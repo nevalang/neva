@@ -1,0 +1,58 @@
+{
+    "deps": ["bypass"],
+    "in": {
+      "a": "int"
+    },
+    "out": {
+      "b": "int"
+    },
+    "workers": {
+      "w1": "dep"
+    },
+    "net": {
+      "out": {
+        "sum": [
+          {
+            "name": "w3",
+            "port": "acc"
+          }
+        ]
+      },
+      "w3": {
+        "in": [
+          {
+            "name": "w1",
+            "port": "out"
+          },
+          {
+            "name": "w2",
+            "port": "out"
+          }
+        ]
+      },
+      "w1": {
+        "in": [
+          {
+            "name": "input",
+            "port": "a"
+          },
+          {
+            "name": "input",
+            "port": "a"
+          }
+        ]
+      },
+      "w2": {
+        "in": [
+          {
+            "name": "in",
+            "port": "b"
+          },
+          {
+            "name": "in",
+            "port": "b"
+          }
+        ]
+      }
+    }
+  }
