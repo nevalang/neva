@@ -2,7 +2,7 @@ package types
 
 type Type uint8
 
-func (t Type) Name() string {
+func (t Type) String() string {
 	return tn[t]
 }
 

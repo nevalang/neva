@@ -2,8 +2,8 @@ package runtime
 
 import "fbp/internal/types"
 
-// Message that goes from outport to inports.
-type Message struct {
+// Msg that goes from outport to inports.
+type Msg struct {
 	Type  types.Type
 	Value Values
 }

@@ -15,7 +15,7 @@ var load cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	var uc parsing.Parsed
+	var uc parsing.Module
 	if err := json.Unmarshal(bb, &uc); err != nil {
 		return err
 	}

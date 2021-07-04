@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fbp/internal/parsing"
 	"fmt"
 	"io/ioutil"
+
+	"fbp/internal/parsing"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -15,11 +15,11 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	var uc parsing.Parsed
-	if err := json.Unmarshal(bb, &uc); err != nil {
+	m, err := parsing.FromJSON(bb)
+	if err != nil {
 		return err
 	}
 
-	fmt.Println(uc)
+	fmt.Println(m)
 	return nil
 }
