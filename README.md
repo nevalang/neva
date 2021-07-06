@@ -1,7 +1,15 @@
 # IMPORTANT
 
-Close all the ports when there are no senders to recieve a message from.
+Что случится, если запустить в системе один компонент дважды под разными именами?
 
+Ответ - ничего особенного, два компонента будут подняты под разными именами.
+Такое может, однако, понадобится в случае, когда система запрашивает две разные зависимости,
+в силу своей конфигурации, с одними и теми же интерфейсами. В этом случае можно попробовать убить двух зайцев одним выстрелом.
+Впрочем, такую ситуацию в реальности сложно себе представить.
+
+Эвристика дуализма - Рантайм модуль может (и возможно даже должен!) отличаться от модуля в парсере.
+
+Close all the ports when there are no senders to recieve a message from.
 
 ```bash
 fbp
@@ -14,8 +22,8 @@ log main
 ```
 
 - there are components that should operate on variadic amount of values
-- there are 
-- how to encode 
+- there are
+- how to encode
 
 # Абстракции
 
@@ -32,11 +40,11 @@ log main
 ```yaml
 # ports example
 ports:
-    in:
-        name: string
-        age: uint8
-    out:
-        greeting: string
+  in:
+    name: string
+    age: uint8
+  out:
+    greeting: string
 ```
 
 ### Пользовательские компоненты
@@ -63,7 +71,7 @@ ports:
 Все те стандартные компоненты, что представляют базовые операции, являются "компонентами-редюсерами".
 У них только один инпорт и один аутпорт. Инпорт при этом имеет списковый тип.
 Задача таких компонентов всегда преобразовать список к какой-то одной сущности, например сложить все числа в массиве.
-Такие компоненты никогда не посылают сигнал на выход до тех пор, пока весь входной массив не заполнен. 
+Такие компоненты никогда не посылают сигнал на выход до тех пор, пока весь входной массив не заполнен.
 Начать при этом вычисления, однако, такой компонент может и по-хорошему должен, как только на вход начнут поступать данные.
 
 ### Типы Портов
@@ -71,29 +79,28 @@ ports:
 Типы должны быть максимально просты и совместимы с `gRPC`, `graphQL` и `json schema`.
 
 ```yaml
-deps:
-    email
+deps: email
 
 types:
-    User: # used defined structured type
-        name: str
-        age: int 
-        bestFriendsIDs[]: int # array (variadic) inport
-        email: email.Email # reference to imported type
-        gender: Gender # reference to locally defined type
-    Gender: [male, female] # used defined enum type
+  User: # used defined structured type
+    name: str
+    age: int
+    bestFriendsIDs[]: int # array (variadic) inport
+    email: email.Email # reference to imported type
+    gender: Gender # reference to locally defined type
+  Gender: [male, female] # used defined enum type
 
 io: # ports
-    in: # input ports
-        user: User # reference to locally defined type
-        incAge: int
-    out: # output ports
-        incremented: User
+  in: # input ports
+    user: User # reference to locally defined type
+    incAge: int
+  out: # output ports
+    incremented: User
 ```
 
 ### Базовые операции
 
-Есть несколько базовых операций, некоторые из которых работают буквально на всех типах, а другие только на части. 
+Есть несколько базовых операций, некоторые из которых работают буквально на всех типах, а другие только на части.
 
 - `+, -, *, /` - не поддерживается булями
 - `==, >, <, >=, <=` везде поддерживается
@@ -192,7 +199,7 @@ schema:
         in:
             in: user.age
             in: incAge
-    sum2: 
+    sum2:
         in:
             in: user.age
             in: incAge
@@ -205,19 +212,17 @@ workers:
 
 Стандартные компоненты помимо базовых операций:
 
-
 ### Splitter
 
 - мёрджер - один списковый инпорт, на выходе сущность того же типа, только без списка.
 
 ### Merger
 
-Просто накапливает 
+Просто накапливает
 
 ===
 
 Nodes - In, Out and Workers`
-
 
 ```
 Info : w2.out -> [w1.in, w3.in]
@@ -225,4 +230,3 @@ Info : w3.out -> out
 Info : "Hello from schema!"
 Error: ERR1 ErrInportMismatch:  wrong type for "in" port of "+" component - want "str" but got "int".
 ```
-

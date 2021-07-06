@@ -16,13 +16,18 @@ type Deps map[string]struct {
 	Out OutPorts
 }
 
-type InPorts PortMap
+type InPorts Ports
 
-type OutPorts PortMap
+type OutPorts Ports
 
-type PortMap map[string]string
+type Ports map[string]string
 
 type Net []struct {
+	Sender    Conn   `json:"sender"`
+	Recievers []Conn `json:"recievers"`
+}
+
+type Conn struct {
 	Node string `json:"node"`
 	Port string `json:"port"`
 }

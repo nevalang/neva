@@ -2,44 +2,44 @@ package runtime
 
 import "fbp/internal/types"
 
-// AbsModule represents abstract module.
-type AbsModule interface {
+// AbstractModule represents complex and atomic modules.
+type AbstractModule interface {
 	Run(in map[string]<-chan Msg, out map[string]chan<- Msg)
 	Ports() (InPorts, OutPorts)
 }
 
-// Module represents used refined module.
-type Module struct {
+// ComplexModule is a composition of other modules.
+type ComplexModule struct {
 	in  InPorts
 	out OutPorts
-	wm  WorkerMap
+	wm  Workers
 	net []Conn
 }
 
-func (m Module) Ports() (InPorts, OutPorts) {
+func (m ComplexModule) Ports() (InPorts, OutPorts) {
 	return m.in, m.out
 }
 
-type InPorts PortMap
+type InPorts Ports
 
-type OutPorts PortMap
+type OutPorts Ports
 
-type WorkerMap map[string]AbsModule
+type Workers map[string]AbstractModule
 
 type Conn struct {
-	sender    <-chan Msg   // outPort
-	receivers []chan<- Msg // inPorts
+	Sender    <-chan Msg   // outPort
+	Receivers []chan<- Msg // inPorts
 }
 
-type PortMap map[string]types.Type
+type Ports map[string]types.Type
 
 func NewModule(
 	in InPorts,
 	out OutPorts,
-	wm WorkerMap,
+	wm Workers,
 	net []Conn,
-) Module {
-	return Module{
+) ComplexModule {
+	return ComplexModule{
 		in:  in,
 		out: out,
 		wm:  wm,
@@ -47,8 +47,8 @@ func NewModule(
 	}
 }
 
-// NativeModule represents native module implementation.
-type NativeModule struct {
+// AtomicModule represents module with native implementation.
+type AtomicModule struct {
 	in   InPorts
 	out  OutPorts
 	impl func(
@@ -57,11 +57,11 @@ type NativeModule struct {
 	)
 }
 
-func (nm NativeModule) Run(in map[string]<-chan Msg, out map[string]chan<- Msg) {
+func (nm AtomicModule) Run(in map[string]<-chan Msg, out map[string]chan<- Msg) {
 	nm.impl(in, out)
 }
 
-func (nm NativeModule) Ports() (InPorts, OutPorts) {
+func (nm AtomicModule) Ports() (InPorts, OutPorts) {
 	return nm.in, nm.out
 }
 
@@ -72,8 +72,8 @@ func NewNativeModule(
 		in map[string]<-chan Msg,
 		out map[string]chan<- Msg,
 	),
-) NativeModule {
-	return NativeModule{
+) AtomicModule {
+	return AtomicModule{
 		in:   in,
 		out:  out,
 		impl: impl,

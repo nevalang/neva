@@ -8,9 +8,9 @@ func ConnectAll(cc []Conn) {
 }
 
 func connect(c Conn) {
-	for msg := range c.sender {
-		for i := range c.receivers {
-			r := c.receivers[i]
+	for msg := range c.Sender {
+		for i := range c.Receivers {
+			r := c.Receivers[i]
 			go func() { r <- msg }()
 		}
 	}
