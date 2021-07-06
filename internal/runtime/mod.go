@@ -26,6 +26,8 @@ type OutPorts Ports
 
 type Workers map[string]AbstractModule
 
+type Env map[string]AbstractModule
+
 type Conn struct {
 	Sender    <-chan Msg   // outPort
 	Receivers []chan<- Msg // inPorts

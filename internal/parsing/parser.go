@@ -4,11 +4,11 @@ import "encoding/json"
 
 // Module represents module after parsing.
 type Module struct {
-	Deps      Deps              `json:"deps"`
-	In        InPorts           `json:"in"`      // inports map
-	Out       OutPorts          `json:"out"`     // outports map
-	WorkerMap map[string]string `json:"workers"` // maps workername to depname
-	Net       Net               `json:"net"`
+	Deps    Deps     `json:"deps"`
+	In      InPorts  `json:"in"`      // inports map
+	Out     OutPorts `json:"out"`     // outports map
+	Workers Workers  `json:"workers"` // maps workername to depname
+	Net     Net      `json:"net"`
 }
 
 type Deps map[string]struct {
@@ -22,12 +22,16 @@ type OutPorts Ports
 
 type Ports map[string]string
 
-type Net []struct {
-	Sender    Conn   `json:"sender"`
-	Recievers []Conn `json:"recievers"`
+type Workers map[string]string
+
+type Net []Subscription
+
+type Subscription struct {
+	Sender    PortPointer   `json:"sender"`
+	Recievers []PortPointer `json:"recievers"`
 }
 
-type Conn struct {
+type PortPointer struct {
 	Node string `json:"node"`
 	Port string `json:"port"`
 }
