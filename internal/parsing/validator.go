@@ -105,12 +105,12 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 
 func validateGraph(graph NetGraph, receiverPorts Ports) error {
 	for portName := range receiverPorts {
-		senders, ok := graph[PortPointer{"out", portName}]
+		_, ok := graph[PortPointer{"out", portName}]
 		if !ok {
 			return fmt.Errorf("'%s' outport is not wired", portName)
 		}
 
-		// TODO: recoursevely check that every sender has resolved inports
+		// TODO: recursively check that every sender has resolved inports
 		// for _, sender := range senders {
 		// }
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	app := &cli.App{
+	app := cli.App{
 		Name: "fbp",
 		Commands: []*cli.Command{
 			{
