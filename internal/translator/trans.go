@@ -40,6 +40,34 @@ func (t translator) Translate(pmod parsing.Module) (runtime.ComplexModule, error
 	), nil
 }
 
+func (t translator) translateDeps(pdeps parsing.Deps) (map[string]runtime.AbstractModule, error) {
+	rdeps := map[string]runtime.AbstractModule{}
+
+	for name := range pdeps {
+		rmod, ok := t.env[name]
+		if !ok {
+			return nil, fmt.Errorf("unresolved dep: '%s'", name)
+		}
+
+		rin, rout := rmod.Ports()
+		if err := t.compareAllPorts(
+			pdeps[name].In, pdeps[name].Out, rin, rout,
+		); err != nil {
+			return nil, fmt.Errorf("incompatible ports on module '%s': %w", name, err)
+		}
+
+		rdeps[name] = rmod
+	}
+
+	return rdeps, nil
+}
+
+func (t translator) translateAllPorts(in parsing.InPorts, out parsing.OutPorts) (runtime.InPorts, runtime.OutPorts) {
+	inPorts := t.translatePorts(parsing.Ports(in))
+	outPorts := t.translatePorts(parsing.Ports(out))
+	return runtime.InPorts(inPorts), runtime.OutPorts(outPorts)
+}
+
 func (t translator) translateWorkers(deps map[string]runtime.AbstractModule, wm map[string]string) runtime.Workers {
 	rwm := runtime.Workers{}
 	for workerName, depName := range wm {
@@ -65,42 +93,28 @@ func (t translator) translateNet(
 	return cc
 }
 
-func (t translator) translateDeps(pdeps parsing.Deps) (map[string]runtime.AbstractModule, error) {
-	rdeps := map[string]runtime.AbstractModule{}
-
-	for name := range pdeps {
-		rmod, ok := t.env[name]
-		if !ok {
-			return nil, fmt.Errorf("unresolved dep: '%s'", name)
-		}
-
-		rin, rout := rmod.Ports()
-		if err := compareAllPorts(
-			pdeps[name].In, pdeps[name].Out, rin, rout,
-		); err != nil {
-			return nil, fmt.Errorf("incompatible ports on module '%s': %w", name, err)
-		}
-
-		rdeps[name] = rmod
+func (t translator) translatePorts(pports parsing.Ports) runtime.Ports {
+	rports := runtime.Ports{}
+	for name, typ := range pports {
+		rports[name] = types.ByName(typ)
 	}
-
-	return rdeps, nil
+	return rports
 }
 
-func compareAllPorts(
+func (t translator) compareAllPorts(
 	pin parsing.InPorts,
 	pout parsing.OutPorts,
 	rin runtime.InPorts,
 	rout runtime.OutPorts,
 ) error {
-	if err := comparePorts(
+	if err := t.comparePorts(
 		parsing.Ports(pin),
 		runtime.Ports(rin),
 	); err != nil {
 		return fmt.Errorf("incompatible inPorts: %w", err)
 	}
 
-	if err := comparePorts(
+	if err := t.comparePorts(
 		parsing.Ports(pout),
 		runtime.Ports(rout),
 	); err != nil {
@@ -110,7 +124,7 @@ func compareAllPorts(
 	return nil
 }
 
-func comparePorts(pports parsing.Ports, rports runtime.Ports) error {
+func (t translator) comparePorts(pports parsing.Ports, rports runtime.Ports) error {
 	if len(pports) != len(rports) {
 		return fmt.Errorf(
 			"different number of ports: want %d, got %d",
@@ -136,18 +150,4 @@ func comparePorts(pports parsing.Ports, rports runtime.Ports) error {
 	}
 
 	return nil
-}
-
-func (t translator) translateAllPorts(in parsing.InPorts, out parsing.OutPorts) (runtime.InPorts, runtime.OutPorts) {
-	inPorts := t.translatePorts(parsing.Ports(in))
-	outPorts := t.translatePorts(parsing.Ports(out))
-	return runtime.InPorts(inPorts), runtime.OutPorts(outPorts)
-}
-
-func (t translator) translatePorts(pports parsing.Ports) runtime.Ports {
-	rports := runtime.Ports{}
-	for name, typ := range pports {
-		rports[name] = types.ByName(typ)
-	}
-	return rports
 }
