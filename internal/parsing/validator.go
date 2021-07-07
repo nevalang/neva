@@ -9,11 +9,11 @@ import (
 type Validator interface {
 	ValidateDeps(Deps) error
 	ValidatePorts(InPorts, OutPorts) error
-	ValidateWorkers(Deps, Workers) error                     // ValidateWorkers valid Deps.
-	ValidateNet(InPorts, OutPorts, Deps, Workers, Net) error // ValidateNet assumes valid ports, deps and workers.
+	ValidateWorkers(Deps, Workers) error
+	ValidateNet(InPorts, OutPorts, Deps, Workers, Net) error
 }
 
-func New() Validator {
+func NewValidator() Validator {
 	return validator{}
 }
 
@@ -55,11 +55,11 @@ func (v validator) ValidateWorkers(deps Deps, workers Workers) error {
 	return nil
 }
 
-// ValidateNet first checks that all connections between ports are type safe,
-// then it checks that all connections are wired the right way so the program will not block.
-// It assumes valid ports, deps, and workers.
+// ValidateNet checks that all port connections are type safe.
+// Then it checks that all connections are wired in the right way so the program will not block.
+// Ports, dependencies and workers should be validated before passing here.
 func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Workers, net Net) error {
-	graph := NetGraph{}
+	graph := Graph{}
 
 	for _, s := range net {
 		if s.Sender.Node == "out" {
@@ -67,7 +67,6 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 		}
 
 		var senderType types.Type
-
 		if s.Sender.Node == "in" {
 			senderType = types.ByName(in[s.Sender.Port])
 		} else {
@@ -81,13 +80,14 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 				return fmt.Errorf("inport node could not be receiver")
 			}
 
+			var receiverType types.Type
 			if receiver.Node == "out" {
-				senderType = types.ByName(out[receiver.Port])
+				receiverType = types.ByName(out[receiver.Port])
+			} else {
+				receiverDepName := workers[receiver.Node]
+				receiverOut := deps[receiverDepName].Out
+				receiverType = types.ByName(receiverOut[receiver.Port])
 			}
-
-			receiverDepName := workers[receiver.Node]
-			receiverOut := deps[receiverDepName].Out
-			receiverType := types.ByName(receiverOut[receiver.Port])
 
 			if receiverType != senderType {
 				return fmt.Errorf(
@@ -100,22 +100,33 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 		}
 	}
 
-	return validateGraph(graph, Ports(out))
+	return validateReceivers("out", in, out, deps, workers, graph)
 }
 
-func validateGraph(graph NetGraph, receiverPorts Ports) error {
-	for portName := range receiverPorts {
-		_, ok := graph[PortPointer{"out", portName}]
-		if !ok {
-			return fmt.Errorf("'%s' outport is not wired", portName)
-		}
-
-		// TODO: recursively check that every sender has resolved inports
-		// for _, sender := range senders {
-		// }
+func validateReceivers(node string, in InPorts, out OutPorts, deps Deps, workers Workers, graph Graph) error {
+	var ports Ports
+	if node == "out" {
+		ports = Ports(out)
+	} else {
+		depName := workers[node]
+		ports = Ports(deps[depName].Out)
 	}
+
+	for portName := range ports {
+		v, ok := graph[PortPointer{Node: node, Port: portName}]
+		if !ok {
+			return fmt.Errorf("%s port not wired", portName)
+		}
+		for _, pp := range v {
+			// TODO: cache?
+			if err := validateReceivers(pp.Node, in, out, deps, workers, graph); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
-// NetGraph maps receiver port with the list of its sender ports.
-type NetGraph map[PortPointer][]PortPointer
+// Graph maps receiver port with the list of its sender ports.
+type Graph map[PortPointer][]PortPointer
