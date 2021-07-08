@@ -67,7 +67,7 @@ func (nm AtomicModule) Ports() (InPorts, OutPorts) {
 	return nm.in, nm.out
 }
 
-func NewNativeModule(
+func NewAtomicModule(
 	in InPorts,
 	out OutPorts,
 	impl func(

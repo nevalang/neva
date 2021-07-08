@@ -2,10 +2,10 @@
   "deps": {
     "+": {
       "in": {
-        "input": "int"
+        "in": "int"
       },
       "out": {
-        "output": "int"
+        "out": "int"
       }
     }
   },

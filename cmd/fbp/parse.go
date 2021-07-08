@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 
 	"fbp/internal/parsing"
+	"fbp/internal/runtime"
+	"fbp/internal/std"
+	"fbp/internal/translator"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -25,6 +28,19 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 	}
 
 	fmt.Println(m)
+
+	env := map[string]runtime.AbstractModule{
+		"+": std.Plus,
+	}
+
+	t := translator.New(env)
+	rmod, err := t.Translate(m)
+	if err != nil {
+		return err
+	}
+
+	// runtime.ConnectAll(rmod.)
+
 	return nil
 }
 

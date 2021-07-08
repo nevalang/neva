@@ -1,40 +1,24 @@
 package std
 
-// type StdComponent struct {
-// }
+import (
+	"fbp/internal/runtime"
+	"fbp/internal/types"
+)
 
-// func NewPlus() Plus {
-// 	in := make([]chan int)
-// 	return Plus{
-// 		inports: in,
-// 		outports: out,
-// 	}
-// }
+var Plus = runtime.NewAtomicModule(
+	runtime.InPorts{"in": types.Int},
+	runtime.OutPorts{"Out": types.Int},
+	func(in map[string]<-chan runtime.Msg, out map[string]chan<- runtime.Msg) {
+		var sum, i int
 
-// type Plus struct {
-// 	inports Ports
-// 	outports Ports
-// }
+		for v := range in["in"] {
+			if i > 2 { // TODO: implement array ports???
+				break
+			}
+			sum += v.Int
+			i++
+		}
 
-// func (p Plus) Ports() struct{ In, Out Ports } {
-// 	return struct{ In, Out Ports }{}
-// }
-
-// func Array(cc []<-chan interface{}) []interface{} {
-// 	ch := make(chan interface{})
-
-// 	for i := range cc {
-// 		c := cc[i]
-// 		go func() {
-// 			ch <- <-c
-// 		}()
-// 	}
-
-// 	var res []interface{}
-// 	for v := range ch {
-// 		res = append(res, v)
-// 	}
-// 	close(ch)
-
-// 	return res
-// }
+		out["out"] <- runtime.Msg{Int: sum}
+	},
+)
