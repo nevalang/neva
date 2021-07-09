@@ -20,6 +20,10 @@ func (m ComplexModule) Ports() (InPorts, OutPorts) {
 	return m.in, m.out
 }
 
+func (m ComplexModule) Net() []Conn {
+	return m.net	
+}
+
 type InPorts Ports
 
 type OutPorts Ports

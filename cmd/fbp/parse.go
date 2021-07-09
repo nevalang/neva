@@ -39,7 +39,7 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	// runtime.ConnectAll(rmod.)
+	runtime.ConnectAll(rmod.Net())
 
 	return nil
 }
