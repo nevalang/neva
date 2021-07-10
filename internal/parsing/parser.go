@@ -31,6 +31,7 @@ type Subscription struct {
 	Recievers []PortPointer `json:"recievers"`
 }
 
+// PortPointer points to some node's port in the network.
 type PortPointer struct {
 	Node string `json:"node"`
 	Port string `json:"port"`
