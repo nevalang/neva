@@ -34,15 +34,11 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	fmt.Println(pmod)
-
 	t := translator.New(env)
 	rmod, err := t.Translate(pmod)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(rmod)
 
 	in := make(map[string]chan runtime.Msg)
 	out := make(map[string]chan runtime.Msg)

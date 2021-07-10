@@ -7,7 +7,7 @@ import (
 
 var Plus = runtime.NewAtomicModule(
 	runtime.InPorts{"in": types.Int},
-	runtime.OutPorts{"Out": types.Int},
+	runtime.OutPorts{"out": types.Int},
 	func(in map[string]<-chan runtime.Msg, out map[string]chan<- runtime.Msg) {
 		var sum, i int
 		for v := range in["in"] {
