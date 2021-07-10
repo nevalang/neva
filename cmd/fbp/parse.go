@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
 
 	"fbp/internal/parsing"
 	"fbp/internal/runtime"
@@ -12,36 +15,66 @@ import (
 	cli "github.com/urfave/cli/v2"
 )
 
+var env = runtime.Env{
+	"+": std.Plus,
+}
+
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
 	bb, err := ioutil.ReadFile(ctx.Args().First())
 	if err != nil {
 		return err
 	}
 
-	m, err := parsing.FromJSON(bb)
+	pmod, err := parsing.FromJSON(bb)
 	if err != nil {
 		return err
 	}
 
-	if err := validate(m); err != nil {
+	if err := validate(pmod); err != nil {
 		return err
 	}
 
-	fmt.Println(m)
-
-	env := map[string]runtime.AbstractModule{
-		"+": std.Plus,
-	}
+	fmt.Println(pmod)
 
 	t := translator.New(env)
-	rmod, err := t.Translate(m)
+	rmod, err := t.Translate(pmod)
 	if err != nil {
 		return err
 	}
 
-	runtime.ConnectAll(rmod.Net())
+	fmt.Println(rmod)
+
+	in := make(map[string]chan runtime.Msg)
+	out := make(map[string]chan runtime.Msg)
+	rmod.Run(in, out)
+
+	num := mustReadNum()
+	go func() {
+		msg := runtime.Msg{Int: num}
+		in["a"] <- msg
+		in["b"] <- msg
+	}()
+
+	fmt.Println(<-out["sum"])
 
 	return nil
+}
+
+func mustReadNum() int {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter a number: ")
+
+	text, err := reader.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+
+	num, err := strconv.Atoi(text)
+	if err != nil {
+		panic(err)
+	}
+
+	return num
 }
 
 func validate(m parsing.Module) error {

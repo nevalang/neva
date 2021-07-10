@@ -20,8 +20,12 @@ func (m ComplexModule) Ports() (InPorts, OutPorts) {
 	return m.in, m.out
 }
 
+func (m ComplexModule) Run(in map[string]chan Msg, out map[string]chan Msg) {
+	ConnectAll(m.Net())
+}
+
 func (m ComplexModule) Net() []Conn {
-	return m.net	
+	return m.net
 }
 
 type InPorts Ports

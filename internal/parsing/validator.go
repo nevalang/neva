@@ -76,7 +76,7 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 		}
 
 		for _, receiver := range s.Recievers {
-			if s.Sender.Node == "in" {
+			if receiver.Node == "in" {
 				return fmt.Errorf("inport node could not be receiver")
 			}
 
@@ -89,6 +89,7 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 				receiverType = types.ByName(receiverOut[receiver.Port])
 			}
 
+			// Something wrong with sum.json
 			if receiverType != senderType {
 				return fmt.Errorf(
 					"%s.%s = %s VS %s.%s. = %s ",
