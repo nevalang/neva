@@ -85,7 +85,7 @@ func (v validator) ValidateNet(in InPorts, out OutPorts, deps Deps, workers Work
 				receiverType = types.ByName(out[receiver.Port])
 			} else {
 				receiverDepName := workers[receiver.Node]
-				receiverOut := deps[receiverDepName].Out
+				receiverOut := deps[receiverDepName].In
 				receiverType = types.ByName(receiverOut[receiver.Port])
 			}
 
