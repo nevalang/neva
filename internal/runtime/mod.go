@@ -16,8 +16,8 @@ type ComplexModule struct {
 	net []Conn
 }
 
-func (m ComplexModule) Ports() (InPorts, OutPorts) {
-	return m.in, m.out
+func (cm ComplexModule) Ports() (InPorts, OutPorts) {
+	return cm.in, cm.out
 }
 
 func (m ComplexModule) Run(in map[string]chan Msg, out map[string]chan Msg) {
