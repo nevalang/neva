@@ -3,9 +3,9 @@ package translator
 import (
 	"fmt"
 
-	"fbp/internal/parsing"
-	"fbp/internal/runtime"
-	"fbp/internal/types"
+	"github.com/emil14/refactored-garbanzo/internal/parsing"
+	"github.com/emil14/refactored-garbanzo/internal/runtime"
+	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
 type (
@@ -32,10 +32,9 @@ func (t translator) Translate(pmod parsing.Module) (runtime.ComplexModule, error
 	rworkers := t.translateWorkers(rdeps, pmod.Workers)
 	rnet := t.translateNet(pmod.Net, rin, rout, rworkers)
 
-	return runtime.NewModule(
+	return runtime.NewComplexModule(
 		rin,
 		rout,
-		rworkers,
 		rnet,
 	), nil
 }
@@ -68,8 +67,8 @@ func (t translator) translateAllPorts(in parsing.InPorts, out parsing.OutPorts) 
 	return runtime.InPorts(inPorts), runtime.OutPorts(outPorts)
 }
 
-func (t translator) translateWorkers(deps map[string]runtime.AbstractModule, wm map[string]string) runtime.Workers {
-	rwm := runtime.Workers{}
+func (t translator) translateWorkers(deps map[string]runtime.AbstractModule, wm map[string]string) runtime.Env {
+	rwm := runtime.Env{}
 	for workerName, depName := range wm {
 		depMod, _ := deps[depName]
 		rwm[workerName] = depMod
@@ -81,15 +80,41 @@ func (t translator) translateNet(
 	pnet parsing.Net,
 	rin runtime.InPorts,
 	rout runtime.OutPorts,
-	rworkers runtime.Workers,
+	rworkers runtime.Env,
 ) []runtime.Conn {
-	cc := make([]runtime.Conn, len(pnet))
-	for i := range pnet {
-		cc[i] = runtime.Conn{
-			Sender:    make(<-chan runtime.Msg),
-			Receivers: []chan<- runtime.Msg{},
+	wio := make(workersIO, len(rworkers))
+
+	for name, mod := range rworkers {
+		wio[name] = workerIO{
+			in:  make(map[string]chan runtime.Msg),
+			out: make(map[string]chan runtime.Msg),
+		}
+
+		in, out := mod.Ports()
+		for portName := range in {
+			wio[name].in[portName] = make(chan runtime.Msg)
+		}
+		for portName := range out {
+			wio[name].out[portName] = make(chan runtime.Msg)
 		}
 	}
+
+	cc := make([]runtime.Conn, len(pnet))
+
+	for i, sub := range pnet {
+		sender := wio[sub.Sender.Node].out[sub.Sender.Port]
+
+		recievers := make([]chan runtime.Msg, len(sub.Recievers))
+		for i, receiver := range sub.Recievers {
+			recievers[i] = wio[receiver.Node].in[receiver.Port]
+		}
+
+		cc[i] = runtime.Conn{
+			Sender:    sender,
+			Receivers: recievers,
+		}
+	}
+
 	return cc
 }
 
@@ -150,4 +175,11 @@ func (t translator) comparePorts(pports parsing.Ports, rports runtime.Ports) err
 	}
 
 	return nil
+}
+
+type workersIO map[string]workerIO
+
+type workerIO struct {
+	in  map[string]chan runtime.Msg
+	out map[string]chan runtime.Msg
 }

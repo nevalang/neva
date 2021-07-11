@@ -3,7 +3,7 @@ package parsing
 import (
 	"fmt"
 
-	"fbp/internal/types"
+	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
 type Validator interface {

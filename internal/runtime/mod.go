@@ -1,60 +1,14 @@
 package runtime
 
-import "fbp/internal/types"
+import "github.com/emil14/refactored-garbanzo/internal/types"
 
-// AbstractModule represents complex and atomic modules.
+// AbstractModule represents atomic and complex modules.
 type AbstractModule interface {
 	Run(in map[string]<-chan Msg, out map[string]chan<- Msg)
 	Ports() (InPorts, OutPorts)
 }
 
-// ComplexModule is a composition of other modules.
-type ComplexModule struct {
-	in  InPorts
-	out OutPorts
-	wm  Workers // TODO: do we need it?
-	net []Conn
-}
-
-func (cm ComplexModule) Ports() (InPorts, OutPorts) {
-	return cm.in, cm.out
-}
-
-func (m ComplexModule) Run(in map[string]chan Msg, out map[string]chan Msg) {
-	// TODO: pass in-out to connect-all?
-	ConnectAll(m.net)
-}
-
-type InPorts Ports
-
-type OutPorts Ports
-
-type Workers map[string]AbstractModule
-
-type Env map[string]AbstractModule
-
-type Conn struct {
-	Sender    <-chan Msg   // outPort
-	Receivers []chan<- Msg // inPorts
-}
-
-type Ports map[string]types.Type
-
-func NewModule(
-	in InPorts,
-	out OutPorts,
-	wm Workers,
-	net []Conn,
-) ComplexModule {
-	return ComplexModule{
-		in:  in,
-		out: out,
-		wm:  wm,
-		net: net,
-	}
-}
-
-// AtomicModule represents module with native implementation.
+// AtomicModule is a module with the native implementation.
 type AtomicModule struct {
 	in   InPorts
 	out  OutPorts
@@ -64,12 +18,12 @@ type AtomicModule struct {
 	)
 }
 
-func (nm AtomicModule) Run(in map[string]<-chan Msg, out map[string]chan<- Msg) {
-	nm.impl(in, out)
+func (a AtomicModule) Run(in map[string]<-chan Msg, out map[string]chan<- Msg) {
+	a.impl(in, out)
 }
 
-func (nm AtomicModule) Ports() (InPorts, OutPorts) {
-	return nm.in, nm.out
+func (a AtomicModule) Ports() (InPorts, OutPorts) {
+	return a.in, a.out
 }
 
 func NewAtomicModule(
@@ -84,5 +38,45 @@ func NewAtomicModule(
 		in:   in,
 		out:  out,
 		impl: impl,
+	}
+}
+
+// ComplexModule is a composition of other modules.
+type ComplexModule struct {
+	in  InPorts
+	out OutPorts
+	net []Conn
+}
+
+func (cm ComplexModule) Ports() (InPorts, OutPorts) {
+	return cm.in, cm.out
+}
+
+func (m ComplexModule) Run(in map[string]chan Msg, out map[string]chan Msg) {
+	ConnectAll(m.net)
+}
+
+type InPorts Ports
+
+type OutPorts Ports
+
+type Env map[string]AbstractModule
+
+type Conn struct {
+	Sender    <-chan Msg
+	Receivers []chan Msg
+}
+
+type Ports map[string]types.Type
+
+func NewComplexModule(
+	in InPorts,
+	out OutPorts,
+	net []Conn,
+) ComplexModule {
+	return ComplexModule{
+		in:  in,
+		out: out,
+		net: net,
 	}
 }

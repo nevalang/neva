@@ -7,10 +7,10 @@ import (
 	"os"
 	"strconv"
 
-	"fbp/internal/parsing"
-	"fbp/internal/runtime"
-	"fbp/internal/std"
-	"fbp/internal/translator"
+	"github.com/emil14/refactored-garbanzo/internal/parsing"
+	"github.com/emil14/refactored-garbanzo/internal/runtime"
+	"github.com/emil14/refactored-garbanzo/internal/std"
+	"github.com/emil14/refactored-garbanzo/internal/translator"
 
 	cli "github.com/urfave/cli/v2"
 )

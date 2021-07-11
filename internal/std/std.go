@@ -1,8 +1,8 @@
 package std
 
 import (
-	"fbp/internal/runtime"
-	"fbp/internal/types"
+	"github.com/emil14/refactored-garbanzo/internal/runtime"
+	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
 var Plus = runtime.NewAtomicModule(

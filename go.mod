@@ -1,4 +1,4 @@
-module fbp
+module github.com/emil14/refactored-garbanzo
 
 go 1.15
 
