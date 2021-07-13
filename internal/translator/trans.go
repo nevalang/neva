@@ -23,7 +23,7 @@ func New(env runtime.Env) Translator {
 }
 
 func (t translator) Translate(pmod parsing.Module) (runtime.ComplexModule, error) {
-	rdeps, err := t.translateDeps(pmod.Deps)
+	rdeps, err := t.resolveEnv(pmod.Deps)
 	if err != nil {
 		return runtime.ComplexModule{}, fmt.Errorf("unresolved deps: %w", err)
 	}
@@ -39,8 +39,9 @@ func (t translator) Translate(pmod parsing.Module) (runtime.ComplexModule, error
 	), nil
 }
 
-func (t translator) translateDeps(pdeps parsing.Deps) (map[string]runtime.AbstractModule, error) {
-	rdeps := map[string]runtime.AbstractModule{}
+// resolveEnv returns error if at least one dependency could not be resolved.
+func (t translator) resolveEnv(pdeps parsing.Deps) (runtime.Env, error) {
+	rdeps := runtime.Env{}
 
 	for name := range pdeps {
 		rmod, ok := t.env[name]
@@ -67,49 +68,56 @@ func (t translator) translateAllPorts(in parsing.InPorts, out parsing.OutPorts) 
 	return runtime.InPorts(inPorts), runtime.OutPorts(outPorts)
 }
 
-func (t translator) translateWorkers(deps map[string]runtime.AbstractModule, wm map[string]string) runtime.Env {
-	rwm := runtime.Env{}
-	for workerName, depName := range wm {
-		depMod, _ := deps[depName]
-		rwm[workerName] = depMod
+func (t translator) translateWorkers(deps runtime.Env, pworkers map[string]string) runtime.Env {
+	rworkers := make(runtime.Env, len(pworkers))
+	for worker, dep := range pworkers {
+		rworkers[worker] = deps[dep]
 	}
-	return rwm
+	return rworkers
 }
 
+// TODO: rename
 func (t translator) translateNet(
 	pnet parsing.Net,
 	rin runtime.InPorts,
 	rout runtime.OutPorts,
 	rworkers runtime.Env,
-) []runtime.Conn {
-	wio := make(workersIO, len(rworkers))
+) []runtime.ChanRel {
+	nio := make(map[string]nodeIO, len(rworkers)+2)
+
+	nio["in"] = nodeIO{
+		out: make(map[string]chan runtime.Msg),
+	}
+	nio["out"] = nodeIO{
+		in: make(map[string]chan runtime.Msg),
+	}
 
 	for name, mod := range rworkers {
-		wio[name] = workerIO{
+		nio[name] = nodeIO{
 			in:  make(map[string]chan runtime.Msg),
 			out: make(map[string]chan runtime.Msg),
 		}
 
 		in, out := mod.Ports()
 		for portName := range in {
-			wio[name].in[portName] = make(chan runtime.Msg)
+			nio[name].in[portName] = make(chan runtime.Msg)
 		}
 		for portName := range out {
-			wio[name].out[portName] = make(chan runtime.Msg)
+			nio[name].out[portName] = make(chan runtime.Msg)
 		}
 	}
 
-	cc := make([]runtime.Conn, len(pnet))
+	cc := make([]runtime.ChanRel, len(pnet))
 
 	for i, sub := range pnet {
-		sender := wio[sub.Sender.Node].out[sub.Sender.Port]
+		sender := nio[sub.Sender.Node].out[sub.Sender.Port]
 
 		recievers := make([]chan runtime.Msg, len(sub.Recievers))
 		for i, receiver := range sub.Recievers {
-			recievers[i] = wio[receiver.Node].in[receiver.Port]
+			recievers[i] = nio[receiver.Node].in[receiver.Port]
 		}
 
-		cc[i] = runtime.Conn{
+		cc[i] = runtime.ChanRel{
 			Sender:    sender,
 			Receivers: recievers,
 		}
@@ -177,9 +185,7 @@ func (t translator) comparePorts(pports parsing.Ports, rports runtime.Ports) err
 	return nil
 }
 
-type workersIO map[string]workerIO
-
-type workerIO struct {
+type nodeIO struct {
 	in  map[string]chan runtime.Msg
 	out map[string]chan runtime.Msg
 }

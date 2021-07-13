@@ -1,12 +1,12 @@
 package runtime
 
-func ConnectAll(cc []Conn) {
+func ConnectAll(cc []ChanRel) {
 	for i := range cc {
 		go connect(cc[i])
 	}
 }
 
-func connect(c Conn) {
+func connect(c ChanRel) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
