@@ -1,4 +1,4 @@
-package parsing
+package parser
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 type Validator interface {
-	Validate(Module) error
+	Validate(CustomModule) error
 }
 
 func NewValidator() Validator {
@@ -16,7 +16,7 @@ func NewValidator() Validator {
 
 type validator struct{}
 
-func (v validator) Validate(mod Module) error {
+func (v validator) Validate(mod CustomModule) error {
 	if err := v.validateDeps(mod.Deps); err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (v validator) validateDeps(deps Deps) error {
 }
 
 // validatePorts checks that every port has valid type.
-func (v validator) validatePorts(in InPorts, out OutPorts) error {
+func (v validator) validatePorts(in InportsInterface, out OutportsInterface) error {
 	for _, typ := range in {
 		if types.ByName(typ) == types.Unknown {
 			return fmt.Errorf("invalid ports: unknown type %s", typ)
@@ -70,7 +70,7 @@ func (v validator) validateWorkers(deps Deps, workers Workers) error {
 // validateNet checks that all port connections are type safe.
 // Then it checks that all connections are wired in the right way so the program will not block.
 // Ports, dependencies and workers should be validated before passing here.
-func (v validator) validateNet(in InPorts, out OutPorts, deps Deps, workers Workers, net Net) error {
+func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps Deps, workers Workers, net Net) error {
 	graph := Graph{}
 
 	for _, s := range net {
@@ -112,27 +112,27 @@ func (v validator) validateNet(in InPorts, out OutPorts, deps Deps, workers Work
 		}
 	}
 
-	return validateReceivers("out", in, out, deps, workers, graph)
+	return validateFlow("out", in, out, deps, workers, graph)
 }
 
-// validateReceivers finds node and checks that all its ports are wired.
-// It does so recursively for every sender of that node.
-func validateReceivers(node string, in InPorts, out OutPorts, deps Deps, workers Workers, graph Graph) error {
-	var ports Ports
-	if node == "out" {
-		ports = Ports(out)
+// validateFlow finds node and checks that all its inports are connected to some other nodes outports.
+// Then it does so recursively for every sender-node.
+func validateFlow(nodeName string, in InportsInterface, out OutportsInterface, deps Deps, workers Workers, graph Graph) error {
+	var ports PortsInterface
+	if nodeName == "out" {
+		ports = PortsInterface(out)
 	} else {
-		depName := workers[node]
-		ports = Ports(deps[depName].In)
+		depName := workers[nodeName]
+		ports = PortsInterface(deps[depName].In)
 	}
 
 	for portName := range ports {
-		pps, ok := graph[PortPointer{Node: node, Port: portName}]
+		pps, ok := graph[PortPoint{Node: nodeName, Port: portName}]
 		if !ok {
 			return fmt.Errorf("%s port is not wired", portName)
 		}
 		for _, pp := range pps {
-			if err := validateReceivers(pp.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
+			if err := validateFlow(pp.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
 				return err
 			}
 		}
@@ -142,4 +142,4 @@ func validateReceivers(node string, in InPorts, out OutPorts, deps Deps, workers
 }
 
 // Graph maps receiver port with the list of its sender ports.
-type Graph map[PortPointer][]PortPointer
+type Graph map[PortPoint][]PortPoint

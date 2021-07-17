@@ -4,20 +4,23 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 
+	"github.com/emil14/refactored-garbanzo/internal/generator"
 	"github.com/emil14/refactored-garbanzo/internal/parsing"
 	"github.com/emil14/refactored-garbanzo/internal/runtime"
-	"github.com/emil14/refactored-garbanzo/internal/std"
-	"github.com/emil14/refactored-garbanzo/internal/translator"
 
 	cli "github.com/urfave/cli/v2"
 )
 
-var env = runtime.Env{
-	"+": std.Plus,
-}
+var (
+	parsingValidator = parsing.NewValidator()
+	parser           = parsing.NewParser(parsingValidator)
+	env              = runtime.Env{"+": nil}
+	// env              = runtime.Env{"+": std.Plus}
+)
 
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
 	bb, err := ioutil.ReadFile(ctx.Args().First())
@@ -25,50 +28,49 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	pmod, err := parsing.FromJSON(bb)
+	pmod, err := parser.Parse(bb)
 	if err != nil {
 		return err
 	}
 
-	if err := parsing.NewValidator().Validate(pmod); err != nil {
-		return err
-	}
-
-	t := translator.New(env)
-	rmod, err := t.Translate(pmod)
-	if err != nil {
-		return err
-	}
+	num := mustReadNum()
 
 	in := make(map[string]chan runtime.Msg)
 	out := make(map[string]chan runtime.Msg)
-	rmod.Run(in, out)
 
-	num := mustReadNum()
+	t := generator.New(in, out, env)
+	rmod := t.Generate(pmod)
+
+	// rmod.Run()
+
 	go func() {
-		msg := runtime.Msg{Int: num}
+		msg := runtime.Msg{Int: int(num)}
 		in["a"] <- msg
 		in["b"] <- msg
 	}()
 
-	fmt.Println(<-out["sum"])
+	fmt.Println(<-out["sum"], rmod)
 
 	return nil
 }
 
-func mustReadNum() int {
-	reader := bufio.NewReader(os.Stdin)
+func mustReadNum() int64 {
 	fmt.Print("Enter a number: ")
 
-	text, err := reader.ReadString('\n')
-	if err != nil {
-		panic(err)
+	var n int64
+	s := bufio.NewScanner(os.Stdin)
+
+	var err error
+	for s.Scan() {
+		log.Println("line", s.Text())
+		n, err = strconv.ParseInt(s.Text(), 10, 0)
+		if err != nil {
+			fmt.Println("not a valid int, please try again")
+			continue
+		}
+		fmt.Println("thank you")
+		break
 	}
 
-	num, err := strconv.Atoi(text)
-	if err != nil {
-		panic(err)
-	}
-
-	return num
+	return n
 }
