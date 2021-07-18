@@ -1,30 +1,27 @@
 package runtime
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Runtime interface {
-	Run(p Opts) error
-}
-
-type Opts struct {
-	env     Env
-	root    string
-	in, out map[string]chan Msg
+	Start(env map[string]Module, root string) (io NodeIO, err error)
 }
 
 type runtime struct{}
 
-func (r runtime) Run(o Opts) error {
-	mod, ok := o.env[o.root]
+func (r runtime) Start(env map[string]Module, root string) (NodeIO, error) {
+	rootMod, ok := env[root]
 	if !ok {
-		return fmt.Errorf("root module '%s' not found in env", o.root)
+		return NodeIO{}, fmt.Errorf("%w: '%s'", ErrModNotFound, root)
 	}
-
-	mod.Run(in, out)
-
-	return nil
+	return rootMod.SpawnWorker(env)
 }
 
-func (r runtime) spawnWorker() Worker {
-	return Worker{}
-}
+
+
+var (
+	ErrModNotFound = errors.New("module not found in env")
+	// ErrPortsNotCompat = errors.New("ports incompatible")
+)

@@ -3,20 +3,20 @@ package parser
 import "encoding/json"
 
 type Parser interface {
-	Parse([]byte) (CustomModule, error)
+	Parse([]byte) (Module, error)
 }
 
 type jsonParser struct {
 	validator Validator
 }
 
-func (jp jsonParser) Parse(bb []byte) (CustomModule, error) {
-	var mod CustomModule
+func (jp jsonParser) Parse(bb []byte) (Module, error) {
+	var mod Module
 	if err := json.Unmarshal(bb, &mod); err != nil {
-		return CustomModule{}, err
+		return Module{}, err
 	}
 	if err := jp.validator.Validate(mod); err != nil {
-		return CustomModule{}, err
+		return Module{}, err
 	}
 	return mod, nil
 }

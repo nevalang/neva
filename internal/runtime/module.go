@@ -3,8 +3,13 @@ package runtime
 import "github.com/emil14/refactored-garbanzo/internal/types"
 
 type Module interface {
-	Run(in, out map[string]chan Msg)
-	Interface() (InportsInterface, OutportsInterface)
+	Interface() ModuleInterface
+	SpawnWorker(env map[string]Module) (NodeIO, error)
+}
+
+type ModuleInterface struct {
+	In  InportsInterface
+	Out OutportsInterface
 }
 
 type InportsInterface PortsInterface

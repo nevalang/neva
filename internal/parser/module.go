@@ -1,6 +1,6 @@
 package parser
 
-type CustomModule struct {
+type Module struct {
 	Deps    Deps              `json:"deps"`
 	In      InportsInterface  `json:"in"`
 	Out     OutportsInterface `json:"out"`

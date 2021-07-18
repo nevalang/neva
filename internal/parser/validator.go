@@ -7,7 +7,7 @@ import (
 )
 
 type Validator interface {
-	Validate(CustomModule) error
+	Validate(Module) error
 }
 
 func NewValidator() Validator {
@@ -16,7 +16,7 @@ func NewValidator() Validator {
 
 type validator struct{}
 
-func (v validator) Validate(mod CustomModule) error {
+func (v validator) Validate(mod Module) error {
 	if err := v.validateDeps(mod.Deps); err != nil {
 		return err
 	}

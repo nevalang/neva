@@ -1,29 +1,43 @@
 package runtime
 
 type NativeModule struct {
-	inportsInterface  InportsInterface
-	outportsInterface OutportsInterface
-	implementation    func(in, out map[string]chan Msg)
+	in   InportsInterface
+	out  OutportsInterface
+	impl func(NodeIO)
+}
+
+func (a NativeModule) SpawnWorker() (NodeIO, error) {
+	io := createIO(a.in, a.out)
+	go a.impl(io)
+	return io, nil
 }
 
 func (a NativeModule) Interface() (InportsInterface, OutportsInterface) {
-	return a.inportsInterface, a.outportsInterface
+	return a.in, a.out
 }
 
-func (a NativeModule) Run(in, out map[string]chan Msg) {
-	go a.implementation(in, out)
-}
-
-type NewNativeModuleParams struct {
-	inportsInterface  InportsInterface
-	outportsInterface OutportsInterface
-	implementation    func(in, out map[string]chan Msg)
-}
-
-func NewNativeModule(p NewNativeModuleParams) NativeModule {
+func NewNativeModule(
+	in InportsInterface,
+	out OutportsInterface,
+	impl func(NodeIO),
+) NativeModule {
 	return NativeModule{
-		inportsInterface:  p.inportsInterface,
-		outportsInterface: p.outportsInterface,
-		implementation:    p.implementation,
+		in:   in,
+		out:  out,
+		impl: impl,
 	}
+}
+
+func createIO(in InportsInterface, out OutportsInterface) NodeIO {
+	inports := make(map[string]chan Msg, len(in))
+	outports := make(map[string]chan Msg, len(in))
+
+	for k := range in {
+		inports[k] = make(chan Msg)
+	}
+	for k := range out {
+		inports[k] = make(chan Msg)
+	}
+
+	return NodeIO{inports, outports}
 }

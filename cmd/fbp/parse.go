@@ -8,17 +8,14 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/emil14/refactored-garbanzo/internal/generator"
-	"github.com/emil14/refactored-garbanzo/internal/parsing"
-	"github.com/emil14/refactored-garbanzo/internal/runtime"
+	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
 
 	cli "github.com/urfave/cli/v2"
 )
 
 var (
-	parsingValidator = parsing.NewValidator()
-	parser           = parsing.NewParser(parsingValidator)
-	env              = runtime.Env{"+": nil}
+	parser = parsing.NewParser(parsing.NewValidator())
+	// env              = runtime.Env{"+": nil}
 	// env              = runtime.Env{"+": std.Plus}
 )
 
@@ -28,28 +25,28 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	pmod, err := parser.Parse(bb)
+	_, err = parser.Parse(bb)
 	if err != nil {
 		return err
 	}
 
-	num := mustReadNum()
+	// num := mustReadNum()
 
-	in := make(map[string]chan runtime.Msg)
-	out := make(map[string]chan runtime.Msg)
+	// in := make(map[string]chan runtime.Msg)
+	// out := make(map[string]chan runtime.Msg)
 
-	t := generator.New(in, out, env)
-	rmod := t.Generate(pmod)
+	// // t := generator.New(in, out, env)
+	// // rmod := t.Generate(pmod)
 
-	// rmod.Run()
+	// // rmod.Run()
 
-	go func() {
-		msg := runtime.Msg{Int: int(num)}
-		in["a"] <- msg
-		in["b"] <- msg
-	}()
+	// go func() {
+	// 	msg := runtime.Msg{Int: int(num)}
+	// 	in["a"] <- msg
+	// 	in["b"] <- msg
+	// }()
 
-	fmt.Println(<-out["sum"], rmod)
+	// fmt.Println(<-out["sum"], rmod)
 
 	return nil
 }
