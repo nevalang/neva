@@ -5,11 +5,11 @@ import (
 )
 
 type CustomModule struct {
-	deps    Deps
-	in      InportsInterface
-	out     OutportsInterface
-	workers Workers
-	net     Net
+	Deps    Deps
+	In      InportsInterface
+	Out     OutportsInterface
+	Workers Workers
+	Net     Net
 }
 
 type Deps map[string]ModuleInterface
@@ -28,8 +28,11 @@ type PortPoint struct {
 	Port string
 }
 
-func (cm CustomModule) Interface() (InportsInterface, OutportsInterface) {
-	return cm.in, cm.out
+func (cm CustomModule) Interface() ModuleInterface {
+	return ModuleInterface{
+		In:  cm.In,
+		Out: cm.Out,
+	}
 }
 
 func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
@@ -37,10 +40,10 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 		return NodeIO{}, err
 	}
 
-	nodesIO := make(map[string]NodeIO, len(m.workers)+2) // workers + io
+	nodesIO := make(map[string]NodeIO, len(m.Workers)+2) // workers + io
 
 	// create nodes for workers
-	for w, dep := range m.workers {
+	for w, dep := range m.Workers {
 		io, err := env[dep].SpawnWorker(env)
 		if err != nil {
 			return NodeIO{}, err
@@ -50,20 +53,20 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 
 	// create io nodes
 	nodesIO["in"] = NodeIO{
-		Out: make(map[string]chan Msg, len(m.in)),
+		Out: make(map[string]chan Msg, len(m.In)),
 	}
-	for port := range m.in {
+	for port := range m.In {
 		nodesIO["in"].Out[port] = make(chan Msg)
 	}
 	nodesIO["out"] = NodeIO{
 		In: make(map[string]chan Msg),
 	}
-	for port := range m.out {
+	for port := range m.Out {
 		nodesIO["out"].In[port] = make(chan Msg)
 	}
 
 	net := []ChanRel{}
-	for _, s := range m.net {
+	for _, s := range m.Net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for _, receiver := range s.Recievers {
 			receivers = append(receivers, nodesIO[receiver.Node].In[receiver.Port])
@@ -103,12 +106,12 @@ type NodeIO struct {
 }
 
 func (m CustomModule) checkDeps(env map[string]Module) error {
-	for dep := range m.deps {
+	for dep := range m.Deps {
 		mod, ok := env[dep]
 		if !ok {
 			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
 		}
-		if err := compareAllPorts(mod.Interface(), m.deps[dep]); err != nil {
+		if err := compareAllPorts(mod.Interface(), m.Deps[dep]); err != nil {
 			return fmt.Errorf("ports incompatibility on module '%s': %w", dep, err)
 		}
 	}

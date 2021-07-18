@@ -9,6 +9,10 @@ type Runtime interface {
 	Start(env map[string]Module, root string) (io NodeIO, err error)
 }
 
+func New() Runtime {
+	return runtime{}
+}
+
 type runtime struct{}
 
 func (r runtime) Start(env map[string]Module, root string) (NodeIO, error) {
@@ -19,9 +23,6 @@ func (r runtime) Start(env map[string]Module, root string) (NodeIO, error) {
 	return rootMod.SpawnWorker(env)
 }
 
-
-
 var (
 	ErrModNotFound = errors.New("module not found in env")
-	// ErrPortsNotCompat = errors.New("ports incompatible")
 )
