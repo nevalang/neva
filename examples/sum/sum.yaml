@@ -1,9 +1,8 @@
-io:
-  in:
-    a: int
-    b: int
-  out:
-    sum: int
+in:
+  a: int
+  b: int
+out:
+  sum: int
 
 deps:
   '+':
