@@ -68,8 +68,8 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 	net := []ChanRel{}
 	for _, s := range m.Net {
 		receivers := make([]chan Msg, len(s.Recievers))
-		for _, receiver := range s.Recievers {
-			receivers = append(receivers, nodesIO[receiver.Node].In[receiver.Port])
+		for i, receiver := range s.Recievers {
+			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
 		}
 
 		net = append(net, ChanRel{
