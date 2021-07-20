@@ -35,6 +35,8 @@ func (cm CustomModule) Interface() ModuleInterface {
 	}
 }
 
+const tmpBuf = 0
+
 func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 	if err := m.checkDeps(env); err != nil {
 		return NodeIO{}, err
@@ -56,29 +58,30 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 		Out: make(map[string]chan Msg, len(m.In)),
 	}
 	for port := range m.In {
-		nodesIO["in"].Out[port] = make(chan Msg)
+		nodesIO["in"].Out[port] = make(chan Msg, tmpBuf)
 	}
+
 	nodesIO["out"] = NodeIO{
 		In: make(map[string]chan Msg),
 	}
 	for port := range m.Out {
-		nodesIO["out"].In[port] = make(chan Msg)
+		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
 	}
 
-	net := []ChanRel{}
+	net := []Relation{}
 	for _, s := range m.Net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for _, receiver := range s.Recievers {
 			receivers = append(receivers, nodesIO[receiver.Node].In[receiver.Port])
 		}
 
-		net = append(net, ChanRel{
+		net = append(net, Relation{
 			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
 			Receivers: receivers,
 		})
 	}
 
-	m.connectAll(net)
+	m.connectNet(net)
 
 	return NodeIO{
 		In:  nodesIO["in"].Out,
@@ -86,13 +89,13 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 	}, nil
 }
 
-func (m CustomModule) connectAll(rels []ChanRel) {
+func (m CustomModule) connectNet(rels []Relation) {
 	for i := range rels {
-		go m.connect(rels[i])
+		go m.retranslate(rels[i])
 	}
 }
 
-func (m CustomModule) connect(c ChanRel) {
+func (m CustomModule) retranslate(c Relation) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
@@ -118,7 +121,7 @@ func (m CustomModule) checkDeps(env map[string]Module) error {
 	return nil
 }
 
-type ChanRel struct {
+type Relation struct {
 	Sender    chan Msg
 	Receivers []chan Msg
 }

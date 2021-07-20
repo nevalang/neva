@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
-	"strconv"
 
 	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
 	"github.com/emil14/refactored-garbanzo/internal/runtime"
@@ -17,9 +13,9 @@ import (
 )
 
 var (
-	parser = parsing.NewParser(parsing.NewValidator())
-	env    = map[string]runtime.Module{"+": std.SumTwo}
-	rt     = runtime.New()
+	validator = parsing.NewValidator()
+	parser    = parsing.NewParser(validator)
+	run       = runtime.New()
 )
 
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
@@ -33,18 +29,18 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	env["root"] = getRoot(mod)
+	env := map[string]runtime.Module{
+		"+":    std.SumTwo,
+		"root": castModule(mod),
+	}
 
-	r := runtime.New()
-	io, err := r.Start(env, "root")
+	io, err := run.Start(env, "root")
 	if err != nil {
 		return err
 	}
 
-	num := mustReadNum()
-
 	go func() {
-		msg := runtime.Msg{Int: int(num)}
+		msg := runtime.Msg{Int: 42}
 		io.In["a"] <- msg
 		io.In["b"] <- msg
 	}()
@@ -54,7 +50,7 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 	return nil
 }
 
-func getRoot(pmod parsing.Module) runtime.Module {
+func castModule(pmod parsing.Module) runtime.Module {
 	deps := runtime.Deps{}
 	for pname, pio := range pmod.Deps {
 		tmp := runtime.ModuleInterface{
@@ -105,23 +101,23 @@ func getRoot(pmod parsing.Module) runtime.Module {
 	}
 }
 
-func mustReadNum() int64 {
-	fmt.Print("Enter a number: ")
+// func mustReadNum() int64 {
+// 	fmt.Print("Enter a number: ")
 
-	var n int64
-	s := bufio.NewScanner(os.Stdin)
+// 	var n int64
+// 	s := bufio.NewScanner(os.Stdin)
 
-	var err error
-	for s.Scan() {
-		log.Println("line", s.Text())
-		n, err = strconv.ParseInt(s.Text(), 10, 0)
-		if err != nil {
-			fmt.Println("not a valid int, please try again")
-			continue
-		}
-		fmt.Println("thank you")
-		break
-	}
+// 	var err error
+// 	for s.Scan() {
+// 		log.Println("line", s.Text())
+// 		n, err = strconv.ParseInt(s.Text(), 10, 0)
+// 		if err != nil {
+// 			fmt.Println("not a valid int, please try again")
+// 			continue
+// 		}
+// 		fmt.Println("thank you")
+// 		break
+// 	}
 
-	return n
-}
+// 	return n
+// }
