@@ -75,25 +75,9 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
 		}
 
-		fmt.Println(
-			"===\n",
-			s.Sender,
-			"-->",
-			s.Recievers,
-			"===\n",
-		)
-
 		net[i] = Relation{
 			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
 			Receivers: receivers,
-		}
-
-		fmt.Println(net)
-	}
-
-	for i, s := range net {
-		if s.Sender == nil {
-			fmt.Println("betrayer", m.Net[i].Sender)
 		}
 	}
 

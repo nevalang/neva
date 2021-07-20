@@ -9,23 +9,21 @@ var SumTwo = runtime.NewNativeModule(
 	runtime.InportsInterface{"in": types.Int},
 	runtime.OutportsInterface{"out": types.Int},
 	func(io runtime.NodeIO) {
-		for msg := range io.In["in"] {
-			msg = runtime.Msg{Int: msg.Int + 1}
-			io.Out["out"] <- msg
-		}
-		// var sum, count int
+		var sum runtime.Msg
+		var count int
 
-		// for msg := range io.In["in"] {
-		// 	count++
-		// 	if count == 2 {
-		// 		break
-		// 	}
-		// 	sum += msg.Int
-		// }
+		for msg := range io.In["in"] {
+			sum.Int += msg.Int
+			count++
+			if count == 2 {
+				break
+			}
+		}
+
+		io.Out["out"] <- sum
 
 		// go func(msg runtime.Msg) {
-		// 	fmt.Println(msg.Int)
 		// 	io.Out["out"] <- msg
-		// }(runtime.Msg{Int: sum})
+		// }(sum)
 	},
 )

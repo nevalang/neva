@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	_ "net/http/pprof"
 	"os"
 
 	cli "github.com/urfave/cli/v2"
@@ -18,10 +17,6 @@ func main() {
 			},
 		},
 	}
-
-	// go func() {
-	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
-	// }()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
