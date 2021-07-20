@@ -68,38 +68,56 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
 	}
 
-	net := []Relation{}
-	for _, s := range m.Net {
+	net := make([]Relation, len(m.Net))
+	for i, s := range m.Net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for i, receiver := range s.Recievers {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
 		}
 
-		net = append(net, Relation{
+		fmt.Println(
+			"===\n",
+			s.Sender,
+			"-->",
+			s.Recievers,
+			"===\n",
+		)
+
+		net[i] = Relation{
 			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
 			Receivers: receivers,
-		})
+		}
+
+		fmt.Println(net)
 	}
 
-	m.connectNet(net)
+	for i, s := range net {
+		if s.Sender == nil {
+			fmt.Println("betrayer", m.Net[i].Sender)
+		}
+	}
+
+	m.connectAll(net)
 
 	return NodeIO{
-		In:  nodesIO["in"].Out,
-		Out: nodesIO["out"].In,
+		In:  NodeInports(nodesIO["in"].Out),
+		Out: NodeOutports(nodesIO["out"].In),
 	}, nil
 }
 
-func (m CustomModule) connectNet(rels []Relation) {
+func (m CustomModule) connectAll(rels []Relation) {
 	for i := range rels {
-		go m.retranslate(rels[i])
+		go m.connect(rels[i])
 	}
 }
 
-func (m CustomModule) retranslate(c Relation) {
+func (m CustomModule) connect(c Relation) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
-			go func() { r <- msg }()
+			go func() {
+				r <- msg
+			}()
 		}
 	}
 }

@@ -1,4 +1,11 @@
 {
+  "in": {
+    "a": "int",
+    "b": "int"
+  },
+  "out": {
+    "sum": "int"
+  },
   "deps": {
     "+": {
       "in": {
@@ -8,13 +15,6 @@
         "out": "int"
       }
     }
-  },
-  "in": {
-    "a": "int",
-    "b": "int"
-  },
-  "out": {
-    "sum": "int"
   },
   "workers": {
     "summator_worker_1": "+",

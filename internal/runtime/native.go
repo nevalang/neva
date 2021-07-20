@@ -39,7 +39,7 @@ func createIO(in InportsInterface, out OutportsInterface) NodeIO {
 		inports[port] = make(chan Msg)
 	}
 	for port := range out {
-		inports[port] = make(chan Msg)
+		outports[port] = make(chan Msg)
 	}
 
 	return NodeIO{inports, outports}

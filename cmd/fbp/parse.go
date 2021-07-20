@@ -18,7 +18,6 @@ import (
 var (
 	validator = parsing.NewValidator()
 	parser    = parsing.NewParser(validator)
-	run       = runtime.New()
 )
 
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
@@ -32,22 +31,17 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	env := map[string]runtime.Module{
-		"+":    std.SumTwo,
-		"root": castModule(mod),
-	}
-
-	io, err := run.Start(env, "root")
+	root := castModule(mod)
+	env := map[string]runtime.Module{"+": std.SumTwo}
+	io, err := root.SpawnWorker(env)
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		msg := runtime.Msg{Int: 42}
-		io.In["a"] <- msg
-		io.In["b"] <- msg
-	}()
+	io.In["a"] <- runtime.Msg{Int: 10}
+	io.In["b"] <- runtime.Msg{Int: 100}
 
+	fmt.Println(<-io.Out["sum"])
 	fmt.Println(<-io.Out["sum"])
 
 	return nil

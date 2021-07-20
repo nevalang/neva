@@ -19,5 +19,10 @@ type OutportsInterface PortsInterface
 type PortsInterface map[string]types.Type
 
 type NodeIO struct {
-	In, Out map[string]chan Msg
+	In  NodeInports
+	Out NodeOutports
 }
+
+type NodeInports map[string]chan Msg
+
+type NodeOutports map[string]chan Msg
