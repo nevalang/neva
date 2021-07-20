@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
 
 	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
 	"github.com/emil14/refactored-garbanzo/internal/runtime"
@@ -101,23 +104,22 @@ func castModule(pmod parsing.Module) runtime.Module {
 	}
 }
 
-// func mustReadNum() int64 {
-// 	fmt.Print("Enter a number: ")
+func mustReadNum() int64 {
+	fmt.Print("enter a number: ")
 
-// 	var n int64
-// 	s := bufio.NewScanner(os.Stdin)
+	var n int64
+	s := bufio.NewScanner(os.Stdin)
 
-// 	var err error
-// 	for s.Scan() {
-// 		log.Println("line", s.Text())
-// 		n, err = strconv.ParseInt(s.Text(), 10, 0)
-// 		if err != nil {
-// 			fmt.Println("not a valid int, please try again")
-// 			continue
-// 		}
-// 		fmt.Println("thank you")
-// 		break
-// 	}
+	var err error
+	for s.Scan() {
+		n, err = strconv.ParseInt(s.Text(), 10, 0)
+		if err != nil {
+			fmt.Println("not a valid int, please try again")
+			continue
+		}
+		break
+	}
 
-// 	return n
-// }
+	fmt.Printf("your number: %d\n", n)
+	return n
+}

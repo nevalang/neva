@@ -17,3 +17,7 @@ type InportsInterface PortsInterface
 type OutportsInterface PortsInterface
 
 type PortsInterface map[string]types.Type
+
+type NodeIO struct {
+	In, Out map[string]chan Msg
+}
