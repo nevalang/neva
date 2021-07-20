@@ -42,7 +42,7 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 
 	nodesIO := make(map[string]NodeIO, len(m.Workers)+2) // workers + io
 
-	// create nodes for workers
+	// worker nodes
 	for w, dep := range m.Workers {
 		io, err := env[dep].SpawnWorker(env)
 		if err != nil {
@@ -51,7 +51,7 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	// create io nodes
+	// io nodes
 	nodesIO["in"] = NodeIO{
 		Out: make(map[string]chan Msg, len(m.In)),
 	}
@@ -101,17 +101,13 @@ func (m CustomModule) connect(c ChanRel) {
 	}
 }
 
-type NodeIO struct {
-	In, Out map[string]chan Msg
-}
-
 func (m CustomModule) checkDeps(env map[string]Module) error {
 	for dep := range m.Deps {
 		mod, ok := env[dep]
 		if !ok {
 			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
 		}
-		if err := compareAllPorts(mod.Interface(), m.Deps[dep]); err != nil {
+		if err := checkAllPorts(mod.Interface(), m.Deps[dep]); err != nil {
 			return fmt.Errorf("ports incompatibility on module '%s': %w", dep, err)
 		}
 	}
@@ -123,15 +119,15 @@ type ChanRel struct {
 	Receivers []chan Msg
 }
 
-func compareAllPorts(got, want ModuleInterface) error {
-	if err := comparePorts(
+func checkAllPorts(got, want ModuleInterface) error {
+	if err := checkPorts(
 		PortsInterface(got.In),
 		PortsInterface(want.In),
 	); err != nil {
 		return fmt.Errorf("incompatible inPorts: %w", err)
 	}
 
-	if err := comparePorts(
+	if err := checkPorts(
 		PortsInterface(got.Out),
 		PortsInterface(want.Out),
 	); err != nil {
@@ -141,10 +137,10 @@ func compareAllPorts(got, want ModuleInterface) error {
 	return nil
 }
 
-func comparePorts(got PortsInterface, want PortsInterface) error {
-	if len(want) != len(got) {
+func checkPorts(got, want PortsInterface) error {
+	if len(got) < len(want) {
 		return fmt.Errorf(
-			"different number of ports: got %d, want %d",
+			"not enough ports: got %d, want %d",
 			len(got),
 			len(want),
 		)
