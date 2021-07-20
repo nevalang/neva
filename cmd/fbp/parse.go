@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 
@@ -106,22 +105,21 @@ func getRoot(pmod parsing.Module) runtime.Module {
 }
 
 func mustReadNum() int64 {
-	fmt.Print("Enter a number: ")
+	fmt.Print("enter a number: ")
 
 	var n int64
 	s := bufio.NewScanner(os.Stdin)
 
 	var err error
 	for s.Scan() {
-		log.Println("line", s.Text())
 		n, err = strconv.ParseInt(s.Text(), 10, 0)
 		if err != nil {
 			fmt.Println("not a valid int, please try again")
 			continue
 		}
-		fmt.Println("thank you")
 		break
 	}
 
+	fmt.Printf("your number: %d\n", n)
 	return n
 }
