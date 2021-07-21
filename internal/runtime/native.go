@@ -6,7 +6,7 @@ type NativeModule struct {
 	impl func(NodeIO)
 }
 
-func (a NativeModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
+func (a NativeModule) SpawnWorker(map[string]Module) (NodeIO, error) {
 	io := createIO(a.in, a.out)
 	go a.impl(io)
 	return io, nil

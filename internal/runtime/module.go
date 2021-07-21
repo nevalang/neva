@@ -4,7 +4,7 @@ import "github.com/emil14/refactored-garbanzo/internal/types"
 
 type Module interface {
 	Interface() ModuleInterface
-	SpawnWorker(env map[string]Module) (NodeIO, error)
+	SpawnWorker(scope map[string]Module) (NodeIO, error)
 }
 
 type ModuleInterface struct {

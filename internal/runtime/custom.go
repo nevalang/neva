@@ -37,8 +37,8 @@ func (cm CustomModule) Interface() ModuleInterface {
 
 const tmpBuf = 0
 
-func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
-	if err := m.checkDeps(env); err != nil {
+func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
+	if err := m.checkDeps(scope); err != nil {
 		return NodeIO{}, err
 	}
 
@@ -46,7 +46,7 @@ func (m CustomModule) SpawnWorker(env map[string]Module) (NodeIO, error) {
 
 	// worker nodes
 	for w, dep := range m.Workers {
-		io, err := env[dep].SpawnWorker(env)
+		io, err := scope[dep].SpawnWorker(scope)
 		if err != nil {
 			return NodeIO{}, err
 		}
