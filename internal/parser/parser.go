@@ -1,24 +1,9 @@
 package parser
 
-import "encoding/json"
+import "github.com/emil14/refactored-garbanzo/internal/runtime"
 
 type Parser interface {
-	Parse([]byte) (Module, error)
-}
-
-type jsonParser struct {
-	validator Validator
-}
-
-func (jp jsonParser) Parse(bb []byte) (Module, error) {
-	var mod Module
-	if err := json.Unmarshal(bb, &mod); err != nil {
-		return Module{}, err
-	}
-	if err := jp.validator.Validate(mod); err != nil {
-		return Module{}, err
-	}
-	return mod, nil
+	Parse([]byte) (runtime.Module, error)
 }
 
 func NewParser(v Validator) Parser {

@@ -99,9 +99,12 @@ func (m CustomModule) connect(c Relation) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
-			go func() {
-				r <- msg
-			}()
+			select {
+			case r <- msg:
+				continue
+			default:
+				go func() { r <- msg }()
+			}
 		}
 	}
 }

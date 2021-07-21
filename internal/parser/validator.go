@@ -117,19 +117,19 @@ func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps 
 
 // validateFlow finds node and checks that all its inports are connected to some other nodes outports.
 // Then it does so recursively for every sender-node.
-func validateFlow(nodeName string, in InportsInterface, out OutportsInterface, deps Deps, workers Workers, graph Graph) error {
+func validateFlow(node string, in InportsInterface, out OutportsInterface, deps Deps, workers Workers, graph Graph) error {
 	var ports PortsInterface
-	if nodeName == "out" {
+	if node == "out" {
 		ports = PortsInterface(out)
 	} else {
-		depName := workers[nodeName]
+		depName := workers[node]
 		ports = PortsInterface(deps[depName].In)
 	}
 
-	for portName := range ports {
-		pps, ok := graph[PortPoint{Node: nodeName, Port: portName}]
+	for port := range ports {
+		pps, ok := graph[PortPoint{Node: node, Port: port}]
 		if !ok {
-			return fmt.Errorf("%s port is not wired", portName)
+			return fmt.Errorf("%s port is not wired", port)
 		}
 		for _, pp := range pps {
 			if err := validateFlow(pp.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?

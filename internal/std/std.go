@@ -21,9 +21,5 @@ var SumTwo = runtime.NewNativeModule(
 		}
 
 		io.Out["out"] <- sum
-
-		// go func(msg runtime.Msg) {
-		// 	io.Out["out"] <- msg
-		// }(sum)
 	},
 )
