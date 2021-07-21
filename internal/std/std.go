@@ -20,10 +20,11 @@ var SumTwo = runtime.NewNativeModule(
 			}
 		}
 
-		io.Out["out"] <- sum
-
-		// go func(msg runtime.Msg) {
-		// 	io.Out["out"] <- msg
-		// }(sum)
+		select {
+		case io.Out["out"] <- sum:
+			return
+		default:
+			go func() { io.Out["out"] <- sum }()
+		}
 	},
 )
