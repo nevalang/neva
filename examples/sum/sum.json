@@ -25,13 +25,13 @@
       "sender": { "node": "in", "port": "a" },
       "recievers": [
         { "node": "summator_worker_1", "port": "in" },
-        { "node": "summator_worker_2", "port": "in" }
+        { "node": "summator_worker_1", "port": "in" }
       ]
     },
     {
       "sender": { "node": "in", "port": "b" },
       "recievers": [
-        { "node": "summator_worker_1", "port": "in" },
+        { "node": "summator_worker_2", "port": "in" },
         { "node": "summator_worker_2", "port": "in" }
       ]
     },
