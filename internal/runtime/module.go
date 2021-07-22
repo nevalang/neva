@@ -26,3 +26,9 @@ type NodeIO struct {
 type NodeInports map[string]chan Msg
 
 type NodeOutports map[string]chan Msg
+
+type Msg struct {
+	Str  string
+	Int  int
+	Bool bool
+}

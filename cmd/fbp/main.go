@@ -12,8 +12,8 @@ func main() {
 		Name: "fbp",
 		Commands: []*cli.Command{
 			{
-				Name:   "parse",
-				Action: parse,
+				Name:   "run",
+				Action: run,
 			},
 		},
 	}
