@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	validator = parsing.NewValidator()
-	parser    = parsing.NewParser(validator)
+	validator  = parsing.NewValidator()
+	jsonParser = parsing.NewJSONParser(validator)
+	yamlParser = parsing.NewYAMLParser(validator)
 )
 
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
@@ -26,7 +27,7 @@ var parse cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	mod, err := parser.Parse(bb)
+	mod, err := jsonParser.Parse(bb)
 	if err != nil {
 		return err
 	}
