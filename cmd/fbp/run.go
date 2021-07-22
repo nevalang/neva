@@ -5,17 +5,9 @@ import (
 	"io/ioutil"
 
 	"github.com/emil14/refactored-garbanzo/internal/core"
-	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
 	"github.com/emil14/refactored-garbanzo/internal/std"
-	"github.com/emil14/refactored-garbanzo/internal/translator"
 
 	cli "github.com/urfave/cli/v2"
-)
-
-var (
-	t = translator.New()
-	v = parsing.NewValidator()
-	p = parsing.NewYAMLParser(v)
 )
 
 var run cli.ActionFunc = func(ctx *cli.Context) error {

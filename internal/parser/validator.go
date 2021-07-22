@@ -71,7 +71,74 @@ func (v validator) validateWorkers(deps Deps, workers Workers) error {
 // Then it checks that all connections are wired in the right way so the program will not block.
 // Ports, dependencies and workers should be validated before passing here.
 func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps Deps, workers Workers, net Net) error {
-	return nil // TODO
+	g := Graph{}
+
+	for sender, conns := range net {
+		if sender == "out" {
+			return fmt.Errorf("outport node could not be sender")
+		}
+
+		for outport, conn := range conns {
+			s := PortPoint{
+				Node: sender,
+				Port: outport,
+			}
+
+			rr := []PortPoint{}
+			for receiver, inports := range conn {
+				for _, inport := range inports {
+					pp := PortPoint{
+						Node: receiver,
+						Port: inport,
+					}
+					rr = append(rr, pp)
+				}
+			}
+
+			g[s] = rr
+		}
+	}
+
+	// for node, conn := range net {
+	// 	if conn.Sender.Node == "out" {
+	// 		return fmt.Errorf("outport node could not be sender")
+	// 	}
+
+	// 	var senderType types.Type
+	// 	if conn.Sender.Node == "in" {
+	// 		senderType = types.ByName(in[conn.Sender.Port])
+	// 	} else {
+	// 		senderDepName := workers[conn.Sender.Node]
+	// 		senderOut := deps[senderDepName].Out
+	// 		senderType = types.ByName(senderOut[conn.Sender.Port])
+	// 	}
+
+	// 	for _, receiver := range conn.Recievers {
+	// 		if receiver.Node == "in" {
+	// 			return fmt.Errorf("inport node could not be receiver")
+	// 		}
+
+	// 		var receiverType types.Type
+	// 		if receiver.Node == "out" {
+	// 			receiverType = types.ByName(out[receiver.Port])
+	// 		} else {
+	// 			receiverDepName := workers[receiver.Node]
+	// 			receiverOut := deps[receiverDepName].In
+	// 			receiverType = types.ByName(receiverOut[receiver.Port])
+	// 		}
+
+	// 		if receiverType != senderType {
+	// 			return fmt.Errorf(
+	// 				"%s.%s = %s VS %s.%s. = %s ",
+	// 				receiver.Node, receiver.Port, receiverType, conn.Sender.Node, conn.Sender.Port, senderType,
+	// 			)
+	// 		}
+
+	// 		g[receiver] = append(g[receiver], conn.Sender)
+	// 	}
+	// }
+
+	return validateFlow("out", in, out, deps, workers, g)
 }
 
 // validateFlow finds node and checks that all its inports are connected to some other nodes outports.

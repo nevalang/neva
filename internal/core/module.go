@@ -1,6 +1,14 @@
 package core
 
-import "github.com/emil14/refactored-garbanzo/internal/types"
+import (
+	"errors"
+
+	"github.com/emil14/refactored-garbanzo/internal/types"
+)
+
+var (
+	ErrModNotFound = errors.New("module not found in env")
+)
 
 type Module interface {
 	Interface() ModuleInterface

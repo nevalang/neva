@@ -4,10 +4,10 @@ type Parser interface {
 	Parse([]byte) (Module, error)
 }
 
-func NewYAMLParser(v Validator) Parser {
-	return yamlParser{v}
+func NewYAMLParser() Parser {
+	return yamlParser{}
 }
 
-func NewJSONParser(v Validator) Parser {
-	return jsonParser{v}
+func NewJSONParser() Parser {
+	return jsonParser{}
 }
