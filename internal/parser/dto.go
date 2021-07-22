@@ -1,16 +1,11 @@
 package parser
 
 type Module struct {
-	Deps    Deps              `json:"deps"`
-	In      InportsInterface  `json:"in"`
-	Out     OutportsInterface `json:"out"`
-	Workers Workers           `json:"workers"`
-	Net     Net               `json:"net"`
-}
-
-type Deps map[string]struct {
-	In  InportsInterface
-	Out OutportsInterface
+	In      InportsInterface
+	Out     OutportsInterface
+	Deps    Deps
+	Workers Workers
+	Net     Net
 }
 
 type InportsInterface PortsInterface
@@ -19,16 +14,15 @@ type OutportsInterface PortsInterface
 
 type PortsInterface map[string]string
 
+type Deps map[string]struct {
+	In  InportsInterface
+	Out OutportsInterface
+}
+
 type Workers map[string]string
 
-type Net []Subscription
+type Net map[string]Connections
 
-type Subscription struct {
-	Sender    PortPoint   `json:"sender"`
-	Recievers []PortPoint `json:"recievers"`
-}
+type Connections map[string]Connection
 
-type PortPoint struct {
-	Node string `json:"node"`
-	Port string `json:"port"`
-}
+type Connection map[string][]string
