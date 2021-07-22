@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/emil14/refactored-garbanzo/internal/core"
 	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
-	"github.com/emil14/refactored-garbanzo/internal/runtime"
 	"github.com/emil14/refactored-garbanzo/internal/std"
+	"github.com/emil14/refactored-garbanzo/internal/translator"
 
 	cli "github.com/urfave/cli/v2"
 )
 
 var (
-	validator = parsing.NewValidator()
-	parser    = parsing.NewParser(validator)
+	t = translator.New()
+	v = parsing.NewValidator()
+	p = parsing.NewYAMLParser(v)
 )
 
 var run cli.ActionFunc = func(ctx *cli.Context) error {
@@ -22,19 +24,24 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	mod, err := parser.Parse(bb)
+	pmod, err := p.Parse(bb)
 	if err != nil {
 		return err
 	}
 
-	scope := map[string]runtime.Module{"+": std.SumTwo}
-	io, err := mod.SpawnWorker(scope)
+	rmod, err := t.Translate(pmod)
 	if err != nil {
 		return err
 	}
 
-	io.In["a"] <- runtime.Msg{Int: 5}
-	io.In["b"] <- runtime.Msg{Int: 2}
+	scope := map[string]core.Module{"+": std.SumTwo}
+	io, err := rmod.SpawnWorker(scope)
+	if err != nil {
+		return err
+	}
+
+	io.In["a"] <- core.Msg{Int: 5}
+	io.In["b"] <- core.Msg{Int: 2}
 
 	fmt.Println(<-io.Out["sum"])
 	fmt.Println(<-io.Out["sum"])

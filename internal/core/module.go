@@ -1,4 +1,4 @@
-package runtime
+package core
 
 import "github.com/emil14/refactored-garbanzo/internal/types"
 
