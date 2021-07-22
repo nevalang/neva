@@ -5,7 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "fbp",
+      "name": "yaml",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fbp",
+      "args": ["parse", "${workspaceFolder}/examples/sum/sum.yaml"]
+    },
+    {
+      "name": "json",
       "type": "go",
       "request": "launch",
       "mode": "auto",

@@ -9,7 +9,7 @@ deps:
     in:
       in: int
     out:
-      out: out
+      out: int
 
 workers:
   summator_worker_1: +

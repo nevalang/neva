@@ -14,7 +14,7 @@ type jsonParser struct {
 	validator Validator
 }
 
-func (jp jsonParser) Parse(bb []byte) (Module, error) {
+func (p jsonParser) Parse(bb []byte) (Module, error) {
 	var mod Module
 	if err := json.Unmarshal(bb, &mod); err != nil {
 		return Module{}, err
@@ -33,17 +33,17 @@ type yamlParser struct {
 	validator Validator
 }
 
-func (yp yamlParser) Parse(bb []byte) (Module, error) {
+func (p yamlParser) Parse(bb []byte) (Module, error) {
 	var mod Module
 	if err := yaml.Unmarshal(bb, &mod); err != nil {
 		return Module{}, err
 	}
-	if err := yp.validator.Validate(mod); err != nil {
+	if err := p.validator.Validate(mod); err != nil {
 		return Module{}, err
 	}
 	return mod, nil
 }
 
 func NewYAMLParser(v Validator) Parser {
-	return yamlParser{}
+	return yamlParser{v}
 }

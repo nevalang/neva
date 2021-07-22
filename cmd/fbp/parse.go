@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"strconv"
 
 	parsing "github.com/emil14/refactored-garbanzo/internal/parser"
 	"github.com/emil14/refactored-garbanzo/internal/runtime"
@@ -15,19 +12,16 @@ import (
 	cli "github.com/urfave/cli/v2"
 )
 
-var (
-	validator  = parsing.NewValidator()
-	jsonParser = parsing.NewJSONParser(validator)
-	yamlParser = parsing.NewYAMLParser(validator)
-)
-
 var parse cli.ActionFunc = func(ctx *cli.Context) error {
-	bb, err := ioutil.ReadFile(ctx.Args().First())
+	path := ctx.Args().First()
+
+	bb, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	mod, err := jsonParser.Parse(bb)
+	yamlParser := parsing.NewYAMLParser(parsing.NewValidator())
+	mod, err := yamlParser.Parse(bb)
 	if err != nil {
 		return err
 	}
@@ -100,24 +94,4 @@ func castModule(pmod parsing.Module) runtime.Module {
 		Workers: runtime.Workers(pmod.Workers),
 		Net:     net,
 	}
-}
-
-func mustReadNum() int64 {
-	fmt.Print("enter a number: ")
-
-	var n int64
-	s := bufio.NewScanner(os.Stdin)
-
-	var err error
-	for s.Scan() {
-		n, err = strconv.ParseInt(s.Text(), 10, 0)
-		if err != nil {
-			fmt.Println("not a valid int, please try again")
-			continue
-		}
-		break
-	}
-
-	fmt.Printf("your number: %d\n", n)
-	return n
 }

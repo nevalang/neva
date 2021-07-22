@@ -44,14 +44,14 @@ func (v validator) validateDeps(deps Deps) error {
 
 // validatePorts checks that every port has valid type.
 func (v validator) validatePorts(in InportsInterface, out OutportsInterface) error {
-	for _, typ := range in {
+	for k, typ := range in {
 		if types.ByName(typ) == types.Unknown {
-			return fmt.Errorf("invalid ports: unknown type %s", typ)
+			return fmt.Errorf("invalid inports: unknown type '%s' of port '%s'", typ, k)
 		}
 	}
-	for _, typ := range out {
+	for k, typ := range out {
 		if types.ByName(typ) == types.Unknown {
-			return fmt.Errorf("invalid ports: unknown type %s", typ)
+			return fmt.Errorf("invalid outports: unknown type '%s' of port '%s'", typ, k)
 		}
 	}
 	return nil
