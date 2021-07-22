@@ -73,20 +73,23 @@ func castModule(pmod parsing.Module) runtime.Module {
 		out[port] = types.ByName(t)
 	}
 
-	net := make(runtime.Net, len(pmod.Net))
-	for i := range pmod.Net {
-		net[i] = runtime.Subscription{
-			Sender: runtime.PortPoint{
-				Node: pmod.Net[i].Sender.Node,
-				Port: pmod.Net[i].Sender.Port,
-			},
-			Recievers: make([]runtime.PortPoint, len(pmod.Net[i].Recievers)),
-		}
-		for j := range pmod.Net[i].Recievers {
-			net[i].Recievers[j] = runtime.PortPoint{
-				Node: pmod.Net[i].Recievers[j].Node,
-				Port: pmod.Net[i].Recievers[j].Port,
+	net := runtime.Net{}
+	for senderNode, conns := range pmod.Net {
+		for senderOutport, outgoingConnections := range conns {
+			senderPoint := runtime.PortPoint{Node: senderNode, Port: senderOutport}
+			receiversPoints := []runtime.PortPoint{}
+			for receiverNode, receiverInports := range outgoingConnections {
+				for _, inport := range receiverInports {
+					receiversPoints = append(receiversPoints, runtime.PortPoint{
+						Node: receiverNode,
+						Port: inport,
+					})
+				}
 			}
+			net = append(net, runtime.Subscription{
+				Sender:    senderPoint,
+				Recievers: receiversPoints,
+			})
 		}
 	}
 
