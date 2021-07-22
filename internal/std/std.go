@@ -20,6 +20,7 @@ var SumTwo = runtime.NewNativeModule(
 			}
 		}
 
+		// IDEA: move this to decorator
 		select {
 		case io.Out["out"] <- sum:
 			return
