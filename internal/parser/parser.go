@@ -19,7 +19,7 @@ func (p jsonParser) Parse(bb []byte) (Module, error) {
 	if err := json.Unmarshal(bb, &mod); err != nil {
 		return Module{}, err
 	}
-	if err := jp.validator.Validate(mod); err != nil {
+	if err := p.validator.Validate(mod); err != nil {
 		return Module{}, err
 	}
 	return mod, nil
