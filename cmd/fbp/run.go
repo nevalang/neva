@@ -26,8 +26,12 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	scope := map[string]core.Module{"+": std.SumTwo}
-	io, err := rmod.SpawnWorker(scope)
+	r := core.NewRuntime(map[string]core.Module{
+		"+":    std.SumTwo,
+		"root": rmod,
+	})
+
+	io, err := r.Run("root")
 	if err != nil {
 		return err
 	}

@@ -10,17 +10,35 @@ func NewRuntime(env map[string]Module) Runtime {
 	return Runtime{env}
 }
 
+const tmpBuf = 0
+
 func (r Runtime) Run(root string) (NodeIO, error) {
-	mod := r.env[root].(CustomModule)
-	if err := r.resolveDeps(mod.deps); err != nil {
+	mod, ok := r.env[root]
+	if !ok {
+		return NodeIO{}, fmt.Errorf("mod not found")
+	}
+
+	if native, ok := mod.(NativeModule); ok {
+		io := r.createIO(native.in, native.out)
+		go native.impl(io)
+		return io, nil
+	}
+
+	custom, ok := r.env[root].(CustomModule)
+	if !ok {
+		return NodeIO{}, fmt.Errorf("mod unknown type")
+	}
+
+	// can we move this?
+	if err := r.resolveDeps(custom.deps); err != nil {
 		return NodeIO{}, err
 	}
 
-	nodesIO := make(map[string]NodeIO, len(mod.workers)+2) // workers + io
+	nodesIO := make(map[string]NodeIO, len(custom.workers)+2) // workers + io
 
 	// worker nodes
-	for w, dep := range mod.workers {
-		io, err := r.env[dep].SpawnWorker(r.env)
+	for w, dep := range custom.workers {
+		io, err := r.Run(dep)
 		if err != nil {
 			return NodeIO{}, err
 		}
@@ -29,21 +47,21 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 
 	// io nodes
 	nodesIO["in"] = NodeIO{
-		Out: make(map[string]chan Msg, len(mod.in)),
+		Out: make(map[string]chan Msg, len(custom.in)),
 	}
-	for port := range mod.in {
+	for port := range custom.in {
 		nodesIO["in"].Out[port] = make(chan Msg, tmpBuf)
 	}
 
 	nodesIO["out"] = NodeIO{
 		In: make(map[string]chan Msg),
 	}
-	for port := range mod.out {
+	for port := range custom.out {
 		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
 	}
 
-	net := make([]Connection, len(mod.net))
-	for i, s := range mod.net {
+	net := make([]Connection, len(custom.net))
+	for i, s := range custom.net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for i, receiver := range s.Recievers {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
@@ -55,7 +73,7 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		}
 	}
 
-	mod.connectAll(net)
+	r.connectAll(net)
 
 	return NodeIO{
 		In:  NodeInports(nodesIO["in"].Out),
