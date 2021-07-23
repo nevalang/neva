@@ -86,6 +86,10 @@ func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps 
 
 			rr := []PortPoint{}
 			for receiver, inports := range conn {
+				if receiver == "in" {
+					return fmt.Errorf("inport node could not be receiver")
+				}
+
 				for _, inport := range inports {
 					pp := PortPoint{
 						Node: receiver,
@@ -100,9 +104,6 @@ func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps 
 	}
 
 	// for node, conn := range net {
-	// 	if conn.Sender.Node == "out" {
-	// 		return fmt.Errorf("outport node could not be sender")
-	// 	}
 
 	// 	var senderType types.Type
 	// 	if conn.Sender.Node == "in" {
@@ -114,10 +115,6 @@ func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps 
 	// 	}
 
 	// 	for _, receiver := range conn.Recievers {
-	// 		if receiver.Node == "in" {
-	// 			return fmt.Errorf("inport node could not be receiver")
-	// 		}
-
 	// 		var receiverType types.Type
 	// 		if receiver.Node == "out" {
 	// 			receiverType = types.ByName(out[receiver.Port])
