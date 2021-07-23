@@ -12,7 +12,6 @@ var (
 
 type Module interface {
 	Interface() Interface
-	Deps() Deps
 }
 
 type Interface struct {
