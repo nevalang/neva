@@ -38,7 +38,7 @@ func (cm CustomModule) Interface() ModuleInterface {
 const tmpBuf = 0
 
 func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
-	if err := m.checkDeps(scope); err != nil {
+	if err := m.resolveDeps(scope); err != nil {
 		return NodeIO{}, err
 	}
 
@@ -68,14 +68,14 @@ func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
 		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
 	}
 
-	net := make([]Relation, len(m.Net))
+	net := make([]Connection, len(m.Net))
 	for i, s := range m.Net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for i, receiver := range s.Recievers {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
 		}
 
-		net[i] = Relation{
+		net[i] = Connection{
 			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
 			Receivers: receivers,
 		}
@@ -89,13 +89,13 @@ func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
 	}, nil
 }
 
-func (m CustomModule) connectAll(rels []Relation) {
+func (m CustomModule) connectAll(rels []Connection) {
 	for i := range rels {
 		go m.connect(rels[i])
 	}
 }
 
-func (m CustomModule) connect(c Relation) {
+func (m CustomModule) connect(c Connection) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
@@ -109,7 +109,7 @@ func (m CustomModule) connect(c Relation) {
 	}
 }
 
-func (m CustomModule) checkDeps(env map[string]Module) error {
+func (m CustomModule) resolveDeps(env map[string]Module) error {
 	for dep := range m.Deps {
 		mod, ok := env[dep]
 		if !ok {
@@ -122,7 +122,7 @@ func (m CustomModule) checkDeps(env map[string]Module) error {
 	return nil
 }
 
-type Relation struct {
+type Connection struct {
 	Sender    chan Msg
 	Receivers []chan Msg
 }
