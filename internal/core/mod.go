@@ -11,32 +11,19 @@ var (
 )
 
 type Module interface {
-	Interface() ModuleInterface
-	SpawnWorker(scope map[string]Module) (NodeIO, error)
+	Interface() Interface
+	Deps() Deps
 }
 
-type ModuleInterface struct {
+type Interface struct {
 	In  InportsInterface
 	Out OutportsInterface
 }
+
+type Deps map[string]Interface
 
 type InportsInterface PortsInterface
 
 type OutportsInterface PortsInterface
 
 type PortsInterface map[string]types.Type
-
-type NodeIO struct {
-	In  NodeInports
-	Out NodeOutports
-}
-
-type NodeInports map[string]chan Msg
-
-type NodeOutports map[string]chan Msg
-
-type Msg struct {
-	Str  string
-	Int  int
-	Bool bool
-}

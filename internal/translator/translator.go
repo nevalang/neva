@@ -18,13 +18,13 @@ func New() translator {
 
 func (t translator) Translate(pmod parser.Module) (core.Module, error) {
 	in, out := t.translateInterface(pmod.In, pmod.Out)
-	return core.CustomModule{
-		In:      in,
-		Out:     out,
-		Deps:    t.translateDeps(pmod.Deps),
-		Workers: core.Workers(pmod.Workers),
-		Net:     t.translateNet(pmod.Net),
-	}, nil
+	return core.NewCustomModule(
+		t.translateDeps(pmod.Deps),
+		in,
+		out,
+		core.Workers(pmod.Workers),
+		t.translateNet(pmod.Net),
+	), nil
 }
 
 func (t translator) translateInterface(pin parser.InportsInterface, pout parser.OutportsInterface) (core.InportsInterface, core.OutportsInterface) {
@@ -45,7 +45,7 @@ func (t translator) translateDeps(pdeps parser.Deps) core.Deps {
 	deps := core.Deps{}
 	for name, pio := range pdeps {
 		in, out := t.translateInterface(pio.In, pio.Out)
-		deps[name] = core.ModuleInterface{
+		deps[name] = core.Interface{
 			In:  in,
 			Out: out,
 		}

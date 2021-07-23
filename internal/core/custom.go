@@ -5,14 +5,19 @@ import (
 )
 
 type CustomModule struct {
-	Deps    Deps
-	In      InportsInterface
-	Out     OutportsInterface
-	Workers Workers
-	Net     Net
+	deps    Deps
+	in      InportsInterface
+	out     OutportsInterface
+	workers Workers
+	net     Net
 }
 
-type Deps map[string]ModuleInterface
+func (cm CustomModule) Interface() Interface {
+	return Interface{
+		In:  cm.in,
+		Out: cm.out,
+	}
+}
 
 type Workers map[string]string
 
@@ -28,13 +33,6 @@ type PortPoint struct {
 	Port string
 }
 
-func (cm CustomModule) Interface() ModuleInterface {
-	return ModuleInterface{
-		In:  cm.In,
-		Out: cm.Out,
-	}
-}
-
 const tmpBuf = 0
 
 func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
@@ -42,10 +40,10 @@ func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
 		return NodeIO{}, err
 	}
 
-	nodesIO := make(map[string]NodeIO, len(m.Workers)+2) // workers + io
+	nodesIO := make(map[string]NodeIO, len(m.workers)+2) // workers + io
 
 	// worker nodes
-	for w, dep := range m.Workers {
+	for w, dep := range m.workers {
 		io, err := scope[dep].SpawnWorker(scope)
 		if err != nil {
 			return NodeIO{}, err
@@ -55,21 +53,21 @@ func (m CustomModule) SpawnWorker(scope map[string]Module) (NodeIO, error) {
 
 	// io nodes
 	nodesIO["in"] = NodeIO{
-		Out: make(map[string]chan Msg, len(m.In)),
+		Out: make(map[string]chan Msg, len(m.in)),
 	}
-	for port := range m.In {
+	for port := range m.in {
 		nodesIO["in"].Out[port] = make(chan Msg, tmpBuf)
 	}
 
 	nodesIO["out"] = NodeIO{
 		In: make(map[string]chan Msg),
 	}
-	for port := range m.Out {
+	for port := range m.out {
 		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
 	}
 
-	net := make([]Connection, len(m.Net))
-	for i, s := range m.Net {
+	net := make([]Connection, len(m.net))
+	for i, s := range m.net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for i, receiver := range s.Recievers {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
@@ -110,12 +108,12 @@ func (m CustomModule) connect(c Connection) {
 }
 
 func (m CustomModule) resolveDeps(env map[string]Module) error {
-	for dep := range m.Deps {
+	for dep := range m.deps {
 		mod, ok := env[dep]
 		if !ok {
 			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
 		}
-		if err := checkAllPorts(mod.Interface(), m.Deps[dep]); err != nil {
+		if err := checkAllPorts(mod.Interface(), m.deps[dep]); err != nil {
 			return fmt.Errorf("ports incompatibility on module '%s': %w", dep, err)
 		}
 	}
@@ -127,7 +125,7 @@ type Connection struct {
 	Receivers []chan Msg
 }
 
-func checkAllPorts(got, want ModuleInterface) error {
+func checkAllPorts(got, want Interface) error {
 	if err := checkPorts(
 		PortsInterface(got.In),
 		PortsInterface(want.In),
@@ -165,5 +163,9 @@ func checkPorts(got, want PortsInterface) error {
 		}
 	}
 
+	return nil
+}
+
+func NewCustomModule(Deps, InportsInterface, OutportsInterface, Workers, Net) Module {
 	return nil
 }
