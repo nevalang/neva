@@ -5,7 +5,6 @@ import (
 )
 
 type jsonParser struct {
-	validator Validator
 }
 
 func (p jsonParser) Parse(bb []byte) (Module, error) {

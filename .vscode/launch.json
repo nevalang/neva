@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/fbp",
-      "args": ["parse", "${workspaceFolder}/examples/sum/sum.yaml"]
+      "args": ["run", "${workspaceFolder}/examples/sum/sum.yaml"]
     },
     {
       "name": "json",
@@ -18,7 +18,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/fbp",
-      "args": ["parse", "${workspaceFolder}/examples/sum/sum.json"]
+      "args": ["run", "${workspaceFolder}/examples/sum/sum.json"]
     }
   ]
 }

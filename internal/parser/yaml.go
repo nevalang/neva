@@ -11,8 +11,5 @@ func (p yamlParser) Parse(bb []byte) (Module, error) {
 	if err := yaml.Unmarshal(bb, &mod); err != nil {
 		return Module{}, err
 	}
-	if err := p.validator.Validate(mod); err != nil {
-		return Module{}, err
-	}
 	return mod, nil
 }
