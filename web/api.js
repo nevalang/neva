@@ -1,3 +1,1 @@
-export default function (props) {
-  return null
-}
+export default {}
