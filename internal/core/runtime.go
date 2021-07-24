@@ -3,14 +3,17 @@ package core
 import "fmt"
 
 type Runtime struct {
-	env map[string]Module
+	env Env
+	buf uint8
 }
 
-func NewRuntime(env map[string]Module) Runtime {
-	return Runtime{env}
-}
+type Env map[string]Module
 
 const tmpBuf = 0
+
+func NewRuntime(env Env) Runtime {
+	return Runtime{env, tmpBuf}
+}
 
 func (r Runtime) Run(root string) (NodeIO, error) {
 	mod, ok := r.env[root]
@@ -126,6 +129,47 @@ func (m Runtime) connect(c Connection) {
 			}
 		}
 	}
+}
+
+func checkAllPorts(got, want Interface) error {
+	if err := checkPorts(
+		PortsInterface(got.In),
+		PortsInterface(want.In),
+	); err != nil {
+		return fmt.Errorf("incompatible inPorts: %w", err)
+	}
+
+	if err := checkPorts(
+		PortsInterface(got.Out),
+		PortsInterface(want.Out),
+	); err != nil {
+		return fmt.Errorf("incompatible inPorts: %w", err)
+	}
+
+	return nil
+}
+
+func checkPorts(got, want PortsInterface) error {
+	if len(got) < len(want) {
+		return fmt.Errorf(
+			"not enough ports: got %d, want %d",
+			len(got),
+			len(want),
+		)
+	}
+
+	for name := range want {
+		if want[name] != got[name] {
+			return fmt.Errorf(
+				"incompatible types on port '%s': got '%s', want '%s'",
+				name,
+				want[name],
+				got[name],
+			)
+		}
+	}
+
+	return nil
 }
 
 type NodeIO struct {

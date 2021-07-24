@@ -26,10 +26,12 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	r := core.NewRuntime(map[string]core.Module{
-		"+":    std.SumTwo,
-		"root": rmod,
-	})
+	r := core.NewRuntime(
+		core.Env{
+			"+":    std.SumTwo,
+			"root": rmod,
+		},
+	)
 
 	io, err := r.Run("root")
 	if err != nil {

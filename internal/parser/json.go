@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 )
 
-type jsonParser struct {
-}
+type jsonParser struct{}
 
 func (p jsonParser) Parse(bb []byte) (Module, error) {
 	var mod Module

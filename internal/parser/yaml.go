@@ -2,9 +2,7 @@ package parser
 
 import yaml "gopkg.in/yaml.v2"
 
-type yamlParser struct {
-	validator Validator
-}
+type yamlParser struct{}
 
 func (p yamlParser) Parse(bb []byte) (Module, error) {
 	var mod Module
