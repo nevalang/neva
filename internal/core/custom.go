@@ -1,14 +1,14 @@
 package core
 
-type CustomModule struct {
+type customModule struct {
 	deps    Deps
-	in      InportsInterface
-	out     OutportsInterface
+	in      Inport
+	out     Outports
 	workers Workers
 	net     Net
 }
 
-func (cm CustomModule) Interface() Interface {
+func (cm customModule) Interface() Interface {
 	return Interface{
 		In:  cm.in,
 		Out: cm.out,
@@ -25,17 +25,18 @@ type Subscription struct {
 }
 
 type PortPoint struct {
-	Node string
+	Node string // worker or in/out node
 	Port string
 }
 
-type Connection struct {
-	Sender    chan Msg
-	Receivers []chan Msg
-}
-
-func NewCustomModule(deps Deps, in InportsInterface, out OutportsInterface, workers Workers, net Net) Module {
-	return CustomModule{
+func NewCustomModule(
+	deps Deps,
+	in Inport,
+	out Outports,
+	workers Workers,
+	net Net,
+) Module {
+	return customModule{
 		deps:    deps,
 		in:      in,
 		out:     out,

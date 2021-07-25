@@ -5,7 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "yaml",
+      "name": "check yaml",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fbp",
+      "args": ["check", "${workspaceFolder}/examples/sum/sum.yaml"]
+    },
+    {
+      "name": "run yaml",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -13,7 +21,7 @@
       "args": ["run", "${workspaceFolder}/examples/sum/sum.yaml"]
     },
     {
-      "name": "json",
+      "name": "run json",
       "type": "go",
       "request": "launch",
       "mode": "auto",

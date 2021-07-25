@@ -1,0 +1,30 @@
+in:
+  x: int
+out:
+  y: int
+
+deps:
+  "submod":
+    in:
+      in: int
+    out:
+      out: int
+
+workers:
+  summator_worker_1: +
+  summator_worker_2: +
+
+net:
+  in:
+    a:
+      summator_worker_1: [in]
+      summator_worker_2: [in]
+    b:
+      summator_worker_1: [in]
+      summator_worker_2: [in]
+  summator_worker_1:
+    out:
+      out: [sum]
+  summator_worker_2:
+    out:
+      out: [sum]

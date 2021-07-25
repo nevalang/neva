@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/emil14/refactored-garbanzo/internal/types"
@@ -43,7 +44,7 @@ func (v validator) validateDeps(deps Deps) error {
 }
 
 // validatePorts checks that every port has valid type.
-func (v validator) validatePorts(in InportsInterface, out OutportsInterface) error {
+func (v validator) validatePorts(in Inports, out Outports) error {
 	for k, typ := range in {
 		if types.ByName(typ) == types.Unknown {
 			return fmt.Errorf("invalid inports: unknown type '%s' of port '%s'", typ, k)
@@ -70,27 +71,43 @@ func (v validator) validateWorkers(deps Deps, workers Workers) error {
 // validateNet checks that all port connections are type safe.
 // Then it checks that all connections are wired in the right way so the program will not block.
 // Ports, dependencies and workers should be validated before passing here.
-func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps Deps, workers Workers, net Net) error {
+func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Workers, net Net) error {
 	g := Graph{}
 
 	for sender, conns := range net {
 		if sender == "out" {
-			return fmt.Errorf("outport node could not be sender")
+			return errors.New("'out' node could not be sender")
+		}
+
+		var senderOutports Outports
+		if sender == "in" {
+			senderOutports = Outports(in)
+		} else {
+			senderOutports = deps[workers[sender]].Out
 		}
 
 		for outport, conn := range conns {
-			s := PortPoint{
-				Node: sender,
-				Port: outport,
-			}
+			senderOutport := types.ByName(senderOutports[outport])
 
 			rr := []PortPoint{}
 			for receiver, inports := range conn {
 				if receiver == "in" {
-					return fmt.Errorf("inport node could not be receiver")
+					return errors.New("'in' node could not be receiver")
+				}
+
+				var receiverInports Inports
+				if sender == "out" {
+					receiverInports = Inports(out)
+				} else {
+					receiverInports = Inports(deps[workers[sender]].Out)
 				}
 
 				for _, inport := range inports {
+					receiverInport := types.ByName(receiverInports[inport])
+					if senderOutport != receiverInport {
+						return fmt.Errorf("mismatched types")
+					}
+
 					pp := PortPoint{
 						Node: receiver,
 						Port: inport,
@@ -99,63 +116,34 @@ func (v validator) validateNet(in InportsInterface, out OutportsInterface, deps 
 				}
 			}
 
-			g[s] = rr
+			g[PortPoint{
+				Node: sender,
+				Port: outport,
+			}] = rr
 		}
 	}
 
-	// for node, conn := range net {
-
-	// 	var senderType types.Type
-	// 	if conn.Sender.Node == "in" {
-	// 		senderType = types.ByName(in[conn.Sender.Port])
-	// 	} else {
-	// 		senderDepName := workers[conn.Sender.Node]
-	// 		senderOut := deps[senderDepName].Out
-	// 		senderType = types.ByName(senderOut[conn.Sender.Port])
-	// 	}
-
-	// 	for _, receiver := range conn.Recievers {
-	// 		var receiverType types.Type
-	// 		if receiver.Node == "out" {
-	// 			receiverType = types.ByName(out[receiver.Port])
-	// 		} else {
-	// 			receiverDepName := workers[receiver.Node]
-	// 			receiverOut := deps[receiverDepName].In
-	// 			receiverType = types.ByName(receiverOut[receiver.Port])
-	// 		}
-
-	// 		if receiverType != senderType {
-	// 			return fmt.Errorf(
-	// 				"%s.%s = %s VS %s.%s. = %s ",
-	// 				receiver.Node, receiver.Port, receiverType, conn.Sender.Node, conn.Sender.Port, senderType,
-	// 			)
-	// 		}
-
-	// 		g[receiver] = append(g[receiver], conn.Sender)
-	// 	}
-	// }
-
-	return validateFlow("out", in, out, deps, workers, g)
+	return validateOutflow("in", in, out, deps, workers, g)
 }
 
-// validateFlow finds node and checks that all its inports are connected to some other nodes outports.
+// validateOutflow finds node and checks that all its inports are connected to some other nodes outports.
 // Then it does so recursively for every sender-node.
-func validateFlow(node string, in InportsInterface, out OutportsInterface, deps Deps, workers Workers, graph Graph) error {
-	var ports PortsInterface
-	if node == "out" {
-		ports = PortsInterface(out)
+func validateOutflow(sender string, in Inports, out Outports, deps Deps, workers Workers, graph Graph) error {
+	var ports Ports
+	if sender == "out" {
+		ports = Ports(out)
 	} else {
-		depName := workers[node]
-		ports = PortsInterface(deps[depName].In)
+		depName := workers[sender]
+		ports = Ports(deps[depName].In)
 	}
 
 	for port := range ports {
-		pps, ok := graph[PortPoint{Node: node, Port: port}]
+		points, ok := graph[PortPoint{Node: sender, Port: port}]
 		if !ok {
-			return fmt.Errorf("%s port is not wired", port)
+			return fmt.Errorf("'%s' outport of '%s' node is not wired", port, sender)
 		}
-		for _, pp := range pps {
-			if err := validateFlow(pp.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
+		for _, p := range points {
+			if err := validateOutflow(p.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
 				return err
 			}
 		}

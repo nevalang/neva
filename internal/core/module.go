@@ -15,14 +15,17 @@ type Module interface {
 }
 
 type Interface struct {
-	In  InportsInterface
-	Out OutportsInterface
+	In  Inport
+	Out Outports
 }
 
 type Deps map[string]Interface
 
-type InportsInterface PortsInterface
+type Inport PortsInterface
 
-type OutportsInterface PortsInterface
+type Outports PortsInterface
 
-type PortsInterface map[string]types.Type
+type PortsInterface map[string]struct {
+	t   types.Type
+	arr bool
+}

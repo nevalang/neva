@@ -1,28 +1,28 @@
 package parser
 
 type Module struct {
-	In      InportsInterface
-	Out     OutportsInterface
+	In      Inports
+	Out     Outports
 	Deps    Deps
 	Workers Workers
 	Net     Net
 }
 
-type InportsInterface PortsInterface
+type Inports Ports
 
-type OutportsInterface PortsInterface
+type Outports Ports
 
-type PortsInterface map[string]string
+type Ports map[string]string
 
 type Deps map[string]struct {
-	In  InportsInterface
-	Out OutportsInterface
+	In  Inports
+	Out Outports
 }
 
 type Workers map[string]string
 
-type Net map[string]Connections
+type Net map[string]Conns
 
-type Connections map[string]Connection
+type Conns map[string]Conn
 
-type Connection map[string][]string
+type Conn map[string][]string

@@ -5,9 +5,9 @@ import (
 	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
-var SumTwo = core.NewNativeModule(
-	core.InportsInterface{"in": types.Int},
-	core.OutportsInterface{"out": types.Int},
+var SumAll = core.NewNativeModule(
+	core.Inport{"in": types.Int},
+	core.Outports{"out": types.Int},
 	func(io core.NodeIO) {
 		var sum core.Msg
 		var count int
@@ -20,12 +20,6 @@ var SumTwo = core.NewNativeModule(
 			}
 		}
 
-		// IDEA: move this to decorator
-		select {
-		case io.Out["out"] <- sum:
-			return
-		default:
-			go func() { io.Out["out"] <- sum }()
-		}
+		io.Out["out"] <- sum
 	},
 )

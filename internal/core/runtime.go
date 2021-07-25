@@ -3,41 +3,51 @@ package core
 import "fmt"
 
 type Runtime struct {
-	env Env
-	buf uint8
+	scope Modules
+	buf   uint8
 }
 
-type Env map[string]Module
+type Modules map[string]Module
 
 const tmpBuf = 0
 
-func NewRuntime(env Env) Runtime {
-	return Runtime{env, tmpBuf}
+func NewRuntime(scope Modules) Runtime {
+	return Runtime{scope, tmpBuf}
 }
 
 func (r Runtime) Run(root string) (NodeIO, error) {
-	mod, ok := r.env[root]
+	mod, ok := r.scope[root]
 	if !ok {
 		return NodeIO{}, fmt.Errorf("mod not found")
 	}
 
 	if native, ok := mod.(NativeModule); ok {
-		io := r.createIO(native.in, native.out)
+		io := r.nodeIO(native.in, native.out)
 		go native.impl(io)
 		return io, nil
 	}
 
-	custom, ok := r.env[root].(CustomModule)
+	custom, ok := r.scope[root].(customModule)
 	if !ok {
 		return NodeIO{}, fmt.Errorf("mod unknown type")
 	}
 
-	// can we move this?
-	if err := r.resolveDeps(custom.deps); err != nil {
+	if err := r.checkDeps(custom.deps); err != nil {
 		return NodeIO{}, err
 	}
 
-	nodesIO := make(map[string]NodeIO, len(custom.workers)+2) // workers + io
+	// workers + io
+	nodesIO := make(map[string]NodeIO, len(custom.workers)+2)
+
+	// io nodes
+	nodesIO["in"] = r.nodeIO(
+		nil,
+		Outports(custom.in),
+	)
+	nodesIO["out"] = r.nodeIO(
+		Inport(custom.out),
+		nil,
+	)
 
 	// worker nodes
 	for w, dep := range custom.workers {
@@ -48,29 +58,15 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	// io nodes
-	nodesIO["in"] = NodeIO{
-		Out: make(map[string]chan Msg, len(custom.in)),
-	}
-	for port := range custom.in {
-		nodesIO["in"].Out[port] = make(chan Msg, tmpBuf)
-	}
-
-	nodesIO["out"] = NodeIO{
-		In: make(map[string]chan Msg),
-	}
-	for port := range custom.out {
-		nodesIO["out"].In[port] = make(chan Msg, tmpBuf)
-	}
-
-	net := make([]Connection, len(custom.net))
+	// net
+	net := make([]Relations, len(custom.net))
 	for i, s := range custom.net {
 		receivers := make([]chan Msg, len(s.Recievers))
 		for i, receiver := range s.Recievers {
 			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
 		}
 
-		net[i] = Connection{
+		net[i] = Relations{
 			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
 			Receivers: receivers,
 		}
@@ -84,9 +80,9 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 	}, nil
 }
 
-func (r Runtime) resolveDeps(deps Deps) error {
+func (r Runtime) checkDeps(deps Deps) error {
 	for dep := range deps {
-		mod, ok := r.env[dep]
+		mod, ok := r.scope[dep]
 		if !ok {
 			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
 		}
@@ -97,7 +93,7 @@ func (r Runtime) resolveDeps(deps Deps) error {
 	return nil
 }
 
-func (r Runtime) createIO(in InportsInterface, out OutportsInterface) NodeIO {
+func (r Runtime) nodeIO(in Inport, out Outports) NodeIO {
 	inports := make(map[string]chan Msg, len(in))
 	outports := make(map[string]chan Msg, len(in))
 
@@ -111,13 +107,13 @@ func (r Runtime) createIO(in InportsInterface, out OutportsInterface) NodeIO {
 	return NodeIO{inports, outports}
 }
 
-func (r Runtime) connectAll(rels []Connection) {
+func (r Runtime) connectAll(rels []Relations) {
 	for i := range rels {
 		go r.connect(rels[i])
 	}
 }
 
-func (m Runtime) connect(c Connection) {
+func (m Runtime) connect(c Relations) {
 	for msg := range c.Sender {
 		for i := range c.Receivers {
 			r := c.Receivers[i]
@@ -185,4 +181,13 @@ type Msg struct {
 	Str  string
 	Int  int
 	Bool bool
+}
+
+func NewStrMsg(msg string) Msg {
+	return Msg{Str: msg}
+}
+
+type Relations struct {
+	Sender    chan Msg
+	Receivers []chan Msg
 }
