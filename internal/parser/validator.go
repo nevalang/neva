@@ -33,7 +33,7 @@ func (v validator) Validate(mod Module) error {
 	return nil
 }
 
-// validateDeps checks ports of every dependency.
+// validateDeps validates ports of every dependency.
 func (v validator) validateDeps(deps Deps) error {
 	for name, dep := range deps {
 		if err := v.validatePorts(dep.In, dep.Out); err != nil {
@@ -43,7 +43,7 @@ func (v validator) validateDeps(deps Deps) error {
 	return nil
 }
 
-// validatePorts checks that every port has valid type.
+// validatePorts ensures that every port has valid type.
 func (v validator) validatePorts(in Inports, out Outports) error {
 	for k, typ := range in {
 		if types.ByName(typ) == types.Unknown {
