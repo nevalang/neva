@@ -124,7 +124,15 @@ func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Work
 		}
 	}
 
-	return validateOutflow("in", in, out, deps, workers, senderReceivers)
+	if err := validateOutflow("in", in, out, deps, workers, senderReceivers); err != nil {
+		return err
+	}
+
+	return validateInflow("out", in, out, deps, workers, senderReceivers)
+}
+
+func validateInflow(receiver string, in Inports, out Outports, deps Deps, workers Workers, graph Graph) error {
+	return nil // TODO
 }
 
 // validateOutflow finds node and checks that all its inports are connected to some other nodes outports.
