@@ -3,17 +3,13 @@ package core
 import "fmt"
 
 type Runtime struct {
-	scope Modules
+	scope Scope
 	buf   uint8
 }
 
-type Modules map[string]Module
+type Scope map[string]Module
 
 const tmpBuf = 0
-
-func NewRuntime(scope Modules) Runtime {
-	return Runtime{scope, tmpBuf}
-}
 
 func (r Runtime) Run(root string) (NodeIO, error) {
 	mod, ok := r.scope[root]
@@ -36,41 +32,27 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		return NodeIO{}, err
 	}
 
-	// workers + io
-	nodesIO := make(map[string]NodeIO, len(custom.workers)+2)
+	nodesIO := make(NodesIO, 2+len(custom.workers))
 
-	// io nodes
 	nodesIO["in"] = r.nodeIO(
 		nil,
-		Outports(custom.in),
+		OutportsInterface(custom.in),
 	)
 	nodesIO["out"] = r.nodeIO(
-		Inport(custom.out),
+		InportsInterface(custom.out),
 		nil,
 	)
 
-	// worker nodes
 	for w, dep := range custom.workers {
 		io, err := r.Run(dep)
 		if err != nil {
 			return NodeIO{}, err
 		}
+
 		nodesIO[w] = io
 	}
 
-	// net
-	net := make([]Relations, len(custom.net))
-	for i, s := range custom.net {
-		receivers := make([]chan Msg, len(s.Recievers))
-		for i, receiver := range s.Recievers {
-			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
-		}
-
-		net[i] = Relations{
-			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
-			Receivers: receivers,
-		}
-	}
+	net := r.net(custom.net, nodesIO)
 
 	r.connectAll(net)
 
@@ -80,20 +62,39 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 	}, nil
 }
 
+func (r Runtime) net(net Net, nodesIO NodesIO) []Relations {
+	rels := make([]Relations, len(net))
+	for i, s := range net {
+		receivers := make([]chan Msg, len(s.Recievers))
+		for i, receiver := range s.Recievers {
+			receivers[i] = nodesIO[receiver.Node].In[receiver.Port]
+		}
+
+		rels[i] = Relations{
+			Sender:    nodesIO[s.Sender.Node].Out[s.Sender.Port],
+			Receivers: receivers,
+		}
+	}
+	return rels
+}
+
+// checkDeps checks that scope contains all the required modules.
 func (r Runtime) checkDeps(deps Deps) error {
 	for dep := range deps {
 		mod, ok := r.scope[dep]
 		if !ok {
 			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
 		}
+
 		if err := checkAllPorts(mod.Interface(), deps[dep]); err != nil {
 			return fmt.Errorf("ports incompatibility on module '%s': %w", dep, err)
 		}
 	}
+
 	return nil
 }
 
-func (r Runtime) nodeIO(in Inport, out Outports) NodeIO {
+func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface) NodeIO {
 	inports := make(map[string]chan Msg, len(in))
 	outports := make(map[string]chan Msg, len(in))
 
@@ -157,7 +158,7 @@ func checkPorts(got, want PortsInterface) error {
 	for name := range want {
 		if want[name] != got[name] {
 			return fmt.Errorf(
-				"incompatible types on port '%s': got '%s', want '%s'",
+				"incompatible types on port '%s': got '%v', want '%v'",
 				name,
 				want[name],
 				got[name],
@@ -183,11 +184,13 @@ type Msg struct {
 	Bool bool
 }
 
-func NewStrMsg(msg string) Msg {
-	return Msg{Str: msg}
-}
-
 type Relations struct {
 	Sender    chan Msg
 	Receivers []chan Msg
+}
+
+type NodesIO map[string]NodeIO
+
+func NewRuntime(scope Scope) Runtime {
+	return Runtime{scope, tmpBuf}
 }

@@ -2,8 +2,8 @@ package core
 
 type customModule struct {
 	deps    Deps
-	in      Inport
-	out     Outports
+	in      InportsInterface
+	out     OutportsInterface
 	workers Workers
 	net     Net
 }
@@ -25,14 +25,14 @@ type Subscription struct {
 }
 
 type PortPoint struct {
-	Node string // worker or in/out node
+	Node string
 	Port string
 }
 
 func NewCustomModule(
 	deps Deps,
-	in Inport,
-	out Outports,
+	in InportsInterface,
+	out OutportsInterface,
 	workers Workers,
 	net Net,
 ) Module {

@@ -6,8 +6,12 @@ import (
 )
 
 var SumAll = core.NewNativeModule(
-	core.Inport{"in": types.Int},
-	core.Outports{"out": types.Int},
+	core.InportsInterface{
+		"in": core.PortType{Type: types.Int, Arr: true},
+	},
+	core.OutportsInterface{
+		"out": core.PortType{Type: types.Int},
+	},
 	func(io core.NodeIO) {
 		var sum core.Msg
 		var count int
@@ -15,9 +19,6 @@ var SumAll = core.NewNativeModule(
 		for msg := range io.In["in"] {
 			sum.Int += msg.Int
 			count++
-			if count == 2 {
-				break
-			}
 		}
 
 		io.Out["out"] <- sum

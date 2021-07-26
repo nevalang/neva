@@ -27,7 +27,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	}
 
 	r := core.NewRuntime(
-		core.Modules{
+		core.Scope{
 			"+":    std.SumAll,
 			"root": rmod,
 		},

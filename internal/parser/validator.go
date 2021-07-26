@@ -72,7 +72,8 @@ func (v validator) validateWorkers(deps Deps, workers Workers) error {
 // Then it checks that all connections are wired in the right way so the program will not block.
 // Ports, dependencies and workers should be validated before passing here.
 func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Workers, net Net) error {
-	g := Graph{}
+	senderReceivers := Graph{}
+	receiverSenders := Graph{}
 
 	for sender, conns := range net {
 		if sender == "out" {
@@ -87,9 +88,10 @@ func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Work
 		}
 
 		for outport, conn := range conns {
+			senderPoint := PortPoint{Node: sender, Port: outport}
 			senderOutport := types.ByName(senderOutports[outport])
+			receivers := map[PortPoint]struct{}{}
 
-			rr := []PortPoint{}
 			for receiver, inports := range conn {
 				if receiver == "in" {
 					return errors.New("'in' node could not be receiver")
@@ -108,22 +110,21 @@ func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Work
 						return fmt.Errorf("mismatched types")
 					}
 
-					pp := PortPoint{
-						Node: receiver,
-						Port: inport,
+					receiverPoint := PortPoint{Node: receiver, Port: inport}
+					receivers[receiverPoint] = struct{}{}
+					if _, ok := receiverSenders[receiverPoint]; !ok {
+						receiverSenders[receiverPoint] = map[PortPoint]struct{}{}
 					}
-					rr = append(rr, pp)
+
+					receiverSenders[receiverPoint][senderPoint] = struct{}{}
 				}
 			}
 
-			g[PortPoint{
-				Node: sender,
-				Port: outport,
-			}] = rr
+			senderReceivers[senderPoint] = receivers
 		}
 	}
 
-	return validateOutflow("in", in, out, deps, workers, g)
+	return validateOutflow("in", in, out, deps, workers, senderReceivers)
 }
 
 // validateOutflow finds node and checks that all its inports are connected to some other nodes outports.
@@ -142,7 +143,7 @@ func validateOutflow(sender string, in Inports, out Outports, deps Deps, workers
 		if !ok {
 			return fmt.Errorf("'%s' outport of '%s' node is not wired", port, sender)
 		}
-		for _, p := range points {
+		for p := range points {
 			if err := validateOutflow(p.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
 				return err
 			}
@@ -153,7 +154,7 @@ func validateOutflow(sender string, in Inports, out Outports, deps Deps, workers
 }
 
 // Graph maps receiver port with the list of its sender ports.
-type Graph map[PortPoint][]PortPoint
+type Graph map[PortPoint]map[PortPoint]struct{}
 
 type PortPoint struct {
 	Node, Port string

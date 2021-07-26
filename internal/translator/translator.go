@@ -1,6 +1,8 @@
 package translator
 
 import (
+	"strings"
+
 	"github.com/emil14/refactored-garbanzo/internal/core"
 	"github.com/emil14/refactored-garbanzo/internal/parser"
 	"github.com/emil14/refactored-garbanzo/internal/types"
@@ -27,16 +29,19 @@ func (t translator) Translate(pmod parser.Module) (core.Module, error) {
 	), nil
 }
 
-func (t translator) translateInterface(pin parser.Inports, pout parser.Outports) (core.Inport, core.Outports) {
+func (t translator) translateInterface(pin parser.Inports, pout parser.Outports) (core.InportsInterface, core.OutportsInterface) {
 	rin := t.translatePorts(parser.Ports(pin))
 	rout := t.translatePorts(parser.Ports(pout))
-	return core.Inport(rin), core.Outports(rout)
+	return core.InportsInterface(rin), core.OutportsInterface(rout)
 }
 
 func (t translator) translatePorts(pports parser.Ports) core.PortsInterface {
 	cports := core.PortsInterface{}
 	for port, t := range pports {
-		cports[port] = types.ByName(t)
+		cports[port] = core.PortType{
+			Type: types.ByName(t),
+			Arr:  strings.HasSuffix(port, "[]"),
+		}
 	}
 	return cports
 }
