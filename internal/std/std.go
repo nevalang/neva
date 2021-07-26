@@ -5,6 +5,8 @@ import (
 	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
+var in []chan core.Msg
+
 var SumAll = core.NewNativeModule(
 	core.InportsInterface{
 		"in": core.PortType{Type: types.Int, Arr: true},
@@ -13,14 +15,13 @@ var SumAll = core.NewNativeModule(
 		"out": core.PortType{Type: types.Int},
 	},
 	func(io core.NodeIO) {
-		var sum core.Msg
-		var count int
-
-		for msg := range io.In["in"] {
-			sum.Int += msg.Int
-			count++
+		for {
+			sum := core.Msg{}
+			for _, c := range in {
+				msg := <-c
+				sum.Int += msg.Int
+			}
+			io.Out["out"] <- sum
 		}
-
-		io.Out["out"] <- sum
 	},
 )
