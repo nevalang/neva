@@ -40,7 +40,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 
 	inA, _ := io.Inport("a")
 	inB, _ := io.Inport("b")
-	outSum, _ := io.Outport("b")
+	outSum, _ := io.NormOutport("b")
 
 	inA <- runtime.Msg{Int: 5}
 	inB <- runtime.Msg{Int: 2}

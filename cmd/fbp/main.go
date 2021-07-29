@@ -11,8 +11,7 @@ import (
 
 var (
 	t = translator.New()
-	v = parser.NewValidator()
-	p = parser.NewYAMLParser()
+	p = parser.MustNewYAML()
 )
 
 func main() {

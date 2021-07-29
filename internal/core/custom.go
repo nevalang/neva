@@ -18,6 +18,11 @@ func (cm customModule) Interface() Interface {
 }
 
 func (mod customModule) Validate() error {
+	// mod.deps.validate()
+	// mod.in.validate()
+	// mod.out.validate()
+	// mod.workers.validate()
+	// mod.net.validate()
 	return nil
 }
 
