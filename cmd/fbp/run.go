@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/emil14/refactored-garbanzo/internal/core"
+	runtime "github.com/emil14/refactored-garbanzo/internal/core"
 	"github.com/emil14/refactored-garbanzo/internal/std"
 
 	cli "github.com/urfave/cli/v2"
@@ -26,8 +26,8 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	r := core.NewRuntime(
-		core.Scope{
+	r := runtime.New(
+		runtime.Env{
 			"+":    std.SumAll,
 			"root": rmod,
 		},
@@ -38,11 +38,15 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	io.In["a"] <- core.Msg{Int: 5}
-	io.In["b"] <- core.Msg{Int: 2}
+	inA, _ := io.Inport("a")
+	inB, _ := io.Inport("b")
+	outSum, _ := io.Outport("b")
 
-	fmt.Println(<-io.Out["sum"])
-	fmt.Println(<-io.Out["sum"])
+	inA <- runtime.Msg{Int: 5}
+	inB <- runtime.Msg{Int: 2}
+
+	fmt.Println(<-outSum)
+	fmt.Println(<-outSum)
 
 	return nil
 }

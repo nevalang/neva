@@ -13,6 +13,7 @@ var (
 
 type Module interface {
 	Interface() Interface
+	// Compare(Module) error
 }
 
 type Interface struct {
@@ -20,20 +21,8 @@ type Interface struct {
 	Out OutportsInterface
 }
 
-type Deps map[string]Interface
-
-func (d Deps) compat(name string, io Interface) error {
-	for port, t := range io.In {
-		if err := d[name].In[port].Compare(t); err != nil {
-			return err
-		}
-	}
-	for port, t := range io.Out {
-		if err := d[name].Out[port].Compare(t); err != nil {
-			return err
-		}
-	}
-	return nil
+func (i1 Interface) Compare(i2 Interface) error {
+	return PortsInterface(i1.In).Compare(PortsInterface(i2.In))
 }
 
 type InportsInterface PortsInterface

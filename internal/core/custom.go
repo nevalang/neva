@@ -1,5 +1,7 @@
 package core
 
+import "errors"
+
 type customModule struct {
 	deps    Deps
 	in      InportsInterface
@@ -15,7 +17,31 @@ func (cm customModule) Interface() Interface {
 	}
 }
 
+type Deps map[string]Interface
+
+func (d Deps) compat(name string, io Interface) error {
+	for port, t := range io.In {
+		if err := d[name].In[port].Compare(t); err != nil {
+			return err
+		}
+	}
+	for port, t := range io.Out {
+		if err := d[name].Out[port].Compare(t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type Workers map[string]string
+
+func (w Workers) Interface(name string, deps Deps) (Interface, error) {
+	i, ok := deps[name]
+	if !ok {
+		return Interface{}, errors.New("..")
+	}
+	return i, nil
+}
 
 type Net []Subscription
 

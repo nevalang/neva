@@ -1,27 +1,31 @@
 package std
 
 import (
-	"github.com/emil14/refactored-garbanzo/internal/core"
+	runtime "github.com/emil14/refactored-garbanzo/internal/core"
 	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
-var in []chan core.Msg
-
-var SumAll = core.NewNativeModule(
-	core.InportsInterface{
-		"in": core.PortType{Type: types.Int, Arr: true},
-	},
-	core.OutportsInterface{
-		"out": core.PortType{Type: types.Int},
-	},
-	func(io core.NodeIO) {
-		for {
-			sum := core.Msg{}
-			for _, c := range in {
-				msg := <-c
-				sum.Int += msg.Int
+var (
+	input = runtime.InportsInterface{
+		"in": runtime.PortType{Type: types.Int, Arr: true},
+	}
+	output = runtime.OutportsInterface{
+		"out": runtime.PortType{Type: types.Int},
+	}
+	SumAll = runtime.NewNativeModule(
+		input,
+		output,
+		func(io runtime.NodeIO) {
+			in, _ := io.ArrInport("in")
+			out, _ := io.Outport("out")
+			for {
+				sum := runtime.Msg{}
+				for _, c := range in {
+					msg := <-c
+					sum.Int += msg.Int
+				}
+				out <- sum
 			}
-			io.Out["out"] <- sum
-		}
-	},
+		},
+	)
 )
