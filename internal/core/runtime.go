@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -19,33 +20,35 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		return NodeIO{}, fmt.Errorf("mod not found")
 	}
 
-	if native, ok := mod.(NativeModule); ok {
-		io := r.nodeIO(native.in, native.out)
-		go native.impl(io)
+	modInterface := mod.Interface()
+
+	if nmod, ok := mod.(NativeModule); ok {
+		io := r.nodeIO(modInterface.In, modInterface.Out)
+		go nmod.connect(io)
 		return io, nil
 	}
 
-	custom, ok := r.env[root].(customModule)
+	cmod, ok := mod.(customModule)
 	if !ok {
-		return NodeIO{}, fmt.Errorf("mod unknown type")
+		return NodeIO{}, fmt.Errorf("mod '%s' has unknown type %T", root, mod)
 	}
 
-	if err := r.checkDeps(custom.deps); err != nil {
+	if err := r.checkDeps(cmod.deps); err != nil {
 		return NodeIO{}, err
 	}
 
-	nodesIO := make(NodesIO, 2+len(custom.workers))
+	nodesIO := make(NodesIO, 2+len(cmod.workers))
 
 	nodesIO["in"] = r.nodeIO(
 		nil,
-		OutportsInterface(custom.in),
+		OutportsInterface(modInterface.In),
 	)
 	nodesIO["out"] = r.nodeIO(
-		InportsInterface(custom.out),
+		InportsInterface(modInterface.Out),
 		nil,
 	)
 
-	for w, dep := range custom.workers {
+	for w, dep := range cmod.workers {
 		io, err := r.Run(dep)
 		if err != nil {
 			return NodeIO{}, err
@@ -54,36 +57,36 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	net := r.net(custom.net, nodesIO)
+	net := r.net(cmod.net, nodesIO)
 
 	r.connectAll(net)
 
 	return NodeIO{
-		In:  nodeInports(nodesIO["in"].Out),
-		Out: nodeOutports(nodesIO["out"].In),
+		in:  nodeInports(nodesIO["in"].out),
+		out: nodeOutports(nodesIO["out"].in),
 	}, nil
 }
 
-func (r Runtime) net(net Net, nodesIO NodesIO) []relations {
+func (r Runtime) net(net Net, io NodesIO) []relations {
 	rels := []relations{}
 
 	for _, s := range net {
 		receivers := []chan Msg{}
 
 		for _, receiver := range s.Recievers {
-			arrport, err := nodesIO[receiver.Node].ArrInport(receiver.Port)
+			arrport, err := io[receiver.Node].ArrInport(receiver.Port)
 			if err == nil {
 				for _, p := range arrport {
 					receivers = append(receivers, p)
 				}
 				continue
 			}
-			normport, _ := nodesIO[receiver.Node].Inport(receiver.Port)
+			normport, _ := io[receiver.Node].Inport(receiver.Port)
 			receivers = append(receivers, normport)
 		}
 
 		rels = append(rels, relations{
-			Sender:    nodesIO[s.Sender.Node].out[s.Sender.Port],
+			Sender:    io[s.Sender.Node].out[s.Sender.Port],
 			Receivers: receivers,
 		})
 	}
@@ -141,6 +144,90 @@ func (m Runtime) connect(c relations) {
 	}
 }
 
-func New(scope Env) Runtime {
-	return Runtime{scope, tmpBuf}
+func checkAllPorts(got, want Interface) error {
+	if err := checkPorts(
+		PortsInterface(got.In),
+		PortsInterface(want.In),
+	); err != nil {
+		return fmt.Errorf("incompatible inPorts: %w", err)
+	}
+
+	if err := checkPorts(
+		PortsInterface(got.Out),
+		PortsInterface(want.Out),
+	); err != nil {
+		return fmt.Errorf("incompatible inPorts: %w", err)
+	}
+
+	return nil
+}
+
+func checkPorts(got, want PortsInterface) error {
+	if len(got) < len(want) {
+		return fmt.Errorf(
+			"not enough ports: got %d, want %d",
+			len(got),
+			len(want),
+		)
+	}
+
+	for name := range want {
+		if want[name] != got[name] {
+			return fmt.Errorf(
+				"incompatible types on port '%s': got '%v', want '%v'",
+				name,
+				want[name],
+				got[name],
+			)
+		}
+	}
+
+	return nil
+}
+
+func (io NodeIO) Port(name string) (NormalPort, error) {
+	p, ok := io.in[name]
+	if !ok {
+		return nil, errors.New("...")
+	}
+
+	c, ok := p.(NormalPort)
+	if !ok {
+		return nil, errors.New("...")
+	}
+
+	return c, nil
+}
+
+func (io NodeIO) ArrPort(name string) (ArrPort, error) {
+	p, ok := io.in[name]
+	if !ok {
+		return nil, errors.New("...")
+	}
+
+	cc, ok := p.(ArrPort)
+	if !ok {
+		return nil, errors.New("...")
+	}
+
+	return cc, nil
+}
+
+type NodeInports map[string]Port
+
+type NodeOutports map[string]Port
+
+type Port interface{}
+
+type NormalPort chan Msg
+
+type ArrPort []chan Msg
+
+type Relations struct {
+	Sender    chan Msg
+	Receivers []chan Msg
+}
+
+func New(env Env) Runtime {
+	return Runtime{env, tmpBuf}
 }
