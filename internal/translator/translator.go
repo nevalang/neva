@@ -67,7 +67,9 @@ func (t translator) translateNet(pnet parser.Net) core.Net {
 
 			for receiverNode, receiverInports := range conn {
 				for _, inport := range receiverInports {
-					receivers = append(receivers, core.PortPoint{
+					port
+					
+					receivers = append(receivers, core.NormPortPoint{
 						Node: receiverNode,
 						Port: inport,
 					})
@@ -75,7 +77,7 @@ func (t translator) translateNet(pnet parser.Net) core.Net {
 			}
 
 			net = append(net, core.Subscription{
-				Sender:    core.PortPoint{Node: sender, Port: outport},
+				Sender:    core.NormPortPoint{Node: sender, Port: outport},
 				Recievers: receivers,
 			})
 		}

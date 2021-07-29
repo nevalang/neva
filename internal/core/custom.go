@@ -17,6 +17,10 @@ func (cm customModule) Interface() Interface {
 	}
 }
 
+func (mod customModule) Validate() error {
+	return nil
+}
+
 type Deps map[string]Interface
 
 func (d Deps) compat(name string, io Interface) error {
@@ -50,9 +54,18 @@ type Subscription struct {
 	Recievers []PortPoint
 }
 
-type PortPoint struct {
+// PortPoint represents NormPortPoint and ArrPortPoint.
+type PortPoint interface{}
+
+type NormPortPoint struct {
 	Node string
 	Port string
+}
+
+type ArrPortPoint struct {
+	Node  string
+	Port  string
+	Index uint8
 }
 
 func NewCustomModule(

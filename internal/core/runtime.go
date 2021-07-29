@@ -17,7 +17,7 @@ const tmpBuf = 0
 func (r Runtime) Run(root string) (NodeIO, error) {
 	mod, ok := r.env[root]
 	if !ok {
-		return NodeIO{}, fmt.Errorf("mod not found")
+		return NodeIO{}, errModNotFound(root)
 	}
 
 	modInterface := mod.Interface()
@@ -30,7 +30,7 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 
 	cmod, ok := mod.(customModule)
 	if !ok {
-		return NodeIO{}, fmt.Errorf("mod '%s' has unknown type %T", root, mod)
+		return NodeIO{}, errUnknownModType(root, mod)
 	}
 
 	if err := r.checkDeps(cmod.deps); err != nil {
@@ -57,8 +57,7 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	net := r.net(cmod.net, nodesIO)
-
+	net := r.net(nodesIO, cmod.net)
 	r.connectAll(net)
 
 	return NodeIO{
@@ -67,24 +66,26 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 	}, nil
 }
 
-func (r Runtime) net(net Net, io NodesIO) []relations {
+func (r Runtime) net(io NodesIO, net Net) []relations {
 	rels := []relations{}
 
 	for _, s := range net {
 		receivers := []chan Msg{}
 
 		for _, receiver := range s.Recievers {
-			arrport, err := io[receiver.Node].ArrInport(receiver.Port)
+			aport, err := io[receiver.Node].ArrInport(receiver.Port)
 			if err == nil {
-				for _, p := range arrport {
+				for _, p := range aport {
 					receivers = append(receivers, p)
 				}
 				continue
 			}
-			normport, _ := io[receiver.Node].Inport(receiver.Port)
-			receivers = append(receivers, normport)
+			nport, _ := io[receiver.Node].Inport(receiver.Port)
+			receivers = append(receivers, nport)
 		}
 
+		sender := r.Sender(io, s.Sender.Node, s.Sender.Port)
+		
 		rels = append(rels, relations{
 			Sender:    io[s.Sender.Node].out[s.Sender.Port],
 			Receivers: receivers,
@@ -94,12 +95,21 @@ func (r Runtime) net(net Net, io NodesIO) []relations {
 	return rels
 }
 
+func (r Runtime) Sender(io NodesIO, node string, port string) chan Msg {
+	port := io[port].out[node]
+	if isArrPort(port) {}
+}
+
+// func isArrPort(port string) bool {
+
+// }
+
 // checkDeps checks that scope contains all the required modules.
 func (r Runtime) checkDeps(deps Deps) error {
 	for dep := range deps {
 		mod, ok := r.env[dep]
 		if !ok {
-			return fmt.Errorf("%w: '%s'", ErrModNotFound, dep)
+			return errModNotFound(dep)
 		}
 
 		if err := mod.Interface().Compare(deps[dep]); err != nil {
