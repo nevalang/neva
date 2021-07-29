@@ -55,7 +55,15 @@ func castNet(pnet net) core.Net {
 
 	for sender, conns := range pnet {
 
-		// senderPortPoint :=
+// Найти индекс [
+// Если не нашелся, значит это нормальный порт
+// Если нашелся, взять все после [ включительно
+// Убрать префикс и суффикс
+// Оставшееся привести к инту
+// Если не удалось, вернуть ошибку
+// Если удалось, создать порт-массив
+
+  sender[len(sender)-3:]
 
 		for outport, conn := range conns {
 			receivers := []core.PortPoint{}
