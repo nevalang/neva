@@ -74,12 +74,18 @@ func NewCustomModule(
 	out OutportsInterface,
 	workers Workers,
 	net Net,
-) Module {
-	return customModule{
+) (Module, error) {
+	m := customModule{
 		deps:    deps,
 		in:      in,
 		out:     out,
 		workers: workers,
 		net:     net,
 	}
+
+	if err := m.Validate(); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }

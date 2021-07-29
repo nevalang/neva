@@ -65,7 +65,7 @@ func (io NodeIO) Inport(name string) (chan Msg, error) {
 	return np, nil
 }
 
-func (io NodeIO) Outport(name string) (chan Msg, error) {
+func (io NodeIO) NormOutport(name string) (chan Msg, error) {
 	np, err := io.normPort(nodePorts(io.out), name)
 	if err != nil {
 		return nil, errors.New("")

@@ -17,7 +17,7 @@ var (
 		output,
 		func(io runtime.NodeIO) {
 			in, _ := io.ArrInport("in")
-			out, _ := io.Outport("out")
+			out, _ := io.NormOutport("out")
 			for {
 				sum := runtime.Msg{}
 				for _, c := range in {
