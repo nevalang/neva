@@ -12,10 +12,10 @@ var check cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	pmod, err := p.Parse(bb)
+	_, err = p.Parse(bb)
 	if err != nil {
 		return err
 	}
 
-	return v.Validate(pmod)
+	return nil // TODO
 }

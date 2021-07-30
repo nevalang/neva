@@ -5,12 +5,10 @@ import (
 	"os"
 
 	"github.com/emil14/refactored-garbanzo/internal/parser"
-	"github.com/emil14/refactored-garbanzo/internal/translator"
 	cli "github.com/urfave/cli/v2"
 )
 
 var (
-	t = translator.New()
 	p = parser.MustNewYAML()
 )
 

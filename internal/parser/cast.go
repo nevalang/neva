@@ -1,17 +1,27 @@
 package parser
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/emil14/refactored-garbanzo/internal/core"
 	"github.com/emil14/refactored-garbanzo/internal/types"
 )
 
+type caster interface {
+	cast(pmod module) (core.Module, error)
+}
+
 func cast(pmod module) (core.Module, error) {
 	in, out := castInterface(pmod.in, pmod.out)
 	deps := castDeps(pmod.deps)
 	workers := core.Workers(pmod.workers)
-	net := castNet(pmod.net)
+
+	net, err := castNet(pmod.net)
+	if err != nil {
+		return nil, err
+	}
 
 	mod, err := core.NewCustomModule(deps, in, out, workers, net)
 	if err != nil {
@@ -32,7 +42,7 @@ func castPorts(pports Ports) core.PortsInterface {
 	for port, t := range pports {
 		cports[port] = core.PortType{
 			Type: types.ByName(t),
-			Arr:  strings.HasSuffix(port, "[]"),
+			Arr:  strings.HasSuffix(port, "["), // TODO improve
 		}
 	}
 	return cports
@@ -50,41 +60,59 @@ func castDeps(pdeps deps) core.Deps {
 	return deps
 }
 
-func castNet(pnet net) core.Net {
+func castNet(pnet net) (core.Net, error) {
 	net := core.Net{}
 
 	for sender, conns := range pnet {
-
-// Найти индекс [
-// Если не нашелся, СОЗДАТЬ НОрмальный порт
-// Если нашелся, найти индекс ]
-// Если не нашелся, вернкть ошибку
-// Если нашелся, взять всё между
-// ПРивести к инту
-// Если не удалось, вернуть ошибку
-// Если удалось, создать порт-массив
-
-  sender[len(sender)-3:]
-
 		for outport, conn := range conns {
+			senderPortPoint, err := portPoint(sender, outport)
+			if err != nil {
+				return nil, err
+			}
+
 			receivers := []core.PortPoint{}
-
-			for receiverNode, receiverInports := range conn {
+			for receiver, receiverInports := range conn {
 				for _, inport := range receiverInports {
+					receiverPortPoint, err := portPoint(receiver, inport)
+					if err != nil {
+						return nil, err
+					}
 
-					receivers = append(receivers, core.NormPortPoint{ // TODO
-						Node: receiverNode,
-						Port: inport,
-					})
+					receivers = append(receivers, receiverPortPoint)
 				}
 			}
 
 			net = append(net, core.Subscription{
-				Sender:    core.NormPortPoint{Node: sender, Port: outport},
+				Sender:    senderPortPoint,
 				Recievers: receivers,
 			})
 		}
 	}
 
-	return net
+	return net, nil
+}
+
+func portPoint(node string, port string) (core.PortPoint, error) {
+	open := strings.Index(port, "[")
+	if open == -1 {
+		return core.NormPortPoint{Node: node, Port: port}, nil
+	}
+
+	close := strings.Index(port, "]")
+	if close == -1 {
+		return nil, fmt.Errorf("invalid port name")
+	}
+
+	idx, err := strconv.ParseUint(port[open:close], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	if idx > 255 {
+		return nil, fmt.Errorf("port index too big")
+	}
+
+	return core.ArrPortPoint{
+		Node:  node,
+		Index: uint8(idx),
+	}, nil
 }

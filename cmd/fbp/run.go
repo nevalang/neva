@@ -16,12 +16,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	pmod, err := p.Parse(bb)
-	if err != nil {
-		return err
-	}
-
-	rmod, err := t.Translate(pmod)
+	mod, err := p.Parse(bb)
 	if err != nil {
 		return err
 	}
@@ -29,7 +24,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	r := runtime.New(
 		runtime.Env{
 			"+":    std.SumAll,
-			"root": rmod,
+			"root": mod,
 		},
 	)
 

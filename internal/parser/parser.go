@@ -41,19 +41,20 @@ type Marshal func(interface{}) ([]byte, error)
 
 type Cast func(module) (core.Module, error)
 
-func New(u Unmarshal, c Cast) (Parser, error) {
-	if u == nil || c == nil {
-		return Parser{}, fmt.Errorf("unmarshal or cast is nil")
+func New(u Unmarshal, m Marshal, c Cast) (Parser, error) {
+	if u == nil || m == nil || c == nil {
+		return Parser{}, fmt.Errorf("parser constructor err")
 	}
 
 	return Parser{
 		unmarshal: u,
+		marshal:   m,
 		cast:      c,
 	}, nil
 }
 
 func MustNew(u Unmarshal, m Marshal, c Cast) Parser {
-	p, err := New(u, c)
+	p, err := New(u, m, c)
 	if err != nil {
 		panic(err)
 	}
