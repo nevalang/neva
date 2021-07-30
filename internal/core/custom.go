@@ -3,7 +3,7 @@ package core
 import "errors"
 
 type customModule struct {
-	deps    Deps
+	deps    Interfaces
 	in      InportsInterface
 	out     OutportsInterface
 	workers Workers
@@ -18,17 +18,12 @@ func (cm customModule) Interface() Interface {
 }
 
 func (mod customModule) Validate() error {
-	// mod.deps.validate()
-	// mod.in.validate()
-	// mod.out.validate()
-	// mod.workers.validate()
-	// mod.net.validate()
-	return nil
+	return nil // TODO
 }
 
-type Deps map[string]Interface
+type Interfaces map[string]Interface
 
-func (d Deps) compat(name string, io Interface) error {
+func (d Interfaces) Compare(name string, io Interface) error {
 	for port, t := range io.In {
 		if err := d[name].In[port].Compare(t); err != nil {
 			return err
@@ -44,7 +39,7 @@ func (d Deps) compat(name string, io Interface) error {
 
 type Workers map[string]string
 
-func (w Workers) Interface(name string, deps Deps) (Interface, error) {
+func (w Workers) Interface(name string, deps Interfaces) (Interface, error) {
 	i, ok := deps[name]
 	if !ok {
 		return Interface{}, errors.New("..")
@@ -52,14 +47,13 @@ func (w Workers) Interface(name string, deps Deps) (Interface, error) {
 	return i, nil
 }
 
-type Net []Subscription
+type Net []RelationsDef
 
-type Subscription struct {
+type RelationsDef struct {
 	Sender    PortPoint
 	Recievers []PortPoint
 }
 
-// PortPoint represents NormPortPoint and ArrPortPoint.
 type PortPoint interface{}
 
 type NormPortPoint struct {
@@ -74,7 +68,7 @@ type ArrPortPoint struct {
 }
 
 func NewCustomModule(
-	deps Deps,
+	deps Interfaces,
 	in InportsInterface,
 	out OutportsInterface,
 	workers Workers,

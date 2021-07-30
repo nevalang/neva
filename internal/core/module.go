@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 
-	"github.com/emil14/refactored-garbanzo/internal/types"
+	"github.com/emil14/stream/internal/types"
 )
 
 type Module interface {

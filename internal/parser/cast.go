@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/refactored-garbanzo/internal/core"
-	"github.com/emil14/refactored-garbanzo/internal/types"
+	"github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/types"
 )
 
 type caster interface {
@@ -48,8 +48,8 @@ func castPorts(pports Ports) core.PortsInterface {
 	return cports
 }
 
-func castDeps(pdeps deps) core.Deps {
-	deps := core.Deps{}
+func castDeps(pdeps deps) core.Interfaces {
+	deps := core.Interfaces{}
 	for name, pio := range pdeps {
 		in, out := castInterface(pio.In, pio.Out)
 		deps[name] = core.Interface{
@@ -82,7 +82,7 @@ func castNet(pnet net) (core.Net, error) {
 				}
 			}
 
-			net = append(net, core.Subscription{
+			net = append(net, core.RelationsDef{
 				Sender:    senderPortPoint,
 				Recievers: receivers,
 			})
@@ -93,21 +93,24 @@ func castNet(pnet net) (core.Net, error) {
 }
 
 func portPoint(node string, port string) (core.PortPoint, error) {
-	open := strings.Index(port, "[")
-	if open == -1 {
-		return core.NormPortPoint{Node: node, Port: port}, nil
+	opening := strings.Index(port, "[")
+	if opening == -1 {
+		return core.NormPortPoint{
+			Node: node,
+			Port: port,
+		}, nil
 	}
 
-	close := strings.Index(port, "]")
-	if close == -1 {
+	closing := strings.Index(port, "]")
+	if closing == -1 {
 		return nil, fmt.Errorf("invalid port name")
 	}
 
-	idx, err := strconv.ParseUint(port[open:close], 10, 64)
+	idx, err := strconv.ParseUint(port[opening:closing], 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	if idx > 255 {
+	if idx > 255 { // TODO move to core
 		return nil, fmt.Errorf("port index too big")
 	}
 

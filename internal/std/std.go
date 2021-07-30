@@ -1,8 +1,8 @@
 package std
 
 import (
-	runtime "github.com/emil14/refactored-garbanzo/internal/core"
-	"github.com/emil14/refactored-garbanzo/internal/types"
+	runtime "github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/types"
 )
 
 var (

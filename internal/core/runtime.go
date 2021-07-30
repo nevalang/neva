@@ -109,7 +109,7 @@ func (r Runtime) Sender(io NodesIO, node string, port string) chan Msg {
 // }
 
 // checkDeps checks that scope contains all the required modules.
-func (r Runtime) checkDeps(deps Deps) error {
+func (r Runtime) checkDeps(deps Interfaces) error {
 	for dep := range deps {
 		mod, ok := r.env[dep]
 		if !ok {

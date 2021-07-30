@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	runtime "github.com/emil14/refactored-garbanzo/internal/core"
-	"github.com/emil14/refactored-garbanzo/internal/std"
+	runtime "github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/std"
 
 	cli "github.com/urfave/cli/v2"
 )

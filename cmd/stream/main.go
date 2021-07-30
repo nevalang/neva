@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/emil14/refactored-garbanzo/internal/parser"
+	"github.com/emil14/stream/internal/parser"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -14,7 +14,7 @@ var (
 
 func main() {
 	app := cli.App{
-		Name: "fbp",
+		Name: "stream",
 		Commands: []*cli.Command{
 			{
 				Name:   "run",

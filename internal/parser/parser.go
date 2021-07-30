@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 
-	"github.com/emil14/refactored-garbanzo/internal/core"
+	"github.com/emil14/stream/internal/core"
 	"gopkg.in/yaml.v2"
 )
 
