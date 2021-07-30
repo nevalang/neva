@@ -7,10 +7,10 @@ import (
 
 var (
 	input = runtime.InportsInterface{
-		"in": runtime.PortType{Type: types.Int, Arr: true}, // FIXME Size
+		"in": runtime.PortInterface{Type: types.Int, Arr: true}, // FIXME Size
 	}
 	output = runtime.OutportsInterface{
-		"out": runtime.PortType{Type: types.Int},
+		"out": runtime.PortInterface{Type: types.Int},
 	}
 	SumAll = runtime.NewNativeModule(
 		input,

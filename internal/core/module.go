@@ -44,7 +44,7 @@ func (want OutportsInterface) Compare(got OutportsInterface) error {
 	return nil
 }
 
-type PortsInterface map[string]PortType
+type PortsInterface map[string]PortInterface
 
 func (want PortsInterface) Compare(got PortsInterface) error {
 	len1 := len(want)
@@ -62,13 +62,17 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-type PortType struct {
+type PortType interface {
+	Compare(PortType) error
+}
+
+type PortInterface struct { // TODO rename to ArrPortInterface
 	Type types.Type
 	Arr  bool
 	Size uint8
 }
 
-func (pt PortType) String() (s string) {
+func (pt PortInterface) String() (s string) {
 	if pt.Arr {
 		s += " array"
 	}
@@ -76,7 +80,7 @@ func (pt PortType) String() (s string) {
 	return s
 }
 
-func (p1 PortType) Compare(p2 PortType) error {
+func (p1 PortInterface) Compare(p2 PortInterface) error {
 	if p1.Arr != p2.Arr || p1.Type != p2.Type {
 		return errPortTypes(p1, p2)
 	}

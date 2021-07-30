@@ -1,8 +1,8 @@
 package core
 
 type NativeModule struct {
-	in   InportsInterface
-	out  OutportsInterface
+	in      InportsInterface
+	out     OutportsInterface
 	connect func(NodeIO)
 }
 
@@ -19,8 +19,8 @@ func NewNativeModule(
 	impl func(NodeIO),
 ) NativeModule {
 	return NativeModule{
-		in:   in,
-		out:  out,
+		in:      in,
+		out:     out,
 		connect: impl,
 	}
 }

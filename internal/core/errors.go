@@ -21,7 +21,7 @@ func errUnknownModType(name string, mod Module) error {
 	return fmt.Errorf("%w: mod '%s', type %T", ErrUnknownModType, name, mod)
 }
 
-func errPortTypes(want, got PortType) error {
+func errPortTypes(want, got PortInterface) error {
 	return fmt.Errorf("%w: want %s, got %s", ErrPortTypes, want, got)
 }
 

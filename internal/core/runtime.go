@@ -70,37 +70,38 @@ func (r Runtime) Run(root string) (NodeIO, error) {
 func (r Runtime) net(io NodesIO, net Net) []relations {
 	rels := []relations{}
 
-	for _, s := range net {
-		receivers := []chan Msg{}
+	// for _, s := range net {
+	// 	receivers := []chan Msg{}
 
-		for _, receiver := range s.Recievers {
+	// 	for _, receiver := range s.Recievers {
 
-			aport, err := io[receiver.Node].ArrInport(receiver.Port)
-			if err == nil {
-				for _, p := range aport {
-					receivers = append(receivers, p)
-				}
-				continue
-			}
-			nport, _ := io[receiver.Node].Inport(receiver.Port)
-			receivers = append(receivers, nport)
-		}
+	// 		aport, err := io[receiver.Node].ArrInport(receiver.Port)
+	// 		if err == nil {
+	// 			for _, p := range aport {
+	// 				receivers = append(receivers, p)
+	// 			}
+	// 			continue
+	// 		}
+	// 		nport, _ := io[receiver.Node].Inport(receiver.Port)
+	// 		receivers = append(receivers, nport)
+	// 	}
 
-		sender := r.Sender(io, s.Sender.Node, s.Sender.Port)
+	// 	sender := r.Sender(io, s.Sender.Node, s.Sender.Port)
 
-		rels = append(rels, relations{
-			Sender:    io[s.Sender.Node].out[s.Sender.Port],
-			Receivers: receivers,
-		})
-	}
+	// 	rels = append(rels, relations{
+	// 		Sender:    io[s.Sender.Node].out[s.Sender.Port],
+	// 		Receivers: receivers,
+	// 	})
+	// }
 
 	return rels
 }
 
 func (r Runtime) Sender(io NodesIO, node string, port string) chan Msg {
-	port := io[port].out[node]
-	if isArrPort(port) {
-	}
+	// port := io[port].out[node]
+	// if isArrPort(port) {
+	// }
+	return nil // TODO
 }
 
 // func isArrPort(port string) bool {

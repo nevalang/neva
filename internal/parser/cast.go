@@ -40,7 +40,7 @@ func castInterface(pin inports, pout outports) (core.InportsInterface, core.Outp
 func castPorts(pports Ports) core.PortsInterface {
 	cports := core.PortsInterface{}
 	for port, t := range pports {
-		cports[port] = core.PortType{
+		cports[port] = core.PortInterface{
 			Type: types.ByName(t),
 			Arr:  strings.HasSuffix(port, "["), // TODO improve
 		}
