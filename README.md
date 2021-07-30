@@ -1,3 +1,5 @@
+Idea - implement mocker
+
 ```shell
 pkg/
     lib.yml

@@ -14,6 +14,7 @@ type Env map[string]Module
 
 const tmpBuf = 0
 
+// TODO test only native module
 func (r Runtime) Run(root string) (NodeIO, error) {
 	mod, ok := r.env[root]
 	if !ok {
@@ -73,6 +74,7 @@ func (r Runtime) net(io NodesIO, net Net) []relations {
 		receivers := []chan Msg{}
 
 		for _, receiver := range s.Recievers {
+
 			aport, err := io[receiver.Node].ArrInport(receiver.Port)
 			if err == nil {
 				for _, p := range aport {
@@ -85,7 +87,7 @@ func (r Runtime) net(io NodesIO, net Net) []relations {
 		}
 
 		sender := r.Sender(io, s.Sender.Node, s.Sender.Port)
-		
+
 		rels = append(rels, relations{
 			Sender:    io[s.Sender.Node].out[s.Sender.Port],
 			Receivers: receivers,
@@ -97,7 +99,8 @@ func (r Runtime) net(io NodesIO, net Net) []relations {
 
 func (r Runtime) Sender(io NodesIO, node string, port string) chan Msg {
 	port := io[port].out[node]
-	if isArrPort(port) {}
+	if isArrPort(port) {
+	}
 }
 
 // func isArrPort(port string) bool {
@@ -124,7 +127,14 @@ func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface) NodeIO {
 	inports := make(nodeInports, len(in))
 	outports := make(nodeOutports, len(in))
 
-	for port := range in {
+	for port, typ := range in {
+		if typ.Arr {
+			cc := [10]chan Msg{} // TODO
+			for i := range cc {
+				cc[i] = make(chan Msg)
+			}
+			inports[port] = cc
+		}
 		inports[port] = make(chan Msg)
 	}
 	for port := range out {

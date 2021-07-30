@@ -71,6 +71,7 @@ type ArrPortPoint struct {
 	Node  string
 	Port  string
 	Index uint8
+	Size  uint8
 }
 
 func NewCustomModule(
