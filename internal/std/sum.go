@@ -6,15 +6,15 @@ import (
 )
 
 var (
-	input = runtime.InportsInterface{
+	sumInput = runtime.InportsInterface{
 		"in": runtime.PortInterface{Type: types.Int, Arr: true}, // FIXME Size
 	}
-	output = runtime.OutportsInterface{
+	sumOutput = runtime.OutportsInterface{
 		"out": runtime.PortInterface{Type: types.Int},
 	}
-	SumAll = runtime.NewNativeModule(
-		input,
-		output,
+	Sum = runtime.NewNativeModule(
+		sumInput,
+		sumOutput,
 		func(io runtime.NodeIO) {
 			in, _ := io.ArrInport("in")
 			out, _ := io.NormOutport("out")

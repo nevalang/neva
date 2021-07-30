@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// type NodesIO struct {
+// type map[string]NodeIO struct {
 // 	m map[string]NodeIO
 // }
 
@@ -12,35 +12,6 @@ import (
 // 	return NetworkIO{
 // 		m: map[string]NetworkIO{},
 // 	}
-// }
-
-type NodesIO map[string]NodeIO
-
-// func (io NodesIO) Set(k string, v NodeIO) error {
-// 	switch k {
-// 	case "in":
-// 		if v.in != nil {
-// 			return fmt.Errorf("in not nil")
-// 		}
-// 		io[k] = v
-// 		return nil
-// 	case "out":
-// 		if v.out != nil {
-// 			return fmt.Errorf("in not nil")
-// 		}
-// 		io[k] = v
-// 		return nil
-// 	}
-
-// 	if v.in == nil {
-// 		return fmt.Errorf("in nil")
-// 	}
-// 	if v.out == nil {
-// 		return fmt.Errorf("out nil")
-// 	}
-
-// 	io[k] = v
-// 	return nil
 // }
 
 type NodeIO struct {
@@ -56,7 +27,7 @@ type NodeIO struct {
 // 	return NodeIO{in, out}, nil
 // }
 
-func (io NodeIO) Inport(name string) (chan Msg, error) {
+func (io NodeIO) NormInport(name string) (chan Msg, error) {
 	np, err := io.normPort(nodePorts(io.in), name)
 	if err != nil {
 		return nil, errors.New("")

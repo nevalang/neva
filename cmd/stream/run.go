@@ -22,8 +22,8 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	}
 
 	r := runtime.New(
-		runtime.Env{
-			"+":    std.SumAll,
+		map[string]runtime.Module{
+			"+":    std.Sum,
 			"root": mod,
 		},
 	)
@@ -33,8 +33,8 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	inA, _ := io.Inport("a")
-	inB, _ := io.Inport("b")
+	inA, _ := io.NormInport("a")
+	inB, _ := io.NormInport("b")
 	outSum, _ := io.NormOutport("b")
 
 	inA <- runtime.Msg{Int: 5}

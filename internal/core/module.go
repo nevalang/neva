@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/emil14/stream/internal/types"
@@ -62,14 +63,21 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-type PortType interface {
+type PortType interface { // TODO rename to PortInterface
 	Compare(PortType) error
 }
 
 type PortInterface struct { // TODO rename to ArrPortInterface
 	Type types.Type
 	Arr  bool
-	Size uint8
+	// Size uint8
+}
+
+func (p1 PortInterface) Compare(p2 PortInterface) error {
+	if p1.Arr != p2.Arr || p1.Type != p2.Type {
+		return errPortTypes(p1, p2)
+	}
+	return nil
 }
 
 func (pt PortInterface) String() (s string) {
@@ -80,9 +88,17 @@ func (pt PortInterface) String() (s string) {
 	return s
 }
 
-func (p1 PortInterface) Compare(p2 PortInterface) error {
-	if p1.Arr != p2.Arr || p1.Type != p2.Type {
-		return errPortTypes(p1, p2)
+type NormPortType types.Type // TODO use
+
+func (p1 NormPortType) Compare(p2 PortType) error {
+	v, ok := p2.(NormPortType)
+	if !ok {
+		return errors.New("normal port expected")
 	}
+
+	if p1 != v {
+		return fmt.Errorf("expected type '%v', got '%v'", p1, v)
+	}
+
 	return nil
 }

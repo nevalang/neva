@@ -54,17 +54,27 @@ type RelationsDef struct {
 	Recievers []PortPoint
 }
 
-type PortPoint interface{}
+type PortPoint interface {
+	NodeName() string
+}
 
 type NormPortPoint struct {
 	Node string
 	Port string
 }
 
+func (p NormPortPoint) NodeName() string {
+	return p.Node
+}
+
 type ArrPortPoint struct {
 	Node  string
 	Port  string
 	Index uint8
+}
+
+func (p ArrPortPoint) NodeName() string {
+	return p.Node
 }
 
 func NewCustomModule(
