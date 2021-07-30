@@ -129,19 +129,49 @@ func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface) NodeIO {
 
 	for port, typ := range in {
 		if typ.Arr {
-			cc := [10]chan Msg{} // TODO
+			cc := make([]chan Msg, typ.Size)
 			for i := range cc {
 				cc[i] = make(chan Msg)
 			}
 			inports[port] = cc
+			continue
 		}
+
 		inports[port] = make(chan Msg)
 	}
-	for port := range out {
+
+	for port, typ := range out {
+		if typ.Arr {
+			cc := make([]chan Msg, typ.Size)
+			for i := range cc {
+				cc[i] = make(chan Msg)
+			}
+			outports[port] = cc
+			continue
+		}
+
 		outports[port] = make(chan Msg)
 	}
 
 	return NodeIO{inports, outports}
+}
+
+func (r Runtime) Ports(ports PortsInterface) nodePorts {
+	result := nodePorts{}
+
+	for port, typ := range ports {
+		if typ.Arr {
+			cc := make([]chan Msg, typ.Size)
+			for i := range cc {
+				cc[i] = make(chan Msg)
+			}
+			result[port] = cc
+		}
+
+		result[port] = make(chan Msg)
+	}
+
+	return result
 }
 
 func (r Runtime) connectAll(rels []relations) {

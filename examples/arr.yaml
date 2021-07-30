@@ -28,3 +28,8 @@ net:
   w1:
     out:
       out: [x]
+
+      
+in.x -> w1.nums[0]
+in.y -> w1.nums[1]
+w1.sum -> out.res

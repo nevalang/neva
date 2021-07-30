@@ -26,15 +26,6 @@ func (p Parser) Parse(bb []byte) (core.Module, error) {
 	return p.cast(mod)
 }
 
-// func (p Parser) Encode(mod core.Module) ([]byte, error) {
-//  bb := []byte
-//  dto := p.caster.From(mod)
-// 	if err := p.marshal(dto, bb); err != nil {
-// 		return nil, err
-// 	}
-// 	return bb, nil
-// }
-
 type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)

@@ -7,7 +7,7 @@ import (
 
 var (
 	input = runtime.InportsInterface{
-		"in": runtime.PortType{Type: types.Int, Arr: true},
+		"in": runtime.PortType{Type: types.Int, Arr: true}, // FIXME Size
 	}
 	output = runtime.OutportsInterface{
 		"out": runtime.PortType{Type: types.Int},

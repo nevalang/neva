@@ -1,3 +1,13 @@
+# FBP SHELL feature
+
+Make it possible to create modules in memory (or even save to files) and run.
+
+```
+in.x -> w1.in[0]
+in.y -> w1.in[1]
+w1.out.sum -> out.res
+```
+
 Idea - implement mocker
 
 ```shell

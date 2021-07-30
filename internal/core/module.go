@@ -62,13 +62,10 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-type PortType2 interface {
-	Arr()
-}
-
 type PortType struct {
 	Type types.Type
 	Arr  bool
+	Size uint8
 }
 
 func (pt PortType) String() (s string) {
