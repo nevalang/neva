@@ -38,7 +38,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	y, err := io.NormOutport("y")
+	y, err := io.NormOut("y")
 	if err != nil {
 		return err
 	}

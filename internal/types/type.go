@@ -5,7 +5,11 @@ import "fmt"
 type Type uint8
 
 func (t Type) String() string {
-	return tn[t]
+	v, ok := tn[t]
+	if !ok {
+		return "unknown"
+	}
+	return v
 }
 
 const (

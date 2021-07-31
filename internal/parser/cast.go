@@ -9,24 +9,20 @@ import (
 	"github.com/emil14/stream/internal/types"
 )
 
-type caster interface {
-	cast(pmod module) (core.Module, error)
-}
-
 func cast(pmod module) (core.Module, error) {
-	io, err := castInterface(pmod.in, pmod.out)
+	io, err := castInterface(pmod.In, pmod.Out)
 	if err != nil {
 		return nil, err
 	}
 
-	deps, err := castDeps(pmod.deps)
+	deps, err := castDeps(pmod.Deps)
 	if err != nil {
 		return nil, err
 	}
 
-	workers := core.Workers(pmod.workers)
+	workers := core.Workers(pmod.Workers)
 
-	net, err := castNet(pmod.net)
+	net, err := castNet(pmod.Net)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +36,10 @@ func cast(pmod module) (core.Module, error) {
 }
 
 func castInterface(pin inports, pout outports) (core.Interface, error) {
+	if len(pin) == 0 || len(pout) == 0 {
+		return core.Interface{}, fmt.Errorf("ports len 0")
+	}
+
 	rin, err := castPorts(Ports(pin))
 	if err != nil {
 		return core.Interface{}, err
@@ -65,7 +65,7 @@ func castPorts(pports Ports) (core.PortsInterface, error) {
 			return nil, err
 		}
 
-		cports[port] = core.PortInterface{
+		cports[port] = core.PortType{
 			Type: typ,
 			Arr:  strings.HasSuffix(port, "[]"),
 		}
@@ -138,7 +138,7 @@ func portPoint(node string, port string) (core.PortPoint, error) {
 		return nil, fmt.Errorf("invalid port name")
 	}
 
-	idx, err := strconv.ParseUint(port[opening:closing], 10, 64)
+	idx, err := strconv.ParseUint(port[opening+1:closing], 10, 64)
 	if err != nil {
 		return nil, err
 	}

@@ -13,11 +13,11 @@ func (io NodeIO) NormInport(name string) (chan Msg, error) {
 	return nodePorts(io.in).normPort(name)
 }
 
-func (io NodeIO) NormOutport(name string) (chan Msg, error) {
+func (io NodeIO) NormOut(name string) (chan Msg, error) {
 	return nodePorts(io.out).normPort(name)
 }
 
-func (io NodeIO) ArrInport(name string) ([]chan Msg, error) {
+func (io NodeIO) ArrIn(name string) ([]chan Msg, error) {
 	return nodePorts(io.in).arrPort(name)
 }
 

@@ -24,7 +24,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 
 	if nmod, ok := mod.(NativeModule); ok {
 		io := r.nodeIO(modInterface.In, modInterface.Out)
-		go nmod.connect(io)
+		go nmod.impl(io)
 		return io, nil
 	}
 
@@ -109,7 +109,7 @@ func (r Runtime) chanByPoint(p PortPoint, io NodeIO) chan Msg {
 
 		result = arrport[arrprot.Index]
 	} else {
-		normport, err := io.NormOutport(arrprot.Port)
+		normport, err := io.NormOut(arrprot.Port)
 		if err != nil {
 			panic(err)
 		}
@@ -127,9 +127,10 @@ func (r Runtime) resolveDeps(deps Interfaces) error {
 			return errModNotFound(dep)
 		}
 
-		err := mod.Interface().Compare(deps[dep])
+		i := mod.Interface()
+		err := i.Compare(deps[dep])
 		if err != nil {
-			return fmt.Errorf("ports incompatible on module '%s': %w", dep, err)
+			return fmt.Errorf("unresolved dependency '%s': %w", dep, err)
 		}
 	}
 

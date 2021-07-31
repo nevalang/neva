@@ -45,7 +45,7 @@ func (want OutportsInterface) Compare(got OutportsInterface) error {
 	return nil
 }
 
-type PortsInterface map[string]PortInterface
+type PortsInterface map[string]PortType
 
 func (want PortsInterface) Compare(got PortsInterface) error {
 	len1 := len(want)
@@ -55,6 +55,11 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	}
 
 	for name, typ := range want {
+		_, ok := got[name]
+		if !ok {
+			return errPortNotFound(name, typ)
+		}
+
 		if err := typ.Compare(got[name]); err != nil {
 			return errPortInvalid(name, err)
 		}
@@ -63,26 +68,25 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-type PortType interface { // TODO rename to PortInterface
-	Compare(PortType) error
+type PortInterface interface {
+	Compare(PortInterface) error
 }
 
-type PortInterface struct { // TODO rename to ArrPortInterface
+type PortType struct {
 	Type types.Type
 	Arr  bool
-	// Size uint8
 }
 
-func (p1 PortInterface) Compare(p2 PortInterface) error {
+func (p1 PortType) Compare(p2 PortType) error {
 	if p1.Arr != p2.Arr || p1.Type != p2.Type {
 		return errPortTypes(p1, p2)
 	}
 	return nil
 }
 
-func (pt PortInterface) String() (s string) {
+func (pt PortType) String() (s string) {
 	if pt.Arr {
-		s += " array"
+		s += "array"
 	}
 	s += "port of type " + pt.Type.String()
 	return s
@@ -90,7 +94,7 @@ func (pt PortInterface) String() (s string) {
 
 type NormPortType types.Type // TODO use
 
-func (p1 NormPortType) Compare(p2 PortType) error {
+func (p1 NormPortType) Compare(p2 PortInterface) error {
 	v, ok := p2.(NormPortType)
 	if !ok {
 		return errors.New("normal port expected")
