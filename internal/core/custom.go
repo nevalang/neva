@@ -87,6 +87,17 @@ type ArrPortPoint struct {
 	Index uint8
 }
 
+func NewArrPortPoint(node, port string, idx uint64) (ArrPortPoint, error) {
+	if node == "" || port == "" || idx > 255 {
+		return ArrPortPoint{}, errors.New("invalid arrport")
+	}
+	return ArrPortPoint{
+		Node:  node,
+		Port:  port,
+		Index: uint8(idx),
+	}, nil
+}
+
 func (p ArrPortPoint) NodeName() string {
 	return p.Node
 }

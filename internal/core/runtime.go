@@ -5,7 +5,7 @@ import (
 )
 
 type Runtime struct {
-	env   map[string]Module
+	env   map[string]Module // TODO move out
 	cache map[string]bool
 }
 
@@ -60,7 +60,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	net, err := r.net(nodesIO, cmod.net)
+	net, err := r.connections(nodesIO, cmod.net)
 	if err != nil {
 		return NodeIO{}, err
 	}
@@ -73,8 +73,8 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	}, nil
 }
 
-func (r Runtime) net(io map[string]NodeIO, net []RelationsDef) ([]relations, error) {
-	rels := make([]relations, len(net))
+func (r Runtime) connections(io map[string]NodeIO, net []RelationsDef) ([]connection, error) {
+	rels := make([]connection, len(net))
 
 	for i, rel := range net {
 		sender := r.chanByPoint(rel.Sender, io[rel.Sender.NodeName()])
@@ -84,7 +84,7 @@ func (r Runtime) net(io map[string]NodeIO, net []RelationsDef) ([]relations, err
 			receivers[i] = r.chanByPoint(receiver, io[receiver.NodeName()])
 		}
 
-		rels[i] = relations{
+		rels[i] = connection{
 			Sender:    sender,
 			Receivers: receivers,
 		}
@@ -93,28 +93,33 @@ func (r Runtime) net(io map[string]NodeIO, net []RelationsDef) ([]relations, err
 	return rels, nil
 }
 
-func (r Runtime) chanByPoint(p PortPoint, io NodeIO) chan Msg {
+func (r Runtime) chanByPoint(point PortPoint, nodeIO NodeIO) chan Msg {
 	var result chan Msg
 
-	arrprot, ok := p.(ArrPortPoint)
+	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
-		arrport, err := io.ArrOutport(arrprot.Port)
+		arrport, err := nodeIO.ArrOutport(arrpoint.Port)
 		if err != nil {
 			panic(err)
 		}
 
-		if uint8(len(arrport)) < arrprot.Index {
+		if uint8(len(arrport)) < arrpoint.Index {
 			panic("arrport to small")
 		}
 
-		result = arrport[arrprot.Index]
+		result = arrport[arrpoint.Index]
 	} else {
-		normport, err := io.NormOut(arrprot.Port)
+		normPoint, ok := point.(NormPortPoint)
+		if !ok {
+			panic(fmt.Sprintf("%T", point))
+		}
+
+		normPort, err := nodeIO.NormOut(normPoint.Port)
 		if err != nil {
 			panic(err)
 		}
 
-		result = normport
+		result = normPort
 	}
 
 	return result
@@ -166,16 +171,15 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 	return result
 }
 
-func (r Runtime) connectAll(rels []relations) {
-	for i := range rels {
-		go r.connect(rels[i])
+func (r Runtime) connectAll(cc []connection) {
+	for i := range cc {
+		go r.connect(cc[i])
 	}
 }
 
-func (m Runtime) connect(c relations) {
+func (m Runtime) connect(c connection) {
 	for msg := range c.Sender {
-		for i := range c.Receivers {
-			r := c.Receivers[i]
+		for _, r := range c.Receivers {
 			select {
 			case r <- msg:
 				continue

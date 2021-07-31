@@ -65,7 +65,7 @@ type Msg struct {
 	Bool bool
 }
 
-type relations struct {
+type connection struct {
 	Sender    chan Msg
 	Receivers []chan Msg
 }

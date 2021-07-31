@@ -22,7 +22,7 @@ func cast(pmod module) (core.Module, error) {
 
 	workers := core.Workers(pmod.Workers)
 
-	net, err := castNet(pmod.Net)
+	net, err := castNet(pmod.Net) // FIXME
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +65,14 @@ func castPorts(pports Ports) (core.PortsInterface, error) {
 			return nil, err
 		}
 
+		isArr := strings.HasSuffix(port, "[]")
+		if strings.HasSuffix(port, "[]") {
+			port = strings.TrimSuffix(port, "[]")
+		}
+
 		cports[port] = core.PortType{
 			Type: typ,
-			Arr:  strings.HasSuffix(port, "[]"),
+			Arr:  isArr,
 		}
 	}
 
@@ -142,12 +147,10 @@ func portPoint(node string, port string) (core.PortPoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	if idx > 255 { // TODO move to core
-		return nil, fmt.Errorf("port index too big")
-	}
 
-	return core.ArrPortPoint{
-		Node:  node,
-		Index: uint8(idx),
-	}, nil
+	return core.NewArrPortPoint(
+		node,
+		port[:opening],
+		idx,
+	)
 }
