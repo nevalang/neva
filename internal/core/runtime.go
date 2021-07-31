@@ -1,13 +1,11 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 )
 
 type Runtime struct {
-	env map[string]Module
-	// buf   uint8
+	env   map[string]Module
 	cache map[string]bool
 }
 
@@ -79,11 +77,11 @@ func (r Runtime) net(io map[string]NodeIO, net []RelationsDef) ([]relations, err
 	rels := make([]relations, len(net))
 
 	for i, rel := range net {
-		sender := r.port(rel.Sender, io[rel.Sender.NodeName()])
+		sender := r.chanByPoint(rel.Sender, io[rel.Sender.NodeName()])
 
 		receivers := make([]chan Msg, len(rel.Recievers))
 		for i, receiver := range rel.Recievers {
-			receivers[i] = r.port(receiver, io[receiver.NodeName()])
+			receivers[i] = r.chanByPoint(receiver, io[receiver.NodeName()])
 		}
 
 		rels[i] = relations{
@@ -95,7 +93,7 @@ func (r Runtime) net(io map[string]NodeIO, net []RelationsDef) ([]relations, err
 	return rels, nil
 }
 
-func (r Runtime) port(p PortPoint, io NodeIO) chan Msg {
+func (r Runtime) chanByPoint(p PortPoint, io NodeIO) chan Msg {
 	var result chan Msg
 
 	arrprot, ok := p.(ArrPortPoint)
@@ -187,6 +185,15 @@ func (m Runtime) connect(c relations) {
 	}
 }
 
+type Port interface{}
+
+func New(env map[string]Module) Runtime {
+	return Runtime{
+		env:   env,
+		cache: map[string]bool{},
+	}
+}
+
 // func checkAllPorts(got, want Interface) error {
 // 	if err := checkPorts(
 // 		PortsInterface(got.In),
@@ -227,53 +234,3 @@ func (m Runtime) connect(c relations) {
 
 // 	return nil
 // }
-
-func (io NodeIO) Port(name string) (NormalPort, error) {
-	p, ok := io.in[name]
-	if !ok {
-		return nil, errors.New("...")
-	}
-
-	c, ok := p.(NormalPort)
-	if !ok {
-		return nil, errors.New("...")
-	}
-
-	return c, nil
-}
-
-func (io NodeIO) ArrPort(name string) (ArrPort, error) {
-	p, ok := io.in[name]
-	if !ok {
-		return nil, errors.New("...")
-	}
-
-	cc, ok := p.(ArrPort)
-	if !ok {
-		return nil, errors.New("...")
-	}
-
-	return cc, nil
-}
-
-type NodeInports map[string]Port
-
-type NodeOutports map[string]Port
-
-type Port interface{}
-
-type NormalPort chan Msg
-
-type ArrPort []chan Msg
-
-type Relations struct {
-	Sender    chan Msg
-	Receivers []chan Msg
-}
-
-func New(env map[string]Module) Runtime {
-	return Runtime{
-		env:   env,
-		cache: map[string]bool{},
-	}
-}

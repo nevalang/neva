@@ -33,15 +33,19 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	inA, _ := io.NormInport("a")
-	inB, _ := io.NormInport("b")
-	outSum, _ := io.NormOutport("b")
+	x, err := io.NormInport("x")
+	if err != nil {
+		return err
+	}
 
-	inA <- runtime.Msg{Int: 5}
-	inB <- runtime.Msg{Int: 2}
+	y, err := io.NormOutport("y")
+	if err != nil {
+		return err
+	}
 
-	fmt.Println(<-outSum)
-	fmt.Println(<-outSum)
+	x <- runtime.Msg{Int: 42}
+
+	fmt.Println(<-y)
 
 	return nil
 }
