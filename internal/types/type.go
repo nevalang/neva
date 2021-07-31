@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 type Type uint8
 
 func (t Type) String() string {
@@ -7,8 +9,7 @@ func (t Type) String() string {
 }
 
 const (
-	Unknown Type = iota
-	Int
+	Int Type = iota + 1
 	Str
 	Bool
 )
@@ -17,18 +18,17 @@ type typeNames map[Type]string
 
 var (
 	tn = typeNames{
-		Unknown: "unknown",
-		Int:     "int",
-		Str:     "str",
-		Bool:    "bool",
+		Int:  "int",
+		Str:  "str",
+		Bool: "bool",
 	}
 )
 
-func ByName(s string) Type {
+func ByName(s string) (Type, error) {
 	for k, v := range tn {
 		if v == s {
-			return k
+			return k, nil
 		}
 	}
-	return Unknown
+	return 0, fmt.Errorf("no type has name '%s'", s)
 }

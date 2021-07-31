@@ -1,6 +1,9 @@
 package core
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type customModule struct {
 	deps    Interfaces
@@ -18,7 +21,18 @@ func (cm customModule) Interface() Interface {
 }
 
 func (mod customModule) Validate() error {
-	return nil // TODO
+	if err := mod.validatePorts(mod.in, mod.out); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (mod customModule) validatePorts(in InportsInterface, out OutportsInterface) error {
+	if len(in) == 0 || len(out) == 0 {
+		return fmt.Errorf("ports len 0")
+	}
+	return nil
 }
 
 type Interfaces map[string]Interface
@@ -84,7 +98,7 @@ func NewCustomModule(
 	workers Workers,
 	net Net,
 ) (Module, error) {
-	m := customModule{
+	mod := customModule{
 		deps:    deps,
 		in:      in,
 		out:     out,
@@ -92,9 +106,9 @@ func NewCustomModule(
 		net:     net,
 	}
 
-	if err := m.Validate(); err != nil {
+	if err := mod.Validate(); err != nil {
 		return nil, err
 	}
 
-	return m, nil
+	return mod, nil
 }

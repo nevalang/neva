@@ -14,8 +14,16 @@ type caster interface {
 }
 
 func cast(pmod module) (core.Module, error) {
-	in, out := castInterface(pmod.in, pmod.out)
-	deps := castDeps(pmod.deps)
+	io, err := castInterface(pmod.in, pmod.out)
+	if err != nil {
+		return nil, err
+	}
+
+	deps, err := castDeps(pmod.deps)
+	if err != nil {
+		return nil, err
+	}
+
 	workers := core.Workers(pmod.workers)
 
 	net, err := castNet(pmod.net)
@@ -23,7 +31,7 @@ func cast(pmod module) (core.Module, error) {
 		return nil, err
 	}
 
-	mod, err := core.NewCustomModule(deps, in, out, workers, net)
+	mod, err := core.NewCustomModule(deps, io.In, io.Out, workers, net)
 	if err != nil {
 		return nil, err
 	}
@@ -31,33 +39,57 @@ func cast(pmod module) (core.Module, error) {
 	return mod, nil
 }
 
-func castInterface(pin inports, pout outports) (core.InportsInterface, core.OutportsInterface) {
-	rin := castPorts(Ports(pin))
-	rout := castPorts(Ports(pout))
-	return core.InportsInterface(rin), core.OutportsInterface(rout)
+func castInterface(pin inports, pout outports) (core.Interface, error) {
+	rin, err := castPorts(Ports(pin))
+	if err != nil {
+		return core.Interface{}, err
+	}
+
+	rout, err := castPorts(Ports(pout))
+	if err != nil {
+		return core.Interface{}, err
+	}
+
+	return core.Interface{
+		In:  core.InportsInterface(rin),
+		Out: core.OutportsInterface(rout),
+	}, nil
 }
 
-func castPorts(pports Ports) core.PortsInterface {
+func castPorts(pports Ports) (core.PortsInterface, error) {
 	cports := core.PortsInterface{}
+
 	for port, t := range pports {
+		typ, err := types.ByName(t)
+		if err != nil {
+			return nil, err
+		}
+
 		cports[port] = core.PortInterface{
-			Type: types.ByName(t),
-			Arr:  strings.HasSuffix(port, "["), // TODO improve
+			Type: typ,
+			Arr:  strings.HasSuffix(port, "[]"),
 		}
 	}
-	return cports
+
+	return cports, nil
 }
 
-func castDeps(pdeps deps) core.Interfaces {
+func castDeps(pdeps deps) (core.Interfaces, error) {
 	deps := core.Interfaces{}
+
 	for name, pio := range pdeps {
-		in, out := castInterface(pio.In, pio.Out)
+		io, err := castInterface(pio.In, pio.Out)
+		if err != nil {
+			return nil, err
+		}
+
 		deps[name] = core.Interface{
-			In:  in,
-			Out: out,
+			In:  io.In,
+			Out: io.Out,
 		}
 	}
-	return deps
+
+	return deps, nil
 }
 
 func castNet(pnet net) (core.Net, error) {
