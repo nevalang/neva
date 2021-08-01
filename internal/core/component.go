@@ -1,9 +1,6 @@
 package core
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/emil14/stream/internal/types"
 )
 
@@ -17,34 +14,16 @@ type Interface struct {
 }
 
 func (want Interface) Compare(got Interface) error {
-	if err := want.In.Compare(got.In); err != nil {
+	if err := PortsInterface(want.In).Compare(PortsInterface(got.In)); err != nil {
 		return err
 	}
 
-	return want.Out.Compare(got.Out)
+	return PortsInterface(want.Out).Compare(PortsInterface(got.Out))
 }
 
 type InportsInterface PortsInterface
 
-func (want InportsInterface) Compare(got InportsInterface) error {
-	err := PortsInterface(want).Compare(PortsInterface(got))
-	if err != nil {
-		return fmt.Errorf("incompatible inports: %w", err)
-	}
-
-	return nil
-}
-
 type OutportsInterface PortsInterface
-
-func (want OutportsInterface) Compare(got OutportsInterface) error {
-	err := PortsInterface(want).Compare(PortsInterface(got))
-	if err != nil {
-		return fmt.Errorf("incompatible outports: %w", err)
-	}
-
-	return nil
-}
 
 type PortsInterface map[string]PortType
 
@@ -67,10 +46,6 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-type PortInterface interface {
-	Compare(PortInterface) error
-}
-
 type PortType struct {
 	Type types.Type
 	Arr  bool
@@ -90,19 +65,4 @@ func (pt PortType) String() (s string) {
 	}
 
 	return s + "port of type " + pt.Type.String()
-}
-
-type NormPortType types.Type
-
-func (p1 NormPortType) Compare(p2 PortInterface) error {
-	v, ok := p2.(NormPortType)
-	if !ok {
-		return errors.New("normal port expected")
-	}
-
-	if p1 != v {
-		return fmt.Errorf("expected type '%v', got '%v'", p1, v)
-	}
-
-	return nil
 }

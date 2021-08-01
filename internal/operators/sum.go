@@ -1,4 +1,4 @@
-package std
+package operators
 
 import (
 	"github.com/emil14/stream/internal/core"

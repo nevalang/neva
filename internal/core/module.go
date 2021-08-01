@@ -44,22 +44,6 @@ func (mod module) validatePorts(in InportsInterface, out OutportsInterface) erro
 
 type Interfaces map[string]Interface
 
-func (d Interfaces) Compare(name string, io Interface) error {
-	for port, t := range io.In {
-		if err := d[name].In[port].Compare(t); err != nil {
-			return err
-		}
-	}
-
-	for port, t := range io.Out {
-		if err := d[name].Out[port].Compare(t); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 type Net map[PortPoint]map[PortPoint]struct{}
 
 type PortPoint interface {

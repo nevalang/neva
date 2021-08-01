@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 
 	runtime "github.com/emil14/stream/internal/core"
-	"github.com/emil14/stream/internal/std"
+	"github.com/emil14/stream/internal/operators"
 
 	cli "github.com/urfave/cli/v2"
 )
@@ -23,7 +23,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 
 	r := runtime.New(
 		map[string]runtime.Component{
-			"+":    std.Sum,
+			"+":    operators.Sum,
 			"root": mod,
 		},
 	)
