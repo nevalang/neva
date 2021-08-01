@@ -1,20 +1,19 @@
 package core
 
-type nativeModule struct {
+type operator struct {
 	in   InportsInterface
 	out  OutportsInterface
 	impl func(NodeIO) error // should return error if io invalid
 }
 
-func (a nativeModule) Interface() Interface {
+func (a operator) Interface() Interface {
 	return Interface{
 		In:  a.in,
 		Out: a.out,
 	}
 }
 
-// TODO use?
-func (nmod nativeModule) startStream(io NodeIO) error {
+func (op operator) startStream(io NodeIO) error {
 	// check io
 	// return err if needed
 	// run go impl
@@ -22,12 +21,12 @@ func (nmod nativeModule) startStream(io NodeIO) error {
 	return nil
 }
 
-func NewNativeModule(
+func NewOperator(
 	in InportsInterface,
 	out OutportsInterface,
 	impl func(NodeIO) error,
-) nativeModule {
-	return nativeModule{
+) operator {
+	return operator{
 		in:   in,
 		out:  out,
 		impl: impl,

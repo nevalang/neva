@@ -5,7 +5,7 @@ import (
 )
 
 type Runtime struct {
-	env   map[string]Module // TODO move out
+	env   map[string]Component // TODO move out
 	cache map[string]bool
 }
 
@@ -22,7 +22,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 
 	modInterface := mod.Interface()
 
-	if nmod, ok := mod.(nativeModule); ok {
+	if nmod, ok := mod.(operator); ok {
 		io := r.nodeIO(modInterface.In, modInterface.Out)
 		if err := nmod.impl(io); err != nil {
 			return NodeIO{}, err
@@ -31,7 +31,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 		return io, nil
 	}
 
-	cmod, ok := mod.(customModule)
+	cmod, ok := mod.(module)
 	if !ok {
 		return NodeIO{}, errUnknownModType(name, mod)
 	}
@@ -165,7 +165,7 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 
 	for port, typ := range ports {
 		if typ.Arr {
-			cc := make([]chan Msg, tmpArrSize)
+			cc := make([]chan Msg, tmpArrSize) // FIXME
 			for i := range cc {
 				cc[i] = make(chan Msg)
 			}
@@ -202,7 +202,7 @@ func (m Runtime) startStream(s stream) {
 
 type Port interface{}
 
-func New(env map[string]Module) Runtime {
+func New(env map[string]Component) Runtime {
 	return Runtime{
 		env:   env,
 		cache: map[string]bool{},

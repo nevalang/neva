@@ -22,7 +22,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	}
 
 	r := runtime.New(
-		map[string]runtime.Module{
+		map[string]runtime.Component{
 			"+":    std.Sum,
 			"root": mod,
 		},

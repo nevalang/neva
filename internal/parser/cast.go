@@ -9,7 +9,7 @@ import (
 	"github.com/emil14/stream/internal/types"
 )
 
-func cast(pmod module) (core.Module, error) {
+func cast(pmod module) (core.Component, error) {
 	io, err := castInterface(pmod.In, pmod.Out)
 	if err != nil {
 		return nil, err

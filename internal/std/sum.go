@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	Sum = core.NewNativeModule(
+	Sum = core.NewOperator(
 		core.InportsInterface{
 			inportName: core.PortType{
 				Type: types.Int,

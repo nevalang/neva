@@ -17,7 +17,7 @@ type Parser struct {
 	cast      Cast
 }
 
-func (p Parser) Parse(bb []byte) (core.Module, error) {
+func (p Parser) Parse(bb []byte) (core.Component, error) {
 	var mod module
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)
 
-type Cast func(module) (core.Module, error)
+type Cast func(module) (core.Component, error)
 
 func New(u Unmarshal, m Marshal, c Cast) (Parser, error) {
 	if u == nil || m == nil || c == nil {

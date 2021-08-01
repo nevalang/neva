@@ -18,7 +18,7 @@ func errModNotFound(name string) error {
 	return fmt.Errorf("%w: %s", ErrModNotFound, name)
 }
 
-func errUnknownModType(name string, mod Module) error {
+func errUnknownModType(name string, mod Component) error {
 	return fmt.Errorf("%w: mod '%s', type %T", ErrUnknownModType, name, mod)
 }
 
