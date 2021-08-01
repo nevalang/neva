@@ -25,6 +25,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	if nmod, ok := mod.(nativeModule); ok {
 		io := r.nodeIO(modInterface.In, modInterface.Out)
 		go nmod.impl(io)
+
 		return io, nil
 	}
 
@@ -37,6 +38,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 		if err := r.resolveDeps(cmod.deps); err != nil {
 			return NodeIO{}, err
 		}
+
 		r.cache[name] = true
 	}
 
@@ -77,16 +79,14 @@ func (rt Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connecti
 	rels := make([]connection, len(net))
 
 	for i, rel := range net {
-		senderOut := io[rel.Sender.Node()].Out
-		sender, err := rt.chanByPoint(rel.Sender, nodePorts(senderOut))
+		sender, err := rt.chanByPoint(rel.Sender, nodePorts(io[rel.Sender.Node()].Out))
 		if err != nil {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
 
-		receivers := make([]chan Msg, len(rel.Recievers))
-		for i, r := range rel.Recievers {
-			receiverIn := io[r.Node()].In
-			receiver, err := rt.chanByPoint(r, nodePorts(receiverIn))
+		receivers := make([]chan Msg, len(rel.Receivers))
+		for i, r := range rel.Receivers {
+			receiver, err := rt.chanByPoint(r, nodePorts(io[r.Node()].In))
 			if err != nil {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
@@ -104,8 +104,6 @@ func (rt Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connecti
 }
 
 func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error) {
-	var result chan Msg
-
 	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
 		arrport, err := ports.arrPort(arrpoint.port)
@@ -117,23 +115,20 @@ func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error)
 			return nil, fmt.Errorf("arrport to small")
 		}
 
-		result = arrport[arrpoint.idx]
-	} else {
-		normPoint, ok := point.(NormPortPoint)
-		if !ok {
-			return nil, fmt.Errorf("port point of unknown type %T", point)
-		}
-
-		normPort, err := ports.normPort(normPoint.port)
-		if err != nil {
-			return nil, err
-
-		}
-
-		result = normPort
+		return arrport[arrpoint.idx], nil
 	}
 
-	return result, nil
+	normPoint, ok := point.(NormPortPoint)
+	if !ok {
+		return nil, fmt.Errorf("port point of unknown type %T", point)
+	}
+
+	normPort, err := ports.normPort(normPoint.port)
+	if err != nil {
+		return nil, err
+	}
+
+	return normPort, nil
 }
 
 func (r Runtime) resolveDeps(deps Interfaces) error {
@@ -143,8 +138,7 @@ func (r Runtime) resolveDeps(deps Interfaces) error {
 			return errModNotFound(dep)
 		}
 
-		i := mod.Interface()
-		err := i.Compare(deps[dep])
+		err := mod.Interface().Compare(deps[dep])
 		if err != nil {
 			return fmt.Errorf("unresolved dependency '%s': %w", dep, err)
 		}

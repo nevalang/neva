@@ -121,7 +121,7 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 
 			net = append(net, core.StreamDef{
 				Sender:    senderPortPoint,
-				Recievers: receivers,
+				Receivers: receivers,
 			})
 		}
 	}

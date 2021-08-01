@@ -32,6 +32,7 @@ func (mod customModule) validatePorts(in InportsInterface, out OutportsInterface
 	if len(in) == 0 || len(out) == 0 {
 		return fmt.Errorf("ports len 0")
 	}
+
 	return nil
 }
 
@@ -43,11 +44,13 @@ func (d Interfaces) Compare(name string, io Interface) error {
 			return err
 		}
 	}
+
 	for port, t := range io.Out {
 		if err := d[name].Out[port].Compare(t); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -58,12 +61,13 @@ func (w Workers) Interface(name string, deps Interfaces) (Interface, error) {
 	if !ok {
 		return Interface{}, errors.New("..")
 	}
+
 	return i, nil
 }
 
 type StreamDef struct {
 	Sender    PortPoint
-	Recievers []PortPoint
+	Receivers []PortPoint
 }
 
 type PortPoint interface {

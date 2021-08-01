@@ -20,6 +20,7 @@ func (want Interface) Compare(got Interface) error {
 	if err := want.In.Compare(got.In); err != nil {
 		return err
 	}
+
 	return want.Out.Compare(got.Out)
 }
 
@@ -48,10 +49,8 @@ func (want OutportsInterface) Compare(got OutportsInterface) error {
 type PortsInterface map[string]PortType
 
 func (want PortsInterface) Compare(got PortsInterface) error {
-	len1 := len(want)
-	len2 := len(got)
-	if len1 != len2 {
-		return errPortsLen(len1, len2)
+	if len(want) != len(got) {
+		return errPortsLen(len(want), len(got))
 	}
 
 	for name, typ := range want {
@@ -81,6 +80,7 @@ func (p1 PortType) Compare(p2 PortType) error {
 	if p1.Arr != p2.Arr || p1.Type != p2.Type {
 		return errPortTypes(p1, p2)
 	}
+
 	return nil
 }
 
@@ -88,11 +88,13 @@ func (pt PortType) String() (s string) {
 	if pt.Arr {
 		s += "array"
 	}
+
 	s += "port of type " + pt.Type.String()
+
 	return s
 }
 
-type NormPortType types.Type // TODO use
+type NormPortType types.Type
 
 func (p1 NormPortType) Compare(p2 PortInterface) error {
 	v, ok := p2.(NormPortType)

@@ -7,4 +7,5 @@
     "rports",
     "типобезопасности"
   ]
+  // "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yml", "--fast"]
 }
