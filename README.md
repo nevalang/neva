@@ -1,5 +1,7 @@
 # Stream
 
 ```shell
-$ stream run example.yml
+$ cd cmd/stream
+$ go install
+$ stream run ../../examples/arr.yml
 ```

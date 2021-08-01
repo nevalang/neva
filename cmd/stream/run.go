@@ -33,7 +33,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	x, err := io.NormInport("x")
+	x, err := io.NormIn("x")
 	if err != nil {
 		return err
 	}

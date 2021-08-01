@@ -9,7 +9,7 @@ type NodeIO struct {
 	Out nodeOutports
 }
 
-func (io NodeIO) NormInport(name string) (chan Msg, error) {
+func (io NodeIO) NormIn(name string) (chan Msg, error) {
 	return nodePorts(io.In).normPort(name)
 }
 
@@ -21,7 +21,7 @@ func (io NodeIO) ArrIn(name string) ([]chan Msg, error) {
 	return nodePorts(io.In).arrPort(name)
 }
 
-func (io NodeIO) ArrOutport(name string) ([]chan Msg, error) {
+func (io NodeIO) ArrOut(name string) ([]chan Msg, error) {
 	return nodePorts(io.Out).arrPort(name)
 }
 
