@@ -5,21 +5,31 @@ import (
 	"github.com/emil14/stream/internal/types"
 )
 
+const (
+	inportName  = "nums"
+	outportName = "sum"
+)
+
 var (
-	sumIn  = core.PortType{Type: types.Int, Arr: true}
-	sumOut = core.PortType{Type: types.Int}
-
 	Sum = core.NewNativeModule(
-		core.InportsInterface{"nums": sumIn},
-		core.OutportsInterface{"sum": sumOut},
-
+		core.InportsInterface{
+			inportName: core.PortType{
+				Type: types.Int,
+				Arr:  true,
+			},
+		},
+		core.OutportsInterface{
+			outportName: core.PortType{
+				Type: types.Int,
+			},
+		},
 		func(io core.NodeIO) error {
-			in, err := io.ArrIn("nums")
+			in, err := io.ArrIn(inportName)
 			if err != nil {
 				return err
 			}
 
-			out, err := io.NormOut("sum")
+			out, err := io.NormOut(outportName)
 			if err != nil {
 				return err
 			}
@@ -27,7 +37,7 @@ var (
 			go func() {
 				for {
 					sum := core.Msg{}
-					for _, c := range in {
+					for _, c := range in { // FIXME 10 chans
 						msg := <-c
 						sum.Int += msg.Int
 					}

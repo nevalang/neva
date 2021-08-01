@@ -33,6 +33,8 @@ func (mod customModule) validatePorts(in InportsInterface, out OutportsInterface
 		return fmt.Errorf("ports len 0")
 	}
 
+	// TODO check arr points - no holes should be
+
 	return nil
 }
 

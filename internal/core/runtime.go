@@ -11,7 +11,7 @@ type Runtime struct {
 
 const (
 	tmpBuf     = 0
-	tmpArrSize = 10
+	tmpArrSize = 3 // FIXME fixed number leads to deadlock
 )
 
 func (r Runtime) Run(name string) (NodeIO, error) {
