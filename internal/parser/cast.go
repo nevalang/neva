@@ -20,14 +20,12 @@ func cast(pmod module) (core.Module, error) {
 		return nil, err
 	}
 
-	workers := core.Workers(pmod.Workers)
-
 	net, err := castNet(pmod.Net)
 	if err != nil {
 		return nil, err
 	}
 
-	mod, err := core.NewCustomModule(deps, io.In, io.Out, workers, net)
+	mod, err := core.NewCustomModule(deps, io.In, io.Out, pmod.Workers, net)
 	if err != nil {
 		return nil, err
 	}
@@ -36,16 +34,12 @@ func cast(pmod module) (core.Module, error) {
 }
 
 func castInterface(pin inports, pout outports) (core.Interface, error) {
-	if len(pin) == 0 || len(pout) == 0 {
-		return core.Interface{}, fmt.Errorf("ports len 0")
-	}
-
-	rin, err := castPorts(Ports(pin))
+	rin, err := castPorts(ports(pin))
 	if err != nil {
 		return core.Interface{}, err
 	}
 
-	rout, err := castPorts(Ports(pout))
+	rout, err := castPorts(ports(pout))
 	if err != nil {
 		return core.Interface{}, err
 	}
@@ -56,21 +50,20 @@ func castInterface(pin inports, pout outports) (core.Interface, error) {
 	}, nil
 }
 
-func castPorts(pports Ports) (core.PortsInterface, error) {
+func castPorts(pports ports) (core.PortsInterface, error) {
 	cports := core.PortsInterface{}
 
 	for port, t := range pports {
 		typ, err := types.ByName(t)
-		if err != nil {
+		if err != nil { // TODO move to compiler
 			return nil, err
 		}
 
 		portType := core.PortType{Type: typ}
 
 		if strings.HasSuffix(port, "[]") {
-			port = strings.TrimSuffix(port, "[]")
 			portType.Arr = true
-			portType.Size = 3
+			port = strings.TrimSuffix(port, "[]")
 		}
 
 		cports[port] = portType

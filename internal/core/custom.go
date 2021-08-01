@@ -9,8 +9,26 @@ type customModule struct {
 	deps    Interfaces
 	in      InportsInterface
 	out     OutportsInterface
-	workers Workers
+	workers map[string]string
 	net     []StreamDef
+}
+
+func (mod customModule) Incoming(p Port) uint8 {
+	// np, ok := p.(NormPortType)
+	// if ok {
+	// 	//
+	// }
+
+	// ap, ok := p.(ArrPortType)
+	// if !ok {
+	// 	panic("...")
+	// }
+
+	// for _, s := range mod.net {
+	// 	if s[]
+	// }
+
+	return 0
 }
 
 func (cm customModule) Interface() Interface {
@@ -56,17 +74,6 @@ func (d Interfaces) Compare(name string, io Interface) error {
 	return nil
 }
 
-type Workers map[string]string
-
-func (w Workers) Interface(name string, deps Interfaces) (Interface, error) {
-	i, ok := deps[name]
-	if !ok {
-		return Interface{}, errors.New("..")
-	}
-
-	return i, nil
-}
-
 type StreamDef struct {
 	Sender    PortPoint
 	Receivers []PortPoint
@@ -74,7 +81,7 @@ type StreamDef struct {
 
 type PortPoint interface {
 	Node() string
-	Port() string
+	// Port() string
 }
 
 type NormPortPoint struct {
@@ -135,7 +142,7 @@ func NewCustomModule(
 	deps Interfaces,
 	in InportsInterface,
 	out OutportsInterface,
-	workers Workers,
+	workers map[string]string,
 	net []StreamDef,
 ) (Module, error) {
 	mod := customModule{

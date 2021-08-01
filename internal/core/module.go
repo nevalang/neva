@@ -74,7 +74,6 @@ type PortInterface interface {
 type PortType struct {
 	Type types.Type
 	Arr  bool
-	Size uint8 // if Arr false should be 0
 }
 
 func (p1 PortType) Compare(p2 PortType) error {

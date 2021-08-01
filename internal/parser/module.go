@@ -8,11 +8,11 @@ type module struct {
 	Net     net      `yaml:"net"`
 }
 
-type inports Ports
+type inports ports
 
-type outports Ports
+type outports ports
 
-type Ports map[string]string
+type ports map[string]string
 
 type deps map[string]struct {
 	In  inports  `yaml:"in"`

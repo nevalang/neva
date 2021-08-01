@@ -11,7 +11,7 @@ type Runtime struct {
 
 const (
 	tmpBuf     = 0
-	tmpArrSize = 3 // FIXME fixed number leads to deadlock
+	tmpArrSize = 3 // FIXME deadlock possibilities
 )
 
 func (r Runtime) Run(name string) (NodeIO, error) {
@@ -168,7 +168,9 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 			for i := range cc {
 				cc[i] = make(chan Msg)
 			}
+
 			result[port] = cc
+
 			continue
 		}
 

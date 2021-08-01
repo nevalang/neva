@@ -23,6 +23,7 @@ const (
 	Bool
 )
 
+// TODO do nut return error
 func ByName(s string) (Type, error) {
 	switch s {
 	case "int":
