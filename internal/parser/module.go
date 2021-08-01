@@ -1,12 +1,12 @@
 package parser
 
-// custom module.
+// user defined component.
 type module struct {
-	In      inports  `yaml:"in"`
-	Out     outports `yaml:"out"`
-	Deps    deps     `yaml:"deps"`
-	Workers workers  `yaml:"workers"`
-	Net     net      `yaml:"net"`
+	In      inports  `yaml:"in"`      // output ports
+	Out     outports `yaml:"out"`     // input ports
+	Deps    deps     `yaml:"deps"`    // describes dependencies interfaces
+	Workers workers  `yaml:"workers"` // maps workers to components
+	Net     net      `yaml:"net"`     // describes data flow
 }
 
 // input ports.
@@ -24,7 +24,7 @@ type deps map[string]struct {
 	Out outports `yaml:"out"`
 }
 
-// worker -> dep.
+// worker -> dependency.
 type workers map[string]string
 
 // senders -> outports -> receivers -> inports.

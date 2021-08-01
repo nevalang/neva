@@ -7,10 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func MustNewYAML() Parser {
-	return MustNew(yaml.Unmarshal, yaml.Marshal, cast)
-}
-
 type Parser struct {
 	marshal   Marshal
 	unmarshal Unmarshal
@@ -51,4 +47,8 @@ func MustNew(u Unmarshal, m Marshal, c Cast) Parser {
 	}
 
 	return p
+}
+
+func MustNewYAML() Parser {
+	return MustNew(yaml.Unmarshal, yaml.Marshal, cast)
 }
