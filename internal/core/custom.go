@@ -10,7 +10,7 @@ type customModule struct {
 	in      InportsInterface
 	out     OutportsInterface
 	workers Workers
-	net     Net
+	net     []StreamDef
 }
 
 func (cm customModule) Interface() Interface {
@@ -61,9 +61,7 @@ func (w Workers) Interface(name string, deps Interfaces) (Interface, error) {
 	return i, nil
 }
 
-type Net []RelationsDef
-
-type RelationsDef struct {
+type StreamDef struct {
 	Sender    PortPoint
 	Recievers []PortPoint
 }
@@ -107,7 +105,7 @@ func NewCustomModule(
 	in InportsInterface,
 	out OutportsInterface,
 	workers Workers,
-	net Net,
+	net []StreamDef,
 ) (Module, error) {
 	mod := customModule{
 		deps:    deps,

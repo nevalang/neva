@@ -20,7 +20,7 @@ package parser
 // 	if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
 // 		return err
 // 	}
-// 	if err := v.validateNet(mod.In, mod.Out, mod.Deps, mod.Workers, mod.Net); err != nil {
+// 	if err := v.validate[]RelationsDef(mod.In, mod.Out, mod.Deps, mod.Workers, mod.[]RelationsDef); err != nil {
 // 		return err
 // 	}
 // 	return nil
@@ -61,10 +61,10 @@ package parser
 // 	return nil
 // }
 
-// // validateNet checks that all port connections are type safe.
+// // validate[]RelationsDef checks that all port connections are type safe.
 // // Then it checks that all connections are wired in the right way so the program will not block.
 // // Ports, dependencies and workers should be validated before passing here.
-// func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Workers, net Net) error {
+// func (v validator) validate[]RelationsDef(in Inports, out Outports, deps Deps, workers Workers, net []RelationsDef) error {
 // 	senderReceivers := Graph{}
 // 	receiverSenders := Graph{}
 

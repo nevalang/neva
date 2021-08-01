@@ -22,7 +22,7 @@ func cast(pmod module) (core.Module, error) {
 
 	workers := core.Workers(pmod.Workers)
 
-	net, err := castNet(pmod.Net) // FIXME
+	net, err := castNet(pmod.Net)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func castDeps(pdeps deps) (core.Interfaces, error) {
 	return deps, nil
 }
 
-func castNet(pnet net) (core.Net, error) {
-	net := core.Net{}
+func castNet(pnet net) ([]core.StreamDef, error) {
+	net := []core.StreamDef{}
 
 	for sender, conns := range pnet {
 		for outport, conn := range conns {
@@ -119,7 +119,7 @@ func castNet(pnet net) (core.Net, error) {
 				}
 			}
 
-			net = append(net, core.RelationsDef{
+			net = append(net, core.StreamDef{
 				Sender:    senderPortPoint,
 				Recievers: receivers,
 			})

@@ -22,7 +22,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 
 	modInterface := mod.Interface()
 
-	if nmod, ok := mod.(NativeModule); ok {
+	if nmod, ok := mod.(nativeModule); ok {
 		io := r.nodeIO(modInterface.In, modInterface.Out)
 		go nmod.impl(io)
 		return io, nil
@@ -73,7 +73,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	}, nil
 }
 
-func (r Runtime) connections(io map[string]NodeIO, net []RelationsDef) ([]connection, error) {
+func (r Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connection, error) {
 	rels := make([]connection, len(net))
 
 	for i, rel := range net {
