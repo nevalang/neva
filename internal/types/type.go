@@ -5,11 +5,16 @@ import "fmt"
 type Type uint8
 
 func (t Type) String() string {
-	v, ok := tn[t]
-	if !ok {
-		return "unknown"
+	switch t {
+	case Int:
+		return "int"
+	case Str:
+		return "str"
+	case Bool:
+		return "bool"
 	}
-	return v
+
+	return "unknown"
 }
 
 const (
@@ -18,21 +23,15 @@ const (
 	Bool
 )
 
-type typeNames map[Type]string
-
-var (
-	tn = typeNames{
-		Int:  "int",
-		Str:  "str",
-		Bool: "bool",
-	}
-)
-
 func ByName(s string) (Type, error) {
-	for k, v := range tn {
-		if v == s {
-			return k, nil
-		}
+	switch s {
+	case "int":
+		return Int, nil
+	case "str":
+		return Str, nil
+	case "bool":
+		return Bool, nil
 	}
+
 	return 0, fmt.Errorf("no type has name '%s'", s)
 }

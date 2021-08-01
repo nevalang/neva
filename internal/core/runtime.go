@@ -108,7 +108,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net []StreamDef) ([]stream, erro
 func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error) {
 	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
-		arrport, err := ports.arrPort(arrpoint.port)
+		arrport, err := ports.arr(arrpoint.port)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error)
 		return nil, fmt.Errorf("port point of unknown type %T", point)
 	}
 
-	normPort, err := ports.normPort(normPoint.port)
+	normPort, err := ports.norm(normPoint.port)
 	if err != nil {
 		return nil, err
 	}

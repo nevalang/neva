@@ -10,19 +10,19 @@ type NodeIO struct {
 }
 
 func (io NodeIO) NormIn(name string) (chan Msg, error) {
-	return nodePorts(io.In).normPort(name)
+	return nodePorts(io.In).norm(name)
 }
 
 func (io NodeIO) NormOut(name string) (chan Msg, error) {
-	return nodePorts(io.Out).normPort(name)
+	return nodePorts(io.Out).norm(name)
 }
 
 func (io NodeIO) ArrIn(name string) ([]chan Msg, error) {
-	return nodePorts(io.In).arrPort(name)
+	return nodePorts(io.In).arr(name)
 }
 
 func (io NodeIO) ArrOut(name string) ([]chan Msg, error) {
-	return nodePorts(io.Out).arrPort(name)
+	return nodePorts(io.Out).arr(name)
 }
 
 type nodeInports nodePorts
@@ -31,7 +31,7 @@ type nodeOutports nodePorts
 
 type nodePorts map[string]interface{}
 
-func (ports nodePorts) normPort(name string) (chan Msg, error) {
+func (ports nodePorts) norm(name string) (chan Msg, error) {
 	port, ok := ports[name]
 	if !ok {
 		return nil, fmt.Errorf("port '%s' not found", name)
@@ -45,7 +45,7 @@ func (ports nodePorts) normPort(name string) (chan Msg, error) {
 	return norm, nil
 }
 
-func (ports nodePorts) arrPort(name string) ([]chan Msg, error) {
+func (ports nodePorts) arr(name string) ([]chan Msg, error) {
 	port, ok := ports[name]
 	if !ok {
 		return nil, fmt.Errorf("port '%s' not found", name)
@@ -64,6 +64,18 @@ type Msg struct {
 	Int  int
 	Bool bool
 }
+
+// func NewStrMsg(s string) Msg {
+// 	return Msg{Str: s}
+// }
+
+// func NewIntMsg(n int) Msg {
+// 	return Msg{Int: n}
+// }
+
+// func NewBoolMsg(b bool) Msg {
+// 	return Msg{Bool: b}
+// }
 
 type stream struct {
 	Sender    chan Msg

@@ -65,15 +65,15 @@ func castPorts(pports Ports) (core.PortsInterface, error) {
 			return nil, err
 		}
 
-		isArr := strings.HasSuffix(port, "[]")
+		portType := core.PortType{Type: typ}
+
 		if strings.HasSuffix(port, "[]") {
 			port = strings.TrimSuffix(port, "[]")
+			portType.Arr = true
+			portType.Size = 3
 		}
 
-		cports[port] = core.PortType{
-			Type: typ,
-			Arr:  isArr,
-		}
+		cports[port] = portType
 	}
 
 	return cports, nil
@@ -102,15 +102,16 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 
 	for sender, conns := range pnet {
 		for outport, conn := range conns {
-			senderPortPoint, err := portPoint(sender, outport)
+			senderPortPoint, err := castPortPoint(sender, outport)
 			if err != nil {
 				return nil, err
 			}
 
 			receivers := []core.PortPoint{}
+
 			for receiver, receiverInports := range conn {
 				for _, inport := range receiverInports {
-					receiverPortPoint, err := portPoint(receiver, inport)
+					receiverPortPoint, err := castPortPoint(receiver, inport)
 					if err != nil {
 						return nil, err
 					}
@@ -129,7 +130,7 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 	return net, nil
 }
 
-func portPoint(node string, port string) (core.PortPoint, error) {
+func castPortPoint(node string, port string) (core.PortPoint, error) {
 	bracketStart := strings.Index(port, "[")
 	if bracketStart == -1 {
 		return core.NewNormPortPoint(node, port)

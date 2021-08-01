@@ -74,6 +74,7 @@ type PortInterface interface {
 type PortType struct {
 	Type types.Type
 	Arr  bool
+	Size uint8 // if Arr false should be 0
 }
 
 func (p1 PortType) Compare(p2 PortType) error {
@@ -89,9 +90,7 @@ func (pt PortType) String() (s string) {
 		s += "array"
 	}
 
-	s += "port of type " + pt.Type.String()
-
-	return s
+	return s + "port of type " + pt.Type.String()
 }
 
 type NormPortType types.Type

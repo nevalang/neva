@@ -37,7 +37,7 @@ var (
 			go func() {
 				for {
 					sum := core.Msg{}
-					for _, c := range in { // FIXME 10 chans
+					for _, c := range in { // FIXME 3 chans
 						msg := <-c
 						sum.Int += msg.Int
 					}
