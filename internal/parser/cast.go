@@ -90,8 +90,8 @@ func castDeps(pdeps deps) (core.Interfaces, error) {
 	return deps, nil
 }
 
-func castNet(pnet net) ([]core.StreamDef, error) {
-	net := []core.StreamDef{}
+func castNet(pnet net) (core.Net, error) {
+	net := core.Net{}
 
 	for sender, conns := range pnet {
 		for outport, conn := range conns {
@@ -100,7 +100,7 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 				return nil, err
 			}
 
-			receivers := []core.PortPoint{}
+			receivers := map[core.PortPoint]struct{}{}
 
 			for receiver, receiverInports := range conn {
 				for _, inport := range receiverInports {
@@ -109,14 +109,11 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 						return nil, err
 					}
 
-					receivers = append(receivers, receiverPortPoint)
+					receivers[receiverPortPoint] = struct{}{}
 				}
 			}
 
-			net = append(net, core.StreamDef{
-				Sender:    senderPortPoint,
-				Receivers: receivers,
-			})
+			net[senderPortPoint] = receivers
 		}
 	}
 

@@ -10,7 +10,7 @@ type customModule struct {
 	in      InportsInterface
 	out     OutportsInterface
 	workers map[string]string
-	net     []StreamDef
+	net     Net
 }
 
 func (mod customModule) Incoming(p Port) uint8 {
@@ -74,10 +74,7 @@ func (d Interfaces) Compare(name string, io Interface) error {
 	return nil
 }
 
-type StreamDef struct {
-	Sender    PortPoint
-	Receivers []PortPoint
-}
+type Net map[PortPoint]map[PortPoint]struct{}
 
 type PortPoint interface {
 	Node() string
@@ -143,7 +140,7 @@ func NewCustomModule(
 	in InportsInterface,
 	out OutportsInterface,
 	workers map[string]string,
-	net []StreamDef,
+	net Net,
 ) (Module, error) {
 	mod := customModule{
 		deps:    deps,

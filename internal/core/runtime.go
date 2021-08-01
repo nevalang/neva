@@ -77,32 +77,33 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	}, nil
 }
 
-func (rt Runtime) streams(io map[string]NodeIO, net []StreamDef) ([]stream, error) {
-	rels := make([]stream, len(net))
+func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
+	ss := make([]stream, 0, len(net))
 
-	for i, rel := range net {
-		sender, err := rt.chanByPoint(rel.Sender, nodePorts(io[rel.Sender.Node()].Out))
+	for senderPoint, receiversPoints := range net {
+		senderPort, err := rt.chanByPoint(senderPoint, nodePorts(io[senderPoint.Node()].Out))
 		if err != nil {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
 
-		receivers := make([]chan Msg, len(rel.Receivers))
-		for i, r := range rel.Receivers {
-			receiver, err := rt.chanByPoint(r, nodePorts(io[r.Node()].In))
+		receivers := make([]chan Msg, 0, len(receiversPoints))
+
+		for receiverPoint := range receiversPoints {
+			receiver, err := rt.chanByPoint(receiverPoint, nodePorts(io[receiverPoint.Node()].In))
 			if err != nil {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
 
-			receivers[i] = receiver
+			receivers = append(receivers, receiver)
 		}
 
-		rels[i] = stream{
-			Sender:    sender,
+		ss = append(ss, stream{
+			Sender:    senderPort,
 			Receivers: receivers,
-		}
+		})
 	}
 
-	return rels, nil
+	return ss, nil
 }
 
 func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error) {
