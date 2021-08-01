@@ -20,11 +20,6 @@ net:
         - nums[0]
         - nums[1]
         - nums[3]
-    y:
-      w1:
-        - nums[4]
-        - nums[5]
-        - nums[6]
   w1:
-    out:
-      out: [x]
+    sum:
+      out: [y]

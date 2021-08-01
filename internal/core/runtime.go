@@ -60,28 +60,38 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	net, err := r.connections(nodesIO, cmod.net)
+	cc, err := r.connections(nodesIO, cmod.net)
 	if err != nil {
 		return NodeIO{}, err
 	}
 
-	r.connectAll(net)
+	r.connectAll(cc)
 
 	return NodeIO{
-		in:  nodeInports(nodesIO["in"].out),
-		out: nodeOutports(nodesIO["out"].in),
+		In:  nodeInports(nodesIO["in"].Out),
+		Out: nodeOutports(nodesIO["out"].In),
 	}, nil
 }
 
-func (r Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connection, error) {
+func (rt Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connection, error) {
 	rels := make([]connection, len(net))
 
 	for i, rel := range net {
-		sender := r.chanByPoint(rel.Sender, io[rel.Sender.NodeName()])
+		senderOut := io[rel.Sender.Node()].Out
+		sender, err := rt.chanByPoint(rel.Sender, nodePorts(senderOut))
+		if err != nil {
+			return nil, fmt.Errorf("invalid sender, %w", err)
+		}
 
 		receivers := make([]chan Msg, len(rel.Recievers))
-		for i, receiver := range rel.Recievers {
-			receivers[i] = r.chanByPoint(receiver, io[receiver.NodeName()])
+		for i, r := range rel.Recievers {
+			receiverIn := io[r.Node()].In
+			receiver, err := rt.chanByPoint(r, nodePorts(receiverIn))
+			if err != nil {
+				return nil, fmt.Errorf("invalid receiver, %w", err)
+			}
+
+			receivers[i] = receiver
 		}
 
 		rels[i] = connection{
@@ -93,36 +103,37 @@ func (r Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connectio
 	return rels, nil
 }
 
-func (r Runtime) chanByPoint(point PortPoint, nodeIO NodeIO) chan Msg {
+func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error) {
 	var result chan Msg
 
 	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
-		arrport, err := nodeIO.ArrOutport(arrpoint.Port)
+		arrport, err := ports.arrPort(arrpoint.port)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		if uint8(len(arrport)) < arrpoint.Index {
-			panic("arrport to small")
+		if uint8(len(arrport)) < arrpoint.idx {
+			return nil, fmt.Errorf("arrport to small")
 		}
 
-		result = arrport[arrpoint.Index]
+		result = arrport[arrpoint.idx]
 	} else {
 		normPoint, ok := point.(NormPortPoint)
 		if !ok {
-			panic(fmt.Sprintf("%T", point))
+			return nil, fmt.Errorf("port point of unknown type %T", point)
 		}
 
-		normPort, err := nodeIO.NormOut(normPoint.Port)
+		normPort, err := ports.normPort(normPoint.port)
 		if err != nil {
-			panic(err)
+			return nil, err
+
 		}
 
 		result = normPort
 	}
 
-	return result
+	return result, nil
 }
 
 func (r Runtime) resolveDeps(deps Interfaces) error {

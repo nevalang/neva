@@ -1,11 +1,11 @@
 package parser
 
 type module struct {
-	In      inports  `json:"in"`
-	Out     outports `json:"out"`
-	Deps    deps     `json:"deps"`
-	Workers workers  `json:"workers"`
-	Net     net      `json:"net"`
+	In      inports  `yaml:"in"`
+	Out     outports `yaml:"out"`
+	Deps    deps     `yaml:"deps"`
+	Workers workers  `yaml:"workers"`
+	Net     net      `yaml:"net"`
 }
 
 type inports Ports
@@ -15,8 +15,8 @@ type outports Ports
 type Ports map[string]string
 
 type deps map[string]struct {
-	In  inports  `json:"in"`
-	Out outports `json:"out"`
+	In  inports  `yaml:"in"`
+	Out outports `yaml:"out"`
 }
 
 type workers map[string]string

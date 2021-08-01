@@ -67,37 +67,62 @@ type StreamDef struct {
 }
 
 type PortPoint interface {
-	NodeName() string
+	Node() string
+	Port() string
 }
 
 type NormPortPoint struct {
-	Node string
-	Port string
+	node string
+	port string
 }
 
-func (p NormPortPoint) NodeName() string {
-	return p.Node
+func NewNormPortPoint(node, port string) (NormPortPoint, error) {
+	if node == "" || port == "" {
+		return NormPortPoint{}, fmt.Errorf("invalid normal port point")
+	}
+
+	return NormPortPoint{
+		port: port,
+		node: node,
+	}, nil
+}
+
+func (p NormPortPoint) Node() string {
+	return p.node
+}
+
+func (p NormPortPoint) Port() string {
+	return p.port
 }
 
 type ArrPortPoint struct {
-	Node  string
-	Port  string
-	Index uint8
+	node string
+	port string
+	idx  uint8
 }
 
 func NewArrPortPoint(node, port string, idx uint64) (ArrPortPoint, error) {
 	if node == "" || port == "" || idx > 255 {
-		return ArrPortPoint{}, errors.New("invalid arrport")
+		return ArrPortPoint{}, errors.New("invalid array port point")
 	}
+
 	return ArrPortPoint{
-		Node:  node,
-		Port:  port,
-		Index: uint8(idx),
+		node: node,
+		port: port,
+		idx:  uint8(idx),
 	}, nil
 }
 
-func (p ArrPortPoint) NodeName() string {
-	return p.Node
+func (p ArrPortPoint) Node() string {
+	return p.node
+}
+
+func (p ArrPortPoint) Port() string {
+	return p.port
+}
+
+func (p ArrPortPoint) Idx() uint8 {
+	return p.idx
 }
 
 func NewCustomModule(

@@ -130,27 +130,24 @@ func castNet(pnet net) ([]core.StreamDef, error) {
 }
 
 func portPoint(node string, port string) (core.PortPoint, error) {
-	opening := strings.Index(port, "[")
-	if opening == -1 {
-		return core.NormPortPoint{
-			Node: node,
-			Port: port,
-		}, nil
+	bracketStart := strings.Index(port, "[")
+	if bracketStart == -1 {
+		return core.NewNormPortPoint(node, port)
 	}
 
-	closing := strings.Index(port, "]")
-	if closing == -1 {
+	bracketEnd := strings.Index(port, "]")
+	if bracketEnd == -1 {
 		return nil, fmt.Errorf("invalid port name")
 	}
 
-	idx, err := strconv.ParseUint(port[opening+1:closing], 10, 64)
+	idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
 	if err != nil {
 		return nil, err
 	}
 
 	return core.NewArrPortPoint(
 		node,
-		port[:opening],
+		port[:bracketStart],
 		idx,
 	)
 }
