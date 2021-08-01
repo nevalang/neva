@@ -14,24 +14,28 @@ var (
 		core.OutportsInterface{"sum": sumOut},
 
 		func(io core.NodeIO) error {
-			in, err := io.ArrIn("in")
+			in, err := io.ArrIn("nums")
 			if err != nil {
 				return err
 			}
 
-			out, err := io.NormOut("out")
+			out, err := io.NormOut("sum")
 			if err != nil {
 				return err
 			}
 
-			for {
-				sum := core.Msg{}
-				for _, c := range in {
-					msg := <-c
-					sum.Int += msg.Int
+			go func() {
+				for {
+					sum := core.Msg{}
+					for _, c := range in {
+						msg := <-c
+						sum.Int += msg.Int
+					}
+					out <- sum
 				}
-				out <- sum
-			}
+			}()
+
+			return nil
 		},
 	)
 )

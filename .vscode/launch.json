@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/stream",
-      "args": ["check", "${workspaceFolder}/examples/arr.yaml"]
+      "args": ["check", "${workspaceFolder}/examples/arr.yml"]
     },
     {
       "name": "run",
@@ -18,7 +18,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/stream",
-      "args": ["run", "${workspaceFolder}/examples/arr.yaml"]
+      "args": ["run", "${workspaceFolder}/examples/arr.yml"]
     }
   ]
 }

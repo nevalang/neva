@@ -65,7 +65,7 @@ type Msg struct {
 	Bool bool
 }
 
-type connection struct {
+type stream struct {
 	Sender    chan Msg
 	Receivers []chan Msg
 }

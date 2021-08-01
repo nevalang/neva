@@ -13,6 +13,15 @@ func (a nativeModule) Interface() Interface {
 	}
 }
 
+// TODO use?
+func (nmod nativeModule) startStream(io NodeIO) error {
+	// check io
+	// return err if needed
+	// run go impl
+	// return nil
+	return nil
+}
+
 func NewNativeModule(
 	in InportsInterface,
 	out OutportsInterface,

@@ -24,7 +24,9 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 
 	if nmod, ok := mod.(nativeModule); ok {
 		io := r.nodeIO(modInterface.In, modInterface.Out)
-		go nmod.impl(io)
+		if err := nmod.impl(io); err != nil {
+			return NodeIO{}, err
+		}
 
 		return io, nil
 	}
@@ -62,12 +64,12 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 		nodesIO[w] = io
 	}
 
-	cc, err := r.connections(nodesIO, cmod.net)
+	ss, err := r.streams(nodesIO, cmod.net)
 	if err != nil {
 		return NodeIO{}, err
 	}
 
-	r.connectAll(cc)
+	r.startStreams(ss)
 
 	return NodeIO{
 		In:  nodeInports(nodesIO["in"].Out),
@@ -75,8 +77,8 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	}, nil
 }
 
-func (rt Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connection, error) {
-	rels := make([]connection, len(net))
+func (rt Runtime) streams(io map[string]NodeIO, net []StreamDef) ([]stream, error) {
+	rels := make([]stream, len(net))
 
 	for i, rel := range net {
 		sender, err := rt.chanByPoint(rel.Sender, nodePorts(io[rel.Sender.Node()].Out))
@@ -94,7 +96,7 @@ func (rt Runtime) connections(io map[string]NodeIO, net []StreamDef) ([]connecti
 			receivers[i] = receiver
 		}
 
-		rels[i] = connection{
+		rels[i] = stream{
 			Sender:    sender,
 			Receivers: receivers,
 		}
@@ -176,20 +178,20 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 	return result
 }
 
-func (r Runtime) connectAll(cc []connection) {
-	for i := range cc {
-		go r.connect(cc[i])
+func (r Runtime) startStreams(ss []stream) {
+	for i := range ss {
+		go r.startStream(ss[i])
 	}
 }
 
-func (m Runtime) connect(c connection) {
-	for msg := range c.Sender {
-		for _, r := range c.Receivers {
+func (m Runtime) startStream(s stream) {
+	for msg := range s.Sender {
+		for _, r := range s.Receivers {
 			select {
 			case r <- msg:
 				continue
-			default:
-				go func() { r <- msg }()
+				// default:
+				// 	go func() { r <- msg }()
 			}
 		}
 	}
