@@ -10,11 +10,18 @@ type Runtime struct {
 }
 
 const (
-	tmpBuf     = 0
 	tmpArrSize = 3 // FIXME deadlock possibilities
 )
 
-func (r Runtime) Run(name string) (NodeIO, error) {
+type Meta struct {
+	arrPortsSize arrPortsSize
+}
+
+type arrPortsSize struct {
+	In, Out map[string]uint8
+}
+
+func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
 	mod, ok := r.env[name]
 	if !ok {
 		return NodeIO{}, errModNotFound(name)
@@ -23,7 +30,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	modInterface := mod.Interface()
 
 	if nmod, ok := mod.(operator); ok {
-		io := r.nodeIO(modInterface.In, modInterface.Out) // FIXME
+		io := r.nodeIO(modInterface.In, modInterface.Out, meta.arrPortsSize) // FIXME no network here
 		if err := nmod.impl(io); err != nil {
 			return NodeIO{}, err
 		}
@@ -49,14 +56,16 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	nodesIO["in"] = r.nodeIO(
 		nil,
 		OutportsInterface(modInterface.In),
+		meta.arrPortsSize,
 	)
 	nodesIO["out"] = r.nodeIO(
 		InportsInterface(modInterface.Out),
 		nil,
+		meta.arrPortsSize,
 	)
 
 	for w, dep := range cmod.workers {
-		io, err := r.Run(dep)
+		io, err := r.NodeIO(dep, Meta{})
 		if err != nil {
 			return NodeIO{}, err
 		}
@@ -150,9 +159,9 @@ func (r Runtime) resolveDeps(deps Interfaces) error {
 	return nil
 }
 
-func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface) NodeIO {
-	inports := r.Ports(PortsInterface(in))
-	outports := r.Ports(PortsInterface(out))
+func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface, size arrPortsSize) NodeIO {
+	inports := r.ports(PortsInterface(in), size.In)
+	outports := r.ports(PortsInterface(out), size.Out)
 
 	return NodeIO{
 		nodeInports(inports),
@@ -160,7 +169,7 @@ func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface) NodeIO {
 	}
 }
 
-func (r Runtime) Ports(ports PortsInterface) nodePorts {
+func (r Runtime) ports(ports PortsInterface, size map[string]uint8) nodePorts {
 	result := make(nodePorts, len(ports))
 
 	for port, typ := range ports {
@@ -170,9 +179,12 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 			continue
 		}
 
-		// net.Incoming(NewArrPortPoint(...))
+		s, ok := size[port]
+		if !ok {
+			panic("no size for port " + port)
+		}
 
-		cc := make([]chan Msg, tmpArrSize) // FIXME
+		cc := make([]chan Msg, s)
 		for i := range cc {
 			cc[i] = make(chan Msg)
 		}

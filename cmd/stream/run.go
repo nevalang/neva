@@ -28,7 +28,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		},
 	)
 
-	io, err := r.Run("root")
+	io, err := r.NodeIO("root", core.Meta{})
 	if err != nil {
 		return err
 	}
