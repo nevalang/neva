@@ -46,20 +46,37 @@ type Interfaces map[string]Interface
 
 type Net map[PortPoint]map[PortPoint]struct{}
 
-func (net Net) Incoming(p PortPoint) (c uint8) {
+// TODO: check if that is not arrport point
+func (net Net) ArrInSize(node, port string) uint8 {
+	var size uint8
+
 	for _, rr := range net {
-		_, ok := rr[p]
-		if ok {
-			c++
+		for receiver := range rr {
+			if receiver.Node() == node && receiver.Port() == port {
+				size++
+			}
 		}
 	}
 
-	return c
+	return size
+}
+
+func (net Net) ArrOutSize(node, port string) uint8 {
+	var size uint8
+
+	for sender := range net {
+		if sender.Node() == node && sender.Port() == port {
+			size++
+		}
+	}
+
+	return size
 }
 
 type PortPoint interface {
 	Node() string
-	// Port() string
+	Port() string
+	Compare(PortPoint) bool
 }
 
 type NormPortPoint struct {
@@ -84,6 +101,15 @@ func (p NormPortPoint) Node() string {
 
 func (p NormPortPoint) Port() string {
 	return p.port
+}
+
+func (p NormPortPoint) Compare(got PortPoint) bool {
+	norm, ok := got.(NormPortPoint)
+	if !ok {
+		return false
+	}
+
+	return norm.node == got.Node() && norm.port == got.Port()
 }
 
 type ArrPortPoint struct {
@@ -114,6 +140,15 @@ func (p ArrPortPoint) Port() string {
 
 func (p ArrPortPoint) Idx() uint8 {
 	return p.idx
+}
+
+func (p ArrPortPoint) Compare(got PortPoint) bool {
+	arr, ok := got.(ArrPortPoint)
+	if !ok {
+		return false
+	}
+
+	return arr.node == got.Node() && arr.port == got.Port() && arr.idx == arr.Idx()
 }
 
 func NewCustomModule(

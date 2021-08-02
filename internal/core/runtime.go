@@ -5,13 +5,9 @@ import (
 )
 
 type Runtime struct {
-	env   map[string]Component // TODO move out
+	env   map[string]Component
 	cache map[string]bool
 }
-
-const (
-	tmpArrSize = 3 // FIXME deadlock possibilities
-)
 
 type Meta struct {
 	arrPortsSize arrPortsSize
@@ -22,58 +18,60 @@ type arrPortsSize struct {
 }
 
 func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
-	mod, ok := r.env[name]
+	c, ok := r.env[name]
 	if !ok {
 		return NodeIO{}, errModNotFound(name)
 	}
 
-	modInterface := mod.Interface()
+	componentIO := c.Interface()
 
-	if nmod, ok := mod.(operator); ok {
-		io := r.nodeIO(modInterface.In, modInterface.Out, meta.arrPortsSize) // FIXME no network here
-		if err := nmod.impl(io); err != nil {
+	if op, ok := c.(operator); ok {
+		nodeIO := r.nodeIO(componentIO.In, componentIO.Out, meta.arrPortsSize)
+		if err := op.impl(nodeIO); err != nil {
 			return NodeIO{}, err
 		}
 
-		return io, nil
+		return nodeIO, nil
 	}
 
-	cmod, ok := mod.(module)
+	mod, ok := c.(module)
 	if !ok {
-		return NodeIO{}, errUnknownModType(name, mod)
+		return NodeIO{}, errUnknownModType(name, c)
 	}
 
 	if !r.cache[name] {
-		if err := r.resolveDeps(cmod.deps); err != nil {
+		if err := r.resolveDeps(mod.deps); err != nil {
 			return NodeIO{}, err
 		}
 
 		r.cache[name] = true
 	}
 
-	nodesIO := make(map[string]NodeIO, 2+len(cmod.workers))
+	nodesIO := make(map[string]NodeIO, 2+len(mod.workers))
 
 	nodesIO["in"] = r.nodeIO(
 		nil,
-		OutportsInterface(modInterface.In),
+		OutportsInterface(componentIO.In),
 		meta.arrPortsSize,
 	)
 	nodesIO["out"] = r.nodeIO(
-		InportsInterface(modInterface.Out),
+		InportsInterface(componentIO.Out),
 		nil,
 		meta.arrPortsSize,
 	)
 
-	for w, dep := range cmod.workers {
-		io, err := r.NodeIO(dep, Meta{})
+	for w, dep := range mod.workers {
+		meta := r.Meta(componentIO, mod.net, w)
+
+		nodeIO, err := r.NodeIO(dep, meta)
 		if err != nil {
 			return NodeIO{}, err
 		}
 
-		nodesIO[w] = io
+		nodesIO[w] = nodeIO
 	}
 
-	ss, err := r.streams(nodesIO, cmod.net)
+	ss, err := r.streams(nodesIO, mod.net)
 	if err != nil {
 		return NodeIO{}, err
 	}
@@ -84,6 +82,20 @@ func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
 		In:  nodeInports(nodesIO["in"].Out),
 		Out: nodeOutports(nodesIO["out"].In),
 	}, nil
+}
+
+func (rt Runtime) Meta(io Interface, net Net, node string) Meta {
+	m := arrPortsSize{}
+
+	for port := range PortsInterface(io.In).Arr() {
+		m.In[port] = net.ArrInSize(node, port)
+	}
+
+	for port := range PortsInterface(io.Out).Arr() {
+		m.Out[port] = net.ArrOutSize(node, port)
+	}
+
+	return Meta{arrPortsSize: m}
 }
 
 func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {

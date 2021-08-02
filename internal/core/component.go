@@ -46,6 +46,18 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
+func (io PortsInterface) Arr() map[string]PortType {
+	m := map[string]PortType{}
+
+	for name, typ := range io {
+		if typ.Arr {
+			m[name] = typ
+		}
+	}
+
+	return m
+}
+
 type PortType struct {
 	Type types.Type
 	Arr  bool
