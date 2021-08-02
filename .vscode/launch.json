@@ -18,7 +18,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/stream",
-      "args": ["run", "${workspaceFolder}/examples/arr.yml"]
+      "args": ["run", "${workspaceFolder}/examples/arr2.yml"]
     }
   ]
 }

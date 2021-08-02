@@ -1,0 +1,25 @@
+in:
+  x: int
+out:
+  y: int
+
+deps:
+  +:
+    in:
+      nums[]: int
+    out:
+      sum: int
+
+workers:
+  w1: +
+
+net:
+  in:
+    x:
+      w1:
+        - nums[0]
+        - nums[1]
+        - nums[2]
+  w1:
+    sum:
+      out: [y]

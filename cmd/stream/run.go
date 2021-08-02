@@ -43,8 +43,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	x <- core.Msg{Int: 42}
-
+	x <- core.Msg{Int: 1}
 	fmt.Println(<-y)
 
 	return nil
