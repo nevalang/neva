@@ -5,24 +5,24 @@ import (
 )
 
 type NodeIO struct {
-	In  nodeInports
-	Out nodeOutports
+	in  nodeInports
+	out nodeOutports
 }
 
 func (io NodeIO) NormIn(name string) (chan Msg, error) {
-	return nodePorts(io.In).norm(name)
+	return nodePorts(io.in).norm(name)
 }
 
 func (io NodeIO) NormOut(name string) (chan Msg, error) {
-	return nodePorts(io.Out).norm(name)
+	return nodePorts(io.out).norm(name)
 }
 
 func (io NodeIO) ArrIn(name string) ([]chan Msg, error) {
-	return nodePorts(io.In).arr(name)
+	return nodePorts(io.in).arr(name)
 }
 
 func (io NodeIO) ArrOut(name string) ([]chan Msg, error) {
-	return nodePorts(io.Out).arr(name)
+	return nodePorts(io.out).arr(name)
 }
 
 type nodeInports nodePorts

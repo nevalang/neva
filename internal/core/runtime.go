@@ -79,8 +79,8 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	r.startStreams(ss)
 
 	return NodeIO{
-		In:  nodeInports(nodesIO["in"].Out),
-		Out: nodeOutports(nodesIO["out"].In),
+		in:  nodeInports(nodesIO["in"].out),
+		out: nodeOutports(nodesIO["out"].in),
 	}, nil
 }
 
@@ -105,7 +105,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 	ss := make([]stream, 0, len(net))
 
 	for senderPoint, receiversPoints := range net {
-		senderPort, err := rt.chanByPoint(senderPoint, nodePorts(io[senderPoint.Node()].Out))
+		senderPort, err := rt.chanByPoint(senderPoint, nodePorts(io[senderPoint.Node()].out))
 		if err != nil {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
@@ -113,7 +113,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 		receivers := make([]chan Msg, 0, len(receiversPoints))
 
 		for receiverPoint := range receiversPoints {
-			receiver, err := rt.chanByPoint(receiverPoint, nodePorts(io[receiverPoint.Node()].In))
+			receiver, err := rt.chanByPoint(receiverPoint, nodePorts(io[receiverPoint.Node()].in))
 			if err != nil {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
