@@ -17,7 +17,7 @@ type arrPortsSize struct {
 	In, Out map[string]uint8
 }
 
-func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
+func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	c, ok := r.env[name]
 	if !ok {
 		return NodeIO{}, errModNotFound(name)
@@ -60,15 +60,15 @@ func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
 		meta.arrPortsSize,
 	)
 
-	for w, dep := range mod.workers {
-		meta := r.Meta(componentIO, mod.net, w)
+	for worker, dep := range mod.workers {
+		meta := r.Meta(r.env[dep].Interface(), mod.net, worker) // TODO rewrite
 
-		nodeIO, err := r.NodeIO(dep, meta)
+		nodeIO, err := r.Start(dep, meta)
 		if err != nil {
 			return NodeIO{}, err
 		}
 
-		nodesIO[w] = nodeIO
+		nodesIO[worker] = nodeIO
 	}
 
 	ss, err := r.streams(nodesIO, mod.net)
@@ -85,7 +85,10 @@ func (r Runtime) NodeIO(name string, meta Meta) (NodeIO, error) {
 }
 
 func (rt Runtime) Meta(io Interface, net Net, node string) Meta {
-	m := arrPortsSize{}
+	m := arrPortsSize{
+		In:  map[string]uint8{},
+		Out: map[string]uint8{},
+	}
 
 	for port := range PortsInterface(io.In).Arr() {
 		m.In[port] = net.ArrInSize(node, port)
@@ -219,8 +222,8 @@ func (m Runtime) startStream(s stream) {
 			select {
 			case r <- msg:
 				continue
-			default:
-				go func() { r <- msg }()
+			// default:
+			// 	go func() { r <- msg }()
 			}
 		}
 	}

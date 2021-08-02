@@ -46,7 +46,7 @@ type Interfaces map[string]Interface
 
 type Net map[PortPoint]map[PortPoint]struct{}
 
-// TODO: check if that is not arrport point
+// TODO: check if that is not arrport point.
 func (net Net) ArrInSize(node, port string) uint8 {
 	var size uint8
 
