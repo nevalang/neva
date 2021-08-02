@@ -1,5 +1,7 @@
 linters:
   enable-all: true
+  disable:
+    - godox
 
 linters-settings:
   lll:

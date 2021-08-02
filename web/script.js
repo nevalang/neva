@@ -2,7 +2,7 @@ import { React } from "https://unpkg.com/react-dom@16.7.0/umd/react-dom.producti
 import { ReactDOM } from "https://unpkg.com/react-dom@16.7.0/umd/react-dom.production.min.js"
 import { htm } from "https://unpkg.com/htm@3.1.0/dist/htm.js"
 
-const html = htm.bind(React.createElement)
+const h = htm.bind(React.createElement)
 
 const Route = {
   "/": React.lazy(() => import("./home.js")),
@@ -10,8 +10,8 @@ const Route = {
 }
 
 ReactDOM.render(
-  html`
-    <${React.Suspense} fallback=${html`<div></div>`}>
+  h`
+    <${React.Suspense} fallback=${h`<div>Loading...</div>`}>
       <${Route[location.pathname] || Route["*"]} />
     <//>
   `,

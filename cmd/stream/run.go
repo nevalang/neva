@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	runtime "github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/core"
 	"github.com/emil14/stream/internal/operators"
 
 	cli "github.com/urfave/cli/v2"
@@ -21,8 +21,8 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	r := runtime.New(
-		map[string]runtime.Component{
+	r := core.New(
+		map[string]core.Component{
 			"+":    operators.Sum,
 			"root": mod,
 		},
@@ -43,7 +43,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		return err
 	}
 
-	x <- runtime.Msg{Int: 42}
+	x <- core.Msg{Int: 42}
 
 	fmt.Println(<-y)
 

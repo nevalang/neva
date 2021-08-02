@@ -46,6 +46,17 @@ type Interfaces map[string]Interface
 
 type Net map[PortPoint]map[PortPoint]struct{}
 
+func (net Net) Incoming(p PortPoint) (c uint8) {
+	for _, rr := range net {
+		_, ok := rr[p]
+		if ok {
+			c++
+		}
+	}
+
+	return c
+}
+
 type PortPoint interface {
 	Node() string
 	// Port() string

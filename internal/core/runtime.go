@@ -23,7 +23,7 @@ func (r Runtime) Run(name string) (NodeIO, error) {
 	modInterface := mod.Interface()
 
 	if nmod, ok := mod.(operator); ok {
-		io := r.nodeIO(modInterface.In, modInterface.Out)
+		io := r.nodeIO(modInterface.In, modInterface.Out) // FIXME
 		if err := nmod.impl(io); err != nil {
 			return NodeIO{}, err
 		}
@@ -164,18 +164,20 @@ func (r Runtime) Ports(ports PortsInterface) nodePorts {
 	result := make(nodePorts, len(ports))
 
 	for port, typ := range ports {
-		if typ.Arr {
-			cc := make([]chan Msg, tmpArrSize) // FIXME
-			for i := range cc {
-				cc[i] = make(chan Msg)
-			}
-
-			result[port] = cc
+		if !typ.Arr {
+			result[port] = make(chan Msg)
 
 			continue
 		}
 
-		result[port] = make(chan Msg)
+		// net.Incoming(NewArrPortPoint(...))
+
+		cc := make([]chan Msg, tmpArrSize) // FIXME
+		for i := range cc {
+			cc[i] = make(chan Msg)
+		}
+
+		result[port] = cc
 	}
 
 	return result
@@ -193,8 +195,8 @@ func (m Runtime) startStream(s stream) {
 			select {
 			case r <- msg:
 				continue
-				// default:
-				// 	go func() { r <- msg }()
+			default:
+				go func() { r <- msg }()
 			}
 		}
 	}
