@@ -24,6 +24,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	r := core.New(
 		map[string]core.Component{
 			"+":    operators.Sum,
+			"*":    operators.Mul,
 			"root": mod,
 		},
 	)

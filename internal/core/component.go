@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/emil14/stream/internal/types"
 )
 
@@ -15,10 +17,14 @@ type Interface struct {
 
 func (want Interface) Compare(got Interface) error {
 	if err := PortsInterface(want.In).Compare(PortsInterface(got.In)); err != nil {
-		return err
+		return fmt.Errorf("inport: %w", err)
 	}
 
-	return PortsInterface(want.Out).Compare(PortsInterface(got.Out))
+	if err := PortsInterface(want.Out).Compare(PortsInterface(got.Out)); err != nil {
+		return fmt.Errorf("outport: %w", err)
+	}
+
+	return nil
 }
 
 type InportsInterface PortsInterface

@@ -40,7 +40,7 @@ var (
 						}()
 					}
 
-					mul := 0
+					mul := 1
 					for i := 0; i < len(in); i++ {
 						mul *= <-s
 					}

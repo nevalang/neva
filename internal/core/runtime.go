@@ -169,7 +169,7 @@ func (r Runtime) resolveDeps(deps Interfaces) error {
 			return errModNotFound(dep)
 		}
 
-		err := mod.Interface().Compare(deps[dep])
+		err := deps[dep].Compare(mod.Interface())
 		if err != nil {
 			return fmt.Errorf("unresolved dependency '%s': %w", dep, err)
 		}
