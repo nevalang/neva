@@ -3,6 +3,7 @@ linters:
   disable:
     - godox
     - gomnd
+    - forbidigo
 
 linters-settings:
   lll:

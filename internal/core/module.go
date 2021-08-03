@@ -13,9 +13,6 @@ type module struct {
 	net     Net
 }
 
-func (mod module) Incoming(p Port) uint8 {
-	return 0
-}
 
 func (cm module) Interface() Interface {
 	return Interface{
@@ -44,7 +41,7 @@ func (mod module) validatePorts(in InportsInterface, out OutportsInterface) erro
 
 type Interfaces map[string]Interface
 
-type Net map[PortPoint]map[PortPoint]struct{}
+type Net map[PortAddr]map[PortAddr]struct{}
 
 // TODO: check if that is not arrport point.
 func (net Net) ArrInSize(node, port string) uint8 {
@@ -73,38 +70,38 @@ func (net Net) ArrOutSize(node, port string) uint8 {
 	return size
 }
 
-type PortPoint interface {
+type PortAddr interface {
 	Node() string
 	Port() string
-	Compare(PortPoint) bool
+	Compare(PortAddr) bool
 }
 
-type NormPortPoint struct {
+type NormPortAddr struct {
 	node string
 	port string
 }
 
-func NewNormPortPoint(node, port string) (NormPortPoint, error) {
+func NewNormPortPoint(node, port string) (NormPortAddr, error) {
 	if node == "" || port == "" {
-		return NormPortPoint{}, fmt.Errorf("invalid normal port point")
+		return NormPortAddr{}, fmt.Errorf("invalid normal port point")
 	}
 
-	return NormPortPoint{
+	return NormPortAddr{
 		port: port,
 		node: node,
 	}, nil
 }
 
-func (p NormPortPoint) Node() string {
+func (p NormPortAddr) Node() string {
 	return p.node
 }
 
-func (p NormPortPoint) Port() string {
+func (p NormPortAddr) Port() string {
 	return p.port
 }
 
-func (p NormPortPoint) Compare(got PortPoint) bool {
-	norm, ok := got.(NormPortPoint)
+func (p NormPortAddr) Compare(got PortAddr) bool {
+	norm, ok := got.(NormPortAddr)
 	if !ok {
 		return false
 	}
@@ -142,7 +139,7 @@ func (p ArrPortPoint) Idx() uint8 {
 	return p.idx
 }
 
-func (p ArrPortPoint) Compare(got PortPoint) bool {
+func (p ArrPortPoint) Compare(got PortAddr) bool {
 	arr, ok := got.(ArrPortPoint)
 	if !ok {
 		return false

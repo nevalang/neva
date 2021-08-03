@@ -114,7 +114,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
 
-		receivers := make([]chan Msg, 0, len(receiversPoints))
+		receivers := make([]Port, 0, len(receiversPoints))
 
 		for receiverPoint := range receiversPoints {
 			receiver, err := rt.port(receiverPoint, nodePorts(io[receiverPoint.Node()].in))
@@ -122,11 +122,11 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
 
-			receivers = append(receivers, receiver)
+			receivers = append(receivers, Port{ch: receiver, addr: receiverPoint})
 		}
 
 		ss = append(ss, stream{
-			Sender:    senderPort,
+			Sender:    Port{ch: senderPort, addr: senderPoint},
 			Receivers: receivers,
 		})
 	}
@@ -134,7 +134,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 	return ss, nil
 }
 
-func (r Runtime) port(point PortPoint, ports nodePorts) (chan Msg, error) {
+func (r Runtime) port(point PortAddr, ports nodePorts) (chan Msg, error) {
 	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
 		arrport, err := ports.arr(arrpoint.port)
@@ -149,7 +149,7 @@ func (r Runtime) port(point PortPoint, ports nodePorts) (chan Msg, error) {
 		return arrport[arrpoint.idx], nil
 	}
 
-	normPoint, ok := point.(NormPortPoint)
+	normPoint, ok := point.(NormPortAddr)
 	if !ok {
 		return nil, fmt.Errorf("port point of unknown type %T", point)
 	}
@@ -221,21 +221,33 @@ func (r Runtime) startStreams(ss []stream) {
 }
 
 func (m Runtime) startStream(s stream) {
-	for msg := range s.Sender {
-		for _, r := range s.Receivers {
+	fmt.Println(s)
+
+	for msg := range s.Sender.ch {
+		fmt.Printf("got msg from %v\n", s.Sender.addr)
+
+		for i, r := range s.Receivers {
+			fmt.Printf("%d start write to %v\n", i, r.addr)
+
+			i := i
+			r := r
+			// go func() {
+			// 	r.ch <- Msg{Int: msg.Int}
+			// 	fmt.Printf("%d finish write to %v\n", i, r.point)
+			// }()
+
 			select {
-			case r <- msg:
-				continue
-				// default:
-				// 	go func() {
-				// 		r <- msg
-				// 	}()
+			case r.ch <- Msg{Int: msg.Int}:
+				fmt.Printf("%d finish write to %v\n", i, r.addr)
+			default:
+				go func() {
+					r.ch <- Msg{Int: msg.Int}
+					fmt.Printf("%d finish write to %v\n", i, r.addr)
+				}()
 			}
 		}
 	}
 }
-
-type Port interface{}
 
 func New(env map[string]Component) Runtime {
 	return Runtime{

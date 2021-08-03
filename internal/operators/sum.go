@@ -1,8 +1,6 @@
 package operators
 
 import (
-	"fmt"
-
 	"github.com/emil14/stream/internal/core"
 	"github.com/emil14/stream/internal/types"
 )
@@ -37,25 +35,22 @@ var (
 				// 	fmt.Printf("i: %d\n", i)
 				// 	sum := core.Msg{}
 				// 	for j, c := range in {
-				// 		fmt.Printf("\tj: %d\n", j)
+				// 		fmt.Printf("\twait === j: %d\n", j)
 				// 		msg := <-c
+				// 		fmt.Printf("\tgot  === j: %d\n", j)
 				// 		sum.Int += msg.Int
 				// 	}
 				// 	out <- sum
 				// 	i++
 				// }
 
-				i := 0
 				for {
-					fmt.Printf("i: %d\n", i)
 					sum := core.Msg{}
-					for j, c := range in {
-						fmt.Printf("\tj: %d\n", j)
+					for _, c := range in {
 						msg := <-c
 						sum.Int += msg.Int
 					}
 					out <- sum
-					i++
 				}
 			}()
 

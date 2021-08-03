@@ -44,6 +44,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 	}
 
 	x <- core.Msg{Int: 1}
+	fmt.Println("runtime read")
 	fmt.Println(<-y)
 
 	return nil

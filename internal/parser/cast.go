@@ -100,7 +100,7 @@ func castNet(pnet net) (core.Net, error) {
 				return nil, err
 			}
 
-			receivers := map[core.PortPoint]struct{}{}
+			receivers := map[core.PortAddr]struct{}{}
 
 			for receiver, receiverInports := range conn {
 				for _, inport := range receiverInports {
@@ -120,7 +120,7 @@ func castNet(pnet net) (core.Net, error) {
 	return net, nil
 }
 
-func castPortPoint(node string, port string) (core.PortPoint, error) {
+func castPortPoint(node string, port string) (core.PortAddr, error) {
 	bracketStart := strings.Index(port, "[")
 	if bracketStart == -1 {
 		return core.NewNormPortPoint(node, port)
