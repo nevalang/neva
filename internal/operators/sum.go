@@ -1,47 +1,61 @@
 package operators
 
 import (
+	"fmt"
+
 	"github.com/emil14/stream/internal/core"
 	"github.com/emil14/stream/internal/types"
-)
-
-const (
-	inportName  = "nums"
-	outportName = "sum"
 )
 
 var (
 	Sum = core.NewOperator(
 		core.InportsInterface{
-			inportName: core.PortType{
+			"nums": core.PortType{
 				Type: types.Int,
 				Arr:  true,
 			},
 		},
 		core.OutportsInterface{
-			outportName: core.PortType{
+			"sum": core.PortType{
 				Type: types.Int,
 			},
 		},
 		func(io core.NodeIO) error {
-			in, err := io.ArrIn(inportName)
+			in, err := io.ArrIn("nums")
 			if err != nil {
 				return err
 			}
 
-			out, err := io.NormOut(outportName)
+			out, err := io.NormOut("sum")
 			if err != nil {
 				return err
 			}
 
 			go func() {
+				// i := 0
+				// for {
+				// 	fmt.Printf("i: %d\n", i)
+				// 	sum := core.Msg{}
+				// 	for j, c := range in {
+				// 		fmt.Printf("\tj: %d\n", j)
+				// 		msg := <-c
+				// 		sum.Int += msg.Int
+				// 	}
+				// 	out <- sum
+				// 	i++
+				// }
+
+				i := 0
 				for {
+					fmt.Printf("i: %d\n", i)
 					sum := core.Msg{}
-					for _, c := range in {
+					for j, c := range in {
+						fmt.Printf("\tj: %d\n", j)
 						msg := <-c
 						sum.Int += msg.Int
 					}
 					out <- sum
+					i++
 				}
 			}()
 

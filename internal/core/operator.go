@@ -1,9 +1,9 @@
 package core
 
 type operator struct {
-	in   InportsInterface
-	out  OutportsInterface
-	impl func(NodeIO) error // should return error if io invalid
+	in    InportsInterface
+	out   OutportsInterface
+	run func(NodeIO) error // should return error if io invalid
 }
 
 func (a operator) Interface() Interface {
@@ -27,8 +27,8 @@ func NewOperator(
 	impl func(NodeIO) error,
 ) operator {
 	return operator{
-		in:   in,
-		out:  out,
-		impl: impl,
+		in:    in,
+		out:   out,
+		run: impl,
 	}
 }

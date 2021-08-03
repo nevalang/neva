@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+
+	"github.com/emil14/stream/internal/types"
 )
 
 type NodeIO struct {
@@ -63,19 +65,8 @@ type Msg struct {
 	Str  string
 	Int  int
 	Bool bool
+	Type types.Type
 }
-
-// func NewStrMsg(s string) Msg {
-// 	return Msg{Str: s}
-// }
-
-// func NewIntMsg(n int) Msg {
-// 	return Msg{Int: n}
-// }
-
-// func NewBoolMsg(b bool) Msg {
-// 	return Msg{Bool: b}
-// }
 
 type stream struct {
 	Sender    chan Msg

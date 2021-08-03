@@ -26,8 +26,13 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	componentIO := c.Interface()
 
 	if op, ok := c.(operator); ok {
-		nodeIO := r.nodeIO(componentIO.In, componentIO.Out, meta.arrPortsSize)
-		if err := op.impl(nodeIO); err != nil {
+		nodeIO := r.nodeIO(
+			componentIO.In,
+			componentIO.Out,
+			meta.arrPortsSize,
+		)
+
+		if err := op.run(nodeIO); err != nil {
 			return NodeIO{}, err
 		}
 
@@ -48,7 +53,6 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	}
 
 	nodesIO := make(map[string]NodeIO, 2+len(mod.workers))
-
 	nodesIO["in"] = r.nodeIO(
 		nil,
 		OutportsInterface(componentIO.In),
@@ -61,7 +65,7 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	)
 
 	for worker, dep := range mod.workers {
-		meta := r.Meta(r.env[dep].Interface(), mod.net, worker) // TODO rewrite
+		meta := r.meta(r.env[dep].Interface(), mod.net, worker) // TODO rewrite
 
 		nodeIO, err := r.Start(dep, meta)
 		if err != nil {
@@ -84,7 +88,7 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	}, nil
 }
 
-func (rt Runtime) Meta(io Interface, net Net, node string) Meta {
+func (rt Runtime) meta(io Interface, net Net, node string) Meta {
 	m := arrPortsSize{
 		In:  map[string]uint8{},
 		Out: map[string]uint8{},
@@ -105,7 +109,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 	ss := make([]stream, 0, len(net))
 
 	for senderPoint, receiversPoints := range net {
-		senderPort, err := rt.chanByPoint(senderPoint, nodePorts(io[senderPoint.Node()].out))
+		senderPort, err := rt.port(senderPoint, nodePorts(io[senderPoint.Node()].out))
 		if err != nil {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
@@ -113,7 +117,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 		receivers := make([]chan Msg, 0, len(receiversPoints))
 
 		for receiverPoint := range receiversPoints {
-			receiver, err := rt.chanByPoint(receiverPoint, nodePorts(io[receiverPoint.Node()].in))
+			receiver, err := rt.port(receiverPoint, nodePorts(io[receiverPoint.Node()].in))
 			if err != nil {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
@@ -130,7 +134,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 	return ss, nil
 }
 
-func (r Runtime) chanByPoint(point PortPoint, ports nodePorts) (chan Msg, error) {
+func (r Runtime) port(point PortPoint, ports nodePorts) (chan Msg, error) {
 	arrpoint, ok := point.(ArrPortPoint)
 	if ok {
 		arrport, err := ports.arr(arrpoint.port)
@@ -174,9 +178,9 @@ func (r Runtime) resolveDeps(deps Interfaces) error {
 	return nil
 }
 
-func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface, size arrPortsSize) NodeIO {
-	inports := r.ports(PortsInterface(in), size.In)
-	outports := r.ports(PortsInterface(out), size.Out)
+func (r Runtime) nodeIO(in InportsInterface, out OutportsInterface, appPortsMeta arrPortsSize) NodeIO {
+	inports := r.ports(PortsInterface(in), appPortsMeta.In)
+	outports := r.ports(PortsInterface(out), appPortsMeta.Out)
 
 	return NodeIO{
 		nodeInports(inports),
@@ -222,8 +226,10 @@ func (m Runtime) startStream(s stream) {
 			select {
 			case r <- msg:
 				continue
-			// default:
-			// 	go func() { r <- msg }()
+				// default:
+				// 	go func() {
+				// 		r <- msg
+				// 	}()
 			}
 		}
 	}
