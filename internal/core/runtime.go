@@ -114,7 +114,7 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 			return nil, fmt.Errorf("invalid sender, %w", err)
 		}
 
-		receivers := make([]Port, 0, len(receiversPoints))
+		receivers := make([]port, 0, len(receiversPoints))
 
 		for receiverPoint := range receiversPoints {
 			receiver, err := rt.port(receiverPoint, nodePorts(io[receiverPoint.Node()].in))
@@ -122,11 +122,11 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 				return nil, fmt.Errorf("invalid receiver, %w", err)
 			}
 
-			receivers = append(receivers, Port{ch: receiver, addr: receiverPoint})
+			receivers = append(receivers, port{ch: receiver, addr: receiverPoint})
 		}
 
 		ss = append(ss, stream{
-			from: Port{ch: senderPort, addr: senderPoint},
+			from: port{ch: senderPort, addr: senderPoint},
 			to:   receivers,
 		})
 	}
@@ -227,7 +227,7 @@ func (r Runtime) startStream(s stream) {
 			case receiver.ch <- msg:
 				continue
 			default:
-				go func(to Port, m Msg) {
+				go func(to port, m Msg) {
 					to.ch <- m
 				}(receiver, msg)
 			}

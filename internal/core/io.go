@@ -11,20 +11,6 @@ type NodeIO struct {
 	out nodeOutports
 }
 
-// func (io NodeIO) String() string {
-// 	s := "in: {\n"
-// 	for port := range io.in {
-// 		s += "\t" + port
-// 	}
-
-// 	s += "}\nout: {"
-// 	for port := range io.out {
-// 		s += "\t" + port
-// 	}
-
-// 	return s
-// }
-
 func (io NodeIO) NormIn(name string) (chan Msg, error) {
 	return nodePorts(io.in).norm(name)
 }
@@ -83,23 +69,16 @@ type Msg struct {
 }
 
 type stream struct {
-	from Port
-	to   []Port // order may change
+	from port
+	to   []port // order may change
 }
 
 func (s stream) String() string {
 	return fmt.Sprintf("from %v to %v", s.from, s.to)
 }
 
-type Port struct {
+// TODO is addresses good for runtime?
+type port struct {
 	ch   chan Msg
 	addr PortAddr
 }
-
-// func (c Chan) Send(msg Msg, from PortAddr) {
-// 	c.ch <- msg
-// }
-
-// func (c Chan) Receive(msg Msg, from PortAddr) Msg {
-// 	return <-c.ch
-// }
