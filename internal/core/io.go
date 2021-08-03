@@ -83,12 +83,12 @@ type Msg struct {
 }
 
 type stream struct {
-	Sender    Port
-	Receivers []Port // order may change
+	from Port
+	to   []Port // order may change
 }
 
 func (s stream) String() string {
-	return fmt.Sprintf("from %v to %v", s.Sender, s.Receivers)
+	return fmt.Sprintf("from %v to %v", s.from, s.to)
 }
 
 type Port struct {

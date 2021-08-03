@@ -30,20 +30,6 @@ var (
 			}
 
 			go func() {
-				// i := 0
-				// for {
-				// 	fmt.Printf("i: %d\n", i)
-				// 	sum := core.Msg{}
-				// 	for j, c := range in {
-				// 		fmt.Printf("\twait === j: %d\n", j)
-				// 		msg := <-c
-				// 		fmt.Printf("\tgot  === j: %d\n", j)
-				// 		sum.Int += msg.Int
-				// 	}
-				// 	out <- sum
-				// 	i++
-				// }
-
 				for {
 					sum := core.Msg{}
 					for _, c := range in {

@@ -126,8 +126,8 @@ func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
 		}
 
 		ss = append(ss, stream{
-			Sender:    Port{ch: senderPort, addr: senderPoint},
-			Receivers: receivers,
+			from: Port{ch: senderPort, addr: senderPoint},
+			to:   receivers,
 		})
 	}
 
@@ -220,30 +220,16 @@ func (r Runtime) startStreams(ss []stream) {
 	}
 }
 
-func (m Runtime) startStream(s stream) {
-	fmt.Println(s)
-
-	for msg := range s.Sender.ch {
-		fmt.Printf("got msg from %v\n", s.Sender.addr)
-
-		for i, r := range s.Receivers {
-			fmt.Printf("%d start write to %v\n", i, r.addr)
-
-			i := i
-			r := r
-			// go func() {
-			// 	r.ch <- Msg{Int: msg.Int}
-			// 	fmt.Printf("%d finish write to %v\n", i, r.point)
-			// }()
-
+func (r Runtime) startStream(s stream) {
+	for msg := range s.from.ch {
+		for _, receiver := range s.to {
 			select {
-			case r.ch <- Msg{Int: msg.Int}:
-				fmt.Printf("%d finish write to %v\n", i, r.addr)
+			case receiver.ch <- msg:
+				continue
 			default:
-				go func() {
-					r.ch <- Msg{Int: msg.Int}
-					fmt.Printf("%d finish write to %v\n", i, r.addr)
-				}()
+				go func(to Port, m Msg) {
+					to.ch <- m
+				}(receiver, msg)
 			}
 		}
 	}
