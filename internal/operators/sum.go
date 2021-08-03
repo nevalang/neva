@@ -31,12 +31,22 @@ var (
 
 			go func() {
 				for {
-					sum := core.Msg{}
-					for _, c := range in {
-						msg := <-c
-						sum.Int += msg.Int
+					s := make(chan int, len(in))
+					for i := range in {
+						c := in[i]
+						go func() {
+							msg := <-c
+							s <- msg.Int
+						}()
 					}
-					out <- sum
+
+					sum := 0
+					for i := 0; i < len(in); i++ {
+						sum += <-s
+					}
+					close(s)
+
+					out <- core.Msg{Int: sum}
 				}
 			}()
 

@@ -12,6 +12,8 @@ deps:
 
 workers:
   w1: +
+  w2: +
+  w3: +
 
 net:
   in:
@@ -19,7 +21,13 @@ net:
       w1:
         - nums[0]
         - nums[1]
-        - nums[2]
+      w2:
+        - nums[0]
   w1:
     sum:
-      out: [y]
+      w2:
+        - nums[1]
+  w2:
+    sum:
+      out:
+        - y
