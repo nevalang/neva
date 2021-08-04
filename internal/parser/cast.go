@@ -9,91 +9,67 @@ import (
 	"github.com/emil14/stream/internal/types"
 )
 
-func cast(pmod module) (core.Component, error) {
-	io, err := castInterface(pmod.In, pmod.Out)
+func cast(mod module) (core.Component, error) {
+	io := castInterface(mod.In, mod.Out)
+	deps := castDeps(mod.Deps)
+
+	net, err := castNet(mod.Net)
 	if err != nil {
 		return nil, err
 	}
 
-	deps, err := castDeps(pmod.Deps)
-	if err != nil {
-		return nil, err
-	}
-
-	net, err := castNet(pmod.Net)
-	if err != nil {
-		return nil, err
-	}
-
-	mod, err := core.NewCustomModule(deps, io.In, io.Out, pmod.Workers, net)
-	if err != nil {
-		return nil, err
-	}
-
-	return mod, nil
+	return core.NewCustomModule(
+		io, deps, mod.Workers, net,
+	)
 }
 
-func castInterface(pin inports, pout outports) (core.Interface, error) {
-	rin, err := castPorts(ports(pin))
-	if err != nil {
-		return core.Interface{}, err
-	}
-
-	rout, err := castPorts(ports(pout))
-	if err != nil {
-		return core.Interface{}, err
-	}
-
+func castInterface(in inports, out outports) core.Interface {
 	return core.Interface{
-		In:  core.InportsInterface(rin),
-		Out: core.OutportsInterface(rout),
-	}, nil
+		In: core.InportsInterface(
+			castPorts(ports(in)),
+		),
+		Out: core.OutportsInterface(
+			castPorts(ports(out)),
+		),
+	}
 }
 
-func castPorts(pports ports) (core.PortsInterface, error) {
-	cports := core.PortsInterface{}
+func castPorts(from ports) core.PortsInterface {
+	to := core.PortsInterface{}
 
-	for port, t := range pports {
-		typ, err := types.ByName(t)
-		if err != nil { // TODO move to compiler
-			return nil, err
-		}
-
-		portType := core.PortType{Type: typ}
+	for port, t := range from {
+		portType := core.PortType{Type: types.ByName(t)}
 
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
 			port = strings.TrimSuffix(port, "[]")
 		}
 
-		cports[port] = portType
+		to[port] = portType
 	}
 
-	return cports, nil
+	return to
 }
 
-func castDeps(pdeps deps) (core.Interfaces, error) {
-	deps := core.Interfaces{}
+func castDeps(from deps) core.Interfaces {
+	to := core.Interfaces{}
 
-	for name, pio := range pdeps {
-		io, err := castInterface(pio.In, pio.Out)
-		if err != nil {
-			return nil, err
-		}
+	for name, pio := range from {
+		io := castInterface(pio.In, pio.Out)
 
-		deps[name] = core.Interface{
+		to[name] = core.Interface{
 			In:  io.In,
 			Out: io.Out,
 		}
 	}
 
-	return deps, nil
+	return to
 }
 
-func castNet(pnet net) (core.Net, error) {
-	net := core.Net{}
+func castNet(from net) (core.Net, error) {
+	to := core.Net{}
 
-	for sender, conns := range pnet {
+	for sender, conns := range from {
 		for outport, conn := range conns {
 			senderPortPoint, err := castPortPoint(sender, outport)
 			if err != nil {
@@ -113,11 +89,11 @@ func castNet(pnet net) (core.Net, error) {
 				}
 			}
 
-			net[senderPortPoint] = receivers
+			to[senderPortPoint] = receivers
 		}
 	}
 
-	return net, nil
+	return to, nil
 }
 
 func castPortPoint(node string, port string) (core.PortAddr, error) {

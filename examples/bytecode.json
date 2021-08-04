@@ -1,9 +1,65 @@
 {
-  "root": {
-    "in": {},
-    "out": {},
-    "w1": {},
-    "meta": {}
+  "import": ["*"],
+  "modules": {
+    "*": {
+      "operator": "*"
+    },
+    "root": {
+      "nodes": {
+        "in": {
+          "out": {
+            "x": 0
+          }
+        },
+        "out": {
+          "in": {
+            "y": 0
+          }
+        },
+        "multi": {
+          "in": {
+            "nums": 3
+          },
+          "out": {
+            "mul": 0
+          },
+          "module": "*"
+        }
+      },
+      "io": {
+        "in": {
+          "x": {
+            "node": "in",
+            "port": "x"
+          }
+        },
+        "out": {
+          "y": {
+            "node": "out",
+            "port": "y"
+          }
+        }
+      },
+      "streams": [
+        {
+          "from": {
+            "node": "in",
+            "port": "x"
+          },
+          "to": [
+            { "node": "multi", "port": "nums", "idx": 0 },
+            { "node": "multi", "port": "nums", "idx": 1 }
+          ]
+        },
+        {
+          "from": {
+            "node": "multi",
+            "port": "mul"
+          },
+          "to": [{ "node": "out", "port": "sum" }]
+        }
+      ]
+    }
   },
-  "+": {}
+  "root": "root"
 }

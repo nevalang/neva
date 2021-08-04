@@ -29,7 +29,7 @@ var run cli.ActionFunc = func(ctx *cli.Context) error {
 		},
 	)
 
-	io, err := r.Start("root", core.Meta{})
+	io, err := r.Start("root", core.NodeMeta{})
 	if err != nil {
 		return err
 	}

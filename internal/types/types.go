@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 type Type uint8
 
 func (t Type) String() string {
@@ -18,21 +16,21 @@ func (t Type) String() string {
 }
 
 const (
-	Int Type = iota + 1
+	Unknown Type = iota
+	Int
 	Str
 	Bool
 )
 
-// TODO do nut return error
-func ByName(s string) (Type, error) {
+func ByName(s string) Type {
 	switch s {
 	case "int":
-		return Int, nil
+		return Int
 	case "str":
-		return Str, nil
+		return Str
 	case "bool":
-		return Bool, nil
+		return Bool
 	}
 
-	return 0, fmt.Errorf("no type has name '%s'", s)
+	return Unknown
 }

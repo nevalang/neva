@@ -1,37 +1,24 @@
-in:
-  x: int
-out:
-  y: int
-
 deps:
-  "+":
-    in:
-      nums[]: int
-    out:
-      sum: int
   "*":
     in:
       nums[]: int
     out:
       mul: int
 
+in:
+  x: int
+out:
+  y: int
+
 workers:
-  +: "+"
-  "*": "*"
+  multi: "*"
 
 net:
   in:
     x:
-      +:
+      multi:
         - nums[0]
         - nums[1]
-        - nums[2]
-      "*":
-        - nums[0]
-  +:
-    sum:
-      "*":
-        - nums[1]
-  "*":
+  multi:
     mul:
       out: [y]

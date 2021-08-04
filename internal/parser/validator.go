@@ -1,70 +1,9 @@
 package parser
 
-// type Validator interface {
-// 	Validate(Module) error
-// }
-
-// func NewValidator() Validator {
-// 	return validator{}
-// }
-
-// type validator struct{}
-
-// func (v validator) Validate(mod Module) error {
-// 	if err := v.validateDeps(mod.Deps); err != nil {
-// 		return err
-// 	}
-// 	if err := v.validatePorts(mod.In, mod.Out); err != nil {
-// 		return err
-// 	}
-// 	if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
-// 		return err
-// 	}
-// 	if err := v.validate[]RelationsDef(mod.In, mod.Out, mod.Deps, mod.Workers, mod.[]RelationsDef); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// // validateDeps validates ports of every dependency.
-// func (v validator) validateDeps(deps Deps) error {
-// 	for name, dep := range deps {
-// 		if err := v.validatePorts(dep.In, dep.Out); err != nil {
-// 			return fmt.Errorf("invalid dep '%s': %w", name, err)
-// 		}
-// 	}
-// 	return nil
-// }
-
-// // validatePorts ensures that every port has valid type.
-// func (v validator) validatePorts(in Inports, out Outports) error {
-// 	for k, typ := range in {
-// 		if types.ByName(typ) == types.Unknown {
-// 			return fmt.Errorf("invalid inports: unknown type '%s' of port '%s'", typ, k)
-// 		}
-// 	}
-// 	for k, typ := range out {
-// 		if types.ByName(typ) == types.Unknown {
-// 			return fmt.Errorf("invalid outports: unknown type '%s' of port '%s'", typ, k)
-// 		}
-// 	}
-// 	return nil
-// }
-
-// // validateWorkers checks that every worker points to existing dependency.
-// func (v validator) validateWorkers(deps Deps, workers Workers) error {
-// 	for workerName, depName := range workers {
-// 		if _, ok := deps[depName]; !ok {
-// 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
-// 		}
-// 	}
-// 	return nil
-// }
-
 // // validate[]RelationsDef checks that all port connections are type safe.
 // // Then it checks that all connections are wired in the right way so the program will not block.
 // // Ports, dependencies and workers should be validated before passing here.
-// func (v validator) validate[]RelationsDef(in Inports, out Outports, deps Deps, workers Workers, net []RelationsDef) error {
+// func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Workers, net Net) error {
 // 	senderReceivers := Graph{}
 // 	receiverSenders := Graph{}
 

@@ -9,15 +9,15 @@ type Runtime struct {
 	cache map[string]bool
 }
 
-type Meta struct {
-	arrPortsSize arrPortsSize
+type NodeMeta struct {
+	arrSizes arrPortsSize
 }
 
 type arrPortsSize struct {
 	In, Out map[string]uint8
 }
 
-func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
+func (r Runtime) Start(name string, meta NodeMeta) (NodeIO, error) {
 	c, ok := r.env[name]
 	if !ok {
 		return NodeIO{}, errModNotFound(name)
@@ -29,10 +29,10 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 		nodeIO := r.nodeIO(
 			componentIO.In,
 			componentIO.Out,
-			meta.arrPortsSize,
+			meta.arrSizes,
 		)
 
-		if err := op.run(nodeIO); err != nil {
+		if err := op.impl(nodeIO); err != nil {
 			return NodeIO{}, err
 		}
 
@@ -56,12 +56,12 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	nodesIO["in"] = r.nodeIO(
 		nil,
 		OutportsInterface(componentIO.In),
-		meta.arrPortsSize,
+		meta.arrSizes,
 	)
 	nodesIO["out"] = r.nodeIO(
 		InportsInterface(componentIO.Out),
 		nil,
-		meta.arrPortsSize,
+		meta.arrSizes,
 	)
 
 	for worker, dep := range mod.workers {
@@ -88,7 +88,7 @@ func (r Runtime) Start(name string, meta Meta) (NodeIO, error) {
 	}, nil
 }
 
-func (rt Runtime) meta(io Interface, net Net, node string) Meta {
+func (rt Runtime) meta(io Interface, net Net, node string) NodeMeta {
 	m := arrPortsSize{
 		In:  map[string]uint8{},
 		Out: map[string]uint8{},
@@ -102,7 +102,7 @@ func (rt Runtime) meta(io Interface, net Net, node string) Meta {
 		m.Out[port] = net.ArrOutSize(node, port)
 	}
 
-	return Meta{arrPortsSize: m}
+	return NodeMeta{arrSizes: m}
 }
 
 func (rt Runtime) streams(io map[string]NodeIO, net Net) ([]stream, error) {
