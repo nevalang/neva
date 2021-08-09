@@ -3,20 +3,22 @@ package core
 import (
 	"fmt"
 
-	"github.com/emil14/stream/internal/types"
+	"github.com/emil14/stream/internal/core/types"
 )
 
 type Component interface {
-	Interface() Interface
+	Interface() ComponentInterface
 }
 
-type Interface struct {
+type ComponentInterface struct {
 	In  InportsInterface
 	Out OutportsInterface
 }
 
-func (want Interface) Compare(got Interface) error {
-	if err := PortsInterface(want.In).Compare(PortsInterface(got.In)); err != nil {
+func (want ComponentInterface) Compare(got ComponentInterface) error {
+	if err := PortsInterface(want.In).Compare(
+		PortsInterface(got.In),
+	); err != nil {
 		return fmt.Errorf("inport: %w", err)
 	}
 
@@ -35,27 +37,27 @@ type PortsInterface map[string]PortType
 
 func (want PortsInterface) Compare(got PortsInterface) error {
 	if len(want) != len(got) {
-		return errPortsLen(len(want), len(got))
+		return ErrPortsLen
 	}
 
 	for name, typ := range want {
 		_, ok := got[name]
 		if !ok {
-			return errPortNotFound(name, typ)
+			return ErrPortNotFound
 		}
 
 		if err := typ.Compare(got[name]); err != nil {
-			return errPortInvalid(name, err)
+			return ErrPortInvalid
 		}
 	}
 
 	return nil
 }
 
-func (io PortsInterface) Arr() map[string]PortType {
+func (ports PortsInterface) ArrPorts() map[string]PortType {
 	m := map[string]PortType{}
 
-	for name, typ := range io {
+	for name, typ := range ports {
 		if typ.Arr {
 			m[name] = typ
 		}
@@ -69,9 +71,9 @@ type PortType struct {
 	Arr  bool
 }
 
-func (p1 PortType) Compare(p2 PortType) error {
-	if p1.Arr != p2.Arr || p1.Type != p2.Type {
-		return errPortTypes(p1, p2)
+func (want PortType) Compare(got PortType) error {
+	if want.Arr != got.Arr || want.Type != got.Type {
+		return ErrPortTypes
 	}
 
 	return nil

@@ -1,12 +1,10 @@
 package parser
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/emil14/stream/internal/core"
-	"github.com/emil14/stream/internal/types"
+	"github.com/emil14/stream/internal/core/types"
 )
 
 func cast(mod module) (core.Component, error) {
@@ -18,13 +16,13 @@ func cast(mod module) (core.Component, error) {
 		return nil, err
 	}
 
-	return core.NewCustomModule(
+	return core.NewModule(
 		io, deps, mod.Workers, net,
 	)
 }
 
-func castInterface(in inports, out outports) core.Interface {
-	return core.Interface{
+func castInterface(in inports, out outports) core.ComponentInterface {
+	return core.ComponentInterface{
 		In: core.InportsInterface(
 			castPorts(ports(in)),
 		),
@@ -57,7 +55,7 @@ func castDeps(from deps) core.Interfaces {
 	for name, pio := range from {
 		io := castInterface(pio.In, pio.Out)
 
-		to[name] = core.Interface{
+		to[name] = core.ComponentInterface{
 			In:  io.In,
 			Out: io.Out,
 		}
@@ -97,24 +95,26 @@ func castNet(from net) (core.Net, error) {
 }
 
 func castPortPoint(node string, port string) (core.PortAddr, error) {
-	bracketStart := strings.Index(port, "[")
-	if bracketStart == -1 {
-		return core.NewNormPortPoint(node, port)
-	}
+	// bracketStart := strings.Index(port, "[")
+	// if bracketStart == -1 {
+	// 	return core.Validate(node, port)
+	// }
 
-	bracketEnd := strings.Index(port, "]")
-	if bracketEnd == -1 {
-		return nil, fmt.Errorf("invalid port name")
-	}
+	// bracketEnd := strings.Index(port, "]")
+	// if bracketEnd == -1 {
+	// 	return nil, fmt.Errorf("invalid port name")
+	// }
 
-	idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
-	if err != nil {
-		return nil, err
-	}
+	// idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return core.NewArrPortPoint(
-		node,
-		port[:bracketStart],
-		idx,
-	)
+	// return core.NewArrPortPoint(
+	// 	node,
+	// 	port[:bracketStart],
+	// 	idx,
+	// )
+
+	return core.PortAddr{}, nil
 }

@@ -1,10 +1,9 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/emil14/stream/internal/types"
+	"github.com/emil14/stream/internal/core/types"
 )
 
 type module struct {
@@ -15,8 +14,8 @@ type module struct {
 	net     Net
 }
 
-func (cm module) Interface() Interface {
-	return Interface{
+func (cm module) Interface() ComponentInterface {
+	return ComponentInterface{
 		In:  cm.in,
 		Out: cm.out,
 	}
@@ -83,117 +82,18 @@ func (v module) validateDeps(deps Interfaces) error {
 	return nil
 }
 
-type Interfaces map[string]Interface
+type Interfaces map[string]ComponentInterface
 
 type Net map[PortAddr]map[PortAddr]struct{}
 
-// TODO: check if that is not arrport point.
-func (net Net) ArrInSize(node, port string) uint8 {
-	var size uint8
-
-	for _, rr := range net {
-		for receiver := range rr {
-			if receiver.Node() == node && receiver.Port() == port {
-				size++
-			}
-		}
-	}
-
-	return size
+type PortAddr struct {
+	Node string
+	Port string
+	Idx  uint8
 }
 
-func (net Net) ArrOutSize(node, port string) uint8 {
-	var size uint8
-
-	for sender := range net {
-		if sender.Node() == node && sender.Port() == port {
-			size++
-		}
-	}
-
-	return size
-}
-
-type PortAddr interface {
-	Node() string
-	Port() string
-	Compare(PortAddr) bool
-}
-
-type NormPortAddr struct {
-	node string
-	port string
-}
-
-func NewNormPortPoint(node, port string) (NormPortAddr, error) {
-	if node == "" || port == "" {
-		return NormPortAddr{}, fmt.Errorf("invalid normal port point")
-	}
-
-	return NormPortAddr{
-		port: port,
-		node: node,
-	}, nil
-}
-
-func (p NormPortAddr) Node() string {
-	return p.node
-}
-
-func (p NormPortAddr) Port() string {
-	return p.port
-}
-
-func (p NormPortAddr) Compare(got PortAddr) bool {
-	norm, ok := got.(NormPortAddr)
-	if !ok {
-		return false
-	}
-
-	return norm.node == got.Node() && norm.port == got.Port()
-}
-
-type ArrPortPoint struct {
-	node string
-	port string
-	idx  uint8
-}
-
-func NewArrPortPoint(node, port string, idx uint64) (ArrPortPoint, error) {
-	if node == "" || port == "" || idx > 255 {
-		return ArrPortPoint{}, errors.New("invalid array port point")
-	}
-
-	return ArrPortPoint{
-		node: node,
-		port: port,
-		idx:  uint8(idx),
-	}, nil
-}
-
-func (p ArrPortPoint) Node() string {
-	return p.node
-}
-
-func (p ArrPortPoint) Port() string {
-	return p.port
-}
-
-func (p ArrPortPoint) Idx() uint8 {
-	return p.idx
-}
-
-func (p ArrPortPoint) Compare(got PortAddr) bool {
-	arr, ok := got.(ArrPortPoint)
-	if !ok {
-		return false
-	}
-
-	return arr.node == got.Node() && arr.port == got.Port() && arr.idx == arr.Idx()
-}
-
-func NewCustomModule(
-	io Interface,
+func NewModule(
+	io ComponentInterface,
 	deps Interfaces,
 	workers map[string]string,
 	net Net,
@@ -206,7 +106,7 @@ func NewCustomModule(
 		net:     net,
 	}
 
-	if err := mod.Validate(); err != nil { // TODO move to compiler
+	if err := mod.Validate(); err != nil {
 		return nil, err
 	}
 

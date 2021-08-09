@@ -1,7 +1,14 @@
 package compiler
 
-type compiler struct{}
+import (
+	"github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/runtime"
+)
 
-func (c compiler) ParseByteCode([]byte) error {
-	return nil
+type compiler struct {
+	p Parser
+}
+
+func (c compiler) Compile(prog map[string]core.Component) (runtime.Program, error) {
+	return runtime.Program{}, nil
 }
