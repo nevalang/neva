@@ -30,7 +30,7 @@ func main() {
 
 func New() runtime.Runtime {
 	return runtime.Runtime{
-		Operators: map[string]func(runtime.RuntimeIO) error{
+		Operators: map[string]func(runtime.IO) error{
 			"*": operators.Mul,
 		},
 	}

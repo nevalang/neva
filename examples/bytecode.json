@@ -4,7 +4,7 @@
       "operator": "*"
     },
     "main": {
-      "workerNodes": {
+      "workers": {
         "multi": {
           "component": "*",
           "in": {
@@ -36,7 +36,7 @@
       ]
     }
   },
-  "rootNode": {
+  "root": {
     "component": "main",
     "in": {
       "x": 0

@@ -4,7 +4,7 @@ import (
 	"github.com/emil14/stream/internal/runtime"
 )
 
-func Mul(io runtime.RuntimeIO) error {
+func Mul(io runtime.IO) error {
 	in := io.In.Slots("nums")
 	out := io.Out.Port("mul")
 
