@@ -1,11 +1,32 @@
 # Glossary
 
-- `network`
-- `node`
-- `component`
-- `module`
-- `operator`
-- `ports`
-- `inports`
-- `outports`
-- `array ports`
+- Program
+- Network
+- Node
+- Component
+- Module
+- Operator
+- Ports
+- Inports
+- Outports
+- Array ports
+
+## Program
+
+## Network
+
+## Node
+
+## Component
+
+## Module
+
+## Operator
+
+## Ports
+
+## Inports
+
+## Outports
+
+## Array ports

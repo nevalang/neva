@@ -18,7 +18,6 @@ func main() {
 				Name: "compile",
 				Action: func(*cli.Context) error {
 
-					// New().Run()
 					return nil
 				},
 			},
