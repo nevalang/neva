@@ -1,9 +1,7 @@
-package core
+package program
 
 import (
 	"fmt"
-
-	"github.com/emil14/stream/internal/core/types"
 )
 
 type Module struct {
@@ -38,20 +36,20 @@ func (mod Module) Validate() error {
 	return nil
 }
 
-// validatePorts checks that ports are not empty and there is no unknown types.
+// validatePorts checks that ports are not empty and there is no unknown
 func (mod Module) validatePorts(io IO) error {
 	if len(io.In) == 0 || len(io.Out) == 0 {
 		return fmt.Errorf("ports len 0")
 	}
 
 	for port, t := range io.In {
-		if t.Type == types.Unknown {
+		if t.Type == Unknown {
 			return fmt.Errorf("unknown type " + port)
 		}
 	}
 
 	for port, t := range io.Out {
-		if t.Type == types.Unknown {
+		if t.Type == Unknown {
 			return fmt.Errorf("unknown type " + port)
 		}
 	}

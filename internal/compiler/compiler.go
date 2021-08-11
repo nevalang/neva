@@ -3,8 +3,8 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/emil14/stream/internal/core"
-	"github.com/emil14/stream/internal/runtime/program"
+	cprogram "github.com/emil14/stream/internal/compiler/program"
+	rprogram "github.com/emil14/stream/internal/runtime/program"
 )
 
 type compiler struct {
@@ -33,11 +33,11 @@ func (c compiler) Compile(src []byte) ([]byte, error) {
 }
 
 type Translator interface {
-	Translate(core.Module) program.Program
+	Translate(cprogram.Module) rprogram.Program
 }
 
 type Coder interface {
-	Code(program.Program) ([]byte, error)
+	Code(rprogram.Program) ([]byte, error)
 }
 
 func New(p Parser, v Validator, t Translator, c Coder) (compiler, error) {

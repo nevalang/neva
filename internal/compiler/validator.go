@@ -3,7 +3,7 @@ package compiler
 import (
 	"errors"
 
-	"github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/compiler/program"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 )
 
 type Validator interface {
-	Validate(core.Module) error
+	Validate(program.Module) error
 }
 
 // // validate[]RelationsDef checks that all port connections are type safe.
@@ -40,7 +40,7 @@ type Validator interface {
 
 // 		for outport, conn := range conns {
 // 			senderPoint := PortPoint{Node: sender, Port: outport}
-// 			senderOutport := types.ByName(senderOutports[outport])
+// 			senderOutport := ByName(senderOutports[outport])
 // 			receivers := map[PortPoint]struct{}{}
 
 // 			for receiver, inports := range conn {
@@ -56,7 +56,7 @@ type Validator interface {
 // 				}
 
 // 				for _, inport := range inports {
-// 					receiverInport := types.ByName(receiverInports[inport])
+// 					receiverInport := ByName(receiverInports[inport])
 // 					if senderOutport != receiverInport {
 // 						return fmt.Errorf("mismatched types")
 // 					}

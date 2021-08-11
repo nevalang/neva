@@ -1,8 +1,10 @@
 package compiler
 
-import "github.com/emil14/stream/internal/core"
+import (
+	"github.com/emil14/stream/internal/compiler/program"
+)
 
 type Parser interface {
-	Parse([]byte) (core.Module, error)
-	Unparse(core.Module) ([]byte, error)
+	Parse([]byte) (program.Module, error)
+	Unparse(program.Module) ([]byte, error)
 }

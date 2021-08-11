@@ -1,9 +1,7 @@
-package core
+package program
 
 import (
 	"fmt"
-
-	"github.com/emil14/stream/internal/core/types"
 )
 
 type IO struct {
@@ -63,7 +61,7 @@ func (ports Ports) ArrPorts() map[string]PortType {
 }
 
 type PortType struct {
-	Type types.Type
+	Type Type
 	Arr  bool
 }
 

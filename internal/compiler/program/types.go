@@ -1,4 +1,4 @@
-package types
+package program
 
 type Type uint8
 

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/stream/internal/core"
-	"github.com/emil14/stream/internal/core/types"
+	"github.com/emil14/stream/internal/compiler/program"
+	core "github.com/emil14/stream/internal/compiler/program"
 )
 
 func cast(mod module) (core.Module, error) {
@@ -38,7 +38,7 @@ func castPorts(from ports) core.Ports {
 	to := core.Ports{}
 
 	for port, t := range from {
-		portType := core.PortType{Type: types.ByName(t)}
+		portType := core.PortType{Type: program.ByName(t)}
 
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
