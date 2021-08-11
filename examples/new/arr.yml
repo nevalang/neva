@@ -1,0 +1,24 @@
+deps:
+  "*":
+    in:
+      nums[]: int
+    out:
+      mul: int
+
+in:
+  x: int
+out:
+  y: int
+
+workers:
+  multi: "*"
+
+net:
+  in:
+    x:
+      multi:
+        - nums[0]
+        - nums[1]
+  multi:
+    mul:
+      out: [y]
