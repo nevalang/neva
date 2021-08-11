@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	cprog "github.com/emil14/stream/internal/compiler/program"
+	"github.com/emil14/stream/internal/compiler/program"
 	rprog "github.com/emil14/stream/internal/runtime/program"
 )
 
@@ -24,16 +24,18 @@ func (c compiler) Compile(src []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	bb, err := c.coder.Code(c.translator.Translate(mod))
+	prog := program.Program{
+		Components: map[string]program.Component{
+			"root": mod,
+		},
+	}
+
+	bb, err := c.coder.Code(c.translator.Translate(prog))
 	if err != nil {
 		return nil, err
 	}
 
 	return bb, nil
-}
-
-type Translator interface {
-	Translate(cprog.Module) rprog.Program
 }
 
 type Coder interface {
@@ -51,4 +53,12 @@ func New(p Parser, v Validator, t Translator, c Coder) (compiler, error) {
 		translator: t,
 		coder:      c,
 	}, nil
+}
+
+func MustNew(p Parser, v Validator, t Translator, c Coder) compiler {
+	cmp, err := New(p, v, t, c)
+	if err != nil {
+		panic(err)
+	}
+	return cmp
 }

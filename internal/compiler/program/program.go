@@ -1,6 +1,6 @@
 package program
 
 type Program struct {
-	root       Component
-	components Component
+	Root       string
+	Components map[string]Component
 }

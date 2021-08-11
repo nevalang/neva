@@ -5,20 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "check",
+      "name": "compile",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/stream",
-      "args": ["check", "${workspaceFolder}/examples/arr.yml"]
-    },
-    {
-      "name": "run",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/stream",
-      "args": ["run", "${workspaceFolder}/examples/arr.yml"]
+      "args": ["compile"]
     }
   ]
 }

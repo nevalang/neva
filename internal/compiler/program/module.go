@@ -15,6 +15,7 @@ func (cm Module) IO() IO {
 	return cm.io
 }
 
+// TODO check arr points - should be no holes
 func (mod Module) Validate() error {
 	if err := mod.validatePorts(mod.io); err != nil {
 		return err
@@ -27,8 +28,6 @@ func (mod Module) Validate() error {
 	if err := mod.validateWorkers(mod.deps, mod.workers); err != nil {
 		return err
 	}
-
-	// TODO check arr points - should be no holes
 
 	return nil
 }
@@ -97,10 +96,6 @@ func NewModule(
 		io:      io,
 		workers: workers,
 		net:     net,
-	}
-
-	if err := mod.Validate(); err != nil {
-		return Module{}, err
 	}
 
 	return mod, nil
