@@ -6,6 +6,7 @@ import (
 
 	"github.com/emil14/stream/internal/runtime"
 	"github.com/emil14/stream/internal/runtime/operators"
+
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -14,8 +15,9 @@ func main() {
 		Name: "stream",
 		Commands: []*cli.Command{
 			{
-				Name: "run",
+				Name: "compile",
 				Action: func(*cli.Context) error {
+
 					// New().Run()
 					return nil
 				},
@@ -30,8 +32,6 @@ func main() {
 
 func New() runtime.Runtime {
 	return runtime.Runtime{
-		Operators: map[string]func(runtime.IO) error{
-			"*": operators.Mul,
-		},
+		Operators: operators.New(),
 	}
 }

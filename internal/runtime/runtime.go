@@ -7,7 +7,7 @@ import (
 )
 
 type Runtime struct {
-	Operators map[string]func(IO) error
+	Operators map[string]Operator
 }
 
 func (r Runtime) Run(p program.Program) (IO, error) {
@@ -162,6 +162,8 @@ func (r Runtime) startStream(s stream) {
 		}
 	}
 }
+
+type Operator func(IO) error
 
 type Msg struct {
 	Str  string

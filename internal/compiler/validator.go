@@ -1,5 +1,16 @@
 package compiler
 
+import "errors"
+
+var (
+	ErrModNotFound    = errors.New("module not found")
+	ErrUnknownModType = errors.New("module has unknown type")
+	ErrPortsLen       = errors.New("different number of ports")
+	ErrPortTypes      = errors.New("different port types")
+	ErrPortInvalid    = errors.New("invalid port")
+	ErrPortNotFound   = errors.New("port not found")
+)
+
 // // validate[]RelationsDef checks that all port connections are type safe.
 // // Then it checks that all connections are wired in the right way so the program will not block.
 // // Ports, dependencies and workers should be validated before passing here.

@@ -4,7 +4,7 @@ import (
 	"github.com/emil14/stream/internal/runtime"
 )
 
-func Mul(io runtime.IO) error {
+var Mul runtime.Operator = func(io runtime.IO) error {
 	in, err := io.In.Slots("nums")
 	if err != nil {
 		return err // TODO

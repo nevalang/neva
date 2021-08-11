@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/emil14/stream/internal/core"
@@ -67,9 +69,9 @@ func castDeps(from deps) core.Interfaces {
 func castNet(from net) (core.Net, error) {
 	to := core.Net{}
 
-	for sender, conns := range from {
-		for outport, conn := range conns {
-			senderPortPoint, err := castPortPoint(sender, outport)
+	for senderNode, connections := range from {
+		for outport, conn := range connections {
+			senderPortPoint, err := castPortPoint(senderNode, outport)
 			if err != nil {
 				return nil, err
 			}
@@ -95,30 +97,31 @@ func castNet(from net) (core.Net, error) {
 }
 
 func castPortPoint(node string, port string) (core.PortAddr, error) {
-	// bracketStart := strings.Index(port, "[")
-	// if bracketStart == -1 {
-	// 	return core.Validate(node, port)
-	// }
+	bracketStart := strings.Index(port, "[")
+	if bracketStart == -1 {
+		return core.PortAddr{
+			Node: node,
+			Port: port,
+		}, nil
+	}
 
-	// bracketEnd := strings.Index(port, "]")
-	// if bracketEnd == -1 {
-	// 	return nil, fmt.Errorf("invalid port name")
-	// }
+	bracketEnd := strings.Index(port, "]")
+	if bracketEnd == -1 {
+		return core.PortAddr{}, fmt.Errorf("invalid port name")
+	}
 
-	// idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
+	if err != nil {
+		return core.PortAddr{}, err
+	}
 
-	// return core.NewArrPortPoint(
-	// 	node,
-	// 	port[:bracketStart],
-	// 	idx,
-	// )
+	if idx > 255 {
+		return core.PortAddr{}, fmt.Errorf("too big index")
+	}
 
 	return core.PortAddr{
 		Node: node,
-		Port: port,
-		Idx:  0,
+		Port: port[:bracketStart],
+		Idx:  uint8(idx),
 	}, nil
 }
