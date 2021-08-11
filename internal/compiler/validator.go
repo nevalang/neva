@@ -1,6 +1,10 @@
 package compiler
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/emil14/stream/internal/core"
+)
 
 var (
 	ErrModNotFound    = errors.New("module not found")
@@ -10,6 +14,10 @@ var (
 	ErrPortInvalid    = errors.New("invalid port")
 	ErrPortNotFound   = errors.New("port not found")
 )
+
+type Validator interface {
+	Validate(core.Module) error
+}
 
 // // validate[]RelationsDef checks that all port connections are type safe.
 // // Then it checks that all connections are wired in the right way so the program will not block.

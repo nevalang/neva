@@ -1,28 +1,54 @@
 package compiler
 
+import (
+	"fmt"
+
+	"github.com/emil14/stream/internal/core"
+	"github.com/emil14/stream/internal/runtime/program"
+)
+
 type compiler struct {
-	parser Parser
+	parser     Parser
+	validator  Validator
+	translator Translator
+	coder      Coder
 }
 
 func (c compiler) Compile(src []byte) ([]byte, error) {
-	// srcMod, err := c.parser.Parse(src)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	mod, err := c.parser.Parse(src)
+	if err != nil {
+		return nil, err
+	}
 
-	// if err := srcMod.Validate(); err != nil {
-	// 	return nil, err
-	// }
+	if err := c.validator.Validate(mod); err != nil {
+		return nil, err
+	}
 
-	// return program.Program{
-	// 	Root: program.NodeMeta{},
-	// }, nil
+	bb, err := c.coder.Code(c.translator.Translate(mod))
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return bb, nil
 }
 
-// func compileModule(mod core.Module) (program.Program, error) {
+type Translator interface {
+	Translate(core.Module) program.Program
+}
 
-// }
+type Coder interface {
+	Code(program.Program) ([]byte, error)
+}
 
-// func New() Compiler
+func New(p Parser, v Validator, t Translator, c Coder) (compiler, error) {
+	if p == nil || v == nil || t == nil || c == nil {
+		return compiler{}, fmt.Errorf("failed to build compiler")
+	}
+
+	return compiler{
+		parser:     p,
+		validator:  v,
+		translator: t,
+		coder:      c,
+	}, nil
+}

@@ -7,12 +7,12 @@ import (
 var Mul runtime.Operator = func(io runtime.IO) error {
 	in, err := io.In.Slots("nums")
 	if err != nil {
-		return err // TODO
+		return err
 	}
 
 	out, err := io.Out.Port("mul")
 	if err != nil {
-		return err // TODO
+		return err
 	}
 
 	go func() {
