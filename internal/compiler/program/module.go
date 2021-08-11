@@ -11,11 +11,8 @@ type Module struct {
 	net     Net
 }
 
-func (cm Module) Interface() IO {
-	return IO{
-		In:  cm.io.In,
-		Out: cm.io.Out,
-	}
+func (cm Module) IO() IO {
+	return cm.io
 }
 
 func (mod Module) Validate() error {

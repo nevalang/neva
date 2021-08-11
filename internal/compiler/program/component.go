@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type Component interface {
+	IO() IO
+}
+
 type IO struct {
 	In  Inports
 	Out Outports
