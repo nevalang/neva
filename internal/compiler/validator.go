@@ -1,4 +1,4 @@
-package parser
+package compiler
 
 // // validate[]RelationsDef checks that all port connections are type safe.
 // // Then it checks that all connections are wired in the right way so the program will not block.

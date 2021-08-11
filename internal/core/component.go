@@ -6,36 +6,32 @@ import (
 	"github.com/emil14/stream/internal/core/types"
 )
 
-type Component interface {
-	Interface() ComponentInterface
+type IO struct {
+	In  Inports
+	Out Outports
 }
 
-type ComponentInterface struct {
-	In  InportsInterface
-	Out OutportsInterface
-}
-
-func (want ComponentInterface) Compare(got ComponentInterface) error {
-	if err := PortsInterface(want.In).Compare(
-		PortsInterface(got.In),
+func (want IO) Compare(got IO) error {
+	if err := Ports(want.In).Compare(
+		Ports(got.In),
 	); err != nil {
 		return fmt.Errorf("inport: %w", err)
 	}
 
-	if err := PortsInterface(want.Out).Compare(PortsInterface(got.Out)); err != nil {
+	if err := Ports(want.Out).Compare(Ports(got.Out)); err != nil {
 		return fmt.Errorf("outport: %w", err)
 	}
 
 	return nil
 }
 
-type InportsInterface PortsInterface
+type Inports Ports
 
-type OutportsInterface PortsInterface
+type Outports Ports
 
-type PortsInterface map[string]PortType
+type Ports map[string]PortType
 
-func (want PortsInterface) Compare(got PortsInterface) error {
+func (want Ports) Compare(got Ports) error {
 	if len(want) != len(got) {
 		return ErrPortsLen
 	}
@@ -54,7 +50,7 @@ func (want PortsInterface) Compare(got PortsInterface) error {
 	return nil
 }
 
-func (ports PortsInterface) ArrPorts() map[string]PortType {
+func (ports Ports) ArrPorts() map[string]PortType {
 	m := map[string]PortType{}
 
 	for name, typ := range ports {

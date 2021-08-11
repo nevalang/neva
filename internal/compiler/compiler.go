@@ -1,14 +1,28 @@
 package compiler
 
-import (
-	"github.com/emil14/stream/internal/core"
-	"github.com/emil14/stream/internal/runtime"
-)
-
 type compiler struct {
-	p Parser
+	parser Parser
 }
 
-func (c compiler) Compile(prog map[string]core.Component) (runtime.Program, error) {
-	return runtime.Program{}, nil
+func (c compiler) Compile(src []byte) ([]byte, error) {
+	// srcMod, err := c.parser.Parse(src)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if err := srcMod.Validate(); err != nil {
+	// 	return nil, err
+	// }
+
+	// return program.Program{
+	// 	Root: program.NodeMeta{},
+	// }, nil
+
+	return nil, nil
 }
+
+// func compileModule(mod core.Module) (program.Program, error) {
+
+// }
+
+// func New() Compiler

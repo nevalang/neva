@@ -14,7 +14,7 @@ func (r Runtime) Run(p program.Program) (IO, error) {
 	return r.connectNode(p.Components, p.Root)
 }
 
-func (r Runtime) connectNode(scope map[string]program.Component, node program.Node) (IO, error) {
+func (r Runtime) connectNode(scope map[string]program.Component, node program.NodeMeta) (IO, error) {
 	component, ok := scope[node.Component]
 	if !ok {
 		return IO{}, fmt.Errorf(node.Component)
@@ -29,9 +29,9 @@ func (r Runtime) connectNode(scope map[string]program.Component, node program.No
 	}
 
 	in, out := r.nodeIO(node)
-	nodesIO := map[string]IO{
-		"in":  IO{Out: in},
-		"out": IO{In: out},
+	net := map[string]IO{
+		"in":  {Out: in}, // for this module's net 'in' is sender
+		"out": {In: out}, // for this module's net 'out' is receiver
 	}
 
 	for workerNode, meta := range component.Workers {
@@ -39,11 +39,12 @@ func (r Runtime) connectNode(scope map[string]program.Component, node program.No
 		if err != nil {
 			return IO{}, err
 		}
-		nodesIO[workerNode] = io
+
+		net[workerNode] = io
 	}
 
 	r.startStreams(
-		r.streams(nodesIO, component.Net),
+		r.streams(net, component.Net),
 	)
 
 	return IO{in, out}, nil
@@ -51,19 +52,44 @@ func (r Runtime) connectNode(scope map[string]program.Component, node program.No
 
 func (r Runtime) streams(nodesIO map[string]IO, net []program.Stream) []stream {
 	ss := make([]stream, len(net))
+
 	for i := range net {
-		ss[i] = stream{
-			// from: ,
-			// to: ,
+		nodeIO, ok := nodesIO[net[i].From.Node]
+		if !ok {
+			panic("not ok")
 		}
-		// s.From
-		// s.To
+
+		from, ok := nodeIO.Out[PortAddr{
+			port: net[i].From.Port,
+			idx:  net[i].From.Idx,
+		}]
+		if !ok {
+			panic("not ok")
+		}
+
+		to := make([]chan Msg, len(net[i].To))
+		for j := range net[i].To {
+			receiver, ok := nodeIO.In[PortAddr{
+				port: net[i].To[j].Port,
+				idx:  net[i].To[j].Idx,
+			}]
+			if !ok {
+				panic("not ok")
+			}
+
+			to[j] = receiver
+		}
+
+		ss[i] = stream{
+			from: from,
+			to:   to,
+		}
 	}
 
 	return nil
 }
 
-func (r Runtime) nodeIO(node program.Node) (in Ports, out Ports) {
+func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
 	inports := make(map[PortAddr]chan Msg)
 	for port, size := range node.In {
 		if size > 0 {
@@ -101,7 +127,7 @@ func (r Runtime) nodeIO(node program.Node) (in Ports, out Ports) {
 	return inports, outports
 }
 
-func (r Runtime) connectOperator(name string, node program.Node) (IO, error) {
+func (r Runtime) connectOperator(name string, node program.NodeMeta) (IO, error) {
 	connector, ok := r.Operators[name]
 	if !ok {
 		return IO{}, fmt.Errorf("ErrUnknownOperator: %s", name)
@@ -154,6 +180,7 @@ type IO struct {
 
 type Ports map[PortAddr]chan Msg
 
+// Slots returns all channels associated with the given array port name.
 func (p Ports) Slots(arrPort string) ([]chan Msg, error) {
 	cc := []chan Msg{}
 	for addr, ch := range p {
@@ -169,6 +196,7 @@ func (p Ports) Slots(arrPort string) ([]chan Msg, error) {
 	return cc, nil
 }
 
+// Port returns all channels associated with the given normal port name.
 func (p Ports) Port(port string) (chan Msg, error) {
 	for addr, ch := range p {
 		if addr.port == port {

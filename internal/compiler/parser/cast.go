@@ -7,13 +7,13 @@ import (
 	"github.com/emil14/stream/internal/core/types"
 )
 
-func cast(mod module) (core.Component, error) {
+func cast(mod module) (core.Module, error) {
 	io := castInterface(mod.In, mod.Out)
 	deps := castDeps(mod.Deps)
 
 	net, err := castNet(mod.Net)
 	if err != nil {
-		return nil, err
+		return core.Module{}, err
 	}
 
 	return core.NewModule(
@@ -21,19 +21,19 @@ func cast(mod module) (core.Component, error) {
 	)
 }
 
-func castInterface(in inports, out outports) core.ComponentInterface {
-	return core.ComponentInterface{
-		In: core.InportsInterface(
+func castInterface(in inports, out outports) core.IO {
+	return core.IO{
+		In: core.Inports(
 			castPorts(ports(in)),
 		),
-		Out: core.OutportsInterface(
+		Out: core.Outports(
 			castPorts(ports(out)),
 		),
 	}
 }
 
-func castPorts(from ports) core.PortsInterface {
-	to := core.PortsInterface{}
+func castPorts(from ports) core.Ports {
+	to := core.Ports{}
 
 	for port, t := range from {
 		portType := core.PortType{Type: types.ByName(t)}
@@ -55,7 +55,7 @@ func castDeps(from deps) core.Interfaces {
 	for name, pio := range from {
 		io := castInterface(pio.In, pio.Out)
 
-		to[name] = core.ComponentInterface{
+		to[name] = core.IO{
 			In:  io.In,
 			Out: io.Out,
 		}
@@ -116,5 +116,9 @@ func castPortPoint(node string, port string) (core.PortAddr, error) {
 	// 	idx,
 	// )
 
-	return core.PortAddr{}, nil
+	return core.PortAddr{
+		Node: node,
+		Port: port,
+		Idx:  0,
+	}, nil
 }

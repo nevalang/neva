@@ -5,8 +5,15 @@ import (
 )
 
 func Mul(io runtime.IO) error {
-	in := io.In.Slots("nums")
-	out := io.Out.Port("mul")
+	in, err := io.In.Slots("nums")
+	if err != nil {
+		return err // TODO
+	}
+
+	out, err := io.Out.Port("mul")
+	if err != nil {
+		return err // TODO
+	}
 
 	go func() {
 		for {
