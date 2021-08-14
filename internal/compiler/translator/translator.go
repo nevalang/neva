@@ -1,16 +1,35 @@
 package translator
 
 import (
+	"fmt"
+
 	cprog "github.com/emil14/neva/internal/compiler/program"
 	rprog "github.com/emil14/neva/internal/runtime/program"
 )
 
-type translator struct{}
+type Translator struct{}
 
-func (t translator) Translate(cprog.Program) rprog.Program {
-	return rprog.Program{}
+// todo
+func (t Translator) Translate(prog cprog.Program) (rprog.Program, error) {
+	root, ok := prog.Components[prog.Root]
+	if !ok {
+		return rprog.Program{}, fmt.Errorf("...")
+	}
+
+	return rprog.Program{
+		Root:       t.translateNodeMeta(root),
+		Components: t.translateComponents(prog.Components),
+	}, nil
 }
 
-func MustNew() translator {
-	return translator{}
+func (t Translator) translateNodeMeta() rprog.NodeMeta {
+	return rprog.NodeMeta{}
+}
+
+func (t Translator) translateComponents(map[string]cprog.Component) map[string]rprog.Component {
+	return rprog.NodeMeta{}
+}
+
+func New() Translator {
+	return Translator{}
 }

@@ -38,7 +38,7 @@ func castPorts(from ports) core.Ports {
 	to := core.Ports{}
 
 	for port, t := range from {
-		portType := core.PortType{Type: program.ByName(t)}
+		portType := core.PortType{Type: program.TypeByName(t)}
 
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
@@ -51,8 +51,8 @@ func castPorts(from ports) core.Ports {
 	return to
 }
 
-func castDeps(from deps) core.Interfaces {
-	to := core.Interfaces{}
+func castDeps(from deps) core.ComponentsIO {
+	to := core.ComponentsIO{}
 
 	for name, pio := range from {
 		io := castInterface(pio.In, pio.Out)

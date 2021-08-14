@@ -4,13 +4,13 @@ type Type uint8
 
 func (t Type) String() string {
 	switch t {
-	case Int:
+	case IntType:
 		return "int"
-	case Str:
+	case StrType:
 		return "str"
-	case Bool:
+	case BoolType:
 		return "bool"
-	case Struct:
+	case StructType:
 		return "struct"
 	}
 
@@ -18,24 +18,24 @@ func (t Type) String() string {
 }
 
 const (
-	Unknown Type = iota
-	Int
-	Str
-	Bool
-	Struct
+	UnknownType Type = iota
+	IntType
+	StrType
+	BoolType
+	StructType
 )
 
-func ByName(s string) Type {
-	switch s {
+func TypeByName(name string) Type {
+	switch name {
 	case "int":
-		return Int
+		return IntType
 	case "str":
-		return Str
+		return StrType
 	case "bool":
-		return Bool
+		return BoolType
 	case "struct":
-		return Struct
+		return StructType
 	}
 
-	return Unknown
+	return UnknownType
 }

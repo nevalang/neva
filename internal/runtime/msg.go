@@ -73,17 +73,17 @@ func NewBoolMsg(b bool) BoolMsg {
 	}
 }
 
-type MsgStruct struct {
+type StructMsg struct {
 	emptyMsg
 	v map[string]Msg
 }
 
-func (msg MsgStruct) Struct() map[string]Msg {
+func (msg StructMsg) Struct() map[string]Msg {
 	return msg.v
 }
 
-func NewMsgStruct(v map[string]Msg) MsgStruct {
-	return MsgStruct{
+func NewMsgStruct(v map[string]Msg) StructMsg {
+	return StructMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,
 	}

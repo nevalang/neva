@@ -26,7 +26,7 @@ func main() {
 					var (
 						p    = parser.MustNewYAML()
 						v    = validator.MustNew()
-						t    = translator.MustNew()
+						t    = translator.New()
 						c    = coder.MustNewJSON()
 						comp = compiler.MustNew(p, v, t, c)
 					)

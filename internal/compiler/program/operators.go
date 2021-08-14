@@ -15,11 +15,11 @@ func New() map[string]Operator {
 				In: Inports{
 					"nums": PortType{
 						Arr:  true,
-						Type: Int,
+						Type: IntType,
 					},
 				},
 				Out: Outports{
-					"mul": PortType{Type: Int},
+					"mul": PortType{Type: IntType},
 				},
 			},
 		},
