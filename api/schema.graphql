@@ -1,0 +1,44 @@
+type Module {
+  deps: [Dep!]!
+  inports: [Port!]!
+  outports: [Port!]!
+  workers: [Worker!]!
+  net: [Node!]!
+}
+
+type Dep {
+  moduleName: String!
+  ports: [Port!]!
+}
+
+type Port {
+  name: String!
+  type: Type!
+}
+
+type Worker {
+  name: String!
+  depModuleName: String!
+}
+
+type Node {
+  worker: String
+  incomingConnections: [Connection!]!
+}
+
+enum Type {
+  INT
+  BOOL
+  STR
+}
+
+type Connection {
+  from: PortAddr!
+  to: [PortAddr!]!
+}
+
+type PortAddr {
+  node: String!
+  port: String!
+  idx: Int!
+}
