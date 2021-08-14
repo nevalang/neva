@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/stream/internal/compiler/program"
-	core "github.com/emil14/stream/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler/program"
+	core "github.com/emil14/neva/internal/compiler/program"
 )
 
 func cast(mod module) (core.Module, error) {

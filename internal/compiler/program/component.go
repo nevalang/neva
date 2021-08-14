@@ -52,18 +52,6 @@ func (want Ports) Compare(got Ports) error {
 	return nil
 }
 
-func (ports Ports) ArrPorts() map[string]PortType {
-	m := map[string]PortType{}
-
-	for name, typ := range ports {
-		if typ.Arr {
-			m[name] = typ
-		}
-	}
-
-	return m
-}
-
 type PortType struct {
 	Type Type
 	Arr  bool
@@ -75,12 +63,4 @@ func (want PortType) Compare(got PortType) error {
 	}
 
 	return nil
-}
-
-func (pt PortType) String() (s string) {
-	if pt.Arr {
-		s += "array"
-	}
-
-	return s + "port of type " + pt.Type.String()
 }

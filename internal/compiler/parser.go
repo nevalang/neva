@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	"github.com/emil14/stream/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
 type Parser interface {

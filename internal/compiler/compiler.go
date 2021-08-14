@@ -3,8 +3,8 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/emil14/stream/internal/compiler/program"
-	rprog "github.com/emil14/stream/internal/runtime/program"
+	"github.com/emil14/neva/internal/compiler/program"
+	rprog "github.com/emil14/neva/internal/runtime/program"
 )
 
 type compiler struct {
@@ -14,13 +14,13 @@ type compiler struct {
 	coder      Coder
 }
 
-func (c compiler) Compile(src []byte) ([]byte, error) {
-	mod, err := c.parser.Parse(src)
+func (cmplr compiler) Compile(src []byte) ([]byte, error) {
+	mod, err := cmplr.parser.Parse(src)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.validator.Validate(mod); err != nil {
+	if err := cmplr.validator.Validate(mod); err != nil {
 		return nil, err
 	}
 
@@ -30,7 +30,7 @@ func (c compiler) Compile(src []byte) ([]byte, error) {
 		},
 	}
 
-	bb, err := c.coder.Code(c.translator.Translate(prog))
+	bb, err := cmplr.coder.Code(cmplr.translator.Translate(prog))
 	if err != nil {
 		return nil, err
 	}

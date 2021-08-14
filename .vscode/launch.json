@@ -9,7 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/stream",
+      "program": "${workspaceFolder}/cmd/neva",
       "args": ["compile"]
     }
   ]

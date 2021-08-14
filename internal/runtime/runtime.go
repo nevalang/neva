@@ -3,7 +3,7 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/emil14/stream/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type Runtime struct {
@@ -44,14 +44,14 @@ func (r Runtime) connectNode(scope map[string]program.Component, node program.No
 	}
 
 	r.startStreams(
-		r.streams(net, component.Net),
+		r.connections(net, component.Net),
 	)
 
 	return IO{in, out}, nil
 }
 
-func (r Runtime) streams(nodesIO map[string]IO, net []program.Stream) []stream {
-	ss := make([]stream, len(net))
+func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []connection {
+	ss := make([]connection, len(net))
 
 	for i := range net {
 		nodeIO, ok := nodesIO[net[i].From.Node]
@@ -80,7 +80,7 @@ func (r Runtime) streams(nodesIO map[string]IO, net []program.Stream) []stream {
 			to[j] = receiver
 		}
 
-		ss[i] = stream{
+		ss[i] = connection{
 			from: from,
 			to:   to,
 		}
@@ -142,13 +142,13 @@ func (r Runtime) connectOperator(name string, node program.NodeMeta) (IO, error)
 	return io, nil
 }
 
-func (r Runtime) startStreams(ss []stream) {
+func (r Runtime) startStreams(ss []connection) {
 	for i := range ss {
 		go r.startStream(ss[i])
 	}
 }
 
-func (r Runtime) startStream(s stream) {
+func (r Runtime) startStream(s connection) {
 	for msg := range s.from {
 		for _, receiver := range s.to {
 			select {
@@ -165,13 +165,7 @@ func (r Runtime) startStream(s stream) {
 
 type Operator func(IO) error
 
-type Msg struct {
-	Str  string
-	Int  int
-	Bool bool
-}
-
-type stream struct {
+type connection struct {
 	from chan Msg
 	to   []chan Msg
 }
@@ -211,4 +205,10 @@ func (p Ports) Port(port string) (chan Msg, error) {
 type PortAddr struct {
 	port string
 	idx  uint8 // always 0 for normal ports
+}
+
+func New(ops map[string]Operator) Runtime {
+	return Runtime{
+		Operators: ops,
+	}
 }

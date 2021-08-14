@@ -1,6 +1,6 @@
 package validator
 
-import "github.com/emil14/stream/internal/compiler/program"
+import "github.com/emil14/neva/internal/compiler/program"
 
 type validator struct{}
 

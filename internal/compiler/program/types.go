@@ -10,6 +10,8 @@ func (t Type) String() string {
 		return "str"
 	case Bool:
 		return "bool"
+	case Struct:
+		return "struct"
 	}
 
 	return "unknown"
@@ -20,6 +22,7 @@ const (
 	Int
 	Str
 	Bool
+	Struct
 )
 
 func ByName(s string) Type {
@@ -30,6 +33,8 @@ func ByName(s string) Type {
 		return Str
 	case "bool":
 		return Bool
+	case "struct":
+		return Struct
 	}
 
 	return Unknown

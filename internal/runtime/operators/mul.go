@@ -1,7 +1,7 @@
 package operators
 
 import (
-	"github.com/emil14/stream/internal/runtime"
+	"github.com/emil14/neva/internal/runtime"
 )
 
 var Mul runtime.Operator = func(io runtime.IO) error {
@@ -23,7 +23,7 @@ var Mul runtime.Operator = func(io runtime.IO) error {
 				c := in[i]
 				go func() {
 					msg := <-c
-					fan <- msg.Int
+					fan <- msg.Int()
 				}()
 			}
 
@@ -33,7 +33,7 @@ var Mul runtime.Operator = func(io runtime.IO) error {
 			}
 			close(fan)
 
-			out <- runtime.Msg{Int: mul}
+			out <- runtime.NewIntMsg(mul)
 		}
 	}()
 

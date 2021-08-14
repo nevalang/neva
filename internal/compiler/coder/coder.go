@@ -3,13 +3,18 @@ package coder
 import (
 	"encoding/json"
 
-	"github.com/emil14/stream/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
-type jsonCoder struct{}
+type jsonCoder struct {
+	caster interface {
+		Cast(program.Program) Program
+	}
+	marshal func(interface{}) ([]byte, error)
+}
 
 func (c jsonCoder) Code(prog program.Program) ([]byte, error) {
-	bb, err := json.Marshal(prog)
+	bb, err := c.marshal(c.caster.Cast(prog))
 	if err != nil {
 		return nil, err
 	}
@@ -18,5 +23,8 @@ func (c jsonCoder) Code(prog program.Program) ([]byte, error) {
 }
 
 func MustNewJSON() jsonCoder {
-	return jsonCoder{}
+	return jsonCoder{
+		marshal: json.Marshal,
+		caster:  caster{},
+	}
 }

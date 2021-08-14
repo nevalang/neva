@@ -1,8 +1,8 @@
 package translator
 
 import (
-	cprog "github.com/emil14/stream/internal/compiler/program"
-	rprog "github.com/emil14/stream/internal/runtime/program"
+	cprog "github.com/emil14/neva/internal/compiler/program"
+	rprog "github.com/emil14/neva/internal/runtime/program"
 )
 
 type translator struct{}
