@@ -26,8 +26,19 @@ func (t Translator) translateNodeMeta() rprog.NodeMeta {
 	return rprog.NodeMeta{}
 }
 
-func (t Translator) translateComponents(map[string]cprog.Component) map[string]rprog.Component {
-	return rprog.NodeMeta{}
+func (t Translator) translateComponents(cc map[string]cprog.Component) map[string]rprog.Component {
+	result := map[string]rprog.Component{}
+
+	for name, component := range cc {
+		component.
+		rprog.Component{
+			Operator: "",
+			Workers:  map[string]rprog.NodeMeta{},
+			Net:      []rprog.Connection{},
+		}
+	}
+
+	return map[string]rprog.Component{}
 }
 
 func New() Translator {

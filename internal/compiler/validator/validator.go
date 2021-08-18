@@ -8,7 +8,6 @@ import (
 
 type validator struct{}
 
-// TODO check arr points - should be no holes
 func (v validator) Validate(mod program.Module) error {
 	if err := v.validatePorts(mod.IO()); err != nil {
 		return err
@@ -21,6 +20,8 @@ func (v validator) Validate(mod program.Module) error {
 	if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
 		return err
 	}
+
+	// TODO check arr points - should be no holes
 
 	return nil
 }

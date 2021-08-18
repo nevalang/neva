@@ -1,8 +1,8 @@
 package program
 
-// Module is component that depends on other components.
+// Module is a component that depends on other components.
 type Module struct {
-	io      IO // fixme
+	io      IO // fixme (field name)
 	Deps    ComponentsIO
 	Workers map[string]string
 	Net     Net
