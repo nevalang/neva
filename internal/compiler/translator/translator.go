@@ -7,7 +7,9 @@ import (
 	rprog "github.com/emil14/neva/internal/runtime/program"
 )
 
-type Translator struct{}
+type Translator struct {
+	operators map[string]cprog.Operator
+}
 
 // todo
 func (t Translator) Translate(prog cprog.Program) (rprog.Program, error) {
@@ -30,17 +32,27 @@ func (t Translator) translateComponents(cc map[string]cprog.Component) map[strin
 	result := map[string]rprog.Component{}
 
 	for name, component := range cc {
-		component.
-		rprog.Component{
-			Operator: "",
-			Workers:  map[string]rprog.NodeMeta{},
-			Net:      []rprog.Connection{},
+		op, ok := component.(cprog.Operator)
+		if ok {
+			result[name] = rprog.Component{
+				Operator: op.Name,
+			}
+			continue
 		}
+
+		mod, ok := component.(cprog.Module)
+		if !ok {
+			panic("not ok") // todo
+		}
+
+		// todo mod
 	}
 
 	return map[string]rprog.Component{}
 }
 
-func New() Translator {
-	return Translator{}
+func New(operators map[string]cprog.Operator) Translator {
+	return Translator{
+		operators: operators,
+	}
 }

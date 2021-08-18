@@ -1,16 +1,18 @@
 package program
 
 type Operator struct {
-	io IO
+	Name string
+	io IO // fixme name
 }
 
 func (op Operator) IO() IO {
 	return op.io
 }
 
-func New() map[string]Operator {
+func NewOperators() map[string]Operator {
 	return map[string]Operator{
 		"*": {
+			Name: "*",
 			io: IO{
 				In: Inports{
 					"nums": PortType{

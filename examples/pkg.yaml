@@ -1,0 +1,6 @@
+use:
+  "*": "*"
+root: arr
+components:
+  arr: arr
+  "*": "*"

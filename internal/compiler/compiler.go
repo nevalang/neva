@@ -58,8 +58,10 @@ func (cmplr Compiler) Compile(src []byte) ([]byte, error) {
 	}
 
 	prog := program.Program{
+		Root: "root",
 		Components: map[string]program.Component{
 			"root": mod,
+			"*": program.NewOperators()["*"], // todo
 		},
 	}
 
