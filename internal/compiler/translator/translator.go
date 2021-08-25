@@ -12,18 +12,34 @@ type Translator struct {
 }
 
 func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
+	component, ok := prog.Components[prog.Root]
+	if !ok {
+		return runtime.Program{}, errors.New("TODO")
+	}
+
+	io := component.Interface()
+
+	in := make(map[string]uint8, len(io.In))
+	for port := range io.In {
+		in[port] = 0 // array-ports not allowed for root components for now.
+	}
+
+	out := make(map[string]uint8, len(io.Out))
+	for port := range io.Out {
+		out[port] = 0 // array-ports not allowed for root components for now.
+	}
+
 	return runtime.Program{
 		Root: runtime.NodeMeta{
 			Component: prog.Root,
-			// array-ports not allowed for root components for now.
-			In:  nil,
-			Out: nil,
+			In:        in,
+			Out:       out,
 		},
-		Components: t.translateComponents(prog.Components),
+		Components: t.components(prog.Components),
 	}, nil
 }
 
-func (t Translator) translateComponents(components map[string]compiler.Component) map[string]runtime.Component {
+func (t Translator) components(components map[string]compiler.Component) map[string]runtime.Component {
 	runtimeComponents := map[string]runtime.Component{}
 
 	for name, component := range components {
@@ -68,7 +84,7 @@ func (t Translator) translateComponents(components map[string]compiler.Component
 		}
 	}
 
-	return map[string]runtime.Component{}
+	return runtimeComponents
 }
 
 func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.PortAddr {

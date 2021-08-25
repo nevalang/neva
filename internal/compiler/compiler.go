@@ -60,9 +60,10 @@ func (c Compiler) Compile(src []byte) ([]byte, error) {
 
 	prog := program.Program{
 		Root: "root",
+		// TODO
 		Components: map[string]program.Component{
 			"root": mod,
-			"*":    c.operators["*"], // todo
+			"*":    c.operators["*"],
 		},
 	}
 
@@ -90,6 +91,7 @@ func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Op
 		validator:  v,
 		translator: t,
 		coder:      c,
+		operators:  ops,
 	}, nil
 }
 

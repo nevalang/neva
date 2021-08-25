@@ -22,7 +22,7 @@ func main() {
 		Name: "neva",
 		Commands: []*cli.Command{
 			{
-				Name: "build",
+				Name: "compile",
 				Action: func(*cli.Context) error {
 					ops := program.NewOperators()
 					cmplr := compiler.MustNew(

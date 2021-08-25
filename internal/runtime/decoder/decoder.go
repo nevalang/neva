@@ -1,7 +1,57 @@
 package decoder
 
-type decoder struct{}
+import (
+	"encoding/json"
 
-func MustNew() decoder {
-	return decoder{}
+	"github.com/emil14/neva/internal/runtime/program"
+)
+
+type Program struct {
+	Root       NodeMeta             `json:"root"`
+	Components map[string]Component `json:"component"`
+}
+
+type Component struct {
+	Operator string              `json:"operator,omitempty"`
+	Workers  map[string]NodeMeta `json:"workers,omitempty"`
+	Net      []Connection        `json:"net,omitempty"`
+}
+
+type NodeMeta struct {
+	In        map[string]uint8 `json:"in"`
+	Out       map[string]uint8 `json:"out"`
+	Component string           `json:"component"`
+}
+
+type Connection struct {
+	From PortAddr   `json:"from"`
+	To   []PortAddr `json:"to"`
+}
+
+type PortAddr struct {
+	Node string `json:"node"`
+	Port string `json:"port"`
+	Idx  uint8  `json:"idx"`
+}
+
+type decoder struct {
+	unmarshal func([]byte, interface{}) error
+	caster    interface {
+		Cast(Program) program.Program
+	}
+}
+
+func NewJSON() (decoder, error) {
+	return decoder{
+		unmarshal: json.Unmarshal,
+		caster:    NewCaster(),
+	}, nil
+}
+
+func MustNewJSON() decoder {
+	d, err := NewJSON()
+	if err != nil {
+		panic(err)
+	}
+	return d
 }
