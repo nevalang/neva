@@ -1,5 +1,6 @@
 package runtime
 
+// TODO errors?
 type Msg interface {
 	Str() string
 	Int() int

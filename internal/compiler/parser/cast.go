@@ -25,12 +25,8 @@ func castModule(mod module) (cprog.Module, error) {
 
 func castIO(in inports, out outports) cprog.IO {
 	return cprog.IO{
-		In: cprog.Inports(
-			castPorts(ports(in)),
-		),
-		Out: cprog.Outports(
-			castPorts(ports(out)),
-		),
+		In: castPorts(ports(in)),
+		Out: castPorts(ports(out)),
 	}
 }
 

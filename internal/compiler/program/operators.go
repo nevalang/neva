@@ -2,10 +2,10 @@ package program
 
 type Operator struct {
 	Name string
-	io IO // fixme name
+	io   IO
 }
 
-func (op Operator) IO() IO {
+func (op Operator) Interface() IO {
 	return op.io
 }
 
@@ -14,13 +14,13 @@ func NewOperators() map[string]Operator {
 		"*": {
 			Name: "*",
 			io: IO{
-				In: Inports{
+				In: Ports{
 					"nums": PortType{
 						Arr:  true,
 						Type: IntType,
 					},
 				},
-				Out: Outports{
+				Out: Ports{
 					"mul": PortType{Type: IntType},
 				},
 			},

@@ -8,6 +8,7 @@ import (
 	"github.com/emil14/neva/internal/compiler"
 	"github.com/emil14/neva/internal/compiler/coder"
 	"github.com/emil14/neva/internal/compiler/parser"
+	"github.com/emil14/neva/internal/compiler/program"
 	"github.com/emil14/neva/internal/compiler/translator"
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
@@ -21,14 +22,15 @@ func main() {
 		Name: "neva",
 		Commands: []*cli.Command{
 			{
-				Name: "compile",
+				Name: "build",
 				Action: func(*cli.Context) error {
-					var (
-						p    = parser.MustNewYAML()
-						v    = validator.MustNew()
-						t    = translator.New()
-						c    = coder.MustNewJSON()
-						comp = compiler.MustNew(p, v, t, c)
+					ops := program.NewOperators()
+					cmplr := compiler.MustNew(
+						parser.MustNewYAML(),
+						validator.MustNew(),
+						translator.New(ops),
+						coder.New(),
+						ops,
 					)
 
 					dat, err := ioutil.ReadFile(`C:\projects\refactored-garbanzo\examples\arr.yml`)
@@ -36,7 +38,7 @@ func main() {
 						return err
 					}
 
-					bb, err := comp.Compile(dat)
+					bb, err := cmplr.Compile(dat)
 					if err != nil {
 						return err
 					}

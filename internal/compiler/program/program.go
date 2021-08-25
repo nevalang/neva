@@ -7,13 +7,13 @@ type Program struct {
 	Components map[string]Component
 }
 
-type Component interface { // todo need?
-	IO() IO
+type Component interface {
+	Interface() IO
 }
 
 type IO struct {
-	In  Inports
-	Out Outports
+	In  Ports
+	Out Ports
 }
 
 func (want IO) Compare(got IO) error {
@@ -29,10 +29,6 @@ func (want IO) Compare(got IO) error {
 
 	return nil
 }
-
-type Inports Ports
-
-type Outports Ports
 
 type Ports map[string]PortType
 

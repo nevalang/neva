@@ -22,7 +22,7 @@ func (c jsonCoder) Code(prog program.Program) ([]byte, error) {
 	return bb, nil
 }
 
-func MustNewJSON() jsonCoder {
+func New() jsonCoder {
 	return jsonCoder{
 		marshal: json.Marshal,
 		caster:  caster{},

@@ -9,7 +9,7 @@ import (
 type validator struct{}
 
 func (v validator) Validate(mod program.Module) error {
-	if err := v.validatePorts(mod.IO()); err != nil {
+	if err := v.validatePorts(mod.Interface()); err != nil {
 		return err
 	}
 

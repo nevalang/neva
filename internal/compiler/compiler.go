@@ -29,7 +29,7 @@ type (
 
 	// Translator creates runtime program representation.
 	Translator interface {
-		Translate(program.Program) rprog.Program
+		Translate(program.Program) (rprog.Program, error)
 	}
 
 	// Coder creates bytecode for given runtime program.
@@ -44,16 +44,17 @@ type Compiler struct {
 	validator  Validator
 	translator Translator
 	coder      Coder
+	operators  map[string]program.Operator
 }
 
 // Compile compiles source code down to bytecode.
-func (cmplr Compiler) Compile(src []byte) ([]byte, error) {
-	mod, err := cmplr.parser.Parse(src)
+func (c Compiler) Compile(src []byte) ([]byte, error) {
+	mod, err := c.parser.Parse(src)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrParsing, err)
 	}
 
-	if err := cmplr.validator.Validate(mod); err != nil {
+	if err := c.validator.Validate(mod); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrValidation, err)
 	}
 
@@ -61,11 +62,16 @@ func (cmplr Compiler) Compile(src []byte) ([]byte, error) {
 		Root: "root",
 		Components: map[string]program.Component{
 			"root": mod,
-			"*": program.NewOperators()["*"], // todo
+			"*":    c.operators["*"], // todo
 		},
 	}
 
-	bb, err := cmplr.coder.Code(cmplr.translator.Translate(prog))
+	rprog, err := c.translator.Translate(prog)
+	if err != nil {
+		return nil, err
+	}
+
+	bb, err := c.coder.Code(rprog)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 	}
@@ -74,8 +80,8 @@ func (cmplr Compiler) Compile(src []byte) ([]byte, error) {
 }
 
 // New creates new Compiler. It returns error if at least one of the deps is nil.
-func New(p Parser, v Validator, t Translator, c Coder) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil {
+func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
+	if p == nil || v == nil || t == nil || c == nil || ops == nil {
 		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
 	}
 
@@ -88,8 +94,8 @@ func New(p Parser, v Validator, t Translator, c Coder) (Compiler, error) {
 }
 
 // MustNew creates Compiler or panics.
-func MustNew(p Parser, v Validator, t Translator, c Coder) Compiler {
-	cmp, err := New(p, v, t, c)
+func MustNew(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
+	cmp, err := New(p, v, t, c, ops)
 	if err != nil {
 		panic(err)
 	}

@@ -2,14 +2,14 @@ package program
 
 // Module is a component that depends on other components.
 type Module struct {
-	io      IO // fixme (field name)
+	io      IO
 	Deps    ComponentsIO
 	Workers map[string]string
 	Net     Net
 }
 
 // IO returns Module input-output interface.
-func (cm Module) IO() IO {
+func (cm Module) Interface() IO {
 	return cm.io
 }
 
@@ -18,6 +18,18 @@ type ComponentsIO map[string]IO
 
 // Net maps outport to set of inports.
 type Net map[PortAddr]map[PortAddr]struct{}
+
+func (net Net) ArrPortIncomings(nodeName string, inportName string) uint8 {
+	var c uint8
+	for _, to := range net {
+		for inport := range to {
+			if inport.Node == nodeName && inport.Port == inportName {
+				c++
+			}
+		}
+	}
+	return c
+}
 
 // PortAddr is a point on a network graph.
 type PortAddr struct {
