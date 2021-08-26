@@ -29,9 +29,9 @@ func (r Runtime) connectNode(components map[string]program.Component, node progr
 	}
 
 	in, out := r.nodeIO(node)
-	net := map[string]IO{
-		"in":  {Out: in}, // for this module's net 'in' is sender
-		"out": {In: out}, // for this module's net 'out' is receiver
+	nodesIO := map[string]IO{
+		"in":  {Out: in}, // for this net 'in' is sender
+		"out": {In: out}, // for this net 'out' is receiver
 	}
 
 	for workerNode, meta := range component.Workers {
@@ -40,11 +40,11 @@ func (r Runtime) connectNode(components map[string]program.Component, node progr
 			return IO{}, err
 		}
 
-		net[workerNode] = io
+		nodesIO[workerNode] = io
 	}
 
 	r.startStreams(
-		r.connections(net, component.Net),
+		r.connections(nodesIO, component.Net),
 	)
 
 	return IO{in, out}, nil
@@ -76,7 +76,6 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 			if !ok {
 				panic("not ok")
 			}
-
 			to[j] = receiver
 		}
 
@@ -108,7 +107,7 @@ func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
 	}
 
 	outports := make(map[PortAddr]chan Msg)
-	for port, size := range node.In {
+	for port, size := range node.Out {
 		if size > 0 {
 			for i := uint8(0); i < size; i++ {
 				outports[PortAddr{
@@ -163,6 +162,7 @@ func (r Runtime) startStream(s connection) {
 	}
 }
 
+// Operator is a function that uses io provided by runtime.
 type Operator func(IO) error
 
 type connection struct {
