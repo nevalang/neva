@@ -54,28 +54,30 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 	ss := make([]connection, len(net))
 
 	for i := range net {
-		nodeIO, ok := nodesIO[net[i].From.Node]
+		fromNodeIO, ok := nodesIO[net[i].From.Node]
 		if !ok {
 			panic("not ok")
 		}
 
-		from, ok := nodeIO.Out[PortAddr{
-			port: net[i].From.Port,
-			idx:  net[i].From.Idx,
-		}]
+		fromOutportAddr := PortAddr{port: net[i].From.Port, idx: net[i].From.Idx}
+		from, ok := fromNodeIO.Out[fromOutportAddr]
 		if !ok {
 			panic("not ok")
 		}
 
 		to := make([]chan Msg, len(net[i].To))
 		for j := range net[i].To {
-			receiver, ok := nodeIO.In[PortAddr{
+			toInportAddr := PortAddr{
 				port: net[i].To[j].Port,
 				idx:  net[i].To[j].Idx,
-			}]
+			}
+
+			toNodeIO := nodesIO[net[i].To[j].Node]
+			receiver, ok := toNodeIO.In[toInportAddr]
 			if !ok {
 				panic("not ok")
 			}
+
 			to[j] = receiver
 		}
 
