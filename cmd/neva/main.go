@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/emil14/neva/internal/compiler/translator"
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/decoder"
 	"github.com/emil14/neva/internal/runtime/operators"
 
 	cli "github.com/urfave/cli/v2"
@@ -46,6 +48,48 @@ func main() {
 					return ioutil.WriteFile(
 						`C:\projects\refactored-garbanzo\examples\arr.json`, bb, 0644,
 					)
+				},
+			},
+			{
+				Name: "run",
+				Action: func(*cli.Context) error {
+					bb, err := ioutil.ReadFile(`C:\projects\refactored-garbanzo\examples\arr.json`)
+					if err != nil {
+						return err
+					}
+
+					c := decoder.MustNewJSON()
+					prog, err := c.Decode(bb)
+					if err != nil {
+						return err
+					}
+
+					ops := operators.New()
+					r := runtime.New(ops)
+					io, err := r.Run(prog)
+					if err != nil {
+						return err
+					}
+
+					inport, err := io.In.Port("x")
+					if err != nil {
+						return err
+					}
+
+					outport, err := io.Out.Port("y")
+					if err != nil {
+						return err
+					}
+
+					go func() {
+						inport <- runtime.NewIntMsg(42)
+					}()
+
+					fmt.Println("before")
+					v := <-outport
+					fmt.Println("after. v: ", v)
+
+					return nil
 				},
 			},
 		},

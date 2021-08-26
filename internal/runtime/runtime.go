@@ -14,16 +14,16 @@ func (r Runtime) Run(p program.Program) (IO, error) {
 	return r.connectNode(p.Components, p.Root)
 }
 
-func (r Runtime) connectNode(scope map[string]program.Component, node program.NodeMeta) (IO, error) {
-	component, ok := scope[node.Component]
+func (r Runtime) connectNode(components map[string]program.Component, node program.NodeMeta) (IO, error) {
+	component, ok := components[node.Component]
 	if !ok {
-		return IO{}, fmt.Errorf(node.Component)
+		return IO{}, fmt.Errorf("component not found: %s", node.Component)
 	}
 
 	if component.Operator != "" {
 		io, err := r.connectOperator(component.Operator, node)
 		if err != nil {
-			return IO{}, fmt.Errorf("...")
+			return IO{}, fmt.Errorf("could not connect operator")
 		}
 		return io, nil
 	}
@@ -35,7 +35,7 @@ func (r Runtime) connectNode(scope map[string]program.Component, node program.No
 	}
 
 	for workerNode, meta := range component.Workers {
-		io, err := r.connectNode(scope, meta)
+		io, err := r.connectNode(components, meta)
 		if err != nil {
 			return IO{}, err
 		}

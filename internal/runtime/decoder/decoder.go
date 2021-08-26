@@ -8,7 +8,7 @@ import (
 
 type Program struct {
 	Root       NodeMeta             `json:"root"`
-	Components map[string]Component `json:"component"`
+	Components map[string]Component `json:"components"`
 }
 
 type Component struct {
@@ -39,6 +39,15 @@ type decoder struct {
 	caster    interface {
 		Cast(Program) program.Program
 	}
+}
+
+func (d decoder) Decode(bb []byte) (program.Program, error) {
+	prog := Program{}
+	err := d.unmarshal(bb, &prog)
+	if err != nil {
+		return program.Program{}, err
+	}
+	return d.caster.Cast(prog), nil
 }
 
 func NewJSON() (decoder, error) {
