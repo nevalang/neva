@@ -71,7 +71,7 @@ func main() {
 						return err
 					}
 
-					inport, err := io.In.Port("x")
+					in, err := io.In.Port("x")
 					if err != nil {
 						return err
 					}
@@ -81,13 +81,9 @@ func main() {
 						return err
 					}
 
-					go func() {
-						inport <- runtime.NewIntMsg(42)
-					}()
-
-					fmt.Println("before")
+					in <- runtime.NewIntMsg(42)
 					v := <-outport
-					fmt.Println("after. v: ", v)
+					fmt.Println(v)
 
 					return nil
 				},

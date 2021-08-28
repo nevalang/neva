@@ -43,7 +43,7 @@ func (r Runtime) connectNode(components map[string]program.Component, node progr
 		nodesIO[workerNode] = io
 	}
 
-	r.startStreams(
+	r.connectMany(
 		r.connections(nodesIO, component.Net),
 	)
 
@@ -87,7 +87,7 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 		}
 	}
 
-	return nil
+	return ss
 }
 
 func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
@@ -143,22 +143,22 @@ func (r Runtime) connectOperator(name string, node program.NodeMeta) (IO, error)
 	return io, nil
 }
 
-func (r Runtime) startStreams(ss []connection) {
-	for i := range ss {
-		go r.startStream(ss[i])
+func (r Runtime) connectMany(cc []connection) {
+	for i := range cc {
+		go r.connect(cc[i])
 	}
 }
 
-func (r Runtime) startStream(s connection) {
+func (r Runtime) connect(s connection) {
 	for msg := range s.from {
-		for _, receiver := range s.to {
+		for _, recv := range s.to {
 			select {
-			case receiver <- msg:
+			case recv <- msg:
 				continue
 			default:
 				go func(to chan Msg, m Msg) {
 					to <- m
-				}(receiver, msg)
+				}(recv, msg)
 			}
 		}
 	}
