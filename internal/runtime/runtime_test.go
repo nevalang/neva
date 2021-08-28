@@ -145,8 +145,8 @@ func TestRuntime_connections(t *testing.T) {
 					"b": {In: bIn},
 				}
 
-				from := program.PortAddr{"a", "x", 0}
-				to := []program.PortAddr{{"b", "x", 0}}
+				from := program.PortAddr{Node: "a", Port: "x", Idx: 0}
+				to := []program.PortAddr{{Node: "b", Port: "x", Idx: 0}}
 				net := []program.Connection{
 					{From: from, To: to},
 				}
@@ -191,6 +191,14 @@ func TestRuntime_connectOperator(t *testing.T) {
 			ops: map[string]Operator{
 				"err": func(IO) error { return errors.New("") },
 			},
+			nodeMeta: program.NodeMeta{},
+			wantMsg:  nil,
+			wantErr:  true,
+		},
+		{
+			name:     "undefined operator",
+			operator: "undefined",
+			ops:      map[string]Operator{},
 			nodeMeta: program.NodeMeta{},
 			wantMsg:  nil,
 			wantErr:  true,
@@ -308,4 +316,78 @@ func comparePorts(got, want Ports) bool {
 		}
 	}
 	return true
+}
+
+func TestNew(t *testing.T) {
+	type args struct {
+		ops map[string]Operator
+	}
+	tests := []struct {
+		name string
+		args args
+		want Runtime
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := New(tt.args.ops); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPorts_Port(t *testing.T) {
+	type args struct {
+		port string
+	}
+	tests := []struct {
+		name    string
+		p       Ports
+		args    args
+		want    chan Msg
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.p.Port(tt.args.port)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Ports.Port() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Ports.Port() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPorts_Slots(t *testing.T) {
+	type args struct {
+		arrPort string
+	}
+	tests := []struct {
+		name    string
+		p       Ports
+		args    args
+		want    []chan Msg
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.p.Slots(tt.args.arrPort)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Ports.Slots() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Ports.Slots() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
