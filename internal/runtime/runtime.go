@@ -11,35 +11,34 @@ type Runtime struct {
 }
 
 func (r Runtime) Run(p program.Program) (IO, error) {
-	return r.connectNode(p.Components, p.Root)
+	return r.run(p.Components, p.Root)
 }
 
-func (r Runtime) connectNode(components map[string]program.Component, node program.NodeMeta) (IO, error) {
+func (r Runtime) run(components map[string]program.Component, node program.NodeMeta) (IO, error) {
 	component, ok := components[node.Component]
 	if !ok {
 		return IO{}, fmt.Errorf("component not found: %s", node.Component)
 	}
 
 	if component.Operator != "" {
-		io, err := r.connectOperator(component.Operator, node)
-		if err != nil {
+		io := r.nodeIO(node)
+		if err := r.connectOperator(component.Operator, io); err != nil {
 			return IO{}, fmt.Errorf("could not connect operator")
 		}
 		return io, nil
 	}
 
-	in, out := r.nodeIO(node)
-	nodesIO := map[string]IO{
-		"in":  {Out: in}, // for this net 'in' is sender
-		"out": {In: out}, // for this net 'out' is receiver
-	}
+	io := r.nodeIO(node)
 
+	nodesIO := map[string]IO{
+		"in":  {Out: io.In}, // for this net 'in' is sender
+		"out": {In: io.Out}, // for this net 'out' is receiver
+	}
 	for workerNode, meta := range component.Workers {
-		io, err := r.connectNode(components, meta)
+		io, err := r.run(components, meta)
 		if err != nil {
 			return IO{}, err
 		}
-
 		nodesIO[workerNode] = io
 	}
 
@@ -47,7 +46,7 @@ func (r Runtime) connectNode(components map[string]program.Component, node progr
 		r.connections(nodesIO, component.Net),
 	)
 
-	return IO{in, out}, nil
+	return io, nil
 }
 
 func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []connection {
@@ -90,12 +89,12 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 	return ss
 }
 
-func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
-	inports := make(map[PortAddr]chan Msg)
+func (r Runtime) nodeIO(node program.NodeMeta) IO {
+	in := make(map[PortAddr]chan Msg)
 	for port, size := range node.In {
 		if size > 0 {
 			for i := uint8(0); i < size; i++ {
-				inports[PortAddr{
+				in[PortAddr{
 					port: port,
 					idx:  i,
 				}] = make(chan Msg)
@@ -103,16 +102,16 @@ func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
 			continue
 		}
 
-		inports[PortAddr{
+		in[PortAddr{
 			port: port,
 		}] = make(chan Msg)
 	}
 
-	outports := make(map[PortAddr]chan Msg)
+	out := make(map[PortAddr]chan Msg)
 	for port, size := range node.Out {
 		if size > 0 {
 			for i := uint8(0); i < size; i++ {
-				outports[PortAddr{
+				out[PortAddr{
 					port: port,
 					idx:  i,
 				}] = make(chan Msg)
@@ -120,27 +119,25 @@ func (r Runtime) nodeIO(node program.NodeMeta) (in Ports, out Ports) {
 			continue
 		}
 
-		outports[PortAddr{
+		out[PortAddr{
 			port: port,
 		}] = make(chan Msg)
 	}
 
-	return inports, outports
+	return IO{in, out}
 }
 
-func (r Runtime) connectOperator(name string, node program.NodeMeta) (IO, error) {
-	connector, ok := r.Operators[name]
+func (r Runtime) connectOperator(name string, io IO) error {
+	op, ok := r.Operators[name]
 	if !ok {
-		return IO{}, fmt.Errorf("ErrUnknownOperator: %s", name)
+		return fmt.Errorf("ErrUnknownOperator: %s", name)
 	}
 
-	in, out := r.nodeIO(node)
-	io := IO{in, out}
-	if err := connector(io); err != nil {
-		return IO{}, err
+	if err := op(io); err != nil {
+		return err
 	}
 
-	return io, nil
+	return nil
 }
 
 func (r Runtime) connectMany(cc []connection) {

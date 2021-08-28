@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -41,6 +42,7 @@ func TestRuntime_connect(t *testing.T) {
 			select {
 			case <-time.After(time.Second):
 				t.Error("timeout")
+				return
 			case tt.c.from <- NewIntMsg(msg):
 			}
 
@@ -48,9 +50,11 @@ func TestRuntime_connect(t *testing.T) {
 				select {
 				case <-time.After(time.Second):
 					t.Error("timeout")
+					return
 				case v := <-tt.c.to[i]:
 					if v != NewIntMsg(msg) {
 						t.Errorf("want %d, got %d", msg, v)
+						return
 					}
 				}
 			}
@@ -98,6 +102,7 @@ func TestRuntime_connectMany(t *testing.T) {
 				select {
 				case <-time.After(time.Second):
 					t.Error("timeout")
+					return
 				case c.from <- NewIntMsg(msg):
 				}
 
@@ -105,9 +110,11 @@ func TestRuntime_connectMany(t *testing.T) {
 					select {
 					case <-time.After(time.Second):
 						t.Error("timeout")
+						return
 					case v := <-ch:
 						if v != NewIntMsg(msg) {
 							t.Errorf("want %d, got %d", msg, v)
+							return
 						}
 					}
 				}
@@ -163,7 +170,142 @@ func TestRuntime_connections(t *testing.T) {
 			nodesIO, net, want := tt.f()
 			if got := r.connections(nodesIO, net); !reflect.DeepEqual(got, want) {
 				t.Errorf("want %v, got %v", want, got)
+				return
 			}
 		})
 	}
+}
+
+func TestRuntime_connectOperator(t *testing.T) {
+	tests := []struct {
+		name     string
+		ops      map[string]Operator
+		operator string
+		nodeMeta program.NodeMeta
+		wantMsg  Msg
+		wantErr  bool
+	}{
+		{
+			name:     "operator error",
+			operator: "err",
+			ops: map[string]Operator{
+				"err": func(IO) error { return errors.New("") },
+			},
+			nodeMeta: program.NodeMeta{},
+			wantMsg:  nil,
+			wantErr:  true,
+		},
+		{
+			name:     "bypass success",
+			operator: "bypass",
+			ops: map[string]Operator{
+				"bypass": func(io IO) error {
+					in := io.In[PortAddr{"x", 0}]
+					out := io.Out[PortAddr{"x", 0}]
+					go func() {
+						v := <-in
+						out <- v
+					}()
+					return nil
+				},
+			},
+			nodeMeta: program.NodeMeta{
+				In:  map[string]uint8{"x": 0},
+				Out: map[string]uint8{"x": 0},
+			},
+			wantMsg: NewIntMsg(42),
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := New(tt.ops)
+			io := r.nodeIO(tt.nodeMeta)
+
+			err := r.connectOperator(tt.operator, io)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("Runtime.connectOperator() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+
+			for _, in := range io.In {
+				in <- tt.wantMsg
+			}
+			for _, out := range io.Out {
+				gotMsg := <-out
+				if gotMsg != tt.wantMsg {
+					t.Errorf("Runtime.connectOperator() want %v, got %v", tt.wantMsg, gotMsg)
+					return
+				}
+			}
+		})
+	}
+}
+
+func TestRuntime_nodeIO(t *testing.T) {
+	r := New(nil)
+
+	tests := []struct {
+		name    string
+		node    program.NodeMeta
+		wantIn  Ports
+		wantOut Ports
+	}{
+		{
+			name: "",
+			node: program.NodeMeta{
+				In: map[string]uint8{
+					"x": 0,
+					"y": 1,
+					"z": 2,
+				},
+				Out: map[string]uint8{
+					"x": 0,
+					"y": 1,
+					"z": 2,
+				},
+			},
+			wantIn: map[PortAddr]chan Msg{
+				{"x", 0}: make(chan Msg),
+				{"y", 0}: make(chan Msg),
+				{"z", 0}: make(chan Msg),
+				{"z", 1}: make(chan Msg),
+			},
+			wantOut: map[PortAddr]chan Msg{
+				{"x", 0}: make(chan Msg),
+				{"y", 0}: make(chan Msg),
+				{"z", 0}: make(chan Msg),
+				{"z", 1}: make(chan Msg),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			io := r.nodeIO(tt.node)
+			if !comparePorts(io.In, tt.wantIn) {
+				t.Error("r.nodeIO: got != want")
+				return
+			}
+			if !comparePorts(io.Out, tt.wantOut) {
+				t.Error("r.nodeIO: got != want")
+				return
+			}
+		})
+	}
+}
+
+func comparePorts(got, want Ports) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for k := range want {
+		if got[k] == nil {
+			return false
+		}
+	}
+	return true
 }
