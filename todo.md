@@ -21,28 +21,35 @@ use:
 repl:
 
 ```
-set dep.plus +
-set workers.a plus
+set in.x int
+set out.y int
 
-connect in.x a.in[0] a.in[1]
+set deps.*.in.nums []int
+set deps.*.out.mul int
 
-show
+set workers.multi *
 
-show io
-show io.in
-show io.out
+connect in.x multi.in[0]
+connect in.x multi.in[1]
+connect multi.out.mul out.x
 
-show deps
-show deps.plus
-show deps.plus.in
-show deps.plus.out
-show deps.plus.in.nums
-show deps.plus.out.sum
+get in
+get out
+get in.x
+get out.y
 
-show workers
-show workers.a
-show.workers.a.in
-show.workers.a.out
-show deps.workers.a.in.nums
-show deps.workers.a.out.sum
+get deps
+get deps.plus
+get deps.plus.in
+get deps.plus.in.nums
+
+get workers
+get workers.multi
+get.workers.multi.in
+get.workers.multi.out
+get deps.workers.multi.in.nums
+get deps.workers.multi.out.sum
+
+get env[deps.plus]
+
 ```
