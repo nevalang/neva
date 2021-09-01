@@ -17,3 +17,39 @@ use:
   +: operators
   ^: pow
 ```
+
+repl:
+
+```
+set in.x int
+set out.y int
+
+set deps.*.in.nums []int
+set deps.*.out.mul int
+
+set workers.multi *
+
+connect in.x multi.in[0]
+connect in.x multi.in[1]
+connect multi.out.mul out.x
+
+get in
+get out
+get in.x
+get out.y
+
+get deps
+get deps.plus
+get deps.plus.in
+get deps.plus.in.nums
+
+get workers
+get workers.multi
+get.workers.multi.in
+get.workers.multi.out
+get deps.workers.multi.in.nums
+get deps.workers.multi.out.sum
+
+get env[deps.plus]
+
+```

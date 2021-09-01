@@ -6,9 +6,9 @@ type Program struct {
 }
 
 type Component struct {
-	Operator string              `json:"operator"`
-	Workers  map[string]NodeMeta `json:"workers"`
-	Net      []Connection        `json:"net"`
+	Operator string              `json:"operator,omitempty"`
+	Workers  map[string]NodeMeta `json:"workers,omitempty"`
+	Net      []Connection        `json:"net,omitempty"`
 }
 
 type NodeMeta struct {
@@ -25,5 +25,5 @@ type Connection struct {
 type PortAddr struct {
 	Node string `json:"node"`
 	Port string `json:"port"`
-	Idx  uint8  `json:"idx"`
+	Idx  uint8  `json:"idx,omitempty"`
 }

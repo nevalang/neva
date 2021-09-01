@@ -1,0 +1,7 @@
+operators:
+  "*": "*"
+
+root: arr
+  components:
+  arr: arr
+  "*": "*"

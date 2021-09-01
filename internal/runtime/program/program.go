@@ -6,7 +6,8 @@ type Program struct {
 	Root       NodeMeta             // Metadata for root node initialization.
 }
 
-// Component represents reusable computation unit. There are module and operator components.
+// Component represents reusable computation unit.
+// There are module and operator concrete components.
 type Component struct {
 	Operator string              // Always "" for modules.
 	Workers  map[string]NodeMeta // Worker nodes metadata, ignored for operators.

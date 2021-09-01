@@ -1,14 +1,14 @@
+in:
+  x: int
+out:
+  y: int
+
 deps:
   "*":
     in:
       nums[]: int
     out:
       mul: int
-
-in:
-  x: int
-out:
-  y: int
 
 workers:
   multi: "*"

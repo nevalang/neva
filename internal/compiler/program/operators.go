@@ -1,25 +1,27 @@
 package program
 
 type Operator struct {
-	io IO
+	Name string
+	io   IO
 }
 
-func (op Operator) IO() IO {
+func (op Operator) Interface() IO {
 	return op.io
 }
 
-func New() map[string]Operator {
+func NewOperators() map[string]Operator {
 	return map[string]Operator{
 		"*": {
+			Name: "*",
 			io: IO{
-				In: Inports{
+				In: Ports{
 					"nums": PortType{
 						Arr:  true,
-						Type: Int,
+						Type: IntType,
 					},
 				},
-				Out: Outports{
-					"mul": PortType{Type: Int},
+				Out: Ports{
+					"mul": PortType{Type: IntType},
 				},
 			},
 		},
