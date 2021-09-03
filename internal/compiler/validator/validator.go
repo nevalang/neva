@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/program"
@@ -8,7 +9,7 @@ import (
 
 type validator struct{}
 
-func (v validator) Validate(mod program.Module) error {
+func (v validator) Validate(mod program.Modules) error {
 	if err := v.validatePorts(mod.Interface()); err != nil {
 		return err
 	}
@@ -21,12 +22,14 @@ func (v validator) Validate(mod program.Module) error {
 		return err
 	}
 
-	// TODO check arr points - should be no holes
+	if err := v.validateNet(mod); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// validatePorts checks that ports are not empty and there is no unknown
+// validatePorts checks that every port has well defined type.
 func (mod validator) validatePorts(io program.IO) error {
 	if len(io.In) == 0 || len(io.Out) == 0 {
 		return fmt.Errorf("ports len 0")
@@ -47,7 +50,7 @@ func (mod validator) validatePorts(io program.IO) error {
 	return nil
 }
 
-// validateWorkers checks that every worker points to existing dependency.
+// validateWorkers checks that every worker points to an existing dependency.
 func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string]string) error {
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
@@ -58,7 +61,7 @@ func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string
 	return nil
 }
 
-// validateDeps validates ports of every dependency.
+// validateDeps validates ports of every given dependency.
 func (v validator) validateDeps(deps program.ComponentsIO) error {
 	for name, dep := range deps {
 		if err := v.validatePorts(dep); err != nil {
@@ -69,110 +72,92 @@ func (v validator) validateDeps(deps program.ComponentsIO) error {
 	return nil
 }
 
-func New() validator {
-	return validator{}
+func (v validator) validateNet(mod program.Modules) error {
+	var incoming reversedNet
+
+	for outportAddr, to := range mod.Net {
+		if outportAddr.Idx > 255 {
+			return fmt.Errorf("too big index on", outportAddr)
+		}
+
+		if outportAddr.Node == "out" {
+			return errors.New("'out' node cannot be sender node")
+		}
+
+		var outports program.Ports
+		if outportAddr.Node == "in" {
+			outports = program.Ports(mod.Interface().In)
+		} else {
+			dep, ok := mod.Workers[outportAddr.Node]
+			if !ok {
+				return fmt.Errorf("unknown node %s", outportAddr.Node)
+			}
+			if _, ok := mod.Deps[dep]; !ok {
+				return fmt.Errorf("unknown dep %s", dep)
+			}
+			outports = mod.Deps[dep].Out
+		}
+
+		outportType, ok := outports[outportAddr.Port]
+		if !ok {
+			return fmt.Errorf("unknown outport %s for node %s", outportAddr.Port, outportAddr.Node)
+		}
+
+		if outportAddr.Idx > 0 && !outportType.Arr {
+			return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
+		}
+
+		for inportAddr := range to {
+			if inportAddr.Idx > 255 {
+				return fmt.Errorf("too big index on", inportAddr)
+			}
+
+			if inportAddr.Node == "in" {
+				return errors.New("'in' node cannot be receiver node")
+			}
+
+			var inports program.Ports
+			if inportAddr.Node == "out" { // for network 'out' is a receiver node
+				inports = program.Ports(mod.Interface().Out)
+			} else {
+				dep, ok := mod.Workers[inportAddr.Node]
+				if !ok {
+					return fmt.Errorf("unknown node %s", inportAddr.Node)
+				}
+				if _, ok := mod.Deps[dep]; !ok {
+					return fmt.Errorf("unknown dep %s", dep)
+				}
+				inports = mod.Deps[dep].In
+			}
+
+			inportType, ok := inports[inportAddr.Port]
+			if !ok {
+				return fmt.Errorf("unknown inport %s for node %s", inportAddr.Port, inportAddr.Node)
+			}
+
+			if outportAddr.Idx > 0 && !outportType.Arr {
+				return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
+			}
+
+			if err := outportType.Compare(inportType); err != nil {
+				return fmt.Errorf("mismatched types on ports %s and %s: %w", outportAddr, inportAddr, err)
+			}
+
+			if incoming[inportAddr] == nil {
+				incoming[inportAddr] = map[program.PortAddr]struct{}{}
+			}
+
+			incoming[inportAddr][outportAddr] = struct{}{}
+		}
+	}
+
+	if err := validateOutflow("in", mod, outgoing); err != nil {
+		return err
+	}
+
+	return validateInflow("out", mod, incoming)
 }
 
-func MustNew() validator {
-	return New()
-}
+type reversedNet program.Net
 
-// // validate[]RelationsDef checks that all port connections are type safe.
-// // Then it checks that all connections are wired in the right way so the program will not block.
-// // Ports, dependencies and workers should be validated before passing here.
-// func (v validator) validateNet(in Inports, out Outports, deps Deps, workers Workers, net Net) error {
-// 	senderReceivers := Graph{}
-// 	receiverSenders := Graph{}
-
-// 	for sender, conns := range net {
-// 		if sender == "out" {
-// 			return errors.New("'out' node could not be sender")
-// 		}
-
-// 		var senderOutports Outports
-// 		if sender == "in" {
-// 			senderOutports = Outports(in)
-// 		} else {
-// 			senderOutports = deps[workers[sender]].Out
-// 		}
-
-// 		for outport, conn := range conns {
-// 			senderPoint := PortPoint{Node: sender, Port: outport}
-// 			senderOutport := ByName(senderOutports[outport])
-// 			receivers := map[PortPoint]struct{}{}
-
-// 			for receiver, inports := range conn {
-// 				if receiver == "in" {
-// 					return errors.New("'in' node could not be receiver")
-// 				}
-
-// 				var receiverInports Inports
-// 				if sender == "out" {
-// 					receiverInports = Inports(out)
-// 				} else {
-// 					receiverInports = Inports(deps[workers[sender]].Out)
-// 				}
-
-// 				for _, inport := range inports {
-// 					receiverInport := ByName(receiverInports[inport])
-// 					if senderOutport != receiverInport {
-// 						return fmt.Errorf("mismatched types")
-// 					}
-
-// 					receiverPoint := PortPoint{Node: receiver, Port: inport}
-// 					receivers[receiverPoint] = struct{}{}
-// 					if _, ok := receiverSenders[receiverPoint]; !ok {
-// 						receiverSenders[receiverPoint] = map[PortPoint]struct{}{}
-// 					}
-
-// 					receiverSenders[receiverPoint][senderPoint] = struct{}{}
-// 				}
-// 			}
-
-// 			senderReceivers[senderPoint] = receivers
-// 		}
-// 	}
-
-// 	if err := validateOutflow("in", in, out, deps, workers, senderReceivers); err != nil {
-// 		return err
-// 	}
-
-// 	return validateInflow("out", in, out, deps, workers, senderReceivers)
-// }
-
-// func validateInflow(receiver string, in Inports, out Outports, deps Deps, workers Workers, graph Graph) error {
-// 	return nil // TODO
-// }
-
-// // validateOutflow finds node and checks that all its inports are connected to some other nodes outports.
-// // Then it does so recursively for every sender-node.
-// func validateOutflow(sender string, in Inports, out Outports, deps Deps, workers Workers, graph Graph) error {
-// 	var ports Ports
-// 	if sender == "out" {
-// 		ports = Ports(out)
-// 	} else {
-// 		depName := workers[sender]
-// 		ports = Ports(deps[depName].In)
-// 	}
-
-// 	for port := range ports {
-// 		points, ok := graph[PortPoint{Node: sender, Port: port}]
-// 		if !ok {
-// 			return fmt.Errorf("'%s' outport of '%s' node is not wired", port, sender)
-// 		}
-// 		for p := range points {
-// 			if err := validateOutflow(p.Node, in, out, deps, workers, graph); err != nil { // TODO: cache?
-// 				return err
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// // Graph maps receiver port with the list of its sender ports.
-// type Graph map[PortPoint]map[PortPoint]struct{}
-
-// type PortPoint struct {
-// 	Node, Port string
-// }
+func New() validator { return validator{} }

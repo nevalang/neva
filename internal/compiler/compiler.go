@@ -19,12 +19,12 @@ var (
 type (
 	// Parser parses source code into compiler program representation.
 	Parser interface {
-		Parse([]byte) (program.Module, error)
+		Parse([]byte) (program.Modules, error)
 	}
 
 	// Validator verifies that program is correct.
 	Validator interface {
-		Validate(program.Module) error // todo validate program
+		Validate(program.Modules) error // todo validate program
 	}
 
 	// Translator creates runtime program representation.

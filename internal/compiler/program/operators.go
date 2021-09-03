@@ -2,18 +2,18 @@ package program
 
 type Operator struct {
 	Name string
-	io   IO
+	IO   IO
 }
 
 func (op Operator) Interface() IO {
-	return op.io
+	return op.IO
 }
 
 func NewOperators() map[string]Operator {
 	return map[string]Operator{
 		"*": {
 			Name: "*",
-			io: IO{
+			IO: IO{
 				In: Ports{
 					"nums": PortType{
 						Arr:  true,

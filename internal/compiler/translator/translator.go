@@ -51,7 +51,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 			continue
 		}
 
-		mod, ok := component.(compiler.Module)
+		mod, ok := component.(compiler.Modules)
 		if !ok {
 			panic("not ok")
 		}
@@ -113,7 +113,7 @@ func (t Translator) workerIO(
 			in[port] = 0
 			continue
 		}
-		in[port] = net.ArrPortIncomings(workerName, port)
+		in[port] = net.Incoming(workerName, port)
 	}
 
 	out := make(map[string]uint8, len(io.In))
@@ -122,7 +122,7 @@ func (t Translator) workerIO(
 			out[port] = 0
 			continue
 		}
-		out[port] = net.ArrPortIncomings(workerName, port)
+		out[port] = net.Incoming(workerName, port)
 	}
 
 	return in, out, nil // TODO
