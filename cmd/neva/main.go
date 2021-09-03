@@ -29,7 +29,7 @@ func main() {
 					ops := program.NewOperators()
 					cmplr := compiler.MustNew(
 						parser.MustNewYAML(),
-						validator.MustNew(),
+						validator.New(),
 						translator.New(ops),
 						coder.New(),
 						ops,
@@ -93,11 +93,5 @@ func main() {
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func New() runtime.Runtime {
-	return runtime.Runtime{
-		Operators: operators.New(),
 	}
 }

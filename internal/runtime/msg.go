@@ -1,6 +1,6 @@
 package runtime
 
-// TODO errors?
+// Msg represents set of methods only one of which should return real value.
 type Msg interface {
 	Str() string
 	Int() int
@@ -8,23 +8,14 @@ type Msg interface {
 	Struct() map[string]Msg
 }
 
-type emptyMsg struct{}
+type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
 
-func (msg emptyMsg) Str() string {
-	return ""
-}
+func (msg emptyMsg) Str() string            { return "" }
+func (msg emptyMsg) Int() int               { return 0 }
+func (msg emptyMsg) Bool() bool             { return false }
+func (msg emptyMsg) Struct() map[string]Msg { return nil }
 
-func (msg emptyMsg) Int() int {
-	return 0
-}
-
-func (msg emptyMsg) Bool() bool {
-	return false
-}
-
-func (msg emptyMsg) Struct() map[string]Msg {
-	return nil
-}
+var empty = emptyMsg{} // To avoid initialization of multiple empty messages.
 
 type IntMsg struct {
 	emptyMsg
@@ -37,7 +28,7 @@ func (msg IntMsg) Int() int {
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
-		emptyMsg: emptyMsg{},
+		emptyMsg: empty,
 		v:        n,
 	}
 }
@@ -53,7 +44,7 @@ func (msg StrMsg) Str() string {
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
-		emptyMsg: emptyMsg{},
+		emptyMsg: empty,
 		v:        s,
 	}
 }
@@ -69,7 +60,7 @@ func (msg BoolMsg) Bool() bool {
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
-		emptyMsg: emptyMsg{},
+		emptyMsg: empty,
 		v:        b,
 	}
 }
@@ -85,7 +76,7 @@ func (msg StructMsg) Struct() map[string]Msg {
 
 func NewMsgStruct(v map[string]Msg) StructMsg {
 	return StructMsg{
-		emptyMsg: emptyMsg{},
+		emptyMsg: empty,
 		v:        v,
 	}
 }
