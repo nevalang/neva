@@ -2,8 +2,11 @@ linters:
   enable-all: true
   disable:
     - godox
+    - godot
     - gomnd
     - forbidigo
+    - nlreturn
+    - wsl
 
 linters-settings:
   lll:

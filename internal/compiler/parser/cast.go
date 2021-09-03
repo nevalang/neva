@@ -32,6 +32,7 @@ func castPorts(from ports) compiler.Ports {
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
 			port = strings.TrimSuffix(port, "[]")
+		}
 
 		to[port] = portType
 	}
