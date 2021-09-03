@@ -17,7 +17,6 @@ func (p parser) Parse(bb []byte) (program.Modules, error) {
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return program.Modules{}, err
 	}
-
 	return p.cast(mod)
 }
 
@@ -26,7 +25,6 @@ func (p parser) Unparse(mod program.Modules) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return bb, nil
 }
 
@@ -53,6 +51,5 @@ func MustNew(u Unmarshal, m Marshal, c Cast) parser {
 	if err != nil {
 		panic(err)
 	}
-
 	return p
 }

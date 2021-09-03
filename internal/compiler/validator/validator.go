@@ -72,6 +72,10 @@ func (mod validator) validatePorts(io program.IO) error {
 
 // validateWorkers checks that every worker points to an existing dependency.
 func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string]string) error {
+	if len(workers) == 0 || len(deps) == 0 {
+		return fmt.Errorf("deps and workers cannot be empty")
+	}
+
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
