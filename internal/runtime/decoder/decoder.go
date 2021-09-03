@@ -43,8 +43,7 @@ type decoder struct {
 
 func (d decoder) Decode(bb []byte) (program.Program, error) {
 	prog := Program{}
-	err := d.unmarshal(bb, &prog)
-	if err != nil {
+	if err := d.unmarshal(bb, &prog); err != nil {
 		return program.Program{}, err
 	}
 	return d.caster.Cast(prog), nil

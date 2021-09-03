@@ -31,7 +31,9 @@ func TestRuntime_connect(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
+
 		t.Run(tt.name, func(t *testing.T) {
 			go func() {
 				tt.r.connect(tt.c)
@@ -63,6 +65,8 @@ func TestRuntime_connect(t *testing.T) {
 }
 
 func TestRuntime_connectMany(t *testing.T) {
+	t.Parallel()
+
 	r := New(map[string]Operator{})
 
 	tests := []struct {
@@ -92,8 +96,11 @@ func TestRuntime_connectMany(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			tt.r.connectMany(tt.cc)
 
 			for _, c := range tt.cc {
@@ -125,6 +132,8 @@ func TestRuntime_connectMany(t *testing.T) {
 }
 
 func TestRuntime_connections(t *testing.T) {
+	t.Parallel()
+
 	r := New(map[string]Operator{})
 
 	tests := []struct {
@@ -166,7 +175,11 @@ func TestRuntime_connections(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			nodesIO, net, want := tt.f()
 			if got := r.connections(nodesIO, net); !reflect.DeepEqual(got, want) {
 				t.Errorf("want %v, got %v", want, got)
@@ -177,6 +190,8 @@ func TestRuntime_connections(t *testing.T) {
 }
 
 func TestRuntime_connectOperator(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		ops      map[string]Operator
@@ -227,7 +242,11 @@ func TestRuntime_connectOperator(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			r := New(tt.ops)
 			io := r.nodeIO(tt.nodeMeta)
 
@@ -254,6 +273,8 @@ func TestRuntime_connectOperator(t *testing.T) {
 }
 
 func TestRuntime_nodeIO(t *testing.T) {
+	t.Parallel()
+
 	r := New(nil)
 
 	tests := []struct {
@@ -292,12 +313,16 @@ func TestRuntime_nodeIO(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			io := r.nodeIO(tt.node)
 			if !comparePorts(io.In, tt.wantIn) {
 				t.Error("r.nodeIO: got != want")
 				return
 			}
+
 			if !comparePorts(io.Out, tt.wantOut) {
 				t.Error("r.nodeIO: got != want")
 				return
@@ -316,78 +341,4 @@ func comparePorts(got, want Ports) bool {
 		}
 	}
 	return true
-}
-
-func TestNew(t *testing.T) {
-	type args struct {
-		ops map[string]Operator
-	}
-	tests := []struct {
-		name string
-		args args
-		want Runtime
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.ops); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestPorts_Port(t *testing.T) {
-	type args struct {
-		port string
-	}
-	tests := []struct {
-		name    string
-		p       Ports
-		args    args
-		want    chan Msg
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.p.Port(tt.args.port)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Ports.Port() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Ports.Port() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestPorts_Slots(t *testing.T) {
-	type args struct {
-		arrPort string
-	}
-	tests := []struct {
-		name    string
-		p       Ports
-		args    args
-		want    []chan Msg
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.p.Slots(tt.args.arrPort)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Ports.Slots() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Ports.Slots() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
