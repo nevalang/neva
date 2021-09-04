@@ -107,7 +107,7 @@ func Test_validator_validateWorkers(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		deps    program.ComponentsIO
+		deps    map[string]program.IO
 		workers map[string]string
 		wantErr bool
 	}{

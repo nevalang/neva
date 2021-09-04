@@ -1,11 +1,14 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Modules is a component that depends on other components.
 type Modules struct {
 	IO      IO
-	Deps    ComponentsIO
+	Deps    map[string]IO
 	Workers map[string]string
 	Net     Net
 }
@@ -14,33 +17,94 @@ func (cm Modules) Interface() IO {
 	return cm.IO
 }
 
-func (m Modules) NodePorts(node string) (Ports, error) {
-	switch node {
+func (m Modules) NodePortType(dir, node, port string) (PortType, error) {
+	var f func(string) (Ports, error)
+
+	switch dir {
 	case "in":
-		return m.IO.In, nil
+		f = m.NodeInports
 	case "out":
-		return m.IO.Out, nil
+		f = m.NodeOutports
 	default:
-		dep, ok := m.Workers[node]
-		if !ok {
-			return nil, fmt.Errorf("unknown node %s", node)
-		}
-		if _, ok := m.Deps[dep]; !ok {
-			return nil, fmt.Errorf("unknown dep %s", dep)
-		}
-		return m.Deps[dep].Out, nil
+		return PortType{}, fmt.Errorf("dir should be in or out, got: %s", dir)
 	}
+
+	ports, err := f(node)
+	if err != nil {
+		return PortType{}, fmt.Errorf("could not get %s ports for node %s: %w", dir, node, err)
+	}
+
+	portType, ok := ports[port]
+	if !ok {
+		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
+	}
+
+	return portType, nil
 }
 
-// ComponentsIO maps component name with it's io interface.
-type ComponentsIO map[string]IO
+func (m Modules) NodeOutports(node string) (Ports, error) {
+	io, err := m.NodeIO(node)
+	if err != nil {
+		return nil, err
+	}
+	return io.Out, nil
+}
+
+func (m Modules) NodeInports(node string) (Ports, error) {
+	io, err := m.NodeIO(node)
+	if err != nil {
+		return nil, err
+	}
+	return io.In, nil
+}
+
+func (m Modules) NodeIO(node string) (IO, error) {
+	if node == "in" || node == "out" {
+		return m.IO, nil
+	}
+
+	dep, ok := m.Workers[node]
+	if !ok {
+		return IO{}, fmt.Errorf("unknown worker node %s", node)
+	}
+
+	io, ok := m.Deps[dep]
+	if !ok {
+		return IO{}, fmt.Errorf("unknown worker dep %s", dep)
+	}
+
+	return io, nil
+}
 
 // Net maps outport to set of inports.
 type Net map[PortAddr]map[PortAddr]struct{}
 
+// Walk implements iterator pattern to allow traverse network.
+func (net Net) Walk() <-chan Rendezvous {
+	ch := make(chan Rendezvous, len(net))
+	wg := sync.WaitGroup{}
+
+	go func() {
+		for from, receivers := range net {
+			for to := range receivers {
+				wg.Add(1)
+				go func(to PortAddr) {
+					ch <- Rendezvous{from, to}
+					wg.Done()
+				}(to)
+			}
+		}
+
+		wg.Wait()
+		close(ch)
+	}()
+
+	return ch
+}
+
 // Incoming returns count of incoming connections for the given port.
-// It also works for array ports.
-// If non-existing port given it always returns 0.
+// It works for array ports as well.
+// It always returns 0 when non-existing port given.
 func (net Net) Incoming(node string, inport string) uint8 {
 	var c uint8
 	for _, to := range net {
@@ -53,6 +117,9 @@ func (net Net) Incoming(node string, inport string) uint8 {
 	return c
 }
 
+// Rendezvous represents from-to port addresses pair.
+type Rendezvous struct{ From, To PortAddr }
+
 // PortAddr is a point on a network graph.
 type PortAddr struct {
 	Node string
@@ -64,19 +131,16 @@ func (p PortAddr) String() string {
 	return fmt.Sprintf("%s.%s[%d]", p.Node, p.Port, p.Idx)
 }
 
-// todo need?
 func NewModule(
 	io IO,
-	deps ComponentsIO,
+	deps map[string]IO,
 	workers map[string]string,
 	net Net,
-) (Modules, error) {
-	mod := Modules{
+) Modules {
+	return Modules{
 		Deps:    deps,
 		IO:      io,
 		Workers: workers,
 		Net:     net,
 	}
-
-	return mod, nil // todo err?
 }

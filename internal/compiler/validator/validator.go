@@ -14,24 +14,13 @@ func (v validator) Validate(mod program.Modules) error {
 	var g errgroup.Group
 
 	g.Go(func() error {
-		if err := v.validatePorts(mod.Interface()); err != nil {
-			return err
-		}
-		return nil
+		return v.validatePorts(mod.Interface())
 	})
-
 	g.Go(func() error {
-		if err := v.validateDeps(mod.Deps); err != nil {
-			return err
-		}
-		return nil
+		return v.validateDeps(mod.Deps)
 	})
-
 	g.Go(func() error {
-		if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
-			return err
-		}
-		return nil
+		return v.validateWorkers(mod.Deps, mod.Workers)
 	})
 
 	if err := g.Wait(); err != nil {
@@ -57,7 +46,6 @@ func (mod validator) validatePorts(io program.IO) error {
 		}
 		return nil
 	})
-
 	g.Go(func() error {
 		for port, t := range io.Out {
 			if t.Type == program.UnknownType {
@@ -71,22 +59,20 @@ func (mod validator) validatePorts(io program.IO) error {
 }
 
 // validateWorkers checks that every worker points to an existing dependency.
-func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string]string) error {
+func (v validator) validateWorkers(deps map[string]program.IO, workers map[string]string) error {
 	if len(workers) == 0 || len(deps) == 0 {
 		return fmt.Errorf("deps and workers cannot be empty")
 	}
-
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
 		}
 	}
-
 	return nil
 }
 
 // validateDeps validates ports of every given dependency.
-func (v validator) validateDeps(deps program.ComponentsIO) error {
+func (v validator) validateDeps(deps map[string]program.IO) error {
 	g := &errgroup.Group{}
 
 	for name := range deps {
@@ -102,79 +88,73 @@ func (v validator) validateDeps(deps program.ComponentsIO) error {
 	return g.Wait()
 }
 
+// validateNet ensures that program will run and won't block by checking that:
+// 1) All needed connections are presented;
+// 2) All existing connections are needed;
+// 3) All existing connections are type safe;
 func (v validator) validateNet(mod program.Modules) error {
 	var incoming reversedNet
 
-	for outportAddr, to := range mod.Net {
-		if outportAddr.Node == "out" {
-			return errors.New("'out' node cannot be sender node")
+	for rndv := range mod.Net.Walk() {
+		if rndv.From.Node == "out" {
+			return errors.New("'out' node is always a receiver")
+		}
+		if rndv.To.Node == "in" {
+			return errors.New("'in' node is always a sender")
 		}
 
-		if outportAddr.Idx > 255 {
-			return fmt.Errorf("too big index on", outportAddr)
+		fromPortType, err := mod.NodePortType("out", rndv.From.Node, rndv.From.Port)
+		if err != nil {
+			return fmt.Errorf("unknown node or port: %w", err)
 		}
-
-		outports, err := mod.NodePorts(outportAddr.Node)
+		toPortType, err := mod.NodePortType("out", rndv.To.Node, rndv.To.Port)
 		if err != nil {
 			return fmt.Errorf("unknown node: %w", err)
 		}
 
-		outportType, ok := outports[outportAddr.Port]
-		if !ok {
-			return fmt.Errorf("unknown outport %s for node %s", outportAddr.Port, outportAddr.Node)
+		if !fromPortType.Arr && rndv.From.Idx > 0 {
+			return fmt.Errorf("only array ports can have address with idx > 0: %s", rndv.From)
+		}
+		if !toPortType.Arr && rndv.To.Idx > 0 {
+			return fmt.Errorf("only array ports can have address with idx > 0: %s", rndv.To)
 		}
 
-		if outportAddr.Idx > 0 && !outportType.Arr {
-			return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
+		if err := fromPortType.Compare(toPortType); err != nil {
+			return fmt.Errorf("mismatched types on ports %s and %s: %w", rndv.From, rndv.To, err)
 		}
 
-		for inportAddr := range to {
-			if inportAddr.Idx > 255 {
-				return fmt.Errorf("too big index on %s", inportAddr)
-			}
-
-			if inportAddr.Node == "in" {
-				return errors.New("'in' node cannot be receiver node")
-			}
-
-			var inports program.Ports
-			if inportAddr.Node == "out" { // for network 'out' is a receiver node
-				inports = program.Ports(mod.Interface().Out)
-			} else {
-				dep, ok := mod.Workers[inportAddr.Node]
-				if !ok {
-					return fmt.Errorf("unknown node %s", inportAddr.Node)
-				}
-				if _, ok := mod.Deps[dep]; !ok {
-					return fmt.Errorf("unknown dep %s", dep)
-				}
-				inports = mod.Deps[dep].In
-			}
-
-			inportType, ok := inports[inportAddr.Port]
-			if !ok {
-				return fmt.Errorf("unknown inport %s for node %s", inportAddr.Port, inportAddr.Node)
-			}
-
-			if outportAddr.Idx > 0 && !outportType.Arr {
-				return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
-			}
-
-			if err := outportType.Compare(inportType); err != nil {
-				return fmt.Errorf("mismatched types on ports %s and %s: %w", outportAddr, inportAddr, err)
-			}
-
-			if incoming[inportAddr] == nil {
-				incoming[inportAddr] = map[program.PortAddr]struct{}{}
-			}
-
-			incoming[inportAddr][outportAddr] = struct{}{}
-		}
+		incoming.add(rndv.To, rndv.From)
 	}
 
+	var g errgroup.Group
+
+	g.Go(func() error {
+		return v.validateInFlow(incoming)
+	})
+	g.Go(func() error {
+		return v.validateOutFlow(mod.Net)
+	})
+
+	return g.Wait()
+}
+
+func (v validator) validateInFlow(reversedNet) error {
+	return nil
+}
+
+func (v validator) validateOutFlow(program.Net) error {
 	return nil
 }
 
 type reversedNet program.Net
 
-func New() validator { return validator{} }
+func (rnet reversedNet) add(to, from program.PortAddr) {
+	if rnet[to] == nil {
+		rnet[to] = map[program.PortAddr]struct{}{}
+	}
+	rnet[to][from] = struct{}{}
+}
+
+func New() validator {
+	return validator{}
+}
