@@ -2,8 +2,12 @@ linters:
   enable-all: true
   disable:
     - godox
+    - godot
     - gomnd
     - forbidigo
+    - nlreturn
+    - wsl
+    - testpackage
 
 linters-settings:
   lll:
@@ -11,6 +15,8 @@ linters-settings:
 
 issues:
   exclude-rules:
-    - linters:
-        - lll
-      source: "^//go:generate "
+    - source: "^//go:generate "
+      linters: [lll]
+    - path: _test\.go
+      linters:
+        - funlen

@@ -5,30 +5,40 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/program"
+	"golang.org/x/sync/errgroup"
 )
 
 type validator struct{}
 
 func (v validator) Validate(mod program.Modules) error {
-	g := errgroup.NewGroup()
+	var g errgroup.Group
 
-	if err := v.validatePorts(mod.Interface()); err != nil {
+	g.Go(func() error {
+		if err := v.validatePorts(mod.Interface()); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		if err := v.validateDeps(mod.Deps); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
-	if err := v.validateDeps(mod.Deps); err != nil {
-		return err
-	}
-
-	if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
-		return err
-	}
-
-	if err := v.validateNet(mod); err != nil {
-		return err
-	}
-
-	return nil
+	return v.validateNet(mod)
 }
 
 // validatePorts checks that every port has well defined type.
@@ -37,23 +47,35 @@ func (mod validator) validatePorts(io program.IO) error {
 		return fmt.Errorf("ports len 0")
 	}
 
-	for port, t := range io.In {
-		if t.Type == program.UnknownType {
-			return fmt.Errorf("unknown type " + port)
-		}
-	}
+	g := &errgroup.Group{}
 
-	for port, t := range io.Out {
-		if t.Type == program.UnknownType {
-			return fmt.Errorf("unknown type " + port)
+	g.Go(func() error {
+		for port, t := range io.In {
+			if t.Type == program.UnknownType {
+				return fmt.Errorf("unknown type " + port)
+			}
 		}
-	}
+		return nil
+	})
 
-	return nil
+	g.Go(func() error {
+		for port, t := range io.Out {
+			if t.Type == program.UnknownType {
+				return fmt.Errorf("unknown type " + port)
+			}
+		}
+		return nil
+	})
+
+	return g.Wait()
 }
 
 // validateWorkers checks that every worker points to an existing dependency.
 func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string]string) error {
+	if len(workers) == 0 || len(deps) == 0 {
+		return fmt.Errorf("deps and workers cannot be empty")
+	}
+
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
@@ -65,13 +87,19 @@ func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string
 
 // validateDeps validates ports of every given dependency.
 func (v validator) validateDeps(deps program.ComponentsIO) error {
-	for name, dep := range deps {
-		if err := v.validatePorts(dep); err != nil {
-			return fmt.Errorf("invalid dep '%s': %w", name, err)
-		}
+	g := &errgroup.Group{}
+
+	for name := range deps {
+		dep := deps[name]
+		g.Go(func() error {
+			if err := v.validatePorts(dep); err != nil {
+				return fmt.Errorf("invalid dep %w", err)
+			}
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (v validator) validateNet(mod program.Modules) error {
@@ -102,7 +130,7 @@ func (v validator) validateNet(mod program.Modules) error {
 
 		for inportAddr := range to {
 			if inportAddr.Idx > 255 {
-				return fmt.Errorf("too big index on", inportAddr)
+				return fmt.Errorf("too big index on %s", inportAddr)
 			}
 
 			if inportAddr.Node == "in" {
@@ -144,11 +172,7 @@ func (v validator) validateNet(mod program.Modules) error {
 		}
 	}
 
-	if err := validateOutflow("in", mod, outgoing); err != nil {
-		return err
-	}
-
-	return validateInflow("out", mod, incoming)
+	return nil
 }
 
 type reversedNet program.Net
