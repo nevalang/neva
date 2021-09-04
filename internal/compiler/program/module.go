@@ -10,9 +10,26 @@ type Modules struct {
 	Net     Net
 }
 
-// IO returns Module input-output interface.
 func (cm Modules) Interface() IO {
 	return cm.IO
+}
+
+func (m Modules) NodePorts(node string) (Ports, error) {
+	switch node {
+	case "in":
+		return m.IO.In, nil
+	case "out":
+		return m.IO.Out, nil
+	default:
+		dep, ok := m.Workers[node]
+		if !ok {
+			return nil, fmt.Errorf("unknown node %s", node)
+		}
+		if _, ok := m.Deps[dep]; !ok {
+			return nil, fmt.Errorf("unknown dep %s", dep)
+		}
+		return m.Deps[dep].Out, nil
+	}
 }
 
 // ComponentsIO maps component name with it's io interface.

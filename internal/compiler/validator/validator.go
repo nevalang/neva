@@ -10,6 +10,8 @@ import (
 type validator struct{}
 
 func (v validator) Validate(mod program.Modules) error {
+	g := errgroup.NewGroup()
+
 	if err := v.validatePorts(mod.Interface()); err != nil {
 		return err
 	}
@@ -76,26 +78,17 @@ func (v validator) validateNet(mod program.Modules) error {
 	var incoming reversedNet
 
 	for outportAddr, to := range mod.Net {
-		if outportAddr.Idx > 255 {
-			return fmt.Errorf("too big index on", outportAddr)
-		}
-
 		if outportAddr.Node == "out" {
 			return errors.New("'out' node cannot be sender node")
 		}
 
-		var outports program.Ports
-		if outportAddr.Node == "in" {
-			outports = program.Ports(mod.Interface().In)
-		} else {
-			dep, ok := mod.Workers[outportAddr.Node]
-			if !ok {
-				return fmt.Errorf("unknown node %s", outportAddr.Node)
-			}
-			if _, ok := mod.Deps[dep]; !ok {
-				return fmt.Errorf("unknown dep %s", dep)
-			}
-			outports = mod.Deps[dep].Out
+		if outportAddr.Idx > 255 {
+			return fmt.Errorf("too big index on", outportAddr)
+		}
+
+		outports, err := mod.NodePorts(outportAddr.Node)
+		if err != nil {
+			return fmt.Errorf("unknown node: %w", err)
 		}
 
 		outportType, ok := outports[outportAddr.Port]
