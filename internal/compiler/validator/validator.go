@@ -1,16 +1,16 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
 type validator struct{}
 
-func (v validator) Validate(mod program.Modules) error {
+func (v validator) Validate(mod program.Module) error {
 	var g errgroup.Group
 
 	g.Go(func() error {
@@ -88,71 +88,63 @@ func (v validator) validateDeps(deps map[string]program.IO) error {
 	return g.Wait()
 }
 
-// validateNet ensures that program will run and won't block by checking that:
-// 1) All needed connections are presented;
-// 2) All existing connections are needed;
-// 3) All existing connections are type safe;
-func (v validator) validateNet(mod program.Modules) error {
-	var incoming reversedNet
-
-	for rndv := range mod.Net.Walk() {
-		if rndv.From.Node == "out" {
-			return errors.New("'out' node is always a receiver")
-		}
-		if rndv.To.Node == "in" {
-			return errors.New("'in' node is always a sender")
-		}
-
-		fromPortType, err := mod.NodePortType("out", rndv.From.Node, rndv.From.Port)
-		if err != nil {
-			return fmt.Errorf("unknown node or port: %w", err)
-		}
-		toPortType, err := mod.NodePortType("out", rndv.To.Node, rndv.To.Port)
-		if err != nil {
-			return fmt.Errorf("unknown node: %w", err)
-		}
-
-		if !fromPortType.Arr && rndv.From.Idx > 0 {
-			return fmt.Errorf("only array ports can have address with idx > 0: %s", rndv.From)
-		}
-		if !toPortType.Arr && rndv.To.Idx > 0 {
-			return fmt.Errorf("only array ports can have address with idx > 0: %s", rndv.To)
-		}
-
-		if err := fromPortType.Compare(toPortType); err != nil {
-			return fmt.Errorf("mismatched types on ports %s and %s: %w", rndv.From, rndv.To, err)
-		}
-
-		incoming.add(rndv.To, rndv.From)
-	}
-
-	var g errgroup.Group
+// validateNet ensures that program will not crash or block.
+func (v validator) validateNet(mod program.Module) error {
+	g := errgroup.Group{}
+	incoming := mod.Net.IncomingConnections()
 
 	g.Go(func() error {
-		return v.validateInFlow(incoming)
+		return v.typeCheckNet(mod)
 	})
 	g.Go(func() error {
-		return v.validateOutFlow(mod.Net)
+		return v.validateInFlow(mod)
+	})
+	g.Go(func() error {
+		return v.validateOutFlow(incoming, mod)
 	})
 
 	return g.Wait()
 }
 
-func (v validator) validateInFlow(reversedNet) error {
-	return nil
-}
-
-func (v validator) validateOutFlow(program.Net) error {
-	return nil
-}
-
-type reversedNet program.Net
-
-func (rnet reversedNet) add(to, from program.PortAddr) {
-	if rnet[to] == nil {
-		rnet[to] = map[program.PortAddr]struct{}{}
+// typeCheckNet checks that all connections are type-safe.
+func (v validator) typeCheckNet(mod program.Module) error {
+	for pair := range mod.Net.Walk() {
+		if err := v.validatePair(pair, mod); err != nil {
+			return err
+		}
 	}
-	rnet[to][from] = struct{}{}
+	return nil
+}
+
+func (v validator) validatePair(pair program.PortAddrPair, mod program.Module) error {
+	if pair.From.Node == "out" || pair.To.Node == "in" {
+		return fmt.Errorf("bad node name in pair %s", pair)
+	}
+
+	from, to, err := mod.PairPortTypes(pair)
+	if err != nil {
+		return fmt.Errorf("could not get pair port types: %w", err)
+	}
+
+	switch {
+	case !from.Arr && pair.From.Idx > 0:
+	case !to.Arr && pair.To.Idx > 0:
+		return fmt.Errorf("only array ports can have address with idx > 0: %s", pair)
+	}
+
+	if err := from.Compare(to); err != nil {
+		return fmt.Errorf("mismatched types on ports %s and %s: %w", pair.From, pair.To, err)
+	}
+
+	return nil
+}
+
+func (v validator) validateOutFlow(incoming program.IncomingConnections, mod program.Module) error {
+	return nil
+}
+
+func (v validator) validateInFlow(mod program.Module) error {
+	return nil
 }
 
 func New() validator {

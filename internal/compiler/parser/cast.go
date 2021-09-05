@@ -8,7 +8,7 @@ import (
 	compiler "github.com/emil14/neva/internal/compiler/program"
 )
 
-func castModule(mod module) compiler.Modules {
+func castModule(mod module) compiler.Module {
 	return compiler.NewModule(
 		castIO(mod.In, mod.Out),
 		castDeps(mod.Deps),
@@ -55,8 +55,8 @@ func castDeps(from deps) map[string]compiler.IO {
 	return to
 }
 
-func castNet(from net) compiler.Net {
-	to := compiler.Net{}
+func castNet(from net) compiler.OutgoingConnections {
+	to := compiler.OutgoingConnections{}
 
 	for senderNode, outgoingConnections := range from {
 		for outport, nodesToInports := range outgoingConnections {

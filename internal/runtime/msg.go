@@ -10,10 +10,10 @@ type Msg interface {
 
 type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
 
-func (msg emptyMsg) Str() string            { return "" }
-func (msg emptyMsg) Int() int               { return 0 }
-func (msg emptyMsg) Bool() bool             { return false }
-func (msg emptyMsg) Struct() map[string]Msg { return nil }
+func (msg emptyMsg) Str() (_ string)            { return }
+func (msg emptyMsg) Int() (_ int)               { return }
+func (msg emptyMsg) Bool() (_ bool)             { return }
+func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
 
 var empty = emptyMsg{} // To avoid initialization of multiple empty messages.
 
