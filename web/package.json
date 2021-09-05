@@ -4,15 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "parcel <your entry file>",
-    "build": "parcel build <your entry file>"
+    "dev": "parcel index.html",
+    "build": "parcel build index.html"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "parcel-bundler": "^1.12.5",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-d3-tree": "^3.1.1",
+    "react-dom": "^17.0.2",
+    "reaflow": "^4.2.1"
   },
   "devDependencies": {
     "typescript": "^4.4.2"
