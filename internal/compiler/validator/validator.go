@@ -143,10 +143,16 @@ func (v validator) validateOutFlow(incoming program.IncomingConnections, mod pro
 	return nil
 }
 
+// 1) get 'out' node
+// 2) check that all its inports are feeded
+// 3) for every sender do this recursively
 func (v validator) validateInFlow(mod program.Module) error {
 	return nil
 }
 
+// 1) get 'in' node
+// 2) check that all its outports has receivers
+// 3) for every receiver do this recursively
 func New() validator {
 	return validator{}
 }
