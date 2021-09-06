@@ -1,11 +1,9 @@
-// tsconfig.json
 {
   "compilerOptions": {
     "jsx": "react",
     "baseUrl": "./src",
     "paths": {
       "~*": ["./*"]
-    },
-    "include": ["src/**/*"]
+    }
   }
 }
