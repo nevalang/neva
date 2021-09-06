@@ -5,14 +5,16 @@
   "main": "index.js",
   "scripts": {
     "dev": "parcel index.html",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html",
+    "build:analize": "parcel build index.html --reporter @parcel/reporter-bundle-analyzer"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Emil Valeev <emil.musician@gmail.com> (https://github.com/emil14)",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5"
+  },
   "dependencies": {
-    "parcel-bundler": "^1.12.5",
     "react": "^17.0.2",
-    "react-d3-tree": "^3.1.1",
     "react-dom": "^17.0.2",
     "reaflow": "^4.2.1"
   },
