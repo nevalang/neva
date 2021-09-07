@@ -1,9 +1,9 @@
 linters:
   enable-all: true
   disable:
-    - godox
+    - godox # todo/fixme
     - godot
-    - gomnd
+    - gomnd # magic number
     - forbidigo
     - nlreturn
     - wsl
