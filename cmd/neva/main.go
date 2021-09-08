@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/emil14/neva/internal/compiler/translator"
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/connector"
 	"github.com/emil14/neva/internal/runtime/decoder"
 	"github.com/emil14/neva/internal/runtime/operators"
 
@@ -63,8 +65,18 @@ func main() {
 						return err
 					}
 
-					ops := operators.New()
-					r := runtime.New(ops)
+					r := runtime.New(
+						connector.New(
+							operators.New(),
+							func(msg runtime.Msg, from runtime.PortAddr) {
+								fmt.Printf("%s -> %s\n", from, msg.Format())
+							},
+							func(msg runtime.Msg, from, to runtime.PortAddr) {
+								fmt.Printf("%v <- %s <- %v\n", to, msg.Format(), from)
+							},
+						),
+					)
+
 					io, err := r.Run(prog)
 					if err != nil {
 						return err

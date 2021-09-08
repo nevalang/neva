@@ -20,8 +20,8 @@ func (r Runtime) Run(p program.Program) (IO, error) {
 	return r.run(p.Scope, p.Root)
 }
 
-func (r Runtime) run(components map[string]program.Component, node program.NodeMeta) (IO, error) {
-	component, ok := components[node.Component]
+func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) (IO, error) {
+	component, ok := scope[node.Component]
 	if !ok {
 		return IO{}, fmt.Errorf("component not found: %s", node.Component)
 	}
@@ -40,20 +40,22 @@ func (r Runtime) run(components map[string]program.Component, node program.NodeM
 		"out": {In: io.Out}, // and 'out' is receiver
 	}
 	for workerNode, meta := range component.WorkerNodes {
-		io, err := r.run(components, meta)
+		io, err := r.run(scope, meta)
 		if err != nil {
 			return IO{}, err
 		}
 		nodesIO[workerNode] = io
 	}
 
-	r.connector.Connect(r.connections(nodesIO, component.Net))
+	r.connector.ConnectSubnet(
+		r.connections(nodesIO, component.Net),
+	)
 
 	return io, nil
 }
 
-func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []connection {
-	ss := make([]connection, len(net))
+func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []Connection {
+	ss := make([]Connection, len(net))
 
 	for i := range net {
 		fromNodeIO, ok := nodesIO[net[i].From.Node]
@@ -81,12 +83,12 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 				panic("not ok")
 			}
 
-			to[j] = Port{ch: receiver, addr: toInportAddr}
+			to[j] = Port{Ch: receiver, Addr: toInportAddr}
 		}
 
-		ss[i] = connection{
-			from: Port{ch: from, addr: fromOutportAddr},
-			to:   to,
+		ss[i] = Connection{
+			From: Port{Ch: from, Addr: fromOutportAddr},
+			To:   to,
 		}
 	}
 
@@ -139,15 +141,15 @@ func (r Runtime) nodeIO(nodeMeta program.NodeMeta) IO {
 // If IO doesn't satisfy the interface - error is returned.
 type Operator func(IO) error
 
-// connection represents sender-receiver pair.
-type connection struct {
-	from Port
-	to   []Port
+// Connection represents sender-receiver pair.
+type Connection struct {
+	From Port
+	To   []Port
 }
 
 type Port struct {
-	ch   chan Msg
-	addr PortAddr
+	Ch   chan Msg
+	Addr PortAddr
 }
 
 // IO represents node's input and output ports.
@@ -195,16 +197,8 @@ func (addr PortAddr) String() string {
 	return fmt.Sprintf("%s.%s[%d]", addr.node, addr.port, addr.idx)
 }
 
-func New(ops map[string]Operator) Runtime {
+func New(connector Connector) Runtime {
 	return Runtime{
-		connector: connector{
-			ops: ops,
-			onSend: func(msg Msg, from PortAddr) {
-				fmt.Printf("%s -> %v\n", from, msg.Format())
-			},
-			onReceive: func(msg Msg, from, to PortAddr) {
-				fmt.Printf("%v <- %v <- %v\n", to, msg.Format(), from)
-			},
-		},
+		connector: connector,
 	}
 }
