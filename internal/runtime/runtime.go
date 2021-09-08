@@ -6,12 +6,6 @@ import (
 	"github.com/emil14/neva/internal/runtime/program"
 )
 
-// AbsPortAddr represents absolute port address in the program's network.
-type AbsPortAddr struct {
-	port Port
-	path []string
-}
-
 type Runtime struct {
 	connector Connector
 }
@@ -35,10 +29,12 @@ func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) 
 		return io, nil
 	}
 
+	// for this subnet 'in' is sender and 'out' is receiver nodes
 	nodesIO := map[string]IO{
-		"in":  {Out: io.In}, // for subnet 'in' is sender
-		"out": {In: io.Out}, // and 'out' is receiver
+		"in":  {Out: io.In},
+		"out": {In: io.Out},
 	}
+
 	for workerNode, meta := range component.WorkerNodes {
 		io, err := r.run(scope, meta)
 		if err != nil {
@@ -201,4 +197,10 @@ func New(connector Connector) Runtime {
 	return Runtime{
 		connector: connector,
 	}
+}
+
+// AbsPortAddr represents absolute port address in the program's network.
+type AbsPortAddr struct {
+	port Port
+	path []string
 }

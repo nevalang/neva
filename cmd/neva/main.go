@@ -59,25 +59,28 @@ func main() {
 						return err
 					}
 
-					c := decoder.MustNewJSON()
-					prog, err := c.Decode(bb)
+					d := decoder.MustNewJSON()
+					prog, err := d.Decode(bb)
 					if err != nil {
 						return err
 					}
 
-					r := runtime.New(
-						connector.New(
-							operators.New(),
-							func(msg runtime.Msg, from runtime.PortAddr) {
-								fmt.Printf("%s -> %s\n", from, msg.Format())
-							},
-							func(msg runtime.Msg, from, to runtime.PortAddr) {
-								fmt.Printf("%v <- %s <- %v\n", to, msg.Format(), from)
-							},
-						),
+					cnctr, err := connector.New(
+						operators.New(),
+						func(msg runtime.Msg, from runtime.PortAddr) {
+							fmt.Printf("%s -> %s\n", from, msg.Format())
+						},
+						func(msg runtime.Msg, from, to runtime.PortAddr) {
+							fmt.Printf("%v <- %s <- %v\n", to, msg.Format(), from)
+						},
 					)
+					if err != nil {
+						return err
+					}
 
-					io, err := r.Run(prog)
+					var rntm = runtime.New(cnctr)
+
+					io, err := rntm.Run(prog)
 					if err != nil {
 						return err
 					}

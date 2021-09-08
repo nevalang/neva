@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/emil14/neva/internal/runtime"
@@ -53,6 +54,10 @@ func New(
 	ops map[string]runtime.Operator,
 	onSend func(msg runtime.Msg, from runtime.PortAddr),
 	onReceive func(msg runtime.Msg, from, to runtime.PortAddr),
-) Connector {
-	return Connector{ops, onSend, onReceive}
+) (Connector, error) {
+	if ops == nil || onSend == nil || onReceive == nil {
+		return Connector{}, errors.New("init connector")
+	}
+
+	return Connector{ops, onSend, onReceive}, nil
 }
