@@ -35,7 +35,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 			In:        in,
 			Out:       out,
 		},
-		Components: t.components(prog.Components),
+		Scope: t.components(prog.Components),
 	}, nil
 }
 
@@ -79,7 +79,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 		}
 
 		runtimeComponents[name] = runtime.Component{
-			Workers: workers,
+			WorkerNodes: workers,
 			Net:     net,
 		}
 	}

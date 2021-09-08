@@ -16,10 +16,10 @@ interface Operator {
   io: IO
 }
 
-interface Module {   
+interface Module {
   type: ComponentTypes.MODULE
   io: IO
-  net: Net
+  net: Network
 }
 
 interface IO {
@@ -48,7 +48,7 @@ export {
   PortType,
 }
 
-interface Net {
+interface Network {
   nodes: Node[]
   connections: Connection[]
 }
@@ -80,4 +80,4 @@ interface PortAddr {
   idx: number
 }
 
-export { Net, Node, Port, Direction, Connection, PortAddr }
+export { Network, Node, Port, Direction, Connection, PortAddr }

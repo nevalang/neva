@@ -71,12 +71,12 @@ func main() {
 						return err
 					}
 
-					in, err := io.In.Port("x")
+					in, err := io.In.Chan("x")
 					if err != nil {
 						return err
 					}
 
-					outport, err := io.Out.Port("y")
+					outport, err := io.Out.Chan("y")
 					if err != nil {
 						return err
 					}

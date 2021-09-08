@@ -10,7 +10,7 @@
           "from": { "node": "in", "port": "x" },
           "to": [
             { "node": "multi", "port": "nums", "idx": 1 },
-            { "node": "multi", "port": "nums" }
+            { "node": "multi", "port": "nums", "idx": 0 }
           ]
         },
         {

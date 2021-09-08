@@ -6,8 +6,13 @@ type caster struct{}
 
 func (c caster) Cast(prog Program) program.Program {
 	return program.Program{
-		Root:       program.NodeMeta(prog.Root),
-		Components: c.components(prog.Components),
+		Root: program.NodeMeta{
+			Node:      "root",
+			In:        prog.Root.In,
+			Out:       prog.Root.Out,
+			Component: prog.Root.Component,
+		},
+		Scope: c.components(prog.Components),
 	}
 }
 
@@ -15,20 +20,27 @@ func (c caster) components(from map[string]Component) map[string]program.Compone
 	to := make(map[string]program.Component, len(from))
 	for name, component := range from {
 		to[name] = program.Component{
-			Operator: component.Operator,
-			Workers:  c.workers(component.Workers),
-			Net:      c.net(component.Net),
+			Operator:    component.Operator,
+			WorkerNodes: c.workerNodes(component.Workers),
+			Net:         c.net(component.Net),
 		}
 	}
 	return to
 }
 
-func (c caster) workers(from map[string]NodeMeta) map[string]program.NodeMeta {
-	to := make(map[string]program.NodeMeta, len(from))
-	for k, v := range from {
-		to[k] = program.NodeMeta(v)
+func (c caster) workerNodes(workers map[string]NodeMeta) map[string]program.NodeMeta {
+	result := make(map[string]program.NodeMeta, len(workers))
+
+	for w, nodeMeta := range workers {
+		result[w] = program.NodeMeta{
+			Node:      w,
+			In:        nodeMeta.In,
+			Out:       nodeMeta.Out,
+			Component: nodeMeta.Component,
+		}
 	}
-	return to
+
+	return result
 }
 
 func (c caster) net(model []Connection) []program.Connection {
