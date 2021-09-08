@@ -13,7 +13,7 @@ type AbsPortAddr struct {
 }
 
 type Runtime struct {
-	Operators map[string]Operator
+	connector Connector
 }
 
 func (r Runtime) Run(p program.Program) (IO, error) {
@@ -26,18 +26,17 @@ func (r Runtime) run(components map[string]program.Component, node program.NodeM
 		return IO{}, fmt.Errorf("component not found: %s", node.Component)
 	}
 
+	io := r.nodeIO(node)
+
 	if component.Operator != "" {
-		io := r.nodeIO(node)
-		if err := r.connectOperator(component.Operator, io); err != nil {
+		if err := r.connector.ConnectOperator(component.Operator, io); err != nil {
 			return IO{}, fmt.Errorf("could not connect operator")
 		}
 		return io, nil
 	}
 
-	io := r.nodeIO(node)
-
 	nodesIO := map[string]IO{
-		"in":  {Out: io.In}, // for this net 'in' is sender
+		"in":  {Out: io.In}, // for subnet 'in' is sender
 		"out": {In: io.Out}, // and 'out' is receiver
 	}
 	for workerNode, meta := range component.WorkerNodes {
@@ -48,15 +47,13 @@ func (r Runtime) run(components map[string]program.Component, node program.NodeM
 		nodesIO[workerNode] = io
 	}
 
-	r.connectMany(
-		r.connections(nodesIO, component.Net),
-	)
+	r.connector.Connect(r.connections(nodesIO, component.Net))
 
 	return io, nil
 }
 
-func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []pair {
-	ss := make([]pair, len(net))
+func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []connection {
+	ss := make([]connection, len(net))
 
 	for i := range net {
 		fromNodeIO, ok := nodesIO[net[i].From.Node]
@@ -87,7 +84,7 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 			to[j] = Port{ch: receiver, addr: toInportAddr}
 		}
 
-		ss[i] = pair{
+		ss[i] = connection{
 			from: Port{ch: from, addr: fromOutportAddr},
 			to:   to,
 		}
@@ -137,47 +134,13 @@ func (r Runtime) nodeIO(nodeMeta program.NodeMeta) IO {
 	return IO{inports, outports}
 }
 
-func (r Runtime) connectOperator(name string, io IO) error {
-	op, ok := r.Operators[name]
-	if !ok {
-		return fmt.Errorf("ErrUnknownOperator: %s", name)
-	}
-
-	if err := op(io); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r Runtime) connectMany(cc []pair) {
-	for i := range cc {
-		go r.connect(cc[i])
-	}
-}
-
-func (r Runtime) connect(s pair) {
-	for msg := range s.from.ch {
-		for _, recv := range s.to {
-			select {
-			case recv.ch <- msg:
-				continue
-			default:
-				go func(to chan Msg, m Msg) {
-					to <- m
-				}(recv.ch, msg)
-			}
-		}
-	}
-}
-
 // Operator spawns a goroutine where the real computation happens.
-// It uses an IO (usually provided by runtime) to receive and send data.
-// If given io won't fit the interface then error should be returned.
+// That goroutine will use given IO (usually provided by runtime) to receive and send data.
+// If IO doesn't satisfy the interface - error is returned.
 type Operator func(IO) error
 
-// pair represents pair betwen sender and receiver.
-type pair struct {
+// connection represents sender-receiver pair.
+type connection struct {
 	from Port
 	to   []Port
 }
@@ -192,7 +155,7 @@ type IO struct {
 	In, Out Ports
 }
 
-// Ports maps port-channels with their network addresses.
+// Ports maps ports to their network addresses.
 type Ports map[PortAddr]chan Msg
 
 // Slots returns all port-chanells associated with the given array port name.
@@ -228,8 +191,20 @@ type PortAddr struct {
 	idx  uint8 // always 0 for normal ports
 }
 
+func (addr PortAddr) String() string {
+	return fmt.Sprintf("%s.%s[%d]", addr.node, addr.port, addr.idx)
+}
+
 func New(ops map[string]Operator) Runtime {
 	return Runtime{
-		Operators: ops,
+		connector: connector{
+			ops: ops,
+			onSend: func(msg Msg, from PortAddr) {
+				fmt.Printf("%s -> %v\n", from, msg.Format())
+			},
+			onReceive: func(msg Msg, from, to PortAddr) {
+				fmt.Printf("%v <- %v <- %v\n", to, msg.Format(), from)
+			},
+		},
 	}
 }

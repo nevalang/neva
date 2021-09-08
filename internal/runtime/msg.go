@@ -1,11 +1,15 @@
 package runtime
 
+import "fmt"
+
 // Msg represents set of methods only one of which should return real value.
 type Msg interface {
 	Str() string
 	Int() int
 	Bool() bool
 	Struct() map[string]Msg
+
+	Format() string
 }
 
 type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
@@ -14,6 +18,7 @@ func (msg emptyMsg) Str() (_ string)            { return }
 func (msg emptyMsg) Int() (_ int)               { return }
 func (msg emptyMsg) Bool() (_ bool)             { return }
 func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
+func (msg emptyMsg) Format() (_ string)         { return }
 
 var empty = emptyMsg{} // To avoid initialization of multiple empty messages.
 
@@ -24,6 +29,10 @@ type IntMsg struct {
 
 func (msg IntMsg) Int() int {
 	return msg.v
+}
+
+func (msg IntMsg) Format() string {
+	return fmt.Sprint(msg.v)
 }
 
 func NewIntMsg(n int) IntMsg {
@@ -39,6 +48,10 @@ type StrMsg struct {
 }
 
 func (msg StrMsg) Str() string {
+	return msg.v
+}
+
+func (msg StrMsg) Format() string {
 	return msg.v
 }
 

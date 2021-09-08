@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -82,8 +81,7 @@ func main() {
 					}
 
 					in <- runtime.NewIntMsg(42)
-					v := <-outport
-					fmt.Println(v)
+					<-outport
 
 					return nil
 				},

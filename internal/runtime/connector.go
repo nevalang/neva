@@ -1,35 +1,51 @@
 package runtime
 
+import "fmt"
+
 type Connector interface {
-	Connect()
+	Connect([]connection)
+	ConnectOperator(string, IO) error
 }
 
 type connector struct {
-	pp        []pair
+	ops       map[string]Operator
 	onSend    func(msg Msg, from PortAddr)
-	onReceive func(msg Msg, to PortAddr)
+	onReceive func(msg Msg, from, to PortAddr)
 }
 
-func (c connector) Connect() {
-	for i := range c.pp {
-		go c.connectPair(c.pp[i])
+func (c connector) Connect(pp []connection) {
+	for i := range pp {
+		go c.connectPair(pp[i])
 	}
 }
 
-func (c connector) connectPair(p pair) {
-	for msg := range p.from.ch {
-		c.onSend(msg, p.from.addr)
+func (c connector) connectPair(con connection) {
+	for msg := range con.from.ch {
+		c.onSend(msg, con.from.addr)
 
-		for _, recv := range p.to {
+		for _, recv := range con.to {
 			select {
 			case recv.ch <- msg:
-				c.onReceive(msg, recv.addr)
+				c.onReceive(msg, con.from.addr, recv.addr)
 			default:
 				go func(to Port, m Msg) {
 					to.ch <- m
-					c.onReceive(m, to.addr)
+					c.onReceive(m, con.from.addr, to.addr)
 				}(recv, msg)
 			}
 		}
 	}
+}
+
+func (c connector) ConnectOperator(name string, io IO) error {
+	op, ok := c.ops[name]
+	if !ok {
+		return fmt.Errorf("ErrUnknownOperator: %s", name)
+	}
+
+	if err := op(io); err != nil {
+		return err
+	}
+
+	return nil
 }
