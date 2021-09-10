@@ -1,5 +1,3 @@
-
-```
 # Neva
 
 Flow based programming environment.
