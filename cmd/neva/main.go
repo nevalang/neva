@@ -102,7 +102,7 @@ func main() {
 					for addr, ch := range io.Out {
 						go func(addr runtime.PortAddr, ch chan runtime.Msg) {
 							for v := range ch {
-								fmt.Println("out:", addr, v)
+								fmt.Print(addr, v)
 							}
 						}(addr, ch)
 					}

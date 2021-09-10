@@ -6,7 +6,7 @@ type caster struct{}
 
 func (c caster) Cast(prog program.Program) Program {
 	return Program{
-		Root:       c.castNode(prog.RootNode),
+		Root:       c.castNode(prog.RootNodeMeta),
 		Components: c.castComponents(prog.Scope),
 	}
 }

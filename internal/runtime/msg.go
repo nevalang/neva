@@ -26,8 +26,8 @@ func (msg IntMsg) Int() int {
 	return msg.v
 }
 
-func (msg IntMsg) Format() string {
-	return fmt.Sprint(msg.v)
+func (msg IntMsg) String() string {
+	return fmt.Sprintf("'%d'", msg.v)
 }
 
 func NewIntMsg(n int) IntMsg {

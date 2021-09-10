@@ -30,7 +30,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	}
 
 	return runtime.Program{
-		RootNode: runtime.NodeMeta{
+		RootNodeMeta: runtime.NodeMeta{
 			Component: prog.Root,
 			In:        in,
 			Out:       out,

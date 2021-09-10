@@ -1,9 +1,11 @@
 package program
 
+import "fmt"
+
 // Program is data for runtime network initialization.
 type Program struct {
-	Scope    map[string]Component // Components available for nodes initialization.
-	RootNode NodeMeta             // Metadata for root node initialization.
+	Scope        map[string]Component // Components available for nodes initialization.
+	RootNodeMeta NodeMeta             // Metadata for root node initialization.
 }
 
 // Component represents reusable computation unit.
@@ -21,7 +23,7 @@ type NodeMeta struct {
 	Component string           // always "" for io nodes
 }
 
-// One-to-many relation betwen sender and receiver ports.
+// One-to-many relation between sender and receiver ports.
 type Connection struct {
 	From PortAddr   // sender
 	To   []PortAddr // receiver
@@ -31,4 +33,8 @@ type Connection struct {
 type PortAddr struct {
 	Node, Port string
 	Idx        uint8 // always 0 for normal ports
+}
+
+func (addr PortAddr) String() string {
+	return fmt.Sprintf("%s.%s", addr.Node, addr.Port)
 }

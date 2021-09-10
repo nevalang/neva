@@ -13,26 +13,23 @@ type Connector struct {
 	onReceive func(msg runtime.Msg, from, to runtime.PortAddr)
 }
 
-func (c Connector) ConnectSubnet(pp []runtime.Connection) {
+func (cnctr Connector) ConnectSubnet(pp []runtime.Connection) {
 	for i := range pp {
-		go c.connectPair(pp[i])
+		go cnctr.connectConnection(pp[i])
 	}
 }
 
-func (c Connector) connectPair(con runtime.Connection) {
-	for msg := range con.From.Ch {
-		c.onSend(msg, con.From.Addr)
+func (cnctr Connector) connectConnection(conn runtime.Connection) {
+	for msg := range conn.From.Ch {
+		cnctr.onSend(msg, conn.From.Addr)
 
-		for _, recv := range con.To {
-			select {
-			case recv.Ch <- msg:
-				c.onReceive(msg, con.From.Addr, recv.Addr)
-			default:
-				go func(to runtime.Port, m runtime.Msg) {
-					to.Ch <- m
-					c.onReceive(m, con.From.Addr, to.Addr)
-				}(recv, msg)
-			}
+		for i := range conn.To {
+			to := conn.To[i]
+
+			go func(m runtime.Msg) {
+				to.Ch <- m
+				cnctr.onReceive(m, conn.From.Addr, to.Addr)
+			}(msg)
 		}
 	}
 }

@@ -110,7 +110,7 @@ func (net OutgoingConnections) CountOutgoing(node, outport string) uint8 {
 }
 
 func (net OutgoingConnections) IncomingConnections() IncomingConnections {
-	var incoming IncomingConnections
+	incoming := IncomingConnections{}
 
 	for pair := range net.Walk() {
 		if incoming[pair.To] == nil {

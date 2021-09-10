@@ -7,54 +7,62 @@ import (
 	"github.com/emil14/neva/internal/runtime/program"
 )
 
-var (
-	ErrPortNotFound = errors.New("port not found")
+var ErrPortNotFound = errors.New("port not found")
+
+type (
+	Runtime struct {
+		cnctr Connector
+	}
+	Connector interface {
+		ConnectSubnet([]Connection)
+		ConnectOperator(string, IO) error
+	}
 )
 
-type Runtime struct {
-	connector Connector
-}
-
+// Run creates root node of the program and returns its io.
 func (r Runtime) Run(p program.Program) (IO, error) {
-	return r.run(p.Scope, p.RootNode)
+	return r.run(p.Scope, p.RootNodeMeta)
 }
 
-func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) (IO, error) {
-	component, ok := scope[node.Component]
+// run uses nodemeta to find component in scope and create a node and returns io of that node.
+func (r Runtime) run(scope map[string]program.Component, nodeMeta program.NodeMeta) (IO, error) {
+	component, ok := scope[nodeMeta.Component]
 	if !ok {
-		return IO{}, fmt.Errorf("component not found: %s", node.Component)
+		return IO{}, fmt.Errorf("component not found: %s", nodeMeta.Component)
 	}
 
-	io := r.nodeIO(node)
+	nodeIO := r.nodeIO(nodeMeta)
 
 	if component.Operator != "" {
-		if err := r.connector.ConnectOperator(component.Operator, io); err != nil {
-			return IO{}, fmt.Errorf("could not connect operator")
+		if err := r.cnctr.ConnectOperator(component.Operator, nodeIO); err != nil {
+			return IO{}, fmt.Errorf("connect operator: %w", err)
 		}
-		return io, nil
+		return nodeIO, nil
 	}
 
-	// for this subnet 'in' is sender and 'out' is receiver nodes
-	nodesIO := map[string]IO{
-		"in":  {Out: io.In},
-		"out": {In: io.Out},
+	// it's a module so it has subnetwork and in-out nodes are part it
+	subnetIO := map[string]IO{ //
+		"in":  {Out: nodeIO.In}, // for subnet 'in' node is sender
+		"out": {In: nodeIO.Out}, // and 'out' is receiver
 	}
 
-	for workerNode, meta := range component.WorkerNodesMeta {
-		io, err := r.run(scope, meta)
+	// repeat this algorithm for every worker to collect their io
+	for workerNodeName, workerNodeMeta := range component.WorkerNodesMeta {
+		workerNodeIO, err := r.run(scope, workerNodeMeta) // <- recursion
 		if err != nil {
 			return IO{}, err
 		}
-		nodesIO[workerNode] = io
+		subnetIO[workerNodeName] = workerNodeIO
 	}
 
-	r.connector.ConnectSubnet(
-		r.connections(nodesIO, component.Connections),
+	r.cnctr.ConnectSubnet( // connect all channels
+		r.connections(subnetIO, component.Connections), // map connections map to real channels
 	)
 
-	return io, nil
+	return nodeIO, nil
 }
 
+// connections maps network schema with real channels.
 func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []Connection {
 	ss := make([]Connection, len(net))
 
@@ -96,6 +104,7 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 	return ss
 }
 
+// nodeIO creates channels following node meta.
 func (r Runtime) nodeIO(nodeMeta program.NodeMeta) IO {
 	inports := make(map[PortAddr]chan Msg)
 
@@ -137,9 +146,7 @@ func (r Runtime) nodeIO(nodeMeta program.NodeMeta) IO {
 	return IO{inports, outports}
 }
 
-// Operator spawns a goroutine where the real computation happens.
-// That goroutine will use given IO (usually provided by runtime) to receive and send data.
-// If IO doesn't satisfy the interface - error is returned.
+// Operator returns error if IO doesn't fit.
 type Operator func(IO) error
 
 // Connection represents sender-receiver pair.
@@ -148,6 +155,7 @@ type Connection struct {
 	To   []Port
 }
 
+// Port maps network address with the real channel.
 type Port struct {
 	Ch   chan Msg
 	Addr PortAddr
@@ -158,13 +166,13 @@ type IO struct {
 	In, Out Ports
 }
 
-// Ports maps ports to their network addresses.
+// Ports maps network addresses to real channels.
 type Ports map[PortAddr]chan Msg
 
 // Slots returns all port-chanells associated with the given array port name.
-func (p Ports) Slots(arrPort string) ([]chan Msg, error) {
+func (ports Ports) Slots(arrPort string) ([]chan Msg, error) {
 	cc := []chan Msg{}
-	for addr, ch := range p {
+	for addr, ch := range ports {
 		if addr.port == arrPort {
 			cc = append(cc, ch)
 		}
@@ -178,13 +186,13 @@ func (p Ports) Slots(arrPort string) ([]chan Msg, error) {
 }
 
 // Chan returns chanell associated with the given normal port name.
-func (p Ports) Chan(port string) (chan Msg, error) {
-	for addr, ch := range p {
+func (ports Ports) Chan(port string) (chan Msg, error) {
+	for addr, ch := range ports {
 		if addr.port == port {
 			return ch, nil
 		}
 	}
-	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, p)
+	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, ports)
 }
 
 // PortAddr describes port address in the
@@ -194,9 +202,13 @@ type PortAddr struct {
 	idx  uint8 // always 0 for normal ports
 }
 
+func (addr PortAddr) String() string {
+	return fmt.Sprintf("%s.%s", addr.node, addr.port)
+}
+
 func New(connector Connector) Runtime {
 	return Runtime{
-		connector: connector,
+		cnctr: connector,
 	}
 }
 
