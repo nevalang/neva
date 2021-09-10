@@ -1,8 +1,12 @@
 # Debugger
 
-Undo/Redo
-Editing of messages values
-Live changing of networks
+## Undo/Redo
+
+Instead of keeping log of all sends/receives, keep only previous values.
+
+## Editing of messages values
+
+## Live changing of networks
 
 - Обмен байткодом между рантаймами
 - DEBUGGER (Обёртка над компилятором и рантаймом, в рантайме, вероятно, мидлварь)
