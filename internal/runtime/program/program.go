@@ -2,16 +2,16 @@ package program
 
 // Program is data for runtime network initialization.
 type Program struct {
-	Scope map[string]Component // Components available for nodes initialization.
-	Root  NodeMeta             // Metadata for root node initialization.
+	Scope    map[string]Component // Components available for nodes initialization.
+	RootNode NodeMeta             // Metadata for root node initialization.
 }
 
 // Component represents reusable computation unit.
 // There are module and operator concrete components.
 type Component struct {
-	Operator    string              // Always "" for modules.
-	WorkerNodes map[string]NodeMeta // Worker nodes metadata, ignored for operators.
-	Net         []Connection        // Data flow, ignored for operators.
+	Operator        string              // Always "" for modules.
+	WorkerNodesMeta map[string]NodeMeta // Worker nodes metadata, ignored for operators.
+	Connections     []Connection        // Data flow, ignored for operators.
 }
 
 // NodeMeta describes metadata for node initialization.

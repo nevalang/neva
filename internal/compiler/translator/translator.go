@@ -30,7 +30,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	}
 
 	return runtime.Program{
-		Root: runtime.NodeMeta{
+		RootNode: runtime.NodeMeta{
 			Component: prog.Root,
 			In:        in,
 			Out:       out,
@@ -79,8 +79,8 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 		}
 
 		runtimeComponents[name] = runtime.Component{
-			WorkerNodes: workers,
-			Net:     net,
+			WorkerNodesMeta: workers,
+			Connections:     net,
 		}
 	}
 

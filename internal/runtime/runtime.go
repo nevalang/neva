@@ -1,9 +1,14 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/emil14/neva/internal/runtime/program"
+)
+
+var (
+	ErrPortNotFound = errors.New("port not found")
 )
 
 type Runtime struct {
@@ -11,7 +16,7 @@ type Runtime struct {
 }
 
 func (r Runtime) Run(p program.Program) (IO, error) {
-	return r.run(p.Scope, p.Root)
+	return r.run(p.Scope, p.RootNode)
 }
 
 func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) (IO, error) {
@@ -35,7 +40,7 @@ func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) 
 		"out": {In: io.Out},
 	}
 
-	for workerNode, meta := range component.WorkerNodes {
+	for workerNode, meta := range component.WorkerNodesMeta {
 		io, err := r.run(scope, meta)
 		if err != nil {
 			return IO{}, err
@@ -44,7 +49,7 @@ func (r Runtime) run(scope map[string]program.Component, node program.NodeMeta) 
 	}
 
 	r.connector.ConnectSubnet(
-		r.connections(nodesIO, component.Net),
+		r.connections(nodesIO, component.Connections),
 	)
 
 	return io, nil
@@ -172,25 +177,21 @@ func (p Ports) Slots(arrPort string) ([]chan Msg, error) {
 	return cc, nil
 }
 
-// Chan returns all port-chanells associated with the given normal port name.
+// Chan returns chanell associated with the given normal port name.
 func (p Ports) Chan(port string) (chan Msg, error) {
 	for addr, ch := range p {
 		if addr.port == port {
 			return ch, nil
 		}
 	}
-	return nil, fmt.Errorf("ErrPortNotFound: %s", port)
+	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, p)
 }
 
-// PortAddr describes port address in the network.
+// PortAddr describes port address in the
 type PortAddr struct {
 	node string
 	port string
 	idx  uint8 // always 0 for normal ports
-}
-
-func (addr PortAddr) String() string {
-	return fmt.Sprintf("%s.%s[%d]", addr.node, addr.port, addr.idx)
 }
 
 func New(connector Connector) Runtime {

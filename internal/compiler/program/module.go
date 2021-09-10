@@ -173,19 +173,11 @@ func (rnet IncomingConnections) add(pair PortAddrPair) {
 // PortAddrPair represents from-to port addresses pair.
 type PortAddrPair struct{ From, To PortAddr }
 
-func (r PortAddrPair) String() string {
-	return fmt.Sprintf("%s -> %s", r.From, r.To)
-}
-
 // PortAddr is a point on a network graph.
 type PortAddr struct {
 	Node string
 	Port string
 	Idx  uint8
-}
-
-func (p PortAddr) String() string {
-	return fmt.Sprintf("%s.%s[%d]", p.Node, p.Port, p.Idx)
 }
 
 func NewModule(

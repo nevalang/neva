@@ -6,13 +6,13 @@ type caster struct{}
 
 func (c caster) Cast(prog Program) program.Program {
 	return program.Program{
-		Root: program.NodeMeta{
+		RootNode: program.NodeMeta{
 			Node:      "root",
-			In:        prog.Root.In,
-			Out:       prog.Root.Out,
-			Component: prog.Root.Component,
+			In:        prog.RootNode.In,
+			Out:       prog.RootNode.Out,
+			Component: prog.RootNode.Component,
 		},
-		Scope: c.components(prog.Components),
+		Scope: c.components(prog.Scope),
 	}
 }
 
@@ -20,15 +20,15 @@ func (c caster) components(from map[string]Component) map[string]program.Compone
 	to := make(map[string]program.Component, len(from))
 	for name, component := range from {
 		to[name] = program.Component{
-			Operator:    component.Operator,
-			WorkerNodes: c.workerNodes(component.Workers),
-			Net:         c.net(component.Net),
+			Operator:        component.Operator,
+			WorkerNodesMeta: c.workerNodesMeta(component.Workers),
+			Connections:     c.net(component.Net),
 		}
 	}
 	return to
 }
 
-func (c caster) workerNodes(workers map[string]NodeMeta) map[string]program.NodeMeta {
+func (c caster) workerNodesMeta(workers map[string]NodeMeta) map[string]program.NodeMeta {
 	result := make(map[string]program.NodeMeta, len(workers))
 
 	for w, nodeMeta := range workers {

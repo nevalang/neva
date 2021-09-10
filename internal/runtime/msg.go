@@ -8,8 +8,6 @@ type Msg interface {
 	Int() int
 	Bool() bool
 	Struct() map[string]Msg
-
-	Format() string
 }
 
 type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
@@ -18,9 +16,6 @@ func (msg emptyMsg) Str() (_ string)            { return }
 func (msg emptyMsg) Int() (_ int)               { return }
 func (msg emptyMsg) Bool() (_ bool)             { return }
 func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
-func (msg emptyMsg) Format() (_ string)         { return }
-
-var empty = emptyMsg{} // To avoid initialization of multiple empty messages.
 
 type IntMsg struct {
 	emptyMsg
@@ -37,7 +32,7 @@ func (msg IntMsg) Format() string {
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        n,
 	}
 }
@@ -51,13 +46,9 @@ func (msg StrMsg) Str() string {
 	return msg.v
 }
 
-func (msg StrMsg) Format() string {
-	return msg.v
-}
-
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        s,
 	}
 }
@@ -73,7 +64,7 @@ func (msg BoolMsg) Bool() bool {
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        b,
 	}
 }
@@ -89,7 +80,7 @@ func (msg StructMsg) Struct() map[string]Msg {
 
 func NewMsgStruct(v map[string]Msg) StructMsg {
 	return StructMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        v,
 	}
 }

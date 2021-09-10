@@ -61,3 +61,15 @@ func New(
 
 	return Connector{ops, onSend, onReceive}, nil
 }
+
+func MustNew(
+	ops map[string]runtime.Operator,
+	onSend func(msg runtime.Msg, from runtime.PortAddr),
+	onReceive func(msg runtime.Msg, from, to runtime.PortAddr),
+) Connector {
+	c, err := New(ops, onSend, onReceive)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}

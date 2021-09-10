@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "parcel index.html",
+    "start": "parcel index.html",
     "build": "parcel build index.html",
     "build:analyze": "parcel build index.html --reporter @parcel/reporter-bundle-analyzer"
   },
