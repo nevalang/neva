@@ -1,0 +1,8 @@
+{
+  "compressors": {
+    "*.{html,css,js,svg,map}": [
+      "...",
+      "@parcel/compressor-brotli"
+    ]
+  }
+}

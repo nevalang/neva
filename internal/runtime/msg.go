@@ -1,5 +1,7 @@
 package runtime
 
+import "fmt"
+
 // Msg represents set of methods only one of which should return real value.
 type Msg interface {
 	Str() string
@@ -10,12 +12,10 @@ type Msg interface {
 
 type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
 
-func (msg emptyMsg) Str() string            { return "" }
-func (msg emptyMsg) Int() int               { return 0 }
-func (msg emptyMsg) Bool() bool             { return false }
-func (msg emptyMsg) Struct() map[string]Msg { return nil }
-
-var empty = emptyMsg{} // To avoid initialization of multiple empty messages.
+func (msg emptyMsg) Str() (_ string)            { return }
+func (msg emptyMsg) Int() (_ int)               { return }
+func (msg emptyMsg) Bool() (_ bool)             { return }
+func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
 
 type IntMsg struct {
 	emptyMsg
@@ -26,9 +26,13 @@ func (msg IntMsg) Int() int {
 	return msg.v
 }
 
+func (msg IntMsg) String() string {
+	return fmt.Sprintf("'%d'", msg.v)
+}
+
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        n,
 	}
 }
@@ -44,7 +48,7 @@ func (msg StrMsg) Str() string {
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        s,
 	}
 }
@@ -60,7 +64,7 @@ func (msg BoolMsg) Bool() bool {
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        b,
 	}
 }
@@ -76,7 +80,7 @@ func (msg StructMsg) Struct() map[string]Msg {
 
 func NewMsgStruct(v map[string]Msg) StructMsg {
 	return StructMsg{
-		emptyMsg: empty,
+		emptyMsg: emptyMsg{},
 		v:        v,
 	}
 }

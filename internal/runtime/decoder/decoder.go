@@ -7,8 +7,8 @@ import (
 )
 
 type Program struct {
-	Root       NodeMeta             `json:"root"`
-	Components map[string]Component `json:"components"`
+	RootNode NodeMeta             `json:"root"`
+	Scope    map[string]Component `json:"scope"`
 }
 
 type Component struct {
@@ -34,30 +34,29 @@ type PortAddr struct {
 	Idx  uint8  `json:"idx"`
 }
 
-type decoder struct {
+type Decoder struct {
 	unmarshal func([]byte, interface{}) error
 	caster    interface {
 		Cast(Program) program.Program
 	}
 }
 
-func (d decoder) Decode(bb []byte) (program.Program, error) {
+func (d Decoder) Decode(bb []byte) (program.Program, error) {
 	prog := Program{}
-	err := d.unmarshal(bb, &prog)
-	if err != nil {
+	if err := d.unmarshal(bb, &prog); err != nil {
 		return program.Program{}, err
 	}
 	return d.caster.Cast(prog), nil
 }
 
-func NewJSON() (decoder, error) {
-	return decoder{
+func NewJSON() (Decoder, error) {
+	return Decoder{
 		unmarshal: json.Unmarshal,
 		caster:    NewCaster(),
 	}, nil
 }
 
-func MustNewJSON() decoder {
+func MustNewJSON() Decoder {
 	d, err := NewJSON()
 	if err != nil {
 		panic(err)

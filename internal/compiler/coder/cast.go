@@ -6,8 +6,8 @@ type caster struct{}
 
 func (c caster) Cast(prog program.Program) Program {
 	return Program{
-		Root:       c.castNode(prog.Root),
-		Components: c.castComponents(prog.Components),
+		Root:       c.castNode(prog.RootNodeMeta),
+		Components: c.castComponents(prog.Scope),
 	}
 }
 
@@ -25,8 +25,8 @@ func (c caster) castComponents(cc map[string]program.Component) map[string]Compo
 	for name := range cc {
 		res[name] = Component{
 			Operator: cc[name].Operator,
-			Workers:  c.castNodes(cc[name].Workers),
-			Net:      c.castNet(cc[name].Net),
+			Workers:  c.castNodes(cc[name].WorkerNodesMeta),
+			Net:      c.castNet(cc[name].Connections),
 		}
 	}
 

@@ -1,89 +1,113 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
+	"strconv"
+	"strings"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/compiler/coder"
-	"github.com/emil14/neva/internal/compiler/parser"
-	"github.com/emil14/neva/internal/compiler/program"
-	"github.com/emil14/neva/internal/compiler/translator"
-	"github.com/emil14/neva/internal/compiler/validator"
+	"github.com/emil14/neva/internal/app"
 	"github.com/emil14/neva/internal/runtime"
-	"github.com/emil14/neva/internal/runtime/decoder"
-	"github.com/emil14/neva/internal/runtime/operators"
-
 	cli "github.com/urfave/cli/v2"
 )
 
 func main() {
+	application := app.MustNew()
+
 	app := cli.App{
 		Name: "neva",
 		Commands: []*cli.Command{
 			{
 				Name: "compile",
-				Action: func(*cli.Context) error {
-					ops := program.NewOperators()
-					cmplr := compiler.MustNew(
-						parser.MustNewYAML(),
-						validator.New(),
-						translator.New(ops),
-						coder.New(),
-						ops,
-					)
-
-					dat, err := ioutil.ReadFile(`C:\projects\refactored-garbanzo\examples\arr.yml`)
+				Action: func(ctx *cli.Context) error {
+					src, err := ioutil.ReadFile(ctx.Args().First())
 					if err != nil {
 						return err
 					}
 
-					bb, err := cmplr.Compile(dat)
+					compiled, err := application.Compile(src)
 					if err != nil {
 						return err
 					}
 
 					return ioutil.WriteFile(
-						`C:\projects\refactored-garbanzo\examples\arr.json`, bb, 0644,
+						`C:\projects\refactored-garbanzo\examples\arr.json`, compiled, 0644,
 					)
 				},
 			},
 			{
 				Name: "run",
-				Action: func(*cli.Context) error {
-					bb, err := ioutil.ReadFile(`C:\projects\refactored-garbanzo\examples\arr.json`)
+				Action: func(cliCtx *cli.Context) error {
+					bb, err := ioutil.ReadFile(cliCtx.Args().First())
 					if err != nil {
 						return err
 					}
 
-					c := decoder.MustNewJSON()
-					prog, err := c.Decode(bb)
+					io, err := application.Run(bb)
 					if err != nil {
 						return err
 					}
 
-					ops := operators.New()
-					r := runtime.New(ops)
-					io, err := r.Run(prog)
-					if err != nil {
-						return err
+					ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+
+					// reading the input
+					go func() {
+						reader := bufio.NewReader(os.Stdin)
+
+						for {
+							select {
+							case <-ctx.Done():
+								return
+							default:
+							}
+
+							fmt.Print("PORT: ")
+							inportName, err := reader.ReadString('\n')
+							if err != nil {
+								fmt.Println(err)
+								continue
+							}
+
+							inportChan, err := io.In.Chan(strings.TrimSuffix(inportName, "\n"))
+							if err != nil {
+								fmt.Println(err)
+								continue
+							}
+
+							fmt.Print("MESSAGE: ")
+							msg, err := reader.ReadString('\n')
+							if err != nil {
+								fmt.Println(err)
+								continue
+							}
+
+							intValue, err := strconv.ParseInt(strings.TrimSuffix(msg, "\n"), 10, 64)
+							if err != nil {
+								fmt.Println(err)
+								continue
+							}
+
+							go func() {
+								inportChan <- runtime.NewIntMsg(int(intValue))
+							}()
+						}
+					}()
+
+					// Printing the output
+					for addr, ch := range io.Out {
+						go func(addr runtime.PortAddr, ch chan runtime.Msg) {
+							for v := range ch {
+								fmt.Print(addr, v)
+							}
+						}(addr, ch)
 					}
 
-					in, err := io.In.Port("x")
-					if err != nil {
-						return err
-					}
-
-					outport, err := io.Out.Port("y")
-					if err != nil {
-						return err
-					}
-
-					in <- runtime.NewIntMsg(42)
-					v := <-outport
-					fmt.Println(v)
+					<-ctx.Done()
 
 					return nil
 				},

@@ -18,7 +18,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "args": ["run"]
+      "args": ["run", "/home/emil14/projects/stream/examples/arr.json"]
     }
   ]
 }

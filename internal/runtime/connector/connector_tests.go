@@ -1,20 +1,11 @@
-package runtime
+package connector
 
-// import (
-// 	"errors"
-// 	"reflect"
-// 	"testing"
-// 	"time"
-
-// 	"github.com/emil14/neva/internal/runtime/program"
-// )
-
-// func TestRuntime_connect(t *testing.T) {
-// 	r := New(map[string]Operator{})
+// func TestConnector_connect(t *testing.T) {
+// 	r, _ := New(map[string]runtime.Operator{}, nil, nil)
 
 // 	tests := []struct {
 // 		name string
-// 		r    Runtime
+// 		r    Connector
 // 		c    pair
 // 	}{
 // 		{
@@ -64,14 +55,14 @@ package runtime
 // 	}
 // }
 
-// func TestRuntime_connectMany(t *testing.T) {
+// func TestConnector_connectMany(t *testing.T) {
 // 	t.Parallel()
 
 // 	r := New(map[string]Operator{})
 
 // 	tests := []struct {
 // 		name string
-// 		r    Runtime
+// 		r    Connector
 // 		cc   []pair
 // 	}{
 // 		{
@@ -131,7 +122,7 @@ package runtime
 // 	}
 // }
 
-// func TestRuntime_connections(t *testing.T) {
+// func TestConnector_connections(t *testing.T) {
 // 	t.Parallel()
 
 // 	r := New(map[string]Operator{})
@@ -189,7 +180,7 @@ package runtime
 // 	}
 // }
 
-// func TestRuntime_connectOperator(t *testing.T) {
+// func TestConnector_connectOperator(t *testing.T) {
 // 	t.Parallel()
 
 // 	tests := []struct {
@@ -253,7 +244,7 @@ package runtime
 // 			err := r.connectOperator(tt.operator, io)
 // 			if err != nil {
 // 				if !tt.wantErr {
-// 					t.Errorf("Runtime.connectOperator() error = %v, wantErr %v", err, tt.wantErr)
+// 					t.Errorf("Connector.connectOperator() error = %v, wantErr %v", err, tt.wantErr)
 // 				}
 // 				return
 // 			}
@@ -264,7 +255,7 @@ package runtime
 // 			for _, out := range io.Out {
 // 				gotMsg := <-out
 // 				if gotMsg != tt.wantMsg {
-// 					t.Errorf("Runtime.connectOperator() want %v, got %v", tt.wantMsg, gotMsg)
+// 					t.Errorf("Connector.connectOperator() want %v, got %v", tt.wantMsg, gotMsg)
 // 					return
 // 				}
 // 			}
@@ -272,7 +263,7 @@ package runtime
 // 	}
 // }
 
-// func TestRuntime_nodeIO(t *testing.T) {
+// func TestConnector_nodeIO(t *testing.T) {
 // 	t.Parallel()
 
 // 	r := New(nil)

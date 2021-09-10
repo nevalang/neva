@@ -5,33 +5,33 @@ import (
 )
 
 var Mul runtime.Operator = func(io runtime.IO) error {
-	in, err := io.In.Slots("nums")
+	slots, err := io.In.Slots("nums")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port("mul")
+	out, err := io.Out.Chan("mul")
 	if err != nil {
 		return err
 	}
 
 	go func() {
 		for {
-			fan := make(chan int, len(in))
+			buf := make(chan int, len(slots))
 
-			for i := range in {
-				c := in[i]
+			for i := range slots {
+				port := slots[i]
 				go func() {
-					msg := <-c
-					fan <- msg.Int()
+					msg := <-port
+					buf <- msg.Int()
 				}()
 			}
 
 			mul := 1
-			for i := 0; i < len(in); i++ {
-				mul *= <-fan
+			for i := 0; i < len(slots); i++ {
+				mul *= <-buf
 			}
-			close(fan)
+			close(buf)
 
 			out <- runtime.NewIntMsg(mul)
 		}

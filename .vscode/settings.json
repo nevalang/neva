@@ -1,10 +1,12 @@
 {
   "cSpell.words": [
-    "Field",
+    "типобезопасности",
+    "cnctr",
     "cprogram",
     "designs",
     "designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField",
     "designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ",
+    "Field",
     "gqlgen",
     "graphql",
     "introspection",
@@ -12,8 +14,8 @@
     "preceiver",
     "pworkers",
     "recievers",
-    "rports",
-    "типобезопасности"
+    "rndv",
+    "rports"
   ]
   // "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yml", "--fast"]
 }

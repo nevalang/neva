@@ -1,16 +1,20 @@
 {
-  "components": {
+  "scope": {
     "*": { "operator": "*" },
     "root": {
       "workers": {
-        "multi": { "in": { "nums": 2 }, "out": { "mul": 0 }, "component": "*" }
+        "multi": {
+          "in": { "nums": 2 },
+          "out": { "mul": 0 },
+          "component": "*"
+        }
       },
       "net": [
         {
           "from": { "node": "in", "port": "x" },
           "to": [
             { "node": "multi", "port": "nums", "idx": 1 },
-            { "node": "multi", "port": "nums" }
+            { "node": "multi", "port": "nums", "idx": 0 }
           ]
         },
         {

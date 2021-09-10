@@ -1,37 +1,26 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
 type validator struct{}
 
-func (v validator) Validate(mod program.Modules) error {
-	g := &errgroup.Group{}
+func (v validator) Validate(mod program.Module) error {
+	var g errgroup.Group
 
 	g.Go(func() error {
-		if err := v.validatePorts(mod.Interface()); err != nil {
-			return err
-		}
-		return nil
+		return v.validatePorts(mod.Interface())
 	})
-
 	g.Go(func() error {
-		if err := v.validateDeps(mod.Deps); err != nil {
-			return err
-		}
-		return nil
+		return v.validateDeps(mod.Deps)
 	})
-
 	g.Go(func() error {
-		if err := v.validateWorkers(mod.Deps, mod.Workers); err != nil {
-			return err
-		}
-		return nil
+		return v.validateWorkers(mod.Deps, mod.Workers)
 	})
 
 	if err := g.Wait(); err != nil {
@@ -57,7 +46,6 @@ func (mod validator) validatePorts(io program.IO) error {
 		}
 		return nil
 	})
-
 	g.Go(func() error {
 		for port, t := range io.Out {
 			if t.Type == program.UnknownType {
@@ -71,18 +59,20 @@ func (mod validator) validatePorts(io program.IO) error {
 }
 
 // validateWorkers checks that every worker points to an existing dependency.
-func (v validator) validateWorkers(deps program.ComponentsIO, workers map[string]string) error {
+func (v validator) validateWorkers(deps map[string]program.IO, workers map[string]string) error {
+	if len(workers) == 0 || len(deps) == 0 {
+		return fmt.Errorf("deps and workers cannot be empty")
+	}
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
 		}
 	}
-
 	return nil
 }
 
 // validateDeps validates ports of every given dependency.
-func (v validator) validateDeps(deps program.ComponentsIO) error {
+func (v validator) validateDeps(deps map[string]program.IO) error {
 	g := &errgroup.Group{}
 
 	for name := range deps {
@@ -98,88 +88,71 @@ func (v validator) validateDeps(deps program.ComponentsIO) error {
 	return g.Wait()
 }
 
-func (v validator) validateNet(mod program.Modules) error {
-	var incoming reversedNet
+// validateNet ensures that program will not crash or block.
+func (v validator) validateNet(mod program.Module) error {
+	g := errgroup.Group{}
+	incoming := mod.Net.IncomingConnections()
 
-	for outportAddr, to := range mod.Net {
-		if outportAddr.Idx > 255 {
-			return fmt.Errorf("too big index on %s", outportAddr)
+	g.Go(func() error {
+		return v.typeCheckNet(mod)
+	})
+	g.Go(func() error {
+		return v.validateInFlow(mod)
+	})
+	g.Go(func() error {
+		return v.validateOutFlow(incoming, mod)
+	})
+
+	return g.Wait()
+}
+
+// typeCheckNet checks that all connections are type-safe.
+func (v validator) typeCheckNet(mod program.Module) error {
+	for pair := range mod.Net.Walk() {
+		if err := v.validatePair(pair, mod); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		if outportAddr.Node == "out" {
-			return errors.New("'out' node cannot be sender node")
-		}
+func (v validator) validatePair(pair program.PortAddrPair, mod program.Module) error {
+	if pair.From.Node == "out" || pair.To.Node == "in" {
+		return fmt.Errorf("bad node name in pair %s", pair)
+	}
 
-		var outports program.Ports
-		if outportAddr.Node == "in" {
-			outports = program.Ports(mod.Interface().In)
-		} else {
-			dep, ok := mod.Workers[outportAddr.Node]
-			if !ok {
-				return fmt.Errorf("unknown node %s", outportAddr.Node)
-			}
-			if _, ok := mod.Deps[dep]; !ok {
-				return fmt.Errorf("unknown dep %s", dep)
-			}
-			outports = mod.Deps[dep].Out
-		}
+	from, to, err := mod.PairPortTypes(pair)
+	if err != nil {
+		return fmt.Errorf("could not get pair port types: %w", err)
+	}
 
-		outportType, ok := outports[outportAddr.Port]
-		if !ok {
-			return fmt.Errorf("unknown outport %s for node %s", outportAddr.Port, outportAddr.Node)
-		}
+	switch {
+	case !from.Arr && pair.From.Idx > 0:
+	case !to.Arr && pair.To.Idx > 0:
+		return fmt.Errorf("only array ports can have address with idx > 0: %s", pair)
+	}
 
-		if outportAddr.Idx > 0 && !outportType.Arr {
-			return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
-		}
-
-		for inportAddr := range to {
-			if inportAddr.Idx > 255 {
-				return fmt.Errorf("too big index on %s", inportAddr)
-			}
-
-			if inportAddr.Node == "in" {
-				return errors.New("'in' node cannot be receiver node")
-			}
-
-			var inports program.Ports
-			if inportAddr.Node == "out" { // for network 'out' is a receiver node
-				inports = program.Ports(mod.Interface().Out)
-			} else {
-				dep, ok := mod.Workers[inportAddr.Node]
-				if !ok {
-					return fmt.Errorf("unknown node %s", inportAddr.Node)
-				}
-				if _, ok := mod.Deps[dep]; !ok {
-					return fmt.Errorf("unknown dep %s", dep)
-				}
-				inports = mod.Deps[dep].In
-			}
-
-			inportType, ok := inports[inportAddr.Port]
-			if !ok {
-				return fmt.Errorf("unknown inport %s for node %s", inportAddr.Port, inportAddr.Node)
-			}
-
-			if outportAddr.Idx > 0 && !outportType.Arr {
-				return fmt.Errorf("only array ports can have address with idx > 0: %s", outportAddr)
-			}
-
-			if err := outportType.Compare(inportType); err != nil {
-				return fmt.Errorf("mismatched types on ports %s and %s: %w", outportAddr, inportAddr, err)
-			}
-
-			if incoming[inportAddr] == nil {
-				incoming[inportAddr] = map[program.PortAddr]struct{}{}
-			}
-
-			incoming[inportAddr][outportAddr] = struct{}{}
-		}
+	if err := from.Compare(to); err != nil {
+		return fmt.Errorf("mismatched types on ports %s and %s: %w", pair.From, pair.To, err)
 	}
 
 	return nil
 }
 
-type reversedNet program.Net
+func (v validator) validateOutFlow(incoming program.IncomingConnections, mod program.Module) error {
+	return nil
+}
 
-func New() validator { return validator{} }
+// 1) get 'out' node
+// 2) check that all its inports are feeded
+// 3) for every sender do this recursively
+func (v validator) validateInFlow(mod program.Module) error {
+	return nil
+}
+
+// 1) get 'in' node
+// 2) check that all its outports has receivers
+// 3) for every receiver do this recursively
+func New() validator {
+	return validator{}
+}

@@ -19,12 +19,12 @@ var (
 type (
 	// Parser parses source code into compiler program representation.
 	Parser interface {
-		Parse([]byte) (program.Modules, error)
+		Parse([]byte) (program.Module, error)
 	}
 
 	// Validator verifies that program is correct.
 	Validator interface {
-		Validate(program.Modules) error // todo validate program
+		Validate(program.Module) error // todo validate program
 	}
 
 	// Translator creates runtime program representation.
@@ -60,7 +60,6 @@ func (c Compiler) Compile(src []byte) ([]byte, error) {
 
 	prog := program.Program{
 		Root: "root",
-		// TODO
 		Components: map[string]program.Component{
 			"root": mod,
 			"*":    c.operators["*"],

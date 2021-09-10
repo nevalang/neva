@@ -30,12 +30,12 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	}
 
 	return runtime.Program{
-		Root: runtime.NodeMeta{
+		RootNodeMeta: runtime.NodeMeta{
 			Component: prog.Root,
 			In:        in,
 			Out:       out,
 		},
-		Components: t.components(prog.Components),
+		Scope: t.components(prog.Components),
 	}, nil
 }
 
@@ -51,7 +51,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 			continue
 		}
 
-		mod, ok := component.(compiler.Modules)
+		mod, ok := component.(compiler.Module)
 		if !ok {
 			panic("not ok")
 		}
@@ -79,8 +79,8 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 		}
 
 		runtimeComponents[name] = runtime.Component{
-			Workers: workers,
-			Net:     net,
+			WorkerNodesMeta: workers,
+			Connections:     net,
 		}
 	}
 
@@ -98,7 +98,7 @@ func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.P
 func (t Translator) workerIO(
 	workerName, componentName string,
 	components map[string]compiler.Component,
-	net compiler.Net,
+	net compiler.OutgoingConnections,
 ) (map[string]uint8, map[string]uint8, error) {
 	c, ok := components[componentName]
 	if !ok {
@@ -113,7 +113,7 @@ func (t Translator) workerIO(
 			in[port] = 0
 			continue
 		}
-		in[port] = net.Incoming(workerName, port)
+		in[port] = net.CountIncoming(workerName, port)
 	}
 
 	out := make(map[string]uint8, len(io.In))
@@ -122,7 +122,7 @@ func (t Translator) workerIO(
 			out[port] = 0
 			continue
 		}
-		out[port] = net.Incoming(workerName, port)
+		out[port] = net.CountIncoming(workerName, port)
 	}
 
 	return in, out, nil // TODO
