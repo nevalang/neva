@@ -113,6 +113,9 @@ export function App() {
             // "spacing.nodeNodeBetweenLayers": "20",
           }
         }
+        // dragNode={console.log}
+        // dragEdge={console.log}
+        animated={false}
         nodes={nodes}
         edges={edges}
         selections={selections}
@@ -140,9 +143,11 @@ export function App() {
             onAdd={console.log}
           />
         }
+        zoom={false}
         node={
           <rf.Node
             className="node"
+            style={{ transition: "none" }}
             drugtype="all"
             // onEnter={(_, port) => console.log(port)}
             // onLeave={(_, port) => console.log(port)}
@@ -159,11 +164,16 @@ export function App() {
                 // onLeave={(_, port) => console.log(port)}
                 onDragStart={(...a) => console.log("start", ...a)}
                 onDragEnd={(...a) => console.log("end", ...a)}
-                style={{ fill: "black", stroke: "white", strokeWidth: "1px" }}
+                style={{
+                  fill: "#5c3f9b",
+                  stroke: "#000000",
+                  strokeWidth: "1px",
+                }}
                 rx={10}
                 ry={10}
               />
             }
+            remove={<rf.Remove />}
           />
         }
       />
