@@ -1,0 +1,14 @@
+depsRepos: # lookup table for modules downloading
+  shared: # name of choice
+    repo: github.com/emil14/neva-shared # git repo path
+    v: 0.0.1 # git tag name
+  # it's possible to use different versions of the same repo:
+  # shared2:
+  #   repo: github.com/emil14/neva-shared
+  #   v: 0.0.2 # should not be 0.0.1
+
+# before download module packager checks if its not presented on the disc
+
+modules: # maps module names with their paths
+  sqr: shared/square # means https://github.com/emil14/neva-shared/blob/0.0.1/square.yml
+  root: ./mul_by_square # this one should always be

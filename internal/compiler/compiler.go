@@ -47,8 +47,10 @@ type Compiler struct {
 	operators  map[string]program.Operator
 }
 
-// Compile compiles source code to bytecode.
-func (c Compiler) Compile(src []byte) ([]byte, error) {
+// Compile compiles module's source code down to bytecode.
+func (c Compiler) Compile(src map[string][]byte) ([]byte, error) {
+	src["prog"]
+
 	mod, err := c.parser.Parse(src)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrParsing, err)

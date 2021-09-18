@@ -13,18 +13,13 @@ import (
 	"github.com/emil14/neva/internal/runtime/operators"
 )
 
-type App interface {
-	Compile([]byte) ([]byte, error)
-	Run([]byte) (runtime.IO, error)
-}
-
-type application struct {
+type App struct {
 	compiler.Compiler
 	dcdr decoder.Decoder
 	rntm runtime.Runtime
 }
 
-func (app application) Run(bb []byte) (runtime.IO, error) {
+func (app App) Run(bb []byte) (runtime.IO, error) {
 	prog, err := app.dcdr.Decode(bb)
 	if err != nil {
 		return runtime.IO{}, err
@@ -43,7 +38,7 @@ func handleOnReceive(msg runtime.Msg, from, to runtime.PortAddr) {
 func MustNew() App {
 	ops := program.NewOperators()
 
-	return application{
+	return App{
 		Compiler: compiler.MustNew(
 			parser.MustNewYAML(),
 			validator.New(),

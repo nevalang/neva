@@ -9,7 +9,20 @@ import {
   EdgeData,
 } from "reaflow"
 
-export function App() {
+interface NetworkProps {
+  nodes: {
+    id: string
+    text: string
+    ports: [
+      {
+        id: string
+        side: "SOUTH"
+      }
+    ]
+  }[]
+}
+
+export function Network(props: NetworkProps) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([])
 
   const [nodes, setNodes] = React.useState<NodeData[]>([
