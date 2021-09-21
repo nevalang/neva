@@ -1,0 +1,34 @@
+in:
+  a: int # takes an integer
+out:
+  b: int # and multiplies it by its square
+
+deps:
+  "*":
+    in:
+      nums[]: int
+    out:
+      mul: int
+  "sqr":
+    in:
+      x: int
+    out:
+      y: int
+
+workers:
+  squarer: "sqr"
+  multi: "*"
+
+net:
+  in:
+    a:
+      squarer: [x]
+      mul:
+        - nums[0]
+  squarer:
+    y:
+      mul:
+        - nums[1]
+  mul:
+    mul:
+      out: [b]

@@ -1,25 +1,12 @@
-interface Store {
+interface Program {
   components: {
     [key: string]: Component
   }
 }
 
-type Component = Operator | Module
-
-enum ComponentTypes {
-  OPERATOR,
-  MODULE,
-}
-
-interface Operator {
-  type: ComponentTypes.OPERATOR
+interface Component {
   io: IO
-}
-
-interface Module {
-  type: ComponentTypes.MODULE
-  io: IO
-  net: Network
+  net?: Network
 }
 
 interface IO {
@@ -37,17 +24,6 @@ enum PortType {
   BOOL,
 }
 
-export {
-  Store,
-  Component,
-  ComponentTypes,
-  Operator,
-  Module,
-  IO,
-  Ports,
-  PortType,
-}
-
 interface Network {
   nodes: Node[]
   connections: Connection[]
@@ -55,8 +31,7 @@ interface Network {
 
 interface Node {
   name: string
-  component: string
-  ports: Port[]
+  componentName: string
 }
 
 interface Port {
@@ -80,4 +55,16 @@ interface PortAddr {
   idx: number
 }
 
-export { Network, Node, Port, Direction, Connection, PortAddr }
+export {
+  Program,
+  Component,
+  IO,
+  Ports,
+  PortType,
+  Network,
+  Node,
+  Port,
+  Direction,
+  Connection,
+  PortAddr,
+}
