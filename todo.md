@@ -1,3 +1,39 @@
+# BLACK ADAPTERS MAGIC!!!
+
+Модуль, который динамически создаёт другие модули.
+Кейс - динамическое создание адаптера между компонентом, который принимает список
+и компонентом, который имеет аррай-портс интерфейс.
+
+При старте такой модуль создаёт аррай портс с кол-ом словов соотв. длине списка.
+При получении значения он пишет в этот порт.
+
+# Mock autogen
+
+Every module depends on components via interfaces.
+So it should be possible to generate mock modules,
+that would allow to program behaviour.
+
+## Motivation
+
+Test is simply a program that uses (e.g. `std/testing`) test utils
+
+## Mock API (go:generate-ish?)
+
+???
+
+```
+prog1.yml
+prog2.yml
+common/
+  mod1.yml
+prog1/
+  mod2.yml
+prog2/
+  mod3.yml
+
+neva run prog1.yml
+```
+
 # Debugger
 
 ## Undo/Redo

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/program"
-	rprog "github.com/emil14/neva/internal/runtime/program"
+	runtime "github.com/emil14/neva/internal/runtime/program"
 )
 
 // Compiler errors.
@@ -19,7 +19,8 @@ var (
 type (
 	// Parser parses source code into compiler program representation.
 	Parser interface {
-		Parse([]byte) (program.Module, error)
+		// ParseProgram([]byte) (program.Program)
+		ParseModule([]byte) (program.Module, error)
 	}
 
 	// Validator verifies that program is correct.
@@ -29,12 +30,17 @@ type (
 
 	// Translator creates runtime program representation.
 	Translator interface {
-		Translate(program.Program) (rprog.Program, error)
+		Translate(program.Program) (runtime.Program, error)
 	}
 
 	// Coder creates bytecode for given runtime program.
 	Coder interface {
-		Code(rprog.Program) ([]byte, error)
+		Code(runtime.Program) ([]byte, error)
+	}
+
+	// Coder creates bytecode for given runtime program.
+	Decoder interface {
+		Code(runtime.Program) ([]byte, error)
 	}
 )
 
@@ -47,25 +53,10 @@ type Compiler struct {
 	operators  map[string]program.Operator
 }
 
-// Compile compiles module's source code down to bytecode.
-func (c Compiler) Compile(src map[string][]byte) ([]byte, error) {
-	src["prog"]
-
-	mod, err := c.parser.Parse(src)
+func (c Compiler) Compile(scope map[string][]byte, root string) ([]byte, error) {
+	prog, err := c.compile(scope, root, c.DefaultScope(len(scope)))
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrParsing, err)
-	}
-
-	if err := c.validator.Validate(mod); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrValidation, err)
-	}
-
-	prog := program.Program{
-		Root: "root",
-		Components: map[string]program.Component{
-			"root": mod,
-			"*":    c.operators["*"],
-		},
+		return nil, err
 	}
 
 	rprog, err := c.translator.Translate(prog)
@@ -73,12 +64,59 @@ func (c Compiler) Compile(src map[string][]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	bb, err := c.coder.Code(rprog)
+	bytecode, err := c.coder.Code(rprog)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 	}
 
-	return bb, nil
+	return bytecode, nil
+}
+
+func (c Compiler) compile(
+	scope map[string][]byte,
+	cmpnt string,
+	cache map[string]program.Component,
+) (program.Program, error) {
+	var mod program.Module
+
+	if _, ok := cache[cmpnt]; !ok {
+		parsed, err := c.parser.ParseModule(scope["root"])
+		if err != nil {
+			return program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
+		}
+
+		if err := c.validator.Validate(parsed); err != nil {
+			return program.Program{}, fmt.Errorf("%w: %v", ErrValidation, err)
+		}
+
+		mod = parsed
+	}
+
+	for name, dep := range mod.Deps {
+		_, err := c.compile(scope, name, cache)
+		if err != nil {
+			return program.Program{}, nil
+		}
+
+		if err := dep.Compare(mod.Interface()); err != nil {
+			return program.Program{}, err
+		}
+	}
+
+	cache[cmpnt] = mod
+
+	return program.Program{
+		Root:       cmpnt,
+		Components: cache,
+	}, nil
+}
+
+func (c Compiler) DefaultScope(padding int) map[string]program.Component {
+	m := make(map[string]program.Component, len(c.operators)+padding)
+	for i := range c.operators {
+		m[c.operators[i].Name] = c.operators[i]
+	}
+	return m
 }
 
 // New creates new Compiler. It returns error if at least one of the deps is nil.

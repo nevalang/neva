@@ -1,7 +1,7 @@
 in:
-  a: int # takes an integer
+  a: int
 out:
-  b: int # and multiplies it by its square
+  b: int
 
 deps:
   "*":
@@ -9,26 +9,26 @@ deps:
       nums[]: int
     out:
       mul: int
-  "sqr":
+  "sqrt":
     in:
       x: int
     out:
       y: int
 
 workers:
-  squarer: "sqr"
-  multi: "*"
+  squarer: "sqrt"
+  multiplicator: "*"
 
 net:
   in:
     a:
       squarer: [x]
-      mul:
+      multiplicator:
         - nums[0]
   squarer:
     y:
-      mul:
+      multiplicator:
         - nums[1]
-  mul:
+  multiplicator:
     mul:
       out: [b]

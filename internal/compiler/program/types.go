@@ -1,5 +1,10 @@
 package program
 
+type TypeDescriptor struct {
+	base   Type
+	params []TypeDescriptor
+}
+
 type Type uint8
 
 func (t Type) String() string {

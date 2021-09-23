@@ -3,9 +3,8 @@ package validator
 import (
 	"fmt"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/emil14/neva/internal/compiler/program"
+	"golang.org/x/sync/errgroup"
 )
 
 type validator struct{}
@@ -118,7 +117,7 @@ func (v validator) typeCheckNet(mod program.Module) error {
 
 func (v validator) validatePair(pair program.PortAddrPair, mod program.Module) error {
 	if pair.From.Node == "out" || pair.To.Node == "in" {
-		return fmt.Errorf("bad node name in pair %s", pair)
+		return fmt.Errorf("bad node name in pair %v", pair)
 	}
 
 	from, to, err := mod.PairPortTypes(pair)
@@ -129,11 +128,11 @@ func (v validator) validatePair(pair program.PortAddrPair, mod program.Module) e
 	switch {
 	case !from.Arr && pair.From.Idx > 0:
 	case !to.Arr && pair.To.Idx > 0:
-		return fmt.Errorf("only array ports can have address with idx > 0: %s", pair)
+		return fmt.Errorf("only array ports can have address with idx > 0: %v", pair)
 	}
 
 	if err := from.Compare(to); err != nil {
-		return fmt.Errorf("mismatched types on ports %s and %s: %w", pair.From, pair.To, err)
+		return fmt.Errorf("mismatched types on ports %v and %v: %w", pair.From, pair.To, err)
 	}
 
 	return nil

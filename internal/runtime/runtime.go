@@ -72,8 +72,8 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 			panic("not ok")
 		}
 
-		fromOutportAddr := PortAddr{port: net[i].From.Port, idx: net[i].From.Idx, node: net[i].From.Node}
-		from, ok := fromNodeIO.Out[fromOutportAddr]
+		fromAddr := PortAddr{port: net[i].From.Port, idx: net[i].From.Idx, node: net[i].From.Node}
+		from, ok := fromNodeIO.Out[fromAddr]
 		if !ok {
 			panic("not ok")
 		}
@@ -96,7 +96,7 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 		}
 
 		ss[i] = Connection{
-			From: Port{Ch: from, Addr: fromOutportAddr},
+			From: Port{Ch: from, Addr: fromAddr},
 			To:   to,
 		}
 	}
@@ -185,10 +185,10 @@ func (ports Ports) Slots(arrPort string) ([]chan Msg, error) {
 	return cc, nil
 }
 
-// Chan returns chanell associated with the given normal port name.
-func (ports Ports) Chan(port string) (chan Msg, error) {
+// Port returns channel associated with the given port address.
+func (ports Ports) Port(port string, idx uint8) (chan Msg, error) {
 	for addr, ch := range ports {
-		if addr.port == port {
+		if addr.port == port && addr.idx == idx {
 			return ch, nil
 		}
 	}

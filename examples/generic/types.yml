@@ -1,0 +1,4 @@
+user:
+  name: str
+  age: int
+  bestFriends: user[]

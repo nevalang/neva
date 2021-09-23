@@ -1,0 +1,23 @@
+in:
+  msg: str
+  args[]: any
+out:
+  y: str
+
+deps:
+  "concat":
+    in:
+      parts[]: str
+    out:
+      full: str
+
+workers:
+  concat: "*"
+
+net:
+  in:
+    msg:
+      split: [in]
+  split:
+    out:
+      out: [y]

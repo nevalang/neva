@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "args": ["compile"]
+      "args": ["compile", ""]
     },
     {
       "name": "run",

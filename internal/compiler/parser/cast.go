@@ -4,9 +4,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler/program"
 	compiler "github.com/emil14/neva/internal/compiler/program"
 )
+
+// func castProgram(prog program) compiler.Program {
+// 	return compiler.Program{
+// 		Root: prog.Root,
+// 		Components: castComponents(),
+// 	}
+// }
 
 func castModule(mod module) compiler.Module {
 	return compiler.NewModule(
@@ -28,7 +34,7 @@ func castPorts(from ports) compiler.Ports {
 	to := compiler.Ports{}
 
 	for port, t := range from {
-		portType := compiler.PortType{Type: program.TypeByName(t)}
+		portType := compiler.PortType{Type: compiler.TypeByName(t)}
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
 			port = strings.TrimSuffix(port, "[]")
@@ -40,7 +46,7 @@ func castPorts(from ports) compiler.Ports {
 	return to
 }
 
-func castDeps(from deps) map[string]compiler.IO {
+func castDeps(from moduleDeps) map[string]compiler.IO {
 	to := map[string]compiler.IO{}
 
 	for name, pio := range from {

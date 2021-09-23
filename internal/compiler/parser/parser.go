@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	compiler "github.com/emil14/neva/internal/compiler/program"
 )
 
 type parser struct {
@@ -12,15 +12,15 @@ type parser struct {
 	cast      Cast
 }
 
-func (p parser) Parse(bb []byte) (program.Module, error) {
+func (p parser) ParseModule(bb []byte) (compiler.Module, error) {
 	var mod module
 	if err := p.unmarshal(bb, &mod); err != nil {
-		return program.Module{}, err
+		return compiler.Module{}, err
 	}
 	return p.cast(mod), nil
 }
 
-func (p parser) Unparse(mod program.Module) ([]byte, error) {
+func (p parser) Unparse(mod compiler.Module) ([]byte, error) {
 	bb, err := p.marshal(mod)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)
 
-type Cast func(module) program.Module
+type Cast func(module) compiler.Module
 
 func New(u Unmarshal, m Marshal, c Cast) (parser, error) {
 	if u == nil || m == nil || c == nil {

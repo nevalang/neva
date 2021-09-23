@@ -1,8 +1,6 @@
 package program
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	ErrModNotFound    = errors.New("module not found")

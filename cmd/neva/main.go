@@ -25,12 +25,12 @@ func main() {
 			{
 				Name: "compile",
 				Action: func(ctx *cli.Context) error {
-					src, err := ioutil.ReadFile(ctx.Args().First())
+					bb, err := ioutil.ReadFile(ctx.Args().First())
 					if err != nil {
 						return err
 					}
 
-					compiled, err := application.Compile(src)
+					compiled, err := application.Compile(bb)
 					if err != nil {
 						return err
 					}
@@ -73,7 +73,7 @@ func main() {
 								continue
 							}
 
-							inportChan, err := io.In.Chan(strings.TrimSuffix(inportName, "\n"))
+							inportChan, err := io.In.Port(strings.TrimSuffix(inportName, "\n"), 0)
 							if err != nil {
 								fmt.Println(err)
 								continue
