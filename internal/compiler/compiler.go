@@ -23,14 +23,14 @@ type (
 		ParseModule([]byte) (program.Module, error)
 	}
 
-	// Validator verifies that program is correct.
-	Validator interface {
-		Validate(program.Module) error // todo validate program
-	}
-
 	// Translator creates runtime program representation.
 	Translator interface {
 		Translate(program.Program) (runtime.Program, error)
+	}
+
+	// Validator verifies that program is correct.
+	Validator interface {
+		Validate(program.Module) error // todo validate program
 	}
 
 	// Coder creates bytecode for given runtime program.
@@ -38,33 +38,40 @@ type (
 		Code(runtime.Program) ([]byte, error)
 	}
 
-	// Coder creates bytecode for given runtime program.
-	Decoder interface {
-		Code(runtime.Program) ([]byte, error)
+	// Storage is an abstraction that allowes retrieve modules
+	Storage interface {
+		Program(descriptorPath string) (map[string][]byte, string, error)
+	}
+
+	// RemoteModuleParams is data needed to get module
+	RemoteModuleParams struct {
+		repo                string
+		major, minor, patch uint64
+		descriptorPath      string
 	}
 )
 
-// Compiler compiles source code to bytecode.
+// Compiler compiles source code into bytecode.
 type Compiler struct {
 	parser     Parser
 	validator  Validator
 	translator Translator
 	coder      Coder
+	storage    Storage
 	operators  map[string]program.Operator
 }
 
-func (c Compiler) Compile(scope map[string][]byte, root string) ([]byte, error) {
-	prog, err := c.compile(scope, root, c.DefaultScope(len(scope)))
+func (c Compiler) PreCompile(descriptorPath string) (runtime.Program, error) {
+	return c.preCompile(descriptorPath)
+}
+
+func (c Compiler) Compile(descriptorPath string) ([]byte, error) {
+	prog, err := c.preCompile(descriptorPath)
 	if err != nil {
 		return nil, err
 	}
 
-	rprog, err := c.translator.Translate(prog)
-	if err != nil {
-		return nil, err
-	}
-
-	bytecode, err := c.coder.Code(rprog)
+	bytecode, err := c.coder.Code(prog)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 	}
@@ -72,14 +79,33 @@ func (c Compiler) Compile(scope map[string][]byte, root string) ([]byte, error) 
 	return bytecode, nil
 }
 
-func (c Compiler) compile(
+func (c Compiler) preCompile(descriptorPath string) (runtime.Program, error) {
+	scope, root, err := c.storage.Program(descriptorPath)
+	if err != nil {
+		return runtime.Program{}, err
+	}
+
+	prog, err := c.compileComponent(scope, root, c.defaultScope(len(scope)))
+	if err != nil {
+		return runtime.Program{}, err
+	}
+
+	rprog, err := c.translator.Translate(prog)
+	if err != nil {
+		return runtime.Program{}, err
+	}
+
+	return rprog, nil
+}
+
+func (c Compiler) compileComponent(
 	scope map[string][]byte,
-	cmpnt string,
+	component string,
 	cache map[string]program.Component,
 ) (program.Program, error) {
 	var mod program.Module
 
-	if _, ok := cache[cmpnt]; !ok {
+	if _, ok := cache[component]; !ok {
 		parsed, err := c.parser.ParseModule(scope["root"])
 		if err != nil {
 			return program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
@@ -93,7 +119,7 @@ func (c Compiler) compile(
 	}
 
 	for name, dep := range mod.Deps {
-		_, err := c.compile(scope, name, cache)
+		_, err := c.compileComponent(scope, name, cache)
 		if err != nil {
 			return program.Program{}, nil
 		}
@@ -103,15 +129,15 @@ func (c Compiler) compile(
 		}
 	}
 
-	cache[cmpnt] = mod
+	cache[component] = mod
 
 	return program.Program{
-		Root:       cmpnt,
+		Root:       component,
 		Components: cache,
 	}, nil
 }
 
-func (c Compiler) DefaultScope(padding int) map[string]program.Component {
+func (c Compiler) defaultScope(padding int) map[string]program.Component {
 	m := make(map[string]program.Component, len(c.operators)+padding)
 	for i := range c.operators {
 		m[c.operators[i].Name] = c.operators[i]
@@ -119,7 +145,6 @@ func (c Compiler) DefaultScope(padding int) map[string]program.Component {
 	return m
 }
 
-// New creates new Compiler. It returns error if at least one of the deps is nil.
 func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
 	if p == nil || v == nil || t == nil || c == nil || ops == nil {
 		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
@@ -134,7 +159,6 @@ func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Op
 	}, nil
 }
 
-// MustNew creates Compiler or panics.
 func MustNew(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
 	cmp, err := New(p, v, t, c, ops)
 	if err != nil {

@@ -1,3 +1,8 @@
+# Modules visualisation
+
+Im talking about map of modules
+
+
 # Imported module could be a program descriptor!
 # Imported module could be a program descriptor!
 # Imported module could be a program descriptor!

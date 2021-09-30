@@ -1,5 +1,6 @@
 package program
 
+// Operator represents builtin component with hidden implementation
 type Operator struct {
 	Name string
 	IO   IO

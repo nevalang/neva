@@ -1,10 +1,19 @@
+# there are 2 kinds of descriptors
+# 1 - have root and no export
+# 2 - don't have root and do have export
+# first are library-packages, second - executable programs
+# in both cases we're dealing with packages
+# package in a nutshell is set of components (with the name of the root sometimes)
+# its like main package in go - it can't have exported members
+# and it's the only one package that can be compiled to binary
+
 deps:
   shared:
-    repo: github.com/emil14/neva-shared
+    repo: "github.com/emil14/neva-shared"
     v: 0.0.1
 
 import:
   sqrt: shared/square
-  root: ./mul_by_square
+  me: ./mul_by_square
 
-root: root
+root: me # no export - if root presented

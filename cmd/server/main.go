@@ -16,17 +16,18 @@ import (
 )
 
 type Server struct {
-	storage  storage.Storage
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
 }
 
-func (s Server) handle() {
+func (s Server) handle(http.ResponseWriter, *http.Request) {
 	bb, _ := ioutil.ReadFile("/home/emil14/projects/neva/examples/program/prog.yml")
+	s.compiler.PreCompile(bb, "root")
 }
 
 func main() {
-	http.HandleFunc("/program", h)
+	s := MustNew()
+	http.HandleFunc("/program", s.handle)
 	http.ListenAndServe(":8090", nil)
 }
 
