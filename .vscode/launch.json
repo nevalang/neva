@@ -5,6 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "web",
+      "request": "launch",
+      "type": "pwa-chrome",
+      "url": "http://localhost:1234",
+      "webRoot": "${workspaceFolder}/web"
+    },
+    {
       "name": "compile",
       "type": "go",
       "request": "launch",

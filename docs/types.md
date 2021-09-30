@@ -31,7 +31,7 @@ out:
 
 ---
 
-Let `T` be a type and let there be a `V` for every `T` where `V ∈ TT`.
+Let there be `T` and for be a `V` for every `T` where `V ∈ TT`.
 
 `∀ V ∈ A`
 

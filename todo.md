@@ -1,3 +1,47 @@
+# Imported module could be a program descriptor!
+# Imported module could be a program descriptor!
+# Imported module could be a program descriptor!
+
+# Pure GENIUS shit
+
+# DATA EDITOR
+
+Data editor is a mind-map-like GUI
+that allowes create graph
+where one can leads to another
+
+a way to visualize message interface creation
+
+
+# Module resolver
+
+start
+
+- load deps to map
+- load imports to map
+- find root name with "find mod" procedure
+
+find mod
+
+- use "check path" to check if path local or remote
+- if local use "find local mod"
+- otherwise use "find remote mod"
+
+check path
+
+- ...
+
+find local mod
+
+- use local path to find file on a disc
+- if it's there return its bytes
+- otherwise throw err
+
+find remote mod
+
+- use remote resolver to find remote file
+- return bytes or err
+
 # BLACK ADAPTERS MAGIC!!!
 
 Модуль, который динамически создаёт другие модули.
