@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -25,7 +26,7 @@ type (
 	}
 )
 
-func (r GitHub) Program(descriptorPath string) (map[string]string, error) {
+func (r GitHub) Program(descriptorPath string) (map[string][]byte, error) {
 	bb, err := ioutil.ReadFile(descriptorPath)
 	if err != nil {
 		return nil, err
@@ -36,7 +37,26 @@ func (r GitHub) Program(descriptorPath string) (map[string]string, error) {
 		return nil, err
 	}
 
-	panic("unimplemented")
+	rr := make(map[string][]byte, len(d.imports))
+
+	for name, path := range d.imports {
+		var b []byte
+		if strings.HasPrefix("./", path) {
+			b, err = ioutil.ReadFile(path)
+			if err != nil {
+				return nil, err
+			}
+			rr[name] = b
+			continue
+		} else {
+			parts := strings.Split("/", path)
+			if len()
+			d.deps[]
+		}
+		
+	}
+
+	return rr, nil
 }
 
 type githubSvc struct{}
