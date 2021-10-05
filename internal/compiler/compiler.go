@@ -148,6 +148,7 @@ func New(p Parser, v Validator, t Translator, c Coder, s Storage, ops map[string
 		validator:  v,
 		translator: t,
 		coder:      c,
+		storage:    s,
 		operators:  ops,
 	}, nil
 }
