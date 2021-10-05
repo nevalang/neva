@@ -16,4 +16,4 @@ import:
   sqrt: shared/square
   me: ./mul_by_square
 
-root: me # no export - if root presented
+root: me # no export if root presented

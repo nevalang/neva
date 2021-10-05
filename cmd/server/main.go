@@ -22,7 +22,7 @@ type Server struct {
 }
 
 func (s Server) handle(http.ResponseWriter, *http.Request) {
-	prog, err := s.compiler.PreCompile("/home/emil14/projects/neva/examples/program/prog.yml")
+	prog, err := s.compiler.PreCompile("/home/emil14/projects/neva/examples/program/pkg.yml")
 	if err != nil {
 		panic(err)
 	}

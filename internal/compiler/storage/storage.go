@@ -6,42 +6,45 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/emil14/neva/internal/compiler"
 	"gopkg.in/yaml.v2"
 )
 
 type (
 	GitHub struct {
-		cacheDir string // TODO
-		cache    map[string][]byte
-		client   client
+		cache map[string][]byte
+		svc   service
 	}
 
-	client interface {
-		file(repo, tag, path string) ([]byte, error)
+	service interface {
+		module(repo, tag, path string) ([]byte, error)
 	}
 
-	descriptor struct {
-		deps    map[string]struct{ repo, v string }
-		imports map[string]string
-		root    string
+	pkgDescriptor struct {
+		Deps map[string]struct {
+			Repo    string `yaml:"repo"`
+			Version string `yaml:"v"`
+		} `yaml:"deps"`
+		Imports map[string]string `yaml:"import"`
+		Root    string            `yaml:"root"`
 	}
 )
 
-func (g GitHub) Program(path string) (map[string][]byte, string, error) {
+func (g GitHub) Pkg(path string) (compiler.Pkg, error) {
 	bb, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, "", err
+		return compiler.Pkg{}, err
 	}
 
-	var d descriptor
+	var d pkgDescriptor
 	if err := yaml.Unmarshal(bb, &d); err != nil {
-		return nil, "", err
+		return compiler.Pkg{}, err
 	}
 
-	bytemap := make(map[string][]byte, len(d.imports))
-	g.cache = make(map[string][]byte, len(d.imports))
+	bytemap := make(map[string][]byte, len(d.Imports))
+	g.cache = make(map[string][]byte, len(d.Imports))
 
-	for name, path := range d.imports {
+	for name, path := range d.Imports {
 		if g.cache[path] != nil {
 			bytemap[name] = g.cache[path]
 			continue
@@ -50,41 +53,43 @@ func (g GitHub) Program(path string) (map[string][]byte, string, error) {
 		if strings.HasPrefix("./", path) {
 			b, err := ioutil.ReadFile(path)
 			if err != nil {
-				return nil, "", err
+				return compiler.Pkg{}, err
 			}
 			bytemap[name] = b
 			g.cache[path] = b
 			continue
 		}
 
-		parts := strings.Split("/", path)
-		if len(parts) < 2 {
-			return nil, "", fmt.Errorf("...")
+		parts := strings.Split(path, "/")
+		if len(parts) != 2 {
+			return compiler.Pkg{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
 		}
 
-		alias := parts[0]
-		dep, ok := d.deps[alias]
+		dep, ok := d.Deps[parts[0]]
 		if !ok {
-			return nil, "", fmt.Errorf("...")
+			return compiler.Pkg{}, fmt.Errorf("imported dep not defined")
 		}
 
-		b, err := g.client.file(dep.repo, dep.v, strings.TrimPrefix(path, alias))
+		mod, err := g.svc.module(dep.Repo, dep.Version, parts[1])
 		if err != nil {
-			return nil, "", err
+			return compiler.Pkg{}, err
 		}
 
-		bytemap[name] = b
-		g.cache[path] = b
+		bytemap[name] = mod
+		g.cache[path] = mod
 	}
 
 	g.cache = nil
 
-	return bytemap, d.root, nil
+	return compiler.Pkg{
+		Root:    d.Root,
+		Modules: bytemap,
+	}, nil
 }
 
 type httpClient struct{}
 
-func (h httpClient) file(repo, tag, path string) ([]byte, error) {
+func (h httpClient) module(repo, tag, path string) ([]byte, error) {
 	resp, err := http.Get(fmt.Sprintf("https://%s/blob/%s/%s", repo, tag, path))
 	if err != nil {
 		return nil, err
@@ -108,7 +113,7 @@ func MustNew(cacheDir string) GitHub {
 
 func New(cacheDir string) (GitHub, error) {
 	return GitHub{
-		client:   httpClient{},
+		svc:      httpClient{},
 		cacheDir: cacheDir,
 	}, nil
 }
