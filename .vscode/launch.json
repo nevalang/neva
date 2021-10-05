@@ -12,20 +12,11 @@
       "webRoot": "${workspaceFolder}/web"
     },
     {
-      "name": "compile",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/neva",
-      "args": ["compile", ""]
-    },
-    {
       "name": "run",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/neva",
-      "args": ["run", "/home/emil14/projects/stream/examples/arr.json"]
+      "program": "${workspaceFolder}/cmd/server"
     }
   ]
 }

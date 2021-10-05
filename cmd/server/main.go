@@ -1,13 +1,14 @@
 package main
 
 import (
-	"io/ioutil"
+	"fmt"
 	"net/http"
 
 	"github.com/emil14/neva/internal/compiler"
 	"github.com/emil14/neva/internal/compiler/coder"
 	"github.com/emil14/neva/internal/compiler/parser"
 	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler/storage"
 	"github.com/emil14/neva/internal/compiler/translator"
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
@@ -21,28 +22,43 @@ type Server struct {
 }
 
 func (s Server) handle(http.ResponseWriter, *http.Request) {
-	bb, _ := ioutil.ReadFile("/home/emil14/projects/neva/examples/program/prog.yml")
-	s.compiler.PreCompile(bb, "root")
+	prog, err := s.compiler.PreCompile("/home/emil14/projects/neva/examples/program/prog.yml")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = s.runtime.Run(prog)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s Server) onSend(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg {
+	fmt.Println(msg, from, to)
+	return msg
+}
+
+func (s Server) onReceive(msg runtime.Msg, from runtime.PortAddr, to runtime.PortAddr) {
+	fmt.Println(msg, from, to)
 }
 
 func main() {
 	s := MustNew()
-	http.HandleFunc("/program", s.handle)
+	http.HandleFunc("/", s.handle)
 	http.ListenAndServe(":8090", nil)
 }
 
 func MustNew() Server {
+	s := Server{}
 	ops := program.NewOperators()
-	return Server{
-		compiler: compiler.MustNew(
-			parser.MustNewYAML(),
-			validator.New(),
-			translator.New(ops),
-			coder.New(),
-			ops,
-		),
-		runtime: runtime.New(
-			connector.MustNew(operators.New(), nil, nil),
-		),
-	}
+	s.compiler = compiler.MustNew(
+		parser.MustNewYAML(),
+		validator.New(),
+		translator.New(ops),
+		coder.New(),
+		storage.MustNew(""),
+		ops,
+	)
+	s.runtime = runtime.New(connector.MustNew(operators.New(), s.onSend, s.onReceive))
+	return s
 }

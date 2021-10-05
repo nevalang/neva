@@ -7,11 +7,6 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 )
 
-type Interceptor interface {
-	onSend(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg
-	onReceive(msg runtime.Msg, from, to runtime.PortAddr)
-}
-
 type Connector struct {
 	operators   map[string]runtime.Operator
 	interceptor Interceptor
@@ -49,6 +44,11 @@ func (c Connector) ConnectOperator(name string, io runtime.IO) error {
 	}
 
 	return nil
+}
+
+type Interceptor interface {
+	onSend(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg
+	onReceive(msg runtime.Msg, from, to runtime.PortAddr)
 }
 
 type interceptor struct {

@@ -42,13 +42,6 @@ type (
 	Storage interface {
 		Program(descriptorPath string) (map[string][]byte, string, error)
 	}
-
-	// RemoteModuleParams is data needed to get module
-	RemoteModuleParams struct {
-		repo                string
-		major, minor, patch uint64
-		descriptorPath      string
-	}
 )
 
 // Compiler compiles source code into bytecode.
@@ -145,8 +138,8 @@ func (c Compiler) defaultScope(padding int) map[string]program.Component {
 	return m
 }
 
-func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil || ops == nil {
+func New(p Parser, v Validator, t Translator, c Coder, s Storage, ops map[string]program.Operator) (Compiler, error) {
+	if p == nil || v == nil || t == nil || c == nil || s == nil || ops == nil {
 		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
 	}
 
@@ -159,8 +152,8 @@ func New(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Op
 	}, nil
 }
 
-func MustNew(p Parser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
-	cmp, err := New(p, v, t, c, ops)
+func MustNew(p Parser, v Validator, t Translator, c Coder, s Storage, ops map[string]program.Operator) Compiler {
+	cmp, err := New(p, v, t, c, s, ops)
 	if err != nil {
 		panic(err)
 	}
