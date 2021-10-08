@@ -41,7 +41,7 @@ func (r Runtime) run(scope map[string]program.Component, nodeMeta program.NodeMe
 	}
 
 	// it's a module so it has subnetwork and in-out nodes are part it
-	subnetIO := map[string]IO{ //
+	subnetIO := map[string]IO{
 		"in":  {Out: nodeIO.In}, // for subnet 'in' node is sender
 		"out": {In: nodeIO.Out}, // and 'out' is receiver
 	}
@@ -64,7 +64,7 @@ func (r Runtime) run(scope map[string]program.Component, nodeMeta program.NodeMe
 
 // connections maps network schema with real channels.
 func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []Connection {
-	ss := make([]Connection, len(net))
+	cc := make([]Connection, len(net))
 
 	for i := range net {
 		fromNodeIO, ok := nodesIO[net[i].From.Node]
@@ -95,13 +95,13 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) []
 			to[j] = Port{Ch: receiver, Addr: toInportAddr}
 		}
 
-		ss[i] = Connection{
+		cc[i] = Connection{
 			From: Port{Ch: from, Addr: fromAddr},
 			To:   to,
 		}
 	}
 
-	return ss
+	return cc
 }
 
 // nodeIO creates channels following node meta.

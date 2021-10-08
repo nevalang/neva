@@ -22,26 +22,26 @@ func (cm Module) Interface() IO {
 func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {
 	fromType, err := mod.NodeOutportType(pair.From.Node, pair.From.Port)
 	if err != nil {
-		return PortType{}, PortType{}, fmt.Errorf("unknown node or port: %w", err)
+		return PortType{}, PortType{}, fmt.Errorf("get node outport type: %w", err)
 	}
 
 	toType, err := mod.NodeInportType(pair.To.Node, pair.To.Port)
 	if err != nil {
-		return PortType{}, PortType{}, fmt.Errorf("unknown node: %w", err)
+		return PortType{}, PortType{}, fmt.Errorf("get node inport type: %w", err)
 	}
 
 	return fromType, toType, nil
 }
 
 func (m Module) NodeInportType(node, port string) (PortType, error) {
-	ports, err := m.NodeInports(node)
+	inports, err := m.NodeInports(node)
 	if err != nil {
-		return PortType{}, fmt.Errorf("could not get inports for node %s: %w", node, err)
+		return PortType{}, fmt.Errorf("could not get inports for node '%s': %w", node, err)
 	}
 
-	portType, ok := ports[port]
+	portType, ok := inports[port]
 	if !ok {
-		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
+		return portType, fmt.Errorf("unknown port '%s' on node '%s'", port, node)
 	}
 
 	return portType, nil
@@ -50,12 +50,12 @@ func (m Module) NodeInportType(node, port string) (PortType, error) {
 func (m Module) NodeOutportType(node, port string) (PortType, error) {
 	ports, err := m.NodeOutports(node)
 	if err != nil {
-		return PortType{}, fmt.Errorf("could not get outports for node %s: %w", node, err)
+		return PortType{}, fmt.Errorf("get outports for node '%s': %w", node, err)
 	}
 
 	portType, ok := ports[port]
 	if !ok {
-		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
+		return portType, fmt.Errorf("unknown port '%s' on node '%s'", port, node)
 	}
 
 	return portType, nil
@@ -78,18 +78,26 @@ func (m Module) NodeInports(node string) (Ports, error) {
 }
 
 func (m Module) NodeIO(node string) (IO, error) {
-	if node == "in" || node == "out" {
-		return m.IO, nil
+	if node == "in" {
+		return IO{
+			Out: m.IO.In,
+		}, nil
+	}
+
+	if node == "out" {
+		return IO{
+			In: m.IO.Out,
+		}, nil
 	}
 
 	dep, ok := m.Workers[node]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker node %s", node)
+		return IO{}, fmt.Errorf("unknown worker node '%s'", node)
 	}
 
 	io, ok := m.Deps[dep]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker dep %s", dep)
+		return IO{}, fmt.Errorf("unknown worker dep '%s'", dep)
 	}
 
 	return io, nil

@@ -12,7 +12,7 @@
       "webRoot": "${workspaceFolder}/web"
     },
     {
-      "name": "run",
+      "name": "server",
       "type": "go",
       "request": "launch",
       "mode": "auto",

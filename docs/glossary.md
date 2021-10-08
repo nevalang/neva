@@ -1,6 +1,7 @@
 # Glossary
 
 - Program
+- Package
 - Network
 - Node
 - Component

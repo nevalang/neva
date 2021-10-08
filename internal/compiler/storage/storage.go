@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/emil14/neva/internal/compiler"
@@ -30,8 +32,8 @@ type (
 	}
 )
 
-func (g GitHub) Pkg(path string) (compiler.Pkg, error) {
-	bb, err := ioutil.ReadFile(path)
+func (g GitHub) Pkg(descriptorPath string) (compiler.Pkg, error) {
+	bb, err := ioutil.ReadFile(descriptorPath)
 	if err != nil {
 		return compiler.Pkg{}, err
 	}
@@ -44,23 +46,25 @@ func (g GitHub) Pkg(path string) (compiler.Pkg, error) {
 	bytemap := make(map[string][]byte, len(d.Imports))
 	g.cache = make(map[string][]byte, len(d.Imports))
 
-	for name, path := range d.Imports {
-		if g.cache[path] != nil {
-			bytemap[name] = g.cache[path]
+	for name, importPath := range d.Imports {
+		if g.cache[importPath] != nil {
+			bytemap[name] = g.cache[importPath]
 			continue
 		}
 
-		if strings.HasPrefix("./", path) {
-			b, err := ioutil.ReadFile(path)
+		if strings.HasPrefix(importPath, "./") {
+			dir := filepath.Dir(descriptorPath)
+			p := filepath.Join(dir, importPath)
+			b, err := ioutil.ReadFile(p + ".yml")
 			if err != nil {
 				return compiler.Pkg{}, err
 			}
 			bytemap[name] = b
-			g.cache[path] = b
+			g.cache[importPath] = b
 			continue
 		}
 
-		parts := strings.Split(path, "/")
+		parts := strings.Split(importPath, "/")
 		if len(parts) != 2 {
 			return compiler.Pkg{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
 		}
@@ -76,7 +80,7 @@ func (g GitHub) Pkg(path string) (compiler.Pkg, error) {
 		}
 
 		bytemap[name] = mod
-		g.cache[path] = mod
+		g.cache[importPath] = mod
 	}
 
 	g.cache = nil
@@ -89,8 +93,18 @@ func (g GitHub) Pkg(path string) (compiler.Pkg, error) {
 
 type httpClient struct{}
 
-func (h httpClient) module(repo, tag, path string) ([]byte, error) {
-	resp, err := http.Get(fmt.Sprintf("https://%s/blob/%s/%s", repo, tag, path))
+func (h httpClient) module(repo, tag, filename string) ([]byte, error) {
+	u := url.URL{
+		Scheme: "https",
+		Host:   "raw.githubusercontent.com",
+		Path:   fmt.Sprintf("%s/%s/%s.yml", repo, tag, filename),
+	}
+
+	fmt.Println(u.String())
+
+	// https://raw.githubusercontent.com/emil14/neva-shared/0.0.2/square.yml
+
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +127,7 @@ func MustNew(cacheDir string) GitHub {
 
 func New(cacheDir string) (GitHub, error) {
 	return GitHub{
-		svc:      httpClient{},
-		cacheDir: cacheDir,
+		svc:   httpClient{},
+		cache: map[string][]byte{},
 	}, nil
 }

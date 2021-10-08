@@ -123,7 +123,11 @@ func (c Compiler) buildProgram(scope map[string]program.Component, root string) 
 	// 	}
 	// }
 
-	return program.Program{}, nil
+	// TODO
+	return program.Program{
+		Root:       root,
+		Components: scope,
+	}, nil
 }
 
 func (c Compiler) compileModule(mod []byte) (program.Module, error) {

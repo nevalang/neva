@@ -58,7 +58,7 @@ type PortType struct {
 
 func (want PortType) Compare(got PortType) error {
 	if want.Arr != got.Arr || want.Type != got.Type {
-		return ErrPortTypes
+		return fmt.Errorf("%w: got %v, want %v", ErrPortTypes, got, want)
 	}
 
 	return nil

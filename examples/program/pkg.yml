@@ -9,8 +9,8 @@
 
 deps:
   shared:
-    repo: "github.com/emil14/neva-shared"
-    v: 0.0.1
+    repo: "emil14/neva-shared"
+    v: 0.0.2
 
 import:
   sqrt: shared/square

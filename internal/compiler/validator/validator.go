@@ -108,31 +108,32 @@ func (v validator) validateNet(mod program.Module) error {
 // typeCheckNet checks that all connections are type-safe.
 func (v validator) typeCheckNet(mod program.Module) error {
 	for pair := range mod.Net.Walk() {
-		if err := v.validatePair(pair, mod); err != nil {
+		if err := v.validateConnection(pair, mod); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (v validator) validatePair(pair program.PortAddrPair, mod program.Module) error {
-	if pair.From.Node == "out" || pair.To.Node == "in" {
-		return fmt.Errorf("bad node name in pair %v", pair)
+func (v validator) validateConnection(connection program.PortAddrPair, module program.Module) error {
+	if connection.From.Node == "out" || connection.To.Node == "in" {
+		return fmt.Errorf("bad node name in pair %v", connection)
 	}
 
-	from, to, err := mod.PairPortTypes(pair)
+	fromType, toType, err := module.PairPortTypes(connection)
 	if err != nil {
-		return fmt.Errorf("could not get pair port types: %w", err)
+		return fmt.Errorf("get pair port types: %w", err)
 	}
 
 	switch {
-	case !from.Arr && pair.From.Idx > 0:
-	case !to.Arr && pair.To.Idx > 0:
-		return fmt.Errorf("only array ports can have address with idx > 0: %v", pair)
+	case !fromType.Arr && connection.From.Idx > 0:
+	case !toType.Arr && connection.To.Idx > 0:
+		return fmt.Errorf("only array ports can have address with idx > 0: %v", connection)
 	}
 
-	if err := from.Compare(to); err != nil {
-		return fmt.Errorf("mismatched types on ports %v and %v: %w", pair.From, pair.To, err)
+	// we don't use Compare methods because it compares arr field
+	if fromType.Type != toType.Type {
+		return fmt.Errorf("mismatched types on ports %v and %v", connection.From, connection.To)
 	}
 
 	return nil
