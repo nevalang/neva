@@ -1,0 +1,83 @@
+openapi: "3.0.2"
+info:
+  title: API Title
+  version: "1.0"
+
+servers:
+  - url: "url"
+
+components:
+  schemas:
+    Program:
+      type: object
+      properties:
+        scope:
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "#/components/schemas/Operator"
+              - $ref: "#/components/schemas/Module"
+        root:
+          type: string
+    Operator:
+      type: object
+      properties:
+        io:
+          $ref: "#/components/schemas/IO"
+    Module:
+      type: object
+      properties:
+        io:
+          $ref: "#/components/schemas/IO"
+        workers:
+          type: object
+          additionalProperties:
+            type: string
+        deps:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/IO"
+        het:
+          type: array
+          items:
+            $ref: "#/components/schemas/Connection"
+    IO:
+      type: object
+      properties:
+        in:
+          type: object
+          additionalProperties:
+            type: string
+        out:
+          type: object
+          additionalProperties:
+            type: string
+    Connection:
+      type: object
+      properties:
+        from:
+          $ref: "#/components/schemas/PortAddr"
+        to:
+          $ref: "#/components/schemas/PortAddr"
+    PortAddr:
+      type: object
+      properties:
+        node:
+          type: string
+        idx:
+          type: integer
+        port:
+          type: string
+
+paths:
+  /program:
+    get:
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+        "500":
+          description: Request failed

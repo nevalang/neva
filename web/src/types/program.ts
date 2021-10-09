@@ -1,5 +1,5 @@
 export interface Program {
-  descriptor?: ProgramDescriptor
+  // descriptor?: ProgramDescriptor
   scope: { [key: string]: Component }
   root: string
 }
@@ -19,7 +19,7 @@ export type Component = Operator | Module
 export interface Operator {
   type: ComponentTypes.OPERATOR
   io: IO
-  name: string
+  // name: string
 }
 
 export interface Module {
