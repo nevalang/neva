@@ -7,10 +7,10 @@ type caster struct{}
 func (c caster) Cast(prog Program) program.Program {
 	return program.Program{
 		RootNodeMeta: program.NodeMeta{
-			Node:      "root",
+			Name:      "root",
 			In:        prog.RootNode.In,
 			Out:       prog.RootNode.Out,
-			Component: prog.RootNode.Component,
+			ComponentName: prog.RootNode.Component,
 		},
 		Scope: c.components(prog.Scope),
 	}
@@ -22,7 +22,7 @@ func (c caster) components(from map[string]Component) map[string]program.Compone
 		to[name] = program.Component{
 			Operator:        component.Operator,
 			WorkerNodesMeta: c.workerNodesMeta(component.Workers),
-			Connections:     c.net(component.Net),
+			Net:     c.net(component.Net),
 		}
 	}
 	return to
@@ -33,10 +33,10 @@ func (c caster) workerNodesMeta(workers map[string]NodeMeta) map[string]program.
 
 	for w, nodeMeta := range workers {
 		result[w] = program.NodeMeta{
-			Node:      w,
+			// Node:      w,
 			In:        nodeMeta.In,
 			Out:       nodeMeta.Out,
-			Component: nodeMeta.Component,
+			ComponentName: nodeMeta.Component,
 		}
 	}
 

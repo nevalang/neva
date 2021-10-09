@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type Connector struct {
@@ -13,8 +14,8 @@ type Connector struct {
 }
 
 func (cnctr Connector) ConnectSubnet(cc []runtime.Connection) {
-	for i := range cc {
-		go cnctr.connectConnection(cc[i])
+	for _, c := range cc {
+		go cnctr.connectConnection(c)
 	}
 }
 
@@ -47,42 +48,43 @@ func (c Connector) ConnectOperator(name string, io runtime.IO) error {
 }
 
 type Interceptor interface {
-	onSend(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg
-	onReceive(msg runtime.Msg, from, to runtime.PortAddr)
+	onSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
+	onReceive(msg runtime.Msg, from, to program.PortAddr)
 }
 
 type interceptor struct {
-	send    func(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg
-	receive func(msg runtime.Msg, from, to runtime.PortAddr)
+	send    func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
+	receive func(msg runtime.Msg, from, to program.PortAddr)
 }
 
-func (i interceptor) onSend(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg {
+func (i interceptor) onSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg {
 	return i.send(msg, from, to)
 }
 
-func (i interceptor) onReceive(msg runtime.Msg, from, to runtime.PortAddr) {
+func (i interceptor) onReceive(msg runtime.Msg, from, to program.PortAddr) {
 	i.receive(msg, from, to)
 }
 
 func New(
-	ops map[string]runtime.Operator,
-	onSend func(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg,
-	onReceive func(msg runtime.Msg, from, to runtime.PortAddr),
+	operators map[string]runtime.Operator,
+	// TODO: use Interceptor types
+	onSend func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg,
+	onReceive func(msg runtime.Msg, from, to program.PortAddr),
 ) (Connector, error) {
-	if ops == nil || onSend == nil || onReceive == nil {
+	if operators == nil || onSend == nil || onReceive == nil {
 		return Connector{}, errors.New("init connector")
 	}
 
 	return Connector{
-		ops,
+		operators,
 		interceptor{onSend, onReceive},
 	}, nil
 }
 
 func MustNew(
 	ops map[string]runtime.Operator,
-	onSend func(msg runtime.Msg, from runtime.PortAddr, to []runtime.PortAddr) runtime.Msg,
-	onReceive func(msg runtime.Msg, from, to runtime.PortAddr),
+	onSend func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg,
+	onReceive func(msg runtime.Msg, from, to program.PortAddr),
 ) Connector {
 	c, err := New(ops, onSend, onReceive)
 	if err != nil {

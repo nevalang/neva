@@ -14,7 +14,7 @@ type Translator struct {
 func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	component, ok := prog.Components[prog.Root]
 	if !ok {
-		return runtime.Program{}, errors.New("TODO")
+		return runtime.Program{}, errors.New("!ok prog.Components[prog.Root]")
 	}
 
 	io := component.Interface()
@@ -31,9 +31,10 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 	return runtime.Program{
 		RootNodeMeta: runtime.NodeMeta{
-			Component: prog.Root,
-			In:        in,
-			Out:       out,
+			Name:          "root",
+			ComponentName: prog.Root,
+			In:            in,
+			Out:           out,
 		},
 		Scope: t.components(prog.Components),
 	}, nil
@@ -57,15 +58,16 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 		}
 
 		workers := map[string]runtime.NodeMeta{}
-		for worker, dep := range mod.Workers {
-			in, out, err := t.workerIO(worker, dep, components, mod.Net)
+		for workerName, dep := range mod.Workers {
+			in, out, err := t.workerIOMeta(workerName, dep, components, mod.Net)
 			if err != nil {
 				panic(err)
 			}
-			workers[worker] = runtime.NodeMeta{
-				Component: dep,
-				In:        in,
-				Out:       out,
+			workers[workerName] = runtime.NodeMeta{
+				Name:          workerName,
+				ComponentName: dep,
+				In:            in,
+				Out:           out,
 			}
 		}
 
@@ -80,7 +82,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 
 		runtimeComponents[name] = runtime.Component{
 			WorkerNodesMeta: workers,
-			Connections:     net,
+			Net:             net,
 		}
 	}
 
@@ -95,10 +97,10 @@ func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.P
 	return to
 }
 
-func (t Translator) workerIO(
+func (t Translator) workerIOMeta(
 	workerName, componentName string,
 	components map[string]compiler.Component,
-	net compiler.OutgoingConnections,
+	outgoing compiler.OutgoingConnections,
 ) (map[string]uint8, map[string]uint8, error) {
 	c, ok := components[componentName]
 	if !ok {
@@ -108,21 +110,13 @@ func (t Translator) workerIO(
 	io := c.Interface()
 
 	in := make(map[string]uint8, len(io.In))
-	for port, typ := range io.In {
-		if !typ.Arr {
-			in[port] = 0
-			continue
-		}
-		in[port] = net.CountIncoming(workerName, port)
+	for port := range io.In {
+		in[port] = outgoing.CountIncoming(workerName, port)
 	}
 
 	out := make(map[string]uint8, len(io.In))
-	for port, typ := range io.Out {
-		if !typ.Arr {
-			out[port] = 0
-			continue
-		}
-		out[port] = net.CountIncoming(workerName, port)
+	for port := range io.Out {
+		out[port] = outgoing.CountIncoming(workerName, port)
 	}
 
 	return in, out, nil // TODO

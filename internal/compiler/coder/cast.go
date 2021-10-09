@@ -15,7 +15,7 @@ func (c caster) castNode(node program.NodeMeta) NodeMeta {
 	return NodeMeta{
 		In:        node.In,
 		Out:       node.Out,
-		Component: node.Component,
+		Component: node.ComponentName,
 	}
 }
 
@@ -26,7 +26,7 @@ func (c caster) castComponents(cc map[string]program.Component) map[string]Compo
 		res[name] = Component{
 			Operator: cc[name].Operator,
 			Workers:  c.castNodes(cc[name].WorkerNodesMeta),
-			Net:      c.castNet(cc[name].Connections),
+			Net:      c.castNet(cc[name].Net),
 		}
 	}
 

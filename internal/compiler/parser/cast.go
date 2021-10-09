@@ -1,40 +1,77 @@
 package parser
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
-	compiler "github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
-// func castProgram(prog program) compiler.Program {
-// 	return compiler.Program{
-// 		Root: prog.Root,
-// 		Components: castComponents(),
-// 	}
-// }
+type caster struct{}
 
-func castModule(mod module) compiler.Module {
-	return compiler.NewModule(
-		castIO(mod.In, mod.Out),
-		castDeps(mod.Deps),
-		map[string]string(mod.Workers),
-		castNet(mod.Net),
-	)
-}
-
-func castIO(in inports, out outports) compiler.IO {
-	return compiler.IO{
-		In:  castPorts(ports(in)),
-		Out: castPorts(ports(out)),
+func (c caster) From(mod program.Module) Module {
+	in, out := c.fromIO(mod.IO)
+	deps := c.fromDeps(mod.Deps)
+	net := c.fromNet(mod.Net)
+	return Module{
+		Deps:    deps,
+		In:      in,
+		Out:     out,
+		Workers: mod.Workers,
+		Net:     net,
 	}
 }
 
-func castPorts(from ports) compiler.Ports {
-	to := compiler.Ports{}
+func (c caster) fromIO(io program.IO) (inports, outports) {
+	in := inports{}
+	for k, v := range io.In {
+		in[k] = fmt.Sprintf("%v", v)
+	}
+	out := outports{}
+	for k, v := range io.Out {
+		out[k] = fmt.Sprintf("%v", v)
+	}
+	return in, out
+}
+
+func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
+	result := moduleDeps{}
+	for k, v := range deps {
+		in, out := c.fromIO(v)
+		result[k] = IO{
+			In:  in,
+			Out: out,
+		}
+	}
+	return result
+}
+
+func (c caster) fromNet(net program.OutgoingConnections) net {
+	return nil // TODO
+}
+
+func (c caster) To(mod Module) program.Module {
+	return program.NewModule(
+		c.toIO(mod.In, mod.Out),
+		c.toDeps(mod.Deps),
+		map[string]string(mod.Workers),
+		c.toNet(mod.Net),
+	)
+}
+
+func (c caster) toIO(in inports, out outports) program.IO {
+	return program.IO{
+		In:  c.castPorts(ports(in)),
+		Out: c.castPorts(ports(out)),
+	}
+}
+
+func (c caster) castPorts(from ports) program.Ports {
+	to := program.Ports{}
 
 	for port, t := range from {
-		portType := compiler.PortType{Type: compiler.TypeByName(t)}
+		portType := program.PortType{Type: program.TypeByName(t)}
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
 			port = strings.TrimSuffix(port, "[]")
@@ -46,13 +83,13 @@ func castPorts(from ports) compiler.Ports {
 	return to
 }
 
-func castDeps(from moduleDeps) map[string]compiler.IO {
-	to := map[string]compiler.IO{}
+func (c caster) toDeps(from moduleDeps) map[string]program.IO {
+	to := map[string]program.IO{}
 
 	for name, pio := range from {
-		io := castIO(pio.In, pio.Out)
+		io := c.toIO(pio.In, pio.Out)
 
-		to[name] = compiler.IO{
+		to[name] = program.IO{
 			In:  io.In,
 			Out: io.Out,
 		}
@@ -61,17 +98,17 @@ func castDeps(from moduleDeps) map[string]compiler.IO {
 	return to
 }
 
-func castNet(from net) compiler.OutgoingConnections {
-	to := compiler.OutgoingConnections{}
+func (c caster) toNet(from net) program.OutgoingConnections {
+	to := program.OutgoingConnections{}
 
 	for senderNode, outgoingConnections := range from {
 		for outport, nodesToInports := range outgoingConnections {
-			senderPortPoint := castPortPoint(senderNode, outport)
-			receivers := map[compiler.PortAddr]struct{}{}
+			senderPortPoint := c.castPortPoint(senderNode, outport)
+			receivers := map[program.PortAddr]struct{}{}
 
 			for receiver, receiverInports := range nodesToInports {
 				for _, inport := range receiverInports {
-					receiverPortPoint := castPortPoint(receiver, inport)
+					receiverPortPoint := c.castPortPoint(receiver, inport)
 					receivers[receiverPortPoint] = struct{}{}
 				}
 			}
@@ -83,10 +120,10 @@ func castNet(from net) compiler.OutgoingConnections {
 	return to
 }
 
-func castPortPoint(node string, port string) compiler.PortAddr {
+func (c caster) castPortPoint(node string, port string) program.PortAddr {
 	bracketStart := strings.Index(port, "[")
 	if bracketStart == -1 {
-		return compiler.PortAddr{
+		return program.PortAddr{
 			Node: node,
 			Port: port,
 		}
@@ -94,7 +131,7 @@ func castPortPoint(node string, port string) compiler.PortAddr {
 
 	bracketEnd := strings.Index(port, "]")
 	if bracketEnd == -1 {
-		return compiler.PortAddr{
+		return program.PortAddr{
 			Node: node,
 			Port: port,
 		}
@@ -102,13 +139,13 @@ func castPortPoint(node string, port string) compiler.PortAddr {
 
 	idx, err := strconv.ParseUint(port[bracketStart+1:bracketEnd], 10, 64)
 	if err != nil {
-		return compiler.PortAddr{
+		return program.PortAddr{
 			Node: node,
 			Port: port,
 		}
 	}
 
-	return compiler.PortAddr{
+	return program.PortAddr{
 		Node: node,
 		Port: port[:bracketStart],
 		Idx:  uint8(idx),

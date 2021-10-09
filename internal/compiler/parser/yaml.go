@@ -1,7 +1,16 @@
 package parser
 
-import "gopkg.in/yaml.v2"
+import (
+	"encoding/json"
 
-func MustNewYAML() parser {
-	return MustNew(yaml.Unmarshal, yaml.Marshal, castModule)
+	"github.com/emil14/neva/internal/compiler"
+	"gopkg.in/yaml.v2"
+)
+
+func MustNewYAML() compiler.Parser {
+	return MustNew(yaml.Unmarshal, yaml.Marshal, caster{})
+}
+
+func MustNewJSON() compiler.Parser {
+	return MustNew(json.Unmarshal, json.Marshal, caster{})
 }

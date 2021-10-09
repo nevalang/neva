@@ -13,14 +13,19 @@ type Program struct {
 type Component struct {
 	Operator        string              // Always "" for modules.
 	WorkerNodesMeta map[string]NodeMeta // Worker nodes metadata, ignored for operators.
-	Connections     []Connection        // Data flow, ignored for operators.
+	Net             []Connection        // Data flow, ignored for operators.
 }
 
-// NodeMeta describes metadata for node initialization.
+// NodeMeta describes how component used by its parent network.
 type NodeMeta struct {
-	Node      string           // name of the node
-	In, Out   map[string]uint8 // port -> size; if size > 0 then array port
-	Component string           // always "" for io nodes
+	Name string
+	// TODO: replace size with buf and create separate ports for every arrport (portgroup) slice
+	In, Out       map[string]uint8 // port -> size; if size > 0 then array port
+	ComponentName string           // always "" for io nodes
+}
+
+type PortMeta struct {
+	Buf uint8
 }
 
 // One-to-many relation between sender and receiver ports.

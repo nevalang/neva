@@ -20,6 +20,7 @@ type (
 	// Parser parses source code into compiler program representation.
 	Parser interface {
 		ParseModule([]byte) (program.Module, error)
+		Program(program.Program) ([]byte, error)
 	}
 
 	// Translator creates runtime program representation.
@@ -59,71 +60,54 @@ type Compiler struct {
 	operators  map[string]program.Operator
 }
 
-func (c Compiler) PreCompile(pkgDescriptorPath string) (runtime.Program, error) {
+func (c Compiler) PreCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
 	return c.preCompile(pkgDescriptorPath)
 }
 
-func (c Compiler) Compile(pkgDescriptorPath string) ([]byte, error) {
-	prog, err := c.preCompile(pkgDescriptorPath)
-	if err != nil {
-		return nil, err
-	}
+// func (c Compiler) Compile(pkgDescriptorPath string) ([]byte, error) {
+// 	prog, err := c.preCompile(pkgDescriptorPath)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	bytecode, err := c.coder.Code(prog)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
-	}
+// 	bytecode, err := c.coder.Code(prog)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+// 	}
 
-	return bytecode, nil
-}
+// 	return bytecode, nil
+// }
 
-func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, error) {
+func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
 	pkg, err := c.storage.Pkg(pkgDescriptorPath)
 	if err != nil {
-		return runtime.Program{}, err
+		return runtime.Program{}, program.Program{}, err
 	}
 
 	scope := c.defaultScope(len(pkg.Modules))
 	for k, v := range pkg.Modules {
 		mod, err := c.compileModule(v)
 		if err != nil {
-			return runtime.Program{}, err
+			return runtime.Program{}, program.Program{}, err
 		}
 		scope[k] = mod
 	}
 
 	prog, err := c.buildProgram(scope, pkg.Root)
 	if err != nil {
-		return runtime.Program{}, err
+		return runtime.Program{}, program.Program{}, err
 	}
 
 	rprog, err := c.translator.Translate(prog)
 	if err != nil {
-		return runtime.Program{}, err
+		return runtime.Program{}, program.Program{}, err
 	}
 
-	return rprog, nil
+	return rprog, prog, nil
 }
 
+// TODO
 func (c Compiler) buildProgram(scope map[string]program.Component, root string) (program.Program, error) {
-	// rootComponent, ok := scope[root]
-	// if !ok {
-	// 	return program.Program{}, fmt.Errorf("...")
-	// }
-
-	// rootModule, ok := rootComponent.(program.Module)
-	// if !ok {
-	// 	return program.Program{}, fmt.Errorf("...")
-	// }
-
-	// for depName, depIO := range rootModule.Deps {
-	// 	io, ok := scope[depName]
-	// 	if !ok {
-
-	// 	}
-	// }
-
-	// TODO
 	return program.Program{
 		Root:       root,
 		Components: scope,
