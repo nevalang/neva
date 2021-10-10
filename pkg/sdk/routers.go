@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -47,6 +48,7 @@ func NewRouter(routers ...Router) *mux.Router {
 			var handler http.Handler
 			handler = route.HandlerFunc
 			handler = Logger(handler, route.Name)
+			handler = handlers.CORS()(handler)
 
 			router.
 				Methods(route.Method).

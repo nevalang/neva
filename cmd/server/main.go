@@ -25,6 +25,104 @@ import (
 type Server struct {
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
+	caster   Caster
+}
+
+type Caster interface {
+	CastProgram(cprog.Program) (sdk.Program, error)
+}
+
+type caster struct{}
+
+func (c caster) CastProgram(from cprog.Program) (sdk.Program, error) {
+	cc, err := c.castComponents(from.Components)
+	if err != nil {
+		return sdk.Program{}, err
+	}
+	return sdk.Program{
+		Scope: cc,
+		Root:  from.Root,
+	}, nil
+}
+
+func (c caster) castComponents(from map[string]cprog.Component) (map[string]sdk.Component, error) {
+	r := map[string]sdk.Component{}
+	for k, v := range from {
+		cmpnt, err := c.castComponent(v)
+		if err != nil {
+			return nil, err
+		}
+		r[k] = cmpnt
+	}
+	return r, nil
+}
+
+func (c caster) castComponent(from cprog.Component) (sdk.Component, error) {
+	if _, ok := from.(cprog.Operator); ok {
+		return sdk.Component{
+			Io: c.castIO(from.Interface()),
+		}, nil
+	}
+
+	mod, ok := from.(cprog.Module)
+	if !ok {
+		return sdk.Component{}, fmt.Errorf("casterr: unknown component type")
+	}
+
+	return sdk.Component{
+		Io:      c.castIO(mod.Interface()),
+		Workers: mod.Workers,
+		Deps:    c.castDeps(mod.Deps),
+		Het:     c.castNet(mod.Net),
+	}, nil
+}
+
+func (c caster) castDeps(from map[string]cprog.IO) map[string]sdk.Io {
+	r := map[string]sdk.Io{}
+	for k, v := range from {
+		r[k] = c.castIO(v)
+	}
+	return r
+}
+
+func (c caster) castNet(net cprog.OutgoingConnections) []sdk.Connection {
+	r := make([]sdk.Connection, 0, len(net))
+	for from, to := range net {
+		for rcvr := range to {
+			r = append(r, c.sdkConnection(from, rcvr))
+		}
+	}
+	return r
+}
+
+func (c caster) sdkConnection(from, to cprog.PortAddr) sdk.Connection {
+	return sdk.Connection{
+		From: c.sdkPortAddr(from),
+		To:   c.sdkPortAddr(to),
+	}
+}
+
+func (c caster) sdkPortAddr(from cprog.PortAddr) sdk.PortAddr {
+	return sdk.PortAddr{
+		Node: from.Node,
+		Idx:  int32(from.Idx),
+		Port: from.Port,
+	}
+}
+
+func (c caster) castIO(from cprog.IO) sdk.Io {
+	return sdk.Io{
+		In:  c.castPorts(from.In),
+		Out: c.castPorts(from.Out),
+	}
+}
+
+func (c caster) castPorts(from cprog.Ports) map[string]string {
+	to := make(map[string]string, len(from))
+	for name, typ := range from {
+		to[name] = typ.String()
+	}
+	return to
 }
 
 func (s Server) ProgramGet(context.Context) (sdk.ImplResponse, error) {
@@ -50,9 +148,14 @@ func (s Server) ProgramGet(context.Context) (sdk.ImplResponse, error) {
 
 	log.Println(io)
 
+	casted, err := s.caster.CastProgram(cprog)
+	if err != nil {
+		return sdk.ImplResponse{}, err
+	}
+
 	return sdk.ImplResponse{
-		Code: 0,
-		Body: nil,
+		Code: 200,
+		Body: casted,
 	}, nil
 }
 
@@ -73,7 +176,9 @@ func main() {
 }
 
 func MustNew() Server {
-	s := Server{}
+	s := Server{
+		caster: caster{},
+	}
 	ops := cprog.NewOperators()
 	s.compiler = compiler.MustNew(
 		parser.MustNewYAML(),

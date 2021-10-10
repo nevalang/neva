@@ -2,7 +2,6 @@ import classNames from "classnames"
 import * as React from "react"
 import { EdgeData, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
-import { createConfiguration, DefaultApi } from "../../sdk/"
 import {
   ComponentTypes,
   Connection,
@@ -10,7 +9,7 @@ import {
   Module,
   Program,
 } from "../types/program"
-import { Api } from "../api"
+import { OpenApi } from "../api"
 
 function moduleNodesAndEdges<T>(module: Module): {
   nodes: NodeData<T>[]
@@ -87,14 +86,12 @@ const defaultProgram: Program = {
 }
 
 interface AppProps {
-  api: Api
+  api: OpenApi // FIXME
 }
 
 function App(props: AppProps) {
   const [program, setProgram] = React.useState<Program>(defaultProgram)
 
-  console.log(props)
-  
   React.useEffect(() => {
     async function wrap() {
       try {

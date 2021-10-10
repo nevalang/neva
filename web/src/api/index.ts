@@ -1,30 +1,22 @@
-import { DefaultApi, Module, SDKOperator, Program as SDKProgram } from "../../sdk"
 import {
-  Component,
-  ComponentTypes,
-  Program,
-  Operator,
-  IO,
-} from "../types/program"
+  DefaultApiFactory,
+  Module as SDKModule,
+  Operator as SDKOperator,
+  Program as SDKProgram,
+} from "../generated_web/index"
+import { Component, ComponentTypes, Program, IO } from "../types/program"
 
-export interface Api {
-  getProgram(): Promise<Program>
-}
+const client = DefaultApiFactory(undefined, "http://localhost:8090")
 
 export class OpenApi {
-  client: DefaultApi
-
-  constructor(client: DefaultApi) {
-    this.client = client
-  }
-
   async getProgram(): Promise<Program> {
     try {
-      console.log('here')
-      const resp = await this.client.programGet()
-      const prog = castProgram(resp)
+      const resp = await client.programGet()
+      console.log(resp)
+      const prog = castProgram(resp.data)
       return prog
     } catch (err) {
+      console.log("so", err)
       throw err
     }
   }
@@ -37,7 +29,7 @@ function castProgram(from: SDKProgram) {
   }
 }
 
-function castScope(scope: { [key: string]: SDKOperator | Module }): {
+function castScope(scope: { [key: string]: SDKOperator | SDKModule }): {
   [key: string]: Component
 } {
   const r = {}
@@ -46,24 +38,28 @@ function castScope(scope: { [key: string]: SDKOperator | Module }): {
     const el = scope[k]
     let res: Component
 
-    if (el instanceof SDKOperator) {
+    if ((el as any).deps == undefined) {
       res = {
         type: ComponentTypes.OPERATOR,
-        io: { in: el.io._in, out: el.io.out },
-      } as Operator
+        io: {
+          in: (el as SDKOperator).io.in,
+          out: (el as SDKOperator).io.out,
+        },
+      }
     } else {
       const deps: { [key: string]: IO } = {}
-      for (const k in el.deps) {
-        const dep = el.deps[k]
-        deps[k] = { in: dep._in, out: dep.out }
+
+      for (const k in (el as SDKModule).deps) {
+        const dep = (el as SDKModule).deps[k]
+        deps[k] = { in: dep.in, out: dep.out }
       }
 
       res = {
         type: ComponentTypes.MODULE,
-        io: { in: el.io._in, out: el.io.out },
+        io: { in: el.io.in, out: el.io.out },
         deps: deps,
-        workers: el.workers,
-        net: el.het.map(v => ({
+        workers: (el as SDKModule).workers,
+        net: (el as SDKModule).het.map(v => ({
           from: {
             node: v.from.node,
             port: v.from.port,

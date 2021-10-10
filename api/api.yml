@@ -1,3 +1,5 @@
+# TODO: add enum and field to components for types
+
 openapi: "3.0.2"
 info:
   title: API Title

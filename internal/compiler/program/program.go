@@ -63,3 +63,11 @@ func (want PortType) Compare(got PortType) error {
 
 	return nil
 }
+
+func (p PortType) String() string {
+	s := p.Type.String()
+	if p.Arr {
+		s += "[]"
+	}
+	return s
+}
