@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,6 +18,8 @@ import (
 	"github.com/emil14/neva/internal/runtime/connector"
 	"github.com/emil14/neva/internal/runtime/operators"
 	rprog "github.com/emil14/neva/internal/runtime/program"
+
+	"github.com/emil14/neva/pkg/sdk"
 )
 
 type Server struct {
@@ -24,17 +27,17 @@ type Server struct {
 	runtime  runtime.Runtime
 }
 
-func (s Server) handle(w http.ResponseWriter, r *http.Request) {
+func (s Server) ProgramGet(context.Context) (sdk.ImplResponse, error) {
 	p, err := filepath.Abs("../../examples/program/pkg.yml")
 	if err != nil {
 		log.Println(err)
-		return
+		return sdk.ImplResponse{}, err
 	}
 
 	prog, cprog, err := s.compiler.PreCompile(p)
 	if err != nil {
 		log.Println(err)
-		return
+		return sdk.ImplResponse{}, err
 	}
 
 	log.Println(cprog)
@@ -42,11 +45,15 @@ func (s Server) handle(w http.ResponseWriter, r *http.Request) {
 	io, err := s.runtime.Run(prog)
 	if err != nil {
 		log.Println(err)
-		return
+		return sdk.ImplResponse{}, err
 	}
 
 	log.Println(io)
 
+	return sdk.ImplResponse{
+		Code: 0,
+		Body: nil,
+	}, nil
 }
 
 func (s Server) onSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
@@ -59,9 +66,10 @@ func (s Server) onReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAdd
 }
 
 func main() {
-	s := MustNew()
-	http.HandleFunc("/", s.handle)
-	http.ListenAndServe(":8090", nil)
+	srv := MustNew()
+	ctrl := sdk.NewDefaultApiController(srv)
+	r := sdk.NewRouter(ctrl)
+	http.ListenAndServe(":8090", r)
 }
 
 func MustNew() Server {

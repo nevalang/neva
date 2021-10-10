@@ -1,9 +1,8 @@
 import classNames from "classnames"
 import * as React from "react"
-import { EdgeData, hasLink, NodeData, PortData, removeNode } from "reaflow"
+import { EdgeData, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
-import { RestApi } from "../api/rest"
-import { Dispatcher } from "~store/actions"
+import { createConfiguration, DefaultApi } from "../../sdk/"
 import {
   ComponentTypes,
   Connection,
@@ -11,6 +10,7 @@ import {
   Module,
   Program,
 } from "../types/program"
+import { Api } from "../api"
 
 function moduleNodesAndEdges<T>(module: Module): {
   nodes: NodeData<T>[]
@@ -70,8 +70,6 @@ function netEdges(net: Connection[]): EdgeData[] {
   }))
 }
 
-const api = new RestApi(process.env.API_ADDR)
-
 const defaultProgram: Program = {
   root: "",
   scope: {
@@ -88,13 +86,19 @@ const defaultProgram: Program = {
   },
 }
 
-function App() {
+interface AppProps {
+  api: Api
+}
+
+function App(props: AppProps) {
   const [program, setProgram] = React.useState<Program>(defaultProgram)
 
+  console.log(props)
+  
   React.useEffect(() => {
     async function wrap() {
       try {
-        const program = await api.getProgram("")
+        const program = await props.api.getProgram()
         setProgram(program)
       } catch (err) {
         console.error(err)

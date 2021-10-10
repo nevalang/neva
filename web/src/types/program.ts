@@ -1,17 +1,6 @@
 export interface Program {
-  // descriptor?: ProgramDescriptor
   scope: { [key: string]: Component }
   root: string
-}
-
-export interface ProgramDescriptor {
-  path: string
-  content: string
-}
-
-export enum ComponentTypes {
-  OPERATOR,
-  MODULE,
 }
 
 export type Component = Operator | Module
@@ -19,7 +8,6 @@ export type Component = Operator | Module
 export interface Operator {
   type: ComponentTypes.OPERATOR
   io: IO
-  // name: string
 }
 
 export interface Module {
@@ -30,14 +18,14 @@ export interface Module {
   workers: { [key: string]: string }
 }
 
-export interface IO {
-  in: { [key: string]: TypeDescriptor }
-  out: { [key: string]: TypeDescriptor }
+export enum ComponentTypes {
+  OPERATOR,
+  MODULE,
 }
 
-export interface TypeDescriptor {
-  typeName: string
-  genericArguments: TypeDescriptor[]
+export interface IO {
+  in: { [key: string]: string }
+  out: { [key: string]: string }
 }
 
 export interface Connection {

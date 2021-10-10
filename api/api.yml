@@ -14,11 +14,13 @@ components:
         scope:
           type: object
           additionalProperties:
-            oneOf:
-              - $ref: "#/components/schemas/Operator"
-              - $ref: "#/components/schemas/Module"
+            $ref: "#/components/schemas/Component"
         root:
           type: string
+    Component:
+      oneOf:
+        - $ref: "#/components/schemas/Operator"
+        - $ref: "#/components/schemas/Module"
     Operator:
       type: object
       properties:
