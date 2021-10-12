@@ -42,6 +42,7 @@ function createWorkerNodes(module: Module): NodeData[] {
 function node(name: string, io: IO): NodeData {
   return {
     id: name,
+    text: name,
     ports: ports(io),
   }
 }
@@ -63,9 +64,9 @@ function netEdges(net: Connection[]): EdgeData[] {
   return net.map<EdgeData>(({ from, to }) => ({
     id: `${from.node}.${from.port}[${from.idx}]-${to.node}.${to.port}[${to.idx}]`,
     from: from.node,
-    fromPort: `${from.port}[${from.idx}]`,
+    fromPort: from.port, // TODO: array ports
     to: to.node,
-    toPort: `${to.port}[${to.idx}]`,
+    toPort: to.port,
   }))
 }
 
@@ -93,7 +94,7 @@ function App(props: AppProps) {
   const [program, setProgram] = React.useState<Program>(defaultProgram)
 
   React.useEffect(() => {
-    async function wrap() {
+    async function aux() {
       try {
         const program = await props.api.getProgram()
         setProgram(program)
@@ -101,11 +102,13 @@ function App(props: AppProps) {
         console.error(err)
       }
     }
-    wrap()
+    aux()
   }, [])
 
   const root = program.scope[program.root] as Module
   const { nodes, edges } = moduleNodesAndEdges(root)
+
+  console.log(nodes, edges)
 
   return (
     <div
@@ -118,33 +121,7 @@ function App(props: AppProps) {
         background: "#171010",
       }}
     >
-      <rf.Canvas
-        nodes={nodes}
-        edges={edges}
-        onNodeLink={(_, fromNode, toNode) => {}}
-        edge={<rf.Edge />}
-        node={node => (
-          <rf.Node
-            className={classNames("node", {})}
-            style={{ transition: "none" }}
-            dragType="port"
-            port={
-              <rf.Port
-                onDragStart={(...a) => console.log("start", ...a)}
-                onDragEnd={(...a) => console.log("end", ...a)}
-                style={{
-                  fill: "#5c3f9b",
-                  stroke: "#000000",
-                  strokeWidth: "1px",
-                }}
-                rx={10}
-                ry={10}
-              />
-            }
-            remove={<rf.Remove />}
-          />
-        )}
-      />
+      <rf.Canvas nodes={nodes} edges={edges} />
     </div>
   )
 }
