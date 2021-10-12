@@ -18,7 +18,6 @@ import (
 	"github.com/emil14/neva/internal/runtime/connector"
 	"github.com/emil14/neva/internal/runtime/operators"
 	rprog "github.com/emil14/neva/internal/runtime/program"
-
 	"github.com/emil14/neva/pkg/sdk"
 )
 
@@ -172,7 +171,11 @@ func main() {
 	srv := MustNew()
 	ctrl := sdk.NewDefaultApiController(srv)
 	r := sdk.NewRouter(ctrl)
-	http.ListenAndServe(":8090", r)
+
+	log.Println("listening http://localhost:8090")
+	if err := http.ListenAndServe(":8090", r); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func MustNew() Server {
