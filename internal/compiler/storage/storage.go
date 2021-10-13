@@ -100,10 +100,6 @@ func (h httpClient) module(repo, tag, filename string) ([]byte, error) {
 		Path:   fmt.Sprintf("%s/%s/%s.yml", repo, tag, filename),
 	}
 
-	fmt.Println(u.String())
-
-	// https://raw.githubusercontent.com/emil14/neva-shared/0.0.2/square.yml
-
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err

@@ -1,7 +1,9 @@
 export interface Program {
-  scope: { [key: string]: Component }
+  scope: Components
   root: string
 }
+
+export type Components = { [key: string]: Component }
 
 export type Component = Operator | Module
 
@@ -36,5 +38,5 @@ export interface Connection {
 export interface PortAddr {
   node: string
   port: string
-  idx: number
+  idx?: number
 }

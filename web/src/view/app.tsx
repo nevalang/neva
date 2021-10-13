@@ -1,6 +1,6 @@
-import classNames from "classnames"
+// import classNames from "classnames"
 import * as React from "react"
-import { EdgeData, NodeData, PortData } from "reaflow"
+import { EdgeData, hasLink, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
 import {
   ComponentTypes,
@@ -9,7 +9,7 @@ import {
   Module,
   Program,
 } from "../types/program"
-import { OpenApi } from "../api"
+import { Api } from "../api"
 
 function moduleNodesAndEdges<T>(module: Module): {
   nodes: NodeData<T>[]
@@ -61,13 +61,27 @@ function ports(io: IO): PortData[] {
 }
 
 function netEdges(net: Connection[]): EdgeData[] {
-  return net.map<EdgeData>(({ from, to }) => ({
-    id: `${from.node}.${from.port}[${from.idx}]-${to.node}.${to.port}[${to.idx}]`,
-    from: from.node,
-    fromPort: from.port, // TODO: array ports
-    to: to.node,
-    toPort: to.port,
-  }))
+  return net.map<EdgeData>(({ from, to }) => {
+    let fromStr = `${from.node}.${from.port}`
+    if (from.idx !== undefined) {
+      fromStr += `[${from.idx}]`
+    }
+
+    let toStr = `${to.node}.${to.port}`
+    if (to.idx !== undefined) {
+      toStr += `[${to.idx}]`
+    }
+
+    const id = `${fromStr}-${toStr}`
+    return {
+      id,
+      from: from.node,
+      fromPort: from.port, // TODO: array ports
+      to: to.node,
+      toPort: to.port,
+      text: id,
+    }
+  })
 }
 
 const defaultProgram: Program = {
@@ -87,11 +101,13 @@ const defaultProgram: Program = {
 }
 
 interface AppProps {
-  api: OpenApi // FIXME
+  api: Api
 }
 
 function App(props: AppProps) {
   const [program, setProgram] = React.useState<Program>(defaultProgram)
+  const [selections, setSelections] = React.useState<string[]>([])
+  const [draggingPort, setDraggingPort] = React.useState("")
 
   React.useEffect(() => {
     async function aux() {
@@ -108,8 +124,6 @@ function App(props: AppProps) {
   const root = program.scope[program.root] as Module
   const { nodes, edges } = moduleNodesAndEdges(root)
 
-  console.log(nodes, edges)
-
   return (
     <div
       style={{
@@ -121,7 +135,64 @@ function App(props: AppProps) {
         background: "#171010",
       }}
     >
-      <rf.Canvas nodes={nodes} edges={edges} />
+      <rf.Canvas
+        maxWidth={window.innerWidth}
+        maxHeight={window.innerHeight}
+        nodes={nodes}
+        edges={edges}
+        selections={selections}
+        onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
+        onCanvasClick={() => setSelections([])}
+        onNodeLink={(_, fromNode, toNode) => {
+          // TODO link ports, not nodes!
+          // setEdges([
+          //   ...edges,
+          //   {
+          //     id: `${fromNode.id}-${toNode.id}`,
+          //     from: fromNode.id,
+          //     to: toNode.id,
+          //   },
+          // ]);
+        }}
+        node={
+          <rf.Node
+            className="node"
+            dragType="port"
+            // onEnter={(_, port) => console.log(port)}
+            // onLeave={(_, port) => console.log(port)}
+            onClick={(_, node) => setSelections([node.id])}
+            onRemove={(_event, node) => {
+              // const results = removeNode(nodes, edges, [node.id]);
+              // setNodes(results.nodes);
+              // setEdges(results.edges);
+            }}
+            port={
+              <rf.Port
+                onClick={(_, port) => setSelections([port.id])}
+                // onEnter={(_, port) => console.log(port)}
+                // onLeave={(_, port) => console.log(port)}
+                onDragStart={(...a) => console.log("start", ...a)}
+                onDragEnd={(...a) => console.log("end", ...a)}
+                style={{ fill: "black", stroke: "white", strokeWidth: "1px" }}
+                rx={10}
+                ry={10}
+              />
+            }
+          />
+        }
+        edge={edge => (
+          <rf.Edge
+            onClick={(_, edge) => setSelections([edge.id])}
+            // onEnter={console.log}
+            // onLeave={console.log}
+            onRemove={(_, e) => {
+              // setEdges(edges.filter(edge => edge.id !== e.id))
+            }}
+            onAdd={console.log}
+          />
+        )}
+        animated={false}
+      />
     </div>
   )
 }

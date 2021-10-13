@@ -137,8 +137,6 @@ func (s Server) ProgramGet(context.Context) (sdk.ImplResponse, error) {
 		return sdk.ImplResponse{}, err
 	}
 
-	log.Println(cprog)
-
 	io, err := s.runtime.Run(prog)
 	if err != nil {
 		log.Println(err)
