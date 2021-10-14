@@ -10,9 +10,10 @@ go_sdk:
 		-g go-server  \
 		-o /app/generated_go_sdk \
 		--additional-properties=isGoSubmodule=false,packageName=sdk,featureCORS=true && \
-		rm -rf pkg/sdk && \
-		mv generated_go_sdk/go pkg/sdk && \
-		rm -rf generated_go_sdk
+		
+# rm -rf pkg/sdk && \
+# mv generated_go_sdk/go pkg/sdk && \
+# rm -rf generated_go_sdk
 
 .PHONY: ts_sdk
 ts_sdk:
@@ -20,7 +21,7 @@ ts_sdk:
 		-v ${PWD}:/app openapitools/openapi-generator-cli generate \
 		-i /app/api/api.yml \
 		-o /app/generated_ts_sdk \
-		-g typescript \
+		-g typescript-axios \
 		--additional-properties=supportsES6=true
 
 # rm -rf web/src/sdk 

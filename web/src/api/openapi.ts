@@ -5,7 +5,7 @@ import {
   Component as SDKComponent,
   Operator as SDKOperator,
   Program as SDKProgram,
-} from "../generated_web/index"
+} from "../sdk"
 import {
   Component,
   ComponentTypes,
@@ -24,14 +24,22 @@ export class OpenApi implements Api {
     this.client = DefaultApiFactory(undefined, backendURL)
   }
 
-  async getProgram(): Promise<Program> {
+  async getProgram(path: string): Promise<Program> {
     try {
-      const resp = await this.client.programGet()
+      const resp = await this.client.programGet(path)
       console.log(resp)
       return this.castProgram(resp.data)
     } catch (err) {
       throw err
     }
+  }
+
+  async createProgram(path: string, program: Program): Promise<Program> {
+    throw new Error("not implemented")
+  }
+
+  async editProgram(path: string, program: Program): Promise<Program> {
+    throw new Error("not implemented")
   }
 
   castProgram(from: SDKProgram): Program {
