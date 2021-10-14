@@ -10,6 +10,7 @@ import {
   Program,
 } from "../types/program"
 import { Api } from "../api"
+import { Network } from "./network"
 
 function netGraph<T>(module: Module): {
   nodes: NodeData<T>[]
@@ -101,19 +102,34 @@ const defaultProgram: Program = {
 }
 
 interface AppProps {
-  api: Api
+  api: Api // TODO
 }
 
 function App(props: AppProps) {
-  const [program, setProgram] = React.useState<Program>(defaultProgram)
-  const [selections, setSelections] = React.useState<string[]>([])
-  const [draggingPort, setDraggingPort] = React.useState("")
+  const [state, setState] = React.useState({
+    program: defaultProgram,
+    activeModuleName: defaultProgram.root,
+  })
+
+  const moduleName = (nodeName: string, program: Program): string => {
+    if (nodeName == "in" || nodeName == "out") {
+      return state.activeModuleName
+    }
+
+    const root = program.scope[state.activeModuleName] as Module
+    const dep = root.workers[nodeName]
+    if (dep === undefined) {
+      return state.activeModuleName
+    }
+
+    return dep
+  }
 
   React.useEffect(() => {
     async function aux() {
       try {
         const program = await props.api.getProgram("examples/program/pkg")
-        setProgram(program)
+        setState({ program: program, activeModuleName: program.root })
       } catch (err) {
         console.error(err)
       }
@@ -121,79 +137,16 @@ function App(props: AppProps) {
     aux()
   }, [])
 
-  const root = program.scope[program.root] as Module
-  const { nodes, edges } = netGraph(root)
-
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        background: "#171010",
+    <Network
+      module={state.program.scope[state.activeModuleName] as Module}
+      onNodeClick={(nodeName: string) => {
+        setState({
+          program: state.program,
+          activeModuleName: moduleName(nodeName, state.program),
+        })
       }}
-    >
-      <rf.Canvas
-        maxWidth={window.innerWidth}
-        maxHeight={window.innerHeight}
-        nodes={nodes}
-        edges={edges}
-        selections={selections}
-        onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
-        onCanvasClick={() => setSelections([])}
-        onNodeLink={(_, fromNode, toNode) => {
-          // TODO link ports, not nodes!
-          // setEdges([
-          //   ...edges,
-          //   {
-          //     id: `${fromNode.id}-${toNode.id}`,
-          //     from: fromNode.id,
-          //     to: toNode.id,
-          //   },
-          // ]);
-        }}
-        node={
-          <rf.Node
-            className="node"
-            dragType="port"
-            // onEnter={(_, port) => console.log(port)}
-            // onLeave={(_, port) => console.log(port)}
-            onClick={(_, node) => setSelections([node.id])}
-            onRemove={(_event, node) => {
-              // const results = removeNode(nodes, edges, [node.id]);
-              // setNodes(results.nodes);
-              // setEdges(results.edges);
-            }}
-            port={
-              <rf.Port
-                onClick={(_, port) => setSelections([port.id])}
-                // onEnter={(_, port) => console.log(port)}
-                // onLeave={(_, port) => console.log(port)}
-                onDragStart={(...a) => console.log("start", ...a)}
-                onDragEnd={(...a) => console.log("end", ...a)}
-                style={{ fill: "black", stroke: "white", strokeWidth: "1px" }}
-                rx={10}
-                ry={10}
-              />
-            }
-          />
-        }
-        edge={edge => (
-          <rf.Edge
-            onClick={(_, edge) => setSelections([edge.id])}
-            // onEnter={console.log}
-            // onLeave={console.log}
-            onRemove={(_, e) => {
-              // setEdges(edges.filter(edge => edge.id !== e.id))
-            }}
-            onAdd={console.log}
-          />
-        )}
-        animated={false}
-      />
-    </div>
+    />
   )
 }
 

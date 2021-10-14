@@ -15,19 +15,22 @@
     "@types/node": "^16.10.2",
     "@types/react": "^17.0.21",
     "@types/react-dom": "^17.0.9",
+    "@types/react-router": "^5.1.17",
     "parcel-bundler": "^1.12.5",
     "typescript": "^4.4.2"
   },
   "dependencies": {
     "axios": "^0.22.0",
     "classnames": "^2.3.1",
+    "es6-promise": "^4.2.4",
     "gene": "^0.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-router": "^5.2.1",
+    "react-router-dom": "^5.3.0",
     "reaflow": "^4.2.1",
-    "whatwg-fetch": "^3.0.0",
-    "es6-promise": "^4.2.4",
-    "url-parse": "^1.4.3"
+    "url-parse": "^1.4.3",
+    "whatwg-fetch": "^3.0.0"
   },
   "browserslist": [
     "last 3 firefox versions",
