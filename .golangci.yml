@@ -1,3 +1,8 @@
+run:
+  skip-dirs:
+    - pkg/sdk
+  timeout: 1m
+
 linters:
   enable-all: true
   disable:

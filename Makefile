@@ -22,7 +22,7 @@ ts_sdk:
 		-o /app/generated_ts_sdk \
 		-g typescript \
 		--additional-properties=supportsES6=true
-	rm -rf web/src/sdk 
-	mv generated_ts_sdk  web/src/sdk 
-	sudo rm -rf generated_ts_sdk
 
+# rm -rf web/src/sdk 
+# mv generated_ts_sdk  web/src/sdk 
+# sudo rm -rf generated_ts_sdk
