@@ -11,7 +11,7 @@ import {
 } from "../types/program"
 import { Api } from "../api"
 
-function moduleNodesAndEdges<T>(module: Module): {
+function netGraph<T>(module: Module): {
   nodes: NodeData<T>[]
   edges: EdgeData<T>[]
 } {
@@ -112,7 +112,7 @@ function App(props: AppProps) {
   React.useEffect(() => {
     async function aux() {
       try {
-        const program = await props.api.getProgram()
+        const program = await props.api.getProgram("examples/program/pkg")
         setProgram(program)
       } catch (err) {
         console.error(err)
@@ -122,7 +122,7 @@ function App(props: AppProps) {
   }, [])
 
   const root = program.scope[program.root] as Module
-  const { nodes, edges } = moduleNodesAndEdges(root)
+  const { nodes, edges } = netGraph(root)
 
   return (
     <div

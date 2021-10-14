@@ -10,8 +10,11 @@
 package sdk
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // DefaultApiController binds http requests to an api service and writes the service results to the http response
@@ -53,12 +56,80 @@ func (c *DefaultApiController) Routes() Routes {
 			"/program",
 			c.ProgramGet,
 		},
+		{
+			"ProgramPatch",
+			strings.ToUpper("Patch"),
+			"/program",
+			c.ProgramPatch,
+		},
+		{
+			"ProgramPost",
+			strings.ToUpper("Post"),
+			"/program",
+			c.ProgramPost,
+		},
 	}
 }
 
 // ProgramGet -
 func (c *DefaultApiController) ProgramGet(w http.ResponseWriter, r *http.Request) {
-	result, err := c.service.ProgramGet(r.Context())
+	params := mux.Vars(r)
+	pathParam := params["path"]
+
+	result, err := c.service.ProgramGet(r.Context(), pathParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// ProgramPatch -
+func (c *DefaultApiController) ProgramPatch(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	pathParam := params["path"]
+
+	programParam := Program{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&programParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertProgramRequired(programParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.ProgramPatch(r.Context(), pathParam, programParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProgramPost -
+func (c *DefaultApiController) ProgramPost(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	pathParam := params["path"]
+
+	programParam := Program{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&programParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertProgramRequired(programParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.ProgramPost(r.Context(), pathParam, programParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

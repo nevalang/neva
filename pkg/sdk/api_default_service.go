@@ -11,8 +11,8 @@ package sdk
 
 import (
 	"context"
-	"net/http"
 	"errors"
+	"net/http"
 )
 
 // DefaultApiService is a service that implements the logic for the DefaultApiServicer
@@ -26,8 +26,8 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-// ProgramGet - 
-func (s *DefaultApiService) ProgramGet(ctx context.Context) (ImplResponse, error) {
+// ProgramGet -
+func (s *DefaultApiService) ProgramGet(ctx context.Context, path string) (ImplResponse, error) {
 	// TODO - update ProgramGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -38,4 +38,32 @@ func (s *DefaultApiService) ProgramGet(ctx context.Context) (ImplResponse, error
 	//return Response(500, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("ProgramGet method not implemented")
+}
+
+// ProgramPatch -
+func (s *DefaultApiService) ProgramPatch(ctx context.Context, path string, program Program) (ImplResponse, error) {
+	// TODO - update ProgramPatch with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, Program{}) or use other options such as http.Ok ...
+	//return Response(200, Program{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	//return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProgramPatch method not implemented")
+}
+
+// ProgramPost -
+func (s *DefaultApiService) ProgramPost(ctx context.Context, path string, program Program) (ImplResponse, error) {
+	// TODO - update ProgramPost with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, Program{}) or use other options such as http.Ok ...
+	//return Response(200, Program{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	//return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProgramPost method not implemented")
 }

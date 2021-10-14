@@ -1,3 +1,5 @@
+- https://openapi-generator.tech/docs/generators/go-server
+
 # Neva
 
 Flow Based Programming Environment

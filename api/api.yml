@@ -75,7 +75,57 @@ components:
 
 paths:
   /program:
+    post:
+      parameters:
+        - in: path
+          name: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Program"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+        "500":
+          description: Request failed
     get:
+      parameters:
+        - in: path
+          name: path
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+        "500":
+          description: Request failed
+    patch:
+      parameters:
+        - in: path
+          name: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Program"
       responses:
         "200":
           description: Success

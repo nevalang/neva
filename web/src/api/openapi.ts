@@ -27,6 +27,7 @@ export class OpenApi implements Api {
   async getProgram(): Promise<Program> {
     try {
       const resp = await this.client.programGet()
+      console.log(resp)
       return this.castProgram(resp.data)
     } catch (err) {
       throw err

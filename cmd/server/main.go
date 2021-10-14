@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/emil14/neva/internal/compiler"
@@ -25,6 +26,94 @@ type Server struct {
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
 	caster   Caster
+}
+
+func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	p, err := filepath.Abs(filepath.Join(dir, "../../examples/program/pkg.yml"))
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	prog, cprog, err := s.compiler.PreCompile(p)
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	io, err := s.runtime.Run(prog)
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	log.Println(io)
+
+	casted, err := s.caster.CastProgram(cprog)
+	if err != nil {
+		return sdk.ImplResponse{}, err
+	}
+
+	return sdk.ImplResponse{
+		Code: 200,
+		Body: casted,
+	}, nil
+}
+
+func (s Server) ProgramPatch(context.Context, string, sdk.Program) (sdk.ImplResponse, error) {
+	return sdk.ImplResponse{
+		Code: 0,
+		Body: nil,
+	}, nil
+}
+
+func (s Server) ProgramPost(context.Context, string, sdk.Program) (sdk.ImplResponse, error) {
+	return sdk.ImplResponse{
+		Code: 0,
+		Body: nil,
+	}, nil
+}
+
+func (s Server) onSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
+	fmt.Println(msg, from, to)
+	return msg
+}
+
+func (s Server) onReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
+	fmt.Println(msg, from, to)
+}
+
+func main() {
+	srv := MustNew()
+	ctrl := sdk.NewDefaultApiController(srv)
+	r := sdk.NewRouter(ctrl)
+
+	log.Println("listening http://localhost:8090")
+	if err := http.ListenAndServe(":8090", r); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func MustNew() Server {
+	s := Server{
+		caster: caster{},
+	}
+	ops := cprog.NewOperators()
+	s.compiler = compiler.MustNew(
+		parser.MustNewYAML(),
+		validator.New(),
+		translator.New(ops),
+		coder.New(),
+		storage.MustNew(""),
+		ops,
+	)
+	s.runtime = runtime.New(connector.MustNew(operators.New(), s.onSend, s.onReceive))
+	return s
 }
 
 type Caster interface {
@@ -122,73 +211,4 @@ func (c caster) castPorts(from cprog.Ports) map[string]string {
 		to[name] = typ.String()
 	}
 	return to
-}
-
-func (s Server) ProgramGet(context.Context) (sdk.ImplResponse, error) {
-	p, err := filepath.Abs("../../examples/program/pkg.yml")
-	if err != nil {
-		log.Println(err)
-		return sdk.ImplResponse{}, err
-	}
-
-	prog, cprog, err := s.compiler.PreCompile(p)
-	if err != nil {
-		log.Println(err)
-		return sdk.ImplResponse{}, err
-	}
-
-	io, err := s.runtime.Run(prog)
-	if err != nil {
-		log.Println(err)
-		return sdk.ImplResponse{}, err
-	}
-
-	log.Println(io)
-
-	casted, err := s.caster.CastProgram(cprog)
-	if err != nil {
-		return sdk.ImplResponse{}, err
-	}
-
-	return sdk.ImplResponse{
-		Code: 200,
-		Body: casted,
-	}, nil
-}
-
-func (s Server) onSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
-	fmt.Println(msg, from, to)
-	return msg
-}
-
-func (s Server) onReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
-	fmt.Println(msg, from, to)
-}
-
-func main() {
-	srv := MustNew()
-	ctrl := sdk.NewDefaultApiController(srv)
-	r := sdk.NewRouter(ctrl)
-
-	log.Println("listening http://localhost:8090")
-	if err := http.ListenAndServe(":8090", r); err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func MustNew() Server {
-	s := Server{
-		caster: caster{},
-	}
-	ops := cprog.NewOperators()
-	s.compiler = compiler.MustNew(
-		parser.MustNewYAML(),
-		validator.New(),
-		translator.New(ops),
-		coder.New(),
-		storage.MustNew(""),
-		ops,
-	)
-	s.runtime = runtime.New(connector.MustNew(operators.New(), s.onSend, s.onReceive))
-	return s
 }
