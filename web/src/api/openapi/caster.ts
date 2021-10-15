@@ -1,46 +1,21 @@
-import { AxiosPromise } from "axios"
 import {
-  DefaultApiFactory,
   Module as SDKModule,
   Component as SDKComponent,
   Operator as SDKOperator,
   Program as SDKProgram,
-} from "../sdk"
+} from "../../sdk"
+
 import {
   Component,
   ComponentTypes,
   Program,
   IO,
   Components,
-} from "../types/program"
-import { Api } from "./"
+} from "../../types/program"
 
-export class OpenApi implements Api {
-  client: {
-    programGet(options?: any): AxiosPromise<SDKProgram>
-  }
+import { Caster } from "."
 
-  constructor(backendURL: string) {
-    this.client = DefaultApiFactory(undefined, backendURL)
-  }
-
-  async getProgram(path: string): Promise<Program> {
-    try {
-      const resp = await this.client.programGet(path)
-      return this.castProgram(resp.data)
-    } catch (err) {
-      throw err
-    }
-  }
-
-  async createProgram(path: string, program: Program): Promise<Program> {
-    throw new Error("not implemented")
-  }
-
-  async editProgram(path: string, program: Program): Promise<Program> {
-    throw new Error("not implemented")
-  }
-
+export class CasterImpl implements Caster {
   castProgram(from: SDKProgram): Program {
     return {
       root: from.root,

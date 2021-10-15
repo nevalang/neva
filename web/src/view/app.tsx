@@ -1,7 +1,8 @@
 // import classNames from "classnames"
 import * as React from "react"
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom"
 import { EdgeData, hasLink, NodeData, PortData } from "reaflow"
-import * as rf from "reaflow"
+
 import {
   ComponentTypes,
   Connection,
@@ -138,15 +139,24 @@ function App(props: AppProps) {
   }, [])
 
   return (
-    <Network
-      module={state.program.scope[state.activeModuleName] as Module}
-      onNodeClick={(nodeName: string) => {
-        setState({
-          program: state.program,
-          activeModuleName: moduleName(nodeName, state.program),
-        })
-      }}
-    />
+    <Router>
+      <Switch>
+        <Route path="/menu">
+          <Menu />
+        </Route>
+        <Route path="/">
+          <Network
+            module={state.program.scope[state.activeModuleName] as Module}
+            onNodeClick={(nodeName: string) => {
+              setState({
+                program: state.program,
+                activeModuleName: moduleName(nodeName, state.program),
+              })
+            }}
+          />
+        </Route>
+      </Switch>
+    </Router>
   )
 }
 

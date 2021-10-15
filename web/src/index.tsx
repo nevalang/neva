@@ -7,9 +7,4 @@ import { App } from "./view/app"
 
 const api = new OpenApi("http://localhost:8090") // TODO use env
 
-ReactDOM.render(
-  <Router>
-    <App api={api} />
-  </Router>,
-  document.getElementById("root")
-)
+ReactDOM.render(<App api={api} />, document.getElementById("root"))
