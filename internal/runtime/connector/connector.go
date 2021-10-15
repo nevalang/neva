@@ -21,14 +21,14 @@ func (cnctr Connector) ConnectSubnet(cc []runtime.Connection) {
 
 func (cnctr Connector) connectConnection(conn runtime.Connection) {
 	for msg := range conn.From.Ch {
-		cnctr.interceptor.onSend(msg, conn.From.Addr, nil)
+		cnctr.interceptor.OnSend(msg, conn.From.Addr, nil)
 
 		for i := range conn.To {
 			to := conn.To[i]
 
 			go func(m runtime.Msg) {
 				to.Ch <- m
-				cnctr.interceptor.onReceive(m, conn.From.Addr, to.Addr)
+				cnctr.interceptor.OnReceive(m, conn.From.Addr, to.Addr)
 			}(msg)
 		}
 	}
@@ -48,8 +48,8 @@ func (c Connector) ConnectOperator(name string, io runtime.IO) error {
 }
 
 type Interceptor interface {
-	onSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
-	onReceive(msg runtime.Msg, from, to program.PortAddr)
+	OnSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
+	OnReceive(msg runtime.Msg, from, to program.PortAddr)
 }
 
 type interceptor struct {
@@ -65,28 +65,22 @@ func (i interceptor) onReceive(msg runtime.Msg, from, to program.PortAddr) {
 	i.receive(msg, from, to)
 }
 
-func New(
-	operators map[string]runtime.Operator,
-	// TODO: use Interceptor types
-	onSend func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg,
-	onReceive func(msg runtime.Msg, from, to program.PortAddr),
-) (Connector, error) {
-	if operators == nil || onSend == nil || onReceive == nil {
+func New(operators map[string]runtime.Operator, interceptor Interceptor) (Connector, error) {
+	if operators == nil || interceptor == nil {
 		return Connector{}, errors.New("init connector")
 	}
 
 	return Connector{
 		operators,
-		interceptor{onSend, onReceive},
+		interceptor,
 	}, nil
 }
 
 func MustNew(
 	ops map[string]runtime.Operator,
-	onSend func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg,
-	onReceive func(msg runtime.Msg, from, to program.PortAddr),
+	interceptor Interceptor,
 ) Connector {
-	c, err := New(ops, onSend, onReceive)
+	c, err := New(ops, interceptor)
 	if err != nil {
 		panic(err)
 	}

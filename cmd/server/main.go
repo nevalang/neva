@@ -17,7 +17,7 @@ import (
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
-	"github.com/emil14/neva/internal/runtime/operators"
+	"github.com/emil14/neva/internal/runtime/operators/loader"
 	rprog "github.com/emil14/neva/internal/runtime/program"
 	"github.com/emil14/neva/pkg/sdk"
 )
@@ -34,7 +34,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		log.Fatal(err)
 	}
 
-	p, err := filepath.Abs(filepath.Join(dir, "../../examples/program/pkg.yml"))
+	p, err := filepath.Abs(filepath.Join(dir, "examples/program/pkg.yml"))
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -79,12 +79,12 @@ func (s Server) ProgramPost(context.Context, string, sdk.Program) (sdk.ImplRespo
 	}, nil
 }
 
-func (s Server) onSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
+func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
 	fmt.Println(msg, from, to)
 	return msg
 }
 
-func (s Server) onReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
+func (s Server) OnReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
 	fmt.Println(msg, from, to)
 }
 
@@ -103,16 +103,35 @@ func MustNew() Server {
 	s := Server{
 		caster: caster{},
 	}
-	ops := cprog.NewOperators()
+
+	compilerOps := cprog.NewOperators()
+
 	s.compiler = compiler.MustNew(
 		parser.MustNewYAML(),
 		validator.New(),
-		translator.New(ops),
+		translator.New(compilerOps),
 		coder.New(),
 		storage.MustNew(""),
-		ops,
+		compilerOps,
 	)
-	s.runtime = runtime.New(connector.MustNew(operators.New(), s.onSend, s.onReceive))
+
+	opspaths, err := loader.Load(map[string]loader.Params{
+		"*": {
+			PluginPath:     "plugins/mul.so",
+			ExportedEntity: "Mul",
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	s.runtime = runtime.New(
+		connector.MustNew(
+			opspaths,
+			s,
+		),
+	)
+
 	return s
 }
 

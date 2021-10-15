@@ -11,3 +11,5 @@ Flow Based Programming Environment
 - Docker
 - Go
 - NodeJS and NPM
+
+docker run --rm -it $(docker build -q .)

@@ -10,6 +10,8 @@ import (
 var ErrPortNotFound = errors.New("port not found")
 
 type (
+	// TODO: hide implementation behind interface in order to free operators from this code
+	// or move operators related code to separate package
 	Runtime struct {
 		cnctr Connector
 	}
@@ -208,23 +210,12 @@ func (ports Ports) Port(port string, idx uint8) (chan Msg, error) {
 	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, ports)
 }
 
-// PortAddr describes port address in the
-// type PortAddr struct {
-// 	node, port string // useful for runtime hooks
-// 	idx        uint8  // always 0 with not array ports
-// }
-
-// func (addr PortAddr) String() string {
-// 	return fmt.Sprintf("%s.%s", addr.node, addr.port)
-// }
-
 func New(connector Connector) Runtime {
 	return Runtime{
 		cnctr: connector,
 	}
 }
 
-// AbsPortAddr represents absolute port address in the program's network.
 type AbsPortAddr struct {
 	port Port
 	path []string

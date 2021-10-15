@@ -1,3 +1,0 @@
-package operators
-
-// func Adapter()

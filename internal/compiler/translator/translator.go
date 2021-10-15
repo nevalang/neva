@@ -2,6 +2,8 @@ package translator
 
 import (
 	"errors"
+	"fmt"
+	"log"
 
 	compiler "github.com/emil14/neva/internal/compiler/program"
 	runtime "github.com/emil14/neva/internal/runtime/program"
@@ -14,7 +16,8 @@ type Translator struct {
 func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	component, ok := prog.Components[prog.Root]
 	if !ok {
-		return runtime.Program{}, errors.New("!ok prog.Components[prog.Root]")
+		log.Println(prog.Components)
+		return runtime.Program{}, fmt.Errorf("could not find %s component", prog.Root)
 	}
 
 	io := component.Interface()
@@ -29,6 +32,11 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		out[port] = 0 // array-ports not allowed for root components for now.
 	}
 
+	scope, err := t.components(prog.Components)
+	if err != nil {
+		return runtime.Program{}, err
+	}
+
 	return runtime.Program{
 		RootNodeMeta: runtime.NodeMeta{
 			Name:          "root",
@@ -36,11 +44,11 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 			In:            in,
 			Out:           out,
 		},
-		Scope: t.components(prog.Components),
+		Scope: scope,
 	}, nil
 }
 
-func (t Translator) components(components map[string]compiler.Component) map[string]runtime.Component {
+func (t Translator) components(components map[string]compiler.Component) (map[string]runtime.Component, error) {
 	runtimeComponents := map[string]runtime.Component{}
 
 	for name, component := range components {
@@ -54,7 +62,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 
 		mod, ok := component.(compiler.Module)
 		if !ok {
-			panic("not ok")
+			return nil, errors.New("not ok from translator")
 		}
 
 		workers := map[string]runtime.NodeMeta{}
@@ -86,7 +94,7 @@ func (t Translator) components(components map[string]compiler.Component) map[str
 		}
 	}
 
-	return runtimeComponents
+	return runtimeComponents, nil
 }
 
 func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.PortAddr {

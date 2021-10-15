@@ -16,7 +16,8 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/server"
+      "program": "${workspaceFolder}/cmd/server",
+      "buildFlags": "-buildmode=plugin"
     }
   ]
 }

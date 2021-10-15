@@ -142,7 +142,7 @@ function App(props: AppProps) {
     <Router>
       <Switch>
         <Route path="/menu">
-          <Menu />
+          {/* <Menu /> */}
         </Route>
         <Route path="/">
           <Network
