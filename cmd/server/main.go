@@ -17,7 +17,7 @@ import (
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
-	"github.com/emil14/neva/internal/runtime/operators/loader"
+	"github.com/emil14/neva/internal/runtime/loader"
 	rprog "github.com/emil14/neva/internal/runtime/program"
 	"github.com/emil14/neva/pkg/sdk"
 )
@@ -115,10 +115,29 @@ func MustNew() Server {
 		compilerOps,
 	)
 
+	// TODO: move this step inside runtime's Run method
+	// otherwise any fbp-probram will have all the operators loaded
+	// which makes all the plugin-related effort useless
 	opspaths, err := loader.Load(map[string]loader.Params{
 		"*": {
 			PluginPath:     "plugins/mul.so",
 			ExportedEntity: "Mul",
+		},
+		"&&": {
+			PluginPath:     "plugins/and.so",
+			ExportedEntity: "And",
+		},
+		"||": {
+			PluginPath:     "plugins/or.so",
+			ExportedEntity: "Or",
+		},
+		">": {
+			PluginPath:     "plugins/more.so",
+			ExportedEntity: "More",
+		},
+		"filter": {
+			PluginPath:     "plugins/filter.so",
+			ExportedEntity: "Filter",
 		},
 	})
 	if err != nil {

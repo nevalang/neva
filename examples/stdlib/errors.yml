@@ -1,3 +1,0 @@
-error:
-  msg: str
-  child: error

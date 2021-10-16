@@ -1,3 +1,7 @@
+# Unused output ports
+
+Unused outports should be connected to special /dev/null analog
+
 # Modules visualisation
 
 Im talking about map of modules

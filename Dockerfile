@@ -6,6 +6,7 @@ WORKDIR $GOPATH/src/app
 
 COPY . .
 
+RUN go build -o plugins/get.so -buildmode=plugin internal/runtime/operators/get/main.go
 RUN go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/main.go
 RUN go build -o /bin/nevabin cmd/server/main.go
 

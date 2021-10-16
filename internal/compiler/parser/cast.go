@@ -10,17 +10,23 @@ import (
 
 type caster struct{}
 
-func (c caster) From(mod program.Module) Module {
+func (c caster) From(mod program.Module) module {
 	in, out := c.fromIO(mod.IO)
 	deps := c.fromDeps(mod.Deps)
+	cnst := c.fromConst(mod.Const)
 	net := c.fromNet(mod.Net)
-	return Module{
+	return module{
 		Deps:    deps,
 		In:      in,
 		Out:     out,
+		Const:   cnst,
 		Workers: mod.Workers,
 		Net:     net,
 	}
+}
+
+func (c caster) fromConst(map[string]program.Type) map[string]Const {
+	return map[string]Const{} // TODO
 }
 
 func (c caster) fromIO(io program.IO) (inports, outports) {
@@ -39,7 +45,7 @@ func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
 	result := moduleDeps{}
 	for k, v := range deps {
 		in, out := c.fromIO(v)
-		result[k] = IO{
+		result[k] = io{
 			In:  in,
 			Out: out,
 		}
@@ -51,13 +57,14 @@ func (c caster) fromNet(net program.OutgoingConnections) net {
 	return nil // TODO
 }
 
-func (c caster) To(mod Module) program.Module {
-	return program.NewModule(
-		c.toIO(mod.In, mod.Out),
-		c.toDeps(mod.Deps),
-		map[string]string(mod.Workers),
-		c.toNet(mod.Net),
-	)
+func (c caster) To(mod module) program.Module {
+	return program.Module{
+		IO:      c.toIO(mod.In, mod.Out),
+		Deps:    c.toDeps(mod.Deps),
+		Const:   c.toConst(mod.Const),
+		Workers: map[string]string(mod.Workers),
+		Net:     c.toNet(mod.Net),
+	}
 }
 
 func (c caster) toIO(in inports, out outports) program.IO {
@@ -96,6 +103,14 @@ func (c caster) toDeps(from moduleDeps) map[string]program.IO {
 	}
 
 	return to
+}
+
+func (c caster) toConst(from map[string]Const) map[string]program.Type {
+	res := map[string]program.Type{}
+	for name, cnst := range from {
+		cnst.Value
+	}
+	return map[string]program.Type{} // TODO
 }
 
 func (c caster) toNet(from net) program.OutgoingConnections {

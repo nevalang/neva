@@ -9,6 +9,7 @@ import (
 type Module struct {
 	IO      IO
 	Deps    map[string]IO
+	Const   map[string]Type
 	Workers map[string]string
 	Net     OutgoingConnections
 }

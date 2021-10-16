@@ -1,22 +1,23 @@
 package parser
 
 type Program struct {
-	Deps   progDeps          `yaml:"deps" json:"deps"`
-	Import map[string]string `yaml:"import" json:"import"`
-	Root   string            `yaml:"root" json:"root"`
+	Deps   deps              `yaml:"deps"`
+	Import map[string]string `yaml:"import"`
+	Root   string            `yaml:"root"`
 }
 
-type progDeps map[string]struct {
-	Repo    string `yaml:"repo" json:"repo"`
-	Version string `yaml:"v" json:"v"`
+type deps map[string]struct {
+	Repo    string `yaml:"repo"`
+	Version string `yaml:"v"`
 }
 
-type Module struct {
-	Out     outports   `yaml:"out" json:"out"`         // input ports
-	In      inports    `yaml:"in" json:"in"`           // output ports
-	Deps    moduleDeps `yaml:"deps" json:"deps"`       // deps interfaces
-	Workers workers    `yaml:"workers" json:"workers"` // maps workers to components
-	Net     net        `yaml:"net" json:"net"`         // data flow
+type module struct {
+	In      inports          `yaml:"in"`
+	Out     outports         `yaml:"out"`
+	Deps    moduleDeps       `yaml:"deps"`
+	Const   map[string]Const `yaml:"const"`
+	Workers workers          `yaml:"workers"`
+	Net     net              `yaml:"net"`
 }
 
 type inports ports
@@ -26,11 +27,16 @@ type outports ports
 type ports map[string]string // name -> type
 
 // module -> interface
-type moduleDeps map[string]IO
+type moduleDeps map[string]io
 
-type IO struct {
-	In  inports  `yaml:"in" json:"in"`
-	Out outports `yaml:"out" json:"out"`
+type io struct {
+	In  inports  `yaml:"in"`
+	Out outports `yaml:"out"`
+}
+
+type Const struct {
+	Type  string      `yaml:"type"`
+	Value interface{} `yaml:"value"`
 }
 
 type workers map[string]string // worker -> dep

@@ -1,0 +1,69 @@
+in:
+  num: int
+out:
+  exit: int
+
+deps:
+  "%":
+    in:
+      a: int
+      b: int
+    out:
+      out: int
+  ">":
+    in:
+      a: int
+      b: int
+    out:
+      out: bool
+  "*":
+    in:
+      nums[]: int
+    out:
+      mul: int
+  filter:
+    in:
+      data: int
+      marker: bool
+    out:
+      acc: int
+      rej: int
+
+const:
+  zero:
+    type: int
+    value: 2
+  two:
+    type: int
+    value: 2
+
+workers:
+  mul: "%"
+  reminder: "%"
+  more: ">"
+  filter: filter
+
+net:
+  in:
+    num:
+      reminder: [a]
+      filter: [data]
+  const:
+    two:
+      reminder: [b]
+      mul:
+        - nums[0]
+    zero:
+      more: [b]
+  reminder:
+    out:
+      more: [a]
+  more:
+    out:
+      filter: [marker]
+  filter:
+    acc:
+      mul:
+        - nums[1]
+  mul:
+    out: [b]

@@ -24,11 +24,11 @@ type (
 
 // Run creates root node of the program and returns its io.
 func (r Runtime) Run(p program.Program) (IO, error) {
-	return r.spawnProc(p.Scope, p.RootNodeMeta)
+	return r.spawn(p.Scope, p.RootNodeMeta)
 }
 
-// spawnProc uses nodemeta to find component in scope and create a node and returns io of that node.
-func (r Runtime) spawnProc(scope map[string]program.Component, nodeMeta program.NodeMeta) (IO, error) {
+// spawn uses nodemeta to find component in scope and create a node and returns io of that node.
+func (r Runtime) spawn(scope map[string]program.Component, nodeMeta program.NodeMeta) (IO, error) {
 	component, ok := scope[nodeMeta.ComponentName]
 	if !ok {
 		return IO{}, fmt.Errorf("component not found: %s", nodeMeta.ComponentName)
@@ -51,7 +51,7 @@ func (r Runtime) spawnProc(scope map[string]program.Component, nodeMeta program.
 
 	// repeat this algorithm for every worker to collect their io
 	for workerNodeName, workerNodeMeta := range component.WorkerNodesMeta {
-		workerNodeIO, err := r.spawnProc(scope, workerNodeMeta) // <- recursion
+		workerNodeIO, err := r.spawn(scope, workerNodeMeta) // <- recursion
 		if err != nil {
 			return IO{}, err
 		}
@@ -184,9 +184,10 @@ type IO struct {
 // Ports maps network addresses to real channels.
 type Ports map[program.PortAddr]chan Msg
 
-// Slots returns all port-chanells associated with the given array port name.
-func (ports Ports) Slots(arrPort string) ([]chan Msg, error) {
+// PortGroup returns all port-chanells associated with the given array port name.
+func (ports Ports) PortGroup(arrPort string) ([]chan Msg, error) {
 	cc := []chan Msg{}
+
 	for addr, ch := range ports {
 		if addr.Port == arrPort {
 			cc = append(cc, ch)
@@ -200,12 +201,15 @@ func (ports Ports) Slots(arrPort string) ([]chan Msg, error) {
 	return cc, nil
 }
 
-// Port returns channel associated with the given port address.
-func (ports Ports) Port(port string, idx uint8) (chan Msg, error) {
+func (ports Ports) Port(port string) (chan Msg, error) {
 	for addr, ch := range ports {
-		if addr.Port == port && addr.Idx == idx {
-			return ch, nil
+		if addr.Port != port {
+			continue
 		}
+		if addr.Idx > 0 {
+			return nil, fmt.Errorf("unexpected port group %v", addr)
+		}
+		return ch, nil
 	}
 	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, ports)
 }
