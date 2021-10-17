@@ -23,12 +23,12 @@ func (cm Module) Interface() IO {
 func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {
 	fromType, err := mod.NodeOutportType(pair.From.Node, pair.From.Port)
 	if err != nil {
-		return PortType{}, PortType{}, fmt.Errorf("get node outport type: %w", err)
+		return PortType{}, PortType{}, fmt.Errorf("outport: %w", err)
 	}
 
 	toType, err := mod.NodeInportType(pair.To.Node, pair.To.Port)
 	if err != nil {
-		return PortType{}, PortType{}, fmt.Errorf("get node inport type: %w", err)
+		return PortType{}, PortType{}, fmt.Errorf("inport: %w", err)
 	}
 
 	return fromType, toType, nil
@@ -91,6 +91,10 @@ func (m Module) NodeIO(node string) (IO, error) {
 		}, nil
 	}
 
+	if node == "const" {
+		return m.ConstIO(), nil
+	}
+
 	dep, ok := m.Workers[node]
 	if !ok {
 		return IO{}, fmt.Errorf("unknown worker node '%s'", node)
@@ -102,6 +106,14 @@ func (m Module) NodeIO(node string) (IO, error) {
 	}
 
 	return io, nil
+}
+
+func (m Module) ConstIO() IO {
+	out := Ports{}
+	for k, cnst := range m.Const {
+		out[k] = PortType{Type: cnst.Type}
+	}
+	return IO{Out: out}
 }
 
 // OutgoingConnections maps sender's outport to receivers inports.

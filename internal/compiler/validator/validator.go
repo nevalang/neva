@@ -133,7 +133,9 @@ func (v validator) validateConnection(connection program.PortAddrPair, module pr
 
 	// we don't use Compare methods because it compares arr field
 	if fromType.Type != toType.Type {
-		return fmt.Errorf("mismatched types on ports %v and %v", connection.From, connection.To)
+		return fmt.Errorf(
+			"mismatched types on ports %v:%s and %v:%s", connection.From, fromType.Type, connection.To, toType.Type,
+		)
 	}
 
 	return nil

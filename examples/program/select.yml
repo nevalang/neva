@@ -1,7 +1,7 @@
 in:
   num: int
 out:
-  exit: int
+  b: int
 
 deps:
   "%":
@@ -20,7 +20,7 @@ deps:
     in:
       nums[]: int
     out:
-      mul: int
+      out: int
   filter:
     in:
       data: int
@@ -30,7 +30,7 @@ deps:
       rej: int
 
 workers:
-  multi: "%"
+  multi: "*"
   reminder: "%"
   more: ">"
   filter: filter
@@ -66,4 +66,5 @@ net:
       multi:
         - nums[1]
   multi:
-    out: [b]
+    out:
+      out: [b]

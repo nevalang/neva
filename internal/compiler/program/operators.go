@@ -32,7 +32,7 @@ func NewOperators() map[string]Operator {
 					"in": PortType{Type: IntType},
 				},
 				Out: Ports{
-					"out": PortType{Type: IntType},
+					"out": PortType{Type: BoolType},
 				},
 			},
 		},
@@ -64,17 +64,17 @@ func NewOperators() map[string]Operator {
 				},
 			},
 		},
-		"select": {
-			Name: "select",
+		"filter": {
+			Name: "filter",
 			IO: IO{
 				In: Ports{
 					"in": PortType{
 						Arr:  true,
-						Type: BoolType,
+						Type: IntType, // TMP
 					},
 				},
 				Out: Ports{
-					"out": PortType{Type: BoolType},
+					"out": PortType{Type: IntType},
 				},
 			},
 		},
