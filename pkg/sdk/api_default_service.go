@@ -11,8 +11,8 @@ package sdk
 
 import (
 	"context"
-	"errors"
 	"net/http"
+	"errors"
 )
 
 // DefaultApiService is a service that implements the logic for the DefaultApiServicer
@@ -26,7 +26,7 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-// ProgramGet -
+// ProgramGet - 
 func (s *DefaultApiService) ProgramGet(ctx context.Context, path string) (ImplResponse, error) {
 	// TODO - update ProgramGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -40,7 +40,7 @@ func (s *DefaultApiService) ProgramGet(ctx context.Context, path string) (ImplRe
 	return Response(http.StatusNotImplemented, nil), errors.New("ProgramGet method not implemented")
 }
 
-// ProgramPatch -
+// ProgramPatch - 
 func (s *DefaultApiService) ProgramPatch(ctx context.Context, path string, program Program) (ImplResponse, error) {
 	// TODO - update ProgramPatch with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -54,7 +54,7 @@ func (s *DefaultApiService) ProgramPatch(ctx context.Context, path string, progr
 	return Response(http.StatusNotImplemented, nil), errors.New("ProgramPatch method not implemented")
 }
 
-// ProgramPost -
+// ProgramPost - 
 func (s *DefaultApiService) ProgramPost(ctx context.Context, path string, program Program) (ImplResponse, error) {
 	// TODO - update ProgramPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.

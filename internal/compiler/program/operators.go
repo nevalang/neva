@@ -11,6 +11,18 @@ func (op Operator) Interface() IO {
 
 func NewOperators() map[string]Operator {
 	return map[string]Operator{
+		"%": {
+			Name: "%",
+			IO: IO{
+				In: Ports{
+					"a": PortType{Type: IntType},
+					"b": PortType{Type: IntType},
+				},
+				Out: Ports{
+					"out": PortType{Type: IntType},
+				},
+			},
+		},
 		"*": {
 			Name: "*",
 			IO: IO{
@@ -29,7 +41,8 @@ func NewOperators() map[string]Operator {
 			Name: ">",
 			IO: IO{
 				In: Ports{
-					"in": PortType{Type: IntType},
+					"a": PortType{Type: IntType},
+					"b": PortType{Type: IntType},
 				},
 				Out: Ports{
 					"out": PortType{Type: BoolType},
@@ -68,13 +81,12 @@ func NewOperators() map[string]Operator {
 			Name: "filter",
 			IO: IO{
 				In: Ports{
-					"in": PortType{
-						Arr:  true,
-						Type: IntType, // TMP
-					},
+					"data": PortType{Type: IntType},
+					"marker": PortType{Type: IntType},
 				},
 				Out: Ports{
-					"out": PortType{Type: IntType},
+					"acc": PortType{Type: IntType},
+					"rej": PortType{Type: IntType},
 				},
 			},
 		},

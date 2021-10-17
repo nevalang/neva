@@ -18,6 +18,13 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/server",
       "buildFlags": "-buildmode=plugin"
+    },
+    {
+      "name": "dbg",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/dbg"
     }
   ]
 }

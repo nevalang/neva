@@ -65,12 +65,12 @@ func (r Runtime) spawnNode(
 		subnetIO[workerNodeName] = nodeIO
 	}
 
-	cc, err := r.connections(subnetIO, component.Net)
+	_, err := r.connections(subnetIO, component.Net)
 	if err != nil {
 		return IO{}, err
 	}
 
-	r.cnctr.ConnectSubnet(cc)
+	// r.cnctr.ConnectSubnet(cc)
 
 	return r.patchIO(nodeMeta, io, nodeName), nil
 }
@@ -117,24 +117,24 @@ func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) ([
 	for i, c := range net {
 		fromNodeIO, ok := nodesIO[c.From.Node]
 		if !ok {
-			return nil, fmt.Errorf("fromNodeIO, ok := nodesIO[c.From.Node]")
+			return nil, fmt.Errorf("not found IO for node %s", c.From.Node)
 		}
 
-		sender, ok := fromNodeIO.Out[c.From] // has in/out names
+		sender, ok := fromNodeIO.Out[c.From]
 		if !ok {
-			return nil, fmt.Errorf("from, ok := fromNodeIO.Out[fromAddr]")
+			return nil, fmt.Errorf("outport %s not found", c.From)
 		}
 
 		receivers := make([]Port, len(c.To))
 		for j, toAddr := range c.To {
 			toNodeIO, ok := nodesIO[toAddr.Node]
 			if !ok {
-				return nil, fmt.Errorf("toNodeIO, ok := nodesIO[to.Node]")
+				return nil, fmt.Errorf("io for receiver node not found: %s", toAddr.Node)
 			}
 
 			receiver, ok := toNodeIO.In[toAddr]
 			if !ok {
-				return nil, fmt.Errorf("receiver, ok := toNodeIO.In[toAddr]")
+				return nil, fmt.Errorf("inport not found %s", toAddr)
 			}
 
 			receivers[j] = Port{Ch: receiver, Addr: toAddr}
@@ -226,17 +226,18 @@ func (ports Ports) PortGroup(arrPort string) ([]chan Msg, error) {
 	return cc, nil
 }
 
-func (ports Ports) Port(port string) (chan Msg, error) {
+func (ports Ports) Port(name string) (chan Msg, error) {
 	for addr, ch := range ports {
-		if addr.Port != port {
+		if addr.Port != name {
 			continue
 		}
 		if addr.Idx > 0 {
-			return nil, fmt.Errorf("unexpected port group %v", addr)
+			return nil, fmt.Errorf("unexpected arr port %v", addr)
 		}
 		return ch, nil
 	}
-	return nil, fmt.Errorf("%w: looking for %s, have: %v", ErrPortNotFound, port, ports)
+
+	return nil, fmt.Errorf("%w: want '%s', got: %v", ErrPortNotFound, name, ports)
 }
 
 func New(connector Connector) Runtime {

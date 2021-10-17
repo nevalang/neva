@@ -12,6 +12,8 @@ type validator struct{}
 func (v validator) Validate(mod program.Module) error {
 	var g errgroup.Group
 
+	// TODO validate const
+	
 	g.Go(func() error {
 		return v.validatePorts(mod.Interface())
 	})
@@ -90,7 +92,6 @@ func (v validator) validateDeps(deps map[string]program.IO) error {
 // validateNet ensures that program will not crash or block.
 func (v validator) validateNet(mod program.Module) error {
 	g := errgroup.Group{}
-	incoming := mod.Net.IncomingConnections()
 
 	g.Go(func() error {
 		return v.typeCheckNet(mod)
@@ -99,7 +100,7 @@ func (v validator) validateNet(mod program.Module) error {
 		return v.validateInFlow(mod)
 	})
 	g.Go(func() error {
-		return v.validateOutFlow(incoming, mod)
+		return v.validateOutFlow(mod)
 	})
 
 	return g.Wait()
@@ -141,7 +142,8 @@ func (v validator) validateConnection(connection program.PortAddrPair, module pr
 	return nil
 }
 
-func (v validator) validateOutFlow(incoming program.IncomingConnections, mod program.Module) error {
+func (v validator) validateOutFlow(mod program.Module) error {
+	// mod.Net.Incoming() 
 	return nil
 }
 

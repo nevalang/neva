@@ -13,12 +13,12 @@ func Filter(io runtime.IO) error {
 		return err
 	}
 
-	acc, err := io.Out.Port("accepted")
+	acc, err := io.Out.Port("acc")
 	if err != nil {
 		return err
 	}
 
-	rej, err := io.Out.Port("rejected")
+	rej, err := io.Out.Port("rej")
 	if err != nil {
 		return err
 	}

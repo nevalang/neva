@@ -13,11 +13,13 @@ type Module struct {
 
 	Io Io `json:"io,omitempty"`
 
-	Workers map[string]string `json:"workers,omitempty"`
-
 	Deps map[string]Io `json:"deps,omitempty"`
 
-	Het []Connection `json:"het,omitempty"`
+	Workers map[string]string `json:"workers,omitempty"`
+
+	Const map[string]Const `json:"const,omitempty"`
+
+	Net []Connection `json:"net,omitempty"`
 }
 
 // AssertModuleRequired checks if the required fields are not zero-ed
@@ -25,7 +27,7 @@ func AssertModuleRequired(obj Module) error {
 	if err := AssertIoRequired(obj.Io); err != nil {
 		return err
 	}
-	for _, el := range obj.Het {
+	for _, el := range obj.Net {
 		if err := AssertConnectionRequired(el); err != nil {
 			return err
 		}

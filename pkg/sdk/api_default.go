@@ -19,7 +19,7 @@ import (
 
 // DefaultApiController binds http requests to an api service and writes the service results to the http response
 type DefaultApiController struct {
-	service      DefaultApiServicer
+	service DefaultApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +49,7 @@ func NewDefaultApiController(s DefaultApiServicer, opts ...DefaultApiOption) Rou
 
 // Routes returns all of the api route for the DefaultApiController
 func (c *DefaultApiController) Routes() Routes {
-	return Routes{
+	return Routes{ 
 		{
 			"ProgramGet",
 			strings.ToUpper("Get"),
@@ -71,11 +71,11 @@ func (c *DefaultApiController) Routes() Routes {
 	}
 }
 
-// ProgramGet -
+// ProgramGet - 
 func (c *DefaultApiController) ProgramGet(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	pathParam := params["path"]
-
+	
 	result, err := c.service.ProgramGet(r.Context(), pathParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -84,13 +84,14 @@ func (c *DefaultApiController) ProgramGet(w http.ResponseWriter, r *http.Request
 	}
 	// If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
+
 }
 
-// ProgramPatch -
+// ProgramPatch - 
 func (c *DefaultApiController) ProgramPatch(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	pathParam := params["path"]
-
+	
 	programParam := Program{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
@@ -113,11 +114,11 @@ func (c *DefaultApiController) ProgramPatch(w http.ResponseWriter, r *http.Reque
 
 }
 
-// ProgramPost -
+// ProgramPost - 
 func (c *DefaultApiController) ProgramPost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	pathParam := params["path"]
-
+	
 	programParam := Program{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()

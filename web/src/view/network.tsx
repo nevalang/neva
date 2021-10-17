@@ -1,16 +1,7 @@
-// import classNames from "classnames"
 import * as React from "react"
 import { EdgeData, hasLink, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
-import {
-  ComponentTypes,
-  Connection,
-  IO,
-  Module,
-  Program,
-} from "../types/program"
-import { Api } from "../api"
-import { Operator } from "~sdk"
+import { Connection, IO, Module } from "../types/program"
 
 function netGraph<N, E>(
   module: Module
@@ -29,7 +20,13 @@ function moduleNodes(module: Module): NodeData[] {
   const inportsNode = node("in", { in: {}, out: inports })
   const outportsNode = node("out", { in: outports, out: {} })
 
-  return createWorkerNodes(module).concat(inportsNode, outportsNode)
+  const constNodeOut = {}
+  for (const name in module.constants) {
+    constNodeOut[name] = module.constants[name].typ
+  }
+  const constNode = node("const", { in: {}, out: constNodeOut })
+
+  return createWorkerNodes(module).concat(inportsNode, outportsNode, constNode)
 }
 
 function createWorkerNodes(module: Module): NodeData[] {
@@ -76,31 +73,16 @@ function netEdges(net: Connection[]): EdgeData[] {
     }
 
     const id = `${fromStr}-${toStr}`
+
     return {
       id,
+      text: id,
       from: from.node,
       fromPort: from.port, // TODO: array ports
       to: to.node,
       toPort: to.port,
-      text: id,
     }
   })
-}
-
-const defaultProgram: Program = {
-  root: "",
-  scope: {
-    "": {
-      type: ComponentTypes.MODULE,
-      io: {
-        in: {},
-        out: {},
-      },
-      deps: {},
-      net: [],
-      workers: {},
-    },
-  },
 }
 
 interface NetworkProps {
@@ -110,8 +92,25 @@ interface NetworkProps {
 
 function Network(props: NetworkProps) {
   const [selections, setSelections] = React.useState<string[]>([])
-  const [state, setState] = React.useState(netGraph(props.module))
   const { nodes, edges } = netGraph(props.module)
+
+  console.log({ nodes, edges })
+
+  console.log(
+    edges.every(edge => {
+      const f = nodes
+        .find(node => node.id == edge.from)
+        .ports.some(port => port.id == edge.fromPort)
+
+      const t = nodes
+        .find(node => node.id == edge.to)
+        .ports.some(port => port.id == edge.toPort)
+
+      console.log({ edgeID: edge.id, f, t })
+
+      return f && t
+    })
+  )
 
   return (
     <div
@@ -128,59 +127,17 @@ function Network(props: NetworkProps) {
         maxWidth={window.innerWidth}
         maxHeight={window.innerHeight}
         nodes={nodes}
-        edges={edges}
+        edges={[]}
         selections={selections}
         onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
         onCanvasClick={() => setSelections([])}
-        onNodeLink={(_, fromNode, toNode) => {
-          // TODO link ports, not nodes!
-          // setEdges([
-          //   ...edges,
-          //   {
-          //     id: `${fromNode.id}-${toNode.id}`,
-          //     from: fromNode.id,
-          //     to: toNode.id,
-          //   },
-          // ]);
-        }}
         node={
           <rf.Node
             className="node"
             dragType="port"
-            // onEnter={(_, port) => console.log(port)}
-            // onLeave={(_, port) => console.log(port)}
             onClick={(_, node) => props.onNodeClick(node.id)}
-            onRemove={(_event, node) => {
-              // const results = removeNode(nodes, edges, [node.id]);
-              // setNodes(results.nodes);
-              // setEdges(results.edges);
-            }}
-            port={
-              <rf.Port
-                onClick={(_, port) => setSelections([port.id])}
-                // onEnter={(_, port) => console.log(port)}
-                // onLeave={(_, port) => console.log(port)}
-                onDragStart={(...a) => console.log("start", ...a)}
-                onDragEnd={(...a) => console.log("end", ...a)}
-                style={{ fill: "black", stroke: "white", strokeWidth: "1px" }}
-                rx={10}
-                ry={10}
-              />
-            }
           />
         }
-        edge={edge => (
-          <rf.Edge
-            onClick={(_, edge) => setSelections([edge.id])}
-            // onEnter={console.log}
-            // onLeave={console.log}
-            onRemove={(_, e) => {
-              // setEdges(edges.filter(edge => edge.id !== e.id))
-            }}
-            onAdd={console.log}
-          />
-        )}
-        animated={false}
       />
     </div>
   )

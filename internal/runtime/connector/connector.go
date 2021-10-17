@@ -37,11 +37,11 @@ func (cnctr Connector) connectConnection(conn runtime.Connection) {
 func (c Connector) ConnectOperator(name string, io runtime.IO) error {
 	op, ok := c.operators[name]
 	if !ok {
-		return fmt.Errorf("ErrUnknownOperator: %s", name)
+		return fmt.Errorf("unknown operator: %s", name)
 	}
 
 	if err := op(io); err != nil {
-		return err
+		return fmt.Errorf("operator '%s': %w", name, err)
 	}
 
 	return nil
@@ -65,13 +65,13 @@ func (i interceptor) onReceive(msg runtime.Msg, from, to program.PortAddr) {
 	i.receive(msg, from, to)
 }
 
-func New(operators map[string]runtime.Operator, interceptor Interceptor) (Connector, error) {
-	if operators == nil || interceptor == nil {
+func New(ops map[string]runtime.Operator, interceptor Interceptor) (Connector, error) {
+	if ops == nil || interceptor == nil {
 		return Connector{}, errors.New("init connector")
 	}
 
 	return Connector{
-		operators,
+		ops,
 		interceptor,
 	}, nil
 }

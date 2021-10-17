@@ -63,7 +63,7 @@ func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
 	return result
 }
 
-func (c caster) fromNet(net program.OutgoingConnections) net {
+func (c caster) fromNet(net program.Net) net {
 	return nil // TODO
 }
 
@@ -121,8 +121,8 @@ func (c caster) toConst(from map[string]Const) map[string]program.Const {
 	return res
 }
 
-func (c caster) toNet(from net) program.OutgoingConnections {
-	to := program.OutgoingConnections{}
+func (c caster) toNet(from net) program.Net {
+	to := program.Net{}
 
 	for senderNode, outgoingConnections := range from {
 		for outport, nodesToInports := range outgoingConnections {

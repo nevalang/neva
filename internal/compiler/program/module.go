@@ -11,7 +11,7 @@ type Module struct {
 	Deps    map[string]IO
 	Const   map[string]Const
 	Workers map[string]string
-	Net     OutgoingConnections
+	Net     Net
 }
 
 // Interface implements Component interface.
@@ -116,11 +116,11 @@ func (m Module) ConstIO() IO {
 	return IO{Out: out}
 }
 
-// OutgoingConnections maps sender's outport to receivers inports.
+// Net maps sender's outport to receivers inports.
 // It uses set instead of slice to speed up reading.
-type OutgoingConnections map[PortAddr]map[PortAddr]struct{}
+type Net map[PortAddr]map[PortAddr]struct{}
 
-func (net OutgoingConnections) CountOutgoing(node, outport string) uint8 {
+func (net Net) CountOutgoing(node, outport string) uint8 {
 	var c uint8
 	for from := range net {
 		if from.Node == node && from.Port == outport {
@@ -130,7 +130,7 @@ func (net OutgoingConnections) CountOutgoing(node, outport string) uint8 {
 	return c
 }
 
-func (net OutgoingConnections) IncomingConnections() IncomingConnections {
+func (net Net) IncomingConnections() IncomingConnections {
 	incoming := IncomingConnections{}
 
 	for pair := range net.Walk() {
@@ -144,7 +144,7 @@ func (net OutgoingConnections) IncomingConnections() IncomingConnections {
 }
 
 // Walk implements iterator pattern to allow traverse network.
-func (net OutgoingConnections) Walk() <-chan PortAddrPair {
+func (net Net) Walk() <-chan PortAddrPair {
 	ch := make(chan PortAddrPair, len(net))
 	wg := sync.WaitGroup{}
 
@@ -152,10 +152,10 @@ func (net OutgoingConnections) Walk() <-chan PortAddrPair {
 		for from, receivers := range net {
 			for to := range receivers {
 				wg.Add(1)
-				go func(to PortAddr) {
+				go func(from, to PortAddr) {
 					ch <- PortAddrPair{from, to}
 					wg.Done()
-				}(to)
+				}(from, to)
 			}
 		}
 
@@ -169,7 +169,7 @@ func (net OutgoingConnections) Walk() <-chan PortAddrPair {
 // CountIncoming returns count of incoming connections for the given port.
 // It works for array ports as well.
 // It always returns 0 when non-existing port given.
-func (net OutgoingConnections) CountIncoming(node string, inport string) uint8 {
+func (net Net) CountIncoming(node string, inport string) uint8 {
 	var c uint8
 	for _, to := range net {
 		for portAddr := range to {
@@ -182,7 +182,7 @@ func (net OutgoingConnections) CountIncoming(node string, inport string) uint8 {
 }
 
 // IncomingConnections maps receiver's inport to senders outports.
-type IncomingConnections OutgoingConnections
+type IncomingConnections Net
 
 func (rnet IncomingConnections) add(pair PortAddrPair) {
 	if rnet[pair.To] == nil {
@@ -210,7 +210,7 @@ func NewModule(
 	io IO,
 	deps map[string]IO,
 	workers map[string]string,
-	net OutgoingConnections,
+	net Net,
 ) Module {
 	return Module{
 		Deps:    deps,

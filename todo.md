@@ -1,3 +1,6 @@
+add compile time deps resolition
+
+
 # Unused output ports
 
 Unused outports should be connected to special /dev/null analog

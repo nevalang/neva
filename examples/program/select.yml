@@ -1,5 +1,5 @@
 in:
-  num: int
+  a: int
 out:
   b: int
 
@@ -18,7 +18,7 @@ deps:
       out: bool
   "*":
     in:
-      nums[]: int
+      in[]: int
     out:
       out: int
   filter:
@@ -31,7 +31,7 @@ deps:
 
 workers:
   multi: "*"
-  reminder: "%"
+  remainder: "%"
   more: ">"
   filter: filter
 
@@ -45,17 +45,17 @@ const:
 
 net:
   in:
-    num:
-      reminder: [a]
+    a:
+      remainder: [a]
       filter: [data]
   const:
     two:
-      reminder: [b]
+      remainder: [b]
       multi:
-        - nums[0]
+        - in[0]
     zero:
       more: [b]
-  reminder:
+  remainder:
     out:
       more: [a]
   more:
@@ -64,7 +64,7 @@ net:
   filter:
     acc:
       multi:
-        - nums[1]
+        - in[1]
   multi:
     out:
       out: [b]

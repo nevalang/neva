@@ -64,7 +64,7 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 			return nil, errors.New("not ok from translator")
 		}
 
-		consts := map[string]rprog.Const{}
+		consts := make(map[string]rprog.Const, len(mod.Const))
 		for name, cnst := range mod.Const {
 			consts[name] = rprog.Const{
 				Type:     rprog.Type(cnst.Type), // check err?
@@ -76,7 +76,7 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 		for workerName, dep := range mod.Workers {
 			in, out, err := t.workerIOMeta(workerName, dep, components, mod.Net)
 			if err != nil {
-				panic(err)
+				return nil, fmt.Errorf("get worker io meta: %w", err)
 			}
 			workers[workerName] = rprog.WorkerNodeMeta{
 				ComponentName: dep,
@@ -95,6 +95,7 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 		}
 
 		runtimeComponents[name] = rprog.Component{
+			Const:           consts,
 			WorkerNodesMeta: workers,
 			Net:             net,
 		}
@@ -114,11 +115,11 @@ func (t Translator) connections(from map[compiler.PortAddr]struct{}) []rprog.Por
 func (t Translator) workerIOMeta(
 	workerName, componentName string,
 	components map[string]compiler.Component,
-	outgoing compiler.OutgoingConnections,
+	outgoing compiler.Net,
 ) (map[string]uint8, map[string]uint8, error) {
 	c, ok := components[componentName]
 	if !ok {
-		return nil, nil, errors.New("TODO")
+		return nil, nil, fmt.Errorf("no such component '%s'", componentName)
 	}
 
 	io := c.Interface()

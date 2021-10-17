@@ -49,6 +49,25 @@ export interface Connection {
 /**
  * 
  * @export
+ * @interface Const
+ */
+export interface Const {
+    /**
+     * 
+     * @type {string}
+     * @memberof Const
+     */
+    'type'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Const
+     */
+    'value'?: number;
+}
+/**
+ * 
+ * @export
  * @interface IO
  */
 export interface IO {
@@ -79,22 +98,28 @@ export interface Module {
     'io'?: IO;
     /**
      * 
-     * @type {{ [key: string]: string; }}
-     * @memberof Module
-     */
-    'workers'?: { [key: string]: string; };
-    /**
-     * 
      * @type {{ [key: string]: IO; }}
      * @memberof Module
      */
     'deps'?: { [key: string]: IO; };
     /**
      * 
+     * @type {{ [key: string]: string; }}
+     * @memberof Module
+     */
+    'workers'?: { [key: string]: string; };
+    /**
+     * 
+     * @type {{ [key: string]: Const; }}
+     * @memberof Module
+     */
+    'const'?: { [key: string]: Const; };
+    /**
+     * 
      * @type {Array<Connection>}
      * @memberof Module
      */
-    'het'?: Array<Connection>;
+    'net'?: Array<Connection>;
 }
 /**
  * 
