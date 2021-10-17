@@ -11,7 +11,7 @@ func (c caster) Cast(prog program.Program) Program {
 	}
 }
 
-func (c caster) castNode(node program.NodeMeta) NodeMeta {
+func (c caster) castNode(node program.WorkerNodeMeta) NodeMeta {
 	return NodeMeta{
 		In:        node.In,
 		Out:       node.Out,
@@ -33,7 +33,7 @@ func (c caster) castComponents(cc map[string]program.Component) map[string]Compo
 	return res
 }
 
-func (c caster) castNodes(nodes map[string]program.NodeMeta) map[string]NodeMeta {
+func (c caster) castNodes(nodes map[string]program.WorkerNodeMeta) map[string]NodeMeta {
 	res := make(map[string]NodeMeta, len(nodes))
 
 	for name := range nodes {

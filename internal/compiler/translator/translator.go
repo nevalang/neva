@@ -6,18 +6,18 @@ import (
 	"log"
 
 	compiler "github.com/emil14/neva/internal/compiler/program"
-	runtime "github.com/emil14/neva/internal/runtime/program"
+	rprog "github.com/emil14/neva/internal/runtime/program"
 )
 
 type Translator struct {
 	operators map[string]compiler.Operator
 }
 
-func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
+func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
 	component, ok := prog.Components[prog.Root]
 	if !ok {
 		log.Println(prog.Components)
-		return runtime.Program{}, fmt.Errorf("could not find %s component", prog.Root)
+		return rprog.Program{}, fmt.Errorf("could not find %s component", prog.Root)
 	}
 
 	io := component.Interface()
@@ -34,12 +34,11 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 	scope, err := t.components(prog.Components)
 	if err != nil {
-		return runtime.Program{}, err
+		return rprog.Program{}, err
 	}
 
-	return runtime.Program{
-		RootNodeMeta: runtime.NodeMeta{
-			Name:          "root",
+	return rprog.Program{
+		RootNodeMeta: rprog.WorkerNodeMeta{
 			ComponentName: prog.Root,
 			In:            in,
 			Out:           out,
@@ -48,13 +47,13 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	}, nil
 }
 
-func (t Translator) components(components map[string]compiler.Component) (map[string]runtime.Component, error) {
-	runtimeComponents := map[string]runtime.Component{}
+func (t Translator) components(components map[string]compiler.Component) (map[string]rprog.Component, error) {
+	runtimeComponents := map[string]rprog.Component{}
 
 	for name, component := range components {
 		oper, ok := component.(compiler.Operator)
 		if ok {
-			runtimeComponents[name] = runtime.Component{
+			runtimeComponents[name] = rprog.Component{
 				Operator: oper.Name,
 			}
 			continue
@@ -65,30 +64,37 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 			return nil, errors.New("not ok from translator")
 		}
 
-		workers := map[string]runtime.NodeMeta{}
+		consts := map[string]rprog.Const{}
+		for name, cnst := range mod.Const {
+			consts[name] = rprog.Const{
+				Type:     rprog.Type(cnst.Type), // check err?
+				IntValue: cnst.IntValue,
+			}
+		}
+
+		workers := map[string]rprog.WorkerNodeMeta{}
 		for workerName, dep := range mod.Workers {
 			in, out, err := t.workerIOMeta(workerName, dep, components, mod.Net)
 			if err != nil {
 				panic(err)
 			}
-			workers[workerName] = runtime.NodeMeta{
-				Name:          workerName,
+			workers[workerName] = rprog.WorkerNodeMeta{
 				ComponentName: dep,
 				In:            in,
 				Out:           out,
 			}
 		}
 
-		net := []runtime.Connection{}
+		net := []rprog.Connection{}
 		for from, to := range mod.Net {
-			c := runtime.Connection{
-				From: runtime.PortAddr(from),
+			c := rprog.Connection{
+				From: rprog.PortAddr(from),
 				To:   t.connections(to),
 			}
 			net = append(net, c)
 		}
 
-		runtimeComponents[name] = runtime.Component{
+		runtimeComponents[name] = rprog.Component{
 			WorkerNodesMeta: workers,
 			Net:             net,
 		}
@@ -97,10 +103,10 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 	return runtimeComponents, nil
 }
 
-func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.PortAddr {
-	to := make([]runtime.PortAddr, 0, len(from))
+func (t Translator) connections(from map[compiler.PortAddr]struct{}) []rprog.PortAddr {
+	to := make([]rprog.PortAddr, 0, len(from))
 	for k := range from {
-		to = append(to, runtime.PortAddr(k))
+		to = append(to, rprog.PortAddr(k))
 	}
 	return to
 }

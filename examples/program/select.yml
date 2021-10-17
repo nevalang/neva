@@ -29,19 +29,19 @@ deps:
       acc: int
       rej: int
 
-const:
-  zero:
-    type: int
-    value: 2
-  two:
-    type: int
-    value: 2
-
 workers:
-  mul: "%"
+  multi: "%"
   reminder: "%"
   more: ">"
   filter: filter
+
+const:
+  zero:
+    type: int
+    intValue: 2
+  two:
+    type: int
+    intValue: 2
 
 net:
   in:
@@ -51,7 +51,7 @@ net:
   const:
     two:
       reminder: [b]
-      mul:
+      multi:
         - nums[0]
     zero:
       more: [b]
@@ -63,7 +63,7 @@ net:
       filter: [marker]
   filter:
     acc:
-      mul:
+      multi:
         - nums[1]
-  mul:
+  multi:
     out: [b]

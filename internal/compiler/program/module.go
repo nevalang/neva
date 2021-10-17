@@ -9,7 +9,7 @@ import (
 type Module struct {
 	IO      IO
 	Deps    map[string]IO
-	Const   map[string]Type
+	Const   map[string]Const
 	Workers map[string]string
 	Net     OutgoingConnections
 }
@@ -181,6 +181,11 @@ func (rnet IncomingConnections) add(pair PortAddrPair) {
 
 // PortAddrPair represents from-to port addresses pair.
 type PortAddrPair struct{ From, To PortAddr }
+
+type Const struct {
+	Type     Type
+	IntValue int
+}
 
 // PortAddr is a point on a network graph.
 type PortAddr struct {

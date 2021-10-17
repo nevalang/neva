@@ -25,7 +25,17 @@ func (c caster) From(mod program.Module) module {
 	}
 }
 
-func (c caster) fromConst(map[string]program.Type) map[string]Const {
+func (c caster) To(mod module) program.Module {
+	return program.Module{
+		IO:      c.toIO(mod.In, mod.Out),
+		Deps:    c.toDeps(mod.Deps),
+		Const:   c.toConst(mod.Const),
+		Workers: map[string]string(mod.Workers),
+		Net:     c.toNet(mod.Net),
+	}
+}
+
+func (c caster) fromConst(map[string]program.Const) map[string]Const {
 	return map[string]Const{} // TODO
 }
 
@@ -55,16 +65,6 @@ func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
 
 func (c caster) fromNet(net program.OutgoingConnections) net {
 	return nil // TODO
-}
-
-func (c caster) To(mod module) program.Module {
-	return program.Module{
-		IO:      c.toIO(mod.In, mod.Out),
-		Deps:    c.toDeps(mod.Deps),
-		Const:   c.toConst(mod.Const),
-		Workers: map[string]string(mod.Workers),
-		Net:     c.toNet(mod.Net),
-	}
 }
 
 func (c caster) toIO(in inports, out outports) program.IO {
@@ -105,12 +105,20 @@ func (c caster) toDeps(from moduleDeps) map[string]program.IO {
 	return to
 }
 
-func (c caster) toConst(from map[string]Const) map[string]program.Type {
-	res := map[string]program.Type{}
+func (c caster) toConst(from map[string]Const) map[string]program.Const {
+	res := map[string]program.Const{}
+
 	for name, cnst := range from {
-		cnst.Value
+		switch cnst.Type {
+		case program.IntType.String():
+			res[name] = program.Const{
+				Type:     program.IntType,
+				IntValue: cnst.IntValue,
+			}
+		}
 	}
-	return map[string]program.Type{} // TODO
+
+	return res
 }
 
 func (c caster) toNet(from net) program.OutgoingConnections {

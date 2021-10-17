@@ -1,11 +1,24 @@
 {
   "scope": {
     "*": { "operator": "*" },
-    "root": {
+    "%": { "operator": "%" },
+    ">": { "operator": ">" },
+    "filter": { "operator": "filter" },
+    "select": {
+      "const": {
+        "zero": {
+          "type": "int",
+          "int": 0
+        },
+        "two": {
+          "type": "int",
+          "int": 0
+        }
+      },
       "workers": {
         "multi": {
-          "in": { "nums": 2 }, 
-          "out": { "mul": 0 },
+          "in": { "nums": 2 },
+          "out": { "out": 0 },
           "component": "*"
         }
       },
@@ -24,5 +37,9 @@
       ]
     }
   },
-  "root": { "in": { "x": 0 }, "out": { "y": 0 }, "component": "root" }
+  "root": {
+    "in": { "a": 0, "b": 0 },
+    "out": { "out": 0 },
+    "component": "select"
+  }
 }

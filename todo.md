@@ -2,7 +2,7 @@
 
 Unused outports should be connected to special /dev/null analog
 
-# Modules visualisation
+# Modules visualization
 
 Im talking about map of modules
 

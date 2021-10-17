@@ -35,8 +35,8 @@ type io struct {
 }
 
 type Const struct {
-	Type  string      `yaml:"type"`
-	Value interface{} `yaml:"value"`
+	Type     string `yaml:"type"`
+	IntValue int    `yaml:"intValue"`
 }
 
 type workers map[string]string // worker -> dep
