@@ -14,16 +14,18 @@ type parser struct {
 }
 
 type Caster interface {
-	From(program.Module) Module
-	To(Module) program.Module
+	From(program.Module) module
+	To(module) program.Module
 }
 
 func (p parser) ParseModule(bb []byte) (program.Module, error) {
-	var mod Module
+	var mod module
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return program.Module{}, err
 	}
-	return p.caster.To(mod), nil
+	to := p.caster.To(mod)
+
+	return to, nil
 }
 
 func (p parser) Program(bb program.Program) ([]byte, error) {

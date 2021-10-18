@@ -2,30 +2,27 @@ package program
 
 import "fmt"
 
-// Program is data for runtime network initialization.
 type Program struct {
-	Scope        map[string]Component // Components available for nodes initialization.
-	RootNodeMeta NodeMeta             // Metadata for root node initialization.
+	Scope        map[string]Component
+	RootNodeMeta WorkerNodeMeta
 }
 
-// Component represents reusable computation unit.
-// There are module and operator concrete components.
 type Component struct {
-	Operator        string              // Always "" for modules.
-	WorkerNodesMeta map[string]NodeMeta // Worker nodes metadata, ignored for operators.
-	Net             []Connection        // Data flow, ignored for operators.
+	Operator        string // Always "" for modules.
+	Const           map[string]Const
+	WorkerNodesMeta map[string]WorkerNodeMeta
+	Net             []Connection
 }
 
-// NodeMeta describes how component used by its parent network.
-type NodeMeta struct {
-	Name string
-	// TODO: replace size with buf and create separate ports for every arrport (portgroup) slice
-	In, Out       map[string]uint8 // port -> size; if size > 0 then array port
-	ComponentName string           // always "" for io nodes
+// TODO: replace size with buf and create separate ports for every arrport (portgroup) slice
+type WorkerNodeMeta struct {
+	In, Out       map[string]uint8
+	ComponentName string
 }
 
-type PortMeta struct {
-	Buf uint8
+type Const struct {
+	Type Type
+	IntValue  int
 }
 
 // One-to-many relation between sender and receiver ports.

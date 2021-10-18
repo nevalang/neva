@@ -11,6 +11,7 @@ import {
   Program,
   IO,
   Components,
+  Const,
 } from "../../types/program"
 
 import { Caster } from "."
@@ -27,46 +28,49 @@ export class CasterImpl implements Caster {
     const result = {}
 
     for (const name in scope) {
-      const el = scope[name]
-      let res: Component
+      const sdkComponent = scope[name]
+      let component: Component
 
-      if ((el as any).deps == undefined) {
-        res = {
+      if ((sdkComponent as SDKModule).deps == undefined) {
+        component = {
           type: ComponentTypes.OPERATOR,
           io: {
-            in: (el as SDKOperator).io.in,
-            out: (el as SDKOperator).io.out,
+            in: (sdkComponent as SDKOperator).io.in,
+            out: (sdkComponent as SDKOperator).io.out,
           },
         }
       } else {
-        const deps: { [key: string]: IO } = {}
+        const mod = sdkComponent as SDKModule
 
-        for (const k in (el as SDKModule).deps) {
-          const dep = (el as SDKModule).deps[k]
+        const deps: { [key: string]: IO } = {}
+        for (const k in mod.deps) {
+          const dep = mod.deps[k]
           deps[k] = { in: dep.in, out: dep.out }
         }
 
-        res = {
+        const constants: { [key: string]: Const } = {}
+        for (const k in mod.const) {
+          const c = mod.const[k]
+          constants[k] = {
+            typ: c.type,
+            value: c.value,
+          }
+        }
+
+        component = {
           type: ComponentTypes.MODULE,
-          io: { in: el.io.in, out: el.io.out },
+          io: { in: sdkComponent.io.in, out: sdkComponent.io.out },
           deps: deps,
-          workers: (el as SDKModule).workers,
-          net: (el as SDKModule).het.map(v => ({
-            from: {
-              node: v.from.node,
-              port: v.from.port,
-              idx: v.from.idx,
-            },
-            to: {
-              node: v.to.node,
-              port: v.to.port,
-              idx: v.to.idx,
-            },
+          workers: mod.workers,
+          constants,
+          net: mod.net.map(v => ({
+            from: { node: v.from.node, port: v.from.port, idx: v.from.idx },
+            to: { node: v.to.node, port: v.to.port, idx: v.to.idx },
           })),
         }
       }
 
-      result[name] = res
+      result[name] = component
     }
 
     return result

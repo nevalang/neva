@@ -1,9 +1,6 @@
-deps:
-  shared:
-    repo: "emil14/neva-shared"
-    v: 0.0.2
+operators: ["*", "%", ">", "filter"]
+
 import:
-  sqrt: shared/square
-  me: ./mul_by_square
-root: me
-export: {}
+  select: ./select
+
+root: select

@@ -62,6 +62,10 @@ func (msg BoolMsg) Bool() bool {
 	return msg.v
 }
 
+func (msg BoolMsg) String() string {
+	return fmt.Sprintf("%v", msg.v)
+}
+
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
 		emptyMsg: emptyMsg{},

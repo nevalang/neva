@@ -10,21 +10,22 @@ import (
 var ErrMul = errors.New("multiplication")
 
 func Mul(io runtime.IO) error {
-	slots, err := io.In.Slots("nums")
+	in, err := io.In.PortGroup("in")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}
 
-	out, err := io.Out.Port("mul", 0)
+	out, err := io.Out.Port("out")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}
 
 	go func() {
 		for {
-			buf := make(chan int, len(slots))
-			for i := range slots {
-				port := slots[i]
+			buf := make(chan int, len(in))
+
+			for i := range in {
+				port := in[i]
 				go func() {
 					msg := <-port
 					buf <- msg.Int()
@@ -32,11 +33,12 @@ func Mul(io runtime.IO) error {
 			}
 
 			mul := 1
-			for i := 0; i < len(slots); i++ {
+			for i := 0; i < len(in); i++ {
 				mul *= <-buf
 			}
 
 			close(buf)
+
 			out <- runtime.NewIntMsg(mul)
 		}
 	}()

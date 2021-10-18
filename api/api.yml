@@ -33,15 +33,20 @@ components:
       properties:
         io:
           $ref: "#/components/schemas/IO"
-        workers:
-          type: object
-          additionalProperties:
-            type: string
+          required: true
         deps:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/IO"
-        het:
+        workers:
+          type: object
+          additionalProperties:
+            type: string
+        const:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Const"
+        net:
           type: array
           items:
             $ref: "#/components/schemas/Connection"
@@ -56,6 +61,14 @@ components:
           type: object
           additionalProperties:
             type: string
+    Const:
+      type: object
+      properties:
+        type:
+          type: string
+        value:
+          oneOf:
+            - $ref: "#/components/schemas/Int"
     Connection:
       type: object
       properties:
@@ -72,6 +85,8 @@ components:
           type: integer
         port:
           type: string
+    Int:
+      type: integer
 
 paths:
   /program:

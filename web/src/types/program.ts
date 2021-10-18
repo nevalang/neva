@@ -15,9 +15,10 @@ export interface Operator {
 export interface Module {
   type: ComponentTypes.MODULE
   io: IO
-  net: Connection[]
   deps: { [key: string]: IO }
   workers: { [key: string]: string }
+  constants: { [key: string]: Const }
+  net: Connection[]
 }
 
 export enum ComponentTypes {
@@ -28,6 +29,11 @@ export enum ComponentTypes {
 export interface IO {
   in: { [key: string]: string }
   out: { [key: string]: string }
+}
+
+export interface Const {
+  typ: string
+  value: any
 }
 
 export interface Connection {

@@ -17,7 +17,6 @@ import (
 	"github.com/emil14/neva/internal/compiler/validator"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
-	"github.com/emil14/neva/internal/runtime/loader"
 	rprog "github.com/emil14/neva/internal/runtime/program"
 	"github.com/emil14/neva/pkg/sdk"
 )
@@ -34,7 +33,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		log.Fatal(err)
 	}
 
-	p, err := filepath.Abs(filepath.Join(dir, "examples/program/pkg.yml")) // TODO
+	p, err := filepath.Abs(filepath.Join(dir, "../../examples/program/pkg.yml"))
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -57,7 +56,6 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		panic(err)
 	}
 
-	log.Println("REED FROM A STARTED")
 	a <- runtime.NewIntMsg(2)
 	log.Println("REED FROM A FINISHED")
 
@@ -96,12 +94,12 @@ func (s Server) ProgramPost(context.Context, string, sdk.Program) (sdk.ImplRespo
 }
 
 func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr) runtime.Msg {
-	fmt.Printf("%s -> %s\n", from, msg)
+	fmt.Println(msg, from)
 	return msg
 }
 
 func (s Server) OnReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
-	fmt.Printf("%s -> %s -> %s\n", from, msg, to)
+	fmt.Println(msg, from, to)
 }
 
 func main() {
@@ -131,43 +129,33 @@ func MustNew() Server {
 		compilerOps,
 	)
 
-	// TODO: move this step inside runtime's Run method
+	// FIXME: move this step inside runtime's Run method
 	// otherwise any fbp-probram will have all the operators loaded
 	// which makes all the plugin-related effort useless
-	// TODO: params should be part of operator type
-	ops, err := loader.Load(map[string]loader.Params{
-		"%": {
-			PluginPath:     "plugins/remainder.so",
-			ExportedEntity: "Remainder",
+	opspaths := map[string]runtime.Operator{
+		"%": func(runtime.IO) error {
+			return nil
 		},
-		"*": {
-			PluginPath:     "plugins/mul.so",
-			ExportedEntity: "Mul",
+		"*": func(runtime.IO) error {
+			return nil
 		},
-		"&&": {
-			PluginPath:     "plugins/and.so",
-			ExportedEntity: "And",
+		"&&": func(runtime.IO) error {
+			return nil
 		},
-		"||": {
-			PluginPath:     "plugins/or.so",
-			ExportedEntity: "Or",
+		"||": func(runtime.IO) error {
+			return nil
 		},
-		">": {
-			PluginPath:     "plugins/more.so",
-			ExportedEntity: "More",
+		">": func(runtime.IO) error {
+			return nil
 		},
-		"filter": {
-			PluginPath:     "plugins/filter.so",
-			ExportedEntity: "Filter",
+		"filter": func(runtime.IO) error {
+			return nil
 		},
-	})
-	if err != nil {
-		panic(err)
 	}
 
 	s.runtime = runtime.New(
 		connector.MustNew(
-			ops,
+			opspaths,
 			s,
 		),
 	)
@@ -226,14 +214,14 @@ func (c caster) castComponent(from cprog.Component) (sdk.Component, error) {
 }
 
 func (c caster) castConst(from map[string]cprog.Const) map[string]sdk.Const {
-	r := map[string]sdk.Const{}
+	to := make(map[string]sdk.Const, len(from))
 	for k, v := range from {
-		r[k] = sdk.Const{
+		to[k] = sdk.Const{
 			Type:  v.Type.String(),
-			Value: v.IntValue,
+			Value: v.IntValue, // TMP
 		}
 	}
-	return r
+	return to
 }
 
 func (c caster) castDeps(from map[string]cprog.IO) map[string]sdk.Io {
