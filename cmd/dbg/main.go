@@ -51,7 +51,22 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	log.Println(io)
+	a, err := io.In.Port("a")
+	if err != nil {
+		panic(err)
+	}
+
+	a <- runtime.NewIntMsg(2)
+	log.Println("REED FROM A FINISHED")
+
+	b, err := io.Out.Port("b")
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("REED FROM B STARTED")
+	log.Println(<-b)
+	log.Println("REED FROM B FINISHED")
 
 	casted, err := s.caster.CastProgram(cprog)
 	if err != nil {
@@ -78,8 +93,8 @@ func (s Server) ProgramPost(context.Context, string, sdk.Program) (sdk.ImplRespo
 	}, nil
 }
 
-func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr, to []rprog.PortAddr) runtime.Msg {
-	fmt.Println(msg, from, to)
+func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr) runtime.Msg {
+	fmt.Println(msg, from)
 	return msg
 }
 

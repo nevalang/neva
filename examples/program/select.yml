@@ -38,7 +38,7 @@ workers:
 const:
   zero:
     type: int
-    intValue: 2
+    intValue: 0
   two:
     type: int
     intValue: 2
@@ -62,7 +62,7 @@ net:
     out:
       filter: [marker]
   filter:
-    acc:
+    rej:
       multi:
         - in[1]
   multi:

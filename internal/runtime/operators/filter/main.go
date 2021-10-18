@@ -1,6 +1,10 @@
 package main
 
-import "github.com/emil14/neva/internal/runtime"
+import (
+	"fmt"
+
+	"github.com/emil14/neva/internal/runtime"
+)
 
 func Filter(io runtime.IO) error {
 	data, err := io.In.Port("data")
@@ -8,7 +12,7 @@ func Filter(io runtime.IO) error {
 		return err
 	}
 
-	marker, err := io.In.Port("data")
+	marker, err := io.In.Port("marker")
 	if err != nil {
 		return err
 	}
@@ -25,15 +29,24 @@ func Filter(io runtime.IO) error {
 
 	go func() {
 		for {
-			dataMsg := <-data
-			markerMsg := <-marker
+			fmt.Println("FILTER: start read data")
+			d := <-data
+			fmt.Println("FILTER: end read data")
 
-			if markerMsg.Bool() {
-				acc <- dataMsg
+			fmt.Println("FILTER: start read marker")
+			m := <-marker
+			fmt.Println("FILTER: end read marker")
+
+			if m.Bool() {
+				fmt.Println("FILTER: end send acc")
+				acc <- d
+				fmt.Println("FILTER: end send acc")
 				continue
 			}
 
-			rej <- dataMsg
+			fmt.Println("FILTER: end send rej")
+			rej <- d
+			fmt.Println("FILTER: end send rej")
 		}
 	}()
 

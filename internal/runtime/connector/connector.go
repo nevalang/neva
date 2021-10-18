@@ -3,6 +3,7 @@ package connector
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/program"
@@ -15,22 +16,30 @@ type Connector struct {
 
 func (cnctr Connector) ConnectSubnet(cc []runtime.Connection) {
 	for _, c := range cc {
-		go cnctr.connectConnection(c)
+		go cnctr.loop(c)
 	}
 }
 
-func (cnctr Connector) connectConnection(conn runtime.Connection) {
+func (cnctr Connector) loop(conn runtime.Connection) {
 	for msg := range conn.From.Ch {
-		cnctr.interceptor.OnSend(msg, conn.From.Addr, nil)
+		cnctr.interceptor.OnSend(msg, conn.From.Addr)
+
+		wg := sync.WaitGroup{}
+		wg.Add(len(conn.To))
 
 		for i := range conn.To {
 			to := conn.To[i]
+			m := msg
 
-			go func(m runtime.Msg) {
+			go func() {
+				fmt.Printf("start %s from %s to %s\n", m, conn.From.Addr, to.Addr)
 				to.Ch <- m
 				cnctr.interceptor.OnReceive(m, conn.From.Addr, to.Addr)
-			}(msg)
+				wg.Done()
+			}()
 		}
+
+		wg.Wait()
 	}
 }
 
@@ -48,7 +57,7 @@ func (c Connector) ConnectOperator(name string, io runtime.IO) error {
 }
 
 type Interceptor interface {
-	OnSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
+	OnSend(msg runtime.Msg, from program.PortAddr) runtime.Msg
 	OnReceive(msg runtime.Msg, from, to program.PortAddr)
 }
 

@@ -65,12 +65,12 @@ func (r Runtime) spawnNode(
 		subnetIO[workerNodeName] = nodeIO
 	}
 
-	_, err := r.connections(subnetIO, component.Net)
+	cc, err := r.connections(subnetIO, component.Net)
 	if err != nil {
 		return IO{}, err
 	}
 
-	// r.cnctr.ConnectSubnet(cc)
+	r.cnctr.ConnectSubnet(cc)
 
 	return r.patchIO(nodeMeta, io, nodeName), nil
 }

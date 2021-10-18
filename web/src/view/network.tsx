@@ -26,10 +26,10 @@ function moduleNodes(module: Module): NodeData[] {
   }
   const constNode = node("const", { in: {}, out: constNodeOut })
 
-  return createWorkerNodes(module).concat(inportsNode, outportsNode, constNode)
+  return workerNodes(module).concat(inportsNode, outportsNode, constNode)
 }
 
-function createWorkerNodes(module: Module): NodeData[] {
+function workerNodes(module: Module): NodeData[] {
   const nodes: NodeData[] = []
   for (const workerName in module.workers) {
     const depName = module.workers[workerName]
@@ -43,18 +43,28 @@ function node(name: string, io: IO): NodeData {
   return {
     id: name,
     text: name,
-    ports: ports(io),
+    ports: ports(name, io),
   }
 }
 
-function ports(io: IO): PortData[] {
+function ports(nodeName: string, io: IO): PortData[] {
   const ports: PortData[] = []
 
   for (const inportName in io.in) {
-    ports.push({ id: inportName, side: "NORTH", height: 10, width: 10 })
+    ports.push({
+      id: nodeName + "_" + inportName,
+      side: "NORTH",
+      height: 10,
+      width: 10,
+    })
   }
   for (const outportName in io.out) {
-    ports.push({ id: outportName, side: "SOUTH", height: 10, width: 10 })
+    ports.push({
+      id: nodeName + "_" + outportName,
+      side: "SOUTH",
+      height: 10,
+      width: 10,
+    })
   }
 
   return ports
@@ -76,11 +86,11 @@ function netEdges(net: Connection[]): EdgeData[] {
 
     return {
       id,
-      text: id,
+      // text: id,
       from: from.node,
-      fromPort: from.port, // TODO: array ports
+      fromPort: from.node + "_" + from.port, // TODO: array ports
       to: to.node,
-      toPort: to.port,
+      toPort: to.node + "_" + to.port,
     }
   })
 }
@@ -94,24 +104,6 @@ function Network(props: NetworkProps) {
   const [selections, setSelections] = React.useState<string[]>([])
   const { nodes, edges } = netGraph(props.module)
 
-  console.log({ nodes, edges })
-
-  console.log(
-    edges.every(edge => {
-      const f = nodes
-        .find(node => node.id == edge.from)
-        .ports.some(port => port.id == edge.fromPort)
-
-      const t = nodes
-        .find(node => node.id == edge.to)
-        .ports.some(port => port.id == edge.toPort)
-
-      console.log({ edgeID: edge.id, f, t })
-
-      return f && t
-    })
-  )
-
   return (
     <div
       style={{
@@ -124,10 +116,8 @@ function Network(props: NetworkProps) {
       }}
     >
       <rf.Canvas
-        maxWidth={window.innerWidth}
-        maxHeight={window.innerHeight}
         nodes={nodes}
-        edges={[]}
+        edges={edges}
         selections={selections}
         onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
         onCanvasClick={() => setSelections([])}
