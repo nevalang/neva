@@ -219,9 +219,21 @@ func (c caster) castComponent(from cprog.Component) (sdk.Component, error) {
 	return sdk.Component{
 		Io:      c.castIO(mod.Interface()),
 		Workers: mod.Workers,
+		Const:   c.castConst(mod.Const),
 		Deps:    c.castDeps(mod.Deps),
 		Net:     c.castNet(mod.Net),
 	}, nil
+}
+
+func (c caster) castConst(from map[string]cprog.Const) map[string]sdk.Const {
+	r := map[string]sdk.Const{}
+	for k, v := range from {
+		r[k] = sdk.Const{
+			Type:  v.Type.String(),
+			Value: v.IntValue,
+		}
+	}
+	return r
 }
 
 func (c caster) castDeps(from map[string]cprog.IO) map[string]sdk.Io {
