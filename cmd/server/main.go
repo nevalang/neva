@@ -40,7 +40,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.PreCompile(p)
+	prog, cprog, err := s.compiler.Compile(p)
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -57,18 +57,14 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		panic(err)
 	}
 
-	log.Println("REED FROM A STARTED")
 	a <- runtime.NewIntMsg(2)
-	log.Println("REED FROM A FINISHED")
 
 	b, err := io.Out.Port("b")
 	if err != nil {
 		panic(err)
 	}
 
-	log.Println("REED FROM B STARTED")
 	log.Println(<-b)
-	log.Println("REED FROM B FINISHED")
 
 	casted, err := s.caster.CastProgram(cprog)
 	if err != nil {
@@ -137,27 +133,27 @@ func MustNew() Server {
 	// TODO: params should be part of operator type
 	ops, err := loader.Load(map[string]loader.Params{
 		"%": {
-			PluginPath:     "plugins/remainder.so",
+			PluginPath:     "../../plugins/remainder.so",
 			ExportedEntity: "Remainder",
 		},
 		"*": {
-			PluginPath:     "plugins/mul.so",
+			PluginPath:     "../../plugins/mul.so",
 			ExportedEntity: "Mul",
 		},
 		"&&": {
-			PluginPath:     "plugins/and.so",
+			PluginPath:     "../../plugins/and.so",
 			ExportedEntity: "And",
 		},
 		"||": {
-			PluginPath:     "plugins/or.so",
+			PluginPath:     "../../plugins/or.so",
 			ExportedEntity: "Or",
 		},
 		">": {
-			PluginPath:     "plugins/more.so",
+			PluginPath:     "../../plugins/more.so",
 			ExportedEntity: "More",
 		},
 		"filter": {
-			PluginPath:     "plugins/filter.so",
+			PluginPath:     "../../plugins/filter.so",
 			ExportedEntity: "Filter",
 		},
 	})

@@ -3,7 +3,7 @@ package program
 import "fmt"
 
 type Program struct {
-	Root       string
+	Root  string
 	Scope map[string]Component
 }
 

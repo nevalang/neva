@@ -2,7 +2,9 @@ package loader
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"os"
 	"plugin"
 
 	"github.com/emil14/neva/internal/runtime"

@@ -39,7 +39,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.PreCompile(p)
+	prog, cprog, err := s.compiler.Compile(p)
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err

@@ -1,9 +1,14 @@
-add compile time deps resolition
+# Minimize flow
 
+Instead of require user to use `Filter` make `More` (and stuff like that) more friendly.
+Instead of having `More.Out.Result` (true or false) you can have `Out.True` and `Out.False` which passes
+given element next.
+
+But how to solve task "for every user that is older than 30 years send a message `yo`"?
 
 # Unused output ports
 
-Unused outports should be connected to special /dev/null analog
+Unused outports should be connected to special `/dev/null` analog (Eraser?)
 
 # Modules visualization
 
@@ -266,7 +271,8 @@ export function App() {
         top: 0,
         bottom: 0,
         background: "#171010",
-      }}selections={selections}
+      }}
+      selections={selections}
     >
       <rf.Canvas
         // https://www.eclipse.org/elk/reference/options.html

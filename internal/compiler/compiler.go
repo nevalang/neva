@@ -60,7 +60,7 @@ type Compiler struct {
 	operators  map[string]program.Operator
 }
 
-func (c Compiler) PreCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
+func (c Compiler) Compile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
 	return c.preCompile(pkgDescriptorPath)
 }
 
