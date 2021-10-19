@@ -14,9 +14,9 @@ type Translator struct {
 }
 
 func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
-	component, ok := prog.Components[prog.Root]
+	component, ok := prog.Scope[prog.Root]
 	if !ok {
-		log.Println(prog.Components)
+		log.Println(prog.Scope)
 		return rprog.Program{}, fmt.Errorf("could not find %s component", prog.Root)
 	}
 
@@ -32,7 +32,7 @@ func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
 		out[port] = 0 // array-ports not allowed for root components for now.
 	}
 
-	scope, err := t.components(prog.Components)
+	scope, err := t.components(prog.Scope)
 	if err != nil {
 		return rprog.Program{}, err
 	}

@@ -182,7 +182,7 @@ type Caster interface {
 type caster struct{}
 
 func (c caster) CastProgram(from cprog.Program) (sdk.Program, error) {
-	cc, err := c.castComponents(from.Components)
+	cc, err := c.castComponents(from.Scope)
 	if err != nil {
 		return sdk.Program{}, err
 	}

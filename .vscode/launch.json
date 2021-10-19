@@ -12,7 +12,7 @@
       "webRoot": "${workspaceFolder}/web"
     },
     {
-      "name": "server",
+      "name": "linux",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -20,7 +20,7 @@
       "buildFlags": "-buildmode=plugin"
     },
     {
-      "name": "dbg",
+      "name": "windows",
       "type": "go",
       "request": "launch",
       "mode": "auto",

@@ -4,7 +4,7 @@ import "fmt"
 
 type Program struct {
 	Root       string
-	Components map[string]Component
+	Scope map[string]Component
 }
 
 type Component interface {
