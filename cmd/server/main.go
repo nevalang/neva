@@ -34,7 +34,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		log.Fatal(err)
 	}
 
-	p, err := filepath.Abs(filepath.Join(dir, "examples/program/pkg.yml")) // TODO
+	p, err := filepath.Abs(filepath.Join(dir, "../../examples/program/pkg.yml"))
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -54,14 +54,14 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 
 	a, err := io.In.Port("a")
 	if err != nil {
-		panic(err)
+		return sdk.ImplResponse{}, err
 	}
 
 	a <- runtime.NewIntMsg(2)
 
 	b, err := io.Out.Port("b")
 	if err != nil {
-		panic(err)
+		return sdk.ImplResponse{}, err
 	}
 
 	log.Println(<-b)

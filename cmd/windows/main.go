@@ -28,18 +28,13 @@ type Server struct {
 }
 
 func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	p, err := filepath.Abs(filepath.Join(dir, "../../examples/program/pkg.yml"))
+	pwd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.Compile(p)
+	prog, cprog, err := s.compiler.Compile(filepath.Join(pwd, "../../", "examples/program/pkg.yml"))
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err

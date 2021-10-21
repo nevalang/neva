@@ -17,13 +17,17 @@ type IO struct {
 }
 
 func (want IO) Compare(got IO) error {
-	if err := Ports(want.In).Compare(
-		Ports(got.In),
-	); err != nil {
+	wantIn := Ports(want.In)
+	gotIn := Ports(got.In)
+
+	if err := wantIn.Compare(gotIn); err != nil {
 		return fmt.Errorf("inport: %w", err)
 	}
 
-	if err := Ports(want.Out).Compare(Ports(got.Out)); err != nil {
+	wantOut := Ports(want.Out)
+	gotOut := Ports(got.Out)
+
+	if err := wantOut.Compare(gotOut); err != nil {
 		return fmt.Errorf("outport: %w", err)
 	}
 
@@ -40,11 +44,11 @@ func (want Ports) Compare(got Ports) error {
 	for name, typ := range want {
 		_, ok := got[name]
 		if !ok {
-			return ErrPortNotFound
+			return fmt.Errorf("%w: %s", ErrPortNotFound, name)
 		}
 
 		if err := typ.Compare(got[name]); err != nil {
-			return ErrPortInvalid
+			return fmt.Errorf("%w: %s", ErrPortInvalid, name)
 		}
 	}
 
