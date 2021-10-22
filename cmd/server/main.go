@@ -57,18 +57,14 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		panic(err)
 	}
 
-	log.Println("REED FROM A STARTED")
 	a <- runtime.NewIntMsg(2)
-	log.Println("REED FROM A FINISHED")
 
 	b, err := io.Out.Port("b")
 	if err != nil {
 		panic(err)
 	}
 
-	log.Println("REED FROM B STARTED")
 	log.Println(<-b)
-	log.Println("REED FROM B FINISHED")
 
 	casted, err := s.caster.CastProgram(cprog)
 	if err != nil {

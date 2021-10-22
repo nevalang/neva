@@ -72,6 +72,7 @@ function App(props: AppProps) {
               })
             }}
           />
+          <Scope scope={state.program.scope} />
         </Route>
       </Switch>
     </Router>
