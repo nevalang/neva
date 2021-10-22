@@ -39,7 +39,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.PreCompile(p)
+	prog, cprog, err := s.compiler.Compile(p)
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -129,9 +129,6 @@ func MustNew() Server {
 		compilerOps,
 	)
 
-	// FIXME: move this step inside runtime's Run method
-	// otherwise any fbp-probram will have all the operators loaded
-	// which makes all the plugin-related effort useless
 	opspaths := map[string]runtime.Operator{
 		"%": func(runtime.IO) error {
 			return nil
@@ -170,7 +167,7 @@ type Caster interface {
 type caster struct{}
 
 func (c caster) CastProgram(from cprog.Program) (sdk.Program, error) {
-	cc, err := c.castComponents(from.Components)
+	cc, err := c.castComponents(from.Scope)
 	if err != nil {
 		return sdk.Program{}, err
 	}

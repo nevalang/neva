@@ -81,7 +81,7 @@ func NewOperators() map[string]Operator {
 			Name: "filter",
 			IO: IO{
 				In: Ports{
-					"data": PortType{Type: IntType},
+					"data":   PortType{Type: IntType},
 					"marker": PortType{Type: IntType},
 				},
 				Out: Ports{

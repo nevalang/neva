@@ -40,7 +40,7 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.PreCompile(p)
+	prog, cprog, err := s.compiler.Compile(p)
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -133,27 +133,27 @@ func MustNew() Server {
 	// TODO: params should be part of operator type
 	ops, err := loader.Load(map[string]loader.Params{
 		"%": {
-			PluginPath:     "plugins/remainder.so",
+			PluginPath:     "../../plugins/remainder.so",
 			ExportedEntity: "Remainder",
 		},
 		"*": {
-			PluginPath:     "plugins/mul.so",
+			PluginPath:     "../../plugins/mul.so",
 			ExportedEntity: "Mul",
 		},
 		"&&": {
-			PluginPath:     "plugins/and.so",
+			PluginPath:     "../../plugins/and.so",
 			ExportedEntity: "And",
 		},
 		"||": {
-			PluginPath:     "plugins/or.so",
+			PluginPath:     "../../plugins/or.so",
 			ExportedEntity: "Or",
 		},
 		">": {
-			PluginPath:     "plugins/more.so",
+			PluginPath:     "../../plugins/more.so",
 			ExportedEntity: "More",
 		},
 		"filter": {
-			PluginPath:     "plugins/filter.so",
+			PluginPath:     "../../plugins/filter.so",
 			ExportedEntity: "Filter",
 		},
 	})
@@ -178,7 +178,7 @@ type Caster interface {
 type caster struct{}
 
 func (c caster) CastProgram(from cprog.Program) (sdk.Program, error) {
-	cc, err := c.castComponents(from.Components)
+	cc, err := c.castComponents(from.Scope)
 	if err != nil {
 		return sdk.Program{}, err
 	}

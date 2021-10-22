@@ -27,3 +27,13 @@ ts_sdk:
 # rm -rf web/src/sdk 
 # mv generated_ts_sdk  web/src/sdk 
 # sudo rm -rf generated_ts_sdk
+
+.PHONY: go_plugins
+go_plugins:
+	go version
+	go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
+	go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
+	go build -o plugins/more.so -buildmode=plugin internal/runtime/operators/more/main.go
+	go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/main.go
+	go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/main.go
+	go build -o plugins/remainder.so -buildmode=plugin internal/runtime/operators/remainder/main.go

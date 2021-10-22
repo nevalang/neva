@@ -3,8 +3,8 @@ package program
 import "fmt"
 
 type Program struct {
-	Root       string
-	Components map[string]Component
+	Root  string
+	Scope map[string]Component
 }
 
 type Component interface {

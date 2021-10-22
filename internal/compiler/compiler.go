@@ -60,23 +60,9 @@ type Compiler struct {
 	operators  map[string]program.Operator
 }
 
-func (c Compiler) PreCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
+func (c Compiler) Compile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
 	return c.preCompile(pkgDescriptorPath)
 }
-
-// func (c Compiler) Compile(pkgDescriptorPath string) ([]byte, error) {
-// 	prog, err := c.preCompile(pkgDescriptorPath)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	bytecode, err := c.coder.Code(prog)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
-// 	}
-
-// 	return bytecode, nil
-// }
 
 func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
 	pkg, err := c.storage.Pkg(pkgDescriptorPath)
@@ -93,9 +79,13 @@ func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program
 		scope[k] = mod
 	}
 
-	prog, err := c.buildProgram(scope, pkg.Root)
-	if err != nil {
+	if err := c.depsResolved(scope); err != nil {
 		return runtime.Program{}, program.Program{}, err
+	}
+
+	prog := program.Program{
+		Root:  pkg.Root,
+		Scope: scope,
 	}
 
 	rprog, err := c.translator.Translate(prog)
@@ -106,12 +96,30 @@ func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program
 	return rprog, prog, nil
 }
 
-// TODO
-func (c Compiler) buildProgram(scope map[string]program.Component, root string) (program.Program, error) {
-	return program.Program{
-		Root:       root,
-		Components: scope,
-	}, nil
+func (c Compiler) depsResolved(scope map[string]program.Component) error {
+	for componentName, component := range scope {
+		if _, ok := component.(program.Operator); ok {
+			continue
+		}
+
+		mod, ok := component.(program.Module)
+		if !ok {
+			return fmt.Errorf("unknown component type")
+		}
+
+		for depName, wantIO := range mod.Deps {
+			dep := scope[depName]
+			if dep == nil {
+				return fmt.Errorf("dep %s not found for %s", depName, componentName)
+			}
+
+			if err := wantIO.Compare(dep.Interface()); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (c Compiler) compileModule(mod []byte) (program.Module, error) {
@@ -153,7 +161,7 @@ func (c Compiler) compileProgram(
 			return program.Program{}, err
 		}
 
-		subroot, ok := prog.Components[prog.Root]
+		subroot, ok := prog.Scope[prog.Root]
 		if !ok {
 			return program.Program{}, fmt.Errorf("%w", ErrInternal)
 		}
@@ -166,12 +174,11 @@ func (c Compiler) compileProgram(
 	scope[root] = mod
 
 	return program.Program{
-		Root:       root,
-		Components: scope,
+		Root:  root,
+		Scope: scope,
 	}, nil
 }
 
-// defaultScope returns scope with operators and free space for modules.
 func (c Compiler) defaultScope(padding int) map[string]program.Component {
 	m := make(map[string]program.Component, len(c.operators)+padding)
 	for i := range c.operators {
