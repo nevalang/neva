@@ -1,3 +1,8 @@
+```
+BASE_PATH # path to directory where programs (packages) can be found
+compiler will use recoursion to find all dirs with pkg.yml files.
+```
+
 # Neva
 
 Flow Based Programming Environment

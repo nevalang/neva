@@ -18,8 +18,8 @@ class OpenApi implements Api {
 
   async getProgram(path: string): Promise<Program> {
     try {
-      const resp = await this.client.programGet(path)
-      return this.caster.castProgram(resp.data)
+      const sdkProg = await this.client.programGet(path)
+      return this.caster.castProgram(sdkProg.data)
     } catch (err) {
       throw new Error("programGet: " + err.message)
     }

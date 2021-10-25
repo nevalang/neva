@@ -1,18 +1,14 @@
-// import classNames from "classnames"
 import * as React from "react"
+import { Link } from "react-router-dom"
+import { RouterProps } from "react-router"
 import { IO } from "../types/program"
 
-interface Props {
-  io: IO
-  deps: { [key: string]: IO }
-  workers: { [key: string]: string }
-}
+interface Props extends RouterProps {}
 
 function Menu(props: Props) {
   return (
     <ul className="ul">
-      {/* <li onClick={props.onNew}>new program</li>
-      <li onClick={props.onEdit}>edit program</li> */}
+      <Link />
     </ul>
   )
 }

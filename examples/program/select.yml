@@ -28,12 +28,18 @@ deps:
     out:
       acc: int
       rej: int
+  bp:
+    in:
+      in: int
+    out:
+      out: int
 
 workers:
   multi: "*"
   remainder: "%"
   more: ">"
   filter: filter
+  bp: bp
 
 const:
   zero:
@@ -66,5 +72,8 @@ net:
       multi:
         - in[1]
   multi:
+    out:
+      bp: [in]
+  bp:
     out:
       out: [b]

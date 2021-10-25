@@ -12,6 +12,7 @@
   "author": "Emil Valeev <emil.musician@gmail.com> (https://github.com/emil14)",
   "license": "MIT",
   "devDependencies": {
+    "@blueprintjs/eslint-config": "^0.7.4",
     "@types/node": "^16.10.2",
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
@@ -25,11 +26,12 @@
     "classnames": "^2.3.1",
     "es6-promise": "^4.2.4",
     "gene": "^0.1.2",
+    "re": "^0.1.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "^5.2.1",
     "react-router-dom": "^5.3.0",
-    "reaflow": "^4.2.1",
+    "reaflow": "^4.2.8",
     "url-parse": "^1.4.3",
     "whatwg-fetch": "^3.0.0"
   },

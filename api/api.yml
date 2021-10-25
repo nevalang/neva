@@ -89,8 +89,23 @@ components:
       type: integer
 
 paths:
+  /paths:
+    description: return list of all directories with pkg.yml
+    get:
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "500":
+          description: Request failed
   /program:
     post:
+      description: save new program on a given path
       parameters:
         - in: path
           name: path

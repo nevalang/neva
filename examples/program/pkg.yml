@@ -2,5 +2,6 @@ operators: ["*", "%", ">", "filter"]
 
 import:
   select: ./select
+  bp: ./bypass
 
 root: select

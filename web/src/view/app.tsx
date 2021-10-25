@@ -1,9 +1,13 @@
 import * as React from "react"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
 
-import { ComponentTypes, Module, Program } from "../types/program"
+import { ComponentTypes, Program } from "../types/program"
 import { Api } from "../api"
-import { Network } from "./network"
+import { useEffect, useState } from "react"
+import { ProgramEditor } from "./program"
+import { Menu } from "./menu"
+import { Redirect } from "react-router"
+// import {drag/} from 'reaflow'
 
 const defaultProgram: Program = {
   root: "",
@@ -27,53 +31,59 @@ interface AppProps {
 }
 
 function App(props: AppProps) {
-  const [state, setState] = React.useState({
-    program: defaultProgram,
-    activeModuleName: defaultProgram.root,
-  })
+  const [path, setPath] = useState("examples/program/pkg")
+  const [program, setProgram] = useState(defaultProgram)
+  const [err, setErr] = useState(null)
 
-  const moduleName = (nodeName: string, program: Program): string => {
-    if (nodeName == "in" || nodeName == "out") {
-      return state.activeModuleName
-    }
-
-    const root = program.scope[state.activeModuleName] as Module
-    const dep = root.workers[nodeName]
-    if (dep === undefined) {
-      return state.activeModuleName
-    }
-
-    return dep
-  }
-
-  React.useEffect(() => {
+  useEffect(() => {
     async function aux() {
+      let err = null
       try {
-        const program = await props.api.getProgram("examples/program/pkg")
-        setState({ program: program, activeModuleName: program.root })
+        setProgram(await props.api.getProgram(path))
       } catch (err) {
-        console.error(err)
+        err = err
+      } finally {
+        setErr(err)
       }
     }
     aux()
-  }, [])
+  }, [path])
+
+  const handleRemoveFromScope = async (name: string) => {
+    const filtered = Object.entries(program.scope).filter(([k]) => k !== name)
+    const newProgram = {
+      root: program.root,
+      scope: Object.fromEntries(filtered),
+    }
+    try {
+      await props.api.editProgram(path, newProgram)
+      setProgram(newProgram)
+      setErr(null)
+    } catch (err) {
+      setErr(err)
+    }
+  }
+
+  if (err !== null) {
+    return <span>{err}</span>
+  }
 
   return (
     <Router>
       <Switch>
-        <Route path="/menu">{/* <Menu /> */}</Route>
-        <Route path="/">
-          <Network
-            module={state.program.scope[state.activeModuleName] as Module}
-            onNodeClick={(nodeName: string) => {
-              setState({
-                program: state.program,
-                activeModuleName: moduleName(nodeName, state.program),
-              })
-            }}
-          />
-          <Scope scope={state.program.scope} />
-        </Route>
+        <Redirect exact from="/" to="/menu" />
+        <Route path="/menu" component={Menu} exact />
+        <Route
+          path="/program"
+          component={props => (
+            <ProgramEditor
+              {...props}
+              program={program}
+              onAddToScope={console.log}
+              onRemoveFromScope={handleRemoveFromScope}
+            />
+          )}
+        />
       </Switch>
     </Router>
   )

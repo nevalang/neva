@@ -13,7 +13,7 @@ func (v validator) Validate(mod program.Module) error {
 	var g errgroup.Group
 
 	// TODO validate const
-	
+
 	g.Go(func() error {
 		return v.validatePorts(mod.Interface())
 	})
@@ -61,14 +61,16 @@ func (mod validator) validatePorts(io program.IO) error {
 
 // validateWorkers checks that every worker points to an existing dependency.
 func (v validator) validateWorkers(deps map[string]program.IO, workers map[string]string) error {
-	if len(workers) == 0 || len(deps) == 0 {
-		return fmt.Errorf("deps and workers cannot be empty")
+	if len(workers) > 0 && len(deps) < len(workers) {
+		return fmt.Errorf("len(workers) > 0 && len(deps) < len(workers)")
 	}
+
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
 			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
 		}
 	}
+
 	return nil
 }
 
@@ -143,7 +145,7 @@ func (v validator) validateConnection(connection program.PortAddrPair, module pr
 }
 
 func (v validator) validateOutFlow(mod program.Module) error {
-	// mod.Net.Incoming() 
+	// mod.Net.Incoming()
 	return nil
 }
 

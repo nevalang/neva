@@ -2,6 +2,74 @@ import * as React from "react"
 import { EdgeData, hasLink, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
 import { Connection, IO, Module } from "../types/program"
+import { ContextMenu, Menu, MenuItem } from "@blueprintjs/core"
+import { MouseEvent } from "react"
+
+interface NetworkProps {
+  module: Module
+  onNodeClick(componentName: string): void
+  onAddNewNode(event: MouseEvent): void
+}
+
+const componentByNode = (nodeName: string, module: Module): string => {
+  return module.workers[nodeName]
+}
+
+function NetworkEditor(props: NetworkProps) {
+  const [selections, setSelections] = React.useState<string[]>([])
+
+  const { nodes, edges } = netGraph(props.module)
+
+  const renderContextMenu = (e: MouseEvent) => {
+    e.preventDefault()
+    ContextMenu.show(
+      <Menu>
+        <MenuItem text="Add node" onClick={props.onAddNewNode} />
+      </Menu>,
+      { left: e.clientX, top: e.clientY },
+      () => {}
+    )
+  }
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+      }}
+      onContextMenu={event => renderContextMenu(event.nativeEvent)}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          background: "black",
+        }}
+      >
+        <rf.Canvas
+          nodes={nodes}
+          edges={edges}
+          selections={selections}
+          onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
+          onCanvasClick={() => setSelections([])}
+          node={
+            <rf.Node
+              className="node"
+              dragType="port"
+              onClick={(_, node) =>
+                props.onNodeClick(componentByNode(node.id, props.module))
+              }
+            />
+          }
+        />
+      </div>
+    </div>
+  )
+}
 
 function netGraph<N, E>(
   module: Module
@@ -16,17 +84,26 @@ function netGraph<N, E>(
 }
 
 function moduleNodes(module: Module): NodeData[] {
+  let nodes: NodeData[] = []
+
   const { in: inports, out: outports } = module.io
   const inportsNode = node("in", { in: {}, out: inports })
   const outportsNode = node("out", { in: outports, out: {} })
+  nodes = nodes.concat(inportsNode, outportsNode)
 
-  const constNodeOut = {}
-  for (const name in module.constants) {
-    constNodeOut[name] = module.constants[name].typ
+  if (Object.keys(module.constants).length > 0) {
+    const ports = {}
+    for (const name in module.constants) {
+      ports[name] = module.constants[name].typ
+    }
+    nodes = nodes.concat(node("const", { in: {}, out: ports }))
   }
-  const constNode = node("const", { in: {}, out: constNodeOut })
 
-  return workerNodes(module).concat(inportsNode, outportsNode, constNode)
+  if (Object.keys(module.workers).length > 0) {
+    nodes = nodes.concat(...workerNodes(module))
+  }
+
+  return nodes
 }
 
 function workerNodes(module: Module): NodeData[] {
@@ -95,42 +172,4 @@ function netEdges(net: Connection[]): EdgeData[] {
   })
 }
 
-interface NetworkProps {
-  module: Module
-  onNodeClick(string): void
-}
-
-function Network(props: NetworkProps) {
-  const [selections, setSelections] = React.useState<string[]>([])
-  const { nodes, edges } = netGraph(props.module)
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        background: "#171010",
-      }}
-    >
-      <rf.Canvas
-        nodes={nodes}
-        edges={edges}
-        selections={selections}
-        onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
-        onCanvasClick={() => setSelections([])}
-        node={
-          <rf.Node
-            className="node"
-            dragType="port"
-            onClick={(_, node) => props.onNodeClick(node.id)}
-          />
-        }
-      />
-    </div>
-  )
-}
-
-export { Network }
+export { NetworkEditor }

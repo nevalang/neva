@@ -31,7 +31,7 @@ export class CasterImpl implements Caster {
       const sdkComponent = scope[name]
       let component: Component
 
-      if ((sdkComponent as SDKModule).deps == undefined) {
+      if ((sdkComponent as SDKModule).net == undefined) {
         component = {
           type: ComponentTypes.OPERATOR,
           io: {
@@ -61,7 +61,7 @@ export class CasterImpl implements Caster {
           type: ComponentTypes.MODULE,
           io: { in: sdkComponent.io.in, out: sdkComponent.io.out },
           deps: deps,
-          workers: mod.workers,
+          workers: { ...mod.workers },
           constants,
           net: mod.net.map(v => ({
             from: { node: v.from.node, port: v.from.port, idx: v.from.idx },

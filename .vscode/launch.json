@@ -23,7 +23,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/dbg"
+      "program": "${workspaceFolder}/cmd/windows"
     }
   ]
 }
