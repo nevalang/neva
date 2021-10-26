@@ -8,7 +8,6 @@ import { ProgramEditor } from "./program"
 import { Menu } from "./menu"
 import { Redirect } from "react-router"
 // import {drag/} from 'reaflow'
-import { Network } from "./network"
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -104,18 +103,7 @@ function App(props: AppProps) {
             />
           )}
         />
-        {/* <Route path="/">
-          <Palette onClick={console.log} scope={state.program.scope} />
-          {/* <Network
-            module={state.program.scope[state.activeModuleName] as Module}
-            onNodeClick={(nodeName: string) => {
-              setState({
-                program: state.program,
-                activeModuleName: moduleName(nodeName, state.program),
-              })
-            }}
-          /> */}
-        </Route> */}
+        {/* <Palette onClick={console.log} scope={state.program.scope} /> */}
       </Switch>
     </Router>
   )
