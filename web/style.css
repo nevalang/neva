@@ -40,3 +40,34 @@ body {
 .scope__card:hover {
   cursor: pointer;
 }
+
+.palette {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+    ". . ."
+    ". . ."
+    ". . .";
+}
+
+.palette-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+}
+
+.palette-card:hover {
+  cursor: pointer;
+  border-color: red;
+}
+
+.node {
+  transition: none;
+}

@@ -8,6 +8,17 @@ import { ProgramEditor } from "./program"
 import { Menu } from "./menu"
 import { Redirect } from "react-router"
 // import {drag/} from 'reaflow'
+import { Network } from "./network"
+import {
+  Breadcrumb,
+  Breadcrumbs,
+  Icon,
+  Intent,
+  Spinner,
+  SpinnerSize,
+} from "@blueprintjs/core"
+import { BREADCRUMBS } from "@blueprintjs/core/lib/esm/common/classes"
+import { Palette } from "./palette"
 
 const defaultProgram: Program = {
   root: "",
@@ -46,6 +57,7 @@ function App(props: AppProps) {
         setErr(err)
       }
     }
+
     aux()
   }, [path])
 
@@ -70,6 +82,14 @@ function App(props: AppProps) {
 
   return (
     <Router>
+      <Breadcrumbs
+        currentBreadcrumbRenderer={props => (
+          <Breadcrumb {...props}>
+            text <Icon icon="star" />
+          </Breadcrumb>
+        )}
+        items={[]}
+      />
       <Switch>
         <Redirect exact from="/" to="/menu" />
         <Route path="/menu" component={Menu} exact />
@@ -84,6 +104,18 @@ function App(props: AppProps) {
             />
           )}
         />
+        {/* <Route path="/">
+          <Palette onClick={console.log} scope={state.program.scope} />
+          {/* <Network
+            module={state.program.scope[state.activeModuleName] as Module}
+            onNodeClick={(nodeName: string) => {
+              setState({
+                program: state.program,
+                activeModuleName: moduleName(nodeName, state.program),
+              })
+            }}
+          /> */}
+        </Route> */}
       </Switch>
     </Router>
   )

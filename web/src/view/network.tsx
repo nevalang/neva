@@ -1,5 +1,5 @@
 import * as React from "react"
-import { EdgeData, hasLink, NodeData, Port, PortData } from "reaflow"
+import { Edge, EdgeData, hasLink, NodeData, PortData } from "reaflow"
 import * as rf from "reaflow"
 import { Connection, IO, Module } from "../types/program"
 import { ContextMenu, Menu, MenuItem } from "@blueprintjs/core"
