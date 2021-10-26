@@ -1,9 +1,9 @@
 import * as React from "react"
-import { EdgeData, hasLink, NodeData, PortData } from "reaflow"
+import { EdgeData, hasLink, NodeData, Port, PortData } from "reaflow"
 import * as rf from "reaflow"
 import { Connection, IO, Module } from "../types/program"
 import { ContextMenu, Menu, MenuItem } from "@blueprintjs/core"
-import { MouseEvent } from "react"
+import { MouseEvent, useState } from "react"
 
 interface NetworkProps {
   module: Module
@@ -16,9 +16,13 @@ const componentByNode = (nodeName: string, module: Module): string => {
 }
 
 function NetworkEditor(props: NetworkProps) {
-  const [selections, setSelections] = React.useState<string[]>([])
+  const [selections, setSelections] = useState<string[]>([])
 
-  const { nodes, edges } = netGraph(props.module)
+  // dragging state
+  const [srcNodeId, setSrcNodeId] = useState(null)
+  const [srcPortId, setSrcPortId] = useState(null)
+  const [targetNodeId, setTargetNodeId] = useState(null)
+  const [targetPortId, setTargetPortId] = useState(null)
 
   const renderContextMenu = (e: MouseEvent) => {
     e.preventDefault()
@@ -31,6 +35,10 @@ function NetworkEditor(props: NetworkProps) {
     )
   }
 
+  const { nodes: n, edges: e } = netGraph(props.module)
+  const [nodes, setNodes] = useState(n)
+  const [edges, setEdges] = useState(e)
+
   return (
     <div
       style={{
@@ -38,7 +46,7 @@ function NetworkEditor(props: NetworkProps) {
         width: "100%",
         height: "100%",
       }}
-      onContextMenu={event => renderContextMenu(event.nativeEvent)}
+      onContextMenu={event => renderContextMenu(event.nativeEvent as any)}
     >
       <div
         style={{
@@ -54,17 +62,46 @@ function NetworkEditor(props: NetworkProps) {
           nodes={nodes}
           edges={edges}
           selections={selections}
-          onNodeLinkCheck={(_, from, to) => !hasLink(edges, from, to)}
           onCanvasClick={() => setSelections([])}
-          node={
+          node={nodeProps => (
             <rf.Node
-              className="node"
               dragType="port"
-              onClick={(_, node) =>
-                props.onNodeClick(componentByNode(node.id, props.module))
+              onClick={(_, nodeData) =>
+                props.onNodeClick(componentByNode(nodeData.id, props.module))
               }
+              port={
+                <Port
+                  onEnter={(_event, port) => {
+                    setTargetPortId(port.id)
+                  }}
+                  onLeave={(_event, _port) => {
+                    setTargetPortId(null)
+                  }}
+                  onDragStart={(_event, _pos, port) => {
+                    setSrcNodeId(nodeProps.id)
+                    setSrcPortId(port.id)
+                  }}
+                  onDragEnd={(_event, _pos, _port) => {
+                    setSrcPortId(null)
+                    setTargetPortId(null)
+                    setEdges([
+                      ...edges,
+                      {
+                        id: `${srcNodeId}.${srcPortId}-${targetNodeId}.${targetPortId}`,
+                        from: srcNodeId,
+                        fromPort: srcPortId,
+                        to: targetNodeId,
+                        toPort: targetPortId,
+                      },
+                    ])
+                  }}
+                />
+              }
+              onEnter={(_event, node) => {
+                setTargetNodeId(node.id)
+              }}
             />
-          }
+          )}
         />
       </div>
     </div>
