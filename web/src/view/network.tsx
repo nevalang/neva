@@ -3,12 +3,13 @@ import { Edge, EdgeData, hasLink, NodeData, Port, PortData } from "reaflow"
 import * as rf from "reaflow"
 import { Connection, IO, Module } from "../types/program"
 import { ContextMenu, Menu, MenuItem } from "@blueprintjs/core"
-import { MouseEvent, useState } from "react"
+import { MouseEvent, useEffect, useState } from "react"
 
 interface NetworkProps {
   module: Module
   onNodeClick(componentName: string): void
-  onAddNewNode(event: MouseEvent): void
+  onAddNode(event: MouseEvent): void
+  onNewConnection(connection: Connection)
 }
 
 const componentByNode = (nodeName: string, module: Module): string => {
@@ -19,25 +20,23 @@ function NetworkEditor(props: NetworkProps) {
   const [selections, setSelections] = useState<string[]>([])
 
   // dragging state
-  const [srcNodeId, setSrcNodeId] = useState(null)
-  const [srcPortId, setSrcPortId] = useState(null)
-  const [targetNodeId, setTargetNodeId] = useState(null)
-  const [targetPortId, setTargetPortId] = useState(null)
+  const [srcNodeId, setSrcNodeId] = useState<string | null>(null)
+  const [srcPortId, setSrcPortId] = useState<string | null>(null)
+  const [dstNodeId, setDstNodeId] = useState<string | null>(null)
+  const [dstPortId, setDstPortId] = useState<string | null>(null)
 
   const renderContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     ContextMenu.show(
       <Menu>
-        <MenuItem text="Add node" onClick={props.onAddNewNode} />
+        <MenuItem text="Add node" onClick={props.onAddNode} />
       </Menu>,
       { left: e.clientX, top: e.clientY },
       () => {}
     )
   }
 
-  const { nodes: n, edges: e } = netGraph(props.module)
-  const [nodes, setNodes] = useState(n)
-  const [edges, setEdges] = useState(e)
+  const { nodes, edges } = reaflowGraph(props.module)
 
   return (
     <div
@@ -72,34 +71,39 @@ function NetworkEditor(props: NetworkProps) {
               port={
                 <Port
                   onEnter={(_event, port) => {
-                    setTargetPortId(port.id)
+                    setDstNodeId(nodeProps.id)
+                    setDstPortId(port.id)
                   }}
-                  onLeave={(_event, _port) => {
-                    setTargetPortId(null)
-                  }}
+                  onLeave={(_event, _port) => {}}
                   onDragStart={(_event, _pos, port) => {
                     setSrcNodeId(nodeProps.id)
                     setSrcPortId(port.id)
                   }}
                   onDragEnd={(_event, _pos, _port) => {
-                    setSrcPortId(null)
-                    setTargetPortId(null)
-                    setEdges([
-                      ...edges,
-                      {
-                        id: `${srcNodeId}.${srcPortId}-${targetNodeId}.${targetPortId}`,
-                        from: srcNodeId,
-                        fromPort: srcPortId,
-                        to: targetNodeId,
-                        toPort: targetPortId,
+                    props.onNewConnection({
+                      from: {
+                        node: srcNodeId,
+                        port: removePortPrefix(srcPortId),
                       },
-                    ])
+                      to: {
+                        node: dstNodeId,
+                        port: removePortPrefix(dstPortId),
+                      },
+                    })
+                    // const edge = {
+                    //   id: `${srcNodeId}.${srcPortId}-${dstNodeId}.${dstPortId}`,
+                    //   from: srcNodeId,
+                    //   fromPort: srcPortId,
+                    //   to: dstNodeId,
+                    //   toPort: dstPortId,
+                    // }
+                    // setEdges([...edges, edge])
+                    setSrcPortId(null)
+                    setDstPortId(null)
                   }}
                 />
               }
-              onEnter={(_event, node) => {
-                setTargetNodeId(node.id)
-              }}
+              onEnter={(_event, node) => {}}
             />
           )}
         />
@@ -108,7 +112,11 @@ function NetworkEditor(props: NetworkProps) {
   )
 }
 
-function netGraph<N, E>(
+function removePortPrefix(withPrefix: string): string {
+  return withPrefix.substring(withPrefix.indexOf("_") + 1)
+}
+
+function reaflowGraph<N, E>(
   module: Module
 ): {
   nodes: NodeData<N>[]

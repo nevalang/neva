@@ -8,7 +8,7 @@ import {
 import * as React from "react"
 import { useState } from "react"
 import { RouterProps } from "react-router"
-import { Module, Program } from "../types/program"
+import { Connection, Module, Program } from "../types/program"
 import { NetworkEditor } from "./network"
 import { Scope } from "./scope"
 
@@ -25,15 +25,24 @@ function ProgramEditor({
   onAddToScope,
 }: ProgramEditorProps) {
   const [module, setModule] = useState(program.scope[program.root] as Module)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [isScopeVisible, setIsScopeVisible] = useState(false)
 
-  const addNewNode = (componentName: string, workerName: string) => {
+  const addWorker = (componentName: string, workerName: string) => {
+    if (module.workers[workerName]) {
+      console.log(workerName, "exist already")
+      return
+    }
     setModule(prev => ({
       ...prev,
-      workers: {
-        ...prev.workers,
-        [workerName]: componentName,
-      },
+      deps: { ...prev.deps, [componentName]: program.scope[componentName].io },
+      workers: { ...prev.workers, [workerName]: componentName },
+    }))
+  }
+
+  const addConnection = (connection: Connection) => {
+    setModule(prev => ({
+      ...prev,
+      net: [...prev.net, connection],
     }))
   }
 
@@ -44,12 +53,13 @@ function ProgramEditor({
         onNodeClick={(componentName: string) => {
           setModule(program.scope[componentName] as Module)
         }}
-        onAddNewNode={() => setDrawerOpen(true)}
+        onAddNode={() => setIsScopeVisible(true)}
+        onNewConnection={addConnection}
       />
       <Drawer
         position={Position.LEFT}
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        isOpen={isScopeVisible}
+        onClose={() => setIsScopeVisible(false)}
         title="Scope"
         style={{ overflow: "scroll" }}
       >
@@ -58,7 +68,7 @@ function ProgramEditor({
           onRemove={onRemoveFromScope}
           onAdd={onAddToScope}
           onDragEnd={console.log}
-          onClick={addNewNode}
+          onClick={addWorker}
         />
       </Drawer>
     </>
