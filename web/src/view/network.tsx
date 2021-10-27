@@ -1,19 +1,17 @@
 import * as React from "react"
-import { Edge, EdgeData, hasLink, NodeData, Port, PortData } from "reaflow"
+import { Edge, EdgeData, NodeData, Port, PortData } from "reaflow"
 import * as rf from "reaflow"
 import { Connection, IO, Module } from "../types/program"
 import { ContextMenu, Menu, MenuItem } from "@blueprintjs/core"
-import { MouseEvent, useEffect, useState } from "react"
+import { MouseEvent, useState } from "react"
 
 interface NetworkProps {
   module: Module
   onNodeClick(componentName: string): void
   onAddNode(event: MouseEvent): void
-  onNewConnection(connection: Connection)
-}
-
-const componentByNode = (nodeName: string, module: Module): string => {
-  return module.workers[nodeName]
+  onAddConnection(connection: Connection): void
+  onRemoveConnection(connection: Connection): void
+  onRemoveNode(nodeName: string)
 }
 
 function NetworkEditor(props: NetworkProps) {
@@ -36,7 +34,7 @@ function NetworkEditor(props: NetworkProps) {
     )
   }
 
-  const { nodes, edges } = reaflowGraph(props.module)
+  const { nodes, edges } = rfGraph(props.module)
 
   return (
     <div
@@ -65,9 +63,8 @@ function NetworkEditor(props: NetworkProps) {
           node={nodeProps => (
             <rf.Node
               dragType="port"
-              onClick={(_, nodeData) =>
-                props.onNodeClick(componentByNode(nodeData.id, props.module))
-              }
+              onClick={(_event, node) => setSelections([node.id])}
+              onRemove={(_event, node) => props.onRemoveNode(node.id)}
               port={
                 <Port
                   onEnter={(_event, port) => {
@@ -80,7 +77,7 @@ function NetworkEditor(props: NetworkProps) {
                     setSrcPortId(port.id)
                   }}
                   onDragEnd={(_event, _pos, _port) => {
-                    props.onNewConnection({
+                    props.onAddConnection({
                       from: {
                         node: srcNodeId,
                         port: removePortPrefix(srcPortId),
@@ -90,20 +87,30 @@ function NetworkEditor(props: NetworkProps) {
                         port: removePortPrefix(dstPortId),
                       },
                     })
-                    // const edge = {
-                    //   id: `${srcNodeId}.${srcPortId}-${dstNodeId}.${dstPortId}`,
-                    //   from: srcNodeId,
-                    //   fromPort: srcPortId,
-                    //   to: dstNodeId,
-                    //   toPort: dstPortId,
-                    // }
-                    // setEdges([...edges, edge])
                     setSrcPortId(null)
                     setDstPortId(null)
                   }}
                 />
               }
               onEnter={(_event, node) => {}}
+            />
+          )}
+          edge={edge => (
+            <Edge
+              onClick={(_event, edge) => setSelections([edge.id])}
+              onRemove={(_event, edge) => {
+                props.onRemoveConnection({
+                  from: {
+                    node: edge.from,
+                    port: removePortPrefix(edge.fromPort),
+                  },
+                  to: {
+                    node: edge.to,
+                    port: removePortPrefix(edge.toPort),
+                  },
+                })
+              }}
+              // onAdd={}
             />
           )}
         />
@@ -116,7 +123,7 @@ function removePortPrefix(withPrefix: string): string {
   return withPrefix.substring(withPrefix.indexOf("_") + 1)
 }
 
-function reaflowGraph<N, E>(
+function rfGraph<N, E>(
   module: Module
 ): {
   nodes: NodeData<N>[]

@@ -1,13 +1,8 @@
-import {
-  ContextMenu,
-  Drawer,
-  Menu,
-  MenuItem,
-  Position,
-} from "@blueprintjs/core"
 import * as React from "react"
 import { useState } from "react"
+import { Drawer, Position } from "@blueprintjs/core"
 import { RouterProps } from "react-router"
+
 import { Connection, Module, Program } from "../types/program"
 import { NetworkEditor } from "./network"
 import { Scope } from "./scope"
@@ -46,6 +41,23 @@ function ProgramEditor({
     }))
   }
 
+  const removeConnection = (toRemove: Connection) => {
+    setModule(prev => ({
+      ...prev,
+      net: prev.net.filter(
+        c =>
+          c.from.node !== toRemove.from.node &&
+          c.from.port !== toRemove.from.port &&
+          c.to.node !== toRemove.to.node &&
+          c.to.port !== toRemove.to.port
+      ),
+    }))
+  }
+
+  const removeNode = (nodeName: string) => {
+    console.log("removeNode not implemented!")
+  }
+
   return (
     <>
       <NetworkEditor
@@ -54,7 +66,9 @@ function ProgramEditor({
           setModule(program.scope[componentName] as Module)
         }}
         onAddNode={() => setIsScopeVisible(true)}
-        onNewConnection={addConnection}
+        onAddConnection={addConnection}
+        onRemoveConnection={removeConnection}
+        onRemoveNode={removeNode}
       />
       <Drawer
         position={Position.LEFT}
