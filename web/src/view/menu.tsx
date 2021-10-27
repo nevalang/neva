@@ -7,8 +7,8 @@ interface Props extends RouterProps {}
 
 function Menu(props: Props) {
   return (
-    <ul className="ul">
-      <Link to="program" />
+    <ul className="menu">
+      <Link to="program">Program</Link>
     </ul>
   )
 }

@@ -56,7 +56,8 @@ function ProgramEditor({
   }
 
   const removeNode = (nodeName: string) => {
-    if (["in", "out", "const"].includes(nodeName)) { // TODO
+    if (["in", "out", "const"].includes(nodeName)) {
+      // TODO
       console.log(nodeName, "cannot be removed")
       return
     }
@@ -71,16 +72,6 @@ function ProgramEditor({
 
   return (
     <>
-      <NetworkEditor
-        module={module}
-        onNodeClick={(componentName: string) => {
-          setModule(program.scope[componentName] as Module)
-        }}
-        onAddNode={() => setIsScopeVisible(true)}
-        onAddConnection={addConnection}
-        onRemoveConnection={removeConnection}
-        onRemoveNode={removeNode}
-      />
       <Drawer
         position={Position.LEFT}
         isOpen={isScopeVisible}
@@ -96,6 +87,16 @@ function ProgramEditor({
           onClick={addWorker}
         />
       </Drawer>
+      <NetworkEditor
+        module={module}
+        onNodeClick={(componentName: string) => {
+          setModule(program.scope[componentName] as Module)
+        }}
+        onAddNode={() => setIsScopeVisible(true)}
+        onAddConnection={addConnection}
+        onRemoveConnection={removeConnection}
+        onRemoveNode={removeNode}
+      />
     </>
   )
 }

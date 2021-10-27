@@ -1,23 +1,13 @@
 import * as React from "react"
+import { useEffect, useState } from "react"
+import { Redirect } from "react-router"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
+import { Breadcrumb, Breadcrumbs, Icon } from "@blueprintjs/core"
 
 import { ComponentTypes, Program } from "../types/program"
 import { Api } from "../api"
-import { useEffect, useState } from "react"
 import { ProgramEditor } from "./program"
 import { Menu } from "./menu"
-import { Redirect } from "react-router"
-// import {drag/} from 'reaflow'
-import {
-  Breadcrumb,
-  Breadcrumbs,
-  Icon,
-  Intent,
-  Spinner,
-  SpinnerSize,
-} from "@blueprintjs/core"
-import { BREADCRUMBS } from "@blueprintjs/core/lib/esm/common/classes"
-import { Palette } from "./palette"
 
 const defaultProgram: Program = {
   root: "",
@@ -56,7 +46,6 @@ function App(props: AppProps) {
         setErr(err)
       }
     }
-
     aux()
   }, [path])
 

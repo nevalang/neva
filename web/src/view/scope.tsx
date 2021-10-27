@@ -1,19 +1,11 @@
 import * as React from "react"
 import { Component, IO } from "../types/program"
-import {
-  Button,
-  Card,
-  Dialog,
-  Elevation,
-  InputGroup,
-  Tag,
-} from "@blueprintjs/core"
-import { Draggable } from "./shared"
+import { Button, Card, Dialog, InputGroup } from "@blueprintjs/core"
 import { useState } from "react"
 
 interface ScopeProps {
   scope: { [key: string]: Component }
-  onAdd(name: string, path: string)
+  onAdd(): void
   onRemove(name: string): void
   onDragEnd(name: string): void
   onClick(component: string, worker: string): void
@@ -48,6 +40,9 @@ function Scope(props: ScopeProps) {
         />
         <Button text="submit" onClick={handleClick} />
       </Dialog>
+      <Card className="scope__card" interactive onClick={props.onAdd}>
+        <h3>New</h3>
+      </Card>
       {Object.entries(props.scope).map(([name, component]) => (
         <Card
           className="scope__card"
@@ -59,8 +54,6 @@ function Scope(props: ScopeProps) {
           key={name}
         >
           <h3>{name}</h3>
-          {/* <Tag fill minimal onRemove={() => props.onRemove(name)}>
-          </Tag> */}
           <ComponentIO io={component.io} />
         </Card>
       ))}
@@ -77,10 +70,10 @@ function ComponentIO(props: IOPreviewProps) {
   const outports = Object.entries(props.io.out)
 
   return (
-    <table className="bp3-html-table .modifier">
+    <table className="scope__io bp3-html-table .modifier">
       <tbody>
         <tr>
-          <td>IN:</td>
+          <td>In:</td>
         </tr>
         {inports.map(([name, typ]) => (
           <tr key={name}>
@@ -89,7 +82,7 @@ function ComponentIO(props: IOPreviewProps) {
           </tr>
         ))}
         <tr>
-          <td>OUT:</td>
+          <td>Out:</td>
         </tr>
         {outports.map(([name, typ]) => (
           <tr key={name}>

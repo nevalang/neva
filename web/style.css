@@ -41,6 +41,10 @@ body {
   cursor: pointer;
 }
 
+.scope__io {
+  width: 100%;
+}
+
 .palette {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -70,4 +74,8 @@ body {
 
 .node {
   transition: none;
+}
+
+.menu {
+  font-size: 16px;
 }
