@@ -7,7 +7,7 @@ import { MouseEvent, useState } from "react"
 
 interface NetworkProps {
   module: Module
-  onNodeClick(componentName: string): void
+  onNodeClick(nodeName: string): void
   onAddNode(event: MouseEvent): void
   onAddConnection(connection: Connection): void
   onRemoveConnection(connection: Connection): void

@@ -103,7 +103,6 @@ function App(props: AppProps) {
             />
           )}
         />
-        {/* <Palette onClick={console.log} scope={state.program.scope} /> */}
       </Switch>
     </Router>
   )

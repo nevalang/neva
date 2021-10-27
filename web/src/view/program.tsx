@@ -2,6 +2,7 @@ import * as React from "react"
 import { useState } from "react"
 import { Drawer, Position } from "@blueprintjs/core"
 import { RouterProps } from "react-router"
+import omit from "lodash.omit"
 
 import { Connection, Module, Program } from "../types/program"
 import { NetworkEditor } from "./network"
@@ -55,7 +56,17 @@ function ProgramEditor({
   }
 
   const removeNode = (nodeName: string) => {
-    console.log("removeNode not implemented!")
+    if (["in", "out", "const"].includes(nodeName)) { // TODO
+      console.log(nodeName, "cannot be removed")
+      return
+    }
+    setModule(prev => ({
+      ...prev,
+      workers: omit(prev.workers, nodeName),
+      net: prev.net.filter(
+        c => c.from.node !== nodeName && c.to.node !== nodeName
+      ),
+    }))
   }
 
   return (
