@@ -31,25 +31,22 @@ interface AppProps {
 }
 
 function App(props: AppProps) {
-  const [path, setPath] = useState("examples/program/pkg")
+  const [path] = useState("examples/program/pkg")
   const [program, setProgram] = useState(defaultProgram)
   const [err, setErr] = useState(null)
 
-  useEffect(() => {
-    async function aux() {
-      let err = null
-      try {
-        setProgram(await props.api.getProgram(path))
-      } catch (err) {
-        err = err
-      } finally {
-        setErr(err)
-      }
+  const fetchProgram = async () => {
+    let err = null
+    try {
+      setProgram(await props.api.getProgram(path))
+    } catch (err) {
+      err = err
+    } finally {
+      setErr(err)
     }
-    aux()
-  }, [path])
+  }
 
-  const handleRemoveFromScope = async (name: string) => {
+  const removeFromScope = async (name: string) => {
     const filtered = Object.entries(program.scope).filter(([k]) => k !== name)
     const newProgram = {
       root: program.root,
@@ -70,17 +67,13 @@ function App(props: AppProps) {
 
   return (
     <Router>
-      <Breadcrumbs
-        currentBreadcrumbRenderer={props => (
-          <Breadcrumb {...props}>
-            text <Icon icon="star" />
-          </Breadcrumb>
-        )}
-        items={[]}
-      />
       <Switch>
         <Redirect exact from="/" to="/menu" />
-        <Route path="/menu" component={Menu} exact />
+        <Route
+          path="/menu"
+          component={props => <Menu onOpen={fetchProgram} {...props} />}
+          exact
+        />
         <Route
           path="/program"
           component={props => (
@@ -88,7 +81,7 @@ function App(props: AppProps) {
               {...props}
               program={program}
               onAddToScope={console.log}
-              onRemoveFromScope={handleRemoveFromScope}
+              onRemoveFromScope={removeFromScope}
             />
           )}
         />

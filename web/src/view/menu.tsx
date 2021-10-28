@@ -1,14 +1,22 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 import { RouterProps } from "react-router"
-import { IO } from "../types/program"
 
-interface Props extends RouterProps {}
+interface Props extends RouterProps {
+  onOpen(): void
+}
 
 function Menu(props: Props) {
   return (
     <ul className="menu">
-      <Link to="program">Program</Link>
+      <li>
+        <Link to="program">New</Link>
+      </li>
+      <li>
+        <Link to="program" onClick={props.onOpen}>
+          Open
+        </Link>
+      </li>
     </ul>
   )
 }

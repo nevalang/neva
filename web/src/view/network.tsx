@@ -63,7 +63,14 @@ function NetworkEditor(props: NetworkProps) {
           node={nodeProps => (
             <rf.Node
               dragType="port"
-              onClick={(_event, node) => setSelections([node.id])}
+              onClick={(_event, node) => {
+                if (selections.includes(node.id)) {
+                  props.onNodeClick(node.id)
+                  setSelections([])
+                  return
+                }
+                setSelections([node.id])
+              }}
               onRemove={(_event, node) => props.onRemoveNode(node.id)}
               port={
                 <Port

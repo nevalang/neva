@@ -37,10 +37,22 @@ function ProgramEditor({
   }
 
   const addConnection = (connection: Connection) => {
-    setModule(prev => ({
-      ...prev,
-      net: [...prev.net, connection],
-    }))
+    if (
+      !module.net.find(
+        c =>
+          c.from.node == connection.from.node &&
+          c.from.port == connection.from.port &&
+          c.from.idx == connection.from.idx &&
+          c.to.node == connection.to.node &&
+          c.to.port == connection.to.port &&
+          c.to.idx == connection.to.idx
+      )
+    ) {
+      setModule(prev => ({
+        ...prev,
+        net: [...prev.net, connection],
+      }))
+    }
   }
 
   const removeConnection = (toRemove: Connection) => {
@@ -68,11 +80,6 @@ function ProgramEditor({
         c => c.from.node !== nodeName && c.to.node !== nodeName
       ),
     }))
-  }
-
-  const addToScope = () => {
-    onAddToScope()
-    setIsOpen(false)
   }
 
   return (

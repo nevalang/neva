@@ -7,9 +7,6 @@
 }
 
 body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100vw;
   height: 100vh;
   font-family: "Glory", sans-serif;
@@ -17,15 +14,15 @@ body {
 }
 
 #root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
-  /* display: grid;
-  grid-template-columns: 1fr 2fr;
-  grid-template-rows: 3fr 1fr;
-  gap: 0px 0px;
-  grid-template-areas:
-    ". ."
-    ". ."; */
+}
+
+.menu {
+  font-size: 32px;
 }
 
 .scope {
@@ -86,8 +83,4 @@ body {
 
 .node {
   transition: none;
-}
-
-.menu {
-  font-size: 16px;
 }

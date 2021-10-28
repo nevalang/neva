@@ -21,6 +21,17 @@ import (
 	"github.com/emil14/neva/pkg/sdk"
 )
 
+func main() {
+	srv := MustNew()
+	sdkCtrl := sdk.NewDefaultApiController(srv)
+	router := sdk.NewRouter(sdkCtrl)
+
+	log.Println("listening http://localhost:8090")
+	if err := http.ListenAndServe(":8090", router); err != nil {
+		log.Fatalln(err)
+	}
+}
+
 type Storage interface {
 	PkgDescriptor(path string) (compiler.PkgDescriptor, error)
 }
@@ -40,7 +51,12 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	pkgd, err := s.storage.PkgDescriptor(filepath.Join(pwd, "../../", path))
+	if path == "" {
+		path = "examples/program/pkg.yml"
+	}
+	p := filepath.Join(pwd, "../../", path)
+
+	pkgd, err := s.storage.PkgDescriptor(p)
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -117,17 +133,6 @@ func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr) runtime.Msg {
 
 func (s Server) OnReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
 	fmt.Println(msg, from, to)
-}
-
-func main() {
-	srv := MustNew()
-	ctrl := sdk.NewDefaultApiController(srv)
-	r := sdk.NewRouter(ctrl)
-
-	log.Println("listening http://localhost:8090")
-	if err := http.ListenAndServe(":8090", r); err != nil {
-		log.Fatalln(err)
-	}
 }
 
 func MustNew() Server {
