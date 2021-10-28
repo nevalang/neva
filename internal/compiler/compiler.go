@@ -8,70 +8,47 @@ import (
 	runtime "github.com/emil14/neva/internal/runtime/program"
 )
 
-// Compiler errors.
 var (
 	ErrParsing    = errors.New("failed to parse module")
 	ErrValidation = errors.New("module is invalid")
 	ErrInternal   = errors.New("internal error")
 )
 
-// Compiler deps.
 type (
-	// Parser parses source code into compiler program representation.
-	Parser interface {
-		ParseModule([]byte) (program.Module, error)
+	SRCParser interface {
+		Module([]byte) (program.Module, error)
 		Program(program.Program) ([]byte, error)
 	}
 
-	// Translator creates runtime program representation.
 	Translator interface {
 		Translate(program.Program) (runtime.Program, error)
 	}
 
-	// Validator verifies that program is correct.
 	Validator interface {
 		Validate(program.Module) error // todo validate program
 	}
 
-	// Coder creates bytecode for given runtime program.
 	Coder interface {
 		Code(runtime.Program) ([]byte, error)
 	}
 
-	// Storage is an abstraction that allowes retrieve packages.
-	Storage interface {
-		Pkg(string) (Pkg, error)
-	}
-
-	// Pkg describes package.
-	Pkg struct {
+	PkgDescriptor struct {
 		Root    string
 		Modules map[string][]byte
 	}
 )
 
-// Compiler compiles source code into bytecode.
 type Compiler struct {
-	storage    Storage
-	parser     Parser
+	srcParser  SRCParser
 	validator  Validator
 	translator Translator
 	coder      Coder
 	operators  map[string]program.Operator
 }
 
-func (c Compiler) Compile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
-	return c.preCompile(pkgDescriptorPath)
-}
-
-func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program.Program, error) {
-	pkg, err := c.storage.Pkg(pkgDescriptorPath)
-	if err != nil {
-		return runtime.Program{}, program.Program{}, err
-	}
-
-	scope := c.defaultScope(len(pkg.Modules))
-	for k, v := range pkg.Modules {
+func (c Compiler) BuildProgram(pkgd PkgDescriptor) (runtime.Program, program.Program, error) {
+	scope := c.defaultScope(len(pkgd.Modules))
+	for k, v := range pkgd.Modules {
 		mod, err := c.compileModule(v)
 		if err != nil {
 			return runtime.Program{}, program.Program{}, err
@@ -79,12 +56,12 @@ func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program
 		scope[k] = mod
 	}
 
-	if err := c.depsResolved(scope); err != nil {
+	if err := c.resolveDeps(scope); err != nil {
 		return runtime.Program{}, program.Program{}, err
 	}
 
 	prog := program.Program{
-		Root:  pkg.Root,
+		Root:  pkgd.Root,
 		Scope: scope,
 	}
 
@@ -96,7 +73,7 @@ func (c Compiler) preCompile(pkgDescriptorPath string) (runtime.Program, program
 	return rprog, prog, nil
 }
 
-func (c Compiler) depsResolved(scope map[string]program.Component) error {
+func (c Compiler) resolveDeps(scope map[string]program.Component) error {
 	for componentName, component := range scope {
 		if _, ok := component.(program.Operator); ok {
 			continue
@@ -123,7 +100,7 @@ func (c Compiler) depsResolved(scope map[string]program.Component) error {
 }
 
 func (c Compiler) compileModule(mod []byte) (program.Module, error) {
-	parsed, err := c.parser.ParseModule(mod)
+	parsed, err := c.srcParser.Module(mod)
 	if err != nil {
 		return program.Module{}, fmt.Errorf("%w: %v", ErrParsing, err)
 	}
@@ -143,7 +120,7 @@ func (c Compiler) compileProgram(
 	var mod program.Module
 
 	if _, ok := scope[root]; !ok {
-		parsed, err := c.parser.ParseModule(modules[root])
+		parsed, err := c.srcParser.Module(modules[root])
 		if err != nil {
 			return program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
 		}
@@ -187,23 +164,22 @@ func (c Compiler) defaultScope(padding int) map[string]program.Component {
 	return m
 }
 
-func New(p Parser, v Validator, t Translator, c Coder, s Storage, ops map[string]program.Operator) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil || s == nil || ops == nil {
+func New(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
+	if p == nil || v == nil || t == nil || c == nil || ops == nil {
 		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
 	}
 
 	return Compiler{
-		parser:     p,
+		srcParser:  p,
 		validator:  v,
 		translator: t,
 		coder:      c,
-		storage:    s,
 		operators:  ops,
 	}, nil
 }
 
-func MustNew(p Parser, v Validator, t Translator, c Coder, s Storage, ops map[string]program.Operator) Compiler {
-	cmp, err := New(p, v, t, c, s, ops)
+func MustNew(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
+	cmp, err := New(p, v, t, c, ops)
 	if err != nil {
 		panic(err)
 	}

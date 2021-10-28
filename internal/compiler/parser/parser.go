@@ -7,18 +7,18 @@ import (
 	"github.com/emil14/neva/internal/compiler/program"
 )
 
+type Caster interface {
+	From(program.Module) module
+	To(module) program.Module
+}
+
 type parser struct {
 	marshal   Marshal
 	unmarshal Unmarshal
 	caster    Caster
 }
 
-type Caster interface {
-	From(program.Module) module
-	To(module) program.Module
-}
-
-func (p parser) ParseModule(bb []byte) (program.Module, error) {
+func (p parser) Module(bb []byte) (program.Module, error) {
 	var mod module
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return program.Module{}, err
@@ -44,7 +44,7 @@ type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)
 
-func New(u Unmarshal, m Marshal, c Caster) (compiler.Parser, error) {
+func New(u Unmarshal, m Marshal, c Caster) (compiler.SRCParser, error) {
 	if u == nil || m == nil || c == nil {
 		return parser{}, fmt.Errorf("parser constructor err")
 	}
@@ -56,7 +56,7 @@ func New(u Unmarshal, m Marshal, c Caster) (compiler.Parser, error) {
 	}, nil
 }
 
-func MustNew(u Unmarshal, m Marshal, c Caster) compiler.Parser {
+func MustNew(u Unmarshal, m Marshal, c Caster) compiler.SRCParser {
 	p, err := New(u, m, c)
 	if err != nil {
 		panic(err)

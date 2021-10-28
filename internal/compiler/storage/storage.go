@@ -32,15 +32,15 @@ type (
 	}
 )
 
-func (g GitHub) Pkg(descriptorPath string) (compiler.Pkg, error) {
-	bb, err := ioutil.ReadFile(descriptorPath)
+func (g GitHub) PkgDescriptor(path string) (compiler.PkgDescriptor, error) {
+	bb, err := ioutil.ReadFile(path)
 	if err != nil {
-		return compiler.Pkg{}, err
+		return compiler.PkgDescriptor{}, err
 	}
 
 	var d pkgDescriptor
 	if err := yaml.Unmarshal(bb, &d); err != nil {
-		return compiler.Pkg{}, err
+		return compiler.PkgDescriptor{}, err
 	}
 
 	bytemap := make(map[string][]byte, len(d.Imports))
@@ -53,11 +53,11 @@ func (g GitHub) Pkg(descriptorPath string) (compiler.Pkg, error) {
 		}
 
 		if strings.HasPrefix(importPath, "./") {
-			dir := filepath.Dir(descriptorPath)
+			dir := filepath.Dir(path)
 			p := filepath.Join(dir, importPath)
 			b, err := ioutil.ReadFile(p + ".yml")
 			if err != nil {
-				return compiler.Pkg{}, err
+				return compiler.PkgDescriptor{}, err
 			}
 			bytemap[name] = b
 			g.cache[importPath] = b
@@ -66,17 +66,17 @@ func (g GitHub) Pkg(descriptorPath string) (compiler.Pkg, error) {
 
 		parts := strings.Split(importPath, "/")
 		if len(parts) != 2 {
-			return compiler.Pkg{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
+			return compiler.PkgDescriptor{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
 		}
 
 		dep, ok := d.Deps[parts[0]]
 		if !ok {
-			return compiler.Pkg{}, fmt.Errorf("imported dep not defined")
+			return compiler.PkgDescriptor{}, fmt.Errorf("imported dep not defined")
 		}
 
 		mod, err := g.svc.module(dep.Repo, dep.Version, parts[1])
 		if err != nil {
-			return compiler.Pkg{}, err
+			return compiler.PkgDescriptor{}, err
 		}
 
 		bytemap[name] = mod
@@ -85,7 +85,7 @@ func (g GitHub) Pkg(descriptorPath string) (compiler.Pkg, error) {
 
 	g.cache = nil
 
-	return compiler.Pkg{
+	return compiler.PkgDescriptor{
 		Root:    d.Root,
 		Modules: bytemap,
 	}, nil

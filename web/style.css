@@ -30,11 +30,18 @@ body {
 
 .scope {
   position: relative;
+  padding: 10px;
+  background-color: white;
+}
+
+.scope__controls {
+  padding: 10px 0;
+}
+
+.scope__grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 10px 10px;
-  padding: 10px;
-  background-color: white;
 }
 
 .scope__card:hover {
@@ -43,6 +50,11 @@ body {
 
 .scope__io {
   width: 100%;
+}
+
+.scope__checkbox {
+  margin-right: 10px;
+  margin-bottom: 0;
 }
 
 .palette {

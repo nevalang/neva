@@ -21,10 +21,16 @@ import (
 	"github.com/emil14/neva/pkg/sdk"
 )
 
+type Storage interface {
+	PkgDescriptor(path string) (compiler.PkgDescriptor, error)
+}
+
 type Server struct {
-	compiler compiler.Compiler
-	runtime  runtime.Runtime
-	caster   Caster
+	validator compiler.Validator
+	compiler  compiler.Compiler
+	runtime   runtime.Runtime
+	caster    Caster
+	storage   Storage
 }
 
 func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, error) {
@@ -34,18 +40,24 @@ func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, 
 		return sdk.ImplResponse{}, err
 	}
 
-	prog, cprog, err := s.compiler.Compile(filepath.Join(pwd, "../../", "examples/program/pkg.yml"))
+	pkgd, err := s.storage.PkgDescriptor(filepath.Join(pwd, "../../", path))
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
 	}
 
-	if _, err = s.runtime.Run(prog); err != nil {
+	rprog, cprog, err := s.compiler.BuildProgram(pkgd)
+	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
 	}
 
-	casted, err := s.caster.CastProgram(cprog)
+	if _, err = s.runtime.Run(rprog); err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	casted, err := s.caster.toSDK(cprog)
 	if err != nil {
 		return sdk.ImplResponse{}, err
 	}
@@ -63,10 +75,38 @@ func (s Server) ProgramPatch(context.Context, string, sdk.Program) (sdk.ImplResp
 	}, nil
 }
 
-func (s Server) ProgramPost(context.Context, string, sdk.Program) (sdk.ImplResponse, error) {
+func (s Server) ProgramPost(ctx context.Context, path string, prog sdk.Program) (sdk.ImplResponse, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	pkgd, err := s.storage.PkgDescriptor(filepath.Join(pwd, "../../", path))
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	rprog, cprog, err := s.compiler.BuildProgram(pkgd)
+	if err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	if _, err = s.runtime.Run(rprog); err != nil {
+		log.Println(err)
+		return sdk.ImplResponse{}, err
+	}
+
+	casted, err := s.caster.toSDK(cprog)
+	if err != nil {
+		return sdk.ImplResponse{}, err
+	}
+
 	return sdk.ImplResponse{
-		Code: 0,
-		Body: nil,
+		Code: 200,
+		Body: casted,
 	}, nil
 }
 
@@ -91,21 +131,16 @@ func main() {
 }
 
 func MustNew() Server {
-	s := Server{
-		caster: caster{},
-	}
-
-	compilerOps := cprog.NewOperators()
-
-	s.compiler = compiler.MustNew(
+	ops := cprog.NewOperators()
+	store := storage.MustNew("")
+	v := validator.New()
+	cmplr := compiler.MustNew(
 		parser.MustNewYAML(),
-		validator.New(),
-		translator.New(compilerOps),
+		v,
+		translator.New(ops),
 		coder.New(),
-		storage.MustNew(""),
-		compilerOps,
+		ops,
 	)
-
 	opspaths := map[string]runtime.Operator{
 		"%": func(runtime.IO) error {
 			return nil
@@ -127,6 +162,12 @@ func MustNew() Server {
 		},
 	}
 
+	s := Server{
+		caster:    caster{},
+		storage:   store,
+		compiler:  cmplr,
+		validator: v,
+	}
 	s.runtime = runtime.New(
 		connector.MustNew(
 			opspaths,
@@ -135,113 +176,4 @@ func MustNew() Server {
 	)
 
 	return s
-}
-
-type Caster interface {
-	CastProgram(cprog.Program) (sdk.Program, error)
-}
-
-type caster struct{}
-
-func (c caster) CastProgram(from cprog.Program) (sdk.Program, error) {
-	cc, err := c.castComponents(from.Scope)
-	if err != nil {
-		return sdk.Program{}, err
-	}
-	return sdk.Program{
-		Scope: cc,
-		Root:  from.Root,
-	}, nil
-}
-
-func (c caster) castComponents(from map[string]cprog.Component) (map[string]sdk.Component, error) {
-	r := map[string]sdk.Component{}
-	for k, v := range from {
-		cmpnt, err := c.castComponent(v)
-		if err != nil {
-			return nil, err
-		}
-		r[k] = cmpnt
-	}
-	return r, nil
-}
-
-func (c caster) castComponent(from cprog.Component) (sdk.Component, error) {
-	if _, ok := from.(cprog.Operator); ok {
-		return sdk.Component{
-			Io: c.castIO(from.Interface()),
-		}, nil
-	}
-
-	mod, ok := from.(cprog.Module)
-	if !ok {
-		return sdk.Component{}, fmt.Errorf("casterr: unknown component type")
-	}
-
-	return sdk.Component{
-		Io:      c.castIO(mod.Interface()),
-		Workers: mod.Workers,
-		Const:   c.castConst(mod.Const),
-		Deps:    c.castDeps(mod.Deps),
-		Net:     c.castNet(mod.Net),
-	}, nil
-}
-
-func (c caster) castConst(from map[string]cprog.Const) map[string]sdk.Const {
-	to := make(map[string]sdk.Const, len(from))
-	for k, v := range from {
-		to[k] = sdk.Const{
-			Type:  v.Type.String(),
-			Value: v.IntValue, // TMP
-		}
-	}
-	return to
-}
-
-func (c caster) castDeps(from map[string]cprog.IO) map[string]sdk.Io {
-	r := map[string]sdk.Io{}
-	for k, v := range from {
-		r[k] = c.castIO(v)
-	}
-	return r
-}
-
-func (c caster) castNet(net cprog.Net) []sdk.Connection {
-	r := make([]sdk.Connection, 0, len(net))
-	for from, to := range net {
-		for rcvr := range to {
-			r = append(r, c.sdkConnection(from, rcvr))
-		}
-	}
-	return r
-}
-
-func (c caster) sdkConnection(from, to cprog.PortAddr) sdk.Connection {
-	return sdk.Connection{
-		From: c.sdkPortAddr(from),
-		To:   c.sdkPortAddr(to),
-	}
-}
-
-func (c caster) sdkPortAddr(from cprog.PortAddr) sdk.PortAddr {
-	return sdk.PortAddr{
-		Node: from.Node,
-		Idx:  int32(from.Idx),
-		Port: from.Port,
-	}
-}
-
-func (c caster) castIO(from cprog.IO) sdk.Io {
-	return sdk.Io{
-		In:  c.castPorts(from.In),
-		Out: c.castPorts(from.Out),
-	}
-}
-
-func (c caster) castPorts(from cprog.Ports) map[string]string {
-	to := make(map[string]string, len(from))
-	for name, typ := range from {
-		to[name] = typ.String()
-	}
-	return to
 }

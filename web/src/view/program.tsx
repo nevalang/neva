@@ -21,7 +21,7 @@ function ProgramEditor({
   onAddToScope,
 }: ProgramEditorProps) {
   const [module, setModule] = useState(program.scope[program.root] as Module)
-  const [isScopeVisible, setIsScopeVisible] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   const addWorker = (componentName: string, workerName: string) => {
     if (module.workers[workerName]) {
@@ -33,6 +33,7 @@ function ProgramEditor({
       deps: { ...prev.deps, [componentName]: program.scope[componentName].io },
       workers: { ...prev.workers, [workerName]: componentName },
     }))
+    setIsOpen(false)
   }
 
   const addConnection = (connection: Connection) => {
@@ -57,7 +58,6 @@ function ProgramEditor({
 
   const removeNode = (nodeName: string) => {
     if (["in", "out", "const"].includes(nodeName)) {
-      // TODO
       console.log(nodeName, "cannot be removed")
       return
     }
@@ -70,29 +70,34 @@ function ProgramEditor({
     }))
   }
 
+  const addToScope = () => {
+    onAddToScope()
+    setIsOpen(false)
+  }
+
   return (
     <>
       <Drawer
         position={Position.LEFT}
-        isOpen={isScopeVisible}
-        onClose={() => setIsScopeVisible(false)}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
         title="Scope"
         style={{ overflow: "scroll" }}
       >
         <Scope
           scope={program.scope}
           onRemove={onRemoveFromScope}
-          onAdd={onAddToScope}
+          onNew={console.log}
           onDragEnd={console.log}
-          onClick={addWorker}
+          onSelect={addWorker}
         />
       </Drawer>
       <NetworkEditor
         module={module}
-        onNodeClick={(componentName: string) => {
+        onNodeClick={(componentName: string) =>
           setModule(program.scope[componentName] as Module)
-        }}
-        onAddNode={() => setIsScopeVisible(true)}
+        }
+        onAddNode={() => setIsOpen(true)}
         onAddConnection={addConnection}
         onRemoveConnection={removeConnection}
         onRemoveNode={removeNode}
