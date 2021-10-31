@@ -1,10 +1,15 @@
-import { DefaultApiFactory, Program as SDKProgram } from "../../sdk"
+import {
+  DefaultApiFactory,
+  Program as SDKProgram,
+  Operator as SDKOperator,
+} from "../../sdk"
 import { Api } from "../"
-import { Program } from "../../types/program"
+import { Operator, Program } from "../../types/program"
 import { CasterImpl } from "./caster"
 
 export interface Caster {
   castProgram(from: SDKProgram): Program
+  castOperator(from: SDKOperator): Operator
 }
 
 class OpenApi implements Api {
@@ -14,6 +19,28 @@ class OpenApi implements Api {
   constructor(backendURL: string) {
     this.client = DefaultApiFactory(undefined, backendURL)
     this.caster = new CasterImpl()
+  }
+
+  async getPaths(): Promise<string[]> {
+    try {
+      const resp = await this.client.pathsGet()
+      return resp.data
+    } catch (err) {
+      throw new Error("getPaths: " + err.message)
+    }
+  }
+
+  async getOperators(): Promise<{ [key: string]: Operator }> {
+    try {
+      const resp = await this.client.operatorsGet()
+      const res = {}
+      for (const k in resp.data) {
+        res[k] = this.caster.castOperator(resp.data[k])
+      }
+      return res
+    } catch (err) {
+      throw new Error("getPaths: " + err.message)
+    }
   }
 
   async getProgram(path: string): Promise<Program> {

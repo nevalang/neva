@@ -12,6 +12,7 @@ import {
   IO,
   Components,
   Const,
+  Operator,
 } from "../../types/program"
 
 import { Caster } from "."
@@ -32,13 +33,7 @@ export class CasterImpl implements Caster {
       let component: Component
 
       if ((sdkComponent as SDKModule).net == undefined) {
-        component = {
-          type: ComponentTypes.OPERATOR,
-          io: {
-            in: (sdkComponent as SDKOperator).io.in,
-            out: (sdkComponent as SDKOperator).io.out,
-          },
-        }
+        component = this.castOperator(sdkComponent as SDKOperator)
       } else {
         const mod = sdkComponent as SDKModule
 
@@ -74,5 +69,15 @@ export class CasterImpl implements Caster {
     }
 
     return result
+  }
+
+  castOperator(sdkComponent: SDKOperator): Operator {
+    return {
+      type: ComponentTypes.OPERATOR,
+      io: {
+        in: sdkComponent.io.in,
+        out: sdkComponent.io.out,
+      },
+    }
   }
 }

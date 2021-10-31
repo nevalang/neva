@@ -1,8 +1,7 @@
 import * as React from "react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Redirect } from "react-router"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
-import { Breadcrumb, Breadcrumbs, Icon } from "@blueprintjs/core"
 
 import { ComponentTypes, Program } from "../types/program"
 import { Api } from "../api"

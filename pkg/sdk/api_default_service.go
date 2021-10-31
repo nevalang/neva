@@ -26,6 +26,31 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
+// OperatorsGet - 
+func (s *DefaultApiService) OperatorsGet(ctx context.Context) (ImplResponse, error) {
+	// TODO - update OperatorsGet with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, map[string]Operator{}) or use other options such as http.Ok ...
+	//return Response(200, map[string]Operator{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("OperatorsGet method not implemented")
+}
+
+// PathsGet - 
+func (s *DefaultApiService) PathsGet(ctx context.Context) (ImplResponse, error) {
+	// TODO - update PathsGet with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, []string{}) or use other options such as http.Ok ...
+	//return Response(200, []string{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	//return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("PathsGet method not implemented")
+}
+
 // ProgramGet - 
 func (s *DefaultApiService) ProgramGet(ctx context.Context, path string) (ImplResponse, error) {
 	// TODO - update ProgramGet with the required logic for this service method.

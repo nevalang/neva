@@ -10,7 +10,6 @@
 package sdk
 
 type Const struct {
-
 	Type string `json:"type,omitempty"`
 
 	Value int `json:"value,omitempty"`
@@ -18,11 +17,6 @@ type Const struct {
 
 // AssertConstRequired checks if the required fields are not zero-ed
 func AssertConstRequired(obj Const) error {
-	// if obj.Value != nil {
-	// 	// if err := AssertoneOf&lt;integer&gt;Required(*obj.Value); err != nil {
-	// 	// 	return err
-	// 	// }
-	// }
 	return nil
 }
 

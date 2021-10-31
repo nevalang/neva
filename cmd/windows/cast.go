@@ -9,10 +9,20 @@ import (
 
 type Caster interface {
 	toSDK(cprog.Program) (sdk.Program, error)
-	// fromSDK(sdk.Program) (cprog.Program, error)
+	toOperators(map[string]cprog.Operator) map[string]sdk.Operator
 }
 
 type caster struct{}
+
+func (c caster) toOperators(from map[string]cprog.Operator) map[string]sdk.Operator {
+	to := make(map[string]sdk.Operator, len(from))
+	for k, v := range from {
+		to[k] = sdk.Operator{
+			Io: c.castIO(v.IO),
+		}
+	}
+	return to
+}
 
 func (c caster) toSDK(from cprog.Program) (sdk.Program, error) {
 	cc, err := c.castComponents(from.Scope)
