@@ -8,17 +8,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/compiler/coder"
-	"github.com/emil14/neva/internal/compiler/parser"
-	cprog "github.com/emil14/neva/internal/compiler/program"
-	"github.com/emil14/neva/internal/compiler/storage"
-	"github.com/emil14/neva/internal/compiler/translator"
-	"github.com/emil14/neva/internal/compiler/validator"
-	"github.com/emil14/neva/internal/runtime"
-	"github.com/emil14/neva/internal/runtime/connector"
-	rprog "github.com/emil14/neva/internal/runtime/program"
-	"github.com/emil14/neva/pkg/sdk"
+	"github.com/emil14/respect/internal/compiler"
+	"github.com/emil14/respect/internal/compiler/coder"
+	"github.com/emil14/respect/internal/compiler/parser"
+	cprog "github.com/emil14/respect/internal/compiler/program"
+	"github.com/emil14/respect/internal/compiler/storage"
+	"github.com/emil14/respect/internal/compiler/translator"
+	"github.com/emil14/respect/internal/compiler/validator"
+	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/respect/internal/runtime/connector"
+	rprog "github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/respect/pkg/sdk"
 )
 
 func main() {
@@ -31,6 +31,18 @@ func main() {
 		log.Fatalln(err)
 	}
 }
+
+// err := filepath.Walk(".",
+//     func(path string, info os.FileInfo, err error) error {
+//     if err != nil {
+//         return err
+//     }
+//     fmt.Println(path, info.Size())
+//     return nil
+// })
+// if err != nil {
+//     log.Println(err)
+// }
 
 type Storage interface {
 	PkgDescriptor(path string) (compiler.PkgDescriptor, error)

@@ -3,7 +3,7 @@ package validator
 import (
 	"testing"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/respect/internal/compiler/program"
 )
 
 func Test_validator_validatePorts(t *testing.T) {

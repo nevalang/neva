@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/emil14/neva/internal/runtime"
-	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/respect/internal/runtime/program"
 )
 
 type Connector struct {

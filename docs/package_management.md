@@ -7,7 +7,7 @@ It has structure:
 ```yaml
 deps: # this section maps git repos and tags with aliases
   shared: # now `shared` can be used in `import` section
-    repo: "github.com/emil14/neva-shared" # assumes there is a pkg.yml
+    repo: "github.com/emil14/respect-shared" # assumes there is a pkg.yml
     v: 0.0.2 # with this tag
 
 # this section defines packages's scope

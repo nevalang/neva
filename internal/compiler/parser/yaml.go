@@ -3,7 +3,7 @@ package parser
 import (
 	"encoding/json"
 
-	"github.com/emil14/neva/internal/compiler"
+	"github.com/emil14/respect/internal/compiler"
 	"gopkg.in/yaml.v2"
 )
 

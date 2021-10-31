@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
-	runtime "github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/respect/internal/compiler/program"
+	runtime "github.com/emil14/respect/internal/runtime/program"
 )
 
 var (

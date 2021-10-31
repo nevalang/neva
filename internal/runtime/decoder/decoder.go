@@ -3,7 +3,7 @@ package decoder
 import (
 	"encoding/json"
 
-	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/respect/internal/runtime/program"
 )
 
 type Program struct {

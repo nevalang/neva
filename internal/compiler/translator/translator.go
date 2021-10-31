@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	compiler "github.com/emil14/neva/internal/compiler/program"
-	rprog "github.com/emil14/neva/internal/runtime/program"
+	compiler "github.com/emil14/respect/internal/compiler/program"
+	rprog "github.com/emil14/respect/internal/runtime/program"
 )
 
 type Translator struct {

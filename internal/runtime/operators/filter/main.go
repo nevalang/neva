@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/respect/internal/runtime"
 )
 
 func Filter(io runtime.IO) error {

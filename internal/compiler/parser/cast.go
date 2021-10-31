@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/respect/internal/compiler/program"
 )
 
 type caster struct{}

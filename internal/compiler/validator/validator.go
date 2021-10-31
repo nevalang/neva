@@ -3,7 +3,7 @@ package validator
 import (
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/respect/internal/compiler/program"
 	"golang.org/x/sync/errgroup"
 )
 

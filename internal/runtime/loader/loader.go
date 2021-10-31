@@ -5,7 +5,7 @@ import (
 	"log"
 	"plugin"
 
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/respect/internal/runtime"
 )
 
 type Params struct {

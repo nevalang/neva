@@ -1,6 +1,6 @@
 .PHONY: sdk
 sdk:
-	make _go_sdk && make _ts_sdk
+	make go_sdk && make ts_sdk
 
 .PHONY: go_sdk
 go_sdk:
@@ -9,7 +9,7 @@ go_sdk:
 		-i /app/api/api.yml \
 		-g go-server  \
 		-o /app/generated_go_sdk \
-		--additional-properties=isGoSubmodule=false,packageName=sdk,featureCORS=true && \
+		--additional-properties=isGoSubmodule=false,packageName=sdk,featureCORS=true
 		
 # rm -rf pkg/sdk && \
 # mv generated_go_sdk/go pkg/sdk && \

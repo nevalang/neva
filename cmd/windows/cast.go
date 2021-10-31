@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	cprog "github.com/emil14/neva/internal/compiler/program"
-	"github.com/emil14/neva/pkg/sdk"
+	cprog "github.com/emil14/respect/internal/compiler/program"
+	"github.com/emil14/respect/pkg/sdk"
 )
 
 type Caster interface {

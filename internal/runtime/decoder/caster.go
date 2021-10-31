@@ -1,6 +1,6 @@
 package decoder
 
-import "github.com/emil14/neva/internal/runtime/program"
+import "github.com/emil14/respect/internal/runtime/program"
 
 type caster struct{}
 
@@ -19,9 +19,9 @@ func (c caster) components(from map[string]Component) map[string]program.Compone
 	to := make(map[string]program.Component, len(from))
 	for name, component := range from {
 		to[name] = program.Component{
-			Operator:  component.Operator,
+			Operator:        component.Operator,
 			WorkerNodesMeta: c.nodesMeta(component.Workers),
-			Net:       c.net(component.Net),
+			Net:             c.net(component.Net),
 		}
 	}
 	return to

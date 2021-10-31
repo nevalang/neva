@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler"
+	"github.com/emil14/respect/internal/compiler"
 	"gopkg.in/yaml.v2"
 )
 
@@ -43,8 +43,8 @@ func (g GitHub) PkgDescriptor(path string) (compiler.PkgDescriptor, error) {
 		return compiler.PkgDescriptor{}, err
 	}
 
-	bytemap := make(map[string][]byte, len(d.Imports))
 	g.cache = make(map[string][]byte, len(d.Imports))
+	bytemap := make(map[string][]byte, len(d.Imports))
 
 	for name, importPath := range d.Imports {
 		if g.cache[importPath] != nil {

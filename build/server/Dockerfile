@@ -15,10 +15,10 @@ RUN go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/ma
 RUN go build -o plugins/remainder.so -buildmode=plugin internal/runtime/operators/remainder/main.go
 
 # Build platform itself
-RUN go build -o /bin/nevabin cmd/server/main.go
+RUN go build -o /bin/respectbin cmd/server/main.go
 
 EXPOSE 8090
 
-RUN ["chmod", "+x", "/bin/nevabin"]
+RUN ["chmod", "+x", "/bin/respectbin"]
 
-CMD ["/bin/nevabin"]
+CMD ["/bin/respectbin"]

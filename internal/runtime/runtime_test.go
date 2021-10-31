@@ -6,7 +6,7 @@ package runtime
 // 	"testing"
 // 	"time"
 
-// 	"github.com/emil14/neva/internal/runtime/program"
+// 	"github.com/emil14/respect/internal/runtime/program"
 // )
 
 // func TestRuntime_connect(t *testing.T) {

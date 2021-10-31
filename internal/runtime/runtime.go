@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/respect/internal/runtime/program"
 )
 
 var ErrPortNotFound = errors.New("port not found")

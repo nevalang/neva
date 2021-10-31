@@ -1,5 +1,3 @@
-# TODO: add enum and field to components for types
-
 openapi: "3.0.2"
 info:
   title: API Title
@@ -90,7 +88,7 @@ components:
 
 paths:
   /paths:
-    description: return list of all directories with pkg.yml
+    description: paths to programs descriptors
     get:
       responses:
         "200":
@@ -103,6 +101,17 @@ paths:
                   type: string
         "500":
           description: Request failed
+  /operators:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/Operator"
   /program:
     post:
       description: save new program on a given path
