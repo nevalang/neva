@@ -1,5 +1,6 @@
 **/main.exe
 **/__debug_bin
+**/__debug_bin.exe
 web/node_modules
 web/dist
 web/.cache

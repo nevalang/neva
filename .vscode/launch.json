@@ -5,13 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "web",
-      "request": "launch",
-      "type": "pwa-chrome",
-      "url": "http://localhost:1234",
-      "webRoot": "${workspaceFolder}/web"
-    },
-    {
       "name": "linux",
       "type": "go",
       "request": "launch",
@@ -23,7 +16,8 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/windows"
+      "program": "${workspaceFolder}/cmd/windows",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

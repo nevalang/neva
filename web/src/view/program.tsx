@@ -4,12 +4,13 @@ import { Drawer, Position } from "@blueprintjs/core"
 import { RouterProps } from "react-router"
 import omit from "lodash.omit"
 
-import { Connection, Module, Program } from "../types/program"
+import { Connection, Module, Operator, Program } from "../types/program"
 import { NetworkEditor } from "./network"
 import { Scope } from "./scope"
 
 interface ProgramEditorProps extends RouterProps {
   program: Program
+  operators: { [key: string]: Operator }
   onRemoveFromScope(name: string)
   onAddToScope()
 }

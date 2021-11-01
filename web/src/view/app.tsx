@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Redirect } from "react-router"
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
 
@@ -34,6 +34,20 @@ function App(props: AppProps) {
   const [program, setProgram] = useState(defaultProgram)
   const [err, setErr] = useState(null)
 
+  useEffect(() => {
+    // let err = null
+    // try {
+    //   setProgram(await props.api.getProgram(path))
+    // } catch (err) {
+    //   err = err
+    // } finally {
+    //   setErr(err)
+    // }
+
+    props.api.getOperators()
+    props.api.getPaths()
+  }, [])
+
   const fetchProgram = async () => {
     let err = null
     try {
@@ -61,7 +75,7 @@ function App(props: AppProps) {
   }
 
   if (err !== null) {
-    return <span>{err}</span>
+    return <span style={{ color: "red" }}>{err}</span>
   }
 
   return (
@@ -79,6 +93,7 @@ function App(props: AppProps) {
             <ProgramEditor
               {...props}
               program={program}
+              // operators
               onAddToScope={console.log}
               onRemoveFromScope={removeFromScope}
             />

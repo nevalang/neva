@@ -104,7 +104,7 @@ func (s Server) OperatorsGet(ctx context.Context) (sdk.ImplResponse, error) {
 func (s Server) PathsGet(ctx context.Context) (sdk.ImplResponse, error) {
 	pp := []string{}
 
-	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk("examples", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

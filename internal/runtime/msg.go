@@ -2,15 +2,13 @@ package runtime
 
 import "fmt"
 
-// Msg represents set of methods only one of which should return real value.
 type Msg interface {
 	Str() string
 	Int() int
 	Bool() bool
-	Struct() map[string]Msg
 }
 
-type emptyMsg struct{} // emptyMsg exists to allow normal messages define only reasonable methods.
+type emptyMsg struct{}
 
 func (msg emptyMsg) Str() (_ string)            { return }
 func (msg emptyMsg) Int() (_ int)               { return }
