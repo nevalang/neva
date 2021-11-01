@@ -7,6 +7,7 @@ import {
   ControlGroup,
   Dialog,
   InputGroup,
+  Switch,
 } from "@blueprintjs/core"
 import { useState } from "react"
 
@@ -14,7 +15,6 @@ interface ScopeProps {
   scope: { [key: string]: Component }
   onNew(): void
   onRemove(name: string): void
-  onDragEnd(name: string): void
   onSelect(component: string, worker: string): void
 }
 
@@ -53,14 +53,14 @@ function Scope(props: ScopeProps) {
         />
         <Button text="submit" onClick={handleClick} />
       </Dialog>
-      <ControlGroup className="scope__controls">
-        <Checkbox
+      <ControlGroup className="scope__controls" fill>
+        <Switch
           checked={isModulesVisible}
           label="Modules"
           onChange={() => setIsModulesVisible(prev => !prev)}
           className="scope__checkbox"
         />
-        <Checkbox
+        <Switch
           checked={isOperatorsVisible}
           label="Operators"
           onChange={() => setIsOperatorsVisible(prev => !prev)}
@@ -74,7 +74,7 @@ function Scope(props: ScopeProps) {
       </ControlGroup>
       <div className="scope__grid">
         <Card className="scope__card" interactive onClick={props.onNew}>
-          <h3>New</h3>
+          <h3>New Module</h3>
         </Card>
         {Object.entries(props.scope).map(([name, component]) => {
           const isVisible =

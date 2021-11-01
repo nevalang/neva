@@ -17,21 +17,22 @@ interface ProgramEditorProps extends RouterProps {
 
 function ProgramEditor({
   program,
-  history,
   onRemoveFromScope,
-  onAddToScope,
+  operators,
 }: ProgramEditorProps) {
   const [module, setModule] = useState(program.scope[program.root] as Module)
   const [isOpen, setIsOpen] = useState(false)
 
+  const scope = { ...operators, ...program.scope }
+
   const addWorker = (componentName: string, workerName: string) => {
     if (module.workers[workerName]) {
-      console.log(workerName, "exist already")
+      console.log("exist already")
       return
     }
     setModule(prev => ({
       ...prev,
-      deps: { ...prev.deps, [componentName]: program.scope[componentName].io },
+      deps: { ...prev.deps, [componentName]: scope[componentName].io },
       workers: { ...prev.workers, [workerName]: componentName },
     }))
     setIsOpen(false)
@@ -93,10 +94,9 @@ function ProgramEditor({
         style={{ overflow: "scroll" }}
       >
         <Scope
-          scope={program.scope}
+          scope={scope}
           onRemove={onRemoveFromScope}
           onNew={console.log}
-          onDragEnd={console.log}
           onSelect={addWorker}
         />
       </Drawer>

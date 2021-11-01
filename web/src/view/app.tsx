@@ -9,9 +9,9 @@ import { ProgramEditor } from "./program"
 import { Menu } from "./menu"
 
 const defaultProgram: Program = {
-  root: "",
+  root: "root",
   scope: {
-    "": {
+    root: {
       type: ComponentTypes.MODULE,
       constants: {},
       io: {
@@ -31,20 +31,14 @@ interface AppProps {
 
 function App(props: AppProps) {
   const [path] = useState("examples/program/pkg")
+  const [operators, setOperators] = useState({})
   const [program, setProgram] = useState(defaultProgram)
   const [err, setErr] = useState(null)
 
   useEffect(() => {
-    // let err = null
-    // try {
-    //   setProgram(await props.api.getProgram(path))
-    // } catch (err) {
-    //   err = err
-    // } finally {
-    //   setErr(err)
-    // }
-
-    props.api.getOperators()
+    ;(async () => {
+      setOperators(await props.api.getOperators())
+    })()
     props.api.getPaths()
   }, [])
 
@@ -93,7 +87,7 @@ function App(props: AppProps) {
             <ProgramEditor
               {...props}
               program={program}
-              // operators
+              operators={operators}
               onAddToScope={console.log}
               onRemoveFromScope={removeFromScope}
             />
