@@ -24,7 +24,7 @@ func (c caster) castComponents(cc map[string]program.Component) map[string]Compo
 
 	for name := range cc {
 		res[name] = Component{
-			Operator: cc[name].Operator,
+			Operator: cc[name].OperatorName,
 			Workers:  c.castNodes(cc[name].WorkerNodesMeta),
 			Net:      c.castNet(cc[name].Net),
 		}

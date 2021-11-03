@@ -1,11 +1,12 @@
 package main
 
 import (
+	"github.com/emil14/respect/internal/core"
 	"github.com/emil14/respect/internal/runtime"
 )
 
-func And(io runtime.IO) error {
-	in, err := io.In.PortGroup("in")
+func And(io core.IO) error {
+	in, err := io.In.Group("in")
 	if err != nil {
 		return err
 	}

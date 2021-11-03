@@ -1,45 +1,39 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/respect/internal/core"
 )
 
-var ErrMul = errors.New("multiplication")
-
-func Mul(io runtime.IO) error {
-	in, err := io.In.PortGroup("in")
+func Mul(io core.IO) error {
+	inportGroup, err := io.In.Group("in")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrMul, err)
+		return err
 	}
 
 	out, err := io.Out.Port("out")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrMul, err)
+		return err
 	}
 
 	go func() {
 		for {
-			buf := make(chan int, len(in))
+			buf := make(chan int, len(inportGroup))
 
-			for i := range in {
-				port := in[i]
+			for i := range inportGroup {
+				inport := inportGroup[i]
 				go func() {
-					msg := <-port
-					buf <- msg.Int()
+					buf <- (<-inport).Int()
 				}()
 			}
 
 			mul := 1
-			for i := 0; i < len(in); i++ {
+			for i := 0; i < len(inportGroup); i++ {
 				mul *= <-buf
 			}
 
 			close(buf)
 
-			out <- runtime.NewIntMsg(mul)
+			out <- core.NewIntMsg(mul)
 		}
 	}()
 

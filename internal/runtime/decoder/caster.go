@@ -19,7 +19,7 @@ func (c caster) components(from map[string]Component) map[string]program.Compone
 	to := make(map[string]program.Component, len(from))
 	for name, component := range from {
 		to[name] = program.Component{
-			Operator:        component.Operator,
+			OperatorName:        component.Operator,
 			WorkerNodesMeta: c.nodesMeta(component.Workers),
 			Net:             c.net(component.Net),
 		}

@@ -2,39 +2,36 @@ package connector
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
+	"github.com/emil14/respect/internal/core"
 	"github.com/emil14/respect/internal/runtime"
-	"github.com/emil14/respect/internal/runtime/program"
 )
 
 type Connector struct {
-	operators   map[string]runtime.Operator
 	interceptor Interceptor
 }
 
-func (cnctr Connector) ConnectSubnet(cc []runtime.Connection) {
-	for _, c := range cc {
-		go cnctr.loop(c)
+func (c Connector) Connect(cc []runtime.Connection) {
+	for _, connection := range cc {
+		go c.loop(connection)
 	}
 }
 
-func (cnctr Connector) loop(conn runtime.Connection) {
-	for msg := range conn.From.Ch {
-		cnctr.interceptor.OnSend(msg, conn.From.Addr)
+func (cnctr Connector) loop(connection runtime.Connection) {
+	for msg := range connection.From.Ch {
+		cnctr.interceptor.OnSend(msg, connection.From.Addr)
 
 		wg := sync.WaitGroup{}
-		wg.Add(len(conn.To))
+		wg.Add(len(connection.To))
 
-		for i := range conn.To {
-			to := conn.To[i]
+		for i := range connection.To {
+			to := connection.To[i]
 			m := msg
 
 			go func() {
-				fmt.Printf("start %s from %s to %s\n", m, conn.From.Addr, to.Addr)
 				to.Ch <- m
-				cnctr.interceptor.OnReceive(m, conn.From.Addr, to.Addr)
+				cnctr.interceptor.OnReceive(m, connection.From.Addr, to.Addr)
 				wg.Done()
 			}()
 		}
@@ -43,53 +40,38 @@ func (cnctr Connector) loop(conn runtime.Connection) {
 	}
 }
 
-func (c Connector) ConnectOperator(name string, io runtime.IO) error {
-	op, ok := c.operators[name]
-	if !ok {
-		return fmt.Errorf("unknown operator: %s", name)
-	}
-
-	if err := op(io); err != nil {
-		return fmt.Errorf("operator '%s': %w", name, err)
-	}
-
-	return nil
-}
-
 type Interceptor interface {
-	OnSend(msg runtime.Msg, from program.PortAddr) runtime.Msg
-	OnReceive(msg runtime.Msg, from, to program.PortAddr)
+	OnSend(msg core.Msg, from core.PortAddr) core.Msg
+	OnReceive(msg core.Msg, from, to core.PortAddr)
 }
 
 type interceptor struct {
-	send    func(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg
-	receive func(msg runtime.Msg, from, to program.PortAddr)
+	send    func(msg core.Msg, from core.PortAddr, to []core.PortAddr) core.Msg
+	receive func(msg core.Msg, from, to core.PortAddr)
 }
 
-func (i interceptor) onSend(msg runtime.Msg, from program.PortAddr, to []program.PortAddr) runtime.Msg {
+func (i interceptor) onSend(msg core.Msg, from core.PortAddr, to []core.PortAddr) core.Msg {
 	return i.send(msg, from, to)
 }
 
-func (i interceptor) onReceive(msg runtime.Msg, from, to program.PortAddr) {
+func (i interceptor) onReceive(msg core.Msg, from, to core.PortAddr) {
 	i.receive(msg, from, to)
 }
 
-func New(ops map[string]runtime.Operator, interceptor Interceptor) (Connector, error) {
-	if ops == nil || interceptor == nil {
+func New(ops map[string]runtime.OperatorFunc, interceptor Interceptor) (Connector, error) {
+	if interceptor == nil {
 		return Connector{}, errors.New("init connector")
 	}
 
 	return Connector{
-		ops,
 		interceptor,
 	}, nil
 }
 
 func MustNew(
-	ops map[string]runtime.Operator,
 	interceptor Interceptor,
 ) Connector {
-	c, err := New(ops, interceptor)
+	c, err := New(interceptor)
 	if err != nil {
 		panic(err)
 	}

@@ -1,10 +1,8 @@
 package main
 
-import (
-	"github.com/emil14/respect/internal/runtime"
-)
+import "github.com/emil14/respect/internal/core"
 
-func Filter(io runtime.IO) error {
+func Filter(io core.IO) error {
 	data, err := io.In.Port("data")
 	if err != nil {
 		return err

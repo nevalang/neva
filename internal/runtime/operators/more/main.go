@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/emil14/respect/internal/core"
 	"github.com/emil14/respect/internal/runtime"
 )
 
-func More(io runtime.IO) error {
+func More(io core.IO) error {
 	a, err := io.In.Port("a")
 	if err != nil {
 		return err

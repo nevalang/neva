@@ -54,7 +54,7 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 		oper, ok := component.(compiler.Operator)
 		if ok {
 			runtimeComponents[name] = rprog.Component{
-				Operator: oper.Name,
+				OperatorName: oper.Name,
 			}
 			continue
 		}
@@ -67,7 +67,7 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 		consts := make(map[string]rprog.Const, len(mod.Const))
 		for name, cnst := range mod.Const {
 			consts[name] = rprog.Const{
-				Type:     rprog.Type(cnst.Type), // check err?
+				Type:     rprog.ValueType(cnst.Type), // check err?
 				IntValue: cnst.IntValue,
 			}
 		}

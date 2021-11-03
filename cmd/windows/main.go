@@ -61,7 +61,7 @@ func MustNew() Server {
 		coder.New(),
 		ops,
 	)
-	opspaths := map[string]runtime.Operator{
+	opspaths := map[string]runtime.OperatorFunc{
 		"%": func(runtime.IO) error {
 			return nil
 		},

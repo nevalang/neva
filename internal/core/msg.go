@@ -1,4 +1,4 @@
-package runtime
+package core
 
 import "fmt"
 
@@ -7,13 +7,6 @@ type Msg interface {
 	Int() int
 	Bool() bool
 }
-
-type emptyMsg struct{}
-
-func (msg emptyMsg) Str() (_ string)            { return }
-func (msg emptyMsg) Int() (_ int)               { return }
-func (msg emptyMsg) Bool() (_ bool)             { return }
-func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
 
 type IntMsg struct {
 	emptyMsg
@@ -86,3 +79,10 @@ func NewMsgStruct(v map[string]Msg) StructMsg {
 		v:        v,
 	}
 }
+
+type emptyMsg struct{}
+
+func (msg emptyMsg) Str() (_ string)            { return }
+func (msg emptyMsg) Int() (_ int)               { return }
+func (msg emptyMsg) Bool() (_ bool)             { return }
+func (msg emptyMsg) Struct() (_ map[string]Msg) { return }

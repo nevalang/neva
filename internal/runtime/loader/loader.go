@@ -13,8 +13,8 @@ type Params struct {
 	ExportedEntity string
 }
 
-func Load(paths map[string]Params) (map[string]runtime.Operator, error) {
-	ops := map[string]runtime.Operator{}
+func Load(paths map[string]Params) (map[string]runtime.OperatorFunc, error) {
+	ops := map[string]runtime.OperatorFunc{}
 
 	for name, params := range paths {
 		plgn, err := plugin.Open(params.PluginPath)
