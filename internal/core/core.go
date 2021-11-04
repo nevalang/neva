@@ -6,25 +6,11 @@ type IO struct {
 	In, Out Ports
 }
 
-type Ports map[PortAddr]chan Msg
-
-type PortAddr struct {
-	Node, Port string
-	Slot       uint8
-}
-
-type Connection struct {
-	From PortAddr
-	To   []PortAddr
-}
-
-func (addr PortAddr) String() string {
-	return fmt.Sprintf("%s.%s", addr.Node, addr.Port)
-}
+type Ports map[string]chan Msg
 
 func (pp Ports) Port(name string) (chan Msg, error) {
-	for addr, ch := range pp {
-		if addr.Port == name {
+	for key, ch := range pp {
+		if key == key {
 			return ch, nil
 		}
 	}
@@ -34,14 +20,14 @@ func (pp Ports) Port(name string) (chan Msg, error) {
 func (ports Ports) Group(name string) ([]chan Msg, error) {
 	cc := []chan Msg{}
 
-	for addr, ch := range ports {
-		if addr.Port == name {
+	for key, ch := range ports {
+		if key == name {
 			cc = append(cc, ch)
 		}
 	}
 
 	if len(cc) == 0 {
-		return nil, fmt.Errorf("ErrArrPortNotFound: %s", name)
+		return nil, fmt.Errorf("port group not found: %s", name)
 	}
 
 	return cc, nil

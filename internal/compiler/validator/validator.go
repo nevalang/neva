@@ -129,8 +129,8 @@ func (v validator) validateConnection(connection program.PortAddrPair, module pr
 	}
 
 	switch {
-	case !fromType.Arr && connection.From.Idx > 0:
-	case !toType.Arr && connection.To.Idx > 0:
+	case !fromType.Arr && connection.From.Slot > 0:
+	case !toType.Arr && connection.To.Slot > 0:
 		return fmt.Errorf("only array ports can have address with idx > 0: %v", connection)
 	}
 

@@ -6,18 +6,18 @@ import (
 	"log"
 
 	compiler "github.com/emil14/respect/internal/compiler/program"
-	rprog "github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/respect/internal/runtime"
 )
 
 type Translator struct {
 	operators map[string]compiler.Operator
 }
 
-func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
+func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	component, ok := prog.Scope[prog.Root]
 	if !ok {
 		log.Println(prog.Scope)
-		return rprog.Program{}, fmt.Errorf("could not find %s component", prog.Root)
+		return runtime.Program{}, fmt.Errorf("could not find %s component", prog.Root)
 	}
 
 	io := component.Interface()
@@ -34,11 +34,11 @@ func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
 
 	scope, err := t.components(prog.Scope)
 	if err != nil {
-		return rprog.Program{}, err
+		return runtime.Program{}, err
 	}
 
-	return rprog.Program{
-		RootNodeMeta: rprog.WorkerNodeMeta{
+	return runtime.Program{
+		RootNodeMeta: runtime.WorkerNodeMeta{
 			ComponentName: prog.Root,
 			In:            in,
 			Out:           out,
@@ -47,14 +47,15 @@ func (t Translator) Translate(prog compiler.Program) (rprog.Program, error) {
 	}, nil
 }
 
-func (t Translator) components(components map[string]compiler.Component) (map[string]rprog.Component, error) {
-	runtimeComponents := map[string]rprog.Component{}
+func (t Translator) components(scope map[string]compiler.Component) (map[string]runtime.Component, error) {
+	components := map[string]runtime.Component{}
 
-	for name, component := range components {
+	for name, component := range scope {
 		oper, ok := component.(compiler.Operator)
 		if ok {
-			runtimeComponents[name] = rprog.Component{
-				OperatorName: oper.Name,
+			components[name] = runtime.Component{
+				Type:     runtime.OperatorComponent,
+				Operator: runtime.Operator{Name: oper.Name},
 			}
 			continue
 		}
@@ -64,50 +65,57 @@ func (t Translator) components(components map[string]compiler.Component) (map[st
 			return nil, errors.New("not ok from translator")
 		}
 
-		consts := make(map[string]rprog.Const, len(mod.Const))
+		consts := make(map[string]runtime.ConstValue, len(mod.Const))
 		for name, cnst := range mod.Const {
-			consts[name] = rprog.Const{
-				Type:     rprog.ValueType(cnst.Type), // check err?
+			consts[name] = runtime.ConstValue{
+				Type:     runtime.ConstValueType(cnst.Type),
 				IntValue: cnst.IntValue,
 			}
 		}
 
-		workers := map[string]rprog.WorkerNodeMeta{}
+		workers := map[string]runtime.WorkerNodeMeta{}
 		for workerName, dep := range mod.Workers {
-			in, out, err := t.workerIOMeta(workerName, dep, components, mod.Net)
+			in, out, err := t.workerIOMeta(workerName, dep, scope, mod.Net)
 			if err != nil {
 				return nil, fmt.Errorf("get worker io meta: %w", err)
 			}
-			workers[workerName] = rprog.WorkerNodeMeta{
+			workers[workerName] = runtime.WorkerNodeMeta{
 				ComponentName: dep,
 				In:            in,
 				Out:           out,
 			}
 		}
 
-		net := []rprog.Connection{}
+		net := []runtime.Connection{}
 		for from, to := range mod.Net {
-			c := rprog.Connection{
-				From: rprog.PortAddr(from),
-				To:   t.connections(to),
+			c := runtime.Connection{
+				From: runtime.PortAddr{
+					Node: from.Node,
+					Port: from.Port,
+					Slot: from.Slot,
+				},
+				To: t.connections(to),
 			}
 			net = append(net, c)
 		}
 
-		runtimeComponents[name] = rprog.Component{
-			Const:           consts,
-			WorkerNodesMeta: workers,
-			Net:             net,
+		components[name] = runtime.Component{
+			Type: runtime.ModuleComponent,
+			Module: runtime.Module{
+				Const:   consts,
+				Workers: workers,
+				Net:     net,
+			},
 		}
 	}
 
-	return runtimeComponents, nil
+	return components, nil
 }
 
-func (t Translator) connections(from map[compiler.PortAddr]struct{}) []rprog.PortAddr {
-	to := make([]rprog.PortAddr, 0, len(from))
+func (t Translator) connections(from map[compiler.PortAddr]struct{}) []runtime.PortAddr {
+	to := make([]runtime.PortAddr, 0, len(from))
 	for k := range from {
-		to = append(to, rprog.PortAddr(k))
+		to = append(to, runtime.PortAddr(k))
 	}
 	return to
 }

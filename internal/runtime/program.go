@@ -25,7 +25,7 @@ type Operator struct {
 type Module struct {
 	Const   map[string]ConstValue
 	Workers map[string]WorkerNodeMeta
-	Net     []Connection
+	Net     []ConnectionDef
 }
 
 type WorkerNodeMeta struct {

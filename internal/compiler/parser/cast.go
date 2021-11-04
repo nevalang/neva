@@ -171,6 +171,6 @@ func (c caster) castPortPoint(node string, port string) program.PortAddr {
 	return program.PortAddr{
 		Node: node,
 		Port: port[:bracketStart],
-		Idx:  uint8(idx),
+		Slot:  uint8(idx),
 	}
 }

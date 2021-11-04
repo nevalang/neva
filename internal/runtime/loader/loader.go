@@ -1,39 +1,41 @@
 package loader
 
 import (
-	"errors"
-	"log"
+	"fmt"
 	"plugin"
 
+	"github.com/emil14/respect/internal/core"
 	"github.com/emil14/respect/internal/runtime"
 )
 
-type Params struct {
-	PluginPath     string
-	ExportedEntity string
+type LoadParams struct {
+	Path   string
+	Export []string
 }
 
-func Load(paths map[string]Params) (map[string]runtime.OperatorFunc, error) {
+func Load(params map[string]LoadParams) (map[string]runtime.OperatorFunc, error) {
 	ops := map[string]runtime.OperatorFunc{}
 
-	for name, params := range paths {
-		plgn, err := plugin.Open(params.PluginPath)
+	for name, p := range params {
+		plug, err := plugin.Open(p.Path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("plugin open: %w", err)
 		}
 
-		sym, err := plgn.Lookup(params.ExportedEntity)
-		if err != nil {
-			return nil, err
+		for _, export := range p.Export {
+			symb, err := plug.Lookup(export)
+			if err != nil {
+				return nil, fmt.Errorf("plugin lookup: %w", err)
+			}
+
+			op, ok := symb.(func(core.IO) error)
+			if !ok {
+				return nil, fmt.Errorf("export not operator: %T", op)
+			}
+
+			ops[name] = op
 		}
 
-		op, ok := sym.(func(runtime.IO) error)
-		if !ok {
-			log.Printf("NOT OK: %T", sym)
-			return nil, errors.New("not ok from loader")
-		}
-
-		ops[name] = op
 	}
 
 	return ops, nil

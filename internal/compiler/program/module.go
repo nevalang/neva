@@ -199,11 +199,9 @@ type Const struct {
 	IntValue int
 }
 
-// PortAddr is a point on a network graph.
 type PortAddr struct {
-	Node string
-	Port string
-	Idx  uint8
+	Node, Port string
+	Slot       uint8
 }
 
 func NewModule(

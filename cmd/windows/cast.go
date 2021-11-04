@@ -107,7 +107,7 @@ func (c caster) sdkConnection(from, to cprog.PortAddr) sdk.Connection {
 func (c caster) sdkPortAddr(from cprog.PortAddr) sdk.PortAddr {
 	return sdk.PortAddr{
 		Node: from.Node,
-		Idx:  int32(from.Idx),
+		Idx:  int32(from.Slot),
 		Port: from.Port,
 	}
 }

@@ -8,9 +8,16 @@ import (
 	"github.com/emil14/respect/internal/runtime"
 )
 
-type Connector struct {
-	interceptor Interceptor
-}
+type (
+	Connector struct {
+		interceptor Interceptor
+	}
+
+	Interceptor interface {
+		OnSend(msg core.Msg, from core.PortAddr) core.Msg
+		OnReceive(msg core.Msg, from, to core.PortAddr)
+	}
+)
 
 func (c Connector) Connect(cc []runtime.Connection) {
 	for _, connection := range cc {
@@ -18,9 +25,9 @@ func (c Connector) Connect(cc []runtime.Connection) {
 	}
 }
 
-func (cnctr Connector) loop(connection runtime.Connection) {
+func (c Connector) loop(connection runtime.Connection) {
 	for msg := range connection.From.Ch {
-		cnctr.interceptor.OnSend(msg, connection.From.Addr)
+		c.interceptor.OnSend(msg, connection.From.Addr)
 
 		wg := sync.WaitGroup{}
 		wg.Add(len(connection.To))
@@ -31,7 +38,7 @@ func (cnctr Connector) loop(connection runtime.Connection) {
 
 			go func() {
 				to.Ch <- m
-				cnctr.interceptor.OnReceive(m, connection.From.Addr, to.Addr)
+				c.interceptor.OnReceive(m, connection.From.Addr, to.Addr)
 				wg.Done()
 			}()
 		}
@@ -40,27 +47,9 @@ func (cnctr Connector) loop(connection runtime.Connection) {
 	}
 }
 
-type Interceptor interface {
-	OnSend(msg core.Msg, from core.PortAddr) core.Msg
-	OnReceive(msg core.Msg, from, to core.PortAddr)
-}
-
-type interceptor struct {
-	send    func(msg core.Msg, from core.PortAddr, to []core.PortAddr) core.Msg
-	receive func(msg core.Msg, from, to core.PortAddr)
-}
-
-func (i interceptor) onSend(msg core.Msg, from core.PortAddr, to []core.PortAddr) core.Msg {
-	return i.send(msg, from, to)
-}
-
-func (i interceptor) onReceive(msg core.Msg, from, to core.PortAddr) {
-	i.receive(msg, from, to)
-}
-
-func New(ops map[string]runtime.OperatorFunc, interceptor Interceptor) (Connector, error) {
+func New(interceptor Interceptor) (Connector, error) {
 	if interceptor == nil {
-		return Connector{}, errors.New("init connector")
+		return Connector{}, errors.New("nil interceptor")
 	}
 
 	return Connector{
@@ -68,9 +57,7 @@ func New(ops map[string]runtime.OperatorFunc, interceptor Interceptor) (Connecto
 	}, nil
 }
 
-func MustNew(
-	interceptor Interceptor,
-) Connector {
+func MustNew(interceptor Interceptor) Connector {
 	c, err := New(interceptor)
 	if err != nil {
 		panic(err)
