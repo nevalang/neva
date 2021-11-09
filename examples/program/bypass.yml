@@ -1,5 +1,3 @@
-deps: {}
-
 in:
   in: int
 out:
