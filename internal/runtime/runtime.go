@@ -3,250 +3,236 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/emil14/respect/internal/runtime/program"
 )
 
-var ErrPortNotFound = errors.New("port not found")
-
 type (
-	Runtime struct { // TODO: hide implementation
-		cnctr Connector
+	Runtime struct {
+		connector Connector
+		opsRepo   OperatorsRepo
+	}
+
+	OperatorsRepo interface {
+		OperatorFunc(pkg, name string) OperatorFunc
 	}
 
 	Connector interface {
-		ConnectSubnet([]Connection)
-		ConnectOperator(string, IO) error
+		Connect([]Connection)
 	}
 )
 
-func (r Runtime) Run(p program.Program) (IO, error) {
-	return r.spawnNode("root", p.Scope, p.RootNodeMeta)
-}
+var ErrPortNotFound = errors.New("port not found")
 
-func (r Runtime) spawnNode(
-	nodeName string,
-	scope map[string]program.Component,
-	nodeMeta program.WorkerNodeMeta,
-) (IO, error) {
-	component, ok := scope[nodeMeta.ComponentName]
-	if !ok {
-		return IO{}, fmt.Errorf("component not found: %s", nodeMeta.ComponentName)
-	}
+func (r Runtime) Run(prog program.Program) (IO, error) {
+	nodes := map[string]IO{}
+	for _, node := range prog.Nodes {
+		io := r.nodeIO(node.In, node.Out)
 
-	io := r.nodeIO(nodeMeta)
-
-	if component.Operator != "" {
-		if err := r.cnctr.ConnectOperator(component.Operator, io); err != nil {
-			return IO{}, fmt.Errorf("connect operator: %w", err)
+		if node.Type == program.OperatorNode {
+			op := r.opsRepo.OperatorFunc(node.Operator.Name, node.Operator.Name)
+			if err := op(io); err != nil {
+				return IO{}, err
+			}
 		}
-		return r.patchIO(nodeMeta, io, nodeName), nil
-	}
 
-	subnetIO := map[string]IO{
-		"in":  {Out: io.In}, // for subnet 'in' node is sender
-		"out": {In: io.Out}, // and 'out' is receiver
-	}
+		if node.Type == program.ConstNode {
+			for name, cnst := range node.Const {
+				out, err := io.Out.Port(PortAddr{Port: name})
+				if err != nil {
+					return IO{}, err
+				}
 
-	if l := len(component.Const); l > 0 {
-		out := make(Ports, l)
-		for name, cnst := range component.Const {
-			addr := program.PortAddr{Node: "const", Port: name}
-			out[addr] = r.constOutport(cnst)
+				var msg Msg
+				switch cnst.Type {
+				case program.IntType:
+					msg = NewIntMsg(cnst.IntValue)
+				default:
+					return IO{}, errors.New("")
+				}
+
+				go func() {
+					for {
+						out <- msg
+					}
+				}()
+			}
 		}
-		subnetIO["const"] = IO{Out: out}
+
+		nodes[strings.Join(node.Path, ".")] = io
 	}
 
-	for workerNodeName, workerNodeMeta := range component.WorkerNodesMeta {
-		nodeIO, err := r.spawnNode(workerNodeName, scope, workerNodeMeta) // <- recursion
+	net := make([]Connection, 0, len(prog.Net))
+	for _, conn := range prog.Net {
+		senderIO, ok := nodes[strings.Join(conn.From.NodePath, ".")]
+		if !ok {
+			return IO{}, fmt.Errorf("")
+		}
+
+		outportAddr := PortAddr{
+			Port: conn.From.Port,
+			Slot: conn.From.Slot,
+		}
+
+		outport, err := senderIO.Out.Port(outportAddr)
 		if err != nil {
 			return IO{}, err
 		}
-		subnetIO[workerNodeName] = nodeIO
-	}
 
-	cc, err := r.connections(subnetIO, component.Net)
-	if err != nil {
-		return IO{}, err
-	}
-
-	r.cnctr.ConnectSubnet(cc)
-
-	return r.patchIO(nodeMeta, io, nodeName), nil
-}
-
-func (r Runtime) constOutport(cnst program.Const) chan Msg {
-	var msg Msg
-
-	switch cnst.Type {
-	case program.IntType:
-		msg = NewIntMsg(cnst.IntValue)
-	}
-
-	ch := make(chan Msg)
-	go func() {
-		for {
-			ch <- msg
-		}
-	}()
-
-	return ch
-}
-
-// patchIO replaces "in" and "out" node names with worker name from parent network
-func (r Runtime) patchIO(meta program.WorkerNodeMeta, io IO, nodeName string) IO {
-	io2 := IO{
-		In:  map[program.PortAddr]chan Msg{},
-		Out: map[program.PortAddr]chan Msg{},
-	}
-	for addr, ch := range io.In {
-		addr.Node = nodeName
-		io2.In[addr] = ch
-	}
-	for addr, ch := range io.Out {
-		addr.Node = nodeName
-		io2.Out[addr] = ch
-	}
-	return io2
-}
-
-// connections initializes channels for network.
-func (r Runtime) connections(nodesIO map[string]IO, net []program.Connection) ([]Connection, error) {
-	cc := make([]Connection, len(net))
-
-	for i, c := range net {
-		fromNodeIO, ok := nodesIO[c.From.Node]
-		if !ok {
-			return nil, fmt.Errorf("not found IO for node %s", c.From.Node)
-		}
-
-		sender, ok := fromNodeIO.Out[c.From]
-		if !ok {
-			return nil, fmt.Errorf("outport %s not found", c.From)
-		}
-
-		receivers := make([]Port, len(c.To))
-		for j, toAddr := range c.To {
-			toNodeIO, ok := nodesIO[toAddr.Node]
+		receivers := make([]Port, 0, len(conn.To))
+		for _, inportAddr := range conn.To {
+			receiverIO, ok := nodes[strings.Join(inportAddr.NodePath, ".")]
 			if !ok {
-				return nil, fmt.Errorf("io for receiver node not found: %s", toAddr.Node)
+				return IO{}, fmt.Errorf("")
 			}
 
-			receiver, ok := toNodeIO.In[toAddr]
-			if !ok {
-				return nil, fmt.Errorf("inport not found %s", toAddr)
+			to, err := receiverIO.In.Port(PortAddr{
+				Port: inportAddr.Port,
+				Slot: inportAddr.Slot,
+			})
+			if err != nil {
+				return IO{}, err
 			}
 
-			receivers[j] = Port{Ch: receiver, Addr: toAddr}
+			receivers = append(receivers, Port{Addr: PortAddr{
+				Port: inportAddr.Port,
+				Slot: inportAddr.Slot,
+			}, Ch: to})
 		}
 
-		cc[i] = Connection{
-			From: Port{Ch: sender, Addr: c.From},
-			To:   receivers,
-		}
+		net = append(net, Connection{
+			To: receivers,
+			From: Port{
+				Ch:   outport,
+				Addr: outportAddr,
+			},
+		})
 	}
 
-	return cc, nil
+	io := IO{}
+	for _, absAddr := range prog.IO.In {
+		node, ok := nodes[strings.Join(absAddr.NodePath, ".")]
+		if !ok {
+			return IO{}, fmt.Errorf("")
+		}
+
+		addr := PortAddr{
+			Port: absAddr.Port,
+			Slot: absAddr.Slot,
+		}
+
+		port, err := node.Out.Port(addr)
+		if err != nil {
+			return IO{}, err
+		}
+
+		io.In[addr] = port
+	}
+	for _, absAddr := range prog.IO.Out {
+		node, ok := nodes[strings.Join(absAddr.NodePath, ".")]
+		if !ok {
+			return IO{}, fmt.Errorf("")
+		}
+
+		addr := PortAddr{
+			Port: absAddr.Port,
+			Slot: absAddr.Slot,
+		}
+
+		port, err := node.In.Port(addr)
+		if err != nil {
+			return IO{}, err
+		}
+
+		io.In[addr] = port
+	}
+
+	return io, nil
 }
 
-// nodeIO creates channels for node.
-func (r Runtime) nodeIO(nodeMeta program.WorkerNodeMeta) IO {
-	in := make(map[program.PortAddr]chan Msg)
-
-	for port, slots := range nodeMeta.In {
-		addr := program.PortAddr{Port: port, Node: "in"}
-
-		if slots == 0 {
-			in[addr] = make(chan Msg)
+func (r Runtime) nodeIO(in, out map[string]program.PortMeta) IO {
+	resultIn := make(map[PortAddr]chan Msg)
+	for port, meta := range in {
+		addr := PortAddr{Port: port}
+		if meta.Slots == 0 {
+			resultIn[addr] = make(chan Msg, meta.Buf)
 			continue
 		}
-
-		for idx := uint8(0); idx < slots; idx++ {
-			addr.Idx = idx
-			in[addr] = make(chan Msg)
+		for slot := uint8(0); slot < meta.Slots; slot++ {
+			addr.Slot = slot
+			resultIn[addr] = make(chan Msg, meta.Buf)
 		}
 	}
 
-	outports := make(map[program.PortAddr]chan Msg)
-
-	for port, slots := range nodeMeta.Out {
-		addr := program.PortAddr{Port: port, Node: "out"}
-
-		if slots == 0 {
-			outports[addr] = make(chan Msg)
+	resultOut := make(map[PortAddr]chan Msg)
+	for port, meta := range out {
+		addr := PortAddr{Port: port}
+		if meta.Slots == 0 {
+			resultOut[addr] = make(chan Msg, meta.Buf)
 			continue
 		}
-
-		for idx := uint8(0); idx < slots; idx++ {
-			addr.Idx = idx
-			outports[addr] = make(chan Msg)
+		for slot := uint8(0); slot < meta.Slots; slot++ {
+			addr.Slot = slot
+			resultOut[addr] = make(chan Msg, meta.Buf)
 		}
 	}
 
-	return IO{in, outports}
+	return IO{resultIn, resultOut}
 }
 
-// Operator returns error if IO doesn't fit.
-type Operator func(IO) error
+type OperatorFunc func(IO) error
 
-// Connection represents sender-receiver pair.
 type Connection struct {
 	From Port
 	To   []Port
 }
 
-// Port maps network address with the real channel.
 type Port struct {
 	Ch   chan Msg
-	Addr program.PortAddr
+	Addr PortAddr
 }
 
-// IO represents node's input and output ports.
 type IO struct {
 	In, Out Ports
 }
 
-// Ports maps network addresses to real channels.
-type Ports map[program.PortAddr]chan Msg
-
-// PortGroup returns all port-chanells associated with the given array port name.
-func (ports Ports) PortGroup(arrPort string) ([]chan Msg, error) {
-	cc := []chan Msg{}
-
-	for addr, ch := range ports {
-		if addr.Port == arrPort {
-			cc = append(cc, ch)
-		}
-	}
-
-	if len(cc) == 0 {
-		return nil, fmt.Errorf("ErrArrPortNotFound: %s", arrPort)
-	}
-
-	return cc, nil
+type PortAddr struct {
+	Port string
+	Slot uint8
 }
 
-func (ports Ports) Port(name string) (chan Msg, error) {
+type Ports map[PortAddr]chan Msg
+
+func (ports Ports) Port(addr PortAddr) (chan Msg, error) {
 	for addr, ch := range ports {
-		if addr.Port != name {
+		if addr.Port != addr.Port || addr.Slot != addr.Slot {
 			continue
-		}
-		if addr.Idx > 0 {
-			return nil, fmt.Errorf("unexpected arr port %v", addr)
 		}
 		return ch, nil
 	}
 
-	return nil, fmt.Errorf("%w: want '%s', got: %v", ErrPortNotFound, name, ports)
+	return nil, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
+}
+
+func (ports Ports) PortGroup(name string) ([]chan Msg, error) {
+	g := []chan Msg{}
+
+	for addr, ch := range ports {
+		if addr.Port == name {
+			g = append(g, ch)
+		}
+	}
+
+	if len(g) == 0 {
+		return nil, fmt.Errorf("%w: %s", ErrPortNotFound, name)
+	}
+
+	return g, nil
 }
 
 func New(connector Connector) Runtime {
 	return Runtime{
-		cnctr: connector,
+		connector: connector,
 	}
-}
-
-type AbsPortAddr struct {
-	port Port
-	path []string
 }

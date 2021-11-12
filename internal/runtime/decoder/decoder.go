@@ -1,26 +1,24 @@
 package decoder
 
 import (
-	"encoding/json"
-
 	"github.com/emil14/respect/internal/runtime/program"
 )
 
 type Program struct {
-	RootNode NodeMeta             `json:"root"`
-	Scope    map[string]Component `json:"scope"`
+	Operators map[string][]string `json:"operators"`
+	Nodes     map[string]Node     `json:"nodes"`
+	Net       map[string][]string `json:"net"`
 }
 
-type Component struct {
+type Node struct {
 	Operator string              `json:"operator,omitempty"`
-	Workers  map[string]NodeMeta `json:"workers,omitempty"`
-	Net      []Connection        `json:"net,omitempty"`
+	In       map[string]PortMeta `json:"in"`
+	Out      map[string]PortMeta `json:"out"`
 }
 
-type NodeMeta struct {
-	In        map[string]uint8 `json:"in"`
-	Out       map[string]uint8 `json:"out"`
-	Component string           `json:"component"`
+type PortMeta struct {
+	Slots uint8 `json:"slots"`
+	Buf   uint8 `json:"buf"`
 }
 
 type Connection struct {
@@ -49,17 +47,17 @@ func (d Decoder) Decode(bb []byte) (program.Program, error) {
 	return d.caster.Cast(prog), nil
 }
 
-func NewJSON() (Decoder, error) {
-	return Decoder{
-		unmarshal: json.Unmarshal,
-		caster:    NewCaster(),
-	}, nil
-}
+// func NewJSON() (Decoder, error) {
+// 	return Decoder{
+// 		unmarshal: json.Unmarshal,
+// 		caster:    NewCaster(),
+// 	}, nil
+// }
 
-func MustNewJSON() Decoder {
-	d, err := NewJSON()
-	if err != nil {
-		panic(err)
-	}
-	return d
-}
+// func MustNewJSON() Decoder {
+// 	d, err := NewJSON()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return d
+// }

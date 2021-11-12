@@ -25,6 +25,6 @@ func (c jsonCoder) Code(prog program.Program) ([]byte, error) {
 func New() jsonCoder {
 	return jsonCoder{
 		marshal: json.Marshal,
-		caster:  caster{},
+		// caster:  caster{},
 	}
 }

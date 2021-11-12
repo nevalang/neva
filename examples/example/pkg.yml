@@ -1,0 +1,24 @@
+meta:
+  compiler: 0.0.1
+
+import:
+  std:
+    - math
+    - logic
+  global:
+    shared: 0.0.1
+  local:
+    - root
+
+scope:
+  "*": "std.math.mul"
+  "%": "std.math.mul"
+  ">": "std.logic.more"
+  "filter": "std.logic.filter"
+  "bypass": "global.shared.bp"
+  "root": "local.root"
+
+export:
+  - root
+
+main: root

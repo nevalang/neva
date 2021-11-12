@@ -5,15 +5,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path/filepath"
-	"strings"
 
 	"github.com/emil14/respect/internal/compiler"
 	"gopkg.in/yaml.v2"
 )
 
 type (
-	GitHub struct {
+	Local struct {
 		cache map[string][]byte
 		svc   service
 	}
@@ -23,16 +21,19 @@ type (
 	}
 
 	pkgDescriptor struct {
-		Deps map[string]struct {
-			Repo    string `yaml:"repo"`
-			Version string `yaml:"v"`
-		} `yaml:"deps"`
-		Imports map[string]string `yaml:"import"`
-		Root    string            `yaml:"root"`
+		Import Import            `yaml:"import"`
+		Scope  map[string]string `yaml:"scope"`
+		Root   string            `yaml:"root"`
+	}
+
+	Import struct {
+		Std    []string          `yaml:"std"`
+		Global map[string]string `yaml:"global"`
+		Local  []string          `yaml:"local"`
 	}
 )
 
-func (g GitHub) PkgDescriptor(path string) (compiler.PkgDescriptor, error) {
+func (g Local) PkgDescriptor(path string) (compiler.PkgDescriptor, error) {
 	bb, err := ioutil.ReadFile(path)
 	if err != nil {
 		return compiler.PkgDescriptor{}, err
@@ -43,51 +44,64 @@ func (g GitHub) PkgDescriptor(path string) (compiler.PkgDescriptor, error) {
 		return compiler.PkgDescriptor{}, err
 	}
 
-	g.cache = make(map[string][]byte, len(d.Imports))
-	bytemap := make(map[string][]byte, len(d.Imports))
+	l := len(d.Import.Std) + len(d.Import.Local) + len(d.Import.Global)
+	g.cache = make(map[string][]byte, l)
+	scope := make(map[string][]byte, l)
 
-	for name, importPath := range d.Imports {
-		if g.cache[importPath] != nil {
-			bytemap[name] = g.cache[importPath]
-			continue
-		}
+	// for _, pkg := range d.Import.Std {
 
-		if strings.HasPrefix(importPath, "./") {
-			dir := filepath.Dir(path)
-			p := filepath.Join(dir, importPath)
-			b, err := ioutil.ReadFile(p + ".yml")
-			if err != nil {
-				return compiler.PkgDescriptor{}, err
-			}
-			bytemap[name] = b
-			g.cache[importPath] = b
-			continue
-		}
+	// }
+	// for _, pkg := range d.Import.Global {
 
-		parts := strings.Split(importPath, "/")
-		if len(parts) != 2 {
-			return compiler.PkgDescriptor{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
-		}
+	// }
+	// for _, pkg := range d.Import. {
 
-		dep, ok := d.Deps[parts[0]]
-		if !ok {
-			return compiler.PkgDescriptor{}, fmt.Errorf("imported dep not defined")
-		}
+	// }
 
-		mod, err := g.svc.module(dep.Repo, dep.Version, parts[1])
-		if err != nil {
-			return compiler.PkgDescriptor{}, err
-		}
+	// for name, importPath := range d.Import {
+	// 	if g.cache[importPath] != nil {
+	// 		scope[name] = g.cache[importPath]
+	// 		continue
+	// 	}
 
-		bytemap[name] = mod
-		g.cache[importPath] = mod
-	}
+	// 	if strings.HasPrefix(importPath, "./") {
+	// 		p := filepath.Join(filepath.Dir(path), importPath)
+
+	// 		b, err := ioutil.ReadFile(p + ".yml")
+	// 		if err != nil {
+	// 			return compiler.PkgDescriptor{}, err
+	// 		}
+
+	// 		scope[name] = b
+	// 		g.cache[importPath] = b
+
+	// 		continue
+	// 	}
+
+	// 	parts := strings.Split(importPath, "/")
+	// 	if len(parts) != 2 {
+	// 		return compiler.PkgDescriptor{}, fmt.Errorf("remote module path should have 2 parts splitted by '/'")
+	// 	}
+
+	// 	dep, ok := d.Deps[parts[0]]
+	// 	if !ok {
+	// 		return compiler.PkgDescriptor{}, fmt.Errorf("imported dep not defined")
+	// 	}
+
+	// 	mod, err := g.svc.module(dep.Repo, dep.Version, parts[1])
+	// 	if err != nil {
+	// 		return compiler.PkgDescriptor{}, err
+	// 	}
+
+	// 	scope[name] = mod
+	// 	g.cache[importPath] = mod
+	// }
 
 	g.cache = nil
 
 	return compiler.PkgDescriptor{
-		Root:    d.Root,
-		Modules: bytemap,
+		Root:  d.Root,
+		Scope: scope,
 	}, nil
 }
 
@@ -113,7 +127,7 @@ func (h httpClient) module(repo, tag, filename string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func MustNew(cacheDir string) GitHub {
+func MustNew(cacheDir string) Local {
 	s, err := New(cacheDir)
 	if err != nil {
 		panic(err)
@@ -121,8 +135,8 @@ func MustNew(cacheDir string) GitHub {
 	return s
 }
 
-func New(cacheDir string) (GitHub, error) {
-	return GitHub{
+func New(cacheDir string) (Local, error) {
+	return Local{
 		svc:   httpClient{},
 		cache: map[string][]byte{},
 	}, nil

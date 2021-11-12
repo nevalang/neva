@@ -44,7 +44,7 @@ type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)
 
-func New(u Unmarshal, m Marshal, c Caster) (compiler.SRCParser, error) {
+func New(u Unmarshal, m Marshal, c Caster) (compiler.Parser, error) {
 	if u == nil || m == nil || c == nil {
 		return parser{}, fmt.Errorf("parser constructor err")
 	}
@@ -56,7 +56,7 @@ func New(u Unmarshal, m Marshal, c Caster) (compiler.SRCParser, error) {
 	}, nil
 }
 
-func MustNew(u Unmarshal, m Marshal, c Caster) compiler.SRCParser {
+func MustNew(u Unmarshal, m Marshal, c Caster) compiler.Parser {
 	p, err := New(u, m, c)
 	if err != nil {
 		panic(err)

@@ -10,8 +10,6 @@ func (t Type) String() string {
 		return "str"
 	case BoolType:
 		return "bool"
-	case StructType:
-		return "struct"
 	}
 
 	return "unknown"
@@ -22,7 +20,6 @@ const (
 	IntType
 	StrType
 	BoolType
-	StructType
 )
 
 func TypeByName(name string) Type {
@@ -33,8 +30,6 @@ func TypeByName(name string) Type {
 		return StrType
 	case "bool":
 		return BoolType
-	case "struct":
-		return StructType
 	}
 
 	return UnknownType

@@ -5,17 +5,17 @@ import (
 )
 
 func Remainder(io runtime.IO) error {
-	a, err := io.In.Port("a")
+	a, err := io.In.Port(runtime.PortAddr{Port: "a"})
 	if err != nil {
 		return err
 	}
 
-	b, err := io.In.Port("b")
+	b, err := io.In.Port(runtime.PortAddr{Port: "b"})
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port("out")
+	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
 	if err != nil {
 		return err
 	}

@@ -10,11 +10,9 @@ import (
 	"github.com/emil14/respect/internal/compiler/parser"
 	cprog "github.com/emil14/respect/internal/compiler/program"
 	"github.com/emil14/respect/internal/compiler/storage"
-	"github.com/emil14/respect/internal/compiler/translator"
 	"github.com/emil14/respect/internal/compiler/validator"
 	"github.com/emil14/respect/internal/runtime"
 	"github.com/emil14/respect/internal/runtime/connector"
-	rprog "github.com/emil14/respect/internal/runtime/program"
 	"github.com/emil14/respect/pkg/sdk"
 )
 
@@ -41,27 +39,28 @@ type Server struct {
 	storage   Storage
 }
 
-func (s Server) OnSend(msg runtime.Msg, from rprog.PortAddr) runtime.Msg {
+func (s Server) OnSend(msg runtime.Msg, from runtime.PortAddr) runtime.Msg {
 	fmt.Println(msg, from)
 	return msg
 }
 
-func (s Server) OnReceive(msg runtime.Msg, from rprog.PortAddr, to rprog.PortAddr) {
+func (s Server) OnReceive(msg runtime.Msg, from runtime.PortAddr, to runtime.PortAddr) {
 	fmt.Println(msg, from, to)
 }
 
 func MustNew() Server {
-	ops := cprog.NewOperators()
+	ops := cprog.NewStd()
 	store := storage.MustNew("")
 	v := validator.New()
 	cmplr := compiler.MustNew(
 		parser.MustNewYAML(),
 		v,
-		translator.New(ops),
+		// translator.New(),
+		nil,
 		coder.New(),
 		ops,
 	)
-	opspaths := map[string]runtime.Operator{
+	opspaths := map[string]runtime.OperatorFunc{
 		"%": func(runtime.IO) error {
 			return nil
 		},

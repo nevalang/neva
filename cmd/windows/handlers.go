@@ -6,23 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	cprog "github.com/emil14/respect/internal/compiler/program"
 	"github.com/emil14/respect/pkg/sdk"
 )
 
 func (s Server) ProgramGet(ctx context.Context, path string) (sdk.ImplResponse, error) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-		return sdk.ImplResponse{}, err
-	}
-
-	if path == "" {
-		path = "examples/program/pkg.yml"
-	}
-	p := filepath.Join(pwd, "../../", path)
-
-	pkgd, err := s.storage.PkgDescriptor(p)
+	pkgd, err := s.storage.PkgDescriptor("/home/emil14/fbp/programs/example/pkg.yml")
 	if err != nil {
 		log.Println(err)
 		return sdk.ImplResponse{}, err
@@ -95,9 +83,9 @@ func (s Server) ProgramPost(ctx context.Context, path string, prog sdk.Program) 
 func (s Server) OperatorsGet(ctx context.Context) (sdk.ImplResponse, error) {
 	return sdk.ImplResponse{
 		Code: 200,
-		Body: s.caster.toOperators(
-			cprog.NewOperators(),
-		),
+		// Body: s.caster.toOperators(
+		// 	cprog.NewStd(),
+		// ),
 	}, nil
 }
 

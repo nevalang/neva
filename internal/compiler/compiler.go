@@ -15,7 +15,7 @@ var (
 )
 
 type (
-	SRCParser interface {
+	Parser interface {
 		Module([]byte) (program.Module, error)
 		Program(program.Program) ([]byte, error)
 	}
@@ -25,7 +25,7 @@ type (
 	}
 
 	Validator interface {
-		Validate(program.Module) error // todo validate program
+		Validate(program.Module) error
 	}
 
 	Coder interface {
@@ -33,22 +33,24 @@ type (
 	}
 
 	PkgDescriptor struct {
-		Root    string
-		Modules map[string][]byte
+		Root  string
+		Std   []string
+		Scope map[string][]byte
 	}
 )
 
 type Compiler struct {
-	srcParser  SRCParser
+	srcParser  Parser
 	validator  Validator
 	translator Translator
 	coder      Coder
-	operators  map[string]program.Operator
+	std        Std
 }
 
 func (c Compiler) BuildProgram(pkgd PkgDescriptor) (runtime.Program, program.Program, error) {
-	scope := c.defaultScope(len(pkgd.Modules))
-	for k, v := range pkgd.Modules {
+	scope := c.defaultScope(len(pkgd.Scope))
+
+	for k, v := range pkgd.Scope {
 		mod, err := c.compileModule(v)
 		if err != nil {
 			return runtime.Program{}, program.Program{}, err
@@ -157,15 +159,15 @@ func (c Compiler) compileProgram(
 }
 
 func (c Compiler) defaultScope(padding int) map[string]program.Component {
-	m := make(map[string]program.Component, len(c.operators)+padding)
-	for i := range c.operators {
-		m[c.operators[i].Name] = c.operators[i]
-	}
+	m := make(map[string]program.Component, len(c.std)+padding)
+	// for i := range c.std {
+	// 	m[c.std[i].Name] = c.std[i]
+	// }
 	return m
 }
 
-func New(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil || ops == nil {
+func New(p Parser, v Validator, t Translator, c Coder, std Std) (Compiler, error) {
+	if p == nil || v == nil || t == nil || c == nil || std == nil {
 		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
 	}
 
@@ -174,14 +176,16 @@ func New(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program
 		validator:  v,
 		translator: t,
 		coder:      c,
-		operators:  ops,
+		std:        std,
 	}, nil
 }
 
-func MustNew(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
-	cmp, err := New(p, v, t, c, ops)
+func MustNew(p Parser, v Validator, t Translator, c Coder, std Std) Compiler {
+	cmp, err := New(p, v, t, c, std)
 	if err != nil {
 		panic(err)
 	}
 	return cmp
 }
+
+type Std map[string]map[string]program.Operator

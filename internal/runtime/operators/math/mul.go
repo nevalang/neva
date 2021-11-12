@@ -15,7 +15,7 @@ func Mul(io runtime.IO) error {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}
 
-	out, err := io.Out.Port("out")
+	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}

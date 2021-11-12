@@ -7,10 +7,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func MustNewYAML() compiler.SRCParser {
+func MustNewYAML() compiler.Parser {
 	return MustNew(yaml.Unmarshal, yaml.Marshal, caster{})
 }
 
-func MustNewJSON() compiler.SRCParser {
+func MustNewJSON() compiler.Parser {
 	return MustNew(json.Unmarshal, json.Marshal, caster{})
 }

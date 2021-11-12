@@ -1,0 +1,12 @@
+import:
+  std:
+    math: [mul]
+  local: [arr]
+
+scope:
+  arr: "local.arr"
+  "*": "std.math.mul"
+
+main: arr
+
+export: [arr]

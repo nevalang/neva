@@ -37,12 +37,12 @@ func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {
 func (m Module) NodeInportType(node, port string) (PortType, error) {
 	inports, err := m.NodeInports(node)
 	if err != nil {
-		return PortType{}, fmt.Errorf("could not get inports for node '%s': %w", node, err)
+		return PortType{}, fmt.Errorf("could not get inports for node %s: %w", node, err)
 	}
 
 	portType, ok := inports[port]
 	if !ok {
-		return portType, fmt.Errorf("unknown port '%s' on node '%s'", port, node)
+		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
 	}
 
 	return portType, nil
@@ -51,12 +51,12 @@ func (m Module) NodeInportType(node, port string) (PortType, error) {
 func (m Module) NodeOutportType(node, port string) (PortType, error) {
 	ports, err := m.NodeOutports(node)
 	if err != nil {
-		return PortType{}, fmt.Errorf("get outports for node '%s': %w", node, err)
+		return PortType{}, fmt.Errorf("get outports for node %s: %w", node, err)
 	}
 
 	portType, ok := ports[port]
 	if !ok {
-		return portType, fmt.Errorf("unknown port '%s' on node '%s'", port, node)
+		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
 	}
 
 	return portType, nil
@@ -97,12 +97,12 @@ func (m Module) NodeIO(node string) (IO, error) {
 
 	dep, ok := m.Workers[node]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker node '%s'", node)
+		return IO{}, fmt.Errorf("unknown worker node %s", node)
 	}
 
 	io, ok := m.Deps[dep]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker dep '%s'", dep)
+		return IO{}, fmt.Errorf("unknown worker dep %s", dep)
 	}
 
 	return io, nil

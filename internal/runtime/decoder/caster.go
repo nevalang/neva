@@ -1,66 +1,66 @@
 package decoder
 
-import "github.com/emil14/respect/internal/runtime/program"
+// import "github.com/emil14/respect/internal/runtime/program"
 
-type caster struct{}
+// type caster struct{}
 
-func (c caster) Cast(prog Program) program.Program {
-	return program.Program{
-		RootNodeMeta: program.WorkerNodeMeta{
-			In:            prog.RootNode.In,
-			Out:           prog.RootNode.Out,
-			ComponentName: prog.RootNode.Component,
-		},
-		Scope: c.components(prog.Scope),
-	}
-}
+// func (c caster) Cast(prog Program) program.Program {
+// 	return program.Program{
+// 		RootNodeMeta: program.NodeMeta{
+// 			In:            prog.Nodes.In,
+// 			Out:           prog.Nodes.Out,
+// 			ComponentName: prog.Nodes.Component,
+// 		},
+// 		Scope: c.components(prog.Scope),
+// 	}
+// }
 
-func (c caster) components(from map[string]Component) map[string]program.Component {
-	to := make(map[string]program.Component, len(from))
-	for name, component := range from {
-		to[name] = program.Component{
-			Operator:        component.Operator,
-			WorkerNodesMeta: c.nodesMeta(component.Workers),
-			Net:             c.net(component.Net),
-		}
-	}
-	return to
-}
+// func (c caster) components(from map[string]Component) map[string]program.Component {
+// 	to := make(map[string]program.Component, len(from))
+// 	for name, component := range from {
+// 		to[name] = program.Component{
+// 			Operator:        component.Operator,
+// 			WorkerNodesMeta: c.nodesMeta(component.Workers),
+// 			Net:             c.net(component.Net),
+// 		}
+// 	}
+// 	return to
+// }
 
-func (c caster) nodesMeta(workers map[string]NodeMeta) map[string]program.WorkerNodeMeta {
-	result := make(map[string]program.WorkerNodeMeta, len(workers))
+// func (c caster) nodesMeta(workers map[string]Node) map[string]program.NodeMeta {
+// 	result := make(map[string]program.NodeMeta, len(workers))
 
-	for w, nodeMeta := range workers {
-		result[w] = program.WorkerNodeMeta{
-			// Node:      w,
-			In:            nodeMeta.In,
-			Out:           nodeMeta.Out,
-			ComponentName: nodeMeta.Component,
-		}
-	}
+// 	for w, nodeMeta := range workers {
+// 		result[w] = program.NodeMeta{
+// 			// Node:      w,
+// 			In:            nodeMeta.In,
+// 			Out:           nodeMeta.Out,
+// 			ComponentName: nodeMeta.Component,
+// 		}
+// 	}
 
-	return result
-}
+// 	return result
+// }
 
-func (c caster) net(model []Connection) []program.Connection {
-	result := make([]program.Connection, len(model))
-	for i := range model {
-		result[i] = program.Connection{
-			From: program.PortAddr(model[i].From),
-			To:   c.portAddrs(model[i].To),
-		}
-	}
-	return result
-}
+// func (c caster) net(model []Connection) []program.Connection {
+// 	result := make([]program.Connection, len(model))
+// 	for i := range model {
+// 		result[i] = program.Connection{
+// 			From: program.PortAddr(model[i].From),
+// 			To:   c.portAddrs(model[i].To),
+// 		}
+// 	}
+// 	return result
+// }
 
-func (c caster) portAddrs(from []PortAddr) []program.PortAddr {
-	to := make([]program.PortAddr, len(from))
-	for i := range from {
-		to[i] = program.PortAddr(from[i])
-	}
-	return to
-}
+// func (c caster) portAddrs(from []PortAddr) []program.PortAddr {
+// 	to := make([]program.PortAddr, len(from))
+// 	for i := range from {
+// 		to[i] = program.PortAddr(from[i])
+// 	}
+// 	return to
+// }
 
-func NewCaster() caster {
-	return caster{}
-}
+// func NewCaster() caster {
+// 	return caster{}
+// }

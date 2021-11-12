@@ -10,7 +10,7 @@ func And(io runtime.IO) error {
 		return err
 	}
 
-	out, err := io.Out.Port("out")
+	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
 	if err != nil {
 		return err
 	}

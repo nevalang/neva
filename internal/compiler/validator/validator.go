@@ -67,7 +67,7 @@ func (v validator) validateWorkers(deps map[string]program.IO, workers map[strin
 
 	for workerName, depName := range workers {
 		if _, ok := deps[depName]; !ok {
-			return fmt.Errorf("invalid workers: worker '%s' points to unknown dependency '%s'", workerName, depName)
+			return fmt.Errorf("invalid workers: worker %s points to unknown dependency %s", workerName, depName)
 		}
 	}
 
