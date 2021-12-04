@@ -12,7 +12,7 @@ import {
   UpdateProgramRequest,
   UpdateProgramResponse} from './devserver_pb';
 
-export class DevServerClient {
+export class DevClient {
   constructor (hostname: string,
                credentials?: null | { [index: string]: string; },
                options?: null | { [index: string]: string; });
@@ -50,7 +50,7 @@ export class DevServerClient {
 
 }
 
-export class DevServerPromiseClient {
+export class DevPromiseClient {
   constructor (hostname: string,
                credentials?: null | { [index: string]: string; },
                options?: null | { [index: string]: string; });

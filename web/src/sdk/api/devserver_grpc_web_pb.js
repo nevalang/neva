@@ -22,7 +22,7 @@ proto.devserver = require('./devserver_pb.js');
  * @struct
  * @final
  */
-proto.devserver.DevServerClient =
+proto.devserver.DevClient =
     function(hostname, credentials, options) {
   if (!options) options = {};
   options['format'] = 'text';
@@ -48,7 +48,7 @@ proto.devserver.DevServerClient =
  * @struct
  * @final
  */
-proto.devserver.DevServerPromiseClient =
+proto.devserver.DevPromiseClient =
     function(hostname, credentials, options) {
   if (!options) options = {};
   options['format'] = 'text';
@@ -72,8 +72,8 @@ proto.devserver.DevServerPromiseClient =
  *   !proto.devserver.ListProgramsRequest,
  *   !proto.devserver.ListProgramsResponse>}
  */
-const methodDescriptor_DevServer_ListPrograms = new grpc.web.MethodDescriptor(
-  '/devserver.DevServer/ListPrograms',
+const methodDescriptor_Dev_ListPrograms = new grpc.web.MethodDescriptor(
+  '/devserver.Dev/ListPrograms',
   grpc.web.MethodType.UNARY,
   proto.devserver.ListProgramsRequest,
   proto.devserver.ListProgramsResponse,
@@ -94,7 +94,7 @@ const methodDescriptor_DevServer_ListPrograms = new grpc.web.MethodDescriptor(
  *   !proto.devserver.ListProgramsRequest,
  *   !proto.devserver.ListProgramsResponse>}
  */
-const methodInfo_DevServer_ListPrograms = new grpc.web.AbstractClientBase.MethodInfo(
+const methodInfo_Dev_ListPrograms = new grpc.web.AbstractClientBase.MethodInfo(
   proto.devserver.ListProgramsResponse,
   /**
    * @param {!proto.devserver.ListProgramsRequest} request
@@ -117,13 +117,13 @@ const methodInfo_DevServer_ListPrograms = new grpc.web.AbstractClientBase.Method
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.ListProgramsResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerClient.prototype.listPrograms =
+proto.devserver.DevClient.prototype.listPrograms =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/devserver.DevServer/ListPrograms',
+      '/devserver.Dev/ListPrograms',
       request,
       metadata || {},
-      methodDescriptor_DevServer_ListPrograms,
+      methodDescriptor_Dev_ListPrograms,
       callback);
 };
 
@@ -136,13 +136,13 @@ proto.devserver.DevServerClient.prototype.listPrograms =
  * @return {!Promise<!proto.devserver.ListProgramsResponse>}
  *     A native promise that resolves to the response
  */
-proto.devserver.DevServerPromiseClient.prototype.listPrograms =
+proto.devserver.DevPromiseClient.prototype.listPrograms =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/devserver.DevServer/ListPrograms',
+      '/devserver.Dev/ListPrograms',
       request,
       metadata || {},
-      methodDescriptor_DevServer_ListPrograms);
+      methodDescriptor_Dev_ListPrograms);
 };
 
 
@@ -152,8 +152,8 @@ proto.devserver.DevServerPromiseClient.prototype.listPrograms =
  *   !proto.devserver.GetProgramRequest,
  *   !proto.devserver.GetProgramResponse>}
  */
-const methodDescriptor_DevServer_GetProgram = new grpc.web.MethodDescriptor(
-  '/devserver.DevServer/GetProgram',
+const methodDescriptor_Dev_GetProgram = new grpc.web.MethodDescriptor(
+  '/devserver.Dev/GetProgram',
   grpc.web.MethodType.UNARY,
   proto.devserver.GetProgramRequest,
   proto.devserver.GetProgramResponse,
@@ -174,7 +174,7 @@ const methodDescriptor_DevServer_GetProgram = new grpc.web.MethodDescriptor(
  *   !proto.devserver.GetProgramRequest,
  *   !proto.devserver.GetProgramResponse>}
  */
-const methodInfo_DevServer_GetProgram = new grpc.web.AbstractClientBase.MethodInfo(
+const methodInfo_Dev_GetProgram = new grpc.web.AbstractClientBase.MethodInfo(
   proto.devserver.GetProgramResponse,
   /**
    * @param {!proto.devserver.GetProgramRequest} request
@@ -197,13 +197,13 @@ const methodInfo_DevServer_GetProgram = new grpc.web.AbstractClientBase.MethodIn
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.GetProgramResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerClient.prototype.getProgram =
+proto.devserver.DevClient.prototype.getProgram =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/devserver.DevServer/GetProgram',
+      '/devserver.Dev/GetProgram',
       request,
       metadata || {},
-      methodDescriptor_DevServer_GetProgram,
+      methodDescriptor_Dev_GetProgram,
       callback);
 };
 
@@ -216,13 +216,13 @@ proto.devserver.DevServerClient.prototype.getProgram =
  * @return {!Promise<!proto.devserver.GetProgramResponse>}
  *     A native promise that resolves to the response
  */
-proto.devserver.DevServerPromiseClient.prototype.getProgram =
+proto.devserver.DevPromiseClient.prototype.getProgram =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/devserver.DevServer/GetProgram',
+      '/devserver.Dev/GetProgram',
       request,
       metadata || {},
-      methodDescriptor_DevServer_GetProgram);
+      methodDescriptor_Dev_GetProgram);
 };
 
 
@@ -232,8 +232,8 @@ proto.devserver.DevServerPromiseClient.prototype.getProgram =
  *   !proto.devserver.UpdateProgramRequest,
  *   !proto.devserver.UpdateProgramResponse>}
  */
-const methodDescriptor_DevServer_UpdateProgram = new grpc.web.MethodDescriptor(
-  '/devserver.DevServer/UpdateProgram',
+const methodDescriptor_Dev_UpdateProgram = new grpc.web.MethodDescriptor(
+  '/devserver.Dev/UpdateProgram',
   grpc.web.MethodType.UNARY,
   proto.devserver.UpdateProgramRequest,
   proto.devserver.UpdateProgramResponse,
@@ -254,7 +254,7 @@ const methodDescriptor_DevServer_UpdateProgram = new grpc.web.MethodDescriptor(
  *   !proto.devserver.UpdateProgramRequest,
  *   !proto.devserver.UpdateProgramResponse>}
  */
-const methodInfo_DevServer_UpdateProgram = new grpc.web.AbstractClientBase.MethodInfo(
+const methodInfo_Dev_UpdateProgram = new grpc.web.AbstractClientBase.MethodInfo(
   proto.devserver.UpdateProgramResponse,
   /**
    * @param {!proto.devserver.UpdateProgramRequest} request
@@ -277,13 +277,13 @@ const methodInfo_DevServer_UpdateProgram = new grpc.web.AbstractClientBase.Metho
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.UpdateProgramResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerClient.prototype.updateProgram =
+proto.devserver.DevClient.prototype.updateProgram =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/devserver.DevServer/UpdateProgram',
+      '/devserver.Dev/UpdateProgram',
       request,
       metadata || {},
-      methodDescriptor_DevServer_UpdateProgram,
+      methodDescriptor_Dev_UpdateProgram,
       callback);
 };
 
@@ -296,13 +296,13 @@ proto.devserver.DevServerClient.prototype.updateProgram =
  * @return {!Promise<!proto.devserver.UpdateProgramResponse>}
  *     A native promise that resolves to the response
  */
-proto.devserver.DevServerPromiseClient.prototype.updateProgram =
+proto.devserver.DevPromiseClient.prototype.updateProgram =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/devserver.DevServer/UpdateProgram',
+      '/devserver.Dev/UpdateProgram',
       request,
       metadata || {},
-      methodDescriptor_DevServer_UpdateProgram);
+      methodDescriptor_Dev_UpdateProgram);
 };
 
 
@@ -312,8 +312,8 @@ proto.devserver.DevServerPromiseClient.prototype.updateProgram =
  *   !proto.devserver.StartDebugRequest,
  *   !proto.devserver.StartDebugResponse>}
  */
-const methodDescriptor_DevServer_StartDebugger = new grpc.web.MethodDescriptor(
-  '/devserver.DevServer/StartDebugger',
+const methodDescriptor_Dev_StartDebugger = new grpc.web.MethodDescriptor(
+  '/devserver.Dev/StartDebugger',
   grpc.web.MethodType.SERVER_STREAMING,
   proto.devserver.StartDebugRequest,
   proto.devserver.StartDebugResponse,
@@ -334,7 +334,7 @@ const methodDescriptor_DevServer_StartDebugger = new grpc.web.MethodDescriptor(
  *   !proto.devserver.StartDebugRequest,
  *   !proto.devserver.StartDebugResponse>}
  */
-const methodInfo_DevServer_StartDebugger = new grpc.web.AbstractClientBase.MethodInfo(
+const methodInfo_Dev_StartDebugger = new grpc.web.AbstractClientBase.MethodInfo(
   proto.devserver.StartDebugResponse,
   /**
    * @param {!proto.devserver.StartDebugRequest} request
@@ -354,13 +354,13 @@ const methodInfo_DevServer_StartDebugger = new grpc.web.AbstractClientBase.Metho
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.StartDebugResponse>}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerClient.prototype.startDebugger =
+proto.devserver.DevClient.prototype.startDebugger =
     function(request, metadata) {
   return this.client_.serverStreaming(this.hostname_ +
-      '/devserver.DevServer/StartDebugger',
+      '/devserver.Dev/StartDebugger',
       request,
       metadata || {},
-      methodDescriptor_DevServer_StartDebugger);
+      methodDescriptor_Dev_StartDebugger);
 };
 
 
@@ -371,13 +371,13 @@ proto.devserver.DevServerClient.prototype.startDebugger =
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.StartDebugResponse>}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerPromiseClient.prototype.startDebugger =
+proto.devserver.DevPromiseClient.prototype.startDebugger =
     function(request, metadata) {
   return this.client_.serverStreaming(this.hostname_ +
-      '/devserver.DevServer/StartDebugger',
+      '/devserver.Dev/StartDebugger',
       request,
       metadata || {},
-      methodDescriptor_DevServer_StartDebugger);
+      methodDescriptor_Dev_StartDebugger);
 };
 
 
@@ -387,8 +387,8 @@ proto.devserver.DevServerPromiseClient.prototype.startDebugger =
  *   !proto.devserver.DebugRequest,
  *   !proto.devserver.DebugResponse>}
  */
-const methodDescriptor_DevServer_SendDebugMessage = new grpc.web.MethodDescriptor(
-  '/devserver.DevServer/SendDebugMessage',
+const methodDescriptor_Dev_SendDebugMessage = new grpc.web.MethodDescriptor(
+  '/devserver.Dev/SendDebugMessage',
   grpc.web.MethodType.SERVER_STREAMING,
   proto.devserver.DebugRequest,
   proto.devserver.DebugResponse,
@@ -409,7 +409,7 @@ const methodDescriptor_DevServer_SendDebugMessage = new grpc.web.MethodDescripto
  *   !proto.devserver.DebugRequest,
  *   !proto.devserver.DebugResponse>}
  */
-const methodInfo_DevServer_SendDebugMessage = new grpc.web.AbstractClientBase.MethodInfo(
+const methodInfo_Dev_SendDebugMessage = new grpc.web.AbstractClientBase.MethodInfo(
   proto.devserver.DebugResponse,
   /**
    * @param {!proto.devserver.DebugRequest} request
@@ -429,13 +429,13 @@ const methodInfo_DevServer_SendDebugMessage = new grpc.web.AbstractClientBase.Me
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.DebugResponse>}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerClient.prototype.sendDebugMessage =
+proto.devserver.DevClient.prototype.sendDebugMessage =
     function(request, metadata) {
   return this.client_.serverStreaming(this.hostname_ +
-      '/devserver.DevServer/SendDebugMessage',
+      '/devserver.Dev/SendDebugMessage',
       request,
       metadata || {},
-      methodDescriptor_DevServer_SendDebugMessage);
+      methodDescriptor_Dev_SendDebugMessage);
 };
 
 
@@ -446,13 +446,13 @@ proto.devserver.DevServerClient.prototype.sendDebugMessage =
  * @return {!grpc.web.ClientReadableStream<!proto.devserver.DebugResponse>}
  *     The XHR Node Readable Stream
  */
-proto.devserver.DevServerPromiseClient.prototype.sendDebugMessage =
+proto.devserver.DevPromiseClient.prototype.sendDebugMessage =
     function(request, metadata) {
   return this.client_.serverStreaming(this.hostname_ +
-      '/devserver.DevServer/SendDebugMessage',
+      '/devserver.Dev/SendDebugMessage',
       request,
       metadata || {},
-      methodDescriptor_DevServer_SendDebugMessage);
+      methodDescriptor_Dev_SendDebugMessage);
 };
 
 

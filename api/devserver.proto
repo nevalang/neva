@@ -4,7 +4,7 @@ package devserver;
 
 option go_package = './;sdk';
 
-service DevServer {
+service Dev {
     rpc ListPrograms (ListProgramsRequest)
         returns (ListProgramsResponse);
 

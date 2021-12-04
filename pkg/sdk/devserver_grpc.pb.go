@@ -14,58 +14,58 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// DevServerClient is the client API for DevServer service.
+// DevClient is the client API for Dev service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DevServerClient interface {
+type DevClient interface {
 	ListPrograms(ctx context.Context, in *ListProgramsRequest, opts ...grpc.CallOption) (*ListProgramsResponse, error)
 	GetProgram(ctx context.Context, in *GetProgramRequest, opts ...grpc.CallOption) (*GetProgramResponse, error)
 	UpdateProgram(ctx context.Context, in *UpdateProgramRequest, opts ...grpc.CallOption) (*UpdateProgramResponse, error)
-	StartDebugger(ctx context.Context, in *StartDebugRequest, opts ...grpc.CallOption) (DevServer_StartDebuggerClient, error)
-	SendDebugMessage(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DevServer_SendDebugMessageClient, error)
+	StartDebugger(ctx context.Context, in *StartDebugRequest, opts ...grpc.CallOption) (Dev_StartDebuggerClient, error)
+	SendDebugMessage(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (Dev_SendDebugMessageClient, error)
 }
 
-type devServerClient struct {
+type devClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDevServerClient(cc grpc.ClientConnInterface) DevServerClient {
-	return &devServerClient{cc}
+func NewDevClient(cc grpc.ClientConnInterface) DevClient {
+	return &devClient{cc}
 }
 
-func (c *devServerClient) ListPrograms(ctx context.Context, in *ListProgramsRequest, opts ...grpc.CallOption) (*ListProgramsResponse, error) {
+func (c *devClient) ListPrograms(ctx context.Context, in *ListProgramsRequest, opts ...grpc.CallOption) (*ListProgramsResponse, error) {
 	out := new(ListProgramsResponse)
-	err := c.cc.Invoke(ctx, "/devserver.DevServer/ListPrograms", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/devserver.Dev/ListPrograms", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *devServerClient) GetProgram(ctx context.Context, in *GetProgramRequest, opts ...grpc.CallOption) (*GetProgramResponse, error) {
+func (c *devClient) GetProgram(ctx context.Context, in *GetProgramRequest, opts ...grpc.CallOption) (*GetProgramResponse, error) {
 	out := new(GetProgramResponse)
-	err := c.cc.Invoke(ctx, "/devserver.DevServer/GetProgram", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/devserver.Dev/GetProgram", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *devServerClient) UpdateProgram(ctx context.Context, in *UpdateProgramRequest, opts ...grpc.CallOption) (*UpdateProgramResponse, error) {
+func (c *devClient) UpdateProgram(ctx context.Context, in *UpdateProgramRequest, opts ...grpc.CallOption) (*UpdateProgramResponse, error) {
 	out := new(UpdateProgramResponse)
-	err := c.cc.Invoke(ctx, "/devserver.DevServer/UpdateProgram", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/devserver.Dev/UpdateProgram", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *devServerClient) StartDebugger(ctx context.Context, in *StartDebugRequest, opts ...grpc.CallOption) (DevServer_StartDebuggerClient, error) {
-	stream, err := c.cc.NewStream(ctx, &DevServer_ServiceDesc.Streams[0], "/devserver.DevServer/StartDebugger", opts...)
+func (c *devClient) StartDebugger(ctx context.Context, in *StartDebugRequest, opts ...grpc.CallOption) (Dev_StartDebuggerClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Dev_ServiceDesc.Streams[0], "/devserver.Dev/StartDebugger", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &devServerStartDebuggerClient{stream}
+	x := &devStartDebuggerClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -75,16 +75,16 @@ func (c *devServerClient) StartDebugger(ctx context.Context, in *StartDebugReque
 	return x, nil
 }
 
-type DevServer_StartDebuggerClient interface {
+type Dev_StartDebuggerClient interface {
 	Recv() (*StartDebugResponse, error)
 	grpc.ClientStream
 }
 
-type devServerStartDebuggerClient struct {
+type devStartDebuggerClient struct {
 	grpc.ClientStream
 }
 
-func (x *devServerStartDebuggerClient) Recv() (*StartDebugResponse, error) {
+func (x *devStartDebuggerClient) Recv() (*StartDebugResponse, error) {
 	m := new(StartDebugResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -92,12 +92,12 @@ func (x *devServerStartDebuggerClient) Recv() (*StartDebugResponse, error) {
 	return m, nil
 }
 
-func (c *devServerClient) SendDebugMessage(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (DevServer_SendDebugMessageClient, error) {
-	stream, err := c.cc.NewStream(ctx, &DevServer_ServiceDesc.Streams[1], "/devserver.DevServer/SendDebugMessage", opts...)
+func (c *devClient) SendDebugMessage(ctx context.Context, in *DebugRequest, opts ...grpc.CallOption) (Dev_SendDebugMessageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Dev_ServiceDesc.Streams[1], "/devserver.Dev/SendDebugMessage", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &devServerSendDebugMessageClient{stream}
+	x := &devSendDebugMessageClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -107,16 +107,16 @@ func (c *devServerClient) SendDebugMessage(ctx context.Context, in *DebugRequest
 	return x, nil
 }
 
-type DevServer_SendDebugMessageClient interface {
+type Dev_SendDebugMessageClient interface {
 	Recv() (*DebugResponse, error)
 	grpc.ClientStream
 }
 
-type devServerSendDebugMessageClient struct {
+type devSendDebugMessageClient struct {
 	grpc.ClientStream
 }
 
-func (x *devServerSendDebugMessageClient) Recv() (*DebugResponse, error) {
+func (x *devSendDebugMessageClient) Recv() (*DebugResponse, error) {
 	m := new(DebugResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -124,175 +124,175 @@ func (x *devServerSendDebugMessageClient) Recv() (*DebugResponse, error) {
 	return m, nil
 }
 
-// DevServerServer is the server API for DevServer service.
-// All implementations must embed UnimplementedDevServerServer
+// DevServer is the server API for Dev service.
+// All implementations must embed UnimplementedDevServer
 // for forward compatibility
-type DevServerServer interface {
+type DevServer interface {
 	ListPrograms(context.Context, *ListProgramsRequest) (*ListProgramsResponse, error)
 	GetProgram(context.Context, *GetProgramRequest) (*GetProgramResponse, error)
 	UpdateProgram(context.Context, *UpdateProgramRequest) (*UpdateProgramResponse, error)
-	StartDebugger(*StartDebugRequest, DevServer_StartDebuggerServer) error
-	SendDebugMessage(*DebugRequest, DevServer_SendDebugMessageServer) error
-	mustEmbedUnimplementedDevServerServer()
+	StartDebugger(*StartDebugRequest, Dev_StartDebuggerServer) error
+	SendDebugMessage(*DebugRequest, Dev_SendDebugMessageServer) error
+	mustEmbedUnimplementedDevServer()
 }
 
-// UnimplementedDevServerServer must be embedded to have forward compatible implementations.
-type UnimplementedDevServerServer struct {
+// UnimplementedDevServer must be embedded to have forward compatible implementations.
+type UnimplementedDevServer struct {
 }
 
-func (UnimplementedDevServerServer) ListPrograms(context.Context, *ListProgramsRequest) (*ListProgramsResponse, error) {
+func (UnimplementedDevServer) ListPrograms(context.Context, *ListProgramsRequest) (*ListProgramsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPrograms not implemented")
 }
-func (UnimplementedDevServerServer) GetProgram(context.Context, *GetProgramRequest) (*GetProgramResponse, error) {
+func (UnimplementedDevServer) GetProgram(context.Context, *GetProgramRequest) (*GetProgramResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProgram not implemented")
 }
-func (UnimplementedDevServerServer) UpdateProgram(context.Context, *UpdateProgramRequest) (*UpdateProgramResponse, error) {
+func (UnimplementedDevServer) UpdateProgram(context.Context, *UpdateProgramRequest) (*UpdateProgramResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProgram not implemented")
 }
-func (UnimplementedDevServerServer) StartDebugger(*StartDebugRequest, DevServer_StartDebuggerServer) error {
+func (UnimplementedDevServer) StartDebugger(*StartDebugRequest, Dev_StartDebuggerServer) error {
 	return status.Errorf(codes.Unimplemented, "method StartDebugger not implemented")
 }
-func (UnimplementedDevServerServer) SendDebugMessage(*DebugRequest, DevServer_SendDebugMessageServer) error {
+func (UnimplementedDevServer) SendDebugMessage(*DebugRequest, Dev_SendDebugMessageServer) error {
 	return status.Errorf(codes.Unimplemented, "method SendDebugMessage not implemented")
 }
-func (UnimplementedDevServerServer) mustEmbedUnimplementedDevServerServer() {}
+func (UnimplementedDevServer) mustEmbedUnimplementedDevServer() {}
 
-// UnsafeDevServerServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DevServerServer will
+// UnsafeDevServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DevServer will
 // result in compilation errors.
-type UnsafeDevServerServer interface {
-	mustEmbedUnimplementedDevServerServer()
+type UnsafeDevServer interface {
+	mustEmbedUnimplementedDevServer()
 }
 
-func RegisterDevServerServer(s grpc.ServiceRegistrar, srv DevServerServer) {
-	s.RegisterService(&DevServer_ServiceDesc, srv)
+func RegisterDevServer(s grpc.ServiceRegistrar, srv DevServer) {
+	s.RegisterService(&Dev_ServiceDesc, srv)
 }
 
-func _DevServer_ListPrograms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dev_ListPrograms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListProgramsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DevServerServer).ListPrograms(ctx, in)
+		return srv.(DevServer).ListPrograms(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/devserver.DevServer/ListPrograms",
+		FullMethod: "/devserver.Dev/ListPrograms",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevServerServer).ListPrograms(ctx, req.(*ListProgramsRequest))
+		return srv.(DevServer).ListPrograms(ctx, req.(*ListProgramsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DevServer_GetProgram_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dev_GetProgram_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetProgramRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DevServerServer).GetProgram(ctx, in)
+		return srv.(DevServer).GetProgram(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/devserver.DevServer/GetProgram",
+		FullMethod: "/devserver.Dev/GetProgram",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevServerServer).GetProgram(ctx, req.(*GetProgramRequest))
+		return srv.(DevServer).GetProgram(ctx, req.(*GetProgramRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DevServer_UpdateProgram_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dev_UpdateProgram_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateProgramRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DevServerServer).UpdateProgram(ctx, in)
+		return srv.(DevServer).UpdateProgram(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/devserver.DevServer/UpdateProgram",
+		FullMethod: "/devserver.Dev/UpdateProgram",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevServerServer).UpdateProgram(ctx, req.(*UpdateProgramRequest))
+		return srv.(DevServer).UpdateProgram(ctx, req.(*UpdateProgramRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DevServer_StartDebugger_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Dev_StartDebugger_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(StartDebugRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(DevServerServer).StartDebugger(m, &devServerStartDebuggerServer{stream})
+	return srv.(DevServer).StartDebugger(m, &devStartDebuggerServer{stream})
 }
 
-type DevServer_StartDebuggerServer interface {
+type Dev_StartDebuggerServer interface {
 	Send(*StartDebugResponse) error
 	grpc.ServerStream
 }
 
-type devServerStartDebuggerServer struct {
+type devStartDebuggerServer struct {
 	grpc.ServerStream
 }
 
-func (x *devServerStartDebuggerServer) Send(m *StartDebugResponse) error {
+func (x *devStartDebuggerServer) Send(m *StartDebugResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _DevServer_SendDebugMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Dev_SendDebugMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(DebugRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(DevServerServer).SendDebugMessage(m, &devServerSendDebugMessageServer{stream})
+	return srv.(DevServer).SendDebugMessage(m, &devSendDebugMessageServer{stream})
 }
 
-type DevServer_SendDebugMessageServer interface {
+type Dev_SendDebugMessageServer interface {
 	Send(*DebugResponse) error
 	grpc.ServerStream
 }
 
-type devServerSendDebugMessageServer struct {
+type devSendDebugMessageServer struct {
 	grpc.ServerStream
 }
 
-func (x *devServerSendDebugMessageServer) Send(m *DebugResponse) error {
+func (x *devSendDebugMessageServer) Send(m *DebugResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// DevServer_ServiceDesc is the grpc.ServiceDesc for DevServer service.
+// Dev_ServiceDesc is the grpc.ServiceDesc for Dev service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DevServer_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "devserver.DevServer",
-	HandlerType: (*DevServerServer)(nil),
+var Dev_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "devserver.Dev",
+	HandlerType: (*DevServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ListPrograms",
-			Handler:    _DevServer_ListPrograms_Handler,
+			Handler:    _Dev_ListPrograms_Handler,
 		},
 		{
 			MethodName: "GetProgram",
-			Handler:    _DevServer_GetProgram_Handler,
+			Handler:    _Dev_GetProgram_Handler,
 		},
 		{
 			MethodName: "UpdateProgram",
-			Handler:    _DevServer_UpdateProgram_Handler,
+			Handler:    _Dev_UpdateProgram_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StartDebugger",
-			Handler:       _DevServer_StartDebugger_Handler,
+			Handler:       _Dev_StartDebugger_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "SendDebugMessage",
-			Handler:       _DevServer_SendDebugMessage_Handler,
+			Handler:       _Dev_SendDebugMessage_Handler,
 			ServerStreams: true,
 		},
 	},
