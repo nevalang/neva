@@ -1,9 +1,0 @@
-in:
-  in: int
-out:
-  out: int
-
-net:
-  in:
-    in:
-      out: [out]

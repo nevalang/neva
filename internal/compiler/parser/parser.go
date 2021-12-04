@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	"github.com/emil14/respect/internal/compiler"
-	"github.com/emil14/respect/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler"
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
 type Caster interface {
@@ -18,7 +18,7 @@ type parser struct {
 	caster    Caster
 }
 
-func (p parser) Module(bb []byte) (program.Module, error) {
+func (p parser) Parse(bb []byte) (program.Module, error) {
 	var mod module
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return program.Module{}, err
@@ -44,7 +44,7 @@ type Unmarshal func([]byte, interface{}) (err error)
 
 type Marshal func(interface{}) ([]byte, error)
 
-func New(u Unmarshal, m Marshal, c Caster) (compiler.Parser, error) {
+func New(u Unmarshal, m Marshal, c Caster) (compiler.ModuleParser, error) {
 	if u == nil || m == nil || c == nil {
 		return parser{}, fmt.Errorf("parser constructor err")
 	}
@@ -56,7 +56,7 @@ func New(u Unmarshal, m Marshal, c Caster) (compiler.Parser, error) {
 	}, nil
 }
 
-func MustNew(u Unmarshal, m Marshal, c Caster) compiler.Parser {
+func MustNew(u Unmarshal, m Marshal, c Caster) compiler.ModuleParser {
 	p, err := New(u, m, c)
 	if err != nil {
 		panic(err)

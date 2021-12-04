@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/neva/internal/runtime"
 )
 
 var ErrMul = errors.New("multiplication")

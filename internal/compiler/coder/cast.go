@@ -1,6 +1,6 @@
 package coder
 
-// import "github.com/emil14/respect/internal/runtime/program"
+// import "github.com/emil14/neva/internal/runtime/program"
 
 // type caster struct{}
 

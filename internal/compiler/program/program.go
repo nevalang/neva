@@ -7,9 +7,42 @@ type Program struct {
 	Scope map[string]Component
 }
 
-type Component interface {
-	Interface() IO
+type Component struct {
+	Type     ComponentType
+	Operator Operator
+	Module   Module
 }
+
+func (c Component) IO() IO {
+	if c.Type == ModuleComponent {
+		return c.Module.IO
+	}
+	return c.Operator.IO
+}
+
+type Operator struct {
+	Ref OpRef
+	IO     IO
+}
+
+type OpRef struct {
+	Pkg, Name string
+}
+
+type NameSpace uint8
+
+const (
+	StdNameSpace NameSpace = iota + 1
+	LocalNameSpace
+	GlobalNameSpace
+)
+
+type ComponentType uint8
+
+const (
+	ModuleComponent ComponentType = iota + 1
+	OperatorComponent
+)
 
 type IO struct {
 	In  Ports

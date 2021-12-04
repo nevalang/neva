@@ -1,36 +1,47 @@
 package program
 
+import "fmt"
+
 type Type uint8
 
-func (t Type) String() string {
-	switch t {
-	case IntType:
-		return "int"
-	case StrType:
-		return "str"
-	case BoolType:
-		return "bool"
-	}
-
-	return "unknown"
-}
-
 const (
-	UnknownType Type = iota
-	IntType
-	StrType
-	BoolType
+	TypeInt Type = iota + 1
+	TypeStr
+	TypeBool
 )
 
-func TypeByName(name string) Type {
-	switch name {
-	case "int":
-		return IntType
-	case "str":
-		return StrType
-	case "bool":
-		return BoolType
+func (t Type) String() string {
+	var s typeName = "unknown"
+
+	switch t {
+	case TypeInt:
+		s = intType
+	case TypeStr:
+		s = strType
+	case TypeBool:
+		s = boolType
 	}
 
-	return UnknownType
+	return string(s)
+}
+
+type typeName string
+
+const (
+	intType  typeName = "int"
+	strType  typeName = "str"
+	boolType typeName = "bool"
+)
+
+func TypeByName(name string) (Type, error) {
+	switch typeName(name) {
+	case intType:
+		return TypeInt, nil
+	case strType:
+		return TypeStr, nil
+	case boolType:
+		return TypeBool, nil
+	}
+
+	return 0, fmt.Errorf("unknown type %s", name)
 }

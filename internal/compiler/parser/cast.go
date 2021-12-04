@@ -5,38 +5,45 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/respect/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler/program"
 )
 
 type caster struct{}
 
 func (c caster) From(mod program.Module) module {
 	in, out := c.fromIO(mod.IO)
-	deps := c.fromDeps(mod.Deps)
-	cnst := c.fromConst(mod.Const)
-	net := c.fromNet(mod.Net)
+
 	return module{
-		Deps:    deps,
+		Deps:    c.fromDeps(mod.DepsIO),
 		In:      in,
 		Out:     out,
-		Const:   cnst,
+		Const:   c.fromConst(mod.Const),
 		Workers: mod.Workers,
-		Net:     net,
+		Net:     c.fromNet(mod.Net),
 	}
 }
 
 func (c caster) To(mod module) program.Module {
 	return program.Module{
 		IO:      c.toIO(mod.In, mod.Out),
-		Deps:    c.toDeps(mod.Deps),
+		DepsIO:  c.toDeps(mod.Deps),
 		Const:   c.toConst(mod.Const),
 		Workers: map[string]string(mod.Workers),
 		Net:     c.toNet(mod.Net),
 	}
 }
 
-func (c caster) fromConst(map[string]program.Const) map[string]Const {
-	return map[string]Const{} // TODO
+func (c caster) fromConst(from map[string]program.Const) map[string]Const {
+	res := map[string]Const{}
+
+	for k, v := range from {
+		res[k] = Const{
+			Type:     string(v.Type()),
+			IntValue: v.Int(),
+		}
+	}
+
+	return res
 }
 
 func (c caster) fromIO(io program.IO) (inports, outports) {
@@ -44,15 +51,18 @@ func (c caster) fromIO(io program.IO) (inports, outports) {
 	for k, v := range io.In {
 		in[k] = fmt.Sprintf("%v", v)
 	}
+
 	out := outports{}
 	for k, v := range io.Out {
 		out[k] = fmt.Sprintf("%v", v)
 	}
+
 	return in, out
 }
 
 func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
 	result := moduleDeps{}
+
 	for k, v := range deps {
 		in, out := c.fromIO(v)
 		result[k] = io{
@@ -60,10 +70,11 @@ func (c caster) fromDeps(deps map[string]program.IO) moduleDeps {
 			Out: out,
 		}
 	}
+
 	return result
 }
 
-func (c caster) fromNet(net program.Net) net {
+func (c caster) fromNet(net program.Connections) net {
 	return nil // TODO
 }
 
@@ -78,7 +89,11 @@ func (c caster) castPorts(from ports) program.Ports {
 	to := program.Ports{}
 
 	for port, t := range from {
-		portType := program.PortType{Type: program.TypeByName(t)}
+		typ, err := program.TypeByName(t)
+		if err != nil {
+			return program.Ports{}
+		}
+		portType := program.PortType{Type: typ}
 		if strings.HasSuffix(port, "[]") {
 			portType.Arr = true
 			port = strings.TrimSuffix(port, "[]")
@@ -110,19 +125,20 @@ func (c caster) toConst(from map[string]Const) map[string]program.Const {
 
 	for name, cnst := range from {
 		switch cnst.Type {
-		case program.IntType.String():
-			res[name] = program.Const{
-				Type:     program.IntType,
-				IntValue: cnst.IntValue,
-			}
+		case program.TypeInt.String():
+			res[name] = program.NewIntConst(cnst.IntValue)
+		case program.TypeStr.String():
+			res[name] = program.NewStrConst(cnst.StrValue)
+		case program.TypeBool.String():
+			res[name] = program.NewBoolConst(cnst.BoolValue)
 		}
 	}
 
 	return res
 }
 
-func (c caster) toNet(from net) program.Net {
-	to := program.Net{}
+func (c caster) toNet(from net) program.Connections {
+	to := program.Connections{}
 
 	for senderNode, outgoingConnections := range from {
 		for outport, nodesToInports := range outgoingConnections {

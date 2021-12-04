@@ -4,7 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type Connector struct {
@@ -40,22 +41,19 @@ func (c Connector) loop(conn runtime.Connection) {
 }
 
 type Interceptor interface {
-	OnSend(msg runtime.Msg, from runtime.PortAddr) runtime.Msg
-	OnReceive(msg runtime.Msg, from, to runtime.PortAddr)
+	OnSend(msg runtime.Msg, from program.FullPortAddr) runtime.Msg
+	OnReceive(msg runtime.Msg, from, to program.FullPortAddr)
 }
 
-func New(interceptor Interceptor) (Connector, error) {
-	if interceptor == nil {
+func New(i Interceptor) (Connector, error) {
+	if i == nil {
 		return Connector{}, errors.New("nil interceptor")
 	}
-	return Connector{interceptor}, nil
+	return Connector{i}, nil
 }
 
-func MustNew(
-	ops map[string]runtime.OperatorFunc,
-	interceptor Interceptor,
-) Connector {
-	c, err := New(interceptor)
+func MustNew(i Interceptor) Connector {
+	c, err := New(i)
 	if err != nil {
 		panic(err)
 	}

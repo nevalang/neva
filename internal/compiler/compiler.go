@@ -4,8 +4,55 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/respect/internal/compiler/program"
-	runtime "github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/neva/internal/compiler/program"
+	runtime "github.com/emil14/neva/internal/runtime/program"
+)
+
+type (
+	Compiler struct {
+		storage    Storage
+		parser     ModuleParser
+		checker    Checker
+		translator Translator
+		coder      Coder
+		opsIO      map[PkgComponentRef]program.IO
+	}
+
+	ModuleParser interface {
+		Parse([]byte) (program.Module, error)
+	}
+
+	Checker interface {
+		Check(program.Program) error
+	}
+
+	Translator interface {
+		Translate(program.Program) (runtime.Program, error)
+	}
+
+	Coder interface {
+		Code(runtime.Program) ([]byte, error)
+	}
+
+	Storage interface {
+		Pkg(path string, ops map[PkgComponentRef]struct{}) (Pkg, error)
+	}
+
+	Pkg struct {
+		Root      string
+		Operators []PkgComponentRef
+		Modules   map[PkgComponentRef][]byte
+		Scope     map[string]PkgComponentRef
+		Meta      PkgMeta
+	}
+
+	PkgComponentRef struct {
+		Pkg, Name string
+	}
+
+	PkgMeta struct {
+		CompilerVersion string
+	}
 )
 
 var (
@@ -14,178 +61,148 @@ var (
 	ErrInternal   = errors.New("internal error")
 )
 
-type (
-	Parser interface {
-		Module([]byte) (program.Module, error)
-		Program(program.Program) ([]byte, error)
-	}
-
-	Translator interface {
-		Translate(program.Program) (runtime.Program, error)
-	}
-
-	Validator interface {
-		Validate(program.Module) error
-	}
-
-	Coder interface {
-		Code(runtime.Program) ([]byte, error)
-	}
-
-	PkgDescriptor struct {
-		Root  string
-		Std   []string
-		Scope map[string][]byte
-	}
-)
-
-type Compiler struct {
-	srcParser  Parser
-	validator  Validator
-	translator Translator
-	coder      Coder
-	std        Std
+func (c Compiler) Version() string {
+	return "0.0.1"
 }
 
-func (c Compiler) BuildProgram(pkgd PkgDescriptor) (runtime.Program, program.Program, error) {
-	scope := c.defaultScope(len(pkgd.Scope))
-
-	for k, v := range pkgd.Scope {
-		mod, err := c.compileModule(v)
-		if err != nil {
-			return runtime.Program{}, program.Program{}, err
-		}
-		scope[k] = mod
-	}
-
-	if err := c.resolveDeps(scope); err != nil {
-		return runtime.Program{}, program.Program{}, err
-	}
-
-	prog := program.Program{
-		Root:  pkgd.Root,
-		Scope: scope,
-	}
-
-	rprog, err := c.translator.Translate(prog)
+func (c Compiler) BuildProgram(descriptorPath string) (runtime.Program, program.Program, error) {
+	pkg, err := c.storage.Pkg(descriptorPath, c.opsSet())
 	if err != nil {
 		return runtime.Program{}, program.Program{}, err
 	}
 
-	return rprog, prog, nil
-}
-
-func (c Compiler) resolveDeps(scope map[string]program.Component) error {
-	for componentName, component := range scope {
-		if _, ok := component.(program.Operator); ok {
-			continue
-		}
-
-		mod, ok := component.(program.Module)
-		if !ok {
-			return fmt.Errorf("unknown component type")
-		}
-
-		for depName, wantIO := range mod.Deps {
-			dep := scope[depName]
-			if dep == nil {
-				return fmt.Errorf("dep %s not found for %s", depName, componentName)
-			}
-
-			if err := wantIO.Compare(dep.Interface()); err != nil {
-				return err
-			}
-		}
+	if v := c.Version(); v != pkg.Meta.CompilerVersion {
+		return runtime.Program{}, program.Program{}, fmt.Errorf(
+			"wrong compiler version: want %s, got %s", pkg.Meta.CompilerVersion, v,
+		)
 	}
 
-	return nil
-}
-
-func (c Compiler) compileModule(mod []byte) (program.Module, error) {
-	parsed, err := c.srcParser.Module(mod)
+	ops, err := c.pkgOps(pkg)
 	if err != nil {
-		return program.Module{}, fmt.Errorf("%w: %v", ErrParsing, err)
+		return runtime.Program{}, program.Program{}, err
 	}
 
-	if err := c.validator.Validate(parsed); err != nil {
-		return program.Module{}, fmt.Errorf("%w: %v", ErrValidation, err)
+	mods, err := c.pkgMods(pkg)
+	if err != nil {
+		return runtime.Program{}, program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
 	}
 
-	return parsed, nil
-}
-
-func (c Compiler) compileProgram(
-	modules map[string][]byte,
-	root string,
-	scope map[string]program.Component,
-) (program.Program, error) {
-	var mod program.Module
-
-	if _, ok := scope[root]; !ok {
-		parsed, err := c.srcParser.Module(modules[root])
-		if err != nil {
-			return program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
-		}
-
-		if err := c.validator.Validate(parsed); err != nil {
-			return program.Program{}, fmt.Errorf("%w: %v", ErrValidation, err)
-		}
-
-		mod = parsed
+	scope, err := c.pkgScope(pkg, ops, mods)
+	if err != nil {
+		return runtime.Program{}, program.Program{}, err
 	}
 
-	for name, dep := range mod.Deps {
-		prog, err := c.compileProgram(modules, name, scope)
-		if err != nil {
-			return program.Program{}, err
-		}
-
-		subroot, ok := prog.Scope[prog.Root]
-		if !ok {
-			return program.Program{}, fmt.Errorf("%w", ErrInternal)
-		}
-
-		if err := subroot.Interface().Compare(dep); err != nil {
-			return program.Program{}, err
-		}
-	}
-
-	scope[root] = mod
-
-	return program.Program{
-		Root:  root,
+	cprog := program.Program{
+		Root:  pkg.Root,
 		Scope: scope,
-	}, nil
-}
-
-func (c Compiler) defaultScope(padding int) map[string]program.Component {
-	m := make(map[string]program.Component, len(c.std)+padding)
-	// for i := range c.std {
-	// 	m[c.std[i].Name] = c.std[i]
-	// }
-	return m
-}
-
-func New(p Parser, v Validator, t Translator, c Coder, std Std) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil || std == nil {
-		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
 	}
 
+	if err := c.checker.Check(cprog); err != nil {
+		return runtime.Program{}, program.Program{}, err
+	}
+
+	rprog, err := c.translator.Translate(cprog)
+	if err != nil {
+		return runtime.Program{}, program.Program{}, err
+	}
+
+	return rprog, cprog, nil
+}
+
+func (Compiler) pkgScope(
+	pkg Pkg,
+	ops map[PkgComponentRef]program.Operator,
+	mods map[PkgComponentRef]program.Module,
+) (map[string]program.Component, error) {
+	scope := make(map[string]program.Component, len(pkg.Scope))
+
+	for alias, ref := range pkg.Scope {
+		op, ok := ops[ref]
+		if ok {
+			scope[alias] = program.Component{
+				Type:     program.OperatorComponent,
+				Operator: op,
+			}
+		}
+
+		mod, ok := mods[ref]
+		if !ok {
+			return nil, fmt.Errorf("")
+		}
+
+		scope[alias] = program.Component{
+			Type:   program.ModuleComponent,
+			Module: mod,
+		}
+	}
+
+	return scope, nil
+}
+
+func (c Compiler) pkgMods(pkg Pkg) (map[PkgComponentRef]program.Module, error) {
+	mods := make(map[PkgComponentRef]program.Module, len(pkg.Modules))
+	for ref, bb := range pkg.Modules {
+		mod, err := c.parser.Parse(bb)
+		if err != nil {
+			return nil, err
+		}
+		mods[ref] = mod
+	}
+	return mods, nil
+}
+
+func (c Compiler) pkgOps(pkg Pkg) (map[PkgComponentRef]program.Operator, error) {
+	ops := make(map[PkgComponentRef]program.Operator, len(pkg.Operators))
+	for _, opRef := range pkg.Operators {
+		io, ok := c.opsIO[opRef]
+		if !ok {
+			return nil, fmt.Errorf("operator not found %s", opRef)
+		}
+		ops[opRef] = program.Operator{IO: io}
+	}
+	return ops, nil
+}
+
+func (c Compiler) opsSet() map[PkgComponentRef]struct{} {
+	opsSet := make(map[PkgComponentRef]struct{}, len(c.opsIO))
+	for ref := range c.opsIO {
+		opsSet[ref] = struct{}{}
+	}
+	return opsSet
+}
+
+func New(
+	parser ModuleParser,
+	checker Checker,
+	translator Translator,
+	coder Coder,
+	store Storage,
+	ops map[PkgComponentRef]program.IO,
+) (Compiler, error) {
+	if parser == nil || checker == nil || translator == nil || store == nil || ops == nil {
+		return Compiler{}, fmt.Errorf("nil deps")
+	}
 	return Compiler{
-		srcParser:  p,
-		validator:  v,
-		translator: t,
-		coder:      c,
-		std:        std,
+		parser:     parser,
+		checker:    checker,
+		translator: translator,
+		coder:      coder,
+		opsIO:      ops,
+		storage:    store,
 	}, nil
 }
 
-func MustNew(p Parser, v Validator, t Translator, c Coder, std Std) Compiler {
-	cmp, err := New(p, v, t, c, std)
+func MustNew(
+	parser ModuleParser,
+	checker Checker,
+	translator Translator,
+	coder Coder,
+	store Storage,
+	ops map[PkgComponentRef]program.IO,
+) Compiler {
+	cmp, err := New(parser, checker, translator, coder, store, ops)
 	if err != nil {
 		panic(err)
 	}
 	return cmp
 }
-
-type Std map[string]map[string]program.Operator

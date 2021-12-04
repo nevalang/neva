@@ -1,7 +1,7 @@
 package decoder
 
 import (
-	"github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type Program struct {

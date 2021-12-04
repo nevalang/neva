@@ -1,3 +1,14 @@
+# Generate RPC-SDK
+
+```shell
+protoc api/devserver.proto \
+    --js_out=import_style=commonjs,binary:web/src/sdk \
+    --grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:web/src/sdk \
+    --go_out=pkg/sdk \
+    --go-grpc_out=pkg/sdk
+```
+
+
 ```
 BASE_PATH # path to directory where programs (packages) can be found
 compiler will use recoursion to find all dirs with pkg.yml files.

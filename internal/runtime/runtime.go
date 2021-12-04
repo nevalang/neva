@@ -3,23 +3,32 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type (
 	Runtime struct {
 		connector Connector
-		opsRepo   OperatorsRepo
+		opsRepo   OpsRepo
 	}
 
-	OperatorsRepo interface {
-		OperatorFunc(pkg, name string) OperatorFunc
+	OpsRepo interface {
+		Opfunc(pkg, name string) Opfunc
 	}
 
 	Connector interface {
 		Connect([]Connection)
+	}
+
+	Connection struct {
+		From ConnectionPoint
+		To   []ConnectionPoint
+	}
+
+	ConnectionPoint struct {
+		Ch   chan Msg
+		Addr program.FullPortAddr
 	}
 )
 
@@ -27,11 +36,11 @@ var ErrPortNotFound = errors.New("port not found")
 
 func (r Runtime) Run(prog program.Program) (IO, error) {
 	nodes := map[string]IO{}
-	for _, node := range prog.Nodes {
-		io := r.nodeIO(node.In, node.Out)
+	for name, node := range prog.Nodes {
+		io := r.newNodeIO(node.In, node.Out)
 
 		if node.Type == program.OperatorNode {
-			op := r.opsRepo.OperatorFunc(node.Operator.Name, node.Operator.Name)
+			op := r.opsRepo.Opfunc(node.OpRef.Name, node.OpRef.Name)
 			if err := op(io); err != nil {
 				return IO{}, err
 			}
@@ -60,59 +69,70 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 			}
 		}
 
-		nodes[strings.Join(node.Path, ".")] = io
+		nodes[name] = io
 	}
 
-	net := make([]Connection, 0, len(prog.Net))
+	conns := make([]Connection, 0, len(prog.Net))
 	for _, conn := range prog.Net {
-		senderIO, ok := nodes[strings.Join(conn.From.NodePath, ".")]
+		senderIO, ok := nodes[conn.From.Node]
 		if !ok {
 			return IO{}, fmt.Errorf("")
 		}
 
-		outportAddr := PortAddr{
-			Port: conn.From.Port,
-			Slot: conn.From.Slot,
-		}
-
-		outport, err := senderIO.Out.Port(outportAddr)
+		fromPortAddr := PortAddr{Port: conn.From.Port, Slot: conn.From.Slot}
+		fromPortCh, err := senderIO.Out.Port(fromPortAddr)
 		if err != nil {
 			return IO{}, err
 		}
 
-		receivers := make([]Port, 0, len(conn.To))
-		for _, inportAddr := range conn.To {
-			receiverIO, ok := nodes[strings.Join(inportAddr.NodePath, ".")]
+		receivers := make([]ConnectionPoint, 0, len(conn.To))
+		for _, connToAddr := range conn.To {
+			receiverIO, ok := nodes[connToAddr.Node]
 			if !ok {
 				return IO{}, fmt.Errorf("")
 			}
 
-			to, err := receiverIO.In.Port(PortAddr{
-				Port: inportAddr.Port,
-				Slot: inportAddr.Slot,
+			toPort, err := receiverIO.In.Port(PortAddr{
+				Port: connToAddr.Port,
+				Slot: connToAddr.Slot,
 			})
 			if err != nil {
 				return IO{}, err
 			}
 
-			receivers = append(receivers, Port{Addr: PortAddr{
-				Port: inportAddr.Port,
-				Slot: inportAddr.Slot,
-			}, Ch: to})
+			receivers = append(receivers, ConnectionPoint{Addr: program.FullPortAddr{
+				Node: connToAddr.Node,
+				Port: connToAddr.Port,
+				Slot: connToAddr.Slot,
+			}, Ch: toPort})
 		}
 
-		net = append(net, Connection{
+		conns = append(conns, Connection{
 			To: receivers,
-			From: Port{
-				Ch:   outport,
-				Addr: outportAddr,
+			From: ConnectionPoint{
+				Ch: fromPortCh,
+				Addr: program.FullPortAddr{
+					Node: conn.From.Node,
+					Port: conn.From.Port,
+					Slot: conn.From.Slot,
+				},
 			},
 		})
 	}
 
+	io, err := r.rootIO(prog.IORef, nodes)
+	if err != nil {
+		return IO{}, fmt.Errorf("")
+	}
+
+	return io, nil
+}
+
+func (Runtime) rootIO(ioRef program.IORef, nodes map[string]IO) (IO, error) {
 	io := IO{}
-	for _, absAddr := range prog.IO.In {
-		node, ok := nodes[strings.Join(absAddr.NodePath, ".")]
+
+	for _, absAddr := range ioRef.In {
+		node, ok := nodes[absAddr.Node]
 		if !ok {
 			return IO{}, fmt.Errorf("")
 		}
@@ -129,8 +149,9 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 
 		io.In[addr] = port
 	}
-	for _, absAddr := range prog.IO.Out {
-		node, ok := nodes[strings.Join(absAddr.NodePath, ".")]
+
+	for _, absAddr := range ioRef.Out {
+		node, ok := nodes[absAddr.Node]
 		if !ok {
 			return IO{}, fmt.Errorf("")
 		}
@@ -151,7 +172,7 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 	return io, nil
 }
 
-func (r Runtime) nodeIO(in, out map[string]program.PortMeta) IO {
+func (r Runtime) newNodeIO(in, out map[string]program.PortMeta) IO {
 	resultIn := make(map[PortAddr]chan Msg)
 	for port, meta := range in {
 		addr := PortAddr{Port: port}
@@ -181,17 +202,7 @@ func (r Runtime) nodeIO(in, out map[string]program.PortMeta) IO {
 	return IO{resultIn, resultOut}
 }
 
-type OperatorFunc func(IO) error
-
-type Connection struct {
-	From Port
-	To   []Port
-}
-
-type Port struct {
-	Ch   chan Msg
-	Addr PortAddr
-}
+type Opfunc func(IO) error
 
 type IO struct {
 	In, Out Ports

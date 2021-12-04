@@ -3,19 +3,19 @@ meta:
 
 import:
   std:
-    - math
-    - logic
+    math: math
+    logic: logic
   global:
-    shared: 0.0.1
+    shared: shared@0.0.1
   local:
-    - root
+    root: dir/root
 
 scope:
   "*": "std.math.mul"
-  "%": "std.math.mul"
+  "%": "std.math.remainder"
   ">": "std.logic.more"
-  "filter": "std.logic.filter"
-  "bypass": "global.shared.bp"
+  "f": "std.logic.filter"
+  "bp": "global.shared.bypass"
   "root": "local.root"
 
 export:

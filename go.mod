@@ -1,4 +1,4 @@
-module github.com/emil14/respect
+module github.com/emil14/neva
 
 go 1.15
 

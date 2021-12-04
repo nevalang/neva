@@ -1,21 +1,20 @@
 package program
 
 type Program struct {
-	IO    IO
-	Nodes []Node
+	Nodes map[string]Node
 	Net   []Connection
+	IORef IORef
 }
 
-type IO struct {
-	In, Out []AbsPortAddr
+type IORef struct {
+	In, Out []FullPortAddr
 }
 
 type Node struct {
-	Path     []string
-	In, Out  map[string]PortMeta
-	Type     NodeType
-	Const    map[string]Const
-	Operator Operator
+	In, Out map[string]PortMeta
+	Type    NodeType
+	Const   map[string]ConstValue
+	OpRef   OpRef
 }
 
 type PortMeta struct {
@@ -28,24 +27,25 @@ type NodeType uint8
 const (
 	ConstNode NodeType = iota + 1
 	OperatorNode
+	ModuleNode
 )
 
-type Const struct {
+type ConstValue struct {
 	Type     Type
 	IntValue int
 }
 
-type Operator struct {
+type OpRef struct {
 	Pkg, Name string
 }
 
 type Connection struct {
-	From AbsPortAddr
-	To   []AbsPortAddr
+	From FullPortAddr
+	To   []FullPortAddr
 }
 
-type AbsPortAddr struct {
-	NodePath []string
-	Port     string
-	Slot     uint8
+type FullPortAddr struct {
+	Node string
+	Port string
+	Slot uint8
 }

@@ -6,7 +6,7 @@ import (
 	"log"
 	"plugin"
 
-	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/neva/internal/runtime"
 )
 
 type Repo struct {
@@ -14,7 +14,7 @@ type Repo struct {
 	packages map[string]PluginData
 }
 
-func (r Repo) Operator(pkg, name string) (runtime.OperatorFunc, error) {
+func (r Repo) Operator(pkg, name string) (runtime.Opfunc, error) {
 	if opfunc := r.cache.get(pkg, name); opfunc != nil {
 		return opfunc, nil
 	}
@@ -57,9 +57,9 @@ type PluginData struct {
 	exports []string
 }
 
-type cache map[string]map[string]runtime.OperatorFunc
+type cache map[string]map[string]runtime.Opfunc
 
-func (c cache) get(pkg, name string) runtime.OperatorFunc {
+func (c cache) get(pkg, name string) runtime.Opfunc {
 	p, ok := c[pkg]
 	if !ok {
 		return nil
@@ -67,9 +67,9 @@ func (c cache) get(pkg, name string) runtime.OperatorFunc {
 	return p[name]
 }
 
-func (c cache) set(pkg, name string, opfunc runtime.OperatorFunc) {
+func (c cache) set(pkg, name string, opfunc runtime.Opfunc) {
 	if c[pkg] == nil {
-		c[pkg] = map[string]runtime.OperatorFunc{}
+		c[pkg] = map[string]runtime.Opfunc{}
 	}
 	c[pkg][name] = opfunc
 }

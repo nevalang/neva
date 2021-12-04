@@ -1,0 +1,14 @@
+meta:
+  compiler: 0.0.1
+
+import:
+  local:
+    bypass: bypass
+
+scope:
+  "bp": "local.bypass"
+
+export:
+  - bp
+
+main: root

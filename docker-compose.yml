@@ -1,6 +1,0 @@
-version: "3.9"
-services:
-  api:
-    build: .
-    ports:
-      - "8090:8090"

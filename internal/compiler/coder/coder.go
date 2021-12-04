@@ -3,7 +3,7 @@ package coder
 import (
 	"encoding/json"
 
-	"github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/program"
 )
 
 type jsonCoder struct {

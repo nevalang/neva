@@ -24,9 +24,8 @@ type inports ports
 
 type outports ports
 
-type ports map[string]string // name -> type
+type ports map[string]string
 
-// module -> interface
 type moduleDeps map[string]io
 
 type io struct {
@@ -35,11 +34,13 @@ type io struct {
 }
 
 type Const struct {
-	Type     string `yaml:"type"`
-	IntValue int    `yaml:"intValue"`
+	Type      string `yaml:"type"`
+	IntValue  int    `yaml:"intValue"`
+	StrValue  string `yaml:"strValue"`
+	BoolValue bool   `yaml:"boolValue"`
 }
 
-type workers map[string]string // worker -> dep
+type workers map[string]string
 
 // senders -> outports -> receivers -> inports
 type net map[string]map[string]map[string][]string

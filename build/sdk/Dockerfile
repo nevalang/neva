@@ -1,13 +1,17 @@
 FROM openapitools/openapi-generator-cli:latest
 
-RUN mkdir /api
+ENTRYPOINT [ "generate", "-i=x" ]
 
-ADD ../../api/api.yml /api/api.yml
+RUN sleep 10000000
 
-RUN generate \
-    -i /api/api.yml \
-    -o /generated_ts_sdk \
-    -g typescript-axios \
-    --additional-properties=supportsES6=true
+# VOLUME [ "/app" ]
 
-VOLUME [ "/generated_ts_sdk" ]
+# WORKDIR /app 
+
+# RUN rm -rf generated_ts_sdk generated_go_sdk
+
+
+# RUN rm -rf web/src/sdk \
+#     mv generated_ts_sdk web/src/sdk \
+#     rm -rf generated_ts_sd
+

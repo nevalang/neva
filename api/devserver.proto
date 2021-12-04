@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package devserver;
+
+option go_package = './;sdk';
+
+service DevServer {
+    rpc ListPrograms (ListProgramsRequest)
+        returns (ListProgramsResponse);
+
+    rpc GetProgram (GetProgramRequest)
+        returns (GetProgramResponse);
+    
+    rpc UpdateProgram (UpdateProgramRequest)
+        returns (UpdateProgramResponse);
+
+    rpc StartDebugger (StartDebugRequest) // call before SendDebugMessage
+        returns (stream StartDebugResponse);
+    
+    rpc SendDebugMessage (DebugRequest)
+        returns (stream DebugResponse);
+}
+
+message DebugRequest {
+    Msg msg = 1;
+}
+
+message DebugResponse {}
+
+message StartDebugRequest {
+    string path = 1;
+}
+
+message StartDebugResponse {
+    DebugEvent event = 1;
+}
+
+message DebugEvent {
+    string from = 1;
+    string to = 2;
+    Msg msg = 3; 
+}
+
+message Msg {
+    ValueType type = 1;
+}
+
+message ListProgramsRequest {}
+
+message ListProgramsResponse {
+    repeated string paths = 1;
+}
+
+message GetProgramRequest {
+    string path = 1;    
+}
+
+message GetProgramResponse {
+    Program Program = 1;
+}
+
+message UpdateProgramRequest {
+    string path = 1;
+    Program Program = 2;
+}
+
+message UpdateProgramResponse {}
+
+message Program {
+    map<string, Component> scope = 1;
+    string root = 2;
+    ProgramImports imports = 3;
+    ProgramMeta meta = 4;
+}
+
+message ProgramMeta {
+    string compiler_version = 1;
+}
+
+message ProgramImports {
+    map<string,string> std = 1;
+    map<string,string> global = 2;
+    map<string,string> local = 3;
+}
+
+message Component {
+    ComponentType type = 1;
+    Operator operator = 2;
+    Module module = 3;
+}
+
+enum ComponentType {
+    COMPONENT_TYPE_OPERATOR = 0;
+    COMPONENT_TYPE_MODULE = 1;
+}
+
+message Operator {
+    ComponentIO io = 1;
+}
+
+message Module {
+    ComponentIO io = 1;
+    map<string,ComponentIO> deps = 2;
+    map<string,string> workers = 3;
+    repeated ModuleConnection net = 4;
+    map<string,ModuleConst> const = 5;
+}
+
+message ModuleConst {
+    ValueType type = 1;
+    int64 int_value = 2;
+    string str_value = 3;
+    bool bool_value = 4;
+}
+
+message ModuleConnection {
+    ConnectionAddr from = 1;
+    ConnectionAddr to = 2;
+}
+
+message ConnectionAddr {
+    string node = 1;   
+    string port = 2;   
+    string idx = 3;   
+}
+
+message ComponentIO {
+    map<string, Port> in = 1;
+    map<string, Port> out = 2;
+}
+
+message Port {
+    bool is_array = 1;
+    ValueType type = 2;
+}
+
+enum ValueType {
+    VALUE_TYPE_INT = 0;
+    VALUE_TYPE_STR = 1;
+    VALUE_TYPE_BOOL = 2;
+}
