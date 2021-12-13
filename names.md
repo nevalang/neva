@@ -6,4 +6,10 @@
 - fips
 - fepsy
 - feepsy
-- 
+- flips
+- rutina
+- rootina
+- rooteen
+- ruteena 
+- routine
+- splash

@@ -23,21 +23,8 @@ func (p parser) Parse(bb []byte) (program.Module, error) {
 	if err := p.unmarshal(bb, &mod); err != nil {
 		return program.Module{}, err
 	}
-	to := p.caster.To(mod)
 
-	return to, nil
-}
-
-func (p parser) Program(bb program.Program) ([]byte, error) {
-	return nil, nil // TODO
-}
-
-func (p parser) Unparse(mod program.Module) ([]byte, error) {
-	bb, err := p.marshal(mod)
-	if err != nil {
-		return nil, err
-	}
-	return bb, nil
+	return p.caster.To(mod), nil
 }
 
 type Unmarshal func([]byte, interface{}) (err error)

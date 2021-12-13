@@ -2,43 +2,50 @@ syntax = "proto3";
 
 package devserver;
 
-option go_package = './;sdk';
+option go_package = './;devserver';
 
 service Dev {
     rpc ListPrograms (ListProgramsRequest)
         returns (ListProgramsResponse);
 
-    rpc GetProgram (GetProgramRequest)
+    rpc GetProgram(GetProgramRequest)
         returns (GetProgramResponse);
     
-    rpc UpdateProgram (UpdateProgramRequest)
+    rpc UpdateProgram(UpdateProgramRequest)
         returns (UpdateProgramResponse);
 
-    rpc StartDebugger (StartDebugRequest) // call before SendDebugMessage
+    rpc StartDebug(StartDebugRequest)
         returns (stream StartDebugResponse);
     
-    rpc SendDebugMessage (DebugRequest)
-        returns (stream DebugResponse);
+    rpc HandleDebugEvent(HandleDebugEventRequest)
+        returns (HandleDebugEventResponse);
+    
+    rpc StopDebug(StopDebugRequest)
+        returns (StopDebugResponse);
 }
 
-message DebugRequest {
-    Msg msg = 1;
+message StopDebugRequest {}
+
+message StopDebugResponse {}
+
+message HandleDebugEventRequest {
+    DebugEvent type = 1;
+    ModuleConnection connection = 2;
+    Msg msg = 3;
 }
 
-message DebugResponse {}
+enum DebugEvent {
+    DUBUG_EVENT_SEND = 0;
+    DUBUG_EVENT_RECEIVE = 2;
+}
+
+message HandleDebugEventResponse {}
 
 message StartDebugRequest {
     string path = 1;
 }
 
 message StartDebugResponse {
-    DebugEvent event = 1;
-}
-
-message DebugEvent {
-    string from = 1;
-    string to = 2;
-    Msg msg = 3; 
 }
 
 message Msg {
@@ -102,8 +109,9 @@ message Module {
     ComponentIO io = 1;
     map<string,ComponentIO> deps = 2;
     map<string,string> workers = 3;
-    repeated ModuleConnection net = 4;
-    map<string,ModuleConst> const = 5;
+    map<string,ModuleConst> const = 4;
+    string start = 5;
+    repeated ModuleConnection net = 6;
 }
 
 message ModuleConst {
@@ -114,11 +122,11 @@ message ModuleConst {
 }
 
 message ModuleConnection {
-    ConnectionAddr from = 1;
-    ConnectionAddr to = 2;
+    PortAddr from = 1;
+    PortAddr to = 2;
 }
 
-message ConnectionAddr {
+message PortAddr {
     string node = 1;   
     string port = 2;   
     string idx = 3;   
@@ -138,4 +146,5 @@ enum ValueType {
     VALUE_TYPE_INT = 0;
     VALUE_TYPE_STR = 1;
     VALUE_TYPE_BOOL = 2;
+    VALUE_TYPE_SIG = 3;
 }

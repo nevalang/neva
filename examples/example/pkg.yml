@@ -2,13 +2,10 @@ meta:
   compiler: 0.0.1
 
 import:
-  std:
-    math: math
-    logic: logic
+  local: [root]
+  std: [math, logic]
   global:
-    shared: shared@0.0.1
-  local:
-    root: dir/root
+    shared: 0.0.1
 
 scope:
   "*": "std.math.mul"
@@ -21,4 +18,4 @@ scope:
 export:
   - root
 
-main: root
+root: root

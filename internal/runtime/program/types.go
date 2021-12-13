@@ -3,9 +3,8 @@ package program
 type Type uint8
 
 const (
-	UnknownType Type = iota
-	IntType
+	IntType Type = iota + 1
 	StrType
 	BoolType
-	StructType
+	SigType
 )

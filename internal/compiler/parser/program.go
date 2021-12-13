@@ -1,23 +1,12 @@
 package parser
 
-type Program struct {
-	Deps   deps              `yaml:"deps"`
-	Import map[string]string `yaml:"import"`
-	Root   string            `yaml:"root"`
-}
-
-type deps map[string]struct {
-	Repo    string `yaml:"repo"`
-	Version string `yaml:"v"`
-}
-
 type module struct {
 	In      inports          `yaml:"in"`
 	Out     outports         `yaml:"out"`
 	Deps    moduleDeps       `yaml:"deps"`
 	Const   map[string]Const `yaml:"const"`
 	Workers workers          `yaml:"workers"`
-	Net     net              `yaml:"net"`
+	Net     net              `yaml:"net,required"`
 }
 
 type inports ports

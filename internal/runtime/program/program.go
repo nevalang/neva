@@ -1,13 +1,9 @@
 package program
 
 type Program struct {
-	Nodes map[string]Node
-	Net   []Connection
-	IORef IORef
-}
-
-type IORef struct {
-	In, Out []FullPortAddr
+	Nodes       map[string]Node
+	Connections []Connection
+	RootNode    string
 }
 
 type Node struct {
@@ -40,11 +36,11 @@ type OpRef struct {
 }
 
 type Connection struct {
-	From FullPortAddr
-	To   []FullPortAddr
+	From PortAddr
+	To   []PortAddr
 }
 
-type FullPortAddr struct {
+type PortAddr struct {
 	Node string
 	Port string
 	Slot uint8

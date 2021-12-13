@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package runtime;
+
+option go_package = './;runtimesdk';
+
+message Program {
+	map<string, Node> nodes = 1;
+	repeated Connection connections = 2;
+}
+
+message Node {
+	NodeIO io = 1;
+	NodeType type = 2;
+	map<string, ConstValue> const = 3;
+	OpRef op_ref = 4;
+}
+
+message NodeIO {
+    map<string, PortMeta> in = 1;
+	map<string, PortMeta> out = 2;
+}
+
+message PortMeta {
+	uint32 Slots = 1;
+	uint32 Buf   = 2;
+}
+
+enum NodeType {
+	NODE_TYPE_CONST = 0;
+	NODE_TYPE_OPERATOR = 1;
+	NODE_TYPE_MODULE = 2;
+}
+
+message ConstValue  {
+	ValueType  type = 1;
+	int64 int_value = 2;
+}
+
+enum ValueType {
+    VALUE_TYPE_INT = 0;
+    VALUE_TYPE_STR = 1;
+    VALUE_TYPE_BOOL = 2;
+    VALUE_TYPE_SIG = 3;
+}
+
+message OpRef  {
+	string Pkg = 1;
+    string Name =2;
+}
+
+message Connection  {
+	PortAddr from = 1;
+	repeated PortAddr to = 2;
+}
+
+message PortAddr {
+	string Node = 1;
+	string Port = 2;
+	uint32 Slot  = 3;
+}

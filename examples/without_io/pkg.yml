@@ -1,0 +1,15 @@
+meta:
+  compiler: 0.0.1
+
+import:
+  local: [root]
+  std: [io]
+  global:
+    shared: 0.0.1
+
+scope:
+  readln: std.io.readln
+  println: std.io.println
+  root: local.root
+
+exec: root

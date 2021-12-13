@@ -13,10 +13,11 @@ type (
 	Storage struct{}
 
 	rawPkgDescriptor struct {
-		Import rawPkgImports     `yaml:"import"`
-		Scope  map[string]string `yaml:"scope"`
-		Root   string            `yaml:"root"`
-		Meta   rawPkgMeta        `yaml:"meta"`
+		Import rawPkgImports     `yaml:"import,required"`
+		Scope  map[string]string `yaml:"scope,required"`
+		Meta   rawPkgMeta        `yaml:"meta,required"`
+		Exec   string            `yaml:"exec"`
+		Export string            `yaml:"export"`
 	}
 
 	rawPkgImports struct {
@@ -26,8 +27,45 @@ type (
 	}
 
 	rawPkgMeta struct {
-		Compiler string `yaml:"compiler"`
+		CompilerVersion string `yaml:"compiler"`
 	}
+
+	pkgDescriptor struct {
+		imports imports
+		scope   map[string]componentRef
+		meta    meta
+		exec    string
+		export  string
+	}
+
+	meta struct {
+		compilerVersion string
+	}
+
+	imports struct {
+		std    map[string]string
+		global map[string]globalImport
+		local  map[string]string
+	}
+
+	globalImport struct {
+		pkg     string
+		version string
+	}
+
+	nameSpace uint8
+
+	componentRef struct {
+		// nameSpace nameSpace
+		pkg  string
+		name string
+	}
+)
+
+const (
+	stdNameSpace nameSpace = iota + 1
+	localNameSpace
+	globalNameSpace
 )
 
 func (s Storage) ParseGlobalImports(from map[string]string) (map[string]globalImport, error) {
@@ -49,8 +87,8 @@ func (s Storage) ParseGlobalImport(str string) (globalImport, error) {
 		return globalImport{}, fmt.Errorf("")
 	}
 	return globalImport{
-		Name:    parts[0],
-		Version: parts[1],
+		pkg:     parts[0],
+		version: parts[1],
 	}, nil
 }
 
@@ -79,8 +117,8 @@ func (s Storage) ParseComponentRef(from string) (componentRef, error) {
 
 	if ns == localNameSpace {
 		return componentRef{
-			NameSpace: ns,
-			Name:      parts[1],
+			// nameSpace: ns,
+			name: parts[1],
 		}, nil
 	}
 
@@ -89,9 +127,9 @@ func (s Storage) ParseComponentRef(from string) (componentRef, error) {
 	}
 
 	return componentRef{
-		NameSpace: ns,
-		Pkg:       parts[1],
-		Name:      parts[2],
+		// nameSpace: ns,
+		pkg:  parts[1],
+		name: parts[2],
 	}, nil
 }
 
@@ -121,24 +159,19 @@ func (s Storage) ParsePkgDesctiptor(from rawPkgDescriptor) (pkgDescriptor, error
 	}
 
 	return pkgDescriptor{
-		root:            from.Root,
-		stdImports:      from.Import.Std,
-		globalImports:   globalImports,
-		localImports:    from.Import.Local,
-		scope:           scope,
-		compilerVersion: from.Meta.Compiler,
+		scope: scope,
 	}, nil
 }
 
-func (s Storage) PkgDescriptor(localpath string) (pkgDescriptor, error) {
+func (s Storage) PkgDescriptor(localpath string) (compiler.Pkg, error) {
 	bb, err := ioutil.ReadFile(localpath)
 	if err != nil {
-		return pkgDescriptor{}, err
+		return compiler.Pkg{}, err
 	}
 
 	var d rawPkgDescriptor
 	if err := yaml.Unmarshal(bb, &d); err != nil {
-		return pkgDescriptor{}, err
+		return compiler.Pkg{}, err
 	}
 
 	return s.ParsePkgDesctiptor(d)
@@ -151,23 +184,23 @@ const (
 	ModuleComponent
 )
 
-func (s Storage) Pkg(path string, ops map[compiler.PkgComponentRef]struct{}) (compiler.Pkg, error) {
+func (s Storage) Pkg(path string, opsSet map[compiler.PkgComponentRef]struct{}) (compiler.Pkg, error) {
 	d, err := s.PkgDescriptor(path)
 	if err != nil {
 		return compiler.Pkg{}, nil
 	}
 
 	pkg := compiler.Pkg{
-		Root:      d.Root,
+		Exec:      d.Exec,
 		Scope:     map[string]compiler.PkgComponentRef{},
 		Operators: []compiler.PkgComponentRef{},
 		Modules:   map[compiler.PkgComponentRef][]byte{},
 		Meta: compiler.PkgMeta{
-			CompilerVersion: d.CompilerVersion,
+			CompilerVersion: d.Meta.CompilerVersion,
 		},
 	}
 
-	for alias, ref := range d.scope {
+	for alias, ref := range d.Scope {
 		switch ref.NameSpace {
 		case stdNameSpace:
 			pkg.Scope[alias] = compiler.PkgComponentRef{
@@ -175,11 +208,10 @@ func (s Storage) Pkg(path string, ops map[compiler.PkgComponentRef]struct{}) (co
 				Name: "",
 			}
 		}
-
 	}
 
 	return compiler.Pkg{
-		Root:      d.Root,
+		Exec:      d.Exec,
 		Modules:   map[compiler.PkgComponentRef][]byte{},
 		Operators: []compiler.PkgComponentRef{},
 		Scope:     map[string]compiler.PkgComponentRef{},

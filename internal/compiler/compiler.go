@@ -35,11 +35,11 @@ type (
 	}
 
 	Storage interface {
-		Pkg(path string, ops map[PkgComponentRef]struct{}) (Pkg, error)
+		Pkg(string, map[PkgComponentRef]struct{}) (Pkg, error)
 	}
 
 	Pkg struct {
-		Root      string
+		Exec      string
 		Operators []PkgComponentRef
 		Modules   map[PkgComponentRef][]byte
 		Scope     map[string]PkgComponentRef
@@ -65,48 +65,53 @@ func (c Compiler) Version() string {
 	return "0.0.1"
 }
 
-func (c Compiler) BuildProgram(descriptorPath string) (runtime.Program, program.Program, error) {
+type CompileResult struct {
+	compiled    runtime.Program
+	precompiled program.Program
+}
+
+func (c Compiler) Compile(descriptorPath string) (CompileResult, error) {
 	pkg, err := c.storage.Pkg(descriptorPath, c.opsSet())
 	if err != nil {
-		return runtime.Program{}, program.Program{}, err
+		return CompileResult{}, err
 	}
 
 	if v := c.Version(); v != pkg.Meta.CompilerVersion {
-		return runtime.Program{}, program.Program{}, fmt.Errorf(
+		return CompileResult{}, fmt.Errorf(
 			"wrong compiler version: want %s, got %s", pkg.Meta.CompilerVersion, v,
 		)
 	}
 
 	ops, err := c.pkgOps(pkg)
 	if err != nil {
-		return runtime.Program{}, program.Program{}, err
+		return CompileResult{}, err
 	}
 
 	mods, err := c.pkgMods(pkg)
 	if err != nil {
-		return runtime.Program{}, program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
+		return CompileResult{}, fmt.Errorf("%w: %v", ErrParsing, err)
 	}
 
 	scope, err := c.pkgScope(pkg, ops, mods)
 	if err != nil {
-		return runtime.Program{}, program.Program{}, err
+		return CompileResult{}, err
 	}
 
-	cprog := program.Program{
-		Root:  pkg.Root,
+	precompiled := program.Program{
+		Root:  pkg.Exec,
 		Scope: scope,
 	}
 
-	if err := c.checker.Check(cprog); err != nil {
-		return runtime.Program{}, program.Program{}, err
+	if err := c.checker.Check(precompiled); err != nil {
+		return CompileResult{}, err
 	}
 
-	rprog, err := c.translator.Translate(cprog)
+	compiled, err := c.translator.Translate(precompiled)
 	if err != nil {
-		return runtime.Program{}, program.Program{}, err
+		return CompileResult{}, err
 	}
 
-	return rprog, cprog, nil
+	return CompileResult{compiled, precompiled}, nil
 }
 
 func (Compiler) pkgScope(
@@ -153,13 +158,16 @@ func (c Compiler) pkgMods(pkg Pkg) (map[PkgComponentRef]program.Module, error) {
 
 func (c Compiler) pkgOps(pkg Pkg) (map[PkgComponentRef]program.Operator, error) {
 	ops := make(map[PkgComponentRef]program.Operator, len(pkg.Operators))
+
 	for _, opRef := range pkg.Operators {
 		io, ok := c.opsIO[opRef]
 		if !ok {
 			return nil, fmt.Errorf("operator not found %s", opRef)
 		}
+
 		ops[opRef] = program.Operator{IO: io}
 	}
+
 	return ops, nil
 }
 
@@ -177,17 +185,18 @@ func New(
 	translator Translator,
 	coder Coder,
 	store Storage,
-	ops map[PkgComponentRef]program.IO,
+	opsIO map[PkgComponentRef]program.IO,
 ) (Compiler, error) {
-	if parser == nil || checker == nil || translator == nil || store == nil || ops == nil {
+	if parser == nil || checker == nil || translator == nil || store == nil || opsIO == nil {
 		return Compiler{}, fmt.Errorf("nil deps")
 	}
+
 	return Compiler{
 		parser:     parser,
 		checker:    checker,
 		translator: translator,
 		coder:      coder,
-		opsIO:      ops,
+		opsIO:      opsIO,
 		storage:    store,
 	}, nil
 }
@@ -198,11 +207,12 @@ func MustNew(
 	translator Translator,
 	coder Coder,
 	store Storage,
-	ops map[PkgComponentRef]program.IO,
+	opsIO map[PkgComponentRef]program.IO,
 ) Compiler {
-	cmp, err := New(parser, checker, translator, coder, store, ops)
+	cmp, err := New(parser, checker, translator, coder, store, opsIO)
 	if err != nil {
 		panic(err)
 	}
+
 	return cmp
 }

@@ -28,21 +28,22 @@ type (
 
 	ConnectionPoint struct {
 		Ch   chan Msg
-		Addr program.FullPortAddr
+		Addr program.PortAddr
 	}
 )
 
 var ErrPortNotFound = errors.New("port not found")
 
-func (r Runtime) Run(prog program.Program) (IO, error) {
+func (r Runtime) Run(prog program.Program) error {
 	nodes := map[string]IO{}
+
 	for name, node := range prog.Nodes {
 		io := r.newNodeIO(node.In, node.Out)
 
 		if node.Type == program.OperatorNode {
 			op := r.opsRepo.Opfunc(node.OpRef.Name, node.OpRef.Name)
 			if err := op(io); err != nil {
-				return IO{}, err
+				return err
 			}
 		}
 
@@ -50,7 +51,7 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 			for name, cnst := range node.Const {
 				out, err := io.Out.Port(PortAddr{Port: name})
 				if err != nil {
-					return IO{}, err
+					return err
 				}
 
 				var msg Msg
@@ -58,7 +59,7 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 				case program.IntType:
 					msg = NewIntMsg(cnst.IntValue)
 				default:
-					return IO{}, errors.New("")
+					return err
 				}
 
 				go func() {
@@ -72,24 +73,24 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 		nodes[name] = io
 	}
 
-	conns := make([]Connection, 0, len(prog.Net))
-	for _, conn := range prog.Net {
+	conns := make([]Connection, 0, len(prog.Connections))
+	for _, conn := range prog.Connections {
 		senderIO, ok := nodes[conn.From.Node]
 		if !ok {
-			return IO{}, fmt.Errorf("")
+			return fmt.Errorf("not ok")
 		}
 
 		fromPortAddr := PortAddr{Port: conn.From.Port, Slot: conn.From.Slot}
 		fromPortCh, err := senderIO.Out.Port(fromPortAddr)
 		if err != nil {
-			return IO{}, err
+			return err
 		}
 
 		receivers := make([]ConnectionPoint, 0, len(conn.To))
 		for _, connToAddr := range conn.To {
 			receiverIO, ok := nodes[connToAddr.Node]
 			if !ok {
-				return IO{}, fmt.Errorf("")
+				return err
 			}
 
 			toPort, err := receiverIO.In.Port(PortAddr{
@@ -97,10 +98,10 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 				Slot: connToAddr.Slot,
 			})
 			if err != nil {
-				return IO{}, err
+				return err
 			}
 
-			receivers = append(receivers, ConnectionPoint{Addr: program.FullPortAddr{
+			receivers = append(receivers, ConnectionPoint{Addr: program.PortAddr{
 				Node: connToAddr.Node,
 				Port: connToAddr.Port,
 				Slot: connToAddr.Slot,
@@ -111,7 +112,7 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 			To: receivers,
 			From: ConnectionPoint{
 				Ch: fromPortCh,
-				Addr: program.FullPortAddr{
+				Addr: program.PortAddr{
 					Node: conn.From.Node,
 					Port: conn.From.Port,
 					Slot: conn.From.Slot,
@@ -120,56 +121,7 @@ func (r Runtime) Run(prog program.Program) (IO, error) {
 		})
 	}
 
-	io, err := r.rootIO(prog.IORef, nodes)
-	if err != nil {
-		return IO{}, fmt.Errorf("")
-	}
-
-	return io, nil
-}
-
-func (Runtime) rootIO(ioRef program.IORef, nodes map[string]IO) (IO, error) {
-	io := IO{}
-
-	for _, absAddr := range ioRef.In {
-		node, ok := nodes[absAddr.Node]
-		if !ok {
-			return IO{}, fmt.Errorf("")
-		}
-
-		addr := PortAddr{
-			Port: absAddr.Port,
-			Slot: absAddr.Slot,
-		}
-
-		port, err := node.Out.Port(addr)
-		if err != nil {
-			return IO{}, err
-		}
-
-		io.In[addr] = port
-	}
-
-	for _, absAddr := range ioRef.Out {
-		node, ok := nodes[absAddr.Node]
-		if !ok {
-			return IO{}, fmt.Errorf("")
-		}
-
-		addr := PortAddr{
-			Port: absAddr.Port,
-			Slot: absAddr.Slot,
-		}
-
-		port, err := node.In.Port(addr)
-		if err != nil {
-			return IO{}, err
-		}
-
-		io.In[addr] = port
-	}
-
-	return io, nil
+	return nil
 }
 
 func (r Runtime) newNodeIO(in, out map[string]program.PortMeta) IO {

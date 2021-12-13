@@ -1,4 +1,4 @@
-package port
+package server
 
 import (
 	"github.com/emil14/neva/internal/compiler"

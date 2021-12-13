@@ -1,3 +1,57 @@
+# Core Components
+
+## time.wait
+
+```yaml
+io(T):
+  in:
+    dur: int
+    # sig?
+  out:
+    sig: signal
+```
+
+# Renaming?
+
+1. `const` в `memory`
+2. add `nodes`
+3. `net` -> `connections`
+
+```yaml
+deps:
+  reader:
+    in:
+      f: int
+
+io:
+  in:
+    a: int
+    b: int
+
+nodes:
+  memory:
+    x: 21
+    z: 21
+  worker:
+    r: reader
+
+connections:
+  in.a: [memory.x]
+  in.b: [memory.z]
+  memory.z: [r.f]
+```
+
+Вопрос - можно ли изменять `memory`?
+
+Если да, то работает это так: мемори постоянно пишет на вывод
+параллельно она слушает
+
+# Website in a rpg-manner
+
+Tutorials like chapters in game
+They require knowledge of specific topics
+You go into them in a right order
+
 # Remove all connections btn?
 
 ```

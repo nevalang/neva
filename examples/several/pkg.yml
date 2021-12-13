@@ -1,0 +1,19 @@
+meta:
+  compiler: 0.0.1
+
+import:
+  local: [dir1/root, dir2/root]
+  std: [io]
+  global:
+    shared: 0.0.1
+
+scope:
+  readln: std.io.readln
+  println: std.io.println
+  locala: local.dir1/root
+  localb: local.dir2/root
+
+export:
+  - root
+
+main: localb

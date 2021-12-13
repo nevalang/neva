@@ -1,30 +1,19 @@
-package coder
+package protocoder
 
 import (
-	"encoding/json"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/neva/pkg/runtimesdk"
 )
 
-type jsonCoder struct {
-	caster interface {
-		Cast(program.Program) Program
-	}
-	marshal func(interface{}) ([]byte, error)
+type coder struct{}
+
+func (c coder) Code(prog program.Program) ([]byte, error) {
+	p := c.cast(prog)
+	return proto.Marshal(&p)
 }
 
-func (c jsonCoder) Code(prog program.Program) ([]byte, error) {
-	bb, err := c.marshal(c.caster.Cast(prog))
-	if err != nil {
-		return nil, err
-	}
-
-	return bb, nil
-}
-
-func New() jsonCoder {
-	return jsonCoder{
-		marshal: json.Marshal,
-		// caster:  caster{},
-	}
+func (c coder) cast(prog program.Program) runtimesdk.Program {
+	return runtimesdk.Program{}
 }

@@ -12,7 +12,7 @@ const grpc = {};
 grpc.web = require('grpc-web');
 
 const proto = {};
-proto.devserver = require('./devserver_pb.js');
+proto.devserver = require('./devserver_pb.js.js');
 
 /**
  * @param {string} hostname

@@ -22,7 +22,7 @@ func (c Component) IO() IO {
 
 type Operator struct {
 	Ref OpRef
-	IO     IO
+	IO  IO
 }
 
 type OpRef struct {

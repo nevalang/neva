@@ -1,6 +1,12 @@
 package main
 
+import (
+	"fmt"
+
+	"github.com/emil14/neva/internal/server"
+)
+
 func main() {
-	// srv := port.NewServer()
-	// grpcSrv := grpc.NewServer()
+	srv := server.NewServer()
+	fmt.Println(srv)
 }

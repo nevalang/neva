@@ -8,6 +8,7 @@ const (
 	TypeInt Type = iota + 1
 	TypeStr
 	TypeBool
+	TypeSig
 )
 
 func (t Type) String() string {
@@ -31,6 +32,7 @@ const (
 	intType  typeName = "int"
 	strType  typeName = "str"
 	boolType typeName = "bool"
+	sigType  typeName = "sig"
 )
 
 func TypeByName(name string) (Type, error) {

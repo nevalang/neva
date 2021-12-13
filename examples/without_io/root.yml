@@ -1,0 +1,21 @@
+deps:
+  readln:
+    in:
+      in: signal
+    out:
+      out: str
+  println:
+    in:
+      in: str
+    out:
+      out: str
+
+start: true
+
+workers:
+  readln: readln
+  println: println
+
+net:
+  start.out: [readline.in]
+  r.out: [println.in]

@@ -1,13 +1,22 @@
-# Generate RPC-SDK
+Только компонент у которого нет ввода-вывода, может быть использован
+как рут. Такой компонент также нельзя использовать никаким другим образом, ибо у него нет ввода-вывода, а любая зависимость должна его иметь. Компилятор проверит, что пакет не содержит "мертвый код".
+
+
+# Generate DevServer-SDK
 
 ```shell
 protoc api/devserver.proto \
     --js_out=import_style=commonjs,binary:web/src/sdk \
     --grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:web/src/sdk \
-    --go_out=pkg/sdk \
-    --go-grpc_out=pkg/sdk
+    --go_out=pkg/devserversdk \
+    --go-grpc_out=pkg/devserversdk
 ```
 
+# Generate Runtime-SDK
+
+```shell
+protoc api/runtime.proto --go_out=pkg/runtimesdk
+```
 
 ```
 BASE_PATH # path to directory where programs (packages) can be found

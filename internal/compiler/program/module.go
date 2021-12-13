@@ -11,10 +11,7 @@ type Module struct {
 	Const   map[string]Const
 	Workers map[string]string
 	Net     Connections
-}
-
-func (cm Module) Interface() IO {
-	return cm.IO
+	Start   bool
 }
 
 func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {

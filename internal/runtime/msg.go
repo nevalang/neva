@@ -3,17 +3,18 @@ package runtime
 import "fmt"
 
 type Msg interface {
-	Str() string
 	Int() int
+	Str() string
 	Bool() bool
+	Sig() struct{}
 }
 
 type emptyMsg struct{}
 
-func (msg emptyMsg) Str() (_ string)            { return }
-func (msg emptyMsg) Int() (_ int)               { return }
-func (msg emptyMsg) Bool() (_ bool)             { return }
-func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
+func (msg emptyMsg) Str() (_ string)   { return }
+func (msg emptyMsg) Int() (_ int)      { return }
+func (msg emptyMsg) Bool() (_ bool)    { return }
+func (msg emptyMsg) Sig() (_ struct{}) { return }
 
 type IntMsg struct {
 	emptyMsg
@@ -71,18 +72,14 @@ func NewBoolMsg(b bool) BoolMsg {
 	}
 }
 
-type StructMsg struct {
+type SigMsg struct {
 	emptyMsg
-	v map[string]Msg
 }
 
-func (msg StructMsg) Struct() map[string]Msg {
-	return msg.v
+func (msg SigMsg) Sig() struct{} {
+	return struct{}{}
 }
 
-func NewMsgStruct(v map[string]Msg) StructMsg {
-	return StructMsg{
-		emptyMsg: emptyMsg{},
-		v:        v,
-	}
+func NewSigMsg() SigMsg {
+	return SigMsg{emptyMsg{}}
 }
