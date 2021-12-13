@@ -10,7 +10,13 @@ import (
 )
 
 type (
-	Storage struct{}
+	Storage struct {
+		registry Registry
+	}
+
+	Registry interface {
+		Pkg(string) (rawPkgDescriptor, error)
+	}
 
 	rawPkgDescriptor struct {
 		Import rawPkgImports     `yaml:"import,required"`
@@ -23,7 +29,7 @@ type (
 	rawPkgImports struct {
 		Std    map[string]string `yaml:"std"`
 		Global map[string]string `yaml:"global"`
-		Local  map[string]string `yaml:"local"`
+		Local  []string          `yaml:"local"`
 	}
 
 	rawPkgMeta struct {
@@ -45,7 +51,7 @@ type (
 	imports struct {
 		std    map[string]string
 		global map[string]globalImport
-		local  map[string]string
+		local  []string
 	}
 
 	globalImport struct {
@@ -56,9 +62,9 @@ type (
 	nameSpace uint8
 
 	componentRef struct {
-		// nameSpace nameSpace
-		pkg  string
-		name string
+		nameSpace nameSpace
+		pkg       string
+		name      string
 	}
 )
 
@@ -147,31 +153,41 @@ func (s Storage) ParseScope(from map[string]string) (map[string]componentRef, er
 	return refs, nil
 }
 
-func (s Storage) ParsePkgDesctiptor(from rawPkgDescriptor) (pkgDescriptor, error) {
-	globalImports, err := s.ParseGlobalImports(from.Import.Global)
+func (s Storage) ParsePkgDesctiptor(raw rawPkgDescriptor) (pkgDescriptor, error) {
+	globalImports, err := s.ParseGlobalImports(raw.Import.Global)
 	if err != nil {
 		return pkgDescriptor{}, err
 	}
 
-	scope, err := s.ParseScope(from.Scope)
+	scope, err := s.ParseScope(raw.Scope)
 	if err != nil {
 		return pkgDescriptor{}, err
 	}
 
 	return pkgDescriptor{
+		imports: imports{
+			std:    raw.Import.Std,
+			global: globalImports,
+			local:  raw.Import.Local,
+		},
 		scope: scope,
+		meta: meta{
+			compilerVersion: raw.Meta.CompilerVersion,
+		},
+		exec:   raw.Exec,
+		export: raw.Export,
 	}, nil
 }
 
-func (s Storage) PkgDescriptor(localpath string) (compiler.Pkg, error) {
+func (s Storage) pkgDescriptor(localpath string) (pkgDescriptor, error) {
 	bb, err := ioutil.ReadFile(localpath)
 	if err != nil {
-		return compiler.Pkg{}, err
+		return pkgDescriptor{}, err
 	}
 
 	var d rawPkgDescriptor
 	if err := yaml.Unmarshal(bb, &d); err != nil {
-		return compiler.Pkg{}, err
+		return pkgDescriptor{}, err
 	}
 
 	return s.ParsePkgDesctiptor(d)
@@ -185,23 +201,23 @@ const (
 )
 
 func (s Storage) Pkg(path string, opsSet map[compiler.PkgComponentRef]struct{}) (compiler.Pkg, error) {
-	d, err := s.PkgDescriptor(path)
+	d, err := s.pkgDescriptor(path)
 	if err != nil {
 		return compiler.Pkg{}, nil
 	}
 
 	pkg := compiler.Pkg{
-		Exec:      d.Exec,
+		Exec:      d.exec,
 		Scope:     map[string]compiler.PkgComponentRef{},
 		Operators: []compiler.PkgComponentRef{},
 		Modules:   map[compiler.PkgComponentRef][]byte{},
 		Meta: compiler.PkgMeta{
-			CompilerVersion: d.Meta.CompilerVersion,
+			CompilerVersion: d.meta.compilerVersion,
 		},
 	}
 
-	for alias, ref := range d.Scope {
-		switch ref.NameSpace {
+	for alias, ref := range d.scope {
+		switch ref.nameSpace {
 		case stdNameSpace:
 			pkg.Scope[alias] = compiler.PkgComponentRef{
 				Pkg:  "",
@@ -211,7 +227,7 @@ func (s Storage) Pkg(path string, opsSet map[compiler.PkgComponentRef]struct{}) 
 	}
 
 	return compiler.Pkg{
-		Exec:      d.Exec,
+		Exec:      d.exec,
 		Modules:   map[compiler.PkgComponentRef][]byte{},
 		Operators: []compiler.PkgComponentRef{},
 		Scope:     map[string]compiler.PkgComponentRef{},

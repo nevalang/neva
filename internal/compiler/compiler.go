@@ -47,7 +47,7 @@ type (
 	}
 
 	PkgComponentRef struct {
-		Pkg, Name string
+		NameSpace, Pkg, Name string
 	}
 
 	PkgMeta struct {
