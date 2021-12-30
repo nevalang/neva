@@ -3,39 +3,22 @@ package program
 import "fmt"
 
 type Program struct {
-	Root  string
-	Scope map[string]Component
+	Components    map[string]Component
+	RootComponent string
 }
 
 type Component struct {
-	Type     ComponentType
-	Operator Operator
-	Module   Module
+	Type       ComponentType
+	OperatorIO ComponentIO
+	Module     Module
 }
 
-func (c Component) IO() IO {
+func (c Component) IO() ComponentIO {
 	if c.Type == ModuleComponent {
 		return c.Module.IO
 	}
-	return c.Operator.IO
+	return c.OperatorIO
 }
-
-type Operator struct {
-	Ref OpRef
-	IO  IO
-}
-
-type OpRef struct {
-	Pkg, Name string
-}
-
-type NameSpace uint8
-
-const (
-	StdNameSpace NameSpace = iota + 1
-	LocalNameSpace
-	GlobalNameSpace
-)
 
 type ComponentType uint8
 
@@ -44,12 +27,13 @@ const (
 	OperatorComponent
 )
 
-type IO struct {
-	In  Ports
-	Out Ports
+type ComponentIO struct {
+	Params map[string]struct{}
+	In     Ports
+	Out    Ports
 }
 
-func (want IO) Compare(got IO) error {
+func (want ComponentIO) Compare(got ComponentIO) error {
 	wantIn := Ports(want.In)
 	gotIn := Ports(got.In)
 
@@ -89,22 +73,23 @@ func (want Ports) Compare(got Ports) error {
 }
 
 type PortType struct {
-	Type Type
-	Arr  bool
+	DataType DataType
+	IsArr    bool
 }
 
 func (want PortType) Compare(got PortType) error {
-	if want.Arr != got.Arr || want.Type != got.Type {
+	if want.IsArr != got.IsArr || want.DataType != got.DataType {
 		return fmt.Errorf("%w: got %v, want %v", ErrPortTypes, got, want)
 	}
 
 	return nil
 }
 
-func (p PortType) String() string {
-	s := p.Type.String()
-	if p.Arr {
-		s += "[]"
-	}
-	return s
-}
+type DataType uint8
+
+const (
+	TypeInt DataType = iota + 1
+	TypeStr
+	TypeBool
+	TypeSig
+)

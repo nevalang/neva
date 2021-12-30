@@ -15,12 +15,15 @@ deps:
       str: str
 
 nodes:
+  const:
+    x: 42
   workers:
-    r: readln
-    p: println
+    read: readln
+    print: println
 
 net:
   in.run:
-    - r.in
-  r.out:
-    - p.in
+    - read.in
+  read.out:
+    - print.s
+    - const.x.out

@@ -1,4 +1,4 @@
-package validator
+package compiler
 
 import (
 	"fmt"
@@ -10,23 +10,22 @@ import (
 type checker struct{}
 
 func (c checker) Check(prog program.Program) error {
-	if _, ok := prog.Scope[prog.Root]; !ok {
-		return fmt.Errorf("unresolved root %s", prog.Root)
+	if _, ok := prog.Components[prog.RootComponent]; !ok {
+		return fmt.Errorf("missing root")
 	}
 
 	var g errgroup.Group
 
-	for alias := range prog.Scope {
-		cmpnt := prog.Scope[alias]
+	for alias := range prog.Components {
+		cmpnt := prog.Components[alias]
 
 		if cmpnt.Type == program.OperatorComponent {
 			continue
 		}
 
-		isRoot := alias == prog.Root
 		name := alias
 		g.Go(func() error {
-			return c.checkModule(name, cmpnt.Module, isRoot, prog.Scope)
+			return c.checkModule(name, cmpnt.Module, alias == prog.RootComponent, prog.Components)
 		})
 	}
 
@@ -42,11 +41,10 @@ func (c checker) checkModule(
 	var g errgroup.Group
 
 	g.Go(func() error { return c.checkIO(mod.IO, isRoot) })
-	g.Go(func() error { return c.checkWorkers(mod.DepsIO, mod.Workers) })
-	g.Go(func() error { return c.checkConst(mod.Const) })
+	g.Go(func() error { return c.checkWorkers(mod.Deps, mod.Nodes.Workers) })
+	g.Go(func() error { return c.checkConst(mod.Nodes.Const) })
 	g.Go(func() error { return c.checkNet(mod) })
-	g.Go(func() error { return c.checkStart(mod, isRoot) })
-	g.Go(func() error { return c.checkDeps(mod.DepsIO, scope, name) })
+	g.Go(func() error { return c.checkDeps(mod.Deps, scope, name) })
 
 	if err := g.Wait(); err != nil {
 		return err
@@ -55,10 +53,10 @@ func (c checker) checkModule(
 	return nil
 }
 
-func (c checker) checkDeps(deps map[string]program.IO, scope map[string]program.Component, name string) error {
+func (c checker) checkDeps(deps map[string]program.ComponentIO, scope map[string]program.Component, node string) error {
 	for dep, wantIO := range deps {
-		if dep == name {
-			return fmt.Errorf("recoursion: %s", name)
+		if dep == node {
+			return fmt.Errorf("recoursion: %s", node)
 		}
 
 		cmpnt, ok := scope[dep]
@@ -83,7 +81,7 @@ func (c checker) checkConst(cnst map[string]program.Const) error {
 	return nil
 }
 
-func (c checker) checkIO(io program.IO, isRoot bool) error {
+func (c checker) checkIO(io program.ComponentIO, isRoot bool) error {
 	switch hasIO := len(io.In) == 0 || len(io.Out) == 0; {
 	case isRoot && hasIO:
 		return fmt.Errorf("root module must not have io")
@@ -100,25 +98,25 @@ func (c checker) checkIO(io program.IO, isRoot bool) error {
 
 func (c checker) checkPorts(ports program.Ports) error {
 	for _, portType := range ports {
-		if err := c.checkType(portType.Type); err != nil {
+		if err := c.checkType(portType.DataType); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c checker) checkType(typ program.Type) error {
-	switch typ {
+func (c checker) checkType(t program.DataType) error {
+	switch t {
 	case program.TypeInt:
 	case program.TypeStr:
 	case program.TypeBool:
 	case program.TypeSig:
 		return nil
 	}
-	return fmt.Errorf("unknown type %d", typ)
+	return fmt.Errorf("unknown type %d", t)
 }
 
-func (c checker) checkWorkers(deps map[string]program.IO, workers map[string]string) error {
+func (c checker) checkWorkers(deps map[string]program.ComponentIO, workers map[string]string) error {
 	var usedDeps map[string]bool
 
 	for workerName, dep := range workers {
@@ -137,20 +135,12 @@ func (c checker) checkWorkers(deps map[string]program.IO, workers map[string]str
 	return nil
 }
 
-func (c checker) checkStart(mod program.Module, isRoot bool) error {
-	if isRoot && !mod.Start {
-		return fmt.Errorf("missing start in root")
-	}
-
-	return nil
-}
-
 func (c checker) checkNet(mod program.Module) error {
 	g := errgroup.Group{}
 
-	g.Go(func() error {
-		return c.checkConnections(mod)
-	})
+	// g.Go(func() error {
+	// 	return c.checkConnections(mod)
+	// })
 	g.Go(func() error {
 		return c.checkInflow(mod)
 	})
@@ -161,30 +151,36 @@ func (c checker) checkNet(mod program.Module) error {
 	return g.Wait()
 }
 
-func (c checker) checkConnections(mod program.Module) error {
-	for pair := range mod.Net.Walk() {
-		if err := c.checkConnection(pair, mod); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// func (c checker) checkConnections(mod program.Module) error {
+// for from, receivers := range mod.Net {
+// 	for _, to := range receivers {
+// 		c.checkConnection(pair, mod)
+// 	}
+// }
 
-func (c checker) checkConnection(pair program.PortAddrPair, mod program.Module) error {
-	fromType, toType, err := mod.PairPortTypes(pair)
+// for pair := range mod.Net.Walk() {
+// 	if err := c.checkConnection(pair, mod); err != nil {
+// 		return err
+// 	}
+// }
+// return nil
+// }
+
+func (c checker) checkConnection(conn program.Connection, mod program.Module) error {
+	fromType, toType, err := mod.ConnectionTypes(conn)
 	if err != nil {
 		return fmt.Errorf("get pair port types: %w", err)
 	}
 
-	switch { // check idx
-	case !fromType.Arr && pair.From.Idx > 0:
-	case !toType.Arr && pair.To.Idx > 0:
-		return fmt.Errorf("only array ports can have address with idx > 0: %v", pair)
+	switch {
+	case !fromType.IsArr && conn.From.Idx > 0:
+	case !toType.IsArr && conn.To.Idx > 0:
+		return fmt.Errorf("only array ports can have address with idx > 0: %v", conn)
 	}
 
-	if fromType.Type != toType.Type {
+	if fromType.DataType != toType.DataType {
 		return fmt.Errorf(
-			"mismatched types on ports %v: %s and %v: %s", pair.From, fromType.Type, pair.To, toType.Type,
+			"mismatched types on ports %v: %s and %v: %s", conn.From, fromType.DataType, conn.To, toType.DataType,
 		)
 	}
 
@@ -199,6 +195,6 @@ func (c checker) checkInflow(mod program.Module) error {
 	return nil
 }
 
-func New() checker {
+func NewChecker() checker {
 	return checker{}
 }

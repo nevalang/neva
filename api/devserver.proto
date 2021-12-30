@@ -17,39 +17,8 @@ service Dev {
     rpc StartDebug(StartDebugRequest)
         returns (stream StartDebugResponse);
     
-    rpc HandleDebugEvent(HandleDebugEventRequest)
-        returns (HandleDebugEventResponse);
-    
-    rpc StopDebug(StopDebugRequest)
-        returns (StopDebugResponse);
-}
-
-message StopDebugRequest {}
-
-message StopDebugResponse {}
-
-message HandleDebugEventRequest {
-    DebugEvent type = 1;
-    ModuleConnection connection = 2;
-    Msg msg = 3;
-}
-
-enum DebugEvent {
-    DUBUG_EVENT_SEND = 0;
-    DUBUG_EVENT_RECEIVE = 2;
-}
-
-message HandleDebugEventResponse {}
-
-message StartDebugRequest {
-    string path = 1;
-}
-
-message StartDebugResponse {
-}
-
-message Msg {
-    ValueType type = 1;
+    rpc SendDebugMsg(stream SendDebugMsgRequest)
+        returns (SendDebugMsgResponse);
 }
 
 message ListProgramsRequest {}
@@ -72,6 +41,32 @@ message UpdateProgramRequest {
 }
 
 message UpdateProgramResponse {}
+
+message StartDebugRequest {
+    string path = 1;
+}
+
+message StartDebugResponse {
+    DebugEvent type = 1;
+    ModuleConnection connection = 2;
+    Msg msg = 3;
+}
+
+message SendDebugMsgRequest {
+    Msg msg = 1;
+}
+
+enum DebugEvent {
+    DUBUG_EVENT_SEND = 0;
+    DUBUG_EVENT_RECEIVE = 2;
+}
+
+message SendDebugMsgResponse {}
+
+message Msg {
+    ValueType type = 1;
+}
+
 
 message Program {
     map<string, Component> scope = 1;

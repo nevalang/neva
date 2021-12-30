@@ -1,54 +1,50 @@
 package connector
 
 import (
-	"errors"
-
+	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/program"
 )
 
-type Connector struct {
-	interceptor Interceptor
+type Interceptor interface {
+	Send(msg runtime.Msg, from program.PortAddr) runtime.Msg
+	Receive(msg runtime.Msg, from, to program.PortAddr) runtime.Msg
 }
 
-func (c Connector) Connect(conns []runtime.Connection) {
-	for _, conn := range conns {
-		go c.loop(conn)
+type Connector struct {
+	i Interceptor
+}
+
+func (c Connector) Connect(cc []runtime.Connection) {
+	for _, conn := range cc {
+		go c.rwloop(conn)
 	}
 }
 
-func (c Connector) loop(conn runtime.Connection) {
+func (c Connector) rwloop(conn runtime.Connection) {
 	for msg := range conn.From.Ch {
-		c.interceptor.OnSend(msg, conn.From.Addr)
+		msg = c.i.Send(msg, conn.From.Addr)
 
 		for i := range conn.To {
-			to := conn.To[i]
 			m := msg
+			to := conn.To[i]
 
 			go func() {
-				to.Ch <- m
-				c.interceptor.OnReceive(m, conn.From.Addr, to.Addr)
+				to.Ch <- c.i.Receive(m, conn.From.Addr, to.Addr)
 			}()
 		}
 	}
 }
 
-type Interceptor interface {
-	OnSend(msg runtime.Msg, from program.PortAddr) runtime.Msg
-	OnReceive(msg runtime.Msg, from, to program.PortAddr)
-}
-
 func New(i Interceptor) (Connector, error) {
-	if i == nil {
-		return Connector{}, errors.New("nil interceptor")
+	if err := utils.NilArgs(i); err != nil {
+		return Connector{}, err
 	}
 	return Connector{i}, nil
 }
 
 func MustNew(i Interceptor) Connector {
 	c, err := New(i)
-	if err != nil {
-		panic(err)
-	}
+	utils.MaybePanic(err)
 	return c
 }

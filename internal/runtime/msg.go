@@ -3,10 +3,10 @@ package runtime
 import "fmt"
 
 type Msg interface {
+	Sig() struct{}
+	Bool() bool
 	Int() int
 	Str() string
-	Bool() bool
-	Sig() struct{}
 }
 
 type emptyMsg struct{}

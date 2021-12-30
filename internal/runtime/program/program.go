@@ -3,14 +3,18 @@ package program
 type Program struct {
 	Nodes       map[string]Node
 	Connections []Connection
-	RootNode    string
+	StartPort   PortAddr
 }
 
 type Node struct {
+	IO       IO
+	Type     NodeType
+	Const    Const
+	Operator OpRef
+}
+
+type IO struct {
 	In, Out map[string]PortMeta
-	Type    NodeType
-	Const   map[string]ConstValue
-	OpRef   OpRef
 }
 
 type PortMeta struct {
@@ -26,9 +30,8 @@ const (
 	ModuleNode
 )
 
-type ConstValue struct {
-	Type     Type
-	IntValue int
+type Const struct {
+	Int int64
 }
 
 type OpRef struct {
@@ -41,7 +44,23 @@ type Connection struct {
 }
 
 type PortAddr struct {
-	Node string
-	Port string
-	Slot uint8
+	// Type PortAddrType
+	Node, Port string
+	Idx        uint8
 }
+
+type PortAddrType uint8
+
+const (
+	PortTypeNorm PortAddrType = iota + 1
+	ArrPortBypass
+)
+
+type Type uint8
+
+const (
+	IntType Type = iota + 1
+	StrType
+	BoolType
+	SigType
+)

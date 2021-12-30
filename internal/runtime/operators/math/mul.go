@@ -10,7 +10,7 @@ import (
 var ErrMul = errors.New("multiplication")
 
 func Mul(io runtime.IO) error {
-	in, err := io.In.PortGroup("in")
+	in, err := io.In.PortArray("in")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}

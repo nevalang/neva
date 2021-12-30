@@ -2,25 +2,27 @@ package program
 
 import (
 	"fmt"
-	"sync"
 )
 
 type Module struct {
-	IO      IO
-	DepsIO  map[string]IO
-	Const   map[string]Const
-	Workers map[string]string
-	Net     Connections
-	Start   bool
+	IO    ComponentIO
+	Deps  map[string]ComponentIO
+	Nodes ModuleNodes
+	Net   ModuleNet
 }
 
-func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {
-	fromType, err := mod.NodeOutportType(pair.From.Node, pair.From.Port)
+type ModuleNodes struct {
+	Const   map[string]Const
+	Workers map[string]string
+}
+
+func (mod Module) ConnectionTypes(c Connection) (PortType, PortType, error) {
+	fromType, err := mod.OutPortType(c.From.Node, c.From.Port)
 	if err != nil {
 		return PortType{}, PortType{}, fmt.Errorf("outport: %w", err)
 	}
 
-	toType, err := mod.NodeInportType(pair.To.Node, pair.To.Port)
+	toType, err := mod.InPortType(c.To.Node, c.To.Port)
 	if err != nil {
 		return PortType{}, PortType{}, fmt.Errorf("inport: %w", err)
 	}
@@ -28,32 +30,32 @@ func (mod Module) PairPortTypes(pair PortAddrPair) (PortType, PortType, error) {
 	return fromType, toType, nil
 }
 
-func (m Module) NodeInportType(node, port string) (PortType, error) {
+func (m Module) InPortType(node, inport string) (PortType, error) {
 	inports, err := m.NodeInports(node)
 	if err != nil {
 		return PortType{}, fmt.Errorf("could not get inports for node %s: %w", node, err)
 	}
 
-	portType, ok := inports[port]
+	inPortType, ok := inports[inport]
 	if !ok {
-		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
+		return inPortType, fmt.Errorf("unknown port %s on node %s", inport, node)
 	}
 
-	return portType, nil
+	return inPortType, nil
 }
 
-func (m Module) NodeOutportType(node, port string) (PortType, error) {
-	ports, err := m.NodeOutports(node)
+func (m Module) OutPortType(node, outport string) (PortType, error) {
+	outports, err := m.NodeOutports(node)
 	if err != nil {
 		return PortType{}, fmt.Errorf("get outports for node %s: %w", node, err)
 	}
 
-	portType, ok := ports[port]
+	outPortType, ok := outports[outport]
 	if !ok {
-		return portType, fmt.Errorf("unknown port %s on node %s", port, node)
+		return outPortType, fmt.Errorf("unknown port %s on node %s", outport, node)
 	}
 
-	return portType, nil
+	return outPortType, nil
 }
 
 func (m Module) NodeOutports(node string) (Ports, error) {
@@ -72,15 +74,15 @@ func (m Module) NodeInports(node string) (Ports, error) {
 	return io.In, nil
 }
 
-func (m Module) NodeIO(node string) (IO, error) {
+func (m Module) NodeIO(node string) (ComponentIO, error) {
 	if node == "in" {
-		return IO{
+		return ComponentIO{
 			Out: m.IO.In,
 		}, nil
 	}
 
 	if node == "out" {
-		return IO{
+		return ComponentIO{
 			In: m.IO.Out,
 		}, nil
 	}
@@ -89,101 +91,41 @@ func (m Module) NodeIO(node string) (IO, error) {
 		return m.ConstIO(), nil
 	}
 
-	dep, ok := m.Workers[node]
+	dep, ok := m.Nodes.Workers[node]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker node %s", node)
+		return ComponentIO{}, fmt.Errorf("unknown worker node %s", node)
 	}
 
-	io, ok := m.DepsIO[dep]
+	io, ok := m.Deps[dep]
 	if !ok {
-		return IO{}, fmt.Errorf("unknown worker dep %s", dep)
+		return ComponentIO{}, fmt.Errorf("unknown worker dep %s", dep)
 	}
 
 	return io, nil
 }
 
-func (m Module) ConstIO() IO {
+func (m Module) ConstIO() ComponentIO {
 	out := Ports{}
-	for k, cnst := range m.Const {
-		out[k] = PortType{Type: cnst.Type()}
+	for k, cnst := range m.Nodes.Const {
+		out[k] = PortType{DataType: cnst.Type()}
 	}
-	return IO{Out: out}
+	return ComponentIO{Out: out}
 }
 
-type Connections map[PortAddr]map[PortAddr]struct{}
+type ModuleNet map[ConnectionPoint][]ConnectionPoint
 
-func (net Connections) CountOutgoing(node, outport string) uint8 {
-	var c uint8
-	for from := range net {
-		if from.Node == node && from.Port == outport {
-			c++
-		}
-	}
-	return c
-}
-
-func (net Connections) IncomingConnections() IncomingConnections {
-	incoming := IncomingConnections{}
-
-	for pair := range net.Walk() {
-		if incoming[pair.To] == nil {
-			incoming[pair.To] = map[PortAddr]struct{}{}
-		}
-		incoming[pair.To][pair.From] = struct{}{}
-	}
-
-	return incoming
-}
-
-func (net Connections) Walk() <-chan PortAddrPair {
-	ch := make(chan PortAddrPair, len(net))
-	wg := sync.WaitGroup{}
-
-	go func() {
-		for from, receivers := range net {
-			for to := range receivers {
-				wg.Add(1)
-				go func(from, to PortAddr) {
-					ch <- PortAddrPair{from, to}
-					wg.Done()
-				}(from, to)
-			}
-		}
-
-		wg.Wait()
-		close(ch)
-	}()
-
-	return ch
-}
-
-type IncomingConnections Connections
-
-func (rnet IncomingConnections) add(pair PortAddrPair) {
-	if rnet[pair.To] == nil {
-		rnet[pair.To] = map[PortAddr]struct{}{}
-	}
-	rnet[pair.To][pair.From] = struct{}{}
-}
-
-type PortAddrPair struct{ From, To PortAddr }
-
-type PortAddr struct {
+type ConnectionPoint struct {
+	Type ConnectionPointType
 	Node string
 	Port string
 	Idx  uint8
 }
 
-func NewModule(
-	io IO,
-	deps map[string]IO,
-	workers map[string]string,
-	net Connections,
-) Module {
-	return Module{
-		DepsIO:  deps,
-		IO:      io,
-		Workers: workers,
-		Net:     net,
-	}
-}
+type ConnectionPointType uint8
+
+const (
+	SinglePort  ConnectionPointType = iota + 1 // use idx
+	ArrayBypass                                // don't use idx
+)
+
+type Connection struct{ From, To ConnectionPoint }

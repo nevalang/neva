@@ -1,3 +1,20 @@
+1. normport -> normport
+2. normport -> arrport[idx]
+3. arrport -> arrport
+
+# json.decode
+
+```yaml
+io:
+  arg: [X]
+  in:
+    s: str
+    msg: X
+  out:
+    msg: X
+    err: str
+```
+
 # Core Components
 
 ## time.wait

@@ -35,53 +35,51 @@ type (
 var ErrPortNotFound = errors.New("port not found")
 
 func (r Runtime) Run(prog program.Program) error {
-	nodes := map[string]IO{}
+	nodes := make(map[string]IO, len(prog.Nodes))
 
 	for name, node := range prog.Nodes {
-		io := r.newNodeIO(node.In, node.Out)
+		io := r.newNodeIO(node.IO.In, node.IO.Out)
 
 		if node.Type == program.OperatorNode {
-			op := r.opsRepo.Opfunc(node.OpRef.Name, node.OpRef.Name)
-			if err := op(io); err != nil {
+			opfunc := r.opsRepo.Opfunc(node.Operator.Name, node.Operator.Name)
+			if err := opfunc(io); err != nil {
 				return err
 			}
 		}
 
 		if node.Type == program.ConstNode {
-			for name, cnst := range node.Const {
-				out, err := io.Out.Port(PortAddr{Port: name})
-				if err != nil {
-					return err
-				}
-
-				var msg Msg
-				switch cnst.Type {
-				case program.IntType:
-					msg = NewIntMsg(cnst.IntValue)
-				default:
-					return err
-				}
-
-				go func() {
-					for {
-						out <- msg
-					}
-				}()
+			out, err := io.Out.Port(PortAddr{Port: "out"})
+			if err != nil {
+				return err
 			}
+
+			var msg Msg
+			switch node.Const.Type {
+			case program.IntType:
+				msg = NewIntMsg(node.Const.IntValue)
+			default:
+				return err
+			}
+
+			go func() {
+				for {
+					out <- msg
+				}
+			}()
 		}
 
 		nodes[name] = io
 	}
 
 	conns := make([]Connection, 0, len(prog.Connections))
+
 	for _, conn := range prog.Connections {
 		senderIO, ok := nodes[conn.From.Node]
 		if !ok {
-			return fmt.Errorf("not ok")
+			return fmt.Errorf("from node not found")
 		}
 
-		fromPortAddr := PortAddr{Port: conn.From.Port, Slot: conn.From.Slot}
-		fromPortCh, err := senderIO.Out.Port(fromPortAddr)
+		fromPortCh, err := senderIO.Out.Port(PortAddr{conn.From.Port, conn.From.Idx})
 		if err != nil {
 			return err
 		}
@@ -95,7 +93,7 @@ func (r Runtime) Run(prog program.Program) error {
 
 			toPort, err := receiverIO.In.Port(PortAddr{
 				Port: connToAddr.Port,
-				Slot: connToAddr.Slot,
+				Idx:  connToAddr.Idx,
 			})
 			if err != nil {
 				return err
@@ -104,7 +102,7 @@ func (r Runtime) Run(prog program.Program) error {
 			receivers = append(receivers, ConnectionPoint{Addr: program.PortAddr{
 				Node: connToAddr.Node,
 				Port: connToAddr.Port,
-				Slot: connToAddr.Slot,
+				Idx:  connToAddr.Idx,
 			}, Ch: toPort})
 		}
 
@@ -115,7 +113,7 @@ func (r Runtime) Run(prog program.Program) error {
 				Addr: program.PortAddr{
 					Node: conn.From.Node,
 					Port: conn.From.Port,
-					Slot: conn.From.Slot,
+					Idx:  conn.From.Idx,
 				},
 			},
 		})
@@ -132,8 +130,8 @@ func (r Runtime) newNodeIO(in, out map[string]program.PortMeta) IO {
 			resultIn[addr] = make(chan Msg, meta.Buf)
 			continue
 		}
-		for slot := uint8(0); slot < meta.Slots; slot++ {
-			addr.Slot = slot
+		for idx := uint8(0); idx < meta.Slots; idx++ {
+			addr.Idx = idx
 			resultIn[addr] = make(chan Msg, meta.Buf)
 		}
 	}
@@ -146,7 +144,7 @@ func (r Runtime) newNodeIO(in, out map[string]program.PortMeta) IO {
 			continue
 		}
 		for slot := uint8(0); slot < meta.Slots; slot++ {
-			addr.Slot = slot
+			addr.Idx = slot
 			resultOut[addr] = make(chan Msg, meta.Buf)
 		}
 	}
@@ -162,36 +160,34 @@ type IO struct {
 
 type PortAddr struct {
 	Port string
-	Slot uint8
+	Idx  uint8
 }
 
 type Ports map[PortAddr]chan Msg
 
 func (ports Ports) Port(addr PortAddr) (chan Msg, error) {
 	for addr, ch := range ports {
-		if addr.Port != addr.Port || addr.Slot != addr.Slot {
-			continue
+		if addr.Port == addr.Port && addr.Idx == addr.Idx {
+			return ch, nil
 		}
-		return ch, nil
 	}
-
 	return nil, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 }
 
-func (ports Ports) PortGroup(name string) ([]chan Msg, error) {
-	g := []chan Msg{}
+func (ports Ports) PortArray(name string) ([]chan Msg, error) {
+	arr := make([]chan Msg, 0, len(ports))
 
 	for addr, ch := range ports {
 		if addr.Port == name {
-			g = append(g, ch)
+			arr = append(arr, ch)
 		}
 	}
 
-	if len(g) == 0 {
+	if len(arr) == 0 {
 		return nil, fmt.Errorf("%w: %s", ErrPortNotFound, name)
 	}
 
-	return g, nil
+	return arr, nil
 }
 
 func New(connector Connector) Runtime {

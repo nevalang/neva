@@ -1,7 +1,7 @@
 package program
 
 type Const interface {
-	Type() Type
+	Type() DataType
 	Int() int
 	Str() string
 	Bool() bool
@@ -18,8 +18,8 @@ type IntConst struct {
 	v int
 }
 
-func (i IntConst) Type() Type { return TypeInt }
-func (i IntConst) Int() int   { return i.v }
+func (i IntConst) Type() DataType { return TypeInt }
+func (i IntConst) Int() int       { return i.v }
 
 func NewIntConst(v int) IntConst {
 	return IntConst{
@@ -33,8 +33,8 @@ type StrConst struct {
 	v string
 }
 
-func (s StrConst) Type() Type  { return TypeStr }
-func (s StrConst) Str() string { return s.v }
+func (s StrConst) Type() DataType { return TypeStr }
+func (s StrConst) Str() string    { return s.v }
 
 func NewStrConst(s string) StrConst {
 	return StrConst{
@@ -48,8 +48,8 @@ type BoolConst struct {
 	v bool
 }
 
-func (b BoolConst) Type() Type { return TypeBool }
-func (b BoolConst) Bool() bool { return b.v }
+func (b BoolConst) Type() DataType { return TypeBool }
+func (b BoolConst) Bool() bool     { return b.v }
 
 func NewBoolConst(b bool) BoolConst {
 	return BoolConst{

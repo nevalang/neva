@@ -5,7 +5,7 @@ import (
 )
 
 func And(io runtime.IO) error {
-	in, err := io.In.PortGroup("in")
+	in, err := io.In.PortArray("in")
 	if err != nil {
 		return err
 	}
