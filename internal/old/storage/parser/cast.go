@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	program "github.com/emil14/neva/internal/new/compiler"
 )
 
 type yamlCaster struct{}
@@ -96,7 +96,7 @@ func (c yamlCaster) toPorts(from map[string]string) program.Ports {
 	to := program.Ports{}
 
 	for port, t := range from {
-		typ, err := typeByName(t)
+		typ, err := toTypeName(t)
 		if err != nil {
 			return program.Ports{}
 		}
@@ -209,7 +209,7 @@ const (
 	sigType  typeName = "sig"
 )
 
-func typeByName(name string) (program.DataType, error) {
+func (p parser) toTypeName(name string) (program.DataType, error) {
 	switch typeName(name) {
 	case intType:
 		return program.TypeInt, nil

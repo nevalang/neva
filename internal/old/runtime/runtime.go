@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/neva/internal/runtime/old/program"
 )
 
 type (
@@ -188,10 +188,4 @@ func (ports Ports) PortArray(name string) ([]chan Msg, error) {
 	}
 
 	return arr, nil
-}
-
-func New(connector Connector) Runtime {
-	return Runtime{
-		connector: connector,
-	}
 }
