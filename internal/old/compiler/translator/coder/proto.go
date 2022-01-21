@@ -1,7 +1,7 @@
 package coder
 
 import (
-	"github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/neva/internal/old/runtime/program"
 	"github.com/emil14/neva/pkg/runtimesdk"
 	"github.com/golang/protobuf/proto"
 )

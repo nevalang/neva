@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/neva/internal/old/compiler/program"
 	"github.com/emil14/neva/internal/pkg/utils"
 )
 
@@ -73,7 +73,7 @@ func (c Compiler) Compile(src Pkg) ([]byte, error) {
 		)
 	}
 
-	scope, err := c.pkgScope(src, ops, mods)
+	scope, err := c.pkgScope(src, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -98,18 +98,18 @@ func (Compiler) pkgScope(
 
 	for alias, ref := range pkg.Scope {
 		if ref.Type == ScopeRefOperator {
-			opref := OpRef{
-				Pkg:  ref.Pkg,
-				Name: ref.Name,
-			}
+			// opref := OpRef{
+			// 	Pkg:  ref.Pkg,
+			// 	Name: ref.Name,
+			// }
 
-			op, ok := ops[opref]
-			if ok {
-				scope[alias] = program.Component{
-					Type:       program.OperatorComponent,
-					OperatorIO: op,
-				}
-			}
+			// op, ok := ops[opref]
+			// if ok {
+			// 	scope[alias] = program.Component{
+			// 		Type:       program.OperatorComponent,
+			// 		OperatorIO: op,
+			// 	}
+			// }
 		}
 
 		mod, ok := mods[ref.Name]
@@ -138,7 +138,7 @@ func New(
 	return Compiler{
 		checker:    checker,
 		translator: translator,
-		storage:    store,
+		// storage:    store,
 	}, nil
 }
 

@@ -12,28 +12,32 @@ type (
 		Decode([]byte) (Program, error)
 	}
 	PortGen interface {
-		Ports(map[string]Node) (map[PortAddr]chan core.Msg, error)
+		Ports(NodeIO) core.IO
 	}
-	OpsSpawner interface {
-		Spawn(map[string]Node, map[PortAddr]chan core.Msg) error
+	ConstSpawner interface {
+		Spawn(map[string]Msg, map[core.PortAddr]chan core.Msg) error
+	}
+	OperatorSpawner interface {
+		Spawn(OpRef, core.IO) error
 	}
 	Connector interface {
-		Connect([]Connection, map[PortAddr]chan core.Msg, chan<- error)
+		Connect([]Connection, map[string]core.IO, chan<- error)
 	}
 )
 
 var (
-	ErrDecoder    = errors.New("decoder")
-	ErrPortGen    = errors.New("port gen")
-	ErrOpsSpawner = errors.New("ops spawner")
-	ErrConnector  = errors.New("connector")
+	ErrDecoder      = errors.New("decoder")
+	ErrOpSpawner    = errors.New("operator spawner")
+	ErrConstSpawner = errors.New("const spawner")
+	ErrConnector    = errors.New("connector")
 )
 
 type Runtime struct {
-	decoder    Decoder
-	portGen    PortGen
-	opsSpawner OpsSpawner
-	connector  Connector
+	decoder      Decoder
+	portGen      PortGen
+	opSpawner    OperatorSpawner
+	constSpawner ConstSpawner
+	connector    Connector
 }
 
 func (r Runtime) Run(raw []byte) error {
@@ -42,16 +46,25 @@ func (r Runtime) Run(raw []byte) error {
 		return fmt.Errorf("%w: %v", ErrDecoder, err)
 	}
 
-	ports, err := r.portGen.Ports(prog.Nodes)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrPortGen, err)
-	}
+	nodesIO := make(map[string]core.IO, len(prog.Nodes))
+	for nodeName, node := range prog.Nodes {
+		nodesIO[nodeName] = r.portGen.Ports(node.IO)
 
-	if err := r.opsSpawner.Spawn(prog.Nodes, ports); err != nil {
-		return fmt.Errorf("%w: %v", ErrOpsSpawner, err)
+		switch node.Type {
+		case OperatorNode:
+			if err := r.opSpawner.Spawn(node.OpRef, nodesIO[nodeName]); err != nil {
+				return fmt.Errorf("%w: %v", ErrOpSpawner, err)
+			}
+		case ConstNode:
+			if err := r.constSpawner.Spawn(node.Const, nodesIO[nodeName].Out); err != nil {
+				return fmt.Errorf("%w: %v", ErrConstSpawner, err)
+			}
+		}
 	}
 
 	stop := make(chan error)
-	r.connector.Connect(prog.Connections, ports, stop)
-	return fmt.Errorf("%w: %v", ErrConnector, <-stop)
+	r.connector.Connect(prog.Connections, nodesIO, stop)
+	err = <-stop
+
+	return fmt.Errorf("%w: %v", ErrConnector, err)
 }

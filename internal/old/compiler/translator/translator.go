@@ -1,8 +1,8 @@
 package translator
 
 import (
-	"github.com/emil14/neva/internal/compiler/program"
-	runtime "github.com/emil14/neva/internal/runtime/program"
+	"github.com/emil14/neva/internal/old/compiler/program"
+	runtime "github.com/emil14/neva/internal/old/runtime/program"
 )
 
 type Coder interface {

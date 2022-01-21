@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/neva/internal/old/compiler"
+	"github.com/emil14/neva/internal/old/compiler/program"
 	yaml "gopkg.in/yaml.v2"
 )
 

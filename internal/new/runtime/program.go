@@ -21,17 +21,17 @@ type (
 		Type  NodeType
 		IO    NodeIO
 		OpRef OpRef
-		Msg   Msg
+		Const map[string]Msg
 	}
 
 	NodeType uint8
 
 	NodeIO struct {
-		in, out map[string]PortMeta
+		In, Out map[string]PortMeta
 	}
 
 	PortMeta struct {
-		slots, buf uint8
+		Slots, Buf uint8
 	}
 
 	OpRef struct {

@@ -20,22 +20,25 @@ const (
 	BeforeReceive
 )
 
-var ErrPortNotFound = errors.New("chan not found by port addr")
+var (
+	ErrNodeNotFound = errors.New("node not found by addr")
+	ErrPortNotFound = errors.New("port not found by addr")
+)
 
 type Connector struct {
 	interceptor Interceptor
 }
 
-func (c Connector) Connect(cc []runtime.Connection, io map[runtime.PortAddr]chan core.Msg, stop chan<- error) {
+func (c Connector) Connect(cc []runtime.Connection, nodesIO map[string]core.IO, stop chan<- error) {
 	for _, conn := range cc {
-		go c.loop(conn, io, stop)
+		go c.loop(conn, nodesIO, stop)
 	}
 }
 
-func (c Connector) loop(conn runtime.Connection, io map[runtime.PortAddr]chan core.Msg, stop chan<- error) {
-	from, ok := io[conn.From]
-	if !ok {
-		stop <- fmt.Errorf("%w: %v", ErrPortNotFound, conn.From)
+func (c Connector) loop(conn runtime.Connection, nodesIO map[string]core.IO, stop chan<- error) {
+	from, err := c.selectPort(conn.From, nodesIO)
+	if err != nil {
+		stop <- err
 		return
 	}
 
@@ -43,9 +46,9 @@ func (c Connector) loop(conn runtime.Connection, io map[runtime.PortAddr]chan co
 		msg = c.interceptor.Event(AfterSend, conn, msg)
 
 		for i := range conn.To {
-			to, ok := io[conn.To[i]]
-			if !ok {
-				stop <- fmt.Errorf("%w: %v", ErrPortNotFound, conn.To[i])
+			to, err := c.selectPort(conn.To[i], nodesIO)
+			if err != nil {
+				stop <- err
 				return
 			}
 
@@ -54,4 +57,18 @@ func (c Connector) loop(conn runtime.Connection, io map[runtime.PortAddr]chan co
 			}(msg)
 		}
 	}
+}
+
+func (c Connector) selectPort(addr runtime.PortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
+	io, ok := nodesIO[addr.Node]
+	if !ok {
+		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)
+	}
+
+	port, ok := io.Out[core.PortAddr{addr.Port, addr.Idx}]
+	if !ok {
+		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
+	}
+
+	return port, nil
 }

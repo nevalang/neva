@@ -3,34 +3,8 @@ package runtime
 import (
 	"errors"
 	"fmt"
-
-	"github.com/emil14/neva/internal/runtime/old/program"
 )
 
-type (
-	Runtime struct {
-		connector Connector
-		opsRepo   OpsRepo
-	}
-
-	OpsRepo interface {
-		Opfunc(pkg, name string) Opfunc
-	}
-
-	Connector interface {
-		Connect([]Connection)
-	}
-
-	Connection struct {
-		From ConnectionPoint
-		To   []ConnectionPoint
-	}
-
-	ConnectionPoint struct {
-		Ch   chan Msg
-		Addr program.PortAddr
-	}
-)
 
 var ErrPortNotFound = errors.New("port not found")
 

@@ -1,36 +1,35 @@
 package portgen
 
 import (
-	"fmt"
-
 	"github.com/emil14/neva/internal/new/core"
 	"github.com/emil14/neva/internal/new/runtime"
 )
 
 type PortGen struct{}
 
-func (p PortGen) Ports(nodes map[string]runtime.Node) (map[runtime.PortAddr]chan core.Msg, error) {
-	nodesPorts := make(map[runtime.PortAddr]chan core.Msg, len(nodes)*2)
+func (p PortGen) Ports(io runtime.NodeIO) core.IO {
+	return core.IO{
+		In:  p.ports(io.In),
+		Out: p.ports(io.Out),
+	}
+}
 
-	for name, node := range nodes {
-		nodePorts, err := p.nodePorts(name, node.IO)
-		if err != nil {
-			return nil, fmt.Errorf("node ports: %w", err)
+func (PortGen) ports(ports map[string]runtime.PortMeta) map[core.PortAddr]chan core.Msg {
+	res := make(map[core.PortAddr]chan core.Msg)
+
+	for portName, meta := range ports {
+		addr := core.PortAddr{Port: portName}
+
+		if meta.Slots == 0 {
+			res[addr] = make(chan core.Msg, meta.Buf)
+			continue
 		}
 
-		nodesPorts, err = p.mergePorts(nodesPorts, nodePorts)
-		if err != nil {
-			return nil, fmt.Errorf("merge ports: %w", err)
+		for idx := uint8(0); idx < meta.Slots; idx++ {
+			addr.Idx = idx
+			res[addr] = make(chan core.Msg, meta.Buf)
 		}
 	}
 
-	return nodesPorts, nil
-}
-
-func (p PortGen) nodePorts(string, runtime.NodeIO) (map[runtime.PortAddr]chan core.Msg, error) {
-	return nil, nil
-}
-
-func (p PortGen) mergePorts(x, y map[runtime.PortAddr]chan core.Msg) (map[runtime.PortAddr]chan core.Msg, error) {
-	return nil, nil
+	return res
 }

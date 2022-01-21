@@ -1,7 +1,11 @@
 package core
 
+import "errors"
+
+var ErrPortNotFound = errors.New("port not found")
+
 type IO struct {
-	in, out map[PortAddr]chan Msg
+	In, Out map[PortAddr]chan Msg
 }
 
 type PortAddr struct {

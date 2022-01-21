@@ -1,28 +1,25 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/new/core"
 )
 
-var ErrLock = errors.New("lock")
-
-func Lock(io runtime.IO) error {
-	sig, err := io.In.Port(runtime.PortAddr{Port: "sig"})
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrLock, err)
+func Lock(io core.IO) error {
+	sig, ok := io.In[core.PortAddr{Port: "sig"}]
+	if !ok {
+		return fmt.Errorf("%w: in: %v", core.ErrPortNotFound, "sig")
 	}
 
-	data, err := io.In.Port(runtime.PortAddr{Port: "data"})
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrLock, err)
+	data, ok := io.In[core.PortAddr{Port: "data"}]
+	if !ok {
+		return fmt.Errorf("%w: in: %v", core.ErrPortNotFound, "data")
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "data"})
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrLock, err)
+	out, ok := io.Out[core.PortAddr{Port: "out"}]
+	if !ok {
+		return fmt.Errorf("%w: out: %v", core.ErrPortNotFound, "out")
 	}
 
 	go func() {

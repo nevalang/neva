@@ -1,7 +1,7 @@
 package packager
 
 import (
-	"github.com/emil14/neva/internal/compiler"
+	"github.com/emil14/neva/internal/new/compiler"
 )
 
 type (

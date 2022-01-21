@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/old/runtime"
 )
 
 var ErrRead = errors.New("multiplication")

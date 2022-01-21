@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/old/compiler"
+	"github.com/emil14/neva/internal/old/runtime"
 	"github.com/emil14/neva/pkg/sdk"
 )
 

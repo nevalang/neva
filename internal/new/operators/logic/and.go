@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/emil14/neva/internal/runtime"
-)
+import "github.com/emil14/neva/internal/old/runtime"
 
 func And(io runtime.IO) error {
 	in, err := io.In.PortArray("in")

@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/program"
+	"github.com/emil14/neva/internal/old/compiler/program"
 	"golang.org/x/sync/errgroup"
 )
 

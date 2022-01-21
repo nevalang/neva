@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/emil14/neva/internal/runtime"
-)
+import "github.com/emil14/neva/internal/old/runtime"
 
 func Remainder(io runtime.IO) error {
 	a, err := io.In.Port(runtime.PortAddr{Port: "a"})
