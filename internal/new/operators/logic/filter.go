@@ -1,24 +1,24 @@
 package main
 
-import "github.com/emil14/neva/internal/old/runtime"
+import "github.com/emil14/neva/internal/new/core"
 
-func Filter(io runtime.IO) error {
-	data, err := io.In.Port(runtime.PortAddr{Port: "data"})
+func Filter(io core.IO) error {
+	data, err := io.In.Port("data")
 	if err != nil {
 		return err
 	}
 
-	marker, err := io.In.Port(runtime.PortAddr{Port: "marker"})
+	marker, err := io.In.Port("marker")
 	if err != nil {
 		return err
 	}
 
-	acc, err := io.Out.Port(runtime.PortAddr{Port: "acc"})
+	acc, err := io.Out.Port("acc")
 	if err != nil {
 		return err
 	}
 
-	rej, err := io.Out.Port(runtime.PortAddr{Port: "rej"})
+	rej, err := io.Out.Port("rej")
 	if err != nil {
 		return err
 	}

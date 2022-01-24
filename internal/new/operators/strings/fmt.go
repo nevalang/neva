@@ -4,23 +4,23 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/old/runtime"
+	"github.com/emil14/neva/internal/new/core"
 )
 
 var ErrFmt = errors.New("fmt")
 
-func Fmt(io runtime.IO) error {
-	str, err := io.In.Port(runtime.PortAddr{Port: "str"})
+func Fmt(io core.IO) error {
+	str, err := io.In.Port("str")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
-	args, err := io.In.PortArray("args")
+	args, err := io.In.ArrPort("args")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+	out, err := io.Out.Port("out")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
@@ -33,7 +33,7 @@ func Fmt(io runtime.IO) error {
 				ss = append(ss, arg)
 			}
 
-			out <- runtime.NewStrMsg(
+			out <- core.NewStrMsg(
 				fmt.Sprintf(s.Str(), ss...),
 			)
 		}

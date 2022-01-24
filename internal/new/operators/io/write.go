@@ -1,18 +1,15 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/old/runtime"
+	"github.com/emil14/neva/internal/new/core"
 )
 
-var ErrWrite = errors.New("multiplication")
-
-func Write(io runtime.IO) error {
-	in, err := io.In.Port(runtime.PortAddr{Port: "in"})
+func Write(io core.IO) error {
+	in, err := io.In.Port("in")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrWrite, err)
+		return err
 	}
 
 	go func() {

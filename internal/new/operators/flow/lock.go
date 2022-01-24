@@ -1,25 +1,23 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/emil14/neva/internal/new/core"
 )
 
 func Lock(io core.IO) error {
-	sig, ok := io.In[core.PortAddr{Port: "sig"}]
-	if !ok {
-		return fmt.Errorf("%w: in: %v", core.ErrPortNotFound, "sig")
+	sig, err := io.In.Port("sig")
+	if err != nil {
+		return err
 	}
 
-	data, ok := io.In[core.PortAddr{Port: "data"}]
-	if !ok {
-		return fmt.Errorf("%w: in: %v", core.ErrPortNotFound, "data")
+	data, err := io.In.Port("data")
+	if err != nil {
+		return err
 	}
 
-	out, ok := io.Out[core.PortAddr{Port: "out"}]
-	if !ok {
-		return fmt.Errorf("%w: out: %v", core.ErrPortNotFound, "out")
+	out, err := io.Out.Port("out")
+	if err != nil {
+		return err
 	}
 
 	go func() {

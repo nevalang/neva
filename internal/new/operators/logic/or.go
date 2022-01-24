@@ -1,14 +1,14 @@
 package main
 
-import "github.com/emil14/neva/internal/old/runtime"
+import "github.com/emil14/neva/internal/new/core"
 
-func Or(io runtime.IO) error {
-	in, err := io.In.PortArray("in")
+func Or(io core.IO) error {
+	in, err := io.In.ArrPort("in")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+	out, err := io.Out.Port("out")
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func Or(io runtime.IO) error {
 
 			close(buf)
 
-			out <- runtime.NewBoolMsg(res)
+			out <- core.NewBoolMsg(res)
 		}
 	}()
 

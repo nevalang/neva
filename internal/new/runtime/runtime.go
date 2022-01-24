@@ -8,10 +8,10 @@ import (
 )
 
 type (
-	Decoder interface {
+	ProgramDecoder interface {
 		Decode([]byte) (Program, error)
 	}
-	PortGen interface {
+	PortGenerator interface {
 		Ports(NodeIO) core.IO
 	}
 	ConstSpawner interface {
@@ -20,30 +20,30 @@ type (
 	OperatorSpawner interface {
 		Spawn(OpRef, core.IO) error
 	}
-	Connector interface {
+	NetworkConnector interface {
 		Connect([]Connection, map[string]core.IO, chan<- error)
 	}
 )
 
 var (
-	ErrDecoder      = errors.New("decoder")
-	ErrOpSpawner    = errors.New("operator spawner")
-	ErrConstSpawner = errors.New("const spawner")
-	ErrConnector    = errors.New("connector")
+	ErrProgDecoder  = errors.New("program decoder")
+	ErrOpSpawner    = errors.New("operator-node spawner")
+	ErrConstSpawner = errors.New("const-node spawner")
+	ErrNetConnector = errors.New("network connector")
 )
 
 type Runtime struct {
-	decoder      Decoder
-	portGen      PortGen
+	progDecoder  ProgramDecoder
+	portGen      PortGenerator
 	opSpawner    OperatorSpawner
 	constSpawner ConstSpawner
-	connector    Connector
+	connector    NetworkConnector
 }
 
 func (r Runtime) Run(raw []byte) error {
-	prog, err := r.decoder.Decode(raw)
+	prog, err := r.progDecoder.Decode(raw)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrDecoder, err)
+		return fmt.Errorf("%w: %v", ErrProgDecoder, err)
 	}
 
 	nodesIO := make(map[string]core.IO, len(prog.Nodes))
@@ -66,5 +66,5 @@ func (r Runtime) Run(raw []byte) error {
 	r.connector.Connect(prog.Connections, nodesIO, stop)
 	err = <-stop
 
-	return fmt.Errorf("%w: %v", ErrConnector, err)
+	return fmt.Errorf("%w: %v", ErrNetConnector, err)
 }

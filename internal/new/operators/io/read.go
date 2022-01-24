@@ -2,25 +2,21 @@ package main
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
 	"os"
 
-	"github.com/emil14/neva/internal/old/runtime"
+	"github.com/emil14/neva/internal/new/core"
 )
 
-var ErrRead = errors.New("multiplication")
-
-func Read(io runtime.IO) error {
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+func Read(io core.IO) error {
+	out, err := io.Out.Port("out")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrWrite, err)
+		return err
 	}
 
 	go func() {
-		s := bufio.NewScanner(os.Stdin)
-		for s.Scan() {
-			out <- runtime.NewStrMsg(s.Text())
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			out <- core.NewStrMsg(scanner.Text())
 		}
 	}()
 

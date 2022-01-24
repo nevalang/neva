@@ -1,37 +1,31 @@
 package main
 
-import "github.com/emil14/neva/internal/old/runtime"
+import "github.com/emil14/neva/internal/new/core"
 
-func And(io runtime.IO) error {
-	in, err := io.In.PortArray("in")
+func And(io core.IO) error {
+	inports, err := io.In.ArrPort("in")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+	outport, err := io.Out.Port("out")
 	if err != nil {
 		return err
 	}
 
 	go func() {
 		for {
-			buf := make(chan bool, len(in))
-			for _, ch := range in {
-				msg := <-ch
-				buf <- msg.Bool()
-			}
-
 			res := true
-			for b := range buf {
-				if !b {
+
+			for _, port := range inports {
+				msg := <-port
+				if !msg.Bool() {
 					res = false
 					break
 				}
 			}
 
-			close(buf)
-
-			out <- runtime.NewBoolMsg(res)
+			outport <- core.NewBoolMsg(res)
 		}
 	}()
 

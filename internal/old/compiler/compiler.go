@@ -138,7 +138,6 @@ func New(
 	return Compiler{
 		checker:    checker,
 		translator: translator,
-		// storage:    store,
 	}, nil
 }
 

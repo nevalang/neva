@@ -1,19 +1,19 @@
 package main
 
-import "github.com/emil14/neva/internal/old/runtime"
+import "github.com/emil14/neva/internal/new/core"
 
-func Remainder(io runtime.IO) error {
-	a, err := io.In.Port(runtime.PortAddr{Port: "a"})
+func Remainder(io core.IO) error {
+	a, err := io.In.Port("a")
 	if err != nil {
 		return err
 	}
 
-	b, err := io.In.Port(runtime.PortAddr{Port: "b"})
+	b, err := io.In.Port("b")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+	out, err := io.Out.Port("out")
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func Remainder(io runtime.IO) error {
 		for {
 			msgA := <-a
 			msgB := <-b
-			out <- runtime.NewIntMsg(
+			out <- core.NewIntMsg(
 				msgA.Int() % msgB.Int(),
 			)
 		}

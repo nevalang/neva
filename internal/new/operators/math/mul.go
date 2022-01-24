@@ -4,18 +4,18 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/old/runtime"
+	"github.com/emil14/neva/internal/new/core"
 )
 
 var ErrMul = errors.New("multiplication")
 
-func Mul(io runtime.IO) error {
-	in, err := io.In.PortArray("in")
+func Mul(io core.IO) error {
+	in, err := io.In.ArrPort("in")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}
 
-	out, err := io.Out.Port(runtime.PortAddr{Port: "out"})
+	out, err := io.Out.Port("out")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}
@@ -39,7 +39,7 @@ func Mul(io runtime.IO) error {
 
 			close(buf)
 
-			out <- runtime.NewIntMsg(mul)
+			out <- core.NewIntMsg(mul)
 		}
 	}()
 
