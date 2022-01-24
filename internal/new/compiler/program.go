@@ -2,22 +2,21 @@ package compiler
 
 type (
 	Pkg struct {
-		Root            string
+		RootComponent   string
 		Scope           map[string]ScopeRef
-		Operators       map[OpRef]IO
+		Operators       map[ComponentRef]IO
 		Modules         map[string][]byte
 		CompilerVersion string
 	}
 
 	ScopeRef struct {
-		ComponentType ComponentType
-		Pkg           string
-		Name          string
+		Type ComponentType
+		Ref  ComponentRef
 	}
 
 	ComponentType uint8
 
-	OpRef struct {
+	ComponentRef struct {
 		Pkg, Name string
 	}
 
@@ -68,7 +67,7 @@ type (
 
 	Program struct {
 		RootModule string
-		Operators  map[string]OpRef
+		Operators  map[string]ComponentRef
 		Modules    map[string]Module
 	}
 )

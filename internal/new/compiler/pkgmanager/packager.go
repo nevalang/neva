@@ -1,4 +1,4 @@
-package packager
+package pkgmanager
 
 import (
 	"github.com/emil14/neva/internal/new/compiler"
@@ -71,13 +71,13 @@ const (
 	Global
 )
 
-type Packager struct {
+type Manager struct {
 	std    StdStore
 	local  LocalStore
 	global GlobalStore
 }
 
-func (p Packager) Pkg(path string) (compiler.Pkg, error) {
+func (p Manager) Pkg(path string) (compiler.Pkg, error) {
 	// if compilerVersion of dep != current return err
 	return compiler.Pkg{}, nil
 }
