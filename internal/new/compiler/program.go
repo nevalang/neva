@@ -4,16 +4,15 @@ type (
 	Pkg struct {
 		RootModule          string
 		Scope               map[string]ScopeRef
-		Modules             map[string][]byte
-		Operators           map[string]OperatorRef
+		Imports             map[string]Component
 		WantCompilerVersion string
 	}
 
-	// Component struct {
-	// 	Type        ComponentType
-	// 	ModuleBytes []byte
-	// 	OperatorRef OperatorRef
-	// }
+	Component struct {
+		Type        ComponentType
+		ModuleBytes []byte
+		OperatorRef OperatorRef
+	}
 
 	ScopeRef struct {
 		Type        ComponentType
