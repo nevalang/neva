@@ -141,16 +141,6 @@ func New(
 	}, nil
 }
 
-func MustNew(
-	checker Checker,
-	translator Translator,
-	store Storage,
-) Compiler {
-	cmp, err := New(checker, translator, store)
-	utils.MaybePanic(err)
-	return cmp
-}
-
 func NewOperatorsIO() map[string]map[string]program.ComponentIO {
 	return map[string]map[string]program.ComponentIO{
 		"math": {

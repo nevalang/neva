@@ -3,6 +3,8 @@ package compiler
 import (
 	"errors"
 	"fmt"
+
+	"github.com/emil14/neva/internal/pkg/utils"
 )
 
 type (
@@ -29,12 +31,11 @@ var (
 )
 
 type Compiler struct {
-	packager   PkgManager
-	parser     ModuleParser
-	checker    ProgramChecker
-	translator ProgramTranslator
-
-	operatorsIO map[ComponentRef]IO
+	pkg         PkgManager
+	parser      ModuleParser
+	checker     ProgramChecker
+	translator  ProgramTranslator
+	operatorsIO map[OperatorRef]IO
 }
 
 func (c Compiler) Compile(path string) ([]byte, error) {
@@ -52,7 +53,7 @@ func (c Compiler) Compile(path string) ([]byte, error) {
 }
 
 func (c Compiler) PreCompile(path string) (Program, error) {
-	pkg, err := c.packager.Pkg(path)
+	pkg, err := c.pkg.Pkg(path)
 	if err != nil {
 		return Program{}, fmt.Errorf("%w: %v", ErrPkgManager, err)
 	}
@@ -82,7 +83,7 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 	return prog, nil
 }
 
-func (c Compiler) Operators(refs map[string]ComponentRef) (map[string]Operator, error) {
+func (c Compiler) Operators(refs map[string]OperatorRef) (map[string]Operator, error) {
 	ops := make(map[string]Operator, len(refs))
 
 	for name, ref := range refs {
@@ -98,4 +99,22 @@ func (c Compiler) Operators(refs map[string]ComponentRef) (map[string]Operator, 
 	}
 
 	return ops, nil
+}
+
+func MustNew(
+	pkg PkgManager,
+	parser ModuleParser,
+	checker ProgramChecker,
+	translator ProgramTranslator,
+	operatorsIO map[OperatorRef]IO,
+) Compiler {
+	utils.NilArgsFatal(pkg, parser, checker, translator, operatorsIO)
+
+	return Compiler{
+		pkg:         pkg,
+		parser:      parser,
+		checker:     checker,
+		translator:  translator,
+		operatorsIO: map[OperatorRef]IO{},
+	}
 }

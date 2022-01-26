@@ -1,7 +1,7 @@
 package compiler
 
-func NewOpsIO() map[ComponentRef]IO {
-	return map[ComponentRef]IO{
+func NewOpsIO() map[OperatorRef]IO {
+	return map[OperatorRef]IO{
 		{Pkg: "math", Name: "mul"}: {
 			In: map[string]Port{
 				"in": {

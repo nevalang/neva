@@ -5,18 +5,25 @@ type (
 		RootModule          string
 		Scope               map[string]ScopeRef
 		Modules             map[string][]byte
-		Operators           map[string]ComponentRef
+		Operators           map[string]OperatorRef
 		WantCompilerVersion string
 	}
 
+	// Component struct {
+	// 	Type        ComponentType
+	// 	ModuleBytes []byte
+	// 	OperatorRef OperatorRef
+	// }
+
 	ScopeRef struct {
-		Type ComponentType
-		Ref  ComponentRef
+		Type        ComponentType
+		ModuleName  string
+		OperatorRef OperatorRef
 	}
 
 	ComponentType uint8
 
-	ComponentRef struct {
+	OperatorRef struct {
 		Pkg, Name string
 	}
 
@@ -60,7 +67,7 @@ type (
 
 	Operator struct {
 		IO  IO
-		Ref ComponentRef
+		Ref OperatorRef
 	}
 
 	Msg interface {

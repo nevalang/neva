@@ -33,7 +33,7 @@ var (
 )
 
 type Runtime struct {
-	progDecoder  ProgramDecoder
+	decoder      ProgramDecoder
 	portGen      PortGenerator
 	opSpawner    OperatorSpawner
 	constSpawner ConstSpawner
@@ -41,7 +41,7 @@ type Runtime struct {
 }
 
 func (r Runtime) Run(raw []byte) error {
-	prog, err := r.progDecoder.Decode(raw)
+	prog, err := r.decoder.Decode(raw)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrProgDecoder, err)
 	}

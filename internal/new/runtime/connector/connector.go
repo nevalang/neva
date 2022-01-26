@@ -65,7 +65,7 @@ func (c Connector) selectPort(addr runtime.PortAddr, nodesIO map[string]core.IO)
 		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)
 	}
 
-	port, ok := io.Out[core.PortAddr{addr.Port, addr.Idx}]
+	port, ok := io.Out[core.PortAddr{Port: addr.Port, Idx: addr.Idx}]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 	}
