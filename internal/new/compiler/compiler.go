@@ -25,6 +25,7 @@ var (
 	ErrModParser      = errors.New("module parser")
 	ErrProgChecker    = errors.New("program checker")
 	ErrProgTranslator = errors.New("program translator")
+	ErrOpNotFound     = errors.New("operator not found")
 )
 
 type Compiler struct {
@@ -33,7 +34,7 @@ type Compiler struct {
 	checker    ProgramChecker
 	translator ProgramTranslator
 
-	opsIO map[ComponentRef]IO // sure?
+	operatorsIO map[ComponentRef]IO
 }
 
 func (c Compiler) Compile(path string) ([]byte, error) {
@@ -61,10 +62,17 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 		return Program{}, fmt.Errorf("%w: %v", ErrModParser, err)
 	}
 
+	ops, err := c.Operators(pkg.Operators)
+	if err != nil {
+		return Program{}, fmt.Errorf("operators: %w", err)
+	}
+
 	prog := Program{
-		RootModule: pkg.RootComponent,
-		Operators:  map[string]ComponentRef{}, // todo
-		Modules:    mods,
+		RootModule: pkg.RootModule,
+		Scope: ProgramScope{
+			Modules:   mods,
+			Operators: ops,
+		},
 	}
 
 	if err := c.checker.Check(prog); err != nil {
@@ -72,4 +80,22 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 	}
 
 	return prog, nil
+}
+
+func (c Compiler) Operators(refs map[string]ComponentRef) (map[string]Operator, error) {
+	ops := make(map[string]Operator, len(refs))
+
+	for name, ref := range refs {
+		io, ok := c.operatorsIO[ref]
+		if !ok {
+			return nil, fmt.Errorf("%w: %v", ErrOpNotFound, ref)
+		}
+
+		ops[name] = Operator{
+			IO:  io,
+			Ref: ref,
+		}
+	}
+
+	return ops, nil
 }

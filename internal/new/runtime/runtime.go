@@ -18,7 +18,7 @@ type (
 		Spawn(map[string]Msg, map[core.PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
-		Spawn(OpRef, core.IO) error
+		Spawn(OperatorRef, core.IO) error
 	}
 	NetworkConnector interface {
 		Connect([]Connection, map[string]core.IO, chan<- error)
@@ -52,7 +52,7 @@ func (r Runtime) Run(raw []byte) error {
 
 		switch node.Type {
 		case OperatorNode:
-			if err := r.opSpawner.Spawn(node.OpRef, nodesIO[nodeName]); err != nil {
+			if err := r.opSpawner.Spawn(node.OperatorRef, nodesIO[nodeName]); err != nil {
 				return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 			}
 		case ConstNode:

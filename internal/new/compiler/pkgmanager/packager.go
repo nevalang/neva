@@ -19,19 +19,17 @@ type (
 	}
 
 	Pkg struct {
-		stdImports      map[string]string
-		globalImports   map[string]GlobalImport
-		localModules    map[string][]byte
-		scope           map[string]ScopeRef
-		root            string
-		export          []string
-		compilerVersion string
+		Imports         PkgImports
+		Scope           map[string]ScopeRef
+		Root            string
+		Exports         []string
+		CompilerVersion string
 	}
 
 	ScopeRef struct {
-		NameSpace NameSpace
-		Pkg       string
-		Name      string
+		Ns   NameSpace
+		Pkg  string
+		Name string
 	}
 
 	PkgImports struct {
@@ -45,14 +43,14 @@ type (
 		Version string
 	}
 
-	OpRef struct {
+	OperatorRef struct {
 		Pkg, Name string
 	}
 
 	Component struct {
-		Type   ComponentType
-		Module []byte
-		OpRef  OpRef
+		Type        ComponentType
+		Module      []byte
+		OperatorRef OperatorRef
 	}
 
 	ComponentType uint8

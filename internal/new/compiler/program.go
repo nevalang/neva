@@ -2,11 +2,11 @@ package compiler
 
 type (
 	Pkg struct {
-		RootComponent   string
-		Scope           map[string]ScopeRef
-		Operators       map[ComponentRef]IO
-		Modules         map[string][]byte
-		CompilerVersion string
+		RootModule          string
+		Scope               map[string]ScopeRef
+		Modules             map[string][]byte
+		Operators           map[string]ComponentRef
+		WantCompilerVersion string
 	}
 
 	ScopeRef struct {
@@ -58,6 +58,11 @@ type (
 
 	PortAddrType uint8
 
+	Operator struct {
+		IO  IO
+		Ref ComponentRef
+	}
+
 	Msg interface {
 		Int() int
 		Str() string
@@ -67,8 +72,12 @@ type (
 
 	Program struct {
 		RootModule string
-		Operators  map[string]ComponentRef
-		Modules    map[string]Module
+		Scope      ProgramScope
+	}
+
+	ProgramScope struct {
+		Modules   map[string]Module
+		Operators map[string]Operator
 	}
 )
 

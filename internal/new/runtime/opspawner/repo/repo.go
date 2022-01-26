@@ -19,10 +19,10 @@ var (
 
 type PluginRepo struct {
 	plugins map[string]Plugin
-	cache   map[runtime.OpRef]func(core.IO) error
+	cache   map[runtime.OperatorRef]func(core.IO) error
 }
 
-func (r PluginRepo) Operator(ref runtime.OpRef) (func(core.IO) error, error) {
+func (r PluginRepo) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 	if op, ok := r.cache[ref]; ok {
 		return op, nil
 	}
@@ -68,7 +68,7 @@ func NewRepo(plugins map[string]Plugin) PluginRepo {
 	return PluginRepo{
 		plugins: plugins,
 		cache: make(
-			map[runtime.OpRef]func(core.IO) error,
+			map[runtime.OperatorRef]func(core.IO) error,
 			len(plugins),
 		),
 	}

@@ -18,10 +18,10 @@ type (
 	}
 
 	Node struct {
-		Type  NodeType
-		IO    NodeIO
-		OpRef OpRef
-		Const map[string]Msg
+		Type        NodeType
+		IO          NodeIO
+		OperatorRef OperatorRef
+		Const       map[string]Msg
 	}
 
 	NodeType uint8
@@ -34,7 +34,7 @@ type (
 		Slots, Buf uint8
 	}
 
-	OpRef struct {
+	OperatorRef struct {
 		Pkg, Name string
 	}
 
