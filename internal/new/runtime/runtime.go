@@ -15,7 +15,7 @@ type (
 		Ports(NodeIO) core.IO
 	}
 	ConstSpawner interface {
-		Spawn(map[string]Msg, map[core.PortAddr]chan core.Msg) error
+		Spawn(map[string]ConstValue, map[core.PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
 		Spawn(OperatorRef, core.IO) error

@@ -6,7 +6,7 @@ WORKDIR $GOPATH/src/app
 
 COPY . .
 
-# Build operators go-plugins
+# build runtime operators
 RUN go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
 RUN go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
 RUN go build -o plugins/more.so -buildmode=plugin internal/runtime/operators/more/main.go
@@ -14,7 +14,7 @@ RUN go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/
 RUN go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/main.go
 RUN go build -o plugins/remainder.so -buildmode=plugin internal/runtime/operators/remainder/main.go
 
-# Build platform itself
+# build platform
 RUN go build -o /bin/respectbin cmd/server/main.go
 
 EXPOSE 8090

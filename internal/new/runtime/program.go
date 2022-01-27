@@ -21,7 +21,7 @@ type (
 		Type        NodeType
 		IO          NodeIO
 		OperatorRef OperatorRef
-		Const       map[string]Msg
+		Const       map[string]ConstValue
 	}
 
 	NodeType uint8
@@ -38,7 +38,7 @@ type (
 		Pkg, Name string
 	}
 
-	Msg struct {
+	ConstValue struct {
 		Type MsgType
 		Int  int
 		Str  string
