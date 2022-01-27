@@ -20,3 +20,7 @@ func (m marshaler) Marshal(sdkProg *runtimesdk.Program) ([]byte, error) {
 
 	return bb, nil
 }
+
+func NewMarshaler() marshaler {
+	return marshaler{}
+}

@@ -8,5 +8,9 @@ import (
 type Translator struct{}
 
 func (t Translator) Translate(compiler.Program) (runtime.Program, error) {
-	return runtime.Program{}, nil
+	return runtime.Program{
+		Nodes:       map[string]runtime.Node{},
+		Connections: []runtime.Connection{},
+		StartPort:   runtime.PortAddr{},
+	}, nil
 }

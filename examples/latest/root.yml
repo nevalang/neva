@@ -16,7 +16,9 @@ deps:
 
 nodes:
   const:
-    x: 42
+    x:
+      type: int
+      value: 42
   workers:
     read: readln
     print: println

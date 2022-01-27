@@ -98,3 +98,7 @@ func (c caster) castPortAddrs(addrs []runtime.PortAddr) []*runtimesdk.PortAddr {
 
 	return sdkAddrs
 }
+
+func NewCaster() caster {
+	return caster{}
+}
