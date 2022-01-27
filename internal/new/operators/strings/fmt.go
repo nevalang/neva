@@ -10,31 +10,32 @@ import (
 var ErrFmt = errors.New("fmt")
 
 func Fmt(io core.IO) error {
-	str, err := io.In.Port("str")
+	strPort, err := io.In.Port("str")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
-	args, err := io.In.ArrPort("args")
+	argPorts, err := io.In.ArrPort("args")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
-	out, err := io.Out.Port("out")
+	outPort, err := io.Out.Port("out")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
 	go func() {
-		for s := range str {
-			ss := make([]interface{}, len(args))
-			for _, ch := range args {
-				arg := <-ch
+		for msg := range strPort {
+			ss := make([]interface{}, 0, len(argPorts))
+
+			for i := range argPorts {
+				arg := <-argPorts[i]
 				ss = append(ss, arg)
 			}
 
-			out <- core.NewStrMsg(
-				fmt.Sprintf(s.Str(), ss...),
+			outPort <- core.NewStrMsg(
+				fmt.Sprintf(msg.Str(), ss...),
 			)
 		}
 	}()
