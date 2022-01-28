@@ -1,3 +1,6 @@
+meta:
+  compiler: 0.0.1
+
 io:
   in:
     run: sig
@@ -18,13 +21,13 @@ nodes:
   const:
     x:
       type: int
-      value: 42
+      int: 42
   workers:
     read: readln
     print: println
 
 net:
-  in.run:
+  in.run[0]:
     - read.in
   read.out:
     - print.s

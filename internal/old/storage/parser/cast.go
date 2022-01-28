@@ -35,7 +35,7 @@ func (c yamlCaster) fromConst(from map[string]program.Const) map[string]constant
 	return to
 }
 
-func (c yamlCaster) fromIO(io program.ComponentIO) (inports, outports) {
+func (c yamlCaster) fromIO(io program.IO) (inports, outports) {
 	in := inports{}
 	for k, v := range io.In {
 		in[k] = fmt.Sprintf("%v", v)
@@ -49,7 +49,7 @@ func (c yamlCaster) fromIO(io program.ComponentIO) (inports, outports) {
 	return in, out
 }
 
-func (c yamlCaster) fromDeps(from map[string]program.ComponentIO) deps {
+func (c yamlCaster) fromDeps(from map[string]program.IO) deps {
 	to := deps{}
 
 	for dep, depIO := range from {
@@ -85,8 +85,8 @@ func (c yamlCaster) to(mod module) (program.Module, error) {
 	}, nil
 }
 
-func (c yamlCaster) toIO(in map[string]string, out map[string]string) program.ComponentIO {
-	return program.ComponentIO{
+func (c yamlCaster) toIO(in map[string]string, out map[string]string) program.IO {
+	return program.IO{
 		In:  c.toPorts(ports(in)),
 		Out: c.toPorts(ports(out)),
 	}
@@ -112,12 +112,12 @@ func (c yamlCaster) toPorts(from map[string]string) program.Ports {
 	return to
 }
 
-func (c yamlCaster) toDeps(from deps) map[string]program.ComponentIO {
-	to := map[string]program.ComponentIO{}
+func (c yamlCaster) toDeps(from deps) map[string]program.IO {
+	to := map[string]program.IO{}
 
 	for name, pio := range from {
 		io := c.toIO(pio.In, pio.Out)
-		to[name] = program.ComponentIO{
+		to[name] = program.IO{
 			In:  io.In,
 			Out: io.Out,
 		}
@@ -209,7 +209,7 @@ const (
 	sigType  typeName = "sig"
 )
 
-func (p parser) toTypeName(name string) (program.DataType, error) {
+func (p parser) toTypeName(name string) (program.MsgType, error) {
 	switch typeName(name) {
 	case intType:
 		return program.TypeInt, nil

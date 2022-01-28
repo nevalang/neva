@@ -5,28 +5,28 @@ func NewOpsIO() map[OperatorRef]IO {
 		{Pkg: "math", Name: "mul"}: {
 			In: map[string]Port{
 				"in": {
-					Type:     ArrPort,
-					DataType: Int,
+					Type:     ArrPortType,
+					MsgType: IntMsgType,
 				},
 			},
 			Out: map[string]Port{
 				"out": {
-					Type:     NormPort,
-					DataType: Int,
+					Type:     NormPortType,
+					MsgType: IntMsgType,
 				},
 			},
 		},
 		{Pkg: "math", Name: "remainder"}: {
 			In: map[string]Port{
 				"in": {
-					Type:     ArrPort,
-					DataType: Int,
+					Type:     ArrPortType,
+					MsgType: IntMsgType,
 				},
 			},
 			Out: map[string]Port{
 				"out": {
-					Type:     NormPort,
-					DataType: Int,
+					Type:     NormPortType,
+					MsgType: IntMsgType,
 				},
 			},
 		},

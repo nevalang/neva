@@ -31,19 +31,24 @@ type (
 	}
 
 	Port struct {
-		Type     PortType
-		DataType DataType
+		Type    PortType
+		MsgType MsgType
 	}
 
 	PortType uint8
 
-	DataType uint8
+	MsgType uint8
 
 	Module struct {
-		IO          IO
-		DepsIO      map[string]IO
-		Nodes       ModuleNodes
-		Connections []Connection
+		IO     IO
+		DepsIO map[string]IO
+		Nodes  ModuleNodes
+		Net    []Connection
+		Meta   ModuleMeta
+	}
+
+	ModuleMeta struct {
+		WantCompilerVersion string
 	}
 
 	ModuleNodes struct {
@@ -52,8 +57,8 @@ type (
 	}
 
 	Connection struct {
-		from PortAddr
-		to   []PortAddr
+		From PortAddr
+		To   []PortAddr
 	}
 
 	PortAddr struct {
@@ -69,11 +74,11 @@ type (
 		Ref OperatorRef
 	}
 
-	Msg interface {
-		Int() int
-		Str() string
-		Bool() bool
-		Sig() struct{}
+	Msg struct {
+		Type      MsgType
+		IntValue  int
+		StrValue  string
+		BoolValue bool
 	}
 
 	Program struct {
@@ -93,15 +98,16 @@ const (
 )
 
 const (
-	NormPort PortType = iota + 1
-	ArrPort
+	NormPortType PortType = iota + 1
+	ArrPortType
 )
 
 const (
-	Int DataType = iota + 1
-	Str
-	Bool
-	Sig
+	UnknownMsgType MsgType = iota
+	IntMsgType
+	StrMsgType
+	BoolMsgType
+	SigMsgType
 )
 
 const (

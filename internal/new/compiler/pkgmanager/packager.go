@@ -76,6 +76,5 @@ type Manager struct {
 }
 
 func (p Manager) Pkg(path string) (compiler.Pkg, error) {
-	// if compilerVersion of dep != current return err
 	return compiler.Pkg{}, nil
 }

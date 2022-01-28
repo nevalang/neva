@@ -1,26 +1,6 @@
 {
 	"files": [
 		{
-			"path": "internal/new/compiler/translator/translator.go",
-			"bookmarks": [
-				{
-					"line": 17,
-					"column": 65,
-					"label": ""
-				}
-			]
-		},
-		{
-			"path": "internal/new/runtime/decoder/proto.go",
-			"bookmarks": [
-				{
-					"line": 27,
-					"column": 19,
-					"label": ""
-				}
-			]
-		},
-		{
 			"path": "internal/new/compiler/checker/checker.go",
 			"bookmarks": [
 				{
@@ -31,20 +11,10 @@
 			]
 		},
 		{
-			"path": "internal/new/compiler/parser/yml.go",
-			"bookmarks": [
-				{
-					"line": 0,
-					"column": 14,
-					"label": ""
-				}
-			]
-		},
-		{
 			"path": "internal/new/compiler/pkgmanager/packager.go",
 			"bookmarks": [
 				{
-					"line": 79,
+					"line": 78,
 					"column": 27,
 					"label": ""
 				}
@@ -56,6 +26,21 @@
 				{
 					"line": 10,
 					"column": 27,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "internal/new/compiler/parser/parser.go",
+			"bookmarks": [
+				{
+					"line": 39,
+					"column": 27,
+					"label": ""
+				},
+				{
+					"line": 40,
+					"column": 34,
 					"label": ""
 				}
 			]
