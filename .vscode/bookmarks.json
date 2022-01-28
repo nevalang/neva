@@ -11,36 +11,11 @@
 			]
 		},
 		{
-			"path": "internal/new/compiler/pkgmanager/packager.go",
-			"bookmarks": [
-				{
-					"line": 78,
-					"column": 27,
-					"label": ""
-				}
-			]
-		},
-		{
 			"path": "internal/new/compiler/generator/translator/translator.go",
 			"bookmarks": [
 				{
 					"line": 10,
 					"column": 27,
-					"label": ""
-				}
-			]
-		},
-		{
-			"path": "internal/new/compiler/parser/parser.go",
-			"bookmarks": [
-				{
-					"line": 39,
-					"column": 27,
-					"label": ""
-				},
-				{
-					"line": 40,
-					"column": 34,
 					"label": ""
 				}
 			]

@@ -9,14 +9,17 @@ import (
 
 type (
 	Caster interface {
-		Cast(Module) compiler.Module
+		Cast(Module) (compiler.Module, error)
 	}
 	Unmarshaler interface {
 		Unmarshal([]byte) (Module, error)
 	}
 )
 
-var ErrUnmarshaler = errors.New("unmarshaler")
+var (
+	ErrUnmarshaler = errors.New("unmarshaler")
+	ErrCaster      = errors.New("caster")
+)
 
 type parser struct {
 	unmarshaler Unmarshaler
@@ -31,7 +34,13 @@ func (p parser) Parse(mods map[string][]byte) (map[string]compiler.Module, error
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrUnmarshaler, err)
 		}
-		compilerMods[name] = p.caster.Cast(mod)
+
+		cmod, err := p.caster.Cast(mod)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrCaster, err)
+		}
+
+		compilerMods[name] = cmod
 	}
 
 	return compilerMods, nil
