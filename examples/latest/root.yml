@@ -3,7 +3,7 @@ meta:
 
 io:
   in:
-    run: sig
+    start: sig
 
 deps:
   readln:
@@ -27,7 +27,7 @@ nodes:
     print: println
 
 net:
-  in.run[0]:
+  in.start:
     - read.in
   read.out:
     - print.s

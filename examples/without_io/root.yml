@@ -1,6 +1,6 @@
 io:
   in:
-    run: sig
+    start: sig
 
 deps:
   readln:
@@ -20,7 +20,7 @@ nodes:
     p: println
 
 net:
-  in.run:
+  in.start:
     - r.in
   r.out:
     - p.in

@@ -14,8 +14,23 @@
 			"path": "internal/new/compiler/generator/translator/translator.go",
 			"bookmarks": [
 				{
-					"line": 10,
-					"column": 27,
+					"line": 56,
+					"column": 8,
+					"label": ""
+				},
+				{
+					"line": 66,
+					"column": 30,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "examples/latest/root.yml",
+			"bookmarks": [
+				{
+					"line": 29,
+					"column": 3,
 					"label": ""
 				}
 			]

@@ -509,7 +509,7 @@ func (m *Connection) GetTo() []*PortAddr {
 type PortAddr struct {
 	Node                 string   `protobuf:"bytes,1,opt,name=Node,proto3" json:"Node,omitempty"`
 	Port                 string   `protobuf:"bytes,2,opt,name=Port,proto3" json:"Port,omitempty"`
-	Slot                 uint32   `protobuf:"varint,3,opt,name=Slot,proto3" json:"Slot,omitempty"`
+	Idx                 uint32   `protobuf:"varint,3,opt,name=Slot,proto3" json:"Slot,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -564,7 +564,7 @@ func (m *PortAddr) GetPort() string {
 
 func (m *PortAddr) GetSlot() uint32 {
 	if m != nil {
-		return m.Slot
+		return m.Idx
 	}
 	return 0
 }
@@ -1084,8 +1084,8 @@ func (m *PortAddr) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if m.Slot != 0 {
-		i = encodeVarintRuntime(dAtA, i, uint64(m.Slot))
+	if m.Idx != 0 {
+		i = encodeVarintRuntime(dAtA, i, uint64(m.Idx))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1325,8 +1325,8 @@ func (m *PortAddr) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRuntime(uint64(l))
 	}
-	if m.Slot != 0 {
-		n += 1 + sovRuntime(uint64(m.Slot))
+	if m.Idx != 0 {
+		n += 1 + sovRuntime(uint64(m.Idx))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -2733,7 +2733,7 @@ func (m *PortAddr) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Slot", wireType)
 			}
-			m.Slot = 0
+			m.Idx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRuntime
@@ -2743,7 +2743,7 @@ func (m *PortAddr) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Slot |= uint32(b&0x7F) << shift
+				m.Idx |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

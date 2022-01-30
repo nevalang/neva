@@ -19,19 +19,19 @@ type (
 
 	Node struct {
 		Type        NodeType
-		IO          NodeIO
+		IO          IO
 		OperatorRef OperatorRef
 		Const       map[string]ConstValue
 	}
 
 	NodeType uint8
 
-	NodeIO struct {
-		In, Out map[string]PortMeta
+	IO struct {
+		In, Out map[string]Port
 	}
 
-	PortMeta struct {
-		Slots, Buf uint8
+	Port struct {
+		ArrSize, Buf uint8
 	}
 
 	OperatorRef struct {
@@ -56,7 +56,7 @@ const (
 )
 
 const (
-	ModuleNode NodeType = iota + 1
+	SimpleNode NodeType = iota + 1
 	OperatorNode
 	ConstNode
 )

@@ -12,7 +12,7 @@ type (
 		Decode([]byte) (Program, error)
 	}
 	PortGenerator interface {
-		Ports(NodeIO) core.IO
+		Ports(IO) core.IO
 	}
 	ConstSpawner interface {
 		Spawn(map[string]ConstValue, map[core.PortAddr]chan core.Msg) error
@@ -26,10 +26,12 @@ type (
 )
 
 var (
-	ErrProgDecoder  = errors.New("program decoder")
-	ErrOpSpawner    = errors.New("operator-node spawner")
-	ErrConstSpawner = errors.New("const-node spawner")
-	ErrNetConnector = errors.New("network connector")
+	ErrProgDecoder       = errors.New("program decoder")
+	ErrOpSpawner         = errors.New("operator-node spawner")
+	ErrConstSpawner      = errors.New("const-node spawner")
+	ErrNetConnector      = errors.New("network connector")
+	ErrStartNodeNotFound = errors.New("start node not found")
+	ErrStartPortNotFound = errors.New("start port not found")
 )
 
 type Runtime struct {
@@ -47,24 +49,33 @@ func (r Runtime) Run(raw []byte) error {
 	}
 
 	nodesIO := make(map[string]core.IO, len(prog.Nodes))
-	for nodeName, node := range prog.Nodes {
-		nodesIO[nodeName] = r.portGen.Ports(node.IO)
-
+	for name, node := range prog.Nodes {
+		nodesIO[name] = r.portGen.Ports(node.IO)
 		switch node.Type {
 		case OperatorNode:
-			if err := r.opSpawner.Spawn(node.OperatorRef, nodesIO[nodeName]); err != nil {
+			if err := r.opSpawner.Spawn(node.OperatorRef, nodesIO[name]); err != nil {
 				return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 			}
 		case ConstNode:
-			if err := r.constSpawner.Spawn(node.Const, nodesIO[nodeName].Out); err != nil {
+			if err := r.constSpawner.Spawn(node.Const, nodesIO[name].Out); err != nil {
 				return fmt.Errorf("%w: %v", ErrConstSpawner, err)
 			}
 		}
 	}
 
-	stop := make(chan error)
-	r.connector.Connect(prog.Connections, nodesIO, stop)
-	err = <-stop
+	startNode, ok := nodesIO[prog.StartPort.Node]
+	if !ok {
+		return fmt.Errorf("%w: %v", ErrStartNodeNotFound, err)
+	}
 
-	return fmt.Errorf("%w: %v", ErrNetConnector, err)
+	startPort, err := startNode.In.Port("start")
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrStartPortNotFound, err)
+	}
+
+	stopChan := make(chan error)
+	r.connector.Connect(prog.Connections, nodesIO, stopChan)
+	go func() { startPort <- core.NewSigMsg() }()
+
+	return fmt.Errorf("%w: %v", ErrNetConnector, <-stopChan)
 }

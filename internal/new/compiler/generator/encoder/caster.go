@@ -14,7 +14,7 @@ func (c caster) Cast(prog runtime.Program) (runtimesdk.Program, error) {
 		StartPort: &runtimesdk.PortAddr{
 			Node: prog.StartPort.Node,
 			Port: prog.StartPort.Port,
-			Slot: uint32(prog.StartPort.Idx),
+			Idx:  uint32(prog.StartPort.Idx),
 		},
 	}, nil
 }
@@ -40,12 +40,12 @@ func (c caster) castNodes(nodes map[string]runtime.Node) map[string]*runtimesdk.
 	return sdkNodes
 }
 
-func (c caster) castPorts(ports map[string]runtime.PortMeta) map[string]*runtimesdk.PortMeta {
+func (c caster) castPorts(ports map[string]runtime.Port) map[string]*runtimesdk.PortMeta {
 	sdkPorts := make(map[string]*runtimesdk.PortMeta, len(ports))
 
 	for name, port := range ports {
 		sdkPorts[name] = &runtimesdk.PortMeta{
-			Slots: uint32(port.Slots),
+			Slots: uint32(port.ArrSize),
 			Buf:   uint32(port.Buf),
 		}
 	}
@@ -85,7 +85,7 @@ func (c caster) castPortAddr(addr runtime.PortAddr) *runtimesdk.PortAddr {
 	return &runtimesdk.PortAddr{
 		Node: addr.Node,
 		Port: addr.Port,
-		Slot: uint32(addr.Idx),
+		Idx:  uint32(addr.Idx),
 	}
 }
 

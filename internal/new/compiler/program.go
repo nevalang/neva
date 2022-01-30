@@ -1,29 +1,27 @@
 package compiler
 
 type (
-	Pkg struct {
-		RootModule          string
-		Scope               map[string]ScopeRef
-		Imports             map[string]Component
-		WantCompilerVersion string
+	Program struct {
+		RootModule string
+		Scope      ProgramScope
 	}
 
-	Component struct {
-		Type        ComponentType
-		ModuleBytes []byte
-		OperatorRef OperatorRef
+	ProgramScope struct {
+		Modules   map[string]Module
+		Operators map[string]Operator
 	}
 
-	ScopeRef struct {
-		Type        ComponentType
-		ModuleName  string
-		OperatorRef OperatorRef
+	Module struct {
+		IO     IO
+		DepsIO map[string]IO
+		Nodes  ModuleNodes
+		Net    []Connection
+		Meta   ModuleMeta
 	}
 
-	ComponentType uint8
-
-	OperatorRef struct {
-		Pkg, Name string
+	Operator struct {
+		IO  IO
+		Ref OperatorRef
 	}
 
 	IO struct {
@@ -38,14 +36,6 @@ type (
 	PortType uint8
 
 	MsgType uint8
-
-	Module struct {
-		IO     IO
-		DepsIO map[string]IO
-		Nodes  ModuleNodes
-		Net    []Connection
-		Meta   ModuleMeta
-	}
 
 	ModuleMeta struct {
 		WantCompilerVersion string
@@ -69,11 +59,6 @@ type (
 
 	PortAddrType uint8
 
-	Operator struct {
-		IO  IO
-		Ref OperatorRef
-	}
-
 	Msg struct {
 		Type      MsgType
 		IntValue  int
@@ -81,14 +66,28 @@ type (
 		BoolValue bool
 	}
 
-	Program struct {
-		RootModule string
-		Scope      ProgramScope
+	Pkg struct {
+		RootModule          string
+		Scope               map[string]ImportRef
+		Imports             Imports
+		WantCompilerVersion string
 	}
 
-	ProgramScope struct {
-		Modules   map[string]Module
-		Operators map[string]Operator
+	Imports struct {
+		Modules   map[string][]byte
+		Operators map[string]OperatorRef
+	}
+
+	ImportRef struct {
+		Type        ComponentType
+		ModuleName  string
+		OperatorRef OperatorRef
+	}
+
+	ComponentType uint8
+
+	OperatorRef struct {
+		Pkg, Name string
 	}
 )
 
@@ -98,16 +97,16 @@ const (
 )
 
 const (
-	NormPortType PortType = iota + 1
-	ArrPortType
+	NormPort PortType = iota + 1
+	ArrPort
 )
 
 const (
-	UnknownMsgType MsgType = iota
-	IntMsgType
-	StrMsgType
-	BoolMsgType
-	SigMsgType
+	UnknownMsg MsgType = iota
+	IntMsg
+	StrMsg
+	BoolMsg
+	SigMsg
 )
 
 const (

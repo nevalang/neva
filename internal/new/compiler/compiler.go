@@ -58,12 +58,12 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 		return Program{}, fmt.Errorf("%w: %v", ErrPkgManager, err)
 	}
 
-	mods, err := c.parser.Parse(pkg.Modules)
+	mods, err := c.parser.Parse(pkg.Imports.Modules)
 	if err != nil {
 		return Program{}, fmt.Errorf("%w: %v", ErrModParser, err)
 	}
 
-	ops, err := c.Operators(pkg.Operators)
+	ops, err := c.operators(pkg.Imports.Operators)
 	if err != nil {
 		return Program{}, fmt.Errorf("operators: %w", err)
 	}
@@ -83,7 +83,7 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 	return prog, nil
 }
 
-func (c Compiler) Operators(refs map[string]OperatorRef) (map[string]Operator, error) {
+func (c Compiler) operators(refs map[string]OperatorRef) (map[string]Operator, error) {
 	ops := make(map[string]Operator, len(refs))
 
 	for name, ref := range refs {
