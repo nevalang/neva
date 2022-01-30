@@ -60,7 +60,7 @@ func (c Connector) stream(connection runtime.Connection, nodesIO map[string]core
 	}
 }
 
-func (c Connector) selectPort(addr runtime.PortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
+func (c Connector) selectPort(addr runtime.AbsPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
 	io, ok := nodesIO[addr.Node]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)

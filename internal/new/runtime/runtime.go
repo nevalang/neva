@@ -57,7 +57,7 @@ func (r Runtime) Run(raw []byte) error {
 				return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 			}
 		case ConstNode:
-			if err := r.constSpawner.Spawn(node.Const, nodesIO[name].Out); err != nil {
+			if err := r.constSpawner.Spawn(node.ConstOut, nodesIO[name].Out); err != nil {
 				return fmt.Errorf("%w: %v", ErrConstSpawner, err)
 			}
 		}

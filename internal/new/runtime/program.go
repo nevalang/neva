@@ -4,34 +4,31 @@ type (
 	Program struct {
 		Nodes       map[string]Node
 		Connections []Connection
-		StartPort   PortAddr
-	}
-
-	Connection struct {
-		From PortAddr
-		To   []PortAddr
-	}
-
-	PortAddr struct {
-		Node, Port string
-		Idx        uint8
+		StartPort   AbsPortAddr
 	}
 
 	Node struct {
 		Type        NodeType
 		IO          IO
 		OperatorRef OperatorRef
-		Const       map[string]ConstValue
+		ConstOut    map[string]ConstValue
+	}
+
+	Connection struct {
+		From AbsPortAddr
+		To   []AbsPortAddr
+	}
+
+	AbsPortAddr struct {
+		Node string
+		Port string
+		Idx  uint8
 	}
 
 	NodeType uint8
 
 	IO struct {
-		In, Out map[string]Port
-	}
-
-	Port struct {
-		ArrSize, Buf uint8
+		In, Out map[RelPortAddr]Port
 	}
 
 	OperatorRef struct {
@@ -43,6 +40,15 @@ type (
 		Int  int
 		Str  string
 		Bool bool
+	}
+
+	RelPortAddr struct {
+		Port string
+		Idx  uint8
+	}
+
+	Port struct {
+		ArrSize, Buf uint8
 	}
 
 	MsgType uint8

@@ -7,7 +7,7 @@ option go_package = './;runtimesdk';
 message Program {
 	map<string, Node> nodes = 1;
 	repeated Connection connections = 2;
-	PortAddr start_port = 3;
+	AbsPortAddr start_port = 3;
 }
 
 message Node {
@@ -18,13 +18,18 @@ message Node {
 }
 
 message NodeIO {
-    map<string, PortMeta> in = 1;
-	map<string, PortMeta> out = 2;
+    repeated Port in = 1;
+	repeated Port out = 2;
+}
+
+message Port {
+	RelPortAddr addr = 1; 
+	PortMeta meta = 2;
 }
 
 message PortMeta {
-	uint32 Slots = 1;
-	uint32 Buf   = 2;
+	uint32 arr_size = 1;
+	uint32 buf   = 2;
 }
 
 enum NodeType {
@@ -48,17 +53,22 @@ enum ValueType {
 }
 
 message OpRef  {
-	string Pkg = 1;
-    string Name =2;
+	string pkg = 1;
+    string name =2;
 }
 
 message Connection  {
-	PortAddr from = 1;
-	repeated PortAddr to = 2;
+	AbsPortAddr from = 1;
+	repeated AbsPortAddr to = 2;
 }
 
-message PortAddr {
+message RelPortAddr {
+	string port = 1;
+	uint32 idx  = 2;
+}
+
+message AbsPortAddr {
 	string Node = 1;
 	string Port = 2;
-	uint32 Slot  = 3;
+	uint32 Idx  = 3;
 }

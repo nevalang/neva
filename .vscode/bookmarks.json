@@ -14,12 +14,12 @@
 			"path": "internal/new/compiler/generator/translator/translator.go",
 			"bookmarks": [
 				{
-					"line": 56,
+					"line": 60,
 					"column": 8,
 					"label": ""
 				},
 				{
-					"line": 66,
+					"line": 92,
 					"column": 30,
 					"label": ""
 				}

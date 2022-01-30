@@ -25,7 +25,7 @@ type (
 	}
 
 	IO struct {
-		In, Out map[string]Port
+		In, Out map[RelPortAddr]Port
 	}
 
 	Port struct {
@@ -47,11 +47,17 @@ type (
 	}
 
 	Connection struct {
-		From PortAddr
-		To   []PortAddr
+		From AbsPortAddr
+		To   []AbsPortAddr
 	}
 
-	PortAddr struct {
+	RelPortAddr struct {
+		Type PortAddrType
+		Port string
+		Idx  uint8
+	}
+
+	AbsPortAddr struct {
 		Type       PortAddrType
 		Node, Port string
 		Idx        uint8
