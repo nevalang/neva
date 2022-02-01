@@ -14,22 +14,10 @@ func (p PortGen) Ports(io runtime.IO) core.IO {
 	}
 }
 
-func (PortGen) ports(ports map[string]runtime.Port) map[core.PortAddr]chan core.Msg {
-	res := make(map[core.PortAddr]chan core.Msg)
-
-	for portName, meta := range ports {
-		addr := core.PortAddr{Port: portName}
-
-		if meta.ArrSize == 0 {
-			res[addr] = make(chan core.Msg, meta.Buf)
-			continue
-		}
-
-		for idx := uint8(0); idx < meta.ArrSize; idx++ {
-			addr.Idx = idx
-			res[addr] = make(chan core.Msg, meta.Buf)
-		}
+func (PortGen) ports(ports map[runtime.RelPortAddr]runtime.Port) map[core.PortAddr]chan core.Msg {
+	corePorts := make(map[core.PortAddr]chan core.Msg)
+	for addr, port := range ports {
+		corePorts[core.PortAddr(addr)] = make(chan core.Msg, port.Buf)
 	}
-
-	return res
+	return corePorts
 }

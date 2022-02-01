@@ -1,3 +1,7 @@
+# Cancelation
+
+Grasefull shutdown of all program (via context?)
+
 # Cons nodes rewriting
 
 There should be separate node for every const.
@@ -19,4 +23,3 @@ io:
 # Unused output ports
 
 Unused outports should be connected to special `/dev/null` analog (Eraser?)
-

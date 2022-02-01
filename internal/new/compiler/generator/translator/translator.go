@@ -42,15 +42,19 @@ func (t Translator) translate(
 	op, ok := scope.Operators[component]
 	if ok {
 		inportsNode := runtime.Node{
-			Type:        runtime.SimpleNode,
-			IO:          runtime.IO{Out: t.ports(nodeName, parentMod.Net, op.IO.In)},
-			OperatorRef: runtime.OperatorRef(op.Ref),
+			Type: runtime.PureNode,
+			IO: runtime.IO{
+				Out: t.translatePorts(nodeName, parentMod.Net, op.IO.In),
+			},
+			OpRef: runtime.OperatorRef(op.Ref),
 		}
 
 		outportsNode := runtime.Node{
-			Type:        runtime.SimpleNode,
-			IO:          runtime.IO{In: t.ports(nodeName, parentMod.Net, op.IO.In)},
-			OperatorRef: runtime.OperatorRef(op.Ref),
+			Type: runtime.PureNode,
+			IO: runtime.IO{
+				In: t.translatePorts(nodeName, parentMod.Net, op.IO.In),
+			},
+			OpRef: runtime.OperatorRef(op.Ref),
 		}
 
 		return map[string]runtime.Node{
@@ -68,28 +72,45 @@ func (t Translator) translate(
 	return nil, nil, nil
 }
 
-func (t Translator) ports(
-	nodeName string,
-	parentNet []compiler.Connection,
-	ports map[compiler.RelPortAddr]compiler.Port,
+func (t Translator) translatePorts(
+	node string,
+	net []compiler.Connection,
+	ports map[string]compiler.Port,
 ) map[runtime.RelPortAddr]runtime.Port {
 	rports := make(map[runtime.RelPortAddr]runtime.Port, len(ports))
 
-	for addr := range ports {
-		rports[runtime.RelPortAddr{
-			Port: addr.Port,
-			Idx:  addr.Idx,
-		}] = t.port(parentNet, compiler.AbsPortAddr{
-			Type: addr.Type,
-			Node: nodeName,
-			Port: addr.Port,
-			Idx:  addr.Idx,
-		})
+	for portName, port := range ports {
+		relAddr := runtime.RelPortAddr{Port: portName}
+
+		pp := t.ports(node, portName, net)
+
+		// rports[runtime.RelPortAddr{
+		// 	Port: portName,
+		// 	Idx:  portName.Idx,
+		// }] = t.port(net, compiler.AbsPortAddr{
+		// 	Type: portName.Type,
+		// 	Node: node,
+		// 	Port: portName.Port,
+		// 	Idx:  portName.Idx,
+		// })
 	}
 
 	return rports
 }
 
-func (t Translator) port(connections []compiler.Connection, addr compiler.AbsPortAddr) runtime.Port {
-	return runtime.Port{} // TODO
+func (t Translator) ports(node, port string, net []compiler.Connection) map[runtime.RelPortAddr]runtime.Port {
+	incoming := 0
+
+	for _, connection := range net {
+		for _, to := range connection.To {
+			if to == addr {
+				incoming++
+			}
+		}
+	}
+
+	return runtime.Port{
+		ArrSize: 0,
+		Buf:     0,
+	}
 }

@@ -25,7 +25,7 @@ type (
 	}
 
 	IO struct {
-		In, Out map[RelPortAddr]Port
+		In, Out map[string]Port
 	}
 
 	Port struct {

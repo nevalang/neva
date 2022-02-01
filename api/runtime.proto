@@ -23,13 +23,9 @@ message NodeIO {
 }
 
 message Port {
-	RelPortAddr addr = 1; 
-	PortMeta meta = 2;
-}
-
-message PortMeta {
-	uint32 arr_size = 1;
-	uint32 buf   = 2;
+	string name = 1;
+	uint32 idx  = 2;
+	uint32 buf = 3;
 }
 
 enum NodeType {
@@ -60,11 +56,6 @@ message OpRef  {
 message Connection  {
 	AbsPortAddr from = 1;
 	repeated AbsPortAddr to = 2;
-}
-
-message RelPortAddr {
-	string port = 1;
-	uint32 idx  = 2;
 }
 
 message AbsPortAddr {

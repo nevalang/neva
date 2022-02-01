@@ -30,10 +30,10 @@ func (c caster) castNodes(nodes map[string]runtime.Node) map[string]*runtimesdk.
 			},
 			Type: runtimesdk.NodeType(node.Type),
 			OpRef: &runtimesdk.OpRef{
-				Pkg:  node.OperatorRef.Pkg,
-				Name: node.OperatorRef.Name,
+				Pkg:  node.OpRef.Pkg,
+				Name: node.OpRef.Name,
 			},
-			Const: c.castConst(node.ConstOut),
+			Const: c.castConst(node.ConstOuts),
 		}
 	}
 
@@ -50,8 +50,7 @@ func (c caster) castPorts(ports map[runtime.RelPortAddr]runtime.Port) []*runtime
 				Idx:  uint32(addr.Idx),
 			},
 			Meta: &runtimesdk.PortMeta{
-				ArrSize: uint32(port.ArrSize),
-				Buf:     uint32(port.Buf),
+				Buf: uint32(port.Buf),
 			},
 		})
 	}
@@ -59,11 +58,11 @@ func (c caster) castPorts(ports map[runtime.RelPortAddr]runtime.Port) []*runtime
 	return nil
 }
 
-func (c caster) castConst(cnst map[string]runtime.ConstValue) map[string]*runtimesdk.ConstValue {
-	sdkConst := make(map[string]*runtimesdk.ConstValue, len(cnst))
+func (c caster) castConst(messages map[runtime.RelPortAddr]runtime.ConstMsg) map[string]*runtimesdk.ConstValue {
+	sdkConst := make(map[runtime.RelPortAddr]*runtimesdk.ConstValue, len(messages))
 
-	for name, value := range cnst {
-		sdkConst[name] = &runtimesdk.ConstValue{
+	for addr, value := range messages {
+		sdkConst[addr] = &runtimesdk.ConstValue{
 			Type:      runtimesdk.ValueType(value.Type),
 			IntValue:  int64(value.Int),
 			StrValue:  value.Str,

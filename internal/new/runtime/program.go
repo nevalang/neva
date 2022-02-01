@@ -8,10 +8,10 @@ type (
 	}
 
 	Node struct {
-		Type        NodeType
-		IO          IO
-		OperatorRef OperatorRef
-		ConstOut    map[string]ConstValue
+		Type      NodeType
+		IO        IO
+		OpRef     OperatorRef
+		ConstOuts map[RelPortAddr]ConstMsg
 	}
 
 	Connection struct {
@@ -20,9 +20,8 @@ type (
 	}
 
 	AbsPortAddr struct {
-		Node string
-		Port string
-		Idx  uint8
+		Node, Port string
+		Idx        uint8
 	}
 
 	NodeType uint8
@@ -35,7 +34,7 @@ type (
 		Pkg, Name string
 	}
 
-	ConstValue struct {
+	ConstMsg struct {
 		Type MsgType
 		Int  int
 		Str  string
@@ -48,7 +47,7 @@ type (
 	}
 
 	Port struct {
-		ArrSize, Buf uint8
+		Buf uint8
 	}
 
 	MsgType uint8
@@ -62,7 +61,7 @@ const (
 )
 
 const (
-	SimpleNode NodeType = iota + 1
+	PureNode NodeType = iota + 1
 	OperatorNode
 	ConstNode
 )

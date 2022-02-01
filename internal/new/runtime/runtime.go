@@ -15,7 +15,7 @@ type (
 		Ports(IO) core.IO
 	}
 	ConstSpawner interface {
-		Spawn(map[string]ConstValue, map[core.PortAddr]chan core.Msg) error
+		Spawn(map[RelPortAddr]ConstMsg, map[core.PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
 		Spawn(OperatorRef, core.IO) error
@@ -53,11 +53,11 @@ func (r Runtime) Run(raw []byte) error {
 		nodesIO[name] = r.portGen.Ports(node.IO)
 		switch node.Type {
 		case OperatorNode:
-			if err := r.opSpawner.Spawn(node.OperatorRef, nodesIO[name]); err != nil {
+			if err := r.opSpawner.Spawn(node.OpRef, nodesIO[name]); err != nil {
 				return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 			}
 		case ConstNode:
-			if err := r.constSpawner.Spawn(node.ConstOut, nodesIO[name].Out); err != nil {
+			if err := r.constSpawner.Spawn(node.ConstOuts, nodesIO[name].Out); err != nil {
 				return fmt.Errorf("%w: %v", ErrConstSpawner, err)
 			}
 		}
