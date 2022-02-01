@@ -11,16 +11,6 @@
 			]
 		},
 		{
-			"path": "internal/new/compiler/generator/translator/translator.go",
-			"bookmarks": [
-				{
-					"line": 64,
-					"column": 8,
-					"label": ""
-				}
-			]
-		},
-		{
 			"path": "examples/latest/root.yml",
 			"bookmarks": [
 				{

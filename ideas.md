@@ -1,3 +1,7 @@
+# The flatter the faster
+
+Optimize runtime structures including proto?
+
 # Memory nodes
 
 Вопрос - можно ли изменять `memory`?

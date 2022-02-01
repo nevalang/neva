@@ -165,8 +165,8 @@ func (c caster) castPortAddrs(
 	deps map[string]compiler.IO,
 	nodes compiler.ModuleNodes,
 	addrs []string,
-) ([]compiler.AbsPortAddr, error) {
-	caddrs := make([]compiler.AbsPortAddr, 0, len(addrs))
+) ([]compiler.PortAddr, error) {
+	caddrs := make([]compiler.PortAddr, 0, len(addrs))
 
 	for _, addr := range addrs {
 		caddr, err := c.castPortAddr(isOutGoing, io, deps, nodes, addr)
@@ -186,10 +186,10 @@ func (c caster) castPortAddr(
 	deps map[string]compiler.IO,
 	nodes compiler.ModuleNodes,
 	addr string,
-) (compiler.AbsPortAddr, error) {
+) (compiler.PortAddr, error) {
 	parts := strings.Split(addr, ".")
 	if len(parts) != 2 {
-		return compiler.AbsPortAddr{}, fmt.Errorf("%w: %s", ErrPortAddrParts, addr)
+		return compiler.PortAddr{}, fmt.Errorf("%w: %s", ErrPortAddrParts, addr)
 	}
 
 	node := parts[0]
@@ -197,7 +197,7 @@ func (c caster) castPortAddr(
 
 	portType, err := c.portType(isOutGoing, io, deps, nodes, node, port)
 	if err != nil {
-		return compiler.AbsPortAddr{}, fmt.Errorf("%w: %v", ErrPortType, addr)
+		return compiler.PortAddr{}, fmt.Errorf("%w: %v", ErrPortType, addr)
 	}
 
 	typ := compiler.NormPortAddr
@@ -207,14 +207,14 @@ func (c caster) castPortAddr(
 
 	portName, portIdx, ok := c.splitPort(port)
 	if !ok {
-		return compiler.AbsPortAddr{
+		return compiler.PortAddr{
 			Type: typ,
 			Node: node,
 			Port: port,
 		}, nil
 	}
 
-	return compiler.AbsPortAddr{
+	return compiler.PortAddr{
 		Type: compiler.NormPortAddr,
 		Node: node,
 		Port: portName,

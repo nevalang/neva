@@ -58,22 +58,19 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 		return Program{}, fmt.Errorf("%w: %v", ErrPkgManager, err)
 	}
 
-	mods, err := c.parser.Parse(pkg.Imports.Modules)
-	if err != nil {
-		return Program{}, fmt.Errorf("%w: %v", ErrModParser, err)
-	}
-
 	ops, err := c.operators(pkg.Imports.Operators)
 	if err != nil {
 		return Program{}, fmt.Errorf("operators: %w", err)
 	}
 
+	mods, err := c.parser.Parse(pkg.Imports.Modules)
+	if err != nil {
+		return Program{}, fmt.Errorf("%w: %v", ErrModParser, err)
+	}
+
 	prog := Program{
 		RootModule: pkg.RootModule,
-		Scope: ProgramScope{
-			Modules:   mods,
-			Operators: ops,
-		},
+		Scope:      c.components(ops, mods),
 	}
 
 	if err := c.checker.Check(prog); err != nil {
@@ -81,6 +78,17 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 	}
 
 	return prog, nil
+}
+
+func (Compiler) components(ops map[string]Operator, mods map[string]Module) map[string]Component {
+	components := make(map[string]Component, len(ops)+len(mods))
+	for name, op := range ops {
+		components[name] = Component{Type: OperatorComponent, Operator: op}
+	}
+	for name, mod := range mods {
+		components[name] = Component{Type: OperatorComponent, Module: mod}
+	}
+	return components
 }
 
 func (c Compiler) operators(refs map[string]OperatorRef) (map[string]Operator, error) {

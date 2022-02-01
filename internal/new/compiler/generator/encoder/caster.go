@@ -45,13 +45,9 @@ func (c caster) castPorts(ports map[runtime.RelPortAddr]runtime.Port) []*runtime
 
 	for addr, port := range ports {
 		sdkPorts = append(sdkPorts, &runtimesdk.Port{
-			Addr: &runtimesdk.RelPortAddr{
-				Port: addr.Port,
-				Idx:  uint32(addr.Idx),
-			},
-			Meta: &runtimesdk.PortMeta{
-				Buf: uint32(port.Buf),
-			},
+			Name: addr.Port,
+			Idx:  uint32(addr.Idx),
+			Buf:  uint32(port.Buf),
 		})
 	}
 

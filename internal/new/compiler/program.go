@@ -3,7 +3,13 @@ package compiler
 type (
 	Program struct {
 		RootModule string
-		Scope      ProgramScope
+		Scope      map[string]Component
+	}
+
+	Component struct {
+		Type     ComponentType
+		Module   Module
+		Operator Operator
 	}
 
 	ProgramScope struct {
@@ -47,17 +53,11 @@ type (
 	}
 
 	Connection struct {
-		From AbsPortAddr
-		To   []AbsPortAddr
+		From PortAddr
+		To   []PortAddr
 	}
 
-	RelPortAddr struct {
-		Type PortAddrType
-		Port string
-		Idx  uint8
-	}
-
-	AbsPortAddr struct {
+	PortAddr struct {
 		Type       PortAddrType
 		Node, Port string
 		Idx        uint8
