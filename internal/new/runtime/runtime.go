@@ -48,9 +48,19 @@ func (r Runtime) Run(raw []byte) error {
 		return fmt.Errorf("%w: %v", ErrProgDecoder, err)
 	}
 
+	if err := r.run(prog); err != nil {
+		return fmt.Errorf("run: %w", err)
+	}
+
+	return nil
+}
+
+func (r Runtime) run(prog Program) error {
 	nodesIO := make(map[string]core.IO, len(prog.Nodes))
+
 	for name, node := range prog.Nodes {
 		nodesIO[name] = r.portGen.Ports(node.IO)
+
 		switch node.Type {
 		case OperatorNode:
 			if err := r.opSpawner.Spawn(node.OpRef, nodesIO[name]); err != nil {
@@ -65,7 +75,7 @@ func (r Runtime) Run(raw []byte) error {
 
 	startNode, ok := nodesIO[prog.StartPort.Node]
 	if !ok {
-		return fmt.Errorf("%w: %v", ErrStartNodeNotFound, err)
+		return fmt.Errorf("%w: %s", ErrStartNodeNotFound, prog.StartPort.Node)
 	}
 
 	startPort, err := startNode.In.Port("start")

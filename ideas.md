@@ -1,3 +1,10 @@
+# Gradual typing
+
+If component `A` needs struct with `X` field
+It can take struct with `X, Y` fields
+
+--- Only if we need structs at all ---
+
 # The flatter the faster
 
 Optimize runtime structures including proto?
@@ -133,7 +140,7 @@ get env[deps.plus]
 
 ```
 
-ЭВРИКА!!! (Уже не уверен....)
+ЭВРИКА!!! (UPD: Уже не уверен....)
 
 ```
 Меня только что осенило, что парадокс "как быть с аррай-инпортами корневых модулей?" наконец-то разрешён.

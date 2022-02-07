@@ -16,8 +16,10 @@ func (p PortGen) Ports(io runtime.IO) core.IO {
 
 func (PortGen) ports(ports map[runtime.RelPortAddr]runtime.Port) map[core.PortAddr]chan core.Msg {
 	corePorts := make(map[core.PortAddr]chan core.Msg)
+
 	for addr, port := range ports {
 		corePorts[core.PortAddr(addr)] = make(chan core.Msg, port.Buf)
 	}
+
 	return corePorts
 }

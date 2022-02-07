@@ -10,7 +10,7 @@ type (
 	Node struct {
 		Type      NodeType
 		IO        IO
-		OpRef     OperatorRef
+		OpRef     OperatorRef // FIXME? don't mix components with nodes
 		ConstOuts map[RelPortAddr]ConstMsg
 	}
 

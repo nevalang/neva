@@ -6,73 +6,66 @@ import (
 
 	"github.com/emil14/neva/internal/new/core"
 	"github.com/emil14/neva/internal/new/runtime"
+	"github.com/emil14/neva/internal/pkg/utils"
 )
 
 type (
 	Interceptor interface {
-		Event(EventType, runtime.Connection, core.Msg) core.Msg
+		AfterSend(runtime.Connection, core.Msg) core.Msg
+		BeforeReceive(from, to runtime.AbsPortAddr, msg core.Msg) core.Msg
 	}
-	EventType uint8
+
+	Mapper interface {
+		Net(map[string]core.IO, []runtime.Connection) ([]Connection, error)
+	}
+
+	Connection struct {
+		original runtime.Connection
+		from     chan core.Msg
+		to       []chan core.Msg
+	}
 )
 
-const (
-	AfterSend EventType = iota + 1
-	BeforeReceive
-)
-
-var (
-	ErrSelectPort   = errors.New("select port")
-	ErrNodeNotFound = errors.New("node not found by addr")
-	ErrPortNotFound = errors.New("port not found by addr")
-)
+var ErrMapper = errors.New("mapper")
 
 type Connector struct {
 	interceptor Interceptor
+	mapper      Mapper
 }
 
-func (c Connector) Connect(cc []runtime.Connection, nodesIO map[string]core.IO, stop chan<- error) {
-	for _, conn := range cc {
-		go c.stream(conn, nodesIO, stop)
-	}
-}
-
-func (c Connector) stream(connection runtime.Connection, nodesIO map[string]core.IO, stop chan<- error) {
-	from, err := c.selectPort(connection.From, nodesIO)
+func (c Connector) Connect(nodesIO map[string]core.IO, net []runtime.Connection) error {
+	connections, err := c.mapper.Net(nodesIO, net)
 	if err != nil {
-		stop <- fmt.Errorf("%w: %v", ErrSelectPort, err)
-		return
+		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
 
-	for msg := range from {
-		msg = c.interceptor.Event(AfterSend, connection, msg)
+	for i := range connections {
+		go c.stream(connections[i], nodesIO)
+	}
 
-		for i := range connection.To {
-			to, err := c.selectPort(connection.To[i], nodesIO)
-			if err != nil {
-				stop <- fmt.Errorf("%w: %v", ErrSelectPort, err)
-				return
-			}
+	return nil
+}
+
+func (c Connector) stream(connection Connection, nodesIO map[string]core.IO) {
+	for msg := range connection.from {
+		msg = c.interceptor.AfterSend(connection.original, msg)
+
+		for i := range connection.to {
+			toAddr := connection.original.To[i]
+			toPort := connection.to[i]
 
 			go func(m core.Msg) {
-				to <- c.interceptor.Event(BeforeReceive, connection, m)
+				toPort <- c.interceptor.BeforeReceive(connection.original.From, toAddr, m)
 			}(msg)
 		}
 	}
 }
 
-func (c Connector) selectPort(addr runtime.AbsPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
-	io, ok := nodesIO[addr.Node]
-	if !ok {
-		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)
-	}
+func MustNew(i Interceptor) Connector {
+	utils.NilArgsFatal(i)
 
-	port, ok := io.Out[core.PortAddr{
-		Port: addr.Port,
-		Idx:  addr.Idx,
-	}]
-	if !ok {
-		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
+	return Connector{
+		interceptor: i,
+		mapper:      mapper{},
 	}
-
-	return port, nil
 }
