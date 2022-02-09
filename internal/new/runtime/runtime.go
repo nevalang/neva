@@ -12,13 +12,13 @@ type (
 		Decode([]byte) (Program, error)
 	}
 	PortGenerator interface {
-		Ports(IO) core.IO
+		Ports(NodeIO) core.IO
 	}
 	ConstSpawner interface {
 		Spawn(map[RelPortAddr]ConstMsg, map[core.PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
-		Spawn(OperatorRef, core.IO) error
+		Spawn(OpRef, core.IO) error
 	}
 	NetworkConnector interface {
 		Connect([]Connection, map[string]core.IO, chan<- error)

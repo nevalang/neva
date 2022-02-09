@@ -7,7 +7,7 @@ import (
 
 type PortGen struct{}
 
-func (p PortGen) Ports(io runtime.IO) core.IO {
+func (p PortGen) Ports(io runtime.NodeIO) core.IO {
 	return core.IO{
 		In:  p.ports(io.In),
 		Out: p.ports(io.Out),

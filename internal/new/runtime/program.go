@@ -9,8 +9,8 @@ type (
 
 	Node struct {
 		Type      NodeType
-		IO        IO
-		OpRef     OperatorRef // FIXME? don't mix components with nodes
+		IO        NodeIO
+		OpRef     OpRef
 		ConstOuts map[RelPortAddr]ConstMsg
 	}
 
@@ -26,11 +26,11 @@ type (
 
 	NodeType uint8
 
-	IO struct {
+	NodeIO struct {
 		In, Out map[RelPortAddr]Port
 	}
 
-	OperatorRef struct {
+	OpRef struct {
 		Pkg, Name string
 	}
 

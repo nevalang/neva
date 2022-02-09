@@ -51,8 +51,8 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		if len(curItem.component.Module.Nodes.Const) != 0 {
 			constNode := runtime.Node{
 				Type:      runtime.ConstNode,
-				IO:        runtime.IO{},
-				OpRef:     runtime.OperatorRef{},
+				IO:        runtime.NodeIO{},
+				OpRef:     runtime.OpRef{},
 				ConstOuts: map[runtime.RelPortAddr]runtime.ConstMsg{},
 			}
 			for name, value := range curItem.component.Module.Nodes.Const {
@@ -80,7 +80,7 @@ func (t Translator) createIONodes(item QueueItem) (in runtime.Node, out runtime.
 
 	inPortsNode := runtime.Node{
 		Type: runtime.PureNode,
-		IO: runtime.IO{
+		IO: runtime.NodeIO{
 			Out: map[runtime.RelPortAddr]runtime.Port{},
 		},
 	}
