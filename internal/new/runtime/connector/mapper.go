@@ -44,8 +44,8 @@ func (m mapper) Net(nodesIO map[string]core.IO, net []runtime.Connection) ([]Con
 	return result, nil
 }
 
-func (m mapper) inport(addr runtime.AbsPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
-	io, ok := nodesIO[addr.Node]
+func (m mapper) inport(addr runtime.FullPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
+	io, ok := nodesIO[addr.Path]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)
 	}
@@ -58,8 +58,8 @@ func (m mapper) inport(addr runtime.AbsPortAddr, nodesIO map[string]core.IO) (ch
 	return port, nil
 }
 
-func (m mapper) outport(addr runtime.AbsPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
-	io, ok := nodesIO[addr.Node]
+func (m mapper) outport(addr runtime.FullPortAddr, nodesIO map[string]core.IO) (chan core.Msg, error) {
+	io, ok := nodesIO[addr.Path]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrNodeNotFound, addr)
 	}

@@ -7,14 +7,14 @@ import (
 
 type PortGen struct{}
 
-func (p PortGen) Ports(io runtime.NodeIO) core.IO {
+func (p PortGen) Ports(io runtime.OperatorIO) core.IO {
 	return core.IO{
 		In:  p.ports(io.In),
 		Out: p.ports(io.Out),
 	}
 }
 
-func (PortGen) ports(ports map[runtime.RelPortAddr]runtime.Port) map[core.PortAddr]chan core.Msg {
+func (PortGen) ports(ports map[runtime.PortAddr]runtime.Port) map[core.PortAddr]chan core.Msg {
 	corePorts := make(map[core.PortAddr]chan core.Msg)
 
 	for addr, port := range ports {

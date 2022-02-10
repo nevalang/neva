@@ -14,14 +14,14 @@ var (
 )
 
 type Repo interface {
-	Operator(ref runtime.OpRef) (func(core.IO) error, error)
+	Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
 }
 
 type Spawner struct {
 	repo Repo
 }
 
-func (s Spawner) Spawn(ref runtime.OpRef, io core.IO) error {
+func (s Spawner) Spawn(ref runtime.OperatorRef, io core.IO) error {
 	op, err := s.repo.Operator(ref)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrRepo, err)

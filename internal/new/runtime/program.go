@@ -2,36 +2,35 @@ package runtime
 
 type (
 	Program struct {
-		Nodes       map[string]Node
+		Ports       map[FullPortAddr]Port
 		Connections []Connection
-		StartPort   AbsPortAddr
+		Effects     Effects
+		StartPort   FullPortAddr
 	}
 
-	Node struct {
-		Type      NodeType
-		IO        NodeIO
-		OpRef     OpRef
-		ConstOuts map[RelPortAddr]ConstMsg
+	FullPortAddr struct {
+		Path string
+		Port string
+		Idx  uint8
+	}
+
+	Port struct {
+		Buf uint8
 	}
 
 	Connection struct {
-		From AbsPortAddr
-		To   []AbsPortAddr
+		From FullPortAddr
+		To   []FullPortAddr
 	}
 
-	AbsPortAddr struct {
-		Node, Port string
-		Idx        uint8
+	Effects struct {
+		Ops   []Operator
+		Const map[FullPortAddr]ConstMsg
 	}
 
-	NodeType uint8
-
-	NodeIO struct {
-		In, Out map[RelPortAddr]Port
-	}
-
-	OpRef struct {
-		Pkg, Name string
+	Operator struct {
+		Ref OperatorRef
+		IO  OperatorIO
 	}
 
 	ConstMsg struct {
@@ -41,13 +40,12 @@ type (
 		Bool bool
 	}
 
-	RelPortAddr struct {
-		Port string
-		Idx  uint8
+	OperatorRef struct {
+		Pkg, Name string
 	}
 
-	Port struct {
-		Buf uint8
+	OperatorIO struct {
+		In, Out []FullPortAddr
 	}
 
 	MsgType uint8
@@ -58,10 +56,4 @@ const (
 	StrMsg
 	BoolMsg
 	SigMsg
-)
-
-const (
-	PureNode NodeType = iota + 1
-	OperatorNode
-	ConstNode
 )

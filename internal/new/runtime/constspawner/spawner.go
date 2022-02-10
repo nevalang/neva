@@ -11,7 +11,7 @@ type Spawner struct{}
 
 var ErrPortNotFound = errors.New("port not found")
 
-func (c Spawner) Spawn(messages map[runtime.RelPortAddr]runtime.ConstMsg, ports map[core.PortAddr]chan core.Msg) error {
+func (c Spawner) Spawn(messages map[runtime.PortAddr]runtime.ConstMsg, ports map[core.PortAddr]chan core.Msg) error {
 	for addr := range messages {
 		port, ok := ports[core.PortAddr(addr)]
 		if !ok {

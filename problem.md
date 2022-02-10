@@ -28,11 +28,10 @@
 NOTE: `root` prefix may be omitted
 
 ```yaml
-const:
-  root.z:
+const: # map[addr]constMsg
+  root.const.z[0]:
     type: int
     int: 42
-    portRef: root.const.z[0]
 ops:
   - ref: math.mul
     in: [root.mul.in.x[0]]
@@ -48,6 +47,7 @@ net:
     to: [mul.in.a[0]]
   - from: mul.out.b[0]
     to: [mul.out.b[0]]
+startPort: root.in.x[0] # it's an error but you get the idea
 ```
 
 - бежим по портам и наполняем мапу адресов на каналы
@@ -57,5 +57,3 @@ net:
 - шлём сигнал в порт рута
 
 (в этой схеме есть ошибка - у рута нет сигнал-порта, но кажется эту деталь можно опустить)
-
-

@@ -5,21 +5,10 @@ package runtime;
 option go_package = './;runtimesdk';
 
 message Program {
-	map<string, Node> nodes = 1;
+	repeated Port ports = 1;
 	repeated Connection connections = 2;
-	AbsPortAddr start_port = 3;
-}
-
-message Node {
-	NodeIO io = 1;
-	NodeType type = 2;
-	map<string, ConstValue> const = 3;
-	OpRef op_ref = 4;
-}
-
-message NodeIO {
-    repeated Port in = 1;
-	repeated Port out = 2;
+	repeated Operator ops = 3;
+	repeated Const const = 4;
 }
 
 message Port {
@@ -28,17 +17,29 @@ message Port {
 	uint32 buf = 3;
 }
 
-enum NodeType {
-	NODE_TYPE_CONST = 0;
-	NODE_TYPE_OPERATOR = 1;
-	NODE_TYPE_MODULE = 2;
+message Connection {
+	PortAddr from = 1;
+	repeated PortAddr to = 2;
 }
 
-message ConstValue  {
-	ValueType  type = 1;
-	int64 int_value = 2;
-	string str_value = 3;
-	bool bool_value = 4;
+message Operator {
+	OpRef ref = 1; 
+	repeated Port in = 2;
+	repeated Port out = 3;
+}
+
+message Const {
+	PortAddr port_addr = 1;
+	ValueType type = 2;
+	int64 int = 3;
+	string str = 4;
+	bool bool = 5;
+}
+
+message PortAddr {
+	string path = 1;
+	string port = 2;
+	uint32 idx  = 3;
 }
 
 enum ValueType {
@@ -51,15 +52,4 @@ enum ValueType {
 message OpRef  {
 	string pkg = 1;
     string name =2;
-}
-
-message Connection  {
-	AbsPortAddr from = 1;
-	repeated AbsPortAddr to = 2;
-}
-
-message AbsPortAddr {
-	string Node = 1;
-	string Port = 2;
-	uint32 Idx  = 3;
 }

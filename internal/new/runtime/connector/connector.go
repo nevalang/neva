@@ -12,7 +12,7 @@ import (
 type (
 	Interceptor interface {
 		AfterSend(runtime.Connection, core.Msg) core.Msg
-		BeforeReceive(from, to runtime.AbsPortAddr, msg core.Msg) core.Msg
+		BeforeReceive(from, to runtime.FullPortAddr, msg core.Msg) core.Msg
 	}
 
 	Mapper interface {
