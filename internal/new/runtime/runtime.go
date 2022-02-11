@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/new/core"
+	"github.com/emil14/neva/internal/pkg/utils"
 )
 
 type (
@@ -49,8 +50,6 @@ func (r Runtime) Run(raw []byte) error {
 
 	ports := r.portGen.Ports(prog.Ports)
 
-	// errgroup?
-
 	if err := r.connector.Connect(ports, prog.Connections); err != nil {
 		return fmt.Errorf("%w: %v", ErrConnector, err)
 	}
@@ -70,4 +69,22 @@ func (r Runtime) Run(raw []byte) error {
 	start <- core.NewSigMsg()
 
 	return nil // block?
+}
+
+func MustNew(
+	decoder Decoder,
+	portGen PortGen,
+	opSpawner OperatorSpawner,
+	constSpawner ConstSpawner,
+	connector Connector,
+) Runtime {
+	utils.NilArgsFatal(decoder, portGen, opSpawner, constSpawner, connector)
+
+	return Runtime{
+		decoder:      decoder,
+		portGen:      portGen,
+		opSpawner:    opSpawner,
+		constSpawner: constSpawner,
+		connector:    connector,
+	}
 }

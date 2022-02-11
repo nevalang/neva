@@ -16,7 +16,7 @@ type (
 	}
 
 	Mapper interface {
-		Net(map[string]core.IO, []runtime.Connection) ([]Connection, error)
+		Net(map[runtime.FullPortAddr]chan core.Msg, []runtime.Connection) ([]Connection, error)
 	}
 
 	Connection struct {
@@ -33,20 +33,20 @@ type Connector struct {
 	mapper      Mapper
 }
 
-func (c Connector) Connect(nodesIO map[string]core.IO, net []runtime.Connection) error {
-	connections, err := c.mapper.Net(nodesIO, net)
+func (c Connector) Connect(ports map[runtime.FullPortAddr]chan core.Msg, net []runtime.Connection) error {
+	connections, err := c.mapper.Net(ports, net)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
 
 	for i := range connections {
-		go c.stream(connections[i], nodesIO)
+		go c.stream(connections[i])
 	}
 
 	return nil
 }
 
-func (c Connector) stream(connection Connection, nodesIO map[string]core.IO) {
+func (c Connector) stream(connection Connection) {
 	for msg := range connection.from {
 		msg = c.interceptor.AfterSend(connection.original, msg)
 

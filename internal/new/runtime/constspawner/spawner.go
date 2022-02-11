@@ -2,6 +2,7 @@ package constspawner
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/emil14/neva/internal/new/core"
 	"github.com/emil14/neva/internal/new/runtime"
@@ -9,25 +10,33 @@ import (
 
 type Spawner struct{}
 
-var ErrPortNotFound = errors.New("port not found")
+var (
+	ErrPortNotFound   = errors.New("port not found")
+	ErrUnknownMsgType = errors.New("unknown message type")
+)
 
-func (c Spawner) Spawn(messages map[runtime.PortAddr]runtime.ConstMsg, ports map[core.PortAddr]chan core.Msg) error {
-	for addr := range messages {
-		port, ok := ports[core.PortAddr(addr)]
+func (c Spawner) Spawn(
+	constData map[runtime.FullPortAddr]runtime.ConstMsg,
+	ports map[runtime.FullPortAddr]chan core.Msg,
+) error {
+	for addr := range constData {
+		port, ok := ports[addr]
 		if !ok {
-			return ErrPortNotFound
+			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
 		var msg core.Msg
-		switch messages[addr].Type {
+		switch constData[addr].Type {
 		case runtime.IntMsg:
-			msg = core.NewIntMsg(messages[addr].Int)
+			msg = core.NewIntMsg(constData[addr].Int)
 		case runtime.BoolMsg:
-			msg = core.NewBoolMsg(messages[addr].Bool)
+			msg = core.NewBoolMsg(constData[addr].Bool)
 		case runtime.StrMsg:
-			msg = core.NewStrMsg(messages[addr].Str)
+			msg = core.NewStrMsg(constData[addr].Str)
 		case runtime.SigMsg:
 			msg = core.NewSigMsg()
+		default:
+			return fmt.Errorf("%w: %v", ErrUnknownMsgType, constData[addr].Type)
 		}
 
 		go func() {

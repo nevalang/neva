@@ -9,26 +9,40 @@ import (
 )
 
 var (
-	ErrRepo  = errors.New("operator not loaded from repo")
-	ErrSpawn = errors.New("operator was spawned with errors")
+	ErrRepo      = errors.New("repo")
+	ErrOper      = errors.New("operator")
+	ErrCollector = errors.New("collector")
 )
 
-type Repo interface {
-	Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
-}
+type (
+	Repo interface {
+		Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
+	}
+	Collector interface {
+		Collect(runtime.OperatorIO, map[runtime.FullPortAddr]chan core.Msg) (core.IO, error)
+	}
+)
 
 type Spawner struct {
-	repo Repo
+	repo      Repo
+	collector Collector
 }
 
-func (s Spawner) Spawn(ref runtime.OperatorRef, io core.IO) error {
-	op, err := s.repo.Operator(ref)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrRepo, err)
-	}
+func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.FullPortAddr]chan core.Msg) error {
+	for i := range ops {
+		op, err := s.repo.Operator(ops[i].Ref)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrRepo, err)
+		}
 
-	if err := op(io); err != nil {
-		return fmt.Errorf("%w: %v", ErrSpawn, err)
+		io, err := s.collector.Collect(ops[i].IO, ports)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrCollector, err)
+		}
+
+		if err := op(io); err != nil {
+			return fmt.Errorf("%w: %v", ErrOper, err)
+		}
 	}
 
 	return nil
