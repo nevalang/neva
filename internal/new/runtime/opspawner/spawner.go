@@ -16,7 +16,7 @@ var (
 
 type (
 	Repo interface {
-		Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
+		Operator(ref runtime.OpRef) (func(core.IO) error, error)
 	}
 	Collector interface {
 		Collect(runtime.OperatorIO, map[runtime.FullPortAddr]chan core.Msg) (core.IO, error)

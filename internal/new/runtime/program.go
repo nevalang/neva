@@ -29,7 +29,7 @@ type (
 	}
 
 	Operator struct {
-		Ref OperatorRef
+		Ref OpRef
 		IO  OperatorIO
 	}
 
@@ -40,7 +40,7 @@ type (
 		Bool bool
 	}
 
-	OperatorRef struct {
+	OpRef struct {
 		Pkg, Name string
 	}
 

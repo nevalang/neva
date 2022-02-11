@@ -16,3 +16,7 @@ func (p PortGen) Ports(src map[runtime.FullPortAddr]runtime.Port) map[runtime.Fu
 
 	return ports
 }
+
+func New() PortGen {
+	return PortGen{}
+}

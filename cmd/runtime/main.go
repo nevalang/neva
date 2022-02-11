@@ -8,16 +8,24 @@ import (
 	"github.com/emil14/neva/internal/new/runtime/constspawner"
 	"github.com/emil14/neva/internal/new/runtime/decoder"
 	"github.com/emil14/neva/internal/new/runtime/opspawner"
+	"github.com/emil14/neva/internal/new/runtime/opspawner/repo"
 	"github.com/emil14/neva/internal/new/runtime/portgen"
 )
 
 func main() {
 	r := runtime.MustNew(
-		decoder.MustNewProto(nil, nil),
-		portgen.PortGen{},
-		opspawner.New(nil),
+		decoder.MustNewProto(
+			decoder.NewCaster(),
+			decoder.NewUnmarshaler(),
+		),
+		portgen.New(),
+		opspawner.New(
+			repo.NewPlugin(nil), // TODO
+		),
 		constspawner.Spawner{},
-		connector.MustNew(nil),
+		connector.MustNew(
+			connector.DefaultInterceptor{},
+		),
 	)
 
 	fmt.Println(r)

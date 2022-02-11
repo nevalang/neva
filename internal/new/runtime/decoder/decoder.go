@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	ErrUnmarshal = errors.New("unmarshal")
 	ErrCast      = errors.New("cast")
+	ErrUnmarshal = errors.New("unmarshal")
 )
 
 type (
