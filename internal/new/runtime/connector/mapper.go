@@ -12,7 +12,7 @@ var ErrPortNotFound = errors.New("port not found by addr")
 
 type mapper struct{}
 
-func (m mapper) Net(ports map[runtime.FullPortAddr]chan core.Msg, net []runtime.Connection) ([]Connection, error) {
+func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) ([]Connection, error) {
 	connections := make([]Connection, len(net))
 
 	for i := range net {

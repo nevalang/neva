@@ -16,8 +16,8 @@ var (
 )
 
 func (c Spawner) Spawn(
-	constData map[runtime.FullPortAddr]runtime.ConstMsg,
-	ports map[runtime.FullPortAddr]chan core.Msg,
+	constData map[runtime.PortAddr]runtime.ConstMsg,
+	ports map[runtime.PortAddr]chan core.Msg,
 ) error {
 	for addr := range constData {
 		port, ok := ports[addr]

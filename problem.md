@@ -1,4 +1,13 @@
-# Problems
+# Remember Array Outport case
+
+1. Something for routing?
+2. It has something to do with array bypass
+
+# Remember array-bypass case
+
+# Figure out if array ports can be omitted via signals and constants
+
+<!-- # Problems
 
 1. в сети модуля есть `узлы` ввода-вывода
 2. компонент соответствует узлу в глобальной сети рантайма
@@ -56,4 +65,4 @@ startPort: root.in.x[0] # it's an error but you get the idea
 - бежим по константам и для каждой поднимаем горутину что шлёт сообщение
 - шлём сигнал в порт рута
 
-(в этой схеме есть ошибка - у рута нет сигнал-порта, но кажется эту деталь можно опустить)
+(в этой схеме есть ошибка - у рута нет сигнал-порта, но кажется эту деталь можно опустить) -->

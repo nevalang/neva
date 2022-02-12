@@ -14,7 +14,6 @@ message Program {
 message Port {
 	string name = 1;
 	uint32 idx  = 2;
-	uint32 buf = 3;
 }
 
 message Connection {

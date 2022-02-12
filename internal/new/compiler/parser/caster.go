@@ -109,17 +109,17 @@ func (c caster) castMsg(msg ConstOutPort) compiler.Msg {
 	case "str":
 		return compiler.Msg{
 			Type:     compiler.StrMsg,
-			StrValue: msg.Str,
+			Str: msg.Str,
 		}
 	case "int":
 		return compiler.Msg{
 			Type:     compiler.IntMsg,
-			IntValue: msg.Int,
+			Int: msg.Int,
 		}
 	case "bool":
 		return compiler.Msg{
 			Type:      compiler.IntMsg,
-			BoolValue: msg.Bool,
+			Bool: msg.Bool,
 		}
 	case "sig":
 		return compiler.Msg{
@@ -202,7 +202,7 @@ func (c caster) castPortAddr(
 
 	typ := compiler.NormPortAddr
 	if portType == compiler.ArrPort {
-		typ = compiler.ArrByPassPortAddr
+		typ = compiler.ArrByPassPortAddr // TODO why?
 	}
 
 	portName, portIdx, ok := c.splitPort(port)

@@ -11,6 +11,6 @@ func (c DefaultInterceptor) AfterSend(_ runtime.Connection, msg core.Msg) core.M
 	return msg
 }
 
-func (c DefaultInterceptor) BeforeReceive(from, to runtime.FullPortAddr, msg core.Msg) core.Msg {
+func (c DefaultInterceptor) BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg {
 	return msg
 }

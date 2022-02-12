@@ -13,16 +13,16 @@ type (
 		Decode([]byte) (Program, error)
 	}
 	PortGen interface {
-		Ports(map[FullPortAddr]Port) map[FullPortAddr]chan core.Msg
+		Ports([]PortAddr) map[PortAddr]chan core.Msg
 	}
 	ConstSpawner interface {
-		Spawn(map[FullPortAddr]ConstMsg, map[FullPortAddr]chan core.Msg) error
+		Spawn(map[PortAddr]ConstMsg, map[PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
-		Spawn([]Operator, map[FullPortAddr]chan core.Msg) error
+		Spawn([]Operator, map[PortAddr]chan core.Msg) error
 	}
 	Connector interface {
-		Connect(map[FullPortAddr]chan core.Msg, []Connection) error
+		Connect(map[PortAddr]chan core.Msg, []Connection) error
 	}
 )
 

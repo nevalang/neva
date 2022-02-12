@@ -2,35 +2,31 @@ package runtime
 
 type (
 	Program struct {
-		Ports       map[FullPortAddr]Port
-		Connections []Connection
+		Ports       []PortAddr
+		Connections []Connection // replace with map?
 		Effects     Effects
-		StartPort   FullPortAddr
+		StartPort   PortAddr
 	}
 
-	FullPortAddr struct {
+	PortAddr struct {
 		Path string
-		Port string
+		Name string
 		Idx  uint8
 	}
 
-	Port struct {
-		Buf uint8
-	}
-
 	Connection struct {
-		From FullPortAddr
-		To   []FullPortAddr
+		From PortAddr
+		To   []PortAddr
 	}
 
 	Effects struct {
 		Ops   []Operator
-		Const map[FullPortAddr]ConstMsg
+		Const map[PortAddr]ConstMsg
 	}
 
 	Operator struct {
-		Ref OpRef
-		IO  OperatorIO
+		Ref       OpRef
+		PortAddrs OpPortAddrs
 	}
 
 	ConstMsg struct {
@@ -44,8 +40,8 @@ type (
 		Pkg, Name string
 	}
 
-	OperatorIO struct {
-		In, Out []FullPortAddr
+	OpPortAddrs struct {
+		In, Out []PortAddr
 	}
 
 	MsgType uint8

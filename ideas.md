@@ -1,3 +1,7 @@
+# Context as a program primitive?
+
+Introduce outport to root module?
+
 # Gradual typing
 
 If component `A` needs struct with `X` field

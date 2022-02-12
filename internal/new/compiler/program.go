@@ -58,7 +58,7 @@ type (
 	}
 
 	PortAddr struct {
-		Type       PortAddrType
+		Type       PortAddrType // TODO figure out the case for this
 		Node, Port string
 		Idx        uint8
 	}
@@ -67,9 +67,9 @@ type (
 
 	Msg struct {
 		Type      MsgType
-		IntValue  int
-		StrValue  string
-		BoolValue bool
+		Int  int
+		Str  string
+		Bool bool
 	}
 
 	Pkg struct {

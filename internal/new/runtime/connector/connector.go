@@ -12,11 +12,11 @@ import (
 type (
 	Interceptor interface {
 		AfterSend(runtime.Connection, core.Msg) core.Msg
-		BeforeReceive(from, to runtime.FullPortAddr, msg core.Msg) core.Msg
+		BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg
 	}
 
 	Mapper interface {
-		Net(map[runtime.FullPortAddr]chan core.Msg, []runtime.Connection) ([]Connection, error)
+		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Connection) ([]Connection, error)
 	}
 
 	Connection struct {
@@ -33,7 +33,7 @@ type Connector struct {
 	mapper      Mapper
 }
 
-func (c Connector) Connect(ports map[runtime.FullPortAddr]chan core.Msg, net []runtime.Connection) error {
+func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) error {
 	connections, err := c.mapper.Net(ports, net)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)

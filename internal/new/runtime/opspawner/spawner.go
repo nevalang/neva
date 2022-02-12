@@ -19,7 +19,7 @@ type (
 		Operator(ref runtime.OpRef) (func(core.IO) error, error)
 	}
 	Collector interface {
-		Collect(runtime.OperatorIO, map[runtime.FullPortAddr]chan core.Msg) (core.IO, error)
+		Collect(runtime.OpPortAddrs, map[runtime.PortAddr]chan core.Msg) (core.IO, error)
 	}
 )
 
@@ -28,14 +28,14 @@ type Spawner struct {
 	collector Collector
 }
 
-func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.FullPortAddr]chan core.Msg) error {
+func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan core.Msg) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrRepo, err)
 		}
 
-		io, err := s.collector.Collect(ops[i].IO, ports)
+		io, err := s.collector.Collect(ops[i].PortAddrs, ports)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrCollector, err)
 		}
