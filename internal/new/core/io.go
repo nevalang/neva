@@ -11,6 +11,7 @@ type IO struct {
 	In, Out Ports
 }
 
+// FIXME: map[string][]chan Msg (ordering)
 type Ports map[PortAddr]chan Msg
 
 func (p Ports) Port(name string) (chan Msg, error) {
@@ -21,6 +22,7 @@ func (p Ports) Port(name string) (chan Msg, error) {
 	return port, nil
 }
 
+// FIXME sorting?
 func (p Ports) ArrPort(name string) ([]chan Msg, error) {
 	pp := make([]chan Msg, 0, len(p))
 

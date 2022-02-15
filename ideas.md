@@ -1,3 +1,33 @@
+# Simplify syntax
+
+1. Allow string in network for cases with only one receiver - `node.port: node.inport`
+2. Think about some special syntax? `node.port -> node.inport`
+
+# General Purpose Router?
+
+```yml
+io:
+  arg: [x,y,z]
+  in:
+    a[]: x
+
+
+```
+
+# SubStreams to array outports
+
+Introduce component that allows to turn substream values into array-outport firings.
+
+## Problem
+
+Slots are compiled-timed
+
+# Graphical notation for network
+
+- Triangles for in-out
+- Squares for constants/memory
+- Circles for components (ops/mods)
+
 # Context as a program primitive?
 
 Introduce outport to root module?
@@ -34,7 +64,7 @@ given element next.
 
 But how to solve task "for every user that is older than 30 years send a message `yo`"?
 
-# DATA EDITOR
+# Data editor
 
 Data editor is a mind-map-like GUI
 that allowes create graph
@@ -48,7 +78,7 @@ a way to visualize message interface creation
 Кейс - динамическое создание адаптера между компонентом, который принимает список
 и компонентом, который имеет аррай-портс интерфейс.
 
-При старте такой модуль создаёт аррай портс с кол-ом словов соотв. длине списка.
+При старте такой модуль создаёт аррай портс с кол-ом ячеек соотв. длине списка.
 При получении значения он пишет в этот порт.
 
 # Mock autogen
@@ -95,68 +125,9 @@ Instead of keeping log of all sends/receives, keep only previous values.
 - type system (типы должны быть максимально просты и совместимы с `gRPC`, `graphQL` и `json schema`)
 - Close all the ports when there are no senders to receive a message from.
 
-pkg.yml
+# REPL
 
-```yaml
-import:
-  pow:
-    repo: https://github.com/emil14/pow
-    version: 4.20.69
-
-use:
-  +: operators
-  ^: pow
-```
-
-repl:
-
-```
-set in.x int
-set out.y int
-
-set deps.*.in.nums []int
-set deps.*.out.mul int
-
-set workers.multi *
-
-connect in.x multi.in[0]
-connect in.x multi.in[1]
-connect multi.out.mul out.x
-
-get in
-get out
-get in.x
-get out.y
-
-get deps
-get deps.plus
-get deps.plus.in
-get deps.plus.in.nums
-
-get workers
-get workers.multi
-get.workers.multi.in
-get.workers.multi.out
-get deps.workers.multi.in.nums
-get deps.workers.multi.out.sum
-
-get env[deps.plus]
-
-```
-
-ЭВРИКА!!! (UPD: Уже не уверен....)
-
-```
-Меня только что осенило, что парадокс "как быть с аррай-инпортами корневых модулей?" наконец-то разрешён.
-
-Проблемы нет - компилятор может понять, сколько каналов создать под такой инпорт (вычислить его size для NodeMeta) на основании сети.
-
-Всё дело в том, как работает референция таких портов в схеме - чтобы сослаться на аррай-порт, нужен индекс.
-Таким образом, в сети рутового модуля будут ссылки на индексы. Согласно правилам валидации, между указателей на слоты таких портов
-не должно быть "дыр".
-
-Стало быть, максимальный индекс плюс один это есть размер.
-```
+...
 
 # WEB (old)
 
