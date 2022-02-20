@@ -91,3 +91,20 @@ Is it possible to use signals for infinite nesting of streams?
 -> m m m m m ->
 -> m m m m m ->
 ```
+
+# Blockers
+
+It should be impossible to compile a program that blocks.
+
+# Struct fields
+
+How to read struct fields?
+
+## Component solution
+
+Introduce `struct-reader` component that has `struct` and `field` inports and `value` outport
+
+### Problems
+
+- Generics/TypeChecking
+- Lots of `const` just to read struct field

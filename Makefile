@@ -10,6 +10,7 @@ sdk:
 go_plugins:
 	go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
 	go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
+	go build -o plugins/select.so -buildmode=plugin internal/runtime/operators/select/main.go
 	go build -o plugins/more.so -buildmode=plugin internal/runtime/operators/more/main.go
 	go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/main.go
 	go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/main.go

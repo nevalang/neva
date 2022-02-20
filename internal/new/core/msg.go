@@ -5,7 +5,18 @@ type Msg interface {
 	Bool() bool
 	Int() int
 	Str() string
+
+	Type() Type
 }
+
+type Type uint8
+
+const (
+	Sig Type = iota
+	Bool
+	Int
+	Str
+)
 
 type emptyMsg struct{}
 
@@ -19,9 +30,8 @@ type IntMsg struct {
 	v int
 }
 
-func (msg IntMsg) Int() int {
-	return msg.v
-}
+func (msg IntMsg) Int() int   { return msg.v }
+func (msg IntMsg) Type() Type { return Int }
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
@@ -35,9 +45,8 @@ type StrMsg struct {
 	v string
 }
 
-func (msg StrMsg) Str() string {
-	return msg.v
-}
+func (msg StrMsg) Str() string { return msg.v }
+func (msg StrMsg) Type() Type  { return Str }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
@@ -51,9 +60,8 @@ type BoolMsg struct {
 	v bool
 }
 
-func (msg BoolMsg) Bool() bool {
-	return msg.v
-}
+func (msg BoolMsg) Bool() bool { return msg.v }
+func (msg BoolMsg) Type() Type { return Bool }
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
@@ -66,10 +74,23 @@ type SigMsg struct {
 	emptyMsg
 }
 
-func (msg SigMsg) Sig() struct{} {
-	return struct{}{}
-}
+func (msg SigMsg) Sig() struct{} { return struct{}{} }
+func (msg SigMsg) Type() Type    { return Sig }
 
 func NewSigMsg() SigMsg {
 	return SigMsg{emptyMsg{}}
+}
+
+func Equal(m1, m2 Msg) bool {
+	switch m1.Type() {
+	case Sig:
+		return m1.Sig() == m2.Sig()
+	case Bool:
+		return m1.Bool() == m2.Bool()
+	case Int:
+		return m1.Int() == m2.Int()
+	case Str:
+		return m1.Str() == m2.Str()
+	}
+	return false
 }

@@ -149,7 +149,7 @@ func NewOperatorsIO() map[string]map[string]program.ComponentIO {
 		},
 		"logic": {
 			"more":   program.ComponentIO{},
-			"filter": program.ComponentIO{},
+			"select": program.ComponentIO{},
 		},
 	}
 }
