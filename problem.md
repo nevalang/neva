@@ -1,110 +1,77 @@
-# Array Ports
+## Port Runtime Representation
 
-For tasks like "substract numbers from first to last" where:
+At runtime there is no `array-ports` but any port has `idx` instead.
 
-1. Arguments count unknown
-2. Order matters
+It turns out that we need `idx` for only one thing - to allow operator get arr-port channels. Can we omit them?
 
-We need a way to represent ordered variadic arguments.
-Not lists because types of messages could be different.
+### New ConnectionPoint
 
-## Array-Outport case
+Introduce `ConnectionPoint` type and use it instead of new `PortAddr`:
 
-What is the case for array-outport?
-The real array-outport, not the array-inport threated like outport by it's network.
+```
+Connection {
+  from ConnectionPoint
+  to []ConnectionPoint
+}
 
-> In J.Paul's version program can ask if port has enough space
-> and the module's designer must make sure there is no 'holes'
+ConnectionPoint {
+  PortAddr PortAddr
+  Meta ConnectionPointMeta
+}
 
-### Routing
+ConnectionPointMeta {
+  Type ConnectionPointType
+  StructField []string
+}
 
-Warning: this maybe `mapping` sub-case.
+ConnectionPointType = NormFieldReceiver | StructFieldReceiver
+```
 
-### Mapping
+Problems:
 
-Map `n` keys to `m` values
+- only `to` should be allowed to have `StructFieldReceiver` type
 
-#### Tuples arrport solution
+# Maps
+
+Map `kk` keys to `vv` values and read `v` value by `k` key.
+Duplicates not allowed
+
+## Tuples arrport solution
 
 Generic `map<K,V>` component that has two inports: `cfg` and `k`, and one `v` outport`. `cfg`is an array-inport of type`Tuple<K,V>`and`k`is a regular port of type`K`. It takes a list of `tuples`and returns a value from its`v`outport of type`V`.
 
 Problems:
 
-- Allowes duplicate keys (is it possible to type-check?)
+- Allowes duplicate keys
 - Generic `map` component
   - Generics
-- New `Tuple` data-type (could (should?) use plain `structs` instead (type-checking?))
+- New `Tuple` data-type (could (should?) use `struct` instead (type-checking?))
 
-#### Map-ports solution
+## Map-ports solution
 
-Just like we have array-ports we could have array-outports.
+Just like we have array-ports we could have map-ports.
 We could specify key when attaching to the port.
 
-`in[]: Tuple(key,value)`
+TODO: poorly thought of
 
-## Array-Outport indexing
+## New ConnectionPoint type
 
-Imagine some component with an array-outport in a module's network.
-It's dangerous to refer specific indexes of that outport because we don't know how many indexes will be used inside that component.
+# Runtime Port Addr Idx
 
-Another case is when some module has an array-inport.
-It's dangerous to refer some specific indexes of that inport because we don't know how many indexes will be used by parent network.
+## Getting arrport for operators
 
-But port reference assumes some index!
+# Debugging
 
-Actually these two cases are the same though we talking about outport in the first one and about inport in the second.
-This happens because for module's network - inport is actually an outport, the port to read from!
-
-### "ONLY Array-Bypass" solution
-
-ArrOutPort indexing is forbidden.
-
-The solution is to forbig array outport indexing and introduce second type of port reference - "array bypass".
-It's a type of port reference that is used when we want to connect some array-outport
-with some array-inport. Both part of the connection must be array-ports.
-
-#### PortAddr vs Connection?
-
-Is it `PortAddr` or `Connection` should have this information?
-
-## Order (sorting)
-
-As it turns out there's no order guarantee in current implementation.
-
-### Solution
-
-Use `map[string][]chan Msg` instead of `map[PortAddr]chan Msg` at the `core` level.
+...
 
 # SubStreams
 
-Allows to arrange messages into peaces
-
--> . . . . ->
-
 ## Structures instead of substreams?
 
-## Sig for SubStream?
+## Signals instead of brackets?
 
-Is it possible to use signals for infinite nesting of streams?
+Is it possible to use `sig` for infinite nesting of streams?
 
-```
--> m m m m m ->
--> m m m m m ->
-```
+### Type Checking
 
-# Blockers
-
-It should be impossible to compile a program that blocks.
-
-# Struct fields
-
-How to read struct fields?
-
-## Component solution
-
-Introduce `struct-reader` component that has `struct` and `field` inports and `value` outport
-
-### Problems
-
-- Generics/TypeChecking
-- Lots of `const` just to read struct field
+In the classical FBP port can receive messages of different types and in `neva` it's forbidden.

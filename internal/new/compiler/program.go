@@ -58,7 +58,7 @@ type (
 	}
 
 	PortAddr struct {
-		Type       PortAddrType // TODO figure out the case for this
+		Type       PortAddrType // IDEA move to Connection?
 		Node, Port string
 		Idx        uint8
 	}
@@ -66,7 +66,7 @@ type (
 	PortAddrType uint8
 
 	Msg struct {
-		Type      MsgType
+		Type MsgType
 		Int  int
 		Str  string
 		Bool bool

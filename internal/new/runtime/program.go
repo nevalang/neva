@@ -9,7 +9,7 @@ type (
 	}
 
 	PortAddr struct {
-		Path string
+		Path string // IDEA: rename to Node for consistency with compiler?
 		Name string
 		Idx  uint8
 	}

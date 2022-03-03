@@ -67,7 +67,6 @@ message Msg {
     ValueType type = 1;
 }
 
-
 message Program {
     map<string, Component> scope = 1;
     string root = 2;

@@ -11,13 +11,13 @@ type (
 	PkgManager interface {
 		Pkg(string) (Pkg, error)
 	}
-	ModuleParser interface {
+	Parser interface {
 		Parse(map[string][]byte) (map[string]Module, error)
 	}
-	ProgramChecker interface {
+	Checker interface {
 		Check(Program) error
 	}
-	RuntimeProgramGenerator interface {
+	Generator interface {
 		Generate(Program) ([]byte, error)
 	}
 )
@@ -31,10 +31,11 @@ var (
 )
 
 type Compiler struct {
-	pkg         PkgManager
-	parser      ModuleParser
-	checker     ProgramChecker
-	generator   RuntimeProgramGenerator
+	pkg       PkgManager
+	parser    Parser
+	checker   Checker
+	generator Generator
+
 	operatorsIO map[OperatorRef]IO
 }
 
@@ -81,14 +82,21 @@ func (c Compiler) PreCompile(path string) (Program, error) {
 }
 
 func (Compiler) components(ops map[string]Operator, mods map[string]Module) map[string]Component {
-	components := make(map[string]Component, len(ops)+len(mods))
+	comps := make(map[string]Component, len(ops)+len(mods))
+
 	for name, op := range ops {
-		components[name] = Component{Type: OperatorComponent, Operator: op}
+		comps[name] = Component{
+			Type: OperatorComponent, Operator: op,
+		}
 	}
+
 	for name, mod := range mods {
-		components[name] = Component{Type: OperatorComponent, Module: mod}
+		comps[name] = Component{
+			Type: OperatorComponent, Module: mod,
+		}
 	}
-	return components
+
+	return comps
 }
 
 func (c Compiler) operators(refs map[string]OperatorRef) (map[string]Operator, error) {
@@ -111,9 +119,9 @@ func (c Compiler) operators(refs map[string]OperatorRef) (map[string]Operator, e
 
 func MustNew(
 	pkg PkgManager,
-	parser ModuleParser,
-	checker ProgramChecker,
-	translator RuntimeProgramGenerator,
+	parser Parser,
+	checker Checker,
+	translator Generator,
 	operatorsIO map[OperatorRef]IO,
 ) Compiler {
 	utils.NilArgsFatal(pkg, parser, checker, translator, operatorsIO)
