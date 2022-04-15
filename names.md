@@ -15,3 +15,9 @@
 - ruteena
 - routine
 - splash
+- asynchrony
+- asynchron
+- asyncron
+
+- gears
+- cogwheel

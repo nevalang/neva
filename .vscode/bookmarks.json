@@ -9,16 +9,6 @@
 					"label": ""
 				}
 			]
-		},
-		{
-			"path": "examples/latest/root.yml",
-			"bookmarks": [
-				{
-					"line": 29,
-					"column": 3,
-					"label": ""
-				}
-			]
 		}
 	]
 }
