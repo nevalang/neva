@@ -1,3 +1,13 @@
+# Insight
+
+There's no need and no possibility to use interfaces everywhere
+There are places where we do need then and there are places where we don't
+Implementation where interfaces must be used all the time leads to useless abstraction layers
+Why have interface for database driver in a component that exists to implement other interface?
+
+
+
+
 # Filter
 
 In classical FBP filter works differently.
