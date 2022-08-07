@@ -1,30 +1,29 @@
 package core
 
-import "fmt"
-
 type Msg interface {
 	Str() string
 	Int() int
 	Bool() bool
 }
 
+type emptyMsg struct{}
+
+func (msg emptyMsg) Str() string            { panic("not implemented") }
+func (msg emptyMsg) Int() int               { panic("not implemented") }
+func (msg emptyMsg) Bool() bool             { panic("not implemented") }
+func (msg emptyMsg) Struct() map[string]Msg { panic("not implemented") }
+
 type IntMsg struct {
 	emptyMsg
 	v int
 }
 
-func (msg IntMsg) Int() int {
-	return msg.v
-}
+func (msg IntMsg) Int() int { return msg.v }
 
-func (msg IntMsg) String() string {
-	return fmt.Sprintf("'%d'", msg.v)
-}
-
-func NewIntMsg(n int) IntMsg {
+func NewIntMsg(v int) IntMsg {
 	return IntMsg{
 		emptyMsg: emptyMsg{},
-		v:        n,
+		v:        v,
 	}
 }
 
@@ -37,10 +36,10 @@ func (msg StrMsg) Str() string {
 	return msg.v
 }
 
-func NewStrMsg(s string) StrMsg {
+func NewStrMsg(v string) StrMsg {
 	return StrMsg{
 		emptyMsg: emptyMsg{},
-		v:        s,
+		v:        v,
 	}
 }
 
@@ -53,36 +52,9 @@ func (msg BoolMsg) Bool() bool {
 	return msg.v
 }
 
-func (msg BoolMsg) String() string {
-	return fmt.Sprintf("%v", msg.v)
-}
-
-func NewBoolMsg(b bool) BoolMsg {
+func NewBoolMsg(v bool) BoolMsg {
 	return BoolMsg{
-		emptyMsg: emptyMsg{},
-		v:        b,
-	}
-}
-
-type StructMsg struct {
-	emptyMsg
-	v map[string]Msg
-}
-
-func (msg StructMsg) Struct() map[string]Msg {
-	return msg.v
-}
-
-func NewMsgStruct(v map[string]Msg) StructMsg {
-	return StructMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,
 	}
 }
-
-type emptyMsg struct{}
-
-func (msg emptyMsg) Str() (_ string)            { return }
-func (msg emptyMsg) Int() (_ int)               { return }
-func (msg emptyMsg) Bool() (_ bool)             { return }
-func (msg emptyMsg) Struct() (_ map[string]Msg) { return }
