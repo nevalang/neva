@@ -1,65 +1,54 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/emil14/respect/internal/compiler"
-	"github.com/emil14/respect/internal/compiler/program"
+	"github.com/emil14/neva/internal/compiler"
 )
 
-type Caster interface {
-	From(program.Module) module
-	To(module) program.Module
-}
+type (
+	Caster interface {
+		Cast(Module) (compiler.Module, error)
+	}
+	Unmarshaler interface {
+		Unmarshal([]byte) (Module, error)
+	}
+)
+
+var (
+	ErrUnmarshaler = errors.New("unmarshaler")
+	ErrCaster      = errors.New("caster")
+)
 
 type parser struct {
-	marshal   Marshal
-	unmarshal Unmarshal
-	caster    Caster
+	unmarshaler Unmarshaler
+	caster      Caster
 }
 
-func (p parser) Module(bb []byte) (program.Module, error) {
-	var mod module
-	if err := p.unmarshal(bb, &mod); err != nil {
-		return program.Module{}, err
-	}
-	to := p.caster.To(mod)
+func (p parser) Parse(mods map[string][]byte) (map[string]compiler.Module, error) {
+	compilerMods := make(map[string]compiler.Module, len(mods))
 
-	return to, nil
-}
+	for name, bb := range mods {
+		mod, err := p.unmarshaler.Unmarshal(bb)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrUnmarshaler, err)
+		}
 
-func (p parser) Program(bb program.Program) ([]byte, error) {
-	return nil, nil // TODO
-}
+		cmod, err := p.caster.Cast(mod)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrCaster, err)
+		}
 
-func (p parser) Unparse(mod program.Module) ([]byte, error) {
-	bb, err := p.marshal(mod)
-	if err != nil {
-		return nil, err
-	}
-	return bb, nil
-}
-
-type Unmarshal func([]byte, interface{}) (err error)
-
-type Marshal func(interface{}) ([]byte, error)
-
-func New(u Unmarshal, m Marshal, c Caster) (compiler.SRCParser, error) {
-	if u == nil || m == nil || c == nil {
-		return parser{}, fmt.Errorf("parser constructor err")
+		compilerMods[name] = cmod
 	}
 
+	return compilerMods, nil
+}
+
+func MustNewYaml() parser {
 	return parser{
-		unmarshal: u,
-		marshal:   m,
-		caster:    c,
-	}, nil
-}
-
-func MustNew(u Unmarshal, m Marshal, c Caster) compiler.SRCParser {
-	p, err := New(u, m, c)
-	if err != nil {
-		panic(err)
+		yamlUnmarshaler{},
+		caster{},
 	}
-	return p
 }

@@ -1,0 +1,13 @@
+meta:
+  compiler: "0.0.1"
+  desc: does nothing
+
+in:
+  in: int
+out:
+  out: int
+
+net:
+  in:
+    in:
+      out: [out]

@@ -1,0 +1,34 @@
+meta:
+  compiler: 0.0.1
+
+io:
+  in:
+    start: sig
+
+deps:
+  readln:
+    in:
+      sig: sig
+    out:
+      str: str
+  println:
+    in:
+      str: str
+    out:
+      str: str
+
+nodes:
+  const:
+    x:
+      type: int
+      int: 42
+  workers:
+    read: readln
+    print: println
+
+net:
+  in.start:
+    - read.in
+  read.out:
+    - print.s
+    - const.x.out

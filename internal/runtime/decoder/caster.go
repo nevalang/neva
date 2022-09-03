@@ -1,18 +1,14 @@
 package decoder
 
-import "github.com/emil14/respect/internal/runtime/program"
+import (
+	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/pkg/runtimesdk"
+)
 
 type caster struct{}
 
-func (c caster) Cast(prog Program) program.Program {
-	return program.Program{
-		RootNodeMeta: program.WorkerNodeMeta{
-			In:            prog.RootNode.In,
-			Out:           prog.RootNode.Out,
-			ComponentName: prog.RootNode.Component,
-		},
-		Scope: c.components(prog.Scope),
-	}
+func (c caster) Cast(runtimesdk.Program) (runtime.Program, error) {
+	return runtime.Program{}, nil // TODO
 }
 
 func (c caster) components(from map[string]Component) map[string]program.Component {

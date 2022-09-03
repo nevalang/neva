@@ -2,65 +2,70 @@ package connector
 
 import (
 	"errors"
-	"sync"
+	"fmt"
 
-	"github.com/emil14/respect/internal/core"
-	"github.com/emil14/respect/internal/runtime"
+	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/runtime"
 )
 
 type (
-	Connector struct {
-		interceptor Interceptor
-	}
-
 	Interceptor interface {
-		OnSend(msg core.Msg, from core.PortAddr) core.Msg
-		OnReceive(msg core.Msg, from, to core.PortAddr)
+		AfterSend(runtime.Relation, core.Msg) core.Msg                  // After Sending
+		BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg // Before receiving
 	}
-)
 
-func (c Connector) Connect(cc []runtime.Connection) {
-	for _, connection := range cc {
-		go c.loop(connection)
+	RelationMapper interface { // TODO do we need business-logic behind interface?
+		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Relation) ([]Relation, error) // TODO rename?
 	}
 }
 
-func (c Connector) loop(connection runtime.Connection) {
-	for msg := range connection.From.Ch {
-		c.interceptor.OnSend(msg, connection.From.Addr)
+var ErrMapper = errors.New("mapper")
 
-		wg := sync.WaitGroup{}
-		wg.Add(len(connection.To))
+type Connector struct {
+	interceptor Interceptor
+	mapper      RelationMapper
+}
 
-		for i := range connection.To {
-			to := connection.To[i]
-			m := msg
+func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Relation) error {
+	connections, err := c.mapper.Net(ports, rels)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrMapper, err)
+	}
 
-			go func() {
-				to.Ch <- m
-				c.interceptor.OnReceive(m, connection.From.Addr, to.Addr)
-				wg.Done()
-			}()
-		}
+	for i := range connections {
+		go c.linkConnection(connections[i])
+	}
 
 		wg.Wait()
 	}
 }
 
-func New(interceptor Interceptor) (Connector, error) {
-	if interceptor == nil {
-		return Connector{}, errors.New("nil interceptor")
-	}
+func (c Connector) linkConnection(relation Relation) {
+	guard := make(chan struct{}, len(relation.receivers))
 
-	return Connector{
-		interceptor,
-	}, nil
+	for msg := range relation.sender { // receiving
+		msg = c.interceptor.AfterSend(relation.meta, msg)
+
+		for i := range relation.receivers { // delivery
+			guard <- struct{}{}
+
+			toAddr := relation.meta.Receivers[i]
+			toPort := relation.receivers[i]
+
+			go func(m core.Msg) {
+				toPort <- c.interceptor.BeforeReceive(relation.meta.Sender, toAddr, m) // FIXME possible memory leak
+				<-guard
+			}(msg)
+		}
+	}
 }
 
-func MustNew(interceptor Interceptor) Connector {
-	c, err := New(interceptor)
-	if err != nil {
-		panic(err)
+func MustNew(i Interceptor) Connector {
+	utils.NilArgsFatal(i)
+
+	return Connector{
+		interceptor: i,
+		mapper:      mapper{},
 	}
-	return c
 }

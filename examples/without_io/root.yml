@@ -1,0 +1,26 @@
+io:
+  in:
+    start: sig
+
+deps:
+  readln:
+    in:
+      sig: sig
+    out:
+      str: str
+  println:
+    in:
+      str: str
+    out:
+      str: str
+
+nodes:
+  workers:
+    r: readln
+    p: println
+
+net:
+  in.start:
+    - r.in
+  r.out:
+    - p.in

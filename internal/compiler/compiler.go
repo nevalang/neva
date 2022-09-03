@@ -4,184 +4,133 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/respect/internal/compiler/program"
-	runtime "github.com/emil14/respect/internal/runtime/program"
-)
-
-var (
-	ErrParsing    = errors.New("failed to parse module")
-	ErrValidation = errors.New("module is invalid")
-	ErrInternal   = errors.New("internal error")
+	"github.com/emil14/neva/internal/pkg/utils"
 )
 
 type (
-	SRCParser interface {
-		Module([]byte) (program.Module, error)
-		Program(program.Program) ([]byte, error)
+	PkgManager interface {
+		Pkg(string) (Pkg, error)
 	}
-
-	Translator interface {
-		Translate(program.Program) (runtime.Program, error)
+	Parser interface {
+		Parse(map[string][]byte) (map[string]Module, error)
 	}
-
-	Validator interface {
-		Validate(program.Module) error // todo validate program
+	Checker interface {
+		Check(Program) error
 	}
-
-	Coder interface {
-		Code(runtime.Program) ([]byte, error)
-	}
-
-	PkgDescriptor struct {
-		Root    string
-		Modules map[string][]byte
+	Generator interface {
+		Generate(Program) ([]byte, error)
 	}
 )
 
+var (
+	ErrPkgManager  = errors.New("package manager")
+	ErrModParser   = errors.New("module parser")
+	ErrProgChecker = errors.New("program checker")
+	ErrRunProgGen  = errors.New("runtime program generator")
+	ErrOpNotFound  = errors.New("operator not found")
+)
+
 type Compiler struct {
-	srcParser  SRCParser
-	validator  Validator
-	translator Translator
-	coder      Coder
-	operators  map[string]program.Operator
+	pkg       PkgManager
+	parser    Parser
+	checker   Checker
+	generator Generator
+
+	operatorsIO map[OperatorRef]IO
 }
 
-func (c Compiler) BuildProgram(pkgd PkgDescriptor) (runtime.Program, program.Program, error) {
-	scope := c.defaultScope(len(pkgd.Modules))
-	for k, v := range pkgd.Modules {
-		mod, err := c.compileModule(v)
-		if err != nil {
-			return runtime.Program{}, program.Program{}, err
-		}
-		scope[k] = mod
-	}
-
-	if err := c.resolveDeps(scope); err != nil {
-		return runtime.Program{}, program.Program{}, err
-	}
-
-	prog := program.Program{
-		Root:  pkgd.Root,
-		Scope: scope,
-	}
-
-	rprog, err := c.translator.Translate(prog)
+func (c Compiler) Compile(path string) ([]byte, error) {
+	prog, err := c.PreCompile(path)
 	if err != nil {
-		return runtime.Program{}, program.Program{}, err
+		return nil, fmt.Errorf("precompile: %w", err)
 	}
 
-	return rprog, prog, nil
-}
-
-func (c Compiler) resolveDeps(scope map[string]program.Component) error {
-	for componentName, component := range scope {
-		if _, ok := component.(program.Operator); ok {
-			continue
-		}
-
-		mod, ok := component.(program.Module)
-		if !ok {
-			return fmt.Errorf("unknown component type")
-		}
-
-		for depName, wantIO := range mod.Deps {
-			dep := scope[depName]
-			if dep == nil {
-				return fmt.Errorf("dep %s not found for %s", depName, componentName)
-			}
-
-			if err := wantIO.Compare(dep.Interface()); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func (c Compiler) compileModule(mod []byte) (program.Module, error) {
-	parsed, err := c.srcParser.Module(mod)
+	bb, err := c.generator.Generate(prog)
 	if err != nil {
-		return program.Module{}, fmt.Errorf("%w: %v", ErrParsing, err)
+		return nil, fmt.Errorf("%w: %v", ErrRunProgGen, err)
 	}
 
-	if err := c.validator.Validate(parsed); err != nil {
-		return program.Module{}, fmt.Errorf("%w: %v", ErrValidation, err)
-	}
-
-	return parsed, nil
+	return bb, nil
 }
 
-func (c Compiler) compileProgram(
-	modules map[string][]byte,
-	root string,
-	scope map[string]program.Component,
-) (program.Program, error) {
-	var mod program.Module
-
-	if _, ok := scope[root]; !ok {
-		parsed, err := c.srcParser.Module(modules[root])
-		if err != nil {
-			return program.Program{}, fmt.Errorf("%w: %v", ErrParsing, err)
-		}
-
-		if err := c.validator.Validate(parsed); err != nil {
-			return program.Program{}, fmt.Errorf("%w: %v", ErrValidation, err)
-		}
-
-		mod = parsed
+func (c Compiler) PreCompile(path string) (Program, error) {
+	pkg, err := c.pkg.Pkg(path)
+	if err != nil {
+		return Program{}, fmt.Errorf("%w: %v", ErrPkgManager, err)
 	}
 
-	for name, dep := range mod.Deps {
-		prog, err := c.compileProgram(modules, name, scope)
-		if err != nil {
-			return program.Program{}, err
-		}
+	ops, err := c.operators(pkg.Imports.Operators)
+	if err != nil {
+		return Program{}, fmt.Errorf("operators: %w", err)
+	}
 
-		subroot, ok := prog.Scope[prog.Root]
+	mods, err := c.parser.Parse(pkg.Imports.Modules)
+	if err != nil {
+		return Program{}, fmt.Errorf("%w: %v", ErrModParser, err)
+	}
+
+	prog := Program{
+		RootModule: pkg.RootModule,
+		Scope:      c.components(ops, mods),
+	}
+
+	if err := c.checker.Check(prog); err != nil {
+		return Program{}, fmt.Errorf("%w: %v", ErrProgChecker, err)
+	}
+
+	return prog, nil
+}
+
+func (Compiler) components(ops map[string]Operator, mods map[string]Module) map[string]Component {
+	comps := make(map[string]Component, len(ops)+len(mods))
+
+	for name, op := range ops {
+		comps[name] = Component{
+			Type: OperatorComponent, Operator: op,
+		}
+	}
+
+	for name, mod := range mods {
+		comps[name] = Component{
+			Type: OperatorComponent, Module: mod,
+		}
+	}
+
+	return comps
+}
+
+func (c Compiler) operators(refs map[string]OperatorRef) (map[string]Operator, error) {
+	ops := make(map[string]Operator, len(refs))
+
+	for name, ref := range refs {
+		io, ok := c.operatorsIO[ref]
 		if !ok {
-			return program.Program{}, fmt.Errorf("%w", ErrInternal)
+			return nil, fmt.Errorf("%w: %v", ErrOpNotFound, ref)
 		}
 
-		if err := subroot.Interface().Compare(dep); err != nil {
-			return program.Program{}, err
+		ops[name] = Operator{
+			IO:  io,
+			Ref: ref,
 		}
 	}
 
-	scope[root] = mod
-
-	return program.Program{
-		Root:  root,
-		Scope: scope,
-	}, nil
+	return ops, nil
 }
 
-func (c Compiler) defaultScope(padding int) map[string]program.Component {
-	m := make(map[string]program.Component, len(c.operators)+padding)
-	for i := range c.operators {
-		m[c.operators[i].Name] = c.operators[i]
-	}
-	return m
-}
-
-func New(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) (Compiler, error) {
-	if p == nil || v == nil || t == nil || c == nil || ops == nil {
-		return Compiler{}, fmt.Errorf("%w: failed to build compiler", ErrInternal)
-	}
+func MustNew(
+	pkg PkgManager,
+	parser Parser,
+	checker Checker,
+	translator Generator,
+	operatorsIO map[OperatorRef]IO,
+) Compiler {
+	utils.NilArgsFatal(pkg, parser, checker, translator, operatorsIO)
 
 	return Compiler{
-		srcParser:  p,
-		validator:  v,
-		translator: t,
-		coder:      c,
-		operators:  ops,
-	}, nil
-}
-
-func MustNew(p SRCParser, v Validator, t Translator, c Coder, ops map[string]program.Operator) Compiler {
-	cmp, err := New(p, v, t, c, ops)
-	if err != nil {
-		panic(err)
+		pkg:         pkg,
+		parser:      parser,
+		checker:     checker,
+		generator:   translator,
+		operatorsIO: map[OperatorRef]IO{},
 	}
-	return cmp
 }

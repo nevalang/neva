@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package runtime;
+
+option go_package = './;runtimesdk';
+
+message Program {
+	repeated Port ports = 1;
+	repeated Connection connections = 2;
+	repeated Operator ops = 3;
+	repeated Const const = 4;
+}
+
+message Port {
+	string name = 1;
+	uint32 idx  = 2;
+}
+
+message Connection {
+	PortAddr from = 1;
+	repeated PortAddr to = 2;
+}
+
+message Operator {
+	OpRef ref = 1; 
+	repeated Port in = 2;
+	repeated Port out = 3;
+}
+
+message Const {
+	PortAddr port_addr = 1;
+	ValueType type = 2;
+	int64 int = 3;
+	string str = 4;
+	bool bool = 5;
+}
+
+message PortAddr {
+	string path = 1;
+	string port = 2;
+	uint32 idx  = 3;
+}
+
+enum ValueType {
+    VALUE_TYPE_INT = 0;
+    VALUE_TYPE_STR = 1;
+    VALUE_TYPE_BOOL = 2;
+    VALUE_TYPE_SIG = 3;
+}
+
+message OpRef  {
+	string pkg = 1;
+    string name =2;
+}

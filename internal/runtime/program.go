@@ -1,51 +1,55 @@
 package runtime
 
-type Program struct {
-	Scope        map[string]Component
-	RootNodeMeta WorkerNodeMeta
-}
+type (
+	Program struct {
+		Ports       []PortAddr
+		Connections []Relation // replace with map? (avoid possible duplicates)
+		Effects     Effects
+		StartPort   PortAddr
+	}
 
-type Component struct {
-	Type     ComponentType
-	Operator Operator
-	Module   Module
-}
+	PortAddr struct {
+		Path string // IDEA: rename to Node for consistency with compiler?
+		Name string
+		Idx  uint8
+	}
 
-type ComponentType uint8
+	Relation struct { // TODO rename to relation?
+		Sender    PortAddr
+		Receivers []PortAddr
+	}
 
-const (
-	ModuleComponent ComponentType = iota + 1
-	OperatorComponent
+	Effects struct {
+		Ops   []Operator
+		Const map[PortAddr]ConstMsg
+	}
+
+	Operator struct {
+		Ref       OpRef
+		PortAddrs OpPortAddrs
+	}
+
+	ConstMsg struct {
+		Type MsgType
+		Int  int
+		Str  string
+		Bool bool
+	}
+
+	OpRef struct {
+		Pkg, Name string
+	}
+
+	OpPortAddrs struct {
+		In, Out []PortAddr
+	}
+
+	MsgType uint8
 )
 
-type Operator struct {
-	Name string
-}
-
-type Module struct {
-	Const   map[string]ConstValue
-	Workers map[string]WorkerNodeMeta
-	Net     []ConnectionDef
-}
-
-type WorkerNodeMeta struct {
-	In, Out       map[string]uint8
-	ComponentName string
-}
-
-type ConstValue struct {
-	Type      ConstValueType
-	IntValue  int
-	BoolValue bool
-	StrValue  string
-}
-
-type ConstValueType uint8
-
 const (
-	UnknownValue ConstValueType = iota
-	IntValue
-	StrValue
-	BoolValue
-	StructValue
+	IntMsg MsgType = iota + 1
+	StrMsg
+	BoolMsg
+	SigMsg
 )

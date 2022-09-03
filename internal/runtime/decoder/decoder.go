@@ -1,65 +1,52 @@
 package decoder
 
 import (
-	"encoding/json"
+	"errors"
+	"fmt"
 
-	"github.com/emil14/respect/internal/runtime/program"
+	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/pkg/runtimesdk"
 )
 
-type Program struct {
-	RootNode NodeMeta             `json:"root"`
-	Scope    map[string]Component `json:"scope"`
-}
+var (
+	ErrCast      = errors.New("cast")
+	ErrUnmarshal = errors.New("unmarshal")
+)
 
-type Component struct {
-	Operator string              `json:"operator,omitempty"`
-	Workers  map[string]NodeMeta `json:"workers,omitempty"`
-	Net      []Connection        `json:"net,omitempty"`
-}
-
-type NodeMeta struct {
-	In        map[string]uint8 `json:"in"`
-	Out       map[string]uint8 `json:"out"`
-	Component string           `json:"component"`
-}
-
-type Connection struct {
-	From PortAddr   `json:"from"`
-	To   []PortAddr `json:"to"`
-}
-
-type PortAddr struct {
-	Node string `json:"node"`
-	Port string `json:"port"`
-	Idx  uint8  `json:"idx"`
-}
-
-type Decoder struct {
-	unmarshal func([]byte, interface{}) error
-	caster    interface {
-		Cast(Program) program.Program
+type (
+	Unmarshaler interface {
+		Unmarshal([]byte, *runtimesdk.Program) error
 	}
-}
-
-func (d Decoder) Decode(bb []byte) (program.Program, error) {
-	prog := Program{}
-	if err := d.unmarshal(bb, &prog); err != nil {
-		return program.Program{}, err
+	Caster interface {
+		Cast(runtimesdk.Program) (runtime.Program, error)
 	}
-	return d.caster.Cast(prog), nil
+)
+
+type Proto struct {
+	unmarshaler Unmarshaler
+	caster      Caster
 }
 
-func NewJSON() (Decoder, error) {
-	return Decoder{
-		unmarshal: json.Unmarshal,
-		caster:    NewCaster(),
-	}, nil
-}
+func (p Proto) Decode(bb []byte) (runtime.Program, error) {
+	var sdkProg runtimesdk.Program
+	if err := p.unmarshaler.Unmarshal(bb, &sdkProg); err != nil {
+		return runtime.Program{}, fmt.Errorf("%w: %v", ErrUnmarshal, err)
+	}
 
-func MustNewJSON() Decoder {
-	d, err := NewJSON()
+	prog, err := p.caster.Cast(sdkProg)
 	if err != nil {
-		panic(err)
+		return runtime.Program{}, fmt.Errorf("%w: %v", ErrCast, err)
 	}
-	return d
+
+	return prog, nil
+}
+
+func MustNewProto(caster Caster, unmarshaler Unmarshaler) Proto {
+	utils.NilArgsFatal(caster, unmarshaler)
+
+	return Proto{
+		caster:      caster,
+		unmarshaler: unmarshaler,
+	}
 }

@@ -5,18 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "linux",
+      "name": "server",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/server"
-    },
-    {
-      "name": "windows",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/windows",
+      "program": "${workspaceFolder}/cmd/server",
       "cwd": "${workspaceFolder}"
     }
   ]

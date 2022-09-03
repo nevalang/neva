@@ -1,9 +1,7 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 
-import { OpenApi } from "./api/openapi"
+import { GrpcClient } from "./api/grpc"
 import { App } from "./view/app"
 
-const api = new OpenApi("http://localhost:8090")
-
-ReactDOM.render(<App api={api} />, document.getElementById("root"))
+ReactDOM.render(<App api={new GrpcClient()} />, document.getElementById("root"))

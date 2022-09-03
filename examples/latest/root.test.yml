@@ -1,0 +1,9 @@
+meta:
+  compiler: 0.0.1
+
+spec:
+  - name: test
+    deps: {}
+    in:
+      a: 42
+    out:
