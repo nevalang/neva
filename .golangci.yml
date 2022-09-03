@@ -13,6 +13,7 @@ linters:
     - nlreturn
     - wsl
     - testpackage
+    - deadcode # replaced by unused
 
 linters-settings:
   lll:
