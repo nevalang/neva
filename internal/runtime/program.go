@@ -3,7 +3,7 @@ package runtime
 type (
 	Program struct {
 		Ports       []PortAddr
-		Connections []Connection // replace with map? (avoid possible duplicates)
+		Connections []Relation // replace with map? (avoid possible duplicates)
 		Effects     Effects
 		StartPort   PortAddr
 	}
@@ -14,9 +14,9 @@ type (
 		Idx  uint8
 	}
 
-	Connection struct {
-		From PortAddr
-		To   []PortAddr
+	Relation struct { // TODO rename to relation?
+		Sender    PortAddr
+		Receivers []PortAddr
 	}
 
 	Effects struct {

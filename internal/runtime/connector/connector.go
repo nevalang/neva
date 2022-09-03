@@ -11,18 +11,18 @@ import (
 
 type (
 	Interceptor interface {
-		AfterSend(runtime.Connection, core.Msg) core.Msg
-		BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg
+		AfterSend(runtime.Relation, core.Msg) core.Msg                  // After Sending
+		BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg // Before receiving
 	}
 
-	Mapper interface {
-		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Connection) ([]Connection, error)
+	RelationMapper interface { // TODO do we need business-logic behind interface?
+		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Relation) ([]Relation, error) // TODO rename?
 	}
 
-	Connection struct {
-		original runtime.Connection
-		from     chan core.Msg
-		to       []chan core.Msg
+	Relation struct {
+		meta      runtime.Relation
+		sender    chan core.Msg
+		receivers []chan core.Msg
 	}
 )
 
@@ -30,32 +30,37 @@ var ErrMapper = errors.New("mapper")
 
 type Connector struct {
 	interceptor Interceptor
-	mapper      Mapper
+	mapper      RelationMapper
 }
 
-func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) error {
-	connections, err := c.mapper.Net(ports, net)
+func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Relation) error {
+	connections, err := c.mapper.Net(ports, rels)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
 
 	for i := range connections {
-		go c.stream(connections[i])
+		go c.linkConnection(connections[i])
 	}
 
 	return nil
 }
 
-func (c Connector) stream(connection Connection) {
-	for msg := range connection.from {
-		msg = c.interceptor.AfterSend(connection.original, msg)
+func (c Connector) linkConnection(relation Relation) {
+	guard := make(chan struct{}, len(relation.receivers))
 
-		for i := range connection.to {
-			toAddr := connection.original.To[i]
-			toPort := connection.to[i]
+	for msg := range relation.sender { // receiving
+		msg = c.interceptor.AfterSend(relation.meta, msg)
+
+		for i := range relation.receivers { // delivery
+			guard <- struct{}{}
+
+			toAddr := relation.meta.Receivers[i]
+			toPort := relation.receivers[i]
 
 			go func(m core.Msg) {
-				toPort <- c.interceptor.BeforeReceive(connection.original.From, toAddr, m)
+				toPort <- c.interceptor.BeforeReceive(relation.meta.Sender, toAddr, m) // FIXME possible memory leak
+				<-guard
 			}(msg)
 		}
 	}
