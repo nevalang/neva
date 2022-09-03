@@ -18,7 +18,7 @@ type (
 	RelationMapper interface { // TODO do we need business-logic behind interface?
 		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Relation) ([]Relation, error) // TODO rename?
 	}
-}
+)
 
 var ErrMapper = errors.New("mapper")
 
@@ -27,8 +27,14 @@ type Connector struct {
 	mapper      RelationMapper
 }
 
+type Relation struct {
+	sender    chan core.Msg
+	receivers []chan core.Msg
+	meta      runtime.Relation
+}
+
 func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Relation) error {
-	connections, err := c.mapper.Net(ports, rels)
+	connections, err := c.mapper.Net(ports, rels) // TODO refactor?
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
@@ -37,8 +43,7 @@ func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runt
 		go c.linkConnection(connections[i])
 	}
 
-		wg.Wait()
-	}
+	return nil
 }
 
 func (c Connector) linkConnection(relation Relation) {
