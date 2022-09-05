@@ -5,14 +5,10 @@ There are places where we do need then and there are places where we don't
 Implementation where interfaces must be used all the time leads to useless abstraction layers
 Why have interface for database driver in a component that exists to implement other interface?
 
-
-
-
 # Filter
 
 In classical FBP filter works differently.
 Is uses sort of optional IP to specify field in the IP with bool.
-
 
 # Sequencizer component
 
@@ -29,11 +25,9 @@ From fbp book:
 
 ```yml
 io:
-  arg: [x,y,z]
+  arg: [x, y, z]
   in:
     a[]: x
-
-
 ```
 
 # SubStreams to array outports

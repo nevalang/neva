@@ -18,6 +18,5 @@
 - asynchrony
 - asynchron
 - asyncron
-
 - gears
 - cogwheel

@@ -11,6 +11,7 @@ type (
 	Caster interface {
 		Cast(Module) (compiler.Module, error)
 	}
+
 	Unmarshaler interface {
 		Unmarshal([]byte) (Module, error)
 	}

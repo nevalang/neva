@@ -31,7 +31,7 @@ type Translator struct{}
 func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	rprog := runtime.Program{
 		Ports:       []runtime.PortAddr{},
-		Connections: []runtime.Relation{},
+		Connections: []runtime.Connection{},
 		Effects:     runtime.Effects{},
 		StartPort: runtime.PortAddr{
 			Path: "",
@@ -77,7 +77,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		for _, connection := range component.Module.Net {
-			rconn := runtime.Relation{
+			rconn := runtime.Connection{
 				Sender: runtime.PortAddr{
 					Path: node.parentCtx.path + "." + node.parentCtx.node + ".out",
 					Name: connection.From.Port,

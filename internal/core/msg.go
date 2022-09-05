@@ -1,28 +1,31 @@
 package core
 
 type Msg interface {
-	Sig() struct{}
+	Type() Type
 	Bool() bool
 	Int() int
 	Str() string
-	Type() Type
+	List() []Msg
+	Struct() map[string]Msg
 }
 
 type Type uint8
 
 const (
-	Sig Type = iota
-	Bool
+	Bool Type = iota
 	Int
 	Str
+	List
+	Struct
 )
 
 type emptyMsg struct{}
 
-func (msg emptyMsg) Str() (_ string)   { return }
-func (msg emptyMsg) Int() (_ int)      { return }
-func (msg emptyMsg) Bool() (_ bool)    { return }
-func (msg emptyMsg) Sig() (_ struct{}) { return }
+func (msg emptyMsg) Int() int               { return 0 }
+func (msg emptyMsg) Bool() bool             { return false }
+func (msg emptyMsg) Str() string            { return "" }
+func (msg emptyMsg) List() []Msg            { return []Msg{} }
+func (msg emptyMsg) Struct() map[string]Msg { return map[string]Msg{} }
 
 type IntMsg struct {
 	emptyMsg
@@ -69,32 +72,69 @@ func NewBoolMsg(b bool) BoolMsg {
 	}
 }
 
-type SigMsg struct {
+type StructMsg struct {
 	emptyMsg
+	v map[string]Msg
 }
 
-func (msg SigMsg) Sig() struct{} { return struct{}{} }
-func (msg SigMsg) Type() Type    { return Sig }
+func (msg StructMsg) Struct() map[string]Msg { return msg.v }
+func (msg StructMsg) Type() Type             { return Struct }
 
-func NewSigMsg() SigMsg {
-	return SigMsg{emptyMsg{}}
+func NewStructMsg(b bool) StructMsg {
+	return StructMsg{
+		emptyMsg: emptyMsg{},
+		v:        map[string]Msg{},
+	}
+}
+
+type ListMsg struct {
+	emptyMsg
+	v []Msg
+}
+
+func (msg ListMsg) List() []Msg { return msg.v }
+func (msg ListMsg) Type() Type  { return List }
+
+func NewListMsg(b bool) ListMsg {
+	return ListMsg{
+		emptyMsg: emptyMsg{},
+		v:        []Msg{},
+	}
 }
 
 func Eq(a, b Msg) bool {
 	if a.Type() != b.Type() {
 		return false
 	}
-
 	switch a.Type() {
-	case Sig:
-		return a.Sig() == b.Sig()
 	case Bool:
 		return a.Bool() == b.Bool()
 	case Int:
 		return a.Int() == b.Int()
 	case Str:
 		return a.Str() == b.Str()
-	default:
-		return false
+	case List:
+		l1 := a.List()
+		l2 := b.List()
+		if len(l1) != len(l2) {
+			return false
+		}
+		for i := range l1 {
+			if !Eq(l1[i], l2[i]) {
+				return false
+			}
+		}
+	case Struct:
+		s1 := a.Struct()
+		s2 := a.Struct()
+		if len(s1) != len(s2) {
+			return false
+		}
+		for k := range s1 {
+			if !Eq(s1[k], s2[k]) {
+				return false
+			}
+		}
 	}
+	return false
 }

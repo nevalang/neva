@@ -11,12 +11,12 @@ import (
 
 type (
 	Interceptor interface {
-		AfterSend(runtime.Relation, core.Msg) core.Msg                  // After Sending
+		AfterSend(runtime.Connection, core.Msg) core.Msg                // After Sending
 		BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg // Before receiving
 	}
 
 	RelationMapper interface { // TODO do we need business-logic behind interface?
-		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Relation) ([]Relation, error) // TODO rename?
+		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Connection) ([]Relation, error) // TODO rename?
 	}
 )
 
@@ -30,10 +30,10 @@ type Connector struct {
 type Relation struct {
 	sender    chan core.Msg
 	receivers []chan core.Msg
-	meta      runtime.Relation
+	meta      runtime.Connection
 }
 
-func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Relation) error {
+func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Connection) error {
 	connections, err := c.mapper.Net(ports, rels) // TODO refactor?
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
@@ -53,10 +53,17 @@ func (c Connector) linkConnection(relation Relation) {
 		msg = c.interceptor.AfterSend(relation.meta, msg)
 
 		for i := range relation.receivers { // delivery
-			guard <- struct{}{}
-
 			toAddr := relation.meta.Receivers[i]
 			toPort := relation.receivers[i]
+
+			if relation.meta.Receivers[i].Type == runtime.FieldReading { // TODO move to core?
+				kk := relation.meta.Receivers[i].StructFieldPath
+				for _, part := range kk[:len(kk)-1] {
+					msg = msg.Struct()[part]
+				}
+			}
+
+			guard <- struct{}{}
 
 			go func(m core.Msg) {
 				toPort <- c.interceptor.BeforeReceive(relation.meta.Sender, toAddr, m) // FIXME possible memory leak

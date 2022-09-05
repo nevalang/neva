@@ -7,7 +7,7 @@ import (
 
 type DefaultInterceptor struct{}
 
-func (c DefaultInterceptor) AfterSend(_ runtime.Relation, msg core.Msg) core.Msg {
+func (c DefaultInterceptor) AfterSend(_ runtime.Connection, msg core.Msg) core.Msg {
 	return msg
 }
 

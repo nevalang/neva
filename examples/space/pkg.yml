@@ -1,0 +1,16 @@
+interfaces:
+  interfaceName:
+    in:
+      sig: any
+    out:
+      sig: any
+
+types:
+  user:
+    params: [T]
+    body:
+      name:
+        type: int
+      data:
+        type: T
+      friends: map

@@ -25,7 +25,7 @@ type (
 		Spawn([]Operator, map[PortAddr]chan core.Msg) error
 	}
 	Connector interface {
-		Connect(map[PortAddr]chan core.Msg, []Relation) error
+		Connect(map[PortAddr]chan core.Msg, []Connection) error
 	}
 )
 

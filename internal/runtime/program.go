@@ -1,23 +1,33 @@
 package runtime
 
+import "github.com/emil14/neva/internal/core"
+
 type (
 	Program struct {
 		Ports       []PortAddr
-		Connections []Relation // replace with map? (avoid possible duplicates)
+		Connections []Connection
 		Effects     Effects
 		StartPort   PortAddr
 	}
 
 	PortAddr struct {
-		Path string // IDEA: rename to Node for consistency with compiler?
+		Path string
 		Name string
 		Idx  uint8
 	}
 
-	Relation struct { // TODO rename to relation?
+	Connection struct {
 		Sender    PortAddr
-		Receivers []PortAddr
+		Receivers []ConnectionPoint
 	}
+
+	ConnectionPoint struct {
+		PortAddr        PortAddr
+		Type            ConnectionPointType
+		StructFieldPath []string
+	}
+
+	ConnectionPointType uint8
 
 	Effects struct {
 		Ops   []Operator
@@ -30,10 +40,10 @@ type (
 	}
 
 	ConstMsg struct {
-		Type MsgType
-		Int  int
-		Str  string
-		Bool bool
+		Type    core.Type
+		BoolMsg core.BoolMsg
+		IntMsg  core.IntMsg
+		StrMsg  core.StrMsg
 	}
 
 	OpRef struct {
@@ -43,13 +53,9 @@ type (
 	OpPortAddrs struct {
 		In, Out []PortAddr
 	}
-
-	MsgType uint8
 )
 
 const (
-	IntMsg MsgType = iota + 1
-	StrMsg
-	BoolMsg
-	SigMsg
+	Normal ConnectionPointType = iota + 1
+	FieldReading
 )
