@@ -53,12 +53,12 @@ func (c Connector) linkConnection(relation Relation) {
 		msg = c.interceptor.AfterSend(relation.meta, msg)
 
 		for i := range relation.receivers { // delivery
-			toAddr := relation.meta.Receivers[i]
-			toPort := relation.receivers[i]
+			receiverConnPoint := relation.meta.Receivers[i]
+			receiverPortChan := relation.receivers[i]
 
-			if relation.meta.Receivers[i].Type == runtime.FieldReading { // TODO move to core?
-				kk := relation.meta.Receivers[i].StructFieldPath
-				for _, part := range kk[:len(kk)-1] {
+			if receiverConnPoint.Type == runtime.FieldReading { // TODO move to core?
+				parts := receiverConnPoint.StructFieldPath
+				for _, part := range parts[:len(parts)-1] {
 					msg = msg.Struct()[part]
 				}
 			}
@@ -66,7 +66,7 @@ func (c Connector) linkConnection(relation Relation) {
 			guard <- struct{}{}
 
 			go func(m core.Msg) {
-				toPort <- c.interceptor.BeforeReceive(relation.meta.Sender, toAddr, m) // FIXME possible memory leak
+				receiverPortChan <- c.interceptor.BeforeReceive(relation.meta.Sender, receiverConnPoint.PortAddr, m)
 				<-guard
 			}(msg)
 		}
