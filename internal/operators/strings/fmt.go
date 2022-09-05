@@ -15,7 +15,7 @@ func Fmt(io core.IO) error {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
 
-	argPorts, err := io.In.ArrPort("args")
+	argPortSlots, err := io.In.ArrPortSlots("args")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrFmt, err)
 	}
@@ -27,10 +27,10 @@ func Fmt(io core.IO) error {
 
 	go func() {
 		for msg := range strPort {
-			ss := make([]interface{}, 0, len(argPorts))
+			ss := make([]interface{}, 0, len(argPortSlots))
 
-			for i := range argPorts {
-				arg := <-argPorts[i]
+			for i := range argPortSlots {
+				arg := <-argPortSlots[i]
 				ss = append(ss, arg)
 			}
 

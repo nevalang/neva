@@ -3,7 +3,7 @@ package main
 import "github.com/emil14/neva/internal/core"
 
 func Or(io core.IO) error {
-	in, err := io.In.ArrPort("in")
+	in, err := io.In.ArrPortSlots("in")
 	if err != nil {
 		return err
 	}

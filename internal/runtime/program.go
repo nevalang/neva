@@ -1,7 +1,5 @@
 package runtime
 
-import "github.com/emil14/neva/internal/core"
-
 type (
 	Program struct {
 		Ports       []PortAddr
@@ -31,7 +29,7 @@ type (
 
 	Effects struct {
 		Ops   []Operator
-		Const map[PortAddr]ConstMsg
+		Const map[PortAddr]Msg
 	}
 
 	Operator struct {
@@ -39,12 +37,15 @@ type (
 		PortAddrs OpPortAddrs
 	}
 
-	ConstMsg struct {
-		Type    core.Type
-		BoolMsg core.BoolMsg
-		IntMsg  core.IntMsg
-		StrMsg  core.StrMsg
+	Msg struct {
+		Type   MsgType
+		Bool   bool
+		Int    int
+		Str    string
+		Struct map[string]Msg
 	}
+
+	MsgType uint8
 
 	OpRef struct {
 		Pkg, Name string
@@ -58,4 +59,11 @@ type (
 const (
 	Normal ConnectionPointType = iota + 1
 	FieldReading
+)
+
+const (
+	IntMsg MsgType = iota + 1
+	StrMsg
+	BoolMsg
+	StructMsg
 )

@@ -83,16 +83,17 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 					Name: connection.From.Port,
 					Idx:  connection.From.Idx,
 				},
-				Receivers: make([]runtime.PortAddr, len(connection.To)),
+				// Receivers: make([]runtime.PortAddr, len(connection.To)), // TODO
 			}
 
-			for i, to := range connection.To {
-				rconn.Receivers[i] = runtime.PortAddr{
-					Path: node.parentCtx.path + "." + node.parentCtx.node + ".in",
-					Name: to.Port,
-					Idx:  to.Idx,
-				}
-			}
+			// TODO
+			// for i, to := range connection.To {
+			// 	rconn.Receivers[i] = runtime.PortAddr{
+			// 		Path: node.parentCtx.path + "." + node.parentCtx.node + ".in",
+			// 		Name: to.Port,
+			// 		Idx:  to.Idx,
+			// 	}
+			// }
 
 			rprog.Connections = append(rprog.Connections, rconn)
 		}
@@ -106,7 +107,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 			rprog.Ports = append(rprog.Ports, addr)
 
-			rprog.Effects.Const[addr] = runtime.ConstMsg{
+			rprog.Effects.Const[addr] = runtime.Msg{
 				Type: runtime.MsgType(msg.Type), // TODO
 				Int:  msg.Int,
 				Str:  msg.Str,

@@ -23,7 +23,7 @@ func (p Ports) Port(name string) (chan Msg, error) {
 }
 
 // FIXME sorting?
-func (p Ports) ArrPort(name string) ([]chan Msg, error) {
+func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	pp := make([]chan Msg, 0, len(p))
 
 	for addr, port := range p {

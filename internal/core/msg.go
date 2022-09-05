@@ -80,7 +80,7 @@ type StructMsg struct {
 func (msg StructMsg) Struct() map[string]Msg { return msg.v }
 func (msg StructMsg) Type() Type             { return Struct }
 
-func NewStructMsg(b bool) StructMsg {
+func NewStructMsg(v map[string]Msg) StructMsg {
 	return StructMsg{
 		emptyMsg: emptyMsg{},
 		v:        map[string]Msg{},

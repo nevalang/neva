@@ -28,7 +28,7 @@ func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Conn
 		}
 
 		for j := range net[i].Receivers {
-			to, ok := ports[net[i].Receivers[j]]
+			to, ok := ports[net[i].Receivers[j].PortAddr]
 			if !ok {
 				return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].Receivers[j])
 			}

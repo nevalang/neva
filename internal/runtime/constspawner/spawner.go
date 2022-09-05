@@ -16,7 +16,7 @@ var (
 )
 
 func (c Spawner) Spawn(
-	constData map[runtime.PortAddr]runtime.ConstMsg,
+	constData map[runtime.PortAddr]runtime.Msg,
 	ports map[runtime.PortAddr]chan core.Msg,
 ) error {
 	for addr := range constData {
@@ -33,8 +33,8 @@ func (c Spawner) Spawn(
 			msg = core.NewBoolMsg(constData[addr].Bool)
 		case runtime.StrMsg:
 			msg = core.NewStrMsg(constData[addr].Str)
-		case runtime.SigMsg:
-			msg = core.NewSigMsg()
+		case runtime.StructMsg:
+			// msg = core.NewStructMsg(constData[addr].Struct) // TODO
 		default:
 			return fmt.Errorf("%w: %v", ErrUnknownMsgType, constData[addr].Type)
 		}

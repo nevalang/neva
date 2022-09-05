@@ -10,7 +10,7 @@ import (
 var ErrMul = errors.New("multiplication")
 
 func Mul(io core.IO) error {
-	inports, err := io.In.ArrPort("in")
+	inports, err := io.In.ArrPortSlots("in")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMul, err)
 	}

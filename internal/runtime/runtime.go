@@ -19,7 +19,7 @@ type (
 	// 	MakeEffects(Effects) error
 	// }
 	ConstSpawner interface {
-		Spawn(map[PortAddr]ConstMsg, map[PortAddr]chan core.Msg) error
+		Spawn(map[PortAddr]Msg, map[PortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
 		Spawn([]Operator, map[PortAddr]chan core.Msg) error
@@ -69,7 +69,7 @@ func (r Runtime) Run(raw []byte) error {
 	if !ok {
 		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPort)
 	}
-	start <- core.NewSigMsg()
+	start <- core.NewStructMsg(nil) // TODO check
 
 	return nil // block?
 }
