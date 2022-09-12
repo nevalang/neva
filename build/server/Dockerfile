@@ -14,11 +14,11 @@ RUN go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/
 RUN go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/main.go
 RUN go build -o plugins/remainder.so -buildmode=plugin internal/runtime/operators/remainder/main.go
 
-# build platform
-RUN go build -o /bin/respectbin cmd/server/main.go
+# build server
+RUN go build -o /bin/nevabin cmd/server/main.go
 
 EXPOSE 8090
 
-RUN ["chmod", "+x", "/bin/respectbin"]
+RUN ["chmod", "+x", "/bin/nevabin"]
 
-CMD ["/bin/respectbin"]
+CMD ["/bin/nevabin"]

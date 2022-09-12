@@ -114,7 +114,7 @@ prog1/
 prog2/
   mod3.yml
 
-respect run prog1.yml
+neva run prog1.yml
 ```
 
 # Debugger

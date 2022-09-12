@@ -15,28 +15,19 @@ var (
 	ErrUnknownMsgType = errors.New("unknown message type")
 )
 
-func (c Spawner) Spawn(
-	constData map[runtime.PortAddr]runtime.Msg,
-	ports map[runtime.PortAddr]chan core.Msg,
+func (s Spawner) Spawn(
+	outportsAndValues map[runtime.PortAddr]runtime.Msg,
+	outportsAndChans map[runtime.PortAddr]chan core.Msg,
 ) error {
-	for addr := range constData {
-		port, ok := ports[addr]
+	for addr := range outportsAndValues {
+		port, ok := outportsAndChans[addr]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
-		var msg core.Msg
-		switch constData[addr].Type {
-		case runtime.IntMsg:
-			msg = core.NewIntMsg(constData[addr].Int)
-		case runtime.BoolMsg:
-			msg = core.NewBoolMsg(constData[addr].Bool)
-		case runtime.StrMsg:
-			msg = core.NewStrMsg(constData[addr].Str)
-		case runtime.StructMsg:
-			// msg = core.NewStructMsg(constData[addr].Struct) // TODO
-		default:
-			return fmt.Errorf("%w: %v", ErrUnknownMsgType, constData[addr].Type)
+		msg, err := s.coreMsg(outportsAndValues, addr)
+		if err != nil {
+			return fmt.Errorf("core msg: %w", err)
 		}
 
 		go func() {
@@ -47,4 +38,27 @@ func (c Spawner) Spawn(
 	}
 
 	return nil
+}
+
+func (s Spawner) coreMsg(outportsAndValues map[runtime.PortAddr]runtime.Msg, addr runtime.PortAddr) (core.Msg, error) {
+	var msg core.Msg
+	switch outportsAndValues[addr].Type {
+	case runtime.IntMsg:
+		msg = core.NewIntMsg(outportsAndValues[addr].Int)
+	case runtime.BoolMsg:
+		msg = core.NewBoolMsg(outportsAndValues[addr].Bool)
+	case runtime.StrMsg:
+		msg = core.NewStrMsg(outportsAndValues[addr].Str)
+	case runtime.StructMsg:
+		msg = core.NewStructMsg(
+			s.structMsg(outportsAndValues[addr].Struct),
+		)
+	default:
+		return nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, outportsAndValues[addr].Type)
+	}
+	return msg, nil
+}
+
+func (s Spawner) structMsg(map[string]runtime.Msg) map[string]core.Msg {
+	return map[string]core.Msg{} // TODO
 }

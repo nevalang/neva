@@ -7,10 +7,10 @@ import (
 
 type DefaultInterceptor struct{}
 
-func (c DefaultInterceptor) AfterSend(_ runtime.Connection, msg core.Msg) core.Msg {
+func (c DefaultInterceptor) AfterSending(_ runtime.Connection, msg core.Msg) core.Msg {
 	return msg
 }
 
-func (c DefaultInterceptor) BeforeReceive(from, to runtime.PortAddr, msg core.Msg) core.Msg {
+func (c DefaultInterceptor) BeforeReceiving(from, to runtime.PortAddr, msg core.Msg) core.Msg {
 	return msg
 }

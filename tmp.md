@@ -6,6 +6,11 @@
 - string: 16 bytes
 - struct: sum of fields
 
+# Chan info
+
+- Safe to receive from closed chan
+- Unsafe to send to closed chan (panic)
+
 # Program structure
 
 ```yaml

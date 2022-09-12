@@ -12,8 +12,8 @@ var ErrPortNotFound = errors.New("port not found by addr")
 
 type mapper struct{}
 
-func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) ([]Relation, error) {
-	connections := make([]Relation, len(net))
+func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) ([]Connection, error) {
+	connections := make([]Connection, len(net))
 
 	for i := range net {
 		from, ok := ports[net[i].Sender]
@@ -21,7 +21,7 @@ func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Conn
 			return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].Sender)
 		}
 
-		connections[i] = Relation{
+		connections[i] = Connection{
 			meta:      net[i],
 			sender:    from,
 			receivers: make([]chan core.Msg, len(net[i].Receivers)),
