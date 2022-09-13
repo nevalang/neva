@@ -66,8 +66,8 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 		if component.Type == compiler.OperatorComponent {
 			rprog.Effects.Ops = append(rprog.Effects.Ops, runtime.Operator{
-				Ref: runtime.OpRef(component.Operator.Ref),
-				PortAddrs: runtime.OpPortAddrs{
+				Ref: runtime.OperatorRef(component.Operator.Ref),
+				PortAddrs: runtime.OperatorPortAddrs{
 					In:  in,
 					Out: out,
 				},

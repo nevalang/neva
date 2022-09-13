@@ -6,6 +6,7 @@ import (
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 type (
@@ -52,26 +53,39 @@ func (r Runtime) Run(raw []byte) error {
 	}
 
 	ports := r.portGen.Ports(prog.Ports)
-
-	if err := r.connector.Connect(ports, prog.Connections); err != nil {
-		return fmt.Errorf("%w: %v", ErrConnector, err)
-	}
-
-	if err := r.opSpawner.Spawn(prog.Effects.Ops, ports); err != nil {
-		return fmt.Errorf("%w: %v", ErrOpSpawner, err)
-	}
-
-	if err := r.constSpawner.Spawn(prog.Effects.Const, ports); err != nil {
-		return fmt.Errorf("%w: %v", ErrConstSpawner, err)
-	}
-
-	start, ok := ports[prog.StartPort]
+	startPort, ok := ports[prog.StartPort]
 	if !ok {
 		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPort)
 	}
-	start <- core.NewStructMsg(nil) // TODO check
 
-	return nil // block?
+	g := errgroup.Group{}
+
+	g.Go(func() error {
+		if err := r.connector.Connect(ports, prog.Connections); err != nil {
+			return fmt.Errorf("%w: %v", ErrConnector, err)
+		}
+		return nil
+	})
+	g.Go(func() error {
+		if err := r.opSpawner.Spawn(prog.Effects.Ops, ports); err != nil {
+			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
+		}
+		return nil
+	})
+	g.Go(func() error {
+		if err := r.constSpawner.Spawn(prog.Effects.Const, ports); err != nil {
+			return fmt.Errorf("%w: %v", ErrConstSpawner, err)
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("wait group: %w", err)
+	}
+
+	startPort <- core.NewStructMsg(nil)
+
+	return nil
 }
 
 func MustNew(

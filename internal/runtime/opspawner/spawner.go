@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime"
 )
 
@@ -16,16 +17,16 @@ var (
 
 type (
 	Repo interface {
-		Operator(ref runtime.OpRef) (func(core.IO) error, error)
+		Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
 	}
-	Collector interface {
-		Collect(runtime.OpPortAddrs, map[runtime.PortAddr]chan core.Msg) (core.IO, error)
+	PortSearcher interface {
+		SearchPorts(runtime.OperatorPortAddrs, map[runtime.PortAddr]chan core.Msg) (core.IO, error)
 	}
 )
 
 type Spawner struct {
-	repo      Repo
-	collector Collector
+	repo         Repo
+	portSearcher PortSearcher
 }
 
 func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan core.Msg) error {
@@ -35,7 +36,7 @@ func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan c
 			return fmt.Errorf("%w: %v", ErrRepo, err)
 		}
 
-		io, err := s.collector.Collect(ops[i].PortAddrs, ports)
+		io, err := s.portSearcher.SearchPorts(ops[i].PortAddrs, ports)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrCollector, err)
 		}
@@ -48,8 +49,10 @@ func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan c
 	return nil
 }
 
-func New(repo Repo) Spawner {
+func MustNew(repo Repo, portSearcher PortSearcher) Spawner {
+	utils.NilArgsFatal(repo, portSearcher)
 	return Spawner{
-		repo: repo,
+		repo:         repo,
+		portSearcher: portSearcher,
 	}
 }

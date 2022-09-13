@@ -12,7 +12,7 @@ var ErrPortNotFound = errors.New("port not found")
 
 type collector struct{}
 
-func (c collector) Collect(wantIO runtime.OpPortAddrs, ports map[runtime.PortAddr]chan core.Msg) (core.IO, error) {
+func (c collector) SearchPorts(wantIO runtime.OperatorPortAddrs, ports map[runtime.PortAddr]chan core.Msg) (core.IO, error) {
 	io := core.IO{}
 
 	for _, addr := range wantIO.In {

@@ -19,10 +19,10 @@ var (
 
 type Plugin struct {
 	pkgs  map[string]PluginData
-	cache map[runtime.OpRef]func(core.IO) error
+	cache map[runtime.OperatorRef]func(core.IO) error
 }
 
-func (r Plugin) Operator(ref runtime.OpRef) (func(core.IO) error, error) {
+func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 	if op, ok := r.cache[ref]; ok {
 		return op, nil
 	}
@@ -68,7 +68,7 @@ func NewPlugin(pkgs map[string]PluginData) Plugin {
 	return Plugin{
 		pkgs: pkgs,
 		cache: make(
-			map[runtime.OpRef]func(core.IO) error,
+			map[runtime.OperatorRef]func(core.IO) error,
 			len(pkgs),
 		),
 	}

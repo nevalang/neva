@@ -33,8 +33,8 @@ type (
 	}
 
 	Operator struct {
-		Ref       OpRef
-		PortAddrs OpPortAddrs
+		Ref       OperatorRef
+		PortAddrs OperatorPortAddrs
 	}
 
 	Msg struct {
@@ -47,11 +47,11 @@ type (
 
 	MsgType uint8
 
-	OpRef struct {
+	OperatorRef struct {
 		Pkg, Name string
 	}
 
-	OpPortAddrs struct {
+	OperatorPortAddrs struct {
 		In, Out []PortAddr
 	}
 )

@@ -19,7 +19,7 @@ func main() {
 			decoder.NewUnmarshaler(),
 		),
 		portgen.New(),
-		opspawner.New(
+		opspawner.MustNew(
 			repo.NewPlugin(map[string]repo.PluginData{
 				"math": {
 					Path:    "/home/emil14/projects/neva/internal/operators/math",
