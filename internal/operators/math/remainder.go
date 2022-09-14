@@ -18,7 +18,7 @@ func Remainder(io core.IO) error {
 		return err
 	}
 
-	go func() {
+	go func() { // return func(ctx) maybe ?
 		for {
 			msgA := <-a
 			msgB := <-b

@@ -1,5 +1,5 @@
-.PHONY: sdk
-sdk:
+.PHONY: dev_server_sdk
+dev_server_sdk:
 	protoc api/devserver.proto \
 		--js_out=import_style=commonjs,binary:web/src/sdk \
 		--grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:web/src/sdk \

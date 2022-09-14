@@ -67,13 +67,13 @@ func (r Runtime) Run(raw []byte) error {
 		return nil
 	})
 	g.Go(func() error {
-		if err := r.opSpawner.Spawn(prog.Effects.Ops, ports); err != nil {
+		if err := r.opSpawner.Spawn(prog.Effects.Operators, ports); err != nil {
 			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 		}
 		return nil
 	})
 	g.Go(func() error {
-		if err := r.constSpawner.Spawn(prog.Effects.Const, ports); err != nil {
+		if err := r.constSpawner.Spawn(prog.Effects.Constants, ports); err != nil {
 			return fmt.Errorf("%w: %v", ErrConstSpawner, err)
 		}
 		return nil

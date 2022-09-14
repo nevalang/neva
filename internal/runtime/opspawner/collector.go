@@ -10,9 +10,12 @@ import (
 
 var ErrPortNotFound = errors.New("port not found")
 
-type collector struct{}
+type Searcher struct{}
 
-func (c collector) SearchPorts(wantIO runtime.OperatorPortAddrs, ports map[runtime.PortAddr]chan core.Msg) (core.IO, error) {
+func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we also lookup them here?
+	wantIO runtime.OperatorPortAddrs,
+	ports map[runtime.PortAddr]chan core.Msg,
+) (core.IO, error) {
 	io := core.IO{}
 
 	for _, addr := range wantIO.In {

@@ -65,7 +65,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		if component.Type == compiler.OperatorComponent {
-			rprog.Effects.Ops = append(rprog.Effects.Ops, runtime.Operator{
+			rprog.Effects.Operators = append(rprog.Effects.Operators, runtime.Operator{
 				Ref: runtime.OperatorRef(component.Operator.Ref),
 				PortAddrs: runtime.OperatorPortAddrs{
 					In:  in,
@@ -107,7 +107,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 			rprog.Ports = append(rprog.Ports, addr)
 
-			rprog.Effects.Const[addr] = runtime.Msg{
+			rprog.Effects.Constants[addr] = runtime.Msg{
 				Type: runtime.MsgType(msg.Type), // TODO
 				Int:  msg.Int,
 				Str:  msg.Str,

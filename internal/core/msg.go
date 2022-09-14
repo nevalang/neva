@@ -7,6 +7,7 @@ type Msg interface {
 	Str() string
 	List() []Msg
 	Struct() map[string]Msg
+	// sub-stream item?
 }
 
 type Type uint8

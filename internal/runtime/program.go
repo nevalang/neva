@@ -28,8 +28,8 @@ type (
 	ConnectionPointType uint8
 
 	Effects struct {
-		Ops   []Operator
-		Const map[PortAddr]Msg
+		Operators []Operator
+		Constants map[PortAddr]Msg
 	}
 
 	Operator struct {

@@ -7,12 +7,12 @@ option go_package = './;runtimesdk';
 message Program {
 	repeated Port ports = 1;
 	repeated Connection connections = 2;
-	repeated Operator ops = 3;
-	repeated Const const = 4;
+	repeated Operator operators = 3;
+	repeated Const constants = 4;
 }
 
 message Port {
-	string name = 1;
+	string name = 1; 
 	uint32 idx  = 2;
 }
 
@@ -22,8 +22,8 @@ message Connection {
 }
 
 message Operator {
-	OpRef ref = 1; 
-	repeated Port in = 2;
+	OperatorRef ref = 1; 
+	repeated Port in = 2; // TODO maybe use mapping? in = { 'a': 'path/to/node/portname }
 	repeated Port out = 3;
 }
 
@@ -48,7 +48,9 @@ enum ValueType {
     VALUE_TYPE_SIG = 3;
 }
 
-message OpRef  {
+message OperatorRef  {
 	string pkg = 1;
     string name =2;
 }
+
+// TODO we use ports and port-addrs without connection?

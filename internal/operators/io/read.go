@@ -14,7 +14,7 @@ func Read(io core.IO) error {
 	}
 
 	go func() {
-		scanner := bufio.NewScanner(os.Stdin)
+		scanner := bufio.NewScanner(os.Stdin) // must be triggered by signal maybe?
 		for scanner.Scan() {
 			out <- core.NewStrMsg(scanner.Text())
 		}

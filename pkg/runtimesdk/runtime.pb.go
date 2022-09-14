@@ -56,8 +56,8 @@ func (ValueType) EnumDescriptor() ([]byte, []int) {
 type Program struct {
 	Ports                []*Port       `protobuf:"bytes,1,rep,name=ports,proto3" json:"ports,omitempty"`
 	Connections          []*Connection `protobuf:"bytes,2,rep,name=connections,proto3" json:"connections,omitempty"`
-	Ops                  []*Operator   `protobuf:"bytes,3,rep,name=ops,proto3" json:"ops,omitempty"`
-	Const                []*Const      `protobuf:"bytes,4,rep,name=const,proto3" json:"const,omitempty"`
+	Operators                  []*Operator   `protobuf:"bytes,3,rep,name=ops,proto3" json:"ops,omitempty"`
+	Constants                []*Const      `protobuf:"bytes,4,rep,name=const,proto3" json:"const,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -112,14 +112,14 @@ func (m *Program) GetConnections() []*Connection {
 
 func (m *Program) GetOps() []*Operator {
 	if m != nil {
-		return m.Ops
+		return m.Operators
 	}
 	return nil
 }
 
 func (m *Program) GetConst() []*Const {
 	if m != nil {
-		return m.Const
+		return m.Constants
 	}
 	return nil
 }
@@ -243,7 +243,7 @@ func (m *Connection) GetTo() []*PortAddr {
 }
 
 type Operator struct {
-	Ref                  *OpRef   `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	Ref                  *OperatorRef   `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
 	In                   []*Port  `protobuf:"bytes,2,rep,name=in,proto3" json:"in,omitempty"`
 	Out                  []*Port  `protobuf:"bytes,3,rep,name=out,proto3" json:"out,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -284,7 +284,7 @@ func (m *Operator) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Operator proto.InternalMessageInfo
 
-func (m *Operator) GetRef() *OpRef {
+func (m *Operator) GetRef() *OperatorRef {
 	if m != nil {
 		return m.Ref
 	}
@@ -447,7 +447,7 @@ func (m *PortAddr) GetIdx() uint32 {
 	return 0
 }
 
-type OpRef struct {
+type OperatorRef struct {
 	Pkg                  string   `protobuf:"bytes,1,opt,name=pkg,proto3" json:"pkg,omitempty"`
 	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -455,16 +455,16 @@ type OpRef struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *OpRef) Reset()         { *m = OpRef{} }
-func (m *OpRef) String() string { return proto.CompactTextString(m) }
-func (*OpRef) ProtoMessage()    {}
-func (*OpRef) Descriptor() ([]byte, []int) {
+func (m *OperatorRef) Reset()         { *m = OperatorRef{} }
+func (m *OperatorRef) String() string { return proto.CompactTextString(m) }
+func (*OperatorRef) ProtoMessage()    {}
+func (*OperatorRef) Descriptor() ([]byte, []int) {
 	return fileDescriptor_86e2dd377c869464, []int{6}
 }
-func (m *OpRef) XXX_Unmarshal(b []byte) error {
+func (m *OperatorRef) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OpRef) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OperatorRef) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_OpRef.Marshal(b, m, deterministic)
 	} else {
@@ -476,26 +476,26 @@ func (m *OpRef) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *OpRef) XXX_Merge(src proto.Message) {
+func (m *OperatorRef) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_OpRef.Merge(m, src)
 }
-func (m *OpRef) XXX_Size() int {
+func (m *OperatorRef) XXX_Size() int {
 	return m.Size()
 }
-func (m *OpRef) XXX_DiscardUnknown() {
+func (m *OperatorRef) XXX_DiscardUnknown() {
 	xxx_messageInfo_OpRef.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_OpRef proto.InternalMessageInfo
 
-func (m *OpRef) GetPkg() string {
+func (m *OperatorRef) GetPkg() string {
 	if m != nil {
 		return m.Pkg
 	}
 	return ""
 }
 
-func (m *OpRef) GetName() string {
+func (m *OperatorRef) GetName() string {
 	if m != nil {
 		return m.Name
 	}
@@ -510,7 +510,7 @@ func init() {
 	proto.RegisterType((*Operator)(nil), "runtime.Operator")
 	proto.RegisterType((*Const)(nil), "runtime.Const")
 	proto.RegisterType((*PortAddr)(nil), "runtime.PortAddr")
-	proto.RegisterType((*OpRef)(nil), "runtime.OpRef")
+	proto.RegisterType((*OperatorRef)(nil), "runtime.OpRef")
 }
 
 func init() { proto.RegisterFile("runtime.proto", fileDescriptor_86e2dd377c869464) }
@@ -574,10 +574,10 @@ func (m *Program) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if len(m.Const) > 0 {
-		for iNdEx := len(m.Const) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Constants) > 0 {
+		for iNdEx := len(m.Constants) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Const[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Constants[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -588,10 +588,10 @@ func (m *Program) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
-	if len(m.Ops) > 0 {
-		for iNdEx := len(m.Ops) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Operators) > 0 {
+		for iNdEx := len(m.Operators) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Ops[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Operators[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -909,7 +909,7 @@ func (m *PortAddr) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OpRef) Marshal() (dAtA []byte, err error) {
+func (m *OperatorRef) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -919,12 +919,12 @@ func (m *OpRef) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OpRef) MarshalTo(dAtA []byte) (int, error) {
+func (m *OperatorRef) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OpRef) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OperatorRef) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -979,14 +979,14 @@ func (m *Program) Size() (n int) {
 			n += 1 + l + sovRuntime(uint64(l))
 		}
 	}
-	if len(m.Ops) > 0 {
-		for _, e := range m.Ops {
+	if len(m.Operators) > 0 {
+		for _, e := range m.Operators {
 			l = e.Size()
 			n += 1 + l + sovRuntime(uint64(l))
 		}
 	}
-	if len(m.Const) > 0 {
-		for _, e := range m.Const {
+	if len(m.Constants) > 0 {
+		for _, e := range m.Constants {
 			l = e.Size()
 			n += 1 + l + sovRuntime(uint64(l))
 		}
@@ -1121,7 +1121,7 @@ func (m *PortAddr) Size() (n int) {
 	return n
 }
 
-func (m *OpRef) Size() (n int) {
+func (m *OperatorRef) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1273,8 +1273,8 @@ func (m *Program) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Ops = append(m.Ops, &Operator{})
-			if err := m.Ops[len(m.Ops)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Operators = append(m.Operators, &Operator{})
+			if err := m.Operators[len(m.Operators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1307,8 +1307,8 @@ func (m *Program) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Const = append(m.Const, &Const{})
-			if err := m.Const[len(m.Const)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Constants = append(m.Constants, &Const{})
+			if err := m.Constants[len(m.Constants)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1635,7 +1635,7 @@ func (m *Operator) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Ref == nil {
-				m.Ref = &OpRef{}
+				m.Ref = &OperatorRef{}
 			}
 			if err := m.Ref.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2042,7 +2042,7 @@ func (m *PortAddr) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OpRef) Unmarshal(dAtA []byte) error {
+func (m *OperatorRef) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {

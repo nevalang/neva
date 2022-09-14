@@ -14,7 +14,7 @@ func Write(io core.IO) error {
 
 	go func() {
 		for {
-			fmt.Print(<-in)
+			fmt.Print(<-in) // TODO add outport with printed message
 		}
 	}()
 
