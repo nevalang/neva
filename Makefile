@@ -1,13 +1,21 @@
-.PHONY: dev_server_sdk
-dev_server_sdk:
+.PHONY: runtimesdk
+runtimesdk:
 	protoc api/devserver.proto \
 		--js_out=import_style=commonjs,binary:web/src/sdk \
 		--grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:web/src/sdk \
 		--go_out=pkg/devserversdk \
 		--go-grpc_out=pkg/devserversdk
 
-.PHONY: go_plugins
-go_plugins:
+.PHONY: devserversdk
+devserversdk:
+	protoc api/devserver.proto \
+		--js_out=import_style=commonjs,binary:web/src/sdk \
+		--grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:web/src/sdk \
+		--go_out=pkg/devserversdk \
+		--go-grpc_out=pkg/devserversdk
+
+.PHONY: goplugins
+goplugins:
 	go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
 	go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
 	go build -o plugins/select.so -buildmode=plugin internal/runtime/operators/select/main.go

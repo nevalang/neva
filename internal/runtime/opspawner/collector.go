@@ -14,7 +14,7 @@ type Searcher struct{}
 
 func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we also lookup them here?
 	wantIO runtime.OperatorPortAddrs,
-	ports map[runtime.PortAddr]chan core.Msg,
+	ports map[runtime.AbsolutePortAddr]chan core.Msg,
 ) (core.IO, error) {
 	io := core.IO{}
 
@@ -24,8 +24,8 @@ func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we a
 			return core.IO{}, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
-		io.In[core.PortAddr{
-			Port: addr.Name,
+		io.In[core.RelativePortAddr{
+			Port: addr.Port,
 			Idx:  addr.Idx,
 		}] = port
 	}
@@ -36,8 +36,8 @@ func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we a
 			return core.IO{}, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
-		io.Out[core.PortAddr{
-			Port: addr.Name,
+		io.Out[core.RelativePortAddr{
+			Port: addr.Port,
 			Idx:  addr.Idx,
 		}] = port
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/emil14/neva/internal/runtime/opspawner/repo"
 	"github.com/emil14/neva/internal/runtime/portgen"
 	"github.com/emil14/neva/pkg/runtimesdk"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 func main() {
@@ -37,8 +37,14 @@ func main() {
 	)
 
 	helloWorld := runtimesdk.Program{
-		Ports: []*runtimesdk.Port{
-			{Name: "start"},
+		StartPort: &runtimesdk.PortAddr{
+			Path: "",
+			Port: "start",
+			Idx:  0,
+		},
+		Ports: []*runtimesdk.PortAddr{
+			{Port: "start"},
+			{Port: "const"},
 		},
 		Operators: []*runtimesdk.Operator{
 			{
@@ -46,18 +52,20 @@ func main() {
 					Pkg:  "io",
 					Name: "Write",
 				},
-				In: []*runtimesdk.Port{
-					{Name: "in"},
+				InPortAddrs: []*runtimesdk.PortAddr{
+					{Port: "in", Idx: 0},
 				},
 			},
 		},
-		Constants: []*runtimesdk.Const{
+		Constants: []*runtimesdk.Constant{
 			{
 				PortAddr: &runtimesdk.PortAddr{
-					Path: "",
-					Port: "",
+					Port: "const",
 				},
-				Str: "hello world!",
+				Msg: &runtimesdk.Msg{
+					Str:  "hello world!",
+					Type: runtimesdk.ValueType_VALUE_TYPE_STR,
+				},
 			},
 		},
 		Connections: []*runtimesdk.Connection{},

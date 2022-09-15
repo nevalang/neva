@@ -5,34 +5,47 @@ package runtime;
 option go_package = './;runtimesdk';
 
 message Program {
-	repeated Port ports = 1;
+	repeated PortAddr ports = 1;
 	repeated Connection connections = 2;
-	repeated Operator operators = 3;
-	repeated Const constants = 4;
-}
-
-message Port {
-	string name = 1; 
-	uint32 idx  = 2;
+	repeated Operator operators = 3; // use map {ref:ports}?
+	repeated Constant constants = 4; // use map {addr:msg}?
+	PortAddr start_port = 5;
 }
 
 message Connection {
-	PortAddr from = 1;
-	repeated PortAddr to = 2;
+	PortAddr sender_port_addr = 1;
+	repeated ConnectionPoint receiver_connection_points = 2;
+}
+
+message ConnectionPoint {
+	PortAddr port_addr = 1;
+	ConnectionPointType type = 2;
+	repeated string struct_field_path = 3; 
+}
+
+enum ConnectionPointType {
+	undefined = 0;
+	normal = 1;
+	struct_field_reading = 2;
 }
 
 message Operator {
 	OperatorRef ref = 1; 
-	repeated Port in = 2; // TODO maybe use mapping? in = { 'a': 'path/to/node/portname }
-	repeated Port out = 3;
+	repeated PortAddr in_port_addrs = 2;
+	repeated PortAddr out_port_addrs = 3;
 }
 
-message Const {
+message Constant {
 	PortAddr port_addr = 1;
-	ValueType type = 2;
-	int64 int = 3;
-	string str = 4;
-	bool bool = 5;
+	Msg msg = 2;
+}
+
+message Msg {
+	ValueType type = 1;
+	int64 int = 2;
+	string str = 3;
+	bool bool = 4;
+	map<string, Msg> struct = 5;
 }
 
 message PortAddr {

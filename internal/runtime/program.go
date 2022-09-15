@@ -2,34 +2,34 @@ package runtime
 
 type (
 	Program struct {
-		Ports       []PortAddr
+		Ports       []AbsolutePortAddr
 		Connections []Connection
 		Effects     Effects
-		StartPort   PortAddr
+		StartPort   AbsolutePortAddr
 	}
 
-	PortAddr struct {
-		Path string
-		Name string
+	AbsolutePortAddr struct {
+		Path string // node path? context? scope?
+		Port string
 		Idx  uint8
 	}
 
 	Connection struct {
-		Sender    PortAddr
-		Receivers []ConnectionPoint
+		SenderPortAddr            AbsolutePortAddr
+		ReceiversConnectionPoints []ConnectionPoint
 	}
 
 	ConnectionPoint struct {
-		PortAddr        PortAddr
+		PortAddr        AbsolutePortAddr
 		Type            ConnectionPointType
-		StructFieldPath []string
+		StructFieldPath []string // Only used for Type == StructFieldReading
 	}
 
 	ConnectionPointType uint8
 
 	Effects struct {
 		Operators []Operator
-		Constants map[PortAddr]Msg
+		Constants map[AbsolutePortAddr]Msg
 	}
 
 	Operator struct {
@@ -52,13 +52,13 @@ type (
 	}
 
 	OperatorPortAddrs struct {
-		In, Out []PortAddr
+		In, Out []AbsolutePortAddr
 	}
 )
 
 const (
 	Normal ConnectionPointType = iota + 1
-	FieldReading
+	StructFieldReading
 )
 
 const (

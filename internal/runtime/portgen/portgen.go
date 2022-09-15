@@ -8,8 +8,8 @@ import (
 type PortGen struct{}
 
 // TODO use map as input?
-func (p PortGen) Ports(addrs []runtime.PortAddr) map[runtime.PortAddr]chan core.Msg {
-	ports := make(map[runtime.PortAddr]chan core.Msg, len(addrs))
+func (p PortGen) Ports(addrs []runtime.AbsolutePortAddr) map[runtime.AbsolutePortAddr]chan core.Msg {
+	ports := make(map[runtime.AbsolutePortAddr]chan core.Msg, len(addrs))
 
 	for i := range addrs {
 		ports[addrs[i]] = make(chan core.Msg)

@@ -43,7 +43,7 @@ func (p Proto) Encode(prog runtime.Program) ([]byte, error) {
 }
 
 func MustNew(marshaler Marshaler, caster Caster) Proto {
-	utils.NilArgsFatal(marshaler)
+	utils.PanicOnNil(marshaler)
 
 	return Proto{marshaler, caster}
 }

@@ -19,7 +19,7 @@ type (
 		Unmarshal([]byte, *runtimesdk.Program) error
 	}
 	Caster interface {
-		Cast(runtimesdk.Program) (runtime.Program, error)
+		Cast(*runtimesdk.Program) (runtime.Program, error)
 	}
 )
 
@@ -34,7 +34,7 @@ func (p Proto) Decode(bb []byte) (runtime.Program, error) {
 		return runtime.Program{}, fmt.Errorf("%w: %v", ErrUnmarshal, err)
 	}
 
-	prog, err := p.caster.Cast(sdkProg)
+	prog, err := p.caster.Cast(&sdkProg)
 	if err != nil {
 		return runtime.Program{}, fmt.Errorf("%w: %v", ErrCast, err)
 	}
@@ -43,7 +43,7 @@ func (p Proto) Decode(bb []byte) (runtime.Program, error) {
 }
 
 func MustNewProto(caster Caster, unmarshaler Unmarshaler) Proto {
-	utils.NilArgsFatal(caster, unmarshaler)
+	utils.PanicOnNil(caster, unmarshaler)
 
 	return Proto{
 		caster:      caster,

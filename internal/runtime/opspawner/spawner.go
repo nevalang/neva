@@ -20,7 +20,7 @@ type (
 		Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
 	}
 	PortSearcher interface {
-		SearchPorts(runtime.OperatorPortAddrs, map[runtime.PortAddr]chan core.Msg) (core.IO, error)
+		SearchPorts(runtime.OperatorPortAddrs, map[runtime.AbsolutePortAddr]chan core.Msg) (core.IO, error)
 	}
 )
 
@@ -29,7 +29,7 @@ type Spawner struct {
 	portSearcher PortSearcher
 }
 
-func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan core.Msg) error {
+func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.AbsolutePortAddr]chan core.Msg) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref)
 		if err != nil {
@@ -50,7 +50,7 @@ func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.PortAddr]chan c
 }
 
 func MustNew(repo Repo, portSearcher PortSearcher) Spawner {
-	utils.NilArgsFatal(repo, portSearcher)
+	utils.PanicOnNil(repo, portSearcher)
 	return Spawner{
 		repo:         repo,
 		portSearcher: portSearcher,

@@ -12,11 +12,20 @@ import (
 type (
 	Interceptor interface {
 		AfterSending(runtime.Connection, core.Msg) core.Msg
-		BeforeReceiving(from, to runtime.PortAddr, msg core.Msg) core.Msg
+		BeforeReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg) core.Msg
 	}
 
-	Mapper interface {
-		Net(map[runtime.PortAddr]chan core.Msg, []runtime.Connection) ([]Connection, error)
+	ChanMapper interface {
+		ConnectionsWithChans(
+			portChans map[runtime.AbsolutePortAddr]chan core.Msg,
+			connections []runtime.Connection,
+		) ([]ConnectionWithChans, error)
+	}
+
+	ConnectionWithChans struct {
+		sender    chan core.Msg
+		receivers []chan core.Msg
+		meta      runtime.Connection
 	}
 )
 
@@ -24,17 +33,11 @@ var ErrMapper = errors.New("mapper")
 
 type Connector struct {
 	interceptor Interceptor
-	mapper      Mapper
+	mapper      ChanMapper
 }
 
-type Connection struct {
-	sender    chan core.Msg
-	receivers []chan core.Msg
-	meta      runtime.Connection
-}
-
-func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runtime.Connection) error {
-	connections, err := c.mapper.Net(ports, rels)
+func (c Connector) Connect(ports map[runtime.AbsolutePortAddr]chan core.Msg, rels []runtime.Connection) error {
+	connections, err := c.mapper.ConnectionsWithChans(ports, rels)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
@@ -46,17 +49,17 @@ func (c Connector) Connect(ports map[runtime.PortAddr]chan core.Msg, rels []runt
 	return nil
 }
 
-func (c Connector) linkConnection(relation Connection) {
-	guard := make(chan struct{}, len(relation.receivers))
+func (c Connector) linkConnection(connection ConnectionWithChans) {
+	guard := make(chan struct{}, len(connection.receivers))
 
-	for msg := range relation.sender {
-		msg = c.interceptor.AfterSending(relation.meta, msg)
+	for msg := range connection.sender {
+		msg = c.interceptor.AfterSending(connection.meta, msg)
 
-		for i := range relation.receivers {
-			receiverConnPoint := relation.meta.Receivers[i]
-			receiverPortChan := relation.receivers[i]
+		for i := range connection.receivers {
+			receiverConnPoint := connection.meta.ReceiversConnectionPoints[i]
+			receiverPortChan := connection.receivers[i]
 
-			if receiverConnPoint.Type == runtime.FieldReading {
+			if receiverConnPoint.Type == runtime.StructFieldReading {
 				parts := receiverConnPoint.StructFieldPath
 				for _, part := range parts[:len(parts)-1] {
 					msg = msg.Struct()[part]
@@ -66,7 +69,7 @@ func (c Connector) linkConnection(relation Connection) {
 			guard <- struct{}{}
 
 			go func(m core.Msg) {
-				receiverPortChan <- c.interceptor.BeforeReceiving(relation.meta.Sender, receiverConnPoint.PortAddr, m)
+				receiverPortChan <- c.interceptor.BeforeReceiving(connection.meta.SenderPortAddr, receiverConnPoint.PortAddr, m)
 				<-guard
 			}(msg)
 		}
@@ -74,7 +77,7 @@ func (c Connector) linkConnection(relation Connection) {
 }
 
 func MustNew(i Interceptor) Connector {
-	utils.NilArgsFatal(i)
+	utils.PanicOnNil(i)
 
 	return Connector{
 		interceptor: i,

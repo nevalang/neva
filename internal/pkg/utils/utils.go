@@ -19,8 +19,8 @@ func NilArgs(args ...interface{}) error {
 	return nil
 }
 
-// NilArgsFatal is NilArgs wrapped by ErrFatal
-func NilArgsFatal(args ...interface{}) {
+// PanicOnNil is NilArgs wrapped by ErrFatal
+func PanicOnNil(args ...interface{}) {
 	ErrFatal(
 		NilArgs(args),
 	)

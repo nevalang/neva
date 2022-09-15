@@ -12,11 +12,11 @@ type IO struct {
 }
 
 // FIXME: map[string][]chan Msg (ordering)
-type Ports map[PortAddr]chan Msg
+type Ports map[RelativePortAddr]chan Msg
 
 // FIXME: must only use port name (not full path) because of how this is used by operators
 func (p Ports) Port(name string) (chan Msg, error) {
-	port, ok := p[PortAddr{Port: name}]
+	port, ok := p[RelativePortAddr{Port: name}]
 	if !ok {
 		return nil, fmt.Errorf("%w: in: %v", ErrPortNotFound, name)
 	}
@@ -40,8 +40,7 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	return pp, nil
 }
 
-// TODO: maybe use port = {type: single|arr, single: chan, arr: []chan}
-type PortAddr struct {
+type RelativePortAddr struct {
 	Port string
 	Idx  uint8
 }

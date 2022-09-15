@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/pkg/runtimesdk"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 var ErrProto = errors.New("proto")

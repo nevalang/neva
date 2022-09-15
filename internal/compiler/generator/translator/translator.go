@@ -30,12 +30,12 @@ type Translator struct{}
 
 func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 	rprog := runtime.Program{
-		Ports:       []runtime.PortAddr{},
+		Ports:       []runtime.AbsolutePortAddr{},
 		Connections: []runtime.Connection{},
 		Effects:     runtime.Effects{},
-		StartPort: runtime.PortAddr{
+		StartPort: runtime.AbsolutePortAddr{
 			Path: "",
-			Name: "start",
+			Port: "start",
 			Idx:  0,
 		},
 	}
@@ -78,9 +78,9 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 		for _, connection := range component.Module.Net {
 			rconn := runtime.Connection{
-				Sender: runtime.PortAddr{
+				SenderPortAddr: runtime.AbsolutePortAddr{
 					Path: node.parentCtx.path + "." + node.parentCtx.node + ".out",
-					Name: connection.From.Port,
+					Port: connection.From.Port,
 					Idx:  connection.From.Idx,
 				},
 				// Receivers: make([]runtime.PortAddr, len(connection.To)), // TODO
@@ -99,9 +99,9 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		for port, msg := range component.Module.Nodes.Const {
-			addr := runtime.PortAddr{
+			addr := runtime.AbsolutePortAddr{
 				Path: node.parentCtx.path + "." + node.parentCtx.node + ".const",
-				Name: port,
+				Port: port,
 				Idx:  0,
 			}
 
@@ -132,25 +132,25 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 // nodePorts creates ports for given node based on it's usage by parent network
 // NOTE: https://github.com/emil14/neva/issues/29#issuecomment-1064185904
-func (t Translator) nodePorts(pctx parentCtx) (in []runtime.PortAddr, out []runtime.PortAddr) {
-	in = []runtime.PortAddr{}
-	out = []runtime.PortAddr{}
+func (t Translator) nodePorts(pctx parentCtx) (in []runtime.AbsolutePortAddr, out []runtime.AbsolutePortAddr) {
+	in = []runtime.AbsolutePortAddr{}
+	out = []runtime.AbsolutePortAddr{}
 	path := pctx.path + "." + pctx.node
 
 	for _, connection := range pctx.net {
 		if connection.From.Node == pctx.node {
-			out = append(out, runtime.PortAddr{
+			out = append(out, runtime.AbsolutePortAddr{
 				Path: path + ".out",
-				Name: connection.From.Port,
+				Port: connection.From.Port,
 				Idx:  connection.From.Idx,
 			})
 		}
 
 		for _, to := range connection.To {
 			if to.Node == pctx.node {
-				in = append(in, runtime.PortAddr{
+				in = append(in, runtime.AbsolutePortAddr{
 					Path: path + ".in",
-					Name: to.Port,
+					Port: to.Port,
 					Idx:  to.Idx,
 				})
 			}

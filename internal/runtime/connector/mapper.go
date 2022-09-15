@@ -12,25 +12,28 @@ var ErrPortNotFound = errors.New("port not found by addr")
 
 type mapper struct{}
 
-func (m mapper) Net(ports map[runtime.PortAddr]chan core.Msg, net []runtime.Connection) ([]Connection, error) {
-	connections := make([]Connection, len(net))
+func (m mapper) ConnectionsWithChans(
+	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	net []runtime.Connection,
+) ([]ConnectionWithChans, error) {
+	connections := make([]ConnectionWithChans, len(net))
 
 	for i := range net {
-		from, ok := ports[net[i].Sender]
+		from, ok := ports[net[i].SenderPortAddr]
 		if !ok {
-			return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].Sender)
+			return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].SenderPortAddr)
 		}
 
-		connections[i] = Connection{
+		connections[i] = ConnectionWithChans{
 			meta:      net[i],
 			sender:    from,
-			receivers: make([]chan core.Msg, len(net[i].Receivers)),
+			receivers: make([]chan core.Msg, len(net[i].ReceiversConnectionPoints)),
 		}
 
-		for j := range net[i].Receivers {
-			to, ok := ports[net[i].Receivers[j].PortAddr]
+		for j := range net[i].ReceiversConnectionPoints {
+			to, ok := ports[net[i].ReceiversConnectionPoints[j].PortAddr]
 			if !ok {
-				return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].Receivers[j])
+				return nil, fmt.Errorf("%w: %v", ErrPortNotFound, net[i].ReceiversConnectionPoints[j])
 			}
 
 			connections[i].receivers[j] = to

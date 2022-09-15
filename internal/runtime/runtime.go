@@ -14,26 +14,26 @@ type (
 		Decode([]byte) (Program, error)
 	}
 	PortGen interface {
-		Ports([]PortAddr) map[PortAddr]chan core.Msg
+		Ports([]AbsolutePortAddr) map[AbsolutePortAddr]chan core.Msg
 	}
 	// Effector interface { // instead of const and ops
 	// 	MakeEffects(Effects) error
 	// }
 	ConstSpawner interface {
-		Spawn(map[PortAddr]Msg, map[PortAddr]chan core.Msg) error
+		Spawn(map[AbsolutePortAddr]Msg, map[AbsolutePortAddr]chan core.Msg) error
 	}
 	OperatorSpawner interface {
-		Spawn([]Operator, map[PortAddr]chan core.Msg) error
+		Spawn([]Operator, map[AbsolutePortAddr]chan core.Msg) error
 	}
 	Connector interface {
-		Connect(map[PortAddr]chan core.Msg, []Connection) error
+		Connect(map[AbsolutePortAddr]chan core.Msg, []Connection) error
 	}
 )
 
 var (
 	ErrDecoder           = errors.New("program decoder")
 	ErrOpSpawner         = errors.New("operator-node spawner")
-	ErrConstSpawner      = errors.New("const-node spawner")
+	ErrConstSpawner      = errors.New("const spawner")
 	ErrConnector         = errors.New("network connector")
 	ErrStartPortNotFound = errors.New("start port not found")
 )
@@ -95,7 +95,7 @@ func MustNew(
 	constSpawner ConstSpawner,
 	connector Connector,
 ) Runtime {
-	utils.NilArgsFatal(decoder, portGen, opSpawner, constSpawner, connector)
+	utils.PanicOnNil(decoder, portGen, opSpawner, constSpawner, connector)
 
 	return Runtime{
 		decoder:      decoder,

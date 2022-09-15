@@ -16,8 +16,8 @@ var (
 )
 
 func (s Spawner) Spawn(
-	outportsAndValues map[runtime.PortAddr]runtime.Msg,
-	outportsAndChans map[runtime.PortAddr]chan core.Msg,
+	outportsAndValues map[runtime.AbsolutePortAddr]runtime.Msg,
+	outportsAndChans map[runtime.AbsolutePortAddr]chan core.Msg,
 ) error {
 	for addr := range outportsAndValues {
 		port, ok := outportsAndChans[addr]
@@ -25,7 +25,7 @@ func (s Spawner) Spawn(
 			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
-		msg, err := s.coreMsg(outportsAndValues, addr)
+		msg, err := s.coreMsg(outportsAndValues[addr])
 		if err != nil {
 			return fmt.Errorf("core msg: %w", err)
 		}
@@ -40,25 +40,48 @@ func (s Spawner) Spawn(
 	return nil
 }
 
-func (s Spawner) coreMsg(outportsAndValues map[runtime.PortAddr]runtime.Msg, addr runtime.PortAddr) (core.Msg, error) {
-	var msg core.Msg
-	switch outportsAndValues[addr].Type {
+func (s Spawner) coreMsg(in runtime.Msg) (core.Msg, error) {
+	var out core.Msg
+
+	switch in.Type {
 	case runtime.IntMsg:
-		msg = core.NewIntMsg(outportsAndValues[addr].Int)
+		out = core.NewIntMsg(in.Int)
 	case runtime.BoolMsg:
-		msg = core.NewBoolMsg(outportsAndValues[addr].Bool)
+		out = core.NewBoolMsg(in.Bool)
 	case runtime.StrMsg:
-		msg = core.NewStrMsg(outportsAndValues[addr].Str)
+		out = core.NewStrMsg(in.Str)
 	case runtime.StructMsg:
-		msg = core.NewStructMsg(
-			s.structMsg(outportsAndValues[addr].Struct),
-		)
+		structMsg := make(map[string]core.Msg, len(in.Struct))
+		for field, value := range in.Struct {
+			v, err := s.coreMsg(value)
+			if err != nil {
+				return nil, fmt.Errorf("core msg: %w", err)
+			}
+			structMsg[field] = v
+		}
+		out = core.NewStructMsg(structMsg)
 	default:
-		return nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, outportsAndValues[addr].Type)
+		return nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, in.Type)
 	}
-	return msg, nil
+
+	return out, nil
 }
 
-func (s Spawner) structMsg(map[string]runtime.Msg) map[string]core.Msg {
-	return map[string]core.Msg{} // TODO
+func (s Spawner) structMsg(in map[string]runtime.Msg) core.StructMsg {
+	out := make(map[string]core.Msg, len(in))
+
+	for field, value := range in {
+		switch value.Type {
+		case runtime.BoolMsg:
+			out[field] = core.NewBoolMsg(value.Bool)
+		case runtime.IntMsg:
+			out[field] = s.structMsg(value.Struct)
+		case runtime.StrMsg:
+			out[field] = s.structMsg(value.Struct)
+		case runtime.StructMsg:
+			out[field] = s.structMsg(value.Struct)
+		}
+	}
+
+	return core.NewStructMsg(out)
 }
