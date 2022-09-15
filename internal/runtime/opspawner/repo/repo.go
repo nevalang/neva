@@ -32,7 +32,7 @@ func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 		return nil, fmt.Errorf("%w: %s", ErrUnknownPkg, ref.Pkg)
 	}
 
-	plug, err := plugin.Open(pluginData.Path)
+	plug, err := plugin.Open(pluginData.Filepath)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrPluginOpen, err)
 	}
@@ -60,8 +60,8 @@ func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 }
 
 type PluginData struct {
-	Path    string
-	Exports []string
+	Filepath string
+	Exports  []string
 }
 
 func NewPlugin(pkgs map[string]PluginData) Plugin {

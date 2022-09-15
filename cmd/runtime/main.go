@@ -23,9 +23,9 @@ func main() {
 		portgen.New(),
 		opspawner.MustNew(
 			repo.NewPlugin(map[string]repo.PluginData{
-				"math": {
-					Path:    "/home/emil14/projects/neva/internal/operators/io",
-					Exports: []string{"Write"},
+				"io": {
+					Filepath: "/home/evaleev/projects/neva/plugins/write.so",
+					Exports:  []string{"Write"},
 				},
 			}),
 			opspawner.Searcher{},
