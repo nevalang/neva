@@ -56,15 +56,14 @@ message PortAddr {
 
 enum MsgType {
 	VALUE_TYPE_UNDEFINED = 0;
-    VALUE_TYPE_INT = 1;
-    VALUE_TYPE_STR = 2;
-    VALUE_TYPE_BOOL = 3;
-    VALUE_TYPE_SIG = 4;
+    VALUE_TYPE_BOOL = 1;
+    VALUE_TYPE_INT = 2;
+    VALUE_TYPE_STR = 3;
+    VALUE_TYPE_STRUCT = 4;
+    VALUE_TYPE_LIST = 5;
 }
 
 message OperatorRef  {
 	string pkg = 1;
     string name =2;
 }
-
-// TODO we use ports and port-addrs without connection?

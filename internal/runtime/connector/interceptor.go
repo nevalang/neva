@@ -17,7 +17,7 @@ func (d DefaultInterceptor) AfterSending(connection runtime.Connection, msg core
 }
 
 func (d DefaultInterceptor) BeforeReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg) core.Msg {
-	log.Println("BeforeReceiving", from, to, msg)
+	// log.Println("BeforeReceiving", from, to, msg)
 	return msg
 }
 

@@ -38,13 +38,14 @@ func main() {
 
 	helloWorld := runtimesdk.Program{
 		StartPort: &runtimesdk.PortAddr{
+			Path: "in",
 			Port: "start",
 		},
 		Ports: []*runtimesdk.PortAddr{
-			{Port: "start"},
-			{Port: "const"},
-			{Port: "kick"},
-			{Port: "msg"},
+			{Path: "in", Port: "start"},
+			{Path: "const", Port: "greeting"},
+			{Path: "write", Port: "kick"},
+			{Path: "write", Port: "msg"},
 		},
 		Operators: []*runtimesdk.Operator{
 			{
@@ -53,15 +54,15 @@ func main() {
 					Name: "Write",
 				},
 				InPortAddrs: []*runtimesdk.PortAddr{
-					{Port: "kick"},
-					{Port: "msg"},
+					{Path: "write", Port: "kick"},
+					{Path: "write", Port: "msg"},
 				},
 			},
 		},
 		Constants: []*runtimesdk.Constant{
 			{
 				OutPortAddr: &runtimesdk.PortAddr{
-					Port: "const",
+					Path: "const", Port: "greeting",
 				},
 				Msg: &runtimesdk.Msg{
 					Str:  "hello world!",
@@ -72,21 +73,21 @@ func main() {
 		Connections: []*runtimesdk.Connection{
 			{
 				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Port: "start",
+					Path: "in", Port: "start",
 				},
 				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
 					{
-						InPortAddr: &runtimesdk.PortAddr{Port: "kick"},
+						InPortAddr: &runtimesdk.PortAddr{Path: "write", Port: "kick"},
 					},
 				},
 			},
 			{
 				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Port: "const",
+					Path: "const", Port: "greeting",
 				},
 				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
 					{
-						InPortAddr: &runtimesdk.PortAddr{Port: "msg"},
+						InPortAddr: &runtimesdk.PortAddr{Path: "write", Port: "msg"},
 					},
 				},
 			},

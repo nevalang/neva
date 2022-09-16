@@ -115,21 +115,37 @@ func (caster) castPorts(in *runtimesdk.Program) []runtime.AbsolutePortAddr {
 	return ports
 }
 
-// TODO handle unknown type
 func (c caster) castMsg(in *runtimesdk.Msg) runtime.Msg {
-	structMsg := make(map[string]runtime.Msg, len(in.Struct))
+	msg := runtime.Msg{}
 
-	for k, v := range in.Struct {
-		structMsg[k] = c.castMsg(v)
+	switch in.Type {
+	case runtimesdk.MsgType_VALUE_TYPE_BOOL:
+		msg = runtime.Msg{
+			Type: runtime.BoolMsg,
+			Bool: in.Bool,
+		}
+	case runtimesdk.MsgType_VALUE_TYPE_INT:
+		msg = runtime.Msg{
+			Type: runtime.IntMsg,
+			Int:  int(in.Int),
+		}
+	case runtimesdk.MsgType_VALUE_TYPE_STR:
+		msg = runtime.Msg{
+			Type: runtime.StrMsg,
+			Str:  in.Str,
+		}
+	case runtimesdk.MsgType_VALUE_TYPE_STRUCT:
+		structMsg := make(map[string]runtime.Msg, len(in.Struct))
+		for k, v := range in.Struct {
+			structMsg[k] = c.castMsg(v)
+		}
+		msg = runtime.Msg{
+			Type:   runtime.StrMsg,
+			Struct: structMsg,
+		}
 	}
 
-	return runtime.Msg{
-		Type:   runtime.MsgType(in.Type),
-		Bool:   in.Bool,
-		Int:    int(in.Int),
-		Str:    in.Str,
-		Struct: structMsg,
-	}
+	return msg
 }
 
 func NewCaster() caster {
