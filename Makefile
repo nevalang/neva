@@ -16,6 +16,7 @@ devserversdk:
 
 .PHONY: goplugins
 goplugins:
+	rm -rf plugins/*
 	go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
 	go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
 	go build -o plugins/select.so -buildmode=plugin internal/runtime/operators/select/main.go

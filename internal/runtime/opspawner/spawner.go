@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ErrRepo      = errors.New("repo")
-	ErrOper      = errors.New("operator")
-	ErrCollector = errors.New("collector")
+	ErrRepo         = errors.New("repo")
+	ErrOper         = errors.New("operator")
+	ErrPortSearcher = errors.New("port searcher")
 )
 
 type (
@@ -38,7 +38,7 @@ func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.AbsolutePortAdd
 
 		io, err := s.portSearcher.SearchPorts(ops[i].PortAddrs, ports)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrCollector, err)
+			return fmt.Errorf("%w: %v", ErrPortSearcher, err)
 		}
 
 		if err := op(io); err != nil {

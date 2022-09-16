@@ -32,9 +32,9 @@ func (c caster) castConstants(in *runtimesdk.Program) map[runtime.AbsolutePortAd
 	constants := make(map[runtime.AbsolutePortAddr]runtime.Msg, len(in.Constants))
 	for _, constant := range in.Constants {
 		addr := runtime.AbsolutePortAddr{
-			Path: constant.PortAddr.Path,
-			Port: constant.PortAddr.Port,
-			Idx:  uint8(constant.PortAddr.Idx),
+			Path: constant.OutPortAddr.Path,
+			Port: constant.OutPortAddr.Port,
+			Idx:  uint8(constant.OutPortAddr.Idx),
 		}
 		constants[addr] = c.castMsg(constant.Msg)
 	}
@@ -83,9 +83,9 @@ func (caster) castConnections(in *runtimesdk.Program) []runtime.Connection {
 		for _, receiver := range connection.ReceiverConnectionPoints {
 			receivers = append(receivers, runtime.ConnectionPoint{
 				PortAddr: runtime.AbsolutePortAddr{
-					Path: receiver.PortAddr.Path,
-					Port: receiver.PortAddr.Port,
-					Idx:  uint8(receiver.PortAddr.Idx),
+					Path: receiver.InPortAddr.Path,
+					Port: receiver.InPortAddr.Port,
+					Idx:  uint8(receiver.InPortAddr.Idx),
 				},
 				Type:            runtime.ConnectionPointType(receiver.Type),
 				StructFieldPath: receiver.StructFieldPath,
@@ -93,9 +93,9 @@ func (caster) castConnections(in *runtimesdk.Program) []runtime.Connection {
 		}
 		connections = append(connections, runtime.Connection{
 			SenderPortAddr: runtime.AbsolutePortAddr{
-				Path: connection.SenderPortAddr.Path,
-				Port: connection.SenderPortAddr.Port,
-				Idx:  uint8(connection.SenderPortAddr.Idx),
+				Path: connection.SenderOutPortAddr.Path,
+				Port: connection.SenderOutPortAddr.Port,
+				Idx:  uint8(connection.SenderOutPortAddr.Idx),
 			},
 			ReceiversConnectionPoints: []runtime.ConnectionPoint{},
 		})

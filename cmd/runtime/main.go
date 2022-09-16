@@ -38,13 +38,12 @@ func main() {
 
 	helloWorld := runtimesdk.Program{
 		StartPort: &runtimesdk.PortAddr{
-			Path: "",
 			Port: "start",
-			Idx:  0,
 		},
 		Ports: []*runtimesdk.PortAddr{
 			{Port: "start"},
 			{Port: "const"},
+			{Port: "in"},
 		},
 		Operators: []*runtimesdk.Operator{
 			{
@@ -53,13 +52,13 @@ func main() {
 					Name: "Write",
 				},
 				InPortAddrs: []*runtimesdk.PortAddr{
-					{Port: "in", Idx: 0},
+					{Port: "in"},
 				},
 			},
 		},
 		Constants: []*runtimesdk.Constant{
 			{
-				PortAddr: &runtimesdk.PortAddr{
+				OutPortAddr: &runtimesdk.PortAddr{
 					Port: "const",
 				},
 				Msg: &runtimesdk.Msg{
@@ -68,7 +67,20 @@ func main() {
 				},
 			},
 		},
-		Connections: []*runtimesdk.Connection{},
+		Connections: []*runtimesdk.Connection{
+			{
+				SenderOutPortAddr: &runtimesdk.PortAddr{
+					Port: "const",
+				},
+				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
+					{
+						InPortAddr: &runtimesdk.PortAddr{
+							Path: "in",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	bb, err := proto.Marshal(&helloWorld)

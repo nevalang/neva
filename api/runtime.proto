@@ -13,12 +13,12 @@ message Program {
 }
 
 message Connection {
-	PortAddr sender_port_addr = 1;
+	PortAddr sender_out_port_addr = 1;
 	repeated ConnectionPoint receiver_connection_points = 2;
 }
 
 message ConnectionPoint {
-	PortAddr port_addr = 1;
+	PortAddr in_port_addr = 1;
 	ConnectionPointType type = 2;
 	repeated string struct_field_path = 3; 
 }
@@ -36,7 +36,7 @@ message Operator {
 }
 
 message Constant {
-	PortAddr port_addr = 1;
+	PortAddr out_port_addr = 1;
 	Msg msg = 2;
 }
 

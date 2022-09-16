@@ -205,7 +205,7 @@ type Connection struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SenderPortAddr           *PortAddr          `protobuf:"bytes,1,opt,name=sender_port_addr,json=senderPortAddr,proto3" json:"sender_port_addr,omitempty"`
+	SenderOutPortAddr           *PortAddr          `protobuf:"bytes,1,opt,name=sender_port_addr,json=senderPortAddr,proto3" json:"sender_port_addr,omitempty"`
 	ReceiverConnectionPoints []*ConnectionPoint `protobuf:"bytes,2,rep,name=receiver_connection_points,json=receiverConnectionPoints,proto3" json:"receiver_connection_points,omitempty"`
 }
 
@@ -243,7 +243,7 @@ func (*Connection) Descriptor() ([]byte, []int) {
 
 func (x *Connection) GetSenderPortAddr() *PortAddr {
 	if x != nil {
-		return x.SenderPortAddr
+		return x.SenderOutPortAddr
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ type ConnectionPoint struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PortAddr        *PortAddr           `protobuf:"bytes,1,opt,name=port_addr,json=portAddr,proto3" json:"port_addr,omitempty"`
+	InPortAddr        *PortAddr           `protobuf:"bytes,1,opt,name=port_addr,json=portAddr,proto3" json:"port_addr,omitempty"`
 	Type            ConnectionPointType `protobuf:"varint,2,opt,name=type,proto3,enum=runtime.ConnectionPointType" json:"type,omitempty"`
 	StructFieldPath []string            `protobuf:"bytes,3,rep,name=struct_field_path,json=structFieldPath,proto3" json:"struct_field_path,omitempty"`
 }
@@ -299,7 +299,7 @@ func (*ConnectionPoint) Descriptor() ([]byte, []int) {
 
 func (x *ConnectionPoint) GetPortAddr() *PortAddr {
 	if x != nil {
-		return x.PortAddr
+		return x.InPortAddr
 	}
 	return nil
 }
@@ -386,7 +386,7 @@ type Constant struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PortAddr *PortAddr `protobuf:"bytes,1,opt,name=port_addr,json=portAddr,proto3" json:"port_addr,omitempty"`
+	OutPortAddr *PortAddr `protobuf:"bytes,1,opt,name=port_addr,json=portAddr,proto3" json:"port_addr,omitempty"`
 	Msg      *Msg      `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 }
 
@@ -424,7 +424,7 @@ func (*Constant) Descriptor() ([]byte, []int) {
 
 func (x *Constant) GetPortAddr() *PortAddr {
 	if x != nil {
-		return x.PortAddr
+		return x.OutPortAddr
 	}
 	return nil
 }

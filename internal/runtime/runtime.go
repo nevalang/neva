@@ -16,9 +16,7 @@ type (
 	PortGen interface {
 		Ports([]AbsolutePortAddr) map[AbsolutePortAddr]chan core.Msg
 	}
-	// Effector interface { // instead of const and ops
-	// 	MakeEffects(Effects) error
-	// }
+	// Effector?
 	ConstSpawner interface {
 		Spawn(map[AbsolutePortAddr]Msg, map[AbsolutePortAddr]chan core.Msg) error
 	}
@@ -84,6 +82,7 @@ func (r Runtime) Run(raw []byte) error {
 	}
 
 	startPort <- core.NewStructMsg(nil)
+	fmt.Println("here")
 
 	return nil
 }

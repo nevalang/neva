@@ -16,12 +16,15 @@ func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we a
 	wantIO runtime.OperatorPortAddrs,
 	ports map[runtime.AbsolutePortAddr]chan core.Msg,
 ) (core.IO, error) {
-	io := core.IO{}
+	io := core.IO{
+		In:  make(map[core.RelativePortAddr]chan core.Msg, len(wantIO.In)),
+		Out: make(map[core.RelativePortAddr]chan core.Msg, len(wantIO.Out)),
+	}
 
 	for _, addr := range wantIO.In {
 		port, ok := ports[addr]
 		if !ok {
-			return core.IO{}, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
+			return core.IO{}, fmt.Errorf("%w: in: %v", ErrPortNotFound, addr)
 		}
 
 		io.In[core.RelativePortAddr{
@@ -33,7 +36,7 @@ func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we a
 	for _, addr := range wantIO.Out {
 		port, ok := ports[addr]
 		if !ok {
-			return core.IO{}, fmt.Errorf("%w: %v", ErrPortNotFound, addr)
+			return core.IO{}, fmt.Errorf("%w: out: %v", ErrPortNotFound, addr)
 		}
 
 		io.Out[core.RelativePortAddr{
