@@ -20,7 +20,7 @@ func (s Spawner) Spawn(
 	outportsAndChans map[runtime.AbsolutePortAddr]chan core.Msg,
 ) error {
 	for addr := range outportsAndValues {
-		port, ok := outportsAndChans[addr]
+		out, ok := outportsAndChans[addr]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
@@ -32,7 +32,7 @@ func (s Spawner) Spawn(
 
 		go func() {
 			for {
-				port <- msg
+				out <- msg
 			}
 		}()
 	}

@@ -1,5 +1,7 @@
 package runtime
 
+import "fmt"
+
 type (
 	Program struct {
 		Ports       []AbsolutePortAddr
@@ -67,3 +69,7 @@ const (
 	BoolMsg
 	StructMsg
 )
+
+func (a AbsolutePortAddr) String() string {
+	return fmt.Sprintf("%s.%s[%d]", a.Path, a.Port, a.Idx)
+}

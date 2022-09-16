@@ -32,7 +32,7 @@ var (
 	ErrDecoder           = errors.New("program decoder")
 	ErrOpSpawner         = errors.New("operator-node spawner")
 	ErrConstSpawner      = errors.New("const spawner")
-	ErrConnector         = errors.New("network connector")
+	ErrConnector         = errors.New("connector")
 	ErrStartPortNotFound = errors.New("start port not found")
 )
 
@@ -82,7 +82,6 @@ func (r Runtime) Run(raw []byte) error {
 	}
 
 	startPort <- core.NewStructMsg(nil)
-	fmt.Println("here")
 
 	return nil
 }

@@ -24,14 +24,14 @@ message ConnectionPoint {
 }
 
 enum ConnectionPointType {
-	undefined = 0;
-	normal = 1;
-	struct_field_reading = 2;
+	CONNECTION_POINT_TYPE_UNDEFINED = 0;
+	CONNECTION_POINT_TYPE_NORMAL = 1;
+	CONNECTION_POINT_TYPE_STRUCT_FIELD_READING = 2;
 }
 
 message Operator {
 	OperatorRef ref = 1; 
-	repeated PortAddr in_port_addrs = 2;
+	repeated PortAddr in_port_addrs = 2; // TODO check if array port works
 	repeated PortAddr out_port_addrs = 3;
 }
 
@@ -41,7 +41,7 @@ message Constant {
 }
 
 message Msg {
-	ValueType type = 1;
+	MsgType type = 1;
 	int64 int = 2;
 	string str = 3;
 	bool bool = 4;
@@ -54,11 +54,12 @@ message PortAddr {
 	uint32 idx  = 3;
 }
 
-enum ValueType {
-    VALUE_TYPE_INT = 0;
-    VALUE_TYPE_STR = 1;
-    VALUE_TYPE_BOOL = 2;
-    VALUE_TYPE_SIG = 3;
+enum MsgType {
+	VALUE_TYPE_UNDEFINED = 0;
+    VALUE_TYPE_INT = 1;
+    VALUE_TYPE_STR = 2;
+    VALUE_TYPE_BOOL = 3;
+    VALUE_TYPE_SIG = 4;
 }
 
 message OperatorRef  {

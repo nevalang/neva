@@ -13,6 +13,7 @@ type (
 	Interceptor interface {
 		AfterSending(runtime.Connection, core.Msg) core.Msg
 		BeforeReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg) core.Msg
+		AfterReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg)
 	}
 
 	ChanMapper interface {
@@ -70,6 +71,7 @@ func (c Connector) linkConnection(connection ConnectionWithChans) {
 
 			go func(m core.Msg) {
 				receiverPortChan <- c.interceptor.BeforeReceiving(connection.meta.SenderPortAddr, receiverConnPoint.PortAddr, m)
+				c.interceptor.AfterReceiving(connection.meta.SenderPortAddr, receiverConnPoint.PortAddr, m)
 				<-guard
 			}(msg)
 		}

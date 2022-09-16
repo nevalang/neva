@@ -97,7 +97,7 @@ func (caster) castConnections(in *runtimesdk.Program) []runtime.Connection {
 				Port: connection.SenderOutPortAddr.Port,
 				Idx:  uint8(connection.SenderOutPortAddr.Idx),
 			},
-			ReceiversConnectionPoints: []runtime.ConnectionPoint{},
+			ReceiversConnectionPoints: receivers,
 		})
 	}
 	return connections

@@ -1,13 +1,20 @@
 package core
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type Msg interface {
 	Type() Type
+
 	Bool() bool
 	Int() int
 	Str() string
 	List() []Msg
 	Struct() map[string]Msg
-	// sub-stream item?
+
+	String() string // for logging
 }
 
 type Type uint8
@@ -33,8 +40,9 @@ type IntMsg struct {
 	v int
 }
 
-func (msg IntMsg) Int() int   { return msg.v }
-func (msg IntMsg) Type() Type { return Int }
+func (msg IntMsg) Int() int       { return msg.v }
+func (msg IntMsg) Type() Type     { return Int }
+func (msg IntMsg) String() string { return strconv.Itoa(msg.v) }
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
@@ -48,8 +56,9 @@ type StrMsg struct {
 	v string
 }
 
-func (msg StrMsg) Str() string { return msg.v }
-func (msg StrMsg) Type() Type  { return Str }
+func (msg StrMsg) Str() string    { return msg.v }
+func (msg StrMsg) Type() Type     { return Str }
+func (msg StrMsg) String() string { return msg.v }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
@@ -63,8 +72,9 @@ type BoolMsg struct {
 	v bool
 }
 
-func (msg BoolMsg) Bool() bool { return msg.v }
-func (msg BoolMsg) Type() Type { return Bool }
+func (msg BoolMsg) Bool() bool     { return msg.v }
+func (msg BoolMsg) Type() Type     { return Bool }
+func (msg BoolMsg) String() string { return fmt.Sprint(msg.v) }
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
@@ -80,6 +90,7 @@ type StructMsg struct {
 
 func (msg StructMsg) Struct() map[string]Msg { return msg.v }
 func (msg StructMsg) Type() Type             { return Struct }
+func (msg StructMsg) String() string         { return fmt.Sprint(msg.v) }
 
 func NewStructMsg(v map[string]Msg) StructMsg {
 	return StructMsg{
@@ -95,6 +106,16 @@ type ListMsg struct {
 
 func (msg ListMsg) List() []Msg { return msg.v }
 func (msg ListMsg) Type() Type  { return List }
+func (msg ListMsg) String() string {
+	// b := &strings.Builder{}
+	// b.WriteString("[")
+	// for _, el := range msg.v {
+	// 	fmt.Fprintf(b, "%s,", el.String())
+	// }
+	// b.WriteString("]")
+	// return b.String()
+	return fmt.Sprintf("[%s]", msg.v)
+}
 
 func NewListMsg(b bool) ListMsg {
 	return ListMsg{

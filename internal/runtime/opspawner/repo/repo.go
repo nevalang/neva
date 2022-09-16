@@ -23,6 +23,28 @@ type Plugin struct {
 }
 
 func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
+	return func(io core.IO) error { // FIXME
+		kick, err := io.In.Port("kick")
+		if err != nil {
+			return err
+		}
+
+		str, err := io.In.Port("msg")
+		if err != nil {
+			return err
+		}
+
+		go func() {
+			for {
+				<-kick
+				msg := <-str
+				fmt.Println(msg.Str())
+			}
+		}()
+
+		return nil
+	}, nil
+
 	if op, ok := r.cache[ref]; ok {
 		return op, nil
 	}
