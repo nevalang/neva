@@ -18,10 +18,10 @@ type (
 
 	Connection struct {
 		SenderPortAddr            AbsolutePortAddr
-		ReceiversConnectionPoints []ConnectionPoint
+		ReceiversConnectionPoints []ReceiverConnectionPoint
 	}
 
-	ConnectionPoint struct {
+	ReceiverConnectionPoint struct {
 		PortAddr        AbsolutePortAddr
 		Type            ConnectionPointType
 		StructFieldPath []string // Only used for Type == StructFieldReading

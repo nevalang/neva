@@ -79,9 +79,9 @@ func (caster) castOperators(in *runtimesdk.Program) []runtime.Operator {
 func (caster) castConnections(in *runtimesdk.Program) []runtime.Connection {
 	connections := make([]runtime.Connection, 0, len(in.Connections))
 	for _, connection := range in.Connections {
-		receivers := make([]runtime.ConnectionPoint, 0, len(connection.ReceiverConnectionPoints))
+		receivers := make([]runtime.ReceiverConnectionPoint, 0, len(connection.ReceiverConnectionPoints))
 		for _, receiver := range connection.ReceiverConnectionPoints {
-			receivers = append(receivers, runtime.ConnectionPoint{
+			receivers = append(receivers, runtime.ReceiverConnectionPoint{
 				PortAddr: runtime.AbsolutePortAddr{
 					Path: receiver.InPortAddr.Path,
 					Port: receiver.InPortAddr.Port,

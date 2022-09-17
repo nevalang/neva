@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
 	"github.com/emil14/neva/internal/runtime/constspawner"
@@ -15,6 +17,23 @@ import (
 )
 
 func main() {
+	fmt.Println(
+		core.NewListMsg([]core.Msg{
+			core.NewIntMsg(42),
+			core.NewStructMsg(map[string]core.Msg{
+				"name": core.NewStrMsg("John"),
+				"age":  core.NewIntMsg(42),
+				"friends": core.NewListMsg([]core.Msg{
+					core.NewStructMsg(map[string]core.Msg{
+						"name":    core.NewStrMsg("John"),
+						"age":     core.NewIntMsg(42),
+						"friends": core.NewListMsg([]core.Msg{}),
+					}),
+				}),
+			}),
+		}),
+	)
+
 	r := runtime.MustNew(
 		decoder.MustNewProto(
 			decoder.NewCaster(),

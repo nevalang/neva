@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Msg interface {
@@ -14,7 +15,7 @@ type Msg interface {
 	List() []Msg
 	Struct() map[string]Msg
 
-	String() string // for logging
+	String() string // for logging (move to logger?)
 }
 
 type Type uint8
@@ -90,12 +91,26 @@ type StructMsg struct {
 
 func (msg StructMsg) Struct() map[string]Msg { return msg.v }
 func (msg StructMsg) Type() Type             { return Struct }
-func (msg StructMsg) String() string         { return fmt.Sprint(msg.v) }
+func (msg StructMsg) String() string {
+	b := &strings.Builder{}
+	b.WriteString("{ ")
+	c := 0
+	for k, el := range msg.v {
+		c++
+		if c < len(msg.v) {
+			fmt.Fprintf(b, "%s: %s, ", k, el.String())
+			continue
+		}
+		fmt.Fprintf(b, "%s: %s", k, el.String())
+	}
+	b.WriteString("}")
+	return b.String()
+}
 
 func NewStructMsg(v map[string]Msg) StructMsg {
 	return StructMsg{
 		emptyMsg: emptyMsg{},
-		v:        map[string]Msg{},
+		v:        v,
 	}
 }
 
@@ -107,20 +122,25 @@ type ListMsg struct {
 func (msg ListMsg) List() []Msg { return msg.v }
 func (msg ListMsg) Type() Type  { return List }
 func (msg ListMsg) String() string {
-	// b := &strings.Builder{}
-	// b.WriteString("[")
-	// for _, el := range msg.v {
-	// 	fmt.Fprintf(b, "%s,", el.String())
-	// }
-	// b.WriteString("]")
-	// return b.String()
-	return fmt.Sprintf("[%s]", msg.v)
+	b := &strings.Builder{}
+	b.WriteString("[")
+	c := 0
+	for _, el := range msg.v {
+		c++
+		if c < len(msg.v) {
+			fmt.Fprintf(b, "%s, ", el.String())
+			continue
+		}
+		fmt.Fprint(b, el.String())
+	}
+	b.WriteString("]")
+	return b.String()
 }
 
-func NewListMsg(b bool) ListMsg {
+func NewListMsg(v []Msg) ListMsg {
 	return ListMsg{
 		emptyMsg: emptyMsg{},
-		v:        []Msg{},
+		v:        v,
 	}
 }
 

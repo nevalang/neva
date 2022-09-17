@@ -25,7 +25,7 @@ func (m mapper) ConnectionsWithChans(
 		}
 
 		result[i] = ConnectionWithChans{
-			meta:      connections[i],
+			info:      connections[i],
 			sender:    from,
 			receivers: make([]chan core.Msg, len(connections[i].ReceiversConnectionPoints)),
 		}

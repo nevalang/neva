@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"sort"
 )
 
 var ErrPortNotFound = errors.New("port not found")
@@ -11,10 +12,8 @@ type IO struct {
 	In, Out Ports
 }
 
-// FIXME: map[string][]chan Msg (ordering)
 type Ports map[RelativePortAddr]chan Msg
 
-// FIXME: must only use port name (not full path) because of how this is used by operators
 func (p Ports) Port(name string) (chan Msg, error) {
 	port, ok := p[RelativePortAddr{Port: name}]
 	if !ok {
@@ -23,13 +22,17 @@ func (p Ports) Port(name string) (chan Msg, error) {
 	return port, nil
 }
 
-// FIXME add sorting?
 func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
-	pp := make([]chan Msg, 0, len(p))
+	type port struct {
+		addr RelativePortAddr
+		ch   chan Msg
+	}
 
-	for addr, port := range p {
+	pp := make([]port, 0, len(p))
+
+	for addr, ch := range p {
 		if addr.Port == name {
-			pp = append(pp, port)
+			pp = append(pp, port{addr, ch})
 		}
 	}
 
@@ -37,7 +40,16 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 		return nil, fmt.Errorf("%w: in: %v", ErrPortNotFound, name)
 	}
 
-	return pp, nil
+	sort.Slice(pp, func(i, j int) bool {
+		return pp[i].addr.Idx < pp[j].addr.Idx
+	})
+
+	cc := make([]chan Msg, len(pp))
+	for i := range pp {
+		cc[i] = pp[i].ch
+	}
+
+	return cc, nil
 }
 
 type RelativePortAddr struct {

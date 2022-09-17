@@ -16,7 +16,6 @@ type (
 	PortGen interface {
 		Ports([]AbsolutePortAddr) map[AbsolutePortAddr]chan core.Msg
 	}
-	// Effector?
 	ConstSpawner interface {
 		Spawn(map[AbsolutePortAddr]Msg, map[AbsolutePortAddr]chan core.Msg) error
 	}
