@@ -1,6 +1,7 @@
 package opspawner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -29,7 +30,11 @@ type Spawner struct {
 	portSearcher PortSearcher
 }
 
-func (s Spawner) Spawn(ops []runtime.Operator, ports map[runtime.AbsolutePortAddr]chan core.Msg) error {
+func (s Spawner) Spawn(
+	ctx context.Context,
+	ops []runtime.Operator,
+	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref)
 		if err != nil {

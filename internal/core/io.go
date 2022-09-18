@@ -14,6 +14,7 @@ type IO struct {
 
 type Ports map[RelativePortAddr]chan Msg
 
+// Port returns port with given name and idx == 0 or non-nil err
 func (p Ports) Port(name string) (chan Msg, error) {
 	port, ok := p[RelativePortAddr{Port: name}]
 	if !ok {
@@ -22,17 +23,18 @@ func (p Ports) Port(name string) (chan Msg, error) {
 	return port, nil
 }
 
+// ArrPortSlots returns all ports with given name sorted by idx or non-nil err
 func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	type port struct {
-		addr RelativePortAddr
-		ch   chan Msg
+		idx uint8
+		ch  chan Msg
 	}
 
 	pp := make([]port, 0, len(p))
 
 	for addr, ch := range p {
 		if addr.Port == name {
-			pp = append(pp, port{addr, ch})
+			pp = append(pp, port{addr.Idx, ch})
 		}
 	}
 
@@ -41,7 +43,7 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	}
 
 	sort.Slice(pp, func(i, j int) bool {
-		return pp[i].addr.Idx < pp[j].addr.Idx
+		return pp[i].idx < pp[j].idx
 	})
 
 	cc := make([]chan Msg, len(pp))

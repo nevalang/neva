@@ -1,6 +1,7 @@
 package constspawner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -16,16 +17,17 @@ var (
 )
 
 func (s Spawner) Spawn(
-	outportsAndValues map[runtime.AbsolutePortAddr]runtime.Msg,
-	outportsAndChans map[runtime.AbsolutePortAddr]chan core.Msg,
+	ctx context.Context,
+	messages map[runtime.AbsolutePortAddr]runtime.Msg,
+	chans map[runtime.AbsolutePortAddr]chan core.Msg,
 ) error {
-	for addr := range outportsAndValues {
-		out, ok := outportsAndChans[addr]
+	for addr := range messages {
+		out, ok := chans[addr]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
 		}
 
-		msg, err := s.coreMsg(outportsAndValues[addr])
+		msg, err := s.coreMsg(messages[addr])
 		if err != nil {
 			return fmt.Errorf("core msg: %w", err)
 		}
@@ -40,7 +42,7 @@ func (s Spawner) Spawn(
 	return nil
 }
 
-func (s Spawner) coreMsg(in runtime.Msg) (core.Msg, error) {
+func (s Spawner) coreMsg(ctx, in runtime.Msg) (core.Msg, error) {
 	var out core.Msg
 
 	switch in.Type {
@@ -53,13 +55,13 @@ func (s Spawner) coreMsg(in runtime.Msg) (core.Msg, error) {
 	case runtime.StructMsg:
 		structMsg := make(map[string]core.Msg, len(in.Struct))
 		for field, value := range in.Struct {
-			v, err := s.coreMsg(value)
+			v, err := s.coreMsg(ctx, value)
 			if err != nil {
 				return nil, fmt.Errorf("core msg: %w", err)
 			}
 			structMsg[field] = v
 		}
-		out = core.NewStructMsg(structMsg)
+		out = core.NewDictMsg(structMsg)
 	default:
 		return nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, in.Type)
 	}
@@ -67,7 +69,7 @@ func (s Spawner) coreMsg(in runtime.Msg) (core.Msg, error) {
 	return out, nil
 }
 
-func (s Spawner) structMsg(in map[string]runtime.Msg) core.StructMsg {
+func (s Spawner) structMsg(in map[string]runtime.Msg) core.DictMsg {
 	out := make(map[string]core.Msg, len(in))
 
 	for field, value := range in {
@@ -83,5 +85,5 @@ func (s Spawner) structMsg(in map[string]runtime.Msg) core.StructMsg {
 		}
 	}
 
-	return core.NewStructMsg(out)
+	return core.NewDictMsg(out)
 }

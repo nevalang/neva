@@ -1,7 +1,5 @@
 package runtime
 
-import "fmt"
-
 type (
 	Program struct {
 		Ports       []AbsolutePortAddr
@@ -23,11 +21,11 @@ type (
 
 	ReceiverConnectionPoint struct {
 		PortAddr        AbsolutePortAddr
-		Type            ConnectionPointType
-		StructFieldPath []string // Only used for Type == StructFieldReading
+		Type            ReceiverConnectionPointType
+		DictReadingPath []string // Only used for Type == DictReadingPath
 	}
 
-	ConnectionPointType uint8
+	ReceiverConnectionPointType uint8
 
 	Effects struct {
 		Operators []Operator
@@ -59,8 +57,8 @@ type (
 )
 
 const (
-	Normal ConnectionPointType = iota + 1
-	StructFieldReading
+	Normal ReceiverConnectionPointType = iota + 1
+	DictKeyReading
 )
 
 const (
@@ -69,7 +67,3 @@ const (
 	BoolMsg
 	StructMsg
 )
-
-func (a AbsolutePortAddr) String() string {
-	return fmt.Sprintf("%s.%s[%d]", a.Path, a.Port, a.Idx)
-}

@@ -1,12 +1,14 @@
 package connector
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime"
+	"golang.org/x/sync/errgroup"
 )
 
 type (
@@ -16,11 +18,8 @@ type (
 		AfterReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg)
 	}
 
-	ChanMapper interface {
-		ConnectionsWithChans(
-			portChans map[runtime.AbsolutePortAddr]chan core.Msg,
-			connections []runtime.Connection,
-		) ([]ConnectionWithChans, error)
+	Mapper interface {
+		MapPortsToConnections(map[runtime.AbsolutePortAddr]chan core.Msg, []runtime.Connection) ([]ConnectionWithChans, error)
 	}
 
 	ConnectionWithChans struct {
@@ -30,27 +29,45 @@ type (
 	}
 )
 
-var ErrMapper = errors.New("mapper")
+var (
+	ErrMapper          = errors.New("mapper")
+	ErrDictKeyNotFound = errors.New("dict key not found")
+)
 
 type Connector struct {
+	mapper      Mapper
 	interceptor Interceptor
-	mapper      ChanMapper
 }
 
-func (c Connector) Connect(ports map[runtime.AbsolutePortAddr]chan core.Msg, connections []runtime.Connection) error {
-	connectionsWithChans, err := c.mapper.ConnectionsWithChans(ports, connections)
+func (c Connector) Connect(
+	ctx context.Context,
+	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	connections []runtime.Connection,
+) error {
+	connectionsWithChans, err := c.mapper.MapPortsToConnections(ports, connections)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrMapper, err)
 	}
 
+	g := errgroup.Group{}
 	for i := range connectionsWithChans {
-		go c.connect(connectionsWithChans[i])
+		v := connectionsWithChans[i]
+		g.Go(func() error {
+			if err := c.connect(v); err != nil {
+				return fmt.Errorf("connect: %w", err)
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("errgroup wait: %w", err)
 	}
 
 	return nil
 }
 
-func (c Connector) connect(connection ConnectionWithChans) {
+func (c Connector) connect(connection ConnectionWithChans) error {
 	guard := make(chan struct{}, len(connection.receivers))
 
 	for msg := range connection.sender {
@@ -58,12 +75,16 @@ func (c Connector) connect(connection ConnectionWithChans) {
 
 		for i := range connection.receivers {
 			receiverPortChan := connection.receivers[i]
-			receiverConnPoint := connection.info.ReceiversConnectionPoints[i]
+			receiverConnPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
 
-			if receiverConnPoint.Type == runtime.StructFieldReading {
-				parts := receiverConnPoint.StructFieldPath
-				for _, part := range parts[:len(parts)-1] {
-					msg = msg.Struct()[part] // FIXME possible panic
+			if receiverConnPoint.Type == runtime.DictKeyReading {
+				path := receiverConnPoint.DictReadingPath
+				for _, part := range path[:len(path)-1] {
+					var ok bool
+					msg, ok = msg.Dict()[part]
+					if !ok {
+						return fmt.Errorf("%w: ", ErrDictKeyNotFound)
+					}
 				}
 			}
 
@@ -76,6 +97,8 @@ func (c Connector) connect(connection ConnectionWithChans) {
 			}(msg)
 		}
 	}
+
+	return nil
 }
 
 func MustNew(i Interceptor) Connector {

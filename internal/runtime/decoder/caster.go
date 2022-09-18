@@ -87,8 +87,8 @@ func (caster) castConnections(in *runtimesdk.Program) []runtime.Connection {
 					Port: receiver.InPortAddr.Port,
 					Idx:  uint8(receiver.InPortAddr.Idx),
 				},
-				Type:            runtime.ConnectionPointType(receiver.Type),
-				StructFieldPath: receiver.StructFieldPath,
+				Type:            runtime.ReceiverConnectionPointType(receiver.Type),
+				DictReadingPath: receiver.StructFieldPath,
 			})
 		}
 		connections = append(connections, runtime.Connection{

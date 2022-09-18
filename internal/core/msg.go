@@ -13,9 +13,9 @@ type Msg interface {
 	Int() int
 	Str() string
 	List() []Msg
-	Struct() map[string]Msg
+	Dict() map[string]Msg
 
-	String() string // for logging (move to logger?)
+	String() string // for logging (move to interceptor?)
 }
 
 type Type uint8
@@ -25,16 +25,20 @@ const (
 	Int
 	Str
 	List
-	Struct
+	Dict
 )
+
+/* --- EMPTY --- */
 
 type emptyMsg struct{}
 
-func (msg emptyMsg) Int() int               { return 0 }
-func (msg emptyMsg) Bool() bool             { return false }
-func (msg emptyMsg) Str() string            { return "" }
-func (msg emptyMsg) List() []Msg            { return []Msg{} }
-func (msg emptyMsg) Struct() map[string]Msg { return map[string]Msg{} }
+func (msg emptyMsg) Int() int             { return 0 }
+func (msg emptyMsg) Bool() bool           { return false }
+func (msg emptyMsg) Str() string          { return "" }
+func (msg emptyMsg) List() []Msg          { return []Msg{} }
+func (msg emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }
+
+/* --- INT --- */
 
 type IntMsg struct {
 	emptyMsg
@@ -52,6 +56,8 @@ func NewIntMsg(n int) IntMsg {
 	}
 }
 
+/* --- STR --- */
+
 type StrMsg struct {
 	emptyMsg
 	v string
@@ -67,6 +73,8 @@ func NewStrMsg(s string) StrMsg {
 		v:        s,
 	}
 }
+
+/* --- BOOL --- */
 
 type BoolMsg struct {
 	emptyMsg
@@ -84,14 +92,16 @@ func NewBoolMsg(b bool) BoolMsg {
 	}
 }
 
-type StructMsg struct {
+/* --- DICT --- */
+
+type DictMsg struct {
 	emptyMsg
 	v map[string]Msg
 }
 
-func (msg StructMsg) Struct() map[string]Msg { return msg.v }
-func (msg StructMsg) Type() Type             { return Struct }
-func (msg StructMsg) String() string {
+func (msg DictMsg) Struct() map[string]Msg { return msg.v }
+func (msg DictMsg) Type() Type             { return Dict }
+func (msg DictMsg) String() string {
 	b := &strings.Builder{}
 	b.WriteString("{ ")
 	c := 0
@@ -107,12 +117,14 @@ func (msg StructMsg) String() string {
 	return b.String()
 }
 
-func NewStructMsg(v map[string]Msg) StructMsg {
-	return StructMsg{
+func NewDictMsg(v map[string]Msg) DictMsg {
+	return DictMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,
 	}
 }
+
+/* --- LIST --- */
 
 type ListMsg struct {
 	emptyMsg
@@ -144,7 +156,9 @@ func NewListMsg(v []Msg) ListMsg {
 	}
 }
 
-func Eq(a, b Msg) bool {
+/* --- OTHER --- */
+
+func Eq(a, b Msg) bool { // maybe rewrite as a method?
 	if a.Type() != b.Type() {
 		return false
 	}
@@ -166,9 +180,9 @@ func Eq(a, b Msg) bool {
 				return false
 			}
 		}
-	case Struct:
-		s1 := a.Struct()
-		s2 := a.Struct()
+	case Dict:
+		s1 := a.Dict()
+		s2 := a.Dict()
 		if len(s1) != len(s2) {
 			return false
 		}

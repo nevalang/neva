@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"time"
+	"log"
+	"os"
+	"os/signal"
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
@@ -20,11 +23,11 @@ func main() {
 	fmt.Println(
 		core.NewListMsg([]core.Msg{
 			core.NewIntMsg(42),
-			core.NewStructMsg(map[string]core.Msg{
+			core.NewDictMsg(map[string]core.Msg{
 				"name": core.NewStrMsg("John"),
 				"age":  core.NewIntMsg(42),
 				"friends": core.NewListMsg([]core.Msg{
-					core.NewStructMsg(map[string]core.Msg{
+					core.NewDictMsg(map[string]core.Msg{
 						"name":    core.NewStrMsg("John"),
 						"age":     core.NewIntMsg(42),
 						"friends": core.NewListMsg([]core.Msg{}),
@@ -43,8 +46,8 @@ func main() {
 		opspawner.MustNew(
 			repo.NewPlugin(map[string]repo.PluginData{
 				"io": {
-					Filepath: "/home/evaleev/projects/neva/plugins/write.so",
-					Exports:  []string{"Write"},
+					Filepath: "/home/evaleev/projects/neva/plugins/print.so",
+					Exports:  []string{"Print"},
 				},
 			}),
 			opspawner.Searcher{},
@@ -70,7 +73,7 @@ func main() {
 			{
 				Ref: &runtimesdk.OperatorRef{
 					Pkg:  "io",
-					Name: "Write",
+					Name: "Print",
 				},
 				InPortAddrs: []*runtimesdk.PortAddr{
 					{Path: "write", Port: "kick"},
@@ -118,9 +121,10 @@ func main() {
 		panic(err)
 	}
 
-	if err := r.Run(bb); err != nil {
-		panic(err)
-	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
-	time.Sleep(time.Hour)
+	if err := r.Run(ctx, bb); err != nil {
+		log.Println(err)
+	}
 }
