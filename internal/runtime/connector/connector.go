@@ -53,7 +53,7 @@ func (c Connector) Connect(
 	for i := range connectionsWithChans {
 		v := connectionsWithChans[i]
 		g.Go(func() error {
-			if err := c.connect(v); err != nil {
+			if err := c.connect(ctx, v); err != nil {
 				return fmt.Errorf("connect: %w", err)
 			}
 			return nil
@@ -67,35 +67,47 @@ func (c Connector) Connect(
 	return nil
 }
 
-func (c Connector) connect(connection ConnectionWithChans) error {
-	guard := make(chan struct{}, len(connection.receivers))
+func (c Connector) connect(ctx context.Context, connection ConnectionWithChans) error {
+	semaphore := make(chan struct{}, len(connection.receivers))
 
-	for msg := range connection.sender {
-		msg = c.interceptor.AfterSending(connection.info, msg)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case msg := <-connection.sender:
+			if err := c.broadcast(connection, msg, semaphore); err != nil {
+				return fmt.Errorf("broadcast: %w", err)
+			}
+		}
+	}
 
-		for i := range connection.receivers {
-			receiverPortChan := connection.receivers[i]
-			receiverConnPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
+	return nil
+}
 
-			if receiverConnPoint.Type == runtime.DictKeyReading {
-				path := receiverConnPoint.DictReadingPath
-				for _, part := range path[:len(path)-1] {
-					var ok bool
-					msg, ok = msg.Dict()[part]
-					if !ok {
-						return fmt.Errorf("%w: ", ErrDictKeyNotFound)
-					}
+// FIXME https://github.com/emil14/neva/issues/86
+func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg, guard chan struct{}) error {
+	for i := range connection.receivers {
+		receiverPortChan := connection.receivers[i]
+		receiverConnPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
+
+		if receiverConnPoint.Type == runtime.DictKeyReading {
+			path := receiverConnPoint.DictReadingPath
+			for _, part := range path[:len(path)-1] {
+				var ok bool
+				msg, ok = msg.Dict()[part]
+				if !ok {
+					return fmt.Errorf("%w: ", ErrDictKeyNotFound)
 				}
 			}
-
-			guard <- struct{}{}
-
-			go func(m core.Msg) {
-				receiverPortChan <- c.interceptor.BeforeReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
-				c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
-				<-guard
-			}(msg)
 		}
+
+		guard <- struct{}{}
+
+		go func(m core.Msg) {
+			receiverPortChan <- c.interceptor.BeforeReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
+			c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
+			<-guard
+		}(msg)
 	}
 
 	return nil
