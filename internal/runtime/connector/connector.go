@@ -14,8 +14,16 @@ import (
 type (
 	Interceptor interface {
 		AfterSending(runtime.Connection, core.Msg) core.Msg
-		BeforeReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg) core.Msg
-		AfterReceiving(from, to runtime.AbsolutePortAddr, msg core.Msg)
+		BeforeReceiving(
+			sender, receiver runtime.AbsolutePortAddr,
+			point runtime.ReceiverConnectionPoint,
+			msg core.Msg,
+		) core.Msg
+		AfterReceiving(
+			sender, receiver runtime.AbsolutePortAddr,
+			point runtime.ReceiverConnectionPoint,
+			msg core.Msg,
+		)
 	}
 
 	Mapper interface {
@@ -75,13 +83,12 @@ func (c Connector) connect(ctx context.Context, connection ConnectionWithChans) 
 		case <-ctx.Done():
 			return ctx.Err()
 		case msg := <-connection.sender:
+			msg = c.interceptor.AfterSending(connection.info, msg)
 			if err := c.broadcast(connection, msg, semaphore); err != nil {
 				return fmt.Errorf("broadcast: %w", err)
 			}
 		}
 	}
-
-	return nil
 }
 
 // FIXME https://github.com/emil14/neva/issues/86
@@ -104,8 +111,10 @@ func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg, guard
 		guard <- struct{}{}
 
 		go func(m core.Msg) {
-			receiverPortChan <- c.interceptor.BeforeReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
-			c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, m)
+			receiverPortChan <- c.interceptor.BeforeReceiving(
+				connection.info.SenderPortAddr, receiverConnPoint.PortAddr, receiverConnPoint, m,
+			)
+			c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, receiverConnPoint, m)
 			<-guard
 		}(msg)
 	}

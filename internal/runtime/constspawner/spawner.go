@@ -42,7 +42,7 @@ func (s Spawner) Spawn(
 	return nil
 }
 
-func (s Spawner) coreMsg(ctx, in runtime.Msg) (core.Msg, error) {
+func (s Spawner) coreMsg(in runtime.Msg) (core.Msg, error) {
 	var out core.Msg
 
 	switch in.Type {
@@ -55,7 +55,7 @@ func (s Spawner) coreMsg(ctx, in runtime.Msg) (core.Msg, error) {
 	case runtime.StructMsg:
 		structMsg := make(map[string]core.Msg, len(in.Struct))
 		for field, value := range in.Struct {
-			v, err := s.coreMsg(ctx, value)
+			v, err := s.coreMsg(value)
 			if err != nil {
 				return nil, fmt.Errorf("core msg: %w", err)
 			}

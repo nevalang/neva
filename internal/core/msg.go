@@ -65,7 +65,7 @@ type StrMsg struct {
 
 func (msg StrMsg) Str() string    { return msg.v }
 func (msg StrMsg) Type() Type     { return Str }
-func (msg StrMsg) String() string { return msg.v }
+func (msg StrMsg) String() string { return "'" + msg.v + "'" }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
@@ -103,15 +103,15 @@ func (msg DictMsg) Struct() map[string]Msg { return msg.v }
 func (msg DictMsg) Type() Type             { return Dict }
 func (msg DictMsg) String() string {
 	b := &strings.Builder{}
-	b.WriteString("{ ")
+	b.WriteString("{")
 	c := 0
 	for k, el := range msg.v {
 		c++
 		if c < len(msg.v) {
-			fmt.Fprintf(b, "%s: %s, ", k, el.String())
+			fmt.Fprintf(b, " %s: %s, ", k, el.String())
 			continue
 		}
-		fmt.Fprintf(b, "%s: %s", k, el.String())
+		fmt.Fprintf(b, "%s: %s ", k, el.String())
 	}
 	b.WriteString("}")
 	return b.String()

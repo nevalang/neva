@@ -54,7 +54,7 @@ func main() {
 		),
 		constspawner.Spawner{},
 		connector.MustNew(
-			connector.DefaultInterceptor{},
+			connector.LoggingInterceptor{},
 		),
 	)
 
