@@ -72,6 +72,7 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 
 	g.Go(func() error {
 		if err := r.opSpawner.Spawn(ctx, prog.Effects.Operators, ports); err != nil {
+			fmt.Println(err) // FIXME get rid
 			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 		}
 		return nil
@@ -93,7 +94,7 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 		}
 	})
 
-	if err := g.Wait(); err != nil {
+	if err := g.Wait(); err != nil { // fixme all goroutines must respect context cancelation
 		return fmt.Errorf("wait group: %w", err)
 	}
 

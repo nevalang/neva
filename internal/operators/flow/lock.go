@@ -10,20 +10,20 @@ func Lock(io core.IO) error {
 		return err
 	}
 
-	data, err := io.In.Port("data")
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port("out")
+	dataOut, err := io.Out.Port("data")
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		for msg := range data {
+		for msg := range dataIn {
 			<-sig
-			out <- msg
+			dataOut <- msg
 		}
 	}()
 

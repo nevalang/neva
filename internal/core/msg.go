@@ -47,7 +47,7 @@ type IntMsg struct {
 
 func (msg IntMsg) Int() int       { return msg.v }
 func (msg IntMsg) Type() Type     { return Int }
-func (msg IntMsg) String() string { return strconv.Itoa(msg.v) }
+func (msg IntMsg) String() string { return strconv.Itoa(msg.v) } // FIXME this broke printing from operators (this is for logging)
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
@@ -65,7 +65,7 @@ type StrMsg struct {
 
 func (msg StrMsg) Str() string    { return msg.v }
 func (msg StrMsg) Type() Type     { return Str }
-func (msg StrMsg) String() string { return "'" + msg.v + "'" }
+func (msg StrMsg) String() string { return strconv.Quote(msg.v) }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{

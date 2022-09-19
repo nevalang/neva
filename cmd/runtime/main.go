@@ -44,7 +44,11 @@ func main() {
 		),
 		portgen.New(),
 		opspawner.MustNew(
-			repo.NewPlugin(map[string]repo.PluginData{
+			repo.NewPlugin(map[string]repo.Package{
+				"flow": {
+					Filepath: "/home/evaleev/projects/neva/plugins/lock.so",
+					Exports:  []string{"Lock"},
+				},
 				"io": {
 					Filepath: "/home/evaleev/projects/neva/plugins/print.so",
 					Exports:  []string{"Print"},
@@ -61,45 +65,67 @@ func main() {
 	helloWorld := runtimesdk.Program{
 		StartPort: &runtimesdk.PortAddr{
 			Path: "in",
-			Port: "start",
+			Port: "sig",
 		},
+
 		Ports: []*runtimesdk.PortAddr{
-			{Path: "in", Port: "start"},
+			{Path: "in", Port: "sig"},
 			{Path: "const", Port: "greeting"},
-			{Path: "write", Port: "kick"},
-			{Path: "write", Port: "msg"},
+
+			{Path: "lock.in", Port: "sig"},
+			{Path: "lock.in", Port: "data"},
+			{Path: "lock.out", Port: "data"},
+
+			{Path: "print.in", Port: "data"},
+			{Path: "print.out", Port: "data"},
 		},
+
 		Operators: []*runtimesdk.Operator{
 			{
 				Ref: &runtimesdk.OperatorRef{
-					Pkg:  "io",
-					Name: "Print",
+					Pkg: "flow", Name: "Lock",
 				},
 				InPortAddrs: []*runtimesdk.PortAddr{
-					{Path: "write", Port: "kick"},
-					{Path: "write", Port: "msg"},
+					{Path: "lock.in", Port: "sig"},
+					{Path: "lock.in", Port: "data"},
+				},
+				OutPortAddrs: []*runtimesdk.PortAddr{
+					{Path: "lock.out", Port: "data"},
+				},
+			},
+			{
+				Ref: &runtimesdk.OperatorRef{
+					Pkg: "io", Name: "Print",
+				},
+				InPortAddrs: []*runtimesdk.PortAddr{
+					{Path: "print.in", Port: "data"},
+				},
+				OutPortAddrs: []*runtimesdk.PortAddr{
+					{Path: "print.out", Port: "data"},
 				},
 			},
 		},
+
 		Constants: []*runtimesdk.Constant{
 			{
 				OutPortAddr: &runtimesdk.PortAddr{
 					Path: "const", Port: "greeting",
 				},
 				Msg: &runtimesdk.Msg{
-					Str:  "hello world!",
+					Str:  "hello world!\n",
 					Type: runtimesdk.MsgType_VALUE_TYPE_STR,
 				},
 			},
 		},
+
 		Connections: []*runtimesdk.Connection{
 			{
 				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Path: "in", Port: "start",
+					Path: "in", Port: "sig",
 				},
 				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
 					{
-						InPortAddr: &runtimesdk.PortAddr{Path: "write", Port: "kick"},
+						InPortAddr: &runtimesdk.PortAddr{Path: "lock.in", Port: "sig"},
 					},
 				},
 			},
@@ -109,7 +135,17 @@ func main() {
 				},
 				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
 					{
-						InPortAddr: &runtimesdk.PortAddr{Path: "write", Port: "msg"},
+						InPortAddr: &runtimesdk.PortAddr{Path: "lock.in", Port: "data"},
+					},
+				},
+			},
+			{
+				SenderOutPortAddr: &runtimesdk.PortAddr{
+					Path: "lock.out", Port: "data",
+				},
+				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
+					{
+						InPortAddr: &runtimesdk.PortAddr{Path: "print.in", Port: "data"},
 					},
 				},
 			},

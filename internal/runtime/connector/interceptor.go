@@ -12,7 +12,7 @@ import (
 type LoggingInterceptor struct{}
 
 func (l LoggingInterceptor) AfterSending(connection runtime.Connection, msg core.Msg) core.Msg {
-	log.Printf("after sending: %s, %s", l.formatConnection(connection), msg)
+	log.Printf("after sending: %s", l.formatConnection(connection, msg))
 	return msg
 }
 
@@ -21,7 +21,7 @@ func (l LoggingInterceptor) BeforeReceiving(
 	point runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) core.Msg {
-	log.Printf("before receiving: %s <- %s, %s", l.formatPortAddr(receiver), l.formatPortAddr(sender), msg)
+	log.Printf("before receiving: %s <- %s <- %s", l.formatPortAddr(receiver), msg, l.formatPortAddr(sender))
 	return msg
 }
 
@@ -30,10 +30,10 @@ func (l LoggingInterceptor) AfterReceiving(
 	point runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) {
-	log.Printf("after receiving: %s <- %s, %s", l.formatPortAddr(receiver), l.formatPortAddr(sender), msg)
+	log.Printf("after receiving: %s <- %s <- %s", l.formatPortAddr(receiver), msg, l.formatPortAddr(sender))
 }
 
-func (l LoggingInterceptor) formatConnection(connection runtime.Connection) string {
+func (l LoggingInterceptor) formatConnection(connection runtime.Connection, msg core.Msg) string {
 	to := []string{}
 	for _, receiver := range connection.ReceiversConnectionPoints {
 		s := l.formatPortAddr(receiver.PortAddr)
@@ -44,8 +44,9 @@ func (l LoggingInterceptor) formatConnection(connection runtime.Connection) stri
 	}
 
 	return fmt.Sprintf(
-		"%s -> %s",
+		"%s -> %s -> %s",
 		l.formatPortAddr(connection.SenderPortAddr),
+		msg,
 		strings.Join(to, ", "),
 	)
 }

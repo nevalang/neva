@@ -14,52 +14,30 @@ var (
 	ErrPluginOpen   = errors.New("plugin could not be loaded")
 	ErrPluginLookup = errors.New("exported entity not found")
 	ErrTypeMismatch = errors.New("exported entity doesn't match operator signature")
-	ErrOpNotFound   = errors.New("package has not implemented the operator")
+	ErrOpNotFound   = errors.New("operator not found")
 )
 
 type Plugin struct {
-	pkgs  map[string]PluginData
+	pkgs  map[string]Package
 	cache map[runtime.OperatorRef]func(core.IO) error
 }
 
-func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
-	return func(io core.IO) error { // FIXME
-		kick, err := io.In.Port("kick")
-		if err != nil {
-			return err
-		}
-
-		str, err := io.In.Port("msg")
-		if err != nil {
-			return err
-		}
-
-		go func() {
-			for {
-				<-kick
-				msg := <-str
-				fmt.Println(msg.Str())
-			}
-		}()
-
-		return nil
-	}, nil
-
-	if op, ok := r.cache[ref]; ok {
+func (p Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
+	if op, ok := p.cache[ref]; ok {
 		return op, nil
 	}
 
-	pluginData, ok := r.pkgs[ref.Pkg]
+	pkg, ok := p.pkgs[ref.Pkg]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrUnknownPkg, ref.Pkg)
 	}
 
-	plug, err := plugin.Open(pluginData.Filepath)
+	plug, err := plugin.Open(pkg.Filepath)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrPluginOpen, err)
 	}
 
-	for _, export := range pluginData.Exports {
+	for _, export := range pkg.Exports {
 		sym, err := plug.Lookup(export)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrPluginLookup, err)
@@ -70,10 +48,13 @@ func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 			return nil, fmt.Errorf("%w: %T", ErrTypeMismatch, op)
 		}
 
-		r.cache[ref] = op
+		p.cache[runtime.OperatorRef{
+			Pkg:  ref.Pkg,
+			Name: export,
+		}] = op
 	}
 
-	op, ok := r.cache[ref]
+	op, ok := p.cache[ref]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrOpNotFound, ref)
 	}
@@ -81,12 +62,12 @@ func (r Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 	return op, nil
 }
 
-type PluginData struct {
+type Package struct {
 	Filepath string
 	Exports  []string
 }
 
-func NewPlugin(pkgs map[string]PluginData) Plugin {
+func NewPlugin(pkgs map[string]Package) Plugin {
 	return Plugin{
 		pkgs: pkgs,
 		cache: make(

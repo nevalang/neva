@@ -1,28 +1,25 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
 )
 
-var ErrFmt = errors.New("fmt")
-
-func Fmt(io core.IO) error {
+func Fmt(io core.IO) error { // TODO rename maybe?
 	strPort, err := io.In.Port("str")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrFmt, err)
+		return err
 	}
 
 	argPortSlots, err := io.In.ArrPortSlots("args")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrFmt, err)
+		return err
 	}
 
 	outPort, err := io.Out.Port("out")
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrFmt, err)
+		return err
 	}
 
 	go func() {
@@ -35,7 +32,7 @@ func Fmt(io core.IO) error {
 			}
 
 			outPort <- core.NewStrMsg(
-				fmt.Sprintf(msg.Str(), ss...),
+				fmt.Sprintf(msg.Str(), ss...), // FIXME go's interface not the best
 			)
 		}
 	}()

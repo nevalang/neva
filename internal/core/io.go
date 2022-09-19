@@ -18,7 +18,7 @@ type Ports map[RelativePortAddr]chan Msg
 func (p Ports) Port(name string) (chan Msg, error) {
 	port, ok := p[RelativePortAddr{Port: name}]
 	if !ok {
-		return nil, fmt.Errorf("%w: in: %v", ErrPortNotFound, name)
+		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, name)
 	}
 	return port, nil
 }
@@ -39,7 +39,7 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	}
 
 	if len(pp) == 0 {
-		return nil, fmt.Errorf("%w: in: %v", ErrPortNotFound, name)
+		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, name)
 	}
 
 	sort.Slice(pp, func(i, j int) bool {

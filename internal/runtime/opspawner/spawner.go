@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrRepo         = errors.New("repo")
-	ErrOper         = errors.New("operator")
+	ErrOperator     = errors.New("operator")
 	ErrPortSearcher = errors.New("port searcher")
 )
 
@@ -36,7 +36,7 @@ func (s Spawner) Spawn(
 	ports map[runtime.AbsolutePortAddr]chan core.Msg,
 ) error {
 	for i := range ops {
-		op, err := s.repo.Operator(ops[i].Ref)
+		op, err := s.repo.Operator(ops[i].Ref) // FIXME no err on not existing operator?
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrRepo, err)
 		}
@@ -47,7 +47,7 @@ func (s Spawner) Spawn(
 		}
 
 		if err := op(io); err != nil {
-			return fmt.Errorf("%w: %v", ErrOper, err)
+			return fmt.Errorf("%w: ref %v, err %v", ErrOperator, ops[i].Ref, err)
 		}
 	}
 
