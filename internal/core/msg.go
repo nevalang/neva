@@ -21,11 +21,11 @@ type Msg interface {
 type Type uint8
 
 const (
-	Bool Type = iota
-	Int
-	Str
-	List
-	Dict
+	BoolMsgType Type = iota
+	IntMsgType
+	StrMsgType
+	ListMsgType
+	DictMsgType
 )
 
 /* --- EMPTY --- */
@@ -46,7 +46,7 @@ type IntMsg struct {
 }
 
 func (msg IntMsg) Int() int       { return msg.v }
-func (msg IntMsg) Type() Type     { return Int }
+func (msg IntMsg) Type() Type     { return IntMsgType }
 func (msg IntMsg) String() string { return strconv.Itoa(msg.v) } // FIXME this broke printing from operators (this is for logging)
 
 func NewIntMsg(n int) IntMsg {
@@ -64,7 +64,7 @@ type StrMsg struct {
 }
 
 func (msg StrMsg) Str() string    { return msg.v }
-func (msg StrMsg) Type() Type     { return Str }
+func (msg StrMsg) Type() Type     { return StrMsgType }
 func (msg StrMsg) String() string { return strconv.Quote(msg.v) }
 
 func NewStrMsg(s string) StrMsg {
@@ -82,7 +82,7 @@ type BoolMsg struct {
 }
 
 func (msg BoolMsg) Bool() bool     { return msg.v }
-func (msg BoolMsg) Type() Type     { return Bool }
+func (msg BoolMsg) Type() Type     { return BoolMsgType }
 func (msg BoolMsg) String() string { return fmt.Sprint(msg.v) }
 
 func NewBoolMsg(b bool) BoolMsg {
@@ -99,9 +99,9 @@ type DictMsg struct {
 	v map[string]Msg
 }
 
-func (msg DictMsg) Struct() map[string]Msg { return msg.v }
-func (msg DictMsg) Type() Type             { return Dict }
-func (msg DictMsg) String() string {
+func (msg DictMsg) Dict() map[string]Msg { return msg.v }
+func (msg DictMsg) Type() Type           { return DictMsgType }
+func (msg DictMsg) String() string { // can't move this to interceptor because print operator needs this
 	b := &strings.Builder{}
 	b.WriteString("{")
 	c := 0
@@ -132,7 +132,7 @@ type ListMsg struct {
 }
 
 func (msg ListMsg) List() []Msg { return msg.v }
-func (msg ListMsg) Type() Type  { return List }
+func (msg ListMsg) Type() Type  { return ListMsgType }
 func (msg ListMsg) String() string {
 	b := &strings.Builder{}
 	b.WriteString("[")
@@ -163,13 +163,13 @@ func Eq(a, b Msg) bool { // maybe rewrite as a method?
 		return false
 	}
 	switch a.Type() {
-	case Bool:
+	case BoolMsgType:
 		return a.Bool() == b.Bool()
-	case Int:
+	case IntMsgType:
 		return a.Int() == b.Int()
-	case Str:
+	case StrMsgType:
 		return a.Str() == b.Str()
-	case List:
+	case ListMsgType:
 		l1 := a.List()
 		l2 := b.List()
 		if len(l1) != len(l2) {
@@ -180,7 +180,7 @@ func Eq(a, b Msg) bool { // maybe rewrite as a method?
 				return false
 			}
 		}
-	case Dict:
+	case DictMsgType:
 		s1 := a.Dict()
 		s2 := a.Dict()
 		if len(s1) != len(s2) {
