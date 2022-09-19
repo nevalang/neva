@@ -14,13 +14,8 @@ devserversdk:
 		--go_out=pkg/devserversdk \
 		--go-grpc_out=pkg/devserversdk
 
-.PHONY: goplugins
-goplugins:
+.PHONY: debug-plugins
+debug-plugins:
 	rm -rf plugins/*
-	go build -o plugins/and.so -buildmode=plugin internal/runtime/operators/and/main.go
-	go build -o plugins/filter.so -buildmode=plugin internal/runtime/operators/filter/main.go
-	go build -o plugins/select.so -buildmode=plugin internal/runtime/operators/select/main.go
-	go build -o plugins/more.so -buildmode=plugin internal/runtime/operators/more/main.go
-	go build -o plugins/mul.so -buildmode=plugin internal/runtime/operators/mul/main.go
-	go build -o plugins/or.so -buildmode=plugin internal/runtime/operators/or/main.go
-	go build -o plugins/remainder.so -buildmode=plugin internal/runtime/operators/remainder/main.go
+	go build -o plugins/print.so -buildmode=plugin -gcflags="all=-N -l" internal/runtime/operators/io/print.go
+	go build -o plugins/lock.so -buildmode=plugin -gcflags="all=-N -l" internal/runtime/operators/flow/lock.go
