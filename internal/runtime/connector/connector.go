@@ -61,7 +61,7 @@ func (c Connector) Connect(
 	for i := range connectionsWithChans {
 		v := connectionsWithChans[i]
 		g.Go(func() error {
-			if err := c.connect(ctx, v); err != nil {
+			if err := c.handleConnection(ctx, v); err != nil {
 				return fmt.Errorf("connect: %w", err)
 			}
 			return nil
@@ -75,16 +75,14 @@ func (c Connector) Connect(
 	return nil
 }
 
-func (c Connector) connect(ctx context.Context, connection ConnectionWithChans) error {
-	semaphore := make(chan struct{}, len(connection.receivers))
-
+func (c Connector) handleConnection(ctx context.Context, connection ConnectionWithChans) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case msg := <-connection.sender:
 			msg = c.interceptor.AfterSending(connection.info, msg)
-			if err := c.broadcast(connection, msg, semaphore); err != nil {
+			if err := c.broadcast(connection, msg); err != nil {
 				return fmt.Errorf("broadcast: %w", err)
 			}
 		}
@@ -92,13 +90,13 @@ func (c Connector) connect(ctx context.Context, connection ConnectionWithChans) 
 }
 
 // FIXME https://github.com/emil14/neva/issues/86
-func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg, guard chan struct{}) error {
+func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg) error {
 	for i := range connection.receivers {
-		receiverPortChan := connection.receivers[i]
-		receiverConnPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
+		receiverPort := connection.receivers[i]
+		receiverPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
 
-		if receiverConnPoint.Type == runtime.DictKeyReading {
-			path := receiverConnPoint.DictReadingPath
+		if receiverPoint.Type == runtime.DictKeyReading {
+			path := receiverPoint.DictReadingPath
 			for _, part := range path[:len(path)-1] {
 				var ok bool
 				msg, ok = msg.Dict()[part]
@@ -108,15 +106,10 @@ func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg, guard
 			}
 		}
 
-		guard <- struct{}{}
-
-		go func(m core.Msg) {
-			receiverPortChan <- c.interceptor.BeforeReceiving(
-				connection.info.SenderPortAddr, receiverConnPoint.PortAddr, receiverConnPoint, m,
-			)
-			c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverConnPoint.PortAddr, receiverConnPoint, m)
-			<-guard
-		}(msg)
+		receiverPort <- c.interceptor.BeforeReceiving(
+			connection.info.SenderPortAddr, receiverPoint.PortAddr, receiverPoint, msg,
+		)
+		c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverPoint.PortAddr, receiverPoint, msg)
 	}
 
 	return nil

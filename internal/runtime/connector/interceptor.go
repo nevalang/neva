@@ -11,46 +11,46 @@ import (
 
 type LoggingInterceptor struct{}
 
-func (l LoggingInterceptor) AfterSending(connection runtime.Connection, msg core.Msg) core.Msg {
-	log.Printf("after sending: %s", l.formatConnection(connection, msg))
+func (l LoggingInterceptor) AfterSending(conn runtime.Connection, msg core.Msg) core.Msg {
+	log.Printf("sent: %s", l.fmtConn(conn, msg))
 	return msg
 }
 
 func (l LoggingInterceptor) BeforeReceiving(
-	sender, receiver runtime.AbsolutePortAddr,
-	point runtime.ReceiverConnectionPoint,
+	saddr, raddr runtime.AbsolutePortAddr,
+	rpoint runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) core.Msg {
-	log.Printf("before receiving: %s <- %s <- %s", l.formatPortAddr(receiver), msg, l.formatPortAddr(sender))
+	log.Printf("prepare: %s <- %s <- %s", l.fmtPortAddr(raddr), msg, l.fmtPortAddr(saddr))
 	return msg
 }
 
 func (l LoggingInterceptor) AfterReceiving(
-	sender, receiver runtime.AbsolutePortAddr,
-	point runtime.ReceiverConnectionPoint,
+	saddr, raddr runtime.AbsolutePortAddr,
+	rpoint runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) {
-	log.Printf("after receiving: %s <- %s <- %s", l.formatPortAddr(receiver), msg, l.formatPortAddr(sender))
+	log.Printf("received: %s <- %s <- %s", l.fmtPortAddr(raddr), msg, l.fmtPortAddr(saddr))
 }
 
-func (l LoggingInterceptor) formatConnection(connection runtime.Connection, msg core.Msg) string {
+func (l LoggingInterceptor) fmtConn(conn runtime.Connection, msg core.Msg) string {
 	to := []string{}
-	for _, receiver := range connection.ReceiversConnectionPoints {
-		s := l.formatPortAddr(receiver.PortAddr)
-		if receiver.Type == runtime.DictKeyReading {
-			s = "." + strings.Join(receiver.DictReadingPath, ".")
+	for _, r := range conn.ReceiversConnectionPoints {
+		s := l.fmtPortAddr(r.PortAddr)
+		if r.Type == runtime.DictKeyReading {
+			s = "." + strings.Join(r.DictReadingPath, ".")
 		}
 		to = append(to, s)
 	}
 
 	return fmt.Sprintf(
 		"%s -> %s -> %s",
-		l.formatPortAddr(connection.SenderPortAddr),
+		l.fmtPortAddr(conn.SenderPortAddr),
 		msg,
 		strings.Join(to, ", "),
 	)
 }
 
-func (l LoggingInterceptor) formatPortAddr(addr runtime.AbsolutePortAddr) string {
+func (l LoggingInterceptor) fmtPortAddr(addr runtime.AbsolutePortAddr) string {
 	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Port, addr.Idx)
 }

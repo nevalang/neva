@@ -21,8 +21,9 @@ func Lock(io core.IO) error {
 	}
 
 	go func() {
-		for msg := range dataIn {
-			<-sig
+		for {
+			<-sig // read sig first to avoid unnecessary sendings
+			msg := <-dataIn
 			dataOut <- msg
 		}
 	}()

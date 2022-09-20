@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/pkg/runtimesdk"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type marshaler struct{}

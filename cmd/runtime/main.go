@@ -2,12 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
-	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
 	"github.com/emil14/neva/internal/runtime/constspawner"
@@ -20,23 +16,171 @@ import (
 )
 
 func main() {
-	fmt.Println(
-		core.NewListMsg([]core.Msg{
-			core.NewIntMsg(42),
-			core.NewDictMsg(map[string]core.Msg{
-				"name": core.NewStrMsg("John"),
-				"age":  core.NewIntMsg(42),
-				"friends": core.NewListMsg([]core.Msg{
-					core.NewDictMsg(map[string]core.Msg{
-						"name":    core.NewStrMsg("John"),
-						"age":     core.NewIntMsg(42),
-						"friends": core.NewListMsg([]core.Msg{}),
-					}),
-				}),
-			}),
-		}),
-	)
+	r := mustCreateRuntime()
+	hw := helloWorld()
 
+	bb, err := proto.Marshal(hw)
+	if err != nil {
+		panic(err)
+	}
+
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+
+	if err := r.Run(context.Background(), bb); err != nil {
+		log.Println(err)
+	}
+}
+
+func helloWorld() *runtimesdk.Program {
+	return prog(
+		port("in", "sig"),
+		ports(
+			port("in", "sig"),
+			port("const", "greeting"),
+			port("lock.in", "sig"),
+			port("lock.in", "data"),
+			port("lock.out", "data"),
+			port("print.in", "data"),
+			port("print.out", "data"),
+		),
+		ops(
+			op(
+				opref("flow", "Lock"),
+				ports(
+					port("lock.in", "sig"),
+					port("lock.in", "data"),
+				),
+				ports(port("lock.out", "data")),
+			),
+			op(
+				opref("io", "Print"),
+				ports(port("print.in", "data")),
+				ports(port("print.out", "data")),
+			),
+		),
+		consts(
+			cnst(
+				port("const", "greeting"),
+				strmsg("hello world!\n"),
+			),
+		),
+		conns(
+			conn(
+				port("in", "sig"),
+				points(
+					point(port("lock.in", "sig")),
+				),
+			),
+			conn(
+				port("const", "greeting"),
+				points(
+					point(port("lock.in", "data")),
+				),
+			),
+			conn(
+				port("lock.out", "data"),
+				points(
+					point(port("print.in", "data")),
+				),
+			),
+		),
+	)
+}
+
+// sdk helpers
+
+func prog(
+	start *runtimesdk.PortAddr,
+	ports []*runtimesdk.PortAddr,
+	ops []*runtimesdk.Operator,
+	consts []*runtimesdk.Constant,
+	conns []*runtimesdk.Connection,
+) *runtimesdk.Program {
+	return &runtimesdk.Program{
+		StartPort:   start,
+		Ports:       ports,
+		Operators:   ops,
+		Constants:   consts,
+		Connections: conns,
+	}
+}
+
+func conns(cc ...*runtimesdk.Connection) []*runtimesdk.Connection {
+	return cc
+}
+
+func conn(sender *runtimesdk.PortAddr, receivers []*runtimesdk.ConnectionPoint) *runtimesdk.Connection {
+	return &runtimesdk.Connection{
+		SenderOutPortAddr:        sender,
+		ReceiverConnectionPoints: receivers,
+	}
+}
+
+func points(pp ...*runtimesdk.ConnectionPoint) []*runtimesdk.ConnectionPoint {
+	return pp
+}
+
+func point(in *runtimesdk.PortAddr) *runtimesdk.ConnectionPoint {
+	return &runtimesdk.ConnectionPoint{
+		InPortAddr:      in,
+		Type:            0,
+		StructFieldPath: []string{},
+	}
+}
+
+func consts(cc ...*runtimesdk.Constant) []*runtimesdk.Constant {
+	return cc
+}
+
+func cnst(out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Constant {
+	return &runtimesdk.Constant{
+		OutPortAddr: out,
+		Msg:         msg,
+	}
+}
+
+func strmsg(s string) *runtimesdk.Msg {
+	return &runtimesdk.Msg{
+		Str:  "hello world!\n",
+		Type: runtimesdk.MsgType_VALUE_TYPE_STR, //nolint
+	}
+}
+
+func ops(oo ...*runtimesdk.Operator) []*runtimesdk.Operator {
+	return oo
+}
+
+func op(ref *runtimesdk.OperatorRef, in, out []*runtimesdk.PortAddr) *runtimesdk.Operator {
+	return &runtimesdk.Operator{
+		Ref:          ref,
+		InPortAddrs:  in,
+		OutPortAddrs: out,
+	}
+}
+
+func opref(pkg, name string) *runtimesdk.OperatorRef {
+	return &runtimesdk.OperatorRef{
+		Pkg: pkg, Name: name,
+	}
+}
+
+func ports(pp ...*runtimesdk.PortAddr) []*runtimesdk.PortAddr {
+	return pp
+}
+
+func port(path, name string) *runtimesdk.PortAddr {
+	return slot(path, name, 0)
+}
+
+func slot(path, name string, idx uint32) *runtimesdk.PortAddr {
+	return &runtimesdk.PortAddr{
+		Path: path, Port: name, Idx: idx,
+	}
+}
+
+// runtime
+
+func mustCreateRuntime() runtime.Runtime {
 	r := runtime.MustNew(
 		decoder.MustNewProto(
 			decoder.NewCaster(),
@@ -61,106 +205,5 @@ func main() {
 			connector.LoggingInterceptor{},
 		),
 	)
-
-	helloWorld := runtimesdk.Program{
-		StartPort: &runtimesdk.PortAddr{
-			Path: "in",
-			Port: "sig",
-		},
-
-		Ports: []*runtimesdk.PortAddr{
-			{Path: "in", Port: "sig"},
-			{Path: "const", Port: "greeting"},
-
-			{Path: "lock.in", Port: "sig"},
-			{Path: "lock.in", Port: "data"},
-			{Path: "lock.out", Port: "data"},
-
-			{Path: "print.in", Port: "data"},
-			{Path: "print.out", Port: "data"},
-		},
-
-		Operators: []*runtimesdk.Operator{
-			{
-				Ref: &runtimesdk.OperatorRef{
-					Pkg: "flow", Name: "Lock",
-				},
-				InPortAddrs: []*runtimesdk.PortAddr{
-					{Path: "lock.in", Port: "sig"},
-					{Path: "lock.in", Port: "data"},
-				},
-				OutPortAddrs: []*runtimesdk.PortAddr{
-					{Path: "lock.out", Port: "data"},
-				},
-			},
-			{
-				Ref: &runtimesdk.OperatorRef{
-					Pkg: "io", Name: "Print",
-				},
-				InPortAddrs: []*runtimesdk.PortAddr{
-					{Path: "print.in", Port: "data"},
-				},
-				OutPortAddrs: []*runtimesdk.PortAddr{
-					{Path: "print.out", Port: "data"},
-				},
-			},
-		},
-
-		Constants: []*runtimesdk.Constant{
-			{
-				OutPortAddr: &runtimesdk.PortAddr{
-					Path: "const", Port: "greeting",
-				},
-				Msg: &runtimesdk.Msg{
-					Str:  "hello world!\n",
-					Type: runtimesdk.MsgType_VALUE_TYPE_STR,
-				},
-			},
-		},
-
-		Connections: []*runtimesdk.Connection{
-			{
-				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Path: "in", Port: "sig",
-				},
-				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
-					{
-						InPortAddr: &runtimesdk.PortAddr{Path: "lock.in", Port: "sig"},
-					},
-				},
-			},
-			{
-				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Path: "const", Port: "greeting",
-				},
-				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
-					{
-						InPortAddr: &runtimesdk.PortAddr{Path: "lock.in", Port: "data"},
-					},
-				},
-			},
-			{
-				SenderOutPortAddr: &runtimesdk.PortAddr{
-					Path: "lock.out", Port: "data",
-				},
-				ReceiverConnectionPoints: []*runtimesdk.ConnectionPoint{
-					{
-						InPortAddr: &runtimesdk.PortAddr{Path: "print.in", Port: "data"},
-					},
-				},
-			},
-		},
-	}
-
-	bb, err := proto.Marshal(&helloWorld)
-	if err != nil {
-		panic(err)
-	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	if err := r.Run(ctx, bb); err != nil {
-		log.Println(err)
-	}
+	return r
 }
