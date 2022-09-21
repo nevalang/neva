@@ -43,7 +43,7 @@ func (p Proto) Decode(bb []byte) (runtime.Program, error) {
 }
 
 func MustNewProto(caster Caster, unmarshaler Unmarshaler) Proto {
-	utils.PanicOnNil(caster, unmarshaler)
+	utils.NilPanic(caster, unmarshaler)
 
 	return Proto{
 		caster:      caster,

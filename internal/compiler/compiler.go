@@ -124,7 +124,7 @@ func MustNew(
 	translator Generator,
 	operatorsIO map[OperatorRef]IO,
 ) Compiler {
-	utils.PanicOnNil(pkg, parser, checker, translator, operatorsIO)
+	utils.NilPanic(pkg, parser, checker, translator, operatorsIO)
 
 	return Compiler{
 		pkg:         pkg,

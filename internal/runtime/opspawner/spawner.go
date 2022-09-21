@@ -55,7 +55,7 @@ func (s Spawner) Spawn(
 }
 
 func MustNew(repo Repo, portSearcher PortSearcher) Spawner {
-	utils.PanicOnNil(repo, portSearcher)
+	utils.NilPanic(repo, portSearcher)
 	return Spawner{
 		repo:         repo,
 		portSearcher: portSearcher,

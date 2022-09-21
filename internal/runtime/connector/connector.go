@@ -116,7 +116,7 @@ func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg) error
 }
 
 func MustNew(i Interceptor) Connector {
-	utils.PanicOnNil(i)
+	utils.NilPanic(i)
 
 	return Connector{
 		interceptor: i,

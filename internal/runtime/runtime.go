@@ -108,7 +108,7 @@ func MustNew(
 	constSpawner ConstSpawner,
 	connector Connector,
 ) Runtime {
-	utils.PanicOnNil(decoder, portGen, opSpawner, constSpawner, connector)
+	utils.NilPanic(decoder, portGen, opSpawner, constSpawner, connector)
 
 	return Runtime{
 		decoder:      decoder,
