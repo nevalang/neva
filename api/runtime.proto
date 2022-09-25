@@ -5,11 +5,16 @@ package runtime;
 option go_package = './;runtimesdk';
 
 message Program {
-	repeated PortAddr ports = 1;
+	repeated Port ports = 1;
 	repeated Connection connections = 2;
 	repeated Operator operators = 3; // use map {ref:ports}?
 	repeated Constant constants = 4; // use map {addr:msg}?
 	PortAddr start_port = 5;
+}
+
+message Port {
+	PortAddr addr = 1;
+	uint32 buf_size = 2;
 }
 
 message Connection {
@@ -31,7 +36,7 @@ enum ConnectionPointType {
 
 message Operator {
 	OperatorRef ref = 1; 
-	repeated PortAddr in_port_addrs = 2; // TODO check if array port works
+	repeated PortAddr in_port_addrs = 2;
 	repeated PortAddr out_port_addrs = 3;
 }
 

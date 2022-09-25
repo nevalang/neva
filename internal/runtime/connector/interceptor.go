@@ -17,20 +17,20 @@ func (l LoggingInterceptor) AfterSending(conn runtime.Connection, msg core.Msg) 
 }
 
 func (l LoggingInterceptor) BeforeReceiving(
-	saddr, raddr runtime.AbsolutePortAddr,
+	saddr runtime.AbsolutePortAddr,
 	rpoint runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) core.Msg {
-	log.Printf("prepare: %s <- %s <- %s", l.fmtPortAddr(raddr), msg, l.fmtPortAddr(saddr))
+	log.Printf("prepare: %s <- %s <- %s", l.fmtPortAddr(rpoint.PortAddr), msg, l.fmtPortAddr(saddr))
 	return msg
 }
 
 func (l LoggingInterceptor) AfterReceiving(
-	saddr, raddr runtime.AbsolutePortAddr,
+	saddr runtime.AbsolutePortAddr,
 	rpoint runtime.ReceiverConnectionPoint,
 	msg core.Msg,
 ) {
-	log.Printf("received: %s <- %s <- %s", l.fmtPortAddr(raddr), msg, l.fmtPortAddr(saddr))
+	log.Printf("received: %s <- %s <- %s", l.fmtPortAddr(rpoint.PortAddr), msg, l.fmtPortAddr(saddr))
 }
 
 func (l LoggingInterceptor) fmtConn(conn runtime.Connection, msg core.Msg) string {

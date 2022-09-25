@@ -14,16 +14,8 @@ import (
 type (
 	Interceptor interface {
 		AfterSending(runtime.Connection, core.Msg) core.Msg
-		BeforeReceiving(
-			sender, receiver runtime.AbsolutePortAddr,
-			point runtime.ReceiverConnectionPoint,
-			msg core.Msg,
-		) core.Msg
-		AfterReceiving(
-			sender, receiver runtime.AbsolutePortAddr,
-			point runtime.ReceiverConnectionPoint,
-			msg core.Msg,
-		)
+		BeforeReceiving(saddr runtime.AbsolutePortAddr, point runtime.ReceiverConnectionPoint, msg core.Msg) core.Msg
+		AfterReceiving(saddr runtime.AbsolutePortAddr, point runtime.ReceiverConnectionPoint, msg core.Msg)
 	}
 
 	Mapper interface {
