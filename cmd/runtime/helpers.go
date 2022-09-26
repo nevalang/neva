@@ -4,7 +4,7 @@ import "github.com/emil14/neva/pkg/runtimesdk"
 
 func prog(
 	start *runtimesdk.PortAddr,
-	ports []*runtimesdk.PortAddr,
+	ports []*runtimesdk.Port,
 	ops []*runtimesdk.Operator,
 	consts []*runtimesdk.Constant,
 	conns []*runtimesdk.Connection,
@@ -77,11 +77,22 @@ func opref(pkg, name string) *runtimesdk.OperatorRef {
 	}
 }
 
-func ports(pp ...*runtimesdk.PortAddr) []*runtimesdk.PortAddr {
+func ports(pp ...*runtimesdk.Port) []*runtimesdk.Port {
 	return pp
 }
 
-func port(path, name string) *runtimesdk.PortAddr {
+func portsAddrs(pp ...*runtimesdk.PortAddr) []*runtimesdk.PortAddr {
+	return pp
+}
+
+func port(path, name string, buf uint32) *runtimesdk.Port {
+	return &runtimesdk.Port{
+		Addr:    portAddr(path, name),
+		BufSize: buf,
+	}
+}
+
+func portAddr(path, name string) *runtimesdk.PortAddr {
 	return slot(path, name, 0)
 }
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 var (
@@ -28,12 +28,12 @@ type (
 
 type Translator struct{}
 
-func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
-	rprog := runtime.Program{
-		Ports:       []runtime.AbsolutePortAddr{},
-		Connections: []runtime.Connection{},
-		Effects:     runtime.Effects{},
-		StartPort: runtime.AbsolutePortAddr{
+func (t Translator) Translate(prog compiler.Program) (src.Program, error) {
+	rprog := src.Program{
+		Ports:       []src.Port{},
+		Connections: []src.Connection{},
+		Effects:     src.Effects{},
+		StartPort: src.AbsolutePortAddr{
 			Path: "",
 			Port: "start",
 			Idx:  0,
@@ -53,7 +53,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 		component, ok := prog.Scope[node.component]
 		if !ok {
-			return runtime.Program{}, fmt.Errorf("%w: %v", ErrComponentNotFound, node.component)
+			return src.Program{}, fmt.Errorf("%w: %v", ErrComponentNotFound, node.component)
 		}
 
 		in, out := t.nodePorts(node.parentCtx)
@@ -65,9 +65,9 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		if component.Type == compiler.OperatorComponent {
-			rprog.Effects.Operators = append(rprog.Effects.Operators, runtime.Operator{
-				Ref: runtime.OperatorRef(component.Operator.Ref),
-				PortAddrs: runtime.OperatorPortAddrs{
+			rprog.Effects.Operators = append(rprog.Effects.Operators, src.Operator{
+				Ref: src.OperatorRef(component.Operator.Ref),
+				PortAddrs: src.OperatorPortAddrs{
 					In:  in,
 					Out: out,
 				},
@@ -77,8 +77,8 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		for _, connection := range component.Module.Net {
-			rconn := runtime.Connection{
-				SenderPortAddr: runtime.AbsolutePortAddr{
+			rconn := src.Connection{
+				SenderPortAddr: src.AbsolutePortAddr{
 					Path: node.parentCtx.path + "." + node.parentCtx.node + ".out",
 					Port: connection.From.Port,
 					Idx:  connection.From.Idx,
@@ -99,7 +99,7 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 
 		for port, msg := range component.Module.Nodes.Const {
-			addr := runtime.AbsolutePortAddr{
+			addr := src.AbsolutePortAddr{
 				Path: node.parentCtx.path + "." + node.parentCtx.node + ".const",
 				Port: port,
 				Idx:  0,
@@ -107,8 +107,8 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 
 			rprog.Ports = append(rprog.Ports, addr)
 
-			rprog.Effects.Constants[addr] = runtime.Msg{
-				Type: runtime.MsgType(msg.Type), // TODO
+			rprog.Effects.Constants[addr] = src.Msg{
+				Type: src.MsgType(msg.Type), // TODO
 				Int:  msg.Int,
 				Str:  msg.Str,
 				Bool: msg.Bool,
@@ -127,19 +127,19 @@ func (t Translator) Translate(prog compiler.Program) (runtime.Program, error) {
 		}
 	}
 
-	return runtime.Program{}, nil // TODO
+	return src.Program{}, nil // TODO
 }
 
 // nodePorts creates ports for given node based on it's usage by parent network
 // NOTE: https://github.com/emil14/neva/issues/29#issuecomment-1064185904
-func (t Translator) nodePorts(pctx parentCtx) (in []runtime.AbsolutePortAddr, out []runtime.AbsolutePortAddr) {
-	in = []runtime.AbsolutePortAddr{}
-	out = []runtime.AbsolutePortAddr{}
+func (t Translator) nodePorts(pctx parentCtx) (in []src.AbsolutePortAddr, out []src.AbsolutePortAddr) {
+	in = []src.AbsolutePortAddr{}
+	out = []src.AbsolutePortAddr{}
 	path := pctx.path + "." + pctx.node
 
 	for _, connection := range pctx.net {
 		if connection.From.Node == pctx.node {
-			out = append(out, runtime.AbsolutePortAddr{
+			out = append(out, src.AbsolutePortAddr{
 				Path: path + ".out",
 				Port: connection.From.Port,
 				Idx:  connection.From.Idx,
@@ -148,7 +148,7 @@ func (t Translator) nodePorts(pctx parentCtx) (in []runtime.AbsolutePortAddr, ou
 
 		for _, to := range connection.To {
 			if to.Node == pctx.node {
-				in = append(in, runtime.AbsolutePortAddr{
+				in = append(in, src.AbsolutePortAddr{
 					Path: path + ".in",
 					Port: to.Port,
 					Idx:  to.Idx,

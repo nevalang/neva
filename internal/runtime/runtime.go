@@ -8,35 +8,53 @@ import (
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/runtime/src"
 	"golang.org/x/sync/errgroup"
 )
 
 type (
 	Decoder interface {
-		Decode([]byte) (Program, error)
+		Decode([]byte) (src.Program, error)
 	}
-	PortGenerator interface {
-		Ports([]AbsolutePortAddr) map[AbsolutePortAddr]chan core.Msg
-	}
-	// TODO maybe move mapping up to runtime?
-	ConstSpawner interface {
-		Spawn(context.Context, map[AbsolutePortAddr]Msg, map[AbsolutePortAddr]chan core.Msg) error
-	}
-	OperatorSpawner interface {
-		Spawn(context.Context, []Operator, map[AbsolutePortAddr]chan core.Msg) error
-	}
-	Connector interface {
-		Connect(context.Context, map[AbsolutePortAddr]chan core.Msg, []Connection) error
-	}
-)
 
-var (
-	ErrDecoder           = errors.New("program decoder")
-	ErrOpSpawner         = errors.New("operator-node spawner")
-	ErrConstSpawner      = errors.New("const spawner")
-	ErrConnector         = errors.New("connector")
-	ErrStartPortNotFound = errors.New("start port not found")
-	ErrStartPortBlocked  = errors.New("start port blocked")
+	PortGenerator interface {
+		Ports([]src.Port) map[src.AbsolutePortAddr]chan core.Msg
+	}
+
+	ConstSpawner interface {
+		Spawn(context.Context, []Const) error
+	}
+	Const struct {
+		port chan core.Msg
+		msg  src.Msg
+	}
+
+	OperatorSpawner interface {
+		Spawn(context.Context, []Operator) error
+	}
+	Operator struct {
+		Ref src.OperatorRef
+		IO  OperatorIO
+	}
+	OperatorIO struct {
+		Inports, Outports map[core.RelativePortAddr]chan core.Msg
+	}
+
+	Connector interface {
+		Connect(context.Context, []Connection) error
+	}
+	Connection struct {
+		sender    Sender
+		receivers []Receiver
+	}
+	Sender struct {
+		addr src.AbsolutePortAddr
+		port chan core.Msg
+	}
+	Receiver struct {
+		point src.ReceiverConnectionPoint
+		port  chan core.Msg
+	}
 )
 
 type Runtime struct {
@@ -47,7 +65,15 @@ type Runtime struct {
 	connector    Connector
 }
 
-// Run blocks until context is closed or error occurs
+var (
+	ErrDecoder           = errors.New("program decoder")
+	ErrStartPortNotFound = errors.New("start port not found")
+	ErrConnector         = errors.New("connector")
+	ErrOpSpawner         = errors.New("operator-node spawner")
+	ErrConstSpawner      = errors.New("const spawner")
+	ErrStartPortBlocked  = errors.New("start port blocked")
+)
+
 func (r Runtime) Run(ctx context.Context, bb []byte) error {
 	prog, err := r.decoder.Decode(bb)
 	if err != nil {
@@ -89,12 +115,12 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 		select {
 		case startPort <- core.NewDictMsg(nil):
 			return nil
-		case <-time.After(time.Second): // FIXME deadline for all 3 jobs +  independent from program size
+		case <-time.After(time.Second): // FIXME deadline for all 3 jobs +  independent from program size and hardware
 			return ErrStartPortBlocked
 		}
 	})
 
-	if err := g.Wait(); err != nil { // fixme all goroutines must respect context cancelation
+	if err := g.Wait(); err != nil { // FIXME all goroutines must respect context cancelation
 		return fmt.Errorf("wait group: %w", err)
 	}
 

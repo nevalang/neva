@@ -2,7 +2,7 @@ package encoder
 
 // type caster struct{}
 
-// func (c caster) Cast(prog runtime.Program) (runtimesdk.Program, error) {
+// func (c caster) Cast(prog src.Program) (runtimesdk.Program, error) {
 // 	return runtimesdk.Program{
 // 		Nodes:       c.castNodes(prog.Nodes),
 // 		Connections: c.castConnections(prog.Connections),

@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	rr := make([]chan int, 10)
+	rr := make([]chan int, 10) // receivers
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(rr))
@@ -26,9 +26,8 @@ func main() {
 	wg.Wait()
 }
 
-// f sends v message to q receivers.
-// If one receiver is blocked it tries next one.
-// It does so in the loop until all message is sent to all q receivers.
+// f sends v message to q receivers, if one receiver is blocked it tries next one.
+// It does so in the loop until message is sent to all receivers.
 func f(v int, q []chan int) {
 	i := 0           // cursor
 	for len(q) > 0 { // while queue not empty

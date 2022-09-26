@@ -1,15 +1,20 @@
-package runtime
+package src
 
 type (
 	Program struct {
-		Ports       []AbsolutePortAddr
+		Ports       []Port
 		Connections []Connection
 		Effects     Effects
 		StartPort   AbsolutePortAddr
 	}
 
+	Port struct {
+		Addr AbsolutePortAddr
+		Buf  uint8
+	}
+
 	AbsolutePortAddr struct {
-		Path string // node path? context? scope?
+		Path string
 		Port string
 		Idx  uint8
 	}
@@ -22,7 +27,7 @@ type (
 	ReceiverConnectionPoint struct {
 		PortAddr        AbsolutePortAddr
 		Type            ReceiverConnectionPointType
-		DictReadingPath []string // Only used for Type == DictReadingPath
+		DictReadingPath []string // Only used for DictKeyReading
 	}
 
 	ReceiverConnectionPointType uint8
@@ -58,7 +63,7 @@ type (
 
 const (
 	Normal ReceiverConnectionPointType = iota + 1
-	DictKeyReading
+	DictReading
 )
 
 const (

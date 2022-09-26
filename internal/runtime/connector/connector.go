@@ -8,24 +8,15 @@ import (
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 	"golang.org/x/sync/errgroup"
 )
 
 type (
 	Interceptor interface {
-		AfterSending(runtime.Connection, core.Msg) core.Msg
-		BeforeReceiving(saddr runtime.AbsolutePortAddr, point runtime.ReceiverConnectionPoint, msg core.Msg) core.Msg
-		AfterReceiving(saddr runtime.AbsolutePortAddr, point runtime.ReceiverConnectionPoint, msg core.Msg)
-	}
-
-	Mapper interface {
-		MapPortsToConnections(map[runtime.AbsolutePortAddr]chan core.Msg, []runtime.Connection) ([]ConnectionWithChans, error)
-	}
-
-	ConnectionWithChans struct {
-		sender    chan core.Msg
-		receivers []chan core.Msg
-		info      runtime.Connection
+		AfterSending(src.Connection, core.Msg) core.Msg
+		BeforeReceiving(saddr src.AbsolutePortAddr, point src.ReceiverConnectionPoint, msg core.Msg) core.Msg
+		AfterReceiving(saddr src.AbsolutePortAddr, point src.ReceiverConnectionPoint, msg core.Msg)
 	}
 )
 
@@ -35,13 +26,12 @@ var (
 )
 
 type Connector struct {
-	mapper      Mapper
 	interceptor Interceptor
 }
 
 func (c Connector) Connect(
 	ctx context.Context,
-	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	ports map[src.AbsolutePortAddr]chan core.Msg,
 	connections []runtime.Connection,
 ) error {
 	connectionsWithChans, err := c.mapper.MapPortsToConnections(ports, connections)
@@ -67,27 +57,27 @@ func (c Connector) Connect(
 	return nil
 }
 
-func (c Connector) handleConnection(ctx context.Context, connection ConnectionWithChans) error {
+func (c Connector) handleConnection(ctx context.Context, connection Connection) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case msg := <-connection.sender:
 			msg = c.interceptor.AfterSending(connection.info, msg)
-			if err := c.broadcast(connection, msg); err != nil {
-				return fmt.Errorf("broadcast: %w", err)
+			if err := c.distribute(connection, msg); err != nil {
+				return fmt.Errorf("distribute: %w", err)
 			}
 		}
 	}
 }
 
 // FIXME https://github.com/emil14/neva/issues/86
-func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg) error {
+func (c Connector) distribute(connection Connection, msg core.Msg) error {
 	for i := range connection.receivers {
 		receiverPort := connection.receivers[i]
 		receiverPoint := connection.info.ReceiversConnectionPoints[i] // we believe mapper
 
-		if receiverPoint.Type == runtime.DictKeyReading {
+		if receiverPoint.Type == src.DictReading {
 			path := receiverPoint.DictReadingPath
 			for _, part := range path[:len(path)-1] {
 				var ok bool
@@ -98,10 +88,8 @@ func (c Connector) broadcast(connection ConnectionWithChans, msg core.Msg) error
 			}
 		}
 
-		receiverPort <- c.interceptor.BeforeReceiving(
-			connection.info.SenderPortAddr, receiverPoint.PortAddr, receiverPoint, msg,
-		)
-		c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverPoint.PortAddr, receiverPoint, msg)
+		receiverPort <- c.interceptor.BeforeReceiving(connection.info.SenderPortAddr, receiverPoint, msg)
+		c.interceptor.AfterReceiving(connection.info.SenderPortAddr, receiverPoint, msg)
 	}
 
 	return nil

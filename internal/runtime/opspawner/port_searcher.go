@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 var ErrPortNotFound = errors.New("port not found")
@@ -13,8 +13,8 @@ var ErrPortNotFound = errors.New("port not found")
 type Searcher struct{}
 
 func (s Searcher) SearchPorts( // we lookup ports inside operator funcs and we also lookup them here?
-	wantIO runtime.OperatorPortAddrs,
-	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	wantIO src.OperatorPortAddrs,
+	ports map[src.AbsolutePortAddr]chan core.Msg,
 ) (core.IO, error) {
 	io := core.IO{
 		In:  make(map[core.RelativePortAddr]chan core.Msg, len(wantIO.In)),

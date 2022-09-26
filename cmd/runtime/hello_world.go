@@ -4,54 +4,54 @@ import "github.com/emil14/neva/pkg/runtimesdk"
 
 func helloWorld() *runtimesdk.Program {
 	return prog(
-		port("in", "sig"),
+		portAddr("in", "sig"),
 		ports(
-			port("in", "sig"),
-			port("const", "greeting"),
-			port("lock.in", "sig"),
-			port("lock.in", "data"),
-			port("lock.out", "data"),
-			port("print.in", "data"),
-			port("print.out", "data"),
+			port("in", "sig", 0),
+			port("const", "greeting", 0),
+			port("lock.in", "sig", 0),
+			port("lock.in", "data", 0),
+			port("lock.out", "data", 0),
+			port("print.in", "data", 0),
+			port("print.out", "data", 0),
 		),
 		ops(
 			op(
 				opref("flow", "Lock"),
-				ports(
-					port("lock.in", "sig"),
-					port("lock.in", "data"),
+				portsAddrs(
+					portAddr("lock.in", "sig"),
+					portAddr("lock.in", "data"),
 				),
-				ports(port("lock.out", "data")),
+				portsAddrs(portAddr("lock.out", "data")),
 			),
 			op(
 				opref("io", "Print"),
-				ports(port("print.in", "data")),
-				ports(port("print.out", "data")),
+				portsAddrs(portAddr("print.in", "data")),
+				portsAddrs(portAddr("print.out", "data")),
 			),
 		),
 		consts(
 			cnst(
-				port("const", "greeting"),
+				portAddr("const", "greeting"),
 				strmsg("hello world!\n"),
 			),
 		),
 		conns(
 			conn(
-				port("in", "sig"),
+				portAddr("in", "sig"),
 				points(
-					point(port("lock.in", "sig")),
+					point(portAddr("lock.in", "sig")),
 				),
 			),
 			conn(
-				port("const", "greeting"),
+				portAddr("const", "greeting"),
 				points(
-					point(port("lock.in", "data")),
+					point(portAddr("lock.in", "data")),
 				),
 			),
 			conn(
-				port("lock.out", "data"),
+				portAddr("lock.out", "data"),
 				points(
-					point(port("print.in", "data")),
+					point(portAddr("print.in", "data")),
 				),
 			),
 		),

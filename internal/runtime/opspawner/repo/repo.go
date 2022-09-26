@@ -6,7 +6,7 @@ import (
 	"plugin"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 var (
@@ -19,10 +19,10 @@ var (
 
 type Plugin struct {
 	pkgs  map[string]Package
-	cache map[runtime.OperatorRef]func(core.IO) error
+	cache map[src.OperatorRef]func(core.IO) error
 }
 
-func (p Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
+func (p Plugin) Operator(ref src.OperatorRef) (func(core.IO) error, error) {
 	if op, ok := p.cache[ref]; ok {
 		return op, nil
 	}
@@ -48,7 +48,7 @@ func (p Plugin) Operator(ref runtime.OperatorRef) (func(core.IO) error, error) {
 			return nil, fmt.Errorf("%w: %T", ErrTypeMismatch, op)
 		}
 
-		p.cache[runtime.OperatorRef{
+		p.cache[src.OperatorRef{
 			Pkg:  ref.Pkg,
 			Name: export,
 		}] = op
@@ -71,7 +71,7 @@ func NewPlugin(pkgs map[string]Package) Plugin {
 	return Plugin{
 		pkgs: pkgs,
 		cache: make(
-			map[runtime.OperatorRef]func(core.IO) error,
+			map[src.OperatorRef]func(core.IO) error,
 			len(pkgs),
 		),
 	}

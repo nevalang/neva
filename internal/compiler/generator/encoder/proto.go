@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/pkg/utils"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/runtimesdk"
 )
 
@@ -14,7 +14,7 @@ type (
 		Marshal(*runtimesdk.Program) ([]byte, error)
 	}
 	Caster interface {
-		Cast(runtime.Program) (runtimesdk.Program, error)
+		Cast(src.Program) (runtimesdk.Program, error)
 	}
 )
 
@@ -28,7 +28,7 @@ type Proto struct {
 	caster    Caster
 }
 
-func (p Proto) Encode(prog runtime.Program) ([]byte, error) {
+func (p Proto) Encode(prog src.Program) ([]byte, error) {
 	sdkProg, err := p.caster.Cast(prog)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrCast, err)

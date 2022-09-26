@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 type (
 	Translator interface {
-		Translate(compiler.Program) (runtime.Program, error)
+		Translate(compiler.Program) (src.Program, error)
 	}
 	Encoder interface {
-		Encode(runtime.Program) ([]byte, error)
+		Encode(src.Program) ([]byte, error)
 	}
 )
 

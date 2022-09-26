@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
+	"github.com/emil14/neva/internal/runtime/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/constspawner"
 	"github.com/emil14/neva/internal/runtime/decoder"
 	"github.com/emil14/neva/internal/runtime/opspawner"
@@ -32,7 +33,7 @@ func mustCreateRuntime() runtime.Runtime {
 		),
 		constspawner.Spawner{},
 		connector.MustNew(
-			connector.LoggingInterceptor{},
+			log.LoggingInterceptor{},
 		),
 	)
 	return r

@@ -6,6 +6,7 @@ import (
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 var ErrPortNotFound = errors.New("port not found by addr")
@@ -13,10 +14,10 @@ var ErrPortNotFound = errors.New("port not found by addr")
 type mapper struct{}
 
 func (m mapper) MapPortsToConnections(
-	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	ports map[src.AbsolutePortAddr]chan core.Msg,
 	connections []runtime.Connection,
-) ([]ConnectionWithChans, error) {
-	result := make([]ConnectionWithChans, len(connections))
+) ([]Connection, error) {
+	result := make([]Connection, len(connections))
 
 	for i := range connections {
 		from, ok := ports[connections[i].SenderPortAddr]
@@ -24,7 +25,7 @@ func (m mapper) MapPortsToConnections(
 			return nil, fmt.Errorf("%w: %v", ErrPortNotFound, connections[i].SenderPortAddr)
 		}
 
-		result[i] = ConnectionWithChans{
+		result[i] = Connection{
 			info:      connections[i],
 			sender:    from,
 			receivers: make([]chan core.Msg, len(connections[i].ReceiversConnectionPoints)),

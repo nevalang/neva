@@ -8,6 +8,7 @@ import (
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/src"
 )
 
 var (
@@ -18,10 +19,10 @@ var (
 
 type (
 	Repo interface {
-		Operator(ref runtime.OperatorRef) (func(core.IO) error, error)
+		Operator(ref src.OperatorRef) (func(core.IO) error, error)
 	}
 	PortSearcher interface {
-		SearchPorts(runtime.OperatorPortAddrs, map[runtime.AbsolutePortAddr]chan core.Msg) (core.IO, error)
+		SearchPorts(src.OperatorPortAddrs, map[src.AbsolutePortAddr]chan core.Msg) (core.IO, error)
 	}
 )
 
@@ -33,7 +34,7 @@ type Spawner struct {
 func (s Spawner) Spawn(
 	ctx context.Context,
 	ops []runtime.Operator,
-	ports map[runtime.AbsolutePortAddr]chan core.Msg,
+	ports map[src.AbsolutePortAddr]chan core.Msg,
 ) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref) // FIXME no err on not existing operator?
