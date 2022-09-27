@@ -2,7 +2,6 @@ package translator
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/emil14/neva/internal/compiler"
 	"github.com/emil14/neva/internal/runtime/src"
@@ -29,103 +28,103 @@ type (
 type Translator struct{}
 
 func (t Translator) Translate(prog compiler.Program) (src.Program, error) {
-	rprog := src.Program{
-		Ports:       []src.Port{},
-		Connections: []src.Connection{},
-		Effects:     src.Effects{},
-		StartPort: src.AbsolutePortAddr{
-			Path: "",
-			Port: "start",
-			Idx:  0,
-		},
-	}
+	// rprog := src.Program{
+	// 	Ports:       []src.Port{},
+	// 	Connections: []src.Connection{},
+	// 	Effects:     src.Effects{},
+	// 	StartPort: src.AbsolutePortAddr{
+	// 		Path: "",
+	// 		Port: "start",
+	// 		Idx:  0,
+	// 	},
+	// }
 
-	nodesQueue := []nodesQueueItem{
-		{
-			component: prog.RootModule,
-			parentCtx: parentCtx{},
-		},
-	}
+	// nodesQueue := []nodesQueueItem{
+	// 	{
+	// 		component: prog.RootModule,
+	// 		parentCtx: parentCtx{},
+	// 	},
+	// }
 
-	for len(nodesQueue) > 0 {
-		node := nodesQueue[len(nodesQueue)-1]
-		nodesQueue = nodesQueue[:len(nodesQueue)-1]
+	// for len(nodesQueue) > 0 {
+	// 	node := nodesQueue[len(nodesQueue)-1]
+	// 	nodesQueue = nodesQueue[:len(nodesQueue)-1]
 
-		component, ok := prog.Scope[node.component]
-		if !ok {
-			return src.Program{}, fmt.Errorf("%w: %v", ErrComponentNotFound, node.component)
-		}
+	// 	component, ok := prog.Scope[node.component]
+	// 	if !ok {
+	// 		return src.Program{}, fmt.Errorf("%w: %v", ErrComponentNotFound, node.component)
+	// 	}
 
-		in, out := t.nodePorts(node.parentCtx)
-		for i := range append(in) {
-			rprog.Ports = append(rprog.Ports, in[i])
-		}
-		for i := range out {
-			rprog.Ports = append(rprog.Ports, out[i])
-		}
+	// 	in, out := t.nodePorts(node.parentCtx)
+	// 	for i := range append(in) {
+	// 		rprog.Ports = append(rprog.Ports, in[i])
+	// 	}
+	// 	for i := range out {
+	// 		rprog.Ports = append(rprog.Ports, out[i])
+	// 	}
 
-		if component.Type == compiler.OperatorComponent {
-			rprog.Effects.Operators = append(rprog.Effects.Operators, src.Operator{
-				Ref: src.OperatorRef(component.Operator.Ref),
-				PortAddrs: src.OperatorPortAddrs{
-					In:  in,
-					Out: out,
-				},
-			})
+	// 	if component.Type == compiler.OperatorComponent {
+	// 		rprog.Effects.Operators = append(rprog.Effects.Operators, src.Operator{
+	// 			Ref: src.OperatorRef(component.Operator.Ref),
+	// 			PortAddrs: src.OperatorPortAddrs{
+	// 				In:  in,
+	// 				Out: out,
+	// 			},
+	// 		})
 
-			continue
-		}
+	// 		continue
+	// 	}
 
-		for _, connection := range component.Module.Net {
-			rconn := src.Connection{
-				SenderPortAddr: src.AbsolutePortAddr{
-					Path: node.parentCtx.path + "." + node.parentCtx.node + ".out",
-					Port: connection.From.Port,
-					Idx:  connection.From.Idx,
-				},
-				// Receivers: make([]runtime.PortAddr, len(connection.To)), // TODO
-			}
+	// 	for _, connection := range component.Module.Net {
+	// 		rconn := src.Connection{
+	// 			SenderPortAddr: src.AbsolutePortAddr{
+	// 				Path: node.parentCtx.path + "." + node.parentCtx.node + ".out",
+	// 				Port: connection.From.Port,
+	// 				Idx:  connection.From.Idx,
+	// 			},
+	// 			// Receivers: make([]runtime.PortAddr, len(connection.To)), // TODO
+	// 		}
 
-			// TODO
-			// for i, to := range connection.To {
-			// 	rconn.Receivers[i] = runtime.PortAddr{
-			// 		Path: node.parentCtx.path + "." + node.parentCtx.node + ".in",
-			// 		Name: to.Port,
-			// 		Idx:  to.Idx,
-			// 	}
-			// }
+	// 		// TODO
+	// 		// for i, to := range connection.To {
+	// 		// 	rconn.Receivers[i] = runtime.PortAddr{
+	// 		// 		Path: node.parentCtx.path + "." + node.parentCtx.node + ".in",
+	// 		// 		Name: to.Port,
+	// 		// 		Idx:  to.Idx,
+	// 		// 	}
+	// 		// }
 
-			rprog.Connections = append(rprog.Connections, rconn)
-		}
+	// 		rprog.Connections = append(rprog.Connections, rconn)
+	// 	}
 
-		for port, msg := range component.Module.Nodes.Const {
-			addr := src.AbsolutePortAddr{
-				Path: node.parentCtx.path + "." + node.parentCtx.node + ".const",
-				Port: port,
-				Idx:  0,
-			}
+	// 	for port, msg := range component.Module.Nodes.Const {
+	// 		addr := src.AbsolutePortAddr{
+	// 			Path: node.parentCtx.path + "." + node.parentCtx.node + ".const",
+	// 			Port: port,
+	// 			Idx:  0,
+	// 		}
 
-			rprog.Ports = append(rprog.Ports, addr)
+	// 		rprog.Ports = append(rprog.Ports, addr)
 
-			rprog.Effects.Constants[addr] = src.Msg{
-				Type: src.MsgType(msg.Type), // TODO
-				Int:  msg.Int,
-				Str:  msg.Str,
-				Bool: msg.Bool,
-			}
-		}
+	// 		rprog.Effects.Constants[addr] = src.Msg{
+	// 			Type: src.MsgType(msg.Type), // TODO
+	// 			Int:  msg.Int,
+	// 			Str:  msg.Str,
+	// 			Bool: msg.Bool,
+	// 		}
+	// 	}
 
-		for worker, dep := range component.Module.Nodes.Workers {
-			nodesQueue = append(nodesQueue, nodesQueueItem{
-				component: dep,
-				parentCtx: parentCtx{
-					path: node.parentCtx.path + "." + node.parentCtx.node,
-					node: worker,
-					net:  component.Module.Net,
-				},
-			})
-		}
-	}
+	// 	for worker, dep := range component.Module.Nodes.Workers {
+	// 		nodesQueue = append(nodesQueue, nodesQueueItem{
+	// 			component: dep,
+	// 			parentCtx: parentCtx{
+	// 				path: node.parentCtx.path + "." + node.parentCtx.node,
+	// 				node: worker,
+	// 				net:  component.Module.Net,
+	// 			},
+	// 		})
+	// 	}
+	// }
 
 	return src.Program{}, nil // TODO
 }

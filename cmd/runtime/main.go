@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/emil14/neva/internal/pkg/utils"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 	hw := helloWorld()
 	bb := utils.Must(proto.Marshal(hw))
 
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+
 
 	if err := r.Run(
 		context.Background(),

@@ -7,15 +7,15 @@ import (
 
 type PortGen struct{}
 
-// TODO use map as input?
-func (p PortGen) Ports(addrs []src.AbsolutePortAddr) map[src.AbsolutePortAddr]chan core.Msg {
-	ports := make(map[src.AbsolutePortAddr]chan core.Msg, len(addrs))
-
-	for i := range addrs {
-		ports[addrs[i]] = make(chan core.Msg)
+func (p PortGen) Ports(in []src.Port) map[src.AbsolutePortAddr]chan core.Msg {
+	out := make(
+		map[src.AbsolutePortAddr]chan core.Msg,
+		len(in),
+	)
+	for i := range in {
+		out[in[i].Addr] = make(chan core.Msg, in[i].Buf)
 	}
-
-	return ports
+	return out
 }
 
 func New() PortGen {

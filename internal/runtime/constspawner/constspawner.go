@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
@@ -16,30 +17,23 @@ var (
 	ErrUnknownMsgType = errors.New("unknown message type")
 )
 
-func (s Spawner) Spawn(
-	ctx context.Context,
-	messages map[src.AbsolutePortAddr]src.Msg,
-	chans map[src.AbsolutePortAddr]chan core.Msg,
-) error {
-	for addr := range messages {
-		out, ok := chans[addr]
-		if !ok {
-			return fmt.Errorf("%w: %v", ErrPortNotFound, addr)
-		}
+func (s Spawner) Spawn(ctx context.Context, consts []runtime.Const) error {
+	for i := range consts {
+		cnst := consts[i]
 
-		msg, err := s.coreMsg(messages[addr])
+		msg, err := s.coreMsg(cnst.Msg)
 		if err != nil {
-			return fmt.Errorf("core msg: %w", err)
+			return fmt.Errorf("%w: %d", ErrUnknownMsgType, i)
 		}
 
 		go func() {
 			for {
-				out <- msg
+				cnst.Port <- msg
 			}
 		}()
 	}
 
-	return nil
+	return nil // TODO wait
 }
 
 func (s Spawner) coreMsg(in src.Msg) (core.Msg, error) {

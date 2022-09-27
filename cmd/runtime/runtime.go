@@ -1,9 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
-	"github.com/emil14/neva/internal/runtime/connector/interceptor/log"
+	logginginterceptor "github.com/emil14/neva/internal/runtime/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/constspawner"
 	"github.com/emil14/neva/internal/runtime/decoder"
 	"github.com/emil14/neva/internal/runtime/opspawner"
@@ -12,6 +14,9 @@ import (
 )
 
 func mustCreateRuntime() runtime.Runtime {
+	l := log.Default()
+	l.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+
 	r := runtime.MustNew(
 		decoder.MustNewProto(
 			decoder.NewCaster(),
@@ -29,11 +34,10 @@ func mustCreateRuntime() runtime.Runtime {
 					Exports:  []string{"Print"},
 				},
 			}),
-			opspawner.Searcher{},
 		),
 		constspawner.Spawner{},
 		connector.MustNew(
-			log.LoggingInterceptor{},
+			logginginterceptor.MustNew(l),
 		),
 	)
 	return r

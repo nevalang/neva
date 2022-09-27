@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
 	"github.com/emil14/neva/internal/runtime/src"
-	"golang.org/x/sync/errgroup"
 )
 
 type (
@@ -18,15 +16,15 @@ type (
 	}
 
 	PortGenerator interface {
-		Ports([]src.Port) map[src.AbsolutePortAddr]chan core.Msg
+		Ports([]src.Port) map[src.AbsolutePortAddr]chan core.Msg // sure that we need an interface?
 	}
 
 	ConstSpawner interface {
 		Spawn(context.Context, []Const) error
 	}
 	Const struct {
-		port chan core.Msg
-		msg  src.Msg
+		Port chan core.Msg
+		Msg  src.Msg
 	}
 
 	OperatorSpawner interface {
@@ -34,10 +32,7 @@ type (
 	}
 	Operator struct {
 		Ref src.OperatorRef
-		IO  OperatorIO
-	}
-	OperatorIO struct {
-		Inports, Outports map[core.RelativePortAddr]chan core.Msg
+		IO  core.IO
 	}
 
 	Connector interface {
@@ -82,47 +77,12 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 
 	ports := r.portGen.Ports(prog.Ports)
 
-	startPort, ok := ports[prog.StartPort]
+	_, ok := ports[prog.StartPort]
 	if !ok {
 		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPort)
 	}
 
-	g, ctx := errgroup.WithContext(ctx)
-
-	g.Go(func() error {
-		if err := r.connector.Connect(ctx, ports, prog.Connections); err != nil {
-			return fmt.Errorf("%w: %v", ErrConnector, err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		if err := r.opSpawner.Spawn(ctx, prog.Effects.Operators, ports); err != nil {
-			fmt.Println(err) // FIXME get rid
-			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		if err := r.constSpawner.Spawn(ctx, prog.Effects.Constants, ports); err != nil {
-			return fmt.Errorf("%w: %v", ErrConstSpawner, err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		select {
-		case startPort <- core.NewDictMsg(nil):
-			return nil
-		case <-time.After(time.Second): // FIXME deadline for all 3 jobs +  independent from program size and hardware
-			return ErrStartPortBlocked
-		}
-	})
-
-	if err := g.Wait(); err != nil { // FIXME all goroutines must respect context cancelation
-		return fmt.Errorf("wait group: %w", err)
-	}
+	// TODO
 
 	return nil
 }

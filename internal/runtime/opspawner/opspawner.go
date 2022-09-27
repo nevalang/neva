@@ -12,9 +12,8 @@ import (
 )
 
 var (
-	ErrRepo         = errors.New("repo")
-	ErrOperator     = errors.New("operator")
-	ErrPortSearcher = errors.New("port searcher")
+	ErrRepo     = errors.New("repo")
+	ErrOperator = errors.New("operator")
 )
 
 type (
@@ -27,27 +26,17 @@ type (
 )
 
 type Spawner struct {
-	repo         Repo
-	portSearcher PortSearcher
+	repo Repo
 }
 
-func (s Spawner) Spawn(
-	ctx context.Context,
-	ops []runtime.Operator,
-	ports map[src.AbsolutePortAddr]chan core.Msg,
-) error {
+func (s Spawner) Spawn(ctx context.Context, ops []runtime.Operator) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref) // FIXME no err on not existing operator?
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrRepo, err)
 		}
 
-		io, err := s.portSearcher.SearchPorts(ops[i].PortAddrs, ports)
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrPortSearcher, err)
-		}
-
-		if err := op(io); err != nil {
+		if err := op(ops[i].IO); err != nil {
 			return fmt.Errorf("%w: ref %v, err %v", ErrOperator, ops[i].Ref, err)
 		}
 	}
@@ -55,10 +44,7 @@ func (s Spawner) Spawn(
 	return nil
 }
 
-func MustNew(repo Repo, portSearcher PortSearcher) Spawner {
-	utils.NilPanic(repo, portSearcher)
-	return Spawner{
-		repo:         repo,
-		portSearcher: portSearcher,
-	}
+func MustNew(repo Repo) Spawner {
+	utils.NilPanic(repo)
+	return Spawner{repo}
 }
