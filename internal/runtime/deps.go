@@ -16,16 +16,16 @@ type (
 		Connect(context.Context, []Connection) error
 	}
 	Connection struct {
-		sender    Sender
-		receivers []Receiver
+		Sender    Sender
+		Receivers []Receiver
 	}
 	Sender struct {
-		addr src.AbsolutePortAddr
-		port chan core.Msg
+		Addr src.AbsolutePortAddr
+		Port chan core.Msg
 	}
 	Receiver struct {
-		point src.ReceiverConnectionPoint
-		port  chan core.Msg
+		Point src.ReceiverConnectionPoint
+		Port  chan core.Msg
 	}
 
 	Effector interface {

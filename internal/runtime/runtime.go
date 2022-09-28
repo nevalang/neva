@@ -88,8 +88,8 @@ func (r Runtime) buildConnections(ports map[src.AbsolutePortAddr]chan core.Msg, 
 		}
 
 		sender := Sender{
-			addr: srcConn.SenderPortAddr,
-			port: senderPort,
+			Addr: srcConn.SenderPortAddr,
+			Port: senderPort,
 		}
 
 		rr := make([]Receiver, 0, len(srcConn.ReceiversConnectionPoints))
@@ -100,14 +100,14 @@ func (r Runtime) buildConnections(ports map[src.AbsolutePortAddr]chan core.Msg, 
 			}
 
 			rr = append(rr, Receiver{
-				point: srcReceiverPoint,
-				port:  receiverPort,
+				Point: srcReceiverPoint,
+				Port:  receiverPort,
 			})
 		}
 
 		cc = append(cc, Connection{
-			sender:    sender,
-			receivers: rr,
+			Sender:    sender,
+			Receivers: rr,
 		})
 	}
 
