@@ -6,11 +6,11 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/connector"
 	logginginterceptor "github.com/emil14/neva/internal/runtime/connector/interceptor/log"
-	"github.com/emil14/neva/internal/runtime/constspawner"
 	"github.com/emil14/neva/internal/runtime/decoder"
-	"github.com/emil14/neva/internal/runtime/opspawner"
-	"github.com/emil14/neva/internal/runtime/opspawner/repo"
-	"github.com/emil14/neva/internal/runtime/portgen"
+	"github.com/emil14/neva/internal/runtime/effector"
+	"github.com/emil14/neva/internal/runtime/effector/constants"
+	"github.com/emil14/neva/internal/runtime/effector/operators"
+	"github.com/emil14/neva/internal/runtime/effector/operators/repo"
 )
 
 func mustCreateRuntime() runtime.Runtime {
@@ -22,23 +22,25 @@ func mustCreateRuntime() runtime.Runtime {
 			decoder.NewCaster(),
 			decoder.NewUnmarshaler(),
 		),
-		portgen.New(),
-		opspawner.MustNew(
-			repo.NewPlugin(map[string]repo.Package{
-				"flow": {
-					Filepath: "/home/evaleev/projects/neva/plugins/lock.so",
-					Exports:  []string{"Lock"},
-				},
-				"io": {
-					Filepath: "/home/evaleev/projects/neva/plugins/print.so",
-					Exports:  []string{"Print"},
-				},
-			}),
-		),
-		constspawner.Spawner{},
 		connector.MustNew(
 			logginginterceptor.MustNew(l),
 		),
+		effector.MustNew(
+			constants.Spawner{},
+			operators.MustNew(
+				repo.NewPlugin(map[string]repo.Package{
+					"flow": {
+						Filepath: "/home/evaleev/projects/neva/plugins/lock.so",
+						Exports:  []string{"Lock"},
+					},
+					"io": {
+						Filepath: "/home/evaleev/projects/neva/plugins/print.so",
+						Exports:  []string{"Print"},
+					},
+				}),
+			),
+		),
 	)
+
 	return r
 }

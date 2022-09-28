@@ -41,8 +41,8 @@ func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]s
 	return constants
 }
 
-func (caster) castOperators(in *runtimesdk.Program) []src.Operator {
-	operators := make([]src.Operator, 0, len(in.Operators))
+func (caster) castOperators(in *runtimesdk.Program) []src.OperatorEffect {
+	operators := make([]src.OperatorEffect, 0, len(in.Operators))
 	for _, operator := range in.Operators {
 		inAddrs := make([]src.AbsolutePortAddr, 0, len(operator.InPortAddrs))
 		for _, addr := range operator.InPortAddrs {
@@ -62,7 +62,7 @@ func (caster) castOperators(in *runtimesdk.Program) []src.Operator {
 			})
 		}
 
-		operators = append(operators, src.Operator{
+		operators = append(operators, src.OperatorEffect{
 			Ref: src.OperatorRef{
 				Pkg:  operator.Ref.Pkg,
 				Name: operator.Ref.Name,
@@ -103,18 +103,17 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 	return connections
 }
 
-func (caster) castPorts(in *runtimesdk.Program) []src.Port {
-	ports := make([]src.Port, 0, len(in.Ports))
-	for _, port := range in.Ports {
-		ports = append(ports, src.Port{
-			Buf: uint8(port.BufSize),
-			Addr: src.AbsolutePortAddr{
-				Path: port.Addr.Path,
-				Port: port.Addr.Port,
-				Idx:  uint8(port.Addr.Idx),
-			},
-		})
+func (caster) castPorts(in *runtimesdk.Program) map[src.AbsolutePortAddr]uint8 {
+	ports := make(map[src.AbsolutePortAddr]uint8, len(in.Ports))
+
+	for _, p := range in.Ports {
+		ports[src.AbsolutePortAddr{
+			Path: p.Addr.Path,
+			Port: p.Addr.Port,
+			Idx:  uint8(p.Addr.Idx),
+		}] = uint8(p.BufSize)
 	}
+
 	return ports
 }
 

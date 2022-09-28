@@ -20,3 +20,6 @@
 - asyncron
 - gears
 - cogwheel
+- asyncro
+- atonce
+- atvance

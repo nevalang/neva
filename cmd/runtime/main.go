@@ -13,12 +13,7 @@ func main() {
 	hw := helloWorld()
 	bb := utils.Must(proto.Marshal(hw))
 
-
-
-	if err := r.Run(
-		context.Background(),
-		bb,
-	); err != nil {
+	if err := r.Run(context.Background(), bb); err != nil {
 		log.Println(err)
 	}
 }

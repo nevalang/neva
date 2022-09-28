@@ -2,15 +2,10 @@ package src
 
 type (
 	Program struct {
-		Ports       []Port
+		Ports       map[AbsolutePortAddr]uint8 // Ports maps address to buffer size
 		Connections []Connection
 		Effects     Effects
 		StartPort   AbsolutePortAddr
-	}
-
-	Port struct {
-		Addr AbsolutePortAddr
-		Buf  uint8
 	}
 
 	AbsolutePortAddr struct {
@@ -33,11 +28,11 @@ type (
 	ReceiverConnectionPointType uint8
 
 	Effects struct {
-		Operators []Operator
+		Operators []OperatorEffect
 		Constants map[AbsolutePortAddr]Msg
 	}
 
-	Operator struct {
+	OperatorEffect struct {
 		Ref       OperatorRef
 		PortAddrs OperatorPortAddrs
 	}

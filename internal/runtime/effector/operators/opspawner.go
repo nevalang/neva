@@ -1,4 +1,4 @@
-package opspawner
+package operators
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type Spawner struct {
 	repo Repo
 }
 
-func (s Spawner) Spawn(ctx context.Context, ops []runtime.Operator) error {
+func (s Spawner) Spawn(ctx context.Context, ops []runtime.OperatorEffect) error {
 	for i := range ops {
 		op, err := s.repo.Operator(ops[i].Ref) // FIXME no err on not existing operator?
 		if err != nil {
