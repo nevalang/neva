@@ -79,7 +79,10 @@ func (r Runtime) buildPorts(in map[src.AbsolutePortAddr]uint8) map[src.AbsoluteP
 	return out
 }
 
-func (r Runtime) buildConnections(ports map[src.AbsolutePortAddr]chan core.Msg, in []src.Connection) ([]Connection, error) {
+func (r Runtime) buildConnections(
+	ports map[src.AbsolutePortAddr]chan core.Msg,
+	in []src.Connection,
+) ([]Connection, error) {
 	cc := make([]Connection, 0, len(in))
 	for _, srcConn := range in {
 		senderPort, ok := ports[srcConn.SenderPortAddr]
@@ -87,26 +90,18 @@ func (r Runtime) buildConnections(ports map[src.AbsolutePortAddr]chan core.Msg, 
 			return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
 		}
 
-		sender := Sender{
-			Addr: srcConn.SenderPortAddr,
-			Port: senderPort,
-		}
-
-		rr := make([]Receiver, 0, len(srcConn.ReceiversConnectionPoints))
+		rr := make([]chan core.Msg, 0, len(srcConn.ReceiversConnectionPoints))
 		for _, srcReceiverPoint := range srcConn.ReceiversConnectionPoints {
 			receiverPort, ok := ports[srcReceiverPoint.PortAddr]
 			if !ok {
 				return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
 			}
 
-			rr = append(rr, Receiver{
-				Point: srcReceiverPoint,
-				Port:  receiverPort,
-			})
+			rr = append(rr, receiverPort)
 		}
 
 		cc = append(cc, Connection{
-			Sender:    sender,
+			Sender:    senderPort,
 			Receivers: rr,
 		})
 	}

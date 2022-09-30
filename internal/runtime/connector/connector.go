@@ -15,14 +15,9 @@ import (
 type (
 	Interceptor interface {
 		AfterSending(src.Connection, core.Msg) core.Msg
-		BeforeReceiving(saddr src.AbsolutePortAddr, point src.ReceiverConnectionPoint, msg core.Msg) core.Msg
-		AfterReceiving(saddr src.AbsolutePortAddr, point src.ReceiverConnectionPoint, msg core.Msg)
+		BeforeReceiving(src.AbsolutePortAddr, src.ReceiverConnectionPoint, core.Msg) core.Msg
+		AfterReceiving(src.AbsolutePortAddr, src.ReceiverConnectionPoint, core.Msg)
 	}
-)
-
-var (
-	ErrMapper          = errors.New("mapper")
-	ErrDictKeyNotFound = errors.New("dict key not found")
 )
 
 type Connector struct {
@@ -47,40 +42,61 @@ func (c Connector) Connect(ctx context.Context, conns []runtime.Connection) erro
 }
 
 func (c Connector) connect(ctx context.Context, conn runtime.Connection) error {
+	rr := make([]receiver, 0, len(conn.Receivers))
+	for i := range conn.Receivers {
+		rr = append(rr, receiver{
+			port:  conn.Receivers[i],
+			point: conn.Src.ReceiversConnectionPoints[i],
+		})
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case msg := <-conn.Sender.Port:
-			// c.interceptor.AfterSending(conn, msg)
-			if err := c.distribute(msg, conn.Sender.Addr, conn.Receivers); err != nil { // add ctx?
-				return fmt.Errorf("distribute: %w", err)
+		case msg := <-conn.Sender:
+			msg = c.interceptor.AfterSending(conn.Src, msg)
+			msg, err := c.getMsgData(msg)
+			if err != nil {
+				return fmt.Errorf("get msg data: %w", err)
 			}
+			c.distribute(msg, conn.Src.SenderPortAddr, rr)
 		}
 	}
 }
 
-// distribute sends msg message to q receivers, if receiver blocked it tries next one.
-// It does so in the loop until message is sent to all receivers.
-func (c Connector) distribute(msg core.Msg, saddr src.AbsolutePortAddr, q []runtime.Receiver) error {
-	i := 0 // cursor
+var ErrDictKeyNotFound = errors.New("dict key not found") // TODO
 
-	for len(q) > 0 { // while queue not empty
+func (c Connector) getMsgData(core.Msg) (core.Msg, error) {
+	return nil, nil
+}
+
+type receiver struct {
+	port  chan core.Msg
+	point src.ReceiverConnectionPoint
+}
+
+func (c Connector) distribute(
+	msg core.Msg,
+	saddr src.AbsolutePortAddr,
+	rr []receiver,
+) {
+	var i int
+	for len(rr) > 0 {
+		msg = c.interceptor.BeforeReceiving(saddr, rr[i].point, msg)
 		select {
-		case q[i].Port <- msg: // try send to receiver
-			q = append(q[:i], q[i+1:]...) // then remove receiver from queue
-			// c.interceptor.AfterReceiving(saddr, q[i].)
-		default: // otherwise if receiver is busy
-			if i < len(q) { // and it's not end of queue
-				i++ // move cursor to next receiver
+		case rr[i].port <- msg:
+			c.interceptor.AfterReceiving(saddr, rr[i].point, msg)
+			rr = append(rr[:i], rr[i+1:]...)
+		default:
+			if i < len(rr) {
+				i++
 			}
 		}
-		if i == len(q) { // if it was last receiver in queue
-			i = 0 // move cursor back to start
+		if i == len(rr) {
+			i = 0
 		}
 	}
-
-	return nil
 }
 
 func MustNew(i Interceptor) Connector {
