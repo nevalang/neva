@@ -101,6 +101,7 @@ func (r Runtime) buildConnections(
 		}
 
 		cc = append(cc, Connection{
+			Src:       srcConn,
 			Sender:    senderPort,
 			Receivers: rr,
 		})

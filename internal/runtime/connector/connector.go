@@ -67,8 +67,8 @@ func (c Connector) connect(ctx context.Context, conn runtime.Connection) error {
 
 var ErrDictKeyNotFound = errors.New("dict key not found") // TODO
 
-func (c Connector) getMsgData(core.Msg) (core.Msg, error) {
-	return nil, nil
+func (c Connector) getMsgData(msg core.Msg) (core.Msg, error) {
+	return msg, nil
 }
 
 type receiver struct {
@@ -81,9 +81,18 @@ func (c Connector) distribute(
 	saddr src.AbsolutePortAddr,
 	rr []receiver,
 ) {
+	cache := map[src.AbsolutePortAddr]core.Msg{}
+
 	var i int
+
 	for len(rr) > 0 {
-		msg = c.interceptor.BeforeReceiving(saddr, rr[i].point, msg)
+		raddr := rr[i].point.PortAddr
+		if _, ok := cache[raddr]; !ok {
+			cache[raddr] = c.interceptor.BeforeReceiving(saddr, rr[i].point, msg)
+		}
+
+		msg = cache[raddr]
+
 		select {
 		case rr[i].port <- msg:
 			c.interceptor.AfterReceiving(saddr, rr[i].point, msg)
@@ -93,6 +102,7 @@ func (c Connector) distribute(
 				i++
 			}
 		}
+
 		if i == len(rr) {
 			i = 0
 		}
