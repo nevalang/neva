@@ -29,8 +29,8 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 }
 
 func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]src.Msg {
-	constants := make(map[src.AbsolutePortAddr]src.Msg, len(in.Constants))
-	for _, constant := range in.Constants {
+	constants := make(map[src.AbsolutePortAddr]src.Msg, len(in.Effects.Constants))
+	for _, constant := range in.Effects.Constants {
 		addr := src.AbsolutePortAddr{
 			Path: constant.OutPortAddr.Path,
 			Port: constant.OutPortAddr.Port,
@@ -42,8 +42,8 @@ func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]s
 }
 
 func (caster) castOperators(in *runtimesdk.Program) []src.OperatorEffect {
-	operators := make([]src.OperatorEffect, 0, len(in.Operators))
-	for _, operator := range in.Operators {
+	operators := make([]src.OperatorEffect, 0, len(in.Effects.Operators))
+	for _, operator := range in.Effects.Operators {
 		inAddrs := make([]src.AbsolutePortAddr, 0, len(operator.InPortAddrs))
 		for _, addr := range operator.InPortAddrs {
 			inAddrs = append(inAddrs, src.AbsolutePortAddr{

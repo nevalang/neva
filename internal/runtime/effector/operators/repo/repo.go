@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"plugin"
@@ -19,10 +20,10 @@ var (
 
 type Plugin struct {
 	pkgs  map[string]Package
-	cache map[src.OperatorRef]func(core.IO) error
+	cache map[src.OperatorRef]func(context.Context, core.IO) error
 }
 
-func (p Plugin) Operator(ref src.OperatorRef) (func(core.IO) error, error) {
+func (p Plugin) Operator(ref src.OperatorRef) (func(context.Context, core.IO) error, error) {
 	if op, ok := p.cache[ref]; ok {
 		return op, nil
 	}
@@ -43,7 +44,7 @@ func (p Plugin) Operator(ref src.OperatorRef) (func(core.IO) error, error) {
 			return nil, fmt.Errorf("%w: %v", ErrPluginLookup, err)
 		}
 
-		op, ok := sym.(func(core.IO) error)
+		op, ok := sym.(func(context.Context, core.IO) error)
 		if !ok {
 			return nil, fmt.Errorf("%w: %T", ErrTypeMismatch, op)
 		}
@@ -71,7 +72,7 @@ func NewPlugin(pkgs map[string]Package) Plugin {
 	return Plugin{
 		pkgs: pkgs,
 		cache: make(
-			map[src.OperatorRef]func(core.IO) error,
+			map[src.OperatorRef]func(context.Context, core.IO) error,
 			len(pkgs),
 		),
 	}

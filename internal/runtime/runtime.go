@@ -147,8 +147,8 @@ func (r Runtime) buildConstEffects(
 		}
 
 		result = append(result, ConstEffect{
-			Port: port,
-			Msg:  msg,
+			OutPort: port,
+			Msg:     msg,
 		})
 	}
 

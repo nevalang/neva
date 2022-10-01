@@ -22,7 +22,7 @@ func (s Spawner) Spawn(ctx context.Context, consts []runtime.ConstEffect) error 
 				case <-ctx.Done():
 					return
 				default:
-					c.Port <- c.Msg
+					c.OutPort <- c.Msg
 				}
 			}
 		}()

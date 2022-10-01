@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
 )
 
-func Print(io core.IO) error {
+func Print(ctx context.Context, io core.IO) error {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return err
@@ -18,9 +19,19 @@ func Print(io core.IO) error {
 	}
 
 	go func() {
-		for msg := range dataIn {
-			fmt.Print(msg)
-			dataOut <- msg
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-dataIn:
+				fmt.Print(msg)
+				select {
+				case dataOut <- msg:
+					continue
+				case <-ctx.Done(): // TODO try figure out better
+					return
+				}
+			}
 		}
 	}()
 

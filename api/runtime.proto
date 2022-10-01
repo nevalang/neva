@@ -7,9 +7,8 @@ option go_package = './;runtimesdk';
 message Program {
 	repeated Port ports = 1;
 	repeated Connection connections = 2;
-	repeated Operator operators = 3; // use map {ref:ports}?
-	repeated Constant constants = 4; // use map {addr:msg}?
-	PortAddr start_port = 5;
+	Effects effects = 3;
+	PortAddr start_port = 4;
 }
 
 message Port {
@@ -20,6 +19,12 @@ message Port {
 message Connection {
 	PortAddr sender_out_port_addr = 1;
 	repeated ConnectionPoint receiver_connection_points = 2;
+}
+
+message Effects {
+	repeated Operator operators = 1;
+	repeated Constant constants = 2; // use map {addr:msg}?
+	repeated Trigger triggers = 3;
 }
 
 message ConnectionPoint {
@@ -43,6 +48,12 @@ message Operator {
 message Constant {
 	PortAddr out_port_addr = 1;
 	Msg msg = 2;
+}
+
+message Trigger {
+	PortAddr in_port_addr = 1;
+	PortAddr out_port_addr = 2;
+	Msg msg = 3;
 }
 
 message Msg {

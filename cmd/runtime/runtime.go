@@ -29,10 +29,6 @@ func mustCreateRuntime() runtime.Runtime {
 			constants.Spawner{},
 			operators.MustNew(
 				repo.NewPlugin(map[string]repo.Package{
-					"flow": {
-						Filepath: "/home/evaleev/projects/neva/plugins/lock.so",
-						Exports:  []string{"Lock"},
-					},
 					"io": {
 						Filepath: "/home/evaleev/projects/neva/plugins/print.so",
 						Exports:  []string{"Print"},

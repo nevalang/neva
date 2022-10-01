@@ -7,49 +7,37 @@ func helloWorld() *runtimesdk.Program {
 		portAddr("in", "sig"),
 		ports(
 			port("in", "sig", 0),
-			port("const", "greeting", 0),
-			port("lock.in", "sig", 0),
-			port("lock.in", "data", 0),
-			port("lock.out", "data", 0),
+			port("const.in", "sig", 0),
+			port("const.out", "greeting", 0),
 			port("print.in", "data", 0),
 			port("print.out", "data", 0),
 		),
-		ops(
-			op(
-				opref("flow", "Lock"),
-				portsAddrs(
-					portAddr("lock.in", "sig"),
-					portAddr("lock.in", "data"),
+		effects(
+			ops(
+				op(
+					opref("io", "Print"),
+					portsAddrs(portAddr("print.in", "data")),
+					portsAddrs(portAddr("print.out", "data")),
 				),
-				portsAddrs(portAddr("lock.out", "data")),
 			),
-			op(
-				opref("io", "Print"),
-				portsAddrs(portAddr("print.in", "data")),
-				portsAddrs(portAddr("print.out", "data")),
-			),
-		),
-		consts(
-			cnst(
-				portAddr("const", "greeting"),
-				strmsg("hello world!\n"),
+			consts(),
+			triggers(
+				trigger(
+					portAddr("const.in", "sig"),
+					portAddr("const.out", "greeting"),
+					strMsg("hello world!\n"),
+				),
 			),
 		),
 		conns(
 			conn(
 				portAddr("in", "sig"),
 				points(
-					point(portAddr("lock.in", "sig")),
+					point(portAddr("const.in", "sig")),
 				),
 			),
 			conn(
-				portAddr("const", "greeting"),
-				points(
-					point(portAddr("lock.in", "data")),
-				),
-			),
-			conn(
-				portAddr("lock.out", "data"),
+				portAddr("const.out", "greeting"),
 				points(
 					point(portAddr("print.in", "data")),
 				),

@@ -27,13 +27,19 @@ type (
 	Effects struct {
 		Consts    []ConstEffect
 		Operators []OperatorEffect
+		Triggers  []TriggerEffect
 	}
 	ConstEffect struct {
-		Port chan core.Msg
-		Msg  core.Msg
+		OutPort chan core.Msg
+		Msg     core.Msg
 	}
 	OperatorEffect struct {
 		Ref src.OperatorRef
 		IO  core.IO
+	}
+	TriggerEffect struct {
+		InPort  chan core.Msg
+		OutPort chan core.Msg
+		Msg     core.Msg
 	}
 )

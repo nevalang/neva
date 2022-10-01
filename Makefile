@@ -1,7 +1,7 @@
 .PHONY: runtimesdk
 runtimesdk:
-	protoc api/runtimesdk.proto \
-		--go_out=pkg/runtimesdksdk
+	protoc api/runtime.proto \
+		--go_out=pkg/runtimesdk
 
 .PHONY: devserversdk
 devserversdk:
@@ -11,8 +11,7 @@ devserversdk:
 		--go_out=pkg/devserversdk \
 		--go-grpc_out=pkg/devserversdk
 
-.PHONY: plugins
-plugins:
+.PHONY: debugplugins
+debugplugins:
 	rm -rf plugins/*
-	go build -o plugins/print.so -buildmode=plugin -gcflags="all=-N -l" internal/runtime/operators/io/print.go
-	go build -o plugins/lock.so -buildmode=plugin -gcflags="all=-N -l" internal/runtime/operators/flow/lock.go
+	go build -o plugins/print.so -buildmode=plugin -gcflags="all=-N -l" internal/operators/io/print.go

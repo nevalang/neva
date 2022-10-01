@@ -5,15 +5,13 @@ import "github.com/emil14/neva/pkg/runtimesdk"
 func prog(
 	start *runtimesdk.PortAddr,
 	ports []*runtimesdk.Port,
-	ops []*runtimesdk.Operator,
-	consts []*runtimesdk.Constant,
+	effects *runtimesdk.Effects,
 	conns []*runtimesdk.Connection,
 ) *runtimesdk.Program {
 	return &runtimesdk.Program{
 		StartPort:   start,
 		Ports:       ports,
-		Operators:   ops,
-		Constants:   consts,
+		Effects:     effects,
 		Connections: conns,
 	}
 }
@@ -45,6 +43,10 @@ func consts(cc ...*runtimesdk.Constant) []*runtimesdk.Constant {
 	return cc
 }
 
+func triggers(tt ...*runtimesdk.Trigger) []*runtimesdk.Trigger {
+	return tt
+}
+
 func cnst(out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Constant {
 	return &runtimesdk.Constant{
 		OutPortAddr: out,
@@ -52,7 +54,15 @@ func cnst(out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Constant {
 	}
 }
 
-func strmsg(s string) *runtimesdk.Msg {
+func trigger(in, out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Trigger {
+	return &runtimesdk.Trigger{
+		InPortAddr:  in,
+		OutPortAddr: out,
+		Msg:         msg,
+	}
+}
+
+func strMsg(s string) *runtimesdk.Msg {
 	return &runtimesdk.Msg{
 		Str:  "hello world!\n",
 		Type: runtimesdk.MsgType_VALUE_TYPE_STR, //nolint
@@ -99,5 +109,17 @@ func portAddr(path, name string) *runtimesdk.PortAddr {
 func slot(path, name string, idx uint32) *runtimesdk.PortAddr {
 	return &runtimesdk.PortAddr{
 		Path: path, Port: name, Idx: idx,
+	}
+}
+
+func effects(
+	Operators []*runtimesdk.Operator,
+	Constants []*runtimesdk.Constant,
+	Triggers []*runtimesdk.Trigger,
+) *runtimesdk.Effects {
+	return &runtimesdk.Effects{
+		Operators: Operators,
+		Constants: Constants,
+		Triggers:  Triggers,
 	}
 }

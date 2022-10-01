@@ -17,11 +17,15 @@ type (
 	OperatorSpawner interface {
 		Spawn(context.Context, []runtime.OperatorEffect) error
 	}
+	TriggerSpawner interface {
+		Spawn(context.Context, []runtime.TriggerEffect) error
+	}
 )
 
 type Effector struct {
 	constants ConstSpawner
 	operators OperatorSpawner
+	triggers TriggerSpawner
 }
 
 var (
