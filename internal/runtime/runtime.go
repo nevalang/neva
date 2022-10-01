@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/utils"
@@ -32,8 +33,7 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 		return fmt.Errorf("%w: %v", ErrDecoder, err)
 	}
 
-	_, ok := prog.Ports[prog.StartPort]
-	if !ok {
+	if _, ok := prog.Ports[prog.StartPort]; !ok {
 		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPort)
 	}
 
@@ -65,7 +65,12 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 		return nil
 	})
 
-	return g.Wait()
+	select {
+	case <-time.After(time.Second):
+		return errors.New("err timeout")
+	case ports[prog.StartPort] <- core.NewDictMsg(nil):
+		return g.Wait()
+	}
 }
 
 func (r Runtime) buildPorts(in map[src.AbsolutePortAddr]uint8) map[src.AbsolutePortAddr]chan core.Msg {

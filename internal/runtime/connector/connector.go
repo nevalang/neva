@@ -32,7 +32,7 @@ func (c Connector) Connect(ctx context.Context, conns []runtime.Connection) erro
 
 		g.Go(func() error {
 			if err := c.connect(ctx, conn); err != nil {
-				return fmt.Errorf("connect: %w", err)
+				return fmt.Errorf("connect: err %w, connection %v", err, conn)
 			}
 			return nil
 		})
@@ -56,19 +56,11 @@ func (c Connector) connect(ctx context.Context, conn runtime.Connection) error {
 			return ctx.Err()
 		case msg := <-conn.Sender:
 			msg = c.interceptor.AfterSending(conn.Src, msg)
-			msg, err := c.getMsgData(msg)
-			if err != nil {
-				return fmt.Errorf("get msg data: %w", err)
+			if err := c.distribute(msg, conn.Src.SenderPortAddr, rr); err != nil {
+				return fmt.Errorf("unpack msg: %w", err)
 			}
-			c.distribute(msg, conn.Src.SenderPortAddr, rr)
 		}
 	}
-}
-
-var ErrDictKeyNotFound = errors.New("dict key not found") // TODO
-
-func (c Connector) getMsgData(msg core.Msg) (core.Msg, error) {
-	return msg, nil
 }
 
 type receiver struct {
@@ -80,22 +72,28 @@ func (c Connector) distribute(
 	msg core.Msg,
 	saddr src.AbsolutePortAddr,
 	rr []receiver,
-) {
-	cache := map[src.AbsolutePortAddr]core.Msg{}
-
-	var i int
+) error {
+	var (
+		i     = 0
+		cache = make(map[src.AbsolutePortAddr]core.Msg, len(rr))
+	)
 
 	for len(rr) > 0 {
-		raddr := rr[i].point.PortAddr
-		if _, ok := cache[raddr]; !ok {
-			cache[raddr] = c.interceptor.BeforeReceiving(saddr, rr[i].point, msg)
+		r := rr[i]
+
+		if _, ok := cache[r.point.PortAddr]; !ok {
+			msg, err := c.unpackMsg(msg, r.point)
+			if err != nil {
+				return fmt.Errorf("unpack msg: err %w, receiver point %v", err, r.point)
+			}
+			cache[r.point.PortAddr] = c.interceptor.BeforeReceiving(saddr, r.point, msg)
 		}
 
-		msg = cache[raddr]
+		msg = cache[r.point.PortAddr]
 
 		select {
-		case rr[i].port <- msg:
-			c.interceptor.AfterReceiving(saddr, rr[i].point, msg)
+		case r.port <- msg:
+			c.interceptor.AfterReceiving(saddr, r.point, msg)
 			rr = append(rr[:i], rr[i+1:]...)
 		default:
 			if i < len(rr) {
@@ -107,6 +105,26 @@ func (c Connector) distribute(
 			i = 0
 		}
 	}
+
+	return nil
+}
+
+var ErrDictKeyNotFound = errors.New("dict key not found")
+
+func (c Connector) unpackMsg(msg core.Msg, point src.ReceiverConnectionPoint) (core.Msg, error) {
+	if point.Type == src.DictReading {
+		path := point.DictReadingPath
+
+		for _, part := range path[:len(path)-1] {
+			var ok bool
+			msg, ok = msg.Dict()[part]
+			if !ok {
+				return nil, fmt.Errorf("%w: %v", ErrDictKeyNotFound, part)
+			}
+		}
+	}
+
+	return msg, nil
 }
 
 func MustNew(i Interceptor) Connector {
