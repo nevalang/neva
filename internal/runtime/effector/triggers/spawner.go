@@ -9,12 +9,12 @@ import (
 
 type Spawner struct{}
 
-func (s Spawner) Spawn(ctx context.Context, consts []runtime.ConstEffect) error {
+func (s Spawner) Spawn(ctx context.Context,triggers []runtime.TriggerEffect) error {
 	wg := sync.WaitGroup{}
-	wg.Add(len(consts))
+	wg.Add(len(triggers))
 
-	for i := range consts {
-		c := consts[i]
+	for i := range triggers {
+		c := triggers[i]
 		go func() {
 			defer wg.Done()
 			for {
@@ -22,6 +22,7 @@ func (s Spawner) Spawn(ctx context.Context, consts []runtime.ConstEffect) error 
 				case <-ctx.Done():
 					return
 				default:
+                                        <-c.InPort
 					c.OutPort <- c.Msg
 				}
 			}
