@@ -30,17 +30,17 @@ var (
 )
 
 func (e Effector) MakeEffects(ctx context.Context, effects runtime.Effects) error {
-	g := errgroup.Group{}
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := e.constants.Spawn(ctx, effects.Consts); err != nil {
+		if err := e.constants.Spawn(gctx, effects.Consts); err != nil {
 			return fmt.Errorf("%w: %v", ErrConstSpawner, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.operators.Spawn(ctx, effects.Operators); err != nil {
+		if err := e.operators.Spawn(gctx, effects.Operators); err != nil {
 			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
 		}
 		return nil

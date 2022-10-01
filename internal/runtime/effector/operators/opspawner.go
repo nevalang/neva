@@ -20,9 +20,6 @@ type (
 	Repo interface {
 		Operator(ref src.OperatorRef) (func(core.IO) error, error)
 	}
-	PortSearcher interface {
-		SearchPorts(src.OperatorPortAddrs, map[src.AbsolutePortAddr]chan core.Msg) (core.IO, error)
-	}
 )
 
 type Spawner struct {

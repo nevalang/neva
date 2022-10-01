@@ -25,13 +25,13 @@ type Connector struct {
 }
 
 func (c Connector) Connect(ctx context.Context, conns []runtime.Connection) error {
-	g, ctx := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range conns {
 		conn := conns[i]
 
 		g.Go(func() error {
-			if err := c.connect(ctx, conn); err != nil {
+			if err := c.connect(gctx, conn); err != nil {
 				return fmt.Errorf("connect: err %w, connection %v", err, conn)
 			}
 			return nil
@@ -56,7 +56,7 @@ func (c Connector) connect(ctx context.Context, conn runtime.Connection) error {
 			return ctx.Err()
 		case msg := <-conn.Sender:
 			msg = c.interceptor.AfterSending(conn.Src, msg)
-			if err := c.distribute(msg, conn.Src.SenderPortAddr, rr); err != nil {
+			if err := c.distribute(ctx, msg, conn.Src.SenderPortAddr, rr); err != nil {
 				return fmt.Errorf("unpack msg: %w", err)
 			}
 		}
@@ -69,6 +69,7 @@ type receiver struct {
 }
 
 func (c Connector) distribute(
+	ctx context.Context,
 	msg core.Msg,
 	saddr src.AbsolutePortAddr,
 	rr []receiver,
@@ -92,6 +93,8 @@ func (c Connector) distribute(
 		msg = cache[r.point.PortAddr]
 
 		select {
+		case <-ctx.Done():
+			return ctx.Err()
 		case r.port <- msg:
 			c.interceptor.AfterReceiving(saddr, r.point, msg)
 			rr = append(rr[:i], rr[i+1:]...)

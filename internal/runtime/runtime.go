@@ -49,17 +49,17 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 		return fmt.Errorf("build effects: %w", err)
 	}
 
-	g, ctx := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := r.connector.Connect(ctx, conns); err != nil {
+		if err := r.connector.Connect(gctx, conns); err != nil {
 			return fmt.Errorf("%w: %v", ErrConnector, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := r.effector.MakeEffects(ctx, effects); err != nil {
+		if err := r.effector.MakeEffects(gctx, effects); err != nil {
 			return fmt.Errorf("%w: %v", ErrEffector, err)
 		}
 		return nil
