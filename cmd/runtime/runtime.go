@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/builder"
 	"github.com/emil14/neva/internal/runtime/connector"
 	logginginterceptor "github.com/emil14/neva/internal/runtime/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/decoder"
@@ -23,6 +24,7 @@ func mustCreateRuntime() runtime.Runtime {
 			decoder.NewCaster(),
 			decoder.NewUnmarshaler(),
 		),
+		builder.Builder{},
 		connector.MustNew(
 			logginginterceptor.MustNew(l),
 		),

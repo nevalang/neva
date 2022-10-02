@@ -12,6 +12,18 @@ type Decoder interface {
 }
 
 type (
+	Builder interface {
+		Build(src.Program) (Build, error)
+	}
+	Build struct {
+		Ports       Ports
+		Connections []Connection
+		Effects     Effects
+	}
+	Ports map[src.AbsPortAddr]chan core.Msg
+)
+
+type (
 	Connector interface {
 		Connect(context.Context, []Connection) error
 	}

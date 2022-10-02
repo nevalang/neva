@@ -131,14 +131,14 @@ func (t Translator) Translate(prog compiler.Program) (src.Program, error) {
 
 // nodePorts creates ports for given node based on it's usage by parent network
 // NOTE: https://github.com/emil14/neva/issues/29#issuecomment-1064185904
-func (t Translator) nodePorts(pctx parentCtx) (in []src.AbsolutePortAddr, out []src.AbsolutePortAddr) {
-	in = []src.AbsolutePortAddr{}
-	out = []src.AbsolutePortAddr{}
+func (t Translator) nodePorts(pctx parentCtx) (in []src.AbsPortAddr, out []src.AbsPortAddr) {
+	in = []src.AbsPortAddr{}
+	out = []src.AbsPortAddr{}
 	path := pctx.path + "." + pctx.node
 
 	for _, connection := range pctx.net {
 		if connection.From.Node == pctx.node {
-			out = append(out, src.AbsolutePortAddr{
+			out = append(out, src.AbsPortAddr{
 				Path: path + ".out",
 				Port: connection.From.Port,
 				Idx:  connection.From.Idx,
@@ -147,7 +147,7 @@ func (t Translator) nodePorts(pctx parentCtx) (in []src.AbsolutePortAddr, out []
 
 		for _, to := range connection.To {
 			if to.Node == pctx.node {
-				in = append(in, src.AbsolutePortAddr{
+				in = append(in, src.AbsPortAddr{
 					Path: path + ".in",
 					Port: to.Port,
 					Idx:  to.Idx,

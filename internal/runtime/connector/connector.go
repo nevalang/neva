@@ -15,8 +15,8 @@ import (
 type (
 	Interceptor interface {
 		AfterSending(src.Connection, core.Msg) core.Msg
-		BeforeReceiving(src.AbsolutePortAddr, src.ReceiverConnectionPoint, core.Msg) core.Msg
-		AfterReceiving(src.AbsolutePortAddr, src.ReceiverConnectionPoint, core.Msg)
+		BeforeReceiving(src.AbsPortAddr, src.ReceiverConnectionPoint, core.Msg) core.Msg
+		AfterReceiving(src.AbsPortAddr, src.ReceiverConnectionPoint, core.Msg)
 	}
 )
 
@@ -71,12 +71,12 @@ type receiver struct {
 func (c Connector) distribute(
 	ctx context.Context,
 	msg core.Msg,
-	saddr src.AbsolutePortAddr,
+	saddr src.AbsPortAddr,
 	rr []receiver,
 ) error {
 	var (
 		i     = 0
-		cache = make(map[src.AbsolutePortAddr]core.Msg, len(rr))
+		cache = make(map[src.AbsPortAddr]core.Msg, len(rr))
 	)
 
 	for len(rr) > 0 {

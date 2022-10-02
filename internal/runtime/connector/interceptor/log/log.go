@@ -23,7 +23,7 @@ func (i Interceptor) AfterSending(conn src.Connection, msg core.Msg) core.Msg {
 }
 
 func (i Interceptor) BeforeReceiving(
-	saddr src.AbsolutePortAddr,
+	saddr src.AbsPortAddr,
 	rpoint src.ReceiverConnectionPoint,
 	msg core.Msg,
 ) core.Msg {
@@ -35,7 +35,7 @@ func (i Interceptor) BeforeReceiving(
 }
 
 func (i Interceptor) AfterReceiving(
-	saddr src.AbsolutePortAddr,
+	saddr src.AbsPortAddr,
 	rpoint src.ReceiverConnectionPoint,
 	msg core.Msg,
 ) {
@@ -63,7 +63,7 @@ func (i Interceptor) formatConnection(conn src.Connection, msg core.Msg) string 
 	)
 }
 
-func (i Interceptor) formatPortAddr(addr src.AbsolutePortAddr) string {
+func (i Interceptor) formatPortAddr(addr src.AbsPortAddr) string {
 	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 

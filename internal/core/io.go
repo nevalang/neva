@@ -12,11 +12,11 @@ type IO struct {
 	In, Out Ports
 }
 
-type Ports map[RelativePortAddr]chan Msg
+type Ports map[RelPortAddr]chan Msg
 
 // Port returns port with given name and idx == 0 or non-nil err
 func (p Ports) Port(name string) (chan Msg, error) {
-	port, ok := p[RelativePortAddr{Port: name}]
+	port, ok := p[RelPortAddr{Port: name}]
 	if !ok {
 		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, name)
 	}
@@ -54,7 +54,7 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	return cc, nil
 }
 
-type RelativePortAddr struct {
+type RelPortAddr struct {
 	Port string
 	Idx  uint8
 }

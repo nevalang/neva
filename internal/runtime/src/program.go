@@ -2,25 +2,27 @@ package src
 
 type (
 	Program struct {
-		Ports       map[AbsolutePortAddr]uint8 // Ports maps address to buffer size
+		Ports       Ports
 		Connections []Connection
 		Effects     Effects
-		StartPort   AbsolutePortAddr
+		StartPort   AbsPortAddr
 	}
 
-	AbsolutePortAddr struct {
+	Ports map[AbsPortAddr]uint8 // Ports maps address to buffer size
+
+	AbsPortAddr struct {
 		Path string
 		Port string
 		Idx  uint8
 	}
 
 	Connection struct {
-		SenderPortAddr            AbsolutePortAddr
+		SenderPortAddr            AbsPortAddr
 		ReceiversConnectionPoints []ReceiverConnectionPoint
 	}
 
 	ReceiverConnectionPoint struct {
-		PortAddr        AbsolutePortAddr
+		PortAddr        AbsPortAddr
 		Type            ReceiverConnectionPointType
 		DictReadingPath []string // Only used for DictKeyReading
 	}
@@ -29,7 +31,7 @@ type (
 
 	Effects struct {
 		Operators []OperatorEffect
-		Constants map[AbsolutePortAddr]Msg
+		Constants map[AbsPortAddr]Msg
 		Triggers  []TriggerEffect
 	}
 
@@ -40,7 +42,7 @@ type (
 
 	TriggerEffect struct {
 		Msg                     Msg
-		InPortAddr, OutPortAddr AbsolutePortAddr
+		InPortAddr, OutPortAddr AbsPortAddr
 	}
 
 	Msg struct {
@@ -58,7 +60,7 @@ type (
 	}
 
 	OperatorPortAddrs struct {
-		In, Out []AbsolutePortAddr
+		In, Out []AbsPortAddr
 	}
 )
 

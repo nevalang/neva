@@ -22,7 +22,7 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 			Constants: constants,
 			Triggers:  triggers,
 		},
-		StartPort: src.AbsolutePortAddr{
+		StartPort: src.AbsPortAddr{
 			Path: in.StartPort.Path,
 			Port: in.StartPort.Port,
 			Idx:  uint8(in.StartPort.Idx),
@@ -30,11 +30,11 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 	}, nil
 }
 
-func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]src.Msg {
-	constants := make(map[src.AbsolutePortAddr]src.Msg, len(in.Effects.Constants))
+func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsPortAddr]src.Msg {
+	constants := make(map[src.AbsPortAddr]src.Msg, len(in.Effects.Constants))
 
 	for _, constant := range in.Effects.Constants {
-		addr := src.AbsolutePortAddr{
+		addr := src.AbsPortAddr{
 			Path: constant.OutPortAddr.Path,
 			Port: constant.OutPortAddr.Port,
 			Idx:  uint8(constant.OutPortAddr.Idx),
@@ -53,12 +53,12 @@ func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerEffect {
 			Msg: c.castMsg(sdkTrigger.Msg),
 		}
 
-		srcTrigger.InPortAddr = src.AbsolutePortAddr{
+		srcTrigger.InPortAddr = src.AbsPortAddr{
 			Path: sdkTrigger.InPortAddr.Path,
 			Port: sdkTrigger.InPortAddr.Port,
 			Idx:  uint8(sdkTrigger.InPortAddr.Idx),
 		}
-		srcTrigger.OutPortAddr = src.AbsolutePortAddr{
+		srcTrigger.OutPortAddr = src.AbsPortAddr{
 			Path: sdkTrigger.OutPortAddr.Path,
 			Port: sdkTrigger.OutPortAddr.Port,
 			Idx:  uint8(sdkTrigger.OutPortAddr.Idx),
@@ -73,18 +73,18 @@ func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerEffect {
 func (caster) castOperators(in *runtimesdk.Program) []src.OperatorEffect {
 	operators := make([]src.OperatorEffect, 0, len(in.Effects.Operators))
 	for _, operator := range in.Effects.Operators {
-		inAddrs := make([]src.AbsolutePortAddr, 0, len(operator.InPortAddrs))
+		inAddrs := make([]src.AbsPortAddr, 0, len(operator.InPortAddrs))
 		for _, addr := range operator.InPortAddrs {
-			inAddrs = append(inAddrs, src.AbsolutePortAddr{
+			inAddrs = append(inAddrs, src.AbsPortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
 			})
 		}
 
-		outAddrs := make([]src.AbsolutePortAddr, 0, len(operator.OutPortAddrs))
+		outAddrs := make([]src.AbsPortAddr, 0, len(operator.OutPortAddrs))
 		for _, addr := range operator.OutPortAddrs {
-			outAddrs = append(outAddrs, src.AbsolutePortAddr{
+			outAddrs = append(outAddrs, src.AbsPortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
@@ -111,7 +111,7 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 		receivers := make([]src.ReceiverConnectionPoint, 0, len(connection.ReceiverConnectionPoints))
 		for _, receiver := range connection.ReceiverConnectionPoints {
 			receivers = append(receivers, src.ReceiverConnectionPoint{
-				PortAddr: src.AbsolutePortAddr{
+				PortAddr: src.AbsPortAddr{
 					Path: receiver.InPortAddr.Path,
 					Port: receiver.InPortAddr.Port,
 					Idx:  uint8(receiver.InPortAddr.Idx),
@@ -121,7 +121,7 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 			})
 		}
 		connections = append(connections, src.Connection{
-			SenderPortAddr: src.AbsolutePortAddr{
+			SenderPortAddr: src.AbsPortAddr{
 				Path: connection.SenderOutPortAddr.Path,
 				Port: connection.SenderOutPortAddr.Port,
 				Idx:  uint8(connection.SenderOutPortAddr.Idx),
@@ -132,11 +132,11 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 	return connections
 }
 
-func (caster) castPorts(in *runtimesdk.Program) map[src.AbsolutePortAddr]uint8 {
-	ports := make(map[src.AbsolutePortAddr]uint8, len(in.Ports))
+func (caster) castPorts(in *runtimesdk.Program) map[src.AbsPortAddr]uint8 {
+	ports := make(map[src.AbsPortAddr]uint8, len(in.Ports))
 
 	for _, p := range in.Ports {
-		ports[src.AbsolutePortAddr{
+		ports[src.AbsPortAddr{
 			Path: p.Addr.Path,
 			Port: p.Addr.Port,
 			Idx:  uint8(p.Addr.Idx),
