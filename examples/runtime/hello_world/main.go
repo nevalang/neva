@@ -14,6 +14,6 @@ func main() {
 	bb := initutils.Must(proto.Marshal(hw))
 
 	if err := r.Run(context.Background(), bb); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }

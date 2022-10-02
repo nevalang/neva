@@ -7,28 +7,46 @@ import (
 	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
+	"golang.org/x/sync/errgroup"
 )
 
 type Builder struct{}
 
 func (b Builder) Build(prog src.Program) (runtime.Build, error) {
-	pp := b.buildPorts(prog.Ports)
+	var (
+		ports       = b.buildPorts(prog.Ports)
+		connections []runtime.Connection
+		effects     runtime.Effects
+		err         error
+	)
 
-	conns, err := b.buildConnections(pp, prog.Connections)
-	if err != nil {
-		return runtime.Build{}, fmt.Errorf("build connections: %w", err)
-	}
+	g := errgroup.Group{}
 
-	ee, err := b.buildEffects(pp, prog.Effects)
-	if err != nil {
-		return runtime.Build{}, fmt.Errorf("build effects: %w", err)
+	g.Go(func() error {
+		connections, err = b.buildConnections(ports, prog.Connections)
+		if err != nil {
+			return fmt.Errorf("build connections: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		effects, err = b.buildEffects(ports, prog.Effects)
+		if err != nil {
+			return fmt.Errorf("build effects: %w", err)
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return runtime.Build{}, fmt.Errorf("wait: %w", err)
 	}
 
 	return runtime.Build{
 		StartPort:   prog.StartPort,
-		Ports:       pp,
-		Connections: conns,
-		Effects:     ee,
+		Ports:       ports,
+		Connections: connections,
+		Effects:     effects,
 	}, nil
 }
 
@@ -43,12 +61,13 @@ func (b Builder) buildPorts(in src.Ports) runtime.Ports {
 	return out
 }
 
-func (b Builder) buildConnections(
+func (b Builder) buildConnections( // todo parallel conns
 	ports runtime.Ports,
-	in []src.Connection,
+	srcConns []src.Connection,
 ) ([]runtime.Connection, error) {
-	cc := make([]runtime.Connection, 0, len(in))
-	for _, srcConn := range in {
+	cc := make([]runtime.Connection, 0, len(srcConns))
+
+	for _, srcConn := range srcConns {
 		senderPort, ok := ports[srcConn.SenderPortAddr]
 		if !ok {
 			return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
@@ -74,18 +93,18 @@ func (b Builder) buildConnections(
 	return cc, nil
 }
 
-func (b Builder) buildEffects(ports runtime.Ports, in src.Effects) (runtime.Effects, error) {
-	c, err := b.buildConstEffects(ports, in.Constants)
+func (b Builder) buildEffects(ports runtime.Ports, effects src.Effects) (runtime.Effects, error) { // todo parallel effects
+	c, err := b.buildConstEffects(ports, effects.Constants)
 	if err != nil {
 		return runtime.Effects{}, fmt.Errorf("build const effects: %w", err)
 	}
 
-	o, err := b.buildOperatorEffects(ports, in.Operators)
+	o, err := b.buildOperatorEffects(ports, effects.Operators)
 	if err != nil {
 		return runtime.Effects{}, fmt.Errorf("build operator effects: %w", err)
 	}
 
-	t, err := b.buildTriggerEffects(ports, in.Triggers)
+	t, err := b.buildTriggerEffects(ports, effects.Triggers)
 	if err != nil {
 		return runtime.Effects{}, fmt.Errorf("build operator effects: %w", err)
 	}
@@ -127,11 +146,11 @@ func (b Builder) buildConstEffects(
 
 func (b Builder) buildOperatorEffects(
 	ports runtime.Ports,
-	in []src.OperatorEffect,
+	ops []src.OperatorEffect,
 ) ([]runtime.OperatorEffect, error) {
-	result := make([]runtime.OperatorEffect, 0, len(in))
+	result := make([]runtime.OperatorEffect, 0, len(ops))
 
-	for _, srcOpEffect := range in {
+	for _, srcOpEffect := range ops {
 		io := core.IO{
 			In:  make(core.Ports, len(srcOpEffect.PortAddrs.In)),
 			Out: make(core.Ports, len(srcOpEffect.PortAddrs.Out)),
