@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime"
 	"golang.org/x/sync/errgroup"
 )
@@ -62,6 +62,6 @@ func (e Effector) Effect(ctx context.Context, effects runtime.Effects) error {
 }
 
 func MustNew(c ConstantEffector, o OperatorEffector, t TriggerEffector) Effector {
-	utils.NilPanic(c, o, t)
+	initutils.NilPanic(c, o, t)
 	return Effector{c, o, t}
 }

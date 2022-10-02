@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
@@ -68,6 +68,6 @@ func (i Interceptor) formatPortAddr(addr src.AbsPortAddr) string {
 }
 
 func MustNew(l Logger) Interceptor {
-	utils.NilPanic(l)
+	initutils.NilPanic(l)
 	return Interceptor{l}
 }

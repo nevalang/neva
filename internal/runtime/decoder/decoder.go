@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/runtimesdk"
 )
@@ -43,7 +43,7 @@ func (p Proto) Decode(bb []byte) (src.Program, error) {
 }
 
 func MustNewProto(caster Caster, unmarshaler Unmarshaler) Proto {
-	utils.NilPanic(caster, unmarshaler)
+	initutils.NilPanic(caster, unmarshaler)
 
 	return Proto{
 		caster:      caster,

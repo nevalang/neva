@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 )
 
 type (
@@ -124,7 +124,7 @@ func MustNew(
 	translator Generator,
 	operatorsIO map[OperatorRef]IO,
 ) Compiler {
-	utils.NilPanic(pkg, parser, checker, translator, operatorsIO)
+	initutils.NilPanic(pkg, parser, checker, translator, operatorsIO)
 
 	return Compiler{
 		pkg:         pkg,

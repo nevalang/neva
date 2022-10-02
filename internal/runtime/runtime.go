@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
@@ -90,7 +90,7 @@ func MustNew(
 	builder Builder,
 	executor Executor,
 ) Runtime {
-	utils.NilPanic(decoder, builder, executor)
+	initutils.NilPanic(decoder, builder, executor)
 
 	return Runtime{
 		decoder:  decoder,

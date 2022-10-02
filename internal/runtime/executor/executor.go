@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime"
 	"golang.org/x/sync/errgroup"
 )
@@ -58,7 +58,7 @@ func (e Executor) Exec(ctx context.Context, build runtime.Build) error {
 }
 
 func MustNew(effector Effector, connector Connector) Executor {
-	utils.NilPanic(effector, connector)
+	initutils.NilPanic(effector, connector)
 	return Executor{
 		connector: connector,
 		effector:  effector,

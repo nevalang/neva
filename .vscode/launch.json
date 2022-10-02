@@ -6,15 +6,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/runtime",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "tmp",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/tmp",
+      "program": "${workspaceFolder}/examples/runtime/hello_world",
       "cwd": "${workspaceFolder}"
     }
   ]

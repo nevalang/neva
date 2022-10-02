@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
 	"golang.org/x/sync/errgroup"
@@ -131,6 +131,6 @@ func (c Connector) unpackMsg(msg core.Msg, point src.ReceiverConnectionPoint) (c
 }
 
 func MustNew(i Interceptor) Connector {
-	utils.NilPanic(i)
+	initutils.NilPanic(i)
 	return Connector{i}
 }

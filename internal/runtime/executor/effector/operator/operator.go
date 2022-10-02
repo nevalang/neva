@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/utils"
+	"github.com/emil14/neva/internal/pkg/initutils"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
 	"golang.org/x/sync/errgroup"
@@ -52,6 +52,6 @@ func (e Effector) Effect(ctx context.Context, effects []runtime.OperatorEffect) 
 }
 
 func MustNew(repo Repo) Effector {
-	utils.NilPanic(repo)
+	initutils.NilPanic(repo)
 	return Effector{repo}
 }

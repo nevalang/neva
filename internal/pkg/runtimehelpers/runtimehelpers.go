@@ -1,8 +1,8 @@
-package main
+package runtimehelpers
 
 import "github.com/emil14/neva/pkg/runtimesdk"
 
-func prog(
+func Prog(
 	start *runtimesdk.PortAddr,
 	ports []*runtimesdk.Port,
 	effects *runtimesdk.Effects,
@@ -16,22 +16,22 @@ func prog(
 	}
 }
 
-func conns(cc ...*runtimesdk.Connection) []*runtimesdk.Connection {
+func Connections(cc ...*runtimesdk.Connection) []*runtimesdk.Connection {
 	return cc
 }
 
-func conn(sender *runtimesdk.PortAddr, receivers []*runtimesdk.ConnectionPoint) *runtimesdk.Connection {
+func Connection(sender *runtimesdk.PortAddr, receivers []*runtimesdk.ConnectionPoint) *runtimesdk.Connection {
 	return &runtimesdk.Connection{
 		SenderOutPortAddr:        sender,
 		ReceiverConnectionPoints: receivers,
 	}
 }
 
-func points(pp ...*runtimesdk.ConnectionPoint) []*runtimesdk.ConnectionPoint {
+func Points(pp ...*runtimesdk.ConnectionPoint) []*runtimesdk.ConnectionPoint {
 	return pp
 }
 
-func point(in *runtimesdk.PortAddr) *runtimesdk.ConnectionPoint {
+func Point(in *runtimesdk.PortAddr) *runtimesdk.ConnectionPoint {
 	return &runtimesdk.ConnectionPoint{
 		InPortAddr:      in,
 		Type:            0,
@@ -39,22 +39,22 @@ func point(in *runtimesdk.PortAddr) *runtimesdk.ConnectionPoint {
 	}
 }
 
-func consts(cc ...*runtimesdk.Constant) []*runtimesdk.Constant {
+func Constants(cc ...*runtimesdk.Constant) []*runtimesdk.Constant {
 	return cc
 }
 
-func triggers(tt ...*runtimesdk.Trigger) []*runtimesdk.Trigger {
+func Triggers(tt ...*runtimesdk.Trigger) []*runtimesdk.Trigger {
 	return tt
 }
 
-func cnst(out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Constant {
+func Constant(out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Constant {
 	return &runtimesdk.Constant{
 		OutPortAddr: out,
 		Msg:         msg,
 	}
 }
 
-func trigger(in, out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Trigger {
+func Trigger(in, out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Trigger {
 	return &runtimesdk.Trigger{
 		InPortAddr:  in,
 		OutPortAddr: out,
@@ -62,18 +62,18 @@ func trigger(in, out *runtimesdk.PortAddr, msg *runtimesdk.Msg) *runtimesdk.Trig
 	}
 }
 
-func strMsg(s string) *runtimesdk.Msg {
+func StrMsg(s string) *runtimesdk.Msg {
 	return &runtimesdk.Msg{
 		Str:  "hello world!\n",
 		Type: runtimesdk.MsgType_VALUE_TYPE_STR, //nolint
 	}
 }
 
-func ops(oo ...*runtimesdk.Operator) []*runtimesdk.Operator {
+func Operators(oo ...*runtimesdk.Operator) []*runtimesdk.Operator {
 	return oo
 }
 
-func op(ref *runtimesdk.OperatorRef, in, out []*runtimesdk.PortAddr) *runtimesdk.Operator {
+func Operator(ref *runtimesdk.OperatorRef, in, out []*runtimesdk.PortAddr) *runtimesdk.Operator {
 	return &runtimesdk.Operator{
 		Ref:          ref,
 		InPortAddrs:  in,
@@ -81,38 +81,38 @@ func op(ref *runtimesdk.OperatorRef, in, out []*runtimesdk.PortAddr) *runtimesdk
 	}
 }
 
-func opref(pkg, name string) *runtimesdk.OperatorRef {
+func OperatorRef(pkg, name string) *runtimesdk.OperatorRef {
 	return &runtimesdk.OperatorRef{
 		Pkg: pkg, Name: name,
 	}
 }
 
-func ports(pp ...*runtimesdk.Port) []*runtimesdk.Port {
+func Ports(pp ...*runtimesdk.Port) []*runtimesdk.Port {
 	return pp
 }
 
-func portsAddrs(pp ...*runtimesdk.PortAddr) []*runtimesdk.PortAddr {
+func PortAddrs(pp ...*runtimesdk.PortAddr) []*runtimesdk.PortAddr {
 	return pp
 }
 
-func port(path, name string, buf uint32) *runtimesdk.Port {
+func Port(path, name string, buf uint32) *runtimesdk.Port {
 	return &runtimesdk.Port{
-		Addr:    portAddr(path, name),
+		Addr:    PortAddr(path, name),
 		BufSize: buf,
 	}
 }
 
-func portAddr(path, name string) *runtimesdk.PortAddr {
-	return slot(path, name, 0)
+func PortAddr(path, name string) *runtimesdk.PortAddr {
+	return Slot(path, name, 0)
 }
 
-func slot(path, name string, idx uint32) *runtimesdk.PortAddr {
+func Slot(path, name string, idx uint32) *runtimesdk.PortAddr {
 	return &runtimesdk.PortAddr{
 		Path: path, Port: name, Idx: idx,
 	}
 }
 
-func effects(
+func Effects(
 	Operators []*runtimesdk.Operator,
 	Constants []*runtimesdk.Constant,
 	Triggers []*runtimesdk.Trigger,
