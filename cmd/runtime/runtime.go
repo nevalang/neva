@@ -8,9 +8,10 @@ import (
 	logginginterceptor "github.com/emil14/neva/internal/runtime/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/decoder"
 	"github.com/emil14/neva/internal/runtime/effector"
-	"github.com/emil14/neva/internal/runtime/effector/constants"
-	"github.com/emil14/neva/internal/runtime/effector/operators"
-	"github.com/emil14/neva/internal/runtime/effector/operators/repo"
+	constantseffects "github.com/emil14/neva/internal/runtime/effector/constant"
+	operatorseffects "github.com/emil14/neva/internal/runtime/effector/operator"
+	oprepo "github.com/emil14/neva/internal/runtime/effector/operator/repo"
+	triggerseffects "github.com/emil14/neva/internal/runtime/effector/trigger"
 )
 
 func mustCreateRuntime() runtime.Runtime {
@@ -26,15 +27,16 @@ func mustCreateRuntime() runtime.Runtime {
 			logginginterceptor.MustNew(l),
 		),
 		effector.MustNew(
-			constants.Spawner{},
-			operators.MustNew(
-				repo.NewPlugin(map[string]repo.Package{
+			constantseffects.Effector{},
+			operatorseffects.MustNew(
+				oprepo.NewPlugin(map[string]oprepo.Package{
 					"io": {
 						Filepath: "/home/evaleev/projects/neva/plugins/print.so",
 						Exports:  []string{"Print"},
 					},
 				}),
 			),
+			triggerseffects.Effector{},
 		),
 	)
 

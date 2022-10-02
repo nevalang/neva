@@ -59,7 +59,7 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 	})
 
 	g.Go(func() error {
-		if err := r.effector.MakeEffects(gctx, effects); err != nil {
+		if err := r.effector.Effect(gctx, effects); err != nil {
 			return fmt.Errorf("%w: %v", ErrEffector, err)
 		}
 		return nil
@@ -67,7 +67,7 @@ func (r Runtime) Run(ctx context.Context, bb []byte) error {
 
 	select {
 	case <-time.After(time.Second):
-		return errors.New("err timeout")
+		return errors.New("timeout")
 	case ports[prog.StartPort] <- core.NewDictMsg(nil):
 		return g.Wait()
 	}
@@ -126,14 +126,19 @@ func (r Runtime) buildEffects(ports map[src.AbsolutePortAddr]chan core.Msg, in s
 		return Effects{}, fmt.Errorf("build operator effects: %w", err)
 	}
 
-	return Effects{consts, ops}, nil
+	triggers, err := r.buildTriggerEffects(ports, in.Triggers)
+	if err != nil {
+		return Effects{}, fmt.Errorf("build operator effects: %w", err)
+	}
+
+	return Effects{consts, ops, triggers}, nil
 }
 
 func (r Runtime) buildConstEffects(
 	ports map[src.AbsolutePortAddr]chan core.Msg,
 	in map[src.AbsolutePortAddr]src.Msg,
-) ([]ConstEffect, error) {
-	result := make([]ConstEffect, 0, len(in))
+) ([]ConstantEffect, error) {
+	result := make([]ConstantEffect, 0, len(in))
 
 	for addr, msg := range in {
 		port, ok := ports[addr]
@@ -146,7 +151,7 @@ func (r Runtime) buildConstEffects(
 			return nil, fmt.Errorf("build core msg: %w", err)
 		}
 
-		result = append(result, ConstEffect{
+		result = append(result, ConstantEffect{
 			OutPort: port,
 			Msg:     msg,
 		})
@@ -225,6 +230,38 @@ func (r Runtime) buildCoreMsg(in src.Msg) (core.Msg, error) {
 	}
 
 	return out, nil
+}
+
+func (r Runtime) buildTriggerEffects(
+	ports map[src.AbsolutePortAddr]chan core.Msg,
+	in []src.TriggerEffect,
+) ([]TriggerEffect, error) {
+	result := make([]TriggerEffect, 0, len(in))
+
+	for _, effect := range in {
+		inPort, ok := ports[effect.InPortAddr]
+		if !ok {
+			return nil, fmt.Errorf("%w: %v", ErrStartPortNotFound, effect.InPortAddr)
+		}
+
+		outPort, ok := ports[effect.OutPortAddr]
+		if !ok {
+			return nil, fmt.Errorf("%w: %v", ErrStartPortNotFound, effect.InPortAddr)
+		}
+
+		msg, err := r.buildCoreMsg(effect.Msg)
+		if err != nil {
+			return nil, fmt.Errorf("build core msg: %w", err)
+		}
+
+		result = append(result, TriggerEffect{
+			InPort:  inPort,
+			OutPort: outPort,
+			Msg:     msg,
+		})
+	}
+
+	return result, nil
 }
 
 func MustNew(

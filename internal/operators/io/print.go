@@ -18,22 +18,18 @@ func Print(ctx context.Context, io core.IO) error {
 		return err
 	}
 
-	go func() {
-		for {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case msg := <-dataIn:
+			fmt.Print(msg)
 			select {
-			case <-ctx.Done():
-				return
-			case msg := <-dataIn:
-				fmt.Print(msg)
-				select {
-				case dataOut <- msg:
-					continue
-				case <-ctx.Done(): // TODO try figure out better
-					return
-				}
+			case dataOut <- msg:
+				continue
+			case <-ctx.Done(): // TODO try figure out better
+				return ctx.Err()
 			}
 		}
-	}()
-
-	return nil
+	}
 }

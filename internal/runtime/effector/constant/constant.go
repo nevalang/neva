@@ -1,4 +1,4 @@
-package constants
+package constant
 
 import (
 	"context"
@@ -7,9 +7,9 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 )
 
-type Spawner struct{}
+type Effector struct{}
 
-func (s Spawner) Spawn(ctx context.Context, consts []runtime.ConstEffect) error {
+func (e Effector) Effect(ctx context.Context, consts []runtime.ConstantEffect) error {
 	wg := sync.WaitGroup{}
 	wg.Add(len(consts))
 

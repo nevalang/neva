@@ -30,11 +30,17 @@ type (
 	Effects struct {
 		Operators []OperatorEffect
 		Constants map[AbsolutePortAddr]Msg
+		Triggers  []TriggerEffect
 	}
 
 	OperatorEffect struct {
 		Ref       OperatorRef
 		PortAddrs OperatorPortAddrs
+	}
+
+	TriggerEffect struct {
+		Msg                     Msg
+		InPortAddr, OutPortAddr AbsolutePortAddr
 	}
 
 	Msg struct {

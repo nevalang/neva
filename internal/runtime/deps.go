@@ -7,11 +7,11 @@ import (
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
-type (
-	Decoder interface {
-		Decode([]byte) (src.Program, error)
-	}
+type Decoder interface {
+	Decode([]byte) (src.Program, error)
+}
 
+type (
 	Connector interface {
 		Connect(context.Context, []Connection) error
 	}
@@ -20,16 +20,18 @@ type (
 		Sender    chan core.Msg
 		Receivers []chan core.Msg
 	}
+)
 
+type (
 	Effector interface {
-		MakeEffects(context.Context, Effects) error
+		Effect(context.Context, Effects) error
 	}
 	Effects struct {
-		Consts    []ConstEffect
+		Constants []ConstantEffect
 		Operators []OperatorEffect
 		Triggers  []TriggerEffect
 	}
-	ConstEffect struct {
+	ConstantEffect struct {
 		OutPort chan core.Msg
 		Msg     core.Msg
 	}

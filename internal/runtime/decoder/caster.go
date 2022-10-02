@@ -12,6 +12,7 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 	connections := c.castConnections(in)
 	operators := c.castOperators(in)
 	constants := c.castConstants(in)
+	triggers := c.castTriggers(in)
 
 	return src.Program{
 		Ports:       ports,
@@ -19,6 +20,7 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 		Effects: src.Effects{
 			Operators: operators,
 			Constants: constants,
+			Triggers:  triggers,
 		},
 		StartPort: src.AbsolutePortAddr{
 			Path: in.StartPort.Path,
@@ -30,6 +32,7 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 
 func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]src.Msg {
 	constants := make(map[src.AbsolutePortAddr]src.Msg, len(in.Effects.Constants))
+
 	for _, constant := range in.Effects.Constants {
 		addr := src.AbsolutePortAddr{
 			Path: constant.OutPortAddr.Path,
@@ -38,7 +41,33 @@ func (c caster) castConstants(in *runtimesdk.Program) map[src.AbsolutePortAddr]s
 		}
 		constants[addr] = c.castMsg(constant.Msg)
 	}
+
 	return constants
+}
+
+func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerEffect {
+	triggers := make([]src.TriggerEffect, 0, len(in.Effects.Triggers))
+
+	for _, sdkTrigger := range in.Effects.Triggers {
+		srcTrigger := src.TriggerEffect{
+			Msg: c.castMsg(sdkTrigger.Msg),
+		}
+
+		srcTrigger.InPortAddr = src.AbsolutePortAddr{
+			Path: sdkTrigger.InPortAddr.Path,
+			Port: sdkTrigger.InPortAddr.Port,
+			Idx:  uint8(sdkTrigger.InPortAddr.Idx),
+		}
+		srcTrigger.OutPortAddr = src.AbsolutePortAddr{
+			Path: sdkTrigger.OutPortAddr.Path,
+			Port: sdkTrigger.OutPortAddr.Port,
+			Idx:  uint8(sdkTrigger.OutPortAddr.Idx),
+		}
+
+		triggers = append(triggers, srcTrigger)
+	}
+
+	return triggers
 }
 
 func (caster) castOperators(in *runtimesdk.Program) []src.OperatorEffect {
@@ -117,7 +146,7 @@ func (caster) castPorts(in *runtimesdk.Program) map[src.AbsolutePortAddr]uint8 {
 	return ports
 }
 
-func (c caster) castMsg(in *runtimesdk.Msg) src.Msg {
+func (c caster) castMsg(in *runtimesdk.Msg) src.Msg { // add err?
 	msg := src.Msg{}
 
 	switch in.Type {

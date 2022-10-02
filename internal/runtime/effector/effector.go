@@ -11,53 +11,57 @@ import (
 )
 
 type (
-	ConstSpawner interface {
-		Spawn(context.Context, []runtime.ConstEffect) error
+	ConstantEffector interface {
+		Effect(context.Context, []runtime.ConstantEffect) error
 	}
-	OperatorSpawner interface {
-		Spawn(context.Context, []runtime.OperatorEffect) error
+	OperatorEffector interface {
+		Effect(context.Context, []runtime.OperatorEffect) error
 	}
-	TriggerSpawner interface {
-		Spawn(context.Context, []runtime.TriggerEffect) error
+	TriggerEffector interface {
+		Effect(context.Context, []runtime.TriggerEffect) error
 	}
 )
 
 type Effector struct {
-	constants ConstSpawner
-	operators OperatorSpawner
-	triggers TriggerSpawner
+	constant ConstantEffector
+	operator OperatorEffector
+	trigger  TriggerEffector
 }
 
 var (
-	ErrOpSpawner    = errors.New("operator-node spawner")
-	ErrConstSpawner = errors.New("const spawner")
+	ErrOperatorEffector = errors.New("operator effector")
+	ErrConstantEffector = errors.New("constant effector")
+	ErrTriggerEffector  = errors.New("trigger effector")
 )
 
-func (e Effector) MakeEffects(ctx context.Context, effects runtime.Effects) error {
+func (e Effector) Effect(ctx context.Context, effects runtime.Effects) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := e.constants.Spawn(gctx, effects.Consts); err != nil {
-			return fmt.Errorf("%w: %v", ErrConstSpawner, err)
+		if err := e.constant.Effect(gctx, effects.Constants); err != nil {
+			return fmt.Errorf("%w: %v", ErrConstantEffector, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.operators.Spawn(gctx, effects.Operators); err != nil {
-			return fmt.Errorf("%w: %v", ErrOpSpawner, err)
+		if err := e.operator.Effect(gctx, effects.Operators); err != nil {
+			return fmt.Errorf("%w: %v", ErrOperatorEffector, err)
 		}
 		return nil
 	})
 
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("wait: %w", err)
-	}
+	g.Go(func() error {
+		if err := e.trigger.Effect(gctx, effects.Triggers); err != nil {
+			return fmt.Errorf("%w: %v", ErrTriggerEffector, err)
+		}
+		return nil
+	})
 
-	return nil
+	return g.Wait()
 }
 
-func MustNew(c ConstSpawner, o OperatorSpawner) Effector {
-	utils.NilPanic(c, o)
-	return Effector{c, o}
+func MustNew(c ConstantEffector, o OperatorEffector, t TriggerEffector) Effector {
+	utils.NilPanic(c, o, t)
+	return Effector{c, o, t}
 }
