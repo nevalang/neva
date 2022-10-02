@@ -14,4 +14,4 @@ devserversdk:
 .PHONY: debugplugins
 debugplugins:
 	rm -rf plugins/*
-	go build -o plugins/print.so -buildmode=plugin -gcflags="all=-N -l" internal/operators/io/print.go
+	go build -o plugins/io.so -buildmode=plugin -gcflags="all=-N -l" internal/operators/io/io.go

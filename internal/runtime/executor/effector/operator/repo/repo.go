@@ -20,40 +20,40 @@ var (
 )
 
 type Plugin struct {
-	pkgs  map[string]Package
-	cache map[src.OperatorRef]operator.Func
+	packages map[string]File
+	cache    map[src.OperatorRef]operator.Func // move cache to operator effector?
 }
 
 func (p Plugin) Operator(ref src.OperatorRef) (operator.Func, error) {
-	if op, ok := p.cache[ref]; ok {
-		return op, nil
+	if f, ok := p.cache[ref]; ok {
+		return f, nil
 	}
 
-	pkg, ok := p.pkgs[ref.Pkg]
+	file, ok := p.packages[ref.Pkg]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrUnknownPkg, ref.Pkg)
 	}
 
-	plug, err := plugin.Open(pkg.Filepath)
+	plug, err := plugin.Open(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrPluginOpen, err)
 	}
 
-	for _, export := range pkg.Exports {
+	for _, export := range file.Exports {
 		sym, err := plug.Lookup(export)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrPluginLookup, err)
 		}
 
-		op, ok := sym.(func(context.Context, core.IO) error)
+		f, ok := sym.(func(context.Context, core.IO) error)
 		if !ok {
-			return nil, fmt.Errorf("%w: %T", ErrTypeMismatch, op)
+			return nil, fmt.Errorf("%w: %T", ErrTypeMismatch, f)
 		}
 
 		p.cache[src.OperatorRef{
 			Pkg:  ref.Pkg,
 			Name: export,
-		}] = op
+		}] = f
 	}
 
 	op, ok := p.cache[ref]
@@ -64,17 +64,14 @@ func (p Plugin) Operator(ref src.OperatorRef) (operator.Func, error) {
 	return op, nil
 }
 
-type Package struct {
-	Filepath string
-	Exports  []string
+type File struct {
+	Path    string
+	Exports []string
 }
 
-func NewPlugin(pkgs map[string]Package) Plugin {
+func NewPlugin(files map[string]File) Plugin {
 	return Plugin{
-		pkgs: pkgs,
-		cache: make(
-			map[src.OperatorRef]operator.Func,
-			len(pkgs),
-		),
+		packages: files,
+		cache:    map[src.OperatorRef]operator.Func{}, // calc size? (files*exports)
 	}
 }

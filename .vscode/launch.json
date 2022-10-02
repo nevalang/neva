@@ -2,12 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "runtime",
+      "name": "examples/hello_world",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/examples/runtime/hello_world",
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "examples/echo",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/runtime/echo",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     }
   ]
 }

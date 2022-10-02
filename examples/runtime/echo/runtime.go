@@ -33,7 +33,7 @@ func mustCreateRuntime() runtime.Runtime {
 					oprepo.NewPlugin(map[string]oprepo.File{
 						"io": {
 							Path:    "/home/evaleev/projects/neva/plugins/io.so",
-							Exports: []string{"Println"},
+							Exports: []string{"Println", "Readln"},
 						},
 					}),
 				),

@@ -14,15 +14,14 @@ type Builder struct{}
 
 func (b Builder) Build(prog src.Program) (runtime.Build, error) {
 	var (
+		g           errgroup.Group
 		ports       = b.buildPorts(prog.Ports)
 		connections []runtime.Connection
 		effects     runtime.Effects
-		err         error
 	)
 
-	g := errgroup.Group{}
-
 	g.Go(func() error {
+		var err error
 		connections, err = b.buildConnections(ports, prog.Connections)
 		if err != nil {
 			return fmt.Errorf("build connections: %w", err)
@@ -31,6 +30,7 @@ func (b Builder) Build(prog src.Program) (runtime.Build, error) {
 	})
 
 	g.Go(func() error {
+		var err error
 		effects, err = b.buildEffects(ports, prog.Effects)
 		if err != nil {
 			return fmt.Errorf("build effects: %w", err)
@@ -61,39 +61,45 @@ func (b Builder) buildPorts(in src.Ports) runtime.Ports {
 	return out
 }
 
-func (b Builder) buildConnections( // todo parallel conns
-	ports runtime.Ports,
-	srcConns []src.Connection,
-) ([]runtime.Connection, error) {
+func (b Builder) buildConnections(ports runtime.Ports, srcConns []src.Connection) ([]runtime.Connection, error) {
 	cc := make([]runtime.Connection, 0, len(srcConns))
 
 	for _, srcConn := range srcConns {
-		senderPort, ok := ports[srcConn.SenderPortAddr]
-		if !ok {
-			return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
+		c, err := b.buildConnection(ports, srcConn)
+		if err != nil {
+			return nil, fmt.Errorf("build connection: err %w, conn %v", err, srcConn)
 		}
 
-		rr := make([]chan core.Msg, 0, len(srcConn.ReceiversConnectionPoints))
-		for _, srcReceiverPoint := range srcConn.ReceiversConnectionPoints {
-			receiverPort, ok := ports[srcReceiverPoint.PortAddr]
-			if !ok {
-				return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
-			}
-
-			rr = append(rr, receiverPort)
-		}
-
-		cc = append(cc, runtime.Connection{
-			Src:       srcConn,
-			Sender:    senderPort,
-			Receivers: rr,
-		})
+		cc = append(cc, c)
 	}
 
 	return cc, nil
 }
 
-func (b Builder) buildEffects(ports runtime.Ports, effects src.Effects) (runtime.Effects, error) { // todo parallel effects
+func (b Builder) buildConnection(ports runtime.Ports, srcConn src.Connection) (runtime.Connection, error) {
+	senderPort, ok := ports[srcConn.SenderPortAddr]
+	if !ok {
+		return runtime.Connection{}, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
+	}
+
+	rr := make([]chan core.Msg, 0, len(srcConn.ReceiversConnectionPoints))
+	for _, srcReceiverPoint := range srcConn.ReceiversConnectionPoints {
+		receiverPort, ok := ports[srcReceiverPoint.PortAddr]
+		if !ok {
+			return runtime.Connection{}, fmt.Errorf("%w: %v", core.ErrPortNotFound, srcConn.SenderPortAddr)
+		}
+
+		rr = append(rr, receiverPort)
+	}
+
+	return runtime.Connection{
+		Src:       srcConn,
+		Sender:    senderPort,
+		Receivers: rr,
+	}, nil
+}
+
+func (b Builder) buildEffects(ports runtime.Ports, effects src.Effects) (runtime.Effects, error) {
 	c, err := b.buildConstEffects(ports, effects.Constants)
 	if err != nil {
 		return runtime.Effects{}, fmt.Errorf("build const effects: %w", err)

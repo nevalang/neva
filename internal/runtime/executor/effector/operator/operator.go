@@ -34,16 +34,15 @@ func (e Effector) Effect(ctx context.Context, effects []runtime.OperatorEffect) 
 	for i := range effects {
 		effect := effects[i]
 
-		g.Go(func() error {
-			f, err := e.repo.Operator(effect.Ref)
-			if err != nil {
-				return fmt.Errorf("%w: ref %v, err %v", ErrRepo, effect.Ref, err)
-			}
+		f, err := e.repo.Operator(effect.Ref)
+		if err != nil {
+			return fmt.Errorf("%w: ref %v, err %v", ErrRepo, effect.Ref, err)
+		}
 
+		g.Go(func() error {
 			if err := f(gctx, effect.IO); err != nil {
 				return fmt.Errorf("%w: ref %v, err %v", ErrOperatorFunc, effect.Ref, err)
 			}
-
 			return nil
 		})
 	}
