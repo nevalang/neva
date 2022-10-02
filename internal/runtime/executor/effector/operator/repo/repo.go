@@ -7,7 +7,7 @@ import (
 	"plugin"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/runtime/effector/operator"
+	"github.com/emil14/neva/internal/runtime/executor/effector/operator"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 

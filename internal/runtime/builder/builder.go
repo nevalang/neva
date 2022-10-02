@@ -25,6 +25,7 @@ func (b Builder) Build(prog src.Program) (runtime.Build, error) {
 	}
 
 	return runtime.Build{
+		StartPort:   prog.StartPort,
 		Ports:       pp,
 		Connections: conns,
 		Effects:     ee,
