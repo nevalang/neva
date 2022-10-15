@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/initutils"
+	"github.com/emil14/neva/pkg/tools"
 )
 
 type Runtime struct {
@@ -22,13 +22,13 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, bb []byte) error {
-	prog, err := r.decoder.Decode(bb)
+	prog, err := r.decoder.Decode(bb) // move to smt.bypath(string)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrDecoder, err)
 	}
 
-	if _, ok := prog.Ports[prog.StartPort]; !ok {
-		return fmt.Errorf("%w: %v", ErrNoStartPort, prog.StartPort)
+	if _, ok := prog.Ports[prog.Start]; !ok {
+		return fmt.Errorf("%w: %v", ErrNoStartPort, prog.Start)
 	}
 
 	build, err := r.builder.Build(prog)
@@ -48,7 +48,7 @@ func MustNew(
 	builder Builder,
 	executor Executor,
 ) Runtime {
-	initutils.NilPanic(decoder, builder, executor)
+	tools.PanicWithNil(decoder, builder, executor)
 
 	return Runtime{
 		decoder:  decoder,

@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 )
 
@@ -12,19 +11,13 @@ type IO struct {
 	In, Out Ports
 }
 
-type Ports map[RelPortAddr]chan Msg
+type Ports map[PortAddr]chan Msg
 
-// Port returns port with given name and idx == 0 or non-nil err
-func (p Ports) Port(name string) (chan Msg, error) {
-	port, ok := p[RelPortAddr{Port: name}]
-	if !ok {
-		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, name)
-	}
-	return port, nil
+func (p Ports) Port(name string) chan Msg {
+	return p[PortAddr{Port: name}]
 }
 
-// ArrPortSlots returns all ports with given name sorted by idx or non-nil err
-func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
+func (p Ports) ArrPortSlots(name string) []chan Msg {
 	type port struct {
 		idx uint8
 		ch  chan Msg
@@ -38,10 +31,6 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 		}
 	}
 
-	if len(pp) == 0 {
-		return nil, fmt.Errorf("%w: %v", ErrPortNotFound, name)
-	}
-
 	sort.Slice(pp, func(i, j int) bool {
 		return pp[i].idx < pp[j].idx
 	})
@@ -51,10 +40,10 @@ func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 		cc[i] = pp[i].ch
 	}
 
-	return cc, nil
+	return cc
 }
 
-type RelPortAddr struct {
+type PortAddr struct {
 	Port string
 	Idx  uint8
 }

@@ -5,27 +5,32 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/initutils"
+	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime"
 	"golang.org/x/sync/errgroup"
 )
 
 type (
 	ConstantEffector interface {
-		Effect(context.Context, []runtime.ConstantEffect) error
+		Effect(context.Context, []runtime.ConstFx) error
 	}
-	OperatorEffector interface {
-		Effect(context.Context, []runtime.OperatorEffect) error
+	FuncEffector interface {
+		Effect(context.Context, []runtime.FuncFx) error
 	}
 	TriggerEffector interface {
-		Effect(context.Context, []runtime.TriggerEffect) error
+		Effect(context.Context, []runtime.TriggerFx) error
+	}
+	VoidEffector interface {
+		Effect(context.Context, []chan core.Msg) error
 	}
 )
 
 type Effector struct {
 	constant ConstantEffector
-	operator OperatorEffector
+	operator FuncEffector
 	trigger  TriggerEffector
+	void     VoidEffector
 }
 
 var (
@@ -38,30 +43,34 @@ func (e Effector) Effect(ctx context.Context, effects runtime.Effects) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := e.constant.Effect(gctx, effects.Constants); err != nil {
+		if err := e.constant.Effect(gctx, effects.Const); err != nil {
 			return fmt.Errorf("%w: %v", ErrConstantEffector, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.operator.Effect(gctx, effects.Operators); err != nil {
+		if err := e.operator.Effect(gctx, effects.Func); err != nil {
 			return fmt.Errorf("%w: %v", ErrOperatorEffector, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.trigger.Effect(gctx, effects.Triggers); err != nil {
+		if err := e.trigger.Effect(gctx, effects.Trigger); err != nil {
 			return fmt.Errorf("%w: %v", ErrTriggerEffector, err)
 		}
 		return nil
 	})
 
+	g.Go(func() error {
+		return e.void.Effect(gctx, effects.VoidFx)
+	})
+
 	return g.Wait()
 }
 
-func MustNew(c ConstantEffector, o OperatorEffector, t TriggerEffector) Effector {
-	initutils.NilPanic(c, o, t)
-	return Effector{c, o, t}
+func MustNew(c ConstantEffector, o FuncEffector, t TriggerEffector, v VoidEffector) Effector {
+	tools.PanicWithNil(c, o, t, v)
+	return Effector{c, o, t, v}
 }

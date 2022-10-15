@@ -1,7 +1,7 @@
 package main
 
 import (
-	h "github.com/emil14/neva/internal/pkg/runtimehelpers"
+	h "github.com/emil14/neva/pkg/runtimehelpers"
 	"github.com/emil14/neva/pkg/runtimesdk"
 )
 

@@ -29,7 +29,7 @@ func mustCreateRuntime() runtime.Runtime {
 		executor.MustNew(
 			effector.MustNew(
 				constantseffects.Effector{},
-				operatorseffects.MustNew(
+				operatorseffects.MustNewEffector(
 					oprepo.NewPlugin(map[string]oprepo.File{
 						"io": {
 							Path:    "/home/evaleev/projects/neva/plugins/io.so",

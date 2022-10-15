@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/initutils"
+	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
@@ -23,8 +23,8 @@ func (i Interceptor) AfterSending(conn src.Connection, msg core.Msg) core.Msg {
 }
 
 func (i Interceptor) BeforeReceiving(
-	saddr src.AbsPortAddr,
-	rpoint src.ReceiverConnectionPoint,
+	saddr src.PortAddr,
+	rpoint src.ConnectionSide,
 	msg core.Msg,
 ) core.Msg {
 	i.logger.Printf(
@@ -35,8 +35,8 @@ func (i Interceptor) BeforeReceiving(
 }
 
 func (i Interceptor) AfterReceiving(
-	saddr src.AbsPortAddr,
-	rpoint src.ReceiverConnectionPoint,
+	saddr src.PortAddr,
+	rpoint src.ConnectionSide,
 	msg core.Msg,
 ) {
 	i.logger.Printf(
@@ -47,27 +47,27 @@ func (i Interceptor) AfterReceiving(
 
 func (i Interceptor) formatConnection(conn src.Connection, msg core.Msg) string {
 	to := []string{}
-	for _, r := range conn.ReceiversConnectionPoints {
+	for _, r := range conn.ReceiverSides {
 		s := i.formatPortAddr(r.PortAddr)
-		if r.Type == src.DictReading {
-			s = "." + strings.Join(r.DictReadingPath, ".")
+		if r.Action == src.ReadDict {
+			s = "." + strings.Join(r.Payload.ReadDict, ".")
 		}
 		to = append(to, s)
 	}
 
 	return fmt.Sprintf(
 		"%s -> %s -> %s",
-		i.formatPortAddr(conn.SenderPortAddr),
+		i.formatPortAddr(conn.SenderSide.PortAddr),
 		msg,
 		strings.Join(to, ", "),
 	)
 }
 
-func (i Interceptor) formatPortAddr(addr src.AbsPortAddr) string {
+func (i Interceptor) formatPortAddr(addr src.PortAddr) string {
 	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 
 func MustNew(l Logger) Interceptor {
-	initutils.NilPanic(l)
+	tools.PanicWithNil(l)
 	return Interceptor{l}
 }

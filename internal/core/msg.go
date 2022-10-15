@@ -10,7 +10,8 @@ type Msg interface {
 	Type() Type
 
 	Bool() bool
-	Int() int
+	Int() int64
+	Float() float64
 	Str() string
 	List() []Msg
 	Dict() map[string]Msg
@@ -32,8 +33,9 @@ const (
 
 type emptyMsg struct{}
 
-func (msg emptyMsg) Int() int             { return 0 }
 func (msg emptyMsg) Bool() bool           { return false }
+func (msg emptyMsg) Int() int             { return 0 }
+func (msg emptyMsg) Float() float64       { return 0 }
 func (msg emptyMsg) Str() string          { return "" }
 func (msg emptyMsg) List() []Msg          { return []Msg{} }
 func (msg emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }

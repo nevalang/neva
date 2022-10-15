@@ -2,76 +2,83 @@ package src
 
 type (
 	Program struct {
-		Ports       Ports
+		Fx          Fx
+		Start       PortAddr
+		Ports       PortSet
 		Connections []Connection
-		Effects     Effects
-		StartPort   AbsPortAddr
 	}
 
-	Ports map[AbsPortAddr]uint8 // Ports maps address to buffer size
+	PortSet map[PortAddr]uint8 // value is buf size
 
-	AbsPortAddr struct {
+	PortAddr struct {
 		Path string
 		Port string
 		Idx  uint8
 	}
 
 	Connection struct {
-		SenderPortAddr            AbsPortAddr
-		ReceiversConnectionPoints []ReceiverConnectionPoint
+		SenderSide    ConnectionSide
+		ReceiverSides []ConnectionSide
 	}
 
-	ReceiverConnectionPoint struct {
-		PortAddr        AbsPortAddr
-		Type            ReceiverConnectionPointType
-		DictReadingPath []string // Only used for DictKeyReading
+	ConnectionSide struct {
+		PortAddr PortAddr
+		Action   ConnectorAction
+		Payload  ConnectorPayload
 	}
 
-	ReceiverConnectionPointType uint8
+	ConnectorAction uint8
 
-	Effects struct {
-		Operators []OperatorEffect
-		Constants map[AbsPortAddr]Msg
-		Triggers  []TriggerEffect
+	ConnectorPayload struct {
+		ReadDict []string
 	}
 
-	OperatorEffect struct {
-		Ref       OperatorRef
-		PortAddrs OperatorPortAddrs
+	Fx struct {
+		Func    []FuncFx
+		Const   map[PortAddr]Msg
+		Trigger []TriggerFx
 	}
 
-	TriggerEffect struct {
-		Msg                     Msg
-		InPortAddr, OutPortAddr AbsPortAddr
+	FuncFx struct {
+		Ref   FuncRef
+		Ports PortAddrs
+	}
+
+	TriggerFx struct {
+		In  PortAddr
+		Out PortAddr
+		Msg Msg
 	}
 
 	Msg struct {
-		Type   MsgType
-		Bool   bool
-		Int    int
-		Str    string
-		Struct map[string]Msg
+		Type MsgType
+		Bool bool
+		Int  int
+		Str  string
+		List []Msg
+		Dict map[string]Msg
 	}
 
 	MsgType uint8
 
-	OperatorRef struct {
+	FuncRef struct {
 		Pkg, Name string
 	}
 
-	OperatorPortAddrs struct {
-		In, Out []AbsPortAddr
+	PortAddrs struct {
+		In, Out []PortAddr
 	}
 )
 
 const (
-	Normal ReceiverConnectionPointType = iota + 1
-	DictReading
+	Nothing ConnectorAction = iota + 1
+	ReadDict
 )
 
 const (
 	IntMsg MsgType = iota + 1
 	StrMsg
 	BoolMsg
-	StructMsg
+	DictMsg
+	List
 )

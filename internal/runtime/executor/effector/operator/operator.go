@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/initutils"
+	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
 	"golang.org/x/sync/errgroup"
@@ -19,22 +19,22 @@ var (
 
 type (
 	Repo interface {
-		Operator(src.OperatorRef) (Func, error)
+		Func(src.FuncRef) (FuncFx, error)
 	}
-	Func func(context.Context, core.IO) error
+	FuncFx func(context.Context, core.IO) error
 )
 
 type Effector struct {
 	repo Repo
 }
 
-func (e Effector) Effect(ctx context.Context, effects []runtime.OperatorEffect) error {
+func (e Effector) Effect(ctx context.Context, effects []runtime.FuncFx) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range effects {
 		effect := effects[i]
 
-		f, err := e.repo.Operator(effect.Ref)
+		f, err := e.repo.Func(effect.Ref)
 		if err != nil {
 			return fmt.Errorf("%w: ref %v, err %v", ErrRepo, effect.Ref, err)
 		}
@@ -50,7 +50,7 @@ func (e Effector) Effect(ctx context.Context, effects []runtime.OperatorEffect) 
 	return g.Wait()
 }
 
-func MustNew(repo Repo) Effector {
-	initutils.NilPanic(repo)
+func MustNewEffector(repo Repo) Effector {
+	tools.PanicWithNil(repo)
 	return Effector{repo}
 }

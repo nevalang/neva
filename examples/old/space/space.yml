@@ -1,5 +1,0 @@
-# space (project) is what compiler turns into one big runtime program
-
-meta: ... # want compiler version
-require: ... # other spaces dependencies
-

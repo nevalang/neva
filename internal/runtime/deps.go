@@ -13,17 +13,17 @@ type Decoder interface {
 
 type (
 	Builder interface {
-		Build(src.Program) (Build, error)
+		Build(src.Program) (Executable, error)
 	}
 
-	Build struct {
-		StartPort   src.AbsPortAddr
-		Ports       Ports
-		Connections []Connection
-		Effects     Effects
+	Executable struct {
+		Start src.PortAddr
+		Ports Ports
+		Net   []Connection
+		Fx    Effects
 	}
 
-	Ports map[src.AbsPortAddr]chan core.Msg
+	Ports map[src.PortAddr]chan core.Msg
 
 	Connection struct {
 		Src       src.Connection
@@ -32,28 +32,29 @@ type (
 	}
 
 	Effects struct {
-		Constants []ConstantEffect
-		Operators []OperatorEffect
-		Triggers  []TriggerEffect
+		Const   []ConstFx
+		Trigger []TriggerFx
+		Func    []FuncFx
+		VoidFx  []chan core.Msg
 	}
 
-	ConstantEffect struct {
+	ConstFx struct {
 		OutPort chan core.Msg
 		Msg     core.Msg
 	}
 
-	OperatorEffect struct {
-		Ref src.OperatorRef
-		IO  core.IO
-	}
-
-	TriggerEffect struct {
+	TriggerFx struct {
 		InPort  chan core.Msg
 		OutPort chan core.Msg
 		Msg     core.Msg
 	}
+
+	FuncFx struct {
+		Ref src.FuncRef
+		IO  core.IO
+	}
 )
 
 type Executor interface {
-	Exec(context.Context, Build) error
+	Exec(context.Context, Executable) error
 }
