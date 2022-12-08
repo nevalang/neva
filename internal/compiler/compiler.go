@@ -8,11 +8,15 @@ import (
 )
 
 type Compiler[T any] struct {
+	builder     Builder
 	analyzer    Analyzer
 	synthesizer Synthesizer[T]
 }
 
 type (
+	Builder interface {
+		Build(context.Context, string) (csrc.Program, error)
+	}
 	Analyzer interface {
 		Analyze(context.Context, csrc.Program) (csrc.Program, error)
 	}
@@ -21,8 +25,14 @@ type (
 	}
 )
 
-func (c Compiler[T]) Compile(ctx context.Context, prog csrc.Program) (any, error) {
-	if err := c.analyzer.Analyze(ctx, prog); err != nil {
+func (c Compiler[T]) Compile(ctx context.Context, path string) (*T, error) {
+	prog, err := c.builder.Build(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+
+	prog, err = c.analyzer.Analyze(ctx, prog)
+	if err != nil {
 		return nil, err
 	}
 
@@ -31,13 +41,14 @@ func (c Compiler[T]) Compile(ctx context.Context, prog csrc.Program) (any, error
 		return nil, err
 	}
 
-	return rprog, err
+	return &rprog, err
 }
 
-func MustNew[T any](a Analyzer, s Synthesizer[T]) Compiler[T] {
-	tools.PanicWithNil(a, s)
+func MustNew[T any](b Builder, a Analyzer, s Synthesizer[T]) Compiler[T] {
+	tools.PanicWithNil(b, a, s)
 
 	return Compiler[T]{
+		builder:     b,
 		analyzer:    a,
 		synthesizer: s,
 	}

@@ -15,14 +15,14 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 	triggers := c.castTriggers(in)
 
 	return src.Program{
-		Ports:       ports,
-		Connections: connections,
-		Fx: src.Fx{
-			Func:    funcs,
-			Const:   constants,
-			Trigger: triggers,
+		Ports: ports,
+		Net:   connections,
+		Effects: src.Effects{
+			Operator: funcs,
+			Giver:    constants,
+			Triggers: triggers,
 		},
-		Start: src.PortAddr{
+		StartPortAddr: src.Ports{
 			Path: in.StartPort.Path,
 			Port: in.StartPort.Port,
 			Idx:  uint8(in.StartPort.Idx),
@@ -30,11 +30,11 @@ func (c caster) Cast(in *runtimesdk.Program) (src.Program, error) {
 	}, nil
 }
 
-func (c caster) castConstants(in *runtimesdk.Program) map[src.PortAddr]src.Msg {
-	constants := make(map[src.PortAddr]src.Msg, len(in.Effects.Constants))
+func (c caster) castConstants(in *runtimesdk.Program) map[src.Ports]src.Msg {
+	constants := make(map[src.Ports]src.Msg, len(in.Effects.Constants))
 
 	for _, constant := range in.Effects.Constants {
-		addr := src.PortAddr{
+		addr := src.Ports{
 			Path: constant.OutPortAddr.Path,
 			Port: constant.OutPortAddr.Port,
 			Idx:  uint8(constant.OutPortAddr.Idx),
@@ -45,20 +45,20 @@ func (c caster) castConstants(in *runtimesdk.Program) map[src.PortAddr]src.Msg {
 	return constants
 }
 
-func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerFx {
-	triggers := make([]src.TriggerFx, 0, len(in.Effects.Triggers))
+func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerNode {
+	triggers := make([]src.TriggerNode, 0, len(in.Effects.Triggers))
 
 	for _, sdkTrigger := range in.Effects.Triggers {
-		srcTrigger := src.TriggerFx{
+		srcTrigger := src.TriggerNode{
 			Msg: c.castMsg(sdkTrigger.Msg),
 		}
 
-		srcTrigger.In = src.PortAddr{
+		srcTrigger.In = src.Ports{
 			Path: sdkTrigger.InPortAddr.Path,
 			Port: sdkTrigger.InPortAddr.Port,
 			Idx:  uint8(sdkTrigger.InPortAddr.Idx),
 		}
-		srcTrigger.Out = src.PortAddr{
+		srcTrigger.Out = src.Ports{
 			Path: sdkTrigger.OutPortAddr.Path,
 			Port: sdkTrigger.OutPortAddr.Port,
 			Idx:  uint8(sdkTrigger.OutPortAddr.Idx),
@@ -70,33 +70,33 @@ func (c caster) castTriggers(in *runtimesdk.Program) []src.TriggerFx {
 	return triggers
 }
 
-func (caster) castOperators(in *runtimesdk.Program) []src.FuncFx {
-	operators := make([]src.FuncFx, 0, len(in.Effects.Operators))
+func (caster) castOperators(in *runtimesdk.Program) []src.OpRef {
+	operators := make([]src.OpRef, 0, len(in.Effects.Operators))
 	for _, operator := range in.Effects.Operators {
-		inAddrs := make([]src.PortAddr, 0, len(operator.InPortAddrs))
+		inAddrs := make([]src.Ports, 0, len(operator.InPortAddrs))
 		for _, addr := range operator.InPortAddrs {
-			inAddrs = append(inAddrs, src.PortAddr{
+			inAddrs = append(inAddrs, src.Ports{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
 			})
 		}
 
-		outAddrs := make([]src.PortAddr, 0, len(operator.OutPortAddrs))
+		outAddrs := make([]src.Ports, 0, len(operator.OutPortAddrs))
 		for _, addr := range operator.OutPortAddrs {
-			outAddrs = append(outAddrs, src.PortAddr{
+			outAddrs = append(outAddrs, src.Ports{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
 			})
 		}
 
-		operators = append(operators, src.FuncFx{
-			Ref: src.FuncRef{
+		operators = append(operators, src.OpRef{
+			FuncRef: src.FuncRef{
 				Class: operator.Ref.Pkg,
 				Name:  operator.Ref.Name,
 			},
-			Ports: src.PortAddrs{
+			PortAddrs: src.OpPortAddrs{
 				In:  inAddrs,
 				Out: outAddrs,
 			},
@@ -111,7 +111,7 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 		receivers := make([]src.ConnectionSide, 0, len(connection.ReceiverConnectionPoints))
 		for _, receiver := range connection.ReceiverConnectionPoints {
 			receivers = append(receivers, src.ConnectionSide{
-				PortAddr: src.PortAddr{
+				PortAddr: src.Ports{
 					Path: receiver.InPortAddr.Path,
 					Port: receiver.InPortAddr.Port,
 					Idx:  uint8(receiver.InPortAddr.Idx),
@@ -121,7 +121,7 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 			})
 		}
 		connections = append(connections, src.Connection{
-			SenderSide: src.PortAddr{
+			SenderSide: src.Ports{
 				Path: connection.SenderOutPortAddr.Path,
 				Port: connection.SenderOutPortAddr.Port,
 				Idx:  uint8(connection.SenderOutPortAddr.Idx),
@@ -132,11 +132,11 @@ func (caster) castConnections(in *runtimesdk.Program) []src.Connection {
 	return connections
 }
 
-func (caster) castPorts(in *runtimesdk.Program) map[src.PortAddr]uint8 {
-	ports := make(map[src.PortAddr]uint8, len(in.Ports))
+func (caster) castPorts(in *runtimesdk.Program) map[src.Ports]uint8 {
+	ports := make(map[src.Ports]uint8, len(in.Ports))
 
 	for _, p := range in.Ports {
-		ports[src.PortAddr{
+		ports[src.Ports{
 			Path: p.Addr.Path,
 			Port: p.Addr.Port,
 			Idx:  uint8(p.Addr.Idx),

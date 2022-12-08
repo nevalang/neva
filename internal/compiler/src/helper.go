@@ -1,9 +1,5 @@
 package src
 
-func NewLocalPkgRef(name string) PkgRef {
-	return NewPkgRef(name, "")
-}
-
 func NewLocalTypeRef(name string) TypeRef {
 	return NewTypeRef(name, "")
 }
@@ -15,13 +11,13 @@ func NewTypeRef(name, pkg string) TypeRef {
 	}
 }
 
-func NewPkgRef(name, version string) PkgRef {
-	return PkgRef{
-		Name:    name,
-		Version: version,
-	}
-}
-
 func NewRefExpr(ref TypeRef) TypeExpr {
 	return TypeExpr{Ref: ref}
+}
+
+func NewPort(expr TypeExpr, isArray bool) Port {
+	return Port{
+		TypeExpr: expr,
+		IsArray:  isArray,
+	}
 }

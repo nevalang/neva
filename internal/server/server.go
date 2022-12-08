@@ -5,13 +5,15 @@ import (
 
 	"github.com/emil14/neva/internal/compiler"
 	csrc "github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/runtime"
 	rsrc "github.com/emil14/neva/internal/runtime/src"
 )
 
 type Server struct {
 	store    Storage
 	saver    Saver
-	compiler compiler.Compiler
+	compiler compiler.Compiler[rsrc.Program]
+	runtime  runtime.Runtime
 }
 
 type (
@@ -23,20 +25,23 @@ type (
 	}
 )
 
-func (s Server) Build(ctx context.Context, src string, dst string) (csrc.Program, rsrc.Program, error) {
-	prog, err := s.store.Program(ctx, src)
+func (s Server) Run(ctx context.Context, path string) error {
+	prog, _ := s.store.Program(ctx, path)
+	_, r, _ := s.compile(ctx, prog)
+	return s.runtime.Run(ctx, r)
+}
+
+func (s Server) Compile(ctx context.Context, pkg string, result string) error {
+	prog, _ := s.store.Program(ctx, pkg)
+	_, r, _ := s.compile(ctx, prog)
+	return s.saver.Save(ctx, r, result)
+}
+
+func (s Server) compile(ctx context.Context, pkg csrc.Program) (csrc.Program, rsrc.Program, error) {
+	rprog, err := s.compiler.Compile(ctx, pkg)
 	if err != nil {
 		return csrc.Program{}, rsrc.Program{}, err
 	}
 
-	rprog, err := s.compiler.Compile(ctx, prog)
-	if err != nil {
-		return csrc.Program{}, rsrc.Program{}, err
-	}
-
-	if err := s.saver.Save(ctx, rprog, dst); err != nil {
-		return csrc.Program{}, rsrc.Program{}, err
-	}
-
-	return prog, rsrc.Program{}, nil
+	return pkg, *rprog, nil
 }

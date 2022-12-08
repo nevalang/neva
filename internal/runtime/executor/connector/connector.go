@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/core"
 	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/tools"
 	"golang.org/x/sync/errgroup"
@@ -38,11 +38,11 @@ type (
 	}
 )
 
-type Connector struct {
+type Router struct {
 	interceptor Interceptor
 }
 
-func (c Connector) Connect(ctx context.Context, net []runtime.Connection) error {
+func (c Router) Route(ctx context.Context, net []runtime.Connection) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range net {
@@ -59,7 +59,7 @@ func (c Connector) Connect(ctx context.Context, net []runtime.Connection) error 
 	return g.Wait()
 }
 
-func (c Connector) broadcast(ctx context.Context, conn runtime.Connection) error {
+func (c Router) broadcast(ctx context.Context, conn runtime.Connection) error {
 	rr := c.receivers(conn)
 
 	for {
@@ -74,7 +74,7 @@ func (c Connector) broadcast(ctx context.Context, conn runtime.Connection) error
 	}
 }
 
-func (Connector) receivers(conn runtime.Connection) []receiver {
+func (Router) receivers(conn runtime.Connection) []receiver {
 	rr := make([]receiver, 0, len(conn.Receivers))
 	for i := range conn.Receivers {
 		rr = append(rr, receiver{
@@ -90,7 +90,7 @@ type receiver struct {
 	side src.ConnectionSide
 }
 
-func (c Connector) distribute(
+func (c Router) distribute(
 	ctx context.Context,
 	msg1 core.Msg,
 	conn src.Connection,
@@ -108,7 +108,7 @@ func (c Connector) distribute(
 	})
 
 	i := 0
-	processedMessages := make(map[src.PortAddr]core.Msg, len(q))
+	processedMessages := make(map[src.Ports]core.Msg, len(q))
 
 	for len(q) > 0 {
 		recv := q[i]
@@ -154,7 +154,7 @@ func (c Connector) distribute(
 
 var ErrDictKeyNotFound = errors.New("dict key not found")
 
-func (c Connector) action(msg core.Msg, side src.ConnectionSide) (core.Msg, error) {
+func (c Router) action(msg core.Msg, side src.ConnectionSide) (core.Msg, error) {
 	if side.Action == src.ReadDict {
 		path := side.Payload.ReadDict
 
@@ -170,7 +170,7 @@ func (c Connector) action(msg core.Msg, side src.ConnectionSide) (core.Msg, erro
 	return msg, nil
 }
 
-func MustNew(i Interceptor) Connector {
+func MustNew(i Interceptor) Router {
 	tools.PanicWithNil(i)
-	return Connector{i}
+	return Router{i}
 }

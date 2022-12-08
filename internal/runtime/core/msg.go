@@ -24,6 +24,7 @@ type Type uint8
 const (
 	BoolMsgType Type = iota
 	IntMsgType
+	FloatMsgType
 	StrMsgType
 	ListMsgType
 	DictMsgType
@@ -33,12 +34,12 @@ const (
 
 type emptyMsg struct{}
 
-func (msg emptyMsg) Bool() bool           { return false }
-func (msg emptyMsg) Int() int             { return 0 }
-func (msg emptyMsg) Float() float64       { return 0 }
-func (msg emptyMsg) Str() string          { return "" }
-func (msg emptyMsg) List() []Msg          { return []Msg{} }
-func (msg emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }
+func (emptyMsg) Bool() bool           { return false }
+func (emptyMsg) Int() int64           { return 0 }
+func (emptyMsg) Float() float64       { return 0 }
+func (emptyMsg) Str() string          { return "" }
+func (emptyMsg) List() []Msg          { return []Msg{} }
+func (emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }
 
 /* --- INT --- */
 
@@ -49,7 +50,7 @@ type IntMsg struct {
 
 func (msg IntMsg) Int() int       { return msg.v }
 func (msg IntMsg) Type() Type     { return IntMsgType }
-func (msg IntMsg) String() string { return strconv.Itoa(msg.v) } // FIXME this broke printing from operators (this is for logging)
+func (msg IntMsg) String() string { return strconv.Itoa(msg.v) }
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
@@ -99,6 +100,14 @@ func NewBoolMsg(b bool) BoolMsg {
 type DictMsg struct {
 	emptyMsg
 	v map[string]Msg
+}
+
+func (msg DictMsg) Get(k string) (Msg, bool) {
+	v, ok := msg.v[k]
+	if !ok {
+		return nil, false
+	}
+	return v, true
 }
 
 func (msg DictMsg) Dict() map[string]Msg { return msg.v }
@@ -160,7 +169,7 @@ func NewListMsg(v []Msg) ListMsg {
 
 /* --- OTHER --- */
 
-func Eq(a, b Msg) bool { // maybe rewrite as a method?
+func Eq(a, b Msg) bool {
 	if a.Type() != b.Type() {
 		return false
 	}

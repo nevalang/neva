@@ -13,16 +13,16 @@ import (
 )
 
 type Executor struct {
-	fx  Effector
-	net Connector
+	effector NodeRunner
+	router   Router
 }
 
 type (
-	Connector interface {
-		Connect(context.Context, []runtime.Connection) error
+	Router interface {
+		Route(context.Context, []runtime.Connection) error
 	}
-	Effector interface {
-		Effect(context.Context, runtime.Effects) error
+	NodeRunner interface {
+		RunNodes(context.Context, runtime.Nodes) error
 	}
 )
 
@@ -32,18 +32,18 @@ var (
 	ErrStartPortBlock = errors.New("start port blocked")
 )
 
-func (e Executor) Exec(ctx context.Context, build runtime.Executable) error {
+func (e Executor) Exec(ctx context.Context, build runtime.Program) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := e.net.Connect(gctx, build.Net); err != nil {
+		if err := e.router.Route(gctx, build.Net); err != nil {
 			return fmt.Errorf("%w: %v", ErrConnector, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.fx.Effect(gctx, build.Fx); err != nil {
+		if err := e.effector.RunNodes(gctx, build.Nodes); err != nil {
 			return fmt.Errorf("%w: %v", ErrEffector, err)
 		}
 		return nil
@@ -57,10 +57,10 @@ func (e Executor) Exec(ctx context.Context, build runtime.Executable) error {
 	}
 }
 
-func MustNew(effector Effector, connector Connector) Executor {
-	tools.PanicWithNil(effector, connector)
+func MustNew(effector NodeRunner, router Router) Executor {
+	tools.PanicWithNil(effector, router)
 	return Executor{
-		net: connector,
-		fx:  effector,
+		router:   router,
+		effector: effector,
 	}
 }

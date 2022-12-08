@@ -23,7 +23,7 @@ func (i Interceptor) AfterSending(conn src.Connection, msg core.Msg) core.Msg {
 }
 
 func (i Interceptor) BeforeReceiving(
-	saddr src.PortAddr,
+	saddr src.Ports,
 	rpoint src.ConnectionSide,
 	msg core.Msg,
 ) core.Msg {
@@ -35,7 +35,7 @@ func (i Interceptor) BeforeReceiving(
 }
 
 func (i Interceptor) AfterReceiving(
-	saddr src.PortAddr,
+	saddr src.Ports,
 	rpoint src.ConnectionSide,
 	msg core.Msg,
 ) {
@@ -63,7 +63,7 @@ func (i Interceptor) formatConnection(conn src.Connection, msg core.Msg) string 
 	)
 }
 
-func (i Interceptor) formatPortAddr(addr src.PortAddr) string {
+func (i Interceptor) formatPortAddr(addr src.Ports) string {
 	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 

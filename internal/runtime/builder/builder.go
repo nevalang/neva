@@ -12,17 +12,17 @@ import (
 
 type Builder struct{}
 
-func (b Builder) Build(prog src.Program) (runtime.Executable, error) {
+func (b Builder) Build(prog src.Program) (runtime.Program, error) {
 	var (
 		g           errgroup.Group
 		ports       = b.buildPorts(prog.Ports)
 		connections []runtime.Connection
-		effects     runtime.Effects
+		effects     runtime.Nodes
 	)
 
 	g.Go(func() error {
 		var err error
-		connections, err = b.buildConnections(ports, prog.Connections)
+		connections, err = b.buildConnections(ports, prog.Net)
 		if err != nil {
 			return fmt.Errorf("build connections: %w", err)
 		}
@@ -31,7 +31,7 @@ func (b Builder) Build(prog src.Program) (runtime.Executable, error) {
 
 	g.Go(func() error {
 		var err error
-		effects, err = b.buildEffects(ports, prog.Fx)
+		effects, err = b.buildEffects(ports, prog.Effects)
 		if err != nil {
 			return fmt.Errorf("build effects: %w", err)
 		}
@@ -39,18 +39,18 @@ func (b Builder) Build(prog src.Program) (runtime.Executable, error) {
 	})
 
 	if err := g.Wait(); err != nil {
-		return runtime.Executable{}, fmt.Errorf("wait: %w", err)
+		return runtime.Program{}, fmt.Errorf("wait: %w", err)
 	}
 
-	return runtime.Executable{
-		Start: prog.Start,
+	return runtime.Program{
+		Start: prog.StartPortAddr,
 		Ports: ports,
 		Net:   connections,
-		Fx:    effects,
+		Nodes: effects,
 	}, nil
 }
 
-func (b Builder) buildPorts(in src.PortSet) runtime.Ports {
+func (b Builder) buildPorts(in src.Ports) runtime.Ports {
 	out := make(
 		runtime.Ports,
 		len(in),
@@ -99,26 +99,26 @@ func (b Builder) buildConnection(ports runtime.Ports, srcConn src.Connection) (r
 	}, nil
 }
 
-func (b Builder) buildEffects(ports runtime.Ports, effects src.Fx) (runtime.Effects, error) {
-	c, err := b.buildConstEffects(ports, effects.Const)
+func (b Builder) buildEffects(ports runtime.Ports, effects src.Effects) (runtime.Nodes, error) {
+	c, err := b.buildConstEffects(ports, effects.Giver)
 	if err != nil {
-		return runtime.Effects{}, fmt.Errorf("build const effects: %w", err)
+		return runtime.Nodes{}, fmt.Errorf("build const effects: %w", err)
 	}
 
-	o, err := b.buildOperatorEffects(ports, effects.Func)
+	o, err := b.buildOperatorEffects(ports, effects.Operator)
 	if err != nil {
-		return runtime.Effects{}, fmt.Errorf("build operator effects: %w", err)
+		return runtime.Nodes{}, fmt.Errorf("build operator effects: %w", err)
 	}
 
-	t, err := b.buildTriggerEffects(ports, effects.Trigger)
+	t, err := b.buildTriggerEffects(ports, effects.Triggers)
 	if err != nil {
-		return runtime.Effects{}, fmt.Errorf("build operator effects: %w", err)
+		return runtime.Nodes{}, fmt.Errorf("build operator effects: %w", err)
 	}
 
-	return runtime.Effects{
-		Const:   c,
-		Func:    o,
-		Trigger: t,
+	return runtime.Nodes{
+		Const:     c,
+		Component: o,
+		Trigger:   t,
 	}, nil
 }
 
@@ -126,9 +126,9 @@ var ErrPortNotFound = errors.New("port not found")
 
 func (b Builder) buildConstEffects(
 	ports runtime.Ports,
-	in map[src.PortAddr]src.Msg,
-) ([]runtime.ConstFx, error) {
-	result := make([]runtime.ConstFx, 0, len(in))
+	in map[src.Ports]src.Msg,
+) ([]runtime.ConstNode, error) {
+	result := make([]runtime.ConstNode, 0, len(in))
 
 	for addr, msg := range in {
 		port, ok := ports[addr]
@@ -141,7 +141,7 @@ func (b Builder) buildConstEffects(
 			return nil, fmt.Errorf("build core msg: %w", err)
 		}
 
-		result = append(result, runtime.ConstFx{
+		result = append(result, runtime.ConstNode{
 			OutPort: port,
 			Msg:     msg,
 		})
@@ -152,9 +152,9 @@ func (b Builder) buildConstEffects(
 
 func (b Builder) buildOperatorEffects(
 	ports runtime.Ports,
-	ops []src.FuncFx,
-) ([]runtime.FuncFx, error) {
-	result := make([]runtime.FuncFx, 0, len(ops))
+	ops []src.OpRef,
+) ([]runtime.ComponentNode, error) {
+	result := make([]runtime.ComponentNode, 0, len(ops))
 
 	for _, srcOpEffect := range ops {
 		io := core.IO{
@@ -162,7 +162,7 @@ func (b Builder) buildOperatorEffects(
 			Out: make(core.Ports, len(srcOpEffect.Ports.Out)),
 		}
 
-		for _, addr := range srcOpEffect.Ports.In {
+		for _, addr := range srcOpEffect.PortAddrs.In {
 			port, ok := ports[addr]
 			if !ok {
 				return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, addr)
@@ -174,7 +174,7 @@ func (b Builder) buildOperatorEffects(
 			io.In[relativeAddr] = port
 		}
 
-		for _, addr := range srcOpEffect.Ports.Out {
+		for _, addr := range srcOpEffect.PortAddrs.Out {
 			port, ok := ports[addr]
 			if !ok {
 				return nil, fmt.Errorf("%w: %v", core.ErrPortNotFound, addr)
@@ -186,8 +186,8 @@ func (b Builder) buildOperatorEffects(
 			io.Out[relativeAddr] = port
 		}
 
-		result = append(result, runtime.FuncFx{
-			Ref: srcOpEffect.Ref,
+		result = append(result, runtime.ComponentNode{
+			Ref: srcOpEffect.FuncRef,
 			IO:  io,
 		})
 	}
@@ -226,9 +226,9 @@ func (b Builder) buildCoreMsg(in src.Msg) (core.Msg, error) {
 
 func (b Builder) buildTriggerEffects(
 	ports runtime.Ports,
-	in []src.TriggerFx,
-) ([]runtime.TriggerFx, error) {
-	result := make([]runtime.TriggerFx, 0, len(in))
+	in []src.TriggerNode,
+) ([]runtime.TriggerNode, error) {
+	result := make([]runtime.TriggerNode, 0, len(in))
 
 	for _, effect := range in {
 		inPort, ok := ports[effect.In]
@@ -246,7 +246,7 @@ func (b Builder) buildTriggerEffects(
 			return nil, fmt.Errorf("build core msg: %w", err)
 		}
 
-		result = append(result, runtime.TriggerFx{
+		result = append(result, runtime.TriggerNode{
 			InPort:  inPort,
 			OutPort: outPort,
 			Msg:     msg,

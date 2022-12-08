@@ -15,3 +15,11 @@ devserversdk:
 debugplugins:
 	rm -rf plugins/*
 	go build -o plugins/io.so -buildmode=plugin -gcflags="all=-N -l" internal/operators/io/io.go
+
+.PHONY: vulncheck
+vulncheck:
+	govulncheck ./...
+
+.PHONY: race
+race:
+	go test -race ./...

@@ -1,0 +1,52 @@
+type (
+    mapAlias<t,y> = map<t,y>
+    intMap<t> = y<t, int>
+    myStr = str
+)
+
+msg intMapMsg intMap<myStr> = { '': 0 }
+
+io MapReader {
+    in { s[] intMap<str> }
+    out { i int }
+}
+
+io BarIo {
+    in {
+        b[] intMap<str>
+    }
+    out { c int }
+}
+
+component Bar {
+    io BarIo
+    ioDeps {
+        reader MapReader
+    }
+    workers {
+        reader
+    }
+    routing {
+        in.b[0] -> reader.s
+        reader.i -> out.c
+    }
+}
+
+component Foo<T> {
+    io {
+        in { sig T }
+    }
+    deps {
+        somelib.A
+        somelib.B
+        Bar
+    }
+    workers {
+        A = somelib.A()
+        B = somelib.B()
+        Bar = Bar(somelib.C)
+    }
+    routing {
+        in.sig -> A.x, B.x
+    }
+}

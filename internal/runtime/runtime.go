@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/tools"
 )
 
@@ -21,14 +22,9 @@ var (
 	ErrExecutor    = errors.New("executor")
 )
 
-func (r Runtime) Run(ctx context.Context, bb []byte) error {
-	prog, err := r.decoder.Decode(bb) // move to smt.bypath(string)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrDecoder, err)
-	}
-
-	if _, ok := prog.Ports[prog.Start]; !ok {
-		return fmt.Errorf("%w: %v", ErrNoStartPort, prog.Start)
+func (r Runtime) Run(ctx context.Context, prog src.Program) error {
+	if _, ok := prog.Ports[prog.StartPortAddr]; !ok {
+		return fmt.Errorf("%w: %v", ErrNoStartPort, prog.StartPortAddr)
 	}
 
 	build, err := r.builder.Build(prog)

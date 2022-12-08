@@ -1,4 +1,4 @@
-package operator
+package funcs
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/src"
+	"github.com/emil14/neva/pkg/tools"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -19,16 +19,16 @@ var (
 
 type (
 	Repo interface {
-		Func(src.FuncRef) (FuncFx, error)
+		Func(src.FuncRef) (Func, error)
 	}
-	FuncFx func(context.Context, core.IO) error
+	Func func(context.Context, core.IO) error
 )
 
 type Effector struct {
 	repo Repo
 }
 
-func (e Effector) Effect(ctx context.Context, effects []runtime.FuncFx) error {
+func (e Effector) Effect(ctx context.Context, effects []runtime.ComponentEffect) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range effects {

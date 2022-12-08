@@ -1,0 +1,7 @@
+rootComponent: Foo
+import:
+  somelib:
+    path: path/to/somelib
+    version: 0.0.1
+export:
+  BarIo: BarIo

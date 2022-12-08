@@ -9,5 +9,6 @@ require (
 
 require (
 	github.com/google/go-cmp v0.5.8 // indirect
+	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a
 	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7
 )

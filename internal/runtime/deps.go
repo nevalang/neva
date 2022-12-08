@@ -3,7 +3,7 @@ package runtime
 import (
 	"context"
 
-	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/runtime/core"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
@@ -11,19 +11,23 @@ type Decoder interface {
 	Decode([]byte) (src.Program, error)
 }
 
+type Executor interface {
+	Exec(context.Context, Program) error
+}
+
 type (
 	Builder interface {
-		Build(src.Program) (Executable, error)
+		Build(src.Program) (Program, error)
 	}
 
-	Executable struct {
-		Start src.PortAddr
+	Program struct {
+		Start src.Ports
 		Ports Ports
 		Net   []Connection
-		Fx    Effects
+		Nodes Nodes
 	}
 
-	Ports map[src.PortAddr]chan core.Msg
+	Ports map[src.Ports]chan core.Msg
 
 	Connection struct {
 		Src       src.Connection
@@ -31,30 +35,26 @@ type (
 		Receivers []chan core.Msg
 	}
 
-	Effects struct {
-		Const   []ConstFx
-		Trigger []TriggerFx
-		Func    []FuncFx
-		VoidFx  []chan core.Msg
+	Nodes struct {
+		Const     []ConstNode
+		Trigger   []TriggerNode
+		Component []ComponentNode
+		Void      []chan core.Msg
 	}
 
-	ConstFx struct {
+	ConstNode struct {
 		OutPort chan core.Msg
 		Msg     core.Msg
 	}
 
-	TriggerFx struct {
+	TriggerNode struct {
 		InPort  chan core.Msg
 		OutPort chan core.Msg
 		Msg     core.Msg
 	}
 
-	FuncFx struct {
+	ComponentNode struct {
 		Ref src.FuncRef
 		IO  core.IO
 	}
 )
-
-type Executor interface {
-	Exec(context.Context, Executable) error
-}

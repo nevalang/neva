@@ -29,22 +29,22 @@ type (
 
 type Synthesizer struct{}
 
-func (t Synthesizer) Synthesize(ctx context.Context, prog src.Program) (rsrc.Program, error) {
-	rootPkg, err := prog.Root()
-	if err != nil {
-		panic(err)
+func (s Synthesizer) Synthesize(ctx context.Context, prog src.Program) (rsrc.Program, error) {
+	rootPkg, ok := prog.Pkgs[prog.RootPkg]
+	if !ok {
+		panic(!ok)
 	}
 
-	rootPkgDeps := make(map[src.PkgRef]src.Package, len(rootPkg.Deps))
-	for _, ref := range rootPkg.Deps {
-		pkg, err := prog.Packages.ByRef(ref)
-		if err != nil {
-			panic(err)
+	rootPkgDeps := make(map[src.PkgRef]src.Pkg, len(rootPkg.Imports))
+	for _, ref := range rootPkg.Imports {
+		pkg, ok := prog.Pkgs[ref]
+		if !ok {
+			panic(ok)
 		}
 		rootPkgDeps[ref] = pkg
 	}
 
-	_, ok := rootPkg.Components[rootPkg.RootComponent]
+	_, ok = rootPkg.Entities.Components[rootPkg.Root]
 	if !ok {
 		panic(ok)
 	}

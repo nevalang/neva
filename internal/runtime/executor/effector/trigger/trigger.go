@@ -9,7 +9,7 @@ import (
 
 type Effector struct{}
 
-func (e Effector) Effect(ctx context.Context, effects []runtime.TriggerFx) error {
+func (e Effector) Effect(ctx context.Context, effects []runtime.TriggerNode) error {
 	wg := sync.WaitGroup{}
 	wg.Add(len(effects))
 

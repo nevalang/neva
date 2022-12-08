@@ -6,20 +6,20 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/pkg/tools"
 	"golang.org/x/sync/errgroup"
 )
 
 type (
 	ConstantEffector interface {
-		Effect(context.Context, []runtime.ConstFx) error
+		Effect(context.Context, []runtime.ConstNode) error
 	}
 	FuncEffector interface {
-		Effect(context.Context, []runtime.FuncFx) error
+		Effect(context.Context, []runtime.FuncEffect) error
 	}
 	TriggerEffector interface {
-		Effect(context.Context, []runtime.TriggerFx) error
+		Effect(context.Context, []runtime.TriggerNode) error
 	}
 	VoidEffector interface {
 		Effect(context.Context, []chan core.Msg) error
@@ -39,7 +39,7 @@ var (
 	ErrTriggerEffector  = errors.New("trigger effector")
 )
 
-func (e Effector) Effect(ctx context.Context, effects runtime.Effects) error {
+func (e Effector) Effect(ctx context.Context, effects runtime.Nodes) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -64,7 +64,7 @@ func (e Effector) Effect(ctx context.Context, effects runtime.Effects) error {
 	})
 
 	g.Go(func() error {
-		return e.void.Effect(gctx, effects.VoidFx)
+		return e.void.Effect(gctx, effects.Void)
 	})
 
 	return g.Wait()

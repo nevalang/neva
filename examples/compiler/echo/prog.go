@@ -7,14 +7,14 @@ import (
 
 func helloWorld() src.Program {
 	return src.Program{
-		Packages: map[src.PkgRef]src.Package{
+		Pkgs: map[src.PkgRef]src.Pkg{
 			{Name: "echo"}: {
 				Imports: map[string]src.PkgRef{
 					"utils": src.NewLocalPkgRef("utils"),
 				},
 				Types: map[string]src.Type{
 					"users": {
-						Expr: src.TypeExpr{
+						Body: src.TypeExpr{
 							Ref: src.NewLocalTypeRef("list"),
 							RefArgs: []src.TypeExpr{
 								src.NewRefExpr(
@@ -22,13 +22,13 @@ func helloWorld() src.Program {
 								),
 							},
 						},
-						StructExpr: map[string]src.TypeExpr{},
+						Struct: map[string]src.TypeExpr{},
 					},
 					"user": {
-						Expr: src.NewRefExpr(
+						Body: src.NewRefExpr(
 							src.NewLocalTypeRef("struct"),
 						),
-						StructExpr: map[string]src.TypeExpr{
+						Struct: map[string]src.TypeExpr{
 							"name": src.NewRefExpr(
 								src.NewLocalTypeRef("int"),
 							),
@@ -41,23 +41,23 @@ func helloWorld() src.Program {
 						},
 					},
 				},
-				Messages:      map[string]src.MsgDef{},
-				Components:    map[string]src.Component{},
-				RootComponent: "root",
+				Messages:   map[string]src.Msg{},
+				Components: map[string]src.Component{},
+				Root:       "root",
 			},
 			{Name: "utils"}: {
 				Components: map[string]src.Component{
 					"wrapper": {
-						Header: iohead.Headers()["print"],
-						Nodes: src.Nodes{
+						Interface: iohead.Headers()["print"],
+						Nodes: src.Node{
 							Effects: src.EffectNodes{
 								Func: src.NewFuncRefSet("print"),
 							},
 						},
-						Net: src.Network{
+						Network: src.Network{
 							{
 								Sender: src.ConnectionSide{
-									PortRef:    src.PortRef{},
+									PortRef:    src.ConnectionPortRef{},
 									ActionType: src.ReadStruct,
 									Payload: src.ActionPayload{
 										StructPath: []string{""},
@@ -68,8 +68,8 @@ func helloWorld() src.Program {
 						},
 					},
 				},
-				Exports: map[string]src.ExportRef{
-					"print": {Type: src.ComponentExport, LocalName: "wrapper"},
+				Exports: map[string]src.PkgEntityRef{
+					"print": {Type: src.ComponentEntity, LocalName: "wrapper"},
 				},
 			},
 		},
