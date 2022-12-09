@@ -27,6 +27,20 @@ type TypeApplication struct { // list<list<int>>
 }
 
 func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add support for structs
+	if expr.StructDef != nil { // struct is a "special native type"
+		resolvedStruct := make(map[string]TypeExpr, len(expr.StructDef))
+		for field, expr := range expr.StructDef {
+			resolvedFieldExpr, err := resolve(expr, scope)
+			if err != nil {
+				return TypeExpr{}, errors.New("")
+			}
+			resolvedStruct[field] = resolvedFieldExpr
+		}
+		return TypeExpr{
+			StructDef: resolvedStruct,
+		}, nil
+	}
+
 	refType, ok := scope[expr.Application.ref] // check that reference type exists
 	if !ok {
 		return TypeExpr{}, errors.New("")
@@ -54,26 +68,28 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 		}
 	}
 
-	baseType, ok := scope[refType.typeExpr.Application.ref]
-	if !ok {
-		return TypeExpr{}, errors.New("")
-	}
-	if expr.Application.ref == baseType.typeExpr.Application.ref {
-		return TypeExpr{
-			Application: TypeApplication{
-				ref:  refType.typeExpr.Application.ref,
-				args: resolvedArgs,
-			},
-			StructDef: nil, // todo
-		}, nil
+	if refType.typeExpr.StructDef == nil { // reference type's body is an application, not a struct definition
+		baseType, ok := scope[refType.typeExpr.Application.ref] // FIXME not work structs
+		if !ok {
+			return TypeExpr{}, errors.New("")
+		}
+		if expr.Application.ref == baseType.typeExpr.Application.ref {
+			return TypeExpr{
+				Application: TypeApplication{
+					ref:  refType.typeExpr.Application.ref,
+					args: resolvedArgs,
+				},
+				StructDef: nil, // todo
+			}, nil
+		}
 	}
 
-	return resolve(refType.typeExpr, newScope)
+	return resolve(refType.typeExpr, newScope) // if it's not a native type and not a struct, then do recursive
 }
 
 func main() {
-	// test1()
 	test2()
+	// test1()
 }
 
 func test2() {
@@ -108,7 +124,7 @@ func test2() {
 		},
 	}
 
-	expr := TypeExpr{ // custom<int> -> list<list<int>>
+	expr := TypeExpr{ // custom<int> -> {x: int}
 		Application: TypeApplication{
 			ref: "custom",
 			args: []TypeExpr{
@@ -123,16 +139,13 @@ func test2() {
 	}
 
 	want := TypeExpr{
-		Application: TypeApplication{
-			ref: "list",
-			args: []TypeExpr{
-				{
-					Application: TypeApplication{
-						ref: "list",
-						args: []TypeExpr{
-							{
-								Application: TypeApplication{ref: "int"},
-							},
+		StructDef: map[string]TypeExpr{
+			"x": {
+				Application: TypeApplication{
+					ref: "list",
+					args: []TypeExpr{
+						{
+							Application: TypeApplication{ref: "int"},
 						},
 					},
 				},
@@ -140,11 +153,13 @@ func test2() {
 		},
 	}
 
-	if fmt.Sprint(got.Application) != fmt.Sprint(want.Application) {
+	g, w := fmt.Sprint(got), fmt.Sprint(want)
+
+	if fmt.Sprint(g) != fmt.Sprint(w) {
 		panic("not equal")
 	}
 
-	fmt.Println("Got: ", got, "Want: ", want)
+	fmt.Println(got)
 }
 
 func test1() {
@@ -219,4 +234,32 @@ func test1() {
 	}
 
 	fmt.Println("Got: ", got, "Want: ", want)
+}
+
+func (expr TypeExpr) String() string {
+	var s string
+
+	if expr.StructDef != nil {
+		s += "{"
+		for fieldName, fieldExpr := range expr.StructDef {
+			s += " " + fieldName + ": " + fieldExpr.String() + " "
+		}
+		s += "}"
+		return s
+	}
+
+	if len(expr.Application.args) == 0 {
+		return expr.Application.ref
+	}
+
+	s = expr.Application.ref + "<"
+	for i, arg := range expr.Application.args {
+		s += arg.String()
+		if i < len(expr.Application.args)-1 {
+			s += ", "
+		}
+	}
+	s += ">"
+
+	return s
 }
