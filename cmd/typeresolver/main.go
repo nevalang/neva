@@ -14,19 +14,26 @@ type TypeDef struct { // l<t> = list<t> || l<t> = { foo t }
 	structFields map[string]TypeExpr // only for struct type
 }
 
-type TypeExpr struct { // list<list<int>>
+// resolvable
+type TypeExpr struct {
+	Application TypeApplication     // not for struct type (indirect recursion!)
+	StructDef   map[string]TypeExpr // only for struct type (direct recursion)
+}
+
+// Applyes type to its arguments
+type TypeApplication struct { // list<list<int>>
 	ref  string
-	args []TypeExpr // can contain refs to generics
+	args []TypeExpr // can contain refs to generics, can be empty (indirect recursion!)
 }
 
 func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add support for structs
-	refType, ok := scope[expr.ref] // check that reference type exists
+	refType, ok := scope[expr.Application.ref] // check that reference type exists
 	if !ok {
 		return TypeExpr{}, errors.New("")
 	}
 
 	// check that generic args for every param is present
-	if len(refType.params) > len(expr.args) { // compare equality? structural typing? linting?
+	if len(refType.params) > len(expr.Application.args) { // compare equality? structural typing? linting?
 		return TypeExpr{}, errors.New("")
 	}
 
@@ -35,7 +42,7 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 	// optimized for concurrency (is there better way?)
 	maps.Copy(newScope, scope)
 	for i, param := range refType.params {
-		resolvedArg, err := resolve(expr.args[i], scope)
+		resolvedArg, err := resolve(expr.Application.args[i], scope)
 		if err != nil {
 			return TypeExpr{}, errors.New("")
 		}
@@ -47,14 +54,17 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 		}
 	}
 
-	baseType, ok := scope[refType.typeExpr.ref]
+	baseType, ok := scope[refType.typeExpr.Application.ref]
 	if !ok {
 		return TypeExpr{}, errors.New("")
 	}
-	if expr.ref == baseType.typeExpr.ref {
+	if expr.Application.ref == baseType.typeExpr.Application.ref {
 		return TypeExpr{
-			ref:  refType.typeExpr.ref,
-			args: resolvedArgs,
+			Application: TypeApplication{
+				ref:  refType.typeExpr.Application.ref,
+				args: resolvedArgs,
+			},
+			StructDef: nil, // todo
 		}, nil
 	}
 
@@ -62,51 +72,151 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 }
 
 func main() {
-	resolved, err := resolve(TypeExpr{ // custom<int> -> list<list<int>>
-		ref: "custom",
-		args: []TypeExpr{
-			{ref: "int"},
-		},
-	}, map[string]TypeDef{
+	// test1()
+	test2()
+}
+
+func test2() {
+	scope := map[string]TypeDef{ // int = int, list<t> = list
 		"int": {
-			typeExpr: TypeExpr{ref: "int"}, // base types references themselves
+			typeExpr: TypeExpr{
+				Application: TypeApplication{ref: "int"}, // native types references themselves
+			},
 		},
 		"list": {
-			typeExpr: TypeExpr{ref: "list"}, // base types references themselves (params?)
-			params:   []string{"t"},
+			typeExpr: TypeExpr{
+				Application: TypeApplication{ref: "list"}, // native types references themselves  (params?)
+			},
+			params: []string{"t"},
 		},
-		"custom": { // custom<t> = list<list<t>>
+		"custom": { // custom<t> = { x: list<t> }
 			params: []string{"t"},
 			typeExpr: TypeExpr{
-				ref: "list",
-				args: []TypeExpr{
-					{
-						ref: "list",
-						args: []TypeExpr{
-							{ref: "t"}, // from params
+				StructDef: map[string]TypeExpr{
+					"x": {
+						Application: TypeApplication{
+							ref: "list",
+							args: []TypeExpr{
+								{
+									Application: TypeApplication{ref: "t"}, // ref to param
+								},
+							},
 						},
 					},
 				},
 			},
-			structFields: map[string]TypeExpr{},
 		},
-	})
+	}
+
+	expr := TypeExpr{ // custom<int> -> list<list<int>>
+		Application: TypeApplication{
+			ref: "custom",
+			args: []TypeExpr{
+				{Application: TypeApplication{ref: "int"}},
+			},
+		},
+	}
+
+	got, err := resolve(expr, scope)
 	if err != nil {
 		panic(err)
 	}
 
-	expected := TypeExpr{
-		ref: "list",
-		args: []TypeExpr{
-			{
-				ref: "list",
-				args: []TypeExpr{
-					{ref: "int"},
+	want := TypeExpr{
+		Application: TypeApplication{
+			ref: "list",
+			args: []TypeExpr{
+				{
+					Application: TypeApplication{
+						ref: "list",
+						args: []TypeExpr{
+							{
+								Application: TypeApplication{ref: "int"},
+							},
+						},
+					},
 				},
 			},
 		},
 	}
 
-	fmt.Println("GOT", resolved)
-	fmt.Println("WANT", expected)
+	if fmt.Sprint(got.Application) != fmt.Sprint(want.Application) {
+		panic("not equal")
+	}
+
+	fmt.Println("Got: ", got, "Want: ", want)
+}
+
+func test1() {
+	scope := map[string]TypeDef{ // int = int, list<t> = list
+		"int": {
+			typeExpr: TypeExpr{
+				Application: TypeApplication{ref: "int"}, // native types references themselves
+			},
+		},
+		"list": {
+			typeExpr: TypeExpr{
+				Application: TypeApplication{ref: "list"}, // native types references themselves  (params?)
+			},
+			params: []string{"t"},
+		},
+		"custom": { // custom<t> = list<list<t>>
+			params: []string{"t"},
+			typeExpr: TypeExpr{
+				Application: TypeApplication{
+					ref: "list",
+					args: []TypeExpr{
+						{
+							Application: TypeApplication{
+								ref: "list",
+								args: []TypeExpr{
+									{
+										Application: TypeApplication{ref: "t"}, // from params
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	expr := TypeExpr{ // custom<int> -> list<list<int>>
+		Application: TypeApplication{
+			ref: "custom",
+			args: []TypeExpr{
+				{Application: TypeApplication{ref: "int"}},
+			},
+		},
+	}
+
+	got, err := resolve(expr, scope)
+	if err != nil {
+		panic(err)
+	}
+
+	want := TypeExpr{
+		Application: TypeApplication{
+			ref: "list",
+			args: []TypeExpr{
+				{
+					Application: TypeApplication{
+						ref: "list",
+						args: []TypeExpr{
+							{
+								Application: TypeApplication{ref: "int"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if fmt.Sprint(got.Application) != fmt.Sprint(want.Application) {
+		panic("not equal")
+	}
+
+	fmt.Println("Got: ", got, "Want: ", want)
 }
