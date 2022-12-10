@@ -7,114 +7,113 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-// TypeDef with empty typeExpr and empty structFields is a native builtin type
+// TypeDef with empty typeExpr and empty structFields is a native builtin TypeDef
 type TypeDef struct { // l<t> = list<t> || l<t> = { foo t }
-	params       []string            // any type can have it
-	typeExpr     TypeExpr            // not for struct type
-	structFields map[string]TypeExpr // only for struct type
+	Params []string // any type can have it
+	Type   Type     // not for struct type (just "Type" in go spec)
 }
 
 // resolvable
-type TypeExpr struct {
-	Application TypeApplication     // not for struct type (indirect recursion!)
-	StructDef   map[string]TypeExpr // only for struct type (direct recursion)
+type Type struct { // Instantiation
+	Instantiation TypeInstantiation   // not for struct type (indirect recursion!)
+	StructLit     map[string]Type     // only for struct type (direct recursion)
+	EnumLit       map[string]struct{} // TODO implement
 }
 
-// Applyes type to its arguments
-type TypeApplication struct { // list<list<int>>
-	ref  string
-	args []TypeExpr // can contain refs to generics, can be empty (indirect recursion!)
+type TypeInstantiation struct { // list<list<int>>
+	Ref  string
+	Args []Type // can contain refs to generics, can be empty (indirect recursion!)
 }
 
-func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add support for structs
-	if expr.StructDef != nil { // struct is a "special native type"
-		resolvedStruct := make(map[string]TypeExpr, len(expr.StructDef))
-		for field, expr := range expr.StructDef {
+func resolve(expr Type, scope map[string]TypeDef) (Type, error) { // Add support for structs
+	if expr.StructLit != nil {
+		resolvedStruct := make(map[string]Type, len(expr.StructLit))
+		for field, expr := range expr.StructLit {
 			resolvedFieldExpr, err := resolve(expr, scope)
 			if err != nil {
-				return TypeExpr{}, errors.New("")
+				return Type{}, errors.New("")
 			}
 			resolvedStruct[field] = resolvedFieldExpr
 		}
-		return TypeExpr{
-			StructDef: resolvedStruct,
+		return Type{
+			StructLit: resolvedStruct,
 		}, nil
 	}
 
-	refType, ok := scope[expr.Application.ref] // check that reference type exists
+	refType, ok := scope[expr.Instantiation.Ref] // check that reference type exists
 	if !ok {
-		return TypeExpr{}, errors.New("")
+		return Type{}, errors.New("")
 	}
 
 	// check that generic args for every param is present
-	if len(refType.params) > len(expr.Application.args) { // compare equality? structural typing? linting?
-		return TypeExpr{}, errors.New("")
+	if len(refType.Params) > len(expr.Instantiation.Args) { // compare equality? structural typing? linting?
+		return Type{}, errors.New("")
 	}
 
-	resolvedArgs := make([]TypeExpr, 0, len(refType.params))
-	newScope := make(map[string]TypeDef, len(scope)+len(refType.params)) // new scope contains resolved params (shadow)
+	resolvedArgs := make([]Type, 0, len(refType.Params))
+	newScope := make(map[string]TypeDef, len(scope)+len(refType.Params)) // new scope contains resolved params (shadow)
 	// optimized for concurrency (is there better way?)
 	maps.Copy(newScope, scope)
-	for i, param := range refType.params {
-		resolvedArg, err := resolve(expr.Application.args[i], scope)
+	for i, param := range refType.Params {
+		resolvedArg, err := resolve(expr.Instantiation.Args[i], scope)
 		if err != nil {
-			return TypeExpr{}, errors.New("")
+			return Type{}, errors.New("")
 		}
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 		newScope[param] = TypeDef{
-			params:       nil, // we don't refer generics with another generics inside!
-			typeExpr:     resolvedArg,
-			structFields: nil, // type argument can only be an expression
+			Params: nil, // we don't refer generics with another generics inside!
+			Type:   resolvedArg,
 		}
 	}
 
-	if refType.typeExpr.StructDef == nil { // reference type's body is an application, not a struct definition
-		baseType, ok := scope[refType.typeExpr.Application.ref] // FIXME not work structs
+	if refType.Type.StructLit == nil { // reference type's body is an application, not a struct definition
+		baseType, ok := scope[refType.Type.Instantiation.Ref] // FIXME not work structs
 		if !ok {
-			return TypeExpr{}, errors.New("")
+			return Type{}, errors.New("")
 		}
-		if expr.Application.ref == baseType.typeExpr.Application.ref {
-			return TypeExpr{
-				Application: TypeApplication{
-					ref:  refType.typeExpr.Application.ref,
-					args: resolvedArgs,
+		if expr.Instantiation.Ref == baseType.Type.Instantiation.Ref {
+			return Type{
+				Instantiation: TypeInstantiation{
+					Ref:  refType.Type.Instantiation.Ref,
+					Args: resolvedArgs,
 				},
-				StructDef: nil, // todo
+				StructLit: nil, // todo
 			}, nil
 		}
 	}
 
-	return resolve(refType.typeExpr, newScope) // if it's not a native type and not a struct, then do recursive
+	return resolve(refType.Type, newScope) // if it's not a native type and not a struct, then do recursive
 }
 
 func main() {
-	test2()
+	test3()
+	// test2()
 	// test1()
 }
 
-func test2() {
+func test3() {
 	scope := map[string]TypeDef{ // int = int, list<t> = list
 		"int": {
-			typeExpr: TypeExpr{
-				Application: TypeApplication{ref: "int"}, // native types references themselves
+			Type: Type{
+				Instantiation: TypeInstantiation{Ref: "int"}, // native types references themselves
 			},
 		},
 		"list": {
-			typeExpr: TypeExpr{
-				Application: TypeApplication{ref: "list"}, // native types references themselves  (params?)
+			Type: Type{
+				Instantiation: TypeInstantiation{Ref: "list"}, // native types references themselves  (params?)
 			},
-			params: []string{"t"},
+			Params: []string{"t"},
 		},
 		"custom": { // custom<t> = { x: list<t> }
-			params: []string{"t"},
-			typeExpr: TypeExpr{
-				StructDef: map[string]TypeExpr{
+			Params: []string{"t"},
+			Type: Type{
+				StructLit: map[string]Type{
 					"x": {
-						Application: TypeApplication{
-							ref: "list",
-							args: []TypeExpr{
+						Instantiation: TypeInstantiation{
+							Ref: "list",
+							Args: []Type{
 								{
-									Application: TypeApplication{ref: "t"}, // ref to param
+									Instantiation: TypeInstantiation{Ref: "t"}, // ref to param
 								},
 							},
 						},
@@ -124,11 +123,11 @@ func test2() {
 		},
 	}
 
-	expr := TypeExpr{ // custom<int> -> {x: int}
-		Application: TypeApplication{
-			ref: "custom",
-			args: []TypeExpr{
-				{Application: TypeApplication{ref: "int"}},
+	expr := Type{ // custom<int> -> {x: int}
+		Instantiation: TypeInstantiation{
+			Ref: "custom",
+			Args: []Type{
+				{Instantiation: TypeInstantiation{Ref: "int"}},
 			},
 		},
 	}
@@ -138,14 +137,14 @@ func test2() {
 		panic(err)
 	}
 
-	want := TypeExpr{
-		StructDef: map[string]TypeExpr{
+	want := Type{
+		StructLit: map[string]Type{
 			"x": {
-				Application: TypeApplication{
-					ref: "list",
-					args: []TypeExpr{
+				Instantiation: TypeInstantiation{
+					Ref: "list",
+					Args: []Type{
 						{
-							Application: TypeApplication{ref: "int"},
+							Instantiation: TypeInstantiation{Ref: "int"},
 						},
 					},
 				},
@@ -162,100 +161,170 @@ func test2() {
 	fmt.Println(got)
 }
 
-func test1() {
-	scope := map[string]TypeDef{ // int = int, list<t> = list
-		"int": {
-			typeExpr: TypeExpr{
-				Application: TypeApplication{ref: "int"}, // native types references themselves
-			},
-		},
-		"list": {
-			typeExpr: TypeExpr{
-				Application: TypeApplication{ref: "list"}, // native types references themselves  (params?)
-			},
-			params: []string{"t"},
-		},
-		"custom": { // custom<t> = list<list<t>>
-			params: []string{"t"},
-			typeExpr: TypeExpr{
-				Application: TypeApplication{
-					ref: "list",
-					args: []TypeExpr{
-						{
-							Application: TypeApplication{
-								ref: "list",
-								args: []TypeExpr{
-									{
-										Application: TypeApplication{ref: "t"}, // from params
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+// func test2() {
+// 	scope := map[string]TypeDef{ // int = int, list<t> = list
+// 		"int": {
+// 			Type: Type{
+// 				Instantiation: TypeInstantiation{Ref: "int"}, // native types references themselves
+// 			},
+// 		},
+// 		"list": {
+// 			Type: Type{
+// 				Instantiation: TypeInstantiation{Ref: "list"}, // native types references themselves  (params?)
+// 			},
+// 			Params: []string{"t"},
+// 		},
+// 		"custom": { // custom<t> = { x: list<t> }
+// 			Params: []string{"t"},
+// 			Type: Type{
+// 				StructLit: map[string]Type{
+// 					"x": {
+// 						Instantiation: TypeInstantiation{
+// 							Ref: "list",
+// 							Args: []Type{
+// 								{
+// 									Instantiation: TypeInstantiation{Ref: "t"}, // ref to param
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
 
-	expr := TypeExpr{ // custom<int> -> list<list<int>>
-		Application: TypeApplication{
-			ref: "custom",
-			args: []TypeExpr{
-				{Application: TypeApplication{ref: "int"}},
-			},
-		},
-	}
+// 	expr := Type{ // custom<int> -> {x: int}
+// 		Instantiation: TypeInstantiation{
+// 			Ref: "custom",
+// 			Args: []Type{
+// 				{Instantiation: TypeInstantiation{Ref: "int"}},
+// 			},
+// 		},
+// 	}
 
-	got, err := resolve(expr, scope)
-	if err != nil {
-		panic(err)
-	}
+// 	got, err := resolve(expr, scope)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	want := TypeExpr{
-		Application: TypeApplication{
-			ref: "list",
-			args: []TypeExpr{
-				{
-					Application: TypeApplication{
-						ref: "list",
-						args: []TypeExpr{
-							{
-								Application: TypeApplication{ref: "int"},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+// 	want := Type{
+// 		StructLit: map[string]Type{
+// 			"x": {
+// 				Instantiation: TypeInstantiation{
+// 					Ref: "list",
+// 					Args: []Type{
+// 						{
+// 							Instantiation: TypeInstantiation{Ref: "int"},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
 
-	if fmt.Sprint(got.Application) != fmt.Sprint(want.Application) {
-		panic("not equal")
-	}
+// 	g, w := fmt.Sprint(got), fmt.Sprint(want)
 
-	fmt.Println("Got: ", got, "Want: ", want)
-}
+// 	if fmt.Sprint(g) != fmt.Sprint(w) {
+// 		panic("not equal")
+// 	}
 
-func (expr TypeExpr) String() string {
+// 	fmt.Println(got)
+// }
+
+// func test1() {
+// 	scope := map[string]TypeDef{ // int = int, list<t> = list
+// 		"int": {
+// 			Type: Type{
+// 				Instantiation: TypeInstantiation{Ref: "int"}, // native types references themselves
+// 			},
+// 		},
+// 		"list": {
+// 			Type: Type{
+// 				Instantiation: TypeInstantiation{Ref: "list"}, // native types references themselves  (params?)
+// 			},
+// 			Params: []string{"t"},
+// 		},
+// 		"custom": { // custom<t> = list<list<t>>
+// 			Params: []string{"t"},
+// 			Type: Type{
+// 				Instantiation: TypeInstantiation{
+// 					Ref: "list",
+// 					Args: []Type{
+// 						{
+// 							Instantiation: TypeInstantiation{
+// 								Ref: "list",
+// 								Args: []Type{
+// 									{
+// 										Instantiation: TypeInstantiation{Ref: "t"}, // from params
+// 									},
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	expr := Type{ // custom<int> -> list<list<int>>
+// 		Instantiation: TypeInstantiation{
+// 			Ref: "custom",
+// 			Args: []Type{
+// 				{Instantiation: TypeInstantiation{Ref: "int"}},
+// 			},
+// 		},
+// 	}
+
+// 	got, err := resolve(expr, scope)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	want := Type{
+// 		Instantiation: TypeInstantiation{
+// 			Ref: "list",
+// 			Args: []Type{
+// 				{
+// 					Instantiation: TypeInstantiation{
+// 						Ref: "list",
+// 						Args: []Type{
+// 							{
+// 								Instantiation: TypeInstantiation{Ref: "int"},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	if fmt.Sprint(got.Instantiation) != fmt.Sprint(want.Instantiation) {
+// 		panic("not equal")
+// 	}
+
+// 	fmt.Println("Got: ", got, "Want: ", want)
+// }
+
+func (expr Type) String() string {
 	var s string
 
-	if expr.StructDef != nil {
+	if expr.StructLit != nil {
 		s += "{"
-		for fieldName, fieldExpr := range expr.StructDef {
+		for fieldName, fieldExpr := range expr.StructLit {
 			s += " " + fieldName + ": " + fieldExpr.String() + " "
 		}
 		s += "}"
 		return s
 	}
 
-	if len(expr.Application.args) == 0 {
-		return expr.Application.ref
+	if len(expr.Instantiation.Args) == 0 {
+		return expr.Instantiation.Ref
 	}
 
-	s = expr.Application.ref + "<"
-	for i, arg := range expr.Application.args {
+	s = expr.Instantiation.Ref + "<"
+	for i, arg := range expr.Instantiation.Args {
 		s += arg.String()
-		if i < len(expr.Application.args)-1 {
+		if i < len(expr.Instantiation.Args)-1 {
 			s += ", "
 		}
 	}
