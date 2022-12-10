@@ -10,21 +10,22 @@ import (
 // TypeDef with empty typeExpr and empty structFields is a native builtin TypeDef
 type TypeDef struct { // l<t> = list<t> || l<t> = { foo t }
 	Params []string // any type can have it
-	Type   TypeExpr // not for struct type (just "Type" in go spec)
+	Expr   TypeExpr // not for struct type (just "Type" in go spec)
 }
 
 // resolvable
 type TypeExpr struct { // Instantiation
-	Instantiation TypeInstantiation   // not for struct type (indirect recursion!)
-	StructLit     map[string]TypeExpr // only for struct type (direct recursion)
-	// TODO check:
-	EnumLit  map[EnumEl]struct{}
-	UnionLit []TypeExpr
+	Instantiation TypeInstantiation // not for struct type (indirect recursion!)
+
+	ArrLir    *ArrLit
+	StructLit map[string]TypeExpr // only for struct type (direct recursion)
+	EnumLit   []string
+	UnionLit  []TypeExpr
 }
 
-type EnumEl struct {
-	Name  string
-	Value uint8
+type ArrLit struct {
+	TypeExpr TypeExpr
+	Size     uint8
 }
 
 type TypeInstantiation struct { // list<list<int>>
@@ -86,19 +87,19 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 		newScope[param] = TypeDef{
 			Params: nil, // we don't refer generics with another generics inside!
-			Type:   resolvedArg,
+			Expr:   resolvedArg,
 		}
 	}
 
-	if refType.Type.StructLit == nil { // reference type's body is an application, not a struct definition
-		baseType, ok := scope[refType.Type.Instantiation.Ref] // FIXME not work structs
+	if refType.Expr.StructLit == nil { // reference type's body is an application, not a struct definition
+		baseType, ok := scope[refType.Expr.Instantiation.Ref] // FIXME not work structs
 		if !ok {
 			return TypeExpr{}, errors.New("")
 		}
-		if expr.Instantiation.Ref == baseType.Type.Instantiation.Ref {
+		if expr.Instantiation.Ref == baseType.Expr.Instantiation.Ref {
 			return TypeExpr{
 				Instantiation: TypeInstantiation{
-					Ref:  refType.Type.Instantiation.Ref,
+					Ref:  refType.Expr.Instantiation.Ref,
 					Args: resolvedArgs,
 				},
 				StructLit: nil, // todo
@@ -106,7 +107,7 @@ func resolve(expr TypeExpr, scope map[string]TypeDef) (TypeExpr, error) { // Add
 		}
 	}
 
-	return resolve(refType.Type, newScope) // if it's not a native type and not a struct, then do recursive
+	return resolve(refType.Expr, newScope) // if it's not a native type and not a struct, then do recursive
 }
 
 func main() {
@@ -118,19 +119,19 @@ func main() {
 func test3() {
 	scope := map[string]TypeDef{ // int = int, list<t> = list
 		"int": {
-			Type: TypeExpr{
+			Expr: TypeExpr{
 				Instantiation: TypeInstantiation{Ref: "int"}, // native types references themselves
 			},
 		},
 		"list": {
-			Type: TypeExpr{
+			Expr: TypeExpr{
 				Instantiation: TypeInstantiation{Ref: "list"}, // native types references themselves  (params?)
 			},
 			Params: []string{"t"},
 		},
 		"custom": { // custom<t> = { x: list<t> }
 			Params: []string{"t"},
-			Type: TypeExpr{
+			Expr: TypeExpr{
 				StructLit: map[string]TypeExpr{
 					"x": {
 						Instantiation: TypeInstantiation{
