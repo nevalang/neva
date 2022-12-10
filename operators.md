@@ -142,7 +142,7 @@ Quotient devides numeric values in the order from left to right. When all the me
 
 #### Map
 
-Finds pairs that are presented in all maps. Does not respect the order.
+Finds pairs that are presented in all maps. Does not respect the order. Sends result whem last map atrives or As soon as finds that no keys are shared
 
 #### Struct
 
