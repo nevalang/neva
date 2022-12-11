@@ -143,15 +143,15 @@ Does [euclidean division](https://en.wikipedia.org/wiki/Euclidean_division) from
 
 ### Bitwise AND `&`
 
-define for int
+TODO define for int
 
 ### Bitwise OR `|`
 
-define for int
+TODO define for int
 
 ### Bit clear (AND NOT) `&^`
 
-define for int
+TODO define for int
 
 ### Bitwise XOR `^`
 
