@@ -17,6 +17,15 @@
     "rndv",
     "rports",
     "типобезопасности"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "terminal.background": "#000000",
+    "debugConsole.warningForeground": "#7f848e",
+    "debugConsole.errorForeground": "#e06c75",
+    "debugConsole.sourceForeground": "#0c0",
+    "debugConsole.infoForeground": "#cccccc",
+    "minimap.background": "#00000000",
+    "scrollbar.shadow": "#00000000"
+  }
   // "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yml", "--fast"]
 }
