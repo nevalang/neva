@@ -8,12 +8,16 @@ import (
 )
 
 func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
+	if err := expr.Validate(); err != nil {
+		return Expr{}, fmt.Errorf("invalid expr: %w", err)
+	}
+
 	switch { // resolve literal
-	case expr.Literal.EnumLit != nil:
+	case expr.Lit.EnumLit != nil:
 		return expr, nil
-	case expr.Literal.UnionLit != nil:
-		resolvedUnion := make([]Expr, 0, len(expr.Literal.UnionLit))
-		for _, unionEl := range expr.Literal.UnionLit {
+	case expr.Lit.UnionLit != nil:
+		resolvedUnion := make([]Expr, 0, len(expr.Lit.UnionLit))
+		for _, unionEl := range expr.Lit.UnionLit {
 			resolvedEl, err := unionEl.Resolve(scope)
 			if err != nil {
 				return Expr{}, err
@@ -21,11 +25,11 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
 		return Expr{
-			Literal: LiteralExpr{UnionLit: resolvedUnion},
+			Lit: LiteralExpr{UnionLit: resolvedUnion},
 		}, nil
-	case expr.Literal.RecLit != nil:
-		resolvedStruct := make(map[string]Expr, len(expr.Literal.RecLit))
-		for field, fieldExpr := range expr.Literal.RecLit {
+	case expr.Lit.RecLit != nil:
+		resolvedStruct := make(map[string]Expr, len(expr.Lit.RecLit))
+		for field, fieldExpr := range expr.Lit.RecLit {
 			resolvedFieldExpr, err := fieldExpr.Resolve(scope)
 			if err != nil {
 				return Expr{}, errors.New("")
@@ -33,19 +37,19 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 			resolvedStruct[field] = resolvedFieldExpr
 		}
 		return Expr{
-			Literal: LiteralExpr{RecLit: resolvedStruct},
+			Lit: LiteralExpr{RecLit: resolvedStruct},
 		}, nil
 	}
 
-	refType, ok := scope[expr.Instantiation.Ref] // check that reference type exists
+	refType, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
 		return Expr{}, errors.New("ref type not found in scope")
 	}
 
-	if len(refType.Params) > len(expr.Instantiation.Args) { // check that generic args for every param is present
+	if len(refType.Params) > len(expr.Inst.Args) { // check that generic args for every param is present
 		return Expr{}, fmt.Errorf(
 			"expr must have at least %d arguments, got %d",
-			len(refType.Params), len(expr.Instantiation.Args),
+			len(refType.Params), len(expr.Inst.Args),
 		)
 	}
 
@@ -54,13 +58,13 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 	resolvedArgs := make([]Expr, 0, len(refType.Params))
 
 	for i, param := range refType.Params {
-		resolvedArg, err := expr.Instantiation.Args[i].Resolve(scope)
+		resolvedArg, err := expr.Inst.Args[i].Resolve(scope)
 		if err != nil {
 			return Expr{}, errors.New("")
 		}
 
 		// ОСТОРОЖНО - констрейнт тоже надо ресолвить
-		if err := resolvedArg.IsSubType(param.Constraint); err != nil { // compatibility check
+		if err := resolvedArg.IsSubTypeOf(param.Constraint); err != nil { // compatibility check
 			return Expr{}, errors.New("!resolvedArg.IsSubType")
 		}
 
@@ -71,15 +75,15 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 		}
 	}
 
-	if refType.Body.Literal.Empty() { // reference type's body is an instantiation
-		baseType, ok := scope[refType.Body.Instantiation.Ref]
+	if refType.Body.Lit.Empty() { // reference type's body is an instantiation
+		baseType, ok := scope[refType.Body.Inst.Ref]
 		if !ok {
 			return Expr{}, errors.New("")
 		}
-		if expr.Instantiation.Ref == baseType.Body.Instantiation.Ref { // direct self reference = native instantiation
+		if expr.Inst.Ref == baseType.Body.Inst.Ref { // direct self reference = native instantiation
 			return Expr{
-				Instantiation: InstantiationExpr{
-					Ref:  refType.Body.Instantiation.Ref,
+				Inst: InstantiationExpr{
+					Ref:  refType.Body.Inst.Ref,
 					Args: resolvedArgs,
 				},
 			}, nil
