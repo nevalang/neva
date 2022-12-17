@@ -25,7 +25,7 @@ func Test_resolve(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := types.Resolve(tt.args.expr, tt.args.scope)
+			got, err := tt.args.expr.Resolve(tt.args.scope)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("resolve() error = %v, wantErr %v", err, tt.wantErr)
 				return

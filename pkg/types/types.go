@@ -24,13 +24,15 @@ type Expr struct {
 var (
 	ErrInvalidExprType = errors.New("expr must be ether literal or instantiation, not both and not nothing")
 	ErrUnknownLit      = errors.New("expr literal must be known")
-	ErrArrSize         = errors.New("arr size must be positive integer")
-	ErrEnumLen         = errors.New("enum len must be positive integer")
-	ErrUnionLen        = errors.New("union len must be positive integer")
+	ErrArrSize         = errors.New("arr size must be >= 2")
+	ErrEnumLen         = errors.New("enum len must be >= 2")
+	ErrUnionLen        = errors.New("union len must be >= 2")
+	ErrEnumDupl        = errors.New("enum contains duplicate elements")
 )
 
-// Check that expr is either an instantiation or a literal, not both and not neither.
-// For array, union and enum it checks that their size is greater than zero.
+// Checks that expr is either an instantiation or a literal, not both and not neither.
+// For array, union and enum literals it checks that their size is >= 2.
+// For enum it ensures there no duplicate elements.
 func (expr Expr) Validate() error {
 	if expr.Lit.Empty() { // it's inst
 		return nil // nothing to validate, resolving needed
@@ -40,24 +42,31 @@ func (expr Expr) Validate() error {
 		return ErrInvalidExprType
 	}
 
-	switch expr.Lit.Type() {
+	switch expr.Lit.Type() { // we don't check recs because empty recs are fine
 	case UnknownLitType:
 		return fmt.Errorf("%w: %v", ErrUnknownLit, expr.Lit)
 	case ArrLitType:
-		if expr.Lit.ArrLit.Size <= 0 {
+		if expr.Lit.ArrLit.Size < 2 {
 			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.ArrLit.Size)
 		}
+	case UnionLitType:
+		if l := len(expr.Lit.UnionLit); l < 2 {
+			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
+		}
 	case EnumLitType:
-		if l := len(expr.Lit.EnumLit); l <= 0 {
+		if l := len(expr.Lit.EnumLit); l < 2 {
 			return fmt.Errorf("%w: got %d", ErrEnumLen, l)
 		}
-	case UnionLitType:
-		if l := len(expr.Lit.UnionLit); l <= 0 {
-			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
+		set := make(map[string]struct{}, len(expr.Lit.EnumLit))
+		for _, el := range expr.Lit.EnumLit { // look for duplicate
+			if _, ok := set[el]; ok {
+				return fmt.Errorf("%w: %s", ErrEnumDupl, el)
+			}
+			set[el] = struct{}{}
 		}
 	}
 
-	return nil // we don't check recs
+	return nil // valid lit
 }
 
 type InstantiationExpr struct {
@@ -77,6 +86,7 @@ func (lit LiteralExpr) Empty() bool {
 	return lit.ArrLit == nil && lit.RecLit == nil && lit.EnumLit == nil && lit.UnionLit == nil
 }
 
+// Always call Validate before
 func (lit LiteralExpr) Type() LiteralType {
 	switch {
 	case lit.ArrLit != nil:
@@ -88,7 +98,7 @@ func (lit LiteralExpr) Type() LiteralType {
 	case lit.UnionLit != nil:
 		return UnionLitType
 	}
-	return UnknownLitType
+	return UnknownLitType // for invalid values
 }
 
 type LiteralType uint8

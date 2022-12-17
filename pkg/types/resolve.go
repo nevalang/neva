@@ -7,15 +7,30 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+var (
+	ErrInvalidExpr = errors.New("expr must be valid to be resolved")
+	ErrArrType     = errors.New("could not resolve array type")
+)
+
 func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 	if err := expr.Validate(); err != nil {
-		return Expr{}, fmt.Errorf("invalid expr: %w", err)
+		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
-	switch { // resolve literal
-	case expr.Lit.EnumLit != nil:
-		return expr, nil
-	case expr.Lit.UnionLit != nil:
+	switch expr.Lit.Type() { // resolve literal
+	case EnumLitType:
+		return expr, nil // nothing to resolve in enum
+	case ArrLitType:
+		resolvedArrType, err := expr.Lit.ArrLit.Expr.Resolve(scope)
+		if err != nil {
+			return Expr{}, fmt.Errorf("invalid expr: %w", err)
+		}
+		return Expr{
+			Lit: LiteralExpr{
+				ArrLit: &ArrLit{resolvedArrType, expr.Lit.ArrLit.Size},
+			},
+		}, nil
+	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.UnionLit))
 		for _, unionEl := range expr.Lit.UnionLit {
 			resolvedEl, err := unionEl.Resolve(scope)
@@ -27,7 +42,7 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 		return Expr{
 			Lit: LiteralExpr{UnionLit: resolvedUnion},
 		}, nil
-	case expr.Lit.RecLit != nil:
+	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.RecLit))
 		for field, fieldExpr := range expr.Lit.RecLit {
 			resolvedFieldExpr, err := fieldExpr.Resolve(scope)
@@ -63,9 +78,13 @@ func (expr Expr) Resolve(scope map[string]Def) (Expr, error) { //nolint:funlen
 			return Expr{}, errors.New("")
 		}
 
-		// ОСТОРОЖНО - констрейнт тоже надо ресолвить
-		if err := resolvedArg.IsSubTypeOf(param.Constraint); err != nil { // compatibility check
-			return Expr{}, errors.New("!resolvedArg.IsSubType")
+		resolvedConstraint, err := param.Constraint.Resolve(scope) // should we resolve it here?
+		if err != nil {
+			return Expr{}, errors.New("")
+		}
+
+		if err := resolvedArg.IsSubTypeOf(resolvedConstraint); err != nil { // compatibility check
+			return Expr{}, fmt.Errorf("arg not subtype of constraint: %w", err)
 		}
 
 		resolvedArgs = append(resolvedArgs, resolvedArg)

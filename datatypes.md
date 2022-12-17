@@ -8,6 +8,7 @@
 - `str`
 - `arr/vec`
 - `map`
+    - `set<t> = map<t, {}>`
 - `struct`
 
 ## Struct/Record
