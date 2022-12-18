@@ -1,8 +1,8 @@
+// Package types provides small type-system
 package types
 
 import (
 	"errors"
-	"fmt"
 )
 
 type Def struct {
@@ -17,8 +17,8 @@ type Param struct {
 
 // Instantiation or literal
 type Expr struct {
-	Lit  LiteralExpr // If empty then instantiation
-	Inst InstantiationExpr
+	Lit  LiteralExpr // If empty then expr is inst
+	Inst InstExpr
 }
 
 var (
@@ -30,51 +30,13 @@ var (
 	ErrEnumDupl        = errors.New("enum contains duplicate elements")
 )
 
-// Checks that expr is either an instantiation or a literal, not both and not neither.
-// For array, union and enum literals it checks that their size is >= 2.
-// For enum it ensures there no duplicate elements.
-func (expr Expr) Validate() error {
-	if expr.Lit.Empty() { // it's inst
-		return nil // nothing to validate, resolving needed
-	}
-
-	if expr.Inst.Ref != "" || len(expr.Inst.Args) != 0 { // must not be both lit and inst
-		return ErrInvalidExprType
-	}
-
-	switch expr.Lit.Type() { // we don't check recs because empty recs are fine
-	case UnknownLitType:
-		return fmt.Errorf("%w: %v", ErrUnknownLit, expr.Lit)
-	case ArrLitType:
-		if expr.Lit.ArrLit.Size < 2 {
-			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.ArrLit.Size)
-		}
-	case UnionLitType:
-		if l := len(expr.Lit.UnionLit); l < 2 {
-			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
-		}
-	case EnumLitType:
-		if l := len(expr.Lit.EnumLit); l < 2 {
-			return fmt.Errorf("%w: got %d", ErrEnumLen, l)
-		}
-		set := make(map[string]struct{}, len(expr.Lit.EnumLit))
-		for _, el := range expr.Lit.EnumLit { // look for duplicate
-			if _, ok := set[el]; ok {
-				return fmt.Errorf("%w: %s", ErrEnumDupl, el)
-			}
-			set[el] = struct{}{}
-		}
-	}
-
-	return nil // valid lit
-}
-
-type InstantiationExpr struct {
+// Instantiation expression
+type InstExpr struct {
 	Ref  string // Must be in the scope
 	Args []Expr // Every ref's parameter must have subtype argument
 }
 
-// Only one field must be initialized
+// Literal expression. Only one field must be initialized
 type LiteralExpr struct {
 	ArrLit   *ArrLit
 	RecLit   map[string]Expr
@@ -82,6 +44,7 @@ type LiteralExpr struct {
 	UnionLit []Expr
 }
 
+// Helper to check that all lit's fields are nils. Doesn't care about validation
 func (lit LiteralExpr) Empty() bool {
 	return lit.ArrLit == nil && lit.RecLit == nil && lit.EnumLit == nil && lit.UnionLit == nil
 }
@@ -98,17 +61,17 @@ func (lit LiteralExpr) Type() LiteralType {
 	case lit.UnionLit != nil:
 		return UnionLitType
 	}
-	return UnknownLitType // for invalid values
+	return EmptyLitType // for inst or invalid lit
 }
 
 type LiteralType uint8
 
 const (
-	UnknownLitType LiteralType = iota
-	ArrLitType     LiteralType = iota
-	RecLitType     LiteralType = iota
-	EnumLitType    LiteralType = iota
-	UnionLitType   LiteralType = iota
+	EmptyLitType LiteralType = iota
+	ArrLitType
+	RecLitType
+	EnumLitType
+	UnionLitType
 )
 
 type ArrLit struct {

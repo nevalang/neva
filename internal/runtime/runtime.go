@@ -44,7 +44,7 @@ func MustNew(
 	builder Builder,
 	executor Executor,
 ) Runtime {
-	tools.PanicWithNil(decoder, builder, executor)
+	tools.PanicOnNil(decoder, builder, executor)
 
 	return Runtime{
 		decoder:  decoder,

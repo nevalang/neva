@@ -7,25 +7,24 @@ import (
 	"github.com/emil14/neva/pkg/types"
 )
 
-func Test_resolve(t *testing.T) {
-	type args struct {
-		expr  types.Expr
-		scope map[string]types.Def
-	}
-
+func TestResolver_Resolve(t *testing.T) {
 	tests := []struct {
 		name    string
-		args    args
+		expr    types.Expr
+		scope   map[string]types.Def
 		want    types.Expr
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{},
 	}
+
+	r := types.NewResolver(nil, nil) // TODO mocks
+
 	for _, tt := range tests {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.args.expr.Resolve(tt.args.scope)
+			got, err := r.Resolve(tt.expr, tt.scope)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("resolve() error = %v, wantErr %v", err, tt.wantErr)
 				return

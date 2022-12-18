@@ -1,17 +1,10 @@
 package main
 
-import "fmt"
+type Box[T any] struct {
+	x T
+}
 
 func main() {
-	fmt.Println(
-		f(-42, 42),
-	)
-}
-
-type Constraint interface {
-	string | int
-}
-
-func f[T Constraint](x, y T) T {
-	return x + y
+	b := Box[Box[int32]]{}
+	print(b)
 }

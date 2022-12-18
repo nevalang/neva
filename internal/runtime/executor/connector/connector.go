@@ -171,6 +171,6 @@ func (c Router) action(msg core.Msg, side src.ConnectionSide) (core.Msg, error) 
 }
 
 func MustNew(i Interceptor) Router {
-	tools.PanicWithNil(i)
+	tools.PanicOnNil(i)
 	return Router{i}
 }

@@ -1,10 +1,5 @@
 package types
 
-// Выводы:
-// Разрешив union только как constraint
-// встретив юнион, мы будем вынуждены рекурсивно проверять
-// точно ли текущий expr это constraint или expr вложенный в constraint
-
 func (expr Expr) String() string {
 	var s string
 

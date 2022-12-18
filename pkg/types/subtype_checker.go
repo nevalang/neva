@@ -6,29 +6,32 @@ import (
 )
 
 var (
-	ErrDiffTypes    = errors.New("expr and constraint must both be literals or instantiations except if constr is union")
-	ErrDiffRefs     = errors.New("expr instantiation must have same ref as constraint")
-	ErrArgsLen      = errors.New("expr instantiation must have >= args than constraint")
-	ErrArg          = errors.New("expr arg must be subtype of it's corresponding constraint arg")
-	ErrLitNotArr    = errors.New("expr is literal but not arr")
-	ErrLitArrSize   = errors.New("expr arr size must be >= constraint")
-	ErrArrDiffType  = errors.New("expr arr must have same type as constraint")
+	ErrDiffTypes    = errors.New("expr and constr must both be lits or insts except constr is union")
+	ErrDiffRefs     = errors.New("expr inst must have same ref as constr")
+	ErrArgsLen      = errors.New("expr inst must have >= args than constr")
+	ErrArg          = errors.New("expr arg must be compat with corresponding constr arg")
+	ErrLitNotArr    = errors.New("expr is lit but not arr")
+	ErrLitArrSize   = errors.New("expr arr size must be >= constr")
+	ErrArrDiffType  = errors.New("expr arr must have same type as constr")
 	ErrLitNotEnum   = errors.New("expr is literal but not enum")
-	ErrBigEnum      = errors.New("expr enum must be <= constraint enum")
-	ErrEnumEl       = errors.New("expr enum el doesn't match constraint")
+	ErrBigEnum      = errors.New("expr enum must be <= constr enum")
+	ErrEnumEl       = errors.New("expr enum el doesn't match constr")
 	ErrLitNotRec    = errors.New("expr is lit but not rec")
-	ErrRecLen       = errors.New("expr record must contain >= fields than constraint")
-	ErrRecField     = errors.New("expr rec field must be subtype of corresponding constraint field")
-	ErrRecNoField   = errors.New("expr rec is missing field of constraint")
-	ErrUnion        = errors.New("expr must be subtype of constraint union")
-	ErrUnionsLen    = errors.New("expr union must be <= constraint union")
-	ErrUnions       = errors.New("expr union el must be subtype of constraint union")
+	ErrRecLen       = errors.New("expr record must contain >= fields than constr")
+	ErrRecField     = errors.New("expr rec field must be subtype of corresponding constr field")
+	ErrRecNoField   = errors.New("expr rec is missing field of constr")
+	ErrUnion        = errors.New("expr must be subtype of constr union")
+	ErrUnionsLen    = errors.New("expr union must be <= constr union")
+	ErrUnions       = errors.New("expr union el must be subtype of constr union")
 	ErrInvariant    = errors.New("expr's invariant is broken")
-	ErrDiffLitTypes = errors.New("expr and constraint literals must be of the same type")
+	ErrDiffLitTypes = errors.New("expr and constr lits must be of the same type")
 )
 
+// Checks subtyping rules
+type SubTypeChecker struct{}
+
 // Both expression and constraint must be resolved
-func (expr Expr) IsSubTypeOf(constr Expr) error { //nolint:funlen,gocognit,gocyclo
+func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,gocognit,gocyclo
 	if expr.Lit.Empty() != constr.Lit.Empty() && constr.Lit.Type() != UnionLitType { // expr can be inst if constr is union
 		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffTypes, expr.Lit, constr.Lit)
 	}
@@ -45,7 +48,7 @@ func (expr Expr) IsSubTypeOf(constr Expr) error { //nolint:funlen,gocognit,gocyc
 			)
 		}
 		for i, constraintArg := range constr.Inst.Args {
-			if err := constraintArg.IsSubTypeOf(expr.Inst.Args[i]); err != nil {
+			if err := s.SubTypeCheck(constraintArg, expr.Inst.Args[i]); err != nil {
 				return fmt.Errorf("%w: #%d, got %v, want %v", ErrArg, i, constraintArg, expr.Inst.Args[i])
 			}
 		}
@@ -58,14 +61,14 @@ func (expr Expr) IsSubTypeOf(constr Expr) error { //nolint:funlen,gocognit,gocyc
 		return fmt.Errorf("%w: got %v, want %v", ErrDiffLitTypes, exprLitType, constrLitType)
 	}
 
-	switch constrLitType { // it's union constr and whatever expr
+	switch constrLitType {
 	case ArrLitType: // [5]int <: [4]int|float ???
 		if expr.Lit.ArrLit.Size < constr.Lit.ArrLit.Size {
 			return fmt.Errorf(
 				"%w: got %d, want %d", ErrLitArrSize, expr.Lit.ArrLit.Size, constr.Lit.ArrLit.Size,
 			)
 		}
-		if err := expr.Lit.ArrLit.Expr.IsSubTypeOf(constr.Lit.ArrLit.Expr); err != nil {
+		if err := s.SubTypeCheck(expr.Lit.ArrLit.Expr, constr.Lit.ArrLit.Expr); err != nil {
 			return fmt.Errorf("%w: %v", ErrArrDiffType, err)
 		}
 	case EnumLitType: // {a b c} <: {a b c d}
@@ -90,14 +93,14 @@ func (expr Expr) IsSubTypeOf(constr Expr) error { //nolint:funlen,gocognit,gocyc
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrRecNoField, constraintFieldName)
 			}
-			if err := exprField.IsSubTypeOf(constraintField); err != nil {
+			if err := s.SubTypeCheck(exprField, constraintField); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrRecField, constraintFieldName, err)
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
 		if expr.Lit.UnionLit == nil { // constraint is union, expr is not
 			for _, constraintUnionEl := range constr.Lit.UnionLit {
-				if expr.IsSubTypeOf(constraintUnionEl) == nil {
+				if s.SubTypeCheck(expr, constraintUnionEl) == nil {
 					return nil
 				}
 			}
@@ -111,7 +114,7 @@ func (expr Expr) IsSubTypeOf(constr Expr) error { //nolint:funlen,gocognit,gocyc
 		for _, exprEl := range expr.Lit.UnionLit {
 			var b bool
 			for _, constraintEl := range constr.Lit.UnionLit {
-				if exprEl.IsSubTypeOf(constraintEl) == nil {
+				if s.SubTypeCheck(exprEl, constraintEl) == nil {
 					b = true
 					break
 				}

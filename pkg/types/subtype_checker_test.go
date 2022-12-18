@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
+func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 	tests := []struct {
 		name    string
 		expr    types.Expr
@@ -23,7 +23,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr is inst and constr is lit (not union)", // ''<> !<: {}
 			expr: types.Expr{
-				Inst: types.InstantiationExpr{Ref: ""},
+				Inst: types.InstExpr{Ref: ""},
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{EnumLit: []string{}}, // content doesn't matter here
@@ -36,24 +36,24 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 				Lit: types.LiteralExpr{EnumLit: []string{}}, // content doesn't matter here
 			},
 			constr: types.Expr{
-				Inst: types.InstantiationExpr{Ref: ""},
+				Inst: types.InstExpr{Ref: ""},
 			},
 			wantErr: types.ErrDiffTypes,
 		},
 		{
 			name:    "expr and constr are insts has with different refs", // a<> !<: b<>
-			expr:    types.Expr{Inst: types.InstantiationExpr{Ref: "a"}},
-			constr:  types.Expr{Inst: types.InstantiationExpr{Ref: "b"}},
+			expr:    types.Expr{Inst: types.InstExpr{Ref: "a"}},
+			constr:  types.Expr{Inst: types.InstExpr{Ref: "b"}},
 			wantErr: types.ErrDiffRefs,
 		},
 		{
 			name: "expr inst, same refs, but expr has less args", // a<> !<: b<int>
-			expr: types.Expr{Inst: types.InstantiationExpr{Ref: "a"}},
+			expr: types.Expr{Inst: types.InstExpr{Ref: "a"}},
 			constr: types.Expr{
-				Inst: types.InstantiationExpr{
+				Inst: types.InstExpr{
 					Ref: "a",
 					Args: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "int"}}, // arg itself doesn't matter here
+						{Inst: types.InstExpr{Ref: "int"}}, // arg itself doesn't matter here
 					},
 				},
 			},
@@ -62,18 +62,18 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr inst, same refs and args count, but one arg is incompatible", // a<str> !<: a<int>
 			expr: types.Expr{
-				Inst: types.InstantiationExpr{
+				Inst: types.InstExpr{
 					Ref: "a",
 					Args: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "str"}}, // str !<: int
+						{Inst: types.InstExpr{Ref: "str"}}, // str !<: int
 					},
 				},
 			},
 			constr: types.Expr{
-				Inst: types.InstantiationExpr{
+				Inst: types.InstExpr{
 					Ref: "a",
 					Args: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "int"}},
+						{Inst: types.InstExpr{Ref: "int"}},
 					},
 				},
 			},
@@ -111,7 +111,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 					ArrLit: &types.ArrLit{
 						Size: 2, // same size itself won't cause any problem
 						Expr: types.Expr{
-							Inst: types.InstantiationExpr{Ref: "a"}, // type will
+							Inst: types.InstExpr{Ref: "a"}, // type will
 						},
 					},
 				},
@@ -121,7 +121,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 					ArrLit: &types.ArrLit{
 						Size: 2,
 						Expr: types.Expr{
-							Inst: types.InstantiationExpr{Ref: "b"},
+							Inst: types.InstExpr{Ref: "b"},
 						},
 					},
 				},
@@ -135,7 +135,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 					ArrLit: &types.ArrLit{
 						Size: 3, // bigger size won't cause any problem
 						Expr: types.Expr{
-							Inst: types.InstantiationExpr{Ref: "a"}, // same type
+							Inst: types.InstExpr{Ref: "a"}, // same type
 						},
 					},
 				},
@@ -145,7 +145,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 					ArrLit: &types.ArrLit{
 						Size: 2,
 						Expr: types.Expr{
-							Inst: types.InstantiationExpr{Ref: "a"},
+							Inst: types.InstExpr{Ref: "a"},
 						},
 					},
 				},
@@ -244,7 +244,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 				Lit: types.LiteralExpr{
 					RecLit: map[string]types.Expr{
 						"a": {
-							Inst: types.InstantiationExpr{Ref: "x"}, // not same as in expr
+							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
 						},
 					},
 				},
@@ -257,7 +257,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 				Lit: types.LiteralExpr{
 					RecLit: map[string]types.Expr{ // both has 1 field
 						"a": {
-							Inst: types.InstantiationExpr{Ref: "x"}, // not same as in expr
+							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
 						},
 						"b": {}, // b field itself won't cause any problems
 					},
@@ -267,7 +267,7 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 				Lit: types.LiteralExpr{
 					RecLit: map[string]types.Expr{
 						"a": {
-							Inst: types.InstantiationExpr{Ref: "x"}, // not same as in expr
+							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
 						},
 					},
 				},
@@ -278,13 +278,13 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr inst, constr union. expr incompat with all els",
 			expr: types.Expr{
-				Inst: types.InstantiationExpr{Ref: "x"}, // not compat with both a and b
+				Inst: types.InstExpr{Ref: "x"}, // not compat with both a and b
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
 					},
 				},
 			},
@@ -293,13 +293,13 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr not union, constr is. expr is compat with one el",
 			expr: types.Expr{
-				Inst: types.InstantiationExpr{Ref: "b"},
+				Inst: types.InstExpr{Ref: "b"},
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
 					},
 				},
 			},
@@ -310,17 +310,17 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
-						{Inst: types.InstantiationExpr{Ref: "c"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "c"}},
 					},
 				},
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
 					},
 				},
 			},
@@ -331,18 +331,18 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "c"}},
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "x"}}, // this
+						{Inst: types.InstExpr{Ref: "c"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "x"}}, // this
 					},
 				},
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
-						{Inst: types.InstantiationExpr{Ref: "c"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "c"}},
 					},
 				},
 			},
@@ -353,17 +353,17 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "c"}},
-						{Inst: types.InstantiationExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "c"}},
+						{Inst: types.InstExpr{Ref: "a"}},
 					},
 				},
 			},
 			constr: types.Expr{
 				Lit: types.LiteralExpr{
 					UnionLit: []types.Expr{
-						{Inst: types.InstantiationExpr{Ref: "a"}},
-						{Inst: types.InstantiationExpr{Ref: "b"}},
-						{Inst: types.InstantiationExpr{Ref: "c"}},
+						{Inst: types.InstExpr{Ref: "a"}},
+						{Inst: types.InstExpr{Ref: "b"}},
+						{Inst: types.InstExpr{Ref: "c"}},
 					},
 				},
 			},
@@ -371,24 +371,16 @@ func TestExpr_IsSubTypeOf(t *testing.T) { //nolint:maintidx
 		},
 	}
 
+	s := types.SubTypeChecker{}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.ErrorIs(
 				t,
-				tt.expr.IsSubTypeOf(tt.constr),
+				s.SubTypeCheck(tt.expr, tt.constr),
 				tt.wantErr,
 			)
 		})
-	}
-}
-
-func emptyExpr(e types.Expr) types.Expr {
-	return types.Expr{
-		Lit: types.LiteralExpr{},
-		Inst: types.InstantiationExpr{
-			Ref:  "",
-			Args: []types.Expr{},
-		},
 	}
 }
