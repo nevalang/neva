@@ -1,14 +1,46 @@
 package types
 
-func (expr Expr) String() string {
+import "fmt"
+
+// String formats expression in a TS manner
+func (expr Expr) String() string { // todo move?
 	var s string
 
-	if expr.Lit.RecLit != nil {
+	switch expr.Lit.Type() {
+	case ArrLitType:
+		return fmt.Sprintf(
+			"[%d]%s",
+			expr.Lit.ArrLit.Size, expr.Lit.ArrLit.Expr.String(),
+		)
+	case EnumLitType:
 		s += "{"
-		for fieldName, fieldExpr := range expr.Lit.RecLit {
-			s += " " + fieldName + ": " + fieldExpr.String() + " "
+		for i, el := range expr.Lit.EnumLit {
+			s += " " + el
+			if i == len(expr.Lit.EnumLit)-1 {
+				s += " "
+			}
 		}
-		s += "}"
+		return s + "}"
+	case RecLitType:
+		s += "{"
+		c := 0
+		for fieldName, fieldExpr := range expr.Lit.RecLit {
+			s += fmt.Sprintf(" %s %s", fieldName, fieldExpr)
+			if c < len(expr.Lit.RecLit)-1 {
+				s += ","
+			} else {
+				s += " "
+			}
+			c++
+		}
+		return s + "}"
+	case UnionLitType:
+		for i, el := range expr.Lit.UnionLit {
+			s += el.String()
+			if i < len(expr.Lit.UnionLit)-1 {
+				s += " | "
+			}
+		}
 		return s
 	}
 

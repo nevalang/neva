@@ -1,17 +1,25 @@
 - expr - expression
-    - lit - (type) literal expression
-    - inst - (type) instantiation expression
-    - compat - compatibility/compatable (type expressions)
+- lit - (type) literal expression
+- inst - (type) instantiation expression
+- compat - compatibility/compatable (type expressions)
 - enum - enumeration
 - union - untagged union (sum-type)
 - arr - array (static array)
 - vec - vector (slice, dynamic array)
-- rec - record (structure)
+- rec - record (structure, tuple with fields, product type)
 - int - integer digit
-    - i8, i16, i32, i64 - N bit integer
+- i8, i16, i32, i64 - N bit integer
 - float - floating point digit
-    - f32, f64 - N bit float
+- f32, f64 - N bit float
 - num - number/numeric
 - bool - boolean
 - str - string
-<!-- - comp - component -->
+- ref - reference
+- arg - argument
+- param - parameter
+- params - parameters
+- el - element
+- els - elements
+- k - key
+- v - value
+- t - type
