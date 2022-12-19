@@ -5,9 +5,7 @@ import "github.com/emil14/neva/pkg/types"
 func NativeType(name string, params ...types.Param) types.Def {
 	return types.Def{
 		Params: params,
-		Body: types.Expr{
-			Inst: types.InstExpr{Ref: name},
-		},
+		Body: InstExpr(name),
 	}
 }
 
