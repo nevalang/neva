@@ -24,7 +24,11 @@ type (
 	}
 )
 
-var ErrInvalidExpr = errors.New("expr must be valid to be resolved")
+var (
+	ErrInvalidExpr = errors.New("expr must be valid to be resolved")
+	ErrNoRefType   = errors.New("ref type not found")
+	ErrInstArgsLen = errors.New("inst cannot have more arguments than reference type has parameters")
+)
 
 // Transforms one expression into another where all references points to native types.
 // It's a recursive process where each step starts with validation. Invalid expression always leads to error.
@@ -80,13 +84,12 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 
 	refType, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
-		return Expr{}, errors.New("ref type not found in scope")
+		return Expr{}, fmt.Errorf("%w: %v", ErrNoRefType, expr.Inst.Ref)
 	}
 
 	if len(refType.Params) > len(expr.Inst.Args) { // check that generic args for every param is present
 		return Expr{}, fmt.Errorf(
-			"expr must have at least %d arguments, got %d",
-			len(refType.Params), len(expr.Inst.Args),
+			"%w, want %d, got %d", ErrInstArgsLen, len(refType.Params), len(expr.Inst.Args),
 		)
 	}
 
@@ -134,14 +137,14 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	return r.Resolve(refType.Body, newScope) // it's not a native type and not literal - next step is needed
 }
 
-func NewResolver() Resolver {
+func NewDefaultResolver() Resolver {
 	return Resolver{
 		validator: Validator{},
 		checker:   SubTypeChecker{},
 	}
 }
 
-func CustomResolver(v validator, c checker) Resolver {
+func MustNewResolver(v validator, c checker) Resolver {
 	tools.PanicOnNil(v, c)
 	return Resolver{v, c}
 }
