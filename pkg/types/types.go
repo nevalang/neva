@@ -1,10 +1,6 @@
 // Package types provides small type-system
 package types
 
-import (
-	"errors"
-)
-
 type Def struct {
 	Params []Param // Body can refer to these parameters
 	Body   Expr    // Expression that must be resolved
@@ -21,19 +17,14 @@ type Expr struct {
 	Inst InstExpr
 }
 
-var (
-	ErrInvalidExprType = errors.New("expr must be ether literal or instantiation, not both and not nothing")
-	ErrUnknownLit      = errors.New("expr literal must be known")
-	ErrArrSize         = errors.New("arr size must be >= 2")
-	ErrEnumLen         = errors.New("enum len must be >= 2")
-	ErrUnionLen        = errors.New("union len must be >= 2")
-	ErrEnumDupl        = errors.New("enum contains duplicate elements")
-)
-
 // Instantiation expression
 type InstExpr struct {
 	Ref  string // Must be in the scope
 	Args []Expr // Every ref's parameter must have subtype argument
+}
+
+func (i InstExpr) Empty() bool {
+	return i.Ref == "" && len(i.Args) == 0
 }
 
 // Literal expression. Only one field must be initialized

@@ -1,20 +1,32 @@
 package types
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Validator struct{}
 
-// Checks that expr is either an instantiation or a literal.
-// If literal is empty then it's an instantiation. All insts are valid because it's ok to have "" type with 0 args.
-// For arr, union and enum lits it checks that their size is >= 2. For enum it ensures there no duplicate elements.
+var (
+	ErrInvalidExprType = errors.New("expr must be ether literal or instantiation, not both and not neither")
+	ErrUnknownLit      = errors.New("expr literal must be known")
+	ErrArrSize         = errors.New("arr size must be >= 2")
+	ErrEnumLen         = errors.New("enum len must be >= 2")
+	ErrUnionLen        = errors.New("union len must be >= 2")
+	ErrEnumDupl        = errors.New("enum contains duplicate elements")
+)
+
+// Checks that expression is either an instantiation or a literal, not both and not neither.
+// All instantiations are valid because it's ok to have "" type with 0 arguments.
+// For arr, union and enum it checks that size is >= 2. For enum it also ensures there no duplicate elements.
 func (v Validator) Validate(expr Expr) error {
+	if expr.Lit.Empty() == expr.Inst.Empty() {
+		return ErrInvalidExprType
+	}
+
 	if expr.Lit.Empty() { // if it's inst
 		return nil // then nothing to validate, resolving needed
 	} // by now we know it's not empty lit
-
-	if expr.Inst.Ref != "" || len(expr.Inst.Args) != 0 { // must not be both lit and inst
-		return ErrInvalidExprType
-	}
 
 	// we don't check recs and empty lits
 	switch expr.Lit.Type() { // because we know lit isn't empty and because empty recs are fine

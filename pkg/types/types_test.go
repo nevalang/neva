@@ -88,3 +88,51 @@ func TestLiteralExpr_Type(t *testing.T) {
 		})
 	}
 }
+
+func TestInstExpr_Empty(t *testing.T) {
+	tests := []struct {
+		name string
+		inst types.InstExpr
+		want bool
+	}{
+		{
+			name: "default inst (empty ref and nil args)",
+			inst: types.InstExpr{
+				Ref:  "",
+				Args: nil,
+			},
+			want: true,
+		},
+		{
+			name: "empty ref and empty list args",
+			inst: types.InstExpr{
+				Ref:  "",
+				Args: []types.Expr{},
+			},
+			want: true,
+		},
+		{
+			name: "empty ref and non empty list args",
+			inst: types.InstExpr{
+				Ref:  "",
+				Args: []types.Expr{{}}, // content doesn't matter here
+			},
+			want: false,
+		},
+		{
+			name: "non-empty ref and non empty list args",
+			inst: types.InstExpr{
+				Ref:  "t",
+				Args: []types.Expr{{}},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.inst.Empty(), tt.want)
+		})
+	}
+}
