@@ -71,16 +71,16 @@ func (m *Mockchecker) EXPECT() *MockcheckerMockRecorder {
 	return m.recorder
 }
 
-// SubTypeCheck mocks base method.
-func (m *Mockchecker) SubTypeCheck(arg0, arg1 types.Expr) error {
+// SubtypeCheck mocks base method.
+func (m *Mockchecker) SubtypeCheck(arg0, arg1 types.Expr) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubTypeCheck", arg0, arg1)
+	ret := m.ctrl.Call(m, "SubtypeCheck", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SubTypeCheck indicates an expected call of SubTypeCheck.
-func (mr *MockcheckerMockRecorder) SubTypeCheck(arg0, arg1 interface{}) *gomock.Call {
+// SubtypeCheck indicates an expected call of SubtypeCheck.
+func (mr *MockcheckerMockRecorder) SubtypeCheck(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubTypeCheck", reflect.TypeOf((*Mockchecker)(nil).SubTypeCheck), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubtypeCheck", reflect.TypeOf((*Mockchecker)(nil).SubtypeCheck), arg0, arg1)
 }

@@ -31,7 +31,7 @@ var (
 type SubTypeChecker struct{}
 
 // Both expression and constraint must be resolved
-func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,gocognit,gocyclo
+func (s SubTypeChecker) SubtypeCheck(expr, constr Expr) error { //nolint:funlen,gocognit,gocyclo
 	if expr.Lit.Empty() != constr.Lit.Empty() && constr.Lit.Type() != UnionLitType { // expr can be inst if constr is union
 		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffTypes, expr.Lit, constr.Lit)
 	}
@@ -48,7 +48,7 @@ func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,
 			)
 		}
 		for i, constraintArg := range constr.Inst.Args {
-			if err := s.SubTypeCheck(constraintArg, expr.Inst.Args[i]); err != nil {
+			if err := s.SubtypeCheck(constraintArg, expr.Inst.Args[i]); err != nil { // FIXME? is this tested?
 				return fmt.Errorf("%w: #%d, got %v, want %v", ErrArg, i, constraintArg, expr.Inst.Args[i])
 			}
 		}
@@ -68,7 +68,7 @@ func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,
 				"%w: got %d, want %d", ErrLitArrSize, expr.Lit.ArrLit.Size, constr.Lit.ArrLit.Size,
 			)
 		}
-		if err := s.SubTypeCheck(expr.Lit.ArrLit.Expr, constr.Lit.ArrLit.Expr); err != nil {
+		if err := s.SubtypeCheck(expr.Lit.ArrLit.Expr, constr.Lit.ArrLit.Expr); err != nil {
 			return fmt.Errorf("%w: %v", ErrArrDiffType, err)
 		}
 	case EnumLitType: // {a b c} <: {a b c d}
@@ -93,14 +93,14 @@ func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrRecNoField, constraintFieldName)
 			}
-			if err := s.SubTypeCheck(exprField, constraintField); err != nil {
+			if err := s.SubtypeCheck(exprField, constraintField); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrRecField, constraintFieldName, err)
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
 		if expr.Lit.UnionLit == nil { // constraint is union, expr is not
 			for _, constraintUnionEl := range constr.Lit.UnionLit {
-				if s.SubTypeCheck(expr, constraintUnionEl) == nil {
+				if s.SubtypeCheck(expr, constraintUnionEl) == nil {
 					return nil
 				}
 			}
@@ -114,7 +114,7 @@ func (s SubTypeChecker) SubTypeCheck(expr, constr Expr) error { //nolint:funlen,
 		for _, exprEl := range expr.Lit.UnionLit {
 			var b bool
 			for _, constraintEl := range constr.Lit.UnionLit {
-				if s.SubTypeCheck(exprEl, constraintEl) == nil {
+				if s.SubtypeCheck(exprEl, constraintEl) == nil {
 					b = true
 					break
 				}

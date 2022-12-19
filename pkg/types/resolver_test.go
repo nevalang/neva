@@ -41,7 +41,7 @@ func TestResolver_Resolve(t *testing.T) {
 			c := NewMockchecker(ctrl)
 			tt.initCheckerMock(c)
 
-			got, err := types.NewResolver(v, c).Resolve(tt.expr, tt.scope)
+			got, err := types.CustomResolver(v, c).Resolve(tt.expr, tt.scope)
 			require.Equal(t, got, tt.wantErr)
 			require.ErrorIs(t, err, tt.wantErr)
 		})

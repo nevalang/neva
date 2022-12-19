@@ -20,7 +20,7 @@ type (
 		Validate(Expr) error // returns error if expression's invariant broken
 	}
 	checker interface {
-		SubTypeCheck(Expr, Expr) error // Returns nil if first expr is subtype of the second
+		SubtypeCheck(Expr, Expr) error // Returns nil if first expr is subtype of the second
 	}
 )
 
@@ -105,7 +105,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 			return Expr{}, errors.New("")
 		}
 
-		if err := r.SubTypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
+		if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
 			return Expr{}, fmt.Errorf("arg not subtype of constraint: %w", err)
 		}
 
@@ -134,15 +134,14 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	return r.Resolve(refType.Body, newScope) // it's not a native type and not literal - next step is needed
 }
 
-func DefaultResolver() Resolver {
+func NewResolver() Resolver {
 	return Resolver{
-		validator: nil,
-		checker:   nil,
+		validator: Validator{},
+		checker:   SubTypeChecker{},
 	}
 }
 
-// Allowes to pass custom validator and subtype checker
-func NewResolver(v validator, c checker) Resolver {
+func CustomResolver(v validator, c checker) Resolver {
 	tools.PanicOnNil(v, c)
 	return Resolver{v, c}
 }

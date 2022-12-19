@@ -378,7 +378,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		t.Run(tt.name, func(t *testing.T) {
 			require.ErrorIs(
 				t,
-				s.SubTypeCheck(tt.expr, tt.constr),
+				s.SubtypeCheck(tt.expr, tt.constr),
 				tt.wantErr,
 			)
 		})
