@@ -14,6 +14,7 @@ type Resolver struct {
 	checker
 }
 
+//go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
 type (
 	validator interface {
 		Validate(Expr) error // returns error if expression's invariant broken

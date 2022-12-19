@@ -1,37 +1,49 @@
 package types_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/emil14/neva/pkg/types"
+	gomock "github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResolver_Resolve(t *testing.T) {
 	tests := []struct {
-		name    string
-		expr    types.Expr
-		scope   map[string]types.Def
-		want    types.Expr
-		wantErr bool
-	}{
-		{},
-	}
+		name string
 
-	r := types.NewResolver(nil, nil) // TODO mocks
+		expr  types.Expr
+		scope map[string]types.Def
+
+		initValidatorMock func(v *Mockvalidator)
+		initCheckerMock   func(c *Mockchecker)
+
+		want    types.Expr
+		wantErr error
+	}{
+		{
+			name:              "",
+			expr:              types.Expr{},
+			scope:             map[string]types.Def{},
+			initValidatorMock: func(v *Mockvalidator) {},
+			want:              types.Expr{},
+			wantErr:           nil,
+		},
+	}
 
 	for _, tt := range tests {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := r.Resolve(tt.expr, tt.scope)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("resolve() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("resolve() = %v, want %v", got, tt.want)
-			}
+			ctrl := gomock.NewController(t)
+			v := NewMockvalidator(ctrl)
+			tt.initValidatorMock(v)
+			c := NewMockchecker(ctrl)
+			tt.initCheckerMock(c)
+
+			got, err := types.NewResolver(v, c).Resolve(tt.expr, tt.scope)
+			require.Equal(t, got, tt.wantErr)
+			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }
