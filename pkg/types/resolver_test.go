@@ -49,7 +49,7 @@ func TestResolver_Resolve(t *testing.T) {
 				name: "inst args < ref type params",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"int": h.NativeType("int", ts.Param{}),
+					"int": h.NativeDef("int", ts.Param{}),
 				},
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)

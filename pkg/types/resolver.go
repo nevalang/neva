@@ -87,7 +87,8 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		return Expr{}, fmt.Errorf("%w: %v", ErrNoRefType, expr.Inst.Ref)
 	}
 
-	if len(refType.Params) > len(expr.Inst.Args) { // check that generic args for every param is present
+	// check that args for every param is present
+	if len(refType.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
 			"%w, want %d, got %d", ErrInstArgsLen, len(refType.Params), len(expr.Inst.Args),
 		)
@@ -95,7 +96,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 
 	newScope := make(map[string]Def, len(scope)+len(refType.Params)) // new scope contains resolved params (shadow)
 	maps.Copy(newScope, scope)
-	resolvedArgs := make([]Expr, 0, len(refType.Params))
+	resolvedArgs := make([]Expr, 0, len(refType.Params)) // in case of native type
 
 	for i, param := range refType.Params {
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)
@@ -113,10 +114,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		}
 
 		resolvedArgs = append(resolvedArgs, resolvedArg)
-		newScope[param.Name] = Def{
-			Params: nil, // we don't refer generics with another generics inside
-			Body:   resolvedArg,
-		}
+		newScope[param.Name] = Def{Body: resolvedArg} // no params for types from args
 	}
 
 	if refType.Body.Lit.Empty() { // reference type's body is an instantiation

@@ -24,12 +24,14 @@ func (v Validator) Validate(expr Expr) error {
 		return ErrInvalidExprType
 	}
 
-	if expr.Lit.Empty() { // if it's inst
-		return nil // then nothing to validate, resolving needed
-	} // by now we know it's not empty lit
+	if expr.Lit.Empty() { // it's non-empty inst, nothing to validate
+		return nil
+	}
 
-	// we don't check recs and empty lits
-	switch expr.Lit.Type() { // because we know lit isn't empty and because empty recs are fine
+	// by now we know it's not empty lit
+	switch expr.Lit.Type() {
+	case RecLitType:
+		return nil // non empty lit recs are always fine because recs with 0 fields are ok
 	case ArrLitType:
 		if expr.Lit.ArrLit.Size < 2 {
 			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.ArrLit.Size)
@@ -51,5 +53,5 @@ func (v Validator) Validate(expr Expr) error {
 		}
 	}
 
-	return nil // valid lit
+	return nil
 }

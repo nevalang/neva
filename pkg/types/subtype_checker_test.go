@@ -3,149 +3,162 @@ package types_test
 import (
 	"testing"
 
-	"github.com/emil14/neva/pkg/types"
+	ts "github.com/emil14/neva/pkg/types"
+	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 	tests := []struct {
 		name    string
-		expr    types.Expr
-		constr  types.Expr
+		arg     ts.Expr
+		constr  ts.Expr
 		wantErr error
 	}{
 		// Instantiations
 		{
-			name:   "expr and constr are default values (empty insts)", // ''<> <: ''<>
-			expr:   types.Expr{},
-			constr: types.Expr{},
+			name:    "arg and constr are default values (empty insts)",
+			arg:     ts.Expr{},
+			constr:  ts.Expr{},
+			wantErr: nil,
+		},
+		//  kinds
+		{
+			name:    "arg inst, constr lit (not union)", // int <: {}
+			arg:     h.InstExpr("int"),
+			constr:  h.EnumLitExpr(),
+			wantErr: ts.ErrDiffTypes,
 		},
 		{
-			name: "expr is inst and constr is lit (not union)", // ''<> !<: {}
-			expr: types.Expr{
-				Inst: types.InstExpr{Ref: ""},
-			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{EnumLit: []string{}}, // content doesn't matter here
-			},
-			wantErr: types.ErrDiffTypes,
+			name:    "constr inst, arg lit (not union)", // {} <: int
+			arg:     h.EnumLitExpr(),
+			constr:  h.InstExpr("int"),
+			wantErr: ts.ErrDiffTypes,
+		},
+		// diff refs
+		{
+			name:    "insts, diff refs, no args", // int <: bool (no need to check vice versa, they resolved)
+			arg:     h.InstExpr("int"),
+			constr:  h.InstExpr("bool"),
+			wantErr: ts.ErrDiffRefs,
 		},
 		{
-			name: "expr is lit (not union) and constr is inst", // {} !<: ''<>
-			expr: types.Expr{
-				Lit: types.LiteralExpr{EnumLit: []string{}}, // content doesn't matter here
-			},
-			constr: types.Expr{
-				Inst: types.InstExpr{Ref: ""},
-			},
-			wantErr: types.ErrDiffTypes,
+			name:    "insts, same refs, no args", // int <: int
+			arg:     h.InstExpr("int"),
+			constr:  h.InstExpr("int"),
+			wantErr: nil,
+		},
+		// args count
+		{
+			name:    "insts, arg has less args", // vec <: vec<int>
+			arg:     h.InstExpr("vec"),
+			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			wantErr: ts.ErrArgsCount,
 		},
 		{
-			name:    "expr and constr are insts has with different refs", // a<> !<: b<>
-			expr:    types.Expr{Inst: types.InstExpr{Ref: "a"}},
-			constr:  types.Expr{Inst: types.InstExpr{Ref: "b"}},
-			wantErr: types.ErrDiffRefs,
+			name:    "insts, arg has same args count", // vec<int> <: vec<int>
+			arg:     h.InstExpr("vec", h.InstExpr("int")),
+			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			wantErr: nil,
 		},
 		{
-			name: "expr inst, same refs, but expr has less args", // a<> !<: b<int>
-			expr: types.Expr{Inst: types.InstExpr{Ref: "a"}},
-			constr: types.Expr{
-				Inst: types.InstExpr{
-					Ref: "a",
-					Args: []types.Expr{
-						{Inst: types.InstExpr{Ref: "int"}}, // arg itself doesn't matter here
-					},
-				},
-			},
-			wantErr: types.ErrArgsLen,
+			name:    "insts, arg has more args count", // vec<int, str> <: vec<int>
+			arg:     h.InstExpr("vec", h.InstExpr("int"), h.InstExpr("str")),
+			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			wantErr: nil,
+		},
+		// args compatibility
+		{
+			name: "insts, one arg's arg incompat", // vec<str> <: vec<int|str>
+			arg:  h.InstExpr("vec", h.InstExpr("str")),
+			constr: h.InstExpr(
+				"vec",
+				h.UnionLitExpr(
+					h.InstExpr("str"),
+					h.InstExpr("int"),
+				),
+			),
+			wantErr: nil,
 		},
 		{
-			name: "expr inst, same refs and args count, but one arg is incompatible", // a<str> !<: a<int>
-			expr: types.Expr{
-				Inst: types.InstExpr{
-					Ref: "a",
-					Args: []types.Expr{
-						{Inst: types.InstExpr{Ref: "str"}}, // str !<: int
-					},
-				},
-			},
-			constr: types.Expr{
-				Inst: types.InstExpr{
-					Ref: "a",
-					Args: []types.Expr{
-						{Inst: types.InstExpr{Ref: "int"}},
-					},
-				},
-			},
-			wantErr: types.ErrArg,
+			name: "insts, constr arg incompat", // vec<str|int> <: vec<int>
+			arg: h.InstExpr(
+				"vec",
+				h.UnionLitExpr(
+					h.InstExpr("str"),
+					h.InstExpr("int"),
+				),
+			),
+			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			wantErr: ts.ErrArgNotSubtype,
 		},
 		// arr
 		{
 			name: "expr and constr has diff lit types (constr not union)",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{EnumLit: []string{}},
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{EnumLit: []string{}},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{ArrLit: &types.ArrLit{}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{ArrLit: &ts.ArrLit{}},
 			},
-			wantErr: types.ErrDiffLitTypes,
+			wantErr: ts.ErrDiffLitTypes,
 		},
 		{
 			name: "expr's arr lit has lesser size than constr",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 1}, // expr doesn't matter here
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 1}, // expr doesn't matter here
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 2},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 2},
 				},
 			},
-			wantErr: types.ErrLitArrSize,
+			wantErr: ts.ErrLitArrSize,
 		},
 		{
 			name: "expr's arr has incompat type",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{
 						Size: 2, // same size itself won't cause any problem
-						Expr: types.Expr{
-							Inst: types.InstExpr{Ref: "a"}, // type will
+						Expr: ts.Expr{
+							Inst: ts.InstExpr{Ref: "a"}, // type will
 						},
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{
 						Size: 2,
-						Expr: types.Expr{
-							Inst: types.InstExpr{Ref: "b"},
+						Expr: ts.Expr{
+							Inst: ts.InstExpr{Ref: "b"},
 						},
 					},
 				},
 			},
-			wantErr: types.ErrArrDiffType,
+			wantErr: ts.ErrArrDiffType,
 		},
 		{
 			name: "expr and constr arrs, expr is bigger and have compat type",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{
 						Size: 3, // bigger size won't cause any problem
-						Expr: types.Expr{
-							Inst: types.InstExpr{Ref: "a"}, // same type
+						Expr: ts.Expr{
+							Inst: ts.InstExpr{Ref: "a"}, // same type
 						},
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{
 						Size: 2,
-						Expr: types.Expr{
-							Inst: types.InstExpr{Ref: "a"},
+						Expr: ts.Expr{
+							Inst: ts.InstExpr{Ref: "a"},
 						},
 					},
 				},
@@ -155,41 +168,41 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// enum
 		{
 			name: "expr and constr enums, expr is bigger",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a", "b"},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a"},
 				},
 			},
-			wantErr: types.ErrBigEnum,
+			wantErr: ts.ErrBigEnum,
 		},
 		{
 			name: "expr and constr enums, expr not bigger but contain diff el",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a", "d"}, // d != b
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a", "b", "c"},
 				},
 			},
-			wantErr: types.ErrEnumEl,
+			wantErr: ts.ErrEnumEl,
 		},
 		{
 			name: "expr and constr enums, expr not bigger and all reqired els are the same",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a", "b"},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{"a", "b", "c"}, // c el won't cause any problem
 				},
 			},
@@ -198,76 +211,76 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// rec
 		{
 			name: "expr and constr recs, expr has less fields",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{}, // 0 fields is ok
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{}, // 0 fields is ok
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{
 						"a": {}, // expr itself doesn't matter here
 					},
 				},
 			},
-			wantErr: types.ErrRecLen,
+			wantErr: ts.ErrRecLen,
 		},
 		{
 			name: "expr and constr recs, expr leaks field",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{ // both has 1 field
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // expr itself doesn't matter here
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{
 						"a": {}, // but this field is missing
 					},
 				},
 			},
-			wantErr: types.ErrRecNoField,
+			wantErr: ts.ErrRecNoField,
 		},
 		{
 			name: "expr and constr recs, expr has incompat field",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{ // both has 1 field
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // b field itself won't cause any problems
 						"a": {}, // this one will
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{
 						"a": {
-							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
+							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
 						},
 					},
 				},
 			},
-			wantErr: types.ErrRecField,
+			wantErr: ts.ErrRecField,
 		},
 		{
 			name: "expr and constr recs, expr has all constr fields, all fields compatible",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{ // both has 1 field
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{ // both has 1 field
 						"a": {
-							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
+							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
 						},
 						"b": {}, // b field itself won't cause any problems
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					RecLit: map[string]ts.Expr{
 						"a": {
-							Inst: types.InstExpr{Ref: "x"}, // not same as in expr
+							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
 						},
 					},
 				},
@@ -277,29 +290,29 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// union
 		{
 			name: "expr inst, constr union. expr incompat with all els",
-			expr: types.Expr{
-				Inst: types.InstExpr{Ref: "x"}, // not compat with both a and b
+			arg: ts.Expr{
+				Inst: ts.InstExpr{Ref: "x"}, // not compat with both a and b
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
 					},
 				},
 			},
-			wantErr: types.ErrUnion,
+			wantErr: ts.ErrUnion,
 		},
 		{
 			name: "expr not union, constr is. expr is compat with one el",
-			expr: types.Expr{
-				Inst: types.InstExpr{Ref: "b"},
+			arg: ts.Expr{
+				Inst: ts.InstExpr{Ref: "b"},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
 					},
 				},
 			},
@@ -307,78 +320,79 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr are unions, expr has more els",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
-						{Inst: types.InstExpr{Ref: "c"}},
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
+						{Inst: ts.InstExpr{Ref: "c"}},
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
 					},
 				},
 			},
-			wantErr: types.ErrUnionsLen,
+			wantErr: ts.ErrUnionsLen,
 		},
 		{
 			name: "expr and constr are unions, same size but incompat expr el",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "c"}},
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "x"}}, // this
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "c"}},
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "x"}}, // this
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
-						{Inst: types.InstExpr{Ref: "c"}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
+						{Inst: ts.InstExpr{Ref: "c"}},
 					},
 				},
 			},
-			wantErr: types.ErrUnions,
+			wantErr: ts.ErrUnions,
 		},
 		{
 			name: "expr and constr are unions, expr is less and compat",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "c"}},
-						{Inst: types.InstExpr{Ref: "a"}},
+			arg: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "c"}},
+						{Inst: ts.InstExpr{Ref: "a"}},
 					},
 				},
 			},
-			constr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
-						{Inst: types.InstExpr{Ref: "a"}},
-						{Inst: types.InstExpr{Ref: "b"}},
-						{Inst: types.InstExpr{Ref: "c"}},
+			constr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{
+						{Inst: ts.InstExpr{Ref: "a"}},
+						{Inst: ts.InstExpr{Ref: "b"}},
+						{Inst: ts.InstExpr{Ref: "c"}},
 					},
 				},
 			},
 			wantErr: nil,
 		},
+		// name: "expr and constr are unions, expr is same and compat",
 	}
 
-	s := types.SubTypeChecker{}
+	s := ts.SubTypeChecker{}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.ErrorIs(
 				t,
-				s.SubtypeCheck(tt.expr, tt.constr),
+				s.SubtypeCheck(tt.arg, tt.constr),
 				tt.wantErr,
 			)
 		})

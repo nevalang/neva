@@ -3,79 +3,84 @@ package types_test
 import (
 	"testing"
 
-	"github.com/emil14/neva/pkg/types"
+	ts "github.com/emil14/neva/pkg/types"
+	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/stretchr/testify/require"
 )
 
 func TestValidator_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		expr    types.Expr
+		expr    ts.Expr
 		wantErr error
 	}{
-		// non checkable cases
+		// both or nothing
 		{
-			name:    "inst (default expr is empty lit and default inst)",
-			expr:    types.Expr{}, // empty lit means inst
+			name:    "empty lit and empty inst (default expr)",
+			expr:    ts.Expr{},
+			wantErr: ts.ErrInvalidExprType,
+		},
+		{
+			name: "non-empty lit and inst",
+			expr: ts.Expr{
+				Lit:  ts.LiteralExpr{EnumLit: []string{"a"}},
+				Inst: ts.InstExpr{Ref: "int"},
+			},
+			wantErr: ts.ErrInvalidExprType,
+		},
+		// non-empty inst
+		{
+			name:    "empty lit and non-empty inst",
+			expr:    h.InstExpr("int"),
 			wantErr: nil,
 		},
+		// rec
 		{
-			name: "rec lit",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{RecLit: map[string]types.Expr{}}, // fields doesn't matter here
-			},
+			name:    "empty rec (non-empty lit)",
+			expr:    h.RecLitExpr(nil),
 			wantErr: nil,
 		},
-		// inst and lit at the same time
+		// non-empty rec
 		{
-			name: "non empty lit and inst with non empty ref",
-			expr: types.Expr{
-				Lit:  types.LiteralExpr{EnumLit: []string{}}, // it's ok to have "" ref for inst
-				Inst: types.InstExpr{Ref: "x"},               // but it's not ok to have a non-empty ref for lit
-			},
-			wantErr: types.ErrInvalidExprType,
-		},
-		{
-			name: "non empty lit and inst with non empty ref",
-			expr: types.Expr{
-				Lit:  types.LiteralExpr{EnumLit: []string{}},
-				Inst: types.InstExpr{Args: []types.Expr{{}}}, // same for len(args)>0
-			},
-			wantErr: types.ErrInvalidExprType,
+			name: "empty rec lit",
+			expr: h.RecLitExpr(map[string]ts.Expr{
+				"foo": h.InstExpr("int"),
+			}),
+			wantErr: nil,
 		},
 		// arr
 		{
 			name: "array of 0 elements",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 0},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 0},
 				},
 			},
-			wantErr: types.ErrArrSize,
+			wantErr: ts.ErrArrSize,
 		},
 		{
 			name: "array of 1 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 1},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 1},
 				},
 			},
-			wantErr: types.ErrArrSize,
+			wantErr: ts.ErrArrSize,
 		},
 		{
 			name: "array of 2 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 2},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 2},
 				},
 			},
 			wantErr: nil,
 		},
 		{
 			name: "array of 3 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{Size: 3},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					ArrLit: &ts.ArrLit{Size: 3},
 				},
 			},
 			wantErr: nil,
@@ -83,36 +88,36 @@ func TestValidator_Validate(t *testing.T) {
 		// union
 		{
 			name: "union of 0 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{},
 				},
 			},
-			wantErr: types.ErrUnionLen,
+			wantErr: ts.ErrUnionLen,
 		},
 		{
 			name: "union of 1 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{{}},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{{}},
 				},
 			},
-			wantErr: types.ErrUnionLen,
+			wantErr: ts.ErrUnionLen,
 		},
 		{
 			name: "union of 2 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{{}, {}},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{{}, {}},
 				},
 			},
 			wantErr: nil,
 		},
 		{
 			name: "union of 3 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{{}, {}, {}},
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
+					UnionLit: []ts.Expr{{}, {}, {}},
 				},
 			},
 			wantErr: nil,
@@ -120,43 +125,45 @@ func TestValidator_Validate(t *testing.T) {
 		// enum
 		{
 			name: "enum of 0 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{},
 				},
 			},
-			wantErr: types.ErrEnumLen,
+			wantErr: ts.ErrEnumLen,
 		},
 		{
 			name: "enum of 1 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
+			expr: ts.Expr{
+				Lit: ts.LiteralExpr{
 					EnumLit: []string{""},
 				},
 			},
-			wantErr: types.ErrEnumLen,
+			wantErr: ts.ErrEnumLen,
 		},
 		{
-			name: "enum of 2 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					EnumLit: []string{"", ""},
-				},
-			},
+			name:    "enum of 2 duplicate element",
+			expr:    h.EnumLitExpr("a", "a"),
+			wantErr: ts.ErrEnumDupl,
+		},
+		{
+			name:    "enum of 2 diff element",
+			expr:    h.EnumLitExpr("a", "b"),
 			wantErr: nil,
 		},
 		{
-			name: "enum of 3 element",
-			expr: types.Expr{
-				Lit: types.LiteralExpr{
-					EnumLit: []string{"", "", ""},
-				},
-			},
+			name:    "enum of 3 diff element",
+			expr:    h.EnumLitExpr("a", "b", "c"),
 			wantErr: nil,
+		},
+		{
+			name:    "enum of 3 els with dupl",
+			expr:    h.EnumLitExpr("a", "b", "a"),
+			wantErr: ts.ErrEnumDupl,
 		},
 	}
 
-	v := types.Validator{}
+	v := ts.Validator{}
 
 	for _, tt := range tests {
 		tt := tt
