@@ -6,9 +6,7 @@ import ts "github.com/emil14/neva/pkg/types"
 func NativeDef(name string, params ...ts.Param) ts.Def {
 	return ts.Def{
 		Params: params,
-		Body: ts.Expr{
-			Inst: ts.InstExpr{Ref: name},
-		},
+		Body: InstExpr(name),
 	}
 }
 
