@@ -1,3 +1,4 @@
+// todo scope ins't validated?
 package types
 
 import (
@@ -28,6 +29,7 @@ var (
 	ErrInvalidExpr = errors.New("expr must be valid to be resolved")
 	ErrNoRefType   = errors.New("ref type not found")
 	ErrInstArgsLen = errors.New("inst cannot have more arguments than reference type has parameters")
+	ErrSubtype     = errors.New("argument not subtype of parameter")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -82,23 +84,23 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		}, nil
 	}
 
-	refType, ok := scope[expr.Inst.Ref] // check that reference type exists
+	def, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
 		return Expr{}, fmt.Errorf("%w: %v", ErrNoRefType, expr.Inst.Ref)
 	}
 
 	// check that args for every param is present
-	if len(refType.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
+	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
-			"%w, want %d, got %d", ErrInstArgsLen, len(refType.Params), len(expr.Inst.Args),
+			"%w, want %d, got %d", ErrInstArgsLen, len(def.Params), len(expr.Inst.Args),
 		)
 	}
 
-	newScope := make(map[string]Def, len(scope)+len(refType.Params)) // new scope contains resolved params (shadow)
+	newScope := make(map[string]Def, len(scope)+len(def.Params)) // new scope contains resolved params (shadow)
 	maps.Copy(newScope, scope)
-	resolvedArgs := make([]Expr, 0, len(refType.Params)) // in case of native type
+	resolvedArgs := make([]Expr, 0, len(def.Params)) // in case of native type
 
-	for i, param := range refType.Params {
+	for i, param := range def.Params {
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)
 		if err != nil {
 			return Expr{}, errors.New("")
@@ -110,29 +112,29 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		}
 
 		if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
-			return Expr{}, fmt.Errorf("arg not subtype of constraint: %w", err)
+			return Expr{}, fmt.Errorf(" %w: %v", ErrSubtype, err)
 		}
 
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 		newScope[param.Name] = Def{Body: resolvedArg} // no params for types from args
 	}
 
-	if refType.Body.Lit.Empty() { // reference type's body is an instantiation
-		baseType, ok := scope[refType.Body.Inst.Ref]
+	if def.Body.Lit.Empty() { // reference type's body is an instantiation
+		baseType, ok := scope[def.Body.Inst.Ref]
 		if !ok {
 			return Expr{}, errors.New("")
 		}
 		if expr.Inst.Ref == baseType.Body.Inst.Ref { // direct self reference = native instantiation
 			return Expr{
 				Inst: InstExpr{
-					Ref:  refType.Body.Inst.Ref,
+					Ref:  def.Body.Inst.Ref,
 					Args: resolvedArgs,
 				},
 			}, nil
 		}
 	}
 
-	return r.Resolve(refType.Body, newScope) // it's not a native type and not literal - next step is needed
+	return r.Resolve(def.Body, newScope) // it's not a native type and not literal - next step is needed
 }
 
 func NewDefaultResolver() Resolver {

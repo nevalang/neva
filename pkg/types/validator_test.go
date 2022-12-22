@@ -31,7 +31,7 @@ func TestValidator_Validate(t *testing.T) {
 		// non-empty inst
 		{
 			name:    "empty lit and non-empty inst",
-			expr:    h.InstExpr("int"),
+			expr:    h.Inst("int"),
 			wantErr: nil,
 		},
 		// rec
@@ -44,7 +44,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "empty rec lit",
 			expr: h.RecLitExpr(map[string]ts.Expr{
-				"foo": h.InstExpr("int"),
+				"foo": h.Inst("int"),
 			}),
 			wantErr: nil,
 		},

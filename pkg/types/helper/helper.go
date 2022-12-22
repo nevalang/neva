@@ -6,12 +6,24 @@ import ts "github.com/emil14/neva/pkg/types"
 func NativeDef(name string, params ...ts.Param) ts.Def {
 	return ts.Def{
 		Params: params,
-		Body: InstExpr(name),
+		Body:   Inst(name),
 	}
 }
 
+// Constr is optional
+// func Param(name string, constr *ts.Expr) ts.Param {
+// 	v := ts.Param{Name: name}
+// 	if constr != nil {
+// 		v.Constraint = *constr
+// 	}
+// 	return v
+// }
+
 // Do not pass empty string as a name to avoid inst.Empty() == true
-func InstExpr(ref string, args ...ts.Expr) ts.Expr {
+func Inst(ref string, args ...ts.Expr) ts.Expr {
+	if args == nil {
+		args = []ts.Expr{} // makes easier testing because resolver returns non-nil args for native types
+	}
 	return ts.Expr{
 		Inst: ts.InstExpr{
 			Ref:  ref,

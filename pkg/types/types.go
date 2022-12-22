@@ -14,7 +14,7 @@ type Param struct {
 // Instantiation or literal
 type Expr struct {
 	Lit  LiteralExpr // If empty then expr is inst
-	Inst InstExpr
+	Inst InstExpr    // rename to call?
 }
 
 // Instantiation expression

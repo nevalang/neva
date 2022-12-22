@@ -45,6 +45,9 @@ func (expr Expr) String() string { // todo move?
 	}
 
 	if len(expr.Inst.Args) == 0 {
+		if expr.Inst.Args != nil {
+			return expr.Inst.Ref + "<>"
+		}
 		return expr.Inst.Ref
 	}
 

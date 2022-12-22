@@ -25,71 +25,71 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		//  kinds
 		{
 			name:    "arg inst, constr lit (not union)", // int <: {}
-			arg:     h.InstExpr("int"),
+			arg:     h.Inst("int"),
 			constr:  h.EnumLitExpr(),
 			wantErr: ts.ErrDiffTypes,
 		},
 		{
 			name:    "constr inst, arg lit (not union)", // {} <: int
 			arg:     h.EnumLitExpr(),
-			constr:  h.InstExpr("int"),
+			constr:  h.Inst("int"),
 			wantErr: ts.ErrDiffTypes,
 		},
 		// diff refs
 		{
 			name:    "insts, diff refs, no args", // int <: bool (no need to check vice versa, they resolved)
-			arg:     h.InstExpr("int"),
-			constr:  h.InstExpr("bool"),
+			arg:     h.Inst("int"),
+			constr:  h.Inst("bool"),
 			wantErr: ts.ErrDiffRefs,
 		},
 		{
 			name:    "insts, same refs, no args", // int <: int
-			arg:     h.InstExpr("int"),
-			constr:  h.InstExpr("int"),
+			arg:     h.Inst("int"),
+			constr:  h.Inst("int"),
 			wantErr: nil,
 		},
 		// args count
 		{
 			name:    "insts, arg has less args", // vec <: vec<int>
-			arg:     h.InstExpr("vec"),
-			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			arg:     h.Inst("vec"),
+			constr:  h.Inst("vec", h.Inst("int")),
 			wantErr: ts.ErrArgsCount,
 		},
 		{
 			name:    "insts, arg has same args count", // vec<int> <: vec<int>
-			arg:     h.InstExpr("vec", h.InstExpr("int")),
-			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			arg:     h.Inst("vec", h.Inst("int")),
+			constr:  h.Inst("vec", h.Inst("int")),
 			wantErr: nil,
 		},
 		{
 			name:    "insts, arg has more args count", // vec<int, str> <: vec<int>
-			arg:     h.InstExpr("vec", h.InstExpr("int"), h.InstExpr("str")),
-			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			arg:     h.Inst("vec", h.Inst("int"), h.Inst("str")),
+			constr:  h.Inst("vec", h.Inst("int")),
 			wantErr: nil,
 		},
 		// args compatibility
 		{
 			name: "insts, one arg's arg incompat", // vec<str> <: vec<int|str>
-			arg:  h.InstExpr("vec", h.InstExpr("str")),
-			constr: h.InstExpr(
+			arg:  h.Inst("vec", h.Inst("str")),
+			constr: h.Inst(
 				"vec",
 				h.UnionLitExpr(
-					h.InstExpr("str"),
-					h.InstExpr("int"),
+					h.Inst("str"),
+					h.Inst("int"),
 				),
 			),
 			wantErr: nil,
 		},
 		{
 			name: "insts, constr arg incompat", // vec<str|int> <: vec<int>
-			arg: h.InstExpr(
+			arg: h.Inst(
 				"vec",
 				h.UnionLitExpr(
-					h.InstExpr("str"),
-					h.InstExpr("int"),
+					h.Inst("str"),
+					h.Inst("int"),
 				),
 			),
-			constr:  h.InstExpr("vec", h.InstExpr("int")),
+			constr:  h.Inst("vec", h.Inst("int")),
 			wantErr: ts.ErrArgNotSubtype,
 		},
 		// arr
