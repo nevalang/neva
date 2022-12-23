@@ -30,6 +30,8 @@ var (
 	ErrNoRefType   = errors.New("ref type not found")
 	ErrInstArgsLen = errors.New("inst cannot have more arguments than reference type has parameters")
 	ErrSubtype     = errors.New("argument not subtype of parameter")
+	ErrConstraint  = errors.New("can't resolve constraint")
+	ErrBaseType    = errors.New("base type not found")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -40,7 +42,7 @@ var (
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nolint:funlen
+func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nolint:funlen,gocognit
 	if err := r.Validate(expr); err != nil {
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
@@ -106,13 +108,14 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 			return Expr{}, errors.New("")
 		}
 
-		resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
-		if err != nil {
-			return Expr{}, errors.New("")
-		}
-
-		if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
-			return Expr{}, fmt.Errorf(" %w: %v", ErrSubtype, err)
+		if !param.Constraint.Empty() {
+			resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
+			if err != nil {
+				return Expr{}, fmt.Errorf("%w: %v", ErrConstraint, err)
+			}
+			if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
+				return Expr{}, fmt.Errorf(" %w: %v", ErrSubtype, err)
+			}
 		}
 
 		resolvedArgs = append(resolvedArgs, resolvedArg)
@@ -122,7 +125,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	if def.Body.Lit.Empty() { // reference type's body is an instantiation
 		baseType, ok := scope[def.Body.Inst.Ref]
 		if !ok {
-			return Expr{}, errors.New("")
+			return Expr{}, fmt.Errorf("%w: %v", ErrBaseType, def.Body.Inst.Ref)
 		}
 		if expr.Inst.Ref == baseType.Body.Inst.Ref { // direct self reference = native instantiation
 			return Expr{

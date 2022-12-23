@@ -76,6 +76,39 @@ func TestResolver_Resolve(t *testing.T) {
 				wantErr: ts.ErrSubtype,
 			}
 		},
+		// TODO test for unresolved constr
+		func() testcase { // expr = t1<t2>, scope = { t2, t1<t> = t3 }
+			expr := h.Inst("t1", h.Inst("t2"))
+			return testcase{
+				name: "base type not found (inst refers to def that refers to nothing)",
+				expr: expr,
+				scope: map[string]ts.Def{
+					"t1": h.NativeDef("t3", ts.Param{Name: "t"}),
+					"t2": h.NativeDef("t2"),
+				},
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
+				},
+				wantErr: ts.ErrBaseType,
+			}
+		},
+		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t3 }
+			expr := h.Inst("t1", h.Inst("t2"))
+			return testcase{
+				name: "invalid constr",
+				expr: expr,
+				scope: map[string]ts.Def{
+					"t1": h.NativeDef("t3", ts.Param{Name: "t"}),
+					"t2": h.NativeDef("t2"),
+				},
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
+				},
+				wantErr: ts.ErrBaseType,
+			}
+		},
 	}
 
 	for _, tt := range tests {

@@ -17,6 +17,10 @@ type Expr struct {
 	Inst InstExpr    // rename to call?
 }
 
+func (e Expr) Empty() bool {
+	return e.Inst.Empty() && e.Lit.Empty()
+}
+
 // Instantiation expression
 type InstExpr struct {
 	Ref  string // Must be in the scope
