@@ -26,12 +26,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name:    "arg inst, constr lit (not union)", // int <: {}
 			arg:     h.Inst("int"),
-			constr:  h.EnumLitExpr(),
+			constr:  h.Enum(),
 			wantErr: ts.ErrDiffTypes,
 		},
 		{
 			name:    "constr inst, arg lit (not union)", // {} <: int
-			arg:     h.EnumLitExpr(),
+			arg:     h.Enum(),
 			constr:  h.Inst("int"),
 			wantErr: ts.ErrDiffTypes,
 		},
@@ -73,7 +73,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 			arg:  h.Inst("vec", h.Inst("str")),
 			constr: h.Inst(
 				"vec",
-				h.UnionLitExpr(
+				h.Union(
 					h.Inst("str"),
 					h.Inst("int"),
 				),
@@ -84,7 +84,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 			name: "insts, constr arg incompat", // vec<str|int> <: vec<int>
 			arg: h.Inst(
 				"vec",
-				h.UnionLitExpr(
+				h.Union(
 					h.Inst("str"),
 					h.Inst("int"),
 				),

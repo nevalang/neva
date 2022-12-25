@@ -26,12 +26,14 @@ type (
 )
 
 var (
-	ErrInvalidExpr = errors.New("expr must be valid to be resolved")
-	ErrNoRefType   = errors.New("ref type not found")
-	ErrInstArgsLen = errors.New("inst cannot have more arguments than reference type has parameters")
-	ErrSubtype     = errors.New("argument not subtype of parameter")
-	ErrConstraint  = errors.New("can't resolve constraint")
-	ErrBaseType    = errors.New("base type not found")
+	ErrInvalidExpr       = errors.New("expression must be valid in order to be resolved")
+	ErrUndefinedRef      = errors.New("expression refers to type that is not presented in the scope")
+	ErrInstArgsLen       = errors.New("inst cannot have more arguments than reference type has parameters")
+	ErrIncompatArg       = errors.New("argument is not subtype of the parameter's contraint")
+	ErrConstr            = errors.New("can't resolve constraint")
+	ErrNoBaseType        = errors.New("definition's body refers to type that is not in the scope")
+	ErrArrType           = errors.New("could not resolve array type")
+	ErrUnionUnresolvedEl = errors.New("can't resolve union element")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -53,7 +55,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	case ArrLitType:
 		resolvedArrType, err := r.Resolve(expr.Lit.ArrLit.Expr, scope)
 		if err != nil {
-			return Expr{}, fmt.Errorf("invalid expr: %w", err)
+			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
 		return Expr{
 			Lit: LiteralExpr{
@@ -65,7 +67,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		for _, unionEl := range expr.Lit.UnionLit {
 			resolvedEl, err := r.Resolve(unionEl, scope)
 			if err != nil {
-				return Expr{}, err
+				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
@@ -88,7 +90,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 
 	def, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
-		return Expr{}, fmt.Errorf("%w: %v", ErrNoRefType, expr.Inst.Ref)
+		return Expr{}, fmt.Errorf("%w: %v", ErrUndefinedRef, expr.Inst.Ref)
 	}
 
 	// check that args for every param is present
@@ -111,10 +113,10 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		if !param.Constraint.Empty() {
 			resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
 			if err != nil {
-				return Expr{}, fmt.Errorf("%w: %v", ErrConstraint, err)
+				return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 			}
 			if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
-				return Expr{}, fmt.Errorf(" %w: %v", ErrSubtype, err)
+				return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 			}
 		}
 
@@ -125,7 +127,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	if def.Body.Lit.Empty() { // reference type's body is an instantiation
 		baseType, ok := scope[def.Body.Inst.Ref]
 		if !ok {
-			return Expr{}, fmt.Errorf("%w: %v", ErrBaseType, def.Body.Inst.Ref)
+			return Expr{}, fmt.Errorf("%w: %v", ErrNoBaseType, def.Body.Inst.Ref)
 		}
 		if expr.Inst.Ref == baseType.Body.Inst.Ref { // direct self reference = native instantiation
 			return Expr{

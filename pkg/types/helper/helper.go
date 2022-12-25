@@ -32,7 +32,7 @@ func Inst(ref string, args ...ts.Expr) ts.Expr {
 	}
 }
 
-func EnumLitExpr(els ...string) ts.Expr {
+func Enum(els ...string) ts.Expr {
 	if els == nil { // for !lit.Empty()
 		els = []string{}
 	}
@@ -41,7 +41,15 @@ func EnumLitExpr(els ...string) ts.Expr {
 	}
 }
 
-func UnionLitExpr(els ...ts.Expr) ts.Expr {
+func Arr(size int, typ ts.Expr) ts.Expr {
+	return ts.Expr{
+		Lit: ts.LiteralExpr{
+			ArrLit: &ts.ArrLit{Expr: typ, Size: size},
+		},
+	}
+}
+
+func Union(els ...ts.Expr) ts.Expr {
 	if els == nil { // for !lit.Empty()
 		els = []ts.Expr{}
 	}

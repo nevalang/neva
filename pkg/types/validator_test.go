@@ -143,22 +143,22 @@ func TestValidator_Validate(t *testing.T) {
 		},
 		{
 			name:    "enum of 2 duplicate element",
-			expr:    h.EnumLitExpr("a", "a"),
+			expr:    h.Enum("a", "a"),
 			wantErr: ts.ErrEnumDupl,
 		},
 		{
 			name:    "enum of 2 diff element",
-			expr:    h.EnumLitExpr("a", "b"),
+			expr:    h.Enum("a", "b"),
 			wantErr: nil,
 		},
 		{
 			name:    "enum of 3 diff element",
-			expr:    h.EnumLitExpr("a", "b", "c"),
+			expr:    h.Enum("a", "b", "c"),
 			wantErr: nil,
 		},
 		{
 			name:    "enum of 3 els with dupl",
-			expr:    h.EnumLitExpr("a", "b", "a"),
+			expr:    h.Enum("a", "b", "a"),
 			wantErr: ts.ErrEnumDupl,
 		},
 	}
