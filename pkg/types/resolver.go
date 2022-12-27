@@ -26,14 +26,15 @@ type (
 )
 
 var (
-	ErrInvalidExpr       = errors.New("expression must be valid in order to be resolved")
-	ErrUndefinedRef      = errors.New("expression refers to type that is not presented in the scope")
-	ErrInstArgsLen       = errors.New("inst cannot have more arguments than reference type has parameters")
-	ErrIncompatArg       = errors.New("argument is not subtype of the parameter's contraint")
-	ErrConstr            = errors.New("can't resolve constraint")
-	ErrNoBaseType        = errors.New("definition's body refers to type that is not in the scope")
-	ErrArrType           = errors.New("could not resolve array type")
-	ErrUnionUnresolvedEl = errors.New("can't resolve union element")
+	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
+	ErrUndefinedRef       = errors.New("expression refers to type that is not presented in the scope")
+	ErrInstArgsLen        = errors.New("inst cannot have more arguments than reference type has parameters")
+	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
+	ErrConstr             = errors.New("can't resolve constraint")
+	ErrNoBaseType         = errors.New("definition's body refers to type that is not in the scope")
+	ErrArrType            = errors.New("could not resolve array type")
+	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
+	ErrRecFieldUnresolved = errors.New("can't resolve record field")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -79,7 +80,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		for field, fieldExpr := range expr.Lit.RecLit {
 			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope)
 			if err != nil {
-				return Expr{}, errors.New("")
+				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
 			resolvedStruct[field] = resolvedFieldExpr
 		}

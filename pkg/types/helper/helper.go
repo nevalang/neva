@@ -58,7 +58,7 @@ func Union(els ...ts.Expr) ts.Expr {
 	}
 }
 
-func RecLitExpr(v map[string]ts.Expr) ts.Expr {
+func Rec(v map[string]ts.Expr) ts.Expr {
 	if v == nil { // for !lit.Empty()
 		v = map[string]ts.Expr{}
 	}

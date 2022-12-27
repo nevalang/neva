@@ -234,6 +234,48 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
+		func() testcase { // {}
+			expr := h.Rec(map[string]ts.Expr{})
+			return testcase{
+				name:  "empty record",
+				scope: map[string]ts.Def{},
+				expr:  expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+				},
+				want:    h.Rec(map[string]ts.Expr{}),
+				wantErr: nil,
+			}
+		},
+		func() testcase { // { name string }
+			stringExpr := h.Inst("string")
+			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
+			return testcase{
+				name:  "record with invalid field",
+				scope: map[string]ts.Def{},
+				expr:  expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(stringExpr).Return(errors.New(""))
+				},
+				wantErr: ts.ErrRecFieldUnresolved,
+			}
+		},
+		func() testcase { // { name string }
+			stringExpr := h.Inst("string")
+			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
+			return testcase{
+				name:  "record with valid field",
+				scope: map[string]ts.Def{"string": h.NativeDef("string")},
+				expr:  expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(stringExpr).Return(nil)
+				},
+				want:    expr,
+				wantErr: nil,
+			}
+		},
 	}
 
 	for _, tt := range tests {
