@@ -51,6 +51,21 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrInstArgsLen,
 			}
 		},
+		func() testcase { // expr = vec<foo>, scope = {vec<t> = vec}
+			expr := h.Inst("vec", h.Inst("foo"))
+			return testcase{
+				name: "unresolvable argument",
+				expr: expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(expr.Inst.Args[0]).Return(errors.New("")) // in the loop
+				},
+				scope: map[string]ts.Def{
+					"vec": h.NativeDef("vec", ts.Param{Name: "t"}),
+				},
+				wantErr: ts.ErrUnresolvedArg,
+			}
+		},
 		func() testcase { // expr = map<t1>, scope = { map<t t2> = map, t1 , t2 }
 			expr := h.Inst("map", h.Inst("t1"))
 			constr := h.Inst("t2")
@@ -232,6 +247,24 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.EXPECT().Validate(t2).Return(errors.New(""))
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
+			}
+		},
+		func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
+			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
+			return testcase{
+				name: "union with resolvable elements",
+				scope: map[string]ts.Def{
+					"t1": h.NativeDef("t1"),
+					"t2": h.NativeDef("t2"),
+				},
+				expr: expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().Validate(expr).Return(nil)
+					v.EXPECT().Validate(expr.Lit.UnionLit[0]).Return(nil)
+					v.EXPECT().Validate(expr.Lit.UnionLit[1]).Return(nil)
+				},
+				want:    expr,
+				wantErr: nil,
 			}
 		},
 		func() testcase { // {}

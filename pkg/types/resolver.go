@@ -30,6 +30,7 @@ var (
 	ErrUndefinedRef       = errors.New("expression refers to type that is not presented in the scope")
 	ErrInstArgsLen        = errors.New("inst cannot have more arguments than reference type has parameters")
 	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
+	ErrUnresolvedArg      = errors.New("can't resolve argument")
 	ErrConstr             = errors.New("can't resolve constraint")
 	ErrNoBaseType         = errors.New("definition's body refers to type that is not in the scope")
 	ErrArrType            = errors.New("could not resolve array type")
@@ -105,10 +106,10 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	maps.Copy(newScope, scope)
 	resolvedArgs := make([]Expr, 0, len(def.Params)) // in case of native type
 
-	for i, param := range def.Params {
+	for i, param := range def.Params { // substutution happens here
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)
 		if err != nil {
-			return Expr{}, errors.New("")
+			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
 
 		if !param.Constraint.Empty() {
