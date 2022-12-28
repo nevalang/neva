@@ -102,29 +102,31 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		)
 	}
 
-	newScope := make(map[string]Def, len(scope)+len(def.Params)) // new scope contains resolved params (shadow)
+	newScope := make(map[string]Def, len(scope)+len(def.Params)) // new scope will contain resolved args (shadow)
 	maps.Copy(newScope, scope)
 	resolvedArgs := make([]Expr, 0, len(def.Params)) // in case of native type
 
-	for i, param := range def.Params { // substutution happens here
+	for i, param := range def.Params { // resolve arguments and parameter's constraints to compare them
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
 
-		if !param.Constraint.Empty() {
-			resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
-			if err != nil {
-				return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
-			}
-			if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
-				return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
-			}
+		resolvedArgs = append(resolvedArgs, resolvedArg)
+		newScope[param.Name] = Def{Body: resolvedArg} // no params for types from args (substutution happens here)
+
+		if param.Constraint.Empty() {
+			continue
 		}
 
-		resolvedArgs = append(resolvedArgs, resolvedArg)
-		newScope[param.Name] = Def{Body: resolvedArg} // no params for types from args
-	}
+		resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
+		if err != nil {
+			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
+		}
+		if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
+			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
+		}
+	} // at this point we have resolved args that are compatible with their parameters and a new scope
 
 	if def.Body.Lit.Empty() { // reference type's body is an instantiation
 		baseType, ok := scope[def.Body.Inst.Ref]
