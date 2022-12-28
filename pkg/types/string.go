@@ -10,13 +10,13 @@ func (expr Expr) String() string { // todo move?
 	case ArrLitType:
 		return fmt.Sprintf(
 			"[%d]%s",
-			expr.Lit.ArrLit.Size, expr.Lit.ArrLit.Expr.String(),
+			expr.Lit.Arr.Size, expr.Lit.Arr.Expr.String(),
 		)
 	case EnumLitType:
 		s += "{"
-		for i, el := range expr.Lit.EnumLit {
+		for i, el := range expr.Lit.Enum {
 			s += " " + el
-			if i == len(expr.Lit.EnumLit)-1 {
+			if i == len(expr.Lit.Enum)-1 {
 				s += " "
 			}
 		}
@@ -24,9 +24,9 @@ func (expr Expr) String() string { // todo move?
 	case RecLitType:
 		s += "{"
 		c := 0
-		for fieldName, fieldExpr := range expr.Lit.RecLit {
+		for fieldName, fieldExpr := range expr.Lit.Rec {
 			s += fmt.Sprintf(" %s %s", fieldName, fieldExpr)
-			if c < len(expr.Lit.RecLit)-1 {
+			if c < len(expr.Lit.Rec)-1 {
 				s += ","
 			} else {
 				s += " "
@@ -35,9 +35,9 @@ func (expr Expr) String() string { // todo move?
 		}
 		return s + "}"
 	case UnionLitType:
-		for i, el := range expr.Lit.UnionLit {
+		for i, el := range expr.Lit.Union {
 			s += el.String()
-			if i < len(expr.Lit.UnionLit)-1 {
+			if i < len(expr.Lit.Union)-1 {
 				s += " | "
 			}
 		}

@@ -37,14 +37,14 @@ func Enum(els ...string) ts.Expr {
 		els = []string{}
 	}
 	return ts.Expr{
-		Lit: ts.LiteralExpr{EnumLit: els},
+		Lit: ts.LiteralExpr{Enum: els},
 	}
 }
 
 func Arr(size int, typ ts.Expr) ts.Expr {
 	return ts.Expr{
 		Lit: ts.LiteralExpr{
-			ArrLit: &ts.ArrLit{Expr: typ, Size: size},
+			Arr: &ts.ArrLit{Expr: typ, Size: size},
 		},
 	}
 }
@@ -54,7 +54,7 @@ func Union(els ...ts.Expr) ts.Expr {
 		els = []ts.Expr{}
 	}
 	return ts.Expr{
-		Lit: ts.LiteralExpr{UnionLit: els},
+		Lit: ts.LiteralExpr{Union: els},
 	}
 }
 
@@ -64,7 +64,7 @@ func Rec(v map[string]ts.Expr) ts.Expr {
 	}
 	return ts.Expr{
 		Lit: ts.LiteralExpr{
-			RecLit: v,
+			Rec: v,
 		},
 	}
 }

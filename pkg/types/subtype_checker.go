@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrDiffTypes     = errors.New("expr and constr must both be lits or insts except constr is union")
+	ErrDiffExprTypes = errors.New("expr and constr must both be lits or insts except constr is union")
 	ErrDiffRefs      = errors.New("expr inst must have same ref as constr")
 	ErrArgsCount     = errors.New("expr inst must have >= args than constr")
 	ErrArgNotSubtype = errors.New("expr arg must be subtype of corresponding constr arg")
@@ -31,25 +31,21 @@ var (
 type SubTypeChecker struct{}
 
 // Both expression and constraint must be resolved
-func (s SubTypeChecker) SubtypeCheck(arg, constr Expr) error { //nolint:funlen,gocognit,gocyclo
+func (s SubTypeChecker) SubtypeCheck(arg, constr Expr) error { //nolint:funlen,gocognit
 	isConstrInst := constr.Lit.Empty()
-	diffTypes := arg.Lit.Empty() != isConstrInst
+	diffExprTypes := arg.Lit.Empty() != isConstrInst
 	isConstrUnion := constr.Lit.Type() == UnionLitType
 
-	if diffTypes && !isConstrUnion {
-		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffTypes, arg.Lit, constr.Lit)
+	if diffExprTypes && !isConstrUnion {
+		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffExprTypes, arg.Lit, constr.Lit)
 	}
 
-	if isConstrInst { // expr and constr insts
+	if isConstrInst { // expr and constr are both insts
 		if arg.Inst.Ref != constr.Inst.Ref {
-			return fmt.Errorf(
-				"%w: got %v, want %v", ErrDiffRefs, arg.Inst.Ref, constr.Inst.Ref,
-			)
+			return fmt.Errorf("%w: got %v, want %v", ErrDiffRefs, arg.Inst.Ref, constr.Inst.Ref)
 		}
 		if len(arg.Inst.Args) < len(constr.Inst.Args) {
-			return fmt.Errorf(
-				"%w: got %v, want %v", ErrArgsCount, len(arg.Inst.Args), len(constr.Inst.Args),
-			)
+			return fmt.Errorf("%w: got %v, want %v", ErrArgsCount, len(arg.Inst.Args), len(constr.Inst.Args))
 		}
 		for i, constraintArg := range constr.Inst.Args {
 			if err := s.SubtypeCheck(arg.Inst.Args[i], constraintArg); err != nil { // FIXME? is this tested?
@@ -67,33 +63,27 @@ func (s SubTypeChecker) SubtypeCheck(arg, constr Expr) error { //nolint:funlen,g
 
 	switch constrLitType {
 	case ArrLitType: // [5]int <: [4]int|float ???
-		if arg.Lit.ArrLit.Size < constr.Lit.ArrLit.Size {
-			return fmt.Errorf(
-				"%w: got %d, want %d", ErrLitArrSize, arg.Lit.ArrLit.Size, constr.Lit.ArrLit.Size,
-			)
+		if arg.Lit.Arr.Size < constr.Lit.Arr.Size {
+			return fmt.Errorf("%w: got %d, want %d", ErrLitArrSize, arg.Lit.Arr.Size, constr.Lit.Arr.Size)
 		}
-		if err := s.SubtypeCheck(arg.Lit.ArrLit.Expr, constr.Lit.ArrLit.Expr); err != nil {
+		if err := s.SubtypeCheck(arg.Lit.Arr.Expr, constr.Lit.Arr.Expr); err != nil {
 			return fmt.Errorf("%w: %v", ErrArrDiffType, err)
 		}
 	case EnumLitType: // {a b c} <: {a b c d}
-		if len(arg.Lit.EnumLit) > len(constr.Lit.EnumLit) {
-			return fmt.Errorf(
-				"%w: got %d, want %d", ErrBigEnum, len(arg.Lit.EnumLit), len(constr.Lit.EnumLit),
-			)
+		if len(arg.Lit.Enum) > len(constr.Lit.Enum) {
+			return fmt.Errorf("%w: got %d, want %d", ErrBigEnum, len(arg.Lit.Enum), len(constr.Lit.Enum))
 		}
-		for i, exprEl := range arg.Lit.EnumLit {
-			if exprEl != constr.Lit.EnumLit[i] {
-				return fmt.Errorf("%w: #%d got %s, want %s", ErrEnumEl, i, exprEl, constr.Lit.EnumLit[i])
+		for i, exprEl := range arg.Lit.Enum {
+			if exprEl != constr.Lit.Enum[i] {
+				return fmt.Errorf("%w: #%d got %s, want %s", ErrEnumEl, i, exprEl, constr.Lit.Enum[i])
 			}
 		}
 	case RecLitType: // {x int, y float} <: {x int|str}
-		if len(arg.Lit.RecLit) < len(constr.Lit.RecLit) {
-			return fmt.Errorf(
-				"%w: got %v, want %v", ErrRecLen, len(arg.Lit.RecLit), len(constr.Lit.RecLit),
-			)
+		if len(arg.Lit.Rec) < len(constr.Lit.Rec) {
+			return fmt.Errorf("%w: got %v, want %v", ErrRecLen, len(arg.Lit.Rec), len(constr.Lit.Rec))
 		}
-		for constraintFieldName, constraintField := range constr.Lit.RecLit {
-			exprField, ok := arg.Lit.RecLit[constraintFieldName]
+		for constraintFieldName, constraintField := range constr.Lit.Rec {
+			exprField, ok := arg.Lit.Rec[constraintFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrRecNoField, constraintFieldName)
 			}
@@ -102,32 +92,27 @@ func (s SubTypeChecker) SubtypeCheck(arg, constr Expr) error { //nolint:funlen,g
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
-		if arg.Lit.UnionLit == nil { // constraint is union, expr is not
-			for _, constraintUnionEl := range constr.Lit.UnionLit {
+		if arg.Lit.Union == nil { // constraint is union, expr is not
+			for _, constraintUnionEl := range constr.Lit.Union {
 				if s.SubtypeCheck(arg, constraintUnionEl) == nil {
 					return nil
 				}
 			}
 			return fmt.Errorf("%w: got %v", ErrUnion, arg.Lit)
 		}
-		if len(arg.Lit.UnionLit) > len(constr.Lit.UnionLit) {
-			return fmt.Errorf(
-				"%w: got %d, want %d", ErrUnionsLen, len(arg.Lit.UnionLit), len(constr.Lit.UnionLit),
-			)
+		if len(arg.Lit.Union) > len(constr.Lit.Union) {
+			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(arg.Lit.Union), len(constr.Lit.Union))
 		}
-		for _, exprEl := range arg.Lit.UnionLit {
+		for _, exprEl := range arg.Lit.Union { // check that all elements of arg union compatible with constr
 			var b bool
-			for _, constraintEl := range constr.Lit.UnionLit {
+			for _, constraintEl := range constr.Lit.Union {
 				if s.SubtypeCheck(exprEl, constraintEl) == nil {
 					b = true
 					break
 				}
 			}
 			if !b {
-				return fmt.Errorf(
-					"%w: got %v, want %v",
-					ErrUnions, exprEl, constr.Lit.UnionLit,
-				)
+				return fmt.Errorf("%w: got %v, want %v", ErrUnions, exprEl, constr.Lit.Union)
 			}
 		}
 	}

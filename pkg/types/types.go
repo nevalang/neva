@@ -33,27 +33,27 @@ func (i InstExpr) Empty() bool {
 
 // Literal expression. Only one field must be initialized
 type LiteralExpr struct {
-	ArrLit   *ArrLit
-	RecLit   map[string]Expr
-	EnumLit  []string
-	UnionLit []Expr
+	Arr   *ArrLit
+	Rec   map[string]Expr
+	Enum  []string
+	Union []Expr
 }
 
 // Helper to check that all lit's fields are nils. Doesn't care about validation
 func (lit LiteralExpr) Empty() bool {
-	return lit.ArrLit == nil && lit.RecLit == nil && lit.EnumLit == nil && lit.UnionLit == nil
+	return lit.Arr == nil && lit.Rec == nil && lit.Enum == nil && lit.Union == nil
 }
 
 // Always call Validate before
 func (lit LiteralExpr) Type() LiteralType {
 	switch {
-	case lit.ArrLit != nil:
+	case lit.Arr != nil:
 		return ArrLitType
-	case lit.RecLit != nil:
+	case lit.Rec != nil:
 		return RecLitType
-	case lit.EnumLit != nil:
+	case lit.Enum != nil:
 		return EnumLitType
-	case lit.UnionLit != nil:
+	case lit.Union != nil:
 		return UnionLitType
 	}
 	return EmptyLitType // for inst or invalid lit

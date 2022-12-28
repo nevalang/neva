@@ -55,18 +55,14 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
-		resolvedArrType, err := r.Resolve(expr.Lit.ArrLit.Expr, scope)
+		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
-		return Expr{
-			Lit: LiteralExpr{
-				ArrLit: &ArrLit{resolvedArrType, expr.Lit.ArrLit.Size},
-			},
-		}, nil
+		return ArrExpr(expr.Lit.Arr.Size, resolvedArrType), nil
 	case UnionLitType:
-		resolvedUnion := make([]Expr, 0, len(expr.Lit.UnionLit))
-		for _, unionEl := range expr.Lit.UnionLit {
+		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
+		for _, unionEl := range expr.Lit.Union {
 			resolvedEl, err := r.Resolve(unionEl, scope)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
@@ -74,11 +70,11 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
 		return Expr{
-			Lit: LiteralExpr{UnionLit: resolvedUnion},
+			Lit: LiteralExpr{Union: resolvedUnion},
 		}, nil
 	case RecLitType:
-		resolvedStruct := make(map[string]Expr, len(expr.Lit.RecLit))
-		for field, fieldExpr := range expr.Lit.RecLit {
+		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
+		for field, fieldExpr := range expr.Lit.Rec {
 			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
@@ -86,7 +82,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 			resolvedStruct[field] = resolvedFieldExpr
 		}
 		return Expr{
-			Lit: LiteralExpr{RecLit: resolvedStruct},
+			Lit: LiteralExpr{Rec: resolvedStruct},
 		}, nil
 	}
 
@@ -104,7 +100,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 
 	newScope := make(map[string]Def, len(scope)+len(def.Params)) // new scope will contain resolved args (shadow)
 	maps.Copy(newScope, scope)
-	resolvedArgs := make([]Expr, 0, len(def.Params)) // in case of native type
+	resolvedArgs := make([]Expr, 0, len(def.Params)) // keep track of ordered resolved args if expr refers to native type
 
 	for i, param := range def.Params { // resolve arguments and parameter's constraints to compare them
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)

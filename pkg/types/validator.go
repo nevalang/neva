@@ -33,19 +33,19 @@ func (v Validator) Validate(expr Expr) error {
 	case RecLitType:
 		return nil // non empty lit recs are always fine because recs with 0 fields are ok
 	case ArrLitType:
-		if expr.Lit.ArrLit.Size < 2 {
-			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.ArrLit.Size)
+		if expr.Lit.Arr.Size < 2 {
+			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.Arr.Size)
 		}
 	case UnionLitType:
-		if l := len(expr.Lit.UnionLit); l < 2 {
+		if l := len(expr.Lit.Union); l < 2 {
 			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
 		}
 	case EnumLitType:
-		if l := len(expr.Lit.EnumLit); l < 2 {
+		if l := len(expr.Lit.Enum); l < 2 {
 			return fmt.Errorf("%w: got %d", ErrEnumLen, l)
 		}
-		set := make(map[string]struct{}, len(expr.Lit.EnumLit))
-		for _, el := range expr.Lit.EnumLit { // look for duplicate
+		set := make(map[string]struct{}, len(expr.Lit.Enum))
+		for _, el := range expr.Lit.Enum { // look for duplicate
 			if _, ok := set[el]; ok {
 				return fmt.Errorf("%w: %s", ErrEnumDupl, el)
 			}

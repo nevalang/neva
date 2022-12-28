@@ -88,7 +88,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr empty enum",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					EnumLit: []string{},
+					Enum: []string{},
 				},
 			},
 			want: "{}",
@@ -97,7 +97,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr enum with one el",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					EnumLit: []string{"MONDAY"},
+					Enum: []string{"MONDAY"},
 				},
 			},
 			want: "{ MONDAY }",
@@ -106,7 +106,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr enum with two els",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					EnumLit: []string{"MONDAY", "TUESDAY"},
+					Enum: []string{"MONDAY", "TUESDAY"},
 				},
 			},
 			want: "{ MONDAY TUESDAY }",
@@ -116,7 +116,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr arr with size 0 and without type",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{},
+					Arr: &types.ArrLit{},
 				},
 			},
 			want: "[0]",
@@ -125,7 +125,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr arr with size 0 and with type",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+					Arr: &types.ArrLit{
 						Expr: types.Expr{Inst: types.InstExpr{Ref: "int"}},
 					},
 				},
@@ -136,7 +136,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr arr with size 4096 and with type",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					ArrLit: &types.ArrLit{
+					Arr: &types.ArrLit{
 						Size: 4096,
 						Expr: types.Expr{Inst: types.InstExpr{Ref: "int"}},
 					},
@@ -149,7 +149,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr rec no fields",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{},
+					Rec: map[string]types.Expr{},
 				},
 			},
 			want: "{}",
@@ -158,7 +158,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr rec with one field",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+					Rec: map[string]types.Expr{
 						"name": {Inst: types.InstExpr{Ref: "str"}},
 					},
 				},
@@ -169,7 +169,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr rec with two fields",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					RecLit: map[string]types.Expr{
+					Rec: map[string]types.Expr{
 						"name": {Inst: types.InstExpr{Ref: "str"}},
 						"age":  {Inst: types.InstExpr{Ref: "int"}},
 					},
@@ -182,7 +182,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr empty union", // not a valid expr
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{},
+					Union: []types.Expr{},
 				},
 			},
 			want: "",
@@ -191,7 +191,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr union with one el", // not a valid expr
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
+					Union: []types.Expr{
 						{Inst: types.InstExpr{Ref: "int"}},
 					},
 				},
@@ -202,7 +202,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr union with two els",
 			expr: types.Expr{
 				Lit: types.LiteralExpr{
-					UnionLit: []types.Expr{
+					Union: []types.Expr{
 						{Inst: types.InstExpr{Ref: "int"}},
 						{Inst: types.InstExpr{Ref: "str"}},
 					},

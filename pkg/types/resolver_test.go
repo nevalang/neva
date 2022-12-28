@@ -260,8 +260,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr: expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
-					v.EXPECT().Validate(expr.Lit.UnionLit[0]).Return(nil)
-					v.EXPECT().Validate(expr.Lit.UnionLit[1]).Return(nil)
+					v.EXPECT().Validate(expr.Lit.Union[0]).Return(nil)
+					v.EXPECT().Validate(expr.Lit.Union[1]).Return(nil)
 				},
 				want:    expr,
 				wantErr: nil,
