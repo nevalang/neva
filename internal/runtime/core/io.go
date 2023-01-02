@@ -13,8 +13,12 @@ type IO struct {
 
 type Ports map[PortAddr]chan Msg
 
-func (p Ports) Port(name string) chan Msg {
-	return p[PortAddr{Port: name}]
+func (p Ports) Port(name string) (chan Msg, error) {
+	v, ok := p[PortAddr{Port: name}]
+	if !ok {
+		return nil, errors.New("not ok")
+	}
+	return v, nil
 }
 
 func (p Ports) ArrPortSlots(name string) []chan Msg {
@@ -47,3 +51,4 @@ type PortAddr struct {
 	Port string
 	Idx  uint8
 }
+

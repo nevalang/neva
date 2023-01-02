@@ -8,6 +8,8 @@ import (
 
 type Msg interface {
 	Type() Type
+	// Trace() []string
+	// Wrap(string) []string
 
 	Bool() bool
 	Int() int64
@@ -27,12 +29,14 @@ const (
 	FloatMsgType
 	StrMsgType
 	ListMsgType
-	DictMsgType
+	MapMsgType
 )
 
 /* --- EMPTY --- */
 
-type emptyMsg struct{}
+type emptyMsg struct {
+	trace []string
+}
 
 func (emptyMsg) Bool() bool           { return false }
 func (emptyMsg) Int() int64           { return 0 }
@@ -104,14 +108,11 @@ type DictMsg struct {
 
 func (msg DictMsg) Get(k string) (Msg, bool) {
 	v, ok := msg.v[k]
-	if !ok {
-		return nil, false
-	}
-	return v, true
+	return v, ok
 }
 
 func (msg DictMsg) Dict() map[string]Msg { return msg.v }
-func (msg DictMsg) Type() Type           { return DictMsgType }
+func (msg DictMsg) Type() Type           { return MapMsgType }
 func (msg DictMsg) String() string { // can't move this to interceptor because print operator needs this
 	b := &strings.Builder{}
 	b.WriteString("{")
@@ -191,7 +192,7 @@ func Eq(a, b Msg) bool {
 				return false
 			}
 		}
-	case DictMsgType:
+	case MapMsgType:
 		s1 := a.Dict()
 		s2 := a.Dict()
 		if len(s1) != len(s2) {

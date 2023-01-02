@@ -10,15 +10,6 @@ func NativeDef(name string, params ...ts.Param) ts.Def {
 	}
 }
 
-// Constr is optional
-// func Param(name string, constr *ts.Expr) ts.Param {
-// 	v := ts.Param{Name: name}
-// 	if constr != nil {
-// 		v.Constraint = *constr
-// 	}
-// 	return v
-// }
-
 // Do not pass empty string as a name to avoid inst.Empty() == true
 func Inst(ref string, args ...ts.Expr) ts.Expr {
 	if args == nil {

@@ -10,8 +10,8 @@ import (
 	"github.com/emil14/neva/internal/runtime/executor/connector"
 	logginginterceptor "github.com/emil14/neva/internal/runtime/executor/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/executor/effector"
+	operatorseffects "github.com/emil14/neva/internal/runtime/executor/effector/component"
 	constantseffects "github.com/emil14/neva/internal/runtime/executor/effector/constant"
-	operatorseffects "github.com/emil14/neva/internal/runtime/executor/effector/operator"
 	oprepo "github.com/emil14/neva/internal/runtime/executor/effector/operator/repo"
 	triggerseffects "github.com/emil14/neva/internal/runtime/executor/effector/trigger"
 )

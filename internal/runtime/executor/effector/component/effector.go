@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/core"
 	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/tools"
 	"golang.org/x/sync/errgroup"
@@ -28,7 +28,7 @@ type Effector struct {
 	repo Repo
 }
 
-func (e Effector) Effect(ctx context.Context, effects []runtime.ComponentEffect) error {
+func (e Effector) Effect(ctx context.Context, effects []runtime.ComponentNode) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range effects {

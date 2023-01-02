@@ -1,12 +1,16 @@
 # Glossary
 
+## Mutual compatibility
+
+Types that are [compatible](#compatibility) with eachother. E.g. type `a` is mutually compatible with type `b` if `a` is compatible with `b` and `b` is compatible `a`.  So `a <: b && b <: c`
+
 ## Compatibility
 
-Type `a` is compatible with the type `b` if it's its [subtype](#subtyping)
+Type `a` is compatible with the type `b` if it's a [subtype](#subtyping) of `b`: `a <: b`
 
 ## Subtyping
 
-Type expr `a` is `<:` (subtype of) type expr `b` if it's [safe](#safety) to use it everywhere type `b` is expected. There's special [algorithm](#subtype-checking) for checking this.
+Type expr `a` is `<:` (subtype of) type expr `b` if it's [safe](#safety) to use it anywhere where type `b` is expected. There's special [algorithm](#subtype-checking) for checking this.
 
 ## Type expression
 
@@ -14,11 +18,11 @@ Type expression ...
 
 ## Subtype checking
 
-Two type expressions can be checked for subtype compatibility if they are both resolved.
+Two type expressions can be checked for [compatibility](#compatibility) if they are both [resolved](#resolved-expression).
 
 ## Resolved expression
 
-Expression is resolved if it doesn't contain references to unresolved types anywhere in it. Invalid expression is also unresolved.
+Expression is resolved if it doesn't contain references to unresolved types anywhere in it's structure. Invalid expression cannot be resolved and thus must be threated as unresolved one.
 
 ## Resolving
 
@@ -54,3 +58,11 @@ Component that platform must implement to satisfy the specification. Such compon
 ## Safety
 
 ...
+
+## Sub-stream
+
+Stream with nesting
+
+## Nested sub-stream
+
+Stream with nesting level more than 1

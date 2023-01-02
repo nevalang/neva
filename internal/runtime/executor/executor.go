@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/core"
 	"github.com/emil14/neva/pkg/tools"
 	"golang.org/x/sync/errgroup"
 )

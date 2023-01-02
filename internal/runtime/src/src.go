@@ -4,9 +4,11 @@ type (
 	Program struct {
 		Effects       Effects
 		StartPortAddr PortAddr
-		Ports         map[PortAddr]uint8 // value is buf size
+		Ports         Ports // value is buf size
 		Net           []Connection
 	}
+
+	Ports map[PortAddr]uint8
 
 	PortAddr struct {
 		Path string

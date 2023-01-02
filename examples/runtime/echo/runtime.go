@@ -10,8 +10,8 @@ import (
 	"github.com/emil14/neva/internal/runtime/executor/connector"
 	logginginterceptor "github.com/emil14/neva/internal/runtime/executor/connector/interceptor/log"
 	"github.com/emil14/neva/internal/runtime/executor/effector"
+	funcfx "github.com/emil14/neva/internal/runtime/executor/effector/component"
 	constfx "github.com/emil14/neva/internal/runtime/executor/effector/constant"
-	funcfx "github.com/emil14/neva/internal/runtime/executor/effector/operator"
 	opsrepo "github.com/emil14/neva/internal/runtime/executor/effector/operator/repo/goplug"
 	triggerfx "github.com/emil14/neva/internal/runtime/executor/effector/trigger"
 )

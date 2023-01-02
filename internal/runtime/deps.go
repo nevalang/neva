@@ -35,11 +35,12 @@ type (
 		Receivers []chan core.Msg
 	}
 
-	Nodes struct {
-		Const     []ConstNode
-		Trigger   []TriggerNode
-		Component []ComponentNode
-		Void      []chan core.Msg
+	// there should only 2 kinds of effects: giver and operator
+	Nodes struct { // should probably be "effects" because there are more nodes, not just givers and operators
+		Const     []ConstNode     // should be giver
+		Trigger   []TriggerNode   // should be operator
+		Component []ComponentNode // should be operator too (not to be confused with compiler's operators)
+		Void      []chan core.Msg // should be operator
 	}
 
 	ConstNode struct {

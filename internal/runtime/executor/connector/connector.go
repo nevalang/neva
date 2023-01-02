@@ -155,6 +155,7 @@ func (c Router) distribute(
 var ErrDictKeyNotFound = errors.New("dict key not found")
 
 func (c Router) action(msg core.Msg, side src.ConnectionSide) (core.Msg, error) {
+	// TODO array index reading
 	if side.Action == src.ReadDict {
 		path := side.Payload.ReadDict
 

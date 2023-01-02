@@ -3,7 +3,7 @@ package void
 import (
 	"context"
 
-	"github.com/emil14/neva/internal/core"
+	"github.com/emil14/neva/internal/runtime/core"
 	"golang.org/x/sync/errgroup"
 )
 

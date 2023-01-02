@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"plugin"
 
-	"github.com/emil14/neva/internal/core"
-	"github.com/emil14/neva/internal/runtime/executor/effector/operator"
+	"github.com/emil14/neva/internal/runtime/core"
+	operator "github.com/emil14/neva/internal/runtime/executor/effector/component"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 

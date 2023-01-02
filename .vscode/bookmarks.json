@@ -9,6 +9,16 @@
 					"label": ""
 				}
 			]
+		},
+		{
+			"path": "internal/runtime/executor/effector/component/effector.go",
+			"bookmarks": [
+				{
+					"line": 23,
+					"column": 42,
+					"label": ""
+				}
+			]
 		}
 	]
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/emil14/neva/internal/core"
 	"github.com/emil14/neva/internal/pkg/tools"
+	"github.com/emil14/neva/internal/runtime/core"
 	"github.com/emil14/neva/internal/runtime/src"
 )
 
