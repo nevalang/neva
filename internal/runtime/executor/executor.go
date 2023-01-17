@@ -58,7 +58,7 @@ func (e Executor) Exec(ctx context.Context, build runtime.Program) error {
 }
 
 func MustNew(effector NodeRunner, router Router) Executor {
-	tools.PanicOnNil(effector, router)
+	tools.NilPanic(effector, router)
 	return Executor{
 		router:   router,
 		effector: effector,

@@ -10,8 +10,8 @@ import (
 )
 
 func Read(ctx context.Context, io core.IO) error {
-	sig := io.In.Port("sig")
-	v := io.Out.Port("v")
+	sig, _ := io.In.SinglePort("sig")
+	v, _ := io.Out.SinglePort("v")
 	scan := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -31,8 +31,8 @@ func Read(ctx context.Context, io core.IO) error {
 }
 
 func Print(ctx context.Context, io core.IO) error {
-	in := io.In.Port("v")
-	out := io.Out.Port("v")
+	in, _ := io.In.SinglePort("v")
+	out, _ := io.Out.SinglePort("v")
 
 	for {
 		select {

@@ -45,7 +45,7 @@ func (c Compiler[T]) Compile(ctx context.Context, path string) (*T, error) {
 }
 
 func MustNew[T any](b Builder, a Analyzer, s Synthesizer[T]) Compiler[T] {
-	tools.PanicOnNil(b, a, s)
+	tools.NilPanic(b, a, s)
 
 	return Compiler[T]{
 		builder:     b,

@@ -2,7 +2,7 @@
 
 ## Mutual compatibility
 
-Types that are [compatible](#compatibility) with eachother. E.g. type `a` is mutually compatible with type `b` if `a` is compatible with `b` and `b` is compatible `a`.  So `a <: b && b <: c`
+Types that are [compatible](#compatibility) with eachother. E.g. type `a` is mutually compatible with type `b` if `a` is compatible with `b` and `b` is compatible `a`. So `a <: b && b <: c`
 
 ## Compatibility
 
@@ -66,3 +66,7 @@ Stream with nesting
 ## Nested sub-stream
 
 Stream with nesting level more than 1
+
+## Base type
+
+Type that doesn't have underlying type. It can have parameters with or without constraints though.

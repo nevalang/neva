@@ -82,3 +82,8 @@ There are many differences, among them:
 - _Node_ instead of _process_ 1) not to be confused with _OS processes_ and 2) there are _io nodes_ that are not component instances but part of the _network_
 - _Static ports_ instead of _IIPs_ because of not using word _IP_
 - Word _worker_ used to highlight nodes that are component instances
+
+
+### Why optional is base type
+
+Because if it would be a regular record then it would be possible to read it's internal field with value of type `T` that could not be there. 

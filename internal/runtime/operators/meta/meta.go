@@ -11,7 +11,7 @@ func Meta(ctx context.Context, io core.IO) error {
 	f := ctx.Value("executorAPI")
 	f.(func ())
 	
-	in, _ := io.In.Port("upd")
+	in, _ := io.In.SinglePort("upd")
 
 	upd := <-in
 	d := upd.Dict()

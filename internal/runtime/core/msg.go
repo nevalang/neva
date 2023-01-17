@@ -8,8 +8,6 @@ import (
 
 type Msg interface {
 	Type() Type
-	// Trace() []string
-	// Wrap(string) []string
 
 	Bool() bool
 	Int() int64

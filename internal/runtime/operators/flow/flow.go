@@ -8,8 +8,8 @@ import (
 
 func Locker(ctx context.Context, io core.IO) error {
 	slots := io.In.ArrPortSlots("sigs")
-	v := io.In.Port("v") // not arrport because 1) one-data-many-lockers 2) use many lockers
-	out := io.Out.Port("v")
+	v := io.In.SinglePort("v") // not arrport because 1) one-data-many-lockers 2) use many lockers
+	out := io.Out.SinglePort("v")
 
 	for {
 		for _, sig := range slots {
@@ -23,7 +23,7 @@ func Locker(ctx context.Context, io core.IO) error {
 // [x,y,z] -> (x, y, z)
 func ArrPortStreamer(ctx context.Context, io core.IO) error {
 	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
+	out := io.Out.SinglePort("out")
 
 	for {
 		out <- core.NewDictMsg(map[string]core.Msg{
@@ -47,7 +47,7 @@ func ArrPortStreamer(ctx context.Context, io core.IO) error {
 // 0: [1,2,3]; 1: [4,5,6] -> (6 5 4) (3 2 1)
 func FlatListStreamer(ctx context.Context, io core.IO) error {
 	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
+	out := io.Out.SinglePort("out")
 
 	for {
 		out <- core.NewDictMsg(map[string]core.Msg{
@@ -71,15 +71,15 @@ func FlatListStreamer(ctx context.Context, io core.IO) error {
 	}
 }
 
-func StreamToListAdapter(ctx context.Context, io core.IO) error {
-	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
-}
+// func StreamToListAdapter(ctx context.Context, io core.IO) error {
+// 	in := io.Out.ArrPortSlots("in")
+// 	out := io.Out.SinglePort("out")
+// }
 
 // 0: [1,2,3]; 1: [4,5,6] -> ( (6 5 4) (3 2 1) )
 func NestedListStreamer(ctx context.Context, io core.IO) error {
 	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
+	out, _ := io.Out.SinglePort("out")
 
 	for {
 		out <- core.NewDictMsg(map[string]core.Msg{
@@ -114,7 +114,7 @@ func NestedListStreamer(ctx context.Context, io core.IO) error {
 // [ {a:3,y:4}, {a:1,y:2} ] -> ({a,3}, {y,4}) ({a,1}, {y,2})
 func FlatDictStreamer(ctx context.Context, io core.IO) error {
 	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
+	out := io.Out.SinglePort("out")
 
 	for {
 		out <- core.NewDictMsg(map[string]core.Msg{
@@ -141,7 +141,7 @@ func FlatDictStreamer(ctx context.Context, io core.IO) error {
 // [ {a:3,y:4}, {a:1,y:2} ] -> ( ({a,3}, {y,4}) ({a,1}, {y,2}) )
 func NestedDictStreamer(ctx context.Context, io core.IO) error {
 	in := io.Out.ArrPortSlots("in")
-	out := io.Out.Port("out")
+	out := io.Out.SinglePort("out")
 
 	for {
 		out <- core.NewDictMsg(map[string]core.Msg{

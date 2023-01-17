@@ -26,16 +26,17 @@ type (
 )
 
 var (
-	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
-	ErrUndefinedRef       = errors.New("expression refers to type that is not presented in the scope")
-	ErrInstArgsLen        = errors.New("inst cannot have more arguments than reference type has parameters")
-	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
-	ErrUnresolvedArg      = errors.New("can't resolve argument")
-	ErrConstr             = errors.New("can't resolve constraint")
-	ErrNoBaseType         = errors.New("definition's body refers to type that is not in the scope")
+	ErrInvalidExpr   = errors.New("expression must be valid in order to be resolved")
+	ErrUndefinedRef  = errors.New("expression refers to type that is not presented in the scope")
+	ErrInstArgsLen   = errors.New("inst cannot have more arguments than reference type has parameters")
+	ErrIncompatArg   = errors.New("argument is not subtype of the parameter's contraint")
+	ErrUnresolvedArg = errors.New("can't resolve argument")
+	ErrConstr        = errors.New("can't resolve constraint")
+	// ErrNoBaseType         = errors.New("definition's body refers to type that is not in the scope")
 	ErrArrType            = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved = errors.New("can't resolve record field")
+	ErrDefBodySelfRefInst = errors.New("type definition's body must not be directly self referenced to itself")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -46,8 +47,12 @@ var (
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nolint:funlen,gocognit
-	if err := r.Validate(expr); err != nil {
+func (r Resolver) Resolve( //nolint:funlen
+	expr Expr,
+	scope map[string]Def,
+	base map[string]struct{},
+) (Expr, error) {
+	if err := r.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
@@ -55,7 +60,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
-		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope)
+		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
@@ -63,32 +68,34 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.Resolve(unionEl, scope)
+			resolvedEl, err := r.Resolve(unionEl, scope, base)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
-		return Expr{
-			Lit: LiteralExpr{Union: resolvedUnion},
-		}, nil
+		return Union(resolvedUnion...), nil
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope)
+			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope, base)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
 			resolvedStruct[field] = resolvedFieldExpr
 		}
-		return Expr{
-			Lit: LiteralExpr{Rec: resolvedStruct},
-		}, nil
-	}
+		return Rec(resolvedStruct), nil
+	} // at this point we know it's an instantiation, not literal
 
 	def, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
 		return Expr{}, fmt.Errorf("%w: %v", ErrUndefinedRef, expr.Inst.Ref)
+	}
+
+	isDefBodyInst := !def.Body.Inst.Empty() && def.Body.Lit.Empty() // check both because def body wasn't validated yet
+	isDefBodySelfRefInst := def.Body.Inst.Ref == expr.Inst.Ref
+	if isDefBodyInst && isDefBodySelfRefInst { // restrict unresolvable cases like t=t
+		return Expr{}, fmt.Errorf("%w: %v", ErrDefBodySelfRefInst, def)
 	}
 
 	// check that args for every param is present
@@ -103,7 +110,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 	resolvedArgs := make([]Expr, 0, len(def.Params)) // keep track of ordered resolved args if expr refers to native type
 
 	for i, param := range def.Params { // resolve arguments and parameter's constraints to compare them
-		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope)
+		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
@@ -115,7 +122,7 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 			continue
 		}
 
-		resolvedConstraint, err := r.Resolve(param.Constraint, scope) // should we resolve it here?
+		resolvedConstraint, err := r.Resolve(param.Constraint, scope, base) // should we resolve it here?
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -124,22 +131,11 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) { //nol
 		}
 	} // at this point we have resolved args that are compatible with their parameters and a new scope
 
-	if def.Body.Lit.Empty() { // reference type's body is an instantiation
-		baseType, ok := scope[def.Body.Inst.Ref]
-		if !ok {
-			return Expr{}, fmt.Errorf("%w: %v", ErrNoBaseType, def.Body.Inst.Ref)
-		}
-		if expr.Inst.Ref == baseType.Body.Inst.Ref { // direct self reference = native instantiation
-			return Expr{
-				Inst: InstExpr{
-					Ref:  def.Body.Inst.Ref,
-					Args: resolvedArgs,
-				},
-			}, nil
-		}
+	if _, ok := base[expr.Inst.Ref]; ok {
+		return Inst(expr.Inst.Ref, resolvedArgs...), nil
 	}
 
-	return r.Resolve(def.Body, newScope) // it's not a native type and not literal - next step is needed
+	return r.Resolve(def.Body, newScope, base)
 }
 
 func NewDefaultResolver() Resolver {
@@ -150,6 +146,6 @@ func NewDefaultResolver() Resolver {
 }
 
 func MustNewResolver(v validator, c checker) Resolver {
-	tools.PanicOnNil(v, c)
+	tools.NilPanic(v, c)
 	return Resolver{v, c}
 }

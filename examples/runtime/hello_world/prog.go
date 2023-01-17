@@ -9,11 +9,11 @@ func helloWorld() *runtimesdk.Program {
 	return h.Prog(
 		h.PortAddr("in", "sig"),
 		h.Ports(
-			h.Port("in", "sig", 0),
-			h.Port("trigger.in", "sig", 0),
-			h.Port("trigger.out", "greeting", 0),
-			h.Port("print.in", "data", 0),
-			h.Port("print.out", "data", 0),
+			h.SinglePort("in", "sig", 0),
+			h.SinglePort("trigger.in", "sig", 0),
+			h.SinglePort("trigger.out", "greeting", 0),
+			h.SinglePort("print.in", "data", 0),
+			h.SinglePort("print.out", "data", 0),
 		),
 		h.Effects(
 			h.Operators(

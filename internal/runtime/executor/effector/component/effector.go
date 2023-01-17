@@ -51,6 +51,6 @@ func (e Effector) Effect(ctx context.Context, effects []runtime.ComponentNode) e
 }
 
 func MustNewEffector(repo Repo) Effector {
-	tools.PanicOnNil(repo)
+	tools.NilPanic(repo)
 	return Effector{repo}
 }

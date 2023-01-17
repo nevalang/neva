@@ -15,6 +15,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		name              string
 		expr              ts.Expr
 		scope             map[string]ts.Def
+		base              map[string]struct{}
 		initValidatorMock func(v *Mockvalidator)
 		initCheckerMock   func(c *Mockchecker)
 		want              ts.Expr
@@ -24,19 +25,27 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 	tests := []func() testcase{
 		func() testcase {
 			return testcase{
-				name:              "invalid expr",
-				initValidatorMock: func(v *Mockvalidator) { v.EXPECT().Validate(ts.Expr{}).Return(errors.New("")) },
-				wantErr:           ts.ErrInvalidExpr,
+				name: "invalid expr",
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().
+						Validate(ts.Expr{}).
+						Return(errors.New(""))
+				},
+				wantErr: ts.ErrInvalidExpr,
 			}
 		},
 		func() testcase { // expr = int, scope = {}
 			expr := h.Inst("int")
 			return testcase{
-				name:              "inst expr refers to undefined",
-				expr:              expr,
-				initValidatorMock: func(v *Mockvalidator) { v.EXPECT().Validate(expr).Return(nil) },
-				scope:             map[string]ts.Def{},
-				wantErr:           ts.ErrUndefinedRef,
+				name: "inst expr refers to undefined",
+				expr: expr,
+				initValidatorMock: func(v *Mockvalidator) {
+					v.EXPECT().
+						Validate(expr).
+						Return(nil)
+				},
+				scope:   map[string]ts.Def{},
+				wantErr: ts.ErrUndefinedRef,
 			}
 		},
 		func() testcase { // expr = vec<>, scope = { vec<t> = vec }
@@ -46,7 +55,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:              expr,
 				initValidatorMock: func(v *Mockvalidator) { v.EXPECT().Validate(expr).Return(nil) },
 				scope: map[string]ts.Def{
-					"vec": h.NativeDef("vec", ts.Param{Name: "t"}),
+					"vec": h.DefWithoutBody(ts.Param{Name: "t"}),
 				},
 				wantErr: ts.ErrInstArgsLen,
 			}
@@ -61,7 +70,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(errors.New("")) // in the loop
 				},
 				scope: map[string]ts.Def{
-					"vec": h.NativeDef("vec", ts.Param{Name: "t"}),
+					"vec": h.DefWithoutBody(ts.Param{Name: "t"}),
 				},
 				wantErr: ts.ErrUnresolvedArg,
 			}
@@ -81,30 +90,30 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					c.EXPECT().SubtypeCheck(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
-					"map": h.NativeDef(
-						"map",
-						ts.Param{"t", constr},
-					),
-					"t1": h.NativeDef("t1"),
-					"t2": h.NativeDef("t2"),
+					"map": h.DefWithoutBody(ts.Param{"t", constr}),
+					"t1":  h.DefWithoutBody(),
+					"t2":  h.DefWithoutBody(),
 				},
+				base:    h.Base("map", "t1", "t2"),
 				wantErr: ts.ErrIncompatArg,
 			}
 		},
 		func() testcase { // expr = t1<t2>, scope = { t2, t1<t> = t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			return testcase{
-				name: "expr base type not found",
+				name: "expr underlaying type not found",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t3", ts.Param{Name: "t"}),
-					"t2": h.NativeDef("t2"),
+					"t1": h.Def(h.Inst("t3"), h.ParamWithoutConstr("t")),
+					"t2": h.DefWithoutBody(),
 				},
+				base: h.Base("t2"),
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
-					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
+					v.EXPECT().Validate(h.Inst("t2")).Return(nil)
+					v.EXPECT().Validate(h.Inst("t3")).Return(nil)
 				},
-				wantErr: ts.ErrNoBaseType,
+				wantErr: ts.ErrUndefinedRef,
 			}
 		},
 		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
@@ -114,9 +123,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				name: "constr undefined ref",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t3", ts.Param{Name: "t", Constraint: constr}),
-					"t2": h.NativeDef("t2"),
+					"t1": h.DefWithoutBody(ts.Param{Name: "t", Constraint: constr}),
+					"t2": h.DefWithoutBody(),
 				},
+				base: h.Base("t1", "t2"),
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
@@ -125,39 +135,42 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrConstr,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
+		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> }
 			expr := h.Inst("t1", h.Inst("t2"))
 			return testcase{
-				name: "constr base type not found",
+				name: "constr ref type not found",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t3", ts.Param{Name: "t"}),
-					"t2": h.NativeDef("t2"),
+					"t2": h.DefWithoutBody(),
+					"t1": h.DefWithoutBody(h.Param("t", h.Inst("t3"))),
 				},
+				base: h.Base("t1", "t2"),
 				initValidatorMock: func(v *Mockvalidator) {
-					v.EXPECT().Validate(expr).Return(nil)
-					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
+					v.EXPECT().Validate(expr).Return(nil)         // expr itself
+					v.EXPECT().Validate(h.Inst("t2")).Return(nil) // expr's arg
+					v.EXPECT().Validate(h.Inst("t3")).Return(nil) // def's constraint
 				},
-				wantErr: ts.ErrNoBaseType,
+				wantErr: ts.ErrConstr,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1, t3 }
+		func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
 			return testcase{
 				name: "invalid constr",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t3", ts.Param{Name: "t"}),
-					"t2": h.NativeDef("t2"),
-					"t3": h.NativeDef("t2"),
+					"t1": h.DefWithoutBody(h.Param("t", ts.Inst("t3"))),
+					"t2": h.DefWithoutBody(),
+					"t3": h.DefWithoutBody(),
 				},
+				base: h.Base("t1", "t2", "t3"),
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
 					v.EXPECT().Validate(constr).Return(errors.New(""))
 				},
-				wantErr: ts.ErrInvalidExpr,
+				wantErr: ts.ErrConstr,
 			}
 		},
 		// Lits
@@ -190,7 +203,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Arr(2, typ)
 			return testcase{
 				name:  "arr with unresolvable (invalid) type",
-				scope: map[string]ts.Def{"t": h.NativeDef("t")},
+				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
+				base:  h.Base("t1"),
 				expr:  expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -204,7 +218,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Arr(2, typ)
 			return testcase{
 				name:  "arr with resolvable type",
-				scope: map[string]ts.Def{"t": h.NativeDef("t")},
+				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
+				base:  h.Base("t"),
 				expr:  expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -220,7 +235,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Union(t1, t2)
 			return testcase{
 				name:  "union with unresolvable (undefined) element",
-				scope: map[string]ts.Def{"t1": h.NativeDef("t1")},
+				scope: map[string]ts.Def{"t1": h.DefWithoutBody()},
+				base:  h.Base("t1"),
 				expr:  expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -237,9 +253,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				name: "union with unresolvable (invalid) element",
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t1"),
-					"t2": h.NativeDef("t2"),
+					"t1": h.DefWithoutBody(),
+					"t2": h.DefWithoutBody(),
 				},
+				base: h.Base("t1", "t2"),
 				expr: expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -254,9 +271,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				name: "union with resolvable elements",
 				scope: map[string]ts.Def{
-					"t1": h.NativeDef("t1"),
-					"t2": h.NativeDef("t2"),
+					"t1": h.DefWithoutBody(),
+					"t2": h.DefWithoutBody(),
 				},
+				base: h.Base("t1", "t2"),
 				expr: expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -299,7 +317,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
 			return testcase{
 				name:  "record with valid field",
-				scope: map[string]ts.Def{"string": h.NativeDef("string")},
+				scope: map[string]ts.Def{"string": h.DefWithoutBody()},
+				base:  h.Base("string"),
 				expr:  expr,
 				initValidatorMock: func(v *Mockvalidator) {
 					v.EXPECT().Validate(expr).Return(nil)
@@ -309,6 +328,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: nil,
 			}
 		},
+		// recursive types
+		// TODO
 	}
 
 	for _, tt := range tests {
@@ -328,8 +349,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				tc.initCheckerMock(c)
 			}
 
-			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope)
-			require.Equal(t, got, tc.want)
+			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope, tc.base)
+			require.Equal(t, tc.want, got)
 			require.ErrorIs(t, err, tc.wantErr)
 		})
 	}

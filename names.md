@@ -24,3 +24,8 @@
 - atonce
 - atvance
 - ICAST
+- pulse
+- vein
+- vena
+- venaneva
+- nevavena

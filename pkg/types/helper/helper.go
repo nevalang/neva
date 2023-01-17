@@ -2,11 +2,17 @@ package helper
 
 import ts "github.com/emil14/neva/pkg/types"
 
-// Do not pass empty string as a name to avoid Body.Empty() == true
-func NativeDef(name string, params ...ts.Param) ts.Def {
+func Def(body ts.Expr, params ...ts.Param) ts.Def {
 	return ts.Def{
 		Params: params,
-		Body:   Inst(name),
+		Body:   body,
+	}
+}
+
+// Do not pass empty string as a name to avoid Body.Empty() == true
+func DefWithoutBody(params ...ts.Param) ts.Def {
+	return ts.Def{
+		Params: params,
 	}
 }
 
@@ -58,4 +64,23 @@ func Rec(v map[string]ts.Expr) ts.Expr {
 			Rec: v,
 		},
 	}
+}
+
+func Base(tt ...string) map[string]struct{} {
+	m := make(map[string]struct{}, len(tt))
+	for _, t := range tt {
+		m[t] = struct{}{}
+	}
+	return m
+}
+
+func Param(name string, constr ts.Expr) ts.Param {
+	return ts.Param{
+		Name:       name,
+		Constraint: constr,
+	}
+}
+
+func ParamWithoutConstr(name string) ts.Param {
+	return Param(name, ts.Expr{})
 }

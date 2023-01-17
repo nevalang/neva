@@ -2,7 +2,7 @@ package tools
 
 import "fmt"
 
-func PanicOnNil(args ...interface{}) {
+func NilPanic(args ...interface{}) {
 	for i, v := range args {
 		if v == nil {
 			panic(

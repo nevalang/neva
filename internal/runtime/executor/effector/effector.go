@@ -71,6 +71,6 @@ func (e Effector) Effect(ctx context.Context, effects runtime.Nodes) error {
 }
 
 func MustNew(c ConstantEffector, o FuncEffector, t TriggerEffector, v VoidEffector) Effector {
-	tools.PanicOnNil(c, o, t, v)
+	tools.NilPanic(c, o, t, v)
 	return Effector{c, o, t, v}
 }
