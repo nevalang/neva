@@ -58,7 +58,7 @@ func (expr Expr) String() string { // todo move?
 			s += ", "
 		}
 	}
-	s += ">" //nolint:wsl
+	s += ">"
 
 	return s
 }

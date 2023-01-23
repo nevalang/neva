@@ -7,12 +7,12 @@ linters:
   enable-all: true
   disable:
     - godox # todo/fixme
-    - godot
+    - godot # dots at the end of comments
     - gomnd # magic number
-    # - forbidigo # https://github.com/ashanbrown/forbidigo
-    - nlreturn
-    # - wsl
-    # - testpackage
+    # - forbidigo # doesn't allow to use fmt.Println
+    - nlreturn # newline before return
+    - wsl # forses spaces in loops, assignments, etc
+    # - testpackage #  _test package
     - deadcode # replaced by unused
 
 linters-settings:
