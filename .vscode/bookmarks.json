@@ -19,16 +19,6 @@
 					"label": ""
 				}
 			]
-		},
-		{
-			"path": "pkg/types/resolver.go",
-			"bookmarks": [
-				{
-					"line": 117,
-					"column": 108,
-					"label": ""
-				}
-			]
 		}
 	]
 }
