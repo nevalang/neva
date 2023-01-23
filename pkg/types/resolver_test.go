@@ -386,30 +386,28 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrDirectRecursion,
 			}
 		},
+		// FIXME:
+		"inderect recursion through inst references": func() testcase { // t1, {t1=t2, t2=t1}
+			return testcase{
+				expr: h.Inst("t1"),
+				scope: map[string]ts.Def{
+					"t1": h.Def(h.Inst("t2")), // indirectly
+					"t2": h.Def(h.Inst("t1")), // refers to itself
+				},
+				base: map[string]struct{}{},
+				exprValidator: func(v *MockexpressionValidator) {
+					v.EXPECT().
+						Validate(h.Inst("t1")).
+						Return(nil)
+
+					v.EXPECT().
+						Validate(h.Inst("t2")).
+						Return(nil)
+				},
+				wantErr: ts.ErrIndirectRecursion,
+			}
+		},
 	}
-
-	// AD THIS POINT IN WON'T TERMINATE
-	// func() testcase { // t1, {t1=t2, t2=t1}
-	// 	return testcase{
-	// 		"type (not base) without parameters indirectly refer to itself"
-	// 		expr: h.Inst("t1"),
-	// 		scope: map[string]ts.Def{
-	// 			"t1": h.Def(h.Inst("t2")), // indirectly
-	// 			"t2": h.Def(h.Inst("t1")), // refers to itself
-	// 		},
-	// 		base: map[string]struct{}{},
-	// 		exprValidator: func(v *MockexpressionValidator) {
-	// 			v.EXPECT().
-	// 				Validate(h.Inst("t1")).
-	// 				Return(nil)
-
-	// 			v.EXPECT().
-	// 				Validate(h.Inst("t2")).
-	// 				Return(nil)
-	// 		},
-	// 		wantErr: ts.ErrIndirectRecursion,
-	// 	}
-	// },
 
 	for name, tt := range tests {
 		name := name

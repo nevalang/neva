@@ -47,9 +47,9 @@ var (
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
 func (r Resolver) Resolve( //nolint:funlen
 	expr Expr,
-	global map[string]Def,
+	scope map[string]Def,
 	base map[string]struct{},
-	// visited map[string]struct{},
+	// trace map[string]struct{},
 ) (Expr, error) {
 	if err := r.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -59,7 +59,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
-		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, global, base)
+		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
@@ -67,7 +67,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.Resolve(unionEl, global, base)
+			resolvedEl, err := r.Resolve(unionEl, scope, base)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
@@ -77,7 +77,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.Resolve(fieldExpr, global, base)
+			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope, base)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
@@ -86,7 +86,7 @@ func (r Resolver) Resolve( //nolint:funlen
 		return Rec(resolvedStruct), nil
 	} // at this point we know it's an instantiation, not literal
 
-	def, ok := global[expr.Inst.Ref] // check that reference type exists
+	def, ok := scope[expr.Inst.Ref] // check that reference type exists
 	if !ok {
 		return Expr{}, fmt.Errorf("%w: %v", ErrUndefinedRef, expr.Inst.Ref)
 	}
@@ -105,7 +105,7 @@ func (r Resolver) Resolve( //nolint:funlen
 
 	resolvedArgs := make([]Expr, 0, len(def.Params))
 	for i, param := range def.Params { // resolve arguments and parameter's constraints to compare them
-		resolvedArg, err := r.Resolve(expr.Inst.Args[i], global, base)
+		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
@@ -116,7 +116,7 @@ func (r Resolver) Resolve( //nolint:funlen
 			continue
 		}
 
-		resolvedConstraint, err := r.Resolve(param.Constraint, global, base) // should we resolve it here?
+		resolvedConstraint, err := r.Resolve(param.Constraint, scope, base) // should we resolve it here?
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -136,7 +136,7 @@ func (r Resolver) Resolve( //nolint:funlen
 		},
 	}
 
-	return r.Resolve(newExpr, global, base)
+	return r.Resolve(newExpr, scope, base)
 }
 
 func NewDefaultResolver() Resolver {
