@@ -9,10 +9,10 @@ linters:
     - godox # todo/fixme
     - godot
     - gomnd # magic number
-    - forbidigo
+    # - forbidigo # https://github.com/ashanbrown/forbidigo
     - nlreturn
-    - wsl
-    - testpackage
+    # - wsl
+    # - testpackage
     - deadcode # replaced by unused
 
 linters-settings:
@@ -26,3 +26,4 @@ issues:
     - path: _test\.go
       linters:
         - funlen
+        - lll
