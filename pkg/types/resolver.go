@@ -10,33 +10,32 @@ import (
 )
 
 type Resolver struct {
-	// table map[string]Def todo?
-	validator
-	checker
+	expressionValidator
+	subtypeChecker
 }
 
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
 type (
-	validator interface {
+	expressionValidator interface {
 		Validate(Expr) error // returns error if expression's invariant broken
 	}
-	checker interface {
-		SubtypeCheck(Expr, Expr) error // Returns nil if first expr is subtype of the second
+	subtypeChecker interface {
+		Check(Expr, Expr) error // Returns error if first expression is not a subtype of second
 	}
 )
 
 var (
-	ErrInvalidExpr   = errors.New("expression must be valid in order to be resolved")
-	ErrUndefinedRef  = errors.New("expression refers to type that is not presented in the scope")
-	ErrInstArgsLen   = errors.New("inst cannot have more arguments than reference type has parameters")
-	ErrIncompatArg   = errors.New("argument is not subtype of the parameter's contraint")
-	ErrUnresolvedArg = errors.New("can't resolve argument")
-	ErrConstr        = errors.New("can't resolve constraint")
-	// ErrNoBaseType         = errors.New("definition's body refers to type that is not in the scope")
+	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
+	ErrUndefinedRef       = errors.New("expression refers to type that is not presented in the scope")
+	ErrInstArgsLen        = errors.New("inst cannot have more arguments than reference type has parameters")
+	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
+	ErrUnresolvedArg      = errors.New("can't resolve argument")
+	ErrConstr             = errors.New("can't resolve constraint")
 	ErrArrType            = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved = errors.New("can't resolve record field")
-	ErrDefBodySelfRefInst = errors.New("type definition's body must not be directly self referenced to itself")
+	ErrDirectRecursion    = errors.New("type definition's body must not be directly self referenced to itself")
+	ErrIndirectRecursion  = errors.New("type definition's body must not be indirectly self referenced to itself")
 )
 
 // Transforms one expression into another where all references points to native types.
@@ -51,6 +50,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	expr Expr,
 	scope map[string]Def,
 	base map[string]struct{},
+	// visited map[string]struct{},
 ) (Expr, error) {
 	if err := r.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -93,9 +93,8 @@ func (r Resolver) Resolve( //nolint:funlen
 	}
 
 	isDefBodyInst := !def.Body.Inst.Empty() && def.Body.Lit.Empty() // check both because def body wasn't validated yet
-	isDefBodySelfRefInst := def.Body.Inst.Ref == expr.Inst.Ref
-	if isDefBodyInst && isDefBodySelfRefInst { // restrict unresolvable cases like t=t
-		return Expr{}, fmt.Errorf("%w: %v", ErrDefBodySelfRefInst, def)
+	if isDefBodyInst && def.Body.Inst.Ref == expr.Inst.Ref {        // restrict unresolvable cases like t=t
+		return Expr{}, fmt.Errorf("%w: %v", ErrDirectRecursion, def)
 	}
 
 	// check that args for every param is present
@@ -126,7 +125,7 @@ func (r Resolver) Resolve( //nolint:funlen
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
-		if err := r.SubtypeCheck(resolvedArg, resolvedConstraint); err != nil { // compatibility check
+		if err := r.Check(resolvedArg, resolvedConstraint); err != nil { // compatibility check
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	} // at this point we have resolved args that are compatible with their parameters and a new scope
@@ -140,12 +139,12 @@ func (r Resolver) Resolve( //nolint:funlen
 
 func NewDefaultResolver() Resolver {
 	return Resolver{
-		validator: Validator{},
-		checker:   SubTypeChecker{},
+		expressionValidator: Validator{},
+		subtypeChecker:      SubtypeChecker{},
 	}
 }
 
-func MustNewResolver(v validator, c checker) Resolver {
+func MustNewResolver(v expressionValidator, c subtypeChecker) Resolver {
 	tools.NilPanic(v, c)
 	return Resolver{v, c}
 }

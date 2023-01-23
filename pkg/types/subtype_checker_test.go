@@ -385,14 +385,14 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// name: "expr and constr are unions, expr is same and compat",
 	}
 
-	s := ts.SubTypeChecker{}
+	checker := ts.SubtypeChecker{}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.ErrorIs(
 				t,
-				s.SubtypeCheck(tt.arg, tt.constr),
+				checker.Check(tt.arg, tt.constr),
 				tt.wantErr,
 			)
 		})

@@ -11,31 +11,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// Mockvalidator is a mock of validator interface.
-type Mockvalidator struct {
+// MockexpressionValidator is a mock of expressionValidator interface.
+type MockexpressionValidator struct {
 	ctrl     *gomock.Controller
-	recorder *MockvalidatorMockRecorder
+	recorder *MockexpressionValidatorMockRecorder
 }
 
-// MockvalidatorMockRecorder is the mock recorder for Mockvalidator.
-type MockvalidatorMockRecorder struct {
-	mock *Mockvalidator
+// MockexpressionValidatorMockRecorder is the mock recorder for MockexpressionValidator.
+type MockexpressionValidatorMockRecorder struct {
+	mock *MockexpressionValidator
 }
 
-// NewMockvalidator creates a new mock instance.
-func NewMockvalidator(ctrl *gomock.Controller) *Mockvalidator {
-	mock := &Mockvalidator{ctrl: ctrl}
-	mock.recorder = &MockvalidatorMockRecorder{mock}
+// NewMockexpressionValidator creates a new mock instance.
+func NewMockexpressionValidator(ctrl *gomock.Controller) *MockexpressionValidator {
+	mock := &MockexpressionValidator{ctrl: ctrl}
+	mock.recorder = &MockexpressionValidatorMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *Mockvalidator) EXPECT() *MockvalidatorMockRecorder {
+func (m *MockexpressionValidator) EXPECT() *MockexpressionValidatorMockRecorder {
 	return m.recorder
 }
 
 // Validate mocks base method.
-func (m *Mockvalidator) Validate(arg0 types.Expr) error {
+func (m *MockexpressionValidator) Validate(arg0 types.Expr) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validate", arg0)
 	ret0, _ := ret[0].(error)
@@ -43,44 +43,44 @@ func (m *Mockvalidator) Validate(arg0 types.Expr) error {
 }
 
 // Validate indicates an expected call of Validate.
-func (mr *MockvalidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call {
+func (mr *MockexpressionValidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*Mockvalidator)(nil).Validate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockexpressionValidator)(nil).Validate), arg0)
 }
 
-// Mockchecker is a mock of checker interface.
-type Mockchecker struct {
+// MocksubtypeChecker is a mock of subtypeChecker interface.
+type MocksubtypeChecker struct {
 	ctrl     *gomock.Controller
-	recorder *MockcheckerMockRecorder
+	recorder *MocksubtypeCheckerMockRecorder
 }
 
-// MockcheckerMockRecorder is the mock recorder for Mockchecker.
-type MockcheckerMockRecorder struct {
-	mock *Mockchecker
+// MocksubtypeCheckerMockRecorder is the mock recorder for MocksubtypeChecker.
+type MocksubtypeCheckerMockRecorder struct {
+	mock *MocksubtypeChecker
 }
 
-// NewMockchecker creates a new mock instance.
-func NewMockchecker(ctrl *gomock.Controller) *Mockchecker {
-	mock := &Mockchecker{ctrl: ctrl}
-	mock.recorder = &MockcheckerMockRecorder{mock}
+// NewMocksubtypeChecker creates a new mock instance.
+func NewMocksubtypeChecker(ctrl *gomock.Controller) *MocksubtypeChecker {
+	mock := &MocksubtypeChecker{ctrl: ctrl}
+	mock.recorder = &MocksubtypeCheckerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *Mockchecker) EXPECT() *MockcheckerMockRecorder {
+func (m *MocksubtypeChecker) EXPECT() *MocksubtypeCheckerMockRecorder {
 	return m.recorder
 }
 
-// SubtypeCheck mocks base method.
-func (m *Mockchecker) SubtypeCheck(arg0, arg1 types.Expr) error {
+// Check mocks base method.
+func (m *MocksubtypeChecker) Check(arg0, arg1 types.Expr) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubtypeCheck", arg0, arg1)
+	ret := m.ctrl.Call(m, "Check", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SubtypeCheck indicates an expected call of SubtypeCheck.
-func (mr *MockcheckerMockRecorder) SubtypeCheck(arg0, arg1 interface{}) *gomock.Call {
+// Check indicates an expected call of Check.
+func (mr *MocksubtypeCheckerMockRecorder) Check(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubtypeCheck", reflect.TypeOf((*Mockchecker)(nil).SubtypeCheck), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MocksubtypeChecker)(nil).Check), arg0, arg1)
 }

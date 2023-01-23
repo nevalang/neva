@@ -52,7 +52,8 @@ With `from rec` feature (that is implemented outside of the typesystem, because 
 
 ### Why structural subtyping?
 
-Because it's allowes to write much less code.
+1. It allowes write less code, especially mappings between records and lists of records
+2. Nominal subtyping doesn't protect from mistake like passing wrong value to type-cast
 
 ## Implementation
 

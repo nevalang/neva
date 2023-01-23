@@ -12,21 +12,20 @@ import (
 
 func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 	type testcase struct {
-		name              string
-		expr              ts.Expr
-		scope             map[string]ts.Def
-		base              map[string]struct{}
-		initValidatorMock func(v *Mockvalidator)
-		initCheckerMock   func(c *Mockchecker)
-		want              ts.Expr
-		wantErr           error
+		// name           string
+		expr           ts.Expr
+		scope          map[string]ts.Def
+		base           map[string]struct{}
+		exprValidator  func(v *MockexpressionValidator)
+		subtypeChecker func(c *MocksubtypeChecker)
+		want           ts.Expr
+		wantErr        error
 	}
 
-	tests := []func() testcase{
-		func() testcase {
+	tests := map[string]func() testcase{
+		"invalid expr": func() testcase {
 			return testcase{
-				name: "invalid expr",
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().
 						Validate(ts.Expr{}).
 						Return(errors.New(""))
@@ -34,12 +33,11 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrInvalidExpr,
 			}
 		},
-		func() testcase { // expr = int, scope = {}
+		"inst expr refers to undefined": func() testcase { // expr = int, scope = {}
 			expr := h.Inst("int")
 			return testcase{
-				name: "inst expr refers to undefined",
 				expr: expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().
 						Validate(expr).
 						Return(nil)
@@ -48,24 +46,22 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUndefinedRef,
 			}
 		},
-		func() testcase { // expr = vec<>, scope = { vec<t> = vec }
+		"args < params": func() testcase { // expr = vec<>, scope = { vec<t> = vec }
 			expr := h.Inst("vec")
 			return testcase{
-				name:              "args < params",
-				expr:              expr,
-				initValidatorMock: func(v *Mockvalidator) { v.EXPECT().Validate(expr).Return(nil) },
+				expr:          expr,
+				exprValidator: func(v *MockexpressionValidator) { v.EXPECT().Validate(expr).Return(nil) },
 				scope: map[string]ts.Def{
 					"vec": h.DefWithoutBody(ts.Param{Name: "t"}),
 				},
 				wantErr: ts.ErrInstArgsLen,
 			}
 		},
-		func() testcase { // expr = vec<foo>, scope = {vec<t> = vec}
+		"unresolvable argument": func() testcase { // expr = vec<foo>, scope = {vec<t> = vec}
 			expr := h.Inst("vec", h.Inst("foo"))
 			return testcase{
-				name: "unresolvable argument",
 				expr: expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(errors.New("")) // in the loop
 				},
@@ -75,19 +71,18 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUnresolvedArg,
 			}
 		},
-		func() testcase { // expr = map<t1>, scope = { map<t t2> = map, t1 , t2 }
+		"incompat arg": func() testcase { // expr = map<t1>, scope = { map<t t2> = map, t1 , t2 }
 			expr := h.Inst("map", h.Inst("t1"))
 			constr := h.Inst("t2")
 			return testcase{
-				name: "incompat arg",
 				expr: expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil) // first recursive call
 					v.EXPECT().Validate(constr).Return(nil)            // first recursive call
 				},
-				initCheckerMock: func(c *Mockchecker) {
-					c.EXPECT().SubtypeCheck(expr.Inst.Args[0], constr).Return(errors.New(""))
+				subtypeChecker: func(c *MocksubtypeChecker) {
+					c.EXPECT().Check(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
 					"map": h.DefWithoutBody(ts.Param{"t", constr}),
@@ -98,17 +93,16 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrIncompatArg,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t2, t1<t> = t3 }
+		"expr underlaying type not found": func() testcase { // expr = t1<t2>, scope = { t2, t1<t> = t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			return testcase{
-				name: "expr underlaying type not found",
 				expr: expr,
 				scope: map[string]ts.Def{
 					"t1": h.Def(h.Inst("t3"), h.ParamWithoutConstr("t")),
 					"t2": h.DefWithoutBody(),
 				},
 				base: h.Base("t2"),
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(h.Inst("t2")).Return(nil)
 					v.EXPECT().Validate(h.Inst("t3")).Return(nil)
@@ -116,18 +110,17 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUndefinedRef,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
+		"constr undefined ref": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
 			return testcase{
-				name: "constr undefined ref",
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.DefWithoutBody(ts.Param{Name: "t", Constraint: constr}),
+					"t1": h.DefWithoutBody(ts.Param{"t", constr}),
 					"t2": h.DefWithoutBody(),
 				},
 				base: h.Base("t1", "t2"),
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
 					v.EXPECT().Validate(constr).Return(nil)
@@ -135,17 +128,16 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrConstr,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> }
+		"constr ref type not found": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> }
 			expr := h.Inst("t1", h.Inst("t2"))
 			return testcase{
-				name: "constr ref type not found",
 				expr: expr,
 				scope: map[string]ts.Def{
 					"t2": h.DefWithoutBody(),
 					"t1": h.DefWithoutBody(h.Param("t", h.Inst("t3"))),
 				},
 				base: h.Base("t1", "t2"),
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)         // expr itself
 					v.EXPECT().Validate(h.Inst("t2")).Return(nil) // expr's arg
 					v.EXPECT().Validate(h.Inst("t3")).Return(nil) // def's constraint
@@ -153,11 +145,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrConstr,
 			}
 		},
-		func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
+		"invalid constr": func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
 			return testcase{
-				name: "invalid constr",
 				expr: expr,
 				scope: map[string]ts.Def{
 					"t1": h.DefWithoutBody(h.Param("t", ts.Inst("t3"))),
@@ -165,7 +156,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					"t3": h.DefWithoutBody(),
 				},
 				base: h.Base("t1", "t2", "t3"),
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(nil)
 					v.EXPECT().Validate(constr).Return(errors.New(""))
@@ -173,55 +164,51 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrConstr,
 			}
 		},
-		// Lits
-		func() testcase { // expr = enum{}, scope = {}
+		// Literals
+		"enum": func() testcase { // expr = enum{}, scope = {}
 			expr := h.Enum()
 			return testcase{
-				name:              "enum",
-				expr:              expr,
-				initValidatorMock: func(v *Mockvalidator) { v.EXPECT().Validate(expr).Return(nil) },
-				want:              expr,
-				wantErr:           nil,
+				expr:          expr,
+				exprValidator: func(v *MockexpressionValidator) { v.EXPECT().Validate(expr).Return(nil) },
+				want:          expr,
+				wantErr:       nil,
 			}
 		},
-		func() testcase { // expr = [2]t, scope = {}
+		"arr with unresolvable (undefined) type": func() testcase { // expr = [2]t, scope = {}
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				name:  "arr with unresolvable (undefined) type",
 				scope: map[string]ts.Def{},
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(typ).Return(nil)
 				},
 				wantErr: ts.ErrArrType,
 			}
 		},
-		func() testcase { // expr = [2]t, scope = {}
+		"arr with unresolvable (invalid) type": func() testcase { // expr = [2]t, scope = {}
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				name:  "arr with unresolvable (invalid) type",
 				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
 				base:  h.Base("t1"),
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(typ).Return(errors.New(""))
 				},
 				wantErr: ts.ErrArrType,
 			}
 		},
-		func() testcase { // expr = [2]t, scope = {t=t}
+		"arr with resolvable type": func() testcase { // expr = [2]t, scope = {t=t}
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				name:  "arr with resolvable type",
 				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
 				base:  h.Base("t"),
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(typ).Return(nil)
 				},
@@ -229,16 +216,15 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: nil,
 			}
 		},
-		func() testcase { // expr = t1 | t2, scope = {t1=t1}
+		"union with unresolvable (undefined) element": func() testcase { // expr = t1 | t2, scope = {t1=t1}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
 			return testcase{
-				name:  "union with unresolvable (undefined) element",
 				scope: map[string]ts.Def{"t1": h.DefWithoutBody()},
 				base:  h.Base("t1"),
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(t1).Return(nil)
 					v.EXPECT().Validate(t2).Return(nil)
@@ -246,19 +232,18 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
-		func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
+		"union with unresolvable (invalid) element": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
 			return testcase{
-				name: "union with unresolvable (invalid) element",
 				scope: map[string]ts.Def{
 					"t1": h.DefWithoutBody(),
 					"t2": h.DefWithoutBody(),
 				},
 				base: h.Base("t1", "t2"),
 				expr: expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(t1).Return(nil)
 					v.EXPECT().Validate(t2).Return(errors.New(""))
@@ -266,17 +251,16 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
-		func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
+		"union with resolvable elements": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
 			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
 			return testcase{
-				name: "union with resolvable elements",
 				scope: map[string]ts.Def{
 					"t1": h.DefWithoutBody(),
 					"t2": h.DefWithoutBody(),
 				},
 				base: h.Base("t1", "t2"),
 				expr: expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(expr.Lit.Union[0]).Return(nil)
 					v.EXPECT().Validate(expr.Lit.Union[1]).Return(nil)
@@ -285,42 +269,39 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: nil,
 			}
 		},
-		func() testcase { // {}
+		"empty record": func() testcase { // {}
 			expr := h.Rec(map[string]ts.Expr{})
 			return testcase{
-				name:  "empty record",
 				scope: map[string]ts.Def{},
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 				},
 				want:    h.Rec(map[string]ts.Expr{}),
 				wantErr: nil,
 			}
 		},
-		func() testcase { // { name string }
+		"record with invalid field": func() testcase { // { name string }
 			stringExpr := h.Inst("string")
 			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
 			return testcase{
-				name:  "record with invalid field",
 				scope: map[string]ts.Def{},
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(stringExpr).Return(errors.New(""))
 				},
 				wantErr: ts.ErrRecFieldUnresolved,
 			}
 		},
-		func() testcase { // { name string }
+		"record with valid field": func() testcase { // { name string }
 			stringExpr := h.Inst("string")
 			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
 			return testcase{
-				name:  "record with valid field",
 				scope: map[string]ts.Def{"string": h.DefWithoutBody()},
 				base:  h.Base("string"),
 				expr:  expr,
-				initValidatorMock: func(v *Mockvalidator) {
+				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)
 					v.EXPECT().Validate(stringExpr).Return(nil)
 				},
@@ -328,25 +309,62 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: nil,
 			}
 		},
-		// recursive types
-		// TODO
+		"type (not base) without parameters directly refer to itself": func() testcase { // t, {t=t}
+			return testcase{
+				expr: h.Inst("t"),
+				scope: map[string]ts.Def{
+					"t": h.Def(h.Inst("t")), // direct recursion
+				},
+				base: map[string]struct{}{},
+				exprValidator: func(v *MockexpressionValidator) {
+					v.EXPECT().
+						Validate(h.Inst("t")).
+						Return(nil)
+				},
+				wantErr: ts.ErrDirectRecursion,
+			}
+		},
 	}
 
-	for _, tt := range tests {
+	// AD THIS POINT IN WON'T TERMINATE
+	// func() testcase { // t1, {t1=t2, t2=t1}
+	// 	return testcase{
+	// 		"type (not base) without parameters indirectly refer to itself"
+	// 		expr: h.Inst("t1"),
+	// 		scope: map[string]ts.Def{
+	// 			"t1": h.Def(h.Inst("t2")), // indirectly
+	// 			"t2": h.Def(h.Inst("t1")), // refers to itself
+	// 		},
+	// 		base: map[string]struct{}{},
+	// 		exprValidator: func(v *MockexpressionValidator) {
+	// 			v.EXPECT().
+	// 				Validate(h.Inst("t1")).
+	// 				Return(nil)
+
+	// 			v.EXPECT().
+	// 				Validate(h.Inst("t2")).
+	// 				Return(nil)
+	// 		},
+	// 		wantErr: ts.ErrIndirectRecursion,
+	// 	}
+	// },
+
+	for name, tt := range tests {
+		name := name
 		tt := tt
 		tc := tt()
 
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			v := NewMockvalidator(ctrl)
-			if tc.initValidatorMock != nil {
-				tc.initValidatorMock(v)
+			v := NewMockexpressionValidator(ctrl)
+			if tc.exprValidator != nil {
+				tc.exprValidator(v)
 			}
 
-			c := NewMockchecker(ctrl)
-			if tc.initCheckerMock != nil {
-				tc.initCheckerMock(c)
+			c := NewMocksubtypeChecker(ctrl)
+			if tc.subtypeChecker != nil {
+				tc.subtypeChecker(c)
 			}
 
 			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope, tc.base)
