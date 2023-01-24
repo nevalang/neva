@@ -96,22 +96,22 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr has diff lit types (constr not union)",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{Enum: []string{}},
+				Lit: ts.LitExpr{Enum: []string{}},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{Arr: &ts.ArrLit{}},
+				Lit: ts.LitExpr{Arr: &ts.ArrLit{}},
 			},
 			wantErr: ts.ErrDiffLitTypes,
 		},
 		{
 			name: "expr's arr lit has lesser size than constr",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 1}, // expr doesn't matter here
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 2},
 				},
 			},
@@ -120,7 +120,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr's arr has incompat type",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2, // same size itself won't cause any problem
 						Expr: ts.Expr{
@@ -130,7 +130,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2,
 						Expr: ts.Expr{
@@ -144,7 +144,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr arrs, expr is bigger and have compat type",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 3, // bigger size won't cause any problem
 						Expr: ts.Expr{
@@ -154,7 +154,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2,
 						Expr: ts.Expr{
@@ -169,12 +169,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr enums, expr is bigger",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a", "b"},
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a"},
 				},
 			},
@@ -183,12 +183,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr enums, expr not bigger but contain diff el",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a", "d"}, // d != b
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a", "b", "c"},
 				},
 			},
@@ -197,12 +197,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr enums, expr not bigger and all reqired els are the same",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a", "b"},
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{"a", "b", "c"}, // c el won't cause any problem
 				},
 			},
@@ -212,12 +212,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr recs, expr has less fields",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{}, // 0 fields is ok
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {}, // expr itself doesn't matter here
 					},
@@ -228,14 +228,14 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr recs, expr leaks field",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // expr itself doesn't matter here
 					},
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {}, // but this field is missing
 					},
@@ -246,7 +246,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr recs, expr has incompat field",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // b field itself won't cause any problems
 						"a": {}, // this one will
@@ -254,7 +254,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {
 							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
@@ -267,7 +267,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr recs, expr has all constr fields, all fields compatible",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"a": {
 							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
@@ -277,7 +277,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {
 							Inst: ts.InstExpr{Ref: "x"}, // not same as in expr
@@ -294,7 +294,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				Inst: ts.InstExpr{Ref: "x"}, // not compat with both a and b
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},
@@ -309,7 +309,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				Inst: ts.InstExpr{Ref: "b"},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},
@@ -321,7 +321,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr are unions, expr has more els",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},
@@ -330,7 +330,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},
@@ -342,7 +342,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr are unions, same size but incompat expr el",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "c"}},
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -351,7 +351,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},
@@ -364,7 +364,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		{
 			name: "expr and constr are unions, expr is less and compat",
 			arg: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "c"}},
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -372,7 +372,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				},
 			},
 			constr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
 						{Inst: ts.InstExpr{Ref: "b"}},

@@ -13,8 +13,8 @@ type Param struct {
 
 // Instantiation or literal
 type Expr struct {
-	Lit  LiteralExpr // If empty then expr is inst
-	Inst InstExpr    // rename to call?
+	Lit  LitExpr  // If empty then expr is inst
+	Inst InstExpr // rename to call?
 }
 
 func (e Expr) Empty() bool {
@@ -32,7 +32,7 @@ func (i InstExpr) Empty() bool {
 }
 
 // Literal expression. Only one field must be initialized
-type LiteralExpr struct {
+type LitExpr struct {
 	Arr   *ArrLit
 	Rec   map[string]Expr
 	Enum  []string
@@ -40,12 +40,12 @@ type LiteralExpr struct {
 }
 
 // Helper to check that all lit's fields are nils. Doesn't care about validation
-func (lit LiteralExpr) Empty() bool {
+func (lit LitExpr) Empty() bool {
 	return lit.Arr == nil && lit.Rec == nil && lit.Enum == nil && lit.Union == nil
 }
 
 // Always call Validate before
-func (lit LiteralExpr) Type() LiteralType {
+func (lit LitExpr) Type() LiteralType {
 	switch {
 	case lit.Arr != nil:
 		return ArrLitType

@@ -10,32 +10,32 @@ import (
 func TestLiteralExpr_Empty(t *testing.T) {
 	tests := []struct {
 		name string
-		lit  types.LiteralExpr
+		lit  types.LitExpr
 		want bool
 	}{
 		{
 			name: "all 4 fields: arr, enum, union and rec are empty",
-			lit:  types.LiteralExpr{nil, nil, nil, nil},
+			lit:  types.LitExpr{nil, nil, nil, nil},
 			want: true,
 		},
 		{
 			name: "arr not empty",
-			lit:  types.LiteralExpr{&types.ArrLit{}, nil, nil, nil},
+			lit:  types.LitExpr{&types.ArrLit{}, nil, nil, nil},
 			want: false,
 		},
 		{
 			name: "rec not empty",
-			lit:  types.LiteralExpr{nil, map[string]types.Expr{}, nil, nil},
+			lit:  types.LitExpr{nil, map[string]types.Expr{}, nil, nil},
 			want: false,
 		},
 		{
 			name: "enum not empty",
-			lit:  types.LiteralExpr{nil, nil, []string{}, nil},
+			lit:  types.LitExpr{nil, nil, []string{}, nil},
 			want: false,
 		},
 		{
 			name: "union not empty",
-			lit:  types.LiteralExpr{nil, nil, nil, []types.Expr{}},
+			lit:  types.LitExpr{nil, nil, nil, []types.Expr{}},
 			want: false,
 		},
 	}
@@ -51,32 +51,32 @@ func TestLiteralExpr_Empty(t *testing.T) {
 func TestLiteralExpr_Type(t *testing.T) {
 	tests := []struct {
 		name string
-		lit  types.LiteralExpr
+		lit  types.LitExpr
 		want types.LiteralType
 	}{
 		{
 			name: "unknown",
-			lit:  types.LiteralExpr{nil, nil, nil, nil},
+			lit:  types.LitExpr{nil, nil, nil, nil},
 			want: types.EmptyLitType,
 		},
 		{
 			name: "arr",
-			lit:  types.LiteralExpr{&types.ArrLit{}, nil, nil, nil},
+			lit:  types.LitExpr{&types.ArrLit{}, nil, nil, nil},
 			want: types.ArrLitType,
 		},
 		{
 			name: "rec",
-			lit:  types.LiteralExpr{nil, map[string]types.Expr{}, nil, nil},
+			lit:  types.LitExpr{nil, map[string]types.Expr{}, nil, nil},
 			want: types.RecLitType,
 		},
 		{
 			name: "enum",
-			lit:  types.LiteralExpr{nil, nil, []string{}, nil},
+			lit:  types.LitExpr{nil, nil, []string{}, nil},
 			want: types.EnumLitType,
 		},
 		{
 			name: "union",
-			lit:  types.LiteralExpr{nil, nil, nil, []types.Expr{}},
+			lit:  types.LitExpr{nil, nil, nil, []types.Expr{}},
 			want: types.UnionLitType,
 		},
 	}

@@ -51,7 +51,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:          expr,
 				exprValidator: func(v *MockexpressionValidator) { v.EXPECT().Validate(expr).Return(nil) },
 				scope: map[string]ts.Def{
-					"vec": h.DefWithoutBody(ts.Param{Name: "t"}),
+					"vec": h.BaseDef(ts.Param{Name: "t"}),
 				},
 				wantErr: ts.ErrInstArgsLen,
 			}
@@ -65,7 +65,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.EXPECT().Validate(expr.Inst.Args[0]).Return(errors.New("")) // in the loop
 				},
 				scope: map[string]ts.Def{
-					"vec": h.DefWithoutBody(ts.Param{Name: "t"}),
+					"vec": h.BaseDef(ts.Param{Name: "t"}),
 				},
 				wantErr: ts.ErrUnresolvedArg,
 			}
@@ -84,9 +84,9 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					c.EXPECT().Check(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
-					"map": h.DefWithoutBody(ts.Param{"t", constr}),
-					"t1":  h.DefWithoutBody(),
-					"t2":  h.DefWithoutBody(),
+					"map": h.BaseDef(ts.Param{"t", constr}),
+					"t1":  h.BaseDef(),
+					"t2":  h.BaseDef(),
 				},
 				base:    h.Base("map", "t1", "t2"),
 				wantErr: ts.ErrIncompatArg,
@@ -98,7 +98,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr: expr,
 				scope: map[string]ts.Def{
 					"t1": h.Def(h.Inst("t3"), h.ParamWithoutConstr("t")),
-					"t2": h.DefWithoutBody(),
+					"t2": h.BaseDef(),
 				},
 				base: h.Base("t2"),
 				exprValidator: func(v *MockexpressionValidator) {
@@ -116,8 +116,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.DefWithoutBody(ts.Param{"t", constr}),
-					"t2": h.DefWithoutBody(),
+					"t1": h.BaseDef(ts.Param{"t", constr}),
+					"t2": h.BaseDef(),
 				},
 				base: h.Base("t1", "t2"),
 				exprValidator: func(v *MockexpressionValidator) {
@@ -133,8 +133,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t2": h.DefWithoutBody(),
-					"t1": h.DefWithoutBody(h.Param("t", h.Inst("t3"))),
+					"t2": h.BaseDef(),
+					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 				},
 				base: h.Base("t1", "t2"),
 				exprValidator: func(v *MockexpressionValidator) {
@@ -151,9 +151,9 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.DefWithoutBody(h.Param("t", ts.Inst("t3"))),
-					"t2": h.DefWithoutBody(),
-					"t3": h.DefWithoutBody(),
+					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
+					"t2": h.BaseDef(),
+					"t3": h.BaseDef(),
 				},
 				base: h.Base("t1", "t2", "t3"),
 				exprValidator: func(v *MockexpressionValidator) {
@@ -191,7 +191,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
+				scope: map[string]ts.Def{"t": h.BaseDef()},
 				base:  h.Base("t1"),
 				expr:  expr,
 				exprValidator: func(v *MockexpressionValidator) {
@@ -205,7 +205,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				scope: map[string]ts.Def{"t": h.DefWithoutBody()},
+				scope: map[string]ts.Def{"t": h.BaseDef()},
 				base:  h.Base("t"),
 				expr:  expr,
 				exprValidator: func(v *MockexpressionValidator) {
@@ -221,7 +221,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
 			return testcase{
-				scope: map[string]ts.Def{"t1": h.DefWithoutBody()},
+				scope: map[string]ts.Def{"t1": h.BaseDef()},
 				base:  h.Base("t1"),
 				expr:  expr,
 				exprValidator: func(v *MockexpressionValidator) {
@@ -238,8 +238,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Union(t1, t2)
 			return testcase{
 				scope: map[string]ts.Def{
-					"t1": h.DefWithoutBody(),
-					"t2": h.DefWithoutBody(),
+					"t1": h.BaseDef(),
+					"t2": h.BaseDef(),
 				},
 				base: h.Base("t1", "t2"),
 				expr: expr,
@@ -255,8 +255,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
 			return testcase{
 				scope: map[string]ts.Def{
-					"t1": h.DefWithoutBody(),
-					"t2": h.DefWithoutBody(),
+					"t1": h.BaseDef(),
+					"t2": h.BaseDef(),
 				},
 				base: h.Base("t1", "t2"),
 				expr: expr,
@@ -298,7 +298,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			stringExpr := h.Inst("string")
 			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
 			return testcase{
-				scope: map[string]ts.Def{"string": h.DefWithoutBody()},
+				scope: map[string]ts.Def{"string": h.BaseDef()},
 				base:  h.Base("string"),
 				expr:  expr,
 				exprValidator: func(v *MockexpressionValidator) {

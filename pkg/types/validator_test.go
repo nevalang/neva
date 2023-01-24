@@ -23,7 +23,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "non-empty lit and inst",
 			expr: ts.Expr{
-				Lit:  ts.LiteralExpr{Enum: []string{"a"}},
+				Lit:  ts.LitExpr{Enum: []string{"a"}},
 				Inst: ts.InstExpr{Ref: "int"},
 			},
 			wantErr: ts.ErrInvalidExprType,
@@ -52,7 +52,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 0 elements",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 0},
 				},
 			},
@@ -61,7 +61,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 1},
 				},
 			},
@@ -70,7 +70,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 2 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 2},
 				},
 			},
@@ -79,7 +79,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 3 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 3},
 				},
 			},
@@ -89,7 +89,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 0 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{},
 				},
 			},
@@ -98,7 +98,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{{}},
 				},
 			},
@@ -107,7 +107,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 2 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{{}, {}},
 				},
 			},
@@ -116,7 +116,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 3 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Union: []ts.Expr{{}, {}, {}},
 				},
 			},
@@ -126,7 +126,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "enum of 0 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{},
 				},
 			},
@@ -135,7 +135,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "enum of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LiteralExpr{
+				Lit: ts.LitExpr{
 					Enum: []string{""},
 				},
 			},

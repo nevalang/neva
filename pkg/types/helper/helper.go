@@ -2,17 +2,15 @@ package helper
 
 import ts "github.com/emil14/neva/pkg/types"
 
+// Do not pass empty string as a name to avoid Body.Empty() == true
+func BaseDef(params ...ts.Param) ts.Def {
+	return Def(ts.Expr{}, params...)
+}
+
 func Def(body ts.Expr, params ...ts.Param) ts.Def {
 	return ts.Def{
 		Params: params,
 		Body:   body,
-	}
-}
-
-// Do not pass empty string as a name to avoid Body.Empty() == true
-func DefWithoutBody(params ...ts.Param) ts.Def {
-	return ts.Def{
-		Params: params,
 	}
 }
 
@@ -34,13 +32,13 @@ func Enum(els ...string) ts.Expr {
 		els = []string{}
 	}
 	return ts.Expr{
-		Lit: ts.LiteralExpr{Enum: els},
+		Lit: ts.LitExpr{Enum: els},
 	}
 }
 
 func Arr(size int, typ ts.Expr) ts.Expr {
 	return ts.Expr{
-		Lit: ts.LiteralExpr{
+		Lit: ts.LitExpr{
 			Arr: &ts.ArrLit{Expr: typ, Size: size},
 		},
 	}
@@ -51,7 +49,7 @@ func Union(els ...ts.Expr) ts.Expr {
 		els = []ts.Expr{}
 	}
 	return ts.Expr{
-		Lit: ts.LiteralExpr{Union: els},
+		Lit: ts.LitExpr{Union: els},
 	}
 }
 
@@ -60,7 +58,7 @@ func Rec(v map[string]ts.Expr) ts.Expr {
 		v = map[string]ts.Expr{}
 	}
 	return ts.Expr{
-		Lit: ts.LiteralExpr{
+		Lit: ts.LitExpr{
 			Rec: v,
 		},
 	}
@@ -74,13 +72,13 @@ func Base(tt ...string) map[string]struct{} {
 	return m
 }
 
+func ParamWithoutConstr(name string) ts.Param {
+	return Param(name, ts.Expr{})
+}
+
 func Param(name string, constr ts.Expr) ts.Param {
 	return ts.Param{
 		Name:       name,
 		Constraint: constr,
 	}
-}
-
-func ParamWithoutConstr(name string) ts.Param {
-	return Param(name, ts.Expr{})
 }

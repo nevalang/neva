@@ -1,4 +1,3 @@
-// todo scope ins't validated?
 package types
 
 import (
@@ -9,8 +8,8 @@ import (
 )
 
 type Resolver struct {
-	expressionValidator
-	subtypeChecker
+	validator expressionValidator
+	checker   subtypeChecker
 }
 
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
@@ -51,7 +50,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	base map[string]struct{},
 	// trace map[string]struct{},
 ) (Expr, error) {
-	if err := r.Validate(expr); err != nil { // todo remove embedding
+	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
@@ -63,7 +62,11 @@ func (r Resolver) Resolve( //nolint:funlen
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
-		return ArrExpr(expr.Lit.Arr.Size, resolvedArrType), nil
+		return Expr{
+			Lit: LitExpr{
+				Arr: &ArrLit{resolvedArrType, expr.Lit.Arr.Size},
+			},
+		}, nil
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
@@ -73,7 +76,9 @@ func (r Resolver) Resolve( //nolint:funlen
 			}
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
-		return Union(resolvedUnion...), nil
+		return Expr{
+			Lit: LitExpr{Union: resolvedUnion},
+		}, nil
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
@@ -83,10 +88,12 @@ func (r Resolver) Resolve( //nolint:funlen
 			}
 			resolvedStruct[field] = resolvedFieldExpr
 		}
-		return Rec(resolvedStruct), nil
+		return Expr{
+			Lit: LitExpr{Rec: resolvedStruct},
+		}, nil
 	} // at this point we know it's an instantiation, not literal
 
-	def, ok := scope[expr.Inst.Ref] // check that reference type exists
+	def, ok := scope[expr.Inst.Ref] // check that ref type exist
 	if !ok {
 		return Expr{}, fmt.Errorf("%w: %v", ErrUndefinedRef, expr.Inst.Ref)
 	}
@@ -104,7 +111,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	}
 
 	resolvedArgs := make([]Expr, 0, len(def.Params))
-	for i, param := range def.Params { // resolve arguments and parameter's constraints to compare them
+	for i, param := range def.Params { // resolve args and constrs to check subtyping
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
@@ -116,17 +123,19 @@ func (r Resolver) Resolve( //nolint:funlen
 			continue
 		}
 
-		resolvedConstraint, err := r.Resolve(param.Constraint, scope, base) // should we resolve it here?
+		resolvedConstr, err := r.Resolve(param.Constraint, scope, base)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
-		if err := r.Check(resolvedArg, resolvedConstraint); err != nil { // compatibility check
+		if err := r.checker.Check(resolvedArg, resolvedConstr); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	} // at this point we have resolved args that are compatible with their parameters and a new scope
 
 	if _, ok := base[expr.Inst.Ref]; ok {
-		return Inst(expr.Inst.Ref, resolvedArgs...), nil
+		return Expr{
+			Inst: InstExpr{expr.Inst.Ref, resolvedArgs},
+		}, nil
 	}
 
 	newExpr := Expr{
@@ -141,8 +150,8 @@ func (r Resolver) Resolve( //nolint:funlen
 
 func NewDefaultResolver() Resolver {
 	return Resolver{
-		expressionValidator: Validator{},
-		subtypeChecker:      SubtypeChecker{},
+		validator: Validator{},
+		checker:   SubtypeChecker{},
 	}
 }
 
