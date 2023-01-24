@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,54 +11,93 @@ import (
 )
 
 var (
-	ErrEmptyStr     = errors.New("empty string")
-	ErrBraceExprLen = errors.New("string that strats with '[' must be at least 4 characters long")
-	ErrNoCloseBrace = errors.New("string that strats with '[' contain ']'")
-	ErrArrSize      = errors.New("string betwee '[ and ']' must be integer")
-	ErrArrType      = errors.New("string after '[' is not valid type expression")
+	ErrEmptyStr          = errors.New("empty string")
+	ErrBraceExprLen      = errors.New("string that strats with '[' must be at least 4 characters long")
+	ErrNoCloseBrace      = errors.New("string that strats with '[' must contain ']'")
+	ErrArrSize           = errors.New("string betwee '[ and ']' must be integer")
+	ErrArrType           = errors.New("string after '[' is not valid type expression")
+	ErrMissingCurlyClose = errors.New("non-union expression that strats with '{' must have '}' at the end")
+	ErrUnionEl           = errors.New("failed to parse union element")
+	// ErrMissingCommas = errors.New("string must contain parts separated by commas")
 )
 
-func Parse(s string) (ts.Expr, error) {
+func Parse(s string) (ts.Expr, error) { //nolint:funlen
+	s = strings.TrimSpace(s)
+
 	rr := []rune(s)
-	l := len(rr)
-	if l == 0 {
+	charCount := len(rr)
+	if charCount == 0 {
 		return ts.Expr{}, ErrEmptyStr
 	}
 
-	unionEls := strings.Split(s, "|")
-	if len(unionEls) != 0 {
-		els := make([]ts.Expr, 0, len(unionEls))
-		for _, el := range unionEls {
+	if unionEls := strings.Split(s, "|"); len(unionEls) != 0 { // union
+		exprs := make([]ts.Expr, 0, len(unionEls))
+		for i, el := range unionEls {
 			expr, err := Parse(el)
 			if err != nil {
-				return ts.Expr{}, err
+				return ts.Expr{}, fmt.Errorf("%w: #%d, err %v", ErrUnionEl, i, err)
 			}
-			els = append(els, expr)
+			exprs = append(exprs, expr)
 		}
-		return h.Union(els...), nil
+		return h.Union(exprs...), nil
 	}
 
-	if strings.HasPrefix(s, "[") {
-		if l < 4 {
-			return ts.Expr{}, ErrBraceExprLen
+	if strings.HasPrefix(s, "[") { // arr
+		if charCount < 4 {
+			return ts.Expr{}, fmt.Errorf("%w: got %d", ErrBraceExprLen, charCount)
 		}
 
-		closing := strings.Index(s, "]")
-		if closing == -1 {
+		closingIdx := strings.Index(s, "]")
+		if closingIdx == -1 {
 			return ts.Expr{}, ErrNoCloseBrace
 		}
 
-		sizeint, err := strconv.ParseInt(s[1:closing], 10, 64)
+		betweenBraces := strings.TrimSpace(s[1:closingIdx])
+
+		size, err := strconv.ParseInt(betweenBraces, 10, 64)
 		if err != nil {
-			return ts.Expr{}, ErrArrSize
+			return ts.Expr{}, fmt.Errorf("%w: %v", ErrArrSize, err)
 		}
 
-		v, err := Parse(s[closing:])
+		afterBraces := strings.TrimSpace(s[closingIdx:])
+
+		arrType, err := Parse(afterBraces)
 		if err != nil {
-			return ts.Expr{}, ErrArrType
+			return ts.Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
 
-		return h.Arr(int(sizeint), v), nil
+		return h.Arr(int(size), arrType), nil
+	}
+
+	if strings.HasPrefix(s, "{") { // record or enum
+		isRecord := false
+		isEnum := false
+
+		closingIdx := strings.Index(s, "}")
+		if closingIdx != charCount-1 {
+			return ts.Expr{}, ErrMissingCurlyClose
+		}
+
+		betweenCurlyBraces := strings.TrimSpace(s[1:closingIdx])
+
+		els := strings.Split(betweenCurlyBraces, ",")
+		for _, parts := range els {
+			if isRecord && isEnum {
+				panic("")
+			}
+
+			parts := strings.Split(strings.TrimSpace(parts), " ")
+			if len(parts) > 2 {
+				panic("") // too many for rec and enum
+			}
+			if len(parts) == 2 {
+				isRecord = true
+			} else {
+				isEnum = true
+			}
+
+			// TODO
+		}
 	}
 
 	// TODO enums, records, insts
