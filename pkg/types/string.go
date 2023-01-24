@@ -18,6 +18,8 @@ func (expr Expr) String() string { // todo move?
 			s += " " + el
 			if i == len(expr.Lit.Enum)-1 {
 				s += " "
+			} else {
+				s += ","
 			}
 		}
 		return s + "}"

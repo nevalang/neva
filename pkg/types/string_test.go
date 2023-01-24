@@ -109,7 +109,7 @@ func TestExpr_String(t *testing.T) {
 					Enum: []string{"MONDAY", "TUESDAY"},
 				},
 			},
-			want: "{ MONDAY TUESDAY }",
+			want: "{ MONDAY, TUESDAY }",
 		},
 		// arr
 		{
