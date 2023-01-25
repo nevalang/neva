@@ -24,6 +24,7 @@ var (
 	ErrMissingAngleClose      = errors.New("strings that has '<' must also has '>'")
 	ErrEmptyAngleBrackets     = errors.New("string with '<>' must not contain arguments")
 	ErrInstArg                = errors.New("could not parse inst argument")
+	ErrRefWIthSpace           = errors.New("inst ref cannot have spaces")
 )
 
 // TODO make API to extend parser
@@ -129,6 +130,18 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 	} // at this point we know it's inst
 
 	openIdx := strings.Index(s, "<")
+
+	ref := ""
+	if openIdx != -1 {
+		ref = s[0:openIdx]
+	} else {
+		ref = s
+	}
+
+	if strings.Contains(ref, " ") {
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrRefWIthSpace, ref)
+	}
+
 	if openIdx == -1 {
 		return h.Inst(s), nil
 	}
@@ -153,5 +166,5 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		exprs = append(exprs, expr)
 	}
 
-	return h.Inst(s[0:openIdx], exprs...), nil
+	return h.Inst(ref, exprs...), nil
 }
