@@ -79,7 +79,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 	if strings.HasPrefix(s, "{") { //nolint:nestif
 		isRecord, isEnum := false, false
 
-		closingIdx := strings.Index(s, "}")
+		closingIdx := strings.LastIndex(s, "}")
 		if closingIdx != charCount-1 {
 			return ts.Expr{}, ErrMissingCurlyClose
 		}
@@ -94,6 +94,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		rec := make(map[string]ts.Expr, len(els))     // allocate memory for both record and enum
 		enum := make([]string, 0, len(els))           // to complete computation in one cycle
 		for _, el := range els {                      // els are record fields or enum elements
+			// SplitN?
 			parts := strings.Split(strings.TrimSpace(el), " ") // record field and its type or just enum element
 
 			switch { // we don't handle len(parts) == 0 because we know there's someting between braces

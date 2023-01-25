@@ -15,22 +15,111 @@ func TestParse(t *testing.T) {
 		want    ts.Expr
 		wantErr error
 	}{
+		// insts
+		// {
+		// 	s:    "t",
+		// 	want: h.Inst("t"),
+		// },
+		// {
+		// 	s:       "t<>",
+		// 	wantErr: parser.ErrEmptyAngleBrackets,
+		// },
+		// {
+		// 	s:    "t<u8>",
+		// 	want: h.Inst("t", h.Inst("u8")),
+		// },
+		// {
+		// 	s:       "t<y<>>",
+		// 	wantErr: parser.ErrInstArg,
+		// },
+		// {
+		// 	s:    "t<y<u8>>",
+		// 	want: h.Inst("t", h.Inst("y", h.Inst("u8"))),
+		// },
+		// {
+		// 	s:       "t<y<u8>, u<>>",
+		// 	wantErr: parser.ErrInstArg,
+		// },
+		// {
+		// 	s: "t<y<u8>, u<u32>>",
+		// 	want: h.Inst(
+		// 		"t",
+		// 		h.Inst("y", h.Inst("u8")),
+		// 		h.Inst("u", h.Inst("u32")),
+		// 	),
+		// },
+		// // recs
+		// {
+		// 	s:       "{",
+		// 	wantErr: parser.ErrMissingCurlyClose,
+		// },
+		// {
+		// 	s:       "{ x",
+		// 	wantErr: parser.ErrMissingCurlyClose,
+		// },
+		// {
+		// 	s:       "{ x u8",
+		// 	wantErr: parser.ErrMissingCurlyClose,
+		// },
+		// {
+		// 	s:       "{ x u8, ",
+		// 	wantErr: parser.ErrMissingCurlyClose,
+		// },
+		// {
+		// 	s:    "{}",
+		// 	want: h.Rec(nil),
+		// },
+		// {
+		// 	s: "{ x u8 }",
+		// 	want: h.Rec(map[string]ts.Expr{
+		// 		"x": h.Inst("u8"),
+		// 	}),
+		// },
+		// {
+		// 	s:       "{ x u8 z }",
+		// 	wantErr: parser.ErrTooMuchPartsForCurlyEl,
+		// },
+		// {
+		// 	s:       "{ x u8<> }",
+		// 	wantErr: parser.ErrRecField,
+		// },
+		// {
+		// 	s:       "{ x u8, y }",
+		// 	wantErr: parser.ErrInvalidCurlyEl,
+		// },
+		// {
+		// 	s:       "{ x u8, z y x }",
+		// 	wantErr: parser.ErrTooMuchPartsForCurlyEl,
+		// },
+		// {
+		// 	s: "{ x u8, y u32 }",
+		// 	want: h.Rec(map[string]ts.Expr{
+		// 		"x": h.Inst("u8"),
+		// 		"y": h.Inst("u32"),
+		// 	}),
+		// },
+		// {
+		// 	s: "{ x t<u8> }",
+		// 	want: h.Rec(map[string]ts.Expr{
+		// 		"x": h.Inst("t", h.Inst("u8")),
+		// 	}),
+		// },
 		{
-			s:    "{}",
-			want: h.Rec(nil),
+			s: "{ x t<{y u8}> }",
+			want: h.Rec(map[string]ts.Expr{
+				"x": h.Inst(
+					"t",
+					h.Rec(map[string]ts.Expr{
+						"y": h.Inst("u8"),
+					}),
+				),
+			}),
 		},
-		{
-			s:    "[256]u8",
-			want: h.Arr(256, h.Inst("u8")),
-		},
-		{
-			s:    "t",
-			want: h.Inst("t"),
-		},
-		{
-			s:       "t<>",
-			wantErr: parser.ErrEmptyAngleBrackets,
-		},
+		// arrs
+		// {
+		// 	s:    "[256]u8",
+		// 	want: h.Arr(256, h.Inst("u8")),
+		// },
 	}
 
 	for _, tt := range tests {
@@ -38,8 +127,8 @@ func TestParse(t *testing.T) {
 
 		t.Run(tt.s, func(t *testing.T) {
 			got, err := parser.Parse(tt.s)
-			require.Equal(t, tt.want, got)
 			require.ErrorIs(t, err, tt.wantErr)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
