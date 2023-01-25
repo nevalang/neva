@@ -23,8 +23,10 @@ var (
 	ErrRecField               = errors.New("cannot parse record field")
 	ErrMissingAngleClose      = errors.New("strings that has '<' must also has '>'")
 	ErrEmptyAngleBrackets     = errors.New("string with '<>' must not contain arguments")
-	ErrInstArg                = errors.New("could not parse inst argument")
+	ErrInstArg                = errors.New("cannot parse inst argument")
 	ErrRefWIthSpace           = errors.New("inst ref cannot have spaces")
+	ErrEnumElWithSpaces       = errors.New("enum element cannot have spaces")
+	ErrTrailingComma          = errors.New("things between curly braces cannot have trailing commas")
 )
 
 // TODO make API to extend parser
@@ -91,11 +93,16 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 			return h.Rec(nil), nil
 		}
 
+		if strings.HasSuffix(betweenCurlyBraces, ",") {
+			return ts.Expr{}, ErrTrailingComma
+		}
+
 		els := strings.Split(betweenCurlyBraces, ",") // we know that's len(els) >= 1
 		rec := make(map[string]ts.Expr, len(els))     // allocate memory for both record and enum
 		enum := make([]string, 0, len(els))           // to complete computation in one cycle
 		for _, el := range els {                      // els are record fields or enum elements
-			parts := strings.SplitN(strings.TrimSpace(el), " ", 2) // record field and its type or just enum element
+			el = strings.TrimSpace(el)
+			parts := strings.SplitN(el, " ", 2) // record field and its type or just enum element
 
 			switch { // we don't handle len(parts) == 0 because we know there's someting between braces
 			case len(parts) == 2:
@@ -109,6 +116,9 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 			}
 
 			if isEnum {
+				if strings.Contains(el, " ") {
+					return ts.Expr{}, ErrEnumElWithSpaces
+				}
 				enum = append(enum, el) // enum's el is basically just a string, no need to parse anything there
 				continue
 			}

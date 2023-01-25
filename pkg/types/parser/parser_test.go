@@ -37,6 +37,18 @@ func TestParse(t *testing.T) {
 			wantErr: parser.ErrEmptyAngleBrackets,
 		},
 		{
+			s:       "t<",
+			wantErr: parser.ErrMissingAngleClose,
+		},
+		{
+			s:       "t<y",
+			wantErr: parser.ErrMissingAngleClose,
+		},
+		{
+			s:       "t<y<u8>",
+			wantErr: parser.ErrInstArg,
+		},
+		{
 			s:    "t<u8>",
 			want: h.Inst("t", h.Inst("u8")),
 		},
@@ -174,6 +186,23 @@ func TestParse(t *testing.T) {
 				"x": h.Inst("u8"),
 			})),
 		},
+		// Enums
+		{
+			s:    "{ x }",
+			want: h.Enum("x"),
+		},
+		{
+			s:    "{ x, y, z }",
+			want: h.Enum("x", "y", "z"),
+		},
+		{
+			s:       "{ x, y, z, }",
+			wantErr: parser.ErrTrailingComma,
+		},
+		// Union
+		// |
+		// t |
+		// t | y
 	}
 
 	for _, tt := range tests {
