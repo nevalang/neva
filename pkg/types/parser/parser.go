@@ -21,7 +21,9 @@ var (
 	ErrInvalidCurlyEl         = errors.New("elements inside curly braces must all be record pairs or enum elements")
 	ErrTooMuchPartsForCurlyEl = errors.New("element inside curly braces cannot have more than 2 parts")
 	ErrRecField               = errors.New("cannot parse record field")
-	// ErrMissingCommas = errors.New("string must contain parts separated by commas")
+	ErrMissingAngleClose      = errors.New("strings that has '<' must also has '>'")
+	ErrEmptyAngleBrackets     = errors.New("string with '<>' must not contain arguments")
+	ErrInstArg                = errors.New("could not parse inst argument")
 )
 
 // TODO make API to extend parser
@@ -126,10 +128,30 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		return h.Rec(rec), nil // no need to check isRecord also
 	} // at this point we know it's inst
 
-	open := strings.Index(s, "<") //nolint:ifshort
-	if open == -1 {
+	openIdx := strings.Index(s, "<")
+	if openIdx == -1 {
 		return h.Inst(s), nil
 	}
 
-	return ts.Expr{}, nil
+	closeIdx := strings.LastIndex(s, ">")
+	if closeIdx == -1 {
+		return ts.Expr{}, ErrMissingAngleClose
+	}
+
+	betweenAngleBrackets := strings.TrimSpace(s[openIdx+1 : closeIdx])
+	if betweenAngleBrackets == "" {
+		return ts.Expr{}, ErrEmptyAngleBrackets
+	}
+
+	args := strings.Split(betweenAngleBrackets, ",")
+	exprs := make([]ts.Expr, 0, len(args))
+	for _, arg := range args {
+		expr, err := Parse(arg)
+		if err != nil {
+			return ts.Expr{}, ErrInstArg
+		}
+		exprs = append(exprs, expr)
+	}
+
+	return h.Inst(s[0:openIdx], exprs...), nil
 }

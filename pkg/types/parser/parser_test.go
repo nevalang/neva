@@ -11,20 +11,25 @@ import (
 
 func TestParse(t *testing.T) {
 	tests := []struct {
-		name    string
 		s       string
 		want    ts.Expr
 		wantErr error
 	}{
 		{
-			s:       "{}",
-			want:    h.Rec(nil),
-			wantErr: nil,
+			s:    "{}",
+			want: h.Rec(nil),
 		},
 		{
-			s:       "[256]u8",
-			want:    h.Arr(256, h.Inst("u8")),
-			wantErr: nil,
+			s:    "[256]u8",
+			want: h.Arr(256, h.Inst("u8")),
+		},
+		{
+			s:    "t",
+			want: h.Inst("t"),
+		},
+		{
+			s:       "t<>",
+			wantErr: parser.ErrEmptyAngleBrackets,
 		},
 	}
 
