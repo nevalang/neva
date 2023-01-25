@@ -13,7 +13,7 @@ import (
 var (
 	ErrEmptyStr               = errors.New("empty string")
 	ErrBraceExprLen           = errors.New("string that strats with '[' must be at least 4 characters long")
-	ErrNoCloseBrace           = errors.New("string that strats with '[' must contain ']'")
+	ErrMissingCloseBrace      = errors.New("string that strats with '[' must contain ']'")
 	ErrArrSize                = errors.New("string betwee '[ and ']' must be integer")
 	ErrArrType                = errors.New("string after '[' is not valid type expression")
 	ErrMissingCurlyClose      = errors.New("non-union expression that strats with '{' must have '}' at the end")
@@ -56,7 +56,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 
 		closingIdx := strings.Index(s, "]")
 		if closingIdx == -1 {
-			return ts.Expr{}, ErrNoCloseBrace
+			return ts.Expr{}, ErrMissingCloseBrace
 		}
 
 		betweenBraces := strings.TrimSpace(s[1:closingIdx])
@@ -98,8 +98,6 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 			parts := strings.SplitN(strings.TrimSpace(el), " ", 2) // record field and its type or just enum element
 
 			switch { // we don't handle len(parts) == 0 because we know there's someting between braces
-			// case len(parts) > 2:
-			// 	return ts.Expr{}, fmt.Errorf("%w: %v", ErrTooMuchPartsForCurlyEl, parts)
 			case len(parts) == 2:
 				isRecord = true
 			case len(parts) == 1:
@@ -137,6 +135,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 	} else {
 		ref = s
 	}
+	ref = strings.Trim(ref, " ")
 
 	if strings.Contains(ref, " ") {
 		return ts.Expr{}, fmt.Errorf("%w: %v", ErrRefWIthSpace, ref)

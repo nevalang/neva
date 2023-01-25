@@ -21,11 +21,31 @@ func TestParse(t *testing.T) {
 			want: h.Inst("t"),
 		},
 		{
+			s:    " t ",
+			want: h.Inst("t"),
+		},
+		{
+			s:       "t y",
+			wantErr: parser.ErrRefWIthSpace,
+		},
+		{
+			s:       "t y<u8>",
+			wantErr: parser.ErrRefWIthSpace,
+		},
+		{
 			s:       "t<>",
 			wantErr: parser.ErrEmptyAngleBrackets,
 		},
 		{
 			s:    "t<u8>",
+			want: h.Inst("t", h.Inst("u8")),
+		},
+		{
+			s:    "t <u8>",
+			want: h.Inst("t", h.Inst("u8")),
+		},
+		{
+			s:    " t <u8>",
 			want: h.Inst("t", h.Inst("u8")),
 		},
 		{
@@ -115,10 +135,44 @@ func TestParse(t *testing.T) {
 				),
 			}),
 		},
-		// // arrs
+		// arrs
+		{
+			s:       "[",
+			wantErr: parser.ErrBraceExprLen,
+		},
+		{
+			s:       "[]",
+			wantErr: parser.ErrBraceExprLen,
+		},
+		{
+			s:       "[256u8",
+			wantErr: parser.ErrMissingCloseBrace,
+		},
+		{
+			s:       "[256]",
+			wantErr: parser.ErrArrType,
+		},
+		{
+			s:       "[256]t y",
+			wantErr: parser.ErrArrType,
+		},
+		{
+			s:       "[]u8",
+			wantErr: parser.ErrArrSize,
+		},
+		{
+			s:       "[abc]u8",
+			wantErr: parser.ErrArrSize,
+		},
 		{
 			s:    "[256]u8",
 			want: h.Arr(256, h.Inst("u8")),
+		},
+		{
+			s: "[256]{x u8}",
+			want: h.Arr(256, h.Rec(map[string]ts.Expr{
+				"x": h.Inst("u8"),
+			})),
 		},
 	}
 
