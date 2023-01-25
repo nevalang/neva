@@ -94,12 +94,11 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		rec := make(map[string]ts.Expr, len(els))     // allocate memory for both record and enum
 		enum := make([]string, 0, len(els))           // to complete computation in one cycle
 		for _, el := range els {                      // els are record fields or enum elements
-			// SplitN?
-			parts := strings.Split(strings.TrimSpace(el), " ") // record field and its type or just enum element
+			parts := strings.SplitN(strings.TrimSpace(el), " ", 2) // record field and its type or just enum element
 
 			switch { // we don't handle len(parts) == 0 because we know there's someting between braces
-			case len(parts) > 2:
-				return ts.Expr{}, fmt.Errorf("%w: %v", ErrTooMuchPartsForCurlyEl, parts)
+			// case len(parts) > 2:
+			// 	return ts.Expr{}, fmt.Errorf("%w: %v", ErrTooMuchPartsForCurlyEl, parts)
 			case len(parts) == 2:
 				isRecord = true
 			case len(parts) == 1:

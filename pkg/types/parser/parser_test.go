@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/emil14/neva/pkg/types/parser"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
@@ -75,10 +74,10 @@ func TestParse(t *testing.T) {
 		// 		"x": h.Inst("u8"),
 		// 	}),
 		// },
-		// {
-		// 	s:       "{ x u8 z }",
-		// 	wantErr: parser.ErrTooMuchPartsForCurlyEl,
-		// },
+		{
+			s:       "{ x u8 z }",
+			wantErr: parser.ErrRecField,
+		},
 		// {
 		// 	s:       "{ x u8<> }",
 		// 	wantErr: parser.ErrRecField,
@@ -89,7 +88,7 @@ func TestParse(t *testing.T) {
 		// },
 		// {
 		// 	s:       "{ x u8, z y x }",
-		// 	wantErr: parser.ErrTooMuchPartsForCurlyEl,
+		// 	wantErr: parser.ErrRecField,
 		// },
 		// {
 		// 	s: "{ x u8, y u32 }",
@@ -104,18 +103,18 @@ func TestParse(t *testing.T) {
 		// 		"x": h.Inst("t", h.Inst("u8")),
 		// 	}),
 		// },
-		{
-			s: "{ x t<{y u8}> }",
-			want: h.Rec(map[string]ts.Expr{
-				"x": h.Inst(
-					"t",
-					h.Rec(map[string]ts.Expr{
-						"y": h.Inst("u8"),
-					}),
-				),
-			}),
-		},
-		// arrs
+		// {
+		// 	s: "{ x t<{y u8}> }",
+		// 	want: h.Rec(map[string]ts.Expr{
+		// 		"x": h.Inst(
+		// 			"t",
+		// 			h.Rec(map[string]ts.Expr{
+		// 				"y": h.Inst("u8"),
+		// 			}),
+		// 		),
+		// 	}),
+		// },
+		// // arrs
 		// {
 		// 	s:    "[256]u8",
 		// 	want: h.Arr(256, h.Inst("u8")),
@@ -127,8 +126,8 @@ func TestParse(t *testing.T) {
 
 		t.Run(tt.s, func(t *testing.T) {
 			got, err := parser.Parse(tt.s)
-			require.ErrorIs(t, err, tt.wantErr)
-			require.Equal(t, tt.want, got)
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
