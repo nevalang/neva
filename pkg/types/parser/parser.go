@@ -44,7 +44,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		for i, el := range unionEls {
 			expr, err := Parse(el)
 			if err != nil {
-				return ts.Expr{}, fmt.Errorf("%w: #%d, err %v", ErrUnionEl, i, err)
+				return ts.Expr{}, fmt.Errorf("%w: #%d: %v", ErrUnionEl, i, err)
 			}
 			exprs = append(exprs, expr)
 		}
@@ -102,7 +102,7 @@ func Parse(s string) (ts.Expr, error) { //nolint:funlen,gocognit
 		enum := make([]string, 0, len(els))           // to complete computation in one cycle
 		for _, el := range els {                      // els are record fields or enum elements
 			el = strings.TrimSpace(el)
-			parts := strings.SplitN(el, " ", 2) // record field and its type or just enum element
+			parts := strings.SplitN(el, " ", 2) // record field and its type or just enum element // FIXME "foo { x, y, z }, bar u8"
 
 			switch { // we don't handle len(parts) == 0 because we know there's someting between braces
 			case len(parts) == 2:
