@@ -44,7 +44,7 @@ var (
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) Resolve( //nolint:funlen
+func (r Resolver) Resolve( //nolint:funlen,gocognit // https://github.com/emil14/neva/issues/181
 	expr Expr,
 	scope map[string]Def,
 	base map[string]bool, // true means recursion allowed
@@ -99,7 +99,15 @@ func (r Resolver) Resolve( //nolint:funlen
 	}
 
 	if newTrace.prev != nil && newTrace.v == newTrace.prev.v { // check
-		return Expr{}, fmt.Errorf("%w: %v", ErrDirectRecursion, newTrace)
+		return Expr{}, fmt.Errorf("%w: trace: %v", ErrDirectRecursion, newTrace)
+	}
+
+	t := &newTrace
+	for t.prev != nil {
+		t = t.prev
+		if newTrace.v == t.v {
+			return
+		}
 	}
 
 	// if err := r.CheckTrace(newTrace, base); err != nil {
@@ -164,6 +172,21 @@ func (r Resolver) isDirectSelfRef(defBody Expr, exprRef string) bool {
 	return !defBody.Inst.Empty() && defBody.Lit.Empty() && defBody.Inst.Ref == exprRef
 }
 
+// Trace is a linked-list for tracing resolving path.
+type Trace struct {
+	prev *Trace // prev == nil for first element
+	v    string
+}
+
+func (t Trace) String() string {
+	s := "[" + t.v
+	for t.prev != nil {
+		t = *t.prev
+		s += ", " + t.v
+	}
+	return s + "]"
+}
+
 func NewDefaultResolver() Resolver {
 	return Resolver{
 		validator: Validator{},
@@ -174,10 +197,4 @@ func NewDefaultResolver() Resolver {
 func MustNewResolver(v expressionValidator, c subtypeChecker) Resolver {
 	tools.NilPanic(v, c)
 	return Resolver{v, c}
-}
-
-// Trace is a linked-list for tracing resolving path.
-type Trace struct {
-	prev *Trace
-	v    string
 }
