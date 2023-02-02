@@ -13,8 +13,8 @@ type Param struct {
 
 // Instantiation or literal
 type Expr struct {
-	Lit  LitExpr  // If empty then expr is inst
-	Inst InstExpr // rename to call?
+	Lit  LitExpr // If empty then expr is inst
+	Inst InstExpr
 }
 
 func (e Expr) Empty() bool {

@@ -28,10 +28,9 @@ func (v Validator) Validate(expr Expr) error {
 		return nil
 	}
 
-	// by now we know it's not empty lit
-	switch expr.Lit.Type() {
+	switch expr.Lit.Type() { // by now we know it's not empty literal
 	case RecLitType:
-		return nil // non empty lit recs are always fine because recs with 0 fields are ok
+		return nil // nothing to check here, records with 0 fields are ok also
 	case ArrLitType:
 		if expr.Lit.Arr.Size < 2 {
 			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.Arr.Size)

@@ -64,10 +64,10 @@ func Rec(v map[string]ts.Expr) ts.Expr {
 	}
 }
 
-func Base(tt ...string) map[string]struct{} {
-	m := make(map[string]struct{}, len(tt))
+func BaseWithoutRecursion(tt ...string) map[string]bool {
+	m := make(map[string]bool, len(tt))
 	for _, t := range tt {
-		m[t] = struct{}{}
+		m[t] = false
 	}
 	return m
 }

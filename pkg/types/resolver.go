@@ -47,18 +47,18 @@ var (
 func (r Resolver) Resolve( //nolint:funlen
 	expr Expr,
 	scope map[string]Def,
-	base map[string]struct{},
-	// trace map[string]struct{},
+	base map[string]bool, // true means recursion allowed
+	trace Trace,
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
-	switch expr.Lit.Type() { // resolve literal
+	switch expr.Lit.Type() {
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
-		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope, base)
+		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope, base, trace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
@@ -70,7 +70,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.Resolve(unionEl, scope, base)
+			resolvedEl, err := r.Resolve(unionEl, scope, base, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
@@ -82,7 +82,7 @@ func (r Resolver) Resolve( //nolint:funlen
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope, base)
+			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope, base, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
@@ -91,19 +91,31 @@ func (r Resolver) Resolve( //nolint:funlen
 		return Expr{
 			Lit: LitExpr{Rec: resolvedStruct},
 		}, nil
-	} // at this point we know it's an instantiation, not literal
+	}
+
+	newTrace := Trace{
+		prev: &trace,
+		v:    expr.Inst.Ref,
+	}
+
+	if newTrace.prev != nil && newTrace.v == newTrace.prev.v { // check
+		return Expr{}, fmt.Errorf("%w: %v", ErrDirectRecursion, newTrace)
+	}
+
+	// if err := r.CheckTrace(newTrace, base); err != nil {
+
+	// }
 
 	def, ok := scope[expr.Inst.Ref] // check that ref type exist
 	if !ok {
 		return Expr{}, fmt.Errorf("%w: %v", ErrUndefinedRef, expr.Inst.Ref)
 	}
 
-	isDefBodyInst := !def.Body.Inst.Empty() && def.Body.Lit.Empty() // check both because def body wasn't validated yet
-	if isDefBodyInst && def.Body.Inst.Ref == expr.Inst.Ref {        // restrict unresolvable cases like t=t
-		return Expr{}, fmt.Errorf("%w: %v", ErrDirectRecursion, def)
-	}
+	// because case with generics must be checked
+	// if r.isDirectSelfRef(def.Body, expr.Inst.Ref) { // move to validator? not sure because of how tests written
+	// 	return Expr{}, fmt.Errorf("%w: %v", ErrDirectRecursion, def)
+	// }
 
-	// check that args for every param is present
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
 			"%w, want %d, got %d", ErrInstArgsLen, len(def.Params), len(expr.Inst.Args),
@@ -111,41 +123,45 @@ func (r Resolver) Resolve( //nolint:funlen
 	}
 
 	resolvedArgs := make([]Expr, 0, len(def.Params))
-	for i, param := range def.Params { // resolve args and constrs to check subtyping
-		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, base)
+	for i, param := range def.Params { // resolve args and constrs and check their compatibility
+		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, base, newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
-
 		resolvedArgs = append(resolvedArgs, resolvedArg)
-
 		if param.Constraint.Empty() {
 			continue
 		}
-
-		resolvedConstr, err := r.Resolve(param.Constraint, scope, base)
+		resolvedConstr, err := r.Resolve(param.Constraint, scope, base, newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
 		if err := r.checker.Check(resolvedArg, resolvedConstr); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
-	} // at this point we have resolved args that are compatible with their parameters and a new scope
+	}
 
 	if _, ok := base[expr.Inst.Ref]; ok {
 		return Expr{
-			Inst: InstExpr{expr.Inst.Ref, resolvedArgs},
+			Inst: InstExpr{
+				Ref:  expr.Inst.Ref,
+				Args: resolvedArgs,
+			},
 		}, nil
 	}
 
-	newExpr := Expr{
+	newExpr := Expr{ // <- substitution
 		Inst: InstExpr{
 			Ref:  def.Body.Inst.Ref,
 			Args: resolvedArgs,
 		},
 	}
 
-	return r.Resolve(newExpr, scope, base)
+	return r.Resolve(newExpr, scope, base, newTrace)
+}
+
+func (r Resolver) isDirectSelfRef(defBody Expr, exprRef string) bool {
+	return !defBody.Inst.Empty() && defBody.Lit.Empty() && defBody.Inst.Ref == exprRef
 }
 
 func NewDefaultResolver() Resolver {
@@ -158,4 +174,10 @@ func NewDefaultResolver() Resolver {
 func MustNewResolver(v expressionValidator, c subtypeChecker) Resolver {
 	tools.NilPanic(v, c)
 	return Resolver{v, c}
+}
+
+// Trace is a linked-list for tracing resolving path.
+type Trace struct {
+	prev *Trace
+	v    string
 }
