@@ -1,9 +1,10 @@
 // Package types provides small type-system
 package types
 
-type Def struct {
-	Params []Param // Body can refer to these parameters
-	Body   Expr    // Expression that must be resolved
+type Def struct { // TODO add validation
+	Params           []Param // Body can refer to these parameters
+	Body             Expr    // Empty body here means base type
+	RecursionAllowed bool    // Only base types can have true here
 }
 
 type Param struct {

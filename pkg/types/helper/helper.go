@@ -64,7 +64,8 @@ func Rec(v map[string]ts.Expr) ts.Expr {
 	}
 }
 
-func BaseWithoutRecursion(tt ...string) map[string]bool {
+// Base without recursion. If you need recursion create map by hand.
+func Base(tt ...string) map[string]bool {
 	m := make(map[string]bool, len(tt))
 	for _, t := range tt {
 		m[t] = false
@@ -72,11 +73,11 @@ func BaseWithoutRecursion(tt ...string) map[string]bool {
 	return m
 }
 
-func ParamWithoutConstr(name string) ts.Param {
-	return Param(name, ts.Expr{})
+func Param(name string) ts.Param {
+	return ParamWithConstr(name, ts.Expr{})
 }
 
-func Param(name string, constr ts.Expr) ts.Param {
+func ParamWithConstr(name string, constr ts.Expr) ts.Param {
 	return ts.Param{
 		Name:       name,
 		Constraint: constr,
