@@ -454,10 +454,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
 			}
 		},
-		"recursion through ": func() testcase { // t1 { t1 = vec<t1> }
+		"recursion through base types with support of recursion": func() testcase { // t1 { t1 = vec<t1> }
 			return testcase{
 				enabled: true,
-				expr:    h.Inst("t"),
+				expr:    h.Inst("t1"),
 				scope: map[string]ts.Def{
 					"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 					"vec": h.BaseDef(h.ParamWithoutConstr("t")),
@@ -467,7 +467,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("t1")).Return(nil)
 					v.Validate(h.Inst("vec", h.Inst("t1"))).Return(nil)
 				},
-				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
+				want: h.Inst("vec", h.Inst("t1")),
 			}
 		},
 	}
