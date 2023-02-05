@@ -32,8 +32,8 @@ var (
 	ErrArrType                      = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl            = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved           = errors.New("can't resolve record field")
-	ErrDirectRecursion              = errors.New("type definition's body must not be directly self referenced to itself")
-	ErrIndirectRecursion            = errors.New("type definition's body must not be indirectly self referenced to itself")
+	ErrDirectRecursion              = errors.New("type definition's body must not be directly referenced to itself")
+	ErrIndirectRecursion            = errors.New("type definition's body must not be indirectly referenced to itself")
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
 )
 
@@ -185,7 +185,7 @@ func (Resolver) checkRecursion(trace TraceChain, scope map[string]Def, def Def) 
 
 	prev := trace.prev
 	for prev != nil {
-		if prev.v == trace.v && isPrevAllowRecursion {
+		if prev.v == trace.v && isPrevAllowRecursion { // FIXME
 			return true, nil
 		}
 		if prev.v == trace.v {

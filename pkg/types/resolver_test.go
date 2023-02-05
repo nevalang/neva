@@ -15,7 +15,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		enabled        bool
 		expr           ts.Expr
 		scope          map[string]ts.Def
-		args           map[string]ts.Def
+		frame          map[string]ts.Def
 		exprValidator  func(v *MockexpressionValidatorMockRecorder)
 		subtypeChecker func(c *MocksubtypeCheckerMockRecorder)
 		want           ts.Expr
@@ -391,7 +391,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					"vec": h.BaseDef(h.ParamWithoutConstr("a")),
 					"map": h.BaseDef(h.ParamWithoutConstr("a"), h.ParamWithoutConstr("b")),
 				},
-				args: map[string]ts.Def{},
+				frame: map[string]ts.Def{},
 				exprValidator: func(v *MockexpressionValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes()
 				},
@@ -412,7 +412,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					"t":   h.Def(h.Inst("int")),
 					"int": h.BaseDef(),
 				},
-				args: map[string]ts.Def{},
+				frame: map[string]ts.Def{},
 				exprValidator: func(v *MockexpressionValidatorMockRecorder) {
 					v.Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
@@ -424,7 +424,6 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"constraint refereing type parameter (generics inside generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
 			return testcase{
-				enabled: true,
 				expr: h.Inst(
 					"t",
 					h.Inst("int"),
@@ -438,7 +437,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					"vec": h.BaseDef(h.ParamWithoutConstr("t")),
 					"int": h.BaseDef(),
 				},
-				args: map[string]ts.Def{},
+				frame: map[string]ts.Def{},
 				exprValidator: func(v *MockexpressionValidatorMockRecorder) {
 					v.Validate(h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int")))).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
@@ -462,10 +461,11 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 					"vec": h.BaseDef(h.ParamWithoutConstr("t")),
 				},
-				args: map[string]ts.Def{},
+				frame: map[string]ts.Def{},
 				exprValidator: func(v *MockexpressionValidatorMockRecorder) {
 					v.Validate(h.Inst("t1")).Return(nil)
 					v.Validate(h.Inst("vec", h.Inst("t1"))).Return(nil)
+					v.Validate(h.Inst("t1")).Return(nil)
 				},
 				want: h.Inst("vec", h.Inst("t1")),
 			}
@@ -477,9 +477,9 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		tt := tt
 		tc := tt()
 
-		// if !tc.enabled {
-		// 	continue
-		// }
+		if !tc.enabled {
+			continue
+		}
 
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -494,7 +494,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				tc.subtypeChecker(c.EXPECT())
 			}
 
-			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope, tc.args, ts.TraceChain{}) // TODO
+			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope, tc.frame, ts.TraceChain{}) // TODO
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
