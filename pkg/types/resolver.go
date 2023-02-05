@@ -117,19 +117,19 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		return expr, nil
 	}
 
-	newArgs := make(map[string]Def, len(def.Params))
+	newFrame := make(map[string]Def, len(def.Params))
 	resolvedArgs := make([]Expr, 0, len(expr.Inst.Args))
 	for i, param := range def.Params { // resolve args and constrs and check their compatibility
 		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, frame, newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
-		newArgs[param.Name] = Def{Body: resolvedArg} // no params for generics
+		newFrame[param.Name] = Def{Body: resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 		if param.Constraint.Empty() {
 			continue
 		}
-		resolvedConstr, err := r.Resolve(param.Constraint, scope, frame, newTrace) //nolint:lll // FIXME t<a, b vec<a>> (do we need it? (go allow this))
+		resolvedConstr, err := r.Resolve(param.Constraint, scope, newFrame, newTrace) //nolint:lll // FIXME t<a, b vec<a>> (do we need it? (go allow this))
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -148,7 +148,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	}
 
 	// TODO investigate possibility to replace "flat" arguments with resolved args
-	return r.Resolve(def.Body, scope, newArgs, newTrace)
+	return r.Resolve(def.Body, scope, newFrame, newTrace)
 }
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.

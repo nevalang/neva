@@ -73,11 +73,11 @@ func Base(tt ...string) map[string]bool {
 	return m
 }
 
-func Param(name string) ts.Param {
-	return ParamWithConstr(name, ts.Expr{})
+func ParamWithoutConstr(name string) ts.Param {
+	return Param(name, ts.Expr{})
 }
 
-func ParamWithConstr(name string, constr ts.Expr) ts.Param {
+func Param(name string, constr ts.Expr) ts.Param {
 	return ts.Param{
 		Name:       name,
 		Constraint: constr,

@@ -97,7 +97,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr: h.Inst("t1", h.Inst("int")),
 				scope: map[string]ts.Def{
 					"int": h.BaseDef(),
-					"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.Param("t")),
+					"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.ParamWithoutConstr("t")),
 				},
 				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
@@ -130,7 +130,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr: expr,
 				scope: map[string]ts.Def{
 					"t2": h.BaseDef(),
-					"t1": h.BaseDef(h.ParamWithConstr("t", h.Inst("t3"))),
+					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 				},
 				exprValidator: func(v *MockexpressionValidator) {
 					v.EXPECT().Validate(expr).Return(nil)         // expr itself
@@ -146,7 +146,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			return testcase{
 				expr: expr,
 				scope: map[string]ts.Def{
-					"t1": h.BaseDef(h.ParamWithConstr("t", h.Inst("t3"))),
+					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 					"t2": h.BaseDef(),
 					"t3": h.BaseDef(),
 				},
@@ -300,23 +300,22 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// Shadowing
 		"type param with same name as type in scope": func() testcase { // t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
 			return testcase{
-				enabled: true,
-				expr:    h.Inst("t1", h.Inst("int")),
+				expr: h.Inst("t1", h.Inst("int")),
 				scope: map[string]ts.Def{
 					"t1": h.Def( // t1<t3> = t2<t3>
 						h.Inst("t2", h.Inst("t3")),
-						h.ParamWithConstr("t3", ts.Expr{}),
+						h.Param("t3", ts.Expr{}),
 					),
 					"t2": h.Def( // t2<t> = t3<t>
 						h.Inst("t3", h.Inst("t")),
-						h.ParamWithConstr("t", ts.Expr{}),
+						h.Param("t", ts.Expr{}),
 					),
 					"t3": h.Def( // t3<t> = vec<t>
 						h.Inst("vec", h.Inst("t")),
-						h.ParamWithConstr("t", ts.Expr{}),
+						h.Param("t", ts.Expr{}),
 					),
 					"vec": h.BaseDef( // vec<t> (base type)
-						h.ParamWithConstr("t", ts.Expr{}),
+						h.Param("t", ts.Expr{}),
 					),
 					"int": h.BaseDef(), // int
 				},
@@ -408,7 +407,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrIndirectRecursion,
 			}
 		},
-		"substitution of arguments (count)": func() testcase { // t1<int, str> { t1<p1, p2> = vec<map<p1, p2>> }
+		"substitution of arguments": func() testcase { // t1<int, str> { t1<p1, p2> = vec<map<p1, p2>> }
 			return testcase{
 				expr: h.Inst("t1", h.Inst("int"), h.Inst("str")),
 				scope: map[string]ts.Def{
@@ -417,13 +416,13 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 							"vec",
 							h.Inst("map", h.Inst("p1"), h.Inst("p2")),
 						),
-						h.Param("p1"),
-						h.Param("p2"),
+						h.ParamWithoutConstr("p1"),
+						h.ParamWithoutConstr("p2"),
 					),
 					"int": h.BaseDef(),
 					"str": h.BaseDef(),
-					"vec": h.BaseDef(h.Param("a")),
-					"map": h.BaseDef(h.Param("a"), h.Param("b")),
+					"vec": h.BaseDef(h.ParamWithoutConstr("a")),
+					"map": h.BaseDef(h.ParamWithoutConstr("a"), h.ParamWithoutConstr("b")),
 				},
 				args: map[string]ts.Def{},
 				exprValidator: func(v *MockexpressionValidator) {
@@ -438,47 +437,64 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				),
 			}
 		},
-		// "substitution of arguments (depth)": func() testcase { // x<int> { x<y> = vec<t<y>>, t<a>, int, vec<a> }
-		// 	return testcase{
-		// 		expr: h.Inst("x", h.Inst("int")),
-		// 		scope: map[string]ts.Def{
-		// 			"x": h.Def(
-		// 				h.Inst(
-		// 					"vec",
-		// 					h.Inst("t", h.Inst("y")),
-		// 				),
-		// 				h.Param("y"),
-		// 			),
-		// 			"t":   h.BaseDef(h.Param("a")),
-		// 			"vec": h.BaseDef(h.Param("a")),
-		// 			"int": h.BaseDef(),
-		// 		},
-		// 		base: map[string]bool{
-		// 			"t":   false,
-		// 			"vec": false,
-		// 			"int": false,
-		// 		},
-		// 		exprValidator: func(v *MockexpressionValidator) {
-		// 			v.EXPECT().Validate(gomock.Any()).AnyTimes()
-		// 		},
-		// 		subtypeChecker: func(c *MocksubtypeChecker) {
-		// 			c.EXPECT().Check(gomock.Any(), gomock.Any()).AnyTimes()
-		// 		},
-		// 		want: h.Inst(
-		// 			"vec",
-		// 			h.Inst("t", h.Inst("int")),
-		// 		),
-		// 		wantErr: nil,
-		// 	}
-		// },
-		// TODO 1: add case for  t<a, b vec<a>>
-		// TODO 2:
-		// {
-		// 	t1<t>=t
-		// 	t=int
-		// 	int
-		// }
-		// var v t1<int> = 42; // works in TS;
+		"RHS": func() testcase { // t1<int> { t1<t>=t, t=int, int }
+			return testcase{
+				expr: h.Inst("t1", h.Inst("int")),
+				scope: map[string]ts.Def{
+					"t1":  h.Def(h.Inst("t"), h.ParamWithoutConstr("t")),
+					"t":   h.Def(h.Inst("int")),
+					"int": h.BaseDef(),
+				},
+				args: map[string]ts.Def{},
+				exprValidator: func(v *MockexpressionValidator) {
+					v.EXPECT().Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
+					v.EXPECT().Validate(h.Inst("int")).Return(nil)
+					v.EXPECT().Validate(h.Inst("t")).Return(nil)
+					v.EXPECT().Validate(h.Inst("int")).Return(nil)
+				},
+				want:    h.Inst("int"),
+				wantErr: nil,
+			}
+		},
+		"constraint refereing type parameter (generics inside generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
+			return testcase{
+				enabled: true,
+				expr: h.Inst(
+					"t",
+					h.Inst("int"),
+					h.Inst("vec", h.Inst("int")),
+				),
+				scope: map[string]ts.Def{
+					"t": h.BaseDef(
+						h.ParamWithoutConstr("a"),
+						h.Param("b", h.Inst("vec", h.Inst("a"))),
+					),
+					"vec": h.BaseDef(h.ParamWithoutConstr("t")),
+					"int": h.BaseDef(),
+				},
+				args: map[string]ts.Def{},
+				exprValidator: func(v *MockexpressionValidator) {
+					v.EXPECT().Validate(h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int")))).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("int")).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("vec", h.Inst("int"))).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("int")).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("vec", h.Inst("a"))).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("a")).Return(nil)
+
+					v.EXPECT().Validate(h.Inst("int")).Return(nil)
+				},
+				subtypeChecker: func(c *MocksubtypeChecker) {
+					c.EXPECT().Check(h.Inst("vec", h.Inst("int")), h.Inst("vec", h.Inst("int"))).Return(nil)
+				},
+				want:    h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
+				wantErr: nil,
+			}
+		},
 	}
 
 	for name, tt := range tests {
