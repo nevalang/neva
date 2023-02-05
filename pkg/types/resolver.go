@@ -129,7 +129,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		if param.Constraint.Empty() {
 			continue
 		}
-		resolvedConstr, err := r.Resolve(param.Constraint, scope, newFrame, newTrace) //nolint:lll // FIXME t<a, b vec<a>> (do we need it? (go allow this))
+		resolvedConstr, err := r.Resolve(param.Constraint, scope, newFrame, newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}

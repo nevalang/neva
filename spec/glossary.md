@@ -70,3 +70,11 @@ Stream with nesting level more than 1
 ## Base type
 
 Type that doesn't have underlying type. It can have parameters with or without constraints though.
+
+## Recursive type
+
+Not-base type that refers to itself in its body
+
+## Type that can be used for recursive definitions
+
+TODO create term for that
