@@ -37,7 +37,11 @@ var (
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
 )
 
-// Resolve turn one expression into another where all references points to native types.
+func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
+	return r.resolve(expr, scope, map[string]Def{}, nil)
+}
+
+// resolve turn one expression into another where all references points to native types.
 // It's a recursive process where each step starts with validation. Invalid expression always leads to error.
 // For inst expr it checks compatibility between args and params and returns error if some constraint isn't satisfied.
 // Then it updates scope by adding params of ref type with resolved args as values to allow substitution later.
@@ -45,11 +49,11 @@ var (
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/issues/181
+func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/issues/181
 	expr Expr, // expression that must be resolved
 	scope map[string]Def, // immutable map of type definitions
 	frame map[string]Def, // parameters mapped onto arguments at previous step
-	trace TraceChain, // linked list to handle recursive expressions
+	trace *TraceChain, // linked list to handle recursive expressions
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -59,7 +63,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
-		resolvedArrType, err := r.Resolve(expr.Lit.Arr.Expr, scope, frame, trace)
+		resolvedArrType, err := r.resolve(expr.Lit.Arr.Expr, scope, frame, trace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
@@ -71,7 +75,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.Resolve(unionEl, scope, frame, trace)
+			resolvedEl, err := r.resolve(unionEl, scope, frame, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
@@ -83,7 +87,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.Resolve(fieldExpr, scope, frame, trace)
+			resolvedFieldExpr, err := r.resolve(fieldExpr, scope, frame, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
@@ -106,7 +110,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	}
 
 	newTrace := TraceChain{
-		prev: &trace,
+		prev: trace,
 		v:    expr.Inst.Ref,
 	}
 
@@ -120,7 +124,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	newFrame := make(map[string]Def, len(def.Params))
 	resolvedArgs := make([]Expr, 0, len(expr.Inst.Args))
 	for i, param := range def.Params { // resolve args and constrs and check their compatibility
-		resolvedArg, err := r.Resolve(expr.Inst.Args[i], scope, frame, newTrace)
+		resolvedArg, err := r.resolve(expr.Inst.Args[i], scope, frame, &newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
@@ -129,7 +133,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		if param.Constraint.Empty() {
 			continue
 		}
-		resolvedConstr, err := r.Resolve(param.Constraint, scope, newFrame, newTrace) //nolint:lll // we pass newFrame because constr can refer type param
+		resolvedConstr, err := r.resolve(param.Constraint, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -147,8 +151,7 @@ func (r Resolver) Resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		}, nil
 	}
 
-	// TODO investigate possibility to replace "flat" arguments with resolved args
-	return r.Resolve(def.Body, scope, newFrame, newTrace)
+	return r.resolve(def.Body, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
 }
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.

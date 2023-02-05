@@ -2,6 +2,13 @@ package helper
 
 import ts "github.com/emil14/neva/pkg/types"
 
+func BaseDefWithRecursion(params ...ts.Param) ts.Def {
+	return ts.Def{
+		Params:           params,
+		RecursionAllowed: true,
+	}
+}
+
 // Do not pass empty string as a name to avoid Body.Empty() == true
 func BaseDef(params ...ts.Param) ts.Def {
 	return Def(ts.Expr{}, params...)
