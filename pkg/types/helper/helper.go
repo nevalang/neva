@@ -90,3 +90,12 @@ func Param(name string, constr ts.Expr) ts.Param {
 		Constraint: constr,
 	}
 }
+
+func Trace(ss ...string) ts.Trace {
+	var t *ts.Trace
+	for _, s := range ss {
+		tmp := ts.NewTrace(t, s)
+		t = &tmp
+	}
+	return *t
+}

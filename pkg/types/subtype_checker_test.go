@@ -5,73 +5,79 @@ import (
 
 	ts "github.com/emil14/neva/pkg/types"
 	h "github.com/emil14/neva/pkg/types/helper"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 	tests := []struct {
-		name    string
-		arg     ts.Expr
-		constr  ts.Expr
-		wantErr error
+		name      string
+		subType   ts.Expr
+		trace1    ts.Trace
+		superType ts.Expr
+		trace2    ts.Trace
+		scope     map[string]ts.Def
+		checker   func(*MockrecursionCheckerMockRecorder)
+		wantErr   error
+		enabled   bool
 	}{
 		// Instantiations
 		{
-			name:    "arg and constr are default values (empty insts)",
-			arg:     ts.Expr{},
-			constr:  ts.Expr{},
-			wantErr: nil,
+			name:      "arg and constr are default values (empty insts)",
+			subType:   ts.Expr{},
+			superType: ts.Expr{},
+			wantErr:   nil,
 		},
 		//  kinds
 		{
-			name:    "arg inst, constr lit (not union)", // int <: {}
-			arg:     h.Inst("int"),
-			constr:  h.Enum(),
-			wantErr: ts.ErrDiffExprTypes,
+			name:      "arg inst, constr lit (not union)", // int <: {}
+			subType:   h.Inst("int"),
+			superType: h.Enum(),
+			wantErr:   ts.ErrDiffExprTypes,
 		},
 		{
-			name:    "constr inst, arg lit (not union)", // {} <: int
-			arg:     h.Enum(),
-			constr:  h.Inst("int"),
-			wantErr: ts.ErrDiffExprTypes,
+			name:      "constr inst, arg lit (not union)", // {} <: int
+			subType:   h.Enum(),
+			superType: h.Inst("int"),
+			wantErr:   ts.ErrDiffExprTypes,
 		},
 		// diff refs
 		{
-			name:    "insts, diff refs, no args", // int <: bool (no need to check vice versa, they resolved)
-			arg:     h.Inst("int"),
-			constr:  h.Inst("bool"),
-			wantErr: ts.ErrDiffRefs,
+			name:      "insts, diff refs, no args", // int <: bool (no need to check vice versa, they resolved)
+			subType:   h.Inst("int"),
+			superType: h.Inst("bool"),
+			wantErr:   ts.ErrDiffRefs,
 		},
 		{
-			name:    "insts, same refs, no args", // int <: int
-			arg:     h.Inst("int"),
-			constr:  h.Inst("int"),
-			wantErr: nil,
+			name:      "insts, same refs, no args", // int <: int
+			subType:   h.Inst("int"),
+			superType: h.Inst("int"),
+			wantErr:   nil,
 		},
 		// args count
 		{
-			name:    "insts, arg has less args", // vec <: vec<int>
-			arg:     h.Inst("vec"),
-			constr:  h.Inst("vec", h.Inst("int")),
-			wantErr: ts.ErrArgsCount,
+			name:      "insts, arg has less args", // vec <: vec<int>
+			subType:   h.Inst("vec"),
+			superType: h.Inst("vec", h.Inst("int")),
+			wantErr:   ts.ErrArgsCount,
 		},
 		{
-			name:    "insts, arg has same args count", // vec<int> <: vec<int>
-			arg:     h.Inst("vec", h.Inst("int")),
-			constr:  h.Inst("vec", h.Inst("int")),
-			wantErr: nil,
+			name:      "insts, arg has same args count", // vec<int> <: vec<int>
+			subType:   h.Inst("vec", h.Inst("int")),
+			superType: h.Inst("vec", h.Inst("int")),
+			wantErr:   nil,
 		},
 		{
-			name:    "insts, arg has more args count", // vec<int, str> <: vec<int>
-			arg:     h.Inst("vec", h.Inst("int"), h.Inst("str")),
-			constr:  h.Inst("vec", h.Inst("int")),
-			wantErr: nil,
+			name:      "insts, arg has more args count", // vec<int, str> <: vec<int>
+			subType:   h.Inst("vec", h.Inst("int"), h.Inst("str")),
+			superType: h.Inst("vec", h.Inst("int")),
+			wantErr:   nil,
 		},
 		// args compatibility
 		{
-			name: "insts, one arg's arg incompat", // vec<str> <: vec<int|str>
-			arg:  h.Inst("vec", h.Inst("str")),
-			constr: h.Inst(
+			name:    "insts, one arg's arg incompat", // vec<str> <: vec<int|str>
+			subType: h.Inst("vec", h.Inst("str")),
+			superType: h.Inst(
 				"vec",
 				h.Union(
 					h.Inst("str"),
@@ -82,35 +88,35 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "insts, constr arg incompat", // vec<str|int> <: vec<int>
-			arg: h.Inst(
+			subType: h.Inst(
 				"vec",
 				h.Union(
 					h.Inst("str"),
 					h.Inst("int"),
 				),
 			),
-			constr:  h.Inst("vec", h.Inst("int")),
-			wantErr: ts.ErrArgNotSubtype,
+			superType: h.Inst("vec", h.Inst("int")),
+			wantErr:   ts.ErrArgNotSubtype,
 		},
 		// arr
 		{
 			name: "expr and constr has diff lit types (constr not union)",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{Enum: []string{}},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{Arr: &ts.ArrLit{}},
 			},
 			wantErr: ts.ErrDiffLitTypes,
 		},
 		{
 			name: "expr's arr lit has lesser size than constr",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 1}, // expr doesn't matter here
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 2},
 				},
@@ -119,7 +125,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr's arr has incompat type",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2, // same size itself won't cause any problem
@@ -129,7 +135,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2,
@@ -143,7 +149,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr arrs, expr is bigger and have compat type",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 3, // bigger size won't cause any problem
@@ -153,7 +159,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 2,
@@ -168,12 +174,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// enum
 		{
 			name: "expr and constr enums, expr is bigger",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a", "b"},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a"},
 				},
@@ -182,12 +188,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr enums, expr not bigger but contain diff el",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a", "d"}, // d != b
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a", "b", "c"},
 				},
@@ -196,12 +202,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr enums, expr not bigger and all reqired els are the same",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a", "b"},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Enum: []string{"a", "b", "c"}, // c el won't cause any problem
 				},
@@ -211,12 +217,12 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// rec
 		{
 			name: "expr and constr recs, expr has less fields",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{}, // 0 fields is ok
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {}, // expr itself doesn't matter here
@@ -227,14 +233,14 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr recs, expr leaks field",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // expr itself doesn't matter here
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {}, // but this field is missing
@@ -245,7 +251,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr recs, expr has incompat field",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // b field itself won't cause any problems
@@ -253,7 +259,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {
@@ -266,7 +272,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr recs, expr has all constr fields, all fields compatible",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"a": {
@@ -276,7 +282,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {
@@ -290,10 +296,10 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		// union
 		{
 			name: "expr inst, constr union. expr incompat with all els",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Inst: ts.InstExpr{Ref: "x"}, // not compat with both a and b
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -305,10 +311,10 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr not union, constr is. expr is compat with one el",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Inst: ts.InstExpr{Ref: "b"},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -320,7 +326,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr are unions, expr has more els",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -329,7 +335,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -341,7 +347,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr are unions, same size but incompat expr el",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "c"}},
@@ -350,7 +356,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -363,7 +369,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "expr and constr are unions, expr is less and compat",
-			arg: ts.Expr{
+			subType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "c"}},
@@ -371,7 +377,7 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			constr: ts.Expr{
+			superType: ts.Expr{
 				Lit: ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: ts.InstExpr{Ref: "a"}},
@@ -382,17 +388,45 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: nil,
 		},
-		// name: "expr and constr are unions, expr is same and compat",
+		{ // vec<t1> t1, vec<t2> t2, { vec, t1=vec<t1>, t2=vec<t2> }
+			enabled:   true,
+			name:      "arg and constr contain diff refs but they are actually recursive",
+			subType:   h.Inst("vec", h.Inst("t1")),
+			trace1:    ts.NewTrace(nil, "t1"),
+			superType: h.Inst("vec", h.Inst("t2")),
+			trace2:    ts.NewTrace(nil, "t2"),
+			scope: map[string]ts.Def{
+				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
+				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
+			},
+			checker: func(mcmr *MockrecursionCheckerMockRecorder) {
+				mcmr.Check(gomock.Any(), gomock.Any()).Return(false, nil).AnyTimes()
+			},
+			wantErr: nil,
+		},
 	}
-
-	checker := ts.SubtypeChecker{}
 
 	for _, tt := range tests {
 		tt := tt
+
+		if !tt.enabled {
+			continue
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			recChecker := NewMockrecursionChecker(ctrl)
+			if tt.checker != nil {
+				tt.checker(recChecker.EXPECT())
+			}
+
+			checker := ts.NewSubtypeChecker(recChecker)
+
 			require.ErrorIs(
 				t,
-				checker.Check(tt.arg, tt.constr),
+				checker.Check(tt.subType, tt.trace1, tt.superType, tt.trace2, tt.scope),
 				tt.wantErr,
 			)
 		})

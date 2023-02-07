@@ -8,17 +8,21 @@ import (
 )
 
 type Resolver struct {
-	validator expressionValidator
-	checker   subtypeChecker
+	validator  expressionValidator
+	stChecker  subtypeChecker
+	recChecker recursionChecker
 }
 
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
 type (
+	recursionChecker interface {
+		Check(Trace, map[string]Def) (shouldReturn bool, err error)
+	}
 	expressionValidator interface {
 		Validate(Expr) error // returns error if expression's invariant broken
 	}
 	subtypeChecker interface {
-		Check(Expr, Expr) error // Returns error if first expression is not a subtype of second
+		Check(Expr, Trace, Expr, Trace, map[string]Def) error // Returns error if first expression is not a subtype of second
 	}
 )
 
@@ -53,7 +57,7 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 	expr Expr, // expression that must be resolved
 	scope map[string]Def, // immutable map of type definitions
 	frame map[string]Def, // parameters mapped onto arguments at previous step
-	trace *TraceChain, // linked list to handle recursive expressions
+	trace *Trace, // linked list to handle recursive expressions
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -103,22 +107,26 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		return Expr{}, err
 	}
 
+	if def.RecursionAllowed && !def.Body.Empty() {
+		return Expr{}, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
+	}
+
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
 			"%w, want %d, got %d", ErrInstArgsLen, len(def.Params), len(expr.Inst.Args),
 		)
 	}
 
-	newTrace := TraceChain{
+	newTrace := Trace{
 		prev: trace,
 		v:    expr.Inst.Ref,
 	}
 
-	ret, err := r.checkRecursion(newTrace, scope, def) // TODO what about args (for loop below)?
+	shouldReturn, err := r.recChecker.Check(newTrace, scope)
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w", err)
-	} else if ret {
-		return expr, nil
+	} else if shouldReturn {
+		return expr, nil // IDEA: replace recursive ref with something like `any` (like chat GPT suggested)
 	}
 
 	newFrame := make(map[string]Def, len(def.Params))
@@ -137,7 +145,7 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
-		if err := r.checker.Check(resolvedArg, resolvedConstr); err != nil {
+		if err := r.stChecker.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}
@@ -169,44 +177,20 @@ func (Resolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
 	return def, nil
 }
 
-// checkRecursion returns true and nil error for recursive expressions that should not go on next step of resolving.
-// It returns false and nil err for non-recursive expressions with valid trace
-// and false with non-nil err for bad recursion cases.
-func (Resolver) checkRecursion(trace TraceChain, scope map[string]Def, def Def) (bool, error) {
-	if !def.Body.Empty() && def.RecursionAllowed { // only base type can be used for recursion
-		return false, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
-	}
-
-	if trace.prev != nil && trace.v == trace.prev.v {
-		return true, fmt.Errorf("%w: trace: %v", ErrDirectRecursion, trace)
-	}
-
-	var isPrevAllowRecursion bool
-	if trace.prev != nil {
-		isPrevAllowRecursion = scope[trace.prev.v].RecursionAllowed
-	}
-
-	prev := trace.prev
-	for prev != nil {
-		if prev.v == trace.v && isPrevAllowRecursion { // FIXME
-			return true, nil
-		}
-		if prev.v == trace.v {
-			return true, fmt.Errorf("%w: %v", ErrIndirectRecursion, trace)
-		}
-		prev = prev.prev
-	}
-
-	return false, nil
-}
-
-// TraceChain is a linked-list for tracing resolving path.
-type TraceChain struct { // TODO make private
-	prev *TraceChain // prev == nil for first element
+// Trace is a linked-list needed to keep track of resolving path to handle recursive types.
+type Trace struct { // TODO make private
+	prev *Trace
 	v    string
 }
 
-func (t TraceChain) String() string {
+func NewTrace(prev *Trace, v string) Trace { // TODO get rid of this
+	return Trace{
+		prev: prev,
+		v:    v,
+	}
+}
+
+func (t Trace) String() string {
 	s := "[" + t.v
 	for t.prev != nil {
 		t = *t.prev
@@ -218,11 +202,11 @@ func (t TraceChain) String() string {
 func NewDefaultResolver() Resolver {
 	return Resolver{
 		validator: Validator{},
-		checker:   SubtypeChecker{},
+		stChecker: SubtypeChecker{},
 	}
 }
 
 func MustNewResolver(v expressionValidator, c subtypeChecker) Resolver {
 	tools.NilPanic(v, c)
-	return Resolver{v, c}
+	return Resolver{v, c, nil}
 }

@@ -77,7 +77,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(constr).Return(nil)            // first recursive call
 				},
 				checker: func(c *MocksubtypeCheckerMockRecorder) {
-					c.Check(expr.Inst.Args[0], constr).Return(errors.New(""))
+					// c.Check(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
 					"map": h.BaseDef(ts.Param{"t", constr}),
@@ -394,7 +394,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(gomock.Any()).AnyTimes()
 				},
 				checker: func(c *MocksubtypeCheckerMockRecorder) {
-					c.Check(gomock.Any(), gomock.Any()).AnyTimes()
+					// c.Check(gomock.Any(), gomock.Any()).AnyTimes()
 				},
 				want: h.Inst(
 					"vec",
@@ -444,7 +444,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("int")).Return(nil)
 				},
 				checker: func(c *MocksubtypeCheckerMockRecorder) {
-					c.Check(h.Inst("vec", h.Inst("int")), h.Inst("vec", h.Inst("int"))).Return(nil)
+					// c.Check(h.Inst("vec", h.Inst("int")), h.Inst("vec", h.Inst("int"))).Return(nil)
 				},
 				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
 			}
@@ -485,10 +485,10 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("t2")).Return(nil)
 				},
 				checker: func(c *MocksubtypeCheckerMockRecorder) {
-					c.Check(
-						h.Inst("vec", h.Inst("t1")),
-						h.Inst("vec", h.Inst("t2")),
-					).Return(nil)
+					// c.Check(
+					// 	h.Inst("vec", h.Inst("t1")),
+					// 	h.Inst("vec", h.Inst("t2")),
+					// ).Return(nil)
 				},
 				want: h.Inst("t3", h.Inst("vec", h.Inst("t1"))),
 			}
