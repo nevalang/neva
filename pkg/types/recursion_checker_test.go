@@ -15,6 +15,7 @@ func TestRecursionChecker_Check(t *testing.T) {
 		scope   map[string]ts.Def
 		want    bool
 		wantErr error
+		enabled bool
 	}{
 		{ // vec<t1> [t1] { t1=vec<t1>, vec<t> }
 			name:  "non valid recursive case",
@@ -23,21 +24,38 @@ func TestRecursionChecker_Check(t *testing.T) {
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
 			},
+			want:    false,
+			wantErr: nil,
 		},
 		{ // t1 [t1 vec t1] { t1=vec<t1>, vec<t> }
-			name:  "recursive valid case",
+			name:  "recursive valid case, recursive type ref",
 			trace: h.Trace("t1", "vec", "t1"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
 			},
-			want: true,
+			want:    true,
+			wantErr: nil,
+		},
+		{ // vec<t1> [vec t1 vec] { t1=vec<t1>, vec<t> }
+			enabled: true,
+			name:    "recursive valid case, recursive type as arg",
+			trace:   h.Trace("vec", "t1", "vec"),
+			scope: map[string]ts.Def{
+				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
+				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+			},
+			want:    true,
+			wantErr: nil,
 		},
 	}
 
 	r := ts.RecursionChecker{}
 
 	for _, tt := range tests {
+		if !tt.enabled {
+			continue
+		}
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := r.Check(tt.trace, tt.scope)

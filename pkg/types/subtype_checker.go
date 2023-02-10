@@ -42,8 +42,6 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 	superTypeTrace Trace,
 	scope map[string]Def,
 ) error {
-	fmt.Println(subType, subTypeTrace, superType, superTypeTrace)
-
 	isSuperTypeInst := superType.Lit.Empty()
 	diffKinds := subType.Lit.Empty() != isSuperTypeInst
 	isSuperTypeUnion := superType.Lit.Type() == UnionLitType
@@ -58,7 +56,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			return fmt.Errorf("%w: %v", ErrRecursionChecker, err)
 		}
 
-		isSuperTypeRecursive, err := s.recursionChecker.Check(subTypeTrace, scope)
+		isSuperTypeRecursive, err := s.recursionChecker.Check(superTypeTrace, scope)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrRecursionChecker, err)
 		}
@@ -75,8 +73,21 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			return fmt.Errorf("%w: got %v, want %v", ErrArgsCount, len(subType.Inst.Args), len(superType.Inst.Args))
 		}
 
+		newSubtypeTrace := Trace{
+			prev: &subTypeTrace,
+			v:    subType.Inst.Ref,
+		}
+		newSupertypeTrace := Trace{
+			prev: &superTypeTrace,
+			v:    superType.Inst.Ref,
+		}
+
 		for i := range superType.Inst.Args {
-			if err := s.Check(subType.Inst.Args[i], subTypeTrace, superType.Inst.Args[i], superTypeTrace, scope); err != nil {
+			if err := s.Check(
+				subType.Inst.Args[i], newSubtypeTrace,
+				superType.Inst.Args[i], newSupertypeTrace,
+				scope,
+			); err != nil {
 				return fmt.Errorf("%w: got %v, want %v", ErrArgNotSubtype, subType.Inst.Args[i], superType.Inst.Args[i])
 			}
 		}
@@ -153,4 +164,8 @@ func NewSubtypeChecker(checker recursionChecker) SubtypeChecker {
 	return SubtypeChecker{
 		recursionChecker: checker,
 	}
+}
+
+func NewDefaultSubtypeChecker() SubtypeChecker {
+	return NewSubtypeChecker(RecursionChecker{})
 }

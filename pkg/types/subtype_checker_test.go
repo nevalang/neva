@@ -401,7 +401,29 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
 			},
 			checker: func(mcmr *MockrecursionCheckerMockRecorder) {
-				mcmr.Check(gomock.Any(), gomock.Any()).Return(false, nil).AnyTimes()
+				scope := map[string]ts.Def{
+					"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+					"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
+					"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
+				}
+
+				mcmr.Check(
+					ts.NewTrace(nil, "t1"), scope,
+				).Return(false, nil)
+
+				mcmr.Check(
+					ts.NewTrace(nil, "t2"), scope,
+				).Return(false, nil)
+
+				prev1 := ts.NewTrace(nil, "t1")
+				mcmr.Check(
+					ts.NewTrace(&prev1, "vec"), scope,
+				).Return(false, nil)
+
+				prev2 := ts.NewTrace(nil, "t2")
+				mcmr.Check(
+					ts.NewTrace(&prev2, "vec"), scope,
+				).Return(false, nil)
 			},
 			wantErr: nil,
 		},
@@ -409,10 +431,6 @@ func TestSubTypeChecker_SubTypeCheck(t *testing.T) { //nolint:maintidx
 
 	for _, tt := range tests {
 		tt := tt
-
-		if !tt.enabled {
-			continue
-		}
 
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)

@@ -201,8 +201,9 @@ func (t Trace) String() string {
 
 func NewDefaultResolver() Resolver {
 	return Resolver{
-		validator: Validator{},
-		stChecker: SubtypeChecker{},
+		validator:  Validator{},
+		stChecker:  NewDefaultSubtypeChecker(),
+		recChecker: RecursionChecker{},
 	}
 }
 

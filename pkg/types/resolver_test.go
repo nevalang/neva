@@ -12,13 +12,13 @@ import (
 
 func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 	type testcase struct {
-		enabled   bool
-		expr      ts.Expr
-		scope     map[string]ts.Def
-		validator func(v *MockexpressionValidatorMockRecorder)
-		checker   func(c *MocksubtypeCheckerMockRecorder)
-		want      ts.Expr
-		wantErr   error
+		enabled        bool
+		expr           ts.Expr
+		scope          map[string]ts.Def
+		validator      func(v *MockexpressionValidatorMockRecorder)
+		subtypeChecker func(c *MocksubtypeCheckerMockRecorder)
+		want           ts.Expr
+		wantErr        error
 	}
 
 	tests := map[string]func() testcase{
@@ -76,7 +76,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr.Inst.Args[0]).Return(nil) // first recursive call
 					v.Validate(constr).Return(nil)            // first recursive call
 				},
-				checker: func(c *MocksubtypeCheckerMockRecorder) {
+				subtypeChecker: func(c *MocksubtypeCheckerMockRecorder) {
 					// c.Check(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
@@ -393,7 +393,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexpressionValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes()
 				},
-				checker: func(c *MocksubtypeCheckerMockRecorder) {
+				subtypeChecker: func(c *MocksubtypeCheckerMockRecorder) {
 					// c.Check(gomock.Any(), gomock.Any()).AnyTimes()
 				},
 				want: h.Inst(
@@ -443,7 +443,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("a")).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
 				},
-				checker: func(c *MocksubtypeCheckerMockRecorder) {
+				subtypeChecker: func(c *MocksubtypeCheckerMockRecorder) {
 					// c.Check(h.Inst("vec", h.Inst("int")), h.Inst("vec", h.Inst("int"))).Return(nil)
 				},
 				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
@@ -484,7 +484,7 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("vec", h.Inst("t2"))).Return(nil)
 					v.Validate(h.Inst("t2")).Return(nil)
 				},
-				checker: func(c *MocksubtypeCheckerMockRecorder) {
+				subtypeChecker: func(c *MocksubtypeCheckerMockRecorder) {
 					// c.Check(
 					// 	h.Inst("vec", h.Inst("t1")),
 					// 	h.Inst("vec", h.Inst("t2")),
@@ -500,9 +500,9 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 		tt := tt
 		tc := tt()
 
-		if !tc.enabled {
-			continue
-		}
+		// if !tc.enabled {
+		// 	continue
+		// }
 
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -513,8 +513,8 @@ func TestResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 
 			c := NewMocksubtypeChecker(ctrl)
-			if tc.checker != nil {
-				tc.checker(c.EXPECT())
+			if tc.subtypeChecker != nil {
+				tc.subtypeChecker(c.EXPECT())
 			}
 
 			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope)
