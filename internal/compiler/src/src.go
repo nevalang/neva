@@ -2,23 +2,23 @@ package src
 
 import ts "github.com/emil14/neva/pkg/types"
 
-type Program struct {
-	Pkgs    map[string]Pkg
+type Prog struct {
+	Pkgs    map[string]Pkg // what about versions? what about package structure? and pkg sturcture?
 	RootPkg string
 }
 
 type Pkg struct {
 	Imports       map[string]string
 	Entities      map[string]Entity
-	Exports       map[string]Export
-	RootComponent *string
+	Exports       map[string]Export // exposes entities under exported names
+	RootComponent string            // empty string means library (not-executable) package
 }
 
 type Entity struct {
 	Kind      EntityKind
 	Msg       Msg
 	Type      ts.Def
-	Interface InterfaceDef
+	Interface Interface
 	Component Component
 }
 
@@ -37,32 +37,28 @@ const (
 )
 
 type Component struct {
-	TypeParams    []string
-	Interface     ComponentInterface
-	InterfaceDeps map[string]EntityRef
-	Nodes         map[string]Node
-	Network       []Connection
-}
-
-type ComponentInterface struct {
-	Def  *InterfaceDef
-	Expr *ts.Expr
-}
-
-type InterfaceDef struct {
 	TypeParams []string
-	In, Out    Ports
+	Interface  Interface
+	DI         map[string]EntityRef
+	Nodes      map[string]Node
+	Network    []Connection
+}
+
+type Interface struct {
+	TypeParams []ts.Param
+	IO         IO
 }
 
 type Node struct {
-	interfaceInstance *ts.TypeExpr       // nil for component nodes. Should refer to interface
-	componentInstance *ComponentInstance // how about type expr?
-	staticPorts       map[string]Msg
+	Interface   ts.Expr       // nil for component nodes. Should refer to interface
+	Component   ComponentNode // how about type expr?
+	staticPorts map[string]Msg
 }
 
-type ComponentInstance struct {
-	Expr TypeExpr // TypeRefExpr
-	Deps map[string]ComponentInstance
+type ComponentNode struct {
+	Ref  EntityRef
+	Args []ts.Expr
+	DI   map[string]ComponentNode
 }
 
 type EntityRef struct {
@@ -71,17 +67,22 @@ type EntityRef struct {
 }
 
 type Msg struct {
-	TypeExpr TypeExpr
+	TypeExpr ts.Expr
 	Int      int64
 	Float    float64
+	Str      string
 	List     []Msg
-	Dict     map[string]Msg
+	Map      map[string]Msg
+}
+
+type IO struct {
+	In, Out Ports
 }
 
 type Ports map[string]Port
 
 type Port struct {
-	TypeExpr TypeExpr
+	TypeExpr ts.Expr
 	IsArray  bool
 }
 

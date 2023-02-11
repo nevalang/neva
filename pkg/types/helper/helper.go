@@ -86,8 +86,8 @@ func ParamWithoutConstr(name string) ts.Param {
 
 func Param(name string, constr ts.Expr) ts.Param {
 	return ts.Param{
-		Name:       name,
-		Constraint: constr,
+		Name:  name,
+		Const: constr,
 	}
 }
 

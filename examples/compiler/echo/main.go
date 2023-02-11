@@ -1,17 +1,12 @@
 package main
 
-import (
-	"context"
-	"fmt"
-)
-
 func main() {
-	c := MustCreateCompiler()
+	// c := MustCreateCompiler()
 
-	fmt.Println(
-		c.Compile(
-			context.Background(),
-			helloWorld(),
-		),
-	)
+	// fmt.Println(
+	// 	c.Compile(
+	// 		context.Background(),
+	// 		helloWorld(),
+	// 	),
+	// )
 }

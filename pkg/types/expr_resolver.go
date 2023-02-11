@@ -137,10 +137,10 @@ func (r ExprResolver) resolve( //nolint:funlen
 		}
 		newFrame[param.Name] = Def{Body: resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
-		if param.Constraint.Empty() {
+		if param.Const.Empty() {
 			continue
 		}
-		resolvedConstr, err := r.resolve(param.Constraint, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
+		resolvedConstr, err := r.resolve(param.Const, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}

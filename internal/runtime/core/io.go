@@ -24,9 +24,9 @@ func (p Ports) SinglePort(name string) (chan Msg, error) {
 	return v, nil
 }
 
-// ArrayPort returns slice of ports with given name sorted by idx.
+// ArrPortSlots returns slice of ports with given name sorted by idx.
 // If zero ports found it returns error.
-func (p Ports) ArrayPort(name string) ([]chan Msg, error) {
+func (p Ports) ArrPortSlots(name string) ([]chan Msg, error) {
 	type port struct {
 		idx uint8
 		ch  chan Msg

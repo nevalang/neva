@@ -1,4 +1,3 @@
-// Package types provides small type-system
 package types
 
 type Def struct { // TODO add validation
@@ -8,8 +7,8 @@ type Def struct { // TODO add validation
 }
 
 type Param struct {
-	Name       string // Must be unique among other type's parameters
-	Constraint Expr   // Expression that must be resolved supertype of corresponding argument
+	Name  string // Must be unique among other type's parameters
+	Const Expr   // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal
