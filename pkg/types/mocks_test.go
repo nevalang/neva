@@ -11,69 +11,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockrecursionChecker is a mock of recursionChecker interface.
-type MockrecursionChecker struct {
+// MockexprValidator is a mock of exprValidator interface.
+type MockexprValidator struct {
 	ctrl     *gomock.Controller
-	recorder *MockrecursionCheckerMockRecorder
+	recorder *MockexprValidatorMockRecorder
 }
 
-// MockrecursionCheckerMockRecorder is the mock recorder for MockrecursionChecker.
-type MockrecursionCheckerMockRecorder struct {
-	mock *MockrecursionChecker
+// MockexprValidatorMockRecorder is the mock recorder for MockexprValidator.
+type MockexprValidatorMockRecorder struct {
+	mock *MockexprValidator
 }
 
-// NewMockrecursionChecker creates a new mock instance.
-func NewMockrecursionChecker(ctrl *gomock.Controller) *MockrecursionChecker {
-	mock := &MockrecursionChecker{ctrl: ctrl}
-	mock.recorder = &MockrecursionCheckerMockRecorder{mock}
+// NewMockexprValidator creates a new mock instance.
+func NewMockexprValidator(ctrl *gomock.Controller) *MockexprValidator {
+	mock := &MockexprValidator{ctrl: ctrl}
+	mock.recorder = &MockexprValidatorMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockrecursionChecker) EXPECT() *MockrecursionCheckerMockRecorder {
-	return m.recorder
-}
-
-// Check mocks base method.
-func (m *MockrecursionChecker) Check(arg0 types.Trace, arg1 map[string]types.Def) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check", arg0, arg1)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Check indicates an expected call of Check.
-func (mr *MockrecursionCheckerMockRecorder) Check(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockrecursionChecker)(nil).Check), arg0, arg1)
-}
-
-// MockexpressionValidator is a mock of expressionValidator interface.
-type MockexpressionValidator struct {
-	ctrl     *gomock.Controller
-	recorder *MockexpressionValidatorMockRecorder
-}
-
-// MockexpressionValidatorMockRecorder is the mock recorder for MockexpressionValidator.
-type MockexpressionValidatorMockRecorder struct {
-	mock *MockexpressionValidator
-}
-
-// NewMockexpressionValidator creates a new mock instance.
-func NewMockexpressionValidator(ctrl *gomock.Controller) *MockexpressionValidator {
-	mock := &MockexpressionValidator{ctrl: ctrl}
-	mock.recorder = &MockexpressionValidatorMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockexpressionValidator) EXPECT() *MockexpressionValidatorMockRecorder {
+func (m *MockexprValidator) EXPECT() *MockexprValidatorMockRecorder {
 	return m.recorder
 }
 
 // Validate mocks base method.
-func (m *MockexpressionValidator) Validate(arg0 types.Expr) error {
+func (m *MockexprValidator) Validate(arg0 types.Expr) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validate", arg0)
 	ret0, _ := ret[0].(error)
@@ -81,36 +43,36 @@ func (m *MockexpressionValidator) Validate(arg0 types.Expr) error {
 }
 
 // Validate indicates an expected call of Validate.
-func (mr *MockexpressionValidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call {
+func (mr *MockexprValidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockexpressionValidator)(nil).Validate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockexprValidator)(nil).Validate), arg0)
 }
 
-// MocksubtypeChecker is a mock of subtypeChecker interface.
-type MocksubtypeChecker struct {
+// MockcompatChecker is a mock of compatChecker interface.
+type MockcompatChecker struct {
 	ctrl     *gomock.Controller
-	recorder *MocksubtypeCheckerMockRecorder
+	recorder *MockcompatCheckerMockRecorder
 }
 
-// MocksubtypeCheckerMockRecorder is the mock recorder for MocksubtypeChecker.
-type MocksubtypeCheckerMockRecorder struct {
-	mock *MocksubtypeChecker
+// MockcompatCheckerMockRecorder is the mock recorder for MockcompatChecker.
+type MockcompatCheckerMockRecorder struct {
+	mock *MockcompatChecker
 }
 
-// NewMocksubtypeChecker creates a new mock instance.
-func NewMocksubtypeChecker(ctrl *gomock.Controller) *MocksubtypeChecker {
-	mock := &MocksubtypeChecker{ctrl: ctrl}
-	mock.recorder = &MocksubtypeCheckerMockRecorder{mock}
+// NewMockcompatChecker creates a new mock instance.
+func NewMockcompatChecker(ctrl *gomock.Controller) *MockcompatChecker {
+	mock := &MockcompatChecker{ctrl: ctrl}
+	mock.recorder = &MockcompatCheckerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MocksubtypeChecker) EXPECT() *MocksubtypeCheckerMockRecorder {
+func (m *MockcompatChecker) EXPECT() *MockcompatCheckerMockRecorder {
 	return m.recorder
 }
 
 // Check mocks base method.
-func (m *MocksubtypeChecker) Check(arg0 types.Expr, arg1 types.Trace, arg2 types.Expr, arg3 types.Trace, arg4 map[string]types.Def) error {
+func (m *MockcompatChecker) Check(arg0 types.Expr, arg1 types.Trace, arg2 types.Expr, arg3 types.Trace, arg4 map[string]types.Def) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Check", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
@@ -118,7 +80,45 @@ func (m *MocksubtypeChecker) Check(arg0 types.Expr, arg1 types.Trace, arg2 types
 }
 
 // Check indicates an expected call of Check.
-func (mr *MocksubtypeCheckerMockRecorder) Check(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockcompatCheckerMockRecorder) Check(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MocksubtypeChecker)(nil).Check), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockcompatChecker)(nil).Check), arg0, arg1, arg2, arg3, arg4)
+}
+
+// MockrecursionTerminator is a mock of recursionTerminator interface.
+type MockrecursionTerminator struct {
+	ctrl     *gomock.Controller
+	recorder *MockrecursionTerminatorMockRecorder
+}
+
+// MockrecursionTerminatorMockRecorder is the mock recorder for MockrecursionTerminator.
+type MockrecursionTerminatorMockRecorder struct {
+	mock *MockrecursionTerminator
+}
+
+// NewMockrecursionTerminator creates a new mock instance.
+func NewMockrecursionTerminator(ctrl *gomock.Controller) *MockrecursionTerminator {
+	mock := &MockrecursionTerminator{ctrl: ctrl}
+	mock.recorder = &MockrecursionTerminatorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockrecursionTerminator) EXPECT() *MockrecursionTerminatorMockRecorder {
+	return m.recorder
+}
+
+// ShouldTerminate mocks base method.
+func (m *MockrecursionTerminator) ShouldTerminate(arg0 types.Trace, arg1 map[string]types.Def) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShouldTerminate", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ShouldTerminate indicates an expected call of ShouldTerminate.
+func (mr *MockrecursionTerminatorMockRecorder) ShouldTerminate(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShouldTerminate", reflect.TypeOf((*MockrecursionTerminator)(nil).ShouldTerminate), arg0, arg1)
 }

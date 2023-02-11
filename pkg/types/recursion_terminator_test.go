@@ -8,14 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRecursionChecker_Check(t *testing.T) {
+func TestRecursionTerminator_Check(t *testing.T) {
 	tests := []struct {
 		name    string
 		trace   ts.Trace
 		scope   map[string]ts.Def
 		want    bool
 		wantErr error
-		enabled bool
 	}{
 		{ // vec<t1> [t1] { t1=vec<t1>, vec<t> }
 			name:  "non valid recursive case",
@@ -38,9 +37,8 @@ func TestRecursionChecker_Check(t *testing.T) {
 			wantErr: nil,
 		},
 		{ // vec<t1> [vec t1 vec] { t1=vec<t1>, vec<t> }
-			enabled: true,
-			name:    "recursive valid case, recursive type as arg",
-			trace:   h.Trace("vec", "t1", "vec"),
+			name:  "recursive valid case, recursive type as arg",
+			trace: h.Trace("vec", "t1", "vec"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
@@ -50,15 +48,12 @@ func TestRecursionChecker_Check(t *testing.T) {
 		},
 	}
 
-	r := ts.RecursionChecker{}
+	r := ts.RecursionTerminator{}
 
 	for _, tt := range tests {
-		if !tt.enabled {
-			continue
-		}
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := r.Check(tt.trace, tt.scope)
+			got, err := r.ShouldTerminate(tt.trace, tt.scope)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.wantErr, err)
 		})

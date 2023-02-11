@@ -7,25 +7,6 @@ import (
 	"github.com/emil14/neva/pkg/tools"
 )
 
-type Resolver struct {
-	validator  expressionValidator
-	stChecker  subtypeChecker
-	recChecker recursionChecker
-}
-
-//go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
-type (
-	recursionChecker interface {
-		Check(Trace, map[string]Def) (shouldReturn bool, err error)
-	}
-	expressionValidator interface {
-		Validate(Expr) error // returns error if expression's invariant broken
-	}
-	subtypeChecker interface {
-		Check(Expr, Trace, Expr, Trace, map[string]Def) error // Returns error if first expression is not a subtype of second
-	}
-)
-
 var (
 	ErrInvalidExpr                  = errors.New("expression must be valid in order to be resolved")
 	ErrUndefinedRef                 = errors.New("expression refers to type that is not presented in the scope and args")
@@ -36,12 +17,30 @@ var (
 	ErrArrType                      = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl            = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved           = errors.New("can't resolve record field")
-	ErrDirectRecursion              = errors.New("type definition's body must not be directly referenced to itself")
-	ErrIndirectRecursion            = errors.New("type definition's body must not be indirectly referenced to itself")
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
 )
 
-func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
+// ExprResolver transforms expression it into a form where all references points to base types or to itself.
+type ExprResolver struct {
+	validator  exprValidator
+	comparator compatChecker
+	terminator recursionTerminator
+}
+
+//go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
+type (
+	exprValidator interface {
+		Validate(Expr) error // non-recursive validation of an expression
+	}
+	compatChecker interface {
+		Check(Expr, Trace, Expr, Trace, map[string]Def) error // error should be nil if first expr is subtype of second
+	}
+	recursionTerminator interface {
+		ShouldTerminate(Trace, map[string]Def) (bool, error) // should true, nil to terminate resolving
+	}
+)
+
+func (r ExprResolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
 	return r.resolve(expr, scope, map[string]Def{}, nil)
 }
 
@@ -53,11 +52,11 @@ func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/issues/181
-	expr Expr, // expression that must be resolved
-	scope map[string]Def, // immutable map of type definitions
-	frame map[string]Def, // parameters mapped onto arguments at previous step
-	trace *Trace, // linked list to handle recursive expressions
+func (r ExprResolver) resolve( //nolint:funlen
+	expr Expr,
+	scope map[string]Def,
+	frame map[string]Def,
+	trace *Trace,
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -119,10 +118,10 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 
 	newTrace := Trace{
 		prev: trace,
-		v:    expr.Inst.Ref,
+		ref:  expr.Inst.Ref,
 	}
 
-	shouldReturn, err := r.recChecker.Check(newTrace, scope)
+	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w", err)
 	} else if shouldReturn {
@@ -145,7 +144,7 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
-		if err := r.stChecker.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
+		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}
@@ -163,7 +162,7 @@ func (r Resolver) resolve( //nolint:funlen // https://github.com/emil14/neva/iss
 }
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.
-func (Resolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
+func (ExprResolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
 	def, ok := args[ref]
 	if ok {
 		return def, nil
@@ -180,34 +179,36 @@ func (Resolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
 // Trace is a linked-list needed to keep track of resolving path to handle recursive types.
 type Trace struct { // TODO make private
 	prev *Trace
-	v    string
+	ref  string
+}
+
+func (t Trace) String() string {
+	s := "[" + t.ref
+	for t.prev != nil {
+		t = *t.prev
+		if t.prev != nil {
+			s += ", " + t.ref
+		}
+	}
+	return s + "]"
 }
 
 func NewTrace(prev *Trace, v string) Trace { // TODO get rid of this
 	return Trace{
 		prev: prev,
-		v:    v,
+		ref:  v,
 	}
 }
 
-func (t Trace) String() string {
-	s := "[" + t.v
-	for t.prev != nil {
-		t = *t.prev
-		s += ", " + t.v
-	}
-	return s + "]"
-}
-
-func NewDefaultResolver() Resolver {
-	return Resolver{
+func NewDefaultResolver() ExprResolver {
+	return ExprResolver{
 		validator:  Validator{},
-		stChecker:  NewDefaultSubtypeChecker(),
-		recChecker: RecursionChecker{},
+		comparator: NewDefaultSubtypeChecker(),
+		terminator: RecursionTerminator{},
 	}
 }
 
-func MustNewResolver(v expressionValidator, c subtypeChecker) Resolver {
+func MustNewResolver(v exprValidator, c compatChecker) ExprResolver {
 	tools.NilPanic(v, c)
-	return Resolver{v, c, nil}
+	return ExprResolver{v, c, nil}
 }
