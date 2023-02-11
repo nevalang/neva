@@ -41,13 +41,6 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	supertypeTrace Trace,
 	scope map[string]Def,
 ) error {
-	fmt.Println(
-		subtype,
-		subtypeTrace,
-		supertype,
-		supertypeTrace,
-	)
-
 	isSuperTypeInst := supertype.Lit.Empty()
 	diffKinds := subtype.Lit.Empty() != isSuperTypeInst
 	isSuperTypeUnion := supertype.Lit.Type() == UnionLitType

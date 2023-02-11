@@ -3,7 +3,7 @@ package compiler
 import (
 	"context"
 
-	csrc "github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler/src"
 	"github.com/emil14/neva/pkg/tools"
 )
 
@@ -15,13 +15,13 @@ type Compiler[T any] struct {
 
 type (
 	Builder interface {
-		Build(context.Context, string) (csrc.Program, error)
+		Build(context.Context, string) (src.Program, error)
 	}
 	Analyzer interface {
-		Analyze(context.Context, csrc.Program) (csrc.Program, error)
+		Analyze(context.Context, src.Program) (src.Program, error)
 	}
 	Synthesizer[T any] interface {
-		Synthesize(context.Context, csrc.Program) (T, error)
+		Synthesize(context.Context, src.Program) (T, error)
 	}
 )
 

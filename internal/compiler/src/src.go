@@ -1,5 +1,7 @@
 package src
 
+import ts "github.com/emil14/neva/pkg/types"
+
 type Program struct {
 	Pkgs    map[string]Pkg
 	RootPkg string
@@ -15,7 +17,7 @@ type Pkg struct {
 type Entity struct {
 	Kind      EntityKind
 	Msg       Msg
-	Type      Type
+	Type      ts.Def
 	Interface InterfaceDef
 	Component Component
 }
@@ -44,7 +46,7 @@ type Component struct {
 
 type ComponentInterface struct {
 	Def  *InterfaceDef
-	Expr *TypeExpr // TypeRefExpr
+	Expr *ts.Expr
 }
 
 type InterfaceDef struct {
@@ -53,7 +55,7 @@ type InterfaceDef struct {
 }
 
 type Node struct {
-	interfaceInstance *TypeExpr          // nil for component nodes. Should refer to interface
+	interfaceInstance *ts.TypeExpr       // nil for component nodes. Should refer to interface
 	componentInstance *ComponentInstance // how about type expr?
 	staticPorts       map[string]Msg
 }
@@ -97,19 +99,4 @@ type ConnectionPortRef struct {
 	Node  string
 	Name  string
 	Index uint8
-}
-
-type Type struct {
-	Params []string
-	Body   TypeExpr
-}
-
-type TypeExpr struct {
-	Ref    TypeRefExpr
-	Struct map[string]TypeExpr
-}
-
-type TypeRefExpr struct {
-	Ref  EntityRef
-	Args []TypeExpr
 }
