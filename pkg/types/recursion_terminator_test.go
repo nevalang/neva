@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRecursionTerminator_Check(t *testing.T) {
+func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	tests := []struct {
 		name    string
 		trace   ts.Trace

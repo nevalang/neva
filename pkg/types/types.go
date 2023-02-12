@@ -7,8 +7,8 @@ type Def struct { // TODO add validation
 }
 
 type Param struct {
-	Name  string // Must be unique among other type's parameters
-	Const Expr   // Expression that must be resolved supertype of corresponding argument
+	Name   string // Must be unique among other type's parameters
+	Constr Expr   // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal
@@ -17,6 +17,7 @@ type Expr struct {
 	Inst InstExpr
 }
 
+// Empty returns true if inst and lit both empty
 func (e Expr) Empty() bool {
 	return e.Inst.Empty() && e.Lit.Empty()
 }

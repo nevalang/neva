@@ -210,17 +210,6 @@ func TestExpr_String(t *testing.T) {
 			},
 			want: "int | str",
 		},
-		// insts + lits
-		// {
-		// 	name: "inst expr with rec arg with 2 fields - inst with arg and inst without args",
-		// 	expr: types.Expr{},
-		// 	want: "map<{ x int, y vec<float> }>",
-		// },
-		// {
-		// 	name: "",
-		// 	expr: types.Expr{},
-		// 	want: "vec<[512]{ X Y Z }>",
-		// },
 	}
 
 	for _, tt := range tests {

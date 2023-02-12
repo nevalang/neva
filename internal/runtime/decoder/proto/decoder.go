@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/pkg/tools"
 	"github.com/emil14/neva/internal/runtime/src"
 	"github.com/emil14/neva/pkg/runtimesdk"
+	"github.com/emil14/neva/pkg/tools"
 )
 
 type Proto struct {
@@ -40,7 +40,7 @@ func (p Proto) Decode(bb []byte) (src.Program, error) {
 }
 
 func MustNewProto(unmarshaler Unmarshaler) Proto {
-	tools.PanicWithNil(unmarshaler)
+	tools.NilPanic(unmarshaler)
 
 	return Proto{
 		caster:      caster{},

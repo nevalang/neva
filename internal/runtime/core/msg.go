@@ -47,14 +47,14 @@ func (emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }
 
 type IntMsg struct {
 	emptyMsg
-	v int
+	v int64
 }
 
-func (msg IntMsg) Int() int       { return msg.v }
+func (msg IntMsg) Int() int64     { return msg.v }
 func (msg IntMsg) Type() Type     { return IntMsgType }
-func (msg IntMsg) String() string { return strconv.Itoa(msg.v) }
+func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
 
-func NewIntMsg(n int) IntMsg {
+func NewIntMsg(n int64) IntMsg {
 	return IntMsg{
 		emptyMsg: emptyMsg{},
 		v:        n,
