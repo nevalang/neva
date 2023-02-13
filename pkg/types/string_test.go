@@ -8,6 +8,8 @@ import (
 )
 
 func TestExpr_String(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		expr types.Expr
@@ -216,6 +218,7 @@ func TestExpr_String(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(
 				t, tt.want, tt.expr.String(),
 			)

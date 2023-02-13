@@ -18,6 +18,7 @@ var (
 	ErrUnionUnresolvedEl            = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved           = errors.New("can't resolve record field")
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
+	ErrValidator                    = errors.New("validator implementation must not allow empty literals")
 )
 
 // ExprResolver transforms expression it into a form where all references points to base types or to itself.
@@ -63,6 +64,8 @@ func (r ExprResolver) resolve( //nolint:funlen
 	}
 
 	switch expr.Lit.Type() {
+	case EmptyLitType:
+		return Expr{}, ErrValidator // TODO test
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
@@ -121,6 +124,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 		ref:  expr.Inst.Ref,
 	}
 
+	fmt.Println(newTrace) //nolint:forbidigo
 	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w", err)
@@ -145,7 +149,6 @@ func (r ExprResolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
 
-		fmt.Println(resolvedArg, newTrace, resolvedConstr, newTrace)
 		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
@@ -165,13 +168,13 @@ func (r ExprResolver) resolve( //nolint:funlen
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.
 func (ExprResolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
-	def, ok := args[ref]
-	if ok {
+	def, exist := args[ref]
+	if exist {
 		return def, nil
 	}
 
-	def, ok = scope[ref]
-	if !ok {
+	def, exist = scope[ref]
+	if !exist {
 		return Def{}, fmt.Errorf("%w: %v", ErrUndefinedRef, ref)
 	}
 

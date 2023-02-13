@@ -26,6 +26,7 @@ var (
 	ErrInvariant           = errors.New("subtype's invariant is broken")
 	ErrDiffLitTypes        = errors.New("subtype and supertype lits must be of the same type")
 	ErrRecursionTerminator = errors.New("recursion terminator")
+	ErrEmptyLit            = errors.New("literal empty")
 )
 
 type CompatChecker struct {
@@ -81,13 +82,13 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 			ref:  supertype.Inst.Ref,
 		}
 
-		for i := range supertype.Inst.Args {
+		for idx := range supertype.Inst.Args {
 			if err := s.Check(
-				subtype.Inst.Args[i], newSubtypeTrace,
-				supertype.Inst.Args[i], newSupertypeTrace,
+				subtype.Inst.Args[idx], newSubtypeTrace,
+				supertype.Inst.Args[idx], newSupertypeTrace,
 				scope,
 			); err != nil {
-				return fmt.Errorf("%w: got %v, want %v", ErrArgNotSubtype, subtype.Inst.Args[i], supertype.Inst.Args[i])
+				return fmt.Errorf("%w: got %v, want %v", ErrArgNotSubtype, subtype.Inst.Args[idx], supertype.Inst.Args[idx])
 			}
 		}
 
@@ -101,6 +102,8 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	}
 
 	switch constrLitType {
+	case EmptyLitType:
+		return ErrEmptyLit // TODO test
 	case ArrLitType: // [5]int <: [4]int|float ???
 		if subtype.Lit.Arr.Size < supertype.Lit.Arr.Size {
 			return fmt.Errorf("%w: got %d, want %d", ErrLitArrSize, subtype.Lit.Arr.Size, supertype.Lit.Arr.Size)
@@ -143,14 +146,14 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(subtype.Lit.Union), len(supertype.Lit.Union))
 		}
 		for _, exprEl := range subtype.Lit.Union { // check that all elements of arg union compatible with constr
-			var b bool
+			var implements bool
 			for _, constraintEl := range supertype.Lit.Union {
 				if s.Check(exprEl, subtypeTrace, constraintEl, supertypeTrace, scope) == nil {
-					b = true
+					implements = true
 					break
 				}
 			}
-			if !b {
+			if !implements {
 				return fmt.Errorf("%w: got %v, want %v", ErrUnions, exprEl, supertype.Lit.Union)
 			}
 		}

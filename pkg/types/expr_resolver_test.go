@@ -10,9 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errTest = errors.New("")
+
 func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
+	t.Parallel()
+
 	type testcase struct {
-		enabled    bool
 		expr       ts.Expr
 		scope      map[string]ts.Def
 		validator  func(v *MockexprValidatorMockRecorder)
@@ -26,7 +29,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"invalid expr": func() testcase {
 			return testcase{
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(ts.Expr{}).Return(errors.New(""))
+					v.Validate(ts.Expr{}).Return(errTest)
 				},
 				wantErr: ts.ErrInvalidExpr,
 			}
@@ -59,7 +62,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr: expr,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
-					v.Validate(expr.Inst.Args[0]).Return(errors.New("")) // in the loop
+					v.Validate(expr.Inst.Args[0]).Return(errTest) // in the loop
 				},
 				scope: map[string]ts.Def{
 					"vec": h.BaseDef(ts.Param{Name: "t"}),
@@ -78,7 +81,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(constr).Return(nil)            // first recursive call
 				},
 				comparator: func(c *MockcompatCheckerMockRecorder) {
-					// c.Check(expr.Inst.Args[0], constr).Return(errors.New(""))
+					// c.Check(expr.Inst.Args[0], constr).Return(testErr)
 				},
 				scope: map[string]ts.Def{
 					"map": h.BaseDef(ts.Param{"t", constr}),
@@ -163,7 +166,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(expr.Inst.Args[0]).Return(nil)
-					v.Validate(constr).Return(errors.New(""))
+					v.Validate(constr).Return(errTest)
 				},
 				wantErr: ts.ErrConstr,
 			}
@@ -199,7 +202,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
-					v.Validate(typ).Return(errors.New(""))
+					v.Validate(typ).Return(errTest)
 				},
 				wantErr: ts.ErrArrType,
 			}
@@ -249,7 +252,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(t1).Return(nil)
-					v.Validate(t2).Return(errors.New(""))
+					v.Validate(t2).Return(errTest)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
@@ -289,7 +292,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
-					v.Validate(stringExpr).Return(errors.New(""))
+					v.Validate(stringExpr).Return(errTest)
 				},
 				wantErr: ts.ErrRecFieldUnresolved,
 			}
@@ -547,6 +550,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// }
 
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			validator := NewMockexprValidator(ctrl)

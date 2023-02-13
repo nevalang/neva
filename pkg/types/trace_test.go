@@ -8,6 +8,8 @@ import (
 )
 
 func TestTrace_String(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		trace func() ts.Trace
 		want  string
@@ -26,6 +28,7 @@ func TestTrace_String(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.want, func(t *testing.T) {
+			t.Parallel()
 			got := tt.trace().String()
 			assert.Equal(t, tt.want, got)
 		})

@@ -18,8 +18,8 @@ type Expr struct {
 }
 
 // Empty returns true if inst and lit both empty
-func (e Expr) Empty() bool {
-	return e.Inst.Empty() && e.Lit.Empty()
+func (expr Expr) Empty() bool {
+	return expr.Inst.Empty() && expr.Lit.Empty()
 }
 
 // Instantiation expression

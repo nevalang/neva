@@ -8,23 +8,23 @@ type Trace struct {
 
 // O(2n)
 func (t Trace) String() string {
-	ss := []string{}
+	lastToFirst := []string{}
 
-	var tmp *Trace = &t
+	tmp := &t
 	for tmp != nil {
-		ss = append(ss, tmp.ref)
+		lastToFirst = append(lastToFirst, tmp.ref)
 		tmp = tmp.prev
 	}
 
-	s := "["
-	for i := len(ss) - 1; i >= 0; i-- {
-		s += ss[i]
+	firstToLast := "["
+	for i := len(lastToFirst) - 1; i >= 0; i-- {
+		firstToLast += lastToFirst[i]
 		if i > 0 {
-			s += ", "
+			firstToLast += ", "
 		}
 	}
 
-	return s + "]"
+	return firstToLast + "]"
 }
 
 func NewTrace(prev *Trace, v string) Trace {

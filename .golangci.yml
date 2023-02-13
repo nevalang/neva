@@ -9,11 +9,15 @@ linters:
     - godox # todo/fixme
     - godot # dots at the end of comments
     - gomnd # magic number
-    # - forbidigo # doesn't allow to use fmt.Println
     - nlreturn # newline before return
     - wsl # forses spaces in loops, assignments, etc
-    # - testpackage #  _test package
     - deadcode # replaced by unused
+    - cyclop # gocyclo does this
+    - exhaustivestruct
+    - exhaustruct
+    - exhaustive
+    # - testpackage #  _test package
+    # - forbidigo # doesn't allow to use fmt.Println
 
 linters-settings:
   lll:
@@ -21,9 +25,7 @@ linters-settings:
 
 issues:
   exclude-rules:
-    - source: "^//go:generate "
-      linters: [lll]
+    - source: "^//go:generate"
+      linters: [funlen , lll , varnamelen, err113]
     - path: _test\.go
-      linters:
-        - funlen
-        - lll
+      linters: [funlen , lll , varnamelen, err113]

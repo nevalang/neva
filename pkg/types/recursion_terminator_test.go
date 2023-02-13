@@ -9,6 +9,8 @@ import (
 )
 
 func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		trace   ts.Trace
@@ -53,6 +55,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := r.ShouldTerminate(tt.trace, tt.scope)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.wantErr, err)

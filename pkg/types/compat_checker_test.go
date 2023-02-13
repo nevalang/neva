@@ -10,6 +10,8 @@ import (
 )
 
 func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		subType    ts.Expr
@@ -298,6 +300,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			terminator := NewMockrecursionTerminator(ctrl)

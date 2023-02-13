@@ -1,18 +1,23 @@
 package tools
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrNil = errors.New("nil arg")
 
 func NilPanic(args ...interface{}) {
 	for i, v := range args {
 		if v == nil {
 			panic(
-				fmt.Errorf("nil arg #%d", i),
+				fmt.Errorf("%w: #%d", ErrNil, i), //nolint:err113
 			)
 		}
 	}
 }
 
-func Must[T any](v T, err error) T {
+func Must[T any](v T, err error) T { //nolint:ireturn
 	if err != nil {
 		panic(err)
 	}

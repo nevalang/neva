@@ -113,13 +113,13 @@ func Slot(path, name string, idx uint32) *runtimesdk.PortAddr {
 }
 
 func Effects(
-	Operators []*runtimesdk.Operator,
-	Constants []*runtimesdk.Constant,
-	Triggers []*runtimesdk.Trigger,
+	operators []*runtimesdk.Operator,
+	constants []*runtimesdk.Constant,
+	triggers []*runtimesdk.Trigger,
 ) *runtimesdk.Effects {
 	return &runtimesdk.Effects{
-		Operators: Operators,
-		Constants: Constants,
-		Triggers:  Triggers,
+		Operators: operators,
+		Constants: constants,
+		Triggers:  triggers,
 	}
 }

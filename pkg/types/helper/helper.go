@@ -60,13 +60,13 @@ func Union(els ...ts.Expr) ts.Expr {
 	}
 }
 
-func Rec(v map[string]ts.Expr) ts.Expr {
-	if v == nil { // for !lit.Empty()
-		v = map[string]ts.Expr{}
+func Rec(rec map[string]ts.Expr) ts.Expr {
+	if rec == nil { // for !lit.Empty()
+		rec = map[string]ts.Expr{}
 	}
 	return ts.Expr{
 		Lit: ts.LitExpr{
-			Rec: v,
+			Rec: rec,
 		},
 	}
 }

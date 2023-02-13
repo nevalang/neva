@@ -12,6 +12,8 @@ import (
 )
 
 func TestDefaultResolver(t *testing.T) {
+	t.Parallel()
+
 	type testcase struct {
 		name    string
 		scope   map[string]ts.Def
@@ -52,6 +54,7 @@ func TestDefaultResolver(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := r.Resolve(tt.expr, tt.scope)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.wantErr, err)

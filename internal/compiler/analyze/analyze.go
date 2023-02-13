@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/emil14/neva/internal/compiler/src"
-	ts "github.com/emil14/neva/pkg/types"
 )
 
 type Analyzer struct {
-	resolver ts.ExprResolver
+	// resolver ts.ExprResolver
 }
 
 func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) error {
@@ -43,7 +42,7 @@ func (a Analyzer) analyzePkg(
 	pkgName string,
 	pkgs map[string]src.Pkg,
 	visited map[src.EntityRef]struct{},
-) error {
+) error { //nolint:unparam
 	pkg := pkgs[pkgName]
 
 	if pkg.RootComponent != "" {
@@ -63,6 +62,8 @@ func (a Analyzer) analyzePkg(
 		if err := a.analyzeRootComp(entity.Component, pkg, pkgs); err != nil {
 			panic(err)
 		}
+
+		return nil
 	}
 
 	usedImports := make(map[string]struct{}, len(pkg.Imports))
@@ -88,7 +89,7 @@ func (a Analyzer) analyzePkg(
 	return nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, pkgs map[string]src.Pkg) (map[string]struct{}, error) {
+func (a Analyzer) analyzeEntity(entity src.Entity, pkgs map[string]src.Pkg) (map[string]struct{}, error) { //nolint:unparam,lll
 	// usedImports := map[string]struct{}{}
 
 	// https://github.com/emil14/neva/issues/186
@@ -107,14 +108,14 @@ func (a Analyzer) analyzeEntity(entity src.Entity, pkgs map[string]src.Pkg) (map
 		panic("unknown entity type")
 	}
 
-	return nil, nil
+	return map[string]struct{}{}, nil
 }
 
 // analyzeRootComp checks root-component-specific requirements:
 // Has only one type parameter without constraint; Doesn't have any outports;
 // Has one not-array inport named `sig` that refers to type-parameter; Has at least one node;
 // All nodes has no static inports or references to anything but components (reason why pkg and pkgs needed);
-func (Analyzer) analyzeRootComp(rootComp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen
+func (Analyzer) analyzeRootComp(rootComp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen,unparam,lll
 	if len(rootComp.TypeParams) != 1 {
 		panic("root component must have one type parameter")
 	}

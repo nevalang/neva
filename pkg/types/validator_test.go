@@ -9,6 +9,8 @@ import (
 )
 
 func TestValidator_Validate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		expr    ts.Expr
@@ -168,6 +170,7 @@ func TestValidator_Validate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.ErrorIs(
 				t, v.Validate(tt.expr), tt.wantErr,
 			)

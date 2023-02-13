@@ -7,8 +7,8 @@ import (
 )
 
 type Compiler[T any] struct {
-	analyzer    Analyzer
-	optimizer   Optimizer
+	analyzer Analyzer
+	// optimizer   Optimizer
 	synthesizer Synthesizer[T]
 }
 
@@ -26,15 +26,15 @@ type (
 
 func (c Compiler[T]) Compile(ctx context.Context, prog src.Prog) (*T, error) {
 	if err := c.analyzer.Analyze(ctx, prog); err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
 	target, err := c.synthesizer.Synthesize(ctx, prog)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 
-	return &target, err
+	return &target, nil
 }
 
 // func MustNew[T any](b Builder, a Analyzer, s Synthesizer[T]) Compiler[T] {

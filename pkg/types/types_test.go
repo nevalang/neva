@@ -8,6 +8,8 @@ import (
 )
 
 func TestLiteralExpr_Empty(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		lit  types.LitExpr
@@ -43,12 +45,15 @@ func TestLiteralExpr_Empty(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.lit.Empty(), tt.want)
 		})
 	}
 }
 
 func TestLiteralExpr_Type(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		lit  types.LitExpr
@@ -84,12 +89,15 @@ func TestLiteralExpr_Type(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.lit.Type(), tt.want)
 		})
 	}
 }
 
 func TestInstExpr_Empty(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		inst types.InstExpr
@@ -132,6 +140,7 @@ func TestInstExpr_Empty(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.inst.Empty(), tt.want)
 		})
 	}
