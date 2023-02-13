@@ -144,6 +144,8 @@ func (r ExprResolver) resolve( //nolint:funlen
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
+
+		fmt.Println(resolvedArg, newTrace, resolvedConstr, newTrace)
 		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
@@ -176,30 +178,6 @@ func (ExprResolver) getDef(ref string, args, scope map[string]Def) (Def, error) 
 	return def, nil
 }
 
-// Trace is a linked-list needed to keep track of resolving path to handle recursive types.
-type Trace struct { // TODO make private
-	prev *Trace
-	ref  string
-}
-
-func (t Trace) String() string {
-	s := "[" + t.ref
-	for t.prev != nil {
-		t = *t.prev
-		if t.prev != nil {
-			s += ", " + t.ref
-		}
-	}
-	return s + "]"
-}
-
-func NewTrace(prev *Trace, v string) Trace { // TODO get rid of this
-	return Trace{
-		prev: prev,
-		ref:  v,
-	}
-}
-
 func NewDefaultResolver() ExprResolver {
 	return ExprResolver{
 		validator:  Validator{},
@@ -208,7 +186,7 @@ func NewDefaultResolver() ExprResolver {
 	}
 }
 
-func MustNewResolver(v exprValidator, c compatChecker) ExprResolver {
+func MustNewResolver(v exprValidator, c compatChecker, t recursionTerminator) ExprResolver {
 	tools.NilPanic(v, c)
-	return ExprResolver{v, c, nil}
+	return ExprResolver{v, c, t}
 }

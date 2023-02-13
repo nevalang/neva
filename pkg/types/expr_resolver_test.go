@@ -12,13 +12,14 @@ import (
 
 func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	type testcase struct {
-		enabled       bool
-		expr          ts.Expr
-		scope         map[string]ts.Def
-		validator     func(v *MockexprValidatorMockRecorder)
-		compatChecker func(c *MockcompatCheckerMockRecorder)
-		want          ts.Expr
-		wantErr       error
+		enabled    bool
+		expr       ts.Expr
+		scope      map[string]ts.Def
+		validator  func(v *MockexprValidatorMockRecorder)
+		comparator func(c *MockcompatCheckerMockRecorder)
+		terminator func(t *MockrecursionTerminatorMockRecorder)
+		want       ts.Expr
+		wantErr    error
 	}
 
 	tests := map[string]func() testcase{
@@ -76,7 +77,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr.Inst.Args[0]).Return(nil) // first recursive call
 					v.Validate(constr).Return(nil)            // first recursive call
 				},
-				compatChecker: func(c *MockcompatCheckerMockRecorder) {
+				comparator: func(c *MockcompatCheckerMockRecorder) {
 					// c.Check(expr.Inst.Args[0], constr).Return(errors.New(""))
 				},
 				scope: map[string]ts.Def{
@@ -393,7 +394,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes()
 				},
-				compatChecker: func(c *MockcompatCheckerMockRecorder) {
+				comparator: func(c *MockcompatCheckerMockRecorder) {
 					// c.Check(gomock.Any(), gomock.Any()).AnyTimes()
 				},
 				want: h.Inst(
@@ -443,7 +444,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("a")).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
 				},
-				compatChecker: func(c *MockcompatCheckerMockRecorder) {
+				comparator: func(c *MockcompatCheckerMockRecorder) {
 					// c.Check(h.Inst("vec", h.Inst("int")), h.Inst("vec", h.Inst("int"))).Return(nil)
 				},
 				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
@@ -484,14 +485,35 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("vec", h.Inst("t2"))).Return(nil)
 					v.Validate(h.Inst("t2")).Return(nil)
 				},
-				compatChecker: func(c *MockcompatCheckerMockRecorder) {
+				comparator: func(c *MockcompatCheckerMockRecorder) {
 					c.Check(
-						h.Inst("vec", h.Inst("t1")),
-						ts.Trace{},
-						h.Inst("vec", h.Inst("t2")),
-						ts.Trace{},
+						h.Inst("vec", h.Inst("t1")), ts.NewTrace(nil, "t3"),
+						h.Inst("vec", h.Inst("t2")), ts.NewTrace(nil, "t3"),
 						scope,
 					).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t3")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "t1")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
+
+					t3 := ts.NewTrace(&t2, "vec")
+					t.ShouldTerminate(t3, scope).Return(false, nil)
+
+					t4 := ts.NewTrace(&t3, "t1")
+					t.ShouldTerminate(t4, scope).Return(true, nil)
+
+					// constr
+					t5 := ts.NewTrace(&t1, "t2")
+					t.ShouldTerminate(t5, scope).Return(false, nil)
+
+					t6 := ts.NewTrace(&t5, "vec")
+					t.ShouldTerminate(t6, scope).Return(false, nil)
+
+					t7 := ts.NewTrace(&t6, "t2")
+					t.ShouldTerminate(t7, scope).Return(true, nil)
 				},
 				want: h.Inst("t3", h.Inst("vec", h.Inst("t1"))),
 			}
@@ -503,24 +525,29 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		tt := tt
 		tc := tt()
 
-		// if !tc.enabled {
-		// 	continue
-		// }
+		if !tc.enabled {
+			continue
+		}
 
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			v := NewMockexprValidator(ctrl)
+			validator := NewMockexprValidator(ctrl)
 			if tc.validator != nil {
-				tc.validator(v.EXPECT())
+				tc.validator(validator.EXPECT())
 			}
 
-			c := NewMockcompatChecker(ctrl)
-			if tc.compatChecker != nil {
-				tc.compatChecker(c.EXPECT())
+			comparator := NewMockcompatChecker(ctrl)
+			if tc.comparator != nil {
+				tc.comparator(comparator.EXPECT())
 			}
 
-			got, err := ts.MustNewResolver(v, c).Resolve(tc.expr, tc.scope)
+			terminator := NewMockrecursionTerminator(ctrl)
+			if tc.terminator != nil {
+				tc.terminator(terminator.EXPECT())
+			}
+
+			got, err := ts.MustNewResolver(validator, comparator, terminator).Resolve(tc.expr, tc.scope)
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
