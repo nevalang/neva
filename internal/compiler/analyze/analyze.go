@@ -68,7 +68,7 @@ func (a Analyzer) analyzePkg(
 	usedImports := make(map[string]struct{}, len(pkg.Imports))
 
 	for entityName, entity := range pkg.Entities {
-		ref := src.EntityRef{pkgName, entityName}
+		ref := src.EntityRef{Pkg: pkgName, Name: entityName}
 		if _, ok := visited[ref]; ok {
 			continue
 		}
@@ -89,13 +89,13 @@ func (a Analyzer) analyzePkg(
 }
 
 func (a Analyzer) analyzeEntity(entity src.Entity, pkgs map[string]src.Pkg) (map[string]struct{}, error) {
-	usedImports := map[string]struct{}{}
+	// usedImports := map[string]struct{}{}
 
 	// https://github.com/emil14/neva/issues/186
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		a.resolver.Resolve(entity.Type)
+		// a.resolver.Resolve(entity.Type)
 		// if entity.Type.Body.Empty() { // TODO move to validator?
 		// 	panic("type entity body cannot be empty")
 		// }
@@ -179,4 +179,6 @@ func (Analyzer) analyzeRootComp(rootComp src.Component, pkg src.Pkg, pkgs map[st
 			panic("root component nodes can only refer to other components")
 		}
 	}
+
+	return nil
 }

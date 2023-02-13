@@ -465,15 +465,16 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"compatibility check between two recursive types": func() testcase { // t3<t1> { t1 = vec<t1>, t2 = vec<t2>, t3<p1 t2>, vec<t> }
+			scope := map[string]ts.Def{
+				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
+				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
+				"t3":  h.BaseDef(h.Param("p1", h.Inst("t2"))),
+				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+			}
 			return testcase{
 				enabled: true,
 				expr:    h.Inst("t3", h.Inst("t1")),
-				scope: map[string]ts.Def{
-					"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-					"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
-					"t3":  h.BaseDef(h.Param("p1", h.Inst("t2"))),
-					"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
-				},
+				scope:   scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(h.Inst("t3", h.Inst("t1"))).Return(nil)
 					v.Validate(h.Inst("t1")).Return(nil)
@@ -484,10 +485,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("t2")).Return(nil)
 				},
 				compatChecker: func(c *MockcompatCheckerMockRecorder) {
-					// c.Check(
-					// 	h.Inst("vec", h.Inst("t1")),
-					// 	h.Inst("vec", h.Inst("t2")),
-					// ).Return(nil)
+					c.Check(
+						h.Inst("vec", h.Inst("t1")),
+						ts.Trace{},
+						h.Inst("vec", h.Inst("t2")),
+						ts.Trace{},
+						scope,
+					).Return(nil)
 				},
 				want: h.Inst("t3", h.Inst("vec", h.Inst("t1"))),
 			}

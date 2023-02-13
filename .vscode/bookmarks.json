@@ -11,7 +11,7 @@
 			]
 		},
 		{
-			"path": "internal/runtime/executor/effector/component/effector.go",
+			"path": "internal/runtime/executor/effector/component/effector.go.tmp",
 			"bookmarks": [
 				{
 					"line": 23,
