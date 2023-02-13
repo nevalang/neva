@@ -106,32 +106,46 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"constr undefined ref": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
+			scope := map[string]ts.Def{
+				"t1": h.BaseDef(ts.Param{"t", constr}),
+				"t2": h.BaseDef(),
+			}
 			return testcase{
-				expr: expr,
-				scope: map[string]ts.Def{
-					"t1": h.BaseDef(ts.Param{"t", constr}),
-					"t2": h.BaseDef(),
-				},
+				expr:  expr,
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(expr.Inst.Args[0]).Return(nil)
 					v.Validate(constr).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "t2")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
 				},
 				wantErr: ts.ErrConstr,
 			}
 		},
 		"constr ref type not found": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> }
 			expr := h.Inst("t1", h.Inst("t2"))
+			scope := map[string]ts.Def{
+				"t2": h.BaseDef(),
+				"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
+			}
 			return testcase{
-				expr: expr,
-				scope: map[string]ts.Def{
-					"t2": h.BaseDef(),
-					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
-				},
+				expr:  expr,
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)         // expr itself
 					v.Validate(h.Inst("t2")).Return(nil) // expr's arg
-					v.Validate(h.Inst("t3")).Return(nil) // def's constraint
+					v.Validate(h.Inst("t3")).Return(nil) // def's constr
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+					t.ShouldTerminate(ts.NewTrace(&t1, "t2"), scope).Return(false, nil)
 				},
 				wantErr: ts.ErrConstr,
 			}
@@ -190,15 +204,19 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrArrType,
 			}
 		},
-		"arr with resolvable type": func() testcase { // expr = [2]t, scope = {t=t}
+		"arr with resolvable type": func() testcase { // expr = [2]t, scope = {t=...}
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
+			scope := map[string]ts.Def{"t": h.BaseDef()}
 			return testcase{
-				scope: map[string]ts.Def{"t": h.BaseDef()},
 				expr:  expr,
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(typ).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t.ShouldTerminate(ts.NewTrace(nil, "t"), scope).Return(false, nil)
 				},
 				want: expr,
 			}
@@ -420,7 +438,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				want: h.Inst("int"),
 			}
 		},
-		"constraint refereing type parameter (generics inside generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
+		"constr refereing type parameter (generics inside generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
 			return testcase{
 				expr: h.Inst(
 					"t",
@@ -473,9 +491,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
 			}
 			return testcase{
-				enabled: true,
-				expr:    h.Inst("t3", h.Inst("t1")),
-				scope:   scope,
+				expr:  h.Inst("t3", h.Inst("t1")),
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(h.Inst("t3", h.Inst("t1"))).Return(nil)
 					v.Validate(h.Inst("t1")).Return(nil)
@@ -525,9 +542,9 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		tt := tt
 		tc := tt()
 
-		if !tc.enabled {
-			continue
-		}
+		// if !tc.enabled {
+		// 	continue
+		// }
 
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
