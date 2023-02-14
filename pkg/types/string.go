@@ -4,11 +4,13 @@ import "fmt"
 
 // String formats expression in a TS manner
 func (expr Expr) String() string { // todo move?
+	if expr.Empty() {
+		return "empty"
+	}
+
 	var str string
 
 	switch expr.Lit.Type() {
-	case EmptyLitType:
-		return "unknown"
 	case ArrLitType:
 		return fmt.Sprintf(
 			"[%d]%s",

@@ -88,6 +88,10 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
 				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
+
+				// TODO figure out why we get [, vec]  and not [vec]
+				// TODO use h.Trace() helper
+				// TODO use https://pkg.go.dev/github.com/golang/mock/gomock#Eq
 			},
 			wantErr: nil,
 		},

@@ -64,8 +64,6 @@ func (r ExprResolver) resolve( //nolint:funlen
 	}
 
 	switch expr.Lit.Type() {
-	case EmptyLitType:
-		return Expr{}, ErrValidator // TODO test
 	case EnumLitType:
 		return expr, nil // nothing to resolve in enum
 	case ArrLitType:
@@ -149,6 +147,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
 
+		fmt.Println(resolvedArg, newTrace, resolvedConstr, newTrace)
 		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}

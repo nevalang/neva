@@ -20,6 +20,7 @@ var (
 // All instantiations are valid because it's ok to have "" type with 0 arguments.
 // For arr, union and enum it checks that size is >= 2. For enum it also ensures there no duplicate elements.
 func (v Validator) Validate(expr Expr) error {
+	// FIXME empty expr considered invalid but native types has empty exprs as body which means their body invalid
 	if expr.Lit.Empty() == expr.Inst.Empty() { // we don't use expr.Empty() because constraint can be empty
 		return ErrInvalidExprType
 	}
