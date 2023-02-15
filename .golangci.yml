@@ -16,6 +16,7 @@ linters:
     - exhaustivestruct
     - exhaustruct
     - exhaustive
+    - composites
     # - testpackage #  _test package
     # - forbidigo # doesn't allow to use fmt.Println
 

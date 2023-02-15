@@ -8,7 +8,7 @@ type Prog struct {
 }
 
 type Pkg struct {
-	Imports       map[string]string
+	Imports       map[string]string // alias->path
 	Entities      map[string]Entity
 	RootComponent string // empty string means library (not-executable) package
 }
@@ -17,7 +17,7 @@ type Entity struct {
 	Exported  bool
 	Kind      EntityKind
 	Msg       Msg
-	Type      ts.Def
+	Type      ts.Def // FIXME https://github.com/emil14/neva/issues/186
 	Interface Interface
 	Component Component
 }
@@ -35,7 +35,7 @@ type Component struct {
 	TypeParams []ts.Param // all type expressions inside component can refer to these
 	IO         IO
 	Nodes      map[string]Node // component and interface instances
-	Network    []Connection    // computational schema
+	Net        []Connection    // computational schema
 }
 
 type Interface struct {
@@ -57,12 +57,13 @@ type Instance struct {
 }
 
 type EntityRef struct {
-	Pkg  string // "" for local entities
-	Name string
+	Import string // "" for local entities
+	Name   string
 }
 
 type Msg struct {
 	Type ts.Expr
+	// Value?
 }
 
 type IO struct {
