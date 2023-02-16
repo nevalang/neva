@@ -17,9 +17,9 @@ func TestExpr_String(t *testing.T) {
 	}{
 		// insts
 		{
-			name: "empty expr (inst with empty ref and no args)",
+			name: "empty_expr_(inst_with_empty_ref_and_no_args)",
 			expr: types.Expr{},
-			want: "",
+			want: "empty",
 		},
 		{
 			name: "inst expr with non-empty ref and no args",
@@ -87,7 +87,7 @@ func TestExpr_String(t *testing.T) {
 		// Lits
 		// enum
 		{
-			name: "lit expr empty enum",
+			name: "lit_expr_empty_enum",
 			expr: types.Expr{
 				Lit: types.LitExpr{
 					Enum: []string{},
@@ -115,13 +115,13 @@ func TestExpr_String(t *testing.T) {
 		},
 		// arr
 		{
-			name: "lit expr arr with size 0 and without type",
+			name: "lit_expr_arr_with_size_0_and_without type",
 			expr: types.Expr{
 				Lit: types.LitExpr{
 					Arr: &types.ArrLit{},
 				},
 			},
-			want: "[0]",
+			want: "[0]empty",
 		},
 		{
 			name: "lit expr arr with size 0 and with type",
