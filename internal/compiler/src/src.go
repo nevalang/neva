@@ -57,8 +57,8 @@ type Instance struct {
 }
 
 type EntityRef struct {
-	Import string // "" for local entities
-	Name   string
+	Pkg  string // "" for local entities (alias, namespace)
+	Name string
 }
 
 type Msg struct {

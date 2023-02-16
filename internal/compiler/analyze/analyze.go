@@ -112,11 +112,11 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[
 		}
 
 		for entityRef := range entitiesUsedByEntity {
-			if entityRef.Import == "" {
+			if entityRef.Pkg == "" {
 				usedLocalEntities[entityName] = struct{}{}
 				continue
 			}
-			usedImports[entityRef.Import] = struct{}{}
+			usedImports[entityRef.Pkg] = struct{}{}
 		}
 	}
 
@@ -209,7 +209,7 @@ func (a Analyzer) analyzeTypeParameters(params []ts.Param) error {
 		}
 		pp[param.Name] = struct{}{}
 
-		ts.NewDefaultResolver().Resolve()
+		// ts.NewDefaultResolver().Resolve()
 	}
 
 	// 	func<

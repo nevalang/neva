@@ -188,17 +188,25 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"invalid_constr": func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
+			scope := map[string]ts.Def{
+				"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
+				"t2": h.BaseDef(),
+				"t3": h.BaseDef(),
+			}
 			return testcase{
-				expr: expr,
-				scope: map[string]ts.Def{
-					"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
-					"t2": h.BaseDef(),
-					"t3": h.BaseDef(),
-				},
+				expr:  expr,
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(expr.Inst.Args[0]).Return(nil)
 					v.Validate(constr).Return(errTest)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "t2")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
 				},
 				wantErr: ts.ErrConstr,
 			}
@@ -380,15 +388,23 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"direct_recursion_through_inst_references": func() testcase { // t, {t=t}
+			scope := map[string]ts.Def{
+				"t": h.Def(h.Inst("t")), // direct recursion
+			}
 			return testcase{
-				expr: h.Inst("t"),
-				scope: map[string]ts.Def{
-					"t": h.Def(h.Inst("t")), // direct recursion
-				},
+				expr:  h.Inst("t"),
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(h.Inst("t")).Return(nil).Times(2)
 				},
-				wantErr: ts.ErrDirectRecursion,
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "t")
+					t.ShouldTerminate(t2, scope).Return(false, errTest)
+				},
+				wantErr: ts.ErrRecursionTerm,
 			}
 		},
 		"indirect_(2_step)_recursion_through_inst_references": func() testcase { // t1, {t1=t2, t2=t1}
@@ -457,18 +473,32 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"RHS": func() testcase { // t1<int> { t1<t>=t, t=int, int }
+			scope := map[string]ts.Def{
+				"t1":  h.Def(h.Inst("t"), h.ParamWithoutConstr("t")),
+				"t":   h.Def(h.Inst("int")),
+				"int": h.BaseDef(),
+			}
 			return testcase{
-				expr: h.Inst("t1", h.Inst("int")),
-				scope: map[string]ts.Def{
-					"t1":  h.Def(h.Inst("t"), h.ParamWithoutConstr("t")),
-					"t":   h.Def(h.Inst("int")),
-					"int": h.BaseDef(),
-				},
+				expr:  h.Inst("t1", h.Inst("int")),
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
 					v.Validate(h.Inst("t")).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "int")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
+
+					t3 := ts.NewTrace(&t1, "t")
+					t.ShouldTerminate(t3, scope).Return(false, nil)
+
+					t4 := ts.NewTrace(&t3, "int")
+					t.ShouldTerminate(t4, scope).Return(false, nil)
 				},
 				want: h.Inst("int"),
 			}

@@ -10,26 +10,22 @@ var (
 	ErrDiffRefs            = errors.New("subtype inst must have same ref as supertype")
 	ErrArgsCount           = errors.New("subtype inst must have >= args than supertype")
 	ErrArgNotSubtype       = errors.New("subtype arg must be subtype of corresponding supertype arg")
-	ErrLitNotArr           = errors.New("subtype is lit but not arr")
 	ErrLitArrSize          = errors.New("subtype arr size must be >= supertype")
 	ErrArrDiffType         = errors.New("subtype arr must have same type as supertype")
-	ErrLitNotEnum          = errors.New("subtype is literal but not enum")
 	ErrBigEnum             = errors.New("subtype enum must be <= supertype enum")
 	ErrEnumEl              = errors.New("subtype enum el doesn't match supertype")
-	ErrLitNotRec           = errors.New("subtype is lit but not rec")
 	ErrRecLen              = errors.New("subtype record must contain >= fields than supertype")
 	ErrRecField            = errors.New("subtype rec field must be subtype of corresponding supertype field")
 	ErrRecNoField          = errors.New("subtype rec is missing field of supertype")
 	ErrUnion               = errors.New("subtype must be subtype of supertype union")
 	ErrUnionsLen           = errors.New("subtype union must be <= supertype union")
 	ErrUnions              = errors.New("subtype union el must be subtype of supertype union")
-	ErrInvariant           = errors.New("subtype's invariant is broken")
 	ErrDiffLitTypes        = errors.New("subtype and supertype lits must be of the same type")
 	ErrRecursionTerminator = errors.New("recursion terminator")
-	ErrEmptyLit            = errors.New("literal empty")
 )
 
 type CompatChecker struct {
+	// TODO figure out if it's possible not to use recursion terminator and pass flags from outside
 	recursionChecker recursionTerminator
 }
 
@@ -102,8 +98,6 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	}
 
 	switch constrLitType {
-	case EmptyLitType:
-		return ErrEmptyLit // TODO test
 	case ArrLitType: // [5]int <: [4]int|float ???
 		if subtype.Lit.Arr.Size < supertype.Lit.Arr.Size {
 			return fmt.Errorf("%w: got %d, want %d", ErrLitArrSize, subtype.Lit.Arr.Size, supertype.Lit.Arr.Size)
