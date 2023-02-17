@@ -2,8 +2,8 @@ package types
 
 type Def struct { // TODO add validation
 	Params           []Param // Body can refer to these parameters
-	Body             Expr    // Empty body here means base type
-	RecursionAllowed bool    // Only base types can have true here
+	Body             Expr    // Empty body here means base type (TODO maybe change needed)
+	RecursionAllowed bool    // Type can be used for recursive definition. Only base type can have this
 }
 
 type Param struct {

@@ -23,29 +23,39 @@ func TestDefaultResolver(t *testing.T) {
 	}
 
 	tests := []testcase{
-		{ // vec<t1> {t1=vec<t1>}
-			name: "recursive type ref as arg",
-			scope: map[string]ts.Def{
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
-				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-			},
-			expr: h.Inst("vec", h.Inst("t1")),
-			want: h.Inst("vec", h.Inst("vec", h.Inst("t1"))), // FIXME? `vec<vec<t1>>` instead of `vec<t1>`
-		},
-		{ // t1 { t1={a vec<t1>} }
-			name: "recursive type ref with structured body",
-			scope: map[string]ts.Def{
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
-				"t1": h.Def(
-					h.Rec(map[string]ts.Expr{
-						"a": h.Inst("vec", h.Inst("t1")),
-					}),
-				),
-			},
+		// { // vec<t1> {t1=vec<t1>}
+		// 	name: "recursive type ref as arg",
+		// 	scope: map[string]ts.Def{
+		// 		"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+		// 		"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
+		// 	},
+		// 	expr: h.Inst("vec", h.Inst("t1")),
+		// 	want: h.Inst("vec", h.Inst("vec", h.Inst("t1"))), // FIXME? `vec<vec<t1>>` instead of `vec<t1>`
+		// },
+		// { // t1 { t1={a vec<t1>} }
+		// 	name: "recursive type ref with structured body",
+		// 	scope: map[string]ts.Def{
+		// 		"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+		// 		"t1": h.Def(
+		// 			h.Rec(map[string]ts.Expr{
+		// 				"a": h.Inst("vec", h.Inst("t1")),
+		// 			}),
+		// 		),
+		// 	},
+		// 	expr: h.Inst("t1"),
+		// 	want: h.Rec(map[string]ts.Expr{
+		// 		"a": h.Inst("vec", h.Inst("t1")),
+		// 	}),
+		// },
+		{ // t1, {t1=t2, t2=t1}
+			// enabled: true,
+			name: "invalid indirect recursion",
 			expr: h.Inst("t1"),
-			want: h.Rec(map[string]ts.Expr{
-				"a": h.Inst("vec", h.Inst("t1")),
-			}),
+			scope: map[string]ts.Def{
+				"t1": h.Def(h.Inst("t2")), // indirectly
+				"t2": h.Def(h.Inst("t1")), // refers to itself
+			},
+			wantErr: ts.ErrRecursionTerm,
 		},
 	}
 

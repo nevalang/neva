@@ -15,6 +15,8 @@ var (
 type RecursionTerminator struct{}
 
 func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (bool, error) {
+	fmt.Println(cur)
+
 	if cur.prev == nil {
 		return false, nil
 	}
@@ -28,11 +30,13 @@ func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (b
 		return false, fmt.Errorf("%w: %v", ErrPrevDefNotFound, cur)
 	}
 
+	fmt.Println(prevDef.Body)
+
 	isPrevAllowRecursion := prevDef.RecursionAllowed
 
 	prev := cur.prev
 	for prev != nil {
-		if prev.ref == cur.ref { // same ref found back on the chain, that's a loop
+		if prev.ref == cur.ref { // same ref found, that's a loop
 			if isPrevAllowRecursion { // but that's ok if prev ref allow recursion
 				return true, nil
 			}
