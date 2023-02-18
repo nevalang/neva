@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +24,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: ts.NewTrace(nil, "t1"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    false,
 			wantErr: nil,
@@ -34,7 +34,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: h.Trace("t1", "vec", "t1"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,
@@ -44,7 +44,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: h.Trace("vec", "t1", "vec"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,

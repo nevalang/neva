@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -117,7 +117,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"expr_underlaying_type_not_found": func() testcase { // expr = t1<int>, scope = { int, t1<t> = t3<t> }
 			scope := map[string]ts.Def{
 				"int": h.BaseDef(),
-				"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.ParamWithoutConstr("t")),
+				"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.ParamWithNoConstr("t")),
 			}
 			return testcase{
 				expr:  h.Inst("t1", h.Inst("int")),
@@ -470,13 +470,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 						"vec",
 						h.Inst("map", h.Inst("p1"), h.Inst("p2")),
 					),
-					h.ParamWithoutConstr("p1"),
-					h.ParamWithoutConstr("p2"),
+					h.ParamWithNoConstr("p1"),
+					h.ParamWithNoConstr("p2"),
 				),
 				"int": h.BaseDef(),
 				"str": h.BaseDef(),
-				"vec": h.BaseDef(h.ParamWithoutConstr("a")),
-				"map": h.BaseDef(h.ParamWithoutConstr("a"), h.ParamWithoutConstr("b")),
+				"vec": h.BaseDef(h.ParamWithNoConstr("a")),
+				"map": h.BaseDef(h.ParamWithNoConstr("a"), h.ParamWithNoConstr("b")),
 			}
 			return testcase{
 				expr:  h.Inst("t1", h.Inst("int"), h.Inst("str")),
@@ -495,7 +495,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"RHS": func() testcase { // t1<int> { t1<t>=t, t=int, int }
 			scope := map[string]ts.Def{
-				"t1":  h.Def(h.Inst("t"), h.ParamWithoutConstr("t")),
+				"t1":  h.Def(h.Inst("t"), h.ParamWithNoConstr("t")),
 				"t":   h.Def(h.Inst("int")),
 				"int": h.BaseDef(),
 			}
@@ -527,10 +527,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"constr_refereing_type_parameter_(generics_inside_generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
 			scope := map[string]ts.Def{
 				"t": h.BaseDef(
-					h.ParamWithoutConstr("a"),
+					h.ParamWithNoConstr("a"),
 					h.Param("b", h.Inst("vec", h.Inst("a"))),
 				),
-				"vec": h.BaseDef(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDef(h.ParamWithNoConstr("t")),
 				"int": h.BaseDef(),
 			}
 			return testcase{
@@ -586,7 +586,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"recursion_through_base_types_with_support_of_recursion": func() testcase { // t1 { t1 = vec<t1> }
 			scope := map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			}
 			return testcase{
 				expr:  h.Inst("t1"),
@@ -604,7 +604,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
 				"t3":  h.BaseDef(h.Param("p1", h.Inst("t2"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			}
 			return testcase{
 				expr:  h.Inst("t3", h.Inst("t1")),

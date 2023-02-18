@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ func TestDefaultResolver(t *testing.T) {
 		{ // vec<t1> {t1=vec<t1>}
 			name: "recursive_type_ref_as_arg",
 			scope: map[string]ts.Def{
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 			},
 			expr: h.Inst("vec", h.Inst("t1")),
@@ -35,7 +35,7 @@ func TestDefaultResolver(t *testing.T) {
 		{ // t1 { t1={a vec<t1>} }
 			name: "recursive_type_ref_with_structured_body",
 			scope: map[string]ts.Def{
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 				"t1": h.Def(
 					h.Rec(map[string]ts.Expr{
 						"a": h.Inst("vec", h.Inst("t1")),
