@@ -1,9 +1,30 @@
 package types
 
 type Def struct { // TODO add validation
-	Params           []Param // Body can refer to these parameters
-	Body             Expr    // Empty body here means base type (TODO maybe change needed)
-	RecursionAllowed bool    // Type can be used for recursive definition. Only base type can have this
+	Params             []Param // Body can refer to these parameters
+	BodyExpr           Expr    // Empty body here means base type (TODO maybe change needed)
+	IsRecursionAllowed bool    // Type can be used for recursive definition. Only base type can have this
+}
+
+func (def Def) String() string {
+	var params string
+
+	if len(def.Params) > 0 {
+		params += "<"
+		for i, param := range def.Params {
+			params += param.Name
+			if param.Constr.Empty() {
+				continue
+			}
+			params += " " + param.Constr.String()
+			if i < len(def.Params)-1 {
+				params += ", "
+			}
+		}
+		params += ">"
+	}
+
+	return params + " = " + def.BodyExpr.String()
 }
 
 type Param struct {

@@ -4,8 +4,8 @@ import ts "github.com/emil14/neva/pkg/types"
 
 func BaseDefWithRecursion(params ...ts.Param) ts.Def {
 	return ts.Def{
-		Params:           params,
-		RecursionAllowed: true,
+		Params:             params,
+		IsRecursionAllowed: true,
 	}
 }
 
@@ -16,8 +16,8 @@ func BaseDef(params ...ts.Param) ts.Def {
 
 func Def(body ts.Expr, params ...ts.Param) ts.Def {
 	return ts.Def{
-		Params: params,
-		Body:   body,
+		Params:   params,
+		BodyExpr: body,
 	}
 }
 

@@ -30,9 +30,9 @@ func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (b
 		return false, fmt.Errorf("%w: %v", ErrPrevDefNotFound, cur)
 	}
 
-	fmt.Println(prevDef.Body)
+	fmt.Println(prevDef.BodyExpr)
 
-	isPrevAllowRecursion := prevDef.RecursionAllowed
+	isPrevAllowRecursion := prevDef.IsRecursionAllowed
 
 	prev := cur.prev
 	for prev != nil {

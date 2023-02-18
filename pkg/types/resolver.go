@@ -108,7 +108,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 		return Expr{}, err
 	}
 
-	if def.RecursionAllowed && !def.Body.Empty() {
+	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
 		return Expr{}, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
 
@@ -138,7 +138,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
-		newFrame[param.Name] = Def{Body: resolvedArg} // no params for generics
+		newFrame[param.Name] = Def{BodyExpr: resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 		if param.Constr.Empty() {
 			continue
@@ -154,7 +154,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 		}
 	}
 
-	if def.Body.Empty() {
+	if def.BodyExpr.Empty() {
 		return Expr{
 			Inst: InstExpr{
 				Ref:  expr.Inst.Ref,
@@ -163,7 +163,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 		}, nil
 	}
 
-	return r.resolve(def.Body, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
+	return r.resolve(def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
 }
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.

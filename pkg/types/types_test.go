@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/emil14/neva/pkg/types"
+	ts "github.com/emil14/neva/pkg/types"
+	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -142,6 +144,30 @@ func TestInstExpr_Empty(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, tt.inst.Empty(), tt.want)
+		})
+	}
+}
+
+func TestDef_String(t *testing.T) {
+	tests := []struct {
+		name string
+		def  ts.Def
+		want string
+	}{
+		{
+			name: "",
+			def: h.Def(
+				h.Inst("vec", h.Inst("T")),
+				h.Param("T", h.Inst("int")),
+			),
+			want: "<T int> = vec<T>",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.def.String(); got != tt.want {
+				t.Errorf("Def.String() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
