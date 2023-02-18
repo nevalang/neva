@@ -16,7 +16,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	type testcase struct {
-		enabled    bool
+		// enabled    bool
 		expr       ts.Expr
 		scope      map[string]ts.Def
 		validator  func(v *MockexprValidatorMockRecorder)
@@ -263,7 +263,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				want: expr,
 			}
 		},
-		"union_with_unresolvable_(undefined)_element": func() testcase { // expr = t1 | t2, scope = {t1=t1}
+		"union_with_unresolvable_(undefined)_element": func() testcase { // t1 | t2, {t1=t1}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
@@ -282,13 +282,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t1 := ts.NewTrace(nil, "t1")
 					t.ShouldTerminate(t1, scope)
 
-					t2 := ts.NewTrace(nil, "t2")
-					t.ShouldTerminate(t2, scope)
+					// t2 := ts.NewTrace(nil, "t2")
+					// t.ShouldTerminate(t2, scope)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
-		"union_with_unresolvable_(invalid)_element": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
+		"union_with_unresolvable_(not_valid)_element": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
@@ -307,14 +307,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, "t1")
 					t.ShouldTerminate(t1, scope)
-
-					t2 := ts.NewTrace(nil, "t2")
-					t.ShouldTerminate(t2, scope)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
-		"union_with_resolvable_elements": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
+		"union_with_resolvable_elements": func() testcase { // expr = t1 | t2, scope = {t1=..., t2=...}
 			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
 			scope := map[string]ts.Def{
 				"t1": h.BaseDef(),
@@ -327,6 +324,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr).Return(nil)
 					v.Validate(expr.Lit.Union[0]).Return(nil)
 					v.Validate(expr.Lit.Union[1]).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope)
+
+					t2 := ts.NewTrace(nil, "t2")
+					t.ShouldTerminate(t2, scope)
 				},
 				want: expr,
 			}
