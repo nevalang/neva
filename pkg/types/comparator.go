@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	"fmt"
+
+	"github.com/emil14/neva/pkg/tools"
 )
 
 var (
@@ -155,12 +157,15 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	return nil
 }
 
-func NewSubtypeChecker(checker recursionTerminator) CompatChecker {
+func MustNewCompatChecker(checker recursionTerminator) CompatChecker {
+	tools.NilPanic(checker)
 	return CompatChecker{
 		recursionChecker: checker,
 	}
 }
 
-func NewDefaultSubtypeChecker() CompatChecker {
-	return NewSubtypeChecker(RecursionTerminator{})
+func NewDefaultCompatChecker() CompatChecker {
+	return CompatChecker{
+		recursionChecker: Terminator{},
+	}
 }

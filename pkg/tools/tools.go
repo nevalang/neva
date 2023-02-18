@@ -7,6 +7,7 @@ import (
 
 var ErrNil = errors.New("nil arg")
 
+// NilPanic panics if at least one argument is nil
 func NilPanic(args ...interface{}) {
 	for i, v := range args {
 		if v == nil {
@@ -15,15 +16,4 @@ func NilPanic(args ...interface{}) {
 			)
 		}
 	}
-}
-
-func Must[T any](v T, err error) T { //nolint:ireturn
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
-func Pointer[T any](v T) *T {
-	return &v
 }

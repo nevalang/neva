@@ -62,7 +62,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		},
 	}
 
-	r := ts.RecursionTerminator{}
+	r := ts.Terminator{}
 
 	for _, tt := range tests {
 		if !tt.enabled {

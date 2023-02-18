@@ -13,13 +13,13 @@ var (
 	ErrCounter           = errors.New("recursive calls counter limit exceeded")
 )
 
-type RecursionTerminator struct{}
+type Terminator struct{}
 
-func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (bool, error) {
+func (r Terminator) ShouldTerminate(cur Trace, scope map[string]Def) (bool, error) {
 	return r.shouldTerminate(cur, scope, 0)
 }
 
-func (r RecursionTerminator) shouldTerminate(cur Trace, scope map[string]Def, counter int) (bool, error) {
+func (r Terminator) shouldTerminate(cur Trace, scope map[string]Def, counter int) (bool, error) {
 	if counter > 1 {
 		return false, ErrCounter
 	}
@@ -64,7 +64,7 @@ func (r RecursionTerminator) shouldTerminate(cur Trace, scope map[string]Def, co
 }
 
 // getLast3AndSwap turns [... a b a] into [b a b]
-func (RecursionTerminator) getLast3AndSwap(cur Trace) Trace {
+func (Terminator) getLast3AndSwap(cur Trace) Trace {
 	t1 := Trace{prev: nil, ref: cur.prev.ref}
 	t2 := Trace{prev: &t1, ref: cur.ref}
 	return Trace{prev: &t2, ref: cur.prev.ref}

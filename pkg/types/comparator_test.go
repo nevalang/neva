@@ -311,7 +311,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				tt.terminator(terminator.EXPECT())
 			}
 
-			checker := ts.NewSubtypeChecker(terminator)
+			checker := ts.MustNewCompatChecker(terminator)
 
 			require.ErrorIs(
 				t,

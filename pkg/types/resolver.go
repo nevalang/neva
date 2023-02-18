@@ -182,12 +182,12 @@ func (Resolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
 func NewDefaultResolver() Resolver {
 	return Resolver{
 		validator:  Validator{},
-		comparator: NewDefaultSubtypeChecker(),
-		terminator: RecursionTerminator{},
+		comparator: NewDefaultCompatChecker(),
+		terminator: Terminator{},
 	}
 }
 
 func MustNewResolver(v exprValidator, c compatChecker, t recursionTerminator) Resolver {
-	tools.NilPanic(v, c)
+	tools.NilPanic(v, c, t)
 	return Resolver{v, c, t}
 }
