@@ -22,11 +22,11 @@ var (
 	ErrTerminator                   = errors.New("recursion terminator")
 )
 
-// ExprResolver transforms expression it into a form where all references points to base types or to itself.
-type ExprResolver struct {
-	validator  exprValidator
-	comparator compatChecker
-	terminator recursionTerminator
+// Resolver transforms expression it into a form where all references it contains points to resolved expressions.
+type Resolver struct {
+	validator  exprValidator       // Check if expression invalid before resolving it
+	comparator compatChecker       // Compare arguments with constraints
+	terminator recursionTerminator // Don't stuck in a loop
 }
 
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func (r ExprResolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
+func (r Resolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
 	return r.resolve(expr, scope, map[string]Def{}, nil)
 }
 
@@ -54,7 +54,7 @@ func (r ExprResolver) Resolve(expr Expr, scope map[string]Def) (Expr, error) {
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
 // for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r ExprResolver) resolve( //nolint:funlen
+func (r Resolver) resolve( //nolint:funlen
 	expr Expr,
 	scope map[string]Def,
 	frame map[string]Def,
@@ -165,7 +165,7 @@ func (r ExprResolver) resolve( //nolint:funlen
 }
 
 // getDef checks for def in args, then in scope and returns err if expr refers no nothing.
-func (ExprResolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
+func (Resolver) getDef(ref string, args, scope map[string]Def) (Def, error) {
 	def, exist := args[ref]
 	if exist {
 		return def, nil
@@ -179,15 +179,15 @@ func (ExprResolver) getDef(ref string, args, scope map[string]Def) (Def, error) 
 	return def, nil
 }
 
-func NewDefaultResolver() ExprResolver {
-	return ExprResolver{
+func NewDefaultResolver() Resolver {
+	return Resolver{
 		validator:  Validator{},
 		comparator: NewDefaultSubtypeChecker(),
 		terminator: RecursionTerminator{},
 	}
 }
 
-func MustNewResolver(v exprValidator, c compatChecker, t recursionTerminator) ExprResolver {
+func MustNewResolver(v exprValidator, c compatChecker, t recursionTerminator) Resolver {
 	tools.NilPanic(v, c)
-	return ExprResolver{v, c, t}
+	return Resolver{v, c, t}
 }

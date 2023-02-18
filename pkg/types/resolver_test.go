@@ -479,13 +479,39 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"map": h.BaseDef(h.ParamWithNoConstr("a"), h.ParamWithNoConstr("b")),
 			}
 			return testcase{
-				expr:  h.Inst("t1", h.Inst("int"), h.Inst("str")),
-				scope: scope,
+				enabled: true,
+				expr:    h.Inst("t1", h.Inst("int"), h.Inst("str")),
+				scope:   scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes()
 				},
-				comparator: func(c *MockcompatCheckerMockRecorder) {
-					// c.Check(gomock.Any(), gomock.Any()).AnyTimes()
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "int")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
+
+					t3 := ts.NewTrace(&t1, "str")
+					t.ShouldTerminate(t3, scope).Return(false, nil)
+
+					t4 := ts.NewTrace(&t1, "vec")
+					t.ShouldTerminate(t4, scope).Return(false, nil)
+
+					t5 := ts.NewTrace(&t4, "map")
+					t.ShouldTerminate(t5, scope).Return(false, nil)
+
+					t6 := ts.NewTrace(&t5, "p1")
+					t.ShouldTerminate(t6, scope).Return(false, nil)
+
+					t7 := ts.NewTrace(&t6, "int")
+					t.ShouldTerminate(t7, scope).Return(false, nil)
+
+					t8 := ts.NewTrace(&t5, "p2")
+					t.ShouldTerminate(t8, scope).Return(false, nil)
+
+					t9 := ts.NewTrace(&t8, "str")
+					t.ShouldTerminate(t9, scope).Return(false, nil)
 				},
 				want: h.Inst(
 					"vec",
@@ -595,6 +621,16 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("t1")).Return(nil)
 					v.Validate(h.Inst("vec", h.Inst("t1"))).Return(nil)
 					v.Validate(h.Inst("t1")).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope).Return(false, nil)
+
+					t2 := ts.NewTrace(&t1, "vec")
+					t.ShouldTerminate(t2, scope).Return(false, nil)
+
+					t3 := ts.NewTrace(&t2, "t1")
+					t.ShouldTerminate(t3, scope).Return(true, nil)
 				},
 				want: h.Inst("vec", h.Inst("t1")),
 			}
