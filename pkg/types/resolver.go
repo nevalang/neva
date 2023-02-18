@@ -108,7 +108,7 @@ func (r Resolver) resolve( //nolint:funlen
 		return Expr{}, err
 	}
 
-	if def.RecursionAllowed && !def.Body.Empty() {
+	if def.IsRecursionAllowed && !def.Body.Empty() {
 		return Expr{}, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
 

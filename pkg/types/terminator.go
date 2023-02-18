@@ -32,15 +32,15 @@ func (r RecursionTerminator) shouldTerminate(cur Trace, scope map[string]Def, co
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 
-	prevDef, ok := scope[cur.prev.ref]
-	if !ok {
-		return false, fmt.Errorf("%w: %v", ErrPrevDefNotFound, cur)
+	isRecursionAllowed := false
+	if _, ok := scope[cur.prev.ref]; ok { // could not be there in case of type parameter
+		isRecursionAllowed = scope[cur.prev.ref].IsRecursionAllowed
 	}
 
 	prev := cur.prev
 	for prev != nil {
 		if prev.ref == cur.ref {
-			if prevDef.RecursionAllowed {
+			if isRecursionAllowed {
 				return true, nil
 			}
 

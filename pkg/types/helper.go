@@ -5,8 +5,8 @@ type Helper struct{}
 
 func (h Helper) BaseDefWithRecursion(params ...Param) Def {
 	return Def{
-		Params:           params,
-		RecursionAllowed: true,
+		Params:             params,
+		IsRecursionAllowed: true,
 	}
 }
 

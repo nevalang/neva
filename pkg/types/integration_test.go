@@ -68,6 +68,29 @@ func TestDefaultResolver(t *testing.T) {
 			expr:    h.Inst("t1"),
 			wantErr: ts.ErrTerminator,
 		},
+		{ // t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
+			name: "param_with_same_name_as_type_in_scope_(shadowing)",
+			scope: map[string]ts.Def{
+				"t1": h.Def( // t1<t3> = t2<t3>
+					h.Inst("t2", h.Inst("t3")),
+					h.Param("t3", ts.Expr{}),
+				),
+				"t2": h.Def( // t2<t> = t3<t>
+					h.Inst("t3", h.Inst("t")),
+					h.Param("t", ts.Expr{}),
+				),
+				"t3": h.Def( // t3<t> = vec<t>
+					h.Inst("vec", h.Inst("t")),
+					h.Param("t", ts.Expr{}),
+				),
+				"vec": h.BaseDef( // vec<t> (base type)
+					h.Param("t", ts.Expr{}),
+				),
+				"int": h.BaseDef(), // int
+			},
+			expr: h.Inst("t1", h.Inst("int")),
+			want: h.Inst("vec", h.Inst("int")),
+		},
 	}
 
 	r := ts.NewDefaultResolver()

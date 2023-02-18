@@ -379,7 +379,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				want: expr,
 			}
 		},
-		"type_param_with_same_name_as_type_in_scope_(shadowing)": func() testcase { // t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
+		"param_with_same_name_as_type_in_scope_(shadowing)": func() testcase {
+			// t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
 			scope := map[string]ts.Def{
 				"t1": h.Def( // t1<t3> = t2<t3>
 					h.Inst("t2", h.Inst("t3")),
@@ -413,6 +414,39 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("vec", h.Inst("t"))).Return(nil)
 					v.Validate(h.Inst("t")).Return(nil)
 					v.Validate(h.Inst("int")).Return(nil)
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t1 := ts.NewTrace(nil, "t1")
+					t.ShouldTerminate(t1, scope) // [t1]
+
+					t2 := ts.NewTrace(&t1, "int")
+					t.ShouldTerminate(t2, scope) // [t1, int]
+
+					t3 := ts.NewTrace(&t1, "t2")
+					t.ShouldTerminate(t3, scope) // [t1, t2]
+
+					t4 := ts.NewTrace(&t3, "t3")
+					t.ShouldTerminate(t4, scope) // [t1, t2, t3]
+
+					t5 := ts.NewTrace(&t4, "int")
+					t.ShouldTerminate(t5, scope) // [t1, t2, t3, int]
+
+					t.ShouldTerminate(t4, scope) // [t1, t2, t3]
+
+					t6 := ts.NewTrace(&t4, "t")
+					t.ShouldTerminate(t6, scope) // [t1, t2, t3, t]
+
+					t7 := ts.NewTrace(&t6, "int")
+					t.ShouldTerminate(t7, scope) // [t1, t2, t3, t, int]
+
+					t8 := ts.NewTrace(&t4, "vec")
+					t.ShouldTerminate(t8, scope) // [t1, t2, t3, vec]
+
+					t9 := ts.NewTrace(&t8, "t")
+					t.ShouldTerminate(t9, scope) // [t1, t2, t3, vec, t]
+
+					t10 := ts.NewTrace(&t9, "int")
+					t.ShouldTerminate(t10, scope) // [t1, t2, t3, vec, t, int]
 				},
 				want: h.Inst("vec", h.Inst("int")),
 			}
@@ -479,9 +513,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"map": h.BaseDef(h.ParamWithNoConstr("a"), h.ParamWithNoConstr("b")),
 			}
 			return testcase{
-				enabled: true,
-				expr:    h.Inst("t1", h.Inst("int"), h.Inst("str")),
-				scope:   scope,
+				expr:  h.Inst("t1", h.Inst("int"), h.Inst("str")),
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes()
 				},
