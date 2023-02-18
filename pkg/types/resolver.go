@@ -19,7 +19,7 @@ var (
 	ErrRecFieldUnresolved           = errors.New("can't resolve record field")
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
 	ErrValidator                    = errors.New("validator implementation must not allow empty literals")
-	ErrRecursionTerm                = errors.New("recursion terminator") // TODO use same err as compat checker
+	ErrTerminator                   = errors.New("recursion terminator")
 )
 
 // ExprResolver transforms expression it into a form where all references points to base types or to itself.
@@ -123,10 +123,9 @@ func (r ExprResolver) resolve( //nolint:funlen
 		ref:  expr.Inst.Ref,
 	}
 
-	fmt.Println(newTrace) //nolint:forbidigo
 	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
 	if err != nil {
-		return Expr{}, fmt.Errorf("%w: %v", ErrRecursionTerm, err)
+		return Expr{}, fmt.Errorf("%w: %v", ErrTerminator, err)
 	} else if shouldReturn {
 		return expr, nil // IDEA: replace recursive ref with something like `any` (like chat GPT suggested)
 	}
@@ -148,7 +147,6 @@ func (r ExprResolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
 
-		fmt.Println(resolvedArg, newTrace, resolvedConstr, newTrace)
 		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}

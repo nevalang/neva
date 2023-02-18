@@ -55,8 +55,30 @@ func TestDefaultResolver(t *testing.T) {
 				"t1": h.Def(h.Inst("t2")), // indirectly
 				"t2": h.Def(h.Inst("t1")), // refers to itself
 			},
-			wantErr: ts.ErrRecursionTerm,
+			wantErr: ts.ErrTerminator,
 		},
+		// "indirect_(5_step)_recursion_through_inst_references": func() testcase { // t1, {t1=t2, t2=t3, t3=t4, t4=t5, t5=t1}
+		// 	scope := map[string]ts.Def{
+		// 		"t1": h.Def(h.Inst("t2")),
+		// 		"t2": h.Def(h.Inst("t3")),
+		// 		"t3": h.Def(h.Inst("t4")),
+		// 		"t4": h.Def(h.Inst("t5")),
+		// 		"t5": h.Def(h.Inst("t1")),
+		// 	}
+		// 	return testcase{
+		// 		expr:  h.Inst("t1"),
+		// 		scope: scope,
+		// 		validator: func(v *MockexprValidatorMockRecorder) {
+		// 			v.Validate(h.Inst("t1")).Return(nil)
+		// 			v.Validate(h.Inst("t2")).Return(nil)
+		// 			v.Validate(h.Inst("t3")).Return(nil)
+		// 			v.Validate(h.Inst("t4")).Return(nil)
+		// 			v.Validate(h.Inst("t5")).Return(nil)
+		// 			v.Validate(h.Inst("t1")).Return(nil)
+		// 		},
+		// 		wantErr: ts.ErrIndirectRecursion,
+		// 	}
+		// },
 	}
 
 	r := ts.NewDefaultResolver()
@@ -67,7 +89,7 @@ func TestDefaultResolver(t *testing.T) {
 			t.Parallel()
 			got, err := r.Resolve(tt.expr, tt.scope)
 			assert.Equal(t, tt.want, got)
-			assert.Equal(t, tt.wantErr, err)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }

@@ -434,7 +434,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t2 := ts.NewTrace(&t1, "t")
 					t.ShouldTerminate(t2, scope).Return(false, errTest)
 				},
-				wantErr: ts.ErrRecursionTerm,
+				wantErr: ts.ErrTerminator,
 			}
 		},
 		"indirect_(2_step)_recursion_through_inst_references": func() testcase { // t1, {t1=t2, t2=t1}
@@ -460,7 +460,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t3 := ts.NewTrace(&t2, "t1")
 					t.ShouldTerminate(t3, scope).Return(false, errTest)
 				},
-				wantErr: ts.ErrRecursionTerm,
+				wantErr: ts.ErrTerminator,
 			}
 		},
 		"substitution_of_arguments": func() testcase { // t1<int, str> { t1<p1, p2> = vec<map<p1, p2>> }

@@ -10,12 +10,19 @@ var (
 	ErrPrevDefNotFound   = errors.New("prev def not found")
 	ErrIndirectRecursion = errors.New("type definition's body must not be indirectly referenced to itself")
 	ErrSwapRun           = errors.New("couldn't do test run with swapped trace")
+	ErrCounter           = errors.New("recursive calls counter limit exceeded")
 )
 
 type RecursionTerminator struct{}
 
 func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (bool, error) {
-	fmt.Println(cur)
+	return r.shouldTerminate(cur, scope, 0)
+}
+
+func (r RecursionTerminator) shouldTerminate(cur Trace, scope map[string]Def, counter int) (bool, error) {
+	if counter > 1 {
+		return false, ErrCounter
+	}
 
 	if cur.prev == nil {
 		return false, nil
@@ -30,26 +37,24 @@ func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (b
 		return false, fmt.Errorf("%w: %v", ErrPrevDefNotFound, cur)
 	}
 
-	fmt.Println(prevDef.Body)
-
-	isPrevAllowRecursion := prevDef.RecursionAllowed
-
 	prev := cur.prev
 	for prev != nil {
-		if prev.ref == cur.ref { // same ref found, that's a loop
-			if isPrevAllowRecursion { // but that's ok if prev ref allow recursion
+		if prev.ref == cur.ref {
+			if prevDef.RecursionAllowed {
 				return true, nil
 			}
 
-			// or maybe prev ref is recursive itself
-			isPrevRecursive, err := r.ShouldTerminate(r.swapTrace(cur), scope)
+			isPrevRecursive, err := r.shouldTerminate(r.getLast3AndSwap(cur), scope, counter+1)
 			if err != nil {
+				if errors.Is(err, ErrCounter) || errors.Is(err, ErrIndirectRecursion) {
+					return false, fmt.Errorf("%w: %v", ErrIndirectRecursion, cur)
+				}
 				return false, fmt.Errorf("%w: %v", ErrSwapRun, err)
 			} else if isPrevRecursive {
 				return true, nil
 			}
 
-			return false, fmt.Errorf("%w: %v", ErrIndirectRecursion, cur)
+			return false, errors.New("unknown")
 		}
 
 		prev = prev.prev
@@ -58,8 +63,8 @@ func (r RecursionTerminator) ShouldTerminate(cur Trace, scope map[string]Def) (b
 	return false, nil
 }
 
-// swapTrace turns [... a b a] into [b a b]
-func (RecursionTerminator) swapTrace(cur Trace) Trace {
+// getLast3AndSwap turns [... a b a] into [b a b]
+func (RecursionTerminator) getLast3AndSwap(cur Trace) Trace {
 	t1 := Trace{prev: nil, ref: cur.prev.ref}
 	t2 := Trace{prev: &t1, ref: cur.ref}
 	return Trace{prev: &t2, ref: cur.prev.ref}

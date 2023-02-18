@@ -6,22 +6,21 @@ import (
 )
 
 var (
-	ErrDiffKinds           = errors.New("subtype and supertype must both be lits or insts except supertype is union")
-	ErrDiffRefs            = errors.New("subtype inst must have same ref as supertype")
-	ErrArgsCount           = errors.New("subtype inst must have >= args than supertype")
-	ErrArgNotSubtype       = errors.New("subtype arg must be subtype of corresponding supertype arg")
-	ErrLitArrSize          = errors.New("subtype arr size must be >= supertype")
-	ErrArrDiffType         = errors.New("subtype arr must have same type as supertype")
-	ErrBigEnum             = errors.New("subtype enum must be <= supertype enum")
-	ErrEnumEl              = errors.New("subtype enum el doesn't match supertype")
-	ErrRecLen              = errors.New("subtype record must contain >= fields than supertype")
-	ErrRecField            = errors.New("subtype rec field must be subtype of corresponding supertype field")
-	ErrRecNoField          = errors.New("subtype rec is missing field of supertype")
-	ErrUnion               = errors.New("subtype must be subtype of supertype union")
-	ErrUnionsLen           = errors.New("subtype union must be <= supertype union")
-	ErrUnions              = errors.New("subtype union el must be subtype of supertype union")
-	ErrDiffLitTypes        = errors.New("subtype and supertype lits must be of the same type")
-	ErrRecursionTerminator = errors.New("recursion terminator")
+	ErrDiffKinds     = errors.New("subtype and supertype must both be lits or insts except supertype is union")
+	ErrDiffRefs      = errors.New("subtype inst must have same ref as supertype")
+	ErrArgsCount     = errors.New("subtype inst must have >= args than supertype")
+	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
+	ErrLitArrSize    = errors.New("subtype arr size must be >= supertype")
+	ErrArrDiffType   = errors.New("subtype arr must have same type as supertype")
+	ErrBigEnum       = errors.New("subtype enum must be <= supertype enum")
+	ErrEnumEl        = errors.New("subtype enum el doesn't match supertype")
+	ErrRecLen        = errors.New("subtype record must contain >= fields than supertype")
+	ErrRecField      = errors.New("subtype rec field must be subtype of corresponding supertype field")
+	ErrRecNoField    = errors.New("subtype rec is missing field of supertype")
+	ErrUnion         = errors.New("subtype must be subtype of supertype union")
+	ErrUnionsLen     = errors.New("subtype union must be <= supertype union")
+	ErrUnions        = errors.New("subtype union el must be subtype of supertype union")
+	ErrDiffLitTypes  = errors.New("subtype and supertype lits must be of the same type")
 )
 
 type CompatChecker struct {
@@ -49,12 +48,12 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	if isSuperTypeInst { //nolint:nestif // expr and constr are both insts
 		isSubTypeRecursive, err := s.recursionChecker.ShouldTerminate(subtypeTrace, scope)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrRecursionTerminator, err)
+			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
 
 		isSuperTypeRecursive, err := s.recursionChecker.ShouldTerminate(supertypeTrace, scope)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrRecursionTerminator, err)
+			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
 
 		if isSubTypeRecursive && isSuperTypeRecursive { // e.g. t1 and t2 (with t1=vec<t1> and t2=vec<t2>)
