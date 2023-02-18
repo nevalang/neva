@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +24,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: ts.NewTrace(nil, "t1"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    false,
 			wantErr: nil,
@@ -34,7 +34,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: h.Trace("t1", "vec", "t1"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,
@@ -44,12 +44,12 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			trace: h.Trace("vec", "t1", "vec"),
 			scope: map[string]ts.Def{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithoutConstr("t")),
+				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,
 		},
-		{ // t1, {t1=t2, t2=t1}
+		{ // [t1 t2 t1], {t1=t2, t2=t1}
 			enabled: true,
 			name:    "invalid indirect recursion",
 			trace:   h.Trace("t1", "t2", "t1"),
@@ -60,28 +60,6 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    false,
 			wantErr: ts.ErrIndirectRecursion,
 		},
-		// "indirect_(5_step)_recursion_through_inst_references": func() testcase { // t1, {t1=t2, t2=t3, t3=t4, t4=t5, t5=t1}
-		// 	scope := map[string]ts.Def{
-		// 		"t1": h.Def(h.Inst("t2")),
-		// 		"t2": h.Def(h.Inst("t3")),
-		// 		"t3": h.Def(h.Inst("t4")),
-		// 		"t4": h.Def(h.Inst("t5")),
-		// 		"t5": h.Def(h.Inst("t1")),
-		// 	}
-		// 	return testcase{
-		// 		expr:  h.Inst("t1"),
-		// 		scope: scope,
-		// 		validator: func(v *MockexprValidatorMockRecorder) {
-		// 			v.Validate(h.Inst("t1")).Return(nil)
-		// 			v.Validate(h.Inst("t2")).Return(nil)
-		// 			v.Validate(h.Inst("t3")).Return(nil)
-		// 			v.Validate(h.Inst("t4")).Return(nil)
-		// 			v.Validate(h.Inst("t5")).Return(nil)
-		// 			v.Validate(h.Inst("t1")).Return(nil)
-		// 		},
-		// 		wantErr: ts.ErrIndirectRecursion,
-		// 	}
-		// },
 	}
 
 	r := ts.RecursionTerminator{}
@@ -96,7 +74,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			t.Parallel()
 			got, err := r.ShouldTerminate(tt.trace, tt.scope)
 			assert.Equal(t, tt.want, got)
-			assert.Equal(t, tt.wantErr, err)
+			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
 }

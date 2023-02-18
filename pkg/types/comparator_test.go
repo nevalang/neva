@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )

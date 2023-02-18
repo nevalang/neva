@@ -3,43 +3,43 @@ package types_test
 import (
 	"testing"
 
-	"github.com/emil14/neva/pkg/types"
 	ts "github.com/emil14/neva/pkg/types"
-	h "github.com/emil14/neva/pkg/types/helper"
 	"github.com/stretchr/testify/require"
 )
+
+var h ts.Helper
 
 func TestLiteralExpr_Empty(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name string
-		lit  types.LitExpr
+		lit  ts.LitExpr
 		want bool
 	}{
 		{
 			name: "all 4 fields: arr, enum, union and rec are empty",
-			lit:  types.LitExpr{nil, nil, nil, nil},
+			lit:  ts.LitExpr{nil, nil, nil, nil},
 			want: true,
 		},
 		{
 			name: "arr not empty",
-			lit:  types.LitExpr{&types.ArrLit{}, nil, nil, nil},
+			lit:  ts.LitExpr{&ts.ArrLit{}, nil, nil, nil},
 			want: false,
 		},
 		{
 			name: "rec not empty",
-			lit:  types.LitExpr{nil, map[string]types.Expr{}, nil, nil},
+			lit:  ts.LitExpr{nil, map[string]ts.Expr{}, nil, nil},
 			want: false,
 		},
 		{
 			name: "enum not empty",
-			lit:  types.LitExpr{nil, nil, []string{}, nil},
+			lit:  ts.LitExpr{nil, nil, []string{}, nil},
 			want: false,
 		},
 		{
 			name: "union not empty",
-			lit:  types.LitExpr{nil, nil, nil, []types.Expr{}},
+			lit:  ts.LitExpr{nil, nil, nil, []ts.Expr{}},
 			want: false,
 		},
 	}
@@ -58,33 +58,33 @@ func TestLiteralExpr_Type(t *testing.T) {
 
 	tests := []struct {
 		name string
-		lit  types.LitExpr
-		want types.LiteralType
+		lit  ts.LitExpr
+		want ts.LiteralType
 	}{
 		{
 			name: "unknown",
-			lit:  types.LitExpr{nil, nil, nil, nil},
-			want: types.EmptyLitType,
+			lit:  ts.LitExpr{nil, nil, nil, nil},
+			want: ts.EmptyLitType,
 		},
 		{
 			name: "arr",
-			lit:  types.LitExpr{&types.ArrLit{}, nil, nil, nil},
-			want: types.ArrLitType,
+			lit:  ts.LitExpr{&ts.ArrLit{}, nil, nil, nil},
+			want: ts.ArrLitType,
 		},
 		{
 			name: "rec",
-			lit:  types.LitExpr{nil, map[string]types.Expr{}, nil, nil},
-			want: types.RecLitType,
+			lit:  ts.LitExpr{nil, map[string]ts.Expr{}, nil, nil},
+			want: ts.RecLitType,
 		},
 		{
 			name: "enum",
-			lit:  types.LitExpr{nil, nil, []string{}, nil},
-			want: types.EnumLitType,
+			lit:  ts.LitExpr{nil, nil, []string{}, nil},
+			want: ts.EnumLitType,
 		},
 		{
 			name: "union",
-			lit:  types.LitExpr{nil, nil, nil, []types.Expr{}},
-			want: types.UnionLitType,
+			lit:  ts.LitExpr{nil, nil, nil, []ts.Expr{}},
+			want: ts.UnionLitType,
 		},
 	}
 
@@ -102,12 +102,12 @@ func TestInstExpr_Empty(t *testing.T) {
 
 	tests := []struct {
 		name string
-		inst types.InstExpr
+		inst ts.InstExpr
 		want bool
 	}{
 		{
 			name: "default inst (empty ref and nil args)",
-			inst: types.InstExpr{
+			inst: ts.InstExpr{
 				Ref:  "",
 				Args: nil,
 			},
@@ -115,25 +115,25 @@ func TestInstExpr_Empty(t *testing.T) {
 		},
 		{
 			name: "empty ref and empty list args",
-			inst: types.InstExpr{
+			inst: ts.InstExpr{
 				Ref:  "",
-				Args: []types.Expr{},
+				Args: []ts.Expr{},
 			},
 			want: true,
 		},
 		{
 			name: "empty ref and non empty list args",
-			inst: types.InstExpr{
+			inst: ts.InstExpr{
 				Ref:  "",
-				Args: []types.Expr{{}}, // content doesn't matter here
+				Args: []ts.Expr{{}}, // content doesn't matter here
 			},
 			want: false,
 		},
 		{
 			name: "non-empty ref and non empty list args",
-			inst: types.InstExpr{
+			inst: ts.InstExpr{
 				Ref:  "t",
-				Args: []types.Expr{{}},
+				Args: []ts.Expr{{}},
 			},
 			want: false,
 		},
