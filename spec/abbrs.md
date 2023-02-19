@@ -1,12 +1,14 @@
+# Abbriviations
+
 - expr - expression
 - lit - (type) literal expression
 - inst - (type) instantiation expression
-- compat - compatibility/compatable (type expressions)
+- compat - (type) compatibility
 - enum - enumeration
 - union - untagged union (sum-type)
 - arr - array (static array)
 - vec - vector (slice, dynamic array)
-- rec - record (structure, tuple with fields, product type)
+- rec - record (structure, product type)
 - int - integer digit
 - i8, i16, i32, i64 - N bit integer
 - float - floating point digit
@@ -23,3 +25,5 @@
 - k - key
 - v - value
 - t - type
+- ssi - SubStreamItem <!-- sure?>
+- err - error

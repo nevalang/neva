@@ -8,18 +8,17 @@ import (
 )
 
 var (
-	ErrInvalidExpr                  = errors.New("expression must be valid in order to be resolved")
-	ErrUndefinedRef                 = errors.New("expression refers to type that is not presented in the scope and args")
-	ErrInstArgsLen                  = errors.New("inst must have same number of arguments as def has parameters")
-	ErrIncompatArg                  = errors.New("argument is not subtype of the parameter's contraint")
-	ErrUnresolvedArg                = errors.New("can't resolve argument")
-	ErrConstr                       = errors.New("can't resolve constraint")
-	ErrArrType                      = errors.New("could not resolve array type")
-	ErrUnionUnresolvedEl            = errors.New("can't resolve union element")
-	ErrRecFieldUnresolved           = errors.New("can't resolve record field")
-	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
-	ErrValidator                    = errors.New("validator implementation must not allow empty literals")
-	ErrTerminator                   = errors.New("recursion terminator")
+	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
+	ErrUndefinedRef       = errors.New("expression refers to type that is not presented in the scope and args")
+	ErrInstArgsLen        = errors.New("inst must have same number of arguments as def has parameters")
+	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
+	ErrUnresolvedArg      = errors.New("can't resolve argument")
+	ErrConstr             = errors.New("can't resolve constraint")
+	ErrArrType            = errors.New("could not resolve array type")
+	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
+	ErrRecFieldUnresolved = errors.New("can't resolve record field")
+	ErrValidator          = errors.New("validator implementation must not allow empty literals")
+	ErrTerminator         = errors.New("recursion terminator")
 )
 
 // Resolver transforms expression it into a form where all references it contains points to resolved expressions.
@@ -32,13 +31,14 @@ type Resolver struct {
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
 type (
 	exprValidator interface {
-		Validate(Expr) error // non-recursive validation of an expression
+		Validate(Expr) error
+		ValidateDef(def Def) error
 	}
 	compatChecker interface {
-		Check(Expr, Trace, Expr, Trace, map[string]Def) error // error should be nil if first expr is subtype of second
+		Check(Expr, Trace, Expr, Trace, map[string]Def) error
 	}
 	recursionTerminator interface {
-		ShouldTerminate(Trace, map[string]Def) (bool, error) // should true, nil to terminate resolving
+		ShouldTerminate(Trace, map[string]Def) (bool, error)
 	}
 )
 
@@ -108,8 +108,8 @@ func (r Resolver) resolve( //nolint:funlen
 		return Expr{}, err
 	}
 
-	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
-		return Expr{}, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
+	if err := r.validator.ValidateDef(def); err != nil {
+		return Expr{}, errors.New("invalid def")
 	}
 
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
@@ -137,11 +137,14 @@ func (r Resolver) resolve( //nolint:funlen
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
+
 		newFrame[param.Name] = Def{BodyExpr: resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
+
 		if param.Constr.Empty() {
 			continue
 		}
+
 		resolvedConstr, err := r.resolve(param.Constr, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
