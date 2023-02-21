@@ -1,6 +1,7 @@
 package types
 
-// Helper is just a namespace for helper functions to avoid conflicts with entity types
+// Helper is just a namespace for helper functions to avoid conflicts with entity types.
+// It's a stateless type and it's safe to share it between goroutines.
 type Helper struct{}
 
 func (h Helper) BaseDefWithRecursion(params ...Param) Def {
@@ -17,8 +18,8 @@ func (h Helper) BaseDef(params ...Param) Def {
 
 func (h Helper) Def(body Expr, params ...Param) Def {
 	return Def{
-		Params: params,
-		BodyExpr:   body,
+		Params:   params,
+		BodyExpr: body,
 	}
 }
 

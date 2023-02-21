@@ -14,7 +14,7 @@ type Compiler[T any] struct {
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, src.Prog) error
+		Analyze(context.Context, src.Prog) (src.Prog, error)
 	}
 	Optimizer interface {
 		Optimize(context.Context, src.Prog) (src.Prog, error)
@@ -24,12 +24,13 @@ type (
 	}
 )
 
-func (c Compiler[T]) Compile(ctx context.Context, prog src.Prog) (*T, error) {
-	if err := c.analyzer.Analyze(ctx, prog); err != nil {
+func (c Compiler[T]) Compile(ctx context.Context, resolvedProg src.Prog) (*T, error) {
+	resolvedProg, err := c.analyzer.Analyze(ctx, resolvedProg)
+	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	target, err := c.synthesizer.Synthesize(ctx, prog)
+	target, err := c.synthesizer.Synthesize(ctx, resolvedProg)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

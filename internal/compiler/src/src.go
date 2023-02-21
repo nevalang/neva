@@ -3,7 +3,7 @@ package src
 import ts "github.com/emil14/neva/pkg/types"
 
 type Prog struct {
-	Pkgs    map[string]Pkg // what about versions? what about file structure?
+	Pkgs    map[string]Pkg // what about versions? files?
 	RootPkg string
 }
 
@@ -62,8 +62,13 @@ type EntityRef struct {
 }
 
 type Msg struct {
-	Type ts.Expr
-	// Value?
+	Type  ts.Expr
+	Ref   EntityRef
+	Value MsgValue
+}
+
+type MsgValue struct {
+	Vec []Msg
 }
 
 type IO struct {

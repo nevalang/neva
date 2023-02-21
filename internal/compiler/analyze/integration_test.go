@@ -7,9 +7,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/emil14/neva/internal/compiler/analyze"
 	"github.com/emil14/neva/internal/compiler/src"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultResolver(t *testing.T) {
@@ -37,7 +38,7 @@ func TestDefaultResolver(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := a.Analyze(context.Background(), tt.prog)
+			_, err := a.Analyze(context.Background(), tt.prog)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}
