@@ -15,10 +15,7 @@ type Analyzer struct {
 
 type (
 	TypeResolver interface {
-		Resolve(ts.Expr, TypeEnv) (ts.Expr, error)
-	}
-	TypeEnv interface {
-		Get(src.EntityRef) (ts.Def, error)
+		Resolve(ts.Expr, ts.Scope) (ts.Expr, error)
 	}
 )
 
@@ -39,6 +36,10 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 
 	if rootPkg.RootComponent == "" { // is executable
 		panic("root pkg must have root component")
+	}
+
+	scope := Scope{
+		pkgs: prog.Pkgs,
 	}
 
 	resolvedPkgs := make(map[string]src.Pkg, len(prog.Pkgs))
@@ -237,11 +238,16 @@ func (a Analyzer) analyzeMsg(msg src.Msg) (src.Msg, map[src.EntityRef]struct{}, 
 
 func (a Analyzer) analyzeType(def ts.Def) (ts.Def, map[src.EntityRef]struct{}, error) {
 	// arg=constr
-	
+
+	// normalization needed
+
+	testArgs := a.getTestExprArgs(def)
 
 	expr := ts.Expr{
-		Lit:  ts.LitExpr{},
-		Inst: ts.InstExpr{},
+		Inst: ts.InstExpr{
+			Ref:  "",
+			Args: testArgs,
+		},
 	}
 
 	a.Resolver.Resolve(expr, nil)
@@ -249,7 +255,7 @@ func (a Analyzer) analyzeType(def ts.Def) (ts.Def, map[src.EntityRef]struct{}, e
 	return ts.Def{}, nil, nil
 }
 
-func (Analyzer) newMethod(def ts.Def) []ts.Expr {
+func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
 	args := make([]ts.Expr, len(def.Params))
 	for _, param := range def.Params {
 		if param.Constr.Empty() {

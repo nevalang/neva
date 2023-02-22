@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	ts "github.com/emil14/neva/pkg/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	ts "github.com/emil14/neva/pkg/types"
 )
 
 var errTest = errors.New("")
@@ -43,7 +43,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr).Return(nil)
 				},
 				scope:   map[string]ts.Def{},
-				wantErr: ts.ErrUndefinedRef,
+				wantErr: ts.ErrDefNotFound,
 			}
 		},
 		"args_<_params": func() testcase { // expr = vec<>, scope = { vec<t> = vec }
@@ -134,7 +134,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t2 := ts.NewTrace(&t1, "int")
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 				},
-				wantErr: ts.ErrUndefinedRef,
+				wantErr: ts.ErrDefNotFound,
 			}
 		},
 		"constr_undefined_ref": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
