@@ -38,9 +38,9 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 		panic("root pkg must have root component")
 	}
 
-	scope := Scope{
-		pkgs: prog.Pkgs,
-	}
+	// scope := Scope{
+	// 	pkgs: prog.Pkgs,
+	// }
 
 	resolvedPkgs := make(map[string]src.Pkg, len(prog.Pkgs))
 	for pkgName := range prog.Pkgs { // we know main component must be there
@@ -74,7 +74,7 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 		panic("package must have exported entities if it doesn't have a root component")
 	}
 
-	imports, err := a.getPkgImports(pkg.Imports, pkgs)
+	imports, err := a.getImports(pkg.Imports, pkgs)
 	if err != nil {
 		panic(err)
 	} // at this we know all pkg's imports points to existing pkgs
@@ -138,10 +138,10 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[
 
 	for entityName, entity := range pkg.Entities {
 		if entity.Exported || entityName == pkg.RootComponent {
-			entitiesUsedByPkg[src.EntityRef{Name: entityName}] = struct{}{}
+			entitiesUsedByPkg[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
 		}
 
-		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entity, imports)
+		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, pkg.Entities, imports)
 		if err != nil {
 			panic(err)
 		}
@@ -156,8 +156,8 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[
 	return resolvedPkgEntities, entitiesUsedByPkg, nil
 }
 
-// getPkgImports maps aliases to packages
-func (Analyzer) getPkgImports(pkgImports map[string]string, pkgs map[string]src.Pkg) (map[string]src.Pkg, error) {
+// getImports maps aliases to packages
+func (Analyzer) getImports(pkgImports map[string]string, pkgs map[string]src.Pkg) (map[string]src.Pkg, error) {
 	imports := make(map[string]src.Pkg, len(pkgImports))
 	for alias, pkgRef := range pkgImports {
 		importedPkg, ok := pkgs[pkgRef]
@@ -195,22 +195,34 @@ func (a Analyzer) analyzePkgWithRootComponent(pkg src.Pkg, pkgs map[string]src.P
 	return nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, imports map[string]src.Pkg) (
+func (a Analyzer) analyzeEntity(
+	entityName string,
+	entities map[string]src.Entity,
+	imports map[string]src.Pkg,
+) (
 	src.Entity,
 	map[src.EntityRef]struct{},
 	error,
 ) { //nolint:unparam
+	entity := entities[entityName]
+
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:
-		resolvedType, referencedTypes, err := a.analyzeType(entity.Type)
+		builtins := a.builtinTypes()
+		resolvedDef, referencedDefs, err := a.analyzeType(
+			entityName,
+			imports,
+			a.getTypes(entities), // TODO move out to reduce number of calls
+			builtins,
+		) // TODO move builtins
 		if err != nil {
 			return src.Entity{}, nil, err
 		}
 		return src.Entity{
-			Type:     resolvedType,
+			Type:     resolvedDef,
 			Kind:     src.TypeEntity,
 			Exported: entity.Exported,
-		}, referencedTypes, nil
+		}, referencedDefs, nil
 	case src.MsgEntity:
 		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg)
 		if err != nil {
@@ -232,31 +244,61 @@ func (a Analyzer) analyzeEntity(entity src.Entity, imports map[string]src.Pkg) (
 	return src.Entity{}, map[src.EntityRef]struct{}{}, nil
 }
 
+func (Analyzer) builtinTypes() map[string]ts.Def { // TODO move?
+	return map[string]ts.Def{
+		"int": h.BaseDef(),
+		"vec": h.BaseDef(h.ParamWithNoConstr("t")),
+	}
+}
+
+func (a Analyzer) getTypes(entities map[string]src.Entity) map[string]ts.Def {
+	types := make(map[string]ts.Def, len(entities))
+	for name, entity := range entities {
+		if entity.Kind == src.TypeEntity {
+			types[name] = entity.Type
+		}
+	}
+	return types
+}
+
 func (a Analyzer) analyzeMsg(msg src.Msg) (src.Msg, map[src.EntityRef]struct{}, error) {
 	return src.Msg{}, nil, nil
 }
 
-func (a Analyzer) analyzeType(def ts.Def) (ts.Def, map[src.EntityRef]struct{}, error) {
-	// arg=constr
+func (a Analyzer) analyzeType(
+	typeName string,
+	imports map[string]src.Pkg,
+	localTypes, builtinTypes map[string]ts.Def,
+) (
+	ts.Def,
+	map[src.EntityRef]struct{},
+	error,
+) {
+	def := localTypes[typeName]
 
-	// normalization needed
-
-	testArgs := a.getTestExprArgs(def)
-
-	expr := ts.Expr{
+	testExpr := ts.Expr{
 		Inst: ts.InstExpr{
-			Ref:  "",
-			Args: testArgs,
+			Ref:  typeName,
+			Args: a.getTestExprArgs(def),
 		},
 	}
 
-	a.Resolver.Resolve(expr, nil)
+	scope := Scope{
+		imports:  imports,
+		local:    localTypes,
+		builtins: builtinTypes,
+	}
 
-	return ts.Def{}, nil, nil
+	_, err := a.Resolver.Resolve(testExpr, scope) // TODO return simplified defs (type t1 pkg1.t0<t0> // t1<int> -> vec<int>)
+	if err != nil {
+		return ts.Def{}, nil, err
+	}
+
+	return def, nil, nil
 }
 
 func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
-	args := make([]ts.Expr, len(def.Params))
+	args := make([]ts.Expr, 0, len(def.Params))
 	for _, param := range def.Params {
 		if param.Constr.Empty() {
 			args = append(args, h.Inst("int"))
@@ -307,97 +349,10 @@ func (a Analyzer) analyzeNodes(map[string]src.Node) error {
 	return nil
 }
 
+// Makes sure that:
+// All ports are used;
+// All nodes are used;
+// All nodes are known;
 func (a Analyzer) analyzeNet([]src.Connection) error {
-	return nil
-}
-
-// analyzeRootComponent checks root-component-specific requirements:
-// Has only one type parameter without constraint;
-// Doesn't have any outports;
-// Has one not-array inport named `sig` that refers to that single type-parameter;
-// Has at least one node (non-root components can have no nodes to implement just routing);
-// All nodes has no static inports or references to anything but components (reason why pkg and pkgs needed);
-func (a Analyzer) analyzeRootComponent(rootComp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen,unparam,lll
-	if len(rootComp.TypeParams) != 1 {
-		panic("root component must have one type parameter")
-	}
-
-	typeParam := rootComp.TypeParams[0]
-
-	if !typeParam.Constr.Empty() {
-		panic("type parameter of root component must not have constraint")
-	}
-
-	if err := a.analyzeRootComponentIO(rootComp.IO, typeParam); err != nil {
-		return err
-	}
-
-	if err := a.analyzeRootComponentNodes(rootComp.Nodes, pkg, pkgs); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (Analyzer) analyzeRootComponentIO(io src.IO, typeParam ts.Param) error {
-	if len(io.Out) != 0 {
-		panic("root component can't have outports")
-	}
-
-	if len(io.In) != 1 {
-		panic("root component must have 1 inport")
-	}
-
-	sigInport, ok := io.In["sig"]
-	if !ok {
-		panic("root component must have 'sig' inport")
-	}
-
-	if sigInport.IsArr {
-		panic("sig inport of root component can't be array port")
-	}
-
-	if !sigInport.Type.Lit.Empty() {
-		panic("sig inport of root component can't have literal as type")
-	}
-
-	if sigInport.Type.Inst.Ref != typeParam.Name {
-		panic("sig inport of root component must refer to type parameter")
-	}
-
-	return nil
-}
-
-func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs map[string]src.Pkg) error {
-	if len(nodes) == 0 {
-		panic("component must have nodes")
-	}
-
-	for _, node := range nodes {
-		if len(node.StaticInports) != 0 {
-			panic("root component can't have static inports")
-		}
-
-		var pkgWithEntity src.Pkg
-		if node.Instance.Ref.Pkg != "" {
-			p, ok := pkgs[node.Instance.Ref.Pkg]
-			if !ok {
-				panic("pkg not found")
-			}
-			pkgWithEntity = p
-		} else {
-			pkgWithEntity = pkg
-		}
-
-		entity, ok := pkgWithEntity.Entities[node.Instance.Ref.Name]
-		panic("entity not found")
-		if !ok {
-		}
-
-		if entity.Kind != src.ComponentEntity {
-			panic("root component nodes can only refer to other components")
-		}
-	}
-
 	return nil
 }

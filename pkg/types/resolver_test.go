@@ -43,7 +43,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr).Return(nil)
 				},
 				scope:   map[string]ts.Def{},
-				wantErr: ts.ErrDefNotFound,
+				wantErr: ts.ErrScope,
 			}
 		},
 		"args_<_params": func() testcase { // expr = vec<>, scope = { vec<t> = vec }
@@ -134,7 +134,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t2 := ts.NewTrace(&t1, "int")
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 				},
-				wantErr: ts.ErrDefNotFound,
+				wantErr: ts.ErrScope,
 			}
 		},
 		"constr_undefined_ref": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }

@@ -37,7 +37,7 @@ func (s CompatChecker) Check( //nolint:funlen,gocognit,gocyclo
 	subtypeTrace Trace,
 	supertype Expr,
 	supertypeTrace Trace,
-	scope map[string]Def,
+	scope Scope,
 ) error {
 	isSuperTypeInst := supertype.Lit.Empty()
 	diffKinds := subtype.Lit.Empty() != isSuperTypeInst

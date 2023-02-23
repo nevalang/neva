@@ -15,11 +15,11 @@ var (
 
 type Terminator struct{}
 
-func (r Terminator) ShouldTerminate(cur Trace, scope map[string]Def) (bool, error) {
+func (r Terminator) ShouldTerminate(cur Trace, scope Scope) (bool, error) {
 	return r.shouldTerminate(cur, scope, 0)
 }
 
-func (r Terminator) shouldTerminate(cur Trace, scope map[string]Def, counter int) (bool, error) {
+func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, error) {
 	if counter > 1 {
 		return false, ErrCounter
 	}
@@ -33,8 +33,8 @@ func (r Terminator) shouldTerminate(cur Trace, scope map[string]Def, counter int
 	}
 
 	isRecursionAllowed := false
-	if _, ok := scope[cur.prev.ref]; ok { // could not be there in case of type parameter
-		isRecursionAllowed = scope[cur.prev.ref].IsRecursionAllowed
+	if prevRef, err := scope.Get(cur.prev.ref); err == nil { // TODO refactor to use errors.Is(notfound)
+		isRecursionAllowed = prevRef.IsRecursionAllowed
 	}
 
 	prev := cur.prev
