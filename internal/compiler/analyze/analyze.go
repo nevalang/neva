@@ -44,16 +44,12 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 		panic("root pkg not found")
 	}
 
-	if rootPkg.RootComponent == "" { // is executable
+	if rootPkg.RootComponent == "" {
 		panic("root pkg must have root component")
 	}
 
-	// scope := Scope{
-	// 	pkgs: prog.Pkgs,
-	// }
-
 	resolvedPkgs := make(map[string]src.Pkg, len(prog.Pkgs))
-	for pkgName := range prog.Pkgs { // we know main component must be there
+	for pkgName := range prog.Pkgs {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
 			return src.Prog{}, fmt.Errorf("%w: pkg name %v, err %v", ErrAnalyzePkg, pkgName, err)

@@ -15,7 +15,6 @@ type Scope struct {
 	visited         map[src.EntityRef]struct{}
 }
 
-// Get returns type definitions by reference. Reference must be src.EntityRef
 func (s Scope) Get(ref string) (ts.Def, error) {
 	var entityRef src.EntityRef
 

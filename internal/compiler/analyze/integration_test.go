@@ -14,6 +14,8 @@ import (
 	ts "github.com/emil14/neva/pkg/types"
 )
 
+var h src.Helper
+
 func TestDefaultResolver(t *testing.T) {
 	t.Parallel()
 
@@ -23,8 +25,6 @@ func TestDefaultResolver(t *testing.T) {
 		wantErr error
 	}
 
-	var h ts.Helper
-
 	tests := []testcase{
 		{
 			name: "",
@@ -32,11 +32,13 @@ func TestDefaultResolver(t *testing.T) {
 				Pkgs: map[string]src.Pkg{
 					"pkg_2": {
 						Entities: map[string]src.Entity{
-							"t1": {
-								Exported: true,
-								Kind:     src.TypeEntity,
-								Type:     h.Def(h.Inst("vec", h.Inst("a")), h.ParamWithNoConstr("a")), // type t1<a> = vec<a>
-							},
+							"t1": h.TypeEntity(
+								true,
+								h.Def( // type t1<a> = vec<a>
+									h.Inst("vec", h.Inst("a")),
+									h.ParamWithNoConstr("a"),
+								),
+							),
 							"c1": {
 								Exported: true,
 								Kind:     src.ComponentEntity,
@@ -45,40 +47,24 @@ func TestDefaultResolver(t *testing.T) {
 						RootComponent: "",
 					},
 					"pkg_1": {
-						Imports: map[string]string{
-							"pkg_2": "pkg_2",
-						},
+						Imports: h.Imports("pkg_2"),
 						Entities: map[string]src.Entity{
-							"t1": {
-								Exported: true,
-								Kind:     src.TypeEntity,
-								Type:     h.Def(h.Inst("pkg_2.t1", h.Inst("int"))), // type t1 = pkg_2.t1<int>
-							},
-							"c1": {
-								Kind: src.ComponentEntity,
-								Component: src.Component{
-									TypeParams: []ts.Param{
-										h.ParamWithNoConstr("t"),
-									},
-									IO: src.IO{
-										In: map[string]src.Port{
-											"sig": {
-												Type: h.Inst("t"),
-											},
-										},
-									},
-									Nodes: map[string]src.Node{
-										"n1": {
-											Instance: src.Instance{
-												Ref: src.EntityRef{
-													Pkg:  "pkg_1",
-													Name: "c1",
-												},
-											},
+							"t1": h.TypeEntity(
+								true,
+								h.Def( // type t1 = pkg_2.t1<int>
+									h.Inst("pkg_2.t1", h.Inst("int")),
+								),
+							),
+							"c1": h.RootComponentEntity(map[string]src.Node{
+								"n1": {
+									Instance: src.Instance{
+										Ref: src.EntityRef{
+											Pkg:  "pkg_1",
+											Name: "c1",
 										},
 									},
 								},
-							},
+							}),
 						},
 						RootComponent: "c1",
 					},
