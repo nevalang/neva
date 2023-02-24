@@ -30,7 +30,7 @@ func TestDefaultResolver(t *testing.T) {
 			name: "",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
-					"pkg_1": {
+					"pkg_2": {
 						Entities: map[string]src.Entity{
 							"t1": {
 								Exported: true,
@@ -44,15 +44,15 @@ func TestDefaultResolver(t *testing.T) {
 						},
 						RootComponent: "",
 					},
-					"pkg_2": {
+					"pkg_1": {
 						Imports: map[string]string{
-							"pkg_1": "pkg_1",
+							"pkg_2": "pkg_2",
 						},
 						Entities: map[string]src.Entity{
 							"t1": {
 								Exported: true,
 								Kind:     src.TypeEntity,
-								Type:     h.Def(h.Inst("pkg_1.t1", h.Inst("int"))), // type t1 = pkg_1.t1<int>
+								Type:     h.Def(h.Inst("pkg_2.t1", h.Inst("int"))), // type t1 = pkg_2.t1<int>
 							},
 							"c1": {
 								Kind: src.ComponentEntity,
@@ -83,7 +83,7 @@ func TestDefaultResolver(t *testing.T) {
 						RootComponent: "c1",
 					},
 				},
-				RootPkg: "pkg_2",
+				RootPkg: "pkg_1",
 			},
 			wantErr: nil,
 		},

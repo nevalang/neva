@@ -12,6 +12,7 @@ import (
 type Scope struct {
 	imports         map[string]src.Pkg
 	local, builtins map[string]ts.Def
+	visited         map[src.EntityRef]struct{}
 }
 
 // Get returns type definitions by reference. Reference must be src.EntityRef
@@ -57,6 +58,8 @@ func (s Scope) Get(ref string) (ts.Def, error) {
 	if !entity.Exported {
 		return ts.Def{}, errors.New("referenced entity not exported")
 	}
+
+	s.visited[entityRef] = struct{}{}
 
 	return entity.Type, nil
 }

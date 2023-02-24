@@ -2,9 +2,19 @@ package analyze
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/src"
 	ts "github.com/emil14/neva/pkg/types"
+)
+
+var (
+	ErrAnalyzePkg    = errors.New("analyze package")
+	ErrAnalyzeUsed   = errors.New("analyze used")
+	ErrUnusedImport  = errors.New("unused import")
+	ErrAnalyzeEntity = errors.New("analyze entity")
+	ErrUnusedEntity  = errors.New("unused entity")
 )
 
 var h ts.Helper
@@ -46,7 +56,7 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 	for pkgName := range prog.Pkgs { // we know main component must be there
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
-			panic(err)
+			return src.Prog{}, fmt.Errorf("%w: pkg name %v, err %v", ErrAnalyzePkg, pkgName, err)
 		}
 		resolvedPkgs[pkgName] = resolvedPkg
 	}
@@ -79,13 +89,13 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 		panic(err)
 	} // at this we know all pkg's imports points to existing pkgs
 
-	resolvedEntities, entitiesUsedByPkg, err := a.analyzeEntities(pkg, imports)
+	resolvedEntities, allUsedEntities, err := a.analyzeEntities(pkg, imports)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := a.analyzeUsed(pkg, entitiesUsedByPkg); err != nil {
-		panic(err)
+	if err := a.analyzeUsed(pkg, allUsedEntities); err != nil {
+		return src.Pkg{}, fmt.Errorf("%w: %v", ErrAnalyzeUsed, err)
 	}
 
 	return src.Pkg{
@@ -109,7 +119,7 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 	usedImports := map[string]struct{}{}
 	usedLocalEntities := map[string]struct{}{}
 
-	for ref := range usedEntities {
+	for ref := range usedEntities { // FIXME no pkg_2.*
 		if ref.Pkg == "" {
 			usedLocalEntities[ref.Name] = struct{}{}
 		} else {
@@ -119,13 +129,13 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 
 	for alias := range pkg.Imports {
 		if _, ok := usedImports[alias]; !ok {
-			panic("unused imports")
+			return fmt.Errorf("%w: %v", ErrUnusedImport, alias)
 		}
 	}
 
 	for entityName := range pkg.Entities {
 		if _, ok := usedLocalEntities[entityName]; !ok {
-			panic("unused local entity")
+			return fmt.Errorf("%w: %v", ErrUnusedEntity, entityName)
 		}
 	}
 
@@ -134,26 +144,26 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 
 func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
 	resolvedPkgEntities := make(map[string]src.Entity, len(pkg.Entities))
-	entitiesUsedByPkg := map[src.EntityRef]struct{}{} // both local and imported
+	allUsedEntities := map[src.EntityRef]struct{}{} // both local and imported
 
 	for entityName, entity := range pkg.Entities {
 		if entity.Exported || entityName == pkg.RootComponent {
-			entitiesUsedByPkg[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
+			allUsedEntities[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
 		}
 
 		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, pkg.Entities, imports)
 		if err != nil {
-			panic(err)
+			return nil, nil, fmt.Errorf("%w: name %v, err %v", ErrAnalyzeEntity, entityName, err)
 		}
 
 		for entityRef := range entitiesUsedByEntity {
-			entitiesUsedByPkg[entityRef] = struct{}{}
+			allUsedEntities[entityRef] = struct{}{}
 		}
 
 		resolvedPkgEntities[entityName] = resolvedEntity
 	}
 
-	return resolvedPkgEntities, entitiesUsedByPkg, nil
+	return resolvedPkgEntities, allUsedEntities, nil
 }
 
 // getImports maps aliases to packages
@@ -209,7 +219,7 @@ func (a Analyzer) analyzeEntity(
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:
 		builtins := a.builtinTypes()
-		resolvedDef, referencedDefs, err := a.analyzeType(
+		resolvedDef, usedTypeEntities, err := a.analyzeType(
 			entityName,
 			imports,
 			a.getTypes(entities), // TODO move out to reduce number of calls
@@ -222,7 +232,7 @@ func (a Analyzer) analyzeEntity(
 			Type:     resolvedDef,
 			Kind:     src.TypeEntity,
 			Exported: entity.Exported,
-		}, referencedDefs, nil
+		}, usedTypeEntities, nil
 	case src.MsgEntity:
 		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg)
 		if err != nil {
@@ -287,6 +297,7 @@ func (a Analyzer) analyzeType(
 		imports:  imports,
 		local:    localTypes,
 		builtins: builtinTypes,
+		visited:  map[src.EntityRef]struct{}{},
 	}
 
 	_, err := a.Resolver.Resolve(testExpr, scope) // TODO return simplified defs (type t1 pkg1.t0<t0> // t1<int> -> vec<int>)
@@ -294,7 +305,7 @@ func (a Analyzer) analyzeType(
 		return ts.Def{}, nil, err
 	}
 
-	return def, nil, nil
+	return def, scope.visited, nil
 }
 
 func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
