@@ -21,6 +21,7 @@ var (
 // and that there're no duplicate names among type parameters. It doesn't validate body or constrs
 // because there's ValidateExpr that called by Resolver already.
 func (v Validator) ValidateDef(def Def) error {
+	// TODO use this method in resolved
 	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
@@ -28,7 +29,7 @@ func (v Validator) ValidateDef(def Def) error {
 	m := make(map[string]struct{}, len(def.Params))
 	for _, param := range def.Params {
 		if _, ok := m[param.Name]; ok {
-			return errors.New("params must have unique names")
+			return fmt.Errorf("%w: param", ErrParamDuplicate)
 		}
 	}
 

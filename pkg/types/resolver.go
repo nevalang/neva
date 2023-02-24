@@ -19,6 +19,7 @@ var (
 	ErrRecFieldUnresolved = errors.New("can't resolve record field")
 	ErrValidator          = errors.New("validator implementation must not allow empty literals")
 	ErrTerminator         = errors.New("recursion terminator")
+	ErrParamDuplicate     = errors.New("params must have unique names")
 )
 
 // Resolver transforms expression it into a form where all references it contains points to resolved expressions.
@@ -112,9 +113,20 @@ func (r Resolver) resolve( //nolint:funlen
 		return Expr{}, err
 	}
 
-	if err := r.validator.ValidateDef(def); err != nil {
-		return Expr{}, errors.New("invalid def")
+	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
+		return Expr{}, fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
+
+	m := make(map[string]struct{}, len(def.Params))
+	for _, param := range def.Params {
+		if _, ok := m[param.Name]; ok {
+			return Expr{}, fmt.Errorf("%w: param", ErrParamDuplicate)
+		}
+	}
+
+	// if err := r.validator.ValidateDef(def); err != nil {
+	// 	return Expr{}, errors.New("invalid def")
+	// }
 
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
