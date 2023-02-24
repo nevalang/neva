@@ -8,7 +8,6 @@ import (
 	ts "github.com/emil14/neva/pkg/types"
 )
 
-// Scope is created ad-hoc
 type Scope struct {
 	imports         map[string]src.Pkg
 	local, builtins map[string]ts.Def

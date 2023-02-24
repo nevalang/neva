@@ -27,7 +27,7 @@ func TestDefaultResolver(t *testing.T) {
 
 	tests := []testcase{
 		{
-			name: "",
+			name: "root pkg refers to type and component in another pkg",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
 					"pkg_2": {
@@ -44,7 +44,6 @@ func TestDefaultResolver(t *testing.T) {
 								Kind:     src.ComponentEntity,
 							},
 						},
-						RootComponent: "",
 					},
 					"pkg_1": {
 						Imports: h.Imports("pkg_2"),
@@ -56,14 +55,7 @@ func TestDefaultResolver(t *testing.T) {
 								),
 							),
 							"c1": h.RootComponentEntity(map[string]src.Node{
-								"n1": {
-									Instance: src.Instance{
-										Ref: src.EntityRef{
-											Pkg:  "pkg_1",
-											Name: "c1",
-										},
-									},
-								},
+								"n1": h.ComponentNode("pkg_1", "c1"),
 							}),
 						},
 						RootComponent: "c1",

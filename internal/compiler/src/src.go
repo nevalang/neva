@@ -62,13 +62,14 @@ type EntityRef struct {
 }
 
 type Msg struct {
-	Type  ts.Expr
-	Ref   EntityRef
+	Ref   *EntityRef
 	Value MsgValue
 }
 
 type MsgValue struct {
-	Vec []Msg
+	Type ts.Expr
+	Int  int
+	Vec  []Msg
 }
 
 type IO struct {

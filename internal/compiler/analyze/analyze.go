@@ -10,21 +10,26 @@ import (
 )
 
 var (
-	ErrAnalyzePkg    = errors.New("analyze package")
-	ErrAnalyzeUsed   = errors.New("analyze used")
-	ErrUnusedImport  = errors.New("unused import")
-	ErrAnalyzeEntity = errors.New("analyze entity")
-	ErrUnusedEntity  = errors.New("unused entity")
+	ErrAnalyzePkg       = errors.New("analyze package")
+	ErrAnalyzeUsed      = errors.New("analyze used")
+	ErrUnusedImport     = errors.New("unused import")
+	ErrAnalyzeEntity    = errors.New("analyze entity")
+	ErrUnusedEntity     = errors.New("unused entity")
+	ErrUnknownMsgType   = errors.New("unknown msg type")
+	ErrUnwantedMsgField = errors.New("unwanted msg field")
+	ErrMissingMsgField  = errors.New("missing msg field")
+	ErrVecEl            = errors.New("vector element")
+	ErrSubMsg           = errors.New("sub message")
 )
 
 var h ts.Helper
 
 type Analyzer struct {
-	Resolver TypeResolver
+	Resolver TypeSystem
 }
 
 type (
-	TypeResolver interface {
+	TypeSystem interface {
 		Resolve(ts.Expr, ts.Scope) (ts.Expr, error)
 	}
 )
@@ -115,7 +120,7 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 	usedImports := map[string]struct{}{}
 	usedLocalEntities := map[string]struct{}{}
 
-	for ref := range usedEntities { // FIXME no pkg_2.*
+	for ref := range usedEntities {
 		if ref.Pkg == "" {
 			usedLocalEntities[ref.Name] = struct{}{}
 		} else {
@@ -211,16 +216,16 @@ func (a Analyzer) analyzeEntity(
 	error,
 ) { //nolint:unparam
 	entity := entities[entityName]
+	builtinTypes := a.builtinTypes()
 
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:
-		builtins := a.builtinTypes()
 		resolvedDef, usedTypeEntities, err := a.analyzeType(
 			entityName,
 			imports,
-			a.getTypes(entities), // TODO move out to reduce number of calls
-			builtins,
-		) // TODO move builtins
+			a.getTypeEntities(entities), // TODO move out to reduce number of calls
+			builtinTypes,
+		)
 		if err != nil {
 			return src.Entity{}, nil, err
 		}
@@ -244,7 +249,7 @@ func (a Analyzer) analyzeEntity(
 		_, err := a.analyzeComponent(entity.Component)
 		return src.Entity{}, nil, err
 	default:
-		panic("unknown entity type")
+		return src.Entity{}, nil, errors.New("unknown entity type")
 	}
 
 	return src.Entity{}, map[src.EntityRef]struct{}{}, nil
@@ -257,7 +262,7 @@ func (Analyzer) builtinTypes() map[string]ts.Def { // TODO move?
 	}
 }
 
-func (a Analyzer) getTypes(entities map[string]src.Entity) map[string]ts.Def {
+func (a Analyzer) getTypeEntities(entities map[string]src.Entity) map[string]ts.Def {
 	types := make(map[string]ts.Def, len(entities))
 	for name, entity := range entities {
 		if entity.Kind == src.TypeEntity {
@@ -265,10 +270,6 @@ func (a Analyzer) getTypes(entities map[string]src.Entity) map[string]ts.Def {
 		}
 	}
 	return types
-}
-
-func (a Analyzer) analyzeMsg(msg src.Msg) (src.Msg, map[src.EntityRef]struct{}, error) {
-	return src.Msg{}, nil, nil
 }
 
 func (a Analyzer) analyzeType(
@@ -316,10 +317,66 @@ func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
 	return args
 }
 
+func (a Analyzer) analyzeMsg(
+	msg src.Msg,
+	imports map[string]src.Pkg,
+	local map[string]ts.Def,
+	builtins map[string]ts.Def,
+	expectedType *ts.Expr, // must be resolved
+) (src.Msg, map[src.EntityRef]struct{}, error) {
+	if msg.Ref != nil {
+		referencedMsg, used, err := a.analyzeMsg(msg, imports, local, builtins, expectedType)
+		if err != nil {
+			return src.Msg{}, nil, fmt.Errorf("%w: ref %v, err %v", ErrSubMsg, err, msg.Ref)
+		}
+		return referencedMsg, used, nil // TODO do we really want unpacking here?
+	}
+
+	scope := Scope{
+		imports:  imports,
+		local:    local,
+		builtins: builtins,
+	}
+
+	resolvedType, err := a.Resolver.Resolve(msg.Value.Type, scope)
+	if err != nil {
+		return src.Msg{}, nil, fmt.Errorf("%w: ", err)
+	}
+
+	var msgToReturn src.Msg
+	switch resolvedType.Inst.Ref { // TODO literals
+	case "int":
+		if msg.Value.Vec != nil {
+			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
+		}
+		msgToReturn = msg
+	case "vec":
+		if msg.Value.Int != 0 {
+			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
+		}
+		if msg.Value.Vec == nil {
+			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrMissingMsgField, msg.Value.Vec)
+		}
+		vecType := resolvedType.Inst.Args[0]
+		for i, el := range msg.Value.Vec {
+			analyzedEl, _, err := a.analyzeMsg(el, imports, local, builtins, &vecType)
+			if err != nil {
+				return src.Msg{}, nil, fmt.Errorf("%w: #%d, err %v", ErrVecEl, i, err)
+			}
+			msg.Value.Vec[i] = analyzedEl
+		}
+	default:
+		return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, resolvedType.Inst.Ref)
+	}
+
+	return msgToReturn, scope.visited, nil
+}
+
 func (a Analyzer) analyzeComponent(component src.Component) (map[string]struct{}, error) {
 	if err := a.analyzeTypeParameters(component.TypeParams); err != nil {
 		panic(err)
 	}
+	// TODO pass type params?
 	if err := a.analyzeIO(component.IO); err != nil {
 		panic(err)
 	}
