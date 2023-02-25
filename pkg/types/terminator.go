@@ -33,7 +33,7 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	}
 
 	isRecursionAllowed := false
-	if prevRef, err := scope.Get(cur.prev.ref); err == nil { // TODO refactor to use errors.Is(notfound)
+	if prevRef, err := scope.GetType(cur.prev.ref); err == nil { // TODO refactor to use errors.Is(notfound)
 		isRecursionAllowed = prevRef.IsRecursionAllowed
 	}
 

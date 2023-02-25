@@ -14,6 +14,10 @@ func (h Helper) TypeEntity(exported bool, def ts.Def) Entity {
 	}
 }
 
+func (h Helper) BaseTypeEntity(params ...ts.Param) Entity {
+	return h.TypeEntity(false, h.BaseDef(params...))
+}
+
 func (h Helper) Imports(ss ...string) map[string]string {
 	m := make(map[string]string, len(ss))
 	for _, s := range ss {

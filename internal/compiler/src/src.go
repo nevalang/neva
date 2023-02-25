@@ -31,6 +31,21 @@ const (
 	InterfaceEntity
 )
 
+func (e EntityKind) String() string {
+	switch e {
+	case ComponentEntity:
+		return "componentEntity"
+	case MsgEntity:
+		return "msgEntity"
+	case TypeEntity:
+		return "typeEntity"
+	case InterfaceEntity:
+		return "interfaceEntity"
+	default:
+		return "unknown"
+	}
+}
+
 type Component struct {
 	TypeParams []ts.Param // all type expressions inside component can refer to these
 	IO         IO

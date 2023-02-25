@@ -48,7 +48,7 @@ func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
 }
 
 type Scope interface {
-	Get(string) (Def, error)
+	GetType(string) (Def, error)
 }
 
 // resolve turn one expression into another where all references points to native types.
@@ -190,7 +190,7 @@ func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, erro
 		return def, nil
 	}
 
-	def, err := scope.Get(ref)
+	def, err := scope.GetType(ref)
 	if err != nil {
 		return Def{}, fmt.Errorf("%w: %v", ErrScope, err)
 	}

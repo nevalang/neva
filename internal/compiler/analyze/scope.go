@@ -2,19 +2,52 @@ package analyze
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/emil14/neva/internal/compiler/src"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
+var (
+	ErrGetEntity  = errors.New("get entity")
+	ErrEntityKind = errors.New("wrong entity kind")
+)
+
 type Scope struct {
 	imports         map[string]src.Pkg
-	local, builtins map[string]ts.Def
+	local, builtins map[string]src.Entity
 	visited         map[src.EntityRef]struct{}
 }
 
-func (s Scope) Get(ref string) (ts.Def, error) {
+// GetType implements types.Scope interface
+func (s Scope) GetType(ref string) (ts.Def, error) {
+	entity, err := s.getEntityByString(ref)
+	if err != nil {
+		return ts.Def{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
+	}
+
+	if entity.Kind != src.TypeEntity {
+		return ts.Def{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
+	}
+
+	return entity.Type, nil
+}
+
+func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
+	entity, err := s.getEntity(ref)
+	if err != nil {
+		return src.Msg{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
+	}
+
+	if entity.Kind != src.MsgEntity {
+		return src.Msg{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
+	}
+
+	return entity.Msg, nil
+}
+
+func (s Scope) getEntityByString(ref string) (src.Entity, error) {
 	var entityRef src.EntityRef
 
 	parts := strings.Split(ref, ".")
@@ -25,6 +58,10 @@ func (s Scope) Get(ref string) (ts.Def, error) {
 		entityRef.Name = ref
 	}
 
+	return s.getEntity(entityRef)
+}
+
+func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 	if entityRef.Pkg == "" {
 		localDef, ok := s.local[entityRef.Name]
 		if ok {
@@ -33,31 +70,27 @@ func (s Scope) Get(ref string) (ts.Def, error) {
 
 		builtinDef, ok := s.builtins[entityRef.Name]
 		if !ok {
-			return ts.Def{}, errors.New("ref without package not found in local and builtin")
+			return src.Entity{}, errors.New("ref without package not found in local and builtin")
 		}
 
 		return builtinDef, nil
 	}
 
-	pkg, ok := s.imports[entityRef.Pkg]
+	importedPkg, ok := s.imports[entityRef.Pkg]
 	if !ok {
-		return ts.Def{}, errors.New("referenced package is not found among imports")
+		return src.Entity{}, errors.New("referenced package is not found among imports")
 	}
 
-	entity, ok := pkg.Entities[entityRef.Name]
+	importedEntity, ok := importedPkg.Entities[entityRef.Name]
 	if !ok {
-		return ts.Def{}, errors.New("referenced entity not found in imported package")
+		return src.Entity{}, errors.New("referenced entity not found in imported package")
 	}
 
-	if entity.Kind != src.TypeEntity {
-		return ts.Def{}, errors.New("referenced entity is not type")
-	}
-
-	if !entity.Exported {
-		return ts.Def{}, errors.New("referenced entity not exported")
+	if !importedEntity.Exported {
+		return src.Entity{}, errors.New("referenced entity not exported")
 	}
 
 	s.visited[entityRef] = struct{}{}
 
-	return entity.Type, nil
+	return importedEntity, nil
 }

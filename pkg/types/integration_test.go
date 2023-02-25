@@ -6,9 +6,9 @@ package types_test
 import (
 	"testing"
 
-	ts "github.com/emil14/neva/pkg/types"
-
 	"github.com/stretchr/testify/assert"
+
+	ts "github.com/emil14/neva/pkg/types"
 )
 
 func TestDefaultResolver(t *testing.T) {
@@ -94,6 +94,7 @@ func TestDefaultResolver(t *testing.T) {
 	}
 
 	r := ts.NewDefaultResolver()
+	c := ts.NewDefaultCompatChecker()
 
 	for _, tt := range tests {
 		tt := tt

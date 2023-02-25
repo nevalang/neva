@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	ts "github.com/emil14/neva/pkg/types"
 	types "github.com/emil14/neva/pkg/types"
-	"github.com/stretchr/testify/require"
 )
 
 var h ts.Helper
