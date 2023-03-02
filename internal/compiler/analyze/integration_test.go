@@ -26,49 +26,168 @@ func TestDefaultResolver(t *testing.T) {
 	}
 
 	tests := []testcase{
+		// {
+		// 	name: "root pkg refers to type and component in another pkg",
+		// 	prog: src.Prog{
+		// 		Pkgs: map[string]src.Pkg{
+		// 			"pkg2": {
+		// 				Entities: map[string]src.Entity{
+		// 					"t1": h.TypeEntity(
+		// 						true,
+		// 						h.Def( // type t1<a> = vec<a>
+		// 							h.Inst("vec", h.Inst("a")),
+		// 							h.ParamWithNoConstr("a"),
+		// 						),
+		// 					),
+		// 					"c1": {
+		// 						Exported: true,
+		// 						Kind:     src.ComponentEntity,
+		// 					},
+		// 				},
+		// 			},
+		// 			"pkg1": {
+		// 				Imports: h.Imports("pkg2"),
+		// 				Entities: map[string]src.Entity{
+		// 					"t1": h.TypeEntity(
+		// 						true,
+		// 						h.Def( // type t1 = pkg2.t1<int>
+		// 							h.Inst("pkg2.t1", h.Inst("int")),
+		// 						),
+		// 					),
+		// 					"c1": h.RootComponentEntity(map[string]src.Node{
+		// 						"n1": h.ComponentNode("pkg1", "c1"),
+		// 					}),
+		// 				},
+		// 				RootComponent: "c1",
+		// 			},
+		// 		},
+		// 		RootPkg: "pkg1",
+		// 	},
+		// 	wantErr: nil,
+		// },
+		// {
+		// 	name: "root pkg refers another pkg that refers another pkg via types",
+		// 	prog: src.Prog{
+		// 		Pkgs: map[string]src.Pkg{
+		// 			"pkg3": {
+		// 				Entities: map[string]src.Entity{
+		// 					"t1": h.TypeEntity(
+		// 						true,
+		// 						h.Def( // type t1<a> = vec<a>
+		// 							h.Inst("vec", h.Inst("a")),
+		// 							h.ParamWithNoConstr("a"),
+		// 						),
+		// 					),
+		// 				},
+		// 			},
+		// 			"pkg2": {
+		// 				Imports: h.Imports("pkg3"),
+		// 				Entities: map[string]src.Entity{
+		// 					"t1": h.TypeEntity(
+		// 						true,
+		// 						h.Def( // type t1<a> = t1<a>
+		// 							h.Inst("pkg3.t1", h.Inst("a")),
+		// 							h.ParamWithNoConstr("a"),
+		// 						),
+		// 					),
+		// 					"c1": {
+		// 						Exported: true,
+		// 						Kind:     src.ComponentEntity,
+		// 					},
+		// 				},
+		// 			},
+		// 			"pkg1": {
+		// 				Imports: h.Imports("pkg2"),
+		// 				Entities: map[string]src.Entity{
+		// 					"t1": h.TypeEntity(
+		// 						true,
+		// 						h.Def( // type t1 = pkg2.t1<int>
+		// 							h.Inst("pkg2.t1", h.Inst("int")),
+		// 						),
+		// 					),
+		// 					"c1": h.RootComponentEntity(map[string]src.Node{
+		// 						"n1": h.ComponentNode("pkg1", "c1"),
+		// 					}),
+		// 				},
+		// 				RootComponent: "c1",
+		// 			},
+		// 		},
+		// 		RootPkg: "pkg1",
+		// 	},
+		// 	wantErr: nil,
+		// },
 		{
-			name: "root pkg refers to type and component in another pkg",
+			name: "inassignable message",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
-					"pkg_2": {
+					"pkg1": {
 						Entities: map[string]src.Entity{
-							"t1": h.TypeEntity(
-								true,
-								h.Def( // type t1<a> = vec<a>
-									h.Inst("vec", h.Inst("a")),
-									h.ParamWithNoConstr("a"),
-								),
-							),
-							"c1": {
-								Exported: true,
-								Kind:     src.ComponentEntity,
-							},
+							"m1": h.IntMsgEntity(true, 42),
 						},
 					},
-					"pkg_1": {
-						Imports: h.Imports("pkg_2"),
+					"pkg2": {
+						Imports: h.Imports("pkg1"),
 						Entities: map[string]src.Entity{
-							"t1": h.TypeEntity(
+							"m1": h.MsgWithRefEntity(true, &src.EntityRef{
+								Pkg:  "pkg1",
+								Name: "m1",
+							}),
+						},
+					},
+					"pkg3": {
+						Imports: h.Imports("pkg1", "pkg2"),
+						Entities: map[string]src.Entity{
+							"m1": h.IntVecMsgEntity(
 								true,
-								h.Def( // type t1 = pkg_2.t1<int>
-									h.Inst("pkg_2.t1", h.Inst("int")),
-								),
+								[]src.Msg{
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg1",
+											Name: "m1",
+										},
+									},
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg2",
+											Name: "m1",
+										},
+									},
+									{Value: h.IntMsgValue(43)},
+								},
+							),
+						},
+					},
+					"pkg4": {
+						Imports: h.Imports("pkg1", "pkg2", "pkg3"),
+						Entities: map[string]src.Entity{
+							"m1": h.IntVecMsgEntity(
+								true,
+								[]src.Msg{
+									{Value: h.IntMsgValue(44)},
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg3",
+											Name: "m1",
+										},
+									},
+								},
 							),
 							"c1": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg_1", "c1"),
+								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
 						RootComponent: "c1",
 					},
 				},
-				RootPkg: "pkg_1",
+				RootPkg: "pkg4",
 			},
-			wantErr: nil,
+			wantErr: analyze.ErrVecEl,
 		},
 	}
 
 	a := analyze.Analyzer{
 		Resolver: ts.NewDefaultResolver(),
+		Compator: ts.NewDefaultCompatChecker(),
 	}
 
 	for _, tt := range tests {

@@ -10,18 +10,20 @@ import (
 )
 
 var (
-	ErrAnalyzePkg       = errors.New("analyze package")
-	ErrAnalyzeUsed      = errors.New("analyze used")
+	ErrPkg              = errors.New("analyze package")
+	ErrUsed             = errors.New("analyze used")
 	ErrUnusedImport     = errors.New("unused import")
-	ErrAnalyzeEntity    = errors.New("analyze entity")
+	ErrEntity           = errors.New("analyze entity")
 	ErrUnusedEntity     = errors.New("unused entity")
 	ErrUnknownMsgType   = errors.New("unknown msg type")
 	ErrUnwantedMsgField = errors.New("unwanted msg field")
 	ErrMissingMsgField  = errors.New("missing msg field")
 	ErrVecEl            = errors.New("vector element")
-	ErrSubMsg           = errors.New("sub message")
-	ErrRefMsg           = errors.New("msg not found by ref")
-	ErrInassignMsg      = errors.New("msg is not assignable?")
+	ErrNestedMsg        = errors.New("sub message")
+	ErrReferencedMsg    = errors.New("msg not found by ref")
+	ErrInassignMsg      = errors.New("msg is not assignable")
+	ErrEntities         = errors.New("analyze entities")
+	ErrRootComponent    = errors.New("analyze root component")
 )
 
 var h src.Helper
@@ -36,7 +38,7 @@ type (
 		Resolve(ts.Expr, ts.Scope) (ts.Expr, error)
 	}
 	Compator interface {
-		Check(ts.Expr, ts.Expr) error
+		Check(ts.Expr, ts.Expr, ts.TerminatorParams) error
 	}
 )
 
@@ -63,7 +65,7 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 	for pkgName := range prog.Pkgs {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
-			return src.Prog{}, fmt.Errorf("%w: pkg name %v, err %v", ErrAnalyzePkg, pkgName, err)
+			return src.Prog{}, fmt.Errorf("%w: %v: err %v", ErrPkg, pkgName, err)
 		}
 		resolvedPkgs[pkgName] = resolvedPkg
 	}
@@ -96,13 +98,13 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 		panic(err)
 	} // at this we know all pkg's imports points to existing pkgs
 
-	resolvedEntities, allUsedEntities, err := a.analyzeEntities(pkg, imports)
+	resolvedEntities, allUsedEntities, err := a.analyzeEntities(pkg, imports, pkgs)
 	if err != nil {
-		panic(err)
+		return src.Pkg{}, fmt.Errorf("%w: %v", ErrEntities, err)
 	}
 
 	if err := a.analyzeUsed(pkg, allUsedEntities); err != nil {
-		return src.Pkg{}, fmt.Errorf("%w: %v", ErrAnalyzeUsed, err)
+		return src.Pkg{}, fmt.Errorf("%w: %v", ErrUsed, err)
 	}
 
 	return src.Pkg{
@@ -149,7 +151,7 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 	return nil
 }
 
-func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
+func (a Analyzer) analyzeEntities(pkg src.Pkg, imports, pkgs map[string]src.Pkg) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
 	resolvedPkgEntities := make(map[string]src.Entity, len(pkg.Entities))
 	allUsedEntities := map[src.EntityRef]struct{}{} // both local and imported
 
@@ -158,9 +160,9 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports map[string]src.Pkg) (map[
 			allUsedEntities[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
 		}
 
-		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, pkg.Entities, imports)
+		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, pkg.Entities, imports, pkgs)
 		if err != nil {
-			return nil, nil, fmt.Errorf("%w: name %v, err %v", ErrAnalyzeEntity, entityName, err)
+			return nil, nil, fmt.Errorf("%w: %v: %v", ErrEntity, entityName, err)
 		}
 
 		for entityRef := range entitiesUsedByEntity {
@@ -206,7 +208,7 @@ func (a Analyzer) analyzePkgWithRootComponent(pkg src.Pkg, pkgs map[string]src.P
 	}
 
 	if err := a.analyzeRootComponent(entity.Component, pkg, pkgs); err != nil {
-		panic(err)
+		return fmt.Errorf("%w: %v", ErrRootComponent, err)
 	}
 
 	return nil
@@ -215,18 +217,17 @@ func (a Analyzer) analyzePkgWithRootComponent(pkg src.Pkg, pkgs map[string]src.P
 func (a Analyzer) analyzeEntity(
 	name string,
 	entities map[string]src.Entity,
-	imports map[string]src.Pkg,
+	imports, pkgs map[string]src.Pkg,
 ) (
 	src.Entity,
 	map[src.EntityRef]struct{},
 	error,
 ) { //nolint:unparam
 	entity := entities[name]
-	builtinEntities := a.builtinEntities()
 	scope := Scope{
 		imports:  imports,
 		local:    entities,
-		builtins: builtinEntities,
+		builtins: a.builtinEntities(),
 		visited:  map[src.EntityRef]struct{}{},
 	}
 
@@ -242,7 +243,7 @@ func (a Analyzer) analyzeEntity(
 			Exported: entity.Exported,
 		}, usedTypeEntities, nil
 	case src.MsgEntity:
-		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg)
+		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg, imports, entities, a.builtinEntities(), pkgs, nil)
 		if err != nil {
 			return src.Entity{}, nil, err
 		}
@@ -270,7 +271,10 @@ func (Analyzer) builtinEntities() map[string]src.Entity {
 }
 
 func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
-	def, _ := scope.GetType(name) // handle?
+	def, err := scope.GetType(name) // FIXME it's not enough to create scope once, it' has dynamic nature
+	if err != nil {
+		panic(err)
+	}
 
 	testExpr := ts.Expr{
 		Inst: ts.InstExpr{
@@ -279,8 +283,8 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 		},
 	}
 
-	_, err := a.Resolver.Resolve(testExpr, scope) // TODO return simplified defs (type t1 pkg1.t0<t0> // t1<int> -> vec<int>)
-	if err != nil {
+	// TODO return simplified defs (type t1 pkg1.t0<t0> // t1<int> -> vec<int>)
+	if _, err = a.Resolver.Resolve(testExpr, scope); err != nil {
 		return ts.Def{}, nil, err
 	}
 
@@ -304,7 +308,7 @@ func (a Analyzer) analyzeMsg(
 	imports map[string]src.Pkg,
 	local, builtins map[string]src.Entity,
 	pkgs map[string]src.Pkg,
-	constr *ts.Expr,
+	resolvedConstr *ts.Expr,
 ) (src.Msg, map[src.EntityRef]struct{}, error) {
 	scope := Scope{
 		imports:  imports,
@@ -314,9 +318,9 @@ func (a Analyzer) analyzeMsg(
 	}
 
 	if msg.Ref != nil {
-		newMsg, err := scope.getMsg(*msg.Ref)
+		subMsg, err := scope.getMsg(*msg.Ref)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrRefMsg, err)
+			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrReferencedMsg, err)
 		}
 		if msg.Ref.Pkg != "" {
 			pkg, ok := imports[msg.Ref.Pkg]
@@ -324,16 +328,17 @@ func (a Analyzer) analyzeMsg(
 				panic("not ok")
 			}
 			local = pkg.Entities
-			imports, err = a.getImports(pkg.Imports, pkgs)
+			imports, err = a.getImports(pkg.Imports, pkgs) // why we don't need this with types???
 			if err != nil {
 				panic(err)
 			}
 		}
-		referencedMsg, used, err := a.analyzeMsg(newMsg, imports, local, builtins, pkgs, constr)
+		resolvedSubMsg, used, err := a.analyzeMsg(subMsg, imports, local, builtins, pkgs, resolvedConstr)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: ref %v, err %v", ErrSubMsg, err, msg.Ref)
+			return src.Msg{}, nil, fmt.Errorf("%w: ref %v, err %v", ErrNestedMsg, err, msg.Ref)
 		}
-		return referencedMsg, used, nil // TODO do we really want unpacking here?
+		used[*msg.Ref] = struct{}{}
+		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
 	}
 
 	resolvedType, err := a.Resolver.Resolve(msg.Value.Type, scope)
@@ -341,8 +346,8 @@ func (a Analyzer) analyzeMsg(
 		return src.Msg{}, nil, fmt.Errorf("%w: ", err)
 	}
 
-	if constr != nil {
-		if err := a.Compator.Check(resolvedType, *constr); err != nil {
+	if resolvedConstr != nil {
+		if err := a.Compator.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
 			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrInassignMsg, err)
 		}
 	}
@@ -380,8 +385,7 @@ func (a Analyzer) analyzeComponent(component src.Component) (map[string]struct{}
 	if err := a.analyzeTypeParameters(component.TypeParams); err != nil {
 		panic(err)
 	}
-	// TODO pass type params?
-	if err := a.analyzeIO(component.IO); err != nil {
+	if err := a.analyzeIO(component.IO); err != nil { // TODO pass type params?
 		panic(err)
 	}
 	if err := a.analyzeNodes(component.Nodes); err != nil {
@@ -394,18 +398,6 @@ func (a Analyzer) analyzeComponent(component src.Component) (map[string]struct{}
 }
 
 func (a Analyzer) analyzeTypeParameters(params []ts.Param) error {
-	// pp := make(map[string]struct{}, len(params))
-
-	// for _, param := range params {
-	// 	if param.Name == "" {
-	// 		panic("param name cannot be empty")
-	// 	}
-	// 	if _, ok := pp[param.Name]; ok {
-	// 		panic("parameter names must be unique")
-	// 	}
-	// 	pp[param.Name] = struct{}{}
-	// }
-
 	return nil
 }
 

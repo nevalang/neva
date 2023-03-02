@@ -108,11 +108,12 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				},
 				comparator: func(c *MockcompatCheckerMockRecorder) {
 					t := ts.NewTrace(nil, "map")
-					c.Check(
-						h.Inst("t1"), t,
-						h.Inst("t2"), t,
-						scope,
-					).Return(errTest)
+					tparams := ts.TerminatorParams{
+						Scope:          scope,
+						SubtypeTrace:   t,
+						SupertypeTrace: t,
+					}
+					c.Check(h.Inst("t1"), h.Inst("t2"), tparams).Return(errTest)
 				},
 				wantErr: ts.ErrIncompatArg,
 			}
@@ -260,7 +261,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					// v.ValidateDef(h.BaseDef(h.ParamWithNoConstr("t")))
-					v.Validate( h.Inst("t")).Return(nil)
+					v.Validate(h.Inst("t")).Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t.ShouldTerminate(ts.NewTrace(nil, "t"), scope).Return(false, nil)
@@ -640,12 +641,15 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t.ShouldTerminate(t7, scope).Return(false, nil)
 				},
 				comparator: func(c *MockcompatCheckerMockRecorder) {
+					tparams := ts.TerminatorParams{
+						Scope:          scope,
+						SubtypeTrace:   ts.NewTrace(nil, "t"),
+						SupertypeTrace: ts.NewTrace(nil, "t"),
+					}
 					c.Check(
 						h.Inst("vec", h.Inst("int")),
-						ts.NewTrace(nil, "t"),
 						h.Inst("vec", h.Inst("int")),
-						ts.NewTrace(nil, "t"),
-						scope,
+						tparams,
 					).Return(nil)
 				},
 				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
@@ -697,10 +701,15 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(h.Inst("t2")).Return(nil)
 				},
 				comparator: func(c *MockcompatCheckerMockRecorder) {
+					tparams := ts.TerminatorParams{
+						Scope:          scope,
+						SubtypeTrace:   ts.NewTrace(nil, "t3"),
+						SupertypeTrace: ts.NewTrace(nil, "t3"),
+					}
 					c.Check(
-						h.Inst("vec", h.Inst("t1")), ts.NewTrace(nil, "t3"),
-						h.Inst("vec", h.Inst("t2")), ts.NewTrace(nil, "t3"),
-						scope,
+						h.Inst("vec", h.Inst("t1")),
+						h.Inst("vec", h.Inst("t2")),
+						tparams,
 					).Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {

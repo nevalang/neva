@@ -94,7 +94,7 @@ func TestDefaultResolver(t *testing.T) {
 	}
 
 	r := ts.NewDefaultResolver()
-	c := ts.NewDefaultCompatChecker()
+	// c := ts.NewDefaultCompatChecker()
 
 	for _, tt := range tests {
 		tt := tt

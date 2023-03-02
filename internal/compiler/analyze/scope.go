@@ -10,14 +10,52 @@ import (
 )
 
 var (
-	ErrGetEntity  = errors.New("get entity")
-	ErrEntityKind = errors.New("wrong entity kind")
+	ErrGetEntity              = errors.New("can't get entity")
+	ErrEntityKind             = errors.New("wrong entity kind")
+	ErrNoImport               = errors.New("entity refers to not imported package")
+	ErrLocalEntityNotFound    = errors.New("local entity not found")
+	ErrImports                = errors.New("can't build imports")
+	ErrImportNotFound         = errors.New("imported package not found")
+	ErrImportedEntityNotFound = errors.New("entity not found in imported package")
+	ErrEntityNotExported      = errors.New("imported entity not exported")
 )
 
 type Scope struct {
-	imports         map[string]src.Pkg
+	pkgs, imports   map[string]src.Pkg
 	local, builtins map[string]src.Entity
 	visited         map[src.EntityRef]struct{}
+}
+
+// Update must be called before package may be changed
+func (s Scope) Update(ref string) (Scope, error) {
+	entityRef := s.parseRef(ref)
+
+	pkg, ok := s.pkgs[entityRef.Pkg]
+	if !ok {
+		return Scope{}, nil
+	}
+
+	imports, err := s.getImports(pkg.Imports)
+	if err != nil {
+		return Scope{}, fmt.Errorf("%w: %v", ErrImports, err)
+	}
+
+	s.imports = imports
+	s.local = pkg.Entities
+
+	return s, nil
+}
+
+func (s Scope) getImports(pkgImports map[string]string) (map[string]src.Pkg, error) {
+	imports := make(map[string]src.Pkg, len(pkgImports))
+	for alias, pkgRef := range pkgImports {
+		importedPkg, ok := s.pkgs[pkgRef]
+		if !ok {
+			return nil, fmt.Errorf("%w: %v", ErrImportNotFound, pkgRef)
+		}
+		imports[alias] = importedPkg
+	}
+	return imports, nil
 }
 
 // GetType implements types.Scope interface
@@ -47,7 +85,7 @@ func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
 	return entity.Msg, nil
 }
 
-func (s Scope) getEntityByString(ref string) (src.Entity, error) {
+func (s Scope) parseRef(ref string) src.EntityRef {
 	var entityRef src.EntityRef
 
 	parts := strings.Split(ref, ".")
@@ -58,7 +96,11 @@ func (s Scope) getEntityByString(ref string) (src.Entity, error) {
 		entityRef.Name = ref
 	}
 
-	return s.getEntity(entityRef)
+	return entityRef
+}
+
+func (s Scope) getEntityByString(ref string) (src.Entity, error) {
+	return s.getEntity(s.parseRef(ref))
 }
 
 func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
@@ -70,7 +112,7 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 		builtinDef, ok := s.builtins[entityRef.Name]
 		if !ok {
-			return src.Entity{}, errors.New("ref without package not found in local and builtin")
+			return src.Entity{}, fmt.Errorf("%w: %v", ErrLocalEntityNotFound, entityRef.Name)
 		}
 
 		return builtinDef, nil
@@ -78,16 +120,16 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 	importedPkg, ok := s.imports[entityRef.Pkg]
 	if !ok {
-		return src.Entity{}, errors.New("referenced package is not found among imports")
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
 	}
 
 	importedEntity, ok := importedPkg.Entities[entityRef.Name]
 	if !ok {
-		return src.Entity{}, errors.New("referenced entity not found in imported package")
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrImportedEntityNotFound, entityRef.Name)
 	}
 
 	if !importedEntity.Exported {
-		return src.Entity{}, errors.New("referenced entity not exported")
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotExported, entityRef.Name)
 	}
 
 	s.visited[entityRef] = struct{}{}

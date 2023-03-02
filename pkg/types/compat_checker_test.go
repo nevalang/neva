@@ -12,14 +12,14 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		subType    ts.Expr
-		trace1     ts.Trace
-		superType  ts.Expr
-		trace2     ts.Trace
-		scope      ts.DefaultScope
-		terminator func(*MockrecursionTerminatorMockRecorder)
-		wantErr    error
+		name           string
+		subType        ts.Expr
+		subtypeTrace   ts.Trace
+		superType      ts.Expr
+		supertypeTrace ts.Trace
+		scope          ts.DefaultScope
+		terminator     func(*MockrecursionTerminatorMockRecorder)
+		wantErr        error
 	}{
 		// Instantiations
 		{
@@ -115,8 +115,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				"vec",
 				h.Union(h.Inst("str"), h.Inst("int")),
 			),
-			trace1: ts.Trace{},
-			trace2: ts.Trace{},
+			subtypeTrace:   ts.Trace{},
+			supertypeTrace: ts.Trace{},
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
@@ -243,8 +243,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			superType: h.Rec(map[string]ts.Expr{
 				"a": h.Inst("x"),
 			}),
-			trace1: ts.Trace{},
-			trace2: ts.Trace{},
+			subtypeTrace:   ts.Trace{},
+			supertypeTrace: ts.Trace{},
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(2)
@@ -313,9 +313,15 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 
 			checker := ts.MustNewCompatChecker(terminator)
 
+			tparams := ts.TerminatorParams{
+				Scope:          tt.scope,
+				SubtypeTrace:   tt.subtypeTrace,
+				SupertypeTrace: tt.supertypeTrace,
+			}
+
 			require.ErrorIs(
 				t,
-				checker.Check(tt.subType, tt.trace1, tt.superType, tt.trace2, tt.scope),
+				checker.Check(tt.subType, tt.superType, tparams),
 				tt.wantErr,
 			)
 		})

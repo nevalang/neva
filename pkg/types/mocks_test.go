@@ -48,20 +48,6 @@ func (mr *MockexprValidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockexprValidator)(nil).Validate), arg0)
 }
 
-// ValidateDef mocks base method.
-func (m *MockexprValidator) ValidateDef(def types.Def) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateDef", def)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ValidateDef indicates an expected call of ValidateDef.
-func (mr *MockexprValidatorMockRecorder) ValidateDef(def interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDef", reflect.TypeOf((*MockexprValidator)(nil).ValidateDef), def)
-}
-
 // MockcompatChecker is a mock of compatChecker interface.
 type MockcompatChecker struct {
 	ctrl     *gomock.Controller
@@ -86,17 +72,17 @@ func (m *MockcompatChecker) EXPECT() *MockcompatCheckerMockRecorder {
 }
 
 // Check mocks base method.
-func (m *MockcompatChecker) Check(arg0 types.Expr, arg1 types.Trace, arg2 types.Expr, arg3 types.Trace, arg4 types.Scope) error {
+func (m *MockcompatChecker) Check(arg0, arg1 types.Expr, arg2 types.TerminatorParams) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Check", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Check indicates an expected call of Check.
-func (mr *MockcompatCheckerMockRecorder) Check(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockcompatCheckerMockRecorder) Check(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockcompatChecker)(nil).Check), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockcompatChecker)(nil).Check), arg0, arg1, arg2)
 }
 
 // MockrecursionTerminator is a mock of recursionTerminator interface.
@@ -160,17 +146,17 @@ func (m *MockScope) EXPECT() *MockScopeMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method.
-func (m *MockScope) Get(arg0 string) (types.Def, error) {
+// GetType mocks base method.
+func (m *MockScope) GetType(arg0 string) (types.Def, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0)
+	ret := m.ctrl.Call(m, "GetType", arg0)
 	ret0, _ := ret[0].(types.Def)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockScopeMockRecorder) Get(arg0 interface{}) *gomock.Call {
+// GetType indicates an expected call of GetType.
+func (mr *MockScopeMockRecorder) GetType(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockScope)(nil).Get), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockScope)(nil).GetType), arg0)
 }

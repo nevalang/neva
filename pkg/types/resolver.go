@@ -33,10 +33,10 @@ type Resolver struct {
 type (
 	exprValidator interface {
 		Validate(Expr) error
-		ValidateDef(def Def) error
+		// ValidateDef(def Def) error
 	}
 	compatChecker interface {
-		Check(Expr, Trace, Expr, Trace, Scope) error
+		Check(Expr, Expr, TerminatorParams) error
 	}
 	recursionTerminator interface {
 		ShouldTerminate(Trace, Scope) (bool, error)
@@ -124,10 +124,6 @@ func (r Resolver) resolve( //nolint:funlen
 		}
 	}
 
-	// if err := r.validator.ValidateDef(def); err != nil {
-	// 	return Expr{}, errors.New("invalid def")
-	// }
-
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
 			"%w, want %d, got %d", ErrInstArgsLen, len(def.Params), len(expr.Inst.Args),
@@ -166,7 +162,13 @@ func (r Resolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
 
-		if err := r.comparator.Check(resolvedArg, newTrace, resolvedConstr, newTrace, scope); err != nil {
+		tparams := TerminatorParams{
+			Scope:          scope,
+			SubtypeTrace:   newTrace,
+			SupertypeTrace: newTrace,
+		}
+
+		if err := r.comparator.Check(resolvedArg, resolvedConstr, tparams); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}
@@ -183,7 +185,7 @@ func (r Resolver) resolve( //nolint:funlen
 	return r.resolve(def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
 }
 
-// getDef checks for def in args, then in scope and returns err if expr refers no nothing.
+// getDef checks for def in frame, then in scope and returns err if expr not found in both.
 func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, error) {
 	def, exist := frame[ref]
 	if exist {
