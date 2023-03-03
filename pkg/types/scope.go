@@ -14,3 +14,7 @@ func (d DefaultScope) GetType(ref string) (Def, error) { // TODO move to tests
 	}
 	return v, nil
 }
+
+func (d DefaultScope) Update(string) (Scope, error) {
+	return d, nil
+}

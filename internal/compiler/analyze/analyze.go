@@ -24,6 +24,7 @@ var (
 	ErrInassignMsg      = errors.New("msg is not assignable")
 	ErrEntities         = errors.New("analyze entities")
 	ErrRootComponent    = errors.New("analyze root component")
+	ErrScopeRebase      = errors.New("scope rebase")
 )
 
 var h src.Helper
@@ -65,7 +66,7 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 	for pkgName := range prog.Pkgs {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
-			return src.Prog{}, fmt.Errorf("%w: %v: err %v", ErrPkg, pkgName, err)
+			return src.Prog{}, fmt.Errorf("%w: %v: %v", ErrPkg, pkgName, err)
 		}
 		resolvedPkgs[pkgName] = resolvedPkg
 	}
@@ -225,6 +226,7 @@ func (a Analyzer) analyzeEntity(
 ) { //nolint:unparam
 	entity := entities[name]
 	scope := Scope{
+		pkgs:     pkgs,
 		imports:  imports,
 		local:    entities,
 		builtins: a.builtinEntities(),
@@ -243,7 +245,7 @@ func (a Analyzer) analyzeEntity(
 			Exported: entity.Exported,
 		}, usedTypeEntities, nil
 	case src.MsgEntity:
-		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg, imports, entities, a.builtinEntities(), pkgs, nil)
+		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg, scope, nil)
 		if err != nil {
 			return src.Entity{}, nil, err
 		}
@@ -305,37 +307,23 @@ func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
 
 func (a Analyzer) analyzeMsg(
 	msg src.Msg,
-	imports map[string]src.Pkg,
-	local, builtins map[string]src.Entity,
-	pkgs map[string]src.Pkg,
+	scope Scope,
 	resolvedConstr *ts.Expr,
 ) (src.Msg, map[src.EntityRef]struct{}, error) {
-	scope := Scope{
-		imports:  imports,
-		local:    local,
-		builtins: builtins,
-		visited:  map[src.EntityRef]struct{}{},
-	}
-
 	if msg.Ref != nil {
 		subMsg, err := scope.getMsg(*msg.Ref)
 		if err != nil {
 			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrReferencedMsg, err)
 		}
-		if msg.Ref.Pkg != "" {
-			pkg, ok := imports[msg.Ref.Pkg]
-			if !ok {
-				panic("not ok")
-			}
-			local = pkg.Entities
-			imports, err = a.getImports(pkg.Imports, pkgs) // why we don't need this with types???
+		if msg.Ref.Pkg != "" { // rebase needed
+			scope, err = scope.rebase(msg.Ref.Pkg)
 			if err != nil {
-				panic(err)
+				return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrScopeRebase, err)
 			}
 		}
-		resolvedSubMsg, used, err := a.analyzeMsg(subMsg, imports, local, builtins, pkgs, resolvedConstr)
+		resolvedSubMsg, used, err := a.analyzeMsg(subMsg, scope, resolvedConstr)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: ref %v, err %v", ErrNestedMsg, err, msg.Ref)
+			return src.Msg{}, nil, fmt.Errorf("%w: %v, %v", ErrNestedMsg, err, msg.Ref)
 		}
 		used[*msg.Ref] = struct{}{}
 		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
@@ -368,7 +356,7 @@ func (a Analyzer) analyzeMsg(
 		}
 		vecType := resolvedType.Inst.Args[0]
 		for i, el := range msg.Value.Vec {
-			analyzedEl, _, err := a.analyzeMsg(el, imports, local, builtins, pkgs, &vecType)
+			analyzedEl, _, err := a.analyzeMsg(el, scope, &vecType)
 			if err != nil {
 				return src.Msg{}, nil, fmt.Errorf("%w: #%d, err %v", ErrVecEl, i, err)
 			}

@@ -10,6 +10,7 @@ import (
 var (
 	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
 	ErrScope              = errors.New("can't get type def from scope by ref")
+	ErrScopeUpdate        = errors.New("scope update")
 	ErrInstArgsLen        = errors.New("inst must have same number of arguments as def has parameters")
 	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
 	ErrUnresolvedArg      = errors.New("can't resolve argument")
@@ -49,6 +50,7 @@ func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
 
 type Scope interface {
 	GetType(string) (Def, error)
+	Update(string) (Scope, error)
 }
 
 // resolve turn one expression into another where all references points to native types.
@@ -108,7 +110,7 @@ func (r Resolver) resolve( //nolint:funlen
 		}, nil
 	}
 
-	def, err := r.getDef(expr.Inst.Ref, frame, scope)
+	def, scope, err := r.getDef(expr.Inst.Ref, frame, scope)
 	if err != nil {
 		return Expr{}, err
 	}
@@ -186,18 +188,23 @@ func (r Resolver) resolve( //nolint:funlen
 }
 
 // getDef checks for def in frame, then in scope and returns err if expr not found in both.
-func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, error) {
+func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, Scope, error) {
 	def, exist := frame[ref]
 	if exist {
-		return def, nil
+		return def, scope, nil
 	}
 
 	def, err := scope.GetType(ref)
 	if err != nil {
-		return Def{}, fmt.Errorf("%w: %v", ErrScope, err)
+		return Def{}, nil, fmt.Errorf("%w: %v", ErrScope, err)
 	}
 
-	return def, nil
+	scope, err = scope.Update(ref)
+	if err != nil {
+		return Def{}, nil, fmt.Errorf("%w: %v", ErrScopeUpdate, err)
+	}
+
+	return def, scope, nil
 }
 
 func NewDefaultResolver() Resolver {

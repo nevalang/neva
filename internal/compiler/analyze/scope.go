@@ -13,9 +13,10 @@ var (
 	ErrGetEntity              = errors.New("can't get entity")
 	ErrEntityKind             = errors.New("wrong entity kind")
 	ErrNoImport               = errors.New("entity refers to not imported package")
-	ErrLocalEntityNotFound    = errors.New("local entity not found")
+	ErrLocalOrBuiltinNotFound = errors.New("local entity not found")
 	ErrImports                = errors.New("can't build imports")
 	ErrImportNotFound         = errors.New("imported package not found")
+	ErrNotImported            = errors.New("pkg not imported")
 	ErrImportedEntityNotFound = errors.New("entity not found in imported package")
 	ErrEntityNotExported      = errors.New("imported entity not exported")
 )
@@ -26,22 +27,41 @@ type Scope struct {
 	visited         map[src.EntityRef]struct{}
 }
 
-// Update must be called before package may be changed
-func (s Scope) Update(ref string) (Scope, error) {
-	entityRef := s.parseRef(ref)
+// Update will parse ref and, if it has pkg, call rebase with that pkg.
+func (s Scope) Update(ref string) (ts.Scope, error) {
+	pkg := s.parseRef(ref).Pkg
+	if pkg == "" {
+		return s, nil
+	}
+	return s.rebase(pkg)
+}
 
-	pkg, ok := s.pkgs[entityRef.Pkg]
-	if !ok {
-		return Scope{}, nil
+func (s Scope) GetType(ref string) (ts.Def, error) {
+	entity, err := s.getEntityByString(ref)
+	if err != nil {
+		return ts.Def{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
 	}
 
-	imports, err := s.getImports(pkg.Imports)
+	if entity.Kind != src.TypeEntity {
+		return ts.Def{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
+	}
+
+	return entity.Type, nil
+}
+
+func (s Scope) rebase(pkgName string) (Scope, error) {
+	newBase, ok := s.imports[pkgName]
+	if !ok {
+		return Scope{}, fmt.Errorf("%w: %v", ErrNotImported, pkgName)
+	}
+
+	newImports, err := s.getImports(newBase.Imports)
 	if err != nil {
 		return Scope{}, fmt.Errorf("%w: %v", ErrImports, err)
 	}
 
-	s.imports = imports
-	s.local = pkg.Entities
+	s.imports = newImports
+	s.local = newBase.Entities
 
 	return s, nil
 }
@@ -56,20 +76,6 @@ func (s Scope) getImports(pkgImports map[string]string) (map[string]src.Pkg, err
 		imports[alias] = importedPkg
 	}
 	return imports, nil
-}
-
-// GetType implements types.Scope interface
-func (s Scope) GetType(ref string) (ts.Def, error) {
-	entity, err := s.getEntityByString(ref)
-	if err != nil {
-		return ts.Def{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
-	}
-
-	if entity.Kind != src.TypeEntity {
-		return ts.Def{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
-	}
-
-	return entity.Type, nil
 }
 
 func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
@@ -112,7 +118,7 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 		builtinDef, ok := s.builtins[entityRef.Name]
 		if !ok {
-			return src.Entity{}, fmt.Errorf("%w: %v", ErrLocalEntityNotFound, entityRef.Name)
+			return src.Entity{}, fmt.Errorf("%w: %v", ErrLocalOrBuiltinNotFound, entityRef.Name)
 		}
 
 		return builtinDef, nil

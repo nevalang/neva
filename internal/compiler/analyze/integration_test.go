@@ -16,7 +16,7 @@ import (
 
 var h src.Helper
 
-func TestDefaultResolver(t *testing.T) {
+func TestAnalyzer(t *testing.T) {
 	t.Parallel()
 
 	type testcase struct {
@@ -123,6 +123,10 @@ func TestDefaultResolver(t *testing.T) {
 					"pkg1": {
 						Entities: map[string]src.Entity{
 							"m1": h.IntMsgEntity(true, 42),
+							"c1": {
+								Exported: true,
+								Kind:     src.ComponentEntity,
+							},
 						},
 					},
 					"pkg2": {

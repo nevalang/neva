@@ -2,9 +2,16 @@ package analyze
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/src"
 	ts "github.com/emil14/neva/pkg/types"
+)
+
+var (
+	ErrRootComponentNodes             = errors.New("root component nodes")
+	ErrRootComponentWithoutNodes      = errors.New("root component must have nodes")
+	ErrRootComponentWithStaticInports = errors.New("root component can't have static inports")
 )
 
 // analyzeRootComponent checks root-component-specific requirements:
@@ -29,7 +36,7 @@ func (a Analyzer) analyzeRootComponent(rootComp src.Component, pkg src.Pkg, pkgs
 	}
 
 	if err := a.analyzeRootComponentNodes(rootComp.Nodes, pkg, pkgs); err != nil {
-		return err
+		return fmt.Errorf("%w: %v", ErrRootComponentNodes, err)
 	}
 
 	return nil
@@ -66,19 +73,19 @@ func (Analyzer) analyzeRootComponentIO(io src.IO, typeParam ts.Param) error {
 
 func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs map[string]src.Pkg) error {
 	if len(nodes) == 0 {
-		return errors.New("root component must have nodes")
+		return ErrRootComponentWithoutNodes
 	}
 
 	for _, node := range nodes {
 		if len(node.StaticInports) != 0 {
-			return errors.New("root component can't have static inports")
+			return fmt.Errorf("%w", ErrRootComponentWithStaticInports)
 		}
 
 		var pkgWithEntity src.Pkg
 		if node.Instance.Ref.Pkg != "" {
 			p, ok := pkgs[node.Instance.Ref.Pkg]
 			if !ok {
-				return errors.New("pkg not found")
+				return fmt.Errorf("%w", errors.New("pkg not found"))
 			}
 			pkgWithEntity = p
 		} else {
@@ -87,11 +94,11 @@ func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg
 
 		entity, ok := pkgWithEntity.Entities[node.Instance.Ref.Name]
 		if !ok {
-			return errors.New("entity not found")
+			return fmt.Errorf("%w", errors.New("entity not found"))
 		}
 
 		if entity.Kind != src.ComponentEntity {
-			return errors.New("root component nodes can only refer to other components")
+			return fmt.Errorf("%w", errors.New("root component nodes can only refer to other components"))
 		}
 	}
 
