@@ -16,19 +16,22 @@ var (
 	ErrLocalOrBuiltinNotFound = errors.New("local entity not found")
 	ErrImports                = errors.New("can't build imports")
 	ErrImportNotFound         = errors.New("imported package not found")
+	ErrPkgNotFound            = errors.New("package not found")
 	ErrNotImported            = errors.New("pkg not imported")
 	ErrImportedEntityNotFound = errors.New("entity not found in imported package")
 	ErrEntityNotExported      = errors.New("imported entity not exported")
 	ErrRebase                 = errors.New("rebase")
 )
 
+// Scope implements types.Scope interface and some additional methods for analyzer
 type Scope struct {
-	pkgs, imports   map[string]src.Pkg
-	local, builtins map[string]src.Entity
-	visited         map[src.EntityRef]struct{}
+	base     string                     // Base must always refer to existing package in pkgs
+	pkgs     map[string]src.Pkg         // Pkgs maps real names to all packages
+	builtins map[string]src.Entity      // Second location for lookup for local entities
+	visited  map[src.EntityRef]struct{} // Set of all visited entities
 }
 
-// Update will parse ref and, if it has pkg, calls rebase with that pkg
+// Update parses ref and, if it has pkg, calls rebase
 func (s Scope) Update(ref string) (ts.Scope, error) {
 	pkgAlias := s.parseRef(ref).Pkg
 	if pkgAlias == "" {
@@ -64,34 +67,21 @@ func (s Scope) getType(ref src.EntityRef) (ts.Def, error) {
 	return entity.Type, nil
 }
 
-// rebase looks for import with given alias and, if it's there, returns new Scope with imports and locals of that pkg
-func (s Scope) rebase(alias string) (Scope, error) {
-	newBase, ok := s.imports[alias]
+func (s Scope) rebase(pkgAlias string) (Scope, error) {
+	imports := s.pkgs[s.base].Imports // we assume s.base is valid
+
+	pkgName, ok := imports[pkgAlias]
 	if !ok {
-		return Scope{}, fmt.Errorf("%w: %v", ErrNotImported, alias)
+		return Scope{}, fmt.Errorf("%w: %v", ErrImportNotFound, pkgAlias)
 	}
 
-	newImports, err := s.getImports(newBase.Imports)
-	if err != nil {
-		return Scope{}, errors.Join(ErrImports, err)
+	if _, ok = s.pkgs[pkgName]; !ok {
+		return Scope{}, fmt.Errorf("%w: %v", ErrPkgNotFound, pkgAlias)
 	}
 
-	s.imports = newImports
-	s.local = newBase.Entities
+	s.base = pkgName
 
 	return s, nil
-}
-
-func (s Scope) getImports(pkgImports map[string]string) (map[string]src.Pkg, error) {
-	imports := make(map[string]src.Pkg, len(pkgImports))
-	for alias, pkgRef := range pkgImports {
-		importedPkg, ok := s.pkgs[pkgRef]
-		if !ok {
-			return nil, fmt.Errorf("%w: %v", ErrImportNotFound, pkgRef)
-		}
-		imports[alias] = importedPkg
-	}
-	return imports, nil
 }
 
 func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
@@ -125,9 +115,15 @@ func (s Scope) getEntityByString(ref string) (src.Entity, error) {
 	return s.getEntity(s.parseRef(ref))
 }
 
+func (s Scope) getLocalEntity(name string) (src.Entity, error) {
+	return s.getEntity(src.EntityRef{Name: name})
+}
+
 func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
+	basePkg := s.pkgs[s.base]
+
 	if entityRef.Pkg == "" {
-		localDef, ok := s.local[entityRef.Name]
+		localDef, ok := basePkg.Entities[entityRef.Name]
 		if ok {
 			return localDef, nil
 		}
@@ -140,9 +136,14 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 		return builtinDef, nil
 	}
 
-	importedPkg, ok := s.imports[entityRef.Pkg]
+	realImportedPkgName, ok := basePkg.Imports[entityRef.Pkg]
 	if !ok {
 		return src.Entity{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
+	}
+
+	importedPkg, ok := s.pkgs[realImportedPkgName]
+	if !ok {
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrImportNotFound, realImportedPkgName)
 	}
 
 	importedEntity, ok := importedPkg.Entities[entityRef.Name]

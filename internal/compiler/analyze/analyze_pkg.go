@@ -30,15 +30,9 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 		return src.Pkg{}, ErrUselessPkg
 	}
 
-	imports, err := a.getImports(pkg.Imports, pkgs)
-	if err != nil {
-		panic(err)
-	}
-
 	scope := Scope{
+		base:     pkgName,
 		pkgs:     pkgs,
-		imports:  imports,
-		local:    pkg.Entities,
 		builtins: a.builtinEntities(),
 		visited:  map[src.EntityRef]struct{}{},
 	}

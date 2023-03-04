@@ -25,6 +25,7 @@ var (
 	ErrReferencedMsg               = errors.New("msg not found by ref")
 	ErrInassignMsg                 = errors.New("msg is not assignable")
 	ErrRootComponent               = errors.New("analyze root component")
+	ErrScopeGetLocalEntity         = errors.New("scope get local entity")
 	ErrScopeRebase                 = errors.New("scope rebase")
 )
 
@@ -139,18 +140,6 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, scope Scope) (map[string]src.Enti
 	return resolvedPkgEntities, allUsedEntities, nil
 }
 
-func (Analyzer) getImports(pkgImports map[string]string, pkgs map[string]src.Pkg) (map[string]src.Pkg, error) {
-	imports := make(map[string]src.Pkg, len(pkgImports))
-	for alias, pkgRef := range pkgImports {
-		importedPkg, ok := pkgs[pkgRef]
-		if !ok {
-			panic("imported pkg not found")
-		}
-		imports[alias] = importedPkg
-	}
-	return imports, nil
-}
-
 // analyzeExecutablePkg checks that:
 // Entity referenced as root component exist;
 // That entity is a component;
@@ -177,15 +166,11 @@ func (a Analyzer) analyzeExecutablePkg(pkg src.Pkg, pkgs map[string]src.Pkg) err
 	return nil
 }
 
-func (a Analyzer) analyzeEntity(
-	name string,
-	scope Scope,
-) (
-	src.Entity,
-	map[src.EntityRef]struct{},
-	error,
-) { //nolint:unparam
-	entity := scope.local[name]
+func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.EntityRef]struct{}, error) {
+	entity, err := scope.getLocalEntity(name)
+	if err != nil {
+		return src.Entity{}, nil, errors.Join(ErrScopeGetLocalEntity, err)
+	}
 
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:
