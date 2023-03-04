@@ -27,7 +27,7 @@ type Scope struct {
 	visited         map[src.EntityRef]struct{}
 }
 
-// Update will parse ref and, if it has pkg, call rebase with that pkg.
+// Update will parse ref and, if it has pkg, calls rebase with that pkg
 func (s Scope) Update(ref string) (ts.Scope, error) {
 	pkg := s.parseRef(ref).Pkg
 	if pkg == "" {
@@ -37,9 +37,17 @@ func (s Scope) Update(ref string) (ts.Scope, error) {
 }
 
 func (s Scope) GetType(ref string) (ts.Def, error) {
-	entity, err := s.getEntityByString(ref)
+	return s.getType(s.parseRef(ref))
+}
+
+func (s Scope) getLocalType(name string) (ts.Def, error) {
+	return s.getType(src.EntityRef{Name: name})
+}
+
+func (s Scope) getType(ref src.EntityRef) (ts.Def, error) {
+	entity, err := s.getEntity(ref)
 	if err != nil {
-		return ts.Def{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
+		return ts.Def{}, err
 	}
 
 	if entity.Kind != src.TypeEntity {
@@ -49,10 +57,11 @@ func (s Scope) GetType(ref string) (ts.Def, error) {
 	return entity.Type, nil
 }
 
-func (s Scope) rebase(pkgName string) (Scope, error) {
-	newBase, ok := s.imports[pkgName]
+// rebase looks for import with given alias and, if it's there, returns new Scope with imports and locals of that pkg
+func (s Scope) rebase(alias string) (Scope, error) {
+	newBase, ok := s.imports[alias]
 	if !ok {
-		return Scope{}, fmt.Errorf("%w: %v", ErrNotImported, pkgName)
+		return Scope{}, fmt.Errorf("%w: %v", ErrNotImported, alias)
 	}
 
 	newImports, err := s.getImports(newBase.Imports)

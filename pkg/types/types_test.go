@@ -272,7 +272,7 @@ func TestExpr_String(t *testing.T) {
 			want: "{ MONDAY }",
 		},
 		{
-			name: "lit expr enum with two els",
+			name: "lit_expr_enum_with_two_els",
 			expr: types.Expr{
 				Lit: types.LitExpr{
 					Enum: []string{"MONDAY", "TUESDAY"},

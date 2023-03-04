@@ -12,6 +12,9 @@ var (
 	ErrRootComponentNodes             = errors.New("root component nodes")
 	ErrRootComponentWithoutNodes      = errors.New("root component must have nodes")
 	ErrRootComponentWithStaticInports = errors.New("root component can't have static inports")
+	ErrNodeRefPkgNotFound             = errors.New("node refers to not found pkg")
+	ErrNodeRefEntityNotFound          = errors.New("node refers to not found entity")
+	ErrRootCompWithNotCompNodes       = errors.New("root component nodes can only refer to other components")
 )
 
 // analyzeRootComponent checks root-component-specific requirements:
@@ -78,14 +81,14 @@ func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg
 
 	for _, node := range nodes {
 		if len(node.StaticInports) != 0 {
-			return fmt.Errorf("%w", ErrRootComponentWithStaticInports)
+			return fmt.Errorf("%w: %v", ErrRootComponentWithStaticInports, node.StaticInports)
 		}
 
 		var pkgWithEntity src.Pkg
 		if node.Instance.Ref.Pkg != "" {
 			p, ok := pkgs[node.Instance.Ref.Pkg]
 			if !ok {
-				return fmt.Errorf("%w", errors.New("pkg not found"))
+				return fmt.Errorf("%w: %v", ErrNodeRefPkgNotFound, node.Instance.Ref.Pkg)
 			}
 			pkgWithEntity = p
 		} else {
@@ -94,11 +97,11 @@ func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg
 
 		entity, ok := pkgWithEntity.Entities[node.Instance.Ref.Name]
 		if !ok {
-			return fmt.Errorf("%w", errors.New("entity not found"))
+			return fmt.Errorf("%w: %v", ErrNodeRefEntityNotFound, node.Instance.Ref.Name)
 		}
 
 		if entity.Kind != src.ComponentEntity {
-			return fmt.Errorf("%w", errors.New("root component nodes can only refer to other components"))
+			return fmt.Errorf("%w: %v: %v", ErrRootCompWithNotCompNodes, node.Instance.Ref.Name, entity.Kind)
 		}
 	}
 

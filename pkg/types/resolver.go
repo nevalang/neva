@@ -44,13 +44,13 @@ type (
 	}
 )
 
-func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
-	return r.resolve(expr, scope, map[string]Def{}, nil)
+type Scope interface {
+	GetType(ref string) (Def, error)
+	Update(ref string) (Scope, error)
 }
 
-type Scope interface {
-	GetType(string) (Def, error)
-	Update(string) (Scope, error)
+func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
+	return r.resolve(expr, scope, map[string]Def{}, nil)
 }
 
 // resolve turn one expression into another where all references points to native types.

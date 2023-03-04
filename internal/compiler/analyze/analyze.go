@@ -235,7 +235,7 @@ func (a Analyzer) analyzeEntity(
 
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:
-		resolvedDef, usedTypeEntities, err := a.analyzeType(name, scope)
+		resolvedDef, usedTypeEntities, err := a.analyzeTypeDef(name, scope)
 		if err != nil {
 			return src.Entity{}, nil, err
 		}
@@ -272,10 +272,10 @@ func (Analyzer) builtinEntities() map[string]src.Entity {
 	}
 }
 
-func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
-	def, err := scope.GetType(name) // FIXME it's not enough to create scope once, it' has dynamic nature
+func (a Analyzer) analyzeTypeDef(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
+	def, err := scope.getLocalType(name)
 	if err != nil {
-		panic(err)
+		return ts.Def{}, nil, err
 	}
 
 	testExpr := ts.Expr{

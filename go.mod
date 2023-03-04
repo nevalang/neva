@@ -1,6 +1,6 @@
 module github.com/emil14/neva
 
-go 1.19
+go 1.20
 
 require google.golang.org/protobuf v1.27.1
 
