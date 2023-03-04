@@ -10,21 +10,22 @@ import (
 )
 
 var (
-	ErrPkg              = errors.New("analyze package")
-	ErrUsed             = errors.New("analyze used")
-	ErrUnusedImport     = errors.New("unused import")
-	ErrEntity           = errors.New("analyze entity")
-	ErrUnusedEntity     = errors.New("unused entity")
-	ErrUnknownMsgType   = errors.New("unknown msg type")
-	ErrUnwantedMsgField = errors.New("unwanted msg field")
-	ErrMissingMsgField  = errors.New("missing msg field")
-	ErrVecEl            = errors.New("vector element")
-	ErrNestedMsg        = errors.New("sub message")
-	ErrReferencedMsg    = errors.New("msg not found by ref")
-	ErrInassignMsg      = errors.New("msg is not assignable")
-	ErrEntities         = errors.New("analyze entities")
-	ErrRootComponent    = errors.New("analyze root component")
-	ErrScopeRebase      = errors.New("scope rebase")
+	ErrRootPkgMissing              = errors.New("program must have root pkg")
+	ErrRootPkgNotFound             = errors.New("root pkg not found")
+	ErrRootPkgWithoutRootComponent = errors.New("root pkg must have root component")
+	ErrPkg                         = errors.New("analyze package")
+	ErrUnusedImport                = errors.New("unused import")
+	ErrEntity                      = errors.New("analyze entity")
+	ErrUnusedEntity                = errors.New("unused entity")
+	ErrUnknownMsgType              = errors.New("unknown msg type")
+	ErrUnwantedMsgField            = errors.New("unwanted msg field")
+	ErrMissingMsgField             = errors.New("missing msg field")
+	ErrVecEl                       = errors.New("vector element")
+	ErrNestedMsg                   = errors.New("sub message")
+	ErrReferencedMsg               = errors.New("msg not found by ref")
+	ErrInassignMsg                 = errors.New("msg is not assignable")
+	ErrRootComponent               = errors.New("analyze root component")
+	ErrScopeRebase                 = errors.New("scope rebase")
 )
 
 var h src.Helper
@@ -50,23 +51,23 @@ type (
 // All pkgs are analyzed;
 func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) {
 	if prog.RootPkg == "" {
-		panic("program must have root pkg")
+		return src.Prog{}, ErrRootPkgMissing
 	}
 
 	rootPkg, ok := prog.Pkgs[prog.RootPkg]
 	if !ok {
-		panic("root pkg not found")
+		return src.Prog{}, fmt.Errorf("%w: %v", ErrRootPkgNotFound, prog.RootPkg)
 	}
 
 	if rootPkg.RootComponent == "" {
-		panic("root pkg must have root component")
+		return src.Prog{}, ErrRootPkgWithoutRootComponent
 	}
 
 	resolvedPkgs := make(map[string]src.Pkg, len(prog.Pkgs))
 	for pkgName := range prog.Pkgs {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
-			return src.Prog{}, fmt.Errorf("%w: %v: %v", ErrPkg, pkgName, err)
+			return src.Prog{}, fmt.Errorf("%w: %v", errors.Join(ErrPkg, err), pkgName)
 		}
 		resolvedPkgs[pkgName] = resolvedPkg
 	}
@@ -74,44 +75,6 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 	return src.Prog{
 		Pkgs:    resolvedPkgs,
 		RootPkg: prog.RootPkg,
-	}, nil
-}
-
-// analyzePkg checks that:
-// If pkg has ref to root component then it satisfies the pkg-with-root-component-specific requirements;
-// There's no imports of not found pkgs;
-// There's no unused imports;
-// All entities are analyzed and;
-// Used (exported or referenced by exported entities or root component).
-func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, error) { //nolint:unparam
-	pkg := pkgs[pkgName]
-
-	if pkg.RootComponent != "" { // is executable
-		if err := a.analyzePkgWithRootComponent(pkg, pkgs); err != nil {
-			panic(err)
-		}
-	} else if len(a.getExports(pkg.Entities)) == 0 {
-		panic("package must have exported entities if it doesn't have a root component")
-	}
-
-	imports, err := a.getImports(pkg.Imports, pkgs)
-	if err != nil {
-		panic(err)
-	} // at this we know all pkg's imports points to existing pkgs
-
-	resolvedEntities, allUsedEntities, err := a.analyzeEntities(pkg, imports, pkgs)
-	if err != nil {
-		return src.Pkg{}, fmt.Errorf("%w: %v", ErrEntities, err)
-	}
-
-	if err := a.analyzeUsed(pkg, allUsedEntities); err != nil {
-		return src.Pkg{}, fmt.Errorf("%w: %v", ErrUsed, err)
-	}
-
-	return src.Pkg{
-		Entities:      resolvedEntities,
-		Imports:       pkg.Imports,
-		RootComponent: pkg.RootComponent,
 	}, nil
 }
 
@@ -152,7 +115,7 @@ func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}
 	return nil
 }
 
-func (a Analyzer) analyzeEntities(pkg src.Pkg, imports, pkgs map[string]src.Pkg) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
+func (a Analyzer) analyzeEntities(pkg src.Pkg, scope Scope) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
 	resolvedPkgEntities := make(map[string]src.Entity, len(pkg.Entities))
 	allUsedEntities := map[src.EntityRef]struct{}{} // both local and imported
 
@@ -161,7 +124,7 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports, pkgs map[string]src.Pkg)
 			allUsedEntities[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
 		}
 
-		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, pkg.Entities, imports, pkgs)
+		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, scope)
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w: %v: %v", ErrEntity, entityName, err)
 		}
@@ -176,7 +139,6 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, imports, pkgs map[string]src.Pkg)
 	return resolvedPkgEntities, allUsedEntities, nil
 }
 
-// getImports maps aliases to packages
 func (Analyzer) getImports(pkgImports map[string]string, pkgs map[string]src.Pkg) (map[string]src.Pkg, error) {
 	imports := make(map[string]src.Pkg, len(pkgImports))
 	for alias, pkgRef := range pkgImports {
@@ -189,12 +151,12 @@ func (Analyzer) getImports(pkgImports map[string]string, pkgs map[string]src.Pkg
 	return imports, nil
 }
 
-// analyzePkgWithRootComponent checks that:
+// analyzeExecutablePkg checks that:
 // Entity referenced as root component exist;
 // That entity is a component;
 // It's not exported and;
 // It satisfies root-component-specific requirements;
-func (a Analyzer) analyzePkgWithRootComponent(pkg src.Pkg, pkgs map[string]src.Pkg) error {
+func (a Analyzer) analyzeExecutablePkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
 	entity, ok := pkg.Entities[pkg.RootComponent]
 	if !ok {
 		panic("root component not found")
@@ -217,21 +179,13 @@ func (a Analyzer) analyzePkgWithRootComponent(pkg src.Pkg, pkgs map[string]src.P
 
 func (a Analyzer) analyzeEntity(
 	name string,
-	entities map[string]src.Entity,
-	imports, pkgs map[string]src.Pkg,
+	scope Scope,
 ) (
 	src.Entity,
 	map[src.EntityRef]struct{},
 	error,
 ) { //nolint:unparam
-	entity := entities[name]
-	scope := Scope{
-		pkgs:     pkgs,
-		imports:  imports,
-		local:    entities,
-		builtins: a.builtinEntities(),
-		visited:  map[src.EntityRef]struct{}{},
-	}
+	entity := scope.local[name]
 
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
 	case src.TypeEntity:

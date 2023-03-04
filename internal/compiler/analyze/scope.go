@@ -19,6 +19,7 @@ var (
 	ErrNotImported            = errors.New("pkg not imported")
 	ErrImportedEntityNotFound = errors.New("entity not found in imported package")
 	ErrEntityNotExported      = errors.New("imported entity not exported")
+	ErrRebase                 = errors.New("rebase")
 )
 
 type Scope struct {
@@ -29,11 +30,17 @@ type Scope struct {
 
 // Update will parse ref and, if it has pkg, calls rebase with that pkg
 func (s Scope) Update(ref string) (ts.Scope, error) {
-	pkg := s.parseRef(ref).Pkg
-	if pkg == "" {
+	pkgAlias := s.parseRef(ref).Pkg
+	if pkgAlias == "" {
 		return s, nil
 	}
-	return s.rebase(pkg)
+
+	scope, err := s.rebase(pkgAlias)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", errors.Join(ErrRebase, err), pkgAlias)
+	}
+
+	return scope, nil
 }
 
 func (s Scope) GetType(ref string) (ts.Def, error) {
@@ -66,7 +73,7 @@ func (s Scope) rebase(alias string) (Scope, error) {
 
 	newImports, err := s.getImports(newBase.Imports)
 	if err != nil {
-		return Scope{}, fmt.Errorf("%w: %v", ErrImports, err)
+		return Scope{}, errors.Join(ErrImports, err)
 	}
 
 	s.imports = newImports
