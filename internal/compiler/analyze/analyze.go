@@ -27,6 +27,7 @@ var (
 	ErrRootComponent               = errors.New("analyze root component")
 	ErrScopeGetLocalEntity         = errors.New("scope get local entity")
 	ErrScopeRebase                 = errors.New("scope rebase")
+	ErrMsg                         = errors.New("analyze msg")
 )
 
 var h src.Helper
@@ -127,7 +128,7 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, scope Scope) (map[string]src.Enti
 
 		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, scope)
 		if err != nil {
-			return nil, nil, fmt.Errorf("%w: %v: %v", ErrEntity, entityName, err)
+			return nil, nil, fmt.Errorf("%w: %v", errors.Join(ErrEntity, err), entityName)
 		}
 
 		for entityRef := range entitiesUsedByEntity {
@@ -186,7 +187,7 @@ func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.E
 	case src.MsgEntity:
 		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg, scope, nil)
 		if err != nil {
-			return src.Entity{}, nil, err
+			return src.Entity{}, nil, errors.Join(ErrMsg, err)
 		}
 		return src.Entity{
 			Msg:      resolvedMsg,
@@ -262,7 +263,7 @@ func (a Analyzer) analyzeMsg(
 		}
 		resolvedSubMsg, used, err := a.analyzeMsg(subMsg, scope, resolvedConstr)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v, %v", ErrNestedMsg, err, msg.Ref)
+			return src.Msg{}, nil, fmt.Errorf("%w: %v: %v", ErrNestedMsg, err, msg.Ref)
 		}
 		used[*msg.Ref] = struct{}{}
 		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
@@ -297,7 +298,7 @@ func (a Analyzer) analyzeMsg(
 		for i, el := range msg.Value.Vec {
 			analyzedEl, _, err := a.analyzeMsg(el, scope, &vecType)
 			if err != nil {
-				return src.Msg{}, nil, fmt.Errorf("%w: #%d, err %v", ErrVecEl, i, err)
+				return src.Msg{}, nil, fmt.Errorf("%w: #%d: %v", ErrVecEl, i, err)
 			}
 			msg.Value.Vec[i] = analyzedEl
 		}

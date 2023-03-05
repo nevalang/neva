@@ -1,6 +1,10 @@
 package src
 
-import ts "github.com/emil14/neva/pkg/types"
+import (
+	"fmt"
+
+	ts "github.com/emil14/neva/pkg/types"
+)
 
 type Prog struct {
 	Pkgs    map[string]Pkg // what about versions? files?
@@ -74,6 +78,13 @@ type Instance struct {
 type EntityRef struct {
 	Pkg  string // "" for local entities (alias, namespace)
 	Name string
+}
+
+func (e EntityRef) String() string {
+	if e.Pkg == "" {
+		return e.Name
+	}
+	return fmt.Sprintf("%s.%s", e.Pkg, e.Name)
 }
 
 type Msg struct {

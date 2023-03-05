@@ -8,7 +8,7 @@ type Helper struct {
 	ts.Helper
 }
 
-/* ============================== TYPES  ============================== */
+/* ================================ TYPES  ================================ */
 
 func (h Helper) TypeEntity(exported bool, def ts.Def) Entity {
 	return Entity{
@@ -22,13 +22,7 @@ func (h Helper) BaseTypeEntity(params ...ts.Param) Entity {
 	return h.TypeEntity(false, h.BaseDef(params...))
 }
 
-func (h Helper) Imports(ss ...string) map[string]string {
-	m := make(map[string]string, len(ss))
-	for _, s := range ss {
-		m[s] = s
-	}
-	return m
-}
+/* ============================== COMPONENTS  ============================== */
 
 func (h Helper) RootComponentEntity(nodes map[string]Node) Entity {
 	return Entity{
@@ -60,7 +54,7 @@ func (h Helper) ComponentNode(pkg, entity string) Node {
 	}
 }
 
-/* ============================== MESSAGES  ============================== */
+/* =============================== MESSAGES  =============================== */
 
 func (h Helper) MsgEntity(exported bool, v MsgValue) Entity {
 	return Entity{
@@ -103,3 +97,12 @@ func (h Helper) IntVecMsgEntity(exported bool, vv []Msg) Entity {
 	})
 }
 
+/* ================================ OTHER  ================================ */
+
+func (h Helper) Imports(ss ...string) map[string]string {
+	m := make(map[string]string, len(ss))
+	for _, s := range ss {
+		m[s] = s
+	}
+	return m
+}

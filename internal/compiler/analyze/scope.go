@@ -91,7 +91,7 @@ func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
 	}
 
 	if entity.Kind != src.MsgEntity {
-		return src.Msg{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
+		return src.Msg{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.MsgEntity, entity.Kind)
 	}
 
 	return entity.Msg, nil
