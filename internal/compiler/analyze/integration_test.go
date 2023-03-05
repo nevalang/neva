@@ -187,6 +187,77 @@ func TestAnalyzer(t *testing.T) {
 			},
 			wantErr: analyze.ErrVecEl,
 		},
+		{
+			name: "...",
+			prog: src.Prog{
+				Pkgs: map[string]src.Pkg{
+					"pkg1": {
+						Entities: map[string]src.Entity{
+							"m1": h.IntMsgEntity(true, 42),
+							"c1": {
+								Exported: true,
+								Kind:     src.ComponentEntity,
+							},
+						},
+					},
+					"pkg2": {
+						Imports: h.Imports("pkg1"),
+						Entities: map[string]src.Entity{
+							"m1": h.MsgWithRefEntity(true, &src.EntityRef{
+								Pkg:  "pkg1",
+								Name: "m1",
+							}),
+						},
+					},
+					"pkg3": {
+						Imports: h.Imports("pkg1", "pkg2"),
+						Entities: map[string]src.Entity{
+							"m1": h.IntVecMsgEntity(
+								true,
+								[]src.Msg{
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg1",
+											Name: "m1",
+										},
+									},
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg2",
+											Name: "m1",
+										},
+									},
+									{Value: h.IntMsgValue(43)},
+								},
+							),
+						},
+					},
+					"pkg4": {
+						Imports: h.Imports("pkg1", "pkg2", "pkg3"),
+						Entities: map[string]src.Entity{
+							"m1": h.IntVecMsgEntity(
+								true,
+								[]src.Msg{
+									{Value: h.IntMsgValue(44)},
+									{
+										Ref: &src.EntityRef{
+											Pkg:  "pkg3",
+											Name: "m1",
+										},
+									},
+								},
+							),
+							"c1": h.RootComponentEntity(map[string]src.Node{
+								"n1": h.ComponentNode("pkg1", "c1"),
+							}),
+						},
+						RootComponent: "c1",
+					},
+				},
+				RootPkg: "pkg4",
+			},
+			wantErr: analyze.ErrVecEl,
+		},
 	}
 
 	a := analyze.Analyzer{

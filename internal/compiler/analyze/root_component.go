@@ -15,6 +15,12 @@ var (
 	ErrNodeRefPkgNotFound             = errors.New("node refers to not found pkg")
 	ErrNodeRefEntityNotFound          = errors.New("node refers to not found entity")
 	ErrRootCompWithNotCompNodes       = errors.New("root component nodes can only refer to other components")
+	ErrRootComponentWithOutports      = errors.New("root component can't have outports")
+	ErrRootComponentInportCount       = errors.New("root component must have 1 inport")
+	ErrRootComponentWithoutSig        = errors.New("root component must have 'sig' inport")
+	ErrArrSig                         = errors.New("sig inport of root component can't be array port")
+	ErrSigLit                         = errors.New("sig inport of root component can't have literal as type")
+	ErrSigType                        = errors.New("sig inport of root component must refer to type parameter")
 )
 
 // analyzeRootComponent checks root-component-specific requirements:
@@ -47,28 +53,28 @@ func (a Analyzer) analyzeRootComponent(rootComp src.Component, pkg src.Pkg, pkgs
 
 func (Analyzer) analyzeRootComponentIO(io src.IO, typeParam ts.Param) error {
 	if len(io.Out) != 0 {
-		return errors.New("root component can't have outports")
+		return fmt.Errorf("%w: %v", ErrRootComponentWithOutports, io.Out)
 	}
 
 	if len(io.In) != 1 {
-		return errors.New("root component must have 1 inport")
+		return fmt.Errorf("%w: %v", ErrRootComponentInportCount, io.In)
 	}
 
 	sigInport, ok := io.In["sig"]
 	if !ok {
-		return errors.New("root component must have 'sig' inport")
+		return ErrRootComponentWithoutSig
 	}
 
 	if sigInport.IsArr {
-		return errors.New("sig inport of root component can't be array port")
+		return ErrArrSig
 	}
 
 	if !sigInport.Type.Lit.Empty() {
-		return errors.New("sig inport of root component can't have literal as type")
+		return ErrSigLit
 	}
 
 	if sigInport.Type.Inst.Ref != typeParam.Name {
-		return errors.New("sig inport of root component must refer to type parameter")
+		return ErrSigType
 	}
 
 	return nil
