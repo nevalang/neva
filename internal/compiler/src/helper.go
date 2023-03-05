@@ -45,7 +45,7 @@ func (h Helper) RootComponentEntity(nodes map[string]Node) Entity {
 
 func (h Helper) ComponentNode(pkg, entity string) Node {
 	return Node{
-		Instance: Instance{
+		Instance: NodeInstance{
 			Ref: EntityRef{
 				Pkg:  pkg,
 				Name: entity,

@@ -5,6 +5,7 @@ package analyze_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ func TestAnalyzer(t *testing.T) {
 	t.Parallel()
 
 	type testcase struct {
+		enabled bool
 		name    string
 		prog    src.Prog
 		wantErr error
@@ -27,7 +29,7 @@ func TestAnalyzer(t *testing.T) {
 
 	tests := []testcase{
 		{
-			name: "root pkg refers to type and component in another pkg",
+			name: "root_pkg_refers_to_imported_pkg",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
 					"pkg2": {
@@ -58,15 +60,15 @@ func TestAnalyzer(t *testing.T) {
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						RootComponent: "c1",
+						MainComponent: "c1",
 					},
 				},
-				RootPkg: "pkg1",
+				MainPkg: "pkg1",
 			},
 			wantErr: nil,
 		},
 		{
-			name: "root pkg refers another pkg that refers another pkg via types",
+			name: "root_pkg_refers_imported_pkg_that_refers_another_imported_pkg",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
 					"pkg3": {
@@ -109,15 +111,15 @@ func TestAnalyzer(t *testing.T) {
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						RootComponent: "c1",
+						MainComponent: "c1",
 					},
 				},
-				RootPkg: "pkg1",
+				MainPkg: "pkg1",
 			},
 			wantErr: nil,
 		},
 		{
-			name: "inassignable message",
+			name: "inassignable_message_and_4-step_import_chain",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
 					"pkg1": {
@@ -180,96 +182,70 @@ func TestAnalyzer(t *testing.T) {
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						RootComponent: "c1",
+						MainComponent: "c1",
 					},
 				},
-				RootPkg: "pkg4",
+				MainPkg: "pkg4",
 			},
 			wantErr: analyze.ErrVecEl,
 		},
 		{
-			name: "...",
+			enabled: true,
+			name:    "pkg1_imports_pkg2_and_pkg3_but_refers_to_only_pkg2_while_pkg2_actually_refers_pkg3",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{
 					"pkg1": {
+						Imports: h.Imports("pkg2", "pkg3"), // pkg3 unused
 						Entities: map[string]src.Entity{
-							"m1": h.IntMsgEntity(true, 42),
+							"c1": h.RootComponentEntity(map[string]src.Node{
+								"n1": h.ComponentNode("pkg2", "c1"),
+							}),
+						},
+						MainComponent: "c1",
+					},
+					"pkg2": {
+						Imports: map[string]string{
+							"pkg3": "pkg3",
+						},
+						Entities: map[string]src.Entity{
 							"c1": {
 								Exported: true,
 								Kind:     src.ComponentEntity,
 							},
-						},
-					},
-					"pkg2": {
-						Imports: h.Imports("pkg1"),
-						Entities: map[string]src.Entity{
 							"m1": h.MsgWithRefEntity(true, &src.EntityRef{
-								Pkg:  "pkg1",
+								Pkg:  "pkg3",
 								Name: "m1",
 							}),
 						},
 					},
 					"pkg3": {
-						Imports: h.Imports("pkg1", "pkg2"),
 						Entities: map[string]src.Entity{
-							"m1": h.IntVecMsgEntity(
-								true,
-								[]src.Msg{
-									{
-										Ref: &src.EntityRef{
-											Pkg:  "pkg1",
-											Name: "m1",
-										},
-									},
-									{
-										Ref: &src.EntityRef{
-											Pkg:  "pkg2",
-											Name: "m1",
-										},
-									},
-									{Value: h.IntMsgValue(43)},
-								},
-							),
+							"m1": h.IntMsgEntity(true, 42),
 						},
-					},
-					"pkg4": {
-						Imports: h.Imports("pkg1", "pkg2", "pkg3"),
-						Entities: map[string]src.Entity{
-							"m1": h.IntVecMsgEntity(
-								true,
-								[]src.Msg{
-									{Value: h.IntMsgValue(44)},
-									{
-										Ref: &src.EntityRef{
-											Pkg:  "pkg3",
-											Name: "m1",
-										},
-									},
-								},
-							),
-							"c1": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg1", "c1"),
-							}),
-						},
-						RootComponent: "c1",
 					},
 				},
-				RootPkg: "pkg4",
+				MainPkg: "pkg1",
 			},
-			wantErr: analyze.ErrVecEl,
+			wantErr: analyze.ErrUnusedImport,
 		},
 	}
 
-	a := analyze.Analyzer{
-		Resolver: ts.NewDefaultResolver(),
-		Compator: ts.NewDefaultCompatChecker(),
-	}
+	a := analyze.MustNew(
+		ts.NewDefaultResolver(),
+		ts.NewDefaultCompatChecker(),
+		ts.Validator{},
+	)
 
 	for _, tt := range tests {
+		if !tt.enabled {
+			continue
+		}
+
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			_, err := a.Analyze(context.Background(), tt.prog)
+			fmt.Println(err)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
 	}

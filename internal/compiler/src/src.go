@@ -8,13 +8,13 @@ import (
 
 type Prog struct {
 	Pkgs    map[string]Pkg // what about versions? files?
-	RootPkg string
+	MainPkg string
 }
 
 type Pkg struct {
 	Imports       map[string]string // alias->path
 	Entities      map[string]Entity
-	RootComponent string // empty string means library (not-executable) package
+	MainComponent string // empty string means library (not-executable) package
 }
 
 type Entity struct {
@@ -64,15 +64,15 @@ type Interface struct {
 
 // Component's network node
 type Node struct {
-	Instance      Instance
+	Instance      NodeInstance
 	StaticInports map[string]EntityRef // must refer to messages
 }
 
-// Instance of a component or interface for network node for DI
-type Instance struct {
-	Ref  EntityRef           // must refer to component or interface
-	Args []ts.Expr           // must be valid args for entity's type params
-	DI   map[string]Instance // only for components with DI
+// NodeInstance of a component or interface for network node for DI
+type NodeInstance struct {
+	Ref  EntityRef               // must refer to component or interface
+	Args []ts.Expr               // must be valid args for entity's type params
+	DI   map[string]NodeInstance // only for components with DI (with nodes with interface refs)
 }
 
 type EntityRef struct {

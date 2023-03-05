@@ -10,7 +10,6 @@ import (
 
 var (
 	ErrScopeGetLocalType = errors.New("scope get local type")
-	ErrResolver          = errors.New("type expression  resolver")
 )
 
 func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
@@ -22,7 +21,7 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 	testExpr := ts.Expr{
 		Inst: ts.InstExpr{
 			Ref:  name,
-			Args: a.getTestExprArgs(def),
+			Args: a.getTestExprArgs(def.Params),
 		},
 	}
 
@@ -34,9 +33,9 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 	return def, scope.visited, nil
 }
 
-func (Analyzer) getTestExprArgs(def ts.Def) []ts.Expr {
-	args := make([]ts.Expr, 0, len(def.Params))
-	for _, param := range def.Params {
+func (Analyzer) getTestExprArgs(params []ts.Param) []ts.Expr {
+	args := make([]ts.Expr, 0, len(params))
+	for _, param := range params {
 		if param.Constr.Empty() {
 			args = append(args, h.Inst("int"))
 		} else {

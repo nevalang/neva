@@ -17,13 +17,24 @@ var (
 	ErrInterface           = errors.New("analyze interface")
 )
 
-func (a Analyzer) analyzeEntities(pkg src.Pkg, scope Scope) (map[string]src.Entity, map[src.EntityRef]struct{}, error) {
-	resolvedPkgEntities := make(map[string]src.Entity, len(pkg.Entities))
-	allUsedEntities := map[src.EntityRef]struct{}{} // both local and imported
+func (a Analyzer) analyzeEntities(
+	pkgName string,
+	pkg src.Pkg,
+	scope Scope,
+) (
+	map[string]src.Entity,
+	map[src.EntityRef]struct{},
+	error,
+) {
+	resolvedEntities := make(map[string]src.Entity, len(pkg.Entities))
+	used := map[src.EntityRef]struct{}{} // both local and imported
 
 	for entityName, entity := range pkg.Entities {
-		if entity.Exported || entityName == pkg.RootComponent {
-			allUsedEntities[src.EntityRef{Name: entityName}] = struct{}{} // normalize?
+		if entity.Exported || entityName == pkg.MainComponent {
+			used[src.EntityRef{
+				Pkg:  pkgName,
+				Name: entityName,
+			}] = struct{}{}
 		}
 
 		resolvedEntity, entitiesUsedByEntity, err := a.analyzeEntity(entityName, scope)
@@ -32,13 +43,13 @@ func (a Analyzer) analyzeEntities(pkg src.Pkg, scope Scope) (map[string]src.Enti
 		}
 
 		for entityRef := range entitiesUsedByEntity {
-			allUsedEntities[entityRef] = struct{}{}
+			used[entityRef] = struct{}{}
 		}
 
-		resolvedPkgEntities[entityName] = resolvedEntity
+		resolvedEntities[entityName] = resolvedEntity
 	}
 
-	return resolvedPkgEntities, allUsedEntities, nil
+	return resolvedEntities, used, nil
 }
 
 func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.EntityRef]struct{}, error) {
@@ -91,6 +102,4 @@ func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.E
 	default:
 		return src.Entity{}, nil, ErrUnknownEntityKind
 	}
-
-	return src.Entity{}, map[src.EntityRef]struct{}{}, nil
 }

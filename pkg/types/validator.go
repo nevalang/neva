@@ -15,24 +15,27 @@ var (
 	ErrUnionLen                     = errors.New("union len must be >= 2")
 	ErrEnumDupl                     = errors.New("enum contains duplicate elements")
 	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
+	ErrParamDuplicate               = errors.New("params must have unique names")
+	ErrParams                       = errors.New("bad params")
 )
 
-// ValidateDef checks that type doesn't support recursion if it's not a base type (it's body isn't empty)
-// and that there're no duplicate names among type parameters. It doesn't validate body or constrs
-// because there's ValidateExpr that called by Resolver already.
 func (v Validator) ValidateDef(def Def) error {
-	// TODO use this method in resolved
 	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
+	if err := v.ValidateParams(def.Params); err != nil {
+		return errors.Join(ErrParams, err)
+	}
+	return nil
+}
 
-	m := make(map[string]struct{}, len(def.Params))
-	for _, param := range def.Params {
+func (v Validator) ValidateParams(params []Param) error {
+	m := make(map[string]struct{}, len(params))
+	for _, param := range params {
 		if _, ok := m[param.Name]; ok {
 			return fmt.Errorf("%w: param", ErrParamDuplicate)
 		}
 	}
-
 	return nil
 }
 

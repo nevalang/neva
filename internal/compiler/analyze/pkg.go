@@ -29,7 +29,7 @@ var (
 func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, error) { //nolint:unparam
 	pkg := pkgs[pkgName]
 
-	if pkg.RootComponent != "" {
+	if pkg.MainComponent != "" {
 		if err := a.analyzeExecutablePkg(pkg, pkgs); err != nil {
 			return src.Pkg{}, errors.Join(ErrExecutablePkg, err)
 		}
@@ -44,19 +44,19 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 		visited:  map[src.EntityRef]struct{}{},
 	}
 
-	resolvedEntities, used, err := a.analyzeEntities(pkg, scope)
+	resolvedEntities, used, err := a.analyzeEntities(pkgName, pkg, scope)
 	if err != nil {
 		return src.Pkg{}, errors.Join(ErrEntities, err)
 	}
 
-	if err := a.analyzeUsed(pkg, used); err != nil {
+	if err := a.analyzeUsed(pkgName, pkg, used); err != nil {
 		return src.Pkg{}, errors.Join(ErrUsed, err)
 	}
 
 	return src.Pkg{
 		Entities:      resolvedEntities,
 		Imports:       pkg.Imports,
-		RootComponent: pkg.RootComponent,
+		MainComponent: pkg.MainComponent,
 	}, nil
 }
 
@@ -66,9 +66,9 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 // It's not exported and;
 // It satisfies root-component-specific requirements;
 func (a Analyzer) analyzeExecutablePkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
-	entity, ok := pkg.Entities[pkg.RootComponent]
+	entity, ok := pkg.Entities[pkg.MainComponent]
 	if !ok {
-		return fmt.Errorf("%w: %v", ErrRootComponentNotFound, pkg.RootComponent)
+		return fmt.Errorf("%w: %v", ErrRootComponentNotFound, pkg.MainComponent)
 	}
 
 	if entity.Kind != src.ComponentEntity {
@@ -103,21 +103,21 @@ func (Analyzer) builtinEntities() map[string]src.Entity {
 }
 
 // analyzeUsed returns error if there're unused imports or entities
-func (Analyzer) analyzeUsed(pkg src.Pkg, usedEntities map[src.EntityRef]struct{}) error {
+func (Analyzer) analyzeUsed(pkgName string, pkg src.Pkg, usedEntities map[src.EntityRef]struct{}) error {
 	usedImports := map[string]struct{}{}
 	usedLocalEntities := map[string]struct{}{}
 
 	for ref := range usedEntities {
-		if ref.Pkg == "" {
+		if ref.Pkg == pkgName {
 			usedLocalEntities[ref.Name] = struct{}{}
 		} else {
 			usedImports[ref.Pkg] = struct{}{}
 		}
 	}
 
-	for alias := range pkg.Imports {
-		if _, ok := usedImports[alias]; !ok {
-			return fmt.Errorf("%w: %v", ErrUnusedImport, alias)
+	for importAlias := range pkg.Imports {
+		if _, ok := usedImports[importAlias]; !ok {
+			return fmt.Errorf("%w: %v", ErrUnusedImport, importAlias)
 		}
 	}
 

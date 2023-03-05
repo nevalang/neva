@@ -48,6 +48,20 @@ func (mr *MockexprValidatorMockRecorder) Validate(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockexprValidator)(nil).Validate), arg0)
 }
 
+// ValidateDef mocks base method.
+func (m *MockexprValidator) ValidateDef(def types.Def) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateDef", def)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateDef indicates an expected call of ValidateDef.
+func (mr *MockexprValidatorMockRecorder) ValidateDef(def interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDef", reflect.TypeOf((*MockexprValidator)(nil).ValidateDef), def)
+}
+
 // MockcompatChecker is a mock of compatChecker interface.
 type MockcompatChecker struct {
 	ctrl     *gomock.Controller
@@ -147,16 +161,31 @@ func (m *MockScope) EXPECT() *MockScopeMockRecorder {
 }
 
 // GetType mocks base method.
-func (m *MockScope) GetType(arg0 string) (types.Def, error) {
+func (m *MockScope) GetType(ref string) (types.Def, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetType", arg0)
+	ret := m.ctrl.Call(m, "GetType", ref)
 	ret0, _ := ret[0].(types.Def)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetType indicates an expected call of GetType.
-func (mr *MockScopeMockRecorder) GetType(arg0 interface{}) *gomock.Call {
+func (mr *MockScopeMockRecorder) GetType(ref interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockScope)(nil).GetType), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockScope)(nil).GetType), ref)
+}
+
+// Update mocks base method.
+func (m *MockScope) Update(ref string) (types.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ref)
+	ret0, _ := ret[0].(types.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockScopeMockRecorder) Update(ref interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockScope)(nil).Update), ref)
 }

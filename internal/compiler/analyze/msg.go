@@ -50,7 +50,7 @@ func (a Analyzer) analyzeMsg(
 	}
 
 	if resolvedConstr != nil {
-		if err := a.Compator.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
+		if err := a.Checker.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
 			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrInassignMsg, err)
 		}
 	}

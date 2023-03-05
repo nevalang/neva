@@ -125,6 +125,10 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 	if entityRef.Pkg == "" {
 		localDef, ok := basePkg.Entities[entityRef.Name]
 		if ok {
+			s.visited[src.EntityRef{
+				Pkg:  s.base,
+				Name: entityRef.Name,
+			}] = struct{}{}
 			return localDef, nil
 		}
 
@@ -132,6 +136,7 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 		if !ok {
 			return src.Entity{}, fmt.Errorf("%w: %v", ErrLocalOrBuiltinNotFound, entityRef.Name)
 		}
+		s.visited[entityRef] = struct{}{}
 
 		return builtinDef, nil
 	}
@@ -159,3 +164,34 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 	return importedEntity, nil
 }
+
+func (s Scope) getComponent(entityRef src.EntityRef) (src.Component, error) {
+	entity, err := s.getEntity(entityRef)
+	if err != nil {
+		return src.Component{}, nil
+	}
+	if entity.Kind != src.ComponentEntity {
+		return src.Component{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.ComponentEntity, entity.Kind)
+	}
+	return entity.Component, nil
+}
+
+func (s Scope) getInterface(entityRef src.EntityRef) (src.Component, error) {
+	entity, err := s.getEntity(entityRef)
+	if err != nil {
+		return src.Component{}, nil
+	}
+	if entity.Kind != src.InterfaceEntity {
+		return src.Component{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.InterfaceEntity, entity.Kind)
+	}
+	return entity.Component, nil
+}
+
+// FIXME:
+// pkg1 {
+//     import pkg3 // <- unused import
+//     E1
+// }
+// pkg2 {
+//     e1 -> pkg3.e1 // makes pkg3 used import
+// }
