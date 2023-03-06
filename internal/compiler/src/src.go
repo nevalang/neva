@@ -38,13 +38,13 @@ const (
 func (e EntityKind) String() string {
 	switch e {
 	case ComponentEntity:
-		return "componentEntity"
+		return "component"
 	case MsgEntity:
-		return "msgEntity"
+		return "msg"
 	case TypeEntity:
-		return "typeEntity"
+		return "type"
 	case InterfaceEntity:
-		return "interfaceEntity"
+		return "interface"
 	default:
 		return "unknown"
 	}

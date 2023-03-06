@@ -3,47 +3,43 @@ package compiler
 import (
 	"context"
 
+	"github.com/emil14/neva/internal/compiler/ir"
 	"github.com/emil14/neva/internal/compiler/src"
 )
 
-type Compiler[T any] struct {
+type Compiler struct {
 	analyzer Analyzer
-	// optimizer   Optimizer
-	synthesizer Synthesizer[T]
+	irgen    IRGenerator
+	backend  Backend
 }
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, src.Prog) (src.Prog, error)
+		Analyze(context.Context, src.Prog) (src.Prog, error) // returns program ready for synthesis
 	}
-	Optimizer interface {
-		Optimize(context.Context, src.Prog) (src.Prog, error)
+	IRGenerator interface {
+		GenerateIR(context.Context, src.Prog) (ir.Program, error)
 	}
-	Synthesizer[T any] interface {
-		Synthesize(context.Context, src.Prog) (T, error)
+	Backend interface {
+		GenerateTarget(context.Context, ir.Program) ([]byte, error)
 	}
 )
 
-func (c Compiler[T]) Compile(ctx context.Context, resolvedProg src.Prog) (*T, error) {
-	resolvedProg, err := c.analyzer.Analyze(ctx, resolvedProg)
+func (c Compiler) Compile(ctx context.Context, analyzedSrc src.Prog) ([]byte, error) {
+	analyzedSrc, err := c.analyzer.Analyze(ctx, analyzedSrc)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	target, err := c.synthesizer.Synthesize(ctx, resolvedProg)
+	irprog, err := c.irgen.GenerateIR(ctx, analyzedSrc)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	return &target, nil
+	target, err := c.backend.GenerateTarget(ctx, irprog)
+	if err != nil {
+		return nil, err
+	}
+
+	return target, nil
 }
-
-// func MustNew[T any](b Builder, a Analyzer, s Synthesizer[T]) Compiler[T] {
-// 	tools.NilPanic(b, a, s)
-
-// 	return Compiler[T]{
-// 		builder:     b,
-// 		analyzer:    a,
-// 		synthesizer: s,
-// 	}
-// }
