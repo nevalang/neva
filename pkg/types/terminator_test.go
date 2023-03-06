@@ -15,14 +15,14 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		enabled bool
 		name    string
 		trace   ts.Trace
-		scope   ts.DefaultScope
+		scope   Scope
 		want    bool
 		wantErr error
 	}{
 		{ // vec<t1> [t1] { t1=vec<t1>, vec<t> }
 			name:  "non valid recursive case",
 			trace: ts.NewTrace(nil, "t1"),
-			scope: ts.DefaultScope{
+			scope: Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
@@ -32,7 +32,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		{ // t1 [t1 vec t1] { t1=vec<t1>, vec<t> }
 			name:  "recursive valid case, recursive type ref",
 			trace: h.Trace("t1", "vec", "t1"),
-			scope: ts.DefaultScope{
+			scope: Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
@@ -42,7 +42,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		{ // vec<t1> [vec t1 vec] { t1=vec<t1>, vec<t> }
 			name:  "recursive valid case, recursive type as arg",
 			trace: h.Trace("vec", "t1", "vec"),
-			scope: ts.DefaultScope{
+			scope: Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			},
@@ -53,7 +53,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			enabled: true,
 			name:    "invalid indirect recursion",
 			trace:   h.Trace("t1", "t2", "t1"),
-			scope: ts.DefaultScope{
+			scope: Scope{
 				"t1": h.Def(h.Inst("t2")), // indirectly
 				"t2": h.Def(h.Inst("t1")), // refers to itself
 			},

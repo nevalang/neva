@@ -18,7 +18,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	type testcase struct {
 		enabled    bool
 		expr       ts.Expr
-		scope      ts.DefaultScope
+		scope      Scope
 		validator  func(v *MockexprValidatorMockRecorder)
 		comparator func(c *MockcompatCheckerMockRecorder)
 		terminator func(t *MockrecursionTerminatorMockRecorder)
@@ -42,7 +42,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 				},
-				scope:   ts.DefaultScope{},
+				scope:   Scope{},
 				wantErr: ts.ErrScope,
 			}
 		},
@@ -50,7 +50,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Inst("vec")
 			return testcase{
 				expr: expr,
-				scope: ts.DefaultScope{
+				scope: Scope{
 					"vec": h.BaseDef(h.ParamWithNoConstr("t")),
 				},
 				validator: func(v *MockexprValidatorMockRecorder) {
@@ -62,7 +62,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"unresolvable_argument": func() testcase { // expr = vec<foo>, scope = {vec<t> = vec}
 			expr := h.Inst("vec", h.Inst("foo"))
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"vec": h.BaseDef(ts.Param{Name: "t"}),
 			}
 			return testcase{
@@ -83,7 +83,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"incompat_arg": func() testcase { // expr = map<t1>, scope = { map<t t2> = map, t1 , t2 }
 			expr := h.Inst("map", h.Inst("t1"))
 			constr := h.Inst("t2")
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"map": h.BaseDef(ts.Param{"t", constr}),
 				"t1":  h.BaseDef(),
 				"t2":  h.BaseDef(),
@@ -119,7 +119,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"expr_underlaying_type_not_found": func() testcase { // expr = t1<int>, scope = { int, t1<t> = t3<t> }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"int": h.BaseDef(),
 				"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.ParamWithNoConstr("t")),
 			}
@@ -144,7 +144,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"constr_undefined_ref": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> = t1 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.BaseDef(ts.Param{"t", constr}),
 				"t2": h.BaseDef(),
 			}
@@ -168,7 +168,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"constr_ref_type_not_found": func() testcase { // expr = t1<t2>, scope = { t2, t1<t t3> }
 			expr := h.Inst("t1", h.Inst("t2"))
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t2": h.BaseDef(),
 				"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 			}
@@ -191,7 +191,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"invalid_constr": func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 				"t2": h.BaseDef(),
 				"t3": h.BaseDef(),
@@ -228,7 +228,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				scope: ts.DefaultScope{},
+				scope: Scope{},
 				expr:  expr,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
@@ -241,7 +241,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
 			return testcase{
-				scope: ts.DefaultScope{"t": h.BaseDef()},
+				scope: Scope{"t": h.BaseDef()},
 				expr:  expr,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
@@ -253,7 +253,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"arr_with_resolvable_type": func() testcase { // expr = [2]t, scope = {t=...}
 			typ := h.Inst("t")
 			expr := h.Arr(2, typ)
-			scope := ts.DefaultScope{"t": h.BaseDef()}
+			scope := Scope{"t": h.BaseDef()}
 			return testcase{
 				enabled: true,
 				expr:    expr,
@@ -273,7 +273,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.BaseDef(),
 			}
 			return testcase{
@@ -298,7 +298,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
 			expr := h.Union(t1, t2)
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.BaseDef(),
 				"t2": h.BaseDef(),
 			}
@@ -319,7 +319,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"union_with_resolvable_elements": func() testcase { // expr = t1 | t2, scope = {t1=..., t2=...}
 			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.BaseDef(),
 				"t2": h.BaseDef(),
 			}
@@ -343,7 +343,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"empty_record": func() testcase { // {}
 			expr := h.Rec(map[string]ts.Expr{})
-			scope := ts.DefaultScope{}
+			scope := Scope{}
 			return testcase{
 				scope: scope,
 				expr:  expr,
@@ -356,7 +356,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"record_with_invalid field": func() testcase { // { name string }
 			stringExpr := h.Inst("string")
 			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
-			scope := ts.DefaultScope{}
+			scope := Scope{}
 			return testcase{
 				expr:  expr,
 				scope: scope,
@@ -372,7 +372,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Rec(map[string]ts.Expr{
 				"name": stringExpr,
 			})
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"string": h.BaseDef(),
 			}
 			return testcase{
@@ -391,7 +391,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"param_with_same_name_as_type_in_scope_(shadowing)": func() testcase {
 			// t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.Def( // t1<t3> = t2<t3>
 					h.Inst("t2", h.Inst("t3")),
 					h.Param("t3", ts.Expr{}),
@@ -462,7 +462,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"direct_recursion_through_inst_references": func() testcase { // t, {t=t}
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t": h.Def(h.Inst("t")), // direct recursion
 			}
 			return testcase{
@@ -482,7 +482,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"indirect_(2_step)_recursion_through_inst_references": func() testcase { // t1, {t1=t2, t2=t1}
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.Def(h.Inst("t2")), // indirectly
 				"t2": h.Def(h.Inst("t1")), // refers to itself
 			}
@@ -508,7 +508,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"substitution_of_arguments": func() testcase { // t1<int, str> { t1<p1, p2> = vec<map<p1, p2>> }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1": h.Def(
 					h.Inst(
 						"vec",
@@ -563,7 +563,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"RHS": func() testcase { // t1<int> { t1<t>=t, t=int, int }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1":  h.Def(h.Inst("t"), h.ParamWithNoConstr("t")),
 				"t":   h.Def(h.Inst("int")),
 				"int": h.BaseDef(),
@@ -594,7 +594,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"constr_refereing_type_parameter_(generics_inside_generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t": h.BaseDef(
 					h.ParamWithNoConstr("a"),
 					h.Param("b", h.Inst("vec", h.Inst("a"))),
@@ -656,7 +656,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"recursion_through_base_types_with_support_of_recursion": func() testcase { // t1 { t1 = vec<t1> }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
 			}
@@ -682,7 +682,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"compatibility_check_between_two_recursive_types": func() testcase { // t3<t1> { t1 = vec<t1>, t2 = vec<t2>, t3<p1 t2>, vec<t> }
-			scope := ts.DefaultScope{
+			scope := Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
 				"t3":  h.BaseDef(h.Param("p1", h.Inst("t2"))),

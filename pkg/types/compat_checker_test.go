@@ -17,7 +17,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		subtypeTrace   ts.Trace
 		superType      ts.Expr
 		supertypeTrace ts.Trace
-		scope          ts.DefaultScope
+		scope          Scope
 		terminator     func(*MockrecursionTerminatorMockRecorder)
 		wantErr        error
 	}{
