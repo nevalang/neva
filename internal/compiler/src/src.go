@@ -58,8 +58,8 @@ type Component struct {
 }
 
 type Interface struct {
-	TypeParams []ts.Param // Interface defined outside of a component so it needs its own parameters
-	IO         IO         // inports and outports
+	Params []ts.Param // Interface defined outside of a component so it needs its own parameters
+	IO     IO         // inports and outports
 }
 
 // Component's network node

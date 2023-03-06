@@ -75,15 +75,11 @@ func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) 
 	}, nil
 }
 
+// analyzeTypeParameters validates type parameters and resolves their constraints.
 func (a Analyzer) analyzeTypeParameters(
 	params []ts.Param,
 	scope Scope,
-	args map[string]ts.Expr,
 ) ([]ts.Param, map[src.EntityRef]struct{}, error) {
-	if args != nil && len(args) != len(params) {
-		panic("len")
-	}
-
 	if err := a.validator.ValidateParams(params); err != nil {
 		return nil, nil, errors.Join(ErrValidator, err)
 	}
@@ -91,9 +87,6 @@ func (a Analyzer) analyzeTypeParameters(
 	resolvedParams := make([]ts.Param, len(params))
 	for i, param := range params {
 		if param.Constr.Empty() {
-			if _, ok := args[param.Name]; ok {
-				panic("")
-			}
 			continue
 		}
 		resolvedConstr, err := a.Resolver.Resolve(param.Constr, scope)

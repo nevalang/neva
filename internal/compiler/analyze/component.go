@@ -99,7 +99,7 @@ func (a Analyzer) analyzeNodeInstance(
 ) {
 	interf, err := scope.getInterface(instance.Ref)
 	if err == nil {
-		a.analyzeInterface(interf, scope)
+		resolvedInterface, err := a.analyzeInterface(interf, scope)
 		
 		return src.NodeInstance{}, nil, err
 	}
@@ -115,8 +115,8 @@ func (a Analyzer) analyzeNodeInstance(
 		if err != nil {
 			return src.NodeInstance{}, nil, err
 		}
-		if node.Instance.Ref
-		interfaces[name] 
+		// if node.Instance.Ref
+		// interfaces[name] 
 	}
 	
 	return src.NodeInstance{}, nil, nil
