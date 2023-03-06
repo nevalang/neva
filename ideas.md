@@ -1,9 +1,6 @@
-# Insight
+# Defer
 
-There's no need and no possibility to use interfaces everywhere
-There are places where we do need then and there are places where we don't
-Implementation where interfaces must be used all the time leads to useless abstraction layers
-Why have interface for database driver in a component that exists to implement other interface?
+We have `defer` in Go. Do we need/can have this in FBP?
 
 # Filter
 
@@ -15,11 +12,6 @@ Is uses sort of optional IP to specify field in the IP with bool.
 From fbp book:
 
 > Во всех существующих системах FBP есть очень полезный компонент, который просто принимает и отдаёт все IP из своего первого входного порта, за которыми следуют все IP из его второго входного порта, и так далее, пока все пакеты в слотах не закончатся. В DFDM это называлось Sequencizer (некоторые мои друзья любят играть с английским языком). Этот компонент часто используется для принудительного создания последовательности данных, которые генерируются случайным образом из различных источников. Одним из примеров могут быть контрольные итоги, генерируемые различными процессами, которые затем вы хотите распечатать в фиксированном порядке в отчете. Вы знаете последовательность, в которой хотите, чтобы они отображались, но не знаете время, в которое они будут созданы.
-
-# Simplify syntax
-
-1. Allow string in network for cases with only one receiver - `node.port: node.inport`
-2. Think about some special syntax? `node.port -> node.inport`
 
 # General Purpose Router?
 
@@ -47,13 +39,6 @@ Slots are compiled-timed
 # Context as a program primitive?
 
 Introduce outport to root module?
-
-# Gradual typing
-
-If component `A` needs struct with `X` field
-It can take struct with `X, Y` fields
-
---- Only if we need structs at all ---
 
 # The flatter the faster
 
@@ -89,12 +74,6 @@ a way to visualize message interface creation
 
 При старте такой модуль создаёт аррай портс с кол-ом ячеек соотв. длине списка.
 При получении значения он пишет в этот порт.
-
-# Mock autogen
-
-Every module depends on components via interfaces.
-So it should be possible to generate mock modules,
-that would allow to program behaviour.
 
 ## Motivation
 

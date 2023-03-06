@@ -1,3 +1,8 @@
+- galina
+- galya
+- gala
+- revir
+- flowra
 - witchcraft
 - wet
 - respect
