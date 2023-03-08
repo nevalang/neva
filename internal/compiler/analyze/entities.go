@@ -90,7 +90,7 @@ func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.E
 			Interface: resolvedInterface,
 		}, used, nil
 	case src.ComponentEntity:
-		resolvedComponent, used, err := a.analyzeComponent(entity.Component, scope)
+		resolvedComponent, used, err := a.analyzeCmp(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, nil, errors.Join(ErrComponent, err)
 		}

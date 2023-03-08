@@ -20,6 +20,8 @@ func Locker(ctx context.Context, io core.IO) error {
 	}
 }
 
+// === flow/stream ===
+
 // [x,y,z] -> (x, y, z)
 func ArrPortStreamer(ctx context.Context, io core.IO) error {
 	in, _ := io.Out.ArrPortSlots("in")

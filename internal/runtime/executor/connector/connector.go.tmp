@@ -108,7 +108,7 @@ func (c Router) distribute(
 	})
 
 	i := 0
-	processedMessages := make(map[src.Ports]core.Msg, len(q))
+	processedMessages := make(map[src.Ports]core.Msg, len(q)) // registered and unwrapped
 
 	for len(q) > 0 {
 		recv := q[i]
@@ -137,15 +137,15 @@ func (c Router) distribute(
 				ReceiverSide:   recv.side,
 				MsgAfterAction: msg5,
 			})
-			q = append(q[:i], q[i+1:]...)
-		default:
+			q = append(q[:i], q[i+1:]...) // remove cur from q
+		default: // cur is too busy to receive, it's buf is full
 			if i < len(q) {
-				i++
+				i++ // so let's go ask next while it's busy and then return
 			}
 		}
 
-		if i == len(q) {
-			i = 0
+		if i == len(q) { // end of q, last el was processed (maybe it was busy)
+			i = 0 // start over
 		}
 	}
 
@@ -154,6 +154,7 @@ func (c Router) distribute(
 
 var ErrDictKeyNotFound = errors.New("dict key not found")
 
+// TODO call this selector not action
 func (c Router) action(msg core.Msg, side src.ConnectionSide) (core.Msg, error) {
 	// TODO array index reading
 	if side.Action == src.ReadDict {

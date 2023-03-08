@@ -8,15 +8,14 @@ import (
 
 type Msg interface {
 	Type() Type
+	String() string // for logging (move to interceptor?)
 
 	Bool() bool
 	Int() int64
 	Float() float64
 	Str() string
-	List() []Msg
-	Dict() map[string]Msg
-
-	String() string // for logging (move to interceptor?)
+	Vec() []Msg
+	Map() map[string]Msg
 }
 
 type Type uint8
@@ -26,7 +25,7 @@ const (
 	IntMsgType
 	FloatMsgType
 	StrMsgType
-	ListMsgType
+	VecMsgType
 	MapMsgType
 )
 
@@ -40,8 +39,8 @@ func (emptyMsg) Bool() bool           { return false }
 func (emptyMsg) Int() int64           { return 0 }
 func (emptyMsg) Float() float64       { return 0 }
 func (emptyMsg) Str() string          { return "" }
-func (emptyMsg) List() []Msg          { return []Msg{} }
-func (emptyMsg) Dict() map[string]Msg { return map[string]Msg{} }
+func (emptyMsg) Vec() []Msg          { return []Msg{} }
+func (emptyMsg) Map() map[string]Msg { return map[string]Msg{} }
 
 /* --- INT --- */
 
@@ -97,21 +96,21 @@ func NewBoolMsg(b bool) BoolMsg {
 	}
 }
 
-/* --- DICT --- */
+/* --- Map --- */
 
-type DictMsg struct {
+type MapMsg struct {
 	emptyMsg
 	v map[string]Msg
 }
 
-func (msg DictMsg) Get(k string) (Msg, bool) {
+func (msg MapMsg) Get(k string) (Msg, bool) {
 	v, ok := msg.v[k]
 	return v, ok
 }
 
-func (msg DictMsg) Dict() map[string]Msg { return msg.v }
-func (msg DictMsg) Type() Type           { return MapMsgType }
-func (msg DictMsg) String() string { // can't move this to interceptor because print operator needs this
+func (msg MapMsg) Map() map[string]Msg { return msg.v }
+func (msg MapMsg) Type() Type           { return MapMsgType }
+func (msg MapMsg) String() string { // can't move this to interceptor because print operator needs this
 	b := &strings.Builder{}
 	b.WriteString("{")
 	c := 0
@@ -127,23 +126,23 @@ func (msg DictMsg) String() string { // can't move this to interceptor because p
 	return b.String()
 }
 
-func NewDictMsg(v map[string]Msg) DictMsg {
-	return DictMsg{
+func NewMapMsg(v map[string]Msg) MapMsg {
+	return MapMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,
 	}
 }
 
-/* --- LIST --- */
+/* --- Vec --- */
 
-type ListMsg struct {
+type VecMsg struct {
 	emptyMsg
 	v []Msg
 }
 
-func (msg ListMsg) List() []Msg { return msg.v }
-func (msg ListMsg) Type() Type  { return ListMsgType }
-func (msg ListMsg) String() string {
+func (msg VecMsg) Vec() []Msg { return msg.v }
+func (msg VecMsg) Type() Type  { return VecMsgType }
+func (msg VecMsg) String() string {
 	b := &strings.Builder{}
 	b.WriteString("[")
 	c := 0
@@ -159,8 +158,8 @@ func (msg ListMsg) String() string {
 	return b.String()
 }
 
-func NewListMsg(v []Msg) ListMsg {
-	return ListMsg{
+func NewVecMsg(v []Msg) VecMsg {
+	return VecMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,
 	}
@@ -179,9 +178,9 @@ func Eq(a, b Msg) bool {
 		return a.Int() == b.Int()
 	case StrMsgType:
 		return a.Str() == b.Str()
-	case ListMsgType:
-		l1 := a.List()
-		l2 := b.List()
+	case VecMsgType:
+		l1 := a.Vec()
+		l2 := b.Vec()
 		if len(l1) != len(l2) {
 			return false
 		}
@@ -191,8 +190,8 @@ func Eq(a, b Msg) bool {
 			}
 		}
 	case MapMsgType:
-		s1 := a.Dict()
-		s2 := a.Dict()
+		s1 := a.Map()
+		s2 := a.Map()
 		if len(s1) != len(s2) {
 			return false
 		}

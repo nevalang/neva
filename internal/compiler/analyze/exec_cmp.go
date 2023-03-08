@@ -23,35 +23,35 @@ var (
 	ErrSigType                        = errors.New("sig inport of root component must refer to type parameter")
 )
 
-// analyzeRootComponent checks root-component-specific requirements:
+// analyzeExecCmp checks root-component-specific requirements:
 // Has only one type parameter without constraint;
 // Doesn't have any outports;
 // Has one not-array inport named `sig` that refers to that single type-parameter;
 // Has at least one node (non-root components can have no nodes to implement just routing);
 // All nodes has no static inports or references to anything but components (reason why pkg and pkgs needed);
-func (a Analyzer) analyzeRootComponent(rootComp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen,unparam,lll
-	if len(rootComp.TypeParams) != 1 {
+func (a Analyzer) analyzeExecCmp(cmp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen,unparam,lll
+	if len(cmp.TypeParams) != 1 {
 		return errors.New("root component must have one type parameter")
 	}
 
-	typeParam := rootComp.TypeParams[0]
+	typeParam := cmp.TypeParams[0]
 
 	if !typeParam.Constr.Empty() {
 		return errors.New("type parameter of root component must not have constraint")
 	}
 
-	if err := a.analyzeRootComponentIO(rootComp.IO, typeParam); err != nil {
+	if err := a.analyzeExecCmpIO(cmp.IO, typeParam); err != nil {
 		return err
 	}
 
-	if err := a.analyzeRootComponentNodes(rootComp.Nodes, pkg, pkgs); err != nil {
+	if err := a.analyzeExecCmpNodes(cmp.Nodes, pkg, pkgs); err != nil {
 		return fmt.Errorf("%w: %v", ErrRootComponentNodes, err)
 	}
 
 	return nil
 }
 
-func (Analyzer) analyzeRootComponentIO(io src.IO, typeParam ts.Param) error {
+func (Analyzer) analyzeExecCmpIO(io src.IO, typeParam ts.Param) error {
 	if len(io.Out) != 0 {
 		return fmt.Errorf("%w: %v", ErrRootComponentWithOutports, io.Out)
 	}
@@ -80,7 +80,7 @@ func (Analyzer) analyzeRootComponentIO(io src.IO, typeParam ts.Param) error {
 	return nil
 }
 
-func (Analyzer) analyzeRootComponentNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs map[string]src.Pkg) error {
+func (Analyzer) analyzeExecCmpNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs map[string]src.Pkg) error {
 	if len(nodes) == 0 {
 		return ErrRootComponentWithoutNodes
 	}

@@ -118,7 +118,7 @@ func TestAnalyzer(t *testing.T) {
 			},
 			wantErr: nil,
 		},
-		{
+		{ // FIXME false-positive
 			name: "inassignable_message_and_4-step_import_chain",
 			prog: src.Prog{
 				Pkgs: map[string]src.Pkg{

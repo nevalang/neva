@@ -19,7 +19,7 @@ var (
 	ErrInterfaceDIArgs     = errors.New("node instance that refers to interface cannot have DI args")
 )
 
-func (a Analyzer) analyzeComponent(
+func (a Analyzer) analyzeCmp(
 	component src.Component,
 	scope Scope,
 ) (

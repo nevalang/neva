@@ -79,7 +79,7 @@ func (a Analyzer) analyzeExecutablePkg(pkg src.Pkg, pkgs map[string]src.Pkg) err
 		return ErrExportedRootComponent
 	}
 
-	if err := a.analyzeRootComponent(entity.Component, pkg, pkgs); err != nil {
+	if err := a.analyzeExecCmp(entity.Component, pkg, pkgs); err != nil {
 		return fmt.Errorf("%w: %v", ErrRootComponent, err)
 	}
 

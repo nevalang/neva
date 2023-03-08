@@ -24,6 +24,7 @@ type (
 	ConnectionSide struct {
 		PortAddr   PortAddr
 		DictUnpack []string // if not nil connector should unpack dict message
+		ArrIdx int
 	}
 
 	Effects struct {
