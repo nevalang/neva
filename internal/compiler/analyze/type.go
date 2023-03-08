@@ -12,6 +12,7 @@ var (
 	ErrScopeGetLocalType = errors.New("scope get local type")
 )
 
+// analyzeType builds text expr that refers to given type and tries to resolve it.
 func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
 	def, err := scope.getLocalType(name)
 	if err != nil {
@@ -21,11 +22,10 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 	testExpr := ts.Expr{
 		Inst: ts.InstExpr{
 			Ref:  name,
-			Args: a.getTestExprArgs(def.Params),
+			Args: a.buildTestExprArgs(def.Params),
 		},
 	}
 
-	// TODO return simplified defs (type t1 pkg1.t0<t0> // t1<int> -> vec<int>)
 	if _, err = a.Resolver.Resolve(testExpr, scope); err != nil {
 		return ts.Def{}, nil, fmt.Errorf("%w: %v", errors.Join(ErrResolver, err), testExpr)
 	}
@@ -33,7 +33,8 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 	return def, scope.visited, nil
 }
 
-func (Analyzer) getTestExprArgs(params []ts.Param) []ts.Expr {
+// buildTestExprArgs takes params and returns args that can be used to build the test expression
+func (Analyzer) buildTestExprArgs(params []ts.Param) []ts.Expr {
 	args := make([]ts.Expr, 0, len(params))
 	for _, param := range params {
 		if param.Constr.Empty() {

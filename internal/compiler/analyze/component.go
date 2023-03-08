@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/emil14/neva/internal/compiler/src"
+	ts "github.com/emil14/neva/pkg/types"
 )
 
 var (
@@ -14,6 +15,8 @@ var (
 	ErrComponentNet        = errors.New("net")
 	ErrNodeInstance        = errors.New("node instance")
 	ErrStaticInports       = errors.New("static inports")
+	ErrUnusedOutports      = errors.New("unused outports")
+	ErrInterfaceDIArgs     = errors.New("node instance that refers to interface cannot have DI args")
 )
 
 func (a Analyzer) analyzeComponent(
@@ -45,7 +48,7 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	if len(unusedOutports) > 0 {
-		panic(unusedOutports)
+		return src.Component{}, nil, fmt.Errorf("%w: %v", ErrUnusedOutports, unusedOutports)
 	}
 
 	return src.Component{
@@ -89,36 +92,40 @@ func (a Analyzer) analyzeNodes(
 	return resolvedNodes, used, nil
 }
 
+// analyzeNodeInstance finds interface or component that node is reffering to
+// and checks whether it's possible to instantiate it with the given arguments
 func (a Analyzer) analyzeNodeInstance(
-	instance src.NodeInstance, 
+	instance src.NodeInstance,
 	scope Scope,
 ) (
 	src.NodeInstance,
 	map[src.EntityRef]struct{},
 	error,
 ) {
+	var params []ts.Param
+
 	interf, err := scope.getInterface(instance.Ref)
 	if err == nil {
-		resolvedInterface, err := a.analyzeInterface(interf, scope)
-		
-		return src.NodeInstance{}, nil, err
-	}
-	
-	component, err := scope.getComponent(instance.Ref)
-	if err != nil {
-		return src.NodeInstance{}, nil, err
-	}
-
-	interfaces := make(map[string]src.Interface, len(component.Nodes))
-	for name, node := range component.Nodes {
-		c, err := scope.getComponent(instance.Ref)
+		if len(instance.DIArgs) != 0 {
+			return src.NodeInstance{}, nil, ErrInterfaceDIArgs
+		}
+		params = interf.Params
+	} else {
+		component, err := scope.getComponent(instance.Ref)
 		if err != nil {
 			return src.NodeInstance{}, nil, err
 		}
-		// if node.Instance.Ref
-		// interfaces[name] 
+		// TODO implement DI analysis
+		// get component's DI params (list of interfaces and names)
+		// make sure DIargs are compatible with DIparams
+		// make sure every DIarg refers to component and not the interface (sure?)
+		params = component.TypeParams
 	}
-	
+
+	// compatCheckParams(params, instance.TypeArgs)
+
+	fmt.Println(params)
+
 	return src.NodeInstance{}, nil, nil
 }
 

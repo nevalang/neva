@@ -2,4 +2,6 @@
 
 package ir
 
-type Program struct{}
+type Program struct{
+	StartPortAddr any
+}

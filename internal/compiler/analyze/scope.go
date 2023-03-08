@@ -176,15 +176,15 @@ func (s Scope) getComponent(entityRef src.EntityRef) (src.Component, error) {
 	return entity.Component, nil
 }
 
-func (s Scope) getInterface(entityRef src.EntityRef) (src.Component, error) {
+func (s Scope) getInterface(entityRef src.EntityRef) (src.Interface, error) {
 	entity, err := s.getEntity(entityRef)
 	if err != nil {
-		return src.Component{}, nil
+		return src.Interface{}, nil
 	}
 	if entity.Kind != src.InterfaceEntity {
-		return src.Component{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.InterfaceEntity, entity.Kind)
+		return src.Interface{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.InterfaceEntity, entity.Kind)
 	}
-	return entity.Component, nil
+	return entity.Interface, nil
 }
 
 // FIXME:

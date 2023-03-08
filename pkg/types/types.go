@@ -46,7 +46,7 @@ func (expr Expr) Empty() bool {
 }
 
 // String formats expression in a TS manner
-func (expr Expr) String() string { // todo move?
+func (expr Expr) String() string {
 	if expr.Empty() {
 		return "empty"
 	}

@@ -19,6 +19,7 @@ var (
 	ErrParams                       = errors.New("bad params")
 )
 
+// ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
 func (v Validator) ValidateDef(def Def) error {
 	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
@@ -29,6 +30,7 @@ func (v Validator) ValidateDef(def Def) error {
 	return nil
 }
 
+// ValidateParams doesn't validate constraints, only ensures uniqueness
 func (v Validator) ValidateParams(params []Param) error {
 	m := make(map[string]struct{}, len(params))
 	for _, param := range params {
@@ -40,12 +42,11 @@ func (v Validator) ValidateParams(params []Param) error {
 }
 
 // Validate makes shallow validation of expr.
-// It checks that expr is inst or literal, not both, not neither.
-// All insts are valid by default.
-// Arr, union and enum must have size >= 2. Enum must have no duplicate elements.
+// It checks that it's inst or literal, not both and not neither; All insts are valid by default;
+// Arr, union and enum must have size >= 2; Enum must have no duplicate elements.
 func (v Validator) Validate(expr Expr) error {
 	// FIXME empty expr considered invalid but native types has empty exprs as body which means their body invalid
-	if expr.Lit.Empty() == expr.Inst.Empty() { // we don't use expr.Empty() because constraint can be empty
+	if expr.Lit.Empty() == expr.Inst.Empty() { // we don't use expr.Empty() because it's ok for constr to be empty
 		return ErrInvalidExprType
 	}
 

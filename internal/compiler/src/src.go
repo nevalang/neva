@@ -57,6 +57,12 @@ type Component struct {
 	Net        []Connection    // computational schema
 }
 
+// func (c Component) DIParams() map[string]Interface {
+// 	for _, node := range c.Nodes {
+// 		node.
+// 	}
+// }
+
 type Interface struct {
 	Params []ts.Param // Interface defined outside of a component so it needs its own parameters
 	IO     IO         // inports and outports
@@ -70,9 +76,9 @@ type Node struct {
 
 // NodeInstance of a component or interface for network node for DI
 type NodeInstance struct {
-	Ref  EntityRef               // must refer to component or interface
-	Args []ts.Expr               // must be valid args for entity's type params
-	DI   map[string]NodeInstance // only for components with DI (with nodes with interface refs)
+	Ref      EntityRef               // must refer to component or interface
+	TypeArgs []ts.Expr               // must be valid args for entity's type params
+	DIArgs   map[string]NodeInstance // only for components with DI (with nodes with interface refs)
 }
 
 type EntityRef struct {
