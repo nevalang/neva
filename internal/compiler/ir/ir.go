@@ -15,7 +15,7 @@ type (
 	}
 
 	Routines struct {
-		Void      []PortAddr // TODO spawn 1 goroutine and make a lockfree round-robin
+		Void      []PortAddr       // TODO spawn 1 goroutine and make a lockfree round-robin
 		Giver     map[PortAddr]Msg // TODO use msg refs to avoid duplications?
 		Component []ComponentRef
 	}
@@ -26,11 +26,11 @@ type (
 	}
 
 	ConnectionSide struct {
-		PortAddr        PortAddr
-		SelectorActions []SelectorAction // len(0) means no action
+		PortAddr  PortAddr
+		Selectors []Selector // len(0) means no action
 	}
 
-	SelectorAction struct {
+	Selector struct {
 		RecField string // "" means use ArrIdx
 		ArrIdx   int
 	}

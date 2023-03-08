@@ -57,12 +57,6 @@ type Component struct {
 	Net        []Connection    // computational schema
 }
 
-// func (c Component) DIParams() map[string]Interface {
-// 	for _, node := range c.Nodes {
-// 		node.
-// 	}
-// }
-
 type Interface struct {
 	Params []ts.Param // Interface defined outside of a component so it needs its own parameters
 	IO     IO         // inports and outports
@@ -121,8 +115,13 @@ type Connection struct {
 }
 
 type ConnectionSide struct {
-	PortRef          ConnectionPortRef
-	UnpackStructPath []string // nil for non-struct ports
+	PortRef   ConnectionPortRef
+	Selectors []Selector
+}
+
+type Selector struct {
+	RecField string // "" means use ArrIdx
+	ArrIdx   int
 }
 
 type ConnectionPortRef struct {
