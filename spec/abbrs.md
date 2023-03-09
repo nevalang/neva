@@ -1,4 +1,4 @@
-# Abbriviations
+# Abbreviations
 
 - expr - expression
 - lit - (type) literal expression
