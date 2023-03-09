@@ -1,4 +1,0 @@
-- generating IR should happen in a tree manner from root to leafs
-- every analyzed node on that path means adding ports to program
-- every node means component. if it's interface then find out how it's instantiated
-- every component means adding new connections (network) or operator (effect)
