@@ -2,10 +2,10 @@ package ir
 
 type (
 	Program struct {
-		Start    PortAddr
-		Ports    map[PortAddr]uint8 // Value describes buffer size
-		Routines Routines
-		Net      []Connection
+		StartPortAddr PortAddr
+		Ports         map[PortAddr]uint8 // Value describes buffer size
+		Routines      Routines
+		Net           []Connection
 	}
 
 	PortAddr struct {
@@ -15,8 +15,7 @@ type (
 	}
 
 	Routines struct {
-		Void      []PortAddr       // TODO spawn 1 goroutine and make a lockfree round-robin
-		Giver     map[PortAddr]Msg // TODO use msg refs to avoid duplications?
+		Giver     map[PortAddr]Msg[any]
 		Component []ComponentRef
 	}
 
@@ -40,14 +39,15 @@ type (
 		PortAddrs CmpPortAddrs
 	}
 
-	Msg struct {
+	// K type parameter only used for maps
+	Msg[K comparable] struct {
 		Type  MsgType
 		Bool  bool
 		Int   int
 		Float float64
 		Str   string
-		Vec   []Msg
-		Map   map[string]Msg
+		Vec   []Msg[any]
+		Map   map[K]Msg[K]
 	}
 
 	MsgType uint8
@@ -62,6 +62,6 @@ const (
 	IntMsg
 	FloatMsg
 	StrMsg
+	VecMsg
 	MapMsg
-	Vec
 )

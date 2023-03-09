@@ -175,3 +175,22 @@ func NestedDictStreamer(ctx context.Context, io core.IO) error {
 		})
 	}
 }
+
+func Void(ctx context.Context, io core.IO) error {
+	q := make([]chan core.Msg, 0, len(io.In))
+	for v := range io.In {
+		q = append(q, v)
+	}
+
+	var i int
+	for {
+		select {
+		case <-io.In[i]:
+		default:
+			i++
+		}
+		if i == len(q) {
+			i = 0
+		}
+	}
+}
