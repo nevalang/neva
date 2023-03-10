@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
-
-	"golang.org/x/sync/errgroup"
 )
 
-/* === PROGRAM === */
+/* --- PROGRAM --- */
 
 type (
 	Program struct {
@@ -24,7 +24,7 @@ type (
 		Idx        uint8
 	}
 
-	Ports map[PortAddr]chan any
+	Ports map[PortAddr]chan Msg
 
 	Connection struct {
 		Sender    ConnectionSide
@@ -32,7 +32,7 @@ type (
 	}
 
 	ConnectionSide struct {
-		Port chan any
+		Port chan Msg
 		Meta ConnectionSideMeta
 	}
 
@@ -52,8 +52,8 @@ type (
 	}
 
 	GiverRoutine struct {
-		OutPort chan any
-		Msg     any
+		OutPort chan Msg
+		Msg     Msg
 	}
 
 	ComponentRoutine struct {
@@ -61,16 +61,231 @@ type (
 		IO  IO
 	}
 
-	IO struct { // to core?
-		In, Out map[string]chan any
-	}
-
 	ComponentRef struct {
 		Pkg, Name string
 	}
+
+	IO struct {
+		In, Out IOPorts
+	}
 )
 
-/* === RUNTIME === */
+/* --- PORTS --- */
+
+type IOPorts map[string][]chan Msg
+
+var (
+	ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
+	ErrArrPortNotFound = errors.New("number of ports found by name equals to zero")
+)
+
+func (i IOPorts) Port(name string) (chan Msg, error) {
+	if len(i[name]) != 1 {
+		return nil, fmt.Errorf("%w: %v", ErrSinglePortCount, len(i[name]))
+	}
+	return i[name][0], nil
+}
+
+func (i IOPorts) ArrPort(name string) ([]chan Msg, error) {
+	if len(i[name]) == 0 {
+		return nil, ErrArrPortNotFound
+	}
+	return i[name], nil
+}
+
+/* --- MESSAGES --- */
+
+type Msg interface {
+	fmt.Stringer
+	Type() Type
+	Bool() bool
+	Int() int64
+	Float() float64
+	Str() string
+	Vec() []Msg
+	Map() map[string]Msg
+}
+
+type Type uint8
+
+const (
+	BoolMsgType Type = iota
+	IntMsgType
+	FloatMsgType
+	StrMsgType
+	VecMsgType
+	MapMsgType
+)
+
+// Empty
+
+type emptyMsg struct{}
+
+func (emptyMsg) Bool() bool
+func (emptyMsg) Int() int64          { return 0 }
+func (emptyMsg) Float() float64      { return 0 }
+func (emptyMsg) Str() string         { return "" }
+func (emptyMsg) Vec() []Msg          { return []Msg{} }
+func (emptyMsg) Map() map[string]Msg { return map[string]Msg{} }
+
+// Int
+
+type IntMsg struct {
+	emptyMsg
+	v int64
+}
+
+func (msg IntMsg) Int() int64     { return msg.v }
+func (msg IntMsg) Type() Type     { return IntMsgType }
+func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
+
+func NewIntMsg(n int64) IntMsg {
+	return IntMsg{
+		emptyMsg: emptyMsg{},
+		v:        n,
+	}
+}
+
+// Str
+
+type StrMsg struct {
+	emptyMsg
+	v string
+}
+
+func (msg StrMsg) Str() string    { return msg.v }
+func (msg StrMsg) Type() Type     { return StrMsgType }
+func (msg StrMsg) String() string { return strconv.Quote(msg.v) }
+
+func NewStrMsg(s string) StrMsg {
+	return StrMsg{
+		emptyMsg: emptyMsg{},
+		v:        s,
+	}
+}
+
+// Bool
+
+type BoolMsg struct {
+	emptyMsg
+	v bool
+}
+
+func (msg BoolMsg) Bool() bool     { return msg.v }
+func (msg BoolMsg) Type() Type     { return BoolMsgType }
+func (msg BoolMsg) String() string { return fmt.Sprint(msg.v) }
+
+func NewBoolMsg(b bool) BoolMsg {
+	return BoolMsg{
+		emptyMsg: emptyMsg{},
+		v:        b,
+	}
+}
+
+/* --- Map --- */
+
+type MapMsg struct {
+	emptyMsg
+	v map[string]Msg
+}
+
+func (msg MapMsg) Map() map[string]Msg { return msg.v }
+func (msg MapMsg) Type() Type          { return MapMsgType }
+func (msg MapMsg) String() string {
+	b := &strings.Builder{}
+	b.WriteString("{")
+	c := 0
+	for k, el := range msg.v {
+		c++
+		if c < len(msg.v) {
+			fmt.Fprintf(b, " %s: %s, ", k, el.String())
+			continue
+		}
+		fmt.Fprintf(b, "%s: %s ", k, el.String())
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+func NewMapMsg(v map[string]Msg) MapMsg {
+	return MapMsg{
+		emptyMsg: emptyMsg{},
+		v:        v,
+	}
+}
+
+// Vec
+
+type VecMsg struct {
+	emptyMsg
+	v []Msg
+}
+
+func (msg VecMsg) Vec() []Msg { return msg.v }
+func (msg VecMsg) Type() Type { return VecMsgType }
+func (msg VecMsg) String() string {
+	b := &strings.Builder{}
+	b.WriteString("[")
+	c := 0
+	for _, el := range msg.v {
+		c++
+		if c < len(msg.v) {
+			fmt.Fprintf(b, "%s, ", el.String())
+			continue
+		}
+		fmt.Fprint(b, el.String())
+	}
+	b.WriteString("]")
+	return b.String()
+}
+
+func NewVecMsg(v []Msg) VecMsg {
+	return VecMsg{
+		emptyMsg: emptyMsg{},
+		v:        v,
+	}
+}
+
+// Eq (NotEq, Less, Greater, Max, Min?)
+
+func Eq(a, b Msg) bool {
+	if a.Type() != b.Type() {
+		return false
+	}
+	switch a.Type() {
+	case BoolMsgType:
+		return a.Bool() == b.Bool()
+	case IntMsgType:
+		return a.Int() == b.Int()
+	case StrMsgType:
+		return a.Str() == b.Str()
+	case VecMsgType:
+		l1 := a.Vec()
+		l2 := b.Vec()
+		if len(l1) != len(l2) {
+			return false
+		}
+		for i := range l1 {
+			if !Eq(l1[i], l2[i]) {
+				return false
+			}
+		}
+	case MapMsgType:
+		s1 := a.Map()
+		s2 := a.Map()
+		if len(s1) != len(s2) {
+			return false
+		}
+		for k := range s1 {
+			if !Eq(s1[k], s2[k]) {
+				return false
+			}
+		}
+	}
+	return false
+}
+
+/* --- RUNTIME --- */
 
 type Runtime struct {
 	connector     Connector
@@ -98,7 +313,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPortAddr)
 	}
 
-	g, gctx := errgroup.WithContext(ctx)
+	g, gctx := WithContext(ctx)
 	g.Go(func() error {
 		if err := r.connector.Connect(gctx, prog.Net); err != nil {
 			return fmt.Errorf("%w: %v", ErrConnector, err)
@@ -116,9 +331,9 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	return g.Wait()
 }
 
-/*  === ROUTINE-RUNNER === */
+/*  --- ROUTINE-RUNNER --- */
 
-type Runner struct {
+type RoutineRunnerImlp struct {
 	constant GiverRunner
 	operator ComponentRunner
 }
@@ -137,8 +352,8 @@ var (
 	ErrGiver     = errors.New("giver")
 )
 
-func (e Runner) Run(ctx context.Context, routines Routines) error {
-	g, gctx := errgroup.WithContext(ctx)
+func (e RoutineRunnerImlp) Run(ctx context.Context, routines Routines) error {
+	g, gctx := WithContext(ctx)
 
 	g.Go(func() error {
 		if err := e.constant.Run(gctx, routines.Giver); err != nil {
@@ -157,7 +372,7 @@ func (e Runner) Run(ctx context.Context, routines Routines) error {
 	return g.Wait()
 }
 
-/* === GIVER-RUNNER === */
+/* --- GIVER-RUNNER --- */
 
 type GiverRunnerImlp struct{}
 
@@ -185,7 +400,7 @@ func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
 	return ctx.Err()
 }
 
-/* === COMPONENT-RUNNER === */
+/* --- COMPONENT-RUNNER --- */
 
 var (
 	ErrRepo          = errors.New("repo")
@@ -197,7 +412,7 @@ type ComponentRunnerImpl struct {
 }
 
 func (c ComponentRunnerImpl) Run(ctx context.Context, components []ComponentRoutine) error {
-	g, gctx := errgroup.WithContext(ctx)
+	g, gctx := WithContext(ctx)
 
 	for i := range components {
 		component := components[i]
@@ -218,7 +433,7 @@ func (c ComponentRunnerImpl) Run(ctx context.Context, components []ComponentRout
 	return g.Wait()
 }
 
-/* === CONNECTOR === */
+/* --- CONNECTOR --- */
 
 var (
 	ErrBroadcast         = errors.New("broadcast")
@@ -232,13 +447,13 @@ type ConnectorImlp struct {
 }
 
 type Interceptor interface {
-	AfterSending(from ConnectionSideMeta, msg any) any
-	BeforeReceiving(from, to ConnectionSideMeta, msg any) any
-	AfterReceiving(from, to ConnectionSideMeta, msg any)
+	AfterSending(from ConnectionSideMeta, msg Msg) Msg
+	BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg
+	AfterReceiving(from, to ConnectionSideMeta, msg Msg)
 }
 
 func (c ConnectorImlp) Connect(ctx context.Context, net []Connection) error {
-	g, gctx := errgroup.WithContext(ctx)
+	g, gctx := WithContext(ctx)
 
 	for i := range net {
 		conn := net[i]
@@ -277,12 +492,12 @@ func (c ConnectorImlp) broadcast(ctx context.Context, conn Connection) error {
 
 func (c ConnectorImlp) distribute(
 	ctx context.Context,
-	msg any,
+	msg Msg,
 	senderMeta ConnectionSideMeta,
 	q []ConnectionSide,
 ) error {
 	i := 0
-	processedMessages := make(map[PortAddr]any, len(q)) // intercepted and selected
+	processedMessages := make(map[PortAddr]Msg, len(q)) // intercepted and selected
 
 	for len(q) > 0 {
 		recv := q[i]
@@ -318,7 +533,7 @@ func (c ConnectorImlp) distribute(
 	return nil
 }
 
-func (c ConnectorImlp) applySelector(msg any, selectors []Selector) (any, error) {
+func (c ConnectorImlp) applySelector(msg Msg, selectors []Selector) (Msg, error) {
 	if len(selectors) == 0 {
 		return msg, nil
 	}
@@ -334,4 +549,62 @@ func (c ConnectorImlp) applySelector(msg any, selectors []Selector) (any, error)
 		msg,
 		selectors[1:],
 	)
+}
+
+/* ---  INTERCEPTOR ---*/
+
+type InterceptorImlp struct{}
+
+func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg        { return msg }
+func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg { return msg }
+func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg)      {}
+
+/* --- ERRGROUP copy of golang.org/x/sync/errgroup --- */
+
+type token struct{}
+
+type Group struct {
+	cancel  func()
+	wg      sync.WaitGroup
+	sem     chan token
+	errOnce sync.Once
+	err     error
+}
+
+func (g *Group) done() {
+	if g.sem != nil {
+		<-g.sem
+	}
+	g.wg.Done()
+}
+
+func WithContext(ctx context.Context) (*Group, context.Context) {
+	ctx, cancel := context.WithCancel(ctx)
+	return &Group{cancel: cancel}, ctx
+}
+
+func (g *Group) Wait() error {
+	g.wg.Wait()
+	if g.cancel != nil {
+		g.cancel()
+	}
+	return g.err
+}
+
+func (g *Group) Go(f func() error) {
+	if g.sem != nil {
+		g.sem <- token{}
+	}
+	g.wg.Add(1)
+	go func() {
+		defer g.done()
+		if err := f(); err != nil {
+			g.errOnce.Do(func() {
+				g.err = err
+				if g.cancel != nil {
+					g.cancel()
+				}
+			})
+		}
+	}()
 }

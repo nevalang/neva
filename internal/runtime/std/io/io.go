@@ -6,12 +6,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/emil14/neva/internal/runtime/core"
+	"github.com/emil14/neva/internal/runtime"
 )
 
-func Read(ctx context.Context, io core.IO) error {
-	sig, _ := io.In.SinglePort("sig")
-	v, _ := io.Out.SinglePort("v")
+func Read(ctx context.Context, io runtime.IO) error {
+	sig, err := io.In.Port("sig")
+	if err != nil {
+		return err
+	}
+
+	v, err := io.Out.Port("v")
+	if err != nil {
+		return err
+	}
+
 	scan := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -23,16 +31,23 @@ func Read(ctx context.Context, io core.IO) error {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case v <- core.NewStrMsg(scan.Text()):
+			case v <- runtime.NewStrMsg(scan.Text()):
 				continue
 			}
 		}
 	}
 }
 
-func Print(ctx context.Context, io core.IO) error {
-	in, _ := io.In.SinglePort("v")
-	out, _ := io.Out.SinglePort("v")
+func Print(ctx context.Context, io runtime.IO) error {
+	in, err := io.In.Port("v")
+	if err != nil {
+		return err
+	}
+
+	out, err := io.Out.Port("v")
+	if err != nil {
+		return err
+	}
 
 	for {
 		select {
