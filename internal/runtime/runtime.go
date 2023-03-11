@@ -15,8 +15,8 @@ type (
 	Program struct {
 		StartPortAddr PortAddr
 		Ports         Ports
-		Net           []Connection
-		Nodes         Routines
+		Connections   []Connection
+		Routines      Routines
 	}
 
 	PortAddr struct {
@@ -121,7 +121,7 @@ const (
 
 type emptyMsg struct{}
 
-func (emptyMsg) Bool() bool
+func (emptyMsg) Bool() bool          { return false }
 func (emptyMsg) Int() int64          { return 0 }
 func (emptyMsg) Float() float64      { return 0 }
 func (emptyMsg) Str() string         { return "" }
@@ -292,6 +292,16 @@ type Runtime struct {
 	routineRunner RoutineRunner
 }
 
+func NewRuntime(
+	connector Connector,
+	routineRunner RoutineRunner,
+) Runtime {
+	return Runtime{
+		connector:     connector,
+		routineRunner: routineRunner,
+	}
+}
+
 type (
 	Connector interface {
 		Connect(context.Context, []Connection) error
@@ -315,13 +325,13 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 
 	g, gctx := WithContext(ctx)
 	g.Go(func() error {
-		if err := r.connector.Connect(gctx, prog.Net); err != nil {
+		if err := r.connector.Connect(gctx, prog.Connections); err != nil {
 			return fmt.Errorf("%w: %v", ErrConnector, err)
 		}
 		return nil
 	})
 	g.Go(func() error {
-		if err := r.routineRunner.Run(gctx, prog.Nodes); err != nil {
+		if err := r.routineRunner.Run(gctx, prog.Routines); err != nil {
 			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)
 		}
 		return nil
@@ -334,8 +344,15 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 /*  --- ROUTINE-RUNNER --- */
 
 type RoutineRunnerImlp struct {
-	constant GiverRunner
-	operator ComponentRunner
+	giver     GiverRunner
+	component ComponentRunner
+}
+
+func NewRoutineRunner(giver GiverRunner, component ComponentRunner) RoutineRunner {
+	return RoutineRunnerImlp{
+		giver:     giver,
+		component: component,
+	}
 }
 
 type (
@@ -356,14 +373,14 @@ func (e RoutineRunnerImlp) Run(ctx context.Context, routines Routines) error {
 	g, gctx := WithContext(ctx)
 
 	g.Go(func() error {
-		if err := e.constant.Run(gctx, routines.Giver); err != nil {
+		if err := e.giver.Run(gctx, routines.Giver); err != nil {
 			return errors.Join(ErrGiver, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.operator.Run(gctx, routines.Component); err != nil {
+		if err := e.component.Run(gctx, routines.Component); err != nil {
 			return errors.Join(ErrComponent, err)
 		}
 		return nil
@@ -411,6 +428,12 @@ type ComponentRunnerImpl struct {
 	repo map[ComponentRef]func(context.Context, IO) error
 }
 
+func NewComponentRunner(repo map[ComponentRef]func(context.Context, IO) error) ComponentRunnerImpl {
+	return ComponentRunnerImpl{
+		repo: repo,
+	}
+}
+
 func (c ComponentRunnerImpl) Run(ctx context.Context, components []ComponentRoutine) error {
 	g, gctx := WithContext(ctx)
 
@@ -444,6 +467,12 @@ var (
 
 type ConnectorImlp struct {
 	interceptor Interceptor
+}
+
+func NewConnector(interceptor Interceptor) Connector {
+	return ConnectorImlp{
+		interceptor: interceptor,
+	}
 }
 
 type Interceptor interface {
@@ -555,9 +584,17 @@ func (c ConnectorImlp) applySelector(msg Msg, selectors []Selector) (Msg, error)
 
 type InterceptorImlp struct{}
 
-func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg        { return msg }
-func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg { return msg }
-func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg)      {}
+func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
+	fmt.Println("after sending", from, msg)
+	return msg
+}
+func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
+	fmt.Println("before receiving", from, to, msg)
+	return msg
+}
+func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {
+	fmt.Println("after receiving", from, to, msg)
+}
 
 /* --- ERRGROUP copy of golang.org/x/sync/errgroup --- */
 

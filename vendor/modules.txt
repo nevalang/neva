@@ -11,8 +11,9 @@ github.com/pmezard/go-difflib/difflib
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# golang.org/x/sync v0.1.0
-## explicit
+# golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
+## explicit; go 1.18
+golang.org/x/exp/maps
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
