@@ -17,7 +17,7 @@ func main() {
 		}: io.Print,
 		{
 			Pkg:  "io",
-			Name: "void",
+			Name: "Void",
 		}: io.Void,
 	}
 
@@ -28,26 +28,26 @@ func main() {
 
 	r := runtime.NewRuntime(connector, routineRunner)
 
+	startPort := make(chan runtime.Msg)
 	startPortAddr := runtime.PortAddr{
 		Path: "root",
 		Name: "sig",
 	}
-	startPortCh := make(chan runtime.Msg)
 
-	printerInPort := runtime.PortAddr{
+	printerInPort := make(chan runtime.Msg)
+	printerInPortAddr := runtime.PortAddr{
 		Path: "printer.in",
 		Name: "v",
 	}
-	printerInCh := make(chan runtime.Msg)
 
-	printerOutPort := runtime.PortAddr{
+	printerOutPort := make(chan runtime.Msg)
+	printerOutPortAddr := runtime.PortAddr{
 		Path: "printer.out",
 		Name: "v",
 	}
-	printerOutCh := make(chan runtime.Msg)
 
-	voidInCh := make(chan runtime.Msg)
-	voidInPort := runtime.PortAddr{
+	voidInPort := make(chan runtime.Msg)
+	voidInPortAddr := runtime.PortAddr{
 		Path: "void.in",
 		Name: "v",
 	}
@@ -55,40 +55,40 @@ func main() {
 	prog := runtime.Program{
 		StartPortAddr: startPortAddr,
 		Ports: map[runtime.PortAddr]chan runtime.Msg{
-			startPortAddr:  printerInCh,
-			printerInPort:  startPortCh,
-			printerInPort:  printerInCh,
-			printerOutPort: printerOutCh,
+			startPortAddr:      printerInPort,
+			printerInPortAddr:  startPort,
+			printerInPortAddr:  printerInPort,
+			printerOutPortAddr: printerOutPort,
 		},
 		Connections: []runtime.Connection{
 			{
 				Sender: runtime.ConnectionSide{
-					Port: startPortCh,
+					Port: startPort,
 					Meta: runtime.ConnectionSideMeta{
 						PortAddr: startPortAddr,
 					},
 				},
 				Receivers: []runtime.ConnectionSide{
 					{
-						Port: printerInCh,
+						Port: printerInPort,
 						Meta: runtime.ConnectionSideMeta{
-							PortAddr: startPortAddr,
+							PortAddr: printerInPortAddr,
 						},
 					},
 				},
 			},
 			{
 				Sender: runtime.ConnectionSide{
-					Port: printerOutCh,
+					Port: printerOutPort,
 					Meta: runtime.ConnectionSideMeta{
-						PortAddr: printerOutPort,
+						PortAddr: printerOutPortAddr,
 					},
 				},
 				Receivers: []runtime.ConnectionSide{
 					{
-						Port: voidInCh,
+						Port: voidInPort,
 						Meta: runtime.ConnectionSideMeta{
-							PortAddr: voidInPort,
+							PortAddr: voidInPortAddr,
 						},
 					},
 				},
@@ -97,13 +97,27 @@ func main() {
 		Routines: runtime.Routines{
 			Component: []runtime.ComponentRoutine{
 				{
-					Ref: runtime.ComponentRef{},
+					Ref: runtime.ComponentRef{
+						Pkg:  "io",
+						Name: "Printer",
+					},
 					IO: runtime.IO{
 						In: map[string][]chan runtime.Msg{
-							"v": {printerInCh},
+							"v": {printerInPort},
 						},
 						Out: map[string][]chan runtime.Msg{
-							"v": {printerOutCh},
+							"v": {printerOutPort},
+						},
+					},
+				},
+				{
+					Ref: runtime.ComponentRef{
+						Pkg:  "io",
+						Name: "Void",
+					},
+					IO: runtime.IO{
+						In: map[string][]chan runtime.Msg{
+							"v": {voidInPort},
 						},
 					},
 				},

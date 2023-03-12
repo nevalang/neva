@@ -337,7 +337,8 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		return nil
 	})
 
-	startPort <- nil
+	go func() { startPort <- nil }()
+
 	return g.Wait()
 }
 
@@ -481,7 +482,7 @@ type Interceptor interface {
 	AfterReceiving(from, to ConnectionSideMeta, msg Msg)
 }
 
-func (c ConnectorImlp) Connect(ctx context.Context, net []Connection) error {
+func (c ConnectorImlp) Connect(ctx context.Context, net []Connection) error { // pass ports map here?
 	g, gctx := WithContext(ctx)
 
 	for i := range net {
