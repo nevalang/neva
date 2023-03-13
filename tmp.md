@@ -13,3 +13,9 @@
 
 - Simply include imports (for runtime, operators, code) or exactly copy/generate that code?
 - Do we need `core` as a separate package?
+
+# Issues
+
+- deadlock detection?
+- sure races are impossible?
+- do we need transactions?

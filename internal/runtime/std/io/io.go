@@ -38,17 +38,6 @@ func Read(ctx context.Context, io runtime.IO) error {
 	}
 }
 
-func Void(ctx context.Context, io runtime.IO) error {
-	for {
-		for _, chans := range io.In {
-			for _, ch := range chans {
-				<-ch
-			}
-		}
-	}
-
-}
-
 // func Print(ctx context.Context, io runtime.IO) error {
 // 	in, err := io.In.Port("v")
 // 	if err != nil {

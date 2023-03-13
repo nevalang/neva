@@ -1,15 +1,82 @@
+// generator/main.go
+package main
+
+import (
+	"bytes"
+	"os"
+
+	"github.com/emil14/neva/internal"
+)
+
+func main() {
+	createGoModFile()
+
+	os.MkdirAll("", os.ModeDir)
+
+	runtimeBb, err := internal.RuntimeFiles.ReadFile("runtime/runtime.go")
+	if err != nil {
+		panic(err)
+	}
+
+	var buf bytes.Buffer
+
+	buf.Write(runtimeBb)
+
+	f, err := os.Create("tmp/runtime/runtime.go")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	if _, err := buf.WriteTo(f); err != nil {
+		panic(err)
+	}
+
+	buf.Reset()
+
+	if _, err := buf.WriteString(prog); err != nil {
+		panic(err)
+	}
+
+	f, err = os.Create("tmp/main.go")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+}
+
+func createGoModFile() {
+	f, err := os.Create("tmp/go.mod")
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	_, err = f.WriteString("module root")
+	if err != nil {
+		panic(err)
+	}
+}
+
+var prog = `
 package main
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/emil14/neva/internal/runtime"
-	"github.com/emil14/neva/internal/runtime/std/flow"
-	"github.com/emil14/neva/internal/runtime/std/io"
+	"root/runtime"
+	"root/std/flow"
+	"root/std/io"
 )
 
 func main() {
+	// component refs
 	printerRef := runtime.ComponentRef{
 		Pkg:  "io",
 		Name: "printer",
@@ -19,6 +86,7 @@ func main() {
 		Name: "void",
 	}
 
+	// component refs to std functions map
 	repo := map[runtime.ComponentRef]runtime.ComponentFunc{
 		printerRef: io.Print,
 		voidRef:    flow.Void,
@@ -129,3 +197,4 @@ func main() {
 		r.Run(context.Background(), prog),
 	)
 }
+`

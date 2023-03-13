@@ -1,4 +1,4 @@
-package main
+package flow
 
 import (
 	"context"
@@ -6,18 +6,28 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 )
 
+func Void(ctx context.Context, io runtime.IO) error {
+	for {
+		for _, inports := range io.In {
+			for _, inport := range inports {
+				<-inport
+			}
+		}
+	}
+}
+
 func Trigger(ctx context.Context, io runtime.IO) error {
-	slots, err := io.In.ArrPort("sigs")
+	sigs, err := io.In.ArrPort("sigs")
 	if err != nil {
 		return err
 	}
 
-	v, err := io.In.Port("v")
+	vin, err := io.In.Port("v")
 	if err != nil {
 		return err
 	}
 
-	out, err := io.Out.Port("v")
+	vout, err := io.Out.Port("v")
 	if err != nil {
 		return err
 	}
@@ -27,13 +37,13 @@ func Trigger(ctx context.Context, io runtime.IO) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			for i := range slots {
+			for i := range sigs {
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
-				case <-slots[i]:
-					msg := <-v
-					out <- msg
+				case <-sigs[i]:
+					msg := <-vin
+					vout <- msg
 				}
 			}
 		}

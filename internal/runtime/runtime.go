@@ -57,7 +57,7 @@ type (
 	}
 
 	ComponentRoutine struct {
-		Ref ComponentRef
+		Ref ComponentRef // Must refer to some function in component-runner's library
 		IO  IO
 	}
 
@@ -426,10 +426,14 @@ var (
 )
 
 type ComponentRunnerImpl struct {
-	repo map[ComponentRef]func(context.Context, IO) error
+	repo map[ComponentRef]ComponentFunc
 }
 
-func NewComponentRunner(repo map[ComponentRef]func(context.Context, IO) error) ComponentRunnerImpl {
+type ComponentFunc func(context.Context, IO) error
+
+func NewComponentRunner(
+	repo map[ComponentRef]ComponentFunc,
+) ComponentRunnerImpl {
 	return ComponentRunnerImpl{
 		repo: repo,
 	}
