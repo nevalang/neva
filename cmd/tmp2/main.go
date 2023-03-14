@@ -8,10 +8,28 @@ import (
 	"github.com/emil14/neva/internal"
 )
 
-func main() {
-	createGoModFile()
+// pathToPkg->files
+var allStdPkgsPaths = map[string]struct{}{
+	"io":          {},
+	"flow":        {},
+	"flow/stream": {},
+}
+var usedStdPkgsPaths = map[string]struct{}{}
 
-	os.MkdirAll("", os.ModeDir)
+func main() {
+	cleanup()
+
+	// Tmp dir and go.mod
+	if err := os.MkdirAll("tmp", os.ModePerm); err != nil {
+		panic(err)
+	}
+
+	putGoMod()
+
+	// Runtime
+	if err := os.MkdirAll("tmp/internal/runtime", os.ModePerm); err != nil {
+		panic(err)
+	}
 
 	runtimeBb, err := internal.RuntimeFiles.ReadFile("runtime/runtime.go")
 	if err != nil {
@@ -19,10 +37,9 @@ func main() {
 	}
 
 	var buf bytes.Buffer
-
 	buf.Write(runtimeBb)
 
-	f, err := os.Create("tmp/runtime/runtime.go")
+	f, err := os.Create("tmp/internal/runtime/runtime.go")
 	if err != nil {
 		panic(err)
 	}
@@ -34,18 +51,55 @@ func main() {
 
 	buf.Reset()
 
-	if _, err := buf.WriteString(prog); err != nil {
-		panic(err)
-	}
+	// main.go
+	progString := getProgString()
 
 	f, err = os.Create("tmp/main.go")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
+
+	if _, err := f.WriteString(progString); err != nil {
+		panic(err)
+	}
+
+	// Std root
+	if err := os.MkdirAll("tmp/internal/runtime/std/io", os.ModePerm); err != nil {
+		panic(err)
+	}
+	bb, err := os.ReadFile("internal/runtime/std/io/io.go")
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile("tmp/internal/runtime/std/io/io.go", bb, os.ModePerm); err != nil {
+		panic(err)
+	}
+	if err := os.MkdirAll("tmp/internal/runtime/std/flow", os.ModePerm); err != nil {
+		panic(err)
+	}
+	bb, err = os.ReadFile("internal/runtime/std/flow/flow.go")
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile("tmp/internal/runtime/std/flow/flow.go", bb, os.ModePerm); err != nil {
+		panic(err)
+	}
+
+	if err := os.Rename("tmp", "/home/evaleev/projects/tmp"); err != nil {
+		panic(err)
+	}
+
+	// Move to special dir to avoid go modules problem
+	// cmd := exec.Command("mv", "tmp", "/home/evaleev/projects/tmp")
+	// if err := cmd.Run(); err != nil {
+	// 	panic(err)
+	// }
+
+	// os.Executable()
 }
 
-func createGoModFile() {
+func putGoMod() {
 	f, err := os.Create("tmp/go.mod")
 	if err != nil {
 		panic(err)
@@ -57,22 +111,22 @@ func createGoModFile() {
 		}
 	}()
 
-	_, err = f.WriteString("module root")
+	_, err = f.WriteString("module github.com/emil14/neva")
 	if err != nil {
 		panic(err)
 	}
 }
 
-var prog = `
-package main
+func getProgString() string {
+	return `package main
 
 import (
 	"context"
 	"fmt"
 
-	"root/runtime"
-	"root/std/flow"
-	"root/std/io"
+	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/runtime/std/flow"
+	"github.com/emil14/neva/internal/runtime/std/io"
 )
 
 func main() {
@@ -196,5 +250,14 @@ func main() {
 	fmt.Println(
 		r.Run(context.Background(), prog),
 	)
+}`
 }
-`
+
+func cleanup() {
+	if err := os.RemoveAll("tmp"); err != nil {
+		panic(err)
+	}
+	if err := os.RemoveAll("/home/evaleev/projects/tmp"); err != nil {
+		panic(err)
+	}
+}
