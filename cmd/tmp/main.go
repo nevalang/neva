@@ -38,9 +38,9 @@ func main() {
 
 	// Ports
 	rootInStartPort := make(chan runtime.Msg)
-	rootInStartPortAddr := runtime.PortAddr{Path: "root", Name: "sig"}
+	rootInStartPortAddr := runtime.PortAddr{Name: "start"}
 	rootOutExitPort := make(chan runtime.Msg)
-	rootOutExitPortAddr := runtime.PortAddr{Path: "root", Name: "exit"}
+	rootOutExitPortAddr := runtime.PortAddr{Name: "exit"}
 
 	printerInPort := make(chan runtime.Msg)
 	printerInPortAddr := runtime.PortAddr{Path: "printer.in", Name: "v"}
@@ -68,7 +68,6 @@ func main() {
 	exitCodeOneMsg := runtime.NewIntMsg(0)
 
 	prog := runtime.Program{
-		StartPortAddr: rootInStartPortAddr,
 		Ports: map[runtime.PortAddr]chan runtime.Msg{
 			// root
 			rootInStartPortAddr: rootInStartPort,
@@ -179,7 +178,7 @@ func main() {
 					IO: runtime.IO{
 						In: map[string][]chan runtime.Msg{
 							"sigs": {triggerInSigsPort},
-							"v":   {triggerInVPort},
+							"v":    {triggerInVPort},
 						},
 						Out: map[string][]chan runtime.Msg{
 							"v": {triggerOutVPort},
@@ -190,7 +189,10 @@ func main() {
 		},
 	}
 
-	fmt.Println(
-		r.Run(context.Background(), prog),
-	)
+	exitCode, err := r.Run(context.Background(), prog)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(exitCode)
 }

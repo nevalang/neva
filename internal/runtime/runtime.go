@@ -13,10 +13,9 @@ import (
 
 type (
 	Program struct {
-		StartPortAddr PortAddr
-		Ports         Ports
-		Connections   []Connection
-		Routines      Routines
+		Ports       Ports
+		Connections []Connection
+		Routines    Routines
 	}
 
 	PortAddr struct {
@@ -70,12 +69,27 @@ type (
 	}
 )
 
-func (p ConnectionSideMeta) String() string {
-	return fmt.Sprint(p.PortAddr)
+func (c Connection) String() string {
+	s := c.Sender.Meta.String() + "->"
+	for i := range c.Receivers {
+		s += c.Receivers[i].Meta.String()
+		if i < len(c.Receivers)-1 {
+			s += ", "
+		}
+	}
+	return s
+}
+
+func (c ConnectionSideMeta) String() string {
+	return fmt.Sprint(c.PortAddr)
 }
 
 func (p PortAddr) String() string {
-	return fmt.Sprintf("%s.%s[%d]", p.Path, p.Name, p.Idx)
+	var s string
+	if p.Path != "" {
+		s += p.Path + "."
+	}
+	return s + fmt.Sprintf("%s[%d]", p.Name, p.Idx)
 }
 
 /* --- PORTS --- */
@@ -107,7 +121,7 @@ type Msg interface {
 	fmt.Stringer
 	Type() Type
 	Bool() bool
-	Int() int64
+	Int() int
 	Float() float64
 	Str() string
 	Vec() []Msg
@@ -130,7 +144,7 @@ const (
 type emptyMsg struct{}
 
 func (emptyMsg) Bool() bool          { return false }
-func (emptyMsg) Int() int64          { return 0 }
+func (emptyMsg) Int() int            { return 0 }
 func (emptyMsg) Float() float64      { return 0 }
 func (emptyMsg) Str() string         { return "" }
 func (emptyMsg) Vec() []Msg          { return []Msg{} }
@@ -140,14 +154,14 @@ func (emptyMsg) Map() map[string]Msg { return map[string]Msg{} }
 
 type IntMsg struct {
 	emptyMsg
-	v int64
+	v int
 }
 
-func (msg IntMsg) Int() int64     { return msg.v }
+func (msg IntMsg) Int() int       { return msg.v }
 func (msg IntMsg) Type() Type     { return IntMsgType }
 func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
 
-func NewIntMsg(n int64) IntMsg {
+func NewIntMsg(n int) IntMsg {
 	return IntMsg{
 		emptyMsg: emptyMsg{},
 		v:        n,
@@ -300,13 +314,10 @@ type Runtime struct {
 	routineRunner RoutineRunner
 }
 
-func NewRuntime(
-	connector Connector,
-	routineRunner RoutineRunner,
-) Runtime {
+func NewRuntime(c Connector, r RoutineRunner) Runtime {
 	return Runtime{
-		connector:     connector,
-		routineRunner: routineRunner,
+		connector:     c,
+		routineRunner: r,
 	}
 }
 
@@ -321,15 +332,24 @@ type (
 
 var (
 	ErrStartPortNotFound = errors.New("start port not found")
+	ErrExitPortNotFound  = errors.New("exit port not found")
 	ErrConnector         = errors.New("connector")
 	ErrRoutineRunner     = errors.New("routine runner")
 )
 
-func (r Runtime) Run(ctx context.Context, prog Program) error {
-	startPort, ok := prog.Ports[prog.StartPortAddr]
+// Run returns exit code of the program when it terminates or non nil error if something goes wrong in the Runtime.
+func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
+	startPort, ok := prog.Ports[PortAddr{Name: "start"}]
 	if !ok {
-		return fmt.Errorf("%w: %v", ErrStartPortNotFound, prog.StartPortAddr)
+		return 0, ErrStartPortNotFound
 	}
+
+	exitPort, ok := prog.Ports[PortAddr{Name: "exit"}]
+	if !ok {
+		return 0, ErrExitPortNotFound
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
 
 	g, gctx := WithContext(ctx)
 	g.Go(func() error {
@@ -347,9 +367,14 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 
 	go func() { startPort <- nil }()
 
-	// TODO implement exit port usage
+	var exitCode int
+	go func() {
+		exitCode = (<-exitPort).Int()
+		cancel()
+		fmt.Println("---after calling cancel()---")
+	}()
 
-	return g.Wait()
+	return exitCode, g.Wait()
 }
 
 /*  --- ROUTINE-RUNNER --- */
@@ -425,7 +450,7 @@ func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
 
 	wg.Wait()
 
-	return ctx.Err()
+	return nil
 }
 
 /* --- COMPONENT-RUNNER --- */
@@ -517,7 +542,7 @@ func (c ConnectorImpl) broadcast(ctx context.Context, conn Connection) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case msg := <-conn.Sender.Port:
 			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
 
@@ -558,7 +583,7 @@ func (c ConnectorImpl) distribute(
 
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case recv.Port <- preparedMsg:
 			c.interceptor.AfterReceiving(senderMeta, recv.Meta, preparedMsg)
 			q = append(q[:i], q[i+1:]...) // remove cur from q

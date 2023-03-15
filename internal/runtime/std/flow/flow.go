@@ -35,12 +35,12 @@ func Trigger(ctx context.Context, io runtime.IO) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		default:
 			for i := range sigs {
 				select {
 				case <-ctx.Done():
-					return ctx.Err()
+					return nil
 				case <-sigs[i]:
 					msg := <-vin
 					vout <- msg

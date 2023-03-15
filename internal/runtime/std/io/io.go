@@ -25,12 +25,12 @@ func Read(ctx context.Context, io runtime.IO) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case <-sig:
 			scan.Scan()
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return nil
 			case v <- runtime.NewStrMsg(scan.Text()):
 				continue
 			}
@@ -52,14 +52,14 @@ func Read(ctx context.Context, io runtime.IO) error {
 // 	for {
 // 		select {
 // 		case <-ctx.Done():
-// 			return ctx.Err()
+// 			return nil
 // 		case msg := <-in:
 // 			fmt.Println(msg)
 // 			select {
 // 			case out <- msg:
 // 				continue
 // 			case <-ctx.Done():
-// 				return ctx.Err()
+// 				return nil
 // 			}
 // 		}
 // 	}
@@ -79,14 +79,14 @@ func Print(ctx context.Context, io runtime.IO) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case msg := <-in:
-			fmt.Println("Hello world")
+			fmt.Println("===Hello world!===")
 			select {
 			case out <- msg:
 				continue
 			case <-ctx.Done():
-				return ctx.Err()
+				return nil
 			}
 		}
 	}
