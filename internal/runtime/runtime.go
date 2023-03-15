@@ -436,13 +436,12 @@ func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
 	for i := range givers {
 		giver := givers[i]
 		go func() {
-			defer wg.Done()
 			for {
 				select {
+				case giver.OutPort <- giver.Msg:
 				case <-ctx.Done():
+					wg.Done()
 					return
-				default:
-					giver.OutPort <- giver.Msg
 				}
 			}
 		}()
