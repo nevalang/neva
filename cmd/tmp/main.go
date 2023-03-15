@@ -10,68 +10,86 @@ import (
 )
 
 func main() {
+	// Component refs
 	printerRef := runtime.ComponentRef{
 		Pkg:  "io",
 		Name: "printer",
 	}
-	voidRef := runtime.ComponentRef{
-		Pkg:  "io",
-		Name: "void",
+	triggerRef := runtime.ComponentRef{
+		Pkg:  "flow",
+		Name: "trigger",
 	}
 
+	// Routine runner
 	repo := map[runtime.ComponentRef]runtime.ComponentFunc{
 		printerRef: io.Print,
-		voidRef:    flow.Void,
+		triggerRef: flow.Trigger,
 	}
 	componentRunner := runtime.NewComponentRunner(repo)
-
 	giverRunner := runtime.GiverRunnerImlp{}
-
 	routineRunner := runtime.NewRoutineRunner(giverRunner, componentRunner)
 
+	// Connector
 	interceptor := runtime.InterceptorImlp{}
 	connector := runtime.NewConnector(interceptor)
 
+	// Runtime
 	r := runtime.NewRuntime(connector, routineRunner)
 
-	startPort := make(chan runtime.Msg)
-	startPortAddr := runtime.PortAddr{
-		Path: "root",
-		Name: "sig",
-	}
+	// Ports
+	rootInStartPort := make(chan runtime.Msg)
+	rootInStartPortAddr := runtime.PortAddr{Path: "root", Name: "sig"}
+	rootOutExitPort := make(chan runtime.Msg)
+	rootOutExitPortAddr := runtime.PortAddr{Path: "root", Name: "exit"}
 
 	printerInPort := make(chan runtime.Msg)
-	printerInPortAddr := runtime.PortAddr{
-		Path: "printer.in",
-		Name: "v",
-	}
+	printerInPortAddr := runtime.PortAddr{Path: "printer.in", Name: "v"}
 
 	printerOutPort := make(chan runtime.Msg)
-	printerOutPortAddr := runtime.PortAddr{
-		Path: "printer.out",
+	printerOutPortAddr := runtime.PortAddr{Path: "printer.out", Name: "v"}
+
+	triggerInSigsPort := make(chan runtime.Msg)
+	triggerInSigsAddr := runtime.PortAddr{Path: "trigger.in", Name: "sigs"}
+	triggerInVPort := make(chan runtime.Msg)
+	triggerInVAddr := runtime.PortAddr{Path: "trigger.in", Name: "v"}
+	triggerOutVPort := make(chan runtime.Msg)
+	triggerOutVPortAddr := runtime.PortAddr{
+		Path: "trigger.out",
 		Name: "v",
 	}
 
-	voidInPort := make(chan runtime.Msg)
-	voidInPortAddr := runtime.PortAddr{
-		Path: "void.in",
-		Name: "v",
+	giverOutPort := make(chan runtime.Msg)
+	giverOutPortAddr := runtime.PortAddr{
+		Path: "giver.out",
+		Name: "code",
 	}
+
+	// Messages
+	exitCodeOneMsg := runtime.NewIntMsg(0)
 
 	prog := runtime.Program{
-		StartPortAddr: startPortAddr,
+		StartPortAddr: rootInStartPortAddr,
 		Ports: map[runtime.PortAddr]chan runtime.Msg{
-			startPortAddr:      printerInPort,
-			printerInPortAddr:  startPort,
+			// root
+			rootInStartPortAddr: rootInStartPort,
+			rootOutExitPortAddr: rootOutExitPort,
+			// printer
 			printerInPortAddr:  printerInPort,
 			printerOutPortAddr: printerOutPort,
+			// trigger
+			triggerInSigsAddr:   triggerInSigsPort,
+			triggerInVAddr:      triggerInVPort,
+			triggerOutVPortAddr: triggerOutVPort,
+			// giver
+			giverOutPortAddr: giverOutPort,
 		},
 		Connections: []runtime.Connection{
+			// root.start -> printer.in.v
 			{
 				Sender: runtime.ConnectionSide{
-					Port: startPort,
+					Port: rootInStartPort,
 					Meta: runtime.ConnectionSideMeta{
-						PortAddr: startPortAddr,
+						PortAddr: rootInStartPortAddr,
 					},
 				},
 				Receivers: []runtime.ConnectionSide{
@@ -83,6 +101,7 @@ func main() {
 					},
 				},
 			},
+			// printer.out.v -> trigger.in.sig
 			{
 				Sender: runtime.ConnectionSide{
 					Port: printerOutPort,
@@ -92,16 +111,57 @@ func main() {
 				},
 				Receivers: []runtime.ConnectionSide{
 					{
-						Port: voidInPort,
+						Port: triggerInSigsPort,
 						Meta: runtime.ConnectionSideMeta{
-							PortAddr: voidInPortAddr,
+							PortAddr: triggerInSigsAddr,
+						},
+					},
+				},
+			},
+			// giver.out.code -> trigger.in.v
+			{
+				Sender: runtime.ConnectionSide{
+					Port: giverOutPort,
+					Meta: runtime.ConnectionSideMeta{
+						PortAddr: giverOutPortAddr,
+					},
+				},
+				Receivers: []runtime.ConnectionSide{
+					{
+						Port: triggerInVPort,
+						Meta: runtime.ConnectionSideMeta{
+							PortAddr: triggerInVAddr,
+						},
+					},
+				},
+			},
+			// trigger.out.v -> root.out.exit
+			{
+				Sender: runtime.ConnectionSide{
+					Port: triggerOutVPort,
+					Meta: runtime.ConnectionSideMeta{
+						PortAddr: triggerOutVPortAddr,
+					},
+				},
+				Receivers: []runtime.ConnectionSide{
+					{
+						Port: rootOutExitPort,
+						Meta: runtime.ConnectionSideMeta{
+							PortAddr: rootOutExitPortAddr,
 						},
 					},
 				},
 			},
 		},
 		Routines: runtime.Routines{
+			Giver: []runtime.GiverRoutine{
+				{
+					OutPort: giverOutPort,
+					Msg:     exitCodeOneMsg,
+				},
+			},
 			Component: []runtime.ComponentRoutine{
+				// printer
 				{
 					Ref: printerRef,
 					IO: runtime.IO{
@@ -113,11 +173,16 @@ func main() {
 						},
 					},
 				},
+				// trigger
 				{
-					Ref: voidRef,
+					Ref: triggerRef,
 					IO: runtime.IO{
 						In: map[string][]chan runtime.Msg{
-							"v": {voidInPort},
+							"sigs": {triggerInSigsPort},
+							"v":   {triggerInVPort},
+						},
+						Out: map[string][]chan runtime.Msg{
+							"v": {triggerOutVPort},
 						},
 					},
 				},

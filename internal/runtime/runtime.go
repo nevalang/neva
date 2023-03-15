@@ -70,6 +70,14 @@ type (
 	}
 )
 
+func (p ConnectionSideMeta) String() string {
+	return fmt.Sprint(p.PortAddr)
+}
+
+func (p PortAddr) String() string {
+	return fmt.Sprintf("%s.%s[%d]", p.Path, p.Name, p.Idx)
+}
+
 /* --- PORTS --- */
 
 type IOPorts map[string][]chan Msg
@@ -339,6 +347,8 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 
 	go func() { startPort <- nil }()
 
+	// TODO implement exit port usage
+
 	return g.Wait()
 }
 
@@ -422,7 +432,7 @@ func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
 
 var (
 	ErrRepo          = errors.New("repo")
-	ErrComponentFunc = errors.New("operator func")
+	ErrComponentFunc = errors.New("component func")
 )
 
 type ComponentRunnerImpl struct {
@@ -470,12 +480,12 @@ var (
 	ErrSelectorReceiving = errors.New("selector before receiving")
 )
 
-type ConnectorImlp struct {
+type ConnectorImpl struct {
 	interceptor Interceptor
 }
 
 func NewConnector(interceptor Interceptor) Connector {
-	return ConnectorImlp{
+	return ConnectorImpl{
 		interceptor: interceptor,
 	}
 }
@@ -486,12 +496,11 @@ type Interceptor interface {
 	AfterReceiving(from, to ConnectionSideMeta, msg Msg)
 }
 
-func (c ConnectorImlp) Connect(ctx context.Context, net []Connection) error { // pass ports map here?
+func (c ConnectorImpl) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
 	g, gctx := WithContext(ctx)
 
-	for i := range net {
-		conn := net[i]
-
+	for i := range conns {
+		conn := conns[i]
 		g.Go(func() error {
 			if err := c.broadcast(gctx, conn); err != nil {
 				return fmt.Errorf("%w: %v", errors.Join(ErrBroadcast, err), conn)
@@ -503,19 +512,19 @@ func (c ConnectorImlp) Connect(ctx context.Context, net []Connection) error { //
 	return g.Wait()
 }
 
-func (c ConnectorImlp) broadcast(ctx context.Context, conn Connection) error {
+func (c ConnectorImpl) broadcast(ctx context.Context, conn Connection) error {
 	var err error
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case msg := <-conn.Sender.Port:
+			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
+
 			msg, err = c.applySelector(msg, conn.Sender.Meta.Selectors)
 			if err != nil {
 				return fmt.Errorf("%w: %v: %v", errors.Join(ErrSelectorSending, err), conn.Sender.Meta, msg)
 			}
-
-			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
 
 			if err := c.distribute(ctx, msg, conn.Sender.Meta, conn.Receivers); err != nil {
 				return fmt.Errorf("%w: %v", errors.Join(ErrDistribute, err), msg)
@@ -524,34 +533,34 @@ func (c ConnectorImlp) broadcast(ctx context.Context, conn Connection) error {
 	}
 }
 
-func (c ConnectorImlp) distribute(
+// distribute implements the "Queue-based Round-Robin Algorithm".
+func (c ConnectorImpl) distribute(
 	ctx context.Context,
 	msg Msg,
 	senderMeta ConnectionSideMeta,
 	q []ConnectionSide,
 ) error {
 	i := 0
-	processedMessages := make(map[PortAddr]Msg, len(q)) // intercepted and selected
+	preparedMsgs := make(map[PortAddr]Msg, len(q))
 
 	for len(q) > 0 {
 		recv := q[i]
 
-		if _, ok := processedMessages[recv.Meta.PortAddr]; !ok {
-			msg4 := c.interceptor.BeforeReceiving(senderMeta, recv.Meta, msg)
-			msg5, err := c.applySelector(msg4, recv.Meta.Selectors)
+		if _, ok := preparedMsgs[recv.Meta.PortAddr]; !ok { // avoid multuple interceptions and selections
+			msg = c.interceptor.BeforeReceiving(senderMeta, recv.Meta, msg)
+			preparedMsg, err := c.applySelector(msg, recv.Meta.Selectors)
 			if err != nil {
 				return fmt.Errorf("%w: %v", errors.Join(ErrSelectorReceiving, err), recv.Meta)
 			}
-			processedMessages[recv.Meta.PortAddr] = msg5
+			preparedMsgs[recv.Meta.PortAddr] = preparedMsg
 		}
-
-		msg5 := processedMessages[recv.Meta.PortAddr]
+		preparedMsg := preparedMsgs[recv.Meta.PortAddr]
 
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case recv.Port <- msg5:
-			c.interceptor.AfterReceiving(senderMeta, recv.Meta, msg5)
+		case recv.Port <- preparedMsg:
+			c.interceptor.AfterReceiving(senderMeta, recv.Meta, preparedMsg)
 			q = append(q[:i], q[i+1:]...) // remove cur from q
 		default: // cur is too busy to receive, it's buf is full
 			if i < len(q) {
@@ -567,7 +576,7 @@ func (c ConnectorImlp) distribute(
 	return nil
 }
 
-func (c ConnectorImlp) applySelector(msg Msg, selectors []Selector) (Msg, error) {
+func (c ConnectorImpl) applySelector(msg Msg, selectors []Selector) (Msg, error) {
 	if len(selectors) == 0 {
 		return msg, nil
 	}
@@ -590,15 +599,15 @@ func (c ConnectorImlp) applySelector(msg Msg, selectors []Selector) (Msg, error)
 type InterceptorImlp struct{}
 
 func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
-	fmt.Println("after sending", from, msg)
+	fmt.Printf("after sending %v -> %v\n", from, msg)
 	return msg
 }
 func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
-	fmt.Println("before receiving", from, to, msg)
+	fmt.Printf("before receiving %v -> %v -> %v\n", from, msg, to)
 	return msg
 }
 func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {
-	fmt.Println("after receiving", from, to, msg)
+	fmt.Printf("after receiving %v -> %v -> %v\n", from, msg, to)
 }
 
 /* --- ERRGROUP copy of golang.org/x/sync/errgroup --- */
