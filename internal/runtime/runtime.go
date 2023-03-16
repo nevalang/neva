@@ -47,14 +47,15 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-
 	g, gctx := WithContext(ctx)
+
 	g.Go(func() error {
 		if err := r.connector.Connect(gctx, prog.Connections); err != nil {
 			return fmt.Errorf("%w: %v", ErrConnector, err)
 		}
 		return nil
 	})
+
 	g.Go(func() error {
 		if err := r.routineRunner.Run(gctx, prog.Routines); err != nil {
 			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)

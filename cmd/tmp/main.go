@@ -163,7 +163,7 @@ func main() {
 				// printer
 				{
 					Ref: printerRef,
-					IO: runtime.IO{
+					IO: runtime.ComponentIO{
 						In: map[string][]chan runtime.Msg{
 							"v": {printerInPort},
 						},
@@ -175,7 +175,7 @@ func main() {
 				// trigger
 				{
 					Ref: triggerRef,
-					IO: runtime.IO{
+					IO: runtime.ComponentIO{
 						In: map[string][]chan runtime.Msg{
 							"sigs": {triggerInSigsPort},
 							"v":    {triggerInVPort},

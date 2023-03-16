@@ -9,7 +9,7 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 )
 
-func Read(ctx context.Context, io runtime.IO) error {
+func Read(ctx context.Context, io runtime.ComponentIO) error {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return err
@@ -38,34 +38,7 @@ func Read(ctx context.Context, io runtime.IO) error {
 	}
 }
 
-// func Print(ctx context.Context, io runtime.IO) error {
-// 	in, err := io.In.Port("v")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	out, err := io.Out.Port("v")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			return nil
-// 		case msg := <-in:
-// 			fmt.Println(msg)
-// 			select {
-// 			case out <- msg:
-// 				continue
-// 			case <-ctx.Done():
-// 				return nil
-// 			}
-// 		}
-// 	}
-// }
-
-func Print(ctx context.Context, io runtime.IO) error {
+func Print(ctx context.Context, io runtime.ComponentIO) error {
 	in, err := io.In.Port("v")
 	if err != nil {
 		return err

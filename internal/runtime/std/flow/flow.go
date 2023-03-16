@@ -6,7 +6,7 @@ import (
 	"github.com/emil14/neva/internal/runtime"
 )
 
-func Void(ctx context.Context, io runtime.IO) error {
+func Void(ctx context.Context, io runtime.ComponentIO) error {
 	for {
 		for _, inports := range io.In {
 			for _, inport := range inports {
@@ -16,7 +16,7 @@ func Void(ctx context.Context, io runtime.IO) error {
 	}
 }
 
-func Trigger(ctx context.Context, io runtime.IO) error {
+func Trigger(ctx context.Context, io runtime.ComponentIO) error {
 	sigs, err := io.In.ArrPort("sigs")
 	if err != nil {
 		return err
