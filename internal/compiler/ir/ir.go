@@ -2,16 +2,14 @@ package ir
 
 type (
 	Program struct {
-		StartPortAddr PortAddr
-		Ports         map[PortAddr]uint8 // Value describes buffer size
-		Routines      Routines
-		Net           []Connection
+		Ports       map[PortAddr]uint8
+		Routines    Routines
+		Connections []Connection
 	}
 
 	PortAddr struct {
-		Path string
-		Port string
-		Idx  uint8
+		Path, Port string
+		Idx        uint8
 	}
 
 	Routines struct {
@@ -26,11 +24,11 @@ type (
 
 	ConnectionSide struct {
 		PortAddr  PortAddr
-		Selectors []Selector // len(0) means no action
+		Selectors []Selector
 	}
 
 	Selector struct {
-		RecField string // "" means use ArrIdx
+		RecField string
 		ArrIdx   int
 	}
 
@@ -55,13 +53,4 @@ type (
 	CmpPortAddrs struct {
 		In, Out []PortAddr
 	}
-)
-
-const (
-	BoolMsg MsgType = iota + 1
-	IntMsg
-	FloatMsg
-	StrMsg
-	VecMsg
-	MapMsg
 )

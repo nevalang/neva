@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"os"
 
 	"github.com/emil14/neva/internal/runtime"
 	"github.com/emil14/neva/internal/runtime/std/flow"
@@ -194,5 +194,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(exitCode)
+	os.Exit(exitCode)
 }
