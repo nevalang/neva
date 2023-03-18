@@ -50,14 +50,14 @@ func main() {
                 Path: "{{$addr.Path}}",
                 Name: "{{$addr.Port}}",
                 Idx: {{$addr.Idx}},
-            }: {{$addr.Path}}{{$addr.Port}}{{$addr.Idx}}Port,
+            }: {{getPortName $addr}},
             {{- end}}
         },
         Connections: []runtime.Connection{
             {{- range .Connections}}
             {
                 Sender: runtime.ConnectionSide{
-                    Port: {{.SenderSide.PortAddr.Path}}{{.SenderSide.PortAddr.Port}}{{.SenderSide.PortAddr.Idx}}Port,
+                    Port: {{getPortName .SenderSide.PortAddr}},
                     Meta: runtime.ConnectionSideMeta{
                         PortAddr:  runtime.PortAddr{
                             Path: "{{.SenderSide.PortAddr.Path}}",
@@ -69,7 +69,7 @@ func main() {
                 Receivers: []runtime.ConnectionSide{
                     {{- range .ReceiverSides }}
                     {
-                        Port: {{.PortAddr.Path}}{{.PortAddr.Port}}{{.PortAddr.Idx}}Port,
+                        Port: {{getPortName .PortAddr}},
                         Meta: runtime.ConnectionSideMeta{
                             PortAddr:  runtime.PortAddr{
                                 Path: "{{.PortAddr.Path}}",
@@ -87,7 +87,7 @@ func main() {
             Giver: []runtime.GiverRoutine{
                 {{- range $portAddr, $msg := .Routines.Giver}}
                 {
-                    OutPort: {{$portAddr.Path}}{{$portAddr.Port}}{{$portAddr.Idx}}Port,
+                    OutPort: {{getPortName $portAddr}},
                     Msg:     {{getMsg $msg}},
                 },
                 {{- end}}

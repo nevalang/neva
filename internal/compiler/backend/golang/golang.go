@@ -6,7 +6,9 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/emil14/neva/internal/compiler/ir"
 )
@@ -47,7 +49,12 @@ func (b Backend) getMsg(msg ir.Msg) (string, error) {
 }
 
 func (b Backend) getPortName(addr ir.PortAddr) string {
-	return fmt.Sprintf("%s%s%dPort", addr.Path, addr.Port, addr.Idx)
+	path := replaceDotsWithUppercase(addr.Path)
+	port := addr.Port
+	if path != "" {
+		port = uppercaseFirstLetter(addr.Port)
+	}
+	return fmt.Sprintf("%s%s%dPort", path, port, addr.Idx)
 }
 
 func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port string) string {
@@ -60,4 +67,26 @@ func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port strin
 		}
 		return s
 	}
+}
+
+func replaceDotsWithUppercase(str string) string {
+	var buffer bytes.Buffer
+	for i := 0; i < len(str); i++ {
+		if str[i] == '.' {
+			i++
+			buffer.WriteString(strings.ToUpper(string(str[i])))
+		} else {
+			buffer.WriteString(string(str[i]))
+		}
+	}
+	return buffer.String()
+}
+
+func uppercaseFirstLetter(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	b := []byte(s)
+	b[0] = byte(unicode.ToUpper(rune(b[0])))
+	return string(b)
 }

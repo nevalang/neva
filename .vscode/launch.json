@@ -10,22 +10,6 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "cmd/tmp2",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/tmp2",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "cmd/tmp3",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/tmp3",
-      "cwd": "${workspaceFolder}"
-    },
-    {
       "name": "examples/hello_world",
       "type": "go",
       "request": "launch",

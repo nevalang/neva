@@ -1,189 +1,222 @@
 package main
 
 import (
-	"context"
+	"bytes"
+	"io/fs"
 	"os"
 
-	"github.com/emil14/neva/internal/runtime"
-	"github.com/emil14/neva/internal/runtime/std/flow"
-	"github.com/emil14/neva/internal/runtime/std/io"
+	"github.com/emil14/neva/internal"
+	"github.com/emil14/neva/internal/compiler/backend/golang"
+	"github.com/emil14/neva/internal/compiler/ir"
 )
 
+var efs = internal.RuntimeFiles
+var basePath = "/home/evaleev/projects/tmp"
+
 func main() {
-	// Component refs
-	printerRef := runtime.ComponentRef{
-		Pkg:  "io",
-		Name: "printer",
-	}
-	triggerRef := runtime.ComponentRef{
-		Pkg:  "flow",
-		Name: "trigger",
+	if err := os.RemoveAll(basePath); err != nil {
+		panic(err)
 	}
 
-	// Routine runner
-	repo := map[runtime.ComponentRef]runtime.ComponentFunc{
-		printerRef: io.Print,
-		triggerRef: flow.Trigger,
+	if err := os.MkdirAll(basePath, os.ModePerm); err != nil {
+		panic(err)
 	}
-	componentRunner := runtime.NewComponentRunner(repo)
-	giverRunner := runtime.GiverRunnerImlp{}
-	routineRunner := runtime.NewRoutineRunner(giverRunner, componentRunner)
 
-	// Connector
-	interceptor := runtime.InterceptorImlp{}
-	connector := runtime.NewConnector(interceptor)
+	putGoMod()
 
-	// Runtime
-	r := runtime.NewRuntime(connector, routineRunner)
+	putRuntime()
 
-	// Ports
-	rootInStartPort := make(chan runtime.Msg)
-	rootOutExitPort := make(chan runtime.Msg)
-	printerInPort := make(chan runtime.Msg)
-	printerOutPort := make(chan runtime.Msg)
-	triggerInSigsPort := make(chan runtime.Msg)
-	triggerInVPort := make(chan runtime.Msg)
-	triggerOutVPort := make(chan runtime.Msg)
-	giverOutPort := make(chan runtime.Msg)
-
-	rootInStartPortAddr := runtime.PortAddr{Name: "start"}
-	rootOutExitPortAddr := runtime.PortAddr{Name: "exit"}
-	printerInPortAddr := runtime.PortAddr{Path: "printer.in", Name: "v"}
-	printerOutPortAddr := runtime.PortAddr{Path: "printer.out", Name: "v"}
-	triggerInSigsAddr := runtime.PortAddr{Path: "trigger.in", Name: "sigs"}
-	triggerInVAddr := runtime.PortAddr{Path: "trigger.in", Name: "v"}
-	triggerOutVPortAddr := runtime.PortAddr{Path: "trigger.out", Name: "v"}
-	giverOutPortAddr := runtime.PortAddr{Path: "giver.out", Name: "code"}
-
-	// Messages
-	exitCodeOneMsg := runtime.NewIntMsg(0)
-
-	prog := runtime.Program{
-		Ports: map[runtime.PortAddr]chan runtime.Msg{
-			// root
-			rootInStartPortAddr: rootInStartPort,
-			rootOutExitPortAddr: rootOutExitPort,
-			// printer
-			printerInPortAddr:  printerInPort,
-			printerOutPortAddr: printerOutPort,
-			// trigger
-			triggerInSigsAddr:   triggerInSigsPort,
-			triggerInVAddr:      triggerInVPort,
-			triggerOutVPortAddr: triggerOutVPort,
-			// giver
-			giverOutPortAddr: giverOutPort,
+	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{
+		Ports: map[ir.PortAddr]uint8{
+			{Port: "start"}:                            0,
+			{Port: "exit"}:                             0,
+			{Path: "printer.in", Port: "v", Idx: 0}:    0,
+			{Path: "printer.out", Port: "v", Idx: 0}:   0,
+			{Path: "trigger.in", Port: "sigs", Idx: 0}: 0,
+			{Path: "trigger.in", Port: "v", Idx: 0}:    0,
+			{Path: "trigger.out", Port: "v", Idx: 0}:   0,
+			{Path: "giver.out", Port: "code", Idx: 0}:  0,
 		},
-		Connections: []runtime.Connection{
-			// root.start -> printer.in.v
-			{
-				Sender: runtime.ConnectionSide{
-					Port: rootInStartPort,
-					Meta: runtime.ConnectionSideMeta{
-						PortAddr: rootInStartPortAddr,
-					},
+		Routines: ir.Routines{
+			Giver: map[ir.PortAddr]ir.Msg{
+				{
+					Path: "giver.out",
+					Port: "code",
+					Idx:  0,
+				}: {
+					Type: ir.IntMsg,
+					Int:  0,
 				},
-				Receivers: []runtime.ConnectionSide{
-					{
-						Port: printerInPort,
-						Meta: runtime.ConnectionSideMeta{
-							PortAddr: printerInPortAddr,
+			},
+			Component: []ir.ComponentRef{
+				{
+					Pkg:  "io",
+					Name: "Print",
+					PortAddrs: ir.ComponentPortAddrs{
+						In: []ir.PortAddr{
+							{Path: "printer.in", Port: "v", Idx: 0},
+						},
+						Out: []ir.PortAddr{
+							{Path: "printer.out", Port: "v", Idx: 0},
 						},
 					},
 				},
-			},
-			// printer.out.v -> trigger.in.sig
-			{
-				Sender: runtime.ConnectionSide{
-					Port: printerOutPort,
-					Meta: runtime.ConnectionSideMeta{
-						PortAddr: printerOutPortAddr,
-					},
-				},
-				Receivers: []runtime.ConnectionSide{
-					{
-						Port: triggerInSigsPort,
-						Meta: runtime.ConnectionSideMeta{
-							PortAddr: triggerInSigsAddr,
+				{
+					Pkg:  "flow",
+					Name: "Trigger",
+					PortAddrs: ir.ComponentPortAddrs{
+						In: []ir.PortAddr{
+							{Path: "trigger.in", Port: "sigs", Idx: 0},
+							{Path: "trigger.in", Port: "v", Idx: 0},
 						},
-					},
-				},
-			},
-			// giver.out.code -> trigger.in.v
-			{
-				Sender: runtime.ConnectionSide{
-					Port: giverOutPort,
-					Meta: runtime.ConnectionSideMeta{
-						PortAddr: giverOutPortAddr,
-					},
-				},
-				Receivers: []runtime.ConnectionSide{
-					{
-						Port: triggerInVPort,
-						Meta: runtime.ConnectionSideMeta{
-							PortAddr: triggerInVAddr,
-						},
-					},
-				},
-			},
-			// trigger.out.v -> root.out.exit
-			{
-				Sender: runtime.ConnectionSide{
-					Port: triggerOutVPort,
-					Meta: runtime.ConnectionSideMeta{
-						PortAddr: triggerOutVPortAddr,
-					},
-				},
-				Receivers: []runtime.ConnectionSide{
-					{
-						Port: rootOutExitPort,
-						Meta: runtime.ConnectionSideMeta{
-							PortAddr: rootOutExitPortAddr,
+						Out: []ir.PortAddr{
+							{Path: "trigger.out", Port: "v", Idx: 0},
 						},
 					},
 				},
 			},
 		},
-		Routines: runtime.Routines{
-			Giver: []runtime.GiverRoutine{
-				{
-					OutPort: giverOutPort,
-					Msg:     exitCodeOneMsg,
+		Connections: []ir.Connection{
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "",
+						Port: "start",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
 				},
-			},
-			Component: []runtime.ComponentRoutine{
-				// printer
-				{
-					Ref: printerRef,
-					IO: runtime.ComponentIO{
-						In: map[string][]chan runtime.Msg{
-							"v": {printerInPort},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "printer.in",
+							Port: "v",
+							Idx:  0,
 						},
-						Out: map[string][]chan runtime.Msg{
-							"v": {printerOutPort},
-						},
+						Selectors: []ir.Selector{},
 					},
 				},
-				// trigger
-				{
-					Ref: triggerRef,
-					IO: runtime.ComponentIO{
-						In: map[string][]chan runtime.Msg{
-							"sigs": {triggerInSigsPort},
-							"v":    {triggerInVPort},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "printer.out",
+						Port: "v",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "trigger.in",
+							Port: "sigs",
+							Idx:  0,
 						},
-						Out: map[string][]chan runtime.Msg{
-							"v": {triggerOutVPort},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "giver.out",
+						Port: "code",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "trigger.in",
+							Port: "v",
+							Idx:  0,
 						},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "trigger.out",
+						Port: "v",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "",
+							Port: "exit",
+							Idx:  0,
+						},
+						Selectors: []ir.Selector{},
 					},
 				},
 			},
 		},
-	}
-
-	exitCode, err := r.Run(context.Background(), prog)
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	os.Exit(exitCode)
+	// write main.go
+	var buf bytes.Buffer
+	if _, err := buf.Write(bb); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(basePath+"/"+"main.go", buf.Bytes(), os.ModePerm); err != nil {
+		panic(err)
+	}
+}
+
+func putRuntime() {
+	// prepare directory structure and collect files to create
+	files := map[string][]byte{}
+	if err := fs.WalkDir(efs, "runtime", func(path string, d fs.DirEntry, err error) error {
+		fullPath := basePath + "/internal/" + path
+		if d.IsDir() {
+			if err := os.MkdirAll(fullPath, os.ModePerm); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		bb, err := efs.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		files[fullPath] = bb
+		return nil
+	}); err != nil {
+		panic(err)
+	}
+	// create files
+	for path, bb := range files {
+		if err := os.WriteFile(path, bb, os.ModePerm); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func putGoMod() {
+	f, err := os.Create(basePath + "/go.mod")
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	_, err = f.WriteString("module github.com/emil14/neva")
+	if err != nil {
+		panic(err)
+	}
 }
