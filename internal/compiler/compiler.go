@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"context"
+	"io"
 
 	"github.com/emil14/neva/internal/compiler/ir"
 	"github.com/emil14/neva/internal/compiler/src"
@@ -11,32 +12,44 @@ type Compiler struct {
 	analyzer Analyzer
 	irgen    IRGenerator
 	backend  Backend
+	writer   io.Writer
 }
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, src.Prog) (src.Prog, error) // returns program ready for synthesis
+		Analyze(context.Context, src.Prog) (src.Prog, error)
+	}
+	Optimizer interface {
+		Optimize(context.Context, src.Prog) (src.Prog, error)
 	}
 	IRGenerator interface {
 		GenerateIR(context.Context, src.Prog) (ir.Program, error)
+	}
+	IROptimizer interface {
+		Optimize(context.Context, ir.Program) (ir.Program, error)
 	}
 	Backend interface {
 		GenerateTarget(context.Context, ir.Program) ([]byte, error)
 	}
 )
 
-func (c Compiler) Compile(ctx context.Context, analyzedSrc src.Prog) ([]byte, error) {
-	analyzedSrc, err := c.analyzer.Analyze(ctx, analyzedSrc)
+func (c Compiler) Compile(ctx context.Context, prog src.Prog) ([]byte, error) {
+	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	irprog, err := c.irgen.GenerateIR(ctx, analyzedSrc)
+	irProg, err := c.irgen.GenerateIR(ctx, analyzedProg)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	target, err := c.backend.GenerateTarget(ctx, irprog)
+	target, err := c.backend.GenerateTarget(ctx, irProg)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = c.writer.Write(target)
 	if err != nil {
 		return nil, err
 	}
