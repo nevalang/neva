@@ -150,9 +150,7 @@ func main() {
 		Name: "code",
 	}
 
-	// Messages
-	exitCodeOneMsg := runtime.NewIntMsg(0)
-
+	// program
 	prog := runtime.Program{
 		Ports: map[runtime.PortAddr]chan runtime.Msg{
 			// root
@@ -242,7 +240,7 @@ func main() {
 			Giver: []runtime.GiverRoutine{
 				{
 					OutPort: giverOutPort,
-					Msg:     exitCodeOneMsg,
+					Msg:     runtime.NewIntMsg(0),
 				},
 			},
 			Component: []runtime.ComponentRoutine{

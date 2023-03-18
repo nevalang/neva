@@ -1,0 +1,130 @@
+package main
+
+import (
+    "context"
+    "os"
+
+    "github.com/emil14/neva/internal/runtime"
+    {{range .Routines.Component}}
+    "github.com/emil14/neva/internal/runtime/std/{{.Pkg}}"
+    {{end}}
+)
+
+func main() {
+    // component refs
+    {{range .Routines.Component}}
+    {{.Pkg}}{{.Name}}Ref := runtime.ComponentRef{
+        Pkg:  "{{.Pkg}}",
+        Name: "{{.Name}}",
+    }
+    {{end}}
+
+    // routine runner
+    repo := map[runtime.ComponentRef]runtime.ComponentFunc{
+        {{range .Routine.Component}}
+        {{.Pkg}}{{.Name}}Ref: {{.Pkg}}{{.Name}},
+        {{end}}
+    }
+    componentRunner := runtime.NewComponentRunner(repo)
+    giverRunner := runtime.GiverRunnerImlp{}
+    routineRunner := runtime.NewRoutineRunner(giverRunner, componentRunner)
+
+    // connector
+    interceptor := runtime.InterceptorImlp{}
+    connector := runtime.NewConnector(interceptor)
+
+    // runtime
+    r := runtime.NewRuntime(connector, routineRunner)
+
+    // ports
+    {{range .Ports}}
+    {{.Path}}{{.Port}}{{.Idx}}Port := make(chan runtime.Msg)
+    {{.Path}}{{.Port}}Addr := runtime.PortAddr{
+        Path: "{{.Path}}",
+		Port: "{{.Port}}",
+        Idx: {{.Idx}},
+    }
+    {{end}}
+
+	// program
+    prog := runtime.Program{
+        Ports: map[runtime.PortAddr]chan runtime.Msg{
+            {{range .Ports}}
+            runtime.PortAddr{
+                Path: "{{.Path}}",
+                Port: "{{.Port}}",
+                Idx: {{.Idx}},
+            }: {{.Path}}{{.Port}}{{.Idx}}Port,
+            {{end}}
+        },
+        Connections: []runtime.Connection{
+            {{range .Connections}}
+            {
+                Sender: runtime.ConnectionSide{
+                    Port: {{.SenderSide.PortAddr.Path}}{{.SenderSide.PortAddr.Port}}{{.SenderSide.PortAddr.Idx}}Port,
+                    Meta: runtime.ConnectionSideMeta{
+                        PortAddr:  runtime.PortAddr{
+                            Path: "{{.SenderSide.PortAddr.Path}}",
+                            Port: "{{.SenderSide.PortAddr.Port}}",
+                            Idx: {{.SenderSide.PortAddr.Idx}},
+                        },
+                    },
+                },
+                Receivers: []runtime.ConnectionSide{
+                    {{ range .ReceiverSides }}
+                    {
+                        Port: {{.PortAddr.Path}}{{.PortAddr.Port}}{{.PortAddr.Idx}}Port,
+                        Meta: runtime.ConnectionSideMeta{
+                            PortAddr:  runtime.PortAddr{
+                                Path: "{{.PortAddr.Path}}",
+                                Port: "{{.PortAddr.Port}}",
+                                Idx: {{.PortAddr.Idx}},
+                            },
+                        },
+                    },
+                    {{ end }}
+                },
+            },
+            {{end}}
+        },
+        Routines: runtime.Routines{
+            Giver: []runtime.GiverRoutine{
+                {{range $portAddr, $msg := .Routine.Giver}}
+                {
+                    OutPort: {{$portAddr.Path}}{{$portAddr.Port}}{{$portAddr.Idx}}Port,
+                    Msg:     {{getMsg $msg}},
+                },
+                {{end}}
+            },
+            Component: []runtime.ComponentRoutine{
+                {{range .Routines.Component}}
+                {
+                    Ref: runtime.ComponentRef{
+                        Pkg:  "{{.Pkg}}",
+                        Name: "{{.Name}}",
+                    },
+                    IO: runtime.ComponentIO{
+                        In: map[string][]chan runtime.Msg{
+                            {{range .PortAddrs.In}}
+                            "{{.Port}}": {
+                                {{getIOFunc .Path .Port}}
+                            },
+                            {{end}}
+                        },
+                        Out: map[string][]chan runtime.Msg{
+                            // TODO
+                        },
+                    },
+                },
+                {{end}}
+            },
+        },
+    }
+
+    exitCode, err := r.Run(context.Background(), prog)
+    if err != nil {
+        panic(err)
+    }
+
+    os.Exit(exitCode)
+}

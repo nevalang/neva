@@ -13,7 +13,7 @@ type (
 	}
 
 	Routines struct {
-		Giver     map[PortAddr]Msg[any]
+		Giver     map[PortAddr]Msg
 		Component []ComponentRef
 	}
 
@@ -34,23 +34,26 @@ type (
 
 	ComponentRef struct {
 		Pkg, Name string
-		PortAddrs CmpPortAddrs
+		PortAddrs ComponentPortAddrs
 	}
 
-	// K type parameter only used for maps
-	Msg[K comparable] struct {
+	Msg struct {
 		Type  MsgType
 		Bool  bool
 		Int   int
 		Float float64
 		Str   string
-		Vec   []Msg[any]
-		Map   map[K]Msg[K]
+		Vec   []Msg
+		Map   map[string]Msg
 	}
 
 	MsgType uint8
 
-	CmpPortAddrs struct {
+	ComponentPortAddrs struct {
 		In, Out []PortAddr
 	}
+)
+
+const (
+	IntMsg MsgType = iota + 1
 )
