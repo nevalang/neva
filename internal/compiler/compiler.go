@@ -19,14 +19,8 @@ type (
 	Analyzer interface {
 		Analyze(context.Context, src.Prog) (src.Prog, error)
 	}
-	Optimizer interface {
-		Optimize(context.Context, src.Prog) (src.Prog, error)
-	}
 	IRGenerator interface {
-		GenerateIR(context.Context, src.Prog) (ir.Program, error)
-	}
-	IROptimizer interface {
-		Optimize(context.Context, ir.Program) (ir.Program, error)
+		Generate(context.Context, src.Prog) (ir.Program, error)
 	}
 	Backend interface {
 		GenerateTarget(context.Context, ir.Program) ([]byte, error)
@@ -39,7 +33,7 @@ func (c Compiler) Compile(ctx context.Context, prog src.Prog) ([]byte, error) {
 		return nil, err //nolint:wrapcheck
 	}
 
-	irProg, err := c.irgen.GenerateIR(ctx, analyzedProg)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}

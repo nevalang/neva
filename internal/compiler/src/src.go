@@ -14,7 +14,7 @@ type Prog struct {
 type Pkg struct {
 	Imports       map[string]string // alias->path
 	Entities      map[string]Entity
-	MainComponent string // empty string means library (not-executable) package
+	MainComponent string // empty string means library package
 }
 
 type Entity struct {
@@ -110,12 +110,12 @@ type Port struct {
 }
 
 type Connection struct {
-	Sender    ConnectionSide
-	Receivers []ConnectionSide
+	SenderSide    ConnectionSide
+	ReceiverSides []ConnectionSide
 }
 
 type ConnectionSide struct {
-	PortRef   ConnectionPortRef
+	PortAddr  PortAddr
 	Selectors []Selector
 }
 
@@ -124,8 +124,7 @@ type Selector struct {
 	ArrIdx   int
 }
 
-type ConnectionPortRef struct {
-	Node  string
-	Name  string
-	Index uint8
+type PortAddr struct {
+	Node, Name string
+	Idx        uint8
 }
