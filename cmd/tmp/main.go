@@ -38,31 +38,22 @@ func main() {
 
 	// Ports
 	rootInStartPort := make(chan runtime.Msg)
-	rootInStartPortAddr := runtime.PortAddr{Name: "start"}
 	rootOutExitPort := make(chan runtime.Msg)
-	rootOutExitPortAddr := runtime.PortAddr{Name: "exit"}
-
 	printerInPort := make(chan runtime.Msg)
-	printerInPortAddr := runtime.PortAddr{Path: "printer.in", Name: "v"}
-
 	printerOutPort := make(chan runtime.Msg)
-	printerOutPortAddr := runtime.PortAddr{Path: "printer.out", Name: "v"}
-
 	triggerInSigsPort := make(chan runtime.Msg)
-	triggerInSigsAddr := runtime.PortAddr{Path: "trigger.in", Name: "sigs"}
 	triggerInVPort := make(chan runtime.Msg)
-	triggerInVAddr := runtime.PortAddr{Path: "trigger.in", Name: "v"}
 	triggerOutVPort := make(chan runtime.Msg)
-	triggerOutVPortAddr := runtime.PortAddr{
-		Path: "trigger.out",
-		Name: "v",
-	}
-
 	giverOutPort := make(chan runtime.Msg)
-	giverOutPortAddr := runtime.PortAddr{
-		Path: "giver.out",
-		Name: "code",
-	}
+
+	rootInStartPortAddr := runtime.PortAddr{Name: "start"}
+	rootOutExitPortAddr := runtime.PortAddr{Name: "exit"}
+	printerInPortAddr := runtime.PortAddr{Path: "printer.in", Name: "v"}
+	printerOutPortAddr := runtime.PortAddr{Path: "printer.out", Name: "v"}
+	triggerInSigsAddr := runtime.PortAddr{Path: "trigger.in", Name: "sigs"}
+	triggerInVAddr := runtime.PortAddr{Path: "trigger.in", Name: "v"}
+	triggerOutVPortAddr := runtime.PortAddr{Path: "trigger.out", Name: "v"}
+	giverOutPortAddr := runtime.PortAddr{Path: "giver.out", Name: "code"}
 
 	// Messages
 	exitCodeOneMsg := runtime.NewIntMsg(0)

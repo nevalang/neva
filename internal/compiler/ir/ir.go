@@ -8,13 +8,13 @@ type (
 	}
 
 	PortAddr struct {
-		Path, Port string
+		Path, Port string // TODO rename Port to Name
 		Idx        uint8
 	}
 
 	Routines struct {
 		Giver     map[PortAddr]Msg
-		Component []ComponentRef
+		Component []ComponentRef // Rename to Components
 	}
 
 	Connection struct {
@@ -32,7 +32,7 @@ type (
 		ArrIdx   int
 	}
 
-	ComponentRef struct {
+	ComponentRef struct { // TODO rename to ComponentRoutine
 		Pkg, Name string
 		PortAddrs ComponentPortAddrs
 	}

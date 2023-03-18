@@ -20,8 +20,9 @@ var ErrExecTmpl = errors.New("execute template")
 
 func (b Backend) GenerateTarget(ctx context.Context, prog ir.Program) ([]byte, error) {
 	tmpl, err := template.New("main.go.tmpl").Funcs(template.FuncMap{
-		"getMsg":   b.getMsg,
-		"getPorts": b.getPortsFunc(prog.Ports),
+		"getMsg":      b.getMsg,
+		"getPorts":    b.getPortsFunc(prog.Ports),
+		"getPortName": b.getPortName,
 	}).ParseFS(efs, "tmpl/main.go.tmpl")
 	if err != nil {
 		return nil, err
@@ -45,8 +46,18 @@ func (b Backend) getMsg(msg ir.Msg) (string, error) {
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port string) (string, error) {
-	return func(path, port string) (string, error) {
-		return "", nil
+func (b Backend) getPortName(addr ir.PortAddr) string {
+	return fmt.Sprintf("%s%s%dPort", addr.Path, addr.Port, addr.Idx)
+}
+
+func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port string) string {
+	return func(path, port string) string {
+		var s string
+		for addr := range ports {
+			if addr.Path == path && addr.Port == port {
+				s = s + b.getPortName(addr) + ","
+			}
+		}
+		return s
 	}
 }

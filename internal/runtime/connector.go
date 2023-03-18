@@ -136,7 +136,7 @@ func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
 	return msg
 }
 func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
-	fmt.Printf("before receiving %v -> %v -> %v\n", from, msg, to)
+	fmt.Printf("before receiving %v <- %v <- %v\n", to, msg, from)
 	return msg
 }
 func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {

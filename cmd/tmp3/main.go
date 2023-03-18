@@ -27,7 +27,139 @@ func main() {
 
 	putRuntime()
 
-	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{})
+	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{
+		Ports: map[ir.PortAddr]uint8{
+			{Port: "start"}:                            0,
+			{Port: "exit"}:                             0,
+			{Path: "printer_in", Port: "v", Idx: 0}:    0,
+			{Path: "printer_out", Port: "v", Idx: 0}:   0,
+			{Path: "trigger_in", Port: "sigs", Idx: 0}: 0,
+			{Path: "trigger_in", Port: "v", Idx: 0}:    0,
+			{Path: "trigger_out", Port: "v", Idx: 0}:   0,
+			{Path: "giver_out", Port: "code", Idx: 0}:  0,
+		},
+		Routines: ir.Routines{
+			Giver: map[ir.PortAddr]ir.Msg{
+				{
+					Path: "giver_out",
+					Port: "code",
+					Idx:  0,
+				}: {
+					Type: ir.IntMsg,
+					Int:  0,
+				},
+			},
+			Component: []ir.ComponentRef{
+				{
+					Pkg:  "io",
+					Name: "Print",
+					PortAddrs: ir.ComponentPortAddrs{
+						In: []ir.PortAddr{
+							{Path: "printer_in", Port: "v", Idx: 0},
+						},
+						Out: []ir.PortAddr{
+							{Path: "printer_out", Port: "v", Idx: 0},
+						},
+					},
+				},
+				{
+					Pkg:  "flow",
+					Name: "Trigger",
+					PortAddrs: ir.ComponentPortAddrs{
+						In: []ir.PortAddr{
+							{Path: "trigger_in", Port: "sigs", Idx: 0},
+							{Path: "trigger_in", Port: "v", Idx: 0},
+						},
+						Out: []ir.PortAddr{
+							{Path: "trigger_out", Port: "v", Idx: 0},
+						},
+					},
+				},
+			},
+		},
+		Connections: []ir.Connection{
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "",
+						Port: "start",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "printer_in",
+							Port: "v",
+							Idx:  0,
+						},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "printer_out",
+						Port: "v",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "trigger_in",
+							Port: "sigs",
+							Idx:  0,
+						},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "giver_out",
+						Port: "code",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "trigger_in",
+							Port: "v",
+							Idx:  0,
+						},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+			{
+				SenderSide: ir.ConnectionSide{
+					PortAddr: ir.PortAddr{
+						Path: "trigger_out",
+						Port: "v",
+						Idx:  0,
+					},
+					Selectors: []ir.Selector{},
+				},
+				ReceiverSides: []ir.ConnectionSide{
+					{
+						PortAddr: ir.PortAddr{
+							Path: "",
+							Port: "exit",
+							Idx:  0,
+						},
+						Selectors: []ir.Selector{},
+					},
+				},
+			},
+		},
+	})
 	if err != nil {
 		panic(err)
 	}
