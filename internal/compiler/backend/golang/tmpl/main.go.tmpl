@@ -21,7 +21,7 @@ func main() {
 
     // routine runner
     repo := map[runtime.ComponentRef]runtime.ComponentFunc{
-        {{range .Routine.Component}}
+        {{range .Routines.Component}}
         {{.Pkg}}{{.Name}}Ref: {{.Pkg}}{{.Name}},
         {{end}}
     }
@@ -89,7 +89,7 @@ func main() {
         },
         Routines: runtime.Routines{
             Giver: []runtime.GiverRoutine{
-                {{range $portAddr, $msg := .Routine.Giver}}
+                {{range $portAddr, $msg := .Routines.Giver}}
                 {
                     OutPort: {{$portAddr.Path}}{{$portAddr.Port}}{{$portAddr.Idx}}Port,
                     Msg:     {{getMsg $msg}},
@@ -107,7 +107,7 @@ func main() {
                         In: map[string][]chan runtime.Msg{
                             {{range .PortAddrs.In}}
                             "{{.Port}}": {
-                                {{getIOFunc .Path .Port}}
+                                {{getPorts .Path .Port}}
                             },
                             {{end}}
                         },

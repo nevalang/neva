@@ -19,15 +19,13 @@ type Backend struct{}
 var ErrExecTmpl = errors.New("execute template")
 
 func (b Backend) GenerateTarget(ctx context.Context, prog ir.Program) ([]byte, error) {
-	tmpl, err := template.ParseFS(efs, "tmpl/main.go.tmpl")
+	tmpl, err := template.New("main.go.tmpl").Funcs(template.FuncMap{
+		"getMsg":   b.getMsg,
+		"getPorts": b.getPortsFunc(prog.Ports),
+	}).ParseFS(efs, "tmpl/main.go.tmpl")
 	if err != nil {
 		return nil, err
 	}
-
-	tmpl.Funcs(template.FuncMap{
-		"getMsg": b.getMsg,
-		"getIO":  b.getPorts(prog.Ports),
-	})
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, prog); err != nil {
@@ -47,7 +45,7 @@ func (b Backend) getMsg(msg ir.Msg) (string, error) {
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func (b Backend) getPorts(ports map[ir.PortAddr]uint8) func(path, port string) (string, error) {
+func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port string) (string, error) {
 	return func(path, port string) (string, error) {
 		return "", nil
 	}

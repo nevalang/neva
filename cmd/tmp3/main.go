@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"io/fs"
 	"os"
 
@@ -26,18 +27,19 @@ func main() {
 
 	putRuntime()
 
-	if _, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{}); err != nil {
+	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{})
+	if err != nil {
 		panic(err)
 	}
 
 	// write main.go
-	// var buf bytes.Buffer
-	// if _, err := buf.WriteString(prog); err != nil {
-	// 	panic(err)
-	// }
-	// if err := os.WriteFile(basePath+"/"+"main.go", buf.Bytes(), os.ModePerm); err != nil {
-	// 	panic(err)
-	// }
+	var buf bytes.Buffer
+	if _, err := buf.Write(bb); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(basePath+"/"+"main.go", buf.Bytes(), os.ModePerm); err != nil {
+		panic(err)
+	}
 }
 
 func putRuntime() {
