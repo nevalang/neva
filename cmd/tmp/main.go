@@ -48,11 +48,13 @@ func main() {
 					Int:  0,
 				},
 			},
-			Component: []ir.ComponentRef{
+			Func: []ir.FuncRoutine{
 				{
-					Pkg:  "io",
-					Name: "Print",
-					PortAddrs: ir.ComponentPortAddrs{
+					Ref: ir.FuncRef{
+						Pkg:  "io",
+						Name: "Print",
+					},
+					IO: ir.FuncIO{
 						In: []ir.PortAddr{
 							{Path: "printer.in", Port: "v", Idx: 0},
 						},
@@ -62,9 +64,11 @@ func main() {
 					},
 				},
 				{
-					Pkg:  "flow",
-					Name: "Trigger",
-					PortAddrs: ir.ComponentPortAddrs{
+					Ref: ir.FuncRef{
+						Pkg:  "flow",
+						Name: "Trigger",
+					},
+					IO: ir.FuncIO{
 						In: []ir.PortAddr{
 							{Path: "trigger.in", Port: "sigs", Idx: 0},
 							{Path: "trigger.in", Port: "v", Idx: 0},

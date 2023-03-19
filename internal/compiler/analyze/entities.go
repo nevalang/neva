@@ -30,6 +30,10 @@ func (a Analyzer) analyzeEntities(
 	used := map[src.EntityRef]struct{}{} // both local and imported
 
 	for entityName, entity := range pkg.Entities {
+		if entityName == "main" && pkgName != "main" {
+			panic("main entity inside not main package")
+		}
+		
 		if entity.Exported || entityName == "main" {
 			used[src.EntityRef{
 				Pkg:  pkgName,

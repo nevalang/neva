@@ -136,6 +136,6 @@ func (a Analyzer) analyzeStaticInports(node src.Node, scope Scope) (map[src.Enti
 // analyzeComponentNetwork returns set of unused outports. It makes sure that:
 // All nodes are used; Every node's inport is used; All connections refers to existing ports and are; Type-safe.
 // All IO nodes are used;
-func (a Analyzer) analyzeComponentNetwork(net []src.Connection, scope Scope) (map[src.PortAddr]struct{}, error) {
+func (a Analyzer) analyzeComponentNetwork(net []src.Connection, scope Scope) (map[src.ConnPortAddr]struct{}, error) {
 	return nil, nil
 }

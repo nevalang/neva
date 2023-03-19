@@ -8,6 +8,7 @@ import (
 )
 
 type Generator struct {
+	native map[src.EntityRef]ir.FuncRef // components implemented at runtime level
 }
 
 func (g Generator) Generate(ctx context.Context, prog src.Program) (ir.Program, error) {

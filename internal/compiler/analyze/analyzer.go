@@ -24,9 +24,10 @@ var (
 var h src.Helper
 
 type Analyzer struct {
-	Resolver  TypeExprResolver
-	Checker   SubtypeChecker
+	resolver  TypeExprResolver
+	checker   SubtypeChecker
 	validator TypeValidator
+	native    map[src.EntityRef]struct{} // set of components that must not have implementation
 }
 
 type (
@@ -34,6 +35,7 @@ type (
 		Resolve(ts.Expr, ts.Scope) (ts.Expr, error)
 	}
 	SubtypeChecker interface {
+		// TODO try to hide terminator params
 		Check(ts.Expr, ts.Expr, ts.TerminatorParams) error
 	}
 	TypeValidator interface {
@@ -79,7 +81,7 @@ func (a Analyzer) analyzeTypeParameters(
 		if param.Constr.Empty() {
 			continue
 		}
-		resolvedConstr, err := a.Resolver.Resolve(param.Constr, scope)
+		resolvedConstr, err := a.resolver.Resolve(param.Constr, scope)
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w: %v", errors.Join(ErrResolver, err), param.Name)
 		}
@@ -109,8 +111,8 @@ func (Analyzer) mergeUsed(used ...map[src.EntityRef]struct{}) map[src.EntityRef]
 func MustNew(r TypeExprResolver, c SubtypeChecker, v TypeValidator) Analyzer {
 	tools.NilPanic(r, c, v)
 	return Analyzer{
-		Resolver:  r,
-		Checker:   c,
+		resolver:  r,
+		checker:   c,
 		validator: v,
 	}
 }

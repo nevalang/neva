@@ -63,7 +63,7 @@ type Selector struct {
 
 type Routines struct {
 	Giver     []GiverRoutine
-	Component []ComponentRoutine
+	Component []ComponentRoutine // TODO rename (here and in tmpl) "Component" To "Func" everywhere
 }
 
 type GiverRoutine struct {

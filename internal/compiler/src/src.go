@@ -7,12 +7,12 @@ import (
 )
 
 type Program struct {
-	Pkgs    map[string]Pkg // what about versions? files?
+	Pkgs map[string]Pkg // what about versions? files?
 }
 
 type Pkg struct {
-	Imports       map[string]string // alias->path
-	Entities      map[string]Entity
+	Imports  map[string]string // alias->path
+	Entities map[string]Entity
 }
 
 type Entity struct {
@@ -63,7 +63,7 @@ type Interface struct {
 // Component's network node
 type Node struct {
 	Instance      NodeInstance
-	StaticInports map[string]EntityRef // must refer to messages
+	StaticInports map[RelPortAddr]EntityRef // must refer to messages
 }
 
 // NodeInstance of a component or interface for network node for DI
@@ -113,7 +113,7 @@ type Connection struct {
 }
 
 type ConnectionSide struct {
-	PortAddr  PortAddr
+	PortAddr  ConnPortAddr
 	Selectors []Selector
 }
 
@@ -122,7 +122,12 @@ type Selector struct {
 	ArrIdx   int
 }
 
-type PortAddr struct {
-	Node, Name string
-	Idx        uint8
+type ConnPortAddr struct {
+	Node string
+	RelPortAddr
+}
+
+type RelPortAddr struct {
+	Name string
+	Idx  uint8
 }

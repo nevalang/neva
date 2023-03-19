@@ -7,9 +7,9 @@ import (
 
 	"github.com/emil14/neva/internal"
 	"github.com/emil14/neva/internal/compiler/backend/golang"
-	"github.com/emil14/neva/internal/compiler/ir"
 	"github.com/emil14/neva/internal/compiler/irgen"
 	"github.com/emil14/neva/internal/compiler/src"
+	ts "github.com/emil14/neva/pkg/types"
 )
 
 var efs = internal.RuntimeFiles
@@ -29,144 +29,180 @@ func main() {
 	putRuntime()
 
 	prog := src.Program{
-		Pkgs:    map[string]src.Pkg{},
+		Pkgs: map[string]src.Pkg{
+			"main": {
+				Imports: map[string]string{
+					"io":   "io",
+					"flow": "flow",
+				},
+				Entities: map[string]src.Entity{
+					"code": {
+						Kind: src.MsgEntity,
+						Msg: src.Msg{
+							Value: src.MsgValue{
+								Type: ts.Expr{
+									Inst: ts.InstExpr{
+										Ref: "int",
+									},
+								},
+								Int: 0,
+							},
+						},
+					},
+					"main": {
+						Kind: src.ComponentEntity,
+						Component: src.Component{
+							IO: src.IO{
+								In: map[string]src.Port{
+									"start": {
+										Type: ts.Expr{
+											Lit: ts.LitExpr{
+												Rec: map[string]ts.Expr{},
+											},
+										},
+										IsArr: false,
+									},
+								},
+								Out: map[string]src.Port{
+									"exit": {
+										Type: ts.Expr{
+											Inst: ts.InstExpr{
+												Ref: "int",
+											},
+										},
+										IsArr: false,
+									},
+								},
+							},
+							Nodes: map[string]src.Node{
+								"print": {
+									Instance: src.NodeInstance{
+										Ref: src.EntityRef{
+											Pkg:  "io",
+											Name: "Print",
+										},
+										TypeArgs: []ts.Expr{
+											{
+												Inst: ts.InstExpr{
+													Ref: "str",
+												},
+											},
+										},
+									},
+								},
+								"trigger": {
+									Instance: src.NodeInstance{
+										Ref: src.EntityRef{
+											Pkg:  "flow",
+											Name: "Trigger",
+										},
+										TypeArgs: []ts.Expr{
+											{
+												Lit: ts.LitExpr{
+													Rec: map[string]ts.Expr{},
+												},
+											},
+										},
+										DIArgs: map[string]src.NodeInstance{},
+									},
+									StaticInports: map[src.RelPortAddr]src.EntityRef{
+										{
+											Name: "v",
+											Idx:  0,
+										}: {
+											Pkg:  "",
+											Name: "code",
+										},
+									},
+								},
+							},
+							Net: []src.Connection{
+								{
+									SenderSide: src.ConnectionSide{
+										PortAddr: src.ConnPortAddr{
+											Node: "in",
+											RelPortAddr: src.RelPortAddr{
+												Name: "start",
+												Idx:  0,
+											},
+										},
+										Selectors: []src.Selector{},
+									},
+									ReceiverSides: []src.ConnectionSide{
+										{
+											PortAddr: src.ConnPortAddr{
+												Node: "print",
+												RelPortAddr: src.RelPortAddr{
+													Name: "v",
+													Idx:  0,
+												},
+											},
+											Selectors: []src.Selector{},
+										},
+									},
+								},
+								{
+									SenderSide: src.ConnectionSide{
+										PortAddr: src.ConnPortAddr{
+											Node: "print",
+											RelPortAddr: src.RelPortAddr{
+												Name: "v",
+												Idx:  0,
+											},
+										},
+										Selectors: []src.Selector{},
+									},
+									ReceiverSides: []src.ConnectionSide{
+										{
+											PortAddr: src.ConnPortAddr{
+												Node: "trigger.",
+												RelPortAddr: src.RelPortAddr{
+													Name: "sig",
+													Idx:  0,
+												},
+											},
+											Selectors: []src.Selector{},
+										},
+									},
+								},
+								{
+									SenderSide: src.ConnectionSide{
+										PortAddr: src.ConnPortAddr{
+											Node: "trigger",
+											RelPortAddr: src.RelPortAddr{
+												Name: "v",
+												Idx:  0,
+											},
+										},
+										Selectors: []src.Selector{},
+									},
+									ReceiverSides: []src.ConnectionSide{
+										{
+											PortAddr: src.ConnPortAddr{
+												Node: "out.exit.",
+												RelPortAddr: src.RelPortAddr{
+													Name: "sig",
+													Idx:  0,
+												},
+											},
+											Selectors: []src.Selector{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
-	irgen.Generator{}.Generate(nil, prog)
+	irProg, err := irgen.Generator{}.Generate(nil, prog)
+	if err != nil {
+		panic(err)
+	}
 
-	bb, err := golang.Backend{}.GenerateTarget(nil, ir.Program{
-		Ports: map[ir.PortAddr]uint8{
-			{Port: "start"}:                            0,
-			{Port: "exit"}:                             0,
-			{Path: "printer.in", Port: "v", Idx: 0}:    0,
-			{Path: "printer.out", Port: "v", Idx: 0}:   0,
-			{Path: "trigger.in", Port: "sigs", Idx: 0}: 0,
-			{Path: "trigger.in", Port: "v", Idx: 0}:    0,
-			{Path: "trigger.out", Port: "v", Idx: 0}:   0,
-			{Path: "giver.out", Port: "code", Idx: 0}:  0,
-		},
-		Routines: ir.Routines{
-			Giver: map[ir.PortAddr]ir.Msg{
-				{
-					Path: "giver.out",
-					Port: "code",
-					Idx:  0,
-				}: {
-					Type: ir.IntMsg,
-					Int:  0,
-				},
-			},
-			Component: []ir.ComponentRef{
-				{
-					Pkg:  "io",
-					Name: "Print",
-					PortAddrs: ir.ComponentPortAddrs{
-						In: []ir.PortAddr{
-							{Path: "printer.in", Port: "v", Idx: 0},
-						},
-						Out: []ir.PortAddr{
-							{Path: "printer.out", Port: "v", Idx: 0},
-						},
-					},
-				},
-				{
-					Pkg:  "flow",
-					Name: "Trigger",
-					PortAddrs: ir.ComponentPortAddrs{
-						In: []ir.PortAddr{
-							{Path: "trigger.in", Port: "sigs", Idx: 0},
-							{Path: "trigger.in", Port: "v", Idx: 0},
-						},
-						Out: []ir.PortAddr{
-							{Path: "trigger.out", Port: "v", Idx: 0},
-						},
-					},
-				},
-			},
-		},
-		Connections: []ir.Connection{
-			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
-						Path: "",
-						Port: "start",
-						Idx:  0,
-					},
-					Selectors: []ir.Selector{},
-				},
-				ReceiverSides: []ir.ConnectionSide{
-					{
-						PortAddr: ir.PortAddr{
-							Path: "printer.in",
-							Port: "v",
-							Idx:  0,
-						},
-						Selectors: []ir.Selector{},
-					},
-				},
-			},
-			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
-						Path: "printer.out",
-						Port: "v",
-						Idx:  0,
-					},
-					Selectors: []ir.Selector{},
-				},
-				ReceiverSides: []ir.ConnectionSide{
-					{
-						PortAddr: ir.PortAddr{
-							Path: "trigger.in",
-							Port: "sigs",
-							Idx:  0,
-						},
-						Selectors: []ir.Selector{},
-					},
-				},
-			},
-			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
-						Path: "giver.out",
-						Port: "code",
-						Idx:  0,
-					},
-					Selectors: []ir.Selector{},
-				},
-				ReceiverSides: []ir.ConnectionSide{
-					{
-						PortAddr: ir.PortAddr{
-							Path: "trigger.in",
-							Port: "v",
-							Idx:  0,
-						},
-						Selectors: []ir.Selector{},
-					},
-				},
-			},
-			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
-						Path: "trigger.out",
-						Port: "v",
-						Idx:  0,
-					},
-					Selectors: []ir.Selector{},
-				},
-				ReceiverSides: []ir.ConnectionSide{
-					{
-						PortAddr: ir.PortAddr{
-							Path: "",
-							Port: "exit",
-							Idx:  0,
-						},
-						Selectors: []ir.Selector{},
-					},
-				},
-			},
-		},
-	})
+	bb, err := golang.Backend{}.GenerateTarget(nil, irProg)
 	if err != nil {
 		panic(err)
 	}

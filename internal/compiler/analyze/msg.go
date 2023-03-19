@@ -44,13 +44,13 @@ func (a Analyzer) analyzeMsg(
 		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
 	}
 
-	resolvedType, err := a.Resolver.Resolve(msg.Value.Type, scope)
+	resolvedType, err := a.resolver.Resolve(msg.Value.Type, scope)
 	if err != nil {
 		return src.Msg{}, nil, fmt.Errorf("%w: ", err)
 	}
 
 	if resolvedConstr != nil {
-		if err := a.Checker.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
+		if err := a.checker.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
 			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrInassignMsg, err)
 		}
 	}

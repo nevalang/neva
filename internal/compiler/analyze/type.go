@@ -26,7 +26,7 @@ func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityR
 		},
 	}
 
-	if _, err = a.Resolver.Resolve(testExpr, scope); err != nil {
+	if _, err = a.resolver.Resolve(testExpr, scope); err != nil {
 		return ts.Def{}, nil, fmt.Errorf("%w: %v", errors.Join(ErrResolver, err), testExpr)
 	}
 
