@@ -10,6 +10,6 @@ import (
 type Generator struct {
 }
 
-func (g Generator) Generate(ctx context.Context, prog src.Prog) (ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, prog src.Program) (ir.Program, error) {
 	return ir.Program{}, nil
 }

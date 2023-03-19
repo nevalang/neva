@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrRootPkgMissing       = errors.New("program must have root pkg")
-	ErrRootPkgNotFound      = errors.New("root pkg not found")
+	ErrMainPkgNotFound      = errors.New("root pkg not found")
 	ErrMainPkgNotExecutable = errors.New("main pkg must be executable (have root component)")
 	ErrPkg                  = errors.New("analyze package")
 	ErrTypeParams           = errors.New("interface type parameters")
@@ -41,37 +41,27 @@ type (
 	}
 )
 
-// Analyze checks that:
-// Program has ref to root pkg;
-// Root pkg exist;
-// Root pkg has root component ref;
-// All pkgs are analyzed;
-func (a Analyzer) Analyze(ctx context.Context, prog src.Prog) (src.Prog, error) {
-	if prog.MainPkg == "" {
-		return src.Prog{}, ErrRootPkgMissing
-	}
-
-	mainPkg, ok := prog.Pkgs[prog.MainPkg]
+func (a Analyzer) Analyze(ctx context.Context, prog src.Program) (src.Program, error) {
+	mainPkg, ok := prog.Pkgs["main"]
 	if !ok {
-		return src.Prog{}, fmt.Errorf("%w: %v", ErrRootPkgNotFound, prog.MainPkg)
+		return src.Program{}, ErrMainPkgNotFound
 	}
 
-	if mainPkg.MainComponent == "" {
-		return src.Prog{}, ErrMainPkgNotExecutable
+	if err := a.analyzeMainPkg(mainPkg, prog.Pkgs); err != nil {
+		return src.Program{}, errors.Join(ErrExecutablePkg, err)
 	}
 
 	resolvedPkgs := make(map[string]src.Pkg, len(prog.Pkgs))
 	for pkgName := range prog.Pkgs {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
 		if err != nil {
-			return src.Prog{}, fmt.Errorf("%w: found in %v", errors.Join(ErrPkg, err), pkgName)
+			return src.Program{}, fmt.Errorf("%w: found in %v", errors.Join(ErrPkg, err), pkgName)
 		}
 		resolvedPkgs[pkgName] = resolvedPkg
 	}
 
-	return src.Prog{
-		Pkgs:    resolvedPkgs,
-		MainPkg: prog.MainPkg,
+	return src.Program{
+		Pkgs: resolvedPkgs,
 	}, nil
 }
 

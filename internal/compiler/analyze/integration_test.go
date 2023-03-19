@@ -23,14 +23,14 @@ func TestAnalyzer(t *testing.T) {
 	type testcase struct {
 		enabled bool
 		name    string
-		prog    src.Prog
+		prog    src.Program
 		wantErr error
 	}
 
 	tests := []testcase{
 		{
 			name: "root_pkg_refers_to_imported_pkg",
-			prog: src.Prog{
+			prog: src.Program{
 				Pkgs: map[string]src.Pkg{
 					"pkg2": {
 						Entities: map[string]src.Entity{
@@ -47,7 +47,7 @@ func TestAnalyzer(t *testing.T) {
 							},
 						},
 					},
-					"pkg1": {
+					"main": {
 						Imports: h.Imports("pkg2"),
 						Entities: map[string]src.Entity{
 							"t1": h.TypeEntity(
@@ -56,20 +56,18 @@ func TestAnalyzer(t *testing.T) {
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"c1": h.RootComponentEntity(map[string]src.Node{
+							"main": h.RootComponentEntity(map[string]src.Node{
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						MainComponent: "c1",
 					},
 				},
-				MainPkg: "pkg1",
 			},
 			wantErr: nil,
 		},
 		{
 			name: "root_pkg_refers_imported_pkg_that_refers_another_imported_pkg",
-			prog: src.Prog{
+			prog: src.Program{
 				Pkgs: map[string]src.Pkg{
 					"pkg3": {
 						Entities: map[string]src.Entity{
@@ -98,7 +96,7 @@ func TestAnalyzer(t *testing.T) {
 							},
 						},
 					},
-					"pkg1": {
+					"main": {
 						Imports: h.Imports("pkg2"),
 						Entities: map[string]src.Entity{
 							"t1": h.TypeEntity(
@@ -107,20 +105,18 @@ func TestAnalyzer(t *testing.T) {
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"c1": h.RootComponentEntity(map[string]src.Node{
+							"main": h.RootComponentEntity(map[string]src.Node{
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						MainComponent: "c1",
 					},
 				},
-				MainPkg: "pkg1",
 			},
 			wantErr: nil,
 		},
 		{ // FIXME false-positive
 			name: "inassignable_message_and_4-step_import_chain",
-			prog: src.Prog{
+			prog: src.Program{
 				Pkgs: map[string]src.Pkg{
 					"pkg1": {
 						Entities: map[string]src.Entity{
@@ -163,7 +159,7 @@ func TestAnalyzer(t *testing.T) {
 							),
 						},
 					},
-					"pkg4": {
+					"main": {
 						Imports: h.Imports("pkg1", "pkg2", "pkg3"),
 						Entities: map[string]src.Entity{
 							"m1": h.IntVecMsgEntity(
@@ -178,30 +174,27 @@ func TestAnalyzer(t *testing.T) {
 									},
 								},
 							),
-							"c1": h.RootComponentEntity(map[string]src.Node{
+							"main": h.RootComponentEntity(map[string]src.Node{
 								"n1": h.ComponentNode("pkg1", "c1"),
 							}),
 						},
-						MainComponent: "c1",
 					},
 				},
-				MainPkg: "pkg4",
 			},
 			wantErr: analyze.ErrVecEl,
 		},
 		{
 			enabled: true,
 			name:    "pkg1_imports_pkg2_and_pkg3_but_refers_to_only_pkg2_while_pkg2_actually_refers_pkg3",
-			prog: src.Prog{
+			prog: src.Program{
 				Pkgs: map[string]src.Pkg{
 					"pkg1": {
 						Imports: h.Imports("pkg2", "pkg3"), // pkg3 unused
 						Entities: map[string]src.Entity{
-							"c1": h.RootComponentEntity(map[string]src.Node{
+							"main": h.RootComponentEntity(map[string]src.Node{
 								"n1": h.ComponentNode("pkg2", "c1"),
 							}),
 						},
-						MainComponent: "c1",
 					},
 					"pkg2": {
 						Imports: map[string]string{
@@ -224,7 +217,6 @@ func TestAnalyzer(t *testing.T) {
 						},
 					},
 				},
-				MainPkg: "pkg1",
 			},
 			wantErr: analyze.ErrUnusedImport,
 		},

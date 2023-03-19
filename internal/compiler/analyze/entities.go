@@ -30,7 +30,7 @@ func (a Analyzer) analyzeEntities(
 	used := map[src.EntityRef]struct{}{} // both local and imported
 
 	for entityName, entity := range pkg.Entities {
-		if entity.Exported || entityName == pkg.MainComponent {
+		if entity.Exported || entityName == "main" {
 			used[src.EntityRef{
 				Pkg:  pkgName,
 				Name: entityName,

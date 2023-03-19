@@ -6,15 +6,13 @@ import (
 	ts "github.com/emil14/neva/pkg/types"
 )
 
-type Prog struct {
+type Program struct {
 	Pkgs    map[string]Pkg // what about versions? files?
-	MainPkg string
 }
 
 type Pkg struct {
 	Imports       map[string]string // alias->path
 	Entities      map[string]Entity
-	MainComponent string // empty string means library package
 }
 
 type Entity struct {

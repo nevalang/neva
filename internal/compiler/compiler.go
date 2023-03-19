@@ -17,17 +17,17 @@ type Compiler struct {
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, src.Prog) (src.Prog, error)
+		Analyze(context.Context, src.Program) (src.Program, error)
 	}
 	IRGenerator interface {
-		Generate(context.Context, src.Prog) (ir.Program, error)
+		Generate(context.Context, src.Program) (ir.Program, error)
 	}
 	Backend interface {
 		GenerateTarget(context.Context, ir.Program) ([]byte, error)
 	}
 )
 
-func (c Compiler) Compile(ctx context.Context, prog src.Prog) ([]byte, error) {
+func (c Compiler) Compile(ctx context.Context, prog src.Program) ([]byte, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, err //nolint:wrapcheck

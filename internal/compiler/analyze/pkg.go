@@ -29,11 +29,7 @@ var (
 func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, error) { //nolint:unparam
 	pkg := pkgs[pkgName]
 
-	if pkg.MainComponent != "" {
-		if err := a.analyzeExecutablePkg(pkg, pkgs); err != nil {
-			return src.Pkg{}, errors.Join(ErrExecutablePkg, err)
-		}
-	} else if len(a.getExports(pkg.Entities)) == 0 {
+	if pkgName != "main" && len(a.getExports(pkg.Entities)) == 0 {
 		return src.Pkg{}, ErrUselessPkg
 	}
 
@@ -54,9 +50,8 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 	}
 
 	return src.Pkg{
-		Entities:      resolvedEntities,
-		Imports:       pkg.Imports,
-		MainComponent: pkg.MainComponent,
+		Entities: resolvedEntities,
+		Imports:  pkg.Imports,
 	}, nil
 }
 
@@ -65,10 +60,10 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 // That entity is a component;
 // It's not exported and;
 // It satisfies root-component-specific requirements;
-func (a Analyzer) analyzeExecutablePkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
-	entity, ok := pkg.Entities[pkg.MainComponent]
+func (a Analyzer) analyzeMainPkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
+	entity, ok := pkg.Entities["main"]
 	if !ok {
-		return fmt.Errorf("%w: %v", ErrRootComponentNotFound, pkg.MainComponent)
+		return ErrRootComponentNotFound
 	}
 
 	if entity.Kind != src.ComponentEntity {
