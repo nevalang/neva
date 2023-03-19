@@ -9,7 +9,6 @@ import (
 	"github.com/emil14/neva/internal/compiler/backend/golang"
 	"github.com/emil14/neva/internal/compiler/irgen"
 	"github.com/emil14/neva/internal/compiler/src"
-	ts "github.com/emil14/neva/pkg/types"
 )
 
 var efs = internal.RuntimeFiles
@@ -28,170 +27,104 @@ func main() {
 
 	putRuntime()
 
+	h := src.Helper{}
+
 	prog := src.Program{
 		Pkgs: map[string]src.Pkg{
 			"main": {
-				Imports: map[string]string{
-					"io":   "io",
-					"flow": "flow",
-				},
+				Imports: h.Imports("io", "flow"),
 				Entities: map[string]src.Entity{
-					"code": {
-						Kind: src.MsgEntity,
-						Msg: src.Msg{
-							Value: src.MsgValue{
-								Type: ts.Expr{
-									Inst: ts.InstExpr{
-										Ref: "int",
-									},
-								},
-								Int: 0,
-							},
-						},
-					},
-					"main": {
-						Kind: src.ComponentEntity,
-						Component: src.Component{
-							IO: src.IO{
-								In: map[string]src.Port{
-									"start": {
-										Type: ts.Expr{
-											Lit: ts.LitExpr{
-												Rec: map[string]ts.Expr{},
-											},
-										},
-										IsArr: false,
-									},
-								},
-								Out: map[string]src.Port{
-									"exit": {
-										Type: ts.Expr{
-											Inst: ts.InstExpr{
-												Ref: "int",
-											},
-										},
-										IsArr: false,
-									},
+					"code": h.IntMsg(false, 0),
+					"main": h.MainComponent(map[string]src.Node{
+						"print": h.Node(
+							h.NodeInstance("io", "Print", h.Inst("str")),
+						),
+						"trigger": h.NodeWithStaticPorts(
+							h.NodeInstance("flow", "Trigger", h.Rec(nil)),
+							map[src.RelPortAddr]src.EntityRef{
+								{
+									Name: "v",
+									Idx:  0,
+								}: {
+									Pkg:  "",
+									Name: "code",
 								},
 							},
-							Nodes: map[string]src.Node{
-								"print": {
-									Instance: src.NodeInstance{
-										Ref: src.EntityRef{
-											Pkg:  "io",
-											Name: "Print",
-										},
-										TypeArgs: []ts.Expr{
-											{
-												Inst: ts.InstExpr{
-													Ref: "str",
-												},
-											},
-										},
+						),
+					}, []src.Connection{
+						{
+							SenderSide: src.ConnectionSide{
+								PortAddr: src.ConnPortAddr{
+									Node: "in",
+									RelPortAddr: src.RelPortAddr{
+										Name: "start",
+										Idx:  0,
 									},
 								},
-								"trigger": {
-									Instance: src.NodeInstance{
-										Ref: src.EntityRef{
-											Pkg:  "flow",
-											Name: "Trigger",
-										},
-										TypeArgs: []ts.Expr{
-											{
-												Lit: ts.LitExpr{
-													Rec: map[string]ts.Expr{},
-												},
-											},
-										},
-										DIArgs: map[string]src.NodeInstance{},
-									},
-									StaticInports: map[src.RelPortAddr]src.EntityRef{
-										{
+								Selectors: []src.Selector{},
+							},
+							ReceiverSides: []src.ConnectionSide{
+								{
+									PortAddr: src.ConnPortAddr{
+										Node: "print",
+										RelPortAddr: src.RelPortAddr{
 											Name: "v",
 											Idx:  0,
-										}: {
-											Pkg:  "",
-											Name: "code",
 										},
 									},
-								},
-							},
-							Net: []src.Connection{
-								{
-									SenderSide: src.ConnectionSide{
-										PortAddr: src.ConnPortAddr{
-											Node: "in",
-											RelPortAddr: src.RelPortAddr{
-												Name: "start",
-												Idx:  0,
-											},
-										},
-										Selectors: []src.Selector{},
-									},
-									ReceiverSides: []src.ConnectionSide{
-										{
-											PortAddr: src.ConnPortAddr{
-												Node: "print",
-												RelPortAddr: src.RelPortAddr{
-													Name: "v",
-													Idx:  0,
-												},
-											},
-											Selectors: []src.Selector{},
-										},
-									},
-								},
-								{
-									SenderSide: src.ConnectionSide{
-										PortAddr: src.ConnPortAddr{
-											Node: "print",
-											RelPortAddr: src.RelPortAddr{
-												Name: "v",
-												Idx:  0,
-											},
-										},
-										Selectors: []src.Selector{},
-									},
-									ReceiverSides: []src.ConnectionSide{
-										{
-											PortAddr: src.ConnPortAddr{
-												Node: "trigger.",
-												RelPortAddr: src.RelPortAddr{
-													Name: "sig",
-													Idx:  0,
-												},
-											},
-											Selectors: []src.Selector{},
-										},
-									},
-								},
-								{
-									SenderSide: src.ConnectionSide{
-										PortAddr: src.ConnPortAddr{
-											Node: "trigger",
-											RelPortAddr: src.RelPortAddr{
-												Name: "v",
-												Idx:  0,
-											},
-										},
-										Selectors: []src.Selector{},
-									},
-									ReceiverSides: []src.ConnectionSide{
-										{
-											PortAddr: src.ConnPortAddr{
-												Node: "out.exit.",
-												RelPortAddr: src.RelPortAddr{
-													Name: "sig",
-													Idx:  0,
-												},
-											},
-											Selectors: []src.Selector{},
-										},
-									},
+									Selectors: []src.Selector{},
 								},
 							},
 						},
-					},
+						{
+							SenderSide: src.ConnectionSide{
+								PortAddr: src.ConnPortAddr{
+									Node: "print",
+									RelPortAddr: src.RelPortAddr{
+										Name: "v",
+										Idx:  0,
+									},
+								},
+								Selectors: []src.Selector{},
+							},
+							ReceiverSides: []src.ConnectionSide{
+								{
+									PortAddr: src.ConnPortAddr{
+										Node: "trigger.",
+										RelPortAddr: src.RelPortAddr{
+											Name: "sig",
+											Idx:  0,
+										},
+									},
+									Selectors: []src.Selector{},
+								},
+							},
+						},
+						{
+							SenderSide: src.ConnectionSide{
+								PortAddr: src.ConnPortAddr{
+									Node: "trigger",
+									RelPortAddr: src.RelPortAddr{
+										Name: "v",
+										Idx:  0,
+									},
+								},
+								Selectors: []src.Selector{},
+							},
+							ReceiverSides: []src.ConnectionSide{
+								{
+									PortAddr: src.ConnPortAddr{
+										Node: "out.exit.",
+										RelPortAddr: src.RelPortAddr{
+											Name: "sig",
+											Idx:  0,
+										},
+									},
+									Selectors: []src.Selector{},
+								},
+							},
+						},
+					}),
 				},
 			},
 		},

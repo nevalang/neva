@@ -42,7 +42,7 @@ func (a Analyzer) analyzeCmp(
 		return src.Component{}, nil, errors.Join(ErrComponentNodes, err)
 	}
 
-	unusedOutports, err := a.analyzeComponentNetwork(component.Net, scope)
+	unusedOutports, err := a.analyzeNet(component.Net, scope)
 	if err != nil {
 		return src.Component{}, nil, errors.Join(ErrComponentNet, err)
 	}
@@ -95,10 +95,10 @@ func (a Analyzer) analyzeNodes(
 // analyzeNodeInstance finds interface or component that node is reffering to
 // and checks whether it's possible to instantiate it with the given arguments
 func (a Analyzer) analyzeNodeInstance(
-	instance src.NodeInstance,
+	instance src.Instance,
 	scope Scope,
 ) (
-	src.NodeInstance,
+	src.Instance,
 	map[src.EntityRef]struct{},
 	error,
 ) {
@@ -107,13 +107,13 @@ func (a Analyzer) analyzeNodeInstance(
 	interf, err := scope.getInterface(instance.Ref)
 	if err == nil {
 		if len(instance.DIArgs) != 0 {
-			return src.NodeInstance{}, nil, ErrInterfaceDIArgs
+			return src.Instance{}, nil, ErrInterfaceDIArgs
 		}
 		params = interf.Params
 	} else {
 		component, err := scope.getComponent(instance.Ref)
 		if err != nil {
-			return src.NodeInstance{}, nil, err
+			return src.Instance{}, nil, err
 		}
 		// TODO implement DI analysis
 		// get component's DI params (list of interfaces and names)
@@ -126,16 +126,20 @@ func (a Analyzer) analyzeNodeInstance(
 
 	fmt.Println(params)
 
-	return src.NodeInstance{}, nil, nil
+	return src.Instance{}, nil, nil
 }
 
 func (a Analyzer) analyzeStaticInports(node src.Node, scope Scope) (map[src.EntityRef]struct{}, error) {
 	return nil, nil
 }
 
-// analyzeComponentNetwork returns set of unused outports. It makes sure that:
+// analyzeNet returns set of unused outports. It makes sure that:
 // All nodes are used; Every node's inport is used; All connections refers to existing ports and are; Type-safe.
 // All IO nodes are used;
-func (a Analyzer) analyzeComponentNetwork(net []src.Connection, scope Scope) (map[src.ConnPortAddr]struct{}, error) {
+func (a Analyzer) analyzeNet(net []src.Connection, scope Scope) (map[src.ConnPortAddr]struct{}, error) {
+	if len(net) == 0 {
+		panic("")
+	}
+
 	return nil, nil
 }

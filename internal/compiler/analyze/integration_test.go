@@ -56,9 +56,9 @@ func TestAnalyzer(t *testing.T) {
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"main": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg1", "c1"),
-							}),
+							"main": h.MainComponent(map[string]src.Node{
+								"n1": h.Node("pkg1", "c1"),
+							}, nil),
 						},
 					},
 				},
@@ -105,9 +105,9 @@ func TestAnalyzer(t *testing.T) {
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"main": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg1", "c1"),
-							}),
+							"main": h.MainComponent(map[string]src.Node{
+								"n1": h.Node("pkg1", "c1"),
+							}, nil),
 						},
 					},
 				},
@@ -120,7 +120,7 @@ func TestAnalyzer(t *testing.T) {
 				Pkgs: map[string]src.Pkg{
 					"pkg1": {
 						Entities: map[string]src.Entity{
-							"m1": h.IntMsgEntity(true, 42),
+							"m1": h.IntMsg(true, 42),
 							"c1": {
 								Exported: true,
 								Kind:     src.ComponentEntity,
@@ -174,9 +174,9 @@ func TestAnalyzer(t *testing.T) {
 									},
 								},
 							),
-							"main": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg1", "c1"),
-							}),
+							"main": h.MainComponent(map[string]src.Node{
+								"n1": h.Node("pkg1", "c1"),
+							}, nil),
 						},
 					},
 				},
@@ -191,9 +191,9 @@ func TestAnalyzer(t *testing.T) {
 					"pkg1": {
 						Imports: h.Imports("pkg2", "pkg3"), // pkg3 unused
 						Entities: map[string]src.Entity{
-							"main": h.RootComponentEntity(map[string]src.Node{
-								"n1": h.ComponentNode("pkg2", "c1"),
-							}),
+							"main": h.MainComponent(map[string]src.Node{
+								"n1": h.Node("pkg2", "c1"),
+							}, nil),
 						},
 					},
 					"pkg2": {
@@ -213,7 +213,7 @@ func TestAnalyzer(t *testing.T) {
 					},
 					"pkg3": {
 						Entities: map[string]src.Entity{
-							"m1": h.IntMsgEntity(true, 42),
+							"m1": h.IntMsg(true, 42),
 						},
 					},
 				},

@@ -24,7 +24,7 @@ func (h Helper) BaseTypeEntity(params ...ts.Param) Entity {
 
 /* ============================== COMPONENTS  ============================== */
 
-func (h Helper) RootComponentEntity(nodes map[string]Node) Entity {
+func (h Helper) MainComponent(nodes map[string]Node, net []Connection) Entity {
 	return Entity{
 		Kind: ComponentEntity,
 		Component: Component{
@@ -33,24 +33,53 @@ func (h Helper) RootComponentEntity(nodes map[string]Node) Entity {
 			},
 			IO: IO{
 				In: map[string]Port{
-					"sig": {
-						Type: h.Inst("t"),
+					"start": {
+						Type: h.Rec(nil), // TODO any?
+					},
+				},
+				Out: map[string]Port{
+					"exit": {
+						Type: h.Inst("int"),
 					},
 				},
 			},
 			Nodes: nodes,
+			Net:   net,
 		},
 	}
 }
 
-func (h Helper) ComponentNode(pkg, entity string) Node {
+func (h Helper) Node(instance Instance) Node {
 	return Node{
-		Instance: NodeInstance{
-			Ref: EntityRef{
-				Pkg:  pkg,
-				Name: entity,
-			},
+		Instance: instance,
+	}
+}
+
+func (h Helper) NodeWithStaticPorts(instance Instance, ports map[RelPortAddr]EntityRef) Node {
+	return Node{
+		Instance:      instance,
+		StaticInports: ports,
+	}
+}
+
+func (h Helper) NodeInstance(pkg, entity string, args ...ts.Expr) Instance {
+	return Instance{
+		Ref: EntityRef{
+			Pkg:  pkg,
+			Name: entity,
 		},
+		TypeArgs: args,
+	}
+}
+
+func (h Helper) InstanceWithDI(pkg, entity string, di map[string]Instance, args ...ts.Expr) Instance {
+	return Instance{
+		Ref: EntityRef{
+			Pkg:  pkg,
+			Name: entity,
+		},
+		TypeArgs: args,
+		DIArgs:   di,
 	}
 }
 
@@ -83,7 +112,7 @@ func (h Helper) IntMsgValue(v int) MsgValue {
 	}
 }
 
-func (h Helper) IntMsgEntity(exported bool, v int) Entity {
+func (h Helper) IntMsg(exported bool, v int) Entity {
 	return h.MsgEntity(
 		exported,
 		h.IntMsgValue(v),
