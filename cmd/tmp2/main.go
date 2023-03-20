@@ -5,9 +5,10 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/emil14/neva/internal/compiler"
 	"github.com/emil14/neva/internal/compiler/backend/golang"
+	"github.com/emil14/neva/internal/compiler/helper"
 	"github.com/emil14/neva/internal/compiler/irgen"
-	"github.com/emil14/neva/internal/compiler/src"
 )
 
 var efs = golang.Efs
@@ -26,100 +27,94 @@ func main() {
 
 	putRuntime()
 
-	h := src.Helper{}
+	h := helper.Helper{}
 
-	prog := src.Program{
-		Pkgs: map[string]src.Pkg{
+	prog := compiler.Program{
+		Pkgs: map[string]compiler.Pkg{
 			"main": {
 				Imports: h.Imports("io", "flow"),
-				Entities: map[string]src.Entity{
+				Entities: map[string]compiler.Entity{
 					"code": h.IntMsg(false, 0),
-					"main": h.MainComponent(map[string]src.Node{
+					"main": h.MainComponent(map[string]compiler.Node{
 						"print": h.Node(
 							h.NodeInstance("io", "Print", h.Inst("str")),
 						),
 						"trigger": h.NodeWithStaticPorts(
 							h.NodeInstance("flow", "Trigger", h.Rec(nil)),
-							map[src.RelPortAddr]src.EntityRef{
-								{
-									Name: "v",
-									Idx:  0,
-								}: {
-									Pkg:  "",
-									Name: "code",
-								},
+							map[compiler.RelPortAddr]compiler.EntityRef{
+								{Name: "v"}: {Name: "code"},
 							},
 						),
-					}, []src.Connection{
+					}, []compiler.Connection{
 						{
-							SenderSide: src.ConnectionSide{
-								PortAddr: src.ConnPortAddr{
+							SenderSide: compiler.ConnectionSide{
+								PortAddr: compiler.ConnPortAddr{
 									Node: "in",
-									RelPortAddr: src.RelPortAddr{
+									RelPortAddr: compiler.RelPortAddr{
 										Name: "start",
 										Idx:  0,
 									},
 								},
-								Selectors: []src.Selector{},
+								Selectors: []compiler.Selector{},
 							},
-							ReceiverSides: []src.ConnectionSide{
+							ReceiverSides: []compiler.ConnectionSide{
 								{
-									PortAddr: src.ConnPortAddr{
+									PortAddr: compiler.ConnPortAddr{
 										Node: "print",
-										RelPortAddr: src.RelPortAddr{
+										RelPortAddr: compiler.RelPortAddr{
 											Name: "v",
 											Idx:  0,
 										},
 									},
-									Selectors: []src.Selector{},
+									Selectors: []compiler.Selector{},
 								},
 							},
 						},
 						{
-							SenderSide: src.ConnectionSide{
-								PortAddr: src.ConnPortAddr{
+							SenderSide: compiler.ConnectionSide{
+								PortAddr: compiler.ConnPortAddr{
 									Node: "print",
-									RelPortAddr: src.RelPortAddr{
+									RelPortAddr: compiler.RelPortAddr{
 										Name: "v",
 										Idx:  0,
 									},
 								},
-								Selectors: []src.Selector{},
+								Selectors: []compiler.Selector{},
 							},
-							ReceiverSides: []src.ConnectionSide{
+							ReceiverSides: []compiler.ConnectionSide{
 								{
-									PortAddr: src.ConnPortAddr{
+									PortAddr: compiler.ConnPortAddr{
 										Node: "trigger.",
-										RelPortAddr: src.RelPortAddr{
+										RelPortAddr: compiler.RelPortAddr{
 											Name: "sig",
 											Idx:  0,
 										},
 									},
-									Selectors: []src.Selector{},
+									Selectors: []compiler.Selector{},
 								},
 							},
 						},
 						{
-							SenderSide: src.ConnectionSide{
-								PortAddr: src.ConnPortAddr{
+							SenderSide: compiler.ConnectionSide{
+								PortAddr: compiler.ConnPortAddr{
 									Node: "trigger",
-									RelPortAddr: src.RelPortAddr{
+									RelPortAddr: compiler.RelPortAddr{
 										Name: "v",
 										Idx:  0,
 									},
 								},
-								Selectors: []src.Selector{},
+								Selectors: []compiler.Selector{},
 							},
-							ReceiverSides: []src.ConnectionSide{
+							ReceiverSides: []compiler.ConnectionSide{
 								{
-									PortAddr: src.ConnPortAddr{
+									PortAddr: compiler.ConnPortAddr{
 										Node: "out.exit.",
-										RelPortAddr: src.RelPortAddr{
+										RelPortAddr: compiler.RelPortAddr{
 											Name: "sig",
 											Idx:  0,
 										},
 									},
-									Selectors: []src.Selector{},
+									Selectors: []compiler.Selector{},
 								},
 							},
 						},
