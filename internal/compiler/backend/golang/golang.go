@@ -13,8 +13,8 @@ import (
 	"github.com/emil14/neva/internal/compiler/ir"
 )
 
-//go:embed tmpl/main.go.tmpl
-var efs embed.FS
+//go:embed tmpl/main.go.tmpl runtime
+var Efs embed.FS // TODO make private
 
 type Backend struct{}
 
@@ -25,7 +25,7 @@ func (b Backend) GenerateTarget(ctx context.Context, prog ir.Program) ([]byte, e
 		"getMsg":      b.getMsg,
 		"getPorts":    b.getPortsFunc(prog.Ports),
 		"getPortName": b.getPortName,
-	}).ParseFS(efs, "tmpl/main.go.tmpl")
+	}).ParseFS(Efs, "tmpl/main.go.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +49,10 @@ func (b Backend) getMsg(msg ir.Msg) (string, error) {
 }
 
 func (b Backend) getPortName(addr ir.PortAddr) string {
-	path := replaceDotsWithUppercase(addr.Path)
-	port := addr.Port
+	path := b.replaceDotsWithUppercase(addr.Path)
+	port := addr.Name
 	if path != "" {
-		port = uppercaseFirstLetter(addr.Port)
+		port = b.uppercaseFirstLetter(addr.Name)
 	}
 	return fmt.Sprintf("%s%s%dPort", path, port, addr.Idx)
 }
@@ -61,7 +61,7 @@ func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port strin
 	return func(path, port string) string {
 		var s string
 		for addr := range ports {
-			if addr.Path == path && addr.Port == port {
+			if addr.Path == path && addr.Name == port {
 				s = s + b.getPortName(addr) + ","
 			}
 		}
@@ -69,7 +69,7 @@ func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port strin
 	}
 }
 
-func replaceDotsWithUppercase(str string) string {
+func (b Backend) replaceDotsWithUppercase(str string) string {
 	var buffer bytes.Buffer
 	for i := 0; i < len(str); i++ {
 		if str[i] == '.' {
@@ -82,11 +82,11 @@ func replaceDotsWithUppercase(str string) string {
 	return buffer.String()
 }
 
-func uppercaseFirstLetter(s string) string {
+func (b Backend) uppercaseFirstLetter(s string) string {
 	if len(s) == 0 {
 		return s
 	}
-	b := []byte(s)
-	b[0] = byte(unicode.ToUpper(rune(b[0])))
-	return string(b)
+	bb := []byte(s)
+	bb[0] = byte(unicode.ToUpper(rune(bb[0])))
+	return string(bb)
 }

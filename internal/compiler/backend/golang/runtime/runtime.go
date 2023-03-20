@@ -7,14 +7,14 @@ import (
 )
 
 type Runtime struct {
-	connector     Connector
-	routineRunner RoutineRunner
+	connector Connector
+	runner    RoutineRunner
 }
 
 func NewRuntime(c Connector, r RoutineRunner) Runtime {
 	return Runtime{
-		connector:     c,
-		routineRunner: r,
+		connector: c,
+		runner:    r,
 	}
 }
 
@@ -34,7 +34,6 @@ var (
 	ErrRoutineRunner     = errors.New("routine runner")
 )
 
-// Run returns exit code of the program when it terminates or non nil error if something goes wrong in the Runtime.
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	startPort, ok := prog.Ports[PortAddr{Name: "start"}]
 	if !ok {
@@ -57,7 +56,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	})
 
 	g.Go(func() error {
-		if err := r.routineRunner.Run(gctx, prog.Routines); err != nil {
+		if err := r.runner.Run(gctx, prog.Routines); err != nil {
 			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)
 		}
 		return nil

@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"context"
-	"io"
+	"errors"
 
 	"github.com/emil14/neva/internal/compiler/ir"
 	"github.com/emil14/neva/internal/compiler/src"
@@ -12,7 +12,6 @@ type Compiler struct {
 	analyzer Analyzer
 	irgen    IRGenerator
 	backend  Backend
-	writer   io.Writer
 }
 
 type (
@@ -27,25 +26,26 @@ type (
 	}
 )
 
+var (
+	ErrAnalyzer = errors.New("analyzer")
+	ErrIrGen    = errors.New("ir generator")
+	ErrBackend  = errors.New("backend")
+)
+
 func (c Compiler) Compile(ctx context.Context, prog src.Program) ([]byte, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		return nil, errors.Join(ErrAnalyzer, err)
 	}
 
 	irProg, err := c.irgen.Generate(ctx, analyzedProg)
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		return nil, errors.Join(ErrIrGen, err)
 	}
 
 	target, err := c.backend.GenerateTarget(ctx, irProg)
 	if err != nil {
-		return nil, err
-	}
-
-	_, err = c.writer.Write(target)
-	if err != nil {
-		return nil, err
+		return nil, errors.Join(ErrBackend, err)
 	}
 
 	return target, nil

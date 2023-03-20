@@ -9,13 +9,13 @@ import (
 
 // Routine runner
 
-type RoutineRunnerImlp struct {
+type DefaultRoutineRunner struct {
 	giver     GiverRunner
-	component ComponentRunner
+	component FuncRunner
 }
 
-func NewRoutineRunner(giver GiverRunner, component ComponentRunner) RoutineRunner {
-	return RoutineRunnerImlp{
+func NewRoutineRunner(giver GiverRunner, component FuncRunner) RoutineRunner {
+	return DefaultRoutineRunner{
 		giver:     giver,
 		component: component,
 	}
@@ -25,29 +25,29 @@ type (
 	GiverRunner interface {
 		Run(context.Context, []GiverRoutine) error
 	}
-	ComponentRunner interface {
-		Run(context.Context, []ComponentRoutine) error
+	FuncRunner interface {
+		Run(context.Context, []FuncRoutine) error
 	}
 )
 
 var (
-	ErrComponent = errors.New("component")
-	ErrGiver     = errors.New("giver")
+	ErrFuncRunner  = errors.New("func runner")
+	ErrGiverRunner = errors.New("giver runner")
 )
 
-func (e RoutineRunnerImlp) Run(ctx context.Context, routines Routines) error {
+func (e DefaultRoutineRunner) Run(ctx context.Context, routines Routines) error {
 	g, gctx := WithContext(ctx)
 
 	g.Go(func() error {
 		if err := e.giver.Run(gctx, routines.Giver); err != nil {
-			return errors.Join(ErrGiver, err)
+			return errors.Join(ErrGiverRunner, err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err := e.component.Run(gctx, routines.Component); err != nil {
-			return errors.Join(ErrComponent, err)
+		if err := e.component.Run(gctx, routines.Func); err != nil {
+			return errors.Join(ErrFuncRunner, err)
 		}
 		return nil
 	})
@@ -57,9 +57,9 @@ func (e RoutineRunnerImlp) Run(ctx context.Context, routines Routines) error {
 
 // Giver runner
 
-type GiverRunnerImlp struct{}
+type DefaultGiverRunner struct{}
 
-func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
+func (d DefaultGiverRunner) Run(ctx context.Context, givers []GiverRoutine) error {
 	wg := sync.WaitGroup{}
 	wg.Add(len(givers))
 
@@ -82,34 +82,32 @@ func (e GiverRunnerImlp) Run(ctx context.Context, givers []GiverRoutine) error {
 	return nil
 }
 
-// Component runner
+// Func runner
 
 var (
 	ErrRepo          = errors.New("repo")
 	ErrComponentFunc = errors.New("component func")
 )
 
-type ComponentRunnerImpl struct {
-	repo map[ComponentRef]ComponentFunc
+type DefaultFuncRunner struct {
+	repo map[FuncRef]Func
 }
 
-type ComponentFunc func(context.Context, ComponentIO) error
+type Func func(context.Context, FuncIO) error
 
-func NewComponentRunner(
-	repo map[ComponentRef]ComponentFunc,
-) ComponentRunnerImpl {
-	return ComponentRunnerImpl{
+func NewFuncRunner(repo map[FuncRef]Func) DefaultFuncRunner {
+	return DefaultFuncRunner{
 		repo: repo,
 	}
 }
 
-func (c ComponentRunnerImpl) Run(ctx context.Context, components []ComponentRoutine) error {
+func (d DefaultFuncRunner) Run(ctx context.Context, components []FuncRoutine) error {
 	g, gctx := WithContext(ctx)
 
 	for i := range components {
 		component := components[i]
 
-		f, ok := c.repo[component.Ref]
+		f, ok := d.repo[component.Ref]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrRepo, component.Ref)
 		}

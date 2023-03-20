@@ -6,29 +6,29 @@ import (
     "os"
 
     "github.com/emil14/neva/internal/runtime"
-    {{- range .Routines.Component}}
-    "github.com/emil14/neva/internal/runtime/std/{{.Pkg}}"
+    {{- range .Routines.Func}}
+    "github.com/emil14/neva/internal/runtime/std/{{.Ref.Pkg}}"
     {{- end}}
 )
 
 func main() {
-    // component refs
-    {{- range .Routines.Component}}
-    {{.Pkg}}{{.Name}}Ref := runtime.ComponentRef{
-        Pkg:  "{{.Pkg}}",
-        Name: "{{.Name}}",
+    // func refs
+    {{- range .Routines.Func}}
+    {{.Ref.Pkg}}{{.Ref.Name}}Ref := runtime.FuncRef{
+        Pkg:  "{{.Ref.Pkg}}",
+        Name: "{{.Ref.Name}}",
     }
     {{- end}}
 
     // routine runner
-    repo := map[runtime.ComponentRef]runtime.ComponentFunc{
-        {{- range .Routines.Component}}
-        {{.Pkg}}{{.Name}}Ref: {{.Pkg}}.{{.Name}},
+    repo := map[runtime.FuncRef]runtime.Func{
+        {{- range .Routines.Func}}
+        {{.Ref.Pkg}}{{.Ref.Name}}Ref: {{.Ref.Pkg}}.{{.Ref.Name}},
         {{- end}}
     }
-    componentRunner := runtime.NewComponentRunner(repo)
+    funcRunner := runtime.NewFuncRunner(repo)
     giverRunner := runtime.GiverRunnerImlp{}
-    routineRunner := runtime.NewRoutineRunner(giverRunner, componentRunner)
+    routineRunner := runtime.NewRoutineRunner(giverRunner, funcRunner)
 
     // connector
     interceptor := runtime.InterceptorImlp{}
@@ -48,7 +48,7 @@ func main() {
             {{- range $addr, $buf := .Ports}}
             {
                 Path: "{{$addr.Path}}",
-                Name: "{{$addr.Port}}",
+                Name: "{{$addr.Name}}",
                 Idx: {{$addr.Idx}},
             }: {{getPortName $addr}},
             {{- end}}
@@ -61,7 +61,7 @@ func main() {
                     Meta: runtime.ConnectionSideMeta{
                         PortAddr:  runtime.PortAddr{
                             Path: "{{.SenderSide.PortAddr.Path}}",
-                            Name: "{{.SenderSide.PortAddr.Port}}",
+                            Name: "{{.SenderSide.PortAddr.Name}}",
                             Idx: {{.SenderSide.PortAddr.Idx}},
                         },
                     },
@@ -73,7 +73,7 @@ func main() {
                         Meta: runtime.ConnectionSideMeta{
                             PortAddr:  runtime.PortAddr{
                                 Path: "{{.PortAddr.Path}}",
-                                Name: "{{.PortAddr.Port}}",
+                                Name: "{{.PortAddr.Name}}",
                                 Idx: {{.PortAddr.Idx}},
                             },
                         },
@@ -92,25 +92,25 @@ func main() {
                 },
                 {{- end}}
             },
-            Component: []runtime.ComponentRoutine{
-                {{- range .Routines.Component}}
+            Func: []runtime.FuncRoutine{
+                {{- range .Routines.Func}}
                 {
-                    Ref: runtime.ComponentRef{
-                        Pkg:  "{{.Pkg}}",
-                        Name: "{{.Name}}",
+                    Ref: runtime.FuncRef{
+                        Pkg:  "{{.Ref.Pkg}}",
+                        Name: "{{.Ref.Name}}",
                     },
-                    IO: runtime.ComponentIO{
+                    IO: runtime.FuncIO{
                         In: map[string][]chan runtime.Msg{
-                            {{- range .PortAddrs.In}}
-                            "{{.Port}}": {
-                                {{getPorts .Path .Port}}
+                            {{- range .IO.In}}
+                            "{{.Name}}": {
+                                {{getPorts .Path .Name}}
                             },
                             {{- end}}
                         },
                         Out: map[string][]chan runtime.Msg{
-                            {{- range .PortAddrs.Out}}
-                            "{{.Port}}": {
-                                {{getPorts .Path .Port}}
+                            {{- range .IO.Out}}
+                            "{{.Name}}": {
+                                {{getPorts .Path .Name}}
                             },
                             {{- end}}
                         },

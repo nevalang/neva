@@ -5,12 +5,11 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/emil14/neva/internal"
 	"github.com/emil14/neva/internal/compiler/backend/golang"
 	"github.com/emil14/neva/internal/compiler/ir"
 )
 
-var efs = internal.RuntimeFiles
+var efs = golang.Efs
 var basePath = "/home/evaleev/projects/tmp"
 
 func main() {
@@ -28,20 +27,20 @@ func main() {
 
 	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{
 		Ports: map[ir.PortAddr]uint8{
-			{Port: "start"}:                            0,
-			{Port: "exit"}:                             0,
-			{Path: "printer.in", Port: "v", Idx: 0}:    0,
-			{Path: "printer.out", Port: "v", Idx: 0}:   0,
-			{Path: "trigger.in", Port: "sigs", Idx: 0}: 0,
-			{Path: "trigger.in", Port: "v", Idx: 0}:    0,
-			{Path: "trigger.out", Port: "v", Idx: 0}:   0,
-			{Path: "giver.out", Port: "code", Idx: 0}:  0,
+			{Name: "start"}:                            0,
+			{Name: "exit"}:                             0,
+			{Path: "printer.in", Name: "v", Idx: 0}:    0,
+			{Path: "printer.out", Name: "v", Idx: 0}:   0,
+			{Path: "trigger.in", Name: "sigs", Idx: 0}: 0,
+			{Path: "trigger.in", Name: "v", Idx: 0}:    0,
+			{Path: "trigger.out", Name: "v", Idx: 0}:   0,
+			{Path: "giver.out", Name: "code", Idx: 0}:  0,
 		},
 		Routines: ir.Routines{
 			Giver: map[ir.PortAddr]ir.Msg{
 				{
 					Path: "giver.out",
-					Port: "code",
+					Name: "code",
 					Idx:  0,
 				}: {
 					Type: ir.IntMsg,
@@ -56,10 +55,10 @@ func main() {
 					},
 					IO: ir.FuncIO{
 						In: []ir.PortAddr{
-							{Path: "printer.in", Port: "v", Idx: 0},
+							{Path: "printer.in", Name: "v", Idx: 0},
 						},
 						Out: []ir.PortAddr{
-							{Path: "printer.out", Port: "v", Idx: 0},
+							{Path: "printer.out", Name: "v", Idx: 0},
 						},
 					},
 				},
@@ -70,11 +69,11 @@ func main() {
 					},
 					IO: ir.FuncIO{
 						In: []ir.PortAddr{
-							{Path: "trigger.in", Port: "sigs", Idx: 0},
-							{Path: "trigger.in", Port: "v", Idx: 0},
+							{Path: "trigger.in", Name: "sigs", Idx: 0},
+							{Path: "trigger.in", Name: "v", Idx: 0},
 						},
 						Out: []ir.PortAddr{
-							{Path: "trigger.out", Port: "v", Idx: 0},
+							{Path: "trigger.out", Name: "v", Idx: 0},
 						},
 					},
 				},
@@ -85,7 +84,7 @@ func main() {
 				SenderSide: ir.ConnectionSide{
 					PortAddr: ir.PortAddr{
 						Path: "",
-						Port: "start",
+						Name: "start",
 						Idx:  0,
 					},
 					Selectors: []ir.Selector{},
@@ -94,7 +93,7 @@ func main() {
 					{
 						PortAddr: ir.PortAddr{
 							Path: "printer.in",
-							Port: "v",
+							Name: "v",
 							Idx:  0,
 						},
 						Selectors: []ir.Selector{},
@@ -105,7 +104,7 @@ func main() {
 				SenderSide: ir.ConnectionSide{
 					PortAddr: ir.PortAddr{
 						Path: "printer.out",
-						Port: "v",
+						Name: "v",
 						Idx:  0,
 					},
 					Selectors: []ir.Selector{},
@@ -114,7 +113,7 @@ func main() {
 					{
 						PortAddr: ir.PortAddr{
 							Path: "trigger.in",
-							Port: "sigs",
+							Name: "sigs",
 							Idx:  0,
 						},
 						Selectors: []ir.Selector{},
@@ -125,7 +124,7 @@ func main() {
 				SenderSide: ir.ConnectionSide{
 					PortAddr: ir.PortAddr{
 						Path: "giver.out",
-						Port: "code",
+						Name: "code",
 						Idx:  0,
 					},
 					Selectors: []ir.Selector{},
@@ -134,7 +133,7 @@ func main() {
 					{
 						PortAddr: ir.PortAddr{
 							Path: "trigger.in",
-							Port: "v",
+							Name: "v",
 							Idx:  0,
 						},
 						Selectors: []ir.Selector{},
@@ -145,7 +144,7 @@ func main() {
 				SenderSide: ir.ConnectionSide{
 					PortAddr: ir.PortAddr{
 						Path: "trigger.out",
-						Port: "v",
+						Name: "v",
 						Idx:  0,
 					},
 					Selectors: []ir.Selector{},
@@ -154,7 +153,7 @@ func main() {
 					{
 						PortAddr: ir.PortAddr{
 							Path: "",
-							Port: "exit",
+							Name: "exit",
 							Idx:  0,
 						},
 						Selectors: []ir.Selector{},

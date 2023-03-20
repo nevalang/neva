@@ -62,8 +62,8 @@ type Selector struct {
 }
 
 type Routines struct {
-	Giver     []GiverRoutine
-	Component []ComponentRoutine // TODO rename (here and in tmpl) "Component" To "Func" everywhere
+	Func  []FuncRoutine
+	Giver []GiverRoutine
 }
 
 type GiverRoutine struct {
@@ -71,16 +71,16 @@ type GiverRoutine struct {
 	Msg     Msg
 }
 
-type ComponentRoutine struct {
-	Ref ComponentRef
-	IO  ComponentIO
+type FuncRoutine struct {
+	Ref FuncRef
+	IO  FuncIO
 }
 
-type ComponentRef struct {
+type FuncRef struct {
 	Pkg, Name string
 }
 
-type ComponentIO struct {
+type FuncIO struct {
 	In, Out ComponentPorts
 }
 

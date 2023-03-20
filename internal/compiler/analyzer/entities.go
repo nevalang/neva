@@ -1,4 +1,4 @@
-package analyze
+package analyzer
 
 import (
 	"errors"
@@ -33,7 +33,7 @@ func (a Analyzer) analyzeEntities(
 		if entityName == "main" && pkgName != "main" {
 			panic("main entity inside not main package")
 		}
-		
+
 		if entity.Exported || entityName == "main" {
 			used[src.EntityRef{
 				Pkg:  pkgName,

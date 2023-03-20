@@ -8,7 +8,7 @@ type (
 	}
 
 	PortAddr struct {
-		Path, Port string // TODO rename Port to Name
+		Path, Name string
 		Idx        uint8
 	}
 

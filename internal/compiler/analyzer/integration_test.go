@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package analyze_test
+package analyzer_test
 
 import (
 	"context"
@@ -57,7 +57,9 @@ func TestAnalyzer(t *testing.T) {
 								),
 							),
 							"main": h.MainComponent(map[string]src.Node{
-								"n1": h.Node("pkg1", "c1"),
+								"n1": h.Node(
+									h.NodeInstance("pkg1", "c1"),
+								),
 							}, nil),
 						},
 					},
@@ -106,7 +108,9 @@ func TestAnalyzer(t *testing.T) {
 								),
 							),
 							"main": h.MainComponent(map[string]src.Node{
-								"n1": h.Node("pkg1", "c1"),
+								"n1": h.Node(
+									h.NodeInstance("pkg1", "c1"),
+								),
 							}, nil),
 						},
 					},
@@ -175,7 +179,7 @@ func TestAnalyzer(t *testing.T) {
 								},
 							),
 							"main": h.MainComponent(map[string]src.Node{
-								"n1": h.Node("pkg1", "c1"),
+								"n1": h.Node(h.NodeInstance("pkg1", "c1")),
 							}, nil),
 						},
 					},
@@ -192,7 +196,7 @@ func TestAnalyzer(t *testing.T) {
 						Imports: h.Imports("pkg2", "pkg3"), // pkg3 unused
 						Entities: map[string]src.Entity{
 							"main": h.MainComponent(map[string]src.Node{
-								"n1": h.Node("pkg2", "c1"),
+								"n1": h.Node(h.NodeInstance("pkg1", "c1")),
 							}, nil),
 						},
 					},

@@ -5,13 +5,12 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/emil14/neva/internal"
 	"github.com/emil14/neva/internal/compiler/backend/golang"
 	"github.com/emil14/neva/internal/compiler/irgen"
 	"github.com/emil14/neva/internal/compiler/src"
 )
 
-var efs = internal.RuntimeFiles
+var efs = golang.Efs
 var basePath = "/home/evaleev/projects/tmp"
 
 func main() {
