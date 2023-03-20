@@ -10,12 +10,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emil14/neva/internal/compiler/analyze"
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
+	"github.com/emil14/neva/internal/compiler/analyzer"
+	"github.com/emil14/neva/internal/compiler/helper"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
-var h src.Helper
+var h helper.Helper
 
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
@@ -23,17 +24,17 @@ func TestAnalyzer(t *testing.T) {
 	type testcase struct {
 		enabled bool
 		name    string
-		prog    src.Program
+		prog    compiler.Program
 		wantErr error
 	}
 
 	tests := []testcase{
 		{
 			name: "root_pkg_refers_to_imported_pkg",
-			prog: src.Program{
-				Pkgs: map[string]src.Pkg{
+			prog: compiler.Program{
+				Pkgs: map[string]compiler.Pkg{
 					"pkg2": {
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"t1": h.TypeEntity(
 								true,
 								h.Def( // type t1<a> = vec<a>
@@ -43,20 +44,20 @@ func TestAnalyzer(t *testing.T) {
 							),
 							"c1": {
 								Exported: true,
-								Kind:     src.ComponentEntity,
+								Kind:     compiler.ComponentEntity,
 							},
 						},
 					},
 					"main": {
 						Imports: h.Imports("pkg2"),
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"t1": h.TypeEntity(
 								true,
 								h.Def( // type t1 = pkg2.t1<int>
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"main": h.MainComponent(map[string]src.Node{
+							"main": h.MainComponent(map[string]compiler.Node{
 								"n1": h.Node(
 									h.NodeInstance("pkg1", "c1"),
 								),
@@ -69,10 +70,10 @@ func TestAnalyzer(t *testing.T) {
 		},
 		{
 			name: "root_pkg_refers_imported_pkg_that_refers_another_imported_pkg",
-			prog: src.Program{
-				Pkgs: map[string]src.Pkg{
+			prog: compiler.Program{
+				Pkgs: map[string]compiler.Pkg{
 					"pkg3": {
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"t1": h.TypeEntity(
 								true,
 								h.Def( // type t1<a> = vec<a>
@@ -84,7 +85,7 @@ func TestAnalyzer(t *testing.T) {
 					},
 					"pkg2": {
 						Imports: h.Imports("pkg3"),
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"t1": h.TypeEntity(
 								true,
 								h.Def( // type t1<a> = t1<a>
@@ -94,20 +95,20 @@ func TestAnalyzer(t *testing.T) {
 							),
 							"c1": {
 								Exported: true,
-								Kind:     src.ComponentEntity,
+								Kind:     compiler.ComponentEntity,
 							},
 						},
 					},
 					"main": {
 						Imports: h.Imports("pkg2"),
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"t1": h.TypeEntity(
 								true,
 								h.Def( // type t1 = pkg2.t1<int>
 									h.Inst("pkg2.t1", h.Inst("int")),
 								),
 							),
-							"main": h.MainComponent(map[string]src.Node{
+							"main": h.MainComponent(map[string]compiler.Node{
 								"n1": h.Node(
 									h.NodeInstance("pkg1", "c1"),
 								),
@@ -120,21 +121,21 @@ func TestAnalyzer(t *testing.T) {
 		},
 		{ // FIXME false-positive
 			name: "inassignable_message_and_4-step_import_chain",
-			prog: src.Program{
-				Pkgs: map[string]src.Pkg{
+			prog: compiler.Program{
+				Pkgs: map[string]compiler.Pkg{
 					"pkg1": {
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"m1": h.IntMsg(true, 42),
 							"c1": {
 								Exported: true,
-								Kind:     src.ComponentEntity,
+								Kind:     compiler.ComponentEntity,
 							},
 						},
 					},
 					"pkg2": {
 						Imports: h.Imports("pkg1"),
-						Entities: map[string]src.Entity{
-							"m1": h.MsgWithRefEntity(true, &src.EntityRef{
+						Entities: map[string]compiler.Entity{
+							"m1": h.MsgWithRefEntity(true, &compiler.EntityRef{
 								Pkg:  "pkg1",
 								Name: "m1",
 							}),
@@ -142,18 +143,18 @@ func TestAnalyzer(t *testing.T) {
 					},
 					"pkg3": {
 						Imports: h.Imports("pkg1", "pkg2"),
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"m1": h.IntVecMsgEntity(
 								true,
-								[]src.Msg{
+								[]compiler.Msg{
 									{
-										Ref: &src.EntityRef{
+										Ref: &compiler.EntityRef{
 											Pkg:  "pkg1",
 											Name: "m1",
 										},
 									},
 									{
-										Ref: &src.EntityRef{
+										Ref: &compiler.EntityRef{
 											Pkg:  "pkg2",
 											Name: "m1",
 										},
@@ -165,37 +166,37 @@ func TestAnalyzer(t *testing.T) {
 					},
 					"main": {
 						Imports: h.Imports("pkg1", "pkg2", "pkg3"),
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"m1": h.IntVecMsgEntity(
 								true,
-								[]src.Msg{
+								[]compiler.Msg{
 									{Value: h.IntMsgValue(44)},
 									{
-										Ref: &src.EntityRef{
+										Ref: &compiler.EntityRef{
 											Pkg:  "pkg3",
 											Name: "m1",
 										},
 									},
 								},
 							),
-							"main": h.MainComponent(map[string]src.Node{
+							"main": h.MainComponent(map[string]compiler.Node{
 								"n1": h.Node(h.NodeInstance("pkg1", "c1")),
 							}, nil),
 						},
 					},
 				},
 			},
-			wantErr: analyze.ErrVecEl,
+			wantErr: analyzer.ErrVecEl,
 		},
 		{
 			enabled: true,
 			name:    "pkg1_imports_pkg2_and_pkg3_but_refers_to_only_pkg2_while_pkg2_actually_refers_pkg3",
-			prog: src.Program{
-				Pkgs: map[string]src.Pkg{
+			prog: compiler.Program{
+				Pkgs: map[string]compiler.Pkg{
 					"pkg1": {
 						Imports: h.Imports("pkg2", "pkg3"), // pkg3 unused
-						Entities: map[string]src.Entity{
-							"main": h.MainComponent(map[string]src.Node{
+						Entities: map[string]compiler.Entity{
+							"main": h.MainComponent(map[string]compiler.Node{
 								"n1": h.Node(h.NodeInstance("pkg1", "c1")),
 							}, nil),
 						},
@@ -204,29 +205,29 @@ func TestAnalyzer(t *testing.T) {
 						Imports: map[string]string{
 							"pkg3": "pkg3",
 						},
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"c1": {
 								Exported: true,
-								Kind:     src.ComponentEntity,
+								Kind:     compiler.ComponentEntity,
 							},
-							"m1": h.MsgWithRefEntity(true, &src.EntityRef{
+							"m1": h.MsgWithRefEntity(true, &compiler.EntityRef{
 								Pkg:  "pkg3",
 								Name: "m1",
 							}),
 						},
 					},
 					"pkg3": {
-						Entities: map[string]src.Entity{
+						Entities: map[string]compiler.Entity{
 							"m1": h.IntMsg(true, 42),
 						},
 					},
 				},
 			},
-			wantErr: analyze.ErrUnusedImport,
+			wantErr: analyzer.ErrUnusedImport,
 		},
 	}
 
-	a := analyze.MustNew(
+	a := analyzer.MustNew(
 		ts.NewDefaultResolver(),
 		ts.NewDefaultCompatChecker(),
 		ts.Validator{},

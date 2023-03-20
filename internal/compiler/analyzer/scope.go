@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
@@ -25,10 +25,10 @@ var (
 
 // Scope implements types.Scope interface and some additional methods for analyzer
 type Scope struct {
-	base     string                     // Base must always refer to existing package in pkgs
-	pkgs     map[string]src.Pkg         // Pkgs maps real names to all packages
-	builtins map[string]src.Entity      // Second location for lookup for local entities
-	visited  map[src.EntityRef]struct{} // Set of all visited entities
+	base     string                          // Base must always refer to existing package in pkgs
+	pkgs     map[string]compiler.Pkg         // Pkgs maps real names to all packages
+	builtins map[string]compiler.Entity      // Second location for lookup for local entities
+	visited  map[compiler.EntityRef]struct{} // Set of all visited entities
 }
 
 // Update parses ref and, if it has pkg, calls rebase
@@ -51,17 +51,17 @@ func (s Scope) GetType(ref string) (ts.Def, error) {
 }
 
 func (s Scope) getLocalType(name string) (ts.Def, error) {
-	return s.getType(src.EntityRef{Name: name})
+	return s.getType(compiler.EntityRef{Name: name})
 }
 
-func (s Scope) getType(ref src.EntityRef) (ts.Def, error) {
+func (s Scope) getType(ref compiler.EntityRef) (ts.Def, error) {
 	entity, err := s.getEntity(ref)
 	if err != nil {
 		return ts.Def{}, err
 	}
 
-	if entity.Kind != src.TypeEntity {
-		return ts.Def{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.TypeEntity, entity.Kind)
+	if entity.Kind != compiler.TypeEntity {
+		return ts.Def{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, compiler.TypeEntity, entity.Kind)
 	}
 
 	return entity.Type, nil
@@ -84,21 +84,21 @@ func (s Scope) rebase(pkgAlias string) (Scope, error) {
 	return s, nil
 }
 
-func (s Scope) getMsg(ref src.EntityRef) (src.Msg, error) {
+func (s Scope) getMsg(ref compiler.EntityRef) (compiler.Msg, error) {
 	entity, err := s.getEntity(ref)
 	if err != nil {
-		return src.Msg{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
+		return compiler.Msg{}, fmt.Errorf("%w: %v", ErrGetEntity, err)
 	}
 
-	if entity.Kind != src.MsgEntity {
-		return src.Msg{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.MsgEntity, entity.Kind)
+	if entity.Kind != compiler.MsgEntity {
+		return compiler.Msg{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, compiler.MsgEntity, entity.Kind)
 	}
 
 	return entity.Msg, nil
 }
 
-func (s Scope) parseRef(ref string) src.EntityRef {
-	var entityRef src.EntityRef
+func (s Scope) parseRef(ref string) compiler.EntityRef {
+	var entityRef compiler.EntityRef
 
 	parts := strings.Split(ref, ".")
 	if len(parts) == 2 {
@@ -111,21 +111,21 @@ func (s Scope) parseRef(ref string) src.EntityRef {
 	return entityRef
 }
 
-func (s Scope) getEntityByString(ref string) (src.Entity, error) {
+func (s Scope) getEntityByString(ref string) (compiler.Entity, error) {
 	return s.getEntity(s.parseRef(ref))
 }
 
-func (s Scope) getLocalEntity(name string) (src.Entity, error) {
-	return s.getEntity(src.EntityRef{Name: name})
+func (s Scope) getLocalEntity(name string) (compiler.Entity, error) {
+	return s.getEntity(compiler.EntityRef{Name: name})
 }
 
-func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
+func (s Scope) getEntity(entityRef compiler.EntityRef) (compiler.Entity, error) {
 	basePkg := s.pkgs[s.base]
 
 	if entityRef.Pkg == "" {
 		localDef, ok := basePkg.Entities[entityRef.Name]
 		if ok {
-			s.visited[src.EntityRef{
+			s.visited[compiler.EntityRef{
 				Pkg:  s.base,
 				Name: entityRef.Name,
 			}] = struct{}{}
@@ -134,7 +134,7 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 		builtinDef, ok := s.builtins[entityRef.Name]
 		if !ok {
-			return src.Entity{}, fmt.Errorf("%w: %v", ErrLocalOrBuiltinNotFound, entityRef.Name)
+			return compiler.Entity{}, fmt.Errorf("%w: %v", ErrLocalOrBuiltinNotFound, entityRef.Name)
 		}
 		s.visited[entityRef] = struct{}{}
 
@@ -143,21 +143,21 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 
 	realImportedPkgName, ok := basePkg.Imports[entityRef.Pkg]
 	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
+		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
 	}
 
 	importedPkg, ok := s.pkgs[realImportedPkgName]
 	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrImportNotFound, realImportedPkgName)
+		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrImportNotFound, realImportedPkgName)
 	}
 
 	importedEntity, ok := importedPkg.Entities[entityRef.Name]
 	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrImportedEntityNotFound, entityRef.Name)
+		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrImportedEntityNotFound, entityRef.Name)
 	}
 
 	if !importedEntity.Exported {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotExported, entityRef.Name)
+		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotExported, entityRef.Name)
 	}
 
 	s.visited[entityRef] = struct{}{}
@@ -165,24 +165,24 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, error) {
 	return importedEntity, nil
 }
 
-func (s Scope) getComponent(entityRef src.EntityRef) (src.Component, error) {
+func (s Scope) getComponent(entityRef compiler.EntityRef) (compiler.Component, error) {
 	entity, err := s.getEntity(entityRef)
 	if err != nil {
-		return src.Component{}, nil
+		return compiler.Component{}, nil
 	}
-	if entity.Kind != src.ComponentEntity {
-		return src.Component{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.ComponentEntity, entity.Kind)
+	if entity.Kind != compiler.ComponentEntity {
+		return compiler.Component{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, compiler.ComponentEntity, entity.Kind)
 	}
 	return entity.Component, nil
 }
 
-func (s Scope) getInterface(entityRef src.EntityRef) (src.Interface, error) {
+func (s Scope) getInterface(entityRef compiler.EntityRef) (compiler.Interface, error) {
 	entity, err := s.getEntity(entityRef)
 	if err != nil {
-		return src.Interface{}, nil
+		return compiler.Interface{}, nil
 	}
-	if entity.Kind != src.InterfaceEntity {
-		return src.Interface{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, src.InterfaceEntity, entity.Kind)
+	if entity.Kind != compiler.InterfaceEntity {
+		return compiler.Interface{}, fmt.Errorf("%w: want %v, got %v", ErrEntityKind, compiler.InterfaceEntity, entity.Kind)
 	}
 	return entity.Interface, nil
 }

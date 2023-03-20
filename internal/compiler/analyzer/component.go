@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
@@ -20,55 +20,55 @@ var (
 )
 
 func (a Analyzer) analyzeCmp(
-	component src.Component,
+	component compiler.Component,
 	scope Scope,
 ) (
-	src.Component,
-	map[src.EntityRef]struct{},
+	compiler.Component,
+	map[compiler.EntityRef]struct{},
 	error,
 ) {
 	resolvedTypeParams, usedByTypeParams, err := a.analyzeTypeParameters(component.TypeParams, scope)
 	if err != nil {
-		return src.Component{}, nil, errors.Join(ErrComponentTypeParams, err)
+		return compiler.Component{}, nil, errors.Join(ErrComponentTypeParams, err)
 	}
 
 	resolvedIO, usedByIO, err := a.analyzeIO(component.IO, scope, resolvedTypeParams)
 	if err != nil {
-		return src.Component{}, nil, errors.Join(ErrComponentIO, err)
+		return compiler.Component{}, nil, errors.Join(ErrComponentIO, err)
 	}
 
 	resolvedNodes, usedByNodes, err := a.analyzeNodes(component.Nodes, scope)
 	if err != nil {
-		return src.Component{}, nil, errors.Join(ErrComponentNodes, err)
+		return compiler.Component{}, nil, errors.Join(ErrComponentNodes, err)
 	}
 
 	unusedOutports, err := a.analyzeNet(component.Net, scope)
 	if err != nil {
-		return src.Component{}, nil, errors.Join(ErrComponentNet, err)
+		return compiler.Component{}, nil, errors.Join(ErrComponentNet, err)
 	}
 
 	if len(unusedOutports) > 0 {
-		return src.Component{}, nil, fmt.Errorf("%w: %v", ErrUnusedOutports, unusedOutports)
+		return compiler.Component{}, nil, fmt.Errorf("%w: %v", ErrUnusedOutports, unusedOutports)
 	}
 
-	return src.Component{
+	return compiler.Component{
 		TypeParams: resolvedTypeParams,
 		IO:         resolvedIO,
 		Nodes:      resolvedNodes,
-		Net:        []src.Connection{},
+		Net:        []compiler.Connection{},
 	}, a.mergeUsed(usedByTypeParams, usedByIO, usedByNodes), nil
 }
 
 func (a Analyzer) analyzeNodes(
-	nodes map[string]src.Node,
+	nodes map[string]compiler.Node,
 	scope Scope,
 ) (
-	map[string]src.Node,
-	map[src.EntityRef]struct{},
+	map[string]compiler.Node,
+	map[compiler.EntityRef]struct{},
 	error,
 ) {
-	resolvedNodes := make(map[string]src.Node, len(nodes))
-	used := map[src.EntityRef]struct{}{}
+	resolvedNodes := make(map[string]compiler.Node, len(nodes))
+	used := map[compiler.EntityRef]struct{}{}
 
 	for name, node := range nodes {
 		resolvedInstance, usedByInstance, err := a.analyzeNodeInstance(node.Instance, scope)
@@ -81,7 +81,7 @@ func (a Analyzer) analyzeNodes(
 			return nil, nil, fmt.Errorf("%w: %v", errors.Join(ErrStaticInports, err), name)
 		}
 
-		resolvedNodes[name] = src.Node{
+		resolvedNodes[name] = compiler.Node{
 			Instance:      resolvedInstance,
 			StaticInports: node.StaticInports,
 		}
@@ -95,11 +95,11 @@ func (a Analyzer) analyzeNodes(
 // analyzeNodeInstance finds interface or component that node is reffering to
 // and checks whether it's possible to instantiate it with the given arguments
 func (a Analyzer) analyzeNodeInstance(
-	instance src.Instance,
+	instance compiler.Instance,
 	scope Scope,
 ) (
-	src.Instance,
-	map[src.EntityRef]struct{},
+	compiler.Instance,
+	map[compiler.EntityRef]struct{},
 	error,
 ) {
 	var params []ts.Param
@@ -107,13 +107,13 @@ func (a Analyzer) analyzeNodeInstance(
 	interf, err := scope.getInterface(instance.Ref)
 	if err == nil {
 		if len(instance.DIArgs) != 0 {
-			return src.Instance{}, nil, ErrInterfaceDIArgs
+			return compiler.Instance{}, nil, ErrInterfaceDIArgs
 		}
 		params = interf.Params
 	} else {
 		component, err := scope.getComponent(instance.Ref)
 		if err != nil {
-			return src.Instance{}, nil, err
+			return compiler.Instance{}, nil, err
 		}
 		// TODO implement DI analysis
 		// get component's DI params (list of interfaces and names)
@@ -126,17 +126,17 @@ func (a Analyzer) analyzeNodeInstance(
 
 	fmt.Println(params)
 
-	return src.Instance{}, nil, nil
+	return compiler.Instance{}, nil, nil
 }
 
-func (a Analyzer) analyzeStaticInports(node src.Node, scope Scope) (map[src.EntityRef]struct{}, error) {
+func (a Analyzer) analyzeStaticInports(node compiler.Node, scope Scope) (map[compiler.EntityRef]struct{}, error) {
 	return nil, nil
 }
 
 // analyzeNet returns set of unused outports. It makes sure that:
 // All nodes are used; Every node's inport is used; All connections refers to existing ports and are; Type-safe.
 // All IO nodes are used;
-func (a Analyzer) analyzeNet(net []src.Connection, scope Scope) (map[src.ConnPortAddr]struct{}, error) {
+func (a Analyzer) analyzeNet(net []compiler.Connection, scope Scope) (map[compiler.ConnPortAddr]struct{}, error) {
 	if len(net) == 0 {
 		panic("")
 	}

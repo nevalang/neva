@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/emil14/neva/internal/compiler/ir"
-	"github.com/emil14/neva/internal/compiler/src"
 )
 
 type Compiler struct {
@@ -16,10 +15,10 @@ type Compiler struct {
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, src.Program) (src.Program, error)
+		Analyze(context.Context, Program) (Program, error)
 	}
 	IRGenerator interface {
-		Generate(context.Context, src.Program) (ir.Program, error)
+		Generate(context.Context, Program) (ir.Program, error)
 	}
 	Backend interface {
 		GenerateTarget(context.Context, ir.Program) ([]byte, error)
@@ -32,7 +31,7 @@ var (
 	ErrBackend  = errors.New("backend")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog src.Program) ([]byte, error) {
+func (c Compiler) Compile(ctx context.Context, prog Program) ([]byte, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, errors.Join(ErrAnalyzer, err)

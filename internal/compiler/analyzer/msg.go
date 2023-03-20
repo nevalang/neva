@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
@@ -21,24 +21,24 @@ var (
 )
 
 func (a Analyzer) analyzeMsg(
-	msg src.Msg,
+	msg compiler.Msg,
 	scope Scope,
 	resolvedConstr *ts.Expr,
-) (src.Msg, map[src.EntityRef]struct{}, error) {
+) (compiler.Msg, map[compiler.EntityRef]struct{}, error) {
 	if msg.Ref != nil {
 		subMsg, err := scope.getMsg(*msg.Ref)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrReferencedMsg, err)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrReferencedMsg, err)
 		}
 		if msg.Ref.Pkg != "" {
 			scope, err = scope.rebase(msg.Ref.Pkg)
 			if err != nil {
-				return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrScopeRebase, err)
+				return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrScopeRebase, err)
 			}
 		}
 		resolvedSubMsg, used, err := a.analyzeMsg(subMsg, scope, resolvedConstr)
 		if err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v: %v", ErrNestedMsg, err, msg.Ref)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v: %v", ErrNestedMsg, err, msg.Ref)
 		}
 		used[*msg.Ref] = struct{}{}
 		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
@@ -46,17 +46,17 @@ func (a Analyzer) analyzeMsg(
 
 	resolvedType, err := a.resolver.Resolve(msg.Value.Type, scope)
 	if err != nil {
-		return src.Msg{}, nil, fmt.Errorf("%w: ", err)
+		return compiler.Msg{}, nil, fmt.Errorf("%w: ", err)
 	}
 
 	if resolvedConstr != nil {
 		if err := a.checker.Check(resolvedType, *resolvedConstr, ts.TerminatorParams{}); err != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrInassignMsg, err)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrInassignMsg, err)
 		}
 	}
 
-	msgToReturn := src.Msg{
-		Value: src.MsgValue{
+	msgToReturn := compiler.Msg{
+		Value: compiler.MsgValue{
 			Type: resolvedType,
 		},
 	}
@@ -64,33 +64,33 @@ func (a Analyzer) analyzeMsg(
 	switch resolvedType.Inst.Ref {
 	case "int":
 		if msg.Value.Vec != nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
 		}
 		msgToReturn.Value.Int = msg.Value.Int
 
 	case "vec":
 		if msg.Value.Int != 0 {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnwantedMsgField, msg.Value.Vec)
 		}
 		if msg.Value.Vec == nil {
-			return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrMissingMsgField, msg.Value.Vec)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrMissingMsgField, msg.Value.Vec)
 		}
 		if l := len(resolvedType.Inst.Args); l != 1 {
-			return src.Msg{}, nil, fmt.Errorf("%w: want 1, got %v", ErrVecArgsLen, l)
+			return compiler.Msg{}, nil, fmt.Errorf("%w: want 1, got %v", ErrVecArgsLen, l)
 		}
 		vecType := resolvedType.Inst.Args[0]
-		resolvedVec := make([]src.Msg, 0, len(msg.Value.Vec))
+		resolvedVec := make([]compiler.Msg, 0, len(msg.Value.Vec))
 		for i, el := range msg.Value.Vec {
 			analyzedEl, _, err := a.analyzeMsg(el, scope, &vecType)
 			if err != nil {
-				return src.Msg{}, nil, fmt.Errorf("%w: #%d: %v", ErrVecEl, i, err)
+				return compiler.Msg{}, nil, fmt.Errorf("%w: #%d: %v", ErrVecEl, i, err)
 			}
 			resolvedVec = append(resolvedVec, analyzedEl)
 		}
 		msgToReturn.Value.Vec = resolvedVec
 
 	default:
-		return src.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, resolvedType.Inst.Ref)
+		return compiler.Msg{}, nil, fmt.Errorf("%w: %v", ErrUnknownMsgType, resolvedType.Inst.Ref)
 	}
 
 	return msgToReturn, scope.visited, nil

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
@@ -29,7 +29,7 @@ var (
 // Has one not-array inport named `sig` that refers to that single type-parameter;
 // Has at least one node (non-root components can have no nodes to implement just routing);
 // All nodes has no static inports or references to anything but components (reason why pkg and pkgs needed);
-func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Pkg, pkgs map[string]src.Pkg) error { //nolint:funlen,unparam,lll
+func (a Analyzer) analyzeMainComponent(cmp compiler.Component, pkg compiler.Pkg, pkgs map[string]compiler.Pkg) error { //nolint:funlen,unparam,lll
 	if len(cmp.TypeParams) != 0 {
 		return errors.New("root component must not have type parameters")
 	}
@@ -45,7 +45,7 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Pkg, pkgs map[
 	return nil
 }
 
-func (a Analyzer) analyzeExecCmpIO(io src.IO) error {
+func (a Analyzer) analyzeExecCmpIO(io compiler.IO) error {
 	if len(io.Out) != 1 {
 		return fmt.Errorf("%w: %v", ErrRootComponentWithOutports, io.Out)
 	}
@@ -72,7 +72,7 @@ func (a Analyzer) analyzeExecCmpIO(io src.IO) error {
 	return nil
 }
 
-func (Analyzer) analyzeExecCmpNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs map[string]src.Pkg) error {
+func (Analyzer) analyzeExecCmpNodes(nodes map[string]compiler.Node, pkg compiler.Pkg, pkgs map[string]compiler.Pkg) error {
 	if len(nodes) == 0 {
 		return ErrRootComponentWithoutNodes
 	}
@@ -82,7 +82,7 @@ func (Analyzer) analyzeExecCmpNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs
 			return fmt.Errorf("%w: %v", ErrRootComponentWithStaticInports, node.StaticInports)
 		}
 
-		var pkgWithEntity src.Pkg
+		var pkgWithEntity compiler.Pkg
 		if node.Instance.Ref.Pkg != "" {
 			p, ok := pkgs[node.Instance.Ref.Pkg]
 			if !ok {
@@ -98,7 +98,7 @@ func (Analyzer) analyzeExecCmpNodes(nodes map[string]src.Node, pkg src.Pkg, pkgs
 			return fmt.Errorf("%w: %v", ErrNodeRefEntityNotFound, node.Instance.Ref.Name)
 		}
 
-		if entity.Kind != src.ComponentEntity {
+		if entity.Kind != compiler.ComponentEntity {
 			return fmt.Errorf("%w: %v: %v", ErrRootCompWithNotCompNodes, node.Instance.Ref.Name, entity.Kind)
 		}
 	}

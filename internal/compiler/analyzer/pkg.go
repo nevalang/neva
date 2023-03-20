@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 )
 
 var (
@@ -26,30 +26,30 @@ var (
 // There's no unused imports;
 // All entities are analyzed and;
 // Used (exported or referenced by exported entities or root component).
-func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, error) { //nolint:unparam
+func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]compiler.Pkg) (compiler.Pkg, error) { //nolint:unparam
 	pkg := pkgs[pkgName]
 
 	if pkgName != "main" && len(a.getExports(pkg.Entities)) == 0 {
-		return src.Pkg{}, ErrUselessPkg
+		return compiler.Pkg{}, ErrUselessPkg
 	}
 
 	scope := Scope{
 		base:     pkgName,
 		pkgs:     pkgs,
 		builtins: a.builtinEntities(),
-		visited:  map[src.EntityRef]struct{}{},
+		visited:  map[compiler.EntityRef]struct{}{},
 	}
 
 	resolvedEntities, used, err := a.analyzeEntities(pkgName, pkg, scope)
 	if err != nil {
-		return src.Pkg{}, errors.Join(ErrEntities, err)
+		return compiler.Pkg{}, errors.Join(ErrEntities, err)
 	}
 
 	if err := a.analyzeUsed(pkgName, pkg, used); err != nil {
-		return src.Pkg{}, errors.Join(ErrUsed, err)
+		return compiler.Pkg{}, errors.Join(ErrUsed, err)
 	}
 
-	return src.Pkg{
+	return compiler.Pkg{
 		Entities: resolvedEntities,
 		Imports:  pkg.Imports,
 	}, nil
@@ -60,13 +60,13 @@ func (a Analyzer) analyzePkg(pkgName string, pkgs map[string]src.Pkg) (src.Pkg, 
 // That entity is a component;
 // It's not exported and;
 // It satisfies root-component-specific requirements;
-func (a Analyzer) analyzeMainPkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
+func (a Analyzer) analyzeMainPkg(pkg compiler.Pkg, pkgs map[string]compiler.Pkg) error {
 	entity, ok := pkg.Entities["main"]
 	if !ok {
 		return ErrRootComponentNotFound
 	}
 
-	if entity.Kind != src.ComponentEntity {
+	if entity.Kind != compiler.ComponentEntity {
 		return fmt.Errorf("%w: %v", ErrRootComponentWrongEntityKind, entity.Kind)
 	}
 
@@ -82,23 +82,23 @@ func (a Analyzer) analyzeMainPkg(pkg src.Pkg, pkgs map[string]src.Pkg) error {
 }
 
 // getExports returns only exported entities
-func (a Analyzer) getExports(entities map[string]src.Entity) map[string]src.Entity {
-	exports := make(map[string]src.Entity, len(entities))
+func (a Analyzer) getExports(entities map[string]compiler.Entity) map[string]compiler.Entity {
+	exports := make(map[string]compiler.Entity, len(entities))
 	for name, entity := range entities {
 		exports[name] = entity
 	}
 	return exports
 }
 
-func (Analyzer) builtinEntities() map[string]src.Entity {
-	return map[string]src.Entity{
+func (Analyzer) builtinEntities() map[string]compiler.Entity {
+	return map[string]compiler.Entity{
 		"int": h.BaseTypeEntity(),
 		"vec": h.BaseTypeEntity(h.ParamWithNoConstr("t")),
 	}
 }
 
 // analyzeUsed returns error if there're unused imports or entities
-func (Analyzer) analyzeUsed(pkgName string, pkg src.Pkg, usedEntities map[src.EntityRef]struct{}) error {
+func (Analyzer) analyzeUsed(pkgName string, pkg compiler.Pkg, usedEntities map[compiler.EntityRef]struct{}) error {
 	usedImports := map[string]struct{}{}
 	usedLocalEntities := map[string]struct{}{}
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 	ts "github.com/emil14/neva/pkg/types"
 )
 
@@ -13,7 +13,7 @@ var (
 )
 
 // analyzeType builds text expr that refers to given type and tries to resolve it.
-func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[src.EntityRef]struct{}, error) {
+func (a Analyzer) analyzeType(name string, scope Scope) (ts.Def, map[compiler.EntityRef]struct{}, error) {
 	def, err := scope.getLocalType(name)
 	if err != nil {
 		return ts.Def{}, nil, errors.Join(ErrScopeGetLocalType, err)

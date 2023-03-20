@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/src"
+	"github.com/emil14/neva/internal/compiler"
 )
 
 var (
@@ -19,15 +19,15 @@ var (
 
 func (a Analyzer) analyzeEntities(
 	pkgName string,
-	pkg src.Pkg,
+	pkg compiler.Pkg,
 	scope Scope,
 ) (
-	map[string]src.Entity,
-	map[src.EntityRef]struct{},
+	map[string]compiler.Entity,
+	map[compiler.EntityRef]struct{},
 	error,
 ) {
-	resolvedEntities := make(map[string]src.Entity, len(pkg.Entities))
-	used := map[src.EntityRef]struct{}{} // both local and imported
+	resolvedEntities := make(map[string]compiler.Entity, len(pkg.Entities))
+	used := map[compiler.EntityRef]struct{}{} // both local and imported
 
 	for entityName, entity := range pkg.Entities {
 		if entityName == "main" && pkgName != "main" {
@@ -35,7 +35,7 @@ func (a Analyzer) analyzeEntities(
 		}
 
 		if entity.Exported || entityName == "main" {
-			used[src.EntityRef{
+			used[compiler.EntityRef{
 				Pkg:  pkgName,
 				Name: entityName,
 			}] = struct{}{}
@@ -56,54 +56,54 @@ func (a Analyzer) analyzeEntities(
 	return resolvedEntities, used, nil
 }
 
-func (a Analyzer) analyzeEntity(name string, scope Scope) (src.Entity, map[src.EntityRef]struct{}, error) {
+func (a Analyzer) analyzeEntity(name string, scope Scope) (compiler.Entity, map[compiler.EntityRef]struct{}, error) {
 	entity, err := scope.getLocalEntity(name)
 	if err != nil {
-		return src.Entity{}, nil, errors.Join(ErrScopeGetLocalEntity, err)
+		return compiler.Entity{}, nil, errors.Join(ErrScopeGetLocalEntity, err)
 	}
 
 	switch entity.Kind { // https://github.com/emil14/neva/issues/186
-	case src.TypeEntity:
+	case compiler.TypeEntity:
 		resolvedDef, usedTypeEntities, err := a.analyzeType(name, scope)
 		if err != nil {
-			return src.Entity{}, nil, errors.Join(ErrType, err)
+			return compiler.Entity{}, nil, errors.Join(ErrType, err)
 		}
-		return src.Entity{
+		return compiler.Entity{
 			Type:     resolvedDef,
-			Kind:     src.TypeEntity,
+			Kind:     compiler.TypeEntity,
 			Exported: entity.Exported,
 		}, usedTypeEntities, nil
-	case src.MsgEntity:
+	case compiler.MsgEntity:
 		resolvedMsg, usedEntities, err := a.analyzeMsg(entity.Msg, scope, nil)
 		if err != nil {
-			return src.Entity{}, nil, errors.Join(ErrMsg, err)
+			return compiler.Entity{}, nil, errors.Join(ErrMsg, err)
 		}
-		return src.Entity{
+		return compiler.Entity{
 			Msg:      resolvedMsg,
-			Kind:     src.MsgEntity,
+			Kind:     compiler.MsgEntity,
 			Exported: entity.Exported,
 		}, usedEntities, nil
-	case src.InterfaceEntity:
+	case compiler.InterfaceEntity:
 		resolvedInterface, used, err := a.analyzeInterface(entity.Interface, scope)
 		if err != nil {
-			return src.Entity{}, nil, errors.Join(ErrInterface, err)
+			return compiler.Entity{}, nil, errors.Join(ErrInterface, err)
 		}
-		return src.Entity{
+		return compiler.Entity{
 			Exported:  entity.Exported,
-			Kind:      src.InterfaceEntity,
+			Kind:      compiler.InterfaceEntity,
 			Interface: resolvedInterface,
 		}, used, nil
-	case src.ComponentEntity:
+	case compiler.ComponentEntity:
 		resolvedComponent, used, err := a.analyzeCmp(entity.Component, scope)
 		if err != nil {
-			return src.Entity{}, nil, errors.Join(ErrComponent, err)
+			return compiler.Entity{}, nil, errors.Join(ErrComponent, err)
 		}
-		return src.Entity{
+		return compiler.Entity{
 			Exported:  entity.Exported,
-			Kind:      src.ComponentEntity,
+			Kind:      compiler.ComponentEntity,
 			Component: resolvedComponent,
 		}, used, nil
 	default:
-		return src.Entity{}, nil, ErrUnknownEntityKind
+		return compiler.Entity{}, nil, ErrUnknownEntityKind
 	}
 }
