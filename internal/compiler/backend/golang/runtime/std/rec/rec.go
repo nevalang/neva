@@ -6,7 +6,7 @@ package main
 // )
 
 // // https://github.com/emil14/neva/issues/149#issuecomment-1368855353
-// func Recorder(ctx context.Context, io runtime.ComponentIO) error {
+// func Recorder(ctx context.Context, io runtime.FuncIO) error {
 // 	outport, err := io.Out.SinglePort("v")
 // 	if err != nil {
 // 		return err
@@ -38,7 +38,7 @@ package main
 // // Unpacker takes message that can be nil and checks it.
 // // If it's not, it sends that message to `some` outport.
 // // Otherwise it sends empty map (signal) to `none` outport.
-// func Unpacker(ctx context.Context, io runtime.ComponentIO) error {
+// func Unpacker(ctx context.Context, io runtime.FuncIO) error {
 // 	option, err := io.In.SinglePort("option")
 // 	if err != nil {
 // 		return err

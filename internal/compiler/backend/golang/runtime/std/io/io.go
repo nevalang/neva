@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/compiler/backend/golang/runtime"
 )
 
-func Read(ctx context.Context, io runtime.ComponentIO) error {
+func Read(ctx context.Context, io runtime.FuncIO) error {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func Read(ctx context.Context, io runtime.ComponentIO) error {
 	}
 }
 
-func Print(ctx context.Context, io runtime.ComponentIO) error {
+func Print(ctx context.Context, io runtime.FuncIO) error {
 	in, err := io.In.Port("v")
 	if err != nil {
 		return err

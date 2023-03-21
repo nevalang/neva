@@ -3,10 +3,10 @@ package flow
 import (
 	"context"
 
-	"github.com/emil14/neva/internal/runtime"
+	"github.com/emil14/neva/internal/compiler/backend/golang/runtime"
 )
 
-func Void(ctx context.Context, io runtime.ComponentIO) error {
+func Void(ctx context.Context, io runtime.FuncIO) error {
 	for {
 		for _, inports := range io.In {
 			for _, inport := range inports {
@@ -16,7 +16,7 @@ func Void(ctx context.Context, io runtime.ComponentIO) error {
 	}
 }
 
-func Trigger(ctx context.Context, io runtime.ComponentIO) error {
+func Trigger(ctx context.Context, io runtime.FuncIO) error {
 	sigs, err := io.In.ArrPort("sigs")
 	if err != nil {
 		return err
