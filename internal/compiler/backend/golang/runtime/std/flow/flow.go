@@ -8,9 +8,13 @@ import (
 
 func Void(ctx context.Context, io runtime.FuncIO) error {
 	for {
-		for _, inports := range io.In {
-			for _, inport := range inports {
-				<-inport
+		for _, portSlots := range io.In {
+			for _, slot := range portSlots {
+				select {
+				case <-ctx.Done():
+					return nil
+				case <-slot:
+				}
 			}
 		}
 	}
@@ -33,18 +37,22 @@ func Trigger(ctx context.Context, io runtime.FuncIO) error {
 	}
 
 	for {
+		for i := range sigs {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-sigs[i]:
+			}
+		}
+
 		select {
 		case <-ctx.Done():
 			return nil
-		default:
-			for i := range sigs {
-				select {
-				case <-ctx.Done():
-					return nil
-				case <-sigs[i]:
-					msg := <-vin
-					vout <- msg
-				}
+		case msg := <-vin:
+			select {
+			case <-ctx.Done():
+				return nil
+			case vout <- msg:
 			}
 		}
 	}

@@ -148,7 +148,7 @@ func putRuntime() {
 	// prepare directory structure and collect files to create
 	files := map[string][]byte{}
 	if err := fs.WalkDir(efs, "runtime", func(path string, d fs.DirEntry, err error) error {
-		fullPath := basePath + "/internal/" + path
+		fullPath := basePath + "/internal/compiler/backend/golang/" + path
 		if d.IsDir() {
 			if err := os.MkdirAll(fullPath, os.ModePerm); err != nil {
 				return err

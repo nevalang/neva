@@ -81,24 +81,24 @@ type FuncRef struct {
 }
 
 type FuncIO struct {
-	In, Out ComponentPorts
+	In, Out FuncPorts
 }
 
-type ComponentPorts map[string][]chan Msg
+type FuncPorts map[string][]chan Msg // port name -> slots
 
 var (
 	ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
 	ErrArrPortNotFound = errors.New("number of ports found by name equals to zero")
 )
 
-func (i ComponentPorts) Port(name string) (chan Msg, error) {
+func (i FuncPorts) Port(name string) (chan Msg, error) {
 	if len(i[name]) != 1 {
 		return nil, fmt.Errorf("%w: %v", ErrSinglePortCount, len(i[name]))
 	}
 	return i[name][0], nil
 }
 
-func (i ComponentPorts) ArrPort(name string) ([]chan Msg, error) {
+func (i FuncPorts) ArrPort(name string) ([]chan Msg, error) {
 	if len(i[name]) == 0 {
 		return nil, ErrArrPortNotFound
 	}

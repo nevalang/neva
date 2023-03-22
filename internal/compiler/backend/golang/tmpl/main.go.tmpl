@@ -5,9 +5,9 @@ import (
     "context"
     "os"
 
-    "github.com/emil14/neva/internal/runtime"
+    "github.com/emil14/neva/internal/compiler/backend/golang/runtime"
     {{- range .Routines.Func}}
-    "github.com/emil14/neva/internal/runtime/std/{{.Ref.Pkg}}"
+    "github.com/emil14/neva/internal/compiler/backend/golang/runtime/std/{{.Ref.Pkg}}"
     {{- end}}
 )
 
@@ -27,7 +27,7 @@ func main() {
         {{- end}}
     }
     funcRunner := runtime.NewFuncRunner(repo)
-    giverRunner := runtime.GiverRunnerImlp{}
+    giverRunner := runtime.DefaultGiverRunner{}
     routineRunner := runtime.NewRoutineRunner(giverRunner, funcRunner)
 
     // connector
