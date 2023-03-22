@@ -1,63 +1,66 @@
 package ir
 
-type (
-	Program struct {
-		Ports       map[PortAddr]uint8
-		Routines    Routines
-		Connections []Connection
-	}
+type Program struct {
+	Ports       map[PortAddr]uint8
+	Routines    Routines
+	Connections []Connection
+}
 
-	PortAddr struct {
-		Path, Name string
-		Idx        uint8
-	}
+type PortAddr struct {
+	Path, Name string
+	Idx        uint8
+}
 
-	Routines struct {
-		Giver map[PortAddr]Msg
-		Func  []FuncRoutine
-	}
+type Routines struct {
+	Giver map[PortAddr]Msg
+	Func  []FuncRoutine
+}
 
-	Connection struct {
-		SenderSide    ConnectionSide
-		ReceiverSides []ConnectionSide
-	}
+type Connection struct {
+	SenderSide    ConnectionSide
+	ReceiverSides []ConnectionSide
+}
 
-	ConnectionSide struct {
-		PortAddr  PortAddr
-		Selectors []Selector
-	}
+type ConnectionSide struct {
+	PortAddr  PortAddr
+	Selectors []Selector
+}
 
-	Selector struct {
-		RecField string
-		ArrIdx   int
-	}
+type Selector struct {
+	RecField string
+	ArrIdx   int
+}
 
-	FuncRoutine struct {
-		Ref FuncRef
-		IO  FuncIO
-	}
+type FuncRoutine struct {
+	Ref FuncRef
+	IO  FuncIO
+}
 
-	FuncRef struct {
-		Pkg, Name string
-	}
+type FuncRef struct {
+	Pkg, Name string
+}
 
-	Msg struct {
-		Type  MsgType
-		Bool  bool
-		Int   int
-		Float float64
-		Str   string
-		Vec   []Msg
-		Map   map[string]Msg
-	}
+type FuncIO struct {
+	In, Out []PortAddr
+}
 
-	MsgType uint8
+type Msg struct {
+	Type  MsgType
+	Bool  bool
+	Int   int
+	Float float64
+	Str   string
+	Vec   []Msg
+	Map   map[string]Msg
+}
 
-	FuncIO struct {
-		In, Out []PortAddr
-	}
-)
+type MsgType uint8
 
 const (
 	IntMsg MsgType = iota + 1
+	BoolMsg
+	FloatMsg
+	StrMsg
+	VecMsg
+	MapMsg
 )

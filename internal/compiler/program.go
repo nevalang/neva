@@ -6,7 +6,7 @@ import (
 	ts "github.com/emil14/neva/pkg/types"
 )
 
-type Program struct {
+type Program struct { // TODO get rid of this?
 	Pkgs map[string]Pkg // what about versions? files?
 }
 

@@ -37,7 +37,10 @@ func main() {
 					"code": h.IntMsg(false, 0),
 					"main": h.MainComponent(map[string]compiler.Node{
 						"print": h.Node(
-							h.NodeInstance("io", "Print", h.Inst("str")),
+							h.NodeInstance(
+								"io", "Print",
+								h.Inst("str"),
+							),
 						),
 						"trigger": h.NodeWithStaticPorts(
 							h.NodeInstance("flow", "Trigger", h.Rec(nil)),
