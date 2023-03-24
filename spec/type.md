@@ -1,10 +1,10 @@
 # Types
 
-All the types described in this secion are _builtins_ in a sence that they're available in a global scope from any package. No need (and it's impossible) to import them.
+All the types described in this secion are _builtins_ in a sense that they're available in a global scope from any package. No need (and it's impossible) to import them.
 
 ## Base
 
-These are types that don't have definition in source code, compiler is awared of them. 
+These are types that don't have definition in source code, compiler is aware of them. 
 
 ### Scalars
 
@@ -25,9 +25,9 @@ These are types that don't have definition in source code, compiler is awared of
 - union: `T1 | T2 ... | Tn`
 - optional: `T?`
 
-## Non-base
+## Non-base stdlib types
 
-These are types that user could express himself but for convinience they're represented in a standard library.
+These are the types that user could express by himself but just for convenience they are represented in a standard library.
 
 - complex: `c64 | c128`
 - float: `float32 | float64`

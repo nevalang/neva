@@ -10,7 +10,7 @@
 - find main pkg and main component to use it as a root node
 - get its io and create nodeCtx for root node with path ""
 <!-- - call "generate" func with root node ??? -->
-- for every connection generate IR connection add IR connection with the path from nodeCtx
+- for every connection generate IR connection add IR connection with the path from nodeCtx ---DONE---
   - while doing so, count incoming connections for every node inport in the network (to create new nodeCtx) and outgoing connections for every outport (to create void connections later when iterating nodes)
   - don't forget about giver and void connections! (void connections could be added later)
 - iterate over nodes

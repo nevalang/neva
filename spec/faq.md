@@ -46,7 +46,7 @@ On the other hand, there's 2 types of effects at the runtime that are essentiall
 
 The reason is the same as with "static ports" vs "givers as special nodes". Otherwise there would be a special kind of nodes like "record builders" that are different from normal component nodes because they must have a specific configuration - record that they must build.
 
-With `from rec` feature (that is implemented outside of the typesystem, because type system doesn't know anything about ports, it only knows about types) it's possible to say "hey compiler, I want a component with the same inports that this record has fields".
+With `fromRec` feature (that is implemented outside of the typesystem, because type system doesn't know anything about ports) it's possible to say "hey compiler, I want a component with the same inports that this record has fields".
 
 ## Type-system
 
@@ -55,36 +55,35 @@ With `from rec` feature (that is implemented outside of the typesystem, because 
 1. It allowes write less code, especially mappings between records and lists of records
 2. Nominal subtyping doesn't protect from mistake like passing wrong value to type-cast
 
+<!-- TODO provide examples -->
+
 ## Implementation
 
 ### Why Go?
 
-It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language.
+It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allowes to reuse its stdlib and increase performance by just updating compiler i.e. for free. 
 
 ## FBP
 
-### Are there any differences between Neva and classical FBP
+### Is Neva "classical FBP"
 
 First of all, there's a [great article](https://jpaulm.github.io/fbp/fbp-inspired-vs-real-fbp.html) by J Paul Morrison (inventor of FBP).
 
 There are many differences, among them:
 
-- Unlike in classical FBP, programmer should not write code by hand. Code should be generated. (But it's possible of course to do so)
-- FBP itself doesn't have static typing. The idea is that you write code by hand in statically typed langauge like Java or Go and then reuse it as a component
-- FBP doesn't have _operators_. There's just _elementary components_ that are written by hand and do specific work. JPaulm did not like the idea of e.g. summing numbers using FBP components
-- Neva has lower-level runtime program structure that is more primitive representation of a program. FBP on the other hand doesn't describe anything like that. So there's no `effects` in classical FBP.
-- There's no _start port_ and _sig_ interface in FBP
-- FBP describes life-cycle of IPs (messages), Neva just uses Go's GC to avoid overhead of using extra memory management on top
-- FBP allowes some sort of process lifecycle control. E.g. process can _terminate_ and it's possible to _revive_ it. On the other hand Neva allowes to design component in a way that it can pause and resume its work at signal if that's needed. Otherwise Neva's runtime takes care of when node must be shutdown.
+- Unlike in classical FBP, programmer should not write code by hand. Code should be generated. (But it's possible of course to write it manually)
+- FBP itself doesn't have static typing. The idea is that you write code by hand in statically typed langauge like Java or Go and then reuse it in a non-typed FBP schema
+- FBP doesn't have _runtime functions_. There's just _elementary components_ that are written by hand and do specific work. JPaulm did not like the idea of e.g. summing numbers using FBP components
+- Neva has lower-level runtime program structure (IR). FBP on the other hand doesn't describe anything like that.
+- FBP describes life-cycle of IPs (messages), Neva just uses Go's GC
+- FBP allowes process lifecycle control. E.g. process can _terminate_ and it's possible to _revive_ it. On the other hand Neva allowes to design component in a way that it can pause and resume its work at signal if that's needed. Otherwise Neva's runtime takes care of when a node must be shutdown.
 
 ### Why some things have different naming?
 
-- _Message_ instead of information package not to be confused with _IP_ as internet protocol
-- _Node_ instead of _process_ 1) not to be confused with _OS processes_ and 2) there are _io nodes_ that are not component instances but part of the _network_
-- _Static ports_ instead of _IIPs_ because of not using word _IP_
-- Word _worker_ used to highlight nodes that are component instances
+- _Message_ instead of _information package_ not to be confused with _IP_ as internet protocol
+- _Node_ instead of _process_ 1) not to be confused with _OS processes_ and 2) there are _io nodes_ that are not component instances but that are part of the _network_
+- _Static inports_ instead of _IIPs_ because of not using word _IP_
 
+### Why `opt` (optional) is base type
 
-### Why optional is base type
-
-Because if it would be a regular record then it would be possible to read it's internal field with value of type `T` that could not be there. 
+Because if it would be a normal `rec` then it would be possible to read it's internal field with value of type `T` that could not be there.
