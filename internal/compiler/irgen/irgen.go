@@ -64,7 +64,7 @@ type (
 	// ioContext describes how many port slots must be created and how many incoming connections inports have
 	ioContext struct {
 		in  map[compiler.RelPortAddr]inportSlotContext
-		out map[string]uint8 // name -> outgoing connections count
+		out map[string]uint8 // name -> slots count
 	}
 	inportSlotContext struct {
 		incomingConnectionsCount uint8
@@ -109,10 +109,10 @@ func (g Generator) processNode(
 	}
 
 	if len(component.Net) == 0 { // component implemented by runtime functions
-		runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncOutportAddrs
+		runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
 		// outports must be generated without processing network
 		for name := range component.IO.Out {
-			outgoingConnectionsCount, ok := nodeCtx.io.out[name]
+			slotsCount, ok := nodeCtx.io.out[name]
 			if !ok { // not used by parent node
 				addr := ir.PortAddr{ // but we generate one because runtime func may need it
 					Path: nodeCtx.path + ".out",
@@ -126,13 +126,13 @@ func (g Generator) processNode(
 				continue
 			}
 
-			for i := 0; i < int(outgoingConnectionsCount); i++ { // outport is used by parent, we know slots count
+			for i := 0; i < int(slotsCount); i++ { // outport is used by parent, we know slots count
 				addr := ir.PortAddr{
 					Path: nodeCtx.path + ".out",
 					Name: name,
 					Idx:  uint8(i),
 				}
-				result.Ports[addr] = g.bufFactor
+				result.Ports[addr] = g.bufFactor // but we don't know incoming connections because of no of network
 				runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
 			}
 		}
@@ -174,8 +174,8 @@ func (g Generator) processNode(
 
 	// generate outports for current node and, if necessary, void routines and connections
 	for name := range component.IO.Out { // generate outports without processing network
-		outgoingConnectionsCount := nodeCtx.io.out[name]
-		if outgoingConnectionsCount == 0 { // not used by parent node (we don't care if it's array port or single)
+		slotsCount := nodeCtx.io.out[name]
+		if slotsCount == 0 { // not used by parent node (we don't care if it's array port or single)
 			addr := ir.PortAddr{ // but we generate one because network must have connections to it
 				Path: nodeCtx.path + ".out",
 				Name: name,
@@ -188,7 +188,7 @@ func (g Generator) processNode(
 			continue
 		}
 
-		for i := 0; i < int(outgoingConnectionsCount); i++ { // outport is used by parent, we know slots count
+		for i := 0; i < int(slotsCount); i++ { // outport is used by parent, slots count is known
 			addr := ir.PortAddr{
 				Path: nodeCtx.path + "/" + "out",
 				Name: name,
@@ -196,7 +196,7 @@ func (g Generator) processNode(
 			}
 			// in valid program component always has at least one connection to it's every outport
 			incoming := incomingConnectionsCount[addr]
-			result.Ports[addr] = incoming - 1*g.bufFactor
+			result.Ports[addr] =( incoming - 1)*g.bufFactor
 		}
 	}
 
