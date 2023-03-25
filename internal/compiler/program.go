@@ -66,11 +66,11 @@ type Node struct {
 	StaticInports map[RelPortAddr]EntityRef // must refer to messages
 }
 
-// Instance of a component or interface for network node for DI
+// Instance of component or interface as a network node base
 type Instance struct {
-	Ref      EntityRef           // must refer to component or interface
-	TypeArgs []ts.Expr           // must be valid args for entity's type params
-	DIArgs   map[string]Instance // only for components with DI (with nodes with interface refs)
+	Ref         EntityRef           // must refer to component or interface
+	TypeArgs    []ts.Expr           // must be valid args for entity's type params
+	ComponentDI map[string]Instance // only for components with DI
 }
 
 type EntityRef struct {

@@ -39,7 +39,7 @@ func main() {
 
     // ports
     {{- range $addr, $buf := .Ports}}
-    {{getPortName $addr}} := make(chan runtime.Msg, {{$buf}})
+    {{getPortChVarName $addr}} := make(chan runtime.Msg, {{$buf}})
     {{- end}}
 
 	// program
@@ -50,14 +50,15 @@ func main() {
                 Path: "{{$addr.Path}}",
                 Name: "{{$addr.Name}}",
                 Idx: {{$addr.Idx}},
-            }: {{getPortName $addr}},
+            }: {{getPortChVarName $addr}},
             {{- end}}
         },
         Connections: []runtime.Connection{
             {{- range .Connections}}
+            {{ getConnComment . }}
             {
                 Sender: runtime.ConnectionSide{
-                    Port: {{getPortName .SenderSide.PortAddr}},
+                    Port: {{getPortChVarName .SenderSide.PortAddr}},
                     Meta: runtime.ConnectionSideMeta{
                         PortAddr:  runtime.PortAddr{
                             Path: "{{.SenderSide.PortAddr.Path}}",
@@ -69,7 +70,7 @@ func main() {
                 Receivers: []runtime.ConnectionSide{
                     {{- range .ReceiverSides }}
                     {
-                        Port: {{getPortName .PortAddr}},
+                        Port: {{getPortChVarName .PortAddr}},
                         Meta: runtime.ConnectionSideMeta{
                             PortAddr:  runtime.PortAddr{
                                 Path: "{{.PortAddr.Path}}",
@@ -87,7 +88,7 @@ func main() {
             Giver: []runtime.GiverRoutine{
                 {{- range $portAddr, $msg := .Routines.Giver}}
                 {
-                    OutPort: {{getPortName $portAddr}},
+                    OutPort: {{getPortChVarName $portAddr}},
                     Msg:     {{getMsg $msg}},
                 },
                 {{- end}}

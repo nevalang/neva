@@ -31,6 +31,43 @@ func main() {
 
 	prog := compiler.Program{
 		Pkgs: map[string]compiler.Pkg{
+			"io": {
+				Entities: map[string]compiler.Entity{
+					"Print": {
+						Exported: true,
+						Kind:     compiler.ComponentEntity,
+						Component: compiler.Component{
+							IO: compiler.IO{
+								In: map[string]compiler.Port{
+									"v": {},
+								},
+								Out: map[string]compiler.Port{
+									"v": {},
+								},
+							},
+						},
+					},
+				},
+			},
+			"flow": {
+				Entities: map[string]compiler.Entity{
+					"Trigger": {
+						Exported: true,
+						Kind:     compiler.ComponentEntity,
+						Component: compiler.Component{
+							IO: compiler.IO{
+								In: map[string]compiler.Port{
+									"sigs": {IsArr: true},
+									"v":    {},
+								},
+								Out: map[string]compiler.Port{
+									"v": {},
+								},
+							},
+						},
+					},
+				},
+			},
 			"main": {
 				Imports: h.Imports("io", "flow"),
 				Entities: map[string]compiler.Entity{
@@ -111,9 +148,9 @@ func main() {
 							ReceiverSides: []compiler.ConnectionSide{
 								{
 									PortAddr: compiler.ConnPortAddr{
-										Node: "out.exit.",
+										Node: "out",
 										RelPortAddr: compiler.RelPortAddr{
-											Name: "sig",
+											Name: "exit",
 											Idx:  0,
 										},
 									},

@@ -82,8 +82,8 @@ func (h Helper) InstanceWithDI(pkg, entity string, di map[string]compiler.Instan
 			Pkg:  pkg,
 			Name: entity,
 		},
-		TypeArgs: args,
-		DIArgs:   di,
+		TypeArgs:    args,
+		ComponentDI: di,
 	}
 }
 

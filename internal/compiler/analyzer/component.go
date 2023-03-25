@@ -106,7 +106,7 @@ func (a Analyzer) analyzeNodeInstance(
 
 	interf, err := scope.getInterface(instance.Ref)
 	if err == nil {
-		if len(instance.DIArgs) != 0 {
+		if len(instance.ComponentDI) != 0 {
 			return compiler.Instance{}, nil, ErrInterfaceDIArgs
 		}
 		params = interf.Params
