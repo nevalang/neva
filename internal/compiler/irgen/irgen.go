@@ -88,44 +88,19 @@ func (g Generator) processNode(
 
 	component := entity.Component
 
-	// create IR inports for cur node
-	runtimeFuncInportAddrs := g.handleInPortsCreation(nodeCtx, result)
-	// and outports with, if needed, void routines and connections
-	runtimeFuncOutPortAddrs := g.handleOutPortsCreation(component.IO.Out, nodeCtx, result)
+	inportAddrs := g.handleInPortsCreation(nodeCtx, result)
+	outPortAddrs := g.handleOutPortsCreation(component.IO.Out, nodeCtx, result)
 
 	if isNative := len(component.Net) == 0; isNative {
-		result.Routines.Func = append(
-			result.Routines.Func,
-			g.getFuncRoutine(
-				nodeCtx,
-				runtimeFuncInportAddrs,
-				runtimeFuncOutPortAddrs,
-			),
-		)
+		funcRoutine := g.getFuncRoutine(nodeCtx, inportAddrs, outPortAddrs)
+		result.Routines.Func = append(result.Routines.Func, funcRoutine)
 		return nil
 	}
 
-	// generate ir connections for current node's network
 	g.handleConnectionsCreation(component, nodeCtx, result)
 
-	// prepare node context and make recursive call for every node
 	for name, node := range component.Nodes {
-		subNodeCtx := nodeContext{
-			path: nodeCtx.path + "/" + name,
-			io: ioContext{
-				in:  map[compiler.RelPortAddr]inportSlotContext{}, // TODO collect how many
-				out: map[string]uint8{},                           // TODO
-			}, // TODO get data for IO by O(1)
-		}
-
-		instance, ok := nodeCtx.di[name]
-		if ok {
-			subNodeCtx.entityRef = instance.Ref
-			subNodeCtx.di = instance.ComponentDI
-		} else {
-			subNodeCtx.entityRef = node.Instance.Ref
-			subNodeCtx.di = node.Instance.ComponentDI
-		}
+		subNodeCtx := g.getSubNodeCtx(nodeCtx, name, node)
 
 		if err := g.processNode(ctx, subNodeCtx, pkgs, result); err != nil {
 			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), name)
@@ -133,6 +108,27 @@ func (g Generator) processNode(
 	}
 
 	return nil
+}
+
+func (Generator) getSubNodeCtx(nodeCtx nodeContext, name string, node compiler.Node) nodeContext {
+	subNodeCtx := nodeContext{
+		path: nodeCtx.path + "/" + name,
+		io: ioContext{ // TODO
+			in:  map[compiler.RelPortAddr]inportSlotContext{},
+			out: map[string]uint8{},
+		},
+	}
+
+	instance, ok := nodeCtx.di[name]
+	if ok {
+		subNodeCtx.entityRef = instance.Ref
+		subNodeCtx.di = instance.ComponentDI
+	} else {
+		subNodeCtx.entityRef = node.Instance.Ref
+		subNodeCtx.di = node.Instance.ComponentDI
+	}
+
+	return subNodeCtx
 }
 
 // getFuncRoutine simply builds and returns func routine structure
@@ -158,9 +154,12 @@ func (g Generator) handleConnectionsCreation(
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) {
-	// FIXME compiler connection doesn't have "in" or "out" in node name but ir connection does
-	// its possible to append postfix but that have to be avoided for io nodes
+	// inportsSlotsCount := map[string]uint8{}
+	outportsSlotsCount := map[string]uint8{}
+
 	for _, conn := range component.Net {
+		outportsSlotsCount[conn.SenderSide.PortAddr.Name]++ // we assume every sender is unique
+
 		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide, "out")
 
 		receiverSides := make([]ir.ConnectionSide, 0, len(conn.ReceiverSides))
@@ -197,9 +196,13 @@ func (Generator) handleInPortsCreation(nodeCtx nodeContext, result *ir.Program) 
 }
 
 // handleOutPortsCreation creates ir outports and inserts them into the given result.
-// It also creates and inserts void routines and connections for unused outports.
+// It also creates and inserts void routines and connections for outports unused by parent.
 // It returns slice of ir port addrs that could be used to create a func routine.
-func (Generator) handleOutPortsCreation(outports compiler.Ports, nodeCtx nodeContext, result *ir.Program) []ir.PortAddr {
+func (Generator) handleOutPortsCreation(
+	outports compiler.Ports,
+	nodeCtx nodeContext,
+	result *ir.Program,
+) []ir.PortAddr {
 	runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
 
 	for name := range outports {

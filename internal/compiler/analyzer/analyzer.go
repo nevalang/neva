@@ -24,6 +24,7 @@ var (
 
 var h helper.Helper
 
+// TODO make sure there's no two or more connections with the same sender
 type Analyzer struct {
 	resolver  TypeExprResolver
 	checker   SubtypeChecker
