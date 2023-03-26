@@ -1,3 +1,7 @@
+    // TODO handle interface case: extend nodeCtx with DIArgs and use it if current node refers to interface
+    // solution2 - make this func always called with component
+    // (probably not because you would have to lookup for every node)
+
 <!-- nodeCtx {
     path string
     ports [portAddr(name,idx)]: {

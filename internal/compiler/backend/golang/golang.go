@@ -60,7 +60,7 @@ func (b Backend) getConnComment(conn ir.Connection) string {
 }
 
 func (b Backend) fmtPortAddr(addr ir.PortAddr) string {
-	return fmt.Sprintf("%s/%s[%d]", addr.Path, addr.Name, addr.Idx)
+	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Name, addr.Idx)
 }
 
 func (b Backend) getPortChVarName(addr ir.PortAddr) string {

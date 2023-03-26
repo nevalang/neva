@@ -9,14 +9,10 @@ import (
 	"github.com/emil14/neva/internal/compiler/ir"
 )
 
-type Generator struct {
-	bufFactor uint8 // used as a multiplier for incoming connections count to get inport's buffer size
-}
+type Generator struct{}
 
-func New(native map[compiler.EntityRef]ir.FuncRef) Generator {
-	return Generator{
-		bufFactor: 1,
-	}
+func New() Generator {
+	return Generator{}
 }
 
 var ErrNoPkgs = errors.New("no packages")
@@ -33,7 +29,7 @@ func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Prog
 		entityRef: ref,
 		io: ioContext{
 			in: map[compiler.RelPortAddr]inportSlotContext{
-				{Name: "start"}: {incomingConnectionsCount: 1},
+				{Name: "start"}: {},
 			},
 			out: map[string]uint8{
 				"exit": 1, // runtime is the only one who will read (once) message (code) from this outport
@@ -64,10 +60,10 @@ type (
 	// ioContext describes how many port slots must be created and how many incoming connections inports have
 	ioContext struct {
 		in  map[compiler.RelPortAddr]inportSlotContext
-		out map[string]uint8 // name -> slots count
+		out map[string]uint8 // name -> slots used by parent count
 	}
 	inportSlotContext struct {
-		incomingConnectionsCount uint8
+		// incomingConnectionsCount uint8 // how many senders (outports) writes to this receiver (inport slot)
 		// static msg?
 	}
 )
@@ -90,123 +86,35 @@ func (g Generator) processNode(
 		return fmt.Errorf("lookup entity: %w", err)
 	}
 
-	// TODO handle interface case: extend nodeCtx with DIArgs and use it if current node refers to interface
-	// solution2 - make this func always called with component
-	// (probably not because you would have to lookup for every node)
 	component := entity.Component
 
-	// create IR ports for current node's inports
-	runtimeFuncInportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.in)) // only needed for nodes with runtime func
-	// in valid program all inports are used, so it's safe to depend on nodeContext and not use component's IO
-	for addr, slotCtx := range nodeCtx.io.in {
-		addr := ir.PortAddr{
-			Path: nodeCtx.path + "/" + "in",
-			Name: addr.Name,
-			Idx:  addr.Idx,
-		}
-		result.Ports[addr] = slotCtx.incomingConnectionsCount - 1
-		runtimeFuncInportAddrs = append(runtimeFuncInportAddrs, addr)
+	// create IR inports for cur node
+	runtimeFuncInportAddrs := g.handleInPortsCreation(nodeCtx, result)
+	// and outports with, if needed, void routines and connections
+	runtimeFuncOutPortAddrs := g.handleOutPortsCreation(component.IO.Out, nodeCtx, result)
+
+	if isNative := len(component.Net) == 0; isNative {
+		result.Routines.Func = append(
+			result.Routines.Func,
+			g.getFuncRoutine(
+				nodeCtx,
+				runtimeFuncInportAddrs,
+				runtimeFuncOutPortAddrs,
+			),
+		)
+		return nil
 	}
 
-	if len(component.Net) == 0 { // component implemented by runtime functions
-		runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
-		// outports must be generated without processing network
-		for name := range component.IO.Out {
-			slotsCount, ok := nodeCtx.io.out[name]
-			if !ok { // not used by parent node
-				addr := ir.PortAddr{ // but we generate one because runtime func may need it
-					Path: nodeCtx.path + ".out",
-					Name: name,
-					Idx:  0,
-				}
-				// runtime func doesn't have network so we don't know incoming connections
-				result.Ports[addr] = g.bufFactor
-				runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
-				// TODO insert ir void routine + connection
-				continue
-			}
-
-			for i := 0; i < int(slotsCount); i++ { // outport is used by parent, we know slots count
-				addr := ir.PortAddr{
-					Path: nodeCtx.path + ".out",
-					Name: name,
-					Idx:  uint8(i),
-				}
-				result.Ports[addr] = g.bufFactor // but we don't know incoming connections because of no of network
-				runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
-			}
-		}
-
-		funcRef := ir.FuncRef{
-			Pkg:  nodeCtx.entityRef.Pkg,
-			Name: nodeCtx.entityRef.Name,
-		}
-		result.Routines.Func = append(result.Routines.Func, ir.FuncRoutine{ // append new func routine
-			Ref: funcRef,
-			IO: ir.FuncIO{
-				In:  runtimeFuncInportAddrs,
-				Out: runtimeFuncOutportAddrs,
-			},
-		})
-
-		return nil // runtime function node is a leaf on a graph so no nodes, no network
-	}
-
-	// to compute buffer size of current node's outports and its subnodes inports
-	incomingConnectionsCount := map[ir.PortAddr]uint8{} // inport -> count of incoming connections
-
-	// generate ir connections for current node's network and count all incoming/outgoing connections
-	for _, conn := range component.Net {
-		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide)
-
-		receiverSides := make([]ir.ConnectionSide, 0, len(conn.ReceiverSides))
-		for _, receiverSide := range conn.ReceiverSides {
-			irSide := g.mapConnSide(nodeCtx.path, receiverSide)
-			receiverSides = append(receiverSides, irSide)
-			incomingConnectionsCount[irSide.PortAddr]++
-		}
-
-		result.Connections = append(result.Connections, ir.Connection{
-			SenderSide:    senderSide,
-			ReceiverSides: receiverSides,
-		})
-	}
-
-	// generate outports for current node and, if necessary, void routines and connections
-	for name := range component.IO.Out { // generate outports without processing network
-		slotsCount := nodeCtx.io.out[name]
-		if slotsCount == 0 { // not used by parent node (we don't care if it's array port or single)
-			addr := ir.PortAddr{ // but we generate one because network must have connections to it
-				Path: nodeCtx.path + ".out",
-				Name: name,
-				Idx:  0,
-			}
-			// in valid program component always has at least one connection to it's every outport
-			count := incomingConnectionsCount[addr] // current node writes it its own outports
-			result.Ports[addr] = count - 1*g.bufFactor
-			// TODO insert ir void routine + connection
-			continue
-		}
-
-		for i := 0; i < int(slotsCount); i++ { // outport is used by parent, slots count is known
-			addr := ir.PortAddr{
-				Path: nodeCtx.path + "/" + "out",
-				Name: name,
-				Idx:  uint8(i),
-			}
-			// in valid program component always has at least one connection to it's every outport
-			incoming := incomingConnectionsCount[addr]
-			result.Ports[addr] =( incoming - 1)*g.bufFactor
-		}
-	}
+	// generate ir connections for current node's network
+	g.handleConnectionsCreation(component, nodeCtx, result)
 
 	// prepare node context and make recursive call for every node
 	for name, node := range component.Nodes {
 		subNodeCtx := nodeContext{
 			path: nodeCtx.path + "/" + name,
 			io: ioContext{
-				in:  map[compiler.RelPortAddr]inportSlotContext{},
-				out: map[string]uint8{},
+				in:  map[compiler.RelPortAddr]inportSlotContext{}, // TODO collect how many
+				out: map[string]uint8{},                           // TODO
 			}, // TODO get data for IO by O(1)
 		}
 
@@ -227,6 +135,94 @@ func (g Generator) processNode(
 	return nil
 }
 
+// getFuncRoutine simply builds and returns func routine structure
+func (Generator) getFuncRoutine(
+	nodeCtx nodeContext,
+	runtimeFuncInportAddrs []ir.PortAddr,
+	runtimeFuncOutPortAddrs []ir.PortAddr,
+) ir.FuncRoutine {
+	return ir.FuncRoutine{
+		Ref: ir.FuncRef{
+			Pkg:  nodeCtx.entityRef.Pkg,
+			Name: nodeCtx.entityRef.Name,
+		},
+		IO: ir.FuncIO{
+			In:  runtimeFuncInportAddrs,
+			Out: runtimeFuncOutPortAddrs,
+		},
+	}
+}
+
+func (g Generator) handleConnectionsCreation(
+	component compiler.Component,
+	nodeCtx nodeContext,
+	result *ir.Program,
+) {
+	// FIXME compiler connection doesn't have "in" or "out" in node name but ir connection does
+	// its possible to append postfix but that have to be avoided for io nodes
+	for _, conn := range component.Net {
+		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide, "out")
+
+		receiverSides := make([]ir.ConnectionSide, 0, len(conn.ReceiverSides))
+		for _, receiverSide := range conn.ReceiverSides {
+			irSide := g.mapConnSide(nodeCtx.path, receiverSide, "in")
+			receiverSides = append(receiverSides, irSide)
+		}
+
+		result.Connections = append(result.Connections, ir.Connection{
+			SenderSide:    senderSide,
+			ReceiverSides: receiverSides,
+		})
+	}
+}
+
+// handleInPortsCreation creates and inserts ir inports into the given result.
+// It also returns slice of created ir port addrs.
+func (Generator) handleInPortsCreation(nodeCtx nodeContext, result *ir.Program) []ir.PortAddr {
+	runtimeFuncInportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.in)) // only needed for nodes with runtime func
+
+	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO here at all
+	// btw we can't use component's IO instead of nodeCtx because we need to know how many slots are used by parent
+	for addr := range nodeCtx.io.in {
+		addr := ir.PortAddr{
+			Path: nodeCtx.path + "/" + "in",
+			Name: addr.Name,
+			Idx:  addr.Idx,
+		}
+		result.Ports[addr] = 0
+		runtimeFuncInportAddrs = append(runtimeFuncInportAddrs, addr)
+	}
+
+	return runtimeFuncInportAddrs
+}
+
+// handleOutPortsCreation creates ir outports and inserts them into the given result.
+// It also creates and inserts void routines and connections for unused outports.
+// It returns slice of ir port addrs that could be used to create a func routine.
+func (Generator) handleOutPortsCreation(outports compiler.Ports, nodeCtx nodeContext, result *ir.Program) []ir.PortAddr {
+	runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
+
+	for name := range outports {
+		slotsCount, ok := nodeCtx.io.out[name]
+		if !ok { // outport not used by parent
+			// TODO insert ir void routine + connection
+			slotsCount = 1 // but component need at least 1 slot to write
+		}
+
+		for i := 0; i < int(slotsCount); i++ {
+			addr := ir.PortAddr{
+				Path: nodeCtx.path + "/" + "out",
+				Name: name,
+				Idx:  uint8(i),
+			}
+			result.Ports[addr] = 0
+			runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
+		}
+	}
+
+	return runtimeFuncOutportAddrs
+}
+
 func (Generator) lookupEntity(pkgs map[string]compiler.Pkg, ref compiler.EntityRef) (compiler.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
@@ -242,21 +238,27 @@ func (Generator) lookupEntity(pkgs map[string]compiler.Pkg, ref compiler.EntityR
 }
 
 // mapConnSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (Generator) mapConnSide(nodeCtxPath string, side compiler.ConnectionSide) ir.ConnectionSide {
-	senderAddr := ir.PortAddr{
+func (Generator) mapConnSide(nodeCtxPath string, side compiler.ConnectionSide, pathPostfix string) ir.ConnectionSide {
+	addr := ir.PortAddr{
 		Path: nodeCtxPath + "/" + side.PortAddr.Node,
 		Name: side.PortAddr.Name,
 		Idx:  side.PortAddr.Idx,
 	}
-	senderSelectors := make([]ir.Selector, 0, len(side.Selectors))
+
+	if side.PortAddr.Node != "in" && side.PortAddr.Node != "out" {
+		addr.Path += "/" + pathPostfix
+	}
+
+	selectors := make([]ir.Selector, 0, len(side.Selectors))
 	for _, selector := range side.Selectors {
-		senderSelectors = append(senderSelectors, ir.Selector{
+		selectors = append(selectors, ir.Selector{
 			RecField: selector.RecField,
 			ArrIdx:   selector.ArrIdx,
 		})
 	}
+
 	return ir.ConnectionSide{
-		PortAddr:  senderAddr,
-		Selectors: senderSelectors,
+		PortAddr:  addr,
+		Selectors: selectors,
 	}
 }

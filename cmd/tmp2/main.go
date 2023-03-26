@@ -124,7 +124,7 @@ func main() {
 							ReceiverSides: []compiler.ConnectionSide{
 								{
 									PortAddr: compiler.ConnPortAddr{
-										Node: "trigger.",
+										Node: "trigger",
 										RelPortAddr: compiler.RelPortAddr{
 											Name: "sig",
 											Idx:  0,

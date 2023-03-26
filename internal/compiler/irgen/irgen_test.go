@@ -17,7 +17,6 @@ func TestGenerator_Generate(t *testing.T) {
 	tests := []struct {
 		name    string
 		prog    compiler.Program
-		native  map[compiler.EntityRef]ir.FuncRef
 		want    ir.Program
 		wantErr bool
 	}{
@@ -82,9 +81,6 @@ func TestGenerator_Generate(t *testing.T) {
 						},
 					},
 				},
-			},
-			native: map[compiler.EntityRef]ir.FuncRef{
-				{Pkg: "flow", Name: "Trigger"}: {Pkg: "flow", Name: "Trigger"},
 			},
 			want: ir.Program{
 				Ports: map[ir.PortAddr]uint8{
@@ -153,7 +149,7 @@ func TestGenerator_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := irgen.New(tt.native)
+			g := irgen.New()
 			got, err := g.Generate(context.Background(), tt.prog)
 
 			assert.Equal(t, tt.want, got)
