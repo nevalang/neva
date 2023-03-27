@@ -64,14 +64,15 @@ type (
 	}
 	inportSlotContext struct {
 		// incomingConnectionsCount uint8 // how many senders (outports) writes to this receiver (inport slot)
-		// static msg?
+		staticMsgRef compiler.EntityRef
 	}
 )
 
 var (
-	ErrPkgNotFound    = errors.New("pkg not found")
-	ErrEntityNotFound = errors.New("entity not found")
-	ErrSubNode        = errors.New("sub node")
+	ErrPkgNotFound            = errors.New("pkg not found")
+	ErrEntityNotFound         = errors.New("entity not found")
+	ErrSubNode                = errors.New("sub node")
+	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
 // processNode fills given result with generated data
@@ -97,10 +98,15 @@ func (g Generator) processNode(
 		return nil
 	}
 
-	g.handleConnectionsCreation(component, nodeCtx, result)
+	slotsCount := g.handleConnectionsCreation(component, nodeCtx, result, len(component.Nodes))
 
 	for name, node := range component.Nodes {
-		subNodeCtx := g.getSubNodeCtx(nodeCtx, name, node)
+		nodeSlots, ok := slotsCount[name]
+		if !ok {
+			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
+		}
+
+		subNodeCtx := g.getSubNodeCtx(nodeCtx, name, node, nodeSlots)
 
 		if err := g.processNode(ctx, subNodeCtx, pkgs, result); err != nil {
 			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), name)
@@ -110,16 +116,27 @@ func (g Generator) processNode(
 	return nil
 }
 
-func (Generator) getSubNodeCtx(nodeCtx nodeContext, name string, node compiler.Node) nodeContext {
+func (Generator) getSubNodeCtx(
+	parentNodeCtx nodeContext,
+	name string,
+	node compiler.Node,
+	slotsCount portSlotsCount,
+) nodeContext {
 	subNodeCtx := nodeContext{
-		path: nodeCtx.path + "/" + name,
-		io: ioContext{ // TODO
+		path: parentNodeCtx.path + "/" + name,
+		io: ioContext{
 			in:  map[compiler.RelPortAddr]inportSlotContext{},
-			out: map[string]uint8{},
+			out: slotsCount.out,
 		},
 	}
 
-	instance, ok := nodeCtx.di[name]
+	for addr, msgRef := range node.StaticInports {
+		subNodeCtx.io.in[addr] = inportSlotContext{
+			staticMsgRef: msgRef,
+		}
+	}
+
+	instance, ok := parentNodeCtx.di[name]
 	if ok {
 		subNodeCtx.entityRef = instance.Ref
 		subNodeCtx.di = instance.ComponentDI
@@ -149,16 +166,30 @@ func (Generator) getFuncRoutine(
 	}
 }
 
+type portSlotsCount struct {
+	in  map[compiler.RelPortAddr]inportSlotContext // inportSlotContext will be empty
+	out map[string]uint8
+}
+
+// handleConnectionsCreation inserts ir connections into the given result
+// and returns map where keys are subnodes and values are ports slots usage.
 func (g Generator) handleConnectionsCreation(
 	component compiler.Component,
 	nodeCtx nodeContext,
 	result *ir.Program,
-) {
-	// inportsSlotsCount := map[string]uint8{}
-	outportsSlotsCount := map[string]uint8{}
+	nodesCount int,
+) map[string]portSlotsCount {
+	portsUsage := make(map[string]portSlotsCount, nodesCount)
+	inPortsSlotsSet := map[compiler.ConnPortAddr]struct{}{}
 
 	for _, conn := range component.Net {
-		outportsSlotsCount[conn.SenderSide.PortAddr.Name]++ // we assume every sender is unique
+		senderPortAddr := conn.SenderSide.PortAddr
+
+		// we assume every sender is unique and we don't increment same port addr twice
+		portsUsage[senderPortAddr.Node] = portSlotsCount{
+			in:  map[compiler.RelPortAddr]inportSlotContext{},
+			out: map[string]uint8{},
+		}
 
 		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide, "out")
 
@@ -166,12 +197,24 @@ func (g Generator) handleConnectionsCreation(
 		for _, receiverSide := range conn.ReceiverSides {
 			irSide := g.mapConnSide(nodeCtx.path, receiverSide, "in")
 			receiverSides = append(receiverSides, irSide)
+
+			if _, ok := inPortsSlotsSet[receiverSide.PortAddr]; !ok { // we can have same receiver for different senders
+				inPortsSlotsCount[NodeAndPort{
+					Node: conn.SenderSide.PortAddr.Node,
+					Port: conn.SenderSide.PortAddr.Name,
+				}]++
+			}
 		}
 
 		result.Connections = append(result.Connections, ir.Connection{
 			SenderSide:    senderSide,
 			ReceiverSides: receiverSides,
 		})
+	}
+
+	return portSlotsCount{
+		in:  inPortsSlotsCount,
+		out: outPortsSlotsCount,
 	}
 }
 
@@ -254,10 +297,7 @@ func (Generator) mapConnSide(nodeCtxPath string, side compiler.ConnectionSide, p
 
 	selectors := make([]ir.Selector, 0, len(side.Selectors))
 	for _, selector := range side.Selectors {
-		selectors = append(selectors, ir.Selector{
-			RecField: selector.RecField,
-			ArrIdx:   selector.ArrIdx,
-		})
+		selectors = append(selectors, ir.Selector(selector))
 	}
 
 	return ir.ConnectionSide{
