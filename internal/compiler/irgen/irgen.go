@@ -125,7 +125,7 @@ func (Generator) getSubNodeCtx(
 	subNodeCtx := nodeContext{
 		path: parentNodeCtx.path + "/" + name,
 		io: ioContext{
-			in:  map[compiler.RelPortAddr]inportSlotContext{},
+			in:  slotsCount.in,
 			out: slotsCount.out,
 		},
 	}
@@ -180,16 +180,20 @@ func (g Generator) handleConnectionsCreation(
 	nodesCount int,
 ) map[string]portSlotsCount {
 	portsUsage := make(map[string]portSlotsCount, nodesCount)
-	inPortsSlotsSet := map[compiler.ConnPortAddr]struct{}{}
+	inPortsSlotsSet := map[compiler.ConnPortAddr]bool{}
 
 	for _, conn := range component.Net {
 		senderPortAddr := conn.SenderSide.PortAddr
 
-		// we assume every sender is unique and we don't increment same port addr twice
-		portsUsage[senderPortAddr.Node] = portSlotsCount{
-			in:  map[compiler.RelPortAddr]inportSlotContext{},
-			out: map[string]uint8{},
+		if _, ok := portsUsage[senderPortAddr.Node]; !ok {
+			portsUsage[senderPortAddr.Node] = portSlotsCount{
+				in:  map[compiler.RelPortAddr]inportSlotContext{},
+				out: map[string]uint8{},
+			}
 		}
+
+		// we assume every sender is unique so we won't increment same port addr twice
+		portsUsage[senderPortAddr.Node].out[senderPortAddr.Name]++
 
 		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide, "out")
 
@@ -198,11 +202,11 @@ func (g Generator) handleConnectionsCreation(
 			irSide := g.mapConnSide(nodeCtx.path, receiverSide, "in")
 			receiverSides = append(receiverSides, irSide)
 
-			if _, ok := inPortsSlotsSet[receiverSide.PortAddr]; !ok { // we can have same receiver for different senders
-				inPortsSlotsCount[NodeAndPort{
-					Node: conn.SenderSide.PortAddr.Node,
-					Port: conn.SenderSide.PortAddr.Name,
-				}]++
+			// we can have same receiver for different senders and we don't want to count it twice
+			if !inPortsSlotsSet[receiverSide.PortAddr] {
+				portsUsage[senderPortAddr.Node].in[receiverSide.PortAddr.RelPortAddr] = inportSlotContext{
+					// staticMsgRef: compiler.EntityRef{},
+				}
 			}
 		}
 
@@ -212,10 +216,7 @@ func (g Generator) handleConnectionsCreation(
 		})
 	}
 
-	return portSlotsCount{
-		in:  inPortsSlotsCount,
-		out: outPortsSlotsCount,
-	}
+	return portsUsage
 }
 
 // handleInPortsCreation creates and inserts ir inports into the given result.
