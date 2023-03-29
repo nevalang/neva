@@ -25,6 +25,7 @@ func (h Helper) BaseTypeEntity(params ...ts.Param) compiler.Entity {
 
 /* --- COMPONENTS  --- */
 
+// MainComponent returns entity of kind "component" with main component type params and io
 func (h Helper) MainComponent(nodes map[string]compiler.Node, net []compiler.Connection) compiler.Entity {
 	return compiler.Entity{
 		Kind: compiler.ComponentEntity,

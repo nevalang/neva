@@ -17,6 +17,7 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
+// TODO static messages -> givers, voids and finish unit test
 func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Program, error) {
 	if len(prog.Pkgs) == 0 {
 		return ir.Program{}, ErrNoPkgs
