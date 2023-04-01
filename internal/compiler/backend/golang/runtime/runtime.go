@@ -7,14 +7,14 @@ import (
 )
 
 type Runtime struct {
+	runner    FuncRunner
 	connector Connector
-	runner    RoutineRunner
 }
 
-func NewRuntime(c Connector, r RoutineRunner) Runtime {
+func NewRuntime(c Connector, f FuncRunner) Runtime {
 	return Runtime{
 		connector: c,
-		runner:    r,
+		runner:    f,
 	}
 }
 
@@ -22,9 +22,10 @@ type (
 	Connector interface {
 		Connect(context.Context, []Connection) error
 	}
-	RoutineRunner interface {
-		Run(context.Context, Routines) error
+	FuncRunner interface {
+		Run(context.Context, []FuncRoutine) error
 	}
+	Func func(context.Context, FuncIO) error
 )
 
 var (
@@ -35,12 +36,12 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	startPort, ok := prog.Ports[PortAddr{Name: "start"}]
+	startPort, ok := prog.Ports[PortAddr{Name: "start"}] // enter?
 	if !ok {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort, ok := prog.Ports[PortAddr{Name: "exit"}]
+	exitPort, ok := prog.Ports[PortAddr{Name: "exit"}] // stop?
 	if !ok {
 		return 0, ErrExitPortNotFound
 	}
@@ -56,7 +57,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	})
 
 	g.Go(func() error {
-		if err := r.runner.Run(gctx, prog.Routines); err != nil {
+		if err := r.runner.Run(gctx, prog.Funcs); err != nil {
 			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)
 		}
 		return nil

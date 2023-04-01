@@ -36,50 +36,50 @@ func main() {
 			{Path: "trigger.out", Name: "v", Idx: 0}:   0,
 			{Path: "giver.out", Name: "code", Idx: 0}:  0,
 		},
-		Routines: ir.Routines{
-			Giver: map[ir.PortAddr]ir.Msg{
-				{
-					Path: "giver.out",
-					Name: "code",
-					Idx:  0,
-				}: {
-					Type: ir.IntMsg,
-					Int:  0,
-				},
-			},
-			Func: []ir.FuncRoutine{
-				{
-					Ref: ir.FuncRef{
-						Pkg:  "io",
-						Name: "Print",
-					},
-					IO: ir.FuncIO{
-						In: []ir.PortAddr{
-							{Path: "printer.in", Name: "v", Idx: 0},
-						},
-						Out: []ir.PortAddr{
-							{Path: "printer.out", Name: "v", Idx: 0},
-						},
-					},
-				},
-				{
-					Ref: ir.FuncRef{
-						Pkg:  "flow",
-						Name: "Trigger",
-					},
-					IO: ir.FuncIO{
-						In: []ir.PortAddr{
-							{Path: "trigger.in", Name: "sigs", Idx: 0},
-							{Path: "trigger.in", Name: "v", Idx: 0},
-						},
-						Out: []ir.PortAddr{
-							{Path: "trigger.out", Name: "v", Idx: 0},
-						},
-					},
-				},
-			},
-		},
-		Connections: []ir.Connection{
+		// Routines: ir.Routines{
+		// 	Giver: map[ir.PortAddr]ir.Msg{
+		// 		{
+		// 			Path: "giver.out",
+		// 			Name: "code",
+		// 			Idx:  0,
+		// 		}: {
+		// 			Type: ir.IntMsg,
+		// 			Int:  0,
+		// 		},
+		// 	},
+		// 	Func: []ir.Func{
+		// 		{
+		// 			Ref: ir.FuncRef{
+		// 				Pkg:  "io",
+		// 				Name: "Print",
+		// 			},
+		// 			IO: ir.FuncIO{
+		// 				In: []ir.PortAddr{
+		// 					{Path: "printer.in", Name: "v", Idx: 0},
+		// 				},
+		// 				Out: []ir.PortAddr{
+		// 					{Path: "printer.out", Name: "v", Idx: 0},
+		// 				},
+		// 			},
+		// 		},
+		// 		{
+		// 			Ref: ir.FuncRef{
+		// 				Pkg:  "flow",
+		// 				Name: "Trigger",
+		// 			},
+		// 			IO: ir.FuncIO{
+		// 				In: []ir.PortAddr{
+		// 					{Path: "trigger.in", Name: "sigs", Idx: 0},
+		// 					{Path: "trigger.in", Name: "v", Idx: 0},
+		// 				},
+		// 				Out: []ir.PortAddr{
+		// 					{Path: "trigger.out", Name: "v", Idx: 0},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+		Net: []ir.Connection{
 			{
 				SenderSide: ir.ConnectionSide{
 					PortAddr: ir.PortAddr{

@@ -77,7 +77,7 @@ func TestGenerator_Generate(t *testing.T) {
 								},
 								[]compiler.Connection{
 									{
-										SenderSide: compiler.ConnectionSide{
+										SenderSide: compiler.SenderConnectionSide{
 											PortAddr: compiler.ConnPortAddr{
 												Node: "in",
 												RelPortAddr: compiler.RelPortAddr{
@@ -85,7 +85,7 @@ func TestGenerator_Generate(t *testing.T) {
 												},
 											},
 										},
-										ReceiverSides: []compiler.ConnectionSide{
+										ReceiverSides: []compiler.PortConnectionSide{
 											{
 												PortAddr: compiler.ConnPortAddr{
 													Node: "trigger.",
@@ -97,7 +97,7 @@ func TestGenerator_Generate(t *testing.T) {
 										},
 									},
 									{
-										SenderSide: compiler.ConnectionSide{
+										SenderSide: compiler.SenderConnectionSide{
 											PortAddr: compiler.ConnPortAddr{
 												Node: "trigger",
 												RelPortAddr: compiler.RelPortAddr{
@@ -105,7 +105,7 @@ func TestGenerator_Generate(t *testing.T) {
 												},
 											},
 										},
-										ReceiverSides: []compiler.ConnectionSide{
+										ReceiverSides: []compiler.PortConnectionSide{
 											{
 												PortAddr: compiler.ConnPortAddr{
 													Node: "out.exit.",
@@ -135,7 +135,7 @@ func TestGenerator_Generate(t *testing.T) {
 					Giver: map[ir.PortAddr]ir.Msg{
 						{Path: "giver.out", Name: "code"}: {Type: ir.IntMsg, Int: 0},
 					},
-					Func: []ir.FuncRoutine{
+					Func: []ir.Func{
 						{
 							Ref: ir.FuncRef{Pkg: "flow", Name: "Trigger"},
 							IO: ir.FuncIO{
@@ -150,7 +150,7 @@ func TestGenerator_Generate(t *testing.T) {
 						},
 					},
 				},
-				Connections: []ir.Connection{
+				Net: []ir.Connection{
 					{
 						SenderSide: ir.ConnectionSide{
 							PortAddr: ir.PortAddr{Name: "start"},

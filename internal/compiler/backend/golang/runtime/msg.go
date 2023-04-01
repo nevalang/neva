@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// Msg methods don't return errors because they can be used not only at startup.
+// If runtime functions need to validate message at startup, they must do it by themselves.
 type Msg interface {
 	fmt.Stringer
 	Bool() bool

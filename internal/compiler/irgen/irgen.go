@@ -17,7 +17,6 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
-// TODO static messages -> givers, voids and finish unit test
 func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Program, error) {
 	if len(prog.Pkgs) == 0 {
 		return ir.Program{}, ErrNoPkgs
@@ -39,9 +38,10 @@ func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Prog
 	}
 
 	result := ir.Program{
-		Ports:       map[ir.PortAddr]uint8{},
-		Routines:    ir.Routines{},
-		Connections: []ir.Connection{},
+		Ports: map[ir.PortAddr]uint8{},
+		Net:   []ir.Connection{},
+		Funcs: []ir.Func{},
+		Msgs:  map[string]ir.Msg{},
 	}
 	if err := g.processNode(ctx, rootNodeCtx, prog.Pkgs, &result); err != nil {
 		return ir.Program{}, fmt.Errorf("process root node: %w", err)
@@ -95,11 +95,11 @@ func (g Generator) processNode(
 
 	if isNative := len(component.Net) == 0; isNative {
 		funcRoutine := g.getFuncRoutine(nodeCtx, inportAddrs, outPortAddrs)
-		result.Routines.Func = append(result.Routines.Func, funcRoutine)
+		result.Funcs = append(result.Funcs, funcRoutine)
 		return nil
 	}
 
-	slotsCount := g.handleConnectionsCreation(component, nodeCtx, result, len(component.Nodes))
+	slotsCount := g.handleNetwork(pkgs, component.Net, nodeCtx, result)
 
 	for name, node := range component.Nodes {
 		nodeSlots, ok := slotsCount[name]
@@ -154,8 +154,8 @@ func (Generator) getFuncRoutine(
 	nodeCtx nodeContext,
 	runtimeFuncInportAddrs []ir.PortAddr,
 	runtimeFuncOutPortAddrs []ir.PortAddr,
-) ir.FuncRoutine {
-	return ir.FuncRoutine{
+) ir.Func {
+	return ir.Func{
 		Ref: ir.FuncRef{
 			Pkg:  nodeCtx.entityRef.Pkg,
 			Name: nodeCtx.entityRef.Name,
@@ -172,18 +172,18 @@ type portSlotsCount struct {
 	out map[string]uint8
 }
 
-// handleConnectionsCreation inserts ir connections into the given result
+// handleNetwork inserts ir connections into the given result
 // and returns map where keys are subnodes and values are ports slots usage.
-func (g Generator) handleConnectionsCreation(
-	component compiler.Component,
+func (g Generator) handleNetwork(
+	pkgs map[string]compiler.Pkg,
+	net []compiler.Connection, // pass only net
 	nodeCtx nodeContext,
 	result *ir.Program,
-	nodesCount int,
 ) map[string]portSlotsCount {
-	portsUsage := make(map[string]portSlotsCount, nodesCount)
+	portsUsage := map[string]portSlotsCount{}
 	inPortsSlotsSet := map[compiler.ConnPortAddr]bool{}
 
-	for _, conn := range component.Net {
+	for _, conn := range net {
 		senderPortAddr := conn.SenderSide.PortAddr
 
 		if _, ok := portsUsage[senderPortAddr.Node]; !ok {
@@ -196,11 +196,14 @@ func (g Generator) handleConnectionsCreation(
 		// we assume every sender is unique so we won't increment same port addr twice
 		portsUsage[senderPortAddr.Node].out[senderPortAddr.Name]++
 
-		senderSide := g.mapConnSide(nodeCtx.path, conn.SenderSide, "out")
+		senderSide, err := g.handleSenderSide(pkgs, nodeCtx.path, conn.SenderSide)
+		if err != nil {
+			panic(err)
+		}
 
 		receiverSides := make([]ir.ConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
-			irSide := g.mapConnSide(nodeCtx.path, receiverSide, "in")
+			irSide := g.mapPortSide(nodeCtx.path, receiverSide, "in")
 			receiverSides = append(receiverSides, irSide)
 
 			// we can have same receiver for different senders and we don't want to count it twice
@@ -211,7 +214,7 @@ func (g Generator) handleConnectionsCreation(
 			}
 		}
 
-		result.Connections = append(result.Connections, ir.Connection{
+		result.Net = append(result.Net, ir.Connection{
 			SenderSide:    senderSide,
 			ReceiverSides: receiverSides,
 		})
@@ -285,8 +288,47 @@ func (Generator) lookupEntity(pkgs map[string]compiler.Pkg, ref compiler.EntityR
 	return entity, nil
 }
 
-// mapConnSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (Generator) mapConnSide(nodeCtxPath string, side compiler.ConnectionSide, pathPostfix string) ir.ConnectionSide {
+// handleSenderSide checks if there's a message sender. If not, it acts just like a mapPortSide.
+// Otherwise it lookups the message, creates outport and giver routine.
+func (g Generator) handleSenderSide(
+	pkgs map[string]compiler.Pkg,
+	nodeCtxPath string,
+	side compiler.SenderConnectionSide,
+	result *ir.Program,
+) (ir.ConnectionSide, error) { // return giver routine and ports also
+	if side.MsgRef == nil {
+		return g.mapPortSide(nodeCtxPath, side.PortConnectionSide, "out"), nil
+	}
+
+	msg, err := g.lookupEntity(pkgs, *side.MsgRef)
+	if err != nil {
+		panic(err)
+	}
+
+	result.Msgs[]
+
+	// insert that message into result
+	// add a giver runtime function instance with that msg
+	// and bound outport from routine to this side
+
+	giverOutport := ir.PortAddr{
+		Path: nodeCtxPath,
+		Name: side.MsgRef.Pkg + "." + side.MsgRef.Name,
+	}
+
+	selectors := make([]ir.Selector, 0, len(side.Selectors))
+	for _, selector := range side.Selectors {
+		selectors = append(selectors, ir.Selector(selector))
+	}
+
+	return ir.ConnectionSide{
+		PortAddr:  giverOutport,
+		Selectors: selectors,
+	}, nil
+}
+
+// mapPortSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
+func (Generator) mapPortSide(nodeCtxPath string, side compiler.PortConnectionSide, pathPostfix string) ir.ConnectionSide {
 	addr := ir.PortAddr{
 		Path: nodeCtxPath + "/" + side.PortAddr.Node,
 		Name: side.PortAddr.Name,

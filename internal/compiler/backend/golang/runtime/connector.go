@@ -13,12 +13,12 @@ var (
 	ErrSelectorReceiving = errors.New("selector before receiving")
 )
 
-type ConnectorImpl struct {
+type DefaultConnector struct {
 	interceptor Interceptor
 }
 
 func NewConnector(interceptor Interceptor) Connector {
-	return ConnectorImpl{
+	return DefaultConnector{
 		interceptor: interceptor,
 	}
 }
@@ -29,7 +29,7 @@ type Interceptor interface {
 	AfterReceiving(from, to ConnectionSideMeta, msg Msg)
 }
 
-func (c ConnectorImpl) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
+func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
 	g, gctx := WithContext(ctx)
 
 	for i := range conns {
@@ -45,7 +45,7 @@ func (c ConnectorImpl) Connect(ctx context.Context, conns []Connection) error { 
 	return g.Wait()
 }
 
-func (c ConnectorImpl) broadcast(ctx context.Context, conn Connection) error {
+func (c DefaultConnector) broadcast(ctx context.Context, conn Connection) error {
 	var err error
 	for {
 		select {
@@ -67,7 +67,7 @@ func (c ConnectorImpl) broadcast(ctx context.Context, conn Connection) error {
 }
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c ConnectorImpl) distribute(
+func (c DefaultConnector) distribute(
 	ctx context.Context,
 	msg Msg,
 	senderMeta ConnectionSideMeta,
@@ -109,7 +109,7 @@ func (c ConnectorImpl) distribute(
 	return nil
 }
 
-func (c ConnectorImpl) applySelector(msg Msg, selectors []Selector) (Msg, error) {
+func (c DefaultConnector) applySelector(msg Msg, selectors []Selector) (Msg, error) {
 	if len(selectors) == 0 {
 		return msg, nil
 	}
@@ -127,18 +127,18 @@ func (c ConnectorImpl) applySelector(msg Msg, selectors []Selector) (Msg, error)
 	)
 }
 
-/* ---  INTERCEPTOR ---*/
+type DefaultInterceptor struct{}
 
-type InterceptorImlp struct{}
-
-func (i InterceptorImlp) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
+func (i DefaultInterceptor) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
 	fmt.Printf("after sending %v -> %v\n", from, msg)
 	return msg
 }
-func (i InterceptorImlp) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
+
+func (i DefaultInterceptor) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
 	fmt.Printf("before receiving %v <- %v <- %v\n", to, msg, from)
 	return msg
 }
-func (i InterceptorImlp) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {
+
+func (i DefaultInterceptor) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {
 	fmt.Printf("after receiving %v -> %v -> %v\n", from, msg, to)
 }

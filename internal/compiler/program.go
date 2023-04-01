@@ -108,11 +108,17 @@ type Port struct {
 }
 
 type Connection struct {
-	SenderSide    ConnectionSide
-	ReceiverSides []ConnectionSide
+	SenderSide    SenderConnectionSide
+	ReceiverSides []PortConnectionSide
 }
 
-type ConnectionSide struct {
+// SenderConnectionSide can have outport or message as a source of data
+type SenderConnectionSide struct {
+	MsgRef *EntityRef // if not nil then port addr must not be used
+	PortConnectionSide
+}
+
+type PortConnectionSide struct {
 	PortAddr  ConnPortAddr
 	Selectors []Selector
 }

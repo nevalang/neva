@@ -87,17 +87,19 @@ func main() {
 						),
 					}, []compiler.Connection{
 						{
-							SenderSide: compiler.ConnectionSide{
-								PortAddr: compiler.ConnPortAddr{
-									Node: "in",
-									RelPortAddr: compiler.RelPortAddr{
-										Name: "start",
-										Idx:  0,
+							SenderSide: compiler.SenderConnectionSide{
+								PortConnectionSide: compiler.PortConnectionSide{
+									PortAddr: compiler.ConnPortAddr{
+										Node: "in",
+										RelPortAddr: compiler.RelPortAddr{
+											Name: "start",
+											Idx:  0,
+										},
 									},
+									Selectors: []compiler.Selector{},
 								},
-								Selectors: []compiler.Selector{},
 							},
-							ReceiverSides: []compiler.ConnectionSide{
+							ReceiverSides: []compiler.PortConnectionSide{
 								{
 									PortAddr: compiler.ConnPortAddr{
 										Node: "print",
@@ -110,42 +112,42 @@ func main() {
 								},
 							},
 						},
+						// {
+						// 	SenderSide: compiler.PortConnectionSide{
+						// 		PortAddr: compiler.ConnPortAddr{
+						// 			Node: "print",
+						// 			RelPortAddr: compiler.RelPortAddr{
+						// 				Name: "v",
+						// 				Idx:  0,
+						// 			},
+						// 		},
+						// 		Selectors: []compiler.Selector{},
+						// 	},
+						// 	ReceiverSides: []compiler.PortConnectionSide{
+						// 		{
+						// 			PortAddr: compiler.ConnPortAddr{
+						// 				Node: "trigger",
+						// 				RelPortAddr: compiler.RelPortAddr{
+						// 					Name: "sig",
+						// 					Idx:  0,
+						// 				},
+						// 			},
+						// 			Selectors: []compiler.Selector{},
+						// 		},
+						// 	},
+						// },
 						{
-							SenderSide: compiler.ConnectionSide{
-								PortAddr: compiler.ConnPortAddr{
-									Node: "print",
-									RelPortAddr: compiler.RelPortAddr{
-										Name: "v",
-										Idx:  0,
-									},
-								},
-								Selectors: []compiler.Selector{},
-							},
-							ReceiverSides: []compiler.ConnectionSide{
-								{
-									PortAddr: compiler.ConnPortAddr{
-										Node: "trigger",
-										RelPortAddr: compiler.RelPortAddr{
-											Name: "sig",
-											Idx:  0,
-										},
-									},
-									Selectors: []compiler.Selector{},
-								},
-							},
-						},
-						{
-							SenderSide: compiler.ConnectionSide{
-								PortAddr: compiler.ConnPortAddr{
-									Node: "trigger",
-									RelPortAddr: compiler.RelPortAddr{
-										Name: "v",
-										Idx:  0,
-									},
-								},
-								Selectors: []compiler.Selector{},
-							},
-							ReceiverSides: []compiler.ConnectionSide{
+							// SenderSide: compiler.PortConnectionSide{
+							// 	PortAddr: compiler.ConnPortAddr{
+							// 		Node: "trigger",
+							// 		RelPortAddr: compiler.RelPortAddr{
+							// 			Name: "v",
+							// 			Idx:  0,
+							// 		},
+							// 	},
+							// 	Selectors: []compiler.Selector{},
+							// },
+							ReceiverSides: []compiler.PortConnectionSide{
 								{
 									PortAddr: compiler.ConnPortAddr{
 										Node: "out",
