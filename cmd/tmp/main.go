@@ -5,8 +5,8 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/emil14/neva/internal/compiler/backend/golang"
-	"github.com/emil14/neva/internal/compiler/ir"
+	"github.com/nevalang/nevalang/internal/compiler/backend/golang"
+	"github.com/nevalang/nevalang/internal/compiler/ir"
 )
 
 var efs = golang.Efs
@@ -218,7 +218,7 @@ func putGoMod() {
 		}
 	}()
 
-	_, err = f.WriteString("module github.com/emil14/neva")
+	_, err = f.WriteString("module github.com/nevalang/nevalang")
 	if err != nil {
 		panic(err)
 	}

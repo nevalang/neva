@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	ts "github.com/emil14/neva/pkg/types"
+	ts "github.com/nevalang/nevalang/pkg/types"
 )
 
 type Program struct { // TODO get rid of this?
@@ -19,7 +19,7 @@ type Entity struct {
 	Exported  bool
 	Kind      EntityKind
 	Msg       Msg
-	Type      ts.Def // FIXME https://github.com/emil14/neva/issues/186
+	Type      ts.Def // FIXME https://github.com/nevalang/nevalang/issues/186
 	Interface Interface
 	Component Component
 }

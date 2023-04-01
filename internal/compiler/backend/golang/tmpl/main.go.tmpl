@@ -5,9 +5,9 @@ import (
     "context"
     "os"
 
-    "github.com/emil14/neva/internal/compiler/backend/golang/runtime"
+    "github.com/nevalang/nevalang/internal/compiler/backend/golang/runtime"
     {{- range .Routines.Func}}
-    "github.com/emil14/neva/internal/compiler/backend/golang/runtime/std/{{.Ref.Pkg}}"
+    "github.com/nevalang/nevalang/internal/compiler/backend/golang/runtime/std/{{.Ref.Pkg}}"
     {{- end}}
 )
 

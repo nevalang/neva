@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	ts "github.com/emil14/neva/pkg/types"
+	ts "github.com/nevalang/nevalang/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
 

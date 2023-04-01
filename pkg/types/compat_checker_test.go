@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	ts "github.com/emil14/neva/pkg/types"
 	"github.com/golang/mock/gomock"
+	ts "github.com/nevalang/nevalang/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 

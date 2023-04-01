@@ -5,10 +5,10 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/compiler/backend/golang"
-	"github.com/emil14/neva/internal/compiler/helper"
-	"github.com/emil14/neva/internal/compiler/irgen"
+	"github.com/nevalang/nevalang/internal/compiler"
+	"github.com/nevalang/nevalang/internal/compiler/backend/golang"
+	"github.com/nevalang/nevalang/internal/compiler/helper"
+	"github.com/nevalang/nevalang/internal/compiler/irgen"
 )
 
 var efs = golang.Efs
@@ -228,7 +228,7 @@ func putGoMod() {
 		}
 	}()
 
-	_, err = f.WriteString("module github.com/emil14/neva")
+	_, err = f.WriteString("module github.com/nevalang/nevalang")
 	if err != nil {
 		panic(err)
 	}

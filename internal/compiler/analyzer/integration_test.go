@@ -10,10 +10,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/emil14/neva/internal/compiler"
-	"github.com/emil14/neva/internal/compiler/analyzer"
-	"github.com/emil14/neva/internal/compiler/helper"
-	ts "github.com/emil14/neva/pkg/types"
+	"github.com/nevalang/nevalang/internal/compiler"
+	"github.com/nevalang/nevalang/internal/compiler/analyzer"
+	"github.com/nevalang/nevalang/internal/compiler/helper"
+	ts "github.com/nevalang/nevalang/pkg/types"
 )
 
 var h helper.Helper

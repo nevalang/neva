@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/emil14/neva/internal/compiler/ir"
+	"github.com/nevalang/nevalang/internal/compiler/ir"
 )
 
 type Compiler struct {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler/backend/golang/runtime"
+	"github.com/nevalang/nevalang/internal/compiler/backend/golang/runtime"
 )
 
 func Void(ctx context.Context, io runtime.FuncIO) error {

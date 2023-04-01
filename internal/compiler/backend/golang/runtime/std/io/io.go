@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/emil14/neva/internal/compiler/backend/golang/runtime"
+	"github.com/nevalang/nevalang/internal/compiler/backend/golang/runtime"
 )
 
 func Read(ctx context.Context, io runtime.FuncIO) error {

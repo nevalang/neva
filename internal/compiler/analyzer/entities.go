@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emil14/neva/internal/compiler"
+	"github.com/nevalang/nevalang/internal/compiler"
 )
 
 var (
@@ -62,7 +62,7 @@ func (a Analyzer) analyzeEntity(name string, scope Scope) (compiler.Entity, map[
 		return compiler.Entity{}, nil, errors.Join(ErrScopeGetLocalEntity, err)
 	}
 
-	switch entity.Kind { // https://github.com/emil14/neva/issues/186
+	switch entity.Kind { // https://github.com/nevalang/nevalang/issues/186
 	case compiler.TypeEntity:
 		resolvedDef, usedTypeEntities, err := a.analyzeType(name, scope)
 		if err != nil {

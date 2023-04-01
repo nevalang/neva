@@ -3,7 +3,7 @@ package analyzer
 import (
 	"errors"
 
-	"github.com/emil14/neva/internal/compiler"
+	"github.com/nevalang/nevalang/internal/compiler"
 )
 
 func (a Analyzer) analyzeInterface(
