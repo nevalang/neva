@@ -414,6 +414,7 @@ func (g Generator) handleSenderSide(
 		Path: nodeCtxPath,
 		Name: side.MsgRef.Pkg + "." + side.MsgRef.Name,
 	}
+	result.Ports[giverOutport] = 0
 
 	selectors := make([]ir.Selector, 0, len(side.Selectors))
 	for _, selector := range side.Selectors {

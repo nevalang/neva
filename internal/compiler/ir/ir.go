@@ -1,8 +1,8 @@
 package ir
 
 type Program struct {
-	Funcs []Func             // what functions to spawn and how
-	Net   []Connection       // how ports are connected to each other
+	Funcs []Func       // what functions to spawn and how
+	Net   []Connection // how ports are connected to each other
 	// TODO thing about naming (options are "StaticMemory", "StaticMessages", "Messages", "Memory")
 	Msgs  map[string]Msg     // predefined data that can be referred by funcs
 	Ports map[PortAddr]uint8 // ports and their buffers size
