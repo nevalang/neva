@@ -112,8 +112,8 @@ func (h Helper) MsgWithRefEntity(exported bool, ref *compiler.EntityRef) compile
 
 func (h Helper) IntMsgValue(v int) compiler.MsgValue {
 	return compiler.MsgValue{
-		Type: h.Inst("int"),
-		Int:  v,
+		TypeExpr: h.Inst("int"),
+		Int:      v,
 	}
 }
 
@@ -126,8 +126,8 @@ func (h Helper) IntMsg(exported bool, v int) compiler.Entity {
 
 func (h Helper) IntVecMsgEntity(exported bool, vv []compiler.Msg) compiler.Entity {
 	return h.MsgEntity(exported, compiler.MsgValue{
-		Type: h.Inst("vec", h.Inst("int")),
-		Vec:  vv,
+		TypeExpr: h.Inst("vec", h.Inst("int")),
+		Vec:      vv,
 	})
 }
 

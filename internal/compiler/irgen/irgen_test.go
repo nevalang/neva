@@ -78,10 +78,12 @@ func TestGenerator_Generate(t *testing.T) {
 								[]compiler.Connection{
 									{
 										SenderSide: compiler.SenderConnectionSide{
-											PortAddr: compiler.ConnPortAddr{
-												Node: "in",
-												RelPortAddr: compiler.RelPortAddr{
-													Name: "start",
+											PortConnectionSide: compiler.PortConnectionSide{
+												PortAddr: compiler.ConnPortAddr{
+													Node: "in",
+													RelPortAddr: compiler.RelPortAddr{
+														Name: "start",
+													},
 												},
 											},
 										},
@@ -98,10 +100,12 @@ func TestGenerator_Generate(t *testing.T) {
 									},
 									{
 										SenderSide: compiler.SenderConnectionSide{
-											PortAddr: compiler.ConnPortAddr{
-												Node: "trigger",
-												RelPortAddr: compiler.RelPortAddr{
-													Name: "v",
+											PortConnectionSide: compiler.PortConnectionSide{
+												PortAddr: compiler.ConnPortAddr{
+													Node: "trigger",
+													RelPortAddr: compiler.RelPortAddr{
+														Name: "v",
+													},
 												},
 											},
 										},
@@ -131,21 +135,28 @@ func TestGenerator_Generate(t *testing.T) {
 					{Path: "main/trigger/out", Name: "v", Idx: 0}:  0,
 					{Path: "main/giver/out", Name: "code", Idx: 0}: 0,
 				},
-				Routines: ir.Routines{
-					Giver: map[ir.PortAddr]ir.Msg{
-						{Path: "giver.out", Name: "code"}: {Type: ir.IntMsg, Int: 0},
+				Funcs: []ir.Func{
+					{
+						Ref: ir.FuncRef{
+							Pkg:  "flow",
+							Name: "Giver",
+						},
+						IO: ir.FuncIO{
+							Out: []ir.PortAddr{
+								// TODO
+							},
+						},
+						MsgRef: "",
 					},
-					Func: []ir.Func{
-						{
-							Ref: ir.FuncRef{Pkg: "flow", Name: "Trigger"},
-							IO: ir.FuncIO{
-								In: []ir.PortAddr{
-									{Path: "trigger.in", Name: "sigs"},
-									{Path: "trigger.in", Name: "v"},
-								},
-								Out: []ir.PortAddr{
-									{Path: "trigger.out", Name: "v"},
-								},
+					{
+						Ref: ir.FuncRef{Pkg: "flow", Name: "Trigger"},
+						IO: ir.FuncIO{
+							In: []ir.PortAddr{
+								{Path: "trigger.in", Name: "sigs"},
+								{Path: "trigger.in", Name: "v"},
+							},
+							Out: []ir.PortAddr{
+								{Path: "trigger.out", Name: "v"},
 							},
 						},
 					},

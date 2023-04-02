@@ -86,14 +86,18 @@ func (e EntityRef) String() string {
 }
 
 type Msg struct {
-	Ref   *EntityRef
+	Ref   *EntityRef // if nil then use value
 	Value MsgValue
 }
 
 type MsgValue struct {
-	Type ts.Expr
-	Int  int
-	Vec  []Msg
+	TypeExpr ts.Expr        // type of the message
+	Bool     bool           // only for messages with `bool`  type
+	Int      int            // only for messages with `int` type
+	Float    float64        // only for messages with `float` type
+	Str      string         // only for messages with `str` type
+	Vec      []Msg          // only for types with `vec` type
+	Map      map[string]Msg // only for types with `map` type
 }
 
 type IO struct {

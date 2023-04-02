@@ -44,7 +44,7 @@ func (a Analyzer) analyzeMsg(
 		return resolvedSubMsg, used, nil // TODO do we really want unpacking here?
 	}
 
-	resolvedType, err := a.resolver.Resolve(msg.Value.Type, scope)
+	resolvedType, err := a.resolver.Resolve(msg.Value.TypeExpr, scope)
 	if err != nil {
 		return compiler.Msg{}, nil, fmt.Errorf("%w: ", err)
 	}
@@ -57,7 +57,7 @@ func (a Analyzer) analyzeMsg(
 
 	msgToReturn := compiler.Msg{
 		Value: compiler.MsgValue{
-			Type: resolvedType,
+			TypeExpr: resolvedType,
 		},
 	}
 

@@ -65,7 +65,7 @@ type (
 	}
 	inportSlotContext struct {
 		// incomingConnectionsCount uint8 // how many senders (outports) writes to this receiver (inport slot)
-		staticMsgRef compiler.EntityRef
+		staticMsgRef compiler.EntityRef // do we need it?
 	}
 )
 
@@ -99,10 +99,32 @@ func (g Generator) processNode(
 		return nil
 	}
 
-	slotsCount := g.handleNetwork(pkgs, component.Net, nodeCtx, result)
+	handleNetRes, err := g.handleNetwork(pkgs, component.Net, nodeCtx, result)
+	if err != nil {
+		return fmt.Errorf("handle network: %w", err)
+	}
+
+	// handle giver creation
+	giverSpecMsg := g.buildGiverSpecMsg(handleNetRes.giverSpecEls, result)
+	giverSpecMsgPath := nodeCtx.path + "/" + "giver"
+	result.Msgs[giverSpecMsgPath] = giverSpecMsg
+	giverFunc := ir.Func{
+		Ref: ir.FuncRef{
+			Pkg:  "flow",
+			Name: "Giver",
+		},
+		IO: ir.FuncIO{
+			Out: make([]ir.PortAddr, 0, len(handleNetRes.giverSpecEls)),
+		},
+		MsgRef: giverSpecMsgPath,
+	}
+	result.Funcs = append(result.Funcs, giverFunc)
+	for _, specEl := range handleNetRes.giverSpecEls {
+		giverFunc.IO.Out = append(giverFunc.IO.Out, specEl.outPortAddr)
+	}
 
 	for name, node := range component.Nodes {
-		nodeSlots, ok := slotsCount[name]
+		nodeSlots, ok := handleNetRes.slotsUsage[name]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
 		}
@@ -115,6 +137,61 @@ func (g Generator) processNode(
 	}
 
 	return nil
+}
+
+// buildGiverSpecMsg translates every spec element to ir msg and puts it into result messages.
+// Then it builds and returns ir vec msg where every element points to corresponding spec element.
+func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *ir.Program) ir.Msg {
+	msg := ir.Msg{
+		Type: ir.VecMsg,
+		Vec:  make([]string, 0, len(specEls)),
+	}
+
+	// put string with outport name to static memory
+	// put int with outport slot number to static memory
+	// create spec message and put to static memory
+	// remember reference to that spec message
+	// collect all such references and return
+	for i, el := range specEls {
+		prefix := el.outPortAddr.Path + "/" + fmt.Sprint(i)
+
+		nameMsg := ir.Msg{
+			Type: ir.StrMsg,
+			Str:  el.outPortAddr.Name,
+		}
+		namePath := prefix + "/" + "name"
+		result.Msgs[namePath] = nameMsg
+
+		idxMsg := ir.Msg{
+			Type: ir.IntMsg,
+			Int:  int(el.outPortAddr.Idx),
+		}
+		idxPath := prefix + "/" + "idx"
+		result.Msgs[idxPath] = idxMsg
+
+		addrMsg := ir.Msg{
+			Type: ir.MapMsg,
+			Map: map[string]string{
+				"name": namePath,
+				"idx":  idxPath,
+			},
+		}
+		addrPath := prefix + "/" + "addr"
+		result.Msgs[addrPath] = addrMsg
+
+		specElMsg := ir.Msg{
+			Type: ir.MapMsg,
+			Map: map[string]string{
+				"msg":  el.msgToSendName,
+				"addr": addrPath,
+			},
+		}
+		result.Msgs[prefix] = addrMsg
+
+		msg.Vec = append(specElMsg.Vec, prefix)
+	}
+
+	return msg
 }
 
 func (Generator) getSubNodeCtx(
@@ -172,33 +249,43 @@ type portSlotsCount struct {
 	out map[string]uint8
 }
 
+type handleNetworkResult struct {
+	slotsUsage   map[string]portSlotsCount // node -> ports
+	giverSpecEls []giverSpecEl
+}
+
 // handleNetwork inserts ir connections into the given result
-// and returns map where keys are subnodes and values are ports slots usage.
+// and returns information about how many slots of each port is actually used in network.
 func (g Generator) handleNetwork(
 	pkgs map[string]compiler.Pkg,
 	net []compiler.Connection, // pass only net
 	nodeCtx nodeContext,
 	result *ir.Program,
-) map[string]portSlotsCount {
-	portsUsage := map[string]portSlotsCount{}
+) (handleNetworkResult, error) {
+	slotsUsage := map[string]portSlotsCount{}
 	inPortsSlotsSet := map[compiler.ConnPortAddr]bool{}
+	giverSpecEls := make([]giverSpecEl, 0, len(net))
 
 	for _, conn := range net {
 		senderPortAddr := conn.SenderSide.PortAddr
 
-		if _, ok := portsUsage[senderPortAddr.Node]; !ok {
-			portsUsage[senderPortAddr.Node] = portSlotsCount{
+		if _, ok := slotsUsage[senderPortAddr.Node]; !ok {
+			slotsUsage[senderPortAddr.Node] = portSlotsCount{
 				in:  map[compiler.RelPortAddr]inportSlotContext{},
 				out: map[string]uint8{},
 			}
 		}
 
 		// we assume every sender is unique so we won't increment same port addr twice
-		portsUsage[senderPortAddr.Node].out[senderPortAddr.Name]++
+		slotsUsage[senderPortAddr.Node].out[senderPortAddr.Name]++
 
-		senderSide, err := g.handleSenderSide(pkgs, nodeCtx.path, conn.SenderSide)
+		handleSenderResult, err := g.handleSenderSide(pkgs, nodeCtx.path, conn.SenderSide, result)
 		if err != nil {
-			panic(err)
+			return handleNetworkResult{}, fmt.Errorf("handle sender side: %w", err)
+		}
+
+		if handleSenderResult.giverParams != nil {
+			giverSpecEls = append(giverSpecEls, *handleSenderResult.giverParams)
 		}
 
 		receiverSides := make([]ir.ConnectionSide, 0, len(conn.ReceiverSides))
@@ -208,19 +295,22 @@ func (g Generator) handleNetwork(
 
 			// we can have same receiver for different senders and we don't want to count it twice
 			if !inPortsSlotsSet[receiverSide.PortAddr] {
-				portsUsage[senderPortAddr.Node].in[receiverSide.PortAddr.RelPortAddr] = inportSlotContext{
+				slotsUsage[senderPortAddr.Node].in[receiverSide.PortAddr.RelPortAddr] = inportSlotContext{
 					// staticMsgRef: compiler.EntityRef{},
 				}
 			}
 		}
 
 		result.Net = append(result.Net, ir.Connection{
-			SenderSide:    senderSide,
+			SenderSide:    handleSenderResult.irConnSide,
 			ReceiverSides: receiverSides,
 		})
 	}
 
-	return portsUsage
+	return handleNetworkResult{
+		slotsUsage:   slotsUsage,
+		giverSpecEls: giverSpecEls,
+	}, nil
 }
 
 // handleInPortsCreation creates and inserts ir inports into the given result.
@@ -288,28 +378,37 @@ func (Generator) lookupEntity(pkgs map[string]compiler.Pkg, ref compiler.EntityR
 	return entity, nil
 }
 
-// handleSenderSide checks if there's a message sender. If not, it acts just like a mapPortSide.
-// Otherwise it lookups the message, creates outport and giver routine.
+type handleSenderSideResult struct {
+	irConnSide  ir.ConnectionSide
+	giverParams *giverSpecEl // nil means sender is normal outport and no giver is needed
+}
+
+type giverSpecEl struct {
+	msgToSendName string // this message is already inserted into the result ir
+	outPortAddr   ir.PortAddr
+}
+
+// handleSenderSide checks if sender side refers to a message instead of port.
+// If not, then it acts just like a mapPortSide without any side-effects.
+// Otherwise it first builds the message, then inserts it into result, then returns params for giver creation.
 func (g Generator) handleSenderSide(
 	pkgs map[string]compiler.Pkg,
 	nodeCtxPath string,
 	side compiler.SenderConnectionSide,
 	result *ir.Program,
-) (ir.ConnectionSide, error) { // return giver routine and ports also
+) (handleSenderSideResult, error) {
 	if side.MsgRef == nil {
-		return g.mapPortSide(nodeCtxPath, side.PortConnectionSide, "out"), nil
+		irConnSide := g.mapPortSide(nodeCtxPath, side.PortConnectionSide, "out")
+		return handleSenderSideResult{irConnSide: irConnSide}, nil
 	}
 
-	msg, err := g.lookupEntity(pkgs, *side.MsgRef)
+	irMsg, err := g.buildIRMsg(pkgs, *side.MsgRef)
 	if err != nil {
-		panic(err)
+		return handleSenderSideResult{}, err
 	}
 
-	result.Msgs[]
-
-	// insert that message into result
-	// add a giver runtime function instance with that msg
-	// and bound outport from routine to this side
+	msgName := nodeCtxPath + "/" + side.MsgRef.Pkg + "." + side.MsgRef.Name
+	result.Msgs[msgName] = irMsg
 
 	giverOutport := ir.PortAddr{
 		Path: nodeCtxPath,
@@ -321,10 +420,51 @@ func (g Generator) handleSenderSide(
 		selectors = append(selectors, ir.Selector(selector))
 	}
 
-	return ir.ConnectionSide{
-		PortAddr:  giverOutport,
-		Selectors: selectors,
+	return handleSenderSideResult{
+		irConnSide: ir.ConnectionSide{
+			PortAddr:  giverOutport,
+			Selectors: selectors,
+		},
+		giverParams: &giverSpecEl{
+			msgToSendName: msgName,
+			outPortAddr:   giverOutport,
+		},
 	}, nil
+}
+
+// buildIRMsg recursively builds the message by following references and analyzing the type expressions.
+// it assumes all type expressions are resolved and it thus possible to 1-1 map them to IR types.
+func (g Generator) buildIRMsg(pkgs map[string]compiler.Pkg, ref compiler.EntityRef) (ir.Msg, error) {
+	entity, err := g.lookupEntity(pkgs, ref)
+	if err != nil {
+		return ir.Msg{}, fmt.Errorf("loopup entity: %w", err)
+	}
+
+	msg := entity.Msg
+
+	if msg.Ref != nil {
+		result, err := g.buildIRMsg(pkgs, *msg.Ref)
+		if err != nil {
+			return ir.Msg{}, fmt.Errorf("get ir msg: %w", err)
+		}
+
+		return result, nil
+	}
+
+	// TODO
+
+	// typ := msg.Value.TypeExpr
+
+	// instRef := typ.Inst.Ref
+
+	// switch {
+	// case msg.Value.TypeExpr:
+
+	// }
+
+	// msg.Value
+
+	return ir.Msg{}, nil
 }
 
 // mapPortSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute

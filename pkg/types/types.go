@@ -38,10 +38,10 @@ type Param struct {
 type Expr struct {
 	Lit  LitExpr // If empty then expr is inst
 	Inst InstExpr
-}
+} // TODO use pointers to represent emptyness?
 
 // Empty returns true if inst and lit both empty
-func (expr Expr) Empty() bool {
+func (expr Expr) Empty() bool { // TODO replace with nil pointer?
 	return expr.Inst.Empty() && expr.Lit.Empty()
 }
 
