@@ -25,6 +25,19 @@ Any runtime error is threated as a compiler bug.
 
 ## Performance
 
+### Complete asynchrony
+
+Data gets processed as soon as it arrives. Concider this pseudocode:
+
+```
+sumRoots(
+    getRootA(),
+    getRootB(),
+)
+```
+
+Both `getRootA()` and `getRootB()` return numbers, `sumRoots` find square roots for those numbers and returns their sum. In conventional programming we have to wait for `getRootA`, then for `getRootB` and then for `sumRoots`. In FBP all three `sumRoots`, `getRootA` and `getRootB` runs concurrently. No matter which finishes first, as soon as first number arrive, `sumRoots` start executing. At the time second number arrive, the first square root could already be calculated. Imagine the whole program work this way.
+
 ### Implicit parallelism
 
 FBP processes don't share memory and thus can run in parallel. Everything that can happen at the same time - will. Programmer doesn't intereact with threads, mutexes, coroutines or channels. Not only it eliminate concurrency-related bugs but also forces the program to utilize all CPU cores.
@@ -47,7 +60,19 @@ Implicit parallelism makes concurrent programming as simple as a regular one. Pr
 
 ### Static analysis
 
-Thanks to graph-like nature of FBP programs and static types compiler can catch most of the possible errors. And everything compiler can't catch is checked at program's startup. So there's just the actual program's logic that programmer have to think about.
+Thanks to graph-like nature of FBP programs and static types compiler can catch most of the possible errors. And everything compiler can't catch is checked at program's startup. So there's just the actual program's logic that programmer have to think about. Situations like "error was handled like a valid result" are impossible.
+
+### Interpreter mode
+
+Iterate fast by using interpreter instead of compiler for development and see changes in realtime. Nevalang architecture allows to use the exact same code analyzer and runtime without the need to generate executable. So you can develop like it's Node.js with TS out of the box. Then compile it to fast executable when it's ready for production.
+
+### Multiplayer mode
+
+Nevalang comes with development server that allowes several developers at the same time to connect and modify the same program. Everyone can see changes in realtime.
+
+### Observability out of the box
+
+Message interceptor is built into the runtime and every message has trace so it's extremely easy to keep track of how data is moving across the program. Same goes for errors - you can see where error arose and what way did it went. You can debug probram by making breakpoints on the graph connections and intercept messages. You can even substitute them on the fly to see what will happen.
 
 ### Visual programming
 
