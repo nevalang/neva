@@ -46,18 +46,18 @@ type (
 )
 
 func (a Analyzer) Analyze(ctx context.Context, prog compiler.Program) (compiler.Program, error) {
-	mainPkg, ok := prog.Pkgs["main"]
+	mainPkg, ok := prog["main"]
 	if !ok {
 		return compiler.Program{}, ErrMainPkgNotFound
 	}
 
-	if err := a.analyzeMainPkg(mainPkg, prog.Pkgs); err != nil {
+	if err := a.analyzeMainPkg(mainPkg, prog); err != nil {
 		return compiler.Program{}, errors.Join(ErrExecutablePkg, err)
 	}
 
-	resolvedPkgs := make(map[string]compiler.Pkg, len(prog.Pkgs))
-	for pkgName := range prog.Pkgs {
-		resolvedPkg, err := a.analyzePkg(pkgName, prog.Pkgs)
+	resolvedPkgs := make(map[string]compiler.Pkg, len(prog))
+	for pkgName := range prog {
+		resolvedPkg, err := a.analyzePkg(pkgName, prog)
 		if err != nil {
 			return compiler.Program{}, fmt.Errorf("%w: found in %v", errors.Join(ErrPkg, err), pkgName)
 		}

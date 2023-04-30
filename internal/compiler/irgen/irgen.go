@@ -18,7 +18,7 @@ func New() Generator {
 var ErrNoPkgs = errors.New("no packages")
 
 func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Program, error) {
-	if len(prog.Pkgs) == 0 {
+	if len(prog) == 0 {
 		return ir.Program{}, ErrNoPkgs
 	}
 
@@ -43,7 +43,7 @@ func (g Generator) Generate(ctx context.Context, prog compiler.Program) (ir.Prog
 		Funcs: []ir.Func{},
 		Msgs:  map[string]ir.Msg{},
 	}
-	if err := g.processNode(ctx, rootNodeCtx, prog.Pkgs, &result); err != nil {
+	if err := g.processNode(ctx, rootNodeCtx, prog, &result); err != nil {
 		return ir.Program{}, fmt.Errorf("process root node: %w", err)
 	}
 

@@ -45,6 +45,19 @@ generate(nodeCtx)
 
 # Ideas
 
+```
+all flags are optional
+
+neva:
+  run # run interpreter
+    - i | --interactive # interactive mode
+  build # run compiler
+    -t | --target = executable (default) | ir | go | js | ts | wasm
+
+neva run
+neva run -i | --interactive
+```
+
 ## GPT-like model for docs search
 
 # Naming/Refactoring

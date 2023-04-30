@@ -6,9 +6,7 @@ import (
 	ts "github.com/nevalang/nevalang/pkg/types"
 )
 
-type Program struct { // TODO get rid of this?
-	Pkgs map[string]Pkg // what about versions? files?
-}
+type Program map[string]Pkg
 
 type Pkg struct {
 	Imports  map[string]string // alias->path

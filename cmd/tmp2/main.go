@@ -30,138 +30,136 @@ func main() {
 	h := helper.Helper{}
 
 	prog := compiler.Program{
-		Pkgs: map[string]compiler.Pkg{
-			"io": {
-				Entities: map[string]compiler.Entity{
-					"Print": {
-						Exported: true,
-						Kind:     compiler.ComponentEntity,
-						Component: compiler.Component{
-							IO: compiler.IO{
-								In: map[string]compiler.Port{
-									"v": {},
-								},
-								Out: map[string]compiler.Port{
-									"v": {},
-								},
+		"io": {
+			Entities: map[string]compiler.Entity{
+				"Print": {
+					Exported: true,
+					Kind:     compiler.ComponentEntity,
+					Component: compiler.Component{
+						IO: compiler.IO{
+							In: map[string]compiler.Port{
+								"v": {},
+							},
+							Out: map[string]compiler.Port{
+								"v": {},
 							},
 						},
 					},
 				},
 			},
-			"flow": {
-				Entities: map[string]compiler.Entity{
-					"Trigger": {
-						Exported: true,
-						Kind:     compiler.ComponentEntity,
-						Component: compiler.Component{
-							IO: compiler.IO{
-								In: map[string]compiler.Port{
-									"sigs": {IsArr: true},
-									"v":    {},
-								},
-								Out: map[string]compiler.Port{
-									"v": {},
-								},
+		},
+		"flow": {
+			Entities: map[string]compiler.Entity{
+				"Trigger": {
+					Exported: true,
+					Kind:     compiler.ComponentEntity,
+					Component: compiler.Component{
+						IO: compiler.IO{
+							In: map[string]compiler.Port{
+								"sigs": {IsArr: true},
+								"v":    {},
+							},
+							Out: map[string]compiler.Port{
+								"v": {},
 							},
 						},
 					},
 				},
 			},
-			"main": {
-				Imports: h.Imports("io", "flow"),
-				Entities: map[string]compiler.Entity{
-					"code": h.IntMsg(false, 0),
-					"main": h.MainComponent(map[string]compiler.Node{
-						"print": h.Node(
-							h.NodeInstance(
-								"io", "Print",
-								h.Inst("str"),
-							),
+		},
+		"main": {
+			Imports: h.Imports("io", "flow"),
+			Entities: map[string]compiler.Entity{
+				"code": h.IntMsg(false, 0),
+				"main": h.MainComponent(map[string]compiler.Node{
+					"print": h.Node(
+						h.NodeInstance(
+							"io", "Print",
+							h.Inst("str"),
 						),
-						"trigger": h.NodeWithStaticPorts(
-							h.NodeInstance("flow", "Trigger", h.Rec(nil)),
-							map[compiler.RelPortAddr]compiler.EntityRef{
-								{Name: "v"}: {Name: "code"},
-							},
-						),
-					}, []compiler.Connection{
-						{
-							SenderSide: compiler.SenderConnectionSide{
-								PortConnectionSide: compiler.PortConnectionSide{
-									PortAddr: compiler.ConnPortAddr{
-										Node: "in",
-										RelPortAddr: compiler.RelPortAddr{
-											Name: "start",
-											Idx:  0,
-										},
+					),
+					"trigger": h.NodeWithStaticPorts(
+						h.NodeInstance("flow", "Trigger", h.Rec(nil)),
+						map[compiler.RelPortAddr]compiler.EntityRef{
+							{Name: "v"}: {Name: "code"},
+						},
+					),
+				}, []compiler.Connection{
+					{
+						SenderSide: compiler.SenderConnectionSide{
+							PortConnectionSide: compiler.PortConnectionSide{
+								PortAddr: compiler.ConnPortAddr{
+									Node: "in",
+									RelPortAddr: compiler.RelPortAddr{
+										Name: "start",
+										Idx:  0,
 									},
-									Selectors: []compiler.Selector{},
 								},
-							},
-							ReceiverSides: []compiler.PortConnectionSide{
-								{
-									PortAddr: compiler.ConnPortAddr{
-										Node: "print",
-										RelPortAddr: compiler.RelPortAddr{
-											Name: "v",
-											Idx:  0,
-										},
-									},
-									Selectors: []compiler.Selector{},
-								},
+								Selectors: []compiler.Selector{},
 							},
 						},
-						// {
-						// 	SenderSide: compiler.PortConnectionSide{
-						// 		PortAddr: compiler.ConnPortAddr{
-						// 			Node: "print",
-						// 			RelPortAddr: compiler.RelPortAddr{
-						// 				Name: "v",
-						// 				Idx:  0,
-						// 			},
+						ReceiverSides: []compiler.PortConnectionSide{
+							{
+								PortAddr: compiler.ConnPortAddr{
+									Node: "print",
+									RelPortAddr: compiler.RelPortAddr{
+										Name: "v",
+										Idx:  0,
+									},
+								},
+								Selectors: []compiler.Selector{},
+							},
+						},
+					},
+					// {
+					// 	SenderSide: compiler.PortConnectionSide{
+					// 		PortAddr: compiler.ConnPortAddr{
+					// 			Node: "print",
+					// 			RelPortAddr: compiler.RelPortAddr{
+					// 				Name: "v",
+					// 				Idx:  0,
+					// 			},
+					// 		},
+					// 		Selectors: []compiler.Selector{},
+					// 	},
+					// 	ReceiverSides: []compiler.PortConnectionSide{
+					// 		{
+					// 			PortAddr: compiler.ConnPortAddr{
+					// 				Node: "trigger",
+					// 				RelPortAddr: compiler.RelPortAddr{
+					// 					Name: "sig",
+					// 					Idx:  0,
+					// 				},
+					// 			},
+					// 			Selectors: []compiler.Selector{},
+					// 		},
+					// 	},
+					// },
+					{
+						// SenderSide: compiler.PortConnectionSide{
+						// 	PortAddr: compiler.ConnPortAddr{
+						// 		Node: "trigger",
+						// 		RelPortAddr: compiler.RelPortAddr{
+						// 			Name: "v",
+						// 			Idx:  0,
 						// 		},
-						// 		Selectors: []compiler.Selector{},
 						// 	},
-						// 	ReceiverSides: []compiler.PortConnectionSide{
-						// 		{
-						// 			PortAddr: compiler.ConnPortAddr{
-						// 				Node: "trigger",
-						// 				RelPortAddr: compiler.RelPortAddr{
-						// 					Name: "sig",
-						// 					Idx:  0,
-						// 				},
-						// 			},
-						// 			Selectors: []compiler.Selector{},
-						// 		},
-						// 	},
+						// 	Selectors: []compiler.Selector{},
 						// },
-						{
-							// SenderSide: compiler.PortConnectionSide{
-							// 	PortAddr: compiler.ConnPortAddr{
-							// 		Node: "trigger",
-							// 		RelPortAddr: compiler.RelPortAddr{
-							// 			Name: "v",
-							// 			Idx:  0,
-							// 		},
-							// 	},
-							// 	Selectors: []compiler.Selector{},
-							// },
-							ReceiverSides: []compiler.PortConnectionSide{
-								{
-									PortAddr: compiler.ConnPortAddr{
-										Node: "out",
-										RelPortAddr: compiler.RelPortAddr{
-											Name: "exit",
-											Idx:  0,
-										},
+						ReceiverSides: []compiler.PortConnectionSide{
+							{
+								PortAddr: compiler.ConnPortAddr{
+									Node: "out",
+									RelPortAddr: compiler.RelPortAddr{
+										Name: "exit",
+										Idx:  0,
 									},
-									Selectors: []compiler.Selector{},
 								},
+								Selectors: []compiler.Selector{},
 							},
 						},
-					}),
-				},
+					},
+				}),
 			},
 		},
 	}
