@@ -71,7 +71,7 @@ func (a Analyzer) analyzeNodes(
 	used := map[compiler.EntityRef]struct{}{}
 
 	for name, node := range nodes {
-		resolvedInstance, usedByInstance, err := a.analyzeNodeInstance(node.Instance, scope)
+		resolvedInstance, usedByInstance, err := a.analyzeNodeInstance(node, scope)
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w: %v", errors.Join(ErrNodeInstance, err), name)
 		}

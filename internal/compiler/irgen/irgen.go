@@ -56,7 +56,7 @@ type (
 		path      string             // path to current node including current node itself
 		entityRef compiler.EntityRef // refers to component (or interface?)
 		io        ioContext
-		di        map[string]compiler.Instance // instances must refer to components
+		di        map[string]compiler.Node // instances must refer to components
 	}
 	// ioContext describes how many port slots must be created and how many incoming connections inports have
 	ioContext struct {
@@ -219,8 +219,8 @@ func (Generator) getSubNodeCtx(
 		subNodeCtx.entityRef = instance.Ref
 		subNodeCtx.di = instance.ComponentDI
 	} else {
-		subNodeCtx.entityRef = node.Instance.Ref
-		subNodeCtx.di = node.Instance.ComponentDI
+		subNodeCtx.entityRef = node.Ref
+		subNodeCtx.di = node.ComponentDI
 	}
 
 	return subNodeCtx

@@ -83,23 +83,23 @@ func (Analyzer) analyzeExecCmpNodes(nodes map[string]compiler.Node, pkg compiler
 		}
 
 		var pkgWithEntity compiler.Pkg
-		if node.Instance.Ref.Pkg != "" {
-			p, ok := pkgs[node.Instance.Ref.Pkg]
+		if node.Ref.Pkg != "" {
+			p, ok := pkgs[node.Ref.Pkg]
 			if !ok {
-				return fmt.Errorf("%w: %v", ErrNodeRefPkgNotFound, node.Instance.Ref.Pkg)
+				return fmt.Errorf("%w: %v", ErrNodeRefPkgNotFound, node.Ref.Pkg)
 			}
 			pkgWithEntity = p
 		} else {
 			pkgWithEntity = pkg
 		}
 
-		entity, ok := pkgWithEntity.Entities[node.Instance.Ref.Name]
+		entity, ok := pkgWithEntity.Entities[node.Ref.Name]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrNodeRefEntityNotFound, node.Instance.Ref.Name)
+			return fmt.Errorf("%w: %v", ErrNodeRefEntityNotFound, node.Ref.Name)
 		}
 
 		if entity.Kind != compiler.ComponentEntity {
-			return fmt.Errorf("%w: %v: %v", ErrRootCompWithNotCompNodes, node.Instance.Ref.Name, entity.Kind)
+			return fmt.Errorf("%w: %v: %v", ErrRootCompWithNotCompNodes, node.Ref.Name, entity.Kind)
 		}
 	}
 
