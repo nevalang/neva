@@ -60,7 +60,7 @@ Implicit parallelism makes concurrent programming as simple as a regular one. Pr
 
 ### Static analysis
 
-Thanks to graph-like nature of FBP programs and static types compiler can catch most of the possible errors. And everything compiler can't catch is checked at program's startup. So there's just the actual program's logic that programmer have to think about. Situations like "error was handled like a valid result" are impossible.
+Thanks to graph-like nature of FBP programs and static types compiler can catch most of the possible errors. And everything compiler can't catch is checked at program's startup. So there's just the actual program's logic that programmer have to think about. Many situations like "error was handled like a valid result" or "class was initialized with null dependencies" are simply impossible.
 
 ### Interpreter mode
 
@@ -72,7 +72,7 @@ Nevalang comes with development server that allowes several developers at the sa
 
 ### Observability out of the box
 
-Message interceptor is built into the runtime and every message has trace so it's extremely easy to keep track of how data is moving across the program. Same goes for errors - you can see where error arose and what way did it went. You can debug probram by making breakpoints on the graph connections and intercept messages. You can even substitute them on the fly to see what will happen.
+Message interceptor is built into the runtime and every message has trace so it's extremely easy to keep track of how data is moving across the program. Same goes for errors - you can see where error arose and what way did it went. You can debug probram by setting breakpoints on the graph connections and intercept messages. You can even substitute them on the fly to see what will happen.
 
 ### Visual programming
 
