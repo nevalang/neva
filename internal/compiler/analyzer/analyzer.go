@@ -24,7 +24,7 @@ var (
 
 var h helper.Helper
 
-// TODO make sure there's no two or more connections with the same sender
+// TODO make sure there's <=1 connections with the same sender
 type Analyzer struct {
 	resolver  TypeExprResolver
 	checker   SubtypeChecker
@@ -37,7 +37,6 @@ type (
 		Resolve(ts.Expr, ts.Scope) (ts.Expr, error)
 	}
 	SubtypeChecker interface {
-		// TODO try to hide terminator params
 		Check(ts.Expr, ts.Expr, ts.TerminatorParams) error
 	}
 	TypeValidator interface {
@@ -55,18 +54,16 @@ func (a Analyzer) Analyze(ctx context.Context, prog compiler.Program) (compiler.
 		return compiler.Program{}, errors.Join(ErrExecutablePkg, err)
 	}
 
-	resolvedPkgs := make(map[string]compiler.Pkg, len(prog))
+	resolvedProg := make(map[string]compiler.Pkg, len(prog))
 	for pkgName := range prog {
 		resolvedPkg, err := a.analyzePkg(pkgName, prog)
 		if err != nil {
 			return compiler.Program{}, fmt.Errorf("%w: found in %v", errors.Join(ErrPkg, err), pkgName)
 		}
-		resolvedPkgs[pkgName] = resolvedPkg
+		resolvedProg[pkgName] = resolvedPkg
 	}
 
-	return compiler.Program{
-		Pkgs: resolvedPkgs,
-	}, nil
+	return resolvedProg, nil
 }
 
 // analyzeTypeParameters validates type parameters and resolves their constraints.
