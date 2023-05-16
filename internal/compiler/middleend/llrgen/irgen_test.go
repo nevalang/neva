@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/helper"
-	"github.com/nevalang/neva/internal/compiler/ir"
-	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/llrgen"
+	"github.com/nevalang/neva/internal/compiler/llrgen/helper"
 )
 
 var h helper.Helper
@@ -16,14 +16,14 @@ var h helper.Helper
 func TestGenerator_Generate(t *testing.T) {
 	tests := []struct {
 		name    string
-		prog    compiler.Program
-		want    ir.Program
+		prog    compiler.HLProgram
+		want    compiler.LLProgram
 		wantErr error
 	}{
 		// TODO - pkgs==nil test
 		{
 			name: "program that does nothing",
-			prog: compiler.Program{ // start -> trigger.sigs[0]; trigger.v = 0; trigger.v -> exit
+			prog: compiler.HLProgram{ // start -> trigger.sigs[0]; trigger.v = 0; trigger.v -> exit
 				"io": {
 					Entities: map[string]compiler.Entity{
 						"Print": {
@@ -124,8 +124,8 @@ func TestGenerator_Generate(t *testing.T) {
 					},
 				},
 			},
-			want: ir.Program{
-				Ports: map[ir.PortAddr]uint8{
+			want: compiler.LLProgram{
+				Ports: map[compiler.LLPortAddr]uint8{
 					{Path: "main/in", Name: "start"}:               0,
 					{Path: "main/out", Name: "exit"}:               0,
 					{Path: "trigger.in", Name: "sigs", Idx: 0}:     0,
@@ -133,60 +133,60 @@ func TestGenerator_Generate(t *testing.T) {
 					{Path: "main/trigger/out", Name: "v", Idx: 0}:  0,
 					{Path: "main/giver/out", Name: "code", Idx: 0}: 0,
 				},
-				Funcs: []ir.Func{
+				Funcs: []compiler.LLFunc{
 					{
-						Ref: ir.FuncRef{
+						Ref: compiler.LLFuncRef{
 							Pkg:  "flow",
 							Name: "Giver",
 						},
-						IO: ir.FuncIO{
-							Out: []ir.PortAddr{
+						IO: compiler.LLFuncIO{
+							Out: []compiler.LLPortAddr{
 								// TODO
 							},
 						},
 						MsgRef: "",
 					},
 					{
-						Ref: ir.FuncRef{Pkg: "flow", Name: "Trigger"},
-						IO: ir.FuncIO{
-							In: []ir.PortAddr{
+						Ref: compiler.LLFuncRef{Pkg: "flow", Name: "Trigger"},
+						IO: compiler.LLFuncIO{
+							In: []compiler.LLPortAddr{
 								{Path: "trigger.in", Name: "sigs"},
 								{Path: "trigger.in", Name: "v"},
 							},
-							Out: []ir.PortAddr{
+							Out: []compiler.LLPortAddr{
 								{Path: "trigger.out", Name: "v"},
 							},
 						},
 					},
 				},
-				Net: []ir.Connection{
+				Net: []compiler.LLConnection{
 					{
-						SenderSide: ir.ConnectionSide{
-							PortAddr: ir.PortAddr{Name: "start"},
+						SenderSide: compiler.LLConnectionSide{
+							PortAddr: compiler.LLPortAddr{Name: "start"},
 						},
-						ReceiverSides: []ir.ConnectionSide{
+						ReceiverSides: []compiler.LLConnectionSide{
 							{
-								PortAddr: ir.PortAddr{Path: "trigger.in", Name: "sigs"},
+								PortAddr: compiler.LLPortAddr{Path: "trigger.in", Name: "sigs"},
 							},
 						},
 					},
 					{
-						SenderSide: ir.ConnectionSide{
-							PortAddr: ir.PortAddr{Path: "giver.out", Name: "code"},
+						SenderSide: compiler.LLConnectionSide{
+							PortAddr: compiler.LLPortAddr{Path: "giver.out", Name: "code"},
 						},
-						ReceiverSides: []ir.ConnectionSide{
+						ReceiverSides: []compiler.LLConnectionSide{
 							{
-								PortAddr: ir.PortAddr{Path: "trigger.in", Name: "v"},
+								PortAddr: compiler.LLPortAddr{Path: "trigger.in", Name: "v"},
 							},
 						},
 					},
 					{
-						SenderSide: ir.ConnectionSide{
-							PortAddr: ir.PortAddr{Path: "trigger.out", Name: "v"},
+						SenderSide: compiler.LLConnectionSide{
+							PortAddr: compiler.LLPortAddr{Path: "trigger.out", Name: "v"},
 						},
-						ReceiverSides: []ir.ConnectionSide{
+						ReceiverSides: []compiler.LLConnectionSide{
 							{
-								PortAddr: ir.PortAddr{Name: "exit"},
+								PortAddr: compiler.LLPortAddr{Name: "exit"},
 							},
 						},
 					},
@@ -198,7 +198,7 @@ func TestGenerator_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := irgen.New()
+			g := llrgen.New()
 			got, err := g.Generate(context.Background(), tt.prog)
 
 			assert.Equal(t, tt.want, got)

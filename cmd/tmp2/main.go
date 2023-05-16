@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"io/fs"
 	"os"
-	"time"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
-	"github.com/nevalang/neva/internal/compiler/helper"
-	"github.com/nevalang/neva/internal/compiler/irgen"
+	"github.com/nevalang/neva/internal/compiler/middleend/llrgen"
+	"github.com/nevalang/neva/internal/compiler/middleend/llrgen/helper"
 )
 
 var efs = golang.Efs
@@ -30,7 +29,7 @@ func main() {
 
 	h := helper.Helper{}
 
-	prog := compiler.Program{
+	prog := compiler.HLProgram{
 		"io": {
 			Entities: map[string]compiler.Entity{
 				"Print": {
@@ -165,7 +164,7 @@ func main() {
 		},
 	}
 
-	irProg, err := irgen.Generator{}.Generate(nil, prog)
+	irProg, err := llrgen.Generator{}.Generate(nil, prog)
 	if err != nil {
 		panic(err)
 	}

@@ -10,7 +10,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/nevalang/neva/internal/compiler/ir"
+	"github.com/nevalang/neva/internal/compiler"
 )
 
 //go:embed tmpl/main.go.tmpl runtime
@@ -20,7 +20,7 @@ type Backend struct{}
 
 var ErrExecTmpl = errors.New("execute template")
 
-func (b Backend) GenerateTarget(ctx context.Context, prog ir.Program) ([]byte, error) {
+func (b Backend) GenerateTarget(ctx context.Context, prog compiler.LLProgram) ([]byte, error) {
 	tmpl, err := template.New("main.go.tmpl").Funcs(template.FuncMap{
 		"getMsg":           b.getMsg,
 		"getPorts":         b.getPortsFunc(prog.Ports),
@@ -41,15 +41,15 @@ func (b Backend) GenerateTarget(ctx context.Context, prog ir.Program) ([]byte, e
 
 var ErrUnknownMsgType = errors.New("unknown msg type")
 
-func (b Backend) getMsg(msg ir.Msg) (string, error) {
+func (b Backend) getMsg(msg compiler.LLMsg) (string, error) {
 	switch msg.Type {
-	case ir.IntMsg:
+	case compiler.LLIntMsg:
 		return fmt.Sprintf("runtime.NewIntMsg(%d)", msg.Int), nil
 	}
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func (b Backend) getConnComment(conn ir.Connection) string {
+func (b Backend) getConnComment(conn compiler.LLConnection) string {
 	s := b.fmtPortAddr(conn.SenderSide.PortAddr) + " -> "
 
 	for _, rcvr := range conn.ReceiverSides {
@@ -59,11 +59,11 @@ func (b Backend) getConnComment(conn ir.Connection) string {
 	return "// " + s
 }
 
-func (b Backend) fmtPortAddr(addr ir.PortAddr) string {
+func (b Backend) fmtPortAddr(addr compiler.LLPortAddr) string {
 	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Name, addr.Idx)
 }
 
-func (b Backend) getPortChVarName(addr ir.PortAddr) string {
+func (b Backend) getPortChVarName(addr compiler.LLPortAddr) string {
 	path := b.handleSpecialChars(addr.Path)
 	port := addr.Name
 	if path != "" {
@@ -72,7 +72,7 @@ func (b Backend) getPortChVarName(addr ir.PortAddr) string {
 	return fmt.Sprintf("%s%s%dPort", path, port, addr.Idx)
 }
 
-func (b Backend) getPortsFunc(ports map[ir.PortAddr]uint8) func(path, port string) string {
+func (b Backend) getPortsFunc(ports map[compiler.LLPortAddr]uint8) func(path, port string) string {
 	return func(path, port string) string {
 		var s string
 		for addr := range ports {

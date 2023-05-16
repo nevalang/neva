@@ -6,7 +6,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/types"
 )
 
-type Program map[string]Pkg
+// HLProgram represents a high level program
+type HLProgram map[string]Pkg
 
 type Pkg struct {
 	Imports  map[string]string // alias->path

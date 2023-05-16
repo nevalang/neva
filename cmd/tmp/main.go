@@ -5,8 +5,8 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
-	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 var efs = golang.Efs
@@ -25,8 +25,8 @@ func main() {
 
 	putRuntime()
 
-	bb, err := (golang.Backend{}).GenerateTarget(nil, ir.Program{
-		Ports: map[ir.PortAddr]uint8{
+	bb, err := (golang.Backend{}).GenerateTarget(nil, compiler.LLProgram{
+		Ports: map[compiler.LLPortAddr]uint8{
 			{Name: "start"}:                            0,
 			{Name: "exit"}:                             0,
 			{Path: "printer.in", Name: "v", Idx: 0}:    0,
@@ -36,127 +36,127 @@ func main() {
 			{Path: "trigger.out", Name: "v", Idx: 0}:   0,
 			{Path: "giver.out", Name: "code", Idx: 0}:  0,
 		},
-		// Routines: ir.Routines{
-		// 	Giver: map[ir.PortAddr]ir.Msg{
+		// Routines: compiler.LLRoutines{
+		// 	Giver: map[compiler.LLPortAddr]compiler.LLMsg{
 		// 		{
 		// 			Path: "giver.out",
 		// 			Name: "code",
 		// 			Idx:  0,
 		// 		}: {
-		// 			Type: ir.IntMsg,
+		// 			Type: compiler.LLIntMsg,
 		// 			Int:  0,
 		// 		},
 		// 	},
-		// 	Func: []ir.Func{
+		// 	Func: []compiler.LLFunc{
 		// 		{
-		// 			Ref: ir.FuncRef{
+		// 			Ref: compiler.LLFuncRef{
 		// 				Pkg:  "io",
 		// 				Name: "Print",
 		// 			},
-		// 			IO: ir.FuncIO{
-		// 				In: []ir.PortAddr{
+		// 			IO: compiler.LLFuncIO{
+		// 				In: []compiler.LLPortAddr{
 		// 					{Path: "printer.in", Name: "v", Idx: 0},
 		// 				},
-		// 				Out: []ir.PortAddr{
+		// 				Out: []compiler.LLPortAddr{
 		// 					{Path: "printer.out", Name: "v", Idx: 0},
 		// 				},
 		// 			},
 		// 		},
 		// 		{
-		// 			Ref: ir.FuncRef{
+		// 			Ref: compiler.LLFuncRef{
 		// 				Pkg:  "flow",
 		// 				Name: "Trigger",
 		// 			},
-		// 			IO: ir.FuncIO{
-		// 				In: []ir.PortAddr{
+		// 			IO: compiler.LLFuncIO{
+		// 				In: []compiler.LLPortAddr{
 		// 					{Path: "trigger.in", Name: "sigs", Idx: 0},
 		// 					{Path: "trigger.in", Name: "v", Idx: 0},
 		// 				},
-		// 				Out: []ir.PortAddr{
+		// 				Out: []compiler.LLPortAddr{
 		// 					{Path: "trigger.out", Name: "v", Idx: 0},
 		// 				},
 		// 			},
 		// 		},
 		// 	},
 		// },
-		Net: []ir.Connection{
+		Net: []compiler.LLConnection{
 			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
+				SenderSide: compiler.LLConnectionSide{
+					PortAddr: compiler.LLPortAddr{
 						Path: "",
 						Name: "start",
 						Idx:  0,
 					},
-					Selectors: []ir.Selector{},
+					Selectors: []compiler.LLSelector{},
 				},
-				ReceiverSides: []ir.ConnectionSide{
+				ReceiverSides: []compiler.LLConnectionSide{
 					{
-						PortAddr: ir.PortAddr{
+						PortAddr: compiler.LLPortAddr{
 							Path: "printer.in",
 							Name: "v",
 							Idx:  0,
 						},
-						Selectors: []ir.Selector{},
+						Selectors: []compiler.LLSelector{},
 					},
 				},
 			},
 			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
+				SenderSide: compiler.LLConnectionSide{
+					PortAddr: compiler.LLPortAddr{
 						Path: "printer.out",
 						Name: "v",
 						Idx:  0,
 					},
-					Selectors: []ir.Selector{},
+					Selectors: []compiler.LLSelector{},
 				},
-				ReceiverSides: []ir.ConnectionSide{
+				ReceiverSides: []compiler.LLConnectionSide{
 					{
-						PortAddr: ir.PortAddr{
+						PortAddr: compiler.LLPortAddr{
 							Path: "trigger.in",
 							Name: "sigs",
 							Idx:  0,
 						},
-						Selectors: []ir.Selector{},
+						Selectors: []compiler.LLSelector{},
 					},
 				},
 			},
 			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
+				SenderSide: compiler.LLConnectionSide{
+					PortAddr: compiler.LLPortAddr{
 						Path: "giver.out",
 						Name: "code",
 						Idx:  0,
 					},
-					Selectors: []ir.Selector{},
+					Selectors: []compiler.LLSelector{},
 				},
-				ReceiverSides: []ir.ConnectionSide{
+				ReceiverSides: []compiler.LLConnectionSide{
 					{
-						PortAddr: ir.PortAddr{
+						PortAddr: compiler.LLPortAddr{
 							Path: "trigger.in",
 							Name: "v",
 							Idx:  0,
 						},
-						Selectors: []ir.Selector{},
+						Selectors: []compiler.LLSelector{},
 					},
 				},
 			},
 			{
-				SenderSide: ir.ConnectionSide{
-					PortAddr: ir.PortAddr{
+				SenderSide: compiler.LLConnectionSide{
+					PortAddr: compiler.LLPortAddr{
 						Path: "trigger.out",
 						Name: "v",
 						Idx:  0,
 					},
-					Selectors: []ir.Selector{},
+					Selectors: []compiler.LLSelector{},
 				},
-				ReceiverSides: []ir.ConnectionSide{
+				ReceiverSides: []compiler.LLConnectionSide{
 					{
-						PortAddr: ir.PortAddr{
+						PortAddr: compiler.LLPortAddr{
 							Path: "",
 							Name: "exit",
 							Idx:  0,
 						},
-						Selectors: []ir.Selector{},
+						Selectors: []compiler.LLSelector{},
 					},
 				},
 			},

@@ -9,20 +9,6 @@ type Helper struct {
 	ts.Helper
 }
 
-/* --- TYPES  --- */
-
-func (h Helper) TypeEntity(exported bool, def ts.Def) compiler.Entity {
-	return compiler.Entity{
-		Exported: exported,
-		Kind:     compiler.TypeEntity,
-		Type:     def,
-	}
-}
-
-func (h Helper) BaseTypeEntity(params ...ts.Param) compiler.Entity {
-	return h.TypeEntity(false, h.BaseDef(params...))
-}
-
 /* --- COMPONENTS  --- */
 
 // MainComponent returns entity of kind "component" with main component type params and io
@@ -58,7 +44,7 @@ func (h Helper) Node(instance compiler.Instance) compiler.Node {
 }
 
 func (h Helper) NodeWithStaticPorts(
-	instance compiler.Instance,
+	instance compiler.Node,
 	ports map[compiler.RelPortAddr]compiler.EntityRef,
 ) compiler.Node {
 	return compiler.Node{
