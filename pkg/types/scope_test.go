@@ -3,7 +3,7 @@ package types_test
 import (
 	"errors"
 
-	ts "github.com/nevalang/nevalang/pkg/types"
+	ts "github.com/nevalang/neva/pkg/types"
 )
 
 var ErrDefaultScope = errors.New("default scope")

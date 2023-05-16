@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	ts "github.com/nevalang/nevalang/pkg/types"
+	ts "github.com/nevalang/neva/pkg/types"
 )
 
 type Program map[string]Pkg
@@ -17,7 +17,7 @@ type Entity struct {
 	Exported  bool
 	Kind      EntityKind
 	Msg       Msg
-	Type      ts.Def // FIXME https://github.com/nevalang/nevalang/issues/186
+	Type      ts.Def // FIXME https://github.com/nevalang/neva/issues/186
 	Interface Interface
 	Component Component
 }

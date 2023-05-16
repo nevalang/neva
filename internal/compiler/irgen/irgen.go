@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/nevalang/internal/compiler"
-	"github.com/nevalang/nevalang/internal/compiler/ir"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 type Generator struct{}

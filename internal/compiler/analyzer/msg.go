@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/nevalang/internal/compiler"
-	ts "github.com/nevalang/nevalang/pkg/types"
+	"github.com/nevalang/neva/internal/compiler"
+	ts "github.com/nevalang/neva/pkg/types"
 )
 
 var (

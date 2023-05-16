@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"io/fs"
 	"os"
+	"time"
 
-	"github.com/nevalang/nevalang/internal/compiler"
-	"github.com/nevalang/nevalang/internal/compiler/backend/golang"
-	"github.com/nevalang/nevalang/internal/compiler/helper"
-	"github.com/nevalang/nevalang/internal/compiler/irgen"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	"github.com/nevalang/neva/internal/compiler/helper"
+	"github.com/nevalang/neva/internal/compiler/irgen"
 )
 
 var efs = golang.Efs
@@ -226,7 +227,7 @@ func putGoMod() {
 		}
 	}()
 
-	_, err = f.WriteString("module github.com/nevalang/nevalang")
+	_, err = f.WriteString("module github.com/nevalang/neva")
 	if err != nil {
 		panic(err)
 	}

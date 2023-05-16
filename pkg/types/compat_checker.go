@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/nevalang/pkg/tools"
+	"github.com/nevalang/neva/pkg/tools"
 )
 
 var (

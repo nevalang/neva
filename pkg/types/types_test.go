@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	ts "github.com/nevalang/nevalang/pkg/types"
-	types "github.com/nevalang/nevalang/pkg/types"
+	ts "github.com/nevalang/neva/pkg/types"
+	types "github.com/nevalang/neva/pkg/types"
 )
 
 var h ts.Helper

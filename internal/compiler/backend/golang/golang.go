@@ -10,7 +10,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/nevalang/nevalang/internal/compiler/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 //go:embed tmpl/main.go.tmpl runtime

@@ -7,7 +7,7 @@ package types_test
 import (
 	reflect "reflect"
 
-	types "github.com/nevalang/nevalang/pkg/types"
+	types "github.com/nevalang/neva/pkg/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/nevalang/internal/compiler"
-	"github.com/nevalang/nevalang/internal/compiler/helper"
-	"github.com/nevalang/nevalang/pkg/tools"
-	ts "github.com/nevalang/nevalang/pkg/types"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/helper"
+	"github.com/nevalang/neva/pkg/tools"
+	ts "github.com/nevalang/neva/pkg/types"
 )
 
 var (

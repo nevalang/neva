@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/nevalang/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler"
 )
 
 var (

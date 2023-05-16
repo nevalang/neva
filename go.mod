@@ -1,4 +1,4 @@
-module github.com/nevalang/nevalang
+module github.com/nevalang/neva
 
 go 1.20
 

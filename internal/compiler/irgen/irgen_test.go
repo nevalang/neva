@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/nevalang/nevalang/internal/compiler"
-	"github.com/nevalang/nevalang/internal/compiler/helper"
-	"github.com/nevalang/nevalang/internal/compiler/ir"
-	"github.com/nevalang/nevalang/internal/compiler/irgen"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/helper"
+	"github.com/nevalang/neva/internal/compiler/ir"
+	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/stretchr/testify/assert"
 )
 
