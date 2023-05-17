@@ -1,10 +1,10 @@
-# Nevalang
+# Neva Programming Language
 
 > On shore abandoned, kissed by wave, he stood, of mighty thoughts the slave.
 
-Nevalang is general purpose [dataflow](https://en.wikipedia.org/wiki/Dataflow_programming) ([flow-based](https://en.wikipedia.org/wiki/Flow-based_programming)) programming language with static [structural](https://en.wikipedia.org/wiki/Structural_type_system) type-system and [implicit parallelism](https://en.wikipedia.org/wiki/Implicit_parallelism) that compiles to machine code.
+Neva is a general purpose [dataflow](https://en.wikipedia.org/wiki/Dataflow_programming) ([flow-based](https://en.wikipedia.org/wiki/Flow-based_programming)) programming language with static [structural](https://en.wikipedia.org/wiki/Structural_type_system) typing and [implicit parallelism](https://en.wikipedia.org/wiki/Implicit_parallelism) that compiles to machine code.
 
-And also [visual programming](https://en.wikipedia.org/wiki/Visual_programming_language) done right!
+Oh, and a [visual programming](https://en.wikipedia.org/wiki/Visual_programming_language) finally done right!
 
 ## Safety
 
