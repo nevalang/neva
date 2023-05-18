@@ -1,4 +1,6 @@
-# Neva Programming Language
+<!-- # Neva Programming Language -->
+
+![assets/header.png](assets/header.png)
 
 > On shore abandoned, kissed by wave, he stood, of mighty thoughts the slave.
 
