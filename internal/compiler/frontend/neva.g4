@@ -1,6 +1,6 @@
 grammar neva;
 
-prog: (comment | stmt)* EOF;
+prog: (comment | stmt)* EOF ;
 
 /* PARSER RULES */
 
@@ -83,5 +83,5 @@ fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;
 STRING: '"' .*? '"' ;
-NEWLINE: '\r'? '\n' ;
+NEWLINE: '\r'? '\n' ; // `\r\n` on windows and `\n` on unix 
 WS: [ \t]+ -> skip ; // ignore whitespace
