@@ -9,7 +9,7 @@ comment: singleLineComment | multiLineComment ;
 singleLineComment: '//' ~('\n')* NEWLINE ; // everything between double slash and first newline
 multiLineComment: '/*' .*? '*/'; // everything between `/*` and `*/` including newlines
 
-stmt: useStmt | typeStmt | ioStmt | constStmt ;
+stmt: useStmt | typeStmt | ioStmt | constStmt | compStmt ;
 
 // use
 useStmt: 'use' '{' importList '}' ;
@@ -83,5 +83,5 @@ fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;
 STRING: '"' .*? '"' ;
-NEWLINE: '\r'? '\n' ; // `\r\n` on windows and `\n` on unix 
+NEWLINE: '\r'? '\n'  ; // `\r\n` on windows and `\n` on unix
 WS: [ \t]+ -> skip ; // ignore whitespace
