@@ -9,11 +9,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	parsing "github.com/nevalang/neva/internal/compiler/frontend/generated"
+	generated "github.com/nevalang/neva/internal/compiler/frontend/generated"
 )
 
 type TreeShapeListener struct {
-	*parsing.BasenevaListener
+	*generated.BasenevaListener
 }
 
 func NewTreeShapeListener() *TreeShapeListener {
@@ -21,6 +21,8 @@ func NewTreeShapeListener() *TreeShapeListener {
 }
 
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}
+
+// MyErrorListener is a copy of antlr.ErrorListener just to generate mock
 type MyErrorListener interface {
 	antlr.ErrorListener
 }
@@ -41,8 +43,8 @@ func TestSmoke(t *testing.T) {
 		require.NoError(t, err)
 
 		// create lexer and parser
-		lexer := parsing.NewnevaLexer(input)
-		parser := parsing.NewnevaParser(
+		lexer := generated.NewnevaLexer(input)
+		parser := generated.NewnevaParser(
 			antlr.NewCommonTokenStream(lexer, 0),
 		)
 
