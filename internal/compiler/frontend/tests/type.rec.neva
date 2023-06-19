@@ -1,0 +1,40 @@
+type {
+    EmptyRec {}
+}
+
+type {
+    EmptyRec2 {
+    }
+}
+
+type {
+    Rec {
+        foo int
+    }
+}
+
+type {
+    Rec {
+        foo int
+        bar str
+    }
+}
+
+type {
+    Rec {
+        foo int
+
+        bar vec<int>
+
+        baz map<
+            vec<int>,
+            map<int, str>
+        >
+
+        Enum {
+            One,
+            Two
+        }
+
+    }
+}

@@ -24,21 +24,19 @@ typeExpr: NEWLINE* (typeInstExpr | typeLitExpr | unionTypeExpr) NEWLINE* ;
 typeInstExpr: IDENTIFIER (typeArgs)?;
 typeArgs: '<' typeExpr (',' typeExpr)* '>';
 typeLitExpr : arrTypeExpr | recTypeExpr | enumTypeExpr ;
-arrTypeExpr: '[' INT ']' typeExpr ;
+arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr ;
 recTypeExpr: '{' NEWLINE* recTypeFields? '}' ;
 recTypeFields: recTypeField (NEWLINE+ recTypeField)* ;
-recTypeField: IDENTIFIER typeExpr ;
+recTypeField: IDENTIFIER typeExpr NEWLINE* ;
 unionTypeExpr: nonUnionTypeExpr ('|' nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
-enumTypeExpr: '{' IDENTIFIER+ (NEWLINE* ',' IDENTIFIER)* '}';
+enumTypeExpr: '{' NEWLINE* IDENTIFIER (NEWLINE* ',' IDENTIFIER)* '}';
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
-ioStmt: 'io' '{' interfaceDefList '}' ;
-interfaceDefList: interfaceDef (NEWLINE interfaceDef)* ;
-interfaceDef: ('pub')? IDENTIFIER typeParams portsDef portsDef ;
-portsDef: '(' portDefList ')' ;
-portDefList: portDef (',' NEWLINE? portDef)* ;
-portDef: IDENTIFIER typeExpr;
+ioStmt: 'io' '{' NEWLINE* interfaceDef* '}' ;
+interfaceDef: ('pub')? IDENTIFIER typeParams portsDef portsDef NEWLINE* ;
+portsDef: '(' NEWLINE* portDef? (',' NEWLINE* portDef)* ')' ;
+portDef: IDENTIFIER typeExpr NEWLINE* ;
 
 // const
 constStmt: 'const' '{' constDefList '}' NEWLINE ;

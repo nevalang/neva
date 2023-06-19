@@ -1,0 +1,22 @@
+type {
+    enum MyEnum { One, Two }
+}
+
+type {
+    enum MyEnum { One,
+        Two
+    }
+}
+
+type {
+    enum MyEnum {
+        One,
+        Two }
+}
+
+type {
+    enum MyEnum {
+        One,
+        Two
+    }
+}

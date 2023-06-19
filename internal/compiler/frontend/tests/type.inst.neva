@@ -1,0 +1,94 @@
+type { MyVec vec<int> }
+
+type {
+    MyVec vec<int> }
+
+type {
+    MyVec vec<int>
+}
+
+type {
+    MyVec vec<int>
+
+}
+
+type {
+    MyVec vec<
+    int>
+}
+
+type { MyVec vec<
+    int>
+}
+
+type { MyVec vec<
+    int> }
+
+type {
+    MyVec vec<
+    int> 
+
+}
+
+type {
+    MyVec vec<
+        int
+    >
+}
+
+type {
+    MyVec1 Vec<int>
+    MyVec 2Vec<int>
+}
+
+type {
+    MyVec1 Vec<int>
+
+    MyVec 2Vec<int>
+}
+
+type {
+    MyMap map<str, int>
+}
+
+type {
+    MyMap map<str,
+        int>
+}
+
+type {
+    MyMap map<str,
+        int
+    >
+}
+
+type {
+    MyMap map<
+        str,
+        int
+    >
+}
+
+type {
+    MyInt int
+
+    MyVec vec<int>
+
+    MyMap map<
+        str,
+        int
+    >
+}
+
+type {
+
+    MyInt int
+
+    MyVec vec<int>
+
+    MyMap map<
+        str,
+        int
+    >
+
+}
