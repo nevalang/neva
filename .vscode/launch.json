@@ -5,7 +5,7 @@
       "name": "antlr",
       "type": "antlr-debug",
       "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/frontend/tests/type.inst.neva",
+      "input": "${workspaceFolder}/internal/compiler/frontend/tests/happypath/type.enum.neva",
       "grammar": "${workspaceFolder}/internal/compiler/frontend/neva.g4",
       "startRule": "prog",
       "printParseTree": true,

@@ -33,13 +33,15 @@ func TestSmoke(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, file := range nevaTestFiles {
+		fileName := file.Name()
+
 		// skip current and mock files
-		if !strings.HasSuffix(file.Name(), ".neva") {
+		if !strings.HasSuffix(fileName, ".neva") {
 			continue
 		}
 
 		// read file and create input
-		input, err := antlr.NewFileStream(file.Name())
+		input, err := antlr.NewFileStream(fileName)
 		require.NoError(t, err)
 
 		// create lexer and parser
@@ -65,6 +67,7 @@ func TestSmoke(t *testing.T) {
 
 // initMock configures the mock to expect zero calls
 func initMock(recorder *MockMyErrorListenerMockRecorder) {
+	// we don't care for now
 	recorder.ReportContextSensitivity(
 		gomock.Any(),
 		gomock.Any(),
@@ -72,8 +75,9 @@ func initMock(recorder *MockMyErrorListenerMockRecorder) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).AnyTimes() // we don't care for now
+	).AnyTimes()
 
+	// we don't care for now
 	recorder.ReportAmbiguity(
 		gomock.Any(),
 		gomock.Any(),
@@ -82,8 +86,9 @@ func initMock(recorder *MockMyErrorListenerMockRecorder) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).AnyTimes() // we don't care for now
+	).AnyTimes()
 
+	// we don't care for now
 	recorder.ReportAttemptingFullContext(
 		gomock.Any(),
 		gomock.Any(),
@@ -91,8 +96,9 @@ func initMock(recorder *MockMyErrorListenerMockRecorder) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).AnyTimes() // we don't care for now
+	).AnyTimes()
 
+	// this is what we care about
 	recorder.SyntaxError(
 		gomock.Any(),
 		gomock.Any(),
@@ -100,5 +106,5 @@ func initMock(recorder *MockMyErrorListenerMockRecorder) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Times(0) // this is what we care about
+	).Times(0)
 }

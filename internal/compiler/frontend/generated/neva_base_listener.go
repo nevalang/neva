@@ -152,12 +152,6 @@ func (s *BasenevaListener) EnterIoStmt(ctx *IoStmtContext) {}
 // ExitIoStmt is called when production ioStmt is exited.
 func (s *BasenevaListener) ExitIoStmt(ctx *IoStmtContext) {}
 
-// EnterInterfaceDefList is called when production interfaceDefList is entered.
-func (s *BasenevaListener) EnterInterfaceDefList(ctx *InterfaceDefListContext) {}
-
-// ExitInterfaceDefList is called when production interfaceDefList is exited.
-func (s *BasenevaListener) ExitInterfaceDefList(ctx *InterfaceDefListContext) {}
-
 // EnterInterfaceDef is called when production interfaceDef is entered.
 func (s *BasenevaListener) EnterInterfaceDef(ctx *InterfaceDefContext) {}
 
@@ -169,12 +163,6 @@ func (s *BasenevaListener) EnterPortsDef(ctx *PortsDefContext) {}
 
 // ExitPortsDef is called when production portsDef is exited.
 func (s *BasenevaListener) ExitPortsDef(ctx *PortsDefContext) {}
-
-// EnterPortDefList is called when production portDefList is entered.
-func (s *BasenevaListener) EnterPortDefList(ctx *PortDefListContext) {}
-
-// ExitPortDefList is called when production portDefList is exited.
-func (s *BasenevaListener) ExitPortDefList(ctx *PortDefListContext) {}
 
 // EnterPortDef is called when production portDef is entered.
 func (s *BasenevaListener) EnterPortDef(ctx *PortDefContext) {}

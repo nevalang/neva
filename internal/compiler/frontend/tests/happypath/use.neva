@@ -12,7 +12,39 @@ use {
 }
 
 use {
+
+    simplepath
+}
+
+use {
+    simplepath
+
+}
+
+use {
+
+    simplepath
+
+}
+
+use {
     path/with/parts
+}
+
+use {
+
+    path/with/parts
+}
+
+use {
+    path/with/parts
+
+}
+
+use {
+
+    path/with/parts
+
 }
 
 use {
@@ -20,7 +52,65 @@ use {
 }
 
 use {
+
+    withalias simplepath
+}
+
+use {
+    withalias simplepath
+
+}
+
+use {
+
+    withalias simplepath
+
+}
+
+use {
     withalias path/with/parts
+}
+
+use {
+    
+    withalias path/with/parts
+}
+
+use {
+    withalias path/with/parts
+
+}
+
+use {
+    simplepath
+    path/with/parts
+}
+
+use {
+
+    simplepath
+    path/with/parts
+}
+
+use {
+    simplepath
+    path/with/parts
+
+}
+
+use {
+
+    simplepath
+    path/with/parts
+
+}
+
+use {
+
+    simplepath
+
+    path/with/parts
+
 }
 
 use {
@@ -31,12 +121,75 @@ use {
 }
 
 use {
-    simplepath
-    withalias simplepath2
 
-    simplepath2
+    simplepath
+    path/with/parts
+    withalias simplepath
+    withalias path/with/parts
+}
+
+use {
+
+    simplepath
+    path/with/parts
+    withalias simplepath
+    withalias path/with/parts
+
+}
+
+use {
+    simplepath
+
+    path/with/parts
+    withalias simplepath
+    withalias path/with/parts
+}
+
+use {
+    simplepath
+
     path/with/parts
 
-    path/with/parts2
-    withalias2 path/with/parts2
+    withalias simplepath
+    withalias path/with/parts
 }
+
+use {
+    simplepath
+
+    path/with/parts
+
+    withalias simplepath
+
+    withalias path/with/parts
+}
+
+use {
+    simplepath
+    path/with/parts
+
+    withalias simplepath
+
+    withalias path/with/parts
+}
+
+use {
+    simplepath
+    path/with/parts
+    withalias simplepath
+
+    withalias path/with/parts
+}
+
+use {
+
+    simplepath
+    
+    path/with/parts
+    
+    withalias simplepath
+    
+    withalias path/with/parts
+
+}
+

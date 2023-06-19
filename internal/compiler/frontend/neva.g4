@@ -29,7 +29,7 @@ recTypeExpr: '{' NEWLINE* recTypeFields? '}' ;
 recTypeFields: recTypeField (NEWLINE+ recTypeField)* ;
 recTypeField: IDENTIFIER typeExpr NEWLINE* ;
 unionTypeExpr: nonUnionTypeExpr ('|' nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
-enumTypeExpr: '{' NEWLINE* IDENTIFIER (NEWLINE* ',' IDENTIFIER)* '}';
+enumTypeExpr: '{' NEWLINE* IDENTIFIER (NEWLINE* ',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
