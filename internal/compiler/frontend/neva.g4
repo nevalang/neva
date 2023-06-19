@@ -1,47 +1,45 @@
- grammar neva;
+grammar neva;
 
-// todo figure out why (comment | stmt | NEWLINE) didn't work 
-prog: (comment NEWLINE* | stmt NEWLINE*)* EOF ; // program is a list of comments and statements optionally followed by one or more newlines
+prog: (NEWLINE | comment | stmt)* EOF ;
 
 /* PARSER */
 
 // comments
-comment: '//' ~NEWLINE* ; // everything after double slash that is not newline
+comment: '//' (~NEWLINE)* ;
 
 stmt: useStmt | typeStmt | ioStmt | constStmt | compStmt ;
 
-// use FIXME https://github.com/nevalang/neva/issues/315
-useStmt: 'use' '{' NEWLINE* importDef* '}' ; // empty, only newlines or with actual imports 
-importDef: IDENTIFIER? importPath NEWLINE*; // optional multiple newlines before and after every import, optional alias and required path inside
+useStmt: 'use' '{' NEWLINE* importDef* '}' ;
+importDef: IDENTIFIER? importPath NEWLINE*;
 importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 
 // type
 typeStmt: 'type' '{' NEWLINE* typeDef* '}' ;
-typeDef: ('pub')? IDENTIFIER typeParams? typeExpr ;
-typeParams: '<' typeParam (',' typeParam)* '>' ;
-typeParam: NEWLINE* IDENTIFIER (typeExpr)? NEWLINE* ;
-typeExpr: NEWLINE* (typeInstExpr | typeLitExpr | unionTypeExpr) NEWLINE* ;
-typeInstExpr: IDENTIFIER (typeArgs)?;
-typeArgs: '<' typeExpr (',' typeExpr)* '>';
-typeLitExpr : arrTypeExpr | recTypeExpr | enumTypeExpr ;
+typeDef: 'pub'? IDENTIFIER typeParams? typeExpr NEWLINE* ;
+typeParams: '<' NEWLINE* typeParam (',' NEWLINE* typeParam)* NEWLINE* '>' ;
+typeParam: IDENTIFIER typeExpr? ;
+typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
+typeInstExpr: IDENTIFIER typeArgs? ;
+typeArgs: '<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
+typeLitExpr : enumTypeExpr | arrTypeExpr | recTypeExpr ;
+enumTypeExpr: '{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
 arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr ;
-recTypeExpr: '{' NEWLINE* recTypeFields? '}' ;
-recTypeFields: recTypeField (NEWLINE+ recTypeField)* ;
-recTypeField: IDENTIFIER typeExpr NEWLINE* ;
+recTypeExpr: '{' NEWLINE* recFields? '}' ;
+recFields: recField (NEWLINE+ recField)* ;
+recField: IDENTIFIER typeExpr NEWLINE* ;
 unionTypeExpr: nonUnionTypeExpr ('|' nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
-enumTypeExpr: '{' NEWLINE* IDENTIFIER (NEWLINE* ',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
 ioStmt: 'io' '{' NEWLINE* interfaceDef* '}' ;
-interfaceDef: ('pub')? IDENTIFIER typeParams portsDef portsDef NEWLINE* ;
+interfaceDef: 'pub'? IDENTIFIER typeParams portsDef portsDef NEWLINE* ;
 portsDef: '(' NEWLINE* portDef? (',' NEWLINE* portDef)* ')' ;
 portDef: IDENTIFIER typeExpr NEWLINE* ;
 
 // const
 constStmt: 'const' '{' constDefList '}' NEWLINE ;
 constDefList: constDef (NEWLINE constDef)* ;
-constDef: ('pub')? IDENTIFIER typeExpr '=' constValue ;
+constDef: 'pub'? IDENTIFIER typeExpr '=' constValue ;
 constValue: 'true' | 'false' | INT | FLOAT | STRING | arrLit | recLit | 'nil' ;
 arrLit:  '[' arrItems ']';
 arrItems: constValue | constValue (',' NEWLINE? constValue)* ;
@@ -52,7 +50,7 @@ recValueField: IDENTIFIER ':' constValue;
 // comp
 compStmt: 'comp' '{' compDefList '}' NEWLINE ;
 compDefList: compDef (NEWLINE compDef)* ;
-compDef: ('pub')? interfaceDef compBody ;
+compDef: 'pub'? interfaceDef compBody ;
 compBody: '{' compNodesDef | compNetDef '}' ;
 compNodesDef: 'node' '{' compNodeDefList '}' ;
 compNodeDefList: absNodeDef | concreteNodeDef ;

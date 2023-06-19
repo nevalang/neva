@@ -117,7 +117,7 @@ use {
     simplepath
     path/with/parts
     withalias simplepath
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -125,7 +125,7 @@ use {
     simplepath
     path/with/parts
     withalias simplepath
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -133,7 +133,7 @@ use {
     simplepath
     path/with/parts
     withalias simplepath
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 
 }
 
@@ -142,16 +142,7 @@ use {
 
     path/with/parts
     withalias simplepath
-    withalias path/with/parts
-}
-
-use {
-    simplepath
-
-    path/with/parts
-
-    withalias simplepath
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -160,8 +151,17 @@ use {
     path/with/parts
 
     withalias simplepath
+    withalias @/local/path/with/parts
+}
 
-    withalias path/with/parts
+use {
+    simplepath
+
+    path/with/parts
+
+    withalias simplepath
+
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -170,7 +170,7 @@ use {
 
     withalias simplepath
 
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -178,7 +178,7 @@ use {
     path/with/parts
     withalias simplepath
 
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 }
 
 use {
@@ -189,7 +189,7 @@ use {
     
     withalias simplepath
     
-    withalias path/with/parts
+    withalias @/local/path/with/parts
 
 }
 

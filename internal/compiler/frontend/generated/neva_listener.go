@@ -49,23 +49,23 @@ type nevaListener interface {
 	// EnterTypeLitExpr is called when entering the typeLitExpr production.
 	EnterTypeLitExpr(c *TypeLitExprContext)
 
+	// EnterEnumTypeExpr is called when entering the enumTypeExpr production.
+	EnterEnumTypeExpr(c *EnumTypeExprContext)
+
 	// EnterArrTypeExpr is called when entering the arrTypeExpr production.
 	EnterArrTypeExpr(c *ArrTypeExprContext)
 
 	// EnterRecTypeExpr is called when entering the recTypeExpr production.
 	EnterRecTypeExpr(c *RecTypeExprContext)
 
-	// EnterRecTypeFields is called when entering the recTypeFields production.
-	EnterRecTypeFields(c *RecTypeFieldsContext)
+	// EnterRecFields is called when entering the recFields production.
+	EnterRecFields(c *RecFieldsContext)
 
-	// EnterRecTypeField is called when entering the recTypeField production.
-	EnterRecTypeField(c *RecTypeFieldContext)
+	// EnterRecField is called when entering the recField production.
+	EnterRecField(c *RecFieldContext)
 
 	// EnterUnionTypeExpr is called when entering the unionTypeExpr production.
 	EnterUnionTypeExpr(c *UnionTypeExprContext)
-
-	// EnterEnumTypeExpr is called when entering the enumTypeExpr production.
-	EnterEnumTypeExpr(c *EnumTypeExprContext)
 
 	// EnterNonUnionTypeExpr is called when entering the nonUnionTypeExpr production.
 	EnterNonUnionTypeExpr(c *NonUnionTypeExprContext)
@@ -211,23 +211,23 @@ type nevaListener interface {
 	// ExitTypeLitExpr is called when exiting the typeLitExpr production.
 	ExitTypeLitExpr(c *TypeLitExprContext)
 
+	// ExitEnumTypeExpr is called when exiting the enumTypeExpr production.
+	ExitEnumTypeExpr(c *EnumTypeExprContext)
+
 	// ExitArrTypeExpr is called when exiting the arrTypeExpr production.
 	ExitArrTypeExpr(c *ArrTypeExprContext)
 
 	// ExitRecTypeExpr is called when exiting the recTypeExpr production.
 	ExitRecTypeExpr(c *RecTypeExprContext)
 
-	// ExitRecTypeFields is called when exiting the recTypeFields production.
-	ExitRecTypeFields(c *RecTypeFieldsContext)
+	// ExitRecFields is called when exiting the recFields production.
+	ExitRecFields(c *RecFieldsContext)
 
-	// ExitRecTypeField is called when exiting the recTypeField production.
-	ExitRecTypeField(c *RecTypeFieldContext)
+	// ExitRecField is called when exiting the recField production.
+	ExitRecField(c *RecFieldContext)
 
 	// ExitUnionTypeExpr is called when exiting the unionTypeExpr production.
 	ExitUnionTypeExpr(c *UnionTypeExprContext)
-
-	// ExitEnumTypeExpr is called when exiting the enumTypeExpr production.
-	ExitEnumTypeExpr(c *EnumTypeExprContext)
 
 	// ExitNonUnionTypeExpr is called when exiting the nonUnionTypeExpr production.
 	ExitNonUnionTypeExpr(c *NonUnionTypeExprContext)

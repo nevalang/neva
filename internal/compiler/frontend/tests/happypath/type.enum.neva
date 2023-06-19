@@ -41,5 +41,12 @@ type {
     }
 }
 
+type {
+    MyEnum9 { One }
+    MyEnum10 {
+        One,
+        Two
+    }
+}
 
 

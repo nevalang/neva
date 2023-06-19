@@ -104,6 +104,12 @@ func (s *BasenevaListener) EnterTypeLitExpr(ctx *TypeLitExprContext) {}
 // ExitTypeLitExpr is called when production typeLitExpr is exited.
 func (s *BasenevaListener) ExitTypeLitExpr(ctx *TypeLitExprContext) {}
 
+// EnterEnumTypeExpr is called when production enumTypeExpr is entered.
+func (s *BasenevaListener) EnterEnumTypeExpr(ctx *EnumTypeExprContext) {}
+
+// ExitEnumTypeExpr is called when production enumTypeExpr is exited.
+func (s *BasenevaListener) ExitEnumTypeExpr(ctx *EnumTypeExprContext) {}
+
 // EnterArrTypeExpr is called when production arrTypeExpr is entered.
 func (s *BasenevaListener) EnterArrTypeExpr(ctx *ArrTypeExprContext) {}
 
@@ -116,29 +122,23 @@ func (s *BasenevaListener) EnterRecTypeExpr(ctx *RecTypeExprContext) {}
 // ExitRecTypeExpr is called when production recTypeExpr is exited.
 func (s *BasenevaListener) ExitRecTypeExpr(ctx *RecTypeExprContext) {}
 
-// EnterRecTypeFields is called when production recTypeFields is entered.
-func (s *BasenevaListener) EnterRecTypeFields(ctx *RecTypeFieldsContext) {}
+// EnterRecFields is called when production recFields is entered.
+func (s *BasenevaListener) EnterRecFields(ctx *RecFieldsContext) {}
 
-// ExitRecTypeFields is called when production recTypeFields is exited.
-func (s *BasenevaListener) ExitRecTypeFields(ctx *RecTypeFieldsContext) {}
+// ExitRecFields is called when production recFields is exited.
+func (s *BasenevaListener) ExitRecFields(ctx *RecFieldsContext) {}
 
-// EnterRecTypeField is called when production recTypeField is entered.
-func (s *BasenevaListener) EnterRecTypeField(ctx *RecTypeFieldContext) {}
+// EnterRecField is called when production recField is entered.
+func (s *BasenevaListener) EnterRecField(ctx *RecFieldContext) {}
 
-// ExitRecTypeField is called when production recTypeField is exited.
-func (s *BasenevaListener) ExitRecTypeField(ctx *RecTypeFieldContext) {}
+// ExitRecField is called when production recField is exited.
+func (s *BasenevaListener) ExitRecField(ctx *RecFieldContext) {}
 
 // EnterUnionTypeExpr is called when production unionTypeExpr is entered.
 func (s *BasenevaListener) EnterUnionTypeExpr(ctx *UnionTypeExprContext) {}
 
 // ExitUnionTypeExpr is called when production unionTypeExpr is exited.
 func (s *BasenevaListener) ExitUnionTypeExpr(ctx *UnionTypeExprContext) {}
-
-// EnterEnumTypeExpr is called when production enumTypeExpr is entered.
-func (s *BasenevaListener) EnterEnumTypeExpr(ctx *EnumTypeExprContext) {}
-
-// ExitEnumTypeExpr is called when production enumTypeExpr is exited.
-func (s *BasenevaListener) ExitEnumTypeExpr(ctx *EnumTypeExprContext) {}
 
 // EnterNonUnionTypeExpr is called when production nonUnionTypeExpr is entered.
 func (s *BasenevaListener) EnterNonUnionTypeExpr(ctx *NonUnionTypeExprContext) {}

@@ -8,26 +8,58 @@ type {
 }
 
 type { MyInt int
-    MyStr str
+    pub MyStr str
 }
 
 type { MyInt int
 
-    MyStr str
+    pub MyStr str
 }
 
 type { MyInt int
-    MyStr str }
+    pub MyStr str }
 
 type {
     MyInt int
-    MyStr str
+    pub MyStr str
+}
+
+type {
+
+    MyInt int
+    pub MyStr str
+}
+
+type {
+    MyInt int
+    pub MyStr str
+
 }
 
 type {
     MyInt int
 
-    MyStr str
+    pub MyStr str
+}
+
+type {
+
+    MyInt int
+
+    pub MyStr str
+}
+
+type {
+    MyInt int
+
+    pub MyStr str
 
 }
 
+type {
+
+    MyInt int
+
+    pub MyStr str
+
+}
