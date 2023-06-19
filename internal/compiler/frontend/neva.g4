@@ -17,19 +17,19 @@ importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 
 // type
 typeStmt: 'type' '{' NEWLINE* typeDef* '}' ;
-typeDef: ('pub')? IDENTIFIER typeParams? typeExpr NEWLINE* ;
+typeDef: ('pub')? IDENTIFIER typeParams? typeExpr ;
 typeParams: '<' typeParam (',' typeParam)* '>' ;
 typeParam: NEWLINE* IDENTIFIER (typeExpr)? NEWLINE* ;
-typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
+typeExpr: NEWLINE* (typeInstExpr | typeLitExpr | unionTypeExpr) NEWLINE* ;
 typeInstExpr: IDENTIFIER (typeArgs)?;
 typeArgs: '<' typeExpr (',' typeExpr)* '>';
 typeLitExpr : arrTypeExpr | recTypeExpr | enumTypeExpr ;
 arrTypeExpr: '[' INT ']' typeExpr ;
-recTypeExpr: '{' recTypeFields? '}' ;
-recTypeFields: recTypeField (NEWLINE recTypeField)* ;
+recTypeExpr: '{' NEWLINE* recTypeFields? '}' ;
+recTypeFields: recTypeField (NEWLINE+ recTypeField)* ;
 recTypeField: IDENTIFIER typeExpr ;
 unionTypeExpr: nonUnionTypeExpr ('|' nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
-enumTypeExpr: '{' ;
+enumTypeExpr: '{' IDENTIFIER+ (NEWLINE* ',' IDENTIFIER)* '}';
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
