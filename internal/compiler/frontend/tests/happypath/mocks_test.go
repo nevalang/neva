@@ -2,7 +2,7 @@
 // Source: smoke_test.go
 
 // Package frontend_test is a generated GoMock package.
-package frontend_test
+package happypath_test
 
 import (
 	reflect "reflect"

@@ -1,4 +1,4 @@
-package frontend_test
+package happypath_test
 
 import (
 	"os"
@@ -65,6 +65,34 @@ func TestSmoke(t *testing.T) {
 
 // initMock configures the mock to expect zero calls
 func initMock(recorder *MockMyErrorListenerMockRecorder) {
+	recorder.ReportContextSensitivity(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).AnyTimes() // we don't care for now
+
+	recorder.ReportAmbiguity(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).AnyTimes() // we don't care for now
+
+	recorder.ReportAttemptingFullContext(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).AnyTimes() // we don't care for now
+
 	recorder.SyntaxError(
 		gomock.Any(),
 		gomock.Any(),
@@ -72,5 +100,5 @@ func initMock(recorder *MockMyErrorListenerMockRecorder) {
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Times(0)
+	).Times(0) // this is what we care about
 }
