@@ -1,0 +1,45 @@
+type {}
+
+type {
+}
+
+type {
+
+}
+
+type {
+    MyInt int
+}
+
+type {
+    MyVec vec<int>
+}
+
+type {
+    MyInt int
+    MyVec Vec<int>
+}
+
+type {
+    foo bar
+
+    MyVec Vec<int>
+    MyMap map<str, int>
+}
+
+type {
+    foo bar
+
+    MyVec Vec<int>
+    MyMap Map<str, int>
+
+    MyRec {
+        age int
+        name str
+        friends [512]MyRec
+
+        bestFriend {
+            enemies Map<MyRec, Vec<{foo bar}>>
+        }
+    }
+}

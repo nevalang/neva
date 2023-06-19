@@ -1,0 +1,42 @@
+use{}
+
+use {
+}
+
+use {
+
+}
+
+use {
+    simplepath
+}
+
+use {
+    path/with/parts
+}
+
+use {
+    withalias simplepath
+}
+
+use {
+    withalias path/with/parts
+}
+
+use {
+    simplepath
+    path/with/parts
+    withalias simplepath
+    withalias path/with/parts
+}
+
+use {
+    simplepath
+    withalias simplepath2
+
+    simplepath2
+    path/with/parts
+
+    path/with/parts2
+    withalias2 path/with/parts2
+}

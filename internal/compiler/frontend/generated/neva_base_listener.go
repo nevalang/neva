@@ -1,4 +1,4 @@
-// Code generated from neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -32,18 +32,6 @@ func (s *BasenevaListener) EnterComment(ctx *CommentContext) {}
 // ExitComment is called when production comment is exited.
 func (s *BasenevaListener) ExitComment(ctx *CommentContext) {}
 
-// EnterSingleLineComment is called when production singleLineComment is entered.
-func (s *BasenevaListener) EnterSingleLineComment(ctx *SingleLineCommentContext) {}
-
-// ExitSingleLineComment is called when production singleLineComment is exited.
-func (s *BasenevaListener) ExitSingleLineComment(ctx *SingleLineCommentContext) {}
-
-// EnterMultiLineComment is called when production multiLineComment is entered.
-func (s *BasenevaListener) EnterMultiLineComment(ctx *MultiLineCommentContext) {}
-
-// ExitMultiLineComment is called when production multiLineComment is exited.
-func (s *BasenevaListener) ExitMultiLineComment(ctx *MultiLineCommentContext) {}
-
 // EnterStmt is called when production stmt is entered.
 func (s *BasenevaListener) EnterStmt(ctx *StmtContext) {}
 
@@ -55,12 +43,6 @@ func (s *BasenevaListener) EnterUseStmt(ctx *UseStmtContext) {}
 
 // ExitUseStmt is called when production useStmt is exited.
 func (s *BasenevaListener) ExitUseStmt(ctx *UseStmtContext) {}
-
-// EnterImportList is called when production importList is entered.
-func (s *BasenevaListener) EnterImportList(ctx *ImportListContext) {}
-
-// ExitImportList is called when production importList is exited.
-func (s *BasenevaListener) ExitImportList(ctx *ImportListContext) {}
 
 // EnterImportDef is called when production importDef is entered.
 func (s *BasenevaListener) EnterImportDef(ctx *ImportDefContext) {}
@@ -79,12 +61,6 @@ func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}
 
 // ExitTypeStmt is called when production typeStmt is exited.
 func (s *BasenevaListener) ExitTypeStmt(ctx *TypeStmtContext) {}
-
-// EnterTypeDefList is called when production typeDefList is entered.
-func (s *BasenevaListener) EnterTypeDefList(ctx *TypeDefListContext) {}
-
-// ExitTypeDefList is called when production typeDefList is exited.
-func (s *BasenevaListener) ExitTypeDefList(ctx *TypeDefListContext) {}
 
 // EnterTypeDef is called when production typeDef is entered.
 func (s *BasenevaListener) EnterTypeDef(ctx *TypeDefContext) {}

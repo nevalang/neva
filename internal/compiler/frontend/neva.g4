@@ -1,28 +1,25 @@
-grammar neva;
+ grammar neva;
 
-prog: (comment | stmt)* EOF ;
+// todo figure out why (comment | stmt | NEWLINE) didn't work 
+prog: (comment NEWLINE* | stmt NEWLINE*)* EOF ; // program is a list of comments and statements optionally followed by one or more newlines
 
-/* PARSER RULES */
+/* PARSER */
 
 // comments
-comment: singleLineComment | multiLineComment ;
-singleLineComment: '//' ~('\n')* NEWLINE ; // everything between double slash and first newline
-multiLineComment: '/*' .*? '*/'; // everything between `/*` and `*/` including newlines
+comment: '//' ~NEWLINE* ; // everything after double slash that is not newline
 
 stmt: useStmt | typeStmt | ioStmt | constStmt | compStmt ;
 
-// use
-useStmt: 'use' '{' importList '}' ;
-importList: importDef (NEWLINE importDef)* ;
-importDef: IDENTIFIER? importPath ;
-importPath: IDENTIFIER ('/' IDENTIFIER)* ;
+// use FIXME https://github.com/nevalang/neva/issues/315
+useStmt: 'use' '{' NEWLINE* importDef* '}' ; // empty, only newlines or with actual imports 
+importDef: IDENTIFIER? importPath NEWLINE*; // optional multiple newlines before and after every import, optional alias and required path inside
+importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 
 // type
-typeStmt: 'type' '{' typeDefList '}' ;
-typeDefList: typeDef (NEWLINE typeDef)* ;
-typeDef: ('pub')? IDENTIFIER (typeParams)? typeExpr ;
-typeParams: '<' typeParam (',' NEWLINE? typeParam)* '>' ;
-typeParam: IDENTIFIER (typeExpr)? ;
+typeStmt: 'type' '{' NEWLINE* typeDef* '}' ;
+typeDef: ('pub')? IDENTIFIER typeParams? typeExpr NEWLINE* ;
+typeParams: '<' typeParam (',' typeParam)* '>' ;
+typeParam: NEWLINE* IDENTIFIER (typeExpr)? NEWLINE* ;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
 typeInstExpr: IDENTIFIER (typeArgs)?;
 typeArgs: '<' typeExpr (',' typeExpr)* '>';
@@ -76,9 +73,9 @@ portDirection: 'in' | 'out' ;
 connReceiverSide:  portAddr | connReceivers;
 connReceivers: '{' portAddr (NEWLINE portAddr)* '}' ;
 
-/* LEXER RULES */
+/* LEXER */
 
-IDENTIFIER: LETTER (LETTER | [0-9])*;
+IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;

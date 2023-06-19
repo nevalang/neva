@@ -1,4 +1,4 @@
-// Code generated from neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -13,20 +13,11 @@ type nevaListener interface {
 	// EnterComment is called when entering the comment production.
 	EnterComment(c *CommentContext)
 
-	// EnterSingleLineComment is called when entering the singleLineComment production.
-	EnterSingleLineComment(c *SingleLineCommentContext)
-
-	// EnterMultiLineComment is called when entering the multiLineComment production.
-	EnterMultiLineComment(c *MultiLineCommentContext)
-
 	// EnterStmt is called when entering the stmt production.
 	EnterStmt(c *StmtContext)
 
 	// EnterUseStmt is called when entering the useStmt production.
 	EnterUseStmt(c *UseStmtContext)
-
-	// EnterImportList is called when entering the importList production.
-	EnterImportList(c *ImportListContext)
 
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
@@ -36,9 +27,6 @@ type nevaListener interface {
 
 	// EnterTypeStmt is called when entering the typeStmt production.
 	EnterTypeStmt(c *TypeStmtContext)
-
-	// EnterTypeDefList is called when entering the typeDefList production.
-	EnterTypeDefList(c *TypeDefListContext)
 
 	// EnterTypeDef is called when entering the typeDef production.
 	EnterTypeDef(c *TypeDefContext)
@@ -193,20 +181,11 @@ type nevaListener interface {
 	// ExitComment is called when exiting the comment production.
 	ExitComment(c *CommentContext)
 
-	// ExitSingleLineComment is called when exiting the singleLineComment production.
-	ExitSingleLineComment(c *SingleLineCommentContext)
-
-	// ExitMultiLineComment is called when exiting the multiLineComment production.
-	ExitMultiLineComment(c *MultiLineCommentContext)
-
 	// ExitStmt is called when exiting the stmt production.
 	ExitStmt(c *StmtContext)
 
 	// ExitUseStmt is called when exiting the useStmt production.
 	ExitUseStmt(c *UseStmtContext)
-
-	// ExitImportList is called when exiting the importList production.
-	ExitImportList(c *ImportListContext)
 
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)
@@ -216,9 +195,6 @@ type nevaListener interface {
 
 	// ExitTypeStmt is called when exiting the typeStmt production.
 	ExitTypeStmt(c *TypeStmtContext)
-
-	// ExitTypeDefList is called when exiting the typeDefList production.
-	ExitTypeDefList(c *TypeDefListContext)
 
 	// ExitTypeDef is called when exiting the typeDef production.
 	ExitTypeDef(c *TypeDefContext)
