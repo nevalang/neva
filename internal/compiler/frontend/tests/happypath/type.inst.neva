@@ -38,13 +38,13 @@ type {
 
 type {
     MyVec1 Vec<int>
-    MyVec 2Vec<int>
+    MyVec2 Vec<int>
 }
 
 type {
     MyVec1 Vec<int>
 
-    MyVec 2Vec<int>
+    MyVec2 Vec<int>
 }
 
 type {
