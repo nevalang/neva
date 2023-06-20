@@ -72,7 +72,7 @@ func (r Resolver) resolve( //nolint:funlen
 
 	switch expr.Lit.Type() {
 	case EnumLitType:
-		return expr, nil // nothing to resolve in enum
+		return expr, nil
 	case ArrLitType:
 		resolvedArrType, err := r.resolve(expr.Lit.Arr.Expr, scope, frame, trace)
 		if err != nil {

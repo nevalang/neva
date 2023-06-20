@@ -250,23 +250,25 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrArrType,
 			}
 		},
-		"arr_with_resolvable_type": func() testcase { // expr = [2]t, scope = {t=...}
-			typ := h.Inst("t")
-			expr := h.Arr(2, typ)
+		"arr_with_resolvable_type": func() testcase { // arrExpr = [2]t, scope = {t=...}
+			arrExpr := h.Arr(
+				2,
+				h.Inst("t"),
+			)
 			scope := Scope{"t": h.BaseDef()}
 			return testcase{
 				enabled: true,
-				expr:    expr,
+				expr:    arrExpr,
 				scope:   scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					// v.ValidateDef(h.BaseDef(h.ParamWithNoConstr("t")))
+					v.Validate(arrExpr).Return(nil)
 					v.Validate(h.Inst("t")).Return(nil)
+					v.ValidateDef(h.BaseDef())
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t.ShouldTerminate(ts.NewTrace(nil, "t"), scope).Return(false, nil)
 				},
-				want: expr,
+				want: arrExpr,
 			}
 		},
 		"union_with_unresolvable_(undefined)_element": func() testcase { // t1 | t2, {t1=t1}
@@ -745,7 +747,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		tt := tt
 		tc := tt()
 
-		if !tc.enabled {
+		if !tc.enabled { // TODO remove
 			continue
 		}
 
