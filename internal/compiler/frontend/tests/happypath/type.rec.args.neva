@@ -2,4 +2,81 @@ type {
     Rec { foo vec<int> }
 }
 
+type {
+    Rec {
+        foo vec<int> }
+}
+
+type {
+    Rec { foo vec<int>
+    }
+}
+
+type {
+    Rec {
+        foo vec<int>
+    }
+}
+
+type {
+    Rec {
+        foo vec<int>
+        bar map<str, int>
+    }
+}
+
+type {
+    Rec { foo vec<int>
+        bar map<str, int>
+    }
+}
+
+type {
+    Rec {
+        foo vec<int>
+        bar map<str, int> }
+}
+
+type {
+    Rec {
+        foo vec<int>
+
+        bar map<str, int>
+    }
+}
+
+type {
+    Rec {
+
+        foo vec<int>
+        bar map<str, int>
+    }
+}
+
+type {
+    Rec {
+        foo vec<int>
+        bar map<str, int>
+
+    }
+}
+
+type {
+    Rec {
+
+        foo vec<int>
+        bar map<str, int>
+
+    }
+}
+
+type {
+    Rec {
+
+        foo vec<int>
+
+        bar map<str, int>
+
+    }
+}
 

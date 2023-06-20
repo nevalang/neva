@@ -27,7 +27,7 @@ arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr ;
 recTypeExpr: '{' NEWLINE* recFields? '}' ;
 recFields: recField (NEWLINE+ recField)* ;
 recField: IDENTIFIER typeExpr NEWLINE* ;
-unionTypeExpr: nonUnionTypeExpr ('|' nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
+unionTypeExpr: nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
