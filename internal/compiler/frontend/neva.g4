@@ -33,8 +33,8 @@ nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 // io
 ioStmt: 'io' '{' NEWLINE* interfaceDef* '}' ;
 interfaceDef: 'pub'? IDENTIFIER typeParams portsDef portsDef NEWLINE* ;
-portsDef: '(' NEWLINE* portDef? (',' NEWLINE* portDef)* ')' ;
-portDef: IDENTIFIER typeExpr NEWLINE* ;
+portsDef: '(' NEWLINE* portDef? | (portDef (',' NEWLINE* portDef))* ')' ;
+portDef: IDENTIFIER typeExpr ;
 
 // const
 constStmt: 'const' '{' constDefList '}' NEWLINE ;
