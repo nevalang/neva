@@ -36,26 +36,30 @@ type {
 type {
     Rec {
         foo int
-        bar str
+        bar { Monday, Tuesday, Wednesday }
     }
 }
 
 type {
     Rec { foo int
-        bar str
+        bar { Monday, Tuesday, Wednesday }
     }
 }
 
 type {
     Rec {
         foo int
-        bar str }
+        bar { Monday, Tuesday, Wednesday } }
 }
 
 type {
     Rec {
         foo int
-        bar str
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
     }
 }
 
@@ -63,7 +67,11 @@ type {
     Rec {
         foo int
 
-        bar str
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
     }
 }
 
@@ -74,6 +82,10 @@ type {
 
     pub Rec {
         foo int
-        bar str
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
     }
 }

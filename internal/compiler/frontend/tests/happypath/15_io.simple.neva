@@ -1,0 +1,33 @@
+io {}
+
+io {
+}
+
+io {
+
+}
+
+io {
+    IReader1() ()
+}
+
+io {
+    IReader2() ()
+}
+
+io {
+    IReader3( 
+    ) (
+    )
+}
+
+io {
+    IReader4(
+        x int) ()
+}
+
+io {
+    IReader5(x int
+    ) ()
+}
+

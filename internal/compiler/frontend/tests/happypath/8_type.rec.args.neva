@@ -80,3 +80,47 @@ type {
     }
 }
 
+type {
+    Rec {
+        foo map<str, int>
+        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday }>
+    }
+}
+
+type {
+    Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday, Tuesday, Wednesday, Thursday, Friday }>
+    }
+}
+
+type {
+    Rec {
+        foo map<str, int>
+        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday
+        }>
+    }
+}
+
+type {
+    Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday, Tuesday, Wednesday, Thursday, Friday
+        }>
+    }
+}
+
+type {
+    Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday
+        }>
+    }
+}

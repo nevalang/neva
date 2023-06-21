@@ -1,4 +1,4 @@
-package happypath_test
+package smoke_test
 
 import (
 	"os"
@@ -29,6 +29,9 @@ type MyErrorListener interface {
 
 // TestSmoke reads all the ".neva" files in current directory and tries to parse them expecting zero errors.
 func TestSmoke(t *testing.T) {
+	err := os.Chdir("./happypath")
+	require.NoError(t, err)
+
 	nevaTestFiles, err := os.ReadDir(".")
 	require.NoError(t, err)
 

@@ -1,0 +1,116 @@
+type {
+    Simple [512]i8
+}
+
+type { Simple [512]i8
+}
+
+type {
+    Simple [512]i8 }
+
+type {
+    Simple [512]i8
+    Nested [512][256]i8
+}
+
+type {
+
+    Simple [512]i8
+    Nested [512][256]i8
+}
+
+type {
+    Simple [512]i8
+    Nested [512][256]i8
+
+}
+
+type {
+
+    Simple [512]i8
+    Nested [512][256]i8
+
+}
+
+type {
+
+    Simple [512]i8
+
+    Nested [512][256]i8
+
+}
+
+type {
+    WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    }
+}
+
+type { WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    }
+}
+
+type {
+    WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    } }
+
+type { WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    } }
+
+type {
+    WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday }
+}
+
+
+type { WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday }
+}
+
+
+type {
+    WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday } }
+
+
+type { WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday } }
+
+type {
+    WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
+}
+
+type { WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
+}
+
+type {
+    WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
+
+type { WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }

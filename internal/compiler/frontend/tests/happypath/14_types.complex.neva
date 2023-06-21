@@ -1,0 +1,29 @@
+type {
+    MyInt i8
+
+    MyNum Int | Float
+    Int i32 | i64
+    Float f32 | f64
+
+    MyEmptyRec {}
+    MyNonEmptyRec {
+        foo MyInt
+        bar MyNum
+        baz MyEmptyRec
+    }
+    MyNestedRec {
+        Nested {
+            Level MyNonEmptyRec
+        }
+    }
+
+    MyShortEnum { Monday }
+    MyNormalEnum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+    MyNormalNewlinedEnum {
+        Monday, Tuesday, Wednesday,
+        Thursday, Friday, Saturday
+    }
+
+    MyArr [512]str
+    MyArrNested [512][256]str
+}
