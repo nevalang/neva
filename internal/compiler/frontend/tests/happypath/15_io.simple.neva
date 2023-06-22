@@ -7,27 +7,132 @@ io {
 
 }
 
-io {
-    IReader1 () ()
+io { IReader1 () () }
+
+io { IReader2 () ()
 }
 
 io {
-    IReader2 () ()
+    IReader3 () () }
+
+io {
+    IReader4 () ()
 }
 
 io {
-    IReader3 (
+    IReader5 (
+    ) ()
+}
+
+io {
+    IReader6 () (
+    )
+}
+
+io {
+    IReader7 (
+    ) (
+    )
+}
+
+io { IReader8 (x int) () }
+
+io { IReader8 (
+    x int) () }
+
+io { IReader8 (x int
+) () }
+
+io { IReader8 (x int) (
+) }
+
+io {
+    IReader8 (x int) () }
+
+io { IReader8 (x int) ()
+}
+
+io {
+    IReader8 (x int) ()
+}
+
+io {
+    IReader8 (
+        x int) ()
+}
+
+io {
+    IReader8 (x int
+    ) ()
+}
+
+io {
+    IReader8 (x int) (
+    )
+}
+
+io {
+    IReader8 (
+        x int
+    ) ()
+}
+
+io {
+    IReader8 (
+        x int
+    ) (
+    )
+}
+
+io { IReader8 (x int, y str) () }
+
+io {
+    IReader8 (x int, y str) () }
+
+io { IReader8 (x int, y str) ()
+}
+
+io { IReader8 (
+    x int, y str) () }
+
+io { IReader8 (x int,
+y str) () }
+
+io {
+    IReader8 (x int, y str) ()
+}
+
+io {
+    IReader8 (
+        x int, y str
+    ) ()
+}
+
+io {
+    IReader8 (
+        x int,
+        y str) ()
+}
+
+io {
+    IReader8 (
+        x int,
+        y str
+    ) ()
+}
+
+io {
+    IReader8 (
+        x int,
+        y str
     ) (
     )
 }
 
 io {
-    IReader4 (
-        x int) ()
-}
-
-io {
-    IReader5 (x int
+    IReader8 (
+        x int,
+        y str
     ) ()
 }
 
