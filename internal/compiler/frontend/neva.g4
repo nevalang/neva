@@ -37,15 +37,11 @@ inPortsDef: portsDef ;
 outPortsDef: portsDef ;
 portsDef: '('
     (
-        NEWLINE* |
         portAndType? |
-        portAndType (',' NEWLINE* portAndType)*
+        portAndType (',' portAndType)*
     )
 ')' ;
-portDef: NEWLINE* |
-    portAndType? |
-    portAndType (',' NEWLINE* portAndType)* ;
-portAndType: IDENTIFIER typeExpr NEWLINE* ;
+portAndType: NEWLINE* IDENTIFIER typeExpr NEWLINE* ;
 
 // const
 constStmt: 'const' '{' constDefList '}' NEWLINE ;
