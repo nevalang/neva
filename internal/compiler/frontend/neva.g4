@@ -37,6 +37,7 @@ inPortsDef: portsDef ;
 outPortsDef: portsDef ;
 portsDef: '('
     (
+        NEWLINE* |
         portAndType? |
         portAndType (',' portAndType)*
     )

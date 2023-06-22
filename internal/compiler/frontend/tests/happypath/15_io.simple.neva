@@ -8,26 +8,26 @@ io {
 }
 
 io {
-    IReader1() ()
+    IReader1 () ()
 }
 
 io {
-    IReader2() ()
+    IReader2 () ()
 }
 
 io {
-    IReader3( 
+    IReader3 (
     ) (
     )
 }
 
 io {
-    IReader4(
+    IReader4 (
         x int) ()
 }
 
 io {
-    IReader5(x int
+    IReader5 (x int
     ) ()
 }
 
