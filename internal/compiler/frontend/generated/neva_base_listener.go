@@ -188,23 +188,17 @@ func (s *BasenevaListener) EnterConstStmt(ctx *ConstStmtContext) {}
 // ExitConstStmt is called when production constStmt is exited.
 func (s *BasenevaListener) ExitConstStmt(ctx *ConstStmtContext) {}
 
-// EnterConstDefList is called when production constDefList is entered.
-func (s *BasenevaListener) EnterConstDefList(ctx *ConstDefListContext) {}
-
-// ExitConstDefList is called when production constDefList is exited.
-func (s *BasenevaListener) ExitConstDefList(ctx *ConstDefListContext) {}
-
 // EnterConstDef is called when production constDef is entered.
 func (s *BasenevaListener) EnterConstDef(ctx *ConstDefContext) {}
 
 // ExitConstDef is called when production constDef is exited.
 func (s *BasenevaListener) ExitConstDef(ctx *ConstDefContext) {}
 
-// EnterConstValue is called when production constValue is entered.
-func (s *BasenevaListener) EnterConstValue(ctx *ConstValueContext) {}
+// EnterConstVal is called when production constVal is entered.
+func (s *BasenevaListener) EnterConstVal(ctx *ConstValContext) {}
 
-// ExitConstValue is called when production constValue is exited.
-func (s *BasenevaListener) ExitConstValue(ctx *ConstValueContext) {}
+// ExitConstVal is called when production constVal is exited.
+func (s *BasenevaListener) ExitConstVal(ctx *ConstValContext) {}
 
 // EnterArrLit is called when production arrLit is entered.
 func (s *BasenevaListener) EnterArrLit(ctx *ArrLitContext) {}
@@ -212,11 +206,11 @@ func (s *BasenevaListener) EnterArrLit(ctx *ArrLitContext) {}
 // ExitArrLit is called when production arrLit is exited.
 func (s *BasenevaListener) ExitArrLit(ctx *ArrLitContext) {}
 
-// EnterArrItems is called when production arrItems is entered.
-func (s *BasenevaListener) EnterArrItems(ctx *ArrItemsContext) {}
+// EnterVecItems is called when production vecItems is entered.
+func (s *BasenevaListener) EnterVecItems(ctx *VecItemsContext) {}
 
-// ExitArrItems is called when production arrItems is exited.
-func (s *BasenevaListener) ExitArrItems(ctx *ArrItemsContext) {}
+// ExitVecItems is called when production vecItems is exited.
+func (s *BasenevaListener) ExitVecItems(ctx *VecItemsContext) {}
 
 // EnterRecLit is called when production recLit is entered.
 func (s *BasenevaListener) EnterRecLit(ctx *RecLitContext) {}

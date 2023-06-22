@@ -1,0 +1,91 @@
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+}
+
+const { PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+}
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1 }
+
+const {
+
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+}
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+
+}
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+}
+
+const {
+
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+
+    VEC_EMPTY vec<i8> = []
+    VEC_FULL vec<i8> = [1, 2, 3, 4]
+    ARR [4]i8 = [0, 1, 2, 3]
+
+    REC { foo int } = { foo: 42 }
+    ENUM { Monday, Tuesday } = 1
+
+}
+
+const {
+    MIXED_REC {
+        foo [64]int | { bar [2]bool }
+        baz [3]bool
+    } | [2]{ bax f32 } = {
+        foo: { bar: [
+            true, false
+        ] }
+        baz: [
+            true,
+            true,
+            true
+        ] 
+    }
+}

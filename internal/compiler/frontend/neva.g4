@@ -45,15 +45,14 @@ portsDef: '('
 portAndType: NEWLINE* IDENTIFIER typeExpr NEWLINE* ;
 
 // const
-constStmt: 'const' '{' constDefList '}' NEWLINE ;
-constDefList: constDef (NEWLINE constDef)* ;
-constDef: 'pub'? IDENTIFIER typeExpr '=' constValue ;
-constValue: 'true' | 'false' | INT | FLOAT | STRING | arrLit | recLit | 'nil' ;
-arrLit:  '[' arrItems ']';
-arrItems: constValue | constValue (',' NEWLINE? constValue)* ;
-recLit:  '{' recValueFields '}';
-recValueFields: recValueField (',' NEWLINE? recValueField)* ;
-recValueField: IDENTIFIER ':' constValue;
+constStmt: 'const' '{' NEWLINE* constDef* '}' ;
+constDef: 'pub'? IDENTIFIER typeExpr '=' constVal NEWLINE* ;
+constVal: 'true' | 'false' | INT | FLOAT | STRING | arrLit | recLit | 'nil' ;
+arrLit:  '[' NEWLINE* vecItems? ']';
+vecItems: constVal | constVal (',' NEWLINE* constVal NEWLINE*)* ;
+recLit:  '{' NEWLINE* recValueFields? '}';
+recValueFields: recValueField (NEWLINE* recValueField)*  ;
+recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 
 // comp
 compStmt: 'comp' '{' compDefList '}' NEWLINE ;

@@ -91,20 +91,17 @@ type nevaListener interface {
 	// EnterConstStmt is called when entering the constStmt production.
 	EnterConstStmt(c *ConstStmtContext)
 
-	// EnterConstDefList is called when entering the constDefList production.
-	EnterConstDefList(c *ConstDefListContext)
-
 	// EnterConstDef is called when entering the constDef production.
 	EnterConstDef(c *ConstDefContext)
 
-	// EnterConstValue is called when entering the constValue production.
-	EnterConstValue(c *ConstValueContext)
+	// EnterConstVal is called when entering the constVal production.
+	EnterConstVal(c *ConstValContext)
 
 	// EnterArrLit is called when entering the arrLit production.
 	EnterArrLit(c *ArrLitContext)
 
-	// EnterArrItems is called when entering the arrItems production.
-	EnterArrItems(c *ArrItemsContext)
+	// EnterVecItems is called when entering the vecItems production.
+	EnterVecItems(c *VecItemsContext)
 
 	// EnterRecLit is called when entering the recLit production.
 	EnterRecLit(c *RecLitContext)
@@ -259,20 +256,17 @@ type nevaListener interface {
 	// ExitConstStmt is called when exiting the constStmt production.
 	ExitConstStmt(c *ConstStmtContext)
 
-	// ExitConstDefList is called when exiting the constDefList production.
-	ExitConstDefList(c *ConstDefListContext)
-
 	// ExitConstDef is called when exiting the constDef production.
 	ExitConstDef(c *ConstDefContext)
 
-	// ExitConstValue is called when exiting the constValue production.
-	ExitConstValue(c *ConstValueContext)
+	// ExitConstVal is called when exiting the constVal production.
+	ExitConstVal(c *ConstValContext)
 
 	// ExitArrLit is called when exiting the arrLit production.
 	ExitArrLit(c *ArrLitContext)
 
-	// ExitArrItems is called when exiting the arrItems production.
-	ExitArrItems(c *ArrItemsContext)
+	// ExitVecItems is called when exiting the vecItems production.
+	ExitVecItems(c *VecItemsContext)
 
 	// ExitRecLit is called when exiting the recLit production.
 	ExitRecLit(c *RecLitContext)
