@@ -1,0 +1,54 @@
+io { IReader1 (x { foo {} }) () }
+
+io {
+    IReader1 (x { foo {} }) () }
+
+io {
+    IReader1 (x { foo {} }) ()
+}
+
+io { IReader1 (x { foo {} }) (bar { baz {} }) }
+
+io {
+    IReader1 (x { foo {} }) (bar { baz {} })
+}
+
+io {
+    IReader1 (
+        x { foo {} }
+    ) (bar { baz {} })
+}
+
+io {
+    IReader1 (
+        x { foo {} }
+    ) (
+        bar { baz {} }
+    )
+}
+
+io {
+    IReader1 (x {
+        foo { a int }
+    }) (bar {
+        baz { b bool }
+    })
+}
+
+io {
+    IReader1 (
+        x { foo { a int } }
+    ) (
+        bar { baz { b bool } }
+    )
+}
+
+io {
+    IReader1 (
+        x { foo { a int } },
+        y {}
+    ) (
+        bar { baz { b bool } },
+        bax { r {} }
+    )
+}

@@ -1,0 +1,44 @@
+io { IReader1 (a bool | int) () }
+
+io {
+    IReader1 (a bool | int) ()
+}
+
+io {
+    IReader1 () (x str | float)
+}
+
+io {
+    IReader1 (a bool | int) (x str | float)
+}
+
+io {
+    IReader1 (a bool | int | {}) (x str | float | { Monday })
+}
+
+io {
+    IReader1 (
+        a bool | int | { foo int | str }
+    ) (
+        x str |
+        float |
+        { Monday } |
+        {
+            foo { January } | {}
+        }
+    )
+}
+
+io {
+    IReader1 (
+        a bool | int | { foo int | str },
+        b [256][128]{ bar int | [64]int }
+    ) (
+        x str |
+            float |
+            { Monday } |
+            {
+                foo { January } | {}
+            }
+    )
+}
