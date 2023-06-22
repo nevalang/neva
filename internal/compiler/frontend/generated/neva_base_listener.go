@@ -158,17 +158,29 @@ func (s *BasenevaListener) EnterInterfaceDef(ctx *InterfaceDefContext) {}
 // ExitInterfaceDef is called when production interfaceDef is exited.
 func (s *BasenevaListener) ExitInterfaceDef(ctx *InterfaceDefContext) {}
 
+// EnterInPortsDef is called when production inPortsDef is entered.
+func (s *BasenevaListener) EnterInPortsDef(ctx *InPortsDefContext) {}
+
+// ExitInPortsDef is called when production inPortsDef is exited.
+func (s *BasenevaListener) ExitInPortsDef(ctx *InPortsDefContext) {}
+
+// EnterOutPortsDef is called when production outPortsDef is entered.
+func (s *BasenevaListener) EnterOutPortsDef(ctx *OutPortsDefContext) {}
+
+// ExitOutPortsDef is called when production outPortsDef is exited.
+func (s *BasenevaListener) ExitOutPortsDef(ctx *OutPortsDefContext) {}
+
 // EnterPortsDef is called when production portsDef is entered.
 func (s *BasenevaListener) EnterPortsDef(ctx *PortsDefContext) {}
 
 // ExitPortsDef is called when production portsDef is exited.
 func (s *BasenevaListener) ExitPortsDef(ctx *PortsDefContext) {}
 
-// EnterPortDef is called when production portDef is entered.
-func (s *BasenevaListener) EnterPortDef(ctx *PortDefContext) {}
+// EnterPortAndType is called when production portAndType is entered.
+func (s *BasenevaListener) EnterPortAndType(ctx *PortAndTypeContext) {}
 
-// ExitPortDef is called when production portDef is exited.
-func (s *BasenevaListener) ExitPortDef(ctx *PortDefContext) {}
+// ExitPortAndType is called when production portAndType is exited.
+func (s *BasenevaListener) ExitPortAndType(ctx *PortAndTypeContext) {}
 
 // EnterConstStmt is called when production constStmt is entered.
 func (s *BasenevaListener) EnterConstStmt(ctx *ConstStmtContext) {}

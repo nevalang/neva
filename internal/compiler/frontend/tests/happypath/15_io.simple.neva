@@ -136,3 +136,50 @@ io {
     ) ()
 }
 
+io { IReader9 () (a int) }
+
+io {
+    IReader10 () (a int) }
+
+io { IReader11 () (a int)
+}
+
+io {
+    IReader12 () (a int)
+}
+
+io {
+    IReader13 (
+    ) (a int)
+}
+
+io {
+    IReader14 () (
+        a int)
+}
+
+io {
+    IReader15 () (a int
+    )
+}
+
+io {
+    IReader16 (
+    ) (
+        a int
+    )
+}
+
+io { IReader17 (x int) (a int) }
+
+io {
+    IReader18 (x int) (a int)
+}
+
+io {
+    IReader19 (x int, y str) (a int)
+}
+
+io {
+    IReader20 (x int, y str) (a int, b bool)
+}

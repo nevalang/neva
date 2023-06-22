@@ -76,11 +76,17 @@ type nevaListener interface {
 	// EnterInterfaceDef is called when entering the interfaceDef production.
 	EnterInterfaceDef(c *InterfaceDefContext)
 
+	// EnterInPortsDef is called when entering the inPortsDef production.
+	EnterInPortsDef(c *InPortsDefContext)
+
+	// EnterOutPortsDef is called when entering the outPortsDef production.
+	EnterOutPortsDef(c *OutPortsDefContext)
+
 	// EnterPortsDef is called when entering the portsDef production.
 	EnterPortsDef(c *PortsDefContext)
 
-	// EnterPortDef is called when entering the portDef production.
-	EnterPortDef(c *PortDefContext)
+	// EnterPortAndType is called when entering the portAndType production.
+	EnterPortAndType(c *PortAndTypeContext)
 
 	// EnterConstStmt is called when entering the constStmt production.
 	EnterConstStmt(c *ConstStmtContext)
@@ -238,11 +244,17 @@ type nevaListener interface {
 	// ExitInterfaceDef is called when exiting the interfaceDef production.
 	ExitInterfaceDef(c *InterfaceDefContext)
 
+	// ExitInPortsDef is called when exiting the inPortsDef production.
+	ExitInPortsDef(c *InPortsDefContext)
+
+	// ExitOutPortsDef is called when exiting the outPortsDef production.
+	ExitOutPortsDef(c *OutPortsDefContext)
+
 	// ExitPortsDef is called when exiting the portsDef production.
 	ExitPortsDef(c *PortsDefContext)
 
-	// ExitPortDef is called when exiting the portDef production.
-	ExitPortDef(c *PortDefContext)
+	// ExitPortAndType is called when exiting the portAndType production.
+	ExitPortAndType(c *PortAndTypeContext)
 
 	// ExitConstStmt is called when exiting the constStmt production.
 	ExitConstStmt(c *ConstStmtContext)
