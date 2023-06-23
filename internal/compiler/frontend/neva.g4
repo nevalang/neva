@@ -23,7 +23,7 @@ typeParams: '<' NEWLINE* typeParamList? '>' ;
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)* ;
 typeParam: IDENTIFIER typeExpr? ;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
-typeInstExpr: IDENTIFIER typeArgs? ;
+typeInstExpr: IDENTIFIER typeArgs? ; // FIXME replace IDENTIFIER with EntityRef
 typeArgs: '<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
 typeLitExpr : enumTypeExpr | arrTypeExpr | recTypeExpr ;
 enumTypeExpr: '{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
@@ -61,16 +61,15 @@ recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 // comp
 compStmt: 'comp' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
 compDef: interfaceDef compBody NEWLINE* ;
-compBody: '{' NEWLINE* (compNodesDef | compNetDef)? '}' ;
-compNodesDef: 'node' NEWLINE* '{' NEWLINE* compNodeDefList '}' ;
-compNodeDefList: absNodeDef | concreteNodeDef ;
+compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)? '}' ;
+compNodesDef: 'node' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
+compNodeDef: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
 concreteNodeDef: IDENTIFIER '=' concreteNodeInst ;
-concreteNodeInst: nodeRef nodeArgs typeArgs;
-nodeRef: IDENTIFIER ('.' IDENTIFIER)* ;
-nodeArgs: '(' nodeArgList ')';
-nodeArgList: nodeArg (',' NEWLINE? nodeArg) ;
-nodeArg: concreteNodeInst;
+concreteNodeInst: nodeRef NEWLINE* nodeArgs typeArgs;
+nodeRef: IDENTIFIER ('.' IDENTIFIER)* ; 
+nodeArgs: '(' NEWLINE* nodeArgList? ')';
+nodeArgList: concreteNodeInst (',' NEWLINE* concreteNodeInst) ;
 compNetDef: 'net' NEWLINE* '{' NEWLINE* connDefList '}';
 connDefList: connDef (NEWLINE connDef)* ;
 connDef: portAddr '->' connReceiverSide ;
@@ -81,6 +80,7 @@ connReceivers: '{' portAddr (NEWLINE portAddr)* '}' ;
 
 /* LEXER */
 
+// ENTITY_REF: IDENTIFIER ('.' IDENTIFIER)* ; TODO debug this one
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
