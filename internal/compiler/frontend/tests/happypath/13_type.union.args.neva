@@ -99,7 +99,7 @@ type {
 }
 
 type {
-    bar vec<
+    pub bar vec<
         i32 |
         vec<i32 | f32>
     > |

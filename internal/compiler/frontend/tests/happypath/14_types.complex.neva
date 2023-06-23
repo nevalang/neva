@@ -3,7 +3,7 @@ type {
 
     MyNum Int | Float
     Int i32 | i64
-    Float f32 | f64
+    pub Float f32 | f64
 
     MyEmptyRec {}
     MyNonEmptyRec {
@@ -11,7 +11,7 @@ type {
         bar MyNum
         baz MyEmptyRec
     }
-    MyNestedRec {
+    pub MyNestedRec {
         Nested {
             Level MyNonEmptyRec
         }
@@ -19,11 +19,11 @@ type {
 
     MyShortEnum { Monday }
     MyNormalEnum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
-    MyNormalNewlinedEnum {
+    pub MyNormalNewlinedEnum {
         Monday, Tuesday, Wednesday,
         Thursday, Friday, Saturday
     }
 
-    MyArr [512]str
+    pub MyArr [512]str
     MyArrNested [512][256]str
 }

@@ -74,6 +74,12 @@ func (s *BasenevaListener) EnterTypeParams(ctx *TypeParamsContext) {}
 // ExitTypeParams is called when production typeParams is exited.
 func (s *BasenevaListener) ExitTypeParams(ctx *TypeParamsContext) {}
 
+// EnterTypeParamList is called when production typeParamList is entered.
+func (s *BasenevaListener) EnterTypeParamList(ctx *TypeParamListContext) {}
+
+// ExitTypeParamList is called when production typeParamList is exited.
+func (s *BasenevaListener) ExitTypeParamList(ctx *TypeParamListContext) {}
+
 // EnterTypeParam is called when production typeParam is entered.
 func (s *BasenevaListener) EnterTypeParam(ctx *TypeParamContext) {}
 
@@ -235,12 +241,6 @@ func (s *BasenevaListener) EnterCompStmt(ctx *CompStmtContext) {}
 
 // ExitCompStmt is called when production compStmt is exited.
 func (s *BasenevaListener) ExitCompStmt(ctx *CompStmtContext) {}
-
-// EnterCompDefList is called when production compDefList is entered.
-func (s *BasenevaListener) EnterCompDefList(ctx *CompDefListContext) {}
-
-// ExitCompDefList is called when production compDefList is exited.
-func (s *BasenevaListener) ExitCompDefList(ctx *CompDefListContext) {}
 
 // EnterCompDef is called when production compDef is entered.
 func (s *BasenevaListener) EnterCompDef(ctx *CompDefContext) {}

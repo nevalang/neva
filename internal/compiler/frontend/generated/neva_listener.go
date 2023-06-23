@@ -34,6 +34,9 @@ type nevaListener interface {
 	// EnterTypeParams is called when entering the typeParams production.
 	EnterTypeParams(c *TypeParamsContext)
 
+	// EnterTypeParamList is called when entering the typeParamList production.
+	EnterTypeParamList(c *TypeParamListContext)
+
 	// EnterTypeParam is called when entering the typeParam production.
 	EnterTypeParam(c *TypeParamContext)
 
@@ -114,9 +117,6 @@ type nevaListener interface {
 
 	// EnterCompStmt is called when entering the compStmt production.
 	EnterCompStmt(c *CompStmtContext)
-
-	// EnterCompDefList is called when entering the compDefList production.
-	EnterCompDefList(c *CompDefListContext)
 
 	// EnterCompDef is called when entering the compDef production.
 	EnterCompDef(c *CompDefContext)
@@ -199,6 +199,9 @@ type nevaListener interface {
 	// ExitTypeParams is called when exiting the typeParams production.
 	ExitTypeParams(c *TypeParamsContext)
 
+	// ExitTypeParamList is called when exiting the typeParamList production.
+	ExitTypeParamList(c *TypeParamListContext)
+
 	// ExitTypeParam is called when exiting the typeParam production.
 	ExitTypeParam(c *TypeParamContext)
 
@@ -279,9 +282,6 @@ type nevaListener interface {
 
 	// ExitCompStmt is called when exiting the compStmt production.
 	ExitCompStmt(c *CompStmtContext)
-
-	// ExitCompDefList is called when exiting the compDefList production.
-	ExitCompDefList(c *CompDefListContext)
 
 	// ExitCompDef is called when exiting the compDef production.
 	ExitCompDef(c *CompDefContext)

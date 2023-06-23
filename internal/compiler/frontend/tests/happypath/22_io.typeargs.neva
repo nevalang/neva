@@ -1,8 +1,8 @@
 io {
-    IReader1 () ()
-    IReader20 (x int, y str) (a int, b bool)
+    IReader1<> () ()
+    IReader20<T> (x int, y T) (a int, b bool)
 
-    IReader12 (
+    IReader12<T int> (
         x {
             Monday,
             Tuesday,

@@ -146,7 +146,7 @@ type {
 }
 
 type {
-    T int | {
+    pub T int | {
         Monday, Tuesday, Wednesday
     } | [64]int | [32]int | {
         foo int | float

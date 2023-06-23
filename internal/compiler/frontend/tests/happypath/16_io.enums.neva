@@ -129,7 +129,7 @@ io {
 }
 
 io {
-    IReader12 (
+    pub IReader12 (
         x {
             Monday,
             Tuesday,

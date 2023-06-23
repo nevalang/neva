@@ -75,7 +75,7 @@ type {
             Rec1Lvl3_2 {} } } }
 
 type {
-    Rec1Lvl1 {
+    pub Rec1Lvl1 {
         Rec1Lvl2 {
             Rec1Lvl3_1 {
                 foo int

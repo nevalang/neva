@@ -53,7 +53,7 @@ io {
 }
 
 io {
-    IReader1 (
+    pub IReader1 (
         arr [512]{ Monday, Tuesday },
         arr2 [256]{ foo int },
         arr3 [128]{ baz {} }

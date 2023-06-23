@@ -43,7 +43,7 @@ type {
 
 type {
     MyEnum9 { One }
-    MyEnum10 {
+    pub MyEnum10 {
         One,
         Two
     }

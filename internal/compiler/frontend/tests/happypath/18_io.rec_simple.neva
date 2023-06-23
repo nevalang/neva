@@ -125,7 +125,7 @@ io {
 }
 
 io {
-    IReader1 (x {
+    pub IReader1 (x {
         foo int
         bar str
     }) (a {

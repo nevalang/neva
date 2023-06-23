@@ -111,6 +111,6 @@ type {
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
 
 type { WithSimpleUnion [512]i8 | f8
-    WithComplexUnion [512]i8 | { foo str | bool }
+    pub WithComplexUnion [512]i8 | { foo str | bool }
     WithNestedUnion [512]i8 | [512]i8
-    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
+    pub WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }

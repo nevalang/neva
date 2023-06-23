@@ -9,14 +9,18 @@ comment: '//' (~NEWLINE)* ;
 
 stmt: useStmt | typeStmt | ioStmt | constStmt | compStmt ;
 
-useStmt: 'use' '{' NEWLINE* importDef* '}' ;
+useStmt: 'use' NEWLINE* '{' NEWLINE* importDef* '}' ;
 importDef: IDENTIFIER? importPath NEWLINE*;
 importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 
 // type
-typeStmt: 'type' '{' NEWLINE* typeDef* '}' ;
-typeDef: 'pub'? IDENTIFIER typeParams? typeExpr NEWLINE* ;
-typeParams: '<' NEWLINE* typeParam (',' NEWLINE* typeParam)* NEWLINE* '>' ;
+typeStmt: 'type' NEWLINE* '{'
+    NEWLINE*
+    ('pub'? typeDef NEWLINE*)*
+'}' ;
+typeDef: IDENTIFIER typeParams? typeExpr ;
+typeParams: '<' NEWLINE* typeParamList? '>' ;
+typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)* ;
 typeParam: IDENTIFIER typeExpr? ;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
 typeInstExpr: IDENTIFIER typeArgs? ;
@@ -31,8 +35,8 @@ unionTypeExpr: nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+ ; // u
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // io
-ioStmt: 'io' '{' NEWLINE* interfaceDef* '}' ;
-interfaceDef: 'pub'? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
+ioStmt: 'io' NEWLINE* '{' NEWLINE* ('pub'? interfaceDef)* '}' ;
+interfaceDef: IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
 inPortsDef: portsDef ;
 outPortsDef: portsDef ;
 portsDef: '('
@@ -45,21 +49,20 @@ portsDef: '('
 portAndType: NEWLINE* IDENTIFIER typeExpr NEWLINE* ;
 
 // const
-constStmt: 'const' '{' NEWLINE* constDef* '}' ;
-constDef: 'pub'? IDENTIFIER typeExpr '=' constVal NEWLINE* ;
+constStmt: 'const' NEWLINE* '{' NEWLINE* ('pub'? constDef)* '}' ;
+constDef: IDENTIFIER typeExpr '=' constVal NEWLINE* ;
 constVal: 'true' | 'false' | INT | FLOAT | STRING | arrLit | recLit | 'nil' ;
-arrLit:  '[' NEWLINE* vecItems? ']';
+arrLit:  '[' NEWLINE* vecItems? ']'; // array and vector use same syntax
 vecItems: constVal | constVal (',' NEWLINE* constVal NEWLINE*)* ;
-recLit:  '{' NEWLINE* recValueFields? '}';
+recLit:  '{' NEWLINE* recValueFields? '}'; // same for record and map
 recValueFields: recValueField (NEWLINE* recValueField)*  ;
 recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 
 // comp
-compStmt: 'comp' '{' compDefList '}' NEWLINE ;
-compDefList: compDef (NEWLINE compDef)* ;
-compDef: 'pub'? interfaceDef compBody ;
-compBody: '{' compNodesDef | compNetDef '}' ;
-compNodesDef: 'node' '{' compNodeDefList '}' ;
+compStmt: 'comp' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
+compDef: interfaceDef compBody NEWLINE* ;
+compBody: '{' NEWLINE* (compNodesDef | compNetDef)? '}' ;
+compNodesDef: 'node' NEWLINE* '{' NEWLINE* compNodeDefList '}' ;
 compNodeDefList: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
 concreteNodeDef: IDENTIFIER '=' concreteNodeInst ;
@@ -68,7 +71,7 @@ nodeRef: IDENTIFIER ('.' IDENTIFIER)* ;
 nodeArgs: '(' nodeArgList ')';
 nodeArgList: nodeArg (',' NEWLINE? nodeArg) ;
 nodeArg: concreteNodeInst;
-compNetDef: 'net' '{' connDefList '}';
+compNetDef: 'net' NEWLINE* '{' NEWLINE* connDefList '}';
 connDefList: connDef (NEWLINE connDef)* ;
 connDef: portAddr '->' connReceiverSide ;
 portAddr: IDENTIFIER? portDirection | IDENTIFIER ('[' INT ']')?;

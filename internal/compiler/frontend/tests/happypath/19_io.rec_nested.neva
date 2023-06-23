@@ -44,7 +44,7 @@ io {
 }
 
 io {
-    IReader1 (
+    pub IReader1 (
         x { foo { a int } },
         y {}
     ) (

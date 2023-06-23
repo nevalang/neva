@@ -30,7 +30,7 @@ io {
 }
 
 io {
-    IReader1 (
+    pub IReader1 (
         a bool | int | { foo int | str },
         b [256][128]{ bar int | [64]int }
     ) (

@@ -38,17 +38,17 @@ type {
 
 type {
     MyVec1 Vec<int>
-    MyVec2 Vec<int>
+    pub MyVec2 Vec<int>
 }
 
 type {
     MyVec1 Vec<int>
 
-    MyVec2 Vec<int>
+    pub MyVec2 Vec<int>
 }
 
 type {
-    MyMap map<str, int>
+    pub MyMap map<str, int>
 }
 
 type {
@@ -74,7 +74,7 @@ type {
 
     MyVec vec<int>
 
-    MyMap map<
+    pub MyMap map<
         str,
         int
     >
@@ -86,9 +86,46 @@ type {
 
     MyVec vec<int>
 
-    MyMap map<
+    pub MyMap map<
         str,
         int
     >
 
+}
+
+type {
+    MyMap1<T, Y> map<T, Y>
+
+    MyMap2<T int, Y> map<T, Y>
+
+    MyMap3<T int, Y vec<float>> map<T, Y>
+}
+
+type {
+    MyMap3<T int, Y vec<
+        float
+    >> map<T, Y>
+}
+
+type {
+    MyMap3<
+        T int,
+        Y vec<float>
+    > map<T, Y>
+}
+
+type {
+    MyMap3<
+        T int,
+        Y vec<float>
+    > map<T, vec<Y>>
+}
+
+type {
+    MyMap3<
+        T int,
+        Y vec<float>
+    > map<
+        T, vec<Y>
+    >
 }

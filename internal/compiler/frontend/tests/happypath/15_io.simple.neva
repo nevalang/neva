@@ -181,5 +181,5 @@ io {
 }
 
 io {
-    IReader20 (x int, y str) (a int, b bool)
+    pub IReader20 (x int, y str) (a int, b bool)
 }

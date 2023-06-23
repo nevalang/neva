@@ -1,0 +1,197 @@
+comp {}
+
+comp {
+}
+
+comp {
+
+}
+
+comp { Doer() () {} }
+
+comp {
+    Doer() () {} }
+
+comp { Doer() () {}
+}
+
+comp {
+    Doer() () {}
+}
+
+comp { Doer<T>(x int) (y T) {} }
+
+comp {
+    Doer<T>(x int) (y T) {
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {}
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node { absNode INode }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            absNode INode }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node { absNode INode
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            absNode INode
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            simpleAbsNode INode
+            absNodeWithTypeArgs INode<
+                int,
+                map<
+                    str, vec<bool>
+                >
+            >
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node { concreteNode = Node() }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNode = Node() }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node { concreteNode = Node()
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNode = Node()
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNodeWithTypeArgs = Node<int, vec<str>>()
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNodeWithDI1 = Node1(Node2())
+            concreteNodeWithDI2 = Node1(Node2(), Node3())
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNodeWithDI1 = Node1(
+                Node2()
+            )
+            concreteNodeWithDI2 = Node1(
+                Node2(),
+                Node3()
+            )
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            concreteNodeWithDIAndTypeArgs = Node1<
+                int,
+                map<
+                    str,
+                    vec<bool>
+                >
+            >(
+                Node2(),
+                Node3()
+            )
+        }
+    }
+}
+
+comp {
+    Doer<T>(x int) (y T) {
+        node {
+            simpleAbsNode INode
+
+            absNodeWithTypeArgs INode<
+                int,
+                map<
+                    str, vec<bool>
+                >
+            >
+
+            concreteNodeWithDI1 = Node1(Node2())
+
+            concreteNodeWithDIAndTypeArgs = Node1<
+                int,
+                map<
+                    str,
+                    vec<bool>
+                >
+            >(
+                Node2(),
+                Node3()
+            )
+        }
+    }
+}
