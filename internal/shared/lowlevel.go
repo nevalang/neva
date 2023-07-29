@@ -13,11 +13,11 @@ type LLPortAddr struct {
 }
 
 type LLConnection struct {
-	SenderSide    LLConnectionSide
-	ReceiverSides []LLConnectionSide
+	SenderSide    LLPortAddr
+	ReceiverSides []LLReceiverConnectionSide
 }
 
-type LLConnectionSide struct {
+type LLReceiverConnectionSide struct {
 	PortAddr  LLPortAddr
 	Selectors []LLSelector
 }

@@ -27,12 +27,12 @@ func (p PortAddr) String() string {
 type Ports map[PortAddr]chan Msg
 
 type Connection struct {
-	Sender    ConnectionSide
-	Receivers []ConnectionSide
+	Sender    SenderConnectionSide
+	Receivers []ReceiverConnectionSide
 }
 
 func (c Connection) String() string {
-	s := c.Sender.Meta.String() + "->"
+	s := c.Sender.PortAddr.String() + "->"
 	for i := range c.Receivers {
 		s += c.Receivers[i].Meta.String()
 		if i < len(c.Receivers)-1 {
@@ -42,17 +42,26 @@ func (c Connection) String() string {
 	return s
 }
 
-type ConnectionSide struct {
+type SenderConnectionSide struct {
 	Port chan Msg
-	Meta ConnectionSideMeta
+	SenderConnectionSideMeta
 }
 
-type ConnectionSideMeta struct {
+type ReceiverConnectionSide struct {
+	Port chan Msg
+	Meta ReceiverConnectionSideMeta
+}
+
+type SenderConnectionSideMeta struct {
+	PortAddr PortAddr
+}
+
+type ReceiverConnectionSideMeta struct {
 	PortAddr  PortAddr
 	Selectors []Selector
 }
 
-func (c ConnectionSideMeta) String() string {
+func (c ReceiverConnectionSideMeta) String() string {
 	return c.PortAddr.String()
 }
 

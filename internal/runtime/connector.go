@@ -24,9 +24,9 @@ func NewConnector(interceptor Interceptor) Connector {
 }
 
 type Interceptor interface {
-	AfterSending(from ConnectionSideMeta, msg Msg) Msg
-	BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg
-	AfterReceiving(from, to ConnectionSideMeta, msg Msg)
+	AfterSending(from SenderConnectionSideMeta, msg Msg) Msg
+	BeforeReceiving(from, to SenderConnectionSideMeta, msg Msg) Msg
+	AfterReceiving(from, to SenderConnectionSideMeta, msg Msg)
 }
 
 func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
