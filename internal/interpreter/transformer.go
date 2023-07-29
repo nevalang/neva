@@ -75,6 +75,26 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 		})
 	}
 
+	rFuncs := make([]runtime.FuncRoutine, len(ll.Funcs))
+	for _, f := range ll.Funcs {
+		io := runtime.FuncIO{
+			In:  map[string][]chan runtime.Msg{},
+			Out: map[string][]chan runtime.Msg{},
+		},
+		
+		rFuncs = append(rFuncs, runtime.FuncRoutine{
+			Ref: runtime.FuncRef{
+				Pkg:  f.Ref.Pkg,
+				Name: f.Ref.Name,
+			},
+			IO: runtime.FuncIO{
+				In:  map[string][]chan runtime.Msg{},
+				Out: map[string][]chan runtime.Msg{},
+			},
+			Msg: nil,
+		})
+	}
+
 	return runtime.Program{
 		Ports:       rPorts,
 		Connections: rConns,

@@ -16,7 +16,7 @@ type Package struct {
 type Entity struct {
 	Exported  bool
 	Kind      EntityKind
-	Msg       Msg
+	Msg       HLMsg
 	Type      ts.Def // FIXME https://github.com/nevalang/neva/issues/186
 	Interface Interface
 	Component Component
@@ -76,19 +76,19 @@ func (e EntityRef) String() string {
 	return fmt.Sprintf("%s.%s", e.Pkg, e.Name)
 }
 
-type Msg struct {
+type HLMsg struct {
 	Ref   *EntityRef // if nil then use value
 	Value MsgValue
 }
 
 type MsgValue struct {
-	TypeExpr ts.Expr        // type of the message
-	Bool     bool           // only for messages with `bool`  type
-	Int      int            // only for messages with `int` type
-	Float    float64        // only for messages with `float` type
-	Str      string         // only for messages with `str` type
-	Vec      []Msg          // only for types with `vec` type
-	Map      map[string]Msg // only for types with `map` type
+	TypeExpr ts.Expr          // type of the message
+	Bool     bool             // only for messages with `bool`  type
+	Int      int              // only for messages with `int` type
+	Float    float64          // only for messages with `float` type
+	Str      string           // only for messages with `str` type
+	Vec      []HLMsg          // only for types with `vec` type
+	Map      map[string]HLMsg // only for types with `map` type
 }
 
 type IO struct {

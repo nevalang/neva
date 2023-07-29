@@ -1,10 +1,9 @@
 package shared
 
 type LowLvlProgram struct {
-	Funcs  []LLFunc             // what functions to spawn and how
-	Net    []LLConnection       // how ports are connected to each other
-	Consts map[string]LLMsg     // predefined data that can be referred by funcs
-	Ports  map[LLPortAddr]uint8 // ports and their buffers size
+	Funcs []LLFunc             // what functions to spawn and how
+	Net   []LLConnection       // how ports are connected to each other
+	Ports map[LLPortAddr]uint8 // ports and their buffers size
 }
 
 type LLPortAddr struct {
@@ -29,9 +28,9 @@ type LLSelector struct {
 
 // LLFunc is a instantiation object that runtime will use to spawn a function
 type LLFunc struct {
-	Ref    LLFuncRef // runtime will use this reference to find the function to spawn
-	IO     LLFuncIO  // this is the ports function will use to receive and send data
-	MsgRef string    // function can receive predefined message at instantiation time
+	Ref LLFuncRef // runtime will use this reference to find the function to spawn
+	IO  LLFuncIO  // this is the ports function will use to receive and send data
+	Msg LLMsg     // function can receive predefined message at instantiation time
 }
 
 type LLFuncRef struct {
