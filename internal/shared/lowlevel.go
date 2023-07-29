@@ -1,4 +1,4 @@
-package compiler
+package shared
 
 type LowLvlProgram struct {
 	Funcs  []LLFunc             // what functions to spawn and how

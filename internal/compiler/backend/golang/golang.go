@@ -20,7 +20,7 @@ type Backend struct{}
 
 var ErrExecTmpl = errors.New("execute template")
 
-func (b Backend) GenerateTarget(ctx context.Context, prog compiler.LLProgram) ([]byte, error) {
+func (b Backend) GenerateTarget(ctx context.Context, prog compiler.LowLvlProgram) ([]byte, error) {
 	tmpl, err := template.New("main.go.tmpl").Funcs(template.FuncMap{
 		"getMsg":           b.getMsg,
 		"getPorts":         b.getPortsFunc(prog.Ports),

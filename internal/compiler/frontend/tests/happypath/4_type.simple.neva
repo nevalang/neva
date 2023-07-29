@@ -7,12 +7,40 @@ type {
 
 }
 
+type
+{}
+
+type
+{
+}
+
+type
+{
+
+}
+
 type { MyInt int }
 
 type {
     MyInt int }
 
 type {
+    MyInt int
+}
+
+type
+{ MyInt int }
+
+type
+{
+    MyInt int }
+
+type
+{ MyInt int
+}
+
+type
+{
     MyInt int
 }
 

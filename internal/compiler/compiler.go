@@ -7,19 +7,19 @@ import (
 
 type Compiler struct {
 	analyzer Analyzer
-	irgen    LLRGenerator
+	llrgen   LowLvlGenerator
 	backend  Backend
 }
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, HLProgram) (HLProgram, error)
+		Analyze(context.Context, HighLvlProgram) (HighLvlProgram, error)
 	}
-	LLRGenerator interface {
-		Generate(context.Context, HLProgram) (LLProgram, error)
+	LowLvlGenerator interface {
+		Generate(context.Context, HighLvlProgram) (LowLvlProgram, error)
 	}
 	Backend interface {
-		GenerateTarget(context.Context, LLProgram) ([]byte, error)
+		GenerateTarget(context.Context, LowLvlProgram) ([]byte, error)
 	}
 )
 
@@ -29,13 +29,13 @@ var (
 	ErrBackend  = errors.New("backend")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog HLProgram) ([]byte, error) {
+func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) ([]byte, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, errors.Join(ErrAnalyzer, err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedProg)
+	irProg, err := c.llrgen.Generate(ctx, analyzedProg)
 	if err != nil {
 		return nil, errors.Join(ErrIrGen, err)
 	}

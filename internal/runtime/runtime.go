@@ -1,3 +1,4 @@
+// Package runtime implements environment for dataflow programs execution.
 package runtime
 
 import (

@@ -1,3 +1,4 @@
+// Package types implements static type-system with generics and structural subtyping.
 package types
 
 import "fmt"

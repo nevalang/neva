@@ -25,7 +25,7 @@ func main() {
 
 	putRuntime()
 
-	bb, err := (golang.Backend{}).GenerateTarget(nil, compiler.LLProgram{
+	bb, err := (golang.Backend{}).GenerateTarget(nil, compiler.LowLvlProgram{
 		Ports: map[compiler.LLPortAddr]uint8{
 			{Name: "start"}:                            0,
 			{Name: "exit"}:                             0,
