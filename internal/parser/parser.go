@@ -8,8 +8,8 @@ import (
 
 type Parser struct{}
 
-func (p Parser) Parse(context.Context, []byte) (shared.HighLvlProgram, error) {
-	return shared.HighLvlProgram{}, nil
+func (p Parser) Parse(context.Context, []byte) (map[string]shared.HLPackage, error) {
+	return map[string]shared.HLPackage{}, nil
 }
 
 func MustNew() Parser {

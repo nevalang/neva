@@ -6,9 +6,7 @@ import (
 	ts "github.com/nevalang/neva/pkg/types"
 )
 
-type HighLvlProgram map[string]Package
-
-type Package struct {
+type HLPackage struct {
 	Imports  map[string]string // alias->path
 	Entities map[string]Entity
 }
