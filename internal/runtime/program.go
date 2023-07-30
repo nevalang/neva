@@ -32,7 +32,7 @@ type Connection struct {
 }
 
 func (c Connection) String() string {
-	s := c.Sender.PortAddr.String() + "->"
+	s := c.Sender.Meta.PortAddr.String() + "->"
 	for i := range c.Receivers {
 		s += c.Receivers[i].Meta.String()
 		if i < len(c.Receivers)-1 {
@@ -44,7 +44,7 @@ func (c Connection) String() string {
 
 type SenderConnectionSide struct {
 	Port chan Msg
-	SenderConnectionSideMeta
+	Meta SenderConnectionSideMeta
 }
 
 type ReceiverConnectionSide struct {

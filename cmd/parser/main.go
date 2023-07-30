@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/antlr4-go/antlr/v4"
-	parser "github.com/nevalang/neva/internal/compiler/frontend/generated"
+	parser "github.com/nevalang/neva/internal/parser/generated"
 )
 
 type TreeShapeListener struct {

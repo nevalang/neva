@@ -31,21 +31,6 @@ type Runtime interface {
 	Run(context.Context, runtime.Program) (code int, err error)
 }
 
-func MustNew(
-	parser Parser,
-	llrgen LowLvlGenerator,
-	transformer Transformer,
-	runtime Runtime,
-) Interpreter {
-	tools.NilPanic(parser, llrgen, transformer, runtime)
-	return Interpreter{
-		parser:      parser,
-		llrgen:      llrgen,
-		transformer: transformer,
-		runtime:     runtime,
-	}
-}
-
 func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 	hl, err := i.parser.Parse(ctx, bb)
 	if err != nil {
@@ -68,4 +53,19 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 	}
 
 	return code, nil
+}
+
+func MustNew(
+	parser Parser,
+	llrgen LowLvlGenerator,
+	transformer Transformer,
+	runtime Runtime,
+) Interpreter {
+	tools.NilPanic(parser, llrgen, transformer, runtime)
+	return Interpreter{
+		parser:      parser,
+		llrgen:      llrgen,
+		transformer: transformer,
+		runtime:     runtime,
+	}
 }

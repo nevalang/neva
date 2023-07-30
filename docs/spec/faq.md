@@ -1,18 +1,30 @@
 # FAQ
 
+Frequently asked questions
+
 ## General
+
+### What is this?
+
+This is Neva - visual general-purpose data-flow (flow-based) programming language with static structural typing and implicit parallelism that compiles to machine code.
 
 ### Why yet another language?
 
-First - because there's no general-purpose [flow-based](https://en.wikipedia.org/wiki/Flow-based_programming) statically typed visual programming language with meta-programming,runtime-introspection and code generation in mind.
+The goal is to create a system that is so powerful and easy to use at the same time, that even a person with zero programming skills can create effective and maintainable programs. Imagine what a professional could do with such a tool.
 
-Second - it's not just a language. This project is more like a platform for a flow-based programming. It's a compiler, runtime, type-system, syntax, IDE plugins. All these components are more or less independent from eachother and could be used in separate.
+To achieve this we need 2 things: _visual programming_ and _implicit parallelism_. First will take maintainability to the next level by making diagrams first class source code and the second will effortlessly unlock the power of multi-core processors.
 
-The goal is to create a system that is so easy to use that even a not programmer could create efficient concurrent program that is easy to maintain. So the real answer is - it's not really _yet another_ programming language.
+### Why FBP/Dataflow?
 
-### Why visual language? Aren't visual programs less unmaintainable?
+Conventional programming paradigms served us well by taking us so far but it's time to admit that they have failed at least at 2 things: visual programming and parallelism. Exactly 2 things we need to make a next-gen programming language.
 
-Because [visual cortex exists](https://youtu.be/8Ab3ArE8W3s?t=1220).
+#### Implicit parallelism
+
+Any conventional program become more difficult when you add parallelism. As soon as you have more than one thread of execution bad things can happen such as deadlocks, race-conditions or memory-leaks. There are langauges that makes this simpler by introdusing concurrency primitives from dataflow world such as goroutines and channels in Go (CSP) or Erlang's processes (actor-model). However, it's still programmer's responsibility to manage those primitives. Concept of parallelism is simple, any adult understands it. But to make use of computer parallelism one must understand coroutines, channels, mutexes and atomics. We can do better.
+
+#### Visual programming
+
+...
 
 First - text is also _visual_ representation (but using sounds or smells is by the way interesting idea). We recognize patterns by looking at code and parse the program's heirarchal structure with braces or offsets.
 
@@ -52,38 +64,40 @@ With `fromRec` feature (that is implemented outside of the typesystem, because t
 
 ### Why structural subtyping?
 
-1. It allowes write less code, especially mappings between records and lists of records
+1. It allowes write less code, especially mappings between records, vectors and maps of records
 2. Nominal subtyping doesn't protect from mistake like passing wrong value to type-cast
 
-<!-- TODO provide examples -->
+### Why there's no Option/Maybe data type?
+
+Because 1) there's `T | nil` (that's the reason shy `nil` is a type) 2) Having `Option` doesn't really introcice any advantage in FBP because we don't have objects and behaviour This means no methods for `Option` instances and thus no handy OOP mechanics for it.
 
 ## Implementation
 
 ### Why Go?
 
-It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allowes to reuse its stdlib and increase performance by just updating compiler i.e. for free. 
+It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allowes to reuse its stdlib and increase performance by just updating compiler i.e. for free.
 
 ## FBP
 
-### Is Neva "classical FBP"
+### Is Neva "classical FBP"?
 
-First of all, there's a [great article](https://jpaulm.github.io/fbp/fbp-inspired-vs-real-fbp.html) by J Paul Morrison (inventor of FBP).
+No. But it inherits so many ideas from it that it would be better to use word "FBP" than anything else. There's a [great article](https://jpaulm.github.io/fbp/fbp-inspired-vs-real-fbp.html) by mr. J. Paul Morrison (inventor of FBP) on this topic.
 
-There are many differences, among them:
+Now here's what makes Neva different from classical FBP:
 
-- Unlike in classical FBP, programmer should not write code by hand. Code should be generated. (But it's possible of course to write it manually)
-- FBP itself doesn't have static typing. The idea is that you write code by hand in statically typed langauge like Java or Go and then reuse it in a non-typed FBP schema
-- FBP doesn't have _runtime functions_. There's just _elementary components_ that are written by hand and do specific work. JPaulm did not like the idea of e.g. summing numbers using FBP components
-- Neva has lower-level runtime program structure (IR). FBP on the other hand doesn't describe anything like that.
-- FBP describes life-cycle of IPs (messages), Neva just uses Go's GC
-- FBP allowes process lifecycle control. E.g. process can _terminate_ and it's possible to _revive_ it. On the other hand Neva allowes to design component in a way that it can pause and resume its work at signal if that's needed. Otherwise Neva's runtime takes care of when a node must be shutdown.
+- Neva has C-like syntax for its textual representation while FBP syntax is somewhat esoteric. It's important to node though that despite C-like syntax Neva programs are 100% declarative
+- Neva doesn't let you program in "implementation-level" language like Go (similar to how Python doesn't let you program in assembly). FBP on the other hand forces you to program in langauges like Go or Java to implement elementary components.
+- Neva introduces builtin observability via runtime interceptor and messages tracing, FBP has nothing like that
+- Existing FBP implementations are essentially interpreters. Neva has both compiler and interpreter.
+- Neva is statically typed while FBP isn't. FBP's idea is that you write code by hand in statically typed langauge like Go or Java and then use it in a non-typed FBP program, introducing runtime type-checks where needed
+- Neva have _runtime functions_. In FBP there's just _elementary components_ that are written by programmer. Mr. Morrison did not like the idea of having "atomic" components like e.g. "numbers adder"
+- Neva introduces hierarchical structure of program entities and package management similar to Go. Entities are packed into reusable packages and could be either public or private.
+- Neva leverages existing Go's GC, FBP on the other hand introduces IP's life-cycle
+- Neva's concurrency model runs on top of Go's scheduler which means it uses CSP as a lower-level fundament. FBP implementations on the other hand used to use shared state with mutex locks
+- Neva has low-level program representation (LLR). FBP on the other hand doesn't describe anything like that
 
-### Why some things have different naming?
+Also there's differences in naming:
 
-- _Message_ instead of _information package_ not to be confused with _IP_ as internet protocol
-- _Node_ instead of _process_ 1) not to be confused with _OS processes_ and 2) there are _io nodes_ that are not component instances but that are part of the _network_
-- _Static inports_ instead of _IIPs_ because of not using word _IP_
-
-### Why `opt` (optional) is base type
-
-Because if it would be a normal `rec` then it would be possible to read it's internal field with value of type `T` that could not be there.
+- _Message_ instead of _IP (information package)_ not to be confused with "IP" as _internet protocol_
+- _Node_ instead of _process_ 1) not to be confused with _OS processes_
+- _Bound inports_ instead of _IIPs_ because of not using word _IP_

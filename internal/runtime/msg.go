@@ -28,6 +28,7 @@ func (emptyMsg) Float() float64      { return 0 }
 func (emptyMsg) Str() string         { return "" }
 func (emptyMsg) Vec() []Msg          { return []Msg{} }
 func (emptyMsg) Map() map[string]Msg { return map[string]Msg{} }
+func (emptyMsg) String() string      { return "stringer not implemented" }
 
 // Int
 
@@ -41,6 +42,22 @@ func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
 
 func NewIntMsg(n int) IntMsg {
 	return IntMsg{
+		emptyMsg: emptyMsg{},
+		v:        n,
+	}
+}
+
+// Float
+
+type FloatMsg struct {
+	emptyMsg
+	v float64
+}
+
+func (msg IntMsg) FloatMsg() int { return msg.v }
+
+func NewFloatMsg(n float64) FloatMsg {
+	return FloatMsg{
 		emptyMsg: emptyMsg{},
 		v:        n,
 	}

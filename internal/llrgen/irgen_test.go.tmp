@@ -16,25 +16,25 @@ var h helper.Helper
 func TestGenerator_Generate(t *testing.T) {
 	tests := []struct {
 		name    string
-		prog    compiler.HighLvlProgram
-		want    compiler.LowLvlProgram
+		prog    shared.HighLvlProgram
+		want    shared.LowLvlProgram
 		wantErr error
 	}{
 		// TODO - pkgs==nil test
 		{
 			name: "program that does nothing",
-			prog: compiler.HighLvlProgram{ // start -> trigger.sigs[0]; trigger.v = 0; trigger.v -> exit
+			prog: shared.HighLvlProgram{ // start -> trigger.sigs[0]; trigger.v = 0; trigger.v -> exit
 				"io": {
-					Entities: map[string]compiler.Entity{
+					Entities: map[string]shared.Entity{
 						"Print": {
 							Exported: true,
-							Kind:     compiler.ComponentEntity,
-							Component: compiler.Component{
-								IO: compiler.IO{
-									In: map[string]compiler.Port{
+							Kind:     shared.ComponentEntity,
+							Component: shared.Component{
+								IO: shared.IO{
+									In: map[string]shared.Port{
 										"v": {},
 									},
-									Out: map[string]compiler.Port{
+									Out: map[string]shared.Port{
 										"v": {},
 									},
 								},
@@ -43,17 +43,17 @@ func TestGenerator_Generate(t *testing.T) {
 					},
 				},
 				"flow": {
-					Entities: map[string]compiler.Entity{
+					Entities: map[string]shared.Entity{
 						"Trigger": {
 							Exported: true,
-							Kind:     compiler.ComponentEntity,
-							Component: compiler.Component{
-								IO: compiler.IO{
-									In: map[string]compiler.Port{
+							Kind:     shared.ComponentEntity,
+							Component: shared.Component{
+								IO: shared.IO{
+									In: map[string]shared.Port{
 										"sigs": {IsArr: true},
 										"v":    {},
 									},
-									Out: map[string]compiler.Port{
+									Out: map[string]shared.Port{
 										"v": {},
 									},
 								},
@@ -63,34 +63,34 @@ func TestGenerator_Generate(t *testing.T) {
 				},
 				"main": {
 					Imports: h.Imports("flow"),
-					Entities: map[string]compiler.Entity{
+					Entities: map[string]shared.Entity{
 						"code": h.IntMsg(false, 0),
 						"main": h.MainComponent(
-							map[string]compiler.Node{
+							map[string]shared.Node{
 								"trigger": h.NodeWithStaticPorts(
 									h.NodeInstance("flow", "Trigger", h.Rec(nil)),
-									map[compiler.RelPortAddr]compiler.EntityRef{
+									map[shared.RelPortAddr]shared.EntityRef{
 										{Name: "v"}: {Name: "code"},
 									},
 								),
 							},
-							[]compiler.Connection{
+							[]shared.Connection{
 								{
-									SenderSide: compiler.SenderConnectionSide{
-										PortConnectionSide: compiler.PortConnectionSide{
-											PortAddr: compiler.ConnPortAddr{
+									SenderSide: shared.SenderConnectionSide{
+										PortConnectionSide: shared.PortConnectionSide{
+											PortAddr: shared.ConnPortAddr{
 												Node: "in",
-												RelPortAddr: compiler.RelPortAddr{
+												RelPortAddr: shared.RelPortAddr{
 													Name: "start",
 												},
 											},
 										},
 									},
-									ReceiverSides: []compiler.PortConnectionSide{
+									ReceiverSides: []shared.PortConnectionSide{
 										{
-											PortAddr: compiler.ConnPortAddr{
+											PortAddr: shared.ConnPortAddr{
 												Node: "trigger.",
-												RelPortAddr: compiler.RelPortAddr{
+												RelPortAddr: shared.RelPortAddr{
 													Name: "sig",
 												},
 											},
@@ -98,21 +98,21 @@ func TestGenerator_Generate(t *testing.T) {
 									},
 								},
 								{
-									SenderSide: compiler.SenderConnectionSide{
-										PortConnectionSide: compiler.PortConnectionSide{
-											PortAddr: compiler.ConnPortAddr{
+									SenderSide: shared.SenderConnectionSide{
+										PortConnectionSide: shared.PortConnectionSide{
+											PortAddr: shared.ConnPortAddr{
 												Node: "trigger",
-												RelPortAddr: compiler.RelPortAddr{
+												RelPortAddr: shared.RelPortAddr{
 													Name: "v",
 												},
 											},
 										},
 									},
-									ReceiverSides: []compiler.PortConnectionSide{
+									ReceiverSides: []shared.PortConnectionSide{
 										{
-											PortAddr: compiler.ConnPortAddr{
+											PortAddr: shared.ConnPortAddr{
 												Node: "out.exit.",
-												RelPortAddr: compiler.RelPortAddr{
+												RelPortAddr: shared.RelPortAddr{
 													Name: "sig",
 												},
 											},
@@ -124,8 +124,8 @@ func TestGenerator_Generate(t *testing.T) {
 					},
 				},
 			},
-			want: compiler.LowLvlProgram{
-				Ports: map[compiler.LLPortAddr]uint8{
+			want: shared.LowLvlProgram{
+				Ports: map[shared.LLPortAddr]uint8{
 					{Path: "main/in", Name: "start"}:               0,
 					{Path: "main/out", Name: "exit"}:               0,
 					{Path: "trigger.in", Name: "sigs", Idx: 0}:     0,
@@ -133,60 +133,60 @@ func TestGenerator_Generate(t *testing.T) {
 					{Path: "main/trigger/out", Name: "v", Idx: 0}:  0,
 					{Path: "main/giver/out", Name: "code", Idx: 0}: 0,
 				},
-				Funcs: []compiler.LLFunc{
+				Funcs: []shared.LLFunc{
 					{
-						Ref: compiler.LLFuncRef{
+						Ref: shared.LLFuncRef{
 							Pkg:  "flow",
 							Name: "Giver",
 						},
-						IO: compiler.LLFuncIO{
-							Out: []compiler.LLPortAddr{
+						IO: shared.LLFuncIO{
+							Out: []shared.LLPortAddr{
 								// TODO
 							},
 						},
 						MsgRef: "",
 					},
 					{
-						Ref: compiler.LLFuncRef{Pkg: "flow", Name: "Trigger"},
-						IO: compiler.LLFuncIO{
-							In: []compiler.LLPortAddr{
+						Ref: shared.LLFuncRef{Pkg: "flow", Name: "Trigger"},
+						IO: shared.LLFuncIO{
+							In: []shared.LLPortAddr{
 								{Path: "trigger.in", Name: "sigs"},
 								{Path: "trigger.in", Name: "v"},
 							},
-							Out: []compiler.LLPortAddr{
+							Out: []shared.LLPortAddr{
 								{Path: "trigger.out", Name: "v"},
 							},
 						},
 					},
 				},
-				Net: []compiler.LLConnection{
+				Net: []shared.LLConnection{
 					{
-						SenderSide: compiler.LLConnectionSide{
-							PortAddr: compiler.LLPortAddr{Name: "start"},
+						SenderSide: shared.LLConnectionSide{
+							PortAddr: shared.LLPortAddr{Name: "start"},
 						},
-						ReceiverSides: []compiler.LLConnectionSide{
+						ReceiverSides: []shared.LLConnectionSide{
 							{
-								PortAddr: compiler.LLPortAddr{Path: "trigger.in", Name: "sigs"},
+								PortAddr: shared.LLPortAddr{Path: "trigger.in", Name: "sigs"},
 							},
 						},
 					},
 					{
-						SenderSide: compiler.LLConnectionSide{
-							PortAddr: compiler.LLPortAddr{Path: "giver.out", Name: "code"},
+						SenderSide: shared.LLConnectionSide{
+							PortAddr: shared.LLPortAddr{Path: "giver.out", Name: "code"},
 						},
-						ReceiverSides: []compiler.LLConnectionSide{
+						ReceiverSides: []shared.LLConnectionSide{
 							{
-								PortAddr: compiler.LLPortAddr{Path: "trigger.in", Name: "v"},
+								PortAddr: shared.LLPortAddr{Path: "trigger.in", Name: "v"},
 							},
 						},
 					},
 					{
-						SenderSide: compiler.LLConnectionSide{
-							PortAddr: compiler.LLPortAddr{Path: "trigger.out", Name: "v"},
+						SenderSide: shared.LLConnectionSide{
+							PortAddr: shared.LLPortAddr{Path: "trigger.out", Name: "v"},
 						},
-						ReceiverSides: []compiler.LLConnectionSide{
+						ReceiverSides: []shared.LLConnectionSide{
 							{
-								PortAddr: compiler.LLPortAddr{Name: "exit"},
+								PortAddr: shared.LLPortAddr{Name: "exit"},
 							},
 						},
 					},

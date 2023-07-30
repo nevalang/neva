@@ -17,10 +17,13 @@ type DefaultFuncRunner struct {
 	repo map[FuncRef]Func
 }
 
-func NewFuncRunner(repo map[FuncRef]Func) DefaultFuncRunner {
+func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
+	if repo == nil {
+		return DefaultFuncRunner{}, ErrNilDeps
+	}
 	return DefaultFuncRunner{
 		repo: repo,
-	}
+	}, nil
 }
 
 func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) error {

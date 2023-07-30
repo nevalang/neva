@@ -34,7 +34,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 
 		rSenderConnSide := runtime.SenderConnectionSide{
 			Port: senderPort,
-			SenderConnectionSideMeta: runtime.SenderConnectionSideMeta{
+			Meta: runtime.SenderConnectionSideMeta{
 				PortAddr: senderAddr,
 			},
 		}
@@ -77,27 +77,67 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 
 	rFuncs := make([]runtime.FuncRoutine, len(ll.Funcs))
 	for _, f := range ll.Funcs {
-		io := runtime.FuncIO{
-			In:  map[string][]chan runtime.Msg{},
-			Out: map[string][]chan runtime.Msg{},
-		},
-		
+		rIOIn := make(map[string][]chan runtime.Msg, len(f.IO.In))
+		for _, addr := range f.IO.In {
+			rPort := rPorts[runtime.PortAddr{
+				Path: addr.Path,
+				Name: addr.Name,
+				Idx:  addr.Idx,
+			}]
+			rIOIn[addr.Name] = append(rIOIn[addr.Name], rPort)
+		}
+
+		rIOOut := make(map[string][]chan runtime.Msg, len(f.IO.Out))
+		for _, addr := range f.IO.Out {
+			rPort := rPorts[runtime.PortAddr{
+				Path: addr.Path,
+				Name: addr.Name,
+				Idx:  addr.Idx,
+			}]
+			rIOOut[addr.Name] = append(rIOOut[addr.Name], rPort)
+		}
+
+		rMsg := t.msg(f.Msg)
+
 		rFuncs = append(rFuncs, runtime.FuncRoutine{
 			Ref: runtime.FuncRef{
 				Pkg:  f.Ref.Pkg,
 				Name: f.Ref.Name,
 			},
 			IO: runtime.FuncIO{
-				In:  map[string][]chan runtime.Msg{},
-				Out: map[string][]chan runtime.Msg{},
+				In:  rIOIn,
+				Out: rIOOut,
 			},
-			Msg: nil,
+			Msg: rMsg,
 		})
 	}
 
 	return runtime.Program{
 		Ports:       rPorts,
 		Connections: rConns,
-		Funcs:       []runtime.FuncRoutine{},
+		Funcs:       rFuncs,
 	}, nil
+}
+
+func (t transformer) msg(msg shared.LLMsg) runtime.Msg {
+	var rMsg runtime.Msg
+
+	switch msg.Type {
+	case shared.LLBoolMsg:
+		rMsg = runtime.NewBoolMsg(msg.Bool)
+	case shared.LLIntMsg:
+		rMsg = runtime.NewIntMsg(msg.Int)
+	case shared.LLFloatMsg:
+		rMsg = runtime.NewFloatMsg(msg.Float)
+	case shared.LLStrMsg:
+		rMsg = runtime.NewStrMsg(msg.Str)
+	default:
+		panic("unknown message type")
+	}
+
+	return rMsg
+}
+
+func MustNewTransformer() transformer {
+	return transformer{}
 }

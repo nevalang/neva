@@ -1,11 +1,11 @@
-package irgen
+package llrgen
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/shared"
 )
 
 type Generator struct{}
@@ -16,18 +16,18 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
-func (g Generator) Generate(ctx context.Context, prog compiler.HighLvlProgram) (compiler.LowLvlProgram, error) {
+func (g Generator) Generate(ctx context.Context, prog shared.HighLvlProgram) (shared.LowLvlProgram, error) {
 	if len(prog) == 0 {
-		return compiler.LowLvlProgram{}, ErrNoPkgs
+		return shared.LowLvlProgram{}, ErrNoPkgs
 	}
 
 	// usually we "look" at the program "inside" the root node but here we look at the root node from the outside
-	ref := compiler.EntityRef{Pkg: "main", Name: "main"}
+	ref := shared.EntityRef{Pkg: "main", Name: "main"}
 	rootNodeCtx := nodeContext{
 		path:      "main",
 		entityRef: ref,
 		io: ioContext{
-			in: map[compiler.RelPortAddr]inportSlotContext{
+			in: map[shared.RelPortAddr]inportSlotContext{
 				{Name: "start"}: {},
 			},
 			out: map[string]uint8{
@@ -36,14 +36,13 @@ func (g Generator) Generate(ctx context.Context, prog compiler.HighLvlProgram) (
 		},
 	}
 
-	result := compiler.LowLvlProgram{
-		Ports:  map[compiler.LLPortAddr]uint8{},
-		Net:    []compiler.LLConnection{},
-		Funcs:  []compiler.LLFunc{},
-		Consts: map[string]compiler.LLMsg{},
+	result := shared.LowLvlProgram{
+		Ports: map[shared.LLPortAddr]uint8{},
+		Net:   []shared.LLConnection{},
+		Funcs: []shared.LLFunc{},
 	}
 	if err := g.processNode(ctx, rootNodeCtx, prog, &result); err != nil {
-		return compiler.LowLvlProgram{}, fmt.Errorf("process root node: %w", err)
+		return shared.LowLvlProgram{}, fmt.Errorf("process root node: %w", err)
 	}
 
 	return result, nil
@@ -52,19 +51,19 @@ func (g Generator) Generate(ctx context.Context, prog compiler.HighLvlProgram) (
 type (
 	// nodeContext describes how node is used by its parent
 	nodeContext struct {
-		path      string             // path to current node including current node itself
-		entityRef compiler.EntityRef // refers to component (or interface?)
+		path      string           // path to current node including current node itself
+		entityRef shared.EntityRef // refers to component (or interface?)
 		io        ioContext
-		di        map[string]compiler.Node // instances must refer to components
+		di        map[string]shared.Node // instances must refer to components
 	}
 	// ioContext describes how many port slots must be created and how many incoming connections inports have
 	ioContext struct {
-		in  map[compiler.RelPortAddr]inportSlotContext
+		in  map[shared.RelPortAddr]inportSlotContext
 		out map[string]uint8 // name -> slots used by parent count
 	}
 	inportSlotContext struct {
 		// incomingConnectionsCount uint8 // how many senders (outports) writes to this receiver (inport slot)
-		staticMsgRef compiler.EntityRef // do we need it?
+		staticMsgRef shared.EntityRef // do we need it?
 	}
 )
 
@@ -79,8 +78,8 @@ var (
 func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]compiler.Pkg,
-	result *compiler.HighLvlProgram,
+	pkgs map[string]shared.Pkg,
+	result *shared.HighLvlProgram,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef) // do we really need this func?
 	if err != nil {
@@ -107,13 +106,13 @@ func (g Generator) processNode(
 	giverSpecMsg := g.buildGiverSpecMsg(handleNetRes.giverSpecEls, result)
 	giverSpecMsgPath := nodeCtx.path + "/" + "giver"
 	result.Consts[giverSpecMsgPath] = giverSpecMsg
-	giverFunc := compiler.LLFunc{
-		Ref: compiler.LLFuncRef{
+	giverFunc := shared.LLFunc{
+		Ref: shared.LLFuncRef{
 			Pkg:  "flow",
 			Name: "Giver",
 		},
-		IO: compiler.LLFuncIO{
-			Out: make([]compiler.LLPortAddr, 0, len(handleNetRes.giverSpecEls)),
+		IO: shared.LLFuncIO{
+			Out: make([]shared.LLPortAddr, 0, len(handleNetRes.giverSpecEls)),
 		},
 		MsgRef: giverSpecMsgPath,
 	}
@@ -140,9 +139,9 @@ func (g Generator) processNode(
 
 // buildGiverSpecMsg translates every spec element to ir msg and puts it into result messages.
 // Then it builds and returns ir vec msg where every element points to corresponding spec element.
-func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *compiler.HighLvlProgram) compiler.LLMsg {
-	msg := compiler.LLMsg{
-		Type: compiler.LLVecMsg,
+func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *shared.HighLvlProgram) shared.LLMsg {
+	msg := shared.LLMsg{
+		Type: shared.LLVecMsg,
 		Vec:  make([]string, 0, len(specEls)),
 	}
 
@@ -154,22 +153,22 @@ func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *compiler.Hig
 	for i, el := range specEls {
 		prefix := el.outPortAddr.Path + "/" + fmt.Sprint(i)
 
-		nameMsg := compiler.LLMsg{
-			Type: compiler.LLStrMsg,
+		nameMsg := shared.LLMsg{
+			Type: shared.LLStrMsg,
 			Str:  el.outPortAddr.Name,
 		}
 		namePath := prefix + "/" + "name"
 		result.Consts[namePath] = nameMsg
 
-		idxMsg := compiler.LLMsg{
-			Type: compiler.LLIntMsg,
+		idxMsg := shared.LLMsg{
+			Type: shared.LLIntMsg,
 			Int:  int(el.outPortAddr.Idx),
 		}
 		idxPath := prefix + "/" + "idx"
 		result.Consts[idxPath] = idxMsg
 
-		addrMsg := compiler.LLMsg{
-			Type: compiler.LLMapMsg,
+		addrMsg := shared.LLMsg{
+			Type: shared.LLMapMsg,
 			Map: map[string]string{
 				"name": namePath,
 				"idx":  idxPath,
@@ -178,8 +177,8 @@ func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *compiler.Hig
 		addrPath := prefix + "/" + "addr"
 		result.Consts[addrPath] = addrMsg
 
-		specElMsg := compiler.LLMsg{
-			Type: compiler.LLMapMsg,
+		specElMsg := shared.LLMsg{
+			Type: shared.LLMapMsg,
 			Map: map[string]string{
 				"msg":  el.msgToSendName,
 				"addr": addrPath,
@@ -196,7 +195,7 @@ func (g Generator) buildGiverSpecMsg(specEls []giverSpecEl, result *compiler.Hig
 func (Generator) getSubNodeCtx(
 	parentNodeCtx nodeContext,
 	name string,
-	node compiler.Node,
+	node shared.Node,
 	slotsCount portSlotsCount,
 ) nodeContext {
 	subNodeCtx := nodeContext{
@@ -228,15 +227,15 @@ func (Generator) getSubNodeCtx(
 // getFuncRoutine simply builds and returns func routine structure
 func (Generator) getFuncRoutine(
 	nodeCtx nodeContext,
-	runtimeFuncInportAddrs []compiler.LLPortAddr,
-	runtimeFuncOutPortAddrs []compiler.LLPortAddr,
-) compiler.LLFunc {
-	return compiler.LLFunc{
-		Ref: compiler.LLFuncRef{
+	runtimeFuncInportAddrs []shared.LLPortAddr,
+	runtimeFuncOutPortAddrs []shared.LLPortAddr,
+) shared.LLFunc {
+	return shared.LLFunc{
+		Ref: shared.LLFuncRef{
 			Pkg:  nodeCtx.entityRef.Pkg,
 			Name: nodeCtx.entityRef.Name,
 		},
-		IO: compiler.LLFuncIO{
+		IO: shared.LLFuncIO{
 			In:  runtimeFuncInportAddrs,
 			Out: runtimeFuncOutPortAddrs,
 		},
@@ -244,7 +243,7 @@ func (Generator) getFuncRoutine(
 }
 
 type portSlotsCount struct {
-	in  map[compiler.RelPortAddr]inportSlotContext // inportSlotContext will be empty
+	in  map[shared.RelPortAddr]inportSlotContext // inportSlotContext will be empty
 	out map[string]uint8
 }
 
@@ -256,13 +255,13 @@ type handleNetworkResult struct {
 // handleNetwork inserts ir connections into the given result
 // and returns information about how many slots of each port is actually used in network.
 func (g Generator) handleNetwork(
-	pkgs map[string]compiler.Pkg,
-	net []compiler.Connection, // pass only net
+	pkgs map[string]shared.Pkg,
+	net []shared.Connection, // pass only net
 	nodeCtx nodeContext,
-	result *compiler.HighLvlProgram,
+	result *shared.HighLvlProgram,
 ) (handleNetworkResult, error) {
 	slotsUsage := map[string]portSlotsCount{}
-	inPortsSlotsSet := map[compiler.ConnPortAddr]bool{}
+	inPortsSlotsSet := map[shared.ConnPortAddr]bool{}
 	giverSpecEls := make([]giverSpecEl, 0, len(net))
 
 	for _, conn := range net {
@@ -270,7 +269,7 @@ func (g Generator) handleNetwork(
 
 		if _, ok := slotsUsage[senderPortAddr.Node]; !ok {
 			slotsUsage[senderPortAddr.Node] = portSlotsCount{
-				in:  map[compiler.RelPortAddr]inportSlotContext{},
+				in:  map[shared.RelPortAddr]inportSlotContext{},
 				out: map[string]uint8{},
 			}
 		}
@@ -287,7 +286,7 @@ func (g Generator) handleNetwork(
 			giverSpecEls = append(giverSpecEls, *handleSenderResult.giverParams)
 		}
 
-		receiverSides := make([]compiler.LLConnectionSide, 0, len(conn.ReceiverSides))
+		receiverSides := make([]shared.LLConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
 			irSide := g.mapPortSide(nodeCtx.path, receiverSide, "in")
 			receiverSides = append(receiverSides, irSide)
@@ -295,12 +294,12 @@ func (g Generator) handleNetwork(
 			// we can have same receiver for different senders and we don't want to count it twice
 			if !inPortsSlotsSet[receiverSide.PortAddr] {
 				slotsUsage[senderPortAddr.Node].in[receiverSide.PortAddr.RelPortAddr] = inportSlotContext{
-					// staticMsgRef: compiler.EntityRef{},
+					// staticMsgRef: shared.EntityRef{},
 				}
 			}
 		}
 
-		result.Net = append(result.Net, compiler.LLConnection{
+		result.Net = append(result.Net, shared.LLConnection{
 			SenderSide:    handleSenderResult.irConnSide,
 			ReceiverSides: receiverSides,
 		})
@@ -314,13 +313,13 @@ func (g Generator) handleNetwork(
 
 // handleInPortsCreation creates and inserts ir inports into the given result.
 // It also returns slice of created ir port addrs.
-func (Generator) handleInPortsCreation(nodeCtx nodeContext, result *compiler.HighLvlProgram) []compiler.LLPortAddr {
-	runtimeFuncInportAddrs := make([]compiler.LLPortAddr, 0, len(nodeCtx.io.in)) // only needed for nodes with runtime func
+func (Generator) handleInPortsCreation(nodeCtx nodeContext, result *shared.HighLvlProgram) []shared.LLPortAddr {
+	runtimeFuncInportAddrs := make([]shared.LLPortAddr, 0, len(nodeCtx.io.in)) // only needed for nodes with runtime func
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO here at all
 	// btw we can't use component's IO instead of nodeCtx because we need to know how many slots are used by parent
 	for addr := range nodeCtx.io.in {
-		addr := compiler.LLPortAddr{
+		addr := shared.LLPortAddr{
 			Path: nodeCtx.path + "/" + "in",
 			Name: addr.Name,
 			Idx:  addr.Idx,
@@ -336,11 +335,11 @@ func (Generator) handleInPortsCreation(nodeCtx nodeContext, result *compiler.Hig
 // It also creates and inserts void routines and connections for outports unused by parent.
 // It returns slice of ir port addrs that could be used to create a func routine.
 func (Generator) handleOutPortsCreation(
-	outports compiler.Ports,
+	outports shared.Ports,
 	nodeCtx nodeContext,
-	result *compiler.HighLvlProgram,
-) []compiler.LLPortAddr {
-	runtimeFuncOutportAddrs := make([]compiler.LLPortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
+	result *shared.HighLvlProgram,
+) []shared.LLPortAddr {
+	runtimeFuncOutportAddrs := make([]shared.LLPortAddr, 0, len(nodeCtx.io.out)) // same as runtimeFuncInportAddrs
 
 	for name := range outports {
 		slotsCount, ok := nodeCtx.io.out[name]
@@ -350,7 +349,7 @@ func (Generator) handleOutPortsCreation(
 		}
 
 		for i := 0; i < int(slotsCount); i++ {
-			addr := compiler.LLPortAddr{
+			addr := shared.LLPortAddr{
 				Path: nodeCtx.path + "/" + "out",
 				Name: name,
 				Idx:  uint8(i),
@@ -363,38 +362,38 @@ func (Generator) handleOutPortsCreation(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]compiler.Pkg, ref compiler.EntityRef) (compiler.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]shared.Pkg, ref shared.EntityRef) (shared.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
-		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
+		return shared.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
 	}
 
 	entity, ok := pkg.Entities[ref.Name]
 	if !ok {
-		return compiler.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotFound, ref.Name)
+		return shared.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotFound, ref.Name)
 	}
 
 	return entity, nil
 }
 
 type handleSenderSideResult struct {
-	irConnSide  compiler.LLConnectionSide
+	irConnSide  shared.LLConnectionSide
 	giverParams *giverSpecEl // nil means sender is normal outport and no giver is needed
 }
 
 type giverSpecEl struct {
 	msgToSendName string // this message is already inserted into the result ir
-	outPortAddr   compiler.LLPortAddr
+	outPortAddr   shared.LLPortAddr
 }
 
 // handleSenderSide checks if sender side refers to a message instead of port.
 // If not, then it acts just like a mapPortSide without any side-effects.
 // Otherwise it first builds the message, then inserts it into result, then returns params for giver creation.
 func (g Generator) handleSenderSide(
-	pkgs map[string]compiler.Pkg,
+	pkgs map[string]shared.Pkg,
 	nodeCtxPath string,
-	side compiler.SenderConnectionSide,
-	result *compiler.HighLvlProgram,
+	side shared.SenderConnectionSide,
+	result *shared.HighLvlProgram,
 ) (handleSenderSideResult, error) {
 	if side.MsgRef == nil {
 		irConnSide := g.mapPortSide(nodeCtxPath, side.PortConnectionSide, "out")
@@ -409,19 +408,19 @@ func (g Generator) handleSenderSide(
 	msgName := nodeCtxPath + "/" + side.MsgRef.Pkg + "." + side.MsgRef.Name
 	result.Consts[msgName] = irMsg
 
-	giverOutport := compiler.LLPortAddr{
+	giverOutport := shared.LLPortAddr{
 		Path: nodeCtxPath,
 		Name: side.MsgRef.Pkg + "." + side.MsgRef.Name,
 	}
 	result.Ports[giverOutport] = 0
 
-	selectors := make([]compiler.LLSelector, 0, len(side.Selectors))
+	selectors := make([]shared.LLSelector, 0, len(side.Selectors))
 	for _, selector := range side.Selectors {
-		selectors = append(selectors, compiler.LLSelector(selector))
+		selectors = append(selectors, shared.LLSelector(selector))
 	}
 
 	return handleSenderSideResult{
-		irConnSide: compiler.LLConnectionSide{
+		irConnSide: shared.LLConnectionSide{
 			PortAddr:  giverOutport,
 			Selectors: selectors,
 		},
@@ -434,10 +433,10 @@ func (g Generator) handleSenderSide(
 
 // buildIRMsg recursively builds the message by following references and analyzing the type expressions.
 // it assumes all type expressions are resolved and it thus possible to 1-1 map them to IR types.
-func (g Generator) buildIRMsg(pkgs map[string]compiler.Pkg, ref compiler.EntityRef) (compiler.LLMsg, error) {
+func (g Generator) buildIRMsg(pkgs map[string]shared.Pkg, ref shared.EntityRef) (shared.LLMsg, error) {
 	entity, err := g.lookupEntity(pkgs, ref)
 	if err != nil {
-		return compiler.LLMsg{}, fmt.Errorf("loopup entity: %w", err)
+		return shared.LLMsg{}, fmt.Errorf("loopup entity: %w", err)
 	}
 
 	msg := entity.Msg
@@ -445,7 +444,7 @@ func (g Generator) buildIRMsg(pkgs map[string]compiler.Pkg, ref compiler.EntityR
 	if msg.Ref != nil {
 		result, err := g.buildIRMsg(pkgs, *msg.Ref)
 		if err != nil {
-			return compiler.LLMsg{}, fmt.Errorf("get ir msg: %w", err)
+			return shared.LLMsg{}, fmt.Errorf("get ir msg: %w", err)
 		}
 
 		return result, nil
@@ -464,12 +463,12 @@ func (g Generator) buildIRMsg(pkgs map[string]compiler.Pkg, ref compiler.EntityR
 
 	// msg.Value
 
-	return compiler.LLMsg{}, nil
+	return shared.LLMsg{}, nil
 }
 
 // mapPortSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (Generator) mapPortSide(nodeCtxPath string, side compiler.PortConnectionSide, pathPostfix string) compiler.LLConnectionSide {
-	addr := compiler.LLPortAddr{
+func (Generator) mapPortSide(nodeCtxPath string, side shared.PortConnectionSide, pathPostfix string) shared.LLConnectionSide {
+	addr := shared.LLPortAddr{
 		Path: nodeCtxPath + "/" + side.PortAddr.Node,
 		Name: side.PortAddr.Name,
 		Idx:  side.PortAddr.Idx,
@@ -479,12 +478,12 @@ func (Generator) mapPortSide(nodeCtxPath string, side compiler.PortConnectionSid
 		addr.Path += "/" + pathPostfix
 	}
 
-	selectors := make([]compiler.LLSelector, 0, len(side.Selectors))
+	selectors := make([]shared.LLSelector, 0, len(side.Selectors))
 	for _, selector := range side.Selectors {
-		selectors = append(selectors, compiler.LLSelector(selector))
+		selectors = append(selectors, shared.LLSelector(selector))
 	}
 
-	return compiler.LLConnectionSide{
+	return shared.LLConnectionSide{
 		PortAddr:  addr,
 		Selectors: selectors,
 	}

@@ -17,16 +17,19 @@ type DefaultConnector struct {
 	interceptor Interceptor
 }
 
-func NewConnector(interceptor Interceptor) Connector {
+func NewDefaultConnector(interceptor Interceptor) (DefaultConnector, error) {
+	if interceptor == nil {
+		return DefaultConnector{}, ErrNilDeps
+	}
 	return DefaultConnector{
 		interceptor: interceptor,
-	}
+	}, nil
 }
 
 type Interceptor interface {
 	AfterSending(from SenderConnectionSideMeta, msg Msg) Msg
-	BeforeReceiving(from, to SenderConnectionSideMeta, msg Msg) Msg
-	AfterReceiving(from, to SenderConnectionSideMeta, msg Msg)
+	BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg
+	AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg)
 }
 
 func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
@@ -46,19 +49,12 @@ func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error
 }
 
 func (c DefaultConnector) broadcast(ctx context.Context, conn Connection) error {
-	var err error
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case msg := <-conn.Sender.Port:
 			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
-
-			msg, err = c.applySelector(msg, conn.Sender.Meta.Selectors)
-			if err != nil {
-				return fmt.Errorf("%w: %v: %v", errors.Join(ErrSelectorSending, err), conn.Sender.Meta, msg)
-			}
-
 			if err := c.distribute(ctx, msg, conn.Sender.Meta, conn.Receivers); err != nil {
 				return fmt.Errorf("%w: %v", errors.Join(ErrDistribute, err), msg)
 			}
@@ -70,8 +66,8 @@ func (c DefaultConnector) broadcast(ctx context.Context, conn Connection) error 
 func (c DefaultConnector) distribute(
 	ctx context.Context,
 	msg Msg,
-	senderMeta ConnectionSideMeta,
-	q []ConnectionSide,
+	senderMeta SenderConnectionSideMeta,
+	q []ReceiverConnectionSide,
 ) error {
 	i := 0
 	preparedMsgs := make(map[PortAddr]Msg, len(q))
@@ -129,16 +125,16 @@ func (c DefaultConnector) applySelector(msg Msg, selectors []Selector) (Msg, err
 
 type DefaultInterceptor struct{}
 
-func (i DefaultInterceptor) AfterSending(from ConnectionSideMeta, msg Msg) Msg {
+func (i DefaultInterceptor) AfterSending(from SenderConnectionSideMeta, msg Msg) Msg {
 	fmt.Printf("after sending %v -> %v\n", from, msg)
 	return msg
 }
 
-func (i DefaultInterceptor) BeforeReceiving(from, to ConnectionSideMeta, msg Msg) Msg {
+func (i DefaultInterceptor) BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg {
 	fmt.Printf("before receiving %v <- %v <- %v\n", to, msg, from)
 	return msg
 }
 
-func (i DefaultInterceptor) AfterReceiving(from, to ConnectionSideMeta, msg Msg) {
+func (i DefaultInterceptor) AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) {
 	fmt.Printf("after receiving %v -> %v -> %v\n", from, msg, to)
 }

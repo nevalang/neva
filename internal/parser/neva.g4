@@ -13,8 +13,8 @@ useStmt: 'use' NEWLINE* '{' NEWLINE* importDef* '}' ;
 importDef: IDENTIFIER? importPath NEWLINE*;
 importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 
-// type
-typeStmt: 'type' NEWLINE* '{'
+// types
+typeStmt: 'types' NEWLINE* '{'
     NEWLINE*
     ('pub'? typeDef NEWLINE*)*
 '}' ;
@@ -58,8 +58,8 @@ recLit:  '{' NEWLINE* recValueFields? '}'; // same for record and map
 recValueFields: recValueField (NEWLINE* recValueField)*  ;
 recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 
-// comp
-compStmt: 'comp' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
+// components
+compStmt: 'components' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
 compDef: interfaceDef compBody NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)? '}' ;
 compNodesDef: 'node' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;

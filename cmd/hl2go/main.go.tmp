@@ -29,7 +29,7 @@ func main() {
 
 	h := helper.Helper{}
 
-	prog := compiler.HLProgram{
+	prog := compiler.HighLvlProgram{
 		"io": {
 			Entities: map[string]compiler.Entity{
 				"Print": {

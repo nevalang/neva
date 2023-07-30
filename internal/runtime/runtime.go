@@ -12,11 +12,16 @@ type Runtime struct {
 	connector Connector
 }
 
-func NewRuntime(c Connector, f FuncRunner) Runtime {
+var ErrNilDeps = errors.New("runtime deps nil")
+
+func New(c Connector, f FuncRunner) (Runtime, error) {
+	if c == nil || f == nil {
+		return Runtime{}, ErrNilDeps
+	}
 	return Runtime{
 		connector: c,
 		runner:    f,
-	}
+	}, nil
 }
 
 type (
