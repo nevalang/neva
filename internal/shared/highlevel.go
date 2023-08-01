@@ -45,21 +45,20 @@ func (e EntityKind) String() string {
 }
 
 type Component struct {
-	TypeParams []ts.Param // all type expressions inside component can refer to these
-	IO         IO
-	Nodes      map[string]Node // component and interface instances
-	Net        []Connection    // computational schema
+	Interface Interface
+	Nodes     map[string]Node
+	Net       []Connection
 }
 
 type Interface struct {
-	Params []ts.Param // Interface defined outside of a component so it needs its own parameters
-	IO     IO         // inports and outports
+	Params []ts.Param
+	IO     IO
 }
 
 type Node struct {
-	Ref         EntityRef       // must refer to component or interface
-	TypeArgs    []ts.Expr       // must be valid args for entity's type params
-	ComponentDI map[string]Node // only for components with DI
+	Ref         EntityRef
+	TypeArgs    []ts.Expr
+	ComponentDI map[string]Node
 }
 
 type EntityRef struct {

@@ -148,6 +148,9 @@ type nevaListener interface {
 	// EnterNodeArgList is called when entering the nodeArgList production.
 	EnterNodeArgList(c *NodeArgListContext)
 
+	// EnterNodeArg is called when entering the nodeArg production.
+	EnterNodeArg(c *NodeArgContext)
+
 	// EnterCompNetDef is called when entering the compNetDef production.
 	EnterCompNetDef(c *CompNetDefContext)
 
@@ -159,6 +162,12 @@ type nevaListener interface {
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
+
+	// EnterIoNodePortAddr is called when entering the ioNodePortAddr production.
+	EnterIoNodePortAddr(c *IoNodePortAddrContext)
+
+	// EnterNormalNodePortAddr is called when entering the normalNodePortAddr production.
+	EnterNormalNodePortAddr(c *NormalNodePortAddrContext)
 
 	// EnterPortDirection is called when entering the portDirection production.
 	EnterPortDirection(c *PortDirectionContext)
@@ -310,6 +319,9 @@ type nevaListener interface {
 	// ExitNodeArgList is called when exiting the nodeArgList production.
 	ExitNodeArgList(c *NodeArgListContext)
 
+	// ExitNodeArg is called when exiting the nodeArg production.
+	ExitNodeArg(c *NodeArgContext)
+
 	// ExitCompNetDef is called when exiting the compNetDef production.
 	ExitCompNetDef(c *CompNetDefContext)
 
@@ -321,6 +333,12 @@ type nevaListener interface {
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
+
+	// ExitIoNodePortAddr is called when exiting the ioNodePortAddr production.
+	ExitIoNodePortAddr(c *IoNodePortAddrContext)
+
+	// ExitNormalNodePortAddr is called when exiting the normalNodePortAddr production.
+	ExitNormalNodePortAddr(c *NormalNodePortAddrContext)
 
 	// ExitPortDirection is called when exiting the portDirection production.
 	ExitPortDirection(c *PortDirectionContext)

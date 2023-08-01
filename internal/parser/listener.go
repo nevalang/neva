@@ -6,24 +6,24 @@ import (
 	"github.com/nevalang/neva/pkg/types"
 )
 
-/* --- Use --- */
-
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 	s.file.Entities = map[string]shared.Entity{}
 }
+
+/* --- Use --- */
 
 func (s *treeShapeListener) EnterUseStmt(actx *generated.UseStmtContext) {
 	imports := actx.AllImportDef()
 	s.file.Imports = make(map[string]string, len(imports))
 }
 
-/* --- Types --- */
-
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	alias := actx.IDENTIFIER().GetText()
 	path := actx.ImportPath().GetText()
 	s.file.Imports[alias] = path
 }
+
+/* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 	name := actx.IDENTIFIER().GetText()
@@ -40,24 +40,42 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 
 /* --- Interfaces --- */
 
-func (s *treeShapeListener) EnterInterfaceDef(actx *generated.InterfaceDefContext) {
-	actxv := *actx
-	name := actxv.IDENTIFIER().GetText()
-	params := parseTypeParams(actxv.TypeParams())
-	in := parsePorts(actxv.InPortsDef().PortsDef().AllPortDef())
-	out := parsePorts(actxv.OutPortsDef().PortsDef().AllPortDef())
+func (s *treeShapeListener) EnterIoStmt(actx *generated.IoStmtContext) {
+	for _, interfaceDef := range actx.AllInterfaceDef() {
+		name := interfaceDef.IDENTIFIER().GetText()
+		s.file.Entities[name] = shared.Entity{
+			Kind:      shared.InterfaceEntity,
+			Interface: parseInterfaceDef(interfaceDef),
+		}
+	}
+}
+
+/* -- Components --- */
+
+func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
+	name := actx.InterfaceDef().IDENTIFIER().GetText()
+	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
+	nodes := parseNodes(actx.CompBody().CompNodesDef())
+	net := parseNet(actx.CompBody().CompNetDef())
 
 	s.file.Entities[name] = shared.Entity{
-		Kind: shared.InterfaceEntity,
-		Interface: shared.Interface{
-			Params: params,
-			IO: shared.IO{
-				In:  in,
-				Out: out,
-			},
+		Kind: shared.ComponentEntity,
+		Component: shared.Component{
+			Interface: parsedInterfaceDef,
+			Nodes:     nodes,
+			Net:       net,
 		},
 	}
 }
+
+// func (s *treeShapeListener) EnterInterfaceDef(actx *generated.InterfaceDefContext) {
+// 	actxv := *actx
+// 	name := actxv.IDENTIFIER().GetText()
+// 	s.file.Entities[name] = shared.Entity{
+// 		Kind:      shared.InterfaceEntity,
+// 		Interface: parseInterfaceDef(actxv),
+// 	}
+// }
 
 // func (s *TreeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 // }
@@ -313,9 +331,6 @@ func (s *treeShapeListener) EnterInterfaceDef(actx *generated.InterfaceDefContex
 // }
 
 // // EnterIoStmt is called when production ioStmt is entered.
-// func (s *treeShapeListener) EnterIoStmt(actx *generated.IoStmtContext) {
-// 	fmt.Println("EnterIoStmt", actx)
-// }
 
 // // ExitIoStmt is called when production ioStmt is exited.
 // func (s *TreeShapeListener) ExitIoStmt(actx *generated.IoStmtContext) {

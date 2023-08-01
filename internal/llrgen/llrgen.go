@@ -88,7 +88,7 @@ func (g Generator) processNode(
 	component := entity.Component
 
 	inportAddrs := g.handleInPortsCreation(nodeCtx, result)
-	outPortAddrs := g.handleOutPortsCreation(component.IO.Out, nodeCtx, result)
+	outPortAddrs := g.handleOutPortsCreation(component.Interface.IO.Out, nodeCtx, result)
 
 	if isNative := len(component.Net) == 0; isNative {
 		funcRoutine := g.getFuncRoutine(nodeCtx, inportAddrs, outPortAddrs)

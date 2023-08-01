@@ -116,6 +116,11 @@ type InstExpr struct {
 	Args []Expr // Every ref's parameter must have subtype argument
 }
 
+// TODO use instead of string
+type InstExprRef struct {
+	Pkg, Name string
+}
+
 func (i InstExpr) Empty() bool {
 	return i.Ref == "" && len(i.Args) == 0
 }

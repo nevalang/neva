@@ -302,6 +302,12 @@ func (s *BasenevaListener) EnterNodeArgList(ctx *NodeArgListContext) {}
 // ExitNodeArgList is called when production nodeArgList is exited.
 func (s *BasenevaListener) ExitNodeArgList(ctx *NodeArgListContext) {}
 
+// EnterNodeArg is called when production nodeArg is entered.
+func (s *BasenevaListener) EnterNodeArg(ctx *NodeArgContext) {}
+
+// ExitNodeArg is called when production nodeArg is exited.
+func (s *BasenevaListener) ExitNodeArg(ctx *NodeArgContext) {}
+
 // EnterCompNetDef is called when production compNetDef is entered.
 func (s *BasenevaListener) EnterCompNetDef(ctx *CompNetDefContext) {}
 
@@ -325,6 +331,18 @@ func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 
 // ExitPortAddr is called when production portAddr is exited.
 func (s *BasenevaListener) ExitPortAddr(ctx *PortAddrContext) {}
+
+// EnterIoNodePortAddr is called when production ioNodePortAddr is entered.
+func (s *BasenevaListener) EnterIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+
+// ExitIoNodePortAddr is called when production ioNodePortAddr is exited.
+func (s *BasenevaListener) ExitIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+
+// EnterNormalNodePortAddr is called when production normalNodePortAddr is entered.
+func (s *BasenevaListener) EnterNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
+
+// ExitNormalNodePortAddr is called when production normalNodePortAddr is exited.
+func (s *BasenevaListener) ExitNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
 
 // EnterPortDirection is called when production portDirection is entered.
 func (s *BasenevaListener) EnterPortDirection(ctx *PortDirectionContext) {}

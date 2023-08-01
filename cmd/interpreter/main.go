@@ -22,7 +22,24 @@ types {
 }
 
 interfaces {
-	Reader(path string) (i int, e err)
+	IReader(path string) (i int, e err)
+	IWriter(path) (i int, anything)
+}
+
+components {
+	Main(enter) (exit) {
+		node {
+			abs IReader
+			concrete io.Reader()
+		}
+		net {
+			in.start -> abs.in.v
+			abs.out.v -> {
+				concrete.in.v
+			}
+			concrete.out.v -> out.code
+		}
+	}
 }
 `
 

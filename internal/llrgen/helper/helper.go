@@ -16,18 +16,20 @@ func (h Helper) MainComponent(nodes map[string]shared.Node, net []shared.Connect
 	return shared.Entity{
 		Kind: shared.ComponentEntity,
 		Component: shared.Component{
-			TypeParams: []ts.Param{
-				h.ParamWithNoConstr("t"),
-			},
-			IO: shared.IO{
-				In: map[string]shared.Port{
-					"start": {
-						Type: h.Rec(nil), // TODO any?
-					},
+			Interface: shared.Interface{
+				Params: []ts.Param{
+					h.ParamWithNoConstr("t"),
 				},
-				Out: map[string]shared.Port{
-					"exit": {
-						Type: h.Inst("int"),
+				IO: shared.IO{
+					In: map[string]shared.Port{
+						"start": {
+							Type: h.Rec(nil), // TODO any?
+						},
+					},
+					Out: map[string]shared.Port{
+						"exit": {
+							Type: h.Inst("int"),
+						},
 					},
 				},
 			},
