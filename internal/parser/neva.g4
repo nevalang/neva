@@ -34,19 +34,19 @@ recField: IDENTIFIER typeExpr NEWLINE* ;
 unionTypeExpr: nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+ ; // union inside union lead to mutuall left recursion (not supported by ANTLR)
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
-// io
-ioStmt: 'io' NEWLINE* '{' NEWLINE* ('pub'? interfaceDef)* '}' ;
+// interfaces
+ioStmt: 'interfaces' NEWLINE* '{' NEWLINE* ('pub'? interfaceDef)* '}' ;
 interfaceDef: IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
 inPortsDef: portsDef ;
 outPortsDef: portsDef ;
 portsDef: '('
     (
         NEWLINE* |
-        portAndType? |
-        portAndType (',' portAndType)*
+        portDef? |
+        portDef (',' portDef)*
     )
 ')' ;
-portAndType: NEWLINE* IDENTIFIER typeExpr NEWLINE* ;
+portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE* ;
 
 // const
 constStmt: 'const' NEWLINE* '{' NEWLINE* ('pub'? constDef)* '}' ;
@@ -62,11 +62,11 @@ recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 compStmt: 'components' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
 compDef: interfaceDef compBody NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)? '}' ;
-compNodesDef: 'node' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
+compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
 compNodeDef: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
 concreteNodeDef: IDENTIFIER '=' concreteNodeInst ;
-concreteNodeInst: nodeRef NEWLINE* nodeArgs typeArgs;
+concreteNodeInst: nodeRef NEWLINE* typeArgs nodeArgs ;
 nodeRef: IDENTIFIER ('.' IDENTIFIER)* ; 
 nodeArgs: '(' NEWLINE* nodeArgList? ')';
 nodeArgList: concreteNodeInst (',' NEWLINE* concreteNodeInst) ;

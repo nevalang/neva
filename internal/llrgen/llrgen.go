@@ -16,7 +16,7 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
-func (g Generator) Generate(ctx context.Context, prog map[string]shared.HLPackage) (shared.LowLvlProgram, error) {
+func (g Generator) Generate(ctx context.Context, prog map[string]shared.HLFile) (shared.LowLvlProgram, error) {
 	if len(prog) == 0 {
 		return shared.LowLvlProgram{}, ErrNoPkgs
 	}
@@ -78,7 +78,7 @@ var (
 func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]shared.HLPackage,
+	pkgs map[string]shared.HLFile,
 	result shared.LowLvlProgram,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
@@ -187,7 +187,7 @@ type handleNetworkResult struct {
 // handleNetwork inserts ir connections into the given result
 // and returns information about how many slots of each port is actually used in network.
 func (g Generator) handleNetwork(
-	pkgs map[string]shared.HLPackage,
+	pkgs map[string]shared.HLFile,
 	net []shared.Connection, // pass only net
 	nodeCtx nodeContext,
 	result shared.LowLvlProgram,
@@ -265,7 +265,7 @@ func (Generator) handleInPortsCreation(nodeCtx nodeContext, result shared.LowLvl
 // It also creates and inserts void routines and connections for outports unused by parent.
 // It returns slice of ir port addrs that could be used to create a func routine.
 func (Generator) handleOutPortsCreation(
-	outports shared.Ports,
+	outports map[string]shared.Port,
 	nodeCtx nodeContext,
 	result shared.LowLvlProgram,
 ) []shared.LLPortAddr {
@@ -292,7 +292,7 @@ func (Generator) handleOutPortsCreation(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]shared.HLPackage, ref shared.EntityRef) (shared.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]shared.HLFile, ref shared.EntityRef) (shared.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
 		return shared.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
@@ -320,7 +320,7 @@ type giverSpecEl struct {
 // If not, then it acts just like a mapReceiverPortSide without any side-effects.
 // Otherwise it first builds the message, then inserts it into result, then returns params for giver creation.
 func (g Generator) handleSenderSide(
-	pkgs map[string]shared.HLPackage,
+	pkgs map[string]shared.HLFile,
 	nodeCtxPath string,
 	side shared.SenderConnectionSide,
 	result shared.LowLvlProgram,

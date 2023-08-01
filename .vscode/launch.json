@@ -21,6 +21,14 @@
       "args": ["neva.g4"]
     },
     {
+      "name": "cmd/interpreter",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "cmd/tmp",
       "type": "go",
       "request": "launch",

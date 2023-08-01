@@ -10,14 +10,19 @@ import (
 )
 
 var prog = `
-use { io }
+use {
+	std io
+}
 
-components {
-	main(sig any) (code any) {
-		net {
-			in.sig -> out.code
-		}
-	}
+types {
+	MyInt int
+	MyFloat float
+	MyStr str
+	MyBool bool
+}
+
+interfaces {
+	Reader(path string) (i int, e err)
 }
 `
 
@@ -29,9 +34,12 @@ func main() {
 	runTime, _ := runtime.New(connector, runner)
 	transformer := interpreter.MustNewTransformer()
 	llrGen := llrgen.New()
-	p := parser.MustNew()
+	p := parser.New()
 
 	intr := interpreter.MustNew(p, llrGen, transformer, runTime)
 
-	intr.Interpret(context.Background(), []byte(prog))
+	_, err := intr.Interpret(context.Background(), []byte(prog))
+	if err != nil {
+		panic(err)
+	}
 }

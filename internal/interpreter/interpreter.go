@@ -16,11 +16,11 @@ type Interpreter struct {
 }
 
 type Parser interface {
-	Parse(context.Context, []byte) (map[string]shared.HLPackage, error)
+	Parse(context.Context, []byte) (map[string]shared.HLFile, error)
 }
 
 type LowLvlGenerator interface {
-	Generate(context.Context, map[string]shared.HLPackage) (shared.LowLvlProgram, error)
+	Generate(context.Context, map[string]shared.HLFile) (shared.LowLvlProgram, error)
 }
 
 type Transformer interface {

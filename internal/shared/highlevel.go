@@ -6,8 +6,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/types"
 )
 
-type HLPackage struct {
-	Imports  map[string]string // alias->path
+type HLFile struct {
+	Imports  map[string]string
 	Entities map[string]Entity
 }
 
@@ -90,10 +90,8 @@ type MsgValue struct {
 }
 
 type IO struct {
-	In, Out Ports
+	In, Out map[string]Port
 }
-
-type Ports map[string]Port
 
 type Port struct {
 	Type  ts.Expr

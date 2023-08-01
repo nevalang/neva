@@ -88,8 +88,8 @@ type nevaListener interface {
 	// EnterPortsDef is called when entering the portsDef production.
 	EnterPortsDef(c *PortsDefContext)
 
-	// EnterPortAndType is called when entering the portAndType production.
-	EnterPortAndType(c *PortAndTypeContext)
+	// EnterPortDef is called when entering the portDef production.
+	EnterPortDef(c *PortDefContext)
 
 	// EnterConstStmt is called when entering the constStmt production.
 	EnterConstStmt(c *ConstStmtContext)
@@ -127,8 +127,8 @@ type nevaListener interface {
 	// EnterCompNodesDef is called when entering the compNodesDef production.
 	EnterCompNodesDef(c *CompNodesDefContext)
 
-	// EnterCompNodeDefList is called when entering the compNodeDefList production.
-	EnterCompNodeDefList(c *CompNodeDefListContext)
+	// EnterCompNodeDef is called when entering the compNodeDef production.
+	EnterCompNodeDef(c *CompNodeDefContext)
 
 	// EnterAbsNodeDef is called when entering the absNodeDef production.
 	EnterAbsNodeDef(c *AbsNodeDefContext)
@@ -147,9 +147,6 @@ type nevaListener interface {
 
 	// EnterNodeArgList is called when entering the nodeArgList production.
 	EnterNodeArgList(c *NodeArgListContext)
-
-	// EnterNodeArg is called when entering the nodeArg production.
-	EnterNodeArg(c *NodeArgContext)
 
 	// EnterCompNetDef is called when entering the compNetDef production.
 	EnterCompNetDef(c *CompNetDefContext)
@@ -253,8 +250,8 @@ type nevaListener interface {
 	// ExitPortsDef is called when exiting the portsDef production.
 	ExitPortsDef(c *PortsDefContext)
 
-	// ExitPortAndType is called when exiting the portAndType production.
-	ExitPortAndType(c *PortAndTypeContext)
+	// ExitPortDef is called when exiting the portDef production.
+	ExitPortDef(c *PortDefContext)
 
 	// ExitConstStmt is called when exiting the constStmt production.
 	ExitConstStmt(c *ConstStmtContext)
@@ -292,8 +289,8 @@ type nevaListener interface {
 	// ExitCompNodesDef is called when exiting the compNodesDef production.
 	ExitCompNodesDef(c *CompNodesDefContext)
 
-	// ExitCompNodeDefList is called when exiting the compNodeDefList production.
-	ExitCompNodeDefList(c *CompNodeDefListContext)
+	// ExitCompNodeDef is called when exiting the compNodeDef production.
+	ExitCompNodeDef(c *CompNodeDefContext)
 
 	// ExitAbsNodeDef is called when exiting the absNodeDef production.
 	ExitAbsNodeDef(c *AbsNodeDefContext)
@@ -312,9 +309,6 @@ type nevaListener interface {
 
 	// ExitNodeArgList is called when exiting the nodeArgList production.
 	ExitNodeArgList(c *NodeArgListContext)
-
-	// ExitNodeArg is called when exiting the nodeArg production.
-	ExitNodeArg(c *NodeArgContext)
 
 	// ExitCompNetDef is called when exiting the compNetDef production.
 	ExitCompNetDef(c *CompNetDefContext)
