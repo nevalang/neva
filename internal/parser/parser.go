@@ -11,12 +11,12 @@ import (
 
 type treeShapeListener struct {
 	*generated.BasenevaListener
-	file shared.HLFile
+	file shared.File
 }
 
 type Parser struct{}
 
-func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.HLFile, error) {
+func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -28,7 +28,7 @@ func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.HLFile,
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
-	return map[string]shared.HLFile{"main": listener.file}, nil
+	return map[string]shared.File{"main": listener.file}, nil
 }
 
 func New() Parser {

@@ -16,7 +16,7 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
-func (g Generator) Generate(ctx context.Context, prog map[string]shared.HLFile) (shared.LowLvlProgram, error) {
+func (g Generator) Generate(ctx context.Context, prog map[string]shared.File) (shared.LowLvlProgram, error) {
 	if len(prog) == 0 {
 		return shared.LowLvlProgram{}, ErrNoPkgs
 	}
@@ -27,8 +27,8 @@ func (g Generator) Generate(ctx context.Context, prog map[string]shared.HLFile) 
 		path:      "main",
 		entityRef: ref,
 		io: ioContext{
-			in: map[shared.RelPortAddr]inportSlotContext{
-				{Name: "start"}: {},
+			in: map[shared.PortAddr]inportSlotContext{
+				{Port: "start"}: {},
 			},
 			out: map[string]uint8{
 				"exit": 1, // runtime is the only one who will read (once) message (code) from this outport
@@ -58,7 +58,7 @@ type (
 	}
 	// ioContext describes how many port slots must be created and how many incoming connections inports have
 	ioContext struct {
-		in  map[shared.RelPortAddr]inportSlotContext
+		in  map[shared.PortAddr]inportSlotContext
 		out map[string]uint8 // name -> slots used by parent count
 	}
 	inportSlotContext struct {
@@ -78,7 +78,7 @@ var (
 func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]shared.HLFile,
+	pkgs map[string]shared.File,
 	result shared.LowLvlProgram,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
@@ -175,7 +175,7 @@ func (Generator) getFuncRoutine(
 }
 
 type portSlotsCount struct {
-	in  map[shared.RelPortAddr]inportSlotContext // inportSlotContext will be empty
+	in  map[shared.PortAddr]inportSlotContext // inportSlotContext will be empty
 	out map[string]uint8
 }
 
@@ -187,13 +187,13 @@ type handleNetworkResult struct {
 // handleNetwork inserts ir connections into the given result
 // and returns information about how many slots of each port is actually used in network.
 func (g Generator) handleNetwork(
-	pkgs map[string]shared.HLFile,
+	pkgs map[string]shared.File,
 	net []shared.Connection, // pass only net
 	nodeCtx nodeContext,
 	result shared.LowLvlProgram,
 ) (handleNetworkResult, error) {
 	slotsUsage := map[string]portSlotsCount{}
-	inPortsSlotsSet := map[shared.ConnPortAddr]bool{}
+	inPortsSlotsSet := map[shared.PortAddr]bool{}
 	giverSpecEls := make([]giverSpecEl, 0, len(net))
 
 	for _, conn := range net {
@@ -201,13 +201,13 @@ func (g Generator) handleNetwork(
 
 		if _, ok := slotsUsage[senderPortAddr.Node]; !ok {
 			slotsUsage[senderPortAddr.Node] = portSlotsCount{
-				in:  map[shared.RelPortAddr]inportSlotContext{},
+				in:  map[shared.PortAddr]inportSlotContext{},
 				out: map[string]uint8{},
 			}
 		}
 
 		// we assume every sender is unique so we won't increment same port addr twice
-		slotsUsage[senderPortAddr.Node].out[senderPortAddr.Name]++
+		slotsUsage[senderPortAddr.Node].out[senderPortAddr.Port]++
 
 		handleSenderResult, err := g.handleSenderSide(pkgs, nodeCtx.path, conn.SenderSide, result)
 		if err != nil {
@@ -225,7 +225,7 @@ func (g Generator) handleNetwork(
 
 			// we can have same receiver for different senders and we don't want to count it twice
 			if !inPortsSlotsSet[receiverSide.PortAddr] {
-				slotsUsage[senderPortAddr.Node].in[receiverSide.PortAddr.RelPortAddr] = inportSlotContext{}
+				slotsUsage[senderPortAddr.Node].in[receiverSide.PortAddr] = inportSlotContext{}
 			}
 		}
 
@@ -251,7 +251,7 @@ func (Generator) handleInPortsCreation(nodeCtx nodeContext, result shared.LowLvl
 	for addr := range nodeCtx.io.in {
 		addr := shared.LLPortAddr{
 			Path: nodeCtx.path + "/" + "in",
-			Name: addr.Name,
+			Name: addr.Port,
 			Idx:  addr.Idx,
 		}
 		result.Ports[addr] = 0
@@ -292,7 +292,7 @@ func (Generator) handleOutPortsCreation(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]shared.HLFile, ref shared.EntityRef) (shared.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]shared.File, ref shared.EntityRef) (shared.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
 		return shared.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
@@ -320,28 +320,23 @@ type giverSpecEl struct {
 // If not, then it acts just like a mapReceiverPortSide without any side-effects.
 // Otherwise it first builds the message, then inserts it into result, then returns params for giver creation.
 func (g Generator) handleSenderSide(
-	pkgs map[string]shared.HLFile,
+	pkgs map[string]shared.File,
 	nodeCtxPath string,
 	side shared.SenderConnectionSide,
 	result shared.LowLvlProgram,
 ) (handleSenderSideResult, error) {
-	if side.MsgRef == nil {
-		irConnSide := g.portAddr(nodeCtxPath, side.PortConnectionSide, "out")
-		return handleSenderSideResult{irConnSide: irConnSide}, nil
-	}
+	// if side.ConstRef == nil {
+	// 	irConnSide := g.portAddr(nodeCtxPath, side.ConnectionSide, "out")
+	// 	return handleSenderSideResult{irConnSide: irConnSide}, nil
+	// }
 
-	msgName := nodeCtxPath + "/" + side.MsgRef.Pkg + "." + side.MsgRef.Name
+	msgName := nodeCtxPath + "/" + side.ConstRef.Pkg + "." + side.ConstRef.Name
 
 	giverOutport := shared.LLPortAddr{
 		Path: nodeCtxPath,
-		Name: side.MsgRef.Pkg + "." + side.MsgRef.Name,
+		Name: side.ConstRef.Pkg + "." + side.ConstRef.Name,
 	}
 	result.Ports[giverOutport] = 0
-
-	selectors := make([]shared.LLSelector, 0, len(side.Selectors))
-	for _, selector := range side.Selectors {
-		selectors = append(selectors, shared.LLSelector(selector))
-	}
 
 	return handleSenderSideResult{
 		irConnSide: giverOutport,
@@ -353,22 +348,17 @@ func (g Generator) handleSenderSide(
 }
 
 // mapReceiverPortSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverPortSide(nodeCtxPath string, side shared.PortConnectionSide, pathPostfix string) shared.LLReceiverConnectionSide {
-	selectors := make([]shared.LLSelector, 0, len(side.Selectors))
-	for _, selector := range side.Selectors {
-		selectors = append(selectors, shared.LLSelector(selector))
-	}
-
+func (g Generator) mapReceiverPortSide(nodeCtxPath string, side shared.ReceiverConnectionSide, pathPostfix string) shared.LLReceiverConnectionSide {
 	return shared.LLReceiverConnectionSide{
 		PortAddr:  g.portAddr(nodeCtxPath, side, pathPostfix),
-		Selectors: selectors,
+		Selectors: side.Selectors,
 	}
 }
 
-func (Generator) portAddr(nodeCtxPath string, side shared.PortConnectionSide, pathPostfix string) shared.LLPortAddr {
+func (Generator) portAddr(nodeCtxPath string, side shared.ReceiverConnectionSide, pathPostfix string) shared.LLPortAddr {
 	addr := shared.LLPortAddr{
 		Path: nodeCtxPath + "/" + side.PortAddr.Node,
-		Name: side.PortAddr.Name,
+		Name: side.PortAddr.Port,
 		Idx:  side.PortAddr.Idx,
 	}
 

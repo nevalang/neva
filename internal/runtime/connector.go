@@ -105,20 +105,12 @@ func (c DefaultConnector) distribute(
 	return nil
 }
 
-func (c DefaultConnector) applySelector(msg Msg, selectors []Selector) (Msg, error) {
+func (c DefaultConnector) applySelector(msg Msg, selectors []string) (Msg, error) {
 	if len(selectors) == 0 {
 		return msg, nil
 	}
-
-	first := selectors[0]
-	if first.RecField != "" {
-		// msg = msg.Rec()[first.RecField]
-	} else {
-		// msg = msg.Arr()[first.ArrIdx]
-	}
-
 	return c.applySelector(
-		msg,
+		msg.Map()[selectors[0]],
 		selectors[1:],
 	)
 }

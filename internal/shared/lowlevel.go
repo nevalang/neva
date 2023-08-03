@@ -18,12 +18,7 @@ type LLConnection struct {
 
 type LLReceiverConnectionSide struct {
 	PortAddr  LLPortAddr
-	Selectors []LLSelector
-}
-
-type LLSelector struct {
-	RecField string
-	ArrIdx   int
+	Selectors []string
 }
 
 // LLFunc is a instantiation object that runtime will use to spawn a function

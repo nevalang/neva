@@ -51,7 +51,9 @@ portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE* ;
 // const
 constStmt: 'const' NEWLINE* '{' NEWLINE* ('pub'? constDef)* '}' ;
 constDef: IDENTIFIER typeExpr '=' constVal NEWLINE* ;
-constVal: 'true' | 'false' | INT | FLOAT | STRING | arrLit | recLit | 'nil' ;
+constVal: bool | INT | FLOAT | STRING | arrLit | recLit | nil ;
+bool: 'true' | 'false' ;
+nil: 'nil' ;
 arrLit:  '[' NEWLINE* vecItems? ']'; // array and vector use same syntax
 vecItems: constVal | constVal (',' NEWLINE* constVal NEWLINE*)* ;
 recLit:  '{' NEWLINE* recValueFields? '}'; // same for record and map
@@ -66,7 +68,7 @@ compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
 compNodeDef: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
 concreteNodeDef: IDENTIFIER '=' concreteNodeInst ;
-concreteNodeInst: nodeRef NEWLINE* typeArgs nodeArgs ;
+concreteNodeInst: nodeRef NEWLINE* typeArgs? nodeArgs ;
 nodeRef: IDENTIFIER ('.' IDENTIFIER)? ; 
 nodeArgs: '(' NEWLINE* nodeArgList? ')';
 nodeArgList: nodeArg (',' NEWLINE* nodeArg)*;
@@ -83,7 +85,6 @@ connReceivers: '{' portAddr (NEWLINE portAddr)* '}' ;
 
 /* LEXER */
 
-// ENTITY_REF: IDENTIFIER ('.' IDENTIFIER)* ; TODO debug this one
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits

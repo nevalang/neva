@@ -101,44 +101,55 @@ func parseNodes(actx generated.ICompNodesDefContext) map[string]shared.Node {
 			panic("abs == nil && concrete == nil")
 		}
 
+		var (
+			name string
+			node shared.Node
+		)
 		if abs != nil {
-			name := abs.IDENTIFIER().GetText()
+			name = abs.IDENTIFIER().GetText()
 			expr := parseTypeInstExpr(abs.TypeInstExpr())
-			result[name] = shared.Node{
-				Ref: shared.EntityRef{ // TODO simply use typeInstExpr here
-					Name: name,
-				},
+			node = shared.Node{
+				Ref:      shared.EntityRef{Name: name}, // TODO simply use typeInstExpr here
 				TypeArgs: expr.Inst.Args,
+			}
+		} else {
+			name = concrete.IDENTIFIER().GetText()
+			concreteNodeInst := concrete.ConcreteNodeInst()
+
+			var (
+				pkg, nodeRef string
+			)
+			nodePath := concreteNodeInst.NodeRef().AllIDENTIFIER()
+			if len(nodePath) == 2 {
+				pkg = nodePath[0].GetText()
+				nodeRef = nodePath[1].GetText()
+			} else {
+				nodeRef = nodePath[0].GetText()
+			}
+
+			var di map[string]shared.Node
+			args := concreteNodeInst.NodeArgs()
+			if args != nil && args.NodeArgList() != nil {
+				nodeArgs := args.NodeArgList().AllNodeArg()
+				di = make(map[string]shared.Node, len(nodeArgs))
+				for _, arg := range nodeArgs {
+					di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
+				}
+			}
+
+			var typeArgs []types.Expr
+			if ta := concreteNodeInst.TypeArgs(); ta != nil {
+				typeArgs = parseTypeExprs(ta.AllTypeExpr())
+			}
+
+			node = shared.Node{
+				Ref:         shared.EntityRef{Pkg: pkg, Name: nodeRef},
+				TypeArgs:    typeArgs,
+				ComponentDI: di,
 			}
 		}
 
-		nodeName := concrete.IDENTIFIER().GetText()
-		nodeInst := concrete.ConcreteNodeInst()
-
-		var (
-			pkg, nodeRef string
-		)
-		nodePath := nodeInst.NodeRef().AllIDENTIFIER()
-		if len(nodePath) == 2 {
-			pkg = nodePath[0].GetText()
-			nodeRef = nodePath[1].GetText()
-		} else {
-			nodeRef = nodePath[0].GetText()
-		}
-
-		args := nodeInst.NodeArgs().NodeArgList().AllNodeArg()
-		di := make(map[string]shared.Node, len(args))
-		for _, arg := range args {
-			di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
-		}
-
-		result[nodeName] = shared.Node{
-			Ref: shared.EntityRef{
-				Pkg: pkg, Name: nodeRef,
-			},
-			TypeArgs:    parseTypeExprs(nodeInst.TypeArgs().AllTypeExpr()),
-			ComponentDI: di,
-		}
+		result[name] = node
 	}
 
 	return nil
@@ -183,36 +194,60 @@ func parseNet(net generated.ICompNetDefContext) []shared.Connection {
 	connDefs := net.ConnDefList().AllConnDef()
 
 	result := make([]shared.Connection, 0, len(connDefs))
-	for _, connDef := range connDefs {
-		senderPortAddr := connDef.PortAddr()
 
-		ioNodeAddr := senderPortAddr.IoNodePortAddr()
-		senderSide := shared.SenderConnectionSide{}
-		if ioNodeAddr != nil {
-			dir := ioNodeAddr.PortDirection().GetText()
-			portName := ioNodeAddr.IDENTIFIER().GetText()
-			senderSide.PortAddr = shared.ConnPortAddr{
-				Node: dir,
-				RelPortAddr: shared.RelPortAddr{
-					Name: portName,
-				},
+	for _, connDef := range connDefs {
+		senderSidePortAddr := parsePortAddr(connDef.PortAddr())
+
+		receiverSide := connDef.ConnReceiverSide()
+		singleReceiver := receiverSide.PortAddr()
+		multipleReceivers := receiverSide.ConnReceivers()
+		if singleReceiver == nil && multipleReceivers == nil {
+			panic("both nil")
+		}
+
+		var receiverSides []shared.ReceiverConnectionSide
+		if singleReceiver != nil {
+			receiverSides = []shared.ReceiverConnectionSide{
+				{PortAddr: parsePortAddr(singleReceiver)},
+			}
+		} else {
+			receiverPortAddrs := multipleReceivers.AllPortAddr()
+			receiverSides = make([]shared.ReceiverConnectionSide, 0, len(receiverPortAddrs))
+			for _, receiverPortAddr := range receiverPortAddrs {
+				receiverSides = append(receiverSides, shared.ReceiverConnectionSide{
+					PortAddr: parsePortAddr(receiverPortAddr),
+				})
 			}
 		}
 
-		normalNodeAddr := senderPortAddr.NormalNodePortAddr()
-		NodeAndPort := normalNodeAddr.AllIDENTIFIER()
-		senderSide.PortAddr = shared.ConnPortAddr{
-			Node: NodeAndPort[0].GetText(),
-			RelPortAddr: shared.RelPortAddr{
-				Name: NodeAndPort[1].GetText(),
-			},
-		}
-
 		result = append(result, shared.Connection{
-			SenderSide:    senderSide,
-			ReceiverSides: []shared.PortConnectionSide{}, // TODO
+			SenderSide:    shared.SenderConnectionSide{PortAddr: &senderSidePortAddr},
+			ReceiverSides: receiverSides,
 		})
 	}
 
-	return nil
+	return result
+}
+
+func parsePortAddr(portAddr generated.IPortAddrContext) shared.PortAddr {
+	ioNodeAddr := portAddr.IoNodePortAddr()
+	senderNormalPortAddr := portAddr.NormalNodePortAddr()
+	if ioNodeAddr == nil && senderNormalPortAddr == nil {
+		panic("both")
+	}
+
+	if ioNodeAddr != nil {
+		dir := ioNodeAddr.PortDirection().GetText()
+		portName := ioNodeAddr.IDENTIFIER().GetText()
+		return shared.PortAddr{
+			Node: dir,
+			Port: portName,
+		}
+	}
+
+	nodeAndPort := senderNormalPortAddr.AllIDENTIFIER()
+	return shared.PortAddr{
+		Node: nodeAndPort[0].GetText(),
+		Port: nodeAndPort[1].GetText(),
+	}
 }

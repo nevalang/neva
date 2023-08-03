@@ -58,7 +58,7 @@ type SenderConnectionSideMeta struct {
 
 type ReceiverConnectionSideMeta struct {
 	PortAddr  PortAddr
-	Selectors []Selector
+	Selectors []string
 }
 
 func (c ReceiverConnectionSideMeta) String() string {

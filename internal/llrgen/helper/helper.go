@@ -39,16 +39,16 @@ func (h Helper) MainComponent(nodes map[string]shared.Node, net []shared.Connect
 	}
 }
 
-func (h Helper) NodeWithStaticPorts(
-	node shared.Node,
-	ports map[shared.RelPortAddr]shared.EntityRef,
-) shared.Node {
-	return shared.Node{
-		Ref:         node.Ref,
-		TypeArgs:    node.TypeArgs,
-		ComponentDI: node.ComponentDI,
-	}
-}
+// func (h Helper) NodeWithStaticPorts(
+// 	node shared.Node,
+// 	ports map[shared.RelPortAddr]shared.EntityRef,
+// ) shared.Node {
+// 	return shared.Node{
+// 		Ref:         node.Ref,
+// 		TypeArgs:    node.TypeArgs,
+// 		ComponentDI: node.ComponentDI,
+// 	}
+// }
 
 func (h Helper) NodeInstance(pkg, entity string, args ...ts.Expr) shared.Node {
 	return shared.Node{
@@ -73,11 +73,11 @@ func (h Helper) InstanceWithDI(pkg, entity string, di map[string]shared.Node, ar
 
 /* --- MESSAGES  --- */
 
-func (h Helper) MsgEntity(exported bool, v shared.MsgValue) shared.Entity {
+func (h Helper) MsgEntity(exported bool, v shared.ConstValue) shared.Entity {
 	return shared.Entity{
 		Exported: exported,
-		Kind:     shared.MsgEntity,
-		Msg: shared.HLMsg{
+		Kind:     shared.ConstEntity,
+		Const: shared.Const{
 			Value: v,
 		},
 	}
@@ -86,15 +86,15 @@ func (h Helper) MsgEntity(exported bool, v shared.MsgValue) shared.Entity {
 func (h Helper) MsgWithRefEntity(exported bool, ref *shared.EntityRef) shared.Entity {
 	return shared.Entity{
 		Exported: exported,
-		Kind:     shared.MsgEntity,
-		Msg: shared.HLMsg{
+		Kind:     shared.ConstEntity,
+		Const: shared.Const{
 			Ref: ref,
 		},
 	}
 }
 
-func (h Helper) IntMsgValue(v int) shared.MsgValue {
-	return shared.MsgValue{
+func (h Helper) IntMsgValue(v int) shared.ConstValue {
+	return shared.ConstValue{
 		TypeExpr: h.Inst("int"),
 		Int:      v,
 	}
@@ -107,8 +107,8 @@ func (h Helper) IntMsg(exported bool, v int) shared.Entity {
 	)
 }
 
-func (h Helper) IntVecMsgEntity(exported bool, vv []shared.HLMsg) shared.Entity {
-	return h.MsgEntity(exported, shared.MsgValue{
+func (h Helper) IntVecMsgEntity(exported bool, vv []shared.Const) shared.Entity {
+	return h.MsgEntity(exported, shared.ConstValue{
 		TypeExpr: h.Inst("vec", h.Inst("int")),
 		Vec:      vv,
 	})

@@ -52,19 +52,11 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 				panic("!ok")
 			}
 
-			selectors := make([]runtime.Selector, len(rcvr.Selectors))
-			for _, sel := range rcvr.Selectors {
-				selectors = append(selectors, runtime.Selector{
-					RecField: sel.RecField,
-					ArrIdx:   sel.ArrIdx,
-				})
-			}
-
 			rReceivers = append(rReceivers, runtime.ReceiverConnectionSide{
 				Port: receiverPort,
 				Meta: runtime.ReceiverConnectionSideMeta{
 					PortAddr:  receiverPortAddr,
-					Selectors: selectors,
+					Selectors: rcvr.Selectors,
 				},
 			})
 		}

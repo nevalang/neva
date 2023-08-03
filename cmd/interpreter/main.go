@@ -28,9 +28,9 @@ interfaces {
 
 components {
 	Main(enter) (exit) {
-		node {
+		nodes {
 			abs IReader
-			concrete io.Reader()
+			concrete = io.Reader()
 		}
 		net {
 			in.start -> abs.in.v

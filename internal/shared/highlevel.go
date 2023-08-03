@@ -6,7 +6,7 @@ import (
 	ts "github.com/nevalang/neva/pkg/types"
 )
 
-type HLFile struct {
+type File struct {
 	Imports  map[string]string
 	Entities map[string]Entity
 }
@@ -14,7 +14,7 @@ type HLFile struct {
 type Entity struct {
 	Exported  bool
 	Kind      EntityKind
-	Msg       HLMsg
+	Const     Const
 	Type      ts.Def // FIXME https://github.com/nevalang/neva/issues/186
 	Interface Interface
 	Component Component
@@ -24,7 +24,7 @@ type EntityKind uint8
 
 const (
 	ComponentEntity EntityKind = iota + 1
-	MsgEntity
+	ConstEntity
 	TypeEntity
 	InterfaceEntity
 )
@@ -33,7 +33,7 @@ func (e EntityKind) String() string {
 	switch e {
 	case ComponentEntity:
 		return "component"
-	case MsgEntity:
+	case ConstEntity:
 		return "msg"
 	case TypeEntity:
 		return "type"
@@ -47,7 +47,7 @@ func (e EntityKind) String() string {
 type Component struct {
 	Interface Interface
 	Nodes     map[string]Node
-	Net       []Connection
+	Net       []Connection // can't be map due to slice in key
 }
 
 type Interface struct {
@@ -73,19 +73,19 @@ func (e EntityRef) String() string {
 	return fmt.Sprintf("%s.%s", e.Pkg, e.Name)
 }
 
-type HLMsg struct {
-	Ref   *EntityRef // if nil then use value
-	Value MsgValue
+type Const struct {
+	Ref   *EntityRef
+	Value ConstValue
 }
 
-type MsgValue struct {
-	TypeExpr ts.Expr          // type of the message
-	Bool     bool             // only for messages with `bool`  type
-	Int      int              // only for messages with `int` type
-	Float    float64          // only for messages with `float` type
-	Str      string           // only for messages with `str` type
-	Vec      []HLMsg          // only for types with `vec` type
-	Map      map[string]HLMsg // only for types with `map` type
+type ConstValue struct {
+	TypeExpr ts.Expr
+	Bool     bool
+	Int      int
+	Float    float64
+	Str      string
+	Vec      []Const
+	Map      map[string]Const
 }
 
 type IO struct {
@@ -99,31 +99,22 @@ type Port struct {
 
 type Connection struct {
 	SenderSide    SenderConnectionSide
-	ReceiverSides []PortConnectionSide
+	ReceiverSides []ReceiverConnectionSide
 }
 
-// SenderConnectionSide can have outport or message as a source of data
 type SenderConnectionSide struct {
-	MsgRef *EntityRef // if not nil then port addr must not be used
-	PortConnectionSide
+	ConstRef  *EntityRef
+	PortAddr  *PortAddr
+	Selectors []string
 }
 
-type PortConnectionSide struct {
-	PortAddr  ConnPortAddr
-	Selectors []Selector
+type ReceiverConnectionSide struct {
+	PortAddr  PortAddr
+	Selectors []string
 }
 
-type Selector struct {
-	RecField string // "" means use ArrIdx
-	ArrIdx   int
-}
-
-type ConnPortAddr struct {
+type PortAddr struct {
 	Node string
-	RelPortAddr
-}
-
-type RelPortAddr struct {
-	Name string
+	Port string
 	Idx  uint8
 }
