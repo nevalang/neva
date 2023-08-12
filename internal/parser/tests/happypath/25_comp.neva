@@ -1,76 +1,76 @@
-comp {}
+components {}
 
-comp {
+components {
 }
 
-comp {
+components {
 
 }
 
-comp { Doer() () {} }
+components { Doer() () {} }
 
-comp {
+components {
     Doer() () {} }
 
-comp { Doer() () {}
+components { Doer() () {}
 }
 
-comp {
+components {
     Doer() () {}
 }
 
-comp { Doer<T>(x int) (y T) {} }
+components { Doer<T>(x int) (y T) {} }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
 
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {}
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
         }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node { absNode INode }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             absNode INode }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node { absNode INode
         }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             absNode INode
@@ -78,7 +78,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             simpleAbsNode INode
@@ -92,27 +92,27 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node { concreteNode = Node() }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNode = Node() }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node { concreteNode = Node()
         }
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNode = Node()
@@ -120,7 +120,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNodeWithTypeArgs = Node<int, vec<str>>()
@@ -128,7 +128,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNodeWithDI1 = Node1(Node2())
@@ -137,7 +137,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNodeWithDI1 = Node1(
@@ -151,7 +151,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             concreteNodeWithDIAndTypeArgs = Node1<
@@ -168,7 +168,7 @@ comp {
     }
 }
 
-comp {
+components {
     Doer<T>(x int) (y T) {
         node {
             simpleAbsNode INode
@@ -194,4 +194,20 @@ comp {
             )
         }
     }
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			abs IReader
+			concrete = io.Reader()
+		}
+		net {
+			in.start -> abs.in.v
+			abs.out.v -> {
+				concrete.in.v
+			}
+			concrete.out.v -> out.code
+		}
+	}
 }

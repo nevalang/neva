@@ -5,8 +5,8 @@
       "name": "antlr",
       "type": "antlr-debug",
       "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/frontend/tests/happypath/25_comp.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/frontend/neva.g4",
+      "input": "${workspaceFolder}/internal/parser/tests/happypath/26_mixed.neva",
+      "grammar": "${workspaceFolder}/internal/parser/neva.g4",
       "startRule": "prog",
       "printParseTree": true,
       "visualParseTree": true
