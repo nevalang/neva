@@ -16,13 +16,13 @@ func New() Generator {
 
 var ErrNoPkgs = errors.New("no packages")
 
-func (g Generator) Generate(ctx context.Context, prog map[string]shared.File) (shared.LowLvlProgram, error) {
-	if len(prog) == 0 {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (shared.LowLvlProgram, error) {
+	if len(pkgs) == 0 {
 		return shared.LowLvlProgram{}, ErrNoPkgs
 	}
 
 	// usually we "look" at the program "inside" the root node but here we look at the root node from the outside
-	ref := shared.EntityRef{Pkg: "main", Name: "main"}
+	ref := shared.EntityRef{Pkg: "main", Name: "Main"}
 	parentCtxForRootNode := nodeContext{
 		path:      "main",
 		entityRef: ref,
@@ -41,7 +41,7 @@ func (g Generator) Generate(ctx context.Context, prog map[string]shared.File) (s
 		Net:   []shared.LLConnection{},
 		Funcs: []shared.LLFunc{},
 	}
-	if err := g.processNode(ctx, parentCtxForRootNode, prog, lprog); err != nil {
+	if err := g.processNode(ctx, parentCtxForRootNode, pkgs, lprog); err != nil {
 		return shared.LowLvlProgram{}, fmt.Errorf("process root node: %w", err)
 	}
 
@@ -325,10 +325,13 @@ func (g Generator) handleSenderSide(
 	side shared.SenderConnectionSide,
 	result shared.LowLvlProgram,
 ) (handleSenderSideResult, error) {
-	// if side.ConstRef == nil {
-	// 	irConnSide := g.portAddr(nodeCtxPath, side.ConnectionSide, "out")
-	// 	return handleSenderSideResult{irConnSide: irConnSide}, nil
-	// }
+	if side.ConstRef == nil {
+		return handleSenderSideResult{irConnSide: shared.LLPortAddr{
+			Path: nodeCtxPath,
+			Name: side.PortAddr.Node,
+			Idx:  side.PortAddr.Idx,
+		}}, nil
+	}
 
 	msgName := nodeCtxPath + "/" + side.ConstRef.Pkg + "." + side.ConstRef.Name
 

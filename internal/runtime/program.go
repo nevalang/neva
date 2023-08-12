@@ -26,6 +26,15 @@ func (p PortAddr) String() string {
 
 type Ports map[PortAddr]chan Msg
 
+func (p Ports) FirstByName(name string) chan Msg {
+	for addr, port := range p {
+		if addr.Name == name {
+			return port
+		}
+	}
+	return nil
+}
+
 type Connection struct {
 	Sender    SenderConnectionSide
 	Receivers []ReceiverConnectionSide
@@ -94,14 +103,14 @@ var (
 
 // Port returns first slot of port found by the given name.
 // It returns error if port is not found or if it's not a single port.
-func (i FuncPorts) Port(name string) (chan Msg, error) {
-	slots, ok := i[name]
+func (f FuncPorts) Port(name string) (chan Msg, error) {
+	slots, ok := f[name]
 	if !ok {
 		return nil, fmt.Errorf("")
 	}
 
 	if len(slots) != 1 {
-		return nil, fmt.Errorf("%w: %v", ErrSinglePortCount, len(i[name]))
+		return nil, fmt.Errorf("%w: %v", ErrSinglePortCount, len(f[name]))
 	}
 
 	return slots[0], nil

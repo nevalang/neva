@@ -27,7 +27,7 @@ interfaces {
 }
 
 components {
-	Main(enter) (exit) {
+	Main(start) (exit) {
 		nodes {
 			abs IReader
 			concrete = io.Reader()

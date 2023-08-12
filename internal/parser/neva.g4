@@ -81,7 +81,7 @@ ioNodePortAddr: portDirection '.' IDENTIFIER ;
 normalNodePortAddr: IDENTIFIER '.' portDirection '.' IDENTIFIER ;
 portDirection: 'in' | 'out' ;
 connReceiverSide:  portAddr | connReceivers;
-connReceivers: '{' portAddr (NEWLINE portAddr)* '}' ;
+connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}' ;
 
 /* LEXER */
 

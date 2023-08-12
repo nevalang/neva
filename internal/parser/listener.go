@@ -98,19 +98,17 @@ func (s *treeShapeListener) EnterIoStmt(actx *generated.IoStmtContext) {
 func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
-	nodesDef := actx.CompBody().CompNodesDef()
-	if nodesDef == nil {
+	allNodesDef := actx.CompBody().AllCompNodesDef()
+	if allNodesDef == nil {
 		panic("nodesDef == nil")
 	}
-	nodes := parseNodes(nodesDef)
-	net := parseNet(actx.CompBody().CompNetDef())
 
 	s.file.Entities[name] = shared.Entity{
 		Kind: shared.ComponentEntity,
 		Component: shared.Component{
 			Interface: parsedInterfaceDef,
-			Nodes:     nodes,
-			Net:       net,
+			Nodes:     parseNodes(allNodesDef),
+			Net:       parseNet(actx.CompBody().AllCompNetDef()),
 		},
 	}
 }

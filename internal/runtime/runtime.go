@@ -42,13 +42,13 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	startPort, ok := prog.Ports[PortAddr{Name: "start"}] // enter?
-	if !ok {
+	startPort := prog.Ports.FirstByName("start")
+	if startPort == nil {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort, ok := prog.Ports[PortAddr{Name: "exit"}] // stop?
-	if !ok {
+	exitPort := prog.Ports.FirstByName("exit")
+	if exitPort == nil {
 		return 0, ErrExitPortNotFound
 	}
 
