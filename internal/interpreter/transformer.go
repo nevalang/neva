@@ -9,12 +9,12 @@ import (
 
 type transformer struct{}
 
-func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (runtime.Program, error) {
+func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtime.Program, error) {
 	rPorts := make(runtime.Ports, len(ll.Ports))
 	for addr, buf := range ll.Ports {
 		rPorts[runtime.PortAddr{
 			Path: addr.Path,
-			Name: addr.Name,
+			Name: addr.Port,
 			Idx:  addr.Idx,
 		}] = make(chan runtime.Msg, buf)
 	}
@@ -23,7 +23,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 	for _, conn := range ll.Net {
 		senderAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
-			Name: conn.SenderSide.Name,
+			Name: conn.SenderSide.Port,
 			Idx:  conn.SenderSide.Idx,
 		}
 
@@ -43,7 +43,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 		for _, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.PortAddr.Path,
-				Name: rcvr.PortAddr.Name,
+				Name: rcvr.PortAddr.Port,
 				Idx:  rcvr.PortAddr.Idx,
 			}
 
@@ -73,20 +73,20 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 		for _, addr := range f.IO.In {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
-				Name: addr.Name,
+				Name: addr.Port,
 				Idx:  addr.Idx,
 			}]
-			rIOIn[addr.Name] = append(rIOIn[addr.Name], rPort)
+			rIOIn[addr.Port] = append(rIOIn[addr.Port], rPort)
 		}
 
 		rIOOut := make(map[string][]chan runtime.Msg, len(f.IO.Out))
 		for _, addr := range f.IO.Out {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
-				Name: addr.Name,
+				Name: addr.Port,
 				Idx:  addr.Idx,
 			}]
-			rIOOut[addr.Name] = append(rIOOut[addr.Name], rPort)
+			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
 		}
 
 		rMsg := t.msg(f.Params)

@@ -1,14 +1,17 @@
 package shared
 
-type LowLvlProgram struct {
-	Funcs []LLFunc             // what functions to spawn and how
-	Net   []LLConnection       // how ports are connected to each other
-	Ports map[LLPortAddr]uint8 // ports and their buffers size
+// IDEA use json/protobuf strings for unmarshalling
+
+type LLProgram struct {
+	Ports map[LLPortAddr]uint8 // uint8 for slots usage
+	Net   []LLConnection
+	Funcs []LLFunc
 }
 
 type LLPortAddr struct {
-	Path, Name string
-	Idx        uint8
+	Path string // Path to node
+	Port string // Name of the port
+	Idx  uint8  // Slot index of the port
 }
 
 type LLConnection struct {

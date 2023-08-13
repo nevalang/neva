@@ -12,8 +12,9 @@ type Program struct {
 }
 
 type PortAddr struct {
-	Path, Name string
-	Idx        uint8
+	Path string // Path is needed to distinguish ports with the same name
+	Name string // Separate name field is needed for functions
+	Idx  uint8
 }
 
 func (p PortAddr) String() string {

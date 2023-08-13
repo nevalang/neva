@@ -20,11 +20,11 @@ type Parser interface {
 }
 
 type LowLvlGenerator interface {
-	Generate(context.Context, map[string]shared.File) (shared.LowLvlProgram, error)
+	Generate(context.Context, map[string]shared.File) (shared.LLProgram, error)
 }
 
 type Transformer interface {
-	Transform(context.Context, shared.LowLvlProgram) (runtime.Program, error)
+	Transform(context.Context, shared.LLProgram) (runtime.Program, error)
 }
 
 type Runtime interface {
