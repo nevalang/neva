@@ -155,14 +155,14 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // fixme why we assume that?
 
 		senderSide := shared.LLPortAddr{
-			Path: nodeCtx.path,
-			Port: conn.SenderSide.PortAddr.Node,
+			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
+			Port: conn.SenderSide.PortAddr.Port,
 			Idx:  conn.SenderSide.PortAddr.Idx,
 		}
 
 		receiverSides := make([]shared.LLReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
-			irSide := g.mapReceiverConnectionSide(nodeCtx.path, receiverSide, "in")
+			irSide := g.mapReceiverConnectionSide(nodeCtx.path, receiverSide)
 			receiverSides = append(receiverSides, irSide)
 
 			// we can have same receiver for different senders and we don't want to count it twice
@@ -250,23 +250,13 @@ type handleSenderSideResult struct {
 }
 
 // mapReceiverConnectionSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide, pathPostfix string) shared.LLReceiverConnectionSide {
+func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) shared.LLReceiverConnectionSide {
 	return shared.LLReceiverConnectionSide{
-		PortAddr:  g.portAddr(nodeCtxPath, side, pathPostfix),
+		PortAddr: shared.LLPortAddr{
+			Path: nodeCtxPath + "/" + side.PortAddr.Node,
+			Port: side.PortAddr.Port,
+			Idx:  side.PortAddr.Idx,
+		},
 		Selectors: side.Selectors,
 	}
-}
-
-func (Generator) portAddr(nodeCtxPath string, side shared.ReceiverConnectionSide, pathPostfix string) shared.LLPortAddr {
-	addr := shared.LLPortAddr{
-		Path: nodeCtxPath,
-		Port: side.PortAddr.Port,
-		Idx:  side.PortAddr.Idx,
-	}
-
-	if side.PortAddr.Node != "in" && side.PortAddr.Node != "out" {
-		addr.Path += "/" + pathPostfix
-	}
-
-	return addr
 }

@@ -13,7 +13,7 @@ type Program struct {
 
 type PortAddr struct {
 	Path string // Path is needed to distinguish ports with the same name
-	Name string // Separate name field is needed for functions
+	Port string // Separate port field is needed for functions
 	Idx  uint8
 }
 
@@ -22,7 +22,7 @@ func (p PortAddr) String() string {
 	if p.Path != "" {
 		s += p.Path + "."
 	}
-	return s + fmt.Sprintf("%s[%d]", p.Name, p.Idx)
+	return s + fmt.Sprintf("%s[%d]", p.Port, p.Idx)
 }
 
 type Ports map[PortAddr]chan Msg

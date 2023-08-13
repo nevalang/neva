@@ -14,7 +14,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 	for addr, buf := range ll.Ports {
 		rPorts[runtime.PortAddr{
 			Path: addr.Path,
-			Name: addr.Port,
+			Port: addr.Port,
 			Idx:  addr.Idx,
 		}] = make(chan runtime.Msg, buf)
 	}
@@ -23,7 +23,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 	for _, conn := range ll.Net {
 		senderAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
-			Name: conn.SenderSide.Port,
+			Port: conn.SenderSide.Port,
 			Idx:  conn.SenderSide.Idx,
 		}
 
@@ -43,7 +43,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 		for _, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.PortAddr.Path,
-				Name: rcvr.PortAddr.Port,
+				Port: rcvr.PortAddr.Port,
 				Idx:  rcvr.PortAddr.Idx,
 			}
 
@@ -73,7 +73,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 		for _, addr := range f.IO.In {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
-				Name: addr.Port,
+				Port: addr.Port,
 				Idx:  addr.Idx,
 			}]
 			rIOIn[addr.Port] = append(rIOIn[addr.Port], rPort)
@@ -83,7 +83,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 		for _, addr := range f.IO.Out {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
-				Name: addr.Port,
+				Port: addr.Port,
 				Idx:  addr.Idx,
 			}]
 			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)

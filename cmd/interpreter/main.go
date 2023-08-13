@@ -28,16 +28,8 @@ interfaces {
 
 components {
 	Main(start) (exit) {
-		nodes {
-			abs IReader
-			concrete = io.Reader()
-		}
 		net {
-			in.start -> abs.in.v
-			abs.out.v -> {
-				concrete.in.v
-			}
-			concrete.out.v -> out.code
+			in.start -> out.exit
 		}
 	}
 }
