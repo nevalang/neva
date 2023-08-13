@@ -102,13 +102,11 @@ type Connection struct {
 	ReceiverSides []ReceiverConnectionSide
 }
 
-type SenderConnectionSide struct {
-	ConstRef  *EntityRef
-	PortAddr  *PortAddr
-	Selectors []string
-}
+type SenderConnectionSide ConnectionSide
 
-type ReceiverConnectionSide struct {
+type ReceiverConnectionSide ConnectionSide
+
+type ConnectionSide struct {
 	PortAddr  PortAddr
 	Selectors []string
 }

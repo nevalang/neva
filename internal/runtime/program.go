@@ -26,15 +26,6 @@ func (p PortAddr) String() string {
 
 type Ports map[PortAddr]chan Msg
 
-func (p Ports) FirstByName(name string) chan Msg {
-	for addr, port := range p {
-		if addr.Name == name {
-			return port
-		}
-	}
-	return nil
-}
-
 type Connection struct {
 	Sender    SenderConnectionSide
 	Receivers []ReceiverConnectionSide

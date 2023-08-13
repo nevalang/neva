@@ -89,7 +89,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LowLvlProgram) (ru
 			rIOOut[addr.Name] = append(rIOOut[addr.Name], rPort)
 		}
 
-		rMsg := t.msg(f.Msg)
+		rMsg := t.msg(f.Params)
 
 		rFuncs = append(rFuncs, runtime.FuncRoutine{
 			Ref: runtime.FuncRef{

@@ -100,7 +100,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 			if abs == nil && concrete == nil {
 				panic("abs == nil && concrete == nil")
 			}
-	
+
 			var (
 				name string
 				node shared.Node
@@ -115,7 +115,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 			} else {
 				name = concrete.IDENTIFIER().GetText()
 				concreteNodeInst := concrete.ConcreteNodeInst()
-	
+
 				var (
 					pkg, nodeRef string
 				)
@@ -126,7 +126,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 				} else {
 					nodeRef = nodePath[0].GetText()
 				}
-	
+
 				var di map[string]shared.Node
 				args := concreteNodeInst.NodeArgs()
 				if args != nil && args.NodeArgList() != nil {
@@ -136,23 +136,23 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 						di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
 					}
 				}
-	
+
 				var typeArgs []types.Expr
 				if ta := concreteNodeInst.TypeArgs(); ta != nil {
 					typeArgs = parseTypeExprs(ta.AllTypeExpr())
 				}
-	
+
 				node = shared.Node{
 					Ref:         shared.EntityRef{Pkg: pkg, Name: nodeRef},
 					TypeArgs:    typeArgs,
 					ComponentDI: di,
 				}
 			}
-	
+
 			result[name] = node
-			
+
 		}
-		
+
 	}
 
 	return nil
@@ -199,14 +199,14 @@ func parseNet(actx []generated.ICompNetDefContext) []shared.Connection {
 	for _, connDefs := range actx {
 		for _, connDef := range connDefs.ConnDefList().AllConnDef() {
 			senderSidePortAddr := parsePortAddr(connDef.PortAddr())
-	
+
 			receiverSide := connDef.ConnReceiverSide()
 			singleReceiver := receiverSide.PortAddr()
 			multipleReceivers := receiverSide.ConnReceivers()
 			if singleReceiver == nil && multipleReceivers == nil {
 				panic("both nil")
 			}
-	
+
 			var receiverSides []shared.ReceiverConnectionSide
 			if singleReceiver != nil {
 				receiverSides = []shared.ReceiverConnectionSide{
@@ -221,12 +221,11 @@ func parseNet(actx []generated.ICompNetDefContext) []shared.Connection {
 					})
 				}
 			}
-	
+
 			result = append(result, shared.Connection{
-				SenderSide:    shared.SenderConnectionSide{PortAddr: &senderSidePortAddr},
+				SenderSide:    shared.SenderConnectionSide{PortAddr: senderSidePortAddr},
 				ReceiverSides: receiverSides,
 			})
-			
 		}
 	}
 

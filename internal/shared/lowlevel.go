@@ -23,9 +23,9 @@ type LLReceiverConnectionSide struct {
 
 // LLFunc is a instantiation object that runtime will use to spawn a function
 type LLFunc struct {
-	Ref LLFuncRef // runtime will use this reference to find the function to spawn
-	IO  LLFuncIO  // this is the ports function will use to receive and send data
-	Msg LLMsg     // function can receive predefined message at instantiation time
+	Ref    LLFuncRef // runtime will use this reference to find the function to spawn
+	IO     LLFuncIO  // this is the ports function will use to receive and send data
+	Params LLMsg     // function can receive predefined message at instantiation time
 }
 
 type LLFuncRef struct {

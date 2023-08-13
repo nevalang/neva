@@ -8,8 +8,8 @@ import (
 )
 
 type Runtime struct {
-	runner    FuncRunner
-	connector Connector
+	funcRunner FuncRunner
+	connector  Connector
 }
 
 var ErrNilDeps = errors.New("runtime deps nil")
@@ -19,8 +19,8 @@ func New(c Connector, f FuncRunner) (Runtime, error) {
 		return Runtime{}, ErrNilDeps
 	}
 	return Runtime{
-		connector: c,
-		runner:    f,
+		connector:  c,
+		funcRunner: f,
 	}, nil
 }
 
@@ -42,12 +42,13 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	startPort := prog.Ports.FirstByName("start")
+	// FirstByName is not how this supposed to be working! There could be more "start" and "exit" ports!
+	startPort := prog.Ports[PortAddr{Path: "main/in", Name: "start"}]
 	if startPort == nil {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort := prog.Ports.FirstByName("exit")
+	exitPort := prog.Ports[PortAddr{Path: "main/in", Name: "start"}]
 	if exitPort == nil {
 		return 0, ErrExitPortNotFound
 	}
@@ -63,7 +64,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	})
 
 	g.Go(func() error {
-		if err := r.runner.Run(gctx, prog.Funcs); err != nil {
+		if err := r.funcRunner.Run(gctx, prog.Funcs); err != nil {
 			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)
 		}
 		return nil
