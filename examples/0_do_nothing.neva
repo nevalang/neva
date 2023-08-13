@@ -1,0 +1,7 @@
+components {
+	Main(start) (exit) {
+		net {
+			in.start -> out.exit
+		}
+	}
+}

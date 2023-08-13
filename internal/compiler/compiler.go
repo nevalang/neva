@@ -19,7 +19,7 @@ type (
 		Generate(context.Context, HighLvlProgram) (LowLvlProgram, error)
 	}
 	Backend interface {
-		GenerateTarget(context.Context, LowLvlProgram) ([]byte, error)
+		GenerateTarget(context.Context, LowLvlProgram) error
 	}
 )
 
@@ -29,21 +29,20 @@ var (
 	ErrBackend  = errors.New("backend")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) ([]byte, error) {
+func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) error {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
-		return nil, errors.Join(ErrAnalyzer, err)
+		return errors.Join(ErrAnalyzer, err)
 	}
 
 	irProg, err := c.llrgen.Generate(ctx, analyzedProg)
 	if err != nil {
-		return nil, errors.Join(ErrIrGen, err)
+		return errors.Join(ErrIrGen, err)
 	}
 
-	target, err := c.backend.GenerateTarget(ctx, irProg)
-	if err != nil {
-		return nil, errors.Join(ErrBackend, err)
+	if err := c.backend.GenerateTarget(ctx, irProg); err != nil {
+		return errors.Join(ErrBackend, err)
 	}
 
-	return target, nil
+	return nil
 }

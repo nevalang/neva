@@ -1,0 +1,23 @@
+use {
+	io
+	sync
+}
+
+const {
+	msg string = 'Hello, World!'
+}
+
+components {
+	Main(start) (exit) {
+		nodes {
+			lock = sync.Lock()
+			print = fmt.Print()
+		}
+		net {
+			in.start -> lock.sig
+			const.msg -> lock.v
+			lock.v -> print.v[0]
+			print.v -> out.exit
+		}
+	}
+}
