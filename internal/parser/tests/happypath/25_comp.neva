@@ -203,7 +203,7 @@ components {
 			concrete = io.Reader()
 		}
 		net {
-			in.start -> abs.in.v
+			in.enter -> abs.in.v
 			abs.out.v -> {
 				concrete.in.v
 			}

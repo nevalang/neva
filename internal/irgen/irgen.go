@@ -32,7 +32,7 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (s
 		entityRef: shared.EntityRef{Pkg: "main", Name: "Main"},
 		ioUsage: nodeIOUsage{
 			in: map[repPortAddr]struct{}{
-				{Port: "start"}: {},
+				{Port: "enter"}: {},
 			},
 			out: map[string]uint8{
 				"exit": 1,

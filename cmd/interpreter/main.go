@@ -29,9 +29,9 @@ interfaces {
 }
 
 components {
-	Main(start) (exit) {
+	Main(enter) (exit) {
 		net {
-			in.start -> out.exit
+			in.enter -> out.exit
 		}
 	}
 }

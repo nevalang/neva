@@ -7,15 +7,15 @@ const {
 }
 
 components {
-	Main(start) (exit) {
+	Main(enter) (exit) {
 		nodes {
 			lock = std.Lock()
 			print = std.Print()
 		}
 		net {
-			in.start -> lock.sig
+			in.enter -> lock.sig
 			const.msg -> lock.v
-			lock.v -> print.v[0]
+			lock.v -> print.v
 			print.v -> out.exit
 		}
 	}

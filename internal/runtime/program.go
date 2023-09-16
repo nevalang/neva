@@ -107,29 +107,3 @@ func (f FuncPorts) Port(name string) (chan Msg, error) {
 
 	return slots[0], nil
 }
-
-// ArrPort returns slots associated with the given name.
-// It only returns error if port is not found. It doesn't care about slots count.
-func (i FuncPorts) ArrPort(name string) ([]chan Msg, error) {
-	slots, ok := i[name]
-	if !ok {
-		return nil, fmt.Errorf("")
-	}
-
-	return slots, nil
-}
-
-// Slot returns slot number idx of the port named by given name.
-// It assumes it's an array port at leas as big as idx and returns error otherwise.
-func (i FuncPorts) Slot(name string, idx uint8) (chan Msg, error) {
-	port, ok := i[name]
-	if !ok {
-		return nil, fmt.Errorf("")
-	}
-
-	if len(port) < int(idx) {
-		return nil, fmt.Errorf("")
-	}
-
-	return port[idx], nil
-}

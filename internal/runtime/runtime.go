@@ -33,24 +33,24 @@ type (
 	FuncRunner interface {
 		Run(context.Context, []FuncRoutine) error
 	}
-	Func func(context.Context, FuncIO) error
+	Func func(FuncIO) (func(context.Context), error)
 )
 
 var (
-	ErrStartPortNotFound = errors.New("start port not found")
+	ErrStartPortNotFound = errors.New("enter port not found")
 	ErrExitPortNotFound  = errors.New("exit port not found")
 	ErrConnector         = errors.New("connector")
 	ErrRoutineRunner     = errors.New("routine runner")
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	// FirstByName is not how this supposed to be working! There could be more "start" and "exit" ports!
-	startPort := prog.Ports[PortAddr{Path: "main/in", Port: "start"}]
+	// FirstByName is not how this supposed to be working! There could be more "enter" and "exit" ports!
+	startPort := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
 	if startPort == nil {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort := prog.Ports[PortAddr{Path: "main/in", Port: "start"}]
+	exitPort := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
 	if exitPort == nil {
 		return 0, ErrExitPortNotFound
 	}

@@ -1,3 +1,4 @@
+# generate parser from antlr grammar
 .PHONY: antlr
 antlr:
 	@cd internal/parser && \

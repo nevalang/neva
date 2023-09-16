@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -29,8 +27,6 @@ func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
 }
 
 func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) error {
-	g, gctx := errgroup.WithContext(ctx)
-
 	for i := range funcRoutines {
 		funcRoutine := funcRoutines[i]
 
@@ -43,13 +39,13 @@ func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) 
 			return fmt.Errorf("%w: %v", ErrRepo, funcRoutine.Ref)
 		}
 
-		g.Go(func() error {
-			if err := f(gctx, funcRoutine.IO); err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), funcRoutine.Ref)
-			}
-			return nil
-		})
+		cb, err := f(funcRoutine.IO)
+		if err != nil {
+			return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), funcRoutine.Ref)
+		}
+
+		go cb(context.WithValue(ctx, "msg", funcRoutine.Msg))
 	}
 
-	return g.Wait()
+	return nil
 }
