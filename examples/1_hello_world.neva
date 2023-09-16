@@ -1,6 +1,5 @@
 use {
-	io
-	sync
+	std
 }
 
 const {
@@ -10,8 +9,8 @@ const {
 components {
 	Main(start) (exit) {
 		nodes {
-			lock = sync.Lock()
-			print = fmt.Print()
+			lock = std.Lock()
+			print = std.Print()
 		}
 		net {
 			in.start -> lock.sig
