@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/nevalang/neva/internal/interpreter"
-	"github.com/nevalang/neva/internal/llrgen"
+	"github.com/nevalang/neva/internal/irgen"
 	"github.com/nevalang/neva/internal/parser"
 	"github.com/nevalang/neva/internal/runtime"
+	"golang.org/x/exp/slog"
 )
 
 var prog = `
@@ -36,19 +38,38 @@ components {
 `
 
 func main() {
-	interceptor := runtime.DefaultInterceptor{}
-	connector, _ := runtime.NewDefaultConnector(interceptor)
-	repo := map[runtime.FuncRef]runtime.Func{}
-	runner, _ := runtime.NewDefaultFuncRunner(repo)
-	runTime, _ := runtime.New(connector, runner)
-	transformer := interpreter.MustNewTransformer()
-	llrGen := llrgen.New()
-	p := parser.New()
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	intr := interpreter.MustNew(p, llrGen, transformer, runTime)
-
-	_, err := intr.Interpret(context.Background(), []byte(prog))
+	connector, err := runtime.NewDefaultConnector(runtime.DefaultInterceptor{})
 	if err != nil {
-		panic(err)
+		logger.Error(err.Error())
+		return
 	}
+
+	runner, err := runtime.NewDefaultFuncRunner(map[runtime.FuncRef]runtime.Func{})
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
+	rt, err := runtime.New(connector, runner)
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
+	intr := interpreter.MustNew(
+		parser.New(),
+		irgen.New(),
+		interpreter.MustNewTransformer(),
+		rt,
+	)
+
+	code, err := intr.Interpret(context.Background(), []byte(prog))
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
+	os.Exit(code)
 }

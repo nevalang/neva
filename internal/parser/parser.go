@@ -16,6 +16,7 @@ type treeShapeListener struct {
 
 type Parser struct{}
 
+// Currently only returns one "main" package
 func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)

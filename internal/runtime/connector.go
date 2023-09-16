@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
 )
 
 var (
-	ErrBroadcast         = errors.New("broadcast")
-	ErrDistribute        = errors.New("distribute")
-	ErrSelectorSending   = errors.New("selector after sending")
-	ErrSelectorReceiving = errors.New("selector before receiving")
+	ErrBroadcast  = errors.New("broadcast")
+	ErrDistribute = errors.New("distribute")
 )
 
 type DefaultConnector struct {
@@ -32,8 +32,8 @@ type Interceptor interface {
 	AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg)
 }
 
-func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
-	g, gctx := WithContext(ctx)
+func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error {
+	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range conns {
 		conn := conns[i]
@@ -75,13 +75,9 @@ func (c DefaultConnector) distribute(
 	for len(q) > 0 {
 		recv := q[i]
 
-		if _, ok := preparedMsgs[recv.Meta.PortAddr]; !ok { // avoid multuple interceptions and selections
+		if _, ok := preparedMsgs[recv.Meta.PortAddr]; !ok { // avoid multuple interceptions
 			msg = c.interceptor.BeforeReceiving(senderMeta, recv.Meta, msg)
-			preparedMsg, err := c.applySelector(msg, recv.Meta.Selectors)
-			if err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrSelectorReceiving, err), recv.Meta)
-			}
-			preparedMsgs[recv.Meta.PortAddr] = preparedMsg
+			preparedMsgs[recv.Meta.PortAddr] = msg
 		}
 		preparedMsg := preparedMsgs[recv.Meta.PortAddr]
 
@@ -103,16 +99,6 @@ func (c DefaultConnector) distribute(
 	}
 
 	return nil
-}
-
-func (c DefaultConnector) applySelector(msg Msg, selectors []string) (Msg, error) {
-	if len(selectors) == 0 {
-		return msg, nil
-	}
-	return c.applySelector(
-		msg.Map()[selectors[0]],
-		selectors[1:],
-	)
 }
 
 type DefaultInterceptor struct{}

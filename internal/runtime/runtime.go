@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Runtime struct {
@@ -54,7 +56,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	g, gctx := WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
 		if err := r.connector.Connect(gctx, prog.Connections); err != nil {

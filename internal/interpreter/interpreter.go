@@ -10,7 +10,7 @@ import (
 
 type Interpreter struct {
 	parser      Parser
-	llrgen      LowLvlGenerator
+	irgen       LowLvlGenerator
 	transformer Transformer
 	runtime     Runtime
 }
@@ -37,7 +37,7 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 		return 0, err
 	}
 
-	ll, err := i.llrgen.Generate(ctx, hl)
+	ll, err := i.irgen.Generate(ctx, hl)
 	if err != nil {
 		return 0, err
 	}
@@ -57,14 +57,14 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 
 func MustNew(
 	parser Parser,
-	llrgen LowLvlGenerator,
+	irgen LowLvlGenerator,
 	transformer Transformer,
 	runtime Runtime,
 ) Interpreter {
-	tools.NilPanic(parser, llrgen, transformer, runtime)
+	tools.NilPanic(parser, irgen, transformer, runtime)
 	return Interpreter{
 		parser:      parser,
-		llrgen:      llrgen,
+		irgen:       irgen,
 		transformer: transformer,
 		runtime:     runtime,
 	}

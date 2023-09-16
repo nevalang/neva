@@ -1,4 +1,4 @@
-package llrgen
+package irgen
 
 import (
 	"context"

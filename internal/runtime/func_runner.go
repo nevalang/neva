@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -27,7 +29,7 @@ func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
 }
 
 func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) error {
-	g, gctx := WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range funcRoutines {
 		funcRoutine := funcRoutines[i]

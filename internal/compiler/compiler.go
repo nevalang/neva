@@ -7,7 +7,7 @@ import (
 
 type Compiler struct {
 	analyzer Analyzer
-	llrgen   LowLvlGenerator
+	irgen    LowLvlGenerator
 	backend  Backend
 }
 
@@ -35,7 +35,7 @@ func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) error {
 		return errors.Join(ErrAnalyzer, err)
 	}
 
-	irProg, err := c.llrgen.Generate(ctx, analyzedProg)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg)
 	if err != nil {
 		return errors.Join(ErrIrGen, err)
 	}

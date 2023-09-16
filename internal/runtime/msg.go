@@ -3,7 +3,6 @@ package runtime
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // Msg methods don't return errors because they can be used not only at startup.
@@ -94,67 +93,5 @@ func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
 		emptyMsg: emptyMsg{},
 		v:        b,
-	}
-}
-
-// Map
-
-type MapMsg struct {
-	emptyMsg
-	v map[string]Msg
-}
-
-func (msg MapMsg) Map() map[string]Msg { return msg.v }
-func (msg MapMsg) String() string {
-	b := &strings.Builder{}
-	b.WriteString("{")
-	c := 0
-	for k, el := range msg.v {
-		c++
-		if c < len(msg.v) {
-			fmt.Fprintf(b, " %s: %s, ", k, el.String())
-			continue
-		}
-		fmt.Fprintf(b, "%s: %s ", k, el.String())
-	}
-	b.WriteString("}")
-	return b.String()
-}
-
-func NewMapMsg(v map[string]Msg) MapMsg {
-	return MapMsg{
-		emptyMsg: emptyMsg{},
-		v:        v,
-	}
-}
-
-// Vec
-
-type VecMsg struct {
-	emptyMsg
-	v []Msg
-}
-
-func (msg VecMsg) Vec() []Msg { return msg.v }
-func (msg VecMsg) String() string {
-	b := &strings.Builder{}
-	b.WriteString("[")
-	c := 0
-	for _, el := range msg.v {
-		c++
-		if c < len(msg.v) {
-			fmt.Fprintf(b, "%s, ", el.String())
-			continue
-		}
-		fmt.Fprint(b, el.String())
-	}
-	b.WriteString("]")
-	return b.String()
-}
-
-func NewVecMsg(v []Msg) VecMsg {
-	return VecMsg{
-		emptyMsg: emptyMsg{},
-		v:        v,
 	}
 }
