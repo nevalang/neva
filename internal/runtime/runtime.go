@@ -33,7 +33,7 @@ type (
 	FuncRunner interface {
 		Run(context.Context, []FuncRoutine) error
 	}
-	Func func(FuncIO) (func(context.Context), error)
+	Func func(context.Context, FuncIO) (func(), error)
 )
 
 var (

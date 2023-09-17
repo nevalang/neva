@@ -100,7 +100,7 @@ func (t transformer) Transform(ctx context.Context, ll *ir.LLProgram) (runtime.P
 				In:  rIOIn,
 				Out: rIOOut,
 			},
-			Msg: rMsg,
+			MetaMsg: rMsg,
 		})
 	}
 

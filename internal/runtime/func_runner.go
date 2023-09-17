@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 )
 
 var (
@@ -26,26 +27,39 @@ func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
 	}, nil
 }
 
-func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) error {
-	for i := range funcRoutines {
-		funcRoutine := funcRoutines[i]
+func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) (err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	wg := sync.WaitGroup{}
+	wg.Add(len(funcRoutines))
 
-		if funcRoutine.Msg != nil {
-			ctx = context.WithValue(ctx, CtxMsgKey, funcRoutine.Msg)
-		}
-
-		f, ok := d.repo[funcRoutine.Ref]
-		if !ok {
-			return fmt.Errorf("%w: %v", ErrRepo, funcRoutine.Ref)
-		}
-
-		cb, err := f(funcRoutine.IO)
+	defer func() {
 		if err != nil {
-			return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), funcRoutine.Ref)
+			cancel()
+		}
+	}()
+
+	for _, routine := range funcRoutines {
+		if routine.MetaMsg != nil {
+			ctx = context.WithValue(ctx, CtxMsgKey, routine.MetaMsg)
 		}
 
-		go cb(context.WithValue(ctx, "msg", funcRoutine.Msg))
+		constructor, ok := d.repo[routine.Ref]
+		if !ok {
+			return fmt.Errorf("%w: %v", ErrRepo, routine.Ref)
+		}
+
+		fun, err := constructor(ctx, routine.IO)
+		if err != nil {
+			return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), routine.Ref)
+		}
+
+		go func() {
+			fun() // will return at ctx.Done()
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 
 	return nil
 }

@@ -2,29 +2,35 @@ package std
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func Print(io runtime.FuncIO) (func(context.Context), error) {
-	ch, err := io.In.Port("v")
+func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
+	in, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
 	}
-	return func(ctx context.Context) {
+	out, err := io.Out.Port("v")
+	if err != nil {
+		return nil, err
+	}
+	return func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case v := <-ch:
+			case v := <-in:
 				fmt.Println(v.String())
+				out <- v
 			}
 		}
 	}, nil
 }
 
-func Lock(io runtime.FuncIO) (func(context.Context), error) {
+func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -37,7 +43,7 @@ func Lock(io runtime.FuncIO) (func(context.Context), error) {
 	if err != nil {
 		return nil, err
 	}
-	return func(ctx context.Context) {
+	return func() {
 		for {
 			select {
 			case <-ctx.Done():
@@ -50,19 +56,24 @@ func Lock(io runtime.FuncIO) (func(context.Context), error) {
 	}, nil
 }
 
-func Const(io runtime.FuncIO) (func(context.Context), error) {
-	vout, err := io.Out.Port("v")
+func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
+	msg, ok := ctx.Value("msg").(runtime.Msg)
+	if !ok {
+		return nil, errors.New("ctx msg not found")
+	}
+
+	out, err := io.Out.Port("v")
 	if err != nil {
 		return nil, err
 	}
-	return func(ctx context.Context) {
-		msg := ctx.Value("msg").(runtime.Msg)
+
+	return func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				vout <- msg
+				out <- msg
 			}
 		}
 	}, nil

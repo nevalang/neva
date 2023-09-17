@@ -72,9 +72,9 @@ type Selector struct {
 }
 
 type FuncRoutine struct { // Func spec/def?
-	Ref FuncRef
-	IO  FuncIO
-	Msg Msg
+	Ref     FuncRef
+	IO      FuncIO
+	MetaMsg Msg
 }
 
 type FuncRef struct {
