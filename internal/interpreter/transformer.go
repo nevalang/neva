@@ -10,9 +10,9 @@ import (
 
 type transformer struct{}
 
-func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Program, error) {
-	rPorts := make(runtime.Ports, len(ll.Ports))
-	for _, portInfo := range ll.Ports {
+func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime.Program, error) {
+	rPorts := make(runtime.Ports, len(irprog.Ports))
+	for _, portInfo := range irprog.Ports {
 		rPorts[runtime.PortAddr{
 			Path: portInfo.PortAddr.Path,
 			Port: portInfo.PortAddr.Port,
@@ -20,8 +20,8 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
-	rConns := make([]runtime.Connection, len(ll.Connections))
-	for _, conn := range ll.Connections {
+	rConns := make([]runtime.Connection, len(irprog.Connections))
+	for _, conn := range irprog.Connections {
 		senderAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
@@ -68,8 +68,8 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 		})
 	}
 
-	rFuncs := make([]runtime.FuncRoutine, len(ll.Funcs))
-	for _, f := range ll.Funcs {
+	rFuncs := make([]runtime.FuncRoutine, len(irprog.Funcs))
+	for _, f := range irprog.Funcs {
 		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
 		for _, addr := range f.Io.Inports {
 			rPort := rPorts[runtime.PortAddr{
@@ -90,7 +90,10 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
 		}
 
-		rMsg := t.msg(f.Params)
+		rMsg, err := t.msg(f.Params)
+		if err != nil {
+			return runtime.Program{}, err
+		}
 
 		rFuncs = append(rFuncs, runtime.FuncRoutine{
 			Ref: f.Ref,

@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -349,6 +349,12 @@ func (s *BasenevaListener) EnterIoNodePortAddr(ctx *IoNodePortAddrContext) {}
 
 // ExitIoNodePortAddr is called when production ioNodePortAddr is exited.
 func (s *BasenevaListener) ExitIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+
+// EnterConstNodePortAddr is called when production constNodePortAddr is entered.
+func (s *BasenevaListener) EnterConstNodePortAddr(ctx *ConstNodePortAddrContext) {}
+
+// ExitConstNodePortAddr is called when production constNodePortAddr is exited.
+func (s *BasenevaListener) ExitConstNodePortAddr(ctx *ConstNodePortAddrContext) {}
 
 // EnterNormalNodePortAddr is called when production normalNodePortAddr is entered.
 func (s *BasenevaListener) EnterNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}

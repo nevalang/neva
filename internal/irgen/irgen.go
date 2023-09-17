@@ -43,9 +43,9 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.
 	}
 
 	result := &ir.Program{
-		Ports: []*ir.PortInfo{},
-		Connections:   []*ir.Connection{},
-		Funcs: []*ir.Func{},
+		Ports:       []*ir.PortInfo{},
+		Connections: []*ir.Connection{},
+		Funcs:       []*ir.Func{},
 	}
 
 	if err := g.processNode(ctx, rootNodeCtx, pkgs, result); err != nil {
@@ -116,6 +116,10 @@ func (g Generator) processNode(
 			ioUsage: nodeIOUsage{
 				in:  nodeSlots.in,
 				out: nodeSlots.out,
+			},
+			entityRef: src.EntityRef{
+				Pkg:  "",
+				Name: name,
 			},
 		}
 

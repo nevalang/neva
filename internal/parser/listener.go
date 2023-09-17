@@ -103,7 +103,7 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 		panic("nodesDef == nil")
 	}
 
-	s.file.Entities[name] = src.Entity{
+	cmp := src.Entity{
 		Kind: src.ComponentEntity,
 		Component: src.Component{
 			Interface: parsedInterfaceDef,
@@ -111,4 +111,6 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 			Net:       parseNet(actx.CompBody().AllCompNetDef()),
 		},
 	}
+
+	s.file.Entities[name] = cmp
 }

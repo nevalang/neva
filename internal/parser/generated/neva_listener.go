@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -171,6 +171,9 @@ type nevaListener interface {
 
 	// EnterIoNodePortAddr is called when entering the ioNodePortAddr production.
 	EnterIoNodePortAddr(c *IoNodePortAddrContext)
+
+	// EnterConstNodePortAddr is called when entering the constNodePortAddr production.
+	EnterConstNodePortAddr(c *ConstNodePortAddrContext)
 
 	// EnterNormalNodePortAddr is called when entering the normalNodePortAddr production.
 	EnterNormalNodePortAddr(c *NormalNodePortAddrContext)
@@ -348,6 +351,9 @@ type nevaListener interface {
 
 	// ExitIoNodePortAddr is called when exiting the ioNodePortAddr production.
 	ExitIoNodePortAddr(c *IoNodePortAddrContext)
+
+	// ExitConstNodePortAddr is called when exiting the constNodePortAddr production.
+	ExitConstNodePortAddr(c *ConstNodePortAddrContext)
 
 	// ExitNormalNodePortAddr is called when exiting the normalNodePortAddr production.
 	ExitNormalNodePortAddr(c *NormalNodePortAddrContext)

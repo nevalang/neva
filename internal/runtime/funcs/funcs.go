@@ -1,4 +1,4 @@
-package std
+package funcs
 
 import (
 	"context"
@@ -77,4 +77,12 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 			}
 		}
 	}, nil
+}
+
+func Repo() map[string]runtime.Func {
+	return map[string]runtime.Func{
+		"print": Print,
+		"lock":  Lock,
+		"const": Const,
+	}
 }

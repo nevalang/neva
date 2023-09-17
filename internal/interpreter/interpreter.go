@@ -32,6 +32,7 @@ type Runtime interface {
 }
 
 func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
+	// FIXME someone has to resolve imports
 	hl, err := i.parser.Parse(ctx, bb)
 	if err != nil {
 		return 0, err

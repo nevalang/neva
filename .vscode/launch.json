@@ -12,62 +12,13 @@
       "visualParseTree": true
     },
     {
-      "name": "cmd/parser",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/parser",
-      "cwd": "${workspaceFolder}/internal/compiler/frontend",
-      "args": ["neva.g4"]
-    },
-    {
       "name": "cmd/interpreter",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/interpreter",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "cmd/tmp",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/tmp",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "cmd/tmp2",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/tmp2",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "examples/hello_world",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/runtime/hello_world",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "examples/echo",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/runtime/echo",
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "cmd/typeresolver",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/typeresolver",
-      "cwd": "${workspaceFolder}"
+      "args": ["examples/1_hello_world.neva"]
     }
   ]
 }

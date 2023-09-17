@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/internal/irgen"
 	"github.com/nevalang/neva/internal/parser"
 	"github.com/nevalang/neva/internal/runtime"
-	"golang.org/x/exp/slog"
+	"github.com/nevalang/neva/internal/runtime/funcs"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 		return
 	}
 
-	funcRunner, err := runtime.NewDefaultFuncRunner(map[string]runtime.Func{})
+	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Repo())
 	if err != nil {
 		logger.Error(err.Error())
 		return

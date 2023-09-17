@@ -150,12 +150,10 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 			}
 
 			result[name] = node
-
 		}
-
 	}
 
-	return nil
+	return result
 }
 
 func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
@@ -235,8 +233,9 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection {
 func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 	ioNodeAddr := portAddr.IoNodePortAddr()
 	senderNormalPortAddr := portAddr.NormalNodePortAddr()
-	if ioNodeAddr == nil && senderNormalPortAddr == nil {
-		panic("both")
+	constPortAddr := portAddr.ConstNodePortAddr()
+	if ioNodeAddr == nil && senderNormalPortAddr == nil && constPortAddr == nil {
+		panic("ioNodeAddr == nil && senderNormalPortAddr == nil && constPortAddr == nil")
 	}
 
 	if ioNodeAddr != nil {
@@ -245,6 +244,13 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 		return src.PortAddr{
 			Node: dir,
 			Port: portName,
+		}
+	}
+
+	if constPortAddr != nil {
+		return src.PortAddr{
+			Node: "const",
+			Port: constPortAddr.IDENTIFIER().GetText(),
 		}
 	}
 

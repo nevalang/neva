@@ -25,7 +25,6 @@ type (
 var (
 	ErrAnalyzer = errors.New("analyzer")
 	ErrIrGen    = errors.New("ir generator")
-	ErrBackend  = errors.New("backend")
 )
 
 func (c Compiler) Compile(ctx context.Context, prog map[string]src.File) (*ir.Program, error) {

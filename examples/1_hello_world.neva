@@ -1,9 +1,9 @@
 use {
-	std
+	std std
 }
 
 const {
-	msg string = 'Hello, World!'
+	msg string = "Hello, World!"
 }
 
 components {
@@ -13,10 +13,10 @@ components {
 			print = std.Print()
 		}
 		net {
-			in.enter -> lock.sig
-			const.msg -> lock.v
-			lock.v -> print.v
-			print.v -> out.exit
+			in.enter -> lock.in.sig
+			const.msg -> lock.out.v
+			lock.in.v -> print.out.v
+			print.in.v -> out.exit
 		}
 	}
 }
