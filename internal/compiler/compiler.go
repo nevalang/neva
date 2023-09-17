@@ -3,23 +3,21 @@ package compiler
 import (
 	"context"
 	"errors"
+
+	ir "github.com/nevalang/neva/pkg/ir/api"
 )
 
 type Compiler struct {
 	analyzer Analyzer
-	irgen    LowLvlGenerator
-	backend  Backend
+	irgen    IRGenerator
 }
 
 type (
 	Analyzer interface {
 		Analyze(context.Context, HighLvlProgram) (HighLvlProgram, error)
 	}
-	LowLvlGenerator interface {
-		Generate(context.Context, HighLvlProgram) (LowLvlProgram, error)
-	}
-	Backend interface {
-		GenerateTarget(context.Context, LowLvlProgram) error
+	IRGenerator interface {
+		Generate(context.Context, HighLvlProgram) (*ir.Program, error)
 	}
 )
 
@@ -29,20 +27,16 @@ var (
 	ErrBackend  = errors.New("backend")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) error {
+func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) (*ir.Program, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
-		return errors.Join(ErrAnalyzer, err)
+		return nil, errors.Join(ErrAnalyzer, err)
 	}
 
 	irProg, err := c.irgen.Generate(ctx, analyzedProg)
 	if err != nil {
-		return errors.Join(ErrIrGen, err)
+		return nil, errors.Join(ErrIrGen, err)
 	}
 
-	if err := c.backend.GenerateTarget(ctx, irProg); err != nil {
-		return errors.Join(ErrBackend, err)
-	}
-
-	return nil
+	return irProg, nil
 }

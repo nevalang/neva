@@ -21,11 +21,11 @@ type SourceCodeParser interface {
 }
 
 type IRGenerator interface {
-	Generate(context.Context, map[string]shared.File) (*ir.LLProgram, error)
+	Generate(context.Context, map[string]shared.File) (*ir.Program, error)
 }
 
 type RuntimeProgramGenerator interface {
-	Transform(context.Context, *ir.LLProgram) (runtime.Program, error)
+	Transform(context.Context, *ir.Program) (runtime.Program, error)
 }
 
 type Runtime interface {

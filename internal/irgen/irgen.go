@@ -23,7 +23,7 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*ir.LLProgram, error) {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*ir.Program, error) {
 	if len(pkgs) == 0 {
 		return nil, ErrNoPkgs
 	}
@@ -41,10 +41,10 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*
 		},
 	}
 
-	result := &ir.LLProgram{
+	result := &ir.Program{
 		Ports: []*ir.PortInfo{},
-		Net:   []*ir.LLConnection{},
-		Funcs: []*ir.LLFunc{},
+		Net:   []*ir.Connection{},
+		Funcs: []*ir.Func{},
 	}
 
 	if err := g.processNode(ctx, rootNodeCtx, pkgs, result); err != nil {
@@ -74,7 +74,7 @@ func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
 	pkgs map[string]shared.File,
-	result *ir.LLProgram,
+	result *ir.Program,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
 	if err != nil {
@@ -88,12 +88,12 @@ func (g Generator) processNode(
 	if len(component.Net) == 0 {
 		result.Funcs = append(
 			result.Funcs,
-			&ir.LLFunc{
-				Ref: &ir.LLFuncRef{
+			&ir.Func{
+				Ref: &ir.FuncRef{
 					Pkg:  nodeCtx.entityRef.Pkg,
 					Name: nodeCtx.entityRef.Name,
 				},
-				Io: &ir.LLFuncIO{
+				Io: &ir.FuncIO{
 					In:  inportAddrs,
 					Out: outPortAddrs,
 				},
@@ -137,7 +137,7 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 	pkgs map[string]shared.File,
 	conns []shared.Connection,
 	nodeCtx nodeContext,
-	result *ir.LLProgram,
+	result *ir.Program,
 ) (map[string]nodeIOUsage, error) {
 	nodesIOUsage := map[string]nodeIOUsage{}
 	inPortsSlotsSet := map[shared.PortAddr]bool{}
@@ -155,13 +155,13 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 		// we assume every sender is unique thus we don't increment same addr twice
 		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // fixme why we assume that?
 
-		senderSide := ir.LLPortAddr{
+		senderSide := ir.PortAddr{
 			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
 			Port: conn.SenderSide.PortAddr.Port,
 			Idx:  uint32(conn.SenderSide.PortAddr.Idx),
 		}
 
-		receiverSides := make([]*ir.LLReceiverConnectionSide, 0, len(conn.ReceiverSides))
+		receiverSides := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
 			irSide := g.mapReceiverConnectionSide(nodeCtx.path, receiverSide)
 			receiverSides = append(receiverSides, &irSide)
@@ -175,7 +175,7 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 			}
 		}
 
-		result.Net = append(result.Net, &ir.LLConnection{
+		result.Net = append(result.Net, &ir.Connection{
 			SenderSide:    &senderSide,
 			ReceiverSides: receiverSides,
 		})
@@ -186,14 +186,14 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 
 func (Generator) insertAndReturnInports(
 	nodeCtx nodeContext,
-	result *ir.LLProgram,
-) []*ir.LLPortAddr {
-	inports := make([]*ir.LLPortAddr, 0, len(nodeCtx.ioUsage.in))
+	result *ir.Program,
+) []*ir.PortAddr {
+	inports := make([]*ir.PortAddr, 0, len(nodeCtx.ioUsage.in))
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
 	// actually we can't use IO because we need to know how many slots are used
 	for addr := range nodeCtx.ioUsage.in {
-		addr := &ir.LLPortAddr{
+		addr := &ir.PortAddr{
 			Path: nodeCtx.path + "/in",
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
@@ -211,9 +211,9 @@ func (Generator) insertAndReturnInports(
 func (Generator) insertAndReturnOutports(
 	outports map[string]shared.Port,
 	nodeCtx nodeContext,
-	result *ir.LLProgram,
-) []*ir.LLPortAddr {
-	runtimeFuncOutportAddrs := make([]*ir.LLPortAddr, 0, len(nodeCtx.ioUsage.out))
+	result *ir.Program,
+) []*ir.PortAddr {
+	runtimeFuncOutportAddrs := make([]*ir.PortAddr, 0, len(nodeCtx.ioUsage.out))
 
 	for name := range outports {
 		slotsCount, ok := nodeCtx.ioUsage.out[name]
@@ -222,7 +222,7 @@ func (Generator) insertAndReturnOutports(
 		}
 
 		for i := 0; i < int(slotsCount); i++ {
-			addr := &ir.LLPortAddr{
+			addr := &ir.PortAddr{
 				Path: nodeCtx.path + "/out",
 				Port: name,
 				Idx:  uint32(i),
@@ -253,13 +253,13 @@ func (Generator) lookupEntity(pkgs map[string]shared.File, ref shared.EntityRef)
 }
 
 type handleSenderSideResult struct {
-	irConnSide ir.LLPortAddr
+	irConnSide ir.PortAddr
 }
 
 // mapReceiverConnectionSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) ir.LLReceiverConnectionSide {
-	return ir.LLReceiverConnectionSide{
-		PortAddr: &ir.LLPortAddr{
+func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) ir.ReceiverConnectionSide {
+	return ir.ReceiverConnectionSide{
+		PortAddr: &ir.PortAddr{
 			Path: nodeCtxPath + "/" + side.PortAddr.Node,
 			Port: side.PortAddr.Port,
 			Idx:  uint32(side.PortAddr.Idx),

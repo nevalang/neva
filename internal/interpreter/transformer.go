@@ -9,7 +9,7 @@ import (
 
 type transformer struct{}
 
-func (t transformer) Transform(ctx context.Context, ll *ir.LLProgram) (runtime.Program, error) {
+func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Program, error) {
 	rPorts := make(runtime.Ports, len(ll.Ports))
 	for _, portInfo := range ll.Ports {
 		rPorts[runtime.PortAddr{
@@ -111,17 +111,17 @@ func (t transformer) Transform(ctx context.Context, ll *ir.LLProgram) (runtime.P
 	}, nil
 }
 
-func (t transformer) msg(msg *ir.LLMsg) runtime.Msg {
+func (t transformer) msg(msg *ir.Msg) runtime.Msg {
 	var rMsg runtime.Msg
 
 	switch msg.Type {
-	case ir.LLMsgType_LLBoolMsg:
+	case ir.MsgType_Bool:
 		rMsg = runtime.NewBoolMsg(msg.Bool)
-	case ir.LLMsgType_LLIntMsg:
+	case ir.MsgType_Int:
 		rMsg = runtime.NewIntMsg(msg.Int)
-	case ir.LLMsgType_LLFloatMsg:
+	case ir.MsgType_Float:
 		rMsg = runtime.NewFloatMsg(msg.Float)
-	case ir.LLMsgType_LLStrMsg:
+	case ir.MsgType_Str:
 		rMsg = runtime.NewStrMsg(msg.Str)
 	default:
 		panic("unknown message type")
