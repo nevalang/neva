@@ -22,13 +22,13 @@ func main() {
 		return
 	}
 
-	runner, err := runtime.NewDefaultFuncRunner(map[runtime.FuncRef]runtime.Func{})
+	funcRunner, err := runtime.NewDefaultFuncRunner(map[runtime.FuncRef]runtime.Func{})
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 
-	rt, err := runtime.New(connector, runner)
+	runTime, err := runtime.New(connector, funcRunner)
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -38,7 +38,7 @@ func main() {
 		parser.New(),
 		irgen.New(),
 		interpreter.MustNewTransformer(),
-		rt,
+		runTime,
 	)
 
 	code, err := intr.Interpret(context.Background(), []byte(prog))

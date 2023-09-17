@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 
-	ir "github.com/nevalang/neva/pkg/ir/api"
+	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/pkg/ir"
 )
 
 type Compiler struct {
@@ -14,10 +15,10 @@ type Compiler struct {
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, HighLvlProgram) (HighLvlProgram, error)
+		Analyze(context.Context, map[string]src.File) (map[string]src.File, error)
 	}
 	IRGenerator interface {
-		Generate(context.Context, HighLvlProgram) (*ir.Program, error)
+		Generate(context.Context, map[string]src.File) (*ir.Program, error)
 	}
 )
 
@@ -27,7 +28,7 @@ var (
 	ErrBackend  = errors.New("backend")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog HighLvlProgram) (*ir.Program, error) {
+func (c Compiler) Compile(ctx context.Context, prog map[string]src.File) (*ir.Program, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, errors.Join(ErrAnalyzer, err)

@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/shared"
-	ir "github.com/nevalang/neva/pkg/ir/api"
-	"github.com/nevalang/neva/pkg/tools"
+	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/pkg/ir"
 )
 
 type Interpreter struct {
@@ -17,11 +16,11 @@ type Interpreter struct {
 }
 
 type SourceCodeParser interface {
-	Parse(context.Context, []byte) (map[string]shared.File, error)
+	Parse(context.Context, []byte) (map[string]src.File, error)
 }
 
 type IRGenerator interface {
-	Generate(context.Context, map[string]shared.File) (*ir.Program, error)
+	Generate(context.Context, map[string]src.File) (*ir.Program, error)
 }
 
 type RuntimeProgramGenerator interface {
@@ -62,7 +61,9 @@ func MustNew(
 	transformer RuntimeProgramGenerator,
 	runtime Runtime,
 ) Interpreter {
-	tools.NilPanic(parser, irgen, transformer, runtime)
+	if parser == nil || irgen == nil || transformer == nil || runtime == nil {
+		panic("nil argument")
+	}
 	return Interpreter{
 		parser:  parser,
 		irgen:   irgen,

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/shared"
-	ir "github.com/nevalang/neva/pkg/ir/api"
+	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/pkg/ir"
 )
 
 type Generator struct{}
@@ -23,14 +23,14 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.Program, error) {
 	if len(pkgs) == 0 {
 		return nil, ErrNoPkgs
 	}
 
 	rootNodeCtx := nodeContext{
 		path:      "main",
-		entityRef: shared.EntityRef{Pkg: "main", Name: "Main"},
+		entityRef: src.EntityRef{Pkg: "main", Name: "Main"},
 		ioUsage: nodeIOUsage{
 			in: map[repPortAddr]struct{}{
 				{Port: "enter"}: {},
@@ -56,8 +56,8 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*
 
 type (
 	nodeContext struct {
-		path      string           // including current
-		entityRef shared.EntityRef // refers to component // todo what about interfaces?
+		path      string        // including current
+		entityRef src.EntityRef // refers to component // todo what about interfaces?
 		ioUsage   nodeIOUsage
 	}
 	nodeIOUsage struct {
@@ -73,7 +73,7 @@ type (
 func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]shared.File,
+	pkgs map[string]src.File,
 	result *ir.Program,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
@@ -134,13 +134,13 @@ type handleNetworkResult struct {
 }
 
 func (g Generator) insertConnectionsAndReturnIOUsage(
-	pkgs map[string]shared.File,
-	conns []shared.Connection,
+	pkgs map[string]src.File,
+	conns []src.Connection,
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) (map[string]nodeIOUsage, error) {
 	nodesIOUsage := map[string]nodeIOUsage{}
-	inPortsSlotsSet := map[shared.PortAddr]bool{}
+	inPortsSlotsSet := map[src.PortAddr]bool{}
 
 	for _, conn := range conns {
 		senderPortAddr := conn.SenderSide.PortAddr
@@ -209,7 +209,7 @@ func (Generator) insertAndReturnInports(
 }
 
 func (Generator) insertAndReturnOutports(
-	outports map[string]shared.Port,
+	outports map[string]src.Port,
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) []*ir.PortAddr {
@@ -238,15 +238,15 @@ func (Generator) insertAndReturnOutports(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]shared.File, ref shared.EntityRef) (shared.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]src.File, ref src.EntityRef) (src.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
-		return shared.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
 	}
 
 	entity, ok := pkg.Entities[ref.Name]
 	if !ok {
-		return shared.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotFound, ref.Name)
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotFound, ref.Name)
 	}
 
 	return entity, nil
@@ -257,7 +257,7 @@ type handleSenderSideResult struct {
 }
 
 // mapReceiverConnectionSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) ir.ReceiverConnectionSide {
+func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side src.ReceiverConnectionSide) ir.ReceiverConnectionSide {
 	return ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
 			Path: nodeCtxPath + "/" + side.PortAddr.Node,

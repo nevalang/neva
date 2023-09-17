@@ -2,21 +2,21 @@ package parser
 
 import (
 	generated "github.com/nevalang/neva/internal/parser/generated"
-	"github.com/nevalang/neva/internal/shared"
-	"github.com/nevalang/neva/pkg/types"
+	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/pkg/ts"
 )
 
-func parseTypeParams(params generated.ITypeParamsContext) []types.Param {
+func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 	if params == nil {
 		return nil
 	}
 
 	typeParams := params.TypeParamList().AllTypeParam()
-	result := make([]types.Param, 0, len(typeParams))
+	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
 		paramName := typeParam.IDENTIFIER().GetText()
 		parsedParamExpr := parseTypeExpr(typeParam.TypeExpr())
-		result = append(result, types.Param{
+		result = append(result, ts.Param{
 			Name:   paramName,
 			Constr: parsedParamExpr,
 		})
@@ -25,10 +25,10 @@ func parseTypeParams(params generated.ITypeParamsContext) []types.Param {
 	return result
 }
 
-func parseTypeExpr(expr generated.ITypeExprContext) types.Expr {
+func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	if expr == nil {
-		return types.Expr{
-			Inst: types.InstExpr{
+		return ts.Expr{
+			Inst: ts.InstExpr{
 				Ref: "any",
 			},
 		}
@@ -37,14 +37,14 @@ func parseTypeExpr(expr generated.ITypeExprContext) types.Expr {
 	return parseTypeInstExpr(expr.TypeInstExpr())
 }
 
-func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) types.Expr {
+func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 	if instExpr == nil {
-		return types.Expr{}
+		return ts.Expr{}
 	}
 
 	ref := instExpr.IDENTIFIER().GetText()
-	result := types.Expr{
-		Inst: types.InstExpr{
+	result := ts.Expr{
+		Inst: ts.InstExpr{
 			Ref: ref,
 		},
 	}
@@ -55,7 +55,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) types.Expr {
 	}
 
 	argExprs := args.AllTypeExpr()
-	parsedArgs := make([]types.Expr, 0, len(argExprs))
+	parsedArgs := make([]ts.Expr, 0, len(argExprs))
 	for _, arg := range argExprs {
 		parsedArgs = append(parsedArgs, parseTypeExpr(arg))
 	}
@@ -64,34 +64,34 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) types.Expr {
 	return result
 }
 
-func parsePorts(in []generated.IPortDefContext) map[string]shared.Port {
-	parsedInports := map[string]shared.Port{}
+func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
+	parsedInports := map[string]src.Port{}
 	for _, port := range in {
 		portName := port.IDENTIFIER().GetText()
 		parsedTypeExpr := parseTypeExpr(port.TypeExpr())
-		parsedInports[portName] = shared.Port{
+		parsedInports[portName] = src.Port{
 			Type: parsedTypeExpr,
 		}
 	}
 	return parsedInports
 }
 
-func parseInterfaceDef(actx generated.IInterfaceDefContext) shared.Interface {
+func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	params := parseTypeParams(actx.TypeParams())
 	in := parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
 	out := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
 
-	return shared.Interface{
+	return src.Interface{
 		Params: params,
-		IO: shared.IO{
+		IO: src.IO{
 			In:  in,
 			Out: out,
 		},
 	}
 }
 
-func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
-	result := map[string]shared.Node{}
+func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
+	result := map[string]src.Node{}
 
 	for _, nodesDef := range actx {
 		for _, node := range nodesDef.AllCompNodeDef() {
@@ -103,13 +103,13 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 
 			var (
 				name string
-				node shared.Node
+				node src.Node
 			)
 			if abs != nil {
 				name = abs.IDENTIFIER().GetText()
 				expr := parseTypeInstExpr(abs.TypeInstExpr())
-				node = shared.Node{
-					Ref:      shared.EntityRef{Name: name}, // TODO simply use typeInstExpr here
+				node = src.Node{
+					Ref:      src.EntityRef{Name: name}, // TODO simply use typeInstExpr here
 					TypeArgs: expr.Inst.Args,
 				}
 			} else {
@@ -127,23 +127,23 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 					nodeRef = nodePath[0].GetText()
 				}
 
-				var di map[string]shared.Node
+				var di map[string]src.Node
 				args := concreteNodeInst.NodeArgs()
 				if args != nil && args.NodeArgList() != nil {
 					nodeArgs := args.NodeArgList().AllNodeArg()
-					di = make(map[string]shared.Node, len(nodeArgs))
+					di = make(map[string]src.Node, len(nodeArgs))
 					for _, arg := range nodeArgs {
 						di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
 					}
 				}
 
-				var typeArgs []types.Expr
+				var typeArgs []ts.Expr
 				if ta := concreteNodeInst.TypeArgs(); ta != nil {
 					typeArgs = parseTypeExprs(ta.AllTypeExpr())
 				}
 
-				node = shared.Node{
-					Ref:         shared.EntityRef{Pkg: pkg, Name: nodeRef},
+				node = src.Node{
+					Ref:         src.EntityRef{Pkg: pkg, Name: nodeRef},
 					TypeArgs:    typeArgs,
 					ComponentDI: di,
 				}
@@ -158,7 +158,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]shared.Node {
 	return nil
 }
 
-func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) shared.Node {
+func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
 	var (
 		pkg, nodeRef string
 	)
@@ -170,14 +170,14 @@ func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) shared.Node 
 		nodeRef = nodePath[0].GetText()
 	}
 
-	di := map[string]shared.Node{}
+	di := map[string]src.Node{}
 	args := nodeInst.NodeArgs().NodeArgList().AllNodeArg()
 	for _, arg := range args {
 		di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
 	}
 
-	return shared.Node{
-		Ref: shared.EntityRef{
+	return src.Node{
+		Ref: src.EntityRef{
 			Pkg: pkg, Name: nodeRef,
 		},
 		TypeArgs:    parseTypeExprs(nodeInst.TypeArgs().AllTypeExpr()),
@@ -185,16 +185,16 @@ func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) shared.Node 
 	}
 }
 
-func parseTypeExprs(in []generated.ITypeExprContext) []types.Expr {
-	result := make([]types.Expr, 0, len(in))
+func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
+	result := make([]ts.Expr, 0, len(in))
 	for _, expr := range in {
 		result = append(result, parseTypeExpr(expr))
 	}
 	return result
 }
 
-func parseNet(actx []generated.ICompNetDefContext) []shared.Connection {
-	result := []shared.Connection{}
+func parseNet(actx []generated.ICompNetDefContext) []src.Connection {
+	result := []src.Connection{}
 
 	for _, connDefs := range actx {
 		for _, connDef := range connDefs.ConnDefList().AllConnDef() {
@@ -207,23 +207,23 @@ func parseNet(actx []generated.ICompNetDefContext) []shared.Connection {
 				panic("both nil")
 			}
 
-			var receiverSides []shared.ReceiverConnectionSide
+			var receiverSides []src.ReceiverConnectionSide
 			if singleReceiver != nil {
-				receiverSides = []shared.ReceiverConnectionSide{
+				receiverSides = []src.ReceiverConnectionSide{
 					{PortAddr: parsePortAddr(singleReceiver)},
 				}
 			} else {
 				receiverPortAddrs := multipleReceivers.AllPortAddr()
-				receiverSides = make([]shared.ReceiverConnectionSide, 0, len(receiverPortAddrs))
+				receiverSides = make([]src.ReceiverConnectionSide, 0, len(receiverPortAddrs))
 				for _, receiverPortAddr := range receiverPortAddrs {
-					receiverSides = append(receiverSides, shared.ReceiverConnectionSide{
+					receiverSides = append(receiverSides, src.ReceiverConnectionSide{
 						PortAddr: parsePortAddr(receiverPortAddr),
 					})
 				}
 			}
 
-			result = append(result, shared.Connection{
-				SenderSide:    shared.SenderConnectionSide{PortAddr: senderSidePortAddr},
+			result = append(result, src.Connection{
+				SenderSide:    src.SenderConnectionSide{PortAddr: senderSidePortAddr},
 				ReceiverSides: receiverSides,
 			})
 		}
@@ -232,7 +232,7 @@ func parseNet(actx []generated.ICompNetDefContext) []shared.Connection {
 	return result
 }
 
-func parsePortAddr(portAddr generated.IPortAddrContext) shared.PortAddr {
+func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 	ioNodeAddr := portAddr.IoNodePortAddr()
 	senderNormalPortAddr := portAddr.NormalNodePortAddr()
 	if ioNodeAddr == nil && senderNormalPortAddr == nil {
@@ -242,14 +242,14 @@ func parsePortAddr(portAddr generated.IPortAddrContext) shared.PortAddr {
 	if ioNodeAddr != nil {
 		dir := ioNodeAddr.PortDirection().GetText()
 		portName := ioNodeAddr.IDENTIFIER().GetText()
-		return shared.PortAddr{
+		return src.PortAddr{
 			Node: dir,
 			Port: portName,
 		}
 	}
 
 	nodeAndPort := senderNormalPortAddr.AllIDENTIFIER()
-	return shared.PortAddr{
+	return src.PortAddr{
 		Node: nodeAndPort[0].GetText(),
 		Port: nodeAndPort[1].GetText(),
 	}

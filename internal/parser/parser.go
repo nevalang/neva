@@ -6,18 +6,18 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 
 	generated "github.com/nevalang/neva/internal/parser/generated"
-	"github.com/nevalang/neva/internal/shared"
+	"github.com/nevalang/neva/internal/src"
 )
 
 type treeShapeListener struct {
 	*generated.BasenevaListener
-	file shared.File
+	file src.File
 }
 
 type Parser struct{}
 
 // Currently only returns one "main" package
-func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.File, error) {
+func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -29,7 +29,7 @@ func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]shared.File, e
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
-	return map[string]shared.File{"main": listener.file}, nil
+	return map[string]src.File{"main": listener.file}, nil
 }
 
 func New() Parser {

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
-	ir "github.com/nevalang/neva/pkg/ir/api"
+	"github.com/nevalang/neva/pkg/ir"
 )
 
 type transformer struct{}

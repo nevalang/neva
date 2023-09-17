@@ -4,12 +4,12 @@ import (
 	"strconv"
 
 	generated "github.com/nevalang/neva/internal/parser/generated"
-	"github.com/nevalang/neva/internal/shared"
-	"github.com/nevalang/neva/pkg/types"
+	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/pkg/ts"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
-	s.file.Entities = map[string]shared.Entity{}
+	s.file.Entities = map[string]src.Entity{}
 }
 
 /* --- Use --- */
@@ -29,10 +29,10 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 
 func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 	name := actx.IDENTIFIER().GetText()
-	result := shared.Entity{
+	result := src.Entity{
 		Exported: false,
-		Kind:     shared.TypeEntity,
-		Type: types.Def{
+		Kind:     src.TypeEntity,
+		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()),
 			BodyExpr: parseTypeExpr(actx.TypeExpr()),
 		},
@@ -46,7 +46,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	name := actx.IDENTIFIER().GetText()
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
-	val := shared.ConstValue{TypeExpr: typeExpr}
+	val := src.ConstValue{TypeExpr: typeExpr}
 
 	switch {
 	case constVal.Bool_() != nil:
@@ -75,9 +75,9 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 		panic("unknown const")
 	}
 
-	s.file.Entities[name] = shared.Entity{
-		Kind:  shared.ConstEntity,
-		Const: shared.Const{Value: val},
+	s.file.Entities[name] = src.Entity{
+		Kind:  src.ConstEntity,
+		Const: src.Const{Value: val},
 	}
 }
 
@@ -86,8 +86,8 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 func (s *treeShapeListener) EnterIoStmt(actx *generated.IoStmtContext) {
 	for _, interfaceDef := range actx.AllInterfaceDef() {
 		name := interfaceDef.IDENTIFIER().GetText()
-		s.file.Entities[name] = shared.Entity{
-			Kind:      shared.InterfaceEntity,
+		s.file.Entities[name] = src.Entity{
+			Kind:      src.InterfaceEntity,
 			Interface: parseInterfaceDef(interfaceDef),
 		}
 	}
@@ -103,9 +103,9 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 		panic("nodesDef == nil")
 	}
 
-	s.file.Entities[name] = shared.Entity{
-		Kind: shared.ComponentEntity,
-		Component: shared.Component{
+	s.file.Entities[name] = src.Entity{
+		Kind: src.ComponentEntity,
+		Component: src.Component{
 			Interface: parsedInterfaceDef,
 			Nodes:     parseNodes(allNodesDef),
 			Net:       parseNet(actx.CompBody().AllCompNetDef()),
