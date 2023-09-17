@@ -82,13 +82,11 @@ type Msg struct {
 }
 
 type MsgValue struct {
-	TypeExpr ts.Expr        // type of the message
-	Bool     bool           // only for messages with `bool`  type
-	Int      int            // only for messages with `int` type
-	Float    float64        // only for messages with `float` type
-	Str      string         // only for messages with `str` type
-	Vec      []Msg          // only for types with `vec` type
-	Map      map[string]Msg // only for types with `map` type
+	TypeExpr ts.Expr
+	Bool     bool
+	Int      int
+	Float    float64
+	Str      string
 }
 
 type IO struct {

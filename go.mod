@@ -7,6 +7,8 @@ require (
 	github.com/stretchr/testify v1.8.1
 )
 
+require google.golang.org/protobuf v1.31.0 // indirect
+
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0
 	github.com/davecgh/go-spew v1.1.1 // indirect

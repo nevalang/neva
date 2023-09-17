@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package ir;
+
+option go_package = "pkg/ir";
+
+message LLProgram {
+    repeated PortInfo ports = 1;
+    repeated LLConnection net = 2;
+    repeated LLFunc funcs = 3;
+}
+
+message PortInfo {
+    LLPortAddr portAddr = 1;
+    uint32 bufSize = 2;
+}
+
+message LLPortAddr {
+    string path = 1;
+    string port = 2;
+    uint32 idx = 3;
+}
+
+message LLConnection {
+    LLPortAddr senderSide = 1;
+    repeated LLReceiverConnectionSide receiverSides = 2;
+}
+
+message LLReceiverConnectionSide {
+    LLPortAddr portAddr = 1;
+    repeated string selectors = 2;
+}
+
+message LLFunc {
+    LLFuncRef ref = 1;
+    LLFuncIO io = 2;
+    LLMsg params = 3;
+}
+
+message LLFuncRef {
+    string pkg = 1;
+    string name = 2;
+}
+
+message LLFuncIO {
+    repeated LLPortAddr in = 1;
+    repeated LLPortAddr out = 2;
+}
+
+message LLMsg {
+    LLMsgType type = 1;
+    bool bool = 2;
+    int64 int = 3;
+    double float = 4;
+    string str = 5;
+}
+
+enum LLMsgType {
+    LLBoolMsg = 0;
+    LLIntMsg = 1;
+    LLFloatMsg = 2;
+    LLStrMsg = 3;
+}

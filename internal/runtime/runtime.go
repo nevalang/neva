@@ -76,11 +76,11 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		startPort <- emptyMsg{}
 	}()
 
-	var exitCode int
+	var exitCode int64
 	go func() {
 		exitCode = (<-exitPort).Int()
 		cancel()
 	}()
 
-	return exitCode, g.Wait()
+	return int(exitCode), g.Wait()
 }

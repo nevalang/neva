@@ -5,26 +5,27 @@ import (
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/shared"
+	ir "github.com/nevalang/neva/pkg/ir/api"
 	"github.com/nevalang/neva/pkg/tools"
 )
 
 type Interpreter struct {
-	parser      Parser
-	irgen       LowLvlGenerator
-	transformer Transformer
-	runtime     Runtime
+	parser  SourceCodeParser
+	irgen   IRGenerator
+	rtgen   RuntimeProgramGenerator
+	runtime Runtime
 }
 
-type Parser interface {
+type SourceCodeParser interface {
 	Parse(context.Context, []byte) (map[string]shared.File, error)
 }
 
-type LowLvlGenerator interface {
-	Generate(context.Context, map[string]shared.File) (shared.LLProgram, error)
+type IRGenerator interface {
+	Generate(context.Context, map[string]shared.File) (*ir.LLProgram, error)
 }
 
-type Transformer interface {
-	Transform(context.Context, shared.LLProgram) (runtime.Program, error)
+type RuntimeProgramGenerator interface {
+	Transform(context.Context, *ir.LLProgram) (runtime.Program, error)
 }
 
 type Runtime interface {
@@ -42,7 +43,7 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 		return 0, err
 	}
 
-	rprog, err := i.transformer.Transform(ctx, ll)
+	rprog, err := i.rtgen.Transform(ctx, ll)
 	if err != nil {
 		return 0, err
 	}
@@ -56,16 +57,16 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 }
 
 func MustNew(
-	parser Parser,
-	irgen LowLvlGenerator,
-	transformer Transformer,
+	parser SourceCodeParser,
+	irgen IRGenerator,
+	transformer RuntimeProgramGenerator,
 	runtime Runtime,
 ) Interpreter {
 	tools.NilPanic(parser, irgen, transformer, runtime)
 	return Interpreter{
-		parser:      parser,
-		irgen:       irgen,
-		transformer: transformer,
-		runtime:     runtime,
+		parser:  parser,
+		irgen:   irgen,
+		rtgen:   transformer,
+		runtime: runtime,
 	}
 }

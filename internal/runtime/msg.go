@@ -10,7 +10,7 @@ import (
 type Msg interface {
 	fmt.Stringer
 	Bool() bool
-	Int() int
+	Int() int64
 	Float() float64
 	Str() string
 	Vec() []Msg
@@ -22,7 +22,7 @@ type Msg interface {
 type emptyMsg struct{}
 
 func (emptyMsg) Bool() bool          { return false }
-func (emptyMsg) Int() int            { return 0 }
+func (emptyMsg) Int() int64          { return 0 }
 func (emptyMsg) Float() float64      { return 0 }
 func (emptyMsg) Str() string         { return "" }
 func (emptyMsg) Vec() []Msg          { return []Msg{} }
@@ -33,13 +33,13 @@ func (emptyMsg) String() string      { return "stringer not implemented" }
 
 type IntMsg struct {
 	emptyMsg
-	v int
+	v int64
 }
 
-func (msg IntMsg) Int() int       { return msg.v }
+func (msg IntMsg) Int() int64     { return msg.v }
 func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
 
-func NewIntMsg(n int) IntMsg {
+func NewIntMsg(n int64) IntMsg {
 	return IntMsg{
 		emptyMsg: emptyMsg{},
 		v:        n,
@@ -53,7 +53,7 @@ type FloatMsg struct {
 	v float64
 }
 
-func (msg IntMsg) FloatMsg() int { return msg.v }
+func (msg FloatMsg) FloatMsg() float64 { return msg.v }
 
 func NewFloatMsg(n float64) FloatMsg {
 	return FloatMsg{

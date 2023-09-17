@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/shared"
+	ir "github.com/nevalang/neva/pkg/ir/api"
 )
 
 type Generator struct{}
@@ -22,9 +23,9 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (shared.LLProgram, error) {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (*ir.LLProgram, error) {
 	if len(pkgs) == 0 {
-		return shared.LLProgram{}, ErrNoPkgs
+		return nil, ErrNoPkgs
 	}
 
 	rootNodeCtx := nodeContext{
@@ -40,14 +41,14 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]shared.File) (s
 		},
 	}
 
-	result := shared.LLProgram{
-		Ports: map[shared.LLPortAddr]uint8{},
-		Net:   []shared.LLConnection{},
-		Funcs: []shared.LLFunc{},
+	result := &ir.LLProgram{
+		Ports: []*ir.PortInfo{},
+		Net:   []*ir.LLConnection{},
+		Funcs: []*ir.LLFunc{},
 	}
 
-	if err := g.processNode(ctx, rootNodeCtx, pkgs, &result); err != nil {
-		return shared.LLProgram{}, fmt.Errorf("process root node: %w", err)
+	if err := g.processNode(ctx, rootNodeCtx, pkgs, result); err != nil {
+		return nil, fmt.Errorf("process root node: %w", err)
 	}
 
 	return result, nil
@@ -73,7 +74,7 @@ func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
 	pkgs map[string]shared.File,
-	result *shared.LLProgram,
+	result *ir.LLProgram,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
 	if err != nil {
@@ -87,12 +88,12 @@ func (g Generator) processNode(
 	if len(component.Net) == 0 {
 		result.Funcs = append(
 			result.Funcs,
-			shared.LLFunc{
-				Ref: shared.LLFuncRef{
+			&ir.LLFunc{
+				Ref: &ir.LLFuncRef{
 					Pkg:  nodeCtx.entityRef.Pkg,
 					Name: nodeCtx.entityRef.Name,
 				},
-				IO: shared.LLFuncIO{
+				Io: &ir.LLFuncIO{
 					In:  inportAddrs,
 					Out: outPortAddrs,
 				},
@@ -136,7 +137,7 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 	pkgs map[string]shared.File,
 	conns []shared.Connection,
 	nodeCtx nodeContext,
-	result *shared.LLProgram,
+	result *ir.LLProgram,
 ) (map[string]nodeIOUsage, error) {
 	nodesIOUsage := map[string]nodeIOUsage{}
 	inPortsSlotsSet := map[shared.PortAddr]bool{}
@@ -154,16 +155,16 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 		// we assume every sender is unique thus we don't increment same addr twice
 		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // fixme why we assume that?
 
-		senderSide := shared.LLPortAddr{
+		senderSide := ir.LLPortAddr{
 			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
 			Port: conn.SenderSide.PortAddr.Port,
-			Idx:  conn.SenderSide.PortAddr.Idx,
+			Idx:  uint32(conn.SenderSide.PortAddr.Idx),
 		}
 
-		receiverSides := make([]shared.LLReceiverConnectionSide, 0, len(conn.ReceiverSides))
+		receiverSides := make([]*ir.LLReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
 			irSide := g.mapReceiverConnectionSide(nodeCtx.path, receiverSide)
-			receiverSides = append(receiverSides, irSide)
+			receiverSides = append(receiverSides, &irSide)
 
 			// we can have same receiver for different senders and we don't want to count it twice
 			if !inPortsSlotsSet[receiverSide.PortAddr] {
@@ -174,8 +175,8 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 			}
 		}
 
-		result.Net = append(result.Net, shared.LLConnection{
-			SenderSide:    senderSide,
+		result.Net = append(result.Net, &ir.LLConnection{
+			SenderSide:    &senderSide,
 			ReceiverSides: receiverSides,
 		})
 	}
@@ -185,19 +186,22 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 
 func (Generator) insertAndReturnInports(
 	nodeCtx nodeContext,
-	result *shared.LLProgram,
-) []shared.LLPortAddr {
-	inports := make([]shared.LLPortAddr, 0, len(nodeCtx.ioUsage.in))
+	result *ir.LLProgram,
+) []*ir.LLPortAddr {
+	inports := make([]*ir.LLPortAddr, 0, len(nodeCtx.ioUsage.in))
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
 	// actually we can't use IO because we need to know how many slots are used
 	for addr := range nodeCtx.ioUsage.in {
-		addr := shared.LLPortAddr{
+		addr := &ir.LLPortAddr{
 			Path: nodeCtx.path + "/in",
 			Port: addr.Port,
-			Idx:  addr.Idx,
+			Idx:  uint32(addr.Idx),
 		}
-		result.Ports[addr] = 0
+		result.Ports = append(result.Ports, &ir.PortInfo{
+			PortAddr: addr,
+			BufSize:  0,
+		})
 		inports = append(inports, addr)
 	}
 
@@ -207,9 +211,9 @@ func (Generator) insertAndReturnInports(
 func (Generator) insertAndReturnOutports(
 	outports map[string]shared.Port,
 	nodeCtx nodeContext,
-	result *shared.LLProgram,
-) []shared.LLPortAddr {
-	runtimeFuncOutportAddrs := make([]shared.LLPortAddr, 0, len(nodeCtx.ioUsage.out))
+	result *ir.LLProgram,
+) []*ir.LLPortAddr {
+	runtimeFuncOutportAddrs := make([]*ir.LLPortAddr, 0, len(nodeCtx.ioUsage.out))
 
 	for name := range outports {
 		slotsCount, ok := nodeCtx.ioUsage.out[name]
@@ -218,12 +222,15 @@ func (Generator) insertAndReturnOutports(
 		}
 
 		for i := 0; i < int(slotsCount); i++ {
-			addr := shared.LLPortAddr{
+			addr := &ir.LLPortAddr{
 				Path: nodeCtx.path + "/out",
 				Port: name,
-				Idx:  uint8(i),
+				Idx:  uint32(i),
 			}
-			result.Ports[addr] = 0
+			result.Ports = append(result.Ports, &ir.PortInfo{
+				PortAddr: addr,
+				BufSize:  0,
+			})
 			runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
 		}
 	}
@@ -246,16 +253,16 @@ func (Generator) lookupEntity(pkgs map[string]shared.File, ref shared.EntityRef)
 }
 
 type handleSenderSideResult struct {
-	irConnSide shared.LLPortAddr
+	irConnSide ir.LLPortAddr
 }
 
 // mapReceiverConnectionSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) shared.LLReceiverConnectionSide {
-	return shared.LLReceiverConnectionSide{
-		PortAddr: shared.LLPortAddr{
+func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side shared.ReceiverConnectionSide) ir.LLReceiverConnectionSide {
+	return ir.LLReceiverConnectionSide{
+		PortAddr: &ir.LLPortAddr{
 			Path: nodeCtxPath + "/" + side.PortAddr.Node,
 			Port: side.PortAddr.Port,
-			Idx:  side.PortAddr.Idx,
+			Idx:  uint32(side.PortAddr.Idx),
 		},
 		Selectors: side.Selectors,
 	}

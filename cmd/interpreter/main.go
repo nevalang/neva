@@ -11,33 +11,9 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-var prog = `
-use {
-	std io
-}
-
-types {
-	MyInt int
-	MyFloat float
-	MyStr str
-	MyBool bool
-}
-
-interfaces {
-	IReader(path string) (i int, e err)
-	IWriter(path) (i int, anything)
-}
-
-components {
-	Main(enter) (exit) {
-		net {
-			in.enter -> out.exit
-		}
-	}
-}
-`
-
 func main() {
+	prog, err := os.ReadFile(os.Args[1])
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	connector, err := runtime.NewDefaultConnector(runtime.DefaultInterceptor{})

@@ -4,19 +4,19 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/shared"
+	ir "github.com/nevalang/neva/pkg/ir/api"
 )
 
 type transformer struct{}
 
-func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtime.Program, error) {
+func (t transformer) Transform(ctx context.Context, ll *ir.LLProgram) (runtime.Program, error) {
 	rPorts := make(runtime.Ports, len(ll.Ports))
-	for addr, buf := range ll.Ports {
+	for _, portInfo := range ll.Ports {
 		rPorts[runtime.PortAddr{
-			Path: addr.Path,
-			Port: addr.Port,
-			Idx:  addr.Idx,
-		}] = make(chan runtime.Msg, buf)
+			Path: portInfo.PortAddr.Path,
+			Port: portInfo.PortAddr.Port,
+			Idx:  uint8(portInfo.PortAddr.Idx),
+		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
 	rConns := make([]runtime.Connection, len(ll.Net))
@@ -24,7 +24,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 		senderAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
-			Idx:  conn.SenderSide.Idx,
+			Idx:  uint8(conn.SenderSide.Idx),
 		}
 
 		senderPort, ok := rPorts[senderAddr]
@@ -44,7 +44,7 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.PortAddr.Path,
 				Port: rcvr.PortAddr.Port,
-				Idx:  rcvr.PortAddr.Idx,
+				Idx:  uint8(rcvr.PortAddr.Idx),
 			}
 
 			receiverPort, ok := rPorts[receiverPortAddr]
@@ -69,22 +69,22 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 
 	rFuncs := make([]runtime.FuncRoutine, len(ll.Funcs))
 	for _, f := range ll.Funcs {
-		rIOIn := make(map[string][]chan runtime.Msg, len(f.IO.In))
-		for _, addr := range f.IO.In {
+		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.In))
+		for _, addr := range f.Io.In {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
-				Idx:  addr.Idx,
+				Idx:  uint8(addr.Idx),
 			}]
 			rIOIn[addr.Port] = append(rIOIn[addr.Port], rPort)
 		}
 
-		rIOOut := make(map[string][]chan runtime.Msg, len(f.IO.Out))
-		for _, addr := range f.IO.Out {
+		rIOOut := make(map[string][]chan runtime.Msg, len(f.Io.Out))
+		for _, addr := range f.Io.Out {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
-				Idx:  addr.Idx,
+				Idx:  uint8(addr.Idx),
 			}]
 			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
 		}
@@ -111,17 +111,17 @@ func (t transformer) Transform(ctx context.Context, ll shared.LLProgram) (runtim
 	}, nil
 }
 
-func (t transformer) msg(msg shared.LLMsg) runtime.Msg {
+func (t transformer) msg(msg *ir.LLMsg) runtime.Msg {
 	var rMsg runtime.Msg
 
 	switch msg.Type {
-	case shared.LLBoolMsg:
+	case ir.LLMsgType_LLBoolMsg:
 		rMsg = runtime.NewBoolMsg(msg.Bool)
-	case shared.LLIntMsg:
+	case ir.LLMsgType_LLIntMsg:
 		rMsg = runtime.NewIntMsg(msg.Int)
-	case shared.LLFloatMsg:
+	case ir.LLMsgType_LLFloatMsg:
 		rMsg = runtime.NewFloatMsg(msg.Float)
-	case shared.LLStrMsg:
+	case ir.LLMsgType_LLStrMsg:
 		rMsg = runtime.NewStrMsg(msg.Str)
 	default:
 		panic("unknown message type")
