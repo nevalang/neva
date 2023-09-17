@@ -15,10 +15,10 @@ var (
 const CtxMsgKey = "msg"
 
 type DefaultFuncRunner struct {
-	repo map[FuncRef]Func
+	repo map[string]Func
 }
 
-func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
+func NewDefaultFuncRunner(repo map[string]Func) (DefaultFuncRunner, error) {
 	if repo == nil {
 		return DefaultFuncRunner{}, ErrNilDeps
 	}

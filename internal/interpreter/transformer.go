@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"context"
+	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/pkg/ir"
@@ -19,8 +20,8 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
-	rConns := make([]runtime.Connection, len(ll.Net))
-	for _, conn := range ll.Net {
+	rConns := make([]runtime.Connection, len(ll.Connections))
+	for _, conn := range ll.Connections {
 		senderAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
@@ -69,8 +70,8 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 
 	rFuncs := make([]runtime.FuncRoutine, len(ll.Funcs))
 	for _, f := range ll.Funcs {
-		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.In))
-		for _, addr := range f.Io.In {
+		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
+		for _, addr := range f.Io.Inports {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
@@ -79,8 +80,8 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 			rIOIn[addr.Port] = append(rIOIn[addr.Port], rPort)
 		}
 
-		rIOOut := make(map[string][]chan runtime.Msg, len(f.Io.Out))
-		for _, addr := range f.Io.Out {
+		rIOOut := make(map[string][]chan runtime.Msg, len(f.Io.Outports))
+		for _, addr := range f.Io.Outports {
 			rPort := rPorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
@@ -92,10 +93,7 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 		rMsg := t.msg(f.Params)
 
 		rFuncs = append(rFuncs, runtime.FuncRoutine{
-			Ref: runtime.FuncRef{
-				Pkg:  f.Ref.Pkg,
-				Name: f.Ref.Name,
-			},
+			Ref: f.Ref,
 			IO: runtime.FuncIO{
 				In:  rIOIn,
 				Out: rIOOut,
@@ -111,23 +109,23 @@ func (t transformer) Transform(ctx context.Context, ll *ir.Program) (runtime.Pro
 	}, nil
 }
 
-func (t transformer) msg(msg *ir.Msg) runtime.Msg {
+func (t transformer) msg(msg *ir.Msg) (runtime.Msg, error) {
 	var rMsg runtime.Msg
 
 	switch msg.Type {
-	case ir.MsgType_Bool:
+	case ir.MsgType_MSG_TYPE_BOOL:
 		rMsg = runtime.NewBoolMsg(msg.Bool)
-	case ir.MsgType_Int:
+	case ir.MsgType_MSG_TYPE_INT:
 		rMsg = runtime.NewIntMsg(msg.Int)
-	case ir.MsgType_Float:
+	case ir.MsgType_MSG_TYPE_FLOAT:
 		rMsg = runtime.NewFloatMsg(msg.Float)
-	case ir.MsgType_Str:
+	case ir.MsgType_MSG_TYPE_STR:
 		rMsg = runtime.NewStrMsg(msg.Str)
 	default:
-		panic("unknown message type")
+		return nil, errors.New("unknown message type")
 	}
 
-	return rMsg
+	return rMsg, nil
 }
 
 func MustNewTransformer() transformer {

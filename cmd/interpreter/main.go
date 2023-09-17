@@ -12,9 +12,13 @@ import (
 )
 
 func main() {
-	prog, err := os.ReadFile(os.Args[1])
-
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	file, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
 
 	connector, err := runtime.NewDefaultConnector(runtime.DefaultInterceptor{})
 	if err != nil {
@@ -22,7 +26,7 @@ func main() {
 		return
 	}
 
-	funcRunner, err := runtime.NewDefaultFuncRunner(map[runtime.FuncRef]runtime.Func{})
+	funcRunner, err := runtime.NewDefaultFuncRunner(map[string]runtime.Func{})
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -41,7 +45,7 @@ func main() {
 		runTime,
 	)
 
-	code, err := intr.Interpret(context.Background(), []byte(prog))
+	code, err := intr.Interpret(context.Background(), file)
 	if err != nil {
 		logger.Error(err.Error())
 		return

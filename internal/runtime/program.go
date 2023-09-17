@@ -71,14 +71,10 @@ type Selector struct {
 	ArrIdx   int
 }
 
-type FuncRoutine struct { // Func spec/def?
-	Ref     FuncRef
+type FuncRoutine struct {
+	Ref     string
 	IO      FuncIO
 	MetaMsg Msg
-}
-
-type FuncRef struct {
-	Pkg, Name string
 }
 
 type FuncIO struct {

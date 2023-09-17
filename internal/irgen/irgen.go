@@ -1,3 +1,4 @@
+// Package irgen implements IR generation from source code.
 package irgen
 
 import (
@@ -43,7 +44,7 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.
 
 	result := &ir.Program{
 		Ports: []*ir.PortInfo{},
-		Net:   []*ir.Connection{},
+		Connections:   []*ir.Connection{},
 		Funcs: []*ir.Func{},
 	}
 
@@ -85,17 +86,14 @@ func (g Generator) processNode(
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
 	outPortAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
-	if len(component.Net) == 0 {
+	if isRuntimeFunc := len(component.Net) == 0; isRuntimeFunc {
 		result.Funcs = append(
 			result.Funcs,
 			&ir.Func{
-				Ref: &ir.FuncRef{
-					Pkg:  nodeCtx.entityRef.Pkg,
-					Name: nodeCtx.entityRef.Name,
-				},
+				Ref: nodeCtx.entityRef.Name,
 				Io: &ir.FuncIO{
-					In:  inportAddrs,
-					Out: outPortAddrs,
+					Inports:  inportAddrs,
+					Outports: outPortAddrs,
 				},
 			},
 		)
@@ -175,7 +173,7 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 			}
 		}
 
-		result.Net = append(result.Net, &ir.Connection{
+		result.Connections = append(result.Connections, &ir.Connection{
 			SenderSide:    &senderSide,
 			ReceiverSides: receiverSides,
 		})

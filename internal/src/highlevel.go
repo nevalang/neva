@@ -1,3 +1,4 @@
+// Package src defines source code abstractions.
 package src
 
 import (

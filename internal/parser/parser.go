@@ -1,3 +1,4 @@
+// Package parser implements source code parsing.
 package parser
 
 import (

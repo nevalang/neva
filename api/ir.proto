@@ -5,60 +5,55 @@ package ir;
 option go_package = "pkg/ir";
 
 message Program {
-    repeated PortInfo ports = 1;
-    repeated Connection net = 2;
-    repeated Func funcs = 3;
+  repeated PortInfo ports = 1;
+  repeated Connection connections = 2;
+  repeated Func funcs = 3;
 }
 
 message PortInfo {
-    PortAddr portAddr = 1;
-    uint32 bufSize = 2;
+  PortAddr port_addr = 1;
+  uint32 buf_size = 2;
 }
 
 message PortAddr {
-    string path = 1;
-    string port = 2;
-    uint32 idx = 3;
+  string path = 1;
+  string port = 2;
+  uint32 idx = 3;
 }
 
 message Connection {
-    PortAddr senderSide = 1;
-    repeated ReceiverConnectionSide receiverSides = 2;
+  PortAddr sender_side = 1;
+  repeated ReceiverConnectionSide receiver_sides = 2;
 }
 
 message ReceiverConnectionSide {
-    PortAddr portAddr = 1;
-    repeated string selectors = 2;
+  PortAddr port_addr = 1;
+  repeated string selectors = 2;
 }
 
 message Func {
-    FuncRef ref = 1;
-    FuncIO io = 2;
-    Msg params = 3;
-}
-
-message FuncRef {
-    string pkg = 1;
-    string name = 2;
+  string ref = 1;
+  FuncIO io = 2;
+  Msg params = 3;
 }
 
 message FuncIO {
-    repeated PortAddr in = 1;
-    repeated PortAddr out = 2;
+  repeated PortAddr inports = 1;
+  repeated PortAddr outports = 2;
 }
 
 message Msg {
-    MsgType type = 1;
-    bool bool = 2;
-    int64 int = 3;
-    double float = 4;
-    string str = 5;
+  MsgType type = 1;
+  bool bool = 2;
+  int64 int = 3;
+  double float = 4;
+  string str = 5;
 }
 
 enum MsgType {
-    Unknown = 0;
-    Bool = 1;
-    Int = 2;
-    Float = 3;
-    Str = 4;
+  MSG_TYPE_UNSPECIFIED = 0;
+  MSG_TYPE_BOOL = 1;
+  MSG_TYPE_INT = 2;
+  MSG_TYPE_FLOAT = 3;
+  MSG_TYPE_STR = 4;
 }
