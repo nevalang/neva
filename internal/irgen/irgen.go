@@ -24,7 +24,7 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*ir.Program, error) {
 	if len(pkgs) == 0 {
 		return nil, ErrNoPkgs
 	}
@@ -74,7 +74,7 @@ type (
 func (g Generator) processNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]src.File,
+	pkgs map[string]src.Package,
 	result *ir.Program,
 ) error {
 	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
@@ -100,12 +100,12 @@ func (g Generator) processNode(
 		return nil
 	}
 
-	nodesIOUsage, err := g.insertConnectionsAndReturnIOUsage(pkgs, component.Net, nodeCtx, result)
+	nodesIOUsage, err := g.insertConnectionsAndReturnIOUsage(pkgs, component.Net, nodeCtx, result) // FIXME lock.sig unused for some reason!
 	if err != nil {
 		return fmt.Errorf("handle network: %w", err)
 	}
 
-	for name := range component.Nodes {
+	for name, node := range component.Nodes {
 		nodeSlots, ok := nodesIOUsage[name]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
@@ -118,8 +118,8 @@ func (g Generator) processNode(
 				out: nodeSlots.out,
 			},
 			entityRef: src.EntityRef{
-				Pkg:  "",
-				Name: name,
+				Pkg:  node.EntityRef.Pkg,
+				Name: node.EntityRef.Name,
 			},
 		}
 
@@ -136,7 +136,7 @@ type handleNetworkResult struct {
 }
 
 func (g Generator) insertConnectionsAndReturnIOUsage(
-	pkgs map[string]src.File,
+	pkgs map[string]src.Package,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -155,7 +155,7 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 		}
 
 		// we assume every sender is unique thus we don't increment same addr twice
-		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // fixme why we assume that?
+		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // FIXME why we assume that?
 
 		senderSide := ir.PortAddr{
 			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
@@ -240,7 +240,7 @@ func (Generator) insertAndReturnOutports(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]src.File, ref src.EntityRef) (src.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]src.Package, ref src.EntityRef) (src.Entity, error) {
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
 		return src.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
@@ -248,7 +248,7 @@ func (Generator) lookupEntity(pkgs map[string]src.File, ref src.EntityRef) (src.
 
 	entity, ok := pkg.Entities[ref.Name]
 	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrEntityNotFound, ref.Name)
+		return src.Entity{}, fmt.Errorf("%w: entity name = %v", ErrEntityNotFound, ref.Name)
 	}
 
 	return entity, nil

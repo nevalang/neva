@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/antlr4-go/antlr/v4"
+	"golang.org/x/sync/errgroup"
 
 	generated "github.com/nevalang/neva/internal/parser/generated"
 	"github.com/nevalang/neva/internal/src"
@@ -12,13 +13,33 @@ import (
 
 type treeShapeListener struct {
 	*generated.BasenevaListener
-	file src.File
+	file src.Package
 }
 
 type Parser struct{}
 
-// Currently only returns one "main" package
-func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]src.File, error) {
+func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.Package, error) {
+	result := make(map[string]src.Package, len(files))
+	g, gctx := errgroup.WithContext(ctx)
+	for name, bb := range files {
+		name := name
+		bb := bb
+		g.Go(func() error {
+			v, err := p.ParseFile(gctx, bb)
+			if err != nil {
+				return err
+			}
+			result[name] = v
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.Package, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
@@ -30,7 +51,7 @@ func (p Parser) Parse(ctx context.Context, bb []byte) (map[string]src.File, erro
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
-	return map[string]src.File{"main": listener.file}, nil
+	return listener.file, nil
 }
 
 func New() Parser {

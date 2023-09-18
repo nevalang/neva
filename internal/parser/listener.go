@@ -20,8 +20,12 @@ func (s *treeShapeListener) EnterUseStmt(actx *generated.UseStmtContext) {
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	alias := actx.IDENTIFIER().GetText()
 	path := actx.ImportPath().GetText()
+	alias := path
+	id := actx.IDENTIFIER()
+	if id != nil {
+		alias = actx.IDENTIFIER().GetText()
+	}
 	s.file.Imports[alias] = path
 }
 

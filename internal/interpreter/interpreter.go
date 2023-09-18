@@ -3,6 +3,7 @@ package interpreter
 import (
 	"context"
 
+	"github.com/nevalang/neva/internal/compiler/std"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/src"
 	"github.com/nevalang/neva/pkg/ir"
@@ -16,11 +17,12 @@ type Interpreter struct {
 }
 
 type SourceCodeParser interface {
-	Parse(context.Context, []byte) (map[string]src.File, error)
+	ParseFiles(context.Context, map[string][]byte) (map[string]src.Package, error)
+	ParseFile(context.Context, []byte) (src.Package, error)
 }
 
 type IRGenerator interface {
-	Generate(context.Context, map[string]src.File) (*ir.Program, error)
+	Generate(context.Context, map[string]src.Package) (*ir.Program, error)
 }
 
 type RuntimeProgramGenerator interface {
@@ -32,13 +34,17 @@ type Runtime interface {
 }
 
 func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
-	// FIXME someone has to resolve imports
-	hl, err := i.parser.Parse(ctx, bb)
+	singleFilePkg, err := i.parser.ParseFile(ctx, bb)
 	if err != nil {
 		return 0, err
 	}
 
-	ll, err := i.irgen.Generate(ctx, hl)
+	prog := map[string]src.Package{
+		"main": singleFilePkg,
+		"std":  std.New(),
+	}
+
+	ll, err := i.irgen.Generate(ctx, prog)
 	if err != nil {
 		return 0, err
 	}

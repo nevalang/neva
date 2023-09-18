@@ -18,7 +18,7 @@ components {
 	Main(enter) (exit) {
 		nodes {
 			abs IReader
-			concrete = io.Reader()
+			concrete  io.Reader()
 		}
 		net {
 			in.enter -> abs.in.v

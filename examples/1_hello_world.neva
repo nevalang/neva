@@ -1,22 +1,22 @@
 use {
-	std std
+	std
 }
 
 const {
-	msg string = "Hello, World!"
+	msg string 'Hello, World!'
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock = std.Lock()
-			print = std.Print()
+			lock std.Lock()
+			print std.Print()
 		}
 		net {
 			in.enter -> lock.in.sig
-			const.msg -> lock.out.v
-			lock.in.v -> print.out.v
-			print.in.v -> out.exit
+			const.msg -> lock.in.v
+			lock.out.v -> print.in.v
+			print.out.v -> out.exit
 		}
 	}
 }

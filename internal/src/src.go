@@ -7,7 +7,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/ts"
 )
 
-type File struct {
+// Package represents one of more files with source code.
+type Package struct {
 	Imports  map[string]string
 	Entities map[string]Entity
 }
@@ -57,7 +58,7 @@ type Interface struct {
 }
 
 type Node struct {
-	Ref         EntityRef
+	EntityRef   EntityRef
 	TypeArgs    []ts.Expr
 	ComponentDI map[string]Node
 }

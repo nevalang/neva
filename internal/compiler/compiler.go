@@ -15,10 +15,10 @@ type Compiler struct {
 
 type (
 	Analyzer interface {
-		Analyze(context.Context, map[string]src.File) (map[string]src.File, error)
+		Analyze(context.Context, map[string]src.Package) (map[string]src.Package, error)
 	}
 	IRGenerator interface {
-		Generate(context.Context, map[string]src.File) (*ir.Program, error)
+		Generate(context.Context, map[string]src.Package) (*ir.Program, error)
 	}
 )
 
@@ -27,7 +27,7 @@ var (
 	ErrIrGen    = errors.New("ir generator")
 )
 
-func (c Compiler) Compile(ctx context.Context, prog map[string]src.File) (*ir.Program, error) {
+func (c Compiler) Compile(ctx context.Context, prog map[string]src.Package) (*ir.Program, error) {
 	analyzedProg, err := c.analyzer.Analyze(ctx, prog)
 	if err != nil {
 		return nil, errors.Join(ErrAnalyzer, err)

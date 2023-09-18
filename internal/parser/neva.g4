@@ -50,7 +50,7 @@ portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE* ;
 
 // const
 constStmt: 'const' NEWLINE* '{' NEWLINE* ('pub'? constDef)* '}' ;
-constDef: IDENTIFIER typeExpr '=' constVal NEWLINE* ;
+constDef: IDENTIFIER typeExpr constVal NEWLINE* ;
 constVal: bool | INT | FLOAT | STRING | arrLit | recLit | nil ;
 bool: 'true' | 'false' ;
 nil: 'nil' ;
@@ -67,7 +67,7 @@ compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}' ;
 compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
 compNodeDef: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
-concreteNodeDef: IDENTIFIER '=' concreteNodeInst ;
+concreteNodeDef: IDENTIFIER concreteNodeInst ;
 concreteNodeInst: nodeRef NEWLINE* typeArgs? nodeArgs ;
 nodeRef: IDENTIFIER ('.' IDENTIFIER)? ; 
 nodeArgs: '(' NEWLINE* nodeArgList? ')';
@@ -90,6 +90,6 @@ IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;
-STRING: '"' .*? '"' ;
+STRING: '\'' .*? '\'' ;
 NEWLINE: '\r'? '\n'  ; // `\r\n` on windows and `\n` on unix
 WS: [ \t]+ -> skip ; // ignore whitespace

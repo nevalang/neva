@@ -22,35 +22,35 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 
 	rConns := make([]runtime.Connection, len(irprog.Connections))
 	for _, conn := range irprog.Connections {
-		senderAddr := runtime.PortAddr{
+		senderPortAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
 			Idx:  uint8(conn.SenderSide.Idx),
 		}
 
-		senderPort, ok := rPorts[senderAddr]
+		senderPort, ok := rPorts[senderPortAddr]
 		if !ok {
-			panic("!ok")
+			return runtime.Program{}, errors.New("sender port not found")
 		}
 
 		rSenderConnSide := runtime.SenderConnectionSide{
 			Port: senderPort,
 			Meta: runtime.SenderConnectionSideMeta{
-				PortAddr: senderAddr,
+				PortAddr: senderPortAddr,
 			},
 		}
 
 		rReceivers := make([]runtime.ReceiverConnectionSide, len(conn.ReceiverSides))
 		for _, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
-				Path: rcvr.PortAddr.Path,
+				Path: rcvr.PortAddr.Path + "/in",
 				Port: rcvr.PortAddr.Port,
 				Idx:  uint8(rcvr.PortAddr.Idx),
 			}
 
 			receiverPort, ok := rPorts[receiverPortAddr]
 			if !ok {
-				panic("!ok")
+				return runtime.Program{}, errors.New("receiver port not found")
 			}
 
 			rReceivers = append(rReceivers, runtime.ReceiverConnectionSide{

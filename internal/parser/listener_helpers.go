@@ -109,8 +109,8 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				name = abs.IDENTIFIER().GetText()
 				expr := parseTypeInstExpr(abs.TypeInstExpr())
 				node = src.Node{
-					Ref:      src.EntityRef{Name: name}, // TODO simply use typeInstExpr here
-					TypeArgs: expr.Inst.Args,
+					EntityRef: src.EntityRef{Name: name}, // TODO simply use typeInstExpr here
+					TypeArgs:  expr.Inst.Args,
 				}
 			} else {
 				name = concrete.IDENTIFIER().GetText()
@@ -143,7 +143,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				}
 
 				node = src.Node{
-					Ref:         src.EntityRef{Pkg: pkg, Name: nodeRef},
+					EntityRef:   src.EntityRef{Pkg: pkg, Name: nodeRef},
 					TypeArgs:    typeArgs,
 					ComponentDI: di,
 				}
@@ -175,7 +175,7 @@ func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
 	}
 
 	return src.Node{
-		Ref: src.EntityRef{
+		EntityRef: src.EntityRef{
 			Pkg: pkg, Name: nodeRef,
 		},
 		TypeArgs:    parseTypeExprs(nodeInst.TypeArgs().AllTypeExpr()),
