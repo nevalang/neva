@@ -82,10 +82,13 @@ func (g Generator) processNode(
 		return fmt.Errorf("lookup entity: %w", err)
 	}
 
-	component := entity.Component
+	component := entity.Component // We assume this entity is component because program is correct.
+
+	// Ports for input and output must be created before processing subnodes because they are used by parent node.
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
 	outPortAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
+	// We assume component without network also doesn't have nodes, but it's not checked.
 	if isRuntimeFunc := len(component.Net) == 0; isRuntimeFunc {
 		result.Funcs = append(
 			result.Funcs,
@@ -100,23 +103,35 @@ func (g Generator) processNode(
 		return nil
 	}
 
-	nodesIOUsage, err := g.insertConnectionsAndReturnIOUsage(pkgs, component.Net, nodeCtx, result) // FIXME lock.sig unused for some reason!
+	// We use network as a source of true about ports usage instead of component's interface definitions.
+	// We cannot rely on then because there's not enough information about how many slots are used.
+	// On the other hand, we believe network has everything we need because probram is checked by analyzer and thus correct.
+	nodesIOUsage, err := g.insertConnectionsAndReturnPortsUsage(pkgs, component.Net, nodeCtx, result)
 	if err != nil {
 		return fmt.Errorf("handle network: %w", err)
 	}
 
+	// Insert ports for const nodes if const node used by this network.
+	if constUsage, ok := nodesIOUsage["const"]; ok {
+		for portName := range constUsage.out { // const node does not have inports, only outports
+			result.Ports = append(result.Ports, &ir.PortInfo{
+				PortAddr: &ir.PortAddr{
+					Path: nodeCtx.path + "/" + "const",
+					Port: portName,
+				},
+			})
+		}
+	}
+
 	for name, node := range component.Nodes {
-		nodeSlots, ok := nodesIOUsage[name]
+		nodeUsage, ok := nodesIOUsage[name]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
 		}
 
 		subNodeCtx := nodeContext{
-			path: nodeCtx.path + "/" + name,
-			ioUsage: nodeIOUsage{
-				in:  nodeSlots.in,
-				out: nodeSlots.out,
-			},
+			path:    nodeCtx.path + "/" + name,
+			ioUsage: nodeUsage,
 			entityRef: src.EntityRef{
 				Pkg:  node.EntityRef.Pkg,
 				Name: node.EntityRef.Name,
@@ -135,27 +150,26 @@ type handleNetworkResult struct {
 	slotsUsage map[string]nodeIOUsage // node -> ports
 }
 
-func (g Generator) insertConnectionsAndReturnIOUsage(
+// TODO validate slots logic + fix code (same inports could be used by multiple different outports)
+func (g Generator) insertConnectionsAndReturnPortsUsage(
 	pkgs map[string]src.Package,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) (map[string]nodeIOUsage, error) {
-	nodesIOUsage := map[string]nodeIOUsage{}
-	inPortsSlotsSet := map[src.PortAddr]bool{}
+	nodesIOUsage := map[string]nodeIOUsage{} // represents how node's IO used by network
 
 	for _, conn := range conns {
 		senderPortAddr := conn.SenderSide.PortAddr
 
-		if _, ok := nodesIOUsage[senderPortAddr.Node]; !ok { // init
+		if _, ok := nodesIOUsage[senderPortAddr.Node]; !ok { // there could be many connections with the same sender
 			nodesIOUsage[senderPortAddr.Node] = nodeIOUsage{
 				in:  map[repPortAddr]struct{}{},
 				out: map[string]uint8{},
 			}
 		}
 
-		// we assume every sender is unique thus we don't increment same addr twice
-		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++ // FIXME why we assume that?
+		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++
 
 		senderSide := ir.PortAddr{
 			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
@@ -163,23 +177,27 @@ func (g Generator) insertConnectionsAndReturnIOUsage(
 			Idx:  uint32(conn.SenderSide.PortAddr.Idx),
 		}
 
-		receiverSides := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
+		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
-			irSide := g.mapReceiverConnectionSide(nodeCtx.path, receiverSide)
-			receiverSides = append(receiverSides, &irSide)
+			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
+			receiverSidesIR = append(receiverSidesIR, &receiverSideIR)
 
-			// we can have same receiver for different senders and we don't want to count it twice
-			if !inPortsSlotsSet[receiverSide.PortAddr] {
-				nodesIOUsage[senderPortAddr.Node].in[repPortAddr{
-					Port: senderPortAddr.Port,
-					Idx:  senderPortAddr.Idx,
-				}] = struct{}{}
+			if _, ok := nodesIOUsage[receiverSide.PortAddr.Node]; !ok { // same receiver can be used by multiple senders so we only add it once
+				nodesIOUsage[receiverSide.PortAddr.Node] = nodeIOUsage{
+					in:  map[repPortAddr]struct{}{},
+					out: map[string]uint8{},
+				}
 			}
+
+			nodesIOUsage[receiverSide.PortAddr.Node].in[repPortAddr{
+				Port: receiverSide.PortAddr.Port,
+				Idx:  receiverSide.PortAddr.Idx,
+			}] = struct{}{}
 		}
 
 		result.Connections = append(result.Connections, &ir.Connection{
 			SenderSide:    &senderSide,
-			ReceiverSides: receiverSides,
+			ReceiverSides: receiverSidesIR,
 		})
 	}
 
@@ -258,8 +276,8 @@ type handleSenderSideResult struct {
 	irConnSide ir.PortAddr
 }
 
-// mapReceiverConnectionSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverConnectionSide(nodeCtxPath string, side src.ReceiverConnectionSide) ir.ReceiverConnectionSide {
+// mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
+func (g Generator) mapReceiverSide(nodeCtxPath string, side src.ReceiverConnectionSide) ir.ReceiverConnectionSide {
 	return ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
 			Path: nodeCtxPath + "/" + side.PortAddr.Node,

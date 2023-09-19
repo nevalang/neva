@@ -22,7 +22,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 
 	rConns := make([]runtime.Connection, len(irprog.Connections))
 	for _, conn := range irprog.Connections {
-		senderPortAddr := runtime.PortAddr{
+		senderPortAddr := runtime.PortAddr{ // reference
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
 			Idx:  uint8(conn.SenderSide.Idx),
@@ -43,7 +43,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 		rReceivers := make([]runtime.ReceiverConnectionSide, len(conn.ReceiverSides))
 		for _, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
-				Path: rcvr.PortAddr.Path + "/in",
+				Path: rcvr.PortAddr.Path,
 				Port: rcvr.PortAddr.Port,
 				Idx:  uint8(rcvr.PortAddr.Idx),
 			}
