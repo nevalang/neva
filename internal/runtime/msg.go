@@ -13,21 +13,17 @@ type Msg interface {
 	Int() int64
 	Float() float64
 	Str() string
-	Vec() []Msg
-	Map() map[string]Msg
 }
 
 // Empty
 
 type emptyMsg struct{}
 
-func (emptyMsg) Bool() bool          { return false }
-func (emptyMsg) Int() int64          { return 0 }
-func (emptyMsg) Float() float64      { return 0 }
-func (emptyMsg) Str() string         { return "" }
-func (emptyMsg) Vec() []Msg          { return []Msg{} }
-func (emptyMsg) Map() map[string]Msg { return map[string]Msg{} }
-func (emptyMsg) String() string      { return "stringer not implemented" }
+func (emptyMsg) Bool() bool     { return false }
+func (emptyMsg) Int() int64     { return 0 }
+func (emptyMsg) Float() float64 { return 0 }
+func (emptyMsg) Str() string    { return "" }
+func (emptyMsg) String() string { return "()" } // stringer
 
 // Int
 

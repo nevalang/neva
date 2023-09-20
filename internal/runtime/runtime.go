@@ -45,13 +45,13 @@ var (
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	// FirstByName is not how this supposed to be working! There could be more "enter" and "exit" ports!
-	startPort := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
-	if startPort == nil {
+	enter := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
+	if enter == nil {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
-	if exitPort == nil {
+	exit := prog.Ports[PortAddr{Path: "main/out", Port: "exit"}]
+	if exit == nil {
 		return 0, ErrExitPortNotFound
 	}
 
@@ -73,12 +73,14 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	})
 
 	go func() { // kick
-		startPort <- emptyMsg{}
+		enter <- emptyMsg{}
 	}()
 
 	var exitCode int64
 	go func() {
-		exitCode, ok = (<-exitPort).Int()
+		msg := <-exit
+		fmt.Println(msg)
+		exitCode = (<-exit).Int()
 		cancel()
 	}()
 
