@@ -105,15 +105,16 @@ func (g Generator) processNode(
 
 	// We use network as a source of true about ports usage instead of component's interface definitions.
 	// We cannot rely on then because there's not enough information about how many slots are used.
-	// On the other hand, we believe network has everything we need because probram is checked by analyzer and thus correct.
+	// On the other hand, we believe network has everything we need because probram is correct.
 	nodesIOUsage, err := g.insertConnectionsAndReturnPortsUsage(pkgs, component.Net, nodeCtx, result)
 	if err != nil {
 		return fmt.Errorf("handle network: %w", err)
 	}
 
-	// Insert ports for const nodes if const node used by this network.
-	if constUsage, ok := nodesIOUsage["const"]; ok {
-		for portName := range constUsage.out { // const node does not have inports, only outports
+	// Handle const subnode if current node makes use of it.
+	if constNodeUsage, ok := nodesIOUsage["const"]; ok {
+		// Insert ports for const nodes.
+		for portName := range constNodeUsage.out { // Const node does not have inports, only outports.
 			result.Ports = append(result.Ports, &ir.PortInfo{
 				PortAddr: &ir.PortAddr{
 					Path: nodeCtx.path + "/" + "const",
@@ -121,6 +122,7 @@ func (g Generator) processNode(
 				},
 			})
 		}
+		// TODO Add func call for const node with meta msg (maybe via recursion?)
 	}
 
 	for name, node := range component.Nodes {
@@ -178,7 +180,8 @@ func (g Generator) insertConnectionsAndReturnPortsUsage(
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 			receiverSidesIR = append(receiverSidesIR, receiverSideIR)
 
-			if _, ok := nodesIOUsage[receiverSide.PortAddr.Node]; !ok { // same receiver can be used by multiple senders so we only add it once
+			// same receiver can be used by multiple senders so we only add it once
+			if _, ok := nodesIOUsage[receiverSide.PortAddr.Node]; !ok {
 				nodesIOUsage[receiverSide.PortAddr.Node] = nodeIOUsage{
 					in:  map[repPortAddr]struct{}{},
 					out: map[string]uint8{},
