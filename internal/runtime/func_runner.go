@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrRepo = errors.New("repo")
-	ErrFunc = errors.New("func")
+	ErrFuncNotFound = errors.New("func not found")
+	ErrFunc         = errors.New("func")
 )
 
 const CtxMsgKey = "msg"
@@ -45,7 +45,7 @@ func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) 
 
 		constructor, ok := d.repo[routine.Ref]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrRepo, routine.Ref)
+			return fmt.Errorf("%w: %v", ErrFuncNotFound, routine.Ref)
 		}
 
 		fun, err := constructor(ctx, routine.IO)

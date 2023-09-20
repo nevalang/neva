@@ -171,16 +171,12 @@ func (g Generator) insertConnectionsAndReturnPortsUsage(
 
 		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++
 
-		senderSide := ir.PortAddr{
-			Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
-			Port: conn.SenderSide.PortAddr.Port,
-			Idx:  uint32(conn.SenderSide.PortAddr.Idx),
-		}
+		senderSide := g.mapSenderSide(nodeCtx, conn)
 
 		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
-			receiverSidesIR = append(receiverSidesIR, &receiverSideIR)
+			receiverSidesIR = append(receiverSidesIR, receiverSideIR)
 
 			if _, ok := nodesIOUsage[receiverSide.PortAddr.Node]; !ok { // same receiver can be used by multiple senders so we only add it once
 				nodesIOUsage[receiverSide.PortAddr.Node] = nodeIOUsage{
@@ -196,12 +192,26 @@ func (g Generator) insertConnectionsAndReturnPortsUsage(
 		}
 
 		result.Connections = append(result.Connections, &ir.Connection{
-			SenderSide:    &senderSide,
+			SenderSide:    senderSide,
 			ReceiverSides: receiverSidesIR,
 		})
 	}
 
 	return nodesIOUsage, nil
+}
+
+func (Generator) mapSenderSide(nodeCtx nodeContext, conn src.Connection) *ir.PortAddr {
+	senderSide := &ir.PortAddr{
+		Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
+		Port: conn.SenderSide.PortAddr.Port,
+		Idx:  uint32(conn.SenderSide.PortAddr.Idx),
+	}
+	switch conn.SenderSide.PortAddr.Node {
+	case "const", "in": // 1) 'const.out' is redundant 2) 'in' is actually sender but we don't want to have 'in.out' addresses
+		return senderSide
+	}
+	senderSide.Path += "/out"
+	return senderSide
 }
 
 func (Generator) insertAndReturnInports(
@@ -277,8 +287,8 @@ type handleSenderSideResult struct {
 }
 
 // mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath string, side src.ReceiverConnectionSide) ir.ReceiverConnectionSide {
-	return ir.ReceiverConnectionSide{
+func (g Generator) mapReceiverSide(nodeCtxPath string, side src.ReceiverConnectionSide) *ir.ReceiverConnectionSide {
+	result := &ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
 			Path: nodeCtxPath + "/" + side.PortAddr.Node,
 			Port: side.PortAddr.Port,
@@ -286,4 +296,9 @@ func (g Generator) mapReceiverSide(nodeCtxPath string, side src.ReceiverConnecti
 		},
 		Selectors: side.Selectors,
 	}
+	if side.PortAddr.Node == "out" { // 'out' node is actually receiver but we don't want to have 'out.in' addresses
+		return result
+	}
+	result.PortAddr.Path += "/in"
+	return result
 }

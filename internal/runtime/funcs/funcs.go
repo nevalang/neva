@@ -9,11 +9,11 @@ import (
 )
 
 func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
-	in, err := io.In.Port("v")
+	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
 	}
-	out, err := io.Out.Port("v")
+	vout, err := io.Out.Port("v")
 	if err != nil {
 		return nil, err
 	}
@@ -22,9 +22,9 @@ func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
 			select {
 			case <-ctx.Done():
 				return
-			case v := <-in:
+			case v := <-vin:
 				fmt.Println(v.String())
-				out <- v
+				vout <- v
 			}
 		}
 	}, nil
@@ -47,6 +47,7 @@ func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		for {
 			select {
 			case <-ctx.Done():
+				fmt.Println(ctx.Err())
 				return
 			default:
 				<-sig
@@ -81,8 +82,8 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 
 func Repo() map[string]runtime.Func {
 	return map[string]runtime.Func{
-		"print": Print,
-		"lock":  Lock,
-		"const": Const,
+		"Print": Print,
+		"Lock":  Lock,
+		"Const": Const,
 	}
 }

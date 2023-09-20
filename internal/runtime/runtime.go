@@ -78,7 +78,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 
 	var exitCode int64
 	go func() {
-		exitCode = (<-exitPort).Int()
+		exitCode, ok = (<-exitPort).Int()
 		cancel()
 	}()
 

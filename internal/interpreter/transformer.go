@@ -68,7 +68,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 		})
 	}
 
-	rFuncs := make([]runtime.FuncRoutine, len(irprog.Funcs))
+	rFuncs := make([]runtime.FuncRoutine, 0, len(irprog.Funcs))
 	for _, f := range irprog.Funcs {
 		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
 		for _, addr := range f.Io.Inports {
@@ -90,19 +90,23 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
 		}
 
-		rMsg, err := t.msg(f.Params)
-		if err != nil {
-			return runtime.Program{}, err
-		}
-
-		rFuncs = append(rFuncs, runtime.FuncRoutine{
+		rFunc := runtime.FuncRoutine{
 			Ref: f.Ref,
 			IO: runtime.FuncIO{
 				In:  rIOIn,
 				Out: rIOOut,
 			},
-			MetaMsg: rMsg,
-		})
+		}
+
+		if f.Params != nil {
+			rMsg, err := t.msg(f.Params)
+			if err != nil {
+				return runtime.Program{}, err
+			}
+			rFunc.MetaMsg = rMsg
+		}
+
+		rFuncs = append(rFuncs, rFunc)
 	}
 
 	return runtime.Program{
