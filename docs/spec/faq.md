@@ -54,6 +54,10 @@ Because if compiler would have givers, they will be a special kind nodes which b
 
 On the other hand, there's 2 types of effects at the runtime that are essentially different. Runtime anyway have concept of effects because if operators and giver is different than operator by the same reason.
 
+### Why have static inports when we have const?
+
+Static inports are actually syntactic sugar for `const`. If there wouldn't be static inports and only const then visual schemas would be complicated.
+
 ### Why have `fromRec`?
 
 The reason is the same as with "static ports" vs "givers as special nodes". Otherwise there would be a special kind of nodes like "record builders" that are different from normal component nodes because they must have a specific configuration - record that they must build.

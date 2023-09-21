@@ -51,7 +51,8 @@ func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 				return
 			default:
 				<-sig
-				vout <- <-vin
+				v := <-vin
+				vout <- v
 			}
 		}
 	}, nil

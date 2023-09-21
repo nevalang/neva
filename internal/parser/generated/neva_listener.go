@@ -145,8 +145,8 @@ type nevaListener interface {
 	// EnterConcreteNodeInst is called when entering the concreteNodeInst production.
 	EnterConcreteNodeInst(c *ConcreteNodeInstContext)
 
-	// EnterNodeRef is called when entering the nodeRef production.
-	EnterNodeRef(c *NodeRefContext)
+	// EnterEntityRef is called when entering the entityRef production.
+	EnterEntityRef(c *EntityRefContext)
 
 	// EnterNodeArgs is called when entering the nodeArgs production.
 	EnterNodeArgs(c *NodeArgsContext)
@@ -165,6 +165,9 @@ type nevaListener interface {
 
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
+
+	// EnterSenderSide is called when entering the senderSide production.
+	EnterSenderSide(c *SenderSideContext)
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
@@ -325,8 +328,8 @@ type nevaListener interface {
 	// ExitConcreteNodeInst is called when exiting the concreteNodeInst production.
 	ExitConcreteNodeInst(c *ConcreteNodeInstContext)
 
-	// ExitNodeRef is called when exiting the nodeRef production.
-	ExitNodeRef(c *NodeRefContext)
+	// ExitEntityRef is called when exiting the entityRef production.
+	ExitEntityRef(c *EntityRefContext)
 
 	// ExitNodeArgs is called when exiting the nodeArgs production.
 	ExitNodeArgs(c *NodeArgsContext)
@@ -345,6 +348,9 @@ type nevaListener interface {
 
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
+
+	// ExitSenderSide is called when exiting the senderSide production.
+	ExitSenderSide(c *SenderSideContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

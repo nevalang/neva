@@ -9,12 +9,12 @@ const {
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock std.Lock()
-			print std.Print()
+			lock std.Lock
+			print std.Print
 		}
 		net {
 			in.enter -> lock.in.sig
-			const.msg -> lock.in.v
+			msg -> lock.in.v
 			lock.out.v -> print.in.v
 			print.out.v -> out.exit
 		}

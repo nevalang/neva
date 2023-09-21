@@ -23,7 +23,7 @@ typeParams: '<' NEWLINE* typeParamList? '>' ;
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)* ;
 typeParam: IDENTIFIER typeExpr? ;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr ;
-typeInstExpr: IDENTIFIER typeArgs? ; // FIXME replace IDENTIFIER with EntityRef
+typeInstExpr: entityRef typeArgs? ; // entity ref points to type definition
 typeArgs: '<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
 typeLitExpr : enumTypeExpr | arrTypeExpr | recTypeExpr ;
 enumTypeExpr: '{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
@@ -64,18 +64,21 @@ recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 compStmt: 'components' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
 compDef: interfaceDef compBody NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}' ;
+// nodes
 compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
 compNodeDef: absNodeDef | concreteNodeDef ;
 absNodeDef: IDENTIFIER typeInstExpr ;
 concreteNodeDef: IDENTIFIER concreteNodeInst ;
-concreteNodeInst: nodeRef NEWLINE* typeArgs? nodeArgs ;
-nodeRef: IDENTIFIER ('.' IDENTIFIER)? ; 
+concreteNodeInst: entityRef NEWLINE* typeArgs? nodeArgs? ; // entityRef points to component or interface entity
+entityRef: IDENTIFIER ('.' IDENTIFIER)? ; 
 nodeArgs: '(' NEWLINE* nodeArgList? ')';
 nodeArgList: nodeArg (',' NEWLINE* nodeArg)*;
 nodeArg : IDENTIFIER ':' concreteNodeInst;
+// net
 compNetDef: 'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}' ;
 connDefList: connDef (NEWLINE* connDef)* ;
-connDef: portAddr '->' connReceiverSide ;
+connDef: senderSide '->' connReceiverSide ;
+senderSide : portAddr | entityRef ; // normal (node's outport) sender OR referency to entity (constant)
 portAddr: ioNodePortAddr | constNodePortAddr | normalNodePortAddr;
 ioNodePortAddr: portDirection '.' IDENTIFIER ;
 constNodePortAddr: 'const' .  IDENTIFIER ;

@@ -64,7 +64,7 @@ type Node struct {
 }
 
 type EntityRef struct {
-	Pkg  string // "" for local entities (alias, namespace)
+	Pkg  string // Empty pkg means reference to local (in the same package) entity
 	Name string
 }
 
@@ -104,12 +104,14 @@ type Connection struct {
 	ReceiverSides []ReceiverConnectionSide
 }
 
-type SenderConnectionSide ConnectionSide
-
-type ReceiverConnectionSide ConnectionSide
-
-type ConnectionSide struct {
+type ReceiverConnectionSide struct {
 	PortAddr  PortAddr
+	Selectors []string
+}
+
+type SenderConnectionSide struct {
+	PortAddr  *PortAddr
+	ConstRef  *EntityRef
 	Selectors []string
 }
 

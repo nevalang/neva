@@ -58,7 +58,7 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*
 type (
 	nodeContext struct {
 		path      string        // including current
-		entityRef src.EntityRef // refers to component // todo what about interfaces?
+		entityRef src.EntityRef // refers to component // TODO what about interfaces?
 		ioUsage   nodeIOUsage
 	}
 	nodeIOUsage struct {
@@ -111,19 +111,7 @@ func (g Generator) processNode(
 		return fmt.Errorf("handle network: %w", err)
 	}
 
-	// Handle const subnode if current node makes use of it.
-	if constNodeUsage, ok := nodesIOUsage["const"]; ok {
-		// Insert ports for const nodes.
-		for portName := range constNodeUsage.out { // Const node does not have inports, only outports.
-			result.Ports = append(result.Ports, &ir.PortInfo{
-				PortAddr: &ir.PortAddr{
-					Path: nodeCtx.path + "/" + "const",
-					Port: portName,
-				},
-			})
-		}
-		// TODO Add func call for const node with meta msg (maybe via recursion?)
-	}
+	// TODO: Handle const
 
 	for name, node := range component.Nodes {
 		nodeUsage, ok := nodesIOUsage[name]
@@ -152,19 +140,20 @@ type handleNetworkResult struct {
 	slotsUsage map[string]nodeIOUsage // node -> ports
 }
 
-// TODO validate slots logic + fix code (same inports could be used by multiple different outports)
+// TODO validate slots logic
 func (g Generator) insertConnectionsAndReturnPortsUsage(
 	pkgs map[string]src.Package,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) (map[string]nodeIOUsage, error) {
-	nodesIOUsage := map[string]nodeIOUsage{} // represents how node's IO used by network
+	nodesIOUsage := map[string]nodeIOUsage{} // how node's IO used by network
 
 	for _, conn := range conns {
 		senderPortAddr := conn.SenderSide.PortAddr
 
-		if _, ok := nodesIOUsage[senderPortAddr.Node]; !ok { // there could be many connections with the same sender
+		// there could be many connections with the same sender
+		if _, ok := nodesIOUsage[senderPortAddr.Node]; !ok {
 			nodesIOUsage[senderPortAddr.Node] = nodeIOUsage{
 				in:  map[repPortAddr]struct{}{},
 				out: map[string]uint8{},

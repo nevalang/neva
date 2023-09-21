@@ -1,7 +1,5 @@
 components {
 	Main(enter) (exit) {
-		net {
-			in.enter -> out.exit
-		}
+		net { in.enter -> out.exit }
 	}
 }

@@ -196,8 +196,6 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection {
 
 	for _, connDefs := range actx {
 		for _, connDef := range connDefs.ConnDefList().AllConnDef() {
-			senderSidePortAddr := parsePortAddr(connDef.PortAddr())
-
 			receiverSide := connDef.ConnReceiverSide()
 			singleReceiver := receiverSide.PortAddr()
 			multipleReceivers := receiverSide.ConnReceivers()
@@ -220,8 +218,36 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection {
 				}
 			}
 
+			senderSide := connDef.SenderSide()
+			senderSidePort := senderSide.PortAddr()
+			senderSideConstRef := senderSide.EntityRef()
+			// TODO  add sender side literal option
+
+			var senderSidePortAddr *src.PortAddr
+			if senderSidePort != nil {
+				tmp := parsePortAddr(senderSidePort)
+				senderSidePortAddr = &tmp
+			}
+
+			var constRef *src.EntityRef
+			if senderSideConstRef != nil {
+				ids := senderSideConstRef.AllIDENTIFIER()
+				if len(ids) == 2 {
+					constRef = &src.EntityRef{
+						Pkg:  ids[0].GetText(),
+						Name: ids[1].GetText(),
+					}
+				} else if len(ids) == 1 {
+					constRef = &src.EntityRef{Name: ids[0].GetText()}
+				}
+			}
+
 			result = append(result, src.Connection{
-				SenderSide:    src.SenderConnectionSide{PortAddr: senderSidePortAddr},
+				SenderSide: src.SenderConnectionSide{
+					PortAddr:  senderSidePortAddr,
+					ConstRef:  constRef,
+					Selectors: []string{},
+				},
 				ReceiverSides: receiverSides,
 			})
 		}

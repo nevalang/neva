@@ -296,11 +296,11 @@ func (s *BasenevaListener) EnterConcreteNodeInst(ctx *ConcreteNodeInstContext) {
 // ExitConcreteNodeInst is called when production concreteNodeInst is exited.
 func (s *BasenevaListener) ExitConcreteNodeInst(ctx *ConcreteNodeInstContext) {}
 
-// EnterNodeRef is called when production nodeRef is entered.
-func (s *BasenevaListener) EnterNodeRef(ctx *NodeRefContext) {}
+// EnterEntityRef is called when production entityRef is entered.
+func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
 
-// ExitNodeRef is called when production nodeRef is exited.
-func (s *BasenevaListener) ExitNodeRef(ctx *NodeRefContext) {}
+// ExitEntityRef is called when production entityRef is exited.
+func (s *BasenevaListener) ExitEntityRef(ctx *EntityRefContext) {}
 
 // EnterNodeArgs is called when production nodeArgs is entered.
 func (s *BasenevaListener) EnterNodeArgs(ctx *NodeArgsContext) {}
@@ -337,6 +337,12 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
+
+// EnterSenderSide is called when production senderSide is entered.
+func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
+
+// ExitSenderSide is called when production senderSide is exited.
+func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
 
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
