@@ -119,7 +119,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				var (
 					pkg, nodeRef string
 				)
-				nodePath := concreteNodeInst.NodeRef().AllIDENTIFIER()
+				nodePath := concreteNodeInst.EntityRef().AllIDENTIFIER()
 				if len(nodePath) == 2 {
 					pkg = nodePath[0].GetText()
 					nodeRef = nodePath[1].GetText()
@@ -160,7 +160,7 @@ func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
 	var (
 		pkg, nodeRef string
 	)
-	nodePath := nodeInst.NodeRef().AllIDENTIFIER()
+	nodePath := nodeInst.EntityRef().AllIDENTIFIER()
 	if len(nodePath) == 2 {
 		pkg = nodePath[0].GetText()
 		nodeRef = nodePath[1].GetText()

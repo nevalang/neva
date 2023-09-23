@@ -59,12 +59,16 @@ func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 }
 
 func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
-	msg, ok := ctx.Value("msg").(runtime.Msg)
-	if !ok {
+	msg := ctx.Value("msg")
+	if msg == nil {
 		return nil, errors.New("ctx msg not found")
 	}
+	v, ok := msg.(runtime.Msg)
+	if !ok {
+		return nil, errors.New("ctx value is not runtime message")
+	}
 
-	out, err := io.Out.Port("v")
+	vout, err := io.Out.Port("v")
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +79,7 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 			case <-ctx.Done():
 				return
 			default:
-				out <- msg
+				vout <- v
 			}
 		}
 	}, nil

@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/src"
 	"github.com/nevalang/neva/pkg/ir"
+	"golang.org/x/exp/maps"
 )
 
 type Generator struct{}
@@ -30,14 +32,14 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*
 	}
 
 	rootNodeCtx := nodeContext{
-		path:      "main",
-		entityRef: src.EntityRef{Pkg: "main", Name: "Main"},
-		ioUsage: nodeIOUsage{
-			in: map[repPortAddr]struct{}{
+		path:         []string{"main"},
+		componentRef: src.EntityRef{Pkg: "main", Name: "Main"},
+		portsUsage: portsUsage{
+			in: map[relPortAddr]struct{}{
 				{Port: "enter"}: {},
 			},
-			out: map[string]uint8{
-				"exit": 1,
+			out: map[relPortAddr]struct{}{
+				{Port: "exit"}: {},
 			},
 		},
 	}
@@ -48,7 +50,7 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*
 		Funcs:       []*ir.Func{},
 	}
 
-	if err := g.processNode(ctx, rootNodeCtx, pkgs, result); err != nil {
+	if err := g.processComponentNode(ctx, rootNodeCtx, pkgs, result); err != nil {
 		return nil, fmt.Errorf("process root node: %w", err)
 	}
 
@@ -57,32 +59,35 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*
 
 type (
 	nodeContext struct {
-		path      string        // including current
-		entityRef src.EntityRef // refers to component // TODO what about interfaces?
-		ioUsage   nodeIOUsage
+		path         []string // including current
+		curPkgName   string
+		componentRef src.EntityRef
+		constValue   *src.ConstValue
+		portsUsage   portsUsage
 	}
-	nodeIOUsage struct {
-		in  map[repPortAddr]struct{} // why not same as out?
-		out map[string]uint8         // name -> slots used by parent
+	portsUsage struct {
+		in         map[relPortAddr]struct{}
+		out        map[relPortAddr]struct{}
+		constValue *src.ConstValue
 	}
-	repPortAddr struct {
+	relPortAddr struct {
 		Port string
 		Idx  uint8
 	}
 )
 
-func (g Generator) processNode(
+func (g Generator) processComponentNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
 	pkgs map[string]src.Package,
 	result *ir.Program,
 ) error {
-	entity, err := g.lookupEntity(pkgs, nodeCtx.entityRef)
+	componentEntity, err := g.lookupEntity(pkgs, "", nodeCtx.componentRef) // not sure about curpkgname
 	if err != nil {
 		return fmt.Errorf("lookup entity: %w", err)
 	}
 
-	component := entity.Component // We assume this entity is component because program is correct.
+	component := componentEntity.Component // We assume this entity is component because program is correct.
 
 	// Ports for input and output must be created before processing subnodes because they are used by parent node.
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
@@ -90,45 +95,57 @@ func (g Generator) processNode(
 
 	// We assume component without network also doesn't have nodes, but it's not checked.
 	if isRuntimeFunc := len(component.Net) == 0; isRuntimeFunc {
-		result.Funcs = append(
-			result.Funcs,
-			&ir.Func{
-				Ref: nodeCtx.entityRef.Name,
-				Io: &ir.FuncIO{
-					Inports:  inportAddrs,
-					Outports: outPortAddrs,
-				},
+		runtimeFunc := &ir.Func{
+			Ref: nodeCtx.componentRef.Name,
+			Io: &ir.FuncIO{
+				Inports:  inportAddrs,
+				Outports: outPortAddrs,
 			},
-		)
+		}
+		if nodeCtx.constValue == nil {
+			result.Funcs = append(result.Funcs, runtimeFunc)
+			return nil
+		}
+		runtimeFunc.Params = &ir.Msg{ // TODO implement other types
+			Type: ir.MsgType_MSG_TYPE_STR, //nolint:nosnakecase
+			Str:  nodeCtx.constValue.Str,
+		}
+		result.Funcs = append(result.Funcs, runtimeFunc)
 		return nil
 	}
 
-	// We use network as a source of true about ports usage instead of component's interface definitions.
-	// We cannot rely on then because there's not enough information about how many slots are used.
+	// Example: if we process main.Main component, then ref like "msg" must have "main" as a package name, not ""
+	nodeCtx.curPkgName = nodeCtx.componentRef.Pkg
+
+	// We use network as a source of true about ports usage instead of component's definitions.
+	// We cannot rely on them because there's not enough information about how many slots are used.
 	// On the other hand, we believe network has everything we need because probram is correct.
-	nodesIOUsage, err := g.insertConnectionsAndReturnPortsUsage(pkgs, component.Net, nodeCtx, result)
+	netResult, err := g.processNet(pkgs, component.Net, nodeCtx, result)
 	if err != nil {
 		return fmt.Errorf("handle network: %w", err)
 	}
 
-	// TODO: Handle const
+	// Merge "virtual" const nodes and "real" component nodes together.
+	maps.Copy(netResult.constNodes, component.Nodes)
+	allNodes := netResult.constNodes
 
-	for name, node := range component.Nodes {
-		nodeUsage, ok := nodesIOUsage[name]
+	for name, node := range allNodes {
+		nodePortsUsage, ok := netResult.nodesUsage[name]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
 		}
 
 		subNodeCtx := nodeContext{
-			path:    nodeCtx.path + "/" + name,
-			ioUsage: nodeUsage,
-			entityRef: src.EntityRef{
+			path:       append(nodeCtx.path, name),
+			portsUsage: nodePortsUsage,
+			componentRef: src.EntityRef{
 				Pkg:  node.EntityRef.Pkg,
 				Name: node.EntityRef.Name,
 			},
+			constValue: nodePortsUsage.constValue,
 		}
 
-		if err := g.processNode(ctx, subNodeCtx, pkgs, result); err != nil {
+		if err := g.processComponentNode(ctx, subNodeCtx, pkgs, result); err != nil {
 			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), name)
 		}
 	}
@@ -137,32 +154,34 @@ func (g Generator) processNode(
 }
 
 type handleNetworkResult struct {
-	slotsUsage map[string]nodeIOUsage // node -> ports
+	slotsUsage map[string]portsUsage // node -> ports
 }
 
-// TODO validate slots logic
-func (g Generator) insertConnectionsAndReturnPortsUsage(
+type processNetworkResult struct {
+	nodesUsage map[string]portsUsage // how many slots are used by each node
+	constNodes map[string]src.Node   // extra nodes to create
+}
+
+// processNet
+// 1) inserts network connections
+// 2) returns metadata about how subnodes are used by this network
+// 3) inserts const value if needed
+func (g Generator) processNet(
 	pkgs map[string]src.Package,
 	conns []src.Connection,
 	nodeCtx nodeContext,
-	result *ir.Program,
-) (map[string]nodeIOUsage, error) {
-	nodesIOUsage := map[string]nodeIOUsage{} // how node's IO used by network
+	irResult *ir.Program,
+) (processNetworkResult, error) {
+	result := processNetworkResult{
+		nodesUsage: map[string]portsUsage{},
+		constNodes: map[string]src.Node{},
+	}
 
 	for _, conn := range conns {
-		senderPortAddr := conn.SenderSide.PortAddr
-
-		// there could be many connections with the same sender
-		if _, ok := nodesIOUsage[senderPortAddr.Node]; !ok {
-			nodesIOUsage[senderPortAddr.Node] = nodeIOUsage{
-				in:  map[repPortAddr]struct{}{},
-				out: map[string]uint8{},
-			}
+		irSenderSidePortAddr, err := g.processSenderSide(pkgs, nodeCtx, conn.SenderSide, result)
+		if err != nil {
+			return processNetworkResult{}, fmt.Errorf("process sender side: %w", err)
 		}
-
-		nodesIOUsage[senderPortAddr.Node].out[senderPortAddr.Port]++
-
-		senderSide := g.mapSenderSide(nodeCtx, conn)
 
 		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiverSide := range conn.ReceiverSides {
@@ -170,53 +189,107 @@ func (g Generator) insertConnectionsAndReturnPortsUsage(
 			receiverSidesIR = append(receiverSidesIR, receiverSideIR)
 
 			// same receiver can be used by multiple senders so we only add it once
-			if _, ok := nodesIOUsage[receiverSide.PortAddr.Node]; !ok {
-				nodesIOUsage[receiverSide.PortAddr.Node] = nodeIOUsage{
-					in:  map[repPortAddr]struct{}{},
-					out: map[string]uint8{},
+			if _, ok := result.nodesUsage[receiverSide.PortAddr.Node]; !ok {
+				result.nodesUsage[receiverSide.PortAddr.Node] = portsUsage{
+					in:  map[relPortAddr]struct{}{},
+					out: map[relPortAddr]struct{}{},
 				}
 			}
 
-			nodesIOUsage[receiverSide.PortAddr.Node].in[repPortAddr{
+			result.nodesUsage[receiverSide.PortAddr.Node].in[relPortAddr{
 				Port: receiverSide.PortAddr.Port,
 				Idx:  receiverSide.PortAddr.Idx,
 			}] = struct{}{}
 		}
 
-		result.Connections = append(result.Connections, &ir.Connection{
-			SenderSide:    senderSide,
+		irResult.Connections = append(irResult.Connections, &ir.Connection{
+			SenderSide:    irSenderSidePortAddr,
 			ReceiverSides: receiverSidesIR,
 		})
 	}
 
-	return nodesIOUsage, nil
+	return result, nil
 }
 
-func (Generator) mapSenderSide(nodeCtx nodeContext, conn src.Connection) *ir.PortAddr {
-	senderSide := &ir.PortAddr{
-		Path: nodeCtx.path + "/" + conn.SenderSide.PortAddr.Node,
-		Port: conn.SenderSide.PortAddr.Port,
-		Idx:  uint32(conn.SenderSide.PortAddr.Idx),
+func (g Generator) processSenderSide(
+	pkgs map[string]src.Package,
+	nodeCtx nodeContext,
+	senderSide src.SenderConnectionSide,
+	result processNetworkResult,
+) (*ir.PortAddr, error) {
+	if senderSide.ConstRef != nil {
+		nodeName := "const" + "_" + senderSide.ConstRef.Pkg + "_" + senderSide.ConstRef.Name
+
+		result.constNodes[nodeName] = src.Node{
+			EntityRef: src.EntityRef{
+				Pkg:  "std",
+				Name: "Const",
+			}, // TODO handle type args
+		}
+
+		if _, ok := result.nodesUsage[nodeName]; !ok {
+			constEntity, err := g.lookupEntity(pkgs, nodeCtx.curPkgName, *senderSide.ConstRef)
+			if err != nil {
+				return nil, fmt.Errorf("lookup const entity: %w", err)
+			}
+
+			result.nodesUsage[nodeName] = portsUsage{
+				in:         map[relPortAddr]struct{}{},
+				out:        map[relPortAddr]struct{}{},
+				constValue: &constEntity.Const.Value,
+			}
+		}
+		result.nodesUsage[nodeName].out[relPortAddr{
+			Port: "v",
+			Idx:  0,
+		}] = struct{}{}
+
+		return &ir.PortAddr{
+			// To avoid collisions we use pkg and name as part of the path.
+			Path: strings.Join(append(nodeCtx.path, nodeName, "out"), "/"),
+			Port: "v", // Note than const's outport is always "v".
+			Idx:  0,   // And Idx is always 0 (Const doesn't use array-ports).
+		}, nil
 	}
-	switch conn.SenderSide.PortAddr.Node {
-	case "const", "in": // 1) 'const.out' is redundant 2) 'in' is actually sender but we don't want to have 'in.out' addresses
-		return senderSide
+
+	// there could be many connections with the same sender but we must only add it once
+	if _, ok := result.nodesUsage[senderSide.PortAddr.Node]; !ok {
+		result.nodesUsage[senderSide.PortAddr.Node] = portsUsage{
+			in:  map[relPortAddr]struct{}{},
+			out: map[relPortAddr]struct{}{},
+		}
 	}
-	senderSide.Path += "/out"
-	return senderSide
+	// insert outport usage
+	result.nodesUsage[senderSide.PortAddr.Node].out[relPortAddr{
+		Port: senderSide.PortAddr.Port,
+		Idx:  senderSide.PortAddr.Idx,
+	}] = struct{}{}
+
+	irSenderSide := &ir.PortAddr{
+		Path: strings.Join(append(nodeCtx.path, senderSide.PortAddr.Node), "/"),
+		Port: senderSide.PortAddr.Port,
+		Idx:  uint32(senderSide.PortAddr.Idx),
+	}
+
+	if senderSide.PortAddr.Node == "in" {
+		return irSenderSide, nil
+	}
+	irSenderSide.Path += "/out"
+
+	return irSenderSide, nil
 }
 
 func (Generator) insertAndReturnInports(
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) []*ir.PortAddr {
-	inports := make([]*ir.PortAddr, 0, len(nodeCtx.ioUsage.in))
+	inports := make([]*ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
 	// actually we can't use IO because we need to know how many slots are used
-	for addr := range nodeCtx.ioUsage.in {
+	for addr := range nodeCtx.portsUsage.in {
 		addr := &ir.PortAddr{
-			Path: nodeCtx.path + "/in",
+			Path: strings.Join(append(nodeCtx.path, "in"), "/"),
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
 		}
@@ -235,32 +308,31 @@ func (Generator) insertAndReturnOutports(
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) []*ir.PortAddr {
-	runtimeFuncOutportAddrs := make([]*ir.PortAddr, 0, len(nodeCtx.ioUsage.out))
+	runtimeFuncOutportAddrs := make([]*ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
-	for name := range outports {
-		slotsCount, ok := nodeCtx.ioUsage.out[name]
-		if !ok { // outport not used by parent
-			slotsCount = 1 // but component need at least 1 slot to write
+	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use component's IO.
+	// Actually we can't use IO because we need to know how many slots are used.
+	for addr := range nodeCtx.portsUsage.out {
+		irAddr := &ir.PortAddr{
+			Path: strings.Join(append(nodeCtx.path, "out"), "/"),
+			Port: addr.Port,
+			Idx:  uint32(addr.Idx),
 		}
-
-		for i := 0; i < int(slotsCount); i++ {
-			addr := &ir.PortAddr{
-				Path: nodeCtx.path + "/out",
-				Port: name,
-				Idx:  uint32(i),
-			}
-			result.Ports = append(result.Ports, &ir.PortInfo{
-				PortAddr: addr,
-				BufSize:  0,
-			})
-			runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, addr)
-		}
+		result.Ports = append(result.Ports, &ir.PortInfo{
+			PortAddr: irAddr,
+			BufSize:  0,
+		})
+		runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, irAddr)
 	}
 
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]src.Package, ref src.EntityRef) (src.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]src.Package, curPkgName string, ref src.EntityRef) (src.Entity, error) {
+	if ref.Pkg == "" {
+		ref.Pkg = curPkgName
+	}
+
 	pkg, ok := pkgs[ref.Pkg]
 	if !ok {
 		return src.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
@@ -274,15 +346,11 @@ func (Generator) lookupEntity(pkgs map[string]src.Package, ref src.EntityRef) (s
 	return entity, nil
 }
 
-type handleSenderSideResult struct {
-	irConnSide ir.PortAddr
-}
-
 // mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath string, side src.ReceiverConnectionSide) *ir.ReceiverConnectionSide {
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnectionSide) *ir.ReceiverConnectionSide {
 	result := &ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
-			Path: nodeCtxPath + "/" + side.PortAddr.Node,
+			Path: strings.Join(append(nodeCtxPath, side.PortAddr.Node), "/"),
 			Port: side.PortAddr.Port,
 			Idx:  uint32(side.PortAddr.Idx),
 		},

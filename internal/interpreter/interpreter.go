@@ -44,12 +44,12 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 		"std":  std.New(),
 	}
 
-	ll, err := i.irgen.Generate(ctx, prog)
+	irprog, err := i.irgen.Generate(ctx, prog)
 	if err != nil {
 		return 0, err
 	}
 
-	rprog, err := i.rtgen.Transform(ctx, ll)
+	rprog, err := i.rtgen.Transform(ctx, irprog)
 	if err != nil {
 		return 0, err
 	}

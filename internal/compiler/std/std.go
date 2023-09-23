@@ -68,6 +68,27 @@ func New() src.Package {
 					},
 				},
 			},
+			"Const": {
+				Exported: true,
+				Kind:     src.ComponentEntity,
+				Component: src.Component{
+					Interface: src.Interface{
+						Params: []ts.Param{
+							{Name: "t1"},
+						},
+						IO: src.IO{
+							In: map[string]src.Port{},
+							Out: map[string]src.Port{
+								"v": {
+									Type: ts.Expr{
+										Inst: ts.InstExpr{Ref: "t1"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }

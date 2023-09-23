@@ -12,13 +12,13 @@ message Program {
 
 message PortInfo {
   PortAddr port_addr = 1;
-  uint32 buf_size = 2;
+  uint32 buf_size = 2; // proto doesn't support uint8
 }
 
 message PortAddr {
   string path = 1;
   string port = 2;
-  uint32 idx = 3;
+  uint32 idx = 3; // proto doesn't support uint8
 }
 
 message Connection {
