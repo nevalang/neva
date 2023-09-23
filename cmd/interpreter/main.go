@@ -40,7 +40,7 @@ func main() {
 	}
 
 	intr := interpreter.MustNew(
-		parser.New(),
+		parser.New(false),
 		irgen.New(),
 		interpreter.MustNewTransformer(),
 		runTime,

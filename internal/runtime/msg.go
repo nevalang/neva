@@ -66,7 +66,7 @@ type StrMsg struct {
 }
 
 func (msg StrMsg) Str() string    { return msg.v }
-func (msg StrMsg) String() string { return strconv.Quote(msg.v) }
+func (msg StrMsg) String() string { return msg.v }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{

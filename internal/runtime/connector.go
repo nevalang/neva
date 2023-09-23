@@ -104,15 +104,15 @@ func (c DefaultConnector) distribute(
 type DefaultInterceptor struct{}
 
 func (i DefaultInterceptor) AfterSending(from SenderConnectionSideMeta, msg Msg) Msg {
-	fmt.Printf("after sending %v -> %v\n", from, msg)
+	// fmt.Printf("after sending: %v -> %v\n", from, msg)
 	return msg
 }
 
 func (i DefaultInterceptor) BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg {
-	fmt.Printf("before receiving %v <- %v <- %v\n", to, msg, from)
+	// fmt.Printf("before receiving: %v -> %v -> %v\n", from, msg, to)
 	return msg
 }
 
 func (i DefaultInterceptor) AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) {
-	fmt.Printf("after receiving %v -> %v -> %v\n", from, msg, to)
+	// fmt.Printf("after receiving: %v -> %v -> %v\n", from, msg, to)
 }

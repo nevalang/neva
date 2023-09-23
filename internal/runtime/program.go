@@ -57,6 +57,10 @@ type SenderConnectionSideMeta struct {
 	PortAddr PortAddr
 }
 
+func (c SenderConnectionSideMeta) String() string {
+	return c.PortAddr.String()
+}
+
 type ReceiverConnectionSideMeta struct {
 	PortAddr  PortAddr
 	Selectors []string

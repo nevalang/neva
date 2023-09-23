@@ -119,6 +119,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 func (t transformer) msg(msg *ir.Msg) (runtime.Msg, error) {
 	var rMsg runtime.Msg
 
+	//nolint:nosnakecase
 	switch msg.Type {
 	case ir.MsgType_MSG_TYPE_BOOL:
 		rMsg = runtime.NewBoolMsg(msg.Bool)

@@ -23,8 +23,17 @@ func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
 			case <-ctx.Done():
 				return
 			case v := <-vin:
-				fmt.Println(v.String())
-				vout <- v
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					fmt.Println(v.String())
+					select {
+					case <-ctx.Done():
+						return
+					case vout <- v:
+					}
+				}
 			}
 		}
 	}, nil
@@ -47,12 +56,18 @@ func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println(ctx.Err())
 				return
-			default:
-				<-sig
-				v := <-vin
-				vout <- v
+			case <-sig:
+				select {
+				case <-ctx.Done():
+					return
+				case v := <-vin:
+					select {
+					case <-ctx.Done():
+						return
+					case vout <- v:
+					}
+				}
 			}
 		}
 	}, nil
@@ -63,6 +78,7 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	if msg == nil {
 		return nil, errors.New("ctx msg not found")
 	}
+
 	v, ok := msg.(runtime.Msg)
 	if !ok {
 		return nil, errors.New("ctx value is not runtime message")
@@ -78,8 +94,7 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 			select {
 			case <-ctx.Done():
 				return
-			default:
-				vout <- v
+			case vout <- v:
 			}
 		}
 	}, nil

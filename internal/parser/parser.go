@@ -16,7 +16,9 @@ type treeShapeListener struct {
 	file src.Package
 }
 
-type Parser struct{}
+type Parser struct {
+	isDebug bool
+}
 
 func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.Package, error) {
 	result := make(map[string]src.Package, len(files))
@@ -43,10 +45,14 @@ func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.Package, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
-	prsr := generated.NewnevaParser(stream)
-	prsr.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
-	prsr.BuildParseTrees = true
-	tree := prsr.Prog()
+
+	parse := generated.NewnevaParser(stream)
+	if p.isDebug {
+		parse.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+	}
+	parse.BuildParseTrees = true
+
+	tree := parse.Prog()
 	listener := &treeShapeListener{}
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
@@ -54,6 +60,8 @@ func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.Package, error) {
 	return listener.file, nil
 }
 
-func New() Parser {
-	return Parser{}
+func New(isDebug bool) Parser {
+	return Parser{
+		isDebug: isDebug,
+	}
 }

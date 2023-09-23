@@ -6,6 +6,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - depguard # enforces to manually configure imports white-list
     - godox # todo/fixme
     - godot # dots at the end of comments
     - gomnd # magic number

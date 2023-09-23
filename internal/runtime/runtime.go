@@ -78,8 +78,6 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 
 	var exitCode int64
 	go func() {
-		msg := <-exit
-		fmt.Println(msg)
 		exitCode = (<-exit).Int()
 		cancel()
 	}()
