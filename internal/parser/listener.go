@@ -2,6 +2,7 @@ package parser
 
 import (
 	"strconv"
+	"strings"
 
 	generated "github.com/nevalang/neva/internal/parser/generated"
 	"github.com/nevalang/neva/internal/src"
@@ -52,6 +53,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	constVal := actx.ConstVal()
 	val := src.ConstValue{TypeExpr: typeExpr}
 
+	//nolint:nosnakecase
 	switch {
 	case constVal.Bool_() != nil:
 		boolVal := constVal.Bool_().GetText()
@@ -72,7 +74,14 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 		}
 		val.Float = f
 	case constVal.STRING() != nil:
-		val.Str = constVal.STRING().GetText()
+		val.Str = strings.Trim(
+			strings.ReplaceAll(
+				constVal.STRING().GetText(),
+				"\\n",
+				"\n",
+			),
+			"'",
+		)
 	case constVal.Nil_() != nil:
 		break
 	default:
