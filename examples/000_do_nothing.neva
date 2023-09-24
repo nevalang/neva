@@ -1,3 +1,5 @@
+// Program that literally does nothing.
+
 components {
 	Main(enter) (exit) {
 		net { in.enter -> out.exit }

@@ -1,0 +1,30 @@
+// Program that reads two numbers from stdin, adds them and prints the result to stdout.
+
+use {
+	std
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			read1 std.Read
+			read2 std.Read
+			parse1 std.ParseInt
+			parse2 std.ParseInt
+			add std.Add<int>
+			print std.Print<int>
+		}
+		net {
+			in.enter -> read1.in.sig // trigger first read
+			read1.out.v -> parse1.in.v // parse result of first read
+			parse1.out.v -> { // successfull result of the first parse triggers the second read and goes to the adder
+				add.in.a
+				read2.in.sig
+			}
+			read2.in.sig -> parse2.in.v // result of the second read goes to parsing
+			parse2.out.v -> add.in.b // successfull result of the second parse goes to the adder
+			add.out.v -> print.in.v // result of the addition goes to the printer
+			print.out.v -> out.exit // successfull print goes to the exit
+		}
+	}
+}

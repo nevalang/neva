@@ -1,0 +1,19 @@
+// This program reads a string and prints it. It does so in an infinite loop.
+
+use {
+	std
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			read std.Read
+			print std.Print<str>
+		}
+		net {
+			in.enter -> read.in.sig
+			read.out.v -> print.in.v
+			print.out.v -> read.in.sig
+		}
+	}
+}

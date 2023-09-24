@@ -1,0 +1,24 @@
+// Hello, World! This program is old as time itself.
+
+use {
+	std
+}
+
+const {
+	msg string 'Hello, World!\n'
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			lock std.Lock<str>
+			print std.Print<str>
+		}
+		net {
+			in.enter -> lock.in.sig
+			msg -> lock.in.v
+			lock.out.v -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+}

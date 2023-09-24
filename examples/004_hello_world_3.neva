@@ -1,0 +1,17 @@
+// Hello, World! Even shorter with enter predefined value.
+
+use {
+	std
+}
+
+components {
+	Main(enter string 'Hello, World!') (exit) {
+		nodes {
+			print std.Print<str>
+		}
+		net {
+			in.enter -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+}
