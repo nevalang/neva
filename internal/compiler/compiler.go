@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
@@ -59,8 +59,12 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		return nil, fmt.Errorf("generate: %w", err)
 	}
 
+	if dstPath == "" {
+		return irProg, nil
+	}
+
 	if err := c.repo.Save(ctx, dstPath, irProg); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repo save: %w", err)
 	}
 
 	return irProg, nil

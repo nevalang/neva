@@ -2,7 +2,7 @@
 package std
 
 import (
-	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/ts"
 )
 

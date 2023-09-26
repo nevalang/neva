@@ -8,7 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/internal/compiler/src"
 )
 
 type treeShapeListener struct {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nevalang/neva/internal/src"
+	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/ir"
 	"golang.org/x/exp/maps"
 )

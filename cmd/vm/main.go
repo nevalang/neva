@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/nevalang/neva/internal/pkg/disk"
+	"github.com/nevalang/neva/internal/vm/repo/disk"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/internal/vm"
