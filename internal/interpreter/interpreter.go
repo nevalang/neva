@@ -3,53 +3,35 @@ package interpreter
 import (
 	"context"
 
-	"github.com/nevalang/neva/internal/compiler/std"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/src"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
 type Interpreter struct {
-	parser  SourceCodeParser
-	irgen   IRGenerator
-	rtgen   RuntimeProgramGenerator
-	runtime Runtime
+	compiler Compiler
+	adapter  Adapter
+	runtime  Runtime
 }
 
-type SourceCodeParser interface {
-	ParseFiles(context.Context, map[string][]byte) (map[string]src.Package, error)
-	ParseFile(context.Context, []byte) (src.Package, error)
-}
+type (
+	Compiler interface {
+		Compile(ctx context.Context, src, dst string) (*ir.Program, error)
+	}
+	Adapter interface {
+		Adapt(irProg *ir.Program) (runtime.Program, error)
+	}
+	Runtime interface {
+		Run(context.Context, runtime.Program) (code int, err error)
+	}
+)
 
-type IRGenerator interface {
-	Generate(context.Context, map[string]src.Package) (*ir.Program, error)
-}
-
-type RuntimeProgramGenerator interface {
-	Transform(context.Context, *ir.Program) (runtime.Program, error)
-}
-
-type Runtime interface {
-	Run(context.Context, runtime.Program) (code int, err error)
-}
-
-func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
-	singleFilePkg, err := i.parser.ParseFile(ctx, bb)
+func (i Interpreter) Interpret(ctx context.Context, path string) (int, error) {
+	irProg, err := i.compiler.Compile(ctx, path, "")
 	if err != nil {
 		return 0, err
 	}
 
-	prog := map[string]src.Package{
-		"main": singleFilePkg,
-		"std":  std.New(),
-	}
-
-	irprog, err := i.irgen.Generate(ctx, prog)
-	if err != nil {
-		return 0, err
-	}
-
-	rprog, err := i.rtgen.Transform(ctx, irprog)
+	rprog, err := i.adapter.Adapt(irProg)
 	if err != nil {
 		return 0, err
 	}
@@ -62,19 +44,14 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 	return code, nil
 }
 
-func MustNew(
-	parser SourceCodeParser,
-	irgen IRGenerator,
-	transformer RuntimeProgramGenerator,
+func New(
+	compiler Compiler,
+	adapter Adapter,
 	runtime Runtime,
 ) Interpreter {
-	if parser == nil || irgen == nil || transformer == nil || runtime == nil {
-		panic("nil argument")
-	}
 	return Interpreter{
-		parser:  parser,
-		irgen:   irgen,
-		rtgen:   transformer,
-		runtime: runtime,
+		compiler: compiler,
+		adapter:  adapter,
+		runtime:  runtime,
 	}
 }

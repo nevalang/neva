@@ -26,7 +26,7 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]src.Package) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.Program, error) {
 	if len(pkgs) == 0 {
 		return nil, ErrNoPkgs
 	}
@@ -79,7 +79,7 @@ type (
 func (g Generator) processComponentNode(
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]src.Package,
+	pkgs map[string]src.File,
 	result *ir.Program,
 ) error {
 	componentEntity, err := g.lookupEntity(pkgs, "", nodeCtx.componentRef) // not sure about curpkgname
@@ -167,7 +167,7 @@ type processNetworkResult struct {
 // 2) returns metadata about how subnodes are used by this network
 // 3) inserts const value if needed
 func (g Generator) processNet(
-	pkgs map[string]src.Package,
+	pkgs map[string]src.File,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	irResult *ir.Program,
@@ -212,7 +212,7 @@ func (g Generator) processNet(
 }
 
 func (g Generator) processSenderSide(
-	pkgs map[string]src.Package,
+	pkgs map[string]src.File,
 	nodeCtx nodeContext,
 	senderSide src.SenderConnectionSide,
 	result processNetworkResult,
@@ -328,7 +328,7 @@ func (Generator) insertAndReturnOutports(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]src.Package, curPkgName string, ref src.EntityRef) (src.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]src.File, curPkgName string, ref src.EntityRef) (src.Entity, error) {
 	if ref.Pkg == "" {
 		ref.Pkg = curPkgName
 	}

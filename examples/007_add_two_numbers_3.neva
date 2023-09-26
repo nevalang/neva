@@ -1,11 +1,12 @@
-// Echo once again. It's a lot of code! Let's split it into sub-components.
+// Our "a+b" program turns out to be quite big!
+// Let's split it into sub-components?
 
 use {
 	std
 }
 
 components {
-	Main(enter) (exit) { // From 25 to 17 lines. About 30% reduce!
+	Main(enter) (exit) {
 		nodes {
 			readInt1 ReadInt
 			readInt2 ReadInt
@@ -14,17 +15,19 @@ components {
 		}
 		net {
 			in.enter -> readInt1.in.sig
+			readInt1.out.err -> print.in.v
 			readInt1.out.v -> {
 				add.in.a
 				readInt2.in.sig
 			}
-			readInt1.out.v -> add.in.b
+			readInt2.out.err -> print.in.v
+			readInt2.out.v -> add.in.b
 			add.out.v -> print.in.v
 			print.out.v -> out.exit
 		}
 	}
 	// Once we create `ReadInt`, we can forget about it.
-	ReadInt(sig) (v int) {
+	ReadInt(sig) (v int, err str) {
 		nodes {
 			read std.Read
 			print std.Print
@@ -33,7 +36,7 @@ components {
 		net {
 			in.sig -> read.in.sig
 			read.out.v -> parse.in.v
-			parse.out.err -> print.in.v
+			parse.out.err -> out.err
 			parse.out.v -> out.v
 		}
 	}

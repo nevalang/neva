@@ -1,4 +1,5 @@
-// Hello, World! Even shorter with enter predefined value.
+// Last, third version of "Hello, World!".
+// Even shorter with predefined `enter `value.
 
 use {
 	std

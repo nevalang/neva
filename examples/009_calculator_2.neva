@@ -1,0 +1,8 @@
+// We gonna add some state now.
+// Remember how we started over when something was wrong?
+// It's time to make our calculator a little bit more user-friendly!
+// Now instead of starting everything over we just rollback to the last step.
+// Example: if user choose operation correctly but inserted invalid number
+// we don't force him to choose operation again. We only ask him to type number
+// again. Same goes for second number. We only start over when operation is
+// invalid.

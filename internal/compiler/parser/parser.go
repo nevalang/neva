@@ -13,15 +13,15 @@ import (
 
 type treeShapeListener struct {
 	*generated.BasenevaListener
-	file src.Package
+	file src.File
 }
 
 type Parser struct {
 	isDebug bool
 }
 
-func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.Package, error) {
-	result := make(map[string]src.Package, len(files))
+func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
+	result := make(map[string]src.File, len(files))
 	g, gctx := errgroup.WithContext(ctx)
 	for name, bb := range files {
 		name := name
@@ -41,7 +41,7 @@ func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[st
 	return result, nil
 }
 
-func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.Package, error) {
+func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)

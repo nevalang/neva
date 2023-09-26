@@ -1,0 +1,59 @@
+components {
+    // Read from stdin until '\n' or EOF delimeter is found
+    pub io.Readln(sig) (v str)
+    
+    // Write given `v` to stdout and append '\n' delimeter to the end
+    pub io.Println<t1>(v t1) (sig t1)
+    
+    // Simple 1-1
+    pub lock.OneToOne<t1, t2>(cond t1, v t2) (cond t1, v t2)
+
+    // Many conditions, 1 value
+    pub lock.ManyToOne<t1, t2>(cond[] t1, v t2) (cond[] t1, v t2)
+
+    // One condition, many values
+    pub locks.OneToMany<t1, t2>(cond t1, v[] t2) (cond t1, v[] t2)
+
+    // Many conditions, many values
+    pub locks.ManyToMany<t1, t2>(cond[] t1, v[] t2) (cond[] t1, v[] t2)
+    
+    // Constantly sends value to the `v` outport
+    pub Const<t1>() (v t1)
+    
+    // Parses string into int or float number.
+    // Success result is sent to the `v` outport
+    // while failure results into messages sent to the `err`
+    pub strconv.ParseNum<t1 int | float>(v str) (v t1, err str)
+    
+    // Addition, concatenation or merging of two values based on their types:
+    // int: 1+1=2 (addition for int);
+    // float: 1.0+1.0=2.0 (and float);
+    // str: "1"+"1"="11" (concatenation for strings);
+    // vec: [1,2,3]+[4,5]=[1,2,3,4,5] (and vectors);
+    pub Add<t1 int | float | str | vec<any>>(a, b t1) (v t1)
+    
+    // int: 1-1=0 (addition for int);
+    // float: 1.0-1.0=0.0 (and float);
+    pub Sub<t1 int | float, map<any>>(a t1, b t1) (v t1)
+    
+    // int: 1*1=1;
+    // float; 1.0*1.0=1.0
+    pub Mul<t1 int | float>(a t1, b t1) (v t1)
+    
+    // int: 1/1=1;
+    // float: 1.0/1.0=1.0
+    pub Div<t1 int | float>(a t1, b t1) (v t1)
+
+    // b==false and i==-1 OR true and i >= 0
+    pub vecs.Has<t1>(vv vec<t1>, v1 t1) (b bool, i int)
+
+    pub maps.Has<t1>(vv map<t1>, v t1) (b bool, i int)
+
+    pub Eq<t1>(a, b t1) (b bool, yes, no t1)
+    pub Less<t1>(a, b t1) (b bool, yes, no t1)
+    pub Greater<t1>(a, b t1) (b bool, yes, no t1)
+    pub LessOrEqual<t1>(a, b t1) (b bool, yes, no t1)
+    pub GreaterOrEqual<t1>(a, b t1) (b bool, yes, no t1)
+
+    pub If<t1>(b bool, v) (then, else t1)
+}

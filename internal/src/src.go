@@ -7,12 +7,19 @@ import (
 	ts "github.com/nevalang/neva/pkg/ts"
 )
 
-// Package represents one of more files with source code.
-type Package struct {
+// Program represents executable set of source code packages. This abstraction does not exists after optimization.
+type Program map[string]Package
+
+// Package represents both source code package and program after optimization
+type Package map[string]File
+
+// File represents both source code file and the whole package after optimization.
+type File struct {
 	Imports  map[string]string
 	Entities map[string]Entity
 }
 
+// Entity is optionally exportable declaration of constant, type, interface or component.
 type Entity struct {
 	Exported  bool
 	Kind      EntityKind
@@ -46,25 +53,29 @@ func (e EntityKind) String() string {
 	}
 }
 
+// Component represents unit of computation.
 type Component struct {
 	Interface Interface
 	Nodes     map[string]Node
 	Net       []Connection // can't be map due to slice in key
 }
 
+// Interface is basically component's signature. It is used for dependency injection.
 type Interface struct {
 	Params []ts.Param
 	IO     IO
 }
 
+// Node is a component or interface instance.
 type Node struct {
 	EntityRef   EntityRef
 	TypeArgs    []ts.Expr
 	ComponentDI map[string]Node
 }
 
+// EntityRef is a pointer to entity. Empty Pkg means local reference.
 type EntityRef struct {
-	Pkg  string // Empty pkg means reference to local (in the same package) entity
+	Pkg  string
 	Name string
 }
 
@@ -75,6 +86,7 @@ func (e EntityRef) String() string {
 	return fmt.Sprintf("%s.%s", e.Pkg, e.Name)
 }
 
+// Const is immutable value that is known at compile-time or reference to another constant.
 type Const struct {
 	Ref   *EntityRef
 	Value ConstValue
@@ -90,6 +102,7 @@ type ConstValue struct {
 	Map      map[string]Const
 }
 
+// IO represents input and output ports of a component' interface.
 type IO struct {
 	In, Out map[string]Port
 }
@@ -109,6 +122,7 @@ type ReceiverConnectionSide struct {
 	Selectors []string
 }
 
+// SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
 type SenderConnectionSide struct {
 	PortAddr  *PortAddr
 	ConstRef  *EntityRef

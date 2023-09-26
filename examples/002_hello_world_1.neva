@@ -1,4 +1,5 @@
-// Hello, World! This program is old as time itself.
+// Program that simply prints "Hello, World!".
+// Turns out we need `const` and `lock` for that!
 
 use {
 	std

@@ -1,4 +1,6 @@
-// Program that reads two numbers from stdin, adds them and prints the result to stdout.
+// Program that adds two numbers typed by user and prints the result.
+// The algorithm is this: read first input, parse it,
+// then read the second input and parse too. Add numbers and print the result.
 
 use {
 	std

@@ -1,3 +1,4 @@
+// TODO maybe load std.neva here without analyzer?
 package std
 
 import (
@@ -6,8 +7,8 @@ import (
 )
 
 // New returns single-package std library with only runtime-function interfaces. TODO add HOCs.
-func New() src.Package { //nolint:funlen
-	return src.Package{
+func New() src.File { //nolint:funlen
+	return src.File{
 		Entities: map[string]src.Entity{
 			"Read": {
 				Exported: true,

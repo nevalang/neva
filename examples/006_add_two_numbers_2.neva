@@ -1,4 +1,7 @@
-// Same thing as in the previous example, but this time we also handle errors.
+// Turns out previous implementation was a bit naive - parse number could fail.
+// This time we will handle errors by printing them.
+// Note how program terminates - in case one of two parse failed or
+// after printing success result.
 
 use {
 	std

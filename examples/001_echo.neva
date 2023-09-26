@@ -1,4 +1,5 @@
-// This program reads a string and prints it. It does so in an infinite loop.
+// This program reads a string and prints it.
+// And it does so in an infinite loop.
 
 use {
 	std

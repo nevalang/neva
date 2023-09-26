@@ -1,18 +1,17 @@
-package interpreter
+package proto
 
 import (
-	"context"
 	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
-type transformer struct{}
+type Adapter struct{}
 
-func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime.Program, error) {
-	rPorts := make(runtime.Ports, len(irprog.Ports))
-	for _, portInfo := range irprog.Ports {
+func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:funlen
+	rPorts := make(runtime.Ports, len(irProg.Ports))
+	for _, portInfo := range irProg.Ports {
 		rPorts[runtime.PortAddr{
 			Path: portInfo.PortAddr.Path,
 			Port: portInfo.PortAddr.Port,
@@ -20,8 +19,8 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
-	rConns := make([]runtime.Connection, len(irprog.Connections))
-	for _, conn := range irprog.Connections {
+	rConns := make([]runtime.Connection, len(irProg.Connections))
+	for _, conn := range irProg.Connections {
 		senderPortAddr := runtime.PortAddr{ // reference
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
@@ -68,8 +67,8 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 		})
 	}
 
-	rFuncs := make([]runtime.FuncRoutine, 0, len(irprog.Funcs))
-	for _, f := range irprog.Funcs {
+	rFuncs := make([]runtime.FuncRoutine, 0, len(irProg.Funcs))
+	for _, f := range irProg.Funcs {
 		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
 		for _, addr := range f.Io.Inports {
 			rPort := rPorts[runtime.PortAddr{
@@ -99,7 +98,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 		}
 
 		if f.Params != nil {
-			rMsg, err := t.msg(f.Params)
+			rMsg, err := a.msg(f.Params)
 			if err != nil {
 				return runtime.Program{}, err
 			}
@@ -116,7 +115,7 @@ func (t transformer) Transform(ctx context.Context, irprog *ir.Program) (runtime
 	}, nil
 }
 
-func (t transformer) msg(msg *ir.Msg) (runtime.Msg, error) {
+func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 	var rMsg runtime.Msg
 
 	//nolint:nosnakecase
@@ -134,8 +133,4 @@ func (t transformer) msg(msg *ir.Msg) (runtime.Msg, error) {
 	}
 
 	return rMsg, nil
-}
-
-func MustNewTransformer() transformer {
-	return transformer{}
 }

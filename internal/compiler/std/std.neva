@@ -1,8 +1,15 @@
 components {
     pub Read(sig) (v str)
+    
     pub Print<t1>(v t1) (v t1)
+    
     pub Lock<t1, t2>(sig t1, v t2) (v t2)
+    
     pub Const<t1>() (v t1)
-    pub Add<t1 int | float | str>(v t1, v t1) (v t1)
+    
     pub ParseNum<t1 int | float>(v str) (v t1, err str)
+    
+    pub Add<t1 int | float | str>(a, b t1) (v t1)
+
+    pub Switch<t1>(v t1, opts[] t1) (vv[] t1)
 }
