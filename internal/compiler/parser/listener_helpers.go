@@ -1,7 +1,7 @@
 package parser
 
 import (
-	generated "github.com/nevalang/neva/internal/parser/generated"
+	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/src"
 	"github.com/nevalang/neva/pkg/ts"
 )

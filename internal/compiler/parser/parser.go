@@ -7,7 +7,7 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 	"golang.org/x/sync/errgroup"
 
-	generated "github.com/nevalang/neva/internal/parser/generated"
+	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/src"
 )
 

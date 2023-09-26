@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	generated "github.com/nevalang/neva/internal/parser/generated"
+	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 )
 
 type TreeShapeListener struct {
