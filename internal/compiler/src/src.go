@@ -13,7 +13,7 @@ type Program map[string]Package
 // Package represents both source code package and program after optimization
 type Package map[string]File
 
-// File represents both source code file and the whole package after optimization.
+// File represents source code file. Also can represent single-file package.
 type File struct {
 	Imports  map[string]string
 	Entities map[string]Entity
