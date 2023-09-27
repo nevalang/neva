@@ -31,8 +31,9 @@ func (def Def) String() string {
 }
 
 type Param struct {
-	Name   string // Must be unique among other type's parameters
-	Constr Expr   // Expression that must be resolved supertype of corresponding argument
+	Name string // Must be unique among other type's parameters
+	// TODO Const *Expr
+	Constr Expr // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal

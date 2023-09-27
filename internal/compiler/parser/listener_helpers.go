@@ -18,23 +18,20 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 		parsedParamExpr := parseTypeExpr(typeParam.TypeExpr())
 		result = append(result, ts.Param{
 			Name:   paramName,
-			Constr: parsedParamExpr,
+			Constr: *parsedParamExpr,
 		})
 	}
 
 	return result
 }
 
-func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
+func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 	if expr == nil {
-		return ts.Expr{
-			Inst: ts.InstExpr{
-				Ref: "any",
-			},
-		}
+		return nil
 	}
 
-	return parseTypeInstExpr(expr.TypeInstExpr())
+	tmp := parseTypeInstExpr(expr.TypeInstExpr())
+	return &tmp
 }
 
 func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
@@ -57,7 +54,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 	argExprs := args.AllTypeExpr()
 	parsedArgs := make([]ts.Expr, 0, len(argExprs))
 	for _, arg := range argExprs {
-		parsedArgs = append(parsedArgs, parseTypeExpr(arg))
+		parsedArgs = append(parsedArgs, *parseTypeExpr(arg))
 	}
 	result.Inst.Args = parsedArgs
 
@@ -186,7 +183,7 @@ func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
 func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	result := make([]ts.Expr, 0, len(in))
 	for _, expr := range in {
-		result = append(result, parseTypeExpr(expr))
+		result = append(result, *parseTypeExpr(expr))
 	}
 	return result
 }

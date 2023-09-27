@@ -39,7 +39,7 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()),
-			BodyExpr: parseTypeExpr(actx.TypeExpr()),
+			BodyExpr: *parseTypeExpr(actx.TypeExpr()),
 		},
 	}
 	s.file.Entities[name] = result
@@ -51,7 +51,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	name := actx.IDENTIFIER().GetText()
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
-	val := src.ConstValue{TypeExpr: typeExpr}
+	val := src.ConstValue{TypeExpr: *typeExpr}
 
 	//nolint:nosnakecase
 	switch {

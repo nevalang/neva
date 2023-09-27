@@ -18,15 +18,11 @@ func New() src.File { //nolint:funlen
 						Params: []ts.Param{},
 						IO: src.IO{
 							In: map[string]src.Port{
-								"sig": {
-									Type: ts.Expr{
-										Inst: ts.InstExpr{Ref: "any"},
-									},
-								},
+								"sig": {},
 							},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "str"},
 									},
 								},
@@ -46,14 +42,14 @@ func New() src.File { //nolint:funlen
 						IO: src.IO{
 							In: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
 							},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
@@ -73,19 +69,15 @@ func New() src.File { //nolint:funlen
 						IO: src.IO{
 							In: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
-								"sig": {
-									Type: ts.Expr{
-										Inst: ts.InstExpr{Ref: "any"},
-									},
-								},
+								"sig": {},
 							},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
@@ -106,7 +98,7 @@ func New() src.File { //nolint:funlen
 							In: map[string]src.Port{},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
@@ -143,19 +135,19 @@ func New() src.File { //nolint:funlen
 						IO: src.IO{
 							In: map[string]src.Port{
 								"a": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
 								"b": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
 							},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
@@ -189,19 +181,19 @@ func New() src.File { //nolint:funlen
 						IO: src.IO{
 							In: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "str"},
 									},
 								},
 							},
 							Out: map[string]src.Port{
 								"v": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "t1"},
 									},
 								},
 								"err": {
-									Type: ts.Expr{
+									Type: &ts.Expr{
 										Inst: ts.InstExpr{Ref: "str"},
 									},
 								},
