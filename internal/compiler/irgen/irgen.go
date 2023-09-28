@@ -76,7 +76,7 @@ type (
 	}
 )
 
-func (g Generator) processComponentNode(
+func (g Generator) processComponentNode( //nolint:funlen
 	ctx context.Context,
 	nodeCtx nodeContext,
 	pkgs map[string]src.File,
@@ -211,7 +211,7 @@ func (g Generator) processNet(
 	return result, nil
 }
 
-func (g Generator) processSenderSide(
+func (g Generator) processSenderSide( //nolint:funlen
 	pkgs map[string]src.File,
 	nodeCtx nodeContext,
 	senderSide src.SenderConnectionSide,

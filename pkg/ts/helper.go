@@ -19,7 +19,7 @@ func (h Helper) BaseDef(params ...Param) Def {
 func (h Helper) Def(body Expr, params ...Param) Def {
 	return Def{
 		Params:   params,
-		BodyExpr: body,
+		BodyExpr: &body,
 	}
 }
 
@@ -29,7 +29,7 @@ func (h Helper) Inst(ref string, args ...Expr) Expr {
 		args = []Expr{} // makes easier testing because resolver returns non-nil args for native types
 	}
 	return Expr{
-		Inst: InstExpr{
+		Inst: &InstExpr{
 			Ref:  ref,
 			Args: args,
 		},
@@ -41,13 +41,13 @@ func (h Helper) Enum(els ...string) Expr {
 		els = []string{}
 	}
 	return Expr{
-		Lit: LitExpr{Enum: els},
+		Lit: &LitExpr{Enum: els},
 	}
 }
 
 func (h Helper) Arr(size int, typ Expr) Expr {
 	return Expr{
-		Lit: LitExpr{
+		Lit: &LitExpr{
 			Arr: &ArrLit{Expr: typ, Size: size},
 		},
 	}
@@ -58,7 +58,7 @@ func (h Helper) Union(els ...Expr) Expr {
 		els = []Expr{}
 	}
 	return Expr{
-		Lit: LitExpr{Union: els},
+		Lit: &LitExpr{Union: els},
 	}
 }
 
@@ -67,7 +67,7 @@ func (h Helper) Rec(rec map[string]Expr) Expr {
 		rec = map[string]Expr{}
 	}
 	return Expr{
-		Lit: LitExpr{
+		Lit: &LitExpr{
 			Rec: rec,
 		},
 	}
@@ -80,7 +80,7 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 func (h Helper) Param(name string, constr Expr) Param {
 	return Param{
 		Name:   name,
-		Constr: constr,
+		Constr: &constr,
 	}
 }
 

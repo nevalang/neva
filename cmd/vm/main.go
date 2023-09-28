@@ -4,11 +4,11 @@ import (
 	"context"
 	"os"
 
-	"github.com/nevalang/neva/internal/vm/repo/disk"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/internal/vm"
 	"github.com/nevalang/neva/internal/vm/decoder/proto"
+	"github.com/nevalang/neva/internal/vm/repo/disk"
 )
 
 func main() {

@@ -273,11 +273,11 @@ func ParseNum(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint
 
 func Repo() map[string]runtime.Func {
 	return map[string]runtime.Func{
-		"Read":  Read,
-		"Print": Print,
-		"Lock":  Lock,
-		"Const": Const,
-		"Add":   Add,
-		"ParseNum":   ParseNum,
+		"Read":     Read,
+		"Print":    Print,
+		"Lock":     Lock,
+		"Const":    Const,
+		"Add":      Add,
+		"ParseNum": ParseNum,
 	}
 }

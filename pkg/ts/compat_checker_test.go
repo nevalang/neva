@@ -205,14 +205,14 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		{
 			name: "subtype and supertype recs, expr leaks field",
 			subType: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{ // both has 1 field
 						"b": {}, // expr itself doesn't matter here
 					},
 				},
 			},
 			superType: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
 						"a": {}, // but this field is missing
 					},

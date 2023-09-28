@@ -18,7 +18,7 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 		parsedParamExpr := parseTypeExpr(typeParam.TypeExpr())
 		result = append(result, ts.Param{
 			Name:   paramName,
-			Constr: *parsedParamExpr,
+			Constr: parsedParamExpr,
 		})
 	}
 
@@ -41,7 +41,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 
 	ref := instExpr.IDENTIFIER().GetText()
 	result := ts.Expr{
-		Inst: ts.InstExpr{
+		Inst: &ts.InstExpr{
 			Ref: ref,
 		},
 	}
@@ -87,7 +87,7 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
-func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
+func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node { //nolint:funlen
 	result := map[string]src.Node{}
 
 	for _, nodesDef := range actx {
@@ -102,7 +102,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				name string
 				node src.Node
 			)
-			if abs != nil {
+			if abs != nil { //nolint:nestif
 				name = abs.IDENTIFIER().GetText()
 				expr := parseTypeInstExpr(abs.TypeInstExpr())
 				node = src.Node{
@@ -113,9 +113,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				name = concrete.IDENTIFIER().GetText()
 				concreteNodeInst := concrete.ConcreteNodeInst()
 
-				var (
-					pkg, nodeRef string
-				)
+				var pkg, nodeRef string
 				nodePath := concreteNodeInst.EntityRef().AllIDENTIFIER()
 				if len(nodePath) == 2 {
 					pkg = nodePath[0].GetText()
@@ -154,9 +152,7 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 }
 
 func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
-	var (
-		pkg, nodeRef string
-	)
+	var pkg, nodeRef string
 	nodePath := nodeInst.EntityRef().AllIDENTIFIER()
 	if len(nodePath) == 2 {
 		pkg = nodePath[0].GetText()
@@ -188,7 +184,7 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx []generated.ICompNetDefContext) []src.Connection {
+func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:funlen
 	result := []src.Connection{}
 
 	for _, connDefs := range actx {

@@ -3,10 +3,10 @@ package ts
 
 import "fmt"
 
-type Def struct { // TODO add validation
+type Def struct { // TODO add validation (what validation?)
 	Params             []Param // Body can refer to these parameters
-	BodyExpr           Expr    // Empty body here means base type (TODO maybe change needed)
-	IsRecursionAllowed bool    // Type can be used for recursive definition. Only base type can have this
+	BodyExpr           *Expr   // Empty body here means base type (TODO maybe change needed)
+	IsRecursionAllowed bool    // Type can be used for recursive definition. Only base type can have true here
 }
 
 func (def Def) String() string {
@@ -16,7 +16,7 @@ func (def Def) String() string {
 		params += "<"
 		for i, param := range def.Params {
 			params += param.Name
-			if param.Constr.Empty() {
+			if param.Constr == nil {
 				continue
 			}
 			params += " " + param.Constr.String()
@@ -31,25 +31,19 @@ func (def Def) String() string {
 }
 
 type Param struct {
-	Name string // Must be unique among other type's parameters
-	// TODO Const *Expr
-	Constr Expr // Expression that must be resolved supertype of corresponding argument
+	Name   string // Must be unique among other type's parameters
+	Constr *Expr  // Expression that must be resolved supertype of corresponding argument
 }
 
-// Instantiation or literal
+// Instantiation or literal. Lit or Inst must be not nil, but not both
 type Expr struct {
-	Lit  LitExpr // If empty then expr is inst
-	Inst InstExpr
-} // TODO use pointers to represent emptyness?
-
-// Empty returns true if inst and lit both empty
-func (expr Expr) Empty() bool { // TODO replace with nil pointer?
-	return expr.Inst.Empty() && expr.Lit.Empty()
+	Lit  *LitExpr
+	Inst *InstExpr
 }
 
 // String formats expression in a TS manner
-func (expr Expr) String() string {
-	if expr.Empty() {
+func (expr *Expr) String() string {
+	if expr == nil {
 		return "empty"
 	}
 
@@ -76,7 +70,7 @@ func (expr Expr) String() string {
 		str += "{"
 		count := 0
 		for fieldName, fieldExpr := range expr.Lit.Rec {
-			str += fmt.Sprintf(" %s %s", fieldName, fieldExpr)
+			str += fmt.Sprintf(" %v %v", fieldName, fieldExpr)
 			if count < len(expr.Lit.Rec)-1 {
 				str += ","
 			} else {
@@ -117,15 +111,6 @@ type InstExpr struct {
 	Args []Expr // Every ref's parameter must have subtype argument
 }
 
-// TODO use instead of string
-type InstExprRef struct {
-	Pkg, Name string
-}
-
-func (i InstExpr) Empty() bool {
-	return i.Ref == "" && len(i.Args) == 0
-}
-
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
 	Arr   *ArrLit
@@ -134,9 +119,12 @@ type LitExpr struct {
 	Union []Expr
 }
 
-// Helper to check that all lit's fields are nils. Doesn't care about validation
-func (lit LitExpr) Empty() bool {
-	return lit.Arr == nil && lit.Rec == nil && lit.Enum == nil && lit.Union == nil
+func (lit *LitExpr) Empty() bool {
+	return lit == nil ||
+		lit.Arr == nil &&
+			lit.Rec == nil &&
+			lit.Enum == nil &&
+			lit.Union == nil
 }
 
 // Always call Validate before

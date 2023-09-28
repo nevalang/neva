@@ -1,6 +1,6 @@
 package ts
 
-// Linked-list to to handle recursive types
+// Linked-list to handle recursive types
 type Trace struct {
 	prev *Trace
 	ref  string

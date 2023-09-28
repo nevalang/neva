@@ -3,9 +3,9 @@ package ts_test
 import (
 	"testing"
 
-	ts "github.com/nevalang/neva/pkg/ts"
-
 	"github.com/stretchr/testify/require"
+
+	ts "github.com/nevalang/neva/pkg/ts"
 )
 
 func TestValidator_Validate(t *testing.T) {
@@ -20,15 +20,15 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name:    "empty lit and empty inst (default expr)",
 			expr:    ts.Expr{},
-			wantErr: ts.ErrInvalidExprType,
+			wantErr: ts.ErrExprMustBeInstOrLit,
 		},
 		{
 			name: "non-empty lit and inst",
 			expr: ts.Expr{
-				Lit:  ts.LitExpr{Enum: []string{"a"}},
-				Inst: ts.InstExpr{Ref: "int"},
+				Lit:  &ts.LitExpr{Enum: []string{"a"}},
+				Inst: &ts.InstExpr{Ref: "int"},
 			},
-			wantErr: ts.ErrInvalidExprType,
+			wantErr: ts.ErrExprMustBeInstOrLit,
 		},
 		// non-empty inst
 		{
@@ -54,7 +54,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 0 elements",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 0},
 				},
 			},
@@ -63,7 +63,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 1},
 				},
 			},
@@ -72,7 +72,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 2 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 2},
 				},
 			},
@@ -81,7 +81,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "array of 3 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{Size: 3},
 				},
 			},
@@ -91,7 +91,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 0 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{},
 				},
 			},
@@ -100,7 +100,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{{}},
 				},
 			},
@@ -109,7 +109,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 2 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{{}, {}},
 				},
 			},
@@ -118,7 +118,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "union of 3 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{{}, {}, {}},
 				},
 			},
@@ -128,7 +128,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "enum of 0 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Enum: []string{},
 				},
 			},
@@ -137,7 +137,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "enum of 1 element",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Enum: []string{""},
 				},
 			},

@@ -23,8 +23,7 @@ func (s *treeShapeListener) EnterUseStmt(actx *generated.UseStmtContext) {
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	path := actx.ImportPath().GetText()
 	alias := path
-	id := actx.IDENTIFIER()
-	if id != nil {
+	if id := actx.IDENTIFIER(); id != nil {
 		alias = actx.IDENTIFIER().GetText()
 	}
 	s.file.Imports[alias] = path
@@ -39,7 +38,7 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()),
-			BodyExpr: *parseTypeExpr(actx.TypeExpr()),
+			BodyExpr: parseTypeExpr(actx.TypeExpr()),
 		},
 	}
 	s.file.Entities[name] = result

@@ -28,6 +28,6 @@ linters-settings:
 issues:
   exclude-rules:
     - source: "^//go:generate"
-      linters: [funlen , lll , varnamelen, err113]
+      linters: [funlen , lll , varnamelen, err113, dupword]
     - path: _test\.go
-      linters: [funlen , lll , varnamelen, err113]
+      linters: [funlen , lll , varnamelen, err113, dupword]

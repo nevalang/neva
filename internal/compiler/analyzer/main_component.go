@@ -20,7 +20,7 @@ var (
 	ErrMainComponentNodeNotComponent   = errors.New("main component's nodes must be components only")
 )
 
-func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, pkgs map[string]src.Package) error { //nolint:funlen,unparam,lll
+func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, pkgs map[string]src.Package) error { //nolint:unparam,lll
 	if len(cmp.Interface.Params) != 0 {
 		return fmt.Errorf("%w: %v", ErrMainComponentWithTypeParams, cmp.Interface.Params)
 	}

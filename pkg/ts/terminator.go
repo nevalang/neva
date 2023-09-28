@@ -33,31 +33,33 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	}
 
 	isRecursionAllowed := false
-	if prevRef, err := scope.GetType(cur.prev.ref); err == nil { // TODO refactor to use errors.Is(notfound), TODO call scope.Update()?
+	// TODO refactor to use errors.Is(notfound), TODO call scope.Update()?
+	if prevRef, err := scope.GetType(cur.prev.ref); err == nil {
 		isRecursionAllowed = prevRef.IsRecursionAllowed
 	}
 
 	prev := cur.prev
 	for prev != nil {
-		if prev.ref == cur.ref {
-			if isRecursionAllowed {
-				return true, nil
-			}
-
-			isPrevRecursive, err := r.shouldTerminate(r.getLast3AndSwap(cur), scope, counter+1)
-			if err != nil {
-				if errors.Is(err, ErrCounter) || errors.Is(err, ErrIndirectRecursion) {
-					return false, fmt.Errorf("%w: %v", ErrIndirectRecursion, cur)
-				}
-				return false, fmt.Errorf("%w: %v", ErrSwapRun, err)
-			} else if isPrevRecursive {
-				return true, nil
-			}
-
-			return false, errors.New("unknown")
+		if prev.ref != cur.ref {
+			prev = prev.prev
+			continue
 		}
 
-		prev = prev.prev
+		if isRecursionAllowed {
+			return true, nil
+		}
+
+		isPrevRecursive, err := r.shouldTerminate(r.getLast3AndSwap(cur), scope, counter+1)
+		if err != nil {
+			if errors.Is(err, ErrCounter) || errors.Is(err, ErrIndirectRecursion) {
+				return false, fmt.Errorf("%w: %v", ErrIndirectRecursion, cur)
+			}
+			return false, fmt.Errorf("%w: %v", ErrSwapRun, err)
+		} else if isPrevRecursive {
+			return true, nil
+		}
+
+		return false, errors.New("unknown")
 	}
 
 	return false, nil

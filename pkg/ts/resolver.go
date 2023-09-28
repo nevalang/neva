@@ -77,7 +77,7 @@ func (r Resolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
 		return Expr{
-			Lit: LitExpr{
+			Lit: &LitExpr{
 				Arr: &ArrLit{resolvedArrType, expr.Lit.Arr.Size},
 			},
 		}, nil
@@ -91,7 +91,7 @@ func (r Resolver) resolve( //nolint:funlen
 			resolvedUnion = append(resolvedUnion, resolvedEl)
 		}
 		return Expr{
-			Lit: LitExpr{Union: resolvedUnion},
+			Lit: &LitExpr{Union: resolvedUnion},
 		}, nil
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
@@ -103,7 +103,7 @@ func (r Resolver) resolve( //nolint:funlen
 			resolvedStruct[field] = resolvedFieldExpr
 		}
 		return Expr{
-			Lit: LitExpr{Rec: resolvedStruct},
+			Lit: &LitExpr{Rec: resolvedStruct},
 		}, nil
 	}
 
@@ -142,14 +142,14 @@ func (r Resolver) resolve( //nolint:funlen
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
 
-		newFrame[param.Name] = Def{BodyExpr: resolvedArg} // no params for generics
+		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 
-		if param.Constr.Empty() {
+		if param.Constr != nil {
 			continue
 		}
 
-		resolvedConstr, err := r.resolve(param.Constr, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
+		resolvedConstr, err := r.resolve(*param.Constr, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -165,16 +165,16 @@ func (r Resolver) resolve( //nolint:funlen
 		}
 	}
 
-	if def.BodyExpr.Empty() {
+	if def.BodyExpr == nil {
 		return Expr{
-			Inst: InstExpr{
+			Inst: &InstExpr{
 				Ref:  expr.Inst.Ref,
 				Args: resolvedArgs,
 			},
 		}, nil
 	}
 
-	return r.resolve(def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
+	return r.resolve(*def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
 }
 
 // getDef checks for def in frame, then in scope and returns err if expr not found in both.

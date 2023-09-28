@@ -89,9 +89,7 @@ type FuncIO struct {
 // Its methods can return error because it's okay to fail at startup. Keys are port names and values are slots.
 type FuncPorts map[string][]chan Msg
 
-var (
-	ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
-)
+var ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
 
 // Port returns first slot of port found by the given name.
 // It returns error if port is not found or if it's not a single port.

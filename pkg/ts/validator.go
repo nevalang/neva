@@ -8,9 +8,12 @@ import (
 type Validator struct{}
 
 var (
-	ErrInvalidExprType              = errors.New("expr must be ether literal or instantiation, not both and not neither")
+	ErrExprMustBeInstOrLit          = errors.New("expr must be ether literal or instantiation, not both and not neither")
 	ErrUnknownLit                   = errors.New("expr literal must be known")
 	ErrArrSize                      = errors.New("arr size must be >= 2")
+	ErrArrLitKind                   = errors.New("array literal must have no enum, union or record")
+	ErrUnionLitKind                 = errors.New("union literal must have no enum, array or record")
+	ErrEnumLitKind                  = errors.New("enum literal must have no union, array or record")
 	ErrEnumLen                      = errors.New("enum len must be >= 2")
 	ErrUnionLen                     = errors.New("union len must be >= 2")
 	ErrEnumDupl                     = errors.New("enum contains duplicate elements")
@@ -21,7 +24,7 @@ var (
 
 // ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
 func (v Validator) ValidateDef(def Def) error {
-	if def.IsRecursionAllowed && !def.BodyExpr.Empty() {
+	if def.IsRecursionAllowed && def.BodyExpr != nil {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
 	if err := v.ValidateParams(def.Params); err != nil {
@@ -45,12 +48,11 @@ func (v Validator) ValidateParams(params []Param) error {
 // It checks that it's inst or literal, not both and not neither; All insts are valid by default;
 // Arr, union and enum must have size >= 2; Enum must have no duplicate elements.
 func (v Validator) Validate(expr Expr) error {
-	// FIXME empty expr considered invalid but native types has empty exprs as body which means their body invalid
-	if expr.Lit.Empty() == expr.Inst.Empty() { // we don't use expr.Empty() because it's ok for constr to be empty
-		return ErrInvalidExprType
+	if expr.Lit.Empty() == (expr.Inst == nil) {
+		return ErrExprMustBeInstOrLit
 	}
 
-	if expr.Lit.Empty() || expr.Lit.Type() == RecLitType {
+	if expr.Inst != nil || expr.Lit.Type() == RecLitType {
 		return nil
 	}
 
@@ -59,9 +61,17 @@ func (v Validator) Validate(expr Expr) error {
 		if expr.Lit.Arr.Size < 2 {
 			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.Arr.Size)
 		}
+		switch {
+		case expr.Lit.Enum != nil, expr.Lit.Rec != nil, expr.Lit.Union != nil:
+			return ErrArrLitKind
+		}
 	case UnionLitType:
 		if l := len(expr.Lit.Union); l < 2 {
 			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
+		}
+		switch {
+		case expr.Lit.Enum != nil, expr.Lit.Rec != nil, expr.Lit.Arr != nil:
+			return ErrUnionLitKind
 		}
 	case EnumLitType:
 		if l := len(expr.Lit.Enum); l < 2 {
@@ -73,6 +83,10 @@ func (v Validator) Validate(expr Expr) error {
 				return fmt.Errorf("%w: %s", ErrEnumDupl, el)
 			}
 			set[el] = struct{}{}
+		}
+		switch {
+		case expr.Lit.Union != nil, expr.Lit.Rec != nil, expr.Lit.Arr != nil:
+			return ErrEnumLitKind
 		}
 	}
 

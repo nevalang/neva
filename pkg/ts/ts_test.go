@@ -98,57 +98,6 @@ func TestLiteralExpr_Type(t *testing.T) {
 	}
 }
 
-func TestInstExpr_Empty(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-		inst ts.InstExpr
-		want bool
-	}{
-		{
-			name: "default inst (empty ref and nil args)",
-			inst: ts.InstExpr{
-				Ref:  "",
-				Args: nil,
-			},
-			want: true,
-		},
-		{
-			name: "empty ref and empty list args",
-			inst: ts.InstExpr{
-				Ref:  "",
-				Args: []ts.Expr{},
-			},
-			want: true,
-		},
-		{
-			name: "empty ref and non empty list args",
-			inst: ts.InstExpr{
-				Ref:  "",
-				Args: []ts.Expr{{}}, // content doesn't matter here
-			},
-			want: false,
-		},
-		{
-			name: "non-empty ref and non empty list args",
-			inst: ts.InstExpr{
-				Ref:  "t",
-				Args: []ts.Expr{{}},
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			require.Equal(t, tt.inst.Empty(), tt.want)
-		})
-	}
-}
-
 func TestDef_String(t *testing.T) {
 	tests := []struct {
 		name string
@@ -165,6 +114,7 @@ func TestDef_String(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.def.String(); got != tt.want {
 				t.Errorf("Def.String() = %v, want %v", got, tt.want)
@@ -190,16 +140,16 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst expr with non-empty ref and no args",
 			expr: ts.Expr{
-				Inst: ts.InstExpr{Ref: "int"},
+				Inst: &ts.InstExpr{Ref: "int"},
 			},
 			want: "int",
 		},
 		{
 			name: "inst expr with empty refs and with args",
 			expr: ts.Expr{
-				Inst: ts.InstExpr{
+				Inst: &ts.InstExpr{
 					Args: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: "str"}},
 					},
 				},
 			},
@@ -208,10 +158,10 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst expr with non-empty refs and with args",
 			expr: ts.Expr{
-				Inst: ts.InstExpr{
+				Inst: &ts.InstExpr{
 					Ref: "map",
 					Args: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: "str"}},
 					},
 				},
 			},
@@ -220,11 +170,11 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst expr with non-empty refs and with several args",
 			expr: ts.Expr{
-				Inst: ts.InstExpr{
+				Inst: &ts.InstExpr{
 					Ref: "map",
 					Args: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "str"}},
-						{Inst: ts.InstExpr{Ref: "bool"}},
+						{Inst: &ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: "bool"}},
 					},
 				},
 			},
@@ -233,15 +183,15 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst expr with non-empty refs and with nested arg",
 			expr: ts.Expr{
-				Inst: ts.InstExpr{
+				Inst: &ts.InstExpr{
 					Ref: "map",
 					Args: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: "str"}},
 						{
-							Inst: ts.InstExpr{
+							Inst: &ts.InstExpr{
 								Ref: "vec",
 								Args: []ts.Expr{
-									{Inst: ts.InstExpr{Ref: "bool"}},
+									{Inst: &ts.InstExpr{Ref: "bool"}},
 								},
 							},
 						},
@@ -255,7 +205,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit_expr_empty_enum",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Enum: []string{},
 				},
 			},
@@ -264,7 +214,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr enum with one el",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Enum: []string{"MONDAY"},
 				},
 			},
@@ -273,7 +223,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit_expr_enum_with_two_els",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Enum: []string{"MONDAY", "TUESDAY"},
 				},
 			},
@@ -283,7 +233,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit_expr_arr_with_size_0_and_without type",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{},
 				},
 			},
@@ -292,9 +242,9 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr arr with size 0 and with type",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{
-						Expr: ts.Expr{Inst: ts.InstExpr{Ref: "int"}},
+						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: "int"}},
 					},
 				},
 			},
@@ -303,10 +253,10 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr arr with size 4096 and with type",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 4096,
-						Expr: ts.Expr{Inst: ts.InstExpr{Ref: "int"}},
+						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: "int"}},
 					},
 				},
 			},
@@ -316,7 +266,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr rec no fields",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{},
 				},
 			},
@@ -325,9 +275,9 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr rec with one field",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
-						"name": {Inst: ts.InstExpr{Ref: "str"}},
+						"name": {Inst: &ts.InstExpr{Ref: "str"}},
 					},
 				},
 			},
@@ -336,10 +286,10 @@ func TestExpr_String(t *testing.T) {
 		{ // FIXME flacky test (struct must be ordered)
 			name: "lit expr rec with two fields",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
-						"name": {Inst: ts.InstExpr{Ref: "str"}},
-						"age":  {Inst: ts.InstExpr{Ref: "int"}},
+						"name": {Inst: &ts.InstExpr{Ref: "str"}},
+						"age":  {Inst: &ts.InstExpr{Ref: "int"}},
 					},
 				},
 			},
@@ -349,7 +299,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr empty union", // not a valid expr
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{},
 				},
 			},
@@ -358,9 +308,9 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr union with one el", // not a valid expr
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "int"}},
+						{Inst: &ts.InstExpr{Ref: "int"}},
 					},
 				},
 			},
@@ -369,10 +319,10 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "lit expr union with two els",
 			expr: ts.Expr{
-				Lit: ts.LitExpr{
+				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: ts.InstExpr{Ref: "int"}},
-						{Inst: ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: "int"}},
+						{Inst: &ts.InstExpr{Ref: "str"}},
 					},
 				},
 			},

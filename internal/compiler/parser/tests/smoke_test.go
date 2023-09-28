@@ -7,9 +7,9 @@ import (
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
+	"github.com/stretchr/testify/require"
 )
 
 type TreeShapeListener struct {
