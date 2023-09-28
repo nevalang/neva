@@ -40,6 +40,17 @@ func (p Package) Entity(name string) (Entity, bool) {
 	return Entity{}, false
 }
 
+func (p Package) Entities(f func(entity Entity, entityName string, fileName string) error) error {
+	for fileName, file := range p {
+		for entityName, entity := range file.Entities {
+			if err := f(entity, entityName, fileName); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 type File struct {
 	Imports  map[string]string
 	Entities map[string]Entity
