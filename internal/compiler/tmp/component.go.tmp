@@ -129,17 +129,3 @@ func (a Analyzer) analyzeNodeInstance(
 	return compiler.Instance{}, nil, nil
 }
 
-func (a Analyzer) analyzeStaticInports(node compiler.Node, scope Scope) (map[compiler.EntityRef]struct{}, error) {
-	return nil, nil
-}
-
-// analyzeNet returns set of unused outports. It makes sure that:
-// All nodes are used; Every node's inport is used; All connections refers to existing ports and are; Type-safe.
-// All IO nodes are used;
-func (a Analyzer) analyzeNet(net []compiler.Connection, scope Scope) (map[compiler.ConnPortAddr]struct{}, error) {
-	if len(net) == 0 {
-		panic("")
-	}
-
-	return nil, nil
-}

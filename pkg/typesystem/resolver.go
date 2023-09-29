@@ -43,7 +43,7 @@ type (
 
 type Scope interface {
 	GetType(ref string) (Def, error)
-	Update(ref string) (Scope, error)
+	Rebase(ref string) (Scope, error)
 }
 
 func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
@@ -189,7 +189,7 @@ func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, Scop
 		return Def{}, nil, fmt.Errorf("%w: %v", ErrScope, err)
 	}
 
-	scope, err = scope.Update(ref)
+	scope, err = scope.Rebase(ref)
 	if err != nil {
 		return Def{}, nil, fmt.Errorf("%w: %v", ErrScopeUpdate, err)
 	}

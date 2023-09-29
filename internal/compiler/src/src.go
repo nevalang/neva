@@ -120,7 +120,7 @@ func (e EntityRef) String() string {
 
 type Const struct {
 	Ref   *EntityRef
-	Value ConstValue
+	Value *ConstValue
 }
 
 type ConstValue struct {

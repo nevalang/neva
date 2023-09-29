@@ -19,6 +19,6 @@ func (d Scope) GetType(ref string) (ts.Def, error) {
 	return v, nil
 }
 
-func (d Scope) Update(string) (ts.Scope, error) {
+func (d Scope) Rebase(string) (ts.Scope, error) {
 	return d, nil
 }
