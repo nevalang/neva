@@ -7,4 +7,4 @@ antlr:
 # generate go sdk from ir proto
 .PHONY: irproto
 irproto:
-	@protoc --go_out=. ./api/ir.proto
+	@protoc --go_out=. ./api/proto/ir.proto
