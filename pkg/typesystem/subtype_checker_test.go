@@ -311,7 +311,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				tt.terminator(terminator.EXPECT())
 			}
 
-			checker := ts.MustNewCompatChecker(terminator)
+			checker := ts.MustNewSubtypeChecker(terminator)
 
 			tparams := ts.TerminatorParams{
 				Scope:          tt.scope,

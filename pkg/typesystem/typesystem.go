@@ -1,12 +1,12 @@
-// package typesystem implements static type-system with generics and structural subtyping.
+// Package typesystem implements type-system with type-parameters and structural subtyping.
 package typesystem
 
 import "fmt"
 
-type Def struct { // TODO add validation (what validation?)
-	Params             []Param // Body can refer to these parameters
-	BodyExpr           *Expr   // Empty body here means base type (TODO maybe change needed)
-	IsRecursionAllowed bool    // Type can be used for recursive definition. Only base type can have true here
+type Def struct {
+	Params                           []Param // Body can refer to these. Must be replaced with arguments while resolving
+	BodyExpr                         *Expr   // Empty body means base type
+	CanBeUsedForRecursiveDefinitions bool    // Only base types can have true.
 }
 
 func (def Def) String() string {

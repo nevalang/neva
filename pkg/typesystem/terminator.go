@@ -32,10 +32,9 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 
-	isRecursionAllowed := false
-	// TODO refactor to use errors.Is(notfound), TODO call scope.Update()?
+	var canBeUsedForRecursiveDefinitions bool
 	if prevRef, err := scope.GetType(cur.prev.ref); err == nil {
-		isRecursionAllowed = prevRef.IsRecursionAllowed
+		canBeUsedForRecursiveDefinitions = prevRef.CanBeUsedForRecursiveDefinitions
 	}
 
 	prev := cur.prev
@@ -45,7 +44,7 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 			continue
 		}
 
-		if isRecursionAllowed {
+		if canBeUsedForRecursiveDefinitions {
 			return true, nil
 		}
 

@@ -23,7 +23,7 @@ var (
 // Resolver transforms expression it into a form where all references it contains points to resolved expressions.
 type Resolver struct {
 	validator  exprValidator       // Check if expression invalid before resolving it
-	comparator compatChecker       // Compare arguments with constraints
+	comparator subtypeChecker      // Compare arguments with constraints
 	terminator recursionTerminator // Don't stuck in a loop
 }
 
@@ -33,7 +33,7 @@ type (
 		Validate(Expr) error
 		ValidateDef(def Def) error
 	}
-	compatChecker interface {
+	subtypeChecker interface {
 		Check(Expr, Expr, TerminatorParams) error
 	}
 	recursionTerminator interface {
@@ -197,17 +197,9 @@ func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, Scop
 	return def, scope, nil
 }
 
-func NewDefaultResolver() Resolver {
-	return Resolver{
-		validator:  Validator{},
-		comparator: NewDefaultCompatChecker(),
-		terminator: Terminator{},
-	}
-}
-
-func MustNewResolver(v exprValidator, c compatChecker, t recursionTerminator) Resolver {
-	if v == nil || c == nil || t == nil {
+func MustNewResolver(validator exprValidator, checker subtypeChecker, terminator recursionTerminator) Resolver {
+	if validator == nil || checker == nil || terminator == nil {
 		panic("all arguments must be not nil")
 	}
-	return Resolver{v, c, t}
+	return Resolver{validator, checker, terminator}
 }

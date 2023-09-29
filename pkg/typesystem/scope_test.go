@@ -1,3 +1,4 @@
+// This file implements Scope interface specifically for tests.
 package typesystem_test
 
 import (

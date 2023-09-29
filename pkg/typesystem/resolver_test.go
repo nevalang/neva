@@ -16,7 +16,6 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	type testcase struct {
-		enabled    bool
 		expr       ts.Expr
 		scope      Scope
 		validator  func(v *MockexprValidatorMockRecorder)
@@ -257,9 +256,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			)
 			scope := Scope{"t": h.BaseDef()}
 			return testcase{
-				enabled: true,
-				expr:    arrExpr,
-				scope:   scope,
+				expr:  arrExpr,
+				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(arrExpr).Return(nil)
 					v.Validate(h.Inst("t")).Return(nil)
@@ -660,7 +658,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"recursion_through_base_types_with_support_of_recursion": func() testcase { // t1 { t1 = vec<t1> }
 			scope := Scope{
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
+				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 			}
 			return testcase{
 				expr:  h.Inst("t1"),
@@ -688,7 +686,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 				"t2":  h.Def(h.Inst("vec", h.Inst("t2"))),
 				"t3":  h.BaseDef(h.Param("p1", h.Inst("t2"))),
-				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
+				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 			}
 			return testcase{
 				expr:  h.Inst("t3", h.Inst("t1")),
@@ -744,12 +742,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 
 	for name, tt := range tests {
 		name := name
-		tt := tt
 		tc := tt()
-
-		if !tc.enabled { // TODO remove
-			continue
-		}
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()

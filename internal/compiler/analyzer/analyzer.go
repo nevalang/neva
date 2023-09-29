@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/src"
+	"github.com/nevalang/neva/pkg/typesystem"
 )
 
-// TODO move to task that package must not be empty
 type Analyzer struct{}
 
 var (
@@ -31,9 +31,9 @@ func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
 		return nil, fmt.Errorf("main specific pkg validation: %w", err)
 	}
 
-	for _, pkg := range prog {
+	for name, pkg := range prog {
 		if err := a.analyzePkg(pkg, prog); err != nil {
-			return nil, fmt.Errorf("analyze pkg: %w", err)
+			return nil, fmt.Errorf("analyze pkg: %v: %w", name, err)
 		}
 	}
 
@@ -46,50 +46,63 @@ func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) error {
 	}
 
 	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		return a.analyzeEntity(entityName, entity, pkg, prog)
+		if err := a.analyzeEntity(entityName, entity, pkg[fileName]); err != nil {
+			return fmt.Errorf("analyze entity: %v: %v: %w", entityName, fileName, err)
+		}
+		return nil
 	}); err != nil {
-		return fmt.Errorf("entities: %w", err)
+		return err
 	}
 
 	return nil
 }
 
-func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, pkg src.Package, prog src.Program) error {
-	analyzedEntity := src.Entity{
-		Exported: entity.Exported,
-		Kind:     entity.Kind,
-	}
+func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.File) error {
+	// analyzedEntity := src.Entity{
+	// 	Exported: entity.Exported,
+	// 	Kind:     entity.Kind,
+	// }
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedType, err := a.resolveType(entity.Type)
-		if err != nil {
+		if err := a.analyzeTypeDef(entity.Type); err != nil {
 			return fmt.Errorf("resolve type: %w", err)
 		}
-		analyzedEntity.Type = resolvedType
-	case src.ConstEntity:
-		analyzedConst, err := a.analyzeConst(entity.Const)
-		if err != nil {
-			return fmt.Errorf("analyze const: %w", err)
-		}
-		analyzedEntity.Const = analyzedConst
-	case src.InterfaceEntity:
-		analyzedEntity, err := a.analyzeInterface(entity.Interface)
-		if err != nil {
-			return fmt.Errorf("analyze interface: %w", err)
-		}
-		analyzedEntity.Interface = analyzedEntity
-	case src.ComponentEntity:
-		analyzedComponent, err := a.analyzeComponent(entity.Component)
-		if err != nil {
-			return fmt.Errorf("analyze component: %w", err)
-		}
-		analyzedEntity.Component = analyzedComponent
+	// case src.ConstEntity:
+	// 	analyzedConst, err := a.analyzeConst(entity.Const)
+	// 	if err != nil {
+	// 		return fmt.Errorf("analyze const: %w", err)
+	// 	}
+	// 	analyzedEntity.Const = analyzedConst
+	// case src.InterfaceEntity:
+	// 	analyzedEntity, err := a.analyzeInterface(entity.Interface)
+	// 	if err != nil {
+	// 		return fmt.Errorf("analyze interface: %w", err)
+	// 	}
+	// 	analyzedEntity.Interface = analyzedEntity
+	// case src.ComponentEntity:
+	// 	analyzedComponent, err := a.analyzeComponent(entity.Component)
+	// 	if err != nil {
+	// 		return fmt.Errorf("analyze component: %w", err)
+	// 	}
+	// 	analyzedEntity.Component = analyzedComponent
 	default:
 		return fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind)
 	}
 
-	pkg[entityName] = analyzedEntity
+	// file.Entities[entityName] = analyzedEntity
+
+	return nil
+}
+
+var (
+	ErrTypeDefWithoutBody = errors.New("type def without body")
+)
+
+func (a Analyzer) analyzeTypeDef(def typesystem.Def) error {
+	if def.BodyExpr == nil {
+		return ErrTypeDefWithoutBody
+	}
 
 	return nil
 }

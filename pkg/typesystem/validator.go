@@ -24,7 +24,7 @@ var (
 
 // ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
 func (v Validator) ValidateDef(def Def) error {
-	if def.IsRecursionAllowed && def.BodyExpr != nil {
+	if def.CanBeUsedForRecursiveDefinitions && def.BodyExpr != nil {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
 	if err := v.ValidateParams(def.Params); err != nil {

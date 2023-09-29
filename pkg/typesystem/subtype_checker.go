@@ -23,12 +23,11 @@ var (
 	ErrDiffLitTypes  = errors.New("subtype and supertype lits must be of the same type")
 )
 
-type CompatChecker struct {
+type SubtypeChecker struct {
 	// TODO figure out if it's possible not to use recursion terminator and pass flags from outside
 	terminator recursionTerminator
 }
 
-// TerminatorParams is data that subtype checker uses to call terminator
 type TerminatorParams struct {
 	Scope                        Scope
 	SubtypeTrace, SupertypeTrace Trace
@@ -36,7 +35,7 @@ type TerminatorParams struct {
 
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
-func (s CompatChecker) Check(sub, super Expr, tparams TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
+func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
 	isSuperTypeInst := super.Lit.Empty()
 	diffKinds := sub.Lit.Empty() != isSuperTypeInst
 	isSuperTypeUnion := super.Lit.Type() == UnionLitType
@@ -145,7 +144,7 @@ func (s CompatChecker) Check(sub, super Expr, tparams TerminatorParams) error { 
 	return nil
 }
 
-func (CompatChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef string) TerminatorParams {
+func (SubtypeChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef string) TerminatorParams {
 	newSubtypeTrace := Trace{
 		prev: &old.SubtypeTrace,
 		ref:  subRef,
@@ -162,17 +161,11 @@ func (CompatChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef
 	return newTParams
 }
 
-func MustNewCompatChecker(checker recursionTerminator) CompatChecker {
-	if checker == nil {
-		panic("nil checker")
+func MustNewSubtypeChecker(terminator recursionTerminator) SubtypeChecker {
+	if terminator == nil {
+		panic("nil terminator")
 	}
-	return CompatChecker{
-		terminator: checker,
-	}
-}
-
-func NewDefaultCompatChecker() CompatChecker {
-	return CompatChecker{
-		terminator: Terminator{},
+	return SubtypeChecker{
+		terminator: terminator,
 	}
 }

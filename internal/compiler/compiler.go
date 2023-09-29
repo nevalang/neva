@@ -24,7 +24,7 @@ type (
 		ParseFiles(context.Context, map[string][]byte) (map[string]src.File, error)
 	}
 	Analyzer interface {
-		Analyze(context.Context, src.Program) (map[string]src.File, error) // TODO maybe move flattening to optimization step?
+		Analyze(context.Context, src.Program) (src.Program, error)
 	}
 	// TODO add desugaring step?
 	IRGenerator interface {
@@ -54,7 +54,7 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		return nil, fmt.Errorf("analyze: %w", err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedProg)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg["main"]) // TODO use all packages
 	if err != nil {
 		return nil, fmt.Errorf("generate: %w", err)
 	}

@@ -75,13 +75,13 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 }
 
 func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, prog src.Program) error {
-	for _, node := range nodes {
+	for name, node := range nodes {
 		nodeEntity, err := prog.Entity(node.EntityRef)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrEntityNotFoundByNodeRef, node.EntityRef)
+			return fmt.Errorf("%w: %v: %v", ErrEntityNotFoundByNodeRef, name, node.EntityRef)
 		}
 		if nodeEntity.Kind != src.ComponentEntity {
-			return fmt.Errorf("%w: %v", ErrMainComponentNodeNotComponent, node.EntityRef)
+			return fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, name, node.EntityRef)
 		}
 	}
 	return nil

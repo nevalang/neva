@@ -26,7 +26,7 @@ func TestDefaultResolver(t *testing.T) {
 		{ // vec<t1> {t1=vec<t1>}
 			name: "recursive_type_ref_as_arg",
 			scope: Scope{
-				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
+				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 			},
 			expr: h.Inst("vec", h.Inst("t1")),
@@ -35,7 +35,7 @@ func TestDefaultResolver(t *testing.T) {
 		{ // t1 { t1={a vec<t1>} }
 			name: "recursive_type_ref_with_structured_body",
 			scope: Scope{
-				"vec": h.BaseDefWithRecursion(h.ParamWithNoConstr("t")),
+				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 				"t1": h.Def(
 					h.Rec(map[string]ts.Expr{
 						"a": h.Inst("vec", h.Inst("t1")),
@@ -93,14 +93,17 @@ func TestDefaultResolver(t *testing.T) {
 		},
 	}
 
-	r := ts.NewDefaultResolver()
-	// c := ts.NewDefaultCompatChecker()
+	resolver := ts.MustNewResolver(
+		ts.Validator{},
+		ts.MustNewSubtypeChecker(ts.Terminator{}),
+		ts.Terminator{},
+	)
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := r.Resolve(tt.expr, tt.scope)
+			got, err := resolver.Resolve(tt.expr, tt.scope)
 			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})
