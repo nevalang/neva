@@ -20,7 +20,8 @@ var (
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
 
-func (a Analyzer) Analyze(prog src.Program) error {
+// AnalyzeAndResolve returns error if program is invalid. It also modifies program by resolving types.
+func (a Analyzer) AnalyzeAndResolve(prog src.Program) error {
 	if len(prog) == 0 {
 		return ErrEmptyProgram
 	}
@@ -114,6 +115,7 @@ func (a Analyzer) analyzeTypeDef(def typesystem.Def) (typesystem.Def, error) {
 	return def, nil // TODO
 }
 
+// TODO unused
 func (Analyzer) buildTestExprArgs(params []ts.Param) []ts.Expr {
 	args := make([]ts.Expr, 0, len(params))
 	for _, param := range params {
