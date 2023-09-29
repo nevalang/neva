@@ -1,10 +1,10 @@
-package ts_test
+package typesystem_test
 
 import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
 )
 

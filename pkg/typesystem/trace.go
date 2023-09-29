@@ -1,4 +1,4 @@
-package ts
+package typesystem
 
 // Linked-list to handle recursive types
 type Trace struct {

@@ -1,4 +1,4 @@
-package ts_test
+package typesystem_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var errTest = errors.New("")

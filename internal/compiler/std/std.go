@@ -3,7 +3,7 @@ package std
 
 import (
 	"github.com/nevalang/neva/internal/compiler/src"
-	"github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 // New returns single-package std library with only runtime-function interfaces. TODO add HOCs.

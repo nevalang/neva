@@ -6,7 +6,7 @@ import (
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/compiler/src"
-	"github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {

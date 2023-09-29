@@ -1,9 +1,9 @@
-package ts_test
+package typesystem_test
 
 import (
 	"errors"
 
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var ErrDefaultScope = errors.New("default scope")

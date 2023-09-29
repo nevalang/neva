@@ -1,5 +1,5 @@
-// Package ts implements static type-system with generics and structural subtyping.
-package ts
+// package typesystem implements static type-system with generics and structural subtyping.
+package typesystem
 
 import "fmt"
 

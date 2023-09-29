@@ -4,7 +4,7 @@ package src
 import (
 	"fmt"
 
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Program map[string]Package

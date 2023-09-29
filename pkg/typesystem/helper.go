@@ -1,4 +1,4 @@
-package ts
+package typesystem
 
 // Helper is just a namespace for helper functions to avoid conflicts with entity types.
 // It's a stateless type and it's safe to share it between goroutines.

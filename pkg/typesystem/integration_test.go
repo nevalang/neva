@@ -1,14 +1,14 @@
 //go:build integration
 // +build integration
 
-package ts_test
+package typesystem_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func TestDefaultResolver(t *testing.T) {

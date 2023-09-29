@@ -1,11 +1,11 @@
-package ts_test
+package typesystem_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	ts "github.com/nevalang/neva/pkg/ts"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var h ts.Helper
