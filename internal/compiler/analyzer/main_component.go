@@ -50,7 +50,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainComponentWithoutEnterInport
 	}
 
-	if enterInport.IsArr {
+	if enterInport.IsArray {
 		return ErrMainPortIsArray
 	}
 
@@ -63,7 +63,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainComponentWithoutExitOutport
 	}
 
-	if exitInport.IsArr {
+	if exitInport.IsArray {
 		return ErrMainPortIsArray
 	}
 

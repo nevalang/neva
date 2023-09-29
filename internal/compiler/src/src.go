@@ -138,8 +138,8 @@ type IO struct {
 }
 
 type Port struct {
-	Type  *ts.Expr // empty means any
-	IsArr bool
+	Type    *ts.Expr // empty means any
+	IsArray bool
 }
 
 type Connection struct {

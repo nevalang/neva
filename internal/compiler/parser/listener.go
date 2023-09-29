@@ -89,7 +89,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 
 	s.file.Entities[name] = src.Entity{
 		Kind:  src.ConstEntity,
-		Const: src.Const{Value: val},
+		Const: src.Const{Value: &val},
 	}
 }
 

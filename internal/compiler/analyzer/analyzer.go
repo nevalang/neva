@@ -6,6 +6,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/typesystem"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Analyzer struct {
@@ -19,128 +20,137 @@ var (
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
 
-func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
+func (a Analyzer) Analyze(prog src.Program) error {
 	if len(prog) == 0 {
-		return nil, ErrEmptyProgram
+		return ErrEmptyProgram
 	}
 
 	mainPkg, ok := prog["main"]
 	if !ok {
-		return nil, ErrMainPkgNotFound
+		return ErrMainPkgNotFound
 	}
 
 	if err := a.mainSpecificPkgValidation(mainPkg, prog); err != nil {
-		return nil, fmt.Errorf("main specific pkg validation: %w", err)
+		return fmt.Errorf("main specific pkg validation: %w", err)
 	}
 
 	for name, pkg := range prog {
-		if err := a.analyzePkg(pkg, prog); err != nil {
-			return nil, fmt.Errorf("analyze pkg: %v: %w", name, err)
+		resolvedPkg, err := a.analyzePkg(pkg, prog)
+		if err != nil {
+			return fmt.Errorf("analyze pkg: %v: %w", name, err)
 		}
+		prog[name] = resolvedPkg
 	}
 
-	return nil, nil
+	return nil
 }
 
-func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) error {
+func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, error) {
 	if len(pkg) == 0 {
-		return ErrEmptyPkg
+		return nil, ErrEmptyPkg
+	}
+
+	resolvedPkg := make(map[string]src.File, len(pkg))
+	for fileName, file := range pkg {
+		resolvedPkg[fileName] = src.File{
+			Imports:  file.Imports,
+			Entities: make(map[string]src.Entity, len(file.Entities)),
+		}
 	}
 
 	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		if err := a.analyzeEntity(entityName, entity, pkg[fileName]); err != nil {
+		resolvedEntity, err := a.analyzeEntity(entityName, entity, pkg[fileName])
+		if err != nil {
 			return fmt.Errorf("analyze entity: %v: %v: %w", entityName, fileName, err)
 		}
+		resolvedPkg[fileName].Entities[entityName] = resolvedEntity
 		return nil
 	}); err != nil {
-		return err
+		return nil, fmt.Errorf("entities: %w", err)
 	}
 
-	return nil
+	return resolvedPkg, nil
 }
 
-func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.File) error {
+func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.File) (src.Entity, error) {
+	resolvedEntity := src.Entity{
+		Exported: entity.Exported,
+		Kind:     entity.Kind,
+	}
+
 	switch entity.Kind {
 	case src.TypeEntity:
-		if err := a.analyzeTypeDef(entity.Type); err != nil {
-			return fmt.Errorf("resolve type: %w", err)
+		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type)
+		if err != nil {
+			return src.Entity{}, fmt.Errorf("resolve type: %w", err)
 		}
+		resolvedEntity.Type = resolvedTypeDef
 	case src.ConstEntity:
-		if err := a.analyzeConst(entity.Const); err != nil {
-			return fmt.Errorf("analyze const: %w", err)
+		resolvedConst, err := a.analyzeConst(entity.Const)
+		if err != nil {
+			return src.Entity{}, fmt.Errorf("analyze const: %w", err)
 		}
+		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		if err := a.analyzeInterface(entity.Interface); err != nil {
-			return fmt.Errorf("analyze interface: %w", err)
+		resolvedInterface, err := a.analyzeInterface(entity.Interface)
+		if err != nil {
+			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
 		}
+		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
 		if err := a.analyzeComponent(entity.Component); err != nil {
-			return fmt.Errorf("analyze component: %w", err)
+			return src.Entity{}, fmt.Errorf("analyze component: %w", err)
 		}
 	default:
-		return fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind)
+		return src.Entity{}, fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind)
 	}
-	return nil
+
+	return resolvedEntity, nil
 }
 
 var ErrCustomBaseType = errors.New("custom type must have body expression and cannot be used for recursive definitions")
 
-func (a Analyzer) analyzeTypeDef(def typesystem.Def) error {
-	// We check this here because it's ok for type-system to face base types.
-	if def.BodyExpr == nil || def.CanBeUsedForRecursiveDefinitions { // FIXME will conflict with actual base types
-		return ErrCustomBaseType
+func (a Analyzer) analyzeTypeDef(def typesystem.Def) (typesystem.Def, error) {
+	return def, nil // TODO
+}
+
+func (Analyzer) buildTestExprArgs(params []ts.Param) []ts.Expr {
+	args := make([]ts.Expr, 0, len(params))
+	for _, param := range params {
+		if param.Constr == nil {
+			args = append(args, ts.Expr{
+				Inst: &ts.InstExpr{Ref: "any"},
+			})
+		} else {
+			args = append(args, *param.Constr)
+		}
 	}
-	return nil
+	return args
+}
+
+// FIXME constr_refereing_type_parameter_(generics_inside_generics)" t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
+func (a Analyzer) resolveTypeParams(params []ts.Param) ([]ts.Param, error) {
+	resolvedParams := make([]ts.Param, 0, len(params))
+	for _, param := range params {
+		if param.Constr == nil {
+			resolvedParams = append(resolvedParams, param)
+			continue
+		}
+		resolvedParam, err := a.resolveTypeExpr(*param.Constr)
+		if err != nil {
+			return nil, fmt.Errorf("analyze type expr: %w", err)
+		}
+		resolvedParams = append(resolvedParams, ts.Param{
+			Name:   param.Name,
+			Constr: &resolvedParam,
+		})
+	}
+	return resolvedParams, nil
 }
 
 func (a Analyzer) resolveTypeExpr(expr typesystem.Expr) (typesystem.Expr, error) {
-	return expr, nil // TODO
-}
-
-var (
-	ErrEmptyConst                  = errors.New("const must have value or reference to another const")
-	ErrResolveConstType            = errors.New("cannot resolve constant type")
-	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
-)
-
-func (a Analyzer) analyzeConst(constant src.Const) error {
-	if constant.Value == nil && constant.Ref == nil {
-		return ErrEmptyConst
-	}
-
-	if constant.Value == nil {
-		panic("references for constants not implemented yet")
-	}
-
-	resolvedType, err := a.resolveTypeExpr(constant.Value.TypeExpr)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrResolveConstType, err)
-	}
-
-	switch resolvedType.Inst.Ref {
-	case "bool":
-		if constant.Value.Int != 0 || constant.Value.Float != 0 || constant.Value.Str != "" {
-			return fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
-		}
-	case "int":
-		if constant.Value.Bool != false || constant.Value.Float != 0 || constant.Value.Str != "" {
-			return fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
-		}
-	case "float":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Str != "" {
-			return fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
-		}
-	case "str":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Float != 0 {
-			return fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
-		}
-	}
-
-	return nil
-}
-
-func (a Analyzer) analyzeInterface(def src.Interface) error {
-	return nil
+	a.resolver.Resolve(expr, nil)
+	return expr, nil
 }
 
 func (a Analyzer) analyzeComponent(def src.Component) error {

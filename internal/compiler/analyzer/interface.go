@@ -1,0 +1,75 @@
+package analyzer
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/nevalang/neva/internal/compiler/src"
+	ts "github.com/nevalang/neva/pkg/typesystem"
+)
+
+var ErrInterfaceTypeParams = errors.New("could not resolve interface type parameters")
+
+func (a Analyzer) analyzeInterface(def src.Interface) (src.Interface, error) {
+	resolvedParams, err := a.resolveTypeParams(def.Params)
+	if err != nil {
+		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.Params)
+	}
+
+	resolvedIO, err := a.analyzeIO(resolvedParams, def.IO)
+	if err != nil {
+		return src.Interface{}, fmt.Errorf("analyze IO: %w", err)
+	}
+
+	return src.Interface{
+		Params: resolvedParams,
+		IO:     resolvedIO,
+	}, nil
+}
+
+func (a Analyzer) analyzeIO(params []ts.Param, io src.IO) (src.IO, error) {
+	resolvedIn, err := a.analyzePorts(params, io.In)
+	if err != nil {
+		return src.IO{}, fmt.Errorf("analyze inports: %w: %v", err, io.In)
+	}
+
+	resolvedOit, err := a.analyzePorts(params, io.Out)
+	if err != nil {
+		return src.IO{}, fmt.Errorf("analyze outports: %w: %v", err, io.In)
+	}
+
+	return src.IO{
+		In:  resolvedIn,
+		Out: resolvedOit,
+	}, nil
+}
+
+func (a Analyzer) analyzePorts(params []ts.Param, ports map[string]src.Port) (map[string]src.Port, error) {
+	resolvedPorts := make(map[string]src.Port, len(ports))
+	for name, port := range ports {
+		resolvedPort, err := a.analyzePort(params, port)
+		if err != nil {
+			return nil, fmt.Errorf("analyze port: %v: %w", name, err)
+		}
+		resolvedPorts[name] = resolvedPort
+	}
+	return resolvedPorts, nil
+}
+
+func (a Analyzer) analyzePort(params []ts.Param, port src.Port) (src.Port, error) {
+	if port.Type == nil {
+		return port, nil
+	}
+
+	// IDEA: create virtual def and resolve it as we do for regular type defs
+
+	resolvedType, err := a.resolveTypeExpr(*port.Type)
+	if err != nil {
+		return src.Port{}, fmt.Errorf("resolve type expr: %w", err)
+	}
+
+	return src.Port{
+		Type:    &resolvedType,
+		IsArray: port.IsArray,
+	}, nil
+}

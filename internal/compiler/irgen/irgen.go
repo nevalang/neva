@@ -236,7 +236,7 @@ func (g Generator) processSenderSide( //nolint:funlen
 			result.nodesUsage[nodeName] = portsUsage{
 				in:         map[relPortAddr]struct{}{},
 				out:        map[relPortAddr]struct{}{},
-				constValue: &constEntity.Const.Value,
+				constValue: constEntity.Const.Value,
 			}
 		}
 		result.nodesUsage[nodeName].out[relPortAddr{

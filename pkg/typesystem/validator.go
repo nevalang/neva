@@ -27,14 +27,14 @@ func (v Validator) ValidateDef(def Def) error {
 	if def.CanBeUsedForRecursiveDefinitions && def.BodyExpr != nil {
 		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
 	}
-	if err := v.ValidateParams(def.Params); err != nil {
+	if err := v.CheckParamUnique(def.Params); err != nil {
 		return errors.Join(ErrParams, err)
 	}
 	return nil
 }
 
-// ValidateParams doesn't validate constraints, only ensures uniqueness
-func (v Validator) ValidateParams(params []Param) error {
+// CheckParamUnique doesn't validate constraints, only ensures uniqueness
+func (v Validator) CheckParamUnique(params []Param) error {
 	m := make(map[string]struct{}, len(params))
 	for _, param := range params {
 		if _, ok := m[param.Name]; ok {
