@@ -11,9 +11,9 @@ import (
 var ErrInterfaceTypeParams = errors.New("could not resolve interface type parameters")
 
 func (a Analyzer) analyzeInterface(def src.Interface) (src.Interface, error) {
-	resolvedParams, err := a.resolveTypeParams(def.Params)
+	resolvedParams, err := a.analyzeTypeParams(def.TypeParams)
 	if err != nil {
-		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.Params)
+		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.TypeParams)
 	}
 
 	resolvedIO, err := a.analyzeIO(resolvedParams, def.IO)
@@ -22,8 +22,8 @@ func (a Analyzer) analyzeInterface(def src.Interface) (src.Interface, error) {
 	}
 
 	return src.Interface{
-		Params: resolvedParams,
-		IO:     resolvedIO,
+		TypeParams: resolvedParams,
+		IO:         resolvedIO,
 	}, nil
 }
 
@@ -57,19 +57,20 @@ func (a Analyzer) analyzePorts(params []ts.Param, ports map[string]src.Port) (ma
 }
 
 func (a Analyzer) analyzePort(params []ts.Param, port src.Port) (src.Port, error) {
-	if port.Type == nil {
+	if port.TypeExpr == nil {
 		return port, nil
 	}
 
-	// IDEA: create virtual def and resolve it as we do for regular type defs
-
-	resolvedType, err := a.resolveTypeExpr(*port.Type)
+	resolvedDef, err := a.analyzeTypeDef(ts.Def{
+		Params:   params,
+		BodyExpr: port.TypeExpr,
+	})
 	if err != nil {
-		return src.Port{}, fmt.Errorf("resolve type expr: %w", err)
+		return src.Port{}, fmt.Errorf("analyze type def: %w", err)
 	}
 
 	return src.Port{
-		Type:    &resolvedType,
-		IsArray: port.IsArray,
+		TypeExpr: resolvedDef.BodyExpr,
+		IsArray:  port.IsArray,
 	}, nil
 }

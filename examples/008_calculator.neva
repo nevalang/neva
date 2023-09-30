@@ -21,7 +21,8 @@ components {
 		nodes {
 			print std.Print
 			readOp ReadOp
-			readFirstNum, readSecondNum ReadNum
+			readFirstNum ReadNum
+			readSecondNum ReadNum
 			calc Calc
 		}
 		net {
@@ -41,6 +42,10 @@ components {
 	}
 	ReadOp(sig) (v str) {
 		nodes {
+			read std.Read
+			has std.Has
+			lockErr std.Lock
+			lockResult std.Lock
 		}
 		net {
 			in.sig -> read.in.sig // read operation
@@ -54,6 +59,21 @@ components {
 		}
 	}
 	ReadNum(sig) (v int) {
-		
+		nodes {
+			read std.Read
+			parse std.Parse
+			lockErr std.Lock
+			lockResult std.Lock
+		}
+		net {
+			in.sig -> read.in.sig // read number
+			read.out.v -> parse.in.v // parse it
+			parse.out.err -> out.err // if error trigger error locker
+			parse.out.v -> lockResult.in.sig // otherwise trigger result locker
+			parse.out.v -> out.v // and send result to the outport
+			parse.out.err -> lockErr.in.v // lock error in case of error
+			lockErr.out.v -> out.err // and send it to the outport
+			lockResult.out.v -> out.v // send result to the outport
+		}
 	}
 }

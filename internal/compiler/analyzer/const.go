@@ -22,7 +22,7 @@ func (a Analyzer) analyzeConst(constant src.Const) (src.Const, error) {
 		panic("// TODO: references for constants not implemented yet")
 	}
 
-	resolvedType, err := a.resolveTypeExpr(constant.Value.TypeExpr)
+	resolvedType, err := a.analyzeTypeExpr(constant.Value.TypeExpr)
 	if err != nil {
 		return src.Const{}, fmt.Errorf("%w: %v", ErrResolveConstType, err)
 	}

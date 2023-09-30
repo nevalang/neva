@@ -46,25 +46,68 @@ type Scope interface {
 	Rebase(ref string) (Scope, error)
 }
 
-func (r Resolver) Resolve(expr Expr, scope Scope) (Expr, error) {
-	return r.resolve(expr, scope, map[string]Def{}, nil)
+func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
+	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
-// resolve turn one expression into another where all references points to native types.
+func (r Resolver) ResolveDef(def Def, scope Scope) (Def, error) {
+	resolvedParams, frame, err := r.ResolveParams(def.Params, scope)
+	if err != nil {
+		return Def{}, fmt.Errorf("resolve params: %w", err)
+	}
+	if def.BodyExpr == nil {
+		return Def{
+			Params:                           resolvedParams,
+			CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
+		}, nil
+	}
+	resolvedBody, err := r.resolveExpr(*def.BodyExpr, scope, frame, nil)
+	if err != nil {
+		return Def{}, fmt.Errorf("resolve expr: %w", err)
+	}
+	return Def{
+		Params:                           resolvedParams,
+		BodyExpr:                         &resolvedBody,
+		CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
+	}, nil
+}
+
+func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, map[string]Def, error) {
+	result := make([]Param, 0, len(params))
+	frame := make(map[string]Def, len(params))
+	for _, param := range params {
+		if param.Constr == nil {
+			result = append(result, Param{Name: param.Name})
+			continue
+		}
+		resolved, err := r.resolveExpr(*param.Constr, scope, frame, nil)
+		if err != nil {
+			return nil, frame, fmt.Errorf("resolve expr: %w", err)
+		}
+		frame[param.Name] = Def{BodyExpr: &resolved}
+		result = append(result, Param{
+			Name:   param.Name,
+			Constr: &resolved,
+		})
+	}
+	return result, frame, nil
+}
+
+// resolveExpr turn one expression into another where all references points to native types.
 // It's a recursive process where each step starts with validation. Invalid expression always leads to error.
 // For inst expr it checks compatibility between args and params and returns error if some constraint isn't satisfied.
 // Then it updates scope by adding params of ref type with resolved args as values to allow substitution later.
 // Then it checks whether base type of current ref type is native type to terminate with nil err and resolved expr.
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
-// For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolve),
-// for array resolve it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) resolve( //nolint:funlen
+// For lit exprs logic is the following: for enum do nothing (it's valid and not composite, there's nothing to resolveExpr),
+// for array resolveExpr it's type, for record and union apply recursion for it's every field/element.
+func (r Resolver) resolveExpr( //nolint:funlen
 	expr Expr,
 	scope Scope,
 	frame map[string]Def,
 	trace *Trace,
 ) (Expr, error) {
-	if err := r.validator.Validate(expr); err != nil { // todo remove embedding
+	if err := r.validator.Validate(expr); err != nil {
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
@@ -72,7 +115,7 @@ func (r Resolver) resolve( //nolint:funlen
 	case EnumLitType:
 		return expr, nil
 	case ArrLitType:
-		resolvedArrType, err := r.resolve(expr.Lit.Arr.Expr, scope, frame, trace)
+		resolvedArrType, err := r.resolveExpr(expr.Lit.Arr.Expr, scope, frame, trace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 		}
@@ -84,7 +127,7 @@ func (r Resolver) resolve( //nolint:funlen
 	case UnionLitType:
 		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.resolve(unionEl, scope, frame, trace)
+			resolvedEl, err := r.resolveExpr(unionEl, scope, frame, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 			}
@@ -96,7 +139,7 @@ func (r Resolver) resolve( //nolint:funlen
 	case RecLitType:
 		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
 		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.resolve(fieldExpr, scope, frame, trace)
+			resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
 			if err != nil {
 				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
 			}
@@ -137,7 +180,7 @@ func (r Resolver) resolve( //nolint:funlen
 	newFrame := make(map[string]Def, len(def.Params))
 	resolvedArgs := make([]Expr, 0, len(expr.Inst.Args))
 	for i, param := range def.Params { // resolve args and constrs and check their compatibility
-		resolvedArg, err := r.resolve(expr.Inst.Args[i], scope, frame, &newTrace)
+		resolvedArg, err := r.resolveExpr(expr.Inst.Args[i], scope, frame, &newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
 		}
@@ -149,7 +192,7 @@ func (r Resolver) resolve( //nolint:funlen
 			continue
 		}
 
-		resolvedConstr, err := r.resolve(*param.Constr, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
+		resolvedConstr, err := r.resolveExpr(*param.Constr, scope, newFrame, &newTrace) //nolint:lll // we pass newFrame because constr can refer type param
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
@@ -174,7 +217,7 @@ func (r Resolver) resolve( //nolint:funlen
 		}, nil
 	}
 
-	return r.resolve(*def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
+	return r.resolveExpr(*def.BodyExpr, scope, newFrame, &newTrace) // TODO replace "flat" args with resolved args?
 }
 
 // getDef checks for def in frame, then in scope and returns err if expr not found in both.

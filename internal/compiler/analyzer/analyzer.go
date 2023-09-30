@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/src"
-	"github.com/nevalang/neva/pkg/typesystem"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Analyzer struct {
-	resolver typesystem.Resolver
+	prog     src.Program
+	resolver ts.Resolver
 }
 
 var (
@@ -20,8 +20,8 @@ var (
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
 
-// AnalyzeAndResolve returns error if program is invalid. It also modifies program by resolving types.
-func (a Analyzer) AnalyzeAndResolve(prog src.Program) error {
+// Analyze returns error if program is invalid. It also modifies program by resolving types.
+func (a Analyzer) Analyze(prog src.Program) error {
 	if len(prog) == 0 {
 		return ErrEmptyProgram
 	}
@@ -60,7 +60,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, er
 	}
 
 	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		resolvedEntity, err := a.analyzeEntity(entityName, entity, pkg[fileName])
+		resolvedEntity, err := a.analyzeEntity(entity, prog)
 		if err != nil {
 			return fmt.Errorf("analyze entity: %v: %v: %w", entityName, fileName, err)
 		}
@@ -73,7 +73,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, er
 	return resolvedPkg, nil
 }
 
-func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.File) (src.Entity, error) {
+func (a Analyzer) analyzeEntity(entity src.Entity, prog src.Program) (src.Entity, error) {
 	resolvedEntity := src.Entity{
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
@@ -99,9 +99,11 @@ func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.F
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		if err := a.analyzeComponent(entity.Component); err != nil {
+		resolvedComp, err := a.analyzeComponent(entity.Component, prog)
+		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze component: %w", err)
 		}
+		resolvedEntity.Component = resolvedComp
 	default:
 		return src.Entity{}, fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind)
 	}
@@ -109,52 +111,8 @@ func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, file src.F
 	return resolvedEntity, nil
 }
 
-var ErrCustomBaseType = errors.New("custom type must have body expression and cannot be used for recursive definitions")
-
-func (a Analyzer) analyzeTypeDef(def typesystem.Def) (typesystem.Def, error) {
-	return def, nil // TODO
-}
-
-// TODO unused
-func (Analyzer) buildTestExprArgs(params []ts.Param) []ts.Expr {
-	args := make([]ts.Expr, 0, len(params))
-	for _, param := range params {
-		if param.Constr == nil {
-			args = append(args, ts.Expr{
-				Inst: &ts.InstExpr{Ref: "any"},
-			})
-		} else {
-			args = append(args, *param.Constr)
-		}
+func MustNew(resolver ts.Resolver) Analyzer {
+	return Analyzer{
+		resolver: resolver,
 	}
-	return args
-}
-
-// FIXME constr_refereing_type_parameter_(generics_inside_generics)" t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
-func (a Analyzer) resolveTypeParams(params []ts.Param) ([]ts.Param, error) {
-	resolvedParams := make([]ts.Param, 0, len(params))
-	for _, param := range params {
-		if param.Constr == nil {
-			resolvedParams = append(resolvedParams, param)
-			continue
-		}
-		resolvedParam, err := a.resolveTypeExpr(*param.Constr)
-		if err != nil {
-			return nil, fmt.Errorf("analyze type expr: %w", err)
-		}
-		resolvedParams = append(resolvedParams, ts.Param{
-			Name:   param.Name,
-			Constr: &resolvedParam,
-		})
-	}
-	return resolvedParams, nil
-}
-
-func (a Analyzer) resolveTypeExpr(expr typesystem.Expr) (typesystem.Expr, error) {
-	a.resolver.Resolve(expr, nil)
-	return expr, nil
-}
-
-func (a Analyzer) analyzeComponent(def src.Component) error {
-	return nil
 }

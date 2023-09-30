@@ -6,7 +6,7 @@ use {
 }
 
 components {
-	Main(enter string 'Hello, World!') (exit) {
+	Main(enter string 'Hello, World!\n') (exit) {
 		nodes {
 			print std.Print<str>
 		}

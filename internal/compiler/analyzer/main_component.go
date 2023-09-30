@@ -21,8 +21,8 @@ var (
 )
 
 func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, pkgs map[string]src.Package) error { //nolint:unparam,lll
-	if len(cmp.Interface.Params) != 0 {
-		return fmt.Errorf("%w: %v", ErrMainComponentWithTypeParams, cmp.Interface.Params)
+	if len(cmp.Interface.TypeParams) != 0 {
+		return fmt.Errorf("%w: %v", ErrMainComponentWithTypeParams, cmp.Interface.TypeParams)
 	}
 
 	if err := a.analyzeMainComponentIO(cmp.Interface.IO); err != nil {
@@ -54,7 +54,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainPortIsArray
 	}
 
-	if enterInport.Type != nil {
+	if enterInport.TypeExpr != nil {
 		return ErrMainComponentPortTypeNotAny
 	}
 
@@ -67,7 +67,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainPortIsArray
 	}
 
-	if exitInport.Type != nil {
+	if exitInport.TypeExpr != nil {
 		return ErrMainComponentPortTypeNotAny
 	}
 

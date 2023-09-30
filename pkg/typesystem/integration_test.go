@@ -103,7 +103,7 @@ func TestDefaultResolver(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := resolver.Resolve(tt.expr, tt.scope)
+			got, err := resolver.ResolveExpr(tt.expr, tt.scope)
 			assert.Equal(t, tt.want, got)
 			assert.ErrorIs(t, err, tt.wantErr)
 		})

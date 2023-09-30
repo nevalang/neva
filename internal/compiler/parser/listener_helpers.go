@@ -67,7 +67,7 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		portName := port.IDENTIFIER().GetText()
 		parsedTypeExpr := parseTypeExpr(port.TypeExpr())
 		parsedInports[portName] = src.Port{
-			Type: parsedTypeExpr,
+			TypeExpr: parsedTypeExpr,
 		}
 	}
 	return parsedInports
@@ -79,7 +79,7 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	out := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
 
 	return src.Interface{
-		Params: params,
+		TypeParams: params,
 		IO: src.IO{
 			In:  in,
 			Out: out,

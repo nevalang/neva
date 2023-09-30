@@ -763,7 +763,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				tc.terminator(terminator.EXPECT())
 			}
 
-			got, err := ts.MustNewResolver(validator, comparator, terminator).Resolve(tc.expr, tc.scope)
+			got, err := ts.MustNewResolver(validator, comparator, terminator).ResolveExpr(tc.expr, tc.scope)
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
 		})

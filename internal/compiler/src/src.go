@@ -96,8 +96,8 @@ type Component struct {
 }
 
 type Interface struct {
-	Params []ts.Param
-	IO     IO
+	TypeParams []ts.Param
+	IO         IO
 }
 
 type Node struct {
@@ -138,8 +138,8 @@ type IO struct {
 }
 
 type Port struct {
-	Type    *ts.Expr // empty means any
-	IsArray bool
+	TypeExpr *ts.Expr // empty means any
+	IsArray  bool
 }
 
 type Connection struct {
