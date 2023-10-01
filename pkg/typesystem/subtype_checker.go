@@ -35,7 +35,7 @@ type TerminatorParams struct {
 
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
-func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
+func (s SubtypeChecker) Check(sub, super Expr, params TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
 	isSuperTypeInst := super.Lit.Empty()
 	diffKinds := sub.Lit.Empty() != isSuperTypeInst
 	isSuperTypeUnion := super.Lit.Type() == UnionLitType
@@ -45,12 +45,12 @@ func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error {
 	}
 
 	if isSuperTypeInst { //nolint:nestif // expr and constr are both insts
-		isSubTypeRecursive, err := s.terminator.ShouldTerminate(tparams.SubtypeTrace, tparams.Scope)
+		isSubTypeRecursive, err := s.terminator.ShouldTerminate(params.SubtypeTrace, params.Scope)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
 
-		isSuperTypeRecursive, err := s.terminator.ShouldTerminate(tparams.SupertypeTrace, tparams.Scope)
+		isSuperTypeRecursive, err := s.terminator.ShouldTerminate(params.SupertypeTrace, params.Scope)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
@@ -67,7 +67,7 @@ func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error {
 			return fmt.Errorf("%w: got %v, want %v", ErrArgsCount, len(sub.Inst.Args), len(super.Inst.Args))
 		}
 
-		newTParams := s.getNewTerminatorParams(tparams, sub.Inst.Ref, super.Inst.Ref)
+		newTParams := s.getNewTerminatorParams(params, sub.Inst.Ref, super.Inst.Ref)
 		for i := range super.Inst.Args {
 			newSub := sub.Inst.Args[i]
 			newSup := super.Inst.Args[i]
@@ -86,11 +86,11 @@ func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error {
 	}
 
 	switch constrLitType {
-	case ArrLitType: // [5]int <: [4]int|float ???
+	case ArrLitType: // [5]int <: [4]int|float ??? (TODO)
 		if sub.Lit.Arr.Size < super.Lit.Arr.Size {
 			return fmt.Errorf("%w: got %d, want %d", ErrLitArrSize, sub.Lit.Arr.Size, super.Lit.Arr.Size)
 		}
-		if err := s.Check(sub.Lit.Arr.Expr, super.Lit.Arr.Expr, tparams); err != nil {
+		if err := s.Check(sub.Lit.Arr.Expr, super.Lit.Arr.Expr, params); err != nil {
 			return fmt.Errorf("%w: %v", ErrArrDiffType, err)
 		}
 	case EnumLitType: // {a b c} <: {a b c d}
@@ -111,14 +111,14 @@ func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error {
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrRecNoField, constrFieldName)
 			}
-			if err := s.Check(exprField, constrField, tparams); err != nil {
+			if err := s.Check(exprField, constrField, params); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrRecField, constrFieldName, err)
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
 		if sub.Lit.Union == nil { // constraint is union, expr is not
 			for _, constrUnionEl := range super.Lit.Union {
-				if s.Check(sub, constrUnionEl, tparams) == nil {
+				if s.Check(sub, constrUnionEl, params) == nil {
 					return nil
 				}
 			}
@@ -130,7 +130,7 @@ func (s SubtypeChecker) Check(sub, super Expr, tparams TerminatorParams) error {
 		for _, exprEl := range sub.Lit.Union { // check that all elements of arg union compatible with constr
 			var implements bool
 			for _, constraintEl := range super.Lit.Union {
-				if s.Check(exprEl, constraintEl, tparams) == nil {
+				if s.Check(exprEl, constraintEl, params) == nil {
 					implements = true
 					break
 				}

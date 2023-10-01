@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/src"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func (a Analyzer) analyzeComponent(comp src.Component, prog src.Program) (src.Component, error) {
@@ -30,57 +29,77 @@ func (a Analyzer) analyzeComponent(comp src.Component, prog src.Program) (src.Co
 	}, nil
 }
 
-func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, prog src.Program) error {
-	for _, node := range nodes {
-		if err := a.analyzeComponentNode(node, prog); err != nil {
-			return fmt.Errorf("analyze node: %w", err)
+func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, prog src.Program) (map[string]src.Node, error) {
+	resolvedNodes := make(map[string]src.Node, len(nodes))
+	for name, node := range nodes {
+		resolvedNode, err := a.analyzeComponentNode(node, prog)
+		if err != nil {
+			return nil, fmt.Errorf("analyze node: %w", err)
 		}
+		resolvedNodes[name] = resolvedNode
 	}
-	return nil
+	return resolvedNodes, nil
 }
 
 var (
-	ErrNodeEntity                = fmt.Errorf("node entity is not a component or interface")
+	ErrNodeWrongEntity           = fmt.Errorf("node entity is not a component or interface")
 	ErrNodeTypeArgsCountMismatch = errors.New("node type args count mismatch")
+	ErrNodeInterfaceDI           = errors.New("interface node cannot have dependency injection")
 )
 
-func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) error {
+func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Node, error) {
 	entity, err := prog.Entity(node.EntityRef)
 	if err != nil {
-		return fmt.Errorf("entity: %w", err)
+		return src.Node{}, fmt.Errorf("entity: %w", err)
 	}
 
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.InterfaceEntity {
-		return fmt.Errorf("%w: %v", ErrNodeEntity, entity.Kind)
+		return src.Node{}, fmt.Errorf("%w: %v", ErrNodeWrongEntity, entity.Kind)
 	}
 
 	var compInterface src.Interface
 	if entity.Kind == src.ComponentEntity {
 		compInterface = entity.Component.Interface
 	} else {
+		if node.ComponentDI != nil {
+			return src.Node{}, ErrNodeInterfaceDI
+		}
 		compInterface = entity.Interface
 	}
 
 	if len(node.TypeArgs) != len(compInterface.TypeParams) {
-		return fmt.Errorf(
+		return src.Node{}, fmt.Errorf(
 			"%w: want %v, got %v",
 			ErrNodeTypeArgsCountMismatch, compInterface.TypeParams, node.TypeArgs,
 		)
 	}
 
-	resolvedArgs := make([]ts.Expr, 0, len(node.TypeArgs))
-	for _, arg := range node.TypeArgs {
-		resolvedArg, err := a.analyzeTypeExpr(arg)
-		if err != nil {
-			return fmt.Errorf("analyze type expr: %w", err)
-		}
-		resolvedArgs = append(resolvedArgs, resolvedArg)
+	resolvedArgs, _, err := a.resolver.ResolveArgs(node.TypeArgs, compInterface.TypeParams, nil)
+	if err != nil {
+		return src.Node{}, fmt.Errorf("resolve args: %w", err)
 	}
 
-	// check that args are compatible with type params
-	// this can be done by creating
+	if node.ComponentDI == nil {
+		return src.Node{
+			EntityRef: node.EntityRef,
+			TypeArgs:  resolvedArgs,
+		}, nil
+	}
 
-	return nil
+	resolvedComponentDI := make(map[string]src.Node, len(node.ComponentDI)) // TODO track recursion
+	for depName, depNode := range node.ComponentDI {
+		resolvedDep, err := a.analyzeComponentNode(depNode, prog)
+		if err != nil {
+			return src.Node{}, fmt.Errorf("analyze dependency node: %w", err)
+		}
+		resolvedComponentDI[depName] = resolvedDep
+	}
+
+	return src.Node{
+		EntityRef:   node.EntityRef,
+		TypeArgs:    resolvedArgs,
+		ComponentDI: resolvedComponentDI,
+	}, nil
 }
 
 func (a Analyzer) analyzeComponentNet(
