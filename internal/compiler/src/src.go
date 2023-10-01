@@ -100,6 +100,11 @@ type Interface struct {
 	IO         IO
 }
 
+// func (i Interface) PortType(PortAddr) (ts.Expr, bool) {
+// 	i.
+// 	return ts.Expr{}, false
+// }
+
 type Node struct {
 	EntityRef   EntityRef
 	TypeArgs    []ts.Expr
@@ -138,7 +143,7 @@ type IO struct {
 }
 
 type Port struct {
-	TypeExpr *ts.Expr // empty means any
+	TypeExpr ts.Expr // empty means any
 	IsArray  bool
 }
 

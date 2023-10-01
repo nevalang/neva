@@ -19,7 +19,7 @@ type (
 		ValidateDef(def Def) error
 	}
 	subtypeChecker interface {
-		Check(Expr, Expr, TerminatorParams) error
+		Check(sub Expr, sup Expr, params TerminatorParams) error
 	}
 	recursionTerminator interface {
 		ShouldTerminate(Trace, Scope) (bool, error)
@@ -77,9 +77,10 @@ func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, map[strin
 	return result, frame, nil
 }
 
-// ResolveArgs resolves arguments and parameters and checks that they are compatible.
+// ResolveFrame resolves arguments and parameters and checks that they are compatible.
+// If everything is okay it returns resolved args and resulting frame.
 // It's copy-paste from resolveExpr method because it's hard to reuse that code without creating useless expr and scope.
-func (r Resolver) ResolveArgs(args []Expr, params []Param, scope Scope) ([]Expr, []Param, error) {
+func (r Resolver) ResolveFrame(args []Expr, params []Param, scope Scope) ([]Expr, map[string]Def, error) {
 	newFrame := make(map[string]Def, len(params))
 	resolvedArgs := make([]Expr, 0, len(args))
 	resolvedParams := make([]Param, 0, len(params))
@@ -112,7 +113,25 @@ func (r Resolver) ResolveArgs(args []Expr, params []Param, scope Scope) ([]Expr,
 			return nil, nil, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}
-	return resolvedArgs, resolvedParams, nil
+	return resolvedArgs, newFrame, nil
+}
+
+func (r Resolver) ResolveExprWithFrame(expr Expr, frame map[string]Def, scope Scope) (Expr, error) {
+	return r.resolveExpr(expr, scope, frame, nil)
+}
+
+func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
+	resolvedSub, err := r.resolveExpr(sub, scope, nil, nil)
+	if err != nil {
+		return fmt.Errorf("resolve sub expr: %w", err)
+	}
+	resolvedSup, err := r.resolveExpr(sup, scope, nil, nil)
+	if err != nil {
+		return fmt.Errorf("resolve sup expr: %w", err)
+	}
+	return r.comparator.Check(resolvedSub, resolvedSup, TerminatorParams{
+		Scope: scope,
+	})
 }
 
 var (

@@ -27,7 +27,16 @@ func (a Analyzer) analyzeInterface(def src.Interface) (src.Interface, error) {
 	}, nil
 }
 
+var ErrEmptyInports = errors.New("IO cannot have empty inports")
+var ErrEmptyOutports = errors.New("IO cannot have empty outports")
+
 func (a Analyzer) analyzeIO(params []ts.Param, io src.IO) (src.IO, error) {
+	if len(io.In) == 0 {
+		return src.IO{}, ErrEmptyInports
+	} else if len(io.Out) == 0 {
+		return src.IO{}, ErrEmptyOutports
+	}
+
 	resolvedIn, err := a.analyzePorts(params, io.In)
 	if err != nil {
 		return src.IO{}, fmt.Errorf("analyze inports: %w: %v", err, io.In)
@@ -57,20 +66,15 @@ func (a Analyzer) analyzePorts(params []ts.Param, ports map[string]src.Port) (ma
 }
 
 func (a Analyzer) analyzePort(params []ts.Param, port src.Port) (src.Port, error) {
-	if port.TypeExpr == nil {
-		return port, nil
-	}
-
 	resolvedDef, err := a.analyzeTypeDef(ts.Def{
 		Params:   params,
-		BodyExpr: port.TypeExpr,
+		BodyExpr: &port.TypeExpr,
 	})
 	if err != nil {
 		return src.Port{}, fmt.Errorf("analyze type def: %w", err)
 	}
-
 	return src.Port{
-		TypeExpr: resolvedDef.BodyExpr,
+		TypeExpr: *resolvedDef.BodyExpr,
 		IsArray:  port.IsArray,
 	}, nil
 }
