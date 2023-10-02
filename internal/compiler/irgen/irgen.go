@@ -26,7 +26,7 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, prog src.Package) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, prog src.Program) (*ir.Program, error) {
 	if len(prog) == 0 {
 		return nil, ErrNoPkgs
 	}
@@ -79,7 +79,7 @@ type (
 func (g Generator) processComponentNode( //nolint:funlen
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs map[string]src.File,
+	pkgs src.Program,
 	result *ir.Program,
 ) error {
 	componentEntity, err := g.lookupEntity(pkgs, "", nodeCtx.componentRef) // not sure about curpkgname
@@ -328,9 +328,9 @@ func (Generator) insertAndReturnOutports(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]src.File, curPkgName string, ref src.EntityRef) (src.Entity, error) {
+func (Generator) lookupEntity(pkgs map[string]src.File, pkgFallback string, ref src.EntityRef) (src.Entity, error) {
 	if ref.Pkg == "" {
-		ref.Pkg = curPkgName
+		ref.Pkg = pkgFallback
 	}
 
 	pkg, ok := pkgs[ref.Pkg]

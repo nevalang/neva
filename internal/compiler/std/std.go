@@ -6,8 +6,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-// New returns single-package std library with only runtime-function interfaces. TODO add HOCs.
-func New() src.File { //nolint:funlen
+// NewFuncsFile returns single-package std library with only runtime-function interfaces. TODO add HOCs.
+func NewFuncsFile() src.File { //nolint:funlen
 	return src.File{
 		Entities: map[string]src.Entity{
 			"Read": {

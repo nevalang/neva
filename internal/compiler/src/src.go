@@ -30,11 +30,11 @@ func (p Program) Entity(entityRef EntityRef) (Entity, string, error) {
 
 type Package map[string]File
 
-func (p Package) Entity(name string) (Entity, string, bool) {
-	for name, file := range p {
-		entity, ok := file.Entities[name]
+func (p Package) Entity(entityName string) (Entity, string, bool) {
+	for fileName, file := range p {
+		entity, ok := file.Entities[entityName]
 		if ok {
-			return entity, name, true
+			return entity, fileName, true
 		}
 	}
 	return Entity{}, "", false

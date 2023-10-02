@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/src"
+	"github.com/nevalang/neva/internal/compiler/std"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
@@ -50,6 +51,11 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 
 	if err := c.analyzer.Analyze(parsedPackages); err != nil {
 		return nil, fmt.Errorf("analyze: %w", err)
+	}
+
+	// TODO add this before analyzer
+	parsedPackages["std"] = src.Package{
+		"funcs.neva": std.NewFuncsFile(),
 	}
 
 	irProg, err := c.irgen.Generate(ctx, parsedPackages["main"]) // TODO use all packages

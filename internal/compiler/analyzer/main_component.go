@@ -58,7 +58,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainComponentPortTypeNotAny
 	}
 
-	exitInport, ok := io.In["exit"]
+	exitInport, ok := io.Out["exit"]
 	if !ok {
 		return ErrMainComponentWithoutExitOutport
 	}

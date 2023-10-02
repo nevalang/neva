@@ -72,6 +72,7 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 					Inst: &ts.InstExpr{Ref: "any"},
 				},
 			}
+			continue
 		}
 		parsedInports[portName] = src.Port{
 			TypeExpr: *parsedTypeExpr,

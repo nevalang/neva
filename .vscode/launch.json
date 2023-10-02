@@ -18,7 +18,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/interpreter",
       "cwd": "${workspaceFolder}",
-      "args": ["examples/1_hello_world.neva"]
+      "args": ["examples/002_hello_world_1.neva"]
     }
   ]
 }

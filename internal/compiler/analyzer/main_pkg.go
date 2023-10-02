@@ -15,7 +15,7 @@ var (
 )
 
 func (a Analyzer) mainSpecificPkgValidation(pkg src.Package, pkgs map[string]src.Package) error {
-	entityMain, _, ok := pkg.Entity("main")
+	entityMain, _, ok := pkg.Entity("Main")
 	if !ok {
 		return ErrMainEntityNotFound
 	}

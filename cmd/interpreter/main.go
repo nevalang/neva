@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
@@ -56,7 +57,12 @@ func main() {
 		runTime,
 	)
 
-	code, err := intr.Interpret(context.Background(), os.Args[1])
+	p, err := filepath.Abs(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+
+	code, err := intr.Interpret(context.Background(), p)
 	if err != nil {
 		logger.Error(err.Error())
 		return
