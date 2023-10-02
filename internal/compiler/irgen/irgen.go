@@ -26,8 +26,8 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.Program, error) {
-	if len(pkgs) == 0 {
+func (g Generator) Generate(ctx context.Context, prog src.Package) (*ir.Program, error) {
+	if len(prog) == 0 {
 		return nil, ErrNoPkgs
 	}
 
@@ -50,7 +50,7 @@ func (g Generator) Generate(ctx context.Context, pkgs map[string]src.File) (*ir.
 		Funcs:       []*ir.Func{},
 	}
 
-	if err := g.processComponentNode(ctx, rootNodeCtx, pkgs, result); err != nil {
+	if err := g.processComponentNode(ctx, rootNodeCtx, prog, result); err != nil {
 		return nil, fmt.Errorf("process root node: %w", err)
 	}
 

@@ -24,3 +24,9 @@ func (t Decoder) Decode(file []byte) (runtime.Program, error) {
 
 	return runtimeProg, nil
 }
+
+func NewDecoder(adapter Adapter) Decoder {
+	return Decoder{
+		adapter: adapter,
+	}
+}

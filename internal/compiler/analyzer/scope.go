@@ -14,6 +14,7 @@ type Scope struct {
 	prog     src.Program
 }
 
+// Location is used by scope to resolve references.
 type Location struct {
 	pkg  src.Package
 	file src.File
@@ -22,7 +23,7 @@ type Location struct {
 func (s Scope) GetType(ref string) (ts.Def, ts.Scope, error) {
 	parsedRef := s.parseRef(ref)
 
-	def, found, err := s.getType(parsedRef)
+	def, location, err := s.getType(parsedRef)
 	if err != nil {
 		return ts.Def{}, Scope{}, fmt.Errorf("get type: %w", err)
 	}
@@ -32,11 +33,12 @@ func (s Scope) GetType(ref string) (ts.Def, ts.Scope, error) {
 	}
 
 	return def, Scope{
-		location: found,
+		location: location,
 		prog:     s.prog,
 	}, nil
 }
 
+// parse refer assumes refs in <pkg_name>.<entity_name≥ or just <entity_name> format
 func (s Scope) parseRef(ref string) src.EntityRef {
 	var entityRef src.EntityRef
 
@@ -71,6 +73,9 @@ var (
 	ErrEntityNotExported = errors.New("entity is not exported")
 )
 
+// getEntity returns entity by passed reference.
+// If entity is local (ref has no pkg) the current location.pkg is used
+// Otherwise we use current file imports to resolve external ref.
 func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, Location, error) {
 	if entityRef.Pkg == "" {
 		entity, filename, ok := s.location.pkg.Entity(entityRef.Name)

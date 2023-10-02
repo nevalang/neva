@@ -134,3 +134,7 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 
 	return rMsg, nil
 }
+
+func NewAdapter() Adapter {
+	return Adapter{}
+}

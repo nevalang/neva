@@ -24,9 +24,8 @@ type (
 		ParseFiles(context.Context, map[string][]byte) (map[string]src.File, error)
 	}
 	Analyzer interface {
-		Analyze(context.Context, src.Program) (src.Program, error)
+		Analyze(src.Program) error
 	}
-	// TODO add desugaring step?
 	IRGenerator interface {
 		Generate(context.Context, src.Package) (*ir.Program, error)
 	}
@@ -49,12 +48,11 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		parsedPackages[pkgName] = parsedFiles
 	}
 
-	analyzedProg, err := c.analyzer.Analyze(ctx, parsedPackages)
-	if err != nil {
+	if err := c.analyzer.Analyze(parsedPackages); err != nil {
 		return nil, fmt.Errorf("analyze: %w", err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedProg["main"]) // TODO use all packages
+	irProg, err := c.irgen.Generate(ctx, parsedPackages["main"]) // TODO use all packages
 	if err != nil {
 		return nil, fmt.Errorf("generate: %w", err)
 	}
