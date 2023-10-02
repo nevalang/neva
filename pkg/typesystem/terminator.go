@@ -33,7 +33,7 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	}
 
 	var canBeUsedForRecursiveDefinitions bool
-	if prevRef, err := scope.GetType(cur.prev.ref); err == nil {
+	if prevRef, _, err := scope.GetType(cur.prev.ref); err == nil {
 		canBeUsedForRecursiveDefinitions = prevRef.CanBeUsedForRecursiveDefinitions
 	}
 

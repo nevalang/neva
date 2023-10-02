@@ -14,30 +14,30 @@ var (
 	ErrEntityNotFound = fmt.Errorf("entity not found")
 )
 
-func (p Program) Entity(entityRef EntityRef) (Entity, error) {
+func (p Program) Entity(entityRef EntityRef) (Entity, string, error) {
 	pkg, ok := p[entityRef.Pkg]
 	if !ok {
-		return Entity{}, ErrPkgNotFound
+		return Entity{}, "", ErrPkgNotFound
 	}
-	for _, file := range pkg {
+	for name, file := range pkg {
 		entity, ok := file.Entities[entityRef.Name]
 		if ok {
-			return entity, nil
+			return entity, name, nil
 		}
 	}
-	return Entity{}, ErrEntityNotFound
+	return Entity{}, "", ErrEntityNotFound
 }
 
 type Package map[string]File
 
-func (p Package) Entity(name string) (Entity, bool) {
-	for _, file := range p {
+func (p Package) Entity(name string) (Entity, string, bool) {
+	for name, file := range p {
 		entity, ok := file.Entities[name]
 		if ok {
-			return entity, true
+			return entity, name, true
 		}
 	}
-	return Entity{}, false
+	return Entity{}, "", false
 }
 
 func (p Package) Entities(f func(entity Entity, entityName string, fileName string) error) error {

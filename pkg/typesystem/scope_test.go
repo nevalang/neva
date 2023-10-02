@@ -11,14 +11,10 @@ var ErrDefaultScope = errors.New("default scope")
 
 type Scope map[string]ts.Def
 
-func (d Scope) GetType(ref string) (ts.Def, error) {
-	v, ok := d[ref]
+func (s Scope) GetType(ref string) (ts.Def, ts.Scope, error) {
+	v, ok := s[ref]
 	if !ok {
-		return ts.Def{}, ErrDefaultScope
+		return ts.Def{}, nil, ErrDefaultScope
 	}
-	return v, nil
-}
-
-func (d Scope) Rebase(string) (ts.Scope, error) {
-	return d, nil
+	return v, s, nil
 }

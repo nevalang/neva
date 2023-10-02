@@ -50,7 +50,7 @@ var (
 )
 
 func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Node, error) {
-	entity, err := prog.Entity(node.EntityRef)
+	entity, _, err := prog.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, fmt.Errorf("entity: %w", err)
 	}
@@ -164,7 +164,7 @@ func (a Analyzer) getNodeInportType(
 		return ts.Expr{}, ErrNodeNotFound
 	}
 
-	component, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
 	outport, ok := component.Interface.IO.In[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeOutportNotFound
@@ -240,7 +240,7 @@ func (a Analyzer) getNodeOutportType(
 		return ts.Expr{}, ErrNodeNotFound
 	}
 
-	component, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
 	outport, ok := component.Interface.IO.Out[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeOutportNotFound
@@ -260,7 +260,7 @@ func (a Analyzer) getNodeOutportType(
 }
 
 func (a Analyzer) getConstType(ref src.EntityRef, prog src.Program) (ts.Expr, error) {
-	entity, err := prog.Entity(ref)
+	entity, _, err := prog.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("prog entity: %w", err)
 	}

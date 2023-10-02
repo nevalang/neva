@@ -76,7 +76,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 
 func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, prog src.Program) error {
 	for name, node := range nodes {
-		nodeEntity, err := prog.Entity(node.EntityRef)
+		nodeEntity, _, err := prog.Entity(node.EntityRef)
 		if err != nil {
 			return fmt.Errorf("%w: %v: %v", ErrEntityNotFoundByNodeRef, name, node.EntityRef)
 		}

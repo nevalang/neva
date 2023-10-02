@@ -25,8 +25,7 @@ type (
 		ShouldTerminate(Trace, Scope) (bool, error)
 	}
 	Scope interface {
-		GetType(ref string) (Def, error)
-		Rebase(ref string) (Scope, error)
+		GetType(ref string) (Def, Scope, error)
 	}
 )
 
@@ -283,15 +282,16 @@ func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, Scop
 		return def, scope, nil
 	}
 
-	def, err := scope.GetType(ref)
+	def, scope, err := scope.GetType(ref)
 	if err != nil {
 		return Def{}, nil, fmt.Errorf("%w: %v", ErrScope, err)
 	}
 
-	scope, err = scope.Rebase(ref)
-	if err != nil {
-		return Def{}, nil, fmt.Errorf("%w: %v", ErrScopeUpdate, err)
-	}
+	// TODO ensure we don't need it
+	// scope, err = scope.Rebase(ref)
+	// if err != nil {
+	// 	return Def{}, nil, fmt.Errorf("%w: %v", ErrScopeUpdate, err)
+	// }
 
 	return def, scope, nil
 }
