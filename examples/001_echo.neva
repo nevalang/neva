@@ -1,4 +1,4 @@
-// This program reads a string and prints it.
+// This program reads a str and prints it.
 // And it does so in an infinite loop.
 
 use {

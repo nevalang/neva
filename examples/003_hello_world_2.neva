@@ -13,7 +13,7 @@ components {
 		}
 		net {
 			in.enter -> lock.in.sig
-			(string 'Hello, World!\n') -> lock.in.v
+			(str 'Hello, World!\n') -> lock.in.v
 			lock.out.v -> print.in.v
 			print.out.v -> out.exit
 		}

@@ -10,14 +10,14 @@ use {
 }
 
 const {
-	instructions string 'Enter operation:\n\t1) +/n/t2) -/n/t3) */n/t4) /'
+	instructions str 'Enter operation:\n\t1) +/n/t2) -/n/t3) */n/t4) /'
 	availableInstructions map<str> ['*', '/', '+', '-']
-	enterNumMsg string 'Enter number'
-	unknownOpErr string 'Unknown operation'
+	enterNumMsg str 'Enter number'
+	unknownOpErr str 'Unknown operation'
 }
 
 components {
-	Main(enter string instructions) (exit) {
+	Main(enter str instructions) (exit) {
 		nodes {
 			print std.Print
 			readOp ReadOp
