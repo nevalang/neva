@@ -79,10 +79,10 @@ type (
 func (g Generator) processComponentNode( //nolint:funlen
 	ctx context.Context,
 	nodeCtx nodeContext,
-	pkgs src.Program,
+	prog src.Program,
 	result *ir.Program,
 ) error {
-	componentEntity, err := g.lookupEntity(pkgs, "", nodeCtx.componentRef) // not sure about curpkgname
+	componentEntity, err := g.lookupEntity(prog, "", nodeCtx.componentRef) // not sure about curpkgname
 	if err != nil {
 		return fmt.Errorf("lookup entity: %w", err)
 	}
@@ -120,7 +120,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	// We use network as a source of true about ports usage instead of component's definitions.
 	// We cannot rely on them because there's not enough information about how many slots are used.
 	// On the other hand, we believe network has everything we need because probram is correct.
-	netResult, err := g.processNet(pkgs, component.Net, nodeCtx, result)
+	netResult, err := g.processNet(prog, component.Net, nodeCtx, result)
 	if err != nil {
 		return fmt.Errorf("handle network: %w", err)
 	}
@@ -145,7 +145,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 			constValue: nodePortsUsage.constValue,
 		}
 
-		if err := g.processComponentNode(ctx, subNodeCtx, pkgs, result); err != nil {
+		if err := g.processComponentNode(ctx, subNodeCtx, prog, result); err != nil {
 			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), name)
 		}
 	}
@@ -167,7 +167,7 @@ type processNetworkResult struct {
 // 2) returns metadata about how subnodes are used by this network
 // 3) inserts const value if needed
 func (g Generator) processNet(
-	pkgs map[string]src.File,
+	prog src.Program,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	irResult *ir.Program,
@@ -178,7 +178,7 @@ func (g Generator) processNet(
 	}
 
 	for _, conn := range conns {
-		irSenderSidePortAddr, err := g.processSenderSide(pkgs, nodeCtx, conn.SenderSide, result)
+		irSenderSidePortAddr, err := g.processSenderSide(prog, nodeCtx, conn.SenderSide, result)
 		if err != nil {
 			return processNetworkResult{}, fmt.Errorf("process sender side: %w", err)
 		}
@@ -212,7 +212,7 @@ func (g Generator) processNet(
 }
 
 func (g Generator) processSenderSide( //nolint:funlen
-	pkgs map[string]src.File,
+	prog src.Program,
 	nodeCtx nodeContext,
 	senderSide src.SenderConnectionSide,
 	result processNetworkResult,
@@ -228,7 +228,7 @@ func (g Generator) processSenderSide( //nolint:funlen
 		}
 
 		if _, ok := result.nodesUsage[nodeName]; !ok {
-			constEntity, err := g.lookupEntity(pkgs, nodeCtx.curPkgName, *senderSide.ConstRef)
+			constEntity, err := g.lookupEntity(prog, nodeCtx.curPkgName, *senderSide.ConstRef)
 			if err != nil {
 				return nil, fmt.Errorf("lookup const entity: %w", err)
 			}
@@ -328,19 +328,14 @@ func (Generator) insertAndReturnOutports(
 	return runtimeFuncOutportAddrs
 }
 
-func (Generator) lookupEntity(pkgs map[string]src.File, pkgFallback string, ref src.EntityRef) (src.Entity, error) {
+func (Generator) lookupEntity(prog src.Program, pkgFallback string, ref src.EntityRef) (src.Entity, error) {
 	if ref.Pkg == "" {
 		ref.Pkg = pkgFallback
 	}
 
-	pkg, ok := pkgs[ref.Pkg]
-	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrPkgNotFound, ref.Pkg)
-	}
-
-	entity, ok := pkg.Entities[ref.Name]
-	if !ok {
-		return src.Entity{}, fmt.Errorf("%w: entity name = %v", ErrEntityNotFound, ref.Name)
+	entity, _, err := prog.Entity(ref)
+	if err != nil {
+		return src.Entity{}, err
 	}
 
 	return entity, nil

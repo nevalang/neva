@@ -10,15 +10,24 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Repository struct{}
+type Repository struct {
+	stdPath string
+}
 
 func (r Repository) ByPath(ctx context.Context, pathToMainPkg string) (map[string]compiler.RawPackage, error) {
 	mainPkgFiles, err := readAllFilesInDir(pathToMainPkg)
 	if err != nil {
 		return nil, err
 	}
+
+	stdPkg, err := readAllFilesInDir(r.stdPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string]compiler.RawPackage{
 		"main": mainPkgFiles,
+		"std":  stdPkg,
 	}, nil
 }
 
@@ -27,7 +36,7 @@ func (r Repository) Save(ctx context.Context, path string, prog *ir.Program) err
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, bb, 0644)
+	return os.WriteFile(path, bb, 0644) //nolint:gofumpt
 }
 
 func readAllFilesInDir(path string) (map[string][]byte, error) {
@@ -51,6 +60,9 @@ func readAllFilesInDir(path string) (map[string][]byte, error) {
 
 	return files, nil
 }
-func MustNew() Repository {
-	return Repository{}
+
+func MustNew(stdPkgPath string) Repository {
+	return Repository{
+		stdPath: stdPkgPath,
+	}
 }

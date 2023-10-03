@@ -13,40 +13,40 @@ var (
 	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
 )
 
-func (a Analyzer) analyzeConst(constant src.Const) (src.Const, error) {
-	if constant.Value == nil && constant.Ref == nil {
+func (a Analyzer) analyzeConst(cnst src.Const, prog src.Program) (src.Const, error) {
+	if cnst.Value == nil && cnst.Ref == nil {
 		return src.Const{}, ErrEmptyConst
 	}
 
-	if constant.Value == nil {
+	if cnst.Value == nil {
 		panic("// TODO: references for constants not implemented yet")
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(constant.Value.TypeExpr)
+	resolvedType, err := a.analyzeTypeExpr(cnst.Value.TypeExpr, Scope{prog: prog})
 	if err != nil {
 		return src.Const{}, fmt.Errorf("%w: %v", ErrResolveConstType, err)
 	}
 
 	switch resolvedType.Inst.Ref {
 	case "bool":
-		if constant.Value.Int != 0 || constant.Value.Float != 0 || constant.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
+		if cnst.Value.Int != 0 || cnst.Value.Float != 0 || cnst.Value.Str != "" {
+			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
 		}
 	case "int":
-		if constant.Value.Bool != false || constant.Value.Float != 0 || constant.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
+		if cnst.Value.Bool != false || cnst.Value.Float != 0 || cnst.Value.Str != "" {
+			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
 		}
 	case "float":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
+		if cnst.Value.Bool != false || cnst.Value.Int != 0 || cnst.Value.Str != "" {
+			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
 		}
 	case "str":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Float != 0 {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, constant.Value)
+		if cnst.Value.Bool != false || cnst.Value.Int != 0 || cnst.Value.Float != 0 {
+			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
 		}
 	}
 
-	valueCopy := *constant.Value
+	valueCopy := *cnst.Value
 	valueCopy.TypeExpr = resolvedType
 
 	return src.Const{

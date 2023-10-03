@@ -81,19 +81,19 @@ func (a Analyzer) analyzeEntity(entity src.Entity, prog src.Program) (src.Entity
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type)
+		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, Scope{prog: prog})
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("resolve type: %w", err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
 	case src.ConstEntity:
-		resolvedConst, err := a.analyzeConst(entity.Const)
+		resolvedConst, err := a.analyzeConst(entity.Const, prog)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze const: %w", err)
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		resolvedInterface, err := a.analyzeInterface(entity.Interface)
+		resolvedInterface, err := a.analyzeInterface(entity.Interface, prog)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
 		}

@@ -9,7 +9,7 @@ import (
 )
 
 func (a Analyzer) analyzeComponent(comp src.Component, prog src.Program) (src.Component, error) {
-	resolvedInterface, err := a.analyzeInterface(comp.Interface)
+	resolvedInterface, err := a.analyzeInterface(comp.Interface, prog)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze interface: %w", err)
 	}
@@ -76,7 +76,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Nod
 		)
 	}
 
-	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, compInterface.TypeParams, nil)
+	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, compInterface.TypeParams, Scope{prog: prog})
 	if err != nil {
 		return src.Node{}, fmt.Errorf("resolve args: %w", err)
 	}
@@ -120,7 +120,7 @@ func (a Analyzer) analyzeComponentNet(
 			if err != nil {
 				return nil, fmt.Errorf("get sender type: %w", err)
 			}
-			if err := a.resolver.IsSubtypeOf(senderType, receiverType, nil); err != nil {
+			if err := a.resolver.IsSubtypeOf(senderType, receiverType, Scope{prog: prog}); err != nil {
 				return nil, fmt.Errorf("is subtype of: %w", err)
 			}
 		}
@@ -146,12 +146,12 @@ func (a Analyzer) getReceiverType(
 		return outport.TypeExpr, nil
 	}
 
-	nodeOutportType, err := a.getNodeOutportType(receiverSide.PortAddr, nodes, prog)
+	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, prog)
 	if err != nil {
-		return ts.Expr{}, fmt.Errorf("get node outport type: %w", err)
+		return ts.Expr{}, fmt.Errorf("get node inport type: %w", err)
 	}
 
-	return nodeOutportType, nil
+	return nodeInportType, nil
 }
 
 func (a Analyzer) getNodeInportType(
@@ -163,19 +163,30 @@ func (a Analyzer) getNodeInportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-
 	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	outport, ok := component.Interface.IO.In[portAddr.Node]
+	return a.getResolvedPortType(component.Interface.IO.In, component.Interface.TypeParams, portAddr, node, prog)
+}
+
+func (a Analyzer) getResolvedPortType(
+	ports map[string]src.Port,
+	params []ts.Param,
+	portAddr src.PortAddr,
+	node src.Node,
+	prog src.Program,
+) (ts.Expr, error) {
+	port, ok := ports[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeOutportNotFound
 	}
 
-	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, component.Interface.TypeParams, nil)
+	scope := Scope{prog: prog}
+
+	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("resolve args: %w", err)
 	}
 
-	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(outport.TypeExpr, frame, nil)
+	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, frame, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("resolve expr with frame: %w", err)
 	}
@@ -239,24 +250,8 @@ func (a Analyzer) getNodeOutportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-
 	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	outport, ok := component.Interface.IO.Out[portAddr.Node]
-	if !ok {
-		return ts.Expr{}, ErrNodeOutportNotFound
-	}
-
-	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, component.Interface.TypeParams, nil)
-	if err != nil {
-		return ts.Expr{}, fmt.Errorf("resolve args: %w", err)
-	}
-
-	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(outport.TypeExpr, frame, nil)
-	if err != nil {
-		return ts.Expr{}, fmt.Errorf("resolve expr with frame: %w", err)
-	}
-
-	return resolvedOutportType, nil
+	return a.getResolvedPortType(component.Interface.IO.Out, component.Interface.TypeParams, portAddr, node, prog)
 }
 
 func (a Analyzer) getConstType(ref src.EntityRef, prog src.Program) (ts.Expr, error) {

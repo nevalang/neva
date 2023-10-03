@@ -45,7 +45,7 @@ func main() {
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
 	comp := compiler.New(
-		disk.MustNew(),
+		disk.MustNew("/Users/emil/projects/neva/std"),
 		parser.New(false),
 		analyzer,
 		irgen,

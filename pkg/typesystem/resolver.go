@@ -156,7 +156,7 @@ var (
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this: for enum do nothing (it's valid and not composite, there's nothing to resolveExpr),
 // for array resolveExpr it's type, for record and union apply recursion for it's every field/element.
-func (r Resolver) resolveExpr( //nolint:funlen
+func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 	expr Expr,
 	scope Scope,
 	frame map[string]Def,
@@ -166,43 +166,45 @@ func (r Resolver) resolveExpr( //nolint:funlen
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
 	}
 
-	switch expr.Lit.Type() {
-	case EnumLitType:
-		return expr, nil
-	case ArrLitType:
-		resolvedArrType, err := r.resolveExpr(expr.Lit.Arr.Expr, scope, frame, trace)
-		if err != nil {
-			return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
-		}
-		return Expr{
-			Lit: &LitExpr{
-				Arr: &ArrLit{resolvedArrType, expr.Lit.Arr.Size},
-			},
-		}, nil
-	case UnionLitType:
-		resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
-		for _, unionEl := range expr.Lit.Union {
-			resolvedEl, err := r.resolveExpr(unionEl, scope, frame, trace)
+	if expr.Lit != nil {
+		switch expr.Lit.Type() {
+		case EnumLitType:
+			return expr, nil
+		case ArrLitType:
+			resolvedArrType, err := r.resolveExpr(expr.Lit.Arr.Expr, scope, frame, trace)
 			if err != nil {
-				return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
+				return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
 			}
-			resolvedUnion = append(resolvedUnion, resolvedEl)
-		}
-		return Expr{
-			Lit: &LitExpr{Union: resolvedUnion},
-		}, nil
-	case RecLitType:
-		resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
-		for field, fieldExpr := range expr.Lit.Rec {
-			resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
-			if err != nil {
-				return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
+			return Expr{
+				Lit: &LitExpr{
+					Arr: &ArrLit{resolvedArrType, expr.Lit.Arr.Size},
+				},
+			}, nil
+		case UnionLitType:
+			resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
+			for _, unionEl := range expr.Lit.Union {
+				resolvedEl, err := r.resolveExpr(unionEl, scope, frame, trace)
+				if err != nil {
+					return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
+				}
+				resolvedUnion = append(resolvedUnion, resolvedEl)
 			}
-			resolvedStruct[field] = resolvedFieldExpr
+			return Expr{
+				Lit: &LitExpr{Union: resolvedUnion},
+			}, nil
+		case RecLitType:
+			resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
+			for field, fieldExpr := range expr.Lit.Rec {
+				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
+				if err != nil {
+					return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
+				}
+				resolvedStruct[field] = resolvedFieldExpr
+			}
+			return Expr{
+				Lit: &LitExpr{Rec: resolvedStruct},
+			}, nil
 		}
-		return Expr{
-			Lit: &LitExpr{Rec: resolvedStruct},
-		}, nil
 	}
 
 	def, scope, err := r.getDef(expr.Inst.Ref, frame, scope)

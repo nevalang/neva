@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/src"
-	"github.com/nevalang/neva/internal/compiler/std"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
@@ -28,7 +27,7 @@ type (
 		Analyze(src.Program) error
 	}
 	IRGenerator interface {
-		Generate(context.Context, src.Package) (*ir.Program, error)
+		Generate(context.Context, src.Program) (*ir.Program, error)
 	}
 
 	RawPackage map[string][]byte // File -> content.
@@ -53,12 +52,7 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		return nil, fmt.Errorf("analyze: %w", err)
 	}
 
-	// TODO add this before analyzer
-	parsedPackages["std"] = src.Package{
-		"funcs.neva": std.NewFuncsFile(),
-	}
-
-	irProg, err := c.irgen.Generate(ctx, parsedPackages["main"]) // TODO use all packages
+	irProg, err := c.irgen.Generate(ctx, parsedPackages)
 	if err != nil {
 		return nil, fmt.Errorf("generate: %w", err)
 	}
