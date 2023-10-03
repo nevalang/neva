@@ -17,7 +17,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		subtypeTrace   ts.Trace
 		superType      ts.Expr
 		supertypeTrace ts.Trace
-		scope          Scope
+		scope          TestScope
 		terminator     func(*MockrecursionTerminatorMockRecorder)
 		wantErr        error
 	}{
@@ -85,8 +85,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
 
 				// TODO figure out why we get [, vec]  and not [vec]
 				// TODO use h.Trace() helper
@@ -102,8 +102,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
 			},
 			wantErr: nil, // valid case for checker because it iterates over supertype args
 		},
@@ -121,8 +121,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, "vec"), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
 			},
 			wantErr: nil,
 		},

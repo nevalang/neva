@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strings"
+
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/compiler/src"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -39,10 +41,14 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 		return ts.Expr{}
 	}
 
-	ref := instExpr.IDENTIFIER().GetText()
+	parsedRef, err := parseEntityRef(instExpr.EntityRef())
+	if err != nil {
+		panic("")
+	}
+
 	result := ts.Expr{
 		Inst: &ts.InstExpr{
-			Ref: ref,
+			Ref: parsedRef,
 		},
 	}
 
@@ -61,6 +67,24 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 	return result
 }
 
+func parseEntityRef(actx generated.IEntityRefContext) (src.EntityRef, error) {
+	parts := strings.Split(actx.GetText(), ".")
+	if len(parts) > 2 {
+		panic("")
+	}
+
+	if len(parts) == 1 {
+		return src.EntityRef{
+			Name: parts[0],
+		}, nil
+	}
+
+	return src.EntityRef{
+		Pkg:  parts[0],
+		Name: parts[1],
+	}, nil
+}
+
 func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 	parsedInports := map[string]src.Port{}
 	for _, port := range in {
@@ -69,7 +93,11 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		if parsedTypeExpr == nil {
 			parsedInports[portName] = src.Port{
 				TypeExpr: ts.Expr{
-					Inst: &ts.InstExpr{Ref: "any"},
+					Inst: &ts.InstExpr{
+						Ref: src.EntityRef{
+							Name: "any",
+						},
+					},
 				},
 			}
 			continue

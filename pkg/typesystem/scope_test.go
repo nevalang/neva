@@ -3,16 +3,17 @@ package typesystem_test
 
 import (
 	"errors"
+	"fmt"
 
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var ErrDefaultScope = errors.New("default scope")
 
-type Scope map[string]ts.Def
+type TestScope map[string]ts.Def
 
-func (s Scope) GetType(ref string) (ts.Def, ts.Scope, error) {
-	v, ok := s[ref]
+func (s TestScope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
+	v, ok := s[ref.String()]
 	if !ok {
 		return ts.Def{}, nil, ErrDefaultScope
 	}

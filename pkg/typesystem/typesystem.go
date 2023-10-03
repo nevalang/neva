@@ -90,10 +90,10 @@ func (expr *Expr) String() string {
 	}
 
 	if len(expr.Inst.Args) == 0 {
-		return expr.Inst.Ref
+		return expr.Inst.Ref.String()
 	}
 
-	str = expr.Inst.Ref + "<"
+	str = expr.Inst.Ref.String() + "<"
 	for i, arg := range expr.Inst.Args {
 		str += arg.String()
 		if i < len(expr.Inst.Args)-1 {
@@ -107,8 +107,8 @@ func (expr *Expr) String() string {
 
 // Instantiation expression
 type InstExpr struct {
-	Ref  string // Must be in the scope
-	Args []Expr // Every ref's parameter must have subtype argument
+	Ref  fmt.Stringer // Must be in the scope
+	Args []Expr       // Every ref's parameter must have subtype argument
 }
 
 // Literal expression. Only one field must be initialized

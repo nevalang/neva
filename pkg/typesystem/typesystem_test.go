@@ -140,7 +140,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst expr with non-empty ref and no args",
 			expr: ts.Expr{
-				Inst: &ts.InstExpr{Ref: "int"},
+				Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")},
 			},
 			want: "int",
 		},
@@ -149,7 +149,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 					},
 				},
 			},
@@ -159,9 +159,9 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: "map",
+					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 					},
 				},
 			},
@@ -171,10 +171,10 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with several args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: "map",
+					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "str"}},
-						{Inst: &ts.InstExpr{Ref: "bool"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
 					},
 				},
 			},
@@ -184,14 +184,14 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with nested arg",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: "map",
+					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 						{
 							Inst: &ts.InstExpr{
-								Ref: "vec",
+								Ref: ts.DefaultStringer("vec"),
 								Args: []ts.Expr{
-									{Inst: &ts.InstExpr{Ref: "bool"}},
+									{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
 								},
 							},
 						},
@@ -244,7 +244,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{
-						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: "int"}},
+						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},
 				},
 			},
@@ -256,7 +256,7 @@ func TestExpr_String(t *testing.T) {
 				Lit: &ts.LitExpr{
 					Arr: &ts.ArrLit{
 						Size: 4096,
-						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: "int"}},
+						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},
 				},
 			},
@@ -277,7 +277,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
-						"name": {Inst: &ts.InstExpr{Ref: "str"}},
+						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 					},
 				},
 			},
@@ -288,8 +288,8 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
-						"name": {Inst: &ts.InstExpr{Ref: "str"}},
-						"age":  {Inst: &ts.InstExpr{Ref: "int"}},
+						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						"age":  {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},
 				},
 			},
@@ -310,7 +310,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "int"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},
 				},
 			},
@@ -321,8 +321,8 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: "int"}},
-						{Inst: &ts.InstExpr{Ref: "str"}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 					},
 				},
 			},

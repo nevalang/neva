@@ -1,14 +1,16 @@
 package typesystem
 
+import "fmt"
+
 // Linked-list to handle recursive types
 type Trace struct {
 	prev *Trace
-	ref  string
+	ref  fmt.Stringer
 }
 
 // O(2n)
 func (t Trace) String() string {
-	lastToFirst := []string{}
+	lastToFirst := []fmt.Stringer{}
 
 	tmp := &t
 	for tmp != nil {
@@ -18,7 +20,7 @@ func (t Trace) String() string {
 
 	firstToLast := "["
 	for i := len(lastToFirst) - 1; i >= 0; i-- {
-		firstToLast += lastToFirst[i]
+		firstToLast += lastToFirst[i].String()
 		if i > 0 {
 			firstToLast += ", "
 		}
@@ -27,7 +29,7 @@ func (t Trace) String() string {
 	return firstToLast + "]"
 }
 
-func NewTrace(prev *Trace, v string) Trace {
+func NewTrace(prev *Trace, v fmt.Stringer) Trace {
 	return Trace{
 		prev: prev,
 		ref:  v,

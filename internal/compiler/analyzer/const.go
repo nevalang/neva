@@ -27,7 +27,7 @@ func (a Analyzer) analyzeConst(cnst src.Const, prog src.Program) (src.Const, err
 		return src.Const{}, fmt.Errorf("%w: %v", ErrResolveConstType, err)
 	}
 
-	switch resolvedType.Inst.Ref {
+	switch resolvedType.Inst.Ref.String() {
 	case "bool":
 		if cnst.Value.Int != 0 || cnst.Value.Float != 0 || cnst.Value.Str != "" {
 			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)

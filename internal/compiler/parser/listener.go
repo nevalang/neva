@@ -1,3 +1,7 @@
+// TODO implement "Exported" field
+// think about moving it in g4 to the level of definition
+// maybe create special TOKEN for that
+
 package parser
 
 import (

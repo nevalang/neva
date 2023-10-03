@@ -16,7 +16,7 @@ func TestDefaultResolver(t *testing.T) {
 
 	type testcase struct {
 		name    string
-		scope   Scope
+		scope   TestScope
 		expr    ts.Expr
 		want    ts.Expr
 		wantErr error
@@ -25,7 +25,7 @@ func TestDefaultResolver(t *testing.T) {
 	tests := []testcase{
 		{ // vec<t1> {t1=vec<t1>}
 			name: "recursive_type_ref_as_arg",
-			scope: Scope{
+			scope: TestScope{
 				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
 			},
@@ -34,7 +34,7 @@ func TestDefaultResolver(t *testing.T) {
 		},
 		{ // t1 { t1={a vec<t1>} }
 			name: "recursive_type_ref_with_structured_body",
-			scope: Scope{
+			scope: TestScope{
 				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 				"t1": h.Def(
 					h.Rec(map[string]ts.Expr{
@@ -50,7 +50,7 @@ func TestDefaultResolver(t *testing.T) {
 		{ // t1, {t1=t2, t2=t1}
 			name: "invalid_(2_step)_indirect_recursion",
 			expr: h.Inst("t1"),
-			scope: Scope{
+			scope: TestScope{
 				"t1": h.Def(h.Inst("t2")), // indirectly
 				"t2": h.Def(h.Inst("t1")), // refers to itself
 			},
@@ -58,7 +58,7 @@ func TestDefaultResolver(t *testing.T) {
 		},
 		{ // t1, {t1=t2, t2=t3, t3=t4, t4=t5, t5=t1}
 			name: "indirect_(5_step)_recursion_through_inst_references",
-			scope: Scope{
+			scope: TestScope{
 				"t1": h.Def(h.Inst("t2")),
 				"t2": h.Def(h.Inst("t3")),
 				"t3": h.Def(h.Inst("t4")),
@@ -70,7 +70,7 @@ func TestDefaultResolver(t *testing.T) {
 		},
 		{ // t1<int>, { t1<t3>=t2<t3>, t2<t>=t3<t>, t3<t>=vec<t>, vec<t>, int }
 			name: "param_with_same_name_as_type_in_scope_(shadowing)",
-			scope: Scope{
+			scope: TestScope{
 				"t1": h.Def( // t1<t3> = t2<t3>
 					h.Inst("t2", h.Inst("t3")),
 					h.Param("t3", ts.Expr{}),

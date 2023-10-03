@@ -20,8 +20,11 @@ type Location struct {
 	file src.File
 }
 
-func (s Scope) GetType(ref string) (ts.Def, ts.Scope, error) {
-	parsedRef := s.parseRef(ref)
+func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
+	parsedRef, ok := ref.(src.EntityRef)
+	if !ok {
+		panic("not ok parse ref")
+	}
 
 	def, location, err := s.getType(parsedRef)
 	if err != nil {

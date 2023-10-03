@@ -30,7 +30,7 @@ func (h Helper) Inst(ref string, args ...Expr) Expr {
 	}
 	return Expr{
 		Inst: &InstExpr{
-			Ref:  ref,
+			Ref:  DefaultStringer(ref),
 			Args: args,
 		},
 	}
@@ -84,10 +84,14 @@ func (h Helper) Param(name string, constr Expr) Param {
 	}
 }
 
+type DefaultStringer string
+
+func (ds DefaultStringer) String() string { return string(ds) }
+
 func (h Helper) Trace(ss ...string) Trace {
 	var t *Trace
 	for _, s := range ss {
-		tmp := NewTrace(t, s)
+		tmp := NewTrace(t, DefaultStringer(s))
 		t = &tmp
 	}
 	return *t

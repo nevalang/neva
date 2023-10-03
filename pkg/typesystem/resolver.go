@@ -25,7 +25,7 @@ type (
 		ShouldTerminate(Trace, Scope) (bool, error)
 	}
 	Scope interface {
-		GetType(ref string) (Def, Scope, error)
+		GetType(ref fmt.Stringer) (Def, Scope, error)
 	}
 )
 
@@ -278,8 +278,8 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 	return r.resolveExpr(*def.BodyExpr, scope, newFrame, &newTrace)
 }
 
-func (Resolver) getDef(ref string, frame map[string]Def, scope Scope) (Def, Scope, error) {
-	def, exist := frame[ref]
+func (Resolver) getDef(ref fmt.Stringer, frame map[string]Def, scope Scope) (Def, Scope, error) {
+	def, exist := frame[ref.String()]
 	if exist {
 		return def, scope, nil
 	}

@@ -16,9 +16,9 @@ func TestTrace_String(t *testing.T) {
 	}{
 		{
 			trace: func() ts.Trace {
-				t1 := ts.NewTrace(nil, "t1")
-				t2 := ts.NewTrace(&t1, "t2")
-				return ts.NewTrace(&t2, "t3")
+				t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+				t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+				return ts.NewTrace(&t2, ts.DefaultStringer("t3"))
 			},
 			want: "[t1, t2, t3]",
 		},

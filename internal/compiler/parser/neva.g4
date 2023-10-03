@@ -16,9 +16,9 @@ importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)* ;
 // types
 typeStmt: 'types' NEWLINE* '{'
     NEWLINE*
-    ('pub'? typeDef NEWLINE*)*
+    (typeDef NEWLINE*)*
 '}' ;
-typeDef: IDENTIFIER typeParams? typeExpr ;
+typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr ;
 typeParams: '<' NEWLINE* typeParamList? '>' ;
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)* ;
 typeParam: IDENTIFIER typeExpr? ;
@@ -35,8 +35,8 @@ unionTypeExpr: nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+ ; // u
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // interfaces
-ioStmt: 'interfaces' NEWLINE* '{' NEWLINE* ('pub'? interfaceDef)* '}' ;
-interfaceDef: IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
+ioStmt: 'interfaces' NEWLINE* '{' NEWLINE* (interfaceDef)* '}' ;
+interfaceDef: PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
 inPortsDef: portsDef ;
 outPortsDef: portsDef ;
 portsDef: '('
@@ -49,8 +49,8 @@ portsDef: '('
 portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE* ;
 
 // const
-constStmt: 'const' NEWLINE* '{' NEWLINE* ('pub'? constDef)* '}' ;
-constDef: IDENTIFIER typeExpr constVal NEWLINE* ;
+constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}' ;
+constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE* ;
 constVal: bool | INT | FLOAT | STRING | arrLit | recLit | nil ;
 bool: 'true' | 'false' ;
 nil: 'nil' ;
@@ -61,7 +61,7 @@ recValueFields: recValueField (NEWLINE* recValueField)*  ;
 recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 
 // components
-compStmt: 'components' NEWLINE* '{' NEWLINE* ('pub'? compDef)* '}' ;
+compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}' ;
 compDef: interfaceDef compBody NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}' ;
 // nodes
@@ -90,6 +90,7 @@ connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}' ;
 /* LEXER */
 
 IDENTIFIER: LETTER (LETTER | INT)*;
+PUB_KW : 'pub' ;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;

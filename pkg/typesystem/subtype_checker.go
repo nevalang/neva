@@ -144,7 +144,7 @@ func (s SubtypeChecker) Check(sub, sup Expr, params TerminatorParams) error { //
 	return nil
 }
 
-func (SubtypeChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef string) TerminatorParams {
+func (SubtypeChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef fmt.Stringer) TerminatorParams {
 	newSubtypeTrace := Trace{
 		prev: &old.SubtypeTrace,
 		ref:  subRef,

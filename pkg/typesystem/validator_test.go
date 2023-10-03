@@ -26,7 +26,7 @@ func TestValidator_Validate(t *testing.T) {
 			name: "non-empty lit and inst",
 			expr: ts.Expr{
 				Lit:  &ts.LitExpr{Enum: []string{"a"}},
-				Inst: &ts.InstExpr{Ref: "int"},
+				Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")},
 			},
 			wantErr: ts.ErrExprMustBeInstOrLit,
 		},
