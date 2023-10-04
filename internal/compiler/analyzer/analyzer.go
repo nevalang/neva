@@ -67,7 +67,13 @@ func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, er
 	}
 
 	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		resolvedEntity, err := a.analyzeEntity(entity, prog)
+		scope := Scope{
+			prog: prog, location: Location{
+				pkg:  pkg,
+				file: pkg[fileName],
+			},
+		}
+		resolvedEntity, err := a.analyzeEntity(entity, scope)
 		if err != nil {
 			return fmt.Errorf("analyze entity: %v: %v: %w", entityName, fileName, err)
 		}
@@ -80,7 +86,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, er
 	return resolvedPkg, nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, prog src.Program) (src.Entity, error) {
+func (a Analyzer) analyzeEntity(entity src.Entity, scope Scope) (src.Entity, error) {
 	resolvedEntity := src.Entity{
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
@@ -88,25 +94,25 @@ func (a Analyzer) analyzeEntity(entity src.Entity, prog src.Program) (src.Entity
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, Scope{prog: prog})
+		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("resolve type: %w", err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
 	case src.ConstEntity:
-		resolvedConst, err := a.analyzeConst(entity.Const, prog)
+		resolvedConst, err := a.analyzeConst(entity.Const, scope)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze const: %w", err)
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		resolvedInterface, err := a.analyzeInterface(entity.Interface, prog)
+		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		resolvedComp, err := a.analyzeComponent(entity.Component, prog)
+		resolvedComp, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze component: %w", err)
 		}

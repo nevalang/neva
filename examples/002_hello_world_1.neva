@@ -3,7 +3,7 @@ use {
 }
 
 const {
-	msg str 'Hello, World!\n'
+	msg std.str 'Hello, World!\n'
 }
 
 components {

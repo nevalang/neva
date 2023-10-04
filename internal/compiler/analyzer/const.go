@@ -13,7 +13,7 @@ var (
 	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
 )
 
-func (a Analyzer) analyzeConst(cnst src.Const, prog src.Program) (src.Const, error) {
+func (a Analyzer) analyzeConst(cnst src.Const, scope Scope) (src.Const, error) {
 	if cnst.Value == nil && cnst.Ref == nil {
 		return src.Const{}, ErrEmptyConst
 	}
@@ -22,7 +22,7 @@ func (a Analyzer) analyzeConst(cnst src.Const, prog src.Program) (src.Const, err
 		panic("// TODO: references for constants not implemented yet")
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(cnst.Value.TypeExpr, Scope{prog: prog})
+	resolvedType, err := a.analyzeTypeExpr(cnst.Value.TypeExpr, scope)
 	if err != nil {
 		return src.Const{}, fmt.Errorf("%w: %v", ErrResolveConstType, err)
 	}

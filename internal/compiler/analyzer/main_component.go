@@ -54,7 +54,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainPortIsArray
 	}
 
-	if enterInport.TypeExpr.Inst == nil || enterInport.TypeExpr.Inst.Ref.String() != "any" {
+	if enterInport.TypeExpr.Inst == nil || enterInport.TypeExpr.Inst.Ref.String() != "std.any" {
 		return ErrMainComponentPortTypeNotAny
 	}
 
@@ -67,7 +67,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 		return ErrMainPortIsArray
 	}
 
-	if exitInport.TypeExpr.Inst == nil || exitInport.TypeExpr.Inst.Ref.String() != "any" {
+	if exitInport.TypeExpr.Inst == nil || exitInport.TypeExpr.Inst.Ref.String() != "std.any" {
 		return ErrMainComponentPortTypeNotAny
 	}
 

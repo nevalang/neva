@@ -95,6 +95,7 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 				TypeExpr: ts.Expr{
 					Inst: &ts.InstExpr{
 						Ref: src.EntityRef{
+							Pkg:  "std",
 							Name: "any",
 						},
 					},

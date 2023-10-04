@@ -1,4 +1,5 @@
 types {
+    pub any
     pub bool
     pub str
     pub int

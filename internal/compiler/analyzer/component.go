@@ -8,18 +8,18 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func (a Analyzer) analyzeComponent(comp src.Component, prog src.Program) (src.Component, error) {
-	resolvedInterface, err := a.analyzeInterface(comp.Interface, prog)
+func (a Analyzer) analyzeComponent(comp src.Component, scope Scope) (src.Component, error) {
+	resolvedInterface, err := a.analyzeInterface(comp.Interface, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze interface: %w", err)
 	}
 
-	resolvedNodes, err := a.analyzeComponentNodes(comp.Nodes, prog)
+	resolvedNodes, err := a.analyzeComponentNodes(comp.Nodes, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze component nodes: %w", err)
 	}
 
-	resolvedNet, err := a.analyzeComponentNet(comp.Net, resolvedInterface, resolvedNodes, prog)
+	resolvedNet, err := a.analyzeComponentNet(comp.Net, resolvedInterface, resolvedNodes, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze component network: %w", err)
 	}
@@ -31,10 +31,10 @@ func (a Analyzer) analyzeComponent(comp src.Component, prog src.Program) (src.Co
 	}, nil
 }
 
-func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, prog src.Program) (map[string]src.Node, error) {
+func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, scope Scope) (map[string]src.Node, error) {
 	resolvedNodes := make(map[string]src.Node, len(nodes))
 	for name, node := range nodes {
-		resolvedNode, err := a.analyzeComponentNode(node, prog)
+		resolvedNode, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
 			return nil, fmt.Errorf("analyze node: %w", err)
 		}
@@ -49,8 +49,8 @@ var (
 	ErrNodeInterfaceDI           = errors.New("interface node cannot have dependency injection")
 )
 
-func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Node, error) {
-	entity, _, err := prog.Entity(node.EntityRef)
+func (a Analyzer) analyzeComponentNode(node src.Node, scope Scope) (src.Node, error) {
+	entity, _, err := scope.prog.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, fmt.Errorf("entity: %w", err)
 	}
@@ -76,7 +76,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Nod
 		)
 	}
 
-	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, compInterface.TypeParams, Scope{prog: prog})
+	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, compInterface.TypeParams, scope)
 	if err != nil {
 		return src.Node{}, fmt.Errorf("resolve args: %w", err)
 	}
@@ -90,7 +90,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, prog src.Program) (src.Nod
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.ComponentDI))
 	for depName, depNode := range node.ComponentDI {
-		resolvedDep, err := a.analyzeComponentNode(depNode, prog)
+		resolvedDep, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
 			return src.Node{}, fmt.Errorf("analyze dependency node: %w", err)
 		}
@@ -108,19 +108,19 @@ func (a Analyzer) analyzeComponentNet(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
-	prog src.Program,
+	scope Scope,
 ) ([]src.Connection, error) {
 	for _, conn := range net {
-		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, prog)
+		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, scope)
 		if err != nil {
 			return nil, fmt.Errorf("get sender type: %w", err)
 		}
 		for _, receiver := range conn.ReceiverSides {
-			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, prog)
+			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, scope)
 			if err != nil {
 				return nil, fmt.Errorf("get sender type: %w", err)
 			}
-			if err := a.resolver.IsSubtypeOf(senderType, receiverType, Scope{prog: prog}); err != nil {
+			if err := a.resolver.IsSubtypeOf(senderType, receiverType, scope); err != nil {
 				return nil, fmt.Errorf("is subtype of: %w", err)
 			}
 		}
@@ -132,7 +132,7 @@ func (a Analyzer) getReceiverType(
 	receiverSide src.ReceiverConnectionSide,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
-	prog src.Program,
+	scope Scope,
 ) (ts.Expr, error) {
 	if receiverSide.PortAddr.Node == "in" {
 		return ts.Expr{}, ErrWriteSelfIn
@@ -146,7 +146,7 @@ func (a Analyzer) getReceiverType(
 		return outport.TypeExpr, nil
 	}
 
-	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, prog)
+	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("get node inport type: %w", err)
 	}
@@ -157,14 +157,14 @@ func (a Analyzer) getReceiverType(
 func (a Analyzer) getNodeInportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	prog src.Program,
+	scope Scope,
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	return a.getResolvedPortType(component.Interface.IO.In, component.Interface.TypeParams, portAddr, node, prog)
+	component, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	return a.getResolvedPortType(component.Interface.IO.In, component.Interface.TypeParams, portAddr, node, scope)
 }
 
 func (a Analyzer) getResolvedPortType(
@@ -172,14 +172,12 @@ func (a Analyzer) getResolvedPortType(
 	params []ts.Param,
 	portAddr src.PortAddr,
 	node src.Node,
-	prog src.Program,
+	scope Scope,
 ) (ts.Expr, error) {
 	port, ok := ports[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeOutportNotFound
 	}
-
-	scope := Scope{prog: prog}
 
 	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
 	if err != nil {
@@ -208,10 +206,10 @@ func (a Analyzer) getSenderType(
 	senderSide src.SenderConnectionSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
-	prog src.Program,
+	scope Scope,
 ) (ts.Expr, error) {
 	if senderSide.ConstRef != nil {
-		constTypeExpr, err := a.getConstType(*senderSide.ConstRef, prog)
+		constTypeExpr, err := a.getConstType(*senderSide.ConstRef, scope)
 		if err != nil {
 			return ts.Expr{}, fmt.Errorf("get const type: %w", err)
 		}
@@ -233,7 +231,7 @@ func (a Analyzer) getSenderType(
 		return inport.TypeExpr, nil
 	}
 
-	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, prog)
+	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("get node outport type: %w", err)
 	}
@@ -244,18 +242,18 @@ func (a Analyzer) getSenderType(
 func (a Analyzer) getNodeOutportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	prog src.Program,
+	scope Scope,
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	component, _, _ := prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	return a.getResolvedPortType(component.Interface.IO.Out, component.Interface.TypeParams, portAddr, node, prog)
+	component, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	return a.getResolvedPortType(component.Interface.IO.Out, component.Interface.TypeParams, portAddr, node, scope)
 }
 
-func (a Analyzer) getConstType(ref src.EntityRef, prog src.Program) (ts.Expr, error) {
-	entity, _, err := prog.Entity(ref)
+func (a Analyzer) getConstType(ref src.EntityRef, scope Scope) (ts.Expr, error) {
+	entity, _, err := scope.prog.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("prog entity: %w", err)
 	}
@@ -263,7 +261,7 @@ func (a Analyzer) getConstType(ref src.EntityRef, prog src.Program) (ts.Expr, er
 		return ts.Expr{}, fmt.Errorf("%w: %v", ErrSenderConstRefEntityKind, entity.Kind)
 	}
 	if entity.Const.Ref != nil {
-		return a.getConstType(*entity.Const.Ref, prog)
+		return a.getConstType(*entity.Const.Ref, scope)
 	}
 	return entity.Const.Value.TypeExpr, nil
 }
