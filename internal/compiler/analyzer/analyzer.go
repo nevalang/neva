@@ -13,6 +13,11 @@ type Analyzer struct {
 	resolver ts.Resolver
 }
 
+// Analyze method formats error from a.analyze so end-user can easily understand what's wrong.
+func (a Analyzer) Analyze(prog src.Program) error {
+	return a.analyze(prog)
+}
+
 var (
 	ErrEmptyProgram      = errors.New("empty program")
 	ErrMainPkgNotFound   = errors.New("main package not found")
@@ -20,8 +25,8 @@ var (
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
 
-// Analyze returns error if program is invalid. It also modifies program by resolving types.
-func (a Analyzer) Analyze(prog src.Program) error {
+// analyze returns error if program is invalid. It also modifies program by resolving types.
+func (a Analyzer) analyze(prog src.Program) error {
 	if len(prog) == 0 {
 		return ErrEmptyProgram
 	}
