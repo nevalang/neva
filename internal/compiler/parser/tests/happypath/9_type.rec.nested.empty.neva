@@ -1,43 +1,43 @@
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 {}
     }
 }
 
-type {
+types {
     Rec1Lvl1 { Rec1Lvl2 {}
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 {} }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2_1 {}
         Rec1Lvl2_2 {}
     }
 }
 
-type {
+types {
     Rec1Lvl1 { Rec1Lvl2_1 {}
         Rec1Lvl2_2 {}
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2_1 {}
         Rec1Lvl2_2 {} }
 }
 
-type {
+types {
     Rec1Lvl1 { Rec1Lvl2_1 {}
         Rec1Lvl2_2 {} } }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 {
             Rec1Lvl3_1 {}
@@ -46,7 +46,7 @@ type {
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 { Rec1Lvl3_1 {}
             Rec1Lvl3_2 {}
@@ -54,7 +54,7 @@ type {
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 {
             Rec1Lvl3_1 {}
@@ -62,19 +62,19 @@ type {
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 { Rec1Lvl3_1 {}
             Rec1Lvl3_2 {} }
     }
 }
 
-type {
+types {
     Rec1Lvl1 {
         Rec1Lvl2 { Rec1Lvl3_1 {}
             Rec1Lvl3_2 {} } } }
 
-type {
+types {
     pub Rec1Lvl1 {
         Rec1Lvl2 {
             Rec1Lvl3_1 {

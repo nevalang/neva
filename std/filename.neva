@@ -1,0 +1,28 @@
+types {
+    bool
+    str
+    int
+    float
+    map<t1>
+    vec<t1>
+}
+
+interfaces {
+    Example() ()
+}
+
+components {
+    Read(sig) (v str)
+    
+    Print<t1>(v t1) (v t1)
+    
+    Lock<t1>(sig, v t1) (v t1)
+    
+    Const<t1>() (v t1)
+    
+    ParseNum<t1 int | float>(v str) (v t1, err str)
+    
+    Add<t1 int | float | str>(a, b t1) (v t1)
+
+    ParseNum<t1 int | float>(v str) (v t1, err str)
+}

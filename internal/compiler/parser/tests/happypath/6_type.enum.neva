@@ -1,47 +1,47 @@
-type {
+types {
     MyEnum1 { One }
 }
 
-type {
+types {
     MyEnum2 {
         One }
 }
 
-type {
+types {
     MyEnum3 { One
     }
 }
 
-type {
+types {
     MyEnum4 {
         One
     }
 }
 
-type {
+types {
     MyEnum5 { One, Two }
 }
 
-type {
+types {
     MyEnum6 { One,
         Two
     }
 }
 
-type {
+types {
     MyEnum7 {
         One,
         Two }
 }
 
-type {
+types {
     MyEnum8 {
         One,
         Two
     }
 }
 
-type {
+types {
     MyEnum9 { One }
     pub MyEnum10 {
         One,

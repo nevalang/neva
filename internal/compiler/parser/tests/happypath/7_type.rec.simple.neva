@@ -1,58 +1,58 @@
-type {
+types {
     EmptyRec {}
 }
 
-type {
+types {
     EmptyRec2 {
     }
 }
 
-type {
+types {
     EmptyRec2 {
 
     }
 }
 
-type {
+types {
     Rec { foo int }
 }
 
-type {
+types {
     Rec {
         foo int }
 }
 
-type {
+types {
     Rec { foo int
     }
 }
 
-type {
+types {
     Rec {
         foo int
     }
 }
 
-type {
+types {
     Rec {
         foo int
         bar { Monday, Tuesday, Wednesday }
     }
 }
 
-type {
+types {
     Rec { foo int
         bar { Monday, Tuesday, Wednesday }
     }
 }
 
-type {
+types {
     Rec {
         foo int
         bar { Monday, Tuesday, Wednesday } }
 }
 
-type {
+types {
     Rec {
         foo int
         bar {
@@ -63,7 +63,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
         foo int
 
@@ -75,7 +75,7 @@ type {
     }
 }
 
-type {
+types {
     EmptyRec {}
 
     Rec { foo int }

@@ -1,99 +1,99 @@
-type {}
+types {}
 
-type {
+types {
 }
 
-type {
+types {
 
 }
 
-type
+types
 {}
 
-type
+types
 {
 }
 
-type
+types
 {
 
 }
 
-type { MyInt int }
+types { MyInt int }
 
-type {
+types {
     MyInt int }
 
-type {
+types {
     MyInt int
 }
 
-type
+types
 { MyInt int }
 
-type
+types
 {
     MyInt int }
 
-type
+types
 { MyInt int
 }
 
-type
+types
 {
     MyInt int
 }
 
-type { MyInt int
+types { MyInt int
     pub MyStr str
 }
 
-type { MyInt int
+types { MyInt int
 
     pub MyStr str
 }
 
-type { MyInt int
+types { MyInt int
     pub MyStr str }
 
-type {
+types {
     MyInt int
     pub MyStr str
 }
 
-type {
+types {
 
     MyInt int
     pub MyStr str
 }
 
-type {
+types {
     MyInt int
     pub MyStr str
 
 }
 
-type {
-    MyInt int
-
-    pub MyStr str
-}
-
-type {
-
+types {
     MyInt int
 
     pub MyStr str
 }
 
-type {
+types {
+
+    MyInt int
+
+    pub MyStr str
+}
+
+types {
     MyInt int
 
     pub MyStr str
 
 }
 
-type {
+types {
 
     MyInt int
 

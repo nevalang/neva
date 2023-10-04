@@ -1,43 +1,43 @@
-type {
+types {
     Rec { foo vec<int> }
 }
 
-type {
+types {
     Rec {
         foo vec<int> }
 }
 
-type {
+types {
     Rec { foo vec<int>
     }
 }
 
-type {
+types {
     Rec {
         foo vec<int>
     }
 }
 
-type {
+types {
     Rec {
         foo vec<int>
         bar map<str, int>
     }
 }
 
-type {
+types {
     Rec { foo vec<int>
         bar map<str, int>
     }
 }
 
-type {
+types {
     Rec {
         foo vec<int>
         bar map<str, int> }
 }
 
-type {
+types {
     Rec {
         foo vec<int>
 
@@ -45,7 +45,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
 
         foo vec<int>
@@ -53,7 +53,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
         foo vec<int>
         bar map<str, int>
@@ -61,7 +61,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
 
         foo vec<int>
@@ -70,7 +70,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
 
         foo vec<int>
@@ -80,14 +80,14 @@ type {
     }
 }
 
-type {
+types {
     Rec {
         foo map<str, int>
         bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
 }
 
-type {
+types {
     Rec {
         foo map<str, int>
         bar vec<{
@@ -95,7 +95,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
         foo map<str, int>
         bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday
@@ -103,7 +103,7 @@ type {
     }
 }
 
-type {
+types {
     Rec {
         foo map<str, int>
         bar vec<{
@@ -112,7 +112,7 @@ type {
     }
 }
 
-type {
+types {
     pub Rec {
         foo map<str, int>
         bar vec<{

@@ -7,7 +7,7 @@ prog: (NEWLINE | comment | stmt)* EOF ;
 // comments
 comment: '//' (~NEWLINE)* ;
 
-stmt: useStmt | typeStmt | ioStmt | constStmt | compStmt ;
+stmt: useStmt | typeStmt | interfaceStmt | constStmt | compStmt ;
 
 useStmt: 'use' NEWLINE* '{' NEWLINE* importDef* '}' ;
 importDef: IDENTIFIER? importPath NEWLINE*;
@@ -35,7 +35,7 @@ unionTypeExpr: nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+ ; // u
 nonUnionTypeExpr: typeInstExpr | typeLitExpr ;
 
 // interfaces
-ioStmt: 'interfaces' NEWLINE* '{' NEWLINE* (interfaceDef)* '}' ;
+interfaceStmt: 'interfaces' NEWLINE* '{' NEWLINE* (interfaceDef)* '}' ;
 interfaceDef: PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE* ;
 inPortsDef: portsDef ;
 outPortsDef: portsDef ;
@@ -66,14 +66,12 @@ compDef: interfaceDef compBody NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}' ;
 // nodes
 compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;
-compNodeDef: absNodeDef | concreteNodeDef ;
-absNodeDef: IDENTIFIER typeInstExpr ;
-concreteNodeDef: IDENTIFIER concreteNodeInst ;
-concreteNodeInst: entityRef NEWLINE* typeArgs? nodeArgs? ; // entityRef points to component or interface entity
+compNodeDef: IDENTIFIER nodeInst ;
+nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeArgs? ;
 entityRef: IDENTIFIER ('.' IDENTIFIER)? ; 
-nodeArgs: '(' NEWLINE* nodeArgList? ')';
+nodeArgs: '(' NEWLINE* nodeArgList? NEWLINE* ')';
 nodeArgList: nodeArg (',' NEWLINE* nodeArg)*;
-nodeArg : IDENTIFIER ':' concreteNodeInst;
+nodeArg : IDENTIFIER ':' nodeInst;
 // net
 compNetDef: 'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}' ;
 connDefList: connDef (NEWLINE* connDef)* ;
@@ -89,8 +87,8 @@ connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}' ;
 
 /* LEXER */
 
-IDENTIFIER: LETTER (LETTER | INT)*;
 PUB_KW : 'pub' ;
+IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_] ;
 INT: [0-9]+ ; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+ ;

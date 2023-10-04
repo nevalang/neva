@@ -1,4 +1,4 @@
-type {
+types {
     Rec1Lvl1 {
         rec1Lvl2 {
             foo vec<int>
@@ -6,7 +6,7 @@ type {
     }
 }
 
-type {
+types {
     Rec2Lvl1 {
         rec2Lvl2 {
             foo vec<{
@@ -16,7 +16,7 @@ type {
     }
 }
 
-type {
+types {
     Rec3Lvl1 {
         rec3Lvl2 {
             foo vec<{
@@ -28,7 +28,7 @@ type {
     }
 }
 
-type {
+types {
     pub Rec4Lvl1 {
         rec4Lvl2 {
             foo vec<{

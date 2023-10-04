@@ -1,22 +1,22 @@
-io { IReader1 (a bool | int) () }
+interfaces { IReader1 (a bool | int) () }
 
-io {
+interfaces {
     IReader1 (a bool | int) ()
 }
 
-io {
+interfaces {
     IReader1 () (x str | float)
 }
 
-io {
+interfaces {
     IReader1 (a bool | int) (x str | float)
 }
 
-io {
+interfaces {
     IReader1 (a bool | int | {}) (x str | float | { Monday })
 }
 
-io {
+interfaces {
     IReader1 (
         a bool | int | { foo int | str }
     ) (
@@ -29,7 +29,7 @@ io {
     )
 }
 
-io {
+interfaces {
     pub IReader1 (
         a bool | int | { foo int | str },
         b [256][128]{ bar int | [64]int }

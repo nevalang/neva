@@ -1,46 +1,46 @@
-io { IReader1 (x { Monday }) () }
+interfaces { IReader1 (x { Monday }) () }
 
-io { IReader2 (x {
+interfaces { IReader2 (x {
     Monday }) () }
 
-io { IReader3 (x { Monday
+interfaces { IReader3 (x { Monday
 }) () }
 
-io {
+interfaces {
     IReader4 (x { Monday }) ()
 }
 
-io {
+interfaces {
     IReader5 (x {
         Monday
     }) ()
 }
 
-io {
+interfaces {
     IReader6 (x { Monday, Tuesday, Wednesday }) ()
 }
 
-io {
+interfaces {
     IReader7 (x {
         Monday, Tuesday, Wednesday
     }) ()
 }
 
-io {
+interfaces {
     IReader8 (x { Monday, Tuesday, Wednesday }) (a { Monday, Tuesday, Wednesday })
 }
 
-io {
+interfaces {
     IReader9 (x { Monday, Tuesday, Wednesday }) (a {
         Monday, Tuesday, Wednesday })
 }
 
-io {
+interfaces {
     IReader10 (x { Monday, Tuesday, Wednesday }) (a { Monday, Tuesday, Wednesday
     })
 }
 
-io {
+interfaces {
     IReader11 (x {
         Monday, Tuesday, Wednesday
     }) (a {
@@ -48,7 +48,7 @@ io {
     })
 }
 
-io {
+interfaces {
     IReader12 (x {
         Monday,
         Tuesday,
@@ -60,17 +60,17 @@ io {
     })
 }
 
-io {
+interfaces {
     IReader12 (x { Monday, Tuesday, Wednesday }, y { January, February }) (a { Monday, Tuesday, Wednesday }, b  { January, February })
 }
 
-io {
+interfaces {
     IReader12 (
         x { Monday, Tuesday, Wednesday }, y { January, February }
     ) (a { Monday, Tuesday, Wednesday }, b  { January, February })
 }
 
-io {
+interfaces {
     IReader12 (
         x { Monday, Tuesday, Wednesday }, y { January, February }
     ) (
@@ -78,7 +78,7 @@ io {
     )
 }
 
-io {
+interfaces {
     IReader12 (
         x {
             Monday, Tuesday, Wednesday
@@ -89,7 +89,7 @@ io {
 }
 
 
-io {
+interfaces {
     IReader12 (
         x {
             Monday, Tuesday, Wednesday
@@ -101,7 +101,7 @@ io {
     )
 }
 
-io {
+interfaces {
     IReader12 (
         x {
             Monday, Tuesday, Wednesday
@@ -114,7 +114,7 @@ io {
     )
 }
 
-io {
+interfaces {
     IReader12 (
         x {
             Monday, Tuesday, Wednesday
@@ -128,7 +128,7 @@ io {
     )
 }
 
-io {
+interfaces {
     pub IReader12 (
         x {
             Monday,

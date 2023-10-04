@@ -1,25 +1,25 @@
-io { IReader1 (x { foo {} }) () }
+interfaces { IReader1 (x { foo {} }) () }
 
-io {
+interfaces {
     IReader1 (x { foo {} }) () }
 
-io {
+interfaces {
     IReader1 (x { foo {} }) ()
 }
 
-io { IReader1 (x { foo {} }) (bar { baz {} }) }
+interfaces { IReader1 (x { foo {} }) (bar { baz {} }) }
 
-io {
+interfaces {
     IReader1 (x { foo {} }) (bar { baz {} })
 }
 
-io {
+interfaces {
     IReader1 (
         x { foo {} }
     ) (bar { baz {} })
 }
 
-io {
+interfaces {
     IReader1 (
         x { foo {} }
     ) (
@@ -27,7 +27,7 @@ io {
     )
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo { a int }
     }) (bar {
@@ -35,7 +35,7 @@ io {
     })
 }
 
-io {
+interfaces {
     IReader1 (
         x { foo { a int } }
     ) (
@@ -43,7 +43,7 @@ io {
     )
 }
 
-io {
+interfaces {
     pub IReader1 (
         x { foo { a int } },
         y {}

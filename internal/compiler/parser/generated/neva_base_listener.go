@@ -152,11 +152,11 @@ func (s *BasenevaListener) EnterNonUnionTypeExpr(ctx *NonUnionTypeExprContext) {
 // ExitNonUnionTypeExpr is called when production nonUnionTypeExpr is exited.
 func (s *BasenevaListener) ExitNonUnionTypeExpr(ctx *NonUnionTypeExprContext) {}
 
-// EnterIoStmt is called when production ioStmt is entered.
-func (s *BasenevaListener) EnterIoStmt(ctx *IoStmtContext) {}
+// EnterInterfaceStmt is called when production interfaceStmt is entered.
+func (s *BasenevaListener) EnterInterfaceStmt(ctx *InterfaceStmtContext) {}
 
-// ExitIoStmt is called when production ioStmt is exited.
-func (s *BasenevaListener) ExitIoStmt(ctx *IoStmtContext) {}
+// ExitInterfaceStmt is called when production interfaceStmt is exited.
+func (s *BasenevaListener) ExitInterfaceStmt(ctx *InterfaceStmtContext) {}
 
 // EnterInterfaceDef is called when production interfaceDef is entered.
 func (s *BasenevaListener) EnterInterfaceDef(ctx *InterfaceDefContext) {}
@@ -278,23 +278,11 @@ func (s *BasenevaListener) EnterCompNodeDef(ctx *CompNodeDefContext) {}
 // ExitCompNodeDef is called when production compNodeDef is exited.
 func (s *BasenevaListener) ExitCompNodeDef(ctx *CompNodeDefContext) {}
 
-// EnterAbsNodeDef is called when production absNodeDef is entered.
-func (s *BasenevaListener) EnterAbsNodeDef(ctx *AbsNodeDefContext) {}
+// EnterNodeInst is called when production nodeInst is entered.
+func (s *BasenevaListener) EnterNodeInst(ctx *NodeInstContext) {}
 
-// ExitAbsNodeDef is called when production absNodeDef is exited.
-func (s *BasenevaListener) ExitAbsNodeDef(ctx *AbsNodeDefContext) {}
-
-// EnterConcreteNodeDef is called when production concreteNodeDef is entered.
-func (s *BasenevaListener) EnterConcreteNodeDef(ctx *ConcreteNodeDefContext) {}
-
-// ExitConcreteNodeDef is called when production concreteNodeDef is exited.
-func (s *BasenevaListener) ExitConcreteNodeDef(ctx *ConcreteNodeDefContext) {}
-
-// EnterConcreteNodeInst is called when production concreteNodeInst is entered.
-func (s *BasenevaListener) EnterConcreteNodeInst(ctx *ConcreteNodeInstContext) {}
-
-// ExitConcreteNodeInst is called when production concreteNodeInst is exited.
-func (s *BasenevaListener) ExitConcreteNodeInst(ctx *ConcreteNodeInstContext) {}
+// ExitNodeInst is called when production nodeInst is exited.
+func (s *BasenevaListener) ExitNodeInst(ctx *NodeInstContext) {}
 
 // EnterEntityRef is called when production entityRef is entered.
 func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}

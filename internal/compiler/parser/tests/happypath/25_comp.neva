@@ -39,40 +39,40 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {}
+        nodes {}
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
         }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node { absNode INode }
+        nodes { absNode INode }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             absNode INode }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node { absNode INode
+        nodes { absNode INode
         }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             absNode INode
         }
     }
@@ -80,7 +80,7 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             simpleAbsNode INode
             absNodeWithTypeArgs INode<
                 int,
@@ -94,27 +94,27 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node { concreteNode  Node() }
+        nodes { concreteNode  Node() }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             concreteNode  Node() }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node { concreteNode  Node()
+        nodes { concreteNode  Node()
         }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             concreteNode  Node()
         }
     }
@@ -122,7 +122,7 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             concreteNodeWithTypeArgs  Node<int, vec<str>>()
         }
     }
@@ -130,22 +130,22 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {
-            concreteNodeWithDI1  Node1(Node2())
-            concreteNodeWithDI2  Node1(Node2(), Node3())
+        nodes {
+            concreteNodeWithDI1  Node1(foo: Node2())
+            concreteNodeWithDI2  Node1(foo: Node2(), bar: Node3())
         }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             concreteNodeWithDI1  Node1(
-                Node2()
+                foo: Node2()
             )
             concreteNodeWithDI2  Node1(
-                Node2(),
-                Node3()
+                foo: Node2(),
+                bar: Node3()
             )
         }
     }
@@ -153,7 +153,7 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             concreteNodeWithDIAndTypeArgs  Node1<
                 int,
                 map<
@@ -161,8 +161,8 @@ components {
                     vec<bool>
                 >
             >(
-                Node2(),
-                Node3()
+                foo: Node2(),
+                bar: Node3()
             )
         }
     }
@@ -170,7 +170,7 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        node {
+        nodes {
             simpleAbsNode INode
 
             absNodeWithTypeArgs INode<
@@ -180,7 +180,7 @@ components {
                 >
             >
 
-            concreteNodeWithDI1  Node1(Node2())
+            concreteNodeWithDI1  Node1(foo: Node2())
 
             concreteNodeWithDIAndTypeArgs  Node1<
                 int,
@@ -189,8 +189,8 @@ components {
                     vec<bool>
                 >
             >(
-                Node2(),
-                Node3()
+                foo: Node2(),
+                bar: Node3()
             )
         }
     }

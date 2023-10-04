@@ -36,16 +36,15 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 /* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
-	name := actx.IDENTIFIER().GetText()
 	result := src.Entity{
-		Exported: false,
+		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()),
 			BodyExpr: parseTypeExpr(actx.TypeExpr()),
 		},
 	}
-	s.file.Entities[name] = result
+	s.file.Entities[actx.IDENTIFIER().GetText()] = result
 }
 
 /* --- Constants --- */
@@ -92,17 +91,19 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	}
 
 	s.file.Entities[name] = src.Entity{
-		Kind:  src.ConstEntity,
-		Const: src.Const{Value: &val},
+		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
+		Kind:     src.ConstEntity,
+		Const:    src.Const{Value: &val},
 	}
 }
 
 /* --- Interfaces --- */
 
-func (s *treeShapeListener) EnterIoStmt(actx *generated.IoStmtContext) {
+func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
 	for _, interfaceDef := range actx.AllInterfaceDef() {
 		name := interfaceDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = src.Entity{
+			Exported:  interfaceDef.PUB_KW() != nil, //nolint:nosnakecase
 			Kind:      src.InterfaceEntity,
 			Interface: parseInterfaceDef(interfaceDef),
 		}
@@ -120,7 +121,8 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	}
 
 	cmp := src.Entity{
-		Kind: src.ComponentEntity,
+		Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
+		Kind:     src.ComponentEntity,
 		Component: src.Component{
 			Interface: parsedInterfaceDef,
 			Nodes:     parseNodes(allNodesDef),

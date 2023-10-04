@@ -1,6 +1,7 @@
 package smoke_test
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -35,6 +36,23 @@ func TestSmoke(t *testing.T) {
 	nevaTestFiles, err := os.ReadDir(".")
 	require.NoError(t, err)
 
+	s := "["
+	for _, file := range nevaTestFiles {
+		fileName := file.Name()
+		s += fmt.Sprintf(`{
+			"name": "antlr_%s",
+			"type": "antlr-debug",
+			"request": "launch",
+			"input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/%s.neva",
+			"grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
+			"startRule": "prog",
+			"printParseTree": true,
+			"visualParseTree": true
+		  },`, fileName, fileName)
+	}
+	// fmt.Println(s + "]")
+	// os.Exit(0)
+
 	for _, file := range nevaTestFiles {
 		fileName := file.Name()
 
@@ -62,6 +80,8 @@ func TestSmoke(t *testing.T) {
 		// create tree to walk
 		parser.BuildParseTrees = true
 		tree := parser.Prog()
+
+		fmt.Println("===", fileName, "===")
 
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)

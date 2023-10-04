@@ -1,127 +1,127 @@
-io {}
+interfaces {}
 
-io {
+interfaces {
 }
 
-io {
+interfaces {
 
 }
 
-io { IReader1 () () }
+interfaces { IReader1 () () }
 
-io { IReader2 () ()
+interfaces { IReader2 () ()
 }
 
-io {
+interfaces {
     IReader3 () () }
 
-io {
+interfaces {
     IReader4 () ()
 }
 
-io {
+interfaces {
     IReader5 (
     ) ()
 }
 
-io {
+interfaces {
     IReader6 () (
     )
 }
 
-io {
+interfaces {
     IReader7 (
     ) (
     )
 }
 
-io { IReader8 (x int) () }
+interfaces { IReader8 (x int) () }
 
-io { IReader8 (
+interfaces { IReader8 (
     x int) () }
 
-io { IReader8 (x int
+interfaces { IReader8 (x int
 ) () }
 
-io { IReader8 (x int) (
+interfaces { IReader8 (x int) (
 ) }
 
-io {
+interfaces {
     IReader8 (x int) () }
 
-io { IReader8 (x int) ()
+interfaces { IReader8 (x int) ()
 }
 
-io {
+interfaces {
     IReader8 (x int) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int) ()
 }
 
-io {
+interfaces {
     IReader8 (x int
     ) ()
 }
 
-io {
+interfaces {
     IReader8 (x int) (
     )
 }
 
-io {
+interfaces {
     IReader8 (
         x int
     ) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int
     ) (
     )
 }
 
-io { IReader8 (x int, y str) () }
+interfaces { IReader8 (x int, y str) () }
 
-io {
+interfaces {
     IReader8 (x int, y str) () }
 
-io { IReader8 (x int, y str) ()
+interfaces { IReader8 (x int, y str) ()
 }
 
-io { IReader8 (
+interfaces { IReader8 (
     x int, y str) () }
 
-io { IReader8 (x int,
+interfaces { IReader8 (x int,
 y str) () }
 
-io {
+interfaces {
     IReader8 (x int, y str) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int, y str
     ) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int,
         y str) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int,
         y str
     ) ()
 }
 
-io {
+interfaces {
     IReader8 (
         x int,
         y str
@@ -129,58 +129,58 @@ io {
     )
 }
 
-io {
+interfaces {
     IReader8 (
         x int,
         y str
     ) ()
 }
 
-io { IReader9 () (a int) }
+interfaces { IReader9 () (a int) }
 
-io {
+interfaces {
     IReader10 () (a int) }
 
-io { IReader11 () (a int)
+interfaces { IReader11 () (a int)
 }
 
-io {
+interfaces {
     IReader12 () (a int)
 }
 
-io {
+interfaces {
     IReader13 (
     ) (a int)
 }
 
-io {
+interfaces {
     IReader14 () (
         a int)
 }
 
-io {
+interfaces {
     IReader15 () (a int
     )
 }
 
-io {
+interfaces {
     IReader16 (
     ) (
         a int
     )
 }
 
-io { IReader17 (x int) (a int) }
+interfaces { IReader17 (x int) (a int) }
 
-io {
+interfaces {
     IReader18 (x int) (a int)
 }
 
-io {
+interfaces {
     IReader19 (x int, y str) (a int)
 }
 
-io {
+interfaces {
     pub IReader20 (x int, y str) (a int, b bool)
 }
 

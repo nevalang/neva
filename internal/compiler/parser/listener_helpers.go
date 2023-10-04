@@ -123,93 +123,29 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
-func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node { //nolint:funlen
+func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 	result := map[string]src.Node{}
 
 	for _, nodesDef := range actx {
 		for _, node := range nodesDef.AllCompNodeDef() {
-			abs := node.AbsNodeDef()
-			concrete := node.ConcreteNodeDef()
-			if abs == nil && concrete == nil {
-				panic("abs == nil && concrete == nil")
+			var typeArgs []ts.Expr
+			if args := node.NodeInst().TypeArgs(); args != nil {
+				typeArgs = parseTypeExprs(args.AllTypeExpr())
 			}
 
-			var (
-				name string
-				node src.Node
-			)
-			if abs != nil { //nolint:nestif
-				name = abs.IDENTIFIER().GetText()
-				expr := parseTypeInstExpr(abs.TypeInstExpr())
-				node = src.Node{
-					EntityRef: src.EntityRef{Name: name}, // TODO simply use typeInstExpr here
-					TypeArgs:  expr.Inst.Args,
-				}
-			} else {
-				name = concrete.IDENTIFIER().GetText()
-				concreteNodeInst := concrete.ConcreteNodeInst()
-
-				var pkg, nodeRef string
-				nodePath := concreteNodeInst.EntityRef().AllIDENTIFIER()
-				if len(nodePath) == 2 {
-					pkg = nodePath[0].GetText()
-					nodeRef = nodePath[1].GetText()
-				} else {
-					nodeRef = nodePath[0].GetText()
-				}
-
-				var di map[string]src.Node
-				args := concreteNodeInst.NodeArgs()
-				if args != nil && args.NodeArgList() != nil {
-					nodeArgs := args.NodeArgList().AllNodeArg()
-					di = make(map[string]src.Node, len(nodeArgs))
-					for _, arg := range nodeArgs {
-						di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
-					}
-				}
-
-				var typeArgs []ts.Expr
-				if ta := concreteNodeInst.TypeArgs(); ta != nil {
-					typeArgs = parseTypeExprs(ta.AllTypeExpr())
-				}
-
-				node = src.Node{
-					EntityRef:   src.EntityRef{Pkg: pkg, Name: nodeRef},
-					TypeArgs:    typeArgs,
-					ComponentDI: di,
-				}
+			parsedRef, err := parseEntityRef(node.NodeInst().EntityRef())
+			if err != nil {
+				panic(err)
 			}
 
-			result[name] = node
+			result[node.IDENTIFIER().GetText()] = src.Node{
+				EntityRef: parsedRef,
+				TypeArgs:  typeArgs,
+			}
 		}
 	}
 
 	return result
-}
-
-func parseConcreteNode(nodeInst generated.IConcreteNodeInstContext) src.Node {
-	var pkg, nodeRef string
-	nodePath := nodeInst.EntityRef().AllIDENTIFIER()
-	if len(nodePath) == 2 {
-		pkg = nodePath[0].GetText()
-		nodeRef = nodePath[1].GetText()
-	} else {
-		nodeRef = nodePath[0].GetText()
-	}
-
-	di := map[string]src.Node{}
-	args := nodeInst.NodeArgs().NodeArgList().AllNodeArg()
-	for _, arg := range args {
-		di[arg.IDENTIFIER().GetText()] = parseConcreteNode(arg.ConcreteNodeInst())
-	}
-
-	return src.Node{
-		EntityRef: src.EntityRef{
-			Pkg: pkg, Name: nodeRef,
-		},
-		TypeArgs:    parseTypeExprs(nodeInst.TypeArgs().AllTypeExpr()),
-		ComponentDI: di,
-	}
 }
 
 func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {

@@ -1,83 +1,83 @@
-type { num int | float }
+types { num int | float }
 
-type {
+types {
     num int | float
 }
 
-type { num int | float
+types { num int | float
 }
 
-type {
+types {
     num int | float }
 
-type {
+types {
     num int
         | float
 }
 
-type { num int
+types { num int
         | float
 }
 
-type {
+types {
     num int
         | float }
 
-type {
+types {
     num int |
         float
 }
 
-type { num int |
+types { num int |
         float
 }
 
-type {
+types {
     num int |
         float }
 
-type {
+types {
     time { Monday, Tuesday, Wednesday } | { January, February, March }
 }
 
 
-type { time { Monday, Tuesday, Wednesday } | { January, February, March }
+types { time { Monday, Tuesday, Wednesday } | { January, February, March }
 }
 
 
-type {
+types {
     time { Monday, Tuesday, Wednesday } | { January, February, March } }
 
-type {
+types {
     time {
         Monday, Tuesday, Wednesday } | { January, February, March }
 }
 
-type {
+types {
     time { Monday, Tuesday, Wednesday } | { January, February, March
     }
 }
 
-type {
+types {
     time {
         Monday, Tuesday, Wednesday } | { January, February, March
     }
 }
 
-type {
+types {
     time {
         Monday, Tuesday, Wednesday
     } | { January, February, March }
 }
 
-type {
+types {
     time {
         Monday, Tuesday, Wednesday
     } | {
         January, February, March }
 }
 
-type {
+types {
     time {
         Monday, Tuesday, Wednesday
     } | {
@@ -85,7 +85,7 @@ type {
     }
 }
 
-type {
+types {
     time {
         Monday,
         Tuesday,
@@ -97,23 +97,23 @@ type {
     }
 }
 
-type { Obj {} | { foo int } }
+types { Obj {} | { foo int } }
 
-type {
+types {
     Obj {} | { foo int } }
 
-type { Obj {} | { foo int }
+types { Obj {} | { foo int }
 }
 
-type {
+types {
     Obj {} | { foo int }
 }
 
-type {
+types {
     Obj {} | { foo int | float }
 }
 
-type {
+types {
     SomeTyp { foo int | float } | int | {
         Monday,
         Tuesday,
@@ -125,27 +125,27 @@ type {
     } | float 
 }
 
-type { size [64]int | [32]int }
+types { size [64]int | [32]int }
 
-type {
+types {
     size [64]int | [32]int
 }
 
-type {
+types {
     size [64]int
         | [32]int
 }
 
-type {
+types {
     size [64]int |
         [32]int
 }
 
-type {
+types {
     T int | { Monday, Tuesday, Wednesday } | [64]int | [32]int | { foo int | float }
 }
 
-type {
+types {
     pub T int | {
         Monday, Tuesday, Wednesday
     } | [64]int | [32]int | {

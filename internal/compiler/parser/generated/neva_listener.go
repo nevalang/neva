@@ -73,8 +73,8 @@ type nevaListener interface {
 	// EnterNonUnionTypeExpr is called when entering the nonUnionTypeExpr production.
 	EnterNonUnionTypeExpr(c *NonUnionTypeExprContext)
 
-	// EnterIoStmt is called when entering the ioStmt production.
-	EnterIoStmt(c *IoStmtContext)
+	// EnterInterfaceStmt is called when entering the interfaceStmt production.
+	EnterInterfaceStmt(c *InterfaceStmtContext)
 
 	// EnterInterfaceDef is called when entering the interfaceDef production.
 	EnterInterfaceDef(c *InterfaceDefContext)
@@ -136,14 +136,8 @@ type nevaListener interface {
 	// EnterCompNodeDef is called when entering the compNodeDef production.
 	EnterCompNodeDef(c *CompNodeDefContext)
 
-	// EnterAbsNodeDef is called when entering the absNodeDef production.
-	EnterAbsNodeDef(c *AbsNodeDefContext)
-
-	// EnterConcreteNodeDef is called when entering the concreteNodeDef production.
-	EnterConcreteNodeDef(c *ConcreteNodeDefContext)
-
-	// EnterConcreteNodeInst is called when entering the concreteNodeInst production.
-	EnterConcreteNodeInst(c *ConcreteNodeInstContext)
+	// EnterNodeInst is called when entering the nodeInst production.
+	EnterNodeInst(c *NodeInstContext)
 
 	// EnterEntityRef is called when entering the entityRef production.
 	EnterEntityRef(c *EntityRefContext)
@@ -256,8 +250,8 @@ type nevaListener interface {
 	// ExitNonUnionTypeExpr is called when exiting the nonUnionTypeExpr production.
 	ExitNonUnionTypeExpr(c *NonUnionTypeExprContext)
 
-	// ExitIoStmt is called when exiting the ioStmt production.
-	ExitIoStmt(c *IoStmtContext)
+	// ExitInterfaceStmt is called when exiting the interfaceStmt production.
+	ExitInterfaceStmt(c *InterfaceStmtContext)
 
 	// ExitInterfaceDef is called when exiting the interfaceDef production.
 	ExitInterfaceDef(c *InterfaceDefContext)
@@ -319,14 +313,8 @@ type nevaListener interface {
 	// ExitCompNodeDef is called when exiting the compNodeDef production.
 	ExitCompNodeDef(c *CompNodeDefContext)
 
-	// ExitAbsNodeDef is called when exiting the absNodeDef production.
-	ExitAbsNodeDef(c *AbsNodeDefContext)
-
-	// ExitConcreteNodeDef is called when exiting the concreteNodeDef production.
-	ExitConcreteNodeDef(c *ConcreteNodeDefContext)
-
-	// ExitConcreteNodeInst is called when exiting the concreteNodeInst production.
-	ExitConcreteNodeInst(c *ConcreteNodeInstContext)
+	// ExitNodeInst is called when exiting the nodeInst production.
+	ExitNodeInst(c *NodeInstContext)
 
 	// ExitEntityRef is called when exiting the entityRef production.
 	ExitEntityRef(c *EntityRefContext)

@@ -1,96 +1,96 @@
-io { IReader1 (x {}) () }
+interfaces { IReader1 (x {}) () }
 
-io { IReader1 (x {
+interfaces { IReader1 (x {
 }) () }
 
-io {
+interfaces {
     IReader1 (x {}) ()
 }
 
-io { IReader1 (x {
+interfaces { IReader1 (x {
     foo int }) () }
 
-io { IReader1 (x { foo int
+interfaces { IReader1 (x { foo int
 }) () }
 
-io { IReader1 (x {
+interfaces { IReader1 (x {
     foo int
 }) () }
 
-io {
+interfaces {
     IReader1 (x { foo int }) ()
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
     }) ()
 }
 
-io { IReader1 (x {}) (a {}) }
+interfaces { IReader1 (x {}) (a {}) }
 
-io { IReader1 (x {}) (a {
+interfaces { IReader1 (x {}) (a {
 }) }
 
-io {
+interfaces {
     IReader1 (x {}) (a {})
 }
 
-io {
+interfaces {
     IReader1 (x {}) (a {
     })
 }
 
-io {
+interfaces {
     IReader1 (x {
     }) (a {
     })
 }
 
-io { IReader1 (x { foo int }) (a {}) }
+interfaces { IReader1 (x { foo int }) (a {}) }
 
-io { 
+interfaces { 
     IReader1 (x {
         foo int
     }) (a {
     })
 }
 
-io { 
+interfaces { 
     IReader1 (x {
     }) (a {
         bar bool
     })
 }
 
-io { 
+interfaces { 
     IReader1 (x {
     }) (a { bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x { }) (a { bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str }) (a { bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str
     }) (a { bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x { foo int
         bar str }) (a { bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str
@@ -98,14 +98,14 @@ io {
         bar bool })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str }) (a { bar bool
     })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str
@@ -115,7 +115,7 @@ io {
     })
 }
 
-io {
+interfaces {
     IReader1 (x {
         foo int
         bar str
@@ -124,7 +124,7 @@ io {
     })
 }
 
-io {
+interfaces {
     pub IReader1 (x {
         foo int
         bar str
