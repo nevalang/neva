@@ -51,6 +51,8 @@ func (a Analyzer) analyze(prog src.Program) error {
 	return nil
 }
 
+// TODO check that there's no 2 entities with the same name
+// and that there's no unused entities.
 func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, error) {
 	if len(pkg) == 0 {
 		return nil, ErrEmptyPkg

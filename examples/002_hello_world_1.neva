@@ -1,6 +1,3 @@
-// Program that simply prints "Hello, World!".
-// Turns out we need `const` and `lock` for that!
-
 use {
 	std
 }
@@ -12,8 +9,8 @@ const {
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock std.Lock<str>
-			print std.Print<str>
+			lock std.Lock<str>()
+			print std.Print<str>()
 		}
 		net {
 			in.enter -> lock.in.sig

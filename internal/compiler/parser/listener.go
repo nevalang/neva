@@ -115,19 +115,31 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
-	allNodesDef := actx.CompBody().AllCompNodesDef()
-	if allNodesDef == nil {
-		panic("nodesDef == nil")
-	}
 
-	cmp := src.Entity{
-		Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
-		Kind:     src.ComponentEntity,
-		Component: src.Component{
-			Interface: parsedInterfaceDef,
-			Nodes:     parseNodes(allNodesDef),
-			Net:       parseNet(actx.CompBody().AllCompNetDef()),
-		},
+	var cmp src.Entity
+	if actx.CompBody() == nil {
+		cmp = src.Entity{
+			Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
+			Kind:     src.ComponentEntity,
+			Component: src.Component{
+				Interface: parsedInterfaceDef,
+			},
+		}
+		s.file.Entities[name] = cmp
+	} else {
+		allNodesDef := actx.CompBody().AllCompNodesDef()
+		if allNodesDef == nil {
+			panic("nodesDef == nil")
+		}
+		cmp = src.Entity{
+			Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
+			Kind:     src.ComponentEntity,
+			Component: src.Component{
+				Interface: parsedInterfaceDef,
+				Nodes:     parseNodes(allNodesDef),
+				Net:       parseNet(actx.CompBody().AllCompNetDef()),
+			},
+		}
 	}
 
 	s.file.Entities[name] = cmp

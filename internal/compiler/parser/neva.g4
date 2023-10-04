@@ -18,7 +18,7 @@ typeStmt: 'types' NEWLINE* '{'
     NEWLINE*
     (typeDef NEWLINE*)*
 '}' ;
-typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr ;
+typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr? ;
 typeParams: '<' NEWLINE* typeParamList? '>' ;
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)* ;
 typeParam: IDENTIFIER typeExpr? ;
@@ -62,7 +62,7 @@ recValueField: IDENTIFIER ':' constVal NEWLINE* ;
 
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}' ;
-compDef: interfaceDef compBody NEWLINE* ;
+compDef: interfaceDef compBody? NEWLINE* ;
 compBody: '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}' ;
 // nodes
 compNodesDef: 'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}' ;

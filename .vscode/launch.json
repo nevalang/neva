@@ -11,6 +11,16 @@
       "args": ["examples/002_hello_world_1.neva"]
     },
     {
+      "name": "antlr_tmp.neva",
+      "type": "antlr-debug",
+      "request": "launch",
+      "input": "${workspaceFolder}/std/filename.neva",
+      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
+      "startRule": "prog",
+      "printParseTree": true,
+      "visualParseTree": true
+    },
+    {
       "name": "antlr_0_empty.neva",
       "type": "antlr-debug",
       "request": "launch",
