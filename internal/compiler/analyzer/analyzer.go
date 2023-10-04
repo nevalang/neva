@@ -40,12 +40,12 @@ func (a Analyzer) analyze(prog src.Program) error {
 		return fmt.Errorf("main specific pkg validation: %w", err)
 	}
 
-	for name, pkg := range prog {
-		resolvedPkg, err := a.analyzePkg(pkg, prog)
+	for pkgName := range prog {
+		resolvedPkg, err := a.analyzePkg(pkgName, prog)
 		if err != nil {
-			return fmt.Errorf("analyze pkg: %v: %w", name, err)
+			return fmt.Errorf("analyze pkg: %v: %w", pkgName, err)
 		}
-		prog[name] = resolvedPkg
+		prog[pkgName] = resolvedPkg
 	}
 
 	return nil
@@ -53,24 +53,24 @@ func (a Analyzer) analyze(prog src.Program) error {
 
 // TODO check that there's no 2 entities with the same name
 // and that there's no unused entities.
-func (a Analyzer) analyzePkg(pkg src.Package, prog src.Program) (src.Package, error) {
-	if len(pkg) == 0 {
+func (a Analyzer) analyzePkg(pkgName string, prog src.Program) (src.Package, error) {
+	if len(pkgName) == 0 {
 		return nil, ErrEmptyPkg
 	}
 
-	resolvedPkg := make(map[string]src.File, len(pkg))
-	for fileName, file := range pkg {
+	resolvedPkg := make(map[string]src.File, len(pkgName))
+	for fileName, file := range prog[pkgName] {
 		resolvedPkg[fileName] = src.File{
 			Imports:  file.Imports,
 			Entities: make(map[string]src.Entity, len(file.Entities)),
 		}
 	}
 
-	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
+	if err := prog[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
 		scope := Scope{
-			prog: prog, location: Location{
-				pkg:  pkg,
-				file: pkg[fileName],
+			prog: prog, loc: Location{
+				pkg:  pkgName,
+				file: fileName,
 			},
 		}
 		resolvedEntity, err := a.analyzeEntity(entity, scope)

@@ -33,7 +33,7 @@ var (
 )
 
 func (a Analyzer) analyzeIO(params []ts.Param, io src.IO, scope Scope) (src.IO, error) {
-	if len(io.In) == 0 {
+	if len(io.In) == 0 && scope.loc.pkg != "std" {
 		return src.IO{}, ErrEmptyInports
 	} else if len(io.Out) == 0 {
 		return src.IO{}, ErrEmptyOutports

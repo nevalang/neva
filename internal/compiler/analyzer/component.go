@@ -163,8 +163,11 @@ func (a Analyzer) getNodeInportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	component, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	return a.getResolvedPortType(component.Interface.IO.In, component.Interface.TypeParams, portAddr, node, scope)
+	entity, _, err := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	if err != nil {
+		panic("")
+	}
+	return a.getResolvedPortType(entity.Component.Interface.IO.In, entity.Component.Interface.TypeParams, portAddr, node, scope)
 }
 
 func (a Analyzer) getResolvedPortType(
@@ -174,9 +177,9 @@ func (a Analyzer) getResolvedPortType(
 	node src.Node,
 	scope Scope,
 ) (ts.Expr, error) {
-	port, ok := ports[portAddr.Node]
+	port, ok := ports[portAddr.Port]
 	if !ok {
-		return ts.Expr{}, ErrNodeOutportNotFound
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodeOutportNotFound, portAddr.Node)
 	}
 
 	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
@@ -184,6 +187,7 @@ func (a Analyzer) getResolvedPortType(
 		return ts.Expr{}, fmt.Errorf("resolve args: %w", err)
 	}
 
+	// FIXME resolve t1
 	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, frame, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("resolve expr with frame: %w", err)
@@ -253,7 +257,7 @@ func (a Analyzer) getNodeOutportType(
 }
 
 func (a Analyzer) getConstType(ref src.EntityRef, scope Scope) (ts.Expr, error) {
-	entity, _, err := scope.prog.Entity(ref)
+	entity, _, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("prog entity: %w", err)
 	}

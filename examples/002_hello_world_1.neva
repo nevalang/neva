@@ -9,8 +9,8 @@ const {
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock std.Lock<str>()
-			print std.Print<str>()
+			lock std.Lock<std.str>()
+			print std.Print<std.str>()
 		}
 		net {
 			in.enter -> lock.in.sig

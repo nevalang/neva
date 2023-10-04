@@ -10,14 +10,14 @@ import (
 )
 
 type Scope struct {
-	location Location
-	prog     src.Program
+	loc  Location
+	prog src.Program
 }
 
 // Location is used by scope to resolve references.
 type Location struct {
-	pkg  src.Package
-	file src.File
+	pkg  string
+	file string
 }
 
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
@@ -36,8 +36,8 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	}
 
 	return def, Scope{
-		location: location,
-		prog:     s.prog,
+		loc:  location,
+		prog: s.prog,
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (s Scope) parseRef(ref string) src.EntityRef {
 var ErrEntityNotType = errors.New("entity not type")
 
 func (s Scope) getType(ref src.EntityRef) (ts.Def, Location, error) {
-	entity, found, err := s.getEntity(ref)
+	entity, found, err := s.Entity(ref)
 	if err != nil {
 		return ts.Def{}, Location{}, err
 	}
@@ -79,19 +79,19 @@ var (
 // getEntity returns entity by passed reference.
 // If entity is local (ref has no pkg) the current location.pkg is used
 // Otherwise we use current file imports to resolve external ref.
-func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, Location, error) {
+func (s Scope) Entity(entityRef src.EntityRef) (src.Entity, Location, error) {
 	if entityRef.Pkg == "" {
-		entity, filename, ok := s.location.pkg.Entity(entityRef.Name)
+		entity, filename, ok := s.prog[s.loc.pkg].Entity(entityRef.Name)
 		if !ok {
 			panic("")
 		}
 		return entity, Location{
-			pkg:  s.location.pkg,
-			file: s.location.pkg[filename],
+			pkg:  s.loc.pkg,
+			file: filename,
 		}, nil
 	}
 
-	realImportPkgName, ok := s.location.file.Imports[entityRef.Pkg]
+	realImportPkgName, ok := s.prog[s.loc.pkg][s.loc.file].Imports[entityRef.Pkg]
 	if !ok {
 		return src.Entity{}, Location{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
 	}
@@ -109,7 +109,7 @@ func (s Scope) getEntity(entityRef src.EntityRef) (src.Entity, Location, error) 
 	}
 
 	return entity, Location{
-		pkg:  s.prog[realImportPkgName],
-		file: s.prog[realImportPkgName][fileName],
+		pkg:  realImportPkgName,
+		file: fileName,
 	}, nil
 }

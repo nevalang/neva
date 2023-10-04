@@ -38,7 +38,7 @@ type TerminatorParams struct {
 func (s SubtypeChecker) Check(sub, sup Expr, params TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
 	isSuperTypeInst := sup.Lit.Empty()
 	diffKinds := sub.Lit.Empty() != isSuperTypeInst
-	isSuperTypeUnion := sup.Lit.Type() == UnionLitType
+	isSuperTypeUnion := sup.Lit != nil && sup.Lit.Type() == UnionLitType
 
 	if diffKinds && !isSuperTypeUnion {
 		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffKinds, sub.Lit, sup.Lit)

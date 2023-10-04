@@ -92,7 +92,7 @@ func (r Resolver) ResolveFrame(args []Expr, params []Param, scope Scope) ([]Expr
 		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 
-		if param.Constr != nil {
+		if param.Constr == nil {
 			resolvedParams = append(resolvedParams, Param{
 				Name: param.Name,
 			})
@@ -279,6 +279,8 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 }
 
 func (Resolver) getDef(ref fmt.Stringer, frame map[string]Def, scope Scope) (Def, Scope, error) {
+	fmt.Println(frame, ref.String())
+
 	def, exist := frame[ref.String()]
 	if exist {
 		return def, scope, nil
