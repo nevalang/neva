@@ -36,10 +36,10 @@ func TestSmoke(t *testing.T) {
 	nevaTestFiles, err := os.ReadDir(".")
 	require.NoError(t, err)
 
-	s := "["
+	vscodeDebug := "["
 	for _, file := range nevaTestFiles {
 		fileName := file.Name()
-		s += fmt.Sprintf(`{
+		vscodeDebug += fmt.Sprintf(`{
 			"name": "antlr_%s",
 			"type": "antlr-debug",
 			"request": "launch",
@@ -50,8 +50,8 @@ func TestSmoke(t *testing.T) {
 			"visualParseTree": true
 		  },`, fileName, fileName)
 	}
-	// fmt.Println(s + "]")
-	// os.Exit(0)
+	fmt.Println(vscodeDebug + "]")
+	os.Exit(0)
 
 	for _, file := range nevaTestFiles {
 		fileName := file.Name()
