@@ -25,7 +25,7 @@ func (a Analyzer) analyzeInterface(
 		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.TypeParams)
 	}
 
-	resolvedIO, err := a.analyzeIO(resolvedParams, def.IO, scope)
+	resolvedIO, err := a.analyzeIO(resolvedParams, def.IO, scope, params)
 	if err != nil {
 		return src.Interface{}, fmt.Errorf("analyze IO: %w", err)
 	}
@@ -41,19 +41,26 @@ var (
 	ErrEmptyOutports = errors.New("IO cannot have empty outports")
 )
 
-func (a Analyzer) analyzeIO(params []ts.Param, io src.IO, scope Scope) (src.IO, error) {
-	if len(io.In) == 0 {
+func (a Analyzer) analyzeIO(
+	typeParams []ts.Param,
+	io src.IO,
+	scope Scope,
+	params analyzeInterfaceParams,
+) (src.IO, error) {
+	if !params.allowEmptyInports && len(io.In) == 0 {
 		return src.IO{}, ErrEmptyInports
-	} else if len(io.Out) == 0 {
+	}
+
+	if !params.allowEmptyOutports && len(io.Out) == 0 {
 		return src.IO{}, ErrEmptyOutports
 	}
 
-	resolvedIn, err := a.analyzePorts(params, io.In, scope)
+	resolvedIn, err := a.analyzePorts(typeParams, io.In, scope)
 	if err != nil {
 		return src.IO{}, fmt.Errorf("analyze inports: %w: %v", err, io.In)
 	}
 
-	resolvedOit, err := a.analyzePorts(params, io.Out, scope)
+	resolvedOit, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
 		return src.IO{}, fmt.Errorf("analyze outports: %w: %v", err, io.In)
 	}

@@ -58,7 +58,7 @@ var (
 )
 
 func (a Analyzer) analyzeComponentNode(node src.Node, scope Scope) (src.Node, error) {
-	entity, _, err := scope.prog.Entity(node.EntityRef)
+	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, fmt.Errorf("entity: %w", err)
 	}
@@ -171,7 +171,7 @@ func (a Analyzer) getNodeInportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	entity, _, err := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	entity, _, err := scope.Entity(node.EntityRef) // nodes analyzed so we don't check error
 	if err != nil {
 		panic("")
 	}
@@ -266,7 +266,12 @@ func (a Analyzer) getNodeOutportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	entity, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+
+	entity, _, err := scope.Entity(node.EntityRef)
+	if err != nil {
+		panic(err)
+	}
+
 	return a.getResolvedPortType(
 		entity.Component.IO.Out,
 		entity.Component.TypeParams,

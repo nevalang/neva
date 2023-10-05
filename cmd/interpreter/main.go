@@ -57,12 +57,12 @@ func main() {
 		runTime,
 	)
 
-	p, err := filepath.Abs(os.Args[1])
+	path, err := filepath.Abs(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
 
-	code, err := intr.Interpret(context.Background(), p)
+	code, err := intr.Interpret(context.Background(), path)
 	if err != nil {
 		logger.Error(err.Error())
 		return

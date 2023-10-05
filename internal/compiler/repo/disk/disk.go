@@ -12,7 +12,7 @@ import (
 )
 
 type Repository struct {
-	stdPath string
+	stdLibPath string
 }
 
 func (r Repository) ByPath(ctx context.Context, pathToMainPkg string) (map[string]compiler.RawPackage, error) {
@@ -21,15 +21,24 @@ func (r Repository) ByPath(ctx context.Context, pathToMainPkg string) (map[strin
 		return nil, err
 	}
 
-	stdFiles := map[string][]byte{}
-	if err := readAllFilesInDir(r.stdPath, stdFiles); err != nil {
+	prog := map[string]compiler.RawPackage{
+		"main": mainPkgFiles,
+	}
+
+	stdTmpFiles := map[string][]byte{}
+	if err := readAllFilesInDir(r.stdLibPath+"/tmp", stdTmpFiles); err != nil {
 		return nil, err
 	}
 
-	return map[string]compiler.RawPackage{
-		"main": mainPkgFiles,
-		"std":  stdFiles,
-	}, nil
+	stdBuiltinFiles := map[string][]byte{}
+	if err := readAllFilesInDir(r.stdLibPath+"/builtin", stdBuiltinFiles); err != nil {
+		return nil, err
+	}
+
+	prog["std/tmp"] = stdTmpFiles
+	prog["std/builtin"] = stdBuiltinFiles
+
+	return prog, nil
 }
 
 func (r Repository) Save(ctx context.Context, path string, prog *ir.Program) error {
@@ -46,10 +55,6 @@ func readAllFilesInDir(path string, files map[string][]byte) error {
 			return err
 		}
 		if info.IsDir() {
-			// err := readAllFilesInDir(filePath, files)
-			// if err != nil {
-			// 	return err
-			// }
 			return nil
 		}
 		ext := filepath.Ext(info.Name())
@@ -70,6 +75,6 @@ func readAllFilesInDir(path string, files map[string][]byte) error {
 
 func MustNew(stdPkgPath string) Repository {
 	return Repository{
-		stdPath: stdPkgPath,
+		stdLibPath: stdPkgPath,
 	}
 }

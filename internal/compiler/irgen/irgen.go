@@ -62,13 +62,13 @@ type (
 		path         []string // including current
 		curPkgName   string
 		componentRef src.EntityRef
-		constValue   *src.ConstValue
+		constValue   *src.ConstValue // for native components only
 		portsUsage   portsUsage
 	}
 	portsUsage struct {
 		in         map[relPortAddr]struct{}
 		out        map[relPortAddr]struct{}
-		constValue *src.ConstValue
+		constValue *src.ConstValue // const value found by ref from net goes here and then to nodeContext
 	}
 	relPortAddr struct {
 		Port string
@@ -106,7 +106,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 			result.Funcs = append(result.Funcs, runtimeFunc)
 			return nil
 		}
-		runtimeFunc.Params = &ir.Msg{ // TODO implement other types
+		runtimeFunc.Params = &ir.Msg{
 			Type: ir.MsgType_MSG_TYPE_STR, //nolint:nosnakecase
 			Str:  nodeCtx.constValue.Str,
 		}

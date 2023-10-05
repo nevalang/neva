@@ -1,13 +1,3 @@
-types {
-    pub any
-    pub bool
-    pub str
-    pub int
-    pub float
-    pub map<t1>
-    pub vec<t1>
-}
-
 interfaces {
     pub Example(v) (v)
 }

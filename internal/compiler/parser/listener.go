@@ -26,10 +26,15 @@ func (s *treeShapeListener) EnterUseStmt(actx *generated.UseStmtContext) {
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	path := actx.ImportPath().GetText()
-	alias := path
+
+	var alias string
 	if id := actx.IDENTIFIER(); id != nil {
 		alias = actx.IDENTIFIER().GetText()
+	} else {
+		ss := strings.Split(path, "/")
+		alias = ss[len(ss)-1]
 	}
+
 	s.file.Imports[alias] = path
 }
 

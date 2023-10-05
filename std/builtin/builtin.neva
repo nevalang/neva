@@ -1,0 +1,11 @@
+// builtin package represents entities that are implicitly injected in any file
+
+types {
+    pub any
+    pub bool
+    pub str
+    pub int
+    pub float
+    pub map<K int | float | str | bool, V>
+    pub vec<V>
+}

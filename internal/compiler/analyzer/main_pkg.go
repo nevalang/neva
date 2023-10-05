@@ -15,7 +15,7 @@ var (
 )
 
 func (a Analyzer) mainSpecificPkgValidation(pkg src.Package, pkgs map[string]src.Package) error {
-	entityMain, _, ok := pkg.Entity("Main")
+	entityMain, filename, ok := pkg.Entity("Main")
 	if !ok {
 		return ErrMainEntityNotFound
 	}
@@ -28,7 +28,15 @@ func (a Analyzer) mainSpecificPkgValidation(pkg src.Package, pkgs map[string]src
 		return ErrMainEntityExported
 	}
 
-	if err := a.analyzeMainComponent(entityMain.Component, pkg, pkgs); err != nil {
+	scope := Scope{
+		loc: Location{
+			pkg:  "main",
+			file: filename,
+		},
+		prog: pkgs,
+	}
+
+	if err := a.analyzeMainComponent(entityMain.Component, pkg, scope); err != nil {
 		return fmt.Errorf("analyze main component: %w", err)
 	}
 

@@ -34,31 +34,12 @@ func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
 	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
-func (r Resolver) ResolveDef(def Def, scope Scope) (Def, error) {
-	resolvedParams, frame, err := r.ResolveParams(def.Params, scope)
-	if err != nil {
-		return Def{}, fmt.Errorf("resolve params: %w", err)
-	}
-	if def.BodyExpr == nil {
-		return Def{
-			Params:                           resolvedParams,
-			CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
-		}, nil
-	}
-	resolvedBody, err := r.resolveExpr(*def.BodyExpr, scope, frame, nil)
-	if err != nil {
-		return Def{}, fmt.Errorf("resolve expr: %w", err)
-	}
-	return Def{
-		Params:                           resolvedParams,
-		BodyExpr:                         &resolvedBody,
-		CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
-	}, nil
-}
-
-func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, map[string]Def, error) {
+// Note that it has no sense to "resolve definition". You can resolve only type parameters (their constraints).
+// This is because def's body, type expr, must be resolved only at instantiation (argument passing) step.
+// Otherwise simply break substitution by replacing param refs with constraints expressions.
+func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, error) {
 	result := make([]Param, 0, len(params))
-	frame := make(map[string]Def, len(params))
+	frame := make(map[string]Def, len(params)) // We only need this frame inside this function. We cannot pass it back.
 	for _, param := range params {
 		if param.Constr == nil {
 			result = append(result, Param{Name: param.Name})
@@ -66,7 +47,7 @@ func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, map[strin
 		}
 		resolved, err := r.resolveExpr(*param.Constr, scope, frame, nil)
 		if err != nil {
-			return nil, frame, fmt.Errorf("resolve expr: %w", err)
+			return nil, fmt.Errorf("resolve expr: %w", err)
 		}
 		frame[param.Name] = Def{BodyExpr: &resolved}
 		result = append(result, Param{
@@ -74,7 +55,7 @@ func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, map[strin
 			Constr: &resolved,
 		})
 	}
-	return result, frame, nil
+	return result, nil
 }
 
 // ResolveFrame resolves arguments and parameters and checks that they are compatible.

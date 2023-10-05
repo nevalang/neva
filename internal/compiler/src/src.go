@@ -30,7 +30,7 @@ func (p Program) Entity(entityRef EntityRef) (Entity, string, error) {
 
 type Package map[string]File
 
-func (p Package) Entity(entityName string) (Entity, string, bool) {
+func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) {
 	for fileName, file := range p {
 		entity, ok := file.Entities[entityName]
 		if ok {
@@ -99,11 +99,6 @@ type Interface struct {
 	TypeParams []ts.Param
 	IO         IO
 }
-
-// func (i Interface) PortType(PortAddr) (ts.Expr, bool) {
-// 	i.
-// 	return ts.Expr{}, false
-// }
 
 type Node struct {
 	EntityRef   EntityRef

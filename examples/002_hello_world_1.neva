@@ -1,16 +1,16 @@
 use {
-	std
+	std/tmp
 }
 
 const {
-	msg std.str 'Hello, World!\n'
+	msg str 'Hello, World!\n'
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock std.Lock<std.str>()
-			print std.Print<std.str>()
+			lock tmp.Lock<str>()
+			print tmp.Print<str>()
 		}
 		net {
 			in.enter -> lock.in.sig

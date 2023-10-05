@@ -3,6 +3,7 @@ package analyzer
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/src"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -91,7 +92,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope Scope) (src.Entity, err
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
 	}
-	isStd := scope.loc.pkg == "std"
+	isStd := strings.HasPrefix(scope.loc.pkg, "std/")
 
 	switch entity.Kind {
 	case src.TypeEntity:

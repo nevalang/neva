@@ -17,12 +17,18 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope Scope, params analyzeTypeDefP
 		return ts.Def{}, ErrEmptyTypeDefBody
 	}
 
-	resolvedDef, err := a.resolver.ResolveDef(def, scope)
+	// Note that we only resolve params. Body is resolved each time there's an expression that refers to it.
+	// We can't resolve body without args. And don't worry about unused bodies. Unused entities are error themselves.
+	resolvedParams, err := a.resolver.ResolveParams(def.Params, scope)
 	if err != nil {
 		return ts.Def{}, fmt.Errorf("resolve def: %w", err)
 	}
 
-	return resolvedDef, nil
+	return ts.Def{
+		Params:                           resolvedParams,
+		BodyExpr:                         def.BodyExpr,
+		CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
+	}, nil
 }
 
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope Scope) (ts.Expr, error) {
@@ -34,7 +40,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope Scope) (ts.Expr, error) {
 }
 
 func (a Analyzer) analyzeTypeParams(params []ts.Param, scope Scope) ([]ts.Param, error) {
-	resolvedParams, _, err := a.resolver.ResolveParams(params, scope)
+	resolvedParams, err := a.resolver.ResolveParams(params, scope)
 	if err != nil {
 		return nil, fmt.Errorf("resolve params: %w", err)
 	}

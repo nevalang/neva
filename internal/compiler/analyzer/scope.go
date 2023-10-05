@@ -21,7 +21,21 @@ type Location struct {
 }
 
 func (s Scope) IsTopType(expr ts.Expr) bool {
-	return expr.Inst != nil && expr.Inst.Ref.String() == "std.any"
+	if expr.Inst == nil {
+		return false
+	}
+	parsed, ok := expr.Inst.Ref.(src.EntityRef)
+	if !ok {
+		return false
+	}
+	if parsed.Name != "any" {
+		return false
+	}
+	switch parsed.Pkg {
+	case "builtin", "":
+		return true
+	}
+	return parsed.Pkg == "" || parsed.Pkg == "builtin"
 }
 
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
@@ -88,11 +102,19 @@ var ErrEntityNotFound = errors.New("entity not found")
 func (s Scope) Entity(entityRef src.EntityRef) (src.Entity, Location, error) {
 	if entityRef.Pkg == "" {
 		entity, filename, ok := s.prog[s.loc.pkg].Entity(entityRef.Name)
+		if ok {
+			return entity, Location{
+				pkg:  s.loc.pkg,
+				file: filename,
+			}, nil
+		}
+
+		entity, filename, ok = s.prog["std/builtin"].Entity(entityRef.Name)
 		if !ok {
-			return src.Entity{}, Location{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef.Name)
+			return src.Entity{}, Location{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef)
 		}
 		return entity, Location{
-			pkg:  s.loc.pkg,
+			pkg:  "std/builtin",
 			file: filename,
 		}, nil
 	}
