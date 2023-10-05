@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrEmptyConst                  = errors.New("const must have value or reference to another const")
+	ErrEntityNotConst              = errors.New("entity is not a const")
 	ErrResolveConstType            = errors.New("cannot resolve constant type")
 	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
 )
@@ -19,7 +20,13 @@ func (a Analyzer) analyzeConst(cnst src.Const, scope Scope) (src.Const, error) {
 	}
 
 	if cnst.Value == nil {
-		panic("// TODO: references for constants not implemented yet")
+		entity, _, err := scope.Entity(*cnst.Ref)
+		if err != nil {
+			return src.Const{}, fmt.Errorf("entity: %w", err)
+		}
+		if entity.Kind != src.ConstEntity {
+			return src.Const{}, fmt.Errorf("%w: %v", ErrEntityNotConst, entity.Kind)
+		}
 	}
 
 	resolvedType, err := a.analyzeTypeExpr(cnst.Value.TypeExpr, scope)

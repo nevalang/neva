@@ -23,7 +23,7 @@ type Location struct {
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	parsedRef, ok := ref.(src.EntityRef)
 	if !ok {
-		panic("not ok parse ref")
+		return ts.Def{}, Scope{}, fmt.Errorf("ref is not entity ref: %v", ref)
 	}
 
 	def, location, err := s.getType(parsedRef)
@@ -76,6 +76,8 @@ var (
 	ErrEntityNotExported = errors.New("entity is not exported")
 )
 
+var ErrEntityNotFound = errors.New("entity not found")
+
 // getEntity returns entity by passed reference.
 // If entity is local (ref has no pkg) the current location.pkg is used
 // Otherwise we use current file imports to resolve external ref.
@@ -83,7 +85,7 @@ func (s Scope) Entity(entityRef src.EntityRef) (src.Entity, Location, error) {
 	if entityRef.Pkg == "" {
 		entity, filename, ok := s.prog[s.loc.pkg].Entity(entityRef.Name)
 		if !ok {
-			panic("")
+			return src.Entity{}, Location{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef.Name)
 		}
 		return entity, Location{
 			pkg:  s.loc.pkg,
@@ -101,7 +103,7 @@ func (s Scope) Entity(entityRef src.EntityRef) (src.Entity, Location, error) {
 		Name: entityRef.Name,
 	})
 	if err != nil {
-		panic(err)
+		return src.Entity{}, Location{}, fmt.Errorf("entity: %w", err)
 	}
 
 	if !entity.Exported {

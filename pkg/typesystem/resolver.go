@@ -224,7 +224,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 
 	newTrace := Trace{
 		prev: trace,
-		ref:  expr.Inst.Ref,
+		ref:  expr.Inst.Ref, // FIXME t1
 	}
 
 	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
@@ -279,9 +279,8 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 }
 
 func (Resolver) getDef(ref fmt.Stringer, frame map[string]Def, scope Scope) (Def, Scope, error) {
-	fmt.Println(frame, ref.String())
-
-	def, exist := frame[ref.String()]
+	strRef := ref.String()
+	def, exist := frame[strRef]
 	if exist {
 		return def, scope, nil
 	}

@@ -32,7 +32,6 @@ func (a Analyzer) mainSpecificPkgValidation(pkg src.Package, pkgs map[string]src
 		return fmt.Errorf("analyze main component: %w", err)
 	}
 
-	// FIXME will conflict with general validation
 	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
 		if entity.Exported {
 			return fmt.Errorf("%w: file %v, entity %v", ErrMainPkgExports, fileName, entityName)

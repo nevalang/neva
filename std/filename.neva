@@ -9,7 +9,7 @@ types {
 }
 
 interfaces {
-    pub Example() ()
+    pub Example(v) (v)
 }
 
 components {

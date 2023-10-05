@@ -10,7 +10,16 @@ import (
 
 var ErrInterfaceTypeParams = errors.New("could not resolve interface type parameters")
 
-func (a Analyzer) analyzeInterface(def src.Interface, scope Scope) (src.Interface, error) {
+type analyzeInterfaceParams struct {
+	allowEmptyInports  bool
+	allowEmptyOutports bool
+}
+
+func (a Analyzer) analyzeInterface(
+	def src.Interface,
+	scope Scope,
+	params analyzeInterfaceParams,
+) (src.Interface, error) {
 	resolvedParams, err := a.analyzeTypeParams(def.TypeParams, scope)
 	if err != nil {
 		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.TypeParams)
@@ -33,7 +42,7 @@ var (
 )
 
 func (a Analyzer) analyzeIO(params []ts.Param, io src.IO, scope Scope) (src.IO, error) {
-	if len(io.In) == 0 && scope.loc.pkg != "std" {
+	if len(io.In) == 0 {
 		return src.IO{}, ErrEmptyInports
 	} else if len(io.Out) == 0 {
 		return src.IO{}, ErrEmptyOutports
@@ -75,7 +84,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope Scope) (sr
 	resolvedDef, err := a.analyzeTypeDef(ts.Def{
 		Params:   params,
 		BodyExpr: &port.TypeExpr,
-	}, scope)
+	}, scope, analyzeTypeDefParams{allowEmptyBody: false})
 	if err != nil {
 		return src.Port{}, fmt.Errorf("analyze type def: %w", err)
 	}

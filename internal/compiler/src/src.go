@@ -90,9 +90,9 @@ func (e EntityKind) String() string {
 }
 
 type Component struct {
-	Interface Interface
-	Nodes     map[string]Node
-	Net       []Connection // can't be map due to slice in key
+	Interface
+	Nodes map[string]Node
+	Net   []Connection // can't be map due to slice in key
 }
 
 type Interface struct {

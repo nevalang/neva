@@ -8,8 +8,16 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func (a Analyzer) analyzeComponent(comp src.Component, scope Scope) (src.Component, error) {
-	resolvedInterface, err := a.analyzeInterface(comp.Interface, scope)
+type analyzeComponentParams struct {
+	iface analyzeInterfaceParams
+}
+
+func (a Analyzer) analyzeComponent(
+	comp src.Component,
+	scope Scope,
+	params analyzeComponentParams,
+) (src.Component, error) {
+	resolvedInterface, err := a.analyzeInterface(comp.Interface, scope, params.iface)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze interface: %w", err)
 	}
@@ -167,7 +175,13 @@ func (a Analyzer) getNodeInportType(
 	if err != nil {
 		panic("")
 	}
-	return a.getResolvedPortType(entity.Component.Interface.IO.In, entity.Component.Interface.TypeParams, portAddr, node, scope)
+	return a.getResolvedPortType(
+		entity.Component.Interface.IO.In,
+		entity.Component.Interface.TypeParams,
+		portAddr,
+		node,
+		scope,
+	)
 }
 
 func (a Analyzer) getResolvedPortType(
@@ -252,8 +266,14 @@ func (a Analyzer) getNodeOutportType(
 	if !ok {
 		return ts.Expr{}, ErrNodeNotFound
 	}
-	component, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
-	return a.getResolvedPortType(component.Interface.IO.Out, component.Interface.TypeParams, portAddr, node, scope)
+	entity, _, _ := scope.prog.Entity(node.EntityRef) // nodes analyzed so we don't check error
+	return a.getResolvedPortType(
+		entity.Component.IO.Out,
+		entity.Component.TypeParams,
+		portAddr,
+		node,
+		scope,
+	)
 }
 
 func (a Analyzer) getConstType(ref src.EntityRef, scope Scope) (ts.Expr, error) {

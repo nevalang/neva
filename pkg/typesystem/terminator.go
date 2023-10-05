@@ -32,6 +32,8 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 
+	// Get prev ref's CanBeUsedForRecursiveDefinitions if it exists.
+	// Note that we don't care if it's not found. Not all types are in the scope, some of them are in the frame.
 	var canBeUsedForRecursiveDefinitions bool
 	if prevRef, _, err := scope.GetType(cur.prev.ref); err == nil {
 		canBeUsedForRecursiveDefinitions = prevRef.CanBeUsedForRecursiveDefinitions

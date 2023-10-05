@@ -6,11 +6,22 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func (a Analyzer) analyzeTypeDef(def ts.Def, scope Scope) (ts.Def, error) {
+type analyzeTypeDefParams struct {
+	allowEmptyBody bool
+}
+
+var ErrEmptyTypeDefBody = fmt.Errorf("type def body is empty")
+
+func (a Analyzer) analyzeTypeDef(def ts.Def, scope Scope, params analyzeTypeDefParams) (ts.Def, error) {
+	if !params.allowEmptyBody && def.BodyExpr == nil {
+		return ts.Def{}, ErrEmptyTypeDefBody
+	}
+
 	resolvedDef, err := a.resolver.ResolveDef(def, scope)
 	if err != nil {
 		return ts.Def{}, fmt.Errorf("resolve def: %w", err)
 	}
+
 	return resolvedDef, nil
 }
 

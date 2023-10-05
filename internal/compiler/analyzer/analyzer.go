@@ -91,10 +91,11 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope Scope) (src.Entity, err
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
 	}
+	isStd := scope.loc.pkg == "std"
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope)
+		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{isStd})
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("resolve type: %w", err)
 		}
@@ -106,13 +107,21 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope Scope) (src.Entity, err
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope)
+		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope, analyzeInterfaceParams{
+			allowEmptyInports:  false,
+			allowEmptyOutports: isStd,
+		})
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		resolvedComp, err := a.analyzeComponent(entity.Component, scope)
+		resolvedComp, err := a.analyzeComponent(entity.Component, scope, analyzeComponentParams{
+			iface: analyzeInterfaceParams{
+				allowEmptyInports:  isStd, // e.g. `Const` component has no inports
+				allowEmptyOutports: false,
+			},
+		})
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze component: %w", err)
 		}

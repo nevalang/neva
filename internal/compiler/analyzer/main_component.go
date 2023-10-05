@@ -40,7 +40,6 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 	if len(io.Out) != 1 {
 		return fmt.Errorf("%w: %v", ErrMainComponentOutportsCount, io.Out)
 	}
-
 	if len(io.In) != 1 {
 		return fmt.Errorf("%w: %v", ErrMainComponentInportsCount, io.In)
 	}
@@ -49,28 +48,28 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
 	if !ok {
 		return ErrMainComponentWithoutEnterInport
 	}
-
-	if enterInport.IsArray {
-		return ErrMainPortIsArray
-	}
-
-	if enterInport.TypeExpr.Inst == nil || enterInport.TypeExpr.Inst.Ref.String() != "std.any" {
-		return ErrMainComponentPortTypeNotAny
+	if err := a.analyzeMainComponentPort(enterInport); err != nil {
+		return fmt.Errorf("enter inport: %w", err)
 	}
 
 	exitInport, ok := io.Out["exit"]
 	if !ok {
 		return ErrMainComponentWithoutExitOutport
 	}
+	if err := a.analyzeMainComponentPort(exitInport); err != nil {
+		return fmt.Errorf("exit outport: %w", err)
+	}
 
-	if exitInport.IsArray {
+	return nil
+}
+
+func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
+	if port.IsArray {
 		return ErrMainPortIsArray
 	}
-
-	if exitInport.TypeExpr.Inst == nil || exitInport.TypeExpr.Inst.Ref.String() != "std.any" {
+	if port.TypeExpr.Inst == nil || port.TypeExpr.Inst.Ref.String() != "std.any" {
 		return ErrMainComponentPortTypeNotAny
 	}
-
 	return nil
 }
 
