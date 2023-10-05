@@ -26,6 +26,7 @@ type (
 	}
 	Scope interface {
 		GetType(ref fmt.Stringer) (Def, Scope, error)
+		IsTopType(expr Expr) bool
 	}
 )
 

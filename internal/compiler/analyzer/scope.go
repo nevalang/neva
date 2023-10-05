@@ -20,6 +20,10 @@ type Location struct {
 	file string
 }
 
+func (s Scope) IsTopType(expr ts.Expr) bool {
+	return expr.Inst != nil && expr.Inst.Ref.String() == "std.any"
+}
+
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	parsedRef, ok := ref.(src.EntityRef)
 	if !ok {

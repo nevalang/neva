@@ -36,6 +36,10 @@ type TerminatorParams struct {
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
 func (s SubtypeChecker) Check(sub, sup Expr, params TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
+	if params.Scope.IsTopType(sup) { // no matter what sub is if sup is top type
+		return nil
+	}
+
 	isSuperTypeInst := sup.Lit.Empty()
 	diffKinds := sub.Lit.Empty() != isSuperTypeInst
 	isSuperTypeUnion := sup.Lit != nil && sup.Lit.Type() == UnionLitType
