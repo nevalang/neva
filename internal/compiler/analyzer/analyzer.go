@@ -10,7 +10,6 @@ import (
 )
 
 type Analyzer struct {
-	prog     src.Program
 	resolver ts.Resolver
 }
 

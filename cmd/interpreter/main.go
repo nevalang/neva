@@ -22,7 +22,7 @@ func main() {
 	// logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	// runtime
-	connector, err := runtime.NewDefaultConnector(runtime.DefaultInterceptor{})
+	connector, err := runtime.NewDefaultConnector(runtime.Listener{})
 	if err != nil {
 		logger.Error(err.Error())
 		return

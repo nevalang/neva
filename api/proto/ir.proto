@@ -28,7 +28,6 @@ message Connection {
 
 message ReceiverConnectionSide {
   PortAddr port_addr = 1;
-  repeated string selectors = 2;
 }
 
 message Func {

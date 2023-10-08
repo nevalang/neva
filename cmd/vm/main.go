@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	connector, err := runtime.NewDefaultConnector(runtime.DefaultInterceptor{})
+	connector, err := runtime.NewDefaultConnector(runtime.Listener{})
 	if err != nil {
 		panic(err)
 	}

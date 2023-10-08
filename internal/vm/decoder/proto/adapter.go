@@ -27,47 +27,40 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			Idx:  uint8(conn.SenderSide.Idx),
 		}
 
-		senderPort, ok := rPorts[senderPortAddr]
+		senderPortChan, ok := rPorts[senderPortAddr]
 		if !ok {
 			return runtime.Program{}, errors.New("sender port not found")
 		}
 
-		rSenderConnSide := runtime.SenderConnectionSide{
-			Port: senderPort,
-			Meta: runtime.SenderConnectionSideMeta{
-				PortAddr: senderPortAddr,
-			},
+		meta := runtime.ConnectionMeta{
+			SenderPortAddr:    senderPortAddr,
+			ReceiverPortAddrs: make([]runtime.PortAddr, 0, len(conn.ReceiverSides)),
 		}
+		receiverChans := make([]chan runtime.Msg, 0, len(conn.ReceiverSides))
 
-		rReceivers := make([]runtime.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
-		for _, rcvr := range conn.ReceiverSides {
+		for i, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.PortAddr.Path,
 				Port: rcvr.PortAddr.Port,
 				Idx:  uint8(rcvr.PortAddr.Idx),
 			}
 
-			receiverPort, ok := rPorts[receiverPortAddr]
+			receiverPortChan, ok := rPorts[receiverPortAddr]
 			if !ok {
 				return runtime.Program{}, errors.New("receiver port not found")
 			}
 
-			rReceivers = append(rReceivers, runtime.ReceiverConnectionSide{
-				Port: receiverPort,
-				Meta: runtime.ReceiverConnectionSideMeta{
-					PortAddr:  receiverPortAddr,
-					Selectors: rcvr.Selectors,
-				},
-			})
+			meta.ReceiverPortAddrs[i] = receiverPortAddr
+			receiverChans = append(receiverChans, receiverPortChan)
 		}
 
 		rConns = append(rConns, runtime.Connection{
-			Sender:    rSenderConnSide,
-			Receivers: rReceivers,
+			Sender:    senderPortChan,
+			Receivers: receiverChans,
 		})
 	}
 
-	rFuncs := make([]runtime.FuncRoutine, 0, len(irProg.Funcs))
+	rFuncs := make([]runtime.FuncCall, 0, len(irProg.Funcs))
 	for _, f := range irProg.Funcs {
 		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
 		for _, addr := range f.Io.Inports {
@@ -89,7 +82,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
 		}
 
-		rFunc := runtime.FuncRoutine{
+		rFunc := runtime.FuncCall{
 			Ref: f.Ref,
 			IO: runtime.FuncIO{
 				In:  rIOIn,

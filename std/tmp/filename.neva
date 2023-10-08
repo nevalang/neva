@@ -5,13 +5,13 @@ interfaces {
 components {
     pub Read(sig) (v str)
     
-    pub Print<t1>(v t1) (v t1)
+    pub Print<T>(v T) (v T)
     
-    pub Lock<t1>(sig, v t1) (v t1)
+    pub Lock<T>(sig, v T) (v T)
     
-    pub Const<t1>() (v t1)
+    pub Const<T>() (v t3)
     
-    pub ParseNum<t1 int | float>(v str) (v t1, err str)
+    pub ParseNum<T int | float>(v str) (v T, err str)
     
-    pub Add<t1 int | float | str>(a, b t1) (v t1)
+    pub Add<T int | float | str>(a T, b T) (v T)
 }

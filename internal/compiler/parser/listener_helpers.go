@@ -18,6 +18,13 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 	for _, typeParam := range typeParams {
 		paramName := typeParam.IDENTIFIER().GetText()
 		parsedParamExpr := parseTypeExpr(typeParam.TypeExpr())
+		if parsedParamExpr == nil {
+			parsedParamExpr = &ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: src.EntityRef{Name: "any"},
+				},
+			}
+		}
 		result = append(result, ts.Param{
 			Name:   paramName,
 			Constr: parsedParamExpr,

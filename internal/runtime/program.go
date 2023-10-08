@@ -8,7 +8,7 @@ import (
 type Program struct {
 	Ports       Ports
 	Connections []Connection
-	Funcs       []FuncRoutine
+	Funcs       []FuncCall
 }
 
 type PortAddr struct {
@@ -28,54 +28,17 @@ func (p PortAddr) String() string {
 type Ports map[PortAddr]chan Msg
 
 type Connection struct {
-	Sender    SenderConnectionSide
-	Receivers []ReceiverConnectionSide
+	Sender    chan Msg
+	Receivers []chan Msg
+	Meta      ConnectionMeta
 }
 
-func (c Connection) String() string {
-	s := c.Sender.Meta.PortAddr.String() + "->"
-	for i := range c.Receivers {
-		s += c.Receivers[i].Meta.String()
-		if i < len(c.Receivers)-1 {
-			s += ", "
-		}
-	}
-	return s
+type ConnectionMeta struct {
+	SenderPortAddr    PortAddr
+	ReceiverPortAddrs []PortAddr
 }
 
-type SenderConnectionSide struct {
-	Port chan Msg
-	Meta SenderConnectionSideMeta
-}
-
-type ReceiverConnectionSide struct {
-	Port chan Msg
-	Meta ReceiverConnectionSideMeta
-}
-
-type SenderConnectionSideMeta struct {
-	PortAddr PortAddr
-}
-
-func (c SenderConnectionSideMeta) String() string {
-	return c.PortAddr.String()
-}
-
-type ReceiverConnectionSideMeta struct {
-	PortAddr  PortAddr
-	Selectors []string
-}
-
-func (c ReceiverConnectionSideMeta) String() string {
-	return c.PortAddr.String()
-}
-
-type Selector struct {
-	RecField string // "" means use ArrIdx
-	ArrIdx   int
-}
-
-type FuncRoutine struct {
+type FuncCall struct {
 	Ref     string
 	IO      FuncIO
 	MetaMsg Msg

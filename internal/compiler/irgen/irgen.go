@@ -349,7 +349,6 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnec
 			Port: side.PortAddr.Port,
 			Idx:  uint32(side.PortAddr.Idx),
 		},
-		Selectors: side.Selectors,
 	}
 	if side.PortAddr.Node == "out" { // 'out' node is actually receiver but we don't want to have 'out.in' addresses
 		return result

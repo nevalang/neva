@@ -27,7 +27,7 @@ func NewDefaultFuncRunner(repo map[string]Func) (DefaultFuncRunner, error) {
 	}, nil
 }
 
-func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) (err error) {
+func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	wg := sync.WaitGroup{}
 	wg.Add(len(funcRoutines))

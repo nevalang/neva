@@ -31,7 +31,7 @@ type (
 		Connect(context.Context, []Connection) error
 	}
 	FuncRunner interface {
-		Run(context.Context, []FuncRoutine) error
+		Run(context.Context, []FuncCall) error
 	}
 	Func func(context.Context, FuncIO) (func(), error)
 )

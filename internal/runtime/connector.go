@@ -13,26 +13,55 @@ var (
 	ErrDistribute = errors.New("distribute")
 )
 
-type DefaultConnector struct {
-	interceptor Interceptor
+type connector struct {
+	listener EventListener
 }
 
-func NewDefaultConnector(interceptor Interceptor) (DefaultConnector, error) {
-	if interceptor == nil {
-		return DefaultConnector{}, ErrNilDeps
+func NewDefaultConnector(listener EventListener) (connector, error) {
+	if listener == nil {
+		return connector{}, ErrNilDeps
 	}
-	return DefaultConnector{
-		interceptor: interceptor,
+	return connector{
+		listener: listener,
 	}, nil
 }
 
-type Interceptor interface {
-	AfterSending(from SenderConnectionSideMeta, msg Msg) Msg
-	BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg
-	AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg)
+type Event struct {
+	Msg             Msg
+	Type            EventType
+	MessageSent     *EventMessageSent
+	MessageInBetwen *EventMessageInBetween
+	MessageReceived *EventMessageReceived
 }
 
-func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error {
+type EventMessageSent struct {
+	SenderPortAddr    PortAddr
+	ReceiverPortAddrs []PortAddr
+}
+
+type EventMessageInBetween struct {
+	Meta             ConnectionMeta
+	ReceiverPortAddr PortAddr
+}
+
+type EventMessageReceived struct {
+	Meta             ConnectionMeta
+	ReceiverPortAddr PortAddr
+}
+
+type EventType uint8
+
+const (
+	MessageSentEvent     EventType = 1
+	MessageInBetween     EventType = 2
+	MessageReceivedEvent EventType = 3
+)
+
+type EventListener interface {
+	Send(Event) Msg
+}
+
+func (c connector) Connect(ctx context.Context, conns []Connection) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range conns {
@@ -48,44 +77,74 @@ func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error
 	return g.Wait()
 }
 
-func (c DefaultConnector) broadcast(ctx context.Context, conn Connection) error {
+// FIXME slowest receiver will slow down the whole system
+func (c connector) broadcast(ctx context.Context, conn Connection) error {
+	buf := make(chan Msg, 100)
+	defer close(buf)
+	go func() {
+		for msg := range buf {
+			c.distribute(ctx, msg, conn.Meta, conn.Receivers)
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
+			close(buf)
 			return nil
-		case msg := <-conn.Sender.Port:
-			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
-			if err := c.distribute(ctx, msg, conn.Sender.Meta, conn.Receivers); err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrDistribute, err), msg)
-			}
+		case msg := <-conn.Sender:
+			msg = c.listener.Send(Event{
+				Type: MessageSentEvent,
+				Msg:  msg,
+				MessageSent: &EventMessageSent{
+					SenderPortAddr:    conn.Meta.SenderPortAddr,
+					ReceiverPortAddrs: conn.Meta.ReceiverPortAddrs,
+				},
+			})
+			buf <- msg // instead distribute directly we use a buffer so sender can write faster than receivers read
 		}
 	}
 }
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c DefaultConnector) distribute(
+func (c connector) distribute(
 	ctx context.Context,
 	msg Msg,
-	senderMeta SenderConnectionSideMeta,
-	q []ReceiverConnectionSide,
-) error {
+	meta ConnectionMeta,
+	q []chan Msg,
+) {
 	i := 0
-	preparedMsgs := make(map[PortAddr]Msg, len(q))
+	interceptedMsgs := make(map[PortAddr]Msg, len(q))
 
 	for len(q) > 0 {
 		recv := q[i]
+		receiverPortAddr := meta.ReceiverPortAddrs[i]
 
-		if _, ok := preparedMsgs[recv.Meta.PortAddr]; !ok { // avoid multuple interceptions
-			msg = c.interceptor.BeforeReceiving(senderMeta, recv.Meta, msg)
-			preparedMsgs[recv.Meta.PortAddr] = msg
+		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
+			msg = c.listener.Send(Event{
+				Type: MessageInBetween,
+				Msg:  msg,
+				MessageInBetwen: &EventMessageInBetween{
+					Meta:             meta,
+					ReceiverPortAddr: receiverPortAddr,
+				},
+			})
+			interceptedMsgs[receiverPortAddr] = msg
 		}
-		preparedMsg := preparedMsgs[recv.Meta.PortAddr]
+		interceptedMsg := interceptedMsgs[receiverPortAddr]
 
 		select {
 		case <-ctx.Done():
-			return nil
-		case recv.Port <- preparedMsg:
-			c.interceptor.AfterReceiving(senderMeta, recv.Meta, preparedMsg)
+			return
+		case recv <- interceptedMsg:
+			msg = c.listener.Send(Event{
+				Type: MessageReceivedEvent,
+				Msg:  msg,
+				MessageReceived: &EventMessageReceived{
+					Meta:             meta,
+					ReceiverPortAddr: receiverPortAddr,
+				},
+			})
 			q = append(q[:i], q[i+1:]...) // remove cur from q
 		default: // cur is busy
 			if i < len(q) {
@@ -98,21 +157,15 @@ func (c DefaultConnector) distribute(
 		}
 	}
 
-	return nil
+	return
 }
 
-type DefaultInterceptor struct{}
+type Listener struct{}
 
-func (i DefaultInterceptor) AfterSending(from SenderConnectionSideMeta, msg Msg) Msg {
-	// fmt.Printf("after sending: %v -> %v\n", from, msg)
-	return msg
+func (l Listener) Send(event Event) Msg {
+	return event.Msg
 }
 
-func (i DefaultInterceptor) BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg {
-	// fmt.Printf("before receiving: %v -> %v -> %v\n", from, msg, to)
-	return msg
-}
-
-func (i DefaultInterceptor) AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) {
-	// fmt.Printf("after receiving: %v -> %v -> %v\n", from, msg, to)
+func NewChanListener() Listener {
+	return Listener{}
 }
