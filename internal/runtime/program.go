@@ -35,7 +35,7 @@ type Connection struct {
 
 type ConnectionMeta struct {
 	SenderPortAddr    PortAddr
-	ReceiverPortAddrs []PortAddr
+	ReceiverPortAddrs []PortAddr // We use slice so we can map port address with its channel by index
 }
 
 type FuncCall struct {

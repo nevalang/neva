@@ -27,38 +27,37 @@ func NewDefaultConnector(listener EventListener) (connector, error) {
 }
 
 type Event struct {
-	Msg             Msg
 	Type            EventType
 	MessageSent     *EventMessageSent
-	MessageInBetwen *EventMessageInBetween
+	MessagePending  *EventMessagePending
 	MessageReceived *EventMessageReceived
 }
 
 type EventMessageSent struct {
 	SenderPortAddr    PortAddr
-	ReceiverPortAddrs []PortAddr
+	ReceiverPortAddrs map[PortAddr]struct{} // We use map to work with breakpoints
 }
 
-type EventMessageInBetween struct {
-	Meta             ConnectionMeta
-	ReceiverPortAddr PortAddr
+type EventMessagePending struct {
+	Meta             ConnectionMeta // We can use sender from here and receivers just as a handy metadata
+	ReceiverPortAddr PortAddr       // So what we really need is sender and receiver port addrs
 }
 
 type EventMessageReceived struct {
-	Meta             ConnectionMeta
+	Meta             ConnectionMeta // Same as with pending event
 	ReceiverPortAddr PortAddr
 }
 
 type EventType uint8
 
 const (
-	MessageSentEvent     EventType = 1
-	MessageInBetween     EventType = 2
-	MessageReceivedEvent EventType = 3
+	MessageSentEvent     EventType = 1 // Message is sent from sender to its receivers
+	MessagePendingEvent  EventType = 2 // Message has reached receiver but not yet passed inside
+	MessageReceivedEvent EventType = 3 // Message is passed inside receiver
 )
 
 type EventListener interface {
-	Send(Event) Msg
+	Send(Event, Msg) Msg
 }
 
 func (c connector) Connect(ctx context.Context, conns []Connection) error {
@@ -87,6 +86,11 @@ func (c connector) broadcast(ctx context.Context, conn Connection) error {
 		}
 	}()
 
+	receiverSet := make(map[PortAddr]struct{}, len(conn.Meta.ReceiverPortAddrs))
+	for _, receiverPortAddr := range conn.Meta.ReceiverPortAddrs {
+		receiverSet[receiverPortAddr] = struct{}{}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -95,12 +99,11 @@ func (c connector) broadcast(ctx context.Context, conn Connection) error {
 		case msg := <-conn.Sender:
 			msg = c.listener.Send(Event{
 				Type: MessageSentEvent,
-				Msg:  msg,
 				MessageSent: &EventMessageSent{
 					SenderPortAddr:    conn.Meta.SenderPortAddr,
-					ReceiverPortAddrs: conn.Meta.ReceiverPortAddrs,
+					ReceiverPortAddrs: receiverSet,
 				},
-			})
+			}, msg)
 			buf <- msg // instead distribute directly we use a buffer so sender can write faster than receivers read
 		}
 	}
@@ -122,13 +125,12 @@ func (c connector) distribute(
 
 		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
 			msg = c.listener.Send(Event{
-				Type: MessageInBetween,
-				Msg:  msg,
-				MessageInBetwen: &EventMessageInBetween{
+				Type: MessagePendingEvent,
+				MessagePending: &EventMessagePending{
 					Meta:             meta,
 					ReceiverPortAddr: receiverPortAddr,
 				},
-			})
+			}, msg)
 			interceptedMsgs[receiverPortAddr] = msg
 		}
 		interceptedMsg := interceptedMsgs[receiverPortAddr]
@@ -139,12 +141,11 @@ func (c connector) distribute(
 		case recv <- interceptedMsg:
 			msg = c.listener.Send(Event{
 				Type: MessageReceivedEvent,
-				Msg:  msg,
 				MessageReceived: &EventMessageReceived{
 					Meta:             meta,
 					ReceiverPortAddr: receiverPortAddr,
 				},
-			})
+			}, msg)
 			q = append(q[:i], q[i+1:]...) // remove cur from q
 		default: // cur is busy
 			if i < len(q) {
@@ -162,8 +163,8 @@ func (c connector) distribute(
 
 type Listener struct{}
 
-func (l Listener) Send(event Event) Msg {
-	return event.Msg
+func (l Listener) Send(event Event, msg Msg) Msg {
+	return msg
 }
 
 func NewChanListener() Listener {

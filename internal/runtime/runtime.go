@@ -44,7 +44,6 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	// FirstByName is not how this supposed to be working! There could be more "enter" and "exit" ports!
 	enter := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
 	if enter == nil {
 		return 0, ErrStartPortNotFound
