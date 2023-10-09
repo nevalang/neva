@@ -175,13 +175,19 @@ func (a Analyzer) getNodeInportType(
 	if err != nil {
 		panic("")
 	}
-	return a.getResolvedPortType(
+
+	typ, err := a.getResolvedPortType(
 		entity.Component.Interface.IO.In,
 		entity.Component.Interface.TypeParams,
 		portAddr,
 		node,
 		scope,
 	)
+	if err != nil {
+		return ts.Expr{}, fmt.Errorf("get resolved inport type: %w", err)
+	}
+
+	return typ, nil
 }
 
 func (a Analyzer) getResolvedPortType(
@@ -193,7 +199,7 @@ func (a Analyzer) getResolvedPortType(
 ) (ts.Expr, error) {
 	port, ok := ports[portAddr.Port]
 	if !ok {
-		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodeOutportNotFound, portAddr.Node)
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodePortNotFound, portAddr)
 	}
 
 	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
@@ -217,7 +223,7 @@ var (
 	ErrWriteSelfIn              = errors.New("component cannot write to self inports")
 	ErrInportNotFound           = errors.New("network references to inport that is not found in component's IO")
 	ErrNodeNotFound             = errors.New("network references node that is not found in component")
-	ErrNodeOutportNotFound      = errors.New("network references to not existing node's outport")
+	ErrNodePortNotFound         = errors.New("network references to not existing node's port")
 )
 
 func (a Analyzer) getSenderType(
@@ -272,13 +278,18 @@ func (a Analyzer) getNodeOutportType(
 		panic(err)
 	}
 
-	return a.getResolvedPortType(
+	typ, err := a.getResolvedPortType(
 		entity.Component.IO.Out,
 		entity.Component.TypeParams,
 		portAddr,
 		node,
 		scope,
 	)
+	if err != nil {
+		return ts.Expr{}, fmt.Errorf("get resolved port outport type: %w", err)
+	}
+
+	return typ, err
 }
 
 func (a Analyzer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, error) {

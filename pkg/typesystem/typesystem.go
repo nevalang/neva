@@ -128,8 +128,10 @@ func (lit *LitExpr) Empty() bool {
 }
 
 // Always call Validate before
-func (lit LitExpr) Type() LiteralType {
+func (lit *LitExpr) Type() LiteralType {
 	switch {
+	case lit == nil:
+		return EmptyLitType
 	case lit.Arr != nil:
 		return ArrLitType
 	case lit.Rec != nil:
