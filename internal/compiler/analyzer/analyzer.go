@@ -67,10 +67,11 @@ func (a Analyzer) analyzePkg(pkgName string, prog src.Program) (src.Package, err
 	}
 
 	if err := prog[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
-		scope := Scope{
-			prog: prog, loc: Location{
-				pkg:  pkgName,
-				file: fileName,
+		scope := src.Scope{
+			Prog: prog,
+			Loc: src.ScopeLocation{
+				PkgName:  pkgName,
+				FileName: fileName,
 			},
 		}
 		resolvedEntity, err := a.analyzeEntity(entity, scope)
@@ -86,12 +87,12 @@ func (a Analyzer) analyzePkg(pkgName string, prog src.Program) (src.Package, err
 	return resolvedPkg, nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, scope Scope) (src.Entity, error) {
+func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, error) {
 	resolvedEntity := src.Entity{
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
 	}
-	isStd := strings.HasPrefix(scope.loc.pkg, "std/")
+	isStd := strings.HasPrefix(scope.Loc.PkgName, "std/")
 
 	switch entity.Kind {
 	case src.TypeEntity:

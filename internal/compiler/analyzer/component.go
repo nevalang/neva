@@ -14,7 +14,7 @@ type analyzeComponentParams struct {
 
 func (a Analyzer) analyzeComponent(
 	comp src.Component,
-	scope Scope,
+	scope src.Scope,
 	params analyzeComponentParams,
 ) (src.Component, error) {
 	resolvedInterface, err := a.analyzeInterface(comp.Interface, scope, params.iface)
@@ -39,7 +39,7 @@ func (a Analyzer) analyzeComponent(
 	}, nil
 }
 
-func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, scope Scope) (map[string]src.Node, error) {
+func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, scope src.Scope) (map[string]src.Node, error) {
 	resolvedNodes := make(map[string]src.Node, len(nodes))
 	for name, node := range nodes {
 		resolvedNode, err := a.analyzeComponentNode(node, scope)
@@ -57,7 +57,7 @@ var (
 	ErrNodeInterfaceDI           = errors.New("interface node cannot have dependency injection")
 )
 
-func (a Analyzer) analyzeComponentNode(node src.Node, scope Scope) (src.Node, error) {
+func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, error) {
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, fmt.Errorf("entity: %w", err)
@@ -116,7 +116,7 @@ func (a Analyzer) analyzeComponentNet(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
-	scope Scope,
+	scope src.Scope,
 ) ([]src.Connection, error) {
 	for _, conn := range net {
 		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, scope)
@@ -140,7 +140,7 @@ func (a Analyzer) getReceiverType(
 	receiverSide src.ReceiverConnectionSide,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
-	scope Scope,
+	scope src.Scope,
 ) (ts.Expr, error) {
 	if receiverSide.PortAddr.Node == "in" {
 		return ts.Expr{}, ErrWriteSelfIn
@@ -165,7 +165,7 @@ func (a Analyzer) getReceiverType(
 func (a Analyzer) getNodeInportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	scope Scope,
+	scope src.Scope,
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
@@ -189,7 +189,7 @@ func (a Analyzer) getResolvedPortType(
 	params []ts.Param,
 	portAddr src.PortAddr,
 	node src.Node,
-	scope Scope,
+	scope src.Scope,
 ) (ts.Expr, error) {
 	port, ok := ports[portAddr.Port]
 	if !ok {
@@ -224,7 +224,7 @@ func (a Analyzer) getSenderType(
 	senderSide src.SenderConnectionSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
-	scope Scope,
+	scope src.Scope,
 ) (ts.Expr, error) {
 	if senderSide.ConstRef != nil {
 		constTypeExpr, err := a.getConstType(*senderSide.ConstRef, scope)
@@ -260,7 +260,7 @@ func (a Analyzer) getSenderType(
 func (a Analyzer) getNodeOutportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	scope Scope,
+	scope src.Scope,
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
@@ -281,7 +281,7 @@ func (a Analyzer) getNodeOutportType(
 	)
 }
 
-func (a Analyzer) getConstType(ref src.EntityRef, scope Scope) (ts.Expr, error) {
+func (a Analyzer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("prog entity: %w", err)

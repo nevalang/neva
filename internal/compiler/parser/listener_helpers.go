@@ -17,13 +17,16 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
 		paramName := typeParam.IDENTIFIER().GetText()
-		parsedParamExpr := parseTypeExpr(typeParam.TypeExpr())
-		if parsedParamExpr == nil {
+		expr := typeParam.TypeExpr()
+		var parsedParamExpr *ts.Expr
+		if expr == nil {
 			parsedParamExpr = &ts.Expr{
 				Inst: &ts.InstExpr{
 					Ref: src.EntityRef{Name: "any"},
 				},
 			}
+		} else {
+			parsedParamExpr = parseTypeExpr(expr)
 		}
 		result = append(result, ts.Param{
 			Name:   paramName,
@@ -39,13 +42,52 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 		return nil
 	}
 
-	tmp := parseTypeInstExpr(expr.TypeInstExpr())
-	return &tmp
+	if instExpr := expr.TypeInstExpr(); instExpr != nil {
+		return parseTypeInstExpr(instExpr)
+	}
+
+	if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
+		return parseUnionExpr(unionExpr)
+	}
+
+	litExpr := expr.TypeLitExpr()
+	if litExpr == nil {
+		panic("expr empty")
+	}
+
+	return parseLitExpr(litExpr)
 }
 
-func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
+func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
+	subExprs := unionExpr.AllNonUnionTypeExpr()
+	parsedSubExprs := make([]ts.Expr, 0, len(subExprs))
+
+	for _, subExpr := range subExprs {
+		if instExpr := subExpr.TypeInstExpr(); instExpr != nil {
+			parsedSubExprs = append(parsedSubExprs, *parseTypeInstExpr(instExpr))
+		}
+		if unionExpr := subExpr.TypeLitExpr(); unionExpr != nil {
+			parsedSubExprs = append(parsedSubExprs, *parseLitExpr(subExpr.TypeLitExpr()))
+		}
+	}
+
+	return &ts.Expr{
+		Lit: &ts.LitExpr{
+			Union: parsedSubExprs,
+		},
+	}
+}
+
+func parseLitExpr(expr generated.ITypeLitExprContext) *ts.Expr {
+	panic("not implemented!")
+	// expr.EnumTypeExpr()
+	// expr.ArrTypeExpr()
+	// expr.RecTypeExpr()
+}
+
+func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 	if instExpr == nil {
-		return ts.Expr{}
+		return nil
 	}
 
 	parsedRef, err := parseEntityRef(instExpr.EntityRef())
@@ -61,7 +103,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 
 	args := instExpr.TypeArgs()
 	if args == nil {
-		return result
+		return &result
 	}
 
 	argExprs := args.AllTypeExpr()
@@ -71,7 +113,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) ts.Expr {
 	}
 	result.Inst.Args = parsedArgs
 
-	return result
+	return &result
 }
 
 func parseEntityRef(actx generated.IEntityRefContext) (src.EntityRef, error) {

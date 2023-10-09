@@ -94,7 +94,6 @@ func (c connector) broadcast(ctx context.Context, conn Connection) error {
 	for {
 		select {
 		case <-ctx.Done():
-			close(buf)
 			return nil
 		case msg := <-conn.Sender:
 			msg = c.listener.Send(Event{

@@ -19,7 +19,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
-	rConns := make([]runtime.Connection, len(irProg.Connections))
+	rConns := make([]runtime.Connection, 0, len(irProg.Connections))
 	for _, conn := range irProg.Connections {
 		senderPortAddr := runtime.PortAddr{ // reference
 			Path: conn.SenderSide.Path,
@@ -38,7 +38,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 		}
 		receiverChans := make([]chan runtime.Msg, 0, len(conn.ReceiverSides))
 
-		for i, rcvr := range conn.ReceiverSides {
+		for _, rcvr := range conn.ReceiverSides {
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.PortAddr.Path,
 				Port: rcvr.PortAddr.Port,
@@ -50,13 +50,14 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 				return runtime.Program{}, errors.New("receiver port not found")
 			}
 
-			meta.ReceiverPortAddrs[i] = receiverPortAddr
+			meta.ReceiverPortAddrs = append(meta.ReceiverPortAddrs, receiverPortAddr)
 			receiverChans = append(receiverChans, receiverPortChan)
 		}
 
 		rConns = append(rConns, runtime.Connection{
 			Sender:    senderPortChan,
 			Receivers: receiverChans,
+			Meta:      meta,
 		})
 	}
 

@@ -3,6 +3,7 @@ package analyzer
 import (
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler/src"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -12,7 +13,7 @@ type analyzeTypeDefParams struct {
 
 var ErrEmptyTypeDefBody = fmt.Errorf("type def body is empty")
 
-func (a Analyzer) analyzeTypeDef(def ts.Def, scope Scope, params analyzeTypeDefParams) (ts.Def, error) {
+func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
 		return ts.Def{}, ErrEmptyTypeDefBody
 	}
@@ -31,7 +32,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope Scope, params analyzeTypeDefP
 	}, nil
 }
 
-func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope Scope) (ts.Expr, error) {
+func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("resolve expr: %w", err)
@@ -39,7 +40,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope Scope) (ts.Expr, error) {
 	return resolvedExpr, nil
 }
 
-func (a Analyzer) analyzeTypeParams(params []ts.Param, scope Scope) ([]ts.Param, error) {
+func (a Analyzer) analyzeTypeParams(params []ts.Param, scope src.Scope) ([]ts.Param, error) {
 	resolvedParams, err := a.resolver.ResolveParams(params, scope)
 	if err != nil {
 		return nil, fmt.Errorf("resolve params: %w", err)

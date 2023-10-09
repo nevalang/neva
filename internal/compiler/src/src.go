@@ -14,15 +14,18 @@ var (
 	ErrEntityNotFound = fmt.Errorf("entity not found")
 )
 
-func (p Program) Entity(entityRef EntityRef) (Entity, string, error) {
+// Entity does not return package because calleer knows it, passed entityRef contains it.
+// Note that this method does not know anything about imports, builtins or anything like that.
+// entityRef passed must be absolute (full, "real") path to the entity.
+func (p Program) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := p[entityRef.Pkg]
 	if !ok {
 		return Entity{}, "", ErrPkgNotFound
 	}
-	for name, file := range pkg {
+	for filename, file := range pkg {
 		entity, ok := file.Entities[entityRef.Name]
 		if ok {
-			return entity, name, nil
+			return entity, filename, nil
 		}
 	}
 	return Entity{}, "", ErrEntityNotFound
@@ -30,6 +33,7 @@ func (p Program) Entity(entityRef EntityRef) (Entity, string, error) {
 
 type Package map[string]File
 
+// Just like program's Entity
 func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) {
 	for fileName, file := range p {
 		entity, ok := file.Entities[entityName]

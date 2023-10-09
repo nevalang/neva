@@ -9,8 +9,6 @@ components {
     
     pub Lock<T>(sig, v T) (v T)
     
-    pub Const<T>() (v t3)
-    
     pub ParseNum<T int | float>(v str) (v T, err str)
     
     pub Add<T int | float | str>(a T, b T) (v T)

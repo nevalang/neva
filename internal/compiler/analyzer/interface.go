@@ -17,7 +17,7 @@ type analyzeInterfaceParams struct {
 
 func (a Analyzer) analyzeInterface(
 	def src.Interface,
-	scope Scope,
+	scope src.Scope,
 	params analyzeInterfaceParams,
 ) (src.Interface, error) {
 	resolvedParams, err := a.analyzeTypeParams(def.TypeParams, scope)
@@ -44,7 +44,7 @@ var (
 func (a Analyzer) analyzeIO(
 	typeParams []ts.Param,
 	io src.IO,
-	scope Scope,
+	scope src.Scope,
 	params analyzeInterfaceParams,
 ) (src.IO, error) {
 	if !params.allowEmptyInports && len(io.In) == 0 {
@@ -74,7 +74,7 @@ func (a Analyzer) analyzeIO(
 func (a Analyzer) analyzePorts(
 	params []ts.Param,
 	ports map[string]src.Port,
-	scope Scope,
+	scope src.Scope,
 ) (map[string]src.Port, error) {
 	resolvedPorts := make(map[string]src.Port, len(ports))
 	for name, port := range ports {
@@ -87,7 +87,7 @@ func (a Analyzer) analyzePorts(
 	return resolvedPorts, nil
 }
 
-func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope Scope) (src.Port, error) {
+func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, error) {
 	resolvedDef, err := a.analyzeTypeDef(ts.Def{
 		Params:   params,
 		BodyExpr: &port.TypeExpr,

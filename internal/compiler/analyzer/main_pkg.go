@@ -28,12 +28,12 @@ func (a Analyzer) mainSpecificPkgValidation(pkg src.Package, pkgs map[string]src
 		return ErrMainEntityExported
 	}
 
-	scope := Scope{
-		loc: Location{
-			pkg:  "main",
-			file: filename,
+	scope := src.Scope{
+		Loc: src.ScopeLocation{
+			PkgName:  "main",
+			FileName: filename,
 		},
-		prog: pkgs,
+		Prog: pkgs,
 	}
 
 	if err := a.analyzeMainComponent(entityMain.Component, pkg, scope); err != nil {

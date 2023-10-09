@@ -9,3 +9,7 @@ types {
     pub map<K int | float | str | bool, V>
     pub vec<V>
 }
+
+components {
+    pub Const<T>() (v t3)
+}

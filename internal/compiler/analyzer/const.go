@@ -14,7 +14,7 @@ var (
 	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
 )
 
-func (a Analyzer) analyzeConst(cnst src.Const, scope Scope) (src.Const, error) {
+func (a Analyzer) analyzeConst(cnst src.Const, scope src.Scope) (src.Const, error) {
 	if cnst.Value == nil && cnst.Ref == nil {
 		return src.Const{}, ErrEmptyConst
 	}

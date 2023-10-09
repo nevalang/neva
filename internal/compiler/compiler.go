@@ -36,7 +36,7 @@ type (
 func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Program, error) {
 	raw, err := c.repo.ByPath(ctx, srcPath)
 	if err != nil {
-		return nil, fmt.Errorf("by path: %w", err)
+		return nil, fmt.Errorf("repo by path: %w", err)
 	}
 
 	parsedPackages := make(src.Program, len(raw))
@@ -54,7 +54,7 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 
 	irProg, err := c.irgen.Generate(ctx, parsedPackages)
 	if err != nil {
-		return nil, fmt.Errorf("generate: %w", err)
+		return nil, fmt.Errorf("generate IR: %w", err)
 	}
 
 	if dstPath == "" {
