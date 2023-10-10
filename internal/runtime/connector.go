@@ -4,36 +4,64 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
 )
 
 var (
-	ErrBroadcast         = errors.New("broadcast")
-	ErrDistribute        = errors.New("distribute")
-	ErrSelectorSending   = errors.New("selector after sending")
-	ErrSelectorReceiving = errors.New("selector before receiving")
+	ErrBroadcast  = errors.New("broadcast")
+	ErrDistribute = errors.New("distribute")
 )
 
-type DefaultConnector struct {
-	interceptor Interceptor
+type connector struct {
+	listener EventListener
 }
 
-func NewDefaultConnector(interceptor Interceptor) (DefaultConnector, error) {
-	if interceptor == nil {
-		return DefaultConnector{}, ErrNilDeps
+func NewDefaultConnector(listener EventListener) (connector, error) {
+	if listener == nil {
+		return connector{}, ErrNilDeps
 	}
-	return DefaultConnector{
-		interceptor: interceptor,
+	return connector{
+		listener: listener,
 	}, nil
 }
 
-type Interceptor interface {
-	AfterSending(from SenderConnectionSideMeta, msg Msg) Msg
-	BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg
-	AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg)
+type Event struct {
+	Type            EventType
+	MessageSent     *EventMessageSent
+	MessagePending  *EventMessagePending
+	MessageReceived *EventMessageReceived
 }
 
-func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error { // pass ports map here?
-	g, gctx := WithContext(ctx)
+type EventMessageSent struct {
+	SenderPortAddr    PortAddr
+	ReceiverPortAddrs map[PortAddr]struct{} // We use map to work with breakpoints
+}
+
+type EventMessagePending struct {
+	Meta             ConnectionMeta // We can use sender from here and receivers just as a handy metadata
+	ReceiverPortAddr PortAddr       // So what we really need is sender and receiver port addrs
+}
+
+type EventMessageReceived struct {
+	Meta             ConnectionMeta // Same as with pending event
+	ReceiverPortAddr PortAddr
+}
+
+type EventType uint8
+
+const (
+	MessageSentEvent     EventType = 1 // Message is sent from sender to its receivers
+	MessagePendingEvent  EventType = 2 // Message has reached receiver but not yet passed inside
+	MessageReceivedEvent EventType = 3 // Message is passed inside receiver
+)
+
+type EventListener interface {
+	Send(Event, Msg) Msg
+}
+
+func (c connector) Connect(ctx context.Context, conns []Connection) error {
+	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range conns {
 		conn := conns[i]
@@ -48,48 +76,75 @@ func (c DefaultConnector) Connect(ctx context.Context, conns []Connection) error
 	return g.Wait()
 }
 
-func (c DefaultConnector) broadcast(ctx context.Context, conn Connection) error {
+// FIXME slowest receiver will slow down the whole system
+func (c connector) broadcast(ctx context.Context, conn Connection) error {
+	buf := make(chan Msg, 100)
+	defer close(buf)
+	go func() {
+		for msg := range buf {
+			c.distribute(ctx, msg, conn.Meta, conn.Receivers)
+		}
+	}()
+
+	receiverSet := make(map[PortAddr]struct{}, len(conn.Meta.ReceiverPortAddrs))
+	for _, receiverPortAddr := range conn.Meta.ReceiverPortAddrs {
+		receiverSet[receiverPortAddr] = struct{}{}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case msg := <-conn.Sender.Port:
-			msg = c.interceptor.AfterSending(conn.Sender.Meta, msg)
-			if err := c.distribute(ctx, msg, conn.Sender.Meta, conn.Receivers); err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrDistribute, err), msg)
-			}
+		case msg := <-conn.Sender:
+			msg = c.listener.Send(Event{
+				Type: MessageSentEvent,
+				MessageSent: &EventMessageSent{
+					SenderPortAddr:    conn.Meta.SenderPortAddr,
+					ReceiverPortAddrs: receiverSet,
+				},
+			}, msg)
+			buf <- msg // instead distribute directly we use a buffer so sender can write faster than receivers read
 		}
 	}
 }
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c DefaultConnector) distribute(
+func (c connector) distribute(
 	ctx context.Context,
 	msg Msg,
-	senderMeta SenderConnectionSideMeta,
-	q []ReceiverConnectionSide,
-) error {
+	meta ConnectionMeta,
+	q []chan Msg,
+) {
 	i := 0
-	preparedMsgs := make(map[PortAddr]Msg, len(q))
+	interceptedMsgs := make(map[PortAddr]Msg, len(q))
 
 	for len(q) > 0 {
 		recv := q[i]
+		receiverPortAddr := meta.ReceiverPortAddrs[i]
 
-		if _, ok := preparedMsgs[recv.Meta.PortAddr]; !ok { // avoid multuple interceptions and selections
-			msg = c.interceptor.BeforeReceiving(senderMeta, recv.Meta, msg)
-			preparedMsg, err := c.applySelector(msg, recv.Meta.Selectors)
-			if err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrSelectorReceiving, err), recv.Meta)
-			}
-			preparedMsgs[recv.Meta.PortAddr] = preparedMsg
+		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
+			msg = c.listener.Send(Event{
+				Type: MessagePendingEvent,
+				MessagePending: &EventMessagePending{
+					Meta:             meta,
+					ReceiverPortAddr: receiverPortAddr,
+				},
+			}, msg)
+			interceptedMsgs[receiverPortAddr] = msg
 		}
-		preparedMsg := preparedMsgs[recv.Meta.PortAddr]
+		interceptedMsg := interceptedMsgs[receiverPortAddr]
 
 		select {
 		case <-ctx.Done():
-			return nil
-		case recv.Port <- preparedMsg:
-			c.interceptor.AfterReceiving(senderMeta, recv.Meta, preparedMsg)
+			return
+		case recv <- interceptedMsg:
+			msg = c.listener.Send(Event{
+				Type: MessageReceivedEvent,
+				MessageReceived: &EventMessageReceived{
+					Meta:             meta,
+					ReceiverPortAddr: receiverPortAddr,
+				},
+			}, msg)
 			q = append(q[:i], q[i+1:]...) // remove cur from q
 		default: // cur is busy
 			if i < len(q) {
@@ -102,31 +157,15 @@ func (c DefaultConnector) distribute(
 		}
 	}
 
-	return nil
+	return
 }
 
-func (c DefaultConnector) applySelector(msg Msg, selectors []string) (Msg, error) {
-	if len(selectors) == 0 {
-		return msg, nil
-	}
-	return c.applySelector(
-		msg.Map()[selectors[0]],
-		selectors[1:],
-	)
-}
+type Listener struct{}
 
-type DefaultInterceptor struct{}
-
-func (i DefaultInterceptor) AfterSending(from SenderConnectionSideMeta, msg Msg) Msg {
-	fmt.Printf("after sending %v -> %v\n", from, msg)
+func (l Listener) Send(event Event, msg Msg) Msg {
 	return msg
 }
 
-func (i DefaultInterceptor) BeforeReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) Msg {
-	fmt.Printf("before receiving %v <- %v <- %v\n", to, msg, from)
-	return msg
-}
-
-func (i DefaultInterceptor) AfterReceiving(from SenderConnectionSideMeta, to ReceiverConnectionSideMeta, msg Msg) {
-	fmt.Printf("after receiving %v -> %v -> %v\n", from, msg, to)
+func NewChanListener() Listener {
+	return Listener{}
 }

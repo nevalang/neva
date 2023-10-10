@@ -1,0 +1,66 @@
+interfaces { IReader1 (arr [512]int) () }
+
+interfaces {
+    IReader1 (arr [512]int) ()
+}
+
+interfaces { IReader1 (arr [512]int) (arr [1024]bool) }
+
+interfaces {
+    IReader1 (arr [512]int) (arr [1024]bool)
+}
+
+interfaces { IReader1 (arr [512]{ Monday, Tuesday }) (arr [1024]{ January, February }) }
+
+interfaces {
+    IReader1 (arr [512]{ Monday, Tuesday }) (arr [1024]{ January, February })
+}
+
+interfaces { IReader1 (arr [512]{ foo int }) (arr [1024]{ bar bool }) }
+
+interfaces {
+    IReader1 (arr [512]{ Monday, Tuesday }) (arr [1024]{ January, February })
+}
+
+interfaces { IReader1 (arr [512]{ Monday, Tuesday }, arr2 [256]{ foo int }) (arr [1024]{ January, February }) }
+
+interfaces {
+    IReader1 (arr [512]{ Monday, Tuesday }, arr2 [256]{ foo int }) (arr [1024]{ January, February })
+}
+
+interfaces {
+    IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int }
+    ) (arr [1024]{ January, February })
+}
+
+interfaces {
+    IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int }
+    ) (arr [1024]{ January, February }, arr2 [256]{ bar bool })
+}
+
+interfaces {
+    IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int }
+    ) (
+        arr [1024]{ January, February },
+        arr2 [256]{ bar bool }
+    )
+}
+
+interfaces {
+    pub IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int },
+        arr3 [128]{ baz {} }
+    ) (
+        arr [1024]{ January, February },
+        arr2 [256]{ bar bool },
+        arr3 [128][64]{ bax {} }
+    )
+}
+

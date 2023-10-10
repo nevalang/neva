@@ -1,0 +1,155 @@
+types { num int | float }
+
+types {
+    num int | float
+}
+
+types { num int | float
+}
+
+types {
+    num int | float }
+
+types {
+    num int
+        | float
+}
+
+types { num int
+        | float
+}
+
+types {
+    num int
+        | float }
+
+types {
+    num int |
+        float
+}
+
+types { num int |
+        float
+}
+
+types {
+    num int |
+        float }
+
+types {
+    time { Monday, Tuesday, Wednesday } | { January, February, March }
+}
+
+
+types { time { Monday, Tuesday, Wednesday } | { January, February, March }
+}
+
+
+types {
+    time { Monday, Tuesday, Wednesday } | { January, February, March } }
+
+types {
+    time {
+        Monday, Tuesday, Wednesday } | { January, February, March }
+}
+
+types {
+    time { Monday, Tuesday, Wednesday } | { January, February, March
+    }
+}
+
+types {
+    time {
+        Monday, Tuesday, Wednesday } | { January, February, March
+    }
+}
+
+types {
+    time {
+        Monday, Tuesday, Wednesday
+    } | { January, February, March }
+}
+
+types {
+    time {
+        Monday, Tuesday, Wednesday
+    } | {
+        January, February, March }
+}
+
+types {
+    time {
+        Monday, Tuesday, Wednesday
+    } | {
+        January, February, March
+    }
+}
+
+types {
+    time {
+        Monday,
+        Tuesday,
+        Wednesday
+    } | {
+        January,
+        February,
+        March
+    }
+}
+
+types { Obj {} | { foo int } }
+
+types {
+    Obj {} | { foo int } }
+
+types { Obj {} | { foo int }
+}
+
+types {
+    Obj {} | { foo int }
+}
+
+types {
+    Obj {} | { foo int | float }
+}
+
+types {
+    SomeTyp { foo int | float } | int | {
+        Monday,
+        Tuesday,
+        Wednesday
+    } | {
+        January,
+        February,
+        March
+    } | float 
+}
+
+types { size [64]int | [32]int }
+
+types {
+    size [64]int | [32]int
+}
+
+types {
+    size [64]int
+        | [32]int
+}
+
+types {
+    size [64]int |
+        [32]int
+}
+
+types {
+    T int | { Monday, Tuesday, Wednesday } | [64]int | [32]int | { foo int | float }
+}
+
+types {
+    pub T int | {
+        Monday, Tuesday, Wednesday
+    } | [64]int | [32]int | {
+        foo int | float
+    }
+}
+

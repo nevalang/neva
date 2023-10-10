@@ -1,0 +1,91 @@
+types {
+    EmptyRec {}
+}
+
+types {
+    EmptyRec2 {
+    }
+}
+
+types {
+    EmptyRec2 {
+
+    }
+}
+
+types {
+    Rec { foo int }
+}
+
+types {
+    Rec {
+        foo int }
+}
+
+types {
+    Rec { foo int
+    }
+}
+
+types {
+    Rec {
+        foo int
+    }
+}
+
+types {
+    Rec {
+        foo int
+        bar { Monday, Tuesday, Wednesday }
+    }
+}
+
+types {
+    Rec { foo int
+        bar { Monday, Tuesday, Wednesday }
+    }
+}
+
+types {
+    Rec {
+        foo int
+        bar { Monday, Tuesday, Wednesday } }
+}
+
+types {
+    Rec {
+        foo int
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
+    }
+}
+
+types {
+    Rec {
+        foo int
+
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
+    }
+}
+
+types {
+    EmptyRec {}
+
+    Rec { foo int }
+
+    pub Rec {
+        foo int
+        bar {
+            Monday,
+            Tuesday,
+            Wednesday
+        }
+    }
+}

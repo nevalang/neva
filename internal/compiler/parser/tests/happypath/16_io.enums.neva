@@ -1,0 +1,150 @@
+interfaces { IReader1 (x { Monday }) () }
+
+interfaces { IReader2 (x {
+    Monday }) () }
+
+interfaces { IReader3 (x { Monday
+}) () }
+
+interfaces {
+    IReader4 (x { Monday }) ()
+}
+
+interfaces {
+    IReader5 (x {
+        Monday
+    }) ()
+}
+
+interfaces {
+    IReader6 (x { Monday, Tuesday, Wednesday }) ()
+}
+
+interfaces {
+    IReader7 (x {
+        Monday, Tuesday, Wednesday
+    }) ()
+}
+
+interfaces {
+    IReader8 (x { Monday, Tuesday, Wednesday }) (a { Monday, Tuesday, Wednesday })
+}
+
+interfaces {
+    IReader9 (x { Monday, Tuesday, Wednesday }) (a {
+        Monday, Tuesday, Wednesday })
+}
+
+interfaces {
+    IReader10 (x { Monday, Tuesday, Wednesday }) (a { Monday, Tuesday, Wednesday
+    })
+}
+
+interfaces {
+    IReader11 (x {
+        Monday, Tuesday, Wednesday
+    }) (a {
+        Monday, Tuesday, Wednesday
+    })
+}
+
+interfaces {
+    IReader12 (x {
+        Monday,
+        Tuesday,
+        Wednesday
+    }) (a {
+        Monday,
+        Tuesday,
+        Wednesday
+    })
+}
+
+interfaces {
+    IReader12 (x { Monday, Tuesday, Wednesday }, y { January, February }) (a { Monday, Tuesday, Wednesday }, b  { January, February })
+}
+
+interfaces {
+    IReader12 (
+        x { Monday, Tuesday, Wednesday }, y { January, February }
+    ) (a { Monday, Tuesday, Wednesday }, b  { January, February })
+}
+
+interfaces {
+    IReader12 (
+        x { Monday, Tuesday, Wednesday }, y { January, February }
+    ) (
+        a { Monday, Tuesday, Wednesday }, b  { January, February }
+    )
+}
+
+interfaces {
+    IReader12 (
+        x {
+            Monday, Tuesday, Wednesday
+        }, y { January, February }
+    ) (
+        a { Monday, Tuesday, Wednesday }, b  { January, February }
+    )
+}
+
+
+interfaces {
+    IReader12 (
+        x {
+            Monday, Tuesday, Wednesday
+        }, y {
+            January, February
+        }
+    ) (
+        a { Monday, Tuesday, Wednesday }, b  { January, February }
+    )
+}
+
+interfaces {
+    IReader12 (
+        x {
+            Monday, Tuesday, Wednesday
+        }, y {
+            January, February
+        }
+    ) (
+        a {
+            Monday, Tuesday, Wednesday }, b  { January, February }
+    )
+}
+
+interfaces {
+    IReader12 (
+        x {
+            Monday, Tuesday, Wednesday
+        }, y {
+            January, February
+        }
+    ) (
+        a {
+            Monday, Tuesday, Wednesday }, b  { January, February
+        }
+    )
+}
+
+interfaces {
+    pub IReader12 (
+        x {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, y {
+            January,
+            February
+        }
+    ) (
+        a {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, b  {
+            January, February
+        }
+    )
+}

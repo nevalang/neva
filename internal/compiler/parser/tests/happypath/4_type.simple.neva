@@ -1,0 +1,102 @@
+types {}
+
+types {
+}
+
+types {
+
+}
+
+types
+{}
+
+types
+{
+}
+
+types
+{
+
+}
+
+types { MyInt int }
+
+types {
+    MyInt int }
+
+types {
+    MyInt int
+}
+
+types
+{ MyInt int }
+
+types
+{
+    MyInt int }
+
+types
+{ MyInt int
+}
+
+types
+{
+    MyInt int
+}
+
+types { MyInt int
+    pub MyStr str
+}
+
+types { MyInt int
+
+    pub MyStr str
+}
+
+types { MyInt int
+    pub MyStr str }
+
+types {
+    MyInt int
+    pub MyStr str
+}
+
+types {
+
+    MyInt int
+    pub MyStr str
+}
+
+types {
+    MyInt int
+    pub MyStr str
+
+}
+
+types {
+    MyInt int
+
+    pub MyStr str
+}
+
+types {
+
+    MyInt int
+
+    pub MyStr str
+}
+
+types {
+    MyInt int
+
+    pub MyStr str
+
+}
+
+types {
+
+    MyInt int
+
+    pub MyStr str
+
+}

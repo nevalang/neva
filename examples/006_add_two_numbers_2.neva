@@ -1,0 +1,37 @@
+// Turns out previous implementation was a bit naive - parse number could fail.
+// This time we will handle errors by printing them.
+// Note how program terminates - in case one of two parse failed or
+// after printing success result.
+
+use {
+	std
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			read1 std.Read
+			read2 std.Read
+			parse1 std.ParseInt
+			parse2 std.ParseInt
+			add std.Add<int>
+			printv std.Print<int>
+			printerr std.Print<int>
+		}
+		net {
+			in.enter -> read1.in.sig // trigger first read
+			read1.out.v -> parse1.in.v // parse result of first read
+			parse1.out.v -> { // successfull result of the first parse triggers the second read and goes to the adder
+				add.in.a
+				read2.in.sig
+			}
+			read2.in.sig -> parse2.in.v // result of the second read goes to parsing
+			parse2.out.v -> add.in.b // successfull result of the second parse goes to the adder
+			add.out.v -> printv.in.v // result of the addition goes to the printer
+			printv.out.v -> out.exit // successfull print goes to the exit
+			parse1.out.err -> printerr.in.v // error of the first parse goes to the error printer
+			parse2.out.err -> printerr.in.v // error of the second parse also goes to the error printer
+			printerr.out.v -> out.exit // error print also terminates the program
+		}
+	}
+}

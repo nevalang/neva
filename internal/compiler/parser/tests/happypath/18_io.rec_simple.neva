@@ -1,0 +1,134 @@
+interfaces { IReader1 (x {}) () }
+
+interfaces { IReader1 (x {
+}) () }
+
+interfaces {
+    IReader1 (x {}) ()
+}
+
+interfaces { IReader1 (x {
+    foo int }) () }
+
+interfaces { IReader1 (x { foo int
+}) () }
+
+interfaces { IReader1 (x {
+    foo int
+}) () }
+
+interfaces {
+    IReader1 (x { foo int }) ()
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+    }) ()
+}
+
+interfaces { IReader1 (x {}) (a {}) }
+
+interfaces { IReader1 (x {}) (a {
+}) }
+
+interfaces {
+    IReader1 (x {}) (a {})
+}
+
+interfaces {
+    IReader1 (x {}) (a {
+    })
+}
+
+interfaces {
+    IReader1 (x {
+    }) (a {
+    })
+}
+
+interfaces { IReader1 (x { foo int }) (a {}) }
+
+interfaces { 
+    IReader1 (x {
+        foo int
+    }) (a {
+    })
+}
+
+interfaces { 
+    IReader1 (x {
+    }) (a {
+        bar bool
+    })
+}
+
+interfaces { 
+    IReader1 (x {
+    }) (a { bar bool })
+}
+
+interfaces {
+    IReader1 (x { }) (a { bar bool })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str }) (a { bar bool })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a { bar bool })
+}
+
+interfaces {
+    IReader1 (x { foo int
+        bar str }) (a { bar bool })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a {
+        bar bool })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str }) (a { bar bool
+    })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a {
+        baz bool
+        bax float
+    })
+}
+
+interfaces {
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a { baz bool
+        bax float
+    })
+}
+
+interfaces {
+    pub IReader1 (x {
+        foo int
+        bar str
+    }) (a {
+        baz bool
+        bax float })
+}

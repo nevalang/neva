@@ -1,0 +1,41 @@
+types {
+    Rec1Lvl1 {
+        rec1Lvl2 {
+            foo vec<int>
+        }
+    }
+}
+
+types {
+    Rec2Lvl1 {
+        rec2Lvl2 {
+            foo vec<{
+                foo int
+            }>
+        }
+    }
+}
+
+types {
+    Rec3Lvl1 {
+        rec3Lvl2 {
+            foo vec<{
+                bar vec<{
+                    baz int
+                }>
+            }>
+        }
+    }
+}
+
+types {
+    pub Rec4Lvl1 {
+        rec4Lvl2 {
+            foo vec<{
+                bar vec<{
+                    baz map<str, { baz bool }>
+                }>
+            }>
+        }
+    }
+}

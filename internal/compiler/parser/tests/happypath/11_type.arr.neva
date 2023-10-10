@@ -1,0 +1,116 @@
+types {
+    Simple [512]i8
+}
+
+types { Simple [512]i8
+}
+
+types {
+    Simple [512]i8 }
+
+types {
+    Simple [512]i8
+    Nested [512][256]i8
+}
+
+types {
+
+    Simple [512]i8
+    Nested [512][256]i8
+}
+
+types {
+    Simple [512]i8
+    Nested [512][256]i8
+
+}
+
+types {
+
+    Simple [512]i8
+    Nested [512][256]i8
+
+}
+
+types {
+
+    Simple [512]i8
+
+    Nested [512][256]i8
+
+}
+
+types {
+    WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    }
+}
+
+types { WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    }
+}
+
+types {
+    WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    } }
+
+types { WithEmptyRec [512]{}
+    WithSingleFieldRec [512]{ foo i8 }
+    WithMultiFieldRec [512]{
+        foo i8
+        bar [1024]i8
+    } }
+
+types {
+    WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday }
+}
+
+
+types { WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday }
+}
+
+
+types {
+    WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday } }
+
+
+types { WithEnum [512]{ Monday }
+    WithEnum [512]{ Monday, Tuesday } }
+
+types {
+    WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
+}
+
+types { WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
+}
+
+types {
+    WithSimpleUnion [512]i8 | f8
+    WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
+
+types { WithSimpleUnion [512]i8 | f8
+    pub WithComplexUnion [512]i8 | { foo str | bool }
+    WithNestedUnion [512]i8 | [512]i8
+    pub WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }

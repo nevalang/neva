@@ -1,0 +1,209 @@
+const {}
+
+const {
+}
+
+const {
+
+}
+
+const { PI f32 3.14 }
+
+const {
+    PI f32 3.14 }
+
+const { PI f32 3.14
+}
+
+const {
+    PI f32 3.14
+}
+
+const {
+
+    PI f32 3.14
+}
+
+const {
+    PI f32 3.14
+
+}
+
+const { PI f32 3.14
+    MAGIC_NUM i8  42 }
+
+const {
+    PI f32 3.14
+    MAGIC_NUM i8  42 }
+
+const {
+    PI f32 3.14
+    MAGIC_NUM i8  42
+}
+
+const {
+
+    PI f32 3.14
+    MAGIC_NUM i8  42
+}
+
+const {
+    PI f32 3.14
+    MAGIC_NUM i8  42
+
+}
+
+const {
+
+    PI f32 3.14
+    MAGIC_NUM i8  42
+}
+
+const {
+    PI f32 3.14
+    MAGIC_NUM i8  42
+
+}
+
+const {
+    PI f32 3.14
+
+    MAGIC_NUM i8  42
+}
+
+const { VEC vec<i8>  [] }
+
+const {
+    VEC vec<i8>  [] }
+
+const { VEC vec<i8>  []
+}
+
+const {
+    VEC vec<i8>  []
+}
+
+const {
+    VEC vec<i8>  [1, 2, 3, 4]
+}
+
+const { ARR [4]i8  [0, 1, 2, 3] }
+
+const {
+    ARR [4]i8  [0, 1, 2, 3] }
+
+const { ARR [4]i8  [0, 1, 2, 3]
+}
+
+const {
+    ARR [4]i8  [0, 1, 2, 3]
+}
+
+const {
+    ARR [4]i8  [
+        0, 1, 2, 3]
+}
+
+const {
+    ARR [4]i8  [0, 1, 2, 3
+    ]
+}
+
+const {
+    ARR [4]i8  [
+        0, 1, 2, 3
+    ]
+}
+
+const {
+    ARR [4]i8  [
+        0, 1,
+        2, 3
+    ]
+}
+
+const {
+    ARR [4]i8  [
+        0,
+        1,
+        2,
+        3
+    ]
+}
+
+const { REC {}  {} }
+
+const { REC {}  {}
+}
+
+const { REC {}  {}
+}
+
+const {
+    REC {}  {}
+}
+
+const { REC { foo int }  { foo: 42 } }
+
+const {
+    REC { foo int }  { foo: 42 } }
+
+const { REC { foo int }  { foo: 42 }
+}
+
+const {
+    REC {
+        foo int
+        bar [4]i8
+    }  {
+        foo: 42
+        bar: [1, 2, 3, 4]
+    }
+}
+
+const { ENUM { Monday, Tuesday }  1 }
+
+const {
+    ENUM { Monday, Tuesday }  2 }
+
+const { ENUM { Monday, Tuesday }  3
+}
+
+const {
+    ENUM { Monday, Tuesday }  4
+}
+
+const {
+    ENUM {
+        Monday, Tuesday }  5
+}
+
+const {
+    ENUM { Monday, Tuesday
+    }  6
+}
+
+const {
+    ENUM {
+        Monday, Tuesday
+    }  7
+}
+
+const {
+    ENUM {
+        Monday,
+        Tuesday
+    }  8
+}
+
+const { UNION int | str  42 }
+
+const {
+    pub UNION int | str  'hello!'
+}
+
+const {
+    msg str  'hello!'
+}
+
+

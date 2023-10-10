@@ -6,6 +6,8 @@ run:
 linters:
   enable-all: true
   disable:
+    - gci
+    - depguard # enforces to manually configure imports white-list
     - godox # todo/fixme
     - godot # dots at the end of comments
     - gomnd # magic number
@@ -16,7 +18,7 @@ linters:
     - exhaustivestruct
     - exhaustruct
     - exhaustive
-    - composites
+    # - composites
     # - testpackage #  _test package
     # - forbidigo # doesn't allow to use fmt.Println
 
@@ -27,6 +29,6 @@ linters-settings:
 issues:
   exclude-rules:
     - source: "^//go:generate"
-      linters: [funlen , lll , varnamelen, err113]
+      linters: [funlen , lll , varnamelen, err113, dupword]
     - path: _test\.go
-      linters: [funlen , lll , varnamelen, err113]
+      linters: [funlen , lll , varnamelen, err113, dupword]

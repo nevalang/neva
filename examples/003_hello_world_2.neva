@@ -1,0 +1,21 @@
+// Second version of "Hello, World!".
+// This time without constants, thanks to "literal senders".
+
+use {
+	std
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			lock std.Lock<str>
+			print std.Print<str>
+		}
+		net {
+			in.enter -> lock.in.sig
+			(str 'Hello, World!\n') -> lock.in.v
+			lock.out.v -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+}

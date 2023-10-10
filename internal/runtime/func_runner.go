@@ -4,20 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 )
 
 var (
-	ErrRepo = errors.New("repo")
-	ErrFunc = errors.New("func")
+	ErrFuncNotFound = errors.New("func not found")
+	ErrFunc         = errors.New("func")
 )
 
 const CtxMsgKey = "msg"
 
 type DefaultFuncRunner struct {
-	repo map[FuncRef]Func
+	repo map[string]Func
 }
 
-func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
+func NewDefaultFuncRunner(repo map[string]Func) (DefaultFuncRunner, error) {
 	if repo == nil {
 		return DefaultFuncRunner{}, ErrNilDeps
 	}
@@ -26,28 +27,39 @@ func NewDefaultFuncRunner(repo map[FuncRef]Func) (DefaultFuncRunner, error) {
 	}, nil
 }
 
-func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncRoutine) error {
-	g, gctx := WithContext(ctx)
+func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	wg := sync.WaitGroup{}
+	wg.Add(len(funcRoutines))
 
-	for i := range funcRoutines {
-		funcRoutine := funcRoutines[i]
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
 
-		if funcRoutine.Msg != nil {
-			ctx = context.WithValue(ctx, CtxMsgKey, funcRoutine.Msg)
+	for _, routine := range funcRoutines {
+		if routine.MetaMsg != nil {
+			ctx = context.WithValue(ctx, CtxMsgKey, routine.MetaMsg)
 		}
 
-		f, ok := d.repo[funcRoutine.Ref]
+		constructor, ok := d.repo[routine.Ref]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrRepo, funcRoutine.Ref)
+			return fmt.Errorf("%w: %v", ErrFuncNotFound, routine.Ref)
 		}
 
-		g.Go(func() error {
-			if err := f(gctx, funcRoutine.IO); err != nil {
-				return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), funcRoutine.Ref)
-			}
-			return nil
-		})
+		fun, err := constructor(ctx, routine.IO)
+		if err != nil {
+			return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), routine.Ref)
+		}
+
+		go func() {
+			fun() // will return at ctx.Done()
+			wg.Done()
+		}()
 	}
 
-	return g.Wait()
+	wg.Wait()
+
+	return nil
 }

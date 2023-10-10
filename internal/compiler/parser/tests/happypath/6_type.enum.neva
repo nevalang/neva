@@ -1,0 +1,52 @@
+types {
+    MyEnum1 { One }
+}
+
+types {
+    MyEnum2 {
+        One }
+}
+
+types {
+    MyEnum3 { One
+    }
+}
+
+types {
+    MyEnum4 {
+        One
+    }
+}
+
+types {
+    MyEnum5 { One, Two }
+}
+
+types {
+    MyEnum6 { One,
+        Two
+    }
+}
+
+types {
+    MyEnum7 {
+        One,
+        Two }
+}
+
+types {
+    MyEnum8 {
+        One,
+        Two
+    }
+}
+
+types {
+    MyEnum9 { One }
+    pub MyEnum10 {
+        One,
+        Two
+    }
+}
+
+

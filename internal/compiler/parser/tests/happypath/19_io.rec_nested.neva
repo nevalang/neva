@@ -1,0 +1,54 @@
+interfaces { IReader1 (x { foo {} }) () }
+
+interfaces {
+    IReader1 (x { foo {} }) () }
+
+interfaces {
+    IReader1 (x { foo {} }) ()
+}
+
+interfaces { IReader1 (x { foo {} }) (bar { baz {} }) }
+
+interfaces {
+    IReader1 (x { foo {} }) (bar { baz {} })
+}
+
+interfaces {
+    IReader1 (
+        x { foo {} }
+    ) (bar { baz {} })
+}
+
+interfaces {
+    IReader1 (
+        x { foo {} }
+    ) (
+        bar { baz {} }
+    )
+}
+
+interfaces {
+    IReader1 (x {
+        foo { a int }
+    }) (bar {
+        baz { b bool }
+    })
+}
+
+interfaces {
+    IReader1 (
+        x { foo { a int } }
+    ) (
+        bar { baz { b bool } }
+    )
+}
+
+interfaces {
+    pub IReader1 (
+        x { foo { a int } },
+        y {}
+    ) (
+        bar { baz { b bool } },
+        bax { r {} }
+    )
+}

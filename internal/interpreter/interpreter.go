@@ -4,45 +4,34 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/shared"
-	"github.com/nevalang/neva/pkg/tools"
+	"github.com/nevalang/neva/pkg/ir"
 )
 
 type Interpreter struct {
-	parser      Parser
-	llrgen      LowLvlGenerator
-	transformer Transformer
-	runtime     Runtime
+	compiler Compiler
+	adapter  Adapter
+	runtime  Runtime
 }
 
-type Parser interface {
-	Parse(context.Context, []byte) (map[string]shared.File, error)
-}
+type (
+	Compiler interface {
+		Compile(ctx context.Context, src, dst string) (*ir.Program, error)
+	}
+	Adapter interface {
+		Adapt(irProg *ir.Program) (runtime.Program, error)
+	}
+	Runtime interface {
+		Run(context.Context, runtime.Program) (code int, err error)
+	}
+)
 
-type LowLvlGenerator interface {
-	Generate(context.Context, map[string]shared.File) (shared.LLProgram, error)
-}
-
-type Transformer interface {
-	Transform(context.Context, shared.LLProgram) (runtime.Program, error)
-}
-
-type Runtime interface {
-	Run(context.Context, runtime.Program) (code int, err error)
-}
-
-func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
-	hl, err := i.parser.Parse(ctx, bb)
+func (i Interpreter) Interpret(ctx context.Context, path string) (int, error) {
+	irProg, err := i.compiler.Compile(ctx, path, "")
 	if err != nil {
 		return 0, err
 	}
 
-	ll, err := i.llrgen.Generate(ctx, hl)
-	if err != nil {
-		return 0, err
-	}
-
-	rprog, err := i.transformer.Transform(ctx, ll)
+	rprog, err := i.adapter.Adapt(irProg)
 	if err != nil {
 		return 0, err
 	}
@@ -55,17 +44,14 @@ func (i Interpreter) Interpret(ctx context.Context, bb []byte) (int, error) {
 	return code, nil
 }
 
-func MustNew(
-	parser Parser,
-	llrgen LowLvlGenerator,
-	transformer Transformer,
+func New(
+	compiler Compiler,
+	adapter Adapter,
 	runtime Runtime,
 ) Interpreter {
-	tools.NilPanic(parser, llrgen, transformer, runtime)
 	return Interpreter{
-		parser:      parser,
-		llrgen:      llrgen,
-		transformer: transformer,
-		runtime:     runtime,
+		compiler: compiler,
+		adapter:  adapter,
+		runtime:  runtime,
 	}
 }

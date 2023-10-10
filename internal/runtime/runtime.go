@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Runtime struct {
@@ -29,32 +31,31 @@ type (
 		Connect(context.Context, []Connection) error
 	}
 	FuncRunner interface {
-		Run(context.Context, []FuncRoutine) error
+		Run(context.Context, []FuncCall) error
 	}
-	Func func(context.Context, FuncIO) error
+	Func func(context.Context, FuncIO) (func(), error)
 )
 
 var (
-	ErrStartPortNotFound = errors.New("start port not found")
+	ErrStartPortNotFound = errors.New("enter port not found")
 	ErrExitPortNotFound  = errors.New("exit port not found")
 	ErrConnector         = errors.New("connector")
 	ErrRoutineRunner     = errors.New("routine runner")
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
-	// FirstByName is not how this supposed to be working! There could be more "start" and "exit" ports!
-	startPort := prog.Ports[PortAddr{Path: "main/in", Port: "start"}]
-	if startPort == nil {
+	enter := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
+	if enter == nil {
 		return 0, ErrStartPortNotFound
 	}
 
-	exitPort := prog.Ports[PortAddr{Path: "main/in", Port: "start"}]
-	if exitPort == nil {
+	exit := prog.Ports[PortAddr{Path: "main/out", Port: "exit"}]
+	if exit == nil {
 		return 0, ErrExitPortNotFound
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	g, gctx := WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
 		if err := r.connector.Connect(gctx, prog.Connections); err != nil {
@@ -71,14 +72,14 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 	})
 
 	go func() { // kick
-		startPort <- emptyMsg{}
+		enter <- emptyMsg{}
 	}()
 
-	var exitCode int
+	var exitCode int64
 	go func() {
-		exitCode = (<-exitPort).Int()
+		exitCode = (<-exit).Int()
 		cancel()
 	}()
 
-	return exitCode, g.Wait()
+	return int(exitCode), g.Wait()
 }

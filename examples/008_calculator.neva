@@ -1,0 +1,79 @@
+// This time we gonna build simple calculator.
+// And we going to use what we build in the last lesson.
+// Here's how it works: print instructions for user, read chosen operation,
+// in case it's invalid print error and start again. Otherwise read first num.
+// Try to parse it, print error and start (everything) again if needed.
+// Do the same for second input. Finally apply operation and print result.
+
+use {
+	std
+}
+
+const {
+	instructions str 'Enter operation:\n\t1) +/n/t2) -/n/t3) */n/t4) /'
+	availableInstructions map<str> ['*', '/', '+', '-']
+	enterNumMsg str 'Enter number'
+	unknownOpErr str 'Unknown operation'
+}
+
+components {
+	Main(enter str instructions) (exit) {
+		nodes {
+			print std.Print
+			readOp ReadOp
+			readFirstNum ReadNum
+			readSecondNum ReadNum
+			calc Calc
+		}
+		net {
+			in.enter -> readOp.in.sig // read operation
+			readOp.out.err -> print.in.v // in case of error print
+			readOp.out.v -> readFirstNum.in.sig // otherwise read first num
+			readFirstNum.out.err -> print.in.v // in case of error print
+			readFirstNum.out.v -> { // otherwise send op to calc and read second num
+				calc.in.op
+				readSecondNum.in.sig
+			}
+			readSecondNum.out.err -> print.in.v // in case of error print
+			readSecondNum.out.v -> calc.in.b // otherwise send second num to calc
+			calc.out.v -> print.in.v // get result and print it
+			print.out.v -> out.exit // any time we print something we exit
+		}
+	}
+	ReadOp(sig) (v str) {
+		nodes {
+			read std.Read
+			has std.Has
+			lockErr std.Lock
+			lockResult std.Lock
+		}
+		net {
+			in.sig -> read.in.sig // read operation
+			availableInstructions -> has.in.vv // configure 'has' component
+			read.out.v -> has.in.v // check if operation is valid
+			has.out.no -> lockErr.in.sig // if not valid trigger error locker
+			unknownOpErr -> lockErr.in.v // and lock error itself
+			lockErr.out.v -> out.err // if error unlocked then send it to the outport
+			has.out.yes -> lockResult.in.sig // otherwise trigger result locker
+			has.out.v -> lockResult.in.v // and lock result in case it's success
+		}
+	}
+	ReadNum(sig) (v int) {
+		nodes {
+			read std.Read
+			parse std.Parse
+			lockErr std.Lock
+			lockResult std.Lock
+		}
+		net {
+			in.sig -> read.in.sig // read number
+			read.out.v -> parse.in.v // parse it
+			parse.out.err -> out.err // if error trigger error locker
+			parse.out.v -> lockResult.in.sig // otherwise trigger result locker
+			parse.out.v -> out.v // and send result to the outport
+			parse.out.err -> lockErr.in.v // lock error in case of error
+			lockErr.out.v -> out.err // and send it to the outport
+			lockResult.out.v -> out.v // send result to the outport
+		}
+	}
+}

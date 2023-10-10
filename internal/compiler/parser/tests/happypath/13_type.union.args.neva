@@ -1,0 +1,107 @@
+types {
+    bar i32 | vec<i32>
+}
+
+types {
+    bar i32
+        | vec<i32>
+}
+
+types {
+    bar i32 |
+        vec<i32>
+}
+
+types {
+    bar i32 | vec<
+        i32
+    >
+}
+
+types {
+    bar i32 | vec<i32 | f32>
+}
+
+types {
+    bar i32 | vec<
+        i32 | f32>
+}
+
+types {
+    bar i32 | vec<i32 | f32
+    >
+}
+
+types {
+    bar i32 | vec<
+        i32 | f32
+    >
+}
+
+types {
+    bar vec<i32 | vec<i32>>
+}
+
+types {
+    bar vec<
+        i32 | vec<i32>>
+}
+
+types {
+    bar vec<i32
+        | vec<i32>>
+}
+
+types {
+    bar vec<
+        i32 | vec<i32>
+    >
+}
+
+types {
+    bar vec<i32 | vec<i32>> | map<i32, i32 | f32>
+}
+
+types {
+    bar vec<
+        i32 | vec<i32>> | map<i32, i32 | f32
+    >
+}
+
+types {
+    bar vec<
+        i32 | vec<i32>
+    > | map<i32, i32 | f32>
+}
+
+types {
+    bar vec<i32 | vec<i32>> | map<
+        i32, i32 | f32
+    >
+}
+
+types {
+    bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
+}
+
+types { bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
+}
+
+types {
+    bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>> }
+
+types { bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>> }
+
+types {
+    bar vec<
+        i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>
+    >
+}
+
+types {
+    pub bar vec<
+        i32 |
+        vec<i32 | f32>
+    > |
+    map<i32, i32 | vec<f32>>
+}

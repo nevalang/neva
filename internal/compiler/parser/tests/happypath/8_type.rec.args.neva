@@ -1,0 +1,126 @@
+types {
+    Rec { foo vec<int> }
+}
+
+types {
+    Rec {
+        foo vec<int> }
+}
+
+types {
+    Rec { foo vec<int>
+    }
+}
+
+types {
+    Rec {
+        foo vec<int>
+    }
+}
+
+types {
+    Rec {
+        foo vec<int>
+        bar map<str, int>
+    }
+}
+
+types {
+    Rec { foo vec<int>
+        bar map<str, int>
+    }
+}
+
+types {
+    Rec {
+        foo vec<int>
+        bar map<str, int> }
+}
+
+types {
+    Rec {
+        foo vec<int>
+
+        bar map<str, int>
+    }
+}
+
+types {
+    Rec {
+
+        foo vec<int>
+        bar map<str, int>
+    }
+}
+
+types {
+    Rec {
+        foo vec<int>
+        bar map<str, int>
+
+    }
+}
+
+types {
+    Rec {
+
+        foo vec<int>
+        bar map<str, int>
+
+    }
+}
+
+types {
+    Rec {
+
+        foo vec<int>
+
+        bar map<str, int>
+
+    }
+}
+
+types {
+    Rec {
+        foo map<str, int>
+        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday }>
+    }
+}
+
+types {
+    Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday, Tuesday, Wednesday, Thursday, Friday }>
+    }
+}
+
+types {
+    Rec {
+        foo map<str, int>
+        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday
+        }>
+    }
+}
+
+types {
+    Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday, Tuesday, Wednesday, Thursday, Friday
+        }>
+    }
+}
+
+types {
+    pub Rec {
+        foo map<str, int>
+        bar vec<{
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday
+        }>
+    }
+}

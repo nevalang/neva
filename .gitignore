@@ -7,3 +7,5 @@ web/.cache
 web/src/sdk
 plugins
 .antlr
+cmd/tmp
+neva

@@ -1,0 +1,4 @@
+// single line comment
+
+// Program that simply prints "Hello, World!".
+// Turns out we need `const` and `lock` for that!

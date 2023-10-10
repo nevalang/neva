@@ -1,0 +1,43 @@
+// Our "a+b" program turns out to be quite big!
+// Let's split it into sub-components?
+
+use {
+	std
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			readInt1 ReadInt
+			readInt2 ReadInt
+			add std.Add<int>
+			print std.Print
+		}
+		net {
+			in.enter -> readInt1.in.sig
+			readInt1.out.err -> print.in.v
+			readInt1.out.v -> {
+				add.in.a
+				readInt2.in.sig
+			}
+			readInt2.out.err -> print.in.v
+			readInt2.out.v -> add.in.b
+			add.out.v -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+	// Once we create `ReadInt`, we can forget about it.
+	ReadInt(sig) (v int, err str) {
+		nodes {
+			read std.Read
+			print std.Print
+			parse std.ParseNum<int>
+		}
+		net {
+			in.sig -> read.in.sig
+			read.out.v -> parse.in.v
+			parse.out.err -> out.err
+			parse.out.v -> out.v
+		}
+	}
+}

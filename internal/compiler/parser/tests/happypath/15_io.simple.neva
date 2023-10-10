@@ -1,0 +1,187 @@
+interfaces {}
+
+interfaces {
+}
+
+interfaces {
+
+}
+
+interfaces { IReader1 () () }
+
+interfaces { IReader2 () ()
+}
+
+interfaces {
+    IReader3 () () }
+
+interfaces {
+    IReader4 () ()
+}
+
+interfaces {
+    IReader5 (
+    ) ()
+}
+
+interfaces {
+    IReader6 () (
+    )
+}
+
+interfaces {
+    IReader7 (
+    ) (
+    )
+}
+
+interfaces { IReader8 (x int) () }
+
+interfaces { IReader8 (
+    x int) () }
+
+interfaces { IReader8 (x int
+) () }
+
+interfaces { IReader8 (x int) (
+) }
+
+interfaces {
+    IReader8 (x int) () }
+
+interfaces { IReader8 (x int) ()
+}
+
+interfaces {
+    IReader8 (x int) ()
+}
+
+interfaces {
+    IReader8 (
+        x int) ()
+}
+
+interfaces {
+    IReader8 (x int
+    ) ()
+}
+
+interfaces {
+    IReader8 (x int) (
+    )
+}
+
+interfaces {
+    IReader8 (
+        x int
+    ) ()
+}
+
+interfaces {
+    IReader8 (
+        x int
+    ) (
+    )
+}
+
+interfaces { IReader8 (x int, y str) () }
+
+interfaces {
+    IReader8 (x int, y str) () }
+
+interfaces { IReader8 (x int, y str) ()
+}
+
+interfaces { IReader8 (
+    x int, y str) () }
+
+interfaces { IReader8 (x int,
+y str) () }
+
+interfaces {
+    IReader8 (x int, y str) ()
+}
+
+interfaces {
+    IReader8 (
+        x int, y str
+    ) ()
+}
+
+interfaces {
+    IReader8 (
+        x int,
+        y str) ()
+}
+
+interfaces {
+    IReader8 (
+        x int,
+        y str
+    ) ()
+}
+
+interfaces {
+    IReader8 (
+        x int,
+        y str
+    ) (
+    )
+}
+
+interfaces {
+    IReader8 (
+        x int,
+        y str
+    ) ()
+}
+
+interfaces { IReader9 () (a int) }
+
+interfaces {
+    IReader10 () (a int) }
+
+interfaces { IReader11 () (a int)
+}
+
+interfaces {
+    IReader12 () (a int)
+}
+
+interfaces {
+    IReader13 (
+    ) (a int)
+}
+
+interfaces {
+    IReader14 () (
+        a int)
+}
+
+interfaces {
+    IReader15 () (a int
+    )
+}
+
+interfaces {
+    IReader16 (
+    ) (
+        a int
+    )
+}
+
+interfaces { IReader17 (x int) (a int) }
+
+interfaces {
+    IReader18 (x int) (a int)
+}
+
+interfaces {
+    IReader19 (x int, y str) (a int)
+}
+
+interfaces {
+    pub IReader20 (x int, y str) (a int, b bool)
+}
+
+// TODO add tests for ports without explicit types

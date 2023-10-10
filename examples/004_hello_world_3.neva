@@ -1,0 +1,18 @@
+// Last, third version of "Hello, World!".
+// Even shorter with predefined `enter `value.
+
+use {
+	std
+}
+
+components {
+	Main(enter str 'Hello, World!\n') (exit) {
+		nodes {
+			print std.Print<str>
+		}
+		net {
+			in.enter -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+}

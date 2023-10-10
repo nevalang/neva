@@ -10,6 +10,7 @@
     "gqlgen",
     "graphql",
     "introspection",
+    "irprotosdk",
     "pmod",
     "preceiver",
     "pworkers",

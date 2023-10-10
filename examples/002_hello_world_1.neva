@@ -1,0 +1,22 @@
+use {
+	std/tmp
+}
+
+const {
+	msg str 'Hello, World!\n'
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			lock tmp.Lock<str>()
+			print tmp.Print<str>()
+		}
+		net {
+			in.enter -> lock.in.sig
+			msg -> lock.in.v
+			lock.out.v -> print.in.v
+			print.out.v -> out.exit
+		}
+	}
+}

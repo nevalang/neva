@@ -1,0 +1,60 @@
+interfaces {
+    IReader1 () ()
+    IReader20 (x int, y str) (a int, b bool)
+
+    IReader12 (
+        x {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, y {
+            January,
+            February
+        }
+    ) (
+        a {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, b  {
+            January, February
+        }
+    )
+
+    IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int },
+        arr3 [128]{ baz {} }
+    ) (
+        arr [1024]{ January, February },
+        arr2 [256]{ bar bool },
+        arr3 [128][64]{ bax {} }
+    )
+
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a {
+        baz bool
+        bax float })
+
+    IReader1 (
+        x { foo { a int } },
+        y {}
+    ) (
+        bar { baz { b bool } },
+        bax { r {} }
+    )
+
+    pub IReader1 (
+        a bool | int | { foo int | str },
+        b [256][128]{ bar int | [64]int }
+    ) (
+        x str |
+            float |
+            { Monday } |
+            {
+                foo { January } | {}
+            }
+    )
+}

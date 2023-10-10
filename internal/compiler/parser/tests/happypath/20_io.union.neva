@@ -1,0 +1,44 @@
+interfaces { IReader1 (a bool | int) () }
+
+interfaces {
+    IReader1 (a bool | int) ()
+}
+
+interfaces {
+    IReader1 () (x str | float)
+}
+
+interfaces {
+    IReader1 (a bool | int) (x str | float)
+}
+
+interfaces {
+    IReader1 (a bool | int | {}) (x str | float | { Monday })
+}
+
+interfaces {
+    IReader1 (
+        a bool | int | { foo int | str }
+    ) (
+        x str |
+        float |
+        { Monday } |
+        {
+            foo { January } | {}
+        }
+    )
+}
+
+interfaces {
+    pub IReader1 (
+        a bool | int | { foo int | str },
+        b [256][128]{ bar int | [64]int }
+    ) (
+        x str |
+            float |
+            { Monday } |
+            {
+                foo { January } | {}
+            }
+    )
+}

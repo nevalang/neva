@@ -8,7 +8,7 @@ import (
 type Program struct {
 	Ports       Ports
 	Connections []Connection
-	Funcs       []FuncRoutine
+	Funcs       []FuncCall
 }
 
 type PortAddr struct {
@@ -28,57 +28,20 @@ func (p PortAddr) String() string {
 type Ports map[PortAddr]chan Msg
 
 type Connection struct {
-	Sender    SenderConnectionSide
-	Receivers []ReceiverConnectionSide
+	Sender    chan Msg
+	Receivers []chan Msg
+	Meta      ConnectionMeta
 }
 
-func (c Connection) String() string {
-	s := c.Sender.Meta.PortAddr.String() + "->"
-	for i := range c.Receivers {
-		s += c.Receivers[i].Meta.String()
-		if i < len(c.Receivers)-1 {
-			s += ", "
-		}
-	}
-	return s
+type ConnectionMeta struct {
+	SenderPortAddr    PortAddr
+	ReceiverPortAddrs []PortAddr // We use slice so we can map port address with its channel by index
 }
 
-type SenderConnectionSide struct {
-	Port chan Msg
-	Meta SenderConnectionSideMeta
-}
-
-type ReceiverConnectionSide struct {
-	Port chan Msg
-	Meta ReceiverConnectionSideMeta
-}
-
-type SenderConnectionSideMeta struct {
-	PortAddr PortAddr
-}
-
-type ReceiverConnectionSideMeta struct {
-	PortAddr  PortAddr
-	Selectors []string
-}
-
-func (c ReceiverConnectionSideMeta) String() string {
-	return c.PortAddr.String()
-}
-
-type Selector struct {
-	RecField string // "" means use ArrIdx
-	ArrIdx   int
-}
-
-type FuncRoutine struct { // Func spec/def?
-	Ref FuncRef
-	IO  FuncIO
-	Msg Msg
-}
-
-type FuncRef struct {
-	Pkg, Name string
+type FuncCall struct {
+	Ref     string
+	IO      FuncIO
+	MetaMsg Msg
 }
 
 type FuncIO struct {
@@ -89,9 +52,7 @@ type FuncIO struct {
 // Its methods can return error because it's okay to fail at startup. Keys are port names and values are slots.
 type FuncPorts map[string][]chan Msg
 
-var (
-	ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
-)
+var ErrSinglePortCount = errors.New("number of ports found by name not equals to one")
 
 // Port returns first slot of port found by the given name.
 // It returns error if port is not found or if it's not a single port.
@@ -106,30 +67,4 @@ func (f FuncPorts) Port(name string) (chan Msg, error) {
 	}
 
 	return slots[0], nil
-}
-
-// ArrPort returns slots associated with the given name.
-// It only returns error if port is not found. It doesn't care about slots count.
-func (i FuncPorts) ArrPort(name string) ([]chan Msg, error) {
-	slots, ok := i[name]
-	if !ok {
-		return nil, fmt.Errorf("")
-	}
-
-	return slots, nil
-}
-
-// Slot returns slot number idx of the port named by given name.
-// It assumes it's an array port at leas as big as idx and returns error otherwise.
-func (i FuncPorts) Slot(name string, idx uint8) (chan Msg, error) {
-	port, ok := i[name]
-	if !ok {
-		return nil, fmt.Errorf("")
-	}
-
-	if len(port) < int(idx) {
-		return nil, fmt.Errorf("")
-	}
-
-	return port[idx], nil
 }
