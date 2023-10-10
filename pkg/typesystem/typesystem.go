@@ -12,20 +12,18 @@ type Def struct {
 func (def Def) String() string {
 	var params string
 
-	if len(def.Params) > 0 {
-		params += "<"
-		for i, param := range def.Params {
-			params += param.Name
-			if param.Constr == nil {
-				continue
-			}
-			params += " " + param.Constr.String()
-			if i < len(def.Params)-1 {
-				params += ", "
-			}
+	params += "<"
+	for i, param := range def.Params {
+		params += param.Name
+		if param.Constr == nil {
+			continue
 		}
-		params += ">"
+		params += " " + param.Constr.String()
+		if i < len(def.Params)-1 {
+			params += ", "
+		}
 	}
+	params += ">"
 
 	return params + " = " + def.BodyExpr.String()
 }

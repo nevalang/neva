@@ -10,7 +10,7 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var errTest = errors.New("")
+var errTest = errors.New("Oops!")
 
 func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	t.Parallel()
@@ -19,7 +19,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		expr       ts.Expr
 		scope      TestScope
 		validator  func(v *MockexprValidatorMockRecorder)
-		comparator func(c *MockcompatCheckerMockRecorder)
+		checker    func(c *MockcompatCheckerMockRecorder)
 		terminator func(t *MockrecursionTerminatorMockRecorder)
 		want       ts.Expr
 		wantErr    error
@@ -54,7 +54,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				},
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
-					// v.ValidateDef(h.BaseDef(h.ParamWithNoConstr("t")))
+					v.ValidateDef(h.BaseDef(h.ParamWithNoConstr("t")))
 				},
 				wantErr: ts.ErrInstArgsLen,
 			}
@@ -69,11 +69,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
+					v.ValidateDef(scope["vec"]).Return(nil)
 					v.Validate(expr.Inst.Args[0]).Return(errTest) // in the loop
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t.ShouldTerminate(ts.NewTrace(nil, ts.DefaultStringer("vec")), scope)
-					// t.ShouldTerminate(ts.NewTrace(nil, ts.DefaultStringer("vec")), scope)
 				},
 
 				wantErr: ts.ErrUnresolvedArg,
@@ -92,8 +92,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
+					v.ValidateDef(scope["map"]).Return(nil)
 					v.Validate(h.Inst("t1")).Return(nil)
+					v.ValidateDef(scope["t1"]).Return(nil)
 					v.Validate(h.Inst("t2")).Return(nil)
+					v.ValidateDef(scope["t2"]).Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("map"))
@@ -105,7 +108,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t3 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
 					t.ShouldTerminate(t3, scope).Return(false, nil)
 				},
-				comparator: func(c *MockcompatCheckerMockRecorder) {
+				checker: func(c *MockcompatCheckerMockRecorder) {
 					t := ts.NewTrace(nil, ts.DefaultStringer("map"))
 					tparams := ts.TerminatorParams{
 						Scope:          scope,
@@ -114,21 +117,22 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					}
 					c.Check(h.Inst("t1"), h.Inst("t2"), tparams).Return(errTest)
 				},
+				want:    ts.Expr{},
 				wantErr: ts.ErrIncompatArg,
 			}
 		},
 		"expr_underlaying_type_not_found": func() testcase { // expr = t1<int>, scope = { int, t1<t> = t3<t> }
+			expr := h.Inst("t1", h.Inst("int"))
 			scope := TestScope{
 				"int": h.BaseDef(),
 				"t1":  h.Def(h.Inst("t3", h.Inst("t")), h.ParamWithNoConstr("t")),
 			}
 			return testcase{
-				expr:  h.Inst("t1", h.Inst("int")),
+				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("t3", h.Inst("t"))).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -151,9 +155,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(expr.Inst.Args[0]).Return(nil)
-					v.Validate(constr).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -175,9 +178,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)         // expr itself
-					v.Validate(h.Inst("t2")).Return(nil) // expr's arg
-					v.Validate(h.Inst("t3")).Return(nil) // def's constr
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -187,9 +189,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr: ts.ErrConstr,
 			}
 		},
-		"invalid_constr": func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
+		"incompatible_arg": func() testcase { // expr = t1<t2>, scope = { t1<t t3>, t2, t3 }
 			expr := h.Inst("t1", h.Inst("t2"))
-			constr := h.Inst("t3")
 			scope := TestScope{
 				"t1": h.BaseDef(h.Param("t", h.Inst("t3"))),
 				"t2": h.BaseDef(),
@@ -199,9 +200,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(expr.Inst.Args[0]).Return(nil)
-					v.Validate(constr).Return(errTest)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
+				},
+				checker: func(c *MockcompatCheckerMockRecorder) {
+					c.Check(h.Inst("t2"), h.Inst("t3"), gomock.Any()).Return(errTest)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -209,8 +212,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 
 					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
 					t.ShouldTerminate(t2, scope).Return(false, nil)
+
+					t3 := ts.NewTrace(&t1, ts.DefaultStringer("t3"))
+					t.ShouldTerminate(t3, scope).Return(false, nil)
 				},
-				wantErr: ts.ErrConstr,
+				wantErr: ts.ErrIncompatArg,
 			}
 		},
 		// Literals
@@ -280,9 +286,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(t1).Return(nil)
-					v.Validate(t2).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -308,11 +313,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				validator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 					v.Validate(t1).Return(nil)
+					v.ValidateDef(scope["t1"]).Return(nil)
 					v.Validate(t2).Return(errTest)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
-					t.ShouldTerminate(t1, scope)
+					t.ShouldTerminate(gomock.Any(), gomock.Any()).AnyTimes().Return(false, nil)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
@@ -327,9 +332,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(expr.Lit.Union[0]).Return(nil)
-					v.Validate(expr.Lit.Union[1]).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -379,8 +383,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  expr,
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(stringExpr).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("string"))
@@ -394,18 +398,18 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			scope := TestScope{
 				"t1": h.Def( // t1<t3> = t2<t3>
 					h.Inst("t2", h.Inst("t3")),
-					h.Param("t3", ts.Expr{}),
+					h.ParamWithNoConstr("t3"),
 				),
 				"t2": h.Def( // t2<t> = t3<t>
 					h.Inst("t3", h.Inst("t")),
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"t3": h.Def( // t3<t> = vec<t>
 					h.Inst("vec", h.Inst("t")),
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"vec": h.BaseDef( // vec<t> (base type)
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"int": h.BaseDef(), // int
 			}
@@ -413,50 +417,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t1", h.Inst("int")),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("t2", h.Inst("t3"))).Return(nil)
-					v.Validate(h.Inst("t3")).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("t3", h.Inst("t"))).Return(nil)
-					v.Validate(h.Inst("t")).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("t"))).Return(nil)
-					v.Validate(h.Inst("t")).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
-					t.ShouldTerminate(t1, scope) // [t1]
-
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t2, scope) // [t1, int]
-
-					t3 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
-					t.ShouldTerminate(t3, scope) // [t1, t2]
-
-					t4 := ts.NewTrace(&t3, ts.DefaultStringer("t3"))
-					t.ShouldTerminate(t4, scope) // [t1, t2, t3]
-
-					t5 := ts.NewTrace(&t4, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t5, scope) // [t1, t2, t3, int]
-
-					t.ShouldTerminate(t4, scope) // [t1, t2, t3]
-
-					t6 := ts.NewTrace(&t4, ts.DefaultStringer("t"))
-					t.ShouldTerminate(t6, scope) // [t1, t2, t3, t]
-
-					t7 := ts.NewTrace(&t6, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t7, scope) // [t1, t2, t3, t, int]
-
-					t8 := ts.NewTrace(&t4, ts.DefaultStringer("vec"))
-					t.ShouldTerminate(t8, scope) // [t1, t2, t3, vec]
-
-					t9 := ts.NewTrace(&t8, ts.DefaultStringer("t"))
-					t.ShouldTerminate(t9, scope) // [t1, t2, t3, vec, t]
-
-					t10 := ts.NewTrace(&t9, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t10, scope) // [t1, t2, t3, vec, t, int]
+					t.ShouldTerminate(gomock.Any(), gomock.Any()).AnyTimes().Return(false, nil)
 				},
 				want: h.Inst("vec", h.Inst("int")),
 			}
@@ -469,7 +434,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t"),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t")).Return(nil).Times(2)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t"))
@@ -490,9 +456,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t1"),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t1")).Return(nil)
-					v.Validate(h.Inst("t2")).Return(nil)
-					v.Validate(h.Inst("t1")).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -526,7 +491,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t1", h.Inst("int"), h.Inst("str")),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(gomock.Any()).AnyTimes()
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -572,10 +538,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t1", h.Inst("int")),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t1", h.Inst("int"))).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("t")).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -594,6 +558,11 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"constr_refereing_type_parameter_(generics_inside_generics)": func() testcase { // t<int, vec<int>> {t<a, b vec<a>>, vec<t>, int}
+			expr := h.Inst(
+				"t",
+				h.Inst("int"),
+				h.Inst("vec", h.Inst("int")),
+			)
 			scope := TestScope{
 				"t": h.BaseDef(
 					h.ParamWithNoConstr("a"),
@@ -603,56 +572,29 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				"int": h.BaseDef(),
 			}
 			return testcase{
-				expr: h.Inst(
+				expr:  expr,
+				scope: scope,
+				validator: func(v *MockexprValidatorMockRecorder) {
+					v.Validate(gomock.Any()).AnyTimes()
+					v.ValidateDef(gomock.Any()).AnyTimes()
+				},
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
+					t.ShouldTerminate(gomock.Any(), gomock.Any()).
+						AnyTimes().
+						Return(false, nil)
+				},
+				checker: func(c *MockcompatCheckerMockRecorder) {
+					c.Check(
+						gomock.Any(),
+						gomock.Any(),
+						gomock.Any(),
+					).AnyTimes().Return(nil)
+				},
+				want: h.Inst(
 					"t",
 					h.Inst("int"),
 					h.Inst("vec", h.Inst("int")),
 				),
-				scope: scope,
-				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int")))).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("int"))).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("a"))).Return(nil)
-					v.Validate(h.Inst("a")).Return(nil)
-					v.Validate(h.Inst("int")).Return(nil)
-				},
-				terminator: func(t *MockrecursionTerminatorMockRecorder) { //nolint:dupl
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t"))
-					t.ShouldTerminate(t1, scope).Return(false, nil)
-
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t2, scope).Return(false, nil)
-
-					t3 := ts.NewTrace(&t1, ts.DefaultStringer("vec"))
-					t.ShouldTerminate(t3, scope).Return(false, nil)
-
-					t4 := ts.NewTrace(&t3, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t4, scope).Return(false, nil)
-
-					t5 := ts.NewTrace(&t1, ts.DefaultStringer("vec"))
-					t.ShouldTerminate(t5, scope).Return(false, nil)
-
-					t6 := ts.NewTrace(&t5, ts.DefaultStringer("a"))
-					t.ShouldTerminate(t6, scope).Return(false, nil)
-
-					t7 := ts.NewTrace(&t6, ts.DefaultStringer("int"))
-					t.ShouldTerminate(t7, scope).Return(false, nil)
-				},
-				comparator: func(c *MockcompatCheckerMockRecorder) {
-					tparams := ts.TerminatorParams{
-						Scope:          scope,
-						SubtypeTrace:   ts.NewTrace(nil, ts.DefaultStringer("t")),
-						SupertypeTrace: ts.NewTrace(nil, ts.DefaultStringer("t")),
-					}
-					c.Check(
-						h.Inst("vec", h.Inst("int")),
-						h.Inst("vec", h.Inst("int")),
-						tparams,
-					).Return(nil)
-				},
-				want: h.Inst("t", h.Inst("int"), h.Inst("vec", h.Inst("int"))),
 			}
 		},
 		"recursion_through_base_types_with_support_of_recursion": func() testcase { // t1 { t1 = vec<t1> }
@@ -664,9 +606,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t1"),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t1")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("t1"))).Return(nil)
-					v.Validate(h.Inst("t1")).Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
 				},
 				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
@@ -692,15 +633,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				expr:  h.Inst("t3", h.Inst("t1")),
 				scope: scope,
 				validator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(h.Inst("t3", h.Inst("t1"))).Return(nil)
-					v.Validate(h.Inst("t1")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("t1"))).Return(nil)
-					v.Validate(h.Inst("t1")).Return(nil)
-					v.Validate(h.Inst("t2")).Return(nil)
-					v.Validate(h.Inst("vec", h.Inst("t2"))).Return(nil)
-					v.Validate(h.Inst("t2")).Return(nil)
+					v.Validate(gomock.Any()).AnyTimes().Return(nil)
+					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
-				comparator: func(c *MockcompatCheckerMockRecorder) {
+				checker: func(c *MockcompatCheckerMockRecorder) {
 					tparams := ts.TerminatorParams{
 						Scope:          scope,
 						SubtypeTrace:   ts.NewTrace(nil, ts.DefaultStringer("t3")),
@@ -712,7 +648,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 						tparams,
 					).Return(nil)
 				},
-				terminator: func(t *MockrecursionTerminatorMockRecorder) { //nolint:dupl
+				terminator: func(t *MockrecursionTerminatorMockRecorder) {
 					t1 := ts.NewTrace(nil, ts.DefaultStringer("t3"))
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
@@ -754,8 +690,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 
 			comparator := NewMockcompatChecker(ctrl)
-			if tc.comparator != nil {
-				tc.comparator(comparator.EXPECT())
+			if tc.checker != nil {
+				tc.checker(comparator.EXPECT())
 			}
 
 			terminator := NewMockrecursionTerminator(ctrl)

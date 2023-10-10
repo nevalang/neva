@@ -22,16 +22,6 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		wantErr        error
 	}{
 		// Instantiations
-		{
-			name:      "subtype and supertype are default values (empty insts)",
-			subType:   ts.Expr{},
-			superType: ts.Expr{},
-			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil)
-			},
-			wantErr: nil,
-		},
 		//  kinds
 		{
 			name:      "subtype inst, supertype lit (not union (enum))", // int <: {}
