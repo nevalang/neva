@@ -124,10 +124,10 @@ func (e EntityRef) String() string {
 
 type Const struct {
 	Ref   *EntityRef
-	Value *ConstValue
+	Value *Msg
 }
 
-type ConstValue struct {
+type Msg struct {
 	TypeExpr ts.Expr // Cannot be any
 	Bool     bool
 	Int      int

@@ -149,17 +149,18 @@ func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return nil, errors.New("ctx value is not runtime message")
 	}
 
+	// overloading:
 	var handler func(a, b runtime.Msg) runtime.Msg
-	switch typ.Int() {
-	case 1: // int
+	switch typ.Type() {
+	case runtime.IntMsgType: // int
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewIntMsg(a.Int() + b.Int())
 		}
-	case 2: // float
+	case runtime.FloatMsgType: // float
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewFloatMsg(a.Float() + b.Float())
 		}
-	case 3: // string
+	case runtime.StrMsgType: // string
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewStrMsg(a.Str() + b.Str())
 		}
@@ -201,17 +202,7 @@ func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func ParseNum(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:funlen
-	msg := ctx.Value("msg")
-	if msg == nil {
-		return nil, errors.New("ctx msg not found")
-	}
-
-	typ, ok := msg.(runtime.Msg)
-	if !ok {
-		return nil, errors.New("ctx value is not runtime message")
-	}
-
+func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -227,23 +218,12 @@ func ParseNum(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint
 		return nil, err
 	}
 
-	var handler func(string) (runtime.Msg, error)
-	if typ.Int() == 1 { // int
-		handler = func(str string) (runtime.Msg, error) {
-			v, err := strconv.Atoi(str)
-			if err != nil {
-				return nil, err
-			}
-			return runtime.NewIntMsg(int64(v)), nil
+	parseFunc := func(str string) (runtime.Msg, error) {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			return nil, err
 		}
-	} else { // float
-		handler = func(str string) (runtime.Msg, error) {
-			v, err := strconv.ParseFloat(str, 64)
-			if err != nil {
-				return nil, err
-			}
-			return runtime.NewFloatMsg(v), nil
-		}
+		return runtime.NewIntMsg(int64(v)), nil
 	}
 
 	return func() {
@@ -252,7 +232,7 @@ func ParseNum(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint
 			case <-ctx.Done():
 				return
 			case str := <-vin:
-				v, err := handler(str.Str())
+				v, err := parseFunc(str.Str())
 				if err != nil {
 					select {
 					case <-ctx.Done():
@@ -278,6 +258,6 @@ func Repo() map[string]runtime.Func {
 		"Lock":     Lock,
 		"Const":    Const,
 		"Add":      Add,
-		"ParseNum": ParseNum,
+		"ParseNum": ParseInt,
 	}
 }

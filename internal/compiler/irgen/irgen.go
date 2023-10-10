@@ -9,6 +9,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/ir"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 	"golang.org/x/exp/maps"
 )
 
@@ -72,16 +73,16 @@ func (g Generator) Generate(ctx context.Context, prog src.Program) (*ir.Program,
 
 type (
 	nodeContext struct {
-		path         []string // including current
-		curPkgName   string
-		componentRef src.EntityRef
-		constValue   *src.ConstValue // for native components only
-		portsUsage   portsUsage
+		path           []string // including current
+		curPkgName     string
+		componentRef   src.EntityRef
+		runtimeFuncMsg *ir.Msg // for native components only, used as const value or overloading param
+		portsUsage     portsUsage
 	}
 	portsUsage struct {
 		in         map[relPortAddr]struct{}
 		out        map[relPortAddr]struct{}
-		constValue *src.ConstValue // const value found by ref from net goes here and then to nodeContext
+		constValue *src.Msg // const value found by ref from net goes here and then to nodeContext
 	}
 	relPortAddr struct {
 		Port string
@@ -115,13 +116,13 @@ func (g Generator) processComponentNode( //nolint:funlen
 				Outports: outPortAddrs,
 			},
 		}
-		if nodeCtx.constValue == nil {
+		if nodeCtx.runtimeFuncMsg == nil {
 			result.Funcs = append(result.Funcs, runtimeFunc)
 			return nil
 		}
 		runtimeFunc.Params = &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_STR, //nolint:nosnakecase
-			Str:  nodeCtx.constValue.Str,
+			Type: ir.MsgType_MSG_TYPE_STR,    //nolint:nosnakecase
+			Str:  nodeCtx.runtimeFuncMsg.Str, // TODO implement for all data-types
 		}
 		result.Funcs = append(result.Funcs, runtimeFunc)
 		return nil
@@ -148,6 +149,17 @@ func (g Generator) processComponentNode( //nolint:funlen
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
 		}
 
+		var runtimeFuncMsg *ir.Msg
+		if nodePortsUsage.constValue != nil {
+			runtimeFuncMsg = &ir.Msg{
+				Type: ir.MsgType_MSG_TYPE_STR,    //nolint:nosnakecase
+				Str:  nodeCtx.runtimeFuncMsg.Str, // TODO implement for all data-types
+			}
+		} else if len(node.TypeArgs) > 0 {
+			// TODO skip this (overloading) if cur node isn't builtin component
+			runtimeFuncMsg = getOverloadingFromTypeArg(node.TypeArgs[0])
+		}
+
 		subNodeCtx := nodeContext{
 			path:       append(nodeCtx.path, name),
 			portsUsage: nodePortsUsage,
@@ -155,7 +167,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 				Pkg:  node.EntityRef.Pkg,
 				Name: node.EntityRef.Name,
 			},
-			constValue: nodePortsUsage.constValue,
+			runtimeFuncMsg: runtimeFuncMsg,
 		}
 
 		if err := g.processComponentNode(ctx, subNodeCtx, scope, result); err != nil {
@@ -164,6 +176,31 @@ func (g Generator) processComponentNode( //nolint:funlen
 	}
 
 	return nil
+}
+
+// getOverloadingFromTypeArg generates runtime.Msg for runtime.FuncCall's meta to use it as overloading parameter.
+func getOverloadingFromTypeArg(expr ts.Expr) *ir.Msg {
+	if expr.Inst == nil {
+		return nil
+	}
+
+	var typ ir.MsgType
+
+	//nolint:nosnakecase
+	switch expr.Inst.Ref.String() {
+	case "bool":
+		typ = ir.MsgType_MSG_TYPE_BOOL
+	case "int":
+		typ = ir.MsgType_MSG_TYPE_INT
+	case "float":
+		typ = ir.MsgType_MSG_TYPE_FLOAT
+	case "str":
+		typ = ir.MsgType_MSG_TYPE_STR
+	}
+
+	return &ir.Msg{
+		Type: typ, // we only care about type here, this is for overloading, value doesn't matter
+	}
 }
 
 type handleNetworkResult struct {

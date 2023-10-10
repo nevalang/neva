@@ -17,7 +17,7 @@ type connector struct {
 	listener EventListener
 }
 
-func NewDefaultConnector(listener EventListener) (connector, error) {
+func NewDefaultConnector(listener EventListener) (Connector, error) {
 	if listener == nil {
 		return connector{}, ErrNilDeps
 	}

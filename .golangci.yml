@@ -1,12 +1,12 @@
 run:
   skip-dirs:
-    - pkg/sdk
+    - pkg/ir
   timeout: 1m
 
 linters:
   enable-all: true
   disable:
-    - gci
+    - gci # imports order
     - depguard # enforces to manually configure imports white-list
     - godox # todo/fixme
     - godot # dots at the end of comments
@@ -14,13 +14,13 @@ linters:
     - nlreturn # newline before return
     - wsl # forses spaces in loops, assignments, etc
     - deadcode # replaced by unused
-    - cyclop # gocyclo does this
+    - cyclop # replaced by gocyclo
     - exhaustivestruct
     - exhaustruct
     - exhaustive
+    - forbidigo # doesn't allow to use fmt.Println
     # - composites
     # - testpackage #  _test package
-    # - forbidigo # doesn't allow to use fmt.Println
 
 linters-settings:
   lll:

@@ -11,9 +11,9 @@ components {
 		nodes {
 			read1 tmp.Read
 			read2 tmp.Read
-			parse1 tmp.ParseNum<int>
-			parse2 tmp.ParseNum<int>
-			add tmp.Add<int>
+			parse1 tmp.ParseInt
+			parse2 tmp.ParseInt
+			add Add<int>
 			print tmp.Print<int>
 		}
 		net {

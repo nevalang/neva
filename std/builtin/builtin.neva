@@ -12,4 +12,5 @@ types {
 
 components {
     pub Const<T>() (v t3)
+    pub Add<T int | float | str>(a T, b T) (v T)
 }

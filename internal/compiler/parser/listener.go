@@ -58,7 +58,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	name := actx.IDENTIFIER().GetText()
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
-	val := src.ConstValue{TypeExpr: *typeExpr}
+	val := src.Msg{TypeExpr: *typeExpr}
 
 	//nolint:nosnakecase
 	switch {

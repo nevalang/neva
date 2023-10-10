@@ -13,7 +13,18 @@ type Msg interface {
 	Int() int64
 	Float() float64
 	Str() string
+	Type() MsgType
 }
+
+type MsgType uint8
+
+const (
+	UnknownMsgType MsgType = 0
+	BoolMsgType    MsgType = 1
+	IntMsgType     MsgType = 2
+	FloatMsgType   MsgType = 3
+	StrMsgType     MsgType = 4
+)
 
 // Empty
 
@@ -24,6 +35,7 @@ func (emptyMsg) Int() int64     { return 0 }
 func (emptyMsg) Float() float64 { return 0 }
 func (emptyMsg) Str() string    { return "" }
 func (emptyMsg) String() string { return "()" } // stringer
+func (emptyMsg) Type() MsgType  { return UnknownMsgType }
 
 // Int
 
@@ -32,6 +44,7 @@ type IntMsg struct {
 	v int64
 }
 
+func (msg IntMsg) Type() MsgType  { return IntMsgType }
 func (msg IntMsg) Int() int64     { return msg.v }
 func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
 
@@ -49,6 +62,7 @@ type FloatMsg struct {
 	v float64
 }
 
+func (msg FloatMsg) Type() MsgType     { return FloatMsgType }
 func (msg FloatMsg) FloatMsg() float64 { return msg.v }
 
 func NewFloatMsg(n float64) FloatMsg {
@@ -65,6 +79,7 @@ type StrMsg struct {
 	v string
 }
 
+func (msg StrMsg) Type() MsgType  { return StrMsgType }
 func (msg StrMsg) Str() string    { return msg.v }
 func (msg StrMsg) String() string { return msg.v }
 
@@ -82,6 +97,7 @@ type BoolMsg struct {
 	v bool
 }
 
+func (msg BoolMsg) Type() MsgType  { return BoolMsgType }
 func (msg BoolMsg) Bool() bool     { return msg.v }
 func (msg BoolMsg) String() string { return fmt.Sprint(msg.v) }
 
