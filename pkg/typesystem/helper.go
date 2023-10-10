@@ -74,7 +74,10 @@ func (h Helper) Rec(rec map[string]Expr) Expr {
 }
 
 func (h Helper) ParamWithNoConstr(name string) Param {
-	return h.Param(name, Expr{})
+	return Param{
+		Name:   name,
+		Constr: nil,
+	}
 }
 
 func (h Helper) Param(name string, constr Expr) Param {

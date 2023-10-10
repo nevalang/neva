@@ -138,18 +138,23 @@ func TestExpr_String(t *testing.T) {
 			want: "empty",
 		},
 		{
-			name: "inst expr with non-empty ref and no args",
+			name: "inst_expr_with_non-empty_ref_and_no_args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")},
 			},
 			want: "int",
 		},
 		{
-			name: "inst expr with empty refs and with args",
+			name: "inst_expr_with_empty_refs_and_with_args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
+					Ref: nil,
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{
+							Inst: &ts.InstExpr{
+								Ref: ts.DefaultStringer("str"),
+							},
+						},
 					},
 				},
 			},
@@ -212,7 +217,7 @@ func TestExpr_String(t *testing.T) {
 			want: "{}",
 		},
 		{
-			name: "lit expr enum with one el",
+			name: "lit_expr_enum_with_one_el",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Enum: []string{"MONDAY"},
@@ -273,18 +278,22 @@ func TestExpr_String(t *testing.T) {
 			want: "{}",
 		},
 		{
-			name: "lit expr rec with one field",
+			name: "lit_expr_rec_with_one_field",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{
-						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						"name": {
+							Inst: &ts.InstExpr{
+								Ref: ts.DefaultStringer("str"),
+							},
+						},
 					},
 				},
 			},
 			want: "{ name str }",
 		},
 		{ // FIXME flacky test (struct must be ordered)
-			name: "lit expr rec with two fields",
+			name: "lit_expr_rec_with_two_fields",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Rec: map[string]ts.Expr{

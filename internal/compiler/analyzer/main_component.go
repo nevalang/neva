@@ -74,13 +74,19 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
 }
 
 func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) error {
-	for name, node := range nodes {
+	for nodeName, node := range nodes {
 		nodeEntity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {
-			return fmt.Errorf("%w: %v: %v", ErrEntityNotFoundByNodeRef, name, node.EntityRef)
+			return fmt.Errorf(
+				"%w: node name %v: entity ref %v: %v",
+				ErrEntityNotFoundByNodeRef,
+				nodeName,
+				node.EntityRef,
+				err,
+			)
 		}
 		if nodeEntity.Kind != src.ComponentEntity {
-			return fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, name, node.EntityRef)
+			return fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef)
 		}
 	}
 	return nil

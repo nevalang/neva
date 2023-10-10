@@ -231,11 +231,15 @@ func (g Generator) processSenderSide( //nolint:funlen
 	result processNetworkResult,
 ) (*ir.PortAddr, error) {
 	if senderSide.ConstRef != nil {
-		nodeName := "const" + "_" + senderSide.ConstRef.Pkg + "_" + senderSide.ConstRef.Name
+		nodeName := "const" + "_"
+		if senderSide.ConstRef.Pkg != "" {
+			nodeName += senderSide.ConstRef.Pkg + "_"
+		}
+		nodeName += senderSide.ConstRef.Name
 
 		result.constNodes[nodeName] = src.Node{
 			EntityRef: src.EntityRef{
-				Pkg:  "",
+				Pkg:  "", // Const is builtin
 				Name: "Const",
 			},
 		}

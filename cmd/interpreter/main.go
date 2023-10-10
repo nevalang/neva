@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -19,28 +19,28 @@ import (
 )
 
 func main() {
-	// logger
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	// runtime
 	connector, err := runtime.NewDefaultConnector(runtime.Listener{})
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
 	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Repo())
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
 	runTime, err := runtime.New(connector, funcRunner)
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
+
 	// type-system
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
+
 	// compiler
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
@@ -50,6 +50,7 @@ func main() {
 		analyzer,
 		irgen,
 	)
+
 	// interpreter
 	intr := interpreter.New(
 		comp,
@@ -59,12 +60,13 @@ func main() {
 
 	path, err := filepath.Abs(os.Args[1])
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	code, err := intr.Interpret(context.Background(), path)
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
 

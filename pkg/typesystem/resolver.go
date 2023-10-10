@@ -8,7 +8,7 @@ import (
 // Resolver transforms expression it into a form where all references it contains points to resolved expressions.
 type Resolver struct {
 	validator  exprValidator       // Check if expression invalid before resolving it
-	comparator subtypeChecker      // Compare arguments with constraints
+	checker    subtypeChecker      // Compare arguments with constraints
 	terminator recursionTerminator // Don't stuck in a loop
 }
 
@@ -90,7 +90,7 @@ func (r Resolver) ResolveFrame(args []Expr, params []Param, scope Scope) ([]Expr
 			Constr: &resolvedConstr,
 		})
 
-		if err := r.comparator.Check(resolvedArg, resolvedConstr, TerminatorParams{Scope: scope}); err != nil {
+		if err := r.checker.Check(resolvedArg, resolvedConstr, TerminatorParams{Scope: scope}); err != nil {
 			return nil, nil, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}
@@ -110,7 +110,7 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
-	return r.comparator.Check(resolvedSub, resolvedSup, TerminatorParams{
+	return r.checker.Check(resolvedSub, resolvedSup, TerminatorParams{
 		Scope: scope,
 	})
 }
@@ -227,7 +227,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 
-		if param.Constr != nil {
+		if param.Constr == nil {
 			continue
 		}
 
@@ -243,7 +243,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 			SupertypeTrace: newTrace,
 		}
 
-		if err := r.comparator.Check(resolvedArg, resolvedConstr, params); err != nil {
+		if err := r.checker.Check(resolvedArg, resolvedConstr, params); err != nil {
 			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
 		}
 	}

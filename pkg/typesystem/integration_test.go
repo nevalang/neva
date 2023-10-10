@@ -73,18 +73,18 @@ func TestDefaultResolver(t *testing.T) {
 			scope: TestScope{
 				"t1": h.Def( // t1<t3> = t2<t3>
 					h.Inst("t2", h.Inst("t3")),
-					h.Param("t3", ts.Expr{}),
+					h.ParamWithNoConstr("t3"),
 				),
 				"t2": h.Def( // t2<t> = t3<t>
 					h.Inst("t3", h.Inst("t")),
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"t3": h.Def( // t3<t> = vec<t>
 					h.Inst("vec", h.Inst("t")),
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"vec": h.BaseDef( // vec<t> (base type)
-					h.Param("t", ts.Expr{}),
+					h.ParamWithNoConstr("t"),
 				),
 				"int": h.BaseDef(), // int
 			},

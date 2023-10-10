@@ -12,20 +12,18 @@ type Def struct {
 func (def Def) String() string {
 	var params string
 
-	if len(def.Params) > 0 {
-		params += "<"
-		for i, param := range def.Params {
-			params += param.Name
-			if param.Constr == nil {
-				continue
-			}
-			params += " " + param.Constr.String()
-			if i < len(def.Params)-1 {
-				params += ", "
-			}
+	params += "<"
+	for i, param := range def.Params {
+		params += param.Name
+		if param.Constr == nil {
+			continue
 		}
-		params += ">"
+		params += " " + param.Constr.String()
+		if i < len(def.Params)-1 {
+			params += ", "
+		}
 	}
+	params += ">"
 
 	return params + " = " + def.BodyExpr.String()
 }
@@ -42,8 +40,8 @@ type Expr struct {
 }
 
 // String formats expression in a TS manner
-func (expr *Expr) String() string {
-	if expr == nil {
+func (expr *Expr) String() string { //nolint:funlen
+	if expr == nil || expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
 
@@ -70,7 +68,7 @@ func (expr *Expr) String() string {
 		str += "{"
 		count := 0
 		for fieldName, fieldExpr := range expr.Lit.Rec {
-			str += fmt.Sprintf(" %v %v", fieldName, fieldExpr)
+			str += " " + fieldName + " " + fieldExpr.String()
 			if count < len(expr.Lit.Rec)-1 {
 				str += ","
 			} else {
@@ -93,7 +91,11 @@ func (expr *Expr) String() string {
 		return expr.Inst.Ref.String()
 	}
 
-	str = expr.Inst.Ref.String() + "<"
+	if expr.Inst.Ref != nil {
+		str = expr.Inst.Ref.String()
+	}
+	str += "<"
+
 	for i, arg := range expr.Inst.Args {
 		str += arg.String()
 		if i < len(expr.Inst.Args)-1 {
@@ -128,8 +130,10 @@ func (lit *LitExpr) Empty() bool {
 }
 
 // Always call Validate before
-func (lit LitExpr) Type() LiteralType {
+func (lit *LitExpr) Type() LiteralType {
 	switch {
+	case lit == nil:
+		return EmptyLitType
 	case lit.Arr != nil:
 		return ArrLitType
 	case lit.Rec != nil:
