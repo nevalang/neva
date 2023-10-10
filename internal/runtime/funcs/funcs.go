@@ -213,7 +213,7 @@ func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return nil, err
 	}
 
-	errout, err := io.Out.Port("err")
+	errout, err := io.Out.Port("err") // FIXME no err port here!
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +258,6 @@ func Repo() map[string]runtime.Func {
 		"Lock":     Lock,
 		"Const":    Const,
 		"Add":      Add,
-		"ParseNum": ParseInt,
+		"ParseInt": ParseInt,
 	}
 }

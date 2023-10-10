@@ -59,7 +59,7 @@ var ErrSinglePortCount = errors.New("number of ports found by name not equals to
 func (f FuncPorts) Port(name string) (chan Msg, error) {
 	slots, ok := f[name]
 	if !ok {
-		return nil, fmt.Errorf("")
+		return nil, fmt.Errorf("port not found by name: %v", name)
 	}
 
 	if len(slots) != 1 {

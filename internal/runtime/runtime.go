@@ -40,7 +40,7 @@ var (
 	ErrStartPortNotFound = errors.New("enter port not found")
 	ErrExitPortNotFound  = errors.New("exit port not found")
 	ErrConnector         = errors.New("connector")
-	ErrRoutineRunner     = errors.New("routine runner")
+	ErrFuncRunner        = errors.New("func runner")
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
@@ -66,7 +66,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 
 	g.Go(func() error {
 		if err := r.funcRunner.Run(gctx, prog.Funcs); err != nil {
-			return fmt.Errorf("%w: %v", ErrRoutineRunner, err)
+			return fmt.Errorf("%w: %v", ErrFuncRunner, err)
 		}
 		return nil
 	})

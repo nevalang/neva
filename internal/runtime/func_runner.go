@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrFuncNotFound = errors.New("func not found")
-	ErrFunc         = errors.New("func")
+	ErrFuncNotFound    = errors.New("func not found")
+	ErrFuncConstructor = errors.New("func constructor")
 )
 
 const CtxMsgKey = "msg"
@@ -50,7 +50,7 @@ func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (er
 
 		fun, err := constructor(ctx, routine.IO)
 		if err != nil {
-			return fmt.Errorf("%w: %v", errors.Join(ErrFunc, err), routine.Ref)
+			return fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, routine.Ref)
 		}
 
 		go func() {
