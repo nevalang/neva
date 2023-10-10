@@ -42,8 +42,8 @@ type Expr struct {
 }
 
 // String formats expression in a TS manner
-func (expr *Expr) String() string {
-	if expr == nil {
+func (expr *Expr) String() string { //nolint:funlen
+	if expr == nil || expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
 
@@ -70,7 +70,7 @@ func (expr *Expr) String() string {
 		str += "{"
 		count := 0
 		for fieldName, fieldExpr := range expr.Lit.Rec {
-			str += fmt.Sprintf(" %v %v", fieldName, fieldExpr)
+			str += " " + fieldName + " " + fieldExpr.String()
 			if count < len(expr.Lit.Rec)-1 {
 				str += ","
 			} else {
@@ -93,7 +93,11 @@ func (expr *Expr) String() string {
 		return expr.Inst.Ref.String()
 	}
 
-	str = expr.Inst.Ref.String() + "<"
+	if expr.Inst.Ref != nil {
+		str = expr.Inst.Ref.String()
+	}
+	str += "<"
+
 	for i, arg := range expr.Inst.Args {
 		str += arg.String()
 		if i < len(expr.Inst.Args)-1 {
