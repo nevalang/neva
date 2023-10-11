@@ -21,10 +21,10 @@ type (
 		Save(context.Context, string, *ir.Program) error
 	}
 	Parser interface {
-		ParseFiles(context.Context, map[string][]byte) (map[string]src.File, error)
+		ParseProg(context.Context, map[string]RawPackage) (src.Program, error)
 	}
 	Analyzer interface {
-		Analyze(src.Program) error
+		Analyze(src.Program) (src.Program, error)
 	}
 	IRGenerator interface {
 		Generate(context.Context, src.Program) (*ir.Program, error)
@@ -34,25 +34,22 @@ type (
 )
 
 func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Program, error) {
-	raw, err := c.repo.ByPath(ctx, srcPath)
+	rawProg, err := c.repo.ByPath(ctx, srcPath)
 	if err != nil {
 		return nil, fmt.Errorf("repo by path: %w", err)
 	}
 
-	parsedPackages := make(src.Program, len(raw))
-	for pkgName, files := range raw {
-		parsedFiles, err := c.parser.ParseFiles(ctx, files)
-		if err != nil {
-			return nil, fmt.Errorf("parse files: %w", err)
-		}
-		parsedPackages[pkgName] = parsedFiles
+	parsedProg, err := c.parser.ParseProg(ctx, rawProg)
+	if err != nil {
+		return nil, fmt.Errorf("parse prog: %w", err)
 	}
 
-	if err := c.analyzer.Analyze(parsedPackages); err != nil {
+	analyzedProg, err := c.analyzer.Analyze(parsedProg)
+	if err != nil {
 		return nil, fmt.Errorf("analyze: %w", err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, parsedPackages)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg)
 	if err != nil {
 		return nil, fmt.Errorf("generate IR: %w", err)
 	}

@@ -22,12 +22,12 @@ func (a Analyzer) analyzeComponent(
 		return src.Component{}, fmt.Errorf("analyze interface: %w", err)
 	}
 
-	resolvedNodes, err := a.analyzeComponentNodes(comp.Nodes, scope)
+	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(comp.Nodes, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze component nodes: %w", err)
 	}
 
-	resolvedNet, err := a.analyzeComponentNet(comp.Net, resolvedInterface, resolvedNodes, scope)
+	resolvedNet, err := a.analyzeComponentNet(comp.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze component network: %w", err)
 	}
@@ -39,16 +39,21 @@ func (a Analyzer) analyzeComponent(
 	}, nil
 }
 
-func (a Analyzer) analyzeComponentNodes(nodes map[string]src.Node, scope src.Scope) (map[string]src.Node, error) {
+func (a Analyzer) analyzeComponentNodes(
+	nodes map[string]src.Node,
+	scope src.Scope,
+) (map[string]src.Node, map[string]src.Interface, error) {
 	resolvedNodes := make(map[string]src.Node, len(nodes))
+	nodesIfaces := make(map[string]src.Interface, len(nodes))
 	for name, node := range nodes {
-		resolvedNode, err := a.analyzeComponentNode(node, scope)
+		resolvedNode, iface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
-			return nil, fmt.Errorf("analyze node: %w", err)
+			return nil, nil, fmt.Errorf("analyze node: %w", err)
 		}
+		nodesIfaces[name] = iface
 		resolvedNodes[name] = resolvedNode
 	}
-	return resolvedNodes, nil
+	return resolvedNodes, nodesIfaces, nil
 }
 
 var (
@@ -57,50 +62,50 @@ var (
 	ErrNodeInterfaceDI           = errors.New("interface node cannot have dependency injection")
 )
 
-func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, error) {
+func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, error) {
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return src.Node{}, fmt.Errorf("entity: %w", err)
+		return src.Node{}, src.Interface{}, fmt.Errorf("entity: %w", err)
 	}
 
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.InterfaceEntity {
-		return src.Node{}, fmt.Errorf("%w: %v", ErrNodeWrongEntity, entity.Kind)
+		return src.Node{}, src.Interface{}, fmt.Errorf("%w: %v", ErrNodeWrongEntity, entity.Kind)
 	}
 
-	var compInterface src.Interface
+	var iface src.Interface
 	if entity.Kind == src.ComponentEntity {
-		compInterface = entity.Component.Interface
+		iface = entity.Component.Interface
 	} else {
 		if node.ComponentDI != nil {
-			return src.Node{}, ErrNodeInterfaceDI
+			return src.Node{}, src.Interface{}, ErrNodeInterfaceDI
 		}
-		compInterface = entity.Interface
+		iface = entity.Interface
 	}
 
-	if len(node.TypeArgs) != len(compInterface.TypeParams) {
-		return src.Node{}, fmt.Errorf(
+	if len(node.TypeArgs) != len(iface.TypeParams) {
+		return src.Node{}, src.Interface{}, fmt.Errorf(
 			"%w: want %v, got %v",
-			ErrNodeTypeArgsCountMismatch, compInterface.TypeParams, node.TypeArgs,
+			ErrNodeTypeArgsCountMismatch, iface.TypeParams, node.TypeArgs,
 		)
 	}
 
-	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, compInterface.TypeParams, scope)
+	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, iface.TypeParams, scope)
 	if err != nil {
-		return src.Node{}, fmt.Errorf("resolve args: %w", err)
+		return src.Node{}, src.Interface{}, fmt.Errorf("resolve args: %w", err)
 	}
 
 	if node.ComponentDI == nil {
 		return src.Node{
 			EntityRef: node.EntityRef,
 			TypeArgs:  resolvedArgs,
-		}, nil
+		}, iface, nil
 	}
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.ComponentDI))
 	for depName, depNode := range node.ComponentDI {
-		resolvedDep, err := a.analyzeComponentNode(depNode, scope)
+		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
-			return src.Node{}, fmt.Errorf("analyze dependency node: %w", err)
+			return src.Node{}, src.Interface{}, fmt.Errorf("analyze dependency node: %w", err)
 		}
 		resolvedComponentDI[depName] = resolvedDep
 	}
@@ -109,30 +114,34 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		EntityRef:   node.EntityRef,
 		TypeArgs:    resolvedArgs,
 		ComponentDI: resolvedComponentDI,
-	}, nil
+	}, iface, nil
 }
 
 func (a Analyzer) analyzeComponentNet(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, error) {
 	for _, conn := range net {
-		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, scope)
+		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
 		if err != nil {
 			return nil, fmt.Errorf("get sender type: %w", err)
 		}
+
 		for _, receiver := range conn.ReceiverSides {
-			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, scope)
+			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
 			if err != nil {
-				return nil, fmt.Errorf("get sender type: %w", err)
+				return nil, fmt.Errorf("get sen der type: %w", err)
 			}
+
 			if err := a.resolver.IsSubtypeOf(senderType, receiverType, scope); err != nil {
 				return nil, fmt.Errorf("is subtype of: %w", err)
 			}
 		}
 	}
+
 	return net, nil
 }
 
@@ -140,6 +149,7 @@ func (a Analyzer) getReceiverType(
 	receiverSide src.ReceiverConnectionSide,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, error) {
 	if receiverSide.PortAddr.Node == "in" {
@@ -207,7 +217,6 @@ func (a Analyzer) getResolvedPortType(
 		return ts.Expr{}, fmt.Errorf("resolve args: %w", err)
 	}
 
-	// FIXME resolve t1
 	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, frame, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("resolve expr with frame: %w", err)
@@ -230,6 +239,7 @@ func (a Analyzer) getSenderType(
 	senderSide src.SenderConnectionSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, error) {
 	if senderSide.ConstRef != nil {
@@ -255,7 +265,7 @@ func (a Analyzer) getSenderType(
 		return inport.TypeExpr, nil
 	}
 
-	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
+	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("get node outport type: %w", err)
 	}
@@ -266,6 +276,7 @@ func (a Analyzer) getSenderType(
 func (a Analyzer) getNodeOutportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
@@ -273,14 +284,14 @@ func (a Analyzer) getNodeOutportType(
 		return ts.Expr{}, ErrNodeNotFound
 	}
 
-	entity, _, err := scope.Entity(node.EntityRef)
-	if err != nil {
-		panic(err)
+	nodeIface, ok := nodesIfaces[portAddr.Node]
+	if !ok {
+		return ts.Expr{}, ErrNodeNotFound
 	}
 
 	typ, err := a.getResolvedPortType(
-		entity.Component.IO.Out,
-		entity.Component.TypeParams,
+		nodeIface.IO.Out,
+		nodeIface.TypeParams,
 		portAddr,
 		node,
 		scope,

@@ -17,8 +17,8 @@ components {
 			print tmp.Print<int>
 		}
 		net {
-			in.enter -> read1.in.sig 
-			read1.out.v -> parse1.in.v 
+			in.enter -> read1.in.sig
+			read1.out.v -> parse1.in.v
 			parse1.out.v -> { 
 				add.in.a
 				read2.in.sig

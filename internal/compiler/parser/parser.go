@@ -3,8 +3,10 @@ package parser
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/antlr4-go/antlr/v4"
+	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/compiler/src"
 	"golang.org/x/sync/errgroup"
@@ -19,14 +21,29 @@ type Parser struct {
 	isDebug bool
 }
 
-func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
+func (p Parser) ParseProg(ctx context.Context, rawProg map[string]compiler.RawPackage) (src.Program, error) {
+	prog := make(src.Program, len(rawProg))
+
+	for pkgName, pkgFiles := range rawProg {
+		parsedFiles, err := p.parseFiles(ctx, pkgFiles)
+		if err != nil {
+			return src.Program{}, fmt.Errorf("parse files: %w", err)
+		}
+
+		prog[pkgName] = parsedFiles
+	}
+
+	return prog, nil
+}
+
+func (p Parser) parseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
 	result := make(map[string]src.File, len(files))
 	g, gctx := errgroup.WithContext(ctx)
 	for name, bb := range files {
 		name := name
 		bb := bb
 		g.Go(func() error {
-			v, err := p.ParseFile(gctx, bb)
+			v, err := p.parseFile(gctx, bb)
 			if err != nil {
 				return err
 			}
@@ -40,7 +57,7 @@ func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[st
 	return result, nil
 }
 
-func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
+func (p Parser) parseFile(ctx context.Context, bb []byte) (src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/src"
 	ts "github.com/nevalang/neva/pkg/typesystem"
+	"golang.org/x/exp/maps"
 )
 
 type Analyzer struct {
@@ -14,8 +15,32 @@ type Analyzer struct {
 }
 
 // Analyze method formats error from a.analyze so end-user can easily understand what's wrong.
-func (a Analyzer) Analyze(prog src.Program) error {
-	return a.analyze(prog)
+func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
+	if len(prog) == 0 {
+		return src.Program{}, ErrEmptyProgram
+	}
+
+	mainPkg, ok := prog["main"]
+	if !ok {
+		return src.Program{}, ErrMainPkgNotFound
+	}
+
+	if err := a.mainSpecificPkgValidation(mainPkg, prog); err != nil {
+		return src.Program{}, fmt.Errorf("main specific pkg validation: %w", err)
+	}
+
+	var progCopy src.Program
+	maps.Copy(progCopy, prog)
+
+	for pkgName := range progCopy {
+		resolvedPkg, err := a.analyzePkg(pkgName, progCopy)
+		if err != nil {
+			return src.Program{}, fmt.Errorf("analyze pkg: %v: %w", pkgName, err)
+		}
+		progCopy[pkgName] = resolvedPkg
+	}
+
+	return progCopy, nil
 }
 
 var (
@@ -24,32 +49,6 @@ var (
 	ErrEmptyPkg          = errors.New("package must not be empty")
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
-
-// analyze returns error if program is invalid. It also modifies program by resolving types.
-func (a Analyzer) analyze(prog src.Program) error {
-	if len(prog) == 0 {
-		return ErrEmptyProgram
-	}
-
-	mainPkg, ok := prog["main"]
-	if !ok {
-		return ErrMainPkgNotFound
-	}
-
-	if err := a.mainSpecificPkgValidation(mainPkg, prog); err != nil {
-		return fmt.Errorf("main specific pkg validation: %w", err)
-	}
-
-	for pkgName := range prog {
-		resolvedPkg, err := a.analyzePkg(pkgName, prog)
-		if err != nil {
-			return fmt.Errorf("analyze pkg: %v: %w", pkgName, err)
-		}
-		prog[pkgName] = resolvedPkg
-	}
-
-	return nil
-}
 
 // TODO check that there's no 2 entities with the same name
 // and that there's no unused entities.

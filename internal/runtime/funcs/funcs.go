@@ -149,18 +149,17 @@ func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return nil, errors.New("ctx value is not runtime message")
 	}
 
-	// overloading:
 	var handler func(a, b runtime.Msg) runtime.Msg
 	switch typ.Type() {
-	case runtime.IntMsgType: // int
+	case runtime.IntMsgType:
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewIntMsg(a.Int() + b.Int())
 		}
-	case runtime.FloatMsgType: // float
+	case runtime.FloatMsgType:
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewFloatMsg(a.Float() + b.Float())
 		}
-	case runtime.StrMsgType: // string
+	case runtime.StrMsgType:
 		handler = func(a, b runtime.Msg) runtime.Msg {
 			return runtime.NewStrMsg(a.Str() + b.Str())
 		}
