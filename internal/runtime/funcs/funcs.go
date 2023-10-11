@@ -138,6 +138,23 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
+func Void(ctx context.Context, io runtime.FuncIO) (func(), error) {
+	vin, err := io.In.Port("v")
+	if err != nil {
+		return nil, err
+	}
+
+	return func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-vin:
+			}
+		}
+	}, nil
+}
+
 func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	msg := ctx.Value("msg")
 	if msg == nil {
@@ -258,5 +275,6 @@ func Repo() map[string]runtime.Func {
 		"Const":    Const,
 		"Add":      Add,
 		"ParseInt": ParseInt,
+		"Void":     Void,
 	}
 }

@@ -44,6 +44,7 @@ func (p Package) Entity(entityName string) (entity Entity, filename string, ok b
 	return Entity{}, "", false
 }
 
+// Entities takes function that can return error. If function returns error iteration stops.
 func (p Package) Entities(f func(entity Entity, entityName string, fileName string) error) error {
 	for fileName, file := range p {
 		for entityName, entity := range file.Entities {

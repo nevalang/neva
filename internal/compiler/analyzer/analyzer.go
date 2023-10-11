@@ -29,7 +29,7 @@ func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
 		return src.Program{}, fmt.Errorf("main specific pkg validation: %w", err)
 	}
 
-	var progCopy src.Program
+	progCopy := make(src.Program, len(prog))
 	maps.Copy(progCopy, prog)
 
 	for pkgName := range progCopy {
@@ -109,7 +109,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	case src.InterfaceEntity:
 		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope, analyzeInterfaceParams{
 			allowEmptyInports:  false,
-			allowEmptyOutports: isStd,
+			allowEmptyOutports: false,
 		})
 		if err != nil {
 			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
@@ -119,7 +119,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		resolvedComp, err := a.analyzeComponent(entity.Component, scope, analyzeComponentParams{
 			iface: analyzeInterfaceParams{
 				allowEmptyInports:  isStd, // e.g. `Const` component has no inports
-				allowEmptyOutports: false,
+				allowEmptyOutports: isStd, // e.g. `Void` component has no outports
 			},
 		})
 		if err != nil {
