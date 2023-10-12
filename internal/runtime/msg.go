@@ -34,7 +34,7 @@ func (emptyMsg) Bool() bool     { return false }
 func (emptyMsg) Int() int64     { return 0 }
 func (emptyMsg) Float() float64 { return 0 }
 func (emptyMsg) Str() string    { return "" }
-func (emptyMsg) String() string { return "()" } // stringer
+func (emptyMsg) String() string { return "empty" } // stringer
 func (emptyMsg) Type() MsgType  { return UnknownMsgType }
 
 // Int

@@ -229,7 +229,7 @@ func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return nil, err
 	}
 
-	errout, err := io.Out.Port("err") // FIXME no err port here!
+	errout, err := io.Out.Port("err")
 	if err != nil {
 		return nil, err
 	}

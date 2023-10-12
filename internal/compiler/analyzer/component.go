@@ -117,6 +117,12 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}, iface, nil
 }
 
+var (
+	ErrUnusedNode        = errors.New("unused node")
+	ErrUnusedNodeInport  = errors.New("unused node inport")
+	ErrUnusedNodeOutport = errors.New("unused node outport")
+)
+
 func (a Analyzer) analyzeComponentNet(
 	net []src.Connection,
 	compInterface src.Interface,
@@ -124,11 +130,21 @@ func (a Analyzer) analyzeComponentNet(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, error) {
+	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
+
 	for _, conn := range net {
 		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
 		if err != nil {
 			return nil, fmt.Errorf("get sender type: %w", err)
 		}
+
+		// mark node's outport as used
+		senderNodeName := conn.SenderSide.PortAddr.Node
+		outportName := conn.SenderSide.PortAddr.Port
+		if _, ok := nodesUsage[senderNodeName]; !ok {
+			nodesUsage[senderNodeName] = NodeNetUsage{}
+		}
+		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
 
 		for _, receiver := range conn.ReceiverSides {
 			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
@@ -139,10 +155,68 @@ func (a Analyzer) analyzeComponentNet(
 			if err := a.resolver.IsSubtypeOf(senderType, receiverType, scope); err != nil {
 				return nil, fmt.Errorf("is subtype of: %w", err)
 			}
+
+			// mark node's inport as used
+			receiverNodeName := conn.SenderSide.PortAddr.Node
+			inportName := conn.SenderSide.PortAddr.Port
+			if _, ok := nodesUsage[receiverNodeName]; !ok {
+				nodesUsage[receiverNodeName] = NodeNetUsage{}
+			}
+			nodesUsage[receiverNodeName].In[inportName] = struct{}{}
 		}
 	}
 
+	if err := a.checkNodeUsage(nodes, scope, nodesUsage); err != nil {
+		return nil, fmt.Errorf("check unused outports: %w", err)
+	}
+
 	return net, nil
+}
+
+// NodeNetUsage represents how network uses node's ports.
+type NodeNetUsage struct {
+	In, Out map[string]struct{}
+}
+
+// checkNodeUsage returns err if some node or node's outport is unused to avoid deadlocks.
+func (Analyzer) checkNodeUsage(
+	nodes map[string]src.Node,
+	scope src.Scope,
+	nodesUsage map[string]NodeNetUsage,
+) error {
+	for nodeName, node := range nodes {
+		nodeEntity, _, err := scope.Entity(node.EntityRef)
+		if err != nil {
+			return fmt.Errorf("scope entity: %w", err)
+		}
+
+		var io src.IO
+		switch nodeEntity.Kind {
+		case src.ComponentEntity:
+			io = nodeEntity.Component.IO
+		case src.InterfaceEntity:
+			io = nodeEntity.Interface.IO
+		}
+
+		nodeUsage, ok := nodesUsage[nodeName]
+		if !ok {
+			return fmt.Errorf("%w: %v", ErrUnusedNode, nodeName)
+		}
+
+		for inportName := range io.In {
+			if _, ok := nodeUsage.In[inportName]; !ok {
+				return fmt.Errorf("%w: %v", ErrUnusedNodeOutport, nodeName)
+			}
+		}
+
+		for outportName := range io.Out {
+			if _, ok := nodeUsage.Out[outportName]; !ok {
+				return fmt.Errorf("%w: %v", ErrUnusedNodeOutport, nodeName)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (a Analyzer) getReceiverType(
