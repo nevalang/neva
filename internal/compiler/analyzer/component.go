@@ -133,7 +133,7 @@ func (a Analyzer) analyzeComponentNet(
 	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
 
 	for _, conn := range net {
-		senderType, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
+		outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
 		if err != nil {
 			return nil, fmt.Errorf("get sender type: %w", err)
 		}
@@ -142,31 +142,37 @@ func (a Analyzer) analyzeComponentNet(
 		senderNodeName := conn.SenderSide.PortAddr.Node
 		outportName := conn.SenderSide.PortAddr.Port
 		if _, ok := nodesUsage[senderNodeName]; !ok {
-			nodesUsage[senderNodeName] = NodeNetUsage{}
+			nodesUsage[senderNodeName] = NodeNetUsage{
+				In:  map[string]struct{}{}, // we don't use nodeIfaces for make with len
+				Out: map[string]struct{}{}, // because sender could be const or io node (in/out)
+			}
 		}
 		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
 
 		for _, receiver := range conn.ReceiverSides {
-			receiverType, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
+			inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
 			if err != nil {
 				return nil, fmt.Errorf("get sen der type: %w", err)
 			}
 
-			if err := a.resolver.IsSubtypeOf(senderType, receiverType, scope); err != nil {
+			if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
 				return nil, fmt.Errorf("is subtype of: %w", err)
 			}
 
 			// mark node's inport as used
-			receiverNodeName := conn.SenderSide.PortAddr.Node
-			inportName := conn.SenderSide.PortAddr.Port
+			receiverNodeName := receiver.PortAddr.Node
+			inportName := receiver.PortAddr.Port
 			if _, ok := nodesUsage[receiverNodeName]; !ok {
-				nodesUsage[receiverNodeName] = NodeNetUsage{}
+				nodesUsage[receiverNodeName] = NodeNetUsage{
+					In:  map[string]struct{}{}, // we don't use nodeIfaces for the same reason
+					Out: map[string]struct{}{}, // as with outports
+				}
 			}
 			nodesUsage[receiverNodeName].In[inportName] = struct{}{}
 		}
 	}
 
-	if err := a.checkNodeUsage(nodes, scope, nodesUsage); err != nil {
+	if err := a.checkNodeUsage(nodesIfaces, scope, nodesUsage); err != nil {
 		return nil, fmt.Errorf("check unused outports: %w", err)
 	}
 
@@ -180,38 +186,25 @@ type NodeNetUsage struct {
 
 // checkNodeUsage returns err if some node or node's outport is unused to avoid deadlocks.
 func (Analyzer) checkNodeUsage(
-	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
 ) error {
-	for nodeName, node := range nodes {
-		nodeEntity, _, err := scope.Entity(node.EntityRef)
-		if err != nil {
-			return fmt.Errorf("scope entity: %w", err)
-		}
-
-		var io src.IO
-		switch nodeEntity.Kind {
-		case src.ComponentEntity:
-			io = nodeEntity.Component.IO
-		case src.InterfaceEntity:
-			io = nodeEntity.Interface.IO
-		}
-
+	for nodeName, nodeIface := range nodesIfaces {
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrUnusedNode, nodeName)
 		}
 
-		for inportName := range io.In {
+		for inportName := range nodeIface.IO.In {
 			if _, ok := nodeUsage.In[inportName]; !ok {
-				return fmt.Errorf("%w: %v", ErrUnusedNodeOutport, nodeName)
+				return fmt.Errorf("%w: %v.in.%v", ErrUnusedNodeInport, nodeName, inportName)
 			}
 		}
 
-		for outportName := range io.Out {
+		for outportName := range nodeIface.IO.Out {
 			if _, ok := nodeUsage.Out[outportName]; !ok {
-				return fmt.Errorf("%w: %v", ErrUnusedNodeOutport, nodeName)
+				return fmt.Errorf("%w: %v.out.%v", ErrUnusedNodeOutport, nodeName, outportName)
 			}
 		}
 	}
