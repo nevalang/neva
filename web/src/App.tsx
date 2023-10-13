@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -9,28 +9,266 @@ import ReactFlow, {
   BackgroundVariant,
   Connection,
   Panel,
-  useNodesInitialized,
+  Handle,
+  Position,
+  Edge,
+  Node,
 } from "reactflow";
+import dagre from "dagre";
 import "reactflow/dist/style.css";
 
+function generateValue(n: number, i: number): number {
+  if (n == 1) {
+    return 50;
+  }
+  return (i / (n - 1)) * 100;
+}
+
+interface INormalNodeProps {
+  id: string;
+  data: {
+    ports: {
+      in: string[];
+      out: string[];
+    };
+  };
+}
+
+function NormalNode(props: INormalNodeProps) {
+  console.log(props);
+
+  return (
+    <div className="react-flow__node-default">
+      {props.data.ports.in.map((inportName, idx, arr) => (
+        <Handle
+          type="target"
+          style={{
+            left: generateValue(arr.length, idx) + "%",
+          }}
+          id={inportName}
+          key={inportName}
+          position={Position.Top}
+          isConnectable={true}
+        />
+      ))}
+      {props.id}
+      {props.data.ports.out.map((outportName) => (
+        <Handle
+          type="source"
+          id={outportName}
+          key={outportName}
+          position={Position.Bottom}
+          isConnectable={true}
+        />
+      ))}
+    </div>
+  );
+}
+
+const defaultPosition = { x: 0, y: 0 };
 const initialNodes = [
-  { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-  { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
+  {
+    type: "normalNode",
+    id: "in",
+    position: defaultPosition,
+    isHidden: false,
+    data: {
+      ports: {
+        in: [],
+        out: ["enter"],
+      },
+    },
+  },
+  {
+    type: "normalNode",
+    id: "out",
+    position: defaultPosition,
+    data: {
+      ports: {
+        in: ["exit"],
+        out: [],
+      },
+    },
+  },
+  {
+    type: "normalNode",
+    id: "readFirstInt",
+    position: defaultPosition,
+    data: {
+      ports: {
+        in: ["sig"],
+        out: ["v"],
+      },
+    },
+  },
+  {
+    type: "normalNode",
+    id: "readSecondInt",
+    position: defaultPosition,
+    data: {
+      ports: {
+        in: ["sig"],
+        out: ["v"],
+      },
+    },
+  },
+  {
+    type: "normalNode",
+    id: "add",
+    position: defaultPosition,
+    data: {
+      ports: {
+        in: ["a", "b"],
+        out: ["v"],
+      },
+    },
+  },
+  {
+    type: "normalNode",
+    id: "print",
+    position: defaultPosition,
+    data: {
+      ports: {
+        in: ["v"],
+        out: ["v"],
+      },
+    },
+  },
 ];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+const initialEdges: Edge[] = [
+  {
+    id: "in.enter -> readFirstInt.sig",
+    source: "in",
+    sourceHandle: "enter",
+    target: "readFirstInt",
+    targetHandle: "sig",
+    // type: "smoothstep"
+  },
+  {
+    id: "readFirstInt.err -> print.v",
+    source: "readFirstInt",
+    sourceHandle: "err",
+    target: "print",
+    targetHandle: "v",
+    // type: "smoothstep"
+  },
+  {
+    id: "readFirstInt.v -> add.a",
+    source: "readFirstInt",
+    sourceHandle: "v",
+    target: "add",
+    targetHandle: "a",
+    // type: "smoothstep"
+  },
+  {
+    id: "readFirstInt.v -> readSecondInt.sig",
+    source: "readFirstInt",
+    sourceHandle: "v",
+    target: "readSecondInt",
+    targetHandle: "sig",
+    // type: "smoothstep"
+  },
+  {
+    id: "readSecondInt.err -> print.v",
+    source: "readSecondInt",
+    sourceHandle: "err",
+    target: "print",
+    targetHandle: "v",
+    // type: "smoothstep"
+  },
+  {
+    id: "readSecondInt.v -> add.b",
+    source: "readSecondInt",
+    sourceHandle: "v",
+    target: "add",
+    targetHandle: "b",
+    // type: "smoothstep"
+  },
+  {
+    id: "add.v -> print.v",
+    source: "add",
+    sourceHandle: "v",
+    target: "print",
+    targetHandle: "v",
+    // type: "smoothstep"
+  },
+  {
+    id: "print.v -> out.exit",
+    source: "print",
+    sourceHandle: "v",
+    target: "out",
+    targetHandle: "exit",
+    // type: "smoothstep"
+  },
+];
+
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 342.5;
+const nodeHeight = 70;
+
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  direction = "TB"
+) => {
+  const isHorizontal = direction === "LR";
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  nodes.forEach((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.targetPosition = (isHorizontal ? "left" : "top") as Position;
+    node.sourcePosition = (isHorizontal ? "right" : "bottom") as Position;
+
+    // We are shifting the dagre node position (anchor=center center) to the top left
+    // so it matches the React Flow node anchor point (top left).
+    node.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    return node;
+  });
+
+  return { nodes, edges };
+};
+
+const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+  initialNodes,
+  initialEdges
+);
 
 export default function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, _setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
+  const nodeTypes = useMemo(
+    () => ({
+      normalNode: NormalNode,
+    }),
+    []
+  );
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlow
+        nodeTypes={nodeTypes}
         onInit={(instance) => instance.fitView()}
         nodes={nodes}
         edges={edges}
