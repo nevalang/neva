@@ -12,9 +12,9 @@ components {
 			print tmp.Print<str>
 		}
 		net {
-			in.enter -> read.in.sig
-			read.out.v -> print.in.v
-			print.out.v -> read.in.sig
+			in.enter -> read.sig
+			read.v -> print.v
+			print.v -> read.sig
 		}
 	}
 }

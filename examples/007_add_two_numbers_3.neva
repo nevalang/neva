@@ -14,16 +14,16 @@ components {
 			print std.Print
 		}
 		net {
-			in.enter -> readInt1.in.sig
-			readInt1.out.err -> print.in.v
-			readInt1.out.v -> {
-				add.in.a
-				readInt2.in.sig
+			in.enter -> readInt1.sig
+			readInt1.err -> print.v
+			readInt1.v -> {
+				add.a
+				readInt2.sig
 			}
-			readInt2.out.err -> print.in.v
-			readInt2.out.v -> add.in.b
-			add.out.v -> print.in.v
-			print.out.v -> out.exit
+			readInt2.err -> print.v
+			readInt2.v -> add.b
+			add.v -> print.v
+			print.v -> out.exit
 		}
 	}
 	// Once we create `ReadInt`, we can forget about it.
@@ -34,10 +34,10 @@ components {
 			parse std.ParseNum<int>
 		}
 		net {
-			in.sig -> read.in.sig
-			read.out.v -> parse.in.v
-			parse.out.err -> out.err
-			parse.out.v -> out.v
+			in.sig -> read.sig
+			read.v -> parse.v
+			parse.err -> out.err
+			parse.v -> out.v
 		}
 	}
 }

@@ -169,14 +169,11 @@ type nevaListener interface {
 	// EnterIoNodePortAddr is called when entering the ioNodePortAddr production.
 	EnterIoNodePortAddr(c *IoNodePortAddrContext)
 
-	// EnterConstNodePortAddr is called when entering the constNodePortAddr production.
-	EnterConstNodePortAddr(c *ConstNodePortAddrContext)
+	// EnterPortDirection is called when entering the portDirection production.
+	EnterPortDirection(c *PortDirectionContext)
 
 	// EnterNormalNodePortAddr is called when entering the normalNodePortAddr production.
 	EnterNormalNodePortAddr(c *NormalNodePortAddrContext)
-
-	// EnterPortDirection is called when entering the portDirection production.
-	EnterPortDirection(c *PortDirectionContext)
 
 	// EnterConnReceiverSide is called when entering the connReceiverSide production.
 	EnterConnReceiverSide(c *ConnReceiverSideContext)
@@ -346,14 +343,11 @@ type nevaListener interface {
 	// ExitIoNodePortAddr is called when exiting the ioNodePortAddr production.
 	ExitIoNodePortAddr(c *IoNodePortAddrContext)
 
-	// ExitConstNodePortAddr is called when exiting the constNodePortAddr production.
-	ExitConstNodePortAddr(c *ConstNodePortAddrContext)
+	// ExitPortDirection is called when exiting the portDirection production.
+	ExitPortDirection(c *PortDirectionContext)
 
 	// ExitNormalNodePortAddr is called when exiting the normalNodePortAddr production.
 	ExitNormalNodePortAddr(c *NormalNodePortAddrContext)
-
-	// ExitPortDirection is called when exiting the portDirection production.
-	ExitPortDirection(c *PortDirectionContext)
 
 	// ExitConnReceiverSide is called when exiting the connReceiverSide production.
 	ExitConnReceiverSide(c *ConnReceiverSideContext)

@@ -271,9 +271,8 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 	ioNodeAddr := portAddr.IoNodePortAddr()
 	senderNormalPortAddr := portAddr.NormalNodePortAddr()
-	constPortAddr := portAddr.ConstNodePortAddr()
-	if ioNodeAddr == nil && senderNormalPortAddr == nil && constPortAddr == nil {
-		panic("ioNodeAddr == nil && senderNormalPortAddr == nil && constPortAddr == nil")
+	if ioNodeAddr == nil && senderNormalPortAddr == nil {
+		panic("ioNodeAddr == nil && senderNormalPortAddr == nil")
 	}
 
 	if ioNodeAddr != nil {
@@ -282,13 +281,6 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 		return src.PortAddr{
 			Node: dir,
 			Port: portName,
-		}
-	}
-
-	if constPortAddr != nil {
-		return src.PortAddr{
-			Node: "const",
-			Port: constPortAddr.IDENTIFIER().GetText(),
 		}
 	}
 

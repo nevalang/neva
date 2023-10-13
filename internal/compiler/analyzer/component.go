@@ -138,16 +138,17 @@ func (a Analyzer) analyzeComponentNet(
 			return nil, fmt.Errorf("get sender type: %w", err)
 		}
 
-		// mark node's outport as used
-		senderNodeName := conn.SenderSide.PortAddr.Node
-		outportName := conn.SenderSide.PortAddr.Port
-		if _, ok := nodesUsage[senderNodeName]; !ok {
-			nodesUsage[senderNodeName] = NodeNetUsage{
-				In:  map[string]struct{}{}, // we don't use nodeIfaces for make with len
-				Out: map[string]struct{}{}, // because sender could be const or io node (in/out)
+		if conn.SenderSide.PortAddr != nil { // mark node's outport as used if sender isn't const ref
+			senderNodeName := conn.SenderSide.PortAddr.Node
+			outportName := conn.SenderSide.PortAddr.Port
+			if _, ok := nodesUsage[senderNodeName]; !ok {
+				nodesUsage[senderNodeName] = NodeNetUsage{
+					In:  map[string]struct{}{}, // we don't use nodeIfaces for make with len
+					Out: map[string]struct{}{}, // because sender could be const or io node (in/out)
+				}
 			}
+			nodesUsage[senderNodeName].Out[outportName] = struct{}{}
 		}
-		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
 
 		for _, receiver := range conn.ReceiverSides {
 			inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
@@ -156,7 +157,7 @@ func (a Analyzer) analyzeComponentNet(
 			}
 
 			if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
-				return nil, fmt.Errorf("is subtype of: %w", err)
+				return nil, fmt.Errorf("is subtype of: %v -> %v: %w", conn.SenderSide, receiver, err)
 			}
 
 			// mark node's inport as used
@@ -246,7 +247,7 @@ func (a Analyzer) getNodeInportType(
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, ErrNodeNotFound
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node)
 	}
 	entity, _, err := scope.Entity(node.EntityRef) // nodes analyzed so we don't check error
 	if err != nil {
@@ -348,12 +349,12 @@ func (a Analyzer) getNodeOutportType(
 ) (ts.Expr, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, ErrNodeNotFound
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node)
 	}
 
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, ErrNodeNotFound
+		return ts.Expr{}, fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node)
 	}
 
 	typ, err := a.getResolvedPortType(
@@ -364,7 +365,7 @@ func (a Analyzer) getNodeOutportType(
 		scope,
 	)
 	if err != nil {
-		return ts.Expr{}, fmt.Errorf("get resolved port outport type: %w", err)
+		return ts.Expr{}, fmt.Errorf("get resolved outport type: %w", err)
 	}
 
 	return typ, err

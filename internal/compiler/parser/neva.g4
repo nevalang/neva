@@ -76,12 +76,11 @@ nodeArg : IDENTIFIER ':' nodeInst;
 compNetDef: 'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}' ;
 connDefList: connDef (NEWLINE* connDef)* ;
 connDef: senderSide '->' connReceiverSide ;
-senderSide : portAddr | entityRef ; // normal (node's outport) sender OR referency to entity (constant)
-portAddr: ioNodePortAddr | constNodePortAddr | normalNodePortAddr;
+senderSide : portAddr | entityRef ;
+portAddr: ioNodePortAddr | normalNodePortAddr;
 ioNodePortAddr: portDirection '.' IDENTIFIER ;
-constNodePortAddr: 'const' .  IDENTIFIER ;
-normalNodePortAddr: IDENTIFIER '.' portDirection '.' IDENTIFIER ;
 portDirection: 'in' | 'out' ;
+normalNodePortAddr: IDENTIFIER '.' IDENTIFIER ;
 connReceiverSide:  portAddr | connReceivers;
 connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}' ;
 

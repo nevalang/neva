@@ -169,3 +169,10 @@ type PortAddr struct {
 	Port string
 	Idx  uint8
 }
+
+func (p PortAddr) String() string {
+	if p.Node == "" {
+		return fmt.Sprintf("%v[%v]", p.Port, p.Idx)
+	}
+	return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
+}

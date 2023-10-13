@@ -9,24 +9,24 @@ use {
 components {
 	Main(enter) (exit) {
 		nodes {
-			read_1 tmp.Read
-			read_2 tmp.Read
-			parse_1 tmp.ParseInt
-			parse_2 tmp.ParseInt
+			readFirst tmp.Read
+			parseFirst tmp.ParseInt
+			readSecond tmp.Read
+			parseSecond tmp.ParseInt
 			add Add<int>
 			print tmp.Print<int>
 		}
 		net {
-			in.enter -> read_1.in.sig
-			read_1.out.v -> parse_1.in.v
-			parse_1.out.v -> { 
-				add.in.a
-				read_2.in.sig
+			in.enter -> readFirst.sig
+			readFirst.v -> parseFirst.v
+			parseFirst.v -> { 
+				add.a
+				readSecond.sig
 			}
-			read_2.out.v -> parse_2.in.v
-			parse_2.out.v -> add.in.b 
-			add.out.v -> print.in.v 
-			print.out.v -> out.exit 
+			readSecond.v -> parseSecond.v
+			parseSecond.v -> add.b 
+			add.v -> print.v 
+			print.v -> out.exit 
 		}
 	}
 }

@@ -74,7 +74,6 @@ func (g Generator) Generate(ctx context.Context, prog src.Program) (*ir.Program,
 type (
 	nodeContext struct {
 		path           []string // including current
-		curPkgName     string
 		componentRef   src.EntityRef
 		runtimeFuncMsg *ir.Msg // for native components only, used as const value or overloading param
 		portsUsage     portsUsage
@@ -120,16 +119,10 @@ func (g Generator) processComponentNode( //nolint:funlen
 			result.Funcs = append(result.Funcs, runtimeFunc)
 			return nil
 		}
-		runtimeFunc.Params = &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_STR,    //nolint:nosnakecase
-			Str:  nodeCtx.runtimeFuncMsg.Str, // TODO implement for all data-types
-		}
+		runtimeFunc.Params = nodeCtx.runtimeFuncMsg
 		result.Funcs = append(result.Funcs, runtimeFunc)
 		return nil
 	}
-
-	// Example: if we process main.Main component, then ref like "msg" must have "main" as a package name, not ""
-	nodeCtx.curPkgName = nodeCtx.componentRef.Pkg
 
 	// We use network as a source of true about ports usage instead of component's definitions.
 	// We cannot rely on them because there's not enough information about how many slots are used.
@@ -149,15 +142,23 @@ func (g Generator) processComponentNode( //nolint:funlen
 			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
 		}
 
+		// There's 2 reasons to insert message for runtime func: 1) it's const 2) overloading
 		var runtimeFuncMsg *ir.Msg
 		if nodePortsUsage.constValue != nil {
 			runtimeFuncMsg = &ir.Msg{
-				Type: ir.MsgType_MSG_TYPE_STR,    //nolint:nosnakecase
-				Str:  nodeCtx.runtimeFuncMsg.Str, // TODO implement for all data-types
+				Type: ir.MsgType_MSG_TYPE_STR,       //nolint:nosnakecase
+				Str:  nodePortsUsage.constValue.Str, // TODO implement for all data-types
 			}
 		} else if len(node.TypeArgs) > 0 {
-			// TODO skip this (overloading) if cur node isn't builtin component
-			runtimeFuncMsg = getOverloadingFromTypeArg(node.TypeArgs[0])
+			// TODO check that component is in builtin package and only then insert message
+			// to do so we could move scope.Entity() here and insert entity right into nodeCtx
+			// problem is runtimeFunc creation - we do it at the start of the function. But we could do this here
+			// FIXME: this is the reason why we have "any" as overloading param for Print()
+			// that doesn't need to have overloading at all!
+			_, loc, _ := scope.Entity(node.EntityRef)
+			if loc.PkgName == "std/builtin" {
+				runtimeFuncMsg = getOverloadingFromTypeArg(node.TypeArgs[0])
+			}
 		}
 
 		subNodeCtx := nodeContext{

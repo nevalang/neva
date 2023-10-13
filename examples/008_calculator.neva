@@ -26,18 +26,18 @@ components {
 			calc Calc
 		}
 		net {
-			in.enter -> readOp.in.sig // read operation
-			readOp.out.err -> print.in.v // in case of error print
-			readOp.out.v -> readFirstNum.in.sig // otherwise read first num
-			readFirstNum.out.err -> print.in.v // in case of error print
-			readFirstNum.out.v -> { // otherwise send op to calc and read second num
-				calc.in.op
-				readSecondNum.in.sig
+			in.enter -> readOp.sig // read operation
+			readOp.err -> print.v // in case of error print
+			readOp.v -> readFirstNum.sig // otherwise read first num
+			readFirstNum.err -> print.v // in case of error print
+			readFirstNum.v -> { // otherwise send op to calc and read second num
+				calc.op
+				readSecondNum.sig
 			}
-			readSecondNum.out.err -> print.in.v // in case of error print
-			readSecondNum.out.v -> calc.in.b // otherwise send second num to calc
-			calc.out.v -> print.in.v // get result and print it
-			print.out.v -> out.exit // any time we print something we exit
+			readSecondNum.err -> print.v // in case of error print
+			readSecondNum.v -> calc.b // otherwise send second num to calc
+			calc.v -> print.v // get result and print it
+			print.v -> out.exit // any time we print something we exit
 		}
 	}
 	ReadOp(sig) (v str) {
@@ -48,14 +48,14 @@ components {
 			lockResult std.Lock
 		}
 		net {
-			in.sig -> read.in.sig // read operation
-			availableInstructions -> has.in.vv // configure 'has' component
-			read.out.v -> has.in.v // check if operation is valid
-			has.out.no -> lockErr.in.sig // if not valid trigger error locker
-			unknownOpErr -> lockErr.in.v // and lock error itself
-			lockErr.out.v -> out.err // if error unlocked then send it to the outport
-			has.out.yes -> lockResult.in.sig // otherwise trigger result locker
-			has.out.v -> lockResult.in.v // and lock result in case it's success
+			in.sig -> read.sig // read operation
+			availableInstructions -> has.vv // configure 'has' component
+			read.v -> has.v // check if operation is valid
+			has.no -> lockErr.sig // if not valid trigger error locker
+			unknownOpErr -> lockErr.v // and lock error itself
+			lockErr.v -> out.err // if error unlocked then send it to the outport
+			has.yes -> lockResult.sig // otherwise trigger result locker
+			has.v -> lockResult.v // and lock result in case it's success
 		}
 	}
 	ReadNum(sig) (v int) {
@@ -66,14 +66,14 @@ components {
 			lockResult std.Lock
 		}
 		net {
-			in.sig -> read.in.sig // read number
-			read.out.v -> parse.in.v // parse it
-			parse.out.err -> out.err // if error trigger error locker
-			parse.out.v -> lockResult.in.sig // otherwise trigger result locker
-			parse.out.v -> out.v // and send result to the outport
-			parse.out.err -> lockErr.in.v // lock error in case of error
-			lockErr.out.v -> out.err // and send it to the outport
-			lockResult.out.v -> out.v // send result to the outport
+			in.sig -> read.sig // read number
+			read.v -> parse.v // parse it
+			parse.err -> out.err // if error trigger error locker
+			parse.v -> lockResult.sig // otherwise trigger result locker
+			parse.v -> out.v // and send result to the outport
+			parse.err -> lockErr.v // lock error in case of error
+			lockErr.v -> out.err // and send it to the outport
+			lockResult.v -> out.v // send result to the outport
 		}
 	}
 }

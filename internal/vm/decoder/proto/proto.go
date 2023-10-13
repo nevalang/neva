@@ -1,6 +1,8 @@
 package proto
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -19,7 +21,7 @@ func (t Decoder) Decode(file []byte) (runtime.Program, error) {
 
 	runtimeProg, err := t.adapter.Adapt(&irProg)
 	if err != nil {
-		return runtime.Program{}, err
+		return runtime.Program{}, fmt.Errorf("adapter: %w", err)
 	}
 
 	return runtimeProg, nil

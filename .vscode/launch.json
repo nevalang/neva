@@ -38,6 +38,15 @@
       "args": ["examples/005_add_two_numbers_1.neva"]
     },
     {
+      "name": "cmd/interpreter 006_add_two_numbers_2.neva",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}",
+      "args": ["examples/006_add_two_numbers_2.neva"]
+    },
+    {
       "name": "antlr_tmp.neva",
       "type": "antlr-debug",
       "request": "launch",

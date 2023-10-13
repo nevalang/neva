@@ -2,6 +2,7 @@ package proto
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/pkg/ir"
@@ -94,7 +95,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 		if f.Params != nil {
 			rMsg, err := a.msg(f.Params)
 			if err != nil {
-				return runtime.Program{}, err
+				return runtime.Program{}, fmt.Errorf("msg: %w", err)
 			}
 			rFunc.MetaMsg = rMsg
 		}

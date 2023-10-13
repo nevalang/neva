@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -31,14 +32,14 @@ func Read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 				case <-ctx.Done():
 					return
 				default:
-					text, err := reader.ReadString('\n')
+					bb, _, err := reader.ReadLine()
 					if err != nil {
-						panic(err) // TODO handle
+						panic(err)
 					}
 					select {
 					case <-ctx.Done():
 						return
-					case vout <- runtime.NewStrMsg(text):
+					case vout <- runtime.NewStrMsg(string(bb)):
 					}
 				}
 			}
@@ -65,7 +66,7 @@ func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
 				case <-ctx.Done():
 					return
 				default:
-					fmt.Print(v.String())
+					fmt.Println(v.String())
 					select {
 					case <-ctx.Done():
 						return
@@ -237,7 +238,7 @@ func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	parseFunc := func(str string) (runtime.Msg, error) {
 		v, err := strconv.Atoi(str)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 		}
 		return runtime.NewIntMsg(int64(v)), nil
 	}
