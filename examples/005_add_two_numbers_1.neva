@@ -1,3 +1,6 @@
+// THIS PROGRAM WON'T COMPILE BECAUSE OF UNUSED ERR PORT
+// NEED TO THINK ABOUT SUGAR AND VOID
+
 // Program that adds two numbers typed by user and prints the result.
 // The algorithm is this: read first input, parse it,
 // then read the second input and parse too. Add numbers and print the result.
