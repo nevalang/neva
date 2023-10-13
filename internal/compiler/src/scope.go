@@ -130,7 +130,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 		Name: entityRef.Name,
 	})
 	if err != nil {
-		return Entity{}, ScopeLocation{}, fmt.Errorf("entity: %w", err)
+		return Entity{}, ScopeLocation{}, fmt.Errorf("prog entity: %w", err)
 	}
 
 	if !entity.Exported {

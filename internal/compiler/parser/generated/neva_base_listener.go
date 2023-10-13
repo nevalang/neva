@@ -26,12 +26,6 @@ func (s *BasenevaListener) EnterProg(ctx *ProgContext) {}
 // ExitProg is called when production prog is exited.
 func (s *BasenevaListener) ExitProg(ctx *ProgContext) {}
 
-// EnterComment is called when production comment is entered.
-func (s *BasenevaListener) EnterComment(ctx *CommentContext) {}
-
-// ExitComment is called when production comment is exited.
-func (s *BasenevaListener) ExitComment(ctx *CommentContext) {}
-
 // EnterStmt is called when production stmt is entered.
 func (s *BasenevaListener) EnterStmt(ctx *StmtContext) {}
 

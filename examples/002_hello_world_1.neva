@@ -3,14 +3,14 @@ use {
 }
 
 const {
-	msg str 'Hello, World!\n'
+	msg str 'Hello, World!'
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock tmp.Lock<str>()
-			print tmp.Print<str>()
+			lock tmp.Lock<str>
+			print tmp.Print<str>
 		}
 		net {
 			in.enter -> lock.sig

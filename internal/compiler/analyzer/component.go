@@ -48,7 +48,7 @@ func (a Analyzer) analyzeComponentNodes(
 	for name, node := range nodes {
 		resolvedNode, iface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
-			return nil, nil, fmt.Errorf("analyze node: %w", err)
+			return nil, nil, fmt.Errorf("analyze node: %v: %w", name, err)
 		}
 		nodesIfaces[name] = iface
 		resolvedNodes[name] = resolvedNode
@@ -65,7 +65,7 @@ var (
 func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, error) {
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return src.Node{}, src.Interface{}, fmt.Errorf("entity: %w", err)
+		return src.Node{}, src.Interface{}, fmt.Errorf("entity: %v: %w", node.EntityRef, err)
 	}
 
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.InterfaceEntity {
@@ -105,7 +105,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	for depName, depNode := range node.ComponentDI {
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
-			return src.Node{}, src.Interface{}, fmt.Errorf("analyze dependency node: %w", err)
+			return src.Node{}, src.Interface{}, fmt.Errorf("analyze dep node: %v: %w", depNode, err)
 		}
 		resolvedComponentDI[depName] = resolvedDep
 	}

@@ -10,9 +10,6 @@ type nevaListener interface {
 	// EnterProg is called when entering the prog production.
 	EnterProg(c *ProgContext)
 
-	// EnterComment is called when entering the comment production.
-	EnterComment(c *CommentContext)
-
 	// EnterStmt is called when entering the stmt production.
 	EnterStmt(c *StmtContext)
 
@@ -183,9 +180,6 @@ type nevaListener interface {
 
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
-
-	// ExitComment is called when exiting the comment production.
-	ExitComment(c *CommentContext)
 
 	// ExitStmt is called when exiting the stmt production.
 	ExitStmt(c *StmtContext)
