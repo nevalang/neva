@@ -1,8 +1,3 @@
-// Turns out previous implementation was a bit naive, parse number could fail.
-// This time we will handle errors by printing them.
-// Note how program terminates. In case one of two parse failed or
-// after printing success result.
-
 use {
 	std/tmp
 }

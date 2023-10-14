@@ -1,16 +1,35 @@
-.normalNode {
-  min-width: 100px;
-  text-align: center;
-  margin: auto;
-  height: 50px;
-  border: 1px solid #eee;
-  padding: 5px;
-  border-radius: 5px;
-  background: white;
+/* https://reactflow.dev/docs/guides/theming/ */
+
+.react-flow__node {
+  height: 40px;
+  width: 150px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-width: 2px;
+  font-weight: 700;
 }
 
-.normalNode label {
-  display: block;
-  color: #777;
-  font-size: 12px;
+.react-flow__node-default {
+  padding: 0;
+}
+
+.react-flow__handle {
+  flex: 1;
+  position: static;
+  background-color: transparent;
+  transform: none;
+  outline: 1px solid black;
+  border-radius: 0;
+}
+
+/* Custom */
+
+.ports {
+  display: flex;
+  justify-content: space-around;
+}
+
+.nodeName {
+  padding: 20px;
 }

@@ -8,11 +8,11 @@ import ReactFlow, {
   addEdge,
   BackgroundVariant,
   Connection,
-  Panel,
   Handle,
   Position,
   Edge,
   Node,
+  MarkerType,
 } from "reactflow";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
@@ -35,32 +35,42 @@ interface INormalNodeProps {
 }
 
 function NormalNode(props: INormalNodeProps) {
-  console.log(props);
-
   return (
     <div className="react-flow__node-default">
-      {props.data.ports.in.map((inportName, idx, arr) => (
-        <Handle
-          type="target"
-          style={{
-            left: generateValue(arr.length, idx) + "%",
-          }}
-          id={inportName}
-          key={inportName}
-          position={Position.Top}
-          isConnectable={true}
-        />
-      ))}
-      {props.id}
-      {props.data.ports.out.map((outportName) => (
-        <Handle
-          type="source"
-          id={outportName}
-          key={outportName}
-          position={Position.Bottom}
-          isConnectable={true}
-        />
-      ))}
+      <div className="ports">
+        {props.data.ports.in.map((inportName, idx, arr) => (
+          <Handle
+            content="asd"
+            type="target"
+            // style={{
+            //   left: generateValue(arr.length, idx) + "%",
+            // }}
+            id={inportName}
+            key={inportName}
+            position={Position.Top}
+            isConnectable={true}
+          >
+            {inportName}
+          </Handle>
+        ))}
+      </div>
+      <div className="nodeName">{props.id}</div>
+      <div className="ports">
+        {props.data.ports.out.map((outportName, idx, arr) => (
+          <Handle
+            type="source"
+            id={outportName}
+            key={outportName}
+            position={Position.Bottom}
+            isConnectable={true}
+            // style={{
+            //   left: generateValue(arr.length, idx) + "%",
+            // }}
+          >
+            {outportName}
+          </Handle>
+        ))}
+      </div>
     </div>
   );
 }
@@ -97,7 +107,7 @@ const initialNodes = [
     data: {
       ports: {
         in: ["sig"],
-        out: ["v"],
+        out: ["v", "err"],
       },
     },
   },
@@ -108,7 +118,7 @@ const initialNodes = [
     data: {
       ports: {
         in: ["sig"],
-        out: ["v"],
+        out: ["v", "err"],
       },
     },
   },
@@ -142,7 +152,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "enter",
     target: "readFirstInt",
     targetHandle: "sig",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "readFirstInt.err -> print.v",
@@ -150,7 +162,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "err",
     target: "print",
     targetHandle: "v",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "readFirstInt.v -> add.a",
@@ -158,7 +172,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "v",
     target: "add",
     targetHandle: "a",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "readFirstInt.v -> readSecondInt.sig",
@@ -166,7 +182,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "v",
     target: "readSecondInt",
     targetHandle: "sig",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "readSecondInt.err -> print.v",
@@ -174,7 +192,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "err",
     target: "print",
     targetHandle: "v",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "readSecondInt.v -> add.b",
@@ -182,7 +202,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "v",
     target: "add",
     targetHandle: "b",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "add.v -> print.v",
@@ -190,7 +212,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "v",
     target: "print",
     targetHandle: "v",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
   {
     id: "print.v -> out.exit",
@@ -198,7 +222,9 @@ const initialEdges: Edge[] = [
     sourceHandle: "v",
     target: "out",
     targetHandle: "exit",
-    // type: "smoothstep"
+    markerEnd: {
+      type: MarkerType.Arrow,
+    },
   },
 ];
 
@@ -276,10 +302,6 @@ export default function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
       >
-        <Panel position="top-left">top-left</Panel>
-        <Panel position="top-center">top-center</Panel>
-        <Panel position="top-right">top-right</Panel>
-        <Panel position="bottom-center">bottom-center</Panel>
         <Controls />
         <MiniMap />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />

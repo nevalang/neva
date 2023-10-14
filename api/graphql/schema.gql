@@ -1,0 +1,66 @@
+schema {
+    mutation: Mutation
+    query: Query
+}
+
+type Query {
+    balance: Decimal!
+    accounts: [Account!]!
+    transactions(filter: TransactionsFilter!): [Transaction!]!
+    fiatAssets: [Asset!]!
+}
+
+type Mutation {
+    addFiatAccount(input: AddFiatAccountInput!): Account!
+    addTonAccount(input: AddTonAccountInput!): Account!
+    deleteAccount(input: DeleteAccountInput!): ID!
+    deleteTransaction(input: DeleteTransactionInput!): ID!
+}
+
+type Asset {
+    id: ID!
+    ticker: String!
+    decimals: Int!
+}
+
+type Transaction {
+    id: ID!
+    effectiveAt: Timestamp!
+    category: Category!
+    merchant: String!
+    amount: Decimal!
+    comment: String!
+    account: Account!
+    asset: Asset!
+}
+
+type Category {
+    id: ID!
+    name: String!
+    emoji: String!
+}
+
+input AddFiatAccountInput {
+    name: String!
+    assetID: ID!
+    initialBalance: Decimal!
+}
+
+input AddTonAccountInput {
+    name: String!
+    address: String!
+}
+
+input TransactionsFilter {
+    limit: Int! = 10
+    lastLoadedID: ID
+    accountID: ID
+}
+
+input DeleteAccountInput {
+    id: ID!
+}
+
+input DeleteTransactionInput {
+    id: ID!
+}

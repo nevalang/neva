@@ -8,3 +8,9 @@ antlr:
 .PHONY: irproto
 irproto:
 	@protoc --go_out=. ./api/proto/ir.proto
+
+# run frontend devserver
+.PHONY: web
+web:
+	@cd web && npm start
+
