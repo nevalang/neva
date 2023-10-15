@@ -74,7 +74,12 @@ func (r *portAddrResolver) Idx(ctx context.Context, obj *src.PortAddr) (*int, er
 
 // Component is the resolver for the component field.
 func (r *queryResolver) Component(ctx context.Context, input *gql.ComponentInput) (*src.Component, error) {
-	panic(fmt.Errorf("not implemented: Component - component"))
+	// TODO
+	return &src.Component{
+		Interface: src.Interface{},
+		Nodes:     map[string]src.Node{},
+		Net:       []src.Connection{},
+	}, nil
 }
 
 // Component returns gql.ComponentResolver implementation.

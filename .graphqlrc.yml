@@ -1,0 +1,3 @@
+# for VSCode
+schema: 'api/schema/schema.graphql'
+documents: 'web/src/**/*.{graphql,js,ts,jsx,tsx}'
