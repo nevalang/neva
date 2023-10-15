@@ -1,0 +1,27 @@
+schema {
+  mutation: Mutation
+  query: Query
+}
+
+type Query {
+  component(location: Location!, entityName: String!): Component!
+}
+
+type Location {
+  pkgName: String!
+  fileName: String!
+}
+
+type Component {
+  interface: Interface!
+  nodes: [Node!]!
+  net: ComponentNetwork!
+}
+
+type Interface {
+  typeParams: [TypeParam]
+}
+
+type Mutation {
+  updateComponent(location: Location!, component: Component!): Component!
+}

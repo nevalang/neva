@@ -13,64 +13,51 @@ import ReactFlow, {
   Edge,
   Node,
   MarkerType,
+  NodeProps,
 } from "reactflow";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 
-function generateValue(n: number, i: number): number {
-  if (n == 1) {
-    return 50;
-  }
-  return (i / (n - 1)) * 100;
+interface IPorts {
+  in: string[];
+  out: string[];
 }
 
-interface INormalNodeProps {
-  id: string;
-  data: {
-    ports: {
-      in: string[];
-      out: string[];
-    };
-  };
-}
-
-function NormalNode(props: INormalNodeProps) {
+function NormalNode(props: NodeProps<{ ports: IPorts }>) {
   return (
     <div className="react-flow__node-default">
-      <div className="ports">
-        {props.data.ports.in.map((inportName, idx, arr) => (
-          <Handle
-            content="asd"
-            type="target"
-            // style={{
-            //   left: generateValue(arr.length, idx) + "%",
-            // }}
-            id={inportName}
-            key={inportName}
-            position={Position.Top}
-            isConnectable={true}
-          >
-            {inportName}
-          </Handle>
-        ))}
-      </div>
+      {props.data.ports.in.length > 0 && (
+        <div className="inports">
+          {props.data.ports.in.map((inportName, idx, arr) => (
+            <Handle
+              content="asd"
+              type="target"
+              id={inportName}
+              key={inportName}
+              position={Position.Top}
+              isConnectable={true}
+            >
+              {inportName}
+            </Handle>
+          ))}
+        </div>
+      )}
       <div className="nodeName">{props.id}</div>
-      <div className="ports">
-        {props.data.ports.out.map((outportName, idx, arr) => (
-          <Handle
-            type="source"
-            id={outportName}
-            key={outportName}
-            position={Position.Bottom}
-            isConnectable={true}
-            // style={{
-            //   left: generateValue(arr.length, idx) + "%",
-            // }}
-          >
-            {outportName}
-          </Handle>
-        ))}
-      </div>
+      {props.data.ports.out.length > 0 && (
+        <div className="outports">
+          {props.data.ports.out.map((outportName, idx, arr) => (
+            <Handle
+              type="source"
+              id={outportName}
+              key={outportName}
+              position={Position.Bottom}
+              isConnectable={true}
+            >
+              {outportName}
+            </Handle>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -304,7 +291,7 @@ export default function App() {
       >
         <Controls />
         <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={5} size={0.5} />
       </ReactFlow>
     </div>
   );

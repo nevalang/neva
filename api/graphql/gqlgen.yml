@@ -1,0 +1,68 @@
+schema:
+  - api/graphql/schema/*.graphql
+
+exec:
+  filename: pkg/gql/generated.go
+  package: gql
+
+model:
+  filename: pkg/gql/models_gen.go
+  package: gql
+
+resolver:
+  layout: follow-schema
+  dir: internal/server
+  package: server
+
+omit_slice_element_pointers: true
+
+# gqlgen will search for any type names in the schema in these go packages
+# if they match it will use them, otherwise it will generate them.
+autobind:
+ - "github.com/nevalang/neva/internal/compiler/src"
+
+# This section declares type mapping between the GraphQL and go type systems
+#
+# The first line in each type will be used as defaults for resolver arguments and
+# modelgen, the others will be allowed when binding to fields. Configure them to
+# your liking
+# models:
+#   ID:
+#     model:
+#       - github.com/99designs/gqlgen/graphql.IntID
+#   Timestamp:
+#     model:
+#       - github.com/eqtlab/eqtbot/pkg/api.Timestamp
+#   Decimal:
+#     model:
+#       - github.com/eqtlab/eqtbot/pkg/api.Decimal
+#   Account:
+#     model:
+#       - github.com/eqtlab/eqtbot/internal/tracker/models.Account
+#     fields:
+#       assets:
+#         resolver: true
+#   AccountAsset:
+#     model:
+#       - github.com/eqtlab/eqtbot/internal/tracker/models.AccountAsset
+#     fields:
+#         asset:
+#           resolver: true
+#         balanceBase:
+#           resolver: true
+#   Asset:
+#     model:
+#       - github.com/eqtlab/eqtbot/internal/tracker/models.Asset
+#   Transaction:
+#     model:
+#       - github.com/eqtlab/eqtbot/internal/tracker/models.Transaction
+#     fields:
+#       asset:
+#         resolver: true
+#       account:
+#         resolver: true
+#       category:
+#         resolver: true
+#   Category:
+#     model:
+#       - github.com/eqtlab/eqtbot/internal/tracker/models.Category
