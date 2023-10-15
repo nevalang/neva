@@ -14,12 +14,12 @@ irproto:
 web:
 	@cd web && npm start
 
-# generate golang graphql SDK
+# generate go gql sdk
 .PHONY: gqlgo
-gql:
+gqlgo:
 	@go run -mod=mod github.com/99designs/gqlgen --config ./api/graphql/gqlgen.yml
 
-# generate typescript graphql SDK
+# generate ts gql sdk
 .PHONY: gqlts
 gqlts:
-	@cd web && npm i && npm run gqlgen
+	@cd web && npm run gqlgen

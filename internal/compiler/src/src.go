@@ -143,7 +143,7 @@ type IO struct {
 }
 
 type Port struct {
-	TypeExpr ts.Expr // empty means any
+	TypeExpr ts.Expr // empty means any // TODO pointer?
 	IsArray  bool
 }
 
@@ -167,7 +167,7 @@ type SenderConnectionSide struct {
 type PortAddr struct {
 	Node string
 	Port string
-	Idx  uint8
+	Idx  *uint8 // Only for array-ports
 }
 
 func (p PortAddr) String() string {

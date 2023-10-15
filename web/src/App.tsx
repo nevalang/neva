@@ -28,7 +28,7 @@ function NormalNode(props: NodeProps<{ ports: IPorts }>) {
     <div className="react-flow__node-default">
       {props.data.ports.in.length > 0 && (
         <div className="inports">
-          {props.data.ports.in.map((inportName, idx, arr) => (
+          {props.data.ports.in.map((inportName) => (
             <Handle
               content="asd"
               type="target"
@@ -45,7 +45,7 @@ function NormalNode(props: NodeProps<{ ports: IPorts }>) {
       <div className="nodeName">{props.id}</div>
       {props.data.ports.out.length > 0 && (
         <div className="outports">
-          {props.data.ports.out.map((outportName, idx, arr) => (
+          {props.data.ports.out.map((outportName) => (
             <Handle
               type="source"
               id={outportName}

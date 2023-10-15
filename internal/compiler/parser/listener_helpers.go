@@ -284,6 +284,8 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 		}
 	}
 
+	// TODO handle array-port's slot
+
 	nodeAndPort := senderNormalPortAddr.AllIDENTIFIER()
 	return src.PortAddr{
 		Node: nodeAndPort[0].GetText(),
