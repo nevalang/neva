@@ -25,7 +25,7 @@ func (p Parser) ParseProg(ctx context.Context, rawProg map[string]compiler.RawPa
 	prog := make(src.Program, len(rawProg))
 
 	for pkgName, pkgFiles := range rawProg {
-		parsedFiles, err := p.parseFiles(ctx, pkgFiles)
+		parsedFiles, err := p.ParseFiles(ctx, pkgFiles)
 		if err != nil {
 			return src.Program{}, fmt.Errorf("parse files: %w", err)
 		}
@@ -36,14 +36,14 @@ func (p Parser) ParseProg(ctx context.Context, rawProg map[string]compiler.RawPa
 	return prog, nil
 }
 
-func (p Parser) parseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
+func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
 	result := make(map[string]src.File, len(files))
 	g, gctx := errgroup.WithContext(ctx)
 	for name, bb := range files {
 		name := name
 		bb := bb
 		g.Go(func() error {
-			v, err := p.parseFile(gctx, bb)
+			v, err := p.ParseFile(gctx, bb)
 			if err != nil {
 				return err
 			}
@@ -57,7 +57,7 @@ func (p Parser) parseFiles(ctx context.Context, files map[string][]byte) (map[st
 	return result, nil
 }
 
-func (p Parser) parseFile(ctx context.Context, bb []byte) (src.File, error) {
+func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
