@@ -263,7 +263,7 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
 );
 
 export default function App() {
-  const [nodes, _setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [nodes, _, onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
   const onConnect = useCallback(

@@ -9,6 +9,11 @@ antlr:
 irproto:
 	@protoc --go_out=. ./api/proto/ir.proto
 
+# generate go sdk from src proto
+.PHONY: srcproto
+srcproto:
+	@protoc --go_out=. ./api/proto/src.proto
+
 # run frontend devserver
 .PHONY: web
 web:

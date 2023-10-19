@@ -88,7 +88,7 @@ use { path/with/parts
 use {
     path/with/parts }
 
-use
+use // FIXME syntax-highlighting does not work with such expressions, { must be on a same line as 'use'
 { path/with/parts }
 
 use
