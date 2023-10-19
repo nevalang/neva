@@ -9,6 +9,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/srcproto"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var p = parser.New(false)
@@ -45,8 +46,11 @@ func fileToProto(file src.File) (*srcproto.File, error) {
 	}, nil
 }
 
-// TODO cast entity values themselves
 func entityToProto(entity src.Entity) (*srcproto.Entity, error) {
+	protoEntity := &srcproto.Entity{
+		Exported: entity.Exported,
+	}
+
 	//nolint:nosnakecase
 	switch entity.Kind {
 	case src.ComponentEntity:
@@ -54,20 +58,41 @@ func entityToProto(entity src.Entity) (*srcproto.Entity, error) {
 		if err != nil {
 			return nil, fmt.Errorf("convert to proto: %w", err)
 		}
-
-		return &srcproto.Entity{
-			Kind:      srcproto.EntityKind_ENTITY_KIND_COMPONENT,
-			Component: protoComponent,
-		}, nil
+		protoEntity.Kind = srcproto.EntityKind_ENTITY_KIND_COMPONENT
+		protoEntity.Component = protoComponent
 	case src.ConstEntity:
-		return &srcproto.Entity{Kind: srcproto.EntityKind_ENTITY_KIND_CONST}, nil
+		protoConst, err := constToProto(entity.Const)
+		if err != nil {
+			return nil, fmt.Errorf("convert to proto: %w", err)
+		}
+		protoEntity.Kind = srcproto.EntityKind_ENTITY_KIND_CONST
+		protoEntity.Const = protoConst
 	case src.TypeEntity:
-		return &srcproto.Entity{Kind: srcproto.EntityKind_ENTITY_KIND_TYPE_DEF}, nil
+		protoTypeDef, err := typeDefToProto(entity.Type)
+		if err != nil {
+			return nil, fmt.Errorf("convert to proto: %w", err)
+		}
+		protoEntity.Kind = srcproto.EntityKind_ENTITY_KIND_TYPE_DEF
+		protoEntity.TypeDef = protoTypeDef
 	case src.InterfaceEntity:
-		return &srcproto.Entity{Kind: srcproto.EntityKind_ENTITY_KIND_INTERFACE}, nil
+		protoInterface, err := interfaceToProto(entity.Interface)
+		if err != nil {
+			return nil, fmt.Errorf("convert to proto: %w", err)
+		}
+		protoEntity.Kind = srcproto.EntityKind_ENTITY_KIND_CONST
+		protoEntity.Interface = protoInterface
 	default:
 		return nil, errors.New("unknown entity kind")
 	}
+
+	return protoEntity, nil
+}
+
+func typeDefToProto(typeDef ts.Def) (*srcproto.TypeDef, error) {
+	return &srcproto.TypeDef{
+		Params:   typeParamsToProto(typeDef.Params),
+		BodyExpr: typeDef.BodyExpr.String(),
+	}, nil
 }
 
 func componentToProto(component src.Component) (*srcproto.Component, error) {
@@ -89,7 +114,7 @@ func componentToProto(component src.Component) (*srcproto.Component, error) {
 		connectionsProto = append(connectionsProto, connectionProto)
 	}
 
-	interfaceProto, err := ConvertInterfaceToProto(component.Interface)
+	interfaceProto, err := interfaceToProto(component.Interface)
 	if err != nil {
 		return nil, fmt.Errorf("convert interface: %v", err)
 	}
@@ -101,24 +126,27 @@ func componentToProto(component src.Component) (*srcproto.Component, error) {
 	}, nil
 }
 
-func ConvertInterfaceToProto(interfaceValue src.Interface) (*srcproto.Interface, error) {
-	typeParamsProto := make([]*srcproto.TypeParam, 0, len(interfaceValue.TypeParams))
-	for _, param := range interfaceValue.TypeParams {
-		typeParamsProto = append(typeParamsProto, &srcproto.TypeParam{
-			Name:   param.Name,
-			Constr: param.Constr.String(),
-		})
-	}
-
+func interfaceToProto(interfaceValue src.Interface) (*srcproto.Interface, error) {
 	ioProto, err := ConvertIOToProto(interfaceValue.IO)
 	if err != nil {
 		return nil, fmt.Errorf("convert IO: %v", err)
 	}
 
 	return &srcproto.Interface{
-		TypeParams: typeParamsProto,
+		TypeParams: typeParamsToProto(interfaceValue.TypeParams),
 		Io:         &ioProto,
 	}, nil
+}
+
+func typeParamsToProto(params []ts.Param) []*srcproto.TypeParam {
+	typeParamsProto := make([]*srcproto.TypeParam, 0, len(params))
+	for _, param := range params {
+		typeParamsProto = append(typeParamsProto, &srcproto.TypeParam{
+			Name:   param.Name,
+			Constr: param.Constr.String(),
+		})
+	}
+	return typeParamsProto
 }
 
 func ConvertNodeToProto(node src.Node) (*srcproto.Node, error) {
@@ -131,7 +159,7 @@ func ConvertNodeToProto(node src.Node) (*srcproto.Node, error) {
 		componentDIsProto[key] = nodeDIProto
 	}
 
-	entityRefProto, err := ConvertEntityRefToProto(node.EntityRef)
+	entityRefProto, err := entityRefToProto(node.EntityRef)
 	if err != nil {
 		return nil, fmt.Errorf("convert entity ref: %v", err)
 	}
@@ -148,47 +176,47 @@ func ConvertNodeToProto(node src.Node) (*srcproto.Node, error) {
 	}, nil
 }
 
-func ConvertEntityRefToProto(entityRef src.EntityRef) (*srcproto.EntityRef, error) {
+func entityRefToProto(entityRef src.EntityRef) (*srcproto.EntityRef, error) {
 	return &srcproto.EntityRef{
 		Pkg:  entityRef.Pkg,
 		Name: entityRef.Name,
 	}, nil
 }
 
-func ConvertConstToProto(constValue src.Const) (srcproto.Const, error) {
-	refProto, err := ConvertEntityRefToProto(*constValue.Ref)
+func constToProto(constValue src.Const) (*srcproto.Const, error) {
+	refProto, err := entityRefToProto(*constValue.Ref)
 	if err != nil {
-		return srcproto.Const{}, fmt.Errorf("convert entity ref: %v", err)
+		return nil, fmt.Errorf("convert entity ref: %v", err)
 	}
 
 	valueProto, err := ConvertMsgToProto(*constValue.Value)
 	if err != nil {
-		return srcproto.Const{}, fmt.Errorf("convert msg: %v", err)
+		return nil, fmt.Errorf("convert msg: %v", err)
 	}
 
-	return srcproto.Const{
+	return &srcproto.Const{
 		Ref:   refProto,
 		Value: valueProto,
 	}, nil
 }
 
 func ConvertMsgToProto(msg src.Msg) (*srcproto.Msg, error) {
-	vecsProto := make([]*srcproto.Msg, 0, len(msg.Vec))
-	for _, v := range msg.Vec {
-		vecProto, err := ConvertMsgToProto(*v.Value)
+	vecItemsProto := make([]*srcproto.Const, 0, len(msg.Vec))
+	for _, constant := range msg.Vec {
+		vecItemProto, err := constToProto(constant)
 		if err != nil {
-			return nil, fmt.Errorf("convert vec msg: %v", err)
+			return nil, fmt.Errorf("convert const: %v", err)
 		}
-		vecsProto = append(vecsProto, vecProto)
+		vecItemsProto = append(vecItemsProto, vecItemProto)
 	}
 
-	mapProto := make(map[string]*srcproto.Msg, len(msg.Map))
-	for key, v := range msg.Map {
-		mapValueProto, err := ConvertMsgToProto(*v.Value) // TODO handle references
+	mapProto := make(map[string]*srcproto.Const, len(msg.Map))
+	for key, constant := range msg.Map {
+		mapItemProto, err := constToProto(constant)
 		if err != nil {
-			return nil, fmt.Errorf("convert map msg: %v", err)
+			return nil, fmt.Errorf("convert const: %v", err)
 		}
-		mapProto[key] = mapValueProto
+		mapProto[key] = mapItemProto
 	}
 
 	return &srcproto.Msg{
@@ -197,7 +225,7 @@ func ConvertMsgToProto(msg src.Msg) (*srcproto.Msg, error) {
 		Int:      int64(msg.Int),
 		Float:    msg.Float,
 		Str:      msg.Str,
-		Vecs:     vecsProto,
+		Vecs:     vecItemsProto,
 		Map:      mapProto,
 	}, nil
 }

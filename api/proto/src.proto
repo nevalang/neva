@@ -37,8 +37,8 @@ message Msg {
   int64 int = 3;
   double float = 4;
   string str = 5;
-  repeated Msg vecs = 6;
-  map<string, Msg> map = 7;
+  repeated Const vecs = 6;
+  map<string, Const> map = 7;
 }
 
 message TypeDef {
