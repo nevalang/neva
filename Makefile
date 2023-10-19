@@ -14,11 +14,6 @@ irproto:
 srcproto:
 	@protoc --go_out=. ./api/proto/src.proto
 
-# run frontend devserver
-.PHONY: web
-web:
-	@cd web && npm start
-
 # generate go gql sdk
 .PHONY: gqlgo
 gqlgo:
