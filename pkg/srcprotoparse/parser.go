@@ -14,7 +14,7 @@ import (
 
 var p = parser.New(false)
 
-func ParseFile(ctx context.Context, bb []byte) (*srcproto.File, error) {
+func SrcBytesToProto(ctx context.Context, bb []byte) (*srcproto.File, error) {
 	parsedSrcFile, err := p.ParseFile(ctx, bb)
 	if err != nil {
 		return nil, fmt.Errorf("parse file: %w", err)

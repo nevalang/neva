@@ -18,7 +18,7 @@ type treeShapeListener struct {
 }
 
 type Parser struct {
-	isDebug bool
+	debug bool
 }
 
 func (p Parser) ParseProg(ctx context.Context, rawProg map[string]compiler.RawPackage) (src.Program, error) {
@@ -63,7 +63,7 @@ func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 
 	parse := generated.NewnevaParser(stream)
-	if p.isDebug {
+	if p.debug {
 		parse.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	}
 	parse.BuildParseTrees = true
@@ -76,8 +76,8 @@ func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	return listener.file, nil
 }
 
-func New(isDebug bool) Parser {
+func New(debug bool) Parser {
 	return Parser{
-		isDebug: isDebug,
+		debug: debug,
 	}
 }
