@@ -1,5 +1,5 @@
-// Package srcproto parse implements parsing of bytes of source code to bytes of src protobuf.
-package srcprotoparse
+// Package implements parsing of bytes of source code to bytes of src protobuf.
+package protoparser
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func fileToProto(file src.File) (*srcproto.File, error) {
 	}
 
 	return &srcproto.File{
-		Imports:  map[string]string{},
+		Imports:  file.Imports,
 		Entities: entityMap,
 	}, nil
 }

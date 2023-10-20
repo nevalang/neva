@@ -9,3 +9,4 @@ plugins
 .antlr
 cmd/tmp
 neva
+node_modules

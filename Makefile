@@ -5,14 +5,24 @@ antlr:
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
 
 # generate go sdk from ir proto
-.PHONY: irproto
-irproto:
+.PHONY: ir-proto
+ir-proto:
 	@protoc --go_out=. ./api/proto/ir.proto
 
 # generate go sdk from src proto
-.PHONY: srcproto
-srcproto:
+.PHONY: src-proto
+src-proto:
 	@protoc --go_out=. ./api/proto/src.proto
+
+# generate ts sdk from src proto
+.PHONY: ts-src-proto
+ts-src-proto:
+	@protoc \
+		--plugin=./node_modules/.bin/protoc-gen-ts_proto \
+		--ts_proto_opt=esModuleInterop=true \
+		--ts_proto_out=. \
+		./api/proto/src.proto
+
 
 # generate go gql sdk
 .PHONY: gqlgo
