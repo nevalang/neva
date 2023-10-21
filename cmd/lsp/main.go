@@ -22,7 +22,7 @@ func main() {
 	isDebug := flag.Bool("debug", false, "-debug")
 	flag.Parse()
 
-	port := flag.Int("port", 8080, "-port")
+	port := flag.Int("port", 9000, "-port")
 	flag.Parse()
 
 	commonlog.Configure(1, nil)
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	srv := server.NewServer(&handler, lsName, *isDebug)
-	if err := srv.RunWebSocket(fmt.Sprintf(":%d", *port)); err != nil {
+	if err := srv.RunWebSocket(fmt.Sprintf("localhost:%d", *port)); err != nil {
 		panic(err)
 	}
 }

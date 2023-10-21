@@ -24,6 +24,11 @@ src-proto-ts:
 		--ts_proto_out=./web/src \
 		./api/proto/src.proto
 
+# build language server for neva written in go and put to vscode extension out
+.PHONY: lsp
+lsp:
+	@go build -ldflags="-s -w" -o web/out/lsp ./cmd/lsp/main.go
+
 # # generate go gql sdk
 # .PHONY: gqlgo
 # gqlgo:

@@ -18,7 +18,7 @@ export function setupLsp(context: ExtensionContext): LanguageClient {
 
   const transport: SocketTransport = {
     kind: TransportKind.socket,
-    port: 8080,
+    port: 9000,
   };
 
   let serverOptions: ServerOptions = {
