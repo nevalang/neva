@@ -10,3 +10,4 @@ plugins
 cmd/tmp
 neva
 node_modules
+__debug*

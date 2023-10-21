@@ -1,23 +1,25 @@
-import { ExtensionContext, commands } from "vscode";
+import { ExtensionContext } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { NevaEditor, registerEditor } from "./editor";
-import { clientId, getClient } from "./client";
+import { setupLsp } from "./client";
 
-let client: LanguageClient;
+let lspClient: LanguageClient;
 const viewType = "neva.editNeva";
 
 export async function activate(context: ExtensionContext) {
   console.log("vscode-neva: activated");
 
-  // Custom Editor
-  const editor = new NevaEditor(context);
-  context.subscriptions.push(registerEditor(viewType, new NevaEditor(context)));
-
   // Language Server
-  client = getClient(context);
-  await client.start();
+  lspClient = setupLsp(context);
+  lspClient.start();
+
+  // Custom Editor
+  const editor = new NevaEditor(context, lspClient);
+  context.subscriptions.push(
+    registerEditor(viewType, new NevaEditor(context, lspClient))
+  );
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  return client && client.stop();
+  return lspClient && lspClient.stop();
 }

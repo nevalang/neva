@@ -4,26 +4,32 @@ import {
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
+  SocketTransport,
   TransportKind,
 } from "vscode-languageclient/node";
 
 export const clientId = "nevaLSPClient";
 export const clientName = "Neva LSP Client";
 
-export function getClient(context: ExtensionContext): LanguageClient {
-  let serverModule = context.asAbsolutePath(path.join("out", "lsp"));
+export function setupLsp(context: ExtensionContext): LanguageClient {
+  let command = context.asAbsolutePath(path.join("out", "lsp"));
 
-  console.log(serverModule);
+  console.log(command);
+
+  const transport: SocketTransport = {
+    kind: TransportKind.socket,
+    port: 8080,
+  };
 
   let serverOptions: ServerOptions = {
     run: {
-      command: serverModule,
-      transport: TransportKind.stdio,
+      command,
+      transport,
     },
     debug: {
-      command: serverModule,
-      transport: TransportKind.stdio,
-      options: {},
+      command,
+      args: ["-debug"],
+      transport,
     },
   };
 

@@ -14,6 +14,7 @@ import {
   Range,
   workspace,
 } from "vscode";
+import { LanguageClient } from "vscode-languageclient/node";
 
 export const registerEditor = (viewType: string, editor: NevaEditor) =>
   window.registerCustomEditorProvider(viewType, editor, {
@@ -22,9 +23,11 @@ export const registerEditor = (viewType: string, editor: NevaEditor) =>
 
 export class NevaEditor implements CustomTextEditorProvider {
   private readonly context: ExtensionContext;
+  private readonly client: LanguageClient;
 
-  constructor(context: ExtensionContext) {
+  constructor(context: ExtensionContext, client: LanguageClient) {
     this.context = context;
+    this.client = client;
   }
 
   resolveCustomTextEditor(
@@ -32,7 +35,7 @@ export class NevaEditor implements CustomTextEditorProvider {
     webviewPanel: WebviewPanel,
     token: CancellationToken
   ): void | Thenable<void> {
-    // const file = File.fromJSON(protoString);
+    console.log(this.client.isRunning());
 
     const extensionUri = this.context.extensionUri;
 

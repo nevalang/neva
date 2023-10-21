@@ -1,6 +1,9 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+
 	"github.com/tliron/commonlog"
 	_ "github.com/tliron/commonlog/simple"
 	"github.com/tliron/glsp"
@@ -16,6 +19,12 @@ var (
 )
 
 func main() {
+	isDebug := flag.Bool("debug", false, "-debug")
+	flag.Parse()
+
+	port := flag.Int("port", 8080, "-port")
+	flag.Parse()
+
 	commonlog.Configure(1, nil)
 
 	handler = protocol.Handler{
@@ -25,8 +34,8 @@ func main() {
 		SetTrace:    setTrace,
 	}
 
-	server := server.NewServer(&handler, lsName, false)
-	if err := server.RunNodeJs(); err != nil {
+	srv := server.NewServer(&handler, lsName, *isDebug)
+	if err := srv.RunWebSocket(fmt.Sprintf(":%d", *port)); err != nil {
 		panic(err)
 	}
 }
