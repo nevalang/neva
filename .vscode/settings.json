@@ -35,5 +35,4 @@
     "scrollbar.shadow": "#00000000"
   },
   "svg.preview.background": "dark-transparent"
-  // "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yml", "--fast"]
 }
