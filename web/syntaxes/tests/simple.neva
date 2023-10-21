@@ -1,0 +1,61 @@
+// comments
+
+use {
+    std/io
+	github.com/emil14/nevatools
+	ws github.com/nevalang/websocket
+}
+
+types {
+    Err error
+    Float float
+    Bool bool
+    pub Str str
+    Vec<T> []T
+    Arr<T Vec<int>> [512][]T
+    Union Float | Vec | Arr | Rec | Enum
+    Struct struct {
+        age int
+        name str
+        bestFriend struct {
+            isDog bool // should be true
+        }
+    }
+}
+
+interfaces {
+    InterfacePrivate<T bool>(y T, x int) (z T)
+    pub InterfacePublic<T Union>(x int, y str) (z T)
+}
+
+const {
+    zero any nil
+    myTrue bool true
+    pi float 3.14
+    pub vec Vec<float> [pi, pi]
+    greet str "Hello, world!"
+}
+
+components {
+    Main(enter) (exit) {
+        nodes {
+            doer Doer<Float>
+        }
+        net {
+            in.enter -> doer.x
+            doer.z -> out.exit
+        }
+    }
+
+    pub Doer<T float>(x) (z T) {
+        nodes {
+            abstractNode InterfacePrivate
+            printer io.Print
+        }
+        net {
+            in.x -> printer.v
+            printer.v -> out.z
+        }
+    }
+}
+

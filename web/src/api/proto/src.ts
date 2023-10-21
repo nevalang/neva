@@ -4,6 +4,8 @@ import _m0 from "protobufjs/minimal";
 
 export const protobufPackage = "srcproto";
 
+/** This file describes structure of the source code */
+
 export enum EntityKind {
   ENTITY_KIND_UNSPECIFIED = 0,
   ENTITY_KIND_CONST = 1,

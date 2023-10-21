@@ -1,0 +1,74 @@
+/* Basic */
+
+:root {
+  --heading: #BE6856;
+  --foreground: #00A8C6;
+  --background: #22272E;
+  --background-second: #2D333B;
+  --link: #539BF5;
+  --dim: #769390;
+  --text: #ADBAC7;
+  --success: #347D39;
+}
+
+body {
+  font-family: 'Bai Jamjuree', sans-serif;
+  background-color: var(--background);
+}
+
+/* https://reactflow.dev/docs/guides/theming/ */
+
+.react-flow__node {
+  height: 40px;
+  width: 150px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-width: 2px;
+  font-weight: 400;
+}
+
+.react-flow__node-default {
+  padding: 0;
+  border-radius: 3px;
+  background-color: var(--text);
+}
+
+.react-flow__handle {
+  flex: 1;
+  position: static;
+  background-color: transparent;
+  transform: none;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  padding: 5px;
+}
+
+/* Custom */
+
+.inports, .outports {
+  display: flex;
+  justify-content: space-around;
+  font-weight: 200;
+  color: var(--background-second)
+}
+
+.inports > :not(:last-child),
+.outports > :not(:last-child) {
+  border-right: 1px solid var(--dim);
+}
+
+.inports {
+  border-bottom: 1px var(--dim) solid;
+}
+
+.outports {
+  border-top: 1px var(--dim) solid;
+}
+
+.nodeName {
+  padding: 15px;
+  color: var(--background-second)
+}
