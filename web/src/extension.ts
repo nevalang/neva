@@ -1,18 +1,23 @@
-import { Disposable, ExtensionContext, window } from "vscode";
-import { NevaEditor } from "./editor";
+import { ExtensionContext, commands } from "vscode";
+import { LanguageClient } from "vscode-languageclient/node";
+import { NevaEditor, registerEditor } from "./editor";
+import { clientId, getClient } from "./client";
 
+let client: LanguageClient;
 const viewType = "neva.editNeva";
 
 export async function activate(context: ExtensionContext) {
-  console.log("vscode-neva activated");
+  console.log("vscode-neva: activated");
 
+  // Custom Editor
   const editor = new NevaEditor(context);
+  context.subscriptions.push(registerEditor(viewType, new NevaEditor(context)));
 
-  const disposable: Disposable = window.registerCustomEditorProvider(
-    viewType,
-    editor,
-    { supportsMultipleEditorsPerDocument: true }
-  );
+  // Language Server
+  client = getClient(context);
+  await client.start();
+}
 
-  context.subscriptions.push(disposable);
+export function deactivate(): Thenable<void> | undefined {
+  return client && client.stop();
 }

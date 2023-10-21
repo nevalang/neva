@@ -15,6 +15,11 @@ import {
   workspace,
 } from "vscode";
 
+export const registerEditor = (viewType: string, editor: NevaEditor) =>
+  window.registerCustomEditorProvider(viewType, editor, {
+    supportsMultipleEditorsPerDocument: true,
+  });
+
 export class NevaEditor implements CustomTextEditorProvider {
   private readonly context: ExtensionContext;
 

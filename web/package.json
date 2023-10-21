@@ -9,17 +9,17 @@
   },
   "description": "VSCode extension for Nevalang - flow based programming language.",
   "publisher": "nevalang",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
   },
   "bugs": {
-    "url": "https://github.com/nevalang/vscode-neva/issues"
+    "url": "https://github.com/nevalang/neva/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nevalang/vscode-neva"
+    "url": "https://github.com/nevalang/neva"
   },
   "keywords": [
     "neva",
