@@ -1,4 +1,5 @@
-// Package src defines source code abstractions.
+// This package defines source code entities - abstractions that end-user (a programmer) operates on.
+// For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
 package src
 
 import (
@@ -57,63 +58,49 @@ func (p Package) Entities(f func(entity Entity, entityName string, fileName stri
 }
 
 type File struct {
-	Imports  map[string]string
-	Entities map[string]Entity
+	Imports  map[string]string `json:"imports,omitempty"`
+	Entities map[string]Entity `json:"entities,omitempty"`
 }
 
+// TODO make const, type, interface and components pointers
 type Entity struct {
-	Exported  bool
-	Kind      EntityKind
-	Const     Const
-	Type      ts.Def // FIXME https://github.com/nevalang/neva/issues/186
-	Interface Interface
-	Component Component
+	Exported  bool       `json:"exported,omitempty"`
+	Kind      EntityKind `json:"kind,omitempty"`
+	Const     Const      `json:"const,omitempty"`
+	Type      ts.Def     `json:"type,omitempty"`
+	Interface Interface  `json:"interface,omitempty"`
+	Component Component  `json:"component,omitempty"`
 }
 
-type EntityKind string
+type EntityKind string // It's handy to transmit strings enum instead of digital
 
 const (
-	ComponentEntity EntityKind = "ComponentEntity"
-	ConstEntity     EntityKind = "ConstEntity"
-	TypeEntity      EntityKind = "TypeEntity"
-	InterfaceEntity EntityKind = "InterfaceEntity"
+	ComponentEntity EntityKind = "component_entity"
+	ConstEntity     EntityKind = "const_entity"
+	TypeEntity      EntityKind = "type_entity"
+	InterfaceEntity EntityKind = "interface_entity"
 )
 
-func (e EntityKind) String() string {
-	switch e {
-	case ComponentEntity:
-		return "component"
-	case ConstEntity:
-		return "msg"
-	case TypeEntity:
-		return "type"
-	case InterfaceEntity:
-		return "interface"
-	default:
-		return "unknown"
-	}
-}
-
 type Component struct {
-	Interface
-	Nodes map[string]Node
-	Net   []Connection // can't be map due to slice in key
+	Interface `json:"interface,omitempty"`
+	Nodes     map[string]Node `json:"nodes,omitempty"`
+	Net       []Connection    `json:"net,omitempty"` // Can't be map, connection side can't be map key due to selectors
 }
 
 type Interface struct {
-	TypeParams []ts.Param
-	IO         IO
+	TypeParams []ts.Param `json:"typeParams,omitempty"`
+	IO         IO         `json:"io,omitempty,"`
 }
 
 type Node struct {
-	EntityRef   EntityRef
-	TypeArgs    []ts.Expr
-	ComponentDI map[string]Node
+	EntityRef   EntityRef       `json:"entityRef,omitempty"`
+	TypeArgs    []ts.Expr       `json:"typeArgs,omitempty"`
+	ComponentDI map[string]Node `json:"componentDi,omitempty"`
 }
 
 type EntityRef struct {
-	Pkg  string
-	Name string
+	Pkg  string `json:"pkg,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 func (e EntityRef) String() string {
@@ -124,50 +111,51 @@ func (e EntityRef) String() string {
 }
 
 type Const struct {
-	Ref   *EntityRef
-	Value *Msg
+	Ref   *EntityRef `json:"ref,omitempty"`
+	Value *Msg       `json:"value,omitempty"`
 }
 
 type Msg struct {
-	TypeExpr ts.Expr // Cannot be any
-	Bool     bool
-	Int      int
-	Float    float64
-	Str      string
-	Vec      []Const
-	Map      map[string]Const
+	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
+	Bool     bool             `json:"bool,omitempty"`
+	Int      int              `json:"int,omitempty"`
+	Float    float64          `json:"float,omitempty"`
+	Str      string           `json:"str,omitempty"`
+	Vec      []Const          `json:"vec,omitempty"`
+	Map      map[string]Const `json:"map,omitempty"`
 }
 
 type IO struct {
-	In, Out map[string]Port
+	In  map[string]Port `json:"in,omitempty"`
+	Out map[string]Port `json:"out,omitempty"`
 }
 
 type Port struct {
-	TypeExpr ts.Expr // empty means any // TODO pointer?
-	IsArray  bool
+	TypeExpr ts.Expr `json:"typeExpr,omitempty"`
+	IsArray  bool    `json:"isArray,omitempty"`
 }
 
 type Connection struct {
-	SenderSide    SenderConnectionSide
-	ReceiverSides []ReceiverConnectionSide
+	SenderSide    SenderConnectionSide     `json:"senderSide,omitempty"`
+	ReceiverSides []ReceiverConnectionSide `json:"receiverSide,omitempty"`
 }
 
 type ReceiverConnectionSide struct {
-	PortAddr  PortAddr
-	Selectors []string
+	PortAddr  PortAddr `json:"portAddr,omitempty"`
+	Selectors []string `json:"selectors,omitempty"`
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
 type SenderConnectionSide struct {
-	PortAddr  *PortAddr
-	ConstRef  *EntityRef
-	Selectors []string
+	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
+	ConstRef  *EntityRef `json:"constRef,omitempty"`
+	Selectors []string   `json:"selectors,omitempty"`
 }
 
 type PortAddr struct {
-	Node string
-	Port string
-	Idx  *uint8 // Only for array-ports
+	Node string `json:"node,omitempty"`
+	Port string `json:"port,omitempty"`
+	Idx  *uint8 `json:"idx,omitempty"`
 }
 
 func (p PortAddr) String() string {

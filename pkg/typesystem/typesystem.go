@@ -1,12 +1,17 @@
-// Package typesystem implements type-system with type-parameters and structural subtyping.
+// Package typesystem implements type-system with generics and structural subtyping.
+// For convenience these structures have json tags (like `src` package).
+// This is not clean architecture but it's very handy for LSP.
 package typesystem
 
 import "fmt"
 
 type Def struct {
-	Params                           []Param // Body can refer to these. Must be replaced with arguments while resolving
-	BodyExpr                         *Expr   // Empty body means base type
-	CanBeUsedForRecursiveDefinitions bool    // Only base types can have true.
+	// Body can refer to these. Must be replaced with arguments while resolving
+	Params []Param `json:"params,omitempty"`
+	// Empty body means base type
+	BodyExpr *Expr `json:"bodyExpr,omitempty"`
+	// Only base types can have true.
+	CanBeUsedForRecursiveDefinitions bool `json:"canBeUsedForRecursiveDefinitions,omitempty"`
 }
 
 func (def Def) String() string {
@@ -29,14 +34,14 @@ func (def Def) String() string {
 }
 
 type Param struct {
-	Name   string // Must be unique among other type's parameters
-	Constr *Expr  // Expression that must be resolved supertype of corresponding argument
+	Name   string `json:"name,omitempty"`   // Must be unique among other type's parameters
+	Constr *Expr  `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both
 type Expr struct {
-	Lit  *LitExpr
-	Inst *InstExpr
+	Lit  *LitExpr  `json:"lit,omitempty"`
+	Inst *InstExpr `json:"inst,omitempty"`
 }
 
 // String formats expression in a TS manner
@@ -109,16 +114,16 @@ func (expr *Expr) String() string { //nolint:funlen
 
 // Instantiation expression
 type InstExpr struct {
-	Ref  fmt.Stringer // Must be in the scope
-	Args []Expr       // Every ref's parameter must have subtype argument
+	Ref  fmt.Stringer `json:"ref,omitempty"`  // Must be in the scope
+	Args []Expr       `json:"args,omitempty"` // Every ref's parameter must have subtype argument
 }
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Arr   *ArrLit
-	Rec   map[string]Expr
-	Enum  []string
-	Union []Expr
+	Arr   *ArrLit         `json:"arr,omitempty"`
+	Rec   map[string]Expr `json:"rec,omitempty"`
+	Enum  []string        `json:"enum,omitempty"`
+	Union []Expr          `json:"union,omitempty"`
 }
 
 func (lit *LitExpr) Empty() bool {
@@ -157,6 +162,6 @@ const (
 )
 
 type ArrLit struct {
-	Expr Expr
-	Size int
+	Expr Expr `json:"expr,omitempty"`
+	Size int  `json:"size,omitempty"`
 }
