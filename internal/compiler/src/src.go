@@ -70,13 +70,13 @@ type Entity struct {
 	Component Component
 }
 
-type EntityKind uint8
+type EntityKind string
 
 const (
-	ComponentEntity EntityKind = iota + 1
-	ConstEntity
-	TypeEntity
-	InterfaceEntity
+	ComponentEntity EntityKind = "ComponentEntity"
+	ConstEntity     EntityKind = "ConstEntity"
+	TypeEntity      EntityKind = "TypeEntity"
+	InterfaceEntity EntityKind = "InterfaceEntity"
 )
 
 func (e EntityKind) String() string {

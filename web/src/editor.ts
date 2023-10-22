@@ -28,6 +28,7 @@ export class NevaEditor implements CustomTextEditorProvider {
   constructor(context: ExtensionContext, client: LanguageClient) {
     this.context = context;
     this.client = client;
+    this.client.onNotification("neva/renderFile", console.log);
   }
 
   resolveCustomTextEditor(
@@ -35,8 +36,6 @@ export class NevaEditor implements CustomTextEditorProvider {
     webviewPanel: WebviewPanel,
     token: CancellationToken
   ): void | Thenable<void> {
-    console.log(this.client.isRunning());
-
     const extensionUri = this.context.extensionUri;
 
     webviewPanel.webview.options = {

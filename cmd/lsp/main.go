@@ -46,16 +46,16 @@ func main() { //nolint:funlen
 	}
 
 	// General Messages
-	h.Initialize = s.initialize
-	h.Initialized = s.initialized
-	h.Shutdown = s.shutdown
+	h.Initialize = s.Initialize
+	h.Initialized = s.Initialized
+	h.Shutdown = s.Shutdown
 	h.Exit = func(context *glsp.Context) error {
 		return nil
 	}
 	h.LogTrace = func(context *glsp.Context, params *protocol.LogTraceParams) error {
 		return nil
 	}
-	h.SetTrace = s.setTrace
+	h.SetTrace = s.SetTrace
 
 	// Window
 	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {
@@ -163,30 +163,6 @@ func main() { //nolint:funlen
 type Server struct {
 	name, version string
 	parser        parser.Parser
-	handler       *protocol.Handler // readonly
+	handler       *protocol.Handler // must not be modified
 	logger        commonlog.Logger
-}
-
-func (srv Server) initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
-	return protocol.InitializeResult{
-		Capabilities: srv.handler.CreateServerCapabilities(),
-		ServerInfo: &protocol.InitializeResultServerInfo{
-			Name:    srv.name,
-			Version: &srv.version,
-		},
-	}, nil
-}
-
-func (srv Server) initialized(context *glsp.Context, params *protocol.InitializedParams) error {
-	return nil
-}
-
-func (srv Server) shutdown(context *glsp.Context) error {
-	protocol.SetTraceValue(protocol.TraceValueOff)
-	return nil
-}
-
-func (srv Server) setTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
-	protocol.SetTraceValue(params.Value)
-	return nil
 }

@@ -50,6 +50,7 @@ export function setupLsp(context: ExtensionContext): LanguageClient {
     serverOptions,
     clientOptions
   );
+
   client.setTrace(Trace.Verbose);
 
   return client;

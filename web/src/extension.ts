@@ -16,7 +16,7 @@ export async function activate(context: ExtensionContext) {
   // Custom Editor
   const editor = new NevaEditor(context, lspClient);
   context.subscriptions.push(
-    registerEditor(viewType, new NevaEditor(context, lspClient))
+    registerEditor(viewType, new NevaEditor(context, lspClient)),
   );
 }
 

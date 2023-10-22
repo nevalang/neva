@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
@@ -17,6 +16,8 @@ func (s Server) TextDocumentDidOpen(glpsCtx *glsp.Context, params *protocol.DidO
 	if err != nil {
 		return err
 	}
-	fmt.Println(parsedFile)
+
+	glpsCtx.Notify("neva/renderFile", parsedFile)
+
 	return nil
 }

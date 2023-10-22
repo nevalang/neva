@@ -12,17 +12,17 @@
       "preLaunchTask": "${defaultBuildTask}"
     },
     // test extension
-    {
-      "name": "VSCode Extension Tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
-      ],
-      "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
-    },
+    // {
+    //   "name": "VSCode Extension Tests",
+    //   "type": "extensionHost",
+    //   "request": "launch",
+    //   "args": [
+    //     "--extensionDevelopmentPath=${workspaceFolder}",
+    //     "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+    //   ],
+    //   "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+    //   "preLaunchTask": "${defaultBuildTask}"
+    // },
     // run lsp in debugger
     {
       "name": "Language server (LSP) ",
