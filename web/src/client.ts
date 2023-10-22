@@ -1,7 +1,7 @@
-import { Trace } from "vscode-jsonrpc";
 import path from "path";
 import net from "net";
 import { ExtensionContext, ExtensionMode, workspace } from "vscode";
+import { Trace } from "vscode-jsonrpc";
 import {
   LanguageClient,
   LanguageClientOptions,
