@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/tliron/commonlog"
 	_ "github.com/tliron/commonlog/simple"
 	"github.com/tliron/glsp"
@@ -11,64 +12,111 @@ import (
 	"github.com/tliron/glsp/server"
 )
 
-const serverName = "neva"
-
-var (
-	version = "0.0.1"
-	handler protocol.Handler
-)
-
 func main() { //nolint:funlen
+	const serverName = "neva"
+
+	// cli args
 	isDebug := flag.Bool("debug", false, "-debug")
 	flag.Parse()
-
 	port := flag.Int("port", 9000, "-port")
 	flag.Parse()
 
-	commonlog.Configure(1, nil)
+	// logger
+	verbosity := 1
+	if *isDebug {
+		verbosity = 2
+	}
+	commonlog.Configure(verbosity, nil)
+	logger := commonlog.GetLoggerf("%s.server", serverName)
 
+	// handler and server
 	h := &protocol.Handler{}
 	s := Server{
-		h:      h,
-		logger: commonlog.GetLoggerf("%s.server", serverName),
+		handler: h,
+		logger:  logger,
+		parser:  parser.New(*isDebug),
 	}
 
 	// Base Protocol
-	h.CancelRequest = nil
-	h.Progress = nil
+	h.CancelRequest = func(context *glsp.Context, params *protocol.CancelParams) error {
+		return nil
+	}
+	h.Progress = func(context *glsp.Context, params *protocol.ProgressParams) error {
+		return nil
+	}
 
 	// General Messages
 	h.Initialize = s.initialize
 	h.Initialized = s.initialized
 	h.Shutdown = s.shutdown
-	h.Exit = nil
-	h.LogTrace = nil
+	h.Exit = func(context *glsp.Context) error {
+		return nil
+	}
+	h.LogTrace = func(context *glsp.Context, params *protocol.LogTraceParams) error {
+		return nil
+	}
 	h.SetTrace = s.setTrace
 
 	// Window
-	h.WindowWorkDoneProgressCancel = nil
+	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {
+		return nil
+	}
 
 	// Workspace
-	h.WorkspaceDidChangeWorkspaceFolders = nil
-	h.WorkspaceDidChangeConfiguration = nil
-	h.WorkspaceDidChangeWatchedFiles = nil
-	h.WorkspaceSymbol = nil
-	h.WorkspaceExecuteCommand = nil
-	h.WorkspaceWillCreateFiles = nil
-	h.WorkspaceDidCreateFiles = nil
-	h.WorkspaceWillRenameFiles = nil
-	h.WorkspaceDidRenameFiles = nil
-	h.WorkspaceWillDeleteFiles = nil
-	h.WorkspaceDidDeleteFiles = nil
-	h.WorkspaceSemanticTokensRefresh = nil
+	h.WorkspaceDidChangeWorkspaceFolders = func(context *glsp.Context, params *protocol.DidChangeWorkspaceFoldersParams) error { //nolint:lll
+		return nil
+	}
+	h.WorkspaceDidChangeConfiguration = func(context *glsp.Context, params *protocol.DidChangeConfigurationParams) error {
+		return nil
+	}
+	h.WorkspaceDidChangeWatchedFiles = func(context *glsp.Context, params *protocol.DidChangeWatchedFilesParams) error {
+		return nil
+	}
+	h.WorkspaceSymbol = func(context *glsp.Context, params *protocol.WorkspaceSymbolParams) ([]protocol.SymbolInformation, error) { //nolint:lll
+		return nil, nil
+	}
+	h.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (any, error) {
+		return nil, nil
+	}
+	h.WorkspaceWillCreateFiles = func(context *glsp.Context, params *protocol.CreateFilesParams) (*protocol.WorkspaceEdit, error) { //nolint:lll
+		return nil, nil
+	}
+	h.WorkspaceDidCreateFiles = func(context *glsp.Context, params *protocol.CreateFilesParams) error {
+		return nil
+	}
+	h.WorkspaceWillRenameFiles = func(context *glsp.Context, params *protocol.RenameFilesParams) (*protocol.WorkspaceEdit, error) { //nolint:lll
+		return nil, nil
+	}
+	h.WorkspaceDidRenameFiles = func(context *glsp.Context, params *protocol.RenameFilesParams) error {
+		return nil
+	}
+	h.WorkspaceWillDeleteFiles = func(context *glsp.Context, params *protocol.DeleteFilesParams) (*protocol.WorkspaceEdit, error) { //nolint:lll
+		return nil, nil
+	}
+	h.WorkspaceDidDeleteFiles = func(context *glsp.Context, params *protocol.DeleteFilesParams) error {
+		return nil
+	}
+	h.WorkspaceSemanticTokensRefresh = func(context *glsp.Context) error {
+		return nil
+	}
 
 	// Text Document Synchronization
-	h.TextDocumentDidOpen = nil
-	h.TextDocumentDidChange = nil
-	h.TextDocumentWillSave = nil
-	h.TextDocumentWillSaveWaitUntil = nil
-	h.TextDocumentDidSave = nil
-	h.TextDocumentDidClose = nil
+	h.TextDocumentDidOpen = s.TextDocumentDidOpen
+	h.TextDocumentDidChange = func(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
+		return nil
+	}
+	h.TextDocumentWillSave = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) error {
+		return nil
+	}
+	h.TextDocumentWillSaveWaitUntil = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) { //nolint:lll
+		return nil, nil
+	}
+	h.TextDocumentDidSave = func(context *glsp.Context, params *protocol.DidSaveTextDocumentParams) error {
+		return nil
+	}
+	h.TextDocumentDidClose = func(context *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {
+		return nil
+	}
 
 	// Language features
 	h.TextDocumentCompletion = nil
@@ -113,18 +161,18 @@ func main() { //nolint:funlen
 }
 
 type Server struct {
-	h      *protocol.Handler // readonly
-	logger commonlog.Logger
+	name, version string
+	parser        parser.Parser
+	handler       *protocol.Handler // readonly
+	logger        commonlog.Logger
 }
 
 func (srv Server) initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
-	srv.logger.Info("initialize")
-
 	return protocol.InitializeResult{
-		Capabilities: handler.CreateServerCapabilities(),
+		Capabilities: srv.handler.CreateServerCapabilities(),
 		ServerInfo: &protocol.InitializeResultServerInfo{
-			Name:    serverName,
-			Version: &version,
+			Name:    srv.name,
+			Version: &srv.version,
 		},
 	}, nil
 }
@@ -134,7 +182,6 @@ func (srv Server) initialized(context *glsp.Context, params *protocol.Initialize
 }
 
 func (srv Server) shutdown(context *glsp.Context) error {
-	fmt.Println("shutdown")
 	protocol.SetTraceValue(protocol.TraceValueOff)
 	return nil
 }

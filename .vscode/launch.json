@@ -4,7 +4,7 @@
     // === Vscode-neva extension debug tasks ===
     // extension itself
     {
-      "name": "Run Extension",
+      "name": "VSCode Extension",
       "type": "extensionHost",
       "request": "launch",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/web"],
@@ -13,7 +13,7 @@
     },
     // test extension
     {
-      "name": "Extension Tests",
+      "name": "VSCode Extension Tests",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -25,12 +25,13 @@
     },
     // run lsp in debugger
     {
-      "name": "LSP",
+      "name": "Language server (LSP) ",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/lsp",
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "args": ["-debug"]
     },
     // === Other ===
     {
