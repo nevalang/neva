@@ -1,0 +1,107 @@
+// This file describes structure of the source code
+syntax = "proto3";
+
+package srcproto;
+
+option go_package = "pkg/srcproto";
+
+message File {
+  map<string, string> imports = 1;
+  map<string, Entity> entities = 2;
+}
+
+message Entity {
+  bool exported = 1;
+  EntityKind kind = 2;
+  Const const = 3;
+  TypeDef type_def = 4;
+  Interface interface = 5;
+  Component component = 6;
+}
+
+enum EntityKind {
+  ENTITY_KIND_UNSPECIFIED = 0;
+  ENTITY_KIND_CONST = 1;
+  ENTITY_KIND_TYPE_DEF = 2;
+  ENTITY_KIND_INTERFACE = 3;
+  ENTITY_KIND_COMPONENT = 4;
+}
+
+message Const {
+  EntityRef ref = 1;
+  Msg value = 2;
+}
+
+message Msg {
+  string type_expr = 1;
+  bool bool = 2;
+  int64 int = 3;
+  double float = 4;
+  string str = 5;
+  repeated Const vecs = 6;
+  map<string, Const> map = 7;
+}
+
+message TypeDef {
+  repeated TypeParam params = 1;
+  string body_expr = 2;
+}
+
+message Component {
+  Interface interface = 1;
+  map<string, Node> nodes = 2;
+  repeated Connection connections = 3;
+}
+
+message Interface {
+  repeated TypeParam type_params = 1;
+  IO io = 2;
+}
+
+message TypeParam {
+  string name = 1;
+  string constr = 2;
+}
+
+message IO {
+  repeated Port ins = 1;
+  repeated Port outs = 2;
+}
+
+message Port {
+  string type_expr = 1;
+  bool is_array = 2;
+}
+
+message Node {
+  EntityRef entity_ref = 1;
+  repeated string type_args = 2;
+  map<string, Node> component_dis = 3;
+}
+
+message EntityRef {
+  string pkg = 1;
+  string name = 2;
+}
+
+message Connection {
+  SenderConnectionSide sender_side = 1;
+  repeated ReceiverConnectionSide receiver_sides = 2;
+}
+
+message ReceiverConnectionSide {
+  PortAddr port_addr = 1;
+  repeated string selectors = 2;
+}
+
+message SenderConnectionSide {
+  EntityRef const_ref = 1;
+  PortAddr port_addr = 2;
+  repeated string selectors = 3;
+}
+
+message PortAddr {
+  string node = 1;
+  string port = 2;
+  int32 idx = 3;
+}

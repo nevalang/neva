@@ -1,0 +1,113 @@
+{
+  "name": "vscode-nevalang",
+  "displayName": "Neva",
+  "main": "out/extension.js",
+  "author": {
+    "email": "emil.musician@gmail.com",
+    "name": "Emil Valeev",
+    "url": "https://github.com/emil14"
+  },
+  "description": "VSCode extension for Nevalang - flow based programming language.",
+  "publisher": "nevalang",
+  "version": "0.2.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.78.0"
+  },
+  "bugs": {
+    "url": "https://github.com/nevalang/neva/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nevalang/neva"
+  },
+  "keywords": [
+    "neva",
+    "nevalang",
+    "neva language",
+    "extension",
+    "intellisense",
+    "autocompletion",
+    "syntax-highlighting",
+    "visual editor",
+    "visual programming",
+    "visual langauge",
+    "fbp",
+    "flow based programming",
+    "dataflow",
+    "dataflow programming"
+  ],
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Debuggers",
+    "Formatters",
+    "Linters",
+    "Snippets",
+    "Testing",
+    "Other"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "neva",
+        "aliases": [
+          "Neva",
+          "nevalang",
+          "Nevalang",
+          "NevaLang"
+        ],
+        "extensions": [
+          ".neva"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/file-icon.svg",
+          "dark": "./assets/file-icon.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "neva",
+        "scopeName": "source.neva",
+        "path": "./syntaxes/neva.tmLanguage.json"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "neva.editNeva",
+        "displayName": "Neva",
+        "selector": [
+          {
+            "filenamePattern": "*.neva"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "icon": "assets/logo.png",
+  "dependencies": {
+    "vscode": "^1.1.37",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.34",
+    "@types/vscode": "^1.73.0",
+    "@types/vscode-webview": "^1.57.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.26.0",
+    "js-yaml": "^4.1.0",
+    "nodemon": "^2.0.22",
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "yaml2json": "js-yaml syntaxes/neva.tmLanguage.yml > syntaxes/neva.tmLanguage.json",
+    "watch-yaml2json": "nodemon --delay 1 --watch syntaxes/neva.tmLanguage.yml --exec npm run yaml2json",
+    "ts": "tsc --p ./",
+    "watch": "tsc -w -p ./",
+    "build-webview": "cd webview && npm i && npm run build"
+  }
+}

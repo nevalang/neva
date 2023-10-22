@@ -1,6 +1,39 @@
 {
   "version": "0.2.0",
   "configurations": [
+    // === Vscode-neva extension debug tasks ===
+    // extension itself
+    {
+      "name": "VSCode Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/web"],
+      "outFiles": ["${workspaceFolder}/web/out/**/*.js"],
+      "preLaunchTask": "${defaultBuildTask}"
+    },
+    // test extension
+    // {
+    //   "name": "VSCode Extension Tests",
+    //   "type": "extensionHost",
+    //   "request": "launch",
+    //   "args": [
+    //     "--extensionDevelopmentPath=${workspaceFolder}",
+    //     "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+    //   ],
+    //   "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+    //   "preLaunchTask": "${defaultBuildTask}"
+    // },
+    // run lsp in debugger
+    {
+      "name": "Language server (LSP) ",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/lsp",
+      "cwd": "${workspaceFolder}",
+      "args": ["-debug"]
+    },
+    // === Other ===
     {
       "name": "cmd/interpreter 000_do_nothing.neva",
       "type": "go",

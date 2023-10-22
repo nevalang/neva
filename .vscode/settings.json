@@ -1,4 +1,10 @@
 {
+  "files.exclude": {
+    "out": false // set this to true to hide the "out" folder with the compiled JS files
+  },
+  "search.exclude": {
+    "out": true // set this to false to include "out" folder in search results
+  },
   "cSpell.words": [
     "cnctr",
     "cprogram",
@@ -27,6 +33,6 @@
     "debugConsole.infoForeground": "#cccccc",
     "minimap.background": "#00000000",
     "scrollbar.shadow": "#00000000"
-  }
-  // "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yml", "--fast"]
+  },
+  "svg.preview.background": "dark-transparent"
 }

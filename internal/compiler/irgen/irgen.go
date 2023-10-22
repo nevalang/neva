@@ -247,9 +247,14 @@ func (g Generator) processNet(
 				}
 			}
 
+			var idx uint8
+			if receiverSide.PortAddr.Idx != nil {
+				idx = *receiverSide.PortAddr.Idx
+			}
+
 			result.nodesUsage[receiverSide.PortAddr.Node].in[relPortAddr{
 				Port: receiverSide.PortAddr.Port,
-				Idx:  receiverSide.PortAddr.Idx,
+				Idx:  idx,
 			}] = struct{}{}
 		}
 
@@ -314,16 +319,22 @@ func (g Generator) processSenderSide( //nolint:funlen
 			out: map[relPortAddr]struct{}{},
 		}
 	}
+
+	var idx uint8
+	if senderSide.PortAddr.Idx != nil {
+		idx = *senderSide.PortAddr.Idx
+	}
+
 	// insert outport usage
 	result.nodesUsage[senderSide.PortAddr.Node].out[relPortAddr{
 		Port: senderSide.PortAddr.Port,
-		Idx:  senderSide.PortAddr.Idx,
+		Idx:  idx,
 	}] = struct{}{}
 
 	irSenderSide := &ir.PortAddr{
 		Path: strings.Join(append(nodeCtx.path, senderSide.PortAddr.Node), "/"),
 		Port: senderSide.PortAddr.Port,
-		Idx:  uint32(senderSide.PortAddr.Idx),
+		Idx:  uint32(idx),
 	}
 
 	if senderSide.PortAddr.Node == "in" {
@@ -385,11 +396,16 @@ func (Generator) insertAndReturnOutports(
 
 // mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
 func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnectionSide) *ir.ReceiverConnectionSide {
+	var idx uint8
+	if side.PortAddr.Idx != nil {
+		idx = *side.PortAddr.Idx
+	}
+
 	result := &ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
 			Path: strings.Join(append(nodeCtxPath, side.PortAddr.Node), "/"),
 			Port: side.PortAddr.Port,
-			Idx:  uint32(side.PortAddr.Idx),
+			Idx:  uint32(idx),
 		},
 	}
 	if side.PortAddr.Node == "out" { // 'out' node is actually receiver but we don't want to have 'out.in' addresses
