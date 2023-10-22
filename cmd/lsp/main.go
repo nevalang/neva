@@ -11,7 +11,7 @@ import (
 	"github.com/tliron/glsp/server"
 )
 
-const lsName = "neva"
+const serverName = "neva:lsp"
 
 var (
 	version = "0.0.1"
@@ -34,19 +34,21 @@ func main() {
 		SetTrace:    setTrace,
 	}
 
-	srv := server.NewServer(&handler, lsName, *isDebug)
-	if err := srv.RunWebSocket(fmt.Sprintf("localhost:%d", *port)); err != nil {
+	srv := server.NewServer(&handler, serverName, *isDebug)
+	if err := srv.RunTCP(fmt.Sprintf("localhost:%d", *port)); err != nil {
 		panic(err)
 	}
 }
 
 func initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
+	fmt.Println("initialize")
+
 	capabilities := handler.CreateServerCapabilities()
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,
 		ServerInfo: &protocol.InitializeResultServerInfo{
-			Name:    lsName,
+			Name:    serverName,
 			Version: &version,
 		},
 	}, nil
@@ -57,6 +59,7 @@ func initialized(context *glsp.Context, params *protocol.InitializedParams) erro
 }
 
 func shutdown(context *glsp.Context) error {
+	fmt.Println("shutdown")
 	protocol.SetTraceValue(protocol.TraceValueOff)
 	return nil
 }
