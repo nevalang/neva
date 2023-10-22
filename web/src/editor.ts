@@ -28,9 +28,9 @@ export class NevaEditor implements CustomTextEditorProvider {
   constructor(context: ExtensionContext, client: LanguageClient) {
     this.context = context;
     this.client = client;
-    this.client.onNotification("neva/renderFile", console.log);
   }
 
+  // every time new tab with .neva file (re)opened
   resolveCustomTextEditor(
     document: TextDocument,
     webviewPanel: WebviewPanel,
@@ -46,79 +46,85 @@ export class NevaEditor implements CustomTextEditorProvider {
       ],
     };
 
+    // load react-app
     webviewPanel.webview.html = getWebviewContent(
       webviewPanel.webview,
       extensionUri
     );
 
-    const disposables: Disposable[] = [];
-
-    let isUpdating = {
-      creationTime: Date.now(),
-      current: false,
-      editTime: undefined,
-    };
-
-    workspace.onDidChangeTextDocument(
-      (event) => {
-        if (event.document.uri.toString() === document.uri.toString()) {
-          if (!isUpdating.current) {
-            console.log("update window", isUpdating);
-            updateWindow(webviewPanel, event.document);
-          } else {
-            isUpdating.current = false;
-          }
-        }
-      },
-      undefined,
-      disposables
-    );
-
-    window.onDidChangeActiveColorTheme(
-      (event: ColorTheme) => {
-        let isDarkTheme = event.kind === ColorThemeKind.Dark;
-        webviewPanel.webview.postMessage({
-          type: "theme",
-          isDarkTheme: isDarkTheme,
-        });
-      },
-      undefined,
-      disposables
-    );
-
-    webviewPanel.webview.onDidReceiveMessage(
-      (message: any) => {
-        const command = message.command;
-        const text = message.text;
-
-        switch (command) {
-          case "update":
-            const edit = new WorkspaceEdit();
-            isUpdating.current = true;
-            isUpdating.editTime = Date.now() as any;
-            console.log("update", message.uri, text);
-            edit.replace(
-              message.uri,
-              new Range(0, 0, document.lineCount, 0),
-              text
-            );
-            workspace.applyEdit(edit);
-        }
-      },
-      undefined,
-      disposables
-    );
-
-    webviewPanel.onDidDispose(() => {
-      while (disposables.length) {
-        const disposable = disposables.pop();
-        if (disposable) {
-          disposable.dispose();
-        }
-      }
+    // subscribe to server's "your file parsed, now render it" events
+    this.client.onNotification("neva/renderFile", (parsedFile) => {
+      sendUpdWebviewMsg(webviewPanel, document, parsedFile);
     });
 
-    updateWindow(webviewPanel, document);
+    // updateWebview(webviewPanel, document); // send current data to react app
+
+    // const disposables: Disposable[] = [];
+
+    // let isUpdating = {
+    //   creationTime: Date.now(),
+    //   current: false,
+    //   editTime: undefined,
+    // };
+
+    // workspace.onDidChangeTextDocument(
+    //   (event) => {
+    //     if (event.document.uri.toString() === document.uri.toString()) {
+    //       if (!isUpdating.current) {
+    //         console.log("update window", isUpdating);
+    //         updateWebview(webviewPanel, event.document);
+    //       } else {
+    //         isUpdating.current = false;
+    //       }
+    //     }
+    //   },
+    //   undefined,
+    //   disposables
+    // );
+
+    // window.onDidChangeActiveColorTheme(
+    //   (event: ColorTheme) => {
+    //     let isDarkTheme = event.kind === ColorThemeKind.Dark;
+    //     webviewPanel.webview.postMessage({
+    //       type: "theme",
+    //       isDarkTheme: isDarkTheme,
+    //     });
+    //   },
+    //   undefined,
+    //   disposables
+    // );
+
+    // webviewPanel.webview.onDidReceiveMessage(
+    //   (message: any) => {
+    //     const command = message.command;
+    //     const text = message.text;
+
+    //     switch (command) {
+    //       case "update":
+    //         const edit = new WorkspaceEdit();
+    //         isUpdating.current = true;
+    //         isUpdating.editTime = Date.now() as any;
+    //         console.log("update", message.uri, text);
+    //         edit.replace(
+    //           message.uri,
+    //           new Range(0, 0, document.lineCount, 0),
+    //           text
+    //         );
+    //         workspace.applyEdit(edit);
+    //     }
+    //   },
+    //   undefined,
+    //   disposables
+    // );
+
+    // webviewPanel.onDidDispose(() => {
+    //   while (disposables.length) {
+    //     const disposable = disposables.pop();
+    //     if (disposable) {
+    //       disposable.dispose();
+    //     }
+    //   }
+    // });
   }
 }
 
@@ -154,15 +160,19 @@ function getWebviewContent(webview: Webview, extensionUri: Uri) {
   `;
 }
 
-function updateWindow(panel: WebviewPanel, document: TextDocument) {
+function sendUpdWebviewMsg(
+  panel: WebviewPanel,
+  document: TextDocument,
+  parsedFile: any
+) {
   const currentTheme = window.activeColorTheme;
   const isDarkTheme = currentTheme.kind === ColorThemeKind.Dark;
 
   panel.webview.postMessage({
-    type: "revive",
-    value: document.getText(),
-    uri: document.uri,
-    isDarkTheme: isDarkTheme,
+    type: "update",
+    document,
+    file: parsedFile,
+    isDarkTheme,
   });
 }
 

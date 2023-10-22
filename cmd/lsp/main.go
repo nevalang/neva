@@ -34,7 +34,7 @@ func main() { //nolint:funlen
 	s := Server{
 		handler: h,
 		logger:  logger,
-		parser:  parser.New(*isDebug),
+		parser:  parser.New(false),
 	}
 
 	// Base Protocol
