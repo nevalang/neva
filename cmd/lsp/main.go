@@ -27,90 +27,98 @@ func main() { //nolint:funlen
 
 	commonlog.Configure(1, nil)
 
-	handler = protocol.Handler{
-		// Base Protocol
-		CancelRequest: nil,
-		Progress:      nil,
-
-		// General Messages
-		Initialize:  initialize,
-		Initialized: initialized,
-		Shutdown:    shutdown,
-		Exit:        nil,
-		LogTrace:    nil,
-		SetTrace:    setTrace,
-
-		// Window
-		WindowWorkDoneProgressCancel: nil,
-
-		// Workspace
-		WorkspaceDidChangeWorkspaceFolders: nil,
-		WorkspaceDidChangeConfiguration:    nil,
-		WorkspaceDidChangeWatchedFiles:     nil,
-		WorkspaceSymbol:                    nil,
-		WorkspaceExecuteCommand:            nil,
-		WorkspaceWillCreateFiles:           nil,
-		WorkspaceDidCreateFiles:            nil,
-		WorkspaceWillRenameFiles:           nil,
-		WorkspaceDidRenameFiles:            nil,
-		WorkspaceWillDeleteFiles:           nil,
-		WorkspaceDidDeleteFiles:            nil,
-		WorkspaceSemanticTokensRefresh:     nil,
-
-		// Text Document Synchronization
-		TextDocumentDidOpen:           nil,
-		TextDocumentDidChange:         nil,
-		TextDocumentWillSave:          nil,
-		TextDocumentWillSaveWaitUntil: nil,
-		TextDocumentDidSave:           nil,
-		TextDocumentDidClose:          nil,
-
-		// Language features
-		TextDocumentCompletion:              nil,
-		CompletionItemResolve:               nil,
-		TextDocumentHover:                   nil,
-		TextDocumentSignatureHelp:           nil,
-		TextDocumentDeclaration:             nil,
-		TextDocumentDefinition:              nil,
-		TextDocumentTypeDefinition:          nil,
-		TextDocumentImplementation:          nil,
-		TextDocumentReferences:              nil,
-		TextDocumentDocumentHighlight:       nil,
-		TextDocumentDocumentSymbol:          nil,
-		TextDocumentCodeAction:              nil,
-		CodeActionResolve:                   nil,
-		TextDocumentCodeLens:                nil,
-		CodeLensResolve:                     nil,
-		TextDocumentDocumentLink:            nil,
-		DocumentLinkResolve:                 nil,
-		TextDocumentColor:                   nil,
-		TextDocumentColorPresentation:       nil,
-		TextDocumentFormatting:              nil,
-		TextDocumentRangeFormatting:         nil,
-		TextDocumentOnTypeFormatting:        nil,
-		TextDocumentRename:                  nil,
-		TextDocumentPrepareRename:           nil,
-		TextDocumentFoldingRange:            nil,
-		TextDocumentSelectionRange:          nil,
-		TextDocumentPrepareCallHierarchy:    nil,
-		CallHierarchyIncomingCalls:          nil,
-		CallHierarchyOutgoingCalls:          nil,
-		TextDocumentSemanticTokensFull:      nil,
-		TextDocumentSemanticTokensFullDelta: nil,
-		TextDocumentSemanticTokensRange:     nil,
-		TextDocumentLinkedEditingRange:      nil,
-		TextDocumentMoniker:                 nil,
+	h := &protocol.Handler{}
+	s := Server{
+		h:      h,
+		logger: commonlog.GetLoggerf("%s.server", serverName),
 	}
 
-	srv := server.NewServer(&handler, serverName, *isDebug)
+	// Base Protocol
+	h.CancelRequest = nil
+	h.Progress = nil
+
+	// General Messages
+	h.Initialize = s.initialize
+	h.Initialized = s.initialized
+	h.Shutdown = s.shutdown
+	h.Exit = nil
+	h.LogTrace = nil
+	h.SetTrace = s.setTrace
+
+	// Window
+	h.WindowWorkDoneProgressCancel = nil
+
+	// Workspace
+	h.WorkspaceDidChangeWorkspaceFolders = nil
+	h.WorkspaceDidChangeConfiguration = nil
+	h.WorkspaceDidChangeWatchedFiles = nil
+	h.WorkspaceSymbol = nil
+	h.WorkspaceExecuteCommand = nil
+	h.WorkspaceWillCreateFiles = nil
+	h.WorkspaceDidCreateFiles = nil
+	h.WorkspaceWillRenameFiles = nil
+	h.WorkspaceDidRenameFiles = nil
+	h.WorkspaceWillDeleteFiles = nil
+	h.WorkspaceDidDeleteFiles = nil
+	h.WorkspaceSemanticTokensRefresh = nil
+
+	// Text Document Synchronization
+	h.TextDocumentDidOpen = nil
+	h.TextDocumentDidChange = nil
+	h.TextDocumentWillSave = nil
+	h.TextDocumentWillSaveWaitUntil = nil
+	h.TextDocumentDidSave = nil
+	h.TextDocumentDidClose = nil
+
+	// Language features
+	h.TextDocumentCompletion = nil
+	h.CompletionItemResolve = nil
+	h.TextDocumentHover = nil
+	h.TextDocumentSignatureHelp = nil
+	h.TextDocumentDeclaration = nil
+	h.TextDocumentDefinition = nil
+	h.TextDocumentTypeDefinition = nil
+	h.TextDocumentImplementation = nil
+	h.TextDocumentReferences = nil
+	h.TextDocumentDocumentHighlight = nil
+	h.TextDocumentDocumentSymbol = nil
+	h.TextDocumentCodeAction = nil
+	h.CodeActionResolve = nil
+	h.TextDocumentCodeLens = nil
+	h.CodeLensResolve = nil
+	h.TextDocumentDocumentLink = nil
+	h.DocumentLinkResolve = nil
+	h.TextDocumentColor = nil
+	h.TextDocumentColorPresentation = nil
+	h.TextDocumentFormatting = nil
+	h.TextDocumentRangeFormatting = nil
+	h.TextDocumentOnTypeFormatting = nil
+	h.TextDocumentRename = nil
+	h.TextDocumentPrepareRename = nil
+	h.TextDocumentFoldingRange = nil
+	h.TextDocumentSelectionRange = nil
+	h.TextDocumentPrepareCallHierarchy = nil
+	h.CallHierarchyIncomingCalls = nil
+	h.CallHierarchyOutgoingCalls = nil
+	h.TextDocumentSemanticTokensFull = nil
+	h.TextDocumentSemanticTokensFullDelta = nil
+	h.TextDocumentSemanticTokensRange = nil
+	h.TextDocumentLinkedEditingRange = nil
+	h.TextDocumentMoniker = nil
+
+	srv := server.NewServer(h, serverName, *isDebug)
 	if err := srv.RunTCP(fmt.Sprintf("localhost:%d", *port)); err != nil {
 		panic(err)
 	}
 }
 
-func initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
-	logger := commonlog.GetLoggerf("%s.server", serverName)
-	logger.Info("initialize")
+type Server struct {
+	h      *protocol.Handler // readonly
+	logger commonlog.Logger
+}
+
+func (srv Server) initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
+	srv.logger.Info("initialize")
 
 	return protocol.InitializeResult{
 		Capabilities: handler.CreateServerCapabilities(),
@@ -121,17 +129,17 @@ func initialize(context *glsp.Context, params *protocol.InitializeParams) (any, 
 	}, nil
 }
 
-func initialized(context *glsp.Context, params *protocol.InitializedParams) error {
+func (srv Server) initialized(context *glsp.Context, params *protocol.InitializedParams) error {
 	return nil
 }
 
-func shutdown(context *glsp.Context) error {
+func (srv Server) shutdown(context *glsp.Context) error {
 	fmt.Println("shutdown")
 	protocol.SetTraceValue(protocol.TraceValueOff)
 	return nil
 }
 
-func setTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
+func (srv Server) setTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
 	protocol.SetTraceValue(params.Value)
 	return nil
 }
