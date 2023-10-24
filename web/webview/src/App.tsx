@@ -53,16 +53,23 @@ function Imports(props: {
 }) {
   return (
     <>
-      <h2 style={{ marginBottom: "10px" }}>Use</h2>
-      {Object.entries(props.imports).map((entry) => {
+      <h2 style={{ marginBottom: "10px" }}>
+        {/* <span style={{ marginRight: "5px" }} className="codicon codicon-plug" /> */}
+        Use
+      </h2>
+      {Object.entries(props.imports).map((entry, idx, imports) => {
         const [alias, path] = entry;
         return (
-          <section>
-            <VSCodeTextField style={{ width: "300px" }} value={path}>
-              {alias}
+          <section
+            style={{
+              width: "500px",
+              marginBottom: idx === imports.length - 1 ? 0 : "10px",
+            }}
+          >
+            <VSCodeTextField style={{ width: "100%" }} value={path}>
               <span
-                slot="start"
-                className="codicon codicon-go-to-file"
+                slot="end"
+                className="codicon codicon-go-to-file import_goto_icon"
                 onClick={() => console.log("navigation not implemented")}
               />
             </VSCodeTextField>

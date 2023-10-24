@@ -21,6 +21,10 @@ body {
   min-width: 100vw;
 }
 
+.import_goto_icon:hover {
+  cursor: pointer;
+}
+
 /* https://reactflow.dev/docs/guides/theming/ */
 
 .react-flow__node {
