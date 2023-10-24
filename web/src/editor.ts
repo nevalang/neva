@@ -14,6 +14,7 @@ import {
   Range,
   workspace,
 } from "vscode";
+import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 
 export const registerEditor = (viewType: string, editor: NevaEditor) =>
@@ -143,6 +144,13 @@ function getWebviewContent(webview: Webview, extensionUri: Uri) {
     "index.js",
   ]);
 
+  const codiconsUri = getUri(webview, extensionUri, [
+    "webview",
+    "dist",
+    "codicons",
+    "codicon.css",
+  ]);
+
   return /*html*/ `
     <!DOCTYPE html>
     <html lang="en">
@@ -150,6 +158,7 @@ function getWebviewContent(webview: Webview, extensionUri: Uri) {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" type="text/css" href="${stylesUri}">
+        <link href="${codiconsUri}" rel="stylesheet" />
         <title>Neva Editor</title>
       </head>
       <body>

@@ -16,6 +16,11 @@ body {
   background-color: var(--background);
 }
 
+.app {
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
 /* https://reactflow.dev/docs/guides/theming/ */
 
 .react-flow__node {

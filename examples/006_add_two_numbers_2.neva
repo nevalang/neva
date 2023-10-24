@@ -1,5 +1,7 @@
 use {
 	std/tmp
+	github/nevalang/neva/pkg/typesystem
+	some/really/deeply/nested/path/to/local/package/inthe/the/project
 }
 
 components {

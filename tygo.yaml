@@ -1,0 +1,5 @@
+packages:
+  - path: "github.com/nevalang/neva/internal/compiler/src"
+    output_path: "web/webview/src/generated/types.ts"
+    exclude_files:
+      - "scope.go"

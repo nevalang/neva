@@ -89,6 +89,7 @@
   },
   "icon": "assets/logo.png",
   "dependencies": {
+    "@vscode/codicons": "^0.0.33",
     "vscode": "^1.1.37",
     "vscode-languageclient": "^9.0.1"
   },
@@ -107,7 +108,19 @@
     "yaml2json": "js-yaml syntaxes/neva.tmLanguage.yml > syntaxes/neva.tmLanguage.json",
     "watch-yaml2json": "nodemon --delay 1 --watch syntaxes/neva.tmLanguage.yml --exec npm run yaml2json",
     "ts": "tsc --p ./",
-    "watch": "tsc -w -p ./",
-    "build-webview": "cd webview && npm i && npm run build"
+    "watch-ts": "tsc -w -p ./",
+    "build-webview": "cd webview && npm run build && cp -r ./node_modules/@vscode/codicons/dist ./dist/codicons",
+    "watch-webview": "nodemon --watch ./webview/src --exec npm run build-webview || exit 1",
+    "watch": "npx concurrently 'npm run watch-yaml2json' 'npm run watch-ts' 'npm run watch-webview'"
+  },
+  "nodemonConfig": {
+    "ext": "js,json,hbs,html,ts,tsx,yml,yaml",
+    "events": {
+      "start": "cls || clear"
+    },
+    "delay": 1000,
+    "ignore": [
+      "**/dist/**"
+    ]
   }
 }

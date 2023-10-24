@@ -79,10 +79,7 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 }
 
 func parseLitExpr(expr generated.ITypeLitExprContext) *ts.Expr {
-	panic("not implemented!")
-	// expr.EnumTypeExpr()
-	// expr.ArrTypeExpr()
-	// expr.RecTypeExpr()
+	panic("not implemented!") // TODO
 }
 
 func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {

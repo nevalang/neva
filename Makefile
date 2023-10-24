@@ -29,6 +29,12 @@ src-proto-ts:
 lsp:
 	@go build -ldflags="-s -w" -o web/out/lsp ./cmd/lsp/main.go
 
+# generate typescript types from golang src package to use in vscode extension
+# https://github.com/gzuidhof/tygo
+.PHONY: vscode-types
+vscode-types:
+	@tygo generate
+
 # # generate go gql sdk
 # .PHONY: gqlgo
 # gqlgo:
