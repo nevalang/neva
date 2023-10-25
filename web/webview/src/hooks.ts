@@ -11,7 +11,7 @@ import {
 } from "./generated/types";
 import { TextDocument } from "vscode";
 
-interface VSCodeState {
+interface VSCodeUpdMsg {
   original: TextDocument;
   parsed: File;
   isDarkTheme: boolean;
@@ -25,7 +25,7 @@ interface GroupedEntities {
   components: Array<{ name: string; entity: Component }>;
 }
 
-const vscodeApi = acquireVsCodeApi<VSCodeState>();
+const vscodeApi = acquireVsCodeApi<VSCodeUpdMsg>();
 
 // File state is grouped and sorted render-friendly object
 interface FileState {
@@ -34,24 +34,15 @@ interface FileState {
 }
 
 // UseFileState returns state that is easy to render. It also does memorization to avoid re-rendering
-export function UseFileState(): FileState {
+export function useFileState(): FileState {
   const persistedState = vscodeApi.getState();
-  const [state, setState] = useState<VSCodeState | undefined>(persistedState);
+  const [state, setState] = useState<VSCodeUpdMsg | undefined>(persistedState);
 
-  // listen upd messages from vscode (LSP -> vscode -> webview) and update both local and persistent state
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const listener = (event: any) => {
-      const msg = event.data;
-      const newState = {
-        original: msg.document,
-        parsed: msg.file,
-        isDarkTheme: msg.isDarkTheme,
-      };
-      setState(newState);
-      vscodeApi.setState(newState);
+    const listener = (event: { data: VSCodeUpdMsg }) => {
+      setState(event.data);
+      vscodeApi.setState(event.data);
     };
-
     window.addEventListener("message", listener);
     return () => window.removeEventListener("message", listener);
   }, []);
@@ -67,57 +58,72 @@ export function UseFileState(): FileState {
       },
     };
 
-    if (state === undefined || state.parsed.entities === undefined) {
+    if (state === undefined) {
       return result;
     }
 
-    for (const alias in state.parsed.imports) {
-      result.imports.push({
-        alias,
-        path: state.parsed.imports[alias],
-      });
-    }
-
-    result.imports.sort();
-
-    for (const name in state.parsed.entities) {
-      const entity = state.parsed.entities[name];
-
-      switch (entity.kind) {
-        case TypeEntity:
-          if (entity.type === undefined) {
-            continue;
-          }
-          result.entities.types.push({ name: name, entity: entity.type });
-          break;
-        case ConstEntity:
-          if (entity.const === undefined) {
-            break;
-          }
-          result.entities.constants.push({ name: name, entity: entity.const });
-          break;
-        case InterfaceEntity:
-          if (entity.interface === undefined) {
-            break;
-          }
-          result.entities.interfaces.push({
-            name: name,
-            entity: entity.interface,
-          });
-          break;
-        case ComponentEntity:
-          if (entity.component === undefined) {
-            break;
-          }
-          result.entities.components.push({
-            name: name,
-            entity: entity.component,
-          });
-          break;
+    try {
+      if (state.parsed.imports === undefined) {
+        return result;
       }
-    }
 
-    return result;
+      for (const alias in state.parsed.imports) {
+        result.imports.push({
+          alias,
+          path: state.parsed.imports[alias],
+        });
+      }
+
+      result.imports.sort();
+
+      if (state.parsed.entities === undefined) {
+        return result;
+      }
+
+      for (const name in state.parsed.entities) {
+        const entity = state.parsed.entities[name];
+
+        switch (entity.kind) {
+          case TypeEntity:
+            if (entity.type === undefined) {
+              continue;
+            }
+            result.entities.types.push({ name: name, entity: entity.type });
+            break;
+          case ConstEntity:
+            if (entity.const === undefined) {
+              break;
+            }
+            result.entities.constants.push({
+              name: name,
+              entity: entity.const,
+            });
+            break;
+          case InterfaceEntity:
+            if (entity.interface === undefined) {
+              break;
+            }
+            result.entities.interfaces.push({
+              name: name,
+              entity: entity.interface,
+            });
+            break;
+          case ComponentEntity:
+            if (entity.component === undefined) {
+              break;
+            }
+            result.entities.components.push({
+              name: name,
+              entity: entity.component,
+            });
+            break;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      return result; // eslint-disable-line no-unsafe-finally
+    }
   }, [state]);
 
   return fileState;

@@ -21,7 +21,9 @@ func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 
 func (s *treeShapeListener) EnterUseStmt(actx *generated.UseStmtContext) {
 	imports := actx.AllImportDef()
-	s.file.Imports = make(map[string]string, len(imports))
+	if len(s.file.Imports) == 0 { // there could be multiple use statements in the file
+		s.file.Imports = make(map[string]string, len(imports))
+	}
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {

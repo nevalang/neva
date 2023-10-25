@@ -17,7 +17,7 @@ func (s Server) TextDocumentDidOpen(glpsCtx *glsp.Context, params *protocol.DidO
 		return err
 	}
 
-	glpsCtx.Notify("neva/renderFile", parsedFile)
+	glpsCtx.Notify("neva/file_parsed", parsedFile)
 
 	return nil
 }

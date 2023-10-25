@@ -1,10 +1,11 @@
 // Package parser implements source code parsing.
-package parser
+package parser_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +36,7 @@ func TestParser_ParseFile(t *testing.T) {
 			},
 		},
 		{
-			name: "use_statement_with_word_IN",
+			name: `use_statement_with_"in"_word`, // FIXME keywords collision
 			bb: []byte(`
 				use {
 					package/in/the/project
@@ -63,11 +64,48 @@ func TestParser_ParseFile(t *testing.T) {
 			},
 			wantErr: nil,
 		},
+		{
+			name: "duplicated_imports",
+			bb: []byte(`
+				use {
+					dupl
+					path/with/parts
+					withalias dupl
+					withalias @/local/path/with/parts
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{
+					"dupl":      "dupl",
+					"parts":     "path/with/parts",
+					"withalias": "@/local/path/with/parts",
+				},
+				Entities: map[string]src.Entity{},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "several_use_statements",
+			bb: []byte(`
+				use {
+					foo
+				}
+				use {
+					bar
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{
+					"foo": "foo",
+					"bar": "bar",
+				},
+				Entities: map[string]src.Entity{},
+			},
+			wantErr: nil,
+		},
 	}
 
-	p := Parser{
-		debug: false,
-	}
+	p := parser.New(false)
 
 	for _, tt := range tests {
 		tt := tt

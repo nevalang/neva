@@ -6,7 +6,7 @@ Frequently asked questions
 
 ### What is this?
 
-This is Neva - visual general-purpose data-flow (flow-based) programming language with static structural typing and implicit parallelism that compiles to machine code.
+This is **Neva** - visual general-purpose data-flow (flow-based) programming language with static structural typing and implicit parallelism.
 
 ### Why yet another language?
 

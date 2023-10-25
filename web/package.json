@@ -107,9 +107,9 @@
   "scripts": {
     "yaml2json": "js-yaml syntaxes/neva.tmLanguage.yml > syntaxes/neva.tmLanguage.json",
     "watch-yaml2json": "nodemon --delay 1 --watch syntaxes/neva.tmLanguage.yml --exec npm run yaml2json",
-    "ts": "tsc --p ./",
+    "ts": "rm -rf out && tsc --p ./",
     "watch-ts": "tsc -w -p ./",
-    "build-webview": "cd webview && npm run build && cp -r ./node_modules/@vscode/codicons/dist ./dist/codicons",
+    "build-webview": "cd webview && rm -rf dist && npm run build && cp -r ./node_modules/@vscode/codicons/dist ./dist/codicons",
     "watch-webview": "nodemon --watch ./webview/src --exec npm run build-webview || exit 1",
     "watch": "npx concurrently 'npm run watch-yaml2json' 'npm run watch-ts' 'npm run watch-webview'"
   },

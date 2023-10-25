@@ -1,7 +1,7 @@
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, window } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
-import { NevaEditor, registerEditor } from "./editor";
-import { setupLsp } from "./client";
+import { NevaEditor } from "./editor";
+import { setupLsp } from "./lsp";
 
 let lspClient: LanguageClient;
 const viewType = "neva.editNeva";
@@ -16,7 +16,9 @@ export async function activate(context: ExtensionContext) {
   // Custom Editor
   const editor = new NevaEditor(context, lspClient);
   context.subscriptions.push(
-    registerEditor(viewType, new NevaEditor(context, lspClient)),
+    window.registerCustomEditorProvider(viewType, editor, {
+      supportsMultipleEditorsPerDocument: true,
+    })
   );
 }
 

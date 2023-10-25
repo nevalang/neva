@@ -3,11 +3,13 @@
 
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { Component, Const, Interface } from "./generated/types";
-import { UseFileState } from "./hooks";
+import { useFileState } from "./hooks";
 
 export default function App() {
-  const { imports, entities } = UseFileState();
+  const { imports, entities } = useFileState();
   const { types, constants, interfaces, components } = entities;
+
+  console.log({ imports, entities });
 
   return (
     <div className="app">
