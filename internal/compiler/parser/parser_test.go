@@ -7,6 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/src"
+	"github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,6 +18,7 @@ func TestParser_ParseFile(t *testing.T) {
 		want    src.File
 		wantErr error
 	}{
+		// === Use ===
 		{
 			name: "use_statement_with_dots",
 			bb: []byte(`
@@ -54,7 +56,7 @@ func TestParser_ParseFile(t *testing.T) {
 			bb: []byte(`
 				use { // inline comment
 					pkg
-				} 
+				}
 			`),
 			want: src.File{
 				Imports: map[string]string{
@@ -100,6 +102,94 @@ func TestParser_ParseFile(t *testing.T) {
 					"bar": "bar",
 				},
 				Entities: map[string]src.Entity{},
+			},
+			wantErr: nil,
+		},
+		// === Interfaces ===
+		{
+			name: "just_a_couple_of_simple_interfaces",
+			bb: []byte(`
+				interfaces {
+					IReader(path string) (i int, e err)
+					IWriter(path) (i int, anything)
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{},
+				Entities: map[string]src.Entity{
+					"IReader": {
+						Exported: false,
+						Kind:     src.InterfaceEntity,
+						Interface: src.Interface{
+							IO: src.IO{
+								In: map[string]src.Port{
+									"path": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "string"},
+											},
+										},
+										IsArray: false,
+									},
+								},
+								Out: map[string]src.Port{
+									"i": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "int"},
+											},
+										},
+										IsArray: false,
+									},
+									"e": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "err"},
+											},
+										},
+										IsArray: false,
+									},
+								},
+							},
+						},
+					},
+					"IWriter": {
+						Exported: false,
+						Kind:     src.InterfaceEntity,
+						Interface: src.Interface{
+							IO: src.IO{
+								In: map[string]src.Port{
+									"path": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "any"},
+											},
+										},
+										IsArray: false,
+									},
+								},
+								Out: map[string]src.Port{
+									"i": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "int"},
+											},
+										},
+										IsArray: false,
+									},
+									"anything": {
+										TypeExpr: typesystem.Expr{
+											Inst: &typesystem.InstExpr{
+												Ref: src.EntityRef{Name: "any"},
+											},
+										},
+										IsArray: false,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			wantErr: nil,
 		},

@@ -15,6 +15,7 @@ import (
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 	s.file.Entities = map[string]src.Entity{}
+	s.file.Imports = map[string]string{}
 }
 
 /* --- Use --- */

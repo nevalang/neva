@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import { Component, Const, Interface } from "./generated/types";
+import { Component, Const, Interface, Port } from "./generated/types";
 import { useFileState } from "./hooks";
+import { useMemo } from "react";
 
 export default function App() {
   const { imports, entities } = useFileState();
@@ -29,6 +30,7 @@ export default function App() {
       <h2 style={{ marginBottom: "10px" }}>Interfaces</h2>
       {interfaces.map((entry) => {
         const { name, entity } = entry;
+        console.log({ name, entity });
         return <InterfaceView name={name} entity={entity} />;
       })}
 
@@ -75,8 +77,55 @@ function ConstantView(props: { name: string; entity: Const }) {
   return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
 }
 
+interface PortEntries {
+  inports: PortEntry[];
+  outports: PortEntry[];
+}
+
+interface PortEntry {
+  name: string;
+  port: Port;
+}
+
 function InterfaceView(props: { name: string; entity: Interface }) {
-  return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
+  const portEntries: PortEntries = useMemo(() => {
+    const result: PortEntries = { inports: [], outports: [] };
+    if (props.entity.io === undefined) {
+      return result;
+    }
+    const { in: inports, out: outports } = props.entity.io;
+    for (const name in inports) {
+      result.inports.push({
+        name: name,
+        port: inports[name],
+      });
+    }
+    for (const name in outports) {
+      result.outports.push({
+        name: name,
+        port: outports[name],
+      });
+    }
+    return result;
+  }, [props.entity]);
+
+  const { inports, outports } = portEntries;
+
+  return (
+    <>
+      <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>
+      <div>
+        {inports.map((inport) => (
+          <>{inport.name}</>
+        ))}
+      </div>
+      <div>
+        {outports.map((outport) => (
+          <>{outport.name}</>
+        ))}
+      </div>
+    </>
+  );
 }
 
 function ComponentView(props: { name: string; entity: Component }) {
