@@ -17,21 +17,51 @@ func TestParser_ParseFile(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "only_use_statement_but_with_dot",
+			name: "use_statement_with_dots",
 			bb: []byte(`
 				use {
 					std/tmp
 					github.com/nevalang/neva/pkg/typesystem
-					some/really/deeply/nested/path/to/local/package/in/the/project
+					some/really/deeply/nested/path/to/local/package/at/the/project
 				}
 			`),
 			want: src.File{
 				Imports: map[string]string{
 					"tmp":        "std/tmp",
 					"typesystem": "github.com/nevalang/neva/pkg/typesystem",
-					"project":    "some/really/deeply/nested/path/to/local/package/in/the/project",
+					"project":    "some/really/deeply/nested/path/to/local/package/at/the/project",
 				},
+				Entities: map[string]src.Entity{},
 			},
+		},
+		{
+			name: "use_statement_with_word_IN",
+			bb: []byte(`
+				use {
+					package/in/the/project
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{
+					"project": "package/in/the/project",
+				},
+				Entities: map[string]src.Entity{},
+			},
+		},
+		{
+			name: "inline comment",
+			bb: []byte(`
+				use { // inline comment
+					pkg
+				} 
+			`),
+			want: src.File{
+				Imports: map[string]string{
+					"pkg": "pkg",
+				},
+				Entities: map[string]src.Entity{},
+			},
+			wantErr: nil,
 		},
 	}
 
@@ -44,7 +74,7 @@ func TestParser_ParseFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := p.ParseFile(context.Background(), tt.bb)
-			require.Equal(t, got, tt.want)
+			require.Equal(t, tt.want, got)
 			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}

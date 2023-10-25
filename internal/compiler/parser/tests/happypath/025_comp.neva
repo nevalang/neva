@@ -203,11 +203,11 @@ components {
 			concrete  io.Reader()
 		}
 		net {
-			in.enter -> abs.in.v
-			abs.out.v -> {
-				concrete.in.v
+			in.enter -> abs.v
+			abs.v -> {
+				concrete.v
 			}
-			concrete.out.v -> out.code
+			concrete.v -> out.code
 		}
 	}
 }

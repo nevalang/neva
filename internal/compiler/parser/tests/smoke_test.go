@@ -37,7 +37,7 @@ func TestSmoke(t *testing.T) {
 	nevaTestFiles, err := os.ReadDir(".")
 	require.NoError(t, err)
 
-	// printVsCodeDebugConfig(nevaTestFiles)
+	// printVsCodeDebugConfig(nevaTestFiles) // uncomment to get vscode debug conf
 
 	for _, file := range nevaTestFiles {
 		fileName := file.Name()
@@ -67,6 +67,8 @@ func TestSmoke(t *testing.T) {
 		parser.BuildParseTrees = true
 		tree := parser.Prog()
 
+		// fmt.Println("trying to parse file: ", fileName) // uncomment this in case of debugging
+
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)
 	}
@@ -81,12 +83,12 @@ func printVsCodeDebugConfig(nevaTestFiles []fs.DirEntry) {
 			"name": "antlr_%s",
 			"type": "antlr-debug",
 			"request": "launch",
-			"input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/%s.neva",
+			"input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/%s",
 			"grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
 			"startRule": "prog",
 			"printParseTree": true,
 			"visualParseTree": true
-		  },`, fileName, fileName)
+		  },`, fileName, fileName) // FIXME remove double extension
 	}
 	fmt.Println(vscodeDebug + "]")
 	os.Exit(0)

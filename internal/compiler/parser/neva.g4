@@ -8,7 +8,11 @@ stmt: useStmt | typeStmt | interfaceStmt | constStmt | compStmt;
 
 useStmt: 'use' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: IDENTIFIER? importPath NEWLINE*;
-importPath: '@/'? IDENTIFIER ('/' IDENTIFIER)*;
+importPath:
+	'@/'? (IDENTIFIER ('.' IDENTIFIER)?) (
+		'/' (IDENTIFIER ('.' IDENTIFIER)?)
+	)*;
+// ImportSegment: IDENTIFIER ('.' IDENTIFIER)?;
 
 // types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
@@ -30,8 +34,9 @@ recFields: recField (NEWLINE+ recField)*;
 recField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr:
 	nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+;
-// union inside union lead to mutuall left recursion (not supported by ANTLR)
-nonUnionTypeExpr: typeInstExpr | typeLitExpr;
+nonUnionTypeExpr:
+	typeInstExpr
+	| typeLitExpr; // union inside union lead to mutuall left recursion (not supported by ANTLR)
 
 // interfaces
 interfaceStmt:
@@ -87,7 +92,7 @@ connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}';
 
 /* LEXER */
 
-COMMENT: '//' ~[\r\n]* ;
+COMMENT: '//' ~( '\r' | '\n')*;
 PUB_KW: 'pub';
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_];

@@ -7,11 +7,11 @@ This package defines source code entities - abstractions that end-user (a progra
 For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
 */
 
-export type Program = { [key: string]: Package};
-export type Package = { [key: string]: File};
+export type Program = { [key: string]: Package };
+export type Package = { [key: string]: File };
 export interface File {
-  imports?: { [key: string]: string};
-  entities?: { [key: string]: Entity};
+  imports?: { [key: string]: string };
+  entities?: { [key: string]: Entity };
 }
 /**
  * TODO make const, type, interface and components pointers
@@ -31,7 +31,7 @@ export const TypeEntity: EntityKind = "type_entity";
 export const InterfaceEntity: EntityKind = "interface_entity";
 export interface Component {
   interface?: Interface;
-  nodes?: { [key: string]: Node};
+  nodes?: { [key: string]: Node };
   net?: Connection[]; // Can't be map, connection side can't be map key due to selectors
 }
 export interface Interface {
@@ -41,7 +41,7 @@ export interface Interface {
 export interface Node {
   entityRef?: EntityRef;
   typeArgs?: any /* ts.Expr */[];
-  componentDi?: { [key: string]: Node};
+  componentDi?: { [key: string]: Node };
 }
 export interface EntityRef {
   pkg?: string;
@@ -58,11 +58,11 @@ export interface Msg {
   float?: number /* float64 */;
   str?: string;
   vec?: Const[];
-  map?: { [key: string]: Const};
+  map?: { [key: string]: Const };
 }
 export interface IO {
-  in?: { [key: string]: Port};
-  out?: { [key: string]: Port};
+  in?: { [key: string]: Port };
+  out?: { [key: string]: Port };
 }
 export interface Port {
   typeExpr?: any /* ts.Expr */;

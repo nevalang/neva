@@ -1,102 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-namespace */
 
-import { useEffect, useState } from "react";
-import {
-  VSCodeProgressRing,
-  VSCodeTextField,
-} from "@vscode/webview-ui-toolkit/react";
-import { File, Component } from "./generated/types";
-
-interface State {
-  originalFileContent: string;
-  parsedFile: File;
-  uri: string;
-  isDarkTheme: boolean;
-}
-
-const vscodeApi = acquireVsCodeApi<State>();
+import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
+import { Component, Const, Interface } from "./generated/types";
+import { UseFileState } from "./hooks";
 
 export default function App() {
-  const defaultState = vscodeApi.getState();
-  const [state, setState] = useState<State | undefined>(defaultState);
-
-  useEffect(() => {
-    const listener = (event: any) => {
-      const msg = event.data;
-      const newState = {
-        originalFileContent: msg.document,
-        uri: msg.uri,
-        isDarkTheme: msg.isDarkTheme,
-        parsedFile: msg.file,
-      };
-      setState(newState);
-      vscodeApi.setState(newState);
-    };
-
-    window.addEventListener("message", listener);
-    return () => window.removeEventListener("message", listener);
-  }, []);
-
-  if (state === undefined || state.parsedFile === undefined) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <VSCodeProgressRing />
-      </div>
-    );
-  }
-
-  const { parsedFile: file } = state;
+  const { imports, entities } = UseFileState();
+  const { types, constants, interfaces, components } = entities;
 
   return (
     <div className="app">
-      {file.imports && (
-        <Imports imports={file.imports} style={{ marginBottom: "20px" }} />
-      )}
-      {file.entities &&
-        Object.entries(file.entities)
-          .filter((entry) => {
-            const [, entity] = entry;
-            return (
-              entity.kind === "component_entity" &&
-              entity.component !== undefined
-            );
-          })
-          .map((entry) => {
-            const [name, entity] = entry;
-            return <Component name={name} entity={entity.component!} />;
-          })}
+      <Imports imports={imports} style={{ marginBottom: "20px" }} />
+
+      <h2 style={{ marginBottom: "10px" }}>Types</h2>
+      {types.map((entry) => {
+        return JSON.stringify(entry);
+      })}
+
+      <h2 style={{ marginBottom: "10px" }}>Constants</h2>
+      {constants.map((entry) => {
+        const { name, entity } = entry;
+        return <ConstantView name={name} entity={entity} />;
+      })}
+
+      <h2 style={{ marginBottom: "10px" }}>Interfaces</h2>
+      {interfaces.map((entry) => {
+        const { name, entity } = entry;
+        return <InterfaceView name={name} entity={entity} />;
+      })}
+
+      <h2 style={{ marginBottom: "10px" }}>Components</h2>
+      {components.map((entry) => {
+        const { name, entity } = entry;
+        return <ComponentView name={name} entity={entity} />;
+      })}
     </div>
   );
 }
 
-function Component(props: { name: string; entity: Component }) {
-  return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
-}
-
 function Imports(props: {
-  imports: {
-    [key: string]: string;
-  };
+  imports: Array<{ alias: string; path: string }>;
   style?: object;
 }) {
   return (
     <div {...props.style}>
-      <h2 style={{ marginBottom: "10px" }}>
-        {/* <span style={{ marginRight: "5px" }} className="codicon codicon-plug" /> */}
-        Use
-      </h2>
-      {Object.entries(props.imports).map((entry, idx, imports) => {
-        const [, path] = entry;
+      <h2 style={{ marginBottom: "10px" }}>Use</h2>
+      {props.imports.map((entry, idx, imports) => {
+        const { path } = entry;
         return (
           <section
             style={{
@@ -116,4 +67,16 @@ function Imports(props: {
       })}
     </div>
   );
+}
+
+function ConstantView(props: { name: string; entity: Const }) {
+  return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
+}
+
+function InterfaceView(props: { name: string; entity: Interface }) {
+  return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
+}
+
+function ComponentView(props: { name: string; entity: Component }) {
+  return <h3 style={{ marginBottom: "10px" }}>{props.name}</h3>;
 }

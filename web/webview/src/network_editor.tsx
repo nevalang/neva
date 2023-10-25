@@ -18,6 +18,41 @@ import ReactFlow, {
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 
+export default function NetworkEditor() {
+  const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
+
+  const nodeTypes = useMemo(
+    () => ({
+      normalNode: NormalNode,
+    }),
+    []
+  );
+
+  return (
+    <div style={{ width: "100vw", height: "100vh" }}>
+      <ReactFlow
+        nodeTypes={nodeTypes}
+        onInit={(instance) => instance.fitView()}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+      >
+        <Controls />
+        <MiniMap />
+        <Background variant={BackgroundVariant.Dots} gap={5} size={0.5} />
+      </ReactFlow>
+    </div>
+  );
+}
+
 interface IPorts {
   in: string[];
   out: string[];
@@ -261,38 +296,3 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
   initialNodes,
   initialEdges
 );
-
-export default function NetworkEditor() {
-  const [nodes, _, onNodesChange] = useNodesState(layoutedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
-
-  const nodeTypes = useMemo(
-    () => ({
-      normalNode: NormalNode,
-    }),
-    []
-  );
-
-  return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        onInit={(instance) => instance.fitView()}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-      >
-        <Controls />
-        <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={5} size={0.5} />
-      </ReactFlow>
-    </div>
-  );
-}

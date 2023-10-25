@@ -1,20 +1,14 @@
 import {
-  Disposable,
   Webview,
   WebviewPanel,
   window,
   Uri,
   ColorThemeKind,
-  ColorTheme,
   CustomTextEditorProvider,
   CancellationToken,
   TextDocument,
   ExtensionContext,
-  WorkspaceEdit,
-  Range,
-  workspace,
 } from "vscode";
-import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 
 export const registerEditor = (viewType: string, editor: NevaEditor) =>
@@ -57,8 +51,6 @@ export class NevaEditor implements CustomTextEditorProvider {
     this.client.onNotification("neva/renderFile", (parsedFile) => {
       sendUpdWebviewMsg(webviewPanel, document, parsedFile);
     });
-
-    // updateWebview(webviewPanel, document); // send current data to react app
 
     // const disposables: Disposable[] = [];
 
@@ -172,16 +164,13 @@ function getWebviewContent(webview: Webview, extensionUri: Uri) {
 function sendUpdWebviewMsg(
   panel: WebviewPanel,
   document: TextDocument,
-  parsedFile: any
+  file: any
 ) {
-  const currentTheme = window.activeColorTheme;
-  const isDarkTheme = currentTheme.kind === ColorThemeKind.Dark;
-
   panel.webview.postMessage({
     type: "update",
-    document,
-    file: parsedFile,
-    isDarkTheme,
+    original: document,
+    parsed: file,
+    isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
   });
 }
 

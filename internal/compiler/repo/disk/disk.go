@@ -17,7 +17,7 @@ type Repository struct {
 
 func (r Repository) ByPath(ctx context.Context, pathToMainPkg string) (map[string]compiler.RawPackage, error) {
 	mainPkgFiles := map[string][]byte{}
-	if err := readAllFilesInDir(pathToMainPkg, mainPkgFiles); err != nil {
+	if err := walk(pathToMainPkg, mainPkgFiles); err != nil {
 		return nil, err
 	}
 
@@ -26,12 +26,12 @@ func (r Repository) ByPath(ctx context.Context, pathToMainPkg string) (map[strin
 	}
 
 	stdTmpFiles := map[string][]byte{}
-	if err := readAllFilesInDir(r.stdLibPath+"/tmp", stdTmpFiles); err != nil {
+	if err := walk(r.stdLibPath+"/tmp", stdTmpFiles); err != nil {
 		return nil, err
 	}
 
 	stdBuiltinFiles := map[string][]byte{}
-	if err := readAllFilesInDir(r.stdLibPath+"/builtin", stdBuiltinFiles); err != nil {
+	if err := walk(r.stdLibPath+"/builtin", stdBuiltinFiles); err != nil {
 		return nil, err
 	}
 
@@ -49,27 +49,33 @@ func (r Repository) Save(ctx context.Context, path string, prog *ir.Program) err
 	return os.WriteFile(path, bb, 0644) //nolint:gofumpt
 }
 
-func readAllFilesInDir(path string, files map[string][]byte) error {
+func walk(path string, files map[string][]byte) error {
 	if err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if info.IsDir() {
-			return nil
+			return walk(filePath, files)
 		}
+
 		ext := filepath.Ext(info.Name())
 		if ext != ".neva" {
 			return nil
 		}
+
 		bb, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
+
 		files[strings.TrimSuffix(info.Name(), ext)] = bb
+
 		return nil
 	}); err != nil {
 		return err
 	}
+
 	return nil
 }
 
