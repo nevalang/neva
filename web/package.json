@@ -99,6 +99,7 @@
     "@types/vscode-webview": "^1.57.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
+    "concurrently": "^8.2.2",
     "eslint": "^8.26.0",
     "js-yaml": "^4.1.0",
     "nodemon": "^2.0.22",
@@ -111,7 +112,7 @@
     "watch-ts": "tsc -w -p ./",
     "build-webview": "cd webview && rm -rf dist && npm run build && cp -r ./node_modules/@vscode/codicons/dist ./dist/codicons",
     "watch-webview": "nodemon --watch ./webview/src --exec npm run build-webview || exit 1",
-    "watch": "npx concurrently 'npm run watch-yaml2json' 'npm run watch-ts' 'npm run watch-webview'"
+    "watch": "concurrently 'npm run watch-yaml2json' 'npm run watch-ts' 'npm run watch-webview'"
   },
   "nodemonConfig": {
     "ext": "js,json,hbs,html,ts,tsx,yml,yaml",

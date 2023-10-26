@@ -23,6 +23,10 @@ These are not really required but recommended in order you're using VSCode
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile). Also many directories contain `README.md` files.
 
+## VSCode Extension
+
+Check out [tygo.yaml](./tygo.yaml). It depends on types defined in the `src` and `ts` packages and thus it's dangerous to rename those types. If you gonna do so make sure you don't brake TS types generation.
+
 # Naming conventions
 
 ## Tests

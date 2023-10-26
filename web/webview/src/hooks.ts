@@ -1,3 +1,4 @@
+import { TextDocument } from "vscode";
 import { useState, useEffect, useMemo } from "react";
 import {
   ConstEntity,
@@ -8,8 +9,8 @@ import {
   Const,
   Interface,
   File,
-} from "./generated/types";
-import { TextDocument } from "vscode";
+} from "./generated/src";
+import * as ts from "./generated/typesystem";
 
 interface VSCodeUpdMsg {
   original: TextDocument;
@@ -19,7 +20,7 @@ interface VSCodeUpdMsg {
 
 // we use arrays instead of objects because it's faster to render
 interface GroupedEntities {
-  types: Array<unknown>;
+  types: Array<{ name: string; entity: ts.Def }>;
   interfaces: Array<{ name: string; entity: Interface }>;
   constants: Array<{ name: string; entity: Const }>;
   components: Array<{ name: string; entity: Component }>;
@@ -88,7 +89,10 @@ export function useFileState(): FileState {
             if (entity.type === undefined) {
               continue;
             }
-            result.entities.types.push({ name: name, entity: entity.type });
+            result.entities.types.push({
+              name: name,
+              entity: entity.type as ts.Def,
+            });
             break;
           case ConstEntity:
             if (entity.const === undefined) {

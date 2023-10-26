@@ -1,6 +1,6 @@
 # Contributing
 
-> WARNING: Don't forget **it's JS**. _Sometimes_ you need to `rm -rf node_modules` and install deps from scratch and everything magically gonna work.
+> WARNING: Don't forget **it's JS**. _Sometimes_ you need to `rm -rf node_modules` and install deps from scratch and everything magically gonna work. Also if you don't see changes in webview while developing, try to kill `watch` task in terminal and re-rerun debuggin.
 
 ## Structure
 
@@ -14,6 +14,10 @@ This extension consist of 4 parts:
 ## Development
 
 Simply `VSCode Extension` debug task. See [launch.json](../.vscode/launch.json) and [tasks.json](../.vscode/tasks.json) to figure out what's going on.
+
+### Webview
+
+See
 
 ## Production
 

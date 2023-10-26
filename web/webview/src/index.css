@@ -14,11 +14,16 @@
 body {
   font-family: 'Bai Jamjuree', sans-serif;
   background-color: var(--background);
+  padding: 20px;
 }
 
-.app {
-  min-height: 100vh;
-  min-width: 100vw;
+h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+h3 {
+  margin: 0;
 }
 
 .import_goto_icon:hover {

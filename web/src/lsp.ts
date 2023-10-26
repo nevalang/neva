@@ -18,7 +18,6 @@ export function setupLsp(context: ExtensionContext): LanguageClient {
   let serverOptions: ServerOptions;
   if (context.extensionMode === ExtensionMode.Production) {
     let command = context.asAbsolutePath(path.join("out", "lsp"));
-    console.log({ command });
 
     const transport: SocketTransport = {
       kind: TransportKind.socket,

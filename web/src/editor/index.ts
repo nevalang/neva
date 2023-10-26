@@ -34,8 +34,6 @@ export class NevaEditor implements CustomTextEditorProvider {
       ],
     };
 
-    console.log(getWebviewContent);
-
     webviewPanel.webview.html = getWebviewContent(
       webviewPanel.webview,
       extensionUri
