@@ -18,7 +18,7 @@ import ReactFlow, {
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 
-export default function NetworkEditor() {
+export default function NetworkView() {
   const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 

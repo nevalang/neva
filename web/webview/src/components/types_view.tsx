@@ -4,7 +4,7 @@ import {
   VSCodeDataGridRow,
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
-import * as ts from "./generated/typesystem";
+import * as ts from "../generated/typesystem";
 
 export function TypesView(props: {
   types: Array<{ name: string; entity: ts.Def }>;

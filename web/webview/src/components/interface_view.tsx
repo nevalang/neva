@@ -4,7 +4,7 @@ import {
   VSCodeDataGridRow,
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
-import { Interface, Port } from "./generated/src";
+import { Interface, Port } from "../generated/src";
 import { useMemo } from "react";
 
 interface PortEntries {
@@ -37,30 +37,31 @@ export function InterfaceView(props: { name: string; entity: Interface }) {
     return result;
   }, [props.entity]);
 
-  const { inports, outports } = portEntries;
+  const { inports } = portEntries;
 
   return (
     <>
       <h3
         style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}
       >
-        <i
-          className="codicon codicon-symbol-interface"
-          style={{ marginRight: "5px" }}
-        />
         {props.name}
       </h3>
       <div style={{ marginBottom: "20px" }}>
+        <h4>Input</h4>
         <VSCodeDataGrid>
           <VSCodeDataGrid generateHeader="sticky">
-            {inports.map((inport) => (
-              <VSCodeDataGridRow>
-                <VSCodeDataGridCell grid-column="1">
+            {inports.map((inport, idx) => (
+              <VSCodeDataGridRow rowType="header">
+                <VSCodeDataGridCell grid-column={idx + 1}>
                   <VSCodeTextField value={inport.name} />
                 </VSCodeDataGridCell>
-                <VSCodeDataGridCell grid-column="2">
+              </VSCodeDataGridRow>
+            ))}
+            {inports.map((inport, idx) => (
+              <VSCodeDataGridRow rowType="default">
+                <VSCodeDataGridCell grid-column={idx + 1}>
                   <VSCodeTextField
-                    value={inport?.port.typeExpr?.inst?.ref?.name}
+                    value={inport.port.typeExpr?.inst?.ref?.name}
                   />
                 </VSCodeDataGridCell>
               </VSCodeDataGridRow>

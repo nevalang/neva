@@ -9,8 +9,8 @@ import {
   Const,
   Interface,
   File,
-} from "./generated/src";
-import * as ts from "./generated/typesystem";
+} from "../generated/src";
+import * as ts from "../generated/typesystem";
 
 interface VSCodeUpdMsg {
   original: TextDocument;
@@ -42,6 +42,7 @@ export function useFileState(): FileState {
   useEffect(() => {
     const listener = (event: { data: VSCodeUpdMsg }) => {
       setState(event.data);
+      console.log("data", event.data);
       vscodeApi.setState(event.data);
     };
     window.addEventListener("message", listener);

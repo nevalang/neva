@@ -27,7 +27,7 @@ types { // adsad
             bazus int // asx
             bazus2 vec<float> // asd
         }>
-        bam struct { 
+        bam struct {
             asd int
             foo float
         }

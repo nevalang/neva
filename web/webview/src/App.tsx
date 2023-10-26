@@ -1,10 +1,12 @@
 import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
-import { useFileState } from "./hooks";
-import { TypesView } from "./types_view";
-import { ImportsView } from "./imports_view";
-import { ConstantView } from "./constant_view";
-import { InterfaceView } from "./interface_view";
-import { ComponentView } from "./component_view";
+import {
+  ImportsView,
+  TypesView,
+  ConstantView,
+  InterfaceView,
+  ComponentView,
+} from "./components";
+import { useFileState } from "./hooks/use_file_state";
 
 export default function App() {
   const { imports, entities } = useFileState();
@@ -26,10 +28,7 @@ export default function App() {
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
       <h2>Constants</h2>
-      {constants.map((entry) => {
-        const { name, entity } = entry;
-        return <ConstantView name={name} entity={entity} />;
-      })}
+      <ConstantView constants={constants} />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 

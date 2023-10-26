@@ -12,7 +12,6 @@ importPath:
 	'@/'? (IDENTIFIER ('.' IDENTIFIER)?) (
 		'/' (IDENTIFIER ('.' IDENTIFIER)?)
 	)*;
-// ImportSegment: IDENTIFIER ('.' IDENTIFIER)?;
 
 // types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';

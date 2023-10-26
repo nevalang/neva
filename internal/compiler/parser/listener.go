@@ -65,6 +65,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 
 	//nolint:nosnakecase
 	switch {
+	// FIXME Implement non-primitive types
 	case constVal.Bool_() != nil:
 		boolVal := constVal.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
@@ -78,7 +79,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 		}
 		val.Int = int(i)
 	case constVal.FLOAT() != nil:
-		f, err := strconv.ParseFloat(constVal.INT().GetText(), 64)
+		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			panic(err)
 		}

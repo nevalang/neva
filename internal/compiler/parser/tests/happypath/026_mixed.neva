@@ -3,10 +3,15 @@ use {
 }
 
 types {
-	MyInt int
-	MyFloat float
-	MyStr str
-	MyBool bool
+	useId int
+	money float
+	userName str
+	isAdmin bool
+}
+
+const {
+    pi float 3.14
+    magicNum int 42
 }
 
 interfaces {

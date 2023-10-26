@@ -1,4 +1,4 @@
-import { Component } from "./generated/src";
+import { Component } from "../generated/src";
 
 export function ComponentView(props: { name: string; entity: Component }) {
   return (
