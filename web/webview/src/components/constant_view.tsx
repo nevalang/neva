@@ -14,10 +14,13 @@ export function ConstantView(props: {
       {props.constants.map((constant) => (
         <VSCodeDataGridRow>
           <VSCodeDataGridCell grid-column="1">
-            <VSCodeTextField value={constant.name} />
+            <VSCodeTextField style={{ width: "100%" }} value={constant.name} />
           </VSCodeDataGridCell>
           <VSCodeDataGridCell grid-column="2">
-            <VSCodeTextField value={formatConstValue(constant.entity.value!)} />
+            <VSCodeTextField
+              style={{ width: "100%" }}
+              value={formatConstValue(constant.entity.value!)}
+            />
           </VSCodeDataGridCell>
         </VSCodeDataGridRow>
       ))}

@@ -16,9 +16,15 @@ import ReactFlow, {
   NodeProps,
 } from "reactflow";
 import dagre from "dagre";
+import * as src from "../generated/src";
 import "reactflow/dist/style.css";
 
-export default function NetworkView() {
+const nodeTypes = { normal_node: NormalNode };
+
+export default function NetView(props: {
+  nodes: { [key: string]: src.Node };
+  net: src.Connection[];
+}) {
   const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
@@ -27,15 +33,8 @@ export default function NetworkView() {
     [setEdges]
   );
 
-  const nodeTypes = useMemo(
-    () => ({
-      normalNode: NormalNode,
-    }),
-    []
-  );
-
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
         nodeTypes={nodeTypes}
         onInit={(instance) => instance.fitView()}
@@ -47,7 +46,7 @@ export default function NetworkView() {
       >
         <Controls />
         <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={5} size={0.5} />
+        <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
       </ReactFlow>
     </div>
   );
@@ -100,7 +99,7 @@ function NormalNode(props: NodeProps<{ ports: IPorts }>) {
 const defaultPosition = { x: 0, y: 0 };
 const initialNodes = [
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "in",
     position: defaultPosition,
     isHidden: false,
@@ -112,7 +111,7 @@ const initialNodes = [
     },
   },
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "out",
     position: defaultPosition,
     data: {
@@ -123,7 +122,7 @@ const initialNodes = [
     },
   },
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "readFirstInt",
     position: defaultPosition,
     data: {
@@ -134,7 +133,7 @@ const initialNodes = [
     },
   },
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "readSecondInt",
     position: defaultPosition,
     data: {
@@ -145,7 +144,7 @@ const initialNodes = [
     },
   },
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "add",
     position: defaultPosition,
     data: {
@@ -156,7 +155,7 @@ const initialNodes = [
     },
   },
   {
-    type: "normalNode",
+    type: "normal_node",
     id: "print",
     position: defaultPosition,
     data: {
@@ -257,16 +256,45 @@ const nodeWidth = 342.5;
 const nodeHeight = 70;
 
 const getLayoutedElements = (
-  nodes: Node[],
-  edges: Edge[],
+  nodes: { [key: string]: src.Node },
+  net: src.Connection[],
   direction = "TB"
 ) => {
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({ rankdir: direction });
 
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
+  const reactflowNodes = [];
+  for (const name in nodes) {
+    const reactflowNode = {
+      id: name,
+      type: "normal_node",
+      position: defaultPosition,
+      data: {
+        ports: {}, // TODO we need more than current parsed file to render this
+      },
+    };
+    reactflowNodes.push(reactflowNode);
+    dagreGraph.setNode(name, { width: nodeWidth, height: nodeHeight });
+  }
+
+  const reactflowEdges = [];
+  for (const connection of net) {
+    const {senderSide, receiverSide} = connection
+    if (!senderSide) {
+      continue
+    }
+    for (const )
+    const reactflowEdge = {
+      id: `${senderSide.portAddr || senderSide.constRef} -> readFirstInt.sig`,
+      source: "in",
+      sourceHandle: "enter",
+      target: "readFirstInt",
+      targetHandle: "sig",
+      markerEnd: {
+        type: MarkerType.Arrow,
+      },
+    };
+  }
 
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);

@@ -14,10 +14,11 @@ export function TypesView(props: {
       {props.types.map((typeDef) => (
         <VSCodeDataGridRow>
           <VSCodeDataGridCell grid-column="1">
-            <VSCodeTextField value={typeDef.name} />
+            <VSCodeTextField style={{ width: "100%" }} value={typeDef.name} />
           </VSCodeDataGridCell>
           <VSCodeDataGridCell grid-column="2">
             <VSCodeTextField
+              style={{ width: "100%" }}
               value={typeDef?.entity?.bodyExpr?.inst?.ref?.name}
             />
           </VSCodeDataGridCell>

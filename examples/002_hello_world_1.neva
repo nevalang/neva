@@ -9,14 +9,11 @@ const {
 components {
 	Main(enter) (exit) {
 		nodes {
-			lock tmp.Lock<str>
 			print tmp.Print<str>
 		}
 		net {
-			in.enter -> lock.sig
-			msg -> lock.v
-			lock.v -> print.v
-			print.v -> out.exit
+			enter -> out.exit
+			msg -> out.exit
 		}
 	}
 }
