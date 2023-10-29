@@ -14,19 +14,22 @@ type Analyzer struct {
 	resolver ts.Resolver
 }
 
-// Analyze method formats error from a.analyze so end-user can easily understand what's wrong.
-func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
-	if len(prog) == 0 {
-		return src.Program{}, ErrEmptyProgram
-	}
-
-	mainPkg, ok := prog["main"]
-	if !ok {
+func (a Analyzer) AnalyzeExecutable(prog src.Program, mainPkgName string) (src.Program, error) {
+	if _, ok := prog[mainPkgName]; !ok {
 		return src.Program{}, ErrMainPkgNotFound
 	}
 
-	if err := a.mainSpecificPkgValidation(mainPkg, prog); err != nil {
+	if err := a.mainSpecificPkgValidation(mainPkgName, prog); err != nil {
 		return src.Program{}, fmt.Errorf("main specific pkg validation: %w", err)
+	}
+
+	return a.Analyze(prog)
+}
+
+// FIXME if there's more than 1 main pkg it will not work
+func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
+	if len(prog) == 0 { // Analyze can be called directly so we need to check emptiness here
+		return src.Program{}, ErrEmptyProgram
 	}
 
 	progCopy := make(src.Program, len(prog))

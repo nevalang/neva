@@ -9,13 +9,10 @@ import (
 )
 
 type Compiler struct {
-	repo         Repository
-	parser       Parser
-	desugarer    Desugarer
-	analyzer     Analyzer
-	srcOptimizer SrcOptimizer
-	irgen        IRGenerator
-	irOptimizer  IROptimizer
+	repo     Repository
+	parser   Parser
+	analyzer Analyzer
+	irgen    IRGenerator
 }
 
 type (
@@ -26,27 +23,18 @@ type (
 	Parser interface {
 		ParseProg(context.Context, map[string]RawPackage) (src.Program, error)
 	}
-	Desugarer interface {
-		Desugar(src.Program) (src.Program, error)
-	}
 	Analyzer interface {
-		Analyze(src.Program) (src.Program, error)
-	}
-	SrcOptimizer interface {
-		Optimize(src.Program) (src.Program, error)
+		Analyze(prog src.Program) (src.Program, error)
+		AnalyzeExecutable(prog src.Program, mainPkg string) (src.Program, error)
 	}
 	IRGenerator interface {
 		Generate(context.Context, src.Program) (*ir.Program, error)
 	}
-	IROptimizer interface {
-		Optimize(*ir.Program) (*ir.Program, error)
-	}
-
-	RawPackage map[string][]byte // File -> content.
+	RawPackage map[string][]byte
 )
 
-func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Program, error) {
-	rawProg, err := c.repo.ByPath(ctx, srcPath)
+func (c Compiler) Compile(ctx context.Context, inputPath, outputPath string) (*ir.Program, error) {
+	rawProg, err := c.repo.ByPath(ctx, inputPath)
 	if err != nil {
 		return nil, fmt.Errorf("repo by path: %w", err)
 	}
@@ -56,12 +44,7 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		return nil, fmt.Errorf("parse prog: %w", err)
 	}
 
-	desugaredProg, err := c.desugarer.Desugar(parsedProg)
-	if err != nil {
-		return nil, fmt.Errorf("desugar: %w", err)
-	}
-
-	analyzedProg, err := c.analyzer.Analyze(desugaredProg)
+	analyzedProg, err := c.analyzer.AnalyzeExecutable(parsedProg, "main")
 	if err != nil {
 		return nil, fmt.Errorf("analyze: %w", err)
 	}
@@ -71,16 +54,11 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 		return nil, fmt.Errorf("generate IR: %w", err)
 	}
 
-	optimizedIR, err := c.irOptimizer.Optimize(irProg)
-	if err != nil {
-		return nil, fmt.Errorf("optimize IR: %w", err)
-	}
-
-	if dstPath == "" {
+	if outputPath == "" {
 		return irProg, nil
 	}
 
-	if err := c.repo.Save(ctx, dstPath, optimizedIR); err != nil {
+	if err := c.repo.Save(ctx, outputPath, irProg); err != nil {
 		return nil, fmt.Errorf("repo save: %w", err)
 	}
 
@@ -90,19 +68,13 @@ func (c Compiler) Compile(ctx context.Context, srcPath, dstPath string) (*ir.Pro
 func New(
 	repo Repository,
 	parser Parser,
-	desugarer Desugarer,
 	analyzer Analyzer,
-	srcOptimizer SrcOptimizer,
 	irgen IRGenerator,
-	irOptimizer IROptimizer,
 ) Compiler {
 	return Compiler{
-		repo:         repo,
-		parser:       parser,
-		desugarer:    desugarer,
-		analyzer:     analyzer,
-		srcOptimizer: srcOptimizer,
-		irgen:        irgen,
-		irOptimizer:  irOptimizer,
+		repo:     repo,
+		parser:   parser,
+		analyzer: analyzer,
+		irgen:    irgen,
 	}
 }

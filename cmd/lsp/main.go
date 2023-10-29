@@ -12,6 +12,13 @@ import (
 	"github.com/tliron/glsp/server"
 )
 
+type Server struct {
+	name, version string
+	parser        parser.Parser
+	handler       *protocol.Handler // must not be modified
+	logger        commonlog.Logger
+}
+
 func main() { //nolint:funlen
 	const serverName = "neva"
 
@@ -158,11 +165,4 @@ func main() { //nolint:funlen
 	if err := srv.RunTCP(fmt.Sprintf("localhost:%d", *port)); err != nil {
 		panic(err)
 	}
-}
-
-type Server struct {
-	name, version string
-	parser        parser.Parser
-	handler       *protocol.Handler // must not be modified
-	logger        commonlog.Logger
 }

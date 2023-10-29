@@ -8,11 +8,9 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
-	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/repo/disk"
-	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
@@ -24,10 +22,6 @@ import (
 type dummyIrOptimizer struct{}
 
 func (dummyIrOptimizer) Optimize(prog *ir.Program) (*ir.Program, error) { return prog, nil }
-
-type dummySrcOptimizer struct{}
-
-func (dummySrcOptimizer) Optimize(prog src.Program) (src.Program, error) { return prog, nil }
 
 func main() {
 	// runtime
@@ -58,11 +52,8 @@ func main() {
 	comp := compiler.New(
 		disk.MustNew("/Users/emil/projects/neva/std"),
 		parser.New(false),
-		desugarer.Desugarer{},
 		analyzer,
-		dummySrcOptimizer{},
 		irgen,
-		dummyIrOptimizer{},
 	)
 
 	// interpreter
