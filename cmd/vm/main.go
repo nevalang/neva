@@ -8,7 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/internal/vm"
 	"github.com/nevalang/neva/internal/vm/decoder/proto"
-	"github.com/nevalang/neva/internal/vm/repo/disk"
+	"github.com/nevalang/neva/internal/vm/loader/disk"
 )
 
 func main() {
@@ -27,13 +27,14 @@ func main() {
 		panic(err)
 	}
 
-	repo := disk.MustNew()
-	decoder := proto.Decoder{}
-	virtualMachine := vm.New(repo, decoder, runTime)
+	vmIRLoader := disk.MustNew()
+	vmIRDecoder := proto.Decoder{}
+	virtualMachine := vm.New(vmIRLoader, vmIRDecoder, runTime)
 
 	code, err := virtualMachine.Exec(context.Background(), os.Args[1])
 	if err != nil {
 		panic(err)
 	}
+
 	os.Exit(code)
 }

@@ -9,7 +9,6 @@ require (
 
 require (
 	github.com/tliron/commonlog v0.1.0
-	github.com/vektah/gqlparser/v2 v2.5.10
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -32,13 +31,6 @@ require (
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
-)
-
-require (
-	github.com/99designs/gqlgen v0.17.39
-	github.com/agnivade/levenshtein v1.1.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/sosodev/duration v1.1.0 // indirect
 )
 
 require (
