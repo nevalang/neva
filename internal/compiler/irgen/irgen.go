@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/nevalang/neva/pkg/ir"
 	ts "github.com/nevalang/neva/pkg/typesystem"
-	"golang.org/x/exp/maps"
 )
 
 type Generator struct{}

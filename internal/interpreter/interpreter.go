@@ -2,31 +2,28 @@ package interpreter
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/nevalang/neva/internal/builder"
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/vm/decoder/proto"
 )
 
 type Interpreter struct {
-	compiler Compiler
-	adapter  Adapter
-	runtime  Runtime
+	builder  builder.Builder
+	compiler compiler.Compiler
+	runtime  runtime.Runtime
+	adapter  proto.Adapter
 }
 
-type (
-	Compiler interface {
-		Compile(ctx context.Context, src, dst string) (*ir.Program, error)
+func (i Interpreter) Interpret(ctx context.Context, pathToMainPkg string) (int, error) {
+	rawProg, err := i.builder.Build(ctx, pathToMainPkg)
+	if err != nil {
+		return 0, fmt.Errorf("build: %w", err)
 	}
-	Adapter interface {
-		Adapt(irProg *ir.Program) (runtime.Program, error)
-	}
-	Runtime interface {
-		Run(context.Context, runtime.Program) (code int, err error)
-	}
-)
 
-func (i Interpreter) Interpret(ctx context.Context, path string) (int, error) {
-	irProg, err := i.compiler.Compile(ctx, path, "")
+	irProg, err := i.compiler.Compile(ctx, rawProg, "main")
 	if err != nil {
 		return 0, err
 	}
@@ -45,13 +42,15 @@ func (i Interpreter) Interpret(ctx context.Context, path string) (int, error) {
 }
 
 func New(
-	compiler Compiler,
-	adapter Adapter,
-	runtime Runtime,
+	compiler compiler.Compiler,
+	adapter proto.Adapter,
+	runtime runtime.Runtime,
+	builder builder.Builder,
 ) Interpreter {
 	return Interpreter{
 		compiler: compiler,
 		adapter:  adapter,
 		runtime:  runtime,
+		builder:  builder,
 	}
 }

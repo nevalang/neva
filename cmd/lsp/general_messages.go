@@ -1,18 +1,37 @@
 package main
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func (s Server) Initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
-	return protocol.InitializeResult{
+func (s Server) Initialize(glpsCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
+	result := protocol.InitializeResult{
 		Capabilities: s.handler.CreateServerCapabilities(),
 		ServerInfo: &protocol.InitializeResultServerInfo{
 			Name:    s.name,
 			Version: &s.version,
 		},
-	}, nil
+	}
+
+	if params.RootPath == nil {
+		glpsCtx.Notify("neva/show_warning", "folder must be opened")
+		return result, nil
+	}
+
+	prog, err := s.indexer.process(context.Background(), *params.RootPath)
+	if err != nil {
+		return nil, fmt.Errorf("processor: %w", err)
+	}
+
+	s.state = prog
+
+	glpsCtx.Notify("neva/workdir_indexed", prog)
+
+	return result, nil
 }
 
 func (srv Server) Initialized(context *glsp.Context, params *protocol.InitializedParams) error {

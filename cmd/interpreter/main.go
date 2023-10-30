@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/repo/disk"
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
@@ -50,8 +50,7 @@ func main() {
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
 	comp := compiler.New(
-		disk.MustNew("/Users/emil/projects/neva/std"),
-		parser.New(false),
+		parser.MustNew(false),
 		analyzer,
 		irgen,
 	)
@@ -61,6 +60,7 @@ func main() {
 		comp,
 		proto.NewAdapter(),
 		runTime,
+		builder.MustNew("/Users/emil/projects/neva/std"),
 	)
 
 	path, err := filepath.Abs(os.Args[1])

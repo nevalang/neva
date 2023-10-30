@@ -1,22 +1,51 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/tliron/commonlog"
 	_ "github.com/tliron/commonlog/simple"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
+
+	"github.com/nevalang/neva/internal/builder"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/analyzer"
+	"github.com/nevalang/neva/internal/compiler/parser"
+	"github.com/nevalang/neva/internal/compiler/src"
+	"github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Server struct {
 	name, version string
-	parser        parser.Parser
-	handler       *protocol.Handler // must not be modified
-	logger        commonlog.Logger
+
+	handler *protocol.Handler // readonly
+	logger  commonlog.Logger
+	indexer Indexer
+
+	state src.Program // TODO protect with mutex (or replace with channel)
+}
+
+type Indexer struct {
+	builder  builder.Builder
+	frontend compiler.FrontEnd
+}
+
+func (p Indexer) process(ctx context.Context, path string) (src.Program, error) {
+	raw, err := p.builder.Build(ctx, path)
+	if err != nil {
+		return src.Program{}, fmt.Errorf("builder: %w", err)
+	}
+
+	prog, err := p.frontend.Process(ctx, raw, "")
+	if err != nil {
+		return src.Program{}, fmt.Errorf("frontend: %w", err)
+	}
+
+	return prog, nil
 }
 
 func main() { //nolint:funlen
@@ -36,12 +65,24 @@ func main() { //nolint:funlen
 	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
+	// compiler
+	terminator := typesystem.Terminator{}
+	checker := typesystem.MustNewSubtypeChecker(terminator)
+	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
+	builder := builder.MustNew("/Users/emil/projects/neva/std")
+	frontend := compiler.NewFrontEnd(parser.MustNew(*isDebug), analyzer.MustNew(resolver))
+
 	// handler and server
 	h := &protocol.Handler{}
 	s := Server{
 		handler: h,
 		logger:  logger,
-		parser:  parser.New(false),
+		name:    serverName,
+		version: "0.0.1",
+		indexer: Indexer{
+			builder:  builder,
+			frontend: frontend,
+		},
 	}
 
 	// Base Protocol

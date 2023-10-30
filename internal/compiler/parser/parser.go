@@ -21,7 +21,7 @@ type Parser struct {
 	debug bool
 }
 
-func (p Parser) ParseProg(ctx context.Context, rawProg map[string]compiler.RawPackage) (src.Program, error) {
+func (p Parser) Parse(ctx context.Context, rawProg map[string]compiler.RawPackage) (src.Program, error) {
 	prog := make(src.Program, len(rawProg))
 
 	for pkgName, pkgFiles := range rawProg {
@@ -76,7 +76,7 @@ func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	return listener.file, nil
 }
 
-func New(debug bool) Parser {
+func MustNew(debug bool) Parser {
 	return Parser{
 		debug: debug,
 	}

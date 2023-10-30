@@ -1,7 +1,8 @@
-package disk
+package builder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,26 +19,30 @@ func (r Builder) Build(ctx context.Context, workdir string) (map[string]compiler
 	prog := map[string]compiler.RawPackage{}
 
 	// read all packages in working directory recursively
-	if err := walk(workdir, prog); err != nil {
+	if err := walk(workdir, prog, 0); err != nil {
 		return nil, fmt.Errorf("walk: %w", err)
 	}
 
 	// read all packages in stdlib directory recursively
-	if err := walk(r.stdLibPath, prog); err != nil {
+	if err := walk(r.stdLibPath, prog, 0); err != nil {
 		return nil, fmt.Errorf("walk: %w", err)
 	}
 
 	return prog, nil
 }
 
-func walk(path string, prog map[string]compiler.RawPackage) error {
+func walk(path string, prog map[string]compiler.RawPackage, lvl int) error {
+	if lvl == 100 {
+		return errors.New("suspiciously deep recursive walk")
+	}
+
 	if err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
 		}
 
 		if info.IsDir() {
-			return walk(filePath, prog)
+			return walk(filePath, prog, lvl+1)
 		}
 
 		ext := filepath.Ext(info.Name())

@@ -195,7 +195,7 @@ func TestParser_ParseFile(t *testing.T) {
 		},
 	}
 
-	p := parser.New(false)
+	p := parser.MustNew(false)
 
 	for _, tt := range tests {
 		tt := tt

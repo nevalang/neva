@@ -18,7 +18,6 @@ export class NevaEditor implements CustomTextEditorProvider {
     this.client = client;
   }
 
-  // every time new tab with .neva file (re)opened
   resolveCustomTextEditor(
     document: TextDocument,
     webviewPanel: WebviewPanel,
@@ -39,26 +38,8 @@ export class NevaEditor implements CustomTextEditorProvider {
       extensionUri
     );
 
-    this.client.onNotification("neva/file_parsed", (parsedFile) => {
+    this.client.onNotification("neva/workdir_indexed", (parsedFile) => {
       sendMsgToWebview(webviewPanel, document, parsedFile);
     });
-
-    // const disposables: Disposable[] = [];
-
-    // workspace.onDidChangeTextDocument(console.log, this, disposables);
-
-    // window.onDidChangeActiveColorTheme(
-    //   (event: ColorTheme) =>
-    //     webviewPanel.webview.postMessage({
-    //       type: "theme",
-    //       isDarkTheme: event.kind === ColorThemeKind.Dark,
-    //     }),
-    //   this,
-    //   disposables
-    // );
-
-    // webviewPanel.webview.onDidReceiveMessage(console.log, this, disposables);
-
-    // webviewPanel.onDidDispose(console.log);
   }
 }
