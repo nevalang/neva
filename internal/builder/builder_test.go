@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func createFile(path string, filename string) error {
@@ -51,50 +51,48 @@ func prepare() error {
 	return nil
 }
 
-func cleanup() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	files := []string{
-		"tmp/foo/1.neva",
-		"tmp/foo/2.neva",
-		"tmp/foo/bar/3.neva",
-		"tmp/baz/4.neva",
-	}
-
-	for _, file := range files {
-		filePath := filepath.Join(wd, file)
-		if err := os.Remove(filePath); err != nil {
-			panic(err)
+func cleanup(t *testing.T) func() {
+	return func() {
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
 		}
-	}
 
-	dirs := []string{
-		"tmp/foo/bar",
-		"tmp/foo",
-		"tmp/baz",
-	}
+		files := []string{
+			"tmp/foo/1.neva",
+			"tmp/foo/2.neva",
+			"tmp/foo/bar/3.neva",
+			"tmp/baz/4.neva",
+		}
 
-	for _, dir := range dirs {
-		dirPath := filepath.Join(wd, dir)
-		if err := os.RemoveAll(dirPath); err != nil {
-			panic(err)
+		for _, file := range files {
+			filePath := filepath.Join(wd, file)
+			if err := os.Remove(filePath); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		dirs := []string{
+			"tmp/foo/bar",
+			"tmp/foo",
+			"tmp/baz",
+		}
+
+		for _, dir := range dirs {
+			dirPath := filepath.Join(wd, dir)
+			if err := os.RemoveAll(dirPath); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
 }
 
-func TestBuilder_Build(t *testing.T) {
-	if err := prepare(); err != nil {
-		panic(err)
-	}
-
-	defer cleanup()
+func TestBuilder_walk(t *testing.T) {
+	require.NoError(t, prepare()) // setup
+	t.Cleanup(cleanup(t))         // teardown
 
 	actual := map[string]compiler.RawPackage{}
-	err := walk("tmp", actual, 0)
-	assert.NoError(t, err)
+	require.NoError(t, walk("tmp", actual))
 
 	// []byte len=0; cap=512 -> default value for empty file
 	expected := map[string]compiler.RawPackage{
@@ -110,5 +108,5 @@ func TestBuilder_Build(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, actual)
+	require.Equal(t, expected, actual)
 }
