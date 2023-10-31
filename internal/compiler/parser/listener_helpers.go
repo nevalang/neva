@@ -10,7 +10,7 @@ import (
 )
 
 func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
-	if params == nil {
+	if params == nil || params.TypeParamList() == nil {
 		return nil
 	}
 
@@ -393,9 +393,14 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg {
 			"'",
 		)
 	case constVal.ArrLit() != nil:
-		items := constVal.ArrLit().VecItems().AllConstVal()
-		val.Vec = make([]src.Const, 0, len(items))
-		for _, item := range items {
+		vecItems := constVal.ArrLit().VecItems()
+		if vecItems == nil { // empty array []
+			val.Vec = []src.Const{}
+			return val
+		}
+		constValues := constVal.ArrLit().VecItems().AllConstVal()
+		val.Vec = make([]src.Const, 0, len(constValues))
+		for _, item := range constValues {
 			parsedConstValue := parseConstVal(item)
 			val.Vec = append(val.Vec, src.Const{
 				Ref:   nil, // TODO implement references
@@ -403,9 +408,14 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg {
 			})
 		}
 	case constVal.RecLit() != nil:
-		fields := constVal.RecLit().RecValueFields().AllRecValueField()
-		val.Map = make(map[string]src.Const, len(fields))
-		for _, field := range fields {
+		fields := constVal.RecLit().RecValueFields()
+		if fields == nil { // empty struct {}
+			val.Map = map[string]src.Const{}
+			return val
+		}
+		fieldValues := fields.AllRecValueField()
+		val.Map = make(map[string]src.Const, len(fieldValues))
+		for _, field := range fieldValues {
 			name := field.IDENTIFIER().GetText()
 			value := parseConstVal(field.ConstVal())
 			val.Map[name] = src.Const{
