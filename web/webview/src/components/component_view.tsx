@@ -7,7 +7,7 @@ import {
 import { Component, EntityRef, Node } from "../generated/src";
 import { InterfaceView } from "./interface_view";
 import { useMemo } from "react";
-import NetView from "./network_view";
+// import NetView from "./network_view";
 
 export function ComponentView(props: { name: string; entity: Component }) {
   const { name, entity } = props;
@@ -24,9 +24,9 @@ export function ComponentView(props: { name: string; entity: Component }) {
       </h3>
       {entity.interface && <InterfaceView name="" entity={entity.interface} />}
       {entity.nodes && <NodesView nodes={entity.nodes} />}
-      {entity.nodes && entity.net && (
+      {/* {entity.nodes && entity.net && (
         <NetView nodes={entity.nodes} net={entity.net} />
-      )}
+      )} */}
     </>
   );
 }

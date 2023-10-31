@@ -1,4 +1,5 @@
 import {
+  window,
   WebviewPanel,
   Uri,
   CustomTextEditorProvider,
@@ -16,6 +17,14 @@ export class NevaEditor implements CustomTextEditorProvider {
   constructor(context: ExtensionContext, client: LanguageClient) {
     this.context = context;
     this.client = client;
+
+    this.client.onNotification("neva/workdir_indexed", (parsedProgram) => {
+      console.log({ parsedProgram });
+    });
+
+    this.client.onNotification("neva/analyzer_message", (message: string) => {
+      window.showWarningMessage(message);
+    });
   }
 
   resolveCustomTextEditor(
@@ -38,8 +47,14 @@ export class NevaEditor implements CustomTextEditorProvider {
       extensionUri
     );
 
-    this.client.onNotification("neva/workdir_indexed", (parsedFile) => {
-      sendMsgToWebview(webviewPanel, document, parsedFile);
+    this.client.onNotification("neva/workdir_indexed", (parsedProgram) => {
+      console.log({ parsedProgram });
+      sendMsgToWebview(webviewPanel, document, parsedProgram);
+    });
+
+    this.client.onNotification("neva/analyzer_message", (message: string) => {
+      console.log({ message });
+      window.showWarningMessage(message);
     });
   }
 }

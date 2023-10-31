@@ -12,7 +12,6 @@ import (
 	"github.com/tliron/glsp/server"
 
 	"github.com/nevalang/neva/internal/builder"
-	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/src"
@@ -25,27 +24,30 @@ type Server struct {
 	handler *protocol.Handler // readonly
 	logger  commonlog.Logger
 	indexer Indexer
-
-	state src.Program // TODO protect with mutex (or replace with channel)
 }
 
 type Indexer struct {
 	builder  builder.Builder
-	frontend compiler.FrontEnd
+	parser   parser.Parser
+	analyzer analyzer.Analyzer
 }
 
-func (p Indexer) process(ctx context.Context, path string) (src.Program, error) {
-	raw, err := p.builder.Build(ctx, path)
+func (i Indexer) index(ctx context.Context, path string) (parsed src.Program, analyzerMsg string, internalErr error) {
+	rawProg, err := i.builder.Build(ctx, path)
 	if err != nil {
-		return src.Program{}, fmt.Errorf("builder: %w", err)
+		return nil, "", fmt.Errorf("builder: %w", err)
 	}
 
-	prog, err := p.frontend.Process(ctx, raw, "")
+	parsedProg, err := i.parser.Parse(ctx, rawProg)
 	if err != nil {
-		return src.Program{}, fmt.Errorf("frontend: %w", err)
+		return nil, "", fmt.Errorf("parse prog: %w", err)
 	}
 
-	return prog, nil
+	if _, err = i.analyzer.Analyze(parsedProg); err != nil {
+		return parsedProg, err.Error(), nil
+	}
+
+	return parsedProg, "", nil
 }
 
 func main() { //nolint:funlen
@@ -70,7 +72,6 @@ func main() { //nolint:funlen
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 	builder := builder.MustNew("/Users/emil/projects/neva/std")
-	frontend := compiler.NewFrontEnd(parser.MustNew(*isDebug), analyzer.MustNew(resolver))
 
 	// handler and server
 	h := &protocol.Handler{}
@@ -81,7 +82,8 @@ func main() { //nolint:funlen
 		version: "0.0.1",
 		indexer: Indexer{
 			builder:  builder,
-			frontend: frontend,
+			parser:   parser.MustNew(*isDebug),
+			analyzer: analyzer.MustNew(resolver),
 		},
 	}
 

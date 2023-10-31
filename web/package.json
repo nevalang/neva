@@ -87,6 +87,9 @@
       }
     ]
   },
+  "activationEvents": [
+    "workspaceContains:**/*.neva"
+  ],
   "icon": "assets/logo.png",
   "dependencies": {
     "@vscode/codicons": "^0.0.33",

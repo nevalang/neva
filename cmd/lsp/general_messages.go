@@ -22,14 +22,15 @@ func (s Server) Initialize(glpsCtx *glsp.Context, params *protocol.InitializePar
 		return result, nil
 	}
 
-	prog, err := s.indexer.process(context.Background(), *params.RootPath)
+	prog, problems, err := s.indexer.index(context.Background(), *params.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("processor: %w", err)
+		return nil, fmt.Errorf("index: %w", err)
 	}
 
-	s.state = prog
-
 	glpsCtx.Notify("neva/workdir_indexed", prog)
+	if problems != "" {
+		glpsCtx.Notify("neva/analyzer_message", prog)
+	}
 
 	return result, nil
 }

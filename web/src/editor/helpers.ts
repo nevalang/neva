@@ -50,11 +50,11 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri) {
 export function sendMsgToWebview(
   panel: WebviewPanel,
   document: TextDocument,
-  file: any
+  parsedProgram: any
 ) {
   panel.webview.postMessage({
     original: document,
-    parsed: file,
+    parsed: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
   });
 }
