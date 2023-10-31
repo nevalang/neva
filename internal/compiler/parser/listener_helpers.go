@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strconv"
 	"strings"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
@@ -78,8 +79,71 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 	}
 }
 
-func parseLitExpr(expr generated.ITypeLitExprContext) *ts.Expr {
-	panic("not implemented!") // TODO
+func parseLitExpr(litExpr generated.ITypeLitExprContext) *ts.Expr {
+	enumExpr := litExpr.EnumTypeExpr()
+	arrExpr := litExpr.ArrTypeExpr()
+	structExpr := litExpr.RecTypeExpr()
+
+	switch {
+	case enumExpr != nil:
+		return parseEnumExpr(enumExpr)
+	case arrExpr != nil:
+		return parseArrExpr(arrExpr)
+	case structExpr != nil:
+		return parseStructExpr(structExpr)
+	}
+
+	panic("unknown literal type")
+}
+
+func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
+	ids := enumExpr.AllIDENTIFIER()
+	result := ts.Expr{
+		Lit: &ts.LitExpr{
+			Enum: make([]string, 0, len(ids)),
+		},
+	}
+	for _, id := range ids {
+		result.Lit.Enum = append(result.Lit.Enum, id.GetText())
+	}
+	return &result
+}
+
+func parseArrExpr(arrExpr generated.IArrTypeExprContext) *ts.Expr {
+	typeExpr := arrExpr.TypeExpr()
+	parsedTypeExpr := parseTypeExpr(typeExpr)
+	size := arrExpr.INT().GetText()
+
+	parsedSize, err := strconv.ParseInt(size, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return &ts.Expr{
+		Lit: &ts.LitExpr{
+			Arr: &ts.ArrLit{
+				Expr: *parsedTypeExpr,
+				Size: int(parsedSize),
+			},
+		},
+	}
+}
+
+func parseStructExpr(recExpr generated.IRecTypeExprContext) *ts.Expr {
+	fields := recExpr.RecFields().AllRecField()
+
+	result := ts.Expr{
+		Lit: &ts.LitExpr{
+			Rec: make(map[string]ts.Expr, len(fields)),
+		},
+	}
+
+	for _, field := range fields {
+		fieldName := field.IDENTIFIER().GetText()
+		result.Lit.Rec[fieldName] = *parseTypeExpr(field.TypeExpr())
+	}
+
+	return &result
 }
 
 func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {

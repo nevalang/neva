@@ -28,14 +28,14 @@ typeLitExpr: enumTypeExpr | arrTypeExpr | recTypeExpr;
 enumTypeExpr:
 	'{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
 arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr;
-recTypeExpr: '{' NEWLINE* recFields? '}';
+recTypeExpr: '{' NEWLINE* recFields? '}'; // TODO rename rec->struct
 recFields: recField (NEWLINE+ recField)*;
 recField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr:
 	nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+;
 nonUnionTypeExpr:
 	typeInstExpr
-	| typeLitExpr; // union inside union lead to mutuall left recursion (not supported by ANTLR)
+	| typeLitExpr; // union inside union lead to mutual left recursion (not supported by ANTLR)
 
 // interfaces
 interfaceStmt:

@@ -1,5 +1,7 @@
 # Requirements
 
+## System
+
 - Go: https://go.dev/doc/install
 - Make: https://www.gnu.org/software/make/#download
 - NodeJS and NPM: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/
@@ -7,21 +9,31 @@
 - Protoc: https://grpc.io/docs/protoc-installation/
 - Tygo: `go install github.com/gzuidhof/tygo@latest`
 
-## VSCode extensions
+## VSCode
 
 These are not really required but recommended in order you're using VSCode
 
-- https://marketplace.visualstudio.com/items?itemName=nevalang.vscode-nevalang
-- https://marketplace.visualstudio.com/items?itemName=mike-lischke.vscode-antlr4
-- https://marketplace.visualstudio.com/items?itemName=pedro-w.tmlanguage
-- https://marketplace.visualstudio.com/items?itemName=tooltitudeteam.tooltitude
-- https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
-- https://marketplace.visualstudio.com/items?itemName=yoavbls.pretty-ts-errors
-- https://marketplace.visualstudio.com/items?itemName=Plex.vscode-protolint
+- [nevalang](https://marketplace.visualstudio.com/items?itemName=nevalang.vscode-nevalang)
+- [antlr4](https://marketplace.visualstudio.com/items?itemName=mike-lischke.vscode-antlr4)
+- [tmlanguage](https://marketplace.visualstudio.com/items?itemName=pedro-w.tmlanguage)
+- [tooltitude](https://marketplace.visualstudio.com/items?itemName=tooltitudeteam.tooltitude)
+- [markdown-mermaid](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
+- [ts-errors](https://marketplace.visualstudio.com/items?itemName=yoavbls.pretty-ts-errors)
+- [vscode-protolint](https://marketplace.visualstudio.com/items?itemName=Plex.vscode-protolint)
 
 # Development
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile). Also many directories contain `README.md` files.
+First read the [language specification](docs/spec.md), [design document](./ARCHITECTURE.md) and see what can [Makefile](./Makefile) do.
+
+Remember that many go packages contain [doc comments](https://tip.golang.org/doc/comment). Do not fear to read the source code, leave the comments for unintuitive parts.
+
+Try to follow [clean code](https://github.com/Pungyeon/clean-go-article) and [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) best practices in general. Follow [SOLID](https://en.wikipedia.org/wiki/SOLID).
+
+Discuss your idea via github discussions or issues before implementing it. Write tests, avoid using `nolint`. Leave the comments (but only when you have to), update documentation.
+
+## Github Issues
+
+Issues must only be created for known bugs and understandable architecture issues. Not ideas, suggestions or feature requests. Discussions must be used for that instead.
 
 ## VSCode Extension
 
@@ -35,13 +47,10 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 
 # Learning Resources
 
-## Common
+## FBP/DataFlow
 
-- [The Bible from the FBP father mr. J.Paul Morrison](https://jpaulmorrison.com/fbp/1stedchaps.html)
+- [Flow-Based Programming: A New Approach to Application Development](https://jpaulmorrison.com/fbp/1stedchaps.html)
 - [Dataflow and Reactive Programming Systems: A Practical Guide](https://www.amazon.com/Dataflow-Reactive-Programming-Systems-Practical/dp/1497422442)
-- [Bob Martin's Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Grokking Algorithms: An Illustrated Guide for Programmers and Other Curious People](https://www.amazon.com/Grokking-Algorithms-illustrated-programmers-curious/dp/1617292230)
-- [Code: The Hidden Language of Computer Hardware and Software](https://www.amazon.com/Code-Language-Computer-Hardware-Software/dp/0735611319)
 
 ## Golang
 
@@ -62,21 +71,20 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 
 ### Nice To Know
 
-- [The Go Programming Language (The Book)](https://www.amazon.com/Programming-Language-Addison-Wesley-Professional-Computing/dp/0134190440)
 - [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings)
 - Concurrency
-    - [Go Concurrency Patterns: Timing out, moving on](https://go.dev/blog/concurrency-timeouts)
-    - [Go Concurrency Patterns: Context](https://go.dev/blog/context)
-    - [Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines)
+  - [Go Concurrency Patterns: Timing out, moving on](https://go.dev/blog/concurrency-timeouts)
+  - [Go Concurrency Patterns: Context](https://go.dev/blog/context)
+  - [Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines)
 
 ## JavaScript
 
-- https://developer.mozilla.org/en-US/
-- https://www.typescriptlang.org/
-- https://react.dev/
-- https://github.com/getify/You-Dont-Know-JS
+- [MDN](https://developer.mozilla.org/en-US/)
+- [TypeScript docs](https://www.typescriptlang.org/)
+- [React docs](https://react.dev/)
+- [You don't know JS books](https://github.com/getify/You-Dont-Know-JS)
 
-## VSCode Extensions
+## VSCode Extensions API Docs
 
 - [Custom Editors](https://code.visualstudio.com/api/extension-guides/custom-editors)
 - [Webviews](https://code.visualstudio.com/api/extension-guides/webview)
@@ -85,13 +93,23 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 - [LSP Overview](https://microsoft.github.io/language-server-protocol/)
 - [Go library for LSP implementation](https://github.com/tliron/glsp)
 
-## Video
+## Subjective Recommendations
+
+### Videos
 
 - ["Stop Writing Dead Programs" by Jack Rusher](https://youtu.be/8Ab3ArE8W3s?feature=shared)
 - ["The Mess We're In" by Joe Armstrong](https://youtu.be/lKXe3HUG2l4?feature=shared)
 - ["Propositions as Types" by Philip Wadler](https://youtu.be/IOiZatlZtGU?feature=shared)
 - ["Outperforming Imperative with Pure Functional Languages" by Richard Feldman](https://youtu.be/vzfy4EKwG_Y?feature=shared)
 - ["What Is a Strange Loop and What is it Like To Be One?" by Douglas Hofstadter (2013)](https://youtu.be/UT5CxsyKwxg?feature=shared)
+
+### Books And Articles
+
+- [Grokking Algorithms: An Illustrated Guide for Programmers and Other Curious People](https://www.amazon.com/Grokking-Algorithms-illustrated-programmers-curious/dp/1617292230)
+- [Bob Martin's Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [The Go Programming Language](https://www.amazon.com/Programming-Language-Addison-Wesley-Professional-Computing/dp/0134190440)
+- [Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems](https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321)
+- [Code: The Hidden Language of Computer Hardware and Software](https://www.amazon.com/Code-Language-Computer-Hardware-Software/dp/0735611319)
 
 # Community
 

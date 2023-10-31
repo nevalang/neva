@@ -9,6 +9,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_walk(t *testing.T) {
+	require.NoError(t, prepare()) // setup
+	t.Cleanup(cleanup(t))         // teardown
+
+	actual := map[string]compiler.RawPackage{}
+	require.NoError(t, walk("tmp", actual))
+
+	// []byte len=0; cap=512 -> default value for empty file
+	expected := map[string]compiler.RawPackage{
+		"tmp/foo": {
+			"1": make([]byte, 0, 512),
+			"2": make([]byte, 0, 512),
+		},
+		"tmp/foo/bar": {
+			"3": make([]byte, 0, 512),
+		},
+		"tmp/baz": {
+			"4": make([]byte, 0, 512),
+		},
+	}
+
+	require.Equal(t, expected, actual)
+}
+
 func createFile(path string, filename string) error {
 	fullPath := filepath.Join(path, filename)
 	file, err := os.Create(fullPath)
@@ -84,29 +108,10 @@ func cleanup(t *testing.T) func() {
 				t.Fatal(err)
 			}
 		}
+
+		tmpDirPath := filepath.Join(wd, "tmp")
+		if err := os.RemoveAll(tmpDirPath); err != nil {
+			t.Fatal(err)
+		}
 	}
-}
-
-func TestBuilder_walk(t *testing.T) {
-	require.NoError(t, prepare()) // setup
-	t.Cleanup(cleanup(t))         // teardown
-
-	actual := map[string]compiler.RawPackage{}
-	require.NoError(t, walk("tmp", actual))
-
-	// []byte len=0; cap=512 -> default value for empty file
-	expected := map[string]compiler.RawPackage{
-		"tmp/foo": {
-			"1": make([]byte, 0, 512),
-			"2": make([]byte, 0, 512),
-		},
-		"tmp/foo/bar": {
-			"3": make([]byte, 0, 512),
-		},
-		"tmp/baz": {
-			"4": make([]byte, 0, 512),
-		},
-	}
-
-	require.Equal(t, expected, actual)
 }
