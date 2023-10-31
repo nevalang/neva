@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func (s Server) Initialize(glpsCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
+func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	result := protocol.InitializeResult{
 		Capabilities: s.handler.CreateServerCapabilities(),
 		ServerInfo: &protocol.InitializeResultServerInfo{
@@ -18,29 +17,47 @@ func (s Server) Initialize(glpsCtx *glsp.Context, params *protocol.InitializePar
 	}
 
 	if params.RootPath == nil {
-		glpsCtx.Notify("neva/show_warning", "folder must be opened")
+		glspCtx.Notify("neva/show_warning", "folder must be opened")
 		return result, nil
 	}
 
-	prog, problems, err := s.indexer.index(context.Background(), *params.RootPath)
-	if err != nil {
-		return nil, fmt.Errorf("index: %w", err)
-	}
+	// first indexation
+	go func() {
+		prog, problems, err := s.indexer.index(context.Background(), *params.RootPath)
+		if err != nil {
+			s.logger.Errorf("indexer: %v", err.Error())
+			return
+		}
 
-	glpsCtx.Notify("neva/workdir_indexed", prog)
-	if problems != "" {
-		glpsCtx.Notify("neva/analyzer_message", prog)
-	}
+		s.prog <- prog
+		s.problems <- problems
+	}()
 
 	return result, nil
 }
 
-func (srv Server) Initialized(context *glsp.Context, params *protocol.InitializedParams) error {
+func (srv Server) Initialized(glspCtx *glsp.Context, params *protocol.InitializedParams) error {
+	go func() {
+		for prog := range srv.prog {
+			glspCtx.Notify("neva/workdir_indexed", prog)
+		}
+	}()
+	go func() {
+		for problems := range srv.problems {
+			glspCtx.Notify("neva/analyzer_message", problems)
+		}
+	}()
 	return nil
 }
 
 func (srv Server) Shutdown(context *glsp.Context) error {
 	protocol.SetTraceValue(protocol.TraceValueOff)
+	return nil
+}
+
+func (srv Server) Exit(glspContext *glsp.Context) error {
+	close(srv.prog)
+	close(srv.problems)
 	return nil
 }
 

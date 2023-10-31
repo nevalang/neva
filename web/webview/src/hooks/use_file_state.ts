@@ -8,13 +8,13 @@ import {
   TypeEntity,
   Const,
   Interface,
-  File,
+  Program,
 } from "../generated/src";
 import * as ts from "../generated/typesystem";
 
 interface VSCodeUpdMsg {
   original: TextDocument;
-  parsed: File;
+  parsed: Program;
   isDarkTheme: boolean;
 }
 
@@ -42,7 +42,6 @@ export function useFileState(): FileState {
   useEffect(() => {
     const listener = (event: { data: VSCodeUpdMsg }) => {
       setState(event.data);
-      console.log("data", event.data);
       vscodeApi.setState(event.data);
     };
     window.addEventListener("message", listener);
@@ -65,6 +64,8 @@ export function useFileState(): FileState {
     }
 
     try {
+      // TODO take current file from the program and use it down here
+
       if (state.parsed.imports === undefined) {
         return result;
       }

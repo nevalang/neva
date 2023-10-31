@@ -12,6 +12,9 @@ export async function activate(context: ExtensionContext) {
   // Language Server
   lspClient = setupLsp(context);
   lspClient.start();
+  lspClient.onNotification("neva/analyzer_message", (message: string) => {
+    window.showWarningMessage(message);
+  });
 
   // Custom Editor
   const editor = new NevaEditor(context, lspClient);

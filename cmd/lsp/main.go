@@ -24,6 +24,9 @@ type Server struct {
 	handler *protocol.Handler // readonly
 	logger  commonlog.Logger
 	indexer Indexer
+
+	prog     chan src.Program
+	problems chan string
 }
 
 type Indexer struct {
@@ -85,6 +88,8 @@ func main() { //nolint:funlen
 			parser:   parser.MustNew(*isDebug),
 			analyzer: analyzer.MustNew(resolver),
 		},
+		prog:     make(chan src.Program),
+		problems: make(chan string),
 	}
 
 	// Base Protocol
@@ -99,9 +104,7 @@ func main() { //nolint:funlen
 	h.Initialize = s.Initialize
 	h.Initialized = s.Initialized
 	h.Shutdown = s.Shutdown
-	h.Exit = func(context *glsp.Context) error {
-		return nil
-	}
+	h.Exit = s.Exit
 	h.LogTrace = func(context *glsp.Context, params *protocol.LogTraceParams) error {
 		return nil
 	}

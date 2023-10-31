@@ -360,7 +360,7 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 	}
 }
 
-func parseConstVal(constVal generated.IConstValContext) src.Msg {
+func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funlen
 	val := src.Msg{}
 
 	//nolint:nosnakecase
