@@ -7,7 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/src"
-	"github.com/nevalang/neva/pkg/typesystem"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
 )
 
@@ -124,8 +124,8 @@ func TestParser_ParseFile(t *testing.T) {
 							IO: src.IO{
 								In: map[string]src.Port{
 									"path": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "string"},
 											},
 										},
@@ -134,16 +134,16 @@ func TestParser_ParseFile(t *testing.T) {
 								},
 								Out: map[string]src.Port{
 									"i": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "int"},
 											},
 										},
 										IsArray: false,
 									},
 									"e": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "err"},
 											},
 										},
@@ -160,8 +160,8 @@ func TestParser_ParseFile(t *testing.T) {
 							IO: src.IO{
 								In: map[string]src.Port{
 									"path": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "any"},
 											},
 										},
@@ -170,22 +170,110 @@ func TestParser_ParseFile(t *testing.T) {
 								},
 								Out: map[string]src.Port{
 									"i": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "int"},
 											},
 										},
 										IsArray: false,
 									},
 									"anything": {
-										TypeExpr: typesystem.Expr{
-											Inst: &typesystem.InstExpr{
+										TypeExpr: ts.Expr{
+											Inst: &ts.InstExpr{
 												Ref: src.EntityRef{Name: "any"},
 											},
 										},
 										IsArray: false,
 									},
 								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		// === Types ===
+		// Struct type literal expression
+		{
+			name: "empty struct",
+			bb: []byte(`
+				types {
+					SomeStruct {}
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{},
+				Entities: map[string]src.Entity{
+					"SomeStruct": {
+						Exported: false,
+						Kind:     src.TypeEntity,
+						Type: ts.Def{
+							Params: nil,
+							BodyExpr: &ts.Expr{
+								Lit: &ts.LitExpr{
+									Rec: map[string]ts.Expr{},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "struct with one int field",
+			bb: []byte(`
+				types {
+					SomeStruct {
+						age int
+					}
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{},
+				Entities: map[string]src.Entity{
+					"SomeStruct": {
+						Exported: false,
+						Kind:     src.TypeEntity,
+						Type: ts.Def{
+							Params: nil,
+							BodyExpr: &ts.Expr{
+								Lit: &ts.LitExpr{
+									Rec: map[string]ts.Expr{
+										"age": {
+											Inst: &ts.InstExpr{Ref: src.EntityRef{Name: "int"}},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		// === Const ===
+		// Float const
+		{
+			name: "float const",
+			bb: []byte(`
+				const {
+					pi float 3.14
+				}
+			`),
+			want: src.File{
+				Imports: map[string]string{},
+				Entities: map[string]src.Entity{
+					"pi": {
+						Exported: false,
+						Kind:     src.ConstEntity,
+						Const: src.Const{
+							Value: &src.Msg{
+								TypeExpr: ts.Expr{
+									Inst: &ts.InstExpr{Ref: src.EntityRef{Name: "float"}},
+								},
+								Float: 3.14,
 							},
 						},
 					},

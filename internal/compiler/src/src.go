@@ -121,8 +121,8 @@ type Msg struct {
 	Int      int              `json:"int,omitempty"`
 	Float    float64          `json:"float,omitempty"`
 	Str      string           `json:"str,omitempty"`
-	Vec      []Const          `json:"vec,omitempty"`
-	Map      map[string]Const `json:"map,omitempty"`
+	Vec      []Const          `json:"vec,omitempty"` // Vecs are used for both vectors and arrays
+	Map      map[string]Const `json:"map,omitempty"` // Maps are used for both maps and structures
 }
 
 type IO struct {

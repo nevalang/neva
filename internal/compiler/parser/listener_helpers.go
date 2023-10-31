@@ -130,13 +130,19 @@ func parseArrExpr(arrExpr generated.IArrTypeExprContext) *ts.Expr {
 }
 
 func parseStructExpr(recExpr generated.IRecTypeExprContext) *ts.Expr {
-	fields := recExpr.RecFields().AllRecField()
-
 	result := ts.Expr{
 		Lit: &ts.LitExpr{
-			Rec: make(map[string]ts.Expr, len(fields)),
+			Rec: map[string]ts.Expr{},
 		},
 	}
+
+	refFields := recExpr.RecFields()
+	if refFields == nil {
+		return &result
+	}
+
+	fields := recExpr.RecFields().AllRecField()
+	result.Lit.Rec = make(map[string]ts.Expr, len(fields))
 
 	for _, field := range fields {
 		fieldName := field.IDENTIFIER().GetText()
@@ -352,4 +358,66 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 		Node: nodeAndPort[0].GetText(),
 		Port: nodeAndPort[1].GetText(),
 	}
+}
+
+func parseConstVal(constVal generated.IConstValContext) src.Msg {
+	val := src.Msg{}
+
+	//nolint:nosnakecase
+	switch {
+	case constVal.Bool_() != nil:
+		boolVal := constVal.Bool_().GetText()
+		if boolVal != "true" && boolVal != "false" {
+			panic("bool val not true or false")
+		}
+		val.Bool = boolVal == "true"
+	case constVal.INT() != nil:
+		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		val.Int = int(i)
+	case constVal.FLOAT() != nil:
+		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
+		if err != nil {
+			panic(err)
+		}
+		val.Float = f
+	case constVal.STRING() != nil:
+		val.Str = strings.Trim(
+			strings.ReplaceAll(
+				constVal.STRING().GetText(),
+				"\\n",
+				"\n",
+			),
+			"'",
+		)
+	case constVal.ArrLit() != nil:
+		items := constVal.ArrLit().VecItems().AllConstVal()
+		val.Vec = make([]src.Const, 0, len(items))
+		for _, item := range items {
+			parsedConstValue := parseConstVal(item)
+			val.Vec = append(val.Vec, src.Const{
+				Ref:   nil, // TODO implement references
+				Value: &parsedConstValue,
+			})
+		}
+	case constVal.RecLit() != nil:
+		fields := constVal.RecLit().RecValueFields().AllRecValueField()
+		val.Map = make(map[string]src.Const, len(fields))
+		for _, field := range fields {
+			name := field.IDENTIFIER().GetText()
+			value := parseConstVal(field.ConstVal())
+			val.Map[name] = src.Const{
+				Ref:   nil, // TODO implement references
+				Value: &value,
+			}
+		}
+	case constVal.Nil_() != nil:
+		return src.Msg{}
+	default:
+		panic("unknown const: " + constVal.GetText())
+	}
+
+	return val
 }

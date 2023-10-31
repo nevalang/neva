@@ -28,7 +28,8 @@ typeLitExpr: enumTypeExpr | arrTypeExpr | recTypeExpr;
 enumTypeExpr:
 	'{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
 arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr;
-recTypeExpr: '{' NEWLINE* recFields? '}'; // TODO rename rec->struct
+recTypeExpr:
+	'{' NEWLINE* recFields? '}'; // TODO rename rec->struct
 recFields: recField (NEWLINE+ recField)*;
 recField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr:

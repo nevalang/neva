@@ -5,7 +5,6 @@
 package parser
 
 import (
-	"strconv"
 	"strings"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
@@ -61,48 +60,14 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	name := actx.IDENTIFIER().GetText()
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
-	val := src.Msg{TypeExpr: *typeExpr}
 
-	//nolint:nosnakecase
-	switch {
-	// FIXME Implement non-primitive types
-	case constVal.Bool_() != nil:
-		boolVal := constVal.Bool_().GetText()
-		if boolVal != "true" && boolVal != "false" {
-			panic("bool val not true or false")
-		}
-		val.Bool = boolVal == "true"
-	case constVal.INT() != nil:
-		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		val.Int = int(i)
-	case constVal.FLOAT() != nil:
-		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
-		if err != nil {
-			panic(err)
-		}
-		val.Float = f
-	case constVal.STRING() != nil:
-		val.Str = strings.Trim(
-			strings.ReplaceAll(
-				constVal.STRING().GetText(),
-				"\\n",
-				"\n",
-			),
-			"'",
-		)
-	case constVal.Nil_() != nil:
-		break
-	default:
-		panic("unknown const")
-	}
+	msg := parseConstVal(constVal)
+	msg.TypeExpr = *typeExpr
 
 	s.file.Entities[name] = src.Entity{
 		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.ConstEntity,
-		Const:    src.Const{Value: &val},
+		Const:    src.Const{Value: &msg},
 	}
 }
 
