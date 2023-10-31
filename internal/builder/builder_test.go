@@ -20,24 +20,29 @@ func createFile(path string, filename string) error {
 }
 
 func prepare() error {
-	// Create directories
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	dirs := []string{"tmp/foo", "tmp/foo/bar", "tmp/baz"}
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil { //nolint:gofumpt
+		dirPath := filepath.Join(wd, dir)
+		if err := os.MkdirAll(dirPath, 0755); err != nil { //nolint:gofumpt
 			return err
 		}
 	}
 
-	// Create files
 	files := map[string][]string{
-		"foo":     {"1.neva", "2.neva"},
-		"foo/bar": {"3.neva"},
-		"baz":     {"4.neva"},
+		"tmp/foo":     {"1.neva", "2.neva"},
+		"tmp/foo/bar": {"3.neva"},
+		"tmp/baz":     {"4.neva"},
 	}
 
 	for dir, files := range files {
-		for _, file := range files {
-			if err := createFile(dir, file); err != nil {
+		for _, fileName := range files {
+			filePath := filepath.Join(wd, dir)
+			if err := createFile(filePath, fileName); err != nil {
 				return err
 			}
 		}
@@ -47,7 +52,11 @@ func prepare() error {
 }
 
 func cleanup() {
-	// List of files to remove
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
 	files := []string{
 		"tmp/foo/1.neva",
 		"tmp/foo/2.neva",
@@ -55,47 +64,51 @@ func cleanup() {
 		"tmp/baz/4.neva",
 	}
 
-	// Remove files
 	for _, file := range files {
-		if err := os.Remove(file); err != nil {
+		filePath := filepath.Join(wd, file)
+		if err := os.Remove(filePath); err != nil {
 			panic(err)
 		}
 	}
 
-	// List of directories to remove
-	// Note: Directories need to be removed in reverse order of creation to ensure subdirectories are empty
 	dirs := []string{
 		"tmp/foo/bar",
 		"tmp/foo",
 		"tmp/baz",
 	}
 
-	// Remove directories
 	for _, dir := range dirs {
-		if err := os.RemoveAll(dir); err != nil {
+		dirPath := filepath.Join(wd, dir)
+		if err := os.RemoveAll(dirPath); err != nil {
 			panic(err)
 		}
 	}
 }
 
 func TestBuilder_Build(t *testing.T) {
-	prepare()
+	if err := prepare(); err != nil {
+		panic(err)
+	}
+
 	defer cleanup()
 
-	prog := map[string]compiler.RawPackage{}
-	err := walk("tmp", prog, 0)
+	actual := map[string]compiler.RawPackage{}
+	err := walk("tmp", actual, 0)
 	assert.NoError(t, err)
 
-	assert.Equal(t, prog, map[string]compiler.RawPackage{
+	// []byte len=0; cap=512 -> default value for empty file
+	expected := map[string]compiler.RawPackage{
 		"tmp/foo": {
-			"1.neva": []byte{},
-			"2.neva": []byte{},
+			"1": make([]byte, 0, 512),
+			"2": make([]byte, 0, 512),
 		},
 		"tmp/foo/bar": {
-			"3.neva": []byte{},
+			"3": make([]byte, 0, 512),
 		},
 		"tmp/baz": {
-			"4.neva": []byte{},
+			"4": make([]byte, 0, 512),
 		},
-	})
+	}
+
+	assert.Equal(t, expected, actual)
 }

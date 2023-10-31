@@ -36,14 +36,16 @@ func walk(path string, prog map[string]compiler.RawPackage, lvl int) error {
 		return errors.New("suspiciously deep recursive walk")
 	}
 
+	// filepath.WalkDir()
+
 	if err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
 		}
 
-		if info.IsDir() {
-			return walk(filePath, prog, lvl+1)
-		}
+		// if info.IsDir() {
+		// 	return walk(filePath, prog, lvl+1)
+		// }
 
 		ext := filepath.Ext(info.Name())
 		if ext != ".neva" {
@@ -55,12 +57,14 @@ func walk(path string, prog map[string]compiler.RawPackage, lvl int) error {
 			return err
 		}
 
-		if _, ok := prog[path]; !ok {
-			prog[path] = compiler.RawPackage{}
+		dirPath := filepath.Dir(filePath)
+
+		if _, ok := prog[dirPath]; !ok {
+			prog[dirPath] = compiler.RawPackage{}
 		}
 
 		fileName := strings.TrimSuffix(info.Name(), ext)
-		prog[path][fileName] = bb
+		prog[dirPath][fileName] = bb
 
 		return nil
 	}); err != nil {

@@ -8,19 +8,18 @@ linters:
   disable:
     - gci # imports order
     - depguard # enforces to manually configure imports white-list
-    - godox # todo/fixme
-    - godot # dots at the end of comments
-    - gomnd # magic number
-    - nlreturn # newline before return
-    - wsl # forses spaces in loops, assignments, etc
+    - godox # restricts todo/fixme comments
+    - godot # enforces dots at the end of comments
+    - gomnd # restricts magic numbers
+    - nlreturn # enforces newlines before returns
+    - wsl # enforces spaces in loops, assignments, etc
     - deadcode # replaced by unused
     - cyclop # replaced by gocyclo
-    - exhaustivestruct
-    - exhaustruct
-    - exhaustive
+    - exhaustivestruct # all struct fields must be initialized
+    - exhaustruct # same as exhaustivestruct
+    - exhaustive # same as exhaustivestruct and exhaustive
+    - testpackage # enforces test files to have _test package
     - forbidigo # doesn't allow to use fmt.Println
-    # - composites
-    # - testpackage #  _test package
 
 linters-settings:
   lll:
