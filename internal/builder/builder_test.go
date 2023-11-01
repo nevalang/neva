@@ -18,14 +18,14 @@ func Test_walk(t *testing.T) {
 
 	// []byte len=0; cap=512 -> default value for empty file
 	expected := map[string]compiler.RawPackage{
-		"tmp/foo": {
+		"foo": {
 			"1": make([]byte, 0, 512),
 			"2": make([]byte, 0, 512),
 		},
-		"tmp/foo/bar": {
+		"foo/bar": {
 			"3": make([]byte, 0, 512),
 		},
-		"tmp/baz": {
+		"baz": {
 			"4": make([]byte, 0, 512),
 		},
 	}

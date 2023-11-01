@@ -5,6 +5,7 @@ import {
   Uri,
   ColorThemeKind,
   TextDocument,
+  workspace,
 } from "vscode";
 
 export function getWebviewContent(webview: Webview, extensionUri: Uri) {
@@ -52,10 +53,11 @@ export function sendMsgToWebview(
   document: TextDocument,
   parsedProgram: any
 ) {
-  panel.webview.postMessage({
+  let x = panel.webview.postMessage({
     original: document,
     parsed: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
+    workspaceUri: workspace.workspaceFolders![0].uri,
   });
 }
 

@@ -30,8 +30,8 @@ func (r Builder) Build(ctx context.Context, workdir string) (map[string]compiler
 	return prog, nil
 }
 
-func walk(path string, prog map[string]compiler.RawPackage) error {
-	if err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+func walk(rootPath string, prog map[string]compiler.RawPackage) error {
+	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
 		}
@@ -46,14 +46,13 @@ func walk(path string, prog map[string]compiler.RawPackage) error {
 			return err
 		}
 
-		dirPath := filepath.Dir(filePath)
-
-		if _, ok := prog[dirPath]; !ok {
-			prog[dirPath] = compiler.RawPackage{}
+		pkgName := strings.TrimPrefix(filepath.Dir(filePath), rootPath+"/")
+		if _, ok := prog[pkgName]; !ok {
+			prog[pkgName] = compiler.RawPackage{}
 		}
 
 		fileName := strings.TrimSuffix(info.Name(), ext)
-		prog[dirPath][fileName] = bb
+		prog[pkgName][fileName] = bb
 
 		return nil
 	}); err != nil {

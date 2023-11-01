@@ -8,12 +8,12 @@ import {
   ExtensionContext,
 } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
-import { getWebviewContent, sendMsgToWebview } from "./helpers";
+import { getWebviewContent, sendMsgToWebview } from "./webview_helpers";
 
 export class NevaEditor implements CustomTextEditorProvider {
   private readonly context: ExtensionContext;
   private readonly client: LanguageClient;
-  private programState: any;
+  // private programState: any;
 
   constructor(context: ExtensionContext, client: LanguageClient) {
     this.context = context;

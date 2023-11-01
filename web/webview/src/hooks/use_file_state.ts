@@ -1,4 +1,4 @@
-import { TextDocument } from "vscode";
+import { TextDocument, Uri } from "vscode";
 import { useState, useEffect, useMemo } from "react";
 import {
   ConstEntity,
@@ -6,15 +6,17 @@ import {
   ComponentEntity,
   Component,
   TypeEntity,
+  File,
   Const,
   Interface,
   Program,
 } from "../generated/src";
 import * as ts from "../generated/typesystem";
 
-interface VSCodeUpdMsg {
-  original: TextDocument;
-  parsed: Program;
+interface VSCodeMessage {
+  workspaceUri: Uri;
+  openedDocument: TextDocument;
+  programState: Program;
   isDarkTheme: boolean;
 }
 
@@ -26,7 +28,7 @@ interface GroupedEntities {
   components: Array<{ name: string; entity: Component }>;
 }
 
-const vscodeApi = acquireVsCodeApi<VSCodeUpdMsg>();
+const vscodeApi = acquireVsCodeApi<VSCodeMessage>();
 
 // File state is grouped and sorted render-friendly object
 interface FileState {
@@ -36,18 +38,22 @@ interface FileState {
 
 // UseFileState returns state that is easy to render. It also does memorization to avoid re-rendering
 export function useFileState(): FileState {
-  const persistedState = vscodeApi.getState();
-  const [state, setState] = useState<VSCodeUpdMsg | undefined>(persistedState);
+  const persistedState = vscodeApi.getState(); // load persistent state
+  const [state, setState] = useState<VSCodeMessage | undefined>(persistedState); // copy it to memory
 
+  console.log({ state });
+
+  // subscribe to state updates from vscode
   useEffect(() => {
-    const listener = (event: { data: VSCodeUpdMsg }) => {
-      setState(event.data);
-      vscodeApi.setState(event.data);
+    const listener = (event: { data: VSCodeMessage }) => {
+      setState(event.data); // update both local state
+      vscodeApi.setState(event.data); // and persistent state to use when tab is reopened
     };
     window.addEventListener("message", listener);
     return () => window.removeEventListener("message", listener);
   }, []);
 
+  // given program state find file corresponding to current opened document and transform it to a render-friendly form, memoize the result
   const fileState: FileState = useMemo(() => {
     const result: FileState = {
       imports: [],
@@ -59,32 +65,36 @@ export function useFileState(): FileState {
       },
     };
 
+    // if tab opened first time and there were no updates from vscode yet
     if (state === undefined) {
       return result;
     }
 
     try {
-      // TODO take current file from the program and use it down here
+      const workspacePath = state.workspaceUri.path;
 
-      if (state.parsed.imports === undefined) {
+      // TODO take current file from the program and use it down here
+      const currentFile: File = {};
+
+      if (currentFile.imports === undefined) {
         return result;
       }
 
-      for (const alias in state.parsed.imports) {
+      for (const alias in state.programState.imports) {
         result.imports.push({
           alias,
-          path: state.parsed.imports[alias],
+          path: currentFile.imports[alias],
         });
       }
 
       result.imports.sort();
 
-      if (state.parsed.entities === undefined) {
+      if (currentFile.entities === undefined) {
         return result;
       }
 
-      for (const name in state.parsed.entities) {
-        const entity = state.parsed.entities[name];
+      for (const name in currentFile.entities) {
+        const entity = currentFile.entities[name];
 
         switch (entity.kind) {
           case TypeEntity:
