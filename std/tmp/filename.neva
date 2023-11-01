@@ -4,10 +4,7 @@ interfaces {
 
 components {
     pub Read(sig) (v str)
-    
     pub Print<T>(v T) (v T)
-    
     pub Lock<T>(sig, v T) (v T)
-    
     pub ParseInt(v str) (v int, err str)
 }

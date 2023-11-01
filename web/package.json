@@ -88,7 +88,8 @@
     ]
   },
   "activationEvents": [
-    "workspaceContains:**/*.neva"
+    "workspaceContains:neva.yml",
+    "workspaceContains:neva.yaml"
   ],
   "icon": "assets/logo.png",
   "dependencies": {

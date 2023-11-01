@@ -1,6 +1,8 @@
 # VSCode Neva
 
-![Logo of the language](/assets/header.png "Nevalang logo and title")
+> **IMPORTANT**: You need to have `neva.yaml` or `neva.yml` in the root of your workspace folder to the activate the extension.
+
+![Logo of the language](./assets/header.png "Nevalang logo and title")
 
 This is VSCode extension for [Neva](https://github.com/nevalang/neva) - flow-based programming language.
 
@@ -8,15 +10,17 @@ This is VSCode extension for [Neva](https://github.com/nevalang/neva) - flow-bas
 
 ### Custom Editor
 
-...
+Open `.neva` file in VSCode to activate visual editor.
 
 ### Syntax Highlighting
 
-![Picture of a syntax highlighting](/assets/code.png "Syntax highlighting example")
+Feel free to edit `.neva` files in old-school text-mode:
+
+![Picture of a syntax highlighting](./assets/code.png "Syntax highlighting example")
 
 ## Requirements
 
-- [Nevalang](https://github.com/nevalang/neva) installed
+- [Neva](https://github.com/nevalang/neva) programming language installed
 
 ## Contributing
 
@@ -26,7 +30,8 @@ See [./Contributing.md](Contributing.md)
 
 ### 0.2.0
 
-**Custom editor** with **webview** for visual editing of `*.neva` files.
+- **LSP**-compatible **Language Server**
+- **WebView**-based **Custom editor** for visual editing of `.neva` files
 
 ### 0.1.0
 

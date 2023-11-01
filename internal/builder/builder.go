@@ -46,7 +46,7 @@ func walk(rootPath string, prog map[string]compiler.RawPackage) error {
 			return err
 		}
 
-		pkgName := strings.TrimPrefix(filepath.Dir(filePath), rootPath+"/")
+		pkgName := getPkgName(rootPath, filePath)
 		if _, ok := prog[pkgName]; !ok {
 			prog[pkgName] = compiler.RawPackage{}
 		}
@@ -60,6 +60,15 @@ func walk(rootPath string, prog map[string]compiler.RawPackage) error {
 	}
 
 	return nil
+}
+
+func getPkgName(rootPath, filePath string) string {
+	dirPath := filepath.Dir(filePath)
+	if dirPath == rootPath { // current directory is root directory
+		ss := strings.Split(dirPath, "/")
+		return ss[len(ss)-1] // return last element
+	}
+	return strings.TrimPrefix(dirPath, rootPath+"/")
 }
 
 func MustNew(stdPkgPath string) Builder {

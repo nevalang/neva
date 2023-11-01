@@ -53,7 +53,8 @@ export function sendMsgToWebview(
   document: TextDocument,
   parsedProgram: any
 ) {
-  let x = panel.webview.postMessage({
+  console.log({ document, parsedProgram });
+  panel.webview.postMessage({
     original: document,
     parsed: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
