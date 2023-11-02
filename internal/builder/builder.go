@@ -8,28 +8,33 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/src"
 )
 
 type Builder struct {
 	stdLibPath string
 }
 
-func (r Builder) Build(ctx context.Context, workdir string) (map[string]compiler.RawPackage, error) {
+func (r Builder) BuildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
 	prog := map[string]compiler.RawPackage{}
 
 	// read all packages in working directory recursively
 	if err := walk(workdir, prog); err != nil {
-		return nil, fmt.Errorf("walk: %w", err)
+		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
 	// read all packages in stdlib directory recursively
 	if err := walk(r.stdLibPath, prog); err != nil {
-		return nil, fmt.Errorf("walk: %w", err)
+		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
-	return prog, nil
+	return compiler.RawModule{
+		Manifest: src.Manifest{}, // TODO
+		Packages: map[string]compiler.RawPackage{},
+	}, nil
 }
 
+// walk recursively traverses the directory assuming that is a neva module (set of packages with source code files).
 func walk(rootPath string, prog map[string]compiler.RawPackage) error {
 	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {

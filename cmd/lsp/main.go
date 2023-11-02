@@ -25,7 +25,7 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer Indexer
 
-	prog     chan src.Program
+	mod      chan src.Module
 	problems chan string
 }
 
@@ -35,22 +35,29 @@ type Indexer struct {
 	analyzer analyzer.Analyzer
 }
 
-func (i Indexer) index(ctx context.Context, path string) (parsed src.Program, analyzerMsg string, internalErr error) {
-	rawProg, err := i.builder.Build(ctx, path)
+type analyzerMessage string
+
+func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
+	rawMod, err := i.builder.BuildModule(ctx, path)
 	if err != nil {
-		return nil, "", fmt.Errorf("builder: %w", err)
+		return src.Module{}, "", fmt.Errorf("builder: %w", err)
 	}
 
-	parsedProg, err := i.parser.Parse(ctx, rawProg)
+	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
-		return nil, "", fmt.Errorf("parse prog: %w", err)
+		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
 	}
 
-	if _, err = i.analyzer.Analyze(parsedProg); err != nil {
-		return parsedProg, err.Error(), nil
+	mod := src.Module{ // TODO
+		Manifest: src.Manifest{},
+		Packages: parsedPkgs,
 	}
 
-	return parsedProg, "", nil
+	if _, err = i.analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
+		return mod, analyzerMessage(err.Error()), nil
+	}
+
+	return mod, "", nil
 }
 
 func main() { //nolint:funlen
@@ -88,7 +95,7 @@ func main() { //nolint:funlen
 			parser:   parser.MustNew(*isDebug),
 			analyzer: analyzer.MustNew(resolver),
 		},
-		prog:     make(chan src.Program),
+		mod:      make(chan src.Module),
 		problems: make(chan string),
 	}
 

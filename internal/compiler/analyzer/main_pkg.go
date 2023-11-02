@@ -14,8 +14,8 @@ var (
 	ErrMainPkgExports           = errors.New("main pkg must not have exported entities")
 )
 
-func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, pkgs map[string]src.Package) error {
-	pkg := pkgs[mainPkgName]
+func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) error {
+	pkg := mod.Packages[mainPkgName]
 
 	entityMain, filename, ok := pkg.Entity("Main")
 	if !ok {
@@ -35,7 +35,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, pkgs map[string]
 			PkgName:  mainPkgName,
 			FileName: filename,
 		},
-		Prog: pkgs,
+		Module: mod,
 	}
 
 	if err := a.analyzeMainComponent(entityMain.Component, pkg, scope); err != nil {

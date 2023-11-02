@@ -8,7 +8,21 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-type Program map[string]Package
+type Module struct {
+	Manifest Manifest           `json:"manifest,omitempty"`
+	Packages map[string]Package `json:"packages,omitempty"`
+}
+
+type Manifest struct {
+	CompilerVersion string                `json:"compilerVersion,omitempty" yaml:"compilerVersion,omitempty"`
+	Dependencies    map[string]Dependency `json:"deps,omitempty"            yaml:"deps,omitempty"`
+}
+
+type Dependency struct {
+	Name    string `json:"name,omitempty"`
+	Repo    string `json:"repo,omitempty"`
+	Version string `json:"version,omitempty"`
+}
 
 var (
 	ErrPkgNotFound    = fmt.Errorf("package not found")
@@ -18,8 +32,8 @@ var (
 // Entity does not return package because calleer knows it, passed entityRef contains it.
 // Note that this method does not know anything about imports, builtins or anything like that.
 // entityRef passed must be absolute (full, "real") path to the entity.
-func (p Program) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
-	pkg, ok := p[entityRef.Pkg]
+func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
+	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
 		return Entity{}, "", ErrPkgNotFound
 	}

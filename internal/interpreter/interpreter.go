@@ -18,12 +18,18 @@ type Interpreter struct {
 }
 
 func (i Interpreter) Interpret(ctx context.Context, pathToMainPkg string) (int, error) {
-	rawProg, err := i.builder.Build(ctx, pathToMainPkg)
+	rawMod, err := i.builder.BuildModule(ctx, pathToMainPkg)
 	if err != nil {
 		return 0, fmt.Errorf("build: %w", err)
 	}
 
-	irProg, err := i.compiler.Compile(ctx, rawProg, "main")
+	irProg, err := i.compiler.Compile(ctx, compiler.Context{
+		MainModule: "",
+		MainPkg:    pathToMainPkg,
+		Modules: map[string]compiler.RawModule{
+			"": rawMod, // TODO name?
+		},
+	})
 	if err != nil {
 		return 0, err
 	}

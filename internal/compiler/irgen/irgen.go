@@ -28,15 +28,15 @@ var (
 	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
 )
 
-func (g Generator) Generate(ctx context.Context, prog src.Program) (*ir.Program, error) {
-	if len(prog) == 0 {
+func (g Generator) Generate(ctx context.Context, prog src.Module) (*ir.Program, error) {
+	if len(prog.Packages) == 0 {
 		return nil, ErrNoPkgs
 	}
 
 	// We need to use prog.Entity to find location of the main component and create initial scope
 	_, fileName, _ := prog.Entity(src.EntityRef{Pkg: "main", Name: "Main"})
 	scope := src.Scope{
-		Prog: prog,
+		Module: prog,
 		Loc: src.ScopeLocation{
 			PkgName:  "main",
 			FileName: fileName,

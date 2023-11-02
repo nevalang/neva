@@ -29,8 +29,8 @@ func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePar
 			return
 		}
 
-		s.prog <- prog
-		s.problems <- problems
+		s.mod <- prog
+		s.problems <- string(problems)
 	}()
 
 	return result, nil
@@ -38,7 +38,7 @@ func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePar
 
 func (srv Server) Initialized(glspCtx *glsp.Context, params *protocol.InitializedParams) error {
 	go func() {
-		for prog := range srv.prog {
+		for prog := range srv.mod {
 			glspCtx.Notify("neva/workdir_indexed", prog)
 		}
 	}()
@@ -56,7 +56,7 @@ func (srv Server) Shutdown(context *glsp.Context) error {
 }
 
 func (srv Server) Exit(glspContext *glsp.Context) error {
-	close(srv.prog)
+	close(srv.mod)
 	close(srv.problems)
 	return nil
 }

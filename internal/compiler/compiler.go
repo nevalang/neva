@@ -15,30 +15,47 @@ type Compiler struct {
 }
 
 type (
+	// Compilation context
+	Context struct {
+		MainModule string               // Name of the module containing main package
+		MainPkg    string               // Name of the executable package in the main module
+		Modules    map[string]RawModule // Set of all modules including both the main module and all its deps
+	}
+
+	RawModule struct {
+		Manifest src.Manifest          // Manifest must be parsed by builder before passing into compiler
+		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
+	}
+
 	Parser interface {
-		Parse(context.Context, map[string]RawPackage) (src.Program, error)
+		ParsePackages(context.Context, map[string]RawPackage) (map[string]src.Package, error)
 	}
 
 	RawPackage map[string][]byte
 
 	Analyzer interface {
-		Analyze(prog src.Program) (src.Program, error)
-		AnalyzeExecutable(prog src.Program, mainPkg string) (src.Program, error)
+		AnalyzeExecutable(prog src.Module, mainPkg string) (src.Module, error)
+	}
+
+	IRGen interface {
+		Generate(context.Context, src.Module) (*ir.Program, error)
 	}
 )
 
-type IRGen interface {
-	Generate(context.Context, src.Program) (*ir.Program, error)
-}
+func (c Compiler) Compile(ctx context.Context, compilerCtx Context) (*ir.Program, error) {
+	rawMod := compilerCtx.Modules[compilerCtx.MainModule] // TODO support multimodule compilation
 
-// Compile is like Analyze but also produces IR.
-func (c Compiler) Compile(ctx context.Context, rawProg map[string]RawPackage, mainPkgName string) (*ir.Program, error) {
-	parsedProg, err := c.parser.Parse(ctx, rawProg)
+	parsedPackages, err := c.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 
-	analyzedProg, err := c.analyzer.Analyze(parsedProg)
+	mod := src.Module{
+		Manifest: rawMod.Manifest,
+		Packages: parsedPackages,
+	}
+
+	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, compilerCtx.MainPkg)
 	if err != nil {
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}

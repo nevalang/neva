@@ -10,8 +10,8 @@ import (
 
 // Scope is an entity that can be used to query the program.
 type Scope struct {
-	Loc  ScopeLocation // It keeps track of current location to properly resolve imports and local references.
-	Prog Program       // And of course it does has access to the program itself.
+	Loc    ScopeLocation // It keeps track of current location to properly resolve imports and local references.
+	Module Module        // And of course it does has access to the program itself.
 }
 
 // ScopeLocation is used by scope to resolve references.
@@ -56,8 +56,8 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	}
 
 	return def, Scope{
-		Loc:  location,
-		Prog: s.Prog,
+		Loc:    location,
+		Module: s.Module,
 	}, nil
 }
 
@@ -101,7 +101,7 @@ var (
 // Otherwise we use current file imports to resolve external ref.
 func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if entityRef.Pkg == "" {
-		entity, filename, ok := s.Prog[s.Loc.PkgName].Entity(entityRef.Name)
+		entity, filename, ok := s.Module.Packages[s.Loc.PkgName].Entity(entityRef.Name)
 		if ok {
 			return entity, ScopeLocation{
 				PkgName:  s.Loc.PkgName,
@@ -109,7 +109,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 			}, nil
 		}
 
-		entity, filename, ok = s.Prog["std/builtin"].Entity(entityRef.Name)
+		entity, filename, ok = s.Module.Packages["std/builtin"].Entity(entityRef.Name)
 		if !ok {
 			return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef)
 		}
@@ -120,12 +120,12 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 		}, nil
 	}
 
-	realImportPkgName, ok := s.Prog[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
+	realImportPkgName, ok := s.Module.Packages[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
 	if !ok {
 		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
 	}
 
-	entity, fileName, err := s.Prog.Entity(EntityRef{
+	entity, fileName, err := s.Module.Entity(EntityRef{
 		Pkg:  realImportPkgName,
 		Name: entityRef.Name,
 	})
