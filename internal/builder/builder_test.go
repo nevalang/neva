@@ -10,8 +10,8 @@ import (
 )
 
 func Test_walk(t *testing.T) {
-	require.NoError(t, prepare()) // setup
-	t.Cleanup(cleanup(t))         // teardown
+	require.NoError(t, setup())
+	t.Cleanup(teardown(t))
 
 	actual := map[string]compiler.RawPackage{}
 	require.NoError(t, walk("tmp", actual))
@@ -43,7 +43,7 @@ func createFile(path string, filename string) error {
 	return nil
 }
 
-func prepare() error {
+func setup() error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func prepare() error {
 	return nil
 }
 
-func cleanup(t *testing.T) func() {
+func teardown(t *testing.T) func() {
 	return func() {
 		wd, err := os.Getwd()
 		if err != nil {
