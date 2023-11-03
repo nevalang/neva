@@ -38,10 +38,12 @@ type Indexer struct {
 type analyzerMessage string
 
 func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
-	rawMod, err := i.builder.BuildModule(ctx, path)
+	build, err := i.builder.Build(ctx, path)
 	if err != nil {
 		return src.Module{}, "", fmt.Errorf("builder: %w", err)
 	}
+
+	rawMod := build.Modules[build.EntryModule] // TODO use all mods
 
 	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
@@ -77,11 +79,14 @@ func main() { //nolint:funlen
 	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
+	// parser
+	p := parser.MustNew(*isDebug)
+
 	// compiler
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
-	builder := builder.MustNew("/Users/emil/projects/neva/std")
+	builder := builder.MustNew("/Users/emil/projects/neva/std", "/Users/emil/projects/neva/third_party/", p)
 
 	// handler and server
 	h := &protocol.Handler{}
@@ -92,7 +97,7 @@ func main() { //nolint:funlen
 		version: "0.0.1",
 		indexer: Indexer{
 			builder:  builder,
-			parser:   parser.MustNew(*isDebug),
+			parser:   p,
 			analyzer: analyzer.MustNew(resolver),
 		},
 		mod:      make(chan src.Module),

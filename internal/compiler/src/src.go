@@ -14,13 +14,12 @@ type Module struct {
 }
 
 type Manifest struct {
-	CompilerVersion string                `json:"compilerVersion,omitempty" yaml:"compilerVersion,omitempty"`
-	Dependencies    map[string]Dependency `json:"deps,omitempty"            yaml:"deps,omitempty"`
+	Compiler string                `json:"compiler,omitempty" yaml:"compiler,omitempty"` // want compiler version
+	Deps     map[string]Dependency `json:"deps,omitempty"     yaml:"deps,omitempty"`     // third-party modules
 }
 
 type Dependency struct {
-	Name    string `json:"name,omitempty"`
-	Repo    string `json:"repo,omitempty"`
+	Addr    string `json:"addr,omitempty"` // e.g. "github.com/nevalang/x"
 	Version string `json:"version,omitempty"`
 }
 

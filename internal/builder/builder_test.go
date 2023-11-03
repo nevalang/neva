@@ -1,36 +1,124 @@
-package builder
+package builder_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/parser"
+	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/maps"
+	"gopkg.in/yaml.v3"
 )
 
-func Test_walk(t *testing.T) {
-	require.NoError(t, setup())
-	t.Cleanup(teardown(t))
+func Test_Build(t *testing.T) {
+	// === SETUP ===
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	tmpPath := filepath.Join(wd, "tmp")
 
-	actual := map[string]compiler.RawPackage{}
-	require.NoError(t, walk("tmp", actual))
-
-	// []byte len=0; cap=512 -> default value for empty file
-	expected := map[string]compiler.RawPackage{
-		"foo": {
-			"1": make([]byte, 0, 512),
-			"2": make([]byte, 0, 512),
-		},
-		"foo/bar": {
-			"3": make([]byte, 0, 512),
-		},
-		"baz": {
-			"4": make([]byte, 0, 512),
+	manifest := src.Manifest{
+		Compiler: "0.0.1",
+		Deps: map[string]src.Dependency{
+			"github.com/nevalang/x": {
+				Addr:    "github.com/nevalang/x", // this repo must be available throughout the network
+				Version: "0.0.1",                 // this tag must exist in the repo
+			},
 		},
 	}
 
-	require.Equal(t, expected, actual)
+	files := map[string][]string{
+		"foo":     {"1.neva", "2.neva"},
+		"foo/bar": {"3.neva"},
+		"baz":     {"4.neva"},
+	}
+
+	err = createMod(manifest, files, tmpPath)
+	require.NoError(t, err)
+
+	// === TEARDOWN ===
+	t.Cleanup(func() {
+		if err := os.RemoveAll(tmpPath); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	// === TEST ===
+	builder := builder.MustNew(
+		"/Users/emil/projects/neva/std",
+		"/Users/emil/projects/neva/thirdparty",
+		parser.MustNew(false),
+	)
+
+	actualBuild, err := builder.Build(context.Background(), tmpPath)
+	require.NoError(t, err)
+
+	expectedBuild := compiler.Build{
+		EntryModule: "entry",
+		Modules: map[string]compiler.RawModule{
+			"entry": {
+				Manifest: manifest,
+				// []byte len=0; cap=512 -> default value for empty file
+				Packages: map[string]compiler.RawPackage{
+					"foo": {
+						"1": make([]byte, 0, 512),
+						"2": make([]byte, 0, 512),
+					},
+					"foo/bar": {
+						"3": make([]byte, 0, 512),
+					},
+					"baz": {
+						"4": make([]byte, 0, 512),
+					},
+				},
+			},
+		},
+	}
+
+	require.Equal(t, expectedBuild, actualBuild)
+}
+
+func createMod(manifest src.Manifest, files map[string][]string, path string) error {
+	if err := os.MkdirAll(path, 0755); err != nil { //nolint:gofumpt
+		return err
+	}
+
+	if err := createFile(path, "neva.yml"); err != nil {
+		return err
+	}
+
+	manifestPath := filepath.Join(path, "neva.yml")
+
+	rawManifest, err := yaml.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(manifestPath, rawManifest, 0644); err != nil { //nolint:gofumpt
+		return err
+	}
+
+	for _, dir := range maps.Keys(files) {
+		dirPath := filepath.Join(path, dir)
+		if err := os.MkdirAll(dirPath, 0755); err != nil { //nolint:gofumpt
+			return err
+		}
+	}
+
+	for dir, files := range files {
+		for _, fileName := range files {
+			filePath := filepath.Join(path, dir)
+			if err := createFile(filePath, fileName); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func createFile(path string, filename string) error {
@@ -41,77 +129,4 @@ func createFile(path string, filename string) error {
 	}
 	defer file.Close()
 	return nil
-}
-
-func setup() error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	dirs := []string{"tmp/foo", "tmp/foo/bar", "tmp/baz"}
-	for _, dir := range dirs {
-		dirPath := filepath.Join(wd, dir)
-		if err := os.MkdirAll(dirPath, 0755); err != nil { //nolint:gofumpt
-			return err
-		}
-	}
-
-	files := map[string][]string{
-		"tmp/foo":     {"1.neva", "2.neva"},
-		"tmp/foo/bar": {"3.neva"},
-		"tmp/baz":     {"4.neva"},
-	}
-
-	for dir, files := range files {
-		for _, fileName := range files {
-			filePath := filepath.Join(wd, dir)
-			if err := createFile(filePath, fileName); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func teardown(t *testing.T) func() {
-	return func() {
-		wd, err := os.Getwd()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		files := []string{
-			"tmp/foo/1.neva",
-			"tmp/foo/2.neva",
-			"tmp/foo/bar/3.neva",
-			"tmp/baz/4.neva",
-		}
-
-		for _, file := range files {
-			filePath := filepath.Join(wd, file)
-			if err := os.Remove(filePath); err != nil {
-				t.Fatal(err)
-			}
-		}
-
-		dirs := []string{
-			"tmp/foo/bar",
-			"tmp/foo",
-			"tmp/baz",
-		}
-
-		for _, dir := range dirs {
-			dirPath := filepath.Join(wd, dir)
-			if err := os.RemoveAll(dirPath); err != nil {
-				t.Fatal(err)
-			}
-		}
-
-		tmpDirPath := filepath.Join(wd, "tmp")
-		if err := os.RemoveAll(tmpDirPath); err != nil {
-			t.Fatal(err)
-		}
-	}
 }

@@ -49,8 +49,9 @@ func main() {
 	// compiler
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
+	p := parser.MustNew(false)
 	comp := compiler.New(
-		parser.MustNew(false),
+		p,
 		analyzer,
 		irgen,
 	)
@@ -60,7 +61,11 @@ func main() {
 		comp,
 		proto.NewAdapter(),
 		runTime,
-		builder.MustNew("/Users/emil/projects/neva/std"),
+		builder.MustNew(
+			"/Users/emil/projects/neva/std",
+			"/Users/emil/projects/neva/thirdparty",
+			p,
+		),
 	)
 
 	path, err := filepath.Abs(os.Args[1])

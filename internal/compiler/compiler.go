@@ -15,11 +15,9 @@ type Compiler struct {
 }
 
 type (
-	// Compilation context
-	Context struct {
-		MainModule string               // Name of the module containing main package
-		MainPkg    string               // Name of the executable package in the main module
-		Modules    map[string]RawModule // Set of all modules including both the main module and all its deps
+	Build struct {
+		EntryModule string
+		Modules     map[string]RawModule
 	}
 
 	RawModule struct {
@@ -42,8 +40,8 @@ type (
 	}
 )
 
-func (c Compiler) Compile(ctx context.Context, compilerCtx Context) (*ir.Program, error) {
-	rawMod := compilerCtx.Modules[compilerCtx.MainModule] // TODO support multimodule compilation
+func (c Compiler) Compile(ctx context.Context, build Build, mainPkg string) (*ir.Program, error) {
+	rawMod := build.Modules[build.EntryModule] // TODO support multimodule compilation
 
 	parsedPackages, err := c.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
@@ -55,7 +53,7 @@ func (c Compiler) Compile(ctx context.Context, compilerCtx Context) (*ir.Program
 		Packages: parsedPackages,
 	}
 
-	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, compilerCtx.MainPkg)
+	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, mainPkg)
 	if err != nil {
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}
