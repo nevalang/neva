@@ -12,8 +12,6 @@ export default function App() {
   const { imports, entities } = useFileState();
   const { types, constants, interfaces, components } = entities;
 
-  console.log({ imports, entities });
-
   return (
     <div className="app">
       <ImportsView imports={imports} style={{ marginBottom: "20px" }} />
@@ -35,7 +33,6 @@ export default function App() {
       <h2>Interfaces</h2>
       {interfaces.map((entry) => {
         const { name, entity } = entry;
-        console.log({ name, entity });
         return <InterfaceView name={name} entity={entity} />;
       })}
 

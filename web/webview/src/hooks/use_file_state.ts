@@ -39,13 +39,13 @@ interface FileState {
 // UseFileState returns state that is easy to render. It also does memorization to avoid re-rendering
 export function useFileState(): FileState {
   const persistedState = vscodeApi.getState(); // load persistent state
+  console.log("persistent state", persistedState);
   const [state, setState] = useState<VSCodeMessage | undefined>(persistedState); // copy it to memory
-
-  console.log({ state });
 
   // subscribe to state updates from vscode
   useEffect(() => {
     const listener = (event: { data: VSCodeMessage }) => {
+      console.log("message from vscode", event.data);
       setState(event.data); // update both local state
       vscodeApi.setState(event.data); // and persistent state to use when tab is reopened
     };

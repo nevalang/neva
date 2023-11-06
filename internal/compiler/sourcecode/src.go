@@ -1,6 +1,6 @@
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
-package src
+package sourcecode
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type Module struct {
 
 type Manifest struct {
 	Compiler string                `json:"compiler,omitempty" yaml:"compiler,omitempty"` // want compiler version
-	Deps     map[string]Dependency `json:"deps,omitempty"     yaml:"deps,omitempty"`     // third-party modules
+	Deps     map[string]Dependency `json:"deps,omitempty"     yaml:"deps,omitempty"`     // third-party mods (optional)
 }
 
 type Dependency struct {

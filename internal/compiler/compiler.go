@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/src"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/ir"
 )
 

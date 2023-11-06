@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nevalang/neva/internal/builder"
-	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/src"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
+
+	"github.com/nevalang/neva/internal/builder"
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/parser"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 func Test_Build(t *testing.T) {
