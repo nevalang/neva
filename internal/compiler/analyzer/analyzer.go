@@ -5,45 +5,58 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nevalang/neva/internal/compiler/src"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 	"golang.org/x/exp/maps"
+
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Analyzer struct {
 	resolver ts.Resolver
 }
 
-func (a Analyzer) AnalyzeExecutable(prog src.Program, mainPkgName string) (src.Program, error) {
-	if _, ok := prog[mainPkgName]; !ok {
-		return src.Program{}, ErrMainPkgNotFound
+func (a Analyzer) AnalyzeExecutable(mod src.Module, mainPkgName string) (src.Module, error) {
+	if _, ok := mod.Packages[mainPkgName]; !ok {
+		return src.Module{}, fmt.Errorf("%w: %s", ErrMainPkgNotFound, mainPkgName)
 	}
 
-	if err := a.mainSpecificPkgValidation(mainPkgName, prog); err != nil {
-		return src.Program{}, fmt.Errorf("main specific pkg validation: %w", err)
+	if err := a.mainSpecificPkgValidation(mainPkgName, mod); err != nil {
+		return src.Module{}, fmt.Errorf("main specific pkg validation: %w", err)
 	}
 
-	return a.Analyze(prog)
+	analyzedPkgs, err := a.Analyze(mod)
+	if err != nil {
+		return src.Module{}, fmt.Errorf("analyze: %w", err)
+	}
+
+	return src.Module{
+		Manifest: mod.Manifest,
+		Packages: analyzedPkgs,
+	}, nil
 }
 
 // FIXME if there's more than 1 main pkg it will not work
-func (a Analyzer) Analyze(prog src.Program) (src.Program, error) {
-	if len(prog) == 0 { // Analyze can be called directly so we need to check emptiness here
-		return src.Program{}, ErrEmptyProgram
+func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
+	if len(mod.Packages) == 0 { // Analyze can be called directly so we need to check emptiness here
+		return nil, ErrEmptyProgram
 	}
 
-	progCopy := make(src.Program, len(prog))
-	maps.Copy(progCopy, prog)
+	pkgsCopy := make(map[string]src.Package, len(mod.Packages))
+	maps.Copy(pkgsCopy, mod.Packages)
+	modCopy := src.Module{
+		Manifest: mod.Manifest, // readonly
+		Packages: pkgsCopy,
+	}
 
-	for pkgName := range progCopy {
-		resolvedPkg, err := a.analyzePkg(pkgName, progCopy)
+	for pkgName := range pkgsCopy {
+		resolvedPkg, err := a.analyzePkg(pkgName, modCopy)
 		if err != nil {
-			return src.Program{}, fmt.Errorf("analyze pkg: %v: %w", pkgName, err)
+			return nil, fmt.Errorf("analyze pkg: %v: %w", pkgName, err)
 		}
-		progCopy[pkgName] = resolvedPkg
+		pkgsCopy[pkgName] = resolvedPkg
 	}
 
-	return progCopy, nil
+	return pkgsCopy, nil
 }
 
 var (
@@ -55,22 +68,22 @@ var (
 
 // TODO check that there's no 2 entities with the same name
 // and that there's no unused entities.
-func (a Analyzer) analyzePkg(pkgName string, prog src.Program) (src.Package, error) {
+func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, error) {
 	if len(pkgName) == 0 {
 		return nil, ErrEmptyPkg
 	}
 
 	resolvedPkg := make(map[string]src.File, len(pkgName))
-	for fileName, file := range prog[pkgName] {
+	for fileName, file := range mod.Packages[pkgName] {
 		resolvedPkg[fileName] = src.File{
 			Imports:  file.Imports,
 			Entities: make(map[string]src.Entity, len(file.Entities)),
 		}
 	}
 
-	if err := prog[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
+	if err := mod.Packages[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
 		scope := src.Scope{
-			Prog: prog,
+			Module: mod,
 			Loc: src.ScopeLocation{
 				PkgName:  pkgName,
 				FileName: fileName,

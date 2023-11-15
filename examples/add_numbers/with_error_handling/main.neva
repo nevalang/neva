@@ -1,20 +1,20 @@
+// handle errors
+
 use {
-	std/tmp
-	github/nevalang/neva/pkg/typesystem
-	some/really/deeply/nested/path/to/local/package/inthe/the/project
+	std/core
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			readFirst tmp.Read
-			readSecond tmp.Read
+			readFirst core.Read
+			readSecond core.Read
 
-			parseFirst tmp.ParseInt
-			parseSecond tmp.ParseInt
+			parseFirst core.ParseInt
+			parseSecond core.ParseInt
 
 			add Add<int>
-			print tmp.Print<any>
+			print core.Print<any>
 		}
 
 		net {

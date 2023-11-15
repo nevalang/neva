@@ -3,8 +3,9 @@ package compiler
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/nevalang/neva/internal/compiler/src"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
@@ -15,35 +16,59 @@ type Compiler struct {
 }
 
 type (
+	Build struct {
+		EntryModule string
+		Modules     map[string]RawModule
+	}
+
+	RawModule struct {
+		Manifest src.Manifest          // Manifest must be parsed by builder before passing into compiler
+		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
+	}
+
 	Parser interface {
-		Parse(context.Context, map[string]RawPackage) (src.Program, error)
+		ParsePackages(context.Context, map[string]RawPackage) (map[string]src.Package, error)
 	}
 
 	RawPackage map[string][]byte
 
 	Analyzer interface {
-		Analyze(prog src.Program) (src.Program, error)
-		AnalyzeExecutable(prog src.Program, mainPkg string) (src.Program, error)
+		AnalyzeExecutable(prog src.Module, mainPkg string) (src.Module, error)
+	}
+
+	IRGen interface {
+		Generate(ctx context.Context, mod src.Module, mainPkgName string) (*ir.Program, error)
 	}
 )
 
-type IRGen interface {
-	Generate(context.Context, src.Program) (*ir.Program, error)
-}
+func (c Compiler) Compile(
+	ctx context.Context,
+	build Build,
+	workdirPath string,
+	mainPkgName string,
+) (*ir.Program, error) {
+	rawMod := build.Modules[build.EntryModule] // TODO support multimodule compilation
 
-// Compile is like Analyze but also produces IR.
-func (c Compiler) Compile(ctx context.Context, rawProg map[string]RawPackage, mainPkgName string) (*ir.Program, error) {
-	parsedProg, err := c.parser.Parse(ctx, rawProg)
+	if strings.HasPrefix(mainPkgName, "./") {
+		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
+	}
+
+	parsedPackages, err := c.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 
-	analyzedProg, err := c.analyzer.Analyze(parsedProg)
+	mod := src.Module{
+		Manifest: rawMod.Manifest,
+		Packages: parsedPackages,
+	}
+
+	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedProg)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("generate IR: %w", err)
 	}

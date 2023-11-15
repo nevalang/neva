@@ -1,6 +1,6 @@
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
-package src
+package sourcecode
 
 import (
 	"fmt"
@@ -8,7 +8,20 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-type Program map[string]Package
+type Module struct {
+	Manifest Manifest           `json:"manifest,omitempty"`
+	Packages map[string]Package `json:"packages,omitempty"`
+}
+
+type Manifest struct {
+	Compiler string                `json:"compiler,omitempty" yaml:"compiler,omitempty"` // want compiler version
+	Deps     map[string]Dependency `json:"deps,omitempty"     yaml:"deps,omitempty"`     // third-party mods (optional)
+}
+
+type Dependency struct {
+	Addr    string `json:"addr,omitempty"` // e.g. "github.com/nevalang/x"
+	Version string `json:"version,omitempty"`
+}
 
 var (
 	ErrPkgNotFound    = fmt.Errorf("package not found")
@@ -18,10 +31,10 @@ var (
 // Entity does not return package because calleer knows it, passed entityRef contains it.
 // Note that this method does not know anything about imports, builtins or anything like that.
 // entityRef passed must be absolute (full, "real") path to the entity.
-func (p Program) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
-	pkg, ok := p[entityRef.Pkg]
+func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
+	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", ErrPkgNotFound
+		return Entity{}, "", fmt.Errorf("%w: %s", ErrPkgNotFound, entityRef.Pkg)
 	}
 	for filename, file := range pkg {
 		entity, ok := file.Entities[entityRef.Name]

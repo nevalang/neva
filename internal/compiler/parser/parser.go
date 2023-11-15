@@ -7,10 +7,12 @@ import (
 	"fmt"
 
 	"github.com/antlr4-go/antlr/v4"
+	"golang.org/x/sync/errgroup"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	"github.com/nevalang/neva/internal/compiler/src"
-	"golang.org/x/sync/errgroup"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 type treeShapeListener struct {
@@ -22,19 +24,30 @@ type Parser struct {
 	isDebug bool
 }
 
-func (p Parser) Parse(ctx context.Context, rawProg map[string]compiler.RawPackage) (src.Program, error) {
-	prog := make(src.Program, len(rawProg))
+func (p Parser) ParseManifest(raw []byte) (src.Manifest, error) {
+	var result src.Manifest
+	if err := yaml.Unmarshal(raw, &result); err != nil {
+		return src.Manifest{}, fmt.Errorf("yaml unmarshal: %w", err)
+	}
+	return result, nil
+}
 
-	for pkgName, pkgFiles := range rawProg {
+func (p Parser) ParsePackages(
+	ctx context.Context,
+	rawPackages map[string]compiler.RawPackage,
+) (map[string]src.Package, error) {
+	packages := make(map[string]src.Package, len(rawPackages))
+
+	for pkgName, pkgFiles := range rawPackages {
 		parsedFiles, err := p.ParseFiles(ctx, pkgFiles)
 		if err != nil {
-			return src.Program{}, fmt.Errorf("parse files: %w", err)
+			return nil, fmt.Errorf("parse files: %w", err)
 		}
 
-		prog[pkgName] = parsedFiles
+		packages[pkgName] = parsedFiles
 	}
 
-	return prog, nil
+	return packages, nil
 }
 
 func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {

@@ -14,18 +14,6 @@
       "outFiles": ["${workspaceFolder}/web/out/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     },
-    // test extension
-    // {
-    //   "name": "VSCode Extension Tests",
-    //   "type": "extensionHost",
-    //   "request": "launch",
-    //   "args": [
-    //     "--extensionDevelopmentPath=${workspaceFolder}",
-    //     "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
-    //   ],
-    //   "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
-    //   "preLaunchTask": "${defaultBuildTask}"
-    // },
     // run lsp in debugger
     {
       "name": "Language server (LSP) ",
@@ -35,6 +23,25 @@
       "program": "${workspaceFolder}/cmd/lsp",
       "cwd": "${workspaceFolder}",
       "args": ["-debug"]
+    },
+    // === Interpreter ===
+    {
+      "name": "Interpreter: do_nothing",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["do_nothing"],
+    },
+    {
+      "name": "Interpreter: add_numbers",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["add_numbers/with_error_handling"],
     },
     // === Other ===
     {

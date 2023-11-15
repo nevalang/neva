@@ -20,7 +20,7 @@ export function ImportsView(props: {
               <span
                 slot="end"
                 className="codicon codicon-go-to-file import_goto_icon"
-                onClick={() => console.log("navigation not implemented")}
+                // onClick={() => console.log("navigation not implemented")}
               />
             </VSCodeTextField>
           </section>

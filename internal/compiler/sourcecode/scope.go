@@ -1,4 +1,4 @@
-package src
+package sourcecode
 
 import (
 	"errors"
@@ -10,14 +10,16 @@ import (
 
 // Scope is an entity that can be used to query the program.
 type Scope struct {
-	Loc  ScopeLocation // It keeps track of current location to properly resolve imports and local references.
-	Prog Program       // And of course it does has access to the program itself.
+	Loc ScopeLocation // It keeps track of current location to properly resolve imports and local references.
+	// TODO use multiple modules
+	Module Module // And of course it does has access to the program itself.
 }
 
 // ScopeLocation is used by scope to resolve references.
 type ScopeLocation struct {
-	PkgName  string // Full (real) name of the current package
-	FileName string // Name of the current file in the current package
+	ModuleName string // TODO currently unused
+	PkgName    string // Full (real) name of the current package
+	FileName   string // Name of the current file in the current package
 }
 
 // IsTopType returns true if passed reference is builtin "any" and false otherwise.
@@ -56,8 +58,8 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	}
 
 	return def, Scope{
-		Loc:  location,
-		Prog: s.Prog,
+		Loc:    location,
+		Module: s.Module,
 	}, nil
 }
 
@@ -97,11 +99,12 @@ var (
 )
 
 // Entity returns entity by passed reference.
-// If entity is local (ref has no pkg) the current location.pkg is used
+// If entity is local (ref has no pkg) the current location.pkg or std/builtin is used
 // Otherwise we use current file imports to resolve external ref.
+// This method MUST be used by all other methods that do entity lookup.
 func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if entityRef.Pkg == "" {
-		entity, filename, ok := s.Prog[s.Loc.PkgName].Entity(entityRef.Name)
+		entity, filename, ok := s.Module.Packages[s.Loc.PkgName].Entity(entityRef.Name)
 		if ok {
 			return entity, ScopeLocation{
 				PkgName:  s.Loc.PkgName,
@@ -109,7 +112,8 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 			}, nil
 		}
 
-		entity, filename, ok = s.Prog["std/builtin"].Entity(entityRef.Name)
+		// TODO when multimod flow gonna be implemented, upd so std is different module, not just package
+		entity, filename, ok = s.Module.Packages["std/builtin"].Entity(entityRef.Name)
 		if !ok {
 			return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef)
 		}
@@ -120,12 +124,15 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 		}, nil
 	}
 
-	realImportPkgName, ok := s.Prog[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
+	realImportPkgName, ok := s.Module.Packages[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
 	if !ok {
-		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
+		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: pkg %v", ErrNoImport, entityRef.Pkg)
 	}
 
-	entity, fileName, err := s.Prog.Entity(EntityRef{
+	// TODO update for multi-module workflow
+	//  check that real import package name is in this module, otherwise use the module we need
+
+	entity, fileName, err := s.Module.Entity(EntityRef{
 		Pkg:  realImportPkgName,
 		Name: entityRef.Name,
 	})

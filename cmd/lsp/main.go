@@ -14,7 +14,7 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/src"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -25,7 +25,7 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer Indexer
 
-	prog     chan src.Program
+	mod      chan src.Module
 	problems chan string
 }
 
@@ -35,22 +35,31 @@ type Indexer struct {
 	analyzer analyzer.Analyzer
 }
 
-func (i Indexer) index(ctx context.Context, path string) (parsed src.Program, analyzerMsg string, internalErr error) {
-	rawProg, err := i.builder.Build(ctx, path)
+type analyzerMessage string
+
+func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
+	build, err := i.builder.Build(ctx, path)
 	if err != nil {
-		return nil, "", fmt.Errorf("builder: %w", err)
+		return src.Module{}, "", fmt.Errorf("builder: %w", err)
 	}
 
-	parsedProg, err := i.parser.Parse(ctx, rawProg)
+	rawMod := build.Modules[build.EntryModule] // TODO use all mods
+
+	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
-		return nil, "", fmt.Errorf("parse prog: %w", err)
+		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
 	}
 
-	if _, err = i.analyzer.Analyze(parsedProg); err != nil {
-		return parsedProg, err.Error(), nil
+	mod := src.Module{ // TODO
+		Manifest: src.Manifest{},
+		Packages: parsedPkgs,
 	}
 
-	return parsedProg, "", nil
+	if _, err = i.analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
+		return mod, analyzerMessage(err.Error()), nil
+	}
+
+	return mod, "", nil
 }
 
 func main() { //nolint:funlen
@@ -70,11 +79,14 @@ func main() { //nolint:funlen
 	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
+	// parser
+	p := parser.MustNew(*isDebug)
+
 	// compiler
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
-	builder := builder.MustNew("/Users/emil/projects/neva/std")
+	builder := builder.MustNew("/Users/emil/projects/neva/std", "/Users/emil/projects/neva/third_party/", p)
 
 	// handler and server
 	h := &protocol.Handler{}
@@ -85,10 +97,10 @@ func main() { //nolint:funlen
 		version: "0.0.1",
 		indexer: Indexer{
 			builder:  builder,
-			parser:   parser.MustNew(*isDebug),
+			parser:   p,
 			analyzer: analyzer.MustNew(resolver),
 		},
-		prog:     make(chan src.Program),
+		mod:      make(chan src.Module),
 		problems: make(chan string),
 	}
 

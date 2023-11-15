@@ -37,7 +37,7 @@ Issues must only be created for known bugs and understandable architecture issue
 
 ## VSCode Extension
 
-Check out [tygo.yaml](./tygo.yaml). It depends on types defined in the `src` and `ts` packages and thus it's dangerous to rename those types. If you gonna do so make sure you don't brake TS types generation.
+Check out [tygo.yaml](./tygo.yaml). It depends on types defined in the `src` and `typesystem` packages and thus it's dangerous to rename those types. If you gonna do so make sure you don't brake TS types generation. Check [web/CONTRIBUTING.md](./web/CONTRIBUTING.md).
 
 # Naming conventions
 
@@ -49,8 +49,11 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 
 ## FBP/DataFlow
 
-- [Flow-Based Programming: A New Approach to Application Development](https://jpaulmorrison.com/fbp/1stedchaps.html)
+- [Elements of Dataflow and Reactive Programming Systems](https://youtu.be/iFlT93wakVo?feature=shared)
+- [The origins of Flow Based Programming with J Paul Morrison](https://youtu.be/up2yhNTsaDs?feature=shared)
 - [Dataflow and Reactive Programming Systems: A Practical Guide](https://www.amazon.com/Dataflow-Reactive-Programming-Systems-Practical/dp/1497422442)
+- [Flow-Based Programming: A New Approach to Application Development](https://jpaulmorrison.com/fbp/1stedchaps.html)
+- [Samuel Smith - "Flow Based Programming"](https://youtu.be/j3cP8uwf5YM?feature=shared)
 
 ## Golang
 
@@ -92,6 +95,7 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 - [Syntax Highlighter](https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide)
 - [LSP Overview](https://microsoft.github.io/language-server-protocol/)
 - [Go library for LSP implementation](https://github.com/tliron/glsp)
+- [LSP official docs](https://microsoft.github.io/language-server-protocol/)
 
 ## Subjective Recommendations
 
@@ -102,6 +106,8 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 - ["Propositions as Types" by Philip Wadler](https://youtu.be/IOiZatlZtGU?feature=shared)
 - ["Outperforming Imperative with Pure Functional Languages" by Richard Feldman](https://youtu.be/vzfy4EKwG_Y?feature=shared)
 - ["What Is a Strange Loop and What is it Like To Be One?" by Douglas Hofstadter (2013)](https://youtu.be/UT5CxsyKwxg?feature=shared)
+- ["The Economics of Programming Languages" by Evan Czaplicki (Strange Loop 2023)](https://youtu.be/XZ3w_jec1v8?feature=shared)
+- [Why Isn't Functional Programming the Norm? – Richard Feldman](https://youtu.be/QyJZzq0v7Z4?feature=shared)
 
 ### Books And Articles
 
@@ -110,6 +116,16 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 - [The Go Programming Language](https://www.amazon.com/Programming-Language-Addison-Wesley-Professional-Computing/dp/0134190440)
 - [Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems](https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321)
 - [Code: The Hidden Language of Computer Hardware and Software](https://www.amazon.com/Code-Language-Computer-Hardware-Software/dp/0735611319)
+
+### Other
+
+- [Go By Example](https://gobyexample.com/)
+- Roadmaps:
+  - [Computer Science](https://roadmap.sh/computer-science)
+  - [Algorithms](https://neetcode.io/roadmap)
+  - [System Design](https://roadmap.sh/system-design)
+  - [Software Design Architecture](https://roadmap.sh/software-design-architecture)
+  - [Backend](https://roadmap.sh/backend)
 
 # Community
 

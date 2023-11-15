@@ -53,7 +53,7 @@ export function sendMsgToWebview(
   document: TextDocument,
   parsedProgram: any
 ) {
-  console.log({ document, parsedProgram });
+  console.log("message to webview sent", parsedProgram);
   panel.webview.postMessage({
     original: document,
     parsed: parsedProgram,

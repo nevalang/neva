@@ -1,5 +1,5 @@
 use {
-	std/tmp
+	std/core
 }
 
 const {
@@ -9,11 +9,12 @@ const {
 components {
 	Main(enter) (exit) {
 		nodes {
-			print tmp.Print<str>
+			print core.Print<str>
 		}
 		net {
-			enter -> out.exit
-			msg -> out.exit
+			in.enter -> out.exit
+			msg -> print.v
+			print.v -> out.exit
 		}
 	}
 }
