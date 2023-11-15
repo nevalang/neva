@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/antlr4-go/antlr/v4"
-	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -52,22 +51,17 @@ func (p Parser) ParsePackages(
 
 func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
 	result := make(map[string]src.File, len(files))
-	g, gctx := errgroup.WithContext(ctx)
-	for name, bb := range files {
+
+	for name, bb := range files { // TODO parse in parallel
 		name := name
 		bb := bb
-		g.Go(func() error {
-			v, err := p.ParseFile(gctx, bb)
-			if err != nil {
-				return err
-			}
-			result[name] = v
-			return nil
-		})
+		v, err := p.ParseFile(ctx, bb)
+		if err != nil {
+			return nil, err
+		}
+		result[name] = v
 	}
-	if err := g.Wait(); err != nil {
-		return nil, err
-	}
+
 	return result, nil
 }
 
