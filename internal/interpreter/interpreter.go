@@ -17,13 +17,13 @@ type Interpreter struct {
 	adapter  proto.Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, pathToMainPkg string) (int, error) {
-	build, err := i.builder.Build(ctx, pathToMainPkg)
+func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) (int, error) {
+	build, err := i.builder.Build(ctx, workdirPath)
 	if err != nil {
 		return 0, fmt.Errorf("build: %w", err)
 	}
 
-	irProg, err := i.compiler.Compile(ctx, build, pathToMainPkg)
+	irProg, err := i.compiler.Compile(ctx, build, workdirPath, mainPkgName)
 	if err != nil {
 		return 0, err
 	}

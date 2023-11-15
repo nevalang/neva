@@ -10,14 +10,16 @@ import (
 
 // Scope is an entity that can be used to query the program.
 type Scope struct {
-	Loc    ScopeLocation // It keeps track of current location to properly resolve imports and local references.
-	Module Module        // And of course it does has access to the program itself.
+	Loc ScopeLocation // It keeps track of current location to properly resolve imports and local references.
+	// TODO use multiple modules
+	Module Module // And of course it does has access to the program itself.
 }
 
 // ScopeLocation is used by scope to resolve references.
 type ScopeLocation struct {
-	PkgName  string // Full (real) name of the current package
-	FileName string // Name of the current file in the current package
+	ModuleName string // TODO currently unused
+	PkgName    string // Full (real) name of the current package
+	FileName   string // Name of the current file in the current package
 }
 
 // IsTopType returns true if passed reference is builtin "any" and false otherwise.
@@ -97,10 +99,15 @@ var (
 )
 
 // Entity returns entity by passed reference.
-// If entity is local (ref has no pkg) the current location.pkg is used
+// If entity is local (ref has no pkg) the current location.pkg or std/builtin is used
 // Otherwise we use current file imports to resolve external ref.
+// This method MUST be used by all other methods that do entity lookup.
 func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if entityRef.Pkg == "" {
+		// pkg, ok := s.Module.Packages[s.Loc.PkgName]
+		// if !ok {
+		// }
+
 		entity, filename, ok := s.Module.Packages[s.Loc.PkgName].Entity(entityRef.Name)
 		if ok {
 			return entity, ScopeLocation{
@@ -109,6 +116,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 			}, nil
 		}
 
+		// FIXME std is different module, not just package
 		entity, filename, ok = s.Module.Packages["std/builtin"].Entity(entityRef.Name)
 		if !ok {
 			return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef)
@@ -124,6 +132,9 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if !ok {
 		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
 	}
+
+	// TODO update for multi-module workflow
+	//  check that real import package name is in this module, otherwise use the module we need
 
 	entity, fileName, err := s.Module.Entity(EntityRef{
 		Pkg:  realImportPkgName,

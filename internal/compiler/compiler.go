@@ -3,6 +3,7 @@ package compiler
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/ir"
@@ -40,20 +41,29 @@ type (
 	}
 )
 
-func (c Compiler) Compile(ctx context.Context, build Build, mainPkg string) (*ir.Program, error) {
+func (c Compiler) Compile(
+	ctx context.Context,
+	build Build,
+	workdirPath string,
+	mainPkgName string,
+) (*ir.Program, error) {
 	rawMod := build.Modules[build.EntryModule] // TODO support multimodule compilation
+
+	if strings.HasPrefix(mainPkgName, "./") {
+		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
+	}
 
 	parsedPackages, err := c.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-
+	
 	mod := src.Module{
 		Manifest: rawMod.Manifest,
 		Packages: parsedPackages,
 	}
 
-	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, mainPkg)
+	analyzedProg, err := c.analyzer.AnalyzeExecutable(mod, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}

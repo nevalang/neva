@@ -12,6 +12,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/parser"
+	"github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 type Builder struct {
@@ -21,20 +22,27 @@ type Builder struct {
 }
 
 func (b Builder) Build(ctx context.Context, workdir string) (compiler.Build, error) {
-	// build user module
 	mods := map[string]compiler.RawModule{}
+
+	// this supposed to work recursively but currently only root module is processed correctly
 	entryMod, err := b.buildModule(ctx, workdir, mods)
 	if err != nil {
 		return compiler.Build{}, fmt.Errorf("build entry mod: %w", err)
 	}
 	mods["entry"] = entryMod
 
-	// build stdlib module
+	// TODO in the future we not going to merge std module into root one
+	// because that won't work with normal multi-module flow
+	// but currently we do this because it works for single-mod flow (which we only support for the moment)
 	stdMod, err := b.buildModule(ctx, b.stdlibLocation, mods)
 	if err != nil {
 		return compiler.Build{}, fmt.Errorf("build entry mod: %w", err)
 	}
-	mods["std"] = stdMod
+
+	// merge std module with the entry module (TODO remove this)
+	for name, stdPkg := range stdMod.Packages {
+		mods["entry"].Packages["std/"+name] = stdPkg
+	}
 
 	return compiler.Build{
 		EntryModule: "entry",
@@ -57,20 +65,11 @@ func (b Builder) buildModule(
 		return compiler.RawModule{}, fmt.Errorf("parse manifest: %w", err)
 	}
 
-	// process module deps (download if needed and build)
+	// FIXME this isn't tested at all (multi-module flow isn't implemented yet)
 	for name, dep := range manifest.Deps {
-		depPath := fmt.Sprintf("%s/%s_%s", b.thirdPartyLocation, dep.Addr, dep.Version)
-		if _, err := os.Stat(depPath); err != nil { // check if directory with this dependency exists
-			if os.IsNotExist(err) { // if not, clone the repo
-				if _, err := git.PlainClone(depPath, false, &git.CloneOptions{
-					URL:           fmt.Sprintf("https://%s", dep.Addr),
-					ReferenceName: plumbing.NewTagReferenceName(dep.Version),
-				}); err != nil {
-					return compiler.RawModule{}, err
-				}
-			} else { // if it's an unknown error then return
-				return compiler.RawModule{}, fmt.Errorf("os stat: %w", err)
-			}
+		depPath, err := b.downloadDep(dep)
+		if err != nil {
+			return compiler.RawModule{}, fmt.Errorf("%w", err)
 		}
 
 		rawMod, err := b.buildModule(ctx, depPath, mods)
@@ -93,6 +92,23 @@ func (b Builder) buildModule(
 	}, nil
 }
 
+func (b Builder) downloadDep(dep sourcecode.Dependency) (string, error) {
+	depPath := fmt.Sprintf("%s/%s_%s", b.thirdPartyLocation, dep.Addr, dep.Version)
+	if _, err := os.Stat(depPath); err != nil {
+		if os.IsNotExist(err) {
+			if _, err := git.PlainClone(depPath, false, &git.CloneOptions{
+				URL:           fmt.Sprintf("https://%s", dep.Addr),
+				ReferenceName: plumbing.NewTagReferenceName(dep.Version),
+			}); err != nil {
+				return "", err
+			}
+		} else {
+			return "", fmt.Errorf("os stat: %w", err)
+		}
+	}
+	return depPath, nil
+}
+
 func readManifestYaml(workdir string) ([]byte, error) {
 	rawManifest, err := os.ReadFile(workdir + "/neva.yml")
 	if err == nil {
@@ -107,7 +123,6 @@ func readManifestYaml(workdir string) ([]byte, error) {
 	return rawManifest, nil
 }
 
-// walk recursively traverses the directory assuming that is a neva module (set of packages with source code files).
 func walk(rootPath string, prog map[string]compiler.RawPackage) error {
 	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -149,10 +164,10 @@ func getPkgName(rootPath, filePath string) string {
 	return strings.TrimPrefix(dirPath, rootPath+"/")
 }
 
-func MustNew(stdPkgPath, thirdPartyLocation string, parser parser.Parser) Builder {
+func MustNew(stdlibPath, thirdpartyPath string, parser parser.Parser) Builder {
 	return Builder{
-		stdlibLocation:     stdPkgPath,
-		thirdPartyLocation: thirdPartyLocation,
+		stdlibLocation:     stdlibPath,
+		thirdPartyLocation: thirdpartyPath,
 		parser:             parser,
 	}
 }

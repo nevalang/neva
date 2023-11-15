@@ -3,21 +3,22 @@
 
 // Program that adds two numbers typed by user and prints the result.
 // The algorithm is this: read first input, parse it,
-// then read the second input and parse too. Add numbers and print the result.
+// then read the second input and parse it too.
+// Add numbers and print the result.
 
 use {
-	std/tmp
+	std/core
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			readFirst tmp.Read
-			parseFirst tmp.ParseInt
-			readSecond tmp.Read
-			parseSecond tmp.ParseInt
+			readFirst core.Read
+			parseFirst core.ParseInt
+			readSecond core.Read
+			parseSecond core.ParseInt
 			add Add<int>
-			print tmp.Print<int>
+			print core.Print<int>
 		}
 		net {
 			in.enter -> readFirst.sig

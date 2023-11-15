@@ -34,7 +34,7 @@ var (
 func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", ErrPkgNotFound
+		return Entity{}, "", fmt.Errorf("%w: %s", ErrPkgNotFound, entityRef.Pkg)
 	}
 	for filename, file := range pkg {
 		entity, ok := file.Entities[entityRef.Name]

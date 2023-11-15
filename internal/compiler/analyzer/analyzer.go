@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
-	"golang.org/x/exp/maps"
 )
 
 type Analyzer struct {
@@ -16,7 +17,7 @@ type Analyzer struct {
 
 func (a Analyzer) AnalyzeExecutable(mod src.Module, mainPkgName string) (src.Module, error) {
 	if _, ok := mod.Packages[mainPkgName]; !ok {
-		return src.Module{}, ErrMainPkgNotFound
+		return src.Module{}, fmt.Errorf("%w: %s", ErrMainPkgNotFound, mainPkgName)
 	}
 
 	if err := a.mainSpecificPkgValidation(mainPkgName, mod); err != nil {

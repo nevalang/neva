@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
@@ -68,13 +67,13 @@ func main() {
 		),
 	)
 
-	path, err := filepath.Abs(os.Args[1])
+	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	code, err := intr.Interpret(context.Background(), path)
+	code, err := intr.Interpret(context.Background(), wd, os.Args[1])
 	if err != nil {
 		fmt.Println(err)
 		return

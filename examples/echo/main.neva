@@ -2,14 +2,14 @@
 // And it does so in an infinite loop.
 
 use {
-	std/tmp
+	std/core
 }
 
 components {
 	Main(enter) (exit) {
 		nodes {
-			read tmp.Read
-			print tmp.Print<str>
+			read core.Read
+			print core.Print<str>
 		}
 		net {
 			in.enter -> read.sig

@@ -1,7 +1,7 @@
 // Our program turns out to be quite big! Let's split it into sub-components?
 
 use {
-	std/tmp
+	std/core
 }
 
 components {
@@ -10,7 +10,7 @@ components {
 			readFirstInt ReadInt
 			readSecondInt ReadInt
 			add Add<int>
-			print tmp.Print<int | str>
+			print core.Print<int | str>
 		}
 		net {
 			in.enter -> readFirstInt.sig
@@ -28,8 +28,8 @@ components {
 
 	ReadInt(sig) (v int, err str) {
 		nodes {
-			read tmp.Read
-			parse tmp.ParseInt
+			read core.Read
+			parse core.ParseInt
 		}
 		net {
 			in.sig -> read.sig
