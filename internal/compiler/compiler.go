@@ -37,7 +37,7 @@ type (
 	}
 
 	IRGen interface {
-		Generate(context.Context, src.Module) (*ir.Program, error)
+		Generate(ctx context.Context, mod src.Module, mainPkgName string) (*ir.Program, error)
 	}
 )
 
@@ -57,7 +57,7 @@ func (c Compiler) Compile(
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-	
+
 	mod := src.Module{
 		Manifest: rawMod.Manifest,
 		Packages: parsedPackages,
@@ -68,7 +68,7 @@ func (c Compiler) Compile(
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedProg)
+	irProg, err := c.irgen.Generate(ctx, analyzedProg, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("generate IR: %w", err)
 	}

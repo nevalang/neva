@@ -1,4 +1,4 @@
-// Handle errors 
+// handle errors
 
 use {
 	std/core

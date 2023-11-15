@@ -104,10 +104,6 @@ var (
 // This method MUST be used by all other methods that do entity lookup.
 func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if entityRef.Pkg == "" {
-		// pkg, ok := s.Module.Packages[s.Loc.PkgName]
-		// if !ok {
-		// }
-
 		entity, filename, ok := s.Module.Packages[s.Loc.PkgName].Entity(entityRef.Name)
 		if ok {
 			return entity, ScopeLocation{
@@ -116,7 +112,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 			}, nil
 		}
 
-		// FIXME std is different module, not just package
+		// TODO when multimod flow gonna be implemented, upd so std is different module, not just package
 		entity, filename, ok = s.Module.Packages["std/builtin"].Entity(entityRef.Name)
 		if !ok {
 			return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef)
@@ -130,7 +126,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 
 	realImportPkgName, ok := s.Module.Packages[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
 	if !ok {
-		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: %v", ErrNoImport, entityRef.Pkg)
+		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: pkg %v", ErrNoImport, entityRef.Pkg)
 	}
 
 	// TODO update for multi-module workflow
