@@ -4,7 +4,7 @@ import {
   VSCodeDataGridCell,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
-import { Const, Msg } from "../generated/src";
+import { Const, Msg } from "../generated/sourcecode";
 
 export function ConstantView(props: {
   constants: Array<{ name: string; entity: Const }>;

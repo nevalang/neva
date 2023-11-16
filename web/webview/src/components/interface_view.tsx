@@ -4,7 +4,7 @@ import {
   VSCodeDataGridRow,
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
-import { Interface, Port } from "../generated/src";
+import { Interface, Port } from "../generated/sourcecode";
 import { useMemo } from "react";
 
 interface PortEntries {

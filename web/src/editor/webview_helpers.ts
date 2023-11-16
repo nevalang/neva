@@ -53,13 +53,13 @@ export function sendMsgToWebview(
   document: TextDocument,
   parsedProgram: any
 ) {
-  console.log("message to webview sent", parsedProgram);
   panel.webview.postMessage({
-    original: document,
-    parsed: parsedProgram,
+    openedDocument: document,
+    programState: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
     workspaceUri: workspace.workspaceFolders![0].uri,
   });
+  console.log("message to webview sent", parsedProgram);
 }
 
 export function getNonce() {

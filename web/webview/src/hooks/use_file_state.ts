@@ -9,14 +9,14 @@ import {
   File,
   Const,
   Interface,
-  Program,
-} from "../generated/src";
+  Module,
+} from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
 
-interface VSCodeMessage {
+interface VSCodeMessageData {
   workspaceUri: Uri;
   openedDocument: TextDocument;
-  programState: Program;
+  programState: Module;
   isDarkTheme: boolean;
 }
 
@@ -28,7 +28,7 @@ interface GroupedEntities {
   components: Array<{ name: string; entity: Component }>;
 }
 
-const vscodeApi = acquireVsCodeApi<VSCodeMessage>();
+const vscodeApi = acquireVsCodeApi<VSCodeMessageData>();
 
 // File state is grouped and sorted render-friendly object
 interface FileState {
@@ -40,12 +40,14 @@ interface FileState {
 export function useFileState(): FileState {
   const persistedState = vscodeApi.getState(); // load persistent state
   console.log("persistent state", persistedState);
-  const [state, setState] = useState<VSCodeMessage | undefined>(persistedState); // copy it to memory
+  const [state, setState] = useState<VSCodeMessageData | undefined>(
+    persistedState
+  ); // copy it to memory
 
   // subscribe to state updates from vscode
   useEffect(() => {
-    const listener = (event: { data: VSCodeMessage }) => {
-      console.log("message from vscode", event.data);
+    const listener = (event: { data: VSCodeMessageData }) => {
+      console.log("event from vscode", { event });
       setState(event.data); // update both local state
       vscodeApi.setState(event.data); // and persistent state to use when tab is reopened
     };
@@ -53,16 +55,12 @@ export function useFileState(): FileState {
     return () => window.removeEventListener("message", listener);
   }, []);
 
-  // given program state find file corresponding to current opened document and transform it to a render-friendly form, memoize the result
+  // given program state find file corresponding to current opened document and transform it
+  // to a render-friendly form, memoize the result
   const fileState: FileState = useMemo(() => {
     const result: FileState = {
       imports: [],
-      entities: {
-        types: [],
-        interfaces: [],
-        constants: [],
-        components: [],
-      },
+      entities: { types: [], interfaces: [], constants: [], components: [] },
     };
 
     // if tab opened first time and there were no updates from vscode yet
@@ -71,16 +69,16 @@ export function useFileState(): FileState {
     }
 
     try {
-      const workspacePath = state.workspaceUri.path;
+      const { currentFileName, currentPackageName } =
+        getCurrentPackageAndFileName(
+          state.openedDocument.fileName,
+          state.workspaceUri.path
+        );
 
-      // TODO take current file from the program and use it down here
-      const currentFile: File = {};
+      const currentFile: File =
+        state.programState.packages![currentPackageName][currentFileName];
 
-      if (currentFile.imports === undefined) {
-        return result;
-      }
-
-      for (const alias in state.programState.imports) {
+      for (const alias in currentFile.imports) {
         result.imports.push({
           alias,
           path: currentFile.imports[alias],
@@ -89,10 +87,7 @@ export function useFileState(): FileState {
 
       result.imports.sort();
 
-      if (currentFile.entities === undefined) {
-        return result;
-      }
-
+      // object to array for faster rendering
       for (const name in currentFile.entities) {
         const entity = currentFile.entities[name];
 
@@ -144,3 +139,17 @@ export function useFileState(): FileState {
 
   return fileState;
 }
+
+const getCurrentPackageAndFileName = (
+  openedFileName: string,
+  workspacePath: string
+) => {
+  const relativePath = openedFileName.replace(workspacePath + "/", "");
+  const pathParts = relativePath.split("/");
+
+  const currentPackageName = pathParts.slice(0, -1).join("/"); // all but the last segment (filename)
+  const currentFileNameWithExtension = pathParts[pathParts.length - 1]; // last semgent (filename)
+  const currentFileName = currentFileNameWithExtension.split(".")[0]; // filename without .neva
+
+  return { currentPackageName, currentFileName };
+};

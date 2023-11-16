@@ -16,7 +16,7 @@ lsp:
 
 # generate typescript types from golang src package to use in vscode extension
 # https://github.com/gzuidhof/tygo
-.PHONY: vscode-types
-vscode-types:
+.PHONY: tygo
+tygo:
 	@tygo generate
 

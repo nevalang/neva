@@ -7,7 +7,18 @@ This package defines source code entities - abstractions that end-user (a progra
 For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
 */
 
-export type Program = { [key: string]: Package};
+export interface Module {
+  manifest?: Manifest;
+  packages?: { [key: string]: Package};
+}
+export interface Manifest {
+  compiler?: string; // want compiler version
+  deps?: { [key: string]: Dependency}; // third-party mods (optional)
+}
+export interface Dependency {
+  addr?: string; // e.g. "github.com/nevalang/x"
+  version?: string;
+}
 export type Package = { [key: string]: File};
 export interface File {
   imports?: { [key: string]: string};
@@ -57,8 +68,8 @@ export interface Msg {
   int?: number /* int */;
   float?: number /* float64 */;
   str?: string;
-  vec?: Const[];
-  map?: { [key: string]: Const};
+  vec?: Const[]; // Vecs are used for both vectors and arrays
+  map?: { [key: string]: Const}; // Maps are used for both maps and structures
 }
 export interface IO {
   in?: { [key: string]: Port};
