@@ -1,4 +1,8 @@
-import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+import {
+  VSCodeDivider,
+  VSCodePanelTab,
+  VSCodePanels,
+} from "@vscode/webview-ui-toolkit/react";
 import {
   ImportsView,
   TypesView,
@@ -14,6 +18,14 @@ export default function App() {
 
   return (
     <div className="app">
+      <VSCodePanels style={{ marginBottom: "20px", position: "sticky" }}>
+        <VSCodePanelTab>USE</VSCodePanelTab>
+        <VSCodePanelTab>TYPES</VSCodePanelTab>
+        <VSCodePanelTab>CONST</VSCodePanelTab>
+        <VSCodePanelTab>INTERFACES</VSCodePanelTab>
+        <VSCodePanelTab>COMPONENTS</VSCodePanelTab>
+      </VSCodePanels>
+
       <ImportsView imports={imports} style={{ marginBottom: "20px" }} />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
@@ -25,7 +37,7 @@ export default function App() {
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
-      <h2>Constants</h2>
+      <h2>Const</h2>
       <ConstantView constants={constants} />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />

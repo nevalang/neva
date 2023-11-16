@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
+	fmt.Println("===Initialize===")
+
 	result := protocol.InitializeResult{
 		Capabilities: s.handler.CreateServerCapabilities(),
 		ServerInfo: &protocol.InitializeResultServerInfo{
@@ -36,10 +39,14 @@ func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePar
 	return result, nil
 }
 
+// Initialized is called when vscode-extension is initialized.
+// It spawns goroutines for sending indexing messages and warnings
 func (srv Server) Initialized(glspCtx *glsp.Context, params *protocol.InitializedParams) error {
 	go func() {
 		for prog := range srv.mod {
+			fmt.Println("new message from mod chan")
 			glspCtx.Notify("neva/workdir_indexed", prog)
+			fmt.Println("message sent to vscode")
 		}
 	}()
 	go func() {
