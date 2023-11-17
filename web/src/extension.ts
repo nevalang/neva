@@ -5,13 +5,13 @@ import {
   ViewColumn,
   Uri,
   WebviewPanel,
+  TextEditor,
 } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
-import { NevaEditor } from "./editor";
 import { setupLsp } from "./lsp";
 import { getWebviewContent, sendMsgToWebview } from "./webview";
 
-let lspClient: LanguageClient;
+let lspClient: LanguageClient; // module-scope var for deactivate
 const viewType = "neva.editNeva";
 
 export async function activate(context: ExtensionContext) {
@@ -24,61 +24,84 @@ export async function activate(context: ExtensionContext) {
     window.showWarningMessage(message);
   });
 
+  // Register event listener that catches updates from language-server to send them to webview later
+  let indexedModule: unknown;
+  lspClient.onNotification("neva/workdir_indexed", (upd: unknown) => {
+    indexedModule = upd;
+  });
+
   // Track the current panel with a webview
   let currentPanel: WebviewPanel | undefined = undefined;
 
   // Register preview command
   context.subscriptions.push(
-    commands.registerCommand("neva.openPreview", () => {
-      const columnToShowIn = window.activeTextEditor
-        ? window.activeTextEditor.viewColumn
-        : undefined;
-
-      // If we already have a panel, show it in the target column
-      if (currentPanel) {
-        currentPanel.reveal(columnToShowIn);
-      } else {
-        // Otherwise, create a new panel
-        currentPanel = window.createWebviewPanel(
-          "neva",
-          "Neva: Preview",
-          ViewColumn.Beside,
-          {
-            enableScripts: true,
-            localResourceRoots: [
-              (Uri as any).joinPath(context.extensionUri, "out"),
-              (Uri as any).joinPath(context.extensionUri, "webview/dist"),
-            ],
-          }
-        );
-
-        // Set content
-        currentPanel.webview.html = getWebviewContent(
-          currentPanel.webview,
-          context.extensionUri
-        );
-
-        lspClient.onNotification("neva/workdir_indexed", (indexedModule) => {
-          sendMsgToWebview(
-            currentPanel!,
-            window.activeTextEditor?.document!,
-            indexedModule
-          );
-        });
-
-        // Reset when the current panel is closed
-        currentPanel.onDidDispose(
-          () => {
-            currentPanel = undefined;
-          },
-          null,
-          context.subscriptions
-        );
-      }
-    })
+    commands.registerCommand(
+      "neva.openPreview",
+      previewCommand(currentPanel, context, indexedModule)
+    )
   );
 }
 
 export function deactivate(): Thenable<void> | undefined {
   return lspClient && lspClient.stop();
+}
+
+function previewCommand(
+  currentPanel: WebviewPanel | undefined,
+  context: ExtensionContext,
+  indexedModule: unknown
+): () => void {
+  return () => {
+    const columnToShowIn = window.activeTextEditor
+      ? window.activeTextEditor.viewColumn
+      : undefined;
+
+    if (currentPanel) {
+      currentPanel.reveal(columnToShowIn);
+    } else {
+      currentPanel = window.createWebviewPanel(
+        "neva",
+        "Neva: Preview",
+        ViewColumn.Beside,
+        {
+          enableScripts: true,
+          localResourceRoots: [
+            (Uri as any).joinPath(context.extensionUri, "out"),
+            (Uri as any).joinPath(context.extensionUri, "webview/dist"),
+          ],
+        }
+      );
+
+      currentPanel.webview.html = getWebviewContent(
+        currentPanel.webview,
+        context.extensionUri
+      );
+
+      if (window.activeTextEditor) {
+        if (indexedModule) {
+          sendMsgToWebview(
+            currentPanel,
+            window.activeTextEditor.document,
+            indexedModule
+          );
+        } else {
+          window.showWarningMessage(
+            "vscode-neva: workdir not indexed yet, please wait a little bit and again later"
+          );
+        }
+      } else {
+        window.showWarningMessage(
+          "vscode-neva: you need to open neva file before calling this command"
+        );
+      }
+
+      currentPanel.onDidDispose(
+        () => {
+          currentPanel = undefined;
+        },
+        null,
+        context.subscriptions
+      );
+    }
+  };
 }

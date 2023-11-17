@@ -10,6 +10,9 @@ flowchart LR
     end
     subgraph compiler
         parser-->|program|analyzer
+        subgraph parser
+            antlr-->|ast|listener
+        end
         subgraph analyzer
             typesystem
         end

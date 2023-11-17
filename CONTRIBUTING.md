@@ -108,6 +108,7 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 - ["What Is a Strange Loop and What is it Like To Be One?" by Douglas Hofstadter (2013)](https://youtu.be/UT5CxsyKwxg?feature=shared)
 - ["The Economics of Programming Languages" by Evan Czaplicki (Strange Loop 2023)](https://youtu.be/XZ3w_jec1v8?feature=shared)
 - [Why Isn't Functional Programming the Norm? – Richard Feldman](https://youtu.be/QyJZzq0v7Z4?feature=shared)
+- https://www.youtube.com/watch?v=SxdOUGdseq4 "Simple Made Easy" - Rich Hickey (2011)
 
 ### Books And Articles
 
