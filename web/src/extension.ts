@@ -5,7 +5,6 @@ import {
   ViewColumn,
   Uri,
   WebviewPanel,
-  TextEditor,
 } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { setupLsp } from "./lsp";
@@ -15,7 +14,9 @@ let lspClient: LanguageClient; // module-scope var for deactivate
 const viewType = "neva.editNeva";
 
 export async function activate(context: ExtensionContext) {
-  console.log("vscode-neva: activated");
+  window.showInformationMessage(
+    "vscode-neva: neva module detected, start indexing workdir..."
+  );
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
@@ -27,6 +28,7 @@ export async function activate(context: ExtensionContext) {
   // Register event listener that catches updates from language-server to send them to webview later
   let indexedModule: unknown;
   lspClient.onNotification("neva/workdir_indexed", (upd: unknown) => {
+    window.showInformationMessage("vscode-neva: workdir indexed");
     indexedModule = upd;
   });
 
