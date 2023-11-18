@@ -48,7 +48,6 @@ export function useFileState(): FileState {
   // subscribe to updates from vscode extension
   useEffect(() => {
     const listener = (event: { data: VSCodeMessageData }) => {
-      console.log("event from vscode", event);
       setState(event.data); // update both memory
       vscodeApi.setState(event.data); // and persistent state (to reuse when tab is reopened)
     };

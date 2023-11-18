@@ -16,7 +16,7 @@ import { getWebviewContent, sendMsgToWebview } from "./webview";
 let lspClient: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
-  console.info("neva module detected, start indexing workdir");
+  console.info("neva module detected, extension activated");
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
@@ -30,7 +30,7 @@ export async function activate(context: ExtensionContext) {
   // Listen to language server events and update current indexed module state
   let initialIndex: unknown;
   lspClient.onNotification("neva/workdir_indexed", (newIndex: unknown) => {
-    console.info("workdir has been successfully indexed");
+    console.info("workdir has been successfully indexed", newIndex);
     initialIndex = newIndex;
   });
 
@@ -64,6 +64,8 @@ function getPreviewCommand(
 
   return () => {
     const initialIndex = getInitialIndex();
+
+    console.info("webview triggered: ", { initialIndex });
 
     if (!window.activeTextEditor) {
       window.showWarningMessage("You need to open neva file to open preview.");
