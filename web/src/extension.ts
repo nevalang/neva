@@ -30,7 +30,10 @@ export async function activate(context: ExtensionContext) {
   // Listen to language server events and update current indexed module state
   let initialIndex: unknown;
   lspClient.onNotification("neva/workdir_indexed", (newIndex: unknown) => {
-    console.info("workdir has been successfully indexed", newIndex);
+    console.info(
+      "language-server notification - workdir has been indexed",
+      newIndex
+    );
     initialIndex = newIndex;
   });
 
@@ -64,18 +67,11 @@ function getPreviewCommand(
 
   return () => {
     const initialIndex = getInitialIndex();
-
     console.info("webview triggered: ", { initialIndex });
 
     if (!window.activeTextEditor) {
       window.showWarningMessage("You need to open neva file to open preview.");
       return;
-    }
-
-    if (!initialIndex) {
-      window.showWarningMessage(
-        "Working directory is not indexed yet. Just wait for a little bit."
-      );
     }
 
     const column = window.activeTextEditor
@@ -103,10 +99,9 @@ function getPreviewCommand(
 
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
 
-    sendMsgToWebview(panel, window.activeTextEditor!.document, initialIndex);
-
     onWebviewCreated((update: unknown) => {
       sendMsgToWebview(panel!, window.activeTextEditor!.document, update);
+      console.info("upd message sent to webview", initialIndex);
     });
 
     panel.onDidDispose(
@@ -118,5 +113,15 @@ function getPreviewCommand(
     );
 
     console.info("existing panel not found, new panel has been created");
+
+    if (!initialIndex) {
+      window.showWarningMessage(
+        "Working directory is not indexed yet. Just wait for a little bit."
+      );
+      return;
+    }
+
+    sendMsgToWebview(panel, window.activeTextEditor!.document, initialIndex);
+    console.info("initial message to webview", initialIndex);
   };
 }

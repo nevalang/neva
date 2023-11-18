@@ -63,7 +63,11 @@ export function useFileState(): FileState {
     };
 
     // if tab opened first time and there were no updates from vscode yet
-    if (state === undefined) {
+    if (!state) {
+      return result;
+    }
+
+    if (!state.programState.packages) {
       return result;
     }
 

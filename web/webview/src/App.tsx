@@ -18,14 +18,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <VSCodePanels style={{ marginBottom: "20px", position: "sticky" }}>
-        <VSCodePanelTab>USE</VSCodePanelTab>
-        <VSCodePanelTab>TYPES</VSCodePanelTab>
-        <VSCodePanelTab>CONST</VSCodePanelTab>
-        <VSCodePanelTab>INTERFACES</VSCodePanelTab>
-        <VSCodePanelTab>COMPONENTS</VSCodePanelTab>
-      </VSCodePanels>
-
       <ImportsView imports={imports} style={{ marginBottom: "20px" }} />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
