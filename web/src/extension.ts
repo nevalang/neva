@@ -16,9 +16,7 @@ import { getWebviewContent, sendMsgToWebview } from "./webview";
 let lspClient: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
-  window.showInformationMessage(
-    "Neva module detected, start indexing workdir."
-  );
+  console.info("neva module detected, start indexing workdir");
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
@@ -27,10 +25,12 @@ export async function activate(context: ExtensionContext) {
     window.showWarningMessage(message);
   });
 
+  console.info("language-server started, client connection established");
+
   // Listen to language server events and update current indexed module state
   let initialIndex: unknown;
   lspClient.onNotification("neva/workdir_indexed", (newIndex: unknown) => {
-    window.showInformationMessage("Workdir indexed.");
+    console.info("workdir has been successfully indexed");
     initialIndex = newIndex;
   });
 
@@ -40,13 +40,15 @@ export async function activate(context: ExtensionContext) {
       "neva.openPreview",
       getPreviewCommand(
         context,
-        initialIndex, // note that initial index could be undefined in case langauge server hasn't indexed workdir yet
-        (f: GenericNotificationHandler) => {
-          lspClient.onNotification("neva/workdir_indexed", f);
+        () => initialIndex, // note that we must use closure so function call gets actual value and not undefined
+        (handler: GenericNotificationHandler) => {
+          lspClient.onNotification("neva/workdir_indexed", handler); // register webview update-function
         }
       )
     )
   );
+
+  console.info("preview command registered");
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -55,22 +57,22 @@ export function deactivate(): Thenable<void> | undefined {
 
 function getPreviewCommand(
   context: ExtensionContext,
-  initialIndex: unknown,
+  getInitialIndex: () => unknown,
   onWebviewCreated: (f: GenericNotificationHandler) => void
 ): () => void {
   let panel: WebviewPanel | undefined;
 
   return () => {
+    const initialIndex = getInitialIndex();
+
     if (!window.activeTextEditor) {
-      window.showWarningMessage(
-        "You need to open neva file before calling this command."
-      );
+      window.showWarningMessage("You need to open neva file to open preview.");
       return;
     }
 
     if (!initialIndex) {
       window.showWarningMessage(
-        "Working directory is not indexed yet. Please wait for a little bit."
+        "Working directory is not indexed yet. Just wait for a little bit."
       );
     }
 
@@ -80,6 +82,7 @@ function getPreviewCommand(
 
     if (panel) {
       panel.reveal(column);
+      console.info("existing panel revealed");
       return;
     }
 
@@ -98,10 +101,8 @@ function getPreviewCommand(
 
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
 
-    // send initial index to webview
     sendMsgToWebview(panel, window.activeTextEditor!.document, initialIndex);
 
-    // subscribe to further language server updates
     onWebviewCreated((update: unknown) => {
       sendMsgToWebview(panel!, window.activeTextEditor!.document, update);
     });
@@ -113,5 +114,7 @@ function getPreviewCommand(
       null,
       context.subscriptions
     );
+
+    console.info("existing panel not found, new panel has been created");
   };
 }
