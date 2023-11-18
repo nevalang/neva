@@ -74,16 +74,15 @@
         "path": "./syntaxes/neva.tmLanguage.json"
       }
     ],
-    "customEditors": [
+    "commands": [
       {
-        "viewType": "neva.editNeva",
-        "displayName": "Neva",
-        "selector": [
-          {
-            "filenamePattern": "*.neva"
-          }
-        ],
-        "priority": "default"
+        "command": "neva.openPreview",
+        "title": "Preview",
+        "category": "Neva",
+        "icon": {
+          "light": "assets/logo.png",
+          "dark": "assets/logo.png"
+        }
       }
     ]
   },

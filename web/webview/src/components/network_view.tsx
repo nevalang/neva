@@ -15,7 +15,7 @@
 //   NodeProps,
 // } from "reactflow";
 // import dagre from "dagre";
-// import * as src from "../generated/src";
+// import * as src from "../generated/sourcecode";
 // import "reactflow/dist/style.css";
 
 // const nodeTypes = { normal_node: NormalNode };

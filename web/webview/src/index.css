@@ -12,7 +12,7 @@
 }
 
 body {
-  font-family: 'Bai Jamjuree', sans-serif;
+  /* font-family: 'Bai Jamjuree', sans-serif; */
   background-color: var(--background);
   padding: 20px;
 }

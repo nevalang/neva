@@ -50,8 +50,8 @@ func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMe
 		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
 	}
 
-	mod := src.Module{ // TODO
-		Manifest: src.Manifest{},
+	mod := src.Module{
+		Manifest: rawMod.Manifest,
 		Packages: parsedPkgs,
 	}
 

@@ -4,7 +4,7 @@ import {
   VSCodeDataGridCell,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
-import { Component, EntityRef, Node } from "../generated/src";
+import { Component, EntityRef, Node } from "../generated/sourcecode";
 import { InterfaceView } from "./interface_view";
 import { useMemo } from "react";
 // import NetView from "./network_view";
