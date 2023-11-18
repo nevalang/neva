@@ -54,12 +54,12 @@ export function sendMsgToWebview(
   parsedProgram: any
 ) {
   panel.webview.postMessage({
+    workspaceUri: workspace.workspaceFolders![0].uri,
     openedDocument: document,
     programState: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
-    workspaceUri: workspace.workspaceFolders![0].uri,
   });
-  console.log("message to webview sent", parsedProgram);
+  console.log("vscode-neva: message to webview sent", parsedProgram);
 }
 
 export function getNonce() {

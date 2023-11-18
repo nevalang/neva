@@ -31,13 +31,13 @@ interface GroupedEntities {
 const vscodeApi = acquireVsCodeApi<VSCodeMessageData>();
 
 // File state is grouped and sorted render-friendly object
-interface RenderFriendly {
+interface FileState {
   imports: Array<{ alias: string; path: string }>;
   entities: GroupedEntities;
 }
 
 // UseFileState returns state that is easy to render. It also does memorization to avoid re-rendering
-export function useFileState(): RenderFriendly {
+export function useFileState(): FileState {
   const persistedState = vscodeApi.getState(); // load persistent state
 
   // copy persistent state from disk it to memory
@@ -48,7 +48,7 @@ export function useFileState(): RenderFriendly {
   // subscribe to updates from vscode extension
   useEffect(() => {
     const listener = (event: { data: VSCodeMessageData }) => {
-      console.log("event from vscode", { event });
+      console.log("event from vscode", event);
       setState(event.data); // update both memory
       vscodeApi.setState(event.data); // and persistent state (to reuse when tab is reopened)
     };
@@ -57,8 +57,8 @@ export function useFileState(): RenderFriendly {
   }, []);
 
   // use state to compute render-friendly state and memoize the result
-  const fileState: RenderFriendly = useMemo(() => {
-    const result: RenderFriendly = {
+  const fileState: FileState = useMemo(() => {
+    const result: FileState = {
       imports: [],
       entities: { types: [], interfaces: [], constants: [], components: [] },
     };
