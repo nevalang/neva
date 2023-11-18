@@ -1,8 +1,4 @@
-import {
-  VSCodeDivider,
-  VSCodePanelTab,
-  VSCodePanels,
-} from "@vscode/webview-ui-toolkit/react";
+import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import {
   ImportsView,
   TypesView,

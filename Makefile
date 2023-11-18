@@ -20,3 +20,9 @@ lsp:
 tygo:
 	@tygo generate
 
+# build language server and put executable to web/out
+.PHONY: lsp
+lsp:
+	@go build -ldflags="-s -w" -o web/out/lsp ./cmd/lsp/*
+
+

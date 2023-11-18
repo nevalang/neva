@@ -77,7 +77,7 @@
     "commands": [
       {
         "command": "neva.openPreview",
-        "title": "Preview",
+        "title": "Preview 👀",
         "category": "Neva",
         "icon": {
           "light": "assets/logo.png",

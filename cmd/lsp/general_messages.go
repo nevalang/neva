@@ -32,7 +32,7 @@ func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePar
 			return
 		}
 
-		s.mod <- prog
+		s.indexChan <- prog
 		s.problems <- string(problems)
 	}()
 
@@ -41,12 +41,11 @@ func (s Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePar
 
 // Initialized is called when vscode-extension is initialized.
 // It spawns goroutines for sending indexing messages and warnings
+// Note that this methods only works correctly if any time vscode reloaded it relaunches language-server.
 func (srv Server) Initialized(glspCtx *glsp.Context, params *protocol.InitializedParams) error {
 	go func() {
-		for prog := range srv.mod {
-			fmt.Println("new message from mod chan")
-			glspCtx.Notify("neva/workdir_indexed", prog)
-			fmt.Println("message sent to vscode")
+		for indexedMod := range srv.indexChan {
+			glspCtx.Notify("neva/workdir_indexed", indexedMod)
 		}
 	}()
 	go func() {
@@ -63,7 +62,7 @@ func (srv Server) Shutdown(context *glsp.Context) error {
 }
 
 func (srv Server) Exit(glspContext *glsp.Context) error {
-	close(srv.mod)
+	close(srv.indexChan)
 	close(srv.problems)
 	return nil
 }
