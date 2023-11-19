@@ -24,8 +24,8 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer Indexer
 
-	indexChan chan src.Module
-	problems  chan string
+	indexChan    chan src.Module
+	problemsChan chan string
 }
 
 func main() { //nolint:funlen
@@ -66,8 +66,6 @@ func main() { //nolint:funlen
 			parser:   p,
 			analyzer: analyzer.MustNew(resolver),
 		},
-		indexChan: make(chan src.Module),
-		problems:  make(chan string),
 	}
 
 	// Base Protocol

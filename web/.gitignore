@@ -134,3 +134,6 @@ dist
 
 # env
 .env
+
+# language server build
+lsp
