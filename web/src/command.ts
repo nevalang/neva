@@ -36,7 +36,7 @@ export function getPreviewCommand(
 
     panel = window.createWebviewPanel(
       "neva",
-      "Neva: Preview",
+      "Neva: Preview 👀",
       ViewColumn.Beside,
       {
         enableScripts: true,
@@ -47,6 +47,10 @@ export function getPreviewCommand(
       }
     );
 
+    panel.iconPath = (Uri as any).joinPath(
+      context.extensionUri,
+      "webview/dist/logo.svg"
+    );
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
 
     onWebviewCreated((update: unknown) => {
