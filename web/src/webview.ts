@@ -59,7 +59,6 @@ export function sendMsgToWebview(
     programState: parsedProgram,
     isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
   });
-  console.log("vscode-neva: message to webview sent: ", parsedProgram);
 }
 
 export function getNonce() {

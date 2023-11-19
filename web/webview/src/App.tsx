@@ -1,8 +1,4 @@
-import {
-  VSCodeDivider,
-  VSCodePanelTab,
-  VSCodePanels,
-} from "@vscode/webview-ui-toolkit/react";
+import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import {
   ImportsView,
   TypesView,
@@ -10,40 +6,37 @@ import {
   InterfaceView,
   ComponentView,
 } from "./components";
-import { useFileState } from "./hooks/use_file_state";
+import { useIndex } from "./helpers/use_index";
+import { useMemo } from "react";
+import { getFileState } from "./helpers/get_file_state";
 
 export default function App() {
-  const { imports, entities } = useFileState();
-  const { types, constants, interfaces, components } = entities;
+  const index = useIndex();
+  const fileState = useMemo(() => getFileState(index), [index]);
 
   return (
     <div className="app">
-      <VSCodePanels style={{ marginBottom: "20px", position: "sticky" }}>
-        <VSCodePanelTab>USE</VSCodePanelTab>
-        <VSCodePanelTab>TYPES</VSCodePanelTab>
-        <VSCodePanelTab>CONST</VSCodePanelTab>
-        <VSCodePanelTab>INTERFACES</VSCodePanelTab>
-        <VSCodePanelTab>COMPONENTS</VSCodePanelTab>
-      </VSCodePanels>
-
-      <ImportsView imports={imports} style={{ marginBottom: "20px" }} />
+      <ImportsView
+        imports={fileState.imports}
+        style={{ marginBottom: "20px" }}
+      />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
       <h2>Types</h2>
       <div style={{ marginBottom: "20px" }}>
-        <TypesView types={types} />
+        <TypesView types={fileState.entities.types} />
       </div>
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
       <h2>Const</h2>
-      <ConstantView constants={constants} />
+      <ConstantView constants={fileState.entities.constants} />
 
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
       <h2>Interfaces</h2>
-      {interfaces.map((entry) => {
+      {fileState.entities.interfaces.map((entry) => {
         const { name, entity } = entry;
         return <InterfaceView name={name} entity={entity} />;
       })}
@@ -51,7 +44,7 @@ export default function App() {
       <VSCodeDivider style={{ marginBottom: "20px" }} />
 
       <h2>Components</h2>
-      {components.map((entry) => {
+      {fileState.entities.components.map((entry) => {
         const { name, entity } = entry;
         return <ComponentView name={name} entity={entity} />;
       })}

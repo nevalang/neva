@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
@@ -25,41 +24,8 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer Indexer
 
-	mod      chan src.Module
-	problems chan string
-}
-
-type Indexer struct {
-	builder  builder.Builder
-	parser   parser.Parser
-	analyzer analyzer.Analyzer
-}
-
-type analyzerMessage string
-
-func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
-	build, err := i.builder.Build(ctx, path)
-	if err != nil {
-		return src.Module{}, "", fmt.Errorf("builder: %w", err)
-	}
-
-	rawMod := build.Modules[build.EntryModule] // TODO use all mods
-
-	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
-	if err != nil {
-		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
-	}
-
-	mod := src.Module{
-		Manifest: rawMod.Manifest,
-		Packages: parsedPkgs,
-	}
-
-	if _, err = i.analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
-		return mod, analyzerMessage(err.Error()), nil
-	}
-
-	return mod, "", nil
+	indexChan    chan src.Module
+	problemsChan chan string
 }
 
 func main() { //nolint:funlen
@@ -100,8 +66,6 @@ func main() { //nolint:funlen
 			parser:   p,
 			analyzer: analyzer.MustNew(resolver),
 		},
-		mod:      make(chan src.Module),
-		problems: make(chan string),
 	}
 
 	// Base Protocol

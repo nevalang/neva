@@ -1,22 +1,15 @@
-import {
-  ExtensionContext,
-  window,
-  commands,
-  ViewColumn,
-  Uri,
-  WebviewPanel,
-} from "vscode";
+import { ExtensionContext, window, commands } from "vscode";
 import {
   GenericNotificationHandler,
   LanguageClient,
 } from "vscode-languageclient/node";
 import { setupLsp } from "./lsp";
-import { getWebviewContent, sendMsgToWebview } from "./webview";
+import { getPreviewCommand } from "./command";
 
 let lspClient: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
-  console.info("neva module detected, start indexing workdir");
+  console.info("neva module detected, extension activated");
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
@@ -30,7 +23,10 @@ export async function activate(context: ExtensionContext) {
   // Listen to language server events and update current indexed module state
   let initialIndex: unknown;
   lspClient.onNotification("neva/workdir_indexed", (newIndex: unknown) => {
-    console.info("workdir has been successfully indexed");
+    console.info(
+      "language-server notification - workdir has been indexed",
+      newIndex
+    );
     initialIndex = newIndex;
   });
 
@@ -53,68 +49,4 @@ export async function activate(context: ExtensionContext) {
 
 export function deactivate(): Thenable<void> | undefined {
   return lspClient && lspClient.stop();
-}
-
-function getPreviewCommand(
-  context: ExtensionContext,
-  getInitialIndex: () => unknown,
-  onWebviewCreated: (f: GenericNotificationHandler) => void
-): () => void {
-  let panel: WebviewPanel | undefined;
-
-  return () => {
-    const initialIndex = getInitialIndex();
-
-    if (!window.activeTextEditor) {
-      window.showWarningMessage("You need to open neva file to open preview.");
-      return;
-    }
-
-    if (!initialIndex) {
-      window.showWarningMessage(
-        "Working directory is not indexed yet. Just wait for a little bit."
-      );
-    }
-
-    const column = window.activeTextEditor
-      ? window.activeTextEditor.viewColumn
-      : undefined;
-
-    if (panel) {
-      panel.reveal(column);
-      console.info("existing panel revealed");
-      return;
-    }
-
-    panel = window.createWebviewPanel(
-      "neva",
-      "Neva: Preview",
-      ViewColumn.Beside,
-      {
-        enableScripts: true,
-        localResourceRoots: [
-          (Uri as any).joinPath(context.extensionUri, "out"),
-          (Uri as any).joinPath(context.extensionUri, "webview/dist"),
-        ],
-      }
-    );
-
-    panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
-
-    sendMsgToWebview(panel, window.activeTextEditor!.document, initialIndex);
-
-    onWebviewCreated((update: unknown) => {
-      sendMsgToWebview(panel!, window.activeTextEditor!.document, update);
-    });
-
-    panel.onDidDispose(
-      () => {
-        panel = undefined;
-      },
-      null,
-      context.subscriptions
-    );
-
-    console.info("existing panel not found, new panel has been created");
-  };
 }

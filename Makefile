@@ -9,10 +9,10 @@ antlr:
 ir-proto:
 	@protoc --go_out=. ./api/proto/ir.proto
 
-# build language server for neva written in go and put to vscode extension out
+# build language server and put executable to web/out
 .PHONY: lsp
 lsp:
-	@go build -ldflags="-s -w" -o web/out/lsp ./cmd/lsp/main.go
+	@go build -ldflags="-s -w" -o web/lsp ./cmd/lsp/*
 
 # generate typescript types from golang src package to use in vscode extension
 # https://github.com/gzuidhof/tygo
