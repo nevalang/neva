@@ -1,12 +1,4 @@
-import {
-  Webview,
-  WebviewPanel,
-  window,
-  Uri,
-  ColorThemeKind,
-  TextDocument,
-  workspace,
-} from "vscode";
+import { Webview, WebviewPanel, Uri, TextDocument, workspace } from "vscode";
 
 export function getWebviewContent(webview: Webview, extensionUri: Uri) {
   const stylesUri = getUri(webview, extensionUri, [
@@ -48,20 +40,7 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri) {
     `;
 }
 
-export function sendMsgToWebview(
-  panel: WebviewPanel,
-  document: TextDocument,
-  parsedProgram: unknown
-) {
-  panel.webview.postMessage({
-    workspaceUri: workspace.workspaceFolders![0].uri,
-    openedDocument: document,
-    programState: parsedProgram,
-    isDarkTheme: window.activeColorTheme.kind === ColorThemeKind.Dark,
-  });
-}
-
-export function getNonce() {
+function getNonce() {
   let text = "";
   const possible =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -71,10 +50,30 @@ export function getNonce() {
   return text;
 }
 
-export function getUri(
-  webview: Webview,
-  extensionUri: Uri,
-  pathList: string[]
-) {
+function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
   return webview.asWebviewUri((Uri as any).joinPath(extensionUri, ...pathList));
+}
+
+export function sendIndexMsgToWebView(
+  panel: WebviewPanel,
+  document: TextDocument,
+  module: unknown
+) {
+  panel.webview.postMessage({
+    type: "index",
+    uri: workspace.workspaceFolders![0].uri,
+    document: document,
+    module: module,
+  });
+}
+
+export function sendTabChangeMsgToWebView(
+  panel: WebviewPanel,
+  document: TextDocument
+) {
+  panel.webview.postMessage({
+    type: "tab_change",
+    uri: workspace.workspaceFolders![0].uri,
+    document: document,
+  });
 }

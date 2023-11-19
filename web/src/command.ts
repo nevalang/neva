@@ -1,4 +1,5 @@
 import {
+  TextEditor,
   window,
   ExtensionContext,
   WebviewPanel,
@@ -6,7 +7,11 @@ import {
   Uri,
 } from "vscode";
 import { GenericNotificationHandler } from "vscode-languageclient";
-import { getWebviewContent, sendMsgToWebview } from "./webview";
+import {
+  getWebviewContent,
+  sendIndexMsgToWebView,
+  sendTabChangeMsgToWebView,
+} from "./webview";
 
 export function getPreviewCommand(
   context: ExtensionContext,
@@ -53,9 +58,22 @@ export function getPreviewCommand(
     );
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
 
-    onWebviewCreated((update: unknown) => {
-      sendMsgToWebview(panel!, window.activeTextEditor!.document, update);
+    onWebviewCreated((indexedModule: unknown) => {
+      sendIndexMsgToWebView(
+        panel!,
+        window.activeTextEditor!.document,
+        indexedModule
+      );
       console.info("upd message sent to webview", initialIndex);
+    });
+
+    window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+      console.info("active text editor changed", editor);
+      if (!editor || !editor.document.fileName.endsWith(".neva")) {
+        return;
+      }
+      sendTabChangeMsgToWebView(panel!, editor.document);
+      console.info("tab changed message was sent to webview");
     });
 
     panel.onDidDispose(
@@ -75,7 +93,11 @@ export function getPreviewCommand(
       return;
     }
 
-    sendMsgToWebview(panel, window.activeTextEditor!.document, initialIndex);
+    sendIndexMsgToWebView(
+      panel,
+      window.activeTextEditor!.document,
+      initialIndex
+    );
     console.info("initial message to webview", initialIndex);
   };
 }
