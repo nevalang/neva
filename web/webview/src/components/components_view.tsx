@@ -8,10 +8,13 @@ interface IComponentViewProps {
 export function ComponentsView(props: IComponentViewProps) {
   return (
     <>
-      {props.components.map((entry) => {
-        const { name, entity } = entry;
-        return <ComponentView name={name} entity={entity} />;
-      })}
+      {props.components.map((entry) => (
+        <ComponentView
+          name={entry.name}
+          entity={entry.entity}
+          style={{ marginBottom: "20px" }}
+        />
+      ))}
     </>
   );
 }

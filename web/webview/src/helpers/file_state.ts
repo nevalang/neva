@@ -9,7 +9,7 @@ import {
   Interface,
 } from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
-import { State } from "./use_index";
+import { VSCodeState } from "./vscode_state";
 
 // File state is grouped and sorted render-friendly object
 interface FileState {
@@ -25,24 +25,24 @@ export interface GroupedEntities {
   components: Array<{ name: string; entity: Component }>;
 }
 
-export function getFileState(state: State | undefined): FileState {
+export function getFileState(state: VSCodeState | undefined): FileState {
   const result: FileState = {
     imports: [],
     entities: { types: [], interfaces: [], constants: [], components: [] },
   };
 
   // if tab opened first time and there were no updates from vscode yet
-  if (!state || !state.module || !state.module.packages) {
+  if (!state || !state.indexedModule || !state.indexedModule.packages) {
     return result;
   }
 
   const { currentFileName, currentPackageName } = getCurrentPackageAndFileName(
-    state.document.fileName,
-    state.uri.path
+    state.openedDocument.fileName,
+    state.workspaceUri.path
   );
 
   const currentFile: File =
-    state.module.packages![currentPackageName][currentFileName];
+    state.indexedModule.packages![currentPackageName][currentFileName];
 
   for (const alias in currentFile.imports) {
     result.imports.push({

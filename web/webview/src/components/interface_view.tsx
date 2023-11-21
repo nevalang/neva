@@ -1,20 +1,21 @@
+import { useMemo } from "react";
 import {
-  VSCodeTextField,
   VSCodeDataGrid,
   VSCodeDataGridRow,
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
 import { Interface, Port } from "../generated/sourcecode";
-import { useMemo } from "react";
 
 interface PortEntries {
   inports: PortEntry[];
   outports: PortEntry[];
 }
+
 interface PortEntry {
   name: string;
   port: Port;
 }
+
 export function InterfaceView(props: { name: string; entity: Interface }) {
   const portEntries: PortEntries = useMemo(() => {
     const result: PortEntries = { inports: [], outports: [] };
@@ -72,18 +73,16 @@ export function InterfaceView(props: { name: string; entity: Interface }) {
       <div style={{ marginBottom: "20px" }}>
         <h4>Outports</h4>
         <VSCodeDataGrid generateHeader="sticky">
-          <VSCodeDataGridRow>
-            {outports.map((port) => (
-              <>
-                <VSCodeDataGridCell grid-column={1}>
-                  {port.name}
-                </VSCodeDataGridCell>
-                <VSCodeDataGridCell grid-column={2}>
-                  {port.port.typeExpr?.inst?.ref?.name}
-                </VSCodeDataGridCell>
-              </>
-            ))}
-          </VSCodeDataGridRow>
+          {outports.map((port) => (
+            <VSCodeDataGridRow>
+              <VSCodeDataGridCell grid-column={1}>
+                {port.name}
+              </VSCodeDataGridCell>
+              <VSCodeDataGridCell grid-column={2}>
+                {port.port.typeExpr?.inst?.ref?.name}
+              </VSCodeDataGridCell>
+            </VSCodeDataGridRow>
+          ))}
         </VSCodeDataGrid>
       </div>
     </>

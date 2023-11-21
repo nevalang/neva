@@ -61,9 +61,9 @@ export function sendIndexMsgToWebView(
 ) {
   panel.webview.postMessage({
     type: "index",
-    uri: workspace.workspaceFolders![0].uri,
-    document: document,
-    module: module,
+    workspaceUri: workspace.workspaceFolders![0].uri,
+    openedDocument: document,
+    indexedModule: module,
   });
 }
 
@@ -73,7 +73,7 @@ export function sendTabChangeMsgToWebView(
 ) {
   panel.webview.postMessage({
     type: "tab_change",
-    uri: workspace.workspaceFolders![0].uri,
-    document: document,
+    workspaceUri: workspace.workspaceFolders![0].uri,
+    openedDocument: document,
   });
 }

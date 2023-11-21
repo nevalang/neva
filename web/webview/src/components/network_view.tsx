@@ -1,101 +1,97 @@
-// import { useCallback } from "react";
-// import ReactFlow, {
-//   MiniMap,
-//   Controls,
-//   Background,
-//   useNodesState,
-//   useEdgesState,
-//   addEdge,
-//   BackgroundVariant,
-//   Connection,
-//   Handle,
-//   Position,
-//   Edge,
-//   MarkerType,
-//   NodeProps,
-// } from "reactflow";
-// import dagre from "dagre";
-// import * as src from "../generated/sourcecode";
-// import "reactflow/dist/style.css";
+import { useContext, useMemo } from "react";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  BackgroundVariant,
+  Handle,
+  Position,
+  Edge,
+  MarkerType,
+  NodeProps,
+  Node,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import dagre from "dagre";
+import { VSCodeState, vscodeStateContext } from "../helpers/vscode_state";
+import * as src from "../generated/sourcecode";
 
-// const nodeTypes = { normal_node: NormalNode };
+const nodeTypes = { normal_node: NormalNode };
 
-// export default function NetView(props: {
-//   nodes: { [key: string]: src.Node };
-//   net: src.Connection[];
-// }) {
-//   const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
-//   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+export default function NetView(props: {
+  nodes: {
+    name: string;
+    entity: src.Node;
+  }[];
+  net: src.Connection[];
+}) {
+  const vscodeState = useContext(vscodeStateContext) as VSCodeState; // component shouldn't be rendered at all without this
+  const { nodes, edges } = useMemo(
+    () => getLayoutedElements(props.nodes, props.net, vscodeState),
+    [props.nodes, props.net, vscodeState]
+  );
 
-//   const onConnect = useCallback(
-//     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-//     [setEdges]
-//   );
+  return (
+    <div style={{ width: "100%", height: "100vh" }}>
+      <ReactFlow
+        nodeTypes={nodeTypes}
+        onInit={(instance) => instance.fitView()}
+        nodes={nodes}
+        edges={edges}
+      >
+        <Controls />
+        <MiniMap />
+        <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
+      </ReactFlow>
+    </div>
+  );
+}
 
-//   return (
-//     <div style={{ width: "100%", height: "100vh" }}>
-//       <ReactFlow
-//         nodeTypes={nodeTypes}
-//         onInit={(instance) => instance.fitView()}
-//         nodes={nodes}
-//         edges={edges}
-//         onNodesChange={onNodesChange}
-//         onEdgesChange={onEdgesChange}
-//         onConnect={onConnect}
-//       >
-//         <Controls />
-//         <MiniMap />
-//         <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
-//       </ReactFlow>
-//     </div>
-//   );
-// }
+interface IPorts {
+  in: string[];
+  out: string[];
+}
 
-// interface IPorts {
-//   in: string[];
-//   out: string[];
-// }
+function NormalNode(props: NodeProps<{ ports: IPorts }>) {
+  return (
+    <div className="react-flow__node-default">
+      {props.data.ports.in.length > 0 && (
+        <div className="inports">
+          {props.data.ports.in.map((inportName) => (
+            <Handle
+              content="asd"
+              type="target"
+              id={inportName}
+              key={inportName}
+              position={Position.Top}
+              isConnectable={true}
+            >
+              {inportName}
+            </Handle>
+          ))}
+        </div>
+      )}
+      <div className="nodeName">{props.id}</div>
+      {props.data.ports.out.length > 0 && (
+        <div className="outports">
+          {props.data.ports.out.map((outportName) => (
+            <Handle
+              type="source"
+              id={outportName}
+              key={outportName}
+              position={Position.Bottom}
+              isConnectable={true}
+            >
+              {outportName}
+            </Handle>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-// function NormalNode(props: NodeProps<{ ports: IPorts }>) {
-//   return (
-//     <div className="react-flow__node-default">
-//       {props.data.ports.in.length > 0 && (
-//         <div className="inports">
-//           {props.data.ports.in.map((inportName) => (
-//             <Handle
-//               content="asd"
-//               type="target"
-//               id={inportName}
-//               key={inportName}
-//               position={Position.Top}
-//               isConnectable={true}
-//             >
-//               {inportName}
-//             </Handle>
-//           ))}
-//         </div>
-//       )}
-//       <div className="nodeName">{props.id}</div>
-//       {props.data.ports.out.length > 0 && (
-//         <div className="outports">
-//           {props.data.ports.out.map((outportName) => (
-//             <Handle
-//               type="source"
-//               id={outportName}
-//               key={outportName}
-//               position={Position.Bottom}
-//               isConnectable={true}
-//             >
-//               {outportName}
-//             </Handle>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// const defaultPosition = { x: 0, y: 0 };
+const defaultPosition = { x: 0, y: 0 };
 // const initialNodes = [
 //   {
 //     type: "normal_node",
@@ -248,77 +244,91 @@
 //   },
 // ];
 
-// const dagreGraph = new dagre.graphlib.Graph();
-// dagreGraph.setDefaultEdgeLabel(() => ({}));
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-// const nodeWidth = 342.5;
-// const nodeHeight = 70;
+const nodeWidth = 342.5;
+const nodeHeight = 70;
 
-// const getLayoutedElements = (
-//   nodes: { [key: string]: src.Node },
-//   net: src.Connection[],
-//   direction = "TB"
-// ) => {
-//   const isHorizontal = direction === "LR";
-//   dagreGraph.setGraph({ rankdir: direction });
+const getLayoutedElements = (
+  nodes: { name: string; entity: src.Node }[],
+  net: src.Connection[],
+  vscodeState: VSCodeState, // TODO use vscode state for ports
+  direction = "TB"
+) => {
+  const isHorizontal = direction === "LR";
+  dagreGraph.setGraph({ rankdir: direction });
 
-//   const reactflowNodes = [];
-//   for (const name in nodes) {
-//     const reactflowNode = {
-//       id: name,
-//       type: "normal_node",
-//       position: defaultPosition,
-//       data: {
-//         ports: {}, // TODO we need more than current parsed file to render this
-//       },
-//     };
-//     reactflowNodes.push(reactflowNode);
-//     dagreGraph.setNode(name, { width: nodeWidth, height: nodeHeight });
-//   }
+  const reactflowNodes: Node[] = [];
+  for (const node of nodes) {
+    const reactflowNode = {
+      id: node.name,
+      type: "normal_node",
+      position: defaultPosition,
+      data: {
+        // TODO we need more than current parsed file to render this
+        ports: {
+          in: {},
+          out: {},
+        },
+      },
+    };
+    reactflowNodes.push(reactflowNode);
+    dagreGraph.setNode(node.name, { width: nodeWidth, height: nodeHeight });
+  }
 
-//   const reactflowEdges = [];
-//   for (const connection of net) {
-//     const { senderSide, receiverSide } = connection;
-//     if (!senderSide) {
-//       continue;
-//     }
-//     const reactflowEdge = {
-//       id: `${senderSide.portAddr || senderSide.constRef} -> readFirstInt.sig`,
-//       source: "in",
-//       sourceHandle: "enter",
-//       target: "readFirstInt",
-//       targetHandle: "sig",
-//       markerEnd: {
-//         type: MarkerType.Arrow,
-//       },
-//     };
-//   }
+  const reactflowEdges: Edge[] = [];
+  for (const connection of net) {
+    const { senderSide, receiverSide } = connection;
+    if (!senderSide || !receiverSide) {
+      continue;
+    }
 
-//   edges.forEach((edge) => {
-//     dagreGraph.setEdge(edge.source, edge.target);
-//   });
+    for (const receiver of receiverSide) {
+      const source = senderSide.portAddr
+        ? senderSide.portAddr.node
+        : `${senderSide.constRef?.pkg}.${senderSide.constRef?.name}`;
 
-//   dagre.layout(dagreGraph);
+      const sourceHandle = senderSide.portAddr
+        ? senderSide.portAddr.port
+        : "out"; // TODO check that this is how constant works
 
-//   nodes.forEach((node) => {
-//     const nodeWithPosition = dagreGraph.node(node.id);
-//     node.targetPosition = (isHorizontal ? "left" : "top") as Position;
-//     node.sourcePosition = (isHorizontal ? "right" : "bottom") as Position;
+      const reactflowEdge = {
+        id: `${senderSide.portAddr || senderSide.constRef} -> ${
+          receiver.portAddr
+        }`,
+        source: source || "unknown",
+        sourceHandle: sourceHandle,
+        target: receiver.portAddr?.node || "unknown",
+        targetHandle: receiver.portAddr?.port || "unknown",
+        markerEnd: {
+          type: MarkerType.Arrow,
+        },
+      };
+      reactflowEdges.push(reactflowEdge);
+    }
+  }
 
-//     // We are shifting the dagre node position (anchor=center center) to the top left
-//     // so it matches the React Flow node anchor point (top left).
-//     node.position = {
-//       x: nodeWithPosition.x - nodeWidth / 2,
-//       y: nodeWithPosition.y - nodeHeight / 2,
-//     };
+  reactflowEdges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
 
-//     return node;
-//   });
+  dagre.layout(dagreGraph);
 
-//   return { nodes, edges };
-// };
+  reactflowNodes.forEach((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.targetPosition = (isHorizontal ? "left" : "top") as Position;
+    node.sourcePosition = (isHorizontal ? "right" : "bottom") as Position;
 
-// const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-//   initialNodes,
-//   initialEdges
-// );
+    // We are shifting the dagre node position (anchor=center center) to the top left
+    // so it matches the React Flow node anchor point (top left).
+    node.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    return node;
+  });
+
+  return { nodes: reactflowNodes, edges: reactflowEdges };
+};

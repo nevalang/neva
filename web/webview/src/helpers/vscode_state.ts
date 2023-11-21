@@ -1,33 +1,32 @@
+import { useState, useEffect, createContext } from "react";
 import { TextDocument, Uri } from "vscode";
-import { useState, useEffect } from "react";
 import { Module } from "../generated/sourcecode";
 
-export interface State {
-  uri: Uri;
-  document: TextDocument;
-  module?: Module;
+export interface VSCodeState {
+  workspaceUri: Uri;
+  openedDocument: TextDocument;
+  indexedModule?: Module;
 }
 
 type VSCodeEvent = {
-  data: State & {
+  data: VSCodeState & {
     type: string;
   };
 };
 
-const vscodeApi = acquireVsCodeApi<State>();
+const vscodeApi = acquireVsCodeApi<VSCodeState>();
 
-export function useIndex(): State | undefined {
+export function useVSCodeState(): VSCodeState | undefined {
   const persistedState = vscodeApi.getState();
-  const [state, setState] = useState<State | undefined>(persistedState);
+  const [state, setState] = useState<VSCodeState | undefined>(persistedState);
 
   useEffect(() => {
     const listener = (event: VSCodeEvent) => {
-      let newState: State;
+      let newState: VSCodeState;
 
       if (event.data.type === "index") {
-        newState = event.data; // index event contains the whole state
+        newState = event.data;
       } else if (event.data.type === "tab_change") {
-        // tab change event doesn't contain indexed module
         newState = {
           ...(state || {}),
           ...event.data,
@@ -44,3 +43,7 @@ export function useIndex(): State | undefined {
 
   return state;
 }
+
+export const vscodeStateContext = createContext<VSCodeState | undefined>(
+  undefined
+);
