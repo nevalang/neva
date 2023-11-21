@@ -18,7 +18,7 @@ interface FileState {
 }
 
 // we use arrays instead of objects because it's faster to render
-interface GroupedEntities {
+export interface GroupedEntities {
   types: Array<{ name: string; entity: ts.Def }>;
   interfaces: Array<{ name: string; entity: Interface }>;
   constants: Array<{ name: string; entity: Const }>;

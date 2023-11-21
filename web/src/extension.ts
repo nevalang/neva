@@ -13,7 +13,7 @@ export async function activate(context: ExtensionContext) {
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
-  lspClient.start();
+  lspClient.start().then(console.info).catch(console.error);
   lspClient.onNotification("neva/analyzer_message", (message: string) => {
     window.showWarningMessage(message);
   });

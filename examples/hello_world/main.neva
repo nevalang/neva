@@ -6,7 +6,7 @@ const {
 	msg str 'Hello, World!'
 }
 
-components {
+components { 
 	Main(enter) (exit) {
 		nodes {
 			print core.Print<str>

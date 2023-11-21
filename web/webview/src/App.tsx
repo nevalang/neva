@@ -1,10 +1,10 @@
-import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+// import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import {
   ImportsView,
   TypesView,
   ConstantView,
-  InterfaceView,
-  ComponentView,
+  InterfacesView,
+  ComponentsView,
 } from "./components";
 import { useIndex } from "./helpers/use_index";
 import { useMemo } from "react";
@@ -16,38 +16,42 @@ export default function App() {
 
   return (
     <div className="app">
-      <ImportsView
-        imports={fileState.imports}
-        style={{ marginBottom: "20px" }}
-      />
+      {fileState.imports.length > 0 && (
+        <div style={{ marginBottom: "20px" }}>
+          <h2>Imports</h2>
+          <ImportsView imports={fileState.imports} />
+        </div>
+      )}
 
-      <VSCodeDivider style={{ marginBottom: "20px" }} />
+      {fileState.entities.types.length > 0 && (
+        <>
+          <h2>Types</h2>
+          <div style={{ marginBottom: "20px" }}>
+            <TypesView types={fileState.entities.types} />
+          </div>
+        </>
+      )}
 
-      <h2>Types</h2>
-      <div style={{ marginBottom: "20px" }}>
-        <TypesView types={fileState.entities.types} />
-      </div>
+      {fileState.entities.constants.length > 0 && (
+        <div style={{ marginBottom: "20px" }}>
+          <h2>Const</h2>
+          <ConstantView constants={fileState.entities.constants} />
+        </div>
+      )}
 
-      <VSCodeDivider style={{ marginBottom: "20px" }} />
+      {fileState.entities.interfaces.length > 0 && (
+        <div style={{ marginBottom: "20px" }}>
+          <h2>Interfaces</h2>
+          <InterfacesView interfaces={fileState.entities.interfaces} />
+        </div>
+      )}
 
-      <h2>Const</h2>
-      <ConstantView constants={fileState.entities.constants} />
-
-      <VSCodeDivider style={{ marginBottom: "20px" }} />
-
-      <h2>Interfaces</h2>
-      {fileState.entities.interfaces.map((entry) => {
-        const { name, entity } = entry;
-        return <InterfaceView name={name} entity={entity} />;
-      })}
-
-      <VSCodeDivider style={{ marginBottom: "20px" }} />
-
-      <h2>Components</h2>
-      {fileState.entities.components.map((entry) => {
-        const { name, entity } = entry;
-        return <ComponentView name={name} entity={entity} />;
-      })}
+      {fileState.entities.components.length > 0 && (
+        <div>
+          <h2>Components</h2>
+          <ComponentsView components={fileState.entities.components} />
+        </div>
+      )}
     </div>
   );
 }

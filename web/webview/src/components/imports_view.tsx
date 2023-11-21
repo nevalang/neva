@@ -13,9 +13,6 @@ export function ImportsView(props: {
       {props.imports.map((importDef) => (
         <VSCodeDataGridRow>
           <VSCodeDataGridCell grid-column="1">
-            {importDef.alias}
-          </VSCodeDataGridCell>
-          <VSCodeDataGridCell grid-column="2">
             {importDef.path}
           </VSCodeDataGridCell>
         </VSCodeDataGridRow>

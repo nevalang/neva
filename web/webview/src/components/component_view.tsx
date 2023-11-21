@@ -16,10 +16,6 @@ export function ComponentView(props: { name: string; entity: Component }) {
       <h3
         style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}
       >
-        <i
-          className="codicon codicon-symbol-class"
-          style={{ marginRight: "5px" }}
-        />
         {name}
       </h3>
       {entity.interface && <InterfaceView name="" entity={entity.interface} />}
@@ -46,17 +42,12 @@ function NodesView(props: { nodes: { [key: string]: Node } }) {
   return (
     <>
       <h4>Nodes</h4>
-      <VSCodeDataGrid generateHeader="sticky">
+      <VSCodeDataGrid>
         {nodes.map(({ name, entity }) => (
-          <VSCodeDataGridRow>
-            <VSCodeDataGridCell grid-column="1">
-              <VSCodeTextField style={{ width: "100%" }} value={name} />
-            </VSCodeDataGridCell>
+          <VSCodeDataGridRow style={{ marginBottom: "20px" }}>
+            <VSCodeDataGridCell grid-column="1">{name}</VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="2">
-              <VSCodeTextField
-                style={{ width: "100%" }}
-                value={formatEntityRef(entity.entityRef)}
-              />
+              {formatEntityRef(entity.entityRef)}
             </VSCodeDataGridCell>
           </VSCodeDataGridRow>
         ))}

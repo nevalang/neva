@@ -55,21 +55,16 @@ export function InterfaceView(props: { name: string; entity: Interface }) {
       <div style={{ marginBottom: "20px" }}>
         <h4>Inports</h4>
         <VSCodeDataGrid generateHeader="sticky">
-          <VSCodeDataGridRow rowType="header">
-            {inports.map((port, idx) => (
-              <VSCodeDataGridCell grid-column={idx + 1}>
-                <VSCodeTextField style={{ width: "100%" }} value={port.name} />
-              </VSCodeDataGridCell>
-            ))}
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow rowType="default">
-            {inports.map((port, idx) => (
-              <VSCodeDataGridCell grid-column={idx + 1}>
-                <VSCodeTextField
-                  style={{ width: "100%" }}
-                  value={port.port.typeExpr?.inst?.ref?.name}
-                />
-              </VSCodeDataGridCell>
+          <VSCodeDataGridRow>
+            {inports.map((port) => (
+              <>
+                <VSCodeDataGridCell grid-column={1}>
+                  {port.name}
+                </VSCodeDataGridCell>
+                <VSCodeDataGridCell grid-column={2}>
+                  {port.port.typeExpr?.inst?.ref?.name}
+                </VSCodeDataGridCell>
+              </>
             ))}
           </VSCodeDataGridRow>
         </VSCodeDataGrid>
@@ -77,21 +72,16 @@ export function InterfaceView(props: { name: string; entity: Interface }) {
       <div style={{ marginBottom: "20px" }}>
         <h4>Outports</h4>
         <VSCodeDataGrid generateHeader="sticky">
-          <VSCodeDataGridRow rowType="header">
-            {outports.map((port, idx) => (
-              <VSCodeDataGridCell grid-column={idx + 1}>
-                <VSCodeTextField style={{ width: "100%" }} value={port.name} />
-              </VSCodeDataGridCell>
-            ))}
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow rowType="default">
-            {outports.map((port, idx) => (
-              <VSCodeDataGridCell grid-column={idx + 1}>
-                <VSCodeTextField
-                  style={{ width: "100%" }}
-                  value={port.port.typeExpr?.inst?.ref?.name}
-                />
-              </VSCodeDataGridCell>
+          <VSCodeDataGridRow>
+            {outports.map((port) => (
+              <>
+                <VSCodeDataGridCell grid-column={1}>
+                  {port.name}
+                </VSCodeDataGridCell>
+                <VSCodeDataGridCell grid-column={2}>
+                  {port.port.typeExpr?.inst?.ref?.name}
+                </VSCodeDataGridCell>
+              </>
             ))}
           </VSCodeDataGridRow>
         </VSCodeDataGrid>

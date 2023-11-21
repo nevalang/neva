@@ -42,7 +42,7 @@ export function getPreviewCommand(
     panel = window.createWebviewPanel(
       "neva",
       "Neva: Preview 👀",
-      ViewColumn.Beside,
+      ViewColumn.Active,
       {
         enableScripts: true,
         localResourceRoots: [
