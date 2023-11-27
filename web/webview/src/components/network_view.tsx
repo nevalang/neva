@@ -144,6 +144,7 @@ const getReactFlowElements = (
     inportsNode.data.ports.out![portName] = port; // inport for component is outport for inport-node in network
   }
   reactflowNodes.push(inportsNode);
+  dagreGraph.setNode(inportsNode.id, { width: nodeWidth, height: nodeHeight });
 
   const outportsNode = {
     id: "out",
@@ -155,9 +156,10 @@ const getReactFlowElements = (
   };
   for (const portName in iface.io?.out) {
     const port = iface.io?.out[portName];
-    inportsNode.data.ports.in![portName] = port; // outport for component is inport for outport-node in network
+    outportsNode.data.ports.in![portName] = port; // outport for component is inport for outport-node in network
   }
   reactflowNodes.push(outportsNode);
+  dagreGraph.setNode(outportsNode.id, { width: nodeWidth, height: nodeHeight });
 
   const reactflowEdges: Edge[] = [];
   for (const connection of net) {
@@ -173,7 +175,7 @@ const getReactFlowElements = (
 
       const sourceHandle = senderSide.portAddr
         ? senderSide.portAddr.port
-        : "out"; // TODO check that this is how constant works
+        : "out";
 
       const reactflowEdge = {
         id: `${senderSide.portAddr || senderSide.constRef} -> ${
