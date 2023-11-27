@@ -35,7 +35,9 @@ export function ComponentView(props: {
       </h3>
       {entity.interface && <InterfaceView name="" entity={entity.interface} />}
       {nodes && <NodesView nodes={nodes} />}
-      {nodes && entity.net && <NetView nodes={nodes} net={entity.net} />}
+      {nodes && entity.interface && entity.net && (
+        <NetView nodes={nodes} net={entity.net} interface={entity.interface} />
+      )}
     </div>
   );
 }

@@ -6,8 +6,8 @@ import {
   InterfacesView,
   ComponentsView,
 } from "./components";
-import { useVSCodeState, vscodeStateContext } from "./helpers/vscode_state";
-import { getFileState } from "./helpers/file_state";
+import { useVSCodeState, vscodeStateContext } from "./core/vscode_state";
+import { getFileState } from "./core/file_state";
 
 export default function App() {
   const index = useVSCodeState();
