@@ -54,26 +54,10 @@ function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
   return webview.asWebviewUri((Uri as any).joinPath(extensionUri, ...pathList));
 }
 
-export function sendIndexMsgToWebView(
-  panel: WebviewPanel,
-  document: TextDocument,
-  module: unknown
-) {
+export function sendMessageToWebView(panel: WebviewPanel, resp: unknown) {
   panel.webview.postMessage({
     type: "index",
     workspaceUri: workspace.workspaceFolders![0].uri,
-    openedDocument: document,
-    indexedModule: module,
-  });
-}
-
-export function sendTabChangeMsgToWebView(
-  panel: WebviewPanel,
-  document: TextDocument
-) {
-  panel.webview.postMessage({
-    type: "tab_change",
-    workspaceUri: workspace.workspaceFolders![0].uri,
-    openedDocument: document,
+    resp: resp,
   });
 }

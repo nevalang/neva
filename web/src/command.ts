@@ -6,38 +6,30 @@ import {
   ViewColumn,
   Uri,
 } from "vscode";
-import { GenericNotificationHandler } from "vscode-languageclient";
-import {
-  getWebviewContent,
-  sendIndexMsgToWebView,
-  sendTabChangeMsgToWebView,
-} from "./webview";
+import { getWebviewContent, sendMessageToWebView } from "./webview";
+import { LanguageClient } from "vscode-languageclient/node";
 
 export function getPreviewCommand(
   context: ExtensionContext,
-  getInitialIndex: () => unknown,
-  onWebviewCreated: (f: GenericNotificationHandler) => void
-): () => void {
+  client: LanguageClient
+): () => Promise<void> {
   let panel: WebviewPanel | undefined;
 
-  return () => {
-    const initialIndex = getInitialIndex();
-    console.info("webview triggered: ", { initialIndex });
+  return async () => {
+    console.info("webview triggered");
+
+    if (panel) {
+      panel.reveal();
+      console.info("existing panel revealed");
+      return;
+    }
 
     if (!window.activeTextEditor) {
       window.showWarningMessage("You need to open neva file to open preview.");
       return;
     }
 
-    const column = window.activeTextEditor
-      ? window.activeTextEditor.viewColumn
-      : undefined;
-
-    if (panel) {
-      panel.reveal(column);
-      console.info("existing panel revealed");
-      return;
-    }
+    console.info("existing panel not found, trying to create new one");
 
     panel = window.createWebviewPanel(
       "neva",
@@ -54,46 +46,21 @@ export function getPreviewCommand(
 
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
 
-    onWebviewCreated((indexedModule: unknown) => {
-      sendIndexMsgToWebView(
-        panel!,
-        window.activeTextEditor!.document,
-        indexedModule
-      );
-      console.info("upd message sent to webview", initialIndex);
-    });
+    panel.onDidDispose(() => (panel = undefined), null, context.subscriptions);
 
-    window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
-      console.info("active text editor changed", editor);
-      if (!editor || !editor.document.fileName.endsWith(".neva")) {
-        return;
-      }
-      sendTabChangeMsgToWebView(panel!, editor.document);
-      console.info("tab changed message was sent to webview");
-    });
+    console.info("new panel has been created");
 
-    panel.onDidDispose(
-      () => {
-        panel = undefined;
-      },
-      null,
-      context.subscriptions
-    );
-
-    console.info("existing panel not found, new panel has been created");
-
-    if (!initialIndex) {
-      window.showWarningMessage(
-        "Working directory is not indexed yet. Just wait for a little bit."
-      );
+    let resp: unknown;
+    try {
+      resp = await client.sendRequest("foobar", {
+        document: window.activeTextEditor.document,
+      });
+      sendMessageToWebView(panel, resp);
+    } catch (e) {
+      console.error(e);
       return;
     }
 
-    sendIndexMsgToWebView(
-      panel,
-      window.activeTextEditor!.document,
-      initialIndex
-    );
-    console.info("initial message to webview", initialIndex);
+    console.info("message sent to webview", resp);
   };
 }
