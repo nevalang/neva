@@ -1,18 +1,23 @@
 package main
 
 import (
+	"strings"
+
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/tliron/glsp"
 )
 
-type FooBarParams struct {
-	Document struct {
-		Uri struct {
-			Path   string
-			fsPath string
-		} `json:"uri"`
+type FooBarRequest struct {
+	WorkspaceUri URI `json:"workspaceUri"`
+	Document     struct {
+		Uri      URI    `json:"uri"`
 		FileName string `json:"fileName"`
 	} `json:"document"`
+}
+
+type URI struct {
+	Path   string `json:"path"`
+	FSPath string `json:"fsPath"`
 }
 
 type FooBarResp struct {
@@ -21,44 +26,60 @@ type FooBarResp struct {
 }
 
 type Extra struct {
-	NodesPorts map[string]src.Port `json:"nodesPorts"`
+	NodesPorts map[string]map[string]map[string]src.Port `json:"nodesPorts"` // component -> node -> port
 }
 
-func (s *Server) FooBar(glspCtx *glsp.Context, params FooBarParams) (any, error) {
+func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
 	s.logger.Info("FooBar")
 
 	if s.indexedProgramState == nil {
 		return nil, nil
 	}
 
-	// 1 get opened file
-	// get nodes ports for every component in file
-	// -- create scope with cur mod (entry), pkg and filename
-	// -- use that scope to resolve all nodes'refs (interfaces and components)
-	// -- gather their io and build response
+	relPathToFile := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
+	fullFilePathParts := strings.Split(relPathToFile, "/")
+	fileNameWithExt := fullFilePathParts[len(fullFilePathParts)-1]
 
-	// TODO figure this out
-	// var (
-	// 	modName  = ""
-	// 	pkgName  = ""
-	// 	fileName = ""
-	// )
+	var (
+		modName  = "entry"
+		pkgName  = strings.Join(fullFilePathParts[0:len(fullFilePathParts)-1], "/")
+		fileName = strings.TrimSuffix(fileNameWithExt, ".neva")
+	)
 
-	// scope := src.Scope{
-	// 	Loc: src.ScopeLocation{
-	// 		ModuleName: modName,
-	// 		PkgName:    pkgName,
-	// 		FileName:   fileName,
-	// 	},
-	// 	Module: *s.indexedProgramState,
-	// }
+	scope := src.Scope{
+		Loc: src.ScopeLocation{
+			ModuleName: modName,
+			PkgName:    pkgName,
+			FileName:   fileName,
+		},
+		Module: *s.indexedProgramState,
+	}
 
-	// TODO use scope to resolve all references in current file
+	pkg := s.indexedProgramState.Packages[pkgName]
+	file := pkg[fileName]
+
+	extra := map[string]map[string]map[string]src.Port{} // c -> n -> p
+	for entityName, entity := range file.Entities {
+		if entity.Kind != src.ComponentEntity {
+			continue
+		}
+		componentNodes := map[string]map[string]src.Port{}
+		for _, node := range entity.Component.Nodes {
+			// for every node find an entity
+			// find out whether its component or interface
+			// get ports and set to extra
+			_, _, err := scope.Entity(node.EntityRef)
+			if err != nil {
+				panic(err)
+			}
+		}
+		extra[entityName] = componentNodes
+	}
 
 	return FooBarResp{
-		File: src.File{},
+		File: file,
 		Extra: Extra{
-			NodesPorts: map[string]src.Port{},
+			NodesPorts: extra,
 		},
 	}, nil
 }

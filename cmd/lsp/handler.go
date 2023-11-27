@@ -13,7 +13,7 @@ import (
 type Handler struct {
 	*protocol.Handler
 
-	FooBar func(glspCtx *glsp.Context, params FooBarParams) (any, error)
+	FooBar func(glspCtx *glsp.Context, params FooBarRequest) (any, error)
 }
 
 func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, validParams bool, err error) {
@@ -22,7 +22,7 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 	}
 
 	if glspCtx.Method == "foobar" {
-		var params FooBarParams
+		var params FooBarRequest
 		if err := json.Unmarshal(glspCtx.Params, &params); err != nil {
 			return nil, true, false, err
 		}
@@ -35,7 +35,7 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 		return resp, true, true, nil
 	}
 
-	return h.Handle(glspCtx)
+	return h.Handler.Handle(glspCtx)
 }
 
 //nolint:lll,funlen

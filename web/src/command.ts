@@ -1,10 +1,10 @@
 import {
-  TextEditor,
   window,
   ExtensionContext,
   WebviewPanel,
   ViewColumn,
   Uri,
+  workspace,
 } from "vscode";
 import { getWebviewContent, sendMessageToWebView } from "./webview";
 import { LanguageClient } from "vscode-languageclient/node";
@@ -54,6 +54,7 @@ export function getPreviewCommand(
     try {
       resp = await client.sendRequest("foobar", {
         document: window.activeTextEditor.document,
+        workspaceUri: workspace.workspaceFolders![0].uri,
       });
       sendMessageToWebView(panel, resp);
     } catch (e) {
