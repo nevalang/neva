@@ -26,7 +26,7 @@ type FooBarResp struct {
 }
 
 type Extra struct {
-	NodesPorts map[string]map[string]map[string]src.Port `json:"nodesPorts"` // component -> node -> port
+	NodesPorts map[string]map[string]src.Interface `json:"nodesPorts"` // components -> nodes -> interface
 }
 
 func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
@@ -58,22 +58,30 @@ func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
 	pkg := s.indexedProgramState.Packages[pkgName]
 	file := pkg[fileName]
 
-	extra := map[string]map[string]map[string]src.Port{} // c -> n -> p
+	extra := map[string]map[string]src.Interface{} // c -> n -> p
 	for entityName, entity := range file.Entities {
 		if entity.Kind != src.ComponentEntity {
 			continue
 		}
-		componentNodes := map[string]map[string]src.Port{}
-		for _, node := range entity.Component.Nodes {
-			// for every node find an entity
-			// find out whether its component or interface
-			// get ports and set to extra
-			_, _, err := scope.Entity(node.EntityRef)
+
+		nodesIfaces := map[string]src.Interface{}
+		for nodeName, node := range entity.Component.Nodes {
+			nodeEntity, _, err := scope.Entity(node.EntityRef)
 			if err != nil {
 				panic(err)
 			}
+
+			var iface src.Interface
+			if nodeEntity.Kind == src.ComponentEntity {
+				iface = nodeEntity.Component.Interface
+			} else if nodeEntity.Kind == src.InterfaceEntity {
+				iface = nodeEntity.Interface
+			}
+
+			nodesIfaces[nodeName] = iface
 		}
-		extra[entityName] = componentNodes
+
+		extra[entityName] = nodesIfaces
 	}
 
 	return FooBarResp{
