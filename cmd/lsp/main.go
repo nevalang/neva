@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
+	"sync"
 
 	"github.com/tliron/commonlog"
 	_ "github.com/tliron/commonlog/simple"
-	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
 
 	"github.com/nevalang/neva/internal/builder"
@@ -18,12 +18,13 @@ import (
 type Server struct {
 	name, version string
 
-	handler *protocol.Handler // readonly
+	handler *Handler
 	logger  commonlog.Logger
 	indexer Indexer
 
-	indexChan    chan src.Module
-	problemsChan chan string
+	mu                  *sync.Mutex
+	indexedProgramState *src.Module
+	problem             string
 }
 
 func main() {
@@ -32,11 +33,11 @@ func main() {
 	isDebug := flag.Bool("debug", false, "-debug")
 	flag.Parse()
 
-	// verbosity := 1
-	// if *isDebug {
-	// 	verbosity = 2
-	// }
-	commonlog.Configure(0, nil)
+	verbosity := 1
+	if *isDebug {
+		verbosity = 2
+	}
+	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
 	p := parser.MustNew(*isDebug)
@@ -44,7 +45,11 @@ func main() {
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
-	builder := builder.MustNew("/Users/emil/projects/neva/std", "/Users/emil/projects/neva/third_party/", p)
+	builder := builder.MustNew(
+		"/Users/emil/projects/neva/std",
+		"/Users/emil/projects/neva/third_party/",
+		p,
+	)
 
 	indexer := Indexer{
 		builder:  builder,
@@ -52,11 +57,15 @@ func main() {
 		analyzer: analyzer.MustNew(resolver),
 	}
 
-	if err := server.NewServer(
-		buildHandler(logger, serverName, indexer),
+	handler := buildHandler(logger, serverName, indexer)
+
+	srv := server.NewServer(
+		handler,
 		serverName,
 		*isDebug,
-	).RunStdio(); err != nil {
+	)
+
+	if err := srv.RunStdio(); err != nil {
 		panic(err)
 	}
 }

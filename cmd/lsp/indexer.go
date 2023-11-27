@@ -16,9 +16,7 @@ type Indexer struct {
 	analyzer analyzer.Analyzer
 }
 
-type analyzerMessage string
-
-func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
+func (i Indexer) index(ctx context.Context, path string) (src.Module, string, error) {
 	build, err := i.builder.Build(ctx, path)
 	if err != nil {
 		return src.Module{}, "", fmt.Errorf("builder: %w", err)
@@ -37,7 +35,7 @@ func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMe
 	}
 
 	if _, err = i.analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
-		return mod, analyzerMessage(err.Error()), nil
+		return mod, err.Error(), nil
 	}
 
 	return mod, "", nil
