@@ -1,114 +1,91 @@
-import {
-  ConstEntity,
-  InterfaceEntity,
-  ComponentEntity,
-  Component,
-  TypeEntity,
-  File,
-  Const,
-  Interface,
-} from "../generated/sourcecode";
+import { ResolveFileResponce } from "../generated/lsp_api";
+import * as src from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
-import { VSCodeState } from "./vscode_state";
 
-// File state is grouped and sorted render-friendly object
-interface FileState {
-  imports: Array<{ alias: string; path: string }>;
-  entities: GroupedEntities;
+// FileView is an object optimized for fast and easy rendering of the UI
+interface FileView {
+  imports: { alias: string; path: string }[];
+  entities: FileViewEntities;
 }
 
-// we use arrays instead of objects because it's faster to render
-export interface GroupedEntities {
-  types: Array<{ name: string; entity: ts.Def }>;
-  interfaces: Array<{ name: string; entity: Interface }>;
-  constants: Array<{ name: string; entity: Const }>;
-  components: Array<{ name: string; entity: Component }>;
+// we use arrays instead of objects because it's faster to render than maps
+export interface FileViewEntities {
+  types: { name: string; entity: ts.Def }[];
+  interfaces: { name: string; entity: src.Interface }[];
+  constants: { name: string; entity: src.Const }[];
+  components: {
+    name: string;
+    entity: src.Component;
+    nodesPorts: { [keyof: string]: src.Interface };
+  }[];
 }
 
-export function getFileState(state: VSCodeState | undefined): FileState {
-  const result: FileState = {
+export function getFileView(state: ResolveFileResponce | undefined): FileView {
+  const result: FileView = {
     imports: [],
     entities: { types: [], interfaces: [], constants: [], components: [] },
   };
 
-  // if tab opened first time and there were no updates from vscode yet
-  if (!state || !state.indexedModule || !state.indexedModule.packages) {
+  if (!state) {
     return result;
   }
 
-  const { currentFileName, currentPackageName } = getCurrentPackageAndFileName(
-    state.openedDocument.fileName,
-    state.workspaceUri.path
-  );
-
-  const currentFile: File =
-    state.indexedModule.packages![currentPackageName][currentFileName];
-
-  for (const alias in currentFile.imports) {
+  for (const alias in state.file.imports) {
     result.imports.push({
       alias,
-      path: currentFile.imports[alias],
+      path: state.file.imports[alias],
     });
   }
 
   result.imports.sort();
 
-  // object to array for faster rendering
-  for (const name in currentFile.entities) {
-    const entity = currentFile.entities[name];
+  // create object entries once so we can render them fast later
+  for (const entityName in state.file.entities) {
+    const entity = state.file.entities[entityName];
+
     switch (entity.kind) {
-      case TypeEntity:
+      case src.TypeEntity:
         if (entity.type === undefined) {
           continue;
         }
         result.entities.types.push({
-          name: name,
+          name: entityName,
           entity: entity.type as ts.Def,
         });
         break;
-      case ConstEntity:
+      case src.ConstEntity:
         if (entity.const === undefined) {
           break;
         }
         result.entities.constants.push({
-          name: name,
+          name: entityName,
           entity: entity.const,
         });
         break;
-      case InterfaceEntity:
+      case src.InterfaceEntity:
         if (entity.interface === undefined) {
           break;
         }
         result.entities.interfaces.push({
-          name: name,
+          name: entityName,
           entity: entity.interface,
         });
         break;
-      case ComponentEntity:
+      case src.ComponentEntity: {
         if (entity.component === undefined) {
           break;
         }
+
         result.entities.components.push({
-          name: name,
+          name: entityName,
           entity: entity.component,
+          nodesPorts: state.extra.nodesPorts[entityName],
         });
+
         break;
+      }
     }
   }
 
   return result;
 }
-
-const getCurrentPackageAndFileName = (
-  openedFileName: string,
-  workspacePath: string
-) => {
-  const relativePath = openedFileName.replace(workspacePath + "/", "");
-  const pathParts = relativePath.split("/");
-
-  const currentPackageName = pathParts.slice(0, -1).join("/"); // all but the last segment (filename)
-  const currentFileNameWithExtension = pathParts[pathParts.length - 1]; // last semgent (filename)
-  const currentFileName = currentFileNameWithExtension.split(".")[0]; // filename without .neva
-
-  return { currentPackageName, currentFileName };
-};

@@ -6,7 +6,7 @@ import {
   Uri,
   workspace,
 } from "vscode";
-import { getWebviewContent, sendMessageToWebView } from "./webview";
+import { getWebviewContent } from "./webview";
 import { LanguageClient } from "vscode-languageclient/node";
 
 export function getPreviewCommand(
@@ -56,7 +56,7 @@ export function getPreviewCommand(
         document: window.activeTextEditor.document,
         workspaceUri: workspace.workspaceFolders![0].uri,
       });
-      sendMessageToWebView(panel, resp);
+      panel.webview.postMessage(resp);
     } catch (e) {
       console.error(e);
       return;

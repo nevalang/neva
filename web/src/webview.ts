@@ -53,11 +53,3 @@ function getNonce() {
 function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
   return webview.asWebviewUri((Uri as any).joinPath(extensionUri, ...pathList));
 }
-
-export function sendMessageToWebView(panel: WebviewPanel, resp: unknown) {
-  panel.webview.postMessage({
-    type: "index",
-    workspaceUri: workspace.workspaceFolders![0].uri,
-    resp: resp,
-  });
-}

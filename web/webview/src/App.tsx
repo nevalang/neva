@@ -7,11 +7,11 @@ import {
   ComponentsView,
 } from "./components";
 import { useVSCodeState, vscodeStateContext } from "./core/vscode_state";
-import { getFileState } from "./core/file_state";
+import { getFileView } from "./core/file_state";
 
 export default function App() {
   const index = useVSCodeState();
-  const fileState = useMemo(() => getFileState(index), [index]);
+  const fileState = useMemo(() => getFileView(index), [index]);
 
   return (
     <vscodeStateContext.Provider value={index}>

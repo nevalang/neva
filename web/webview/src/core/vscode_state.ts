@@ -1,42 +1,19 @@
 import { useState, useEffect, createContext } from "react";
-import { TextDocument, Uri } from "vscode";
-import { Module } from "../generated/sourcecode";
+import { ResolveFileResponce } from "../generated/lsp_api";
 
-export interface VSCodeState {
-  workspaceUri: Uri;
-  openedDocument: TextDocument;
-  indexedModule?: Module;
-}
+const vscodeApi = acquireVsCodeApi<ResolveFileResponce>();
 
-type VSCodeEvent = {
-  data: VSCodeState & {
-    type: string;
-  };
-};
-
-const vscodeApi = acquireVsCodeApi<VSCodeState>();
-
-export function useVSCodeState(): VSCodeState | undefined {
+export function useVSCodeState(): ResolveFileResponce | undefined {
   const persistedState = vscodeApi.getState();
-  const [state, setState] = useState<VSCodeState | undefined>(persistedState);
+  const [state, setState] = useState<ResolveFileResponce | undefined>(
+    persistedState
+  );
 
   useEffect(() => {
-    const listener = (event: VSCodeEvent) => {
-      let newState: VSCodeState;
-
-      if (event.data.type === "index") {
-        newState = event.data;
-      } else if (event.data.type === "tab_change") {
-        newState = {
-          ...(state || {}),
-          ...event.data,
-        };
-      }
-
-      setState(newState!);
-      vscodeApi.setState(newState!);
+    const listener = (event: { data: ResolveFileResponce }) => {
+      setState(event.data!);
+      vscodeApi.setState(event.data!);
     };
-
     window.addEventListener("message", listener);
     return () => window.removeEventListener("message", listener);
   }, [state]);
@@ -44,6 +21,6 @@ export function useVSCodeState(): VSCodeState | undefined {
   return state;
 }
 
-export const vscodeStateContext = createContext<VSCodeState | undefined>(
-  undefined
-);
+export const vscodeStateContext = createContext<
+  ResolveFileResponce | undefined
+>(undefined);
