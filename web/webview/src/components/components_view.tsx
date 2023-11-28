@@ -11,7 +11,7 @@ export function ComponentsView(props: IComponentViewProps) {
       {props.components.map((entry) => (
         <ComponentView
           name={entry.name}
-          entity={entry.entity}
+          viewState={entry.entity}
           style={{ marginBottom: "20px" }}
         />
       ))}

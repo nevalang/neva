@@ -27,7 +27,7 @@ export interface NodesViewState {
   interface: src.Interface;
 }
 
-export function getFileView(
+export function getFileViewState(
   state: ResolveFileResponce | undefined
 ): FileViewState {
   const result: FileViewState = {

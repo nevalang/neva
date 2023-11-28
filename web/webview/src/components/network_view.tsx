@@ -14,23 +14,18 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import dagre from "dagre";
 import * as src from "../generated/sourcecode";
-import { ComponentViewState, NodesViewState } from "../core/file_view_state";
+import { ComponentViewState } from "../core/file_view_state";
 
 const nodeTypes = { normal_node: NormalNode };
 
 interface INetViewProps {
-  component: ComponentViewState;
+  componentViewState: ComponentViewState;
 }
 
 export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(
-    () =>
-      getReactFlowElements(
-        props.component.interface!,
-        props.component.nodes,
-        props.component.net!
-      ),
-    [props.component.interface, props.component.net, props.component.nodes]
+    () => getReactFlowElements(props.componentViewState),
+    [props.componentViewState]
   );
 
   return (
@@ -110,11 +105,11 @@ const nodeWidth = 342.5;
 const nodeHeight = 70;
 
 const getReactFlowElements = (
-  iface: src.Interface,
-  nodes: NodesViewState[],
-  net: src.Connection[],
+  componentViewState: ComponentViewState,
   direction = "TB"
 ) => {
+  const { nodes, interface: iface, net } = componentViewState;
+
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({ rankdir: direction });
 
@@ -135,12 +130,17 @@ const getReactFlowElements = (
     type: "normal_node",
     position: defaultPosition,
     data: {
-      ports: { in: {}, out: {} } as src.IO,
+      ports: {
+        io: {
+          in: {},
+          out: {},
+        },
+      } as src.Interface,
     },
   };
-  for (const portName in iface.io?.in) {
-    const port = iface.io?.in[portName];
-    inportsNode.data.ports.out![portName] = port; // inport for component is outport for inport-node in network
+  for (const portName in iface!.io?.in) {
+    const port = iface!.io?.in[portName];
+    inportsNode.data.ports.io!.out![portName] = port; // inport for component is outport for inport-node in network
   }
   reactflowNodes.push(inportsNode);
   dagreGraph.setNode(inportsNode.id, { width: nodeWidth, height: nodeHeight });
@@ -150,18 +150,23 @@ const getReactFlowElements = (
     type: "normal_node",
     position: defaultPosition,
     data: {
-      ports: { in: {}, out: {} } as src.IO,
+      ports: {
+        io: {
+          in: {},
+          out: {},
+        },
+      } as src.Interface,
     },
   };
-  for (const portName in iface.io?.out) {
-    const port = iface.io?.out[portName];
-    outportsNode.data.ports.in![portName] = port; // outport for component is inport for outport-node in network
+  for (const portName in iface!.io?.out) {
+    const port = iface!.io?.out[portName];
+    outportsNode.data.ports.io!.in![portName] = port; // outport for component is inport for outport-node in network
   }
   reactflowNodes.push(outportsNode);
   dagreGraph.setNode(outportsNode.id, { width: nodeWidth, height: nodeHeight });
 
   const reactflowEdges: Edge[] = [];
-  for (const connection of net) {
+  for (const connection of net!) {
     const { senderSide, receiverSide } = connection;
     if (!senderSide || !receiverSide) {
       continue;
@@ -212,6 +217,8 @@ const getReactFlowElements = (
 
     return node;
   });
+
+  console.log({ reactflowNodes, iface });
 
   return { nodes: reactflowNodes, edges: reactflowEdges };
 };

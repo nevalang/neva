@@ -3,7 +3,7 @@ import { ResolveFileResponce } from "../generated/lsp_api";
 
 const vscodeApi = acquireVsCodeApi<ResolveFileResponce>();
 
-export function useVSCodeState(): ResolveFileResponce | undefined {
+export function useResolveFile(): ResolveFileResponce | undefined {
   const persistedState = vscodeApi.getState();
   const [state, setState] = useState<ResolveFileResponce | undefined>(
     persistedState

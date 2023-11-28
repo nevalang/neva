@@ -10,7 +10,7 @@ import { ComponentViewState, NodesViewState } from "../core/file_view_state";
 
 export function ComponentView(props: {
   name: string;
-  entity: ComponentViewState;
+  viewState: ComponentViewState;
   style?: object;
 }) {
   return (
@@ -20,15 +20,15 @@ export function ComponentView(props: {
       >
         {props.name}
       </h3>
-      {props.entity.interface && (
-        <InterfaceView name="" entity={props.entity.interface} />
+      {props.viewState.interface && (
+        <InterfaceView name="" entity={props.viewState.interface} />
       )}
-      {props.entity.nodes.length > 0 && (
-        <NodesView nodes={props.entity.nodes} />
+      {props.viewState.nodes.length > 0 && (
+        <NodesView nodes={props.viewState.nodes} />
       )}
-      {props.entity.nodes.length > 0 &&
-        props.entity.interface &&
-        props.entity.net && <NetView component={props.entity} />}
+      {props.viewState.nodes.length > 0 &&
+        props.viewState.interface &&
+        props.viewState.net && <NetView componentViewState={props.viewState} />}
     </div>
   );
 }
