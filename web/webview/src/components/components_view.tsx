@@ -1,8 +1,8 @@
-import { Component } from "../generated/sourcecode";
+import { ComponentViewState } from "../core/file_view_state";
 import { ComponentView } from "./component_view";
 
 interface IComponentViewProps {
-  components: Array<{ name: string; entity: Component }>;
+  components: Array<{ name: string; entity: ComponentViewState }>;
 }
 
 export function ComponentsView(props: IComponentViewProps) {

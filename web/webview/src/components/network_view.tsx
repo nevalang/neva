@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -14,24 +14,23 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import dagre from "dagre";
 import * as src from "../generated/sourcecode";
-import { ResolveFileResponce } from "../generated/lsp_api";
+import { ComponentViewState, NodesViewState } from "../core/file_view_state";
 
 const nodeTypes = { normal_node: NormalNode };
 
 interface INetViewProps {
-  component: Component;
+  component: ComponentViewState;
 }
 
 export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(
     () =>
       getReactFlowElements(
-        props.interface,
-        props.nodes,
-        props.net,
-        vscodeState
+        props.component.interface!,
+        props.component.nodes,
+        props.component.net!
       ),
-    [props.interface, props.nodes, props.net, vscodeState]
+    [props.component.interface, props.component.net, props.component.nodes]
   );
 
   return (
@@ -107,9 +106,8 @@ const nodeHeight = 70;
 
 const getReactFlowElements = (
   iface: src.Interface,
-  nodes: { name: string; entity: src.Node }[],
+  nodes: NodesViewState[],
   net: src.Connection[],
-  resolveFileResp: ResolveFileResponce,
   direction = "TB"
 ) => {
   const isHorizontal = direction === "LR";

@@ -7,7 +7,7 @@ import {
   ComponentsView,
 } from "./components";
 import { useVSCodeState, vscodeStateContext } from "./core/vscode_state";
-import { getFileView } from "./core/file_state";
+import { getFileView } from "./core/file_view_state";
 
 export default function App() {
   const index = useVSCodeState();
