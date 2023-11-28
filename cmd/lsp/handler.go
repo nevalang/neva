@@ -45,13 +45,13 @@ func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *
 	}
 
 	s := Server{
-		handler:             h,
-		logger:              logger,
-		name:                serverName,
-		version:             "0.0.1",
-		indexer:             indexer,
-		mu:                  &sync.Mutex{},
-		indexedProgramState: nil,
+		handler: h,
+		logger:  logger,
+		name:    serverName,
+		version: "0.0.1",
+		indexer: indexer,
+		mu:      &sync.Mutex{},
+		state:   nil,
 	}
 
 	// Basic

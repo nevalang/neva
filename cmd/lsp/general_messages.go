@@ -27,7 +27,7 @@ func (s *Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializePa
 		return nil, err
 	}
 
-	s.setState(&prog, problems)
+	s.setState(prog, problems)
 
 	return result, nil
 }

@@ -22,9 +22,13 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer Indexer
 
-	mu                  *sync.Mutex
-	indexedProgramState *src.Module
-	problem             string
+	mu    *sync.Mutex
+	state *State
+}
+
+type State struct {
+	mod     src.Module
+	problem string
 }
 
 func main() {

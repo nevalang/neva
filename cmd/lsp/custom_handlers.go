@@ -30,35 +30,51 @@ type Extra struct {
 }
 
 func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
-	s.logger.Info("FooBar")
-
-	if s.indexedProgramState == nil {
+	if s.state == nil {
 		return nil, nil
 	}
 
-	relPathToFile := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
-	fullFilePathParts := strings.Split(relPathToFile, "/")
-	fileNameWithExt := fullFilePathParts[len(fullFilePathParts)-1]
+	relFilePath := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
+	relFilePath = strings.TrimPrefix(relFilePath, "/")
 
-	var (
-		modName  = "entry"
-		pkgName  = strings.Join(fullFilePathParts[0:len(fullFilePathParts)-1], "/")
-		fileName = strings.TrimSuffix(fileNameWithExt, ".neva")
-	)
+	relPathParts := strings.Split(relFilePath, "/")           // relative path to file in slice
+	relPathLastPart := relPathParts[len(relPathParts)-1]      // file name with extension
+	relPartsWithoutFile := relPathParts[:len(relPathParts)-1] // relative path to package
+
+	pkgName := strings.Join(relPartsWithoutFile, "/")
+	fileName := strings.TrimSuffix(relPathLastPart, ".neva")
 
 	scope := src.Scope{
 		Loc: src.ScopeLocation{
-			ModuleName: modName,
+			ModuleName: "entry",
 			PkgName:    pkgName,
 			FileName:   fileName,
 		},
-		Module: *s.indexedProgramState,
+		Module: s.state.mod,
 	}
 
-	pkg := s.indexedProgramState.Packages[pkgName]
-	file := pkg[fileName]
+	pkg, ok := s.state.mod.Packages[pkgName]
+	if !ok {
+		panic(fileName + " pkg not found")
+	}
 
-	extra := map[string]map[string]src.Interface{} // c -> n -> p
+	file, ok := pkg[fileName]
+	if !ok {
+		panic(fileName + ".neva not found in pkg " + pkgName)
+	}
+
+	extra := getExtraForFile(file, scope)
+
+	return FooBarResp{
+		File: file,
+		Extra: Extra{
+			NodesPorts: extra,
+		},
+	}, nil
+}
+
+func getExtraForFile(file src.File, scope src.Scope) map[string]map[string]src.Interface {
+	extra := map[string]map[string]src.Interface{}
 	for entityName, entity := range file.Entities {
 		if entity.Kind != src.ComponentEntity {
 			continue
@@ -83,18 +99,15 @@ func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
 
 		extra[entityName] = nodesIfaces
 	}
-
-	return FooBarResp{
-		File: file,
-		Extra: Extra{
-			NodesPorts: extra,
-		},
-	}, nil
+	return extra
 }
 
-func (s *Server) setState(mod *src.Module, problem string) {
+// setState allows to update state in a thread-safe manner.
+func (s *Server) setState(mod src.Module, problem string) {
 	s.mu.Lock()
-	s.indexedProgramState = mod
-	s.problem = problem
+	s.state = &State{
+		mod:     mod,
+		problem: problem,
+	}
 	s.mu.Unlock()
 }
