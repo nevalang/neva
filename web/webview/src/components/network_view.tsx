@@ -49,14 +49,19 @@ export default function NetView(props: INetViewProps) {
   );
 }
 
-function NormalNode(props: NodeProps<{ ports: src.IO }>) {
-  const { inports, outports } = useMemo(
-    () => ({
-      inports: Object.entries(props.data.ports.in || {}),
-      outports: Object.entries(props.data.ports.out || {}),
-    }),
-    [props.data.ports.in, props.data.ports.out]
-  );
+function NormalNode(props: NodeProps<{ ports: src.Interface }>) {
+  const { io } = props.data.ports;
+
+  const { inports, outports } = useMemo(() => {
+    const result = { inports: [], outports: [] };
+    if (!io) {
+      return result;
+    }
+    return {
+      inports: Object.entries(io.in || {}),
+      outports: Object.entries(io.out || {}),
+    };
+  }, [io]);
 
   return (
     <div className="react-flow__node-default">
@@ -114,19 +119,15 @@ const getReactFlowElements = (
   dagreGraph.setGraph({ rankdir: direction });
 
   const reactflowNodes: Node[] = [];
-  for (const node of nodes) {
-    // resolveFileResp.extra.nodesPorts[]
-
+  for (const nodeView of nodes) {
     const reactflowNode = {
-      id: node.name,
+      id: nodeView.name,
       type: "normal_node",
       position: defaultPosition,
-      data: {
-        ports: {},
-      },
+      data: { ports: nodeView.interface },
     };
     reactflowNodes.push(reactflowNode);
-    dagreGraph.setNode(node.name, { width: nodeWidth, height: nodeHeight });
+    dagreGraph.setNode(nodeView.name, { width: nodeWidth, height: nodeHeight });
   }
 
   const inportsNode = {
