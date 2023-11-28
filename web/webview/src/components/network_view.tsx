@@ -13,18 +13,16 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import dagre from "dagre";
-import { VSCodeState, vscodeStateContext } from "../core/vscode_state";
 import * as src from "../generated/sourcecode";
+import { ResolveFileResponce } from "../generated/lsp_api";
 
 const nodeTypes = { normal_node: NormalNode };
 
-export default function NetView(props: {
-  interface: src.Interface;
-  nodes: { name: string; entity: src.Node }[];
-  net: src.Connection[];
-}) {
-  const vscodeState = useContext(vscodeStateContext) as VSCodeState;
+interface INetViewProps {
+  component: Component;
+}
 
+export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(
     () =>
       getReactFlowElements(
@@ -111,7 +109,7 @@ const getReactFlowElements = (
   iface: src.Interface,
   nodes: { name: string; entity: src.Node }[],
   net: src.Connection[],
-  vscodeState: VSCodeState,
+  resolveFileResp: ResolveFileResponce,
   direction = "TB"
 ) => {
   const isHorizontal = direction === "LR";
@@ -119,6 +117,8 @@ const getReactFlowElements = (
 
   const reactflowNodes: Node[] = [];
   for (const node of nodes) {
+    // resolveFileResp.extra.nodesPorts[]
+
     const reactflowNode = {
       id: node.name,
       type: "normal_node",

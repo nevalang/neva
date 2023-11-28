@@ -2,26 +2,35 @@ import { ResolveFileResponce } from "../generated/lsp_api";
 import * as src from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
 
-// FileView is an object optimized for fast and easy rendering of the UI
-interface FileView {
+// Object optimized for fast and easy rendering of the UI
+interface FileViewState {
   imports: { alias: string; path: string }[];
   entities: FileViewEntities;
 }
 
-// we use arrays instead of objects because it's faster to render than maps
 export interface FileViewEntities {
   types: { name: string; entity: ts.Def }[];
   interfaces: { name: string; entity: src.Interface }[];
   constants: { name: string; entity: src.Const }[];
-  components: {
-    name: string;
-    entity: src.Component;
-    nodesPorts: { [keyof: string]: src.Interface };
-  }[];
+  components: { name: string; entity: ComponentViewState }[];
 }
 
-export function getFileView(state: ResolveFileResponce | undefined): FileView {
-  const result: FileView = {
+export interface ComponentViewState {
+  interface?: src.Interface;
+  net?: src.Connection[];
+  nodes: NodesViewState[];
+}
+
+export interface NodesViewState {
+  name: string;
+  node: src.Node;
+  interface: src.Interface;
+}
+
+export function getFileView(
+  state: ResolveFileResponce | undefined
+): FileViewState {
+  const result: FileViewState = {
     imports: [],
     entities: { types: [], interfaces: [], constants: [], components: [] },
   };
@@ -76,11 +85,33 @@ export function getFileView(state: ResolveFileResponce | undefined): FileView {
           break;
         }
 
-        result.entities.components.push({
+        const componentViewState = {
           name: entityName,
-          entity: entity.component,
-          nodesPorts: state.extra.nodesPorts[entityName],
-        });
+          entity: {
+            ...entity.component,
+            nodes: [],
+          } as ComponentViewState,
+        };
+
+        if (!entity.component.nodes) {
+          result.entities.components.push(componentViewState);
+          break;
+        }
+
+        const componentNodesExtra = state.extra.nodesPorts[entityName];
+        const nodesViewState: NodesViewState[] = [];
+
+        for (const nodeName in entity.component.nodes) {
+          const node = entity.component.nodes;
+          nodesViewState.push({
+            name: nodeName,
+            node: node,
+            interface: componentNodesExtra[nodeName],
+          });
+        }
+
+        componentViewState.entity.nodes = nodesViewState;
+        result.entities.components.push(componentViewState);
 
         break;
       }
