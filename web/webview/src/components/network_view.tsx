@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -13,22 +13,19 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import dagre from "dagre";
-import { VSCodeState, vscodeStateContext } from "../helpers/vscode_state";
 import * as src from "../generated/sourcecode";
+import { ComponentViewState } from "../core/file_view_state";
 
 const nodeTypes = { normal_node: NormalNode };
 
-export default function NetView(props: {
-  nodes: {
-    name: string;
-    entity: src.Node;
-  }[];
-  net: src.Connection[];
-}) {
-  const vscodeState = useContext(vscodeStateContext) as VSCodeState; // component shouldn't be rendered at all without this
+interface INetViewProps {
+  componentViewState: ComponentViewState;
+}
+
+export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(
-    () => getLayoutedElements(props.nodes, props.net, vscodeState),
-    [props.nodes, props.net, vscodeState]
+    () => getReactFlowElements(props.componentViewState),
+    [props.componentViewState]
   );
 
   return (
@@ -47,17 +44,25 @@ export default function NetView(props: {
   );
 }
 
-interface IPorts {
-  in: string[];
-  out: string[];
-}
+function NormalNode(props: NodeProps<{ ports: src.Interface }>) {
+  const { io } = props.data.ports;
 
-function NormalNode(props: NodeProps<{ ports: IPorts }>) {
+  const { inports, outports } = useMemo(() => {
+    const result = { inports: [], outports: [] };
+    if (!io) {
+      return result;
+    }
+    return {
+      inports: Object.entries(io.in || {}),
+      outports: Object.entries(io.out || {}),
+    };
+  }, [io]);
+
   return (
     <div className="react-flow__node-default">
-      {props.data.ports.in.length > 0 && (
+      {inports.length > 0 && (
         <div className="inports">
-          {props.data.ports.in.map((inportName) => (
+          {inports.map(([inportName]) => (
             <Handle
               content="asd"
               type="target"
@@ -72,9 +77,9 @@ function NormalNode(props: NodeProps<{ ports: IPorts }>) {
         </div>
       )}
       <div className="nodeName">{props.id}</div>
-      {props.data.ports.out.length > 0 && (
+      {outports.length > 0 && (
         <div className="outports">
-          {props.data.ports.out.map((outportName) => (
+          {outports.map(([outportName]) => (
             <Handle
               type="source"
               id={outportName}
@@ -92,157 +97,6 @@ function NormalNode(props: NodeProps<{ ports: IPorts }>) {
 }
 
 const defaultPosition = { x: 0, y: 0 };
-// const initialNodes = [
-//   {
-//     type: "normal_node",
-//     id: "in",
-//     position: defaultPosition,
-//     isHidden: false,
-//     data: {
-//       ports: {
-//         in: [],
-//         out: ["enter"],
-//       },
-//     },
-//   },
-//   {
-//     type: "normal_node",
-//     id: "out",
-//     position: defaultPosition,
-//     data: {
-//       ports: {
-//         in: ["exit"],
-//         out: [],
-//       },
-//     },
-//   },
-//   {
-//     type: "normal_node",
-//     id: "readFirstInt",
-//     position: defaultPosition,
-//     data: {
-//       ports: {
-//         in: ["sig"],
-//         out: ["v", "err"],
-//       },
-//     },
-//   },
-//   {
-//     type: "normal_node",
-//     id: "readSecondInt",
-//     position: defaultPosition,
-//     data: {
-//       ports: {
-//         in: ["sig"],
-//         out: ["v", "err"],
-//       },
-//     },
-//   },
-//   {
-//     type: "normal_node",
-//     id: "add",
-//     position: defaultPosition,
-//     data: {
-//       ports: {
-//         in: ["a", "b"],
-//         out: ["v"],
-//       },
-//     },
-//   },
-//   {
-//     type: "normal_node",
-//     id: "print",
-//     position: defaultPosition,
-//     data: {
-//       ports: {
-//         in: ["v"],
-//         out: ["v"],
-//       },
-//     },
-//   },
-// ];
-// const initialEdges: Edge[] = [
-//   {
-//     id: "in.enter -> readFirstInt.sig",
-//     source: "in",
-//     sourceHandle: "enter",
-//     target: "readFirstInt",
-//     targetHandle: "sig",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "readFirstInt.err -> print.v",
-//     source: "readFirstInt",
-//     sourceHandle: "err",
-//     target: "print",
-//     targetHandle: "v",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "readFirstInt.v -> add.a",
-//     source: "readFirstInt",
-//     sourceHandle: "v",
-//     target: "add",
-//     targetHandle: "a",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "readFirstInt.v -> readSecondInt.sig",
-//     source: "readFirstInt",
-//     sourceHandle: "v",
-//     target: "readSecondInt",
-//     targetHandle: "sig",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "readSecondInt.err -> print.v",
-//     source: "readSecondInt",
-//     sourceHandle: "err",
-//     target: "print",
-//     targetHandle: "v",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "readSecondInt.v -> add.b",
-//     source: "readSecondInt",
-//     sourceHandle: "v",
-//     target: "add",
-//     targetHandle: "b",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "add.v -> print.v",
-//     source: "add",
-//     sourceHandle: "v",
-//     target: "print",
-//     targetHandle: "v",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-//   {
-//     id: "print.v -> out.exit",
-//     source: "print",
-//     sourceHandle: "v",
-//     target: "out",
-//     targetHandle: "exit",
-//     markerEnd: {
-//       type: MarkerType.Arrow,
-//     },
-//   },
-// ];
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -250,35 +104,69 @@ dagreGraph.setDefaultEdgeLabel(() => ({}));
 const nodeWidth = 342.5;
 const nodeHeight = 70;
 
-const getLayoutedElements = (
-  nodes: { name: string; entity: src.Node }[],
-  net: src.Connection[],
-  vscodeState: VSCodeState, // TODO use vscode state for ports
+const getReactFlowElements = (
+  componentViewState: ComponentViewState,
   direction = "TB"
 ) => {
+  const { nodes, interface: iface, net } = componentViewState;
+
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({ rankdir: direction });
 
   const reactflowNodes: Node[] = [];
-  for (const node of nodes) {
+  for (const nodeView of nodes) {
     const reactflowNode = {
-      id: node.name,
+      id: nodeView.name,
       type: "normal_node",
       position: defaultPosition,
-      data: {
-        // TODO we need more than current parsed file to render this
-        ports: {
+      data: { ports: nodeView.interface },
+    };
+    reactflowNodes.push(reactflowNode);
+    dagreGraph.setNode(nodeView.name, { width: nodeWidth, height: nodeHeight });
+  }
+
+  const inportsNode = {
+    id: "in",
+    type: "normal_node",
+    position: defaultPosition,
+    data: {
+      ports: {
+        io: {
           in: {},
           out: {},
         },
-      },
-    };
-    reactflowNodes.push(reactflowNode);
-    dagreGraph.setNode(node.name, { width: nodeWidth, height: nodeHeight });
+      } as src.Interface,
+    },
+  };
+  for (const portName in iface!.io?.in) {
+    const port = iface!.io?.in[portName];
+    inportsNode.data.ports.io!.out![portName] = port; // inport for component is outport for inport-node in network
   }
+  reactflowNodes.push(inportsNode);
+  dagreGraph.setNode(inportsNode.id, { width: nodeWidth, height: nodeHeight });
+
+  const outportsNode = {
+    id: "out",
+    type: "normal_node",
+    position: defaultPosition,
+    data: {
+      ports: {
+        io: {
+          in: {},
+          out: {},
+        },
+      } as src.Interface,
+    },
+  };
+  for (const portName in iface!.io?.out) {
+    const port = iface!.io?.out[portName];
+    outportsNode.data.ports.io!.in![portName] = port; // outport for component is inport for outport-node in network
+  }
+  reactflowNodes.push(outportsNode);
+  dagreGraph.setNode(outportsNode.id, { width: nodeWidth, height: nodeHeight });
 
   const reactflowEdges: Edge[] = [];
-  for (const connection of net) {
+  for (const connection of net!) {
     const { senderSide, receiverSide } = connection;
     if (!senderSide || !receiverSide) {
       continue;
@@ -291,7 +179,7 @@ const getLayoutedElements = (
 
       const sourceHandle = senderSide.portAddr
         ? senderSide.portAddr.port
-        : "out"; // TODO check that this is how constant works
+        : "out";
 
       const reactflowEdge = {
         id: `${senderSide.portAddr || senderSide.constRef} -> ${
@@ -329,6 +217,8 @@ const getLayoutedElements = (
 
     return node;
   });
+
+  console.log({ reactflowNodes, iface });
 
   return { nodes: reactflowNodes, edges: reactflowEdges };
 };

@@ -1,14 +1,9 @@
 import path from "path";
 import net from "net";
 import cp from "child_process";
-import { window, ExtensionContext, ExtensionMode, workspace } from "vscode";
+import { window, ExtensionContext, workspace } from "vscode";
 import { Trace } from "vscode-jsonrpc";
-import {
-  LanguageClient,
-  ServerOptions,
-  StreamInfo,
-  TransportKind,
-} from "vscode-languageclient/node";
+import { LanguageClient, ServerOptions } from "vscode-languageclient/node";
 
 export const clientId = "nevaLSPClient";
 export const clientName = "Neva LSP Client";
@@ -31,7 +26,9 @@ export function setupLsp(context: ExtensionContext): LanguageClient {
       serverProcess.on("exit", (code, signal) => {
         console.warn(`server exited with code ${code} and signal ${signal}`);
       });
-      const outputChannel = window.createOutputChannel("Neva Language Server Logs");
+      const outputChannel = window.createOutputChannel(
+        "Neva Language Server Logs"
+      );
       serverProcess.stdout.on("data", (data) => {
         outputChannel.appendLine(data.toString());
       });

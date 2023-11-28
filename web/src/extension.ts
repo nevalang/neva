@@ -17,7 +17,6 @@ export async function activate(context: ExtensionContext) {
   lspClient.onNotification("neva/analyzer_message", (message: string) => {
     window.showWarningMessage(message);
   });
-
   console.info("language-server started, client connection established");
 
   // Listen to language server events and update current indexed module state
@@ -32,18 +31,8 @@ export async function activate(context: ExtensionContext) {
 
   // Register preview command that opens webview
   context.subscriptions.push(
-    commands.registerCommand(
-      "neva.openPreview",
-      getPreviewCommand(
-        context,
-        () => initialIndex, // note that we must use closure so function call gets actual value and not undefined
-        (handler: GenericNotificationHandler) => {
-          lspClient.onNotification("neva/workdir_indexed", handler); // register webview update-function
-        }
-      )
-    )
+    commands.registerCommand("neva.openPreview", getPreviewCommand(context, lspClient))
   );
-
   console.info("preview command registered");
 }
 

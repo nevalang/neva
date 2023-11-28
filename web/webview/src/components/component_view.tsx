@@ -1,60 +1,49 @@
-import { useMemo } from "react";
 import {
   VSCodeDataGrid,
   VSCodeDataGridRow,
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
-import { Component, EntityRef, Node } from "../generated/sourcecode";
+import { EntityRef } from "../generated/sourcecode";
 import { InterfaceView } from "./interface_view";
 import NetView from "./network_view";
+import { ComponentViewState, NodesViewState } from "../core/file_view_state";
 
 export function ComponentView(props: {
   name: string;
-  entity: Component;
+  viewState: ComponentViewState;
   style?: object;
 }) {
-  const { name, entity } = props;
-
-  const nodes = useMemo(() => {
-    const result = [];
-    for (const name in props.entity.nodes) {
-      result.push({
-        name: name,
-        entity: props.entity.nodes[name],
-      });
-    }
-    return result;
-  }, [props.entity.nodes]);
-
   return (
     <div style={props.style}>
       <h3
         style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}
       >
-        {name}
+        {props.name}
       </h3>
-      {entity.interface && <InterfaceView name="" entity={entity.interface} />}
-      {nodes && <NodesView nodes={nodes} />}
-      {nodes && entity.net && <NetView nodes={nodes} net={entity.net} />}
+      {props.viewState.interface && (
+        <InterfaceView name="" entity={props.viewState.interface} />
+      )}
+      {props.viewState.nodes.length > 0 && (
+        <NodesView nodes={props.viewState.nodes} />
+      )}
+      {props.viewState.nodes.length > 0 &&
+        props.viewState.interface &&
+        props.viewState.net && <NetView componentViewState={props.viewState} />}
     </div>
   );
 }
 
-function NodesView(props: {
-  nodes: {
-    name: string;
-    entity: Node;
-  }[];
-}) {
+function NodesView(props: { nodes: NodesViewState[] }) {
+  // TODO render their ports
   return (
     <>
       <h4>Nodes</h4>
       <VSCodeDataGrid>
-        {props.nodes.map(({ name, entity }) => (
+        {props.nodes.map(({ name, node }) => (
           <VSCodeDataGridRow>
             <VSCodeDataGridCell grid-column="1">{name}</VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="2">
-              {formatEntityRef(entity.entityRef)}
+              {formatEntityRef(node.entityRef)}
             </VSCodeDataGridCell>
           </VSCodeDataGridRow>
         ))}

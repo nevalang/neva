@@ -1,4 +1,4 @@
-package main
+package lsp
 
 import (
 	"context"
@@ -11,22 +11,20 @@ import (
 )
 
 type Indexer struct {
-	builder  builder.Builder
-	parser   parser.Parser
-	analyzer analyzer.Analyzer
+	Builder  builder.Builder
+	Parser   parser.Parser
+	Analyzer analyzer.Analyzer
 }
 
-type analyzerMessage string
-
-func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMessage, error) {
-	build, err := i.builder.Build(ctx, path)
+func (i Indexer) index(ctx context.Context, path string) (src.Module, string, error) {
+	build, err := i.Builder.Build(ctx, path)
 	if err != nil {
 		return src.Module{}, "", fmt.Errorf("builder: %w", err)
 	}
 
 	rawMod := build.Modules[build.EntryModule] // TODO use all mods
 
-	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
+	parsedPkgs, err := i.Parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
 		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
 	}
@@ -36,8 +34,8 @@ func (i Indexer) index(ctx context.Context, path string) (src.Module, analyzerMe
 		Packages: parsedPkgs,
 	}
 
-	if _, err = i.analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
-		return mod, analyzerMessage(err.Error()), nil
+	if _, err = i.Analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
+		return mod, err.Error(), nil
 	}
 
 	return mod, "", nil

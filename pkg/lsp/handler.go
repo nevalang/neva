@@ -1,22 +1,60 @@
-package main
+package lsp
 
 import (
+	"encoding/json"
+	"errors"
+	"sync"
+
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
+type Handler struct {
+	*protocol.Handler
+
+	ResolveFile func(glspCtx *glsp.Context, params ResolveFileRequest) (ResolveFileResponce, error)
+}
+
+func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, validParams bool, err error) {
+	if !h.IsInitialized() && (glspCtx.Method != protocol.MethodInitialize) {
+		return nil, true, true, errors.New("server not initialized")
+	}
+
+	if glspCtx.Method == "resolve_file" {
+		var params ResolveFileRequest
+		if err := json.Unmarshal(glspCtx.Params, &params); err != nil {
+			return nil, true, false, err
+		}
+
+		resp, err := h.ResolveFile(glspCtx, params)
+		if err != nil {
+			return nil, true, true, err
+		}
+
+		return resp, true, true, nil
+	}
+
+	return h.Handler.Handle(glspCtx)
+}
+
 //nolint:lll,funlen
-func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *protocol.Handler {
-	h := &protocol.Handler{}
+func BuildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *Handler {
+	h := &Handler{
+		Handler: &protocol.Handler{},
+	}
+
 	s := Server{
 		handler: h,
 		logger:  logger,
 		name:    serverName,
 		version: "0.0.1",
 		indexer: indexer,
+		mu:      &sync.Mutex{},
+		state:   nil,
 	}
 
+	// Basic
 	h.CancelRequest = func(context *glsp.Context, params *protocol.CancelParams) error {
 		return nil
 	}
@@ -24,6 +62,7 @@ func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *
 		return nil
 	}
 
+	// Lifetime
 	h.Initialize = s.Initialize
 	h.Initialized = s.Initialized
 	h.Shutdown = s.Shutdown
@@ -33,6 +72,10 @@ func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *
 	}
 	h.SetTrace = s.SetTrace
 
+	// Custom handlers
+	h.ResolveFile = s.ResolveFile
+
+	// Rest...
 	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {
 		return nil
 	}
