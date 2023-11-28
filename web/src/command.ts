@@ -52,7 +52,7 @@ export function getPreviewCommand(
 
     let resp: unknown;
     try {
-      resp = await client.sendRequest("foobar", {
+      resp = await client.sendRequest("resolve_file", {
         document: window.activeTextEditor.document,
         workspaceUri: workspace.workspaceFolders![0].uri,
       });

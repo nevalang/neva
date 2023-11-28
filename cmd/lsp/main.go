@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"sync"
 
 	"github.com/tliron/commonlog"
 	_ "github.com/tliron/commonlog/simple"
@@ -11,25 +10,9 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/pkg/lsp"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
-
-type Server struct {
-	name, version string
-
-	handler *Handler
-	logger  commonlog.Logger
-	indexer Indexer
-
-	mu    *sync.Mutex
-	state *State
-}
-
-type State struct {
-	mod     src.Module
-	problem string
-}
 
 func main() {
 	const serverName = "neva"
@@ -41,6 +24,7 @@ func main() {
 	if *isDebug {
 		verbosity = 2
 	}
+
 	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
@@ -55,13 +39,13 @@ func main() {
 		p,
 	)
 
-	indexer := Indexer{
-		builder:  builder,
-		parser:   p,
-		analyzer: analyzer.MustNew(resolver),
+	indexer := lsp.Indexer{
+		Builder:  builder,
+		Parser:   p,
+		Analyzer: analyzer.MustNew(resolver),
 	}
 
-	handler := buildHandler(logger, serverName, indexer)
+	handler := lsp.BuildHandler(logger, serverName, indexer)
 
 	srv := server.NewServer(
 		handler,

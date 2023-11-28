@@ -20,3 +20,15 @@ packages:
       - terminator.go
       - trace.go
       - validator.go
+  - path: github.com/nevalang/neva/cmd/lsp
+    frontmatter: import { EntityRef } from "./sourcecode" # circular dependencies are ok in JS
+    type_mappings:
+      fmt.Stringer: EntityRef
+    output_path: web/webview/src/generated/typesystem.ts
+    exclude_files:
+      - general_messages.go
+      - handler.go
+      - indexer.go
+      - main.go
+      - text_document_.go
+      - validator.go

@@ -1,13 +1,14 @@
-package main
+package lsp
 
 import (
+	"errors"
 	"strings"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/tliron/glsp"
 )
 
-type FooBarRequest struct {
+type ResolveFileRequest struct {
 	WorkspaceUri URI `json:"workspaceUri"`
 	Document     struct {
 		Uri      URI    `json:"uri"`
@@ -20,7 +21,7 @@ type URI struct {
 	FSPath string `json:"fsPath"`
 }
 
-type FooBarResp struct {
+type ResolveFileResponce struct {
 	File  src.File `json:"file"`
 	Extra Extra    `json:"extra"` // info that is not presented in the file but needed for rendering
 }
@@ -29,9 +30,9 @@ type Extra struct {
 	NodesPorts map[string]map[string]src.Interface `json:"nodesPorts"` // components -> nodes -> interface
 }
 
-func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
+func (s *Server) ResolveFile(glspCtx *glsp.Context, req ResolveFileRequest) (ResolveFileResponce, error) {
 	if s.state == nil {
-		return nil, nil
+		return ResolveFileResponce{}, nil
 	}
 
 	relFilePath := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
@@ -55,17 +56,20 @@ func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
 
 	pkg, ok := s.state.mod.Packages[pkgName]
 	if !ok {
-		panic(fileName + " pkg not found")
+		return ResolveFileResponce{}, errors.New("no such package: " + pkgName)
 	}
 
 	file, ok := pkg[fileName]
 	if !ok {
-		panic(fileName + ".neva not found in pkg " + pkgName)
+		return ResolveFileResponce{}, errors.New("no such file: " + fileName + "." + pkgName)
 	}
 
-	extra := getExtraForFile(file, scope)
+	extra, err := getExtraForFile(file, scope)
+	if err != nil {
+		return ResolveFileResponce{}, err
+	}
 
-	return FooBarResp{
+	return ResolveFileResponce{
 		File: file,
 		Extra: Extra{
 			NodesPorts: extra,
@@ -73,7 +77,7 @@ func (s *Server) FooBar(glspCtx *glsp.Context, req FooBarRequest) (any, error) {
 	}, nil
 }
 
-func getExtraForFile(file src.File, scope src.Scope) map[string]map[string]src.Interface {
+func getExtraForFile(file src.File, scope src.Scope) (map[string]map[string]src.Interface, error) {
 	extra := map[string]map[string]src.Interface{}
 	for entityName, entity := range file.Entities {
 		if entity.Kind != src.ComponentEntity {
@@ -84,7 +88,7 @@ func getExtraForFile(file src.File, scope src.Scope) map[string]map[string]src.I
 		for nodeName, node := range entity.Component.Nodes {
 			nodeEntity, _, err := scope.Entity(node.EntityRef)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 
 			var iface src.Interface
@@ -99,7 +103,8 @@ func getExtraForFile(file src.File, scope src.Scope) map[string]map[string]src.I
 
 		extra[entityName] = nodesIfaces
 	}
-	return extra
+
+	return extra, nil
 }
 
 // setState allows to update state in a thread-safe manner.

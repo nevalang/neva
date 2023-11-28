@@ -1,4 +1,4 @@
-package main
+package lsp
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 type Handler struct {
 	*protocol.Handler
 
-	FooBar func(glspCtx *glsp.Context, params FooBarRequest) (any, error)
+	ResolveFile func(glspCtx *glsp.Context, params ResolveFileRequest) (ResolveFileResponce, error)
 }
 
 func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, validParams bool, err error) {
@@ -21,13 +21,13 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 		return nil, true, true, errors.New("server not initialized")
 	}
 
-	if glspCtx.Method == "foobar" {
-		var params FooBarRequest
+	if glspCtx.Method == "resolve_file" {
+		var params ResolveFileRequest
 		if err := json.Unmarshal(glspCtx.Params, &params); err != nil {
 			return nil, true, false, err
 		}
 
-		resp, err := h.FooBar(glspCtx, params)
+		resp, err := h.ResolveFile(glspCtx, params)
 		if err != nil {
 			return nil, true, true, err
 		}
@@ -39,7 +39,7 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 }
 
 //nolint:lll,funlen
-func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *Handler {
+func BuildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *Handler {
 	h := &Handler{
 		Handler: &protocol.Handler{},
 	}
@@ -73,7 +73,7 @@ func buildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *
 	h.SetTrace = s.SetTrace
 
 	// Custom handlers
-	h.FooBar = s.FooBar
+	h.ResolveFile = s.ResolveFile
 
 	// Rest...
 	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {
