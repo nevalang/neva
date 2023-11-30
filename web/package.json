@@ -78,13 +78,18 @@
       {
         "command": "neva.openPreview",
         "title": "Preview 👀",
-        "category": "Neva",
-        "icon": {
-          "light": "assets/logo.png",
-          "dark": "assets/logo.png"
-        }
+        "category": "Neva"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "editorLangId == neva",
+          "command": "neva.openPreview",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "activationEvents": [
     "workspaceContains:neva.yml",

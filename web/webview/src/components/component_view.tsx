@@ -4,7 +4,6 @@ import {
   VSCodeDataGridCell,
 } from "@vscode/webview-ui-toolkit/react";
 import { EntityRef } from "../generated/sourcecode";
-import { InterfaceView } from "./interface_view";
 import NetView from "./network_view";
 import { ComponentViewState, NodesViewState } from "../core/file_view_state";
 
@@ -20,9 +19,6 @@ export function ComponentView(props: {
       >
         {props.name}
       </h3>
-      {props.viewState.interface && (
-        <InterfaceView name="" entity={props.viewState.interface} />
-      )}
       {props.viewState.nodes.length > 0 && (
         <NodesView nodes={props.viewState.nodes} />
       )}
@@ -34,7 +30,6 @@ export function ComponentView(props: {
 }
 
 function NodesView(props: { nodes: NodesViewState[] }) {
-  // TODO render their ports
   return (
     <>
       <h4>Nodes</h4>

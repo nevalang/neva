@@ -17,7 +17,7 @@ export interface FileViewEntities {
 
 export interface ComponentViewState {
   interface?: src.Interface;
-  net?: src.Connection[];
+  net: src.Connection[];
   nodes: NodesViewState[];
 }
 

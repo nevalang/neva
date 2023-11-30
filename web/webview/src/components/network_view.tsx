@@ -125,45 +125,23 @@ const getReactFlowElements = (
     dagreGraph.setNode(nodeView.name, { width: nodeWidth, height: nodeHeight });
   }
 
-  const inportsNode = {
-    id: "in",
-    type: "normal_node",
-    position: defaultPosition,
-    data: {
-      ports: {
-        io: {
-          in: {},
-          out: {},
-        },
-      } as src.Interface,
-    },
-  };
-  for (const portName in iface!.io?.in) {
-    const port = iface!.io?.in[portName];
-    inportsNode.data.ports.io!.out![portName] = port; // inport for component is outport for inport-node in network
-  }
-  reactflowNodes.push(inportsNode);
-  dagreGraph.setNode(inportsNode.id, { width: nodeWidth, height: nodeHeight });
+  if (iface) {
+    const ioNodes = getIONodes(iface);
 
-  const outportsNode = {
-    id: "out",
-    type: "normal_node",
-    position: defaultPosition,
-    data: {
-      ports: {
-        io: {
-          in: {},
-          out: {},
-        },
-      } as src.Interface,
-    },
-  };
-  for (const portName in iface!.io?.out) {
-    const port = iface!.io?.out[portName];
-    outportsNode.data.ports.io!.in![portName] = port; // outport for component is inport for outport-node in network
+    reactflowNodes.push(ioNodes.in);
+    dagreGraph.setNode(ioNodes.in.id, {
+      width: nodeWidth,
+      height: nodeHeight,
+    });
+
+    reactflowNodes.push(ioNodes.out);
+    dagreGraph.setNode(ioNodes.out.id, {
+      width: nodeWidth,
+      height: nodeHeight,
+    });
   }
-  reactflowNodes.push(outportsNode);
-  dagreGraph.setNode(outportsNode.id, { width: nodeWidth, height: nodeHeight });
+
+  console.log(reactflowNodes);
 
   const reactflowEdges: Edge[] = [];
   for (const connection of net!) {
@@ -222,3 +200,48 @@ const getReactFlowElements = (
 
   return { nodes: reactflowNodes, edges: reactflowEdges };
 };
+
+function getIONodes(iface: src.Interface) {
+  const inportsNode = {
+    id: "in",
+    type: "normal_node",
+    position: defaultPosition,
+    data: {
+      ports: {
+        io: {
+          in: {},
+          out: {},
+        },
+      } as src.Interface,
+    },
+  };
+
+  for (const portName in iface!.io?.in) {
+    const port = iface!.io?.in[portName];
+    inportsNode.data.ports.io!.out![portName] = port; // inport for component is outport for inport-node in network
+  }
+
+  const outportsNode = {
+    id: "out",
+    type: "normal_node",
+    position: defaultPosition,
+    data: {
+      ports: {
+        io: {
+          in: {},
+          out: {},
+        },
+      } as src.Interface,
+    },
+  };
+
+  for (const portName in iface!.io?.out) {
+    const port = iface!.io?.out[portName];
+    outportsNode.data.ports.io!.in![portName] = port; // outport for component is inport for outport-node in network
+  }
+
+  return {
+    in: inportsNode,
+    out: outportsNode,
+  };
+}

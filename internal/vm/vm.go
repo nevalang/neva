@@ -27,7 +27,7 @@ type Machine struct {
 
 type (
 	Loader interface {
-		Load(ctx context.Context, path string) ([]byte, error)
+		Load(ctx context.Context, path string) (bb []byte, err error)
 	}
 	Decoder interface {
 		Decode([]byte) (runtime.Program, error)

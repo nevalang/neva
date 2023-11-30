@@ -1,0 +1,75 @@
+Workspace {
+    Modules {
+        ...
+        'stdlib'
+        'some'
+        'entry'
+    }
+}
+
+Module {
+    Manifest {
+        Deps { Modules }
+    }
+    
+    Packages {
+        ...
+        'main'
+        ...
+        Files {
+            Imports {} (import other packages)
+            Entities []Entity
+        }
+    }
+}
+
+Entity {
+    Component
+    Interface
+    Const
+    Type
+}
+
+Component {
+    Interface
+    Nodes
+    Network
+}
+
+Interface {
+    inports {}
+    outports {}
+}
+
+Component Foo<T>(A T) (B) {...}
+Component Bar {...}
+
+types {
+    MyStr string
+    MyType int
+    MyUser User
+}
+
+User {
+    name string
+    age int
+    friend struct {
+        name string
+        age int
+    }
+}
+
+Component Baz (enter int) (exit MyType) {
+    Nodes {
+        foo Foo()<int>
+        doer Doer()
+    }
+
+    Network {
+        enter -> foo.A
+        foo.B -> doer.X
+        doer.Y -> exit
+    }
+}
+
+interface Doer = (int) -> (int)
