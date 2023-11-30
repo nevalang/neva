@@ -19,5 +19,5 @@ export function InterfaceView(props: { name: string; entity: Interface }) {
     [props.entity, props.name]
   );
 
-  return <NetView componentViewState={virtualComponentState} />;
+  return <NetView name="" componentViewState={virtualComponentState} />;
 }

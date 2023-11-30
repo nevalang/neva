@@ -11,13 +11,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tisoap/react-flow-smart-edge": "^3.0.0",
     "@types/vscode-webview": "^1.57.0",
+    "@vscode/codicons": "^0.0.33",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "dagre": "^0.8.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reactflow": "^11.9.3",
-    "@vscode/codicons": "^0.0.33"
+    "reactflow": "^11.9.3"
   },
   "devDependencies": {
     "@types/dagre": "^0.7.50",

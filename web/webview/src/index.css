@@ -9,6 +9,7 @@
   --dim: #769390;
   --text: #ADBAC7;
   --success: #347D39;
+  --pink: #ff0072;
 }
 
 body {
@@ -35,12 +36,19 @@ h3 {
   display: flex;
   border-width: 2px;
   font-weight: 400;
+  background-color: transparent;
 }
 
 .react-flow__node-default {
   padding: 0;
-  border-radius: 3px;
+  border-radius: 5px;
+  border-width: 2px;
   background-color: var(--text);
+  box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
+}
+
+.react-flow__node-default:active {
+  transform: scale(1.1);
 }
 
 .react-flow__handle {
@@ -60,24 +68,28 @@ h3 {
 .inports, .outports {
   display: flex;
   justify-content: space-around;
-  font-weight: 200;
-  color: var(--background-second)
+  font-weight: 400;
+  color: var(--background-second);
+  background-color: #00A8C6;
 }
 
 .inports > :not(:last-child),
 .outports > :not(:last-child) {
-  border-right: 1px solid var(--dim);
+  border-right: 2px solid var(--background-second);
 }
 
 .inports {
-  border-bottom: 1px var(--dim) solid;
+  border-bottom: 2px var(--background-second) solid;
+  border-radius:  3px 3px 0px 0px;
 }
 
 .outports {
-  border-top: 1px var(--dim) solid;
+  border-top: 2px var(--background-second) solid;
+  border-radius: 0px 0px 3px 3px;
 }
 
 .nodeName {
   padding: 15px;
-  color: var(--background-second)
+  color: var(--background);
+  font-weight: 700;
 }
