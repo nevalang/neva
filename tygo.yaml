@@ -9,9 +9,9 @@ packages:
     exclude_files:
       - scope.go
   - path: github.com/nevalang/neva/pkg/typesystem
-    frontmatter: import { EntityRef } from "./sourcecode" # circular dependencies are ok in JS
+    frontmatter: import * as src from "./sourcecode" # circular dependencies this are impossible in Go but possible in JS
     type_mappings:
-      fmt.Stringer: EntityRef
+      fmt.Stringer: src.EntityRef # this is how we replace any with conrete type without generics
     output_path: web/webview/src/generated/typesystem.ts
     exclude_files:
       - helper.go

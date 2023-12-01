@@ -13,6 +13,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   XYPosition,
+  useStore,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import SmartBezierEdge from "@tisoap/react-flow-smart-edge";
@@ -27,6 +28,8 @@ interface INetViewProps {
   name: string;
   componentViewState: ComponentViewState;
 }
+
+const gridStep = 10;
 
 export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(() => {
@@ -53,20 +56,25 @@ export default function NetView(props: INetViewProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         snapToGrid={true}
-        snapGrid={[20, 20]}
+        snapGrid={[gridStep, gridStep]}
         fitView
         nodesConnectable={false}
       >
         <Controls />
         <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={gridStep}
+          size={0.5}
+        />
       </ReactFlow>
     </div>
   );
 }
 
-function NormalNode(props: NodeProps<{ ports: src.Interface }>) {
+function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
   const { io } = props.data.ports;
+  const isZoomBig = useStore((s) => s.transform[2] >= 1.5);
 
   const { inports, outports } = useMemo(() => {
     const result = { inports: [], outports: [] };
@@ -83,7 +91,7 @@ function NormalNode(props: NodeProps<{ ports: src.Interface }>) {
     <div className="react-flow__node-default">
       {inports.length > 0 && (
         <div className="inports">
-          {inports.map(([inportName]) => (
+          {inports.map(([inportName, inportType]) => (
             <Handle
               content="asd"
               type="target"
@@ -93,11 +101,14 @@ function NormalNode(props: NodeProps<{ ports: src.Interface }>) {
               isConnectable={true}
             >
               {inportName}
+              {isZoomBig && inportType.typeExpr && inportType.typeExpr.meta && (
+                <div>{(inportType.typeExpr.meta as src.Meta).Text}</div>
+              )}
             </Handle>
           ))}
         </div>
       )}
-      <div className="nodeName">{props.id}</div>
+      <div className="nodeName">{props.data.label}</div>
       {outports.length > 0 && (
         <div className="outports">
           {outports.map(([outportName]) => (
@@ -132,34 +143,42 @@ const getReactFlowElements = (
   const nodeWidth = 342.5;
   const nodeHeight = 70;
 
-  const containerNode = {
-    id: `${name}-container`,
-    type: "group",
-    data: { label: name },
-    position: defaultPosition,
-  };
+  // const containerNode = {
+  //   id: `${name}-container`,
+  //   type: "group",
+  //   data: { label: name },
+  //   position: defaultPosition,
+  // };
 
-  const reactflowNodes: Node[] = [containerNode];
-  dagreGraph.setNode(containerNode.id, {
-    width: 1000,
-    height: 1000,
-  });
+  const reactflowNodes: Node[] = [];
+  // dagreGraph.setNode(containerNode.id, {
+  //   width: 1000,
+  //   height: 1000,
+  // });
 
   for (const nodeView of nodes) {
     const reactflowNode = {
-      id: nodeView.name,
+      id: `${name}-${nodeView.name}`,
       type: "normal",
       position: defaultPosition,
-      data: { ports: nodeView.interface },
-      parentNode: `${name}-container`,
-      extent: "parent" as const,
+      data: {
+        ports: nodeView.interface,
+        label: nodeView.name,
+      },
+      // parentNode: `${name}-container`,
+      // extent: "parent" as const,
     };
     reactflowNodes.push(reactflowNode);
-    dagreGraph.setNode(nodeView.name, { width: nodeWidth, height: nodeHeight });
+    dagreGraph.setNode(reactflowNode.id, {
+      width: nodeWidth,
+      height: nodeHeight,
+    });
   }
 
   if (iface) {
-    const ioNodes = getIONodes(iface, defaultPosition);
+    const ioNodes = getIONodes(name, iface, defaultPosition);
+
+    console.log({ ioNodes });
 
     reactflowNodes.push(ioNodes.in);
     dagreGraph.setNode(ioNodes.in.id, {
@@ -174,8 +193,6 @@ const getReactFlowElements = (
     });
   }
 
-  console.log(reactflowNodes);
-
   const reactflowEdges: Edge[] = [];
   for (const connection of net!) {
     const { senderSide, receiverSide } = connection;
@@ -183,28 +200,27 @@ const getReactFlowElements = (
       continue;
     }
 
+    const senderNode = senderSide.portAddr
+      ? senderSide.portAddr.node
+      : `${senderSide.constRef?.pkg}.${senderSide.constRef?.name}`;
+
+    const senderOutport = senderSide.portAddr
+      ? senderSide.portAddr.port
+      : "out";
+
     for (const receiver of receiverSide) {
-      const source = senderSide.portAddr
-        ? senderSide.portAddr.node
-        : `${senderSide.constRef?.pkg}.${senderSide.constRef?.name}`;
-
-      const sourceHandle = senderSide.portAddr
-        ? senderSide.portAddr.port
-        : "out";
-
       const reactflowEdge = {
-        id: `${senderSide.portAddr || senderSide.constRef} -> ${
+        id: `${name}-${senderSide.portAddr || senderSide.constRef} -> ${
           receiver.portAddr
         }`,
-        source: source || "unknown",
-        sourceHandle: sourceHandle,
-        target: receiver.portAddr?.node || "unknown",
-        targetHandle: receiver.portAddr?.port || "unknown",
-        markerEnd: {
-          type: MarkerType.Arrow,
-        },
+        source: `${name}-${senderNode}`!,
+        sourceHandle: senderOutport,
+        target: `${name}-${receiver.portAddr?.node!}`, // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
+        targetHandle: receiver.portAddr?.port,
+        markerEnd: { type: MarkerType.Arrow },
         type: "smart",
       };
+
       reactflowEdges.push(reactflowEdge);
     }
   }
@@ -220,18 +236,23 @@ const getReactFlowElements = (
     node.targetPosition = (isHorizontal ? "left" : "top") as Position;
     node.sourcePosition = (isHorizontal ? "right" : "bottom") as Position;
 
-    if (node.parentNode) {
-      const parentNodeWithPosition = dagreGraph.node(node.parentNode);
-      node.position = {
-        x: nodeWithPosition.x - parentNodeWithPosition.x,
-        y: nodeWithPosition.y - parentNodeWithPosition.y,
-      };
-    } else {
-      node.position = {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      };
-    }
+    node.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    // if (node.parentNode) {
+    //   const parentNodeWithPosition = dagreGraph.node(node.parentNode);
+    //   node.position = {
+    //     x: nodeWithPosition.x - parentNodeWithPosition.x,
+    //     y: nodeWithPosition.y - parentNodeWithPosition.y,
+    //   };
+    // } else {
+    //   node.position = {
+    //     x: nodeWithPosition.x - nodeWidth / 2,
+    //     y: nodeWithPosition.y - nodeHeight / 2,
+    //   };
+    // }
 
     return node;
   });
@@ -239,43 +260,40 @@ const getReactFlowElements = (
   return { nodes: reactflowNodes, edges: reactflowEdges };
 };
 
-function getIONodes(iface: src.Interface, position: XYPosition) {
-  const inportsNode = {
-    id: "in",
+function getIONodes(name: string, iface: src.Interface, position: XYPosition) {
+  const defaultData = {
     type: "normal",
     position: position,
-    data: {
-      ports: {
-        io: {
-          in: {},
-          out: {},
-        },
-      } as src.Interface,
-    },
   };
 
+  const inportsNode = {
+    ...defaultData,
+    id: `${name}-in`,
+    data: {
+      ports: {
+        io: { out: {} },
+      } as src.Interface,
+      label: "in",
+    },
+  };
   for (const portName in iface!.io?.in) {
-    const port = iface!.io?.in[portName];
-    inportsNode.data.ports.io!.out![portName] = port; // inport for component is outport for inport-node in network
+    const inport = iface!.io?.in[portName];
+    inportsNode.data.ports.io!.out![portName] = inport;
   }
 
   const outportsNode = {
-    id: "out",
-    type: "normal",
-    position: position,
+    ...defaultData,
+    id: `${name}-out`,
     data: {
       ports: {
-        io: {
-          in: {},
-          out: {},
-        },
+        io: { in: {} },
       } as src.Interface,
+      label: "out",
     },
   };
-
   for (const portName in iface!.io?.out) {
-    const port = iface!.io?.out[portName];
-    outportsNode.data.ports.io!.in![portName] = port; // outport for component is inport for outport-node in network
+    const outport = iface!.io?.out[portName];
+    outportsNode.data.ports.io!.in![portName] = outport;
   }
 
   return {

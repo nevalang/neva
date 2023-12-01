@@ -3,7 +3,7 @@ use {
 }
 
 interfaces {
-    Example(foo int, bar string, baz { age int }) (x int, y bool)
+    Example<T int | float>(foo int, bar string, baz { age int }) (x int, y bool)
 }
 
 components {

@@ -177,3 +177,15 @@ func (p PortAddr) String() string {
 	}
 	return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
 }
+
+// Meta keeps info about original text related to the structured object
+type Meta struct {
+	Text  string
+	Start Position
+	End   Position
+}
+
+type Position struct {
+	Line   int
+	Column int
+}

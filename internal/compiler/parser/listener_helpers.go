@@ -43,20 +43,34 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 		return nil
 	}
 
+	var result *ts.Expr
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
-		return parseTypeInstExpr(instExpr)
-	}
-
-	if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
-		return parseUnionExpr(unionExpr)
-	}
-
-	litExpr := expr.TypeLitExpr()
-	if litExpr == nil {
+		result = parseTypeInstExpr(instExpr)
+	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
+		result = parseUnionExpr(unionExpr)
+	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
+		result = parseLitExpr(litExpr)
+	} else {
 		panic("expr empty")
 	}
 
-	return parseLitExpr(litExpr)
+	start := expr.GetStart()
+	stop := expr.GetStop()
+	meta := src.Meta{
+		Text: expr.GetText(),
+		Start: src.Position{
+			Line:   start.GetLine(),
+			Column: start.GetColumn(),
+		},
+		End: src.Position{
+			Line:   stop.GetLine(),
+			Column: stop.GetColumn(),
+		},
+	}
+
+	result.Meta = meta
+
+	return result
 }
 
 func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {

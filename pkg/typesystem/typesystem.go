@@ -38,10 +38,13 @@ type Param struct {
 	Constr *Expr  `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
+type ExprMeta any
+
 // Instantiation or literal. Lit or Inst must be not nil, but not both
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
+	Meta ExprMeta  `json:"meta,omitempty"`
 }
 
 // String formats expression in a TS manner

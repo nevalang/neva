@@ -10,7 +10,7 @@ export function InterfacesView(props: IInterfacesViewProps) {
     <>
       {props.interfaces.map((entry) => {
         const { name, entity } = entry;
-        return <InterfaceView name={name} entity={entity} />;
+        return <InterfaceView name={name} entity={entity} />; 
       })}
     </>
   );
