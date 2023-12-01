@@ -28,7 +28,7 @@ components {
 		}
 	}
 
-	ReadInt(sig) (v int, err str) {
+	ReadInt(sig) (v int, err str) { 
 		nodes {
 			read core.Read
 			parse core.ParseInt

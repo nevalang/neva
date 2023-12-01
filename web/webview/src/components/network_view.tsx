@@ -29,8 +29,6 @@ interface INetViewProps {
   componentViewState: ComponentViewState;
 }
 
-const gridStep = 10;
-
 export default function NetView(props: INetViewProps) {
   const { nodes, edges } = useMemo(() => {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -55,18 +53,12 @@ export default function NetView(props: INetViewProps) {
         edges={edgesState}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        snapToGrid={true}
-        snapGrid={[gridStep, gridStep]}
         fitView
         nodesConnectable={false}
       >
         <Controls />
         <MiniMap />
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={gridStep}
-          size={0.5}
-        />
+        <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
       </ReactFlow>
     </div>
   );
@@ -74,7 +66,8 @@ export default function NetView(props: INetViewProps) {
 
 function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
   const { io } = props.data.ports;
-  const isZoomBig = useStore((s) => s.transform[2] >= 1.5);
+  const isPortsVisible = useStore((s) => s.transform[2] >= 0.51);
+  const isTypesVisible = useStore((s) => s.transform[2] >= 1);
 
   const { inports, outports } = useMemo(() => {
     const result = { inports: [], outports: [] };
@@ -100,10 +93,15 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
               position={Position.Top}
               isConnectable={true}
             >
-              {inportName}
-              {isZoomBig && inportType.typeExpr && inportType.typeExpr.meta && (
-                <div>{(inportType.typeExpr.meta as src.Meta).Text}</div>
-              )}
+              {/* {inportName} */}
+              {isPortsVisible && inportName}
+              {isTypesVisible &&
+                inportType.typeExpr &&
+                inportType.typeExpr.meta && (
+                  <span className="portType">
+                    : {(inportType.typeExpr.meta as src.Meta).Text}
+                  </span>
+                )}
             </Handle>
           ))}
         </div>
@@ -111,7 +109,7 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
       <div className="nodeName">{props.data.label}</div>
       {outports.length > 0 && (
         <div className="outports">
-          {outports.map(([outportName]) => (
+          {outports.map(([outportName, outportType]) => (
             <Handle
               type="source"
               id={outportName}
@@ -119,7 +117,14 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
               position={Position.Bottom}
               isConnectable={true}
             >
-              {outportName}
+              {isPortsVisible && outportName}
+              {isTypesVisible &&
+                outportType.typeExpr &&
+                outportType.typeExpr.meta && (
+                  <span className="portType">
+                    : {(outportType.typeExpr.meta as src.Meta).Text}
+                  </span>
+                )}
             </Handle>
           ))}
         </div>

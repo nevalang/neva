@@ -34,7 +34,7 @@ h3 {
   justify-content: center;
   align-items: center;
   display: flex;
-  border-width: 2px;
+  border-width: 0px;
   font-weight: 400;
   background-color: transparent;
 }
@@ -42,14 +42,26 @@ h3 {
 .react-flow__node-default {
   padding: 0;
   border-radius: 5px;
-  border-width: 2px;
+  border-width: 1px;
+  border-color: #00A8C6;
   background-color: var(--text);
   box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
+  transition: all .15s ease-out;
+}
+
+.react-flow__node-default:hover {
+  box-shadow: 10px 0 15px rgba(42, 138, 246, 0.3), -10px 0 15px rgba(233, 42, 103, 0.3);
+  border-color:var(--text);
 }
 
 .react-flow__node-default:active {
   transform: scale(1.1);
+  border-color: white;
 }
+
+/* .react-flow__node.selected .react-flow__node-default {
+  animation: glow .5s ease-out infinite;
+} */
 
 .react-flow__handle {
   flex: 1;
@@ -61,9 +73,14 @@ h3 {
   border: none;
   border-radius: 0;
   padding: 5px;
+  font-weight: 300;
 }
 
 /* Custom */
+
+.portType {
+  font-weight: 200;
+}
 
 .inports, .outports {
   display: flex;
@@ -75,21 +92,20 @@ h3 {
 
 .inports > :not(:last-child),
 .outports > :not(:last-child) {
-  border-right: 2px solid var(--background-second);
+  border-right: 1px solid var(--text);
 }
 
 .inports {
-  border-bottom: 2px var(--background-second) solid;
   border-radius:  3px 3px 0px 0px;
 }
 
 .outports {
-  border-top: 2px var(--background-second) solid;
   border-radius: 0px 0px 3px 3px;
 }
 
 .nodeName {
   padding: 15px;
   color: var(--background);
-  font-weight: 700;
+  font-weight: 400;
 }
+

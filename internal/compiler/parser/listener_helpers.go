@@ -17,21 +17,9 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 	typeParams := params.TypeParamList().AllTypeParam()
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
-		paramName := typeParam.IDENTIFIER().GetText()
-		expr := typeParam.TypeExpr()
-		var parsedParamExpr *ts.Expr
-		if expr == nil {
-			parsedParamExpr = &ts.Expr{
-				Inst: &ts.InstExpr{
-					Ref: src.EntityRef{Name: "any"},
-				},
-			}
-		} else {
-			parsedParamExpr = parseTypeExpr(expr)
-		}
 		result = append(result, ts.Param{
-			Name:   paramName,
-			Constr: parsedParamExpr,
+			Name:   typeParam.IDENTIFIER().GetText(),
+			Constr: parseTypeExpr(typeParam.TypeExpr()),
 		})
 	}
 
@@ -40,7 +28,12 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 
 func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 	if expr == nil {
-		return nil
+		return &ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref: src.EntityRef{Name: "any"},
+			},
+			Meta: src.Meta{Text: "any"},
+		}
 	}
 
 	var result *ts.Expr
@@ -54,10 +47,21 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 		panic("expr empty")
 	}
 
+	result.Meta = getTypeExprMeta(expr)
+
+	return result
+}
+
+func getTypeExprMeta(expr generated.ITypeExprContext) src.Meta {
+	var text string
+	if text = expr.GetText(); text == "" {
+		text = "any "
+	}
+
 	start := expr.GetStart()
 	stop := expr.GetStop()
 	meta := src.Meta{
-		Text: expr.GetText(),
+		Text: text,
 		Start: src.Position{
 			Line:   start.GetLine(),
 			Column: start.GetColumn(),
@@ -67,10 +71,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 			Column: stop.GetColumn(),
 		},
 	}
-
-	result.Meta = meta
-
-	return result
+	return meta
 }
 
 func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
@@ -167,13 +168,9 @@ func parseStructExpr(recExpr generated.IRecTypeExprContext) *ts.Expr {
 }
 
 func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
-	if instExpr == nil {
-		return nil
-	}
-
 	parsedRef, err := parseEntityRef(instExpr.EntityRef())
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 
 	result := ts.Expr{
@@ -219,19 +216,8 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 	parsedInports := map[string]src.Port{}
 	for _, port := range in {
 		portName := port.IDENTIFIER().GetText()
-		parsedTypeExpr := parseTypeExpr(port.TypeExpr())
-		if parsedTypeExpr == nil {
-			parsedInports[portName] = src.Port{
-				TypeExpr: ts.Expr{
-					Inst: &ts.InstExpr{
-						Ref: src.EntityRef{Name: "any"},
-					},
-				},
-			}
-			continue
-		}
 		parsedInports[portName] = src.Port{
-			TypeExpr: *parsedTypeExpr,
+			TypeExpr: *parseTypeExpr(port.TypeExpr()),
 		}
 	}
 	return parsedInports
