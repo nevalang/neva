@@ -50,8 +50,8 @@ h3 {
 }
 
 .react-flow__node-default:hover {
-  box-shadow: 10px 0 15px rgba(42, 138, 246, 0.3), -10px 0 15px rgba(233, 42, 103, 0.3);
-  border-color:var(--text);
+  box-shadow: 10px 0 15px rgba(255, 255, 255, 0.3), -10px 0 15px rgba(255, 255, 255, 0.3);
+  border-color: white;
 }
 
 .react-flow__node-default:active {
@@ -76,6 +76,15 @@ h3 {
   font-weight: 300;
 }
 
+.react-flow__edge path {
+  transition: stroke .15s ease-out;
+  stroke: #ADBAC7;
+}
+
+.react-flow__edge-interaction path {
+  stroke-opacity: .5;
+}
+
 /* Custom */
 
 .portType {
@@ -86,8 +95,10 @@ h3 {
   display: flex;
   justify-content: space-around;
   font-weight: 400;
+  min-height: 20px;
   color: var(--background-second);
   background-color: #00A8C6;
+  transition: background-color .15s ease-out;
 }
 
 .inports > :not(:last-child),

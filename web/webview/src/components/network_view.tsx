@@ -14,15 +14,18 @@ import ReactFlow, {
   useEdgesState,
   XYPosition,
   useStore,
+  BaseEdge,
+  EdgeProps,
+  getStraightPath,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import SmartBezierEdge from "@tisoap/react-flow-smart-edge";
+// import SmartBezierEdge from "@tisoap/react-flow-smart-edge";
 import dagre from "dagre";
 import * as src from "../generated/sourcecode";
 import { ComponentViewState } from "../core/file_view_state";
 
 const nodeTypes = { normal: NormalNode };
-const edgeTypes = { smart: SmartBezierEdge };
+const edgeTypes = { smart: NormalEdge };
 
 interface INetViewProps {
   name: string;
@@ -41,7 +44,7 @@ export default function NetView(props: INetViewProps) {
   }, [props.name, props.componentViewState]);
 
   const [nodesState, , onNodesChange] = useNodesState(nodes);
-  const [edgesState, , onEdgesChange] = useEdgesState(edges);
+  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
 
   return (
     <div style={{ width: "100%", height: "100vh" }}>
@@ -55,6 +58,30 @@ export default function NetView(props: INetViewProps) {
         onEdgesChange={onEdgesChange}
         fitView
         nodesConnectable={false}
+        onNodeMouseEnter={(_, node: Node) => {
+          setEdgesState(
+            edgesState.map((edge) =>
+              edge.source === node.id || edge.target === node.id
+                ? {
+                    ...edge,
+                    data: { isHighlighted: true },
+                  }
+                : edge
+            )
+          );
+        }}
+        onNodeMouseLeave={() => {
+          setEdgesState(
+            edgesState.map((edge) =>
+              edge.data.isHighlighted
+                ? {
+                    ...edge,
+                    data: { isHighlighted: false },
+                  }
+                : edge
+            )
+          );
+        }}
       >
         <Controls />
         <MiniMap />
@@ -62,6 +89,19 @@ export default function NetView(props: INetViewProps) {
       </ReactFlow>
     </div>
   );
+}
+
+function NormalEdge(props: EdgeProps<{ isHighlighted: boolean }>) {
+  const [edgePath] = getStraightPath({
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    targetX: props.targetX,
+    targetY: props.targetY,
+  });
+
+  const style = props.data?.isHighlighted ? { stroke: "white" } : {};
+
+  return <BaseEdge {...props} path={edgePath} style={style} />;
 }
 
 function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
@@ -99,7 +139,8 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
                 inportType.typeExpr &&
                 inportType.typeExpr.meta && (
                   <span className="portType">
-                    : {(inportType.typeExpr.meta as src.Meta).Text}
+                    {" "}
+                    {(inportType.typeExpr.meta as src.Meta).Text}
                   </span>
                 )}
             </Handle>
@@ -122,7 +163,8 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
                 outportType.typeExpr &&
                 outportType.typeExpr.meta && (
                   <span className="portType">
-                    : {(outportType.typeExpr.meta as src.Meta).Text}
+                    {" "}
+                    {(outportType.typeExpr.meta as src.Meta).Text}{" "}
                   </span>
                 )}
             </Handle>
@@ -183,8 +225,6 @@ const getReactFlowElements = (
   if (iface) {
     const ioNodes = getIONodes(name, iface, defaultPosition);
 
-    console.log({ ioNodes });
-
     reactflowNodes.push(ioNodes.in);
     dagreGraph.setNode(ioNodes.in.id, {
       width: nodeWidth,
@@ -215,6 +255,7 @@ const getReactFlowElements = (
 
     for (const receiver of receiverSide) {
       const reactflowEdge = {
+        // FIXME senderSide.portAddr and senderSide.constRef are formated like [object Object] (maybe do the same trick)
         id: `${name}-${senderSide.portAddr || senderSide.constRef} -> ${
           receiver.portAddr
         }`,
@@ -224,6 +265,9 @@ const getReactFlowElements = (
         targetHandle: receiver.portAddr?.port,
         markerEnd: { type: MarkerType.Arrow },
         type: "smart",
+        data: {
+          isHighlighted: false,
+        },
       };
 
       reactflowEdges.push(reactflowEdge);
