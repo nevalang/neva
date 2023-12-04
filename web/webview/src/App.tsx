@@ -1,7 +1,5 @@
 import { useMemo } from "react";
-import {
-  ComponentsView,
-} from "./components";
+import { ComponentsView } from "./components/components_view";
 import { useResolveFile } from "./core/vscode_state";
 import { getFileViewState } from "./core/file_view_state";
 
@@ -15,10 +13,7 @@ export default function App() {
   return (
     <div className="app">
       {fileViewState.entities.components.length > 0 && (
-        <div>
-          <h2>Components</h2>
-          <ComponentsView components={fileViewState.entities.components} />
-        </div>
+        <ComponentsView components={fileViewState.entities.components} />
       )}
     </div>
   );
