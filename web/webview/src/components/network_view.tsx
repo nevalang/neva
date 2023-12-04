@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, MouseEvent } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -16,13 +16,13 @@ import ReactFlow, {
   useStore,
   BaseEdge,
   EdgeProps,
-  getStraightPath,
+  getBezierPath,
 } from "reactflow";
 import "reactflow/dist/style.css";
-// import SmartBezierEdge from "@tisoap/react-flow-smart-edge";
 import dagre from "dagre";
 import * as src from "../generated/sourcecode";
 import { ComponentViewState } from "../core/file_view_state";
+import classnames from "classnames";
 
 const nodeTypes = { normal: NormalNode };
 const edgeTypes = { smart: NormalEdge };
@@ -43,8 +43,27 @@ export default function NetView(props: INetViewProps) {
     );
   }, [props.name, props.componentViewState]);
 
-  const [nodesState, , onNodesChange] = useNodesState(nodes);
+  const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
   const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
+
+  const onNodeMouseEnter = useCallback(
+    (_: MouseEvent, hoveredNode: Node) => {
+      const { newEdges, newNodes } = handleNodeMouseEnter(
+        hoveredNode,
+        edgesState,
+        nodesState
+      );
+      setEdgesState(newEdges);
+      setNodesState(newNodes);
+    },
+    [edgesState, nodesState, setEdgesState, setNodesState]
+  );
+
+  const onNodeMouseLeave = useCallback(() => {
+    const { newEdges, newNodes } = handleNodeMouseLeave(edgesState, nodesState);
+    setEdgesState(newEdges);
+    setNodesState(newNodes);
+  }, [edgesState, nodesState, setEdgesState, setNodesState]);
 
   return (
     <div style={{ width: "100%", height: "100vh" }}>
@@ -58,30 +77,8 @@ export default function NetView(props: INetViewProps) {
         onEdgesChange={onEdgesChange}
         fitView
         nodesConnectable={false}
-        onNodeMouseEnter={(_, node: Node) => {
-          setEdgesState(
-            edgesState.map((edge) =>
-              edge.source === node.id || edge.target === node.id
-                ? {
-                    ...edge,
-                    data: { isHighlighted: true },
-                  }
-                : edge
-            )
-          );
-        }}
-        onNodeMouseLeave={() => {
-          setEdgesState(
-            edgesState.map((edge) =>
-              edge.data.isHighlighted
-                ? {
-                    ...edge,
-                    data: { isHighlighted: false },
-                  }
-                : edge
-            )
-          );
-        }}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
       >
         <Controls />
         <MiniMap />
@@ -91,23 +88,85 @@ export default function NetView(props: INetViewProps) {
   );
 }
 
+function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
+  const newEdges = edgesState.map((edge) =>
+    edge.data.isHighlighted ? { ...edge, data: { isHighlighted: false } } : edge
+  );
+  const newNodes = nodesState.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      isDimmed: false,
+      isHighlighted: false,
+    },
+  }));
+  return { newEdges, newNodes };
+}
+
+function handleNodeMouseEnter(
+  hoveredNode: Node,
+  edgesState: Edge[],
+  nodesState: Node[]
+) {
+  const newEdges: Edge[] = [];
+  const relatedNodeIds: Set<string> = new Set();
+  relatedNodeIds.add(hoveredNode.id);
+
+  edgesState.forEach((edge) => {
+    const isEdgeRelated =
+      edge.source === hoveredNode.id || edge.target === hoveredNode.id;
+    const newEdge = isEdgeRelated
+      ? { ...edge, data: { isHighlighted: true } }
+      : edge;
+    newEdges.push(newEdge);
+    if (isEdgeRelated) {
+      const isIncoming = edge.source === hoveredNode.id;
+      const relatedNodeId = isIncoming ? edge.target : edge.source;
+      relatedNodeIds.add(relatedNodeId);
+    }
+  });
+
+  const newNodes = nodesState.map((node) =>
+    relatedNodeIds.has(node.id)
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            isHighlighted: true,
+          },
+        }
+      : { ...node, data: { ...node.data, isDimmed: true } }
+  );
+
+  return { newEdges, newNodes };
+}
+
 function NormalEdge(props: EdgeProps<{ isHighlighted: boolean }>) {
-  const [edgePath] = getStraightPath({
+  const [edgePath] = getBezierPath({
     sourceX: props.sourceX,
     sourceY: props.sourceY,
     targetX: props.targetX,
     targetY: props.targetY,
   });
 
-  const style = props.data?.isHighlighted ? { stroke: "white" } : {};
+  const style = props.data?.isHighlighted
+    ? { strokeOpacity: 1, stroke: "white" }
+    : { strokeOpacity: 0.75 };
 
   return <BaseEdge {...props} path={edgePath} style={style} />;
 }
 
-function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
+function NormalNode(
+  props: NodeProps<{
+    ports: src.Interface;
+    label: string;
+    isHighlighted: boolean;
+    isDimmed: boolean;
+  }>
+) {
   const { io } = props.data.ports;
-  const isPortsVisible = useStore((s) => s.transform[2] >= 0.51);
-  const isTypesVisible = useStore((s) => s.transform[2] >= 1);
+  const arePortsVisible = useStore((s) => s.transform[2] >= 0.6);
+  const areTypesVisible = useStore((s) => s.transform[2] >= 1);
 
   const { inports, outports } = useMemo(() => {
     const result = { inports: [], outports: [] };
@@ -120,10 +179,17 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
     };
   }, [io]);
 
+  const cn = classnames("react-flow__node-default", {
+    highlighted: props.data.isHighlighted,
+    dimmed: props.data.isDimmed,
+  });
+
   return (
-    <div className="react-flow__node-default">
+    <div className={cn}>
       {inports.length > 0 && (
-        <div className="inports">
+        <div
+          className={classnames("ports", "in", { hidden: !arePortsVisible })}
+        >
           {inports.map(([inportName, inportType]) => (
             <Handle
               content="asd"
@@ -133,14 +199,13 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
               position={Position.Top}
               isConnectable={true}
             >
-              {/* {inportName} */}
-              {isPortsVisible && inportName}
-              {isTypesVisible &&
+              {inportName}
+              {areTypesVisible &&
                 inportType.typeExpr &&
                 inportType.typeExpr.meta && (
                   <span className="portType">
                     {" "}
-                    {(inportType.typeExpr.meta as src.Meta).Text}
+                    {(inportType.typeExpr.meta as src.Meta).text}
                   </span>
                 )}
             </Handle>
@@ -149,7 +214,9 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
       )}
       <div className="nodeName">{props.data.label}</div>
       {outports.length > 0 && (
-        <div className="outports">
+        <div
+          className={classnames("ports", "out", { hidden: !arePortsVisible })}
+        >
           {outports.map(([outportName, outportType]) => (
             <Handle
               type="source"
@@ -158,13 +225,13 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
               position={Position.Bottom}
               isConnectable={true}
             >
-              {isPortsVisible && outportName}
-              {isTypesVisible &&
+              {outportName}
+              {areTypesVisible &&
                 outportType.typeExpr &&
                 outportType.typeExpr.meta && (
                   <span className="portType">
                     {" "}
-                    {(outportType.typeExpr.meta as src.Meta).Text}{" "}
+                    {(outportType.typeExpr.meta as src.Meta).text}{" "}
                   </span>
                 )}
             </Handle>
@@ -176,7 +243,7 @@ function NormalNode(props: NodeProps<{ ports: src.Interface; label: string }>) {
 }
 
 const getReactFlowElements = (
-  name: string,
+  entityName: string,
   componentViewState: ComponentViewState,
   dagreGraph: dagre.graphlib.Graph
 ) => {
@@ -190,30 +257,17 @@ const getReactFlowElements = (
   const nodeWidth = 342.5;
   const nodeHeight = 70;
 
-  // const containerNode = {
-  //   id: `${name}-container`,
-  //   type: "group",
-  //   data: { label: name },
-  //   position: defaultPosition,
-  // };
-
   const reactflowNodes: Node[] = [];
-  // dagreGraph.setNode(containerNode.id, {
-  //   width: 1000,
-  //   height: 1000,
-  // });
 
   for (const nodeView of nodes) {
     const reactflowNode = {
-      id: `${name}-${nodeView.name}`,
+      id: `${entityName}-${nodeView.name}`,
       type: "normal",
       position: defaultPosition,
       data: {
         ports: nodeView.interface,
         label: nodeView.name,
       },
-      // parentNode: `${name}-container`,
-      // extent: "parent" as const,
     };
     reactflowNodes.push(reactflowNode);
     dagreGraph.setNode(reactflowNode.id, {
@@ -223,7 +277,7 @@ const getReactFlowElements = (
   }
 
   if (iface) {
-    const ioNodes = getIONodes(name, iface, defaultPosition);
+    const ioNodes = getIONodes(entityName, iface, defaultPosition);
 
     reactflowNodes.push(ioNodes.in);
     dagreGraph.setNode(ioNodes.in.id, {
@@ -254,14 +308,15 @@ const getReactFlowElements = (
       : "out";
 
     for (const receiver of receiverSide) {
+      const senderPart = senderSide.portAddr
+        ? senderSide.portAddr.meta?.text
+        : senderSide.constRef?.meta?.text;
+
       const reactflowEdge = {
-        // FIXME senderSide.portAddr and senderSide.constRef are formated like [object Object] (maybe do the same trick)
-        id: `${name}-${senderSide.portAddr || senderSide.constRef} -> ${
-          receiver.portAddr
-        }`,
-        source: `${name}-${senderNode}`!,
+        id: `${entityName}-${senderPart} -> ${receiver.portAddr?.meta?.text}`,
+        source: `${entityName}-${senderNode}`,
         sourceHandle: senderOutport,
-        target: `${name}-${receiver.portAddr?.node!}`, // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
+        target: `${entityName}-${receiver.portAddr?.node!}`, // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
         targetHandle: receiver.portAddr?.port,
         markerEnd: { type: MarkerType.Arrow },
         type: "smart",
@@ -289,19 +344,6 @@ const getReactFlowElements = (
       x: nodeWithPosition.x - nodeWidth / 2,
       y: nodeWithPosition.y - nodeHeight / 2,
     };
-
-    // if (node.parentNode) {
-    //   const parentNodeWithPosition = dagreGraph.node(node.parentNode);
-    //   node.position = {
-    //     x: nodeWithPosition.x - parentNodeWithPosition.x,
-    //     y: nodeWithPosition.y - parentNodeWithPosition.y,
-    //   };
-    // } else {
-    //   node.position = {
-    //     x: nodeWithPosition.x - nodeWidth / 2,
-    //     y: nodeWithPosition.y - nodeHeight / 2,
-    //   };
-    // }
 
     return node;
   });

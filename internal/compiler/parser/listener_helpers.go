@@ -66,7 +66,7 @@ func getTypeExprMeta(expr generated.ITypeExprContext) src.Meta {
 			Line:   start.GetLine(),
 			Column: start.GetColumn(),
 		},
-		End: src.Position{
+		Stop: src.Position{
 			Line:   stop.GetLine(),
 			Column: stop.GetColumn(),
 		},
@@ -194,21 +194,35 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 	return &result
 }
 
-func parseEntityRef(actx generated.IEntityRefContext) (src.EntityRef, error) {
-	parts := strings.Split(actx.GetText(), ".")
+func parseEntityRef(expr generated.IEntityRefContext) (src.EntityRef, error) {
+	parts := strings.Split(expr.GetText(), ".")
 	if len(parts) > 2 {
 		panic("")
+	}
+
+	meta := src.Meta{
+		Text: expr.GetText(),
+		Start: src.Position{
+			Line:   expr.GetStart().GetLine(),
+			Column: expr.GetStart().GetColumn(),
+		},
+		Stop: src.Position{
+			Line:   expr.GetStart().GetLine(),
+			Column: expr.GetStop().GetColumn(),
+		},
 	}
 
 	if len(parts) == 1 {
 		return src.EntityRef{
 			Name: parts[0],
+			Meta: meta,
 		}, nil
 	}
 
 	return src.EntityRef{
 		Pkg:  parts[0],
 		Name: parts[1],
+		Meta: meta,
 	}, nil
 }
 
@@ -335,11 +349,23 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 	return result
 }
 
-func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
-	ioNodeAddr := portAddr.IoNodePortAddr()
-	senderNormalPortAddr := portAddr.NormalNodePortAddr()
+func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
+	ioNodeAddr := expr.IoNodePortAddr()
+	senderNormalPortAddr := expr.NormalNodePortAddr()
 	if ioNodeAddr == nil && senderNormalPortAddr == nil {
 		panic("ioNodeAddr == nil && senderNormalPortAddr == nil")
+	}
+
+	meta := src.Meta{
+		Text: expr.GetText(),
+		Start: src.Position{
+			Line:   expr.GetStart().GetLine(),
+			Column: expr.GetStart().GetColumn(),
+		},
+		Stop: src.Position{
+			Line:   expr.GetStart().GetLine(),
+			Column: expr.GetStop().GetColumn(),
+		},
 	}
 
 	if ioNodeAddr != nil {
@@ -348,6 +374,7 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 		return src.PortAddr{
 			Node: dir,
 			Port: portName,
+			Meta: meta,
 		}
 	}
 
@@ -357,6 +384,7 @@ func parsePortAddr(portAddr generated.IPortAddrContext) src.PortAddr {
 	return src.PortAddr{
 		Node: nodeAndPort[0].GetText(),
 		Port: nodeAndPort[1].GetText(),
+		Meta: meta,
 	}
 }
 

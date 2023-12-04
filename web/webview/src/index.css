@@ -9,7 +9,6 @@
   --dim: #769390;
   --text: #ADBAC7;
   --success: #347D39;
-  --pink: #ff0072;
 }
 
 body {
@@ -49,19 +48,44 @@ h3 {
   transition: all .15s ease-out;
 }
 
-.react-flow__node-default:hover {
-  box-shadow: 10px 0 15px rgba(255, 255, 255, 0.3), -10px 0 15px rgba(255, 255, 255, 0.3);
+.react-flow__node-default:hover,
+.react-flow__node-default.highlighted {
   border-color: white;
+}
+
+.react-flow__node-default.dimmed {
+  opacity: 0.5;
 }
 
 .react-flow__node-default:active {
+  box-shadow: 0px 0 10px #fff;
   transform: scale(1.1);
   border-color: white;
+  background-image: linear-gradient(
+    45deg,
+    hsl(213deg 89% 64%) 0%,
+    hsl(228deg 85% 63%) 9%,
+    hsl(242deg 81% 63%) 18%,
+    hsl(256deg 77% 62%) 27%,
+    hsl(271deg 73% 61%) 36%,
+    hsl(285deg 69% 60%) 45%,
+    hsl(299deg 65% 59%) 55%,
+    hsl(313deg 61% 58%) 64%,
+    hsl(328deg 56% 57%) 73%,
+    hsl(342deg 53% 56%) 82%,
+    hsl(356deg 48% 55%) 91%,
+    hsl(10deg 44% 54%) 100%
+  );
 }
 
-/* .react-flow__node.selected .react-flow__node-default {
-  animation: glow .5s ease-out infinite;
-} */
+.react-flow__node-default:active .ports, 
+.react-flow__node-default:active .nodeName {
+  background: transparent;
+  color: white;
+}
+.react-flow__node-default:active .ports > :not(:last-child) {
+  border-color: transparent;
+}
 
 .react-flow__handle {
   flex: 1;
@@ -87,36 +111,36 @@ h3 {
 
 /* Custom */
 
-.portType {
-  font-weight: 200;
-}
-
-.inports, .outports {
-  display: flex;
-  justify-content: space-around;
-  font-weight: 400;
-  min-height: 20px;
-  color: var(--background-second);
-  background-color: #00A8C6;
-  transition: background-color .15s ease-out;
-}
-
-.inports > :not(:last-child),
-.outports > :not(:last-child) {
-  border-right: 1px solid var(--text);
-}
-
-.inports {
-  border-radius:  3px 3px 0px 0px;
-}
-
-.outports {
-  border-radius: 0px 0px 3px 3px;
-}
-
 .nodeName {
   padding: 15px;
   color: var(--background);
   font-weight: 400;
+  transition: color .15s ease-out;
 }
+
+.ports {
+  display: flex;
+  justify-content: space-around;
+  font-weight: 400;
+  color: var(--background-second);
+  background-color: #00A8C6;
+  transition: all .15s ease-out;
+}
+.ports.in {
+  border-radius:  3px 3px 0px 0px;
+}
+.ports.out {
+  border-radius: 0px 0px 3px 3px;
+}
+.ports > :not(:last-child) {
+  border-right: 1px solid var(--text);
+}
+.ports.hidden {
+  color: transparent;
+}
+
+.portType {
+  font-weight: 200;
+}
+
 

@@ -114,6 +114,7 @@ type Node struct {
 type EntityRef struct {
 	Pkg  string `json:"pkg,omitempty"`
 	Name string `json:"name,omitempty"`
+	Meta Meta   `json:"meta,omitempty"`
 }
 
 func (e EntityRef) String() string {
@@ -169,6 +170,7 @@ type PortAddr struct {
 	Node string `json:"node,omitempty"`
 	Port string `json:"port,omitempty"`
 	Idx  *uint8 `json:"idx,omitempty"`
+	Meta Meta   `json:"meta,omitempty"`
 }
 
 func (p PortAddr) String() string {
@@ -180,12 +182,12 @@ func (p PortAddr) String() string {
 
 // Meta keeps info about original text related to the structured object
 type Meta struct {
-	Text  string
-	Start Position
-	End   Position
+	Text  string   `json:"text,omitempty"`
+	Start Position `json:"start,omitempty"`
+	Stop  Position `json:"stop,omitempty"`
 }
 
 type Position struct {
-	Line   int
-	Column int
+	Line   int `json:"line,omitempty"`
+	Column int `json:"column,omitempty"`
 }
