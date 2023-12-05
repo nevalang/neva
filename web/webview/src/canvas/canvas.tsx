@@ -1,4 +1,4 @@
-import { useCallback, useMemo, MouseEvent } from "react";
+import { useCallback, useMemo, MouseEvent, useEffect } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -30,6 +30,10 @@ export function Canvas(props: ICanvasProps) {
 
   const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
   const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
+  useEffect(() => {
+    setNodesState(nodes);
+    setEdgesState(edges);
+  }, [nodes, edges, setNodesState, setEdgesState]);
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {

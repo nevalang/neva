@@ -11,6 +11,7 @@ export function useResolveFile(): ResolveFileResponce | undefined {
 
   useEffect(() => {
     const listener = (event: { data: ResolveFileResponce }) => {
+      // console.log("HERE!!!", event);
       setState(event.data!);
       vscodeApi.setState(event.data!);
     };
