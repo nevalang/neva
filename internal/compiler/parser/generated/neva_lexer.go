@@ -164,7 +164,7 @@ func nevalexerLexerInit() {
 		229, 231, 7, 3, 0, 0, 230, 229, 1, 0, 0, 0, 231, 232, 1, 0, 0, 0, 232,
 		230, 1, 0, 0, 0, 232, 233, 1, 0, 0, 0, 233, 234, 1, 0, 0, 0, 234, 235,
 		6, 35, 0, 0, 235, 72, 1, 0, 0, 0, 10, 0, 181, 191, 193, 201, 206, 213,
-		219, 225, 232, 1, 6, 0, 0,
+		219, 225, 232, 1, 0, 1, 0,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)

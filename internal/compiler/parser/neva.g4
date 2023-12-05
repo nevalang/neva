@@ -100,4 +100,4 @@ INT: [0-9]+; // one or more integer digits
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
 NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix
-WS: [ \t]+ -> skip; // ignore whitespace
+WS: [ \t]+ -> channel(HIDDEN); // ignore whitespace

@@ -110,7 +110,6 @@ function handleNodeMouseEnter(
 ) {
   const newEdges: Edge[] = [];
   const relatedNodeIds: Set<string> = new Set();
-  relatedNodeIds.add(hoveredNode.id);
 
   edgesState.forEach((edge) => {
     const isEdgeRelated =

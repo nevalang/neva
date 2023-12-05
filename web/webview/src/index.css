@@ -48,13 +48,17 @@ h3 {
   transition: all .15s ease-out;
 }
 
-.react-flow__node-default:hover,
 .react-flow__node-default.highlighted {
-  border-color: white;
+  opacity: 0.5;
 }
 
 .react-flow__node-default.dimmed {
-  opacity: 0.5;
+  opacity: 0.1;
+}
+
+.react-flow__node-default:hover {
+  opacity: 1;
+  border-color: white;
 }
 
 .react-flow__node-default:active {
