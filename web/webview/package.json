@@ -13,7 +13,6 @@
   "dependencies": {
     "@tisoap/react-flow-smart-edge": "^3.0.0",
     "@types/vscode-webview": "^1.57.0",
-    "@vscode/codicons": "^0.0.33",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "classnames": "^2.3.2",
     "dagre": "^0.8.5",
