@@ -17,10 +17,39 @@ export function buildReactFlowGraph(fileViewState: FileViewState) {
   // TODO
   // fileViewState.entities.types
   // fileViewState.entities.constants
-  // fileViewState.entities.interfaces
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+
+  for (const constEntity of fileViewState.entities.types) {
+    const faceComponent: ComponentViewState= {
+      nodes: [{ name: constEntity.name, interface: {}, node: {
+        
+      } }],
+      net: [],
+    };
+    buildAndInsertComponentSubgraph(
+      constEntity.name,
+      faceComponent,
+      nodes,
+      edges,
+      dagreGraph
+    );
+  }
+
+  for (const iface of fileViewState.entities.interfaces) {
+    const faceComponent = {
+      nodes: [{ name: iface.name, interface: iface.entity, node: {} }],
+      net: [],
+    };
+    buildAndInsertComponentSubgraph(
+      iface.name,
+      faceComponent,
+      nodes,
+      edges,
+      dagreGraph
+    );
+  }
 
   for (const component of fileViewState.entities.components) {
     buildAndInsertComponentSubgraph(

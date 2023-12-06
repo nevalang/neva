@@ -46,27 +46,6 @@ function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
   return webview.asWebviewUri((Uri as any).joinPath(extensionUri, ...pathList));
 }
 
-// deliverMessageToWebview tries to deliver a given message to the webview.
-// On each try it increases the timeout to give webview more time to respond.
-export async function deliverMessageToWebview<T>(
-  webview: Webview,
-  msg: T,
-  tries: number
-) {
-  const inner = async (step: number): Promise<boolean> => {
-    if (step > tries) {
-      return false;
-    }
-    if (await webview.postMessage(msg)) {
-      return true;
-    }
-    await sleep(step * 1000);
-    return inner(step + 1);
-  };
-
-  await inner(1); // it's important to count from 1 and not 1 since we use step as a multiplier
-}
-
 const sleep = async (ms: number): Promise<any> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);

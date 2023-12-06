@@ -44,5 +44,12 @@ export function setupLsp(context: ExtensionContext): LanguageClient {
 
   client.setTrace(Trace.Verbose);
 
+  client
+    .start()
+    .then(() =>
+      console.info("language-server started, client connection established")
+    )
+    .catch(console.error);
+
   return client;
 }

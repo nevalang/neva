@@ -6,7 +6,7 @@ import {
   Uri,
   workspace,
 } from "vscode";
-import { deliverMessageToWebview, getWebviewContent } from "./webview";
+import { getWebviewContent } from "./webview";
 import { LanguageClient } from "vscode-languageclient/node";
 
 export function getPreviewCommand(
@@ -31,6 +31,7 @@ export function getPreviewCommand(
 
     console.info("existing panel not found, trying to create new one");
 
+    // Render empty webview
     panel = window.createWebviewPanel(
       "neva",
       "Neva: Preview",
@@ -43,25 +44,30 @@ export function getPreviewCommand(
         ],
       }
     );
-
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
-
     panel.onDidDispose(() => (panel = undefined), null, context.subscriptions);
-
     console.info("new panel has been created");
 
+    // Request index object from LSP server
     let resp: unknown;
     try {
       resp = await client.sendRequest("resolve_file", {
         document: window.activeTextEditor.document,
         workspaceUri: workspace.workspaceFolders![0].uri,
       });
-      deliverMessageToWebview(panel!.webview, resp, 3);
     } catch (e) {
       console.error(e);
       return;
     }
+    console.info("got response from LSP server: ", resp);
 
-    console.info("message sent to webview", resp);
+    panel.webview.onDidReceiveMessage((msg) => {
+      if (msg === "ready") {
+        panel!.webview.postMessage(resp);
+        console.info("webview ready, message sent: ", msg);
+        return;
+      }
+      console.info("unknown message from webview: ", msg);
+    });
   };
 }

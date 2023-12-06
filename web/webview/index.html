@@ -11,9 +11,21 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nevalang UI</title>
+    <script>
+      console.info("=== HTML: hello!");
+      window.addEventListener("message", (event) => {
+        console.info("=== HTML: new message from vscode: ", event);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      console.info("=== BODY: hello!");
+      window.addEventListener("message", (event) => {
+        console.info("=== BODY: new message from vscode: ", event);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

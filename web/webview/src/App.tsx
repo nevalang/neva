@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Canvas } from "./canvas/canvas";
+import { Canvas } from "./components/canvas";
 import { getFileViewState } from "./core/file_view_state";
 import { ResolveFileResponce } from "./generated/lsp_api";
 
@@ -10,13 +10,13 @@ export default function App() {
   const [state, setState] = useState(persistentState);
 
   useEffect(() => {
-    window.addEventListener(
-      "message",
-      (event: { data: ResolveFileResponce }) => {
-        vscodeApi.setState(event.data!);
-        setState(event.data!);
-      }
-    );
+    const listener = (event: { data: ResolveFileResponce }) => {
+      vscodeApi.setState(event.data!);
+      setState(event.data!);
+    };
+    window.addEventListener("message", listener);
+    vscodeApi.postMessage("ready");
+    return () => window.removeEventListener("message", listener);
   }, []);
 
   const fileViewState = useMemo(() => getFileViewState(state), [state]);
