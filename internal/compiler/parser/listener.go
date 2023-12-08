@@ -45,6 +45,17 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()).Params,
 			BodyExpr: parseTypeExpr(actx.TypeExpr()),
+			Meta: src.Meta{
+				Text: actx.GetText(),
+				Start: src.Position{
+					Line:   actx.GetStart().GetLine(),
+					Column: actx.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   actx.GetStop().GetLine(),
+					Column: actx.GetStop().GetColumn(),
+				},
+			},
 		},
 	}
 	s.file.Entities[actx.IDENTIFIER().GetText()] = result
@@ -57,13 +68,26 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
 
-	msg := parseConstVal(constVal)
-	msg.TypeExpr = *typeExpr
+	parsedMsg := parseConstVal(constVal)
+	parsedMsg.TypeExpr = *typeExpr
 
 	s.file.Entities[name] = src.Entity{
 		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.ConstEntity,
-		Const:    src.Const{Value: &msg},
+		Const: src.Const{
+			Value: &parsedMsg,
+			Meta: src.Meta{
+				Text: actx.GetText(),
+				Start: src.Position{
+					Line:   actx.GetStart().GetLine(),
+					Column: actx.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   actx.GetStop().GetLine(),
+					Column: actx.GetStop().GetColumn(),
+				},
+			},
+		},
 	}
 }
 

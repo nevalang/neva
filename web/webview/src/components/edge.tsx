@@ -1,6 +1,10 @@
 import { BaseEdge, EdgeProps, getBezierPath } from "reactflow";
 
-export function NormalEdge(props: EdgeProps<{ isHighlighted: boolean }>) {
+interface INormalEdgeProps {
+  isHighlighted: boolean;
+}
+
+export function NormalEdge(props: EdgeProps<INormalEdgeProps>) {
   const [edgePath] = getBezierPath({
     sourceX: props.sourceX,
     sourceY: props.sourceY,

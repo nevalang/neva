@@ -410,7 +410,19 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 }
 
 func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funlen
-	val := src.Msg{}
+	val := src.Msg{
+		Meta: src.Meta{
+			Text: constVal.GetText(),
+			Start: src.Position{
+				Line:   constVal.GetStart().GetLine(),
+				Column: constVal.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   constVal.GetStop().GetLine(),
+				Column: constVal.GetStop().GetColumn(),
+			},
+		},
+	}
 
 	//nolint:nosnakecase
 	switch {

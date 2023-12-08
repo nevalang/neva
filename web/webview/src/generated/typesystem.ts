@@ -21,6 +21,10 @@ export interface Def {
    * Only base types can have true.
    */
   canBeUsedForRecursiveDefinitions?: boolean;
+  /**
+   * Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
+   */
+  meta?: ExprMeta;
 }
 export interface Param {
   name?: string; // Must be unique among other type's parameters

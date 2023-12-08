@@ -12,6 +12,8 @@ type Def struct {
 	BodyExpr *Expr `json:"bodyExpr,omitempty"`
 	// Only base types can have true.
 	CanBeUsedForRecursiveDefinitions bool `json:"canBeUsedForRecursiveDefinitions,omitempty"`
+	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
+	Meta ExprMeta `json:"meta,omitempty"`
 }
 
 func (def Def) String() string {

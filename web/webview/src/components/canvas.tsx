@@ -15,6 +15,8 @@ import { FileViewState } from "../core/file_view_state";
 import { NormalEdge } from "./edge";
 import { buildReactFlowGraph } from "./helpers";
 import { InterfaceNode } from "./nodes/interface_node";
+import { TypeNode } from "./nodes/type_node";
+import { ConstNode } from "./nodes/const_node";
 
 interface ICanvasProps {
   fileViewState: FileViewState;
@@ -22,10 +24,10 @@ interface ICanvasProps {
 
 const edgeTypes = { normal: NormalEdge };
 const nodeTypes = {
-  // type: NormalNode,
-  interface: InterfaceNode,
-  // const: NormalNode,
+  type: TypeNode,
+  const: ConstNode,
   component: InterfaceNode, // component and interface nodes are the same at presentation level
+  interface: InterfaceNode,
 };
 
 export function Canvas(props: ICanvasProps) {

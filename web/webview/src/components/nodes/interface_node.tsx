@@ -3,9 +3,12 @@ import classnames from "classnames";
 import { Handle, NodeProps, HandleType, Position, useStore } from "reactflow";
 import * as src from "../../generated/sourcecode";
 
-export function InterfaceNode(
-  props: NodeProps<{ title: string; interface: src.Interface }>
-) {
+export interface IInterfaceNodeProps {
+  title: string;
+  interface: src.Interface;
+}
+
+export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
   const { inports, outports } = useMemo(() => {
     const result = { inports: [], outports: [] };
     if (!props.data.interface.io) {
@@ -19,8 +22,6 @@ export function InterfaceNode(
 
   const isZoomMiddle = useStore((s) => s.transform[2] >= 0.6);
   const isZoomClose = useStore((s) => s.transform[2] >= 1);
-  const hasTypeParams =
-    props.data.interface.typeParams?.meta?.text !== undefined;
 
   return (
     <div className={"react-flow__node-default"}>
@@ -29,23 +30,17 @@ export function InterfaceNode(
         position={Position.Top}
         type="target"
         isVisible={isZoomMiddle}
+        areTypesVisible={isZoomClose}
       />
       <div className="nodeBody">
         <div className="nodeName">{props.data.title}</div>
-        {hasTypeParams && (
-          <div
-            className="typeParams"
-            style={isZoomClose ? {} : { color: "transparent" }}
-          >
-            {props.data.interface.typeParams!.meta!.text}
-          </div>
-        )}
       </div>
       <Ports
         ports={outports}
         position={Position.Bottom}
         type="source"
         isVisible={isZoomMiddle}
+        areTypesVisible={isZoomClose}
       />
     </div>
   );
@@ -56,9 +51,8 @@ function Ports(props: {
   position: Position;
   type: HandleType;
   isVisible: boolean;
+  areTypesVisible: boolean;
 }) {
-  const isZoomClose = useStore((s) => s.transform[2] >= 1);
-
   if (!props.ports) {
     return null;
   }
@@ -74,12 +68,14 @@ function Ports(props: {
           key={portName}
         >
           {portName}
-          {isZoomClose && portType.typeExpr && portType.typeExpr.meta && (
-            <span className="portType">
-              {" "}
-              {(portType.typeExpr.meta as src.Meta).text}
-            </span>
-          )}
+          {props.areTypesVisible &&
+            portType.typeExpr &&
+            portType.typeExpr.meta && (
+              <span className="portType">
+                {" "}
+                {(portType.typeExpr.meta as src.Meta).text}
+              </span>
+            )}
         </Handle>
       ))}
     </div>

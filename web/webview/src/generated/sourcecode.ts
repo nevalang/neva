@@ -67,6 +67,7 @@ export interface EntityRef {
 export interface Const {
   ref?: EntityRef;
   value?: Msg;
+  meta?: Meta;
 }
 export interface Msg {
   typeExpr?: ts.Expr;
@@ -76,6 +77,7 @@ export interface Msg {
   str?: string;
   vec?: Const[]; // Vecs are used for both vectors and arrays
   map?: { [key: string]: Const}; // Maps are used for both maps and structures
+  meta?: Meta;
 }
 export interface IO {
   in?: { [key: string]: Port};

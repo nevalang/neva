@@ -7,6 +7,9 @@ import {
   NodesViewState,
 } from "../core/file_view_state";
 import dagre from "dagre";
+import { ITypeNodeProps } from "./nodes/type_node";
+import { IConstNodeProps } from "./nodes/const_node";
+import { IInterfaceNodeProps } from "./nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 const nodeWidth = 342.5;
@@ -183,8 +186,8 @@ function buildAndInsertTypeDefNode(
     data: {
       kind: src.TypeEntity,
       title: entityName,
-      typeDef: typeDef,
-    },
+      type: typeDef,
+    } as ITypeNodeProps,
   };
   reactflowNodes.push(reactflowNode);
   dagreGraph.setNode(reactflowNode.id, {
@@ -206,8 +209,8 @@ function buildAndInsertConstNode(
     data: {
       kind: src.ConstEntity,
       title: entityName,
-      constant: constant,
-    },
+      const: constant,
+    } as IConstNodeProps,
   };
   reactflowNodes.push(reactflowNode);
   dagreGraph.setNode(reactflowNode.id, {
@@ -230,7 +233,7 @@ function buildAndInsertInterfaceNode(
       kind: src.InterfaceEntity,
       title: entityName,
       interface: iface,
-    },
+    } as IInterfaceNodeProps,
   };
   reactflowNodes.push(reactflowNode);
   dagreGraph.setNode(reactflowNode.id, {
@@ -253,7 +256,7 @@ function buildAndInsertComponentNode(
       kind: src.ComponentEntity,
       title: nodeView.name,
       interface: nodeView.interface,
-    },
+    } as IInterfaceNodeProps,
   };
   reactflowNodes.push(reactflowNode);
   dagreGraph.setNode(reactflowNode.id, {
@@ -281,7 +284,7 @@ function getComponentIONodes(
       } as src.Interface,
       title: "in",
       kind: src.ComponentEntity,
-    },
+    } as IInterfaceNodeProps,
   };
   for (const portName in iface!.io?.in) {
     const inport = iface!.io?.in[portName];
@@ -297,7 +300,7 @@ function getComponentIONodes(
       } as src.Interface,
       title: "out",
       kind: src.ComponentEntity,
-    },
+    } as IInterfaceNodeProps,
   };
   for (const portName in iface!.io?.out) {
     const outport = iface!.io?.out[portName];

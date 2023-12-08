@@ -126,7 +126,7 @@ h3 {
   position: relative;
 }
 
-.typeParams {
+.nodeType {
   padding-top: 5px;
   font-weight: 200;
   transition: color 0.15s ease-out;
