@@ -82,14 +82,14 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		iface = entity.Interface
 	}
 
-	if len(node.TypeArgs) != len(iface.TypeParams) {
+	if len(node.TypeArgs) != len(iface.TypeParams.Params) {
 		return src.Node{}, src.Interface{}, fmt.Errorf(
 			"%w: want %v, got %v",
 			ErrNodeTypeArgsCountMismatch, iface.TypeParams, node.TypeArgs,
 		)
 	}
 
-	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, iface.TypeParams, scope)
+	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, iface.TypeParams.Params, scope)
 	if err != nil {
 		return src.Node{}, src.Interface{}, fmt.Errorf("resolve args: %w", err)
 	}
@@ -256,7 +256,7 @@ func (a Analyzer) getNodeInportType(
 
 	typ, err := a.getResolvedPortType(
 		entity.Component.Interface.IO.In,
-		entity.Component.Interface.TypeParams,
+		entity.Component.Interface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,
@@ -359,7 +359,7 @@ func (a Analyzer) getNodeOutportType(
 
 	typ, err := a.getResolvedPortType(
 		nodeIface.IO.Out,
-		nodeIface.TypeParams,
+		nodeIface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,

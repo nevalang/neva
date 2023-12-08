@@ -1,6 +1,11 @@
 import { Node, Edge, MarkerType, XYPosition, Position } from "reactflow";
 import * as src from "../generated/sourcecode";
-import { ComponentViewState, FileViewState } from "../core/file_view_state";
+import * as ts from "../generated/typesystem";
+import {
+  ComponentViewState,
+  FileViewState,
+  NodesViewState,
+} from "../core/file_view_state";
 import dagre from "dagre";
 
 const defaultPosition = { x: 0, y: 0 };
@@ -14,41 +19,19 @@ export function buildReactFlowGraph(fileViewState: FileViewState) {
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction });
 
-  // TODO
-  // fileViewState.entities.types
-  // fileViewState.entities.constants
-
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  for (const constEntity of fileViewState.entities.types) {
-    const faceComponent: ComponentViewState= {
-      nodes: [{ name: constEntity.name, interface: {}, node: {
-        
-      } }],
-      net: [],
-    };
-    buildAndInsertComponentSubgraph(
-      constEntity.name,
-      faceComponent,
-      nodes,
-      edges,
-      dagreGraph
-    );
+  for (const typeDef of fileViewState.entities.types) {
+    buildAndInsertTypeDefNode(typeDef.name, typeDef.entity, nodes, dagreGraph);
+  }
+
+  for (const constant of fileViewState.entities.constants) {
+    buildAndInsertConstNode(constant.name, constant.entity, nodes, dagreGraph);
   }
 
   for (const iface of fileViewState.entities.interfaces) {
-    const faceComponent = {
-      nodes: [{ name: iface.name, interface: iface.entity, node: {} }],
-      net: [],
-    };
-    buildAndInsertComponentSubgraph(
-      iface.name,
-      faceComponent,
-      nodes,
-      edges,
-      dagreGraph
-    );
+    buildAndInsertInterfaceNode(iface.name, iface.entity, nodes, dagreGraph);
   }
 
   for (const component of fileViewState.entities.components) {
@@ -84,46 +67,34 @@ export function buildReactFlowGraph(fileViewState: FileViewState) {
 
 function buildAndInsertComponentSubgraph(
   entityName: string,
-  componentViewState: ComponentViewState,
+  component: ComponentViewState,
   reactflowNodes: Node[],
   reactflowEdges: Edge[],
   dagreGraph: dagre.graphlib.Graph
 ) {
-  const { nodes, interface: iface, net } = componentViewState;
-
-  for (const nodeView of nodes) {
-    const reactflowNode = {
-      id: `${entityName}-${nodeView.name}`,
-      type: "normal",
-      position: defaultPosition,
-      data: {
-        ports: nodeView.interface,
-        label: nodeView.name,
-      },
-    };
-    reactflowNodes.push(reactflowNode);
-    dagreGraph.setNode(reactflowNode.id, {
-      width: nodeWidth,
-      height: nodeHeight,
-    });
+  if (component.interface) {
+    buildAndInsertInterfaceNodes(
+      component.interface,
+      entityName,
+      reactflowNodes,
+      dagreGraph
+    );
   }
+  buildAndInsertComponentNodes(
+    entityName,
+    component.nodes,
+    reactflowNodes,
+    dagreGraph
+  );
+  buildAndInsertNetEdges(component.net, entityName, reactflowEdges, dagreGraph);
+}
 
-  if (iface) {
-    const ioNodes = getIONodes(entityName, iface, defaultPosition);
-
-    reactflowNodes.push(ioNodes.in);
-    dagreGraph.setNode(ioNodes.in.id, {
-      width: nodeWidth,
-      height: nodeHeight,
-    });
-
-    reactflowNodes.push(ioNodes.out);
-    dagreGraph.setNode(ioNodes.out.id, {
-      width: nodeWidth,
-      height: nodeHeight,
-    });
-  }
-
+function buildAndInsertNetEdges(
+  net: src.Connection[],
+  entityName: string,
+  reactflowEdges: Edge[],
+  dagreGraph: dagre.graphlib.Graph
+) {
   for (const connection of net) {
     const { senderSide, receiverSide } = connection;
     if (!senderSide || !receiverSide) {
@@ -160,44 +131,177 @@ function buildAndInsertComponentSubgraph(
       dagreGraph.setEdge(reactflowEdge.source, reactflowEdge.target);
     }
   }
-
-  return { nodes: reactflowNodes, edges: reactflowEdges };
 }
 
-function getIONodes(name: string, iface: src.Interface, position: XYPosition) {
+function buildAndInsertInterfaceNodes(
+  iface: src.Interface,
+  entityName: string,
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  const ioNodes = getComponentIONodes(entityName, iface, defaultPosition);
+
+  reactflowNodes.push(ioNodes.in);
+  dagreGraph.setNode(ioNodes.in.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+
+  reactflowNodes.push(ioNodes.out);
+  dagreGraph.setNode(ioNodes.out.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+}
+
+function buildAndInsertComponentNodes(
+  entityName: string,
+  nodes: NodesViewState[],
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  for (const nodeView of nodes) {
+    buildAndInsertComponentNode(
+      entityName,
+      nodeView,
+      reactflowNodes,
+      dagreGraph
+    );
+  }
+}
+
+function buildAndInsertTypeDefNode(
+  entityName: string,
+  typeDef: ts.Def,
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  const reactflowNode = {
+    id: entityName,
+    type: "type",
+    position: defaultPosition,
+    data: {
+      kind: src.TypeEntity,
+      title: entityName,
+      typeDef: typeDef,
+    },
+  };
+  reactflowNodes.push(reactflowNode);
+  dagreGraph.setNode(reactflowNode.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+}
+
+function buildAndInsertConstNode(
+  entityName: string,
+  constant: src.Const,
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  const reactflowNode = {
+    id: entityName,
+    type: "const",
+    position: defaultPosition,
+    data: {
+      kind: src.ConstEntity,
+      title: entityName,
+      constant: constant,
+    },
+  };
+  reactflowNodes.push(reactflowNode);
+  dagreGraph.setNode(reactflowNode.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+}
+
+function buildAndInsertInterfaceNode(
+  entityName: string,
+  iface: src.Interface,
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  const reactflowNode = {
+    id: entityName,
+    type: "interface",
+    position: defaultPosition,
+    data: {
+      kind: src.InterfaceEntity,
+      title: entityName,
+      interface: iface,
+    },
+  };
+  reactflowNodes.push(reactflowNode);
+  dagreGraph.setNode(reactflowNode.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+}
+
+function buildAndInsertComponentNode(
+  entityName: string,
+  nodeView: NodesViewState,
+  reactflowNodes: Node[],
+  dagreGraph: dagre.graphlib.Graph
+) {
+  const reactflowNode = {
+    id: `${entityName}-${nodeView.name}`,
+    type: "component",
+    position: defaultPosition,
+    data: {
+      kind: src.ComponentEntity,
+      title: nodeView.name,
+      interface: nodeView.interface,
+    },
+  };
+  reactflowNodes.push(reactflowNode);
+  dagreGraph.setNode(reactflowNode.id, {
+    width: nodeWidth,
+    height: nodeHeight,
+  });
+}
+
+function getComponentIONodes(
+  entityName: string,
+  iface: src.Interface,
+  position: XYPosition
+) {
   const defaultData = {
-    type: "normal",
+    type: "component",
     position: position,
   };
 
   const inportsNode = {
     ...defaultData,
-    id: `${name}-in`,
+    id: `${entityName}-in`,
     data: {
-      ports: {
+      interface: {
         io: { out: {} },
       } as src.Interface,
-      label: "in",
+      title: "in",
+      kind: src.ComponentEntity,
     },
   };
   for (const portName in iface!.io?.in) {
     const inport = iface!.io?.in[portName];
-    inportsNode.data.ports.io!.out![portName] = inport;
+    inportsNode.data.interface.io!.out![portName] = inport;
   }
 
   const outportsNode = {
     ...defaultData,
-    id: `${name}-out`,
+    id: `${entityName}-out`,
     data: {
-      ports: {
+      interface: {
         io: { in: {} },
       } as src.Interface,
-      label: "out",
+      title: "out",
+      kind: src.ComponentEntity,
     },
   };
   for (const portName in iface!.io?.out) {
     const outport = iface!.io?.out[portName];
-    outportsNode.data.ports.io!.in![portName] = outport;
+    outportsNode.data.interface.io!.in![portName] = outport;
   }
 
   return {

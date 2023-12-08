@@ -101,8 +101,14 @@ type Component struct {
 }
 
 type Interface struct {
-	TypeParams []ts.Param `json:"typeParams,omitempty"`
+	TypeParams TypeParams `json:"typeParams,omitempty"`
 	IO         IO         `json:"io,omitempty,"`
+	Meta       Meta       `json:"meta,omitempty"`
+}
+
+type TypeParams struct {
+	Params []ts.Param `json:"params,omitempty"`
+	Meta   Meta       `json:"meta,omitempty"`
 }
 
 type Node struct {

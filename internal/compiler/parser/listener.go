@@ -1,7 +1,3 @@
-// TODO implement "Exported" field
-// think about moving it in g4 to the level of definition
-// maybe create special TOKEN for that
-
 package parser
 
 import (
@@ -47,7 +43,7 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
-			Params:   parseTypeParams(actx.TypeParams()),
+			Params:   parseTypeParams(actx.TypeParams()).Params,
 			BodyExpr: parseTypeExpr(actx.TypeExpr()),
 		},
 	}

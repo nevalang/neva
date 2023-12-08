@@ -26,15 +26,18 @@ export interface Param {
   name?: string; // Must be unique among other type's parameters
   constr?: Expr; // Expression that must be resolved supertype of corresponding argument
 }
-export type ExprMeta = any;
 /**
  * Instantiation or literal. Lit or Inst must be not nil, but not both
  */
 export interface Expr {
   lit?: LitExpr;
   inst?: InstExpr;
-  meta?: ExprMeta;
+  meta?: ExprMeta; // This field must be ignored by the typesystem and only used outside
 }
+/**
+ * ExprMeta can contain any meta information that typesystem user might need e.g. source code text representation.
+ */
+export type ExprMeta = any;
 /**
  * Instantiation expression
  */

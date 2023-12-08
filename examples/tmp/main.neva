@@ -10,11 +10,13 @@ types {
     pub Float f32 | f64
 
     MyEmptyRec {}
+    
     MyNonEmptyRec {
         foo MyInt
         bar MyNum
         baz MyEmptyRec
     }
+    
     pub MyNestedRec {
         Nested {
             Level MyNonEmptyRec
@@ -22,7 +24,9 @@ types {
     }
 
     MyShortEnum { Monday }
+
     MyNormalEnum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+    
     pub MyNormalNewlinedEnum {
         Monday, Tuesday, Wednesday,
         Thursday, Friday, Saturday
@@ -44,7 +48,7 @@ const {
 
 interfaces {
     IReader1 () ()
-    IReader20 (x int, y str) (a int, b bool)
+    IReader20<T int | str | { age int }> (x T, y str) (a int, b bool)
 
     IReader12 (
         x {

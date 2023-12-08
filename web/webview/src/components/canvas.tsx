@@ -10,17 +10,23 @@ import ReactFlow, {
   useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import * as src from "../generated/sourcecode";
 import { FileViewState } from "../core/file_view_state";
-import { NormalNode } from "./node";
 import { NormalEdge } from "./edge";
 import { buildReactFlowGraph } from "./helpers";
+import { InterfaceNode } from "./nodes/interface_node";
 
 interface ICanvasProps {
   fileViewState: FileViewState;
 }
 
-const nodeTypes = { normal: NormalNode };
 const edgeTypes = { normal: NormalEdge };
+const nodeTypes = {
+  // type: NormalNode,
+  interface: InterfaceNode,
+  // const: NormalNode,
+  component: InterfaceNode, // component and interface nodes are the same at presentation level
+};
 
 export function Canvas(props: ICanvasProps) {
   const { nodes, edges } = useMemo(
@@ -37,6 +43,9 @@ export function Canvas(props: ICanvasProps) {
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {
+      if (hoveredNode.data.kind != src.ComponentEntity) {
+        return;
+      }
       const { newEdges, newNodes } = handleNodeMouseEnter(
         hoveredNode,
         edgesState,
@@ -77,21 +86,6 @@ export function Canvas(props: ICanvasProps) {
   );
 }
 
-function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
-  const newEdges = edgesState.map((edge) =>
-    edge.data.isHighlighted ? { ...edge, data: { isHighlighted: false } } : edge
-  );
-  const newNodes = nodesState.map((node) => ({
-    ...node,
-    data: {
-      ...node.data,
-      isDimmed: false,
-      isHighlighted: false,
-    },
-  }));
-  return { newEdges, newNodes };
-}
-
 function handleNodeMouseEnter(
   hoveredNode: Node,
   edgesState: Edge[],
@@ -126,5 +120,20 @@ function handleNodeMouseEnter(
       : { ...node, data: { ...node.data, isDimmed: true } }
   );
 
+  return { newEdges, newNodes };
+}
+
+function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
+  const newEdges = edgesState.map((edge) =>
+    edge.data.isHighlighted ? { ...edge, data: { isHighlighted: false } } : edge
+  );
+  const newNodes = nodesState.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      isDimmed: false,
+      isHighlighted: false,
+    },
+  }));
   return { newEdges, newNodes };
 }

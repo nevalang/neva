@@ -21,7 +21,7 @@ var (
 )
 
 func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) error {
-	if len(cmp.Interface.TypeParams) != 0 {
+	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return fmt.Errorf("%w: %v", ErrMainComponentWithTypeParams, cmp.Interface.TypeParams)
 	}
 
