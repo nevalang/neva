@@ -68,9 +68,9 @@ func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[st
 func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
-	stream := antlr.NewCommonTokenStream(lexer, 0)
+	tokenStream := antlr.NewCommonTokenStream(lexer, 0)
 
-	parse := generated.NewnevaParser(stream)
+	parse := generated.NewnevaParser(tokenStream)
 	if p.isDebug {
 		parse.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	}

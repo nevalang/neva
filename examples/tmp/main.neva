@@ -2,8 +2,109 @@ use {
 	std/core
 }
 
+types {
+    MyInt i8
+
+    MyNum Int | Float
+    Int i32 | i64
+    pub Float f32 | f64
+
+    MyEmptyRec {}
+    
+    MyNonEmptyRec {
+        foo MyInt
+        bar MyNum
+        baz MyEmptyRec
+    }
+    
+    pub MyNestedRec {
+        Nested {
+            Level MyNonEmptyRec
+        }
+    }
+
+    MyShortEnum { Monday }
+
+    MyNormalEnum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+    
+    pub MyNormalNewlinedEnum {
+        Monday, Tuesday, Wednesday,
+        Thursday, Friday, Saturday
+    }
+
+    pub MyArr [512]str
+    MyArrNested [512][256]str
+}
+
+const {
+    PI f32  3.14
+    MAGIC_NUM i8  42
+    pub VEC_EMPTY vec<i8>  []
+    VEC_FULL vec<i8>  [1, 2, 3, 4]
+    ARR [4]i8  [0, 1, 2, 3]
+    REC { foo int }  { foo: 42 }
+    pub ENUM { Monday, Tuesday }  1
+}
+
 interfaces {
-    Example<T int | float>(foo int, bar string, baz { age int }) (x int, y bool)
+    IReader1 () ()
+    IReader20<T int | str | { age int }> (x T, y str) (a int, b bool)
+
+    IReader12 (
+        x {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, y {
+            January,
+            February
+        }
+    ) (
+        a {
+            Monday,
+            Tuesday,
+            Wednesday
+        }, b  {
+            January, February
+        }
+    )
+
+    IReader1 (
+        arr [512]{ Monday, Tuesday },
+        arr2 [256]{ foo int },
+        arr3 [128]{ baz {} }
+    ) (
+        arr [1024]{ January, February },
+        arr2 [256]{ bar bool },
+        arr3 [128][64]{ bax {} }
+    )
+
+    IReader1 (x {
+        foo int
+        bar str
+    }) (a {
+        baz bool
+        bax float })
+
+    IReader1 (
+        x { foo { a int } },
+        y {}
+    ) (
+        bar { baz { b bool } },
+        bax { r {} }
+    )
+
+    pub IReader1 (
+        a bool | int | { foo int | str },
+        b [256][128]{ bar int | [64]int }
+    ) (
+        x str |
+            float |
+            { Monday } |
+            {
+                foo { January } | {}
+            }
+    )
 }
 
 components {

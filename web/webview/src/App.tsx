@@ -1,20 +1,29 @@
-import { useMemo } from "react";
-import { ComponentsView } from "./components/components_view";
-import { useResolveFile } from "./core/vscode_state";
+import { useEffect, useMemo, useState } from "react";
+import { Canvas } from "./components/canvas";
 import { getFileViewState } from "./core/file_view_state";
+import { ResolveFileResponce } from "./generated/lsp_api";
+
+const vscodeApi = acquireVsCodeApi<ResolveFileResponce>();
 
 export default function App() {
-  const resolveFileResp = useResolveFile();
-  const fileViewState = useMemo(
-    () => getFileViewState(resolveFileResp),
-    [resolveFileResp]
-  );
+  const persistentState = vscodeApi.getState();
+  const [state, setState] = useState(persistentState);
+
+  useEffect(() => {
+    const listener = (event: { data: ResolveFileResponce }) => {
+      vscodeApi.setState(event.data!);
+      setState(event.data!);
+    };
+    window.addEventListener("message", listener);
+    vscodeApi.postMessage("ready");
+    return () => window.removeEventListener("message", listener);
+  }, []);
+
+  const fileViewState = useMemo(() => getFileViewState(state), [state]);
 
   return (
     <div className="app">
-      {fileViewState.entities.components.length > 0 && (
-        <ComponentsView components={fileViewState.entities.components} />
-      )}
+      <Canvas fileViewState={fileViewState} />
     </div>
   );
 }

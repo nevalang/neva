@@ -12,6 +12,8 @@ type Def struct {
 	BodyExpr *Expr `json:"bodyExpr,omitempty"`
 	// Only base types can have true.
 	CanBeUsedForRecursiveDefinitions bool `json:"canBeUsedForRecursiveDefinitions,omitempty"`
+	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
+	Meta ExprMeta `json:"meta,omitempty"`
 }
 
 func (def Def) String() string {
@@ -38,14 +40,15 @@ type Param struct {
 	Constr *Expr  `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
-type ExprMeta any
-
 // Instantiation or literal. Lit or Inst must be not nil, but not both
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
-	Meta ExprMeta  `json:"meta,omitempty"`
+	Meta ExprMeta  `json:"meta,omitempty"` // This field must be ignored by the typesystem and only used outside
 }
+
+// ExprMeta can contain any meta information that typesystem user might need e.g. source code text representation.
+type ExprMeta any
 
 // String formats expression in a TS manner
 func (expr *Expr) String() string { //nolint:funlen

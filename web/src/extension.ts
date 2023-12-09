@@ -1,8 +1,5 @@
 import { ExtensionContext, window, commands } from "vscode";
-import {
-  GenericNotificationHandler,
-  LanguageClient,
-} from "vscode-languageclient/node";
+import { LanguageClient } from "vscode-languageclient/node";
 import { setupLsp } from "./lsp";
 import { getPreviewCommand } from "./command";
 
@@ -13,25 +10,16 @@ export async function activate(context: ExtensionContext) {
 
   // Run language server, initialize client and establish connection
   lspClient = setupLsp(context);
-  lspClient.start().then(console.info).catch(console.error);
   lspClient.onNotification("neva/analyzer_message", (message: string) => {
     window.showWarningMessage(message);
-  });
-  console.info("language-server started, client connection established");
-
-  // Listen to language server events and update current indexed module state
-  let initialIndex: unknown;
-  lspClient.onNotification("neva/workdir_indexed", (newIndex: unknown) => {
-    console.info(
-      "language-server notification - workdir has been indexed",
-      newIndex
-    );
-    initialIndex = newIndex;
   });
 
   // Register preview command that opens webview
   context.subscriptions.push(
-    commands.registerCommand("neva.openPreview", getPreviewCommand(context, lspClient))
+    commands.registerCommand(
+      "neva.openPreview",
+      getPreviewCommand(context, lspClient)
+    )
   );
   console.info("preview command registered");
 }

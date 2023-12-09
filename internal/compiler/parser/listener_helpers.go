@@ -9,9 +9,9 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
+func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
 	if params == nil || params.TypeParamList() == nil {
-		return nil
+		return src.TypeParams{}
 	}
 
 	typeParams := params.TypeParamList().AllTypeParam()
@@ -23,7 +23,20 @@ func parseTypeParams(params generated.ITypeParamsContext) []ts.Param {
 		})
 	}
 
-	return result
+	return src.TypeParams{
+		Params: result,
+		Meta: src.Meta{
+			Text: params.GetText(),
+			Start: src.Position{
+				Line:   params.GetStart().GetLine(),
+				Column: params.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   params.GetStop().GetLine(),
+				Column: params.GetStop().GetColumn(),
+			},
+		},
+	}
 }
 
 func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
@@ -238,15 +251,23 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 }
 
 func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
-	params := parseTypeParams(actx.TypeParams())
+	parsedTypeParams := parseTypeParams(actx.TypeParams())
 	in := parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
 	out := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
 
 	return src.Interface{
-		TypeParams: params,
-		IO: src.IO{
-			In:  in,
-			Out: out,
+		TypeParams: parsedTypeParams,
+		IO:         src.IO{In: in, Out: out},
+		Meta: src.Meta{
+			Text: actx.GetText(),
+			Start: src.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
 		},
 	}
 }
@@ -389,7 +410,19 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 }
 
 func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funlen
-	val := src.Msg{}
+	val := src.Msg{
+		Meta: src.Meta{
+			Text: constVal.GetText(),
+			Start: src.Position{
+				Line:   constVal.GetStart().GetLine(),
+				Column: constVal.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   constVal.GetStop().GetLine(),
+				Column: constVal.GetStop().GetColumn(),
+			},
+		},
+	}
 
 	//nolint:nosnakecase
 	switch {

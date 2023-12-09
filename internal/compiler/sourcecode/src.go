@@ -101,8 +101,14 @@ type Component struct {
 }
 
 type Interface struct {
-	TypeParams []ts.Param `json:"typeParams,omitempty"`
+	TypeParams TypeParams `json:"typeParams,omitempty"`
 	IO         IO         `json:"io,omitempty,"`
+	Meta       Meta       `json:"meta,omitempty"`
+}
+
+type TypeParams struct {
+	Params []ts.Param `json:"params,omitempty"`
+	Meta   Meta       `json:"meta,omitempty"`
 }
 
 type Node struct {
@@ -127,6 +133,7 @@ func (e EntityRef) String() string {
 type Const struct {
 	Ref   *EntityRef `json:"ref,omitempty"`
 	Value *Msg       `json:"value,omitempty"`
+	Meta  Meta       `json:"meta,omitempty"`
 }
 
 type Msg struct {
@@ -137,6 +144,7 @@ type Msg struct {
 	Str      string           `json:"str,omitempty"`
 	Vec      []Const          `json:"vec,omitempty"` // Vecs are used for both vectors and arrays
 	Map      map[string]Const `json:"map,omitempty"` // Maps are used for both maps and structures
+	Meta     Meta             `json:"meta,omitempty"`
 }
 
 type IO struct {

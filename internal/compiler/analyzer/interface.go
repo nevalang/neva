@@ -20,7 +20,7 @@ func (a Analyzer) analyzeInterface(
 	scope src.Scope,
 	params analyzeInterfaceParams,
 ) (src.Interface, error) {
-	resolvedParams, err := a.analyzeTypeParams(def.TypeParams, scope)
+	resolvedParams, err := a.analyzeTypeParams(def.TypeParams.Params, scope)
 	if err != nil {
 		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.TypeParams)
 	}
@@ -30,8 +30,13 @@ func (a Analyzer) analyzeInterface(
 		return src.Interface{}, fmt.Errorf("analyze IO: %w", err)
 	}
 
+	typeParams := src.TypeParams{
+		Params: resolvedParams,
+		Meta:   def.TypeParams.Meta,
+	}
+
 	return src.Interface{
-		TypeParams: resolvedParams,
+		TypeParams: typeParams,
 		IO:         resolvedIO,
 	}, nil
 }

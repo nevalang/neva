@@ -1,4 +1,4 @@
-import { Webview, WebviewPanel, Uri, TextDocument, workspace } from "vscode";
+import { Webview, Uri } from "vscode";
 
 export function getWebviewContent(webview: Webview, extensionUri: Uri) {
   const stylesUri = getUri(webview, extensionUri, [
@@ -45,3 +45,8 @@ function getNonce() {
 function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
   return webview.asWebviewUri((Uri as any).joinPath(extensionUri, ...pathList));
 }
+
+const sleep = async (ms: number): Promise<any> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });

@@ -1,14 +1,14 @@
 /* Basic */
 
 :root {
-  --heading: #BE6856;
-  --foreground: #00A8C6;
-  --background: #22272E;
-  --background-second: #2D333B;
-  --link: #539BF5;
+  --heading: #be6856;
+  --foreground: #00a8c6;
+  --background: #22272e;
+  --background-second: #2d333b;
+  --link: #539bf5;
   --dim: #769390;
-  --text: #ADBAC7;
-  --success: #347D39;
+  --text: #adbac7;
+  --success: #347d39;
 }
 
 body {
@@ -42,10 +42,10 @@ h3 {
   padding: 0;
   border-radius: 5px;
   border-width: 1px;
-  border-color: #00A8C6;
+  border-color: #00a8c6;
   background-color: var(--text);
   box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
-  transition: all .15s ease-out;
+  transition: all 0.15s ease-out;
 }
 
 .react-flow__node-default.highlighted {
@@ -82,8 +82,8 @@ h3 {
   );
 }
 
-.react-flow__node-default:active .ports, 
-.react-flow__node-default:active .nodeName {
+.react-flow__node-default:active .ports,
+.react-flow__node-default:active .nodeBody {
   background: transparent;
   color: white;
 }
@@ -101,25 +101,35 @@ h3 {
   border: none;
   border-radius: 0;
   padding: 5px;
-  font-weight: 300;
+  font-weight: 200;
 }
 
 .react-flow__edge path {
-  transition: stroke .15s ease-out;
-  stroke: #ADBAC7;
+  transition: stroke 0.15s ease-out;
+  stroke: #adbac7;
 }
 
 .react-flow__edge-interaction path {
-  stroke-opacity: .5;
+  stroke-opacity: 0.5;
 }
 
 /* Custom */
 
-.nodeName {
+.nodeBody {
   padding: 15px;
   color: var(--background);
   font-weight: 400;
-  transition: color .15s ease-out;
+  transition: color 0.15s ease-out;
+}
+
+.nodeName {
+  position: relative;
+}
+
+.nodeType {
+  padding-top: 5px;
+  font-weight: 200;
+  transition: color 0.15s ease-out;
 }
 
 .ports {
@@ -127,11 +137,11 @@ h3 {
   justify-content: space-around;
   font-weight: 400;
   color: var(--background-second);
-  background-color: #00A8C6;
-  transition: all .15s ease-out;
+  background-color: #00a8c6;
+  transition: all 0.15s ease-out;
 }
 .ports.in {
-  border-radius:  3px 3px 0px 0px;
+  border-radius: 3px 3px 0px 0px;
 }
 .ports.out {
   border-radius: 0px 0px 3px 3px;
@@ -146,5 +156,3 @@ h3 {
 .portType {
   font-weight: 200;
 }
-
-

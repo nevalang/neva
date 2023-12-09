@@ -3,7 +3,7 @@ import * as src from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
 
 // Object optimized for fast and easy rendering of the UI
-interface FileViewState {
+export interface FileViewState {
   imports: { alias: string; path: string }[];
   entities: FileViewEntities;
 }
