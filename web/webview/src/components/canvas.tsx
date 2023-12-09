@@ -1,4 +1,4 @@
-import { useCallback, useMemo, MouseEvent, useEffect, useState } from "react";
+import { useCallback, MouseEvent, useEffect, useState } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -13,15 +13,12 @@ import "reactflow/dist/style.css";
 import * as src from "../generated/sourcecode";
 import { FileViewState } from "../core/file_view_state";
 import { NormalEdge } from "./edge";
-// import { buildReactFlowGraph } from "./helpers";
 import { InterfaceNode } from "./nodes/interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
-import createLayout from "./layout";
-
-interface ICanvasProps {
-  fileViewState: FileViewState;
-}
+import getLayoutedNodes from "./get_layouted_nodes";
+import { buildGraph } from "./build_graph";
+import { handleNodeMouseEnter, handleNodeMouseLeave } from "./mouse_handlers";
 
 const edgeTypes = { normal: NormalEdge };
 const nodeTypes = {
@@ -31,34 +28,32 @@ const nodeTypes = {
   interface: InterfaceNode,
 };
 
-export function Canvas(props: ICanvasProps) {
-  console.log("here");
+interface ICanvasProps {
+  fileViewState: FileViewState;
+}
 
-  const [graph, setGraph] = useState({ nodes: [], edges: [] });
-  const { nodes, edges } = graph;
+export function Canvas(props: ICanvasProps) {
+  const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] }>({
+    nodes: [],
+    edges: [],
+  });
 
   useEffect(() => {
     (async () => {
-      const newGraph = await createLayout();
-      setGraph(newGraph as any);
+      const graph = buildGraph(props.fileViewState);
+      console.log({ graph });
+      const layoutedNodes = await getLayoutedNodes(graph.nodes, graph.edges);
+      console.log({ layoutedNodes });
+      setGraph({ nodes: layoutedNodes, edges: graph.edges });
     })();
-  }, []);
+  }, [props.fileViewState]);
 
-  console.log({ nodes, edges });
-
-  // const { nodes, edges } = useMemo(
-  //   () => buildReactFlowGraph(props.fileViewState),
-  //   [props.fileViewState]
-  // );
-
-  const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
-  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
+  const [nodesState, setNodesState, onNodesChange] = useNodesState(graph.nodes);
+  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(graph.edges);
   useEffect(() => {
-    setNodesState(nodes);
-    setEdgesState(edges);
-  }, [nodes, edges, setNodesState, setEdgesState]);
-
-  console.log({ nodesState, edgesState });
+    setNodesState(graph.nodes);
+    setEdgesState(graph.edges);
+  }, [graph, setNodesState, setEdgesState]);
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {
@@ -103,56 +98,4 @@ export function Canvas(props: ICanvasProps) {
       </ReactFlow>
     </div>
   );
-}
-
-function handleNodeMouseEnter(
-  hoveredNode: Node,
-  edgesState: Edge[],
-  nodesState: Node[]
-) {
-  const newEdges: Edge[] = [];
-  const relatedNodeIds: Set<string> = new Set();
-
-  edgesState.forEach((edge) => {
-    const isEdgeRelated =
-      edge.source === hoveredNode.id || edge.target === hoveredNode.id;
-    const newEdge = isEdgeRelated
-      ? { ...edge, data: { isHighlighted: true } }
-      : edge;
-    newEdges.push(newEdge);
-    if (isEdgeRelated) {
-      const isIncoming = edge.source === hoveredNode.id;
-      const relatedNodeId = isIncoming ? edge.target : edge.source;
-      relatedNodeIds.add(relatedNodeId);
-    }
-  });
-
-  const newNodes = nodesState.map((node) =>
-    relatedNodeIds.has(node.id)
-      ? {
-          ...node,
-          data: {
-            ...node.data,
-            isHighlighted: true,
-          },
-        }
-      : { ...node, data: { ...node.data, isDimmed: true } }
-  );
-
-  return { newEdges, newNodes };
-}
-
-function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
-  const newEdges = edgesState.map((edge) =>
-    edge.data.isHighlighted ? { ...edge, data: { isHighlighted: false } } : edge
-  );
-  const newNodes = nodesState.map((node) => ({
-    ...node,
-    data: {
-      ...node.data,
-      isDimmed: false,
-      isHighlighted: false,
-    },
-  }));
-  return { newEdges, newNodes };
 }

@@ -45,7 +45,11 @@ h3 {
   border-color: #00a8c6;
   background-color: var(--text);
   box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
-  transition: all 0.15s ease-out;
+  /* transition: all 0.15s ease-out; */
+}
+
+.react-flow__node-default.parent {
+  background-color: transparent;
 }
 
 .react-flow__node-default.highlighted {
