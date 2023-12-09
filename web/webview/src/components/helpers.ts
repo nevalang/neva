@@ -17,7 +17,10 @@ const nodeHeight = 70;
 const direction = "TB";
 const isHorizontal = false;
 
-export function buildReactFlowGraph(fileViewState: FileViewState) {
+export function buildReactFlowGraph(fileViewState: FileViewState): {
+  nodes: Node[];
+  edges: Edge[];
+} {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction });

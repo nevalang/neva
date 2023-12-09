@@ -1,4 +1,4 @@
-import { useCallback, useMemo, MouseEvent, useEffect } from "react";
+import { useCallback, useMemo, MouseEvent, useEffect, useState } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -13,10 +13,11 @@ import "reactflow/dist/style.css";
 import * as src from "../generated/sourcecode";
 import { FileViewState } from "../core/file_view_state";
 import { NormalEdge } from "./edge";
-import { buildReactFlowGraph } from "./helpers";
+// import { buildReactFlowGraph } from "./helpers";
 import { InterfaceNode } from "./nodes/interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
+import createLayout from "./layout";
 
 interface ICanvasProps {
   fileViewState: FileViewState;
@@ -31,10 +32,24 @@ const nodeTypes = {
 };
 
 export function Canvas(props: ICanvasProps) {
-  const { nodes, edges } = useMemo(
-    () => buildReactFlowGraph(props.fileViewState),
-    [props.fileViewState]
-  );
+  console.log("here");
+
+  const [graph, setGraph] = useState({ nodes: [], edges: [] });
+  const { nodes, edges } = graph;
+
+  useEffect(() => {
+    (async () => {
+      const newGraph = await createLayout();
+      setGraph(newGraph as any);
+    })();
+  }, []);
+
+  console.log({ nodes, edges });
+
+  // const { nodes, edges } = useMemo(
+  //   () => buildReactFlowGraph(props.fileViewState),
+  //   [props.fileViewState]
+  // );
 
   const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
   const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);
@@ -42,6 +57,8 @@ export function Canvas(props: ICanvasProps) {
     setNodesState(nodes);
     setEdgesState(edges);
   }, [nodes, edges, setNodesState, setEdgesState]);
+
+  console.log({ nodesState, edgesState });
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {
