@@ -1,14 +1,14 @@
-/* Basic */
-
 :root {
-  --heading: #be6856;
+  --component: #be6856;
   --foreground: #00a8c6;
+  --type: #61afef;
   --background: #22272e;
   --background-second: #2d333b;
-  --link: #539bf5;
   --dim: #769390;
   --text: #adbac7;
   --success: #347d39;
+  --const: #d19a66;
+  --light: #c5c5c5
 }
 
 body {
@@ -25,8 +25,6 @@ h3 {
   margin: 0;
 }
 
-/* https://reactflow.dev/docs/guides/theming/ */
-
 .react-flow__node {
   height: 40px;
   width: 150px;
@@ -42,10 +40,48 @@ h3 {
   padding: 0;
   border-radius: 5px;
   border-width: 1px;
-  border-color: #00a8c6;
-  background-color: var(--text);
   box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
   transition: all 0.15s ease-out;
+  background-color: var(--text);
+}
+
+.react-flow__node-default.interface {
+  border-color: var(--foreground);
+  background-color: var(--text);
+}
+
+.react-flow__node-default.component {
+  background-color: var(--light);
+}
+
+.react-flow__node-default.type {
+  background-color: var(--type);
+} 
+
+.react-flow__panel.react-flow__controls.bottom {
+  bottom: 15px;
+}
+
+.react-flow__controls-button {
+  background-color: var(--text);
+  border-color: var(--background-second)
+}
+
+.react-flow__node-default.component .ports {
+  background-color: var(--component);
+}
+
+.react-flow__node-default.parent {
+  align-items: flex-start;
+  border-color: var(--text);
+  color: var(--text);
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.react-flow__node-default.const {
+  border-color: var(--const);
+  background-color: var(--const);
 }
 
 .react-flow__node-default.highlighted {
@@ -62,7 +98,7 @@ h3 {
 }
 
 .react-flow__node-default:active {
-  box-shadow: 0px 0 10px #fff;
+  box-shadow: 0px 0 10px white;
   transform: scale(1.1);
   border-color: white;
   background-image: linear-gradient(
@@ -106,14 +142,12 @@ h3 {
 
 .react-flow__edge path {
   transition: stroke 0.15s ease-out;
-  stroke: #adbac7;
+  stroke: var(--text);
 }
 
 .react-flow__edge-interaction path {
   stroke-opacity: 0.5;
 }
-
-/* Custom */
 
 .nodeBody {
   padding: 15px;
@@ -129,7 +163,7 @@ h3 {
 .nodeType {
   padding-top: 5px;
   font-weight: 200;
-  transition: color 0.15s ease-out;
+  transition: all 0.15s ease-out;
 }
 
 .ports {
@@ -137,7 +171,7 @@ h3 {
   justify-content: space-around;
   font-weight: 400;
   color: var(--background-second);
-  background-color: #00a8c6;
+  background-color: var(--foreground);
   transition: all 0.15s ease-out;
 }
 .ports.in {
@@ -156,3 +190,8 @@ h3 {
 .portType {
   font-weight: 200;
 }
+
+.react-flow__minimap {
+  background-color: var(--background);
+}
+

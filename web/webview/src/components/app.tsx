@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Canvas } from "./components/canvas";
-import { getFileViewState } from "./core/file_view_state";
-import { ResolveFileResponce } from "./generated/lsp_api";
+import { Canvas } from "./canvas/canvas";
+import { getFileViewState } from "../core/file_view_state";
+import { ResolveFileResponce } from "../generated/lsp_api";
 
 const vscodeApi = acquireVsCodeApi<ResolveFileResponce>();
 

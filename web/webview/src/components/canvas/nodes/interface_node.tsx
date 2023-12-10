@@ -1,11 +1,15 @@
 import { useMemo } from "react";
 import classnames from "classnames";
-import { Handle, NodeProps, HandleType, Position, useStore } from "reactflow";
-import * as src from "../../generated/sourcecode";
+import { Handle, NodeProps, HandleType, Position } from "reactflow";
+import * as src from "../../../generated/sourcecode";
+import { useZoom } from "./use_zoom";
 
 export interface IInterfaceNodeProps {
   title: string;
   interface: src.Interface;
+  isDimmed: boolean;
+  isHighlighted: boolean;
+  entityName: string;
 }
 
 export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
@@ -20,12 +24,17 @@ export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
     };
   }, [props.data.interface.io]);
 
-  const isZoomMiddle = useStore((s) => s.transform[2] >= 0.6);
-  const isZoomClose = useStore((s) => s.transform[2] >= 1);
+  const { isZoomMiddle, isZoomClose } = useZoom();
 
   return (
-    <div className={"react-flow__node-default"}>
+    <div
+      className={classnames("react-flow__node-default", props.type, {
+        highlighted: props.data.isHighlighted,
+        dimmed: props.data.isDimmed,
+      })}
+    >
       <Ports
+        direction="in"
         ports={inports}
         position={Position.Top}
         type="target"
@@ -36,6 +45,7 @@ export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
         <div className="nodeName">{props.data.title}</div>
       </div>
       <Ports
+        direction="out"
         ports={outports}
         position={Position.Bottom}
         type="source"
@@ -52,13 +62,18 @@ function Ports(props: {
   type: HandleType;
   isVisible: boolean;
   areTypesVisible: boolean;
+  direction: "in" | "out";
 }) {
   if (!props.ports) {
     return null;
   }
 
   return (
-    <div className={classnames("ports", "in", { hidden: !props.isVisible })}>
+    <div
+      className={classnames("ports", props.direction, {
+        hidden: !props.isVisible,
+      })}
+    >
       {props.ports.map(([portName, portType]) => (
         <Handle
           id={portName}

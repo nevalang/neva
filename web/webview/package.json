@@ -16,9 +16,11 @@
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "classnames": "^2.3.2",
     "dagre": "^0.8.5",
+    "elkjs": "^0.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reactflow": "^11.9.3"
+    "reactflow": "^11.9.3",
+    "web-worker": "^1.2.0"
   },
   "devDependencies": {
     "@types/dagre": "^0.7.50",
