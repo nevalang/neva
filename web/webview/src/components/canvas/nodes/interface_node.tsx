@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import classnames from "classnames";
 import { Handle, NodeProps, HandleType, Position, useStore } from "reactflow";
-import * as src from "../../generated/sourcecode";
+import * as src from "../../../generated/sourcecode";
+import { useZoom } from "./use_zoom";
 
 export interface IInterfaceNodeProps {
   title: string;
@@ -20,11 +21,10 @@ export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
     };
   }, [props.data.interface.io]);
 
-  const isZoomMiddle = useStore((s) => s.transform[2] >= 0.6);
-  const isZoomClose = useStore((s) => s.transform[2] >= 1);
+  const { isZoomMiddle, isZoomClose } = useZoom();
 
   return (
-    <div className={"react-flow__node-default"}>
+    <div className={classnames("react-flow__node-default", props.type)}>
       <Ports
         ports={inports}
         position={Position.Top}

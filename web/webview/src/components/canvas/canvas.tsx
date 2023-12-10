@@ -10,15 +10,18 @@ import ReactFlow, {
   useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import * as src from "../generated/sourcecode";
-import { FileViewState } from "../core/file_view_state";
+import * as src from "../../generated/sourcecode";
+import { FileViewState } from "../../core/file_view_state";
 import { NormalEdge } from "./edge";
 import { InterfaceNode } from "./nodes/interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
-import getLayoutedNodes from "./get_layouted_nodes";
-import { buildGraph } from "./build_graph";
-import { handleNodeMouseEnter, handleNodeMouseLeave } from "./mouse_handlers";
+import getLayoutedNodes from "./helpers/get_layouted_nodes";
+import { buildGraph } from "./helpers/build_graph";
+import {
+  handleNodeMouseEnter,
+  handleNodeMouseLeave,
+} from "./helpers/mouse_handlers";
 
 const edgeTypes = { normal: NormalEdge };
 const nodeTypes = {
@@ -87,10 +90,14 @@ export function Canvas(props: ICanvasProps) {
         edges={edgesState}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        fitView
-        nodesConnectable={false}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
+        fitView
+        nodesFocusable
+        zoomOnPinch
+        nodesConnectable={false}
+        zoomOnScroll={false}
+        panOnScroll={true}
       >
         <Controls />
         <MiniMap />

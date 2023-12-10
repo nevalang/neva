@@ -1,14 +1,14 @@
 import { Node, Edge, MarkerType, XYPosition } from "reactflow";
-import * as src from "../generated/sourcecode";
-import * as ts from "../generated/typesystem";
+import * as src from "../../../generated/sourcecode";
+import * as ts from "../../../generated/typesystem";
 import {
   ComponentViewState,
   FileViewState,
   NodesViewState,
-} from "../core/file_view_state";
-import { ITypeNodeProps } from "./nodes/type_node";
-import { IConstNodeProps } from "./nodes/const_node";
-import { IInterfaceNodeProps } from "./nodes/interface_node";
+} from "../../../core/file_view_state";
+import { ITypeNodeProps } from "../nodes/type_node";
+import { IConstNodeProps } from "../nodes/const_node";
+import { IInterfaceNodeProps } from "../nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 

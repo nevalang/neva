@@ -1,5 +1,3 @@
-/* Basic */
-
 :root {
   --heading: #be6856;
   --foreground: #00a8c6;
@@ -9,6 +7,8 @@
   --dim: #769390;
   --text: #adbac7;
   --success: #347d39;
+  --tmp: #ef596f;
+  --tmp2: #d19a66;
 }
 
 body {
@@ -25,8 +25,6 @@ h3 {
   margin: 0;
 }
 
-/* https://reactflow.dev/docs/guides/theming/ */
-
 .react-flow__node {
   height: 40px;
   width: 150px;
@@ -42,14 +40,41 @@ h3 {
   padding: 0;
   border-radius: 5px;
   border-width: 1px;
+  box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease-out;
+  background-color: var(--text);
+}
+
+.react-flow__node-default.interface {
   border-color: #00a8c6;
   background-color: var(--text);
-  box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
-  /* transition: all 0.15s ease-out; */
+}
+
+.react-flow__node-default.component {
+  border-color: #347d39;
+  background-color: var(--text);
+}
+
+.react-flow__node-default.type {
+  background-color: #00a8c6;
+} 
+
+.react-flow__node-default.component .ports {
+  /* color: var(--text);
+  background-color: var(--tmp); */
 }
 
 .react-flow__node-default.parent {
+  align-items: flex-start;
+  border-color: var(--text);
+  color: var(--text);
+  box-shadow: none;
   background-color: transparent;
+}
+
+.react-flow__node-default.const {
+  border-color: var(--tmp2);
+  background-color: var(--tmp2);
 }
 
 .react-flow__node-default.highlighted {
@@ -117,8 +142,6 @@ h3 {
   stroke-opacity: 0.5;
 }
 
-/* Custom */
-
 .nodeBody {
   padding: 15px;
   color: var(--background);
@@ -133,7 +156,7 @@ h3 {
 .nodeType {
   padding-top: 5px;
   font-weight: 200;
-  transition: color 0.15s ease-out;
+  transition: all 0.15s ease-out;
 }
 
 .ports {

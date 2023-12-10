@@ -6,6 +6,17 @@ const nodeHeight = 100;
 
 const elk = new ELK();
 
+const nodeTypes = ["type", "const", "interface", "component"];
+
+type NodeType = (typeof nodeTypes)[number];
+
+const nodeTypeToAlgorithm: { [key: NodeType]: string } = {
+  type: "rectpacking",
+  const: "rectpacking",
+  interface: "rectpacking",
+  component: "mrtree",
+};
+
 export default async function getLayoutedNodes(
   nodes: Node[],
   edges: Edge[]
@@ -13,27 +24,25 @@ export default async function getLayoutedNodes(
   const graph: ElkNode = {
     id: "root",
     layoutOptions: {
-      "elk.algorithm": "mrtree",
+      "elk.algorithm": "box",
       "elk.direction": "DOWN",
     },
-    children: ["type", "const", "interface", "component"].map(
-      (groupNodeId) => ({
-        id: groupNodeId,
-        width: nodeWidth,
-        height: nodeHeight,
-        layoutOptions: { "elk.direction": "DOWN" },
-        children: nodes
-          .filter((node) => node.type === groupNodeId)
-          .map((node) => ({
-            ...node,
-            width: nodeWidth,
-            height: nodeHeight,
-            layoutOptions: {
-              "elk.direction": "DOWN",
-            },
-          })),
-      })
-    ),
+    children: nodeTypes.map((nodeType) => ({
+      id: nodeType,
+      width: nodeWidth,
+      height: nodeHeight,
+      layoutOptions: {
+        "elk.algorithm": nodeTypeToAlgorithm[nodeType],
+        "elk.direction": "DOWN",
+      },
+      children: nodes
+        .filter((node) => node.type === nodeType)
+        .map((node) => ({
+          ...node,
+          width: nodeWidth,
+          height: nodeHeight,
+        })),
+    })),
     edges: edges.map((edge) => ({
       id: edge.id,
       sources: [edge.source],

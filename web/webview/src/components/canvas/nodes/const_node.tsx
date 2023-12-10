@@ -1,5 +1,7 @@
 import { NodeProps } from "reactflow";
-import * as src from "../../generated/sourcecode";
+import * as src from "../../../generated/sourcecode";
+import { useZoom } from "./use_zoom";
+import classnames from "classnames";
 
 export interface IConstNodeProps {
   title: string;
@@ -7,12 +9,18 @@ export interface IConstNodeProps {
 }
 
 export function ConstNode(props: NodeProps<IConstNodeProps>) {
+  const { isZoomMiddle, isZoomClose } = useZoom();
+
   return (
-    <div className={"react-flow__node-default"}>
+    <div className={classnames("react-flow__node-default", props.type)}>
       <div className="nodeBody">
         <div className="nodeName">{props.data.title}</div>
-        <div className="nodeType">{formatConstType(props.data.const)}</div>
-        <div className="nodeType">{formatConstValue(props.data.const)}</div>
+        <div className="nodeType" style={{ opacity: isZoomClose ? 1 : 0 }}>
+          {formatConstType(props.data.const)}
+        </div>
+        <div className="nodeType" style={{ opacity: isZoomMiddle ? 1 : 0 }}>
+          {formatConstValue(props.data.const)}
+        </div>
       </div>
     </div>
   );
