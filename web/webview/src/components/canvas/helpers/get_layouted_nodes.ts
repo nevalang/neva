@@ -1,7 +1,7 @@
 import { Edge, Node } from "reactflow";
 import ELK, { ElkNode } from "elkjs";
 
-const nodeWidth = 350;
+const nodeWidth = 150;
 const nodeHeight = 100;
 
 const elk = new ELK();
@@ -26,6 +26,7 @@ export default async function getLayoutedNodes(
     layoutOptions: {
       "elk.algorithm": "box",
       "elk.direction": "DOWN",
+      "spacing.nodeNode": "50",
     },
     children: nodeTypes.map((nodeType) => ({
       id: nodeType,
@@ -34,6 +35,7 @@ export default async function getLayoutedNodes(
       layoutOptions: {
         "elk.algorithm": nodeTypeToAlgorithm[nodeType],
         "elk.direction": "DOWN",
+        "spacing.nodeNode": "30",
       },
       children: nodes
         .filter((node) => node.type === nodeType)

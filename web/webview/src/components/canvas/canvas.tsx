@@ -35,6 +35,8 @@ interface ICanvasProps {
   fileViewState: FileViewState;
 }
 
+const fitViewOptions = { duration: 300, padding: 20 };
+
 export function Canvas(props: ICanvasProps) {
   const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] }>({
     nodes: [],
@@ -44,9 +46,7 @@ export function Canvas(props: ICanvasProps) {
   useEffect(() => {
     (async () => {
       const graph = buildGraph(props.fileViewState);
-      console.log({ graph });
       const layoutedNodes = await getLayoutedNodes(graph.nodes, graph.edges);
-      console.log({ layoutedNodes });
       setGraph({ nodes: layoutedNodes, edges: graph.edges });
     })();
   }, [props.fileViewState]);
@@ -60,8 +60,11 @@ export function Canvas(props: ICanvasProps) {
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {
-      if (hoveredNode.data.kind != src.ComponentEntity) {
-        return;
+      if (hoveredNode.type !== "component") {
+        return {
+          newEdges: edgesState,
+          newNodes: nodesState,
+        };
       }
       const { newEdges, newNodes } = handleNodeMouseEnter(
         hoveredNode,
@@ -80,12 +83,15 @@ export function Canvas(props: ICanvasProps) {
     setNodesState(newNodes);
   }, [edgesState, nodesState, setEdgesState, setNodesState]);
 
+  if (nodesState.length === 0) {
+    return null;
+  }
+
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onInit={(instance) => instance.fitView()}
         nodes={nodesState}
         edges={edgesState}
         onNodesChange={onNodesChange}
@@ -93,16 +99,34 @@ export function Canvas(props: ICanvasProps) {
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
         fitView
+        fitViewOptions={fitViewOptions}
         nodesFocusable
-        zoomOnPinch
-        nodesConnectable={false}
+        panOnScroll
         zoomOnScroll={false}
-        panOnScroll={true}
+        elementsSelectable={false}
+        nodesDraggable={false}
+        nodesConnectable={false}
       >
-        <Controls />
-        <MiniMap />
+        <Controls fitViewOptions={fitViewOptions} />
+        <MiniMap
+          position="top-right"
+          zoomable
+          pannable
+          nodeStrokeWidth={3}
+          nodeColor={nodeColor}
+          nodeBorderRadius={10}
+          maskColor="rgba(255, 255, 255, 0.1)"
+        />
         <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
       </ReactFlow>
     </div>
   );
 }
+
+const nodeColor = (nodeType: Node): string =>
+  ({
+    type: "var(--type)",
+    const: "var(--const)",
+    interface: "var(--foreground)",
+    component: "var(--component)",
+  }[nodeType.type!]!);

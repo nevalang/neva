@@ -139,7 +139,6 @@ function buildAndInsertTypeDefNode(
     type: "type",
     position: defaultPosition,
     data: {
-      kind: src.TypeEntity,
       title: entityName,
       type: typeDef,
     } as ITypeNodeProps,
@@ -157,7 +156,6 @@ function buildAndInsertConstNode(
     type: "const",
     position: defaultPosition,
     data: {
-      kind: src.ConstEntity,
       title: entityName,
       const: constant,
     } as IConstNodeProps,
@@ -175,9 +173,11 @@ function buildAndInsertInterfaceNode(
     type: "interface",
     position: defaultPosition,
     data: {
-      kind: src.InterfaceEntity,
       title: entityName,
       interface: iface,
+      isDimmed: false,
+      isHighlighted: false,
+      entityName: entityName,
     } as IInterfaceNodeProps,
   };
   reactflowNodes.push(reactflowNode);
@@ -193,9 +193,11 @@ function buildAndInsertComponentNode(
     type: "component",
     position: defaultPosition,
     data: {
-      kind: src.ComponentEntity,
       title: nodeView.name,
       interface: nodeView.interface,
+      isDimmed: false,
+      isHighlighted: false,
+      entityName: entityName,
     } as IInterfaceNodeProps,
   };
   reactflowNodes.push(reactflowNode);
@@ -219,7 +221,9 @@ function getComponentIONodes(
         io: { out: {} },
       } as src.Interface,
       title: "in",
-      kind: src.ComponentEntity,
+      isDimmed: false,
+      isHighlighted: false,
+      entityName: entityName,
     } as IInterfaceNodeProps,
   };
   for (const portName in iface!.io?.in) {
@@ -235,7 +239,9 @@ function getComponentIONodes(
         io: { in: {} },
       } as src.Interface,
       title: "out",
-      kind: src.ComponentEntity,
+      isDimmed: false,
+      isHighlighted: false,
+      entityName: entityName,
     } as IInterfaceNodeProps,
   };
   for (const portName in iface!.io?.out) {

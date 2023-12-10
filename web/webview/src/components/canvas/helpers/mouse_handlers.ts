@@ -5,6 +5,8 @@ export function handleNodeMouseEnter(
   edgesState: Edge[],
   nodesState: Node[]
 ) {
+
+
   const newEdges: Edge[] = [];
   const relatedNodeIds: Set<string> = new Set();
 
@@ -31,7 +33,15 @@ export function handleNodeMouseEnter(
             isHighlighted: true,
           },
         }
-      : { ...node, data: { ...node.data, isDimmed: true } }
+      : {
+          ...node,
+          data: {
+            ...node.data,
+            isDimmed:
+              node.type === "component" &&
+              node.data.entityName === hoveredNode.data.entityName,
+          },
+        }
   );
 
   return { newEdges, newNodes };
