@@ -116,6 +116,8 @@ export function Canvas(props: ICanvasProps) {
           nodeColor={nodeColor}
           nodeBorderRadius={10}
           maskColor="rgba(255, 255, 255, 0.1)"
+          maskStrokeColor="var(--text)"
+          nodeStrokeColor="var(--light)"
         />
         <Background variant={BackgroundVariant.Dots} gap={10} size={0.5} />
       </ReactFlow>
@@ -129,4 +131,5 @@ const nodeColor = (nodeType: Node): string =>
     const: "var(--const)",
     interface: "var(--foreground)",
     component: "var(--component)",
+    parent: "var(--background)",
   }[nodeType.type!]!);

@@ -195,3 +195,7 @@ h3 {
   background-color: var(--background);
 }
 
+
+.react-flow__minimap-node {
+  /* fill: var(--background); */
+}

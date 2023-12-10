@@ -26,10 +26,11 @@ export default async function getLayoutedNodes(
     layoutOptions: {
       "elk.algorithm": "box",
       "elk.direction": "DOWN",
-      "spacing.nodeNode": "50",
+      "spacing.nodeNode": "20",
     },
     children: nodeTypes.map((nodeType) => ({
       id: nodeType,
+      type: "parent",
       width: nodeWidth,
       height: nodeHeight,
       layoutOptions: {
