@@ -1,4 +1,4 @@
-import { useCallback, MouseEvent, useEffect, useState } from "react";
+import { useCallback, MouseEvent } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -8,16 +8,14 @@ import ReactFlow, {
   Node,
   useNodesState,
   useEdgesState,
+  FitViewOptions,
+  ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import * as src from "../../generated/sourcecode";
-import { FileViewState } from "../../core/file_view_state";
 import { NormalEdge } from "./edge";
 import { InterfaceNode } from "./nodes/interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
-import getLayoutedNodes from "./helpers/get_layouted_nodes";
-import { buildGraph } from "./helpers/build_graph";
 import {
   handleNodeMouseEnter,
   handleNodeMouseLeave,
@@ -31,40 +29,30 @@ const nodeTypes = {
   interface: InterfaceNode,
 };
 
-interface ICanvasProps {
-  fileViewState: FileViewState;
+interface IFlowProps {
+  nodes: Node[];
+  edges: Edge[];
 }
 
-const fitViewOptions = { duration: 300, padding: 20 };
+const fitViewOptions: FitViewOptions = {
+  duration: 300,
+  padding: 20,
+  minZoom: 0.5,
+  maxZoom: 1,
+};
 
-export function Canvas(props: ICanvasProps) {
-  const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] }>({
-    nodes: [],
-    edges: [],
-  });
+export function Flow(props: IFlowProps) {
+  console.log("=== props", props.nodes, props.edges);
 
-  useEffect(() => {
-    (async () => {
-      const graph = buildGraph(props.fileViewState);
-      const layoutedNodes = await getLayoutedNodes(graph.nodes, graph.edges);
-      setGraph({ nodes: layoutedNodes, edges: graph.edges });
-    })();
-  }, [props.fileViewState]);
+  const [nodesState, setNodesState, onNodesChange] = useNodesState(props.nodes);
+  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(props.edges);
 
-  const [nodesState, setNodesState, onNodesChange] = useNodesState(graph.nodes);
-  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(graph.edges);
-  useEffect(() => {
-    setNodesState(graph.nodes);
-    setEdgesState(graph.edges);
-  }, [graph, setNodesState, setEdgesState]);
+  console.log("=== state", nodesState, edgesState);
 
   const onNodeMouseEnter = useCallback(
     (_: MouseEvent, hoveredNode: Node) => {
       if (hoveredNode.type !== "component") {
-        return {
-          newEdges: edgesState,
-          newNodes: nodesState,
-        };
+        return;
       }
       const { newEdges, newNodes } = handleNodeMouseEnter(
         hoveredNode,
@@ -83,10 +71,6 @@ export function Canvas(props: ICanvasProps) {
     setNodesState(newNodes);
   }, [edgesState, nodesState, setEdgesState, setNodesState]);
 
-  if (nodesState.length === 0) {
-    return null;
-  }
-
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
@@ -99,6 +83,7 @@ export function Canvas(props: ICanvasProps) {
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
         fitView
+        // onInit={fitView}
         fitViewOptions={fitViewOptions}
         nodesFocusable
         panOnScroll
@@ -106,6 +91,8 @@ export function Canvas(props: ICanvasProps) {
         elementsSelectable={false}
         nodesDraggable={false}
         nodesConnectable={false}
+        minZoom={0.1}
+        maxZoom={2}
       >
         <Controls fitViewOptions={fitViewOptions} />
         <MiniMap
