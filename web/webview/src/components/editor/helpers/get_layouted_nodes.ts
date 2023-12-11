@@ -10,11 +10,14 @@ const nodeTypes = ["type", "const", "interface", "component"];
 
 type NodeType = (typeof nodeTypes)[number];
 
-const nodeTypeToAlgorithm: { [key: NodeType]: string } = {
-  type: "rectpacking",
-  const: "rectpacking",
-  interface: "rectpacking",
-  component: "mrtree",
+const layoutOptions: { [key: NodeType]: object } = {
+  type: { "elk.algorithm": "rectpacking" },
+  const: { "elk.algorithm": "rectpacking" },
+  interface: { "elk.algorithm": "rectpacking" },
+  component: {
+    "elk.algorithm": "mrtree",
+    "elk.spacing.nodeNode": "50",
+  },
 };
 
 export default async function getLayoutedNodes(
@@ -26,7 +29,7 @@ export default async function getLayoutedNodes(
     layoutOptions: {
       "elk.algorithm": "box",
       "elk.direction": "DOWN",
-      "spacing.nodeNode": "20",
+      "elk.spacing.nodeNode": "50",
     },
     children: nodeTypes.map((nodeType) => ({
       id: nodeType,
@@ -34,9 +37,9 @@ export default async function getLayoutedNodes(
       width: nodeWidth,
       height: nodeHeight,
       layoutOptions: {
-        "elk.algorithm": nodeTypeToAlgorithm[nodeType],
         "elk.direction": "DOWN",
-        "spacing.nodeNode": "30",
+        "elk.spacing.nodeNode": "20",
+        ...layoutOptions[nodeType],
       },
       children: nodes
         .filter((node) => node.type === nodeType)

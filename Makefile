@@ -20,3 +20,7 @@ lsp:
 tygo:
 	@tygo generate
 
+# static Analysis tool to detect potential nil panics in go code
+.PHONY: nilaway
+nilaway:
+	@nilaway ./...
