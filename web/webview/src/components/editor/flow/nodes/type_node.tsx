@@ -1,5 +1,5 @@
 import { NodeProps } from "reactflow";
-import * as ts from "../../../generated/typesystem";
+import * as ts from "../../../../generated/typesystem";
 import { useZoom } from "./use_zoom";
 import classnames from "classnames";
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Node } from "reactflow";
 import { FileViewState } from "../../core/file_view_state";
 import { buildGraph } from "./helpers/build_graph";
-import { Flow } from "./flow";
+import { Flow } from "./flow/flow";
 import getLayoutedNodes from "./helpers/get_layouted_nodes";
 
 interface IEditorProps {

@@ -9,17 +9,13 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   FitViewOptions,
-  ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { NormalEdge } from "./edge";
 import { InterfaceNode } from "./nodes/interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
-import {
-  handleNodeMouseEnter,
-  handleNodeMouseLeave,
-} from "./helpers/mouse_handlers";
+import { handleNodeMouseEnter, handleNodeMouseLeave } from "./mouse_handlers";
 
 const edgeTypes = { normal: NormalEdge };
 const nodeTypes = {
@@ -35,7 +31,7 @@ interface IFlowProps {
 }
 
 const fitViewOptions: FitViewOptions = {
-  duration: 300,
+  duration: 500,
   padding: 20,
   minZoom: 0.5,
   maxZoom: 1,
@@ -83,7 +79,6 @@ export function Flow(props: IFlowProps) {
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
         fitView
-        // onInit={fitView}
         fitViewOptions={fitViewOptions}
         nodesFocusable
         panOnScroll
