@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Canvas } from "./canvas/canvas";
+import { Editor } from "./editor/editor";
 import { getFileViewState } from "../core/file_view_state";
 import { ResolveFileResponce } from "../generated/lsp_api";
 
@@ -19,11 +19,13 @@ export default function App() {
     return () => window.removeEventListener("message", listener);
   }, []);
 
-  const fileViewState = useMemo(() => getFileViewState(state), [state]);
+  if (state === undefined) {
+    return null;
+  }
 
   return (
     <div className="app">
-      <Canvas fileViewState={fileViewState} />
+      <Editor fileViewState={getFileViewState(state)} />
     </div>
   );
 }
