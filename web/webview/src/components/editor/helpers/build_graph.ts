@@ -176,7 +176,7 @@ function buildAndInsertInterfaceNode(
       title: entityName,
       interface: iface,
       isDimmed: false,
-      isHighlighted: false,
+      isRelated: false,
       entityName: entityName,
     } as IInterfaceNodeProps,
   };
@@ -196,7 +196,7 @@ function buildAndInsertComponentNode(
       title: nodeView.name,
       interface: nodeView.interface,
       isDimmed: false,
-      isHighlighted: false,
+      isRelated: false,
       entityName: entityName,
     } as IInterfaceNodeProps,
   };
@@ -222,7 +222,7 @@ function getComponentIONodes(
       } as src.Interface,
       title: "in",
       isDimmed: false,
-      isHighlighted: false,
+      isRelated: false,
       entityName: entityName,
     } as IInterfaceNodeProps,
   };
@@ -240,7 +240,7 @@ function getComponentIONodes(
       } as src.Interface,
       title: "out",
       isDimmed: false,
-      isHighlighted: false,
+      isRelated: false,
       entityName: entityName,
     } as IInterfaceNodeProps,
   };

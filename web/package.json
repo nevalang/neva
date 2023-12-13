@@ -78,6 +78,7 @@
       {
         "command": "neva.openPreview",
         "title": "Preview 👀",
+        "icon": "$(eye)",
         "category": "Neva"
       }
     ],

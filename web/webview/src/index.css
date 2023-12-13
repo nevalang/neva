@@ -85,7 +85,7 @@ h3 {
   background-color: var(--const);
 }
 
-.react-flow__node-default.highlighted {
+.react-flow__node-default.related {
   opacity: 0.5;
 }
 

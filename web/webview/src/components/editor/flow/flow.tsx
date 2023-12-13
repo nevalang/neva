@@ -86,7 +86,7 @@ export function Flow(props: IFlowProps) {
         elementsSelectable={false}
         nodesDraggable={false}
         nodesConnectable={false}
-        minZoom={0.1}
+        minZoom={0.3}
         maxZoom={2}
       >
         <Controls fitViewOptions={fitViewOptions} />

@@ -1,4 +1,4 @@
-package lsp
+package indexer
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type Indexer struct {
 	Analyzer analyzer.Analyzer
 }
 
-func (i Indexer) index(ctx context.Context, path string) (src.Module, string, error) {
+func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, problems string, err error) {
 	build, err := i.Builder.Build(ctx, path)
 	if err != nil {
 		return src.Module{}, "", fmt.Errorf("builder: %w", err)
@@ -29,7 +29,7 @@ func (i Indexer) index(ctx context.Context, path string) (src.Module, string, er
 		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
 	}
 
-	mod := src.Module{
+	mod = src.Module{
 		Manifest: rawMod.Manifest,
 		Packages: parsedPkgs,
 	}

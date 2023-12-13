@@ -31,24 +31,26 @@ export default async function getLayoutedNodes(
       "elk.direction": "DOWN",
       "elk.spacing.nodeNode": "50",
     },
-    children: nodeTypes.map((nodeType) => ({
-      id: nodeType,
-      type: "parent",
-      width: nodeWidth,
-      height: nodeHeight,
-      layoutOptions: {
-        "elk.direction": "DOWN",
-        "elk.spacing.nodeNode": "20",
-        ...layoutOptions[nodeType],
-      },
-      children: nodes
-        .filter((node) => node.type === nodeType)
-        .map((node) => ({
-          ...node,
-          width: nodeWidth,
-          height: nodeHeight,
-        })),
-    })),
+    children: nodeTypes
+      .map((nodeType) => ({
+        id: nodeType,
+        type: "parent",
+        width: nodeWidth,
+        height: nodeHeight,
+        layoutOptions: {
+          "elk.direction": "DOWN",
+          "elk.spacing.nodeNode": "20",
+          ...layoutOptions[nodeType],
+        },
+        children: nodes
+          .filter((node) => node.type === nodeType)
+          .map((node) => ({
+            ...node,
+            width: nodeWidth,
+            height: nodeHeight,
+          })),
+      }))
+      .filter((node) => node.children.length > 0),
     edges: edges.map((edge) => ({
       id: edge.id,
       sources: [edge.source],

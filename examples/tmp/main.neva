@@ -36,15 +36,15 @@ types {
     MyArrNested [512][256]str
 }
 
-const {
-    PI f32  3.14
-    MAGIC_NUM i8  42
-    pub VEC_EMPTY vec<i8>  []
-    VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
-    REC { foo int }  { foo: 42 }
-    pub ENUM { Monday, Tuesday }  1
-}
+// const {
+//     PI f32 3.14
+//     MAGIC_NUM i8  42
+//     pub VEC_EMPTY vec<i8>  []
+//     VEC_FULL vec<i8>  [1, 2, 3, 4]
+//     ARR [4]i8  [0, 1, 2, 3]
+//     REC { foo int }  { foo: 42 }
+//     pub ENUM { Monday, Tuesday }  1
+// }
 
 interfaces {
     IReader1 () ()
@@ -110,8 +110,8 @@ interfaces {
 components {
 	Main(enter) (exit) {
 		nodes {
-			readFirstInt ReadInt
-			readSecondInt ReadInt
+			readFirstInt ReadInt(Foo())
+			readSecondInt ReadInt(Bar())
 			add Add<int>
 			print core.Print<int | str>
 		}
@@ -129,12 +129,14 @@ components {
 		}
 	}
 
-	ReadInt(sig) (v int, err str) { 
+	ReadInt(sig) (v int, err str) {
 		nodes {
 			read core.Read
 			parse core.ParseInt
 		}
 		net {
+            abs.x -> out.x
+
 			in.sig -> read.sig
 			read.v -> parse.v
 			parse.err -> out.err

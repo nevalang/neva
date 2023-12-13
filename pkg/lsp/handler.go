@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/nevalang/neva/pkg/lsp/indexer"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
@@ -39,7 +40,7 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 }
 
 //nolint:lll,funlen
-func BuildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *Handler {
+func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.Indexer) *Handler {
 	h := &Handler{
 		Handler: &protocol.Handler{},
 	}
@@ -117,10 +118,10 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer Indexer) *
 		return nil
 	}
 
-	h.TextDocumentDidOpen = s.TextDocumentDidOpen
-	h.TextDocumentDidChange = func(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
+	h.TextDocumentDidOpen = func(glpsCtx *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
 		return nil
 	}
+	h.TextDocumentDidChange = s.TextDocumentDidChange
 	h.TextDocumentWillSave = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) error {
 		return nil
 	}

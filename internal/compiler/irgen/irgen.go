@@ -21,11 +21,11 @@ func New() Generator {
 }
 
 var (
-	ErrNoPkgs                 = errors.New("no packages")
-	ErrPkgNotFound            = errors.New("pkg not found")
-	ErrEntityNotFound         = errors.New("entity not found")
-	ErrSubNode                = errors.New("sub node")
-	ErrNodeSlotsCountNotFound = errors.New("node slots count not found")
+	ErrNoPkgs            = errors.New("no packages")
+	ErrPkgNotFound       = errors.New("pkg not found")
+	ErrEntityNotFound    = errors.New("entity not found")
+	ErrSubNode           = errors.New("sub node")
+	ErrNodeUsageNotFound = errors.New("node usage not found")
 )
 
 func (g Generator) Generate(ctx context.Context, prog src.Module, mainPkgName string) (*ir.Program, error) {
@@ -134,21 +134,21 @@ func (g Generator) processComponentNode( //nolint:funlen
 	}
 
 	// Merge "virtual" const nodes and "real" component nodes together.
-	maps.Copy(netResult.constNodes, component.Nodes)
 	allNodes := netResult.constNodes
+	maps.Copy(allNodes, component.Nodes)
 
-	for name, node := range allNodes {
-		nodePortsUsage, ok := netResult.nodesUsage[name]
+	for nodeName, node := range allNodes {
+		nodeUsage, ok := netResult.nodesUsage[nodeName]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrNodeSlotsCountNotFound, name)
+			return fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName)
 		}
 
 		// There's 2 reasons to insert message for runtime func: 1) it's const 2) overloading
 		var runtimeFuncMsg *ir.Msg
-		if nodePortsUsage.constValue != nil {
+		if nodeUsage.constValue != nil { // current node
 			runtimeFuncMsg = &ir.Msg{
-				Type: ir.MsgType_MSG_TYPE_STR,       //nolint:nosnakecase
-				Str:  nodePortsUsage.constValue.Str, // TODO implement for all data-types
+				Type: ir.MsgType_MSG_TYPE_STR, //nolint:nosnakecase
+				Str:  nodeUsage.constValue.Str,
 			}
 		} else if len(node.TypeArgs) > 0 {
 			// TODO check that component is in builtin package and only then insert message
@@ -163,8 +163,8 @@ func (g Generator) processComponentNode( //nolint:funlen
 		}
 
 		subNodeCtx := nodeContext{
-			path:       append(nodeCtx.path, name),
-			portsUsage: nodePortsUsage,
+			path:       append(nodeCtx.path, nodeName),
+			portsUsage: nodeUsage,
 			componentRef: src.EntityRef{
 				Pkg:  node.EntityRef.Pkg,
 				Name: node.EntityRef.Name,
@@ -173,7 +173,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 		}
 
 		if err := g.processComponentNode(ctx, subNodeCtx, scope, result); err != nil {
-			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), name)
+			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), nodeName)
 		}
 	}
 

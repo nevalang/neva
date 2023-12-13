@@ -8,7 +8,7 @@ export interface IInterfaceNodeProps {
   title: string;
   interface: src.Interface;
   isDimmed: boolean;
-  isHighlighted: boolean;
+  isRelated: boolean;
   entityName: string;
 }
 
@@ -29,7 +29,7 @@ export function InterfaceNode(props: NodeProps<IInterfaceNodeProps>) {
   return (
     <div
       className={classnames("react-flow__node-default", props.type, {
-        highlighted: props.data.isHighlighted,
+        related: props.data.isRelated,
         dimmed: props.data.isDimmed,
       })}
     >

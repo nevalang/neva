@@ -11,6 +11,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/pkg/lsp"
+	"github.com/nevalang/neva/pkg/lsp/indexer"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -39,7 +40,7 @@ func main() {
 		p,
 	)
 
-	indexer := lsp.Indexer{
+	indexer := indexer.Indexer{
 		Builder:  builder,
 		Parser:   p,
 		Analyzer: analyzer.MustNew(resolver),

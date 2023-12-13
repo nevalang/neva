@@ -46,6 +46,7 @@ export function getPreviewCommand(
     );
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
     panel.onDidDispose(() => (panel = undefined), null, context.subscriptions);
+    // panel.iconPath = "";
     console.info("new panel has been created");
 
     // Request index object from LSP server

@@ -8,7 +8,7 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--disable-extensions",
+        // "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/web",
         "${workspaceFolder}/examples"
       ],
@@ -33,7 +33,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/interpreter",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["do_nothing"],
+      "args": ["do_nothing"]
     },
     {
       "name": "Interpreter: add_numbers",
@@ -42,7 +42,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/interpreter",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["add_numbers/with_error_handling"],
+      "args": ["add_numbers/with_error_handling"]
     },
     // === Other ===
     {

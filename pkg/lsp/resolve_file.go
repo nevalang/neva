@@ -106,13 +106,3 @@ func getExtraForFile(file src.File, scope src.Scope) (map[string]map[string]src.
 
 	return extra, nil
 }
-
-// setState allows to update state in a thread-safe manner.
-func (s *Server) setState(mod src.Module, problem string) {
-	s.mu.Lock()
-	s.state = &State{
-		mod:     mod,
-		problem: problem,
-	}
-	s.mu.Unlock()
-}
