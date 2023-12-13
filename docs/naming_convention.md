@@ -14,7 +14,7 @@ Package names are in `lower_snake_case`. short 1-3 words, perfectly one word. Ex
 
 `CommonCamelCase` is used for types, interfaces and components and `UPPER_SNAKE_CASE` is used for constants.
 
-Entity names should be relatively long (up to 5 words) and descriptive. It's important 
+Entity names should be relatively long (up to 5 words) and descriptive. It's important
 because other names (e.g. ports) must be short and names of the entities they represent will serve as a documentation.
 
 Abbreviation is ok if there is a generally accepted one. Or the name turns out to be extremely long (more than 3 words).
@@ -25,11 +25,22 @@ On the other hand `AsyncFRdr` is bad too because words "File" and "Reader" are s
 
 Perfect name would be `AsyncFileReader`.
 
-Another bad example would be `GeneralPurposeReadonlyLinuxSocketStream`. It consist of 6 words which is too much, one of them must be omitted. `GeneralReadonlyLinuxSocketStream` is acceptable but given how long this name is, `GeneralReadLinuxSockStream` is better. 
+Another bad example would be `GeneralPurposeReadonlyLinuxSocketStream`. It consist of 6 words which is too much, one of them must be omitted. `GeneralReadonlyLinuxSocketStream` is acceptable but given how long this name is, `GeneralReadLinuxSockStream` is better.
 
 ### Types
 
 No special rules for types. Examples: `User`, `UserId`, `OrderDetail`, `HttpResponse`, `DayOfWeek`, `ResponseCode`, `FileType`.
+
+Enum elements are named exactly the same way: `{ Monday, Tuesday, ... }`.
+
+Struct fields are named this way too except they start with the lower case:
+
+```neva
+User struct {
+    age int
+    name string
+}
+```
 
 ### Components
 
