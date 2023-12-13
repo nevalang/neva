@@ -35,7 +35,6 @@ func (a Analyzer) AnalyzeExecutable(mod src.Module, mainPkgName string) (src.Mod
 	}, nil
 }
 
-// FIXME if there's more than 1 main pkg it will not work
 func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
 	if len(mod.Packages) == 0 { // Analyze can be called directly so we need to check emptiness here
 		return nil, ErrEmptyProgram
@@ -66,8 +65,6 @@ var (
 	ErrUnknownEntityKind = errors.New("unknown entity kind")
 )
 
-// TODO check that there's no 2 entities with the same name
-// and that there's no unused entities.
 func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, error) {
 	if len(pkgName) == 0 {
 		return nil, ErrEmptyPkg
@@ -84,7 +81,7 @@ func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, error
 	if err := mod.Packages[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
 		scope := src.Scope{
 			Module: mod,
-			Loc: src.ScopeLocation{
+			Location: src.ScopeLocation{
 				PkgName:  pkgName,
 				FileName: fileName,
 			},
@@ -107,7 +104,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
 	}
-	isStd := strings.HasPrefix(scope.Loc.PkgName, "std/")
+	isStd := strings.HasPrefix(scope.Location.PkgName, "std/")
 
 	switch entity.Kind {
 	case src.TypeEntity:

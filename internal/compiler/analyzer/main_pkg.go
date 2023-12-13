@@ -31,7 +31,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) 
 	}
 
 	scope := src.Scope{
-		Loc: src.ScopeLocation{
+		Location: src.ScopeLocation{
 			PkgName:  mainPkgName,
 			FileName: filename,
 		},

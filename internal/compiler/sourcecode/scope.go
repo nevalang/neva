@@ -10,7 +10,7 @@ import (
 
 // Scope is an entity that can be used to query the program.
 type Scope struct {
-	Loc ScopeLocation // It keeps track of current location to properly resolve imports and local references.
+	Location ScopeLocation // It keeps track of current location to properly resolve imports and local references.
 	// TODO use multiple modules
 	Module Module // And of course it does has access to the program itself.
 }
@@ -58,8 +58,8 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	}
 
 	return def, Scope{
-		Loc:    location,
-		Module: s.Module,
+		Location: location,
+		Module:   s.Module,
 	}, nil
 }
 
@@ -104,10 +104,10 @@ var (
 // This method MUST be used by all other methods that do entity lookup.
 func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 	if entityRef.Pkg == "" {
-		entity, filename, ok := s.Module.Packages[s.Loc.PkgName].Entity(entityRef.Name)
+		entity, filename, ok := s.Module.Packages[s.Location.PkgName].Entity(entityRef.Name)
 		if ok {
 			return entity, ScopeLocation{
-				PkgName:  s.Loc.PkgName,
+				PkgName:  s.Location.PkgName,
 				FileName: filename,
 			}, nil
 		}
@@ -124,7 +124,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, ScopeLocation, error) {
 		}, nil
 	}
 
-	realImportPkgName, ok := s.Module.Packages[s.Loc.PkgName][s.Loc.FileName].Imports[entityRef.Pkg]
+	realImportPkgName, ok := s.Module.Packages[s.Location.PkgName][s.Location.FileName].Imports[entityRef.Pkg]
 	if !ok {
 		return Entity{}, ScopeLocation{}, fmt.Errorf("%w: pkg %v", ErrNoImport, entityRef.Pkg)
 	}

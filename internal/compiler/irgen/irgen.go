@@ -37,7 +37,7 @@ func (g Generator) Generate(ctx context.Context, prog src.Module, mainPkgName st
 	_, fileName, _ := prog.Entity(src.EntityRef{Pkg: mainPkgName, Name: "Main"})
 	scope := src.Scope{
 		Module: prog,
-		Loc: src.ScopeLocation{
+		Location: src.ScopeLocation{
 			PkgName:  mainPkgName,
 			FileName: fileName,
 		},

@@ -46,7 +46,7 @@ func (s *Server) ResolveFile(glspCtx *glsp.Context, req ResolveFileRequest) (Res
 	fileName := strings.TrimSuffix(relPathLastPart, ".neva")
 
 	scope := src.Scope{
-		Loc: src.ScopeLocation{
+		Location: src.ScopeLocation{
 			ModuleName: "entry",
 			PkgName:    pkgName,
 			FileName:   fileName,
