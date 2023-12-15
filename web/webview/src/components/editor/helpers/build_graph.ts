@@ -20,23 +20,23 @@ export function buildGraph(fileViewState: FileViewState): {
   const edges: Edge[] = [];
 
   for (const typeDef of fileViewState.entities.types) {
-    buildAndInsertTypeDefNode(typeDef.name, typeDef.entity, nodes);
+    handleTypeNode(typeDef.name, typeDef.entity, nodes);
   }
 
   for (const constant of fileViewState.entities.constants) {
-    buildAndInsertConstNode(constant.name, constant.entity, nodes);
+    handleConstNode(constant.name, constant.entity, nodes);
   }
 
   for (const iface of fileViewState.entities.interfaces) {
-    buildAndInsertInterfaceNode(iface.name, iface.entity, nodes);
+    handleInterfaceNode(iface.name, iface.entity, nodes, "interface");
   }
 
   for (const component of fileViewState.entities.components) {
-    buildAndInsertComponentSubgraph(
+    handleInterfaceNode(
       component.name,
-      component.entity,
+      component.entity.interface!,
       nodes,
-      edges
+      "component"
     );
   }
 
@@ -129,7 +129,7 @@ function buildAndInsertComponentNodes(
   }
 }
 
-function buildAndInsertTypeDefNode(
+function handleTypeNode(
   entityName: string,
   typeDef: ts.Def,
   reactflowNodes: Node[]
@@ -146,7 +146,7 @@ function buildAndInsertTypeDefNode(
   reactflowNodes.push(reactflowNode);
 }
 
-function buildAndInsertConstNode(
+function handleConstNode(
   entityName: string,
   constant: src.Const,
   reactflowNodes: Node[]
@@ -163,14 +163,15 @@ function buildAndInsertConstNode(
   reactflowNodes.push(reactflowNode);
 }
 
-function buildAndInsertInterfaceNode(
+function handleInterfaceNode(
   entityName: string,
   iface: src.Interface,
-  reactflowNodes: Node[]
+  reactflowNodes: Node[],
+  type: "component" | "interface"
 ) {
   const reactflowNode = {
     id: entityName,
-    type: "interface",
+    type: type,
     position: defaultPosition,
     data: {
       title: entityName,

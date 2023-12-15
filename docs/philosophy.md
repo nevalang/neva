@@ -1,4 +1,4 @@
-# Language Philosophy
+# Philosophy
 
 Balance between _efficiency_, _performance_ and _safety_.
 
