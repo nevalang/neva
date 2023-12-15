@@ -1,4 +1,3 @@
-import { useCallback, MouseEvent } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -6,18 +5,14 @@ import ReactFlow, {
   BackgroundVariant,
   Edge,
   Node,
-  useNodesState,
-  useEdgesState,
   FitViewOptions,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { NormalEdge } from "./edge";
-import { InterfaceNode } from "./nodes/interface_node";
+import { InterfaceNode } from "../../interface_node";
 import { TypeNode } from "./nodes/type_node";
 import { ConstNode } from "./nodes/const_node";
-import { handleNodeMouseEnter, handleNodeMouseLeave } from "./mouse_handlers";
+import { useNavigate } from "react-router-dom";
 
-const edgeTypes = { normal: NormalEdge };
 const nodeTypes = {
   type: TypeNode,
   const: ConstNode,
@@ -38,46 +33,14 @@ const fitViewOptions: FitViewOptions = {
 };
 
 export function Flow(props: IFlowProps) {
-  console.log("=== props", props.nodes, props.edges);
-
-  const [nodesState, setNodesState, onNodesChange] = useNodesState(props.nodes);
-  const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(props.edges);
-
-  console.log("=== state", nodesState, edgesState);
-
-  const onNodeMouseEnter = useCallback(
-    (_: MouseEvent, hoveredNode: Node) => {
-      if (hoveredNode.type !== "component") {
-        return;
-      }
-      const { newEdges, newNodes } = handleNodeMouseEnter(
-        hoveredNode,
-        edgesState,
-        nodesState
-      );
-      setEdgesState(newEdges);
-      setNodesState(newNodes);
-    },
-    [edgesState, nodesState, setEdgesState, setNodesState]
-  );
-
-  const onNodeMouseLeave = useCallback(() => {
-    const { newEdges, newNodes } = handleNodeMouseLeave(edgesState, nodesState);
-    setEdgesState(newEdges);
-    setNodesState(newNodes);
-  }, [edgesState, nodesState, setEdgesState, setNodesState]);
+  const navigate = useNavigate();
 
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        nodes={nodesState}
-        edges={edgesState}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeMouseEnter={onNodeMouseEnter}
-        onNodeMouseLeave={onNodeMouseLeave}
+        nodes={props.nodes}
+        edges={props.edges}
         fitView
         fitViewOptions={fitViewOptions}
         nodesFocusable
@@ -86,6 +49,9 @@ export function Flow(props: IFlowProps) {
         elementsSelectable={false}
         nodesDraggable={false}
         nodesConnectable={false}
+        onNodeClick={(_, node: Node) => {
+          navigate(`/${node.data.entityName}`);
+        }}
         minZoom={0.3}
         maxZoom={2}
       >

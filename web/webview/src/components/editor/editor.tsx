@@ -1,20 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Node } from "reactflow";
-import { FileViewState } from "../../core/file_view_state";
 import { buildGraph } from "./helpers/build_graph";
-import { Flow } from "./flow/flow";
+import { Flow } from "./flow";
 import getLayoutedNodes from "./helpers/get_layouted_nodes";
+import { FileContext } from "../app";
 
-interface IEditorProps {
-  fileViewState: FileViewState;
-}
-
-export function Editor(props: IEditorProps) {
+export function Editor() {
+  const fileContext = useContext(FileContext);
   const { nodes, edges } = useMemo(
-    () => buildGraph(props.fileViewState),
-    [props.fileViewState]
+    () => buildGraph(fileContext.state),
+    [fileContext]
   );
-
   const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
 
   useEffect(() => {
