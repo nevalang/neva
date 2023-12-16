@@ -1,4 +1,4 @@
-import { Edge, Node } from "reactflow";
+import { Node } from "reactflow";
 import ELK, { ElkNode } from "elkjs";
 
 const nodeWidth = 150;
@@ -6,41 +6,29 @@ const nodeHeight = 100;
 
 const elk = new ELK();
 
-const nodeTypes = ["type", "const", "interface", "component"];
-
-type NodeType = (typeof nodeTypes)[number];
-
-const layoutOptions: { [key: NodeType]: object } = {
-  type: { "elk.algorithm": "rectpacking" },
-  const: { "elk.algorithm": "rectpacking" },
-  interface: { "elk.algorithm": "rectpacking" },
-  component: {
-    "elk.algorithm": "mrtree",
-    "elk.spacing.nodeNode": "50",
-  },
-};
+const parents = ["type", "const", "interface", "component"]; // node-types
 
 export async function getLayoutedNodes(nodes: Node[]): Promise<Node[]> {
   const graph: ElkNode = {
     id: "root",
     layoutOptions: {
-      "elk.algorithm": "box",
+      "elk.algorithm": "rectpacking",
       "elk.direction": "DOWN",
-      "elk.spacing.nodeNode": "50",
+      "elk.spacing.nodeNode": "100",
     },
-    children: nodeTypes
-      .map((nodeType) => ({
-        id: nodeType,
+    children: parents
+      .map((parentNodeId) => ({
+        id: parentNodeId,
         type: "parent",
         width: nodeWidth,
         height: nodeHeight,
         layoutOptions: {
           "elk.direction": "DOWN",
           "elk.spacing.nodeNode": "20",
-          ...layoutOptions[nodeType],
+          "elk.algorithm": "rectpacking",
         },
         children: nodes
-          .filter((node) => node.type === nodeType)
+          .filter((node) => node.type === parentNodeId)
           .map((node) => ({
             ...node,
             width: nodeWidth,
@@ -81,8 +69,8 @@ export async function getLayoutedNodes(nodes: Node[]): Promise<Node[]> {
 }
 
 const labels: { [key: string]: string } = {
-  type: "📦 Types",
-  const: "📌 Constants",
-  interface: "🔌 Interfaces",
-  component: "🔨 Components",
+  type: "TYPES",
+  const: "CONSTANTS",
+  interface: "INTERFACES",
+  component: "COMPONENTS",
 };

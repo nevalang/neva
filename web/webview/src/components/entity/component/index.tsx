@@ -25,7 +25,9 @@ export function Component(props: IComponentProps) {
   );
 
   return (
-    <Flow nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesDraggable />
+    <div className="entity">
+      <Flow nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesDraggable />
+    </div>
   );
 }
 

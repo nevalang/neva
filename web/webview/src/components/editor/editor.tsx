@@ -43,11 +43,13 @@ export function Editor() {
   );
 
   return (
-    <Flow
-      nodes={layoutedNodes}
-      edges={[]}
-      nodeTypes={flowNodeTypes}
-      onNodeClick={handleNodeClick}
-    />
+    <div className="editor">
+      <Flow
+        nodes={layoutedNodes}
+        edges={[]}
+        nodeTypes={flowNodeTypes}
+        onNodeClick={handleNodeClick}
+      />
+    </div>
   );
 }
