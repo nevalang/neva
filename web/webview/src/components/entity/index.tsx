@@ -10,8 +10,32 @@ export function Entity() {
   const entityName = location.pathname.substr(1);
   const entity = (fileContext.resp.file.entities || {})[entityName];
 
+  if (entity.kind === src.TypeEntity) {
+    const typ = fileContext.state.entities.types.find(
+      (entity) => entity.name === entityName
+    );
+    return JSON.stringify(typ);
+  }
+
+  if (entity.kind === src.InterfaceEntity) {
+    const constant = fileContext.state.entities.interfaces.find(
+      (entity) => entity.name === entityName
+    );
+    return JSON.stringify(constant);
+  }
+
+  if (entity.kind === src.ConstEntity) {
+    const constant = fileContext.state.entities.constants.find(
+      (entity) => entity.name === entityName
+    );
+    return JSON.stringify(constant);
+  }
+
   if (entity.kind === src.ComponentEntity) {
-    return <Component />;
+    const viewState = fileContext.state.entities.components.find(
+      (entity) => entity.name === entityName
+    );
+    return <Component viewState={viewState!.entity} />;
   }
 
   return location.pathname;
