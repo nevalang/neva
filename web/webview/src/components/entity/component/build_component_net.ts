@@ -1,66 +1,25 @@
-import { Node, Edge, MarkerType, XYPosition } from "reactflow";
+import { Edge, MarkerType, Node, XYPosition } from "reactflow";
 import * as src from "../../../generated/sourcecode";
-import * as ts from "../../../generated/typesystem";
 import {
   ComponentViewState,
-  FileViewState,
   NodesViewState,
 } from "../../../core/file_view_state";
-import { ITypeNodeProps } from "../flow/nodes/type_node";
-import { IConstNodeProps } from "../flow/nodes/const_node";
-import { IInterfaceNodeProps } from "../flow/nodes/interface_node";
+import { IInterfaceNodeProps } from "../../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 
-export function buildGraph(fileViewState: FileViewState): {
-  nodes: Node[];
-  edges: Edge[];
-} {
+export function buildComponentNetwork(
+  entityName: string,
+  component: ComponentViewState
+) {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  for (const typeDef of fileViewState.entities.types) {
-    buildAndInsertTypeDefNode(typeDef.name, typeDef.entity, nodes);
-  }
+  buildAndInsertInterfaceNodes(component.interface!, entityName, nodes);
+  buildAndInsertComponentNodes(entityName, component.nodes, nodes);
+  buildAndInsertNetEdges(component.net, entityName, edges);
 
-  for (const constant of fileViewState.entities.constants) {
-    buildAndInsertConstNode(constant.name, constant.entity, nodes);
-  }
-
-  for (const iface of fileViewState.entities.interfaces) {
-    buildAndInsertInterfaceNode(iface.name, iface.entity, nodes);
-  }
-
-  for (const component of fileViewState.entities.components) {
-    buildAndInsertComponentSubgraph(
-      component.name,
-      component.entity,
-      nodes,
-      edges
-    );
-  }
-
-  return {
-    nodes: nodes,
-    edges: edges,
-  };
-}
-
-function buildAndInsertComponentSubgraph(
-  entityName: string,
-  component: ComponentViewState,
-  reactflowNodes: Node[],
-  reactflowEdges: Edge[]
-) {
-  if (component.interface) {
-    buildAndInsertInterfaceNodes(
-      component.interface,
-      entityName,
-      reactflowNodes
-    );
-  }
-  buildAndInsertComponentNodes(entityName, component.nodes, reactflowNodes);
-  buildAndInsertNetEdges(component.net, entityName, reactflowEdges);
+  return { nodes, edges };
 }
 
 function buildAndInsertNetEdges(
@@ -94,7 +53,6 @@ function buildAndInsertNetEdges(
         target: `${entityName}-${receiver.portAddr!.node!}`,
         targetHandle: receiver.portAddr?.port,
         markerEnd: { type: MarkerType.Arrow },
-        type: "normal",
         data: {
           isHighlighted: false,
         },
@@ -129,60 +87,6 @@ function buildAndInsertComponentNodes(
   }
 }
 
-function buildAndInsertTypeDefNode(
-  entityName: string,
-  typeDef: ts.Def,
-  reactflowNodes: Node[]
-) {
-  const reactflowNode = {
-    id: entityName,
-    type: "type",
-    position: defaultPosition,
-    data: {
-      title: entityName,
-      type: typeDef,
-    } as ITypeNodeProps,
-  };
-  reactflowNodes.push(reactflowNode);
-}
-
-function buildAndInsertConstNode(
-  entityName: string,
-  constant: src.Const,
-  reactflowNodes: Node[]
-) {
-  const reactflowNode = {
-    id: entityName,
-    type: "const",
-    position: defaultPosition,
-    data: {
-      title: entityName,
-      const: constant,
-    } as IConstNodeProps,
-  };
-  reactflowNodes.push(reactflowNode);
-}
-
-function buildAndInsertInterfaceNode(
-  entityName: string,
-  iface: src.Interface,
-  reactflowNodes: Node[]
-) {
-  const reactflowNode = {
-    id: entityName,
-    type: "interface",
-    position: defaultPosition,
-    data: {
-      title: entityName,
-      interface: iface,
-      isDimmed: false,
-      isRelated: false,
-      entityName: entityName,
-    } as IInterfaceNodeProps,
-  };
-  reactflowNodes.push(reactflowNode);
-}
-
 function buildAndInsertComponentNode(
   entityName: string,
   nodeView: NodesViewState,
@@ -209,7 +113,7 @@ function getComponentIONodes(
   position: XYPosition
 ) {
   const defaultData = {
-    type: "component",
+    type: "interface",
     position: position,
   };
 

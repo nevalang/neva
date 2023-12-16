@@ -1,18 +1,16 @@
 :root {
   --component: #be6856;
-  --foreground: #00a8c6;
-  --type: #61afef;
-  --background: #22272e;
-  --background-second: #2d333b;
-  --dim: #769390;
-  --text: #adbac7;
-  --success: #347d39;
   --const: #d19a66;
+  --interface: #00a8c6;
+  --type: #61afef;
+  --dark: #22272e;
+  --dark-second: #2d333b;
+  --grey: #adbac7;
   --light: #c5c5c5
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--dark);
   padding: 20px;
 }
 
@@ -40,18 +38,20 @@ h3 {
   padding: 0;
   border-radius: 5px;
   border-width: 1px;
-  box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
-  /* transition: all 0.15s ease-out; */
-  background-color: var(--text);
+  /* box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5); */
+  background-color: var(--grey);
 }
 
 .react-flow__node-default.interface {
-  border-color: var(--foreground);
-  background-color: var(--text);
+  border-color: var(--interface);
+  background-color: var(--grey);
 }
 
 .react-flow__node-default.component {
   background-color: var(--light);
+}
+.editor .react-flow__node-default.component:hover {
+  cursor: pointer;
 }
 
 .react-flow__node-default.type {
@@ -63,8 +63,8 @@ h3 {
 }
 
 .react-flow__controls-button {
-  background-color: var(--text);
-  border-color: var(--background-second)
+  background-color: var(--grey);
+  border-color: var(--dark-second)
 }
 
 .react-flow__node-default.component .ports {
@@ -73,8 +73,8 @@ h3 {
 
 .react-flow__node-default.parent {
   align-items: flex-start;
-  border-color: var(--text);
-  color: var(--text);
+  border-color: var(--grey);
+  color: var(--grey);
   background-color: transparent;
   box-shadow: none;
   /* background-color: transparent; */
@@ -93,42 +93,6 @@ h3 {
   opacity: 0.1;
 }
 
-.react-flow__node-default:hover {
-  opacity: 1;
-  border-color: white;
-  box-shadow: none;
-}
-
-.react-flow__node-default:active {
-  box-shadow: 0px 0 10px white;
-  transform: scale(1.1);
-  border-color: white;
-  background-image: linear-gradient(
-    45deg,
-    hsl(213deg 89% 64%) 0%,
-    hsl(228deg 85% 63%) 9%,
-    hsl(242deg 81% 63%) 18%,
-    hsl(256deg 77% 62%) 27%,
-    hsl(271deg 73% 61%) 36%,
-    hsl(285deg 69% 60%) 45%,
-    hsl(299deg 65% 59%) 55%,
-    hsl(313deg 61% 58%) 64%,
-    hsl(328deg 56% 57%) 73%,
-    hsl(342deg 53% 56%) 82%,
-    hsl(356deg 48% 55%) 91%,
-    hsl(10deg 44% 54%) 100%
-  );
-}
-
-.react-flow__node-default:active .ports,
-.react-flow__node-default:active .nodeBody {
-  background: transparent;
-  color: white;
-}
-.react-flow__node-default:active .ports > :not(:last-child) {
-  border-color: transparent;
-}
-
 .react-flow__handle {
   flex: 1;
   position: static;
@@ -143,8 +107,7 @@ h3 {
 }
 
 .react-flow__edge path {
-  transition: stroke 0.15s ease-out;
-  stroke: var(--text);
+  stroke: var(--grey);
 }
 
 .react-flow__edge-interaction path {
@@ -153,9 +116,8 @@ h3 {
 
 .nodeBody {
   padding: 15px;
-  color: var(--background);
+  color: var(--dark);
   font-weight: 400;
-  transition: color 0.15s ease-out;
 }
 
 .nodeName {
@@ -165,16 +127,14 @@ h3 {
 .nodeType {
   padding-top: 5px;
   font-weight: 200;
-  /* transition: all 0.15s ease-out; */
 }
 
 .ports {
   display: flex;
   justify-content: space-around;
   font-weight: 400;
-  color: var(--background-second);
-  background-color: var(--foreground);
-  /* transition: all 0.15s ease-out; */
+  color: var(--dark-second);
+  background-color: var(--interface);
 }
 .ports.in {
   border-radius: 3px 3px 0px 0px;
@@ -183,7 +143,7 @@ h3 {
   border-radius: 0px 0px 3px 3px;
 }
 .ports > :not(:last-child) {
-  border-right: 1px solid var(--text);
+  border-right: 1px solid var(--grey);
 }
 .ports.hidden {
   color: transparent;
@@ -194,10 +154,7 @@ h3 {
 }
 
 .react-flow__minimap {
-  background-color: var(--background);
+  background-color: var(--dark);
 }
 
 
-.react-flow__minimap-node {
-  /* fill: var(--background); */
-}

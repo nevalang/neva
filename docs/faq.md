@@ -1,38 +1,35 @@
-# FAQ
-
-Frequently asked questions
+# Frequently Asked Questions
 
 ## General
 
 ### What is this?
 
-This is **Neva** - first visual general-purpose data-flow (flow-based) programming language with static structural typing and implicit parallelism.
+This is **Neva** - first visual general-purpose flow-based programming language with static structural typing and implicit parallelism.
 
 ### Why yet another language?
 
-The goal is to create a system that is so powerful and easy to use at the same time, that even a person with zero programming skills can create effective and maintainable programs. Imagine what a professional could do with such tool.
+The goal is to create a system that is so powerful and easy to use at the same time, that even a person with zero programming skills can create effective and maintainable software with it. Imagine what a professional programmer could do with this tool.
 
-To achieve this we need 2 things: _visual programming_ and _implicit parallelism_. First will take maintainability to the next level by making diagrams first class source code and the second will effortlessly unlock the power of multi-core processors.
+To achieve this we need many things. 2 of them can highlighted among them all:
 
-### Why FBP/Dataflow?
+1. Visual programming - natural way of thinking
+2. Implicit parallelism - elimination of manual concurrency management
 
-Conventional programming paradigms served us well by taking us so far but it's time to admit that they have failed at least at 2 things: visual programming and parallelism. Exactly 2 things we need to make a next-gen programming language.
+### Why not yet another language?
 
-#### Implicit parallelism
+Conventional programming paradigms served us well by taking us so far but it's time to admit that they have failed at visual programming and that parallelism is usually hard to implement right with them. Also dataflow is just what the things are in real world. This is the natural way of thinking about computation.
 
-Any conventional program become more difficult when you add parallelism. As soon as you have more than one thread of execution bad things can happen such as deadlocks, race-conditions or memory-leaks. There are langauges that makes this simpler by introdusing concurrency primitives from dataflow world such as goroutines and channels in Go (CSP) or Erlang's processes (actor-model). However, it's still programmer's responsibility to manage those primitives. Concept of parallelism is simple, any adult understands it. But to make use of computer parallelism one must understand coroutines, channels, mutexes and atomics. We can do better.
+#### No manual concurrency management
+
+Any conventional program become more difficult when you add parallelism. As soon as you have more than one thread, bad things can happen - deadlocks, race-conditions, you name it. There are languages that makes this simpler by introdusing concurrency primitives from dataflow world such as goroutines and channels in Go (CSP) or Erlang's processes (actor-model). However, it's still programmer's responsibility to manage those primitives. Concept of parallelism is simple, any adult understands it. But to make use of computer parallelism one must understand coroutines, channels, mutexes and atomics.
 
 #### Visual programming
 
-First - text is also _visual_ representation (but using sounds or smells is by the way interesting idea). We recognize patterns by looking at code and parse the program's heirarchal structure with braces or offsets.
+The argument that visual programming is less maintanable is wrong. This is just different form of representing a data. Flow-based approach allowes to abstract things away exactly like we used to with text-based programming.
 
-Second - argument that what we usually call visual programming is less maintanable is simply wrong. This is just different (also visual and more explicit one) form of representing a data of specific structure. Flow-based approach allowes to abstract things away exactly like text-based programming does.
+Actually there's no dependency on visual programming. Neva designed with support for visual programming in mind but in fact it's possible to use text representation.
 
-Third - actually there's no dependency on visual programming. Neva designed with support for visual programming as a first-class citizen in mind but in fact it's possible to use text representation. Actually text is used as a source code for version control. There's also, by the way, no dependency on specific syntax.
-
-Neva programs are, first of all, typed graphs that describes dataflows. The paradigm ([FBP]()) allowes to represent they in an infinite ways (including e.g. VR).
-
-### Why Flow Based Programming and not OOP/FP/etc?
+### Why FBP and not OOP/FP/etc?
 
 1. Higher level programming
 2. Implicit concurrency

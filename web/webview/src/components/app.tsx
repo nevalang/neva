@@ -1,31 +1,82 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, createContext } from "react";
 import { Editor } from "./editor/editor";
-import { getFileViewState } from "../core/file_view_state";
+import { FileViewState, getFileViewState } from "../core/file_view_state";
 import { ResolveFileResponce } from "../generated/lsp_api";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { Entity } from "../components/entity";
 
-const vscodeApi = acquireVsCodeApi<ResolveFileResponce>();
+const vscodeApi = acquireVsCodeApi<VSCodePersistentState>();
+
+export interface IFileContext {
+  resp: ResolveFileResponce;
+  state: FileViewState;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const FileContext = createContext<IFileContext>(undefined as any);
+
+export interface VSCodePersistentState {
+  resp: ResolveFileResponce;
+  pathname: string;
+}
 
 export default function App() {
   const persistentState = vscodeApi.getState();
-  const [state, setState] = useState(persistentState);
+  const [resp, setResp] = useState(persistentState?.resp);
 
   useEffect(() => {
     const listener = (event: { data: ResolveFileResponce }) => {
-      vscodeApi.setState(event.data!);
-      setState(event.data!);
+      vscodeApi.setState({
+        resp: event.data!,
+        pathname: persistentState?.pathname || "/",
+      });
+      setResp(event.data!);
     };
     window.addEventListener("message", listener);
     vscodeApi.postMessage("ready");
     return () => window.removeEventListener("message", listener);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // this is only must be done once
 
-  if (state === undefined) {
+  if (resp === undefined) {
     return null;
   }
 
+  const contextValue = {
+    resp: resp,
+    state: getFileViewState(resp),
+  };
+
   return (
     <div className="app">
-      <Editor fileViewState={getFileViewState(state)} />
+      <FileContext.Provider value={contextValue}>
+        <MemoryRouter initialEntries={[persistentState?.pathname || "/"]}>
+          <LocationSaver>
+            <Routes>
+              <Route path="/" element={<Editor />} />
+              <Route path=":entityName" element={<Entity />} />
+            </Routes>
+          </LocationSaver>
+        </MemoryRouter>
+      </FileContext.Provider>
     </div>
   );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function LocationSaver(props: any) {
+  const location = useLocation();
+
+  useEffect(() => {
+    const presistentState = vscodeApi.getState();
+    if (!presistentState) {
+      return;
+    }
+    vscodeApi.setState({
+      pathname: location.pathname,
+      resp: presistentState.resp,
+    });
+  }, [location.pathname]);
+
+  return props.children;
 }

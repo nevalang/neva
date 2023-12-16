@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import classnames from "classnames";
 import { Handle, NodeProps, HandleType, Position } from "reactflow";
-import * as src from "../../../../generated/sourcecode";
+import * as src from "../../../generated/sourcecode";
 import { useZoom } from "./use_zoom";
 
 export interface IInterfaceNodeProps {
