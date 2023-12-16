@@ -37,7 +37,9 @@ export function Entity() {
     const viewState = fileContext.state.entities.components.find(
       (entity) => entity.name === entityName
     );
-    element = <Component viewState={viewState!.entity} />;
+    element = (
+      <Component entityName={entityName} viewState={viewState!.entity} />
+    );
   }
 
   return (

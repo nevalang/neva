@@ -8,21 +8,18 @@ import { IInterfaceNodeProps } from "../../../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 
-export function buildAndInsertComponentSubgraph(
+export function buildComponentNetwork(
   entityName: string,
-  component: ComponentViewState,
-  reactflowNodes: Node[],
-  reactflowEdges: Edge[]
+  component: ComponentViewState
 ) {
-  if (component.interface) {
-    buildAndInsertInterfaceNodes(
-      component.interface,
-      entityName,
-      reactflowNodes
-    );
-  }
-  buildAndInsertComponentNodes(entityName, component.nodes, reactflowNodes);
-  buildAndInsertNetEdges(component.net, entityName, reactflowEdges);
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+
+  buildAndInsertInterfaceNodes(component.interface!, entityName, nodes);
+  buildAndInsertComponentNodes(entityName, component.nodes, nodes);
+  buildAndInsertNetEdges(component.net, entityName, edges);
+
+  return { nodes, edges };
 }
 
 export function buildAndInsertNetEdges(

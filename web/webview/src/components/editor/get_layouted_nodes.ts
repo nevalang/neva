@@ -61,17 +61,17 @@ export async function getLayoutedNodes(
   const layoutedGraph = await elk.layout(graph);
 
   const layoutedNodes: Node[] = [];
-  for (const groupNode of layoutedGraph.children!) {
+  for (const parentNode of layoutedGraph.children!) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (groupNode as any).data;
+    const data = (parentNode as any).data;
     layoutedNodes.push({
-      ...groupNode,
-      id: groupNode.id,
-      position: { x: groupNode.x!, y: groupNode.y! },
-      data: { ...data, label: groupNode.id },
-      style: { width: groupNode.width, height: groupNode.height },
+      ...parentNode,
+      id: parentNode.id,
+      position: { x: parentNode.x!, y: parentNode.y! },
+      data: { ...data, label: labels[parentNode.id] },
+      style: { width: parentNode.width, height: parentNode.height },
     });
-    for (const childNode of groupNode.children!) {
+    for (const childNode of parentNode.children!) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = (childNode as any).data;
       layoutedNodes.push({
@@ -80,10 +80,17 @@ export async function getLayoutedNodes(
         position: { x: childNode.x!, y: childNode.y! },
         data: { ...data, label: childNode.id },
         style: { width: childNode.width, height: childNode.height },
-        parentNode: groupNode.id,
+        parentNode: parentNode.id,
       });
     }
   }
 
   return layoutedNodes;
 }
+
+const labels: { [key: string]: string } = {
+  type: "📦 Types",
+  const: "📌 Constants",
+  interface: "🔌 Interfaces",
+  component: "🔨 Components",
+};

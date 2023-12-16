@@ -56,6 +56,7 @@ export function Flow(props: IFlowProps) {
         nodesConnectable={false}
         onNodeClick={(_, node: Node) => {
           if (node.type !== "parent") {
+            console.log("!!!", `/${node.data.entityName}`);
             navigate(`/${node.data.entityName}`);
           }
         }}
@@ -84,7 +85,7 @@ const nodeColor = (nodeType: Node): string =>
   ({
     type: "var(--type)",
     const: "var(--const)",
-    interface: "var(--foreground)",
+    interface: "var(--interface)",
     component: "var(--component)",
-    parent: "var(--background)",
+    parent: "var(--dark)",
   }[nodeType.type!]!);
