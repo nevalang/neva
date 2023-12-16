@@ -1,10 +1,10 @@
 import { Node, Edge } from "reactflow";
-import * as src from "../../../generated/sourcecode";
-import * as ts from "../../../generated/typesystem";
-import { FileViewState } from "../../../core/file_view_state";
+import * as src from "../../generated/sourcecode";
+import * as ts from "../../generated/typesystem";
+import { FileViewState } from "../../core/file_view_state";
 import { ITypeNodeProps } from "../flow/nodes/type_node";
 import { IConstNodeProps } from "../flow/nodes/const_node";
-import { IInterfaceNodeProps } from "../../interface_node";
+import { IInterfaceNodeProps } from "../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 

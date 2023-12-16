@@ -1,5 +1,5 @@
-import { useContext } from "react";
-import { useLocation } from "react-router-dom";
+import { ReactNode, useContext } from "react";
+import { Link, useLocation } from "react-router-dom";
 import * as src from "../../generated/sourcecode";
 import { FileContext } from "../app";
 import { Component } from "./component";
@@ -10,33 +10,42 @@ export function Entity() {
   const entityName = location.pathname.substr(1);
   const entity = (fileContext.resp.file.entities || {})[entityName];
 
+  let element: ReactNode = "Unknown Entity";
+
   if (entity.kind === src.TypeEntity) {
     const typ = fileContext.state.entities.types.find(
       (entity) => entity.name === entityName
     );
-    return JSON.stringify(typ);
+    element = JSON.stringify(typ);
   }
 
   if (entity.kind === src.InterfaceEntity) {
     const constant = fileContext.state.entities.interfaces.find(
       (entity) => entity.name === entityName
     );
-    return JSON.stringify(constant);
+    element = JSON.stringify(constant);
   }
 
   if (entity.kind === src.ConstEntity) {
     const constant = fileContext.state.entities.constants.find(
       (entity) => entity.name === entityName
     );
-    return JSON.stringify(constant);
+    element = JSON.stringify(constant);
   }
 
   if (entity.kind === src.ComponentEntity) {
     const viewState = fileContext.state.entities.components.find(
       (entity) => entity.name === entityName
     );
-    return <Component viewState={viewState!.entity} />;
+    element = <Component viewState={viewState!.entity} />;
   }
 
-  return location.pathname;
+  return (
+    <>
+      <div style={{ marginBottom: "20px" }}>
+        <Link to="/">Go Back</Link>
+      </div>
+      {element}
+    </>
+  );
 }

@@ -4,7 +4,7 @@ import {
   ComponentViewState,
   NodesViewState,
 } from "../../../../core/file_view_state";
-import { IInterfaceNodeProps } from "../../../interface_node";
+import { IInterfaceNodeProps } from "../../../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 

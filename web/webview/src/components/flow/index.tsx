@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -6,27 +8,19 @@ import ReactFlow, {
   Edge,
   Node,
   FitViewOptions,
+  NodeTypes,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { InterfaceNode } from "../../interface_node";
-import { TypeNode } from "./nodes/type_node";
-import { ConstNode } from "./nodes/const_node";
-import { useNavigate } from "react-router-dom";
-
-const nodeTypes = {
-  type: TypeNode,
-  const: ConstNode,
-  component: InterfaceNode, // component and interface nodes are the same at presentation level
-  interface: InterfaceNode,
-};
+import { getLayoutedNodes } from "../editor/get_layouted_nodes";
 
 interface IFlowProps {
   nodes: Node[];
   edges: Edge[];
+  nodeTypes: NodeTypes;
 }
 
 const fitViewOptions: FitViewOptions = {
-  duration: 500,
+  duration: 0,
   padding: 20,
   minZoom: 0.5,
   maxZoom: 1,
@@ -35,11 +29,22 @@ const fitViewOptions: FitViewOptions = {
 export function Flow(props: IFlowProps) {
   const navigate = useNavigate();
 
+  const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
+  useEffect(() => {
+    (async () => {
+      setLayoutedNodes(await getLayoutedNodes(props.nodes, props.edges));
+    })();
+  }, [props.nodes, props.edges]);
+
+  if (layoutedNodes.length === 0) {
+    return null;
+  }
+
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={props.nodes}
+        nodeTypes={props.nodeTypes}
+        nodes={layoutedNodes}
         edges={props.edges}
         fitView
         fitViewOptions={fitViewOptions}
@@ -50,7 +55,9 @@ export function Flow(props: IFlowProps) {
         nodesDraggable={false}
         nodesConnectable={false}
         onNodeClick={(_, node: Node) => {
-          navigate(`/${node.data.entityName}`);
+          if (node.type !== "parent") {
+            navigate(`/${node.data.entityName}`);
+          }
         }}
         minZoom={0.3}
         maxZoom={2}

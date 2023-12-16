@@ -1,9 +1,17 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Node } from "reactflow";
-import { buildGraph } from "./helpers/build_graph";
-import { Flow } from "./flow";
-import getLayoutedNodes from "./helpers/get_layouted_nodes";
+import { useContext, useMemo } from "react";
+import { buildGraph } from "./build_graph";
 import { FileContext } from "../app";
+import { Flow } from "../flow";
+import { InterfaceNode } from "../flow/nodes/interface_node";
+import { TypeNode } from "../flow/nodes/type_node";
+import { ConstNode } from "../flow/nodes/const_node";
+
+const flowNodeTypes = {
+  type: TypeNode,
+  const: ConstNode,
+  interface: InterfaceNode,
+  component: InterfaceNode,
+};
 
 export function Editor() {
   const fileContext = useContext(FileContext);
@@ -11,18 +19,6 @@ export function Editor() {
     () => buildGraph(fileContext.state),
     [fileContext]
   );
-  const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const newLayoutedNodes = await getLayoutedNodes(nodes, edges);
-      setLayoutedNodes(newLayoutedNodes);
-    })();
-  }, [edges, nodes]);
-
-  if (layoutedNodes.length === 0) {
-    return null;
-  }
-
-  return <Flow nodes={layoutedNodes} edges={edges} />;
+  return <Flow nodes={nodes} edges={edges} nodeTypes={flowNodeTypes} />;
 }

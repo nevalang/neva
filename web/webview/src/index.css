@@ -1,18 +1,16 @@
 :root {
   --component: #be6856;
-  --foreground: #00a8c6;
-  --type: #61afef;
-  --background: #22272e;
-  --background-second: #2d333b;
-  --dim: #769390;
-  --text: #adbac7;
-  --success: #347d39;
   --const: #d19a66;
+  --interface: #00a8c6;
+  --type: #61afef;
+  --dark: #22272e;
+  --dark-second: #2d333b;
+  --grey: #adbac7;
   --light: #c5c5c5
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--dark);
   padding: 20px;
 }
 
@@ -42,12 +40,12 @@ h3 {
   border-width: 1px;
   box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5);
   /* transition: all 0.15s ease-out; */
-  background-color: var(--text);
+  background-color: var(--grey);
 }
 
 .react-flow__node-default.interface {
-  border-color: var(--foreground);
-  background-color: var(--text);
+  border-color: var(--interface);
+  background-color: var(--grey);
 }
 
 .react-flow__node-default.component {
@@ -63,8 +61,8 @@ h3 {
 }
 
 .react-flow__controls-button {
-  background-color: var(--text);
-  border-color: var(--background-second)
+  background-color: var(--grey);
+  border-color: var(--dark-second)
 }
 
 .react-flow__node-default.component .ports {
@@ -73,8 +71,8 @@ h3 {
 
 .react-flow__node-default.parent {
   align-items: flex-start;
-  border-color: var(--text);
-  color: var(--text);
+  border-color: var(--grey);
+  color: var(--grey);
   background-color: transparent;
   box-shadow: none;
   /* background-color: transparent; */
@@ -144,7 +142,7 @@ h3 {
 
 .react-flow__edge path {
   transition: stroke 0.15s ease-out;
-  stroke: var(--text);
+  stroke: var(--grey);
 }
 
 .react-flow__edge-interaction path {
@@ -153,7 +151,7 @@ h3 {
 
 .nodeBody {
   padding: 15px;
-  color: var(--background);
+  color: var(--dark);
   font-weight: 400;
   transition: color 0.15s ease-out;
 }
@@ -172,8 +170,8 @@ h3 {
   display: flex;
   justify-content: space-around;
   font-weight: 400;
-  color: var(--background-second);
-  background-color: var(--foreground);
+  color: var(--dark-second);
+  background-color: var(--interface);
   /* transition: all 0.15s ease-out; */
 }
 .ports.in {
@@ -183,7 +181,7 @@ h3 {
   border-radius: 0px 0px 3px 3px;
 }
 .ports > :not(:last-child) {
-  border-right: 1px solid var(--text);
+  border-right: 1px solid var(--grey);
 }
 .ports.hidden {
   color: transparent;
@@ -194,10 +192,10 @@ h3 {
 }
 
 .react-flow__minimap {
-  background-color: var(--background);
+  background-color: var(--dark);
 }
 
 
 .react-flow__minimap-node {
-  /* fill: var(--background); */
+  /* fill: var(--dark); */
 }

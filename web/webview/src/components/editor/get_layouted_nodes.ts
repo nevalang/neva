@@ -20,7 +20,7 @@ const layoutOptions: { [key: NodeType]: object } = {
   },
 };
 
-export default async function getLayoutedNodes(
+export async function getLayoutedNodes(
   nodes: Node[],
   edges: Edge[]
 ): Promise<Node[]> {
