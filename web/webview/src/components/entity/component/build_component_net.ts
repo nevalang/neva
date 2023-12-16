@@ -1,10 +1,10 @@
 import { Edge, MarkerType, Node, XYPosition } from "reactflow";
-import * as src from "../../../../generated/sourcecode";
+import * as src from "../../../generated/sourcecode";
 import {
   ComponentViewState,
   NodesViewState,
-} from "../../../../core/file_view_state";
-import { IInterfaceNodeProps } from "../../../flow/nodes/interface_node";
+} from "../../../core/file_view_state";
+import { IInterfaceNodeProps } from "../../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 
@@ -22,7 +22,7 @@ export function buildComponentNetwork(
   return { nodes, edges };
 }
 
-export function buildAndInsertNetEdges(
+function buildAndInsertNetEdges(
   net: src.Connection[],
   entityName: string,
   reactflowEdges: Edge[]
@@ -113,7 +113,7 @@ function getComponentIONodes(
   position: XYPosition
 ) {
   const defaultData = {
-    type: "component",
+    type: "interface",
     position: position,
   };
 

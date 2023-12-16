@@ -20,10 +20,7 @@ const layoutOptions: { [key: NodeType]: object } = {
   },
 };
 
-export async function getLayoutedNodes(
-  nodes: Node[],
-  edges: Edge[]
-): Promise<Node[]> {
+export async function getLayoutedNodes(nodes: Node[]): Promise<Node[]> {
   const graph: ElkNode = {
     id: "root",
     layoutOptions: {
@@ -51,11 +48,6 @@ export async function getLayoutedNodes(
           })),
       }))
       .filter((node) => node.children.length > 0),
-    edges: edges.map((edge) => ({
-      id: edge.id,
-      sources: [edge.source],
-      targets: [edge.target],
-    })),
   };
 
   const layoutedGraph = await elk.layout(graph);

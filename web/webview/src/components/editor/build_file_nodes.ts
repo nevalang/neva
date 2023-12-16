@@ -8,12 +8,8 @@ import { IInterfaceNodeProps } from "../flow/nodes/interface_node";
 
 const defaultPosition = { x: 0, y: 0 };
 
-export function buildGraph(fileViewState: FileViewState): {
-  nodes: Node[];
-  edges: Edge[];
-} {
+export function buildFileNodes(fileViewState: FileViewState): Node[] {
   const nodes: Node[] = [];
-  const edges: Edge[] = [];
 
   for (const typeDef of fileViewState.entities.types) {
     handleTypeNode(typeDef.name, typeDef.entity, nodes);
@@ -36,10 +32,7 @@ export function buildGraph(fileViewState: FileViewState): {
     );
   }
 
-  return {
-    nodes: nodes,
-    edges: edges,
-  };
+  return nodes;
 }
 
 function handleTypeNode(

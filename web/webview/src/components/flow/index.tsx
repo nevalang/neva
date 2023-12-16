@@ -9,34 +9,36 @@ import ReactFlow, {
   Node,
   FitViewOptions,
   NodeTypes,
+  useNodesState,
+  useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { getLayoutedNodes } from "../editor/get_layouted_nodes";
 
 interface IFlowProps {
   nodes: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
+  onNodeClick?: (node: Node) => void;
+  nodesDraggable?: boolean;
 }
 
-const fitViewOptions: FitViewOptions = {
+const defaultFitViewOptions: FitViewOptions = {
   duration: 0,
   padding: 20,
   minZoom: 0.5,
   maxZoom: 1,
 };
 
+const fitViewControlOptions: FitViewOptions = {
+  ...defaultFitViewOptions,
+  duration: 300,
+};
+
 export function Flow(props: IFlowProps) {
-  const navigate = useNavigate();
+  const [nodes, , onNodesChange] = useNodesState(props.nodes);
+  const [edges, , onEdgesChange] = useEdgesState(props.edges);
 
-  const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
-  useEffect(() => {
-    (async () => {
-      setLayoutedNodes(await getLayoutedNodes(props.nodes, props.edges));
-    })();
-  }, [props.nodes, props.edges]);
-
-  if (layoutedNodes.length === 0) {
+  if (props.nodes.length === 0) {
     return null;
   }
 
@@ -44,26 +46,25 @@ export function Flow(props: IFlowProps) {
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
         nodeTypes={props.nodeTypes}
-        nodes={layoutedNodes}
-        edges={props.edges}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         fitView
-        fitViewOptions={fitViewOptions}
+        fitViewOptions={defaultFitViewOptions}
         nodesFocusable
         panOnScroll
         zoomOnScroll={false}
         elementsSelectable={false}
-        nodesDraggable={false}
+        nodesDraggable={Boolean(props.nodesDraggable)}
         nodesConnectable={false}
-        onNodeClick={(_, node: Node) => {
-          if (node.type !== "parent") {
-            console.log("!!!", `/${node.data.entityName}`);
-            navigate(`/${node.data.entityName}`);
-          }
-        }}
+        onNodeClick={(_, node: Node) =>
+          props.onNodeClick && props.onNodeClick(node)
+        }
         minZoom={0.3}
         maxZoom={2}
       >
-        <Controls fitViewOptions={fitViewOptions} />
+        <Controls fitViewOptions={fitViewControlOptions} />
         <MiniMap
           position="top-right"
           zoomable
