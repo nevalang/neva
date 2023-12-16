@@ -42,12 +42,5 @@ export function Entity() {
     );
   }
 
-  return (
-    <>
-      <div style={{ marginBottom: "20px" }}>
-        <Link to="/">Go Back</Link>
-      </div>
-      {element}
-    </>
-  );
+  return element;
 }

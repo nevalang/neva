@@ -4,6 +4,7 @@ import { Flow } from "../../flow";
 import { buildComponentNetwork } from "./build_component_net";
 import { InterfaceNode } from "../../flow/nodes/interface_node";
 import { getLayoutedNodes } from "./get_layouted_nodes";
+import { Link } from "react-router-dom";
 
 interface IComponentProps {
   viewState: ComponentViewState;
@@ -26,7 +27,14 @@ export function Component(props: IComponentProps) {
 
   return (
     <div className="entity">
-      <Flow nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesDraggable />
+      <Flow
+        title={props.entityName}
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        nodesDraggable
+        leftTopPanel={<Link to="/">Go Back</Link>}
+      />
     </div>
   );
 }

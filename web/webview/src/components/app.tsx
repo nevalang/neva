@@ -5,8 +5,6 @@ import { ResolveFileResponce } from "../generated/lsp_api";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Entity } from "../components/entity";
 
-// 🧰 📐 🔢 🎛️ 📄 📁 📂 🔗 🕸️
-
 const vscodeApi = acquireVsCodeApi<VSCodePersistentState>();
 
 export interface IFileContext {

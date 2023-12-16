@@ -49,6 +49,7 @@ export function Editor() {
         edges={[]}
         nodeTypes={flowNodeTypes}
         onNodeClick={handleNodeClick}
+        title=""
       />
     </div>
   );

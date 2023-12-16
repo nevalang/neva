@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -10,6 +10,7 @@ import ReactFlow, {
   NodeTypes,
   useNodesState,
   useEdgesState,
+  Panel,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -17,8 +18,10 @@ interface IFlowProps {
   nodes: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
+  title: string;
   onNodeClick?: (node: Node) => void;
   nodesDraggable?: boolean;
+  leftTopPanel?: ReactNode;
 }
 
 const defaultFitViewOptions: FitViewOptions = {
@@ -67,6 +70,8 @@ export function Flow(props: IFlowProps) {
         minZoom={0.3}
         maxZoom={2}
       >
+        <Panel position="top-center">{props.title}</Panel>
+        <Panel position="top-left">{props.leftTopPanel}</Panel>
         <Controls fitViewOptions={fitViewControlOptions} />
         <MiniMap
           position="top-right"
