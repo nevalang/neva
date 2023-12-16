@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -35,10 +34,14 @@ const fitViewControlOptions: FitViewOptions = {
 };
 
 export function Flow(props: IFlowProps) {
-  const [nodes, , onNodesChange] = useNodesState(props.nodes);
-  const [edges, , onEdgesChange] = useEdgesState(props.edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(props.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(props.edges);
+  useEffect(() => {
+    setNodes(props.nodes);
+    setEdges(props.edges);
+  }, [props.edges, props.nodes, setEdges, setNodes]);
 
-  if (props.nodes.length === 0) {
+  if (nodes.length === 0) {
     return null;
   }
 
