@@ -73,11 +73,11 @@ h3 {
 
 .react-flow__node-default.parent {
   align-items: flex-start;
+  padding-top: 10px;
   border-color: var(--grey);
   color: var(--grey);
   background-color: transparent;
   box-shadow: none;
-  /* background-color: transparent; */
 }
 
 .react-flow__node-default.const {
