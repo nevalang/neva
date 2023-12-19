@@ -3,6 +3,7 @@
 package sourcecode
 
 import (
+	"errors"
 	"fmt"
 
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -75,7 +76,6 @@ type File struct {
 	Entities map[string]Entity `json:"entities,omitempty"`
 }
 
-// TODO make const, type, interface and components pointers
 type Entity struct {
 	Exported  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
@@ -83,6 +83,20 @@ type Entity struct {
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
 	Component Component  `json:"component,omitempty"`
+}
+
+func (e Entity) Meta() (Meta, error) {
+	switch e.Kind {
+	case ConstEntity:
+		return e.Const.Meta, nil
+	case TypeEntity:
+		return e.Type.Meta.(Meta), nil //nolint
+	case InterfaceEntity:
+		return e.Interface.Meta, nil
+	case ComponentEntity:
+		return e.Component.Meta, nil
+	}
+	return Meta{}, errors.New("unknown entity")
 }
 
 type EntityKind string // It's handy to transmit strings enum instead of digital
@@ -155,6 +169,7 @@ type IO struct {
 type Port struct {
 	TypeExpr ts.Expr `json:"typeExpr,omitempty"`
 	IsArray  bool    `json:"isArray,omitempty"`
+	Meta     Meta    `json:"meta,omitempty"`
 }
 
 type Connection struct {

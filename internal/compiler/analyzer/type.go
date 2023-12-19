@@ -11,7 +11,7 @@ type analyzeTypeDefParams struct {
 	allowEmptyBody bool
 }
 
-var ErrEmptyTypeDefBody = fmt.Errorf("type def body is empty")
+var ErrEmptyTypeDefBody = fmt.Errorf("Type definition must have non-empty body")
 
 func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {

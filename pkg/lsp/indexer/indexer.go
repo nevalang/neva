@@ -16,17 +16,17 @@ type Indexer struct {
 	Analyzer analyzer.Analyzer
 }
 
-func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, problems string, err error) {
+func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, analyzerErr *analyzer.Error, err error) {
 	build, err := i.Builder.Build(ctx, path)
 	if err != nil {
-		return src.Module{}, "", fmt.Errorf("builder: %w", err)
+		return src.Module{}, nil, fmt.Errorf("builder: %w", err)
 	}
 
 	rawMod := build.Modules[build.EntryModule] // TODO use all mods
 
 	parsedPkgs, err := i.Parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {
-		return src.Module{}, "", fmt.Errorf("parse prog: %w", err)
+		return src.Module{}, nil, fmt.Errorf("parse prog: %w", err)
 	}
 
 	mod = src.Module{
@@ -34,9 +34,14 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, pr
 		Packages: parsedPkgs,
 	}
 
-	if _, err = i.Analyzer.Analyze(mod); err != nil { // note that we interpret this error as a message, not failure
-		return mod, err.Error(), nil
+	// we interpret analyzer error as a message, not failure
+	if _, err = i.Analyzer.Analyze(mod); err != nil {
+		aerr, ok := err.(analyzer.Error)
+		if ok {
+			panic("err.(analyzer.Error)")
+		}
+		return mod, &aerr, nil
 	}
 
-	return mod, "", nil
+	return mod, nil, nil
 }

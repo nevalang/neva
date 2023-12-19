@@ -245,6 +245,17 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		portName := port.IDENTIFIER().GetText()
 		parsedInports[portName] = src.Port{
 			TypeExpr: *parseTypeExpr(port.TypeExpr()),
+			Meta: src.Meta{
+				Text: port.GetText(),
+				Start: src.Position{
+					Line:   port.GetStart().GetLine(),
+					Column: port.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   port.GetStop().GetLine(),
+					Column: port.GetStop().GetColumn(),
+				},
+			},
 		}
 	}
 	return parsedInports

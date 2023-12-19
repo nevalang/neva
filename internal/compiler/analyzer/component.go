@@ -8,6 +8,22 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
+var (
+	ErrNodeWrongEntity           = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsCountMismatch = errors.New("Type arguments count between node and its referenced entity does not match")
+	ErrNodeInterfaceDI           = errors.New("Interface node cannot have dependency injection")
+	ErrUnusedNode                = errors.New("Unused node found")
+	ErrUnusedNodeInport          = errors.New("Unused node inport found")
+	ErrUnusedNodeOutport         = errors.New("Unused node outport found")
+	ErrSenderConstRefEntityKind  = errors.New("Sender in network with entity reference can only refer to a constant")
+	ErrSenderIsEmpty             = errors.New("Sender in network must either refer to some port address or constant")
+	ErrReadSelfOut               = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn               = errors.New("Component cannot write to self inport")
+	ErrInportNotFound            = errors.New("Referenced inport not found in component's interface")
+	ErrNodeNotFound              = errors.New("Referenced node not found")
+	ErrNodePortNotFound          = errors.New("Referenced node port not found")
+)
+
 type analyzeComponentParams struct {
 	iface analyzeInterfaceParams
 }
@@ -27,7 +43,7 @@ func (a Analyzer) analyzeComponent(
 		return src.Component{}, fmt.Errorf("analyze component nodes: %w", err)
 	}
 
-	resolvedNet, err := a.analyzeComponentNet(comp.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)
+	resolvedNet, err := a.analyzeComponentNetwork(comp.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)
 	if err != nil {
 		return src.Component{}, fmt.Errorf("analyze component network: %w", err)
 	}
@@ -55,12 +71,6 @@ func (a Analyzer) analyzeComponentNodes(
 	}
 	return resolvedNodes, nodesIfaces, nil
 }
-
-var (
-	ErrNodeWrongEntity           = fmt.Errorf("node entity is not a component or interface")
-	ErrNodeTypeArgsCountMismatch = errors.New("node type args count mismatch")
-	ErrNodeInterfaceDI           = errors.New("interface node cannot have dependency injection")
-)
 
 func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, error) {
 	entity, _, err := scope.Entity(node.EntityRef)
@@ -117,13 +127,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}, iface, nil
 }
 
-var (
-	ErrUnusedNode        = errors.New("unused node")
-	ErrUnusedNodeInport  = errors.New("unused node inport")
-	ErrUnusedNodeOutport = errors.New("unused node outport")
-)
-
-func (a Analyzer) analyzeComponentNet(
+func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
@@ -293,16 +297,6 @@ func (a Analyzer) getResolvedPortType(
 	return resolvedOutportType, nil
 }
 
-var (
-	ErrSenderConstRefEntityKind = errors.New("entity reference in network sender  points to not constant")
-	ErrSenderEmpty              = errors.New("network sender must contain either const ref or port addr")
-	ErrReadSelfOut              = errors.New("component cannot read from self outport")
-	ErrWriteSelfIn              = errors.New("component cannot write to self inports")
-	ErrInportNotFound           = errors.New("network references to inport that is not found in component's IO")
-	ErrNodeNotFound             = errors.New("network references node that is not found in component")
-	ErrNodePortNotFound         = errors.New("network references to not existing node's port")
-)
-
 func (a Analyzer) getSenderType(
 	senderSide src.SenderConnectionSide,
 	inports map[string]src.Port,
@@ -319,7 +313,7 @@ func (a Analyzer) getSenderType(
 	}
 
 	if senderSide.PortAddr == nil {
-		return ts.Expr{}, ErrSenderEmpty
+		return ts.Expr{}, ErrSenderIsEmpty
 	}
 	if senderSide.PortAddr.Node == "out" {
 		return ts.Expr{}, ErrReadSelfOut

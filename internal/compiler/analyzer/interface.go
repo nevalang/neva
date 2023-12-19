@@ -8,7 +8,11 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var ErrInterfaceTypeParams = errors.New("could not resolve interface type parameters")
+var (
+	ErrInterfaceTypeParams = errors.New("Cannot resolve interface type parameters")
+	ErrEmptyInports        = errors.New("Interface must have inports")
+	ErrEmptyOutports       = errors.New("Interface must have outports")
+)
 
 type analyzeInterfaceParams struct {
 	allowEmptyInports  bool
@@ -40,11 +44,6 @@ func (a Analyzer) analyzeInterface(
 		IO:         resolvedIO,
 	}, nil
 }
-
-var (
-	ErrEmptyInports  = errors.New("IO cannot have empty inports")
-	ErrEmptyOutports = errors.New("IO cannot have empty outports")
-)
 
 func (a Analyzer) analyzeIO(
 	typeParams []ts.Param,

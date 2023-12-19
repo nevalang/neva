@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nevalang/neva/internal/compiler/analyzer"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/lsp/indexer"
 	"github.com/tliron/commonlog"
@@ -14,7 +15,7 @@ import (
 )
 
 type Server struct {
-	rootPath      string
+	workspacePath string
 	name, version string
 
 	handler *Handler
@@ -26,28 +27,26 @@ type Server struct {
 }
 
 type State struct {
-	mod      src.Module
-	problems string
+	mod src.Module
 }
 
 // setState allows to update state in a thread-safe manner.
-func (s *Server) setState(mod src.Module, problem string) {
+func (s *Server) setState(mod src.Module) {
 	s.mu.Lock()
 	s.state = &State{
-		mod:      mod,
-		problems: problem,
+		mod: mod,
 	}
 	s.mu.Unlock()
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	prog, problems, err := s.indexer.FullIndex(context.Background(), s.rootPath)
+	prog, analyzerErr, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
 	if err != nil {
 		return fmt.Errorf("%w: index", err)
 	}
-	s.setState(prog, problems)
+	s.setState(prog)
 
-	if s.state.problems == "" {
+	if analyzerErr == nil {
 		notify(
 			protocol.ServerTextDocumentPublishDiagnostics,
 			protocol.PublishDiagnosticsParams{}, // clear problems
@@ -56,43 +55,48 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 		return nil
 	}
 
+	notify(
+		protocol.ServerTextDocumentPublishDiagnostics,
+		s.createDiagnostics(*analyzerErr),
+	)
+
+	s.logger.Info("diagnostic sent: " + analyzerErr.Error())
+
+	return nil
+}
+
+func (s *Server) createDiagnostics(analyzerErr analyzer.Error) protocol.PublishDiagnosticsParams {
 	source := "neva"
 	severity := protocol.DiagnosticSeverityError
 
-	notify(
-		protocol.ServerTextDocumentPublishDiagnostics,
-		protocol.PublishDiagnosticsParams{
-			URI: "",
-			Diagnostics: []protocol.Diagnostic{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{
-							Line:      0,
-							Character: 0,
-						},
-						End: protocol.Position{
-							Line:      0,
-							Character: 0,
-						},
+	return protocol.PublishDiagnosticsParams{
+		URI: fmt.Sprintf(
+			"%s/%s/%s",
+			s.workspacePath,
+			analyzerErr.Location.PkgName,
+			analyzerErr.Location.FileName,
+		),
+		Diagnostics: []protocol.Diagnostic{
+			{
+				Range: protocol.Range{
+					Start: protocol.Position{
+						Line:      uint32(analyzerErr.Meta.Start.Line),
+						Character: uint32(analyzerErr.Meta.Start.Column),
 					},
-					Severity: &severity,
-					Code: &protocol.IntegerOrString{
-						Value: nil,
+					End: protocol.Position{
+						Line:      uint32(analyzerErr.Meta.Stop.Line),
+						Character: uint32(analyzerErr.Meta.Stop.Column),
 					},
-					CodeDescription: &protocol.CodeDescription{
-						HRef: "",
-					},
-					Source:             &source,
-					Message:            s.state.problems,
-					Tags:               []protocol.DiagnosticTag{},
-					RelatedInformation: []protocol.DiagnosticRelatedInformation{},
-					Data:               time.Now(),
 				},
+				Severity:           &severity,
+				Source:             &source,
+				Code:               &protocol.IntegerOrString{Value: nil},
+				CodeDescription:    &protocol.CodeDescription{HRef: ""},
+				Message:            analyzerErr.Error(),
+				Tags:               []protocol.DiagnosticTag{},
+				RelatedInformation: []protocol.DiagnosticRelatedInformation{},
+				Data:               time.Now(),
 			},
 		},
-	)
-
-	s.logger.Info("diagnostic sent: " + s.state.problems)
-
-	return nil
+	}
 }
