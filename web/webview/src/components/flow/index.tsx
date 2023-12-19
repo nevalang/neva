@@ -11,6 +11,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
+  NodeMouseHandler,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -22,6 +23,8 @@ interface IFlowProps {
   onNodeClick?: (node: Node) => void;
   nodesDraggable?: boolean;
   leftTopPanel?: ReactNode;
+  onNodeMouseEnter?: NodeMouseHandler;
+  onNodeMouseLeave?: NodeMouseHandler;
 }
 
 const defaultFitViewOptions: FitViewOptions = {
@@ -39,6 +42,7 @@ const fitViewControlOptions: FitViewOptions = {
 export function Flow(props: IFlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(props.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(props.edges);
+
   useEffect(() => {
     setNodes(props.nodes);
     setEdges(props.edges);
@@ -56,6 +60,8 @@ export function Flow(props: IFlowProps) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeMouseEnter={props.onNodeMouseEnter}
+        onNodeMouseLeave={props.onNodeMouseLeave}
         fitView
         fitViewOptions={defaultFitViewOptions}
         nodesFocusable
