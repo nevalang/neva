@@ -3,7 +3,6 @@
 package sourcecode
 
 import (
-	"errors"
 	"fmt"
 
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -85,18 +84,19 @@ type Entity struct {
 	Component Component  `json:"component,omitempty"`
 }
 
-func (e Entity) Meta() (Meta, error) {
+func (e Entity) Meta() *Meta {
+	m := Meta{}
 	switch e.Kind {
 	case ConstEntity:
-		return e.Const.Meta, nil
+		m = e.Const.Meta
 	case TypeEntity:
-		return e.Type.Meta.(Meta), nil //nolint
+		m = e.Type.Meta.(Meta) //nolint
 	case InterfaceEntity:
-		return e.Interface.Meta, nil
+		m = e.Interface.Meta
 	case ComponentEntity:
-		return e.Component.Meta, nil
+		m = e.Component.Meta
 	}
-	return Meta{}, errors.New("unknown entity")
+	return &m
 }
 
 type EntityKind string // It's handy to transmit strings enum instead of digital
@@ -129,6 +129,7 @@ type Node struct {
 	EntityRef   EntityRef       `json:"entityRef,omitempty"`
 	TypeArgs    []ts.Expr       `json:"typeArgs,omitempty"`
 	ComponentDI map[string]Node `json:"componentDi,omitempty"`
+	Meta        Meta            `json:"meta,omitempty"`
 }
 
 type EntityRef struct {
@@ -175,11 +176,13 @@ type Port struct {
 type Connection struct {
 	SenderSide    SenderConnectionSide     `json:"senderSide,omitempty"`
 	ReceiverSides []ReceiverConnectionSide `json:"receiverSide,omitempty"`
+	Meta          Meta                     `json:"meta,omitempty"`
 }
 
 type ReceiverConnectionSide struct {
 	PortAddr  PortAddr `json:"portAddr,omitempty"`
 	Selectors []string `json:"selectors,omitempty"`
+	Meta      Meta     `json:"meta,omit"`
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
@@ -187,6 +190,7 @@ type SenderConnectionSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
 	ConstRef  *EntityRef `json:"constRef,omitempty"`
 	Selectors []string   `json:"selectors,omitempty"`
+	Meta      Meta       `json:"meta,omitempty"`
 }
 
 type PortAddr struct {

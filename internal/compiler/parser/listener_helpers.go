@@ -301,6 +301,17 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 			result[node.IDENTIFIER().GetText()] = src.Node{
 				EntityRef: parsedRef,
 				TypeArgs:  typeArgs,
+				Meta: src.Meta{
+					Text: node.GetText(),
+					Start: src.Position{
+						Line:   node.GetStart().GetLine(),
+						Column: node.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   node.GetStop().GetLine(),
+						Column: node.GetStop().GetColumn(),
+					},
+				},
 			}
 		}
 	}
@@ -331,7 +342,20 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 			var receiverSides []src.ReceiverConnectionSide
 			if singleReceiver != nil {
 				receiverSides = []src.ReceiverConnectionSide{
-					{PortAddr: parsePortAddr(singleReceiver)},
+					{
+						PortAddr: parsePortAddr(singleReceiver),
+						Meta: src.Meta{
+							Text: singleReceiver.GetText(),
+							Start: src.Position{
+								Line:   singleReceiver.GetStart().GetLine(),
+								Column: singleReceiver.GetStart().GetColumn(),
+							},
+							Stop: src.Position{
+								Line:   singleReceiver.GetStop().GetLine(),
+								Column: singleReceiver.GetStop().GetColumn(),
+							},
+						},
+					},
 				}
 			} else {
 				receiverPortAddrs := multipleReceivers.AllPortAddr()
@@ -339,6 +363,17 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 				for _, receiverPortAddr := range receiverPortAddrs {
 					receiverSides = append(receiverSides, src.ReceiverConnectionSide{
 						PortAddr: parsePortAddr(receiverPortAddr),
+						Meta: src.Meta{
+							Text: receiverPortAddr.GetText(),
+							Start: src.Position{
+								Line:   receiverPortAddr.GetStart().GetLine(),
+								Column: receiverPortAddr.GetStart().GetColumn(),
+							},
+							Stop: src.Position{
+								Line:   receiverPortAddr.GetStop().GetLine(),
+								Column: receiverPortAddr.GetStop().GetColumn(),
+							},
+						},
 					})
 				}
 			}
@@ -346,7 +381,6 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 			senderSide := connDef.SenderSide()
 			senderSidePort := senderSide.PortAddr()
 			senderSideConstRef := senderSide.EntityRef()
-			// TODO  add sender side literal option
 
 			var senderSidePortAddr *src.PortAddr
 			if senderSidePort != nil {
@@ -372,8 +406,30 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 					PortAddr:  senderSidePortAddr,
 					ConstRef:  constRef,
 					Selectors: []string{},
+					Meta: src.Meta{
+						Text: senderSide.GetText(),
+						Start: src.Position{
+							Line:   senderSide.GetStart().GetLine(),
+							Column: senderSide.GetStart().GetColumn(),
+						},
+						Stop: src.Position{
+							Line:   senderSide.GetStop().GetLine(),
+							Column: senderSide.GetStop().GetColumn(),
+						},
+					},
 				},
 				ReceiverSides: receiverSides,
+				Meta: src.Meta{
+					Text: connDef.GetText(),
+					Start: src.Position{
+						Line:   connDef.GetStart().GetLine(),
+						Column: connDef.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   connDef.GetStop().GetLine(),
+						Column: connDef.GetStop().GetColumn(),
+					},
+				},
 			})
 		}
 	}

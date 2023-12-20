@@ -65,13 +65,9 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) 
 
 	if err := mainPkg.Entities(func(entity src.Entity, entityName, fileName string) error {
 		if entity.Exported {
-			var meta src.Meta
-			if m, err := entity.Meta(); err != nil {
-				meta = m
-			}
 			return &Error{
 				Err:  fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
-				Meta: &meta,
+				Meta: entity.Meta(),
 				Location: &src.Location{
 					ModuleName: "entry",
 					PkgName:    mainPkgName,

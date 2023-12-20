@@ -13,16 +13,26 @@ type analyzeTypeDefParams struct {
 
 var ErrEmptyTypeDefBody = fmt.Errorf("Type definition must have non-empty body")
 
-func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, error) {
+func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
-		return ts.Def{}, ErrEmptyTypeDefBody
+		meta := def.Meta.(src.Meta) //nolint:forcetypeassert
+		return ts.Def{}, &Error{
+			Err:      ErrEmptyTypeDefBody,
+			Location: &scope.Location,
+			Meta:     &meta,
+		}
 	}
 
 	// Note that we only resolve params. Body is resolved each time there's an expression that refers to it.
 	// We can't resolve body without args. And don't worry about unused bodies. Unused entities are error themselves.
 	resolvedParams, err := a.resolver.ResolveParams(def.Params, scope)
 	if err != nil {
-		return ts.Def{}, fmt.Errorf("resolve def: %w", err)
+		meta := def.Meta.(src.Meta) //nolint:forcetypeassert
+		return ts.Def{}, &Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &meta,
+		}
 	}
 
 	return ts.Def{
@@ -32,18 +42,26 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	}, nil
 }
 
-func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, error) {
+func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
-		return ts.Expr{}, fmt.Errorf("resolve expr: %w", err)
+		meta := expr.Meta.(src.Meta) //nolint:forcetypeassert
+		return ts.Expr{}, &Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &meta,
+		}
 	}
 	return resolvedExpr, nil
 }
 
-func (a Analyzer) analyzeTypeParams(params []ts.Param, scope src.Scope) ([]ts.Param, error) {
+func (a Analyzer) analyzeTypeParams(params []ts.Param, scope src.Scope) ([]ts.Param, *Error) {
 	resolvedParams, err := a.resolver.ResolveParams(params, scope)
 	if err != nil {
-		return nil, fmt.Errorf("resolve params: %w", err)
+		return nil, &Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
 	}
 	return resolvedParams, nil
 }

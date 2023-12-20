@@ -109,43 +109,54 @@ func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, *Erro
 
 		resolvedEntity, err := a.analyzeEntity(entity, scope)
 		if err != nil {
-			return &Error{
-				Err: err,
+			return Error{
 				Location: &src.Location{
 					ModuleName: "entry",
 					PkgName:    pkgName,
 					FileName:   fileName,
 				},
-			}
+				Meta: entity.Meta(),
+			}.Merge(err)
 		}
 
 		resolvedPkg[fileName].Entities[entityName] = resolvedEntity
+
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("entities: %w", err)
+		return nil, err.(*Error) //nolint:forcetypeassert
 	}
 
 	return resolvedPkg, nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, error) {
+//nolint:funlen
+func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *Error) {
 	resolvedEntity := src.Entity{
 		Exported: entity.Exported,
 		Kind:     entity.Kind,
 	}
+
 	isStd := strings.HasPrefix(scope.Location.PkgName, "std/")
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{isStd})
+		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
 		if err != nil {
-			return src.Entity{}, fmt.Errorf("resolve type: %w", err)
+			meta := entity.Type.Meta.(src.Meta) //nolint:forcetypeassert
+			return src.Entity{}, Error{
+				Location: &scope.Location,
+				Meta:     &meta,
+			}.Merge(err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
 	case src.ConstEntity:
 		resolvedConst, err := a.analyzeConst(entity.Const, scope)
 		if err != nil {
-			return src.Entity{}, fmt.Errorf("analyze const: %w", err)
+			meta := entity.Const.Meta
+			return src.Entity{}, Error{
+				Location: &scope.Location,
+				Meta:     &meta,
+			}.Merge(err)
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
@@ -154,7 +165,11 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			allowEmptyOutports: false,
 		})
 		if err != nil {
-			return src.Entity{}, fmt.Errorf("analyze interface: %w", err)
+			meta := entity.Interface.Meta
+			return src.Entity{}, Error{
+				Location: &scope.Location,
+				Meta:     &meta,
+			}.Merge(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
@@ -165,11 +180,18 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			},
 		})
 		if err != nil {
-			return src.Entity{}, fmt.Errorf("analyze component: %w", err)
+			meta := entity.Component.Meta
+			return src.Entity{}, Error{
+				Location: &scope.Location,
+				Meta:     &meta,
+			}.Merge(err)
 		}
 		resolvedEntity.Component = resolvedComp
 	default:
-		return src.Entity{}, fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind)
+		return src.Entity{}, &Error{
+			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
+			Location: &scope.Location,
+		}
 	}
 
 	return resolvedEntity, nil

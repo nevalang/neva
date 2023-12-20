@@ -99,15 +99,11 @@ func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Pac
 		}
 
 		if nodeEntity.Kind != src.ComponentEntity {
-			e := &Error{
+			return &Error{
 				Err:      fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef),
 				Location: &loc,
+				Meta:     nodeEntity.Meta(),
 			}
-			meta, err := nodeEntity.Meta()
-			if err != nil {
-				e.Meta = &meta
-			}
-			return e
 		}
 	}
 

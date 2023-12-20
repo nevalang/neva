@@ -6,12 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nevalang/neva/internal/compiler/analyzer"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/pkg/lsp/indexer"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
+
+	"github.com/nevalang/neva/internal/compiler/analyzer"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/pkg/lsp/indexer"
 )
 
 type Server struct {
