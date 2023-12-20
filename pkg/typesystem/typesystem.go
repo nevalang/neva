@@ -78,9 +78,9 @@ func (expr *Expr) String() string { //nolint:funlen
 	case RecLitType:
 		str += "{"
 		count := 0
-		for fieldName, fieldExpr := range expr.Lit.Rec {
+		for fieldName, fieldExpr := range expr.Lit.Struct {
 			str += " " + fieldName + " " + fieldExpr.String()
-			if count < len(expr.Lit.Rec)-1 {
+			if count < len(expr.Lit.Struct)-1 {
 				str += ","
 			} else {
 				str += " "
@@ -126,16 +126,16 @@ type InstExpr struct {
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Arr   *ArrLit         `json:"arr,omitempty"`
-	Rec   map[string]Expr `json:"rec,omitempty"`
-	Enum  []string        `json:"enum,omitempty"`
-	Union []Expr          `json:"union,omitempty"`
+	Arr    *ArrLit         `json:"arr,omitempty"`
+	Struct map[string]Expr `json:"rec,omitempty"`
+	Enum   []string        `json:"enum,omitempty"`
+	Union  []Expr          `json:"union,omitempty"`
 }
 
 func (lit *LitExpr) Empty() bool {
 	return lit == nil ||
 		lit.Arr == nil &&
-			lit.Rec == nil &&
+			lit.Struct == nil &&
 			lit.Enum == nil &&
 			lit.Union == nil
 }
@@ -147,7 +147,7 @@ func (lit *LitExpr) Type() LiteralType {
 		return EmptyLitType
 	case lit.Arr != nil:
 		return ArrLitType
-	case lit.Rec != nil:
+	case lit.Struct != nil:
 		return RecLitType
 	case lit.Enum != nil:
 		return EnumLitType

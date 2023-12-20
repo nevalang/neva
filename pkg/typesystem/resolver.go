@@ -175,8 +175,8 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 				Lit: &LitExpr{Union: resolvedUnion},
 			}, nil
 		case RecLitType:
-			resolvedStruct := make(map[string]Expr, len(expr.Lit.Rec))
-			for field, fieldExpr := range expr.Lit.Rec {
+			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
+			for field, fieldExpr := range expr.Lit.Struct {
 				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
 				if err != nil {
 					return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
@@ -184,7 +184,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 				resolvedStruct[field] = resolvedFieldExpr
 			}
 			return Expr{
-				Lit: &LitExpr{Rec: resolvedStruct},
+				Lit: &LitExpr{Struct: resolvedStruct},
 			}, nil
 		}
 	}

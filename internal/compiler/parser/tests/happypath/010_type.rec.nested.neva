@@ -1,15 +1,15 @@
 types {
-    Rec1Lvl1 {
-        rec1Lvl2 {
+    Rec1Lvl1 struct {
+        rec1Lvl2 struct {
             foo vec<int>
         }
     }
 }
 
 types {
-    Rec2Lvl1 {
-        rec2Lvl2 {
-            foo vec<{
+    Rec2Lvl1 struct  {
+        rec2Lvl2 struct {
+            foo vec<struct {
                 foo int
             }>
         }
@@ -17,10 +17,10 @@ types {
 }
 
 types {
-    Rec3Lvl1 {
-        rec3Lvl2 {
-            foo vec<{
-                bar vec<{
+    Rec3Lvl1 struct {
+        rec3Lvl2 struct {
+            foo vec<struct {
+                bar vec<struct {
                     baz int
                 }>
             }>
@@ -29,11 +29,11 @@ types {
 }
 
 types {
-    pub Rec4Lvl1 {
-        rec4Lvl2 {
-            foo vec<{
-                bar vec<{
-                    baz map<str, { baz bool }>
+    pub Rec4Lvl1 struct {
+        rec4Lvl2 struct {
+            foo vec<struct {
+                bar vec<struct {
+                    baz map<str, struct { baz bool }>
                 }>
             }>
         }

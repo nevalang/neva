@@ -4,8 +4,8 @@ const {
     pub VEC_EMPTY vec<i8>  []
     VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
-    REC { foo int }  { foo: 42 }
-    pub ENUM { Monday, Tuesday }  1
+    REC struct { foo int }  { foo: 42 }
+    pub ENUM enum { Monday, Tuesday }  1
 }
 
 const { PI f32  3.14
@@ -13,8 +13,8 @@ const { PI f32  3.14
     VEC_EMPTY vec<i8>  []
     pub VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
-    pub REC { foo int }  { foo: 42 }
-    ENUM { Monday, Tuesday }  1
+    pub REC struct { foo int }  { foo: 42 }
+    ENUM enum { Monday, Tuesday }  1
 }
 
 const {
@@ -23,8 +23,8 @@ const {
     VEC_EMPTY vec<i8>  []
     pub VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
-    pub REC { foo int }  { foo: 42 }
-    ENUM { Monday, Tuesday }  1 }
+    pub REC struct { foo int }  { foo: 42 }
+    ENUM enum { Monday, Tuesday }  1 }
 
 const {
 
@@ -33,8 +33,8 @@ const {
     VEC_EMPTY vec<i8>  []
     pub VEC_FULL vec<i8>  [1, 2, 3, 4]
     pub ARR [4]i8  [0, 1, 2, 3]
-    REC { foo int }  { foo: 42 }
-    ENUM { Monday, Tuesday }  1
+    REC struct { foo int }  { foo: 42 }
+    ENUM enum { Monday, Tuesday }  1
 }
 
 const {
@@ -43,8 +43,8 @@ const {
     VEC_EMPTY vec<i8>  []
     VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
-    REC { foo int }  { foo: 42 }
-    pub ENUM { Monday, Tuesday }  1
+    REC struct { foo int }  { foo: 42 }
+    pub ENUM enum { Monday, Tuesday }  1
 
 }
 
@@ -56,8 +56,8 @@ const {
     VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
 
-    pub REC { foo int }  { foo: 42 }
-    ENUM { Monday, Tuesday }  1
+    pub REC struct { foo int }  { foo: 42 }
+    ENUM enum { Monday, Tuesday }  1
 }
 
 const {
@@ -69,16 +69,16 @@ const {
     VEC_FULL vec<i8>  [1, 2, 3, 4]
     ARR [4]i8  [0, 1, 2, 3]
 
-    REC { foo int }  { foo: 42 }
-    pub ENUM { Monday, Tuesday }  1
+    REC struct { foo int }  { foo: 42 }
+    pub ENUM enum { Monday, Tuesday }  1
 
 }
 
 const {
-    pub MIXED_REC {
-        foo [64]int | { bar [2]bool }
+    pub MIXED_REC struct {
+        foo [64]int | struct { bar [2]bool }
         baz [3]bool
-    } | [2]{ bax f32 }  {
+    } | [2]struct{ bax f32 }  {
         foo: { bar: [
             true, false
         ] }

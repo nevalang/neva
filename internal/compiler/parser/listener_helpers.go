@@ -110,7 +110,7 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 func parseLitExpr(litExpr generated.ITypeLitExprContext) *ts.Expr {
 	enumExpr := litExpr.EnumTypeExpr()
 	arrExpr := litExpr.ArrTypeExpr()
-	structExpr := litExpr.RecTypeExpr()
+	structExpr := litExpr.StructTypeExpr()
 
 	switch {
 	case enumExpr != nil:
@@ -157,24 +157,24 @@ func parseArrExpr(arrExpr generated.IArrTypeExprContext) *ts.Expr {
 	}
 }
 
-func parseStructExpr(recExpr generated.IRecTypeExprContext) *ts.Expr {
+func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
 	result := ts.Expr{
 		Lit: &ts.LitExpr{
-			Rec: map[string]ts.Expr{},
+			Struct: map[string]ts.Expr{},
 		},
 	}
 
-	refFields := recExpr.RecFields()
-	if refFields == nil {
+	structFields := structExpr.StructFields()
+	if structFields == nil {
 		return &result
 	}
 
-	fields := recExpr.RecFields().AllRecField()
-	result.Lit.Rec = make(map[string]ts.Expr, len(fields))
+	fields := structExpr.StructFields().AllStructField()
+	result.Lit.Struct = make(map[string]ts.Expr, len(fields))
 
 	for _, field := range fields {
 		fieldName := field.IDENTIFIER().GetText()
-		result.Lit.Rec[fieldName] = *parseTypeExpr(field.TypeExpr())
+		result.Lit.Struct[fieldName] = *parseTypeExpr(field.TypeExpr())
 	}
 
 	return &result

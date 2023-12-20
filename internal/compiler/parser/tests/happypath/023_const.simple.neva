@@ -131,66 +131,66 @@ const {
     ]
 }
 
-const { REC {}  {} }
+const { REC struct {}  {} }
 
-const { REC {}  {}
+const { REC struct {}  {}
 }
 
-const { REC {}  {}
-}
-
-const {
-    REC {}  {}
-}
-
-const { REC { foo int }  { foo: 42 } }
-
-const {
-    REC { foo int }  { foo: 42 } }
-
-const { REC { foo int }  { foo: 42 }
+const { REC struct {}  {}
 }
 
 const {
-    REC {
+    REC struct {}  {}
+}
+
+const { REC struct { foo int }  { foo: 42 } }
+
+const {
+    REC struct { foo int }  { foo: 42 } }
+
+const { REC struct { foo int }  { foo: 42 }
+}
+
+const {
+    REC struct {
         foo int
         bar [4]i8
-    }  {
+    } {
         foo: 42
         bar: [1, 2, 3, 4]
     }
 }
 
-const { ENUM { Monday, Tuesday }  1 }
+const { ENUM enum { Monday, Tuesday }  1 }
 
 const {
-    ENUM { Monday, Tuesday }  2 }
+    ENUM enum { Monday, Tuesday }  2 }
 
-const { ENUM { Monday, Tuesday }  3
+const { ENUM enum { Monday, Tuesday }  3
 }
 
 const {
-    ENUM { Monday, Tuesday }  4
+    ENUM enum { Monday, Tuesday }  4
 }
 
 const {
-    ENUM {
+    ENUM enum {
         Monday, Tuesday }  5
 }
 
 const {
-    ENUM { Monday, Tuesday
+    ENUM enum { Monday, Tuesday
     }  6
 }
 
 const {
-    ENUM {
+    ENUM enum {
         Monday, Tuesday
     }  7
 }
 
 const {
-    ENUM {
+    ENUM enum {
         Monday,
         Tuesday
     }  8

@@ -13,32 +13,32 @@ interfaces {
 }
 
 interfaces {
-    IReader1 (a bool | int | {}) (x str | float | { Monday })
+    IReader1 (a bool | int | struct {}) (x str | float | enum { Monday })
 }
 
 interfaces {
     IReader1 (
-        a bool | int | { foo int | str }
+        a bool | int | struct { foo int | str }
     ) (
         x str |
         float |
-        { Monday } |
-        {
-            foo { January } | {}
+        enum { Monday } |
+        struct {
+            foo enum { January } | struct {}
         }
     )
 }
 
 interfaces {
     pub IReader1 (
-        a bool | int | { foo int | str },
-        b [256][128]{ bar int | [64]int }
+        a bool | int | struct { foo int | str },
+        b [256][128]struct { bar int | [64]int }
     ) (
         x str |
             float |
-            { Monday } |
-            {
-                foo { January } | {}
+            enum { Monday } |
+            struct {
+                foo enum { January } | struct {}
             }
     )
 }

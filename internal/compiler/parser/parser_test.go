@@ -212,7 +212,7 @@ func TestParser_ParseFile(t *testing.T) {
 							Params: nil,
 							BodyExpr: &ts.Expr{
 								Lit: &ts.LitExpr{
-									Rec: map[string]ts.Expr{},
+									Struct: map[string]ts.Expr{},
 								},
 							},
 						},
@@ -240,7 +240,7 @@ func TestParser_ParseFile(t *testing.T) {
 							Params: nil,
 							BodyExpr: &ts.Expr{
 								Lit: &ts.LitExpr{
-									Rec: map[string]ts.Expr{
+									Struct: map[string]ts.Expr{
 										"age": {
 											Inst: &ts.InstExpr{Ref: src.EntityRef{Name: "int"}},
 										},

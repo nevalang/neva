@@ -1,86 +1,86 @@
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 {}
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct {}
     }
 }
 
 types {
-    Rec1Lvl1 { Rec1Lvl2 {}
+    Rec1Lvl1 struct { Rec1Lvl2 struct {}
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 {} }
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct {} }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2_1 {}
-        Rec1Lvl2_2 {}
+    Rec1Lvl1 struct {
+        Rec1Lvl2_1 struct {}
+        Rec1Lvl2_2 struct {}
     }
 }
 
 types {
-    Rec1Lvl1 { Rec1Lvl2_1 {}
-        Rec1Lvl2_2 {}
+    Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
+        Rec1Lvl2_2 struct {}
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2_1 {}
-        Rec1Lvl2_2 {} }
+    Rec1Lvl1 struct {
+        Rec1Lvl2_1 struct {}
+        Rec1Lvl2_2 struct {} }
 }
 
 types {
-    Rec1Lvl1 { Rec1Lvl2_1 {}
-        Rec1Lvl2_2 {} } }
+    Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
+        Rec1Lvl2_2 struct {} } }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 {
-            Rec1Lvl3_1 {}
-            Rec1Lvl3_2 {}
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct {
+            Rec1Lvl3_1 struct {}
+            Rec1Lvl3_2 struct {}
         }
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 { Rec1Lvl3_1 {}
-            Rec1Lvl3_2 {}
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+            Rec1Lvl3_2 struct {}
         }
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 {
-            Rec1Lvl3_1 {}
-            Rec1Lvl3_2 {} }
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct {
+            Rec1Lvl3_1 struct {}
+            Rec1Lvl3_2 struct {} }
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 { Rec1Lvl3_1 {}
-            Rec1Lvl3_2 {} }
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+            Rec1Lvl3_2 struct {} }
     }
 }
 
 types {
-    Rec1Lvl1 {
-        Rec1Lvl2 { Rec1Lvl3_1 {}
-            Rec1Lvl3_2 {} } } }
+    Rec1Lvl1 struct {
+        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+            Rec1Lvl3_2 struct {} } } }
 
 types {
-    pub Rec1Lvl1 {
-        Rec1Lvl2 {
-            Rec1Lvl3_1 {
+    pub Rec1Lvl1 struct {
+        Rec1Lvl2 struct {
+            Rec1Lvl3_1 struct {
                 foo int
             }
-            Rec1Lvl3_2 {
+            Rec1Lvl3_2 struct {
                 bar vec<int>
             }
         }

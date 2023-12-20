@@ -3,58 +3,58 @@ interfaces {
     IReader20<T> (x int, y T) (a int, b bool)
 
     IReader12<T int> (
-        x {
+        x enum {
             Monday,
             Tuesday,
             Wednesday
-        }, y {
+        }, y enum {
             January,
             February
         }
     ) (
-        a {
+        a enum {
             Monday,
             Tuesday,
             Wednesday
-        }, b  {
+        }, b  enum {
             January, February
         }
     )
 
     IReader1 (
-        arr [512]{ Monday, Tuesday },
-        arr2 [256]{ foo int },
-        arr3 [128]{ baz {} }
+        arr [512]enum { Monday, Tuesday },
+        arr2 [256]struct { foo int },
+        arr3 [128]struct { baz struct {} }
     ) (
-        arr [1024]{ January, February },
-        arr2 [256]{ bar bool },
-        arr3 [128][64]{ bax {} }
+        arr [1024]enum { January, February },
+        arr2 [256]struct { bar bool },
+        arr3 [128][64]struct { bax struct {} }
     )
 
-    IReader1 (x {
+    IReader1 (x struct {
         foo int
         bar str
-    }) (a {
+    }) (a struct {
         baz bool
         bax float })
 
     IReader1 (
-        x { foo { a int } },
-        y {}
+        x struct { foo struct { a int } },
+        y struct {}
     ) (
-        bar { baz { b bool } },
-        bax { r {} }
+        bar struct { baz struct { b bool } },
+        bax struct { r struct {} }
     )
 
     pub IReader1 (
-        a bool | int | { foo int | str },
-        b [256][128]{ bar int | [64]int }
+        a bool | int | struct { foo int | str },
+        b [256][128]struct{ bar int | [64]int }
     ) (
         x str |
             float |
-            { Monday } |
-            {
-                foo { January } | {}
+            enum { Monday } |
+            struct {
+                foo enum { January } | struct {}
             }
     )
 }

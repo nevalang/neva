@@ -272,7 +272,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit expr rec no fields",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Rec: map[string]ts.Expr{},
+					Struct: map[string]ts.Expr{},
 				},
 			},
 			want: "{}",
@@ -281,7 +281,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit_expr_rec_with_one_field",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Rec: map[string]ts.Expr{
+					Struct: map[string]ts.Expr{
 						"name": {
 							Inst: &ts.InstExpr{
 								Ref: ts.DefaultStringer("str"),
@@ -296,7 +296,7 @@ func TestExpr_String(t *testing.T) {
 			name: "lit_expr_rec_with_two_fields",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Rec: map[string]ts.Expr{
+					Struct: map[string]ts.Expr{
 						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
 						"age":  {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},

@@ -62,7 +62,7 @@ func (v Validator) Validate(expr Expr) error {
 			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.Arr.Size)
 		}
 		switch {
-		case expr.Lit.Enum != nil, expr.Lit.Rec != nil, expr.Lit.Union != nil:
+		case expr.Lit.Enum != nil, expr.Lit.Struct != nil, expr.Lit.Union != nil:
 			return ErrArrLitKind
 		}
 	case UnionLitType:
@@ -70,7 +70,7 @@ func (v Validator) Validate(expr Expr) error {
 			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
 		}
 		switch {
-		case expr.Lit.Enum != nil, expr.Lit.Rec != nil, expr.Lit.Arr != nil:
+		case expr.Lit.Enum != nil, expr.Lit.Struct != nil, expr.Lit.Arr != nil:
 			return ErrUnionLitKind
 		}
 	case EnumLitType:
@@ -85,7 +85,7 @@ func (v Validator) Validate(expr Expr) error {
 			set[el] = struct{}{}
 		}
 		switch {
-		case expr.Lit.Union != nil, expr.Lit.Rec != nil, expr.Lit.Arr != nil:
+		case expr.Lit.Union != nil, expr.Lit.Struct != nil, expr.Lit.Arr != nil:
 			return ErrEnumLitKind
 		}
 	}

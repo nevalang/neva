@@ -1,44 +1,44 @@
 types {
-    Rec { foo vec<int> }
+    Rec struct { foo vec<int> }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int> }
 }
 
 types {
-    Rec { foo vec<int>
+    Rec struct { foo vec<int>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int>
         bar map<str, int>
     }
 }
 
 types {
-    Rec { foo vec<int>
+    Rec struct { foo vec<int>
         bar map<str, int>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int>
         bar map<str, int> }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int>
 
         bar map<str, int>
@@ -46,7 +46,7 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
 
         foo vec<int>
         bar map<str, int>
@@ -54,7 +54,7 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
         foo vec<int>
         bar map<str, int>
 
@@ -62,7 +62,7 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
 
         foo vec<int>
         bar map<str, int>
@@ -71,7 +71,7 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
 
         foo vec<int>
 
@@ -81,41 +81,41 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
         foo map<str, int>
-        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday }>
+        bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo map<str, int>
-        bar vec<{
+        bar vec<enum {
             Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo map<str, int>
-        bar vec<{ Monday, Tuesday, Wednesday, Thursday, Friday
+        bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
         }>
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo map<str, int>
-        bar vec<{
+        bar vec<enum {
             Monday, Tuesday, Wednesday, Thursday, Friday
         }>
     }
 }
 
 types {
-    pub Rec {
+    pub Rec struct {
         foo map<str, int>
-        bar vec<{
+        bar vec<enum {
             Monday,
             Tuesday,
             Wednesday,

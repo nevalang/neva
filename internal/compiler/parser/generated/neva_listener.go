@@ -55,14 +55,14 @@ type nevaListener interface {
 	// EnterArrTypeExpr is called when entering the arrTypeExpr production.
 	EnterArrTypeExpr(c *ArrTypeExprContext)
 
-	// EnterRecTypeExpr is called when entering the recTypeExpr production.
-	EnterRecTypeExpr(c *RecTypeExprContext)
+	// EnterStructTypeExpr is called when entering the structTypeExpr production.
+	EnterStructTypeExpr(c *StructTypeExprContext)
 
-	// EnterRecFields is called when entering the recFields production.
-	EnterRecFields(c *RecFieldsContext)
+	// EnterStructFields is called when entering the structFields production.
+	EnterStructFields(c *StructFieldsContext)
 
-	// EnterRecField is called when entering the recField production.
-	EnterRecField(c *RecFieldContext)
+	// EnterStructField is called when entering the structField production.
+	EnterStructField(c *StructFieldContext)
 
 	// EnterUnionTypeExpr is called when entering the unionTypeExpr production.
 	EnterUnionTypeExpr(c *UnionTypeExprContext)
@@ -226,14 +226,14 @@ type nevaListener interface {
 	// ExitArrTypeExpr is called when exiting the arrTypeExpr production.
 	ExitArrTypeExpr(c *ArrTypeExprContext)
 
-	// ExitRecTypeExpr is called when exiting the recTypeExpr production.
-	ExitRecTypeExpr(c *RecTypeExprContext)
+	// ExitStructTypeExpr is called when exiting the structTypeExpr production.
+	ExitStructTypeExpr(c *StructTypeExprContext)
 
-	// ExitRecFields is called when exiting the recFields production.
-	ExitRecFields(c *RecFieldsContext)
+	// ExitStructFields is called when exiting the structFields production.
+	ExitStructFields(c *StructFieldsContext)
 
-	// ExitRecField is called when exiting the recField production.
-	ExitRecField(c *RecFieldContext)
+	// ExitStructField is called when exiting the structField production.
+	ExitStructField(c *StructFieldContext)
 
 	// ExitUnionTypeExpr is called when exiting the unionTypeExpr production.
 	ExitUnionTypeExpr(c *UnionTypeExprContext)

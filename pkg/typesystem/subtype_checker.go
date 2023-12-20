@@ -107,11 +107,11 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 			}
 		}
 	case RecLitType: // {x int, y float} <: {x int|str}
-		if len(expr.Lit.Rec) < len(constr.Lit.Rec) {
-			return fmt.Errorf("%w: got %v, want %v", ErrRecLen, len(expr.Lit.Rec), len(constr.Lit.Rec))
+		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
+			return fmt.Errorf("%w: got %v, want %v", ErrRecLen, len(expr.Lit.Struct), len(constr.Lit.Struct))
 		}
-		for constrFieldName, constrField := range constr.Lit.Rec {
-			exprField, ok := expr.Lit.Rec[constrFieldName]
+		for constrFieldName, constrField := range constr.Lit.Struct {
+			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrRecNoField, constrFieldName)
 			}

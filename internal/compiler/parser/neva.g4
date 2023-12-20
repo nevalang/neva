@@ -24,14 +24,16 @@ typeInstExpr:
 	entityRef typeArgs?; // entity ref points to type definition
 typeArgs:
 	'<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
-typeLitExpr: enumTypeExpr | arrTypeExpr | recTypeExpr;
+typeLitExpr: enumTypeExpr | arrTypeExpr | structTypeExpr;
 enumTypeExpr:
-	'{' NEWLINE* IDENTIFIER (',' NEWLINE* IDENTIFIER)* NEWLINE* '}';
+	'enum' NEWLINE* '{' NEWLINE* IDENTIFIER (
+		',' NEWLINE* IDENTIFIER
+	)* NEWLINE* '}';
 arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr;
-recTypeExpr:
-	'{' NEWLINE* recFields? '}'; // TODO rename rec->struct
-recFields: recField (NEWLINE+ recField)*;
-recField: IDENTIFIER typeExpr NEWLINE*;
+structTypeExpr:
+	'struct' NEWLINE* '{' NEWLINE* structFields? '}';
+structFields: structField (NEWLINE+ structField)*;
+structField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr:
 	nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+;
 nonUnionTypeExpr:

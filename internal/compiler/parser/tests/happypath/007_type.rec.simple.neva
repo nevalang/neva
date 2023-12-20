@@ -1,61 +1,61 @@
 types {
-    EmptyRec {}
+    EmptyRec struct {}
 }
 
 types {
-    EmptyRec2 {
+    EmptyRec2 struct {
     }
 }
 
 types {
-    EmptyRec2 {
+    EmptyRec2 struct {
 
     }
 }
 
 types {
-    Rec { foo int }
+    Rec struct  { foo int }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int }
 }
 
 types {
-    Rec { foo int
+    Rec struct { foo int
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int
-        bar { Monday, Tuesday, Wednesday }
+        bar enum { Monday, Tuesday, Wednesday }
     }
 }
 
 types {
-    Rec { foo int
-        bar { Monday, Tuesday, Wednesday }
+    Rec struct { foo int
+        bar enum { Monday, Tuesday, Wednesday }
     }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int
-        bar { Monday, Tuesday, Wednesday } }
+        bar enum { Monday, Tuesday, Wednesday } }
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int
-        bar {
+        bar enum {
             Monday,
             Tuesday,
             Wednesday
@@ -64,10 +64,10 @@ types {
 }
 
 types {
-    Rec {
+    Rec struct {
         foo int
 
-        bar {
+        bar enum {
             Monday,
             Tuesday,
             Wednesday
@@ -76,13 +76,13 @@ types {
 }
 
 types {
-    EmptyRec {}
+    EmptyRec struct {}
 
-    Rec { foo int }
+    Rec struct { foo int }
 
-    pub Rec {
+    pub Rec struct {
         foo int
-        bar {
+        bar enum {
             Monday,
             Tuesday,
             Wednesday

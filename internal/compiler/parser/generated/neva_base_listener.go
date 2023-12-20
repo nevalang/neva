@@ -116,23 +116,23 @@ func (s *BasenevaListener) EnterArrTypeExpr(ctx *ArrTypeExprContext) {}
 // ExitArrTypeExpr is called when production arrTypeExpr is exited.
 func (s *BasenevaListener) ExitArrTypeExpr(ctx *ArrTypeExprContext) {}
 
-// EnterRecTypeExpr is called when production recTypeExpr is entered.
-func (s *BasenevaListener) EnterRecTypeExpr(ctx *RecTypeExprContext) {}
+// EnterStructTypeExpr is called when production structTypeExpr is entered.
+func (s *BasenevaListener) EnterStructTypeExpr(ctx *StructTypeExprContext) {}
 
-// ExitRecTypeExpr is called when production recTypeExpr is exited.
-func (s *BasenevaListener) ExitRecTypeExpr(ctx *RecTypeExprContext) {}
+// ExitStructTypeExpr is called when production structTypeExpr is exited.
+func (s *BasenevaListener) ExitStructTypeExpr(ctx *StructTypeExprContext) {}
 
-// EnterRecFields is called when production recFields is entered.
-func (s *BasenevaListener) EnterRecFields(ctx *RecFieldsContext) {}
+// EnterStructFields is called when production structFields is entered.
+func (s *BasenevaListener) EnterStructFields(ctx *StructFieldsContext) {}
 
-// ExitRecFields is called when production recFields is exited.
-func (s *BasenevaListener) ExitRecFields(ctx *RecFieldsContext) {}
+// ExitStructFields is called when production structFields is exited.
+func (s *BasenevaListener) ExitStructFields(ctx *StructFieldsContext) {}
 
-// EnterRecField is called when production recField is entered.
-func (s *BasenevaListener) EnterRecField(ctx *RecFieldContext) {}
+// EnterStructField is called when production structField is entered.
+func (s *BasenevaListener) EnterStructField(ctx *StructFieldContext) {}
 
-// ExitRecField is called when production recField is exited.
-func (s *BasenevaListener) ExitRecField(ctx *RecFieldContext) {}
+// ExitStructField is called when production structField is exited.
+func (s *BasenevaListener) ExitStructField(ctx *StructFieldContext) {}
 
 // EnterUnionTypeExpr is called when production unionTypeExpr is entered.
 func (s *BasenevaListener) EnterUnionTypeExpr(ctx *UnionTypeExprContext) {}

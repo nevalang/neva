@@ -1,54 +1,54 @@
-interfaces { IReader1 (x { foo {} }) () }
+interfaces { IReader1 (x struct { foo struct {} }) () }
 
 interfaces {
-    IReader1 (x { foo {} }) () }
+    IReader1 (x struct { foo struct {} }) () }
 
 interfaces {
-    IReader1 (x { foo {} }) ()
+    IReader1 (x struct { foo struct {} }) ()
 }
 
-interfaces { IReader1 (x { foo {} }) (bar { baz {} }) }
+interfaces { IReader1 (x struct { foo struct {} }) (bar struct { baz struct {} }) }
 
 interfaces {
-    IReader1 (x { foo {} }) (bar { baz {} })
-}
-
-interfaces {
-    IReader1 (
-        x { foo {} }
-    ) (bar { baz {} })
+    IReader1 (x struct { foo struct {} }) (bar struct { baz struct {} })
 }
 
 interfaces {
     IReader1 (
-        x { foo {} }
+        x struct { foo struct {} }
+    ) (bar struct { baz struct {} })
+}
+
+interfaces {
+    IReader1 (
+        x struct { foo struct {} }
     ) (
-        bar { baz {} }
+        bar struct { baz struct {} }
     )
 }
 
 interfaces {
-    IReader1 (x {
-        foo { a int }
-    }) (bar {
-        baz { b bool }
+    IReader1 (x struct {
+        foo struct { a int }
+    }) (bar struct {
+        baz struct { b bool }
     })
 }
 
 interfaces {
     IReader1 (
-        x { foo { a int } }
+        x struct { foo struct { a int } }
     ) (
-        bar { baz { b bool } }
+        bar struct { baz struct { b bool } }
     )
 }
 
 interfaces {
     pub IReader1 (
-        x { foo { a int } },
-        y {}
+        x struct { foo struct { a int } },
+        y struct {}
     ) (
-        bar { baz { b bool } },
-        bax { r {} }
+        bar struct { baz struct { b bool } },
+        bax struct { r struct {} }
     )
 }

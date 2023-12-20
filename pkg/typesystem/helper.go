@@ -68,7 +68,7 @@ func (h Helper) Rec(rec map[string]Expr) Expr {
 	}
 	return Expr{
 		Lit: &LitExpr{
-			Rec: rec,
+			Struct: rec,
 		},
 	}
 }

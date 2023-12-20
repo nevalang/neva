@@ -184,4 +184,6 @@ interfaces {
     pub IReader20 (x int, y str) (a int, b bool)
 }
 
-// TODO add tests for ports without explicit types
+interfaces {
+    pub IReader21 (x, y) (a, b)
+}
