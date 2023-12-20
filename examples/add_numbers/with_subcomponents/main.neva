@@ -1,6 +1,6 @@
 // Our program turns out to be quite big! Let's split it into sub-components?
 
-use {
+import {
 	std/core
 }
 

@@ -32,11 +32,11 @@ func (s *BasenevaListener) EnterStmt(ctx *StmtContext) {}
 // ExitStmt is called when production stmt is exited.
 func (s *BasenevaListener) ExitStmt(ctx *StmtContext) {}
 
-// EnterUseStmt is called when production useStmt is entered.
-func (s *BasenevaListener) EnterUseStmt(ctx *UseStmtContext) {}
+// EnterImportStmt is called when production importStmt is entered.
+func (s *BasenevaListener) EnterImportStmt(ctx *ImportStmtContext) {}
 
-// ExitUseStmt is called when production useStmt is exited.
-func (s *BasenevaListener) ExitUseStmt(ctx *UseStmtContext) {}
+// ExitImportStmt is called when production importStmt is exited.
+func (s *BasenevaListener) ExitImportStmt(ctx *ImportStmtContext) {}
 
 // EnterImportDef is called when production importDef is entered.
 func (s *BasenevaListener) EnterImportDef(ctx *ImportDefContext) {}

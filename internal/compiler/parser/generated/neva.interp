@@ -1,6 +1,6 @@
 token literal names:
 null
-'use'
+'import'
 '{'
 '}'
 '@/'
@@ -81,7 +81,7 @@ WS
 rule names:
 prog
 stmt
-useStmt
+importStmt
 importDef
 importPath
 typeStmt

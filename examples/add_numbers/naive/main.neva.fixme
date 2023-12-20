@@ -6,7 +6,7 @@
 // then read the second input and parse it too.
 // Add numbers and print the result.
 
-use {
+import {
 	std/core
 }
 

@@ -13,8 +13,8 @@ type nevaListener interface {
 	// EnterStmt is called when entering the stmt production.
 	EnterStmt(c *StmtContext)
 
-	// EnterUseStmt is called when entering the useStmt production.
-	EnterUseStmt(c *UseStmtContext)
+	// EnterImportStmt is called when entering the importStmt production.
+	EnterImportStmt(c *ImportStmtContext)
 
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
@@ -184,8 +184,8 @@ type nevaListener interface {
 	// ExitStmt is called when exiting the stmt production.
 	ExitStmt(c *StmtContext)
 
-	// ExitUseStmt is called when exiting the useStmt production.
-	ExitUseStmt(c *UseStmtContext)
+	// ExitImportStmt is called when exiting the importStmt production.
+	ExitImportStmt(c *ImportStmtContext)
 
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)

@@ -32,9 +32,9 @@ var NevaParserStaticData struct {
 func nevaParserInit() {
 	staticData := &NevaParserStaticData
 	staticData.LiteralNames = []string{
-		"", "'use'", "'{'", "'}'", "'@/'", "'.'", "'/'", "'types'", "'<'", "'>'",
-		"','", "'enum'", "'['", "']'", "'struct'", "'|'", "'interfaces'", "'('",
-		"')'", "'const'", "'true'", "'false'", "'nil'", "':'", "'components'",
+		"", "'import'", "'{'", "'}'", "'@/'", "'.'", "'/'", "'types'", "'<'",
+		"'>'", "','", "'enum'", "'['", "']'", "'struct'", "'|'", "'interfaces'",
+		"'('", "')'", "'const'", "'true'", "'false'", "'nil'", "':'", "'components'",
 		"'nodes'", "'net'", "'->'", "'in'", "'out'", "", "'pub'",
 	}
 	staticData.SymbolicNames = []string{
@@ -43,8 +43,8 @@ func nevaParserInit() {
 		"IDENTIFIER", "INT", "FLOAT", "STRING", "NEWLINE", "WS",
 	}
 	staticData.RuleNames = []string{
-		"prog", "stmt", "useStmt", "importDef", "importPath", "typeStmt", "typeDef",
-		"typeParams", "typeParamList", "typeParam", "typeExpr", "typeInstExpr",
+		"prog", "stmt", "importStmt", "importDef", "importPath", "typeStmt",
+		"typeDef", "typeParams", "typeParamList", "typeParam", "typeExpr", "typeInstExpr",
 		"typeArgs", "typeLitExpr", "enumTypeExpr", "arrTypeExpr", "structTypeExpr",
 		"structFields", "structField", "unionTypeExpr", "nonUnionTypeExpr",
 		"interfaceStmt", "interfaceDef", "inPortsDef", "outPortsDef", "portsDef",
@@ -524,7 +524,7 @@ const (
 const (
 	nevaParserRULE_prog               = 0
 	nevaParserRULE_stmt               = 1
-	nevaParserRULE_useStmt            = 2
+	nevaParserRULE_importStmt         = 2
 	nevaParserRULE_importDef          = 3
 	nevaParserRULE_importPath         = 4
 	nevaParserRULE_typeStmt           = 5
@@ -803,7 +803,7 @@ type IStmtContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	UseStmt() IUseStmtContext
+	ImportStmt() IImportStmtContext
 	TypeStmt() ITypeStmtContext
 	InterfaceStmt() IInterfaceStmtContext
 	ConstStmt() IConstStmtContext
@@ -845,10 +845,10 @@ func NewStmtContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokin
 
 func (s *StmtContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *StmtContext) UseStmt() IUseStmtContext {
+func (s *StmtContext) ImportStmt() IImportStmtContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IUseStmtContext); ok {
+		if _, ok := ctx.(IImportStmtContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -858,7 +858,7 @@ func (s *StmtContext) UseStmt() IUseStmtContext {
 		return nil
 	}
 
-	return t.(IUseStmtContext)
+	return t.(IImportStmtContext)
 }
 
 func (s *StmtContext) TypeStmt() ITypeStmtContext {
@@ -959,7 +959,7 @@ func (p *nevaParser) Stmt() (localctx IStmtContext) {
 		p.EnterOuterAlt(localctx, 1)
 		{
 			p.SetState(124)
-			p.UseStmt()
+			p.ImportStmt()
 		}
 
 	case nevaParserT__6:
@@ -1008,8 +1008,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IUseStmtContext is an interface to support dynamic dispatch.
-type IUseStmtContext interface {
+// IImportStmtContext is an interface to support dynamic dispatch.
+type IImportStmtContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -1021,51 +1021,51 @@ type IUseStmtContext interface {
 	AllImportDef() []IImportDefContext
 	ImportDef(i int) IImportDefContext
 
-	// IsUseStmtContext differentiates from other interfaces.
-	IsUseStmtContext()
+	// IsImportStmtContext differentiates from other interfaces.
+	IsImportStmtContext()
 }
 
-type UseStmtContext struct {
+type ImportStmtContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyUseStmtContext() *UseStmtContext {
-	var p = new(UseStmtContext)
+func NewEmptyImportStmtContext() *ImportStmtContext {
+	var p = new(ImportStmtContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_useStmt
+	p.RuleIndex = nevaParserRULE_importStmt
 	return p
 }
 
-func InitEmptyUseStmtContext(p *UseStmtContext) {
+func InitEmptyImportStmtContext(p *ImportStmtContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_useStmt
+	p.RuleIndex = nevaParserRULE_importStmt
 }
 
-func (*UseStmtContext) IsUseStmtContext() {}
+func (*ImportStmtContext) IsImportStmtContext() {}
 
-func NewUseStmtContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UseStmtContext {
-	var p = new(UseStmtContext)
+func NewImportStmtContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ImportStmtContext {
+	var p = new(ImportStmtContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_useStmt
+	p.RuleIndex = nevaParserRULE_importStmt
 
 	return p
 }
 
-func (s *UseStmtContext) GetParser() antlr.Parser { return s.parser }
+func (s *ImportStmtContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *UseStmtContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *ImportStmtContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(nevaParserNEWLINE)
 }
 
-func (s *UseStmtContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *ImportStmtContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *UseStmtContext) AllImportDef() []IImportDefContext {
+func (s *ImportStmtContext) AllImportDef() []IImportDefContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -1086,7 +1086,7 @@ func (s *UseStmtContext) AllImportDef() []IImportDefContext {
 	return tst
 }
 
-func (s *UseStmtContext) ImportDef(i int) IImportDefContext {
+func (s *ImportStmtContext) ImportDef(i int) IImportDefContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -1106,29 +1106,29 @@ func (s *UseStmtContext) ImportDef(i int) IImportDefContext {
 	return t.(IImportDefContext)
 }
 
-func (s *UseStmtContext) GetRuleContext() antlr.RuleContext {
+func (s *ImportStmtContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *UseStmtContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *ImportStmtContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *UseStmtContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *ImportStmtContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterUseStmt(s)
+		listenerT.EnterImportStmt(s)
 	}
 }
 
-func (s *UseStmtContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *ImportStmtContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitUseStmt(s)
+		listenerT.ExitImportStmt(s)
 	}
 }
 
-func (p *nevaParser) UseStmt() (localctx IUseStmtContext) {
-	localctx = NewUseStmtContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 4, nevaParserRULE_useStmt)
+func (p *nevaParser) ImportStmt() (localctx IImportStmtContext) {
+	localctx = NewImportStmtContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 4, nevaParserRULE_importStmt)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)

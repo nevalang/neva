@@ -110,8 +110,8 @@ repository:
 patterns:
   - include: "#comments" # Comments at the root level of the file
 
-  # Use (Imports)
-  - begin: "\\b(use)\\s*\\{"  # Matches the keyword 'use' followed by optional whitespace and an opening curly brace
+  # Imports
+  - begin: "\\b(import)\\s*\\{"  # Matches the keyword 'import' followed by optional whitespace and an opening curly brace
     beginCaptures:
       '1':
         name: keyword.import

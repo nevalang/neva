@@ -1,6 +1,6 @@
 // comments
 
-use {
+import {
     std/io
 	github.com/emil14/nevatools
 	ws github.com/nevalang/websocket

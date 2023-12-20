@@ -1,6 +1,6 @@
 // comments
 
-use { // asd
+import { // asd
     std/tmp/io // asdasdas asd1 1s
     // asdasx
 	stdpkg // asd

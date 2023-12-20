@@ -4,9 +4,9 @@ prog: (NEWLINE | COMMENT | stmt)* EOF;
 
 /* PARSER */
 
-stmt: useStmt | typeStmt | interfaceStmt | constStmt | compStmt;
+stmt: importStmt | typeStmt | interfaceStmt | constStmt | compStmt;
 
-useStmt: 'use' NEWLINE* '{' NEWLINE* importDef* '}';
+importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: IDENTIFIER? importPath NEWLINE*;
 importPath:
 	'@/'? (IDENTIFIER ('.' IDENTIFIER)?) (

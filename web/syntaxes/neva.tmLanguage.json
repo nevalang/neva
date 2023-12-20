@@ -159,7 +159,7 @@
       "include": "#comments"
     },
     {
-      "begin": "\\b(use)\\s*\\{",
+      "begin": "\\b(import)\\s*\\{",
       "beginCaptures": {
         "1": {
           "name": "keyword.import"
