@@ -5,6 +5,8 @@ interface INormalEdgeProps {
 }
 
 export function NormalEdge(props: EdgeProps<INormalEdgeProps>) {
+  console.log("===", props.data);
+
   const [edgePath] = getBezierPath({
     sourceX: props.sourceX,
     sourceY: props.sourceY,

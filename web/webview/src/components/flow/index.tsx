@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useCallback, useEffect } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -11,7 +11,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
-  NodeMouseHandler,
+  EdgeTypes,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -19,12 +19,20 @@ interface IFlowProps {
   nodes: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
+  edgeTypes?: EdgeTypes;
   title: string;
   onNodeClick?: (node: Node) => void;
   nodesDraggable?: boolean;
   leftTopPanel?: ReactNode;
-  onNodeMouseEnter?: NodeMouseHandler;
-  onNodeMouseLeave?: NodeMouseHandler;
+  onNodeMouseEnter?: (
+    node: Node,
+    nodes: Node[],
+    edges: Edge[]
+  ) => { nodes: Node[]; edges: Edge[] };
+  onNodeMouseLeave?: (
+    nodes: Node[],
+    edges: Edge[]
+  ) => { nodes: Node[]; edges: Edge[] };
 }
 
 const defaultFitViewOptions: FitViewOptions = {
@@ -48,6 +56,34 @@ export function Flow(props: IFlowProps) {
     setEdges(props.edges);
   }, [props.edges, props.nodes, setEdges, setNodes]);
 
+  const handleOnMouseEnter = useCallback(
+    (_: unknown, node: Node): void => {
+      if (!props.onNodeMouseEnter) {
+        return;
+      }
+      const { nodes: newNodes, edges: newEdges } = props.onNodeMouseEnter(
+        node,
+        nodes,
+        edges
+      );
+      setNodes(newNodes);
+      setEdges(newEdges);
+    },
+    [edges, nodes, props, setEdges, setNodes]
+  );
+
+  const handleOnMouseLeave = useCallback(() => {
+    if (!props.onNodeMouseLeave) {
+      return;
+    }
+    const { nodes: newNodes, edges: newEdges } = props.onNodeMouseLeave(
+      nodes,
+      edges
+    );
+    setNodes(newNodes);
+    setEdges(newEdges);
+  }, [edges, nodes, props, setEdges, setNodes]);
+
   if (nodes.length === 0) {
     return null;
   }
@@ -55,13 +91,14 @@ export function Flow(props: IFlowProps) {
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <ReactFlow
-        nodeTypes={props.nodeTypes}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeMouseEnter={props.onNodeMouseEnter}
-        onNodeMouseLeave={props.onNodeMouseLeave}
+        onNodeMouseEnter={handleOnMouseEnter}
+        onNodeMouseLeave={handleOnMouseLeave}
+        nodeTypes={props.nodeTypes}
+        edgeTypes={props.edgeTypes}
         fitView
         fitViewOptions={defaultFitViewOptions}
         nodesFocusable

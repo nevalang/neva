@@ -2,17 +2,25 @@ import { Node, Edge } from "reactflow";
 
 export function handleNodeMouseEnter(
   hoveredNode: Node,
-  edgesState: Edge[],
-  nodesState: Node[]
-) {
+  nodesState: Node[],
+  edgesState: Edge[]
+): { nodes: Node[]; edges: Edge[] } {
   const newEdges: Edge[] = [];
   const relatedNodeIds: Set<string> = new Set();
+
+  console.log(edgesState);
 
   edgesState.forEach((edge) => {
     const isEdgeRelated =
       edge.source === hoveredNode.id || edge.target === hoveredNode.id;
     const newEdge = isEdgeRelated
-      ? { ...edge, data: { isHighlighted: true } }
+      ? {
+          ...edge,
+          data: {
+            ...edge.data,
+            isHighlighted: true,
+          },
+        }
       : edge;
     newEdges.push(newEdge);
     if (isEdgeRelated) {
@@ -35,21 +43,30 @@ export function handleNodeMouseEnter(
           ...node,
           data: {
             ...node.data,
-            isDimmed:
-              node.type === "component" &&
-              node.data.entityName === hoveredNode.data.entityName &&
-              node.id !== hoveredNode.id,
+            isDimmed: node.id !== hoveredNode.id,
           },
         }
   );
 
-  return { newEdges, newNodes };
+  return { edges: newEdges, nodes: newNodes };
 }
 
-export function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
+export function handleNodeMouseLeave(
+  nodesState: Node[],
+  edgesState: Edge[]
+): { nodes: Node[]; edges: Edge[] } {
   const newEdges = edgesState.map((edge) =>
-    edge.data.isRelated ? { ...edge, data: { isRelated: false } } : edge
+    edge.data.isHighlighted
+      ? {
+          ...edge,
+          data: {
+            ...edge.data,
+            isHighlighted: false,
+          },
+        }
+      : edge
   );
+
   const newNodes = nodesState.map((node) => ({
     ...node,
     data: {
@@ -58,5 +75,6 @@ export function handleNodeMouseLeave(edgesState: Edge[], nodesState: Node[]) {
       isRelated: false,
     },
   }));
-  return { newEdges, newNodes };
+
+  return { edges: newEdges, nodes: newNodes };
 }

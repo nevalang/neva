@@ -53,6 +53,7 @@ function buildAndInsertNetEdges(
         target: `${entityName}-${receiver.portAddr!.node!}`,
         targetHandle: receiver.portAddr?.port,
         markerEnd: { type: MarkerType.Arrow },
+        type: "normal",
         data: {
           isHighlighted: false,
         },
