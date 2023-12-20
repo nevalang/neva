@@ -152,6 +152,20 @@
           ]
         }
       ]
+    },
+    "compiler_directives": {
+      "patterns": [
+        {
+          "name": "meta.directive",
+          "begin": "\\#",
+          "beginCaptures": {
+            "1": {
+              "name": "meta.directive"
+            }
+          },
+          "end": "(?:\\n|$)"
+        }
+      ]
     }
   },
   "patterns": [
@@ -274,6 +288,9 @@
       },
       "end": "\\}",
       "patterns": [
+        {
+          "include": "#compiler_directives"
+        },
         {
           "include": "#pub"
         },

@@ -1,0 +1,7 @@
+components {
+    #extern(read)
+    pub Read(sig) (v str)
+
+    #extern(read, write)
+    pub Print<T>(v T) (v T)
+}

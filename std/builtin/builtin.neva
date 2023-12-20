@@ -11,7 +11,12 @@ types {
 }
 
 components {
+    #extern(Const)
     pub Const<T>() (v t3)
+
+    #extern(Add)
     pub Add<T int | float | str>(a T, b T) (v T)
+
+    #extern(Void)
     pub Void(v any) ()
 }

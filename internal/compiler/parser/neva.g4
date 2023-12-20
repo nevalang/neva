@@ -4,7 +4,12 @@ prog: (NEWLINE | COMMENT | stmt)* EOF;
 
 /* PARSER */
 
-stmt: importStmt | typeStmt | interfaceStmt | constStmt | compStmt;
+stmt:
+	importStmt
+	| typeStmt
+	| interfaceStmt
+	| constStmt
+	| compStmt;
 
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: IDENTIFIER? importPath NEWLINE*;
@@ -67,7 +72,10 @@ recValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
-compDef: interfaceDef compBody? NEWLINE*;
+compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
+compilerDirectives: (compilerDirective NEWLINE)+;
+compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
+compilerDirectivesArgs: '(' IDENTIFIER (',' IDENTIFIER)* ')';
 compBody:
 	'{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
 // nodes
