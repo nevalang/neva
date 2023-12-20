@@ -2,13 +2,18 @@ package analyzer
 
 import (
 	"errors"
-	"fmt"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var ErrInterfaceTypeParams = errors.New("could not resolve interface type parameters")
+var (
+	ErrInterfaceTypeParams = errors.New("Cannot resolve interface type parameters")
+	ErrEmptyInports        = errors.New("Interface must have inports")
+	ErrEmptyOutports       = errors.New("Interface must have outports")
+	ErrInvalidInports      = errors.New("Inports are invalid")
+	ErrInvalidOutports     = errors.New("Outports are invalid")
+)
 
 type analyzeInterfaceParams struct {
 	allowEmptyInports  bool
@@ -16,23 +21,31 @@ type analyzeInterfaceParams struct {
 }
 
 func (a Analyzer) analyzeInterface(
-	def src.Interface,
+	iface src.Interface,
 	scope src.Scope,
 	params analyzeInterfaceParams,
-) (src.Interface, error) {
-	resolvedParams, err := a.analyzeTypeParams(def.TypeParams.Params, scope)
+) (src.Interface, *Error) {
+	resolvedParams, err := a.analyzeTypeParams(iface.TypeParams.Params, scope)
 	if err != nil {
-		return src.Interface{}, fmt.Errorf("%w: %v", ErrInterfaceTypeParams, def.TypeParams)
+		return src.Interface{}, Error{
+			Err:      ErrInterfaceTypeParams,
+			Location: &scope.Location,
+			Meta:     &iface.Meta,
+		}.Merge(err)
 	}
 
-	resolvedIO, err := a.analyzeIO(resolvedParams, def.IO, scope, params)
+	resolvedIO, err := a.analyzeIO(resolvedParams, iface.IO, scope, params)
 	if err != nil {
-		return src.Interface{}, fmt.Errorf("analyze IO: %w", err)
+		return src.Interface{}, Error{
+			Err:      ErrInterfaceTypeParams,
+			Location: &scope.Location,
+			Meta:     &iface.Meta,
+		}.Merge(err)
 	}
 
 	typeParams := src.TypeParams{
 		Params: resolvedParams,
-		Meta:   def.TypeParams.Meta,
+		Meta:   iface.TypeParams.Meta,
 	}
 
 	return src.Interface{
@@ -41,33 +54,40 @@ func (a Analyzer) analyzeInterface(
 	}, nil
 }
 
-var (
-	ErrEmptyInports  = errors.New("IO cannot have empty inports")
-	ErrEmptyOutports = errors.New("IO cannot have empty outports")
-)
-
 func (a Analyzer) analyzeIO(
 	typeParams []ts.Param,
 	io src.IO,
 	scope src.Scope,
 	params analyzeInterfaceParams,
-) (src.IO, error) {
+) (src.IO, *Error) {
 	if !params.allowEmptyInports && len(io.In) == 0 {
-		return src.IO{}, ErrEmptyInports
+		return src.IO{}, &Error{
+			Err:      ErrEmptyInports,
+			Location: &scope.Location,
+		}
 	}
 
 	if !params.allowEmptyOutports && len(io.Out) == 0 {
-		return src.IO{}, ErrEmptyOutports
+		return src.IO{}, &Error{
+			Err:      ErrEmptyOutports,
+			Location: &scope.Location,
+		}
 	}
 
 	resolvedIn, err := a.analyzePorts(typeParams, io.In, scope)
 	if err != nil {
-		return src.IO{}, fmt.Errorf("analyze inports: %w: %v", err, io.In)
+		return src.IO{}, Error{
+			Err:      ErrInvalidInports,
+			Location: &scope.Location,
+		}.Merge(err)
 	}
 
 	resolvedOit, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
-		return src.IO{}, fmt.Errorf("analyze outports: %w: %v", err, io.In)
+		return src.IO{}, Error{
+			Err:      ErrInvalidOutports,
+			Location: &scope.Location,
+		}.Merge(err)
 	}
 
 	return src.IO{
@@ -80,26 +100,36 @@ func (a Analyzer) analyzePorts(
 	params []ts.Param,
 	ports map[string]src.Port,
 	scope src.Scope,
-) (map[string]src.Port, error) {
+) (map[string]src.Port, *Error) {
 	resolvedPorts := make(map[string]src.Port, len(ports))
 	for name, port := range ports {
 		resolvedPort, err := a.analyzePort(params, port, scope)
 		if err != nil {
-			return nil, fmt.Errorf("analyze port: %v: %w", name, err)
+			return nil, Error{
+				Location: &scope.Location,
+				Meta:     &port.Meta,
+			}.Merge(err)
 		}
 		resolvedPorts[name] = resolvedPort
 	}
 	return resolvedPorts, nil
 }
 
-func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, error) {
-	resolvedDef, err := a.analyzeTypeDef(ts.Def{
-		Params:   params,
-		BodyExpr: &port.TypeExpr,
-	}, scope, analyzeTypeDefParams{allowEmptyBody: false})
+func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *Error) {
+	resolvedDef, err := a.analyzeTypeDef(
+		ts.Def{
+			Params:   params,
+			BodyExpr: &port.TypeExpr,
+		},
+		scope, analyzeTypeDefParams{allowEmptyBody: false},
+	)
 	if err != nil {
-		return src.Port{}, fmt.Errorf("analyze type def: %w", err)
+		return src.Port{}, Error{
+			Location: &scope.Location,
+			Meta:     &port.Meta,
+		}.Merge(err)
 	}
+
 	return src.Port{
 		TypeExpr: *resolvedDef.BodyExpr,
 		IsArray:  port.IsArray,

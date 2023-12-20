@@ -15,7 +15,7 @@ export function getLayoutedNodes(graph: Graph): Graph {
     nodesep: 500,
     edgesep: 200,
     ranksep: 100,
-    ranker: "network-simplex",
+    ranker: "longest-path",
   });
 
   graph.nodes.forEach((node) => {

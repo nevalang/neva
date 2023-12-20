@@ -75,7 +75,6 @@ type File struct {
 	Entities map[string]Entity `json:"entities,omitempty"`
 }
 
-// TODO make const, type, interface and components pointers
 type Entity struct {
 	Exported  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
@@ -83,6 +82,21 @@ type Entity struct {
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
 	Component Component  `json:"component,omitempty"`
+}
+
+func (e Entity) Meta() *Meta {
+	m := Meta{}
+	switch e.Kind {
+	case ConstEntity:
+		m = e.Const.Meta
+	case TypeEntity:
+		m = e.Type.Meta.(Meta) //nolint
+	case InterfaceEntity:
+		m = e.Interface.Meta
+	case ComponentEntity:
+		m = e.Component.Meta
+	}
+	return &m
 }
 
 type EntityKind string // It's handy to transmit strings enum instead of digital
@@ -115,6 +129,7 @@ type Node struct {
 	EntityRef   EntityRef       `json:"entityRef,omitempty"`
 	TypeArgs    []ts.Expr       `json:"typeArgs,omitempty"`
 	ComponentDI map[string]Node `json:"componentDi,omitempty"`
+	Meta        Meta            `json:"meta,omitempty"`
 }
 
 type EntityRef struct {
@@ -155,16 +170,19 @@ type IO struct {
 type Port struct {
 	TypeExpr ts.Expr `json:"typeExpr,omitempty"`
 	IsArray  bool    `json:"isArray,omitempty"`
+	Meta     Meta    `json:"meta,omitempty"`
 }
 
 type Connection struct {
 	SenderSide    SenderConnectionSide     `json:"senderSide,omitempty"`
 	ReceiverSides []ReceiverConnectionSide `json:"receiverSide,omitempty"`
+	Meta          Meta                     `json:"meta,omitempty"`
 }
 
 type ReceiverConnectionSide struct {
 	PortAddr  PortAddr `json:"portAddr,omitempty"`
 	Selectors []string `json:"selectors,omitempty"`
+	Meta      Meta     `json:"meta,omit"`
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
@@ -172,6 +190,7 @@ type SenderConnectionSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
 	ConstRef  *EntityRef `json:"constRef,omitempty"`
 	Selectors []string   `json:"selectors,omitempty"`
+	Meta      Meta       `json:"meta,omitempty"`
 }
 
 type PortAddr struct {

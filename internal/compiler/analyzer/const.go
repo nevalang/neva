@@ -8,52 +8,86 @@ import (
 )
 
 var (
-	ErrEmptyConst                  = errors.New("const must have value or reference to another const")
-	ErrEntityNotConst              = errors.New("entity is not a const")
-	ErrResolveConstType            = errors.New("cannot resolve constant type")
-	ErrConstValuesOfDifferentTypes = errors.New("constant cannot have values of different types at once")
+	ErrEmptyConst         = errors.New("Constant must either have value or reference to another constant")
+	ErrEntityNotConst     = errors.New("Constant refers to an entity that is not constant")
+	ErrResolveConstType   = errors.New("Cannot resolve constant type")
+	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
-func (a Analyzer) analyzeConst(cnst src.Const, scope src.Scope) (src.Const, error) {
-	if cnst.Value == nil && cnst.Ref == nil {
-		return src.Const{}, ErrEmptyConst
+//nolint:funlen
+func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *Error) {
+	if constant.Value == nil && constant.Ref == nil {
+		return src.Const{}, &Error{
+			Err:      ErrEmptyConst,
+			Location: &scope.Location,
+			Meta:     &constant.Meta,
+		}
 	}
 
-	if cnst.Value == nil {
-		entity, _, err := scope.Entity(*cnst.Ref)
+	if constant.Value == nil { // is ref
+		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
-			return src.Const{}, fmt.Errorf("entity: %w", err)
+			return src.Const{}, &Error{
+				Err:      err,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
 		}
+
 		if entity.Kind != src.ConstEntity {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrEntityNotConst, entity.Kind)
+			return src.Const{}, &Error{
+				Err:      fmt.Errorf("%w: entity kind %v", ErrEntityNotConst, entity.Kind),
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
 		}
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(cnst.Value.TypeExpr, scope)
+	resolvedType, err := a.analyzeTypeExpr(constant.Value.TypeExpr, scope)
 	if err != nil {
-		return src.Const{}, fmt.Errorf("%w: %v", ErrResolveConstType, err)
+		return src.Const{}, Error{
+			Err:      ErrResolveConstType,
+			Location: &scope.Location,
+			Meta:     &constant.Meta,
+		}.Merge(err)
 	}
 
 	switch resolvedType.Inst.Ref.String() {
 	case "bool":
-		if cnst.Value.Int != 0 || cnst.Value.Float != 0 || cnst.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
+		if constant.Value.Int != 0 || constant.Value.Float != 0 || constant.Value.Str != "" {
+			return src.Const{}, &Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
 		}
 	case "int":
-		if cnst.Value.Bool != false || cnst.Value.Float != 0 || cnst.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
+		if constant.Value.Bool != false || constant.Value.Float != 0 || constant.Value.Str != "" {
+			return src.Const{}, &Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
 		}
 	case "float":
-		if cnst.Value.Bool != false || cnst.Value.Int != 0 || cnst.Value.Str != "" {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
+		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Str != "" {
+			return src.Const{}, &Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
 		}
 	case "str":
-		if cnst.Value.Bool != false || cnst.Value.Int != 0 || cnst.Value.Float != 0 {
-			return src.Const{}, fmt.Errorf("%w: %v", ErrConstValuesOfDifferentTypes, cnst.Value)
+		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Float != 0 {
+			return src.Const{}, &Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
 		}
 	}
 
-	valueCopy := *cnst.Value
+	valueCopy := *constant.Value
 	valueCopy.TypeExpr = resolvedType
 
 	return src.Const{

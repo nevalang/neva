@@ -8,47 +8,76 @@ import (
 )
 
 var (
-	ErrMainEntityNotFound       = errors.New("entity main is not found")
-	ErrMainEntityIsNotComponent = errors.New("main entity is not a component")
-	ErrMainEntityExported       = errors.New("main entity is exported")
-	ErrMainPkgExports           = errors.New("main pkg must not have exported entities")
+	ErrMainEntityNotFound       = errors.New("Main entity is not found")
+	ErrMainEntityIsNotComponent = errors.New("Main entity is not a component")
+	ErrMainEntityExported       = errors.New("Main entity cannot be exported")
+	ErrMainPkgExports           = errors.New("Main package must cannot have exported entities")
 )
 
-func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) error {
-	pkg := mod.Packages[mainPkgName]
+//nolint:funlen
+func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) *Error {
+	mainPkg := mod.Packages[mainPkgName]
 
-	entityMain, filename, ok := pkg.Entity("Main")
-	if !ok {
-		return ErrMainEntityNotFound
+	fallbackLocation := &src.Location{
+		ModuleName: "entry",
+		PkgName:    mainPkgName,
 	}
 
+	entityMain, filename, ok := mainPkg.Entity("Main")
+	if !ok {
+		return &Error{
+			Err:      ErrMainEntityNotFound,
+			Location: fallbackLocation,
+		}
+	}
+
+	fallbackLocation.FileName = filename
+
 	if entityMain.Kind != src.ComponentEntity {
-		return ErrMainEntityIsNotComponent
+		return &Error{
+			Err:      ErrMainEntityIsNotComponent,
+			Location: fallbackLocation,
+		}
 	}
 
 	if entityMain.Exported {
-		return ErrMainEntityExported
+		return &Error{
+			Err:      ErrMainEntityExported,
+			Location: fallbackLocation,
+			Meta:     &entityMain.Component.Meta,
+		}
 	}
 
 	scope := src.Scope{
-		Location: src.ScopeLocation{
+		Module: mod,
+		Location: src.Location{
 			PkgName:  mainPkgName,
 			FileName: filename,
 		},
-		Module: mod,
 	}
 
-	if err := a.analyzeMainComponent(entityMain.Component, pkg, scope); err != nil {
-		return fmt.Errorf("analyze main component: %w", err)
+	if err := a.analyzeMainComponent(entityMain.Component, mainPkg, scope); err != nil {
+		return Error{
+			Location: fallbackLocation,
+			Meta:     &entityMain.Component.Meta,
+		}.Merge(err)
 	}
 
-	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
+	if err := mainPkg.Entities(func(entity src.Entity, entityName, fileName string) error {
 		if entity.Exported {
-			return fmt.Errorf("%w: file %v, entity %v", ErrMainPkgExports, fileName, entityName)
+			return &Error{
+				Err:  fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
+				Meta: entity.Meta(),
+				Location: &src.Location{
+					ModuleName: "entry",
+					PkgName:    mainPkgName,
+					FileName:   filename,
+				},
+			}
 		}
 		return nil
 	}); err != nil {
-		return fmt.Errorf("entities: %w", err)
+		return err.(*Error) //nolint:forcetypeassert
 	}
 
 	return nil

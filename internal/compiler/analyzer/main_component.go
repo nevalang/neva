@@ -8,56 +8,64 @@ import (
 )
 
 var (
-	ErrMainComponentWithTypeParams     = errors.New("main component can't have type parameters")
-	ErrMainComponentNodes              = errors.New("something wrong with main component's nodes")
-	ErrEntityNotFoundByNodeRef         = errors.New("entity not found by node ref")
-	ErrMainComponentInportsCount       = errors.New("main component must have one inport")
-	ErrMainComponentOutportsCount      = errors.New("main component must have exactly one outport")
-	ErrMainComponentWithoutEnterInport = errors.New("main component must have 'enter' inport")
-	ErrMainComponentWithoutExitOutport = errors.New("main component must have 'exit' outport")
-	ErrMainPortIsArray                 = errors.New("main component's ports cannot not be arrays")
-	ErrMainComponentPortTypeNotAny     = errors.New("main component's ports must be of type any")
-	ErrMainComponentNodeNotComponent   = errors.New("main component's nodes must be components only")
+	ErrMainComponentWithTypeParams     = errors.New("Main component cannot have type parameters")
+	ErrEntityNotFoundByNodeRef         = errors.New("Node references to entity that cannot be found")
+	ErrMainComponentInportsCount       = errors.New("Main component must have exactly one inport")
+	ErrMainComponentOutportsCount      = errors.New("Main component must have exactly one outport")
+	ErrMainComponentWithoutEnterInport = errors.New("Main component must have 'enter' inport")
+	ErrMainComponentWithoutExitOutport = errors.New("Main component must have 'exit' outport")
+	ErrMainPortIsArray                 = errors.New("Main component cannot have array ports")
+	ErrMainComponentPortTypeNotAny     = errors.New("Main component's ports must be of type any")
+	ErrMainComponentNodeNotComponent   = errors.New("Main component's nodes must only refer to components")
 )
 
-func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) error {
+func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) *Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
-		return fmt.Errorf("%w: %v", ErrMainComponentWithTypeParams, cmp.Interface.TypeParams)
+		return &Error{
+			Err:  ErrMainComponentWithTypeParams,
+			Meta: &cmp.Interface.Meta,
+		}
 	}
 
 	if err := a.analyzeMainComponentIO(cmp.Interface.IO); err != nil {
-		return fmt.Errorf("main component io: %w", err)
+		return Error{Meta: &cmp.Interface.Meta}.Merge(err)
 	}
 
 	if err := a.analyzeMainComponentNodes(cmp.Nodes, pkg, scope); err != nil {
-		return fmt.Errorf("%w: %v", ErrMainComponentNodes, err)
+		return Error{Meta: &cmp.Meta}.Merge(err)
 	}
 
 	return nil
 }
 
-func (a Analyzer) analyzeMainComponentIO(io src.IO) error {
+func (a Analyzer) analyzeMainComponentIO(io src.IO) *Error {
 	if len(io.Out) != 1 {
-		return fmt.Errorf("%w: %v", ErrMainComponentOutportsCount, io.Out)
+		return &Error{Err: ErrMainComponentOutportsCount}
 	}
 	if len(io.In) != 1 {
-		return fmt.Errorf("%w: %v", ErrMainComponentInportsCount, io.In)
+		return &Error{Err: ErrMainComponentInportsCount}
 	}
 
 	enterInport, ok := io.In["enter"]
 	if !ok {
-		return ErrMainComponentWithoutEnterInport
+		return &Error{Err: ErrMainComponentWithoutEnterInport}
 	}
 	if err := a.analyzeMainComponentPort(enterInport); err != nil {
-		return fmt.Errorf("enter inport: %w", err)
+		return &Error{
+			Err:  err,
+			Meta: &enterInport.Meta,
+		}
 	}
 
-	exitInport, ok := io.Out["exit"]
+	exitOutport, ok := io.Out["exit"]
 	if !ok {
-		return ErrMainComponentWithoutExitOutport
+		return &Error{Err: ErrMainComponentWithoutExitOutport}
 	}
-	if err := a.analyzeMainComponentPort(exitInport); err != nil {
-		return fmt.Errorf("exit outport: %w", err)
+	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
+		return &Error{
+			Err:  err,
+			Meta: &exitOutport.Meta,
+		}
 	}
 
 	return nil
@@ -73,21 +81,31 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
 	return nil
 }
 
-func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) error {
+func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) *Error {
 	for nodeName, node := range nodes {
-		nodeEntity, _, err := scope.Entity(node.EntityRef)
+		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {
-			return fmt.Errorf(
-				"%w: node name %v: entity ref %v: %v",
-				ErrEntityNotFoundByNodeRef,
-				nodeName,
-				node.EntityRef,
-				err,
-			)
+			return &Error{
+				Err: fmt.Errorf(
+					"%w: node '%v', ref '%v', details %v",
+					ErrEntityNotFoundByNodeRef,
+					nodeName,
+					node.EntityRef,
+					err,
+				),
+				Location: &loc,
+				Meta:     &node.EntityRef.Meta,
+			}
 		}
+
 		if nodeEntity.Kind != src.ComponentEntity {
-			return fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef)
+			return &Error{
+				Err:      fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef),
+				Location: &loc,
+				Meta:     nodeEntity.Meta(),
+			}
 		}
 	}
+
 	return nil
 }

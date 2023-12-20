@@ -6,7 +6,7 @@ const nodeHeight = 100;
 
 const elk = new ELK();
 
-const parents = ["type", "const", "interface", "component"]; // node-types
+const parents = ["component", "type", "const", "interface"]; // node-types
 
 export async function getLayoutedNodes(nodes: Node[]): Promise<Node[]> {
   const graph: ElkNode = {
@@ -26,6 +26,7 @@ export async function getLayoutedNodes(nodes: Node[]): Promise<Node[]> {
           "elk.direction": "DOWN",
           "elk.spacing.nodeNode": "20",
           "elk.algorithm": "rectpacking",
+          "elk.padding": "[top=40,left=20,bottom=20,right=20]",
         },
         children: nodes
           .filter((node) => node.type === parentNodeId)

@@ -38,12 +38,17 @@ h3 {
   padding: 0;
   border-radius: 5px;
   border-width: 1px;
-  /* box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.5); */
+  border-color: var(--dark);
   background-color: var(--grey);
+}
+.react-flow__node-default:hover {
+  border-color: white;
+}
+.react-flow__node-default.dimmed {
+  opacity: 0.5;
 }
 
 .react-flow__node-default.interface {
-  border-color: var(--interface);
   background-color: var(--grey);
 }
 
@@ -73,25 +78,18 @@ h3 {
 
 .react-flow__node-default.parent {
   align-items: flex-start;
+  padding-top: 10px;
   border-color: var(--grey);
   color: var(--grey);
   background-color: transparent;
   box-shadow: none;
-  /* background-color: transparent; */
 }
 
 .react-flow__node-default.const {
-  border-color: var(--const);
   background-color: var(--const);
 }
 
-.react-flow__node-default.related {
-  opacity: 0.5;
-}
 
-.react-flow__node-default.dimmed {
-  opacity: 0.1;
-}
 
 .react-flow__handle {
   flex: 1;

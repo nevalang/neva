@@ -44,6 +44,7 @@ func main() {
 		Builder:  builder,
 		Parser:   p,
 		Analyzer: analyzer.MustNew(resolver),
+		Logger:   logger,
 	}
 
 	handler := lsp.BuildHandler(logger, serverName, indexer)
