@@ -1,13 +1,13 @@
 components {
-    #extern(Read)
+    #runtime_func(Read)
     pub Read(sig) (v str)
 
-    #extern(Print)
+    #runtime_func(Print)
     pub Print<T>(v T) (v T)
 
-    #extern(Lock)
+    #runtime_func(Lock)
     pub Lock<T>(sig, v T) (v T)
 
-    #extern(ParseInt)
+    #runtime_func(ParseInt)
     pub ParseInt(v str) (v int, err str)
 }

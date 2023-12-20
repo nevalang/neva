@@ -1,7 +1,7 @@
 components {
-    #extern(read)
+    #runtime_func(read)
     pub Read(sig) (v str)
 
-    #extern(read, write)
+    #runtime_func(read, write)
     pub Print<T>(v T) (v T)
 }

@@ -11,12 +11,12 @@ types {
 }
 
 components {
-    #extern(Const)
+    #runtime_func(Const)
     pub Const<T>() (v t3)
 
-    #extern(Add)
+    #runtime_func(Add)
     pub Add<T int | float | str>(a T, b T) (v T)
 
-    #extern(Void)
+    #runtime_func(Void)
     pub Void(v any) ()
 }
