@@ -8,12 +8,14 @@ import (
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/tliron/commonlog"
 )
 
 type Indexer struct {
 	Builder  builder.Builder
 	Parser   parser.Parser
 	Analyzer analyzer.Analyzer
+	Logger   commonlog.Logger
 }
 
 func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, analyzerErr *analyzer.Error, err error) {
@@ -36,11 +38,11 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, an
 
 	// we interpret analyzer error as a message, not failure
 	if _, err = i.Analyzer.Analyze(mod); err != nil {
-		aerr, ok := err.(analyzer.Error)
-		if ok {
-			panic("err.(analyzer.Error)")
+		analyzerErr, ok := err.(*analyzer.Error) // FIXME for some reason we loose info after cast
+		if !ok {
+			i.Logger.Errorf("Analyzer returned an error of unexpected type: %T", err)
 		}
-		return mod, &aerr, nil
+		return mod, analyzerErr, nil
 	}
 
 	return mod, nil, nil

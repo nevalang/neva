@@ -53,7 +53,7 @@ func (a Analyzer) AnalyzeExecutable(mod src.Module, mainPkgName string) (src.Mod
 
 func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
 	if len(mod.Packages) == 0 { // Analyze can be called directly so we need to check emptiness here
-		return nil, Error{Err: ErrEmptyProgram}
+		return nil, &Error{Err: ErrEmptyProgram}
 	}
 
 	pkgsCopy := make(map[string]src.Package, len(mod.Packages))
@@ -73,6 +73,7 @@ func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
 				},
 			}.Merge(err)
 		}
+
 		pkgsCopy[pkgName] = resolvedPkg
 	}
 

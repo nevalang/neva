@@ -70,33 +70,44 @@ func (s *Server) createDiagnostics(analyzerErr analyzer.Error) protocol.PublishD
 	source := "neva"
 	severity := protocol.DiagnosticSeverityError
 
-	return protocol.PublishDiagnosticsParams{
-		URI: fmt.Sprintf(
+	var uri string
+	if analyzerErr.Location != nil {
+		uri = fmt.Sprintf(
 			"%s/%s/%s",
 			s.workspacePath,
 			analyzerErr.Location.PkgName,
-			analyzerErr.Location.FileName,
-		),
+			analyzerErr.Location.FileName+".neva",
+		)
+	}
+
+	var protocolRange protocol.Range
+	if analyzerErr.Meta != nil {
+		protocolRange = protocol.Range{
+			Start: protocol.Position{
+				Line:      uint32(analyzerErr.Meta.Start.Line),
+				Character: uint32(analyzerErr.Meta.Start.Column),
+			},
+			End: protocol.Position{
+				Line:      uint32(analyzerErr.Meta.Stop.Line),
+				Character: uint32(analyzerErr.Meta.Stop.Column),
+			},
+		}
+	}
+
+	return protocol.PublishDiagnosticsParams{
+		URI: uri,
 		Diagnostics: []protocol.Diagnostic{
 			{
-				Range: protocol.Range{
-					Start: protocol.Position{
-						Line:      uint32(analyzerErr.Meta.Start.Line),
-						Character: uint32(analyzerErr.Meta.Start.Column),
-					},
-					End: protocol.Position{
-						Line:      uint32(analyzerErr.Meta.Stop.Line),
-						Character: uint32(analyzerErr.Meta.Stop.Column),
-					},
-				},
-				Severity:           &severity,
-				Source:             &source,
+				Range:    protocolRange,
+				Severity: &severity,
+				Source:   &source,
+				Message:  analyzerErr.Error(),
+				Data:     time.Now(),
+				// Unused:
+				Tags:               []protocol.DiagnosticTag{},
 				Code:               &protocol.IntegerOrString{Value: nil},
 				CodeDescription:    &protocol.CodeDescription{HRef: ""},
-				Message:            analyzerErr.Error(),
-				Tags:               []protocol.DiagnosticTag{},
 				RelatedInformation: []protocol.DiagnosticRelatedInformation{},
-				Data:               time.Now(),
 			},
 		},
 	}

@@ -13,7 +13,10 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%v %v %v", e.Location, e.Meta, e.Err)
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return fmt.Sprint(e.Location, e.Meta)
 }
 
 func (e Error) Wrap(err error) *Error {
@@ -25,10 +28,12 @@ func (e Error) Wrap(err error) *Error {
 }
 
 func (e Error) Merge(prefer *Error) *Error {
-	if prefer.Err != nil && e.Err == nil {
-		e.Err = prefer.Err
-	} else if prefer.Err != nil {
-		e.Err = fmt.Errorf("%w: %v", e.Err, prefer.Err)
+	if prefer.Err != nil {
+		if e.Err == nil {
+			e.Err = prefer.Err
+		} else {
+			e.Err = fmt.Errorf("%w: %v", e.Err, prefer.Err)
+		}
 	}
 
 	if prefer.Meta != nil {
