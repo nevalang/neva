@@ -7,6 +7,7 @@ import (
 )
 
 // Error is custom error interface implementation that allows to keep track of code location.
+// TODO move this to compiler or src package
 type Error struct {
 	Err      error
 	Location *src.Location

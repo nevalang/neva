@@ -193,7 +193,7 @@ type ReceiverConnectionSide struct {
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
 type SenderConnectionSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
-	ConstRef  *EntityRef `json:"constRef,omitempty"`
+	ConstRef  *EntityRef `json:"constRef,omitempty"` // Only sugared form
 	Selectors []string   `json:"selectors,omitempty"`
 	Meta      Meta       `json:"meta,omitempty"`
 }

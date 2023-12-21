@@ -16,8 +16,7 @@ var (
 	ErrUnusedNode                  = errors.New("Unused node found")
 	ErrUnusedNodeInport            = errors.New("Unused node inport found")
 	ErrUnusedNodeOutport           = errors.New("Unused node outport found")
-	ErrSenderConstRefEntityKind    = errors.New("Sender in network with entity reference can only refer to a constant")
-	ErrSenderIsEmpty               = errors.New("Sender in network must either refer to some port address or constant")
+	ErrSenderIsEmpty               = errors.New("Sender in network must refer to some port address")
 	ErrReadSelfOut                 = errors.New("Component cannot read from self outport")
 	ErrWriteSelfIn                 = errors.New("Component cannot write to self inport")
 	ErrInportNotFound              = errors.New("Referenced inport not found in component's interface")
@@ -451,17 +450,6 @@ func (a Analyzer) getSenderType(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, *Error) {
-	if senderSide.ConstRef != nil {
-		constTypeExpr, err := a.getConstType(*senderSide.ConstRef, scope)
-		if err != nil {
-			return ts.Expr{}, Error{
-				Location: &scope.Location,
-				Meta:     &senderSide.ConstRef.Meta,
-			}.Merge(err)
-		}
-		return constTypeExpr, nil
-	}
-
 	if senderSide.PortAddr == nil {
 		return ts.Expr{}, &Error{
 			Err:      ErrSenderIsEmpty,
@@ -469,6 +457,7 @@ func (a Analyzer) getSenderType(
 			Meta:     &senderSide.Meta,
 		}
 	}
+
 	if senderSide.PortAddr.Node == "out" {
 		return ts.Expr{}, &Error{
 			Err:      ErrReadSelfOut,
@@ -541,37 +530,4 @@ func (a Analyzer) getNodeOutportType(
 	}
 
 	return typ, err
-}
-
-func (a Analyzer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *Error) {
-	entity, _, err := scope.Entity(ref)
-	if err != nil {
-		return ts.Expr{}, &Error{
-			Err:      err,
-			Location: &scope.Location,
-			Meta:     &ref.Meta,
-		}
-	}
-
-	if entity.Kind != src.ConstEntity {
-		return ts.Expr{}, &Error{
-			Err:      fmt.Errorf("%w: %v", ErrSenderConstRefEntityKind, entity.Kind),
-			Location: &scope.Location,
-			Meta:     entity.Meta(),
-		}
-	}
-
-	if entity.Const.Ref != nil {
-		expr, err := a.getConstType(*entity.Const.Ref, scope)
-		if err != nil {
-			return ts.Expr{}, Error{
-				Location: &scope.Location,
-				Meta:     entity.Meta(),
-			}.Merge(err)
-		}
-
-		return expr, nil
-	}
-
-	return entity.Const.Value.TypeExpr, nil
 }
