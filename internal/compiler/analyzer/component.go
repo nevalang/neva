@@ -4,24 +4,27 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var (
-	ErrNodeWrongEntity           = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsCountMismatch = errors.New("Type arguments count between node and its referenced entity does not match")
-	ErrNonComponentNodeWithDI    = errors.New("Only component node can have dependency injection")
-	ErrUnusedNode                = errors.New("Unused node found")
-	ErrUnusedNodeInport          = errors.New("Unused node inport found")
-	ErrUnusedNodeOutport         = errors.New("Unused node outport found")
-	ErrSenderConstRefEntityKind  = errors.New("Sender in network with entity reference can only refer to a constant")
-	ErrSenderIsEmpty             = errors.New("Sender in network must either refer to some port address or constant")
-	ErrReadSelfOut               = errors.New("Component cannot read from self outport")
-	ErrWriteSelfIn               = errors.New("Component cannot write to self inport")
-	ErrInportNotFound            = errors.New("Referenced inport not found in component's interface")
-	ErrNodeNotFound              = errors.New("Referenced node not found")
-	ErrNodePortNotFound          = errors.New("Referenced node port not found")
+	ErrNodeWrongEntity            = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsCountMismatch  = errors.New("Type arguments count between node and its referenced entity does not match")
+	ErrNonComponentNodeWithDI     = errors.New("Only component node can have dependency injection")
+	ErrUnusedNode                 = errors.New("Unused node found")
+	ErrUnusedNodeInport           = errors.New("Unused node inport found")
+	ErrUnusedNodeOutport          = errors.New("Unused node outport found")
+	ErrSenderConstRefEntityKind   = errors.New("Sender in network with entity reference can only refer to a constant")
+	ErrSenderIsEmpty              = errors.New("Sender in network must either refer to some port address or constant")
+	ErrReadSelfOut                = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn                = errors.New("Component cannot write to self inport")
+	ErrInportNotFound             = errors.New("Referenced inport not found in component's interface")
+	ErrNodeNotFound               = errors.New("Referenced node not found")
+	ErrNodePortNotFound           = errors.New("Referenced node port not found")
+	ErrCompWithRuntimeFuncAndBody = errors.New("Component with #runtime_func directive cannot have nodes or network")
+	ErrNormComponentWithoutNet    = errors.New("Component must have network except it doesn't use #runtime_func directive")
 )
 
 type analyzeComponentParams struct {
@@ -31,14 +34,30 @@ type analyzeComponentParams struct {
 func (a Analyzer) analyzeComponent(
 	component src.Component,
 	scope src.Scope,
-	params analyzeComponentParams,
+	// params analyzeComponentParams,
 ) (src.Component, *Error) {
-	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, params.iface)
+	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
+
+	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
+		allowEmptyInports:  isRuntimeFunc,
+		allowEmptyOutports: isRuntimeFunc,
+	})
 	if err != nil {
 		return src.Component{}, Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
+	}
+
+	if isRuntimeFunc {
+		if len(component.Nodes) != 0 || len(component.Net) != 0 {
+			return src.Component{}, &Error{
+				Err:      ErrCompWithRuntimeFuncAndBody,
+				Location: &scope.Location,
+				Meta:     &component.Meta,
+			}
+		}
+		return component, nil
 	}
 
 	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
@@ -47,6 +66,14 @@ func (a Analyzer) analyzeComponent(
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
+	}
+
+	if len(component.Net) == 0 {
+		return src.Component{}, &Error{
+			Err:      ErrNormComponentWithoutNet,
+			Location: &scope.Location,
+			Meta:     &component.Meta,
+		}
 	}
 
 	resolvedNet, err := a.analyzeComponentNetwork(component.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)

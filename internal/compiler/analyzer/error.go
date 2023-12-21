@@ -6,6 +6,7 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
+// Error is custom error interface implementation that allows to keep track of code location.
 type Error struct {
 	Err      error
 	Location *src.Location
@@ -17,14 +18,6 @@ func (e Error) Error() string {
 		return e.Err.Error()
 	}
 	return fmt.Sprint(e.Location, e.Meta)
-}
-
-func (e Error) Wrap(err error) *Error {
-	return &Error{
-		Err:      fmt.Errorf("%w: %v", err, e.Err),
-		Location: e.Location,
-		Meta:     e.Meta,
-	}
 }
 
 func (e Error) Merge(prefer *Error) *Error {

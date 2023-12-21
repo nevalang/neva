@@ -109,18 +109,14 @@ const (
 )
 
 type Component struct {
-	Directives []Directive `json:"directives,omitempty"`
+	Directives map[Directive][]string `json:"directives,omitempty"`
 	Interface  `json:"interface,omitempty"`
 	Nodes      map[string]Node `json:"nodes,omitempty"`
-	Net        []Connection    `json:"net,omitempty"` // Can't be map, connection side can't be map key due to selectors
+	Net        []Connection    `json:"net,omitempty"`
 	Meta       Meta            `json:"meta,omitempty"`
 }
 
-type Directive struct {
-	Name string   `json:"name,omitempty"`
-	Args []string `json:"args,omitempty"`
-	Meta Meta     `json:"meta,omitempty"`
-}
+type Directive string
 
 type Interface struct {
 	TypeParams TypeParams `json:"typeParams,omitempty"`

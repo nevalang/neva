@@ -9,6 +9,7 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
+	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/pkg/lsp"
 	"github.com/nevalang/neva/pkg/lsp/indexer"
@@ -40,12 +41,13 @@ func main() {
 		p,
 	)
 
-	indexer := indexer.Indexer{
-		Builder:  builder,
-		Parser:   p,
-		Analyzer: analyzer.MustNew(resolver),
-		Logger:   logger,
-	}
+	indexer := indexer.New(
+		builder,
+		p,
+		desugarer.Desugarer{},
+		analyzer.MustNew(resolver),
+		logger,
+	)
 
 	handler := lsp.BuildHandler(logger, serverName, indexer)
 

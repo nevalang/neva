@@ -11,15 +11,13 @@ import (
 // Scope is an entity that can be used to query the program.
 type Scope struct {
 	Location Location // It keeps track of current location to properly resolve imports and local references.
-	// TODO use multiple modules
-	Module Module // And of course it does has access to the program itself.
+	Module   Module   // And of course it does has access to the program itself.
 }
 
-// Location is used by scope to resolve references.
 type Location struct {
-	ModuleName string // TODO currently unused
-	PkgName    string // Full (real) name of the current package
-	FileName   string // Name of the current file in the current package
+	ModuleName string
+	PkgName    string
+	FileName   string
 }
 
 // IsTopType returns true if passed reference is builtin "any" and false otherwise.
