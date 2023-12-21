@@ -130,10 +130,11 @@ type TypeParams struct {
 }
 
 type Node struct {
-	EntityRef   EntityRef       `json:"entityRef,omitempty"`
-	TypeArgs    []ts.Expr       `json:"typeArgs,omitempty"`
-	ComponentDI map[string]Node `json:"componentDi,omitempty"`
-	Meta        Meta            `json:"meta,omitempty"`
+	Directives map[Directive][]string `json:"directives,omitempty"`
+	EntityRef  EntityRef              `json:"entityRef,omitempty"`
+	TypeArgs   []ts.Expr              `json:"typeArgs,omitempty"`
+	Deps       map[string]Node        `json:"componentDi,omitempty"`
+	Meta       Meta                   `json:"meta,omitempty"`
 }
 
 type EntityRef struct {

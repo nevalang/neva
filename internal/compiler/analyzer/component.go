@@ -10,32 +10,30 @@ import (
 )
 
 var (
-	ErrNodeWrongEntity            = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsCountMismatch  = errors.New("Type arguments count between node and its referenced entity does not match")
-	ErrNonComponentNodeWithDI     = errors.New("Only component node can have dependency injection")
-	ErrUnusedNode                 = errors.New("Unused node found")
-	ErrUnusedNodeInport           = errors.New("Unused node inport found")
-	ErrUnusedNodeOutport          = errors.New("Unused node outport found")
-	ErrSenderConstRefEntityKind   = errors.New("Sender in network with entity reference can only refer to a constant")
-	ErrSenderIsEmpty              = errors.New("Sender in network must either refer to some port address or constant")
-	ErrReadSelfOut                = errors.New("Component cannot read from self outport")
-	ErrWriteSelfIn                = errors.New("Component cannot write to self inport")
-	ErrInportNotFound             = errors.New("Referenced inport not found in component's interface")
-	ErrNodeNotFound               = errors.New("Referenced node not found")
-	ErrNodePortNotFound           = errors.New("Referenced node port not found")
-	ErrCompWithRuntimeFuncAndBody = errors.New("Component with #runtime_func directive cannot have nodes or network")
-	ErrNormComponentWithoutNet    = errors.New("Component must have network except it doesn't use #runtime_func directive")
+	ErrNodeWrongEntity             = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsCountMismatch   = errors.New("Type arguments count between node and its referenced entity not matches")
+	ErrNonComponentNodeWithDI      = errors.New("Only component node can have dependency injection")
+	ErrUnusedNode                  = errors.New("Unused node found")
+	ErrUnusedNodeInport            = errors.New("Unused node inport found")
+	ErrUnusedNodeOutport           = errors.New("Unused node outport found")
+	ErrSenderConstRefEntityKind    = errors.New("Sender in network with entity reference can only refer to a constant")
+	ErrSenderIsEmpty               = errors.New("Sender in network must either refer to some port address or constant")
+	ErrReadSelfOut                 = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn                 = errors.New("Component cannot write to self inport")
+	ErrInportNotFound              = errors.New("Referenced inport not found in component's interface")
+	ErrNodeNotFound                = errors.New("Referenced node not found")
+	ErrNodePortNotFound            = errors.New("Referenced node port not found")
+	ErrNormCompWithRuntimeFunc     = errors.New("Component with nodes or network cannot use #runtime_func directive")
+	ErrNormComponentWithoutNet     = errors.New("Component must have network except it uses #runtime_func directive")
+	ErrNormNodeRuntimeMsg          = errors.New("Node can't use #runtime_func_msg if it's component doesn't use #runtime_func") //nolint:lll
+	ErrInterfaceNodeWithRuntimeMsg = errors.New("Interface node cannot use #runtime_func_msg directive")
 )
 
 type analyzeComponentParams struct {
 	iface analyzeInterfaceParams
 }
 
-func (a Analyzer) analyzeComponent(
-	component src.Component,
-	scope src.Scope,
-	// params analyzeComponentParams,
-) (src.Component, *Error) {
+func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) {
 	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
 
 	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
@@ -52,7 +50,7 @@ func (a Analyzer) analyzeComponent(
 	if isRuntimeFunc {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &Error{
-				Err:      ErrCompWithRuntimeFuncAndBody,
+				Err:      ErrNormCompWithRuntimeFunc,
 				Location: &scope.Location,
 				Meta:     &component.Meta,
 			}
@@ -134,17 +132,37 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
+	_, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
+
 	var iface src.Interface
 	if entity.Kind == src.ComponentEntity {
+		_, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+		if hasRuntimeMsg && !isRuntimeFunc {
+			return src.Node{}, src.Interface{}, &Error{
+				Err:      ErrNormNodeRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
 		iface = entity.Component.Interface
 	} else {
-		if node.ComponentDI != nil {
+		if hasRuntimeMsg {
+			return src.Node{}, src.Interface{}, &Error{
+				Err:      ErrInterfaceNodeWithRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
+		if node.Deps != nil {
 			return src.Node{}, src.Interface{}, &Error{
 				Err:      ErrNonComponentNodeWithDI,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
 		}
+
 		iface = entity.Interface
 	}
 
@@ -168,15 +186,15 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	if node.ComponentDI == nil {
+	if node.Deps == nil {
 		return src.Node{
 			EntityRef: node.EntityRef,
 			TypeArgs:  resolvedArgs,
 		}, iface, nil
 	}
 
-	resolvedComponentDI := make(map[string]src.Node, len(node.ComponentDI))
-	for depName, depNode := range node.ComponentDI {
+	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
+	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
 			return src.Node{}, src.Interface{}, Error{
@@ -189,9 +207,9 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	return src.Node{
-		EntityRef:   node.EntityRef,
-		TypeArgs:    resolvedArgs,
-		ComponentDI: resolvedComponentDI,
+		EntityRef: node.EntityRef,
+		TypeArgs:  resolvedArgs,
+		Deps:      resolvedComponentDI,
 	}, iface, nil
 }
 
