@@ -224,23 +224,23 @@ func (s *BasenevaListener) EnterVecItems(ctx *VecItemsContext) {}
 // ExitVecItems is called when production vecItems is exited.
 func (s *BasenevaListener) ExitVecItems(ctx *VecItemsContext) {}
 
-// EnterRecLit is called when production recLit is entered.
-func (s *BasenevaListener) EnterRecLit(ctx *RecLitContext) {}
+// EnterStructLit is called when production structLit is entered.
+func (s *BasenevaListener) EnterStructLit(ctx *StructLitContext) {}
 
-// ExitRecLit is called when production recLit is exited.
-func (s *BasenevaListener) ExitRecLit(ctx *RecLitContext) {}
+// ExitStructLit is called when production structLit is exited.
+func (s *BasenevaListener) ExitStructLit(ctx *StructLitContext) {}
 
-// EnterRecValueFields is called when production recValueFields is entered.
-func (s *BasenevaListener) EnterRecValueFields(ctx *RecValueFieldsContext) {}
+// EnterStructValueFields is called when production structValueFields is entered.
+func (s *BasenevaListener) EnterStructValueFields(ctx *StructValueFieldsContext) {}
 
-// ExitRecValueFields is called when production recValueFields is exited.
-func (s *BasenevaListener) ExitRecValueFields(ctx *RecValueFieldsContext) {}
+// ExitStructValueFields is called when production structValueFields is exited.
+func (s *BasenevaListener) ExitStructValueFields(ctx *StructValueFieldsContext) {}
 
-// EnterRecValueField is called when production recValueField is entered.
-func (s *BasenevaListener) EnterRecValueField(ctx *RecValueFieldContext) {}
+// EnterStructValueField is called when production structValueField is entered.
+func (s *BasenevaListener) EnterStructValueField(ctx *StructValueFieldContext) {}
 
-// ExitRecValueField is called when production recValueField is exited.
-func (s *BasenevaListener) ExitRecValueField(ctx *RecValueFieldContext) {}
+// ExitStructValueField is called when production structValueField is exited.
+func (s *BasenevaListener) ExitStructValueField(ctx *StructValueFieldContext) {}
 
 // EnterCompStmt is called when production compStmt is entered.
 func (s *BasenevaListener) EnterCompStmt(ctx *CompStmtContext) {}

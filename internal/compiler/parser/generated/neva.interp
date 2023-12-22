@@ -115,9 +115,9 @@ bool
 nil
 arrLit
 vecItems
-recLit
-recValueFields
-recValueField
+structLit
+structValueFields
+structValueField
 compStmt
 compDef
 compilerDirectives

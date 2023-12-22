@@ -109,14 +109,14 @@ type nevaListener interface {
 	// EnterVecItems is called when entering the vecItems production.
 	EnterVecItems(c *VecItemsContext)
 
-	// EnterRecLit is called when entering the recLit production.
-	EnterRecLit(c *RecLitContext)
+	// EnterStructLit is called when entering the structLit production.
+	EnterStructLit(c *StructLitContext)
 
-	// EnterRecValueFields is called when entering the recValueFields production.
-	EnterRecValueFields(c *RecValueFieldsContext)
+	// EnterStructValueFields is called when entering the structValueFields production.
+	EnterStructValueFields(c *StructValueFieldsContext)
 
-	// EnterRecValueField is called when entering the recValueField production.
-	EnterRecValueField(c *RecValueFieldContext)
+	// EnterStructValueField is called when entering the structValueField production.
+	EnterStructValueField(c *StructValueFieldContext)
 
 	// EnterCompStmt is called when entering the compStmt production.
 	EnterCompStmt(c *CompStmtContext)
@@ -289,14 +289,14 @@ type nevaListener interface {
 	// ExitVecItems is called when exiting the vecItems production.
 	ExitVecItems(c *VecItemsContext)
 
-	// ExitRecLit is called when exiting the recLit production.
-	ExitRecLit(c *RecLitContext)
+	// ExitStructLit is called when exiting the structLit production.
+	ExitStructLit(c *StructLitContext)
 
-	// ExitRecValueFields is called when exiting the recValueFields production.
-	ExitRecValueFields(c *RecValueFieldsContext)
+	// ExitStructValueFields is called when exiting the structValueFields production.
+	ExitStructValueFields(c *StructValueFieldsContext)
 
-	// ExitRecValueField is called when exiting the recValueField production.
-	ExitRecValueField(c *RecValueFieldContext)
+	// ExitStructValueField is called when exiting the structValueField production.
+	ExitStructValueField(c *StructValueFieldContext)
 
 	// ExitCompStmt is called when exiting the compStmt production.
 	ExitCompStmt(c *CompStmtContext)

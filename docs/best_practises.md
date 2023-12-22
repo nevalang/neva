@@ -2,11 +2,17 @@
 
 > This section is under heavy development
 
+## Code Organization
+
+### Small files
+
+Try to keep files less than **300** lines. Exceptions _sometimes_ allowed but 500 and more lines are definitely a sign of a problem. Perfectly it's about 100-200 lines per file.
+
 ## Formatting
 
 ### Line height
 
-Avoid lines that are longer than 80 characters.
+Avoid lines that are longer than **80** characters.
 
 1. Even though we have big screens these days, the space that we can focus on with our eyes is limited to about 80 characters. With this line length we can read code without moving the head and with less amount of eyes movement.
 2. Professional programmers tend to use split-screens a lot. 120 characters is ok if you only have one editor and probably one sidebar but what about 2 editors? What about 2 editors and sidebar? 2 editors and two sidebars? You got the point.

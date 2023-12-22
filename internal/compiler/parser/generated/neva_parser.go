@@ -49,7 +49,7 @@ func nevaParserInit() {
 		"structFields", "structField", "unionTypeExpr", "nonUnionTypeExpr",
 		"interfaceStmt", "interfaceDef", "inPortsDef", "outPortsDef", "portsDef",
 		"portDef", "constStmt", "constDef", "constVal", "bool", "nil", "arrLit",
-		"vecItems", "recLit", "recValueFields", "recValueField", "compStmt",
+		"vecItems", "structLit", "structValueFields", "structValueField", "compStmt",
 		"compDef", "compilerDirectives", "compilerDirective", "compilerDirectivesArgs",
 		"compBody", "compNodesDef", "compNodeDef", "nodeInst", "entityRef",
 		"nodeArgs", "nodeArgList", "nodeArg", "compNetDef", "connDefList", "connDef",
@@ -572,9 +572,9 @@ const (
 	nevaParserRULE_nil                    = 31
 	nevaParserRULE_arrLit                 = 32
 	nevaParserRULE_vecItems               = 33
-	nevaParserRULE_recLit                 = 34
-	nevaParserRULE_recValueFields         = 35
-	nevaParserRULE_recValueField          = 36
+	nevaParserRULE_structLit              = 34
+	nevaParserRULE_structValueFields      = 35
+	nevaParserRULE_structValueField       = 36
 	nevaParserRULE_compStmt               = 37
 	nevaParserRULE_compDef                = 38
 	nevaParserRULE_compilerDirectives     = 39
@@ -6209,7 +6209,7 @@ type IConstValContext interface {
 	FLOAT() antlr.TerminalNode
 	STRING() antlr.TerminalNode
 	ArrLit() IArrLitContext
-	RecLit() IRecLitContext
+	StructLit() IStructLitContext
 	Nil_() INilContext
 
 	// IsConstValContext differentiates from other interfaces.
@@ -6292,10 +6292,10 @@ func (s *ConstValContext) ArrLit() IArrLitContext {
 	return t.(IArrLitContext)
 }
 
-func (s *ConstValContext) RecLit() IRecLitContext {
+func (s *ConstValContext) StructLit() IStructLitContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IRecLitContext); ok {
+		if _, ok := ctx.(IStructLitContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -6305,7 +6305,7 @@ func (s *ConstValContext) RecLit() IRecLitContext {
 		return nil
 	}
 
-	return t.(IRecLitContext)
+	return t.(IStructLitContext)
 }
 
 func (s *ConstValContext) Nil_() INilContext {
@@ -6405,7 +6405,7 @@ func (p *nevaParser) ConstVal() (localctx IConstValContext) {
 		p.EnterOuterAlt(localctx, 6)
 		{
 			p.SetState(538)
-			p.RecLit()
+			p.StructLit()
 		}
 
 	case nevaParserT__21:
@@ -7015,8 +7015,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IRecLitContext is an interface to support dynamic dispatch.
-type IRecLitContext interface {
+// IStructLitContext is an interface to support dynamic dispatch.
+type IStructLitContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -7025,56 +7025,56 @@ type IRecLitContext interface {
 	// Getter signatures
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
-	RecValueFields() IRecValueFieldsContext
+	StructValueFields() IStructValueFieldsContext
 
-	// IsRecLitContext differentiates from other interfaces.
-	IsRecLitContext()
+	// IsStructLitContext differentiates from other interfaces.
+	IsStructLitContext()
 }
 
-type RecLitContext struct {
+type StructLitContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyRecLitContext() *RecLitContext {
-	var p = new(RecLitContext)
+func NewEmptyStructLitContext() *StructLitContext {
+	var p = new(StructLitContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recLit
+	p.RuleIndex = nevaParserRULE_structLit
 	return p
 }
 
-func InitEmptyRecLitContext(p *RecLitContext) {
+func InitEmptyStructLitContext(p *StructLitContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recLit
+	p.RuleIndex = nevaParserRULE_structLit
 }
 
-func (*RecLitContext) IsRecLitContext() {}
+func (*StructLitContext) IsStructLitContext() {}
 
-func NewRecLitContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *RecLitContext {
-	var p = new(RecLitContext)
+func NewStructLitContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StructLitContext {
+	var p = new(StructLitContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_recLit
+	p.RuleIndex = nevaParserRULE_structLit
 
 	return p
 }
 
-func (s *RecLitContext) GetParser() antlr.Parser { return s.parser }
+func (s *StructLitContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *RecLitContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *StructLitContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(nevaParserNEWLINE)
 }
 
-func (s *RecLitContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *StructLitContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *RecLitContext) RecValueFields() IRecValueFieldsContext {
+func (s *StructLitContext) StructValueFields() IStructValueFieldsContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IRecValueFieldsContext); ok {
+		if _, ok := ctx.(IStructValueFieldsContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -7084,32 +7084,32 @@ func (s *RecLitContext) RecValueFields() IRecValueFieldsContext {
 		return nil
 	}
 
-	return t.(IRecValueFieldsContext)
+	return t.(IStructValueFieldsContext)
 }
 
-func (s *RecLitContext) GetRuleContext() antlr.RuleContext {
+func (s *StructLitContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *RecLitContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *StructLitContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *RecLitContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *StructLitContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterRecLit(s)
+		listenerT.EnterStructLit(s)
 	}
 }
 
-func (s *RecLitContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *StructLitContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitRecLit(s)
+		listenerT.ExitStructLit(s)
 	}
 }
 
-func (p *nevaParser) RecLit() (localctx IRecLitContext) {
-	localctx = NewRecLitContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 68, nevaParserRULE_recLit)
+func (p *nevaParser) StructLit() (localctx IStructLitContext) {
+	localctx = NewStructLitContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 68, nevaParserRULE_structLit)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
@@ -7155,7 +7155,7 @@ func (p *nevaParser) RecLit() (localctx IRecLitContext) {
 	if _la == nevaParserIDENTIFIER {
 		{
 			p.SetState(588)
-			p.RecValueFields()
+			p.StructValueFields()
 		}
 
 	}
@@ -7181,69 +7181,69 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IRecValueFieldsContext is an interface to support dynamic dispatch.
-type IRecValueFieldsContext interface {
+// IStructValueFieldsContext is an interface to support dynamic dispatch.
+type IStructValueFieldsContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	AllRecValueField() []IRecValueFieldContext
-	RecValueField(i int) IRecValueFieldContext
+	AllStructValueField() []IStructValueFieldContext
+	StructValueField(i int) IStructValueFieldContext
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
 
-	// IsRecValueFieldsContext differentiates from other interfaces.
-	IsRecValueFieldsContext()
+	// IsStructValueFieldsContext differentiates from other interfaces.
+	IsStructValueFieldsContext()
 }
 
-type RecValueFieldsContext struct {
+type StructValueFieldsContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyRecValueFieldsContext() *RecValueFieldsContext {
-	var p = new(RecValueFieldsContext)
+func NewEmptyStructValueFieldsContext() *StructValueFieldsContext {
+	var p = new(StructValueFieldsContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recValueFields
+	p.RuleIndex = nevaParserRULE_structValueFields
 	return p
 }
 
-func InitEmptyRecValueFieldsContext(p *RecValueFieldsContext) {
+func InitEmptyStructValueFieldsContext(p *StructValueFieldsContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recValueFields
+	p.RuleIndex = nevaParserRULE_structValueFields
 }
 
-func (*RecValueFieldsContext) IsRecValueFieldsContext() {}
+func (*StructValueFieldsContext) IsStructValueFieldsContext() {}
 
-func NewRecValueFieldsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *RecValueFieldsContext {
-	var p = new(RecValueFieldsContext)
+func NewStructValueFieldsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StructValueFieldsContext {
+	var p = new(StructValueFieldsContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_recValueFields
+	p.RuleIndex = nevaParserRULE_structValueFields
 
 	return p
 }
 
-func (s *RecValueFieldsContext) GetParser() antlr.Parser { return s.parser }
+func (s *StructValueFieldsContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *RecValueFieldsContext) AllRecValueField() []IRecValueFieldContext {
+func (s *StructValueFieldsContext) AllStructValueField() []IStructValueFieldContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
-		if _, ok := ctx.(IRecValueFieldContext); ok {
+		if _, ok := ctx.(IStructValueFieldContext); ok {
 			len++
 		}
 	}
 
-	tst := make([]IRecValueFieldContext, len)
+	tst := make([]IStructValueFieldContext, len)
 	i := 0
 	for _, ctx := range children {
-		if t, ok := ctx.(IRecValueFieldContext); ok {
-			tst[i] = t.(IRecValueFieldContext)
+		if t, ok := ctx.(IStructValueFieldContext); ok {
+			tst[i] = t.(IStructValueFieldContext)
 			i++
 		}
 	}
@@ -7251,11 +7251,11 @@ func (s *RecValueFieldsContext) AllRecValueField() []IRecValueFieldContext {
 	return tst
 }
 
-func (s *RecValueFieldsContext) RecValueField(i int) IRecValueFieldContext {
+func (s *StructValueFieldsContext) StructValueField(i int) IStructValueFieldContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IRecValueFieldContext); ok {
+		if _, ok := ctx.(IStructValueFieldContext); ok {
 			if j == i {
 				t = ctx.(antlr.RuleContext)
 				break
@@ -7268,46 +7268,46 @@ func (s *RecValueFieldsContext) RecValueField(i int) IRecValueFieldContext {
 		return nil
 	}
 
-	return t.(IRecValueFieldContext)
+	return t.(IStructValueFieldContext)
 }
 
-func (s *RecValueFieldsContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *StructValueFieldsContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(nevaParserNEWLINE)
 }
 
-func (s *RecValueFieldsContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *StructValueFieldsContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *RecValueFieldsContext) GetRuleContext() antlr.RuleContext {
+func (s *StructValueFieldsContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *RecValueFieldsContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *StructValueFieldsContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *RecValueFieldsContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *StructValueFieldsContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterRecValueFields(s)
+		listenerT.EnterStructValueFields(s)
 	}
 }
 
-func (s *RecValueFieldsContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *StructValueFieldsContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitRecValueFields(s)
+		listenerT.ExitStructValueFields(s)
 	}
 }
 
-func (p *nevaParser) RecValueFields() (localctx IRecValueFieldsContext) {
-	localctx = NewRecValueFieldsContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 70, nevaParserRULE_recValueFields)
+func (p *nevaParser) StructValueFields() (localctx IStructValueFieldsContext) {
+	localctx = NewStructValueFieldsContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 70, nevaParserRULE_structValueFields)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(593)
-		p.RecValueField()
+		p.StructValueField()
 	}
 	p.SetState(603)
 	p.GetErrorHandler().Sync(p)
@@ -7343,7 +7343,7 @@ func (p *nevaParser) RecValueFields() (localctx IRecValueFieldsContext) {
 		}
 		{
 			p.SetState(600)
-			p.RecValueField()
+			p.StructValueField()
 		}
 
 		p.SetState(605)
@@ -7367,8 +7367,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IRecValueFieldContext is an interface to support dynamic dispatch.
-type IRecValueFieldContext interface {
+// IStructValueFieldContext is an interface to support dynamic dispatch.
+type IStructValueFieldContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -7380,47 +7380,47 @@ type IRecValueFieldContext interface {
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
 
-	// IsRecValueFieldContext differentiates from other interfaces.
-	IsRecValueFieldContext()
+	// IsStructValueFieldContext differentiates from other interfaces.
+	IsStructValueFieldContext()
 }
 
-type RecValueFieldContext struct {
+type StructValueFieldContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyRecValueFieldContext() *RecValueFieldContext {
-	var p = new(RecValueFieldContext)
+func NewEmptyStructValueFieldContext() *StructValueFieldContext {
+	var p = new(StructValueFieldContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recValueField
+	p.RuleIndex = nevaParserRULE_structValueField
 	return p
 }
 
-func InitEmptyRecValueFieldContext(p *RecValueFieldContext) {
+func InitEmptyStructValueFieldContext(p *StructValueFieldContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_recValueField
+	p.RuleIndex = nevaParserRULE_structValueField
 }
 
-func (*RecValueFieldContext) IsRecValueFieldContext() {}
+func (*StructValueFieldContext) IsStructValueFieldContext() {}
 
-func NewRecValueFieldContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *RecValueFieldContext {
-	var p = new(RecValueFieldContext)
+func NewStructValueFieldContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StructValueFieldContext {
+	var p = new(StructValueFieldContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_recValueField
+	p.RuleIndex = nevaParserRULE_structValueField
 
 	return p
 }
 
-func (s *RecValueFieldContext) GetParser() antlr.Parser { return s.parser }
+func (s *StructValueFieldContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *RecValueFieldContext) IDENTIFIER() antlr.TerminalNode {
+func (s *StructValueFieldContext) IDENTIFIER() antlr.TerminalNode {
 	return s.GetToken(nevaParserIDENTIFIER, 0)
 }
 
-func (s *RecValueFieldContext) ConstVal() IConstValContext {
+func (s *StructValueFieldContext) ConstVal() IConstValContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
 		if _, ok := ctx.(IConstValContext); ok {
@@ -7436,37 +7436,37 @@ func (s *RecValueFieldContext) ConstVal() IConstValContext {
 	return t.(IConstValContext)
 }
 
-func (s *RecValueFieldContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *StructValueFieldContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(nevaParserNEWLINE)
 }
 
-func (s *RecValueFieldContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *StructValueFieldContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *RecValueFieldContext) GetRuleContext() antlr.RuleContext {
+func (s *StructValueFieldContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *RecValueFieldContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *StructValueFieldContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *RecValueFieldContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *StructValueFieldContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterRecValueField(s)
+		listenerT.EnterStructValueField(s)
 	}
 }
 
-func (s *RecValueFieldContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *StructValueFieldContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitRecValueField(s)
+		listenerT.ExitStructValueField(s)
 	}
 }
 
-func (p *nevaParser) RecValueField() (localctx IRecValueFieldContext) {
-	localctx = NewRecValueFieldContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 72, nevaParserRULE_recValueField)
+func (p *nevaParser) StructValueField() (localctx IStructValueFieldContext) {
+	localctx = NewStructValueFieldContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 72, nevaParserRULE_structValueField)
 	var _alt int
 
 	p.EnterOuterAlt(localctx, 1)

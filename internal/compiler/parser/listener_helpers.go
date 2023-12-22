@@ -535,13 +535,13 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 				Value: &parsedConstValue,
 			})
 		}
-	case constVal.RecLit() != nil:
-		fields := constVal.RecLit().RecValueFields()
+	case constVal.StructLit() != nil:
+		fields := constVal.StructLit().StructValueFields()
 		if fields == nil { // empty struct {}
 			val.Map = map[string]src.Const{}
 			return val
 		}
-		fieldValues := fields.AllRecValueField()
+		fieldValues := fields.AllStructValueField()
 		val.Map = make(map[string]src.Const, len(fieldValues))
 		for _, field := range fieldValues {
 			name := field.IDENTIFIER().GetText()
