@@ -36,8 +36,8 @@ type (
 	}
 
 	Build struct {
-		EntryModule string
-		Modules     map[string]RawModule
+		EntryModRef src.ModuleRef
+		Modules     map[src.ModuleRef]RawModule
 	}
 
 	RawModule struct {
@@ -58,7 +58,7 @@ func (c Compiler) Compile(
 	workdirPath string,
 	mainPkgName string,
 ) (*ir.Program, error) {
-	rawMod := build.Modules[build.EntryModule]
+	rawMod := build.Modules[build.EntryModRef]
 
 	if strings.HasPrefix(mainPkgName, "./") {
 		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
