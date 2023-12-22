@@ -26,7 +26,7 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, an
 		return src.Module{}, nil, fmt.Errorf("builder: %w", err)
 	}
 
-	rawMod := build.Modules[build.EntryModule] // TODO use all mods
+	rawMod := build.Modules[build.EntryModule]
 
 	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
 	if err != nil {

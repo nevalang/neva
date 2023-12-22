@@ -1,2 +1,4 @@
-# this is example neva module
 compiler: 0.0.1
+
+deps:
+  - github.com/nevalang/x 0.0.1

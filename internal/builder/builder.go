@@ -16,7 +16,7 @@ import (
 )
 
 type Builder struct {
-	stdlibLocation     string        // path to standart library module
+	stdLibLocation     string        // path to standart library module
 	thirdPartyLocation string        // path to third-party modules
 	parser             parser.Parser // parser is needed to parse manifest files
 }
@@ -31,15 +31,11 @@ func (b Builder) Build(ctx context.Context, workdir string) (compiler.Build, err
 	}
 	mods["entry"] = entryMod
 
-	// TODO in the future we not going to merge std module into root one
-	// because that won't work with normal multi-module flow
-	// but currently we do this because it works for single-mod flow (which we only support for the moment)
-	stdMod, err := b.buildModule(ctx, b.stdlibLocation, mods)
+	stdMod, err := b.buildModule(ctx, b.stdLibLocation, mods)
 	if err != nil {
 		return compiler.Build{}, fmt.Errorf("build entry mod: %w", err)
 	}
 
-	// merge std module with the entry module (TODO remove this)
 	for name, stdPkg := range stdMod.Packages {
 		mods["entry"].Packages["std/"+name] = stdPkg
 	}
@@ -166,7 +162,7 @@ func getPkgName(rootPath, filePath string) string {
 
 func MustNew(stdlibPath, thirdpartyPath string, parser parser.Parser) Builder {
 	return Builder{
-		stdlibLocation:     stdlibPath,
+		stdLibLocation:     stdlibPath,
 		thirdPartyLocation: thirdpartyPath,
 		parser:             parser,
 	}
