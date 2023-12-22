@@ -9,24 +9,36 @@ flowchart LR
         git-client
     end
     subgraph compiler
-        parser-->|program|analyzer
+        parser-->|program|desugarer
+        desugarer-->|desugaredProgram|analyzer
+
         subgraph parser
             antlr-->|ast|listener
         end
+
         subgraph analyzer
             typesystem
         end
+
+        subgraph analyzer
+            typesystem
+        end
+
         analyzer-->|analyzed-program|irgen
-        irgen-->|ir|decoder
+
+        irgen-->|ir|encoder
     end
+
     compiler-->|protobuf|VM
+
     subgraph VM
-        loader-->|ir|runtime
+        decoder-->|ir|runtime
         runtime
         subgraph runtime
             connector
             func-runner
         end
+
     end
 ```
 

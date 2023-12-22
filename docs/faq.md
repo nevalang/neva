@@ -120,11 +120,11 @@ On the other hand, there's 2 types of effects at the runtime that are essentiall
 
 Static inports are actually syntactic sugar for `const`. If there wouldn't be static inports and only const then visual schemas would be complicated.
 
-### Why have `fromRec`?
+<!-- ### Why have `fromRec`?
 
 The reason is the same as with "static ports" vs "givers as special nodes". Otherwise there would be a special kind of nodes like "record builders" that are different from normal component nodes because they must have a specific configuration - record that they must build.
 
-With `fromRec` feature (that is implemented outside of the typesystem, because type system doesn't know anything about ports) it's possible to say "hey compiler, I want a component with the same inports that this record has fields".
+With `fromRec` feature (that is implemented outside of the typesystem, because type system doesn't know anything about ports) it's possible to say "hey compiler, I want a component with the same inports that this record has fields". -->
 
 ## Type-system
 
@@ -182,11 +182,54 @@ The thing is - there's a separate flow for `err` and for `foo`. There's no way w
 
 Of course there's unions so nothing stops as from using `Foo | nil`. We need this to process external data e.g. json from the network. But for programming dataflows? There are inports and outports connected to each other. It's that simple.
 
-## Implementation
+## Internal Implementation
 
 ### Why Go?
 
-It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allowes to reuse its stdlib and increase performance by just updating compiler i.e. for free.
+It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allows to reuse its state of the art standart library and increase performance for free by just updating the underlaying compiler.
+
+### Why compiler operates on multi-module graph and not just turns everything into one big module?
+
+Imagine you have `foo.bar` in your code. How does compiler figures out what that actually is? In order to do that it needs to _resolve_ that _reference_. And this is how _reference resolution_ works:
+
+First, find out what `foo` is. Look at the `import` section in the current file. Let's say we see something like:
+
+```neva
+import {
+    github.com/nevalang/x/foo
+}
+```
+
+This is how we now that `foo` is actually `github.com/nevalang/x/foo` imported package. Cool, but when version of the `github.com/nevalang/x` we should use? Well, to figure that out we need to look out current _module_'s _manifest_ file. There we can find something like:
+
+```yaml
+deps:
+  - github.com/nevalang/x 0.0.1
+```
+
+Cool, now we now what _exactly_ `foo` is. It's a `foo` package inside of `0.0.1` version of the `github.com/nevalang/x` module. So what's the point of operating on a nested multi-module graph instead of having one giant module?
+
+Now let's consider another example. Instead of depending on `github.com/nevalang/x` your code depends on `submodule` and that sub-module itself depends on `github.com/nevalang/x`
+
+You still have that `foo.bar` in your code and your module still depends on `github.com/nevalang/x` module. But now you also depends on another `submod` sub-module that also depends on `github.com/nevalang/x`. But your module depends on `github.com/nevalang/x` of the `0.0.1` version and `submod` depends on `1.0.0`.
+
+Now we have a problem. When compiler sees `foo.bar` in some file it does import lookup and sees `github.com/nevalang/x` and... does not know what to do. To solve this issue we need to lookup current module manifest and check what version `github.com/nevalang/x` _this current module_ uses. To do that we need to preserve the multi-module structure of the program.
+
+One might ask can't we simply import things like:
+
+```neva
+import {
+    github.com/nevalang/x@0.0.1
+}
+```
+
+That actually could solve the issue. The problem is that now we have to update the source code _each time we update our dependency_. That's a bad solution. We simply made probramming harder to avoid working on a compiler. We can do better.
+
+```
+# github.com/nevalang/x/neva.yml
+deps:
+    - github.com/.../x 1.0.0
+```
 
 ## FBP
 
