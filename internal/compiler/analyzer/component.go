@@ -4,41 +4,67 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var (
-	ErrNodeWrongEntity           = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsCountMismatch = errors.New("Type arguments count between node and its referenced entity does not match")
-	ErrNonComponentNodeWithDI    = errors.New("Only component node can have dependency injection")
-	ErrUnusedNode                = errors.New("Unused node found")
-	ErrUnusedNodeInport          = errors.New("Unused node inport found")
-	ErrUnusedNodeOutport         = errors.New("Unused node outport found")
-	ErrSenderConstRefEntityKind  = errors.New("Sender in network with entity reference can only refer to a constant")
-	ErrSenderIsEmpty             = errors.New("Sender in network must either refer to some port address or constant")
-	ErrReadSelfOut               = errors.New("Component cannot read from self outport")
-	ErrWriteSelfIn               = errors.New("Component cannot write to self inport")
-	ErrInportNotFound            = errors.New("Referenced inport not found in component's interface")
-	ErrNodeNotFound              = errors.New("Referenced node not found")
-	ErrNodePortNotFound          = errors.New("Referenced node port not found")
+	ErrNodeWrongEntity             = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsCountMismatch   = errors.New("Type arguments count between node and its referenced entity not matches")
+	ErrNonComponentNodeWithDI      = errors.New("Only component node can have dependency injection")
+	ErrUnusedNode                  = errors.New("Unused node found")
+	ErrUnusedNodeInport            = errors.New("Unused node inport found")
+	ErrUnusedNodeOutport           = errors.New("Unused node outport found")
+	ErrSenderIsEmpty               = errors.New("Sender in network must refer to some port address")
+	ErrReadSelfOut                 = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn                 = errors.New("Component cannot write to self inport")
+	ErrInportNotFound              = errors.New("Referenced inport not found in component's interface")
+	ErrNodeNotFound                = errors.New("Referenced node not found")
+	ErrNodePortNotFound            = errors.New("Referenced node port not found")
+	ErrNormCompWithRuntimeFunc     = errors.New("Component with nodes or network cannot use #runtime_func directive")
+	ErrNormComponentWithoutNet     = errors.New("Component must have network except it uses #runtime_func directive")
+	ErrNormNodeRuntimeMsg          = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func") //nolint:lll
+	ErrInterfaceNodeWithRuntimeMsg = errors.New("Interface node cannot use #runtime_func_msg directive")
+	ErrRuntimeFuncDirectiveArgs    = errors.New("Component that use #runtime_func directive must provide exactly one argument") //nolint:lll
+	ErrRuntimeMsgArgs              = errors.New("Node with #runtime_func_msg directive must provide exactly one argument")
 )
 
 type analyzeComponentParams struct {
 	iface analyzeInterfaceParams
 }
 
-func (a Analyzer) analyzeComponent(
-	component src.Component,
-	scope src.Scope,
-	params analyzeComponentParams,
-) (src.Component, *Error) {
-	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, params.iface)
+func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) { //nolint:funlen
+	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
+
+	if len(component.Directives[compiler.RuntimeFuncDirective]) != 1 {
+		return src.Component{}, &Error{
+			Err:      ErrRuntimeFuncDirectiveArgs,
+			Location: &scope.Location,
+			Meta:     &component.Meta,
+		}
+	}
+
+	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
+		allowEmptyInports:  isRuntimeFunc,
+		allowEmptyOutports: isRuntimeFunc,
+	})
 	if err != nil {
 		return src.Component{}, Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
+	}
+
+	if isRuntimeFunc {
+		if len(component.Nodes) != 0 || len(component.Net) != 0 {
+			return src.Component{}, &Error{
+				Err:      ErrNormCompWithRuntimeFunc,
+				Location: &scope.Location,
+				Meta:     &component.Meta,
+			}
+		}
+		return component, nil
 	}
 
 	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
@@ -47,6 +73,14 @@ func (a Analyzer) analyzeComponent(
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
+	}
+
+	if len(component.Net) == 0 {
+		return src.Component{}, &Error{
+			Err:      ErrNormComponentWithoutNet,
+			Location: &scope.Location,
+			Meta:     &component.Meta,
+		}
 	}
 
 	resolvedNet, err := a.analyzeComponentNetwork(component.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)
@@ -107,17 +141,45 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
+	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
+	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
+		return src.Node{}, src.Interface{}, &Error{
+			Err:      ErrRuntimeMsgArgs,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
 	var iface src.Interface
 	if entity.Kind == src.ComponentEntity {
+		_, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+
+		if hasRuntimeMsg && !isRuntimeFunc {
+			return src.Node{}, src.Interface{}, &Error{
+				Err:      ErrNormNodeRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
 		iface = entity.Component.Interface
 	} else {
-		if node.ComponentDI != nil {
+		if hasRuntimeMsg {
+			return src.Node{}, src.Interface{}, &Error{
+				Err:      ErrInterfaceNodeWithRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
+		if node.Deps != nil {
 			return src.Node{}, src.Interface{}, &Error{
 				Err:      ErrNonComponentNodeWithDI,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
 		}
+
 		iface = entity.Interface
 	}
 
@@ -141,15 +203,15 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	if node.ComponentDI == nil {
+	if node.Deps == nil {
 		return src.Node{
 			EntityRef: node.EntityRef,
 			TypeArgs:  resolvedArgs,
 		}, iface, nil
 	}
 
-	resolvedComponentDI := make(map[string]src.Node, len(node.ComponentDI))
-	for depName, depNode := range node.ComponentDI {
+	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
+	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
 			return src.Node{}, src.Interface{}, Error{
@@ -162,9 +224,9 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	return src.Node{
-		EntityRef:   node.EntityRef,
-		TypeArgs:    resolvedArgs,
-		ComponentDI: resolvedComponentDI,
+		EntityRef: node.EntityRef,
+		TypeArgs:  resolvedArgs,
+		Deps:      resolvedComponentDI,
 	}, iface, nil
 }
 
@@ -406,17 +468,6 @@ func (a Analyzer) getSenderType(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, *Error) {
-	if senderSide.ConstRef != nil {
-		constTypeExpr, err := a.getConstType(*senderSide.ConstRef, scope)
-		if err != nil {
-			return ts.Expr{}, Error{
-				Location: &scope.Location,
-				Meta:     &senderSide.ConstRef.Meta,
-			}.Merge(err)
-		}
-		return constTypeExpr, nil
-	}
-
 	if senderSide.PortAddr == nil {
 		return ts.Expr{}, &Error{
 			Err:      ErrSenderIsEmpty,
@@ -424,6 +475,7 @@ func (a Analyzer) getSenderType(
 			Meta:     &senderSide.Meta,
 		}
 	}
+
 	if senderSide.PortAddr.Node == "out" {
 		return ts.Expr{}, &Error{
 			Err:      ErrReadSelfOut,
@@ -496,37 +548,4 @@ func (a Analyzer) getNodeOutportType(
 	}
 
 	return typ, err
-}
-
-func (a Analyzer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *Error) {
-	entity, _, err := scope.Entity(ref)
-	if err != nil {
-		return ts.Expr{}, &Error{
-			Err:      err,
-			Location: &scope.Location,
-			Meta:     &ref.Meta,
-		}
-	}
-
-	if entity.Kind != src.ConstEntity {
-		return ts.Expr{}, &Error{
-			Err:      fmt.Errorf("%w: %v", ErrSenderConstRefEntityKind, entity.Kind),
-			Location: &scope.Location,
-			Meta:     entity.Meta(),
-		}
-	}
-
-	if entity.Const.Ref != nil {
-		expr, err := a.getConstType(*entity.Const.Ref, scope)
-		if err != nil {
-			return ts.Expr{}, Error{
-				Location: &scope.Location,
-				Meta:     entity.Meta(),
-			}.Merge(err)
-		}
-
-		return expr, nil
-	}
-
-	return entity.Const.Value.TypeExpr, nil
 }

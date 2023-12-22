@@ -8,6 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
+	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/interpreter"
@@ -46,11 +47,13 @@ func main() {
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 
 	// compiler
+	desugarer := desugarer.Desugarer{}
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
-	p := parser.MustNew(false)
+	prsr := parser.MustNew(false)
 	comp := compiler.New(
-		p,
+		prsr,
+		desugarer,
 		analyzer,
 		irgen,
 	)
@@ -63,7 +66,7 @@ func main() {
 		builder.MustNew(
 			"/Users/emil/projects/neva/std",
 			"/Users/emil/projects/neva/thirdparty",
-			p,
+			prsr,
 		),
 	)
 

@@ -4,7 +4,12 @@ prog: (NEWLINE | COMMENT | stmt)* EOF;
 
 /* PARSER */
 
-stmt: importStmt | typeStmt | interfaceStmt | constStmt | compStmt;
+stmt:
+	importStmt
+	| typeStmt
+	| interfaceStmt
+	| constStmt
+	| compStmt;
 
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: IDENTIFIER? importPath NEWLINE*;
@@ -54,20 +59,33 @@ portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE*;
 // const
 constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
 constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE*;
-constVal: bool | INT | FLOAT | STRING | arrLit | recLit | nil;
+constVal:
+	bool
+	| INT
+	| FLOAT
+	| STRING
+	| arrLit
+	| structLit
+	| nil;
 bool: 'true' | 'false';
 nil: 'nil';
 arrLit:
-	'[' NEWLINE* vecItems? ']'; // array and vector use same syntax
-vecItems: constVal | constVal (',' NEWLINE* constVal NEWLINE*)*;
-recLit:
-	'{' NEWLINE* recValueFields? '}'; // same for record and map
-recValueFields: recValueField (NEWLINE* recValueField)*;
-recValueField: IDENTIFIER ':' constVal NEWLINE*;
+	'[' NEWLINE* listItems? ']'; // array and vector use same syntax
+listItems:
+	constVal
+	| constVal (',' NEWLINE* constVal NEWLINE*)*;
+structLit:
+	'{' NEWLINE* structValueFields? '}'; // same for struct and map
+structValueFields:
+	structValueField (NEWLINE* structValueField)*;
+structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
-compDef: interfaceDef compBody? NEWLINE*;
+compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
+compilerDirectives: (compilerDirective NEWLINE)+;
+compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
+compilerDirectivesArgs: '(' IDENTIFIER (',' IDENTIFIER)* ')';
 compBody:
 	'{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
 // nodes

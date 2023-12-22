@@ -3,7 +3,7 @@
 name: neva
 scopeName: source.neva
 fileTypes:
-- ".neva"
+  - ".neva"
 
 # ----------------------------------------------------------------
 # Repository (reusable pattern definitions)
@@ -11,203 +11,209 @@ fileTypes:
 repository:
   # Pub keyword
   pub:
-    match: "\\b(pub)\\b"  # Matches the keyword 'pub'
+    match: "\\b(pub)\\b" # Matches the keyword 'pub'
     name: storage.modifier.public
 
   # Comments
   comments:
     patterns:
-    - name: comment.line.double-slash
-      begin: "\\/\\/"  # Matches the start of a single-line comment (//)
-      beginCaptures:
-        '1':
-          name: punctuation.definition.comment
-      end: "(?:\\n|$)"  # Matches the end of a line or the end of the input
+      - name: comment.line.double-slash
+        begin: "\\/\\/" # Matches the start of a single-line comment (//)
+        beginCaptures:
+          "1":
+            name: punctuation.definition.comment
+        end: "(?:\\n|$)" # Matches the end of a line or the end of the input
 
   # Storage types (basic types)
   storage_types:
     patterns:
-    - match: "\\bbool\\b"  # Matches the keyword 'bool'
-      name: storage.type.boolean
-    - match: "\\berror\\b"  # Matches the keyword 'error'
-      name: storage.type.error
-    - match: "\\b(int|float)\\b"  # Matches the keywords 'int' or 'float'
-      name: storage.type.numeric
-    - match: "\\bstr\\b"  # Matches the keyword 'str'
-      name: storage.type.string
-    - match: "\\bany\\b"  # Matches the keyword 'any'
-      name: storage.type.any
-    - include: "#struct_type"
-    - include: "#enum_type"
+      - match: "\\bbool\\b" # Matches the keyword 'bool'
+        name: storage.type.boolean
+      - match: "\\berror\\b" # Matches the keyword 'error'
+        name: storage.type.error
+      - match: "\\b(int|float)\\b" # Matches the keywords 'int' or 'float'
+        name: storage.type.numeric
+      - match: "\\bstr\\b" # Matches the keyword 'str'
+        name: storage.type.string
+      - match: "\\bany\\b" # Matches the keyword 'any'
+        name: storage.type.any
+      - include: "#struct_type"
+      - include: "#enum_type"
 
   # Struct type (indirect-recursive via storage_types)
   struct_type:
     patterns:
-    - begin: "\\b(struct)\\s*\\{"
-      beginCaptures:
-        '1':
-          name: keyword.struct
-      end: "\\}"
-      patterns:
-        - include: "#comments"
-        - include: "#storage_types"
+      - begin: "\\b(struct)\\s*\\{"
+        beginCaptures:
+          "1":
+            name: keyword.struct
+        end: "\\}"
+        patterns:
+          - include: "#comments"
+          - include: "#storage_types"
 
   # Enum type
   enum_type:
     patterns:
-    - begin: "\\b(enum)\\s*\\{"
-      beginCaptures:
-        '1':
-          name: keyword.struct
-      end: "\\}"
-      name: variable.other.enummember
+      - begin: "\\b(enum)\\s*\\{"
+        beginCaptures:
+          "1":
+            name: keyword.struct
+        end: "\\}"
+        name: variable.other.enummember
 
   # Numeric literals
   numeric_literals:
     patterns:
-    - match: "\\b0[xX][0-9a-fA-F]+\\b"  # Matches hexadecimal literals (e.g., 0x1a3)
-      name: constant.numeric.hexadecimal
-    - match: "\\b[0-9]+\\.?[0-9]*([eE][-+]?[0-9]+)?\\b"  # Matches floating-point literals (e.g., 3.14, 2.71e5)
-      name: constant.numeric.float
-    - match: "\\b[0-9]+\\b"  # Matches integer literals (e.g., 123)
-      name: constant.numeric.integer
+      - match: "\\b0[xX][0-9a-fA-F]+\\b" # Matches hexadecimal literals (e.g., 0x1a3)
+        name: constant.numeric.hexadecimal
+      - match: "\\b[0-9]+\\.?[0-9]*([eE][-+]?[0-9]+)?\\b" # Matches floating-point literals (e.g., 3.14, 2.71e5)
+        name: constant.numeric.float
+      - match: "\\b[0-9]+\\b" # Matches integer literals (e.g., 123)
+        name: constant.numeric.integer
 
   # String literals
   string_literals:
     patterns:
-    - name: string.quoted.double
-      begin: "\""  # Matches the start of a string literal (")
-      end: "\""  # Matches the end of a string literal (")
-      patterns:
-      - match: \\""  # Matches an escaped double quote (\")
-        name: constant.character.escape.double-quote
-  
+      - name: string.quoted.double
+        begin: '"' # Matches the start of a string literal (")
+        end: '"' # Matches the end of a string literal (")
+        patterns:
+          - match: \\"" # Matches an escaped double quote (\")
+            name: constant.character.escape.double-quote
+
   # Boolean literals
   bool_literals:
-    match: "\\b(true|false)"  # Matches the keywords 'true' or 'false'
+    match: "\\b(true|false)" # Matches the keywords 'true' or 'false'
     name: constant.language.boolean
 
   # Nil literal
   nil_literal:
-    match: "\\b(nil)"  # Matches the keyword 'nil'
+    match: "\\b(nil)" # Matches the keyword 'nil'
     name: constant.language.nil
 
   # Struct literal (structure)
   struct_literal:
     patterns:
-    - begin: "\\{"
-      end: "\\}"
-      patterns:
-        - include: "#nil_literal"
-        - include: "#bool_literals"
-        - include: "#numeric_literals"
-        - include: "#string_literals"
-        - include: "#struct_literal"
+      - begin: "\\{"
+        end: "\\}"
+        patterns:
+          - include: "#nil_literal"
+          - include: "#bool_literals"
+          - include: "#numeric_literals"
+          - include: "#string_literals"
+          - include: "#struct_literal"
+
+  # Compiler directives
+  compiler_directives:
+    patterns:
+      - name: meta.directive
+        begin: "\\#"
+        beginCaptures:
+          "1":
+            name: meta.directive
+        end: "(?:\\n|$)" # Matches the end of a line or the end of the input
 
 # ----------------------------------------------------------------
 # Patterns (actual rules)
 # ----------------------------------------------------------------
 patterns:
-  - include: "#comments" # Comments at the root level of the file
+  # Comments at the root level of the file
+  - include: "#comments"
 
   # Imports
-  - begin: "\\b(import)\\s*\\{"  # Matches the keyword 'import' followed by optional whitespace and an opening curly brace
+  - begin: "\\b(import)\\s*\\{" # Matches the keyword 'import' followed by optional whitespace and an opening curly brace
     beginCaptures:
-      '1':
+      "1":
         name: keyword.import
-    end: "\\}"  # Matches a closing curly brace
+    end: "\\}" # Matches a closing curly brace
     patterns:
-    - match: "^(\\s*)([^\\s/]+)\\s+[^\\s]+(?:/[^\\s]+)*$"  # Matches a line with some whitespace, followed by non-whitespace/non-slash characters, whitespace, and then any character except whitespace and slashes until the end of the line
-      captures:
-        '2':
-          name: entity.name.section
-    - match: "^(\\s*)[^\\s/]+(?:/[^\\s/]+)*(/([^\\s/]+))\\s*$"  # Similar to above, but with a grouping for a slash followed by non-whitespace/non-slash characters
-      captures:
-        '3':
-          name: entity.name.section
-    - match: "^(\\s*)[^\\s/]+\\s*$"  # Matches a line with some whitespace, followed by non-whitespace/non-slash characters, and then optional whitespace until the end of the line
-      captures:
-        '0':
-          name: entity.name.section
-    - include: "#comments"
+      - match: "^(\\s*)([^\\s/]+)\\s+[^\\s]+(?:/[^\\s]+)*$" # Matches a line with some whitespace, followed by non-whitespace/non-slash characters, whitespace, and then any character except whitespace and slashes until the end of the line
+        captures:
+          "2":
+            name: entity.name.section
+      - match: "^(\\s*)[^\\s/]+(?:/[^\\s/]+)*(/([^\\s/]+))\\s*$" # Similar to above, but with a grouping for a slash followed by non-whitespace/non-slash characters
+        captures:
+          "3":
+            name: entity.name.section
+      - match: "^(\\s*)[^\\s/]+\\s*$" # Matches a line with some whitespace, followed by non-whitespace/non-slash characters, and then optional whitespace until the end of the line
+        captures:
+          "0":
+            name: entity.name.section
+      - include: "#comments"
 
   # Types
-  - begin: "\\b(types)\\s*\\{"  # Matches the keyword 'types' followed by optional whitespace and an opening curly brace
+  - begin: "\\b(types)\\s*\\{" # Matches the keyword 'types' followed by optional whitespace and an opening curly brace
     beginCaptures:
-      '1':
+      "1":
         name: keyword.type
-    end: "\\}"  # Matches a closing curly brace
+    end: "\\}" # Matches a closing curly brace
     patterns:
-    - include: "#comments"
-    - include: "#pub"
-    - include: "#storage_types"
+      - include: "#comments"
+      - include: "#pub"
+      - include: "#storage_types"
 
   # Interfaces
-  - begin: "\\b(interfaces)\\s*\\{"  # Matches the keyword 'interfaces' followed by optional whitespace and an opening curly brace
+  - begin: "\\b(interfaces)\\s*\\{" # Matches the keyword 'interfaces' followed by optional whitespace and an opening curly brace
     beginCaptures:
-      '1':
+      "1":
         name: keyword.declaration.interfaces
-    end: "\\}"  # Matches a closing curly brace
+    end: "\\}" # Matches a closing curly brace
     patterns:
-    - include: "#pub"
-    - include: "#storage_types"
+      - include: "#pub"
+      - include: "#storage_types"
 
   # Const
-  - begin: "\\b(const)\\s*\\{"  # Matches the keyword 'const' followed by optional whitespace and an opening curly brace
+  - begin: "\\b(const)\\s*\\{" # Matches the keyword 'const' followed by optional whitespace and an opening curly brace
     beginCaptures:
-      '1':
+      "1":
         name: keyword.declaration.const
-    end: "\\}"  # Matches a closing curly brace
+    end: "\\}" # Matches a closing curly brace
     patterns:
-    - include: "#pub"
-    - include: "#struct_literal"
-    - include: "#storage_types"
-    - include: "#string_literals"
-    - include: "#numeric_literals"
-    - include: "#bool_literals"
-    - include: "#nil_literal"
+      - include: "#pub"
+      - include: "#struct_literal"
+      - include: "#storage_types"
+      - include: "#string_literals"
+      - include: "#numeric_literals"
+      - include: "#bool_literals"
+      - include: "#nil_literal"
 
   # Components
-  - begin: "\\b(components)\\s*\\{"  # Matches the keyword 'components' followed by optional whitespace and an opening curly brace
+  - begin: "\\b(components)\\s*\\{" # Matches the keyword 'components' followed by optional whitespace and an opening curly brace
     beginCaptures:
-      '1':
+      "1":
         name: keyword.declaration.function
-    end: "\\}"  # Matches a closing curly brace
+    end: "\\}" # Matches a closing curly brace
     patterns:
-    - include: "#pub"
-    - include: "#storage_types"
-    - match: "\\b(\\w+)\\b(?=\\s*<|\\s*\\()"
-      name: "entity.name.section"
-    - begin: "\\{"
-      end: "\\}"
-      patterns:
-      # Component Nodes
-      - begin: "\\b(nodes)\\s*\\{"  # Matches the keyword 'nodes' followed by optional whitespace and an opening curly brace
-        beginCaptures:
-          '1':
-            name: entity.name.section
-        end: "\\}"  # Matches a closing curly brace
+      - include: "#compiler_directives"
+      - include: "#pub"
+      - include: "#storage_types"
+      - match: "\\b(\\w+)\\b(?=\\s*<|\\s*\\()"
+        name: "entity.name.section"
+      - begin: "\\{"
+        end: "\\}"
         patterns:
-          - include: "#storage_types"
-          - match: "^(\\s*)\\b(\\w+)\\b"  # Matches a line with some whitespace, followed by a word (node identifier)
-            captures:
-              '2':
-                name: variable.other.node
+          # Component Nodes
+          - begin: "\\b(nodes)\\s*\\{" # Matches the keyword 'nodes' followed by optional whitespace and an opening curly brace
+            beginCaptures:
+              "1":
+                name: entity.name.section
+            end: "\\}" # Matches a closing curly brace
+            patterns:
+              - include: "#storage_types"
+              - match: "^(\\s*)\\b(\\w+)\\b" # Matches a line with some whitespace, followed by a word (node identifier)
+                captures:
+                  "2":
+                    name: variable.other.node
 
-      # Component Net
-      - begin: "\\b(net)\\s*\\{"  # Matches the keyword 'net' followed by optional whitespace and an opening curly brace
-        beginCaptures:
-          '1':
-            name: entity.name.section
-        end: "\\}"  # Matches a closing curly brace
-        patterns:
-          - match: "->"  # Matches the '->' operator
-            name: keyword.control
-          - begin: "\\{"
-            end: "\\}"
-            # patterns:
-              # - match: "->"  # Matches the '->' operator
-              # name: keyword.control
-
-
-    
+          # Component Net
+          - begin: "\\b(net)\\s*\\{" # Matches the keyword 'net' followed by optional whitespace and an opening curly brace
+            beginCaptures:
+              "1":
+                name: entity.name.section
+            end: "\\}" # Matches a closing curly brace
+            patterns:
+              - match: "->" # Matches the '->' operator
+                name: keyword.control
+              - begin: "\\{"
+                end: "\\}"

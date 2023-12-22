@@ -1,0 +1,23 @@
+import {
+	std/core
+}
+
+const {
+	msg str 'Hello, World!'
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			#runtime_func_msg(msg)
+			msg Const<str>
+
+			print core.Print<str>
+		}
+		net {
+			in.enter -> out.exit
+			msg -> print.v
+			print.v -> out.exit
+		}
+	}
+}

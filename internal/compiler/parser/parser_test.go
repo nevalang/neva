@@ -8,6 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/parser"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/pkg/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -273,7 +274,7 @@ func TestParser_ParseFile(t *testing.T) {
 								TypeExpr: ts.Expr{
 									Inst: &ts.InstExpr{Ref: src.EntityRef{Name: "float"}},
 								},
-								Float: 3.14,
+								Float: utils.Pointer(3.14),
 							},
 						},
 					},

@@ -314,6 +314,17 @@
       "startRule": "prog",
       "printParseTree": true,
       "visualParseTree": true
+    },
+
+    {
+      "name": "antlr_027_compiler_directives.neva",
+      "type": "antlr-debug",
+      "request": "launch",
+      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/027_compiler_directives.neva",
+      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
+      "startRule": "prog",
+      "printParseTree": true,
+      "visualParseTree": true
     }
   ]
 }

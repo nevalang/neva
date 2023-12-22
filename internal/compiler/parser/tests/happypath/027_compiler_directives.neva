@@ -1,0 +1,7 @@
+components {
+    #runtime_func(read)
+    pub Read(sig) (v str)
+
+    #runtime_func(read, write)
+    pub Print<T>(v T) (v T)
+}

@@ -45,6 +45,11 @@ func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, e
 	return Entity{}, "", ErrEntityNotFound
 }
 
+func (mod Module) FilenameByEntityRef(entityRef EntityRef) (string, error) {
+	_, fileName, err := mod.Entity(entityRef)
+	return fileName, err
+}
+
 type Package map[string]File
 
 // Just like program's Entity
@@ -109,10 +114,14 @@ const (
 )
 
 type Component struct {
-	Interface `json:"interface,omitempty"`
-	Nodes     map[string]Node `json:"nodes,omitempty"`
-	Net       []Connection    `json:"net,omitempty"` // Can't be map, connection side can't be map key due to selectors
+	Directives map[Directive][]string `json:"directives,omitempty"`
+	Interface  `json:"interface,omitempty"`
+	Nodes      map[string]Node `json:"nodes,omitempty"`
+	Net        []Connection    `json:"net,omitempty"`
+	Meta       Meta            `json:"meta,omitempty"`
 }
+
+type Directive string
 
 type Interface struct {
 	TypeParams TypeParams `json:"typeParams,omitempty"`
@@ -126,10 +135,11 @@ type TypeParams struct {
 }
 
 type Node struct {
-	EntityRef   EntityRef       `json:"entityRef,omitempty"`
-	TypeArgs    []ts.Expr       `json:"typeArgs,omitempty"`
-	ComponentDI map[string]Node `json:"componentDi,omitempty"`
-	Meta        Meta            `json:"meta,omitempty"`
+	Directives map[Directive][]string `json:"directives,omitempty"`
+	EntityRef  EntityRef              `json:"entityRef,omitempty"`
+	TypeArgs   []ts.Expr              `json:"typeArgs,omitempty"`
+	Deps       map[string]Node        `json:"componentDi,omitempty"`
+	Meta       Meta                   `json:"meta,omitempty"`
 }
 
 type EntityRef struct {
@@ -153,12 +163,12 @@ type Const struct {
 
 type Msg struct {
 	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
-	Bool     bool             `json:"bool,omitempty"`
-	Int      int              `json:"int,omitempty"`
-	Float    float64          `json:"float,omitempty"`
-	Str      string           `json:"str,omitempty"`
-	Vec      []Const          `json:"vec,omitempty"` // Vecs are used for both vectors and arrays
-	Map      map[string]Const `json:"map,omitempty"` // Maps are used for both maps and structures
+	Bool     *bool            `json:"bool,omitempty"`
+	Int      *int             `json:"int,omitempty"`
+	Float    *float64         `json:"float,omitempty"`
+	Str      *string          `json:"str,omitempty"`
+	List     []Const          `json:"vec,omitempty"`
+	Map      map[string]Const `json:"map,omitempty"`
 	Meta     Meta             `json:"meta,omitempty"`
 }
 
@@ -188,7 +198,7 @@ type ReceiverConnectionSide struct {
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
 type SenderConnectionSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
-	ConstRef  *EntityRef `json:"constRef,omitempty"`
+	ConstRef  *EntityRef `json:"constRef,omitempty"` // Only sugared form
 	Selectors []string   `json:"selectors,omitempty"`
 	Meta      Meta       `json:"meta,omitempty"`
 }

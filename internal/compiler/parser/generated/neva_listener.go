@@ -106,23 +106,32 @@ type nevaListener interface {
 	// EnterArrLit is called when entering the arrLit production.
 	EnterArrLit(c *ArrLitContext)
 
-	// EnterVecItems is called when entering the vecItems production.
-	EnterVecItems(c *VecItemsContext)
+	// EnterListItems is called when entering the listItems production.
+	EnterListItems(c *ListItemsContext)
 
-	// EnterRecLit is called when entering the recLit production.
-	EnterRecLit(c *RecLitContext)
+	// EnterStructLit is called when entering the structLit production.
+	EnterStructLit(c *StructLitContext)
 
-	// EnterRecValueFields is called when entering the recValueFields production.
-	EnterRecValueFields(c *RecValueFieldsContext)
+	// EnterStructValueFields is called when entering the structValueFields production.
+	EnterStructValueFields(c *StructValueFieldsContext)
 
-	// EnterRecValueField is called when entering the recValueField production.
-	EnterRecValueField(c *RecValueFieldContext)
+	// EnterStructValueField is called when entering the structValueField production.
+	EnterStructValueField(c *StructValueFieldContext)
 
 	// EnterCompStmt is called when entering the compStmt production.
 	EnterCompStmt(c *CompStmtContext)
 
 	// EnterCompDef is called when entering the compDef production.
 	EnterCompDef(c *CompDefContext)
+
+	// EnterCompilerDirectives is called when entering the compilerDirectives production.
+	EnterCompilerDirectives(c *CompilerDirectivesContext)
+
+	// EnterCompilerDirective is called when entering the compilerDirective production.
+	EnterCompilerDirective(c *CompilerDirectiveContext)
+
+	// EnterCompilerDirectivesArgs is called when entering the compilerDirectivesArgs production.
+	EnterCompilerDirectivesArgs(c *CompilerDirectivesArgsContext)
 
 	// EnterCompBody is called when entering the compBody production.
 	EnterCompBody(c *CompBodyContext)
@@ -277,23 +286,32 @@ type nevaListener interface {
 	// ExitArrLit is called when exiting the arrLit production.
 	ExitArrLit(c *ArrLitContext)
 
-	// ExitVecItems is called when exiting the vecItems production.
-	ExitVecItems(c *VecItemsContext)
+	// ExitListItems is called when exiting the listItems production.
+	ExitListItems(c *ListItemsContext)
 
-	// ExitRecLit is called when exiting the recLit production.
-	ExitRecLit(c *RecLitContext)
+	// ExitStructLit is called when exiting the structLit production.
+	ExitStructLit(c *StructLitContext)
 
-	// ExitRecValueFields is called when exiting the recValueFields production.
-	ExitRecValueFields(c *RecValueFieldsContext)
+	// ExitStructValueFields is called when exiting the structValueFields production.
+	ExitStructValueFields(c *StructValueFieldsContext)
 
-	// ExitRecValueField is called when exiting the recValueField production.
-	ExitRecValueField(c *RecValueFieldContext)
+	// ExitStructValueField is called when exiting the structValueField production.
+	ExitStructValueField(c *StructValueFieldContext)
 
 	// ExitCompStmt is called when exiting the compStmt production.
 	ExitCompStmt(c *CompStmtContext)
 
 	// ExitCompDef is called when exiting the compDef production.
 	ExitCompDef(c *CompDefContext)
+
+	// ExitCompilerDirectives is called when exiting the compilerDirectives production.
+	ExitCompilerDirectives(c *CompilerDirectivesContext)
+
+	// ExitCompilerDirective is called when exiting the compilerDirective production.
+	ExitCompilerDirective(c *CompilerDirectiveContext)
+
+	// ExitCompilerDirectivesArgs is called when exiting the compilerDirectivesArgs production.
+	ExitCompilerDirectivesArgs(c *CompilerDirectivesArgsContext)
 
 	// ExitCompBody is called when exiting the compBody production.
 	ExitCompBody(c *CompBodyContext)

@@ -1,3 +1,6 @@
+// Package analyzer implements source code static semantic analysis.
+// It's important to keep errors as human-readable as possible
+// because they are what end-user is facing when something goes wrong.
 package analyzer
 
 import (
@@ -130,7 +133,6 @@ func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, *Erro
 	return resolvedPkg, nil
 }
 
-//nolint:funlen
 func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *Error) {
 	resolvedEntity := src.Entity{
 		Exported: entity.Exported,
@@ -174,17 +176,11 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		resolvedComp, err := a.analyzeComponent(entity.Component, scope, analyzeComponentParams{
-			iface: analyzeInterfaceParams{
-				allowEmptyInports:  isStd, // e.g. `Const` component has no inports
-				allowEmptyOutports: isStd, // e.g. `Void` component has no outports
-			},
-		})
+		resolvedComp, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
-			meta := entity.Component.Meta
 			return src.Entity{}, Error{
 				Location: &scope.Location,
-				Meta:     &meta,
+				Meta:     &entity.Component.Meta,
 			}.Merge(err)
 		}
 		resolvedEntity.Component = resolvedComp
