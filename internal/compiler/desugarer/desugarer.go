@@ -109,9 +109,11 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 			return src.Component{}, err
 		}
 
-		constVirtualNode := src.Node{
+		constRefStr := conn.SenderSide.ConstRef.String()
+
+		desugaredNodes[constRefStr] = src.Node{
 			Directives: map[src.Directive][]string{
-				"runtime_func": {"Const"},
+				"runtime_func_msg": {constRefStr},
 			},
 			EntityRef: src.EntityRef{
 				Pkg:  "std/builtin",
@@ -120,11 +122,8 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 			TypeArgs: []ts.Expr{constTypeExpr},
 		}
 
-		constNodeName := conn.SenderSide.ConstRef.String()
-		desugaredNodes[constNodeName] = constVirtualNode
-
 		constNodeOutportAddr := src.PortAddr{
-			Node: constNodeName,
+			Node: constRefStr,
 			Port: "out",
 		}
 
