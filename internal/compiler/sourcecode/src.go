@@ -45,6 +45,11 @@ func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, e
 	return Entity{}, "", ErrEntityNotFound
 }
 
+func (mod Module) FilenameByEntityRef(entityRef EntityRef) (string, error) {
+	_, fileName, err := mod.Entity(entityRef)
+	return fileName, err
+}
+
 type Package map[string]File
 
 // Just like program's Entity
@@ -158,12 +163,12 @@ type Const struct {
 
 type Msg struct {
 	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
-	Bool     bool             `json:"bool,omitempty"`
-	Int      int              `json:"int,omitempty"`
-	Float    float64          `json:"float,omitempty"`
-	Str      string           `json:"str,omitempty"`
-	Vec      []Const          `json:"vec,omitempty"` // Vecs are used for both vectors and arrays
-	Map      map[string]Const `json:"map,omitempty"` // Maps are used for both maps and structures
+	Bool     *bool            `json:"bool,omitempty"`
+	Int      *int             `json:"int,omitempty"`
+	Float    *float64         `json:"float,omitempty"`
+	Str      *string          `json:"str,omitempty"`
+	List     []Const          `json:"vec,omitempty"`
+	Map      map[string]Const `json:"map,omitempty"`
 	Meta     Meta             `json:"meta,omitempty"`
 }
 

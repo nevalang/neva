@@ -49,7 +49,7 @@ func nevaParserInit() {
 		"structFields", "structField", "unionTypeExpr", "nonUnionTypeExpr",
 		"interfaceStmt", "interfaceDef", "inPortsDef", "outPortsDef", "portsDef",
 		"portDef", "constStmt", "constDef", "constVal", "bool", "nil", "arrLit",
-		"vecItems", "structLit", "structValueFields", "structValueField", "compStmt",
+		"listItems", "structLit", "structValueFields", "structValueField", "compStmt",
 		"compDef", "compilerDirectives", "compilerDirective", "compilerDirectivesArgs",
 		"compBody", "compNodesDef", "compNodeDef", "nodeInst", "entityRef",
 		"nodeArgs", "nodeArgList", "nodeArg", "compNetDef", "connDefList", "connDef",
@@ -571,7 +571,7 @@ const (
 	nevaParserRULE_bool                   = 30
 	nevaParserRULE_nil                    = 31
 	nevaParserRULE_arrLit                 = 32
-	nevaParserRULE_vecItems               = 33
+	nevaParserRULE_listItems              = 33
 	nevaParserRULE_structLit              = 34
 	nevaParserRULE_structValueFields      = 35
 	nevaParserRULE_structValueField       = 36
@@ -6622,7 +6622,7 @@ type IArrLitContext interface {
 	// Getter signatures
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
-	VecItems() IVecItemsContext
+	ListItems() IListItemsContext
 
 	// IsArrLitContext differentiates from other interfaces.
 	IsArrLitContext()
@@ -6668,10 +6668,10 @@ func (s *ArrLitContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *ArrLitContext) VecItems() IVecItemsContext {
+func (s *ArrLitContext) ListItems() IListItemsContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IVecItemsContext); ok {
+		if _, ok := ctx.(IListItemsContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -6681,7 +6681,7 @@ func (s *ArrLitContext) VecItems() IVecItemsContext {
 		return nil
 	}
 
-	return t.(IVecItemsContext)
+	return t.(IListItemsContext)
 }
 
 func (s *ArrLitContext) GetRuleContext() antlr.RuleContext {
@@ -6752,7 +6752,7 @@ func (p *nevaParser) ArrLit() (localctx IArrLitContext) {
 	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&120266428420) != 0 {
 		{
 			p.SetState(553)
-			p.VecItems()
+			p.ListItems()
 		}
 
 	}
@@ -6778,8 +6778,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IVecItemsContext is an interface to support dynamic dispatch.
-type IVecItemsContext interface {
+// IListItemsContext is an interface to support dynamic dispatch.
+type IListItemsContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -6791,43 +6791,43 @@ type IVecItemsContext interface {
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
 
-	// IsVecItemsContext differentiates from other interfaces.
-	IsVecItemsContext()
+	// IsListItemsContext differentiates from other interfaces.
+	IsListItemsContext()
 }
 
-type VecItemsContext struct {
+type ListItemsContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyVecItemsContext() *VecItemsContext {
-	var p = new(VecItemsContext)
+func NewEmptyListItemsContext() *ListItemsContext {
+	var p = new(ListItemsContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_vecItems
+	p.RuleIndex = nevaParserRULE_listItems
 	return p
 }
 
-func InitEmptyVecItemsContext(p *VecItemsContext) {
+func InitEmptyListItemsContext(p *ListItemsContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_vecItems
+	p.RuleIndex = nevaParserRULE_listItems
 }
 
-func (*VecItemsContext) IsVecItemsContext() {}
+func (*ListItemsContext) IsListItemsContext() {}
 
-func NewVecItemsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *VecItemsContext {
-	var p = new(VecItemsContext)
+func NewListItemsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ListItemsContext {
+	var p = new(ListItemsContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_vecItems
+	p.RuleIndex = nevaParserRULE_listItems
 
 	return p
 }
 
-func (s *VecItemsContext) GetParser() antlr.Parser { return s.parser }
+func (s *ListItemsContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *VecItemsContext) AllConstVal() []IConstValContext {
+func (s *ListItemsContext) AllConstVal() []IConstValContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -6848,7 +6848,7 @@ func (s *VecItemsContext) AllConstVal() []IConstValContext {
 	return tst
 }
 
-func (s *VecItemsContext) ConstVal(i int) IConstValContext {
+func (s *ListItemsContext) ConstVal(i int) IConstValContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -6868,37 +6868,37 @@ func (s *VecItemsContext) ConstVal(i int) IConstValContext {
 	return t.(IConstValContext)
 }
 
-func (s *VecItemsContext) AllNEWLINE() []antlr.TerminalNode {
+func (s *ListItemsContext) AllNEWLINE() []antlr.TerminalNode {
 	return s.GetTokens(nevaParserNEWLINE)
 }
 
-func (s *VecItemsContext) NEWLINE(i int) antlr.TerminalNode {
+func (s *ListItemsContext) NEWLINE(i int) antlr.TerminalNode {
 	return s.GetToken(nevaParserNEWLINE, i)
 }
 
-func (s *VecItemsContext) GetRuleContext() antlr.RuleContext {
+func (s *ListItemsContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *VecItemsContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *ListItemsContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *VecItemsContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *ListItemsContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterVecItems(s)
+		listenerT.EnterListItems(s)
 	}
 }
 
-func (s *VecItemsContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *ListItemsContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitVecItems(s)
+		listenerT.ExitListItems(s)
 	}
 }
 
-func (p *nevaParser) VecItems() (localctx IVecItemsContext) {
-	localctx = NewVecItemsContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 66, nevaParserRULE_vecItems)
+func (p *nevaParser) ListItems() (localctx IListItemsContext) {
+	localctx = NewListItemsContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 66, nevaParserRULE_listItems)
 	var _la int
 
 	p.SetState(579)

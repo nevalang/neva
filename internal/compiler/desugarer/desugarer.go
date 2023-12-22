@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -113,7 +114,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 
 		desugaredNodes[constRefStr] = src.Node{
 			Directives: map[src.Directive][]string{
-				"runtime_func_msg": {constRefStr},
+				compiler.RuntimeFuncMsgDirective: {constRefStr},
 			},
 			EntityRef: src.EntityRef{
 				Pkg:  "std/builtin",

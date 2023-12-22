@@ -54,7 +54,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 
 	switch resolvedType.Inst.Ref.String() {
 	case "bool":
-		if constant.Value.Int != 0 || constant.Value.Float != 0 || constant.Value.Str != "" {
+		if constant.Value.Int != nil || constant.Value.Float != nil || constant.Value.Str != nil {
 			return src.Const{}, &Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -62,7 +62,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "int":
-		if constant.Value.Bool != false || constant.Value.Float != 0 || constant.Value.Str != "" {
+		if constant.Value.Bool != nil || constant.Value.Float != nil || constant.Value.Str != nil {
 			return src.Const{}, &Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -70,7 +70,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "float":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Str != "" {
+		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Str != nil {
 			return src.Const{}, &Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -78,7 +78,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "str":
-		if constant.Value.Bool != false || constant.Value.Int != 0 || constant.Value.Float != 0 {
+		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Float != nil {
 			return src.Const{}, &Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,

@@ -92,8 +92,8 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			},
 		}
 
-		if f.Params != nil {
-			rMsg, err := a.msg(f.Params)
+		if f.Msg != nil {
+			rMsg, err := a.msg(f.Msg)
 			if err != nil {
 				return runtime.Program{}, fmt.Errorf("msg: %w", err)
 			}

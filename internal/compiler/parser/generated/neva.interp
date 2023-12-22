@@ -114,7 +114,7 @@ constVal
 bool
 nil
 arrLit
-vecItems
+listItems
 structLit
 structValueFields
 structValueField

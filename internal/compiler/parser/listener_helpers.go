@@ -7,6 +7,7 @@ import (
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/pkg/utils"
 )
 
 func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
@@ -498,39 +499,41 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 		if boolVal != "true" && boolVal != "false" {
 			panic("bool val not true or false")
 		}
-		val.Bool = boolVal == "true"
+		val.Bool = utils.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		val.Int = int(i)
+		val.Int = utils.Pointer(int(i))
 	case constVal.FLOAT() != nil:
 		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			panic(err)
 		}
-		val.Float = f
+		val.Float = &f
 	case constVal.STRING() != nil:
-		val.Str = strings.Trim(
-			strings.ReplaceAll(
-				constVal.STRING().GetText(),
-				"\\n",
-				"\n",
+		val.Str = utils.Pointer(
+			strings.Trim(
+				strings.ReplaceAll(
+					constVal.STRING().GetText(),
+					"\\n",
+					"\n",
+				),
+				"'",
 			),
-			"'",
 		)
 	case constVal.ArrLit() != nil:
-		vecItems := constVal.ArrLit().VecItems()
-		if vecItems == nil { // empty array []
-			val.Vec = []src.Const{}
+		listItems := constVal.ArrLit().ListItems()
+		if listItems == nil { // empty array []
+			val.List = []src.Const{}
 			return val
 		}
-		constValues := constVal.ArrLit().VecItems().AllConstVal()
-		val.Vec = make([]src.Const, 0, len(constValues))
+		constValues := listItems.AllConstVal()
+		val.List = make([]src.Const, 0, len(constValues))
 		for _, item := range constValues {
 			parsedConstValue := parseConstVal(item)
-			val.Vec = append(val.Vec, src.Const{
+			val.List = append(val.List, src.Const{
 				Ref:   nil, // TODO implement references
 				Value: &parsedConstValue,
 			})

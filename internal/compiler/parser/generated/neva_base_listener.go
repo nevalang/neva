@@ -218,11 +218,11 @@ func (s *BasenevaListener) EnterArrLit(ctx *ArrLitContext) {}
 // ExitArrLit is called when production arrLit is exited.
 func (s *BasenevaListener) ExitArrLit(ctx *ArrLitContext) {}
 
-// EnterVecItems is called when production vecItems is entered.
-func (s *BasenevaListener) EnterVecItems(ctx *VecItemsContext) {}
+// EnterListItems is called when production listItems is entered.
+func (s *BasenevaListener) EnterListItems(ctx *ListItemsContext) {}
 
-// ExitVecItems is called when production vecItems is exited.
-func (s *BasenevaListener) ExitVecItems(ctx *VecItemsContext) {}
+// ExitListItems is called when production listItems is exited.
+func (s *BasenevaListener) ExitListItems(ctx *ListItemsContext) {}
 
 // EnterStructLit is called when production structLit is entered.
 func (s *BasenevaListener) EnterStructLit(ctx *StructLitContext) {}

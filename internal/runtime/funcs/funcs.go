@@ -157,34 +157,6 @@ func Void(ctx context.Context, io runtime.FuncIO) (func(), error) {
 }
 
 func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
-	msg := ctx.Value("msg")
-	if msg == nil {
-		return nil, errors.New("ctx msg not found")
-	}
-
-	typ, ok := msg.(runtime.Msg)
-	if !ok {
-		return nil, errors.New("ctx value is not runtime message")
-	}
-
-	var handler func(a, b runtime.Msg) runtime.Msg
-	switch typ.Type() {
-	case runtime.IntMsgType:
-		handler = func(a, b runtime.Msg) runtime.Msg {
-			return runtime.NewIntMsg(a.Int() + b.Int())
-		}
-	case runtime.FloatMsgType:
-		handler = func(a, b runtime.Msg) runtime.Msg {
-			return runtime.NewFloatMsg(a.Float() + b.Float())
-		}
-	case runtime.StrMsgType:
-		handler = func(a, b runtime.Msg) runtime.Msg {
-			return runtime.NewStrMsg(a.Str() + b.Str())
-		}
-	default:
-		return nil, errors.New("unknown msg type")
-	}
-
 	a, err := io.In.Port("a")
 	if err != nil {
 		return nil, err
@@ -196,6 +168,10 @@ func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vout, err := io.Out.Port("v")
 	if err != nil {
 		return nil, err
+	}
+
+	handler := func(a, b runtime.Msg) runtime.Msg {
+		return runtime.NewIntMsg(a.Int() + b.Int())
 	}
 
 	return func() {

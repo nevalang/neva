@@ -106,8 +106,8 @@ type nevaListener interface {
 	// EnterArrLit is called when entering the arrLit production.
 	EnterArrLit(c *ArrLitContext)
 
-	// EnterVecItems is called when entering the vecItems production.
-	EnterVecItems(c *VecItemsContext)
+	// EnterListItems is called when entering the listItems production.
+	EnterListItems(c *ListItemsContext)
 
 	// EnterStructLit is called when entering the structLit production.
 	EnterStructLit(c *StructLitContext)
@@ -286,8 +286,8 @@ type nevaListener interface {
 	// ExitArrLit is called when exiting the arrLit production.
 	ExitArrLit(c *ArrLitContext)
 
-	// ExitVecItems is called when exiting the vecItems production.
-	ExitVecItems(c *VecItemsContext)
+	// ExitListItems is called when exiting the listItems production.
+	ExitListItems(c *ListItemsContext)
 
 	// ExitStructLit is called when exiting the structLit production.
 	ExitStructLit(c *StructLitContext)

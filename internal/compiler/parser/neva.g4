@@ -70,8 +70,10 @@ constVal:
 bool: 'true' | 'false';
 nil: 'nil';
 arrLit:
-	'[' NEWLINE* vecItems? ']'; // array and vector use same syntax
-vecItems: constVal | constVal (',' NEWLINE* constVal NEWLINE*)*;
+	'[' NEWLINE* listItems? ']'; // array and vector use same syntax
+listItems:
+	constVal
+	| constVal (',' NEWLINE* constVal NEWLINE*)*;
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:

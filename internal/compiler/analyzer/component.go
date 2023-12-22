@@ -24,16 +24,26 @@ var (
 	ErrNodePortNotFound            = errors.New("Referenced node port not found")
 	ErrNormCompWithRuntimeFunc     = errors.New("Component with nodes or network cannot use #runtime_func directive")
 	ErrNormComponentWithoutNet     = errors.New("Component must have network except it uses #runtime_func directive")
-	ErrNormNodeRuntimeMsg          = errors.New("Node can't use #runtime_func_msg if it's component doesn't use #runtime_func") //nolint:lll
+	ErrNormNodeRuntimeMsg          = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func") //nolint:lll
 	ErrInterfaceNodeWithRuntimeMsg = errors.New("Interface node cannot use #runtime_func_msg directive")
+	ErrRuntimeFuncDirectiveArgs    = errors.New("Component that use #runtime_func directive must provide exactly one argument") //nolint:lll
+	ErrRuntimeMsgArgs              = errors.New("Node with #runtime_func_msg directive must provide exactly one argument")
 )
 
 type analyzeComponentParams struct {
 	iface analyzeInterfaceParams
 }
 
-func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) {
+func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) { //nolint:funlen
 	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
+
+	if len(component.Directives[compiler.RuntimeFuncDirective]) != 1 {
+		return src.Component{}, &Error{
+			Err:      ErrRuntimeFuncDirectiveArgs,
+			Location: &scope.Location,
+			Meta:     &component.Meta,
+		}
+	}
 
 	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
 		allowEmptyInports:  isRuntimeFunc,
@@ -131,11 +141,19 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	_, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
+	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
+	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
+		return src.Node{}, src.Interface{}, &Error{
+			Err:      ErrRuntimeMsgArgs,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
 
 	var iface src.Interface
 	if entity.Kind == src.ComponentEntity {
 		_, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+
 		if hasRuntimeMsg && !isRuntimeFunc {
 			return src.Node{}, src.Interface{}, &Error{
 				Err:      ErrNormNodeRuntimeMsg,
