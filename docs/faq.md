@@ -43,6 +43,73 @@ _Easy to visualize_ means that the nature of FBP programs is that we do not have
 
 ## Design
 
+### Why outports usage is optional and inport usage is required?
+
+Indeed when component `A` uses `B` as it's sub-component (when it instantiates a _node_ with it) in it's _network_ it's _enforced_ to use _all_ the inports of `B` and it's _at least one_ outport. It doesn't have to use all the outports though.
+
+This is because inports are requirements - they are needed to receive the data that component _needs_ to produce result. Outports on the other hands are options. They are results that parent network might need to a sertain degree. For instance if `B` have outports `foo` and `bar`, it's completely possible that `A` only needs `foo` and have nothing to do with `bar`.
+
+This leads us to the need of the `Void` (builtin) component. This is the only component that doesn't have outports. It is used for discarding the unwanted data. If there would be no syntactic sugar for that, then we would have to explicitly create `void` nodes and use it in places like this:
+
+```neva
+nodes {
+    b B
+    void Void
+}
+net {
+    // ...
+    b.bar -> void.v // discard all messages from `bar` outport
+}
+```
+
+It's not the problem that it's tedious (even though it is, imagine having 10 unwanted outports in your network which is completely possible). The real problem is that by discarding some outports user is in danger of programming the dataflow in the wrong way.
+
+Imagine that `B` has outports `v` (for valid results) and `err` (for error messages). It fires either `v` or `err` and never both at the same time. And we want out program to terminate if there's nothing to do left. Consider this code:
+
+```neva
+Main(enter) (exit) {
+    nodes {
+        b B
+        void Void
+        print Print
+    }
+    net {
+        in.enter -> b.sig
+        b.err -> void.v // ignore the `err` outport, only handle happy path
+        b.v -> print.v
+        print.v -> out.exit
+    }
+}
+```
+
+We print the success result and then terminate. If there is no success result and only error we well... do nothing. And that's bad. What we should do instead is this:
+
+```neva
+// ...
+net {
+    in.enter -> b.sig
+
+    // print both result and error
+    b.err -> print.v
+    b.v -> print.v
+
+    // and then exit
+    print.v -> out.exit
+}
+```
+
+As you can see it's easy to get in trouble by ignoring some outports (especially the error ones). If user wouldn't have the ability to do so he would have to do _something_ with `err` message. Anyway there would still be two problems...
+
+1. Even then user still _can_ send the data in the wrong way. E.g. send the `err` message back to `b.sig` or `print` it but then send the `print.v` back to the `print` forming an endless loop. This kind of _logical_ mistakes are hard to catch. Making the language _that_ safe would also make it much more complicated (think of Haskell or Rust (where we still have such kinds of problems!)).
+2. Sometimes we have _nothing to do_ with unwanted data. We don't wanna print it or even send downstream (because that would simply delay the question what to do with unwanted data). This is the reason why `Void` doesn't have outports. Otherwise a paradox arises.
+
+This leads us to a conclusions:
+
+- There must be a way to omit unwanted data, whether it's explicit (`Void`) or implicit sugar
+- It's impossible to make langauge 100% safe without sacrificing the simplicity of use
+
+As we saw explicit Void doesn't solve these problems so why not introduce sugar? Let's allow user to simply omit unwanted data and let the compiler implicitly insert `Void` under the hood. The logical mistakes? Well... They are "unsolvable" anyway.
+
 ### Why compiler has static ports and runtime has givers?
 
 Because if compiler would have givers, they will be a special kind nodes which broke elegance of nodes being just component instances. Because giver is a regular component, it has a specific configuration - a message that it must distribute.
