@@ -3,24 +3,36 @@ package sourcecode
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-// Scope is an entity that can be used to query the program.
+var (
+	ErrModNotFound    = errors.New("module not found")
+	ErrPkgNotFound    = fmt.Errorf("package not found")
+	ErrImportNotFound = errors.New("import not found")
+	ErrFileNotFound   = errors.New("file not found")
+	ErrEntityNotPub   = errors.New("entity is not public")
+)
+
 type Scope struct {
-	Location Location // It keeps track of current location to properly resolve imports and local references.
-	Module   Module   // And of course it does has access to the program itself.
+	Location Location
+	Build    Build
+}
+
+func (s Scope) WithLocation(location Location) Scope {
+	return Scope{
+		Location: location,
+		Build:    s.Build,
+	}
 }
 
 type Location struct {
-	ModuleName string
-	PkgName    string
-	FileName   string
+	ModRef   ModuleRef
+	PkgName  string
+	FileName string
 }
 
-// IsTopType returns true if passed reference is builtin "any" and false otherwise.
 func (s Scope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
@@ -29,118 +41,122 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 	if !ok {
 		return false
 	}
-	if parsed.Name != "any" {
-		return false
-	}
-	switch parsed.Pkg {
-	case "builtin", "":
-		return true
-	}
-	return parsed.Pkg == "" || parsed.Pkg == "builtin"
+	return parsed.Name == "any" && (parsed.Pkg == "" || parsed.Pkg == "builtin")
 }
 
-// Get type takes reference to type and returns def and scope with updated location if type found, or error.
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	parsedRef, ok := ref.(EntityRef)
 	if !ok {
 		return ts.Def{}, Scope{}, fmt.Errorf("ref is not entity ref: %v", ref)
 	}
 
-	def, location, err := s.getType(parsedRef)
+	entity, location, err := s.Entity(parsedRef)
 	if err != nil {
-		return ts.Def{}, Scope{}, fmt.Errorf("get type: %w", err)
+		return ts.Def{}, nil, err
 	}
 
-	if parsedRef.Pkg == "" {
-		return def, s, nil
-	}
-
-	return def, Scope{
-		Location: location,
-		Module:   s.Module,
-	}, nil
+	return entity.Type, s.WithLocation(location), nil
 }
 
-// parseRef assumes string-ref has form of <pkg_name>.<entity_name≥ or just <entity_name>.
-func (s Scope) parseRef(ref string) EntityRef {
-	var entityRef EntityRef
-
-	parts := strings.Split(ref, ".")
-	if len(parts) == 2 {
-		entityRef.Pkg = parts[0]
-		entityRef.Name = parts[1]
-	} else {
-		entityRef.Name = ref
-	}
-
-	return entityRef
-}
-
-var ErrEntityNotType = errors.New("entity not type")
-
-func (s Scope) getType(ref EntityRef) (ts.Def, Location, error) {
-	entity, found, err := s.Entity(ref)
-	if err != nil {
-		return ts.Def{}, Location{}, err
-	}
-
-	if entity.Kind != TypeEntity {
-		return ts.Def{}, Location{}, fmt.Errorf("%w: want %v, got %v", ErrEntityNotType, TypeEntity, entity.Kind)
-	}
-
-	return entity.Type, found, nil
-}
-
-var (
-	ErrNoImport          = errors.New("no import found")
-	ErrEntityNotExported = errors.New("entity is not exported")
-)
-
-// Entity returns entity by passed reference.
-// If entity is local (ref has no pkg) the current location.pkg or std/builtin is used
-// Otherwise we use current file imports to resolve external ref.
-// This method MUST be used by all other methods that do entity lookup.
+//nolint:funlen
 func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
+	curMod, ok := s.Build.Modules[s.Location.ModRef]
+	if !ok {
+		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, s.Location.ModRef)
+	}
+
+	curPkg := curMod.Packages[s.Location.PkgName]
+	if !ok {
+		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrPkgNotFound, s.Location.PkgName)
+	}
+
+	// local reference (current package or builtin)
 	if entityRef.Pkg == "" {
-		entity, filename, ok := s.Module.Packages[s.Location.PkgName].Entity(entityRef.Name)
+		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, Location{
 				PkgName:  s.Location.PkgName,
-				FileName: filename,
+				FileName: fileName,
 			}, nil
 		}
 
-		// TODO when multimod flow gonna be implemented, upd so std is different module, not just package
-		entity, filename, ok = s.Module.Packages["std/builtin"].Entity(entityRef.Name)
+		stdModRef := ModuleRef{Name: "std"}
+		stdMod, ok := s.Build.Modules[stdModRef]
 		if !ok {
-			return Entity{}, Location{}, ErrEntityNotFound
+			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)
+		}
+
+		builtinPkgName := "builtin"
+		builtinPkg, ok := stdMod.Packages[builtinPkgName]
+		if !ok {
+			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrPkgNotFound, "builtin")
+		}
+
+		entity, fileName, ok = builtinPkg.Entity(entityRef.Name)
+		if !ok {
+			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef.Name)
 		}
 
 		return entity, Location{
-			PkgName:  "std/builtin",
-			FileName: filename,
+			ModRef:   stdModRef,
+			PkgName:  builtinPkgName,
+			FileName: fileName,
 		}, nil
 	}
 
-	realImportPkgName, ok := s.Module.Packages[s.Location.PkgName][s.Location.FileName].Imports[entityRef.Pkg]
+	curFile, ok := curPkg[s.Location.FileName]
 	if !ok {
-		return Entity{}, Location{}, ErrNoImport
+		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrFileNotFound, s.Location.FileName)
 	}
 
-	entity, fileName, err := s.Module.Entity(EntityRef{
-		Pkg:  realImportPkgName,
+	pkgImport, ok := curFile.Imports[entityRef.Pkg]
+	if !ok {
+		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrImportNotFound, entityRef.Pkg)
+	}
+
+	var mod Module
+	if pkgImport.ModuleName == "@" {
+		mod = curMod
+	} else {
+		depModRef := curMod.Manifest.Deps[pkgImport.ModuleName]
+		depMod, ok := s.Build.Modules[depModRef]
+		if !ok {
+			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, depModRef)
+		}
+		mod = depMod
+	}
+
+	entity, fileName, err := mod.Entity(EntityRef{
+		Pkg:  pkgImport.PkgName,
 		Name: entityRef.Name,
 	})
 	if err != nil {
 		return Entity{}, Location{}, err
 	}
 
-	if !entity.Exported {
-		return Entity{}, Location{}, ErrEntityNotExported
+	if !entity.IsPublic {
+		return Entity{}, Location{}, ErrEntityNotPub
 	}
 
 	return entity, Location{
-		PkgName:  realImportPkgName,
+		PkgName:  pkgImport.PkgName,
 		FileName: fileName,
 	}, nil
+}
+
+// Entity does not return package because calleer knows it, passed entityRef contains it.
+// Note that this method does not know anything about imports, builtins or anything like that.
+// entityRef passed must be absolute (full, "real") path to the entity.
+func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
+	pkg, ok := mod.Packages[entityRef.Pkg]
+	if !ok {
+		return Entity{}, "", fmt.Errorf("%w: %s", ErrPkgNotFound, entityRef.Pkg)
+	}
+	for filename, file := range pkg {
+		entity, ok := file.Entities[entityRef.Name]
+		if ok {
+			return entity, filename, nil
+		}
+	}
+	return Entity{}, "", ErrEntityNotFound
 }

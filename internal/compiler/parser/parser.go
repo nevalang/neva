@@ -3,7 +3,6 @@
 package parser
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -23,22 +22,34 @@ type Parser struct {
 	isDebug bool
 }
 
-func (p Parser) ParseManifest(raw []byte) (src.Manifest, error) {
-	var result src.Manifest
+func (p Parser) ParseManifest(raw []byte) (src.ModuleManifest, error) {
+	var result src.ModuleManifest
 	if err := yaml.Unmarshal(raw, &result); err != nil {
-		return src.Manifest{}, fmt.Errorf("yaml unmarshal: %w", err)
+		return src.ModuleManifest{}, fmt.Errorf("yaml unmarshal: %w", err)
 	}
 	return result, nil
 }
 
-func (p Parser) ParsePackages(
-	ctx context.Context,
-	rawPackages map[string]compiler.RawPackage,
-) (map[string]src.Package, error) {
-	packages := make(map[string]src.Package, len(rawPackages))
+func (p Parser) ParseModules(rawMods map[src.ModuleRef]compiler.RawModule) (map[src.ModuleRef]src.Module, error) {
+	parsedMods := make(map[src.ModuleRef]src.Module, len(rawMods))
+	for modRef, rawMod := range rawMods {
+		parsedPkgs, err := p.ParsePackages(rawMod.Packages)
+		if err != nil {
+			return nil, err
+		}
+		parsedMods[modRef] = src.Module{
+			Manifest: rawMod.Manifest,
+			Packages: parsedPkgs,
+		}
+	}
+	return parsedMods, nil
+}
 
-	for pkgName, pkgFiles := range rawPackages {
-		parsedFiles, err := p.ParseFiles(ctx, pkgFiles)
+func (p Parser) ParsePackages(rawPkgs map[string]compiler.RawPackage) (map[string]src.Package, error) {
+	packages := make(map[string]src.Package, len(rawPkgs))
+
+	for pkgName, pkgFiles := range rawPkgs {
+		parsedFiles, err := p.ParseFiles(pkgFiles)
 		if err != nil {
 			return nil, fmt.Errorf("parse files: %w", err)
 		}
@@ -49,13 +60,13 @@ func (p Parser) ParsePackages(
 	return packages, nil
 }
 
-func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[string]src.File, error) {
+func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, error) {
 	result := make(map[string]src.File, len(files))
 
 	for name, bb := range files { // TODO parse in parallel
 		name := name
 		bb := bb
-		v, err := p.ParseFile(ctx, bb)
+		v, err := p.ParseFile(bb)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +76,7 @@ func (p Parser) ParseFiles(ctx context.Context, files map[string][]byte) (map[st
 	return result, nil
 }
 
-func (p Parser) ParseFile(ctx context.Context, bb []byte) (src.File, error) {
+func (p Parser) ParseFile(bb []byte) (src.File, error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	tokenStream := antlr.NewCommonTokenStream(lexer, 0)

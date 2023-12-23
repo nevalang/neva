@@ -10,7 +10,7 @@ import (
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 	s.file.Entities = map[string]src.Entity{}
-	s.file.Imports = map[string]string{}
+	s.file.Imports = map[string]src.Import{}
 }
 
 /* --- Import --- */
@@ -18,29 +18,31 @@ func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 func (s *treeShapeListener) EnterUseStmt(actx *generated.ImportStmtContext) {
 	imports := actx.AllImportDef()
 	if len(s.file.Imports) == 0 { // there could be multiple use statements in the file
-		s.file.Imports = make(map[string]string, len(imports))
+		s.file.Imports = make(map[string]src.Import, len(imports))
 	}
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	path := actx.ImportPath().GetText()
+	path := strings.Split(actx.ImportPath().GetText(), "/")
 
 	var alias string
 	if id := actx.IDENTIFIER(); id != nil {
 		alias = actx.IDENTIFIER().GetText()
 	} else {
-		ss := strings.Split(path, "/")
-		alias = ss[len(ss)-1]
+		alias = path[len(path)-1]
 	}
 
-	s.file.Imports[alias] = path
+	s.file.Imports[alias] = src.Import{
+		ModuleName: path[0],
+		PkgName:    strings.Join(path[1:], "/"),
+	}
 }
 
 /* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 	result := src.Entity{
-		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
+		IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()).Params,
@@ -72,7 +74,7 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 	parsedMsg.TypeExpr = *typeExpr
 
 	s.file.Entities[name] = src.Entity{
-		Exported: actx.PUB_KW() != nil, //nolint:nosnakecase
+		IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.ConstEntity,
 		Const: src.Const{
 			Value: &parsedMsg,
@@ -97,7 +99,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	for _, interfaceDef := range actx.AllInterfaceDef() {
 		name := interfaceDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = src.Entity{
-			Exported:  interfaceDef.PUB_KW() != nil, //nolint:nosnakecase
+			IsPublic:  interfaceDef.PUB_KW() != nil, //nolint:nosnakecase
 			Kind:      src.InterfaceEntity,
 			Interface: parseInterfaceDef(interfaceDef),
 		}
@@ -113,7 +115,7 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	var cmp src.Entity
 	if actx.CompBody() == nil {
 		cmp = src.Entity{
-			Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
+			IsPublic: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
 			Kind:     src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
@@ -126,7 +128,7 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 			panic("nodesDef == nil")
 		}
 		cmp = src.Entity{
-			Exported: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
+			IsPublic: actx.InterfaceDef().PUB_KW() != nil, //nolint:nosnakecase
 			Kind:     src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,

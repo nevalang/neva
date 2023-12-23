@@ -6,11 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/pkg/utils"
 )
 
 type Generator struct{}
@@ -26,10 +26,14 @@ var (
 	ErrNodeUsageNotFound = errors.New("node usage not found")
 )
 
-func (g Generator) Generate(ctx context.Context, mod src.Module, mainPkgName string) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, error) {
 	initialScope := src.Scope{
-		Module:   mod,
-		Location: src.Location{PkgName: mainPkgName}, // we don't need a filename to resolve local entity ref
+		Build: build,
+		Location: src.Location{
+			ModRef:   build.EntryModRef,
+			PkgName:  mainPkgName,
+			FileName: "", // we don't know at this point and we don't need to
+		},
 	}
 
 	result := &ir.Program{
@@ -96,24 +100,12 @@ func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, error) {
 		return nil, nil
 	}
 
-	var constRefParsed src.EntityRef
-	parts := strings.Split(args[0], ".")
-	if len(parts) == 1 {
-		constRefParsed.Name = parts[0]
-	} else {
-		constRefParsed.Pkg = parts[0]
-		constRefParsed.Name = parts[1]
-	}
-
-	entity, location, err := scope.Entity(constRefParsed)
+	entity, location, err := scope.Entity(utils.ParseRef(args[0]))
 	if err != nil {
 		return nil, err
 	}
 
-	return getIRMsgBySrcRef(entity.Const, src.Scope{
-		Location: location,
-		Module:   scope.Module,
-	})
+	return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
 }
 
 func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, error) { //nolint:funlen
@@ -122,40 +114,35 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, error) { //
 		if err != nil {
 			return nil, err
 		}
-
-		return getIRMsgBySrcRef(entity.Const, src.Scope{
-			Location: location,
-			Module:   scope.Module,
-		})
+		return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
 	}
 
-	v := constant.Value
 	//nolint:nosnakecase
 	switch {
-	case v.Bool != nil:
+	case constant.Value.Bool != nil:
 		return &ir.Msg{
 			Type: ir.MsgType_MSG_TYPE_BOOL,
-			Bool: *v.Bool,
+			Bool: *constant.Value.Bool,
 		}, nil
-	case v.Int != nil:
+	case constant.Value.Int != nil:
 		return &ir.Msg{
 			Type: ir.MsgType_MSG_TYPE_INT,
-			Int:  int64(*v.Int),
+			Int:  int64(*constant.Value.Int),
 		}, nil
-	case v.Float != nil:
+	case constant.Value.Float != nil:
 		return &ir.Msg{
 			Type:  ir.MsgType_MSG_TYPE_FLOAT,
-			Float: *v.Float,
+			Float: *constant.Value.Float,
 		}, nil
-	case v.Str != nil:
+	case constant.Value.Str != nil:
 		return &ir.Msg{
 			Type: ir.MsgType_MSG_TYPE_STR,
-			Str:  *v.Str,
+			Str:  *constant.Value.Str,
 		}, nil
-	case v.List != nil:
-		listMsg := make([]*ir.Msg, len(v.List))
+	case constant.Value.List != nil:
+		listMsg := make([]*ir.Msg, len(constant.Value.List))
 
-		for i, el := range v.List {
+		for i, el := range constant.Value.List {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err
@@ -167,10 +154,10 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, error) { //
 			Type: ir.MsgType_MSG_TYPE_LIST,
 			List: listMsg,
 		}, nil
-	case v.Map != nil:
-		mapMsg := make(map[string]*ir.Msg, len(v.Map))
+	case constant.Value.Map != nil:
+		mapMsg := make(map[string]*ir.Msg, len(constant.Value.Map))
 
-		for name, el := range v.Map {
+		for name, el := range constant.Value.Map {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err
@@ -206,10 +193,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 	runtimeFuncRef, isRuntimeFunc := getRuntimeFunc(component)
 	if isRuntimeFunc {
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, src.Scope{
-			Location: location,
-			Module:   scope.Module,
-		})
+		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope.WithLocation(location))
 		if err != nil {
 			return err
 		}

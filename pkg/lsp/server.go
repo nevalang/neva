@@ -24,28 +24,22 @@ type Server struct {
 	indexer indexer.Indexer
 
 	mu    *sync.Mutex
-	state *State
-}
-
-type State struct {
-	mod src.Module
+	index *src.Build
 }
 
 // setState allows to update state in a thread-safe manner.
-func (s *Server) setState(mod src.Module) {
+func (s *Server) saveIndex(build src.Build) {
 	s.mu.Lock()
-	s.state = &State{
-		mod: mod,
-	}
+	s.index = &build
 	s.mu.Unlock()
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	prog, analyzerErr, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
+	build, analyzerErr, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
 	if err != nil {
 		return fmt.Errorf("%w: index", err)
 	}
-	s.setState(prog)
+	s.saveIndex(build)
 
 	if analyzerErr == nil {
 		notify(

@@ -1,14 +1,14 @@
 import { useEffect, useState, createContext } from "react";
 import { Editor } from "./editor/editor";
 import { FileViewState, getFileViewState } from "../core/file_view_state";
-import { ResolveFileResponce } from "../generated/lsp_api";
+import { GetFileViewResponce } from "../generated/lsp_api";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Entity } from "../components/entity";
 
 const vscodeApi = acquireVsCodeApi<VSCodePersistentState>();
 
 export interface IFileContext {
-  resp: ResolveFileResponce;
+  resp: GetFileViewResponce;
   state: FileViewState;
 }
 
@@ -16,7 +16,7 @@ export interface IFileContext {
 export const FileContext = createContext<IFileContext>(undefined as any);
 
 export interface VSCodePersistentState {
-  resp: ResolveFileResponce;
+  resp: GetFileViewResponce;
   pathname: string;
 }
 
@@ -25,7 +25,7 @@ export default function App() {
   const [resp, setResp] = useState(persistentState?.resp);
 
   useEffect(() => {
-    const listener = (event: { data: ResolveFileResponce }) => {
+    const listener = (event: { data: GetFileViewResponce }) => {
       vscodeApi.setState({
         resp: event.data!,
         pathname: persistentState?.pathname || "/",

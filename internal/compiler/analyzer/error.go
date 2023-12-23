@@ -38,8 +38,9 @@ func (e Error) Merge(prefer *Error) *Error {
 		if e.Location == nil {
 			e.Location = prefer.Location
 		} else {
-			if prefer.Location.ModuleName != "" {
-				e.Location.ModuleName = prefer.Location.ModuleName
+			if prefer.Location.ModRef.Name != "" {
+				e.Location.ModRef.Name = prefer.Location.ModRef.Name
+				e.Location.ModRef.Version = prefer.Location.ModRef.Version
 			}
 			if prefer.Location.PkgName != "" {
 				e.Location.PkgName = prefer.Location.PkgName

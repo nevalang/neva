@@ -9,7 +9,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/tliron/commonlog"
 )
 
 type Indexer struct {
@@ -17,37 +16,35 @@ type Indexer struct {
 	parser    parser.Parser
 	desugarer desugarer.Desugarer
 	analyzer  analyzer.Analyzer
-	logger    commonlog.Logger
 }
 
-func (i Indexer) FullIndex(ctx context.Context, path string) (mod src.Module, analyzerErr *analyzer.Error, err error) {
-	build, err := i.builder.Build(ctx, path)
+func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *analyzer.Error, error) {
+	rawBuild, err := i.builder.Build(ctx, path)
 	if err != nil {
-		return src.Module{}, nil, fmt.Errorf("builder: %w", err)
+		return src.Build{}, nil, fmt.Errorf("builder: %w", err)
 	}
 
-	rawMod := build.Modules[build.EntryModule] // TODO use all mods
-
-	parsedPkgs, err := i.parser.ParsePackages(ctx, rawMod.Packages)
+	parsedMods, err := i.parser.ParseModules(rawBuild.Modules)
 	if err != nil {
-		return src.Module{}, nil, fmt.Errorf("parse prog: %w", err)
+		return src.Build{}, nil, fmt.Errorf("parse prog: %w", err)
 	}
 
-	mod = src.Module{
-		Manifest: rawMod.Manifest,
-		Packages: parsedPkgs,
+	parsedBuild := src.Build{
+		EntryModRef: rawBuild.EntryModRef,
+		Modules:     parsedMods,
 	}
 
-	// we interpret analyzer error as a message, not failure
-	if _, err = i.analyzer.Analyze(mod); err != nil {
-		analyzerErr, ok := err.(*analyzer.Error) // FIXME for some reason we loose info after cast
-		if !ok {
-			i.logger.Errorf("Analyzer returned an error of unexpected type: %T", err)
-		}
-		return mod, analyzerErr, nil
+	_, err = i.analyzer.AnalyzeBuild(parsedBuild)
+	if err == nil {
+		return parsedBuild, nil, nil
 	}
 
-	return mod, nil, nil
+	analyzerErr, ok := err.(*analyzer.Error)
+	if !ok {
+		return src.Build{}, nil, fmt.Errorf("cast analyzer err: %w", err)
+	}
+
+	return parsedBuild, analyzerErr, nil
 }
 
 func New(
@@ -55,13 +52,11 @@ func New(
 	parser parser.Parser,
 	desugarer desugarer.Desugarer,
 	analyzer analyzer.Analyzer,
-	logger commonlog.Logger,
 ) Indexer {
 	return Indexer{
 		builder:   builder,
 		parser:    parser,
 		desugarer: desugarer,
 		analyzer:  analyzer,
-		logger:    logger,
 	}
 }
