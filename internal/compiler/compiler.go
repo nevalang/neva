@@ -18,30 +18,30 @@ type Compiler struct {
 
 type (
 	Parser interface {
-		ParsePackages(context.Context, map[string]RawPackage) (map[string]src.Package, error)
+		ParseModules(rawMods map[src.ModuleRef]RawModule) (map[src.ModuleRef]src.Module, error)
 	}
 
 	RawPackage map[string][]byte
 
 	Desugarer interface {
-		Desugar(prog src.Module) (src.Module, error)
+		Desugar(build src.Build) (src.Build, error)
 	}
 
 	Analyzer interface {
-		AnalyzeExecutable(prog src.Module, mainPkg string) (src.Module, error)
+		AnalyzeExecutableBuild(mod src.Build, mainPkgName string) (src.Build, error)
 	}
 
 	IRGenerator interface {
-		Generate(ctx context.Context, mod src.Module, mainPkgName string) (*ir.Program, error)
+		Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, error)
 	}
 
-	Build struct {
+	RawBuild struct {
 		EntryModRef src.ModuleRef
 		Modules     map[src.ModuleRef]RawModule
 	}
 
 	RawModule struct {
-		Manifest src.Manifest          // Manifest must be parsed by builder before passing into compiler
+		Manifest src.ModuleManifest    // Manifest must be parsed by builder before passing into compiler
 		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
 	}
 )
@@ -54,37 +54,35 @@ const (
 
 func (c Compiler) Compile(
 	ctx context.Context,
-	build Build,
+	rawBuild RawBuild,
 	workdirPath string,
 	mainPkgName string,
 ) (*ir.Program, error) {
-	rawMod := build.Modules[build.EntryModRef]
+	parsedMods, err := c.parser.ParseModules(rawBuild.Modules)
+	if err != nil {
+		return nil, fmt.Errorf("parse: %w", err)
+	}
+
+	parsedBuild := src.Build{
+		EntryModRef: rawBuild.EntryModRef,
+		Modules:     parsedMods,
+	}
+
+	desugaredBuild, err := c.desugarer.Desugar(parsedBuild)
+	if err != nil {
+		return nil, fmt.Errorf("analyzer: %w", err)
+	}
 
 	if strings.HasPrefix(mainPkgName, "./") {
 		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
 	}
 
-	parsedPackages, err := c.parser.ParsePackages(ctx, rawMod.Packages)
-	if err != nil {
-		return nil, fmt.Errorf("parse: %w", err)
-	}
-
-	mod := src.Module{
-		Manifest: rawMod.Manifest,
-		Packages: parsedPackages,
-	}
-
-	desugaredMod, err := c.desugarer.Desugar(mod)
+	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(desugaredBuild, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("analyzer: %w", err)
 	}
 
-	analyzedProg, err := c.analyzer.AnalyzeExecutable(desugaredMod, mainPkgName)
-	if err != nil {
-		return nil, fmt.Errorf("analyzer: %w", err)
-	}
-
-	irProg, err := c.irgen.Generate(ctx, analyzedProg, mainPkgName)
+	irProg, err := c.irgen.Generate(ctx, analyzedBuild, mainPkgName)
 	if err != nil {
 		return nil, fmt.Errorf("generate IR: %w", err)
 	}

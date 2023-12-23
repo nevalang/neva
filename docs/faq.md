@@ -225,12 +225,6 @@ import {
 
 That actually could solve the issue. The problem is that now we have to update the source code _each time we update our dependency_. That's a bad solution. We simply made probramming harder to avoid working on a compiler. We can do better.
 
-```
-# github.com/nevalang/x/neva.yml
-deps:
-    - github.com/.../x 1.0.0
-```
-
 ## FBP
 
 ### Is Neva "classical FBP"?

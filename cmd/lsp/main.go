@@ -45,8 +45,7 @@ func main() {
 		builder,
 		p,
 		desugarer.Desugarer{},
-		analyzer.MustNew(resolver),
-		logger,
+		analyzer.MustNew("0.0.1", resolver),
 	)
 
 	handler := lsp.BuildHandler(logger, serverName, indexer)

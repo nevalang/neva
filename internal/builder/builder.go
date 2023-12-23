@@ -15,15 +15,15 @@ type Builder struct {
 }
 
 type Parser interface {
-	ParseManifest(raw []byte) (src.Manifest, error)
+	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
-func (b Builder) Build(ctx context.Context, workdir string) (compiler.Build, error) {
+func (b Builder) Build(ctx context.Context, workdir string) (compiler.RawBuild, error) {
 	mods := map[src.ModuleRef]compiler.RawModule{}
 
 	entryMod, err := b.buildModule(ctx, workdir)
 	if err != nil {
-		return compiler.Build{}, fmt.Errorf("build entry mod: %w", err)
+		return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 	}
 	mods[src.ModuleRef{Name: "entry"}] = entryMod
 
@@ -38,12 +38,12 @@ func (b Builder) Build(ctx context.Context, workdir string) (compiler.Build, err
 
 		depPath, err := b.downloadDep(depModRef)
 		if err != nil {
-			return compiler.Build{}, fmt.Errorf("download dep: %w", err)
+			return compiler.RawBuild{}, fmt.Errorf("download dep: %w", err)
 		}
 
 		depMod, err := b.buildModule(ctx, depPath)
 		if err != nil {
-			return compiler.Build{}, fmt.Errorf("build entry mod: %w", err)
+			return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 		}
 
 		mods[depModRef] = depMod
@@ -53,11 +53,11 @@ func (b Builder) Build(ctx context.Context, workdir string) (compiler.Build, err
 
 	stdMod, err := b.buildModule(ctx, b.stdLibLocation)
 	if err != nil {
-		return compiler.Build{}, fmt.Errorf("build stdlib mod: %w", err)
+		return compiler.RawBuild{}, fmt.Errorf("build stdlib mod: %w", err)
 	}
 	mods[src.ModuleRef{Name: "std"}] = stdMod
 
-	return compiler.Build{
+	return compiler.RawBuild{
 		EntryModRef: src.ModuleRef{Name: "entry"},
 		Modules:     mods,
 	}, nil

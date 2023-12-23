@@ -14,7 +14,7 @@ import (
 type Handler struct {
 	*protocol.Handler
 
-	ResolveFile func(glspCtx *glsp.Context, params ResolveFileRequest) (ResolveFileResponce, error)
+	GetFileView func(glspCtx *glsp.Context, params GetFileViewRequest) (GetFileViewResponce, error)
 }
 
 func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, validParams bool, err error) {
@@ -23,12 +23,12 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 	}
 
 	if glspCtx.Method == "resolve_file" {
-		var params ResolveFileRequest
+		var params GetFileViewRequest
 		if err := json.Unmarshal(glspCtx.Params, &params); err != nil {
 			return nil, true, false, err
 		}
 
-		resp, err := h.ResolveFile(glspCtx, params)
+		resp, err := h.GetFileView(glspCtx, params)
 		if err != nil {
 			return nil, true, true, err
 		}
@@ -52,7 +52,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		version: "0.0.1",
 		indexer: indexer,
 		mu:      &sync.Mutex{},
-		state:   nil,
+		index:   nil,
 	}
 
 	// Basic
@@ -74,7 +74,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	h.SetTrace = s.SetTrace
 
 	// Custom handlers
-	h.ResolveFile = s.ResolveFile
+	h.GetFileView = s.GetFileView
 
 	// Rest...
 	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {

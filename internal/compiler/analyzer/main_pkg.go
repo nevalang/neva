@@ -14,65 +14,54 @@ var (
 	ErrMainPkgExports           = errors.New("Main package must cannot have exported entities")
 )
 
-//nolint:funlen
-func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module) *Error {
+func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *Error {
 	mainPkg := mod.Packages[mainPkgName]
 
-	fallbackLocation := &src.Location{
-		ModuleName: "entry",
-		PkgName:    mainPkgName,
+	location := &src.Location{
+		ModRef:  scope.Location.ModRef,
+		PkgName: mainPkgName,
 	}
 
 	entityMain, filename, ok := mainPkg.Entity("Main")
 	if !ok {
 		return &Error{
 			Err:      ErrMainEntityNotFound,
-			Location: fallbackLocation,
+			Location: location,
 		}
 	}
 
-	fallbackLocation.FileName = filename
+	location.FileName = filename
 
 	if entityMain.Kind != src.ComponentEntity {
 		return &Error{
 			Err:      ErrMainEntityIsNotComponent,
-			Location: fallbackLocation,
+			Location: location,
 		}
 	}
 
-	if entityMain.Exported {
+	if entityMain.IsPublic {
 		return &Error{
 			Err:      ErrMainEntityExported,
-			Location: fallbackLocation,
+			Location: location,
 			Meta:     &entityMain.Component.Meta,
 		}
 	}
 
-	scope := src.Scope{
-		Module: mod,
-		Location: src.Location{
-			PkgName:  mainPkgName,
-			FileName: filename,
-		},
-	}
+	scope = scope.WithLocation(*location)
 
 	if err := a.analyzeMainComponent(entityMain.Component, mainPkg, scope); err != nil {
 		return Error{
-			Location: fallbackLocation,
+			Location: location,
 			Meta:     &entityMain.Component.Meta,
 		}.Merge(err)
 	}
 
 	if err := mainPkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		if entity.Exported {
+		if entity.IsPublic {
 			return &Error{
-				Err:  fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
-				Meta: entity.Meta(),
-				Location: &src.Location{
-					ModuleName: "entry",
-					PkgName:    mainPkgName,
-					FileName:   filename,
-				},
+				Err:      fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
+				Meta:     entity.Meta(),
+				Location: location,
 			}
 		}
 		return nil

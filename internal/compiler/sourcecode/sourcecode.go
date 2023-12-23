@@ -8,12 +8,17 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
+type Build struct {
+	EntryModRef ModuleRef
+	Modules     map[ModuleRef]Module
+}
+
 type Module struct {
-	Manifest Manifest           `json:"manifest,omitempty"`
+	Manifest ModuleManifest     `json:"manifest,omitempty"`
 	Packages map[string]Package `json:"packages,omitempty"`
 }
 
-type Manifest struct {
+type ModuleManifest struct {
 	WantCompilerVersion string               `json:"compiler,omitempty" yaml:"compiler,omitempty"`
 	Deps                map[string]ModuleRef `json:"deps,omitempty"     yaml:"deps,omitempty"`
 }
@@ -23,32 +28,7 @@ type ModuleRef struct {
 	Version string `json:"version,omitempty"`
 }
 
-var (
-	ErrPkgNotFound    = fmt.Errorf("package not found")
-	ErrEntityNotFound = fmt.Errorf("entity not found")
-)
-
-// Entity does not return package because calleer knows it, passed entityRef contains it.
-// Note that this method does not know anything about imports, builtins or anything like that.
-// entityRef passed must be absolute (full, "real") path to the entity.
-func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
-	pkg, ok := mod.Packages[entityRef.Pkg]
-	if !ok {
-		return Entity{}, "", fmt.Errorf("%w: %s", ErrPkgNotFound, entityRef.Pkg)
-	}
-	for filename, file := range pkg {
-		entity, ok := file.Entities[entityRef.Name]
-		if ok {
-			return entity, filename, nil
-		}
-	}
-	return Entity{}, "", ErrEntityNotFound
-}
-
-func (mod Module) FilenameByEntityRef(entityRef EntityRef) (string, error) {
-	_, fileName, err := mod.Entity(entityRef)
-	return fileName, err
-}
+var ErrEntityNotFound = fmt.Errorf("entity not found")
 
 type Package map[string]File
 
@@ -76,12 +56,17 @@ func (p Package) Entities(f func(entity Entity, entityName string, fileName stri
 }
 
 type File struct {
-	Imports  map[string]string `json:"imports,omitempty"`
+	Imports  map[string]Import `json:"imports,omitempty"`
 	Entities map[string]Entity `json:"entities,omitempty"`
 }
 
+type Import struct {
+	ModuleName string `json:"moduleName,omitempty"`
+	PkgName    string `json:"pkgName,omitempty"`
+}
+
 type Entity struct {
-	Exported  bool       `json:"exported,omitempty"`
+	IsPublic  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
 	Const     Const      `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`

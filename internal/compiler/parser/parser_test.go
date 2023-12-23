@@ -1,8 +1,6 @@
-// Package parser implements source code parsing.
 package parser_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -12,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// We need unit tests for parser because it contains not only antlr grammar but also mapping logic.
 func TestParser_ParseFile(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -30,10 +29,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{
-					"tmp":        "std/tmp",
-					"typesystem": "github.com/nevalang/neva/pkg/typesystem",
-					"project":    "some/really/deeply/nested/path/to/local/package/at/the/project",
+				Imports: map[string]src.Import{
+					"tmp":        {PkgName: "std/tmp"},
+					"typesystem": {PkgName: "github.com/nevalang/neva/pkg/typesystem"},
+					"project":    {PkgName: "some/really/deeply/nested/path/to/local/package/at/the/project"},
 				},
 				Entities: map[string]src.Entity{},
 			},
@@ -46,8 +45,8 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{
-					"project": "package/in/the/project",
+				Imports: map[string]src.Import{
+					"project": {PkgName: "package/in/the/project"},
 				},
 				Entities: map[string]src.Entity{},
 			},
@@ -60,8 +59,8 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{
-					"pkg": "pkg",
+				Imports: map[string]src.Import{
+					"pkg": {PkgName: "pkg"},
 				},
 				Entities: map[string]src.Entity{},
 			},
@@ -78,10 +77,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{
-					"dupl":      "dupl",
-					"parts":     "path/with/parts",
-					"withalias": "@/local/path/with/parts",
+				Imports: map[string]src.Import{
+					"dupl":      {PkgName: "dupl"},
+					"parts":     {PkgName: "path/with/parts"},
+					"withalias": {PkgName: "@/local/path/with/parts"},
 				},
 				Entities: map[string]src.Entity{},
 			},
@@ -98,9 +97,9 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{
-					"foo": "foo",
-					"bar": "bar",
+				Imports: map[string]src.Import{
+					"foo": {PkgName: "foo"},
+					"bar": {PkgName: "bar"},
 				},
 				Entities: map[string]src.Entity{},
 			},
@@ -116,10 +115,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{},
+				Imports: map[string]src.Import{},
 				Entities: map[string]src.Entity{
 					"IReader": {
-						Exported: false,
+						IsPublic: false,
 						Kind:     src.InterfaceEntity,
 						Interface: src.Interface{
 							IO: src.IO{
@@ -155,7 +154,7 @@ func TestParser_ParseFile(t *testing.T) {
 						},
 					},
 					"IWriter": {
-						Exported: false,
+						IsPublic: false,
 						Kind:     src.InterfaceEntity,
 						Interface: src.Interface{
 							IO: src.IO{
@@ -204,10 +203,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{},
+				Imports: map[string]src.Import{},
 				Entities: map[string]src.Entity{
 					"SomeStruct": {
-						Exported: false,
+						IsPublic: false,
 						Kind:     src.TypeEntity,
 						Type: ts.Def{
 							Params: nil,
@@ -232,10 +231,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{},
+				Imports: map[string]src.Import{},
 				Entities: map[string]src.Entity{
 					"SomeStruct": {
-						Exported: false,
+						IsPublic: false,
 						Kind:     src.TypeEntity,
 						Type: ts.Def{
 							Params: nil,
@@ -264,10 +263,10 @@ func TestParser_ParseFile(t *testing.T) {
 				}
 			`),
 			want: src.File{
-				Imports: map[string]string{},
+				Imports: map[string]src.Import{},
 				Entities: map[string]src.Entity{
 					"pi": {
-						Exported: false,
+						IsPublic: false,
 						Kind:     src.ConstEntity,
 						Const: src.Const{
 							Value: &src.Msg{
@@ -290,7 +289,7 @@ func TestParser_ParseFile(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := p.ParseFile(context.Background(), tt.bb)
+			got, err := p.ParseFile(tt.bb)
 			require.Equal(t, tt.want, got)
 			require.ErrorIs(t, err, tt.wantErr)
 		})

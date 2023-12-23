@@ -8,7 +8,7 @@ import (
 	"github.com/tliron/glsp"
 )
 
-type ResolveFileRequest struct {
+type GetFileViewRequest struct {
 	WorkspaceUri URI `json:"workspaceUri"`
 	Document     struct {
 		Uri      URI    `json:"uri"`
@@ -21,7 +21,7 @@ type URI struct {
 	FSPath string `json:"fsPath"`
 }
 
-type ResolveFileResponce struct {
+type GetFileViewResponce struct {
 	File  src.File `json:"file"`
 	Extra Extra    `json:"extra"` // info that is not presented in the file but needed for rendering
 }
@@ -30,9 +30,9 @@ type Extra struct {
 	NodesPorts map[string]map[string]src.Interface `json:"nodesPorts"` // components -> nodes -> interface
 }
 
-func (s *Server) ResolveFile(glspCtx *glsp.Context, req ResolveFileRequest) (ResolveFileResponce, error) {
-	if s.state == nil {
-		return ResolveFileResponce{}, nil
+func (s *Server) GetFileView(glspCtx *glsp.Context, req GetFileViewRequest) (GetFileViewResponce, error) {
+	if s.index == nil {
+		return GetFileViewResponce{}, nil
 	}
 
 	relFilePath := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
@@ -47,29 +47,29 @@ func (s *Server) ResolveFile(glspCtx *glsp.Context, req ResolveFileRequest) (Res
 
 	scope := src.Scope{
 		Location: src.Location{
-			ModuleName: "entry",
-			PkgName:    pkgName,
-			FileName:   fileName,
+			ModRef:   s.index.EntryModRef,
+			PkgName:  pkgName,
+			FileName: fileName,
 		},
-		Module: s.state.mod,
+		Build: *s.index,
 	}
 
-	pkg, ok := s.state.mod.Packages[pkgName]
+	pkg, ok := s.index.Modules[s.index.EntryModRef].Packages[pkgName]
 	if !ok {
-		return ResolveFileResponce{}, errors.New("no such package: " + pkgName)
+		return GetFileViewResponce{}, errors.New("no such package: " + pkgName)
 	}
 
 	file, ok := pkg[fileName]
 	if !ok {
-		return ResolveFileResponce{}, errors.New("no such file: " + fileName + "." + pkgName)
+		return GetFileViewResponce{}, errors.New("no such file: " + fileName + "." + pkgName)
 	}
 
 	extra, err := getExtraForFile(file, scope)
 	if err != nil {
-		return ResolveFileResponce{}, err
+		return GetFileViewResponce{}, err
 	}
 
-	return ResolveFileResponce{
+	return GetFileViewResponce{
 		File: file,
 		Extra: Extra{
 			NodesPorts: extra,

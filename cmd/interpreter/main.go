@@ -43,7 +43,7 @@ func main() {
 
 	// compiler
 	desugarer := desugarer.Desugarer{}
-	analyzer := analyzer.MustNew(resolver)
+	analyzer := analyzer.MustNew("0.0.1", resolver)
 	irgen := irgen.New()
 	prsr := parser.MustNew(false)
 	comp := compiler.New(

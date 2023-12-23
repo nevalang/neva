@@ -1,4 +1,4 @@
-import { ResolveFileResponce } from "../generated/lsp_api";
+import { GetFileViewResponce } from "../generated/lsp_api";
 import * as src from "../generated/sourcecode";
 import * as ts from "../generated/typesystem";
 
@@ -28,7 +28,7 @@ export interface NodesViewState {
 }
 
 export function getFileViewState(
-  state: ResolveFileResponce | undefined
+  state: GetFileViewResponce | undefined
 ): FileViewState {
   const result: FileViewState = {
     imports: [],

@@ -15,64 +15,123 @@ import (
 )
 
 var (
-	ErrEmptyProgram      = errors.New("Program cannot be empty")
+	ErrModuleWithoutPkgs = errors.New("Module must contain at least one package")
+	ErrEntryModNotFound  = errors.New("Entry module is not found")
 	ErrMainPkgNotFound   = errors.New("Main package is not found")
-	ErrEmptyPkg          = errors.New("Package cannot be empty")
+	ErrPkgWithoutFiles   = errors.New("Package must contain at least one file")
 	ErrUnknownEntityKind = errors.New("Entity kind can only be either component, interface, type of constant")
+	ErrCompilerVersion   = errors.New("Incompatible compiler version")
 )
 
 type Analyzer struct {
-	resolver ts.Resolver
+	compilerVersion string
+	resolver        ts.Resolver
 }
 
-func (a Analyzer) AnalyzeExecutable(mod src.Module, mainPkgName string) (src.Module, error) {
-	rootLocation := &src.Location{
-		ModuleName: "entry",
-		PkgName:    mainPkgName,
+func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, error) {
+	location := src.Location{
+		ModRef:  build.EntryModRef,
+		PkgName: mainPkgName,
 	}
 
-	if _, ok := mod.Packages[mainPkgName]; !ok {
-		return src.Module{}, Error{
-			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
-			Location: rootLocation,
+	entryMod, ok := build.Modules[build.EntryModRef]
+	if !ok {
+		return src.Build{}, Error{
+			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
+			Location: &location,
 		}
 	}
 
-	if err := a.mainSpecificPkgValidation(mainPkgName, mod); err.Err != nil {
-		return src.Module{}, Error{Location: rootLocation}.Merge(err)
+	if _, ok := entryMod.Packages[mainPkgName]; !ok {
+		return src.Build{}, Error{
+			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
+			Location: &location,
+		}
 	}
 
-	analyzedPkgs, err := a.Analyze(mod)
+	scope := src.Scope{
+		Location: location,
+		Build:    build,
+	}
+
+	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err.Err != nil {
+		return src.Build{}, Error{Location: &location}.Merge(err)
+	}
+
+	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
 		aerr := err.(Error) //nolint:forcetypeassert
-		return src.Module{}, Error{Location: rootLocation}.Merge(&aerr)
+		return src.Build{}, Error{Location: &location}.Merge(&aerr)
 	}
 
-	return src.Module{
-		Manifest: mod.Manifest,
-		Packages: analyzedPkgs,
+	return analyzedBuild, nil
+}
+
+func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
+	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
+
+	for modRef, mod := range build.Modules {
+		if mod.Manifest.WantCompilerVersion != a.compilerVersion {
+			return src.Build{}, &Error{
+				Err: fmt.Errorf(
+					"%w: module %v wants %v while current is %v",
+					ErrCompilerVersion,
+					modRef, mod.Manifest.WantCompilerVersion, a.compilerVersion,
+				),
+			}
+		}
+
+		analyzedPkgs, err := a.analyzeModule(modRef, build)
+		if err != nil {
+			return src.Build{}, &Error{
+				Err: fmt.Errorf(
+					"%w: module %v wants %v while current is %v",
+					ErrCompilerVersion,
+					modRef, mod.Manifest.WantCompilerVersion, a.compilerVersion,
+				),
+			}
+		}
+
+		analyzedMods[modRef] = src.Module{
+			Manifest: mod.Manifest,
+			Packages: analyzedPkgs,
+		}
+	}
+
+	return src.Build{
+		EntryModRef: build.EntryModRef,
+		Modules:     analyzedMods,
 	}, nil
 }
 
-func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
-	if len(mod.Packages) == 0 { // Analyze can be called directly so we need to check emptiness here
-		return nil, &Error{Err: ErrEmptyProgram}
+func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *Error) {
+	location := src.Location{ModRef: modRef}
+	mod := build.Modules[modRef]
+
+	if len(mod.Packages) == 0 {
+		return nil, &Error{
+			Err:      ErrModuleWithoutPkgs,
+			Location: &location,
+		}
 	}
 
 	pkgsCopy := make(map[string]src.Package, len(mod.Packages))
 	maps.Copy(pkgsCopy, mod.Packages)
-	modCopy := src.Module{
-		Manifest: mod.Manifest, // readonly
-		Packages: pkgsCopy,
-	}
 
-	for pkgName := range pkgsCopy {
-		resolvedPkg, err := a.analyzePkg(pkgName, modCopy)
+	for pkgName, pkg := range pkgsCopy {
+		scope := src.Scope{
+			Location: src.Location{
+				ModRef:  modRef,
+				PkgName: pkgName,
+			},
+			Build: build,
+		}
+
+		resolvedPkg, err := a.analyzePkg(pkg, scope)
 		if err != nil {
 			return nil, Error{
 				Location: &src.Location{
-					ModuleName: "entry",
-					PkgName:    pkgName,
+					PkgName: pkgName,
 				},
 			}.Merge(err)
 		}
@@ -83,59 +142,51 @@ func (a Analyzer) Analyze(mod src.Module) (map[string]src.Package, error) {
 	return pkgsCopy, nil
 }
 
-func (a Analyzer) analyzePkg(pkgName string, mod src.Module) (src.Package, *Error) {
-	if len(pkgName) == 0 {
+func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *Error) {
+	if len(pkg) == 0 {
 		return nil, &Error{
-			Err: ErrEmptyPkg,
-			Location: &src.Location{
-				ModuleName: "entry",
-				PkgName:    pkgName,
-			},
+			Err:      ErrPkgWithoutFiles,
+			Location: &scope.Location,
 		}
 	}
 
-	resolvedPkg := make(map[string]src.File, len(pkgName))
-	for fileName, file := range mod.Packages[pkgName] {
-		resolvedPkg[fileName] = src.File{
+	// preallocate
+	analyzedFiles := make(map[string]src.File, len(pkg))
+	for fileName, file := range pkg {
+		analyzedFiles[fileName] = src.File{
 			Imports:  file.Imports,
 			Entities: make(map[string]src.Entity, len(file.Entities)),
 		}
 	}
 
-	if err := mod.Packages[pkgName].Entities(func(entity src.Entity, entityName, fileName string) error {
-		scope := src.Scope{
-			Module: mod,
-			Location: src.Location{
-				PkgName:  pkgName,
-				FileName: fileName,
-			},
-		}
+	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
+		scopeWithFile := scope.WithLocation(src.Location{
+			FileName: fileName,
+			ModRef:   scope.Location.ModRef,
+			PkgName:  scope.Location.PkgName,
+		})
 
-		resolvedEntity, err := a.analyzeEntity(entity, scope)
+		resolvedEntity, err := a.analyzeEntity(entity, scopeWithFile)
 		if err != nil {
 			return Error{
-				Location: &src.Location{
-					ModuleName: "entry",
-					PkgName:    pkgName,
-					FileName:   fileName,
-				},
-				Meta: entity.Meta(),
+				Location: &scopeWithFile.Location,
+				Meta:     entity.Meta(),
 			}.Merge(err)
 		}
 
-		resolvedPkg[fileName].Entities[entityName] = resolvedEntity
+		analyzedFiles[fileName].Entities[entityName] = resolvedEntity
 
 		return nil
 	}); err != nil {
 		return nil, err.(*Error) //nolint:forcetypeassert
 	}
 
-	return resolvedPkg, nil
+	return analyzedFiles, nil
 }
 
 func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *Error) {
 	resolvedEntity := src.Entity{
-		Exported: entity.Exported,
+		IsPublic: entity.IsPublic,
 		Kind:     entity.Kind,
 	}
 
@@ -194,8 +245,9 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	return resolvedEntity, nil
 }
 
-func MustNew(resolver ts.Resolver) Analyzer {
+func MustNew(version string, resolver ts.Resolver) Analyzer {
 	return Analyzer{
-		resolver: resolver,
+		compilerVersion: version,
+		resolver:        resolver,
 	}
 }
