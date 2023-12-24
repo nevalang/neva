@@ -7,12 +7,12 @@ import (
 	_ "github.com/tliron/commonlog/simple"
 	"github.com/tliron/glsp/server"
 
-	"github.com/nevalang/neva/internal/builder"
+	"github.com/nevalang/neva/cmd/language-server/indexer"
+	lspServer "github.com/nevalang/neva/cmd/language-server/server"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/pkg/lsp"
-	"github.com/nevalang/neva/pkg/lsp/indexer"
+	builder "github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -48,7 +48,7 @@ func main() {
 		analyzer.MustNew("0.0.1", resolver),
 	)
 
-	handler := lsp.BuildHandler(logger, serverName, indexer)
+	handler := lspServer.BuildHandler(logger, serverName, indexer)
 
 	srv := server.NewServer(
 		handler,

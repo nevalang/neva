@@ -1,4 +1,4 @@
-package lsp
+package server
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 
+	"github.com/nevalang/neva/cmd/language-server/indexer"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/pkg/lsp/indexer"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Server struct {

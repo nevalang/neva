@@ -1,20 +1,19 @@
-package interpreter
+package main
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
+	builder "github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/vm/decoder/proto"
 )
 
 type Interpreter struct {
-	builder  builder.Builder
+	builder  builder.PkgManager
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
-	adapter  proto.Adapter
+	adapter  Adapter
 }
 
 func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) (int, error) {
@@ -43,9 +42,9 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 
 func New(
 	compiler compiler.Compiler,
-	adapter proto.Adapter,
+	adapter Adapter,
 	runtime runtime.Runtime,
-	builder builder.Builder,
+	builder builder.PkgManager,
 ) Interpreter {
 	return Interpreter{
 		compiler: compiler,

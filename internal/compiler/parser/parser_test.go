@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler/parser"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/utils"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
-	"github.com/nevalang/neva/pkg/utils"
 	"github.com/stretchr/testify/require"
 )
 

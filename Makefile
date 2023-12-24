@@ -12,7 +12,7 @@ ir-proto:
 # build language server and put executable to web/out
 .PHONY: lsp
 lsp:
-	@go build -ldflags="-s -w" -o web/lsp ./cmd/lsp/*
+	@go build -ldflags="-s -w" -o web/lsp ./cmd/language-server/*
 
 # generate typescript types from golang src package to use in vscode extension
 # https://github.com/gzuidhof/tygo

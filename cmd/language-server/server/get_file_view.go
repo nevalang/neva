@@ -1,10 +1,10 @@
-package lsp
+package server
 
 import (
 	"errors"
 	"strings"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/tliron/glsp"
 )
 

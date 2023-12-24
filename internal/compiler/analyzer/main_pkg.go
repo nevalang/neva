@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 var (

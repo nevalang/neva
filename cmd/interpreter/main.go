@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/interpreter"
+	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
-	"github.com/nevalang/neva/internal/vm/decoder/proto"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -54,11 +52,11 @@ func main() {
 	)
 
 	// interpreter
-	intr := interpreter.New(
+	intr := New(
 		comp,
-		proto.NewAdapter(),
+		NewAdapter(),
 		runTime,
-		builder.MustNew(
+		pkgmanager.MustNew(
 			"/Users/emil/projects/neva/std",
 			"/Users/emil/projects/neva/thirdparty",
 			prsr,

@@ -1,4 +1,4 @@
-package builder
+package pkgmanager
 
 import (
 	"context"
@@ -8,21 +8,18 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-func (b Builder) buildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
-	rawManifest, err := readManifestYaml(workdir)
+func (p PkgManager) buildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
+	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
-		return compiler.RawModule{}, fmt.Errorf("read manifest yaml: %w", err)
-	}
-
-	manifest, err := b.parser.ParseManifest(rawManifest)
-	if err != nil {
-		return compiler.RawModule{}, fmt.Errorf("parse manifest: %w", err)
+		return compiler.RawModule{}, nil
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
-	if err := walk(workdir, pkgs); err != nil {
+	if err := walkTree(workdir, pkgs); err != nil {
 		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
@@ -30,6 +27,20 @@ func (b Builder) buildModule(ctx context.Context, workdir string) (compiler.RawM
 		Manifest: manifest,
 		Packages: pkgs,
 	}, nil
+}
+
+func (p PkgManager) retrieveManifest(workdir string) (src.ModuleManifest, error) {
+	rawManifest, err := readManifestYaml(workdir)
+	if err != nil {
+		return sourcecode.ModuleManifest{}, fmt.Errorf("read manifest yaml: %w", err)
+	}
+
+	manifest, err := p.parser.ParseManifest(rawManifest)
+	if err != nil {
+		return sourcecode.ModuleManifest{}, fmt.Errorf("parse manifest: %w", err)
+	}
+
+	return manifest, nil
 }
 
 func readManifestYaml(workdir string) ([]byte, error) {
@@ -46,7 +57,7 @@ func readManifestYaml(workdir string) ([]byte, error) {
 	return rawManifest, nil
 }
 
-func walk(rootPath string, pkgs map[string]compiler.RawPackage) error {
+func walkTree(rootPath string, pkgs map[string]compiler.RawPackage) error {
 	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)

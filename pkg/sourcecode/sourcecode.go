@@ -24,7 +24,7 @@ type ModuleManifest struct {
 }
 
 type ModuleRef struct {
-	Name    string `json:"name,omitempty"`
+	Path    string `json:"path,omitempty"`
 	Version string `json:"version,omitempty"`
 }
 

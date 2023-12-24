@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg/ir"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Compiler struct {

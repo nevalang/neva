@@ -80,7 +80,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 			}, nil
 		}
 
-		stdModRef := ModuleRef{Name: "std"}
+		stdModRef := ModuleRef{Path: "std"}
 		stdMod, ok := s.Build.Modules[stdModRef]
 		if !ok {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)

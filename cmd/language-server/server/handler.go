@@ -1,11 +1,11 @@
-package lsp
+package server
 
 import (
 	"encoding/json"
 	"errors"
 	"sync"
 
-	"github.com/nevalang/neva/pkg/lsp/indexer"
+	"github.com/nevalang/neva/cmd/language-server/indexer"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
