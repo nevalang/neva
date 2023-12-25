@@ -9,11 +9,13 @@ import (
 // If runtime functions need to validate message at startup, they must do it by themselves.
 type Msg interface {
 	fmt.Stringer
+	Type() MsgType
 	Bool() bool
 	Int() int64
 	Float() float64
 	Str() string
-	Type() MsgType
+	List() []Msg
+	Map() map[string]Msg
 }
 
 type MsgType uint8
@@ -24,18 +26,22 @@ const (
 	IntMsgType     MsgType = 2
 	FloatMsgType   MsgType = 3
 	StrMsgType     MsgType = 4
+	ListMsgType    MsgType = 5
+	MapMsgType     MsgType = 6
 )
 
 // Empty
 
 type emptyMsg struct{}
 
-func (emptyMsg) Bool() bool     { return false }
-func (emptyMsg) Int() int64     { return 0 }
-func (emptyMsg) Float() float64 { return 0 }
-func (emptyMsg) Str() string    { return "" }
-func (emptyMsg) String() string { return "empty" } // stringer
-func (emptyMsg) Type() MsgType  { return UnknownMsgType }
+func (emptyMsg) String() string      { return "<stringer not implemented>" }
+func (emptyMsg) Type() MsgType       { return UnknownMsgType }
+func (emptyMsg) Bool() bool          { return false }
+func (emptyMsg) Int() int64          { return 0 }
+func (emptyMsg) Float() float64      { return 0 }
+func (emptyMsg) Str() string         { return "" }
+func (emptyMsg) List() []Msg         { return nil }
+func (emptyMsg) Map() map[string]Msg { return nil }
 
 // Int
 
@@ -105,5 +111,39 @@ func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
 		emptyMsg: emptyMsg{},
 		v:        b,
+	}
+}
+
+// List
+type ListMsg struct {
+	emptyMsg
+	v []Msg
+}
+
+func (msg ListMsg) Type() MsgType  { return ListMsgType }
+func (msg ListMsg) List() []Msg    { return msg.v }
+func (msg ListMsg) String() string { return fmt.Sprint(msg.v) }
+
+func NewListMsg(v []Msg) ListMsg {
+	return ListMsg{
+		emptyMsg: emptyMsg{},
+		v:        v,
+	}
+}
+
+// Map
+type MapMsg struct {
+	emptyMsg
+	v map[string]Msg
+}
+
+func (msg MapMsg) Type() MsgType       { return MapMsgType }
+func (msg MapMsg) Map() map[string]Msg { return msg.v }
+func (msg MapMsg) String() string      { return fmt.Sprint(msg.v) }
+
+func NewMapMsg(v map[string]Msg) MapMsg {
+	return MapMsg{
+		emptyMsg: emptyMsg{},
+		v:        v,
 	}
 }

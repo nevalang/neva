@@ -11,16 +11,16 @@ import (
 type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:funlen
-	rPorts := make(runtime.Ports, len(irProg.Ports))
+	runtimePorts := make(runtime.Ports, len(irProg.Ports))
 	for _, portInfo := range irProg.Ports {
-		rPorts[runtime.PortAddr{
+		runtimePorts[runtime.PortAddr{
 			Path: portInfo.PortAddr.Path,
 			Port: portInfo.PortAddr.Port,
 			Idx:  uint8(portInfo.PortAddr.Idx),
 		}] = make(chan runtime.Msg, portInfo.BufSize)
 	}
 
-	rConns := make([]runtime.Connection, 0, len(irProg.Connections))
+	runtimeConnections := make([]runtime.Connection, 0, len(irProg.Connections))
 	for _, conn := range irProg.Connections {
 		senderPortAddr := runtime.PortAddr{ // reference
 			Path: conn.SenderSide.Path,
@@ -28,7 +28,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			Idx:  uint8(conn.SenderSide.Idx),
 		}
 
-		senderPortChan, ok := rPorts[senderPortAddr]
+		senderPortChan, ok := runtimePorts[senderPortAddr]
 		if !ok {
 			return runtime.Program{}, errors.New("sender port not found")
 		}
@@ -46,7 +46,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 				Idx:  uint8(rcvr.PortAddr.Idx),
 			}
 
-			receiverPortChan, ok := rPorts[receiverPortAddr]
+			receiverPortChan, ok := runtimePorts[receiverPortAddr]
 			if !ok {
 				return runtime.Program{}, errors.New("receiver port not found")
 			}
@@ -55,18 +55,18 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			receiverChans = append(receiverChans, receiverPortChan)
 		}
 
-		rConns = append(rConns, runtime.Connection{
+		runtimeConnections = append(runtimeConnections, runtime.Connection{
 			Sender:    senderPortChan,
 			Receivers: receiverChans,
 			Meta:      meta,
 		})
 	}
 
-	rFuncs := make([]runtime.FuncCall, 0, len(irProg.Funcs))
+	runtimeFuncs := make([]runtime.FuncCall, 0, len(irProg.Funcs))
 	for _, f := range irProg.Funcs {
 		rIOIn := make(map[string][]chan runtime.Msg, len(f.Io.Inports))
 		for _, addr := range f.Io.Inports {
-			rPort := rPorts[runtime.PortAddr{
+			rPort := runtimePorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
@@ -76,7 +76,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 		rIOOut := make(map[string][]chan runtime.Msg, len(f.Io.Outports))
 		for _, addr := range f.Io.Outports {
-			rPort := rPorts[runtime.PortAddr{
+			rPort := runtimePorts[runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
 				Idx:  uint8(addr.Idx),
@@ -100,13 +100,13 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			rFunc.MetaMsg = rMsg
 		}
 
-		rFuncs = append(rFuncs, rFunc)
+		runtimeFuncs = append(runtimeFuncs, rFunc)
 	}
 
 	return runtime.Program{
-		Ports:       rPorts,
-		Connections: rConns,
-		Funcs:       rFuncs,
+		Ports:       runtimePorts,
+		Connections: runtimeConnections,
+		Funcs:       runtimeFuncs,
 	}, nil
 }
 

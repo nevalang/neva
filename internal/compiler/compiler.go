@@ -14,6 +14,7 @@ type Compiler struct {
 	desugarer Desugarer
 	analyzer  Analyzer
 	irgen     IRGenerator
+	backend   Backend
 }
 
 type (
@@ -44,6 +45,10 @@ type (
 		Manifest src.ModuleManifest    // Manifest must be parsed by builder before passing into compiler
 		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
 	}
+
+	Backend interface {
+		GenerateTarget(*ir.Program) ([]byte, error)
+	}
 )
 
 // Compiler directives that dependency interface implementations must support.
@@ -53,6 +58,19 @@ const (
 )
 
 func (c Compiler) Compile(
+	ctx context.Context,
+	rawBuild RawBuild,
+	workdirPath string,
+	mainPkgName string,
+) ([]byte, error) {
+	ir, err := c.CompileToIR(ctx, rawBuild, workdirPath, mainPkgName)
+	if err != nil {
+		return nil, err
+	}
+	return c.backend.GenerateTarget(ir)
+}
+
+func (c Compiler) CompileToIR(
 	ctx context.Context,
 	rawBuild RawBuild,
 	workdirPath string,
