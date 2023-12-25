@@ -22,7 +22,7 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 		return 0, fmt.Errorf("build: %w", err)
 	}
 
-	irProg, err := i.compiler.Compile(ctx, build, workdirPath, mainPkgName)
+	irProg, err := i.compiler.CompileToIR(ctx, build, workdirPath, mainPkgName)
 	if err != nil {
 		return 0, err
 	}

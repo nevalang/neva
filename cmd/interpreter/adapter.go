@@ -111,23 +111,43 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 }
 
 func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
-	var rMsg runtime.Msg
+	var result runtime.Msg
 
 	//nolint:nosnakecase
 	switch msg.Type {
 	case ir.MsgType_MSG_TYPE_BOOL:
-		rMsg = runtime.NewBoolMsg(msg.Bool)
+		result = runtime.NewBoolMsg(msg.Bool)
 	case ir.MsgType_MSG_TYPE_INT:
-		rMsg = runtime.NewIntMsg(msg.Int)
+		result = runtime.NewIntMsg(msg.Int)
 	case ir.MsgType_MSG_TYPE_FLOAT:
-		rMsg = runtime.NewFloatMsg(msg.Float)
+		result = runtime.NewFloatMsg(msg.Float)
 	case ir.MsgType_MSG_TYPE_STR:
-		rMsg = runtime.NewStrMsg(msg.Str)
+		result = runtime.NewStrMsg(msg.Str)
+	case ir.MsgType_MSG_TYPE_LIST:
+		list := make([]runtime.Msg, len(msg.List))
+		for i, v := range msg.List {
+			el, err := a.msg(v)
+			if err != nil {
+				return nil, err
+			}
+			list[i] = el
+		}
+		result = runtime.NewListMsg(list)
+	case ir.MsgType_MSG_TYPE_MAP:
+		m := make(map[string]runtime.Msg, len(msg.List))
+		for k, v := range msg.Map {
+			el, err := a.msg(v)
+			if err != nil {
+				return nil, err
+			}
+			m[k] = el
+		}
+		result = runtime.NewMapMsg(m)
 	default:
 		return nil, errors.New("unknown message type")
 	}
 
-	return rMsg, nil
+	return result, nil
 }
 
 func NewAdapter() Adapter {
