@@ -10,7 +10,7 @@ import (
 )
 
 type Interpreter struct {
-	builder  builder.PkgManager
+	builder  builder.Manager
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
 	adapter  Adapter
@@ -44,7 +44,7 @@ func New(
 	compiler compiler.Compiler,
 	adapter Adapter,
 	runtime runtime.Runtime,
-	builder builder.PkgManager,
+	builder builder.Manager,
 ) Interpreter {
 	return Interpreter{
 		compiler: compiler,

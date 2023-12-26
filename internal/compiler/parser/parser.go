@@ -95,8 +95,6 @@ func (p Parser) ParseFile(bb []byte) (src.File, error) {
 	return listener.file, nil
 }
 
-func MustNew(debug bool) Parser {
-	return Parser{
-		isDebug: debug,
-	}
+func New(isDebug bool) Parser {
+	return Parser{isDebug: isDebug}
 }

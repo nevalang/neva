@@ -12,7 +12,7 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-func (p PkgManager) buildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
+func (p Manager) buildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
 	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
 		return compiler.RawModule{}, nil
@@ -29,7 +29,7 @@ func (p PkgManager) buildModule(ctx context.Context, workdir string) (compiler.R
 	}, nil
 }
 
-func (p PkgManager) retrieveManifest(workdir string) (src.ModuleManifest, error) {
+func (p Manager) retrieveManifest(workdir string) (src.ModuleManifest, error) {
 	rawManifest, err := readManifestYaml(workdir)
 	if err != nil {
 		return sourcecode.ModuleManifest{}, fmt.Errorf("read manifest yaml: %w", err)

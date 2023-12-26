@@ -12,7 +12,7 @@ import (
 )
 
 type Indexer struct {
-	pkgManager pkgmanager.PkgManager
+	pkgManager pkgmanager.Manager
 	parser     parser.Parser
 	desugarer  desugarer.Desugarer
 	analyzer   analyzer.Analyzer
@@ -48,7 +48,7 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *analyz
 }
 
 func New(
-	builder pkgmanager.PkgManager,
+	builder pkgmanager.Manager,
 	parser parser.Parser,
 	desugarer desugarer.Desugarer,
 	analyzer analyzer.Analyzer,

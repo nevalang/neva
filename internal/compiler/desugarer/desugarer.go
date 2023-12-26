@@ -8,8 +8,6 @@ import (
 
 type Desugarer struct{}
 
-// TODO add sugar for manifests, insert std dependency
-
 func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 

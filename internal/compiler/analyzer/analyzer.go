@@ -17,7 +17,7 @@ import (
 var (
 	ErrModuleWithoutPkgs = errors.New("Module must contain at least one package")
 	ErrEntryModNotFound  = errors.New("Entry module is not found")
-	ErrMainPkgNotFound   = errors.New("Main package is not found")
+	ErrMainPkgNotFound   = errors.New("Main package not found")
 	ErrPkgWithoutFiles   = errors.New("Package must contain at least one file")
 	ErrUnknownEntityKind = errors.New("Entity kind can only be either component, interface, type of constant")
 	ErrCompilerVersion   = errors.New("Incompatible compiler version")

@@ -30,12 +30,12 @@ func main() {
 	commonlog.Configure(verbosity, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
-	p := parser.MustNew(*isDebug)
+	p := parser.New(*isDebug)
 
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
-	builder := builder.MustNew(
+	builder := builder.New(
 		"/Users/emil/projects/neva/std",
 		"/Users/emil/projects/neva/third_party/",
 		p,

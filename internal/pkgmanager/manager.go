@@ -8,7 +8,7 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-type PkgManager struct {
+type Manager struct {
 	stdLibLocation     string // path to standart library module
 	thirdPartyLocation string // path to third-party modules
 	parser             Parser // parser is needed to parse manifest files
@@ -18,7 +18,7 @@ type Parser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
-func (p PkgManager) Build(ctx context.Context, workdir string) (compiler.RawBuild, error) {
+func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, error) {
 	mods := map[src.ModuleRef]compiler.RawModule{}
 
 	entryMod, err := p.buildModule(ctx, workdir)
@@ -63,7 +63,7 @@ func (p PkgManager) Build(ctx context.Context, workdir string) (compiler.RawBuil
 	}, nil
 }
 
-func (p PkgManager) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
+func (p Manager) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
 	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
 		return err
@@ -78,12 +78,12 @@ func (p PkgManager) Install(ctx context.Context, depModRef src.ModuleRef, workdi
 	return nil
 }
 
-func MustNew(
+func New(
 	stdlibPath string,
 	thirdpartyPath string,
 	parser Parser,
-) PkgManager {
-	return PkgManager{
+) Manager {
+	return Manager{
 		stdLibLocation:     stdlibPath,
 		thirdPartyLocation: thirdpartyPath,
 		parser:             parser,

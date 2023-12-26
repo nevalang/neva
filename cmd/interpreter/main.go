@@ -31,7 +31,7 @@ func main() {
 	desugarer := desugarer.Desugarer{}
 	analyzer := analyzer.MustNew("0.0.1", resolver)
 	irgen := irgen.New()
-	prsr := parser.MustNew(false)
+	prsr := parser.New(false)
 	comp := compiler.New(
 		prsr,
 		desugarer,
@@ -44,7 +44,7 @@ func main() {
 		comp,
 		NewAdapter(),
 		r,
-		pkgmanager.MustNew(
+		pkgmanager.New(
 			"/Users/emil/projects/neva/std",
 			"/Users/emil/projects/neva/thirdparty",
 			prsr,
