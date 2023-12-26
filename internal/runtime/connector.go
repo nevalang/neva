@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/nevalang/neva/internal/runtime/errgroup"
 )
 
 var (
@@ -13,17 +13,23 @@ var (
 	ErrDistribute = errors.New("distribute")
 )
 
-type connector struct {
+type Connector struct {
 	listener EventListener
 }
 
-func NewDefaultConnector(listener EventListener) (Connector, error) {
+func MustNewConnector(listener EventListener) Connector {
 	if listener == nil {
-		return connector{}, ErrNilDeps
+		panic(ErrNilDeps)
 	}
-	return connector{
+	return Connector{
 		listener: listener,
-	}, nil
+	}
+}
+
+func NewDefaultConnector() Connector {
+	return Connector{
+		listener: EmptyListener{},
+	}
 }
 
 type Event struct {
@@ -103,7 +109,7 @@ type EventListener interface {
 	Send(Event, Msg) Msg
 }
 
-func (c connector) Connect(ctx context.Context, conns []Connection) error {
+func (c Connector) Connect(ctx context.Context, conns []Connection) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	for i := range conns {
@@ -120,7 +126,7 @@ func (c connector) Connect(ctx context.Context, conns []Connection) error {
 }
 
 // FIXME slowest receiver will slow down the whole system
-func (c connector) broadcast(ctx context.Context, conn Connection) error {
+func (c Connector) broadcast(ctx context.Context, conn Connection) error {
 	buf := make(chan Msg, 100)
 	defer close(buf)
 	go func() {
@@ -152,7 +158,7 @@ func (c connector) broadcast(ctx context.Context, conn Connection) error {
 }
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c connector) distribute(
+func (c Connector) distribute(
 	ctx context.Context,
 	msg Msg,
 	meta ConnectionMeta,
@@ -203,13 +209,12 @@ func (c connector) distribute(
 	return
 }
 
-type Listener struct{}
+type EmptyListener struct{}
 
-func (l Listener) Send(event Event, msg Msg) Msg {
-	fmt.Printf("%v: %v;\n", event, msg)
+func (l EmptyListener) Send(event Event, msg Msg) Msg {
 	return msg
 }
 
-func NewChanListener() Listener {
-	return Listener{}
+func NewChanListener() EmptyListener {
+	return EmptyListener{}
 }

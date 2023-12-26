@@ -58,6 +58,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tliron/glsp v0.2.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
-	golang.org/x/sync v0.3.0
+	golang.org/x/sync v0.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )

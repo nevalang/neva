@@ -14,20 +14,18 @@ var (
 
 const CtxMsgKey = "msg"
 
-type DefaultFuncRunner struct {
-	repo map[string]Func
+type FuncRunner struct {
+	registry map[string]Func
 }
 
-func NewDefaultFuncRunner(repo map[string]Func) (DefaultFuncRunner, error) {
-	if repo == nil {
-		return DefaultFuncRunner{}, ErrNilDeps
+func MustNewFuncRunner(registry map[string]Func) FuncRunner {
+	if registry == nil {
+		panic(ErrNilDeps)
 	}
-	return DefaultFuncRunner{
-		repo: repo,
-	}, nil
+	return FuncRunner{registry: registry}
 }
 
-func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error) {
+func (d FuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	wg := sync.WaitGroup{}
 	wg.Add(len(funcRoutines))
@@ -43,7 +41,7 @@ func (d DefaultFuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (er
 			ctx = context.WithValue(ctx, CtxMsgKey, routine.MetaMsg)
 		}
 
-		constructor, ok := d.repo[routine.Ref]
+		constructor, ok := d.registry[routine.Ref]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrFuncNotFound, routine.Ref)
 		}

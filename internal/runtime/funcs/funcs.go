@@ -47,7 +47,7 @@ func read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func print(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func print(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:predeclared
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err

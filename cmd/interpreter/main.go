@@ -18,21 +18,9 @@ import (
 
 func main() {
 	// runtime
-	connector, err := runtime.NewDefaultConnector(runtime.Listener{})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Registry())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	runTime, err := runtime.New(connector, funcRunner)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	connector := runtime.NewDefaultConnector()
+	funcRunner := runtime.MustNewFuncRunner(funcs.Registry())
+	r := runtime.New(connector, funcRunner)
 
 	// type-system
 	terminator := typesystem.Terminator{}
@@ -55,7 +43,7 @@ func main() {
 	intr := New(
 		comp,
 		NewAdapter(),
-		runTime,
+		r,
 		pkgmanager.MustNew(
 			"/Users/emil/projects/neva/std",
 			"/Users/emil/projects/neva/thirdparty",

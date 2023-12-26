@@ -20,24 +20,24 @@ var (
 )
 
 func (b Backend) GenerateTarget(ctx context.Context, prog *ir.Program) (map[string][]byte, error) {
-	tpl, err := template.New("main.go.tmpl").Funcs(template.FuncMap{
+	tmpl, err := template.New("tpl.go").Funcs(template.FuncMap{
 		"getMsg":           getMsg,
 		"getPorts":         getPortsFunc(prog.Ports),
 		"getPortChVarName": getPortChVarName,
 		"getConnComment":   getConnComment,
-	}).Parse(tmpl)
+	}).Parse(mainGoTemplate)
 	if err != nil {
 		return nil, err
 	}
 
 	var buf bytes.Buffer
-	if err := tpl.Execute(&buf, prog); err != nil {
+	if err := tmpl.Execute(&buf, prog); err != nil {
 		return nil, errors.Join(ErrExecTmpl, err)
 	}
 
 	result := map[string][]byte{}
 	result["main.go"] = buf.Bytes()
-	result["go.mod"] = []byte("module github.com/nevalang/neva\bgo 1.21")
+	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.21") //nolint:lll // must match imports in runtime package //
 
 	// runtime
 	if err := putRuntime(result); err != nil {
