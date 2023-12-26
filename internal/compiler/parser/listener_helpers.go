@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/utils"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
-	"github.com/nevalang/neva/pkg/utils"
 )
 
 func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {

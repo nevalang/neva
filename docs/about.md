@@ -1,14 +1,16 @@
 # About The Language
 
-> This document describes the final state of the language. Please note that at the time of writing the language is under heavy development.
-
 Nevalang is a programming language with unique set of characteristics. Let's break down each one of them
 
 ## Main Characteristics
 
-### Flow-Based
+### Flow-Based (Dataflow)
 
-The main thing about Nevalang is that it's [flow-based](https://en.wikipedia.org/wiki/Flow-based_programming). Flow-based programming is a paradigm from the family of [dataflow](https://en.wikipedia.org/wiki/Dataflow_programming) programming paradigms. In dataflow programming, unlike the [control-flow](https://en.wikipedia.org/wiki/Control_flow) programming, we do not control execution flow. We control data flow instead. Basically this means that you don't have access to low-level instructions like "goto", "break" or even "return". Instead you can only connect inputs and outputs. And this changes everything we know about programming.
+In most _conventional_ languages programmer [controls execution flow](https://en.wikipedia.org/wiki/Control_flow). In [dataflow programming](https://en.wikipedia.org/wiki/Dataflow_programming) on the other hand programmer _controls data flow_. Basically it means that you don't have access to "low-level" instructions like "goto", "break" or even "return". Instead you can only connect inputs and outputs. And this changes everything we know about programming.
+
+Dataflow programming is very different from the conventional. Some things are easier with conventional programming and some with dataflow. One thing for sure - dataflow programming is much more suitable for at least 2 things: parallel computations and visual programming.
+
+The main thing about Nevalang is that it's [flow-based](https://en.wikipedia.org/wiki/Flow-based_programming). Flow-based programming is a subset of dataflow programming. It's not a classical FBP though.
 
 ### Visual
 
@@ -18,7 +20,9 @@ Right now visual editor is a supporting tool while text is the main way to progr
 
 ### General Purpose
 
-This means that Nevalang could be used to implement any kind of program. It doesn't mean that it's perfectly suitable for anything though. For instance it probably should't be used for low-level stuff like drivers because of the runtime overhead. But eventually user should be able to do so anyway.
+Most visual programming languages are not general purpose. They are designed for specific purposes. E.g. "Scratch" is for educating, "Unreal blueprints" are for games, "Labview" for science, etc. There are a few _general purpose visual programming languages_ but none of them are popular as well as none of them are flow-based.
+
+Nevalang on the other hand is general purpose visual flow-based language. It could be used for anything. It doesn't mean that it's perfectly suitable for anything though. For instance it probably should't be used for low-level stuff like drivers (because of the runtime overhead). But eventually user should be _able_ to do so.
 
 ### Statically Structurally Typed
 
@@ -37,10 +41,6 @@ Used neither allocate and free memory manually not faces borrow-checker or other
 ## Extra Characteristics
 
 We covered most important characteristics of the language but there is a couple more, a little bit less important but still unusual.
-
-### VM-mode
-
-As been said there is a byte-code which means there is a virtual machine that can execute it. That virtual machine is actually a very thing wrapper around the _runtime_.
 
 ### Interpreted-mode
 

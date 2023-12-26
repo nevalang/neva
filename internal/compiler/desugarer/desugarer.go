@@ -3,7 +3,7 @@ package desugarer
 import (
 	"maps"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Desugarer struct{}
@@ -53,7 +53,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Name: "std"} // inject stdlib dep
+	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std"} // inject stdlib dep
 
 	return src.Module{
 		Manifest: mod.Manifest,

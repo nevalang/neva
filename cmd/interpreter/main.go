@@ -5,36 +5,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/interpreter"
+	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
-	"github.com/nevalang/neva/internal/vm/decoder/proto"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
 func main() {
 	// runtime
-	connector, err := runtime.NewDefaultConnector(runtime.Listener{})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Repo())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	runTime, err := runtime.New(connector, funcRunner)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	connector := runtime.NewDefaultConnector()
+	funcRunner := runtime.MustNewFuncRunner(funcs.Registry())
+	r := runtime.New(connector, funcRunner)
 
 	// type-system
 	terminator := typesystem.Terminator{}
@@ -54,11 +40,11 @@ func main() {
 	)
 
 	// interpreter
-	intr := interpreter.New(
+	intr := New(
 		comp,
-		proto.NewAdapter(),
-		runTime,
-		builder.MustNew(
+		NewAdapter(),
+		r,
+		pkgmanager.MustNew(
 			"/Users/emil/projects/neva/std",
 			"/Users/emil/projects/neva/thirdparty",
 			prsr,

@@ -1,56 +1,49 @@
 # ARCHITECTURE
 
-## Production
+## Executable Binary Compilation
 
 ```mermaid
 flowchart LR
-    builder-->|raw-program|compiler
-    subgraph builder
+    package-manager -->|raw-build| compiler
+
+    subgraph package-manager
         git-client
+        file-system
     end
+
     subgraph compiler
-        parser-->|program|desugarer
-        desugarer-->|desugaredProgram|analyzer
+        subgraph frontend
+            parser
+            desugarer
+            analyzer
+        end
+
+        subgraph backend
+            go-code-generator
+        end
+
+        parser -->|parsed-build| desugarer
 
         subgraph parser
-            antlr-->|ast|listener
+            antlr
         end
+
+        desugarer -->|desugared-build| analyzer
 
         subgraph analyzer
             typesystem
         end
 
-        subgraph analyzer
-            typesystem
-        end
+        analyzer -->|analyzed-build| ir-generator
 
-        analyzer-->|analyzed-program|irgen
-
-        irgen-->|ir|encoder
+        ir-generator -->|ir| backend
     end
 
-    compiler-->|protobuf|VM
-
-    subgraph VM
-        decoder-->|ir|runtime
-        runtime
-        subgraph runtime
-            connector
-            func-runner
-        end
-
-    end
+    compiler -->|go-code| go-compiler
 ```
 
-## Development
+## Interpreter mode
 
-```mermaid
-flowchart LR
-    subgraph interpreter
-        builder-->compiler
-        compiler-->runtime
-    end
-```
 
 ## VSCode Extension
 

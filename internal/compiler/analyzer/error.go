@@ -3,7 +3,7 @@ package analyzer
 import (
 	"fmt"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 // Error is custom error interface implementation that allows to keep track of code location.
@@ -38,8 +38,8 @@ func (e Error) Merge(prefer *Error) *Error {
 		if e.Location == nil {
 			e.Location = prefer.Location
 		} else {
-			if prefer.Location.ModRef.Name != "" {
-				e.Location.ModRef.Name = prefer.Location.ModRef.Name
+			if prefer.Location.ModRef.Path != "" {
+				e.Location.ModRef.Path = prefer.Location.ModRef.Path
 				e.Location.ModRef.Version = prefer.Location.ModRef.Version
 			}
 			if prefer.Location.PkgName != "" {

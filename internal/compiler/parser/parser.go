@@ -10,7 +10,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type treeShapeListener struct {

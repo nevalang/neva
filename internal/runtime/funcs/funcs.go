@@ -12,7 +12,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func Read(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func Read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func print(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:predeclared
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func Print(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func Lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func constant(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	msg := ctx.Value("msg")
 	if msg == nil {
 		return nil, errors.New("ctx msg not found")
@@ -139,7 +139,7 @@ func Const(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Void(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func void(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func Void(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	a, err := io.In.Port("a")
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func Add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func parseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -244,14 +244,14 @@ func ParseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func Repo() map[string]runtime.Func {
+func Registry() map[string]runtime.Func {
 	return map[string]runtime.Func{
-		"Read":     Read,
-		"Print":    Print,
-		"Lock":     Lock,
-		"Const":    Const,
-		"Add":      Add,
-		"ParseInt": ParseInt,
-		"Void":     Void,
+		"Read":     read,
+		"Print":    print,
+		"Lock":     lock,
+		"Const":    constant,
+		"Add":      add,
+		"ParseInt": parseInt,
+		"Void":     void,
 	}
 }

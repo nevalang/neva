@@ -6,33 +6,24 @@ import (
 	"errors"
 	"fmt"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/nevalang/neva/internal/runtime/errgroup"
 )
 
 type Runtime struct {
-	funcRunner FuncRunner
 	connector  Connector
+	funcRunner FuncRunner
 }
 
 var ErrNilDeps = errors.New("runtime deps nil")
 
-func New(c Connector, f FuncRunner) (Runtime, error) {
-	if c == nil || f == nil {
-		return Runtime{}, ErrNilDeps
-	}
+func New(connector Connector, funcRunner FuncRunner) Runtime {
 	return Runtime{
-		connector:  c,
-		funcRunner: f,
-	}, nil
+		connector:  connector,
+		funcRunner: funcRunner,
+	}
 }
 
 type (
-	Connector interface {
-		Connect(context.Context, []Connection) error
-	}
-	FuncRunner interface {
-		Run(context.Context, []FuncCall) error
-	}
 	Func func(context.Context, FuncIO) (func(), error)
 )
 

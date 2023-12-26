@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/utils"
 	"github.com/nevalang/neva/pkg/ir"
-	"github.com/nevalang/neva/pkg/utils"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Generator struct{}
