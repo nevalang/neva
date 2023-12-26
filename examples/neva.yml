@@ -1,4 +1,6 @@
 compiler: 0.0.1
 
 deps:
-  - github.com/nevalang/x 0.0.1
+  - path: github.com/nevalang/x
+    version: 0.0.2
+    

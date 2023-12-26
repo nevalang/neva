@@ -64,11 +64,11 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 	}
 
 	return src.Component{
-		Directives: map[src.Directive][]string{},
-		Interface:  src.Interface{},
+		Directives: component.Directives,
+		Interface:  component.Interface,
 		Nodes:      desugaredNodes,
 		Net:        desugaredNet,
-		Meta:       src.Meta{},
+		Meta:       component.Meta,
 	}, nil
 }
 

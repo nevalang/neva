@@ -12,3 +12,4 @@ neva
 node_modules
 __debug*
 web/webview/dist
+thirdparty

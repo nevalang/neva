@@ -11,6 +11,12 @@ stmt:
 	| constStmt
 	| compStmt;
 
+// Compiler Directives
+compilerDirectives: (compilerDirective NEWLINE)+;
+compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
+compilerDirectivesArgs: '(' IDENTIFIER (',' IDENTIFIER)* ')';
+
+// Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: IDENTIFIER? importPath NEWLINE*;
 importPath:
@@ -18,7 +24,7 @@ importPath:
 		'/' (IDENTIFIER ('.' IDENTIFIER)?)
 	)*;
 
-// types
+// Types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
 typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
@@ -83,20 +89,19 @@ structValueField: IDENTIFIER ':' constVal NEWLINE*;
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
 compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
-compilerDirectives: (compilerDirective NEWLINE)+;
-compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
-compilerDirectivesArgs: '(' IDENTIFIER (',' IDENTIFIER)* ')';
 compBody:
 	'{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
+
 // nodes
 compNodesDef:
 	'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}';
-compNodeDef: IDENTIFIER nodeInst;
+compNodeDef: compilerDirectives? IDENTIFIER nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeArgs?;
 entityRef: IDENTIFIER ('.' IDENTIFIER)?;
 nodeArgs: '(' NEWLINE* nodeArgList? NEWLINE* ')';
 nodeArgList: nodeArg (',' NEWLINE* nodeArg)*;
 nodeArg: IDENTIFIER ':' nodeInst;
+
 // net
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';

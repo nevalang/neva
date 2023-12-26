@@ -15,12 +15,13 @@ import (
 )
 
 var (
-	ErrModuleWithoutPkgs = errors.New("Module must contain at least one package")
-	ErrEntryModNotFound  = errors.New("Entry module is not found")
-	ErrMainPkgNotFound   = errors.New("Main package not found")
-	ErrPkgWithoutFiles   = errors.New("Package must contain at least one file")
-	ErrUnknownEntityKind = errors.New("Entity kind can only be either component, interface, type of constant")
-	ErrCompilerVersion   = errors.New("Incompatible compiler version")
+	ErrModuleWithoutPkgs    = errors.New("Module must contain at least one package")
+	ErrEntryModNotFound     = errors.New("Entry module is not found")
+	ErrMainPkgNotFound      = errors.New("Main package not found")
+	ErrPkgWithoutFiles      = errors.New("Package must contain at least one file")
+	ErrUnknownEntityKind    = errors.New("Entity kind can only be either component, interface, type of constant")
+	ErrCompilerVersion      = errors.New("Incompatible compiler version")
+	ErrDepModWithoutVersion = errors.New("Every dependency module must have version")
 )
 
 type Analyzer struct {
@@ -54,14 +55,14 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		Build:    build,
 	}
 
-	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err.Err != nil {
+	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err != nil {
 		return src.Build{}, Error{Location: &location}.Merge(err)
 	}
 
 	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
-		aerr := err.(Error) //nolint:forcetypeassert
-		return src.Build{}, Error{Location: &location}.Merge(&aerr)
+		aerr := err.(*Error) //nolint:forcetypeassert
+		return src.Build{}, Error{Location: &location}.Merge(aerr)
 	}
 
 	return analyzedBuild, nil
@@ -83,13 +84,7 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
 
 		analyzedPkgs, err := a.analyzeModule(modRef, build)
 		if err != nil {
-			return src.Build{}, &Error{
-				Err: fmt.Errorf(
-					"%w: module %v wants %v while current is %v",
-					ErrCompilerVersion,
-					modRef, mod.Manifest.WantCompilerVersion, a.compilerVersion,
-				),
-			}
+			return src.Build{}, err
 		}
 
 		analyzedMods[modRef] = src.Module{
@@ -105,6 +100,12 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
 }
 
 func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *Error) {
+	if modRef != build.EntryModRef && modRef.Version == "" {
+		return nil, &Error{
+			Err: ErrDepModWithoutVersion,
+		}
+	}
+
 	location := src.Location{ModRef: modRef}
 	mod := build.Modules[modRef]
 

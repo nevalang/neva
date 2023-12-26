@@ -37,7 +37,7 @@ type analyzeComponentParams struct {
 func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) { //nolint:funlen
 	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
 
-	if len(component.Directives[compiler.RuntimeFuncDirective]) != 1 {
+	if isRuntimeFunc && len(component.Directives[compiler.RuntimeFuncDirective]) != 1 {
 		return src.Component{}, &Error{
 			Err:      ErrRuntimeFuncDirectiveArgs,
 			Location: &scope.Location,

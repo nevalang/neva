@@ -51,7 +51,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std"} // inject stdlib dep
+	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib dep
 
 	return src.Module{
 		Manifest: mod.Manifest,

@@ -22,7 +22,7 @@ func (q *queue) empty() bool {
 }
 
 func newQueue(deps map[string]src.ModuleRef) *queue {
-	q := make(queue, len(deps))
+	q := make(queue, 0, len(deps))
 	q.enqueue(deps)
 	return &q
 }

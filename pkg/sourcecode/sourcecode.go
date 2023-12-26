@@ -28,6 +28,13 @@ type ModuleRef struct {
 	Version string `json:"version,omitempty"`
 }
 
+func (m ModuleRef) String() string {
+	if m.Version == "" {
+		return m.Path
+	}
+	return fmt.Sprintf("%v@%v", m.Path, m.Version)
+}
+
 var ErrEntityNotFound = fmt.Errorf("entity not found")
 
 type Package map[string]File

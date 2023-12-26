@@ -10,8 +10,8 @@ import (
 var (
 	ErrMainComponentWithTypeParams     = errors.New("Main component cannot have type parameters")
 	ErrEntityNotFoundByNodeRef         = errors.New("Node references to entity that cannot be found")
-	ErrMainComponentInportsCount       = errors.New("Main component must have exactly one inport")
-	ErrMainComponentOutportsCount      = errors.New("Main component must have exactly one outport")
+	ErrMainComponentInportsCount       = errors.New("Main component must have exactly 1 inport")
+	ErrMainComponentOutportsCount      = errors.New("Main component must have exactly 1 outport")
 	ErrMainComponentWithoutEnterInport = errors.New("Main component must have 'enter' inport")
 	ErrMainComponentWithoutExitOutport = errors.New("Main component must have 'exit' outport")
 	ErrMainPortIsArray                 = errors.New("Main component cannot have array ports")
@@ -39,11 +39,15 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope
 }
 
 func (a Analyzer) analyzeMainComponentIO(io src.IO) *Error {
-	if len(io.Out) != 1 {
-		return &Error{Err: ErrMainComponentOutportsCount}
-	}
 	if len(io.In) != 1 {
-		return &Error{Err: ErrMainComponentInportsCount}
+		return &Error{
+			Err: fmt.Errorf("%w: got %v", ErrMainComponentInportsCount, len(io.In)),
+		}
+	}
+	if len(io.Out) != 1 {
+		return &Error{
+			Err: fmt.Errorf("%w: got %v", ErrMainComponentOutportsCount, len(io.Out)),
+		}
 	}
 
 	enterInport, ok := io.In["enter"]
@@ -87,7 +91,7 @@ func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Pac
 		if err != nil {
 			return &Error{
 				Err: fmt.Errorf(
-					"%w: node '%v', ref '%v', details %v",
+					"%w: node '%v', ref '%v', details '%v'",
 					ErrEntityNotFoundByNodeRef,
 					nodeName,
 					node.EntityRef,

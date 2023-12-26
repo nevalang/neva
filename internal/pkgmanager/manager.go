@@ -19,13 +19,14 @@ type Parser interface {
 }
 
 func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, error) {
-	mods := map[src.ModuleRef]compiler.RawModule{}
-
 	entryMod, err := p.buildModule(ctx, workdir)
 	if err != nil {
 		return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 	}
-	mods[src.ModuleRef{Path: "entry"}] = entryMod
+
+	mods := map[src.ModuleRef]compiler.RawModule{}
+	entryModRef := src.ModuleRef{Path: ""}
+	mods[entryModRef] = entryMod
 
 	q := newQueue(entryMod.Manifest.Deps)
 
@@ -55,10 +56,13 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	if err != nil {
 		return compiler.RawBuild{}, fmt.Errorf("build stdlib mod: %w", err)
 	}
-	mods[src.ModuleRef{Path: "std"}] = stdMod
+	mods[src.ModuleRef{
+		Path:    "std",
+		Version: "0.0.1",
+	}] = stdMod
 
 	return compiler.RawBuild{
-		EntryModRef: src.ModuleRef{Path: "entry"},
+		EntryModRef: entryModRef,
 		Modules:     mods,
 	}, nil
 }

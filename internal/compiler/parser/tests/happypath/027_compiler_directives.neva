@@ -3,5 +3,10 @@ components {
     pub Read(sig) (v str)
 
     #runtime_func(read, write)
-    pub Print<T>(v T) (v T)
+    pub Print<T>(v T) (v T) {
+		nodes {
+			#runtime_func_msg(msg)
+			msg Const<str>
+		}
+    }
 }

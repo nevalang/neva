@@ -15,6 +15,7 @@ var (
 	ErrEntityNotPub   = errors.New("entity is not public")
 )
 
+// TODO maybe move this to compiler package because we don't wanna src know about stdlib
 type Scope struct {
 	Location Location
 	Build    Build
@@ -31,6 +32,10 @@ type Location struct {
 	ModRef   ModuleRef
 	PkgName  string
 	FileName string
+}
+
+func (l Location) String() string {
+	return fmt.Sprintf("%v/%v/%v.neva", l.ModRef, l.PkgName, l.FileName)
 }
 
 func (s Scope) IsTopType(expr ts.Expr) bool {
@@ -80,7 +85,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 			}, nil
 		}
 
-		stdModRef := ModuleRef{Path: "std"}
+		stdModRef := ModuleRef{Path: "std", Version: "0.0.1"}
 		stdMod, ok := s.Build.Modules[stdModRef]
 		if !ok {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)

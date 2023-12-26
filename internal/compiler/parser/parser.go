@@ -3,10 +3,10 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/antlr4-go/antlr/v4"
-	yaml "gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
@@ -20,14 +20,6 @@ type treeShapeListener struct {
 
 type Parser struct {
 	isDebug bool
-}
-
-func (p Parser) ParseManifest(raw []byte) (src.ModuleManifest, error) {
-	var result src.ModuleManifest
-	if err := yaml.Unmarshal(raw, &result); err != nil {
-		return src.ModuleManifest{}, fmt.Errorf("yaml unmarshal: %w", err)
-	}
-	return result, nil
 }
 
 func (p Parser) ParseModules(rawMods map[src.ModuleRef]compiler.RawModule) (map[src.ModuleRef]src.Module, error) {
@@ -76,7 +68,13 @@ func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, error)
 	return result, nil
 }
 
-func (p Parser) ParseFile(bb []byte) (src.File, error) {
+func (p Parser) ParseFile(bb []byte) (f src.File, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+	}()
+
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	tokenStream := antlr.NewCommonTokenStream(lexer, 0)

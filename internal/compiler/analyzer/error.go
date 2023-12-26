@@ -15,10 +15,17 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	if e.Err != nil {
+	switch {
+	case e.Location != nil && e.Meta != nil:
+		return fmt.Sprintf("%v:%v:%v %v", *e.Location, e.Meta.Start.Column, e.Meta.Start.Column, e.Err)
+	case e.Meta != nil:
+		return fmt.Sprintf("%v:%v %v", e.Meta.Start.Column, e.Meta.Start.Column, e.Err)
+	case e.Location != nil:
+		return fmt.Sprintf("%v: %v", *e.Location, e.Err)
+	case e.Err != nil:
 		return e.Err.Error()
 	}
-	return fmt.Sprint(e.Location, e.Meta)
+	return ""
 }
 
 func (e Error) Merge(prefer *Error) *Error {
@@ -26,7 +33,7 @@ func (e Error) Merge(prefer *Error) *Error {
 		if e.Err == nil {
 			e.Err = prefer.Err
 		} else {
-			e.Err = fmt.Errorf("%w: %v", e.Err, prefer.Err)
+			e.Err = fmt.Errorf("%w: %v", e.Err, prefer.Err) // FIXME duplication of context
 		}
 	}
 
