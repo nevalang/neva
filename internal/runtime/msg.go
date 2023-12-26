@@ -124,7 +124,7 @@ func (msg ListMsg) Type() MsgType  { return ListMsgType }
 func (msg ListMsg) List() []Msg    { return msg.v }
 func (msg ListMsg) String() string { return fmt.Sprint(msg.v) }
 
-func NewListMsg(v []Msg) ListMsg {
+func NewListMsg(v ...Msg) ListMsg {
 	return ListMsg{
 		emptyMsg: emptyMsg{},
 		v:        v,

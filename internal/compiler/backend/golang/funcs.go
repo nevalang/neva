@@ -20,8 +20,28 @@ func getMsg(msg *ir.Msg) (string, error) {
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgType_MSG_TYPE_STR:
 		return fmt.Sprintf("runtime.NewStrMsg(%v)", msg.Str), nil
-		// TODO support all other types (lists and maps)
+	case ir.MsgType_MSG_TYPE_LIST:
+		s := "runtime.NewListMsg(\n\t"
+		for _, v := range msg.List {
+			el, err := getMsg(v)
+			if err != nil {
+				return "", err
+			}
+			s += fmt.Sprintf("\t%v,\n", el)
+		}
+		return s + ")", nil
+	case ir.MsgType_MSG_TYPE_MAP:
+		s := "runtime.NewMapMsg(map[string]runtime.Msg{\n\t"
+		for k, v := range msg.Map {
+			el, err := getMsg(v)
+			if err != nil {
+				return "", err
+			}
+			s += fmt.Sprintf(`\t"%v": %v,\n`, k, el)
+		}
+		return s + "},\n)", nil
 	}
+
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 

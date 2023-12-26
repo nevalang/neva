@@ -132,7 +132,7 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 			}
 			list[i] = el
 		}
-		result = runtime.NewListMsg(list)
+		result = runtime.NewListMsg(list...)
 	case ir.MsgType_MSG_TYPE_MAP:
 		m := make(map[string]runtime.Msg, len(msg.List))
 		for k, v := range msg.Map {

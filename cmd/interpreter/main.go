@@ -23,7 +23,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Repo())
+	funcRunner, err := runtime.NewDefaultFuncRunner(funcs.Registry())
 	if err != nil {
 		fmt.Println(err)
 		return
