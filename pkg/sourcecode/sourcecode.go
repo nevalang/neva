@@ -134,6 +134,10 @@ type Node struct {
 	Meta       Meta                   `json:"meta,omitempty"`
 }
 
+func (n Node) String() string {
+	return n.EntityRef.String()
+}
+
 type EntityRef struct {
 	Pkg  string `json:"pkg,omitempty"`
 	Name string `json:"name,omitempty"`
@@ -195,6 +199,24 @@ type SenderConnectionSide struct {
 	Meta      Meta       `json:"meta,omitempty"`
 }
 
+func (s SenderConnectionSide) String() string {
+	selectorsString := ""
+	if len(s.Selectors) != 0 {
+		for _, selector := range s.Selectors {
+			selectorsString += "." + selector
+		}
+	}
+
+	var result string
+	if s.ConstRef != nil {
+		result = s.ConstRef.String()
+	} else {
+		result = s.PortAddr.String()
+	}
+
+	return result + selectorsString
+}
+
 type PortAddr struct {
 	Node string `json:"node,omitempty"`
 	Port string `json:"port,omitempty"`
@@ -205,6 +227,9 @@ type PortAddr struct {
 func (p PortAddr) String() string {
 	if p.Node == "" {
 		return fmt.Sprintf("%v[%v]", p.Port, p.Idx)
+	}
+	if p.Idx == nil {
+		return fmt.Sprintf("%v", p.Port)
 	}
 	return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
 }

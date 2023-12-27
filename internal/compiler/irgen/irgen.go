@@ -47,7 +47,7 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 		node: src.Node{
 			EntityRef: src.EntityRef{
 				Pkg:  "", // ref to local entity
-				Name: mainPkgName,
+				Name: "Main",
 			},
 		},
 		portsUsage: portsUsage{

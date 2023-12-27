@@ -99,7 +99,7 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error)
 	}
 
 	return src.File{
-		Imports:  file.Imports,
+		Imports:  desugaredImports,
 		Entities: desugaredEntities,
 	}, nil
 }

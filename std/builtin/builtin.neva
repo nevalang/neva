@@ -12,7 +12,7 @@ types {
 
 components {
     #runtime_func(Const)
-    pub Const<T>() (v t3)
+    pub Const<T>() (v T)
 
     #runtime_func(Add)
     pub Add<T int | float | str>(a T, b T) (v T)

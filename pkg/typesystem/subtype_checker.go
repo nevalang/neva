@@ -63,7 +63,7 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 			return nil // we sure that 'parent' (e.g. vec) is same for previous recursive call
 		}
 
-		if expr.Inst.Ref != constr.Inst.Ref {
+		if expr.Inst.Ref.String() != constr.Inst.Ref.String() {
 			return fmt.Errorf("%w: got %v, want %v", ErrDiffRefs, expr.Inst.Ref, constr.Inst.Ref)
 		}
 

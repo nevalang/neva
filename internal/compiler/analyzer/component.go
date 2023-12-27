@@ -401,22 +401,26 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
-	entity, _, err := scope.Entity(node.EntityRef)
+	entity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		panic("")
+		return ts.Expr{}, &Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &portAddr.Meta,
+		}
 	}
 
-	typ, err := a.getResolvedPortType(
+	typ, aerr := a.getResolvedPortType(
 		entity.Component.Interface.IO.In,
 		entity.Component.Interface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,
 	)
-	if err != nil {
+	if aerr != nil {
 		return ts.Expr{}, &Error{
-			Err:      fmt.Errorf("Unable to get resolved port type: port '%v', node '%v': %w", portAddr, node, err),
-			Location: &scope.Location,
+			Err:      fmt.Errorf("Unable to get resolved port type: port '%v', node '%v': %w", portAddr, node, aerr),
+			Location: &location,
 			Meta:     &portAddr.Meta,
 		}
 	}

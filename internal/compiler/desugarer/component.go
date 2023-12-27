@@ -42,7 +42,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 				compiler.RuntimeFuncMsgDirective: {constRefStr},
 			},
 			EntityRef: src.EntityRef{
-				Pkg:  "std/builtin", // FIXME we need import to builtin
+				Pkg:  "builtin",
 				Name: "Const",
 			},
 			TypeArgs: []ts.Expr{constTypeExpr},
@@ -50,7 +50,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 
 		constNodeOutportAddr := src.PortAddr{
 			Node: constRefStr,
-			Port: "out",
+			Port: "v",
 		}
 
 		desugaredNet = append(desugaredNet, src.Connection{
