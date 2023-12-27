@@ -54,7 +54,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib dep
 
 	return src.Module{
-		Manifest: mod.Manifest,
+		Manifest: desugaredManifest,
 		Packages: desugaredPkgs,
 	}, nil
 }

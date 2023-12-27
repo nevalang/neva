@@ -14,6 +14,7 @@ import (
 
 var ErrConstSenderEntityKind = errors.New("Entity that is used as a const reference in component's network must be of kind constant") //nolint:lll
 
+// desugarComponent replaces const ref in net with regular port addr and injects const node with directive.
 func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (src.Component, error) {
 	if len(component.Net) == 0 {
 		return component, nil
@@ -41,7 +42,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 				compiler.RuntimeFuncMsgDirective: {constRefStr},
 			},
 			EntityRef: src.EntityRef{
-				Pkg:  "std/builtin",
+				Pkg:  "std/builtin", // FIXME we need import to builtin
 				Name: "Const",
 			},
 			TypeArgs: []ts.Expr{constTypeExpr},
@@ -72,6 +73,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 	}, nil
 }
 
+// getConstType is needed to figure out type parameters for Const node
 func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *analyzer.Error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
