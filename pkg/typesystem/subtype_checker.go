@@ -127,7 +127,7 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 					return nil
 				}
 			}
-			return fmt.Errorf("%w: got %v", ErrUnion, expr.Lit)
+			return fmt.Errorf("%w: want %v, got %v", ErrUnion, constr.Lit.Union, expr)
 		}
 		// If we here, then expr is union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {

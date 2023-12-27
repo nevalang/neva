@@ -562,3 +562,23 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 
 	return val
 }
+
+func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.Directive][]string {
+	if actx == nil {
+		return nil
+	}
+
+	directives := actx.AllCompilerDirective()
+	result := make(map[src.Directive][]string, len(directives))
+	for _, directive := range directives {
+		id := directive.IDENTIFIER()
+		args := directive.CompilerDirectivesArgs().AllIDENTIFIER()
+		ss := make([]string, 0, len(args))
+		for _, arg := range args {
+			ss = append(ss, arg.GetText())
+		}
+		result[src.Directive(id.GetText())] = ss
+	}
+
+	return nil
+}

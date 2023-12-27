@@ -415,7 +415,7 @@ func (a Analyzer) getNodeInportType(
 	)
 	if err != nil {
 		return ts.Expr{}, &Error{
-			Err:      fmt.Errorf("Unable to ger resolved port type: %w", err),
+			Err:      fmt.Errorf("Unable to get resolved port type: port '%v', node '%v': %w", portAddr, node, err),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
