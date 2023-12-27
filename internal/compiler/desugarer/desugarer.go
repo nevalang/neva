@@ -80,6 +80,7 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, er
 	return desugaredPkgs, nil
 }
 
+// desugarFile injects import of std/builtin into every pkg's file and desugares it's every entity
 func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error) {
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
@@ -89,6 +90,12 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error)
 			return src.File{}, err
 		}
 		desugaredEntities[entityName] = desugaredEntity
+	}
+
+	desugaredImports := maps.Clone(file.Imports)
+	desugaredImports["builtin"] = src.Import{
+		ModuleName: "std",
+		PkgName:    "builtin",
 	}
 
 	return src.File{

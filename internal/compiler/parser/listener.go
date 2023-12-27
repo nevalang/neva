@@ -41,12 +41,17 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 /* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
+	var body *ts.Expr
+	if expr := actx.TypeExpr(); expr != nil {
+		body = parseTypeExpr(actx.TypeExpr())
+	}
+
 	result := src.Entity{
 		IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
 		Kind:     src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()).Params,
-			BodyExpr: parseTypeExpr(actx.TypeExpr()),
+			BodyExpr: body,
 			Meta: src.Meta{
 				Text: actx.GetText(),
 				Start: src.Position{
