@@ -6,7 +6,6 @@ package analyzer
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"golang.org/x/exp/maps"
 
@@ -191,7 +190,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		Kind:     entity.Kind,
 	}
 
-	isStd := strings.HasPrefix(scope.Location.PkgName, "std/")
+	isStd := scope.Location.ModRef.Path == "std"
 
 	switch entity.Kind {
 	case src.TypeEntity:

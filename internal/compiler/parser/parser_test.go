@@ -36,18 +36,18 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	require.NoError(t, err)
 
 	d1 := got.Entities["C1"].Component.Directives[compiler.RuntimeFuncDirective][0]
-	require.Equal(t, d1, "d1")
+	require.Equal(t, "d1", d1)
 
 	c2 := got.Entities["C2"].Component
 
 	d2 := c2.Directives[compiler.RuntimeFuncDirective][0]
-	require.Equal(t, d2, "d2")
+	require.Equal(t, "d2", d2)
 
-	d3 := c2.Nodes["n1"].Directives[compiler.RuntimeFuncMsgDirective]
-	require.Equal(t, d3, "d3")
+	d3 := c2.Nodes["n1"].Directives[compiler.RuntimeFuncMsgDirective][0]
+	require.Equal(t, "d3", d3)
 
-	d4 := c2.Nodes["n2"].Directives[compiler.RuntimeFuncMsgDirective]
-	require.Equal(t, d4, "d4")
+	d4 := c2.Nodes["n2"].Directives[compiler.RuntimeFuncMsgDirective][0]
+	require.Equal(t, "d4", d4)
 }
 
 // FIXME this suit contains broken tests (they fail because of bugs in parser), but we can't write tests this way because of src.Meta field

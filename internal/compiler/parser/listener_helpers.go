@@ -284,6 +284,8 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
+// TODO implement directives for nodes
+
 func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 	result := map[string]src.Node{}
 
@@ -299,9 +301,12 @@ func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 				panic(err)
 			}
 
+			directives := parseCompilerDirectives(node.CompilerDirectives())
+
 			result[node.IDENTIFIER().GetText()] = src.Node{
-				EntityRef: parsedRef,
-				TypeArgs:  typeArgs,
+				Directives: directives,
+				EntityRef:  parsedRef,
+				TypeArgs:   typeArgs,
 				Meta: src.Meta{
 					Text: node.GetText(),
 					Start: src.Position{
@@ -580,5 +585,5 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 		result[src.Directive(id.GetText())] = ss
 	}
 
-	return nil
+	return result
 }

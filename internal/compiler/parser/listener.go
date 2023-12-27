@@ -113,14 +113,12 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 
 /* -- Components --- */
 
-// TODO implement directives for components and nodes
-
 func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
 	isPublic := actx.InterfaceDef().PUB_KW() != nil //nolint:nosnakecase
 
-	parseCompilerDirectives(actx.CompilerDirectives())
+	directives := parseCompilerDirectives(actx.CompilerDirectives())
 
 	var cmp src.Entity
 	if actx.CompBody() == nil {
@@ -128,7 +126,8 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
 			Component: src.Component{
-				Interface: parsedInterfaceDef,
+				Directives: directives,
+				Interface:  parsedInterfaceDef,
 			},
 		}
 		s.file.Entities[name] = cmp
@@ -141,9 +140,10 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
 			Component: src.Component{
-				Interface: parsedInterfaceDef,
-				Nodes:     parseNodes(allNodesDef),
-				Net:       parseNet(actx.CompBody().AllCompNetDef()),
+				Directives: directives,
+				Interface:  parsedInterfaceDef,
+				Nodes:      parseNodes(allNodesDef),
+				Net:        parseNet(actx.CompBody().AllCompNetDef()),
 			},
 		}
 	}
