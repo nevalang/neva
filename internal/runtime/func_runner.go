@@ -25,10 +25,10 @@ func MustNewFuncRunner(registry map[string]Func) FuncRunner {
 	return FuncRunner{registry: registry}
 }
 
-func (d FuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error) {
+func (d FuncRunner) Run(ctx context.Context, funcCalls []FuncCall) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	wg := sync.WaitGroup{}
-	wg.Add(len(funcRoutines))
+	wg.Add(len(funcCalls))
 
 	defer func() {
 		if err != nil {
@@ -36,19 +36,19 @@ func (d FuncRunner) Run(ctx context.Context, funcRoutines []FuncCall) (err error
 		}
 	}()
 
-	for _, routine := range funcRoutines {
-		if routine.MetaMsg != nil {
-			ctx = context.WithValue(ctx, CtxMsgKey, routine.MetaMsg)
+	for _, call := range funcCalls {
+		if call.MetaMsg != nil {
+			ctx = context.WithValue(ctx, CtxMsgKey, call.MetaMsg)
 		}
 
-		constructor, ok := d.registry[routine.Ref]
+		constructor, ok := d.registry[call.Ref]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrFuncNotFound, routine.Ref)
+			return fmt.Errorf("%w: %v", ErrFuncNotFound, call.Ref)
 		}
 
-		fun, err := constructor(ctx, routine.IO)
+		fun, err := constructor(ctx, call.IO)
 		if err != nil {
-			return fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, routine.Ref)
+			return fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, call.Ref)
 		}
 
 		go func() {

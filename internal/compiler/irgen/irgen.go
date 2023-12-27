@@ -95,7 +95,7 @@ func getRuntimeFunc(component src.Component) (string, bool) {
 }
 
 func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, error) {
-	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective]
+	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective] // FIXME no directives on const (msg) node
 	if !ok {
 		return nil, nil
 	}
@@ -191,9 +191,11 @@ func (g Generator) processComponentNode( //nolint:funlen
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
 	outPortAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
+	scope = scope.WithLocation(location)
+
 	runtimeFuncRef, isRuntimeFunc := getRuntimeFunc(component)
 	if isRuntimeFunc {
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope.WithLocation(location))
+		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
 		if err != nil {
 			return err
 		}
