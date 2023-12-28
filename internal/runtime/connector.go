@@ -76,10 +76,11 @@ func (c Connector) distribute(
 	isFirstReceiverProcessed := false
 	i := 0
 	interceptedMsgs := make(map[PortAddr]Msg, len(q)) // we can handle same receiver multiple times
+	receiversPortAddrs := meta.ReceiverPortAddrs
 
 	for len(q) > 0 {
 		currentReceiver := q[i]
-		receiverPortAddr := meta.ReceiverPortAddrs[i]
+		receiverPortAddr := meta.ReceiverPortAddrs[i] // TODO check
 
 		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
 			event := Event{
@@ -108,7 +109,9 @@ func (c Connector) distribute(
 
 			msg = c.listener.Send(event, msg) // notify listener about the event and save intercepted message
 
-			q = append(q[:i], q[i+1:]...) // remove current receiver from queue
+			// remove current receiver from queue
+			q = append(q[:i], q[i+1:]...)
+			receiversPortAddrs = append(receiversPortAddrs[:i], receiversPortAddrs[i+1:]...)
 
 			if !isFirstReceiverProcessed { // if this is the first time we processed receiver
 				ready <- struct{}{}             // then notify the sender that it can send new messages

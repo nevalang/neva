@@ -36,6 +36,15 @@
       "args": ["do_nothing"]
     },
     {
+      "name": "Interpreter: do_nothing2",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["do_nothing2"]
+    },
+    {
       "name": "Interpreter: add_numbers",
       "type": "go",
       "request": "launch",
