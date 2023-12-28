@@ -16,28 +16,27 @@ type Interpreter struct {
 	adapter  Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) (int, error) {
+func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) error {
 	build, err := i.builder.Build(ctx, workdirPath)
 	if err != nil {
-		return 0, fmt.Errorf("build: %w", err)
+		return fmt.Errorf("build: %w", err)
 	}
 
 	irProg, err := i.compiler.CompileToIR(ctx, build, workdirPath, mainPkgName)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	rprog, err := i.adapter.Adapt(irProg)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	code, err := i.runtime.Run(ctx, rprog)
-	if err != nil {
-		return 0, err
+	if err := i.runtime.Run(ctx, rprog); err != nil {
+		return err
 	}
 
-	return code, nil
+	return nil
 }
 
 func New(

@@ -23,7 +23,7 @@ func New(connector Connector, funcRunner FuncRunner) Runtime {
 }
 
 type (
-	Func func(context.Context, FuncIO) (func(), error)
+	Func func(FuncIO, Msg) (func(context.Context), error)
 )
 
 var (
@@ -33,34 +33,32 @@ var (
 	ErrFuncRunner        = errors.New("func runner")
 )
 
-func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
+func (r Runtime) Run(ctx context.Context, prog Program) (err error) {
 	enter := prog.Ports[PortAddr{Path: "main/in", Port: "enter"}]
 	if enter == nil {
-		return 0, ErrStartPortNotFound
+		return ErrStartPortNotFound
 	}
 
 	exit := prog.Ports[PortAddr{Path: "main/out", Port: "exit"}]
 	if exit == nil {
-		return 0, ErrExitPortNotFound
+		return ErrExitPortNotFound
 	}
 
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithCancel(ctx)
-	defer cancel()
-
-	funcRun, err := r.funcRunner.Run(ctx, prog.Funcs)
+	funcRun, err := r.funcRunner.Run(prog.Funcs)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %v", ErrFuncRunner, err)
+		return fmt.Errorf("%w: %v", ErrFuncRunner, err)
 	}
+
+	ctx2, cancel := context.WithCancel(ctx)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
-		funcRun()
+		funcRun(ctx2)
 		wg.Done()
 	}()
 	go func() {
-		r.connector.Connect(ctx, prog.Connections)
+		r.connector.Connect(ctx2, prog.Connections)
 		wg.Done()
 	}()
 
@@ -68,13 +66,12 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		enter <- emptyMsg{}
 	}()
 
-	var exitCode int64
 	go func() {
-		exitCode = (<-exit).Int()
+		<-exit
 		cancel()
 	}()
 
-	wg.Wait() // wait for connector and funcs to finish
+	wg.Wait()
 
-	return int(exitCode), nil
+	return nil
 }
