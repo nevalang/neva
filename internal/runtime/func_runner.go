@@ -25,39 +25,31 @@ func MustNewFuncRunner(registry map[string]Func) FuncRunner {
 	return FuncRunner{registry: registry}
 }
 
-func (d FuncRunner) Run(ctx context.Context, funcCalls []FuncCall) (err error) {
-	ctx, cancel := context.WithCancel(ctx)
-	wg := sync.WaitGroup{}
-	wg.Add(len(funcCalls))
+func (d FuncRunner) Run(ctx context.Context, funcCalls []FuncCall) (func(), error) {
+	ff := make([]func(), len(funcCalls))
 
-	defer func() {
-		if err != nil {
-			cancel()
-		}
-	}()
-
-	for _, call := range funcCalls {
+	for i, call := range funcCalls {
 		if call.MetaMsg != nil {
 			ctx = context.WithValue(ctx, CtxMsgKey, call.MetaMsg)
 		}
-
 		constructor, ok := d.registry[call.Ref]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrFuncNotFound, call.Ref)
+			return nil, fmt.Errorf("%w: %v", ErrFuncNotFound, call.Ref)
 		}
-
 		fun, err := constructor(ctx, call.IO)
 		if err != nil {
-			return fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, call.Ref)
+			return nil, fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, call.Ref)
 		}
-
-		go func() {
-			fun() // will return at ctx.Done()
-			wg.Done()
-		}()
+		ff[i] = fun
 	}
 
-	wg.Wait()
-
-	return nil
+	return func() {
+		wg := sync.WaitGroup{}
+		wg.Add(len(funcCalls))
+		for _, f := range ff {
+			f()
+			wg.Done()
+		}
+		wg.Wait()
+	}, nil
 }

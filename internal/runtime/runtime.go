@@ -5,8 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/nevalang/neva/internal/runtime/errgroup"
+	"sync"
 )
 
 type Runtime struct {
@@ -45,24 +44,27 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		return 0, ErrExitPortNotFound
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	g, gctx := errgroup.WithContext(ctx)
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(ctx)
+	defer cancel()
 
-	g.Go(func() error {
-		if err := r.connector.Connect(gctx, prog.Connections); err != nil {
-			return fmt.Errorf("%w: %v", ErrConnector, err)
-		}
-		return nil
-	})
+	funcRun, err := r.funcRunner.Run(ctx, prog.Funcs)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrFuncRunner, err)
+	}
 
-	g.Go(func() error {
-		if err := r.funcRunner.Run(gctx, prog.Funcs); err != nil {
-			return fmt.Errorf("%w: %v", ErrFuncRunner, err)
-		}
-		return nil
-	})
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		funcRun()
+		wg.Done()
+	}()
+	go func() {
+		r.connector.Connect(ctx, prog.Connections)
+		wg.Done()
+	}()
 
-	go func() { // kick
+	go func() {
 		enter <- emptyMsg{}
 	}()
 
@@ -72,5 +74,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		cancel()
 	}()
 
-	return int(exitCode), g.Wait()
+	wg.Wait() // wait for connector and funcs to finish
+
+	return int(exitCode), nil
 }
