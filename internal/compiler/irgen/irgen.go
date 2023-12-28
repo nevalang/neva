@@ -191,11 +191,9 @@ func (g Generator) processComponentNode( //nolint:funlen
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
 	outPortAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
-	scope = scope.WithLocation(location)
-
 	runtimeFuncRef, isRuntimeFunc := getRuntimeFunc(component)
 	if isRuntimeFunc {
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
+		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope) // use previous location
 		if err != nil {
 			return err
 		}
@@ -211,6 +209,8 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 		return nil
 	}
+
+	scope = scope.WithLocation(location) // only use new location if that's not builtin
 
 	// We use network as a source of true about ports usage instead of component's definitions.
 	// We cannot rely on them because there's not enough information about how many slots are used.

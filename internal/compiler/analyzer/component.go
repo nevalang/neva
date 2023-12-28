@@ -45,7 +45,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 		}
 	}
 
-	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
+	analyzedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
 		allowEmptyInports:  isRuntimeFunc,
 		allowEmptyOutports: isRuntimeFunc,
 	})
@@ -67,7 +67,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
+	analyzedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
 	if err != nil {
 		return src.Component{}, Error{
 			Location: &scope.Location,
@@ -83,7 +83,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 		}
 	}
 
-	resolvedNet, err := a.analyzeComponentNetwork(component.Net, resolvedInterface, resolvedNodes, nodesIfaces, scope)
+	analyzedNet, err := a.analyzeComponentNetwork(component.Net, analyzedInterface, analyzedNodes, nodesIfaces, scope)
 	if err != nil {
 		return src.Component{}, Error{
 			Location: &scope.Location,
@@ -92,9 +92,9 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 	}
 
 	return src.Component{
-		Interface: resolvedInterface,
-		Nodes:     resolvedNodes,
-		Net:       resolvedNet,
+		Interface: analyzedInterface,
+		Nodes:     analyzedNodes,
+		Net:       analyzedNet,
 	}, nil
 }
 
@@ -102,11 +102,11 @@ func (a Analyzer) analyzeComponentNodes(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (map[string]src.Node, map[string]src.Interface, *Error) {
-	resolvedNodes := make(map[string]src.Node, len(nodes))
+	analyzedNodes := make(map[string]src.Node, len(nodes))
 	nodesInterfaces := make(map[string]src.Interface, len(nodes))
 
 	for nodeName, node := range nodes {
-		resolvedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
+		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
 			return nil, nil, Error{
 				Err:      fmt.Errorf("Invalid node: %v", nodeName),
@@ -116,10 +116,10 @@ func (a Analyzer) analyzeComponentNodes(
 		}
 
 		nodesInterfaces[nodeName] = nodeInterface
-		resolvedNodes[nodeName] = resolvedNode
+		analyzedNodes[nodeName] = analyzedNode
 	}
 
-	return resolvedNodes, nodesInterfaces, nil
+	return analyzedNodes, nodesInterfaces, nil
 }
 
 //nolint:funlen
@@ -205,8 +205,10 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 
 	if node.Deps == nil {
 		return src.Node{
-			EntityRef: node.EntityRef,
-			TypeArgs:  resolvedArgs,
+			Directives: node.Directives,
+			EntityRef:  node.EntityRef,
+			TypeArgs:   resolvedArgs,
+			Meta:       node.Meta,
 		}, iface, nil
 	}
 
@@ -224,9 +226,11 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	return src.Node{
-		EntityRef: node.EntityRef,
-		TypeArgs:  resolvedArgs,
-		Deps:      resolvedComponentDI,
+		Directives: node.Directives,
+		EntityRef:  node.EntityRef,
+		TypeArgs:   resolvedArgs,
+		Deps:       resolvedComponentDI,
+		Meta:       node.Meta,
 	}, iface, nil
 }
 

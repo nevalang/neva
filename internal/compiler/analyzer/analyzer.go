@@ -227,14 +227,14 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		resolvedComp, err := a.analyzeComponent(entity.Component, scope)
+		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, Error{
 				Location: &scope.Location,
 				Meta:     &entity.Component.Meta,
 			}.Merge(err)
 		}
-		resolvedEntity.Component = resolvedComp
+		resolvedEntity.Component = analyzedComponent
 	default:
 		return src.Entity{}, &Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),

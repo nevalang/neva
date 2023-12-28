@@ -20,8 +20,7 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 		return component, nil
 	}
 
-	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
-	maps.Copy(desugaredNodes, component.Nodes)
+	desugaredNodes := maps.Clone(component.Nodes)
 	desugaredNet := make([]src.Connection, 0, len(component.Net))
 
 	for _, conn := range component.Net {

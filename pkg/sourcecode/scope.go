@@ -80,6 +80,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, Location{
+				ModRef:   s.Location.ModRef,
 				PkgName:  s.Location.PkgName,
 				FileName: fileName,
 			}, nil
@@ -119,14 +120,18 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrImportNotFound, entityRef.Pkg)
 	}
 
-	var mod Module
+	var (
+		mod    Module
+		modRef ModuleRef
+	)
 	if pkgImport.ModuleName == "@" {
+		modRef = s.Location.ModRef
 		mod = curMod
 	} else {
-		depModRef := curMod.Manifest.Deps[pkgImport.ModuleName]
-		depMod, ok := s.Build.Modules[depModRef]
+		modRef = curMod.Manifest.Deps[pkgImport.ModuleName]
+		depMod, ok := s.Build.Modules[modRef]
 		if !ok {
-			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, depModRef)
+			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, modRef)
 		}
 		mod = depMod
 	}
@@ -144,6 +149,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 	}
 
 	return entity, Location{
+		ModRef:   modRef,
 		PkgName:  pkgImport.PkgName,
 		FileName: fileName,
 	}, nil
