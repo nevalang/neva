@@ -23,7 +23,7 @@ func New(connector Connector, funcRunner FuncRunner) Runtime {
 }
 
 type (
-	Func func(context.Context, FuncIO) (func(), error)
+	Func func(FuncIO, Msg) (func(context.Context), error)
 )
 
 var (
@@ -44,23 +44,21 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		return 0, ErrExitPortNotFound
 	}
 
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithCancel(ctx)
-	defer cancel()
-
-	funcRun, err := r.funcRunner.Run(ctx, prog.Funcs)
+	funcRun, err := r.funcRunner.Run(prog.Funcs)
 	if err != nil {
 		return 0, fmt.Errorf("%w: %v", ErrFuncRunner, err)
 	}
 
+	ctx2, cancel := context.WithCancel(ctx)
+
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
-		funcRun()
+		funcRun(ctx2)
 		wg.Done()
 	}()
 	go func() {
-		r.connector.Connect(ctx, prog.Connections)
+		r.connector.Connect(ctx2, prog.Connections)
 		wg.Done()
 	}()
 

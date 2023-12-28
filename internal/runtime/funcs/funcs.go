@@ -12,7 +12,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func read(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func read(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	return func() {
+	return func(ctx context.Context) {
 		reader := bufio.NewReader(os.Stdin)
 		for {
 			select {
@@ -47,7 +47,7 @@ func read(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func print(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:predeclared
+func print(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) { //nolint:predeclared
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func print(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:pr
 	if err != nil {
 		return nil, err
 	}
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -78,7 +78,7 @@ func print(ctx context.Context, io runtime.FuncIO) (func(), error) { //nolint:pr
 	}, nil
 }
 
-func lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func lock(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -112,12 +112,7 @@ func lock(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func constant(ctx context.Context, io runtime.FuncIO) (func(), error) {
-	msg := ctx.Value("msg")
-	if msg == nil {
-		return nil, errors.New("ctx msg not found")
-	}
-
+func constant(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
 	v, ok := msg.(runtime.Msg)
 	if !ok {
 		return nil, errors.New("ctx value is not runtime message")
@@ -128,7 +123,7 @@ func constant(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return nil, err
 	}
 
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -139,13 +134,13 @@ func constant(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func void(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func void(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
 	}
 
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -156,7 +151,7 @@ func void(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func add(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func add(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	a, err := io.In.Port("a")
 	if err != nil {
 		return nil, err
@@ -174,7 +169,7 @@ func add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return runtime.NewIntMsg(a.Int() + b.Int())
 	}
 
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -195,7 +190,7 @@ func add(ctx context.Context, io runtime.FuncIO) (func(), error) {
 	}, nil
 }
 
-func parseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
+func parseInt(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -219,7 +214,7 @@ func parseInt(ctx context.Context, io runtime.FuncIO) (func(), error) {
 		return runtime.NewIntMsg(int64(v)), nil
 	}
 
-	return func() {
+	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
