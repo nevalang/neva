@@ -72,7 +72,8 @@ func (r Runtime) Run(ctx context.Context, prog Program) (code int, err error) {
 		cancel()
 	}()
 
-	wg.Wait() // wait for connector and funcs to finish
+	// wait for connector and funcs to finish
+	wg.Wait()
 
 	return int(exitCode), nil
 }

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -32,6 +33,8 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 		receiverSet[receiverPortAddr] = struct{}{}
 	}
 
+	fmt.Println("enter", conn.Meta.SenderPortAddr)
+
 	// when some receivers are much faster than others we can leak memory by spawning to many distribute goroutines
 	// sema := make(chan struct{}, 10)
 
@@ -59,11 +62,23 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 				)
 				// <-sema // distribute finished, all receivers processed, decrement running goroutines counter
 			}()
-			<-ready // after processing first receiver we can move on and accept new messages from sender
+
+			select {
+			case <-ctx.Done(): // it's possible that ctx already closed and no one will receive current message
+				return
+			case <-ready: // after processing first receiver we can move on and accept new messages from sender
+				continue
+			}
+
 			// sema <- struct{}{} // increment running goroutines counter
 		}
 	}
 }
+
+// FIXME
+// const -> (msg) -> lock.v
+// ... ctx.Done() (lock exits)
+// const -> (next msg) -> lock.v (lock won't read)
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
 func (c Connector) distribute(
