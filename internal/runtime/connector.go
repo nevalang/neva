@@ -27,13 +27,10 @@ func (c Connector) Connect(ctx context.Context, conns []Connection) {
 }
 
 func (c Connector) broadcast(ctx context.Context, conn Connection) {
-	receiverSet := make(map[PortAddr]struct{}, len(conn.Meta.ReceiverPortAddrs))
-	for _, receiverPortAddr := range conn.Meta.ReceiverPortAddrs {
-		receiverSet[receiverPortAddr] = struct{}{}
-	}
+	receiversForEvent := getReceiversForEvent(conn)
 
 	// when some receivers are much faster than others we can leak memory by spawning to many distribute goroutines
-	// sema := make(chan struct{}, 10)
+	sema := make(chan struct{}, 10)
 
 	for {
 		select {
@@ -44,9 +41,11 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 				Type: MessageSentEvent,
 				MessageSent: &EventMessageSent{
 					SenderPortAddr:    conn.Meta.SenderPortAddr,
-					ReceiverPortAddrs: receiverSet,
+					ReceiverPortAddrs: receiversForEvent,
 				},
 			}
+
+			sema <- struct{}{} // increment active goroutines counter, if too much active, block
 
 			ready := make(chan struct{}) // distribute will send to this channel after processing first receiver
 			go func() {
@@ -57,7 +56,7 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 					conn.Receivers,
 					ready,
 				)
-				// <-sema // distribute finished, all receivers processed, decrement running goroutines counter
+				<-sema // all receivers processed, decrement active goroutines counter
 			}()
 
 			select {
@@ -66,16 +65,17 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 			case <-ready: // after processing first receiver we can move on and accept new messages from sender
 				continue
 			}
-
-			// sema <- struct{}{} // increment running goroutines counter
 		}
 	}
 }
 
-// FIXME
-// const -> (msg) -> lock.v
-// ... ctx.Done() (lock exits)
-// const -> (next msg) -> lock.v (lock won't read)
+func getReceiversForEvent(conn Connection) map[PortAddr]struct{} {
+	receiversForEvent := make(map[PortAddr]struct{}, len(conn.Meta.ReceiverPortAddrs))
+	for _, receiverPortAddr := range conn.Meta.ReceiverPortAddrs {
+		receiversForEvent[receiverPortAddr] = struct{}{}
+	}
+	return receiversForEvent
+}
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
 func (c Connector) distribute( //nolint:funlen
