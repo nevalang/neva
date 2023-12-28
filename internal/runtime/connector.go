@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -32,8 +31,6 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 	for _, receiverPortAddr := range conn.Meta.ReceiverPortAddrs {
 		receiverSet[receiverPortAddr] = struct{}{}
 	}
-
-	fmt.Println("enter", conn.Meta.SenderPortAddr)
 
 	// when some receivers are much faster than others we can leak memory by spawning to many distribute goroutines
 	// sema := make(chan struct{}, 10)
@@ -81,7 +78,7 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 // const -> (next msg) -> lock.v (lock won't read)
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c Connector) distribute(
+func (c Connector) distribute( //nolint:funlen
 	ctx context.Context,
 	msg Msg,
 	meta ConnectionMeta,
@@ -95,7 +92,7 @@ func (c Connector) distribute(
 
 	for len(q) > 0 {
 		currentReceiver := q[i]
-		receiverPortAddr := meta.ReceiverPortAddrs[i] // TODO check
+		receiverPortAddr := meta.ReceiverPortAddrs[i]
 
 		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
 			event := Event{
