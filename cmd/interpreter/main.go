@@ -57,11 +57,8 @@ func main() {
 		return
 	}
 
-	code, err := intr.Interpret(context.Background(), wd, os.Args[1])
-	if err != nil {
+	if err := intr.Interpret(context.Background(), wd, os.Args[1]); err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	os.Exit(code)
 }
