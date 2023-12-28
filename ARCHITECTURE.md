@@ -1,6 +1,6 @@
 # ARCHITECTURE
 
-## Executable Binary Compilation
+## Compiler
 
 ```mermaid
 flowchart LR
@@ -12,12 +12,6 @@ flowchart LR
     end
 
     subgraph compiler
-        subgraph frontend
-            parser
-            desugarer
-            analyzer
-        end
-
         subgraph backend
             go-code-generator
         end
@@ -42,9 +36,54 @@ flowchart LR
     compiler -->|go-code| go-compiler
 ```
 
-## Interpreter mode
+## Runtime
 
+```mermaid
+flowchart LR
+    program-->runtime
+
+    subgraph runtime
+        connector-->|msg|func-runner
+        func-runner-->|msg|connector
+    end
+
+    subgraph connector
+        event-listener
+    end
+
+    subgraph func-runner
+        func-registry
+    end
+```
+
+## Interpreter
+
+```mermaid
+flowchart LR
+    source-code-->interpreter
+
+    subgraph interpreter
+        compiler-->|ir|adapter-->|program|runtime
+    end
+```
 
 ## VSCode Extension
 
-See [web/ARCHITECTURE.md](./web/ARCHITECTURE.md)
+```mermaid
+flowchart LR
+    language-server-->|jsonrpc|vscode
+    vscode-->|jsonrpc|language-server
+
+    subgraph language-server
+        indexer
+    end
+
+    subgraph vscode
+        webview-->extension
+        extension-->webview
+    end
+
+    subgraph indexer
+        compiler-frontend
+    end
+```
