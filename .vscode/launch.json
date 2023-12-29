@@ -71,6 +71,33 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["hello_world/with_sugar"]
     },
+    {
+      "name": "Interpreter: add_numbers/naive",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["add_numbers/naive"]
+    },
+    {
+      "name": "Interpreter: add_numbers/with_error_handling",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["add_numbers/with_error_handling"]
+    },
+    {
+      "name": "Interpreter: add_numbers/with_sub_components",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["add_numbers/with_sub_components"]
+    },
     // === Other ===
     {
       "name": "antlr_000_empty.neva",
