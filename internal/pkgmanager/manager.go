@@ -25,6 +25,7 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	}
 
 	mods := map[src.ModuleRef]compiler.RawModule{}
+	// entryModRef := src.ModuleRef{Path: "@"}
 	entryModRef := src.ModuleRef{Path: ""}
 	mods[entryModRef] = entryMod
 

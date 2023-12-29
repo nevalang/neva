@@ -1,10 +1,8 @@
-// THIS PROGRAM WON'T COMPILE BECAUSE OF UNUSED ERR PORT
-// NEED TO THINK ABOUT SUGAR AND VOID
-
 // Program that adds two numbers typed by user and prints the result.
-// The algorithm is this: read first input, parse it,
-// then read the second input and parse it too.
-// Add numbers and print the result.
+// The algorithm is:
+// 1) read first input, parse it,
+// 2)  read the second input and parse it too.
+// 3) add numbers and print the result.
 
 import {
 	std/core

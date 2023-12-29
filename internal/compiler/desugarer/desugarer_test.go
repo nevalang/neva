@@ -16,8 +16,54 @@ func TestDesugarer_Desugar(t *testing.T) {
 		want    src.Build
 		wantErr error
 	}{
+		// every module must have std module dependency and std/builtin import in every file
+		// {
+		// 	name: "std_mod_dep_and_builtin_import",
+		// 	build: src.Build{
+		// 		Modules: map[src.ModuleRef]src.Module{
+		// 			{}: {
+		// 				Manifest: src.ModuleManifest{
+		// 					Deps: map[string]src.ModuleRef{}, // <-- no std mod dep
+		// 				},
+		// 				Packages: map[string]src.Package{
+		// 					"pkgName": {
+		// 						"fileName": src.File{
+		// 							Imports: map[string]src.Import{}, // <-- no imports of std/builtin
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	want: src.Build{
+		// 		Modules: map[src.ModuleRef]src.Module{
+		// 			{}: {
+		// 				Manifest: src.ModuleManifest{
+		// 					Deps: map[string]src.ModuleRef{
+		// 						"std": {Path: "std", Version: "0.0.1"}, // <-- std mod dep added
+		// 					},
+		// 				},
+		// 				Packages: map[string]src.Package{
+		// 					"pkgName": {
+		// 						"fileName": src.File{
+		// 							Imports: map[string]src.Import{
+		// 								"builtin": { // <-- std/builtin import added
+		// 									ModuleName: "std",
+		// 									PkgName:    "builtin",
+		// 								},
+		// 							},
+		// 							Entities: map[string]src.Entity{},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	wantErr: nil,
+		// },
 		{
-			name: "inject_std_dep_and_const_node",
+			// every network with const ref must be desugared into special node and connections to it
+			name: "const_node",
 			build: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
@@ -62,7 +108,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 						Manifest: src.ModuleManifest{
 							WantCompilerVersion: "0.0.1",
 							Deps: map[string]src.ModuleRef{
-								"std": { // stdlib dep injected
+								"std": { // <-- stdlib mod dep added
 									Path:    "std",
 									Version: "0.0.1",
 								},
@@ -71,6 +117,12 @@ func TestDesugarer_Desugar(t *testing.T) {
 						Packages: map[string]src.Package{
 							"main": {
 								"file": src.File{
+									Imports: map[string]src.Import{
+										"builtin": { // <-- std/builtin import added
+											ModuleName: "std",
+											PkgName:    "builtin",
+										},
+									},
 									Entities: map[string]src.Entity{
 										"bar": {
 											Kind: src.ConstEntity,
@@ -87,12 +139,12 @@ func TestDesugarer_Desugar(t *testing.T) {
 											Kind: src.ComponentEntity,
 											Component: src.Component{
 												Nodes: map[string]src.Node{
-													"bar": {
+													"bar": { // <-- const node added
 														Directives: map[src.Directive][]string{
 															"runtime_func_msg": {"bar"},
 														},
 														EntityRef: src.EntityRef{
-															Pkg:  "std/builtin",
+															Pkg:  "builtin",
 															Name: "Const",
 														},
 														TypeArgs: []typesystem.Expr{
@@ -104,10 +156,10 @@ func TestDesugarer_Desugar(t *testing.T) {
 												},
 												Net: []src.Connection{
 													{
-														SenderSide: src.SenderConnectionSide{
+														SenderSide: src.SenderConnectionSide{ // <-- const ref conn replaced with normal one
 															PortAddr: &src.PortAddr{
 																Node: "bar",
-																Port: "out",
+																Port: "v",
 															},
 														},
 													},
@@ -123,6 +175,85 @@ func TestDesugarer_Desugar(t *testing.T) {
 			},
 			wantErr: nil,
 		},
+		// {
+		// 	name: "inject_void_nodes_and_connections",
+		// 	build: src.Build{
+		// 		Modules: map[src.ModuleRef]src.Module{
+		// 			{}: {
+		// 				Manifest: src.ModuleManifest{},
+		// 				Packages: map[string]src.Package{
+		// 					"main": {
+		// 						"file": src.File{
+		// 							Entities: map[string]src.Entity{
+		// 								"Foo": {
+		// 									Kind: src.ComponentEntity,
+		// 									Component: src.Component{
+		// 										Nodes: map[string]src.Node{
+		// 											"bar": {EntityRef: src.EntityRef{Name: "Bar"}}, // <-- node with `x` outport
+		// 										},
+		// 										Net: []src.Connection{}, // <-- no bar.x usage
+		// 									},
+		// 								},
+		// 								"Bar": {
+		// 									Kind: src.ComponentEntity,
+		// 									Component: src.Component{
+		// 										Interface: src.Interface{
+		// 											IO: src.IO{
+		// 												Out: map[string]src.Port{
+		// 													"x": {}, // <-- unused by Foo
+		// 												},
+		// 											},
+		// 										},
+		// 									},
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	want: src.Build{
+		// 		Modules: map[src.ModuleRef]src.Module{
+		// 			{}: {
+		// 				Manifest: src.ModuleManifest{
+		// 					Deps: map[string]src.ModuleRef{
+		// 						"std": {
+		// 							Path:    "std",
+		// 							Version: "0.0.1",
+		// 						},
+		// 					},
+		// 				},
+		// 				Packages: map[string]src.Package{
+		// 					"main": {
+		// 						"file": src.File{
+		// 							Entities: map[string]src.Entity{
+		// 								"Foo": {
+		// 									Kind: src.ComponentEntity,
+		// 									Component: src.Component{
+		// 										Nodes: map[string]src.Node{
+		// 											"bar": {EntityRef: src.EntityRef{Name: "Bar"}}, // that one node
+		// 											"void": {
+		// 												EntityRef: src.EntityRef{
+		// 													Name: "Void",
+		// 													Pkg:  "builtin",
+		// 												},
+		// 											},
+		// 										},
+		// 										Net: []src.Connection{
+		// 											{},
+		// 										}, // <-- no bar.x usage
+		// 									},
+		// 								},
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	wantErr: nil,
+		// },
 	}
 
 	d := Desugarer{}

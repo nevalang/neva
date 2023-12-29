@@ -93,6 +93,10 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error)
 	}
 
 	desugaredImports := maps.Clone(file.Imports)
+	if desugaredImports == nil {
+		desugaredImports = map[string]src.Import{}
+	}
+
 	desugaredImports["builtin"] = src.Import{
 		ModuleName: "std",
 		PkgName:    "builtin",

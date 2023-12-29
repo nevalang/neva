@@ -284,8 +284,6 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
-// TODO implement directives for nodes
-
 func parseNodes(actx []generated.ICompNodesDefContext) map[string]src.Node {
 	result := map[string]src.Node{}
 
