@@ -341,7 +341,7 @@ func (Analyzer) checkNodeUsage(
 			if _, ok := nodeUsage.Out[outportName]; !ok {
 				meta := nodeIface.IO.Out[outportName].Meta
 				return &Error{
-					Err:      fmt.Errorf("%w: %v.out.%v", ErrUnusedNodeOutport, nodeName, outportName),
+					Err:      fmt.Errorf("%w: %v.%v", ErrUnusedNodeOutport, nodeName, outportName),
 					Location: &scope.Location,
 					Meta:     &meta,
 				}

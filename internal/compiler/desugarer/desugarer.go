@@ -27,11 +27,33 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 
 func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Module, error) {
 	mod := build.Modules[modRef]
+
+	// create manifest copy with std module dependency
+	desugaredManifest := src.ModuleManifest{
+		WantCompilerVersion: mod.Manifest.WantCompilerVersion,
+		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
+	}
+	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
+	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"}
+
+	// copy all modules but replace manifest in current one
+	modsCopy := maps.Clone(build.Modules)
+	modsCopy[modRef] = src.Module{
+		Manifest: desugaredManifest,
+		Packages: mod.Packages,
+	}
+
+	// create new build with patched modeles (current module have patched manifest with std dependency)
+	build = src.Build{
+		EntryModRef: modRef,
+		Modules:     modsCopy,
+	}
+
 	desugaredPkgs := make(map[string]src.Package, len(mod.Packages))
 
 	for pkgName, pkg := range mod.Packages {
 		scope := src.Scope{
-			Build: build,
+			Build: build, // it's important to patch build before desugar package so we can resolve references to std
 			Location: src.Location{
 				ModRef:  modRef,
 				PkgName: pkgName,
@@ -45,13 +67,6 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 
 		desugaredPkgs[pkgName] = desugaredPkg
 	}
-
-	desugaredManifest := src.ModuleManifest{
-		WantCompilerVersion: mod.Manifest.WantCompilerVersion,
-		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
-	}
-	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib dep
 
 	return src.Module{
 		Manifest: desugaredManifest,
