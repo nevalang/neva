@@ -1,9 +1,12 @@
 components {
 	#runtime_func(read)
-	pub Read(sig) (v str)
+	pub C1(sig) (v str)
+
+	#runtime_func(int DoInt, float DoFloat)
+	pub C2(sig) (v str)
 
 	#runtime_func(read, write)
-	pub Print<T>(v T) (v T) {
+	pub C3<T>(v T) (v T) {
 		nodes {
 			#runtime_func_msg(msg)
 			msg Const<str>

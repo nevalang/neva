@@ -151,12 +151,12 @@ func void(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	}, nil
 }
 
-func add(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	a, err := io.In.Port("a")
+func addInts(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	ain, err := io.In.Port("a")
 	if err != nil {
 		return nil, err
 	}
-	b, err := io.In.Port("b")
+	bin, err := io.In.Port("b")
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +165,39 @@ func add(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 		return nil, err
 	}
 
-	handler := func(a, b runtime.Msg) runtime.Msg {
-		return runtime.NewIntMsg(a.Int() + b.Int())
+	return func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case v1 := <-ain:
+				select {
+				case <-ctx.Done():
+					return
+				case v2 := <-bin:
+					select {
+					case <-ctx.Done():
+						return
+					case vout <- runtime.NewIntMsg(v1.Int() + v2.Int()):
+					}
+				}
+			}
+		}
+	}, nil
+}
+
+func addFloats(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	ain, err := io.In.Port("a")
+	if err != nil {
+		return nil, err
+	}
+	bin, err := io.In.Port("b")
+	if err != nil {
+		return nil, err
+	}
+	vout, err := io.Out.Port("v")
+	if err != nil {
+		return nil, err
 	}
 
 	return func(ctx context.Context) {
@@ -174,15 +205,15 @@ func add(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 			select {
 			case <-ctx.Done():
 				return
-			case v1 := <-a:
+			case v1 := <-ain:
 				select {
 				case <-ctx.Done():
 					return
-				case v2 := <-b:
+				case v2 := <-bin:
 					select {
 					case <-ctx.Done():
 						return
-					case vout <- handler(v1, v2):
+					case vout <- runtime.NewFloatMsg(v1.Float() + v2.Float()):
 					}
 				}
 			}
@@ -241,12 +272,13 @@ func parseInt(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), erro
 
 func Registry() map[string]runtime.Func {
 	return map[string]runtime.Func{
-		"Read":     read,
-		"Print":    print,
-		"Lock":     lock,
-		"Const":    constant,
-		"Add":      add,
-		"ParseInt": parseInt,
-		"Void":     void,
+		"Read":      read,
+		"Print":     print,
+		"Lock":      lock,
+		"Const":     constant,
+		"AddInts":   addInts,
+		"AddFloats": addFloats,
+		"ParseInt":  parseInt,
+		"Void":      void,
 	}
 }

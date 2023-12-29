@@ -3,31 +3,35 @@ package analyzer
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
+//nolint:lll
 var (
-	ErrNodeWrongEntity             = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsCountMismatch   = errors.New("Type arguments count between node and its referenced entity not matches")
-	ErrNonComponentNodeWithDI      = errors.New("Only component node can have dependency injection")
-	ErrUnusedNode                  = errors.New("Unused node found")
-	ErrUnusedNodeInport            = errors.New("Unused node inport found")
-	ErrUnusedNodeOutport           = errors.New("Unused node outport found")
-	ErrSenderIsEmpty               = errors.New("Sender in network must refer to some port address")
-	ErrReadSelfOut                 = errors.New("Component cannot read from self outport")
-	ErrWriteSelfIn                 = errors.New("Component cannot write to self inport")
-	ErrInportNotFound              = errors.New("Referenced inport not found in component's interface")
-	ErrNodeNotFound                = errors.New("Referenced node not found")
-	ErrNodePortNotFound            = errors.New("Referenced node port not found")
-	ErrNormCompWithRuntimeFunc     = errors.New("Component with nodes or network cannot use #runtime_func directive")
-	ErrNormComponentWithoutNet     = errors.New("Component must have network except it uses #runtime_func directive")
-	ErrNormNodeRuntimeMsg          = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func") //nolint:lll
-	ErrInterfaceNodeWithRuntimeMsg = errors.New("Interface node cannot use #runtime_func_msg directive")
-	ErrRuntimeFuncDirectiveArgs    = errors.New("Component that use #runtime_func directive must provide exactly one argument") //nolint:lll
-	ErrRuntimeMsgArgs              = errors.New("Node with #runtime_func_msg directive must provide exactly one argument")
+	ErrNodeWrongEntity                = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsCountMismatch      = errors.New("Type arguments count between node and its referenced entity not matches")
+	ErrNonComponentNodeWithDI         = errors.New("Only component node can have dependency injection")
+	ErrUnusedNode                     = errors.New("Unused node found")
+	ErrUnusedNodeInport               = errors.New("Unused node inport found")
+	ErrUnusedNodeOutport              = errors.New("Unused node outport found")
+	ErrSenderIsEmpty                  = errors.New("Sender in network must refer to some port address")
+	ErrReadSelfOut                    = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn                    = errors.New("Component cannot write to self inport")
+	ErrInportNotFound                 = errors.New("Referenced inport not found in component's interface")
+	ErrNodeNotFound                   = errors.New("Referenced node not found")
+	ErrNodePortNotFound               = errors.New("Referenced node port not found")
+	ErrNormCompWithRuntimeFunc        = errors.New("Component with nodes or network cannot use #runtime_func directive")
+	ErrNormComponentWithoutNet        = errors.New("Component must have network except it uses #runtime_func directive")
+	ErrNormNodeRuntimeMsg             = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func")
+	ErrInterfaceNodeWithRuntimeMsg    = errors.New("Interface node cannot use #runtime_func_msg directive")
+	ErrRuntimeFuncZeroArgs            = errors.New("Component that use #runtime_func directive must provide at least one argument")
+	ErrRuntimeMsgArgs                 = errors.New("Node with #runtime_func_msg directive must provide exactly one argument")
+	ErrRuntimeFuncOverloadingArg      = errors.New("Component that use #runtime_func with more than one argument must provide arguments in a form of <type, component_ref> pairs")
+	ErrRuntimeFuncOverloadingNodeArgs = errors.New("Node instantiated with component with #runtime_func with > 1 argument, must have exactly one type-argument for overloading")
 )
 
 type analyzeComponentParams struct {
@@ -35,13 +39,26 @@ type analyzeComponentParams struct {
 }
 
 func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) { //nolint:funlen
-	_, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
+	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
 
-	if isRuntimeFunc && len(component.Directives[compiler.RuntimeFuncDirective]) != 1 {
+	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
 		return src.Component{}, &Error{
-			Err:      ErrRuntimeFuncDirectiveArgs,
+			Err:      ErrRuntimeFuncZeroArgs,
 			Location: &scope.Location,
 			Meta:     &component.Meta,
+		}
+	}
+
+	if len(runtimeFuncArgs) > 1 {
+		for _, runtimeFuncArg := range runtimeFuncArgs {
+			parts := strings.Split(runtimeFuncArg, " ")
+			if len(parts) != 2 {
+				return src.Component{}, &Error{
+					Err:      ErrRuntimeFuncOverloadingArg,
+					Location: &scope.Location,
+					Meta:     &component.Meta,
+				}
+			}
 		}
 	}
 
@@ -151,12 +168,20 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	var iface src.Interface
-	if entity.Kind == src.ComponentEntity {
-		_, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+	if entity.Kind == src.ComponentEntity { //nolint:nestif
+		runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
 
 		if hasRuntimeMsg && !isRuntimeFunc {
 			return src.Node{}, src.Interface{}, &Error{
 				Err:      ErrNormNodeRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
+		if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
+			return src.Node{}, src.Interface{}, &Error{
+				Err:      ErrRuntimeFuncOverloadingNodeArgs,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}

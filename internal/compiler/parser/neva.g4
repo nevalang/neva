@@ -14,7 +14,9 @@ stmt:
 // Compiler Directives
 compilerDirectives: (compilerDirective NEWLINE)+;
 compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
-compilerDirectivesArgs: '(' IDENTIFIER (',' IDENTIFIER)* ')';
+compilerDirectivesArgs:
+	'(' compiler_directive_arg (',' compiler_directive_arg)* ')';
+compiler_directive_arg: IDENTIFIER+;
 
 // Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
