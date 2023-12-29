@@ -18,6 +18,14 @@ type Module struct {
 	Packages map[string]Package `json:"packages,omitempty"`
 }
 
+func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, ok bool) {
+	pkg, ok := mod.Packages[entityRef.Pkg]
+	if !ok {
+		return Entity{}, "", false
+	}
+	return pkg.Entity(entityRef.Name)
+}
+
 type ModuleManifest struct {
 	WantCompilerVersion string               `json:"compiler,omitempty" yaml:"compiler,omitempty"`
 	Deps                map[string]ModuleRef `json:"deps,omitempty"     yaml:"deps,omitempty"`
@@ -50,7 +58,6 @@ func (p Package) Entity(entityName string) (entity Entity, filename string, ok b
 	return Entity{}, "", false
 }
 
-// Entities takes function that can return error. If function returns error iteration stops.
 func (p Package) Entities(f func(entity Entity, entityName string, fileName string) error) error {
 	for fileName, file := range p {
 		for entityName, entity := range file.Entities {

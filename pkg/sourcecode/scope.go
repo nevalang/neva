@@ -15,7 +15,6 @@ var (
 	ErrEntityNotPub   = errors.New("entity is not public")
 )
 
-// TODO maybe move this to compiler package because we don't wanna src know about stdlib
 type Scope struct {
 	Location Location
 	Build    Build
@@ -63,8 +62,12 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	return entity.Type, s.WithLocation(location), nil
 }
 
-//nolint:funlen
 func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
+	return s.entity(entityRef)
+}
+
+//nolint:funlen
+func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 	curMod, ok := s.Build.Modules[s.Location.ModRef]
 	if !ok {
 		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, s.Location.ModRef)
@@ -75,8 +78,7 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrPkgNotFound, s.Location.PkgName)
 	}
 
-	// local reference (current package or builtin)
-	if entityRef.Pkg == "" {
+	if entityRef.Pkg == "" { // local reference (current package or builtin)
 		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, Location{
@@ -92,20 +94,17 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)
 		}
 
-		builtinPkgName := "builtin"
-		builtinPkg, ok := stdMod.Packages[builtinPkgName]
+		entity, fileName, ok = stdMod.Entity(EntityRef{
+			Pkg:  "builtin",
+			Name: entityRef.Name,
+		})
 		if !ok {
-			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrPkgNotFound, "builtin")
-		}
-
-		entity, fileName, ok = builtinPkg.Entity(entityRef.Name)
-		if !ok {
-			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrEntityNotFound, entityRef.Name)
+			return Entity{}, Location{}, ErrPkgNotFound
 		}
 
 		return entity, Location{
 			ModRef:   stdModRef,
-			PkgName:  builtinPkgName,
+			PkgName:  "builtin",
 			FileName: fileName,
 		}, nil
 	}
@@ -136,12 +135,12 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 		mod = depMod
 	}
 
-	entity, fileName, err := mod.Entity(EntityRef{
+	entity, fileName, ok := mod.Entity(EntityRef{
 		Pkg:  pkgImport.PkgName,
 		Name: entityRef.Name,
 	})
-	if err != nil {
-		return Entity{}, Location{}, err
+	if !ok {
+		return Entity{}, Location{}, ErrEntityNotFound
 	}
 
 	if !entity.IsPublic {
@@ -153,21 +152,4 @@ func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
 		PkgName:  pkgImport.PkgName,
 		FileName: fileName,
 	}, nil
-}
-
-// Entity does not return package because calleer knows it, passed entityRef contains it.
-// Note that this method does not know anything about imports, builtins or anything like that.
-// entityRef passed must be absolute (full, "real") path to the entity.
-func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
-	pkg, ok := mod.Packages[entityRef.Pkg]
-	if !ok {
-		return Entity{}, "", fmt.Errorf("%w: %s", ErrPkgNotFound, entityRef.Pkg)
-	}
-	for filename, file := range pkg {
-		entity, ok := file.Entities[entityRef.Name]
-		if ok {
-			return entity, filename, nil
-		}
-	}
-	return Entity{}, "", ErrEntityNotFound
 }
