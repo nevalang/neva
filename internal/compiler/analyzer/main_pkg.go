@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -14,7 +15,7 @@ var (
 	ErrMainPkgExports           = errors.New("Main package must cannot have exported entities")
 )
 
-func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *Error {
+func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
 	mainPkg := mod.Packages[mainPkgName]
 
 	location := &src.Location{
@@ -24,7 +25,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	entityMain, filename, ok := mainPkg.Entity("Main")
 	if !ok {
-		return &Error{
+		return &compiler.Error{
 			Err:      ErrMainEntityNotFound,
 			Location: location,
 		}
@@ -33,14 +34,14 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	location.FileName = filename
 
 	if entityMain.Kind != src.ComponentEntity {
-		return &Error{
+		return &compiler.Error{
 			Err:      ErrMainEntityIsNotComponent,
 			Location: location,
 		}
 	}
 
 	if entityMain.IsPublic {
-		return &Error{
+		return &compiler.Error{
 			Err:      ErrMainEntityExported,
 			Location: location,
 			Meta:     &entityMain.Component.Meta,
@@ -50,7 +51,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	scope = scope.WithLocation(*location)
 
 	if err := a.analyzeMainComponent(entityMain.Component, mainPkg, scope); err != nil {
-		return Error{
+		return compiler.Error{
 			Location: location,
 			Meta:     &entityMain.Component.Meta,
 		}.Merge(err)
@@ -58,7 +59,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	if err := mainPkg.Entities(func(entity src.Entity, entityName, fileName string) error {
 		if entity.IsPublic {
-			return &Error{
+			return &compiler.Error{
 				Err:      fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
 				Meta:     entity.Meta(),
 				Location: location,
@@ -66,7 +67,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 		}
 		return nil
 	}); err != nil {
-		return err.(*Error) //nolint:forcetypeassert
+		return err.(*compiler.Error) //nolint:forcetypeassert
 	}
 
 	return nil

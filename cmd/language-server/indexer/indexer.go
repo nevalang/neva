@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -18,7 +19,7 @@ type Indexer struct {
 	analyzer   analyzer.Analyzer
 }
 
-func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *analyzer.Error, error) {
+func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compiler.Error, error) {
 	rawBuild, err := i.pkgManager.Build(ctx, path)
 	if err != nil {
 		return src.Build{}, nil, fmt.Errorf("builder: %w", err)
@@ -39,7 +40,7 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *analyz
 		return parsedBuild, nil, nil
 	}
 
-	analyzerErr, ok := err.(*analyzer.Error)
+	analyzerErr, ok := err.(*compiler.Error)
 	if !ok {
 		return src.Build{}, nil, fmt.Errorf("cast analyzer err: %w", err)
 	}

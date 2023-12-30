@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
@@ -36,14 +37,14 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 
 	entryMod, ok := build.Modules[build.EntryModRef]
 	if !ok {
-		return src.Build{}, Error{
+		return src.Build{}, compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
 			Location: &location,
 		}
 	}
 
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
-		return src.Build{}, Error{
+		return src.Build{}, compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
 			Location: &location,
 		}
@@ -55,13 +56,13 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err != nil {
-		return src.Build{}, Error{Location: &location}.Merge(err)
+		return src.Build{}, compiler.Error{Location: &location}.Merge(err)
 	}
 
 	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
-		aerr := err.(*Error) //nolint:forcetypeassert
-		return src.Build{}, Error{Location: &location}.Merge(aerr)
+		aerr := err.(*compiler.Error) //nolint:forcetypeassert
+		return src.Build{}, compiler.Error{Location: &location}.Merge(aerr)
 	}
 
 	return analyzedBuild, nil
@@ -72,7 +73,7 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
 
 	for modRef, mod := range build.Modules {
 		if mod.Manifest.WantCompilerVersion != a.compilerVersion {
-			return src.Build{}, &Error{
+			return src.Build{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"%w: module %v wants %v while current is %v",
 					ErrCompilerVersion,
@@ -98,9 +99,9 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
 	}, nil
 }
 
-func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *Error) {
+func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
 	if modRef != build.EntryModRef && modRef.Version == "" {
-		return nil, &Error{
+		return nil, &compiler.Error{
 			Err: ErrDepModWithoutVersion,
 		}
 	}
@@ -109,7 +110,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 	mod := build.Modules[modRef]
 
 	if len(mod.Packages) == 0 {
-		return nil, &Error{
+		return nil, &compiler.Error{
 			Err:      ErrModuleWithoutPkgs,
 			Location: &location,
 		}
@@ -129,7 +130,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 
 		resolvedPkg, err := a.analyzePkg(pkg, scope)
 		if err != nil {
-			return nil, Error{
+			return nil, compiler.Error{
 				Location: &src.Location{
 					PkgName: pkgName,
 				},
@@ -142,9 +143,9 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 	return pkgsCopy, nil
 }
 
-func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *Error) {
+func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	if len(pkg) == 0 {
-		return nil, &Error{
+		return nil, &compiler.Error{
 			Err:      ErrPkgWithoutFiles,
 			Location: &scope.Location,
 		}
@@ -168,7 +169,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *Er
 
 		resolvedEntity, err := a.analyzeEntity(entity, scopeWithFile)
 		if err != nil {
-			return Error{
+			return compiler.Error{
 				Location: &scopeWithFile.Location,
 				Meta:     entity.Meta(),
 			}.Merge(err)
@@ -178,13 +179,13 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *Er
 
 		return nil
 	}); err != nil {
-		return nil, err.(*Error) //nolint:forcetypeassert
+		return nil, err.(*compiler.Error) //nolint:forcetypeassert
 	}
 
 	return analyzedFiles, nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *Error) {
+func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
 	resolvedEntity := src.Entity{
 		IsPublic: entity.IsPublic,
 		Kind:     entity.Kind,
@@ -197,7 +198,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
 		if err != nil {
 			meta := entity.Type.Meta.(src.Meta) //nolint:forcetypeassert
-			return src.Entity{}, Error{
+			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
 			}.Merge(err)
@@ -207,7 +208,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		resolvedConst, err := a.analyzeConst(entity.Const, scope)
 		if err != nil {
 			meta := entity.Const.Meta
-			return src.Entity{}, Error{
+			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
 			}.Merge(err)
@@ -220,7 +221,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		})
 		if err != nil {
 			meta := entity.Interface.Meta
-			return src.Entity{}, Error{
+			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
 			}.Merge(err)
@@ -229,14 +230,14 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	case src.ComponentEntity:
 		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
-			return src.Entity{}, Error{
+			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &entity.Component.Meta,
 			}.Merge(err)
 		}
 		resolvedEntity.Component = analyzedComponent
 	default:
-		return src.Entity{}, &Error{
+		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
 			Location: &scope.Location,
 		}

@@ -6,7 +6,6 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/analyzer"
 
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -144,10 +143,10 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 }
 
 // getConstType is needed to figure out type parameters for Const node
-func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *analyzer.Error) {
+func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
-		return ts.Expr{}, &analyzer.Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &ref.Meta,
@@ -155,7 +154,7 @@ func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *a
 	}
 
 	if entity.Kind != src.ConstEntity {
-		return ts.Expr{}, &analyzer.Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrConstSenderEntityKind, entity.Kind),
 			Location: &scope.Location,
 			Meta:     entity.Meta(),
@@ -165,12 +164,11 @@ func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *a
 	if entity.Const.Ref != nil {
 		expr, err := d.getConstType(*entity.Const.Ref, scope)
 		if err != nil {
-			return ts.Expr{}, analyzer.Error{
+			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     entity.Meta(),
 			}.Merge(err)
 		}
-
 		return expr, nil
 	}
 

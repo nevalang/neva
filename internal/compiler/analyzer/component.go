@@ -38,11 +38,14 @@ type analyzeComponentParams struct {
 	iface analyzeInterfaceParams
 }
 
-func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (src.Component, *Error) { //nolint:funlen
+func (a Analyzer) analyzeComponent( //nolint:funlen
+	component src.Component,
+	scope src.Scope,
+) (src.Component, *compiler.Error) {
 	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
-		return src.Component{}, &Error{
+		return src.Component{}, &compiler.Error{
 			Err:      ErrRuntimeFuncZeroArgs,
 			Location: &scope.Location,
 			Meta:     &component.Meta,
@@ -53,7 +56,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 		for _, runtimeFuncArg := range runtimeFuncArgs {
 			parts := strings.Split(runtimeFuncArg, " ")
 			if len(parts) != 2 {
-				return src.Component{}, &Error{
+				return src.Component{}, &compiler.Error{
 					Err:      ErrRuntimeFuncOverloadingArg,
 					Location: &scope.Location,
 					Meta:     &component.Meta,
@@ -67,7 +70,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 		allowEmptyOutports: isRuntimeFunc,
 	})
 	if err != nil {
-		return src.Component{}, Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
@@ -75,7 +78,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 
 	if isRuntimeFunc {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
-			return src.Component{}, &Error{
+			return src.Component{}, &compiler.Error{
 				Err:      ErrNormCompWithRuntimeFunc,
 				Location: &scope.Location,
 				Meta:     &component.Meta,
@@ -86,14 +89,14 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 
 	analyzedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
 	if err != nil {
-		return src.Component{}, Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
 	}
 
 	if len(component.Net) == 0 {
-		return src.Component{}, &Error{
+		return src.Component{}, &compiler.Error{
 			Err:      ErrNormComponentWithoutNet,
 			Location: &scope.Location,
 			Meta:     &component.Meta,
@@ -102,7 +105,7 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 
 	analyzedNet, err := a.analyzeComponentNetwork(component.Net, analyzedInterface, analyzedNodes, nodesIfaces, scope)
 	if err != nil {
-		return src.Component{}, Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}.Merge(err)
@@ -118,14 +121,14 @@ func (a Analyzer) analyzeComponent(component src.Component, scope src.Scope) (sr
 func (a Analyzer) analyzeComponentNodes(
 	nodes map[string]src.Node,
 	scope src.Scope,
-) (map[string]src.Node, map[string]src.Interface, *Error) {
+) (map[string]src.Node, map[string]src.Interface, *compiler.Error) {
 	analyzedNodes := make(map[string]src.Node, len(nodes))
 	nodesInterfaces := make(map[string]src.Interface, len(nodes))
 
 	for nodeName, node := range nodes {
 		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
-			return nil, nil, Error{
+			return nil, nil, compiler.Error{
 				Err:      fmt.Errorf("Invalid node: %v", nodeName),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
@@ -140,10 +143,10 @@ func (a Analyzer) analyzeComponentNodes(
 }
 
 //nolint:funlen
-func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, *Error) {
+func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, *compiler.Error) {
 	entity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return src.Node{}, src.Interface{}, &Error{
+		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &node.Meta,
@@ -151,7 +154,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.InterfaceEntity {
-		return src.Node{}, src.Interface{}, &Error{
+		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, entity.Kind),
 			Location: &location,
 			Meta:     entity.Meta(),
@@ -160,7 +163,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 
 	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
 	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
-		return src.Node{}, src.Interface{}, &Error{
+		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      ErrRuntimeMsgArgs,
 			Location: &location,
 			Meta:     entity.Meta(),
@@ -172,7 +175,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
 
 		if hasRuntimeMsg && !isRuntimeFunc {
-			return src.Node{}, src.Interface{}, &Error{
+			return src.Node{}, src.Interface{}, &compiler.Error{
 				Err:      ErrNormNodeRuntimeMsg,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -180,7 +183,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 
 		if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
-			return src.Node{}, src.Interface{}, &Error{
+			return src.Node{}, src.Interface{}, &compiler.Error{
 				Err:      ErrRuntimeFuncOverloadingNodeArgs,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -190,7 +193,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		iface = entity.Component.Interface
 	} else {
 		if hasRuntimeMsg {
-			return src.Node{}, src.Interface{}, &Error{
+			return src.Node{}, src.Interface{}, &compiler.Error{
 				Err:      ErrInterfaceNodeWithRuntimeMsg,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -198,7 +201,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 
 		if node.Deps != nil {
-			return src.Node{}, src.Interface{}, &Error{
+			return src.Node{}, src.Interface{}, &compiler.Error{
 				Err:      ErrNonComponentNodeWithDI,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -209,7 +212,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	if len(node.TypeArgs) != len(iface.TypeParams.Params) {
-		return src.Node{}, src.Interface{}, &Error{
+		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err: fmt.Errorf(
 				"%w: want %v, got %v",
 				ErrNodeTypeArgsCountMismatch, iface.TypeParams, node.TypeArgs,
@@ -221,7 +224,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 
 	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, iface.TypeParams.Params, scope)
 	if err != nil {
-		return src.Node{}, src.Interface{}, &Error{
+		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
@@ -241,7 +244,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
 		if err != nil {
-			return src.Node{}, src.Interface{}, Error{
+			return src.Node{}, src.Interface{}, compiler.Error{
 				Err:      fmt.Errorf("Invalid node dependency: node '%v'", depNode),
 				Location: &location,
 				Meta:     &depNode.Meta,
@@ -266,13 +269,13 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) ([]src.Connection, *Error) {
+) ([]src.Connection, *compiler.Error) {
 	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
 
 	for _, conn := range net {
 		outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
 		if err != nil {
-			return nil, Error{
+			return nil, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &conn.SenderSide.Meta,
 			}.Merge(err)
@@ -293,7 +296,7 @@ func (a Analyzer) analyzeComponentNetwork(
 		for _, receiver := range conn.ReceiverSides {
 			inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
 			if err != nil {
-				return nil, Error{
+				return nil, compiler.Error{
 					Err:      errors.New("Unable to get receiver type"),
 					Location: &scope.Location,
 					Meta:     &receiver.Meta,
@@ -301,7 +304,7 @@ func (a Analyzer) analyzeComponentNetwork(
 			}
 
 			if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
-				return nil, &Error{
+				return nil, &compiler.Error{
 					Err: fmt.Errorf(
 						"Subtype checking failed: sender %v, receiver %v, error %w",
 						conn.SenderSide, receiver, err,
@@ -325,7 +328,7 @@ func (a Analyzer) analyzeComponentNetwork(
 	}
 
 	if err := a.checkNodeUsage(nodesIfaces, scope, nodesUsage); err != nil {
-		return nil, Error{Location: &scope.Location}.Merge(err)
+		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
 	return net, nil
@@ -341,11 +344,11 @@ func (Analyzer) checkNodeUsage(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
-) *Error {
+) *compiler.Error {
 	for nodeName, nodeIface := range nodesIfaces {
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
-			return &Error{
+			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrUnusedNode, nodeName),
 				Location: &scope.Location,
 			}
@@ -354,7 +357,7 @@ func (Analyzer) checkNodeUsage(
 		for inportName := range nodeIface.IO.In {
 			if _, ok := nodeUsage.In[inportName]; !ok {
 				meta := nodeIface.IO.In[inportName].Meta
-				return &Error{
+				return &compiler.Error{
 					Err:      fmt.Errorf("%w: node '%v', inport '%v'", ErrUnusedNodeInport, nodeName, inportName),
 					Location: &scope.Location,
 					Meta:     &meta,
@@ -365,7 +368,7 @@ func (Analyzer) checkNodeUsage(
 		for outportName := range nodeIface.IO.Out {
 			if _, ok := nodeUsage.Out[outportName]; !ok {
 				meta := nodeIface.IO.Out[outportName].Meta
-				return &Error{
+				return &compiler.Error{
 					Err:      fmt.Errorf("%w: %v.%v", ErrUnusedNodeOutport, nodeName, outportName),
 					Location: &scope.Location,
 					Meta:     &meta,
@@ -383,9 +386,9 @@ func (a Analyzer) getReceiverType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *Error) {
+) (ts.Expr, *compiler.Error) {
 	if receiverSide.PortAddr.Node == "in" {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      ErrWriteSelfIn,
 			Location: &scope.Location,
 			Meta:     &receiverSide.PortAddr.Meta,
@@ -395,7 +398,7 @@ func (a Analyzer) getReceiverType(
 	if receiverSide.PortAddr.Node == "out" {
 		outport, ok := outports[receiverSide.PortAddr.Port]
 		if !ok {
-			return ts.Expr{}, &Error{
+			return ts.Expr{}, &compiler.Error{
 				Err:      ErrInportNotFound,
 				Location: &scope.Location,
 				Meta:     &receiverSide.PortAddr.Meta,
@@ -406,7 +409,7 @@ func (a Analyzer) getReceiverType(
 
 	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, scope)
 	if err != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("get node inport type: %w", err),
 			Location: &scope.Location,
 			Meta:     &receiverSide.PortAddr.Meta,
@@ -420,10 +423,10 @@ func (a Analyzer) getNodeInportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
 	scope src.Scope,
-) (ts.Expr, *Error) {
+) (ts.Expr, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -432,7 +435,7 @@ func (a Analyzer) getNodeInportType(
 
 	entity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -447,7 +450,7 @@ func (a Analyzer) getNodeInportType(
 		scope,
 	)
 	if aerr != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("Unable to get resolved port type: port '%v', node '%v': %w", portAddr, node, aerr),
 			Location: &location,
 			Meta:     &portAddr.Meta,
@@ -463,10 +466,10 @@ func (a Analyzer) getResolvedPortType(
 	portAddr src.PortAddr,
 	node src.Node,
 	scope src.Scope,
-) (ts.Expr, *Error) {
+) (ts.Expr, *compiler.Error) {
 	port, ok := ports[portAddr.Port]
 	if !ok {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodePortNotFound, portAddr),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -475,7 +478,7 @@ func (a Analyzer) getResolvedPortType(
 
 	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
 	if err != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &node.Meta,
@@ -484,7 +487,7 @@ func (a Analyzer) getResolvedPortType(
 
 	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, frame, scope)
 	if err != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &node.Meta,
@@ -500,9 +503,9 @@ func (a Analyzer) getSenderType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *Error) {
+) (ts.Expr, *compiler.Error) {
 	if senderSide.PortAddr == nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
@@ -510,7 +513,7 @@ func (a Analyzer) getSenderType(
 	}
 
 	if senderSide.PortAddr.Node == "out" {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      ErrReadSelfOut,
 			Location: &scope.Location,
 			Meta:     &senderSide.PortAddr.Meta,
@@ -520,7 +523,7 @@ func (a Analyzer) getSenderType(
 	if senderSide.PortAddr.Node == "in" {
 		inport, ok := inports[senderSide.PortAddr.Port]
 		if !ok {
-			return ts.Expr{}, &Error{
+			return ts.Expr{}, &compiler.Error{
 				Err:      ErrInportNotFound,
 				Location: &scope.Location,
 				Meta:     &senderSide.PortAddr.Meta,
@@ -531,7 +534,7 @@ func (a Analyzer) getSenderType(
 
 	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, Error{
+		return ts.Expr{}, compiler.Error{
 			Err:      ErrInportNotFound,
 			Location: &scope.Location,
 			Meta:     &senderSide.PortAddr.Meta,
@@ -546,10 +549,10 @@ func (a Analyzer) getNodeOutportType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *Error) {
+) (ts.Expr, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -558,7 +561,7 @@ func (a Analyzer) getNodeOutportType(
 
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -573,7 +576,7 @@ func (a Analyzer) getNodeOutportType(
 		scope,
 	)
 	if err != nil {
-		return ts.Expr{}, &Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("get resolved outport type: %w", err),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,

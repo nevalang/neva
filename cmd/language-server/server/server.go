@@ -11,7 +11,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 
 	"github.com/nevalang/neva/cmd/language-server/indexer"
-	"github.com/nevalang/neva/internal/compiler/analyzer"
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -60,7 +60,7 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 	return nil
 }
 
-func (s *Server) createDiagnostics(analyzerErr analyzer.Error) protocol.PublishDiagnosticsParams {
+func (s *Server) createDiagnostics(analyzerErr compiler.Error) protocol.PublishDiagnosticsParams {
 	source := "neva"
 	severity := protocol.DiagnosticSeverityError
 
