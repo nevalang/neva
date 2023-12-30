@@ -1,0 +1,29 @@
+interfaces {
+    Iface(v any) (v any)
+}
+
+components {
+    Main(enter) (exit) {
+        nodes {
+            c1 C1(iface: C2)
+        }
+        net {
+            enter -> c1.v
+            c1.v -> out.exit
+        }
+    }
+    
+    C1 (v any) (v any) {
+        nodes {
+            iface Iface
+        }
+        net {
+            in.v -> iface.v
+            iface.v -> out.v
+        }
+    }
+
+    C2 (v any) (v any) {
+        net { in.v -> out.v }
+    }
+}
