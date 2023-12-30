@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/utils"
 	"github.com/nevalang/neva/pkg/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 type Generator struct{}
@@ -86,12 +88,25 @@ type (
 	}
 )
 
-func getRuntimeFunc(component src.Component) (string, bool) {
+func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := component.Directives[compiler.RuntimeFuncDirective]
 	if !ok {
-		return "", false
+		return "", nil
 	}
-	return args[0], true
+
+	if len(args) == 1 {
+		return args[0], nil
+	}
+
+	firstTypeArg := nodeTypeArgs[0].Inst.Ref.String()
+	for _, arg := range args {
+		parts := strings.Split(arg, " ")
+		if firstTypeArg == parts[0] {
+			return parts[1], nil
+		}
+	}
+
+	return "", errors.New("type argument mismatches runtime func directive")
 }
 
 func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, error) {
@@ -189,10 +204,14 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 	// Ports for input and output must be created before processing subnodes because they are used by parent node.
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
-	outPortAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
+	outportAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
-	runtimeFuncRef, isRuntimeFunc := getRuntimeFunc(component)
-	if isRuntimeFunc {
+	runtimeFuncRef, err := getRuntimeFunc(component, nodeCtx.node.TypeArgs)
+	if err != nil {
+		return err
+	}
+
+	if runtimeFuncRef != "" {
 		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope) // use previous location
 		if err != nil {
 			return err
@@ -202,7 +221,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 			Ref: runtimeFuncRef,
 			Io: &ir.FuncIO{
 				Inports:  inportAddrs,
-				Outports: outPortAddrs,
+				Outports: outportAddrs,
 			},
 			Msg: runtimeFuncMsg,
 		})

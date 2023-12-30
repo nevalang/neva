@@ -575,10 +575,18 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 	result := make(map[src.Directive][]string, len(directives))
 	for _, directive := range directives {
 		id := directive.IDENTIFIER()
-		args := directive.CompilerDirectivesArgs().AllIDENTIFIER()
+		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg() //nolint:nosnakecase
 		ss := make([]string, 0, len(args))
 		for _, arg := range args {
-			ss = append(ss, arg.GetText())
+			s := ""
+			ids := arg.AllIDENTIFIER()
+			for i, id := range ids {
+				s += id.GetText()
+				if i < len(ids)-1 {
+					s += " "
+				}
+			}
+			ss = append(ss, s)
 		}
 		result[src.Directive(id.GetText())] = ss
 	}

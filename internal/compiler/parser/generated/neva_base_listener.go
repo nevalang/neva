@@ -50,6 +50,12 @@ func (s *BasenevaListener) EnterCompilerDirectivesArgs(ctx *CompilerDirectivesAr
 // ExitCompilerDirectivesArgs is called when production compilerDirectivesArgs is exited.
 func (s *BasenevaListener) ExitCompilerDirectivesArgs(ctx *CompilerDirectivesArgsContext) {}
 
+// EnterCompiler_directive_arg is called when production compiler_directive_arg is entered.
+func (s *BasenevaListener) EnterCompiler_directive_arg(ctx *Compiler_directive_argContext) {}
+
+// ExitCompiler_directive_arg is called when production compiler_directive_arg is exited.
+func (s *BasenevaListener) ExitCompiler_directive_arg(ctx *Compiler_directive_argContext) {}
+
 // EnterImportStmt is called when production importStmt is entered.
 func (s *BasenevaListener) EnterImportStmt(ctx *ImportStmtContext) {}
 
