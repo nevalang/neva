@@ -24,11 +24,10 @@ func New() Generator {
 var (
 	ErrPkgNotFound       = errors.New("package not found")
 	ErrEntityNotFound    = errors.New("entity is not found")
-	ErrSubNode           = errors.New("sub node")
 	ErrNodeUsageNotFound = errors.New("node usage not found")
 )
 
-func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, error) {
+func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
 	initialScope := src.Scope{
 		Build: build,
 		Location: src.Location{
@@ -63,7 +62,9 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 	}
 
 	if err := g.processComponentNode(ctx, rootNodeCtx, initialScope, result); err != nil {
-		return nil, fmt.Errorf("process root node: %w", err)
+		return nil, compiler.Error{
+			Location: &initialScope.Location,
+		}.Merge(err)
 	}
 
 	return result, nil
@@ -109,25 +110,31 @@ func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, er
 	return "", errors.New("type argument mismatches runtime func directive")
 }
 
-func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, error) {
-	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective] // FIXME no directives on const (msg) node
+func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
+	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective]
 	if !ok {
 		return nil, nil
 	}
 
 	entity, location, err := scope.Entity(utils.ParseRef(args[0]))
 	if err != nil {
-		return nil, err
+		return nil, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
 	}
 
 	return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
 }
 
-func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, error) { //nolint:funlen
+func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) { //nolint:funlen
 	if constant.Ref != nil {
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
-			return nil, err
+			return nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+			}
 		}
 		return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
 	}
@@ -186,7 +193,10 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, error) { //
 		}, nil
 	}
 
-	return nil, errors.New("unknown msg type")
+	return nil, &compiler.Error{
+		Err:      errors.New("unknown msg type"),
+		Location: &scope.Location,
+	}
 }
 
 func (g Generator) processComponentNode( //nolint:funlen
@@ -194,10 +204,13 @@ func (g Generator) processComponentNode( //nolint:funlen
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
-) error {
+) *compiler.Error {
 	componentEntity, location, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
-		return fmt.Errorf("scope entity: %w", err)
+		return &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
 	}
 
 	component := componentEntity.Component
@@ -208,13 +221,21 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 	runtimeFuncRef, err := getRuntimeFunc(component, nodeCtx.node.TypeArgs)
 	if err != nil {
-		return err
+		return &compiler.Error{
+			Err:      err,
+			Location: &location,
+			Meta:     &component.Meta,
+		}
 	}
 
 	if runtimeFuncRef != "" {
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope) // use previous location
+		// use previous scope's location, not the location where runtime func was found
+		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
 		if err != nil {
-			return err
+			return &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+			}
 		}
 
 		result.Funcs = append(result.Funcs, &ir.Func{
@@ -236,13 +257,20 @@ func (g Generator) processComponentNode( //nolint:funlen
 	// On the other hand, we believe network has everything we need because probram is correct.
 	netResult, err := g.processNet(scope, component.Net, nodeCtx, result)
 	if err != nil {
-		return fmt.Errorf("handle network: %w", err)
+		return &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
 	}
 
 	for nodeName, node := range component.Nodes {
 		nodeUsage, ok := netResult[nodeName]
 		if !ok {
-			return fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName)
+			return &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
+				Location: &location,
+				Meta:     &component.Meta,
+			}
 		}
 
 		subNodeCtx := nodeContext{
@@ -252,7 +280,11 @@ func (g Generator) processComponentNode( //nolint:funlen
 		}
 
 		if err := g.processComponentNode(ctx, subNodeCtx, scope, result); err != nil {
-			return fmt.Errorf("%w: %v", errors.Join(ErrSubNode, err), nodeName)
+			return &compiler.Error{
+				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
+				Location: &location,
+				Meta:     &component.Meta,
+			}
 		}
 	}
 

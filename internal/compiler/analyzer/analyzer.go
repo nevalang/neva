@@ -29,7 +29,7 @@ type Analyzer struct {
 	resolver        ts.Resolver
 }
 
-func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, error) {
+func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
 	location := src.Location{
 		ModRef:  build.EntryModRef,
 		PkgName: mainPkgName,
@@ -37,14 +37,14 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 
 	entryMod, ok := build.Modules[build.EntryModRef]
 	if !ok {
-		return src.Build{}, compiler.Error{
+		return src.Build{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
 			Location: &location,
 		}
 	}
 
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
-		return src.Build{}, compiler.Error{
+		return src.Build{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
 			Location: &location,
 		}
@@ -61,14 +61,13 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 
 	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
-		aerr := err.(*compiler.Error) //nolint:forcetypeassert
-		return src.Build{}, compiler.Error{Location: &location}.Merge(aerr)
+		return src.Build{}, compiler.Error{Location: &location}.Merge(err)
 	}
 
 	return analyzedBuild, nil
 }
 
-func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, error) {
+func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
