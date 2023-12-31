@@ -302,11 +302,16 @@ func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
 
 		directives := parseCompilerDirectives(node.CompilerDirectives())
 
+		var deps map[string]src.Node
+		if diArgs := nodeInst.NodeDIArgs(); diArgs != nil {
+			deps = parseNodes(diArgs.CompNodesDefBody())
+		}
+
 		result[node.IDENTIFIER().GetText()] = src.Node{
 			Directives: directives,
 			EntityRef:  parsedRef,
 			TypeArgs:   typeArgs,
-			Deps:       parseNodes(nodeInst.NodeDIArgs().CompNodesDefBody()),
+			Deps:       deps,
 			Meta: src.Meta{
 				Text: node.GetText(),
 				Start: src.Position{

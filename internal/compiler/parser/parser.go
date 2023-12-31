@@ -5,6 +5,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/antlr4-go/antlr/v4"
 
@@ -31,6 +32,7 @@ func (p Parser) ParseModules(
 		parsedPkgs, err := p.ParsePackages(rawMod.Packages, modRef)
 		if err != nil {
 			return nil, compiler.Error{
+				Err:      errors.New("Parsing error"),
 				Location: &src.Location{ModRef: modRef},
 			}.Merge(err)
 		}
@@ -85,11 +87,17 @@ func (p Parser) ParseFile(bb []byte) (f src.File, err *compiler.Error) {
 	defer func() {
 		if e := recover(); e != nil {
 			compilerErr, ok := e.(*compiler.Error)
-			if !ok {
-				err = &compiler.Error{Err: errors.New(fmt.Sprint(e))}
+			if ok {
+				err = compilerErr
 				return
 			}
-			err = compilerErr
+			err = &compiler.Error{
+				Err: fmt.Errorf(
+					"%v: %v",
+					e,
+					string(debug.Stack()),
+				),
+			}
 		}
 	}()
 

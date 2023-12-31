@@ -1,15 +1,8 @@
 components {
-	#runtime_func(read)
-	pub C1(sig) (v str)
-
-	#runtime_func(int DoInt, float DoFloat)
-	pub C2(sig) (v str)
-
-	#runtime_func(read, write)
-	pub C3<T>(v T) (v T) {
+	C1 () () {
 		nodes {
-			#runtime_func_msg(msg)
-			msg Const<str>
+		}
+		net {
 		}
 	}
 }

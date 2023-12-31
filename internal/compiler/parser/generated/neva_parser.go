@@ -58,7 +58,7 @@ func nevaParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 38, 845, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
+		4, 1, 38, 853, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
 		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7,
 		10, 2, 11, 7, 11, 2, 12, 7, 12, 2, 13, 7, 13, 2, 14, 7, 14, 2, 15, 7, 15,
 		2, 16, 7, 16, 2, 17, 7, 17, 2, 18, 7, 18, 2, 19, 7, 19, 2, 20, 7, 20, 2,
@@ -135,29 +135,30 @@ func nevaParserInit() {
 		664, 8, 42, 10, 42, 12, 42, 667, 9, 42, 1, 42, 1, 42, 1, 43, 3, 43, 672,
 		8, 43, 1, 43, 1, 43, 3, 43, 676, 8, 43, 1, 43, 5, 43, 679, 8, 43, 10, 43,
 		12, 43, 682, 9, 43, 1, 44, 1, 44, 5, 44, 686, 8, 44, 10, 44, 12, 44, 689,
-		9, 44, 1, 44, 1, 44, 1, 44, 5, 44, 694, 8, 44, 10, 44, 12, 44, 697, 9,
-		44, 1, 44, 1, 44, 3, 44, 701, 8, 44, 1, 45, 1, 45, 5, 45, 705, 8, 45, 10,
-		45, 12, 45, 708, 9, 45, 1, 45, 1, 45, 1, 46, 1, 46, 5, 46, 714, 8, 46,
-		10, 46, 12, 46, 717, 9, 46, 1, 46, 1, 46, 5, 46, 721, 8, 46, 10, 46, 12,
-		46, 724, 9, 46, 5, 46, 726, 8, 46, 10, 46, 12, 46, 729, 9, 46, 1, 46, 1,
-		46, 1, 47, 3, 47, 734, 8, 47, 1, 47, 1, 47, 1, 47, 1, 48, 1, 48, 5, 48,
-		741, 8, 48, 10, 48, 12, 48, 744, 9, 48, 1, 48, 3, 48, 747, 8, 48, 1, 48,
-		5, 48, 750, 8, 48, 10, 48, 12, 48, 753, 9, 48, 1, 48, 3, 48, 756, 8, 48,
-		1, 49, 1, 49, 1, 50, 1, 50, 5, 50, 762, 8, 50, 10, 50, 12, 50, 765, 9,
-		50, 1, 50, 1, 50, 5, 50, 769, 8, 50, 10, 50, 12, 50, 772, 9, 50, 1, 50,
-		3, 50, 775, 8, 50, 1, 50, 5, 50, 778, 8, 50, 10, 50, 12, 50, 781, 9, 50,
-		1, 50, 1, 50, 1, 51, 1, 51, 5, 51, 787, 8, 51, 10, 51, 12, 51, 790, 9,
-		51, 1, 51, 5, 51, 793, 8, 51, 10, 51, 12, 51, 796, 9, 51, 1, 52, 1, 52,
-		1, 52, 1, 52, 1, 53, 1, 53, 3, 53, 804, 8, 53, 1, 54, 1, 54, 3, 54, 808,
+		9, 44, 1, 44, 1, 44, 5, 44, 693, 8, 44, 10, 44, 12, 44, 696, 9, 44, 3,
+		44, 698, 8, 44, 1, 44, 1, 44, 5, 44, 702, 8, 44, 10, 44, 12, 44, 705, 9,
+		44, 3, 44, 707, 8, 44, 1, 44, 1, 44, 1, 45, 1, 45, 5, 45, 713, 8, 45, 10,
+		45, 12, 45, 716, 9, 45, 1, 45, 1, 45, 1, 46, 1, 46, 5, 46, 722, 8, 46,
+		10, 46, 12, 46, 725, 9, 46, 1, 46, 1, 46, 5, 46, 729, 8, 46, 10, 46, 12,
+		46, 732, 9, 46, 5, 46, 734, 8, 46, 10, 46, 12, 46, 737, 9, 46, 1, 46, 1,
+		46, 1, 47, 3, 47, 742, 8, 47, 1, 47, 1, 47, 1, 47, 1, 48, 1, 48, 5, 48,
+		749, 8, 48, 10, 48, 12, 48, 752, 9, 48, 1, 48, 3, 48, 755, 8, 48, 1, 48,
+		5, 48, 758, 8, 48, 10, 48, 12, 48, 761, 9, 48, 1, 48, 3, 48, 764, 8, 48,
+		1, 49, 1, 49, 1, 50, 1, 50, 5, 50, 770, 8, 50, 10, 50, 12, 50, 773, 9,
+		50, 1, 50, 1, 50, 5, 50, 777, 8, 50, 10, 50, 12, 50, 780, 9, 50, 1, 50,
+		3, 50, 783, 8, 50, 1, 50, 5, 50, 786, 8, 50, 10, 50, 12, 50, 789, 9, 50,
+		1, 50, 1, 50, 1, 51, 1, 51, 5, 51, 795, 8, 51, 10, 51, 12, 51, 798, 9,
+		51, 1, 51, 5, 51, 801, 8, 51, 10, 51, 12, 51, 804, 9, 51, 1, 52, 1, 52,
+		1, 52, 1, 52, 1, 53, 1, 53, 3, 53, 812, 8, 53, 1, 54, 1, 54, 3, 54, 816,
 		8, 54, 1, 55, 1, 55, 1, 55, 1, 55, 1, 56, 1, 56, 1, 57, 1, 57, 1, 57, 1,
-		57, 1, 58, 1, 58, 3, 58, 822, 8, 58, 1, 59, 1, 59, 5, 59, 826, 8, 59, 10,
-		59, 12, 59, 829, 9, 59, 1, 59, 1, 59, 5, 59, 833, 8, 59, 10, 59, 12, 59,
-		836, 9, 59, 5, 59, 838, 8, 59, 10, 59, 12, 59, 841, 9, 59, 1, 59, 1, 59,
+		57, 1, 58, 1, 58, 3, 58, 830, 8, 58, 1, 59, 1, 59, 5, 59, 834, 8, 59, 10,
+		59, 12, 59, 837, 9, 59, 1, 59, 1, 59, 5, 59, 841, 8, 59, 10, 59, 12, 59,
+		844, 9, 59, 5, 59, 846, 8, 59, 10, 59, 12, 59, 849, 9, 59, 1, 59, 1, 59,
 		1, 59, 0, 0, 60, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
 		30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64,
 		66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100,
 		102, 104, 106, 108, 110, 112, 114, 116, 118, 0, 2, 1, 0, 21, 22, 1, 0,
-		29, 30, 910, 0, 125, 1, 0, 0, 0, 2, 135, 1, 0, 0, 0, 4, 140, 1, 0, 0, 0,
+		29, 30, 920, 0, 125, 1, 0, 0, 0, 2, 135, 1, 0, 0, 0, 4, 140, 1, 0, 0, 0,
 		6, 144, 1, 0, 0, 0, 8, 149, 1, 0, 0, 0, 10, 161, 1, 0, 0, 0, 12, 165, 1,
 		0, 0, 0, 14, 188, 1, 0, 0, 0, 16, 198, 1, 0, 0, 0, 18, 216, 1, 0, 0, 0,
 		20, 221, 1, 0, 0, 0, 22, 250, 1, 0, 0, 0, 24, 259, 1, 0, 0, 0, 26, 271,
@@ -169,12 +170,12 @@ func nevaParserInit() {
 		0, 62, 519, 1, 0, 0, 0, 64, 532, 1, 0, 0, 0, 66, 555, 1, 0, 0, 0, 68, 573,
 		1, 0, 0, 0, 70, 575, 1, 0, 0, 0, 72, 577, 1, 0, 0, 0, 74, 579, 1, 0, 0,
 		0, 76, 612, 1, 0, 0, 0, 78, 614, 1, 0, 0, 0, 80, 626, 1, 0, 0, 0, 82, 639,
-		1, 0, 0, 0, 84, 648, 1, 0, 0, 0, 86, 671, 1, 0, 0, 0, 88, 700, 1, 0, 0,
-		0, 90, 702, 1, 0, 0, 0, 92, 711, 1, 0, 0, 0, 94, 733, 1, 0, 0, 0, 96, 738,
-		1, 0, 0, 0, 98, 757, 1, 0, 0, 0, 100, 759, 1, 0, 0, 0, 102, 784, 1, 0,
-		0, 0, 104, 797, 1, 0, 0, 0, 106, 803, 1, 0, 0, 0, 108, 807, 1, 0, 0, 0,
-		110, 809, 1, 0, 0, 0, 112, 813, 1, 0, 0, 0, 114, 815, 1, 0, 0, 0, 116,
-		821, 1, 0, 0, 0, 118, 823, 1, 0, 0, 0, 120, 124, 5, 37, 0, 0, 121, 124,
+		1, 0, 0, 0, 84, 648, 1, 0, 0, 0, 86, 671, 1, 0, 0, 0, 88, 683, 1, 0, 0,
+		0, 90, 710, 1, 0, 0, 0, 92, 719, 1, 0, 0, 0, 94, 741, 1, 0, 0, 0, 96, 746,
+		1, 0, 0, 0, 98, 765, 1, 0, 0, 0, 100, 767, 1, 0, 0, 0, 102, 792, 1, 0,
+		0, 0, 104, 805, 1, 0, 0, 0, 106, 811, 1, 0, 0, 0, 108, 815, 1, 0, 0, 0,
+		110, 817, 1, 0, 0, 0, 112, 821, 1, 0, 0, 0, 114, 823, 1, 0, 0, 0, 116,
+		829, 1, 0, 0, 0, 118, 831, 1, 0, 0, 0, 120, 124, 5, 37, 0, 0, 121, 124,
 		5, 31, 0, 0, 122, 124, 3, 2, 1, 0, 123, 120, 1, 0, 0, 0, 123, 121, 1, 0,
 		0, 0, 123, 122, 1, 0, 0, 0, 124, 127, 1, 0, 0, 0, 125, 123, 1, 0, 0, 0,
 		125, 126, 1, 0, 0, 0, 126, 128, 1, 0, 0, 0, 127, 125, 1, 0, 0, 0, 128,
@@ -381,70 +382,73 @@ func nevaParserInit() {
 		682, 1, 0, 0, 0, 680, 678, 1, 0, 0, 0, 680, 681, 1, 0, 0, 0, 681, 87, 1,
 		0, 0, 0, 682, 680, 1, 0, 0, 0, 683, 687, 5, 6, 0, 0, 684, 686, 5, 37, 0,
 		0, 685, 684, 1, 0, 0, 0, 686, 689, 1, 0, 0, 0, 687, 685, 1, 0, 0, 0, 687,
-		688, 1, 0, 0, 0, 688, 690, 1, 0, 0, 0, 689, 687, 1, 0, 0, 0, 690, 701,
-		3, 90, 45, 0, 691, 695, 3, 100, 50, 0, 692, 694, 5, 37, 0, 0, 693, 692,
-		1, 0, 0, 0, 694, 697, 1, 0, 0, 0, 695, 693, 1, 0, 0, 0, 695, 696, 1, 0,
-		0, 0, 696, 698, 1, 0, 0, 0, 697, 695, 1, 0, 0, 0, 698, 699, 5, 7, 0, 0,
-		699, 701, 1, 0, 0, 0, 700, 683, 1, 0, 0, 0, 700, 691, 1, 0, 0, 0, 701,
-		89, 1, 0, 0, 0, 702, 706, 5, 26, 0, 0, 703, 705, 5, 37, 0, 0, 704, 703,
-		1, 0, 0, 0, 705, 708, 1, 0, 0, 0, 706, 704, 1, 0, 0, 0, 706, 707, 1, 0,
-		0, 0, 707, 709, 1, 0, 0, 0, 708, 706, 1, 0, 0, 0, 709, 710, 3, 92, 46,
-		0, 710, 91, 1, 0, 0, 0, 711, 715, 5, 6, 0, 0, 712, 714, 5, 37, 0, 0, 713,
-		712, 1, 0, 0, 0, 714, 717, 1, 0, 0, 0, 715, 713, 1, 0, 0, 0, 715, 716,
-		1, 0, 0, 0, 716, 727, 1, 0, 0, 0, 717, 715, 1, 0, 0, 0, 718, 722, 3, 94,
-		47, 0, 719, 721, 5, 37, 0, 0, 720, 719, 1, 0, 0, 0, 721, 724, 1, 0, 0,
-		0, 722, 720, 1, 0, 0, 0, 722, 723, 1, 0, 0, 0, 723, 726, 1, 0, 0, 0, 724,
-		722, 1, 0, 0, 0, 725, 718, 1, 0, 0, 0, 726, 729, 1, 0, 0, 0, 727, 725,
-		1, 0, 0, 0, 727, 728, 1, 0, 0, 0, 728, 730, 1, 0, 0, 0, 729, 727, 1, 0,
-		0, 0, 730, 731, 5, 7, 0, 0, 731, 93, 1, 0, 0, 0, 732, 734, 3, 4, 2, 0,
-		733, 732, 1, 0, 0, 0, 733, 734, 1, 0, 0, 0, 734, 735, 1, 0, 0, 0, 735,
-		736, 5, 33, 0, 0, 736, 737, 3, 96, 48, 0, 737, 95, 1, 0, 0, 0, 738, 742,
-		3, 18, 9, 0, 739, 741, 5, 37, 0, 0, 740, 739, 1, 0, 0, 0, 741, 744, 1,
-		0, 0, 0, 742, 740, 1, 0, 0, 0, 742, 743, 1, 0, 0, 0, 743, 746, 1, 0, 0,
-		0, 744, 742, 1, 0, 0, 0, 745, 747, 3, 34, 17, 0, 746, 745, 1, 0, 0, 0,
-		746, 747, 1, 0, 0, 0, 747, 751, 1, 0, 0, 0, 748, 750, 5, 37, 0, 0, 749,
-		748, 1, 0, 0, 0, 750, 753, 1, 0, 0, 0, 751, 749, 1, 0, 0, 0, 751, 752,
-		1, 0, 0, 0, 752, 755, 1, 0, 0, 0, 753, 751, 1, 0, 0, 0, 754, 756, 3, 98,
-		49, 0, 755, 754, 1, 0, 0, 0, 755, 756, 1, 0, 0, 0, 756, 97, 1, 0, 0, 0,
-		757, 758, 3, 92, 46, 0, 758, 99, 1, 0, 0, 0, 759, 763, 5, 27, 0, 0, 760,
-		762, 5, 37, 0, 0, 761, 760, 1, 0, 0, 0, 762, 765, 1, 0, 0, 0, 763, 761,
-		1, 0, 0, 0, 763, 764, 1, 0, 0, 0, 764, 766, 1, 0, 0, 0, 765, 763, 1, 0,
-		0, 0, 766, 770, 5, 6, 0, 0, 767, 769, 5, 37, 0, 0, 768, 767, 1, 0, 0, 0,
-		769, 772, 1, 0, 0, 0, 770, 768, 1, 0, 0, 0, 770, 771, 1, 0, 0, 0, 771,
-		774, 1, 0, 0, 0, 772, 770, 1, 0, 0, 0, 773, 775, 3, 102, 51, 0, 774, 773,
-		1, 0, 0, 0, 774, 775, 1, 0, 0, 0, 775, 779, 1, 0, 0, 0, 776, 778, 5, 37,
-		0, 0, 777, 776, 1, 0, 0, 0, 778, 781, 1, 0, 0, 0, 779, 777, 1, 0, 0, 0,
-		779, 780, 1, 0, 0, 0, 780, 782, 1, 0, 0, 0, 781, 779, 1, 0, 0, 0, 782,
-		783, 5, 7, 0, 0, 783, 101, 1, 0, 0, 0, 784, 794, 3, 104, 52, 0, 785, 787,
-		5, 37, 0, 0, 786, 785, 1, 0, 0, 0, 787, 790, 1, 0, 0, 0, 788, 786, 1, 0,
-		0, 0, 788, 789, 1, 0, 0, 0, 789, 791, 1, 0, 0, 0, 790, 788, 1, 0, 0, 0,
-		791, 793, 3, 104, 52, 0, 792, 788, 1, 0, 0, 0, 793, 796, 1, 0, 0, 0, 794,
-		792, 1, 0, 0, 0, 794, 795, 1, 0, 0, 0, 795, 103, 1, 0, 0, 0, 796, 794,
-		1, 0, 0, 0, 797, 798, 3, 106, 53, 0, 798, 799, 5, 28, 0, 0, 799, 800, 3,
-		116, 58, 0, 800, 105, 1, 0, 0, 0, 801, 804, 3, 108, 54, 0, 802, 804, 3,
-		18, 9, 0, 803, 801, 1, 0, 0, 0, 803, 802, 1, 0, 0, 0, 804, 107, 1, 0, 0,
-		0, 805, 808, 3, 110, 55, 0, 806, 808, 3, 114, 57, 0, 807, 805, 1, 0, 0,
-		0, 807, 806, 1, 0, 0, 0, 808, 109, 1, 0, 0, 0, 809, 810, 3, 112, 56, 0,
-		810, 811, 5, 9, 0, 0, 811, 812, 5, 33, 0, 0, 812, 111, 1, 0, 0, 0, 813,
-		814, 7, 1, 0, 0, 814, 113, 1, 0, 0, 0, 815, 816, 5, 33, 0, 0, 816, 817,
-		5, 9, 0, 0, 817, 818, 5, 33, 0, 0, 818, 115, 1, 0, 0, 0, 819, 822, 3, 108,
-		54, 0, 820, 822, 3, 118, 59, 0, 821, 819, 1, 0, 0, 0, 821, 820, 1, 0, 0,
-		0, 822, 117, 1, 0, 0, 0, 823, 827, 5, 6, 0, 0, 824, 826, 5, 37, 0, 0, 825,
-		824, 1, 0, 0, 0, 826, 829, 1, 0, 0, 0, 827, 825, 1, 0, 0, 0, 827, 828,
-		1, 0, 0, 0, 828, 839, 1, 0, 0, 0, 829, 827, 1, 0, 0, 0, 830, 834, 3, 108,
-		54, 0, 831, 833, 5, 37, 0, 0, 832, 831, 1, 0, 0, 0, 833, 836, 1, 0, 0,
-		0, 834, 832, 1, 0, 0, 0, 834, 835, 1, 0, 0, 0, 835, 838, 1, 0, 0, 0, 836,
-		834, 1, 0, 0, 0, 837, 830, 1, 0, 0, 0, 838, 841, 1, 0, 0, 0, 839, 837,
-		1, 0, 0, 0, 839, 840, 1, 0, 0, 0, 840, 842, 1, 0, 0, 0, 841, 839, 1, 0,
-		0, 0, 842, 843, 5, 7, 0, 0, 843, 119, 1, 0, 0, 0, 114, 123, 125, 135, 142,
+		688, 1, 0, 0, 0, 688, 697, 1, 0, 0, 0, 689, 687, 1, 0, 0, 0, 690, 694,
+		3, 90, 45, 0, 691, 693, 5, 37, 0, 0, 692, 691, 1, 0, 0, 0, 693, 696, 1,
+		0, 0, 0, 694, 692, 1, 0, 0, 0, 694, 695, 1, 0, 0, 0, 695, 698, 1, 0, 0,
+		0, 696, 694, 1, 0, 0, 0, 697, 690, 1, 0, 0, 0, 697, 698, 1, 0, 0, 0, 698,
+		706, 1, 0, 0, 0, 699, 703, 3, 100, 50, 0, 700, 702, 5, 37, 0, 0, 701, 700,
+		1, 0, 0, 0, 702, 705, 1, 0, 0, 0, 703, 701, 1, 0, 0, 0, 703, 704, 1, 0,
+		0, 0, 704, 707, 1, 0, 0, 0, 705, 703, 1, 0, 0, 0, 706, 699, 1, 0, 0, 0,
+		706, 707, 1, 0, 0, 0, 707, 708, 1, 0, 0, 0, 708, 709, 5, 7, 0, 0, 709,
+		89, 1, 0, 0, 0, 710, 714, 5, 26, 0, 0, 711, 713, 5, 37, 0, 0, 712, 711,
+		1, 0, 0, 0, 713, 716, 1, 0, 0, 0, 714, 712, 1, 0, 0, 0, 714, 715, 1, 0,
+		0, 0, 715, 717, 1, 0, 0, 0, 716, 714, 1, 0, 0, 0, 717, 718, 3, 92, 46,
+		0, 718, 91, 1, 0, 0, 0, 719, 723, 5, 6, 0, 0, 720, 722, 5, 37, 0, 0, 721,
+		720, 1, 0, 0, 0, 722, 725, 1, 0, 0, 0, 723, 721, 1, 0, 0, 0, 723, 724,
+		1, 0, 0, 0, 724, 735, 1, 0, 0, 0, 725, 723, 1, 0, 0, 0, 726, 730, 3, 94,
+		47, 0, 727, 729, 5, 37, 0, 0, 728, 727, 1, 0, 0, 0, 729, 732, 1, 0, 0,
+		0, 730, 728, 1, 0, 0, 0, 730, 731, 1, 0, 0, 0, 731, 734, 1, 0, 0, 0, 732,
+		730, 1, 0, 0, 0, 733, 726, 1, 0, 0, 0, 734, 737, 1, 0, 0, 0, 735, 733,
+		1, 0, 0, 0, 735, 736, 1, 0, 0, 0, 736, 738, 1, 0, 0, 0, 737, 735, 1, 0,
+		0, 0, 738, 739, 5, 7, 0, 0, 739, 93, 1, 0, 0, 0, 740, 742, 3, 4, 2, 0,
+		741, 740, 1, 0, 0, 0, 741, 742, 1, 0, 0, 0, 742, 743, 1, 0, 0, 0, 743,
+		744, 5, 33, 0, 0, 744, 745, 3, 96, 48, 0, 745, 95, 1, 0, 0, 0, 746, 750,
+		3, 18, 9, 0, 747, 749, 5, 37, 0, 0, 748, 747, 1, 0, 0, 0, 749, 752, 1,
+		0, 0, 0, 750, 748, 1, 0, 0, 0, 750, 751, 1, 0, 0, 0, 751, 754, 1, 0, 0,
+		0, 752, 750, 1, 0, 0, 0, 753, 755, 3, 34, 17, 0, 754, 753, 1, 0, 0, 0,
+		754, 755, 1, 0, 0, 0, 755, 759, 1, 0, 0, 0, 756, 758, 5, 37, 0, 0, 757,
+		756, 1, 0, 0, 0, 758, 761, 1, 0, 0, 0, 759, 757, 1, 0, 0, 0, 759, 760,
+		1, 0, 0, 0, 760, 763, 1, 0, 0, 0, 761, 759, 1, 0, 0, 0, 762, 764, 3, 98,
+		49, 0, 763, 762, 1, 0, 0, 0, 763, 764, 1, 0, 0, 0, 764, 97, 1, 0, 0, 0,
+		765, 766, 3, 92, 46, 0, 766, 99, 1, 0, 0, 0, 767, 771, 5, 27, 0, 0, 768,
+		770, 5, 37, 0, 0, 769, 768, 1, 0, 0, 0, 770, 773, 1, 0, 0, 0, 771, 769,
+		1, 0, 0, 0, 771, 772, 1, 0, 0, 0, 772, 774, 1, 0, 0, 0, 773, 771, 1, 0,
+		0, 0, 774, 778, 5, 6, 0, 0, 775, 777, 5, 37, 0, 0, 776, 775, 1, 0, 0, 0,
+		777, 780, 1, 0, 0, 0, 778, 776, 1, 0, 0, 0, 778, 779, 1, 0, 0, 0, 779,
+		782, 1, 0, 0, 0, 780, 778, 1, 0, 0, 0, 781, 783, 3, 102, 51, 0, 782, 781,
+		1, 0, 0, 0, 782, 783, 1, 0, 0, 0, 783, 787, 1, 0, 0, 0, 784, 786, 5, 37,
+		0, 0, 785, 784, 1, 0, 0, 0, 786, 789, 1, 0, 0, 0, 787, 785, 1, 0, 0, 0,
+		787, 788, 1, 0, 0, 0, 788, 790, 1, 0, 0, 0, 789, 787, 1, 0, 0, 0, 790,
+		791, 5, 7, 0, 0, 791, 101, 1, 0, 0, 0, 792, 802, 3, 104, 52, 0, 793, 795,
+		5, 37, 0, 0, 794, 793, 1, 0, 0, 0, 795, 798, 1, 0, 0, 0, 796, 794, 1, 0,
+		0, 0, 796, 797, 1, 0, 0, 0, 797, 799, 1, 0, 0, 0, 798, 796, 1, 0, 0, 0,
+		799, 801, 3, 104, 52, 0, 800, 796, 1, 0, 0, 0, 801, 804, 1, 0, 0, 0, 802,
+		800, 1, 0, 0, 0, 802, 803, 1, 0, 0, 0, 803, 103, 1, 0, 0, 0, 804, 802,
+		1, 0, 0, 0, 805, 806, 3, 106, 53, 0, 806, 807, 5, 28, 0, 0, 807, 808, 3,
+		116, 58, 0, 808, 105, 1, 0, 0, 0, 809, 812, 3, 108, 54, 0, 810, 812, 3,
+		18, 9, 0, 811, 809, 1, 0, 0, 0, 811, 810, 1, 0, 0, 0, 812, 107, 1, 0, 0,
+		0, 813, 816, 3, 110, 55, 0, 814, 816, 3, 114, 57, 0, 815, 813, 1, 0, 0,
+		0, 815, 814, 1, 0, 0, 0, 816, 109, 1, 0, 0, 0, 817, 818, 3, 112, 56, 0,
+		818, 819, 5, 9, 0, 0, 819, 820, 5, 33, 0, 0, 820, 111, 1, 0, 0, 0, 821,
+		822, 7, 1, 0, 0, 822, 113, 1, 0, 0, 0, 823, 824, 5, 33, 0, 0, 824, 825,
+		5, 9, 0, 0, 825, 826, 5, 33, 0, 0, 826, 115, 1, 0, 0, 0, 827, 830, 3, 108,
+		54, 0, 828, 830, 3, 118, 59, 0, 829, 827, 1, 0, 0, 0, 829, 828, 1, 0, 0,
+		0, 830, 117, 1, 0, 0, 0, 831, 835, 5, 6, 0, 0, 832, 834, 5, 37, 0, 0, 833,
+		832, 1, 0, 0, 0, 834, 837, 1, 0, 0, 0, 835, 833, 1, 0, 0, 0, 835, 836,
+		1, 0, 0, 0, 836, 847, 1, 0, 0, 0, 837, 835, 1, 0, 0, 0, 838, 842, 3, 108,
+		54, 0, 839, 841, 5, 37, 0, 0, 840, 839, 1, 0, 0, 0, 841, 844, 1, 0, 0,
+		0, 842, 840, 1, 0, 0, 0, 842, 843, 1, 0, 0, 0, 843, 846, 1, 0, 0, 0, 844,
+		842, 1, 0, 0, 0, 845, 838, 1, 0, 0, 0, 846, 849, 1, 0, 0, 0, 847, 845,
+		1, 0, 0, 0, 847, 848, 1, 0, 0, 0, 848, 850, 1, 0, 0, 0, 849, 847, 1, 0,
+		0, 0, 850, 851, 5, 7, 0, 0, 851, 119, 1, 0, 0, 0, 116, 123, 125, 135, 142,
 		147, 155, 163, 169, 176, 182, 188, 194, 198, 203, 209, 213, 219, 225, 232,
 		239, 244, 250, 254, 257, 263, 267, 276, 283, 288, 293, 298, 302, 308, 316,
 		322, 328, 336, 342, 349, 357, 363, 369, 378, 385, 395, 402, 406, 414, 419,
 		427, 434, 441, 447, 451, 457, 464, 470, 476, 480, 487, 498, 502, 509, 512,
 		519, 524, 529, 536, 543, 549, 555, 563, 573, 583, 587, 597, 604, 609, 612,
-		618, 622, 630, 636, 645, 652, 659, 665, 671, 675, 680, 687, 695, 700, 706,
-		715, 722, 727, 733, 742, 746, 751, 755, 763, 770, 774, 779, 788, 794, 803,
-		807, 821, 827, 834, 839,
+		618, 622, 630, 636, 645, 652, 659, 665, 671, 675, 680, 687, 694, 697, 703,
+		706, 714, 723, 730, 735, 741, 750, 754, 759, 763, 771, 778, 782, 787, 796,
+		802, 811, 815, 829, 835, 842, 847,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -8636,7 +8640,7 @@ func (p *nevaParser) CompDef() (localctx ICompDefContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if _la == nevaParserT__5 || _la == nevaParserT__26 {
+	if _la == nevaParserT__5 {
 		{
 			p.SetState(674)
 			p.CompBody()
@@ -8689,9 +8693,9 @@ type ICompBodyContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	CompNodesDef() ICompNodesDefContext
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
+	CompNodesDef() ICompNodesDefContext
 	CompNetDef() ICompNetDefContext
 
 	// IsCompBodyContext differentiates from other interfaces.
@@ -8730,6 +8734,14 @@ func NewCompBodyContext(parser antlr.Parser, parent antlr.ParserRuleContext, inv
 
 func (s *CompBodyContext) GetParser() antlr.Parser { return s.parser }
 
+func (s *CompBodyContext) AllNEWLINE() []antlr.TerminalNode {
+	return s.GetTokens(nevaParserNEWLINE)
+}
+
+func (s *CompBodyContext) NEWLINE(i int) antlr.TerminalNode {
+	return s.GetToken(nevaParserNEWLINE, i)
+}
+
 func (s *CompBodyContext) CompNodesDef() ICompNodesDefContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
@@ -8744,14 +8756,6 @@ func (s *CompBodyContext) CompNodesDef() ICompNodesDefContext {
 	}
 
 	return t.(ICompNodesDefContext)
-}
-
-func (s *CompBodyContext) AllNEWLINE() []antlr.TerminalNode {
-	return s.GetTokens(nevaParserNEWLINE)
-}
-
-func (s *CompBodyContext) NEWLINE(i int) antlr.TerminalNode {
-	return s.GetToken(nevaParserNEWLINE, i)
 }
 
 func (s *CompBodyContext) CompNetDef() ICompNetDefContext {
@@ -8795,59 +8799,52 @@ func (p *nevaParser) CompBody() (localctx ICompBodyContext) {
 	p.EnterRule(localctx, 88, nevaParserRULE_compBody)
 	var _la int
 
-	p.SetState(700)
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(683)
+		p.Match(nevaParserT__5)
+		if p.HasError() {
+			// Recognition error - abort rule
+			goto errorExit
+		}
+	}
+	p.SetState(687)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
+	_la = p.GetTokenStream().LA(1)
 
-	switch p.GetTokenStream().LA(1) {
-	case nevaParserT__5:
-		p.EnterOuterAlt(localctx, 1)
+	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(683)
-			p.Match(nevaParserT__5)
+			p.SetState(684)
+			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
 			}
 		}
-		p.SetState(687)
+
+		p.SetState(689)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
 		_la = p.GetTokenStream().LA(1)
+	}
+	p.SetState(697)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_la = p.GetTokenStream().LA(1)
 
-		for _la == nevaParserNEWLINE {
-			{
-				p.SetState(684)
-				p.Match(nevaParserNEWLINE)
-				if p.HasError() {
-					// Recognition error - abort rule
-					goto errorExit
-				}
-			}
-
-			p.SetState(689)
-			p.GetErrorHandler().Sync(p)
-			if p.HasError() {
-				goto errorExit
-			}
-			_la = p.GetTokenStream().LA(1)
-		}
+	if _la == nevaParserT__25 {
 		{
 			p.SetState(690)
 			p.CompNodesDef()
 		}
-
-	case nevaParserT__26:
-		p.EnterOuterAlt(localctx, 2)
-		{
-			p.SetState(691)
-			p.CompNetDef()
-		}
-		p.SetState(695)
+		p.SetState(694)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -8856,7 +8853,7 @@ func (p *nevaParser) CompBody() (localctx ICompBodyContext) {
 
 		for _la == nevaParserNEWLINE {
 			{
-				p.SetState(692)
+				p.SetState(691)
 				p.Match(nevaParserNEWLINE)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -8864,25 +8861,60 @@ func (p *nevaParser) CompBody() (localctx ICompBodyContext) {
 				}
 			}
 
-			p.SetState(697)
+			p.SetState(696)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
 			}
 			_la = p.GetTokenStream().LA(1)
 		}
+
+	}
+	p.SetState(706)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_la = p.GetTokenStream().LA(1)
+
+	if _la == nevaParserT__26 {
 		{
-			p.SetState(698)
-			p.Match(nevaParserT__6)
+			p.SetState(699)
+			p.CompNetDef()
+		}
+		p.SetState(703)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_la = p.GetTokenStream().LA(1)
+
+		for _la == nevaParserNEWLINE {
+			{
+				p.SetState(700)
+				p.Match(nevaParserNEWLINE)
+				if p.HasError() {
+					// Recognition error - abort rule
+					goto errorExit
+				}
+			}
+
+			p.SetState(705)
+			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
-				// Recognition error - abort rule
 				goto errorExit
 			}
+			_la = p.GetTokenStream().LA(1)
 		}
 
-	default:
-		p.SetError(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
-		goto errorExit
+	}
+	{
+		p.SetState(708)
+		p.Match(nevaParserT__6)
+		if p.HasError() {
+			// Recognition error - abort rule
+			goto errorExit
+		}
 	}
 
 errorExit:
@@ -8997,14 +9029,14 @@ func (p *nevaParser) CompNodesDef() (localctx ICompNodesDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(702)
+		p.SetState(710)
 		p.Match(nevaParserT__25)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
 		}
 	}
-	p.SetState(706)
+	p.SetState(714)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9013,7 +9045,7 @@ func (p *nevaParser) CompNodesDef() (localctx ICompNodesDefContext) {
 
 	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(703)
+			p.SetState(711)
 			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -9021,7 +9053,7 @@ func (p *nevaParser) CompNodesDef() (localctx ICompNodesDefContext) {
 			}
 		}
 
-		p.SetState(708)
+		p.SetState(716)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9029,7 +9061,7 @@ func (p *nevaParser) CompNodesDef() (localctx ICompNodesDefContext) {
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(709)
+		p.SetState(717)
 		p.CompNodesDefBody()
 	}
 
@@ -9171,14 +9203,14 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(711)
+		p.SetState(719)
 		p.Match(nevaParserT__5)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
 		}
 	}
-	p.SetState(715)
+	p.SetState(723)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9187,7 +9219,7 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 
 	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(712)
+			p.SetState(720)
 			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -9195,14 +9227,14 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 			}
 		}
 
-		p.SetState(717)
+		p.SetState(725)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
 		_la = p.GetTokenStream().LA(1)
 	}
-	p.SetState(727)
+	p.SetState(735)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9211,10 +9243,10 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 
 	for _la == nevaParserT__0 || _la == nevaParserIDENTIFIER {
 		{
-			p.SetState(718)
+			p.SetState(726)
 			p.CompNodeDef()
 		}
-		p.SetState(722)
+		p.SetState(730)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9223,7 +9255,7 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 
 		for _la == nevaParserNEWLINE {
 			{
-				p.SetState(719)
+				p.SetState(727)
 				p.Match(nevaParserNEWLINE)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -9231,7 +9263,7 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 				}
 			}
 
-			p.SetState(724)
+			p.SetState(732)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
@@ -9239,7 +9271,7 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 			_la = p.GetTokenStream().LA(1)
 		}
 
-		p.SetState(729)
+		p.SetState(737)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9247,7 +9279,7 @@ func (p *nevaParser) CompNodesDefBody() (localctx ICompNodesDefBodyContext) {
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(730)
+		p.SetState(738)
 		p.Match(nevaParserT__6)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -9378,7 +9410,7 @@ func (p *nevaParser) CompNodeDef() (localctx ICompNodeDefContext) {
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(733)
+	p.SetState(741)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9387,13 +9419,13 @@ func (p *nevaParser) CompNodeDef() (localctx ICompNodeDefContext) {
 
 	if _la == nevaParserT__0 {
 		{
-			p.SetState(732)
+			p.SetState(740)
 			p.CompilerDirectives()
 		}
 
 	}
 	{
-		p.SetState(735)
+		p.SetState(743)
 		p.Match(nevaParserIDENTIFIER)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -9401,7 +9433,7 @@ func (p *nevaParser) CompNodeDef() (localctx ICompNodeDefContext) {
 		}
 	}
 	{
-		p.SetState(736)
+		p.SetState(744)
 		p.NodeInst()
 	}
 
@@ -9553,55 +9585,10 @@ func (p *nevaParser) NodeInst() (localctx INodeInstContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(738)
+		p.SetState(746)
 		p.EntityRef()
 	}
-	p.SetState(742)
-	p.GetErrorHandler().Sync(p)
-	if p.HasError() {
-		goto errorExit
-	}
-	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 98, p.GetParserRuleContext())
-	if p.HasError() {
-		goto errorExit
-	}
-	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
-		if _alt == 1 {
-			{
-				p.SetState(739)
-				p.Match(nevaParserNEWLINE)
-				if p.HasError() {
-					// Recognition error - abort rule
-					goto errorExit
-				}
-			}
-
-		}
-		p.SetState(744)
-		p.GetErrorHandler().Sync(p)
-		if p.HasError() {
-			goto errorExit
-		}
-		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 98, p.GetParserRuleContext())
-		if p.HasError() {
-			goto errorExit
-		}
-	}
-	p.SetState(746)
-	p.GetErrorHandler().Sync(p)
-	if p.HasError() {
-		goto errorExit
-	}
-	_la = p.GetTokenStream().LA(1)
-
-	if _la == nevaParserT__11 {
-		{
-			p.SetState(745)
-			p.TypeArgs()
-		}
-
-	}
-	p.SetState(751)
+	p.SetState(750)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9613,7 +9600,7 @@ func (p *nevaParser) NodeInst() (localctx INodeInstContext) {
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
 			{
-				p.SetState(748)
+				p.SetState(747)
 				p.Match(nevaParserNEWLINE)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -9622,7 +9609,7 @@ func (p *nevaParser) NodeInst() (localctx INodeInstContext) {
 			}
 
 		}
-		p.SetState(753)
+		p.SetState(752)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9632,7 +9619,52 @@ func (p *nevaParser) NodeInst() (localctx INodeInstContext) {
 			goto errorExit
 		}
 	}
-	p.SetState(755)
+	p.SetState(754)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_la = p.GetTokenStream().LA(1)
+
+	if _la == nevaParserT__11 {
+		{
+			p.SetState(753)
+			p.TypeArgs()
+		}
+
+	}
+	p.SetState(759)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 102, p.GetParserRuleContext())
+	if p.HasError() {
+		goto errorExit
+	}
+	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1 {
+			{
+				p.SetState(756)
+				p.Match(nevaParserNEWLINE)
+				if p.HasError() {
+					// Recognition error - abort rule
+					goto errorExit
+				}
+			}
+
+		}
+		p.SetState(761)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 102, p.GetParserRuleContext())
+		if p.HasError() {
+			goto errorExit
+		}
+	}
+	p.SetState(763)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9641,7 +9673,7 @@ func (p *nevaParser) NodeInst() (localctx INodeInstContext) {
 
 	if _la == nevaParserT__5 {
 		{
-			p.SetState(754)
+			p.SetState(762)
 			p.NodeDIArgs()
 		}
 
@@ -9747,7 +9779,7 @@ func (p *nevaParser) NodeDIArgs() (localctx INodeDIArgsContext) {
 	p.EnterRule(localctx, 98, nevaParserRULE_nodeDIArgs)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(757)
+		p.SetState(765)
 		p.CompNodesDefBody()
 	}
 
@@ -9865,14 +9897,14 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(759)
+		p.SetState(767)
 		p.Match(nevaParserT__26)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
 		}
 	}
-	p.SetState(763)
+	p.SetState(771)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9881,7 +9913,7 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 
 	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(760)
+			p.SetState(768)
 			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -9889,7 +9921,7 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 			}
 		}
 
-		p.SetState(765)
+		p.SetState(773)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9897,26 +9929,26 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(766)
+		p.SetState(774)
 		p.Match(nevaParserT__5)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
 		}
 	}
-	p.SetState(770)
+	p.SetState(778)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
-	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 103, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 105, p.GetParserRuleContext())
 	if p.HasError() {
 		goto errorExit
 	}
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
 			{
-				p.SetState(767)
+				p.SetState(775)
 				p.Match(nevaParserNEWLINE)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -9925,17 +9957,17 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 			}
 
 		}
-		p.SetState(772)
+		p.SetState(780)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
-		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 103, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 105, p.GetParserRuleContext())
 		if p.HasError() {
 			goto errorExit
 		}
 	}
-	p.SetState(774)
+	p.SetState(782)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9944,12 +9976,12 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 
 	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&10200547328) != 0 {
 		{
-			p.SetState(773)
+			p.SetState(781)
 			p.ConnDefList()
 		}
 
 	}
-	p.SetState(779)
+	p.SetState(787)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -9958,7 +9990,7 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 
 	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(776)
+			p.SetState(784)
 			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -9966,7 +9998,7 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 			}
 		}
 
-		p.SetState(781)
+		p.SetState(789)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -9974,7 +10006,7 @@ func (p *nevaParser) CompNetDef() (localctx ICompNetDefContext) {
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(782)
+		p.SetState(790)
 		p.Match(nevaParserT__6)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10122,21 +10154,21 @@ func (p *nevaParser) ConnDefList() (localctx IConnDefListContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(784)
+		p.SetState(792)
 		p.ConnDef()
 	}
-	p.SetState(794)
+	p.SetState(802)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
-	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 107, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 109, p.GetParserRuleContext())
 	if p.HasError() {
 		goto errorExit
 	}
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
-			p.SetState(788)
+			p.SetState(796)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
@@ -10145,7 +10177,7 @@ func (p *nevaParser) ConnDefList() (localctx IConnDefListContext) {
 
 			for _la == nevaParserNEWLINE {
 				{
-					p.SetState(785)
+					p.SetState(793)
 					p.Match(nevaParserNEWLINE)
 					if p.HasError() {
 						// Recognition error - abort rule
@@ -10153,7 +10185,7 @@ func (p *nevaParser) ConnDefList() (localctx IConnDefListContext) {
 					}
 				}
 
-				p.SetState(790)
+				p.SetState(798)
 				p.GetErrorHandler().Sync(p)
 				if p.HasError() {
 					goto errorExit
@@ -10161,17 +10193,17 @@ func (p *nevaParser) ConnDefList() (localctx IConnDefListContext) {
 				_la = p.GetTokenStream().LA(1)
 			}
 			{
-				p.SetState(791)
+				p.SetState(799)
 				p.ConnDef()
 			}
 
 		}
-		p.SetState(796)
+		p.SetState(804)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
-		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 107, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 109, p.GetParserRuleContext())
 		if p.HasError() {
 			goto errorExit
 		}
@@ -10294,11 +10326,11 @@ func (p *nevaParser) ConnDef() (localctx IConnDefContext) {
 	p.EnterRule(localctx, 104, nevaParserRULE_connDef)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(797)
+		p.SetState(805)
 		p.SenderSide()
 	}
 	{
-		p.SetState(798)
+		p.SetState(806)
 		p.Match(nevaParserT__27)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10306,7 +10338,7 @@ func (p *nevaParser) ConnDef() (localctx IConnDefContext) {
 		}
 	}
 	{
-		p.SetState(799)
+		p.SetState(807)
 		p.ConnReceiverSide()
 	}
 
@@ -10425,24 +10457,24 @@ func (s *SenderSideContext) ExitRule(listener antlr.ParseTreeListener) {
 func (p *nevaParser) SenderSide() (localctx ISenderSideContext) {
 	localctx = NewSenderSideContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 106, nevaParserRULE_senderSide)
-	p.SetState(803)
+	p.SetState(811)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
 
-	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 108, p.GetParserRuleContext()) {
+	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 110, p.GetParserRuleContext()) {
 	case 1:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(801)
+			p.SetState(809)
 			p.PortAddr()
 		}
 
 	case 2:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(802)
+			p.SetState(810)
 			p.EntityRef()
 		}
 
@@ -10565,7 +10597,7 @@ func (s *PortAddrContext) ExitRule(listener antlr.ParseTreeListener) {
 func (p *nevaParser) PortAddr() (localctx IPortAddrContext) {
 	localctx = NewPortAddrContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 108, nevaParserRULE_portAddr)
-	p.SetState(807)
+	p.SetState(815)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -10575,14 +10607,14 @@ func (p *nevaParser) PortAddr() (localctx IPortAddrContext) {
 	case nevaParserT__28, nevaParserT__29:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(805)
+			p.SetState(813)
 			p.IoNodePortAddr()
 		}
 
 	case nevaParserIDENTIFIER:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(806)
+			p.SetState(814)
 			p.NormalNodePortAddr()
 		}
 
@@ -10696,11 +10728,11 @@ func (p *nevaParser) IoNodePortAddr() (localctx IIoNodePortAddrContext) {
 	p.EnterRule(localctx, 110, nevaParserRULE_ioNodePortAddr)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(809)
+		p.SetState(817)
 		p.PortDirection()
 	}
 	{
-		p.SetState(810)
+		p.SetState(818)
 		p.Match(nevaParserT__8)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10708,7 +10740,7 @@ func (p *nevaParser) IoNodePortAddr() (localctx IIoNodePortAddrContext) {
 		}
 	}
 	{
-		p.SetState(811)
+		p.SetState(819)
 		p.Match(nevaParserIDENTIFIER)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10797,7 +10829,7 @@ func (p *nevaParser) PortDirection() (localctx IPortDirectionContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(813)
+		p.SetState(821)
 		_la = p.GetTokenStream().LA(1)
 
 		if !(_la == nevaParserT__28 || _la == nevaParserT__29) {
@@ -10901,7 +10933,7 @@ func (p *nevaParser) NormalNodePortAddr() (localctx INormalNodePortAddrContext) 
 	p.EnterRule(localctx, 114, nevaParserRULE_normalNodePortAddr)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(815)
+		p.SetState(823)
 		p.Match(nevaParserIDENTIFIER)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10909,7 +10941,7 @@ func (p *nevaParser) NormalNodePortAddr() (localctx INormalNodePortAddrContext) 
 		}
 	}
 	{
-		p.SetState(816)
+		p.SetState(824)
 		p.Match(nevaParserT__8)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -10917,7 +10949,7 @@ func (p *nevaParser) NormalNodePortAddr() (localctx INormalNodePortAddrContext) 
 		}
 	}
 	{
-		p.SetState(817)
+		p.SetState(825)
 		p.Match(nevaParserIDENTIFIER)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -11040,7 +11072,7 @@ func (s *ConnReceiverSideContext) ExitRule(listener antlr.ParseTreeListener) {
 func (p *nevaParser) ConnReceiverSide() (localctx IConnReceiverSideContext) {
 	localctx = NewConnReceiverSideContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 116, nevaParserRULE_connReceiverSide)
-	p.SetState(821)
+	p.SetState(829)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -11050,14 +11082,14 @@ func (p *nevaParser) ConnReceiverSide() (localctx IConnReceiverSideContext) {
 	case nevaParserT__28, nevaParserT__29, nevaParserIDENTIFIER:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(819)
+			p.SetState(827)
 			p.PortAddr()
 		}
 
 	case nevaParserT__5:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(820)
+			p.SetState(828)
 			p.ConnReceivers()
 		}
 
@@ -11204,14 +11236,14 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(823)
+		p.SetState(831)
 		p.Match(nevaParserT__5)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
 		}
 	}
-	p.SetState(827)
+	p.SetState(835)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -11220,7 +11252,7 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 
 	for _la == nevaParserNEWLINE {
 		{
-			p.SetState(824)
+			p.SetState(832)
 			p.Match(nevaParserNEWLINE)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -11228,14 +11260,14 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 			}
 		}
 
-		p.SetState(829)
+		p.SetState(837)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
 		_la = p.GetTokenStream().LA(1)
 	}
-	p.SetState(839)
+	p.SetState(847)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -11244,10 +11276,10 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 
 	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&10200547328) != 0 {
 		{
-			p.SetState(830)
+			p.SetState(838)
 			p.PortAddr()
 		}
-		p.SetState(834)
+		p.SetState(842)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -11256,7 +11288,7 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 
 		for _la == nevaParserNEWLINE {
 			{
-				p.SetState(831)
+				p.SetState(839)
 				p.Match(nevaParserNEWLINE)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -11264,7 +11296,7 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 				}
 			}
 
-			p.SetState(836)
+			p.SetState(844)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
@@ -11272,7 +11304,7 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 			_la = p.GetTokenStream().LA(1)
 		}
 
-		p.SetState(841)
+		p.SetState(849)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -11280,7 +11312,7 @@ func (p *nevaParser) ConnReceivers() (localctx IConnReceiversContext) {
 		_la = p.GetTokenStream().LA(1)
 	}
 	{
-		p.SetState(842)
+		p.SetState(850)
 		p.Match(nevaParserT__6)
 		if p.HasError() {
 			// Recognition error - abort rule

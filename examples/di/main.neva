@@ -9,7 +9,9 @@ interfaces {
 components {
     Main(enter) (exit) {
         nodes {
-            n1 C1(iface: core.Print<any>)
+            n1 C1 {
+                iface core.Print<any>
+            }
         }
         net {
             in.enter -> n1.v

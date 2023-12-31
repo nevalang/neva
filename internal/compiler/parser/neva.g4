@@ -94,7 +94,8 @@ structValueField: IDENTIFIER ':' constVal NEWLINE*;
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
 compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
-compBody: '{' NEWLINE* compNodesDef | compNetDef NEWLINE* '}';
+compBody: '{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
+	// '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
 
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
