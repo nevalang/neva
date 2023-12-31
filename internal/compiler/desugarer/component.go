@@ -14,7 +14,10 @@ import (
 var ErrConstSenderEntityKind = errors.New("Entity that is used as a const reference in component's network must be of kind constant") //nolint:lll
 
 // desugarComponent replaces const ref in net with regular port addr and injects const node with directive.
-func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (src.Component, error) { //nolint:funlen
+func (d Desugarer) desugarComponent( //nolint:funlen
+	component src.Component,
+	scope src.Scope,
+) (src.Component, *compiler.Error) {
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
 		return component, nil
 	}
@@ -40,7 +43,11 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 
 		constTypeExpr, err := d.getConstType(*conn.SenderSide.ConstRef, scope)
 		if err != nil {
-			return src.Component{}, err
+			return src.Component{}, compiler.Error{
+				Err:      fmt.Errorf("Unable to get constant type by reference '%v'", *conn.SenderSide.ConstRef),
+				Location: &scope.Location,
+				Meta:     &conn.SenderSide.ConstRef.Meta,
+			}.Merge(err)
 		}
 
 		constRefStr := conn.SenderSide.ConstRef.String()

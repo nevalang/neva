@@ -3,6 +3,7 @@
 package sourcecode
 
 import (
+	"errors"
 	"fmt"
 
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -18,12 +19,16 @@ type Module struct {
 	Packages map[string]Package `json:"packages,omitempty"`
 }
 
-func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, ok bool) {
+func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", false
+		return Entity{}, "", ErrPkgNotFound
 	}
-	return pkg.Entity(entityRef.Name)
+	entity, filename, ok = pkg.Entity(entityRef.Name)
+	if !ok {
+		return Entity{}, "", fmt.Errorf("%w: '%v'", ErrEntityNotFound, entityRef.Name)
+	}
+	return entity, filename, nil
 }
 
 type ModuleManifest struct {
@@ -43,7 +48,7 @@ func (m ModuleRef) String() string {
 	return fmt.Sprintf("%v@%v", m.Path, m.Version)
 }
 
-var ErrEntityNotFound = fmt.Errorf("entity not found")
+var ErrEntityNotFound = errors.New("entity not found")
 
 type Package map[string]File
 
@@ -133,12 +138,36 @@ type TypeParams struct {
 	Meta   Meta       `json:"meta,omitempty"`
 }
 
+func (t TypeParams) String() string {
+	s := "<"
+	for i, param := range t.Params {
+		s += param.Name + " " + param.Constr.String()
+		if i < len(t.Params)-1 {
+			s += ", "
+		}
+	}
+	return s + ">"
+}
+
 type Node struct {
 	Directives map[Directive][]string `json:"directives,omitempty"`
 	EntityRef  EntityRef              `json:"entityRef,omitempty"`
-	TypeArgs   []ts.Expr              `json:"typeArgs,omitempty"`
+	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
 	Deps       map[string]Node        `json:"componentDi,omitempty"`
 	Meta       Meta                   `json:"meta,omitempty"`
+}
+
+type TypeArgs []ts.Expr
+
+func (t TypeArgs) String() string {
+	s := "<"
+	for i, arg := range t {
+		s += arg.String()
+		if i < len(t)-1 {
+			s += " , "
+		}
+	}
+	return s + ">"
 }
 
 func (n Node) String() string {
@@ -232,13 +261,18 @@ type PortAddr struct {
 }
 
 func (p PortAddr) String() string {
-	if p.Node == "" {
-		return fmt.Sprintf("%v[%v]", p.Port, p.Idx)
+	hasNode := p.Node != ""
+	hasPort := p.Port != ""
+	hasIdx := p.Idx != nil
+
+	switch {
+	case hasNode && hasPort && hasIdx:
+		return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
+	case hasNode && hasPort:
+		return fmt.Sprintf("%v.%v", p.Node, p.Port)
 	}
-	if p.Idx == nil {
-		return fmt.Sprintf("%v", p.Port)
-	}
-	return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
+
+	return "invalid port addr"
 }
 
 // Meta keeps info about original text related to the structured object
@@ -251,4 +285,8 @@ type Meta struct {
 type Position struct {
 	Line   int `json:"line,omitempty"`
 	Column int `json:"column,omitempty"`
+}
+
+func (p Position) String() string {
+	return fmt.Sprintf("%v:%v", p.Line, p.Column)
 }

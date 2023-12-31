@@ -139,10 +139,7 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (src.Entity
 
 	desugarComponent, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
-		return src.Entity{}, &compiler.Error{
-			Err:  err,
-			Meta: &entity.Component.Meta,
-		}
+		return src.Entity{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
 	}
 
 	return src.Entity{

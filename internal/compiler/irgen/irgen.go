@@ -6,25 +6,33 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/utils"
 	"github.com/nevalang/neva/pkg/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
+
+var ErrNodeUsageNotFound = errors.New("node usage not found")
 
 type Generator struct{}
 
-func New() Generator {
-	return Generator{}
-}
+type (
+	nodeContext struct {
+		path       []string   // Path to current node including current node
+		node       src.Node   // Node definition
+		portsUsage portsUsage // How parent network uses this node's ports
+	}
 
-var (
-	ErrPkgNotFound       = errors.New("package not found")
-	ErrEntityNotFound    = errors.New("entity is not found")
-	ErrNodeUsageNotFound = errors.New("node usage not found")
+	portsUsage struct {
+		in         map[relPortAddr]struct{}
+		out        map[relPortAddr]struct{}
+		constValue *src.Msg // const value found by ref from net goes here and then to nodeContext
+	}
+
+	relPortAddr struct {
+		Port string
+		Idx  uint8
+	}
 )
 
 func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
@@ -44,7 +52,7 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 	}
 
 	rootNodeCtx := nodeContext{
-		path: []string{"main"},
+		path: []string{},
 		node: src.Node{
 			EntityRef: src.EntityRef{
 				Pkg:  "", // ref to local entity
@@ -68,135 +76,6 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 	}
 
 	return result, nil
-}
-
-type (
-	nodeContext struct {
-		path       []string   // Path to current node including current node
-		node       src.Node   // Node definition
-		portsUsage portsUsage // How parent network uses this node's ports
-	}
-
-	portsUsage struct {
-		in         map[relPortAddr]struct{}
-		out        map[relPortAddr]struct{}
-		constValue *src.Msg // const value found by ref from net goes here and then to nodeContext
-	}
-
-	relPortAddr struct {
-		Port string
-		Idx  uint8
-	}
-)
-
-func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
-	args, ok := component.Directives[compiler.RuntimeFuncDirective]
-	if !ok {
-		return "", nil
-	}
-
-	if len(args) == 1 {
-		return args[0], nil
-	}
-
-	firstTypeArg := nodeTypeArgs[0].Inst.Ref.String()
-	for _, arg := range args {
-		parts := strings.Split(arg, " ")
-		if firstTypeArg == parts[0] {
-			return parts[1], nil
-		}
-	}
-
-	return "", errors.New("type argument mismatches runtime func directive")
-}
-
-func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
-	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective]
-	if !ok {
-		return nil, nil
-	}
-
-	entity, location, err := scope.Entity(utils.ParseRef(args[0]))
-	if err != nil {
-		return nil, &compiler.Error{
-			Err:      err,
-			Location: &scope.Location,
-		}
-	}
-
-	return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
-}
-
-func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) { //nolint:funlen
-	if constant.Ref != nil {
-		entity, location, err := scope.Entity(*constant.Ref)
-		if err != nil {
-			return nil, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-			}
-		}
-		return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
-	}
-
-	//nolint:nosnakecase
-	switch {
-	case constant.Value.Bool != nil:
-		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_BOOL,
-			Bool: *constant.Value.Bool,
-		}, nil
-	case constant.Value.Int != nil:
-		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_INT,
-			Int:  int64(*constant.Value.Int),
-		}, nil
-	case constant.Value.Float != nil:
-		return &ir.Msg{
-			Type:  ir.MsgType_MSG_TYPE_FLOAT,
-			Float: *constant.Value.Float,
-		}, nil
-	case constant.Value.Str != nil:
-		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_STR,
-			Str:  *constant.Value.Str,
-		}, nil
-	case constant.Value.List != nil:
-		listMsg := make([]*ir.Msg, len(constant.Value.List))
-
-		for i, el := range constant.Value.List {
-			result, err := getIRMsgBySrcRef(el, scope)
-			if err != nil {
-				return nil, err
-			}
-			listMsg[i] = result
-		}
-
-		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_LIST,
-			List: listMsg,
-		}, nil
-	case constant.Value.Map != nil:
-		mapMsg := make(map[string]*ir.Msg, len(constant.Value.Map))
-
-		for name, el := range constant.Value.Map {
-			result, err := getIRMsgBySrcRef(el, scope)
-			if err != nil {
-				return nil, err
-			}
-			mapMsg[name] = result
-		}
-
-		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_MAP,
-			Map:  mapMsg,
-		}, nil
-	}
-
-	return nil, &compiler.Error{
-		Err:      errors.New("unknown msg type"),
-		Location: &scope.Location,
-	}
 }
 
 func (g Generator) processComponentNode( //nolint:funlen
@@ -291,6 +170,6 @@ func (g Generator) processComponentNode( //nolint:funlen
 	return nil
 }
 
-type handleNetworkResult struct {
-	slotsUsage map[string]portsUsage // node -> ports
+func New() Generator {
+	return Generator{}
 }

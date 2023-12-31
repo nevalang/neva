@@ -394,14 +394,29 @@ func parseNet(actx []generated.ICompNetDefContext) []src.Connection { //nolint:f
 
 			var constRef *src.EntityRef
 			if senderSideConstRef != nil {
+				constRefMeta := src.Meta{
+					Text: senderSideConstRef.GetText(),
+					Start: src.Position{
+						Line:   senderSideConstRef.GetStart().GetLine(),
+						Column: senderSideConstRef.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   senderSideConstRef.GetStop().GetLine(),
+						Column: senderSideConstRef.GetStop().GetColumn(),
+					},
+				}
 				ids := senderSideConstRef.AllIDENTIFIER()
 				if len(ids) == 2 {
 					constRef = &src.EntityRef{
 						Pkg:  ids[0].GetText(),
 						Name: ids[1].GetText(),
+						Meta: constRefMeta,
 					}
 				} else if len(ids) == 1 {
-					constRef = &src.EntityRef{Name: ids[0].GetText()}
+					constRef = &src.EntityRef{
+						Name: ids[0].GetText(),
+						Meta: constRefMeta,
+					}
 				}
 			}
 

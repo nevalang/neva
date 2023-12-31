@@ -85,7 +85,7 @@ func (g Generator) processSenderSide(
 	}] = struct{}{}
 
 	irSenderSide := &ir.PortAddr{
-		Path: strings.Join(append(nodeCtx.path, senderSide.PortAddr.Node), "/"),
+		Path: joinNodePath(nodeCtx.path, senderSide.PortAddr.Node),
 		Port: senderSide.PortAddr.Port,
 		Idx:  uint32(idx),
 	}
@@ -108,7 +108,7 @@ func (Generator) insertAndReturnInports(
 	// actually we can't use IO because we need to know how many slots are used
 	for addr := range nodeCtx.portsUsage.in {
 		addr := &ir.PortAddr{
-			Path: strings.Join(append(nodeCtx.path, "in"), "/"),
+			Path: joinNodePath(nodeCtx.path, "in"),
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
 		}
@@ -133,7 +133,7 @@ func (Generator) insertAndReturnOutports(
 	// Actually we can't use IO because we need to know how many slots are used.
 	for addr := range nodeCtx.portsUsage.out {
 		irAddr := &ir.PortAddr{
-			Path: strings.Join(append(nodeCtx.path, "out"), "/"),
+			Path: joinNodePath(nodeCtx.path, "out"),
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
 		}
@@ -156,7 +156,7 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnec
 
 	result := &ir.ReceiverConnectionSide{
 		PortAddr: &ir.PortAddr{
-			Path: strings.Join(append(nodeCtxPath, side.PortAddr.Node), "/"),
+			Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 			Port: side.PortAddr.Port,
 			Idx:  uint32(idx),
 		},
@@ -166,4 +166,9 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnec
 	}
 	result.PortAddr.Path += "/in"
 	return result
+}
+
+func joinNodePath(nodePath []string, nodeName string) string {
+	newPath := append(nodePath, nodeName)
+	return strings.Join(newPath, "/")
 }

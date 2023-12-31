@@ -13,7 +13,8 @@ import (
 //nolint:lll
 var (
 	ErrNodeWrongEntity                = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsCountMismatch      = errors.New("Type arguments count between node and its referenced entity not matches")
+	ErrNodeTypeArgsMissing            = errors.New("Not enough type arguments")
+	ErrNodeTypeArgsTooMuch            = errors.New("Too much type arguments")
 	ErrNonComponentNodeWithDI         = errors.New("Only component node can have dependency injection")
 	ErrUnusedNode                     = errors.New("Unused node found")
 	ErrUnusedNodeInport               = errors.New("Unused node inport found")
@@ -23,7 +24,7 @@ var (
 	ErrWriteSelfIn                    = errors.New("Component cannot write to self inport")
 	ErrInportNotFound                 = errors.New("Referenced inport not found in component's interface")
 	ErrNodeNotFound                   = errors.New("Referenced node not found")
-	ErrNodePortNotFound               = errors.New("Referenced node port not found")
+	ErrNodePortNotFound               = errors.New("Node's port not found")
 	ErrNormCompWithRuntimeFunc        = errors.New("Component with nodes or network cannot use #runtime_func directive")
 	ErrNormComponentWithoutNet        = errors.New("Component must have network except it uses #runtime_func directive")
 	ErrNormNodeRuntimeMsg             = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func")
@@ -129,7 +130,7 @@ func (a Analyzer) analyzeComponentNodes(
 		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
 			return nil, nil, compiler.Error{
-				Err:      fmt.Errorf("Invalid node: %v", nodeName),
+				Err:      fmt.Errorf("Invalid node '%v'", nodeName),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}.Merge(err)
@@ -212,10 +213,16 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	}
 
 	if len(node.TypeArgs) != len(iface.TypeParams.Params) {
+		var err error
+		if len(node.TypeArgs) < len(iface.TypeParams.Params) {
+			err = ErrNodeTypeArgsMissing
+		} else {
+			err = ErrNodeTypeArgsTooMuch
+		}
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err: fmt.Errorf(
 				"%w: want %v, got %v",
-				ErrNodeTypeArgsCountMismatch, iface.TypeParams, node.TypeArgs,
+				err, iface.TypeParams, node.TypeArgs,
 			),
 			Location: &location,
 			Meta:     &node.Meta,
@@ -409,11 +416,10 @@ func (a Analyzer) getReceiverType(
 
 	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, scope)
 	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("get node inport type: %w", err),
+		return ts.Expr{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &receiverSide.PortAddr.Meta,
-		}
+		}.Merge(err)
 	}
 
 	return nodeInportType, nil
@@ -427,7 +433,7 @@ func (a Analyzer) getNodeInportType(
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
+			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -442,19 +448,26 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
+	var iface src.Interface
+	if entity.Kind == src.ComponentEntity {
+		iface = entity.Component.Interface
+	} else { // we assume that nodes are already validated so if it's not component then it's interface
+		iface = entity.Interface
+	}
+
 	typ, aerr := a.getResolvedPortType(
-		entity.Component.Interface.IO.In,
-		entity.Component.Interface.TypeParams.Params,
+		iface.IO.In,
+		iface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,
 	)
 	if aerr != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("Unable to get resolved port type: port '%v', node '%v': %w", portAddr, node, aerr),
+		return ts.Expr{}, compiler.Error{
+			Err:      fmt.Errorf("Unable to resolve '%v' port type", portAddr),
 			Location: &location,
 			Meta:     &portAddr.Meta,
-		}
+		}.Merge(aerr)
 	}
 
 	return typ, nil
@@ -470,7 +483,7 @@ func (a Analyzer) getResolvedPortType(
 	port, ok := ports[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodePortNotFound, portAddr),
+			Err:      fmt.Errorf("%w '%v'", ErrNodePortNotFound, portAddr),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}

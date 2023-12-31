@@ -8,7 +8,7 @@ func (l EmptyListener) Send(event Event, msg Msg) Msg {
 	// if event.Type != MessageReceivedEvent {
 	// 	return msg
 	// }
-	// fmt.Println(event, msg)
+	fmt.Println(event, msg)
 	return msg
 }
 

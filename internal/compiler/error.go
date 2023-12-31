@@ -18,11 +18,11 @@ type Error struct {
 func (e Error) Error() string {
 	switch {
 	case e.Location != nil && e.Meta != nil:
-		return fmt.Sprintf("%v:%v:%v %v", *e.Location, e.Meta.Start.Column, e.Meta.Start.Column, e.Err)
+		return fmt.Sprintf("%v:%v %v", *e.Location, e.Meta.Start, e.Err)
 	case e.Meta != nil:
-		return fmt.Sprintf("%v:%v %v", e.Meta.Start.Column, e.Meta.Start.Column, e.Err)
+		return fmt.Sprintf("%v %v", e.Meta.Start, e.Err)
 	case e.Location != nil:
-		return fmt.Sprintf("%v: %v", *e.Location, e.Err)
+		return fmt.Sprintf("%v %v", *e.Location, e.Err)
 	case e.Err != nil:
 		return e.Err.Error()
 	}
