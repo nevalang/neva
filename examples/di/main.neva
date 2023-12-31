@@ -10,7 +10,7 @@ components {
     Main(enter) (exit) {
         nodes {
             n1 C1 {
-                iface core.Print<any>
+                n2 core.Print<any>
             }
         }
         net {
