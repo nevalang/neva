@@ -132,15 +132,24 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 		}
 		s.file.Entities[name] = cmp
 	} else {
-		nodesDef := body.CompNodesDef()
+		var nodes map[string]src.Node
+		if nodesDef := body.CompNodesDef(); nodesDef != nil {
+			nodes = parseNodes(nodesDef.CompNodesDefBody())
+		}
+
+		var net []src.Connection
+		if netDef := body.CompNetDef(); netDef != nil {
+			net = parseNet(netDef)
+		}
+
 		cmp = src.Entity{
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
 			Component: src.Component{
 				Directives: directives,
 				Interface:  parsedInterfaceDef,
-				Nodes:      parseNodes(nodesDef.CompNodesDefBody()),
-				Net:        parseNet(body.CompNetDef()),
+				Nodes:      nodes,
+				Net:        net,
 			},
 		}
 	}
