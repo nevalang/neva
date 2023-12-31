@@ -120,10 +120,8 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 
 	directives := parseCompilerDirectives(actx.CompilerDirectives())
 
-	body := actx.CompBody()
-
 	var cmp src.Entity
-	if body == nil {
+	if body := actx.CompBody(); body == nil {
 		cmp = src.Entity{
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
@@ -135,9 +133,6 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 		s.file.Entities[name] = cmp
 	} else {
 		nodesDef := body.CompNodesDef()
-		if nodesDef == nil {
-			panic("nodesDef == nil")
-		}
 		cmp = src.Entity{
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
