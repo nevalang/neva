@@ -9,21 +9,21 @@ interfaces {
 components {
     Main(enter) (exit) {
         nodes {
-            c1 C1(iface: core.Print<any>)
+            n1 C1(iface: core.Print<any>)
         }
         net {
-            in.enter -> c1.v
-            c1.v -> out.exit
+            in.enter -> n1.v
+            n1.v -> out.exit
         }
     }
     
     C1 (v any) (v any) {
         nodes {
-            n1 I1<any>
+            n2 I1<any>
         }
         net {
-            in.v -> n1.v
-            n1.v -> out.v
+            in.v -> n2.v
+            n2.v -> out.v
         }
     }
 }

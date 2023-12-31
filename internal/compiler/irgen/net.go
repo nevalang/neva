@@ -11,7 +11,6 @@ import (
 // processNet
 // 1) inserts network connections
 // 2) returns metadata about how subnodes are used by this network
-// 3) inserts const value if needed
 func (g Generator) processNet(
 	scope src.Scope,
 	conns []src.Connection,

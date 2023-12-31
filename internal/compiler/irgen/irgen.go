@@ -84,6 +84,8 @@ func (g Generator) processComponentNode( //nolint:funlen
 	scope src.Scope,
 	result *ir.Program,
 ) *compiler.Error {
+	// FIXME node DI does not work (no runtime funcs at all in the result bundle)
+
 	componentEntity, location, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		return &compiler.Error{
@@ -131,10 +133,10 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 	scope = scope.WithLocation(location) // only use new location if that's not builtin
 
-	// We use network as a source of true about ports usage instead of component's definitions.
-	// We cannot rely on them because there's not enough information about how many slots are used.
-	// On the other hand, we believe network has everything we need because probram is correct.
-	netResult, err := g.processNet(scope, component.Net, nodeCtx, result)
+	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
+	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
+	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
+	subnodesPortsUsage, err := g.processNet(scope, component.Net, nodeCtx, result)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -143,7 +145,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	}
 
 	for nodeName, node := range component.Nodes {
-		nodeUsage, ok := netResult[nodeName]
+		nodeUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
@@ -156,6 +158,10 @@ func (g Generator) processComponentNode( //nolint:funlen
 			path:       append(nodeCtx.path, nodeName),
 			portsUsage: nodeUsage,
 			node:       node,
+		}
+
+		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
+			subNodeCtx.node = injectedNode
 		}
 
 		if err := g.processComponentNode(ctx, subNodeCtx, scope, result); err != nil {

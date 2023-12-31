@@ -132,8 +132,8 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 		}
 		s.file.Entities[name] = cmp
 	} else {
-		allNodesDef := actx.CompBody().AllCompNodesDef()
-		if allNodesDef == nil {
+		nodesDef := actx.CompBody().CompNodesDef()
+		if nodesDef == nil {
 			panic("nodesDef == nil")
 		}
 		cmp = src.Entity{
@@ -142,8 +142,8 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 			Component: src.Component{
 				Directives: directives,
 				Interface:  parsedInterfaceDef,
-				Nodes:      parseNodes(allNodesDef),
-				Net:        parseNet(actx.CompBody().AllCompNetDef()),
+				Nodes:      parseNodes(nodesDef.CompNodesDefBody()),
+				Net:        parseNet(actx.CompBody().CompNetDef()),
 			},
 		}
 	}
