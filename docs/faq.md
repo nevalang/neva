@@ -43,6 +43,16 @@ _Easy to visualize_ means that the nature of FBP programs is that we do not have
 
 ## Design
 
+### Why need array-ports?
+
+Every time we need to somehow combine/accumulate/reduce several sources of data into one e.g. 
+
+- create list of 3 elements based on outputs of 3 outports
+- create structure with field-values from several outports
+- substract values from left to right
+
+Ok but can't we substract values and do other stuff like that by simply passing lists around? Well, we have to create that list right somehow? It's fine if you already have it (let's say from JSON file you got from server) but what if you need to build it?
+
 ### Why have integers and floats and not just numbers?
 
 1. Overflow issues: if you only have `number`, probably represented as a `float64` in memory, your maximum safe number is bigest float64. Integer can store "bigger" values because it doesn't have to store (floating) precision. This is especially important when you work with big numbers.
