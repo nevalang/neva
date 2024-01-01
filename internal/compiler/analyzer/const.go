@@ -17,7 +17,7 @@ var (
 )
 
 //nolint:funlen
-func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo
+func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo,gocognit,lll
 	if constant.Value == nil && constant.Ref == nil {
 		return src.Const{}, &compiler.Error{
 			Err:      ErrEmptyConst,

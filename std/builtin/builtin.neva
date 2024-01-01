@@ -6,7 +6,7 @@ types {
     pub str
     pub int
     pub float
-    pub map<K int | float | str | bool, V>
+    pub map<T>
     pub vec<V>
 }
 
@@ -27,7 +27,7 @@ components {
     pub StructSelector<T>(v struct {}) (v T)
 
     #runtime_func(MapSelector)
-    pub MapSelector<T>(m map<T>, k str) (v T)
+    pub MapSelector<T>(v map<T>, k str) (ok T, miss str)
 
     #runtime_func(Print)
     pub Print<T>(v T) (v T)

@@ -62,11 +62,11 @@ func mapSelector(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), e
 	}
 
 	// out
-	okOut, err := io.Out.Port("v")
+	okOut, err := io.Out.Port("ok")
 	if err != nil {
 		return nil, err
 	}
-	missOut, err := io.Out.Port("v")
+	missOut, err := io.Out.Port("miss")
 	if err != nil {
 		return nil, err
 	}
