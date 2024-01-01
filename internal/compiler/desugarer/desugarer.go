@@ -3,18 +3,21 @@ package desugarer
 import (
 	"maps"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Desugarer struct{}
 
-func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
+func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef := range build.Modules {
 		desugaredMod, err := d.desugarModule(build, modRef)
 		if err != nil {
-			return src.Build{}, err
+			return src.Build{}, compiler.Error{
+				Location: &src.Location{ModRef: modRef},
+			}.Merge(err)
 		}
 		desugaredMods[modRef] = desugaredMod
 	}
@@ -25,7 +28,7 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 	}, nil
 }
 
-func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Module, error) {
+func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Module, *compiler.Error) {
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
@@ -62,7 +65,9 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 
 		desugaredPkg, err := d.desugarPkg(pkg, scope)
 		if err != nil {
-			return src.Module{}, err
+			return src.Module{}, compiler.Error{
+				Location: &src.Location{PkgName: pkgName},
+			}.Merge(err)
 		}
 
 		desugaredPkgs[pkgName] = desugaredPkg
@@ -74,7 +79,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 	}, nil
 }
 
-func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, error) {
+func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
@@ -86,7 +91,9 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, er
 
 		desugaredFile, err := d.desugarFile(file, newScope)
 		if err != nil {
-			return nil, err
+			return nil, compiler.Error{
+				Location: &src.Location{FileName: fileName},
+			}.Merge(err)
 		}
 
 		desugaredPkgs[fileName] = desugaredFile
@@ -96,13 +103,15 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, er
 }
 
 // desugarFile injects import of std/builtin into every pkg's file and desugares it's every entity
-func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error) {
+func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compiler.Error) {
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
 	for entityName, entity := range file.Entities {
 		desugaredEntity, err := d.desugarEntity(entity, scope)
 		if err != nil {
-			return src.File{}, err
+			return src.File{}, compiler.Error{
+				Meta: entity.Meta(),
+			}.Merge(err)
 		}
 		desugaredEntities[entityName] = desugaredEntity
 	}
@@ -123,14 +132,14 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, error)
 	}, nil
 }
 
-func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (src.Entity, error) {
+func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
 	if entity.Kind != src.ComponentEntity {
 		return entity, nil
 	}
 
 	desugarComponent, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
-		return src.Entity{}, err
+		return src.Entity{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
 	}
 
 	return src.Entity{

@@ -74,6 +74,12 @@ func (s *BasenevaListener) EnterImportPath(ctx *ImportPathContext) {}
 // ExitImportPath is called when production importPath is exited.
 func (s *BasenevaListener) ExitImportPath(ctx *ImportPathContext) {}
 
+// EnterEntityRef is called when production entityRef is entered.
+func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
+
+// ExitEntityRef is called when production entityRef is exited.
+func (s *BasenevaListener) ExitEntityRef(ctx *EntityRefContext) {}
+
 // EnterTypeStmt is called when production typeStmt is entered.
 func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}
 
@@ -290,6 +296,12 @@ func (s *BasenevaListener) EnterCompNodesDef(ctx *CompNodesDefContext) {}
 // ExitCompNodesDef is called when production compNodesDef is exited.
 func (s *BasenevaListener) ExitCompNodesDef(ctx *CompNodesDefContext) {}
 
+// EnterCompNodesDefBody is called when production compNodesDefBody is entered.
+func (s *BasenevaListener) EnterCompNodesDefBody(ctx *CompNodesDefBodyContext) {}
+
+// ExitCompNodesDefBody is called when production compNodesDefBody is exited.
+func (s *BasenevaListener) ExitCompNodesDefBody(ctx *CompNodesDefBodyContext) {}
+
 // EnterCompNodeDef is called when production compNodeDef is entered.
 func (s *BasenevaListener) EnterCompNodeDef(ctx *CompNodeDefContext) {}
 
@@ -302,29 +314,11 @@ func (s *BasenevaListener) EnterNodeInst(ctx *NodeInstContext) {}
 // ExitNodeInst is called when production nodeInst is exited.
 func (s *BasenevaListener) ExitNodeInst(ctx *NodeInstContext) {}
 
-// EnterEntityRef is called when production entityRef is entered.
-func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
+// EnterNodeDIArgs is called when production nodeDIArgs is entered.
+func (s *BasenevaListener) EnterNodeDIArgs(ctx *NodeDIArgsContext) {}
 
-// ExitEntityRef is called when production entityRef is exited.
-func (s *BasenevaListener) ExitEntityRef(ctx *EntityRefContext) {}
-
-// EnterNodeArgs is called when production nodeArgs is entered.
-func (s *BasenevaListener) EnterNodeArgs(ctx *NodeArgsContext) {}
-
-// ExitNodeArgs is called when production nodeArgs is exited.
-func (s *BasenevaListener) ExitNodeArgs(ctx *NodeArgsContext) {}
-
-// EnterNodeArgList is called when production nodeArgList is entered.
-func (s *BasenevaListener) EnterNodeArgList(ctx *NodeArgListContext) {}
-
-// ExitNodeArgList is called when production nodeArgList is exited.
-func (s *BasenevaListener) ExitNodeArgList(ctx *NodeArgListContext) {}
-
-// EnterNodeArg is called when production nodeArg is entered.
-func (s *BasenevaListener) EnterNodeArg(ctx *NodeArgContext) {}
-
-// ExitNodeArg is called when production nodeArg is exited.
-func (s *BasenevaListener) ExitNodeArg(ctx *NodeArgContext) {}
+// ExitNodeDIArgs is called when production nodeDIArgs is exited.
+func (s *BasenevaListener) ExitNodeDIArgs(ctx *NodeDIArgsContext) {}
 
 // EnterCompNetDef is called when production compNetDef is entered.
 func (s *BasenevaListener) EnterCompNetDef(ctx *CompNetDefContext) {}

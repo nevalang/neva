@@ -5,6 +5,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/antlr4-go/antlr/v4"
 
@@ -22,28 +23,41 @@ type Parser struct {
 	isDebug bool
 }
 
-func (p Parser) ParseModules(rawMods map[src.ModuleRef]compiler.RawModule) (map[src.ModuleRef]src.Module, error) {
+func (p Parser) ParseModules(
+	rawMods map[src.ModuleRef]compiler.RawModule,
+) (map[src.ModuleRef]src.Module, *compiler.Error) {
 	parsedMods := make(map[src.ModuleRef]src.Module, len(rawMods))
+
 	for modRef, rawMod := range rawMods {
-		parsedPkgs, err := p.ParsePackages(rawMod.Packages)
+		parsedPkgs, err := p.ParsePackages(rawMod.Packages, modRef)
 		if err != nil {
-			return nil, err
+			return nil, compiler.Error{
+				Err:      errors.New("Parsing error"),
+				Location: &src.Location{ModRef: modRef},
+			}.Merge(err)
 		}
+
 		parsedMods[modRef] = src.Module{
 			Manifest: rawMod.Manifest,
 			Packages: parsedPkgs,
 		}
 	}
+
 	return parsedMods, nil
 }
 
-func (p Parser) ParsePackages(rawPkgs map[string]compiler.RawPackage) (map[string]src.Package, error) {
+func (p Parser) ParsePackages(
+	rawPkgs map[string]compiler.RawPackage,
+	modRef src.ModuleRef,
+) (map[string]src.Package, *compiler.Error) {
 	packages := make(map[string]src.Package, len(rawPkgs))
 
 	for pkgName, pkgFiles := range rawPkgs {
 		parsedFiles, err := p.ParseFiles(pkgFiles)
 		if err != nil {
-			return nil, fmt.Errorf("parse files: %w", err)
+			return nil, compiler.Error{
+				Location: &src.Location{PkgName: pkgName},
+			}.Merge(err)
 		}
 
 		packages[pkgName] = parsedFiles
@@ -52,26 +66,38 @@ func (p Parser) ParsePackages(rawPkgs map[string]compiler.RawPackage) (map[strin
 	return packages, nil
 }
 
-func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, error) {
+func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, *compiler.Error) {
 	result := make(map[string]src.File, len(files))
 
-	for name, bb := range files { // TODO parse in parallel
-		name := name
-		bb := bb
-		v, err := p.ParseFile(bb)
+	for name, fileBytes := range files {
+		fileName := name
+		v, err := p.ParseFile(fileBytes)
 		if err != nil {
-			return nil, err
+			return nil, compiler.Error{
+				Location: &src.Location{FileName: fileName},
+			}.Merge(err)
 		}
-		result[name] = v
+		result[fileName] = v
 	}
 
 	return result, nil
 }
 
-func (p Parser) ParseFile(bb []byte) (f src.File, err error) {
+func (p Parser) ParseFile(bb []byte) (f src.File, err *compiler.Error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err = errors.New(fmt.Sprint(e))
+			compilerErr, ok := e.(*compiler.Error)
+			if ok {
+				err = compilerErr
+				return
+			}
+			err = &compiler.Error{
+				Err: fmt.Errorf(
+					"%v: %v",
+					e,
+					string(debug.Stack()),
+				),
+			}
 		}
 	}()
 

@@ -5,10 +5,6 @@ import "fmt"
 type EmptyListener struct{}
 
 func (l EmptyListener) Send(event Event, msg Msg) Msg {
-	// if event.Type != MessageReceivedEvent {
-	// 	return msg
-	// }
-	// fmt.Println(event, msg)
 	return msg
 }
 

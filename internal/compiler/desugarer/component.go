@@ -6,7 +6,6 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/analyzer"
 
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -15,7 +14,10 @@ import (
 var ErrConstSenderEntityKind = errors.New("Entity that is used as a const reference in component's network must be of kind constant") //nolint:lll
 
 // desugarComponent replaces const ref in net with regular port addr and injects const node with directive.
-func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (src.Component, error) { //nolint:funlen
+func (d Desugarer) desugarComponent( //nolint:funlen
+	component src.Component,
+	scope src.Scope,
+) (src.Component, *compiler.Error) {
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
 		return component, nil
 	}
@@ -41,7 +43,11 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 
 		constTypeExpr, err := d.getConstType(*conn.SenderSide.ConstRef, scope)
 		if err != nil {
-			return src.Component{}, err
+			return src.Component{}, compiler.Error{
+				Err:      fmt.Errorf("Unable to get constant type by reference '%v'", *conn.SenderSide.ConstRef),
+				Location: &scope.Location,
+				Meta:     &conn.SenderSide.ConstRef.Meta,
+			}.Merge(err)
 		}
 
 		constRefStr := conn.SenderSide.ConstRef.String()
@@ -144,10 +150,10 @@ func (d Desugarer) desugarComponent(component src.Component, scope src.Scope) (s
 }
 
 // getConstType is needed to figure out type parameters for Const node
-func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *analyzer.Error) {
+func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
-		return ts.Expr{}, &analyzer.Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &ref.Meta,
@@ -155,7 +161,7 @@ func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *a
 	}
 
 	if entity.Kind != src.ConstEntity {
-		return ts.Expr{}, &analyzer.Error{
+		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrConstSenderEntityKind, entity.Kind),
 			Location: &scope.Location,
 			Meta:     entity.Meta(),
@@ -165,12 +171,11 @@ func (d Desugarer) getConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *a
 	if entity.Const.Ref != nil {
 		expr, err := d.getConstType(*entity.Const.Ref, scope)
 		if err != nil {
-			return ts.Expr{}, analyzer.Error{
+			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     entity.Meta(),
 			}.Merge(err)
 		}
-
 		return expr, nil
 	}
 

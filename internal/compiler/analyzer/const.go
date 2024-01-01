@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -15,9 +16,9 @@ var (
 )
 
 //nolint:funlen
-func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *Error) {
+func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) {
 	if constant.Value == nil && constant.Ref == nil {
-		return src.Const{}, &Error{
+		return src.Const{}, &compiler.Error{
 			Err:      ErrEmptyConst,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
@@ -27,7 +28,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 	if constant.Value == nil { // is ref
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      err,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -35,7 +36,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 
 		if entity.Kind != src.ConstEntity {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: entity kind %v", ErrEntityNotConst, entity.Kind),
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -45,7 +46,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 
 	resolvedType, err := a.analyzeTypeExpr(constant.Value.TypeExpr, scope)
 	if err != nil {
-		return src.Const{}, Error{
+		return src.Const{}, compiler.Error{
 			Err:      ErrResolveConstType,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
@@ -55,7 +56,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 	switch resolvedType.Inst.Ref.String() {
 	case "bool":
 		if constant.Value.Int != nil || constant.Value.Float != nil || constant.Value.Str != nil {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
@@ -63,7 +64,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	case "int":
 		if constant.Value.Bool != nil || constant.Value.Float != nil || constant.Value.Str != nil {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
@@ -71,7 +72,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	case "float":
 		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Str != nil {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
@@ -79,7 +80,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	case "str":
 		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Float != nil {
-			return src.Const{}, &Error{
+			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
 				Meta:     &constant.Meta,

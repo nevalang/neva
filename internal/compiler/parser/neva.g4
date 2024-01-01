@@ -26,6 +26,9 @@ importPath:
 		'/' (IDENTIFIER ('.' IDENTIFIER)?)
 	)*;
 
+// Entity Reference
+entityRef: IDENTIFIER ('.' IDENTIFIER)?;
+
 // Types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
 typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
@@ -91,18 +94,15 @@ structValueField: IDENTIFIER ':' constVal NEWLINE*;
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
 compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
-compBody:
-	'{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
+compBody: '{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
+	// '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
 
 // nodes
-compNodesDef:
-	'nodes' NEWLINE* '{' NEWLINE* (compNodeDef NEWLINE*)* '}';
+compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
+compNodesDefBody: '{' NEWLINE* (compNodeDef NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER nodeInst;
-nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeArgs?;
-entityRef: IDENTIFIER ('.' IDENTIFIER)?;
-nodeArgs: '(' NEWLINE* nodeArgList? NEWLINE* ')';
-nodeArgList: nodeArg (',' NEWLINE* nodeArg)*;
-nodeArg: IDENTIFIER ':' nodeInst;
+nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
+nodeDIArgs: compNodesDefBody;
 
 // net
 compNetDef:

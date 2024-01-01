@@ -34,6 +34,9 @@ type nevaListener interface {
 	// EnterImportPath is called when entering the importPath production.
 	EnterImportPath(c *ImportPathContext)
 
+	// EnterEntityRef is called when entering the entityRef production.
+	EnterEntityRef(c *EntityRefContext)
+
 	// EnterTypeStmt is called when entering the typeStmt production.
 	EnterTypeStmt(c *TypeStmtContext)
 
@@ -142,23 +145,17 @@ type nevaListener interface {
 	// EnterCompNodesDef is called when entering the compNodesDef production.
 	EnterCompNodesDef(c *CompNodesDefContext)
 
+	// EnterCompNodesDefBody is called when entering the compNodesDefBody production.
+	EnterCompNodesDefBody(c *CompNodesDefBodyContext)
+
 	// EnterCompNodeDef is called when entering the compNodeDef production.
 	EnterCompNodeDef(c *CompNodeDefContext)
 
 	// EnterNodeInst is called when entering the nodeInst production.
 	EnterNodeInst(c *NodeInstContext)
 
-	// EnterEntityRef is called when entering the entityRef production.
-	EnterEntityRef(c *EntityRefContext)
-
-	// EnterNodeArgs is called when entering the nodeArgs production.
-	EnterNodeArgs(c *NodeArgsContext)
-
-	// EnterNodeArgList is called when entering the nodeArgList production.
-	EnterNodeArgList(c *NodeArgListContext)
-
-	// EnterNodeArg is called when entering the nodeArg production.
-	EnterNodeArg(c *NodeArgContext)
+	// EnterNodeDIArgs is called when entering the nodeDIArgs production.
+	EnterNodeDIArgs(c *NodeDIArgsContext)
 
 	// EnterCompNetDef is called when entering the compNetDef production.
 	EnterCompNetDef(c *CompNetDefContext)
@@ -216,6 +213,9 @@ type nevaListener interface {
 
 	// ExitImportPath is called when exiting the importPath production.
 	ExitImportPath(c *ImportPathContext)
+
+	// ExitEntityRef is called when exiting the entityRef production.
+	ExitEntityRef(c *EntityRefContext)
 
 	// ExitTypeStmt is called when exiting the typeStmt production.
 	ExitTypeStmt(c *TypeStmtContext)
@@ -325,23 +325,17 @@ type nevaListener interface {
 	// ExitCompNodesDef is called when exiting the compNodesDef production.
 	ExitCompNodesDef(c *CompNodesDefContext)
 
+	// ExitCompNodesDefBody is called when exiting the compNodesDefBody production.
+	ExitCompNodesDefBody(c *CompNodesDefBodyContext)
+
 	// ExitCompNodeDef is called when exiting the compNodeDef production.
 	ExitCompNodeDef(c *CompNodeDefContext)
 
 	// ExitNodeInst is called when exiting the nodeInst production.
 	ExitNodeInst(c *NodeInstContext)
 
-	// ExitEntityRef is called when exiting the entityRef production.
-	ExitEntityRef(c *EntityRefContext)
-
-	// ExitNodeArgs is called when exiting the nodeArgs production.
-	ExitNodeArgs(c *NodeArgsContext)
-
-	// ExitNodeArgList is called when exiting the nodeArgList production.
-	ExitNodeArgList(c *NodeArgListContext)
-
-	// ExitNodeArg is called when exiting the nodeArg production.
-	ExitNodeArg(c *NodeArgContext)
+	// ExitNodeDIArgs is called when exiting the nodeDIArgs production.
+	ExitNodeDIArgs(c *NodeDIArgsContext)
 
 	// ExitCompNetDef is called when exiting the compNetDef production.
 	ExitCompNetDef(c *CompNetDefContext)

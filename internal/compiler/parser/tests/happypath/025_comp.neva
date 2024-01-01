@@ -94,20 +94,20 @@ components {
 
 components {
     Doer<T>(x int) (y T) {
-        nodes { concreteNode  Node() }
+        nodes { concreteNode  Node }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNode  Node() }
+            concreteNode  Node }
     }
 }
 
 components {
     Doer<T>(x int) (y T) {
-        nodes { concreteNode  Node()
+        nodes { concreteNode  Node
         }
     }
 }
@@ -115,7 +115,7 @@ components {
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNode  Node()
+            concreteNode  Node
         }
     }
 }
@@ -123,7 +123,7 @@ components {
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNodeWithTypeArgs  Node<int, vec<str>>()
+            concreteNodeWithTypeArgs  Node<int, vec<str>>
         }
     }
 }
@@ -131,8 +131,11 @@ components {
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNodeWithDI1  Node1(foo: Node2())
-            concreteNodeWithDI2  Node1(foo: Node2(), bar: Node3())
+            concreteNodeWithDI1  Node1{foo Node2}
+            concreteNodeWithDI2  Node1{
+                foo Node2
+                bar Node3
+            }
         }
     }
 }
@@ -140,13 +143,13 @@ components {
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNodeWithDI1  Node1(
-                foo: Node2()
-            )
-            concreteNodeWithDI2  Node1(
-                foo: Node2(),
-                bar: Node3()
-            )
+            concreteNodeWithDI1  Node1{
+                foo Node2
+            }
+            concreteNodeWithDI2  Node1{
+                foo Node2
+                bar Node3
+            }
         }
     }
 }
@@ -160,10 +163,10 @@ components {
                     str,
                     vec<bool>
                 >
-            >(
-                foo: Node2(),
-                bar: Node3()
-            )
+            > {
+                foo Node2
+                bar Node3
+            }
         }
     }
 }
@@ -180,7 +183,7 @@ components {
                 >
             >
 
-            concreteNodeWithDI1  Node1(foo: Node2())
+            concreteNodeWithDI1  Node1{ foo Node2 }
 
             concreteNodeWithDIAndTypeArgs  Node1<
                 int,
@@ -188,10 +191,10 @@ components {
                     str,
                     vec<bool>
                 >
-            >(
-                foo: Node2(),
-                bar: Node3()
-            )
+            >{
+                foo Node2
+                bar Node3
+            }
         }
     }
 }
@@ -200,7 +203,7 @@ components {
 	Main(enter) (exit) {
 		nodes {
 			abs IReader
-			concrete  io.Reader()
+			concrete  io.Reader
 		}
 		net {
 			in.enter -> abs.v

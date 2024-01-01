@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -19,43 +20,43 @@ var (
 	ErrMainComponentNodeNotComponent   = errors.New("Main component's nodes must only refer to components")
 )
 
-func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) *Error {
+func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
-		return &Error{
+		return &compiler.Error{
 			Err:  ErrMainComponentWithTypeParams,
 			Meta: &cmp.Interface.Meta,
 		}
 	}
 
 	if err := a.analyzeMainComponentIO(cmp.Interface.IO); err != nil {
-		return Error{Meta: &cmp.Interface.Meta}.Merge(err)
+		return compiler.Error{Meta: &cmp.Interface.Meta}.Merge(err)
 	}
 
 	if err := a.analyzeMainComponentNodes(cmp.Nodes, pkg, scope); err != nil {
-		return Error{Meta: &cmp.Meta}.Merge(err)
+		return compiler.Error{Meta: &cmp.Meta}.Merge(err)
 	}
 
 	return nil
 }
 
-func (a Analyzer) analyzeMainComponentIO(io src.IO) *Error {
+func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
-		return &Error{
+		return &compiler.Error{
 			Err: fmt.Errorf("%w: got %v", ErrMainComponentInportsCount, len(io.In)),
 		}
 	}
 	if len(io.Out) != 1 {
-		return &Error{
+		return &compiler.Error{
 			Err: fmt.Errorf("%w: got %v", ErrMainComponentOutportsCount, len(io.Out)),
 		}
 	}
 
 	enterInport, ok := io.In["enter"]
 	if !ok {
-		return &Error{Err: ErrMainComponentWithoutEnterInport}
+		return &compiler.Error{Err: ErrMainComponentWithoutEnterInport}
 	}
 	if err := a.analyzeMainComponentPort(enterInport); err != nil {
-		return &Error{
+		return &compiler.Error{
 			Err:  err,
 			Meta: &enterInport.Meta,
 		}
@@ -63,10 +64,10 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) *Error {
 
 	exitOutport, ok := io.Out["exit"]
 	if !ok {
-		return &Error{Err: ErrMainComponentWithoutExitOutport}
+		return &compiler.Error{Err: ErrMainComponentWithoutExitOutport}
 	}
 	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
-		return &Error{
+		return &compiler.Error{
 			Err:  err,
 			Meta: &exitOutport.Meta,
 		}
@@ -85,11 +86,11 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
 	return nil
 }
 
-func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) *Error {
+func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) *compiler.Error {
 	for nodeName, node := range nodes {
 		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {
-			return &Error{
+			return &compiler.Error{
 				Err: fmt.Errorf(
 					"%w: node '%v', ref '%v', details '%v'",
 					ErrEntityNotFoundByNodeRef,
@@ -103,7 +104,7 @@ func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Pac
 		}
 
 		if nodeEntity.Kind != src.ComponentEntity {
-			return &Error{
+			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef),
 				Location: &loc,
 				Meta:     nodeEntity.Meta(),

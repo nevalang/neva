@@ -3,6 +3,7 @@ package analyzer
 import (
 	"errors"
 
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
@@ -24,10 +25,10 @@ func (a Analyzer) analyzeInterface(
 	iface src.Interface,
 	scope src.Scope,
 	params analyzeInterfaceParams,
-) (src.Interface, *Error) {
+) (src.Interface, *compiler.Error) {
 	resolvedParams, err := a.analyzeTypeParams(iface.TypeParams.Params, scope)
 	if err != nil {
-		return src.Interface{}, Error{
+		return src.Interface{}, compiler.Error{
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
@@ -36,7 +37,7 @@ func (a Analyzer) analyzeInterface(
 
 	resolvedIO, err := a.analyzeIO(resolvedParams, iface.IO, scope, params)
 	if err != nil {
-		return src.Interface{}, Error{
+		return src.Interface{}, compiler.Error{
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
@@ -59,16 +60,16 @@ func (a Analyzer) analyzeIO(
 	io src.IO,
 	scope src.Scope,
 	params analyzeInterfaceParams,
-) (src.IO, *Error) {
+) (src.IO, *compiler.Error) {
 	if !params.allowEmptyInports && len(io.In) == 0 {
-		return src.IO{}, &Error{
+		return src.IO{}, &compiler.Error{
 			Err:      ErrEmptyInports,
 			Location: &scope.Location,
 		}
 	}
 
 	if !params.allowEmptyOutports && len(io.Out) == 0 {
-		return src.IO{}, &Error{
+		return src.IO{}, &compiler.Error{
 			Err:      ErrEmptyOutports,
 			Location: &scope.Location,
 		}
@@ -76,7 +77,7 @@ func (a Analyzer) analyzeIO(
 
 	resolvedIn, err := a.analyzePorts(typeParams, io.In, scope)
 	if err != nil {
-		return src.IO{}, Error{
+		return src.IO{}, compiler.Error{
 			Err:      ErrInvalidInports,
 			Location: &scope.Location,
 		}.Merge(err)
@@ -84,7 +85,7 @@ func (a Analyzer) analyzeIO(
 
 	resolvedOit, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
-		return src.IO{}, Error{
+		return src.IO{}, compiler.Error{
 			Err:      ErrInvalidOutports,
 			Location: &scope.Location,
 		}.Merge(err)
@@ -100,12 +101,12 @@ func (a Analyzer) analyzePorts(
 	params []ts.Param,
 	ports map[string]src.Port,
 	scope src.Scope,
-) (map[string]src.Port, *Error) {
+) (map[string]src.Port, *compiler.Error) {
 	resolvedPorts := make(map[string]src.Port, len(ports))
 	for name, port := range ports {
 		resolvedPort, err := a.analyzePort(params, port, scope)
 		if err != nil {
-			return nil, Error{
+			return nil, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &port.Meta,
 			}.Merge(err)
@@ -115,7 +116,7 @@ func (a Analyzer) analyzePorts(
 	return resolvedPorts, nil
 }
 
-func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *Error) {
+func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *compiler.Error) {
 	resolvedDef, err := a.analyzeTypeDef(
 		ts.Def{
 			Params:   params,
@@ -124,7 +125,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 		scope, analyzeTypeDefParams{allowEmptyBody: false},
 	)
 	if err != nil {
-		return src.Port{}, Error{
+		return src.Port{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &port.Meta,
 		}.Merge(err)

@@ -33,7 +33,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	p := parser.New(false)
 
 	got, err := p.ParseFile(text)
-	require.NoError(t, err)
+	require.True(t, err == nil)
 
 	d1 := got.Entities["C1"].Component.Directives[compiler.RuntimeFuncDirective][0]
 	require.Equal(t, "d1", d1)

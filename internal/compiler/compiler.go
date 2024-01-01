@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/nevalang/neva/pkg/ir"
@@ -16,46 +15,6 @@ type Compiler struct {
 	irgen     IRGenerator
 	backend   Backend
 }
-
-type (
-	Parser interface {
-		ParseModules(rawMods map[src.ModuleRef]RawModule) (map[src.ModuleRef]src.Module, error)
-	}
-
-	RawPackage map[string][]byte
-
-	Desugarer interface {
-		Desugar(build src.Build) (src.Build, error)
-	}
-
-	Analyzer interface {
-		AnalyzeExecutableBuild(mod src.Build, mainPkgName string) (src.Build, error)
-	}
-
-	IRGenerator interface {
-		Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, error)
-	}
-
-	RawBuild struct {
-		EntryModRef src.ModuleRef
-		Modules     map[src.ModuleRef]RawModule
-	}
-
-	RawModule struct {
-		Manifest src.ModuleManifest    // Manifest must be parsed by builder before passing into compiler
-		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
-	}
-
-	Backend interface {
-		GenerateTarget(*ir.Program) ([]byte, error)
-	}
-)
-
-// Compiler directives that dependency interface implementations must support.
-const (
-	RuntimeFuncDirective    src.Directive = "runtime_func"
-	RuntimeFuncMsgDirective src.Directive = "runtime_func_msg"
-)
 
 func (c Compiler) Compile(
 	ctx context.Context,
@@ -75,10 +34,10 @@ func (c Compiler) CompileToIR(
 	rawBuild RawBuild,
 	workdirPath string,
 	mainPkgName string,
-) (*ir.Program, error) {
+) (*ir.Program, *Error) {
 	parsedMods, err := c.parser.ParseModules(rawBuild.Modules)
 	if err != nil {
-		return nil, fmt.Errorf("parse: %w", err)
+		return nil, err
 	}
 
 	parsedBuild := src.Build{
@@ -88,7 +47,7 @@ func (c Compiler) CompileToIR(
 
 	desugaredBuild, err := c.desugarer.Desugar(parsedBuild)
 	if err != nil {
-		return nil, fmt.Errorf("analyzer: %w", err)
+		return nil, err
 	}
 
 	if strings.HasPrefix(mainPkgName, "./") {
@@ -97,12 +56,12 @@ func (c Compiler) CompileToIR(
 
 	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(desugaredBuild, mainPkgName)
 	if err != nil {
-		return nil, fmt.Errorf("analyzer: %w", err)
+		return nil, err
 	}
 
 	irProg, err := c.irgen.Generate(ctx, analyzedBuild, mainPkgName)
 	if err != nil {
-		return nil, fmt.Errorf("generate IR: %w", err)
+		return nil, err
 	}
 
 	return irProg, nil

@@ -34,6 +34,9 @@ type Location struct {
 }
 
 func (l Location) String() string {
+	if l.ModRef.Path == "" { // cur mod
+		return fmt.Sprintf("%v/%v.neva", l.PkgName, l.FileName)
+	}
 	return fmt.Sprintf("%v/%v/%v.neva", l.ModRef, l.PkgName, l.FileName)
 }
 
@@ -94,12 +97,12 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)
 		}
 
-		entity, fileName, ok = stdMod.Entity(EntityRef{
+		entity, fileName, err := stdMod.Entity(EntityRef{
 			Pkg:  "builtin",
 			Name: entityRef.Name,
 		})
-		if !ok {
-			return Entity{}, Location{}, ErrPkgNotFound
+		if err != nil {
+			return Entity{}, Location{}, err
 		}
 
 		return entity, Location{
@@ -135,12 +138,12 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 		mod = depMod
 	}
 
-	entity, fileName, ok := mod.Entity(EntityRef{
+	entity, fileName, err := mod.Entity(EntityRef{
 		Pkg:  pkgImport.PkgName,
 		Name: entityRef.Name,
 	})
-	if !ok {
-		return Entity{}, Location{}, ErrEntityNotFound
+	if err != nil {
+		return Entity{}, Location{}, err
 	}
 
 	if !entity.IsPublic {
