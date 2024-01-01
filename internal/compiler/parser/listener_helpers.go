@@ -341,7 +341,13 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 	result := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
-		receiverSide := connDef.ConnReceiverSide()
+		if connDef.SingleSenderConn() == nil {
+			panic("multi sender connections are not implemented yet")
+		}
+
+		singleSenderConn := connDef.SingleSenderConn()
+
+		receiverSide := singleSenderConn.ConnReceiverSide()
 		singleReceiver := receiverSide.PortAddr()
 		multipleReceivers := receiverSide.ConnReceivers()
 		if singleReceiver == nil && multipleReceivers == nil {
@@ -387,7 +393,7 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 			}
 		}
 
-		senderSide := connDef.SenderSide()
+		senderSide := singleSenderConn.SingleSenderSide()
 		senderSidePort := senderSide.PortAddr()
 		senderSideConstRef := senderSide.EntityRef()
 
@@ -461,7 +467,6 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 }
 
 func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
-
 	meta := src.Meta{
 		Text: expr.GetText(),
 		Start: src.Position{

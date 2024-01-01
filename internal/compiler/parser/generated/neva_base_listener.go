@@ -350,11 +350,29 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
 
-// EnterSenderSide is called when production senderSide is entered.
-func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
+// EnterSingleSenderConn is called when production singleSenderConn is entered.
+func (s *BasenevaListener) EnterSingleSenderConn(ctx *SingleSenderConnContext) {}
 
-// ExitSenderSide is called when production senderSide is exited.
-func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
+// ExitSingleSenderConn is called when production singleSenderConn is exited.
+func (s *BasenevaListener) ExitSingleSenderConn(ctx *SingleSenderConnContext) {}
+
+// EnterMultiSenderConn is called when production multiSenderConn is entered.
+func (s *BasenevaListener) EnterMultiSenderConn(ctx *MultiSenderConnContext) {}
+
+// ExitMultiSenderConn is called when production multiSenderConn is exited.
+func (s *BasenevaListener) ExitMultiSenderConn(ctx *MultiSenderConnContext) {}
+
+// EnterMultiSenderSide is called when production multiSenderSide is entered.
+func (s *BasenevaListener) EnterMultiSenderSide(ctx *MultiSenderSideContext) {}
+
+// ExitMultiSenderSide is called when production multiSenderSide is exited.
+func (s *BasenevaListener) ExitMultiSenderSide(ctx *MultiSenderSideContext) {}
+
+// EnterSingleSenderSide is called when production singleSenderSide is entered.
+func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {}
+
+// ExitSingleSenderSide is called when production singleSenderSide is exited.
+func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}

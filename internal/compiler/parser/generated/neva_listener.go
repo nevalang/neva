@@ -172,8 +172,17 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterSenderSide is called when entering the senderSide production.
-	EnterSenderSide(c *SenderSideContext)
+	// EnterSingleSenderConn is called when entering the singleSenderConn production.
+	EnterSingleSenderConn(c *SingleSenderConnContext)
+
+	// EnterMultiSenderConn is called when entering the multiSenderConn production.
+	EnterMultiSenderConn(c *MultiSenderConnContext)
+
+	// EnterMultiSenderSide is called when entering the multiSenderSide production.
+	EnterMultiSenderSide(c *MultiSenderSideContext)
+
+	// EnterSingleSenderSide is called when entering the singleSenderSide production.
+	EnterSingleSenderSide(c *SingleSenderSideContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -364,8 +373,17 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
-	// ExitSenderSide is called when exiting the senderSide production.
-	ExitSenderSide(c *SenderSideContext)
+	// ExitSingleSenderConn is called when exiting the singleSenderConn production.
+	ExitSingleSenderConn(c *SingleSenderConnContext)
+
+	// ExitMultiSenderConn is called when exiting the multiSenderConn production.
+	ExitMultiSenderConn(c *MultiSenderConnContext)
+
+	// ExitMultiSenderSide is called when exiting the multiSenderSide production.
+	ExitMultiSenderSide(c *MultiSenderSideContext)
+
+	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
+	ExitSingleSenderSide(c *SingleSenderSideContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)

@@ -214,3 +214,14 @@ components {
 		}
 	}
 }
+
+components {
+	Main() () {
+		net {
+            foo {
+                .bar -> baz
+                .bax -> bac
+            }
+		}
+	}
+}

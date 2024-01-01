@@ -112,8 +112,11 @@ nodeDIArgs: compNodesDefBody;
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
-connDef: senderSide '->' connReceiverSide;
-senderSide: portAddr | '$' entityRef;
+connDef: singleSenderConn | multiSenderConn;
+singleSenderConn: singleSenderSide '->' connReceiverSide;
+multiSenderConn: portAddrNode '{' multiSenderSide+ '}';
+multiSenderSide: '.' portAddrPort '->' connReceiverSide;
+singleSenderSide: portAddr | '$' entityRef;
 senderConstRef: '$' entityRef;
 portAddr:
 	portAddrNode '.' portAddrPort portAddrIdx? structSelectors?;
