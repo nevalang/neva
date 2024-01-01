@@ -43,6 +43,20 @@ _Easy to visualize_ means that the nature of FBP programs is that we do not have
 
 ## Design
 
+### Why have integers and floats and not just numbers?
+
+1. Overflow issues: if you only have `number`, probably represented as a `float64` in memory, your maximum safe number is bigest float64. Integer can store "bigger" values because it doesn't have to store (floating) precision. This is especially important when you work with big numbers.
+
+2. Performance Overhead: Floating-point operations are generally slower than integer operations. In a system where all numbers are floating-point, operations that could have been more efficient with integers suffer a performance penalty.
+
+3. Predictability in Comparisons: Floating-point arithmetic can lead to non-intuitive results due to precision errors, making comparisons and certain calculations (like summing a large list of numbers) less predictable.
+
+4. Lack of Type Safety: The absence of distinct types can lead to bugs that are hard to detect, as the language won't provide errors or warnings when performing potentially erroneous operations between different kinds of numeric values.
+
+### Why there's no int32, float32, etc
+
+Because that's a simple language. Lack of ability to configure bit-size of the number but still being able to choose between integers and floats is the compromise that seems to be reasonable. Probably Python is a good example of that too.
+
 ### Why outports usage is optional and inport usage is required?
 
 Indeed when component `A` uses `B` as it's sub-component (when it instantiates a _node_ with it) in it's _network_ it's _enforced_ to use _all_ the inports of `B` and it's _at least one_ outport. It doesn't have to use all the outports though.

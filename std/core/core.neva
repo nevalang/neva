@@ -2,12 +2,6 @@ components {
     #runtime_func(Read)
     pub Read(sig) (v str)
 
-    #runtime_func(Print)
-    pub Print<T>(v T) (v T)
-
-    #runtime_func(Lock)
-    pub Lock<T>(sig, v T) (v T)
-
     #runtime_func(ParseInt)
     pub ParseInt(v str) (v int, err str)
 }

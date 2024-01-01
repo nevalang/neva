@@ -16,7 +16,7 @@ components {
 			readSecond core.Read
 			parseSecond core.ParseInt
 			add Add<int>
-			print core.Print<int>
+			print Print<int>
 		}
 		net {
 			in.enter -> readFirst.sig

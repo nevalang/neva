@@ -12,11 +12,12 @@ var (
 	ErrEmptyConst         = errors.New("Constant must either have value or reference to another constant")
 	ErrEntityNotConst     = errors.New("Constant refers to an entity that is not constant")
 	ErrResolveConstType   = errors.New("Cannot resolve constant type")
+	ErrUnionConst         = errors.New("Constant cannot have type union")
 	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
 //nolint:funlen
-func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) {
+func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo
 	if constant.Value == nil && constant.Ref == nil {
 		return src.Const{}, &compiler.Error{
 			Err:      ErrEmptyConst,
@@ -53,17 +54,44 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}.Merge(err)
 	}
 
-	switch resolvedType.Inst.Ref.String() {
+	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
+		return src.Const{}, &compiler.Error{
+			Err:      ErrUnionConst,
+			Location: &scope.Location,
+			Meta:     &constant.Meta,
+		}
+	}
+
+	var typ string
+	if inst := resolvedType.Inst; inst != nil {
+		typ = inst.Ref.String()
+	} else if lit := resolvedType.Lit; lit != nil {
+		if lit.Enum != nil {
+			typ = "enum"
+		} else if lit.Struct != nil {
+			typ = "struct"
+		}
+	}
+
+	switch typ {
 	case "bool":
-		if constant.Value.Int != nil || constant.Value.Float != nil || constant.Value.Str != nil {
+		if constant.Value.Int != nil ||
+			constant.Value.Float != nil ||
+			constant.Value.Str != nil ||
+			constant.Value.List != nil ||
+			constant.Value.Map != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-	case "int":
-		if constant.Value.Bool != nil || constant.Value.Float != nil || constant.Value.Str != nil {
+	case "int", "enum":
+		if constant.Value.Bool != nil ||
+			constant.Value.Float != nil ||
+			constant.Value.Str != nil ||
+			constant.Value.List != nil ||
+			constant.Value.Map != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -71,7 +99,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "float":
-		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Str != nil {
+		if constant.Value.Bool != nil ||
+			constant.Value.Int != nil ||
+			constant.Value.Str != nil ||
+			constant.Value.List != nil ||
+			constant.Value.Map != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -79,7 +111,33 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "str":
-		if constant.Value.Bool != nil || constant.Value.Int != nil || constant.Value.Float != nil {
+		if constant.Value.Bool != nil ||
+			constant.Value.Int != nil ||
+			constant.Value.Float != nil ||
+			constant.Value.List != nil ||
+			constant.Value.Map != nil {
+			return src.Const{}, &compiler.Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
+		}
+	case "list":
+		if constant.Value.Bool != nil ||
+			constant.Value.Int != nil ||
+			constant.Value.Float != nil ||
+			constant.Value.Map != nil {
+			return src.Const{}, &compiler.Error{
+				Err:      ErrConstSeveralValues,
+				Location: &scope.Location,
+				Meta:     &constant.Meta,
+			}
+		}
+	case "map", "struct":
+		if constant.Value.Bool != nil ||
+			constant.Value.Int != nil ||
+			constant.Value.Float != nil ||
+			constant.Value.List != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,

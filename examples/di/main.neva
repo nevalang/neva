@@ -10,7 +10,7 @@ components {
     Main(enter) (exit) {
         nodes {
             n1 C1 {
-                n2 core.Print<any>
+                n2 Print<any>
             }
         }
         net {
