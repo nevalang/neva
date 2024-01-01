@@ -10,7 +10,7 @@ components {
 			readFirstInt ReadInt
 			readSecondInt ReadInt
 			add Add<int>
-			print core.Print<int | str>
+			print Print<int | str>
 		}
 		net {
 			in.enter -> readFirstInt.sig

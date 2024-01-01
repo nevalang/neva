@@ -9,7 +9,7 @@ components {
 	Main(enter) (exit) {
 		nodes {
 			read core.Read
-			print core.Print<str>
+			print Print<str>
 		}
 		net {
 			in.enter -> read.sig

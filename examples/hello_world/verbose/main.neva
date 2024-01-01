@@ -11,8 +11,8 @@ components {
 		nodes {
 			#runtime_func_msg(msg)
 			msg Const<str>
-			print core.Print<str>
-			lock core.Lock<str>
+			print Print<str>
+			lock Lock<str>
 		}
 		net {
 			in.enter -> lock.sig

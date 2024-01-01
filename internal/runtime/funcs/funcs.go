@@ -12,6 +12,100 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+func structSelector(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
+	field, ok := msg.(runtime.Msg)
+	if !ok {
+		return nil, errors.New("ctx value is not runtime message")
+	}
+
+	fieldStr := field.Str()
+	if fieldStr == "" {
+		return nil, errors.New("field name cannot be empty")
+	}
+
+	vin, err := io.In.Port("v")
+	if err != nil {
+		return nil, err
+	}
+
+	vout, err := io.Out.Port("v")
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case obj := <-vin:
+				fieldValue := obj.Map()[fieldStr]
+				select {
+				case <-ctx.Done():
+					return
+				case vout <- fieldValue:
+				}
+			}
+		}
+	}, nil
+}
+
+func mapSelector(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	// in
+	vin, err := io.In.Port("v")
+	if err != nil {
+		return nil, err
+	}
+	kin, err := io.In.Port("k")
+	if err != nil {
+		return nil, err
+	}
+
+	// out
+	okOut, err := io.Out.Port("ok")
+	if err != nil {
+		return nil, err
+	}
+	missOut, err := io.Out.Port("miss")
+	if err != nil {
+		return nil, err
+	}
+
+	// logic
+	return func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case m := <-vin: // read map
+				select {
+				case <-ctx.Done():
+					return
+				case k := <-kin: // then read key
+					var ( // figure out what and where to send
+						msg runtime.Msg
+						out chan runtime.Msg
+					)
+					v, ok := m.Map()[k.Str()]
+					if ok {
+						msg = v
+						out = okOut
+					} else {
+						msg = k // if value not found, send missing key as a signal for miss outport
+						out = missOut
+					}
+					select { // and send
+					case <-ctx.Done():
+						return
+					case out <- msg:
+						return
+					}
+				}
+			}
+		}
+	}, nil
+}
+
 func read(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
@@ -272,13 +366,15 @@ func parseInt(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), erro
 
 func Registry() map[string]runtime.Func {
 	return map[string]runtime.Func{
-		"Read":      read,
-		"Print":     print,
-		"Lock":      lock,
-		"Const":     constant,
-		"AddInts":   addInts,
-		"AddFloats": addFloats,
-		"ParseInt":  parseInt,
-		"Void":      void,
+		"Read":           read,
+		"Print":          print,
+		"Lock":           lock,
+		"Const":          constant,
+		"AddInts":        addInts,
+		"AddFloats":      addFloats,
+		"ParseInt":       parseInt,
+		"Void":           void,
+		"StructSelector": structSelector,
+		"MapSelector":    mapSelector,
 	}
 }
