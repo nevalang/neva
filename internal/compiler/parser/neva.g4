@@ -29,7 +29,9 @@ importPath:
 // Entity Reference
 entityRef: localEntityRef | importedEntityRef;
 localEntityRef: IDENTIFIER;
-importedEntityRef: IDENTIFIER ('.' IDENTIFIER)?;
+importedEntityRef: PkgRef ('.' EntityName)?;
+PkgRef: IDENTIFIER;
+EntityName: IDENTIFIER;
 
 // Types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';

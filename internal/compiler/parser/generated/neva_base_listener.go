@@ -80,6 +80,18 @@ func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
 // ExitEntityRef is called when production entityRef is exited.
 func (s *BasenevaListener) ExitEntityRef(ctx *EntityRefContext) {}
 
+// EnterLocalEntityRef is called when production localEntityRef is entered.
+func (s *BasenevaListener) EnterLocalEntityRef(ctx *LocalEntityRefContext) {}
+
+// ExitLocalEntityRef is called when production localEntityRef is exited.
+func (s *BasenevaListener) ExitLocalEntityRef(ctx *LocalEntityRefContext) {}
+
+// EnterImportedEntityRef is called when production importedEntityRef is entered.
+func (s *BasenevaListener) EnterImportedEntityRef(ctx *ImportedEntityRefContext) {}
+
+// ExitImportedEntityRef is called when production importedEntityRef is exited.
+func (s *BasenevaListener) ExitImportedEntityRef(ctx *ImportedEntityRefContext) {}
+
 // EnterTypeStmt is called when production typeStmt is entered.
 func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}
 
@@ -344,29 +356,41 @@ func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
 // ExitSenderSide is called when production senderSide is exited.
 func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
 
+// EnterSenderConstRef is called when production senderConstRef is entered.
+func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
+
+// ExitSenderConstRef is called when production senderConstRef is exited.
+func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
+
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 
 // ExitPortAddr is called when production portAddr is exited.
 func (s *BasenevaListener) ExitPortAddr(ctx *PortAddrContext) {}
 
-// EnterIoNodePortAddr is called when production ioNodePortAddr is entered.
-func (s *BasenevaListener) EnterIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+// EnterPortAddrNode is called when production portAddrNode is entered.
+func (s *BasenevaListener) EnterPortAddrNode(ctx *PortAddrNodeContext) {}
 
-// ExitIoNodePortAddr is called when production ioNodePortAddr is exited.
-func (s *BasenevaListener) ExitIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+// ExitPortAddrNode is called when production portAddrNode is exited.
+func (s *BasenevaListener) ExitPortAddrNode(ctx *PortAddrNodeContext) {}
 
-// EnterPortDirection is called when production portDirection is entered.
-func (s *BasenevaListener) EnterPortDirection(ctx *PortDirectionContext) {}
+// EnterPortAddrPort is called when production portAddrPort is entered.
+func (s *BasenevaListener) EnterPortAddrPort(ctx *PortAddrPortContext) {}
 
-// ExitPortDirection is called when production portDirection is exited.
-func (s *BasenevaListener) ExitPortDirection(ctx *PortDirectionContext) {}
+// ExitPortAddrPort is called when production portAddrPort is exited.
+func (s *BasenevaListener) ExitPortAddrPort(ctx *PortAddrPortContext) {}
 
-// EnterNormalNodePortAddr is called when production normalNodePortAddr is entered.
-func (s *BasenevaListener) EnterNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
+// EnterPortAddrIdx is called when production portAddrIdx is entered.
+func (s *BasenevaListener) EnterPortAddrIdx(ctx *PortAddrIdxContext) {}
 
-// ExitNormalNodePortAddr is called when production normalNodePortAddr is exited.
-func (s *BasenevaListener) ExitNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
+// ExitPortAddrIdx is called when production portAddrIdx is exited.
+func (s *BasenevaListener) ExitPortAddrIdx(ctx *PortAddrIdxContext) {}
+
+// EnterStructSelectors is called when production structSelectors is entered.
+func (s *BasenevaListener) EnterStructSelectors(ctx *StructSelectorsContext) {}
+
+// ExitStructSelectors is called when production structSelectors is exited.
+func (s *BasenevaListener) ExitStructSelectors(ctx *StructSelectorsContext) {}
 
 // EnterConnReceiverSide is called when production connReceiverSide is entered.
 func (s *BasenevaListener) EnterConnReceiverSide(ctx *ConnReceiverSideContext) {}

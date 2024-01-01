@@ -410,16 +410,16 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 					Column: senderSideConstRef.GetStop().GetColumn(),
 				},
 			}
-			ids := senderSideConstRef.AllIDENTIFIER()
-			if len(ids) == 2 {
+
+			if localRef := senderSideConstRef.LocalEntityRef(); localRef != nil {
 				constRef = &src.EntityRef{
-					Pkg:  ids[0].GetText(),
-					Name: ids[1].GetText(),
+					Name: localRef.GetText(),
 					Meta: constRefMeta,
 				}
-			} else if len(ids) == 1 {
+			} else if imoportedRef := senderSideConstRef.ImportedEntityRef(); imoportedRef != nil {
 				constRef = &src.EntityRef{
-					Name: ids[0].GetText(),
+					Pkg:  imoportedRef.PkgRef().GetText(),
+					Name: imoportedRef.EntityName().GetText(),
 					Meta: constRefMeta,
 				}
 			}
@@ -461,11 +461,6 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 }
 
 func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
-	ioNodeAddr := expr.IoNodePortAddr()
-	senderNormalPortAddr := expr.NormalNodePortAddr()
-	if ioNodeAddr == nil && senderNormalPortAddr == nil {
-		panic("ioNodeAddr == nil && senderNormalPortAddr == nil")
-	}
 
 	meta := src.Meta{
 		Text: expr.GetText(),
@@ -479,22 +474,19 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 		},
 	}
 
-	if ioNodeAddr != nil {
-		dir := ioNodeAddr.PortDirection().GetText()
-		portName := ioNodeAddr.IDENTIFIER().GetText()
-		return src.PortAddr{
-			Node: dir,
-			Port: portName,
-			Meta: meta,
+	var idx *uint8
+	if index := expr.PortAddrIdx(); index != nil {
+		result, err := strconv.ParseUint(index.GetText(), 10, 8)
+		if err != nil {
+			panic(err)
 		}
+		idx = utils.Pointer(uint8(result))
 	}
 
-	// TODO handle array-port's slot
-
-	nodeAndPort := senderNormalPortAddr.AllIDENTIFIER()
 	return src.PortAddr{
-		Node: nodeAndPort[0].GetText(),
-		Port: nodeAndPort[1].GetText(),
+		Node: expr.PortAddrNode().GetText(),
+		Port: expr.PortAddrPort().GetText(),
+		Idx:  idx,
 		Meta: meta,
 	}
 }
