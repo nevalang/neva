@@ -1,4 +1,4 @@
-# Frequently Asked Questions
+# Questions and Answers
 
 ## General
 
@@ -45,13 +45,44 @@ _Easy to visualize_ means that the nature of FBP programs is that we do not have
 
 ### Why need array-ports?
 
-Every time we need to somehow combine/accumulate/reduce several sources of data into one e.g. 
+Every time we need to somehow combine/accumulate/reduce several sources of data into one e.g.
 
 - create list of 3 elements based on outputs of 3 outports
 - create structure with field-values from several outports
 - substract values from left to right
 
 Ok but can't we substract values and do other stuff like that by simply passing lists around? Well, we have to create that list right somehow? It's fine if you already have it (let's say from JSON file you got from server) but what if you need to build it?
+
+### Why component can't read from it's own array-inports by index?
+
+Imagine you do stuff like:
+
+```neva
+in.foo[0] -> ...
+in.foo[1] -> ...
+```
+
+Now what will happen if parent node will only use `0` slot of your `foo` array-inport? Should it block forever? Or maybe should the program crash? Sounds not too good.
+
+The other way we could handle this is by making analyzer ensure that parent of your component uses your `foo` array-inport with exactly `0` and `1` slots. The problem is that makes array-ports useless. Why even have them then? The whole point of array-ports is that you don't know how many slots are going to be used. And that makes your component flexible. It allows you to create components that can do stuff like "sum all numbers from all inports no matter how many of them are present".
+
+Besides, you can already say "use my component with exactly two values" already and you don't need any array-ports for that at all! All you need in that case is simply create two inports.
+
+Having that said we must admit that it's impossible to allow component read form it's own array-inports by index and still having type-safety.
+
+Also think about _variadic arguments_ in Go. It's not safe to refer to `...args` by index (even though it's possible because Go compiler won't protect you).
+
+### Why component can read from sub-node's array-outports by index?
+
+Isn't it unsafe to read from array-outports by index? We've restricted that for component itself by banning the ability to read form self outports by index. Why allow read from sub-node outports by index then?
+
+Well, it turns out there are critical cases where we need that. One of them is "routing" - where you have some data on the input and you need to figure out, based on some predicate, where to send it further. Like if you have a web-server and you received a request, you need to route it to specific handler based on the path that this request contains.
+
+It's possible to do that with sequence of if-else though but that would be really tedious and error-prone. That also would make your network more nested and less straightforward.
+
+#### Can't we implement syntax sugar for that?
+
+It's possible to introduce some sort of syntax sugar where user interacts with array ports and under the hood it's just a bunch of if-elses. But that actually makes no sense. If we have array-outports as a part of the language interface, we have them anyway. We also have use-cases for array-inports which means there are other reasons why have array ports. And finally it would be better for performance to have one low-level control-flow component implemented in implementation langauge and not Nevalang instead of compiling one high-level component to another big high-level component. One might ask - but we did that for Lock, what's the difference? The thing is with lock we are not replacing one component usage with the another, like we would in case of replacing some kind of "router" with bunch if if-elses. We simply insert implicit code, that is assumed by the higher level constructs like only exist at the level of the source code and not the real machinery.
 
 ### Why have integers and floats and not just numbers?
 

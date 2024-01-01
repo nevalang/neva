@@ -10,12 +10,9 @@ components {
 	Main(enter) (exit) {
 		nodes {
 			print Print<str>
-			lock Lock<str>
 		}
 		net {
-			in.enter -> lock.sig
-			$msg -> lock.v
-			lock.v -> print.v
+			in.enter -> ($msg -> print.v)
 			print.v -> out.exit
 		}
 	}

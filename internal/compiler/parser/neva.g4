@@ -27,7 +27,9 @@ importPath:
 	)*;
 
 // Entity Reference
-entityRef: IDENTIFIER ('.' IDENTIFIER)?;
+entityRef: localEntityRef | importedEntityRef;
+localEntityRef: IDENTIFIER;
+importedEntityRef: IDENTIFIER ('.' IDENTIFIER)?;
 
 // Types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
@@ -94,8 +96,8 @@ structValueField: IDENTIFIER ':' constVal NEWLINE*;
 // components
 compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
 compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
-compBody: '{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
-	// '{' NEWLINE* ((compNodesDef | compNetDef) NEWLINE*)* '}';
+compBody:
+	'{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
 
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
@@ -109,11 +111,14 @@ compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: senderSide '->' connReceiverSide;
-senderSide: portAddr | entityRef;
-portAddr: ioNodePortAddr | normalNodePortAddr;
-ioNodePortAddr: portDirection '.' IDENTIFIER;
-portDirection: 'in' | 'out';
-normalNodePortAddr: IDENTIFIER '.' IDENTIFIER;
+senderSide: portAddr | '$' entityRef;
+senderConstRef: '$' entityRef;
+portAddr:
+	portAddrNode '.' portAddrPort portAddrIdx? structSelectors?;
+portAddrNode: IDENTIFIER;
+portAddrPort: IDENTIFIER;
+portAddrIdx: '[' INT ']';
+structSelectors: '/' IDENTIFIER ('/' IDENTIFIER)*;
 connReceiverSide: portAddr | connReceivers;
 connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}';
 

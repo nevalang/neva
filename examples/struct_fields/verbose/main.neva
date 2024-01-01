@@ -23,7 +23,7 @@ components {
         }
         net {
             in.enter -> lock.sig
-            u -> lock.v
+            $u -> lock.v
             lock.v -> nameGetter.u
             nameGetter.name -> print.v
             print.v -> out.exit
