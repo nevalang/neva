@@ -392,6 +392,12 @@ func (s *BasenevaListener) EnterMultiSenderConn(ctx *MultiSenderConnContext) {}
 // ExitMultiSenderConn is called when production multiSenderConn is exited.
 func (s *BasenevaListener) ExitMultiSenderConn(ctx *MultiSenderConnContext) {}
 
+// EnterMultiSenderConnLine is called when production multiSenderConnLine is entered.
+func (s *BasenevaListener) EnterMultiSenderConnLine(ctx *MultiSenderConnLineContext) {}
+
+// ExitMultiSenderConnLine is called when production multiSenderConnLine is exited.
+func (s *BasenevaListener) ExitMultiSenderConnLine(ctx *MultiSenderConnLineContext) {}
+
 // EnterMultiSenderSide is called when production multiSenderSide is entered.
 func (s *BasenevaListener) EnterMultiSenderSide(ctx *MultiSenderSideContext) {}
 

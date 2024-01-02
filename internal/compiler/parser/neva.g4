@@ -114,17 +114,22 @@ compNetDef:
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: singleSenderConn | multiSenderConn;
 singleSenderConn: singleSenderSide '->' connReceiverSide;
-multiSenderConn: portAddrNode NEWLINE* '{' (NEWLINE* multiSenderSide NEWLINE*)+ '}';
-multiSenderSide: '.' portAddrPort '->' connReceiverSide;
-singleSenderSide: portAddr | '$' entityRef;
+multiSenderConn:
+	portAddrNode NEWLINE* '{' (
+		NEWLINE* multiSenderConnLine NEWLINE*
+	)+ '}';
+multiSenderConnLine: multiSenderSide '->' connReceiverSide;
+multiSenderSide: '.' portAddrPort structSelectors?;
+singleSenderSide: (portAddr | senderConstRef) structSelectors?;
 senderConstRef: '$' entityRef;
-portAddr:
-	portAddrNode '.' portAddrPort portAddrIdx? structSelectors?;
+portAddr: portAddrNode '.' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '/' IDENTIFIER ('/' IDENTIFIER)*;
-connReceiverSide: portAddr | connReceivers;
+connReceiverSide:
+	portAddr
+	| connReceivers; // TODO figure out syntax for structSelectors
 connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}';
 
 /* LEXER */

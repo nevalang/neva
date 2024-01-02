@@ -193,6 +193,9 @@ type nevaListener interface {
 	// EnterMultiSenderConn is called when entering the multiSenderConn production.
 	EnterMultiSenderConn(c *MultiSenderConnContext)
 
+	// EnterMultiSenderConnLine is called when entering the multiSenderConnLine production.
+	EnterMultiSenderConnLine(c *MultiSenderConnLineContext)
+
 	// EnterMultiSenderSide is called when entering the multiSenderSide production.
 	EnterMultiSenderSide(c *MultiSenderSideContext)
 
@@ -408,6 +411,9 @@ type nevaListener interface {
 
 	// ExitMultiSenderConn is called when exiting the multiSenderConn production.
 	ExitMultiSenderConn(c *MultiSenderConnContext)
+
+	// ExitMultiSenderConnLine is called when exiting the multiSenderConnLine production.
+	ExitMultiSenderConnLine(c *MultiSenderConnLineContext)
 
 	// ExitMultiSenderSide is called when exiting the multiSenderSide production.
 	ExitMultiSenderSide(c *MultiSenderSideContext)
