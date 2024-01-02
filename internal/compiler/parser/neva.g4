@@ -20,18 +20,18 @@ compiler_directive_arg: IDENTIFIER+;
 
 // Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
-importDef: IDENTIFIER? importPath NEWLINE*;
-importPath:
-	'@/'? (IDENTIFIER ('.' IDENTIFIER)?) (
-		'/' (IDENTIFIER ('.' IDENTIFIER)?)
-	)*;
+importDef: importAlias? importPath NEWLINE*;
+importAlias: IDENTIFIER;
+importPath: importPathMod '/' importPathPkg;
+importPathMod: '@' | IDENTIFIER;
+importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 
 // Entity Reference
 entityRef: localEntityRef | importedEntityRef;
 localEntityRef: IDENTIFIER;
-importedEntityRef: PkgRef ('.' EntityName)?;
-PkgRef: IDENTIFIER;
-EntityName: IDENTIFIER;
+importedEntityRef: pkgRef ('.' entityName)?;
+pkgRef: IDENTIFIER;
+entityName: IDENTIFIER;
 
 // Types
 typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
@@ -114,7 +114,7 @@ compNetDef:
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: singleSenderConn | multiSenderConn;
 singleSenderConn: singleSenderSide '->' connReceiverSide;
-multiSenderConn: portAddrNode '{' multiSenderSide+ '}';
+multiSenderConn: portAddrNode NEWLINE* '{' (NEWLINE* multiSenderSide NEWLINE*)+ '}';
 multiSenderSide: '.' portAddrPort '->' connReceiverSide;
 singleSenderSide: portAddr | '$' entityRef;
 senderConstRef: '$' entityRef;

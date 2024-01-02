@@ -68,11 +68,29 @@ func (s *BasenevaListener) EnterImportDef(ctx *ImportDefContext) {}
 // ExitImportDef is called when production importDef is exited.
 func (s *BasenevaListener) ExitImportDef(ctx *ImportDefContext) {}
 
+// EnterImportAlias is called when production importAlias is entered.
+func (s *BasenevaListener) EnterImportAlias(ctx *ImportAliasContext) {}
+
+// ExitImportAlias is called when production importAlias is exited.
+func (s *BasenevaListener) ExitImportAlias(ctx *ImportAliasContext) {}
+
 // EnterImportPath is called when production importPath is entered.
 func (s *BasenevaListener) EnterImportPath(ctx *ImportPathContext) {}
 
 // ExitImportPath is called when production importPath is exited.
 func (s *BasenevaListener) ExitImportPath(ctx *ImportPathContext) {}
+
+// EnterImportPathMod is called when production importPathMod is entered.
+func (s *BasenevaListener) EnterImportPathMod(ctx *ImportPathModContext) {}
+
+// ExitImportPathMod is called when production importPathMod is exited.
+func (s *BasenevaListener) ExitImportPathMod(ctx *ImportPathModContext) {}
+
+// EnterImportPathPkg is called when production importPathPkg is entered.
+func (s *BasenevaListener) EnterImportPathPkg(ctx *ImportPathPkgContext) {}
+
+// ExitImportPathPkg is called when production importPathPkg is exited.
+func (s *BasenevaListener) ExitImportPathPkg(ctx *ImportPathPkgContext) {}
 
 // EnterEntityRef is called when production entityRef is entered.
 func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
@@ -91,6 +109,18 @@ func (s *BasenevaListener) EnterImportedEntityRef(ctx *ImportedEntityRefContext)
 
 // ExitImportedEntityRef is called when production importedEntityRef is exited.
 func (s *BasenevaListener) ExitImportedEntityRef(ctx *ImportedEntityRefContext) {}
+
+// EnterPkgRef is called when production pkgRef is entered.
+func (s *BasenevaListener) EnterPkgRef(ctx *PkgRefContext) {}
+
+// ExitPkgRef is called when production pkgRef is exited.
+func (s *BasenevaListener) ExitPkgRef(ctx *PkgRefContext) {}
+
+// EnterEntityName is called when production entityName is entered.
+func (s *BasenevaListener) EnterEntityName(ctx *EntityNameContext) {}
+
+// ExitEntityName is called when production entityName is exited.
+func (s *BasenevaListener) ExitEntityName(ctx *EntityNameContext) {}
 
 // EnterTypeStmt is called when production typeStmt is entered.
 func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}

@@ -31,8 +31,17 @@ type nevaListener interface {
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
 
+	// EnterImportAlias is called when entering the importAlias production.
+	EnterImportAlias(c *ImportAliasContext)
+
 	// EnterImportPath is called when entering the importPath production.
 	EnterImportPath(c *ImportPathContext)
+
+	// EnterImportPathMod is called when entering the importPathMod production.
+	EnterImportPathMod(c *ImportPathModContext)
+
+	// EnterImportPathPkg is called when entering the importPathPkg production.
+	EnterImportPathPkg(c *ImportPathPkgContext)
 
 	// EnterEntityRef is called when entering the entityRef production.
 	EnterEntityRef(c *EntityRefContext)
@@ -42,6 +51,12 @@ type nevaListener interface {
 
 	// EnterImportedEntityRef is called when entering the importedEntityRef production.
 	EnterImportedEntityRef(c *ImportedEntityRefContext)
+
+	// EnterPkgRef is called when entering the pkgRef production.
+	EnterPkgRef(c *PkgRefContext)
+
+	// EnterEntityName is called when entering the entityName production.
+	EnterEntityName(c *EntityNameContext)
 
 	// EnterTypeStmt is called when entering the typeStmt production.
 	EnterTypeStmt(c *TypeStmtContext)
@@ -232,8 +247,17 @@ type nevaListener interface {
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)
 
+	// ExitImportAlias is called when exiting the importAlias production.
+	ExitImportAlias(c *ImportAliasContext)
+
 	// ExitImportPath is called when exiting the importPath production.
 	ExitImportPath(c *ImportPathContext)
+
+	// ExitImportPathMod is called when exiting the importPathMod production.
+	ExitImportPathMod(c *ImportPathModContext)
+
+	// ExitImportPathPkg is called when exiting the importPathPkg production.
+	ExitImportPathPkg(c *ImportPathPkgContext)
 
 	// ExitEntityRef is called when exiting the entityRef production.
 	ExitEntityRef(c *EntityRefContext)
@@ -243,6 +267,12 @@ type nevaListener interface {
 
 	// ExitImportedEntityRef is called when exiting the importedEntityRef production.
 	ExitImportedEntityRef(c *ImportedEntityRefContext)
+
+	// ExitPkgRef is called when exiting the pkgRef production.
+	ExitPkgRef(c *PkgRefContext)
+
+	// ExitEntityName is called when exiting the entityName production.
+	ExitEntityName(c *EntityNameContext)
 
 	// ExitTypeStmt is called when exiting the typeStmt production.
 	ExitTypeStmt(c *TypeStmtContext)

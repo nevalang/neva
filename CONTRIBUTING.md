@@ -39,6 +39,10 @@ Issues must only be created for known bugs and understandable architecture issue
 
 Check out [tygo.yaml](./tygo.yaml). It depends on types defined in the `src` and `typesystem` packages and thus it's dangerous to rename those types. If you gonna do so make sure you don't brake TS types generation. Check [web/CONTRIBUTING.md](./web/CONTRIBUTING.md).
 
+## ANTLR Grammar
+
+Don't forget to open `neva.g4` file before debugging with VSCode!
+
 # Naming conventions
 
 ## Tests
@@ -121,12 +125,6 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 ### Other
 
 - [Go By Example](https://gobyexample.com/)
-- Roadmaps:
-  - [Computer Science](https://roadmap.sh/computer-science)
-  - [Algorithms](https://neetcode.io/roadmap)
-  - [System Design](https://roadmap.sh/system-design)
-  - [Software Design Architecture](https://roadmap.sh/software-design-architecture)
-  - [Backend](https://roadmap.sh/backend)
 
 # Community
 

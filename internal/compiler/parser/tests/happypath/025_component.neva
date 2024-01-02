@@ -219,8 +219,8 @@ components {
 	Main() () {
 		net {
             foo {
-                .bar -> baz
-                .bax -> bac
+                .bar -> x.y
+                .bax -> z.z
             }
 		}
 	}

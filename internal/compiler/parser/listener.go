@@ -23,18 +23,20 @@ func (s *treeShapeListener) EnterUseStmt(actx *generated.ImportStmtContext) {
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	path := strings.Split(actx.ImportPath().GetText(), "/")
+	path := actx.ImportPath()
+	pkgName := path.ImportPathPkg().GetText()
 
 	var alias string
-	if id := actx.IDENTIFIER(); id != nil {
-		alias = actx.IDENTIFIER().GetText()
+	if tmp := actx.ImportAlias(); tmp != nil {
+		alias = tmp.GetText()
 	} else {
-		alias = path[len(path)-1]
+		parts := strings.Split(pkgName, "/")
+		alias = parts[len(parts)-1]
 	}
 
 	s.file.Imports[alias] = src.Import{
-		ModuleName: path[0],
-		PkgName:    strings.Join(path[1:], "/"),
+		ModuleName: path.ImportPathMod().GetText(),
+		PkgName:    pkgName,
 	}
 }
 
