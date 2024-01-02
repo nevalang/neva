@@ -200,7 +200,7 @@ type Msg struct {
 	Float    *float64         `json:"float,omitempty"`
 	Str      *string          `json:"str,omitempty"`
 	List     []Const          `json:"vec,omitempty"`
-	Map      map[string]Const `json:"map,omitempty"`
+	Map      map[string]Const `json:"map,omitempty"` // Used for both maps and structs
 	Meta     Meta             `json:"meta,omitempty"`
 }
 

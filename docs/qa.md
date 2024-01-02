@@ -284,11 +284,35 @@ Of course there's unions so nothing stops as from using `Foo | nil`. We need thi
 
 ## Internal Implementation
 
+### Why structures are not represented as Go structures?
+
+It would take generating Go types dynamically which is either makes use of reflection or codegeneration (which makes interpreter mode impossible). Maps have their overhead but they are easy to work with.
+
+### Why nested structures are not represented as flat maps?
+
+Indeed it's possible to represent `{ foo {bar int } }` like `{ "foo/bar": 42 }`. The problem arise when when we access the whole field. Let's take this example:
+
+```
+types {
+    User {
+        pet {
+            name str
+        }
+    }
+}
+
+...
+
+$u.pet -> foo.bar
+```
+
+What will `foo.bar` actually receive? This design makes impossible to actually send structures around and allows to operate on non-structured data only.
+
 ### Why Go?
 
 It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allows to reuse its state of the art standart library and increase performance for free by just updating the underlaying compiler.
 
-### Why compiler operates on multi-module graph and not just turns everything into one big module?
+### Why compiler operates on multi-module graph (build) and not just turns everything into one big module?
 
 Imagine you have `foo.bar` in your code. How does compiler figures out what that actually is? In order to do that it needs to _resolve_ that _reference_. And this is how _reference resolution_ works:
 

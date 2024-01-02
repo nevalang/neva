@@ -65,7 +65,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			if err != nil {
 				return nil, err
 			}
-			mapMsg[name] = result
+			mapMsg[name] = result // see Q&A on why we don't create flat maps for nested structures
 		}
 
 		return &ir.Msg{
