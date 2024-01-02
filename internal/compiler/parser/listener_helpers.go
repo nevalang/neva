@@ -395,7 +395,7 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 
 		senderSide := singleSenderConn.SingleSenderSide()
 		senderSidePort := senderSide.PortAddr()
-		senderSideConstRef := senderSide.EntityRef()
+		senderSideConstRef := senderSide.SenderConstRef()
 
 		var senderSidePortAddr *src.PortAddr
 		if senderSidePort != nil {
@@ -417,12 +417,12 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 				},
 			}
 
-			if localRef := senderSideConstRef.LocalEntityRef(); localRef != nil {
+			if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
 				constRef = &src.EntityRef{
 					Name: localRef.GetText(),
 					Meta: constRefMeta,
 				}
-			} else if imoportedRef := senderSideConstRef.ImportedEntityRef(); imoportedRef != nil {
+			} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
 				constRef = &src.EntityRef{
 					Pkg:  imoportedRef.PkgRef().GetText(),
 					Name: imoportedRef.EntityName().GetText(),
