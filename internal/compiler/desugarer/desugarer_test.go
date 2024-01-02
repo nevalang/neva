@@ -3,13 +3,16 @@ package desugarer
 import (
 	"testing"
 
+	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
+var p = parser.New(false)
+
+func TestDesugarer_Desugar(t *testing.T) {
 	tests := []struct {
 		name    string
 		build   src.Build
@@ -38,20 +41,11 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 			want: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
-						Manifest: src.ModuleManifest{
-							Deps: map[string]src.ModuleRef{
-								"std": {Path: "std", Version: "0.0.1"}, // <-- std mod dep added
-							},
-						},
+						Manifest: defaultManifest(), // <-- std mod dep
 						Packages: map[string]src.Package{
 							"pkgName": {
 								"fileName": src.File{
-									Imports: map[string]src.Import{
-										"builtin": { // <-- std/builtin import added
-											ModuleName: "std",
-											PkgName:    "builtin",
-										},
-									},
+									Imports:  defaultImports(), // <-- std/builtin import
 									Entities: map[string]src.Entity{},
 								},
 							},
@@ -61,8 +55,8 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: false,
 		},
+		// every network with const ref must be desugared into special node and connections to it
 		{
-			// every network with const ref must be desugared into special node and connections to it
 			name: "const_node",
 			build: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
@@ -175,8 +169,8 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: false,
 		},
+		// every unused outport must be connected to special void node
 		{
-			// every unused outport must be connected to special void node
 			name: "void_node",
 			build: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
@@ -299,5 +293,44 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 			require.Equal(t, err != nil, tt.wantErr)
 			require.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func mustParseFile(s string) src.File {
+	file, err := p.ParseFile([]byte(s))
+	if err != nil {
+		panic(err)
+	}
+	return file
+}
+
+func injectStd(file src.File) src.File {
+	if file.Imports == nil {
+		file.Imports = map[string]src.Import{}
+	}
+	file.Imports["builtin"] = src.Import{
+		ModuleName: "std",
+		PkgName:    "builtin",
+	}
+	return file
+}
+
+func defaultManifest() src.ModuleManifest {
+	return src.ModuleManifest{
+		Deps: map[string]src.ModuleRef{
+			"std": {
+				Path:    "std",
+				Version: "0.0.1",
+			},
+		},
+	}
+}
+
+func defaultImports() map[string]src.Import {
+	return map[string]src.Import{
+		"builtin": {
+			ModuleName: "std",
+			PkgName:    "builtin",
+		},
 	}
 }

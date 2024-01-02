@@ -313,7 +313,7 @@ func (a Analyzer) analyzeComponentNetwork(
 			if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
 				return nil, &compiler.Error{
 					Err: fmt.Errorf(
-						"Subtype checking failed: sender %v, receiver %v, error %w",
+						"Subtype checking failed: %v -> %v: %w",
 						conn.SenderSide, receiver, err,
 					),
 					Location: &scope.Location,

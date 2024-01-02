@@ -6,21 +6,21 @@ import (
 )
 
 var (
-	ErrDiffKinds     = errors.New("subtype and supertype must both be lits or insts except supertype is union")
-	ErrDiffRefs      = errors.New("subtype inst must have same ref as supertype")
-	ErrArgsCount     = errors.New("subtype inst must have >= args than supertype")
-	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
-	ErrLitArrSize    = errors.New("subtype arr size must be >= supertype")
-	ErrArrDiffType   = errors.New("subtype arr must have same type as supertype")
-	ErrBigEnum       = errors.New("subtype enum must be <= supertype enum")
-	ErrEnumEl        = errors.New("subtype enum el doesn't match supertype")
-	ErrRecLen        = errors.New("subtype record must contain >= fields than supertype")
-	ErrRecField      = errors.New("subtype rec field must be subtype of corresponding supertype field")
-	ErrRecNoField    = errors.New("subtype rec is missing field of supertype")
-	ErrUnion         = errors.New("subtype must be subtype of supertype union")
-	ErrUnionsLen     = errors.New("subtype union must be <= supertype union")
-	ErrUnions        = errors.New("subtype union el must be subtype of supertype union")
-	ErrDiffLitTypes  = errors.New("subtype and supertype lits must be of the same type")
+	ErrDiffKinds     = errors.New("Subtype and supertype must both be either literals or instances, except if supertype is union") //nolint:lll
+	ErrDiffRefs      = errors.New("Subtype inst must have same ref as supertype")
+	ErrArgsCount     = errors.New("Subtype inst must have >= args than supertype")
+	ErrArgNotSubtype = errors.New("Subtype arg must be subtype of corresponding supertype arg")
+	ErrLitArrSize    = errors.New("Subtype arr size must be >= supertype")
+	ErrArrDiffType   = errors.New("Subtype arr must have same type as supertype")
+	ErrBigEnum       = errors.New("Subtype enum must be <= supertype enum")
+	ErrEnumEl        = errors.New("Subtype enum el doesn't match supertype")
+	ErrRecLen        = errors.New("Subtype record must contain >= fields than supertype")
+	ErrRecField      = errors.New("Subtype rec field must be subtype of corresponding supertype field")
+	ErrRecNoField    = errors.New("Subtype rec is missing field of supertype")
+	ErrUnion         = errors.New("Subtype must be subtype of supertype union")
+	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
+	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
+	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
 )
 
 type SubtypeChecker struct {
@@ -40,15 +40,15 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 		return nil
 	}
 
-	isConstrTypeInst := constr.Lit.Empty()
-	diffKinds := expr.Lit.Empty() != isConstrTypeInst
-	isConstrTypeUnion := constr.Lit != nil && constr.Lit.Type() == UnionLitType
+	isConstraintInstance := constr.Lit.Empty()
+	areKindsDifferent := expr.Lit.Empty() != isConstraintInstance
+	isConstraintUnion := constr.Lit != nil && constr.Lit.Type() == UnionLitType
 
-	if diffKinds && !isConstrTypeUnion {
-		return fmt.Errorf("%w: expr %v, constaint %v", ErrDiffKinds, expr.Lit, constr.Lit)
+	if areKindsDifferent && !isConstraintUnion {
+		return fmt.Errorf("%w: expression %v, constaint %v", ErrDiffKinds, expr.String(), constr.String())
 	}
 
-	if isConstrTypeInst { //nolint:nestif // both expr and constr are insts
+	if isConstraintInstance { //nolint:nestif // both expr and constr are insts
 		isSubTypeRecursive, err := s.terminator.ShouldTerminate(params.SubtypeTrace, params.Scope)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTerminator, err)

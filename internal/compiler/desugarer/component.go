@@ -30,6 +30,10 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 	usedNodePorts := newNodePortsMap()
 	desugaredNet := make([]src.Connection, 0, len(component.Net))
 	for _, conn := range component.Net {
+		if len(conn.SenderSide.Selectors) != 0 {
+			handleStructSelectors(conn.SenderSide.Selectors)
+		}
+		
 		if conn.SenderSide.ConstRef == nil {
 			desugaredNet = append(desugaredNet, conn)
 			if conn.SenderSide.PortAddr != nil {

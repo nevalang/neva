@@ -31,6 +31,14 @@ func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, e
 	return entity, filename, nil
 }
 
+func (mod Module) Files(f func(file File, pkgName, fileName string)) {
+	for pkgName, pkg := range mod.Packages {
+		for fileName, file := range pkg {
+			f(file, pkgName, fileName)
+		}
+	}
+}
+
 type ModuleManifest struct {
 	WantCompilerVersion string               `json:"compiler,omitempty" yaml:"compiler,omitempty"`
 	Deps                map[string]ModuleRef `json:"deps,omitempty"     yaml:"deps,omitempty"`
@@ -216,15 +224,48 @@ type Port struct {
 }
 
 type Connection struct {
-	SenderSide    SenderConnectionSide     `json:"senderSide,omitempty"`
-	ReceiverSides []ReceiverConnectionSide `json:"receiverSide,omitempty"`
-	Meta          Meta                     `json:"meta,omitempty"`
+	SenderSide    SenderConnectionSide    `json:"senderSide,omitempty"`
+	ReceiverSides ReceiverConnectionSides `json:"receiverSide,omitempty"`
+	Meta          Meta                    `json:"meta,omitempty"`
+}
+
+type ReceiverConnectionSides []ReceiverConnectionSide
+
+func (r ReceiverConnectionSides) String() string {
+	// s := ""
+	// for _, side := range r {
+	// 	side.
+	// }
+	return ""
 }
 
 type ReceiverConnectionSide struct {
-	PortAddr  PortAddr `json:"portAddr,omitempty"`
-	Selectors []string `json:"selectors,omitempty"`
-	Meta      Meta     `json:"meta,omit"`
+	PortAddr  PortAddr                `json:"portAddr,omitempty"`
+	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
+	Meta      Meta                    `json:"meta,omit"`
+}
+
+type ConnectionSideSelectors []string
+
+func (c ConnectionSideSelectors) String() string {
+	if len(c) == 0 {
+		return ""
+	}
+	s := ""
+	for i, field := range c {
+		s += field
+		if i != len(c)-1 {
+			s += "/"
+		}
+	}
+	return s
+}
+
+func (r ReceiverConnectionSide) String() string {
+	if len(r.Selectors) == 0 {
+		return r.PortAddr.String()
+	}
+	return fmt.Sprint("%v/%v", r.PortAddr, r.Selectors)
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
