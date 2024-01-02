@@ -51,8 +51,9 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		}
 
 		constRefStr := conn.SenderSide.ConstRef.String()
+		constNodeName := fmt.Sprintf("__%v__", constRefStr)
 
-		desugaredNodes[constRefStr] = src.Node{
+		desugaredNodes[constNodeName] = src.Node{
 			Directives: map[src.Directive][]string{
 				compiler.RuntimeFuncMsgDirective: {constRefStr},
 			},
@@ -64,7 +65,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		}
 
 		constNodeOutportAddr := src.PortAddr{
-			Node: constRefStr,
+			Node: constNodeName,
 			Port: "v",
 		}
 
@@ -116,14 +117,15 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 	}
 
 	// add void node and connections to it
-	desugaredNodes["void"] = src.Node{
+	voidNodeName := "__void__"
+	desugaredNodes[voidNodeName] = src.Node{
 		EntityRef: src.EntityRef{
 			Pkg:  "builtin",
 			Name: "Void",
 		},
 	}
 	receiverSides := []src.ReceiverConnectionSide{
-		{PortAddr: src.PortAddr{Node: "void", Port: "v"}},
+		{PortAddr: src.PortAddr{Node: voidNodeName, Port: "v"}},
 	}
 	for nodeName, ports := range unusedOutports.m {
 		for portName := range ports {

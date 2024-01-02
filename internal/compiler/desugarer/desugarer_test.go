@@ -14,7 +14,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 		name    string
 		build   src.Build
 		want    src.Build
-		wantErr error
+		wantErr bool
 	}{
 		// every module must have std module dependency and std/builtin import in every file
 		{
@@ -59,7 +59,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			wantErr: nil,
+			wantErr: false,
 		},
 		{
 			// every network with const ref must be desugared into special node and connections to it
@@ -139,7 +139,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 											Kind: src.ComponentEntity,
 											Component: src.Component{
 												Nodes: map[string]src.Node{
-													"bar": { // <-- const node added
+													"__bar__": { // <-- const node added
 														Directives: map[src.Directive][]string{
 															"runtime_func_msg": {"bar"},
 														},
@@ -158,7 +158,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 													{
 														SenderSide: src.SenderConnectionSide{ // <-- const ref conn replaced with normal one
 															PortAddr: &src.PortAddr{
-																Node: "bar",
+																Node: "__bar__",
 																Port: "v",
 															},
 														},
@@ -173,7 +173,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			wantErr: nil,
+			wantErr: false,
 		},
 		{
 			// every unused outport must be connected to special void node
@@ -240,7 +240,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 											Component: src.Component{
 												Nodes: map[string]src.Node{
 													"bar": {EntityRef: src.EntityRef{Name: "Bar"}}, // that one node
-													"void": { // <-- new node
+													"__void__": { // <-- new node
 														EntityRef: src.EntityRef{
 															Name: "Void",
 															Pkg:  "builtin",
@@ -258,7 +258,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 														ReceiverSides: []src.ReceiverConnectionSide{
 															{
 																PortAddr: src.PortAddr{
-																	Node: "void",
+																	Node: "__void__",
 																	Port: "v",
 																},
 															},
@@ -286,7 +286,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			wantErr: nil,
+			wantErr: false,
 		},
 	}
 
@@ -296,7 +296,7 @@ func TestDesugarer_Desugar(t *testing.T) { //nolint:maintidx
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := d.Desugar(tt.build)
-			require.ErrorIs(t, err, tt.wantErr)
+			require.Equal(t, err != nil, tt.wantErr)
 			require.Equal(t, tt.want, got)
 		})
 	}

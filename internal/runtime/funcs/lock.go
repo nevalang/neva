@@ -13,14 +13,21 @@ func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
+
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
 	}
+
 	vout, err := io.Out.Port("v")
 	if err != nil {
 		return nil, err
 	}
+
+	return l.Handle(vin, sig, vout), nil
+}
+
+func (lock) Handle(vin, sig, vout chan runtime.Msg) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
 			select {
@@ -39,5 +46,5 @@ func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 				}
 			}
 		}
-	}, nil
+	}
 }

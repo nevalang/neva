@@ -1,10 +1,13 @@
+// Package funcs implements low-level components (runtime functions).
+// It has only one exported entity which is function creators registry.
 package funcs
 
 import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func Registry() map[string]runtime.FuncCreator {
+// CreatorRegistry allows to create runtime functions by accessing function creators by key.
+func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		"Read":           read{},
 		"Print":          print{},

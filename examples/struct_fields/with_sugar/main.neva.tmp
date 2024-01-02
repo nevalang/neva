@@ -6,8 +6,6 @@ types {
 }
 
 const {
-    path list<str> ['name']
-    
     u User {
         age: 32
         name: 'john'
@@ -19,14 +17,11 @@ components {
         nodes {
             lock Lock<User>
             print Print<str>
-            #runtime_func_msg(path)
-            selector StructSelector<str>
         }
         net {
             in.enter -> lock.sig
-            $u -> lock.v
-            lock.v -> selector.v
-            selector.v -> print.v
+            $u/name -> lock.v
+            lock.v -> print.v
             print.v -> out.exit
         }
     }
