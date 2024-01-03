@@ -7,6 +7,13 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
+// Desugarer does the following:
+// 1. Replaces const ref senders with normal nodes that uses Const component with compiler directive;
+// 2. Inserts void nodes and connections for every unused outport in the program;
+// 3. Replaces struct selectors with chain of struct selector nodes.
+// Each step can produce extra entities like constants, nodes, connections, etc.
+// Sometimes we need to know types, so it's not always possible to desugar invalid program.
+// Desugarer tries to avoid any unnecessary validations though. There's analyzer for that.
 type Desugarer struct{}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
@@ -107,13 +114,17 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
 	for entityName, entity := range file.Entities {
-		desugaredEntity, err := d.desugarEntity(entity, scope)
+		entityResult, err := d.desugarEntity(entity, scope)
 		if err != nil {
 			return src.File{}, compiler.Error{
 				Meta: entity.Meta(),
 			}.Merge(err)
 		}
-		desugaredEntities[entityName] = desugaredEntity
+
+		desugaredEntities[entityName] = entityResult.entity
+		for name, entityToInsert := range entityResult.entitiesToInsert {
+			desugaredEntities[name] = entityToInsert
+		}
 	}
 
 	desugaredImports := maps.Clone(file.Imports)
@@ -132,19 +143,36 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 	}, nil
 }
 
-func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
+type desugarEntityResult struct {
+	entity           src.Entity
+	entitiesToInsert map[string]src.Entity
+}
+
+func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEntityResult, *compiler.Error) {
 	if entity.Kind != src.ComponentEntity {
-		return entity, nil
+		return desugarEntityResult{}, nil
 	}
 
-	desugarComponent, err := d.desugarComponent(entity.Component, scope)
+	componentResult, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
-		return src.Entity{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
+		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
 	}
 
-	return src.Entity{
-		IsPublic:  entity.IsPublic,
-		Kind:      entity.Kind,
-		Component: desugarComponent,
+	entitiesToInsert := make(map[string]src.Entity, len(componentResult.constsToInsert))
+	for constName, constant := range componentResult.constsToInsert {
+		entitiesToInsert[constName] = src.Entity{
+			IsPublic: false,
+			Kind:     src.ConstEntity,
+			Const:    constant,
+		}
+	}
+
+	return desugarEntityResult{
+		entitiesToInsert: entitiesToInsert,
+		entity: src.Entity{
+			IsPublic:  entity.IsPublic,
+			Kind:      entity.Kind,
+			Component: componentResult.component,
+		},
 	}, nil
 }
