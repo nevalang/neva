@@ -58,9 +58,10 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			if err != nil {
 				return desugarComponentResult{}, err
 			}
+			// desugaredNodes[]
 			maps.Copy(desugaredNodes, selectorsResult.nodesToInsert)
 			maps.Copy(constsToInsert, selectorsResult.constsToInsert)
-			desugaredNet = append(desugaredNet, selectorsResult.connsToInsert...)
+			desugaredNet = append(desugaredNet, selectorsResult.connToInsert)
 			conn = selectorsResult.connToReplace
 		}
 

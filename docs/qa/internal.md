@@ -81,3 +81,15 @@ This would make desugarer much simpler (no need to create all this virtual const
 However, to implement this we need to be able to parse literals inside `irgen`. Right now we already introduce dependency for parsing entity references, but for arbitrary expressions we need the whole parser.
 
 Of course, it's possible to hide actual parser implementation behind some kind of interface defined by irgen but that would make code more complicated. Besides, the very idea of having parser inside code-generator sounds bad. Parsing references is the acceptable compromise on the other hand.
+
+## Why Analyzer knows about stdlib? Isn't it bad design?
+
+At first there was a try to implement analyzer in a way that it only knows about the core of the language.
+
+But turns out that some components in stdlib (especially `builtin` package, especially the ones that uses `#runtime_func` and `#runtime_func_msg` directives) are actually part of the core of the language.
+
+E.g. when user uses struct selectors like `foo.bar/baz -> ...` and then desugarer replaces this with `foo.bar -> structSelectorNode("baz") -> ...` (this is pseudocode) we must ensure that type of the `bar` is 1) a `struct` 2) has field `baz` and 3) `baz` is compatible with whatever `...` is. _This is static semantic analysis_ and that's is work for analyzer.
+
+Actually every time we use compiler directive we depend on implicit contract that cannot be expressed in the terms of the language itself (except we introduce abstractions for that, which will make language more complicated). That's why we have to analyze such things by injecting knowledge about stdlib.
+
+Designing the language in a way where analyzer has zero knowledge about stdlib is possible in theory but would make the language more complicated and would take much more time.

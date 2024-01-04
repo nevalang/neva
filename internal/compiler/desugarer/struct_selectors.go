@@ -3,30 +3,33 @@ package desugarer
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
-	"github.com/nevalang/neva/pkg/typesystem"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var (
 	ErrEmptySenderSide     = errors.New("Unable to desugar sender side with struct selectors because it's empty.")
-	ErrOutportAddrNotFound = errors.New("")
+	ErrOutportAddrNotFound = errors.New("Outport addr not found")
+	ErrTypeNotStruct       = errors.New("Type not struct")
+	ErrStructFieldNotFound = errors.New("Struct field not found")
 )
 
 type handleStructSelectorsResult struct {
 	connToReplace  src.Connection
-	connsToInsert  []src.Connection
+	connToInsert   src.Connection
 	constsToInsert map[string]src.Const
 	nodesToInsert  map[string]src.Node
 }
 
-// handleStructSelectors inserts nodes and returns connections to insert.
-// `substitution` connection must replace the one that relates to given sender side, `rest` must be inserted.
-// E.g. for `a.b/c -> d.e` it returns `(a.b -> selector.v, [selector.v -> d.e], nil)`
-// so `a.b/c -> d.e` replaced by `a.b -> selector.v` and `selector.v -> d.e` is inserted.
+var selectorNodeRef = src.EntityRef{
+	Pkg:  "builtin",
+	Name: "StructSelector",
+}
+
 func (d Desugarer) handleStructSelectors( //nolint:funlen
 	conn src.Connection,
 	nodes map[string]src.Node,
@@ -42,112 +45,150 @@ func (d Desugarer) handleStructSelectors( //nolint:funlen
 		}
 	}
 
-	entityRef := src.EntityRef{
-		Pkg:  "builtin",
-		Name: "StructSelector",
+	structType, err := d.getSenderType(senderSide, scope, nodes)
+	if err != nil {
+		return handleStructSelectorsResult{}, err
 	}
 
-	var selectorNodeTypeArg ts.Expr
-	if senderSide.ConstRef != nil {
-		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getConstType(*senderSide.ConstRef, scope)
-		if err != nil {
-			return handleStructSelectorsResult{}, err
+	lastFIeldType, err := d.getStructFieldType(structType, senderSide.Selectors)
+	if err != nil {
+		return handleStructSelectorsResult{}, err
+	}
+
+	selectorsStr := strings.Join(senderSide.Selectors, "_")
+
+	constName := fmt.Sprintf("__%v_const__", selectorsStr)
+	pathConst := d.createPathConst(senderSide)
+
+	nodeName := fmt.Sprintf("__%v_node__", selectorsStr)
+	selectorNode := src.Node{
+		Directives: map[src.Directive][]string{
+			// pass selectors down to component through the constant via directive
+			compiler.RuntimeFuncMsgDirective: {constName},
+		},
+		EntityRef: selectorNodeRef,
+		TypeArgs:  []ts.Expr{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
+	}
+
+	// original connection must be replaced with two new connections, this is the first one
+	connToReplace := src.Connection{
+		SenderSide: src.SenderConnectionSide{
+			PortAddr:  senderSide.PortAddr, // preserve original sender port
+			Selectors: nil,                 // remove selectors in desugared version
+		},
+		ReceiverSides: []src.ReceiverConnectionSide{
+			{
+				PortAddr: src.PortAddr{
+					Node: nodeName, // point it to created selector node
+					Port: "v",
+				},
+			},
+		},
+	}
+
+	// and this is the second
+	connToInsert := src.Connection{
+		SenderSide: src.SenderConnectionSide{
+			PortAddr: &src.PortAddr{
+				Node: nodeName, // created node received data from original sender and is now sending it further
+				Port: "v",
+			},
+			Selectors: nil, // no selectors in desugared version
+		},
+		ReceiverSides: conn.ReceiverSides, // preserve original receivers
+	}
+
+	return handleStructSelectorsResult{
+		connToReplace:  connToReplace,
+		connToInsert:   connToInsert,
+		constsToInsert: map[string]src.Const{constName: pathConst},
+		nodesToInsert:  map[string]src.Node{nodeName: selectorNode},
+	}, nil
+}
+
+func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (ts.Expr, *compiler.Error) {
+	if len(selectors) == 0 {
+		return ts.Expr{}, &compiler.Error{
+			Err: ErrStructFieldNotFound,
 		}
-	} else if senderSide.PortAddr != nil {
-		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
-		if err != nil {
-			return handleStructSelectorsResult{}, err
+	}
+
+	if structType.Lit == nil || structType.Lit.Struct == nil {
+		return ts.Expr{}, &compiler.Error{
+			Err: ErrTypeNotStruct,
 		}
 	}
 
-	// we will create constant, node and connection per each selector
-	constsToInsert := make(map[string]src.Const, len(senderSide.Selectors))
-	nodesToInsert := make(map[string]src.Node, len(senderSide.Selectors))
-	createdChain := make([]src.Connection, 0, len(senderSide.Selectors))
-
-	// we're going to create chain of connections in a for loop where
-	// on each previous iteration receiver becomes next sender and so on until all selectors are precessed
-	// but we have to preserve original sender side so the chain is connected with the rest of the graph
-	prev := src.SenderConnectionSide{
-		PortAddr:  conn.SenderSide.PortAddr,
-		ConstRef:  conn.SenderSide.ConstRef,
-		Selectors: nil, // remove selectors
-		Meta:      conn.SenderSide.Meta,
+	curField := selectors[0]
+	fieldType, ok := structType.Lit.Struct[curField]
+	if !ok {
+		return ts.Expr{}, &compiler.Error{
+			Err: fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
+		}
 	}
 
-	// for every selector we need to create unique constant but type of all constants is the same
-	strType := ts.Expr{
+	return d.getStructFieldType(fieldType, selectors[1:])
+}
+
+// list<str>
+var (
+	strTypeExpr = ts.Expr{
 		Inst: &ts.InstExpr{
 			Ref: src.EntityRef{Pkg: "builtin", Name: "str"},
 		},
 	}
 
-	// for every selector create const, node that uses that const through directive and connection
-	// example: `$a/b/c -> d.e` becomes `[$a -> s(b), s(b) -> s(c), s(c) -> d.e]`
-	// not that $a (beginning of the chain) lost it's selectors and `d.e` receivers preserved at the end
-	for _, fieldName := range senderSide.Selectors {
-		// create const with string value equal to the name of the struct field from selector
-		constName := fmt.Sprintf("__%v_const__", fieldName)
-		constant := src.Const{
-			Value: &src.Msg{
-				TypeExpr: strType,
-				Str:      utils.Pointer(fieldName),
-			},
-		}
-		constsToInsert[constName] = constant
-
-		// create struct selector node with directive referring that const with field name string
-		nodeName := fmt.Sprintf("__%v_node__", fieldName)
-		selectorNode := src.Node{
-			Directives: map[src.Directive][]string{
-				compiler.RuntimeFuncMsgDirective: {constName}, // refer that const
-			},
-			EntityRef: entityRef,
-			TypeArgs:  []typesystem.Expr{selectorNodeTypeArg},
-		}
-		nodesToInsert[nodeName] = selectorNode
-
-		// create connection from previous sender to this node
-		selectorConn := src.Connection{
-			SenderSide: prev,
-			ReceiverSides: []src.ReceiverConnectionSide{
-				{PortAddr: src.PortAddr{Node: nodeName, Port: "v"}},
-			},
-			Meta: src.Meta{},
-		}
-		createdChain = append(createdChain, selectorConn)
-
-		// and move cursor right
-		prev = selectorConn.SenderSide
-	}
-
-	// at this point we created the chain that is connected to original sender through it's beginning
-	// now we need to link chain's end with the original receiver
-	chainEnd := createdChain[len(createdChain)-1]
-	endOfTheCreatedChain := chainEnd.ReceiverSides[0] // every receiver in chain is always struct sender node
-	finalConnection := src.Connection{
-		SenderSide: src.SenderConnectionSide{
-			PortAddr: &src.PortAddr{
-				Node: endOfTheCreatedChain.PortAddr.Node, // we need to figure out last struct selector node's name
-				Port: "v",                                // but outport name is always the same
-			},
+	pathConstTypeExpr = ts.Expr{
+		Inst: &ts.InstExpr{
+			Ref:  src.EntityRef{Pkg: "builtin", Name: "list"},
+			Args: []ts.Expr{strTypeExpr},
 		},
-		ReceiverSides: conn.ReceiverSides, // this is where end of the chain is connected to original receiver
 	}
 
-	// finally let's split beginning form the rest of the chain
-	// because first one must replace the original one, while the rest must be inserted
-	connToReplace := createdChain[0]
-	connsToInsert := append(createdChain[1:], finalConnection)
+	structSelectorEntityRef = src.EntityRef{
+		Pkg:  "builtin",
+		Name: "structSelector",
+	}
+)
 
-	return handleStructSelectorsResult{
-		connToReplace:  connToReplace,
-		connsToInsert:  connsToInsert,
-		constsToInsert: constsToInsert,
-		nodesToInsert:  nodesToInsert,
-	}, nil
+func (Desugarer) createPathConst(senderSide src.SenderConnectionSide) src.Const {
+	constToInsert := src.Const{
+		Value: &src.Msg{
+			TypeExpr: pathConstTypeExpr,
+			List:     make([]src.Const, 0, len(senderSide.Selectors)),
+		},
+	}
+	for _, selector := range senderSide.Selectors {
+		constToInsert.Value.List = append(constToInsert.Value.List, src.Const{
+			Value: &src.Msg{
+				TypeExpr: strTypeExpr,
+				Str:      utils.Pointer(selector),
+			},
+		})
+	}
+	return constToInsert
+}
+
+func (d Desugarer) getSenderType(
+	senderSide src.SenderConnectionSide,
+	scope src.Scope,
+	nodes map[string]src.Node,
+) (ts.Expr, *compiler.Error) {
+	var selectorNodeTypeArg ts.Expr
+	if senderSide.ConstRef != nil {
+		var err *compiler.Error
+		selectorNodeTypeArg, err = d.getConstType(*senderSide.ConstRef, scope)
+		if err != nil {
+			return ts.Expr{}, err
+		}
+	} else if senderSide.PortAddr != nil {
+		var err *compiler.Error
+		selectorNodeTypeArg, err = d.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
+		if err != nil {
+			return ts.Expr{}, err
+		}
+	}
+	return selectorNodeTypeArg, nil
 }
 
 func (d Desugarer) getNodeOutportType(
