@@ -9,6 +9,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
+var ErrStructFieldNotFound = errors.New("Struct field not found")
+
 //nolint:funlen
 func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
@@ -17,6 +19,8 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
+	// TODO handle struct selectors for sender
+
 	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
 
 	for _, conn := range net {
@@ -33,11 +37,23 @@ func (a Analyzer) analyzeComponentNetwork(
 			outportName := conn.SenderSide.PortAddr.Port
 			if _, ok := nodesUsage[senderNodeName]; !ok {
 				nodesUsage[senderNodeName] = NodeNetUsage{
-					In:  map[string]struct{}{}, // we don't use nodeIfaces for make with len
-					Out: map[string]struct{}{}, // because sender could be const or io node (in/out)
+					In:  map[string]struct{}{},
+					Out: map[string]struct{}{},
 				}
 			}
 			nodesUsage[senderNodeName].Out[outportName] = struct{}{}
+		}
+
+		if len(conn.SenderSide.Selectors) > 0 {
+			lastFieldType, err := a.analyzeSenderSelectors(outportTypeExpr, conn.SenderSide.Selectors)
+			if err != nil {
+				return nil, compiler.Error{
+					Err:      errors.New("Sender side selectors are invalid"),
+					Location: &scope.Location,
+					Meta:     &conn.Meta,
+				}.Merge(err)
+			}
+			outportTypeExpr = lastFieldType
 		}
 
 		for _, receiver := range conn.ReceiverSides {
@@ -74,7 +90,7 @@ func (a Analyzer) analyzeComponentNetwork(
 		}
 	}
 
-	if err := a.checkNodeUsage(nodesIfaces, scope, nodesUsage); err != nil {
+	if err := a.checkNodesUsage(nodesIfaces, scope, nodesUsage); err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
@@ -86,9 +102,9 @@ type NodeNetUsage struct {
 	In, Out map[string]struct{}
 }
 
-// TODO return err only if ALL outs unused
-// checkNodeUsage returns err if some node or node's outport is unused to avoid deadlocks.
-func (Analyzer) checkNodeUsage(
+// checkNodesUsage ensures that for every node we use all its inports
+// and (if they are outports) at least one it's outport.
+func (Analyzer) checkNodesUsage(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
@@ -113,14 +129,21 @@ func (Analyzer) checkNodeUsage(
 			}
 		}
 
+		if len(nodeIface.IO.Out) == 0 { // such components exist in stdlib, user cannot create them
+			continue
+		}
+
+		atLeastOneOutportIsUsed := false
 		for outportName := range nodeIface.IO.Out {
-			if _, ok := nodeUsage.Out[outportName]; !ok {
-				meta := nodeIface.IO.Out[outportName].Meta
-				return &compiler.Error{
-					Err:      fmt.Errorf("%w: %v.%v", ErrUnusedNodeOutport, nodeName, outportName),
-					Location: &scope.Location,
-					Meta:     &meta,
-				}
+			if _, ok := nodeUsage.Out[outportName]; ok {
+				atLeastOneOutportIsUsed = true
+			}
+		}
+		if !atLeastOneOutportIsUsed {
+			return &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrUnusedNodeOutports, nodeName),
+				Location: &scope.Location,
+				Meta:     &nodeIface.Meta,
 			}
 		}
 	}
@@ -258,12 +281,23 @@ func (a Analyzer) getSenderType(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	if senderSide.PortAddr == nil {
+	if senderSide.PortAddr == nil && senderSide.ConstRef == nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
 		}
+	}
+
+	if senderSide.ConstRef != nil {
+		expr, err := a.getResolvedConstType(*senderSide.ConstRef, scope)
+		if err != nil {
+			return ts.Expr{}, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &senderSide.ConstRef.Meta,
+			}.Merge(err)
+		}
+		return expr, nil
 	}
 
 	if senderSide.PortAddr.Node == "out" {
@@ -338,4 +372,77 @@ func (a Analyzer) getNodeOutportType(
 	}
 
 	return typ, err
+}
+
+func (a Analyzer) getResolvedConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
+	entity, location, err := scope.Entity(ref)
+	if err != nil {
+		return ts.Expr{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &ref.Meta,
+		}
+	}
+
+	if entity.Kind != src.ConstEntity {
+		return ts.Expr{}, &compiler.Error{
+			Err:      fmt.Errorf("%w: %v", errors.New("Entity found but is not constant"), entity.Kind),
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if entity.Const.Ref != nil {
+		expr, err := a.getResolvedConstType(*entity.Const.Ref, scope)
+		if err != nil {
+			return ts.Expr{}, compiler.Error{
+				Location: &location,
+				Meta:     &entity.Const.Meta,
+			}.Merge(err)
+		}
+		return expr, nil
+	}
+
+	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Value.TypeExpr, scope)
+	if err != nil {
+		return ts.Expr{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &entity.Const.Value.Meta,
+		}
+	}
+
+	return resolvedExpr, nil
+}
+
+func (a Analyzer) analyzeSenderSelectors(
+	senderType ts.Expr,
+	selectors []string,
+) (ts.Expr, *compiler.Error) {
+	var meta *src.Meta
+	if m, ok := senderType.Meta.(src.Meta); ok {
+		meta = &m
+	}
+
+	if senderType.Lit == nil || senderType.Lit.Struct == nil {
+		return ts.Expr{}, &compiler.Error{
+			Err:  fmt.Errorf("Type not struct: %v", senderType.String()),
+			Meta: meta,
+		}
+	}
+
+	curField := selectors[0]
+	fieldType, ok := senderType.Lit.Struct[curField]
+	if !ok {
+		return ts.Expr{}, &compiler.Error{
+			Err:  fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
+			Meta: meta,
+		}
+	}
+
+	if len(selectors) == 1 {
+		return senderType, nil
+	}
+
+	return a.analyzeSenderSelectors(fieldType, selectors[1:])
 }
