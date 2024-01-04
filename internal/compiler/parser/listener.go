@@ -123,7 +123,7 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	directives := parseCompilerDirectives(actx.CompilerDirectives())
 
 	var cmp src.Entity
-	if body := actx.CompBody(); body == nil {
+	if body := actx.CompBody(); body == nil { //nolint:nestif
 		cmp = src.Entity{
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
@@ -141,7 +141,11 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 
 		var net []src.Connection
 		if netDef := body.CompNetDef(); netDef != nil {
-			net = parseNet(netDef)
+			parsedNet, err := parseNet(netDef)
+			if err != nil {
+				panic(err)
+			}
+			net = parsedNet
 		}
 
 		cmp = src.Entity{

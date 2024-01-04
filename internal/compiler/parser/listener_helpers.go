@@ -1,9 +1,11 @@
 package parser
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -337,21 +339,47 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:funlen
+func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) { //nolint:funlen
 	result := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
+		connMeta := src.Meta{
+			Text: connDef.GetText(),
+			Start: src.Position{
+				Line:   connDef.GetStart().GetLine(),
+				Column: connDef.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   connDef.GetStop().GetLine(),
+				Column: connDef.GetStop().GetColumn(),
+			},
+		}
+
 		if connDef.SingleSenderConn() == nil {
-			panic("multi sender connections are not implemented yet")
+			return nil, &compiler.Error{
+				Err:  errors.New("Multi sender connections are not implemented yet"),
+				Meta: &connMeta,
+			}
 		}
 
 		singleSenderConn := connDef.SingleSenderConn()
+
+		var senderSelectors []string
+		singleSenderSelectors := singleSenderConn.SingleSenderSide().StructSelectors()
+		if singleSenderSelectors != nil {
+			for _, id := range singleSenderSelectors.AllIDENTIFIER() {
+				senderSelectors = append(senderSelectors, id.GetText())
+			}
+		}
 
 		receiverSide := singleSenderConn.ConnReceiverSide()
 		singleReceiver := receiverSide.PortAddr()
 		multipleReceivers := receiverSide.ConnReceivers()
 		if singleReceiver == nil && multipleReceivers == nil {
-			panic("both nil")
+			return nil, &compiler.Error{
+				Err:  errors.New("Connection must have at least one receiver"),
+				Meta: &connMeta,
+			}
 		}
 
 		var receiverSides []src.ReceiverConnectionSide
@@ -399,8 +427,9 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 
 		var senderSidePortAddr *src.PortAddr
 		if senderSidePort != nil {
-			tmp := parsePortAddr(senderSidePort)
-			senderSidePortAddr = &tmp
+			senderSidePortAddr = utils.Pointer(
+				parsePortAddr(senderSidePort),
+			)
 		}
 
 		var constRef *src.EntityRef
@@ -435,7 +464,7 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 			SenderSide: src.SenderConnectionSide{
 				PortAddr:  senderSidePortAddr,
 				ConstRef:  constRef,
-				Selectors: []string{},
+				Selectors: senderSelectors,
 				Meta: src.Meta{
 					Text: senderSide.GetText(),
 					Start: src.Position{
@@ -449,21 +478,11 @@ func parseNet(actx generated.ICompNetDefContext) []src.Connection { //nolint:fun
 				},
 			},
 			ReceiverSides: receiverSides,
-			Meta: src.Meta{
-				Text: connDef.GetText(),
-				Start: src.Position{
-					Line:   connDef.GetStart().GetLine(),
-					Column: connDef.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   connDef.GetStop().GetLine(),
-					Column: connDef.GetStop().GetColumn(),
-				},
-			},
+			Meta:          connMeta,
 		})
 	}
 
-	return result
+	return result, nil
 }
 
 func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {

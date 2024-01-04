@@ -27,7 +27,7 @@ type handleStructSelectorsResult struct {
 // `substitution` connection must replace the one that relates to given sender side, `rest` must be inserted.
 // E.g. for `a.b/c -> d.e` it returns `(a.b -> selector.v, [selector.v -> d.e], nil)`
 // so `a.b/c -> d.e` replaced by `a.b -> selector.v` and `selector.v -> d.e` is inserted.
-func (d Desugarer) handleStructSelectors(
+func (d Desugarer) handleStructSelectors( //nolint:funlen
 	conn src.Connection,
 	nodes map[string]src.Node,
 	net []src.Connection,
@@ -44,7 +44,7 @@ func (d Desugarer) handleStructSelectors(
 
 	entityRef := src.EntityRef{
 		Pkg:  "builtin",
-		Name: "structSelector",
+		Name: "StructSelector",
 	}
 
 	var selectorNodeTypeArg ts.Expr
@@ -65,7 +65,7 @@ func (d Desugarer) handleStructSelectors(
 	// we will create constant, node and connection per each selector
 	constsToInsert := make(map[string]src.Const, len(senderSide.Selectors))
 	nodesToInsert := make(map[string]src.Node, len(senderSide.Selectors))
-	createdChain := make([]src.Connection, len(senderSide.Selectors))
+	createdChain := make([]src.Connection, 0, len(senderSide.Selectors))
 
 	// we're going to create chain of connections in a for loop where
 	// on each previous iteration receiver becomes next sender and so on until all selectors are precessed
@@ -86,7 +86,7 @@ func (d Desugarer) handleStructSelectors(
 
 	// for every selector create const, node that uses that const through directive and connection
 	// example: `$a/b/c -> d.e` becomes `[$a -> s(b), s(b) -> s(c), s(c) -> d.e]`
-	// not that $a (beggining of the chain) lost it's selectors and `d.e` receivers preserved at the end
+	// not that $a (beginning of the chain) lost it's selectors and `d.e` receivers preserved at the end
 	for _, fieldName := range senderSide.Selectors {
 		// create const with string value equal to the name of the struct field from selector
 		constName := fmt.Sprintf("__%v_const__", fieldName)
@@ -98,11 +98,11 @@ func (d Desugarer) handleStructSelectors(
 		}
 		constsToInsert[constName] = constant
 
-		// create struct selector node with directive refering that const with field name string
+		// create struct selector node with directive referring that const with field name string
 		nodeName := fmt.Sprintf("__%v_node__", fieldName)
 		selectorNode := src.Node{
 			Directives: map[src.Directive][]string{
-				compiler.RuntimeFuncDirective: []string{constName}, // refer that const
+				compiler.RuntimeFuncMsgDirective: {constName}, // refer that const
 			},
 			EntityRef: entityRef,
 			TypeArgs:  []typesystem.Expr{selectorNodeTypeArg},
@@ -123,7 +123,7 @@ func (d Desugarer) handleStructSelectors(
 		prev = selectorConn.SenderSide
 	}
 
-	// at this point we created the chain that is connected to original sender through it's beggining
+	// at this point we created the chain that is connected to original sender through it's beginning
 	// now we need to link chain's end with the original receiver
 	chainEnd := createdChain[len(createdChain)-1]
 	endOfTheCreatedChain := chainEnd.ReceiverSides[0] // every receiver in chain is always struct sender node
@@ -137,7 +137,7 @@ func (d Desugarer) handleStructSelectors(
 		ReceiverSides: conn.ReceiverSides, // this is where end of the chain is connected to original receiver
 	}
 
-	// finally let's split beggining form the rest of the chain
+	// finally let's split beginning form the rest of the chain
 	// because first one must replace the original one, while the rest must be inserted
 	connToReplace := createdChain[0]
 	connsToInsert := append(createdChain[1:], finalConnection)
@@ -150,7 +150,11 @@ func (d Desugarer) handleStructSelectors(
 	}, nil
 }
 
-func (d Desugarer) getNodeOutportType(portAddr src.PortAddr, nodes map[string]src.Node, scope src.Scope) (ts.Expr, *compiler.Error) {
+func (d Desugarer) getNodeOutportType(
+	portAddr src.PortAddr,
+	nodes map[string]src.Node,
+	scope src.Scope,
+) (ts.Expr, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{

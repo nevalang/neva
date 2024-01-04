@@ -150,7 +150,9 @@ type desugarEntityResult struct {
 
 func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEntityResult, *compiler.Error) {
 	if entity.Kind != src.ComponentEntity {
-		return desugarEntityResult{}, nil
+		return desugarEntityResult{
+			entity: entity,
+		}, nil
 	}
 
 	componentResult, err := d.desugarComponent(entity.Component, scope)

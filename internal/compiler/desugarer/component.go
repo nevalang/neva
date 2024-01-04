@@ -12,11 +12,11 @@ var ErrConstSenderEntityKind = errors.New("Entity that is used as a const refere
 
 type desugarComponentResult struct {
 	component      src.Component        // desugared component to replace
-	constsToInsert map[string]src.Const // sometimes after desugaring component we need to insert some constants to the package
+	constsToInsert map[string]src.Const //nolint:lll // sometimes after desugaring component we need to insert some constants to the package
 }
 
 // desugarComponent replaces const ref in net with regular port addr and injects const node with directive.
-func (d Desugarer) desugarComponent(
+func (d Desugarer) desugarComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
 ) (desugarComponentResult, *compiler.Error) {
