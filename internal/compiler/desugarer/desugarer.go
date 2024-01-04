@@ -11,9 +11,6 @@ import (
 // 1. Replaces const ref senders with normal nodes that uses Const component with compiler directive;
 // 2. Inserts void nodes and connections for every unused outport in the program;
 // 3. Replaces struct selectors with chain of struct selector nodes.
-// Each step can produce extra entities like constants, nodes, connections, etc.
-// Sometimes we need to know types, so it's not always possible to desugar invalid program.
-// Desugarer tries to avoid any unnecessary validations though. There's analyzer for that.
 type Desugarer struct{}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
@@ -122,6 +119,7 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 		}
 
 		desugaredEntities[entityName] = entityResult.entity
+
 		for name, entityToInsert := range entityResult.entitiesToInsert {
 			desugaredEntities[name] = entityToInsert
 		}

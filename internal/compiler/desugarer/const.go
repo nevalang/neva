@@ -8,8 +8,8 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-// handleConst inserts nodes and connections and returns resulted network (because new array could be allocated).
-func (d Desugarer) handleConst(
+// desugarConstSender inserts nodes and connections and returns resulted network (because new array could be allocated).
+func (d Desugarer) desugarConstSender(
 	conn src.Connection,
 	scope src.Scope,
 	desugaredNodes map[string]src.Node,

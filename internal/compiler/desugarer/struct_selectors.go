@@ -30,7 +30,7 @@ var selectorNodeRef = src.EntityRef{
 	Name: "StructSelector",
 }
 
-func (d Desugarer) handleStructSelectors( //nolint:funlen
+func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	conn src.Connection,
 	nodes map[string]src.Node,
 	net []src.Connection,
@@ -38,16 +38,13 @@ func (d Desugarer) handleStructSelectors( //nolint:funlen
 ) (handleStructSelectorsResult, *compiler.Error) {
 	senderSide := conn.SenderSide
 
-	if senderSide.ConstRef == nil && senderSide.PortAddr == nil {
-		return handleStructSelectorsResult{}, &compiler.Error{
-			Err:      ErrEmptySenderSide,
-			Location: &scope.Location,
-		}
-	}
-
 	structType, err := d.getSenderType(senderSide, scope, nodes)
 	if err != nil {
-		return handleStructSelectorsResult{}, err
+		return handleStructSelectorsResult{}, compiler.Error{
+			Err:      errors.New("Cannot get sender type"),
+			Location: &scope.Location,
+			Meta:     &senderSide.Meta,
+		}.Merge(err)
 	}
 
 	lastFIeldType, err := d.getStructFieldType(structType, senderSide.Selectors)
@@ -55,6 +52,7 @@ func (d Desugarer) handleStructSelectors( //nolint:funlen
 		return handleStructSelectorsResult{}, compiler.Error{
 			Err:      errors.New("Cannot desugar struct selectors"),
 			Location: &scope.Location,
+			Meta:     &senderSide.Meta,
 		}.Merge(err)
 	}
 
@@ -118,13 +116,6 @@ func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (t
 	if len(selectors) == 0 {
 		return ts.Expr{}, &compiler.Error{
 			Err:  ErrStructFieldNotFound,
-			Meta: meta,
-		}
-	}
-
-	if structType.Lit == nil || structType.Lit.Struct == nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:  fmt.Errorf("%w: %v", ErrTypeNotStruct, structType.String()),
 			Meta: meta,
 		}
 	}

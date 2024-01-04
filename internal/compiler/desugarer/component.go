@@ -49,14 +49,18 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		}
 
 		if len(conn.SenderSide.Selectors) != 0 {
-			selectorsResult, err := d.handleStructSelectors(
+			selectorsResult, err := d.desugarStructSelectors(
 				conn,
 				desugaredNodes,
 				desugaredNet,
 				scope,
 			)
 			if err != nil {
-				return desugarComponentResult{}, err
+				return desugarComponentResult{}, compiler.Error{
+					Err:      errors.New("Cannot desugar struct selectors"),
+					Location: &scope.Location,
+					Meta:     &conn.Meta,
+				}.Merge(err)
 			}
 			maps.Copy(desugaredNodes, selectorsResult.nodesToInsert)
 			maps.Copy(constsToInsert, selectorsResult.constsToInsert)
@@ -69,7 +73,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			continue
 		}
 
-		netAfterConstDesugar, err := d.handleConst(conn, scope, desugaredNodes, desugaredNet)
+		netAfterConstDesugar, err := d.desugarConstSender(conn, scope, desugaredNodes, desugaredNet)
 		if err != nil {
 			return desugarComponentResult{}, err
 		}
