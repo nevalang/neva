@@ -37,6 +37,7 @@ func main() {
 		desugarer,
 		analyzer,
 		irgen,
+		nil, // we don't need backend for interpretation
 	)
 
 	// interpreter

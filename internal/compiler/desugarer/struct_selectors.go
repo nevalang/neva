@@ -52,7 +52,10 @@ func (d Desugarer) handleStructSelectors( //nolint:funlen
 
 	lastFIeldType, err := d.getStructFieldType(structType, senderSide.Selectors)
 	if err != nil {
-		return handleStructSelectorsResult{}, err
+		return handleStructSelectorsResult{}, compiler.Error{
+			Err:      errors.New("Cannot desugar struct selectors"),
+			Location: &scope.Location,
+		}.Merge(err)
 	}
 
 	selectorsStr := strings.Join(senderSide.Selectors, "_")
@@ -107,15 +110,22 @@ func (d Desugarer) handleStructSelectors( //nolint:funlen
 }
 
 func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (ts.Expr, *compiler.Error) {
+	var meta *src.Meta
+	if m, ok := structType.Meta.(src.Meta); ok {
+		meta = &m
+	}
+
 	if len(selectors) == 0 {
 		return ts.Expr{}, &compiler.Error{
-			Err: ErrStructFieldNotFound,
+			Err:  ErrStructFieldNotFound,
+			Meta: meta,
 		}
 	}
 
 	if structType.Lit == nil || structType.Lit.Struct == nil {
 		return ts.Expr{}, &compiler.Error{
-			Err: ErrTypeNotStruct,
+			Err:  fmt.Errorf("%w: %v", ErrTypeNotStruct, structType.String()),
+			Meta: meta,
 		}
 	}
 
@@ -123,7 +133,8 @@ func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (t
 	fieldType, ok := structType.Lit.Struct[curField]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err: fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
+			Err:  fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
+			Meta: meta,
 		}
 	}
 

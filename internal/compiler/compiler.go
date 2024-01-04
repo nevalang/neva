@@ -45,21 +45,21 @@ func (c Compiler) CompileToIR(
 		Modules:     parsedMods,
 	}
 
-	desugaredBuild, err := c.desugarer.Desugar(parsedBuild)
-	if err != nil {
-		return nil, err
-	}
-
 	if strings.HasPrefix(mainPkgName, "./") {
 		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
 	}
 
-	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(desugaredBuild, mainPkgName)
+	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(parsedBuild, mainPkgName)
 	if err != nil {
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(ctx, analyzedBuild, mainPkgName)
+	desugaredBuild, err := c.desugarer.Desugar(analyzedBuild)
+	if err != nil {
+		return nil, err
+	}
+
+	irProg, err := c.irgen.Generate(ctx, desugaredBuild, mainPkgName)
 	if err != nil {
 		return nil, err
 	}
@@ -67,17 +67,20 @@ func (c Compiler) CompileToIR(
 	return irProg, nil
 }
 
-// New creates new Compiler instance. You can omit irgen if all you need is Analyze method.
+// New creates new Compiler instance.
+// You can omit irgen and backend if all you need is Analyze method.
 func New(
 	parser Parser,
 	desugarer Desugarer,
 	analyzer Analyzer,
 	irgen IRGenerator,
+	backend Backend,
 ) Compiler {
 	return Compiler{
 		parser:    parser,
 		desugarer: desugarer,
 		analyzer:  analyzer,
 		irgen:     irgen,
+		backend:   backend,
 	}
 }
