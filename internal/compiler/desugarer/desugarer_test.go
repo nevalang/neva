@@ -3,14 +3,11 @@ package desugarer
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
 )
-
-var p = parser.New(false)
 
 func TestDesugarer_Desugar(t *testing.T) {
 	tests := []struct {
@@ -294,14 +291,6 @@ func TestDesugarer_Desugar(t *testing.T) {
 			require.Equal(t, tt.want, got)
 		})
 	}
-}
-
-func mustParseFile(s string) src.File {
-	file, err := p.ParseFile([]byte(s))
-	if err != nil {
-		panic(err)
-	}
-	return file
 }
 
 func injectStd(file src.File) src.File {

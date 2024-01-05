@@ -18,7 +18,7 @@ func (a Analyzer) analyzeComponentNodes(
 		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
 		if err != nil {
 			return nil, nil, compiler.Error{
-				Err:      fmt.Errorf("Invalid node '%v'", nodeName),
+				Err:      fmt.Errorf("Invalid node '%v %v", nodeName, node),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}.Merge(err)

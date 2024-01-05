@@ -39,13 +39,13 @@ func TestValidator_Validate(t *testing.T) {
 		// rec
 		{
 			name:    "empty rec (non-empty lit)",
-			expr:    h.Rec(nil),
+			expr:    h.Struct(nil),
 			wantErr: nil,
 		},
 		// non-empty rec
 		{
 			name: "empty rec lit",
-			expr: h.Rec(map[string]ts.Expr{
+			expr: h.Struct(map[string]ts.Expr{
 				"foo": h.Inst("int"),
 			}),
 			wantErr: nil,

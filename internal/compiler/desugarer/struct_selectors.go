@@ -47,10 +47,11 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 		}.Merge(err)
 	}
 
-	lastFIeldType, err := d.getStructFieldType(structType, senderSide.Selectors)
+	var e error
+	lastFIeldType, e := ts.GetStructFieldTypeByPath(structType, senderSide.Selectors)
 	if err != nil {
 		return handleStructSelectorsResult{}, compiler.Error{
-			Err:      errors.New("Cannot desugar struct selectors"),
+			Err:      e,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
 		}.Merge(err)
@@ -68,14 +69,17 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			compiler.RuntimeFuncMsgDirective: {constName},
 		},
 		EntityRef: selectorNodeRef,
-		TypeArgs:  []ts.Expr{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
+		TypeArgs:  src.TypeArgs{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
 	}
 
 	// original connection must be replaced with two new connections, this is the first one
 	connToReplace := src.Connection{
 		SenderSide: src.SenderConnectionSide{
-			PortAddr:  senderSide.PortAddr, // preserve original sender port
-			Selectors: nil,                 // remove selectors in desugared version
+			// preserve original sender port
+			PortAddr: senderSide.PortAddr,
+			ConstRef: senderSide.ConstRef,
+			// remove selectors in desugared version
+			Selectors: nil,
 		},
 		ReceiverSides: []src.ReceiverConnectionSide{
 			{

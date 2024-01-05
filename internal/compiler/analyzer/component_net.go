@@ -19,8 +19,6 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
-	// TODO handle struct selectors for sender
-
 	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
 
 	for _, conn := range net {
@@ -45,13 +43,13 @@ func (a Analyzer) analyzeComponentNetwork(
 		}
 
 		if len(conn.SenderSide.Selectors) > 0 {
-			lastFieldType, err := a.analyzeSenderSelectors(outportTypeExpr, conn.SenderSide.Selectors)
+			lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.SenderSide.Selectors)
 			if err != nil {
-				return nil, compiler.Error{
-					Err:      errors.New("Sender side selectors are invalid"),
+				return nil, &compiler.Error{
+					Err:      err,
 					Location: &scope.Location,
 					Meta:     &conn.Meta,
-				}.Merge(err)
+				}
 			}
 			outportTypeExpr = lastFieldType
 		}
@@ -413,36 +411,4 @@ func (a Analyzer) getResolvedConstType(ref src.EntityRef, scope src.Scope) (ts.E
 	}
 
 	return resolvedExpr, nil
-}
-
-func (a Analyzer) analyzeSenderSelectors(
-	senderType ts.Expr,
-	selectors []string,
-) (ts.Expr, *compiler.Error) {
-	var meta *src.Meta
-	if m, ok := senderType.Meta.(src.Meta); ok {
-		meta = &m
-	}
-
-	if senderType.Lit == nil || senderType.Lit.Struct == nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:  fmt.Errorf("Type not struct: %v", senderType.String()),
-			Meta: meta,
-		}
-	}
-
-	curField := selectors[0]
-	fieldType, ok := senderType.Lit.Struct[curField]
-	if !ok {
-		return ts.Expr{}, &compiler.Error{
-			Err:  fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
-			Meta: meta,
-		}
-	}
-
-	if len(selectors) == 1 {
-		return senderType, nil
-	}
-
-	return a.analyzeSenderSelectors(fieldType, selectors[1:])
 }

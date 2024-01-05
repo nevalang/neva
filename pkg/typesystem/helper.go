@@ -62,13 +62,13 @@ func (h Helper) Union(els ...Expr) Expr {
 	}
 }
 
-func (h Helper) Rec(rec map[string]Expr) Expr {
-	if rec == nil { // for !lit.Empty()
-		rec = map[string]Expr{}
+func (h Helper) Struct(structure map[string]Expr) Expr {
+	if structure == nil { // for !lit.Empty()
+		structure = map[string]Expr{}
 	}
 	return Expr{
 		Lit: &LitExpr{
-			Struct: rec,
+			Struct: structure,
 		},
 	}
 }

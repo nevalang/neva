@@ -22,7 +22,7 @@ type Module struct {
 func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", ErrPkgNotFound
+		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
 	}
 	entity, filename, ok = pkg.Entity(entityRef.Name)
 	if !ok {
@@ -165,6 +165,10 @@ type Node struct {
 	Meta       Meta                   `json:"meta,omitempty"`
 }
 
+func (n Node) String() string {
+	return fmt.Sprintf("%v%v", n.EntityRef.String(), n.TypeArgs.String())
+}
+
 type TypeArgs []ts.Expr
 
 func (t TypeArgs) String() string {
@@ -176,10 +180,6 @@ func (t TypeArgs) String() string {
 		}
 	}
 	return s + ">"
-}
-
-func (n Node) String() string {
-	return n.EntityRef.String()
 }
 
 type EntityRef struct {
@@ -265,7 +265,7 @@ func (r ReceiverConnectionSide) String() string {
 	if len(r.Selectors) == 0 {
 		return r.PortAddr.String()
 	}
-	return fmt.Sprint("%v/%v", r.PortAddr, r.Selectors)
+	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.

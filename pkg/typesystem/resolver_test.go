@@ -348,7 +348,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		"empty_record": func() testcase { // {}
-			expr := h.Rec(map[string]ts.Expr{})
+			expr := h.Struct(map[string]ts.Expr{})
 			scope := TestScope{}
 			return testcase{
 				scope: scope,
@@ -356,12 +356,12 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				prepareValidator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(expr).Return(nil)
 				},
-				want: h.Rec(map[string]ts.Expr{}),
+				want: h.Struct(map[string]ts.Expr{}),
 			}
 		},
 		"record_with_invalid field": func() testcase { // { name string }
 			stringExpr := h.Inst("string")
-			expr := h.Rec(map[string]ts.Expr{"name": stringExpr})
+			expr := h.Struct(map[string]ts.Expr{"name": stringExpr})
 			scope := TestScope{}
 			return testcase{
 				expr:  expr,
@@ -375,7 +375,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		},
 		"record_with_valid_field": func() testcase { // { name string }
 			stringExpr := h.Inst("string")
-			expr := h.Rec(map[string]ts.Expr{
+			expr := h.Struct(map[string]ts.Expr{
 				"name": stringExpr,
 			})
 			scope := TestScope{

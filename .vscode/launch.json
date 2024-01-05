@@ -63,22 +63,13 @@
       "args": ["di"]
     },
     {
-      "name": "Interpreter: add_numbers/with_error_handling",
+      "name": "Interpreter: struct_fields/with_sugar",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/interpreter",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["add_numbers/with_error_handling"]
-    },
-    {
-      "name": "Interpreter: add_numbers/with_sub_components",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["add_numbers/with_sub_components"]
+      "args": ["struct_fields/with_sugar"]
     },
     // === Other ===
     {

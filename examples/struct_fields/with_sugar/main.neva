@@ -15,7 +15,7 @@ const {
 components {
     Main(enter) (exit) {
         nodes {
-            lock Lock<User>
+            lock Lock<str>
             print Print<str>
         }
         net {
