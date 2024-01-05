@@ -31,11 +31,32 @@ type nevaListener interface {
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
 
+	// EnterImportAlias is called when entering the importAlias production.
+	EnterImportAlias(c *ImportAliasContext)
+
 	// EnterImportPath is called when entering the importPath production.
 	EnterImportPath(c *ImportPathContext)
 
+	// EnterImportPathMod is called when entering the importPathMod production.
+	EnterImportPathMod(c *ImportPathModContext)
+
+	// EnterImportPathPkg is called when entering the importPathPkg production.
+	EnterImportPathPkg(c *ImportPathPkgContext)
+
 	// EnterEntityRef is called when entering the entityRef production.
 	EnterEntityRef(c *EntityRefContext)
+
+	// EnterLocalEntityRef is called when entering the localEntityRef production.
+	EnterLocalEntityRef(c *LocalEntityRefContext)
+
+	// EnterImportedEntityRef is called when entering the importedEntityRef production.
+	EnterImportedEntityRef(c *ImportedEntityRefContext)
+
+	// EnterPkgRef is called when entering the pkgRef production.
+	EnterPkgRef(c *PkgRefContext)
+
+	// EnterEntityName is called when entering the entityName production.
+	EnterEntityName(c *EntityNameContext)
 
 	// EnterTypeStmt is called when entering the typeStmt production.
 	EnterTypeStmt(c *TypeStmtContext)
@@ -166,20 +187,38 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterSenderSide is called when entering the senderSide production.
-	EnterSenderSide(c *SenderSideContext)
+	// EnterSingleSenderConn is called when entering the singleSenderConn production.
+	EnterSingleSenderConn(c *SingleSenderConnContext)
+
+	// EnterMultiSenderConn is called when entering the multiSenderConn production.
+	EnterMultiSenderConn(c *MultiSenderConnContext)
+
+	// EnterMultiSenderConnLine is called when entering the multiSenderConnLine production.
+	EnterMultiSenderConnLine(c *MultiSenderConnLineContext)
+
+	// EnterMultiSenderSide is called when entering the multiSenderSide production.
+	EnterMultiSenderSide(c *MultiSenderSideContext)
+
+	// EnterSingleSenderSide is called when entering the singleSenderSide production.
+	EnterSingleSenderSide(c *SingleSenderSideContext)
+
+	// EnterSenderConstRef is called when entering the senderConstRef production.
+	EnterSenderConstRef(c *SenderConstRefContext)
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
-	// EnterIoNodePortAddr is called when entering the ioNodePortAddr production.
-	EnterIoNodePortAddr(c *IoNodePortAddrContext)
+	// EnterPortAddrNode is called when entering the portAddrNode production.
+	EnterPortAddrNode(c *PortAddrNodeContext)
 
-	// EnterPortDirection is called when entering the portDirection production.
-	EnterPortDirection(c *PortDirectionContext)
+	// EnterPortAddrPort is called when entering the portAddrPort production.
+	EnterPortAddrPort(c *PortAddrPortContext)
 
-	// EnterNormalNodePortAddr is called when entering the normalNodePortAddr production.
-	EnterNormalNodePortAddr(c *NormalNodePortAddrContext)
+	// EnterPortAddrIdx is called when entering the portAddrIdx production.
+	EnterPortAddrIdx(c *PortAddrIdxContext)
+
+	// EnterStructSelectors is called when entering the structSelectors production.
+	EnterStructSelectors(c *StructSelectorsContext)
 
 	// EnterConnReceiverSide is called when entering the connReceiverSide production.
 	EnterConnReceiverSide(c *ConnReceiverSideContext)
@@ -211,11 +250,32 @@ type nevaListener interface {
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)
 
+	// ExitImportAlias is called when exiting the importAlias production.
+	ExitImportAlias(c *ImportAliasContext)
+
 	// ExitImportPath is called when exiting the importPath production.
 	ExitImportPath(c *ImportPathContext)
 
+	// ExitImportPathMod is called when exiting the importPathMod production.
+	ExitImportPathMod(c *ImportPathModContext)
+
+	// ExitImportPathPkg is called when exiting the importPathPkg production.
+	ExitImportPathPkg(c *ImportPathPkgContext)
+
 	// ExitEntityRef is called when exiting the entityRef production.
 	ExitEntityRef(c *EntityRefContext)
+
+	// ExitLocalEntityRef is called when exiting the localEntityRef production.
+	ExitLocalEntityRef(c *LocalEntityRefContext)
+
+	// ExitImportedEntityRef is called when exiting the importedEntityRef production.
+	ExitImportedEntityRef(c *ImportedEntityRefContext)
+
+	// ExitPkgRef is called when exiting the pkgRef production.
+	ExitPkgRef(c *PkgRefContext)
+
+	// ExitEntityName is called when exiting the entityName production.
+	ExitEntityName(c *EntityNameContext)
 
 	// ExitTypeStmt is called when exiting the typeStmt production.
 	ExitTypeStmt(c *TypeStmtContext)
@@ -346,20 +406,38 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
-	// ExitSenderSide is called when exiting the senderSide production.
-	ExitSenderSide(c *SenderSideContext)
+	// ExitSingleSenderConn is called when exiting the singleSenderConn production.
+	ExitSingleSenderConn(c *SingleSenderConnContext)
+
+	// ExitMultiSenderConn is called when exiting the multiSenderConn production.
+	ExitMultiSenderConn(c *MultiSenderConnContext)
+
+	// ExitMultiSenderConnLine is called when exiting the multiSenderConnLine production.
+	ExitMultiSenderConnLine(c *MultiSenderConnLineContext)
+
+	// ExitMultiSenderSide is called when exiting the multiSenderSide production.
+	ExitMultiSenderSide(c *MultiSenderSideContext)
+
+	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
+	ExitSingleSenderSide(c *SingleSenderSideContext)
+
+	// ExitSenderConstRef is called when exiting the senderConstRef production.
+	ExitSenderConstRef(c *SenderConstRefContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
 
-	// ExitIoNodePortAddr is called when exiting the ioNodePortAddr production.
-	ExitIoNodePortAddr(c *IoNodePortAddrContext)
+	// ExitPortAddrNode is called when exiting the portAddrNode production.
+	ExitPortAddrNode(c *PortAddrNodeContext)
 
-	// ExitPortDirection is called when exiting the portDirection production.
-	ExitPortDirection(c *PortDirectionContext)
+	// ExitPortAddrPort is called when exiting the portAddrPort production.
+	ExitPortAddrPort(c *PortAddrPortContext)
 
-	// ExitNormalNodePortAddr is called when exiting the normalNodePortAddr production.
-	ExitNormalNodePortAddr(c *NormalNodePortAddrContext)
+	// ExitPortAddrIdx is called when exiting the portAddrIdx production.
+	ExitPortAddrIdx(c *PortAddrIdxContext)
+
+	// ExitStructSelectors is called when exiting the structSelectors production.
+	ExitStructSelectors(c *StructSelectorsContext)
 
 	// ExitConnReceiverSide is called when exiting the connReceiverSide production.
 	ExitConnReceiverSide(c *ConnReceiverSideContext)

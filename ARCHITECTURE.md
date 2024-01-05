@@ -16,21 +16,21 @@ flowchart LR
             go-code-generator
         end
 
-        parser -->|parsed-build| desugarer
+        parser -->|parsed-build| analyzer
 
         subgraph parser
             antlr
         end
 
-        desugarer -->|desugared-build| analyzer
+        analyzer -->|analyzed-build| desugarer
 
         subgraph analyzer
             typesystem
         end
 
-        analyzer -->|analyzed-build| ir-generator
+        desugarer -->|desugared-build| irgen
 
-        ir-generator -->|ir| backend
+        irgen -->|ir| backend
     end
 
     compiler -->|go-code| go-compiler

@@ -1,0 +1,28 @@
+types {
+    User struct {
+        age int
+        name str
+    }
+}
+
+const {
+    u User {
+        age: 32
+        name: 'john'
+    }
+}
+
+components {
+    Main(enter) (exit) {
+        nodes {
+            lock Lock<str>
+            print Print<str>
+        }
+        net {
+            in.enter -> lock.sig
+            $u/name -> lock.v
+            lock.v -> print.v
+            print.v -> out.exit
+        }
+    }
+}

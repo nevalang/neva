@@ -7,7 +7,7 @@ types {
     pub int
     pub float
     pub map<T>
-    pub vec<V>
+    pub list<V>
 }
 
 components {

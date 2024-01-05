@@ -23,18 +23,20 @@ func (s *treeShapeListener) EnterUseStmt(actx *generated.ImportStmtContext) {
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	path := strings.Split(actx.ImportPath().GetText(), "/")
+	path := actx.ImportPath()
+	pkgName := path.ImportPathPkg().GetText()
 
 	var alias string
-	if id := actx.IDENTIFIER(); id != nil {
-		alias = actx.IDENTIFIER().GetText()
+	if tmp := actx.ImportAlias(); tmp != nil {
+		alias = tmp.GetText()
 	} else {
-		alias = path[len(path)-1]
+		parts := strings.Split(pkgName, "/")
+		alias = parts[len(parts)-1]
 	}
 
 	s.file.Imports[alias] = src.Import{
-		ModuleName: path[0],
-		PkgName:    strings.Join(path[1:], "/"),
+		ModuleName: path.ImportPathMod().GetText(),
+		PkgName:    pkgName,
 	}
 }
 
@@ -121,7 +123,7 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 	directives := parseCompilerDirectives(actx.CompilerDirectives())
 
 	var cmp src.Entity
-	if body := actx.CompBody(); body == nil {
+	if body := actx.CompBody(); body == nil { //nolint:nestif
 		cmp = src.Entity{
 			IsPublic: isPublic,
 			Kind:     src.ComponentEntity,
@@ -139,7 +141,11 @@ func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
 
 		var net []src.Connection
 		if netDef := body.CompNetDef(); netDef != nil {
-			net = parseNet(netDef)
+			parsedNet, err := parseNet(netDef)
+			if err != nil {
+				panic(err)
+			}
+			net = parsedNet
 		}
 
 		cmp = src.Entity{

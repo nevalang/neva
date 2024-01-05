@@ -12,39 +12,36 @@ var (
 	ErrFuncConstructor = errors.New("func constructor")
 )
 
-const CtxMsgKey = "msg"
-
 type FuncRunner struct {
-	registry map[string]Func
+	registry map[string]FuncCreator
 }
 
-func MustNewFuncRunner(registry map[string]Func) FuncRunner {
-	if registry == nil {
-		panic(ErrNilDeps)
-	}
-	return FuncRunner{registry: registry}
+type FuncCreator interface {
+	Create(FuncIO, Msg) (func(context.Context), error)
 }
 
 func (d FuncRunner) Run(funcCalls []FuncCall) (func(ctx context.Context), error) {
-	routines := make([]func(context.Context), len(funcCalls))
+	funcs := make([]func(context.Context), len(funcCalls))
 
 	for i, call := range funcCalls {
-		constructor, ok := d.registry[call.Ref]
+		creator, ok := d.registry[call.Ref]
 		if !ok {
 			return nil, fmt.Errorf("%w: %v", ErrFuncNotFound, call.Ref)
 		}
-		handler, err := constructor(call.IO, call.MetaMsg)
+
+		handler, err := creator.Create(call.IO, call.MetaMsg)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, call.Ref)
 		}
-		routines[i] = handler
+
+		funcs[i] = handler
 	}
 
 	return func(ctx context.Context) {
 		wg := sync.WaitGroup{}
-		wg.Add(len(routines))
-		for i := range routines {
-			routine := routines[i]
+		wg.Add(len(funcs))
+		for i := range funcs {
+			routine := funcs[i]
 			go func() {
 				routine(ctx)
 				wg.Done()
@@ -52,4 +49,11 @@ func (d FuncRunner) Run(funcCalls []FuncCall) (func(ctx context.Context), error)
 		}
 		wg.Wait()
 	}, nil
+}
+
+func MustNewFuncRunner(registry map[string]FuncCreator) FuncRunner {
+	if registry == nil {
+		panic(ErrNilDeps)
+	}
+	return FuncRunner{registry: registry}
 }

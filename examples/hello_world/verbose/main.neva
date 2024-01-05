@@ -16,7 +16,7 @@ components {
 		}
 		net {
 			in.enter -> lock.sig
-			msg -> lock.v
+			msg.v -> lock.v
 			lock.v -> print.v
 			print.v -> out.exit
 		}

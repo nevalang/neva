@@ -22,10 +22,6 @@ func New(connector Connector, funcRunner FuncRunner) Runtime {
 	}
 }
 
-type (
-	Func func(FuncIO, Msg) (func(context.Context), error)
-)
-
 var (
 	ErrStartPortNotFound = errors.New("enter port not found")
 	ErrExitPortNotFound  = errors.New("exit port not found")

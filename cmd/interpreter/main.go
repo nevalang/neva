@@ -19,7 +19,7 @@ import (
 func main() {
 	// runtime
 	connector := runtime.NewDefaultConnector()
-	funcRunner := runtime.MustNewFuncRunner(funcs.Registry())
+	funcRunner := runtime.MustNewFuncRunner(funcs.CreatorRegistry())
 	r := runtime.New(connector, funcRunner)
 
 	// type-system
@@ -37,6 +37,7 @@ func main() {
 		desugarer,
 		analyzer,
 		irgen,
+		nil, // we don't need backend for interpretation
 	)
 
 	// interpreter

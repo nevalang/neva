@@ -6,7 +6,7 @@ types {
 }
 
 const {
-    fieldName str 'name'
+    path list<str> ['name']
     
     u User {
         age: 32
@@ -18,26 +18,16 @@ components {
     Main(enter) (exit) {
         nodes {
             lock Lock<User>
-            nameGetter NameGetter
             print Print<str>
-        }
-        net {
-            in.enter -> lock.sig
-            u -> lock.v
-            lock.v -> nameGetter.u
-            nameGetter.name -> print.v
-            print.v -> out.exit
-        }
-    }
-    
-    NameGetter(u User) (name str) {
-        nodes {
-            #runtime_func_msg(fieldName)
+            #runtime_func_msg(path)
             selector StructSelector<str>
         }
         net {
-            in.u -> selector.v
-            selector.v -> out.name
+            in.enter -> lock.sig
+            $u -> lock.v
+            lock.v -> selector.v
+            selector.v -> print.v
+            print.v -> out.exit
         }
     }
 }

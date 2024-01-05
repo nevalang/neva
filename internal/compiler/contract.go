@@ -29,12 +29,12 @@ type (
 
 	RawPackage map[string][]byte
 
-	Desugarer interface {
-		Desugar(build src.Build) (src.Build, *Error)
-	}
-
 	Analyzer interface {
 		AnalyzeExecutableBuild(mod src.Build, mainPkgName string) (src.Build, *Error)
+	}
+
+	Desugarer interface {
+		Desugar(build src.Build) (src.Build, *Error)
 	}
 
 	IRGenerator interface {

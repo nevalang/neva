@@ -186,8 +186,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		// rec
 		{
 			name:    "subtype and supertype are records, subtype has less fields",
-			subType: h.Rec(nil),
-			superType: h.Rec(map[string]ts.Expr{
+			subType: h.Struct(nil),
+			superType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst(""),
 			}),
 			wantErr: ts.ErrRecLen,
@@ -212,11 +212,11 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		{
 			name: "subtype and supertype recs, subtype has incompat field",
-			subType: h.Rec(map[string]ts.Expr{
+			subType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst(""),
 				"b": h.Inst(""),
 			}),
-			superType: h.Rec(map[string]ts.Expr{
+			superType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst("x"),
 			}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
@@ -226,11 +226,11 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		{ // { a x, b {} }, { a x }
 			name: "subtype and supertype are both records, subtype has all supertype fields, all fields compatible",
-			subType: h.Rec(map[string]ts.Expr{
+			subType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst("x"),
 				"b": {},
 			}),
-			superType: h.Rec(map[string]ts.Expr{
+			superType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst("x"),
 			}),
 			subtypeTrace:   ts.Trace{},

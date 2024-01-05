@@ -138,10 +138,12 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 		mod = depMod
 	}
 
-	entity, fileName, err := mod.Entity(EntityRef{
+	ref := EntityRef{
 		Pkg:  pkgImport.PkgName,
 		Name: entityRef.Name,
-	})
+	}
+
+	entity, fileName, err := mod.Entity(ref)
 	if err != nil {
 		return Entity{}, Location{}, err
 	}

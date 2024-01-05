@@ -37,13 +37,13 @@ func TestDefaultResolver(t *testing.T) {
 			scope: TestScope{
 				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 				"t1": h.Def(
-					h.Rec(map[string]ts.Expr{
+					h.Struct(map[string]ts.Expr{
 						"a": h.Inst("vec", h.Inst("t1")),
 					}),
 				),
 			},
 			expr: h.Inst("t1"),
-			want: h.Rec(map[string]ts.Expr{
+			want: h.Struct(map[string]ts.Expr{
 				"a": h.Inst("vec", h.Inst("t1")),
 			}),
 		},

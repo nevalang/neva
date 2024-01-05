@@ -18,8 +18,8 @@ components {
                 valueLock.sig
             }
             
-            mapKey -> keyLock.v
-            agesMap -> valueLock.v
+            $mapKey -> keyLock.v
+            $agesMap -> valueLock.v
             
             keyLock.v -> selector.k
             valueLock.v -> selector.v

@@ -22,13 +22,21 @@ type Module struct {
 func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", ErrPkgNotFound
+		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
 	}
 	entity, filename, ok = pkg.Entity(entityRef.Name)
 	if !ok {
 		return Entity{}, "", fmt.Errorf("%w: '%v'", ErrEntityNotFound, entityRef.Name)
 	}
 	return entity, filename, nil
+}
+
+func (mod Module) Files(f func(file File, pkgName, fileName string)) {
+	for pkgName, pkg := range mod.Packages {
+		for fileName, file := range pkg {
+			f(file, pkgName, fileName)
+		}
+	}
 }
 
 type ModuleManifest struct {
@@ -157,6 +165,10 @@ type Node struct {
 	Meta       Meta                   `json:"meta,omitempty"`
 }
 
+func (n Node) String() string {
+	return fmt.Sprintf("%v%v", n.EntityRef.String(), n.TypeArgs.String())
+}
+
 type TypeArgs []ts.Expr
 
 func (t TypeArgs) String() string {
@@ -168,10 +180,6 @@ func (t TypeArgs) String() string {
 		}
 	}
 	return s + ">"
-}
-
-func (n Node) String() string {
-	return n.EntityRef.String()
 }
 
 type EntityRef struct {
@@ -200,7 +208,7 @@ type Msg struct {
 	Float    *float64         `json:"float,omitempty"`
 	Str      *string          `json:"str,omitempty"`
 	List     []Const          `json:"vec,omitempty"`
-	Map      map[string]Const `json:"map,omitempty"`
+	Map      map[string]Const `json:"map,omitempty"` // Used for both maps and structs
 	Meta     Meta             `json:"meta,omitempty"`
 }
 
@@ -216,15 +224,48 @@ type Port struct {
 }
 
 type Connection struct {
-	SenderSide    SenderConnectionSide     `json:"senderSide,omitempty"`
-	ReceiverSides []ReceiverConnectionSide `json:"receiverSide,omitempty"`
-	Meta          Meta                     `json:"meta,omitempty"`
+	SenderSide    SenderConnectionSide    `json:"senderSide,omitempty"`
+	ReceiverSides ReceiverConnectionSides `json:"receiverSide,omitempty"`
+	Meta          Meta                    `json:"meta,omitempty"`
+}
+
+type ReceiverConnectionSides []ReceiverConnectionSide
+
+func (r ReceiverConnectionSides) String() string {
+	// s := ""
+	// for _, side := range r {
+	// 	side.
+	// }
+	return ""
 }
 
 type ReceiverConnectionSide struct {
-	PortAddr  PortAddr `json:"portAddr,omitempty"`
-	Selectors []string `json:"selectors,omitempty"`
-	Meta      Meta     `json:"meta,omit"`
+	PortAddr  PortAddr                `json:"portAddr,omitempty"`
+	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
+	Meta      Meta                    `json:"meta,omit"`
+}
+
+type ConnectionSideSelectors []string
+
+func (c ConnectionSideSelectors) String() string {
+	if len(c) == 0 {
+		return ""
+	}
+	s := ""
+	for i, field := range c {
+		s += field
+		if i != len(c)-1 {
+			s += "/"
+		}
+	}
+	return s
+}
+
+func (r ReceiverConnectionSide) String() string {
+	if len(r.Selectors) == 0 {
+		return r.PortAddr.String()
+	}
+	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
 }
 
 // SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.

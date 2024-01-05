@@ -1,0 +1,7 @@
+components {
+	Main() () {
+		net {
+            $foo/bar/baz -> foo.bar
+		}
+	}
+}

@@ -68,17 +68,59 @@ func (s *BasenevaListener) EnterImportDef(ctx *ImportDefContext) {}
 // ExitImportDef is called when production importDef is exited.
 func (s *BasenevaListener) ExitImportDef(ctx *ImportDefContext) {}
 
+// EnterImportAlias is called when production importAlias is entered.
+func (s *BasenevaListener) EnterImportAlias(ctx *ImportAliasContext) {}
+
+// ExitImportAlias is called when production importAlias is exited.
+func (s *BasenevaListener) ExitImportAlias(ctx *ImportAliasContext) {}
+
 // EnterImportPath is called when production importPath is entered.
 func (s *BasenevaListener) EnterImportPath(ctx *ImportPathContext) {}
 
 // ExitImportPath is called when production importPath is exited.
 func (s *BasenevaListener) ExitImportPath(ctx *ImportPathContext) {}
 
+// EnterImportPathMod is called when production importPathMod is entered.
+func (s *BasenevaListener) EnterImportPathMod(ctx *ImportPathModContext) {}
+
+// ExitImportPathMod is called when production importPathMod is exited.
+func (s *BasenevaListener) ExitImportPathMod(ctx *ImportPathModContext) {}
+
+// EnterImportPathPkg is called when production importPathPkg is entered.
+func (s *BasenevaListener) EnterImportPathPkg(ctx *ImportPathPkgContext) {}
+
+// ExitImportPathPkg is called when production importPathPkg is exited.
+func (s *BasenevaListener) ExitImportPathPkg(ctx *ImportPathPkgContext) {}
+
 // EnterEntityRef is called when production entityRef is entered.
 func (s *BasenevaListener) EnterEntityRef(ctx *EntityRefContext) {}
 
 // ExitEntityRef is called when production entityRef is exited.
 func (s *BasenevaListener) ExitEntityRef(ctx *EntityRefContext) {}
+
+// EnterLocalEntityRef is called when production localEntityRef is entered.
+func (s *BasenevaListener) EnterLocalEntityRef(ctx *LocalEntityRefContext) {}
+
+// ExitLocalEntityRef is called when production localEntityRef is exited.
+func (s *BasenevaListener) ExitLocalEntityRef(ctx *LocalEntityRefContext) {}
+
+// EnterImportedEntityRef is called when production importedEntityRef is entered.
+func (s *BasenevaListener) EnterImportedEntityRef(ctx *ImportedEntityRefContext) {}
+
+// ExitImportedEntityRef is called when production importedEntityRef is exited.
+func (s *BasenevaListener) ExitImportedEntityRef(ctx *ImportedEntityRefContext) {}
+
+// EnterPkgRef is called when production pkgRef is entered.
+func (s *BasenevaListener) EnterPkgRef(ctx *PkgRefContext) {}
+
+// ExitPkgRef is called when production pkgRef is exited.
+func (s *BasenevaListener) ExitPkgRef(ctx *PkgRefContext) {}
+
+// EnterEntityName is called when production entityName is entered.
+func (s *BasenevaListener) EnterEntityName(ctx *EntityNameContext) {}
+
+// ExitEntityName is called when production entityName is exited.
+func (s *BasenevaListener) ExitEntityName(ctx *EntityNameContext) {}
 
 // EnterTypeStmt is called when production typeStmt is entered.
 func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}
@@ -338,11 +380,41 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
 
-// EnterSenderSide is called when production senderSide is entered.
-func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
+// EnterSingleSenderConn is called when production singleSenderConn is entered.
+func (s *BasenevaListener) EnterSingleSenderConn(ctx *SingleSenderConnContext) {}
 
-// ExitSenderSide is called when production senderSide is exited.
-func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
+// ExitSingleSenderConn is called when production singleSenderConn is exited.
+func (s *BasenevaListener) ExitSingleSenderConn(ctx *SingleSenderConnContext) {}
+
+// EnterMultiSenderConn is called when production multiSenderConn is entered.
+func (s *BasenevaListener) EnterMultiSenderConn(ctx *MultiSenderConnContext) {}
+
+// ExitMultiSenderConn is called when production multiSenderConn is exited.
+func (s *BasenevaListener) ExitMultiSenderConn(ctx *MultiSenderConnContext) {}
+
+// EnterMultiSenderConnLine is called when production multiSenderConnLine is entered.
+func (s *BasenevaListener) EnterMultiSenderConnLine(ctx *MultiSenderConnLineContext) {}
+
+// ExitMultiSenderConnLine is called when production multiSenderConnLine is exited.
+func (s *BasenevaListener) ExitMultiSenderConnLine(ctx *MultiSenderConnLineContext) {}
+
+// EnterMultiSenderSide is called when production multiSenderSide is entered.
+func (s *BasenevaListener) EnterMultiSenderSide(ctx *MultiSenderSideContext) {}
+
+// ExitMultiSenderSide is called when production multiSenderSide is exited.
+func (s *BasenevaListener) ExitMultiSenderSide(ctx *MultiSenderSideContext) {}
+
+// EnterSingleSenderSide is called when production singleSenderSide is entered.
+func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {}
+
+// ExitSingleSenderSide is called when production singleSenderSide is exited.
+func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
+
+// EnterSenderConstRef is called when production senderConstRef is entered.
+func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
+
+// ExitSenderConstRef is called when production senderConstRef is exited.
+func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
 
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
@@ -350,23 +422,29 @@ func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 // ExitPortAddr is called when production portAddr is exited.
 func (s *BasenevaListener) ExitPortAddr(ctx *PortAddrContext) {}
 
-// EnterIoNodePortAddr is called when production ioNodePortAddr is entered.
-func (s *BasenevaListener) EnterIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+// EnterPortAddrNode is called when production portAddrNode is entered.
+func (s *BasenevaListener) EnterPortAddrNode(ctx *PortAddrNodeContext) {}
 
-// ExitIoNodePortAddr is called when production ioNodePortAddr is exited.
-func (s *BasenevaListener) ExitIoNodePortAddr(ctx *IoNodePortAddrContext) {}
+// ExitPortAddrNode is called when production portAddrNode is exited.
+func (s *BasenevaListener) ExitPortAddrNode(ctx *PortAddrNodeContext) {}
 
-// EnterPortDirection is called when production portDirection is entered.
-func (s *BasenevaListener) EnterPortDirection(ctx *PortDirectionContext) {}
+// EnterPortAddrPort is called when production portAddrPort is entered.
+func (s *BasenevaListener) EnterPortAddrPort(ctx *PortAddrPortContext) {}
 
-// ExitPortDirection is called when production portDirection is exited.
-func (s *BasenevaListener) ExitPortDirection(ctx *PortDirectionContext) {}
+// ExitPortAddrPort is called when production portAddrPort is exited.
+func (s *BasenevaListener) ExitPortAddrPort(ctx *PortAddrPortContext) {}
 
-// EnterNormalNodePortAddr is called when production normalNodePortAddr is entered.
-func (s *BasenevaListener) EnterNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
+// EnterPortAddrIdx is called when production portAddrIdx is entered.
+func (s *BasenevaListener) EnterPortAddrIdx(ctx *PortAddrIdxContext) {}
 
-// ExitNormalNodePortAddr is called when production normalNodePortAddr is exited.
-func (s *BasenevaListener) ExitNormalNodePortAddr(ctx *NormalNodePortAddrContext) {}
+// ExitPortAddrIdx is called when production portAddrIdx is exited.
+func (s *BasenevaListener) ExitPortAddrIdx(ctx *PortAddrIdxContext) {}
+
+// EnterStructSelectors is called when production structSelectors is entered.
+func (s *BasenevaListener) EnterStructSelectors(ctx *StructSelectorsContext) {}
+
+// ExitStructSelectors is called when production structSelectors is exited.
+func (s *BasenevaListener) ExitStructSelectors(ctx *StructSelectorsContext) {}
 
 // EnterConnReceiverSide is called when production connReceiverSide is entered.
 func (s *BasenevaListener) EnterConnReceiverSide(ctx *ConnReceiverSideContext) {}

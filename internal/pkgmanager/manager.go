@@ -23,11 +23,17 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	if err != nil {
 		return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 	}
+	entryMod.Manifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib mod dep
 
-	mods := map[src.ModuleRef]compiler.RawModule{}
-	// entryModRef := src.ModuleRef{Path: "@"}
-	entryModRef := src.ModuleRef{Path: ""}
-	mods[entryModRef] = entryMod
+	stdMod, err := p.buildModule(ctx, p.stdLibLocation)
+	if err != nil {
+		return compiler.RawBuild{}, fmt.Errorf("build stdlib mod: %w", err)
+	}
+
+	mods := map[src.ModuleRef]compiler.RawModule{
+		{Path: "", Version: ""}:         entryMod,
+		{Path: "std", Version: "0.0.1"}: stdMod,
+	}
 
 	q := newQueue(entryMod.Manifest.Deps)
 
@@ -48,22 +54,14 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 			return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 		}
 
+		depMod.Manifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib mod dep
 		mods[depModRef] = depMod
 
 		q.enqueue(depMod.Manifest.Deps)
 	}
 
-	stdMod, err := p.buildModule(ctx, p.stdLibLocation)
-	if err != nil {
-		return compiler.RawBuild{}, fmt.Errorf("build stdlib mod: %w", err)
-	}
-	mods[src.ModuleRef{
-		Path:    "std",
-		Version: "0.0.1",
-	}] = stdMod
-
 	return compiler.RawBuild{
-		EntryModRef: entryModRef,
+		EntryModRef: src.ModuleRef{Path: "", Version: ""},
 		Modules:     mods,
 	}, nil
 }

@@ -3,7 +3,9 @@
 // This is not clean architecture but it's very handy for LSP.
 package typesystem
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Def struct {
 	// Body can refer to these. Must be replaced with arguments while resolving
@@ -170,4 +172,22 @@ const (
 type ArrLit struct {
 	Expr Expr `json:"expr,omitempty"`
 	Size int  `json:"size,omitempty"`
+}
+
+func GetStructFieldTypeByPath(senderType Expr, path []string) (Expr, error) {
+	if len(path) == 0 {
+		return senderType, nil
+	}
+
+	if senderType.Lit == nil || senderType.Lit.Struct == nil {
+		return Expr{}, fmt.Errorf("Type not struct: %v", senderType.String())
+	}
+
+	curField := path[0]
+	fieldType, ok := senderType.Lit.Struct[curField]
+	if !ok {
+		return Expr{}, fmt.Errorf("struct field '%v' not found", curField)
+	}
+
+	return GetStructFieldTypeByPath(fieldType, path[1:])
 }

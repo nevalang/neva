@@ -239,6 +239,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
 			Location: &scope.Location,
+			Meta:     entity.Meta(),
 		}
 	}
 
