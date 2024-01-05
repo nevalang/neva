@@ -187,23 +187,17 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterSingleSenderConn is called when entering the singleSenderConn production.
-	EnterSingleSenderConn(c *SingleSenderConnContext)
+	// EnterSenderSide is called when entering the senderSide production.
+	EnterSenderSide(c *SenderSideContext)
 
 	// EnterThenConnExpr is called when entering the thenConnExpr production.
 	EnterThenConnExpr(c *ThenConnExprContext)
-
-	// EnterMultiSenderConn is called when entering the multiSenderConn production.
-	EnterMultiSenderConn(c *MultiSenderConnContext)
 
 	// EnterMultiSenderConnLine is called when entering the multiSenderConnLine production.
 	EnterMultiSenderConnLine(c *MultiSenderConnLineContext)
 
 	// EnterMultiSenderSide is called when entering the multiSenderSide production.
 	EnterMultiSenderSide(c *MultiSenderSideContext)
-
-	// EnterSingleSenderSide is called when entering the singleSenderSide production.
-	EnterSingleSenderSide(c *SingleSenderSideContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -409,23 +403,17 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
-	// ExitSingleSenderConn is called when exiting the singleSenderConn production.
-	ExitSingleSenderConn(c *SingleSenderConnContext)
+	// ExitSenderSide is called when exiting the senderSide production.
+	ExitSenderSide(c *SenderSideContext)
 
 	// ExitThenConnExpr is called when exiting the thenConnExpr production.
 	ExitThenConnExpr(c *ThenConnExprContext)
-
-	// ExitMultiSenderConn is called when exiting the multiSenderConn production.
-	ExitMultiSenderConn(c *MultiSenderConnContext)
 
 	// ExitMultiSenderConnLine is called when exiting the multiSenderConnLine production.
 	ExitMultiSenderConnLine(c *MultiSenderConnLineContext)
 
 	// ExitMultiSenderSide is called when exiting the multiSenderSide production.
 	ExitMultiSenderSide(c *MultiSenderSideContext)
-
-	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
-	ExitSingleSenderSide(c *SingleSenderSideContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
