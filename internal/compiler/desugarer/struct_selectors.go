@@ -74,18 +74,20 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	// original connection must be replaced with two new connections, this is the first one
 	connToReplace := src.Connection{
-		SenderSide: src.SenderConnectionSide{
+		SenderSide: src.ConnectionSenderSide{
 			// preserve original sender port
 			PortAddr: senderSide.PortAddr,
 			ConstRef: senderSide.ConstRef,
 			// remove selectors in desugared version
 			Selectors: nil,
 		},
-		ReceiverSides: []src.ReceiverConnectionSide{
-			{
-				PortAddr: src.PortAddr{
-					Node: nodeName, // point it to created selector node
-					Port: "v",
+		ReceiverSide: src.ConnectionReceiverSide{
+			Receivers: []src.ConnectionReceiver{
+				{
+					PortAddr: src.PortAddr{
+						Node: nodeName, // point it to created selector node
+						Port: "v",
+					},
 				},
 			},
 		},
@@ -93,14 +95,14 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	// and this is the second
 	connToInsert := src.Connection{
-		SenderSide: src.SenderConnectionSide{
+		SenderSide: src.ConnectionSenderSide{
 			PortAddr: &src.PortAddr{
 				Node: nodeName, // created node received data from original sender and is now sending it further
 				Port: "v",
 			},
 			Selectors: nil, // no selectors in desugared version
 		},
-		ReceiverSides: conn.ReceiverSides, // preserve original receivers
+		ReceiverSide: conn.ReceiverSide, // preserve original receivers
 	}
 
 	return handleStructSelectorsResult{
@@ -157,7 +159,7 @@ var (
 	}
 )
 
-func (Desugarer) createPathConst(senderSide src.SenderConnectionSide) src.Const {
+func (Desugarer) createPathConst(senderSide src.ConnectionSenderSide) src.Const {
 	constToInsert := src.Const{
 		Value: &src.Msg{
 			TypeExpr: pathConstTypeExpr,
@@ -176,7 +178,7 @@ func (Desugarer) createPathConst(senderSide src.SenderConnectionSide) src.Const 
 }
 
 func (d Desugarer) getSenderType(
-	senderSide src.SenderConnectionSide,
+	senderSide src.ConnectionSenderSide,
 	scope src.Scope,
 	nodes map[string]src.Node,
 ) (ts.Expr, *compiler.Error) {

@@ -44,13 +44,13 @@ func (d Desugarer) desugarConstSender(
 	}
 
 	desugaredNet = append(desugaredNet, src.Connection{
-		SenderSide: src.SenderConnectionSide{
+		SenderSide: src.ConnectionSenderSide{
 			PortAddr:  &constNodeOutportAddr,
 			Selectors: conn.SenderSide.Selectors,
 			Meta:      conn.SenderSide.Meta,
 		},
-		ReceiverSides: conn.ReceiverSides,
-		Meta:          conn.Meta,
+		ReceiverSide: conn.ReceiverSide,
+		Meta:         conn.Meta,
 	})
 
 	return desugaredNet, nil

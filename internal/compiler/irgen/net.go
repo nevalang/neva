@@ -25,8 +25,8 @@ func (g Generator) processNet(
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
-		for _, receiverSide := range conn.ReceiverSides {
+		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSide.Receivers))
+		for _, receiverSide := range conn.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 			receiverSidesIR = append(receiverSidesIR, receiverSideIR)
 
@@ -61,7 +61,7 @@ func (g Generator) processNet(
 func (g Generator) processSenderSide(
 	scope src.Scope,
 	nodeCtx nodeContext,
-	senderSide src.SenderConnectionSide,
+	senderSide src.ConnectionSenderSide,
 	result map[string]portsUsage,
 ) (*ir.PortAddr, error) {
 	// there could be many connections with the same sender but we must only add it once
@@ -147,7 +147,7 @@ func (Generator) insertAndReturnOutports(
 }
 
 // mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ReceiverConnectionSide) *ir.ReceiverConnectionSide {
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) *ir.ReceiverConnectionSide {
 	var idx uint8
 	if side.PortAddr.Idx != nil {
 		idx = *side.PortAddr.Idx

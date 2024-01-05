@@ -386,6 +386,12 @@ func (s *BasenevaListener) EnterSingleSenderConn(ctx *SingleSenderConnContext) {
 // ExitSingleSenderConn is called when production singleSenderConn is exited.
 func (s *BasenevaListener) ExitSingleSenderConn(ctx *SingleSenderConnContext) {}
 
+// EnterThenConnExpr is called when production thenConnExpr is entered.
+func (s *BasenevaListener) EnterThenConnExpr(ctx *ThenConnExprContext) {}
+
+// ExitThenConnExpr is called when production thenConnExpr is exited.
+func (s *BasenevaListener) ExitThenConnExpr(ctx *ThenConnExprContext) {}
+
 // EnterMultiSenderConn is called when production multiSenderConn is entered.
 func (s *BasenevaListener) EnterMultiSenderConn(ctx *MultiSenderConnContext) {}
 

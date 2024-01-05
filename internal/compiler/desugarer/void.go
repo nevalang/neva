@@ -14,20 +14,22 @@ func (Desugarer) insertVoidNodeAndConns(
 			Name: "Void",
 		},
 	}
-	receiverSides := []src.ReceiverConnectionSide{
+	receiverSides := []src.ConnectionReceiver{
 		{PortAddr: src.PortAddr{Node: voidNodeName, Port: "v"}},
 	}
 	for nodeName, ports := range unusedOutports.m {
 		for portName := range ports {
 			desugaredNet = append(desugaredNet, src.Connection{
-				SenderSide: src.SenderConnectionSide{
+				SenderSide: src.ConnectionSenderSide{
 					PortAddr: &src.PortAddr{
 						Node: nodeName,
 						Port: portName,
 					},
 				},
-				ReceiverSides: receiverSides,
-				Meta:          src.Meta{},
+				ReceiverSide: src.ConnectionReceiverSide{
+					Receivers: receiverSides,
+				},
+				Meta: src.Meta{},
 			})
 		}
 	}

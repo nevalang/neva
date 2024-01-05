@@ -339,150 +339,160 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) { //nolint:funlen
+func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
 	result := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
-		connMeta := src.Meta{
-			Text: connDef.GetText(),
-			Start: src.Position{
-				Line:   connDef.GetStart().GetLine(),
-				Column: connDef.GetStart().GetColumn(),
-			},
-			Stop: src.Position{
-				Line:   connDef.GetStop().GetLine(),
-				Column: connDef.GetStop().GetColumn(),
-			},
+		parsedConn, err := parseConn(connDef)
+		if err != nil {
+			return nil, err
 		}
-
-		if connDef.SingleSenderConn() == nil {
-			return nil, &compiler.Error{
-				Err:  errors.New("Multi sender connections are not implemented yet"),
-				Meta: &connMeta,
-			}
-		}
-
-		singleSenderConn := connDef.SingleSenderConn()
-
-		var senderSelectors []string
-		singleSenderSelectors := singleSenderConn.SingleSenderSide().StructSelectors()
-		if singleSenderSelectors != nil {
-			for _, id := range singleSenderSelectors.AllIDENTIFIER() {
-				senderSelectors = append(senderSelectors, id.GetText())
-			}
-		}
-
-		receiverSide := singleSenderConn.ConnReceiverSide()
-		singleReceiver := receiverSide.PortAddr()
-		multipleReceivers := receiverSide.ConnReceivers()
-		if singleReceiver == nil && multipleReceivers == nil {
-			return nil, &compiler.Error{
-				Err:  errors.New("Connection must have at least one receiver"),
-				Meta: &connMeta,
-			}
-		}
-
-		var receiverSides []src.ReceiverConnectionSide
-		if singleReceiver != nil {
-			receiverSides = []src.ReceiverConnectionSide{
-				{
-					PortAddr: parsePortAddr(singleReceiver),
-					Meta: src.Meta{
-						Text: singleReceiver.GetText(),
-						Start: src.Position{
-							Line:   singleReceiver.GetStart().GetLine(),
-							Column: singleReceiver.GetStart().GetColumn(),
-						},
-						Stop: src.Position{
-							Line:   singleReceiver.GetStop().GetLine(),
-							Column: singleReceiver.GetStop().GetColumn(),
-						},
-					},
-				},
-			}
-		} else {
-			receiverPortAddrs := multipleReceivers.AllPortAddr()
-			receiverSides = make([]src.ReceiverConnectionSide, 0, len(receiverPortAddrs))
-			for _, receiverPortAddr := range receiverPortAddrs {
-				receiverSides = append(receiverSides, src.ReceiverConnectionSide{
-					PortAddr: parsePortAddr(receiverPortAddr),
-					Meta: src.Meta{
-						Text: receiverPortAddr.GetText(),
-						Start: src.Position{
-							Line:   receiverPortAddr.GetStart().GetLine(),
-							Column: receiverPortAddr.GetStart().GetColumn(),
-						},
-						Stop: src.Position{
-							Line:   receiverPortAddr.GetStop().GetLine(),
-							Column: receiverPortAddr.GetStop().GetColumn(),
-						},
-					},
-				})
-			}
-		}
-
-		senderSide := singleSenderConn.SingleSenderSide()
-		senderSidePort := senderSide.PortAddr()
-		senderSideConstRef := senderSide.SenderConstRef()
-
-		var senderSidePortAddr *src.PortAddr
-		if senderSidePort != nil {
-			senderSidePortAddr = utils.Pointer(
-				parsePortAddr(senderSidePort),
-			)
-		}
-
-		var constRef *src.EntityRef
-		if senderSideConstRef != nil {
-			constRefMeta := src.Meta{
-				Text: senderSideConstRef.GetText(),
-				Start: src.Position{
-					Line:   senderSideConstRef.GetStart().GetLine(),
-					Column: senderSideConstRef.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   senderSideConstRef.GetStop().GetLine(),
-					Column: senderSideConstRef.GetStop().GetColumn(),
-				},
-			}
-
-			if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
-				constRef = &src.EntityRef{
-					Name: localRef.GetText(),
-					Meta: constRefMeta,
-				}
-			} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
-				constRef = &src.EntityRef{
-					Pkg:  imoportedRef.PkgRef().GetText(),
-					Name: imoportedRef.EntityName().GetText(),
-					Meta: constRefMeta,
-				}
-			}
-		}
-
-		result = append(result, src.Connection{
-			SenderSide: src.SenderConnectionSide{
-				PortAddr:  senderSidePortAddr,
-				ConstRef:  constRef,
-				Selectors: senderSelectors,
-				Meta: src.Meta{
-					Text: senderSide.GetText(),
-					Start: src.Position{
-						Line:   senderSide.GetStart().GetLine(),
-						Column: senderSide.GetStart().GetColumn(),
-					},
-					Stop: src.Position{
-						Line:   senderSide.GetStop().GetLine(),
-						Column: senderSide.GetStop().GetColumn(),
-					},
-				},
-			},
-			ReceiverSides: receiverSides,
-			Meta:          connMeta,
-		})
+		result = append(result, parsedConn)
 	}
 
 	return result, nil
+}
+
+func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) { //nolint:funlen
+	connMeta := src.Meta{
+		Text: connDef.GetText(),
+		Start: src.Position{
+			Line:   connDef.GetStart().GetLine(),
+			Column: connDef.GetStart().GetColumn(),
+		},
+		Stop: src.Position{
+			Line:   connDef.GetStop().GetLine(),
+			Column: connDef.GetStop().GetColumn(),
+		},
+	}
+
+	if connDef.SingleSenderConn() == nil {
+		return src.Connection{}, &compiler.Error{
+			Err:  errors.New("Multi sender connections are not implemented yet"),
+			Meta: &connMeta,
+		}
+	}
+
+	singleSenderConn := connDef.SingleSenderConn()
+
+	var senderSelectors []string
+	singleSenderSelectors := singleSenderConn.SingleSenderSide().StructSelectors()
+	if singleSenderSelectors != nil {
+		for _, id := range singleSenderSelectors.AllIDENTIFIER() {
+			senderSelectors = append(senderSelectors, id.GetText())
+		}
+	}
+
+	receiverSide := singleSenderConn.ConnReceiverSide()
+	singleReceiver := receiverSide.PortAddr()
+	multipleReceivers := receiverSide.ConnReceivers()
+	if singleReceiver == nil && multipleReceivers == nil {
+		return src.Connection{}, &compiler.Error{
+			Err:  errors.New("Connection must have at least one receiver"),
+			Meta: &connMeta,
+		}
+	}
+
+	var receiverSides []src.ConnectionReceiver
+	if singleReceiver != nil {
+		receiverSides = []src.ConnectionReceiver{
+			{
+				PortAddr: parsePortAddr(singleReceiver),
+				Meta: src.Meta{
+					Text: singleReceiver.GetText(),
+					Start: src.Position{
+						Line:   singleReceiver.GetStart().GetLine(),
+						Column: singleReceiver.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   singleReceiver.GetStop().GetLine(),
+						Column: singleReceiver.GetStop().GetColumn(),
+					},
+				},
+			},
+		}
+	} else {
+		receiverPortAddrs := multipleReceivers.AllPortAddr()
+		receiverSides = make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))
+		for _, receiverPortAddr := range receiverPortAddrs {
+			receiverSides = append(receiverSides, src.ConnectionReceiver{
+				PortAddr: parsePortAddr(receiverPortAddr),
+				Meta: src.Meta{
+					Text: receiverPortAddr.GetText(),
+					Start: src.Position{
+						Line:   receiverPortAddr.GetStart().GetLine(),
+						Column: receiverPortAddr.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   receiverPortAddr.GetStop().GetLine(),
+						Column: receiverPortAddr.GetStop().GetColumn(),
+					},
+				},
+			})
+		}
+	}
+
+	senderSide := singleSenderConn.SingleSenderSide()
+	senderSidePort := senderSide.PortAddr()
+	senderSideConstRef := senderSide.SenderConstRef()
+
+	var senderSidePortAddr *src.PortAddr
+	if senderSidePort != nil {
+		senderSidePortAddr = utils.Pointer(
+			parsePortAddr(senderSidePort),
+		)
+	}
+
+	var constRef *src.EntityRef
+	if senderSideConstRef != nil {
+		constRefMeta := src.Meta{
+			Text: senderSideConstRef.GetText(),
+			Start: src.Position{
+				Line:   senderSideConstRef.GetStart().GetLine(),
+				Column: senderSideConstRef.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   senderSideConstRef.GetStop().GetLine(),
+				Column: senderSideConstRef.GetStop().GetColumn(),
+			},
+		}
+
+		if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
+			constRef = &src.EntityRef{
+				Name: localRef.GetText(),
+				Meta: constRefMeta,
+			}
+		} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
+			constRef = &src.EntityRef{
+				Pkg:  imoportedRef.PkgRef().GetText(),
+				Name: imoportedRef.EntityName().GetText(),
+				Meta: constRefMeta,
+			}
+		}
+	}
+
+	return src.Connection{
+		SenderSide: src.ConnectionSenderSide{
+			PortAddr:  senderSidePortAddr,
+			ConstRef:  constRef,
+			Selectors: senderSelectors,
+			Meta: src.Meta{
+				Text: senderSide.GetText(),
+				Start: src.Position{
+					Line:   senderSide.GetStart().GetLine(),
+					Column: senderSide.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   senderSide.GetStop().GetLine(),
+					Column: senderSide.GetStop().GetColumn(),
+				},
+			},
+		},
+		ReceiverSide: src.ConnectionReceiverSide{
+			Receivers: receiverSides,
+		},
+		Meta: connMeta,
+	}, nil
 }
 
 func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {

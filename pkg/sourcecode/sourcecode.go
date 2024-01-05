@@ -224,22 +224,17 @@ type Port struct {
 }
 
 type Connection struct {
-	SenderSide    SenderConnectionSide    `json:"senderSide,omitempty"`
-	ReceiverSides ReceiverConnectionSides `json:"receiverSide,omitempty"`
-	Meta          Meta                    `json:"meta,omitempty"`
+	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
+	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
+	Meta         Meta                   `json:"meta,omitempty"`
 }
 
-type ReceiverConnectionSides []ReceiverConnectionSide
-
-func (r ReceiverConnectionSides) String() string {
-	// s := ""
-	// for _, side := range r {
-	// 	side.
-	// }
-	return ""
+type ConnectionReceiverSide struct {
+	Then      []Connection
+	Receivers []ConnectionReceiver
 }
 
-type ReceiverConnectionSide struct {
+type ConnectionReceiver struct {
 	PortAddr  PortAddr                `json:"portAddr,omitempty"`
 	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
 	Meta      Meta                    `json:"meta,omit"`
@@ -261,22 +256,22 @@ func (c ConnectionSideSelectors) String() string {
 	return s
 }
 
-func (r ReceiverConnectionSide) String() string {
+func (r ConnectionReceiver) String() string {
 	if len(r.Selectors) == 0 {
 		return r.PortAddr.String()
 	}
 	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
 }
 
-// SenderConnectionSide unlike ReceiverConnectionSide could refer to constant.
-type SenderConnectionSide struct {
+// ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
+type ConnectionSenderSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
 	ConstRef  *EntityRef `json:"constRef,omitempty"` // Only sugared form
 	Selectors []string   `json:"selectors,omitempty"`
 	Meta      Meta       `json:"meta,omitempty"`
 }
 
-func (s SenderConnectionSide) String() string {
+func (s ConnectionSenderSide) String() string {
 	selectorsString := ""
 	if len(s.Selectors) != 0 {
 		for _, selector := range s.Selectors {

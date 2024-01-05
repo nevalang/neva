@@ -113,12 +113,16 @@ compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: singleSenderConn | multiSenderConn;
-singleSenderConn: singleSenderSide '->' connReceiverSide;
+singleSenderConn:
+	singleSenderSide '->' (connReceiverSide | thenConnExpr);
+thenConnExpr:
+	'(' NEWLINE* connDef (NEWLINE connDef)* NEWLINE* ')';
 multiSenderConn:
 	portAddrNode NEWLINE* '{' (
 		NEWLINE* multiSenderConnLine NEWLINE*
 	)+ '}';
-multiSenderConnLine: multiSenderSide '->' connReceiverSide;
+multiSenderConnLine:
+	multiSenderSide '->' (connReceiverSide | thenConnExpr);
 multiSenderSide: '.' portAddrPort structSelectors?;
 singleSenderSide: (portAddr | senderConstRef) structSelectors?;
 senderConstRef: '$' entityRef;

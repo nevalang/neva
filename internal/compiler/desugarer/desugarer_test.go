@@ -79,7 +79,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 											Component: src.Component{
 												Net: []src.Connection{
 													{
-														SenderSide: src.SenderConnectionSide{
+														SenderSide: src.ConnectionSenderSide{
 															ConstRef: &src.EntityRef{Name: "bar"},
 														},
 													},
@@ -147,7 +147,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 												},
 												Net: []src.Connection{
 													{
-														SenderSide: src.SenderConnectionSide{ // <-- const ref conn replaced with normal one
+														SenderSide: src.ConnectionSenderSide{ // <-- const ref conn replaced with normal one
 															PortAddr: &src.PortAddr{
 																Node: "__bar__",
 																Port: "v",
@@ -240,17 +240,19 @@ func TestDesugarer_Desugar(t *testing.T) {
 												},
 												Net: []src.Connection{
 													{ // <-- (bar.x -> void.void)
-														SenderSide: src.SenderConnectionSide{
+														SenderSide: src.ConnectionSenderSide{
 															PortAddr: &src.PortAddr{
 																Node: "bar",
 																Port: "x",
 															},
 														},
-														ReceiverSides: []src.ReceiverConnectionSide{
-															{
-																PortAddr: src.PortAddr{
-																	Node: "__void__",
-																	Port: "v",
+														ReceiverSide: src.ConnectionReceiverSide{
+															Receivers: []src.ConnectionReceiver{
+																{
+																	PortAddr: src.PortAddr{
+																		Node: "__void__",
+																		Port: "v",
+																	},
 																},
 															},
 														},

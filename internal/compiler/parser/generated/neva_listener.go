@@ -190,6 +190,9 @@ type nevaListener interface {
 	// EnterSingleSenderConn is called when entering the singleSenderConn production.
 	EnterSingleSenderConn(c *SingleSenderConnContext)
 
+	// EnterThenConnExpr is called when entering the thenConnExpr production.
+	EnterThenConnExpr(c *ThenConnExprContext)
+
 	// EnterMultiSenderConn is called when entering the multiSenderConn production.
 	EnterMultiSenderConn(c *MultiSenderConnContext)
 
@@ -408,6 +411,9 @@ type nevaListener interface {
 
 	// ExitSingleSenderConn is called when exiting the singleSenderConn production.
 	ExitSingleSenderConn(c *SingleSenderConnContext)
+
+	// ExitThenConnExpr is called when exiting the thenConnExpr production.
+	ExitThenConnExpr(c *ThenConnExprContext)
 
 	// ExitMultiSenderConn is called when exiting the multiSenderConn production.
 	ExitMultiSenderConn(c *MultiSenderConnContext)

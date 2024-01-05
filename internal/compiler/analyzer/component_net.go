@@ -54,7 +54,7 @@ func (a Analyzer) analyzeComponentNetwork(
 			outportTypeExpr = lastFieldType
 		}
 
-		for _, receiver := range conn.ReceiverSides {
+		for _, receiver := range conn.ReceiverSide.Receivers {
 			inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
 			if err != nil {
 				return nil, compiler.Error{
@@ -150,7 +150,7 @@ func (Analyzer) checkNodesUsage(
 }
 
 func (a Analyzer) getReceiverType(
-	receiverSide src.ReceiverConnectionSide,
+	receiverSide src.ConnectionReceiver,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
@@ -273,7 +273,7 @@ func (a Analyzer) getResolvedPortType(
 }
 
 func (a Analyzer) getSenderType(
-	senderSide src.SenderConnectionSide,
+	senderSide src.ConnectionSenderSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
