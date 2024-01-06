@@ -52,8 +52,43 @@ flowchart LR
     end
 
     subgraph func-runner
-        func-registry
+        func-registry[(func-registry)]
     end
+```
+
+### Connector Algorithm
+
+```mermaid
+flowchart TB
+    cond{are there still connections?}
+    cond -->|yes| broadcast[spawn broadcast goroutine]
+    cond -->|no| exit[wait for all broadcast goroutines to finish]
+    broadcast --> cond
+```
+
+#### Broadcast
+
+```mermaid
+flowchart TB
+    msg[await new message from sender] --> inc[semaphore increment]
+    inc --> distribute[spawn distribute goroutine]
+    distribute --> |first receiver processed| msg
+    distribute --> |all receivers processed| dec[semaphore decrement]
+```
+
+#### Distribute
+
+```mermaid
+flowchart TB
+    q{is receivers queue empty?}
+    q --> |yes| exit
+    q --> |no| pick[pick receiver]
+    pick --> try[try to send message to current receiver]
+    try --> busy{is current receiver busy?}
+    busy --> |yes| next[go to the next one]
+    busy --> |no| remove[remove this receiver from queue]
+    remove --> next
+    next --> q
 ```
 
 ## Interpreter
