@@ -50,7 +50,7 @@ func (a Analyzer) analyzeConnections(
 	return nil
 }
 
-func (a Analyzer) analyzeNetConn(
+func (a Analyzer) analyzeNetConn( //nolint:funlen
 	conn src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,

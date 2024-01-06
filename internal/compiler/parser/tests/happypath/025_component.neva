@@ -258,3 +258,21 @@ components {
 		}
 	}
 }
+
+components {
+	Main() () {
+		net {
+            $a -> ($b -> ($c -> d.e))
+
+            $a -> (
+                $b -> ($c -> d.e)
+            )
+
+            $a -> (
+                $b -> (
+                    $c -> d.e
+                )
+            )
+		}
+	}
+}
