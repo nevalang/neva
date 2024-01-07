@@ -8,16 +8,21 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-// desugarConstSender inserts nodes and connections and returns resulted network (because new array could be allocated).
-func (d Desugarer) desugarConstSender(
-	conn src.Connection,
-	scope src.Scope,
-	desugaredNodes map[string]src.Node,
-	desugaredNet []src.Connection,
-) ([]src.Connection, *compiler.Error) {
+var constComponentRef = src.EntityRef{
+	Pkg:  "builtin",
+	Name: "Const",
+}
+
+type handleConstSenderResult struct {
+	desugaredConstConn src.Connection
+	constNodeName      string
+	constNode          src.Node
+}
+
+func (d Desugarer) handleConstSender(conn src.Connection, scope src.Scope) (handleConstSenderResult, *compiler.Error) {
 	constTypeExpr, err := d.getConstType(*conn.SenderSide.ConstRef, scope)
 	if err != nil {
-		return nil, compiler.Error{
+		return handleConstSenderResult{}, compiler.Error{
 			Err:      fmt.Errorf("Unable to get constant type by reference '%v'", *conn.SenderSide.ConstRef),
 			Location: &scope.Location,
 			Meta:     &conn.SenderSide.ConstRef.Meta,
@@ -26,34 +31,31 @@ func (d Desugarer) desugarConstSender(
 
 	constRefStr := conn.SenderSide.ConstRef.String()
 	constNodeName := fmt.Sprintf("__%v__", constRefStr)
-
-	desugaredNodes[constNodeName] = src.Node{
+	constNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.RuntimeFuncMsgDirective: {constRefStr},
 		},
-		EntityRef: src.EntityRef{
-			Pkg:  "builtin",
-			Name: "Const",
-		},
-		TypeArgs: []ts.Expr{constTypeExpr},
+		EntityRef: constComponentRef,
+		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
-
 	constNodeOutportAddr := src.PortAddr{
 		Node: constNodeName,
 		Port: "v",
 	}
 
-	desugaredNet = append(desugaredNet, src.Connection{
-		SenderSide: src.ConnectionSenderSide{
-			PortAddr:  &constNodeOutportAddr,
-			Selectors: conn.SenderSide.Selectors,
-			Meta:      conn.SenderSide.Meta,
+	return handleConstSenderResult{
+		desugaredConstConn: src.Connection{
+			SenderSide: src.ConnectionSenderSide{
+				PortAddr:  &constNodeOutportAddr,
+				Selectors: conn.SenderSide.Selectors,
+				Meta:      conn.SenderSide.Meta,
+			},
+			ReceiverSide: conn.ReceiverSide,
+			Meta:         conn.Meta,
 		},
-		ReceiverSide: conn.ReceiverSide,
-		Meta:         conn.Meta,
-	})
-
-	return desugaredNet, nil
+		constNodeName: constNodeName,
+		constNode:     constNode,
+	}, nil
 }
 
 // getConstType is needed to figure out type parameters for Const node

@@ -19,10 +19,12 @@ var (
 )
 
 type handleStructSelectorsResult struct {
-	connToReplace  src.Connection
-	connToInsert   src.Connection
-	constsToInsert map[string]src.Const
-	nodesToInsert  map[string]src.Node
+	connToReplace     src.Connection
+	connToInsert      src.Connection
+	constToInsertName string
+	constToInsert     src.Const
+	nodeToInsert      src.Node
+	nodeToInsertName  string
 }
 
 var selectorNodeRef = src.EntityRef{
@@ -106,10 +108,12 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	}
 
 	return handleStructSelectorsResult{
-		connToReplace:  connToReplace,
-		connToInsert:   connToInsert,
-		constsToInsert: map[string]src.Const{constName: pathConst},
-		nodesToInsert:  map[string]src.Node{nodeName: selectorNode},
+		connToReplace:     connToReplace,
+		connToInsert:      connToInsert,
+		constToInsertName: constName,
+		constToInsert:     pathConst,
+		nodeToInsertName:  nodeName,
+		nodeToInsert:      selectorNode,
 	}, nil
 }
 
