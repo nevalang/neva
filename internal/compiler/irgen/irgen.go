@@ -84,8 +84,6 @@ func (g Generator) processComponentNode( //nolint:funlen
 	scope src.Scope,
 	result *ir.Program,
 ) *compiler.Error {
-	// FIXME node DI does not work (no runtime funcs at all in the result bundle)
-
 	componentEntity, location, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		return &compiler.Error{
@@ -96,8 +94,9 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 	component := componentEntity.Component
 
-	// Ports for input and output must be created before processing subnodes because they are used by parent node.
+	// for inports we only use parent context because all inports are used
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
+	//  for outports we use both parent context and component's interface
 	outportAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
 	runtimeFuncRef, err := getRuntimeFunc(component, nodeCtx.node.TypeArgs)

@@ -10,8 +10,8 @@ import (
 )
 
 type Build struct {
-	EntryModRef ModuleRef
-	Modules     map[ModuleRef]Module
+	EntryModRef ModuleRef            `json:"entryModRef,omitempty"`
+	Modules     map[ModuleRef]Module `json:"modules,omitempty"`
 }
 
 type Module struct {
@@ -230,8 +230,8 @@ type Connection struct {
 }
 
 type ConnectionReceiverSide struct {
-	Then      []Connection
-	Receivers []ConnectionReceiver
+	ThenConnections []Connection
+	Receivers       []ConnectionReceiver
 }
 
 type ConnectionReceiver struct {

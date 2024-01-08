@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -49,8 +48,6 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 			receiverPortChan, ok := runtimePorts[receiverPortAddr]
 			if !ok {
-				dump(irProg)
-
 				return runtime.Program{}, fmt.Errorf("receiver port not found: %v", receiverPortAddr)
 			}
 
@@ -155,12 +152,4 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 
 func NewAdapter() Adapter {
 	return Adapter{}
-}
-
-func dump(irprog *ir.Program) {
-	bb, err := json.Marshal(irprog)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(bb))
 }

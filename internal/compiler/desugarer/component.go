@@ -2,13 +2,10 @@ package desugarer
 
 import (
 	"errors"
-	"fmt"
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
-	"github.com/nevalang/neva/pkg/typesystem"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var ErrConstSenderEntityKind = errors.New("Entity that is used as a const reference in component's network must be of kind constant") //nolint:lll
@@ -38,8 +35,8 @@ func (d Desugarer) desugarComponent(
 		return desugarComponentResult{}, err
 	}
 
-	desugaredNet := handleConnsResult.connsToInsert
-	maps.Copy(desugaredNodes, handleConnsResult.nodesToInsert)
+	desugaredNet := handleConnsResult.desugaredConns
+	maps.Copy(desugaredNodes, handleConnsResult.extraNodes)
 
 	unusedOutports := d.findUnusedOutports(component, scope, handleConnsResult.usedNodePorts, desugaredNodes, desugaredNet)
 	if unusedOutports.len() != 0 {
@@ -56,15 +53,15 @@ func (d Desugarer) desugarComponent(
 			Net:        desugaredNet,
 			Meta:       component.Meta,
 		},
-		constsToInsert: handleConnsResult.constsToInsert,
+		constsToInsert: handleConnsResult.extraConsts,
 	}, nil
 }
 
 type handleConnsResult struct {
-	connsToInsert  []src.Connection
-	usedNodePorts  nodePortsMap
-	constsToInsert map[string]src.Const
-	nodesToInsert  map[string]src.Node
+	desugaredConns []src.Connection     // desugared network
+	extraConsts    map[string]src.Const // constants that needs to be inserted in to make desugared network work
+	extraNodes     map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
+	usedNodePorts  nodePortsMap         // ports that were used in processed network
 }
 
 func (d Desugarer) handleConns( //nolint:funlen
@@ -87,7 +84,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 
 		if conn.SenderSide.ConstRef == nil &&
 			len(conn.SenderSide.Selectors) == 0 &&
-			len(conn.ReceiverSide.Then) == 0 {
+			len(conn.ReceiverSide.ThenConnections) == 0 {
 			desugaredConns = append(desugaredConns, conn)
 			continue
 		}
@@ -121,99 +118,29 @@ func (d Desugarer) handleConns( //nolint:funlen
 			conn = result.desugaredConstConn
 		}
 
-		if len(conn.ReceiverSide.Then) != 0 {
-			result, err := d.handleThenConns(conn, nodes, scope)
-			if err != nil {
-				return handleConnsResult{}, err
-			}
+		desugaredConns = append(desugaredConns, conn)
 
-			// handleThenConns recursively calls this function so it returns the same structure
-			maps.Copy(usedNodePorts.m, result.usedNodesPorts.m)
-			maps.Copy(constsToInsert, result.constsToInsert)
-			maps.Copy(nodesToInsert, result.nodesToInsert)
-
-			conn = result.connToReplace
-			desugaredConns = append(desugaredConns, result.connsToInsert...)
+		if len(conn.ReceiverSide.ThenConnections) == 0 {
+			continue
 		}
 
-		desugaredConns = append(desugaredConns, conn)
+		result, err := d.handleThenConns(conn, nodes, scope)
+		if err != nil {
+			return handleConnsResult{}, err
+		}
+
+		// handleThenConns recursively calls this function so it returns the same structure
+		maps.Copy(usedNodePorts.m, result.usedNodesPorts.m)
+		maps.Copy(constsToInsert, result.extraConsts)
+		maps.Copy(nodesToInsert, result.extraNodes)
+
+		desugaredConns = append(desugaredConns, result.extraConns...)
 	}
 
 	return handleConnsResult{
-		connsToInsert:  desugaredConns,
+		desugaredConns: desugaredConns,
 		usedNodePorts:  usedNodePorts,
-		constsToInsert: constsToInsert,
-		nodesToInsert:  nodesToInsert,
-	}, nil
-}
-
-type handleThenConns struct {
-	connToReplace src.Connection
-	connsToInsert []src.Connection
-	// lockNodeName   string
-	// lockNode       src.Node
-	constsToInsert map[string]src.Const
-	usedNodesPorts nodePortsMap
-	nodesToInsert  map[string]src.Node
-}
-
-var (
-	typeExprAny = ts.Expr{
-		Inst: &typesystem.InstExpr{
-			Ref: src.EntityRef{Pkg: "builtin", Name: "any"},
-		},
-	}
-	lockComponentRef = src.EntityRef{
-		Pkg:  "builtin",
-		Name: "Lock",
-	}
-)
-
-// handleThenConns does the following:
-// 1. Replaces current connection with desugared one where instead of then connections we have lock receiver;
-// 2. Recursively calls handleConns for every then connection and returns combined result
-func (d Desugarer) handleThenConns(
-	conn src.Connection,
-	nodes map[string]src.Node,
-	scope src.Scope,
-) (handleThenConns, *compiler.Error) {
-	lockNodeName := fmt.Sprintf("__%v_lock__", conn.SenderSide.String())
-
-	lockNode := src.Node{
-		EntityRef: lockComponentRef,
-		TypeArgs:  []typesystem.Expr{typeExprAny},
-	}
-
-	// replace `a -> (b -> c) with `a -> lock.sig`
-	connToReplace := src.Connection{
-		SenderSide: conn.SenderSide,
-		ReceiverSide: src.ConnectionReceiverSide{
-			Receivers: []src.ConnectionReceiver{
-				{
-					PortAddr: src.PortAddr{
-						Node: lockNodeName,
-						Port: "sig",
-					},
-				},
-			},
-		},
-		Meta: conn.Meta,
-	}
-
-	// now handle (...) then part
-	connsResult, err := d.handleConns(conn.ReceiverSide.Then, nodes, scope)
-	if err != nil {
-		return handleThenConns{}, err
-	}
-
-	nodesToInsert := maps.Clone(connsResult.nodesToInsert)
-	nodesToInsert[lockNodeName] = lockNode
-
-	return handleThenConns{
-		connToReplace:  connToReplace,
-		connsToInsert:  connsResult.connsToInsert,
-		constsToInsert: connsResult.constsToInsert,
-		usedNodesPorts: connsResult.usedNodePorts,
-		nodesToInsert:  nodesToInsert,
+		extraConsts:    constsToInsert,
+		extraNodes:     nodesToInsert,
 	}, nil
 }

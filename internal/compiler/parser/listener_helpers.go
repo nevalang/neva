@@ -399,7 +399,7 @@ func parseConnReceiverSide(
 			}
 			thenConns = append(thenConns, parsedThenConn)
 		}
-		return src.ConnectionReceiverSide{Then: thenConns}, nil
+		return src.ConnectionReceiverSide{ThenConnections: thenConns}, nil
 	}
 
 	var receivers []src.ConnectionReceiver
