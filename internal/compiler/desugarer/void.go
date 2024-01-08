@@ -2,36 +2,56 @@ package desugarer
 
 import src "github.com/nevalang/neva/pkg/sourcecode"
 
-func (Desugarer) insertVoidNodeAndConns(
-	desugaredNodes map[string]src.Node,
-	unusedOutports nodePortsMap,
-	desugaredNet []src.Connection,
-) []src.Connection {
+type voidResult struct {
+	voidNodeName string
+	voidNode     src.Node
+	voidConns    []src.Connection
+}
+
+func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 	voidNodeName := "__void__"
-	desugaredNodes[voidNodeName] = src.Node{
-		EntityRef: src.EntityRef{
-			Pkg:  "builtin",
-			Name: "Void",
+
+	result := voidResult{
+		voidNodeName: voidNodeName,
+		voidNode: src.Node{
+			EntityRef: src.EntityRef{
+				Pkg:  "builtin",
+				Name: "Void",
+			},
+		},
+		voidConns: make([]src.Connection, 0, len(unusedOutports.m)),
+	}
+
+	receiverSides := []src.ConnectionReceiver{
+		{
+			PortAddr: src.PortAddr{
+				Node: voidNodeName,
+				Port: "v",
+			},
 		},
 	}
-	receiverSides := []src.ReceiverConnectionSide{
-		{PortAddr: src.PortAddr{Node: voidNodeName, Port: "v"}},
-	}
+
+	voidConns := make([]src.Connection, 0, len(unusedOutports.m))
 	for nodeName, ports := range unusedOutports.m {
 		for portName := range ports {
-			desugaredNet = append(desugaredNet, src.Connection{
-				SenderSide: src.SenderConnectionSide{
+			voidConns = append(voidConns, src.Connection{
+				SenderSide: src.ConnectionSenderSide{
 					PortAddr: &src.PortAddr{
 						Node: nodeName,
 						Port: portName,
 					},
 				},
-				ReceiverSides: receiverSides,
-				Meta:          src.Meta{},
+				ReceiverSide: src.ConnectionReceiverSide{
+					Receivers: receiverSides,
+				},
+				Meta: src.Meta{},
 			})
 		}
 	}
-	return desugaredNet
+
+	result.voidConns = voidConns
+
+	return result
 }
 
 func (Desugarer) findUnusedOutports(

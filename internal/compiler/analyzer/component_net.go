@@ -11,7 +11,6 @@ import (
 
 var ErrStructFieldNotFound = errors.New("Struct field not found")
 
-//nolint:funlen
 func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
@@ -19,80 +18,149 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
-	nodesUsage := make(map[string]NodeNetUsage, len(nodes))
+	nodesUsage := make(map[string]NodeNetUsage, len(nodes)) // we create it here because there's recursion down there
 
-	for _, conn := range net {
-		outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
-		if err != nil {
-			return nil, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &conn.SenderSide.Meta,
-			}.Merge(err)
-		}
-
-		if conn.SenderSide.PortAddr != nil { // mark node's outport as used if sender isn't const ref
-			senderNodeName := conn.SenderSide.PortAddr.Node
-			outportName := conn.SenderSide.PortAddr.Port
-			if _, ok := nodesUsage[senderNodeName]; !ok {
-				nodesUsage[senderNodeName] = NodeNetUsage{
-					In:  map[string]struct{}{},
-					Out: map[string]struct{}{},
-				}
-			}
-			nodesUsage[senderNodeName].Out[outportName] = struct{}{}
-		}
-
-		if len(conn.SenderSide.Selectors) > 0 {
-			lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.SenderSide.Selectors)
-			if err != nil {
-				return nil, &compiler.Error{
-					Err:      err,
-					Location: &scope.Location,
-					Meta:     &conn.Meta,
-				}
-			}
-			outportTypeExpr = lastFieldType
-		}
-
-		for _, receiver := range conn.ReceiverSides {
-			inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
-			if err != nil {
-				return nil, compiler.Error{
-					Err:      errors.New("Unable to get receiver type"),
-					Location: &scope.Location,
-					Meta:     &receiver.Meta,
-				}.Merge(err)
-			}
-
-			if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
-				return nil, &compiler.Error{
-					Err: fmt.Errorf(
-						"Subtype checking failed: %v -> %v: %w",
-						conn.SenderSide, receiver, err,
-					),
-					Location: &scope.Location,
-					Meta:     &conn.Meta,
-				}
-			}
-
-			// mark node's inport as used
-			receiverNodeName := receiver.PortAddr.Node
-			inportName := receiver.PortAddr.Port
-			if _, ok := nodesUsage[receiverNodeName]; !ok {
-				nodesUsage[receiverNodeName] = NodeNetUsage{
-					In:  map[string]struct{}{}, // we don't use nodeIfaces for the same reason
-					Out: map[string]struct{}{}, // as with outports
-				}
-			}
-			nodesUsage[receiverNodeName].In[inportName] = struct{}{}
-		}
+	if err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope); err != nil {
+		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
-	if err := a.checkNodesUsage(nodesIfaces, scope, nodesUsage); err != nil {
+	if err := a.checkNodesPortsUsage(nodesIfaces, scope, nodesUsage); err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
 	return net, nil
+}
+
+// analyzeConnections does two things:
+// 1. Analyzes every connection and terminates with non-nil error if any of them is invalid.
+// 2. Updates nodesUsage (we mutate it in-place instead of returning to avoid merging across recursive calls).
+func (a Analyzer) analyzeConnections(
+	net []src.Connection,
+	compInterface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
+	nodesUsage map[string]NodeNetUsage,
+	scope src.Scope,
+) *compiler.Error {
+	for _, conn := range net {
+		if err := a.analyzeNetConn(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a Analyzer) analyzeNetConn( //nolint:funlen
+	conn src.Connection,
+	compInterface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
+	scope src.Scope,
+	nodesUsage map[string]NodeNetUsage,
+) *compiler.Error {
+	outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
+	if err != nil {
+		return compiler.Error{
+			Location: &scope.Location,
+			Meta:     &conn.SenderSide.Meta,
+		}.Merge(err)
+	}
+
+	// mark node's outport as used if sender isn't const ref
+	if conn.SenderSide.PortAddr != nil {
+		senderNodeName := conn.SenderSide.PortAddr.Node
+		outportName := conn.SenderSide.PortAddr.Port
+		if _, ok := nodesUsage[senderNodeName]; !ok {
+			nodesUsage[senderNodeName] = NodeNetUsage{
+				In:  map[string]struct{}{},
+				Out: map[string]struct{}{},
+			}
+		}
+		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
+	}
+
+	if len(conn.SenderSide.Selectors) > 0 {
+		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.SenderSide.Selectors)
+		if err != nil {
+			return &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+		outportTypeExpr = lastFieldType
+	}
+
+	if len(conn.ReceiverSide.ThenConnections) == 0 && len(conn.ReceiverSide.Receivers) == 0 {
+		if err != nil {
+			return &compiler.Error{
+				Err: errors.New(
+					"Connection's receiver side cannot be empty, it must either have then connection or receivers",
+				),
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+	} else if len(conn.ReceiverSide.ThenConnections) != 0 && len(conn.ReceiverSide.Receivers) != 0 {
+		if err != nil {
+			return &compiler.Error{
+				Err: errors.New(
+					"Connection's receiver side must either have then connection or receivers, not both",
+				),
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+	}
+
+	if conn.ReceiverSide.ThenConnections != nil {
+		// note that we call analyzeConnections instead of analyzeComponentNetwork
+		// because we only need to analyze connections and update nodesUsage
+		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
+		return a.analyzeConnections( // indirect recursion
+			conn.ReceiverSide.ThenConnections,
+			compInterface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			scope,
+		)
+	}
+
+	for _, receiver := range conn.ReceiverSide.Receivers {
+		inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
+		if err != nil {
+			return compiler.Error{
+				Err:      errors.New("Unable to get receiver type"),
+				Location: &scope.Location,
+				Meta:     &receiver.Meta,
+			}.Merge(err)
+		}
+
+		if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
+			return &compiler.Error{
+				Err: fmt.Errorf(
+					"Subtype checking failed: %v -> %v: %w",
+					conn.SenderSide, receiver, err,
+				),
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+
+		// mark node's inport as used
+		receiverNodeName := receiver.PortAddr.Node
+		inportName := receiver.PortAddr.Port
+		if _, ok := nodesUsage[receiverNodeName]; !ok {
+			nodesUsage[receiverNodeName] = NodeNetUsage{
+				In:  map[string]struct{}{}, // we don't use nodeIfaces for the same reason
+				Out: map[string]struct{}{}, // as with outports
+			}
+		}
+		nodesUsage[receiverNodeName].In[inportName] = struct{}{}
+	}
+
+	return nil
 }
 
 // NodeNetUsage represents how network uses node's ports.
@@ -100,9 +168,8 @@ type NodeNetUsage struct {
 	In, Out map[string]struct{}
 }
 
-// checkNodesUsage ensures that for every node we use all its inports
-// and (if they are outports) at least one it's outport.
-func (Analyzer) checkNodesUsage(
+// checkNodesPortsUsage ensures that for every node out there we use all its inports and outports.
+func (Analyzer) checkNodesPortsUsage(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
@@ -150,7 +217,7 @@ func (Analyzer) checkNodesUsage(
 }
 
 func (a Analyzer) getReceiverType(
-	receiverSide src.ReceiverConnectionSide,
+	receiverSide src.ConnectionReceiver,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
@@ -273,7 +340,7 @@ func (a Analyzer) getResolvedPortType(
 }
 
 func (a Analyzer) getSenderType(
-	senderSide src.SenderConnectionSide,
+	senderSide src.ConnectionSenderSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,

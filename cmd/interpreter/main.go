@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
@@ -57,6 +58,8 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	os.Args[1] = strings.TrimSuffix(os.Args[1], "/main.neva")
 
 	if err := intr.Interpret(context.Background(), wd, os.Args[1]); err != nil {
 		fmt.Println(err)

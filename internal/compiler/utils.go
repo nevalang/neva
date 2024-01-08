@@ -1,6 +1,7 @@
-package utils
+package compiler
 
 import (
+	"encoding/json"
 	"strings"
 
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -26,4 +27,13 @@ func ParseRef(ref string) src.EntityRef {
 	}
 
 	return entityRef
+}
+
+// JSONDump is for debugging purposes only!
+func JSONDump(v any) string {
+	bb, err := json.Marshal(v)
+	if err != nil {
+		return err.Error()
+	}
+	return string(bb)
 }

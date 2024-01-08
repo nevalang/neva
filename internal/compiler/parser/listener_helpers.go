@@ -7,7 +7,6 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
@@ -339,150 +338,199 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) { //nolint:funlen
+func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
 	result := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
-		connMeta := src.Meta{
-			Text: connDef.GetText(),
-			Start: src.Position{
-				Line:   connDef.GetStart().GetLine(),
-				Column: connDef.GetStart().GetColumn(),
-			},
-			Stop: src.Position{
-				Line:   connDef.GetStop().GetLine(),
-				Column: connDef.GetStop().GetColumn(),
-			},
+		parsedConn, err := parseConn(connDef)
+		if err != nil {
+			return nil, err
 		}
-
-		if connDef.SingleSenderConn() == nil {
-			return nil, &compiler.Error{
-				Err:  errors.New("Multi sender connections are not implemented yet"),
-				Meta: &connMeta,
-			}
-		}
-
-		singleSenderConn := connDef.SingleSenderConn()
-
-		var senderSelectors []string
-		singleSenderSelectors := singleSenderConn.SingleSenderSide().StructSelectors()
-		if singleSenderSelectors != nil {
-			for _, id := range singleSenderSelectors.AllIDENTIFIER() {
-				senderSelectors = append(senderSelectors, id.GetText())
-			}
-		}
-
-		receiverSide := singleSenderConn.ConnReceiverSide()
-		singleReceiver := receiverSide.PortAddr()
-		multipleReceivers := receiverSide.ConnReceivers()
-		if singleReceiver == nil && multipleReceivers == nil {
-			return nil, &compiler.Error{
-				Err:  errors.New("Connection must have at least one receiver"),
-				Meta: &connMeta,
-			}
-		}
-
-		var receiverSides []src.ReceiverConnectionSide
-		if singleReceiver != nil {
-			receiverSides = []src.ReceiverConnectionSide{
-				{
-					PortAddr: parsePortAddr(singleReceiver),
-					Meta: src.Meta{
-						Text: singleReceiver.GetText(),
-						Start: src.Position{
-							Line:   singleReceiver.GetStart().GetLine(),
-							Column: singleReceiver.GetStart().GetColumn(),
-						},
-						Stop: src.Position{
-							Line:   singleReceiver.GetStop().GetLine(),
-							Column: singleReceiver.GetStop().GetColumn(),
-						},
-					},
-				},
-			}
-		} else {
-			receiverPortAddrs := multipleReceivers.AllPortAddr()
-			receiverSides = make([]src.ReceiverConnectionSide, 0, len(receiverPortAddrs))
-			for _, receiverPortAddr := range receiverPortAddrs {
-				receiverSides = append(receiverSides, src.ReceiverConnectionSide{
-					PortAddr: parsePortAddr(receiverPortAddr),
-					Meta: src.Meta{
-						Text: receiverPortAddr.GetText(),
-						Start: src.Position{
-							Line:   receiverPortAddr.GetStart().GetLine(),
-							Column: receiverPortAddr.GetStart().GetColumn(),
-						},
-						Stop: src.Position{
-							Line:   receiverPortAddr.GetStop().GetLine(),
-							Column: receiverPortAddr.GetStop().GetColumn(),
-						},
-					},
-				})
-			}
-		}
-
-		senderSide := singleSenderConn.SingleSenderSide()
-		senderSidePort := senderSide.PortAddr()
-		senderSideConstRef := senderSide.SenderConstRef()
-
-		var senderSidePortAddr *src.PortAddr
-		if senderSidePort != nil {
-			senderSidePortAddr = utils.Pointer(
-				parsePortAddr(senderSidePort),
-			)
-		}
-
-		var constRef *src.EntityRef
-		if senderSideConstRef != nil {
-			constRefMeta := src.Meta{
-				Text: senderSideConstRef.GetText(),
-				Start: src.Position{
-					Line:   senderSideConstRef.GetStart().GetLine(),
-					Column: senderSideConstRef.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   senderSideConstRef.GetStop().GetLine(),
-					Column: senderSideConstRef.GetStop().GetColumn(),
-				},
-			}
-
-			if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
-				constRef = &src.EntityRef{
-					Name: localRef.GetText(),
-					Meta: constRefMeta,
-				}
-			} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
-				constRef = &src.EntityRef{
-					Pkg:  imoportedRef.PkgRef().GetText(),
-					Name: imoportedRef.EntityName().GetText(),
-					Meta: constRefMeta,
-				}
-			}
-		}
-
-		result = append(result, src.Connection{
-			SenderSide: src.SenderConnectionSide{
-				PortAddr:  senderSidePortAddr,
-				ConstRef:  constRef,
-				Selectors: senderSelectors,
-				Meta: src.Meta{
-					Text: senderSide.GetText(),
-					Start: src.Position{
-						Line:   senderSide.GetStart().GetLine(),
-						Column: senderSide.GetStart().GetColumn(),
-					},
-					Stop: src.Position{
-						Line:   senderSide.GetStop().GetLine(),
-						Column: senderSide.GetStop().GetColumn(),
-					},
-				},
-			},
-			ReceiverSides: receiverSides,
-			Meta:          connMeta,
-		})
+		result = append(result, parsedConn)
 	}
 
 	return result, nil
+}
+
+func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+	connMeta := src.Meta{
+		Text: connDef.GetText(),
+		Start: src.Position{
+			Line:   connDef.GetStart().GetLine(),
+			Column: connDef.GetStart().GetColumn(),
+		},
+		Stop: src.Position{
+			Line:   connDef.GetStop().GetLine(),
+			Column: connDef.GetStop().GetColumn(),
+		},
+	}
+
+	parsedSenderSide := parseConnSenderSide(connDef)
+
+	receiverSide, err := parseConnReceiverSide(connDef, connMeta)
+	if err != nil {
+		return src.Connection{}, compiler.Error{
+			Meta: &connMeta,
+		}.Merge(err)
+	}
+
+	return src.Connection{
+		SenderSide:   parsedSenderSide,
+		ReceiverSide: receiverSide,
+		Meta:         connMeta,
+	}, nil
+}
+
+func parseConnReceiverSide(
+	connDef generated.IConnDefContext,
+	connMeta src.Meta,
+) (src.ConnectionReceiverSide, *compiler.Error) {
+	thenExpr := connDef.ThenConnExpr()
+	if thenExpr != nil {
+		thenConnExprs := thenExpr.AllConnDef()
+		thenConns := make([]src.Connection, 0, len(thenConnExprs))
+		for _, thenConnDef := range thenConnExprs {
+			parsedThenConn, err := parseConn(thenConnDef)
+			if err != nil {
+				return src.ConnectionReceiverSide{}, &compiler.Error{
+					Err:  err,
+					Meta: &connMeta,
+				}
+			}
+			thenConns = append(thenConns, parsedThenConn)
+		}
+		return src.ConnectionReceiverSide{ThenConnections: thenConns}, nil
+	}
+
+	var receivers []src.ConnectionReceiver
+	receivers, err := getConnReceivers(connDef.ConnReceiverSide())
+	if err != nil {
+		return src.ConnectionReceiverSide{}, &compiler.Error{
+			Err:  err,
+			Meta: &connMeta,
+		}
+	}
+
+	return src.ConnectionReceiverSide{Receivers: receivers}, nil
+}
+
+func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSenderSide { //nolint:funlen
+	senderSide := connDef.SenderSide()
+
+	var senderSelectors []string
+	singleSenderSelectors := senderSide.StructSelectors()
+	if singleSenderSelectors != nil {
+		for _, id := range singleSenderSelectors.AllIDENTIFIER() {
+			senderSelectors = append(senderSelectors, id.GetText())
+		}
+	}
+
+	senderSidePort := senderSide.PortAddr()
+	senderSideConstRef := senderSide.SenderConstRef()
+
+	var senderSidePortAddr *src.PortAddr
+	if senderSidePort != nil {
+		senderSidePortAddr = compiler.Pointer(
+			parsePortAddr(senderSidePort),
+		)
+	}
+
+	var constRef *src.EntityRef
+	if senderSideConstRef != nil {
+		constRefMeta := src.Meta{
+			Text: senderSideConstRef.GetText(),
+			Start: src.Position{
+				Line:   senderSideConstRef.GetStart().GetLine(),
+				Column: senderSideConstRef.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   senderSideConstRef.GetStop().GetLine(),
+				Column: senderSideConstRef.GetStop().GetColumn(),
+			},
+		}
+		if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
+			constRef = &src.EntityRef{
+				Name: localRef.GetText(),
+				Meta: constRefMeta,
+			}
+		} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
+			constRef = &src.EntityRef{
+				Pkg:  imoportedRef.PkgRef().GetText(),
+				Name: imoportedRef.EntityName().GetText(),
+				Meta: constRefMeta,
+			}
+		}
+	}
+
+	parsedSenderSide := src.ConnectionSenderSide{
+		PortAddr:  senderSidePortAddr,
+		ConstRef:  constRef,
+		Selectors: senderSelectors,
+		Meta: src.Meta{
+			Text: senderSide.GetText(),
+			Start: src.Position{
+				Line:   senderSide.GetStart().GetLine(),
+				Column: senderSide.GetStart().GetColumn(),
+			},
+			Stop: src.Position{
+				Line:   senderSide.GetStop().GetLine(),
+				Column: senderSide.GetStop().GetColumn(),
+			},
+		},
+	}
+	return parsedSenderSide
+}
+
+func getConnReceivers(receiverSide generated.IConnReceiverSideContext) ([]src.ConnectionReceiver, *compiler.Error) {
+	singleReceiver := receiverSide.PortAddr()
+	multipleReceivers := receiverSide.ConnReceivers()
+
+	if singleReceiver == nil && multipleReceivers == nil {
+		return nil, &compiler.Error{
+			Err: errors.New("Connection must have at least one receiver"),
+		}
+	}
+
+	if singleReceiver != nil {
+		return []src.ConnectionReceiver{
+			{
+				PortAddr: parsePortAddr(singleReceiver),
+				Meta: src.Meta{
+					Text: singleReceiver.GetText(),
+					Start: src.Position{
+						Line:   singleReceiver.GetStart().GetLine(),
+						Column: singleReceiver.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   singleReceiver.GetStop().GetLine(),
+						Column: singleReceiver.GetStop().GetColumn(),
+					},
+				},
+			},
+		}, nil
+	}
+
+	receiverPortAddrs := multipleReceivers.AllPortAddr()
+	receiverSides := make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))
+
+	for _, receiverPortAddr := range receiverPortAddrs {
+		receiverSides = append(receiverSides, src.ConnectionReceiver{
+			PortAddr: parsePortAddr(receiverPortAddr),
+			Meta: src.Meta{
+				Text: receiverPortAddr.GetText(),
+				Start: src.Position{
+					Line:   receiverPortAddr.GetStart().GetLine(),
+					Column: receiverPortAddr.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   receiverPortAddr.GetStop().GetLine(),
+					Column: receiverPortAddr.GetStop().GetColumn(),
+				},
+			},
+		})
+	}
+
+	return receiverSides, nil
 }
 
 func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
@@ -504,7 +552,7 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 		if err != nil {
 			panic(err)
 		}
-		idx = utils.Pointer(uint8(result))
+		idx = compiler.Pointer(uint8(result))
 	}
 
 	return src.PortAddr{
@@ -537,13 +585,13 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 		if boolVal != "true" && boolVal != "false" {
 			panic("bool val not true or false")
 		}
-		val.Bool = utils.Pointer(boolVal == "true")
+		val.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		val.Int = utils.Pointer(int(i))
+		val.Int = compiler.Pointer(int(i))
 	case constVal.FLOAT() != nil:
 		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -551,7 +599,7 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 		}
 		val.Float = &f
 	case constVal.STRING() != nil:
-		val.Str = utils.Pointer(
+		val.Str = compiler.Pointer(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),

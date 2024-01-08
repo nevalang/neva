@@ -15,8 +15,7 @@ type desugarComponentResult struct {
 	constsToInsert map[string]src.Const //nolint:lll // sometimes after desugaring component we need to insert some constants to the package
 }
 
-// desugarComponent replaces const ref in net with regular port addr and injects const node with directive.
-func (d Desugarer) desugarComponent( //nolint:funlen
+func (d Desugarer) desugarComponent(
 	component src.Component,
 	scope src.Scope,
 ) (desugarComponentResult, *compiler.Error) {
@@ -31,59 +30,19 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		desugaredNodes = map[string]src.Node{}
 	}
 
-	usedNodePorts := newNodePortsMap() // needed for voids
-	desugaredNet := make([]src.Connection, 0, len(component.Net))
-	constsToInsert := map[string]src.Const{}
-
-	for _, conn := range component.Net {
-		if conn.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
-			usedNodePorts.set(
-				conn.SenderSide.PortAddr.Node,
-				conn.SenderSide.PortAddr.Port,
-			)
-		}
-
-		if conn.SenderSide.ConstRef == nil && len(conn.SenderSide.Selectors) == 0 { // nothing to desugar here
-			desugaredNet = append(desugaredNet, conn)
-			continue
-		}
-
-		if len(conn.SenderSide.Selectors) != 0 {
-			selectorsResult, err := d.desugarStructSelectors(
-				conn,
-				desugaredNodes,
-				desugaredNet,
-				scope,
-			)
-			if err != nil {
-				return desugarComponentResult{}, compiler.Error{
-					Err:      errors.New("Cannot desugar struct selectors"),
-					Location: &scope.Location,
-					Meta:     &conn.Meta,
-				}.Merge(err)
-			}
-			maps.Copy(desugaredNodes, selectorsResult.nodesToInsert)
-			maps.Copy(constsToInsert, selectorsResult.constsToInsert)
-			desugaredNet = append(desugaredNet, selectorsResult.connToInsert)
-			conn = selectorsResult.connToReplace
-		}
-
-		if conn.SenderSide.ConstRef == nil {
-			desugaredNet = append(desugaredNet, conn)
-			continue
-		}
-
-		netAfterConstDesugar, err := d.desugarConstSender(conn, scope, desugaredNodes, desugaredNet)
-		if err != nil {
-			return desugarComponentResult{}, err
-		}
-
-		desugaredNet = netAfterConstDesugar
+	handleConnsResult, err := d.handleConns(component.Net, desugaredNodes, scope)
+	if err != nil {
+		return desugarComponentResult{}, err
 	}
 
-	unusedOutports := d.findUnusedOutports(component, scope, usedNodePorts, desugaredNodes, desugaredNet)
+	desugaredNet := handleConnsResult.desugaredConns
+	maps.Copy(desugaredNodes, handleConnsResult.extraNodes)
+
+	unusedOutports := d.findUnusedOutports(component, scope, handleConnsResult.usedNodePorts, desugaredNodes, desugaredNet)
 	if unusedOutports.len() != 0 {
-		desugaredNet = d.insertVoidNodeAndConns(desugaredNodes, unusedOutports, desugaredNet)
+		voidResult := d.getVoidNodeAndConns(unusedOutports)
+		desugaredNet = append(desugaredNet, voidResult.voidConns...)
+		desugaredNodes[voidResult.voidNodeName] = voidResult.voidNode
 	}
 
 	return desugarComponentResult{
@@ -94,6 +53,94 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			Net:        desugaredNet,
 			Meta:       component.Meta,
 		},
-		constsToInsert: constsToInsert,
+		constsToInsert: handleConnsResult.extraConsts,
+	}, nil
+}
+
+type handleConnsResult struct {
+	desugaredConns []src.Connection     // desugared network
+	extraConsts    map[string]src.Const // constants that needs to be inserted in to make desugared network work
+	extraNodes     map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
+	usedNodePorts  nodePortsMap         // ports that were used in processed network
+}
+
+func (d Desugarer) handleConns( //nolint:funlen
+	conns []src.Connection,
+	nodes map[string]src.Node,
+	scope src.Scope,
+) (handleConnsResult, *compiler.Error) {
+	nodesToInsert := map[string]src.Node{}
+	desugaredConns := make([]src.Connection, 0, len(conns))
+	usedNodePorts := newNodePortsMap()
+	constsToInsert := map[string]src.Const{}
+
+	for _, conn := range conns {
+		if conn.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
+			usedNodePorts.set(
+				conn.SenderSide.PortAddr.Node,
+				conn.SenderSide.PortAddr.Port,
+			)
+		}
+
+		if conn.SenderSide.ConstRef == nil &&
+			len(conn.SenderSide.Selectors) == 0 &&
+			len(conn.ReceiverSide.ThenConnections) == 0 {
+			desugaredConns = append(desugaredConns, conn)
+			continue
+		}
+
+		if len(conn.SenderSide.Selectors) != 0 {
+			result, err := d.desugarStructSelectors(
+				conn,
+				nodes,
+				desugaredConns,
+				scope,
+			)
+			if err != nil {
+				return handleConnsResult{}, compiler.Error{
+					Err:      errors.New("Cannot desugar struct selectors"),
+					Location: &scope.Location,
+					Meta:     &conn.Meta,
+				}.Merge(err)
+			}
+			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
+			constsToInsert[result.constToInsertName] = result.constToInsert
+			conn = result.connToReplace
+			desugaredConns = append(desugaredConns, result.connToInsert)
+		}
+
+		if conn.SenderSide.ConstRef != nil {
+			result, err := d.handleConstSender(conn, scope)
+			if err != nil {
+				return handleConnsResult{}, err
+			}
+			nodesToInsert[result.constNodeName] = result.constNode
+			conn = result.desugaredConstConn
+		}
+
+		desugaredConns = append(desugaredConns, conn)
+
+		if len(conn.ReceiverSide.ThenConnections) == 0 {
+			continue
+		}
+
+		result, err := d.handleThenConns(conn, nodes, scope)
+		if err != nil {
+			return handleConnsResult{}, err
+		}
+
+		// handleThenConns recursively calls this function so it returns the same structure
+		maps.Copy(usedNodePorts.m, result.usedNodesPorts.m)
+		maps.Copy(constsToInsert, result.extraConsts)
+		maps.Copy(nodesToInsert, result.extraNodes)
+
+		desugaredConns = append(desugaredConns, result.extraConns...)
+	}
+
+	return handleConnsResult{
+		desugaredConns: desugaredConns,
+		usedNodePorts:  usedNodePorts,
+		extraConsts:    constsToInsert,
+		extraNodes:     nodesToInsert,
 	}, nil
 }

@@ -172,3 +172,8 @@ This will probably happen quite often because when you don't have to create cons
 The reason is the same as with "static ports" vs "givers as special nodes". Otherwise there would be a special kind of nodes like "record builders" that are different from normal component nodes because they must have a specific configuration - record that they must build.
 
 With `fromRec` feature (that is implemented outside of the typesystem, because type system doesn't know anything about ports) it's possible to say "hey compiler, I want a component with the same inports that this record has fields". -->
+
+## What is the motivation behind putting exactly these entities under builtin package?
+
+1. Frequently used
+2. Used internally by compiler (desugarer)

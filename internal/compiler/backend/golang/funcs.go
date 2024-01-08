@@ -12,15 +12,15 @@ import (
 func getMsg(msg *ir.Msg) (string, error) {
 	//nolint:nosnakecase
 	switch msg.Type {
-	case ir.MsgType_MSG_TYPE_BOOL:
+	case ir.MSG_TYPE_BOOL:
 		return fmt.Sprintf("runtime.NewBoolMsg(%v)", msg.Bool), nil
-	case ir.MsgType_MSG_TYPE_INT:
+	case ir.MSG_TYPE_INT:
 		return fmt.Sprintf("runtime.NewIntMsg(%v)", msg.Int), nil
-	case ir.MsgType_MSG_TYPE_FLOAT:
+	case ir.MSG_TYPE_FLOAT:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
-	case ir.MsgType_MSG_TYPE_STR:
+	case ir.MSG_TYPE_STR:
 		return fmt.Sprintf("runtime.NewStrMsg(%v)", msg.Str), nil
-	case ir.MsgType_MSG_TYPE_LIST:
+	case ir.MSG_TYPE_LIST:
 		s := "runtime.NewListMsg(\n\t"
 		for _, v := range msg.List {
 			el, err := getMsg(v)
@@ -30,7 +30,7 @@ func getMsg(msg *ir.Msg) (string, error) {
 			s += fmt.Sprintf("\t%v,\n", el)
 		}
 		return s + ")", nil
-	case ir.MsgType_MSG_TYPE_MAP:
+	case ir.MSG_TYPE_MAP:
 		s := "runtime.NewMapMsg(map[string]runtime.Msg{\n\t"
 		for k, v := range msg.Map {
 			el, err := getMsg(v)

@@ -24,22 +24,22 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 	switch {
 	case constant.Value.Bool != nil:
 		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_BOOL,
+			Type: ir.MSG_TYPE_BOOL,
 			Bool: *constant.Value.Bool,
 		}, nil
 	case constant.Value.Int != nil:
 		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_INT,
+			Type: ir.MSG_TYPE_INT,
 			Int:  int64(*constant.Value.Int),
 		}, nil
 	case constant.Value.Float != nil:
 		return &ir.Msg{
-			Type:  ir.MsgType_MSG_TYPE_FLOAT,
+			Type:  ir.MSG_TYPE_FLOAT,
 			Float: *constant.Value.Float,
 		}, nil
 	case constant.Value.Str != nil:
 		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_STR,
+			Type: ir.MSG_TYPE_STR,
 			Str:  *constant.Value.Str,
 		}, nil
 	case constant.Value.List != nil:
@@ -54,7 +54,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 		}
 
 		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_LIST,
+			Type: ir.MSG_TYPE_LIST,
 			List: listMsg,
 		}, nil
 	case constant.Value.Map != nil:
@@ -69,7 +69,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 		}
 
 		return &ir.Msg{
-			Type: ir.MsgType_MSG_TYPE_MAP,
+			Type: ir.MSG_TYPE_MAP,
 			Map:  mapMsg,
 		}, nil
 	}

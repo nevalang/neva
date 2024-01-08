@@ -34,7 +34,7 @@ const (
 
 type emptyMsg struct{}
 
-func (emptyMsg) String() string      { return "<stringer not implemented>" }
+func (emptyMsg) String() string      { return "<empty>" }
 func (emptyMsg) Type() MsgType       { return UnknownMsgType }
 func (emptyMsg) Bool() bool          { return false }
 func (emptyMsg) Int() int64          { return 0 }

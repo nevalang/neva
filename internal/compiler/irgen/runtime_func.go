@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/utils"
 	"github.com/nevalang/neva/pkg/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -38,7 +37,7 @@ func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error
 		return nil, nil
 	}
 
-	entity, location, err := scope.Entity(utils.ParseRef(args[0]))
+	entity, location, err := scope.Entity(compiler.ParseRef(args[0]))
 	if err != nil {
 		return nil, &compiler.Error{
 			Err:      err,
