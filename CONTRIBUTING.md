@@ -1,12 +1,15 @@
 # Requirements
 
+Read the [documentation](./docs/). Many design decisions are described there.
+
+This is **must read** for everyone who want to contribute to the language.
+
 ## System
 
 - Go: https://go.dev/doc/install
 - Make: https://www.gnu.org/software/make/#download
 - NodeJS and NPM: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/
 - Antlr: `pip install antlr4-tools`
-- Protoc: https://grpc.io/docs/protoc-installation/
 - Tygo: `go install github.com/gzuidhof/tygo@latest`
 
 ## VSCode
@@ -19,17 +22,16 @@ These are not really required but recommended in order you're using VSCode
 - [tooltitude](https://marketplace.visualstudio.com/items?itemName=tooltitudeteam.tooltitude)
 - [markdown-mermaid](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
 - [ts-errors](https://marketplace.visualstudio.com/items?itemName=yoavbls.pretty-ts-errors)
-- [vscode-protolint](https://marketplace.visualstudio.com/items?itemName=Plex.vscode-protolint)
 
 # Development
 
-First read the [language specification](docs/spec.md), [design document](./ARCHITECTURE.md) and see what can [Makefile](./Makefile) do.
+After you've read the [documentation](./docs/) see [architecture high level overview](./ARCHITECTURE.md), see what [Makefile](./Makefile) can do.
 
-Remember that many go packages contain [doc comments](https://tip.golang.org/doc/comment). Do not fear to read the source code, leave the comments for unintuitive parts.
+Remember that many go packages contain doc comments. Do not fear to read the source code, leave the comments for unintuitive parts.
 
-Try to follow [clean code](https://github.com/Pungyeon/clean-go-article) and [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) best practices in general. Follow [SOLID](https://en.wikipedia.org/wiki/SOLID).
+Try to follow [clean code](https://github.com/Pungyeon/clean-go-article), [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) and [SOLID](https://en.wikipedia.org/wiki/SOLID).
 
-Discuss your idea via github discussions or issues before implementing it. Write tests, avoid using `nolint`. Leave the comments (but only when you have to), update documentation.
+Discuss your ideas via github discussions or issues before implementing it. Write tests, avoid using `nolint`. Leave the comments (but only when you have to), update documentation.
 
 ## Github Issues
 

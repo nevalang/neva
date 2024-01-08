@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -60,6 +61,11 @@ func main() {
 	}
 
 	os.Args[1] = strings.TrimSuffix(os.Args[1], "/main.neva")
+
+	if filepath.Ext(os.Args[1]) != "" {
+		fmt.Println("Use path to directory with executable package, relative to module root")
+		return
+	}
 
 	if err := intr.Interpret(context.Background(), wd, os.Args[1]); err != nil {
 		fmt.Println(err)

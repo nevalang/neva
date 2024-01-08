@@ -1,0 +1,25 @@
+types {
+    User struct {
+        age int
+        name str
+        pet Pet
+    }
+    Pet struct {
+        name str
+    }
+}
+
+components {
+    Main(enter) (exit) {
+        nodes {
+            #ports_from_struct
+            selector StructBuilder<User>
+            print Print<str>
+        }
+        net {
+            in.enter -> ($u -> selector.v)
+            selector.v -> print.v
+            print.v -> out.exit
+        }
+    }
+}
