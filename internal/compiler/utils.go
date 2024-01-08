@@ -1,4 +1,4 @@
-package utils
+package compiler
 
 import (
 	"strings"

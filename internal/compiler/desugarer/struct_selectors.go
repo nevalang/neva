@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
@@ -174,7 +173,7 @@ func (Desugarer) createPathConst(senderSide src.ConnectionSenderSide) src.Const 
 		constToInsert.Value.List = append(constToInsert.Value.List, src.Const{
 			Value: &src.Msg{
 				TypeExpr: strTypeExpr,
-				Str:      utils.Pointer(selector),
+				Str:      compiler.Pointer(selector),
 			},
 		})
 	}

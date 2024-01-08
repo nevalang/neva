@@ -10,7 +10,6 @@ require (
 require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/tliron/commonlog v0.1.0
-	google.golang.org/protobuf v1.31.0
 )
 
 require (

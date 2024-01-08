@@ -3,7 +3,7 @@ package desugarer
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/utils"
+	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
@@ -70,7 +70,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 													TypeExpr: typesystem.Expr{
 														Inst: &typesystem.InstExpr{Ref: src.EntityRef{Name: "int"}},
 													},
-													Int: utils.Pointer(42),
+													Int: compiler.Pointer(42),
 												},
 											},
 										},
@@ -122,7 +122,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 													TypeExpr: typesystem.Expr{
 														Inst: &typesystem.InstExpr{Ref: src.EntityRef{Name: "int"}},
 													},
-													Int: utils.Pointer(42),
+													Int: compiler.Pointer(42),
 												},
 											},
 										},

@@ -7,7 +7,6 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	"github.com/nevalang/neva/internal/utils"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
@@ -431,7 +430,7 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
-		senderSidePortAddr = utils.Pointer(
+		senderSidePortAddr = compiler.Pointer(
 			parsePortAddr(senderSidePort),
 		)
 	}
@@ -553,7 +552,7 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 		if err != nil {
 			panic(err)
 		}
-		idx = utils.Pointer(uint8(result))
+		idx = compiler.Pointer(uint8(result))
 	}
 
 	return src.PortAddr{
@@ -586,13 +585,13 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 		if boolVal != "true" && boolVal != "false" {
 			panic("bool val not true or false")
 		}
-		val.Bool = utils.Pointer(boolVal == "true")
+		val.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		val.Int = utils.Pointer(int(i))
+		val.Int = compiler.Pointer(int(i))
 	case constVal.FLOAT() != nil:
 		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -600,7 +599,7 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 		}
 		val.Float = &f
 	case constVal.STRING() != nil:
-		val.Str = utils.Pointer(
+		val.Str = compiler.Pointer(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),

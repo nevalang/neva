@@ -49,6 +49,8 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 		}
 	}
 
+	result.voidConns = voidConns
+
 	return result
 }
 

@@ -21,7 +21,7 @@ components {
 		net {
 			in.enter -> readFirst.sig
 			readFirst.v -> parseFirst.v
-			parseFirst.v -> { 
+			parseFirst.v -> {
 				add.a
 				readSecond.sig
 			}

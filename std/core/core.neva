@@ -1,0 +1,7 @@
+components {
+    #runtime_func(Read)
+    pub Read(sig) (v str)
+
+    #runtime_func(ParseInt)
+    pub ParseInt(v str) (v int, err str)
+}

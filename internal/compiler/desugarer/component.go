@@ -214,6 +214,6 @@ func (d Desugarer) handleThenConns(
 		connsToInsert:  connsResult.connsToInsert,
 		constsToInsert: connsResult.constsToInsert,
 		usedNodesPorts: connsResult.usedNodePorts,
-		nodesToInsert:  connsResult.nodesToInsert,
+		nodesToInsert:  nodesToInsert,
 	}, nil
 }

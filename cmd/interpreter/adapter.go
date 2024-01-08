@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -48,7 +49,9 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 			receiverPortChan, ok := runtimePorts[receiverPortAddr]
 			if !ok {
-				return runtime.Program{}, errors.New("receiver port not found")
+				dump(irProg)
+
+				return runtime.Program{}, fmt.Errorf("receiver port not found: %v", receiverPortAddr)
 			}
 
 			meta.ReceiverPortAddrs = append(meta.ReceiverPortAddrs, receiverPortAddr)
@@ -115,15 +118,15 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 
 	//nolint:nosnakecase
 	switch msg.Type {
-	case ir.MsgType_MSG_TYPE_BOOL:
+	case ir.MSG_TYPE_BOOL:
 		result = runtime.NewBoolMsg(msg.Bool)
-	case ir.MsgType_MSG_TYPE_INT:
+	case ir.MSG_TYPE_INT:
 		result = runtime.NewIntMsg(msg.Int)
-	case ir.MsgType_MSG_TYPE_FLOAT:
+	case ir.MSG_TYPE_FLOAT:
 		result = runtime.NewFloatMsg(msg.Float)
-	case ir.MsgType_MSG_TYPE_STR:
+	case ir.MSG_TYPE_STR:
 		result = runtime.NewStrMsg(msg.Str)
-	case ir.MsgType_MSG_TYPE_LIST:
+	case ir.MSG_TYPE_LIST:
 		list := make([]runtime.Msg, len(msg.List))
 		for i, v := range msg.List {
 			el, err := a.msg(v)
@@ -133,7 +136,7 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 			list[i] = el
 		}
 		result = runtime.NewListMsg(list...)
-	case ir.MsgType_MSG_TYPE_MAP:
+	case ir.MSG_TYPE_MAP:
 		m := make(map[string]runtime.Msg, len(msg.List))
 		for k, v := range msg.Map {
 			el, err := a.msg(v)
@@ -152,4 +155,12 @@ func (a Adapter) msg(msg *ir.Msg) (runtime.Msg, error) {
 
 func NewAdapter() Adapter {
 	return Adapter{}
+}
+
+func dump(irprog *ir.Program) {
+	bb, err := json.Marshal(irprog)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(bb))
 }
