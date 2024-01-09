@@ -17,6 +17,7 @@ type FuncRunner struct {
 }
 
 type FuncCreator interface {
+	// Create method validates the input and builds ready to use function
 	Create(FuncIO, Msg) (func(context.Context), error)
 }
 

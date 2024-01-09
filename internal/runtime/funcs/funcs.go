@@ -19,5 +19,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"Void":           void{},
 		"StructSelector": structSelector{},
 		"MapSelector":    mapSelector{},
+		"StructBuilder":  structBuilder{},
 	}
 }
