@@ -16,7 +16,7 @@ func (s structBuilder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx contex
 
 	inports := make(map[string]chan runtime.Msg, len(io.In))
 	for k, slots := range io.In {
-		if len(slots) != 0 {
+		if len(slots) != 1 {
 			return nil, errors.New("non-single port found: " + k)
 		}
 		inports[k] = slots[0]

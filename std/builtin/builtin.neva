@@ -34,5 +34,5 @@ components {
 
     #runtime_func(StructBuilder)
     #struct_inports
-    StructBuilder<T {}> () (T)
+    StructBuilder<T struct {}> () (T)
 }

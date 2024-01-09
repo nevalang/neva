@@ -116,6 +116,15 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["map_keys"]
     },
+    {
+      "name": "Interpreter: struct_builder/verbose",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/interpreter",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["struct_builder/verbose"]
+    },
     // === Other ===
     {
       "name": "antlr_000_empty.neva",
