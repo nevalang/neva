@@ -31,4 +31,8 @@ components {
 
     #runtime_func(Print)
     pub Print<T>(v T) (v T)
+
+    #runtime_func(StructBuilder)
+    #struct_inports
+    StructBuilder<T {}> () (T)
 }

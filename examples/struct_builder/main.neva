@@ -2,23 +2,24 @@ types {
     User struct {
         age int
         name str
-        pet Pet
     }
-    Pet struct {
-        name str
-    }
+}
+
+const {
+    age 32
+    name 'John'
 }
 
 components {
     Main(enter) (exit) {
         nodes {
-            #ports_from_struct
-            selector StructBuilder<User>
+            builder StructBuilder<User>
             print Print<str>
         }
         net {
-            in.enter -> ($u -> selector.v)
-            selector.v -> print.v
+            $age -> builder.age
+            $name -> builder.name
+            builder.v -> print.v
             print.v -> out.exit
         }
     }
