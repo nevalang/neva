@@ -41,7 +41,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"}
+	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // TODO rethink stdlib
 
 	// copy all modules but replace manifest in current one
 	modsCopy := maps.Clone(build.Modules)
@@ -130,7 +130,7 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 		desugaredImports = map[string]src.Import{}
 	}
 
-	desugaredImports["builtin"] = src.Import{
+	desugaredImports["builtin"] = src.Import{ // inject std/builtin import
 		ModuleName: "std",
 		PkgName:    "builtin",
 	}

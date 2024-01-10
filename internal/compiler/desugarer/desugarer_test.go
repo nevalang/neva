@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Try to avoid adding tests here, write tests for submethods. It's hard to test this way.
 func TestDesugarer_Desugar(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -16,42 +17,6 @@ func TestDesugarer_Desugar(t *testing.T) {
 		want    src.Build
 		wantErr bool
 	}{
-		// every module must have std module dependency and std/builtin import in every file
-		{
-			name: "std_mod_dep_and_builtin_import",
-			build: src.Build{
-				Modules: map[src.ModuleRef]src.Module{
-					{}: {
-						Manifest: src.ModuleManifest{
-							Deps: map[string]src.ModuleRef{}, // <-- no std mod dep
-						},
-						Packages: map[string]src.Package{
-							"pkgName": {
-								"fileName": src.File{
-									Imports: map[string]src.Import{}, // <-- no imports of std/builtin
-								},
-							},
-						},
-					},
-				},
-			},
-			want: src.Build{
-				Modules: map[src.ModuleRef]src.Module{
-					{}: {
-						Manifest: defaultManifest(), // <-- std mod dep
-						Packages: map[string]src.Package{
-							"pkgName": {
-								"fileName": src.File{
-									Imports:  defaultImports(), // <-- std/builtin import
-									Entities: map[string]src.Entity{},
-								},
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
-		},
 		// every network with const ref must be desugared into special node and connections to it
 		{
 			name: "const_node",
@@ -295,33 +260,90 @@ func TestDesugarer_Desugar(t *testing.T) {
 	}
 }
 
-func injectStd(file src.File) src.File {
-	if file.Imports == nil {
-		file.Imports = map[string]src.Import{}
-	}
-	file.Imports["builtin"] = src.Import{
-		ModuleName: "std",
-		PkgName:    "builtin",
-	}
-	return file
-}
-
-func defaultManifest() src.ModuleManifest {
-	return src.ModuleManifest{
-		Deps: map[string]src.ModuleRef{
-			"std": {
-				Path:    "std",
-				Version: "0.0.1",
-			},
-		},
-	}
-}
-
 func defaultImports() map[string]src.Import {
 	return map[string]src.Import{
 		"builtin": {
 			ModuleName: "std",
 			PkgName:    "builtin",
 		},
+	}
+}
+
+func TestDesugarer_desugarModule(t *testing.T) {
+	tests := []struct {
+		name    string
+		mod     src.Module
+		want    src.Module
+		wantErr bool
+	}{
+		// every output module must have std module dependency
+		{
+			name: "std_mod_dep_and_builtin_import",
+			mod: src.Module{
+				Manifest: src.ModuleManifest{
+					Deps: map[string]src.ModuleRef{}, // <-- no std mod dep
+				},
+			},
+			want: src.Module{
+				Manifest: src.ModuleManifest{
+					Deps: map[string]src.ModuleRef{
+						"std": { // <-- std mod dep
+							Path:    "std",
+							Version: "0.0.1",
+						},
+					},
+				},
+				Packages: map[string]src.Package{},
+			},
+			wantErr: false,
+		},
+	}
+
+	d := Desugarer{}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			modRef := src.ModuleRef{Path: "@"}
+			build := src.Build{
+				Modules: map[src.ModuleRef]src.Module{
+					modRef: tt.mod,
+				},
+			}
+
+			got, err := d.desugarModule(build, modRef)
+			require.Equal(t, err != nil, tt.wantErr)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestDesugarer_desugarFile(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    src.File
+		want    src.File
+		wantErr bool
+	}{
+		{
+			name: "std_mod_dep_and_builtin_import",
+			file: src.File{
+				Imports: map[string]src.Import{}, // <-- no imports of std/builtin
+			},
+			want: src.File{
+				Imports:  defaultImports(), // <-- std/builtin import
+				Entities: map[string]src.Entity{},
+			},
+			wantErr: false,
+		},
+	}
+	d := Desugarer{}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := d.desugarFile(tt.file, src.Scope{})
+			require.Equal(t, err != nil, tt.wantErr)
+			require.Equal(t, tt.want, got)
+		})
 	}
 }
