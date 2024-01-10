@@ -22,7 +22,7 @@ var (
 	ErrWriteSelfIn                    = errors.New("Component cannot write to self inport")
 	ErrInportNotFound                 = errors.New("Referenced inport not found in component's interface")
 	ErrNodeNotFound                   = errors.New("Referenced node not found")
-	ErrNodePortNotFound               = errors.New("Node's port not found")
+	ErrPortNotFound                   = errors.New("Port not found")
 	ErrNormCompWithRuntimeFunc        = errors.New("Component with nodes or network cannot use #runtime_func directive")
 	ErrNormComponentWithoutNet        = errors.New("Component must have network except it uses #runtime_func directive")
 	ErrNormNodeRuntimeMsg             = errors.New("Node can't use #runtime_func_msg if it isn't instantiated with the component that use #runtime_func")

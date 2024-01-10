@@ -128,10 +128,10 @@ func (a Analyzer) analyzeNetConn( //nolint:funlen
 	}
 
 	for _, receiver := range conn.ReceiverSide.Receivers {
-		inportTypeExpr, err := a.getReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
+		inportTypeExpr, err := a.resolveReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
 		if err != nil {
 			return compiler.Error{
-				Err:      errors.New("Unable to get receiver type"),
+				Err:      errors.New("Unable to resolve receiver"),
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
 			}.Merge(err)
@@ -216,7 +216,7 @@ func (Analyzer) checkNodesPortsUsage(
 	return nil
 }
 
-func (a Analyzer) getReceiverType(
+func (a Analyzer) resolveReceiverType(
 	receiverSide src.ConnectionReceiver,
 	outports map[string]src.Port,
 	nodes map[string]src.Node,
@@ -293,7 +293,6 @@ func (a Analyzer) getNodeInportType(
 	)
 	if aerr != nil {
 		return ts.Expr{}, compiler.Error{
-			Err:      fmt.Errorf("Unable to resolve '%v' port type", portAddr),
 			Location: &location,
 			Meta:     &portAddr.Meta,
 		}.Merge(aerr)
@@ -312,7 +311,7 @@ func (a Analyzer) getResolvedPortType(
 	port, ok := ports[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrNodePortNotFound, portAddr),
+			Err:      fmt.Errorf("%w '%v'", ErrPortNotFound, portAddr),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}

@@ -31,8 +31,8 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	}
 
 	mods := map[src.ModuleRef]compiler.RawModule{
-		{Path: "", Version: ""}:         entryMod,
-		{Path: "std", Version: "0.0.1"}: stdMod,
+		{Path: "@"}:                     entryMod,
+		{Path: "std", Version: "0.0.1"}: stdMod, // TODO maybe remove version?
 	}
 
 	q := newQueue(entryMod.Manifest.Deps)
@@ -61,7 +61,7 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	}
 
 	return compiler.RawBuild{
-		EntryModRef: src.ModuleRef{Path: "", Version: ""},
+		EntryModRef: src.ModuleRef{Path: "@"},
 		Modules:     mods,
 	}, nil
 }

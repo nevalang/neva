@@ -6,8 +6,8 @@ types {
 }
 
 const {
-    age 32
-    name 'John'
+    age int 32
+    name str 'John'
 }
 
 components {

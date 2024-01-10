@@ -34,7 +34,7 @@ type Location struct {
 }
 
 func (l Location) String() string {
-	if l.ModRef.Path == "" { // cur mod
+	if l.ModRef.Path == "@" {
 		return fmt.Sprintf("%v/%v.neva", l.PkgName, l.FileName)
 	}
 	return fmt.Sprintf("%v/%v/%v.neva", l.ModRef, l.PkgName, l.FileName)
@@ -127,7 +127,7 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 		modRef ModuleRef
 	)
 	if pkgImport.ModuleName == "@" {
-		modRef = s.Location.ModRef
+		modRef = s.Location.ModRef // FIXME s.Location.ModRef is where we are now (e.g. std)
 		mod = curMod
 	} else {
 		modRef = curMod.Manifest.Deps[pkgImport.ModuleName]

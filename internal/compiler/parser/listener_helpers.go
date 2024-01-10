@@ -59,7 +59,20 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
-		panic("expr empty")
+		panic(&compiler.Error{
+			Err: errors.New("Missing type expression"),
+			Meta: &src.Meta{
+				Text: expr.GetText(),
+				Start: src.Position{
+					Line:   expr.GetStart().GetLine(),
+					Column: expr.GetStart().GetLine(),
+				},
+				Stop: src.Position{
+					Line:   expr.GetStop().GetLine(),
+					Column: expr.GetStop().GetLine(),
+				},
+			},
+		})
 	}
 
 	result.Meta = getTypeExprMeta(expr)
