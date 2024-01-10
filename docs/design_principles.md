@@ -16,7 +16,7 @@ Runtime won't do any checks after startup. The program that runtime consumes mus
 
 Language must allow to implement everything without using of compiler directives.
 
-**Compiler directives are unsafe** (analyzer won't validate their usage - that will make analyzer complicated) and thus must be used by language/stdlib developers or at _for users that know what they are doing_.
+**Compiler directives are not always unsafe** (analyzer won't always validate their usage - that will make implementation more complicated) and thus must be used by language/stdlib developers or at _for users that know what they are doing_.
 
 It's good for user to understand what compiler directives are and how syntax sugar use them under the hood though.
 

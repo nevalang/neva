@@ -10,6 +10,7 @@ import (
 const (
 	RuntimeFuncDirective    src.Directive = "runtime_func"
 	RuntimeFuncMsgDirective src.Directive = "runtime_func_msg"
+	StructInports           src.Directive = "struct_inports"
 )
 
 type (

@@ -7,14 +7,6 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-// FIXME since desugarer operates before analyzer
-// we must inject std mod dep and builtin import before we analyze
-// i.e not in desugarer
-// TODO consider changing the strategy to previous one where
-// scope.Entity() know about stdlib and stuff
-// it should be enough to use "builtin" in resolution
-// but this could broke other virtual entities we create
-
 // Desugarer does the following:
 // 1. Replaces const ref senders with normal nodes that uses Const component with compiler directive;
 // 2. Inserts void nodes and connections for every unused outport in the program;
@@ -166,17 +158,8 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
 	}
 
-	entitiesToInsert := make(map[string]src.Entity, len(componentResult.constsToInsert))
-	for constName, constant := range componentResult.constsToInsert {
-		entitiesToInsert[constName] = src.Entity{
-			IsPublic: false,
-			Kind:     src.ConstEntity,
-			Const:    constant,
-		}
-	}
-
 	return desugarEntityResult{
-		entitiesToInsert: entitiesToInsert,
+		entitiesToInsert: componentResult.entitiesToInsert,
 		entity: src.Entity{
 			IsPublic:  entity.IsPublic,
 			Kind:      entity.Kind,
