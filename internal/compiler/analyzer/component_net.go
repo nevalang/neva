@@ -128,10 +128,16 @@ func (a Analyzer) analyzeNetConn( //nolint:funlen
 	}
 
 	for _, receiver := range conn.ReceiverSide.Receivers {
-		inportTypeExpr, err := a.resolveReceiverType(receiver, compInterface.IO.Out, nodes, nodesIfaces, scope)
+		inportTypeExpr, err := a.resolveReceiverType(
+			receiver,
+			compInterface.IO.Out,
+			nodes,
+			nodesIfaces,
+			scope,
+		)
 		if err != nil {
 			return compiler.Error{
-				Err:      errors.New("Unable to resolve receiver"),
+				Err:      errors.New("Bad receiver"),
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
 			}.Merge(err)

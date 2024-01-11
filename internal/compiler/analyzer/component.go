@@ -33,10 +33,6 @@ var (
 	ErrRuntimeFuncOverloadingNodeArgs = errors.New("Node instantiated with component with #runtime_func with > 1 argument, must have exactly one type-argument for overloading")
 )
 
-type analyzeComponentParams struct {
-	iface analyzeInterfaceParams
-}
-
 func (a Analyzer) analyzeComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
