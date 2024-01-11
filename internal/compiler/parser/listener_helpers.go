@@ -672,6 +672,7 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 	for _, directive := range directives {
 		id := directive.IDENTIFIER()
 		if directive.CompilerDirectivesArgs() == nil {
+			result[src.Directive(id.GetText())] = []string{}
 			continue
 		}
 		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg() //nolint:nosnakecase
