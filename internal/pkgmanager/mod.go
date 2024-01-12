@@ -10,7 +10,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 )
 
-func (p Manager) buildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
+func (p Manager) BuildModule(ctx context.Context, workdir string) (compiler.RawModule, error) {
 	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
 		return compiler.RawModule{}, fmt.Errorf("retrieve manifest: %w", err)

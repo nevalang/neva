@@ -1,10 +1,20 @@
 package analyzer
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
+)
+
+//nolint:lll
+var (
+	ErrStructInportsArgNonStruct               = errors.New("Type argument for component with struct inports directive must be struct")
+	ErrStructInportsNodeTypeArgsCount          = errors.New("Note that uses component with struct inports directive must pass exactly one type argument")
+	ErrStructInportsTypeParamConstr            = errors.New("Component that uses struct inports directive must have type parameter with struct constraint")
+	ErrStructInportsTypeParamsCount            = errors.New("Component that uses struct inports directive must have type parameter with have exactly one type parameter")
+	ErrNormalInportsWithStructInportsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
 )
 
 func (a Analyzer) analyzeComponentNodes(
@@ -59,45 +69,9 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	var iface src.Interface
-	if entity.Kind == src.ComponentEntity { //nolint:nestif
-		runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
-
-		if hasRuntimeMsg && !isRuntimeFunc {
-			return src.Node{}, src.Interface{}, &compiler.Error{
-				Err:      ErrNormNodeRuntimeMsg,
-				Location: &location,
-				Meta:     entity.Meta(),
-			}
-		}
-
-		if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
-			return src.Node{}, src.Interface{}, &compiler.Error{
-				Err:      ErrRuntimeFuncOverloadingNodeArgs,
-				Location: &location,
-				Meta:     entity.Meta(),
-			}
-		}
-
-		iface = entity.Component.Interface
-	} else {
-		if hasRuntimeMsg {
-			return src.Node{}, src.Interface{}, &compiler.Error{
-				Err:      ErrInterfaceNodeWithRuntimeMsg,
-				Location: &location,
-				Meta:     entity.Meta(),
-			}
-		}
-
-		if node.Deps != nil {
-			return src.Node{}, src.Interface{}, &compiler.Error{
-				Err:      ErrNonComponentNodeWithDI,
-				Location: &location,
-				Meta:     entity.Meta(),
-			}
-		}
-
-		iface = entity.Interface
+	iface, aerr := a.getResolvedNodeInterface(entity, hasRuntimeMsg, location, node, scope)
+	if aerr != nil {
+		return src.Node{}, src.Interface{}, aerr
 	}
 
 	if len(node.TypeArgs) != len(iface.TypeParams.Params) {
@@ -155,4 +129,139 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		Deps:       resolvedComponentDI,
 		Meta:       node.Meta,
 	}, iface, nil
+}
+
+func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
+	entity src.Entity,
+	hasRuntimeMsg bool,
+	location src.Location,
+	node src.Node,
+	scope src.Scope,
+) (src.Interface, *compiler.Error) {
+	if entity.Kind == src.InterfaceEntity {
+		if hasRuntimeMsg {
+			return src.Interface{}, &compiler.Error{
+				Err:      ErrInterfaceNodeWithRuntimeMsg,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
+		if node.Deps != nil {
+			return src.Interface{}, &compiler.Error{
+				Err:      ErrNonComponentNodeWithDI,
+				Location: &location,
+				Meta:     entity.Meta(),
+			}
+		}
+
+		return entity.Interface, nil
+	}
+
+	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+
+	if hasRuntimeMsg && !isRuntimeFunc {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrNormNodeRuntimeMsg,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrRuntimeFuncOverloadingNodeArgs,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	iface := entity.Component.Interface
+
+	_, hasStructInportsDirective := entity.Component.Directives[compiler.StructInports]
+
+	if !hasStructInportsDirective {
+		return iface, nil
+	}
+
+	if len(iface.IO.In) != 0 {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrNormalInportsWithStructInportsDirective,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if len(iface.TypeParams.Params) != 1 {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrStructInportsTypeParamsCount,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(*iface.TypeParams.Params[0].Constr, scope)
+	if err != nil {
+		return src.Interface{}, &compiler.Error{
+			Err:      err,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrStructInportsTypeParamConstr,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if len(node.TypeArgs) != 1 {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrStructInportsNodeTypeArgsCount,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	resolvedNodeArg, err := a.resolver.ResolveExpr(node.TypeArgs[0], scope)
+	if err != nil {
+		return src.Interface{}, &compiler.Error{
+			Err:      err,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
+		return src.Interface{}, &compiler.Error{
+			Err:      ErrStructInportsArgNonStruct,
+			Location: &location,
+			Meta:     entity.Meta(),
+		}
+	}
+
+	structFields := resolvedNodeArg.Lit.Struct
+	inports := make(map[string]src.Port, len(structFields))
+	for fieldName, fieldTypeExpr := range structFields {
+		inports[fieldName] = src.Port{
+			TypeExpr: fieldTypeExpr,
+		}
+	}
+
+	return src.Interface{
+		TypeParams: iface.TypeParams,
+		IO: src.IO{
+			In: inports,
+			Out: map[string]src.Port{
+				"v": { // TODO refactor (it's not good to know exact interface here)
+					TypeExpr: resolvedNodeArg,
+					IsArray:  false,
+					Meta:     iface.IO.Out["v"].Meta,
+				},
+			},
+		},
+		Meta: iface.Meta,
+	}, nil
 }

@@ -2,14 +2,8 @@ package runtime
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
-)
-
-var (
-	ErrFuncNotFound    = errors.New("func not found")
-	ErrFuncConstructor = errors.New("func constructor")
 )
 
 type FuncRunner struct {
@@ -17,6 +11,7 @@ type FuncRunner struct {
 }
 
 type FuncCreator interface {
+	// Create method validates the input and builds ready to use function
 	Create(FuncIO, Msg) (func(context.Context), error)
 }
 
@@ -26,12 +21,12 @@ func (d FuncRunner) Run(funcCalls []FuncCall) (func(ctx context.Context), error)
 	for i, call := range funcCalls {
 		creator, ok := d.registry[call.Ref]
 		if !ok {
-			return nil, fmt.Errorf("%w: %v", ErrFuncNotFound, call.Ref)
+			return nil, fmt.Errorf("func creator not found: %v", call.Ref)
 		}
 
 		handler, err := creator.Create(call.IO, call.MetaMsg)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v: ref %v", ErrFuncConstructor, err, call.Ref)
+			return nil, fmt.Errorf("create: %w: %v", err, call.Ref)
 		}
 
 		funcs[i] = handler

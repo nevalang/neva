@@ -1,0 +1,29 @@
+types {
+    User struct {
+        age int
+        name str
+    }
+}
+
+const {
+    age int 32
+    name str 'John'
+}
+
+components {
+    #runtime_func(StructBuilder)
+    MyStructBuilder(age int, name str) (v User)
+    
+    Main(enter) (exit) {
+        nodes {
+            builder MyStructBuilder
+            print Print<User>
+        }
+        net {
+            $age -> builder.age
+            $name -> builder.name
+            builder.v -> print.v
+            print.v -> out.exit
+        }
+    }
+}

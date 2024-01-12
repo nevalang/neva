@@ -59,7 +59,20 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
-		panic("expr empty")
+		panic(&compiler.Error{
+			Err: errors.New("Missing type expression"),
+			Meta: &src.Meta{
+				Text: expr.GetText(),
+				Start: src.Position{
+					Line:   expr.GetStart().GetLine(),
+					Column: expr.GetStart().GetLine(),
+				},
+				Stop: src.Position{
+					Line:   expr.GetStop().GetLine(),
+					Column: expr.GetStop().GetLine(),
+				},
+			},
+		})
 	}
 
 	result.Meta = getTypeExprMeta(expr)
@@ -658,6 +671,10 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 	result := make(map[src.Directive][]string, len(directives))
 	for _, directive := range directives {
 		id := directive.IDENTIFIER()
+		if directive.CompilerDirectivesArgs() == nil {
+			result[src.Directive(id.GetText())] = []string{}
+			continue
+		}
 		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg() //nolint:nosnakecase
 		ss := make([]string, 0, len(args))
 		for _, arg := range args {

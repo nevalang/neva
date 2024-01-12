@@ -2,20 +2,23 @@ package desugarer
 
 import (
 	"errors"
+	"fmt"
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-var ErrConstSenderEntityKind = errors.New("Entity that is used as a const reference in component's network must be of kind constant") //nolint:lll
+var ErrConstSenderEntityKind = errors.New(
+	"Entity that is used as a const reference in component's network must be of kind constant",
+)
 
 type desugarComponentResult struct {
-	component      src.Component        // desugared component to replace
-	constsToInsert map[string]src.Const //nolint:lll // sometimes after desugaring component we need to insert some constants to the package
+	component        src.Component         // desugared component to replace
+	entitiesToInsert map[string]src.Entity //nolint:lll // sometimes after desugaring component we need to insert some entities to the file
 }
 
-func (d Desugarer) desugarComponent(
+func (d Desugarer) desugarComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
 ) (desugarComponentResult, *compiler.Error) {
@@ -25,9 +28,69 @@ func (d Desugarer) desugarComponent(
 		}, nil
 	}
 
-	desugaredNodes := maps.Clone(component.Nodes)
-	if desugaredNodes == nil {
-		desugaredNodes = map[string]src.Node{}
+	entitiesToInsert := map[string]src.Entity{}
+
+	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
+	for nodeName, node := range component.Nodes {
+		entity, _, err := scope.Entity(node.EntityRef)
+		if err != nil {
+			return desugarComponentResult{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+			}
+		}
+
+		if entity.Kind != src.ComponentEntity {
+			desugaredNodes[nodeName] = node
+			continue
+		}
+
+		_, ok := entity.Component.Directives[compiler.StructInports]
+		if !ok {
+			desugaredNodes[nodeName] = node
+			continue
+		}
+
+		structFields := node.TypeArgs[0].Lit.Struct // must be resolved struct after analysis stage
+
+		inports := make(map[string]src.Port, len(structFields))
+		for fieldName, fieldTypeExpr := range structFields {
+			inports[fieldName] = src.Port{
+				TypeExpr: fieldTypeExpr,
+			}
+		}
+
+		outports := map[string]src.Port{
+			"v": {
+				TypeExpr: node.TypeArgs[0],
+			},
+		}
+
+		// create local variation of the struct builder component with inports corresponding to struct fields
+		localBuilderComponent := src.Component{
+			Interface: src.Interface{
+				IO: src.IO{In: inports, Out: outports}, // these ports gonna be used by irgen and then by runtime func
+			},
+		}
+
+		localBuilderName := fmt.Sprintf("__struct_builder_%v__", nodeName)
+
+		entitiesToInsert[localBuilderName] = src.Entity{
+			Kind:      src.ComponentEntity,
+			Component: localBuilderComponent,
+		}
+
+		// finally replace component ref for this current node with the ref to newly created local builder variation
+		desugaredNodes[nodeName] = src.Node{
+			EntityRef: src.EntityRef{
+				Pkg:  "builtin",
+				Name: "StructBuilder",
+			},
+			Directives: node.Directives,
+			TypeArgs:   node.TypeArgs,
+			Deps:       node.Deps,
+			Meta:       node.Meta,
+		}
 	}
 
 	handleConnsResult, err := d.handleConns(component.Net, desugaredNodes, scope)
@@ -45,6 +108,13 @@ func (d Desugarer) desugarComponent(
 		desugaredNodes[voidResult.voidNodeName] = voidResult.voidNode
 	}
 
+	for name, constant := range handleConnsResult.extraConsts {
+		entitiesToInsert[name] = src.Entity{
+			Kind:  src.ConstEntity,
+			Const: constant,
+		}
+	}
+
 	return desugarComponentResult{
 		component: src.Component{
 			Directives: component.Directives,
@@ -53,7 +123,7 @@ func (d Desugarer) desugarComponent(
 			Net:        desugaredNet,
 			Meta:       component.Meta,
 		},
-		constsToInsert: handleConnsResult.extraConsts,
+		entitiesToInsert: entitiesToInsert,
 	}, nil
 }
 
