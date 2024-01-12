@@ -98,7 +98,13 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		}
 	}
 
-	analyzedNet, err := a.analyzeComponentNetwork(component.Net, analyzedInterface, analyzedNodes, nodesIfaces, scope)
+	analyzedNet, err := a.analyzeComponentNetwork(
+		component.Net,
+		analyzedInterface,
+		analyzedNodes,
+		nodesIfaces,
+		scope,
+	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,

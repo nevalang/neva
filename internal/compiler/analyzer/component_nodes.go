@@ -184,8 +184,6 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		return iface, nil
 	}
 
-	// handle struct inports directive case:
-
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrNormalInportsWithStructInportsDirective,
@@ -252,14 +250,18 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		}
 	}
 
-	iface = src.Interface{
+	return src.Interface{
 		TypeParams: iface.TypeParams,
 		IO: src.IO{
-			In:  inports,
-			Out: iface.IO.Out,
+			In: inports,
+			Out: map[string]src.Port{
+				"v": { // TODO refactor (it's not good to know exact interface here)
+					TypeExpr: resolvedNodeArg,
+					IsArray:  false,
+					Meta:     iface.IO.Out["v"].Meta,
+				},
+			},
 		},
 		Meta: iface.Meta,
-	}
-
-	return iface, nil
+	}, nil
 }

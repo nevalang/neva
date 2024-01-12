@@ -34,5 +34,6 @@
     "minimap.background": "#00000000",
     "scrollbar.shadow": "#00000000"
   },
-  "svg.preview.background": "dark-transparent"
+  "svg.preview.background": "dark-transparent",
+  "vsicons.presets.angular": true
 }

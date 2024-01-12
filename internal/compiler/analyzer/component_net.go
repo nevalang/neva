@@ -249,12 +249,13 @@ func (a Analyzer) resolveReceiverType(
 		return outport.TypeExpr, nil
 	}
 
-	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, scope)
+	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, compiler.Error{
+		return ts.Expr{}, &compiler.Error{
+			Err:      err,
 			Location: &scope.Location,
 			Meta:     &receiverSide.PortAddr.Meta,
-		}.Merge(err)
+		}
 	}
 
 	return nodeInportType, nil
@@ -263,9 +264,19 @@ func (a Analyzer) resolveReceiverType(
 func (a Analyzer) getNodeInportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
+	if !ok {
+		return ts.Expr{}, &compiler.Error{
+			Err:      fmt.Errorf("Node not found '%v'", portAddr.Node),
+			Location: &scope.Location,
+			Meta:     &portAddr.Meta,
+		}
+	}
+
+	iface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
@@ -274,22 +285,7 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
-	entity, location, err := scope.Entity(node.EntityRef)
-	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      err,
-			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
-		}
-	}
-
-	var iface src.Interface
-	if entity.Kind == src.ComponentEntity {
-		iface = entity.Component.Interface
-	} else { // we assume that nodes are already validated so if it's not component then it's interface
-		iface = entity.Interface
-	}
-
+	// TODO optimize: we can resolve every node's interface just once before processing the network
 	typ, aerr := a.getResolvedPortType(
 		iface.IO.In,
 		iface.TypeParams.Params,
@@ -299,7 +295,7 @@ func (a Analyzer) getNodeInportType(
 	)
 	if aerr != nil {
 		return ts.Expr{}, compiler.Error{
-			Location: &location,
+			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}.Merge(aerr)
 	}

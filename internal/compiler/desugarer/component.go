@@ -83,7 +83,8 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		// finally replace component ref for this current node with the ref to newly created local builder variation
 		desugaredNodes[nodeName] = src.Node{
 			EntityRef: src.EntityRef{
-				Name: localBuilderName,
+				Pkg:  "builtin",
+				Name: "StructBuilder",
 			},
 			Directives: node.Directives,
 			TypeArgs:   node.TypeArgs,

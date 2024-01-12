@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/nevalang/neva/pkg/ir"
@@ -63,6 +64,27 @@ func (c Compiler) CompileToIR(
 	if err != nil {
 		return nil, err
 	}
+
+	// FIXME no structBuilder func call in resulting irprog
+
+	fmt.Println(
+		JSONDump(parsedBuild.Modules[desugaredBuild.EntryModRef].Packages["struct_builder/with_sugar"]),
+	)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(
+		JSONDump(analyzedBuild.Modules[desugaredBuild.EntryModRef].Packages["struct_builder/with_sugar"]),
+	)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(
+		JSONDump(desugaredBuild.Modules[desugaredBuild.EntryModRef].Packages["struct_builder/with_sugar"]),
+	)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(
+		JSONDump(irProg),
+	)
 
 	return irProg, nil
 }
