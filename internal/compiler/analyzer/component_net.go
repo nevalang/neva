@@ -9,7 +9,13 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var ErrStructFieldNotFound = errors.New("Struct field not found")
+var (
+	ErrStructFieldNotFound = errors.New("Struct field not found")
+	ErrUnusedOutports      = errors.New("All component's outports are unused")
+	ErrUnusedOutport       = errors.New("Unused outport found")
+	ErrUnusedInports       = errors.New("All component inports are unused")
+	ErrUnusedInport        = errors.New("Unused inport found")
+)
 
 func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
@@ -24,7 +30,7 @@ func (a Analyzer) analyzeComponentNetwork(
 		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
-	if err := a.checkNodesPortsUsage(nodesIfaces, scope, nodesUsage); err != nil {
+	if err := a.checkNetPortsUsage(compInterface, nodesIfaces, scope, nodesUsage); err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
 	}
 
@@ -174,12 +180,49 @@ type NodeNetUsage struct {
 	In, Out map[string]struct{}
 }
 
-// checkNodesPortsUsage ensures that for every node out there we use all its inports and outports.
-func (Analyzer) checkNodesPortsUsage(
+// checkNetPortsUsage ensures that:
+// Every component's inport and outport is used;
+// Every sub-node's inport is used;
+// For every  sub-node's there's at least one used outport.
+func (Analyzer) checkNetPortsUsage( //nolint:funlen
+	compInterface src.Interface,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
 ) *compiler.Error {
+	inportsUsage, ok := nodesUsage["in"]
+	if !ok {
+		return &compiler.Error{
+			Err:      ErrUnusedInports,
+			Location: &scope.Location,
+			Meta:     &compInterface.Meta,
+		}
+	}
+	for inportName := range compInterface.IO.In {
+		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
+			return &compiler.Error{
+				Err:      fmt.Errorf("%w '%v'", ErrUnusedInport, inportName),
+				Location: &scope.Location,
+			}
+		}
+	}
+
+	outportsUsage, ok := nodesUsage["out"]
+	if !ok {
+		return &compiler.Error{
+			Err:      ErrUnusedOutports,
+			Location: &scope.Location,
+		}
+	}
+	for outportName := range compInterface.IO.Out {
+		if _, ok := outportsUsage.In[outportName]; !ok { // note that self outports are inports for the network
+			return &compiler.Error{
+				Err:      fmt.Errorf("%w '%v'", ErrUnusedOutport, outportName),
+				Location: &scope.Location,
+			}
+		}
+	}
+
 	for nodeName, nodeIface := range nodesIfaces {
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
@@ -200,7 +243,7 @@ func (Analyzer) checkNodesPortsUsage(
 			}
 		}
 
-		if len(nodeIface.IO.Out) == 0 { // such components exist in stdlib, user cannot create them
+		if len(nodeIface.IO.Out) == 0 { // std/builtin.Void
 			continue
 		}
 
@@ -208,6 +251,7 @@ func (Analyzer) checkNodesPortsUsage(
 		for outportName := range nodeIface.IO.Out {
 			if _, ok := nodeUsage.Out[outportName]; ok {
 				atLeastOneOutportIsUsed = true
+				break
 			}
 		}
 		if !atLeastOneOutportIsUsed {
