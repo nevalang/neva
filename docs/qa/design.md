@@ -204,3 +204,52 @@ Problems with this solution are:
 It's possible in theory to create sugar for triggers but the language could be too complicated with so many syntax features. This conclusion by itself is questionable but in combination with the first problem - having 2 ways to use static values. Looks like it's better not to have triggers.
 
 All this leads to a conclusion that the only good semantic for constants is the current ones - infinite loops that requires locks. The need to have locks is not a fancy thing by itself, but "then connections" sugar made this pretty simple.
+
+## Why have sub-streams?
+
+In programming we range over collections all the time. We do that either via _loops_ or higher order functions (recursion). There's a problem with both of these in FBP:
+
+We don't have _code as data_ (we can't pass components around like we pass functions in conventional languages)
+
+To implement loop we need:
+
+1. Mutable state. (We don't have one! We can simulate one using network loops tho). After we simulate mutable
+2. Condition to check whether current cursor is still less than the length of the list
+3. Length of the list
+
+It would be very verbose to do such things all the time so we can imagine some kind of generic `for` component that takes `list<T>` and sends single values `T`.
+
+The biggest problem is - how do we know that list ended? How do we know that the previous element was the last one and the current element is the first element of the new list that just arrived? Without knowing this we loos information about the list boundary. And that is huge problem. In conventional programming we always know that. Without this simplest iteration patterns like `map` are impossible to implement.
+
+Possible solution to this (without introducing sub-streams) would be adding some kind of _signal_ that "the list just ended". One might think that `For` component could simply have two outports `v` and `sig`. No, it can't. In this case `sig` cannot be separate port because it needs to be in the exact same _steam_ as the elements themselves. Otherwise it's unclear how to be sure that we synchronized both streams (flows) together. Streams are concurrent and the order of messages across different streams is often unpredictable.
+
+That leads us to conclusion - such `For` component must have one outport (or at least it must not have separate `sig` outport). It instead must send not just `T` values (single elements of the colletion), but instead it must send some kind of structures. The shape must be something like this
+
+```neva
+types {
+    Element<T> {
+        v T
+        isLast bool
+    }
+}
+```
+
+Congratulations! You just discovered sub-streams.
+
+## Why sub-streams are not like in classical FBP?
+
+John Paul Morrison, creator of Flow-Based Programming created _Sub streams_ as a part of the FBP. The problem that he was solving wasn't just iteration over collections. It was work with structured data. Sub-streams are the way we transfer structured objects in his paradigm.
+
+In Nevalang we have `struct`, `map` and `list` for that. We don't need to create "flat nested" sub-stream like this `( (1 2 3) (4 5 6) ) ( (7 8 9) )` to move two lists, we can simply move them like regular messages across the stream `-> l1 l2 ->`. The downstream component that receives `l1` and `l2` can then unpack them into sub-streams and process their individual elements.
+
+At the end it must pack them pack tho. This is _maybe_ where classical FBP outperforms Nevalang. We have to spend time on destructuring and structuring back. However, the **data in the outside world is structured**. We usually work with some kind of relational data, JSON, Protobuf, etc.
+
+## Isn't it the problem that component that works with type `T` cannot operate on `SubStreamItem<T>`
+
+This is just how type-system works. We don't want to have a lot of special cases here and there. It's not a big deal also.
+
+If you have a component `C1` that takes `T` and you want to operate on `SubStreamItem<T>` all you need is to create a wrapper. That wrapper will receive `SubStreamItem<T>` and use `C1` inside of it with `.v` struct selection.
+
+If you need to continue sub-stream you simply send `SubStreamItem<T>` from you wrapper component downstream. Or `SubStreamItem<WhateverYouWant>` (probably preserving `isLast` value).
+
+It's either you continue sub-stream or you do not. Depending on what your're doing (maybe you're counting sub-stream items so you just sends `int` eachtime sub-stream ends).
