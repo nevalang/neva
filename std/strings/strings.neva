@@ -1,0 +1,22 @@
+components {
+    #runtime_func(StringConcatenator)
+    pub Concatenator(seq stream<str>) (res str)
+
+    #runtime_func(StringSpaceTrimmer)
+    pub SpaceTrimmer(s str) (res str)
+
+    #runtime_func(StringUpperCaser)
+    pub UpperCaser(s str) (res str)
+
+    #runtime_func(StringLowerCaser)
+    pub LowerCaser(s str) (res str)
+
+    #runtime_func(StringPrefixChecker)
+    pub PrefixChecker(s str, pref str) (b bool)
+
+    #runtime_func(StringSuffixChecker)
+    pub SuffixChecker(s str, suff str) (b bool)
+
+    #runtime_func(StringOccurrenceChecker)
+    pub OccurrenceChecker(s str, subs str) (b bool)
+}

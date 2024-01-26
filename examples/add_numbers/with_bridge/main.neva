@@ -1,0 +1,21 @@
+const {
+	a 1
+	b 2
+}
+
+components {
+	Main(enter) (exit) {
+		nodes {
+			add PortBridge { handler Add<int> }
+			print Print<int>
+		}
+		net {
+			in:enter -> (
+				$a -> add:p[0]
+				$b -> add:p[1]
+			)
+			add:res -> print:msg
+			print:res.s -> out:exit
+		}
+	}
+}

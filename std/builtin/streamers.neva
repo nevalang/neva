@@ -1,0 +1,21 @@
+// Streamers turn non-stream data into stream.
+// It allows to iterate over array ports, lists and maps.
+// It also allows to use bridges (and to create custom bridges when needed).
+
+types {
+    pub MapEntry<T> struct {
+        k str
+        v T
+    }
+}
+
+components {
+    #runtime_func(PortStreamer)
+    pub PortStreamer<T>([p] T) (seq stream<T>)
+
+    #runtime_func(ListStreamer)
+    pub ListStreamer<T>(l list<T>) (seq stream<T>)
+
+    #runtime_func(MapStreamer)
+    pub MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
+}
