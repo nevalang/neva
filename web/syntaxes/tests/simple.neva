@@ -10,13 +10,13 @@ types {
     Err error
     Float float
     Bool bool
-    pub Str str
+    pub Str string
     Vec<T> []T
     Arr<T Vec<int>> [512][]T
     Union Float | Vec | Arr | Rec | Enum
     Struct struct {
         age int
-        name str
+        name string
         bestFriend struct {
             isDog bool // should be true
         }
@@ -25,7 +25,7 @@ types {
 
 interfaces {
     InterfacePrivate<T bool>(y T, x int) (z T)
-    pub InterfacePublic<T Union>(x int, y str) (z T)
+    pub InterfacePublic<T Union>(x int, y string) (z T)
 }
 
 const {
@@ -33,7 +33,7 @@ const {
     myTrue bool true
     pi float 3.14
     pub vec Vec<float> [pi, pi]
-    greet str "Hello, world!"
+    greet string "Hello, world!"
 }
 
 components {
