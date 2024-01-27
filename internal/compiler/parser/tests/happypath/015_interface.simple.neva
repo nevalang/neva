@@ -84,47 +84,47 @@ interfaces {
     )
 }
 
-interfaces { IReader8 (x int, y str) () }
+interfaces { IReader8 (x int, y string) () }
 
 interfaces {
-    IReader8 (x int, y str) () }
+    IReader8 (x int, y string) () }
 
-interfaces { IReader8 (x int, y str) ()
+interfaces { IReader8 (x int, y string) ()
 }
 
 interfaces { IReader8 (
-    x int, y str) () }
+    x int, y string) () }
 
 interfaces { IReader8 (x int,
-y str) () }
+y string) () }
 
 interfaces {
-    IReader8 (x int, y str) ()
+    IReader8 (x int, y string) ()
 }
 
 interfaces {
     IReader8 (
-        x int, y str
+        x int, y string
     ) ()
 }
 
 interfaces {
     IReader8 (
         x int,
-        y str) ()
+        y string) ()
 }
 
 interfaces {
     IReader8 (
         x int,
-        y str
+        y string
     ) ()
 }
 
 interfaces {
     IReader8 (
         x int,
-        y str
+        y string
     ) (
     )
 }
@@ -132,7 +132,7 @@ interfaces {
 interfaces {
     IReader8 (
         x int,
-        y str
+        y string
     ) ()
 }
 
@@ -177,11 +177,11 @@ interfaces {
 }
 
 interfaces {
-    IReader19 (x int, y str) (a int)
+    IReader19 (x int, y string) (a int)
 }
 
 interfaces {
-    pub IReader20 (x int, y str) (a int, b bool)
+    pub IReader20 (x int, y string) (a int, b bool)
 }
 
 interfaces {

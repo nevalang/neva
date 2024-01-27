@@ -3,20 +3,20 @@ components {
 	pub C1() ()
 	
 	#runtime_func(read)
-	pub C1(sig) (v str)
+	pub C1(sig) (v string)
 
 	#struct_inports
 	#runtime_func(read)
-	pub C1_5(sig) (v str)
+	pub C1_5(sig) (v string)
 
 	#runtime_func(int DoInt, float DoFloat)
-	pub C2(sig) (v str)
+	pub C2(sig) (v string)
 
 	#runtime_func(read, write)
 	pub C3<T>(v T) (v T) {
 		nodes {
 			#runtime_func_msg(msg)
-			msg Const<str>
+			msg Const<string>
 		}
 	}
 }

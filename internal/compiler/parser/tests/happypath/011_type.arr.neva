@@ -93,24 +93,24 @@ types { WithEnum [512]enum{ Monday }
 
 types {
     WithSimpleUnion [512]i8 | f8
-    WithComplexUnion [512]i8 | struct { foo str | bool }
+    WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
 }
 
 types { WithSimpleUnion [512]i8 | f8
-    WithComplexUnion [512]i8 | struct { foo str | bool }
+    WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
 }
 
 types {
     WithSimpleUnion [512]i8 | f8
-    WithComplexUnion [512]i8 | struct { foo str | bool }
+    WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
 
 types { WithSimpleUnion [512]i8 | f8
-    pub WithComplexUnion [512]i8 | struct { foo str | bool }
+    pub WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     pub WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }

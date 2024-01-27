@@ -196,14 +196,14 @@ const {
     }  8
 }
 
-const { UNION int | str  42 }
+const { UNION int | string  42 }
 
 const {
-    pub UNION int | str  'hello!'
+    pub UNION int | string  'hello!'
 }
 
 const {
-    msg str  'hello!'
+    msg string  'hello!'
 }
 
 

@@ -75,25 +75,25 @@ interfaces {
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str }) (a struct { bar bool })
+        bar string }) (a struct { bar bool })
 }
 
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct { bar bool })
 }
 
 interfaces {
     IReader1 (x struct { foo int
-        bar str }) (a struct { bar bool })
+        bar string }) (a struct { bar bool })
 }
 
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct {
         bar bool })
 }
@@ -101,14 +101,14 @@ interfaces {
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str }) (a struct { bar bool
+        bar string }) (a struct { bar bool
     })
 }
 
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct {
         baz bool
         bax float
@@ -118,7 +118,7 @@ interfaces {
 interfaces {
     IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct { baz bool
         bax float
     })
@@ -127,7 +127,7 @@ interfaces {
 interfaces {
     pub IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct {
         baz bool
         bax float })
