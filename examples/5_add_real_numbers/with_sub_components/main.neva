@@ -1,4 +1,4 @@
-// Here we learn how to handle errors by fixing this simple program
+// Here we learn how to simplify program by separating concerns
 
 import {
 	std/io
@@ -7,23 +7,31 @@ import {
 
 components {
 	Main(enter any) (exit any) {
+		nodes { aux Aux }
+		net {
+			in:enter -> aux:sig
+			aux:res -> printer:msg
+			aux:err -> printer:msg
+			printer:msg -> out:exit
+		}
+	}
+	
+	Aux(sig any) (res int, err error) {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
 			adder PortBridge { handler Adder<int> }
-			printer Printer<any>
 		}
 		net {
 			in:enter -> reader1.sig
 			reader1:num -> {
-				adder:seq[0]
+				adder:p[0]
 				reader2:sig
 			}
-			reader1:err -> printer:msg
-			reader2.num -> adder.seq[1]
-			reader2.err -> printer:msg
-			adder.res -> printer:msg
-			printer:msg -> out:exit
+			reader1:err -> out:err
+			reader2.num -> adder.p[1]
+			reader2.err -> out:err
+			adder.res -> out:res
 		}
 	}
 

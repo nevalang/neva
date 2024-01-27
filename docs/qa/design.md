@@ -253,3 +253,18 @@ If you have a component `C1` that takes `T` and you want to operate on `SubStrea
 If you need to continue sub-stream you simply send `SubStreamItem<T>` from you wrapper component downstream. Or `SubStreamItem<WhateverYouWant>` (probably preserving `isLast` value).
 
 It's either you continue sub-stream or you do not. Depending on what your're doing (maybe you're counting sub-stream items so you just sends `int` eachtime sub-stream ends).
+
+
+## Why `out:exit` of the `Main` is't `int`?
+
+This is the question about why `out:exit` isn't interpreted as exit code.
+
+The things is - you don't always have `int` as your exit condition. That's why it's `any`.
+
+Ok, but why then we don't check if that `any` is actually `int` under the hood and then interpret it as an exit code?
+
+Well, we can do that. But that would lead to situations where you accidentally have `int` like your exit condition but don't actually want it to be your exit code. Such cases are non obvious and will require you to somehow check that you send exit code you want.
+
+This problem gets bigger when you have `any` or _union_ `... | int` outport that is directed to `out:exit` - you'll have to check whether value isn't an `int`. Otherwise you're at risk of terminating with wrong code.
+
+**Exit codes are important**. Shell scripts and CI/CD depends on that. Most of the time you want your exit code to be `zero`. Non-zero exit code is not happypath, it's more rare. Having corner case like a base design decision is not what we want.
