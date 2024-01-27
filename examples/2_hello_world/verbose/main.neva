@@ -1,0 +1,20 @@
+const {
+	greeting string 'Hello, World!'
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			#runtime_func_msg(greeting)
+			greeting Distributor<string>
+			printer Printer<string>
+			blocker Blocker<string>
+		}
+		net {
+			in:enter -> blocker:sig
+			greeting:msg -> blocker:data
+			blocker:data -> printer:msg
+			printer:msg -> out:exit
+		}
+	}
+}

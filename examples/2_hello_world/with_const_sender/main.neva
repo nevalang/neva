@@ -1,0 +1,18 @@
+const {
+	greeting string 'Hello, World!'
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			printer Printer<string>
+			blocker Blocker<string>
+		}
+		net {
+			in:enter -> blocker:sig
+			$greeting -> blocker:data
+			blocker:data -> printer:msg
+			printer:msg -> out:exit
+		}
+	}
+}

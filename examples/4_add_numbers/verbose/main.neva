@@ -1,0 +1,23 @@
+const {
+	a 1
+	b 1
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			adder Adder<int>
+			streamer PortStreamer<int>
+			printer Printer<int>
+		}
+		net {
+			in:enter -> (
+				$a -> streamer:p[0]
+				$b -> streamer:p[1]
+			)
+			streamer:seq -> adder:seq
+			adder:res -> printer:msg
+			printer:sig -> out:exit
+		}
+	}
+}

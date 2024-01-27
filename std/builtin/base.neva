@@ -32,13 +32,16 @@ components {
 
     #struct_inports
     #runtime_func(StructBuilder)
-    pub StructBuilder<T struct {}> () (s T)
+    pub StructBuilder<T struct {}> () (msg T)
 
     #runtime_func(StructSelector)
-    pub StructSelector<T>(s struct {}) (msg T)
+    pub StructSelector<T>(msg struct {}) (msg T)
 
     #runtime_func(string StrLen, list ListLen, map MapLen)
     pub Len<
         T string | list<any> | map<any>
     >(msg T) (n int)
+
+    #runtime_func(LinePrinter)
+    pub Printer<T>(msg T) (sig T)
 }

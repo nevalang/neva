@@ -1,9 +1,0 @@
-// Not fundamental but frequently used
-
-components {
-    #runtime_func(Printer)
-    pub Printer<T>(data T) (data T)
-    
-    #runtime_func(Parser)
-    pub Parser<T int | float | bool>(s string) (res T, err error)
-}

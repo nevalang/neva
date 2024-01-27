@@ -1,0 +1,32 @@
+// Here we build structure using custom struct builder component
+// in conjunction with compiler directive.
+
+types {
+    User struct {
+        age int
+        name string
+    }
+}
+
+const {
+    age int 32
+    name string 'John'
+}
+
+components {
+    #runtime_func(StructBuilder)
+    MyStructBuilder(age int, name string) (msg User)
+    
+    Main(enter any) (exit any) {
+        nodes {
+            builder MyStructBuilder
+            printer Printer<User>
+        }
+        net {
+            $age -> builder:age
+            $name -> builder:name
+            builder:msg -> printer:msg
+            printer:msg -> out:exit
+        }
+    }
+}

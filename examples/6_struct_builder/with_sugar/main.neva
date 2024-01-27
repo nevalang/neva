@@ -1,0 +1,28 @@
+// Turns out we can do the same thing using builtin StructBulder component.
+
+types {
+    User struct {
+        age int
+        name string
+    }
+}
+
+const {
+    age int 32
+    name string 'John'
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            builder StructBuilder<User>
+            print Print<User>
+        }
+        net {
+            $age -> builder.age
+            $name -> builder.name
+            builder.v -> print.v
+            print.v -> out:exit
+        }
+    }
+}

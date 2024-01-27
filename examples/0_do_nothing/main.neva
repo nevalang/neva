@@ -1,0 +1,7 @@
+// Program that does literally nothing.
+
+components {
+	Main(enter any) (exit any) {
+		net { in:enter -> out:exit }
+	}
+}

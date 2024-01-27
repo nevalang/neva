@@ -1,0 +1,26 @@
+types {
+    User struct {
+        age int
+        name string
+    }
+}
+
+const {
+    u User {
+        age: 32
+        name: 'john'
+    }
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            locker Locker<string>
+            printer Printer<string>
+        }
+        net {
+            in:enter -> ($u.name -> printer:msg)
+            printer:msg -> out:exit
+        }
+    }
+}

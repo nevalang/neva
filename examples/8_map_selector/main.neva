@@ -1,0 +1,24 @@
+import { std/maps }
+
+const {
+    m map<int> { alice: 32 }
+    err error { msg 'key not found' }
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            reader io.Reader
+            print Printer<int>
+            selector maps.Selector<int>
+        }
+        net {
+            in:enter -> reader.sig
+            in:enter -> ($m -> selector.m)
+            reader.s -> selector.k
+            selector:ok -> printer.msg
+            selector:miss -> ($err -> printer.msg)
+            printer:msg -> out:exit
+        }
+    }
+}
