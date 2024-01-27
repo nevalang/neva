@@ -2,9 +2,9 @@
 // and thus could be used with bridges.
 
 components {
-    #runtime_func(int IntAdder, float FloatAdder, str StringAdder)
+    #runtime_func(int IntAdder, float FloatAdder, string StringAdder)
     pub Adder<
-        T int | float | str
+        T int | float | string
     >(seq stream<T>) (res T)
 
     #runtime_func(int IntSubstractor, float FloatSubstractor)

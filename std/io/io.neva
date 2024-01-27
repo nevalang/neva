@@ -1,4 +1,4 @@
 components {
     #runtime_func(Reader)
-    pub Reader(sig any) (v str)
+    pub Reader(sig any) (s string)
 }

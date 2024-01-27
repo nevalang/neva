@@ -15,8 +15,8 @@ components {
     pub Merger<T>(maps stream<map<T>>) (res map<T>)
 
     #runtime_func(MapUpdater)
-    pub Updater<T> (m map<T>, k str, v T) (res map<T>)
+    pub Updater<T> (m map<T>, k string, v T) (res map<T>)
 
     #runtime_func(MapSelector)
-    pub Selector<T>(m map<T>, k str) (yes T, no str)
+    pub Selector<T>(m map<T>, k string) (ok T, miss string)
 }

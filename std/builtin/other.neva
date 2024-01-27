@@ -5,5 +5,5 @@ components {
     pub Printer<T>(data T) (data T)
     
     #runtime_func(Parser)
-    pub Parser<T int | float | bool>(s str) (res T, err error)
+    pub Parser<T int | float | bool>(s string) (res T, err error)
 }

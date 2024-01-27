@@ -69,7 +69,7 @@ inPortsDef: portsDef;
 outPortsDef: portsDef;
 portsDef:
 	'(' (NEWLINE* | portDef? | portDef (',' portDef)*) ')';
-portDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE*;
+portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 
 // const
 constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
@@ -108,7 +108,7 @@ compNodeDef: compilerDirectives? IDENTIFIER nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
 nodeDIArgs: compNodesDefBody;
 
-// net
+// network
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
@@ -120,14 +120,12 @@ multiSenderConnLine:
 	multiSenderSide '->' (connReceiverSide | thenConnExpr);
 multiSenderSide: '.' portAddrPort structSelectors?;
 senderConstRef: '$' entityRef;
-portAddr: portAddrNode '.' portAddrPort portAddrIdx?;
+portAddr: portAddrNode ':' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
-structSelectors: '/' IDENTIFIER ('/' IDENTIFIER)*;
-connReceiverSide:
-	portAddr
-	| connReceivers; // TODO figure out syntax for structSelectors
+structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
+connReceiverSide: portAddr | connReceivers;
 connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}';
 
 /* LEXER */

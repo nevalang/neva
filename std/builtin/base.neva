@@ -3,7 +3,7 @@ types {
     pub maybe<T>
     
     pub bool
-    pub str
+    pub string
     pub int
     pub float
     
@@ -12,7 +12,7 @@ types {
 
     pub stream<T> maybe<T>
     pub error struct {
-        msg str
+        msg string
         child maybe<error>
     }
 }
@@ -28,7 +28,7 @@ components {
     pub Blocker<T>(cond any, data T) (data T)
 
     #runtime_func(Checker)
-    pub Checker(opt maybe<T>) (yes T, no struct{})
+    pub Checker(opt maybe<T>) (some T, none struct{})
 
     #struct_inports
     #runtime_func(StructBuilder)
@@ -37,8 +37,8 @@ components {
     #runtime_func(StructSelector)
     pub StructSelector<T>(s struct {}) (msg T)
 
-    #runtime_func(str StrLen, list ListLen, map MapLen)
+    #runtime_func(string StrLen, list ListLen, map MapLen)
     pub Len<
-        T str | list<any> | map<any>
+        T string | list<any> | map<any>
     >(msg T) (n int)
 }

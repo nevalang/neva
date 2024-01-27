@@ -20,14 +20,14 @@ components {
     pub NotEq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
     #runtime_func(Less)
-    pub Less<T int | float | str>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub Less<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
     #runtime_func(More)
-    pub More<T int | float | str>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub More<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
     #runtime_func(LessOrEq)
-    pub LessOrEq<T int | float | str>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub LessOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
     #runtime_func(MoreOrEq)
-    pub MoreOrEq<T int | float | str>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub MoreOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 }
