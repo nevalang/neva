@@ -1,17 +1,22 @@
+// Here we learn how to read struct field
+// by using builtin component with compiler directive.
+
 types {
     User struct {
-        age int
+        name string
+        pet Pet
+    }
+    Pet struct {
         name string
     }
 }
 
 const {
     user User {
-        age: 32
         name: 'john'
+        pet: { name: 'Charley' }
     }
-
-    path list<string> ['name']
+    path list<string> ['pet', 'name']
 }
 
 components {

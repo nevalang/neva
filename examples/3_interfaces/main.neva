@@ -1,3 +1,6 @@
+// Here we learn interfaces and how to use them.
+// It's essential to understand bridges.
+
 interfaces {
     IExample<T>(msg T) (msg T)
 }

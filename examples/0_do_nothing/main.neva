@@ -1,4 +1,5 @@
 // Program that does literally nothing.
+// Here we learn components, ports, networks, connections and port addrs.
 
 components {
 	Main(enter any) (exit any) {

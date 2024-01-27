@@ -1,8 +1,5 @@
 // Program that adds two numbers typed by user and prints the result.
-// The algorithm is:
-// 1) read first input, parse it,
-// 2)  read the second input and parse it too.
-// 3) add numbers and print the result.
+// Here we learn strconv package and why error handling is important.
 
 import {
 	std/io

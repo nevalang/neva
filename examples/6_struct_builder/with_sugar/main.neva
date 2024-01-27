@@ -1,4 +1,6 @@
-// Turns out we can do the same thing using builtin StructBulder component.
+// Here we learn how to build structures
+// without custom components and compiler directives
+// by simply using builtin StructBuilder.
 
 types {
     User struct {

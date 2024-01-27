@@ -1,4 +1,4 @@
-// handle errors
+// Here we learn how to handle errors by fixing this simple program
 
 import {
 	std/io

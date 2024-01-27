@@ -1,3 +1,7 @@
+// Now it's time to learn another syntatic sugar `... -> (...)`
+// Called "then connections" that allows to avoid explicit usage of blockers.
+// It's extremely useful when working with constants to keep code simple.
+
 const {
 	greeting string 'Hello, World!'
 }

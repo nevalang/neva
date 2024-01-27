@@ -1,5 +1,5 @@
-// Here we build structure using custom struct builder component
-// in conjunction with compiler directive.
+// Here we learn how to build structures
+// by creating custom components with compiler directives.
 
 types {
     User struct {
