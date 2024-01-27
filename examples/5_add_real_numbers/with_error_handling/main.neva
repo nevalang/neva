@@ -9,15 +9,12 @@ components {
 	Main(enter any) (exit any) {
 		nodes {
 			reader1 io.Reader
-			parser1 strconv.NumParser
-
 			reader2 io.Reader
-			parser2 strconv.NumParser
-
+			parser1 strconv.NumParser<int>
+			parser2 strconv.NumParser<int>
 			adder PortBridge { handler Adder<int> }
 			printer Printer<any>
 		}
-
 		net {
 			in:enter -> reader1:sig
 			reader1:s -> parser1:s
@@ -26,11 +23,9 @@ components {
 				adder:p[0]
 				reader2:sig
 			}
-			
 			reader2:s -> parser2:s
 			parser2:err -> printer:msg
 			parser2:res -> adder:p[1]
-
 			add:res -> printer:msg
 			printer:msg -> out:exit
 		}

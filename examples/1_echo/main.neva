@@ -9,7 +9,7 @@ import {
 components {
 	Main(enter any) (exit any) {
 		nodes {
-			read io.Reader
+			reader io.Reader
 			printer Printer<string>
 		}
 		net {

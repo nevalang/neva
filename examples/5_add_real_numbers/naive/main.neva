@@ -1,4 +1,3 @@
-// Program that adds two numbers typed by user and prints the result.
 // Here we learn strconv package and why error handling is important.
 
 import {
@@ -10,15 +9,12 @@ components {
 	Main(enter any) (exit any) {
 		nodes {
 			reader1 io.Reader
-			parser1 strconv.NumParser<int>
-
 			reader2 io.Reader
+			parser1 strconv.NumParser<int>
 			parser2 strconv.NumParser<int>
-
 			adder PortBridge { handler Adder<int> }
 			printer Printer<int>
 		}
-
 		net {
 			in:enter -> reader1:sig
 			reader1:s -> parser1:s

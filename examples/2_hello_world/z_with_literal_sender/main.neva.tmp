@@ -1,9 +1,0 @@
-components {
-	Main(enter any) (exit any) {
-		nodes { printer Printer<string> }
-		net {
-			in:enter -> (|string 'Hello, World!'| -> print.v)
-			print.v -> out:exit
-		}
-	}
-}

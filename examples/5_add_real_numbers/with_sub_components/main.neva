@@ -1,0 +1,42 @@
+// Here we learn how to handle errors by fixing this simple program
+
+import {
+	std/io
+	std/strconv
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			reader1 IntReader
+			reader2 IntReader
+			adder PortBridge { handler Adder<int> }
+			printer Printer<any>
+		}
+		net {
+			in:enter -> reader1.sig
+			reader1:num -> {
+				adder:seq[0]
+				reader2:sig
+			}
+			reader1:err -> printer:msg
+			reader2.num -> adder.seq[1]
+			reader2.err -> printer:msg
+			adder.res -> printer:msg
+			printer:msg -> out:exit
+		}
+	}
+
+	IntReader(sig any) (num int, err error) {
+		nodes {
+			reader io.Reader
+			parser strconv.NumParser<int>
+		}
+		net {
+			in:sig -> reader:sig
+			reader:s -> parser:s
+			parser:num -> out:num
+			parser:err -> out:err
+		}
+	}
+}
