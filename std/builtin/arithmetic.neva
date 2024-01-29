@@ -1,0 +1,20 @@
+// All arithmetic operations support IStreamHandler
+// and thus could be used with bridges.
+
+components {
+    #runtime_func(int IntAdder, float FloatAdder, string StringAdder)
+    pub Adder<
+        T int | float | string
+    >(seq stream<T>) (res T)
+
+    #runtime_func(int IntSubstractor, float FloatSubstractor)
+    pub Substractor<
+        T int | float
+    >(seq stream<T>) (res T)
+
+    #runtime_func(int IntMultiplier, float FloatMultiplier)
+    pub Multiplier<T int | float>(seq stream<T>) (res T)
+
+    #runtime_func(int IntDivider, float FloatDivider)
+    pub Divider<T int | float>(seq stream<T>) (res T)
+}

@@ -1,0 +1,4 @@
+components {
+    #runtime_func(Reader)
+    pub Reader(sig any) (s string)
+}

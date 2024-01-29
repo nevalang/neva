@@ -190,14 +190,11 @@ type nevaListener interface {
 	// EnterSenderSide is called when entering the senderSide production.
 	EnterSenderSide(c *SenderSideContext)
 
+	// EnterReceiverSide is called when entering the receiverSide production.
+	EnterReceiverSide(c *ReceiverSideContext)
+
 	// EnterThenConnExpr is called when entering the thenConnExpr production.
 	EnterThenConnExpr(c *ThenConnExprContext)
-
-	// EnterMultiSenderConnLine is called when entering the multiSenderConnLine production.
-	EnterMultiSenderConnLine(c *MultiSenderConnLineContext)
-
-	// EnterMultiSenderSide is called when entering the multiSenderSide production.
-	EnterMultiSenderSide(c *MultiSenderSideContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -217,11 +214,8 @@ type nevaListener interface {
 	// EnterStructSelectors is called when entering the structSelectors production.
 	EnterStructSelectors(c *StructSelectorsContext)
 
-	// EnterConnReceiverSide is called when entering the connReceiverSide production.
-	EnterConnReceiverSide(c *ConnReceiverSideContext)
-
-	// EnterConnReceivers is called when entering the connReceivers production.
-	EnterConnReceivers(c *ConnReceiversContext)
+	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
+	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
 
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
@@ -406,14 +400,11 @@ type nevaListener interface {
 	// ExitSenderSide is called when exiting the senderSide production.
 	ExitSenderSide(c *SenderSideContext)
 
+	// ExitReceiverSide is called when exiting the receiverSide production.
+	ExitReceiverSide(c *ReceiverSideContext)
+
 	// ExitThenConnExpr is called when exiting the thenConnExpr production.
 	ExitThenConnExpr(c *ThenConnExprContext)
-
-	// ExitMultiSenderConnLine is called when exiting the multiSenderConnLine production.
-	ExitMultiSenderConnLine(c *MultiSenderConnLineContext)
-
-	// ExitMultiSenderSide is called when exiting the multiSenderSide production.
-	ExitMultiSenderSide(c *MultiSenderSideContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
@@ -433,9 +424,6 @@ type nevaListener interface {
 	// ExitStructSelectors is called when exiting the structSelectors production.
 	ExitStructSelectors(c *StructSelectorsContext)
 
-	// ExitConnReceiverSide is called when exiting the connReceiverSide production.
-	ExitConnReceiverSide(c *ConnReceiverSideContext)
-
-	// ExitConnReceivers is called when exiting the connReceivers production.
-	ExitConnReceivers(c *ConnReceiversContext)
+	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
+	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)
 }

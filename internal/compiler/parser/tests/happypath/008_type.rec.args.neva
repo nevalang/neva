@@ -21,43 +21,27 @@ types {
 types {
     Rec struct {
         foo vec<int>
-        bar map<str, int>
+        bar map<string, int>
     }
 }
 
 types {
     Rec struct { foo vec<int>
-        bar map<str, int>
+        bar map<string, int>
     }
 }
 
 types {
     Rec struct {
         foo vec<int>
-        bar map<str, int> }
+        bar map<string, int> }
 }
 
 types {
     Rec struct {
         foo vec<int>
 
-        bar map<str, int>
-    }
-}
-
-types {
-    Rec struct {
-
-        foo vec<int>
-        bar map<str, int>
-    }
-}
-
-types {
-    Rec struct {
-        foo vec<int>
-        bar map<str, int>
-
+        bar map<string, int>
     }
 }
 
@@ -65,7 +49,14 @@ types {
     Rec struct {
 
         foo vec<int>
-        bar map<str, int>
+        bar map<string, int>
+    }
+}
+
+types {
+    Rec struct {
+        foo vec<int>
+        bar map<string, int>
 
     }
 }
@@ -74,22 +65,31 @@ types {
     Rec struct {
 
         foo vec<int>
-
-        bar map<str, int>
+        bar map<string, int>
 
     }
 }
 
 types {
     Rec struct {
-        foo map<str, int>
+
+        foo vec<int>
+
+        bar map<string, int>
+
+    }
+}
+
+types {
+    Rec struct {
+        foo map<string, int>
         bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
 }
 
 types {
     Rec struct {
-        foo map<str, int>
+        foo map<string, int>
         bar vec<enum {
             Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
@@ -97,7 +97,7 @@ types {
 
 types {
     Rec struct {
-        foo map<str, int>
+        foo map<string, int>
         bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
         }>
     }
@@ -105,7 +105,7 @@ types {
 
 types {
     Rec struct {
-        foo map<str, int>
+        foo map<string, int>
         bar vec<enum {
             Monday, Tuesday, Wednesday, Thursday, Friday
         }>
@@ -114,7 +114,7 @@ types {
 
 types {
     pub Rec struct {
-        foo map<str, int>
+        foo map<string, int>
         bar vec<enum {
             Monday,
             Tuesday,

@@ -33,7 +33,7 @@ interfaces {
 
     IReader1 (x struct {
         foo int
-        bar str
+        bar string
     }) (a struct {
         baz bool
         bax float })
@@ -47,10 +47,10 @@ interfaces {
     )
 
     pub IReader1 (
-        a bool | int | struct { foo int | str },
+        a bool | int | struct { foo int | string },
         b [256][128]struct{ bar int | [64]int }
     ) (
-        x str |
+        x string |
             float |
             enum { Monday } |
             struct {

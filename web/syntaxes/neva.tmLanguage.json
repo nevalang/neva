@@ -27,24 +27,40 @@
     "storage_types": {
       "patterns": [
         {
-          "match": "\\bbool\\b",
-          "name": "storage.type.boolean"
+          "match": "\\bany\\b",
+          "name": "storage.type.any"
         },
         {
-          "match": "\\berror\\b",
-          "name": "storage.type.error"
+          "match": "\\bmaybe\\b",
+          "name": "storage.type.maybe"
+        },
+        {
+          "match": "\\bbool\\b",
+          "name": "storage.type.boolean"
         },
         {
           "match": "\\b(int|float)\\b",
           "name": "storage.type.numeric"
         },
         {
-          "match": "\\bstr\\b",
+          "match": "\\bstring\\b",
           "name": "storage.type.string"
         },
         {
-          "match": "\\bany\\b",
-          "name": "storage.type.any"
+          "match": "\\bmap\\b",
+          "name": "storage.type.map"
+        },
+        {
+          "match": "\\blist\\b",
+          "name": "storage.type.list"
+        },
+        {
+          "match": "\\berror\\b",
+          "name": "storage.type.error"
+        },
+        {
+          "match": "\\bstream\\b",
+          "name": "storage.type.stream"
         },
         {
           "include": "#struct_type"
@@ -164,6 +180,30 @@
             }
           },
           "end": "(?:\\n|$)"
+        }
+      ]
+    },
+    "component_nodes": {
+      "patterns": [
+        {
+          "include": "#storage_types"
+        },
+        {
+          "match": "^(\\s*)\\b(\\w+)\\b",
+          "captures": {
+            "2": {
+              "name": "variable.other.node"
+            }
+          }
+        },
+        {
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            {
+              "include": "#component_nodes"
+            }
+          ]
         }
       ]
     }
@@ -315,15 +355,7 @@
               "end": "\\}",
               "patterns": [
                 {
-                  "include": "#storage_types"
-                },
-                {
-                  "match": "^(\\s*)\\b(\\w+)\\b",
-                  "captures": {
-                    "2": {
-                      "name": "variable.other.node"
-                    }
-                  }
+                  "include": "#component_nodes"
                 }
               ]
             },

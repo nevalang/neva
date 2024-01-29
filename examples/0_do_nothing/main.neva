@@ -1,0 +1,9 @@
+// This is the smallest possible program that compiles.
+// It literally does absolutely literally nothing.
+// Here we learn components, ports, networks, connections and port addrs.
+
+components {
+	Main(enter any) (exit any) {
+		net { in:enter -> out:exit }
+	}
+}

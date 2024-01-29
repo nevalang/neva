@@ -1,0 +1,35 @@
+// Here we learn how to read struct field
+// by using builtin component with compiler directive.
+
+types {
+    User struct {
+        name string
+        pet Pet
+    }
+    Pet struct {
+        name string
+    }
+}
+
+const {
+    user User {
+        name: 'john'
+        pet: { name: 'Charley' }
+    }
+    path list<string> ['pet', 'name']
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            printer Printer<string>
+            #runtime_func_msg(path)
+            selector StructSelector<string>
+        }
+        net {
+            in:enter -> ($user -> selector:msg)
+            selector:msg -> printer:msg
+            printer:msg -> out:exit
+        }
+    }
+}

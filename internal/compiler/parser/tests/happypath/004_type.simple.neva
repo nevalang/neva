@@ -45,58 +45,58 @@ types
 }
 
 types { MyInt int
-    pub MyStr str
+    pub MyStr string
 }
 
 types { MyInt int
 
-    pub MyStr str
+    pub MyStr string
 }
 
 types { MyInt int
-    pub MyStr str }
+    pub MyStr string }
 
 types {
     MyInt int
-    pub MyStr str
+    pub MyStr string
 }
 
 types {
 
     MyInt int
-    pub MyStr str
+    pub MyStr string
 }
 
 types {
     MyInt int
-    pub MyStr str
+    pub MyStr string
 
-}
-
-types {
-    MyInt int
-
-    pub MyStr str
-}
-
-types {
-
-    MyInt int
-
-    pub MyStr str
 }
 
 types {
     MyInt int
 
-    pub MyStr str
-
+    pub MyStr string
 }
 
 types {
 
     MyInt int
 
-    pub MyStr str
+    pub MyStr string
+}
+
+types {
+    MyInt int
+
+    pub MyStr string
+
+}
+
+types {
+
+    MyInt int
+
+    pub MyStr string
 
 }

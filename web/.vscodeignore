@@ -1,0 +1,12 @@
+.vscode
+docs
+node_modules
+src
+syntaxes/tests
+syntaxes/neva.tmLanguage.yml
+.gitignore
+.vscodeignore
+webview
+lsp
+tsconfig.json
+package-lock.json

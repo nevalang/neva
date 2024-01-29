@@ -33,7 +33,7 @@ types {
         rec4Lvl2 struct {
             foo vec<struct {
                 bar vec<struct {
-                    baz map<str, struct { baz bool }>
+                    baz map<string, struct { baz bool }>
                 }>
             }>
         }

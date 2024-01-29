@@ -1,0 +1,21 @@
+// This program reads a line from stdin and immidiately prints it.
+// It does so in a loop - it won't terminate untill you press Ctrl+C.
+// Here we learn packages, stdlib, io package, nodes and type parameters
+
+import {
+	std/io
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			reader io.Reader
+			printer Printer<string>
+		}
+		net {
+			in:enter -> reader:sig
+			reader.s -> printer:msg
+			printer:msg -> reader:sig
+		}
+	}
+}

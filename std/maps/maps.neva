@@ -1,0 +1,22 @@
+components {
+    #runtime_func(MapAccumulator)
+    pub Accumulator<T>(ents stream<MapEntry<T>>) (res map<T>)
+
+    #runtime_func(MapBuilder)
+    pub Builder<T> ([ents] MapEntry<T>) (res map<T>)
+    
+    #runtime_func(MapDiscriminator)
+    pub Discriminator<T>(maps stream<map<T>>) (res map<T>)
+
+    #runtime_func(MapIntersector)
+    pub Intersector<T>(maps stream<map<T>>) (res map<T>)
+
+    #runtime_func(MapMerger)
+    pub Merger<T>(maps stream<map<T>>) (res map<T>)
+
+    #runtime_func(MapUpdater)
+    pub Updater<T> (m map<T>, k string, v T) (res map<T>)
+
+    #runtime_func(MapSelector)
+    pub Selector<T>(m map<T>, k string) (ok T, miss string)
+}

@@ -85,7 +85,7 @@ components {
             absNodeWithTypeArgs INode<
                 int,
                 map<
-                    str, vec<bool>
+                    string, vec<bool>
                 >
             >
         }
@@ -123,7 +123,7 @@ components {
 components {
     Doer<T>(x int) (y T) {
         nodes {
-            concreteNodeWithTypeArgs  Node<int, vec<str>>
+            concreteNodeWithTypeArgs  Node<int, vec<string>>
         }
     }
 }
@@ -160,7 +160,7 @@ components {
             concreteNodeWithDIAndTypeArgs  Node1<
                 int,
                 map<
-                    str,
+                    string,
                     vec<bool>
                 >
             > {
@@ -179,7 +179,7 @@ components {
             absNodeWithTypeArgs INode<
                 int,
                 map<
-                    str, vec<bool>
+                    string, vec<bool>
                 >
             >
 
@@ -188,7 +188,7 @@ components {
             concreteNodeWithDIAndTypeArgs  Node1<
                 int,
                 map<
-                    str,
+                    string,
                     vec<bool>
                 >
             >{
@@ -206,11 +206,9 @@ components {
 			concrete  io.Reader
 		}
 		net {
-			in.enter -> abs.v
-			abs.v -> {
-				concrete.v
-			}
-			concrete.v -> out.code
+			in:enter -> abs:v
+			abs:v -> [concrete:v]
+			concrete:v -> out:code
 		}
 	}
 }
@@ -218,18 +216,15 @@ components {
 components {
 	Main() () {
 		net {
-            $foo/bar -> foo.bar
-            $foo/bar/baz -> foo.bar
-            foo.bar/baz -> foo.bar
-            foo.bar/baz/bax -> foo.bar
-			$foo/bar/baz -> {
-				foo.bar
-				bar.baz
-			}
-			foo.bar/baz/bax -> {
-				foo.bar
-				bar.baz
-			}
+            $foo.bar -> foo:bar
+            $foo.bar.baz -> foo:bar
+            foo:bar.baz -> foo:bar
+            foo:bar.baz.bax -> foo:bar
+			$foo.bar.baz -> [foo:bar, bar:baz]
+			foo:bar.baz.bax -> [
+				foo:bar,
+				bar:baz
+            ]
 		}
 	}
 }
@@ -237,23 +232,23 @@ components {
 components {
 	Main() () {
 		net {
-            $foo -> (foo.bar -> bar.baz)
+            $foo -> (foo:bar -> bar:baz)
 
-			$foo -> (foo.bar -> bar.baz
-			foo.bar -> bar.baz
+			$foo -> (foo:bar -> bar:baz
+			foo:bar -> bar:baz
 			)
 
-			$foo -> (foo.bar -> bar.baz
-				foo.bar -> bar.baz
+			$foo -> (foo:bar -> bar:baz
+				foo:bar -> bar:baz
 			)
 
 			$foo -> (
-				foo.bar -> bar.baz
-				foo.bar -> bar.baz)
+				foo:bar -> bar:baz
+				foo:bar -> bar:baz)
 
 			$foo -> (
-				foo.bar -> bar.baz
-				foo.bar -> bar.baz
+				foo:bar -> bar:baz
+				foo:bar -> bar:baz
 			)
 		}
 	}
@@ -262,15 +257,15 @@ components {
 components {
 	Main() () {
 		net {
-            $a -> ($b -> ($c -> d.e))
+            $a -> ($b -> ($c -> d:e))
 
             $a -> (
-                $b -> ($c -> d.e)
+                $b -> ($c -> d:e)
             )
 
             $a -> (
                 $b -> (
-                    $c -> d.e
+                    $c -> d:e
                 )
             )
 		}

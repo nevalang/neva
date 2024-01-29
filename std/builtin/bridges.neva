@@ -1,0 +1,44 @@
+// Bridges are basically decorators that works over DI API
+// they serve as adapters for stream handlers and outside world:
+
+interfaces {
+    IStreamHandler<T>(seq stream<T>) (res T)
+}
+
+components {
+    pub PortBridge<T>([p] T) (res T) {
+        nodes {
+            streamer PortStreamer<T>
+            handler IStreamHandler<T>
+        }
+        net {
+            in:p -> streamer:p
+            streamer:seq -> handler:seq
+            handler:res -> out:res
+        }
+    }
+
+    pub ListBridge<T>(l list<T>) (res T) {
+        nodes {
+            streamer ListStreamer<T>
+            handler IStreamHandler<T>
+        }
+        net {
+            in:l -> streamer:l
+            streamer:seq -> handler:seq
+            handler:res -> out:res
+        }
+    }
+
+    pub MapBridge<T>(m map<T>) (res T) {
+        nodes {
+            streamer MapStreamer<T>
+            handler IStreamHandler<T>
+        }
+        net {
+            in:m -> streamer:m
+            streamer:seq -> handler:seq
+            handler:res -> out:res
+        }
+    }
+}

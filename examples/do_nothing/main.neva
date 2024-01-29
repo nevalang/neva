@@ -1,7 +1,0 @@
-// Program that does literally nothing.
-
-components {
-	Main(enter) (exit) {
-		net { in.enter -> out.exit }
-	}
-}

@@ -1,0 +1,30 @@
+// Here we learn interfaces and how to use them.
+// It's essential to understand bridges.
+
+interfaces {
+    IExample<T>(msg T) (msg T)
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            sub SubComponent {
+                dep Printer<any>
+            }
+        }
+        net {
+            in:enter -> sub:msg
+            sub:msg -> out:exit
+        }
+    }
+    
+    SubComponent (msg any) (msg any) {
+        nodes {
+            dep IExample<any>
+        }
+        net {
+            in:msg -> dep:msg
+            dep:msg -> out:msg
+        }
+    }
+}

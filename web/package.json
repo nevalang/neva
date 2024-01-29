@@ -9,7 +9,7 @@
   },
   "description": "VSCode extension for Nevalang - flow based programming language.",
   "publisher": "nevalang",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
@@ -62,8 +62,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./assets/file-icon.svg",
-          "dark": "./assets/file-icon.svg"
+          "light": "./assets/logo.svg",
+          "dark": "./assets/logo.svg"
         }
       }
     ],
@@ -73,35 +73,18 @@
         "scopeName": "source.neva",
         "path": "./syntaxes/neva.tmLanguage.json"
       }
-    ],
-    "commands": [
-      {
-        "command": "neva.openPreview",
-        "title": "Preview 👀",
-        "icon": "$(eye)",
-        "category": "Neva"
-      }
-    ],
-    "menus": {
-      "editor/title": [
-        {
-          "when": "editorLangId == neva",
-          "command": "neva.openPreview",
-          "group": "navigation"
-        }
-      ]
-    }
+    ]
   },
   "activationEvents": [
     "workspaceContains:neva.yml",
     "workspaceContains:neva.yaml"
   ],
-  "icon": "assets/logo.png",
+  "icon": "./assets/logo_gradient.png",
   "dependencies": {
-    "vscode": "^1.1.37",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
+    "vscode": "^1.1.37",
     "@types/node": "^16.18.34",
     "@types/vscode": "^1.73.0",
     "@types/vscode-webview": "^1.57.0",

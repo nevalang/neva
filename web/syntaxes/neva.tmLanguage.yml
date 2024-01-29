@@ -27,17 +27,36 @@ repository:
   # Storage types (basic types)
   storage_types:
     patterns:
-      - match: "\\bbool\\b" # Matches the keyword 'bool'
-        name: storage.type.boolean
-      - match: "\\berror\\b" # Matches the keyword 'error'
-        name: storage.type.error
-      - match: "\\b(int|float)\\b" # Matches the keywords 'int' or 'float'
-        name: storage.type.numeric
-      - match: "\\bstr\\b" # Matches the keyword 'str'
-        name: storage.type.string
+      # any
       - match: "\\bany\\b" # Matches the keyword 'any'
         name: storage.type.any
+      # maybe
+      - match: "\\bmaybe\\b" # Matches the keyword 'maybe'
+        name: storage.type.maybe
+      # bool
+      - match: "\\bbool\\b" # Matches the keyword 'bool'
+        name: storage.type.boolean
+      # int | float
+      - match: "\\b(int|float)\\b" # Matches the keywords 'int' or 'float'
+        name: storage.type.numeric
+      # string
+      - match: "\\bstring\\b" # Matches the keyword 'string'
+        name: storage.type.string
+      # map
+      - match: "\\bmap\\b" # Matches the keyword 'map'
+        name: storage.type.map
+      # list
+      - match: "\\blist\\b" # Matches the keyword 'list'
+        name: storage.type.list
+      # error
+      - match: "\\berror\\b" # Matches the keyword 'error'
+        name: storage.type.error
+      # stream
+      - match: "\\bstream\\b" # Matches the keyword 'stream'
+        name: storage.type.stream
+      # struct
       - include: "#struct_type"
+      # enum
       - include: "#enum_type"
 
   # Struct type (indirect-recursive via storage_types)
@@ -113,6 +132,19 @@ repository:
           "1":
             name: meta.directive
         end: "(?:\\n|$)" # Matches the end of a line or the end of the input
+
+  # Component nodes
+  component_nodes:
+    patterns:
+      - include: "#storage_types"
+      - match: "^(\\s*)\\b(\\w+)\\b" # Matches a line with some whitespace, followed by a word
+        captures:
+          "2":
+            name: variable.other.node
+      - begin: "\\{"
+        end: "\\}"
+        patterns:
+        - include: "#component_nodes"
 
 # ----------------------------------------------------------------
 # Patterns (actual rules)
@@ -200,11 +232,7 @@ patterns:
                 name: entity.name.section
             end: "\\}" # Matches a closing curly brace
             patterns:
-              - include: "#storage_types"
-              - match: "^(\\s*)\\b(\\w+)\\b" # Matches a line with some whitespace, followed by a word (node identifier)
-                captures:
-                  "2":
-                    name: variable.other.node
+              - include: "#component_nodes"
 
           # Component Net
           - begin: "\\b(net)\\s*\\{" # Matches the keyword 'net' followed by optional whitespace and an opening curly brace

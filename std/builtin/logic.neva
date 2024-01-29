@@ -1,0 +1,33 @@
+// Logic operatos don't implement IStreamProcessor
+// because they always return bool and not T (sometimes threre's no T at all).
+// So when logic operation happens without stream - streamer must be used.
+// And that's BTW is the reason to for more handy `yes, no, b` API.
+
+components {
+    #runtime_func(Neg)
+    pub Neg(arg bool) (b bool)
+    
+    #runtime_func(And)
+    pub And(args stream<bool>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(Or)
+    pub Or(args stream<bool>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(Eq)
+    pub Eq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(NotEq)
+    pub NotEq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(Less)
+    pub Less<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(More)
+    pub More<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(LessOrEq)
+    pub LessOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+
+    #runtime_func(MoreOrEq)
+    pub MoreOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+}

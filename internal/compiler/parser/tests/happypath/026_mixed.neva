@@ -5,7 +5,7 @@ import {
 types {
 	useId int
 	money float
-	userName str
+	userName string
 	isAdmin bool
 }
 
@@ -26,11 +26,9 @@ components {
 			concrete  io.Reader
 		}
 		net {
-			in.enter -> abs.v
-			abs.v -> {
-				concrete.v
-			}
-			concrete.v -> out.code
+			in:enter -> abs:v
+			abs:v -> [concrete:v]
+			concrete:v -> out:code
 		}
 	}
 }

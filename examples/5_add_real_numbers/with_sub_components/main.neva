@@ -1,0 +1,51 @@
+// Here we learn how to simplify program by separating concerns
+
+import {
+	std/io
+	std/strconv
+}
+
+components {
+	Main(enter any) (exit any) {
+		nodes {
+			aux Aux
+		}
+		net {
+			in:enter -> aux:sig
+			aux:res -> printer:msg
+			aux:err -> printer:msg
+			printer:msg -> out:exit
+		}
+	}
+	
+	Aux(sig any) (res int, err error) {
+		nodes {
+			reader1 IntReader
+			reader2 IntReader
+			adder PortBridge {
+				handler Adder<int>
+			}
+		}
+		net {
+			in:enter -> reader1.sig
+			reader1:num -> [adder:p[0], reader2:sig]
+			reader1:err -> out:err
+			reader2.num -> adder.p[1]
+			reader2.err -> out:err
+			adder.res -> out:res
+		}
+	}
+
+	IntReader(sig any) (num int, err error) {
+		nodes {
+			reader io.Reader
+			parser strconv.NumParser<int>
+		}
+		net {
+			in:sig -> reader:sig
+			reader:s -> parser:s
+			parser:num -> out:num
+			parser:err -> out:err
+		}
+	}
+}

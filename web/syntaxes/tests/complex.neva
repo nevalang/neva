@@ -12,7 +12,7 @@ types { // adsad
     MyErr error // asdasdasd
     MyFloat float // asdasdasd
     MyBool bool // asdasdasd
-    pub MyStr str // asdasdasd
+    pub MyStr string // asdasdasd
     MyVec<T> []T // asdasdasd
     MyArr<T int> [512]int // asdasdasd
     MyArr<T MyVec<int>> [512]T // asdasdasd
@@ -20,7 +20,7 @@ types { // adsad
     // 123123sa
     pub MyRec<T> struct { // asdasdasd
         foo int // asdasdasd
-        bar str // asdasdasd
+        bar string // asdasdasd
         baz MyArr<T> // asdasdasd
         bax MyArr<int> // asdasdasd
         bac MyArr<struct { // asdasdasd
@@ -47,17 +47,17 @@ types {
     MyErr error
     MyFloat float
     MyBool bool
-    MyStr str
+    MyStr string
     MyVec<T> []T
     MyArr<T> [512]T
     MyRec<T> struct {
         foo int
-        bar str
+        bar string
         baz MyArr<T>
         baz2 MyArr<int>
         baz3 MyArr<struct {
             foo int
-            bar str
+            bar string
             baz MyArr<T>
             baz2 MyArr<int>
             baz3 MyArr<int>
@@ -87,7 +87,7 @@ const {
         bar: "john"
         baz: 42.0
     }
-    my_str str "my string"
+    my_str string "my string"
 }
 
 components {
@@ -95,7 +95,7 @@ components {
         nodes {
             abstractNode IMyInterface
             printer std_pkg.Printer
-            reader elsewhere.Reader<str>
+            reader elsewhere.Reader<string>
         }
         net {
             in.x -> printer.in.v
@@ -110,7 +110,7 @@ components {
         nodes {
             abstractNode IMyInterface
             printer std_pkg.Printer
-            reader elsewhere.Reader<str>
+            reader elsewhere.Reader<string>
         }
         net {
             in.x -> printer.in.v
@@ -125,7 +125,7 @@ components {
         nodes {
             abstractNode IMyInterface
             printer std_pkg.Printer
-            reader elsewhere.Reader<str>
+            reader elsewhere.Reader<string>
         }
         net {
             in.x -> printer.in.v
@@ -137,7 +137,7 @@ components {
     }
 
     #runtime_func(Read)
-    pub Read(sig) (v str)
+    pub Read(sig) (v string)
 
     #runtime_func(Print)
     pub Print<T>(v T) (v T)
@@ -146,6 +146,6 @@ components {
     pub Lock<T>(sig, v T) (v T)
 
     #runtime_func(ParseInt)
-    pub ParseInt(v str) (v int, err str)
+    pub ParseInt(v string) (v int, err string)
 }
 

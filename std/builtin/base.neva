@@ -1,0 +1,47 @@
+types {
+    pub any
+    pub maybe<T>
+    
+    pub bool
+    pub string
+    pub int
+    pub float
+    
+    pub map<T>
+    pub list<T>
+
+    pub stream<T> maybe<T>
+    pub error struct {
+        msg string
+        child maybe<error>
+    }
+}
+
+components {
+    #runtime_func(Destructor)
+    pub Destructor(msg any) ()
+
+    #runtime_func(Distributor)
+    pub Distributor<T>() (msg T)
+
+    #runtime_func(Blocker)
+    pub Blocker<T>(cond any, data T) (data T)
+
+    #runtime_func(Checker)
+    pub Checker(opt maybe<T>) (some T, none struct{})
+
+    #struct_inports
+    #runtime_func(StructBuilder)
+    pub StructBuilder<T struct {}> () (msg T)
+
+    #runtime_func(StructSelector)
+    pub StructSelector<T>(msg struct {}) (msg T)
+
+    #runtime_func(string StrLen, list ListLen, map MapLen)
+    pub Len<
+        T string | list<any> | map<any>
+    >(msg T) (n int)
+
+    #runtime_func(LinePrinter)
+    pub Printer<T>(msg T) (sig T)
+}

@@ -1,0 +1,30 @@
+// Here we learn how to build structures
+// without custom components and compiler directives
+// by simply using builtin StructBuilder.
+
+types {
+    User struct {
+        age int
+        name string
+    }
+}
+
+const {
+    age int 32
+    name string 'John'
+}
+
+components {
+    Main(enter any) (exit any) {
+        nodes {
+            builder StructBuilder<User>
+            print Print<User>
+        }
+        net {
+            $age -> builder.age
+            $name -> builder.name
+            builder.v -> print.v
+            print.v -> out:exit
+        }
+    }
+}

@@ -48,23 +48,23 @@ types {
 }
 
 types {
-    pub MyMap map<str, int>
+    pub MyMap map<string, int>
 }
 
 types {
-    MyMap map<str,
+    MyMap map<string,
         int>
 }
 
 types {
-    MyMap map<str,
+    MyMap map<string,
         int
     >
 }
 
 types {
     MyMap map<
-        str,
+        string,
         int
     >
 }
@@ -75,7 +75,7 @@ types {
     MyVec vec<int>
 
     pub MyMap map<
-        str,
+        string,
         int
     >
 }
@@ -87,7 +87,7 @@ types {
     MyVec vec<int>
 
     pub MyMap map<
-        str,
+        string,
         int
     >
 
