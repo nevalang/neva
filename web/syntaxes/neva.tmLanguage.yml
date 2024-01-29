@@ -130,6 +130,19 @@ repository:
             name: meta.directive
         end: "(?:\\n|$)" # Matches the end of a line or the end of the input
 
+  # Component nodes
+  component_nodes:
+    patterns:
+      - include: "#storage_types"
+      - match: "^(\\s*)\\b(\\w+)\\b" # Matches a line with some whitespace, followed by a word
+        captures:
+          "2":
+            name: variable.other.node
+      - begin: "\\{"
+        end: "\\}"
+        patterns:
+        - include: "#component_nodes"
+
 # ----------------------------------------------------------------
 # Patterns (actual rules)
 # ----------------------------------------------------------------
@@ -216,11 +229,7 @@ patterns:
                 name: entity.name.section
             end: "\\}" # Matches a closing curly brace
             patterns:
-              - include: "#storage_types"
-              - match: "^(\\s*)\\b(\\w+)\\b" # Matches a line with some whitespace, followed by a word (node identifier)
-                captures:
-                  "2":
-                    name: variable.other.node
+              - include: "#component_nodes"
 
           # Component Net
           - begin: "\\b(net)\\s*\\{" # Matches the keyword 'net' followed by optional whitespace and an opening curly brace

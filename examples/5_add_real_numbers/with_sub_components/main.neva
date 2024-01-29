@@ -7,7 +7,9 @@ import {
 
 components {
 	Main(enter any) (exit any) {
-		nodes { aux Aux }
+		nodes {
+			aux Aux
+		}
 		net {
 			in:enter -> aux:sig
 			aux:res -> printer:msg
@@ -20,7 +22,9 @@ components {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
-			adder PortBridge { handler Adder<int> }
+			adder PortBridge {
+				handler Adder<int>
+			}
 		}
 		net {
 			in:enter -> reader1.sig

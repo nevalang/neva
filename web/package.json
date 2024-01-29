@@ -62,8 +62,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./assets/file-icon.svg",
-          "dark": "./assets/file-icon.svg"
+          "light": "./assets/logo.svg",
+          "dark": "./assets/logo.svg"
         }
       }
     ],
@@ -73,30 +73,13 @@
         "scopeName": "source.neva",
         "path": "./syntaxes/neva.tmLanguage.json"
       }
-    ],
-    "commands": [
-      {
-        "command": "neva.openPreview",
-        "title": "Preview 👀",
-        "icon": "$(eye)",
-        "category": "Neva"
-      }
-    ],
-    "menus": {
-      "editor/title": [
-        {
-          "when": "editorLangId == neva",
-          "command": "neva.openPreview",
-          "group": "navigation"
-        }
-      ]
-    }
+    ]
   },
   "activationEvents": [
     "workspaceContains:neva.yml",
     "workspaceContains:neva.yaml"
   ],
-  "icon": "assets/logo.png",
+  "icon": "./assets/logo.png",
   "dependencies": {
     "vscode": "^1.1.37",
     "vscode-languageclient": "^9.0.1"
