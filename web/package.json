@@ -9,7 +9,7 @@
   },
   "description": "VSCode extension for Nevalang - flow based programming language.",
   "publisher": "nevalang",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
@@ -79,12 +79,12 @@
     "workspaceContains:neva.yml",
     "workspaceContains:neva.yaml"
   ],
-  "icon": "./assets/logo.png",
+  "icon": "./assets/logo_gradient.png",
   "dependencies": {
-    "vscode": "^1.1.37",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
+    "vscode": "^1.1.37",
     "@types/node": "^16.18.34",
     "@types/vscode": "^1.73.0",
     "@types/vscode-webview": "^1.57.0",
