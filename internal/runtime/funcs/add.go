@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -10,23 +9,23 @@ import (
 type addInts struct{}
 
 func (addInts) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	vvin, err := io.In.Port("vv")
-	if err != nil {
-		return nil, err
-	}
+	// vvin, err := io.In.Port("vv")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	vout, err := io.Out.Port("v")
-	if err != nil {
-		return nil, err
-	}
+	// vout, err := io.Out.Port("v")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case subStreamItem := <-vvin:
-				subStreamItem
+			// case subStreamItem := <-vvin:
+			// 	subStreamItem
 			}
 		}
 	}, nil

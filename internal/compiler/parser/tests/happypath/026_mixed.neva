@@ -27,9 +27,7 @@ components {
 		}
 		net {
 			in:enter -> abs:v
-			abs:v -> {
-				concrete:v
-			}
+			abs:v -> [concrete:v]
 			concrete:v -> out:code
 		}
 	}

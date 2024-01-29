@@ -268,3 +268,12 @@ Well, we can do that. But that would lead to situations where you accidentally h
 This problem gets bigger when you have `any` or _union_ `... | int` outport that is directed to `out:exit` - you'll have to check whether value isn't an `int`. Otherwise you're at risk of terminating with wrong code.
 
 **Exit codes are important**. Shell scripts and CI/CD depends on that. Most of the time you want your exit code to be `zero`. Non-zero exit code is not happypath, it's more rare. Having corner case like a base design decision is not what we want.
+
+## Why structural subtyping?
+
+1. It allowes write less code, especially mappings between records, vectors and maps of records
+2. Nominal subtyping doesn't protect from mistake like passing wrong value to type-cast
+
+## Why have `any`?
+
+First of all it's more like Go's `any`, not like TS's `any`. It's similar to TS's `unknown`. It means you can't do anything with `any` except _receive_, _send_ or _store_ it. There are some [critical cases](https://github.com/nevalang/neva/issues/224) where you either make your type-system super complicated or simply introduce any. Keep in mind that unlike Go where generics were introduced almost after 10 years of language release, Neva has type parameters from the beggining. Which means in 90% of cases you can avoid using of `any` and panicking.

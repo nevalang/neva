@@ -24,10 +24,7 @@ components {
 		}
 		net {
 			in:enter -> reader1.sig
-			reader1:num -> {
-				adder:p[0]
-				reader2:sig
-			}
+			reader1:num -> [adder:p[0], reader2:sig]
 			reader1:err -> out:err
 			reader2.num -> adder.p[1]
 			reader2.err -> out:err

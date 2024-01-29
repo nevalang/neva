@@ -14,7 +14,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"Lock":           lock{},
 		"Const":          constant{},
 		"AddInts":        addInts{},
-		"AddFloats":      addFloats{},
+		// "AddFloats":      addFloats{},
 		"ParseInt":       parseInt{},
 		"Void":           void{},
 		"StructSelector": structSelector{},

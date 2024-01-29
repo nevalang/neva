@@ -207,9 +207,7 @@ components {
 		}
 		net {
 			in:enter -> abs:v
-			abs:v -> {
-				concrete:v
-			}
+			abs:v -> [concrete:v]
 			concrete:v -> out:code
 		}
 	}
@@ -222,14 +220,11 @@ components {
             $foo.bar.baz -> foo:bar
             foo:bar.baz -> foo:bar
             foo:bar.baz.bax -> foo:bar
-			$foo.bar.baz -> {
-				foo:bar
+			$foo.bar.baz -> [foo:bar, bar:baz]
+			foo:bar.baz.bax -> [
+				foo:bar,
 				bar:baz
-			}
-			foo:bar.baz.bax -> {
-				foo:bar
-				bar:baz
-			}
+            ]
 		}
 	}
 }

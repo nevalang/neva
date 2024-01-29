@@ -112,21 +112,18 @@ nodeDIArgs: compNodesDefBody;
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
-connDef: senderSide '->' (connReceiverSide | thenConnExpr);
+connDef: senderSide '->' (receiverSide | multipleReceiverSide);
 senderSide: (portAddr | senderConstRef) structSelectors?;
+receiverSide: portAddr | thenConnExpr;
 thenConnExpr:
 	'(' NEWLINE* connDef (NEWLINE connDef)* NEWLINE* ')';
-multiSenderConnLine:
-	multiSenderSide '->' (connReceiverSide | thenConnExpr);
-multiSenderSide: '.' portAddrPort structSelectors?;
 senderConstRef: '$' entityRef;
 portAddr: portAddrNode ':' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-connReceiverSide: portAddr | connReceivers;
-connReceivers: '{' NEWLINE* (portAddr NEWLINE*)* '}';
+multipleReceiverSide: '[' NEWLINE* receiverSide (',' NEWLINE* receiverSide NEWLINE*)* ']';
 
 /* LEXER */
 
