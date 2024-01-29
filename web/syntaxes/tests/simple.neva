@@ -2,19 +2,20 @@
 
 import {
     std/io
-	github.com/emil14/nevatools
-	ws github.com/nevalang/websocket
+    std/strconv
+
+    @/my_lovely_mod/foo
+    @/my_lovely_mod/bar
+    @/my_lovely_mod/baz
+
+	github.com/nevalang/x
 }
 
 types {
-    Err error
-    Float float
-    Bool bool
-    pub Str string
-    Vec<T> []T
-    Arr<T Vec<int>> [512][]T
-    Union Float | Vec | Arr | Rec | Enum
-    Struct struct {
+    pub Num int | float
+    pub Primitive Num | string | bool
+    pub Users list<User>
+    User struct {
         age int
         name string
         bestFriend struct {
@@ -24,38 +25,33 @@ types {
 }
 
 interfaces {
-    InterfacePrivate<T bool>(y T, x int) (z T)
-    pub InterfacePublic<T Union>(x int, y string) (z T)
+    IStreamHandler<T>(seq stream<T>) (res T)
+    pub IListStreamer<T>(l list<T>) (seq stream<T>)
 }
 
 const {
-    zero any nil
-    myTrue bool true
     pi float 3.14
-    pub vec Vec<float> [pi, pi]
     greet string "Hello, world!"
+    pub maybeInt maybe<int>
+    pub nums list<int>[1, 2, 3, 4, 5]
 }
 
 components {
-    Main(enter) (exit) {
+    Main(enter any) (exit any) {
         nodes {
-            doer Doer<Float>
+            bypass Bypass<float>
+            printer Printer<float>
+            writer foo.FileWriter
         }
         net {
-            in.enter -> doer.x
-            doer.z -> out.exit
+            in:enter -> (pi -> bypass:foo)
+            bypass:bar -> [printer:msg, writer:msg]
+            printer:msg -> out:exit
         }
     }
 
-    pub Doer<T float>(x) (z T) {
-        nodes {
-            abstractNode InterfacePrivate
-            printer io.Print
-        }
-        net {
-            in.x -> printer.v
-            printer.v -> out.z
-        }
+    pub Bypass<T float>(foo T) (bar T) {
+        net { in.foo -> out.bar }
     }
 }
 

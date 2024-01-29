@@ -51,6 +51,9 @@ repository:
       # error
       - match: "\\berror\\b" # Matches the keyword 'error'
         name: storage.type.error
+      # stream
+      - match: "\\bstream\\b" # Matches the keyword 'stream'
+        name: storage.type.stream
       # struct
       - include: "#struct_type"
       # enum

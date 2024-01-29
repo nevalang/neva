@@ -1,4 +1,5 @@
-// Program that does literally nothing.
+// This is the smallest possible program that compiles.
+// It literally does absolutely literally nothing.
 // Here we learn components, ports, networks, connections and port addrs.
 
 components {

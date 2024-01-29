@@ -59,6 +59,10 @@
           "name": "storage.type.error"
         },
         {
+          "match": "\\bstream\\b",
+          "name": "storage.type.stream"
+        },
+        {
           "include": "#struct_type"
         },
         {
