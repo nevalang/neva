@@ -9,7 +9,7 @@
   },
   "description": "VSCode extension for Neva programming language",
   "publisher": "nevalang",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
