@@ -15,11 +15,11 @@
     "vscode": "^1.78.0"
   },
   "bugs": {
-    "url": "https://github.com/nevalang/neva/issues"
+    "url": "https://github.com/nevalang/vscode-neva/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nevalang/neva/web"
+    "url": "https://github.com/nevalang/vscode-neva"
   },
   "keywords": [
     "neva",
