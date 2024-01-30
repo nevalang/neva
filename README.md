@@ -1,9 +1,12 @@
-# Neva
-
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-**Neva** is a general purpose [flow-based](https://en.wikipedia.org/wiki/Flow-based_programming) programming language with static [structural](https://en.wikipedia.org/wiki/Structural_type_system) typing and [implicit parallelism](https://en.wikipedia.org/wiki/Implicit_parallelism) that compiles to machine code. Designed with [visual programming](https://en.wikipedia.org/wiki/Visual_programming_language) in mind. For the era of effortless concurrency.
+<p style="text-align: center;">Flow Based Programming Language</p>
 
+## Neva
+
+A general-purpose, flow-based programming language with static typing and implicit parallelism, designed with visual programming in mind, that compiles to machine code.
+
+Website: https://nevalang.org
 
 ```neva
 const {
@@ -21,8 +24,6 @@ components {
 }
 ```
 
-> WARNING: This project is under heavy development and not production ready yet.
-
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
@@ -34,3 +35,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md)
 ## FAQ
 
 See [FAQ.md](./docs/faq.md)
+
+---
+
+> WARNING: This project is under heavy development and not production ready yet.
