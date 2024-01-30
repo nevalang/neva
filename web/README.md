@@ -1,6 +1,6 @@
 # Neva Programming Language
 
-![Logo of the language](./assets/header.png "Nevalang logo and title")
+![Black Header](./assets/header.png "Nevalang logo and title")
 
 This is extension for [Neva](https://github.com/nevalang/neva) - flow based programming language.
 

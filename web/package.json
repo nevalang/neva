@@ -7,9 +7,9 @@
     "name": "Emil Valeev",
     "url": "https://github.com/emil14"
   },
-  "description": "VSCode extension for Nevalang - flow based programming language.",
+  "description": "VSCode extension for Neva programming language",
   "publisher": "nevalang",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "engines": {
     "vscode": "^1.78.0"
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nevalang/neva"
+    "url": "https://github.com/nevalang/neva/web"
   },
   "keywords": [
     "neva",
