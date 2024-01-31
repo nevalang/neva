@@ -1,19 +1,23 @@
-{{- /*
-Renders a menu for the given menu ID.
-
-@context {page} page The current page.
-@context {string} menuID The menu ID.
-
-@example: {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
-*/}}
-
 {{- $page := .page }}
 {{- $menuID := .menuID }}
+{{- $baseURL := .Site.BaseURL }}
 
 {{- with index site.Menus $menuID }}
   <nav class="nav">
-    <div class="tabs">
-      {{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
+    <div class="nav-left">
+      <a class="brand" href="/">
+        <img
+          src="/images/logo/light.svg"
+          alt="Neva language logo"
+          width="63"
+          height="40"
+        />
+      </a>
+    </div>
+    <div class="nav-right">
+      <div class="tabs">
+        {{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
+      </div>
     </div>
   </nav>
 {{- end }}

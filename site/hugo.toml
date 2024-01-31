@@ -3,16 +3,21 @@ languageCode = 'en-us'
 title = 'Neva Programming Language'
 
 [[menus.main]]
-name = 'Home'
-pageRef = '/'
+name = 'Docs'
+pageRef = '/docs'
 weight = 10
 
 [[menus.main]]
-name = 'Documentation'
-pageRef = '/docs'
+name = 'Blog'
+pageRef = '/blog'
 weight = 20
 
+[[menus.main]]
+name = 'GitHub'
+url = "https://github.com/nevalang/neva"
+weight = 30
+
 [module]
-  [module.hugoVersion]
-    extended = false
-    min = "0.116.0"
+[module.hugoVersion]
+extended = false
+min = "0.116.0"

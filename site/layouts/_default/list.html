@@ -2,7 +2,12 @@
   <h1>{{ .Title }}</h1>
   {{ .Content }}
   {{ range .Pages }}
-    <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-    {{ .Summary }}
+    {{ $dateHuman := .Date | time.Format ":date_long" }}
+    <div>
+      <a href="{{ .RelPermalink }}">
+        <h2 style="display: inline">{{ .LinkTitle }}</h2>
+      </a>
+      <span>{{ $dateHuman }}</span>
+    </div>
   {{ end }}
 {{ end }}
