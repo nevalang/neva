@@ -1,10 +1,10 @@
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-<p style="text-align: center;">Flow Based Programming Language</p>
+<p align="center">Flow Based Programming Language</p>
 
 ## Neva
 
-A general-purpose, flow-based programming language with static typing and implicit parallelism, designed with visual programming in mind, that compiles to machine code.
+A general-purpose, flow-based programming language with static typing and implicit parallelism, designed with visual programming in mind, that compiles to machine code and Go.
 
 Website: https://nevalang.org
 
