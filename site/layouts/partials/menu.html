@@ -1,48 +1,21 @@
-{{- $page := .page }}
-{{- $menuID := .menuID }}
-{{- $baseURL := .Site.BaseURL }}
-
-{{- with index site.Menus $menuID }}
-  <nav class="nav">
-    <div class="nav-left">
-      <a class="brand" href="/">
-        <img
-          src="/images/logo/light.svg"
-          alt="Neva language logo"
-          width="63"
-          height="40"
-        />
-      </a>
-    </div>
-    <div class="nav-right">
-      <div class="tabs">
-        {{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
-      </div>
-    </div>
-  </nav>
-{{- end }}
-
-{{- define "partials/inline/menu/walk.html" }}
-  {{- $page := .page }}
-  {{- range .menuEntries }}
-    {{- $attrs := dict "href" .URL }}
-    {{- if $page.IsMenuCurrent .Menu . }}
-      {{- $attrs = merge $attrs (dict "class" "active" "aria-current" "page") }}
-    {{- else if $page.HasMenuCurrent .Menu .}}
-      {{- $attrs = merge $attrs (dict "class" "ancestor" "aria-current" "true") }}
-    {{- end }}
-    {{- $name := .Name }}
-    {{- with .Identifier }}
-      {{- with T . }}
-        {{- $name = . }}
+<nav class="nav">
+  <div class="nav-left">
+    <a class="brand" href="/">
+      <img
+        src="/images/logo/light.svg"
+        alt="Neva language logo"
+        width="63"
+        height="40"
+      />
+    </a>
+  </div>
+  <div class="nav-right">
+    <div class="tabs">
+      {{- range site.Menus.main }}
+        <a
+          href="{{ .URL }}">{{ .Name }}
+        </a>
       {{- end }}
-    {{- end }}
-    <a
-      {{- range $k, $v := $attrs }}
-        {{- with $v }}
-          {{- printf " %s=%q" $k $v | safeHTMLAttr }}
-        {{- end }}
-      {{- end -}}
-    >{{ $name }}</a>
-  {{- end }}
-{{- end }}
+    </div>
+  </div>
+</nav>

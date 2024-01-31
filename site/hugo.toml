@@ -4,12 +4,12 @@ title = 'Neva Programming Language'
 
 [[menus.main]]
 name = 'Docs'
-pageRef = '/docs'
+url = '/docs'
 weight = 10
 
 [[menus.main]]
 name = 'Blog'
-pageRef = '/blog'
+url = '/blog'
 weight = 20
 
 [[menus.main]]
