@@ -1,6 +1,6 @@
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-<p align="center">Flow Based Programming Language</p>
+**<p align="center">Flow Based Programming Language</p>**
 
 ## Neva
 
