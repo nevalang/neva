@@ -1,2 +1,10 @@
-<h1>{{ site.Title }}</h1>
+<div class="row">
+  <img
+    src="{{ .Site.BaseURL }}images/logo/light_gradient.svg"
+    alt="Header Image"
+    width="95"
+    height="60"
+  />
+  <h1>{{ site.Title }}</h1>
+</div>
 {{ partial "menu.html" (dict "menuID" "main" "page" .) }}

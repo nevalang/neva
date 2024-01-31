@@ -11,10 +11,10 @@ Renders a menu for the given menu ID.
 {{- $menuID := .menuID }}
 
 {{- with index site.Menus $menuID }}
-  <nav>
-    <ul>
+  <nav class="nav">
+    <div class="tabs">
       {{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
-    </ul>
+    </div>
   </nav>
 {{- end }}
 
@@ -33,19 +33,12 @@ Renders a menu for the given menu ID.
         {{- $name = . }}
       {{- end }}
     {{- end }}
-    <li>
-      <a
-        {{- range $k, $v := $attrs }}
-          {{- with $v }}
-            {{- printf " %s=%q" $k $v | safeHTMLAttr }}
-          {{- end }}
-        {{- end -}}
-      >{{ $name }}</a>
-      {{- with .Children }}
-        <ul>
-          {{- partial "inline/menu/walk.html" (dict "page" $page "menuEntries" .) }}
-        </ul>
-      {{- end }}
-    </li>
+    <a
+      {{- range $k, $v := $attrs }}
+        {{- with $v }}
+          {{- printf " %s=%q" $k $v | safeHTMLAttr }}
+        {{- end }}
+      {{- end -}}
+    >{{ $name }}</a>
   {{- end }}
 {{- end }}
