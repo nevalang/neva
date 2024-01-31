@@ -6,8 +6,8 @@
     <div>
       <a href="{{ .RelPermalink }}">
         <h2 style="display: inline">{{ .LinkTitle }}</h2>
+        <span class="text-grey" style="margin-left: 5px">{{ $dateHuman }}</span>
       </a>
-      <span class="text-grey">{{ $dateHuman }}</span>
     </div>
   {{ end }}
 {{ end }}
