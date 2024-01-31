@@ -1,6 +1,6 @@
 <nav class="nav">
   <div class="nav-left">
-    <a class="brand" href="/">
+    <a href="/" class="is-paddingless">
       <img
         src="/images/logo/light.svg"
         alt="Neva language logo"
@@ -12,9 +12,7 @@
   <div class="nav-right">
     <div class="tabs">
       {{- range site.Menus.main }}
-        <a
-          href="{{ .URL }}">{{ .Name }}
-        </a>
+      <a href="{{ .URL }}">{{ .Name }} </a>
       {{- end }}
     </div>
   </div>

@@ -1,0 +1,52 @@
+<svg width="1280" height="540" viewBox="0 0 1280 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_2021_2)">
+<rect width="1280" height="540" fill="white"/>
+<g clip-path="url(#clip1_2021_2)">
+<rect x="640" y="540" width="640" height="540" transform="rotate(180 640 540)" fill="url(#paint0_linear_2021_2)"/>
+<rect x="1280" y="540" width="640" height="540" transform="rotate(180 1280 540)" fill="url(#paint1_linear_2021_2)"/>
+<g filter="url(#filter0_d_2021_2)">
+<path d="M697.955 308.303C682.093 338.975 636.881 334.611 627.191 301.473L616.413 264.615C615.888 262.818 613.436 262.581 612.576 264.245L585.171 317.236C590.562 306.811 574.086 252.306 582.045 230.697C597.907 200.026 643.119 204.389 652.809 237.527L663.587 274.385C664.112 276.182 666.564 276.419 667.425 274.755L694.829 221.764C689.438 232.189 705.915 286.694 697.955 308.303Z" fill="url(#paint2_linear_2021_2)"/>
+<path d="M732.623 241.267L697.955 308.303C705.915 286.694 689.438 232.189 694.829 221.764C700.22 211.339 713.051 207.254 723.488 212.639C733.925 218.025 738.014 230.842 732.623 241.267Z" fill="url(#paint3_linear_2021_2)"/>
+<path d="M547.377 297.733L582.045 230.697C574.086 252.306 590.562 306.811 585.171 317.236C579.78 327.661 566.949 331.746 556.512 326.361C546.075 320.975 541.986 308.158 547.377 297.733Z" fill="url(#paint4_linear_2021_2)"/>
+</g>
+</g>
+</g>
+<defs>
+<filter id="filter0_d_2021_2" x="541" y="210" width="198" height="127" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2021_2"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2021_2" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_2021_2" x1="931.827" y1="501.395" x2="1014.54" y2="1122.48" gradientUnits="userSpaceOnUse">
+<stop stop-color="#3164E6"/>
+<stop offset="1" stop-color="#86FFAF"/>
+</linearGradient>
+<linearGradient id="paint1_linear_2021_2" x1="1532.01" y1="597.807" x2="1671.81" y2="1035.91" gradientUnits="userSpaceOnUse">
+<stop stop-color="#86FFAF"/>
+<stop offset="1" stop-color="#3164E6"/>
+</linearGradient>
+<linearGradient id="paint2_linear_2021_2" x1="631.636" y1="201.493" x2="645.273" y2="339.44" gradientUnits="userSpaceOnUse">
+<stop stop-color="#3164E6"/>
+<stop offset="1" stop-color="#86FFAF"/>
+</linearGradient>
+<linearGradient id="paint3_linear_2021_2" x1="619.814" y1="222.739" x2="643.674" y2="323.463" gradientUnits="userSpaceOnUse">
+<stop stop-color="#86FFAF"/>
+<stop offset="1" stop-color="#3164E6"/>
+</linearGradient>
+<linearGradient id="paint4_linear_2021_2" x1="619.814" y1="222.739" x2="643.674" y2="323.463" gradientUnits="userSpaceOnUse">
+<stop stop-color="#86FFAF"/>
+<stop offset="1" stop-color="#3164E6"/>
+</linearGradient>
+<clipPath id="clip0_2021_2">
+<rect width="1280" height="540" fill="white"/>
+</clipPath>
+<clipPath id="clip1_2021_2">
+<rect width="1280" height="540" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -1,4 +1,6 @@
-# Frequently Asked Questions (FAQ)
+---
+Title: FAQ
+---
 
 ## What is this?
 

@@ -1,5 +1,8 @@
-body {
-  font-family: 'Nunito', sans-serif;
+:root {
+  --color-primary: #da1d50; /* brand color */
+  --grid-maxWidth: 960px; /* max container width 1080px */
+  --font-family-sans:  'Nunito', sans-serif;
+  --font-family-mono: monaco, "Consolas", "Lucida Console", monospace;
 }
 
 body.dark {
@@ -8,4 +11,29 @@ body.dark {
   --font-color: #f5f5f5;
   --color-grey: #ccc;
   --color-darkGrey: #777;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+header, main, footer {
+  flex-shrink: 0;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--bg-color);
+  border-bottom: solid 1px var(--color-lightGrey);
+}
+
+header .tabs > a, header .tabs > a:hover {
+  border: none;
+}
+
+main {
+  flex-grow: 1;
 }

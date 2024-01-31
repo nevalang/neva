@@ -1,4 +1,6 @@
-# Style Guide
+---
+Title: Style guide
+---
 
 Neva language has official style guide and it's described in this document.
 
