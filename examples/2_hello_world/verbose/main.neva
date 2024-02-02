@@ -9,7 +9,7 @@ components {
 	Main(enter any) (exit any) {
 		nodes {
 			#runtime_func_msg(greeting)
-			greeting Distributor<string>
+			greeting Emitter<string>
 			printer Printer<string>
 			blocker Blocker<string>
 		}

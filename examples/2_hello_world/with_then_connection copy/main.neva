@@ -1,0 +1,11 @@
+// Finally the shortest hello world with literal senders
+
+components {
+	component Main(enter any) (exit any) {
+		nodes { printer Printer<string> }
+		net {
+			in:enter -> ('Hello, World!' -> printer:data)
+			printer:sig -> out:exit
+		}
+	}
+}

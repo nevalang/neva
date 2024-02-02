@@ -12,17 +12,17 @@ types {
 
     pub stream<T> maybe<T>
     pub error struct {
-        msg string
+        text string
         child maybe<error>
     }
 }
 
 components {
+    #runtime_func(Emitter)
+    pub Emitter<T>() (msg T)
+
     #runtime_func(Destructor)
     pub Destructor(msg any) ()
-
-    #runtime_func(Distributor)
-    pub Distributor<T>() (msg T)
 
     #runtime_func(Blocker)
     pub Blocker<T>(cond any, data T) (data T)
@@ -38,10 +38,10 @@ components {
     pub StructSelector<T>(msg struct {}) (msg T)
 
     #runtime_func(string StrLen, list ListLen, map MapLen)
-    pub Len<
+    pub LenGetter<
         T string | list<any> | map<any>
-    >(msg T) (n int)
+    >(data T) (n int)
 
     #runtime_func(LinePrinter)
-    pub Printer<T>(msg T) (sig T)
+    pub Printer<T>(data T) (sig T)
 }
