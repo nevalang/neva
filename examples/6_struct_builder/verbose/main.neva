@@ -8,11 +8,6 @@ types {
     }
 }
 
-const {
-    age int 32
-    name string 'John'
-}
-
 components {
     #runtime_func(StructBuilder)
     MyStructBuilder(age int, name string) (msg User)
@@ -23,8 +18,8 @@ components {
             printer Printer<User>
         }
         net {
-            $age -> builder:age
-            $name -> builder:name
+            32 -> builder:age
+            'John' -> builder:name
             builder:msg -> printer:msg
             printer:msg -> out:exit
         }

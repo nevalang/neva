@@ -9,11 +9,6 @@ types {
     }
 }
 
-const {
-    age int 32
-    name string 'John'
-}
-
 components {
     Main(enter any) (exit any) {
         nodes {
@@ -21,8 +16,8 @@ components {
             print Print<User>
         }
         net {
-            $age -> builder.age
-            $name -> builder.name
+            32 -> builder.age
+            'John' -> builder.name
             builder.v -> print.v
             print.v -> out:exit
         }
