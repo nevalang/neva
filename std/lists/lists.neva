@@ -1,22 +1,22 @@
 components {
-    #runtime_func(ListAccumulator)
+    #extern(ListAccumulator)
     pub Accumulator<T>(els stream<T>) (res list<T>)
 
-    #runtime_func(ListBuilder)
+    #extern(ListBuilder)
     pub Builder<T> ([els] T) (res list<T>)
     
-    #runtime_func(ListConcatenator)
+    #extern(ListConcatenator)
     pub Concatenator<T> (lsts stream<list<T>>) (res list<T>)
 
-    #runtime_func(ListPusher)
+    #extern(ListPusher)
     pub Pusher<T> (l list<T>, el T) (res list<T>)
 
-    #runtime_func(ListUpdater)
+    #extern(ListUpdater)
     pub Updater<T> (l list<T>, i int, el T) (res list<T>, err error)
 
-    #runtime_func(ListSelector)
+    #extern(ListSelector)
     pub Selector<T>(l list<T>, i int) (ok T, miss int)
 
-    #runtime_func(ListSlicer)
+    #extern(ListSlicer)
     pub Slicer<T>(l list<T>, from int, to int) (res list<T>, err error)
 }

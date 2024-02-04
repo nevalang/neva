@@ -14,16 +14,16 @@ import (
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		components {
-			#runtime_func(d1)
+			#extern(d1)
 			C1() ()
 
-			#runtime_func(d2)
+			#extern(d2)
 			C2() () {
 				nodes {
-					#runtime_func_msg(d3)
+					#bind(d3)
 					n1 C1
 
-					#runtime_func_msg(d4)
+					#bind(d4)
 					n2 C1
 				}
 			}
@@ -31,7 +31,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 			#struct_inports
 			C3() ()
 
-			#runtime_func(d5)
+			#extern(d5)
 			#struct_inports
 			C4() ()
 		}

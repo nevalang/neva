@@ -1,4 +1,4 @@
 components {
-    #runtime_func(Reader)
+    #extern(Reader)
     pub Reader(sig any) (s string)
 }

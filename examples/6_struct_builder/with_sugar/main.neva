@@ -2,24 +2,20 @@
 // without custom components and compiler directives
 // by simply using builtin StructBuilder.
 
-types {
-    User struct {
-        age int
-        name string
-    }
+type User struct {
+    age int
+    name string
 }
 
-components {
-    Main(enter any) (exit any) {
-        nodes {
-            builder StructBuilder<User>
-            print Print<User>
-        }
-        net {
-            32 -> builder:age
-            'John' -> builder:name
-            builder:msg -> print:data
-            print:sig -> out:exit
-        }
+component Main(enter any) (exit any) {
+    nodes {
+        builder StructBuilder<User>
+        print Print<User>
+    }
+    net {
+        32 -> builder:age
+        'John' -> builder:name
+        builder:msg -> print:data
+        print:sig -> out:exit
     }
 }

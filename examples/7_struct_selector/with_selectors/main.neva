@@ -3,16 +3,17 @@
 
 types {
     User struct {
-        age int
+        name string
+        pet Pet
+    }
+    Pet struct {
         name string
     }
 }
 
-const {
-    user User {
-        age: 32
-        name: 'john'
-    }
+const user User = {
+    name: 'John',
+    pet: { name: 'Charley' },
 }
 
 components {

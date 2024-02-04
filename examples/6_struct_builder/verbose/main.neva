@@ -1,17 +1,12 @@
 // Here we learn how to build structures
 // by creating custom components with compiler directives.
 
-types {
-    User struct {
-        age int
-        name string
-    }
+type User struct {
+    age int
+    name string
 }
 
 components {
-    #runtime_func(StructBuilder)
-    MyStructBuilder(age int, name string) (msg User)
-    
     Main(enter any) (exit any) {
         nodes {
             builder MyStructBuilder
@@ -24,4 +19,7 @@ components {
             printer:msg -> out:exit
         }
     }
+
+    #extern(StructBuilder)
+    MyStructBuilder(age int, name string) (msg User)
 }

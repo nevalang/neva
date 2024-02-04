@@ -10,12 +10,12 @@ types {
 }
 
 components {
-    #runtime_func(PortStreamer)
+    #extern(PortStreamer)
     pub PortStreamer<T>([p] T) (seq stream<T>)
 
-    #runtime_func(ListStreamer)
+    #extern(ListStreamer)
     pub ListStreamer<T>(l list<T>) (seq stream<T>)
 
-    #runtime_func(MapStreamer)
+    #extern(MapStreamer)
     pub MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
 }

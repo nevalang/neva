@@ -19,30 +19,30 @@ types {
 }
 
 components {
-    #runtime_func(Emitter)
+    #extern(Emitter)
     pub Emitter<T>() (msg T)
 
-    #runtime_func(Destructor)
+    #extern(Destructor)
     pub Destructor(msg any) ()
 
-    #runtime_func(Blocker)
+    #extern(Blocker)
     pub Blocker<T>(cond any, data T) (data T)
 
-    #runtime_func(Checker)
+    #extern(Checker)
     pub Checker(opt maybe<T>) (some T, none struct{})
 
-    #struct_inports
-    #runtime_func(StructBuilder)
+    #autoport
+    #extern(StructBuilder)
     pub StructBuilder<T struct {}> () (msg T)
 
-    #runtime_func(StructSelector)
+    #extern(StructSelector)
     pub StructSelector<T>(msg struct {}) (msg T)
 
-    #runtime_func(string StrLen, list ListLen, map MapLen)
+    #extern(string StrLen, list ListLen, map MapLen)
     pub LenGetter<
         T string | list<any> | map<any>
     >(data T) (n int)
 
-    #runtime_func(LinePrinter)
+    #extern(LinePrinter)
     pub Printer<T>(data T) (sig T)
 }

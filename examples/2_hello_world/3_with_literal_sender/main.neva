@@ -5,12 +5,10 @@
 // Secondly, what if you wanna use your message in several places?
 // Finally, you might wanna move your message to const just because it's big!
 
-components {
-	component Main(enter any) (exit any) {
-		nodes { printer Printer<string> }
-		net {
-			in:enter -> ('Hello, World!' -> printer:data)
-			printer:sig -> out:exit
-		}
+component Main(enter any) (exit any) {
+	nodes { printer Printer<string> }
+	net {
+		in:enter -> ('Hello, World!' -> printer:data)
+		printer:sig -> out:exit
 	}
 }

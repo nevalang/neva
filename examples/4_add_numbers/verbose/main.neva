@@ -1,20 +1,18 @@
 // Here we learn `stream<T>` and streamers
 
-components {
-	Main(enter any) (exit any) {
-		nodes {
-			adder Adder<int>
-			streamer PortStreamer<int>
-			printer Printer<int>
-		}
-		net {
-			in:enter -> (
-				1 -> streamer:p[0]
-				2 -> streamer:p[1]
-			)
-			streamer:seq -> adder:seq
-			adder:res -> printer:msg
-			printer:sig -> out:exit
-		}
+component Main(enter any) (exit any) {
+	nodes {
+		adder Adder<int>
+		streamer PortStreamer<int>
+		printer Printer<int>
+	}
+	net {
+		in:enter -> (
+			1 -> streamer:p[0]
+			2 -> streamer:p[1]
+		)
+		streamer:seq -> adder:seq
+		adder:res -> printer:msg
+		printer:sig -> out:exit
 	}
 }

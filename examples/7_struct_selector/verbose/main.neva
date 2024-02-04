@@ -12,11 +12,11 @@ types {
 }
 
 const {
-    user User {
+    user User = {
         name: 'John',
         pet: { name: 'Charley' },
     }
-    path list<string> ['pet', 'name']
+    path list<string> = ['pet', 'name']
 }
 
 components {
@@ -24,7 +24,7 @@ components {
         nodes {
             printer Printer<string>
 
-            #runtime_func_msg(path)
+            #bind(path)
             selector StructSelector<string>
         }
         net {

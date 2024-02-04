@@ -3,10 +3,10 @@ const {
 }
 
 components {
-    #runtime_func(BoolParser)
+    #extern(BoolParser)
     pub BoolParser(s string) (res bool, err error)
 
-    #runtime_func(int IntParser, float FloatParser)
+    #extern(int IntParser, float FloatParser)
     pub BaseNumParser<T int | float>(s string, base int) (res T, err error)
 
     pub NumParser<T int | float>(s string) (res T, err error) {

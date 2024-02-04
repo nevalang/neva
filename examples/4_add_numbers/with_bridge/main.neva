@@ -1,18 +1,16 @@
 // Here we learn how to avoid explicit usage of streamers by using bridges.
 
-components {
-	Main(enter any) (exit any) {
-		nodes {
-			adder PortBridge { handler Adder<int> }
-			printer Printer<int>
-		}
-		net {
-			in:enter -> (
-				1 -> adder:p[0]
-				2 -> adder:p[1]
-			)
-			adder:res -> printer:msg
-			printer:sig -> out:exit
-		}
+component Main(enter any) (exit any) {
+	nodes {
+		adder PortBridge { handler Adder<int> }
+		printer Printer<int>
+	}
+	net {
+		in:enter -> (
+			1 -> adder:p[0]
+			2 -> adder:p[1]
+		)
+		adder:res -> printer:msg
+		printer:sig -> out:exit
 	}
 }

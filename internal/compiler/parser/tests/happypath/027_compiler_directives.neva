@@ -1,21 +1,21 @@
 components {
-	#struct_inports
+	#autoport
 	pub C1() ()
 	
-	#runtime_func(read)
+	#extern(read)
 	pub C1(sig) (v string)
 
-	#struct_inports
-	#runtime_func(read)
+	#extern(read)
+	#autoport
 	pub C1_5(sig) (v string)
 
-	#runtime_func(int DoInt, float DoFloat)
+	#extern(int DoInt, float DoFloat)
 	pub C2(sig) (v string)
 
-	#runtime_func(read, write)
+	#extern(read, write)
 	pub C3<T>(v T) (v T) {
 		nodes {
-			#runtime_func_msg(msg)
+			#bind(msg)
 			msg Const<string>
 		}
 	}

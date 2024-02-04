@@ -63,7 +63,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
 	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
 		return src.Node{}, src.Interface{}, &compiler.Error{
-			Err:      ErrRuntimeMsgArgs,
+			Err:      ErrBindDirectiveArgs,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -141,7 +141,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 	if entity.Kind == src.InterfaceEntity {
 		if hasRuntimeMsg {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrInterfaceNodeWithRuntimeMsg,
+				Err:      ErrInterfaceNodeBindDirective,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -162,7 +162,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if hasRuntimeMsg && !isRuntimeFunc {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormNodeRuntimeMsg,
+			Err:      ErrNormNodeBindDirective,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
