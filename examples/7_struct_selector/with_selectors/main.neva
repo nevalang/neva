@@ -9,7 +9,7 @@ types {
 }
 
 const {
-    u User {
+    user User {
         age: 32
         name: 'john'
     }
@@ -22,7 +22,7 @@ components {
             printer Printer<string>
         }
         net {
-            in:enter -> ($u.pet.name -> printer:msg)
+            in:enter -> ($user.pet.name -> printer:msg)
             printer:msg -> out:exit
         }
     }

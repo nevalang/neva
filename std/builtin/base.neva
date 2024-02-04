@@ -11,6 +11,7 @@ types {
     pub list<T>
 
     pub stream<T> maybe<T>
+    
     pub error struct {
         text string
         child maybe<error>

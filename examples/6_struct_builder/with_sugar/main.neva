@@ -16,10 +16,10 @@ components {
             print Print<User>
         }
         net {
-            32 -> builder.age
-            'John' -> builder.name
-            builder.v -> print.v
-            print.v -> out:exit
+            32 -> builder:age
+            'John' -> builder:name
+            builder:msg -> print:data
+            print:sig -> out:exit
         }
     }
 }

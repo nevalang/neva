@@ -13,8 +13,8 @@ types {
 
 const {
     user User {
-        name: 'john'
-        pet: { name: 'Charley' }
+        name: 'John',
+        pet: { name: 'Charley' },
     }
     path list<string> ['pet', 'name']
 }
@@ -23,6 +23,7 @@ components {
     Main(enter any) (exit any) {
         nodes {
             printer Printer<string>
+
             #runtime_func_msg(path)
             selector StructSelector<string>
         }

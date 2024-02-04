@@ -2,7 +2,7 @@
 // they serve as adapters for stream handlers and outside world:
 
 interfaces {
-    IStreamHandler<T>(seq stream<T>) (res T)
+    pub IStreamHandler<T>(seq stream<T>) (res T)
 }
 
 components {

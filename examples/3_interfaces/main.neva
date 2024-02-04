@@ -2,29 +2,29 @@
 // It's essential to understand bridges.
 
 interfaces {
-    IExample<T>(msg T) (msg T)
+    IExample<T>(data T) (sig T)
 }
 
 components {
     Main(enter any) (exit any) {
         nodes {
-            sub SubComponent {
-                dep Printer<any>
+            subNode SecondComponent {
+                depNode Printer<any>
             }
         }
         net {
-            in:enter -> sub:msg
-            sub:msg -> out:exit
+            in:enter -> subNode:msg
+            subNode:msg -> out:exit
         }
     }
     
-    SubComponent (msg any) (msg any) {
+    SecondComponent (msg any) (msg any) {
         nodes {
-            dep IExample<any>
+            depNode IExample<any>
         }
         net {
-            in:msg -> dep:msg
-            dep:msg -> out:msg
+            in:msg -> depNode:data
+            depNode:sig -> out:msg
         }
     }
 }
