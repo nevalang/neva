@@ -1,12 +1,12 @@
 components {
-	#autoport
+	#autoports
 	pub C1() ()
 	
 	#extern(read)
 	pub C1(sig) (v string)
 
 	#extern(read)
-	#autoport
+	#autoports
 	pub C1_5(sig) (v string)
 
 	#extern(int DoInt, float DoFloat)

@@ -31,7 +31,7 @@ components {
     #extern(Checker)
     pub Checker(opt maybe<T>) (some T, none struct{})
 
-    #autoport
+    #autoports
     #extern(StructBuilder)
     pub StructBuilder<T struct {}> () (msg T)
 
@@ -39,10 +39,13 @@ components {
     pub StructSelector<T>(msg struct {}) (msg T)
 
     #extern(string StrLen, list ListLen, map MapLen)
-    pub LenGetter<
+    pub Len<
         T string | list<any> | map<any>
     >(data T) (n int)
 
     #extern(LinePrinter)
     pub Printer<T>(data T) (sig T)
+
+    #extern(Ranger)
+    pub Ranger(n int) (stream<int>)
 }
