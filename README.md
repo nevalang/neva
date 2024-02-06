@@ -26,15 +26,7 @@ components {
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-## Architecture
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md)
-
-## FAQ
-
-See [FAQ.md](./docs/faq.md)
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ---
 
