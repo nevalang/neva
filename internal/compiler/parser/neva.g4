@@ -43,16 +43,14 @@ typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
 typeParam: IDENTIFIER typeExpr?;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr;
-typeInstExpr:
-	entityRef typeArgs?; // entity ref points to type definition
+typeInstExpr: entityRef typeArgs?;
 typeArgs:
 	'<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
-typeLitExpr: enumTypeExpr | arrTypeExpr | structTypeExpr;
+typeLitExpr: enumTypeExpr | structTypeExpr;
 enumTypeExpr:
 	'enum' NEWLINE* '{' NEWLINE* IDENTIFIER (
 		',' NEWLINE* IDENTIFIER
 	)* NEWLINE* '}';
-arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr;
 structTypeExpr:
 	'struct' NEWLINE* '{' NEWLINE* structFields? '}';
 structFields: structField (NEWLINE+ structField)*;

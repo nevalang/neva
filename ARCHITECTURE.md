@@ -265,3 +265,11 @@ Actually it's impossible to have desugarer before analysis. It's possible to hav
 ## Why union types are allowed for constants at syntax level?
 
 You indeed can declare `const foo int | string = 42` and that won't make much sense. The problem it's not enough to restrict that at root level, you also have to recursively check every complex type like `struct`, `list` or `map`. And that is impossible to make at syntax level and require work in analyzer. This is could be done in the future when we cover more important cases.
+
+## Why we have special syntax for union?
+
+We don't have sugar for `maybe<T>` and `list<T>` so why would we have this for unions? The reason is union is special for the type system. It's handled differently at the level of compatibility checking and resolving.
+
+However it's not `struct` where we _technically_ have to have some "literal" syntax. It's possible in theory to have just `union<T1, T2, ... Tn>` like e.g. in Python but would require _type-system_ known about `union` name and handle this reference expressions very differently. In fact this will only make design more complicated because we _pretend_ like it's regular type instantiation consisting of reference and arguments but in fact it's not.
+
+Lastly it's just common to have `|` syntax for unions.
