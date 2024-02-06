@@ -2,6 +2,6 @@
 // It literally does absolutely literally nothing.
 // Here we learn components, ports, networks, connections and port addrs.
 
-component Main(enter any) (exit any) {
-	net { in:enter -> out:exit }
+component Main(start any) (stop any) {
+	net { in:start -> out:stop }
 }

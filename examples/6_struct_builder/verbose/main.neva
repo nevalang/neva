@@ -7,7 +7,7 @@ type User struct {
 }
 
 components {
-    Main(enter any) (exit any) {
+    Main(start any) (stop any) {
         nodes {
             builder MyStructBuilder
             printer Printer<User>
@@ -16,7 +16,7 @@ components {
             32 -> builder:age
             'John' -> builder:name
             builder:msg -> printer:msg
-            printer:msg -> out:exit
+            printer:msg -> out:stop
         }
     }
 

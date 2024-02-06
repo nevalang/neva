@@ -5,7 +5,7 @@ import {
 	std/strconv
 }
 
-component Main(enter any) (exit any) {
+component Main(start any) (stop any) {
 	nodes {
 		reader1 io.Reader
 		reader2 io.Reader
@@ -15,7 +15,7 @@ component Main(enter any) (exit any) {
 		printer Printer<any>
 	}
 	net {
-		in:enter -> reader1:sig
+		in:start -> reader1:sig
 		reader1:s -> parser1:s
 		parser1:err -> printer:v
 		parser1:res -> [adder:p[0], reader2:sig]
@@ -23,6 +23,6 @@ component Main(enter any) (exit any) {
 		parser2:err -> printer:msg
 		parser2:res -> adder:p[1]
 		add:res -> printer:msg
-		printer:msg -> out:exit
+		printer:msg -> out:stop
 	}
 }

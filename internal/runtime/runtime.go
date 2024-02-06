@@ -30,12 +30,12 @@ var (
 )
 
 func (r Runtime) Run(ctx context.Context, prog Program) (err error) {
-	enter := prog.Ports[PortAddr{Path: "in", Port: "enter"}]
+	enter := prog.Ports[PortAddr{Path: "in", Port: "start"}]
 	if enter == nil {
 		return ErrStartPortNotFound
 	}
 
-	exit := prog.Ports[PortAddr{Path: "out", Port: "exit"}]
+	exit := prog.Ports[PortAddr{Path: "out", Port: "stop"}]
 	if exit == nil {
 		return ErrExitPortNotFound
 	}

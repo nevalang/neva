@@ -51,7 +51,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
 		}
 	}
 
-	enterInport, ok := io.In["enter"]
+	enterInport, ok := io.In["start"]
 	if !ok {
 		return &compiler.Error{Err: ErrMainComponentWithoutEnterInport}
 	}
@@ -62,7 +62,7 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
 		}
 	}
 
-	exitOutport, ok := io.Out["exit"]
+	exitOutport, ok := io.Out["stop"]
 	if !ok {
 		return &compiler.Error{Err: ErrMainComponentWithoutExitOutport}
 	}

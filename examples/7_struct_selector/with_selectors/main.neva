@@ -17,14 +17,14 @@ const user User = {
 }
 
 components {
-    Main(enter any) (exit any) {
+    Main(start any) (stop any) {
         nodes {
             locker Locker<string>
             printer Printer<string>
         }
         net {
-            in:enter -> ($user.pet.name -> printer:msg)
-            printer:msg -> out:exit
+            in:start -> ($user.pet.name -> printer:msg)
+            printer:msg -> out:stop
         }
     }
 }

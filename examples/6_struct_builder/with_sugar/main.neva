@@ -7,7 +7,7 @@ type User struct {
     name string
 }
 
-component Main(enter any) (exit any) {
+component Main(start any) (stop any) {
     nodes {
         builder StructBuilder<User>
         print Print<User>
@@ -16,6 +16,6 @@ component Main(enter any) (exit any) {
         32 -> builder:age
         'John' -> builder:name
         builder:msg -> print:data
-        print:sig -> out:exit
+        print:sig -> out:stop
     }
 }

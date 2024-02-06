@@ -4,13 +4,13 @@
 interface IPrinter<T>(data T) (sig T)
 
 components {
-    Main(enter any) (exit any) {
+    Main(start any) (stop any) {
         nodes {
             subNode SecondComponent { depNode Printer<any> }
         }
         net {
-            in:enter -> subNode:msg
-            subNode:msg -> out:exit
+            in:start -> subNode:msg
+            subNode:msg -> out:stop
         }
     }
     

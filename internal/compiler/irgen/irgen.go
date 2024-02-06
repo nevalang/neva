@@ -61,10 +61,10 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 		},
 		portsUsage: portsUsage{
 			in: map[relPortAddr]struct{}{
-				{Port: "enter"}: {},
+				{Port: "start"}: {},
 			},
 			out: map[relPortAddr]struct{}{
-				{Port: "exit"}: {},
+				{Port: "stop"}: {},
 			},
 		},
 	}

@@ -3,15 +3,15 @@
 
 const greeting string = 'Hello, World!'
 
-component Main(enter any) (exit any) {
+component Main(start any) (stop any) {
 	nodes {
 		printer Printer<string>
 		blocker Blocker<string>
 	}
 	net {
-		in:enter -> blocker:sig
+		in:start -> blocker:sig
 		$greeting -> blocker:data
 		blocker:data -> printer:msg
-		printer:msg -> out:exit
+		printer:msg -> out:stop
 	}
 }

@@ -6,13 +6,13 @@ import {
 }
 
 components {
-	Main(enter any) (exit any) {
+	Main(start any) (stop any) {
 		nodes { aux Aux }
 		net {
-			in:enter -> aux:sig
+			in:start -> aux:sig
 			aux:res -> printer:msg
 			aux:err -> printer:msg
-			printer:msg -> out:exit
+			printer:msg -> out:stop
 		}
 	}
 	
@@ -23,7 +23,7 @@ components {
 			adder PortBridge { handler Adder<int> }
 		}
 		net {
-			in:enter -> reader1.sig
+			in:start -> reader1.sig
 			reader1:num -> [adder:p[0], reader2:sig]
 			reader1:err -> out:err
 			reader2.num -> adder.p[1]

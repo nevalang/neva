@@ -4,13 +4,13 @@
 
 import { std/io }
 
-component Main(enter any) (exit any) {
+component Main(start any) (stop any) {
 	nodes {
 		reader io.Reader
 		printer Printer<string>
 	}
 	net {
-		in:enter -> reader:sig
+		in:start -> reader:sig
 		reader.s -> printer:msg
 		printer:msg -> reader:sig
 	}

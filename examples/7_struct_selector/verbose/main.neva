@@ -20,7 +20,7 @@ const {
 }
 
 components {
-    Main(enter any) (exit any) {
+    Main(start any) (stop any) {
         nodes {
             printer Printer<string>
 
@@ -28,9 +28,9 @@ components {
             selector StructSelector<string>
         }
         net {
-            in:enter -> ($user -> selector:msg)
+            in:start -> ($user -> selector:msg)
             selector:msg -> printer:msg
-            printer:msg -> out:exit
+            printer:msg -> out:stop
         }
     }
 }

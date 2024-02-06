@@ -20,13 +20,13 @@ interfaces {
 }
 
 components {
-	Main(enter) (exit) {
+	Main(start) (stop) {
 		nodes {
 			abs IReader
 			concrete  io.Reader
 		}
 		net {
-			in:enter -> abs:v
+			in:start -> abs:v
 			abs:v -> [concrete:v]
 			concrete:v -> out:code
 		}
