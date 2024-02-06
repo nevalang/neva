@@ -34,7 +34,10 @@ pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
 // Types
-typeStmt: 'type' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
+typeStmt: singleTypeStmt | groupTypeStmt;
+singleTypeStmt: PUB_KW? 'type' typeDef;
+groupTypeStmt:
+	'type' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
 typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
@@ -61,7 +64,9 @@ nonUnionTypeExpr:
 	| typeLitExpr; // union inside union lead to mutual left recursion (not supported by ANTLR)
 
 // interfaces
-interfaceStmt:
+interfaceStmt: singleInterfaceStmt | groupInterfaceStmt;
+singleInterfaceStmt: PUB_KW? 'interface' interfaceDef;
+groupInterfaceStmt:
 	'interface' NEWLINE* '{' NEWLINE* (interfaceDef)* '}';
 interfaceDef:
 	PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
@@ -72,7 +77,9 @@ portsDef:
 portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 
 // const
-constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
+constStmt: singleConstStmt | groupConstStmt;
+singleConstStmt: PUB_KW? 'const' constDef;
+groupConstStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
 constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE*;
 constVal:
 	nil
@@ -84,8 +91,7 @@ constVal:
 	| structLit;
 bool: 'true' | 'false';
 nil: 'nil';
-listLit:
-	'[' NEWLINE* listItems? ']';
+listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	constVal
 	| constVal (',' NEWLINE* constVal NEWLINE*)*;
@@ -96,8 +102,13 @@ structValueFields:
 structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components
-compStmt: 'component' NEWLINE* '{' NEWLINE* (compDef)* '}';
-compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
+compStmt: singleCompStmt | groupCompStmt;
+singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
+groupCompStmt:
+	'component' NEWLINE* '{' NEWLINE* (
+		compilerDirectives? compDef
+	)* '}';
+compDef: interfaceDef compBody? NEWLINE*;
 compBody:
 	'{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
 
@@ -123,7 +134,10 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-multipleReceiverSide: '[' NEWLINE* receiverSide (',' NEWLINE* receiverSide NEWLINE*)* ']';
+multipleReceiverSide:
+	'[' NEWLINE* receiverSide (
+		',' NEWLINE* receiverSide NEWLINE*
+	)* ']';
 
 /* LEXER */
 
