@@ -3,7 +3,7 @@
 // So when logic operation happens without stream - streamer must be used.
 // And that's BTW is the reason to for more handy `yes, no, b` API.
 
-components {
+component {
     #extern(Neg)
     pub Neg(arg bool) (b bool)
     

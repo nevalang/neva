@@ -1,7 +1,7 @@
 // Here we learn how to read struct field
 // by using builtin component with compiler directive.
 
-types {
+type {
     User struct {
         name string
         pet Pet
@@ -19,7 +19,7 @@ const {
     path list<string> = ['pet', 'name']
 }
 
-components {
+component {
     Main(start any) (stop any) {
         nodes {
             printer Printer<string>

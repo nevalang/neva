@@ -1,4 +1,4 @@
-components {
+component {
     #extern(MapAccumulator)
     pub Accumulator<T>(ents stream<MapEntry<T>>) (res map<T>)
 

@@ -34,7 +34,7 @@ pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
 // Types
-typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
+typeStmt: 'type' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
 typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
@@ -62,7 +62,7 @@ nonUnionTypeExpr:
 
 // interfaces
 interfaceStmt:
-	'interfaces' NEWLINE* '{' NEWLINE* (interfaceDef)* '}';
+	'interface' NEWLINE* '{' NEWLINE* (interfaceDef)* '}';
 interfaceDef:
 	PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
@@ -75,17 +75,17 @@ portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
 constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE*;
 constVal:
-	bool
+	nil
+	| bool
 	| INT
 	| FLOAT
 	| STRING
-	| arrLit
-	| structLit
-	| nil;
+	| listLit
+	| structLit;
 bool: 'true' | 'false';
 nil: 'nil';
-arrLit:
-	'[' NEWLINE* listItems? ']'; // array and vector use same syntax
+listLit:
+	'[' NEWLINE* listItems? ']';
 listItems:
 	constVal
 	| constVal (',' NEWLINE* constVal NEWLINE*)*;
@@ -96,7 +96,7 @@ structValueFields:
 structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components
-compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
+compStmt: 'component' NEWLINE* '{' NEWLINE* (compDef)* '}';
 compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
 compBody:
 	'{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';

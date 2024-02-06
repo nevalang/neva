@@ -1,96 +1,96 @@
-interfaces { IReader1 (x struct {}) () }
+interface { IReader1 (x struct {}) () }
 
-interfaces { IReader1 (x struct {
+interface { IReader1 (x struct {
 }) () }
 
-interfaces {
+interface {
     IReader1 (x struct {}) ()
 }
 
-interfaces { IReader1 (x struct {
+interface { IReader1 (x struct {
     foo int }) () }
 
-interfaces { IReader1 (x struct { foo int
+interface { IReader1 (x struct { foo int
 }) () }
 
-interfaces { IReader1 (x struct {
+interface { IReader1 (x struct {
     foo int
 }) () }
 
-interfaces {
+interface {
     IReader1 (x struct { foo int }) ()
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
     }) ()
 }
 
-interfaces { IReader1 (x struct {}) (a struct {}) }
+interface { IReader1 (x struct {}) (a struct {}) }
 
-interfaces { IReader1 (x struct {}) (a struct {
+interface { IReader1 (x struct {}) (a struct {
 }) }
 
-interfaces {
+interface {
     IReader1 (x struct {}) (a struct {})
 }
 
-interfaces {
+interface {
     IReader1 (x struct {}) (a struct {
     })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
     }) (a struct {
     })
 }
 
-interfaces { IReader1 (x struct { foo int }) (a struct {}) }
+interface { IReader1 (x struct { foo int }) (a struct {}) }
 
-interfaces { 
+interface { 
     IReader1 (x struct {
         foo int
     }) (a struct {
     })
 }
 
-interfaces { 
+interface { 
     IReader1 (x struct {
     }) (a struct {
         bar bool
     })
 }
 
-interfaces { 
+interface { 
     IReader1 (x struct {
     }) (a struct { bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct { }) (a struct { bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string }) (a struct { bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string
     }) (a struct { bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct { foo int
         bar string }) (a struct { bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string
@@ -98,14 +98,14 @@ interfaces {
         bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string }) (a struct { bar bool
     })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string
@@ -115,7 +115,7 @@ interfaces {
     })
 }
 
-interfaces {
+interface {
     IReader1 (x struct {
         foo int
         bar string
@@ -124,7 +124,7 @@ interfaces {
     })
 }
 
-interfaces {
+interface {
     pub IReader1 (x struct {
         foo int
         bar string

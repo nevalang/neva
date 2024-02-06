@@ -1,48 +1,48 @@
-interfaces { IReader1 (arr [512]int) () }
+interface { IReader1 (arr [512]int) () }
 
-interfaces {
+interface {
     IReader1 (arr [512]int) ()
 }
 
-interfaces { IReader1 (arr [512]int) (arr [1024]bool) }
+interface { IReader1 (arr [512]int) (arr [1024]bool) }
 
-interfaces {
+interface {
     IReader1 (arr [512]int) (arr [1024]bool)
 }
 
-interfaces { IReader1 (arr [512]enum{ Monday, Tuesday }) (arr [1024]enum{ January, February }) }
+interface { IReader1 (arr [512]enum{ Monday, Tuesday }) (arr [1024]enum{ January, February }) }
 
-interfaces {
+interface {
     IReader1 (arr [512]enum{ Monday, Tuesday }) (arr [1024]enum{ January, February })
 }
 
-interfaces { IReader1 (arr [512]struct{ foo int }) (arr [1024]struct{ bar bool }) }
+interface { IReader1 (arr [512]struct{ foo int }) (arr [1024]struct{ bar bool }) }
 
-interfaces {
+interface {
     IReader1 (arr [512]enum{ Monday, Tuesday }) (arr [1024]enum{ January, February })
 }
 
-interfaces { IReader1 (arr [512]enum{ Monday, Tuesday }, arr2 [256]struct{ foo int }) (arr [1024]enum{ January, February }) }
+interface { IReader1 (arr [512]enum{ Monday, Tuesday }, arr2 [256]struct{ foo int }) (arr [1024]enum{ January, February }) }
 
-interfaces {
+interface {
     IReader1 (arr [512]enum{ Monday, Tuesday }, arr2 [256]struct{ foo int }) (arr [1024]enum{ January, February })
 }
 
-interfaces {
+interface {
     IReader1 (
         arr [512]enum{ Monday, Tuesday },
         arr2 [256]struct{ foo int }
     ) (arr [1024]enum{ January, February })
 }
 
-interfaces {
+interface {
     IReader1 (
         arr [512]enum{ Monday, Tuesday },
         arr2 [256]struct{ foo int }
     ) (arr [1024]enum{ January, February }, arr2 [256]struct{ bar bool })
 }
 
-interfaces {
+interface {
     IReader1 (
         arr [512]enum{ Monday, Tuesday },
         arr2 [256]struct{ foo int }
@@ -52,7 +52,7 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     pub IReader1 (
         arr [512]enum{ Monday, Tuesday },
         arr2 [256]struct{ foo int },

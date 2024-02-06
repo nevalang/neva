@@ -1,4 +1,4 @@
-components {
+component {
     #extern(Reader)
     pub Reader(sig any) (s string)
 

@@ -2,7 +2,7 @@ const {
     base 10
 }
 
-components {
+component {
     #extern(BoolParser)
     pub BoolParser(s string) (res bool, err error)
 

@@ -1,7 +1,7 @@
 // Here we learn how to read struct fields without compiler directives
 // by using another one syntax sugare `.` called "struct selectors".
 
-types {
+type {
     User struct {
         name string
         pet Pet
@@ -16,7 +16,7 @@ const user User = {
     pet: { name: 'Charley' },
 }
 
-components {
+component {
     Main(start any) (stop any) {
         nodes {
             locker Locker<string>

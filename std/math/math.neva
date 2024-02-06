@@ -2,7 +2,7 @@
 // Just like them, these implement IStreamHandler
 // and thus could be used with bridges.
 
-components {
+component {
     #extern(int PowInts, float PowFloats)
     pub Pow<T int | float>(seq stream<T>) (res T)
 

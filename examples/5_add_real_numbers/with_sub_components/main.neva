@@ -5,7 +5,7 @@ import {
 	std/strconv
 }
 
-components {
+component {
 	Main(start any) (stop any) {
 		nodes { aux Aux }
 		net {

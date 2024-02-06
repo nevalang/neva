@@ -1,7 +1,7 @@
 // All arithmetic operations support IStreamHandler
 // and thus could be used with bridges.
 
-components {
+component {
     #extern(int IntAdder, float FloatAdder, string StringAdder)
     pub Adder<
         T int | float | string

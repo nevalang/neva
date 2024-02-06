@@ -1,4 +1,4 @@
-components {
+component {
 	Main(start) (stop) {
 		net { in.start -> out.stop }
 	}

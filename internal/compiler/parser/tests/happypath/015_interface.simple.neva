@@ -1,127 +1,127 @@
-interfaces {}
+interface {}
 
-interfaces {
+interface {
 }
 
-interfaces {
+interface {
 
 }
 
-interfaces { IReader1 () () }
+interface { IReader1 () () }
 
-interfaces { IReader2 () ()
+interface { IReader2 () ()
 }
 
-interfaces {
+interface {
     IReader3 () () }
 
-interfaces {
+interface {
     IReader4 () ()
 }
 
-interfaces {
+interface {
     IReader5 (
     ) ()
 }
 
-interfaces {
+interface {
     IReader6 () (
     )
 }
 
-interfaces {
+interface {
     IReader7 (
     ) (
     )
 }
 
-interfaces { IReader8 (x int) () }
+interface { IReader8 (x int) () }
 
-interfaces { IReader8 (
+interface { IReader8 (
     x int) () }
 
-interfaces { IReader8 (x int
+interface { IReader8 (x int
 ) () }
 
-interfaces { IReader8 (x int) (
+interface { IReader8 (x int) (
 ) }
 
-interfaces {
+interface {
     IReader8 (x int) () }
 
-interfaces { IReader8 (x int) ()
+interface { IReader8 (x int) ()
 }
 
-interfaces {
+interface {
     IReader8 (x int) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int) ()
 }
 
-interfaces {
+interface {
     IReader8 (x int
     ) ()
 }
 
-interfaces {
+interface {
     IReader8 (x int) (
     )
 }
 
-interfaces {
+interface {
     IReader8 (
         x int
     ) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int
     ) (
     )
 }
 
-interfaces { IReader8 (x int, y string) () }
+interface { IReader8 (x int, y string) () }
 
-interfaces {
+interface {
     IReader8 (x int, y string) () }
 
-interfaces { IReader8 (x int, y string) ()
+interface { IReader8 (x int, y string) ()
 }
 
-interfaces { IReader8 (
+interface { IReader8 (
     x int, y string) () }
 
-interfaces { IReader8 (x int,
+interface { IReader8 (x int,
 y string) () }
 
-interfaces {
+interface {
     IReader8 (x int, y string) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int, y string
     ) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int,
         y string) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int,
         y string
     ) ()
 }
 
-interfaces {
+interface {
     IReader8 (
         x int,
         y string
@@ -129,61 +129,61 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     IReader8 (
         x int,
         y string
     ) ()
 }
 
-interfaces { IReader9 () (a int) }
+interface { IReader9 () (a int) }
 
-interfaces {
+interface {
     IReader10 () (a int) }
 
-interfaces { IReader11 () (a int)
+interface { IReader11 () (a int)
 }
 
-interfaces {
+interface {
     IReader12 () (a int)
 }
 
-interfaces {
+interface {
     IReader13 (
     ) (a int)
 }
 
-interfaces {
+interface {
     IReader14 () (
         a int)
 }
 
-interfaces {
+interface {
     IReader15 () (a int
     )
 }
 
-interfaces {
+interface {
     IReader16 (
     ) (
         a int
     )
 }
 
-interfaces { IReader17 (x int) (a int) }
+interface { IReader17 (x int) (a int) }
 
-interfaces {
+interface {
     IReader18 (x int) (a int)
 }
 
-interfaces {
+interface {
     IReader19 (x int, y string) (a int)
 }
 
-interfaces {
+interface {
     pub IReader20 (x int, y string) (a int, b bool)
 }
 
-interfaces {
+interface {
     pub IReader21 (x, y) (a, b)
 }

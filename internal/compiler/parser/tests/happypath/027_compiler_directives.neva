@@ -1,4 +1,4 @@
-components {
+component {
 	#autoports
 	pub C1() ()
 	

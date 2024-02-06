@@ -1,4 +1,4 @@
-components {
+component {
     #extern(StringConcatenator)
     pub Concatenator(seq stream<string>) (res string)
 

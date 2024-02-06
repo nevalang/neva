@@ -1,12 +1,12 @@
 // Here we learn how to build structures
-// by creating custom components with compiler directives.
+// by creating custom component with compiler directives.
 
 type User struct {
     age int
     name string
 }
 
-components {
+component {
     Main(start any) (stop any) {
         nodes {
             builder MyStructBuilder

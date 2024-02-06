@@ -1,4 +1,4 @@
-interfaces {
+interface {
     IReader1 () ()
     IReader20 (x int, y string) (a int, b bool)
 

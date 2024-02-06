@@ -2,14 +2,14 @@
 // It allows to iterate over array ports, lists and maps.
 // It also allows to use bridges (and to create custom bridges when needed).
 
-types {
+type {
     pub MapEntry<T> struct {
         k string
         v T
     }
 }
 
-components {
+component {
     #extern(PortStreamer)
     pub PortStreamer<T>([p] T) (seq stream<T>)
 

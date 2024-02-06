@@ -1,4 +1,4 @@
-types {
+type {
     pub any
     pub maybe<T>
     
@@ -18,7 +18,7 @@ types {
     }
 }
 
-components {
+component {
     #extern(Emitter)
     pub Emitter<T>() (msg T)
 

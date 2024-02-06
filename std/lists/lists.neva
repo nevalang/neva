@@ -1,4 +1,4 @@
-components {
+component {
     #extern(ListAccumulator)
     pub Accumulator<T>(els stream<T>) (res list<T>)
 

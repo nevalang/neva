@@ -2,7 +2,7 @@ import {
 	std/io
 }
 
-types {
+type {
 	useId int
 	money float
 	userName string
@@ -14,12 +14,12 @@ const {
     magicNum int 42
 }
 
-interfaces {
+interface {
 	IReader(path string) (i int, e err)
 	IWriter(path) (i int, anything)
 }
 
-components {
+component {
 	Main(start) (stop) {
 		nodes {
 			abs IReader

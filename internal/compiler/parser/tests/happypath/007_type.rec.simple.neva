@@ -1,58 +1,58 @@
-types {
+type {
     EmptyRec struct {}
 }
 
-types {
+type {
     EmptyRec2 struct {
     }
 }
 
-types {
+type {
     EmptyRec2 struct {
 
     }
 }
 
-types {
+type {
     Rec struct  { foo int }
 }
 
-types {
+type {
     Rec struct {
         foo int }
 }
 
-types {
+type {
     Rec struct { foo int
     }
 }
 
-types {
+type {
     Rec struct {
         foo int
     }
 }
 
-types {
+type {
     Rec struct {
         foo int
         bar enum { Monday, Tuesday, Wednesday }
     }
 }
 
-types {
+type {
     Rec struct { foo int
         bar enum { Monday, Tuesday, Wednesday }
     }
 }
 
-types {
+type {
     Rec struct {
         foo int
         bar enum { Monday, Tuesday, Wednesday } }
 }
 
-types {
+type {
     Rec struct {
         foo int
         bar enum {
@@ -63,7 +63,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
         foo int
 
@@ -75,7 +75,7 @@ types {
     }
 }
 
-types {
+type {
     EmptyRec struct {}
 
     Rec struct { foo int }
