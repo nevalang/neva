@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type lock struct{}
+type blocker struct{}
 
-func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (l blocker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	return l.Handle(vin, sig, vout), nil
 }
 
-func (lock) Handle(vin, sig, vout chan runtime.Msg) func(ctx context.Context) {
+func (blocker) Handle(vin, sig, vout chan runtime.Msg) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
 			select {

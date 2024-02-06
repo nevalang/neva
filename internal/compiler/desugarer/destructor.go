@@ -16,7 +16,7 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 		voidNode: src.Node{
 			EntityRef: src.EntityRef{
 				Pkg:  "builtin",
-				Name: "Void",
+				Name: "Destructor",
 			},
 		},
 		voidConns: make([]src.Connection, 0, len(unusedOutports.m)),

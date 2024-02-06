@@ -162,7 +162,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if hasRuntimeMsg && !isRuntimeFunc {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormNodeBindDirective,
+			Err:      ErrNormNodeBind,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -170,7 +170,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrRuntimeFuncOverloadingNodeArgs,
+			Err:      ErrExternOverloadingNodeArgs,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}

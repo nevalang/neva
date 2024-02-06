@@ -10,8 +10,8 @@ type {
 }
 
 const {
-    pi float 3.14
-    magicNum int 42
+    pi float = 3.14
+    magicNum int = 42
 }
 
 interface {

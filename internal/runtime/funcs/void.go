@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type void struct{}
+type destructor struct{}
 
-func (v void) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (v destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")
 	if err != nil {
 		return nil, err

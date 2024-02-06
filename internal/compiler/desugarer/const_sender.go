@@ -8,9 +8,9 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var constComponentRef = src.EntityRef{
+var emitterComponentRef = src.EntityRef{
 	Pkg:  "builtin",
-	Name: "Const",
+	Name: "Emitter",
 }
 
 type handleConstSenderResult struct {
@@ -35,7 +35,7 @@ func (d Desugarer) handleConstSender(conn src.Connection, scope src.Scope) (hand
 		Directives: map[src.Directive][]string{
 			compiler.RuntimeFuncMsgDirective: {constRefStr},
 		},
-		EntityRef: constComponentRef,
+		EntityRef: emitterComponentRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
 	constNodeOutportAddr := src.PortAddr{

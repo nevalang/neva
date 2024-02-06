@@ -1,11 +1,9 @@
-const {
-    base 10
-}
+#extern(BoolParser)
+pub component BoolParser(s string) (res bool, err error)Q
+
+const base = 10
 
 component {
-    #extern(BoolParser)
-    pub BoolParser(s string) (res bool, err error)
-
     #extern(int IntParser, float FloatParser)
     pub BaseNumParser<T int | float>(s string, base int) (res T, err error)
 

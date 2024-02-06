@@ -80,7 +80,7 @@ portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 constStmt: singleConstStmt | groupConstStmt;
 singleConstStmt: PUB_KW? 'const' constDef;
 groupConstStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
-constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE*;
+constDef: PUB_KW? IDENTIFIER '=' typeExpr constVal NEWLINE*;
 constVal:
 	nil
 	| bool
@@ -98,7 +98,7 @@ listItems:
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
-	structValueField (NEWLINE* structValueField)*;
+	structValueField (',' NEWLINE* structValueField)* ','?;
 structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components

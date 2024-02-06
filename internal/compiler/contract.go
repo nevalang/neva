@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	RuntimeFuncDirective    src.Directive = "runtime_func"
-	RuntimeFuncMsgDirective src.Directive = "runtime_func_msg"
+	RuntimeFuncDirective    src.Directive = "extern"
+	RuntimeFuncMsgDirective src.Directive = "bind"
 	StructInports           src.Directive = "struct_inports"
 )
 

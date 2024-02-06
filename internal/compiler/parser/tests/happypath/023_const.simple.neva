@@ -7,203 +7,157 @@ const {
 
 }
 
-const { PI f32 3.14 }
+const { PI = f32 = 3.14 }
 
 const {
-    PI f32 3.14 }
+    PI f32 = 3.14 }
 
-const { PI f32 3.14
+const { PI f32 = 3.14
 }
 
 const {
-    PI f32 3.14
-}
-
-const {
-
-    PI f32 3.14
-}
-
-const {
-    PI f32 3.14
-
-}
-
-const { PI f32 3.14
-    MAGIC_NUM i8  42 }
-
-const {
-    PI f32 3.14
-    MAGIC_NUM i8  42 }
-
-const {
-    PI f32 3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
 }
 
 const {
 
-    PI f32 3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
 }
 
 const {
-    PI f32 3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
+
+}
+
+const { PI f32 = 3.14
+    MAGIC_NUM i8 = 42 }
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42 }
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+}
+
+const {
+
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+}
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
 
 }
 
 const {
 
-    PI f32 3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
 }
 
 const {
-    PI f32 3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
 
 }
 
 const {
-    PI f32 3.14
+    PI f32 = 3.14
 
-    MAGIC_NUM i8  42
+    MAGIC_NUM i8 = 42
 }
 
-const { VEC vec<i8>  [] }
+const { VEC list<i8> = [] }
 
 const {
-    VEC vec<i8>  [] }
+    VEC list<i8> = [] }
 
-const { VEC vec<i8>  []
-}
-
-const {
-    VEC vec<i8>  []
+const { VEC list<i8> = []
 }
 
 const {
-    VEC vec<i8>  [1, 2, 3, 4]
-}
-
-const { ARR [4]i8  [0, 1, 2, 3] }
-
-const {
-    ARR [4]i8  [0, 1, 2, 3] }
-
-const { ARR [4]i8  [0, 1, 2, 3]
+    VEC list<i8> = []
 }
 
 const {
-    ARR [4]i8  [0, 1, 2, 3]
+    VEC list<i8> = [1, 2, 3, 4]
+}
+
+const { REC struct {} = {} }
+
+const { REC struct {} = {}
+}
+
+const { REC struct {} = {}
 }
 
 const {
-    ARR [4]i8  [
-        0, 1, 2, 3]
+    REC struct {} = {}
 }
+
+const { REC struct { foo int } = { foo: 42 } }
 
 const {
-    ARR [4]i8  [0, 1, 2, 3
-    ]
-}
+    REC struct { foo int } = { foo: 42 } }
 
-const {
-    ARR [4]i8  [
-        0, 1, 2, 3
-    ]
-}
-
-const {
-    ARR [4]i8  [
-        0, 1,
-        2, 3
-    ]
-}
-
-const {
-    ARR [4]i8  [
-        0,
-        1,
-        2,
-        3
-    ]
-}
-
-const { REC struct {}  {} }
-
-const { REC struct {}  {}
-}
-
-const { REC struct {}  {}
-}
-
-const {
-    REC struct {}  {}
-}
-
-const { REC struct { foo int }  { foo: 42 } }
-
-const {
-    REC struct { foo int }  { foo: 42 } }
-
-const { REC struct { foo int }  { foo: 42 }
+const { REC struct { foo int } = { foo: 42 }
 }
 
 const {
     REC struct {
         foo int
-        bar [4]i8
-    } {
-        foo: 42
-        bar: [1, 2, 3, 4]
+        bar list<i8>
+    } = {
+        foo: 42,
+        bar: [1, 2, 3, 4],
     }
 }
 
-const { ENUM enum { Monday, Tuesday }  1 }
+const { ENUM enum { Monday, Tuesday } = 1 }
 
 const {
-    ENUM enum { Monday, Tuesday }  2 }
+    ENUM enum { Monday, Tuesday } = 2 }
 
-const { ENUM enum { Monday, Tuesday }  3
+const { ENUM enum { Monday, Tuesday } = 3
 }
 
 const {
-    ENUM enum { Monday, Tuesday }  4
+    ENUM enum { Monday, Tuesday } = 4
 }
 
 const {
     ENUM enum {
-        Monday, Tuesday }  5
+        Monday, Tuesday } = 5
 }
 
 const {
     ENUM enum { Monday, Tuesday
-    }  6
+    } = 6
 }
 
 const {
     ENUM enum {
         Monday, Tuesday
-    }  7
+    } = 7
 }
 
 const {
     ENUM enum {
         Monday,
         Tuesday
-    }  8
+    } = 8
 }
 
-const { UNION int | string  42 }
+const { UNION int | string = 42 }
 
 const {
-    pub UNION int | string  'hello!'
+    pub UNION int | string = 'hello!'
 }
 
 const {
-    msg string  'hello!'
+    msg string = 'hello!'
 }
-
-

@@ -97,11 +97,11 @@ func TestDesugarer_Desugar(t *testing.T) {
 												Nodes: map[string]src.Node{
 													"__bar__": { // <-- const node added
 														Directives: map[src.Directive][]string{
-															"runtime_func_msg": {"bar"},
+															"bind": {"bar"},
 														},
 														EntityRef: src.EntityRef{
 															Pkg:  "builtin",
-															Name: "Const",
+															Name: "Emitter",
 														},
 														TypeArgs: []typesystem.Expr{
 															{
@@ -198,7 +198,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 													"bar": {EntityRef: src.EntityRef{Name: "Bar"}}, // that one node
 													"__void__": { // <-- new node
 														EntityRef: src.EntityRef{
-															Name: "Void",
+															Name: "Destructor",
 															Pkg:  "builtin",
 														},
 													},
