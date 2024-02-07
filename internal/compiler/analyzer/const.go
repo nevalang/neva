@@ -16,6 +16,8 @@ var (
 	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
+// TODO validate messages themselves
+
 //nolint:funlen
 func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo,gocognit,lll
 	if constant.Value == nil && constant.Ref == nil {
@@ -86,7 +88,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 				Meta:     &constant.Meta,
 			}
 		}
-	case "int", "enum":
+	case "int":
 		if constant.Value.Bool != nil ||
 			constant.Value.Float != nil ||
 			constant.Value.Str != nil ||
@@ -110,7 +112,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 				Meta:     &constant.Meta,
 			}
 		}
-	case "str":
+	case "string":
 		if constant.Value.Bool != nil ||
 			constant.Value.Int != nil ||
 			constant.Value.Float != nil ||
@@ -151,5 +153,6 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 
 	return src.Const{
 		Value: &valueCopy,
+		Meta:  constant.Meta,
 	}, nil
 }

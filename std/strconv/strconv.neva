@@ -1,12 +1,10 @@
-const {
-    base 10
-}
+#extern(BoolParser)
+pub component BoolParser(s string) (res bool, err error)Q
 
-components {
-    #runtime_func(BoolParser)
-    pub BoolParser(s string) (res bool, err error)
+const base = 10
 
-    #runtime_func(int IntParser, float FloatParser)
+component {
+    #extern(int IntParser, float FloatParser)
     pub BaseNumParser<T int | float>(s string, base int) (res T, err error)
 
     pub NumParser<T int | float>(s string) (res T, err error) {

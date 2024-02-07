@@ -60,16 +60,16 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
-	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
+	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
+	if usesBindDirective && len(bindDirectiveArgs) != 1 {
 		return src.Node{}, src.Interface{}, &compiler.Error{
-			Err:      ErrRuntimeMsgArgs,
+			Err:      ErrBindDirectiveArgs,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
 	}
 
-	iface, aerr := a.getResolvedNodeInterface(entity, hasRuntimeMsg, location, node, scope)
+	iface, aerr := a.getResolvedNodeInterface(entity, usesBindDirective, location, node, scope)
 	if aerr != nil {
 		return src.Node{}, src.Interface{}, aerr
 	}
@@ -141,7 +141,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 	if entity.Kind == src.InterfaceEntity {
 		if hasRuntimeMsg {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrInterfaceNodeWithRuntimeMsg,
+				Err:      ErrInterfaceNodeBindDirective,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -158,11 +158,11 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		return entity.Interface, nil
 	}
 
-	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.ExternDirective]
 
 	if hasRuntimeMsg && !isRuntimeFunc {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormNodeRuntimeMsg,
+			Err:      ErrNormNodeBind,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -170,7 +170,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrRuntimeFuncOverloadingNodeArgs,
+			Err:      ErrExternOverloadingNodeArgs,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -178,7 +178,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	iface := entity.Component.Interface
 
-	_, hasStructInportsDirective := entity.Component.Directives[compiler.StructInports]
+	_, hasStructInportsDirective := entity.Component.Directives[compiler.AutoportsDirective]
 
 	if !hasStructInportsDirective {
 		return iface, nil

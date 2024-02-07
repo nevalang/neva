@@ -1,46 +1,46 @@
-interfaces { IReader1 (x enum { Monday }) () }
+interface { IReader1 (x enum { Monday }) () }
 
-interfaces { IReader2 (x enum {
+interface { IReader2 (x enum {
     Monday }) () }
 
-interfaces { IReader3 (x enum { Monday
+interface { IReader3 (x enum { Monday
 }) () }
 
-interfaces {
+interface {
     IReader4 (x enum { Monday }) ()
 }
 
-interfaces {
+interface {
     IReader5 (x enum {
         Monday
     }) ()
 }
 
-interfaces {
+interface {
     IReader6 (x enum { Monday, Tuesday, Wednesday }) ()
 }
 
-interfaces {
+interface {
     IReader7 (x enum {
         Monday, Tuesday, Wednesday
     }) ()
 }
 
-interfaces {
+interface {
     IReader8 (x enum { Monday, Tuesday, Wednesday }) (a enum { Monday, Tuesday, Wednesday })
 }
 
-interfaces {
+interface {
     IReader9 (x enum { Monday, Tuesday, Wednesday }) (a enum {
         Monday, Tuesday, Wednesday })
 }
 
-interfaces {
+interface {
     IReader10 (x enum { Monday, Tuesday, Wednesday }) (a enum { Monday, Tuesday, Wednesday
     })
 }
 
-interfaces {
+interface {
     IReader11 (x enum {
         Monday, Tuesday, Wednesday
     }) (a enum {
@@ -48,7 +48,7 @@ interfaces {
     })
 }
 
-interfaces {
+interface {
     IReader12 (x enum {
         Monday,
         Tuesday,
@@ -60,17 +60,17 @@ interfaces {
     })
 }
 
-interfaces {
+interface {
     IReader12 (x enum { Monday, Tuesday, Wednesday }, y enum { January, February }) (a enum { Monday, Tuesday, Wednesday }, b  enum { January, February })
 }
 
-interfaces {
+interface {
     IReader12 (
         x enum { Monday, Tuesday, Wednesday }, y enum { January, February }
     ) (a enum { Monday, Tuesday, Wednesday }, b  enum { January, February })
 }
 
-interfaces {
+interface {
     IReader12 (
         x enum { Monday, Tuesday, Wednesday }, y enum { January, February }
     ) (
@@ -78,7 +78,7 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     IReader12 (
         x enum {
             Monday, Tuesday, Wednesday
@@ -89,7 +89,7 @@ interfaces {
 }
 
 
-interfaces {
+interface {
     IReader12 (
         x enum {
             Monday, Tuesday, Wednesday
@@ -101,7 +101,7 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     IReader12 (
         x enum {
             Monday, Tuesday, Wednesday
@@ -114,7 +114,7 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     IReader12 (
         x enum {
             Monday, Tuesday, Wednesday
@@ -128,7 +128,7 @@ interfaces {
     )
 }
 
-interfaces {
+interface {
     pub IReader12 (
         x enum {
             Monday,

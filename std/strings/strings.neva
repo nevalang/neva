@@ -1,25 +1,25 @@
-components {
-    #runtime_func(StringConcatenator)
+component {
+    #extern(StringConcatenator)
     pub Concatenator(seq stream<string>) (res string)
 
-    #runtime_func(StringTrimmer)
+    #extern(StringTrimmer)
     pub Trimmer(s string) (res string)
 
-    #runtime_func(StringUpperCaser)
+    #extern(StringUpperCaser)
     pub UpperCaser(s string) (res string)
 
-    #runtime_func(StringLowerCaser)
+    #extern(StringLowerCaser)
     pub LowerCaser(s string) (res string)
 
-    #runtime_func(StringOccurrenceChecker)
+    #extern(StringOccurrenceChecker)
     pub OccurrenceChecker(s string, subs string) (b bool)
 
-    #runtime_func(StringPrefixChecker)
+    #extern(StringPrefixChecker)
     pub PrefixChecker(s string, pref string) (b bool)
 
-    #runtime_func(StringSuffixChecker)
+    #extern(StringSuffixChecker)
     pub SuffixChecker(s string, suff string) (b bool)
 
-    #runtime_func(StringSlicer)
+    #extern(StringSlicer)
     pub Slicer(s string, from int, to int) (s string, err error)
 }

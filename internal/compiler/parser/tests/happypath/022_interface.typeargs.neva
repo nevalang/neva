@@ -1,4 +1,4 @@
-interfaces {
+interface {
     IReader1<> () ()
     IReader20<T> (x int, y T) (a int, b bool)
 

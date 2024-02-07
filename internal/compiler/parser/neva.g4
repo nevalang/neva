@@ -34,22 +34,23 @@ pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
 // Types
-typeStmt: 'types' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
-typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
+typeStmt: singleTypeStmt | groupTypeStmt;
+singleTypeStmt: PUB_KW? 'type' typeDef;
+groupTypeStmt:
+	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
+typeDef: IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
 typeParam: IDENTIFIER typeExpr?;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr;
-typeInstExpr:
-	entityRef typeArgs?; // entity ref points to type definition
+typeInstExpr: entityRef typeArgs?;
 typeArgs:
 	'<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
-typeLitExpr: enumTypeExpr | arrTypeExpr | structTypeExpr;
+typeLitExpr: enumTypeExpr | structTypeExpr;
 enumTypeExpr:
 	'enum' NEWLINE* '{' NEWLINE* IDENTIFIER (
 		',' NEWLINE* IDENTIFIER
 	)* NEWLINE* '}';
-arrTypeExpr: '[' NEWLINE* INT NEWLINE* ']' typeExpr;
 structTypeExpr:
 	'struct' NEWLINE* '{' NEWLINE* structFields? '}';
 structFields: structField (NEWLINE+ structField)*;
@@ -61,10 +62,12 @@ nonUnionTypeExpr:
 	| typeLitExpr; // union inside union lead to mutual left recursion (not supported by ANTLR)
 
 // interfaces
-interfaceStmt:
-	'interfaces' NEWLINE* '{' NEWLINE* (interfaceDef)* '}';
+interfaceStmt: singleInterfaceStmt | groupInterfaceStmt;
+singleInterfaceStmt: PUB_KW? 'interface' interfaceDef;
+groupInterfaceStmt:
+	'interface' NEWLINE* '{' NEWLINE* (PUB_KW? interfaceDef)* '}';
 interfaceDef:
-	PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
+	IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
 outPortsDef: portsDef;
 portsDef:
@@ -72,32 +75,39 @@ portsDef:
 portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 
 // const
-constStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
-constDef: PUB_KW? IDENTIFIER typeExpr constVal NEWLINE*;
+constStmt: singleConstStmt | groupConstStmt;
+singleConstStmt: PUB_KW? 'const' constDef;
+groupConstStmt:
+	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
+constDef: IDENTIFIER '=' typeExpr constVal NEWLINE*;
 constVal:
-	bool
+	nil
+	| bool
 	| INT
 	| FLOAT
 	| STRING
-	| arrLit
-	| structLit
-	| nil;
+	| listLit
+	| structLit;
 bool: 'true' | 'false';
 nil: 'nil';
-arrLit:
-	'[' NEWLINE* listItems? ']'; // array and vector use same syntax
+listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	constVal
 	| constVal (',' NEWLINE* constVal NEWLINE*)*;
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
-	structValueField (NEWLINE* structValueField)*;
+	structValueField (',' NEWLINE* structValueField)* ','?;
 structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components
-compStmt: 'components' NEWLINE* '{' NEWLINE* (compDef)* '}';
-compDef: compilerDirectives? interfaceDef compBody? NEWLINE*;
+compStmt: singleCompStmt | groupCompStmt;
+singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
+groupCompStmt:
+	'component' NEWLINE* '{' NEWLINE* (
+		compilerDirectives? PUB_KW? compDef
+	)* '}';
+compDef: interfaceDef compBody? NEWLINE*;
 compBody:
 	'{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
 
@@ -123,7 +133,10 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-multipleReceiverSide: '[' NEWLINE* receiverSide (',' NEWLINE* receiverSide NEWLINE*)* ']';
+multipleReceiverSide:
+	'[' NEWLINE* receiverSide (
+		',' NEWLINE* receiverSide NEWLINE*
+	)* ']';
 
 /* LEXER */
 

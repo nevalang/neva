@@ -1,4 +1,7 @@
-components {
-    #runtime_func(Reader)
+component {
+    #extern(Reader)
     pub Reader(sig any) (s string)
+
+    #extern(StreamReader)
+    pub StreamReader(start any, stop any) (seq stream<string>)
 }

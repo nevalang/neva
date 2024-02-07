@@ -1,4 +1,4 @@
-types {
+type {
     pub any
     pub maybe<T>
     
@@ -11,37 +11,41 @@ types {
     pub list<T>
 
     pub stream<T> maybe<T>
+    
     pub error struct {
-        msg string
+        text string
         child maybe<error>
     }
 }
 
-components {
-    #runtime_func(Destructor)
+component {
+    #extern(Emitter)
+    pub Emitter<T>() (msg T)
+
+    #extern(Destructor)
     pub Destructor(msg any) ()
 
-    #runtime_func(Distributor)
-    pub Distributor<T>() (msg T)
-
-    #runtime_func(Blocker)
+    #extern(Blocker)
     pub Blocker<T>(cond any, data T) (data T)
 
-    #runtime_func(Checker)
+    #extern(Checker)
     pub Checker(opt maybe<T>) (some T, none struct{})
 
-    #struct_inports
-    #runtime_func(StructBuilder)
+    #autoports
+    #extern(StructBuilder)
     pub StructBuilder<T struct {}> () (msg T)
 
-    #runtime_func(StructSelector)
+    #extern(StructSelector)
     pub StructSelector<T>(msg struct {}) (msg T)
 
-    #runtime_func(string StrLen, list ListLen, map MapLen)
+    #extern(string StrLen, list ListLen, map MapLen)
     pub Len<
         T string | list<any> | map<any>
-    >(msg T) (n int)
+    >(data T) (n int)
 
-    #runtime_func(LinePrinter)
-    pub Printer<T>(msg T) (sig T)
+    #extern(LinePrinter)
+    pub Printer<T>(data T) (sig T)
+
+    #extern(Ranger)
+    pub Ranger(n int) (stream<int>)
 }

@@ -31,7 +31,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 										"bar": { // const must be present so desugarer can figure out type args for Const node
 											Kind: src.ConstEntity,
 											Const: src.Const{
-												Value: &src.Msg{
+												Value: &src.Message{
 													TypeExpr: typesystem.Expr{
 														Inst: &typesystem.InstExpr{Ref: src.EntityRef{Name: "int"}},
 													},
@@ -45,7 +45,9 @@ func TestDesugarer_Desugar(t *testing.T) {
 												Net: []src.Connection{
 													{
 														SenderSide: src.ConnectionSenderSide{
-															ConstRef: &src.EntityRef{Name: "bar"},
+															Const: &src.Const{
+																Ref: &src.EntityRef{Name: "bar"},
+															},
 														},
 													},
 												},
@@ -83,7 +85,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 										"bar": {
 											Kind: src.ConstEntity,
 											Const: src.Const{
-												Value: &src.Msg{
+												Value: &src.Message{
 													TypeExpr: typesystem.Expr{
 														Inst: &typesystem.InstExpr{Ref: src.EntityRef{Name: "int"}},
 													},
@@ -97,11 +99,11 @@ func TestDesugarer_Desugar(t *testing.T) {
 												Nodes: map[string]src.Node{
 													"__bar__": { // <-- const node added
 														Directives: map[src.Directive][]string{
-															"runtime_func_msg": {"bar"},
+															"bind": {"bar"},
 														},
 														EntityRef: src.EntityRef{
 															Pkg:  "builtin",
-															Name: "Const",
+															Name: "Emitter",
 														},
 														TypeArgs: []typesystem.Expr{
 															{
@@ -196,9 +198,9 @@ func TestDesugarer_Desugar(t *testing.T) {
 											Component: src.Component{
 												Nodes: map[string]src.Node{
 													"bar": {EntityRef: src.EntityRef{Name: "Bar"}}, // that one node
-													"__void__": { // <-- new node
+													"__destructor__": { // <-- new node
 														EntityRef: src.EntityRef{
-															Name: "Void",
+															Name: "Destructor",
 															Pkg:  "builtin",
 														},
 													},
@@ -215,7 +217,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 															Receivers: []src.ConnectionReceiver{
 																{
 																	PortAddr: src.PortAddr{
-																		Node: "__void__",
+																		Node: "__destructor__",
 																		Port: "v",
 																	},
 																},

@@ -1,0 +1,7 @@
+type ArgsReaderResult {
+    args list<string>
+    len int
+}
+
+#extern(OsArgsReader)
+component ArgsReader(sig any) (res ArgsReaderResult)

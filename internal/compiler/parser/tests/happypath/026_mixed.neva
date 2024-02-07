@@ -2,7 +2,7 @@ import {
 	std/io
 }
 
-types {
+type {
 	useId int
 	money float
 	userName string
@@ -10,23 +10,23 @@ types {
 }
 
 const {
-    pi float 3.14
-    magicNum int 42
+    pi float = 3.14
+    magicNum int = 42
 }
 
-interfaces {
+interface {
 	IReader(path string) (i int, e err)
 	IWriter(path) (i int, anything)
 }
 
-components {
-	Main(enter) (exit) {
+component {
+	Main(start) (stop) {
 		nodes {
 			abs IReader
 			concrete  io.Reader
 		}
 		net {
-			in:enter -> abs:v
+			in:start -> abs:v
 			abs:v -> [concrete:v]
 			concrete:v -> out:code
 		}

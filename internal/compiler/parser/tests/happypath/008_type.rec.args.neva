@@ -1,43 +1,43 @@
-types {
+type {
     Rec struct { foo vec<int> }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int> }
 }
 
-types {
+type {
     Rec struct { foo vec<int>
     }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int>
     }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int>
         bar map<string, int>
     }
 }
 
-types {
+type {
     Rec struct { foo vec<int>
         bar map<string, int>
     }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int>
         bar map<string, int> }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int>
 
@@ -45,7 +45,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
 
         foo vec<int>
@@ -53,7 +53,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
         foo vec<int>
         bar map<string, int>
@@ -61,7 +61,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
 
         foo vec<int>
@@ -70,7 +70,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
 
         foo vec<int>
@@ -80,14 +80,14 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
         foo map<string, int>
         bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
     }
 }
 
-types {
+type {
     Rec struct {
         foo map<string, int>
         bar vec<enum {
@@ -95,7 +95,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
         foo map<string, int>
         bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
@@ -103,7 +103,7 @@ types {
     }
 }
 
-types {
+type {
     Rec struct {
         foo map<string, int>
         bar vec<enum {
@@ -112,7 +112,7 @@ types {
     }
 }
 
-types {
+type {
     pub Rec struct {
         foo map<string, int>
         bar vec<enum {

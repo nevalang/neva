@@ -8,9 +8,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type read struct{}
+type reader struct{}
 
-func (r read) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (r reader) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err

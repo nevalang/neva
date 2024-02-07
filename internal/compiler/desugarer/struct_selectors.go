@@ -67,7 +67,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{
 			// pass selectors down to component through the constant via directive
-			compiler.RuntimeFuncMsgDirective: {constName},
+			compiler.BindDirective: {constName},
 		},
 		EntityRef: selectorNodeRef,
 		TypeArgs:  src.TypeArgs{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
@@ -78,7 +78,9 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 		SenderSide: src.ConnectionSenderSide{
 			// preserve original sender port
 			PortAddr: senderSide.PortAddr,
-			ConstRef: senderSide.ConstRef,
+			Const: &src.Const{
+				Ref: senderSide.Const.Ref,
+			},
 			// remove selectors in desugared version
 			Selectors: nil,
 		},
@@ -145,7 +147,7 @@ func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (t
 var (
 	strTypeExpr = ts.Expr{
 		Inst: &ts.InstExpr{
-			Ref: src.EntityRef{Pkg: "builtin", Name: "str"},
+			Ref: src.EntityRef{Pkg: "builtin", Name: "string"},
 		},
 	}
 
@@ -164,14 +166,14 @@ var (
 
 func (Desugarer) createPathConst(senderSide src.ConnectionSenderSide) src.Const {
 	constToInsert := src.Const{
-		Value: &src.Msg{
+		Value: &src.Message{
 			TypeExpr: pathConstTypeExpr,
 			List:     make([]src.Const, 0, len(senderSide.Selectors)),
 		},
 	}
 	for _, selector := range senderSide.Selectors {
 		constToInsert.Value.List = append(constToInsert.Value.List, src.Const{
-			Value: &src.Msg{
+			Value: &src.Message{
 				TypeExpr: strTypeExpr,
 				Str:      compiler.Pointer(selector),
 			},
@@ -186,9 +188,9 @@ func (d Desugarer) getSenderType(
 	nodes map[string]src.Node,
 ) (ts.Expr, *compiler.Error) {
 	var selectorNodeTypeArg ts.Expr
-	if senderSide.ConstRef != nil {
+	if senderSide.Const.Ref != nil {
 		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getConstType(*senderSide.ConstRef, scope)
+		selectorNodeTypeArg, err = d.getConstTypeByRef(*senderSide.Const.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, err
 		}

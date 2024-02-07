@@ -1,83 +1,83 @@
-types { num int | float }
+type { num int | float }
 
-types {
+type {
     num int | float
 }
 
-types { num int | float
+type { num int | float
 }
 
-types {
+type {
     num int | float }
 
-types {
+type {
     num int
         | float
 }
 
-types { num int
+type { num int
         | float
 }
 
-types {
+type {
     num int
         | float }
 
-types {
+type {
     num int |
         float
 }
 
-types { num int |
+type { num int |
         float
 }
 
-types {
+type {
     num int |
         float }
 
-types {
+type {
     time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
 }
 
 
-types { time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
+type { time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
 }
 
 
-types {
+type {
     time enum { Monday, Tuesday, Wednesday } | enum { January, February, March } }
 
-types {
+type {
     time enum {
         Monday, Tuesday, Wednesday } | enum { January, February, March }
 }
 
-types {
+type {
     time enum { Monday, Tuesday, Wednesday } | enum { January, February, March
     }
 }
 
-types {
+type {
     time enum {
         Monday, Tuesday, Wednesday } | enum { January, February, March
     }
 }
 
-types {
+type {
     time enum {
         Monday, Tuesday, Wednesday
     } | enum { January, February, March }
 }
 
-types {
+type {
     time enum {
         Monday, Tuesday, Wednesday
     } | enum {
         January, February, March }
 }
 
-types {
+type {
     time enum {
         Monday, Tuesday, Wednesday
     } | enum {
@@ -85,7 +85,7 @@ types {
     }
 }
 
-types {
+type {
     time enum {
         Monday,
         Tuesday,
@@ -97,23 +97,23 @@ types {
     }
 }
 
-types { Obj struct {} | struct { foo int } }
+type { Obj struct {} | struct { foo int } }
 
-types {
+type {
     Obj struct {} | struct { foo int } }
 
-types { Obj struct {} | struct { foo int }
+type { Obj struct {} | struct { foo int }
 }
 
-types {
+type {
     Obj struct {} | struct { foo int }
 }
 
-types {
+type {
     Obj struct {} | struct { foo int | float }
 }
 
-types {
+type {
     SomeTyp struct { foo int | float } | int | enum {
         Monday,
         Tuesday,
@@ -125,27 +125,27 @@ types {
     } | float 
 }
 
-types { size [64]int | [32]int }
+type { size [64]int | [32]int }
 
-types {
+type {
     size [64]int | [32]int
 }
 
-types {
+type {
     size [64]int
         | [32]int
 }
 
-types {
+type {
     size [64]int |
         [32]int
 }
 
-types {
+type {
     T int | enum { Monday, Tuesday, Wednesday } | [64]int | [32]int | struct { foo int | float }
 }
 
-types {
+type {
     pub T int | enum {
         Monday, Tuesday, Wednesday
     } | [64]int | [32]int | struct {

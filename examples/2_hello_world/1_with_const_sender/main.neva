@@ -1,0 +1,17 @@
+// In this example we use `$` suntatic sugar called "const sender"
+// that allows to avoid using compiler directives for sending constants.
+
+const greeting string = 'Hello, World!'
+
+component Main(start any) (stop any) {
+	nodes {
+		printer Printer<string>
+		blocker Blocker<string>
+	}
+	net {
+		in:start -> blocker:sig
+		$greeting -> blocker:data
+		blocker:data -> printer:msg
+		printer:msg -> out:stop
+	}
+}

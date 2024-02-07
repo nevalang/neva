@@ -1,4 +1,4 @@
-types {
+type {
     MyInt i8
 
     MyNum Int | Float

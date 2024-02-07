@@ -1,38 +1,38 @@
-types {
+type {
     Simple [512]i8
 }
 
-types { Simple [512]i8
+type { Simple [512]i8
 }
 
-types {
+type {
     Simple [512]i8 }
 
-types {
+type {
     Simple [512]i8
     Nested [512][256]i8
 }
 
-types {
+type {
 
     Simple [512]i8
     Nested [512][256]i8
 }
 
-types {
-    Simple [512]i8
-    Nested [512][256]i8
-
-}
-
-types {
-
+type {
     Simple [512]i8
     Nested [512][256]i8
 
 }
 
-types {
+type {
+
+    Simple [512]i8
+    Nested [512][256]i8
+
+}
+
+type {
 
     Simple [512]i8
 
@@ -40,7 +40,7 @@ types {
 
 }
 
-types {
+type {
     WithEmptyRec [512]struct{}
     WithSingleFieldRec [512]struct{ foo i8 }
     WithMultiFieldRec [512]struct{
@@ -49,7 +49,7 @@ types {
     }
 }
 
-types { WithEmptyRec [512]struct{}
+type { WithEmptyRec [512]struct{}
     WithSingleFieldRec [512]struct{ foo i8 }
     WithMultiFieldRec [512]struct{
         foo i8
@@ -57,7 +57,7 @@ types { WithEmptyRec [512]struct{}
     }
 }
 
-types {
+type {
     WithEmptyRec [512]struct{}
     WithSingleFieldRec [512]struct{ foo i8 }
     WithMultiFieldRec [512]struct{
@@ -65,52 +65,52 @@ types {
         bar [1024]i8
     } }
 
-types { WithEmptyRec [512]struct{}
+type { WithEmptyRec [512]struct{}
     WithSingleFieldRec [512]struct{ foo i8 }
     WithMultiFieldRec [512]struct{
         foo i8
         bar [1024]i8
     } }
 
-types {
+type {
     WithEnum [512]enum{ Monday }
     WithEnum [512]enum{ Monday, Tuesday }
 }
 
 
-types { WithEnum [512] enum { Monday }
+type { WithEnum [512] enum { Monday }
     WithEnum [512] enum { Monday, Tuesday }
 }
 
 
-types {
+type {
     WithEnum [512]enum{ Monday }
     WithEnum [512]enum { Monday, Tuesday } }
 
 
-types { WithEnum [512]enum{ Monday }
+type { WithEnum [512]enum{ Monday }
     WithEnum [512] enum{ Monday, Tuesday } }
 
-types {
+type {
     WithSimpleUnion [512]i8 | f8
     WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
 }
 
-types { WithSimpleUnion [512]i8 | f8
+type { WithSimpleUnion [512]i8 | f8
     WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8
 }
 
-types {
+type {
     WithSimpleUnion [512]i8 | f8
     WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }
 
-types { WithSimpleUnion [512]i8 | f8
+type { WithSimpleUnion [512]i8 | f8
     pub WithComplexUnion [512]i8 | struct { foo string | bool }
     WithNestedUnion [512]i8 | [512]i8
     pub WithComplexNestedUnion [512]i8 | [512]i8 | [512]i8 }

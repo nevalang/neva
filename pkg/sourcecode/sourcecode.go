@@ -197,11 +197,11 @@ func (e EntityRef) String() string {
 
 type Const struct {
 	Ref   *EntityRef `json:"ref,omitempty"`
-	Value *Msg       `json:"value,omitempty"`
+	Value *Message   `json:"value,omitempty"`
 	Meta  Meta       `json:"meta,omitempty"`
 }
 
-type Msg struct {
+type Message struct {
 	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
 	Bool     *bool            `json:"bool,omitempty"`
 	Int      *int             `json:"int,omitempty"`
@@ -210,6 +210,10 @@ type Msg struct {
 	List     []Const          `json:"vec,omitempty"`
 	Map      map[string]Const `json:"map,omitempty"` // Used for both maps and structs
 	Meta     Meta             `json:"meta,omitempty"`
+}
+
+func (m Message) String() string {
+	return "message" // TODO
 }
 
 type IO struct {
@@ -265,10 +269,10 @@ func (r ConnectionReceiver) String() string {
 
 // ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSenderSide struct {
-	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
-	ConstRef  *EntityRef `json:"constRef,omitempty"` // Only sugared form
-	Selectors []string   `json:"selectors,omitempty"`
-	Meta      Meta       `json:"meta,omitempty"`
+	PortAddr  *PortAddr `json:"portAddr,omitempty"`
+	Const     *Const    `json:"literal,omitempty"`
+	Selectors []string  `json:"selectors,omitempty"`
+	Meta      Meta      `json:"meta,omitempty"`
 }
 
 func (s ConnectionSenderSide) String() string {
@@ -280,8 +284,12 @@ func (s ConnectionSenderSide) String() string {
 	}
 
 	var result string
-	if s.ConstRef != nil {
-		result = s.ConstRef.String()
+	if s.Const != nil {
+		if s.Const.Ref != nil {
+			result = s.Const.Ref.String()
+		} else {
+			result = s.Const.Value.String()
+		}
 	} else {
 		result = s.PortAddr.String()
 	}

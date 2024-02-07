@@ -1,0 +1,19 @@
+// Surprisingly "hello world" isn't the simplest program in Nevalang.
+// Here we learn constants, compiler directives and blockers.
+
+const greeting string = 'Hello, World!'
+
+component Main(start any) (stop any) {
+	nodes {
+		#bind(greeting)
+		greeting Emitter<string>
+		printer Printer<string>
+		blocker Blocker<string>
+	}
+	net {
+		in:start -> blocker:sig
+		greeting:msg -> blocker:data
+		blocker:data -> printer:msg
+		printer:msg -> out:stop
+	}
+}

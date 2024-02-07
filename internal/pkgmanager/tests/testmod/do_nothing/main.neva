@@ -1,5 +1,5 @@
-components {
-	Main(enter) (exit) {
-		net { in.enter -> out.exit }
+component {
+	Main(start) (stop) {
+		net { in.start -> out.stop }
 	}
 }

@@ -1,91 +1,68 @@
 const {
-    PI f32  3.14
-    MAGIC_NUM i8  42
-    pub VEC_EMPTY vec<i8>  []
-    VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
-    REC struct { foo int }  { foo: 42 }
-    pub ENUM enum { Monday, Tuesday }  1
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    pub VEC_EMPTY list<i8> = []
+    VEC_FULL list<i8> = [1, 2, 3, 4]
+    REC struct { foo int } = { foo: 42 }
+    pub ENUM enum { Monday, Tuesday } = 1
 }
 
-const { PI f32  3.14
-    MAGIC_NUM i8  42
-    VEC_EMPTY vec<i8>  []
-    pub VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
-    pub REC struct { foo int }  { foo: 42 }
-    ENUM enum { Monday, Tuesday }  1
-}
-
-const {
-    PI f32  3.14
-    MAGIC_NUM i8  42
-    VEC_EMPTY vec<i8>  []
-    pub VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
-    pub REC struct { foo int }  { foo: 42 }
-    ENUM enum { Monday, Tuesday }  1 }
-
-const {
-
-    PI f32  3.14
-    MAGIC_NUM i8  42
-    VEC_EMPTY vec<i8>  []
-    pub VEC_FULL vec<i8>  [1, 2, 3, 4]
-    pub ARR [4]i8  [0, 1, 2, 3]
-    REC struct { foo int }  { foo: 42 }
-    ENUM enum { Monday, Tuesday }  1
+const { PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY list<i8> = []
+    pub VEC_FULL list<i8> = [1, 2, 3, 4]
+    pub REC struct { foo int } = { foo: 42 }
+    ENUM enum { Monday, Tuesday } = 1
 }
 
 const {
-    PI f32  3.14
-    MAGIC_NUM i8  42
-    VEC_EMPTY vec<i8>  []
-    VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
-    REC struct { foo int }  { foo: 42 }
-    pub ENUM enum { Monday, Tuesday }  1
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY list<i8> = []
+    pub VEC_FULL list<i8> = [1, 2, 3, 4]
+    pub REC struct { foo int } = { foo: 42 }
+    ENUM enum { Monday, Tuesday } = 1 }
+
+const {
+
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY list<i8> = []
+    pub VEC_FULL list<i8> = [1, 2, 3, 4]
+    REC struct { foo int } = { foo: 42 }
+    ENUM enum { Monday, Tuesday } = 1
+}
+
+const {
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
+    VEC_EMPTY list<i8> = []
+    VEC_FULL list<i8> = [1, 2, 3, 4]
+    REC struct { foo int } = { foo: 42 }
+    pub ENUM enum { Monday, Tuesday } = 1
 
 }
 
 const {
-    PI f32  3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
 
-    VEC_EMPTY vec<i8>  []
-    VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
+    VEC_EMPTY list<i8> = []
+    VEC_FULL list<i8> = [1, 2, 3, 4]
 
-    pub REC struct { foo int }  { foo: 42 }
-    ENUM enum { Monday, Tuesday }  1
+    pub REC struct { foo int } = { foo: 42 }
+    ENUM enum { Monday, Tuesday } = 1
 }
 
 const {
 
-    PI f32  3.14
-    MAGIC_NUM i8  42
+    PI f32 = 3.14
+    MAGIC_NUM i8 = 42
 
-    VEC_EMPTY vec<i8>  []
-    VEC_FULL vec<i8>  [1, 2, 3, 4]
-    ARR [4]i8  [0, 1, 2, 3]
+    VEC_EMPTY list<i8> = []
+    VEC_FULL list<i8> = [1, 2, 3, 4]
 
-    REC struct { foo int }  { foo: 42 }
-    pub ENUM enum { Monday, Tuesday }  1
+    REC struct { foo int } = { foo: 42 }
+    pub ENUM enum { Monday, Tuesday } = 1
 
-}
-
-const {
-    pub MIXED_REC struct {
-        foo [64]int | struct { bar [2]bool }
-        baz [3]bool
-    } | [2]struct{ bax f32 }  {
-        foo: { bar: [
-            true, false
-        ] }
-        baz: [
-            true,
-            true,
-            true
-        ] 
-    }
 }

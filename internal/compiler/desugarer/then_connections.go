@@ -11,10 +11,10 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var lockNode = src.Node{
+var blockerNode = src.Node{
 	EntityRef: src.EntityRef{
 		Pkg:  "builtin",
-		Name: "Lock",
+		Name: "Blocker",
 	},
 	TypeArgs: []typesystem.Expr{
 		ts.Expr{
@@ -53,7 +53,7 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 			desugaredThenConn.SenderSide.String(),
 		)
 
-		extraNodes[lockNodeName] = lockNode
+		extraNodes[lockNodeName] = blockerNode
 
 		extraConns = append(
 			extraConns,

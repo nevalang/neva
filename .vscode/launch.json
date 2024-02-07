@@ -31,108 +31,144 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["do_nothing"]
+      "args": ["run", "0_do_nothing"]
     },
     {
       "name": "Interpreter: echo",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["echo"]
+      "args": ["run", "1_echo"]
     },
     {
       "name": "Interpreter: hello_world/verbose",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["hello_world/verbose"]
+      "args": ["run", "2_hello_world/0_verbose"]
     },
     {
       "name": "Interpreter: hello_world/with_const_sender",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["hello_world/with_const_sender"]
+      "args": ["run", "2_hello_world/1_with_const_sender"]
     },
     {
       "name": "Interpreter: hello_world/with_then_connection",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["hello_world/with_then_connection"]
+      "args": ["run", "2_hello_world/2_with_then_connection"]
     },
     {
-      "name": "Interpreter: add_numbers/naive",
+      "name": "Interpreter: hello_world/with_then_connection",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["add_numbers/naive"]
+      "args": ["run", "2_hello_world/3_with_literal_senders"]
     },
     {
       "name": "Interpreter: interfaces",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["interfaces"]
+      "args": ["run", "3_interfaces"]
     },
     {
-      "name": "Interpreter: struct_fields/verbose",
+      "name": "Interpreter: add_numbers/naive",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["struct_fields/verbose"]
+      "args": ["run", "4_add_numbers/verbose"]
     },
     {
-      "name": "Interpreter: struct_fields/with_selectors",
+      "name": "Interpreter: add_numbers/naive",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["struct_fields/with_selectors"]
+      "args": ["run", "4_add_numbers/with_bridge"]
     },
     {
-      "name": "Interpreter: map_keys",
+      "name": "Interpreter: 5_add_real_numbers/naive",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["map_keys"]
+      "args": ["run", "5_add_real_numbers/naive"]
+    },
+    {
+      "name": "Interpreter: 5_add_real_numbers/with_err_handling",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "5_add_real_numbers/with_err_handling"]
+    },
+    {
+      "name": "Interpreter: 5_add_real_numbers/with_sub_components",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "5_add_real_numbers/with_sub_components"]
     },
     {
       "name": "Interpreter: struct_builder/verbose",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["struct_builder/verbose"]
+      "args": ["run", "6_struct_builder/verbose"]
     },
     {
       "name": "Interpreter: struct_builder/with_sugar",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/interpreter",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["struct_builder/with_sugar"]
+      "args": ["run", "6_struct_builder/with_sugar"]
+    },
+    {
+      "name": "Interpreter: struct_selectors/verbose",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "7_struct_selectors/verbose"]
+    },
+    {
+      "name": "Interpreter: struct_selectors/with_sugar",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "7_struct_selectors/with_sugar"]
     },
     // === Other ===
     {

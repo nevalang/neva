@@ -2,13 +2,13 @@
 // Just like them, these implement IStreamHandler
 // and thus could be used with bridges.
 
-components {
-    #runtime_func(int PowInts, float PowFloats)
+component {
+    #extern(int PowInts, float PowFloats)
     pub Pow<T int | float>(seq stream<T>) (res T)
 
-    #runtime_func(int ModInts, float ModFloats)
+    #extern(int ModInts, float ModFloats)
     pub Mod<T int | float>(seq stream<T>) (res T)
 
-    #runtime_func(int AbsInts, float AbsFloats)
+    #extern(int AbsInts, float AbsFloats)
     pub Abs<T int | float>(seq stream<T>) (res T)
 }

@@ -3,31 +3,31 @@
 // So when logic operation happens without stream - streamer must be used.
 // And that's BTW is the reason to for more handy `yes, no, b` API.
 
-components {
-    #runtime_func(Neg)
+component {
+    #extern(Neg)
     pub Neg(arg bool) (b bool)
     
-    #runtime_func(And)
+    #extern(And)
     pub And(args stream<bool>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(Or)
+    #extern(Or)
     pub Or(args stream<bool>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(Eq)
+    #extern(Eq)
     pub Eq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(NotEq)
+    #extern(NotEq)
     pub NotEq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(Less)
+    #extern(Less)
     pub Less<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(More)
+    #extern(More)
     pub More<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(LessOrEq)
+    #extern(LessOrEq)
     pub LessOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #runtime_func(MoreOrEq)
+    #extern(MoreOrEq)
     pub MoreOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
 }

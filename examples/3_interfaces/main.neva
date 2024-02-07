@@ -1,30 +1,24 @@
-// Here we learn interfaces and how to use them.
+// Here we learn interface and DI.
 // It's essential to understand bridges.
 
-interfaces {
-    IExample<T>(msg T) (msg T)
-}
+interface IPrinter<T>(data T) (sig T)
 
-components {
-    Main(enter any) (exit any) {
+component {
+    Main(start any) (stop any) {
         nodes {
-            sub SubComponent {
-                dep Printer<any>
-            }
+            subNode SecondComponent { depNode Printer<any> }
         }
         net {
-            in:enter -> sub:msg
-            sub:msg -> out:exit
+            in:start -> subNode:msg
+            subNode:msg -> out:stop
         }
     }
     
-    SubComponent (msg any) (msg any) {
-        nodes {
-            dep IExample<any>
-        }
+    SecondComponent (msg any) (msg any) {
+        nodes { depNode IPrinter<any> }
         net {
-            in:msg -> dep:msg
-            dep:msg -> out:msg
+            in:msg -> depNode:data
+            depNode:sig -> out:msg
         }
     }
 }

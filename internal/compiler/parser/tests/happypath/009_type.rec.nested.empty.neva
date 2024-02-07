@@ -1,43 +1,43 @@
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct {}
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct { Rec1Lvl2 struct {}
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct {} }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2_1 struct {}
         Rec1Lvl2_2 struct {}
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
         Rec1Lvl2_2 struct {}
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2_1 struct {}
         Rec1Lvl2_2 struct {} }
 }
 
-types {
+type {
     Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
         Rec1Lvl2_2 struct {} } }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct {
             Rec1Lvl3_1 struct {}
@@ -46,7 +46,7 @@ types {
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
             Rec1Lvl3_2 struct {}
@@ -54,7 +54,7 @@ types {
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct {
             Rec1Lvl3_1 struct {}
@@ -62,19 +62,19 @@ types {
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
             Rec1Lvl3_2 struct {} }
     }
 }
 
-types {
+type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
             Rec1Lvl3_2 struct {} } } }
 
-types {
+type {
     pub Rec1Lvl1 struct {
         Rec1Lvl2 struct {
             Rec1Lvl3_1 struct {

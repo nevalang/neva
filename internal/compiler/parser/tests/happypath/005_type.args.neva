@@ -1,75 +1,75 @@
-types { MyVec vec<int> }
+type { MyVec vec<int> }
 
-types {
+type {
     MyVec vec<int> }
 
-types {
+type {
     MyVec vec<int>
 }
 
-types {
+type {
     MyVec vec<int>
 
 }
 
-types {
+type {
     MyVec vec<
     int>
 }
 
-types { MyVec vec<
+type { MyVec vec<
     int>
 }
 
-types { MyVec vec<
+type { MyVec vec<
     int> }
 
-types {
+type {
     MyVec vec<
     int> 
 
 }
 
-types {
+type {
     MyVec vec<
         int
     >
 }
 
-types {
+type {
     MyVec1 Vec<int>
     pub MyVec2 Vec<int>
 }
 
-types {
+type {
     MyVec1 Vec<int>
 
     pub MyVec2 Vec<int>
 }
 
-types {
+type {
     pub MyMap map<string, int>
 }
 
-types {
+type {
     MyMap map<string,
         int>
 }
 
-types {
+type {
     MyMap map<string,
         int
     >
 }
 
-types {
+type {
     MyMap map<
         string,
         int
     >
 }
 
-types {
+type {
     MyInt int
 
     MyVec vec<int>
@@ -80,7 +80,7 @@ types {
     >
 }
 
-types {
+type {
 
     MyInt int
 
@@ -93,7 +93,7 @@ types {
 
 }
 
-types {
+type {
     MyMap1<T, Y> map<T, Y>
 
     MyMap2<T int, Y> map<T, Y>
@@ -101,27 +101,27 @@ types {
     MyMap3<T int, Y vec<float>> map<T, Y>
 }
 
-types {
+type {
     MyMap3<T int, Y vec<
         float
     >> map<T, Y>
 }
 
-types {
+type {
     MyMap3<
         T int,
         Y vec<float>
     > map<T, Y>
 }
 
-types {
+type {
     MyMap3<
         T int,
         Y vec<float>
     > map<T, vec<Y>>
 }
 
-types {
+type {
     MyMap3<
         T int,
         Y vec<float>
