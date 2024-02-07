@@ -37,8 +37,8 @@ entityName: IDENTIFIER;
 typeStmt: singleTypeStmt | groupTypeStmt;
 singleTypeStmt: PUB_KW? 'type' typeDef;
 groupTypeStmt:
-	'type' NEWLINE* '{' NEWLINE* (typeDef NEWLINE*)* '}';
-typeDef: PUB_KW? IDENTIFIER typeParams? typeExpr?;
+	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
+typeDef: IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
 typeParam: IDENTIFIER typeExpr?;
@@ -65,9 +65,9 @@ nonUnionTypeExpr:
 interfaceStmt: singleInterfaceStmt | groupInterfaceStmt;
 singleInterfaceStmt: PUB_KW? 'interface' interfaceDef;
 groupInterfaceStmt:
-	'interface' NEWLINE* '{' NEWLINE* (interfaceDef)* '}';
+	'interface' NEWLINE* '{' NEWLINE* (PUB_KW? interfaceDef)* '}';
 interfaceDef:
-	PUB_KW? IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
+	IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
 outPortsDef: portsDef;
 portsDef:
@@ -77,8 +77,9 @@ portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
 // const
 constStmt: singleConstStmt | groupConstStmt;
 singleConstStmt: PUB_KW? 'const' constDef;
-groupConstStmt: 'const' NEWLINE* '{' NEWLINE* (constDef)* '}';
-constDef: PUB_KW? IDENTIFIER '=' typeExpr constVal NEWLINE*;
+groupConstStmt:
+	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
+constDef: IDENTIFIER '=' typeExpr constVal NEWLINE*;
 constVal:
 	nil
 	| bool
@@ -104,7 +105,7 @@ compStmt: singleCompStmt | groupCompStmt;
 singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
 groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
-		compilerDirectives? compDef
+		compilerDirectives? PUB_KW? compDef
 	)* '}';
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
