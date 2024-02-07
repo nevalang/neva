@@ -124,14 +124,11 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 
 func parseLitExpr(litExpr generated.ITypeLitExprContext) *ts.Expr {
 	enumExpr := litExpr.EnumTypeExpr()
-	arrExpr := litExpr.ArrTypeExpr()
 	structExpr := litExpr.StructTypeExpr()
 
 	switch {
 	case enumExpr != nil:
 		return parseEnumExpr(enumExpr)
-	case arrExpr != nil:
-		return parseArrExpr(arrExpr)
 	case structExpr != nil:
 		return parseStructExpr(structExpr)
 	}
@@ -150,26 +147,6 @@ func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
 		result.Lit.Enum = append(result.Lit.Enum, id.GetText())
 	}
 	return &result
-}
-
-func parseArrExpr(arrExpr generated.IArrTypeExprContext) *ts.Expr {
-	typeExpr := arrExpr.TypeExpr()
-	parsedTypeExpr := parseTypeExpr(typeExpr)
-	size := arrExpr.INT().GetText()
-
-	parsedSize, err := strconv.ParseInt(size, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return &ts.Expr{
-		Lit: &ts.LitExpr{
-			Arr: &ts.ArrLit{
-				Expr: *parsedTypeExpr,
-				Size: int(parsedSize),
-			},
-		},
-	}
 }
 
 func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
@@ -632,9 +609,9 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 				"'",
 			),
 		)
-	case constVal.ArrLit() != nil:
-		listItems := constVal.ArrLit().ListItems()
-		if listItems == nil { // empty array []
+	case constVal.ListLit() != nil:
+		listItems := constVal.ListLit().ListItems()
+		if listItems == nil { // empty list []
 			val.List = []src.Const{}
 			return val
 		}

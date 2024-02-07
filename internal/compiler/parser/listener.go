@@ -42,15 +42,36 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 
 /* --- Types --- */
 
-func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
+func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
+	single := actx.SingleTypeStmt()
+
+	if single != nil {
+		typeDef := single.TypeDef()
+		parsedEntity := parseTypeDef(typeDef)
+		parsedEntity.IsPublic = single.PUB_KW() != nil
+		name := typeDef.IDENTIFIER().GetText()
+		s.file.Entities[name] = parsedEntity
+		return
+	}
+
+	group := actx.GroupTypeStmt()
+	for i, typeDef := range group.AllTypeDef() {
+		parsedEntity := parseTypeDef(typeDef)
+		parsedEntity.IsPublic = group.PUB_KW(i) != nil
+		name := typeDef.IDENTIFIER().GetText()
+		s.file.Entities[name] = parsedEntity
+	}
+}
+
+func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
 		body = parseTypeExpr(actx.TypeExpr())
 	}
 
-	result := src.Entity{
-		IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
-		Kind:     src.TypeEntity,
+	return src.Entity{
+		// IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
+		Kind: src.TypeEntity,
 		Type: ts.Def{
 			Params:   parseTypeParams(actx.TypeParams()).Params,
 			BodyExpr: body,
@@ -67,22 +88,39 @@ func (s *treeShapeListener) EnterTypeDef(actx *generated.TypeDefContext) {
 			},
 		},
 	}
-	s.file.Entities[actx.IDENTIFIER().GetText()] = result
+	// s.file.Entities[actx.IDENTIFIER().GetText()] = result
 }
 
 /* --- Constants --- */
 
-func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
-	name := actx.IDENTIFIER().GetText()
+func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmtContext) {
+	constDef := actx.ConstDef()
+	parsedEntity := parseConstDef(constDef)
+	parsedEntity.IsPublic = actx.PUB_KW() != nil
+	name := constDef.IDENTIFIER().GetText()
+	s.file.Entities[name] = parsedEntity
+}
+
+func (s *treeShapeListener) EnterGroupConstStmt(actx *generated.GroupConstStmtContext) {
+	for i, constDef := range actx.AllConstDef() {
+		parsedEntity := parseConstDef(constDef)
+		parsedEntity.IsPublic = actx.PUB_KW(i) != nil
+		name := constDef.IDENTIFIER().GetText()
+		s.file.Entities[name] = parsedEntity
+	}
+}
+
+func parseConstDef(actx generated.IConstDefContext) src.Entity {
+	// name := actx.IDENTIFIER().GetText()
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
 
 	parsedMsg := parseConstVal(constVal)
 	parsedMsg.TypeExpr = *typeExpr
 
-	s.file.Entities[name] = src.Entity{
-		IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
-		Kind:     src.ConstEntity,
+	return src.Entity{
+		// IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
+		Kind: src.ConstEntity,
 		Const: src.Const{
 			Value: &parsedMsg,
 			Meta: src.Meta{
@@ -102,63 +140,101 @@ func (s *treeShapeListener) EnterConstDef(actx *generated.ConstDefContext) {
 
 /* --- Interfaces --- */
 
+// func (s ) EnterSingleInterfaceStmt(c *generated.SingleInterfaceStmtContext) {
+
+// }
+// func (s ) EnterGroupInterfaceStmt(c *generated.GroupInterfaceStmtContext) {
+
+// }
+
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
-	for _, interfaceDef := range actx.AllInterfaceDef() {
-		name := interfaceDef.IDENTIFIER().GetText()
+	single := actx.SingleInterfaceStmt()
+	group := actx.GroupInterfaceStmt()
+
+	if single != nil {
+		name := single.InterfaceDef().IDENTIFIER().GetText()
 		s.file.Entities[name] = src.Entity{
-			IsPublic:  interfaceDef.PUB_KW() != nil, //nolint:nosnakecase
+			IsPublic:  single.PUB_KW() != nil,
+			Kind:      src.InterfaceEntity,
+			Interface: parseInterfaceDef(single.InterfaceDef()),
+		}
+		return
+	}
+
+	for i, interfaceDef := range group.AllInterfaceDef() {
+		name := interfaceDef.IDENTIFIER().GetText()
+
+		s.file.Entities[name] = src.Entity{
+			IsPublic:  group.PUB_KW(i) != nil,
 			Kind:      src.InterfaceEntity,
 			Interface: parseInterfaceDef(interfaceDef),
 		}
 	}
 }
 
-/* -- Components --- */
+/* --- Components --- */
 
-func (s *treeShapeListener) EnterCompDef(actx *generated.CompDefContext) {
-	name := actx.InterfaceDef().IDENTIFIER().GetText()
+func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
+	single := actx.SingleCompStmt()
+
+	if single != nil {
+		compDef := single.CompDef()
+		parsedCompEntity := parseCompDef(compDef)
+		parsedCompEntity.IsPublic = single.PUB_KW() != nil
+		parsedCompEntity.Component.Directives = parseCompilerDirectives(
+			single.CompilerDirectives(),
+		)
+		name := compDef.InterfaceDef().IDENTIFIER().GetText()
+		s.file.Entities[name] = parsedCompEntity
+		return
+	}
+
+	group := actx.GroupCompStmt()
+	for i, compDef := range group.AllCompDef() {
+		parsedCompEntity := parseCompDef(compDef)
+		parsedCompEntity.IsPublic = group.PUB_KW(i) != nil
+		parsedCompEntity.Component.Directives = parseCompilerDirectives(
+			group.CompilerDirectives(i),
+		)
+		name := compDef.InterfaceDef().IDENTIFIER().GetText()
+		s.file.Entities[name] = parsedCompEntity
+	}
+}
+
+// parseCompDef does NOT set isPublic
+func parseCompDef(actx generated.ICompDefContext) src.Entity {
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
-	isPublic := actx.InterfaceDef().PUB_KW() != nil //nolint:nosnakecase
 
-	directives := parseCompilerDirectives(actx.CompilerDirectives())
-
-	var cmp src.Entity
-	if body := actx.CompBody(); body == nil { //nolint:nestif
-		cmp = src.Entity{
-			IsPublic: isPublic,
-			Kind:     src.ComponentEntity,
+	body := actx.CompBody()
+	if body == nil {
+		return src.Entity{
+			Kind: src.ComponentEntity,
 			Component: src.Component{
-				Directives: directives,
-				Interface:  parsedInterfaceDef,
-			},
-		}
-		s.file.Entities[name] = cmp
-	} else {
-		var nodes map[string]src.Node
-		if nodesDef := body.CompNodesDef(); nodesDef != nil {
-			nodes = parseNodes(nodesDef.CompNodesDefBody())
-		}
-
-		var net []src.Connection
-		if netDef := body.CompNetDef(); netDef != nil {
-			parsedNet, err := parseNet(netDef)
-			if err != nil {
-				panic(err)
-			}
-			net = parsedNet
-		}
-
-		cmp = src.Entity{
-			IsPublic: isPublic,
-			Kind:     src.ComponentEntity,
-			Component: src.Component{
-				Directives: directives,
-				Interface:  parsedInterfaceDef,
-				Nodes:      nodes,
-				Net:        net,
+				Interface: parsedInterfaceDef,
 			},
 		}
 	}
 
-	s.file.Entities[name] = cmp
+	var nodes map[string]src.Node
+	if nodesDef := body.CompNodesDef(); nodesDef != nil {
+		nodes = parseNodes(nodesDef.CompNodesDefBody())
+	}
+
+	var net []src.Connection
+	if netDef := body.CompNetDef(); netDef != nil {
+		parsedNet, err := parseNet(netDef)
+		if err != nil {
+			panic(err)
+		}
+		net = parsedNet
+	}
+
+	return src.Entity{
+		Kind: src.ComponentEntity,
+		Component: src.Component{
+			Interface: parsedInterfaceDef,
+			Nodes:     nodes,
+			Net:       net,
+		},
+	}
 }
