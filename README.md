@@ -9,17 +9,11 @@ A general-purpose, flow-based programming language with static typing and implic
 Website: https://nevalang.org
 
 ```neva
-const {
-	greeting string 'Hello, World!'
-}
-
-components {
-	Main(enter any) (exit any) {
-		nodes { printer Printer<string> }
-		net {
-			in:enter -> ($greeting -> printer:msg)
-			printer:msg -> out:exit
-		}
+component Main(start any) (stop any) {
+	nodes { printer Printer<string> }
+	net {
+		in:start -> ('Hello, World!' -> printer:msg)
+		printer:msg -> out:stop
 	}
 }
 ```
@@ -45,4 +39,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md
 
 ---
 
-> WARNING: This project is under heavy development and not production ready yet.
+> WARNING: This project is under **heavy** development and not production ready yet.
