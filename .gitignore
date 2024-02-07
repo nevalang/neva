@@ -8,7 +8,10 @@ web/src/sdk
 plugins
 .antlr
 cmd/tmp
-neva
+
+# generated executable
+/neva
+
 node_modules
 __debug*
 web/webview/dist
