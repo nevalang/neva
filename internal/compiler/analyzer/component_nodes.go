@@ -60,8 +60,8 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.BindDirective]
-	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
+	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
+	if usesBindDirective && len(bindDirectiveArgs) != 1 {
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      ErrBindDirectiveArgs,
 			Location: &location,
@@ -69,7 +69,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	iface, aerr := a.getResolvedNodeInterface(entity, hasRuntimeMsg, location, node, scope)
+	iface, aerr := a.getResolvedNodeInterface(entity, usesBindDirective, location, node, scope)
 	if aerr != nil {
 		return src.Node{}, src.Interface{}, aerr
 	}
