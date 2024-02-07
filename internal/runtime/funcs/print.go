@@ -7,7 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type printer struct{} //nolint:predeclared
+type printer struct{}
 
 func (p printer) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("v")

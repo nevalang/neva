@@ -2,7 +2,7 @@
 
 **<p align="center">Flow Based Programming Language</p>**
 
-## Neva
+# Neva
 
 A general-purpose, flow-based programming language with static typing and implicit parallelism, designed with visual programming in mind, that compiles to machine code and Go.
 
@@ -23,6 +23,21 @@ components {
 	}
 }
 ```
+
+## Features
+
+- 🌊 Flow-Based Programming
+- 🔀 Effortless Concurrency
+- 🛡️ Static Type System
+- 🎯 Multi-Target Compilation
+- ✨ Simple and Clean C-like Syntax
+- 🏃‍♂️ Interpreter Mode
+- 💉 First-Class Dependency Injection
+- 🕵️‍♂️ Builtin Observability
+- ♻️ Garbage Collection
+- 🌈 Visual Programming (WIP)
+- 🦫 Go Interop (WIP)
+- 🦺 No Runtime Exceptions (WIP)
 
 ## Contributing
 

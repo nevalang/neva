@@ -10,11 +10,14 @@ import (
 )
 
 var (
-	ErrStructFieldNotFound = errors.New("Struct field not found")
-	ErrUnusedOutports      = errors.New("All component's outports are unused")
-	ErrUnusedOutport       = errors.New("Unused outport found")
-	ErrUnusedInports       = errors.New("All component inports are unused")
-	ErrUnusedInport        = errors.New("Unused inport found")
+	ErrStructFieldNotFound    = errors.New("Struct field not found")
+	ErrUnusedOutports         = errors.New("All component's outports are unused")
+	ErrUnusedOutport          = errors.New("Unused outport found")
+	ErrUnusedInports          = errors.New("All component inports are unused")
+	ErrUnusedInport           = errors.New("Unused inport found")
+	ErrLiteralSenderTypeEmpty = errors.New("Literal network sender must contain message value")
+	ErrLiteralSenderKind      = errors.New("Literal network sender must have type of kind instantiation")
+	ErrLiteralSenderType      = errors.New("Literal network sender must have primitive type")
 )
 
 func (a Analyzer) analyzeComponentNetwork(
@@ -49,14 +52,14 @@ func (a Analyzer) analyzeConnections(
 	scope src.Scope,
 ) *compiler.Error {
 	for _, conn := range net {
-		if err := a.analyzeNetConn(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage); err != nil {
+		if err := a.analyzeConnection(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (a Analyzer) analyzeNetConn( //nolint:funlen
+func (a Analyzer) analyzeConnection( //nolint:funlen
 	conn src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
@@ -384,14 +387,14 @@ func (a Analyzer) getResolvedPortType(
 	return resolvedOutportType, nil
 }
 
-func (a Analyzer) getSenderType(
+func (a Analyzer) getSenderType( //nolint:funlen
 	senderSide src.ConnectionSenderSide,
 	inports map[string]src.Port,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	if senderSide.PortAddr == nil && senderSide.ConstRef == nil {
+	if senderSide.PortAddr == nil && senderSide.Const == nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
@@ -399,15 +402,24 @@ func (a Analyzer) getSenderType(
 		}
 	}
 
-	if senderSide.ConstRef != nil {
-		expr, err := a.getResolvedConstType(*senderSide.ConstRef, scope)
-		if err != nil {
-			return ts.Expr{}, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &senderSide.ConstRef.Meta,
-			}.Merge(err)
+	if senderSide.Const != nil {
+		if senderSide.Const.Ref != nil {
+			expr, err := a.getResolvedConstType(*senderSide.Const.Ref, scope)
+			if err != nil {
+				return ts.Expr{}, compiler.Error{
+					Location: &scope.Location,
+					Meta:     &senderSide.Const.Ref.Meta,
+				}.Merge(err)
+			}
+			return expr, nil
 		}
-		return expr, nil
+		if err := a.validateLiteralSender(senderSide.Const); err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &senderSide.Const.Ref.Meta,
+			}
+		}
 	}
 
 	if senderSide.PortAddr.Node == "out" {
@@ -440,6 +452,20 @@ func (a Analyzer) getSenderType(
 	}
 
 	return nodeOutportType, nil
+}
+
+func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
+	if cnst.Value == nil {
+		return ErrLiteralSenderTypeEmpty
+	}
+	if cnst.Value.TypeExpr.Inst == nil {
+		return ErrLiteralSenderKind
+	}
+	switch cnst.Value.TypeExpr.Inst.Ref.String() {
+	case "bool", "int", "float", "string":
+		return nil
+	}
+	return ErrLiteralSenderType
 }
 
 func (a Analyzer) getNodeOutportType(

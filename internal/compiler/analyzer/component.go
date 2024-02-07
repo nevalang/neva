@@ -17,7 +17,7 @@ var (
 	ErrUnusedNode                 = errors.New("Unused node found")
 	ErrUnusedNodeInport           = errors.New("Unused node inport found")
 	ErrUnusedNodeOutports         = errors.New("All node's outports are unused")
-	ErrSenderIsEmpty              = errors.New("Sender in network must contain either port address or constant reference")
+	ErrSenderIsEmpty              = errors.New("Sender in network must contain port address, constant reference or message literal")
 	ErrReadSelfOut                = errors.New("Component cannot read from self outport")
 	ErrWriteSelfIn                = errors.New("Component cannot write to self inport")
 	ErrInportNotFound             = errors.New("Referenced inport not found in component's interface")

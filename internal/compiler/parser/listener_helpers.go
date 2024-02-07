@@ -515,8 +515,10 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 	}
 
 	parsedSenderSide := src.ConnectionSenderSide{
-		PortAddr:  senderSidePortAddr,
-		ConstRef:  constRef,
+		PortAddr: senderSidePortAddr,
+		Const: &src.Const{
+			Ref: constRef,
+		},
 		Selectors: senderSelectors,
 		Meta: src.Meta{
 			Text: senderSide.GetText(),
@@ -584,8 +586,8 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 	}
 }
 
-func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funlen
-	val := src.Msg{
+func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:funlen
+	val := src.Message{
 		Meta: src.Meta{
 			Text: constVal.GetText(),
 			Start: src.Position{
@@ -662,7 +664,7 @@ func parseConstVal(constVal generated.IConstValContext) src.Msg { //nolint:funle
 			}
 		}
 	case constVal.Nil_() != nil:
-		return src.Msg{}
+		return src.Message{}
 	default:
 		panic("unknown const: " + constVal.GetText())
 	}

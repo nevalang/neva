@@ -152,7 +152,7 @@ func TestExpr_String(t *testing.T) {
 					Args: []ts.Expr{
 						{
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("str"),
+								Ref: ts.DefaultStringer("string"),
 							},
 						},
 					},
@@ -166,7 +166,7 @@ func TestExpr_String(t *testing.T) {
 				Inst: &ts.InstExpr{
 					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 					},
 				},
 			},
@@ -178,7 +178,7 @@ func TestExpr_String(t *testing.T) {
 				Inst: &ts.InstExpr{
 					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
 					},
 				},
@@ -191,7 +191,7 @@ func TestExpr_String(t *testing.T) {
 				Inst: &ts.InstExpr{
 					Ref: ts.DefaultStringer("map"),
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 						{
 							Inst: &ts.InstExpr{
 								Ref: ts.DefaultStringer("vec"),
@@ -284,7 +284,7 @@ func TestExpr_String(t *testing.T) {
 					Struct: map[string]ts.Expr{
 						"name": {
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("str"),
+								Ref: ts.DefaultStringer("string"),
 							},
 						},
 					},
@@ -297,7 +297,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Struct: map[string]ts.Expr{
-						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 						"age":  {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
 					},
 				},
@@ -331,7 +331,7 @@ func TestExpr_String(t *testing.T) {
 				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
 						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("str")}},
+						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 					},
 				},
 			},

@@ -484,13 +484,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					h.ParamWithNoConstr("p1"),
 					h.ParamWithNoConstr("p2"),
 				),
-				"int": h.BaseDef(),
-				"str": h.BaseDef(),
-				"vec": h.BaseDef(h.ParamWithNoConstr("a")),
-				"map": h.BaseDef(h.ParamWithNoConstr("a"), h.ParamWithNoConstr("b")),
+				"int":    h.BaseDef(),
+				"string": h.BaseDef(),
+				"vec":    h.BaseDef(h.ParamWithNoConstr("a")),
+				"map":    h.BaseDef(h.ParamWithNoConstr("a"), h.ParamWithNoConstr("b")),
 			}
 			return testcase{
-				expr:  h.Inst("t1", h.Inst("int"), h.Inst("str")),
+				expr:  h.Inst("t1", h.Inst("int"), h.Inst("string")),
 				scope: scope,
 				prepareValidator: func(v *MockexprValidatorMockRecorder) {
 					v.Validate(gomock.Any()).AnyTimes().Return(nil)
@@ -503,7 +503,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 
-					t3 := ts.NewTrace(&t1, ts.DefaultStringer("str"))
+					t3 := ts.NewTrace(&t1, ts.DefaultStringer("string"))
 					t.ShouldTerminate(t3, scope).Return(false, nil)
 
 					t4 := ts.NewTrace(&t1, ts.DefaultStringer("vec"))
@@ -521,12 +521,12 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t8 := ts.NewTrace(&t5, ts.DefaultStringer("p2"))
 					t.ShouldTerminate(t8, scope).Return(false, nil)
 
-					t9 := ts.NewTrace(&t8, ts.DefaultStringer("str"))
+					t9 := ts.NewTrace(&t8, ts.DefaultStringer("string"))
 					t.ShouldTerminate(t9, scope).Return(false, nil)
 				},
 				want: h.Inst(
 					"vec",
-					h.Inst("map", h.Inst("int"), h.Inst("str")),
+					h.Inst("map", h.Inst("int"), h.Inst("string")),
 				),
 			}
 		},

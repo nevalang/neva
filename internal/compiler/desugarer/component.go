@@ -152,7 +152,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 			)
 		}
 
-		if conn.SenderSide.ConstRef == nil &&
+		if conn.SenderSide.Const == nil &&
 			len(conn.SenderSide.Selectors) == 0 &&
 			len(conn.ReceiverSide.ThenConnections) == 0 {
 			desugaredConns = append(desugaredConns, conn)
@@ -179,7 +179,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
 
-		if conn.SenderSide.ConstRef != nil {
+		if conn.SenderSide.Const.Ref != nil {
 			result, err := d.handleConstSender(conn, scope)
 			if err != nil {
 				return handleConnsResult{}, err

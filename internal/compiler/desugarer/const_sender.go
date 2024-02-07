@@ -20,16 +20,16 @@ type handleConstSenderResult struct {
 }
 
 func (d Desugarer) handleConstSender(conn src.Connection, scope src.Scope) (handleConstSenderResult, *compiler.Error) {
-	constTypeExpr, err := d.getConstType(*conn.SenderSide.ConstRef, scope)
+	constTypeExpr, err := d.getConstType(*conn.SenderSide.Const.Ref, scope)
 	if err != nil {
 		return handleConstSenderResult{}, compiler.Error{
-			Err:      fmt.Errorf("Unable to get constant type by reference '%v'", *conn.SenderSide.ConstRef),
+			Err:      fmt.Errorf("Unable to get constant type by reference '%v'", *conn.SenderSide.Const.Ref),
 			Location: &scope.Location,
-			Meta:     &conn.SenderSide.ConstRef.Meta,
+			Meta:     &conn.SenderSide.Const.Ref.Meta,
 		}.Merge(err)
 	}
 
-	constRefStr := conn.SenderSide.ConstRef.String()
+	constRefStr := conn.SenderSide.Const.Ref.String()
 	constNodeName := fmt.Sprintf("__%v__", constRefStr)
 	constNode := src.Node{
 		Directives: map[src.Directive][]string{

@@ -86,7 +86,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		{ // vec<int, str> <: vec<int> (impossible if checker used by resolver)
 			name:      "insts, subtype has more args count",
-			subType:   h.Inst("vec", h.Inst("int"), h.Inst("str")),
+			subType:   h.Inst("vec", h.Inst("int"), h.Inst("string")),
 			superType: h.Inst("vec", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
@@ -100,10 +100,10 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		// args compatibility
 		{
 			name:    "insts, one subtype's subtype incompat", // vec<str> <: vec<int|str>
-			subType: h.Inst("vec", h.Inst("str")),
+			subType: h.Inst("vec", h.Inst("string")),
 			superType: h.Inst(
 				"vec",
-				h.Union(h.Inst("str"), h.Inst("int")),
+				h.Union(h.Inst("string"), h.Inst("int")),
 			),
 			subtypeTrace:   ts.Trace{},
 			supertypeTrace: ts.Trace{},
@@ -121,7 +121,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			subType: h.Inst(
 				"vec",
 				h.Union(
-					h.Inst("str"),
+					h.Inst("string"),
 					h.Inst("int"),
 				),
 			),

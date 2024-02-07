@@ -9,10 +9,10 @@ type voidResult struct {
 }
 
 func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
-	voidNodeName := "__void__"
+	destructorNodeName := "__destructor__"
 
 	result := voidResult{
-		voidNodeName: voidNodeName,
+		voidNodeName: destructorNodeName,
 		voidNode: src.Node{
 			EntityRef: src.EntityRef{
 				Pkg:  "builtin",
@@ -25,8 +25,8 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 	receiverSides := []src.ConnectionReceiver{
 		{
 			PortAddr: src.PortAddr{
-				Node: voidNodeName,
-				Port: "v",
+				Node: destructorNodeName,
+				Port: "msg",
 			},
 		},
 	}
