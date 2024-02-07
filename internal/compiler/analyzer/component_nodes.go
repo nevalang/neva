@@ -60,7 +60,7 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.RuntimeFuncMsgDirective]
+	runtimeMsgArgs, hasRuntimeMsg := node.Directives[compiler.BindDirective]
 	if hasRuntimeMsg && len(runtimeMsgArgs) != 1 {
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      ErrBindDirectiveArgs,
@@ -158,7 +158,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		return entity.Interface, nil
 	}
 
-	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.RuntimeFuncDirective]
+	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.ExternDirective]
 
 	if hasRuntimeMsg && !isRuntimeFunc {
 		return src.Interface{}, &compiler.Error{
@@ -178,7 +178,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	iface := entity.Component.Interface
 
-	_, hasStructInportsDirective := entity.Component.Directives[compiler.StructInports]
+	_, hasStructInportsDirective := entity.Component.Directives[compiler.AutoportsDirective]
 
 	if !hasStructInportsDirective {
 		return iface, nil

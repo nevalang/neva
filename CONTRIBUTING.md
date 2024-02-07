@@ -216,3 +216,13 @@ Lastly it's just common to have `|` syntax for unions.
 Because type-system is public package that can be used by others to implement languages (or something else constraint-based).
 
 Since there's no arrays at the syntax and internal representation levels then there's no performance overhead. Also having arrays in type system is not the most complicated thing so removing them won't save us much.
+
+### Why isn't Nevalang self-hosted?
+
+- Runtime will never be written in Nevalang itself because of the overhead of FBP runtime on to of Go's runtime. Go provides exactly that level of control we needed to implement FBP runtime for Nevalang.
+- Compiler will be someday rewritten in Nevalang itself but we need several years of active usage of the language before that
+
+There's 2 reasons why we don't rewrite compiler in Nevalang right now:
+
+1. Language is incredibly unstable. Stdlib and even the core is massively changing these days. Compiler will be even more unstable and hard to maintain if we do that, until Nevalang is more or less stable.
+2. Languages that are mostly used for writing compilers are eventually better suited for that purpose. While it's good to be able to write compiler in Nevalang without much effort, it's not the goal to create a language for compilers. Writing compilers is a good thing but it's not very popular task for programmers. Actually it's incredibly rare to write compilers at work. We want Nevalang to be good language for many programmers.

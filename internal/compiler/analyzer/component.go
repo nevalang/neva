@@ -37,7 +37,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.RuntimeFuncDirective]
+	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.ExternDirective]
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
 		return src.Component{}, &compiler.Error{

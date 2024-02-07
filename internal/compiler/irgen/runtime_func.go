@@ -11,7 +11,7 @@ import (
 )
 
 func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
-	args, ok := component.Directives[compiler.RuntimeFuncDirective]
+	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
 	}
@@ -32,7 +32,7 @@ func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, er
 }
 
 func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
-	args, ok := node.Directives[compiler.RuntimeFuncMsgDirective]
+	args, ok := node.Directives[compiler.BindDirective]
 	if !ok {
 		return nil, nil
 	}

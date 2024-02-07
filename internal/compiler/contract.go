@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	RuntimeFuncDirective    src.Directive = "extern"
-	RuntimeFuncMsgDirective src.Directive = "bind"
-	StructInports           src.Directive = "struct_inports"
+	ExternDirective    src.Directive = "extern"
+	BindDirective      src.Directive = "bind"
+	AutoportsDirective src.Directive = "autoports"
 )
 
 type (
@@ -44,5 +44,11 @@ type (
 
 	Backend interface {
 		GenerateTarget(*ir.Program) ([]byte, error)
+	}
+
+	STDLib interface {
+		Emitter() src.Interface
+		Destructor() src.Interface
+		Blocker() src.Interface
 	}
 )

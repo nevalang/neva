@@ -67,7 +67,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{
 			// pass selectors down to component through the constant via directive
-			compiler.RuntimeFuncMsgDirective: {constName},
+			compiler.BindDirective: {constName},
 		},
 		EntityRef: selectorNodeRef,
 		TypeArgs:  src.TypeArgs{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
@@ -190,7 +190,7 @@ func (d Desugarer) getSenderType(
 	var selectorNodeTypeArg ts.Expr
 	if senderSide.Const.Ref != nil {
 		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getConstType(*senderSide.Const.Ref, scope)
+		selectorNodeTypeArg, err = d.getConstTypeByRef(*senderSide.Const.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, err
 		}

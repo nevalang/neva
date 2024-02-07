@@ -45,7 +45,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			continue
 		}
 
-		_, ok := entity.Component.Directives[compiler.StructInports]
+		_, ok := entity.Component.Directives[compiler.AutoportsDirective]
 		if !ok {
 			desugaredNodes[nodeName] = node
 			continue
@@ -179,13 +179,23 @@ func (d Desugarer) handleConns( //nolint:funlen
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
 
-		if conn.SenderSide.Const.Ref != nil {
-			result, err := d.handleConstSender(conn, scope)
-			if err != nil {
-				return handleConnsResult{}, err
+		if conn.SenderSide.Const != nil { //nolint:nestif
+			if conn.SenderSide.Const.Ref != nil {
+				result, err := d.handleConstRefSender(conn, scope)
+				if err != nil {
+					return handleConnsResult{}, err
+				}
+				nodesToInsert[result.emitterNodeName] = result.emitterNode
+				conn = result.desugaredConn
+			} else if conn.SenderSide.Const.Value != nil {
+				result, err := d.handleLiteralSender(conn, scope)
+				if err != nil {
+					return handleConnsResult{}, err
+				}
+				nodesToInsert[result.emitterNodeName] = result.emitterNode
+				conn = result.desugaredConn
+				constsToInsert[result.constName] = *conn.SenderSide.Const
 			}
-			nodesToInsert[result.constNodeName] = result.constNode
-			conn = result.desugaredConstConn
 		}
 
 		desugaredConns = append(desugaredConns, conn)
