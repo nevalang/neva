@@ -18,20 +18,20 @@ component Main(start any) (stop any) {
 }
 ```
 
-## 🚀 Features
+## Features
 
-- 🌊 Flow-Based Programming
-- 🔀 Effortless Concurrency
-- 🛡️ Static Type System
-- 🎯 Multi-Target Compilation
-- ✨ Simple and Clean C-like Syntax
-- 🏃‍♂️ Interpreter Mode
-- 💉 First-Class Dependency Injection
-- 🕵️‍♂️ Builtin Observability
-- ♻️ Garbage Collection
-- 🌈 Visual Programming (WIP)
-- 🦫 Go Interop (WIP)
-- 🦺 No Runtime Exceptions (WIP)
+- Flow-Based Programming
+- Effortless Concurrency
+- Static Type System
+- Multi-Target Compilation
+- Simple and Clean C-like Syntax
+- 🏃Interpreter Mode
+- First-Class Dependency Injection
+- Builtin Observability
+- Garbage Collection
+- Visual Programming (WIP)
+- Go Interop (WIP)
+- No Runtime Exceptions (WIP)
 
 ## Contributing
 
