@@ -35,9 +35,9 @@ type ConnectionMeta struct {
 }
 
 type FuncCall struct {
-	Ref     string
-	IO      FuncIO
-	MetaMsg Msg
+	Ref       string
+	IO        FuncIO
+	ConfigMsg Msg
 }
 
 type FuncIO struct {

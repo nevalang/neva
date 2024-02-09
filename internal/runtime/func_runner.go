@@ -24,7 +24,7 @@ func (d FuncRunner) Run(funcCalls []FuncCall) (func(ctx context.Context), error)
 			return nil, fmt.Errorf("func creator not found: %v", call.Ref)
 		}
 
-		handler, err := creator.Create(call.IO, call.MetaMsg)
+		handler, err := creator.Create(call.IO, call.ConfigMsg)
 		if err != nil {
 			return nil, fmt.Errorf("create: %w: %v", err, call.Ref)
 		}

@@ -82,7 +82,7 @@ func main() {
                         {{- end}}
                     },
                 },
-                MetaMsg: {{getMsg .Msg}},
+                ConfigMsg: {{getMsg .Msg}},
             },
             {{- end}}
         },

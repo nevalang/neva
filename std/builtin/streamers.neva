@@ -1,13 +1,6 @@
-// Streamers turn non-stream data into stream.
-// It allows to iterate over array ports, lists and maps.
-// It also allows to use bridges (and to create custom bridges when needed).
-
-type {
-    pub MapEntry<T> struct {
-        k string
-        v T
-    }
-}
+// Streamers turn collections into streams.
+// They allow to iterate over array ports, lists and maps.
+// They also used by bridges.
 
 component {
     #extern(PortStreamer)
@@ -15,7 +8,13 @@ component {
 
     #extern(ListStreamer)
     pub ListStreamer<T>(l list<T>) (seq stream<T>)
-
-    #extern(MapStreamer)
-    pub MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
 }
+
+type pub MapEntry<T> struct {
+    k string
+    v T
+}
+
+#extern(MapStreamer)
+component pub MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
+

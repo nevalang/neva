@@ -72,7 +72,9 @@ inPortsDef: portsDef;
 outPortsDef: portsDef;
 portsDef:
 	'(' (NEWLINE* | portDef? | portDef (',' portDef)*) ')';
-portDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
+portDef: singlePortDef | arrayPortDef;
+singlePortDef: NEWLINE* IDENTIFIER typeExpr NEWLINE*;
+arrayPortDef: NEWLINE* '[' IDENTIFIER ']' typeExpr NEWLINE*;
 
 // const
 constStmt: singleConstStmt | groupConstStmt;

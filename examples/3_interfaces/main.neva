@@ -1,6 +1,3 @@
-// Here we learn interface and DI.
-// It's essential to understand bridges.
-
 interface IPrinter<T>(data T) (sig T)
 
 component {

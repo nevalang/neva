@@ -13,7 +13,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/caarlos0/env/v10 v10.0.0 // indirect
+require github.com/caarlos0/env/v10 v10.0.0
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

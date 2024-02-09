@@ -26,7 +26,7 @@ component {
     pub Destructor(msg any) ()
 
     #extern(Blocker)
-    pub Blocker<T>(cond any, data T) (data T)
+    pub Blocker<T>(sig any, data T) (data T)
 
     #extern(Checker)
     pub Checker(opt maybe<T>) (some T, none struct{})
@@ -42,10 +42,4 @@ component {
     pub Len<
         T string | list<any> | map<any>
     >(data T) (n int)
-
-    #extern(LinePrinter)
-    pub Printer<T>(data T) (sig T)
-
-    #extern(Ranger)
-    pub Ranger(n int) (stream<int>)
 }

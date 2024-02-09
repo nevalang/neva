@@ -20,14 +20,22 @@ component {
     pub NotEq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
     #extern(Less)
-    pub Less<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub Less<T int | float | string>(
+        args stream<T>
+    ) (y struct{}, n struct{}, b bool)
 
     #extern(More)
-    pub More<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub More<T int | float | string>(
+        args stream<T>
+    ) (y struct{}, n struct{}, b bool)
 
     #extern(LessOrEq)
-    pub LessOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub LessOrEq<T int | float | string>(
+        args stream<T>
+    ) (y struct{}, n struct{}, b bool)
 
     #extern(MoreOrEq)
-    pub MoreOrEq<T int | float | string>(args stream<T>) (y struct{}, n struct{}, b bool)
+    pub MoreOrEq<T int | float | string>(
+        args stream<T>
+    ) (y struct{}, n struct{}, b bool)
 }

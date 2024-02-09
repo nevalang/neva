@@ -97,7 +97,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 			if err != nil {
 				return runtime.Program{}, fmt.Errorf("msg: %w", err)
 			}
-			rFunc.MetaMsg = rMsg
+			rFunc.ConfigMsg = rMsg
 		}
 
 		runtimeFuncs = append(runtimeFuncs, rFunc)
