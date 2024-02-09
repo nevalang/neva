@@ -417,7 +417,7 @@ func (a Analyzer) getSenderType( //nolint:funlen
 			return ts.Expr{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &senderSide.Const.Ref.Meta,
+				Meta:     &senderSide.Const.Value.Meta,
 			}
 		}
 	}

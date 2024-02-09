@@ -484,7 +484,7 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 		)
 	}
 
-	var constRef *src.EntityRef
+	var constant *src.Const
 	if senderSideConstRef != nil {
 		constRefMeta := src.Meta{
 			Text: senderSideConstRef.GetText(),
@@ -498,24 +498,22 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 			},
 		}
 		if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
-			constRef = &src.EntityRef{
+			constant = &src.Const{Ref: &src.EntityRef{
 				Name: localRef.GetText(),
 				Meta: constRefMeta,
-			}
+			}}
 		} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
-			constRef = &src.EntityRef{
+			constant = &src.Const{Ref: &src.EntityRef{
 				Pkg:  imoportedRef.PkgRef().GetText(),
 				Name: imoportedRef.EntityName().GetText(),
 				Meta: constRefMeta,
-			}
+			}}
 		}
 	}
 
 	parsedSenderSide := src.ConnectionSenderSide{
-		PortAddr: senderSidePortAddr,
-		Const: &src.Const{
-			Ref: constRef,
-		},
+		PortAddr:  senderSidePortAddr,
+		Const:     constant,
 		Selectors: senderSelectors,
 		Meta: src.Meta{
 			Text: senderSide.GetText(),
