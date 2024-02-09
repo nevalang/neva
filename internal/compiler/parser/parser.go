@@ -71,13 +71,15 @@ func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, *compi
 
 	for name, fileBytes := range files {
 		fileName := name
-		v, err := p.ParseFile(fileBytes)
+		parsedFile, err := p.ParseFile(fileBytes)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: &src.Location{FileName: fileName},
+				Location: &src.Location{
+					FileName: fileName,
+				},
 			}.Merge(err)
 		}
-		result[fileName] = v
+		result[fileName] = parsedFile
 	}
 
 	return result, nil
@@ -103,18 +105,39 @@ func (p Parser) ParseFile(bb []byte) (f src.File, err *compiler.Error) {
 
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
+	lexerErrors := &CustomErrorListener{}
+	lexer.RemoveErrorListeners()
+	lexer.AddErrorListener(lexerErrors)
 	tokenStream := antlr.NewCommonTokenStream(lexer, 0)
 
-	parse := generated.NewnevaParser(tokenStream)
+	parserErrors := &CustomErrorListener{}
+	prsr := generated.NewnevaParser(tokenStream)
+	prsr.RemoveErrorListeners()
+	prsr.AddErrorListener(parserErrors)
 	if p.isDebug {
-		parse.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+		prsr.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	}
-	parse.BuildParseTrees = true
+	prsr.BuildParseTrees = true
 
-	tree := parse.Prog()
+	tree := prsr.Prog()
 	listener := &treeShapeListener{}
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+
+	if len(lexerErrors.Errors) > 0 {
+		return src.File{}, &compiler.Error{
+			Err:      errors.Join(lexerErrors.Errors...),
+			Location: &src.Location{},
+			Meta:     &src.Meta{},
+		}
+	}
+	if len(parserErrors.Errors) > 0 {
+		return src.File{}, &compiler.Error{
+			Err:      errors.Join(parserErrors.Errors...),
+			Location: &src.Location{},
+			Meta:     &src.Meta{},
+		}
+	}
 
 	return listener.file, nil
 }

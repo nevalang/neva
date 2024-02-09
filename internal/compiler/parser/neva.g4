@@ -40,8 +40,8 @@ groupTypeStmt:
 	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
 typeDef: IDENTIFIER typeParams? typeExpr?;
 typeParams: '<' NEWLINE* typeParamList? '>';
-typeParamList: typeParam (',' NEWLINE* typeParam NEWLINE*)*;
-typeParam: IDENTIFIER typeExpr?;
+typeParamList: typeParam (',' NEWLINE* typeParam)*;
+typeParam: IDENTIFIER typeExpr? NEWLINE*;
 typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr;
 typeInstExpr: entityRef typeArgs?;
 typeArgs:

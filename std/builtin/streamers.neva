@@ -16,5 +16,5 @@ pub type MapEntry<T> struct {
 }
 
 #extern(MapStreamer)
-component pub MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
+pub component MapStreamer<T>(m map<T>) (seq stream<MapEntry>)
 

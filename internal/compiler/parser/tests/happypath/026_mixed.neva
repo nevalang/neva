@@ -31,4 +31,9 @@ component {
 			concrete:v -> out:code
 		}
 	}
+
+	#extern(int IntAdder, float FloatAdder, string StringAdder)
+    pub Adder<
+        T int | float | string
+    >(seq stream<T>) (res T)
 }

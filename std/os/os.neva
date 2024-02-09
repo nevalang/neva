@@ -1,4 +1,4 @@
-type ArgsReaderResult {
+type ArgsReaderResult struct {
     args list<string>
     len int
 }
