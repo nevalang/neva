@@ -2,11 +2,11 @@ package interpreter
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
 	builder "github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Interpreter struct {
@@ -16,24 +16,43 @@ type Interpreter struct {
 	adapter  Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) error {
+func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) *compiler.Error {
 	build, err := i.builder.Build(ctx, workdirPath)
 	if err != nil {
-		return fmt.Errorf("build: %w", err)
+		return &compiler.Error{
+			Err: err,
+			Location: &sourcecode.Location{
+				PkgName: mainPkgName,
+			},
+		}
 	}
 
 	irProg, compilerErr := i.compiler.CompileToIR(ctx, build, workdirPath, mainPkgName)
 	if compilerErr != nil {
-		return compilerErr
+		return compiler.Error{
+			Location: &sourcecode.Location{
+				PkgName: mainPkgName,
+			},
+		}.Merge(compilerErr)
 	}
 
 	rprog, err := i.adapter.Adapt(irProg)
 	if err != nil {
-		return err
+		return &compiler.Error{
+			Err: err,
+			Location: &sourcecode.Location{
+				PkgName: mainPkgName,
+			},
+		}
 	}
 
 	if err := i.runtime.Run(ctx, rprog); err != nil {
-		return err
+		return &compiler.Error{
+			Err: err,
+			Location: &sourcecode.Location{
+				PkgName: mainPkgName,
+			},
+		}
 	}
 
 	return nil

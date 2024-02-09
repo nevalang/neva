@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -234,9 +235,28 @@ func parseEntityRef(expr generated.IEntityRefContext) (src.EntityRef, error) {
 func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 	parsedInports := map[string]src.Port{}
 	for _, port := range in {
-		portName := port.IDENTIFIER().GetText()
+		single := port.SinglePortDef()
+		arr := port.ArrayPortDef()
+
+		var (
+			id       antlr.TerminalNode
+			typeExpr generated.ITypeExprContext
+			isArr    bool
+		)
+		if single != nil {
+			isArr = false
+			id = single.IDENTIFIER()
+			typeExpr = single.TypeExpr()
+		} else {
+			isArr = true
+			id = arr.IDENTIFIER()
+			typeExpr = arr.TypeExpr()
+		}
+
+		portName := id.GetText()
 		parsedInports[portName] = src.Port{
-			TypeExpr: *parseTypeExpr(port.TypeExpr()),
+			IsArray:  isArr,
+			TypeExpr: *parseTypeExpr(typeExpr),
 			Meta: src.Meta{
 				Text: port.GetText(),
 				Start: src.Position{

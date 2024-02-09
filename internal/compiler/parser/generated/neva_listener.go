@@ -133,6 +133,12 @@ type nevaListener interface {
 	// EnterPortDef is called when entering the portDef production.
 	EnterPortDef(c *PortDefContext)
 
+	// EnterSinglePortDef is called when entering the singlePortDef production.
+	EnterSinglePortDef(c *SinglePortDefContext)
+
+	// EnterArrayPortDef is called when entering the arrayPortDef production.
+	EnterArrayPortDef(c *ArrayPortDefContext)
+
 	// EnterConstStmt is called when entering the constStmt production.
 	EnterConstStmt(c *ConstStmtContext)
 
@@ -363,6 +369,12 @@ type nevaListener interface {
 
 	// ExitPortDef is called when exiting the portDef production.
 	ExitPortDef(c *PortDefContext)
+
+	// ExitSinglePortDef is called when exiting the singlePortDef production.
+	ExitSinglePortDef(c *SinglePortDefContext)
+
+	// ExitArrayPortDef is called when exiting the arrayPortDef production.
+	ExitArrayPortDef(c *ArrayPortDefContext)
 
 	// ExitConstStmt is called when exiting the constStmt production.
 	ExitConstStmt(c *ConstStmtContext)

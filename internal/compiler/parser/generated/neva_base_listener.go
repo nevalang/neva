@@ -272,6 +272,18 @@ func (s *BasenevaListener) EnterPortDef(ctx *PortDefContext) {}
 // ExitPortDef is called when production portDef is exited.
 func (s *BasenevaListener) ExitPortDef(ctx *PortDefContext) {}
 
+// EnterSinglePortDef is called when production singlePortDef is entered.
+func (s *BasenevaListener) EnterSinglePortDef(ctx *SinglePortDefContext) {}
+
+// ExitSinglePortDef is called when production singlePortDef is exited.
+func (s *BasenevaListener) ExitSinglePortDef(ctx *SinglePortDefContext) {}
+
+// EnterArrayPortDef is called when production arrayPortDef is entered.
+func (s *BasenevaListener) EnterArrayPortDef(ctx *ArrayPortDefContext) {}
+
+// ExitArrayPortDef is called when production arrayPortDef is exited.
+func (s *BasenevaListener) ExitArrayPortDef(ctx *ArrayPortDefContext) {}
+
 // EnterConstStmt is called when production constStmt is entered.
 func (s *BasenevaListener) EnterConstStmt(ctx *ConstStmtContext) {}
 
