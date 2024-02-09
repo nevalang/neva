@@ -13,7 +13,7 @@ import (
 // TestParser_ParseFile_Directives checks only how compiler directives are parsed.
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
-		components {
+		component {
 			#extern(d1)
 			C1() ()
 
