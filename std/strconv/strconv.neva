@@ -1,7 +1,7 @@
 #extern(BoolParser)
-pub component BoolParser(s string) (res bool, err error)Q
+pub component BoolParser(s string) (res bool, err error)
 
-const base = 10
+const base int = 10
 
 component {
     #extern(int IntParser, float FloatParser)

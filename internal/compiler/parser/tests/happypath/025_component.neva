@@ -1,3 +1,7 @@
+component Doer() () {}
+
+pub component Doer() () {}
+
 component {}
 
 component {
@@ -200,7 +204,7 @@ component {
 }
 
 component {
-	Main(start) (stop) {
+	Main(start any) (stop any) {
 		nodes {
 			abs IReader
 			concrete  io.Reader

@@ -1,3 +1,10 @@
+type num int | float
+
+type num int |
+    float
+
+pub type num int | float
+
 type { num int | float }
 
 type {
@@ -125,30 +132,14 @@ type {
     } | float 
 }
 
-type { size [64]int | [32]int }
-
 type {
-    size [64]int | [32]int
-}
-
-type {
-    size [64]int
-        | [32]int
-}
-
-type {
-    size [64]int |
-        [32]int
-}
-
-type {
-    T int | enum { Monday, Tuesday, Wednesday } | [64]int | [32]int | struct { foo int | float }
+    T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
 }
 
 type {
     pub T int | enum {
         Monday, Tuesday, Wednesday
-    } | [64]int | [32]int | struct {
+    } | struct {
         foo int | float
     }
 }

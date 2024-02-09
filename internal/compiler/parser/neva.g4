@@ -99,7 +99,7 @@ listItems:
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
-	structValueField (',' NEWLINE* structValueField)* ','?;
+	structValueField (',' NEWLINE* structValueField)*;
 structValueField: IDENTIFIER ':' constVal NEWLINE*;
 
 // components

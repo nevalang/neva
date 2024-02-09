@@ -1,16 +1,26 @@
+#autoports
+pub component C1() ()
+
+#extern(read)
+pub component C1(sig any) (v string)
+
+#extern(read)
+#autoports
+pub component C1_5(sig any) (v string)
+
 component {
 	#autoports
 	pub C1() ()
 	
 	#extern(read)
-	pub C1(sig) (v string)
+	pub C1(sig any) (v string)
 
 	#extern(read)
 	#autoports
-	pub C1_5(sig) (v string)
+	pub C1_5(sig any) (v string)
 
 	#extern(int DoInt, float DoFloat)
-	pub C2(sig) (v string)
+	pub C2(sig any) (v string)
 
 	#extern(read, write)
 	pub C3<T>(v T) (v T) {

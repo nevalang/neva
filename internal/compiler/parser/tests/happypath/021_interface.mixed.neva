@@ -22,13 +22,13 @@ interface {
     )
 
     IReader1 (
-        arr [512]enum { Monday, Tuesday },
-        arr2 [256]struct { foo int },
-        arr3 [128]struct { baz struct {} }
+        arr enum { Monday, Tuesday },
+        arr2 struct { foo int },
+        arr3 struct { baz struct {} }
     ) (
-        arr [1024]enum { January, February },
-        arr2 [256]struct { bar bool },
-        arr3 [128][64]struct { bax struct {} }
+        arr enum { January, February },
+        arr2 struct { bar bool },
+        arr3 struct { bax struct {} }
     )
 
     IReader1 (x struct {
@@ -48,7 +48,7 @@ interface {
 
     pub IReader1 (
         a bool | int | struct { foo int | string },
-        b [256][128]struct { bar int | [64]int }
+        b struct { bar int }
     ) (
         x string |
             float |

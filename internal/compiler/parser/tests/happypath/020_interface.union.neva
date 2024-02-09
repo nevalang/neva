@@ -32,7 +32,7 @@ interface {
 interface {
     pub IReader1 (
         a bool | int | struct { foo int | string },
-        b [256][128]struct { bar int | [64]int }
+        b struct { bar int }
     ) (
         x string |
             float |

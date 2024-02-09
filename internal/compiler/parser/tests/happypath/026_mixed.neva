@@ -16,11 +16,11 @@ const {
 
 interface {
 	IReader(path string) (i int, e err)
-	IWriter(path) (i int, anything)
+	IWriter(path string) (i int, anything any)
 }
 
 component {
-	Main(start) (stop) {
+	Main(start any) (stop any) {
 		nodes {
 			abs IReader
 			concrete  io.Reader

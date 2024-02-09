@@ -1,3 +1,18 @@
+type Rec struct { foo vec<int> }
+
+pub type Rec struct {
+    foo vec<int> }
+
+pub type Rec struct {
+    foo vec<int>
+}
+
+pub type Rec struct {
+    foo vec<
+        int
+    >
+}
+
 type {
     Rec struct { foo vec<int> }
 }

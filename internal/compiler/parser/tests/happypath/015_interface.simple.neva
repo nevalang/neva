@@ -1,3 +1,7 @@
+interface IReader1 () ()
+
+pub interface IReader1 () ()
+
 interface {}
 
 interface {
@@ -185,5 +189,5 @@ interface {
 }
 
 interface {
-    pub IReader21 (x, y) (a, b)
+    pub IReader21 (x any, y any) (a any, b any)
 }

@@ -1,3 +1,7 @@
+const pi f32 = 3.14
+
+pub const pi f32 = 3.14
+
 const {}
 
 const {
@@ -7,68 +11,68 @@ const {
 
 }
 
-const { PI = f32 = 3.14 }
+const { pi f32 = 3.14 }
 
 const {
-    PI f32 = 3.14 }
+    pi f32 = 3.14 }
 
-const { PI f32 = 3.14
+const { pi f32 = 3.14
 }
 
 const {
-    PI f32 = 3.14
-}
-
-const {
-
-    PI f32 = 3.14
-}
-
-const {
-    PI f32 = 3.14
-
-}
-
-const { PI f32 = 3.14
-    MAGIC_NUM i8 = 42 }
-
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42 }
-
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
+    pi f32 = 3.14
 }
 
 const {
 
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
+    pi f32 = 3.14
 }
 
 const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
+    pi f32 = 3.14
+
+}
+
+const { pi f32 = 3.14
+    magic_num i8 = 42 }
+
+const {
+    pi f32 = 3.14
+    magic_num i8 = 42 }
+
+const {
+    pi f32 = 3.14
+    magic_num i8 = 42
+}
+
+const {
+
+    pi f32 = 3.14
+    magic_num i8 = 42
+}
+
+const {
+    pi f32 = 3.14
+    magic_num i8 = 42
 
 }
 
 const {
 
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
+    pi f32 = 3.14
+    magic_num i8 = 42
 }
 
 const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
+    pi f32 = 3.14
+    magic_num i8 = 42
 
 }
 
 const {
-    PI f32 = 3.14
+    pi f32 = 3.14
 
-    MAGIC_NUM i8 = 42
+    magic_num i8 = 42
 }
 
 const { VEC list<i8> = [] }
@@ -113,7 +117,7 @@ const {
         bar list<i8>
     } = {
         foo: 42,
-        bar: [1, 2, 3, 4],
+        bar: [1, 2, 3, 4]
     }
 }
 

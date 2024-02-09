@@ -24,6 +24,6 @@ type {
         Thursday, Friday, Saturday
     }
 
-    pub MyArr [512]string
-    MyArrNested [512][256]string
+    pub MyArr string
+    MyArrNested string
 }

@@ -10,7 +10,7 @@ component {
     pub ListStreamer<T>(l list<T>) (seq stream<T>)
 }
 
-type pub MapEntry<T> struct {
+pub type MapEntry<T> struct {
     k string
     v T
 }

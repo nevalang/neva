@@ -1,3 +1,7 @@
+type bar i32 | vec<i32>
+
+pub type bar i32 | vec<i32>
+
 type {
     bar i32 | vec<i32>
 }

@@ -1,3 +1,11 @@
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {}
+}
+
+pub type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {}
+}
+
 type {
     Rec1Lvl1 struct {
         Rec1Lvl2 struct {}
