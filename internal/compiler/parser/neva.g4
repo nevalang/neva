@@ -81,7 +81,7 @@ constStmt: singleConstStmt | groupConstStmt;
 singleConstStmt: PUB_KW? 'const' constDef;
 groupConstStmt:
 	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
-constDef: IDENTIFIER '=' typeExpr constVal NEWLINE*;
+constDef: IDENTIFIER typeExpr '=' constVal NEWLINE*;
 constVal:
 	nil
 	| bool
