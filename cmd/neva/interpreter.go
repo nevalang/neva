@@ -38,7 +38,7 @@ func newInterpreter() interpreter.Interpreter {
 	)
 
 	// interpreter
-	intr := interpreter.New(
+	return interpreter.New(
 		comp,
 		interpreter.NewAdapter(),
 		r,
@@ -48,6 +48,4 @@ func newInterpreter() interpreter.Interpreter {
 			prsr,
 		),
 	)
-
-	return intr
 }

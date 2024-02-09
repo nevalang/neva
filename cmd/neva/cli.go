@@ -3,23 +3,15 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/nevalang/neva/internal/interpreter"
 	cli "github.com/urfave/cli/v2"
 )
 
-func main() {
-	intr := newInterpreter()
-
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	app := &cli.App{
+func newApp(intr interpreter.Interpreter, wd string) *cli.App {
+	return &cli.App{
 		Name:  "neva",
 		Usage: "Flow-based programming language",
 		Commands: []*cli.Command{
@@ -29,8 +21,7 @@ func main() {
 				Args:      true,
 				ArgsUsage: "Provide path to the executable package",
 				Action: func(cCtx *cli.Context) error {
-					args := cCtx.Args()
-					path := strings.TrimSuffix(args.First(), "/main.neva")
+					path := strings.TrimSuffix(cCtx.Args().First(), "/main.neva")
 					if filepath.Ext(path) != "" {
 						return errors.New(
 							"Use path to directory with executable package, relative to module root",
@@ -56,9 +47,5 @@ func main() {
 				},
 			},
 		},
-	}
-
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
 	}
 }
