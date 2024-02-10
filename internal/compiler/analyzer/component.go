@@ -33,6 +33,7 @@ var (
 	ErrExternOverloadingNodeArgs  = errors.New("Node instantiated with component with #extern with > 1 argument, must have exactly one type-argument for overloading")
 )
 
+// Maybe start here
 func (a Analyzer) analyzeComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
@@ -60,7 +61,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		}
 	}
 
-	analyzedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
+	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
 		allowEmptyInports:  isRuntimeFunc,
 		allowEmptyOutports: isRuntimeFunc,
 	})
@@ -82,7 +83,11 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return component, nil
 	}
 
-	analyzedNodes, nodesIfaces, err := a.analyzeComponentNodes(component.Nodes, scope)
+	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(
+		component.Interface.TypeParams,
+		component.Nodes,
+		scope,
+	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
@@ -100,8 +105,8 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 
 	analyzedNet, err := a.analyzeComponentNetwork(
 		component.Net,
-		analyzedInterface,
-		analyzedNodes,
+		resolvedInterface,
+		resolvedNodes,
 		nodesIfaces,
 		scope,
 	)
@@ -113,8 +118,8 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	}
 
 	return src.Component{
-		Interface: analyzedInterface,
-		Nodes:     analyzedNodes,
+		Interface: resolvedInterface,
+		Nodes:     resolvedNodes,
 		Net:       analyzedNet,
 	}, nil
 }

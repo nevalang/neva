@@ -1,7 +1,10 @@
-type ArgsReaderResult struct {
+#extern(FileWriter)
+pub component FileWriter(path string, data string) (err error)
+
+pub type ArgsReaderResult struct {
     args list<string>
     len int
 }
 
-#extern(OsArgsReader)
-component ArgsReader(sig any) (res ArgsReaderResult)
+#extern(ArgsReader)
+pub component ArgsReader(sig any) (res ArgsReaderResult)

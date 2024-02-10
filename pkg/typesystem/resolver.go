@@ -5,6 +5,21 @@ import (
 	"fmt"
 )
 
+var (
+	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
+	ErrScope              = errors.New("can't get type def from scope by ref")
+	ErrScopeUpdate        = errors.New("scope update")
+	ErrInstArgsLen        = errors.New("inst must have same number of arguments as def has parameters")
+	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
+	ErrUnresolvedArg      = errors.New("can't resolve argument")
+	ErrConstr             = errors.New("can't resolve constraint")
+	ErrArrType            = errors.New("could not resolve array type")
+	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
+	ErrRecFieldUnresolved = errors.New("can't resolve record field")
+	ErrInvalidDef         = errors.New("invalid definition")
+	ErrTerminator         = errors.New("recursion terminator")
+)
+
 // Resolver transforms expression it into a form where all references it contains points to resolved expressions.
 type Resolver struct {
 	validator  exprValidator       // Check if expression invalid before resolving it
@@ -30,16 +45,54 @@ type (
 	}
 )
 
+// ResolveExpr resolves given expression using only global scope.
 func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
 	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
-// Note that it has no sense to "resolve definition". You can resolve only type parameters (their constraints).
-// This is because def's body, type expr, must be resolved only at instantiation (argument passing) step.
-// Otherwise simply break substitution by replacing param refs with constraints expressions.
-func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, error) {
+// ResolveExprWithFrame works like ResolveExpr but allows to pass local scope.
+func (r Resolver) ResolveExprWithFrame(
+	expr Expr,
+	frame map[string]Def,
+	scope Scope,
+) (
+	Expr,
+	error,
+) {
+	return r.resolveExpr(expr, scope, frame, nil)
+}
+
+// ResolveExprWithFrame works like ResolveExprWithFrame but for list of expressions.
+func (r Resolver) ResolveExprsWithFrame(
+	exprs []Expr,
+	frame map[string]Def,
+	scope Scope,
+) (
+	[]Expr,
+	error,
+) {
+	resolvedExprs := make([]Expr, 0, len(exprs))
+	for _, expr := range exprs {
+		resolvedExpr, err := r.resolveExpr(expr, scope, frame, nil)
+		if err != nil {
+			return nil, err
+		}
+		resolvedExprs = append(resolvedExprs, resolvedExpr)
+	}
+	return resolvedExprs, nil
+}
+
+// ResolveParams resolves every constraint in given parameter list.
+func (r Resolver) ResolveParams(
+	params []Param,
+	scope Scope,
+) (
+	[]Param, // resolved parameters
+	map[string]Def, // resolved frame `paramName:resolvedConstr`
+	error,
+) {
 	result := make([]Param, 0, len(params))
-	frame := make(map[string]Def, len(params)) // We only need this frame inside this function. We cannot pass it back.
+	frame := make(map[string]Def, len(params))
 	for _, param := range params {
 		if param.Constr == nil {
 			result = append(result, Param{Name: param.Name})
@@ -47,7 +100,7 @@ func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, error) {
 		}
 		resolved, err := r.resolveExpr(*param.Constr, scope, frame, nil)
 		if err != nil {
-			return nil, fmt.Errorf("resolve expr: %w", err)
+			return nil, nil, fmt.Errorf("resolve expr: %w", err)
 		}
 		frame[param.Name] = Def{BodyExpr: &resolved}
 		result = append(result, Param{
@@ -55,52 +108,11 @@ func (r Resolver) ResolveParams(params []Param, scope Scope) ([]Param, error) {
 			Constr: &resolved,
 		})
 	}
-	return result, nil
+	return result, frame, nil
 }
 
-// ResolveFrame resolves arguments and parameters and checks that they are compatible.
-// If everything is okay it returns resolved args and resulting frame.
-// It's copy-paste from resolveExpr method because it's hard to reuse that code without creating useless expr and scope.
-func (r Resolver) ResolveFrame(args []Expr, params []Param, scope Scope) ([]Expr, map[string]Def, error) {
-	newFrame := make(map[string]Def, len(params))
-	resolvedArgs := make([]Expr, 0, len(args))
-	resolvedParams := make([]Param, 0, len(params))
-	for i, param := range params { // resolve args and constrs and check their compatibility
-		resolvedArg, err := r.resolveExpr(args[i], scope, nil, nil)
-		if err != nil {
-			return nil, nil, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
-		}
-
-		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
-		resolvedArgs = append(resolvedArgs, resolvedArg)
-
-		if param.Constr == nil {
-			resolvedParams = append(resolvedParams, Param{
-				Name: param.Name,
-			})
-			continue
-		}
-
-		resolvedConstr, err := r.resolveExpr(*param.Constr, scope, newFrame, nil)
-		if err != nil {
-			return nil, nil, fmt.Errorf("%w: %v", ErrConstr, err)
-		}
-		resolvedParams = append(resolvedParams, Param{
-			Name:   param.Name,
-			Constr: &resolvedConstr,
-		})
-
-		if err := r.checker.Check(resolvedArg, resolvedConstr, TerminatorParams{Scope: scope}); err != nil {
-			return nil, nil, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
-		}
-	}
-	return resolvedArgs, newFrame, nil
-}
-
-func (r Resolver) ResolveExprWithFrame(expr Expr, frame map[string]Def, scope Scope) (Expr, error) {
-	return r.resolveExpr(expr, scope, frame, nil)
-}
-
+// IsSubtypeOf resolves both `sub` and `sup` expressions
+// and returns error if `sub` is not subtype of `sup`.
 func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	resolvedSub, err := r.resolveExpr(sub, scope, nil, nil)
 	if err != nil {
@@ -115,20 +127,36 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	})
 }
 
-var (
-	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
-	ErrScope              = errors.New("can't get type def from scope by ref")
-	ErrScopeUpdate        = errors.New("scope update")
-	ErrInstArgsLen        = errors.New("inst must have same number of arguments as def has parameters")
-	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
-	ErrUnresolvedArg      = errors.New("can't resolve argument")
-	ErrConstr             = errors.New("can't resolve constraint")
-	ErrArrType            = errors.New("could not resolve array type")
-	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
-	ErrRecFieldUnresolved = errors.New("can't resolve record field")
-	ErrInvalidDef         = errors.New("invalid definition")
-	ErrTerminator         = errors.New("recursion terminator")
-)
+// CheckArgsCompatibility resolves args
+// and params and then checks their compatibility.
+func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scope) error {
+	if len(args) != len(params) {
+		return errors.New("count of arguments mismatch count of parameters")
+	}
+
+	for i := range params {
+		arg := args[i]
+		param := params[i]
+
+		resolvedSub, err := r.resolveExpr(arg, scope, nil, nil)
+		if err != nil {
+			return fmt.Errorf("resolve arg expr: %w", err)
+		}
+
+		resolvedSup, err := r.resolveExpr(*param.Constr, scope, nil, nil)
+		if err != nil {
+			return fmt.Errorf("resolve param constr expr: %w", err)
+		}
+
+		if err := r.checker.Check(resolvedSub, resolvedSup, TerminatorParams{
+			Scope: scope,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // resolveExpr turn one expression into another where all references points to native types.
 // It's a recursive process where each step starts with validation. Invalid expression always leads to error.
@@ -139,10 +167,10 @@ var (
 // For lit exprs logic is the this: for enum do nothing (it's valid and not composite, there's nothing to resolveExpr),
 // for array resolveExpr it's type, for record and union apply recursion for it's every field/element.
 func (r Resolver) resolveExpr( //nolint:funlen,gocognit
-	expr Expr,
-	scope Scope,
-	frame map[string]Def,
-	trace *Trace,
+	expr Expr, // expression to be resolved
+	scope Scope, // global scope
+	frame map[string]Def, // local scope
+	trace *Trace, // how did we get here
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil {
 		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
@@ -271,12 +299,6 @@ func (Resolver) getDef(ref fmt.Stringer, frame map[string]Def, scope Scope) (Def
 	if err != nil {
 		return Def{}, nil, fmt.Errorf("%w: %v", ErrScope, err)
 	}
-
-	// TODO ensure we don't need it
-	// scope, err = scope.Rebase(ref)
-	// if err != nil {
-	// 	return Def{}, nil, fmt.Errorf("%w: %v", ErrScopeUpdate, err)
-	// }
 
 	return def, scope, nil
 }
