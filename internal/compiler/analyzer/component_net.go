@@ -20,6 +20,7 @@ var (
 	ErrLiteralSenderType      = errors.New("Literal network sender must have primitive type")
 )
 
+// analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
 func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
@@ -323,7 +324,7 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
-	iface, ok := nodesIfaces[portAddr.Node]
+	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
@@ -332,10 +333,12 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
-	// TODO optimize: we can resolve every node's interface just once before processing the network
+	// TODO optimize:
+	// we can resolve every node's interface just once
+	// before processing the network
 	typ, aerr := a.getResolvedPortType(
-		iface.IO.In,
-		iface.TypeParams.Params,
+		nodeIface.IO.In,
+		nodeIface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,
@@ -350,9 +353,10 @@ func (a Analyzer) getNodeInportType(
 	return typ, nil
 }
 
+// TODO: here could be a problem - we don't get parent type params into account
 func (a Analyzer) getResolvedPortType(
 	ports map[string]src.Port,
-	params []ts.Param,
+	nodeIfaceParams []ts.Param,
 	portAddr src.PortAddr,
 	node src.Node,
 	scope src.Scope,
@@ -360,13 +364,33 @@ func (a Analyzer) getResolvedPortType(
 	port, ok := ports[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrPortNotFound, portAddr),
+			Err: fmt.Errorf(
+				"%w '%v'",
+				ErrPortNotFound,
+				portAddr,
+			),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
 	}
 
-	_, frame, err := a.resolver.ResolveFrame(node.TypeArgs, params, scope)
+	// we don't resolve node's args assuming they resolved already
+
+	// create frame `param:resolvedArg` to get resolved port type
+	frame := make(map[string]ts.Def, len(nodeIfaceParams))
+	for i, param := range nodeIfaceParams {
+		arg := node.TypeArgs[i]
+		frame[param.Name] = ts.Def{
+			BodyExpr: &arg,
+			Meta:     arg.Meta,
+		}
+	}
+
+	resolvedPortType, err := a.resolver.ResolveExprWithFrame(
+		port.TypeExpr,
+		frame,
+		scope,
+	)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
@@ -375,16 +399,7 @@ func (a Analyzer) getResolvedPortType(
 		}
 	}
 
-	resolvedOutportType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, frame, scope)
-	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      err,
-			Location: &scope.Location,
-			Meta:     &node.Meta,
-		}
-	}
-
-	return resolvedOutportType, nil
+	return resolvedPortType, nil
 }
 
 func (a Analyzer) getSenderType( //nolint:funlen

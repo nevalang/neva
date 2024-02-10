@@ -10,22 +10,27 @@ import (
 
 //nolint:lll
 var (
-	ErrStructInportsArgNonStruct               = errors.New("Type argument for component with struct inports directive must be struct")
-	ErrStructInportsNodeTypeArgsCount          = errors.New("Note that uses component with struct inports directive must pass exactly one type argument")
-	ErrStructInportsTypeParamConstr            = errors.New("Component that uses struct inports directive must have type parameter with struct constraint")
-	ErrStructInportsTypeParamsCount            = errors.New("Component that uses struct inports directive must have type parameter with have exactly one type parameter")
-	ErrNormalInportsWithStructInportsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
+	ErrAutoPortsArgNonStruct               = errors.New("Type argument for component with struct inports directive must be struct")
+	ErrAutoPortsNodeTypeArgsCount          = errors.New("Note that uses component with struct inports directive must pass exactly one type argument")
+	ErrAutoPortsTypeParamConstr            = errors.New("Component that uses struct inports directive must have type parameter with struct constraint")
+	ErrAutoPortsTypeParamsCount            = errors.New("Component that uses struct inports directive must have type parameter with have exactly one type parameter")
+	ErrNormalInportsWithAutoPortsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
 )
 
 func (a Analyzer) analyzeComponentNodes(
+	parentTypeParams src.TypeParams,
 	nodes map[string]src.Node,
 	scope src.Scope,
-) (map[string]src.Node, map[string]src.Interface, *compiler.Error) {
+) (
+	map[string]src.Node, // resolved nodes
+	map[string]src.Interface, // resolved nodes interfaces
+	*compiler.Error, // err
+) {
 	analyzedNodes := make(map[string]src.Node, len(nodes))
 	nodesInterfaces := make(map[string]src.Interface, len(nodes))
 
 	for nodeName, node := range nodes {
-		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, scope)
+		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, parentTypeParams, scope)
 		if err != nil {
 			return nil, nil, compiler.Error{
 				Err:      fmt.Errorf("Invalid node '%v %v", nodeName, node),
@@ -42,8 +47,12 @@ func (a Analyzer) analyzeComponentNodes(
 }
 
 //nolint:funlen
-func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node, src.Interface, *compiler.Error) {
-	entity, location, err := scope.Entity(node.EntityRef)
+func (a Analyzer) analyzeComponentNode(
+	node src.Node,
+	parentTypeParams src.TypeParams,
+	scope src.Scope,
+) (src.Node, src.Interface, *compiler.Error) {
+	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      err,
@@ -52,11 +61,12 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		}
 	}
 
-	if entity.Kind != src.ComponentEntity && entity.Kind != src.InterfaceEntity {
+	if nodeEntity.Kind != src.ComponentEntity &&
+		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, src.Interface{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, entity.Kind),
+			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
 			Location: &location,
-			Meta:     entity.Meta(),
+			Meta:     nodeEntity.Meta(),
 		}
 	}
 
@@ -65,34 +75,59 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      ErrBindDirectiveArgs,
 			Location: &location,
-			Meta:     entity.Meta(),
+			Meta:     nodeEntity.Meta(),
 		}
 	}
 
-	iface, aerr := a.getResolvedNodeInterface(entity, usesBindDirective, location, node, scope)
+	nodeIface, aerr := a.getNodeInterface(
+		nodeEntity,
+		usesBindDirective,
+		location,
+		node,
+		scope,
+	)
 	if aerr != nil {
 		return src.Node{}, src.Interface{}, aerr
 	}
 
-	if len(node.TypeArgs) != len(iface.TypeParams.Params) {
-		var err error
-		if len(node.TypeArgs) < len(iface.TypeParams.Params) {
-			err = ErrNodeTypeArgsMissing
-		} else {
-			err = ErrNodeTypeArgsTooMuch
-		}
+	// We need to get resolved frame from parent type parameters
+	// in order to be able to resolve node's args
+	// since they can refer to type parameter of the parent (interface)
+	resolvedParentParams, resolvedParentParamsFrame, err := a.resolver.ResolveParams(
+		parentTypeParams.Params,
+		scope,
+	)
+	if err != nil {
 		return src.Node{}, src.Interface{}, &compiler.Error{
-			Err: fmt.Errorf(
-				"%w: want %v, got %v",
-				err, iface.TypeParams, node.TypeArgs,
-			),
+			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
 		}
 	}
 
-	resolvedArgs, _, err := a.resolver.ResolveFrame(node.TypeArgs, iface.TypeParams.Params, scope)
+	// Now when we have frame made of parent type parameters constraints
+	// we can resolve cases like `subnode SubComponent<T>`
+	// where `T` refers to type parameter of the component/interface we're in.
+	resolvedArgs, err := a.resolver.ResolveExprsWithFrame(
+		node.TypeArgs,
+		resolvedParentParamsFrame,
+		scope,
+	)
 	if err != nil {
+		return src.Node{}, src.Interface{}, &compiler.Error{
+			Err:      err,
+			Location: &location,
+			Meta:     &node.Meta,
+		}
+	}
+
+	// Finally check that every argument is compatible
+	// with corresponding parameter of the node's entity.
+	if err = a.resolver.CheckArgsCompatibility(
+		resolvedArgs,
+		resolvedParentParams,
+		scope,
+	); err != nil {
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
@@ -106,12 +141,12 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 			EntityRef:  node.EntityRef,
 			TypeArgs:   resolvedArgs,
 			Meta:       node.Meta,
-		}, iface, nil
+		}, nodeIface, nil
 	}
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
-		resolvedDep, _, err := a.analyzeComponentNode(depNode, scope)
+		resolvedDep, _, err := a.analyzeComponentNode(depNode, parentTypeParams, scope)
 		if err != nil {
 			return src.Node{}, src.Interface{}, compiler.Error{
 				Err:      fmt.Errorf("Invalid node dependency: node '%v'", depNode),
@@ -128,18 +163,18 @@ func (a Analyzer) analyzeComponentNode(node src.Node, scope src.Scope) (src.Node
 		TypeArgs:   resolvedArgs,
 		Deps:       resolvedComponentDI,
 		Meta:       node.Meta,
-	}, iface, nil
+	}, nodeIface, nil
 }
 
-func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
+func (a Analyzer) getNodeInterface( //nolint:funlen
 	entity src.Entity,
-	hasRuntimeMsg bool,
+	hasConfigMsg bool,
 	location src.Location,
 	node src.Node,
 	scope src.Scope,
 ) (src.Interface, *compiler.Error) {
 	if entity.Kind == src.InterfaceEntity {
-		if hasRuntimeMsg {
+		if hasConfigMsg {
 			return src.Interface{}, &compiler.Error{
 				Err:      ErrInterfaceNodeBindDirective,
 				Location: &location,
@@ -158,9 +193,9 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		return entity.Interface, nil
 	}
 
-	runtimeFuncArgs, isRuntimeFunc := entity.Component.Directives[compiler.ExternDirective]
+	externArgs, hasExternDirective := entity.Component.Directives[compiler.ExternDirective]
 
-	if hasRuntimeMsg && !isRuntimeFunc {
+	if hasConfigMsg && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrNormNodeBind,
 			Location: &location,
@@ -168,7 +203,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		}
 	}
 
-	if len(runtimeFuncArgs) > 1 && len(node.TypeArgs) != 1 {
+	if len(externArgs) > 1 && len(node.TypeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrExternOverloadingNodeArgs,
 			Location: &location,
@@ -178,15 +213,16 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	iface := entity.Component.Interface
 
-	_, hasStructInportsDirective := entity.Component.Directives[compiler.AutoportsDirective]
-
-	if !hasStructInportsDirective {
+	_, hasAutoPortsDirective := entity.Component.Directives[compiler.AutoportsDirective]
+	if !hasAutoPortsDirective {
 		return iface, nil
 	}
 
+	// if we here then we have #autoports
+
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormalInportsWithStructInportsDirective,
+			Err:      ErrNormalInportsWithAutoPortsDirective,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -194,7 +230,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if len(iface.TypeParams.Params) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrStructInportsTypeParamsCount,
+			Err:      ErrAutoPortsTypeParamsCount,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -211,7 +247,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrStructInportsTypeParamConstr,
+			Err:      ErrAutoPortsTypeParamConstr,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -219,7 +255,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if len(node.TypeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrStructInportsNodeTypeArgsCount,
+			Err:      ErrAutoPortsNodeTypeArgsCount,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -236,7 +272,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 
 	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrStructInportsArgNonStruct,
+			Err:      ErrAutoPortsArgNonStruct,
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -255,7 +291,7 @@ func (a Analyzer) getResolvedNodeInterface( //nolint:funlen
 		IO: src.IO{
 			In: inports,
 			Out: map[string]src.Port{
-				"v": { // TODO refactor (it's not good to know exact interface here)
+				"msg": {
 					TypeExpr: resolvedNodeArg,
 					IsArray:  false,
 					Meta:     iface.IO.Out["v"].Meta,
