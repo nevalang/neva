@@ -28,7 +28,7 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 		return false, nil
 	}
 
-	if cur.ref == cur.prev.ref {
+	if sameRefs(cur.ref, cur.prev.ref) {
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 
@@ -36,7 +36,8 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	// Note that we don't care if it's not found. Not all types are in the scope, some of them are in the frame.
 	var canBeUsedForRecursiveDefinitions bool
 	if prevRef, _, err := scope.GetType(cur.prev.ref); err == nil {
-		canBeUsedForRecursiveDefinitions = prevRef.CanBeUsedForRecursiveDefinitions
+		// we don't have to check if prev has params, it has because we're here
+		canBeUsedForRecursiveDefinitions = prevRef.BodyExpr == nil
 	}
 
 	prev := cur.prev
@@ -71,4 +72,12 @@ func (Terminator) getLast3AndSwap(cur Trace) Trace {
 	t1 := Trace{prev: nil, ref: cur.prev.ref}
 	t2 := Trace{prev: &t1, ref: cur.ref}
 	return Trace{prev: &t2, ref: cur.prev.ref}
+}
+
+func sameRefs(cur, prev fmt.Stringer) bool {
+	// beginning of the trace has nil prev
+	if cur == nil || prev == nil {
+		return false
+	}
+	return cur.String() == prev.String()
 }

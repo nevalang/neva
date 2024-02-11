@@ -8,25 +8,21 @@ import (
 type Validator struct{}
 
 var (
-	ErrExprMustBeInstOrLit          = errors.New("expr must be ether literal or instantiation, not both and not neither")
-	ErrUnknownLit                   = errors.New("expr literal must be known")
-	ErrArrSize                      = errors.New("arr size must be >= 2")
-	ErrArrLitKind                   = errors.New("array literal must have no enum, union or record")
-	ErrUnionLitKind                 = errors.New("union literal must have no enum, array or record")
-	ErrEnumLitKind                  = errors.New("enum literal must have no union, array or record")
-	ErrEnumLen                      = errors.New("enum len must be >= 2")
-	ErrUnionLen                     = errors.New("union len must be >= 2")
-	ErrEnumDupl                     = errors.New("enum contains duplicate elements")
-	ErrNotBaseTypeSupportsRecursion = errors.New("only base type definitions can have support for recursion")
-	ErrParamDuplicate               = errors.New("params must have unique names")
-	ErrParams                       = errors.New("bad params")
+	ErrExprMustBeInstOrLit = errors.New("expr must be ether literal or instantiation, not both and not neither")
+	ErrUnknownLit          = errors.New("expr literal must be known")
+	ErrArrSize             = errors.New("arr size must be >= 2")
+	ErrArrLitKind          = errors.New("array literal must have no enum, union or record")
+	ErrUnionLitKind        = errors.New("union literal must have no enum, array or record")
+	ErrEnumLitKind         = errors.New("enum literal must have no union, array or record")
+	ErrEnumLen             = errors.New("enum len must be >= 2")
+	ErrUnionLen            = errors.New("union len must be >= 2")
+	ErrEnumDupl            = errors.New("enum contains duplicate elements")
+	ErrParamDuplicate      = errors.New("params must have unique names")
+	ErrParams              = errors.New("bad params")
 )
 
 // ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
 func (v Validator) ValidateDef(def Def) error {
-	if def.CanBeUsedForRecursiveDefinitions && def.BodyExpr != nil {
-		return fmt.Errorf("%w: %v", ErrNotBaseTypeSupportsRecursion, def)
-	}
 	if err := v.CheckParamUnique(def.Params); err != nil {
 		return errors.Join(ErrParams, err)
 	}
@@ -52,7 +48,7 @@ func (v Validator) Validate(expr Expr) error {
 		return ErrExprMustBeInstOrLit
 	}
 
-	if expr.Inst != nil || expr.Lit.Type() == RecLitType {
+	if expr.Inst != nil || expr.Lit.Type() == StructLitType {
 		return nil
 	}
 

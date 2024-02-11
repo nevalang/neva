@@ -106,7 +106,7 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 				return fmt.Errorf("%w: #%d got %s, want %s", ErrEnumEl, i, exprEl, constr.Lit.Enum[i])
 			}
 		}
-	case RecLitType: // {x int, y float} <: {x int|str}
+	case StructLitType: // {x int, y float} <: {x int|str}
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 			return fmt.Errorf("%w: got %v, want %v", ErrRecLen, len(expr.Lit.Struct), len(constr.Lit.Struct))
 		}

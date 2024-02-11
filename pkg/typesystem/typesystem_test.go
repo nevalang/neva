@@ -75,7 +75,7 @@ func TestLiteralExpr_Type(t *testing.T) {
 		{
 			name: "rec",
 			lit:  ts.LitExpr{nil, map[string]ts.Expr{}, nil, nil},
-			want: ts.RecLitType,
+			want: ts.StructLitType,
 		},
 		{
 			name: "enum",

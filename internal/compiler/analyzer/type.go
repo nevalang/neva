@@ -39,7 +39,6 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	return ts.Def{
 		Params:                           resolvedParams,
 		BodyExpr:                         def.BodyExpr,
-		CanBeUsedForRecursiveDefinitions: def.CanBeUsedForRecursiveDefinitions,
 	}, nil
 }
 

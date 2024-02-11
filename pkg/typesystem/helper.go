@@ -4,10 +4,11 @@ package typesystem
 // It's a stateless type and it's safe to share it between goroutines.
 type Helper struct{}
 
+// any base type def (without body) that has type parameters allows recursion
 func (h Helper) BaseDefWithRecursionAllowed(params ...Param) Def {
 	return Def{
-		Params:                           params,
-		CanBeUsedForRecursiveDefinitions: true,
+		Params:   params,
+		BodyExpr: nil,
 	}
 }
 

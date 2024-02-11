@@ -18,32 +18,34 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		want    bool
 		wantErr error
 	}{
-		{ // vec<t1> [t1] { t1=vec<t1>, vec<t> }
+		{ // list<t1> [t1] { t1=list<t1>, list<t> }
 			name:  "non valid recursive case",
 			trace: ts.NewTrace(nil, ts.DefaultStringer("t1")),
 			scope: TestScope{
-				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
+				"t1": h.Def(
+					h.Inst("list", h.Inst("t1")),
+				),
+				"list": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 			},
 			want:    false,
 			wantErr: nil,
 		},
-		{ // t1 [t1 vec t1] { t1=vec<t1>, vec<t> }
+		{ // t1 [t1 list t1] { t1=list<t1>, list<t> }
 			name:  "recursive valid case, recursive type ref",
-			trace: h.Trace("t1", "vec", "t1"),
+			trace: h.Trace("t1", "list", "t1"),
 			scope: TestScope{
-				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
+				"t1":   h.Def(h.Inst("list", h.Inst("t1"))),
+				"list": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,
 		},
-		{ // vec<t1> [vec t1 vec] { t1=vec<t1>, vec<t> }
+		{ // list<t1> [list t1 list] { t1=list<t1>, list<t> }
 			name:  "recursive valid case, recursive type as arg",
-			trace: h.Trace("vec", "t1", "vec"),
+			trace: h.Trace("list", "t1", "list"),
 			scope: TestScope{
-				"t1":  h.Def(h.Inst("vec", h.Inst("t1"))),
-				"vec": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
+				"t1":   h.Def(h.Inst("list", h.Inst("t1"))),
+				"list": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
 			},
 			want:    true,
 			wantErr: nil,

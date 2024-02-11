@@ -3,10 +3,8 @@ package parser
 import (
 	"strings"
 
-	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
@@ -64,36 +62,6 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 }
 
-func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
-	var body *ts.Expr
-	if expr := actx.TypeExpr(); expr != nil {
-		body = compiler.Pointer(
-			parseTypeExpr(actx.TypeExpr()),
-		)
-	}
-
-	return src.Entity{
-		// IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
-		Kind: src.TypeEntity,
-		Type: ts.Def{
-			Params:   parseTypeParams(actx.TypeParams()).Params,
-			BodyExpr: body,
-			Meta: src.Meta{
-				Text: actx.GetText(),
-				Start: src.Position{
-					Line:   actx.GetStart().GetLine(),
-					Column: actx.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   actx.GetStop().GetLine(),
-					Column: actx.GetStop().GetColumn(),
-				},
-			},
-		},
-	}
-	// s.file.Entities[actx.IDENTIFIER().GetText()] = result
-}
-
 /* --- Constants --- */
 
 func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmtContext) {
@@ -113,42 +81,7 @@ func (s *treeShapeListener) EnterGroupConstStmt(actx *generated.GroupConstStmtCo
 	}
 }
 
-func parseConstDef(actx generated.IConstDefContext) src.Entity {
-	// name := actx.IDENTIFIER().GetText()
-	typeExpr := parseTypeExpr(actx.TypeExpr())
-	constVal := actx.ConstVal()
-
-	parsedMsg := parseConstVal(constVal)
-	parsedMsg.TypeExpr = typeExpr
-
-	return src.Entity{
-		// IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase
-		Kind: src.ConstEntity,
-		Const: src.Const{
-			Value: &parsedMsg,
-			Meta: src.Meta{
-				Text: actx.GetText(),
-				Start: src.Position{
-					Line:   actx.GetStart().GetLine(),
-					Column: actx.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   actx.GetStop().GetLine(),
-					Column: actx.GetStop().GetColumn(),
-				},
-			},
-		},
-	}
-}
-
 /* --- Interfaces --- */
-
-// func (s ) EnterSingleInterfaceStmt(c *generated.SingleInterfaceStmtContext) {
-
-// }
-// func (s ) EnterGroupInterfaceStmt(c *generated.GroupInterfaceStmtContext) {
-
-// }
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
 	single := actx.SingleInterfaceStmt()
@@ -201,43 +134,5 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 		)
 		name := compDef.InterfaceDef().IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedCompEntity
-	}
-}
-
-// parseCompDef does NOT set isPublic
-func parseCompDef(actx generated.ICompDefContext) src.Entity {
-	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
-
-	body := actx.CompBody()
-	if body == nil {
-		return src.Entity{
-			Kind: src.ComponentEntity,
-			Component: src.Component{
-				Interface: parsedInterfaceDef,
-			},
-		}
-	}
-
-	var nodes map[string]src.Node
-	if nodesDef := body.CompNodesDef(); nodesDef != nil {
-		nodes = parseNodes(nodesDef.CompNodesDefBody())
-	}
-
-	var net []src.Connection
-	if netDef := body.CompNetDef(); netDef != nil {
-		parsedNet, err := parseNet(netDef)
-		if err != nil {
-			panic(err)
-		}
-		net = parsedNet
-	}
-
-	return src.Entity{
-		Kind: src.ComponentEntity,
-		Component: src.Component{
-			Interface: parsedInterfaceDef,
-			Nodes:     nodes,
-			Net:       net,
-		},
 	}
 }

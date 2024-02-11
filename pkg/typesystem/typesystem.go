@@ -12,8 +12,6 @@ type Def struct {
 	Params []Param `json:"params,omitempty"`
 	// Empty body means base type
 	BodyExpr *Expr `json:"bodyExpr,omitempty"`
-	// Only base types can have true.
-	CanBeUsedForRecursiveDefinitions bool `json:"canBeUsedForRecursiveDefinitions,omitempty"`
 	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
 	Meta ExprMeta `json:"meta,omitempty"`
 }
@@ -75,7 +73,7 @@ func (expr *Expr) String() string { //nolint:funlen
 			}
 		}
 		return str + "}"
-	case RecLitType:
+	case StructLitType:
 		str += "{"
 		count := 0
 		for fieldName, fieldExpr := range expr.Lit.Struct {
@@ -148,7 +146,7 @@ func (lit *LitExpr) Type() LiteralType {
 	case lit.Arr != nil:
 		return ArrLitType
 	case lit.Struct != nil:
-		return RecLitType
+		return StructLitType
 	case lit.Enum != nil:
 		return EnumLitType
 	case lit.Union != nil:
@@ -162,7 +160,7 @@ type LiteralType uint8
 const (
 	EmptyLitType LiteralType = iota
 	ArrLitType
-	RecLitType
+	StructLitType
 	EnumLitType
 	UnionLitType
 )

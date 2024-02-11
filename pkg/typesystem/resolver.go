@@ -198,10 +198,16 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 			return Expr{
 				Lit: &LitExpr{Union: resolvedUnion},
 			}, nil
-		case RecLitType:
+		case StructLitType:
 			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
 			for field, fieldExpr := range expr.Lit.Struct {
-				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
+				// we create new trace with virtual ref "struct" (it's safe because it's reserved word)
+				// otherwise expressions like `error struct {child maybe<error>}` will be direct recursive for terminator
+				newTrace := Trace{
+					prev: trace,
+					ref:  DefaultStringer("struct"),
+				}
+				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, &newTrace)
 				if err != nil {
 					return Expr{}, fmt.Errorf(
 						"%w: %v: %v",

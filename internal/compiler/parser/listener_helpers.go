@@ -698,3 +698,95 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 
 	return result
 }
+
+func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
+	var body *ts.Expr
+	if expr := actx.TypeExpr(); expr != nil {
+		body = compiler.Pointer(
+			parseTypeExpr(actx.TypeExpr()),
+		)
+	}
+
+	return src.Entity{
+		Kind: src.TypeEntity,
+		Type: ts.Def{
+			Params:   parseTypeParams(actx.TypeParams()).Params,
+			BodyExpr: body,
+			// CanBeUsedForRecursiveDefinitions: body == nil,
+			Meta: src.Meta{
+				Text: actx.GetText(),
+				Start: src.Position{
+					Line:   actx.GetStart().GetLine(),
+					Column: actx.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   actx.GetStop().GetLine(),
+					Column: actx.GetStop().GetColumn(),
+				},
+			},
+		},
+	}
+}
+
+func parseConstDef(actx generated.IConstDefContext) src.Entity {
+	typeExpr := parseTypeExpr(actx.TypeExpr())
+	constVal := actx.ConstVal()
+
+	parsedMsg := parseConstVal(constVal)
+	parsedMsg.TypeExpr = typeExpr
+
+	return src.Entity{
+		Kind: src.ConstEntity,
+		Const: src.Const{
+			Value: &parsedMsg,
+			Meta: src.Meta{
+				Text: actx.GetText(),
+				Start: src.Position{
+					Line:   actx.GetStart().GetLine(),
+					Column: actx.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   actx.GetStop().GetLine(),
+					Column: actx.GetStop().GetColumn(),
+				},
+			},
+		},
+	}
+}
+
+func parseCompDef(actx generated.ICompDefContext) src.Entity {
+	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
+
+	body := actx.CompBody()
+	if body == nil {
+		return src.Entity{
+			Kind: src.ComponentEntity,
+			Component: src.Component{
+				Interface: parsedInterfaceDef,
+			},
+		}
+	}
+
+	var nodes map[string]src.Node
+	if nodesDef := body.CompNodesDef(); nodesDef != nil {
+		nodes = parseNodes(nodesDef.CompNodesDefBody())
+	}
+
+	var net []src.Connection
+	if netDef := body.CompNetDef(); netDef != nil {
+		parsedNet, err := parseNet(netDef)
+		if err != nil {
+			panic(err)
+		}
+		net = parsedNet
+	}
+
+	return src.Entity{
+		Kind: src.ComponentEntity,
+		Component: src.Component{
+			Interface: parsedInterfaceDef,
+			Nodes:     nodes,
+			Net:       net,
+		},
+	}
+}
