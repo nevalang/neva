@@ -85,7 +85,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Inst("map", h.Inst("t1"))
 			constr := h.Inst("t2")
 			scope := TestScope{
-				"map": h.BaseDef(ts.Param{"t", &constr}),
+				"map": h.BaseDef(ts.Param{"t", constr}),
 				"t1":  h.BaseDef(),
 				"t2":  h.BaseDef(),
 			}
@@ -150,7 +150,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			expr := h.Inst("t1", h.Inst("t2"))
 			constr := h.Inst("t3")
 			scope := TestScope{
-				"t1": h.BaseDef(ts.Param{"t", &constr}),
+				"t1": h.BaseDef(ts.Param{"t", constr}),
 				"t2": h.BaseDef(),
 			}
 			return testcase{

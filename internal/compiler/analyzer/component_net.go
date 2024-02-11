@@ -291,7 +291,7 @@ func (a Analyzer) getReceiverType(
 		outport, ok := outports[receiverSide.PortAddr.Port]
 		if !ok {
 			return ts.Expr{}, &compiler.Error{
-				Err:      ErrInportNotFound,
+				Err:      fmt.Errorf("%w: %v", ErrOutportNotFound, receiverSide.PortAddr.Port),
 				Location: &scope.Location,
 				Meta:     &receiverSide.PortAddr.Meta,
 			}
@@ -466,7 +466,7 @@ func (a Analyzer) getSenderType( //nolint:funlen
 		inport, ok := inports[senderSide.PortAddr.Port]
 		if !ok {
 			return ts.Expr{}, &compiler.Error{
-				Err:      ErrInportNotFound,
+				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSide.PortAddr.Port),
 				Location: &scope.Location,
 				Meta:     &senderSide.PortAddr.Meta,
 			}
@@ -490,11 +490,11 @@ func (a Analyzer) getSenderType( //nolint:funlen
 
 	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, compiler.Error{
-			Err:      ErrInportNotFound,
+		return ts.Expr{}, &compiler.Error{
+			Err:      err,
 			Location: &scope.Location,
 			Meta:     &senderSide.PortAddr.Meta,
-		}.Merge(err)
+		}
 	}
 
 	return nodeOutportType, nil
@@ -547,7 +547,7 @@ func (a Analyzer) getNodeOutportType(
 	)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("get resolved outport type: %w", err),
+			Err:      fmt.Errorf("get resolved outport type: %v: %w", portAddr, err),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}

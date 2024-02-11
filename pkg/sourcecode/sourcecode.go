@@ -150,7 +150,7 @@ func (t TypeParams) ToFrame() map[string]ts.Def {
 	frame := make(map[string]ts.Def, len(t.Params))
 	for _, param := range t.Params {
 		frame[param.Name] = ts.Def{
-			BodyExpr: param.Constr,
+			BodyExpr: &param.Constr,
 			Meta:     param.Constr.Meta,
 		}
 	}

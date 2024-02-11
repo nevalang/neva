@@ -24,9 +24,6 @@ func (def Def) String() string {
 	params += "<"
 	for i, param := range def.Params {
 		params += param.Name
-		if param.Constr == nil {
-			continue
-		}
 		params += " " + param.Constr.String()
 		if i < len(def.Params)-1 {
 			params += ", "
@@ -40,7 +37,7 @@ func (def Def) String() string {
 type Param struct {
 	Name string `json:"name,omitempty"` // Must be unique among other type's parameters
 	// TODO make constr required (use any where not set)
-	Constr *Expr `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
+	Constr Expr `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both

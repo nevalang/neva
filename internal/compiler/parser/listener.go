@@ -3,6 +3,7 @@ package parser
 import (
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -66,7 +67,9 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		body = parseTypeExpr(actx.TypeExpr())
+		body = compiler.Pointer(
+			parseTypeExpr(actx.TypeExpr()),
+		)
 	}
 
 	return src.Entity{
@@ -116,7 +119,7 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	constVal := actx.ConstVal()
 
 	parsedMsg := parseConstVal(constVal)
-	parsedMsg.TypeExpr = *typeExpr
+	parsedMsg.TypeExpr = typeExpr
 
 	return src.Entity{
 		// IsPublic: actx.PUB_KW() != nil, //nolint:nosnakecase

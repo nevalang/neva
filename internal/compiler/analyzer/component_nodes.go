@@ -236,7 +236,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		}
 	}
 
-	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(*iface.TypeParams.Params[0].Constr, scope)
+	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(iface.TypeParams.Params[0].Constr, scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
 			Err:      err,

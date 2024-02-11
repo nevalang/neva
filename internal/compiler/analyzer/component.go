@@ -10,17 +10,20 @@ import (
 
 //nolint:lll
 var (
-	ErrNodeWrongEntity            = errors.New("Node can only refer to components or interfaces")
-	ErrNodeTypeArgsMissing        = errors.New("Not enough type arguments")
-	ErrNodeTypeArgsTooMuch        = errors.New("Too much type arguments")
-	ErrNonComponentNodeWithDI     = errors.New("Only component node can have dependency injection")
-	ErrUnusedNode                 = errors.New("Unused node found")
-	ErrUnusedNodeInport           = errors.New("Unused node inport found")
-	ErrUnusedNodeOutports         = errors.New("All node's outports are unused")
-	ErrSenderIsEmpty              = errors.New("Sender in network must contain port address, constant reference or message literal")
-	ErrReadSelfOut                = errors.New("Component cannot read from self outport")
-	ErrWriteSelfIn                = errors.New("Component cannot write to self inport")
-	ErrInportNotFound             = errors.New("Referenced inport not found in component's interface")
+	ErrNodeWrongEntity        = errors.New("Node can only refer to components or interfaces")
+	ErrNodeTypeArgsMissing    = errors.New("Not enough type arguments")
+	ErrNodeTypeArgsTooMuch    = errors.New("Too much type arguments")
+	ErrNonComponentNodeWithDI = errors.New("Only component node can have dependency injection")
+	ErrUnusedNode             = errors.New("Unused node found")
+	ErrUnusedNodeInport       = errors.New("Unused node inport found")
+	ErrUnusedNodeOutports     = errors.New("All node's outports are unused")
+	ErrSenderIsEmpty          = errors.New("Sender in network must contain port address, constant reference or message literal")
+	ErrReadSelfOut            = errors.New("Component cannot read from self outport")
+	ErrWriteSelfIn            = errors.New("Component cannot write to self inport")
+	ErrInportNotFound         = errors.New("Referenced inport not found in component's interface")
+	ErrOutportNotFound        = errors.New(
+		"Referenced inport not found in component's interface",
+	)
 	ErrNodeNotFound               = errors.New("Referenced node not found")
 	ErrPortNotFound               = errors.New("Port not found")
 	ErrNormCompWithExtern         = errors.New("Component with nodes or network cannot use #extern directive")

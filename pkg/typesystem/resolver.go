@@ -94,18 +94,14 @@ func (r Resolver) ResolveParams(
 	result := make([]Param, 0, len(params))
 	frame := make(map[string]Def, len(params))
 	for _, param := range params {
-		if param.Constr == nil {
-			result = append(result, Param{Name: param.Name})
-			continue
-		}
-		resolved, err := r.resolveExpr(*param.Constr, scope, frame, nil)
+		resolved, err := r.resolveExpr(param.Constr, scope, frame, nil)
 		if err != nil {
 			return nil, nil, fmt.Errorf("resolve expr: %w", err)
 		}
 		frame[param.Name] = Def{BodyExpr: &resolved}
 		result = append(result, Param{
 			Name:   param.Name,
-			Constr: &resolved,
+			Constr: resolved,
 		})
 	}
 	return result, frame, nil
@@ -143,7 +139,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			return fmt.Errorf("resolve arg expr: %w", err)
 		}
 
-		resolvedSup, err := r.resolveExpr(*param.Constr, scope, nil, nil)
+		resolvedSup, err := r.resolveExpr(param.Constr, scope, nil, nil)
 		if err != nil {
 			return fmt.Errorf("resolve param constr expr: %w", err)
 		}
@@ -207,7 +203,12 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 			for field, fieldExpr := range expr.Lit.Struct {
 				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, trace)
 				if err != nil {
-					return Expr{}, fmt.Errorf("%w: %v", ErrRecFieldUnresolved, err)
+					return Expr{}, fmt.Errorf(
+						"%w: %v: %v",
+						ErrRecFieldUnresolved,
+						field,
+						err,
+					)
 				}
 				resolvedStruct[field] = resolvedFieldExpr
 			}
@@ -255,12 +256,8 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 
-		if param.Constr == nil {
-			continue
-		}
-
 		// we pass newFrame because constr can refer type param
-		resolvedConstr, err := r.resolveExpr(*param.Constr, scope, newFrame, &newTrace)
+		resolvedConstr, err := r.resolveExpr(param.Constr, scope, newFrame, &newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}

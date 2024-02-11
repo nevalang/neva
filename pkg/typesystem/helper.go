@@ -75,15 +75,24 @@ func (h Helper) Struct(structure map[string]Expr) Expr {
 
 func (h Helper) ParamWithNoConstr(name string) Param {
 	return Param{
-		Name:   name,
-		Constr: nil,
+		Name: name,
+		Constr: Expr{
+			Lit:  &LitExpr{},
+			Inst: &InstExpr{},
+			Meta: nil,
+		},
 	}
 }
 
 func (h Helper) Param(name string, constr Expr) Param {
 	return Param{
-		Name:   name,
-		Constr: &constr,
+		Name: name,
+		Constr: Expr{
+			Inst: &InstExpr{
+				// TODO refactor we shouldn't know about exact top-type here
+				Ref: DefaultStringer("any"),
+			},
+		},
 	}
 }
 

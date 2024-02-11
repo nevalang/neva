@@ -42,9 +42,9 @@ func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
 	}
 }
 
-func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
+func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	if expr == nil {
-		return &ts.Expr{
+		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: src.EntityRef{Name: "any"},
 			},
@@ -78,7 +78,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) *ts.Expr {
 
 	result.Meta = getTypeExprMeta(expr)
 
-	return result
+	return *result
 }
 
 func getTypeExprMeta(expr generated.ITypeExprContext) src.Meta {
@@ -167,7 +167,7 @@ func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
 
 	for _, field := range fields {
 		fieldName := field.IDENTIFIER().GetText()
-		result.Lit.Struct[fieldName] = *parseTypeExpr(field.TypeExpr())
+		result.Lit.Struct[fieldName] = parseTypeExpr(field.TypeExpr())
 	}
 
 	return &result
@@ -193,7 +193,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 	argExprs := args.AllTypeExpr()
 	parsedArgs := make([]ts.Expr, 0, len(argExprs))
 	for _, arg := range argExprs {
-		parsedArgs = append(parsedArgs, *parseTypeExpr(arg))
+		parsedArgs = append(parsedArgs, parseTypeExpr(arg))
 	}
 	result.Inst.Args = parsedArgs
 
@@ -256,7 +256,7 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		portName := id.GetText()
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
-			TypeExpr: *parseTypeExpr(typeExpr),
+			TypeExpr: parseTypeExpr(typeExpr),
 			Meta: src.Meta{
 				Text: port.GetText(),
 				Start: src.Position{
@@ -343,7 +343,7 @@ func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
 func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	result := make([]ts.Expr, 0, len(in))
 	for _, expr := range in {
-		result = append(result, *parseTypeExpr(expr))
+		result = append(result, parseTypeExpr(expr))
 	}
 	return result
 }
