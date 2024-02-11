@@ -58,7 +58,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr).Return(nil)
 					v.ValidateDef(h.BaseDef(h.ParamWithNoConstr("t")))
 				},
-				wantErr: ts.ErrInstArgsLen,
+				wantErr: ts.ErrInstArgsCount,
 			}
 		},
 		"unresolvable_argument": func() testcase { // expr = vec<foo>, scope = {vec<t> = vec}

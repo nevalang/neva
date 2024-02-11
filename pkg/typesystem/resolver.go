@@ -9,7 +9,7 @@ var (
 	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
 	ErrScope              = errors.New("can't get type def from scope by ref")
 	ErrScopeUpdate        = errors.New("scope update")
-	ErrInstArgsLen        = errors.New("inst must have same number of arguments as def has parameters")
+	ErrInstArgsCount      = errors.New("Wrong number of type arguments")
 	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
 	ErrUnresolvedArg      = errors.New("can't resolve argument")
 	ErrConstr             = errors.New("can't resolve constraint")
@@ -235,7 +235,11 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 
 	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
 		return Expr{}, fmt.Errorf(
-			"%w, want %d, got %d", ErrInstArgsLen, len(def.Params), len(expr.Inst.Args),
+			"%w for '%v': want %d, got %d",
+			ErrInstArgsCount,
+			expr.Inst.Ref,
+			len(def.Params),
+			len(expr.Inst.Args),
 		)
 	}
 

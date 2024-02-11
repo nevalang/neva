@@ -37,8 +37,8 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	}
 
 	return ts.Def{
-		Params:                           resolvedParams,
-		BodyExpr:                         def.BodyExpr,
+		Params:   resolvedParams,
+		BodyExpr: def.BodyExpr,
 	}, nil
 }
 

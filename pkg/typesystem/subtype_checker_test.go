@@ -190,7 +190,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			superType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst(""),
 			}),
-			wantErr: ts.ErrRecLen,
+			wantErr: ts.ErrStructLen,
 		},
 		{
 			name: "subtype and supertype recs, expr leaks field",
@@ -208,7 +208,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 					},
 				},
 			},
-			wantErr: ts.ErrRecNoField,
+			wantErr: ts.ErrStructNoField,
 		},
 		{
 			name: "subtype and supertype recs, subtype has incompat field",
@@ -222,7 +222,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil).Times(2)
 			},
-			wantErr: ts.ErrRecField,
+			wantErr: ts.ErrStructField,
 		},
 		{ // { a x, b {} }, { a x }
 			name: "subtype and supertype are both records, subtype has all supertype fields, all fields compatible",

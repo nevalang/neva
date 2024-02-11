@@ -410,7 +410,7 @@ func (a Analyzer) getResolvedPortType(
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &node.Meta,
+			Meta:     &port.Meta,
 		}
 	}
 

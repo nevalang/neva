@@ -14,9 +14,9 @@ var (
 	ErrArrDiffType   = errors.New("Subtype arr must have same type as supertype")
 	ErrBigEnum       = errors.New("Subtype enum must be <= supertype enum")
 	ErrEnumEl        = errors.New("Subtype enum el doesn't match supertype")
-	ErrRecLen        = errors.New("Subtype record must contain >= fields than supertype")
-	ErrRecField      = errors.New("Subtype rec field must be subtype of corresponding supertype field")
-	ErrRecNoField    = errors.New("Subtype rec is missing field of supertype")
+	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
+	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
+	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
 	ErrUnion         = errors.New("Subtype must be subtype of supertype union")
 	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
 	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
@@ -35,26 +35,42 @@ type TerminatorParams struct {
 
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
-func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error { //nolint:funlen,gocognit,gocyclo
-	if params.Scope.IsTopType(constr) { // no matter what sub is if sup is top type
+func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
+	expr,
+	constr Expr,
+	params TerminatorParams,
+) error {
+	if params.Scope.IsTopType(constr) { // no matter what expr is if constr is top type
 		return nil
 	}
 
 	isConstraintInstance := constr.Lit.Empty()
 	areKindsDifferent := expr.Lit.Empty() != isConstraintInstance
-	isConstraintUnion := constr.Lit != nil && constr.Lit.Type() == UnionLitType
+	isConstraintUnion := constr.Lit != nil &&
+		constr.Lit.Type() == UnionLitType
 
 	if areKindsDifferent && !isConstraintUnion {
-		return fmt.Errorf("%w: expression %v, constaint %v", ErrDiffKinds, expr.String(), constr.String())
+		return fmt.Errorf(
+			"%w: expression %v, constaint %v",
+			ErrDiffKinds,
+			expr.String(),
+			constr.String(),
+		)
 	}
 
 	if isConstraintInstance { //nolint:nestif // both expr and constr are insts
-		isSubTypeRecursive, err := s.terminator.ShouldTerminate(params.SubtypeTrace, params.Scope)
+		isSubTypeRecursive, err := s.terminator.ShouldTerminate(
+			params.SubtypeTrace,
+			params.Scope,
+		)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
 
-		isSuperTypeRecursive, err := s.terminator.ShouldTerminate(params.SupertypeTrace, params.Scope)
+		isSuperTypeRecursive, err := s.terminator.ShouldTerminate(
+			params.SupertypeTrace,
+			params.Scope,
+		)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
@@ -73,10 +89,20 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 
 		newTParams := s.getNewTerminatorParams(params, expr.Inst.Ref, constr.Inst.Ref)
 		for i := range constr.Inst.Args {
-			newSub := expr.Inst.Args[i]
-			newSup := constr.Inst.Args[i]
-			if err := s.Check(newSub, newSup, newTParams); err != nil {
-				return fmt.Errorf("%w: got %v, want %v", ErrArgNotSubtype, expr.Inst.Args[i], constr.Inst.Args[i])
+			newExpr := expr.Inst.Args[i]
+			newConstr := constr.Inst.Args[i]
+			if err := s.Check(
+				newExpr,
+				newConstr,
+				newTParams,
+			); err != nil {
+				return fmt.Errorf(
+					"%w: %v: got %v, want %v",
+					ErrArgNotSubtype,
+					err,
+					expr.Inst.Args[i].String(),
+					constr.Inst.Args[i].String(),
+				)
 			}
 		}
 
@@ -108,15 +134,15 @@ func (s SubtypeChecker) Check(expr, constr Expr, params TerminatorParams) error 
 		}
 	case StructLitType: // {x int, y float} <: {x int|str}
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
-			return fmt.Errorf("%w: got %v, want %v", ErrRecLen, len(expr.Lit.Struct), len(constr.Lit.Struct))
+			return fmt.Errorf("%w: got %v, want %v", ErrStructLen, len(expr.Lit.Struct), len(constr.Lit.Struct))
 		}
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
-				return fmt.Errorf("%w: %v", ErrRecNoField, constrFieldName)
+				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 			}
 			if err := s.Check(exprField, constrField, params); err != nil {
-				return fmt.Errorf("%w: field '%s': %v", ErrRecField, constrFieldName, err)
+				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
