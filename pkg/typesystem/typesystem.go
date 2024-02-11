@@ -38,8 +38,9 @@ func (def Def) String() string {
 }
 
 type Param struct {
-	Name   string `json:"name,omitempty"`   // Must be unique among other type's parameters
-	Constr *Expr  `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
+	Name string `json:"name,omitempty"` // Must be unique among other type's parameters
+	// TODO make constr required (use any where not set)
+	Constr *Expr `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both

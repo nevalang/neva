@@ -146,6 +146,17 @@ type TypeParams struct {
 	Meta   Meta       `json:"meta,omitempty"`
 }
 
+func (t TypeParams) ToFrame() map[string]ts.Def {
+	frame := make(map[string]ts.Def, len(t.Params))
+	for _, param := range t.Params {
+		frame[param.Name] = ts.Def{
+			BodyExpr: param.Constr,
+			Meta:     param.Constr.Meta,
+		}
+	}
+	return frame
+}
+
 func (t TypeParams) String() string {
 	s := "<"
 	for i, param := range t.Params {
@@ -279,7 +290,7 @@ func (s ConnectionSenderSide) String() string {
 	selectorsString := ""
 	if len(s.Selectors) != 0 {
 		for _, selector := range s.Selectors {
-			selectorsString += "." + selector
+			selectorsString += ":" + selector
 		}
 	}
 
@@ -311,9 +322,9 @@ func (p PortAddr) String() string {
 
 	switch {
 	case hasNode && hasPort && hasIdx:
-		return fmt.Sprintf("%v.%v[%v]", p.Node, p.Port, p.Idx)
+		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, p.Idx)
 	case hasNode && hasPort:
-		return fmt.Sprintf("%v.%v", p.Node, p.Port)
+		return fmt.Sprintf("%v:%v", p.Node, p.Port)
 	}
 
 	return "invalid port addr"

@@ -68,7 +68,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
 ) *compiler.Error {
-	outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface.IO.In, nodes, nodesIfaces, scope)
+	outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface, nodes, nodesIfaces, scope)
 	if err != nil {
 		return compiler.Error{
 			Location: &scope.Location,
@@ -138,9 +138,9 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	}
 
 	for _, receiver := range conn.ReceiverSide.Receivers {
-		inportTypeExpr, err := a.resolveReceiverType(
+		inportTypeExpr, err := a.getReceiverType(
 			receiver,
-			compInterface.IO.Out,
+			compInterface,
 			nodes,
 			nodesIfaces,
 			scope,
@@ -270,9 +270,9 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 	return nil
 }
 
-func (a Analyzer) resolveReceiverType(
+func (a Analyzer) getReceiverType(
 	receiverSide src.ConnectionReceiver,
-	outports map[string]src.Port,
+	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
@@ -286,6 +286,8 @@ func (a Analyzer) resolveReceiverType(
 	}
 
 	if receiverSide.PortAddr.Node == "out" {
+		outports := iface.IO.Out
+
 		outport, ok := outports[receiverSide.PortAddr.Port]
 		if !ok {
 			return ts.Expr{}, &compiler.Error{
@@ -294,7 +296,21 @@ func (a Analyzer) resolveReceiverType(
 				Meta:     &receiverSide.PortAddr.Meta,
 			}
 		}
-		return outport.TypeExpr, nil
+
+		resolvedOutportType, err := a.resolver.ResolveExprWithFrame(
+			outport.TypeExpr,
+			iface.TypeParams.ToFrame(),
+			scope,
+		)
+		if err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &receiverSide.PortAddr.Meta,
+			}
+		}
+
+		return resolvedOutportType, nil
 	}
 
 	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, nodesIfaces, scope)
@@ -336,7 +352,7 @@ func (a Analyzer) getNodeInportType(
 	// TODO optimize:
 	// we can resolve every node's interface just once
 	// before processing the network
-	typ, aerr := a.getResolvedPortType(
+	resolvedInportType, aerr := a.getResolvedPortType(
 		nodeIface.IO.In,
 		nodeIface.TypeParams.Params,
 		portAddr,
@@ -350,10 +366,9 @@ func (a Analyzer) getNodeInportType(
 		}.Merge(aerr)
 	}
 
-	return typ, nil
+	return resolvedInportType, nil
 }
 
-// TODO: here could be a problem - we don't get parent type params into account
 func (a Analyzer) getResolvedPortType(
 	ports map[string]src.Port,
 	nodeIfaceParams []ts.Param,
@@ -376,7 +391,7 @@ func (a Analyzer) getResolvedPortType(
 
 	// we don't resolve node's args assuming they resolved already
 
-	// create frame `param:resolvedArg` to get resolved port type
+	// create frame `nodeParam:resolvedArg` to get resolved port type
 	frame := make(map[string]ts.Def, len(nodeIfaceParams))
 	for i, param := range nodeIfaceParams {
 		arg := node.TypeArgs[i]
@@ -404,7 +419,7 @@ func (a Analyzer) getResolvedPortType(
 
 func (a Analyzer) getSenderType( //nolint:funlen
 	senderSide src.ConnectionSenderSide,
-	inports map[string]src.Port,
+	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
@@ -446,6 +461,8 @@ func (a Analyzer) getSenderType( //nolint:funlen
 	}
 
 	if senderSide.PortAddr.Node == "in" {
+		inports := iface.IO.In
+
 		inport, ok := inports[senderSide.PortAddr.Port]
 		if !ok {
 			return ts.Expr{}, &compiler.Error{
@@ -454,7 +471,21 @@ func (a Analyzer) getSenderType( //nolint:funlen
 				Meta:     &senderSide.PortAddr.Meta,
 			}
 		}
-		return inport.TypeExpr, nil
+
+		resolvedInportType, err := a.resolver.ResolveExprWithFrame(
+			inport.TypeExpr,
+			iface.TypeParams.ToFrame(),
+			scope,
+		)
+		if err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &senderSide.PortAddr.Meta,
+			}
+		}
+
+		return resolvedInportType, nil
 	}
 
 	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
@@ -507,7 +538,7 @@ func (a Analyzer) getNodeOutportType(
 		}
 	}
 
-	typ, err := a.getResolvedPortType(
+	resolvedPortType, err := a.getResolvedPortType(
 		nodeIface.IO.Out,
 		nodeIface.TypeParams.Params,
 		portAddr,
@@ -522,7 +553,7 @@ func (a Analyzer) getNodeOutportType(
 		}
 	}
 
-	return typ, err
+	return resolvedPortType, err
 }
 
 func (a Analyzer) getResolvedConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
