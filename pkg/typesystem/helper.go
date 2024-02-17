@@ -46,14 +46,6 @@ func (h Helper) Enum(els ...string) Expr {
 	}
 }
 
-func (h Helper) Arr(size int, typ Expr) Expr {
-	return Expr{
-		Lit: &LitExpr{
-			Arr: &ArrLit{Expr: typ, Size: size},
-		},
-	}
-}
-
 func (h Helper) Union(els ...Expr) Expr {
 	if els == nil { // for !lit.Empty()
 		els = []Expr{}

@@ -33,9 +33,8 @@ func (def Def) String() string {
 }
 
 type Param struct {
-	Name string `json:"name,omitempty"` // Must be unique among other type's parameters
-	// TODO make constr required (use any where not set)
-	Constr Expr `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
+	Name   string `json:"name,omitempty"`   // Must be unique among other type's parameters
+	Constr Expr   `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both
@@ -49,7 +48,7 @@ type Expr struct {
 type ExprMeta any
 
 // String formats expression in a TS manner
-func (expr *Expr) String() string { //nolint:funlen
+func (expr *Expr) String() string {
 	if expr == nil || expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
@@ -57,11 +56,6 @@ func (expr *Expr) String() string { //nolint:funlen
 	var str string
 
 	switch expr.Lit.Type() {
-	case ArrLitType:
-		return fmt.Sprintf(
-			"[%d]%s",
-			expr.Lit.Arr.Size, expr.Lit.Arr.Expr.String(),
-		)
 	case EnumLitType:
 		str += "{"
 		for i, el := range expr.Lit.Enum {
@@ -124,7 +118,6 @@ type InstExpr struct {
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Arr    *ArrLit         `json:"arr,omitempty"`
 	Struct map[string]Expr `json:"rec,omitempty"`
 	Enum   []string        `json:"enum,omitempty"`
 	Union  []Expr          `json:"union,omitempty"`
@@ -132,8 +125,7 @@ type LitExpr struct {
 
 func (lit *LitExpr) Empty() bool {
 	return lit == nil ||
-		lit.Arr == nil &&
-			lit.Struct == nil &&
+		lit.Struct == nil &&
 			lit.Enum == nil &&
 			lit.Union == nil
 }
@@ -143,8 +135,6 @@ func (lit *LitExpr) Type() LiteralType {
 	switch {
 	case lit == nil:
 		return EmptyLitType
-	case lit.Arr != nil:
-		return ArrLitType
 	case lit.Struct != nil:
 		return StructLitType
 	case lit.Enum != nil:
@@ -164,11 +154,6 @@ const (
 	EnumLitType
 	UnionLitType
 )
-
-type ArrLit struct {
-	Expr Expr `json:"expr,omitempty"`
-	Size int  `json:"size,omitempty"`
-}
 
 func GetStructFieldTypeByPath(senderType Expr, path []string) (Expr, error) {
 	if len(path) == 0 {

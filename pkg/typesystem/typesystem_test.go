@@ -19,28 +19,23 @@ func TestLiteralExpr_Empty(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "all 4 fields: arr, enum, union and rec are empty",
-			lit:  ts.LitExpr{nil, nil, nil, nil},
+			name: "all 4 fields: arr, enum, union and struct are empty",
+			lit:  ts.LitExpr{nil, nil, nil},
 			want: true,
 		},
 		{
-			name: "arr not empty",
-			lit:  ts.LitExpr{&ts.ArrLit{}, nil, nil, nil},
-			want: false,
-		},
-		{
-			name: "rec not empty",
-			lit:  ts.LitExpr{nil, map[string]ts.Expr{}, nil, nil},
+			name: "struct not empty",
+			lit:  ts.LitExpr{map[string]ts.Expr{}, nil, nil},
 			want: false,
 		},
 		{
 			name: "enum not empty",
-			lit:  ts.LitExpr{nil, nil, []string{}, nil},
+			lit:  ts.LitExpr{nil, []string{}, nil},
 			want: false,
 		},
 		{
 			name: "union not empty",
-			lit:  ts.LitExpr{nil, nil, nil, []ts.Expr{}},
+			lit:  ts.LitExpr{nil, nil, []ts.Expr{}},
 			want: false,
 		},
 	}
@@ -64,27 +59,27 @@ func TestLiteralExpr_Type(t *testing.T) {
 	}{
 		{
 			name: "unknown",
-			lit:  ts.LitExpr{nil, nil, nil, nil},
+			lit:  ts.LitExpr{nil, nil, nil},
 			want: ts.EmptyLitType,
 		},
 		{
 			name: "arr",
-			lit:  ts.LitExpr{&ts.ArrLit{}, nil, nil, nil},
+			lit:  ts.LitExpr{nil, nil, nil},
 			want: ts.ArrLitType,
 		},
 		{
-			name: "rec",
-			lit:  ts.LitExpr{nil, map[string]ts.Expr{}, nil, nil},
+			name: "struct",
+			lit:  ts.LitExpr{map[string]ts.Expr{}, nil, nil},
 			want: ts.StructLitType,
 		},
 		{
 			name: "enum",
-			lit:  ts.LitExpr{nil, nil, []string{}, nil},
+			lit:  ts.LitExpr{nil, []string{}, nil},
 			want: ts.EnumLitType,
 		},
 		{
 			name: "union",
-			lit:  ts.LitExpr{nil, nil, nil, []ts.Expr{}},
+			lit:  ts.LitExpr{nil, nil, []ts.Expr{}},
 			want: ts.UnionLitType,
 		},
 	}
@@ -234,42 +229,9 @@ func TestExpr_String(t *testing.T) {
 			},
 			want: "{ MONDAY, TUESDAY }",
 		},
-		// arr
+		// struct
 		{
-			name: "lit_expr_arr_with_size_0_and_without type",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{},
-				},
-			},
-			want: "[0]empty",
-		},
-		{
-			name: "lit expr arr with size 0 and with type",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{
-						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
-					},
-				},
-			},
-			want: "[0]int",
-		},
-		{
-			name: "lit expr arr with size 4096 and with type",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{
-						Size: 4096,
-						Expr: ts.Expr{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
-					},
-				},
-			},
-			want: "[4096]int",
-		},
-		// rec
-		{
-			name: "lit expr rec no fields",
+			name: "lit expr struct no fields",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Struct: map[string]ts.Expr{},
@@ -278,7 +240,7 @@ func TestExpr_String(t *testing.T) {
 			want: "{}",
 		},
 		{
-			name: "lit_expr_rec_with_one_field",
+			name: "lit_expr_struct_with_one_field",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Struct: map[string]ts.Expr{
@@ -293,7 +255,7 @@ func TestExpr_String(t *testing.T) {
 			want: "{ name str }",
 		},
 		{ // FIXME flacky test (struct must be ordered)
-			name: "lit_expr_rec_with_two_fields",
+			name: "lit_expr_struct_with_two_fields",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Struct: map[string]ts.Expr{

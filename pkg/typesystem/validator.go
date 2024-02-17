@@ -53,20 +53,12 @@ func (v Validator) Validate(expr Expr) error {
 	}
 
 	switch expr.Lit.Type() { // by now we know it's not empty literal
-	case ArrLitType:
-		if expr.Lit.Arr.Size < 2 {
-			return fmt.Errorf("%w: got %d", ErrArrSize, expr.Lit.Arr.Size)
-		}
-		switch {
-		case expr.Lit.Enum != nil, expr.Lit.Struct != nil, expr.Lit.Union != nil:
-			return ErrArrLitKind
-		}
 	case UnionLitType:
 		if l := len(expr.Lit.Union); l < 2 {
 			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
 		}
 		switch {
-		case expr.Lit.Enum != nil, expr.Lit.Struct != nil, expr.Lit.Arr != nil:
+		case expr.Lit.Enum != nil, expr.Lit.Struct != nil:
 			return ErrUnionLitKind
 		}
 	case EnumLitType:
@@ -81,7 +73,7 @@ func (v Validator) Validate(expr Expr) error {
 			set[el] = struct{}{}
 		}
 		switch {
-		case expr.Lit.Union != nil, expr.Lit.Struct != nil, expr.Lit.Arr != nil:
+		case expr.Lit.Union != nil, expr.Lit.Struct != nil:
 			return ErrEnumLitKind
 		}
 	}

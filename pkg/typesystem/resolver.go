@@ -176,16 +176,6 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		switch expr.Lit.Type() {
 		case EnumLitType:
 			return expr, nil
-		case ArrLitType:
-			resolvedArrType, err := r.resolveExpr(expr.Lit.Arr.Expr, scope, frame, trace)
-			if err != nil {
-				return Expr{}, fmt.Errorf("%w: %v", ErrArrType, err)
-			}
-			return Expr{
-				Lit: &LitExpr{
-					Arr: &ArrLit{resolvedArrType, expr.Lit.Arr.Size},
-				},
-			}, nil
 		case UnionLitType:
 			resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
 			for _, unionEl := range expr.Lit.Union {

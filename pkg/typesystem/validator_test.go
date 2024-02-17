@@ -50,43 +50,6 @@ func TestValidator_Validate(t *testing.T) {
 			}),
 			wantErr: nil,
 		},
-		// arr
-		{
-			name: "array of 0 elements",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{Size: 0},
-				},
-			},
-			wantErr: ts.ErrArrSize,
-		},
-		{
-			name: "array of 1 element",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{Size: 1},
-				},
-			},
-			wantErr: ts.ErrArrSize,
-		},
-		{
-			name: "array of 2 element",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{Size: 2},
-				},
-			},
-			wantErr: nil,
-		},
-		{
-			name: "array of 3 element",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Arr: &ts.ArrLit{Size: 3},
-				},
-			},
-			wantErr: nil,
-		},
 		// union
 		{
 			name: "union of 0 element",

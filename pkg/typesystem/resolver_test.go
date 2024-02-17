@@ -231,52 +231,6 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 				wantErr:          nil,
 			}
 		},
-		"arr_with_unresolvable_(undefined)_type": func() testcase { // expr = [2]t, scope = {}
-			typ := h.Inst("t")
-			expr := h.Arr(2, typ)
-			return testcase{
-				scope: TestScope{},
-				expr:  expr,
-				prepareValidator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(typ).Return(nil)
-				},
-				wantErr: ts.ErrArrType,
-			}
-		},
-		"arr_with_unresolvable_(invalid)_type": func() testcase { // expr = [2]t, scope = {}
-			typ := h.Inst("t")
-			expr := h.Arr(2, typ)
-			return testcase{
-				scope: TestScope{"t": h.BaseDef()},
-				expr:  expr,
-				prepareValidator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(expr).Return(nil)
-					v.Validate(typ).Return(errTest)
-				},
-				wantErr: ts.ErrArrType,
-			}
-		},
-		"arr_with_resolvable_type": func() testcase { // arrExpr = [2]t, scope = {t=...}
-			arrExpr := h.Arr(
-				2,
-				h.Inst("t"),
-			)
-			scope := TestScope{"t": h.BaseDef()}
-			return testcase{
-				expr:  arrExpr,
-				scope: scope,
-				prepareValidator: func(v *MockexprValidatorMockRecorder) {
-					v.Validate(arrExpr).Return(nil)
-					v.Validate(h.Inst("t")).Return(nil)
-					v.ValidateDef(h.BaseDef())
-				},
-				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t.ShouldTerminate(ts.NewTrace(nil, ts.DefaultStringer("t")), scope).Return(false, nil)
-				},
-				want: arrExpr,
-			}
-		},
 		"union_with_unresolvable_(undefined)_element": func() testcase { // t1 | t2, {t1=t1}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
