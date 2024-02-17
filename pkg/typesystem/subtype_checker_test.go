@@ -58,9 +58,9 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		// args count
 		{
-			name:      "insts, subtype has less args", // vec <: vec<int>
-			subType:   h.Inst("vec"),
-			superType: h.Inst("vec", h.Inst("int")),
+			name:      "insts, subtype has less args", // list <: list<int>
+			subType:   h.Inst("list"),
+			superType: h.Inst("list", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil)
 				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil)
@@ -68,41 +68,41 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrArgsCount,
 		},
 		{
-			name:      "insts, subtype has same args count", // vec<int> <: vec<int>
-			subType:   h.Inst("vec", h.Inst("int")),
-			superType: h.Inst("vec", h.Inst("int")),
+			name:      "insts, subtype has same args count", // list<int> <: list<int>
+			subType:   h.Inst("list", h.Inst("int")),
+			superType: h.Inst("list", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
 
-				// TODO figure out why we get [, vec]  and not [vec]
+				// TODO figure out why we get [, list]  and not [list]
 				// TODO use h.Trace() helper
 				// TODO use https://pkg.go.dev/github.com/golang/mock/gomock#Eq
 			},
 			wantErr: nil,
 		},
-		{ // vec<int, str> <: vec<int> (impossible if checker used by resolver)
+		{ // list<int, str> <: list<int> (impossible if checker used by resolver)
 			name:      "insts, subtype has more args count",
-			subType:   h.Inst("vec", h.Inst("int"), h.Inst("string")),
-			superType: h.Inst("vec", h.Inst("int")),
+			subType:   h.Inst("list", h.Inst("int"), h.Inst("string")),
+			superType: h.Inst("list", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
 			},
 			wantErr: nil, // valid case for checker because it iterates over supertype args
 		},
 		// args compatibility
 		{
-			name:    "insts, one subtype's subtype incompat", // vec<str> <: vec<int|str>
-			subType: h.Inst("vec", h.Inst("string")),
+			name:    "insts, one subtype's subtype incompat", // list<str> <: list<int|str>
+			subType: h.Inst("list", h.Inst("string")),
 			superType: h.Inst(
-				"vec",
+				"list",
 				h.Union(h.Inst("string"), h.Inst("int")),
 			),
 			subtypeTrace:   ts.Trace{},
@@ -111,21 +111,21 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("vec")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
 			},
 			wantErr: nil,
 		},
 		{
-			name: "insts, supertype subtype incompat", // vec<str|int> <: vec<int>
+			name: "insts, supertype subtype incompat", // list<str|int> <: list<int>
 			subType: h.Inst(
-				"vec",
+				"list",
 				h.Union(
 					h.Inst("string"),
 					h.Inst("int"),
 				),
 			),
-			superType: h.Inst("vec", h.Inst("int")),
+			superType: h.Inst("list", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)

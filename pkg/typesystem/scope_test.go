@@ -13,7 +13,10 @@ var ErrDefaultScope = errors.New("default scope")
 type TestScope map[string]ts.Def
 
 func (s TestScope) IsTopType(expr ts.Expr) bool {
-	return false
+	if expr.Inst == nil {
+		return false
+	}
+	return expr.Inst.Ref.String() == "any"
 }
 
 func (s TestScope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {

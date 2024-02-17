@@ -75,8 +75,8 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			return fmt.Errorf("%w: %v", ErrTerminator, err)
 		}
 
-		if isSubTypeRecursive && isSuperTypeRecursive { // e.g. t1 and t2 (with t1=vec<t1> and t2=vec<t2>)
-			return nil // we sure that 'parent' (e.g. vec) is same for previous recursive call
+		if isSubTypeRecursive && isSuperTypeRecursive { // e.g. t1 and t2 (with t1=list<t1> and t2=list<t2>)
+			return nil // we sure that 'parent' (e.g. list) is same for previous recursive call
 		}
 
 		if expr.Inst.Ref.String() != constr.Inst.Ref.String() {

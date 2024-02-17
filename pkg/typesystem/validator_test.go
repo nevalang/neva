@@ -36,15 +36,15 @@ func TestValidator_Validate(t *testing.T) {
 			expr:    h.Inst("int"),
 			wantErr: nil,
 		},
-		// rec
+		// struct
 		{
-			name:    "empty rec (non-empty lit)",
+			name:    "empty struct (non-empty lit)",
 			expr:    h.Struct(nil),
 			wantErr: nil,
 		},
-		// non-empty rec
+		// non-empty struct
 		{
-			name: "empty rec lit",
+			name: "empty struct lit",
 			expr: h.Struct(map[string]ts.Expr{
 				"foo": h.Inst("int"),
 			}),

@@ -118,7 +118,7 @@ type InstExpr struct {
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Struct map[string]Expr `json:"rec,omitempty"`
+	Struct map[string]Expr `json:"struct,omitempty"`
 	Enum   []string        `json:"enum,omitempty"`
 	Union  []Expr          `json:"union,omitempty"`
 }

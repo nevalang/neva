@@ -102,10 +102,10 @@ func TestDef_String(t *testing.T) {
 		{
 			name: "",
 			def: h.Def(
-				h.Inst("vec", h.Inst("T")),
+				h.Inst("list", h.Inst("T")),
 				h.Param("T", h.Inst("int")),
 			),
-			want: "<T int> = vec<T>",
+			want: "<T int> = list<T>",
 		},
 	}
 	for _, tt := range tests {
@@ -189,7 +189,7 @@ func TestExpr_String(t *testing.T) {
 						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
 						{
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("vec"),
+								Ref: ts.DefaultStringer("list"),
 								Args: []ts.Expr{
 									{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
 								},
@@ -198,7 +198,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "map<str, vec<bool>>",
+			want: "map<str, list<bool>>",
 		},
 		// Lits
 		// enum

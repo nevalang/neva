@@ -70,9 +70,9 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 	return Param{
 		Name: name,
 		Constr: Expr{
-			Lit:  &LitExpr{},
-			Inst: &InstExpr{},
-			Meta: nil,
+			Inst: &InstExpr{
+				Ref: DefaultStringer("any"),
+			},
 		},
 	}
 }

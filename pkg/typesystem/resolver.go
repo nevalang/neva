@@ -15,7 +15,7 @@ var (
 	ErrConstr             = errors.New("can't resolve constraint")
 	ErrArrType            = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
-	ErrRecFieldUnresolved = errors.New("can't resolve record field")
+	ErrRecFieldUnresolved = errors.New("can't resolve struct field")
 	ErrInvalidDef         = errors.New("invalid definition")
 	ErrTerminator         = errors.New("recursion terminator")
 )
@@ -161,7 +161,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // Then it checks whether base type of current ref type is native type to terminate with nil err and resolved expr.
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this: for enum do nothing (it's valid and not composite, there's nothing to resolveExpr),
-// for array resolveExpr it's type, for record and union apply recursion for it's every field/element.
+// for array resolveExpr it's type, for struct and union apply recursion for it's every field/element.
 func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
@@ -256,8 +256,13 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
 		resolvedArgs = append(resolvedArgs, resolvedArg)
 
-		// we pass newFrame because constr can refer type param
-		resolvedConstr, err := r.resolveExpr(param.Constr, scope, newFrame, &newTrace)
+		// we pass newFrame because constr can refer to type parameters
+		resolvedConstr, err := r.resolveExpr(
+			param.Constr,
+			scope,
+			newFrame,
+			&newTrace,
+		)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
 		}
