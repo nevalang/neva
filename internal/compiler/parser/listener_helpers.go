@@ -496,6 +496,26 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 
 	senderSidePort := senderSide.PortAddr()
 	senderSideConstRef := senderSide.SenderConstRef()
+	senderSideConstLit := senderSide.ConstVal()
+
+	if senderSidePort == nil &&
+		senderSideConstRef == nil &&
+		senderSideConstLit == nil {
+		panic(&compiler.Error{
+			Err: errors.New("no sender side at all"),
+			Meta: &src.Meta{
+				Text: connDef.GetText(),
+				Start: src.Position{
+					Line:   connDef.GetStart().GetLine(),
+					Column: connDef.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   connDef.GetStop().GetLine(),
+					Column: connDef.GetStop().GetColumn(),
+				},
+			},
+		})
+	}
 
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
@@ -531,6 +551,11 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 		}
 	}
 
+	if senderSideConstLit != nil {
+		msg := parseConstVal(senderSideConstLit)
+		constant = &src.Const{Value: &msg}
+	}
+
 	parsedSenderSide := src.ConnectionSenderSide{
 		PortAddr:  senderSidePortAddr,
 		Const:     constant,
@@ -547,6 +572,7 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 			},
 		},
 	}
+
 	return parsedSenderSide
 }
 
@@ -621,6 +647,8 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 		},
 	}
 
+	val.TypeExpr = ts.Expr{}
+
 	//nolint:nosnakecase
 	switch {
 	case constVal.Bool_() != nil:
@@ -628,17 +656,26 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 		if boolVal != "true" && boolVal != "false" {
 			panic("bool val not true or false")
 		}
+		val.TypeExpr.Inst = &ts.InstExpr{
+			Ref: src.EntityRef{Name: "bool"},
+		}
 		val.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
+		val.TypeExpr.Inst = &ts.InstExpr{
+			Ref: src.EntityRef{Name: "int"},
+		}
 		val.Int = compiler.Pointer(int(i))
 	case constVal.FLOAT() != nil:
 		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			panic(err)
+		}
+		val.TypeExpr.Inst = &ts.InstExpr{
+			Ref: src.EntityRef{Name: "float"},
 		}
 		val.Float = &f
 	case constVal.STRING() != nil:
@@ -652,6 +689,9 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 				"'",
 			),
 		)
+		val.TypeExpr.Inst = &ts.InstExpr{
+			Ref: src.EntityRef{Name: "string"},
+		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()
 		if listItems == nil { // empty list []

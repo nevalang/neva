@@ -125,12 +125,11 @@ compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: senderSide '->' (receiverSide | multipleReceiverSide);
-senderSide: (portAddr | senderConstRef | senderConstLit) structSelectors?;
+senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;
 thenConnExpr:
 	'(' NEWLINE* connDef (NEWLINE connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
-senderConstLit: bool | INT | FLOAT | STRING;
 portAddr: portAddrNode? ':' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;

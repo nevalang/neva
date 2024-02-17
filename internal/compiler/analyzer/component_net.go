@@ -434,7 +434,7 @@ func (a Analyzer) getSenderType( //nolint:funlen
 
 	if senderSide.Const != nil {
 		if senderSide.Const.Ref != nil {
-			expr, err := a.getResolvedConstType(*senderSide.Const.Ref, scope)
+			expr, err := a.getResolvedConstTypeByRef(*senderSide.Const.Ref, scope)
 			if err != nil {
 				return ts.Expr{}, compiler.Error{
 					Location: &scope.Location,
@@ -443,12 +443,28 @@ func (a Analyzer) getSenderType( //nolint:funlen
 			}
 			return expr, nil
 		}
-		if err := a.validateLiteralSender(senderSide.Const); err != nil {
-			return ts.Expr{}, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-				Meta:     &senderSide.Const.Value.Meta,
+		if senderSide.Const.Value != nil {
+			if err := a.validateLiteralSender(senderSide.Const); err != nil {
+				return ts.Expr{}, &compiler.Error{
+					Err:      err,
+					Location: &scope.Location,
+					Meta:     &senderSide.Const.Value.Meta,
+				}
 			}
+			resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Value.TypeExpr, scope)
+			if err != nil {
+				return ts.Expr{}, &compiler.Error{
+					Err:      err,
+					Location: &scope.Location,
+					Meta:     &senderSide.Const.Value.Meta,
+				}
+			}
+			return resolvedExpr, nil
+		}
+		return ts.Expr{}, &compiler.Error{
+			Err:      ErrLiteralSenderTypeEmpty,
+			Location: &scope.Location,
+			Meta:     &senderSide.Meta,
 		}
 	}
 
@@ -501,9 +517,6 @@ func (a Analyzer) getSenderType( //nolint:funlen
 }
 
 func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
-	if cnst.Value == nil {
-		return ErrLiteralSenderTypeEmpty
-	}
 	if cnst.Value.TypeExpr.Inst == nil {
 		return ErrLiteralSenderKind
 	}
@@ -556,7 +569,7 @@ func (a Analyzer) getNodeOutportType(
 	return resolvedPortType, err
 }
 
-func (a Analyzer) getResolvedConstType(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
+func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
 	entity, location, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
@@ -575,7 +588,7 @@ func (a Analyzer) getResolvedConstType(ref src.EntityRef, scope src.Scope) (ts.E
 	}
 
 	if entity.Const.Ref != nil {
-		expr, err := a.getResolvedConstType(*entity.Const.Ref, scope)
+		expr, err := a.getResolvedConstTypeByRef(*entity.Const.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, compiler.Error{
 				Location: &location,
