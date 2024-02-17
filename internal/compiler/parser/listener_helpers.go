@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -401,7 +402,26 @@ func parseConnReceiverSide(
 
 	multipleSides := connDef.MultipleReceiverSide()
 	if multipleSides == nil {
-		panic("no receiver sides at all")
+		fmt.Println(
+			connDef.ReceiverSide(),
+			connDef.MultipleReceiverSide(),
+			connDef.GetText(),
+		)
+		// FIXME implement literal senders
+		panic(&compiler.Error{
+			Err: errors.New("no receiver sides at all"),
+			Meta: &src.Meta{
+				Text: connDef.GetText(),
+				Start: src.Position{
+					Line:   connDef.GetStart().GetLine(),
+					Column: connDef.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   connDef.GetStop().GetLine(),
+					Column: connDef.GetStop().GetColumn(),
+				},
+			},
+		})
 	}
 
 	return parseMultipleReceiverSides(multipleSides, connMeta)

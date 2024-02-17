@@ -11,7 +11,7 @@ component Main(start any) (stop any) {
 	net {
 		in:start -> blocker:sig
 		$greeting -> blocker:data
-		blocker:data -> printer:msg
-		printer:msg -> out:stop
+		blocker:data -> printer:data
+		printer:sig -> out:stop
 	}
 }
