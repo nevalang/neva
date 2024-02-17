@@ -6,16 +6,16 @@ component {
             subNode SecondComponent { depNode Printer<any> }
         }
         net {
-            in:start -> subNode:msg
-            subNode:msg -> out:stop
+            :start -> subNode:msg
+            subNode:msg -> :stop
         }
     }
     
     SecondComponent (msg any) (msg any) {
         nodes { depNode IPrinter<any> }
         net {
-            in:msg -> depNode:data
-            depNode:sig -> out:msg
+            :msg -> depNode:data
+            depNode:sig -> :msg
         }
     }
 }

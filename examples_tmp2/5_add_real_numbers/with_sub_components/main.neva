@@ -9,10 +9,10 @@ component {
 	Main(start any) (stop any) {
 		nodes { aux Aux }
 		net {
-			in:start -> aux:sig
+			:start -> aux:sig
 			aux:res -> printer:msg
 			aux:err -> printer:msg
-			printer:msg -> out:stop
+			printer:msg -> :stop
 		}
 	}
 	
@@ -23,12 +23,12 @@ component {
 			adder PortBridge { handler Adder<int> }
 		}
 		net {
-			in:start -> reader1.sig
+			:start -> reader1.sig
 			reader1:num -> [adder:p[0], reader2:sig]
-			reader1:err -> out:err
+			reader1:err -> :err
 			reader2.num -> adder.p[1]
-			reader2.err -> out:err
-			adder.res -> out:res
+			reader2.err -> :err
+			adder.res -> :res
 		}
 	}
 
@@ -38,10 +38,10 @@ component {
 			parser strconv.NumParser<int>
 		}
 		net {
-			in:sig -> reader:sig
+			:sig -> reader:sig
 			reader:s -> parser:s
-			parser:num -> out:num
-			parser:err -> out:err
+			parser:num -> :num
+			parser:err -> :err
 		}
 	}
 }

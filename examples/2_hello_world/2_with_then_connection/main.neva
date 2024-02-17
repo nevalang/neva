@@ -7,7 +7,7 @@ const greeting string = 'Hello, World!'
 component Main(start any) (stop any) {
 	nodes { printer Printer<string> }
 	net {
-		in:start -> ($greeting -> printer:data)
-		printer:sig -> out:stop
+		:start -> ($greeting -> printer:data)
+		printer:sig -> :stop
 	}
 }

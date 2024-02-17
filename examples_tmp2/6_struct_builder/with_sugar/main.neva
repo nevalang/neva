@@ -16,6 +16,6 @@ component Main(start any) (stop any) {
         32 -> builder:age
         'John' -> builder:name
         builder:msg -> print:data
-        print:sig -> out:stop
+        print:sig -> :stop
     }
 }

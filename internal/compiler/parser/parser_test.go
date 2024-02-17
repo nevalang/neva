@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestParser_ParseFile_Directives checks only how compiler directives are parsed.
+// TestParser_ParseFile_Directives checks only
+// how compiler directives are parsed.
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		component {
@@ -66,4 +67,25 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	require.Equal(t, "d5", d5[0])
 	_, ok = c4.Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
+}
+
+// Check that parser correctly parses port addresses without
+// explicitly specified nodes.
+func TestParser_ParseFile_IONodes(t *testing.T) {
+	text := []byte(`
+		component C1(start any) (stop any) {
+			net { :start -> :stop }
+		}
+	`)
+
+	p := parser.New(false)
+
+	got, err := p.ParseFile(text)
+	require.True(t, err == nil)
+
+	conn := got.Entities["C1"].Component.Net[0]
+	sender := conn.SenderSide.PortAddr.Node
+	receiver := conn.ReceiverSide.Receivers[0].PortAddr.Node
+	require.Equal(t, "in", sender)
+	require.Equal(t, "out", receiver)
 }

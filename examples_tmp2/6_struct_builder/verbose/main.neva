@@ -16,7 +16,7 @@ component {
             32 -> builder:age
             'John' -> builder:name
             builder:msg -> printer:msg
-            printer:msg -> out:stop
+            printer:msg -> :stop
         }
     }
 

@@ -11,9 +11,9 @@ component Main(start any) (stop any) {
 		blocker Blocker<string>
 	}
 	net {
-		in:start -> blocker:sig
+		:start -> blocker:sig
 		greeting:msg -> blocker:data
 		blocker:data -> printer:data
-		printer:sig -> out:stop
+		printer:sig -> :stop
 	}
 }

@@ -210,9 +210,9 @@ component {
 			concrete  io.Reader
 		}
 		net {
-			in:start -> abs:v
+			:start -> abs:v
 			abs:v -> [concrete:v]
-			concrete:v -> out:code
+			concrete:v -> :code
 		}
 	}
 }

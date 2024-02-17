@@ -8,7 +8,7 @@
 component Main(start any) (stop any) {
 	nodes { printer Printer<string> }
 	net {
-		in:start -> ('Hello, World!' -> printer:data)
-		printer:sig -> out:stop
+		:start -> ('Hello, World!' -> printer:data)
+		printer:sig -> :stop
 	}
 }

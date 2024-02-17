@@ -7,12 +7,12 @@ component Main(start any) (stop any) {
 		printer Printer<int>
 	}
 	net {
-		in:start -> (
+		:start -> (
 			1 -> streamer:p[0]
 			2 -> streamer:p[1]
 		)
 		streamer:seq -> adder:seq
 		adder:res -> printer:msg
-		printer:sig -> out:stop
+		printer:sig -> :stop
 	}
 }

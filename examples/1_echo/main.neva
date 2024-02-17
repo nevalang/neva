@@ -4,8 +4,8 @@ component Main(start any) (stop any) {
 		printer Printer<string>
 	}
 	net {
-		in:start -> reader:sig
+		:start -> reader:sig
 		reader:data -> printer:data
-		printer:sig -> out:stop
+		printer:sig -> :stop
 	}
 }

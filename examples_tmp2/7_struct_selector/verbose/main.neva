@@ -28,9 +28,9 @@ component {
             selector StructSelector<string>
         }
         net {
-            in:start -> ($user -> selector:msg)
+            :start -> ($user -> selector:msg)
             selector:msg -> printer:msg
-            printer:msg -> out:stop
+            printer:msg -> :stop
         }
     }
 }
