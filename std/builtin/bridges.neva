@@ -12,9 +12,9 @@ component {
             handler IStreamHandler<T>
         }
         net {
-            in:p -> streamer:p
+            :p -> streamer:p
             streamer:seq -> handler:seq
-            handler:res -> out:res
+            handler:res -> :res
         }
     }
 
@@ -24,9 +24,9 @@ component {
             handler IStreamHandler<T>
         }
         net {
-            in:l -> streamer:l
+            :l -> streamer:l
             streamer:seq -> handler:seq
-            handler:res -> out:res
+            handler:res -> :res
         }
     }
 
@@ -36,9 +36,9 @@ component {
             handler IStreamHandler<T>
         }
         net {
-            in:m -> streamer:m
+            :m -> streamer:m
             streamer:seq -> handler:seq
-            handler:res -> out:res
+            handler:res -> :res
         }
     }
 }

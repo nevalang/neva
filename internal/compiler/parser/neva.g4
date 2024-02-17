@@ -130,7 +130,7 @@ receiverSide: portAddr | thenConnExpr;
 thenConnExpr:
 	'(' NEWLINE* connDef (NEWLINE connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: portAddrNode ':' portAddrPort portAddrIdx?;
+portAddr: portAddrNode? ':' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';

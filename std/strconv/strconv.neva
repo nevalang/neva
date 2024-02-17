@@ -12,10 +12,10 @@ component {
             parser BaseNumParser<T>
         }
         net {
-            in:s -> parser:s
-            in:s -> ($base -> parser:base)
-            parser:res -> out:res
-            parser:err -> out:err
+            :s -> parser:s
+            :s -> ($base -> parser:base)
+            parser:res -> :res
+            parser:err -> :err
         }
     }
 }

@@ -426,7 +426,7 @@ func parseMultipleReceiverSides(
 
 	for _, receiverPortAddr := range receiverPortAddrs {
 		result = append(result, src.ConnectionReceiver{
-			PortAddr: parsePortAddr(receiverPortAddr.PortAddr()),
+			PortAddr: parsePortAddr(receiverPortAddr.PortAddr(), "out"),
 			Meta: src.Meta{
 				Text: receiverPortAddr.GetText(),
 				Start: src.Position{
@@ -480,7 +480,7 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
 		senderSidePortAddr = compiler.Pointer(
-			parsePortAddr(senderSidePort),
+			parsePortAddr(senderSidePort, "in"),
 		)
 	}
 
@@ -534,7 +534,7 @@ func parseSingleReceiverSide(singleReceiver generated.IPortAddrContext) (src.Con
 	return src.ConnectionReceiverSide{
 		Receivers: []src.ConnectionReceiver{
 			{
-				PortAddr: parsePortAddr(singleReceiver),
+				PortAddr: parsePortAddr(singleReceiver, "out"),
 				Meta: src.Meta{
 					Text: singleReceiver.GetText(),
 					Start: src.Position{
@@ -551,7 +551,7 @@ func parseSingleReceiverSide(singleReceiver generated.IPortAddrContext) (src.Con
 	}, nil
 }
 
-func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
+func parsePortAddr(expr generated.IPortAddrContext, fallbackNode string) src.PortAddr {
 	meta := src.Meta{
 		Text: expr.GetText(),
 		Start: src.Position{
@@ -573,8 +573,13 @@ func parsePortAddr(expr generated.IPortAddrContext) src.PortAddr {
 		idx = compiler.Pointer(uint8(result))
 	}
 
+	nodeName := fallbackNode
+	if n := expr.PortAddrNode(); n != nil {
+		nodeName = n.GetText()
+	}
+
 	return src.PortAddr{
-		Node: expr.PortAddrNode().GetText(),
+		Node: nodeName,
 		Port: expr.PortAddrPort().GetText(),
 		Idx:  idx,
 		Meta: meta,

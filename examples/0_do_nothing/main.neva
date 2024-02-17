@@ -1,7 +1,3 @@
-// This is the smallest possible program that compiles.
-// It literally does absolutely literally nothing.
-// Here we learn component, ports, networks, connections and port addrs.
-
 component Main(start any) (stop any) {
-	net { in:start -> out:stop }
+	net { :start -> :stop }
 }
