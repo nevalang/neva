@@ -133,37 +133,6 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: ts.ErrArgNotSubtype,
 		},
-		// arr
-		{
-			name:      "subtype and supertype has diff lit types (supertype not union)",
-			subType:   h.Enum(),
-			superType: h.Arr(0, ts.Expr{}),
-			wantErr:   ts.ErrDiffLitTypes,
-		},
-		{ // [1] [2]
-			name:      "expr's arr lit has lesser size than supertype",
-			subType:   h.Arr(1, ts.Expr{}),
-			superType: h.Arr(2, ts.Expr{}),
-			wantErr:   ts.ErrLitArrSize,
-		},
-		{ // [2]a [2]b
-			name:      "expr's arr has incompat type",
-			subType:   h.Arr(2, h.Inst("a")),
-			superType: h.Arr(2, h.Inst("b")),
-			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil).Times(2)
-			},
-			wantErr: ts.ErrArrDiffType,
-		},
-		{
-			name:      "subtype and supertype arrs, expr is bigger and have compat type",
-			subType:   h.Arr(3, h.Inst("a")),
-			superType: h.Arr(2, h.Inst("a")),
-			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil).Times(2)
-			},
-			wantErr: nil,
-		},
 		// enum
 		{
 			name:      "subtype and supertype are enums, subtype is bigger",
@@ -183,9 +152,9 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			superType: h.Enum("a", "b", "c"),
 			wantErr:   nil,
 		},
-		// rec
+		// struct
 		{
-			name:    "subtype and supertype are records, subtype has less fields",
+			name:    "subtype and supertype are structures, subtype has less fields",
 			subType: h.Struct(nil),
 			superType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst(""),
@@ -193,7 +162,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrStructLen,
 		},
 		{
-			name: "subtype and supertype recs, expr leaks field",
+			name: "subtype and supertype structures, expr lacks field",
 			subType: ts.Expr{
 				Lit: &ts.LitExpr{
 					Struct: map[string]ts.Expr{ // both has 1 field
@@ -211,7 +180,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrStructNoField,
 		},
 		{
-			name: "subtype and supertype recs, subtype has incompat field",
+			name: "subtype and supertype structs, subtype has incompat field",
 			subType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst(""),
 				"b": h.Inst(""),
@@ -225,7 +194,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrStructField,
 		},
 		{ // { a x, b {} }, { a x }
-			name: "subtype and supertype are both records, subtype has all supertype fields, all fields compatible",
+			name: "subtype and supertype are both structs, subtype has all supertype fields, all fields compatible",
 			subType: h.Struct(map[string]ts.Expr{
 				"a": h.Inst("x"),
 				"b": {},
@@ -241,7 +210,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: nil,
 		},
-		// union
+		// UNION
 		{ // x a|b
 			name:      "expr inst, supertype union. expr incompat with all els",
 			subType:   h.Inst("x"),

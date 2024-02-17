@@ -20,6 +20,9 @@ func (t Trace) String() string {
 
 	firstToLast := "["
 	for i := len(lastToFirst) - 1; i >= 0; i-- {
+		if lastToFirst[i] == nil { // every trace starts with nil
+			continue
+		}
 		firstToLast += lastToFirst[i].String()
 		if i > 0 {
 			firstToLast += ", "

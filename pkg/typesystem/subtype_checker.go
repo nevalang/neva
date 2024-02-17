@@ -87,7 +87,11 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			return fmt.Errorf("%w: got %v, want %v", ErrArgsCount, len(expr.Inst.Args), len(constr.Inst.Args))
 		}
 
-		newTParams := s.getNewTerminatorParams(params, expr.Inst.Ref, constr.Inst.Ref)
+		newTParams := s.getNewTerminatorParams(
+			params,
+			expr.Inst.Ref,
+			constr.Inst.Ref,
+		)
 		for i := range constr.Inst.Args {
 			newExpr := expr.Inst.Args[i]
 			newConstr := constr.Inst.Args[i]
@@ -116,13 +120,6 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 	}
 
 	switch constrLitType {
-	case ArrLitType: // [5]int <: [4]int|float ??? (TODO)
-		if expr.Lit.Arr.Size < constr.Lit.Arr.Size {
-			return fmt.Errorf("%w: got %d, want %d", ErrLitArrSize, expr.Lit.Arr.Size, constr.Lit.Arr.Size)
-		}
-		if err := s.Check(expr.Lit.Arr.Expr, constr.Lit.Arr.Expr, params); err != nil {
-			return fmt.Errorf("%w: %v", ErrArrDiffType, err)
-		}
 	case EnumLitType: // {a b c} <: {a b c d}
 		if len(expr.Lit.Enum) > len(constr.Lit.Enum) {
 			return fmt.Errorf("%w: got %d, want %d", ErrBigEnum, len(expr.Lit.Enum), len(constr.Lit.Enum))
@@ -133,15 +130,28 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			}
 		}
 	case StructLitType: // {x int, y float} <: {x int|str}
+
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
-			return fmt.Errorf("%w: got %v, want %v", ErrStructLen, len(expr.Lit.Struct), len(constr.Lit.Struct))
+			return fmt.Errorf(
+				"%w: got %v, want %v",
+				ErrStructLen,
+				len(expr.Lit.Struct),
+				len(constr.Lit.Struct),
+			)
+		}
+		subtypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
+		supertypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
+		newParams := TerminatorParams{
+			Scope:          params.Scope,
+			SubtypeTrace:   subtypeTrace,
+			SupertypeTrace: supertypeTrace,
 		}
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 			}
-			if err := s.Check(exprField, constrField, params); err != nil {
+			if err := s.Check(exprField, constrField, newParams); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
 			}
 		}
@@ -176,7 +186,10 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 	return nil
 }
 
-func (SubtypeChecker) getNewTerminatorParams(old TerminatorParams, subRef, supRef fmt.Stringer) TerminatorParams {
+func (SubtypeChecker) getNewTerminatorParams(
+	old TerminatorParams,
+	subRef, supRef fmt.Stringer,
+) TerminatorParams {
 	newSubtypeTrace := Trace{
 		prev: &old.SubtypeTrace,
 		ref:  subRef,
