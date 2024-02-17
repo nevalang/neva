@@ -5,7 +5,7 @@ component Main(start any) (stop any) {
 	}
 	net {
 		in:start -> reader:sig
-		reader:data -> printer:msg
-		printer:msg -> out:stop
+		reader:data -> printer:data
+		printer:sig -> out:stop
 	}
 }

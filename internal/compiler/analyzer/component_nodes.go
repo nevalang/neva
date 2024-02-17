@@ -93,7 +93,7 @@ func (a Analyzer) analyzeComponentNode(
 	// We need to get resolved frame from parent type parameters
 	// in order to be able to resolve node's args
 	// since they can refer to type parameter of the parent (interface)
-	resolvedParentParams, resolvedParentParamsFrame, err := a.resolver.ResolveParams(
+	_, resolvedParentParamsFrame, err := a.resolver.ResolveParams(
 		parentTypeParams.Params,
 		scope,
 	)
@@ -108,7 +108,7 @@ func (a Analyzer) analyzeComponentNode(
 	// Now when we have frame made of parent type parameters constraints
 	// we can resolve cases like `subnode SubComponent<T>`
 	// where `T` refers to type parameter of the component/interface we're in.
-	resolvedArgs, err := a.resolver.ResolveExprsWithFrame(
+	resolvedNodeArgs, err := a.resolver.ResolveExprsWithFrame(
 		node.TypeArgs,
 		resolvedParentParamsFrame,
 		scope,
@@ -122,10 +122,10 @@ func (a Analyzer) analyzeComponentNode(
 	}
 
 	// Finally check that every argument is compatible
-	// with corresponding parameter of the node's entity.
+	// with corresponding parameter of the node's interface.
 	if err = a.resolver.CheckArgsCompatibility(
-		resolvedArgs,
-		resolvedParentParams,
+		resolvedNodeArgs,
+		nodeIface.TypeParams.Params,
 		scope,
 	); err != nil {
 		return src.Node{}, src.Interface{}, &compiler.Error{
@@ -139,7 +139,7 @@ func (a Analyzer) analyzeComponentNode(
 		return src.Node{
 			Directives: node.Directives,
 			EntityRef:  node.EntityRef,
-			TypeArgs:   resolvedArgs,
+			TypeArgs:   resolvedNodeArgs,
 			Meta:       node.Meta,
 		}, nodeIface, nil
 	}
@@ -160,7 +160,7 @@ func (a Analyzer) analyzeComponentNode(
 	return src.Node{
 		Directives: node.Directives,
 		EntityRef:  node.EntityRef,
-		TypeArgs:   resolvedArgs,
+		TypeArgs:   resolvedNodeArgs,
 		Deps:       resolvedComponentDI,
 		Meta:       node.Meta,
 	}, nodeIface, nil

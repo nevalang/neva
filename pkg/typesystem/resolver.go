@@ -127,7 +127,11 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 // and params and then checks their compatibility.
 func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scope) error {
 	if len(args) != len(params) {
-		return errors.New("count of arguments mismatch count of parameters")
+		return fmt.Errorf(
+			"count of arguments mismatch count of parameters, want %d got %d",
+			len(params),
+			len(args),
+		)
 	}
 
 	for i := range params {
