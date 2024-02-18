@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/nevalang/neva/internal/interpreter"
+	"github.com/nevalang/neva/pkg"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -44,6 +46,14 @@ func newApp(intr interpreter.Interpreter, wd string) *cli.App {
 				ArgsUsage: "Provide path to the executable package",
 				Action: func(cCtx *cli.Context) error {
 					panic("not implemented")
+				},
+			},
+			{
+				Name:  "version",
+				Usage: "Get current Nevalang version",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Println(pkg.Version)
+					return nil
 				},
 			},
 		},

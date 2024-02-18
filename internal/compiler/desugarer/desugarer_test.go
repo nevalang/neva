@@ -23,7 +23,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 			build: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
-						Manifest: src.ModuleManifest{WantCompilerVersion: "0.0.1"},
+						Manifest: src.ModuleManifest{LanguageVersion: "0.0.1"},
 						Packages: map[string]src.Package{
 							"main": {
 								"file": src.File{
@@ -64,7 +64,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
 						Manifest: src.ModuleManifest{
-							WantCompilerVersion: "0.0.1",
+							LanguageVersion: "0.0.1",
 							Deps: map[string]src.ModuleRef{
 								"std": { // <-- stdlib mod dep added
 									Path:    "std",

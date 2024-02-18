@@ -71,12 +71,12 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
-		if mod.Manifest.WantCompilerVersion != a.compilerVersion {
+		if mod.Manifest.LanguageVersion != a.compilerVersion {
 			return src.Build{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"%w: module %v wants %v while current is %v",
 					ErrCompilerVersion,
-					modRef, mod.Manifest.WantCompilerVersion, a.compilerVersion,
+					modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
 				),
 			}
 		}

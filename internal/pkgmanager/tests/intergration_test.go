@@ -19,7 +19,7 @@ func TestPkgManager(t *testing.T) {
 	mod, ok := build.Modules[build.EntryModRef]
 	require.True(t, ok)
 	require.Len(t, mod.Packages, 1)
-	require.Equal(t, mod.Manifest.WantCompilerVersion, "0.0.1")
+	require.Equal(t, mod.Manifest.LanguageVersion, "0.0.1")
 
 	pkg, ok := mod.Packages["do_nothing"]
 	require.True(t, ok)

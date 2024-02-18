@@ -1,6 +1,7 @@
 #!/bin/bash
 
-BIN_URL="https://github.com/nevalang/neva/releases/download/v0.3.0/neva"
+LATEST_TAG=$(curl -s https://api.github.com/repos/nevalang/neva/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+BIN_URL="https://github.com/nevalang/neva/releases/download/$LATEST_TAG/neva"
 INSTALL_DIR="/usr/local/bin"
 BIN_NAME="neva"
 

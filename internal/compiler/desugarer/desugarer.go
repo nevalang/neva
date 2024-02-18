@@ -37,8 +37,8 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 
 	// create manifest copy with std module dependency
 	desugaredManifest := src.ModuleManifest{
-		WantCompilerVersion: mod.Manifest.WantCompilerVersion,
-		Deps:                make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
+		LanguageVersion: mod.Manifest.LanguageVersion,
+		Deps:            make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
 	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // TODO rethink stdlib

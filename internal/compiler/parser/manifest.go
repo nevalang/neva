@@ -42,7 +42,7 @@ func manifestToSourceCode(manifest Manifest) src.ModuleManifest {
 		}
 	}
 	return src.ModuleManifest{
-		WantCompilerVersion: manifest.WantCompilerVersion,
-		Deps:                deps,
+		LanguageVersion: manifest.WantCompilerVersion,
+		Deps:            deps,
 	}
 }

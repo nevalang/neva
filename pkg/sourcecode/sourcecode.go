@@ -40,8 +40,8 @@ func (mod Module) Files(f func(file File, pkgName, fileName string)) {
 }
 
 type ModuleManifest struct {
-	WantCompilerVersion string               `json:"compiler,omitempty" yaml:"compiler,omitempty"`
-	Deps                map[string]ModuleRef `json:"deps,omitempty"     yaml:"deps,omitempty"`
+	LanguageVersion string               `json:"neva,omitempty" yaml:"neva,omitempty"`
+	Deps            map[string]ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
 }
 
 type ModuleRef struct {
