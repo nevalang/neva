@@ -1,28 +1,27 @@
 // Here we learn how to handle errors by fixing this simple program
 
 import {
-	std/io
 	std/strconv
 }
 
 component Main(start any) (stop any) {
 	nodes {
-		reader1 io.Reader
-		reader2 io.Reader
+		reader1 Scanner
+		reader2 Scanner
 		parser1 strconv.NumParser<int>
 		parser2 strconv.NumParser<int>
-		adder PortBridge { handler Adder<int> }
+		adder PortBridge<int> { handler Adder<int> }
 		printer Printer<any>
 	}
 	net {
 		:start -> reader1:sig
-		reader1:s -> parser1:s
-		parser1:err -> printer:v
+		reader1:data -> parser1:s
+		parser1:err -> printer:data
 		parser1:res -> [adder:p[0], reader2:sig]
-		reader2:s -> parser2:s
-		parser2:err -> printer:msg
+		reader2:data -> parser2:s
+		parser2:err -> printer:data
 		parser2:res -> adder:p[1]
-		add:res -> printer:msg
-		printer:msg -> :stop
+		adder:res -> printer:data
+		printer:sig -> :stop
 	}
 }

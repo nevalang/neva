@@ -10,11 +10,13 @@ type User struct {
 component Main(start any) (stop any) {
     nodes {
         builder StructBuilder<User>
-        print Print<User>
+        print Printer<User>
     }
     net {
-        32 -> builder:age
-        'John' -> builder:name
+        :start -> (
+            'John' -> builder:name,
+            32 -> builder:age
+        )
         builder:msg -> print:data
         print:sig -> :stop
     }

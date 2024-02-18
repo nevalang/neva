@@ -1,21 +1,7 @@
-#extern(BoolParser)
-pub component BoolParser(s string) (res bool, err error)
-
-const base int = 10
-
 component {
-    #extern(int IntParser, float FloatParser)
-    pub BaseNumParser<T int | float>(s string, base int) (res T, err error)
+    #extern(BoolParser)
+    pub BoolParser(s string) (res bool, err error)
 
-    pub NumParser<T int | float>(s string) (res T, err error) {
-        nodes {
-            parser BaseNumParser<T>
-        }
-        net {
-            :s -> parser:s
-            :s -> ($base -> parser:base)
-            parser:res -> :res
-            parser:err -> :err
-        }
-    }
+    #extern(int IntParser, float FloatParser)
+    pub NumParser<T int | float>(s string) (res T, err error)
 }

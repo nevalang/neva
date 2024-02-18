@@ -90,7 +90,7 @@
       "args": ["run", "3_interfaces"]
     },
     {
-      "name": "Interpreter: add_numbers/naive",
+      "name": "Interpreter: add_numbers/verbose",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -99,7 +99,7 @@
       "args": ["run", "4_add_numbers/verbose"]
     },
     {
-      "name": "Interpreter: add_numbers/naive",
+      "name": "Interpreter: add_numbers/with_bridge",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -153,22 +153,22 @@
       "args": ["run", "6_struct_builder/with_sugar"]
     },
     {
-      "name": "Interpreter: struct_selectors/verbose",
+      "name": "Interpreter: struct_selector/verbose",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "7_struct_selectors/verbose"]
+      "args": ["run", "7_struct_selector/verbose"]
     },
     {
-      "name": "Interpreter: struct_selectors/with_sugar",
+      "name": "Interpreter: struct_selector/with_sugar",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "7_struct_selectors/with_sugar"]
+      "args": ["run", "7_struct_selector/with_sugar"]
     },
     // === Other ===
     {

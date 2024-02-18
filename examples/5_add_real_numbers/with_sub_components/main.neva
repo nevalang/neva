@@ -1,18 +1,20 @@
 // Here we learn how to simplify program by separating concerns
 
 import {
-	std/io
 	std/strconv
 }
 
 component {
 	Main(start any) (stop any) {
-		nodes { aux Aux }
+		nodes {
+			aux Aux
+			printer Printer<any>
+		}
 		net {
 			:start -> aux:sig
-			aux:res -> printer:msg
-			aux:err -> printer:msg
-			printer:msg -> :stop
+			aux:res -> printer:data
+			aux:err -> printer:data
+			printer:sig -> :stop
 		}
 	}
 	
@@ -20,27 +22,27 @@ component {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
-			adder PortBridge { handler Adder<int> }
+			adder PortBridge<int> { handler Adder<int> }
 		}
 		net {
-			:start -> reader1.sig
+			:sig -> reader1:sig
 			reader1:num -> [adder:p[0], reader2:sig]
 			reader1:err -> :err
-			reader2.num -> adder.p[1]
-			reader2.err -> :err
-			adder.res -> :res
+			reader2:num -> adder:p[1]
+			reader2:err -> :err
+			adder:res -> :res
 		}
 	}
 
 	IntReader(sig any) (num int, err error) {
 		nodes {
-			reader io.Reader
+			reader Scanner
 			parser strconv.NumParser<int>
 		}
 		net {
 			:sig -> reader:sig
-			reader:s -> parser:s
-			parser:num -> :num
+			reader:data -> parser:s
+			parser:res -> :num
 			parser:err -> :err
 		}
 	}

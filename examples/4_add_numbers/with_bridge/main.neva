@@ -1,0 +1,14 @@
+component Main(start any) (stop any) {
+	nodes {
+		adder PortBridge<int> { handler Adder<int> }
+		printer Printer<int> 
+	}
+	net {
+		:start -> (
+			1 -> adder:p[0],
+			2 -> adder:p[1]
+		)
+		adder:res -> printer:data
+		printer:sig -> :stop
+	}
+}

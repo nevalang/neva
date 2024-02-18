@@ -13,18 +13,17 @@ type {
 
 const user User = {
     name: 'John',
-    pet: { name: 'Charley' },
+    pet: { name: 'Charley' }
 }
 
 component {
     Main(start any) (stop any) {
         nodes {
-            locker Locker<string>
             printer Printer<string>
         }
         net {
-            :start -> ($user.pet.name -> printer:msg)
-            printer:msg -> :stop
+            :start -> ($user.pet.name -> printer:data)
+            printer:sig -> :stop
         }
     }
 }

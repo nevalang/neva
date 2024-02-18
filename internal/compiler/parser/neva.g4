@@ -128,7 +128,7 @@ connDef: senderSide '->' (receiverSide | multipleReceiverSide);
 senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;
 thenConnExpr:
-	'(' NEWLINE* connDef (NEWLINE connDef)* NEWLINE* ')';
+	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
 portAddr: portAddrNode? ':' portAddrPort portAddrIdx?;
 portAddrNode: IDENTIFIER;

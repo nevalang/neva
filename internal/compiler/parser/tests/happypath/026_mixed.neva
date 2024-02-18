@@ -23,7 +23,7 @@ component {
 	Main(start any) (stop any) {
 		nodes {
 			abs IReader
-			concrete  io.Reader
+			concrete  Scanner
 		}
 		net {
 			:start -> abs:v

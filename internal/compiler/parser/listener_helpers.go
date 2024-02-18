@@ -445,8 +445,12 @@ func parseMultipleReceiverSides(
 	result := make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))
 
 	for _, receiverPortAddr := range receiverPortAddrs {
+		portAddr, err := parsePortAddr(receiverPortAddr.PortAddr(), "out")
+		if err != nil {
+			panic(err)
+		}
 		result = append(result, src.ConnectionReceiver{
-			PortAddr: parsePortAddr(receiverPortAddr.PortAddr(), "out"),
+			PortAddr: portAddr,
 			Meta: src.Meta{
 				Text: receiverPortAddr.GetText(),
 				Start: src.Position{
@@ -519,9 +523,11 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
-		senderSidePortAddr = compiler.Pointer(
-			parsePortAddr(senderSidePort, "in"),
-		)
+		v, err := parsePortAddr(senderSidePort, "in")
+		if err != nil {
+			panic(err)
+		}
+		senderSidePortAddr = &v
 	}
 
 	var constant *src.Const
@@ -576,11 +582,21 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 	return parsedSenderSide
 }
 
-func parseSingleReceiverSide(singleReceiver generated.IPortAddrContext) (src.ConnectionReceiverSide, *compiler.Error) {
+func parseSingleReceiverSide(
+	singleReceiver generated.IPortAddrContext,
+) (
+	src.ConnectionReceiverSide,
+	*compiler.Error,
+) {
+	portAddr, err := parsePortAddr(singleReceiver, "out")
+	if err != nil {
+		return src.ConnectionReceiverSide{}, err
+	}
+
 	return src.ConnectionReceiverSide{
 		Receivers: []src.ConnectionReceiver{
 			{
-				PortAddr: parsePortAddr(singleReceiver, "out"),
+				PortAddr: portAddr,
 				Meta: src.Meta{
 					Text: singleReceiver.GetText(),
 					Start: src.Position{
@@ -597,7 +613,10 @@ func parseSingleReceiverSide(singleReceiver generated.IPortAddrContext) (src.Con
 	}, nil
 }
 
-func parsePortAddr(expr generated.IPortAddrContext, fallbackNode string) src.PortAddr {
+func parsePortAddr(
+	expr generated.IPortAddrContext,
+	fallbackNode string,
+) (src.PortAddr, *compiler.Error) {
 	meta := src.Meta{
 		Text: expr.GetText(),
 		Start: src.Position{
@@ -612,11 +631,30 @@ func parsePortAddr(expr generated.IPortAddrContext, fallbackNode string) src.Por
 
 	var idx *uint8
 	if index := expr.PortAddrIdx(); index != nil {
-		result, err := strconv.ParseUint(index.GetText(), 10, 8)
+		withoutSquareBraces := strings.Trim(index.GetText(), "[]")
+		result, err := strconv.ParseUint(
+			withoutSquareBraces,
+			10,
+			8,
+		)
 		if err != nil {
-			panic(err)
+			return src.PortAddr{}, &compiler.Error{
+				Err: err,
+				Meta: &src.Meta{
+					Text: expr.GetText(),
+					Start: src.Position{
+						Line:   expr.GetStart().GetLine(),
+						Column: expr.GetStart().GetColumn(),
+					},
+					Stop: src.Position{
+						Line:   expr.GetStop().GetLine(),
+						Column: expr.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
-		idx = compiler.Pointer(uint8(result))
+		idxVal := uint8(result)
+		idx = &idxVal
 	}
 
 	nodeName := fallbackNode
@@ -629,7 +667,7 @@ func parsePortAddr(expr generated.IPortAddrContext, fallbackNode string) src.Por
 		Port: expr.PortAddrPort().GetText(),
 		Idx:  idx,
 		Meta: meta,
-	}
+	}, nil
 }
 
 func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:funlen
@@ -715,7 +753,12 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 		}
 		fieldValues := fields.AllStructValueField()
 		val.Map = make(map[string]src.Const, len(fieldValues))
-		for _, field := range fieldValues {
+		for i, field := range fieldValues {
+			if field.IDENTIFIER() == nil {
+				fmt.Println(field.GetText(), i)
+				panic("")
+			}
+
 			name := field.IDENTIFIER().GetText()
 			value := parseConstVal(field.ConstVal())
 			val.Map[name] = src.Const{

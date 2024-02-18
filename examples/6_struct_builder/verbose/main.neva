@@ -7,19 +7,21 @@ type User struct {
 }
 
 component {
+    #extern(StructBuilder)
+    MyStructBuilder(age int, name string) (msg User)
+
     Main(start any) (stop any) {
         nodes {
             builder MyStructBuilder
             printer Printer<User>
         }
         net {
-            32 -> builder:age
-            'John' -> builder:name
-            builder:msg -> printer:msg
-            printer:msg -> :stop
+            :start -> (
+                'John' -> builder:name,
+                32 -> builder:age
+            )
+            builder:msg -> printer:data
+            printer:sig -> :stop
         }
     }
-
-    #extern(StructBuilder)
-    MyStructBuilder(age int, name string) (msg User)
 }

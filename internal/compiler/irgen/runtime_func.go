@@ -20,6 +20,12 @@ func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, er
 		return args[0], nil
 	}
 
+	if len(nodeTypeArgs) == 0 || nodeTypeArgs[0].Inst == nil {
+		// FIXME sometimes we have union here
+		// we must use node argument instead of component type param
+		return "", nil
+	}
+
 	firstTypeArg := nodeTypeArgs[0].Inst.Ref.String()
 	for _, arg := range args {
 		parts := strings.Split(arg, " ")

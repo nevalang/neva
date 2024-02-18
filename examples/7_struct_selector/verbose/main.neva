@@ -14,7 +14,7 @@ type {
 const {
     user User = {
         name: 'John',
-        pet: { name: 'Charley' },
+        pet: { name: 'Charley' }
     }
     path list<string> = ['pet', 'name']
 }
@@ -29,8 +29,8 @@ component {
         }
         net {
             :start -> ($user -> selector:msg)
-            selector:msg -> printer:msg
-            printer:msg -> :stop
+            selector:msg -> printer:data
+            printer:sig -> :stop
         }
     }
 }
