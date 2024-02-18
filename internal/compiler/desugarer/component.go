@@ -192,10 +192,9 @@ func (d Desugarer) handleConns( //nolint:funlen
 				if err != nil {
 					return handleConnsResult{}, err
 				}
+				constsToInsert[result.constName] = *conn.SenderSide.Const
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.desugaredConn
-				// FIXME panic here with const literal sender hello world
-				constsToInsert[result.constName] = *conn.SenderSide.Const
 			}
 		}
 

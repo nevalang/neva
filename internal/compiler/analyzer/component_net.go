@@ -433,39 +433,7 @@ func (a Analyzer) getSenderType( //nolint:funlen
 	}
 
 	if senderSide.Const != nil {
-		if senderSide.Const.Ref != nil {
-			expr, err := a.getResolvedConstTypeByRef(*senderSide.Const.Ref, scope)
-			if err != nil {
-				return ts.Expr{}, compiler.Error{
-					Location: &scope.Location,
-					Meta:     &senderSide.Const.Ref.Meta,
-				}.Merge(err)
-			}
-			return expr, nil
-		}
-		if senderSide.Const.Value != nil {
-			if err := a.validateLiteralSender(senderSide.Const); err != nil {
-				return ts.Expr{}, &compiler.Error{
-					Err:      err,
-					Location: &scope.Location,
-					Meta:     &senderSide.Const.Value.Meta,
-				}
-			}
-			resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Value.TypeExpr, scope)
-			if err != nil {
-				return ts.Expr{}, &compiler.Error{
-					Err:      err,
-					Location: &scope.Location,
-					Meta:     &senderSide.Const.Value.Meta,
-				}
-			}
-			return resolvedExpr, nil
-		}
-		return ts.Expr{}, &compiler.Error{
-			Err:      ErrLiteralSenderTypeEmpty,
-			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
-		}
+		return a.getResolvedSenderConstType(senderSide, scope)
 	}
 
 	if senderSide.PortAddr.Node == "out" {
@@ -514,6 +482,45 @@ func (a Analyzer) getSenderType( //nolint:funlen
 	}
 
 	return nodeOutportType, nil
+}
+
+func (a Analyzer) getResolvedSenderConstType(
+	senderSide src.ConnectionSenderSide,
+	scope src.Scope,
+) (ts.Expr, *compiler.Error) {
+	if senderSide.Const.Ref != nil {
+		expr, err := a.getResolvedConstTypeByRef(*senderSide.Const.Ref, scope)
+		if err != nil {
+			return ts.Expr{}, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &senderSide.Const.Ref.Meta,
+			}.Merge(err)
+		}
+		return expr, nil
+	}
+	if senderSide.Const.Value != nil {
+		if err := a.validateLiteralSender(senderSide.Const); err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &senderSide.Const.Value.Meta,
+			}
+		}
+		resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Value.TypeExpr, scope)
+		if err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &senderSide.Const.Value.Meta,
+			}
+		}
+		return resolvedExpr, nil
+	}
+	return ts.Expr{}, &compiler.Error{
+		Err:      ErrLiteralSenderTypeEmpty,
+		Location: &scope.Location,
+		Meta:     &senderSide.Meta,
+	}
 }
 
 func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
