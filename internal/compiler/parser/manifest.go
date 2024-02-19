@@ -17,8 +17,8 @@ func (p Parser) ParseManifest(raw []byte) (src.ModuleManifest, error) {
 }
 
 type Manifest struct {
-	WantCompilerVersion string      `yaml:"compiler"`
-	Deps                []ModuleRef `yaml:"deps"`
+	LanguageVersion string      `yaml:"neva"`
+	Deps            []ModuleRef `yaml:"deps"`
 }
 
 type ModuleRef struct {
@@ -42,7 +42,7 @@ func manifestToSourceCode(manifest Manifest) src.ModuleManifest {
 		}
 	}
 	return src.ModuleManifest{
-		LanguageVersion: manifest.WantCompilerVersion,
+		LanguageVersion: manifest.LanguageVersion,
 		Deps:            deps,
 	}
 }

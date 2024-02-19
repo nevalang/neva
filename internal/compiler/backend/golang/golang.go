@@ -2,12 +2,12 @@ package golang
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io/fs"
 	"text/template"
 
 	"github.com/nevalang/neva/internal"
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
@@ -19,7 +19,7 @@ var (
 	ErrUnknownMsgType = errors.New("unknown msg type")
 )
 
-func (b Backend) GenerateTarget(ctx context.Context, prog *ir.Program) (map[string][]byte, error) {
+func (b Backend) Emit(dst string, prog *ir.Program) error {
 	tmpl, err := template.New("tpl.go").Funcs(template.FuncMap{
 		"getMsg":           getMsg,
 		"getPorts":         getPortsFunc(prog.Ports),
@@ -27,24 +27,23 @@ func (b Backend) GenerateTarget(ctx context.Context, prog *ir.Program) (map[stri
 		"getConnComment":   getConnComment,
 	}).Parse(mainGoTemplate)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, prog); err != nil {
-		return nil, errors.Join(ErrExecTmpl, err)
+		return errors.Join(ErrExecTmpl, err)
 	}
 
 	result := map[string][]byte{}
 	result["main.go"] = buf.Bytes()
 	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.21") //nolint:lll // must match imports in runtime package //
 
-	// runtime
 	if err := putRuntime(result); err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return compiler.SaveFilesToDir(dst, result)
 }
 
 func putRuntime(files map[string][]byte) error {
@@ -65,4 +64,8 @@ func putRuntime(files map[string][]byte) error {
 	}
 
 	return nil
+}
+
+func NewBackend() Backend {
+	return Backend{}
 }

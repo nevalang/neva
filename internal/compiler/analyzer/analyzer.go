@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	semver "github.com/Masterminds/semver/v3"
 	"golang.org/x/exp/maps"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -71,7 +72,23 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
-		if mod.Manifest.LanguageVersion != a.compilerVersion {
+		got, err := semver.NewVersion(mod.Manifest.LanguageVersion)
+		if err != nil {
+			return src.Build{}, &compiler.Error{
+				Err: fmt.Errorf("%w: %v", ErrCompilerVersion, err),
+			}
+		}
+
+		want, err := semver.NewVersion(a.compilerVersion)
+		if err != nil {
+			return src.Build{}, &compiler.Error{
+				Err: fmt.Errorf("%w: %v", ErrCompilerVersion, err),
+			}
+		}
+
+		// semver check (we use minor as major until 1.0.0)
+		if got.Minor() != want.Minor() ||
+			got.Patch() > want.Patch() {
 			return src.Build{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"%w: module %v wants %v while current is %v",
@@ -81,9 +98,9 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 			}
 		}
 
-		analyzedPkgs, err := a.analyzeModule(modRef, build)
+		analyzedPkgs, aerr := a.analyzeModule(modRef, build)
 		if err != nil {
-			return src.Build{}, err
+			return src.Build{}, aerr
 		}
 
 		analyzedMods[modRef] = src.Module{

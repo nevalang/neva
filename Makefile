@@ -1,3 +1,10 @@
+# build neva cli
+.PHONY: install
+install:
+	@go build -ldflags="-s -w" cmd/neva/*.go && \
+	rm -rf /usr/local/bin/neva && \
+	mv cli /usr/local/bin/neva
+
 # generate parser from antlr grammar
 .PHONY: antlr
 antlr:

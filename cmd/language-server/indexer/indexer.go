@@ -40,12 +40,7 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compil
 		return parsedBuild, nil, nil
 	}
 
-	analyzerErr, ok := err.(*compiler.Error)
-	if !ok {
-		return src.Build{}, nil, fmt.Errorf("cast analyzer err: %w", err)
-	}
-
-	return parsedBuild, analyzerErr, nil
+	return parsedBuild, err, nil
 }
 
 func New(

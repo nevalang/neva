@@ -19,10 +19,15 @@ type Parser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
-func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, error) {
+func (p Manager) Build( //nolint:funlen
+	ctx context.Context,
+	workdir string,
+) (compiler.RawBuild, *compiler.Error) {
 	entryMod, err := p.BuildModule(ctx, workdir)
 	if err != nil {
-		return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
+		return compiler.RawBuild{}, &compiler.Error{
+			Err: fmt.Errorf("build entry mod: %w", err),
+		}
 	}
 	entryMod.Manifest.Deps["std"] = src.ModuleRef{
 		Path:    "std",
@@ -31,7 +36,9 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 
 	stdMod, err := p.BuildModule(ctx, p.stdLibLocation)
 	if err != nil {
-		return compiler.RawBuild{}, fmt.Errorf("build stdlib mod: %w", err)
+		return compiler.RawBuild{}, &compiler.Error{
+			Err: fmt.Errorf("build stdlib mod: %w", err),
+		}
 	}
 
 	mods := map[src.ModuleRef]compiler.RawModule{
@@ -50,18 +57,24 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 
 		depPath, err := p.downloadDep(depModRef)
 		if err != nil {
-			return compiler.RawBuild{}, fmt.Errorf("download dep: %w", err)
+			return compiler.RawBuild{}, &compiler.Error{
+				Err: fmt.Errorf("download dep: %w", err),
+			}
 		}
 
 		depMod, err := p.BuildModule(ctx, depPath)
 		if err != nil {
-			return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
+			return compiler.RawBuild{}, &compiler.Error{
+				Err: fmt.Errorf("build entry mod: %w", err),
+			}
 		}
 
+		// inject stdlib mod dep
 		depMod.Manifest.Deps["std"] = src.ModuleRef{
 			Path:    "std",
 			Version: pkg.Version,
-		} // inject stdlib mod dep
+		}
+
 		mods[depModRef] = depMod
 
 		q.enqueue(depMod.Manifest.Deps)

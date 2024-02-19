@@ -14,7 +14,7 @@ import (
 func main() {
     // runtime
     connector := runtime.NewDefaultConnector()
-	funcRunner := runtime.MustNewFuncRunner(funcs.Registry())
+	funcRunner := runtime.MustNewFuncRunner(funcs.CreatorRegistry())
 	runTime := runtime.New(connector, funcRunner)
 
     // ports
@@ -87,9 +87,8 @@ func main() {
             {{- end}}
         },
     }
-
-    exitCode, err := runTime.Run(context.Background(), prog)
-    if err != nil {
+    
+    if err := runTime.Run(context.Background(), prog); err != nil {
         panic(err)
     }
 

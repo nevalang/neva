@@ -3,6 +3,7 @@ module github.com/nevalang/neva
 go 1.21
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/antlr4-go/antlr/v4 v4.13.0
 	github.com/go-git/go-git/v5 v5.10.0
 	github.com/golang/mock v1.6.0
@@ -12,8 +13,6 @@ require (
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-require github.com/caarlos0/env/v10 v10.0.0
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

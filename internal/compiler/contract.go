@@ -14,6 +14,10 @@ const (
 )
 
 type (
+	Builder interface {
+		Build(ctx context.Context, workdir string) (RawBuild, *Error)
+	}
+
 	RawBuild struct {
 		EntryModRef src.ModuleRef
 		Modules     map[src.ModuleRef]RawModule
@@ -39,16 +43,10 @@ type (
 	}
 
 	IRGenerator interface {
-		Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, *Error)
+		Generate(build src.Build, mainPkgName string) (*ir.Program, *Error)
 	}
 
 	Backend interface {
-		GenerateTarget(*ir.Program) ([]byte, error)
-	}
-
-	STDLib interface {
-		Emitter() src.Interface
-		Destructor() src.Interface
-		Blocker() src.Interface
+		Emit(string, *ir.Program) error
 	}
 )

@@ -43,7 +43,7 @@ func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error
 		return nil, nil
 	}
 
-	entity, location, err := scope.Entity(compiler.ParseRef(args[0]))
+	entity, location, err := scope.Entity(compiler.ParseEntityRef(args[0]))
 	if err != nil {
 		return nil, &compiler.Error{
 			Err:      err,

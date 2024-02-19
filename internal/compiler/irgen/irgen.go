@@ -3,7 +3,6 @@
 package irgen
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -35,7 +34,7 @@ type (
 	}
 )
 
-func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
+func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
 	initialScope := src.Scope{
 		Build: build,
 		Location: src.Location{
@@ -69,7 +68,7 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 		},
 	}
 
-	if err := g.processComponentNode(ctx, rootNodeCtx, initialScope, result); err != nil {
+	if err := g.processComponentNode(rootNodeCtx, initialScope, result); err != nil {
 		return nil, compiler.Error{
 			Location: &initialScope.Location,
 		}.Merge(err)
@@ -79,7 +78,6 @@ func (g Generator) Generate(ctx context.Context, build src.Build, mainPkgName st
 }
 
 func (g Generator) processComponentNode( //nolint:funlen
-	ctx context.Context,
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
@@ -163,7 +161,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 			subNodeCtx.node = injectedNode
 		}
 
-		if err := g.processComponentNode(ctx, subNodeCtx, scope, result); err != nil {
+		if err := g.processComponentNode(subNodeCtx, scope, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &location,

@@ -1,6 +1,16 @@
 {
   "version": "0.2.0",
   "configurations": [
+    // CLI
+    {
+      "name": "Neva CLI",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["build", "0_do_nothing"]
+    },
     // === Vscode-neva extension debug tasks ===
     // extension itself
     {

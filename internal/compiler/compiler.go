@@ -5,10 +5,11 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/pkg/ir"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Compiler struct {
+	builder   Builder
 	parser    Parser
 	desugarer Desugarer
 	analyzer  Analyzer
@@ -16,31 +17,41 @@ type Compiler struct {
 	backend   Backend
 }
 
+// Compile compiles given rawBuild to target language
+// and uses specified backend to emit files to the destination.
 func (c Compiler) Compile(
-	ctx context.Context,
-	rawBuild RawBuild,
-	workdirPath string,
+	src string,
 	mainPkgName string,
-) ([]byte, error) {
-	ir, err := c.CompileToIR(ctx, rawBuild, workdirPath, mainPkgName)
+	dstPath string,
+) error {
+	ir, err := c.CompileToIR(src, mainPkgName)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return c.backend.GenerateTarget(ir)
+	return c.backend.Emit(dstPath, ir)
 }
 
+// CompileToIR compiles to intermediate representation
 func (c Compiler) CompileToIR(
-	ctx context.Context,
-	rawBuild RawBuild,
-	workdirPath string,
+	src string,
 	mainPkgName string,
 ) (*ir.Program, *Error) {
+	rawBuild, err := c.builder.Build(context.Background(), src)
+	if err != nil {
+		return nil, &Error{
+			Err: err,
+			Location: &sourcecode.Location{
+				PkgName: mainPkgName,
+			},
+		}
+	}
+
 	parsedMods, err := c.parser.ParseModules(rawBuild.Modules)
 	if err != nil {
 		return nil, err
 	}
 
-	parsedBuild := src.Build{
+	parsedBuild := sourcecode.Build{
 		EntryModRef: rawBuild.EntryModRef,
 		Modules:     parsedMods,
 	}
@@ -59,7 +70,7 @@ func (c Compiler) CompileToIR(
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(ctx, desugaredBuild, mainPkgName)
+	irProg, err := c.irgen.Generate(desugaredBuild, mainPkgName)
 	if err != nil {
 		return nil, err
 	}
@@ -67,9 +78,8 @@ func (c Compiler) CompileToIR(
 	return irProg, nil
 }
 
-// New creates new Compiler instance.
-// You can omit irgen and backend if all you need is Analyze method.
 func New(
+	builder Builder,
 	parser Parser,
 	desugarer Desugarer,
 	analyzer Analyzer,
@@ -77,6 +87,7 @@ func New(
 	backend Backend,
 ) Compiler {
 	return Compiler{
+		builder:   builder,
 		parser:    parser,
 		desugarer: desugarer,
 		analyzer:  analyzer,

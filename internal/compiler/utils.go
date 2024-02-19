@@ -2,6 +2,8 @@ package compiler
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -12,8 +14,8 @@ func Pointer[T any](v T) *T {
 	return &v
 }
 
-// ParseRef assumes string-ref has form of <pkg_name>.<entity_name≥ or just <entity_name>.
-func ParseRef(ref string) src.EntityRef {
+// ParseEntityRef assumes string-ref has form of <pkg_name>.<entity_name≥ or just <entity_name>.
+func ParseEntityRef(ref string) src.EntityRef {
 	entityRef := src.EntityRef{
 		Meta: src.Meta{Text: ref},
 	}
@@ -36,4 +38,21 @@ func JSONDump(v any) string {
 		return err.Error()
 	}
 	return string(bb)
+}
+
+func SaveFilesToDir(dst string, files map[string][]byte) error {
+	for path, content := range files {
+		filePath := filepath.Join(dst, path)
+		dirPath := filepath.Dir(filePath)
+
+		if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(filePath, content, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

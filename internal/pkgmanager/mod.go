@@ -17,7 +17,7 @@ func (p Manager) BuildModule(ctx context.Context, workdir string) (compiler.RawM
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
-	if err := walkTree(workdir, pkgs); err != nil {
+	if err := collectNevaFiles(workdir, pkgs); err != nil {
 		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
@@ -27,7 +27,8 @@ func (p Manager) BuildModule(ctx context.Context, workdir string) (compiler.RawM
 	}, nil
 }
 
-func walkTree(rootPath string, pkgs map[string]compiler.RawPackage) error {
+// collectNevaFiles recursively walks the given tree and fills given pkgs with neva files
+func collectNevaFiles(rootPath string, pkgs map[string]compiler.RawPackage) error {
 	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
