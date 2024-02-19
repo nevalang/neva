@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/cmd/language-server/indexer"
+	"github.com/nevalang/neva/pkg"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
@@ -49,7 +50,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		handler: h,
 		logger:  logger,
 		name:    serverName,
-		version: "0.0.1",
+		version: pkg.Version,
 		indexer: indexer,
 		mu:      &sync.Mutex{},
 		index:   nil,

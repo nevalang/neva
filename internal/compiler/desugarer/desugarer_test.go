@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/nevalang/neva/pkg/typesystem"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 			build: src.Build{
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
-						Manifest: src.ModuleManifest{LanguageVersion: "0.0.1"},
+						Manifest: src.ModuleManifest{LanguageVersion: pkg.Version},
 						Packages: map[string]src.Package{
 							"main": {
 								"file": src.File{
@@ -64,11 +65,11 @@ func TestDesugarer_Desugar(t *testing.T) {
 				Modules: map[src.ModuleRef]src.Module{
 					{}: {
 						Manifest: src.ModuleManifest{
-							LanguageVersion: "0.0.1",
+							LanguageVersion: pkg.Version,
 							Deps: map[string]src.ModuleRef{
 								"std": { // <-- stdlib mod dep added
 									Path:    "std",
-									Version: "0.0.1",
+									Version: pkg.Version,
 								},
 							},
 						},
@@ -179,7 +180,7 @@ func TestDesugarer_Desugar(t *testing.T) {
 							Deps: map[string]src.ModuleRef{
 								"std": {
 									Path:    "std",
-									Version: "0.0.1",
+									Version: pkg.Version,
 								},
 							},
 						},
@@ -291,7 +292,7 @@ func TestDesugarer_desugarModule(t *testing.T) {
 					Deps: map[string]src.ModuleRef{
 						"std": { // <-- std mod dep
 							Path:    "std",
-							Version: "0.0.1",
+							Version: pkg.Version,
 						},
 					},
 				},

@@ -10,6 +10,7 @@ import (
 	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
+	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -26,7 +27,7 @@ func newInterpreter() interpreter.Interpreter {
 
 	// compiler
 	desugarer := desugarer.Desugarer{}
-	analyzer := analyzer.MustNew("0.0.1", resolver)
+	analyzer := analyzer.MustNew(pkg.Version, resolver)
 	irgen := irgen.New()
 	prsr := parser.New(false)
 	comp := compiler.New(

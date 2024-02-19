@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/pkg"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
@@ -91,7 +92,7 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 			}, nil
 		}
 
-		stdModRef := ModuleRef{Path: "std", Version: "0.0.1"}
+		stdModRef := ModuleRef{Path: "std", Version: pkg.Version}
 		stdMod, ok := s.Build.Modules[stdModRef]
 		if !ok {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -23,7 +24,10 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	if err != nil {
 		return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 	}
-	entryMod.Manifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib mod dep
+	entryMod.Manifest.Deps["std"] = src.ModuleRef{
+		Path:    "std",
+		Version: pkg.Version,
+	} // inject stdlib mod dep
 
 	stdMod, err := p.BuildModule(ctx, p.stdLibLocation)
 	if err != nil {
@@ -31,8 +35,8 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 	}
 
 	mods := map[src.ModuleRef]compiler.RawModule{
-		{Path: "@"}:                     entryMod,
-		{Path: "std", Version: "0.0.1"}: stdMod, // TODO maybe remove version?
+		{Path: "@"}:                         entryMod,
+		{Path: "std", Version: pkg.Version}: stdMod,
 	}
 
 	q := newQueue(entryMod.Manifest.Deps)
@@ -54,7 +58,10 @@ func (p Manager) Build(ctx context.Context, workdir string) (compiler.RawBuild, 
 			return compiler.RawBuild{}, fmt.Errorf("build entry mod: %w", err)
 		}
 
-		depMod.Manifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // inject stdlib mod dep
+		depMod.Manifest.Deps["std"] = src.ModuleRef{
+			Path:    "std",
+			Version: pkg.Version,
+		} // inject stdlib mod dep
 		mods[depModRef] = depMod
 
 		q.enqueue(depMod.Manifest.Deps)

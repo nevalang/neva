@@ -6,6 +6,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/pkgmanager"
+	"github.com/nevalang/neva/pkg"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,7 +20,7 @@ func TestPkgManager(t *testing.T) {
 	mod, ok := build.Modules[build.EntryModRef]
 	require.True(t, ok)
 	require.Len(t, mod.Packages, 1)
-	require.Equal(t, mod.Manifest.LanguageVersion, "0.0.1")
+	require.Equal(t, mod.Manifest.LanguageVersion, pkg.Version)
 
 	pkg, ok := mod.Packages["do_nothing"]
 	require.True(t, ok)

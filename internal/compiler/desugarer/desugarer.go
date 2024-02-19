@@ -4,6 +4,7 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -41,7 +42,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		Deps:            make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: "0.0.1"} // TODO rethink stdlib
+	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: pkg.Version} // TODO rethink stdlib
 
 	// copy all modules but replace manifest in current one
 	modsCopy := maps.Clone(build.Modules)
