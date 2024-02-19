@@ -29,8 +29,17 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 
 func buildExecutable(src, dst string) error {
 	outputPath := filepath.Join(dst, "output")
+	if err := os.Chdir(src); err != nil {
+		return err
+	}
 	cmd := exec.Command("go", "build", "-o", outputPath, src)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func NewBackend(golangBackend golang.Backend) Backend {
+	return Backend{
+		golang: golangBackend,
+	}
 }

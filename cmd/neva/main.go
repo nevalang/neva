@@ -7,6 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -45,6 +46,9 @@ func main() { //nolint:funlen
 	analyzer := analyzer.MustNew(pkg.Version, resolver)
 	irgen := irgen.New()
 
+	// golang backend
+	golangBackend := golang.NewBackend()
+
 	// this one can emit go code
 	goCompiler := compiler.New(
 		pkgMngr,
@@ -62,7 +66,9 @@ func main() { //nolint:funlen
 		desugarer,
 		analyzer,
 		irgen,
-		golang.NewBackend(),
+		native.NewBackend(
+			golangBackend,
+		),
 	)
 
 	// doesn't matter which compiler to use for interpreter

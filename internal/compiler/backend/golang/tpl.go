@@ -5,7 +5,6 @@ package main
 
 import (
     "context"
-    "os"
 
     "github.com/nevalang/neva/internal/runtime"
     "github.com/nevalang/neva/internal/runtime/funcs"
@@ -91,6 +90,4 @@ func main() {
     if err := runTime.Run(context.Background(), prog); err != nil {
         panic(err)
     }
-
-    os.Exit(exitCode)
 }`
