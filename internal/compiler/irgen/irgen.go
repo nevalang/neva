@@ -45,9 +45,9 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 	}
 
 	result := &ir.Program{
-		Ports:       []*ir.PortInfo{},
-		Connections: []*ir.Connection{},
-		Funcs:       []*ir.Func{},
+		Ports:       []ir.PortInfo{},
+		Connections: []ir.Connection{},
+		Funcs:       []ir.Func{},
 	}
 
 	rootNodeCtx := nodeContext{
@@ -116,11 +116,11 @@ func (g Generator) processComponentNode( //nolint:funlen
 			}
 		}
 
-		result.Funcs = append(result.Funcs, &ir.Func{
+		result.Funcs = append(result.Funcs, ir.Func{
 			Ref: runtimeFuncRef,
-			Io: &ir.FuncIO{
-				Inports:  inportAddrs,
-				Outports: outportAddrs,
+			IO: ir.FuncIO{
+				In:  inportAddrs,
+				Out: outportAddrs,
 			},
 			Msg: runtimeFuncMsg,
 		})

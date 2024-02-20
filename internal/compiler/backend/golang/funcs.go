@@ -10,30 +10,29 @@ import (
 )
 
 func getMsg(msg *ir.Msg) (string, error) {
-	//nolint:nosnakecase
 	switch msg.Type {
-	case ir.MSG_TYPE_BOOL:
+	case ir.MsgTypeBool:
 		return fmt.Sprintf("runtime.NewBoolMsg(%v)", msg.Bool), nil
-	case ir.MSG_TYPE_INT:
+	case ir.MsgTypeInt:
 		return fmt.Sprintf("runtime.NewIntMsg(%v)", msg.Int), nil
-	case ir.MSG_TYPE_FLOAT:
+	case ir.MsgTypeFloat:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
-	case ir.MSG_TYPE_STR:
+	case ir.MsgTypeString:
 		return fmt.Sprintf("runtime.NewStrMsg(%v)", msg.Str), nil
-	case ir.MSG_TYPE_LIST:
+	case ir.MsgTypeList:
 		s := "runtime.NewListMsg(\n\t"
 		for _, v := range msg.List {
-			el, err := getMsg(v)
+			el, err := getMsg(&v)
 			if err != nil {
 				return "", err
 			}
 			s += fmt.Sprintf("\t%v,\n", el)
 		}
 		return s + ")", nil
-	case ir.MSG_TYPE_MAP:
+	case ir.MsgTypeMap:
 		s := "runtime.NewMapMsg(map[string]runtime.Msg{\n\t"
 		for k, v := range msg.Map {
-			el, err := getMsg(v)
+			el, err := getMsg(&v)
 			if err != nil {
 				return "", err
 			}
@@ -46,9 +45,9 @@ func getMsg(msg *ir.Msg) (string, error) {
 }
 
 func getConnComment(conn *ir.Connection) string {
-	s := fmtPortAddr(conn.SenderSide) + " -> "
+	s := fmtPortAddr(&conn.SenderSide) + " -> "
 	for _, rcvr := range conn.ReceiverSides {
-		s += fmtPortAddr(rcvr.PortAddr)
+		s += fmtPortAddr(&rcvr.PortAddr)
 	}
 	return "// " + s
 }
@@ -66,12 +65,12 @@ func getPortChVarName(addr *ir.PortAddr) string {
 	return fmt.Sprintf("%s%s%dPort", path, port, addr.Idx)
 }
 
-func getPortsFunc(ports []*ir.PortInfo) func(path, port string) string {
+func getPortsFunc(ports []ir.PortInfo) func(path, port string) string {
 	return func(path, port string) string {
 		var s string
 		for _, info := range ports {
 			if info.PortAddr.Path == path && info.PortAddr.Port == port {
-				s = s + getPortChVarName(info.PortAddr) + ","
+				s = s + getPortChVarName(&info.PortAddr) + ","
 			}
 		}
 		return s

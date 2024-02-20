@@ -25,10 +25,10 @@ func (g Generator) processNet(
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		receiverSidesIR := make([]*ir.ReceiverConnectionSide, 0, len(conn.ReceiverSide.Receivers))
+		receiverSidesIR := make([]ir.ReceiverConnectionSide, 0, len(conn.ReceiverSide.Receivers))
 		for _, receiverSide := range conn.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
-			receiverSidesIR = append(receiverSidesIR, receiverSideIR)
+			receiverSidesIR = append(receiverSidesIR, *receiverSideIR)
 
 			// same receiver can be used by multiple senders so we only add it once
 			if _, ok := result[receiverSide.PortAddr.Node]; !ok {
@@ -49,8 +49,8 @@ func (g Generator) processNet(
 			}] = struct{}{}
 		}
 
-		irResult.Connections = append(irResult.Connections, &ir.Connection{
-			SenderSide:    irSenderSidePortAddr,
+		irResult.Connections = append(irResult.Connections, ir.Connection{
+			SenderSide:    *irSenderSidePortAddr,
 			ReceiverSides: receiverSidesIR,
 		})
 	}
@@ -100,8 +100,8 @@ func (g Generator) processSenderSide(
 func (Generator) insertAndReturnInports(
 	nodeCtx nodeContext,
 	result *ir.Program,
-) []*ir.PortAddr {
-	inports := make([]*ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
+) []ir.PortAddr {
+	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
 	// actually we can't use IO because we need to know how many slots are used
@@ -111,11 +111,11 @@ func (Generator) insertAndReturnInports(
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
 		}
-		result.Ports = append(result.Ports, &ir.PortInfo{
-			PortAddr: addr,
+		result.Ports = append(result.Ports, ir.PortInfo{
+			PortAddr: *addr,
 			BufSize:  0,
 		})
-		inports = append(inports, addr)
+		inports = append(inports, *addr)
 	}
 
 	return inports
@@ -125,8 +125,8 @@ func (Generator) insertAndReturnOutports(
 	outports map[string]src.Port,
 	nodeCtx nodeContext,
 	result *ir.Program,
-) []*ir.PortAddr {
-	runtimeFuncOutportAddrs := make([]*ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
+) []ir.PortAddr {
+	runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
 	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use component's IO.
 	// Actually we can't use IO because we need to know how many slots are used.
@@ -136,11 +136,11 @@ func (Generator) insertAndReturnOutports(
 			Port: addr.Port,
 			Idx:  uint32(addr.Idx),
 		}
-		result.Ports = append(result.Ports, &ir.PortInfo{
-			PortAddr: irAddr,
+		result.Ports = append(result.Ports, ir.PortInfo{
+			PortAddr: *irAddr,
 			BufSize:  0,
 		})
-		runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, irAddr)
+		runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, *irAddr)
 	}
 
 	return runtimeFuncOutportAddrs
@@ -154,7 +154,7 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionRece
 	}
 
 	result := &ir.ReceiverConnectionSide{
-		PortAddr: &ir.PortAddr{
+		PortAddr: ir.PortAddr{
 			Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 			Port: side.PortAddr.Port,
 			Idx:  uint32(idx),
