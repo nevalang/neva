@@ -6,10 +6,14 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg/ir"
 )
 
 func getMsg(msg *ir.Msg) (string, error) {
+	if msg == nil {
+		return "nil", nil
+	}
 	switch msg.Type {
 	case ir.MsgTypeBool:
 		return fmt.Sprintf("runtime.NewBoolMsg(%v)", msg.Bool), nil
@@ -18,11 +22,11 @@ func getMsg(msg *ir.Msg) (string, error) {
 	case ir.MsgTypeFloat:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
-		return fmt.Sprintf("runtime.NewStrMsg(%v)", msg.Str), nil
+		return fmt.Sprintf(`runtime.NewStrMsg("%v")`, msg.Str), nil
 	case ir.MsgTypeList:
 		s := "runtime.NewListMsg(\n\t"
 		for _, v := range msg.List {
-			el, err := getMsg(&v)
+			el, err := getMsg(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
@@ -32,7 +36,7 @@ func getMsg(msg *ir.Msg) (string, error) {
 	case ir.MsgTypeMap:
 		s := "runtime.NewMapMsg(map[string]runtime.Msg{\n\t"
 		for k, v := range msg.Map {
-			el, err := getMsg(&v)
+			el, err := getMsg(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
@@ -45,15 +49,15 @@ func getMsg(msg *ir.Msg) (string, error) {
 }
 
 func getConnComment(conn *ir.Connection) string {
-	s := fmtPortAddr(&conn.SenderSide) + " -> "
+	s := fmtPortAddr(conn.SenderSide) + " -> "
 	for _, rcvr := range conn.ReceiverSides {
-		s += fmtPortAddr(&rcvr.PortAddr)
+		s += fmtPortAddr(rcvr.PortAddr)
 	}
 	return "// " + s
 }
 
-func fmtPortAddr(addr *ir.PortAddr) string {
-	return fmt.Sprintf("%s.%s[%d]", addr.Path, addr.Port, addr.Idx)
+func fmtPortAddr(addr ir.PortAddr) string {
+	return fmt.Sprintf("%s:%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 
 func getPortChVarName(addr *ir.PortAddr) string {
@@ -84,11 +88,16 @@ func handleSpecialChars(portPath string) string {
 	)
 
 	for i := 0; i < len(portPath); i++ {
-		if portPath[i] == '.' || portPath[i] == '/' {
+		cur := portPath[i]
+		if cur == '$' {
+			buffer.WriteString("_")
+			continue
+		}
+		if cur == '.' || cur == '/' || cur == ':' {
 			shouldUppercase = true
 			continue
 		}
-		s := string(portPath[i])
+		s := string(cur)
 		if shouldUppercase {
 			s = strings.ToUpper(s)
 			shouldUppercase = false

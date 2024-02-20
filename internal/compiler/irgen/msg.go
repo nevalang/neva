@@ -20,7 +20,6 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 		return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
 	}
 
-	//nolint:nosnakecase
 	switch {
 	case constant.Value.Bool != nil:
 		return &ir.Msg{

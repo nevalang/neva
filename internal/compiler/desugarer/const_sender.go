@@ -38,7 +38,7 @@ func (d Desugarer) handleLiteralSender(
 ) {
 	counter := litSendersCount.Load()
 	litSendersCount.Store(counter + 1)
-	constName := fmt.Sprintf("literal-%d", counter)
+	constName := fmt.Sprintf("literal_%d", counter)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope

@@ -4,7 +4,7 @@ package ir
 type Program struct {
 	Ports       []PortInfo
 	Connections []Connection
-	Funcs       []Func
+	Funcs       []FuncCall
 }
 
 // PortInfo contains information about each port.
@@ -31,8 +31,8 @@ type ReceiverConnectionSide struct {
 	PortAddr PortAddr
 }
 
-// Func represents a function within the program.
-type Func struct {
+// FuncCall represents a function within the program.
+type FuncCall struct {
 	Ref string
 	IO  FuncIO
 	Msg *Msg
