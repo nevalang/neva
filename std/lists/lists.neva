@@ -1,22 +1,22 @@
 component {
-    #extern(ListAccumulator)
+    #extern(list_accumulator)
     pub Accumulator<T>(els stream<T>) (res list<T>)
 
-    #extern(ListBuilder)
+    #extern(list_builder)
     pub Builder<T> ([els] T) (res list<T>)
     
-    #extern(ListConcatenator)
+    #extern(list_concatenator)
     pub Concatenator<T> (lsts stream<list<T>>) (res list<T>)
 
-    #extern(ListPusher)
+    #extern(list_pusher)
     pub Pusher<T> (l list<T>, el T) (res list<T>)
 
-    #extern(ListUpdater)
+    #extern(list_updater)
     pub Updater<T> (l list<T>, i int, el T) (res list<T>, err error)
 
-    #extern(ListSelector)
+    #extern(list_selector)
     pub Selector<T>(l list<T>, i int) (ok T, miss int)
 
-    #extern(ListSlicer)
+    #extern(list_slicer)
     pub Slicer<T>(l list<T>, from int, to int) (res list<T>, err error)
 }

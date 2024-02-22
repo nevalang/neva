@@ -1,22 +1,22 @@
 component {
-    #extern(MapAccumulator)
+    #extern(map_accumulator)
     pub Accumulator<T>(ents stream<MapEntry<T>>) (res map<T>)
 
-    #extern(MapBuilder)
+    #extern(map_builder)
     pub Builder<T> ([ents] MapEntry<T>) (res map<T>)
     
-    #extern(MapDiscriminator)
+    #extern(map_discriminator)
     pub Discriminator<T>(maps stream<map<T>>) (res map<T>)
 
-    #extern(MapIntersector)
+    #extern(map_intersector)
     pub Intersector<T>(maps stream<map<T>>) (res map<T>)
 
-    #extern(MapMerger)
+    #extern(map_merger)
     pub Merger<T>(maps stream<map<T>>) (res map<T>)
 
-    #extern(MapUpdater)
+    #extern(map_updater)
     pub Updater<T> (m map<T>, k string, v T) (res map<T>)
 
-    #extern(MapSelector)
+    #extern(map_selector)
     pub Selector<T>(m map<T>, k string) (ok T, miss string)
 }

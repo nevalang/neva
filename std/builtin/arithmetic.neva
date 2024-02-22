@@ -2,19 +2,19 @@
 // and thus could be used with bridges.
 
 component {
-    #extern(int IntAdder, float FloatAdder, string StringAdder)
+    #extern(int int_adder, float float_adder, string string_adder)
     pub Adder<
         T int | float | string
     >(seq stream<T>) (res T)
 
-    #extern(int IntSubstractor, float FloatSubstractor)
+    #extern(int int_substractor, float float_substractor)
     pub Substractor<
         T int | float
     >(seq stream<T>) (res T)
 
-    #extern(int IntMultiplier, float FloatMultiplier)
+    #extern(int int_multiplier, float float_multiplier)
     pub Multiplier<T int | float>(seq stream<T>) (res T)
 
-    #extern(int IntDivider, float FloatDivider)
+    #extern(int int_divider, float float_divider)
     pub Divider<T int | float>(seq stream<T>) (res T)
 }

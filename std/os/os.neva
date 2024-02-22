@@ -1,4 +1,4 @@
-#extern(FileWriter)
+#extern(file_writer)
 pub component FileWriter(path string, data string) (err error)
 
 pub type ArgsReaderResult struct {
@@ -6,5 +6,5 @@ pub type ArgsReaderResult struct {
     len int
 }
 
-#extern(ArgsReader)
+#extern(args_reader)
 pub component ArgsReader(sig any) (res ArgsReaderResult)

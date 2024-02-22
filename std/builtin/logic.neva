@@ -4,37 +4,37 @@
 // And that's BTW is the reason to for more handy `yes, no, b` API.
 
 component {
-    #extern(Neg)
+    #extern(neg)
     pub Neg(arg bool) (b bool)
     
-    #extern(And)
+    #extern(and)
     pub And(args stream<bool>) (y struct{}, n struct{}, b bool)
 
-    #extern(Or)
+    #extern(or)
     pub Or(args stream<bool>) (y struct{}, n struct{}, b bool)
 
-    #extern(Eq)
+    #extern(eq)
     pub Eq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #extern(NotEq)
+    #extern(not_eq)
     pub NotEq<T>(args stream<T>) (y struct{}, n struct{}, b bool)
 
-    #extern(Less)
+    #extern(less)
     pub Less<T int | float | string>(
         args stream<T>
     ) (y struct{}, n struct{}, b bool)
 
-    #extern(More)
+    #extern(more)
     pub More<T int | float | string>(
         args stream<T>
     ) (y struct{}, n struct{}, b bool)
 
-    #extern(LessOrEq)
+    #extern(less_or_eq)
     pub LessOrEq<T int | float | string>(
         args stream<T>
     ) (y struct{}, n struct{}, b bool)
 
-    #extern(MoreOrEq)
+    #extern(more_or_eq)
     pub MoreOrEq<T int | float | string>(
         args stream<T>
     ) (y struct{}, n struct{}, b bool)

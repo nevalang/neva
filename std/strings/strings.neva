@@ -1,25 +1,25 @@
 component {
-    #extern(StringConcatenator)
+    #extern(string_concatenator)
     pub Concatenator(seq stream<string>) (res string)
 
-    #extern(StringTrimmer)
+    #extern(string_trimmer)
     pub Trimmer(s string) (res string)
 
-    #extern(StringUpperCaser)
+    #extern(string_upper_caser)
     pub UpperCaser(s string) (res string)
 
-    #extern(StringLowerCaser)
+    #extern(string_lower_caser)
     pub LowerCaser(s string) (res string)
 
-    #extern(StringOccurrenceChecker)
+    #extern(string_occurrence_checker)
     pub OccurrenceChecker(s string, subs string) (b bool)
 
-    #extern(StringPrefixChecker)
+    #extern(string_prefix_checker)
     pub PrefixChecker(s string, pref string) (b bool)
 
-    #extern(StringSuffixChecker)
+    #extern(string_suffix_checker)
     pub SuffixChecker(s string, suff string) (b bool)
 
-    #extern(StringSlicer)
+    #extern(string_slicer)
     pub Slicer(s string, from int, to int) (s string, err error)
 }

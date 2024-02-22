@@ -18,26 +18,26 @@ type {
 }
 
 component {
-    #extern(Emitter)
+    #extern(emitter)
     pub Emitter<T>() (msg T)
 
-    #extern(Destructor)
+    #extern(destructor)
     pub Destructor(msg any) ()
 
-    #extern(Blocker)
+    #extern(blocker)
     pub Blocker<T>(sig any, data T) (data T)
 
-    #extern(Checker)
+    #extern(checker)
     pub Checker(opt maybe<T>) (some T, none struct{})
 
     #autoports
-    #extern(StructBuilder)
+    #extern(struct_builder)
     pub StructBuilder<T struct {}> () (msg T)
 
-    #extern(StructSelector)
+    #extern(struct_selector)
     pub StructSelector<T>(msg struct {}) (msg T)
 
-    #extern(string StrLen, list ListLen, map MapLen)
+    #extern(string str_len, list list_len, map map_len)
     pub Len<
         T string | list<any> | map<any>
     >(data T) (n int)

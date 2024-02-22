@@ -1,7 +1,7 @@
 component {
-    #extern(BoolParser)
+    #extern(bool_parser)
     pub BoolParser(s string) (res bool, err error)
 
-    #extern(int IntParser, float FloatParser)
+    #extern(int int_parser, float float_parser)
     pub NumParser<T int | float>(s string) (res T, err error)
 }

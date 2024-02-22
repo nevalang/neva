@@ -3,12 +3,12 @@
 // and thus could be used with bridges.
 
 component {
-    #extern(int PowInts, float PowFloats)
+    #extern(int pow_ints, float pow_floats)
     pub Pow<T int | float>(seq stream<T>) (res T)
 
-    #extern(int ModInts, float ModFloats)
+    #extern(int mod_ints, float mod_floats)
     pub Mod<T int | float>(seq stream<T>) (res T)
 
-    #extern(int AbsInts, float AbsFloats)
+    #extern(int abs_ints, float abs_floats)
     pub Abs<T int | float>(seq stream<T>) (res T)
 }

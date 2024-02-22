@@ -2,9 +2,9 @@
 // but it's handy to be able to use them without imports.
 
 component {
-    #extern(LinePrinter)
+    #extern(line_printer)
     pub Printer<T>(data T) (sig T)
 
-    #extern(LinePrinter)
+    #extern(line_scanner)
     pub Scanner(sig any) (data string)
 }

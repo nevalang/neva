@@ -7,7 +7,7 @@ type User struct {
 }
 
 component {
-    #extern(StructBuilder)
+    #extern(struct_builder)
     MyStructBuilder(age int, name string) (msg User)
 
     Main(start any) (stop any) {

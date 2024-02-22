@@ -1,28 +1,23 @@
-# build neva cli
+# build neva cli binary and insstall to PATH
+# example usage: sudo make install
 .PHONY: install
 install:
 	@go build -ldflags="-s -w" cmd/neva/*.go && \
 	rm -rf /usr/local/bin/neva && \
 	mv cli /usr/local/bin/neva
 
-# generate parser from antlr grammar
+# generate go parser from antlr grammar
 .PHONY: antlr
 antlr:
 	@cd internal/compiler/parser && \
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
 
-# build language server and put executable to web/out
+# build language-server
 .PHONY: lsp
 lsp:
-	@go build -ldflags="-s -w" -o web/lsp ./cmd/language-server/*
+	@go build -ldflags="-s -w" ./cmd/lsp/*
 
-# generate typescript types from golang src package to use in vscode extension
-# https://github.com/gzuidhof/tygo
+# generate ts types from go src pkg
 .PHONY: tygo
 tygo:
 	@tygo generate
-
-# static Analysis tool to detect potential nil panics in go code
-.PHONY: nilaway
-nilaway:
-	@nilaway ./...
