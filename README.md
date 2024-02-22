@@ -22,16 +22,19 @@ component Main(start any) (stop any) {
 
 - Flow-Based Programming
 - Effortless Concurrency
-- Static Type System
+- Strong Static Typing
 - Multi-Target Compilation
-- Simple and Clean C-like Syntax
+- Clean C-like Syntax
 - Interpreter Mode
 - First-Class Dependency Injection
 - Builtin Observability
 - Garbage Collection
-- Visual Programming (WIP)
-- Go Interop (WIP)
-- No Runtime Exceptions (WIP)
+
+### WIP
+
+- Visual Programming
+- Go Interop
+- No Runtime Exceptions
 
 [Read more about the language](https://nevalang.org/docs/about)
 
@@ -41,4 +44,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md
 
 ---
 
-> ⚠️ WARNING: This project is under **heavy** development and not production ready yet.
+> ⚠️ WARNING: This project is under heavy development and **not production ready** yet.

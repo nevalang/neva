@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/nevalang/neva/cmd/language-server/indexer"
+	"github.com/nevalang/neva/cmd/lsp/indexer"
 	"github.com/nevalang/neva/pkg"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"

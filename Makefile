@@ -21,3 +21,8 @@ lsp:
 .PHONY: tygo
 tygo:
 	@tygo generate
+
+# lint go code
+.PHONY: lint
+lint:
+	@golangci-lint run ./... --new-from-rev=HEAD~1
