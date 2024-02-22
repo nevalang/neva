@@ -29,7 +29,7 @@ func (s Server) Exit(_ *glsp.Context) error {
 	return nil
 }
 
-func (s Server) SetTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
+func (s Server) SetTrace(_ *glsp.Context, params *protocol.SetTraceParams) error {
 	protocol.SetTraceValue(params.Value)
 	return nil
 }
