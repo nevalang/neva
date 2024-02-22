@@ -24,25 +24,30 @@ func getMsg(msg *ir.Msg) (string, error) {
 	case ir.MsgTypeString:
 		return fmt.Sprintf(`runtime.NewStrMsg("%v")`, msg.Str), nil
 	case ir.MsgTypeList:
-		s := "runtime.NewListMsg(\n\t"
+		s := `runtime.NewListMsg(
+	`
 		for _, v := range msg.List {
 			el, err := getMsg(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
-			s += fmt.Sprintf("\t%v,\n", el)
+			s += fmt.Sprintf(`	%v,
+`, el)
 		}
 		return s + ")", nil
 	case ir.MsgTypeMap:
-		s := "runtime.NewMapMsg(map[string]runtime.Msg{\n\t"
+		s := `runtime.NewMapMsg(map[string]runtime.Msg{
+	`
 		for k, v := range msg.Map {
 			el, err := getMsg(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
-			s += fmt.Sprintf(`\t"%v": %v,\n`, k, el)
+			s += fmt.Sprintf(`	"%v": %v,
+`, k, el)
 		}
-		return s + "},\n)", nil
+		return s + `},
+)`, nil
 	}
 
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)

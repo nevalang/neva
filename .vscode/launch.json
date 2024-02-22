@@ -9,7 +9,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "1_echo"]
+      "args": ["build", "7_struct_selector/with_sugar"]
     },
     // === Vscode-neva extension debug tasks ===
     // extension itself
