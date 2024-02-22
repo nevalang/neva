@@ -47,6 +47,6 @@ type (
 	}
 
 	Backend interface {
-		Emit(string, *ir.Program) error
+		Emit(dst string, prog *ir.Program) error
 	}
 )

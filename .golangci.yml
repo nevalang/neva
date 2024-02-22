@@ -1,25 +1,29 @@
 run:
-  skip-dirs:
-    - pkg/ir
   timeout: 5m
+  concurrency: 4
+  tests: false
+  issues-exit-code: 2
+  skip-files:
+    - ".*\\.my\\.go$"
 
 linters:
   enable-all: true
   disable:
     - gci # imports order
-    - depguard # enforces to manually configure imports white-list
+    - depguard # enforces to use imports white-list
     - godox # restricts todo/fixme comments
     - godot # enforces dots at the end of comments
     - gomnd # restricts magic numbers
     - nlreturn # enforces newlines before returns
     - wsl # enforces spaces in loops, assignments, etc
-    - deadcode # replaced by unused
-    - cyclop # replaced by gocyclo
     - exhaustivestruct # all struct fields must be initialized
     - exhaustruct # same as exhaustivestruct
     - exhaustive # same as exhaustivestruct and exhaustive
     - testpackage # enforces test files to have _test package
     - forbidigo # doesn't allow to use fmt.Println
+    # deprecated:
+    - deadcode # replaced by unused
+    - cyclop # replaced by gocyclo
 
 linters-settings:
   lll:

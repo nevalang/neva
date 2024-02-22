@@ -168,6 +168,8 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionRece
 }
 
 func joinNodePath(nodePath []string, nodeName string) string {
-	newPath := append(nodePath, nodeName)
+	newPath := make([]string, 0, len(nodePath)+1)
+	copy(newPath, nodePath)
+	newPath = append(newPath, nodeName)
 	return strings.Join(newPath, "/")
 }
