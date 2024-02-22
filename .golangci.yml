@@ -24,6 +24,7 @@ linters:
     # - inamedparam # forces to give names to interface params
     - errorlint # doesn't understand wrapping correctly
     - varnamelen # restricts names like wg, ok, ctx, etc
+    - ireturn # restricts returned interfaces
     # deprecated:
     - deadcode # replaced by unused
     - cyclop # replaced by gocyclo
