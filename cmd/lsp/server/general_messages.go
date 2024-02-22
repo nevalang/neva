@@ -25,7 +25,7 @@ func (s *Server) Shutdown(context *glsp.Context) error {
 	return nil
 }
 
-func (s Server) Exit(glspContext *glsp.Context) error {
+func (s Server) Exit(_ *glsp.Context) error {
 	return nil
 }
 
