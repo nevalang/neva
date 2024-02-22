@@ -20,14 +20,11 @@ func main() {
     inSig0Port := make(chan runtime.Msg, 0)
     inV0Port := make(chan runtime.Msg, 0)
     outV0Port := make(chan runtime.Msg, 0)
-    inV0Port := make(chan runtime.Msg, 0)
-    outV0Port := make(chan runtime.Msg, 0)
-    outMsg0Port := make(chan runtime.Msg, 0)
     inData0Port := make(chan runtime.Msg, 0)
     outSig0Port := make(chan runtime.Msg, 0)
-    inSig0Port := make(chan runtime.Msg, 0)
-    inV0Port := make(chan runtime.Msg, 0)
-    outV0Port := make(chan runtime.Msg, 0)
+    inMsg0Port := make(chan runtime.Msg, 0)
+    outMsg0Port := make(chan runtime.Msg, 0)
+    outMsg0Port := make(chan runtime.Msg, 0)
 
 	// program
     prog := runtime.Program{
@@ -59,21 +56,6 @@ func main() {
             }: outV0Port,
             {
                 Path: "in",
-                Port: "v",
-                Idx: 0,
-            }: inV0Port,
-            {
-                Path: "out",
-                Port: "v",
-                Idx: 0,
-            }: outV0Port,
-            {
-                Path: "out",
-                Port: "msg",
-                Idx: 0,
-            }: outMsg0Port,
-            {
-                Path: "in",
                 Port: "data",
                 Idx: 0,
             }: inData0Port,
@@ -84,19 +66,19 @@ func main() {
             }: outSig0Port,
             {
                 Path: "in",
-                Port: "sig",
+                Port: "msg",
                 Idx: 0,
-            }: inSig0Port,
-            {
-                Path: "in",
-                Port: "v",
-                Idx: 0,
-            }: inV0Port,
+            }: inMsg0Port,
             {
                 Path: "out",
-                Port: "v",
+                Port: "msg",
                 Idx: 0,
-            }: outV0Port,
+            }: outMsg0Port,
+            {
+                Path: "out",
+                Port: "msg",
+                Idx: 0,
+            }: outMsg0Port,
         },
         Connections: []runtime.Connection{
             // in:start[0] -> 
@@ -114,32 +96,11 @@ func main() {
                     },
                 },
             },
-            // __pet_name_node__/out:v[0] -> printer/in:data[0]
-            {
-                Sender: __pet_name_node__OutV0Port,
-                Receivers: []chan runtime.Msg{
-                    printerInData0Port,
-                },
-                Meta: runtime.ConnectionMeta{
-                    SenderPortAddr: runtime.PortAddr{
-                        Path: "__pet_name_node__/out",
-                        Port: "v",
-                        Idx: 0,
-                    },
-                    ReceiverPortAddrs: []runtime.PortAddr{
-                        {
-                            Path: "printer/in",
-                            Port: "data",
-                            Idx: 0,
-                        },
-                    },
-                },
-            },
-            // $user/out:msg[0] -> __pet_name_node__/in:v[0]
+            // $user/out:msg[0] -> selector/in:msg[0]
             {
                 Sender: _userOutMsg0Port,
                 Receivers: []chan runtime.Msg{
-                    __pet_name_node__InV0Port,
+                    selectorInMsg0Port,
                 },
                 Meta: runtime.ConnectionMeta{
                     SenderPortAddr: runtime.PortAddr{
@@ -149,71 +110,8 @@ func main() {
                     },
                     ReceiverPortAddrs: []runtime.PortAddr{
                         {
-                            Path: "__pet_name_node__/in",
-                            Port: "v",
-                            Idx: 0,
-                        },
-                    },
-                },
-            },
-            // in:start[0] -> __then_lock_from_in:start_to___pet_name_node__:v_/in:sig[0]
-            {
-                Sender: inStart0Port,
-                Receivers: []chan runtime.Msg{
-                    __then_lock_from_inStart_to___pet_name_node__V_InSig0Port,
-                },
-                Meta: runtime.ConnectionMeta{
-                    SenderPortAddr: runtime.PortAddr{
-                        Path: "in",
-                        Port: "start",
-                        Idx: 0,
-                    },
-                    ReceiverPortAddrs: []runtime.PortAddr{
-                        {
-                            Path: "__then_lock_from_in:start_to___pet_name_node__:v_/in",
-                            Port: "sig",
-                            Idx: 0,
-                        },
-                    },
-                },
-            },
-            // __pet_name_node__/out:v[0] -> __then_lock_from_in:start_to___pet_name_node__:v_/in:v[0]
-            {
-                Sender: __pet_name_node__OutV0Port,
-                Receivers: []chan runtime.Msg{
-                    __then_lock_from_inStart_to___pet_name_node__V_InV0Port,
-                },
-                Meta: runtime.ConnectionMeta{
-                    SenderPortAddr: runtime.PortAddr{
-                        Path: "__pet_name_node__/out",
-                        Port: "v",
-                        Idx: 0,
-                    },
-                    ReceiverPortAddrs: []runtime.PortAddr{
-                        {
-                            Path: "__then_lock_from_in:start_to___pet_name_node__:v_/in",
-                            Port: "v",
-                            Idx: 0,
-                        },
-                    },
-                },
-            },
-            // __then_lock_from_in:start_to___pet_name_node__:v_/out:v[0] -> printer/in:data[0]
-            {
-                Sender: __then_lock_from_inStart_to___pet_name_node__V_OutV0Port,
-                Receivers: []chan runtime.Msg{
-                    printerInData0Port,
-                },
-                Meta: runtime.ConnectionMeta{
-                    SenderPortAddr: runtime.PortAddr{
-                        Path: "__then_lock_from_in:start_to___pet_name_node__:v_/out",
-                        Port: "v",
-                        Idx: 0,
-                    },
-                    ReceiverPortAddrs: []runtime.PortAddr{
-                        {
-                            Path: "printer/in",
-                            Port: "data",
+                            Path: "selector/in",
+                            Port: "msg",
                             Idx: 0,
                         },
                     },
@@ -261,11 +159,11 @@ func main() {
                     },
                 },
             },
-            // __then_lock_from_in:start_to_$user:msg_/out:v[0] -> __pet_name_node__/in:v[0]
+            // __then_lock_from_in:start_to_$user:msg_/out:v[0] -> selector/in:msg[0]
             {
                 Sender: __then_lock_from_inStart_to__userMsg_OutV0Port,
                 Receivers: []chan runtime.Msg{
-                    __pet_name_node__InV0Port,
+                    selectorInMsg0Port,
                 },
                 Meta: runtime.ConnectionMeta{
                     SenderPortAddr: runtime.PortAddr{
@@ -275,8 +173,29 @@ func main() {
                     },
                     ReceiverPortAddrs: []runtime.PortAddr{
                         {
-                            Path: "__pet_name_node__/in",
-                            Port: "v",
+                            Path: "selector/in",
+                            Port: "msg",
+                            Idx: 0,
+                        },
+                    },
+                },
+            },
+            // selector/out:msg[0] -> printer/in:data[0]
+            {
+                Sender: selectorOutMsg0Port,
+                Receivers: []chan runtime.Msg{
+                    printerInData0Port,
+                },
+                Meta: runtime.ConnectionMeta{
+                    SenderPortAddr: runtime.PortAddr{
+                        Path: "selector/out",
+                        Port: "msg",
+                        Idx: 0,
+                    },
+                    ReceiverPortAddrs: []runtime.PortAddr{
+                        {
+                            Path: "printer/in",
+                            Port: "data",
                             Idx: 0,
                         },
                     },
@@ -310,58 +229,19 @@ func main() {
                 IO: runtime.FuncIO{
                     In: map[string][]chan runtime.Msg{
                         "sig": {
-                            inSig0Port,inSig0Port,
+                            inSig0Port,
                         },
                         "v": {
-                            inV0Port,inV0Port,inV0Port,
+                            inV0Port,
                         },
                     },
                     Out: map[string][]chan runtime.Msg{
                         "v": {
-                            outV0Port,outV0Port,outV0Port,
+                            outV0Port,
                         },
                     },
                 },
                 ConfigMsg: nil,
-            },
-            {
-                Ref: "struct_selector",
-                IO: runtime.FuncIO{
-                    In: map[string][]chan runtime.Msg{
-                        "v": {
-                            inV0Port,inV0Port,inV0Port,
-                        },
-                    },
-                    Out: map[string][]chan runtime.Msg{
-                        "v": {
-                            outV0Port,outV0Port,outV0Port,
-                        },
-                    },
-                },
-                ConfigMsg: runtime.NewListMsg(
-		runtime.NewStrMsg("pet"),
-	runtime.NewStrMsg("name"),
-),
-            },
-            {
-                Ref: "emitter",
-                IO: runtime.FuncIO{
-                    In: map[string][]chan runtime.Msg{
-                    },
-                    Out: map[string][]chan runtime.Msg{
-                        "msg": {
-                            outMsg0Port,
-                        },
-                    },
-                },
-                ConfigMsg: runtime.NewMapMsg(map[string]runtime.Msg{
-		"name": runtime.NewStrMsg("John"),
-	"pet": runtime.NewMapMsg(map[string]runtime.Msg{
-		"name": runtime.NewStrMsg("Charley"),
-},
-),
-},
-),
             },
             {
                 Ref: "line_printer",
@@ -380,23 +260,43 @@ func main() {
                 ConfigMsg: nil,
             },
             {
-                Ref: "blocker",
+                Ref: "struct_selector",
                 IO: runtime.FuncIO{
                     In: map[string][]chan runtime.Msg{
-                        "sig": {
-                            inSig0Port,inSig0Port,
-                        },
-                        "v": {
-                            inV0Port,inV0Port,inV0Port,
+                        "msg": {
+                            inMsg0Port,
                         },
                     },
                     Out: map[string][]chan runtime.Msg{
-                        "v": {
-                            outV0Port,outV0Port,outV0Port,
+                        "msg": {
+                            outMsg0Port,outMsg0Port,
                         },
                     },
                 },
-                ConfigMsg: nil,
+                ConfigMsg: runtime.NewListMsg(
+		runtime.NewStrMsg("pet"),
+	runtime.NewStrMsg("name"),
+),
+            },
+            {
+                Ref: "emitter",
+                IO: runtime.FuncIO{
+                    In: map[string][]chan runtime.Msg{
+                    },
+                    Out: map[string][]chan runtime.Msg{
+                        "msg": {
+                            outMsg0Port,outMsg0Port,
+                        },
+                    },
+                },
+                ConfigMsg: runtime.NewMapMsg(map[string]runtime.Msg{
+		"name": runtime.NewStrMsg("John"),
+	"pet": runtime.NewMapMsg(map[string]runtime.Msg{
+		"name": runtime.NewStrMsg("Charley"),
+},
+),
+},
+),
             },
         },
     }

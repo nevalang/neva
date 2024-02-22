@@ -65,7 +65,7 @@ func fmtPortAddr(addr ir.PortAddr) string {
 	return fmt.Sprintf("%s:%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 
-func getPortChVarName(addr *ir.PortAddr) string {
+func getPortChanName(addr *ir.PortAddr) string {
 	path := handleSpecialChars(addr.Path)
 	port := addr.Port
 	if path != "" {
@@ -79,7 +79,7 @@ func getPortsFunc(ports []ir.PortInfo) func(path, port string) string {
 		var s string
 		for _, info := range ports {
 			if info.PortAddr.Path == path && info.PortAddr.Port == port {
-				s = s + getPortChVarName(&info.PortAddr) + ","
+				s = s + getPortChanName(&info.PortAddr) + ","
 			}
 		}
 		return s
