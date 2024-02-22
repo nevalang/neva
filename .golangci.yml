@@ -2,7 +2,6 @@ run:
   timeout: 5m
   concurrency: 4
   tests: false
-  issues-exit-code: 2
   skip-files:
     - ".*\\.my\\.go$"
 
