@@ -28,6 +28,6 @@ lint:
 	@golangci-lint run ./... --new-from-rev=HEAD~1
 
 # lint all go code
-.PHONY: lintall
-lint:
+.PHONY: lint-all
+lint-all:
 	@golangci-lint run ./...
