@@ -77,7 +77,7 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 	}
 }
 
-func (h Helper) Param(name string, constr Expr) Param {
+func (h Helper) Param(name string, _ Expr) Param {
 	return Param{
 		Name: name,
 		Constr: Expr{

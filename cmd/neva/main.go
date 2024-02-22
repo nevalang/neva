@@ -72,7 +72,7 @@ func main() { //nolint:funlen
 	)
 
 	// doesn't matter which compiler to use for interpreter
-	interp := newInterpreter(prsr, goCompiler, pkgMngr)
+	interp := newInterpreter(goCompiler, pkgMngr)
 
 	// command-line app that can compile and interpret neva code
 	app := newCliApp(
@@ -90,7 +90,6 @@ func main() { //nolint:funlen
 }
 
 func newInterpreter(
-	p parser.Parser,
 	c compiler.Compiler,
 	pkg pkgmanager.Manager,
 ) interpreter.Interpreter {

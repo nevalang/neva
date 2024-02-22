@@ -9,9 +9,9 @@ import (
 )
 
 type GetFileViewRequest struct {
-	WorkspaceUri URI `json:"workspaceUri"`
+	WorkspaceURI URI `json:"workspaceUri"`
 	Document     struct {
-		Uri      URI    `json:"uri"`
+		URI      URI    `json:"uri"`
 		FileName string `json:"fileName"`
 	} `json:"document"`
 }
@@ -35,7 +35,7 @@ func (s *Server) GetFileView(glspCtx *glsp.Context, req GetFileViewRequest) (Get
 		return GetFileViewResponce{}, nil
 	}
 
-	relFilePath := strings.TrimPrefix(req.Document.FileName, req.WorkspaceUri.Path)
+	relFilePath := strings.TrimPrefix(req.Document.FileName, req.WorkspaceURI.Path)
 	relFilePath = strings.TrimPrefix(relFilePath, "/")
 
 	relPathParts := strings.Split(relFilePath, "/")           // relative path to file in slice

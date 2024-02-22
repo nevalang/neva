@@ -101,7 +101,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 	desugaredNet := handleConnsResult.desugaredConns
 	maps.Copy(desugaredNodes, handleConnsResult.extraNodes)
 
-	unusedOutports := d.findUnusedOutports(component, scope, handleConnsResult.usedNodePorts, desugaredNodes, desugaredNet)
+	unusedOutports := d.findUnusedOutports(component, scope, handleConnsResult.usedNodePorts)
 	if unusedOutports.len() != 0 {
 		voidResult := d.getVoidNodeAndConns(unusedOutports)
 		desugaredNet = append(desugaredNet, voidResult.voidConns...)
@@ -163,7 +163,6 @@ func (d Desugarer) handleConns( //nolint:funlen
 			result, err := d.desugarStructSelectors(
 				conn,
 				nodes,
-				desugaredConns,
 				scope,
 			)
 			if err != nil {
@@ -188,7 +187,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.desugaredConn
 			} else if conn.SenderSide.Const.Value != nil {
-				result, err := d.handleLiteralSender(conn, scope)
+				result, err := d.handleLiteralSender(conn)
 				if err != nil {
 					return handleConnsResult{}, err
 				}

@@ -31,7 +31,6 @@ var litSendersCount atomic.Uint32
 
 func (d Desugarer) handleLiteralSender(
 	conn src.Connection,
-	scope src.Scope,
 ) (
 	handleLiteralSenderResult,
 	*compiler.Error,

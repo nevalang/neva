@@ -25,11 +25,11 @@ func (s *Server) Shutdown(context *glsp.Context) error {
 	return nil
 }
 
-func (srv Server) Exit(glspContext *glsp.Context) error {
+func (s Server) Exit(glspContext *glsp.Context) error {
 	return nil
 }
 
-func (srv Server) SetTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
+func (s Server) SetTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
 	protocol.SetTraceValue(params.Value)
 	return nil
 }

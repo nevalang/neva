@@ -29,7 +29,7 @@ func (p Parser) ParseModules(
 	parsedMods := make(map[src.ModuleRef]src.Module, len(rawMods))
 
 	for modRef, rawMod := range rawMods {
-		parsedPkgs, err := p.ParsePackages(rawMod.Packages, modRef)
+		parsedPkgs, err := p.ParsePackages(rawMod.Packages)
 		if err != nil {
 			return nil, compiler.Error{
 				Err:      errors.New("Parsing error"),
@@ -48,7 +48,6 @@ func (p Parser) ParseModules(
 
 func (p Parser) ParsePackages(
 	rawPkgs map[string]compiler.RawPackage,
-	modRef src.ModuleRef,
 ) (map[string]src.Package, *compiler.Error) {
 	packages := make(map[string]src.Package, len(rawPkgs))
 

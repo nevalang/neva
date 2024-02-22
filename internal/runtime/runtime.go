@@ -29,7 +29,7 @@ var (
 	ErrFuncRunner        = errors.New("func runner")
 )
 
-func (r Runtime) Run(ctx context.Context, prog Program) (err error) {
+func (r Runtime) Run(ctx context.Context, prog Program) error {
 	enter := prog.Ports[PortAddr{Path: "in", Port: "start"}]
 	if enter == nil {
 		return ErrStartPortNotFound

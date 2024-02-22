@@ -22,7 +22,12 @@ lsp:
 tygo:
 	@tygo generate
 
-# lint go code
+# lint new go code
 .PHONY: lint
 lint:
 	@golangci-lint run ./... --new-from-rev=HEAD~1
+
+# lint all go code
+.PHONY: lintall
+lint:
+	@golangci-lint run ./...

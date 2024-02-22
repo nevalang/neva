@@ -105,7 +105,7 @@ type BoolMsg struct {
 
 func (msg BoolMsg) Type() MsgType  { return BoolMsgType }
 func (msg BoolMsg) Bool() bool     { return msg.v }
-func (msg BoolMsg) String() string { return fmt.Sprint(msg.v) }
+func (msg BoolMsg) String() string { return strconv.FormatBool(msg.v) }
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
