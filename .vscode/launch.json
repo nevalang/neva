@@ -7,7 +7,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/neva",
+      "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
       "args": ["build", "7_struct_selector/with_sugar"]
     },

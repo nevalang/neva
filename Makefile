@@ -2,7 +2,7 @@
 # example usage: sudo make install
 .PHONY: install
 install:
-	@go build -ldflags="-s -w" cmd/neva/*.go && \
+	@go build -ldflags="-s -w" cmd/cli/*.go && \
 	rm -rf /usr/local/bin/neva && \
 	mv cli /usr/local/bin/neva
 

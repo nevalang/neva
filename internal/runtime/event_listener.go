@@ -82,5 +82,5 @@ func (e EventType) String() string {
 }
 
 type EventListener interface {
-	Send(Event, Msg) Msg
+	Send(event Event, msg Msg) Msg
 }
