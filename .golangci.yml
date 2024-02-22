@@ -2,7 +2,6 @@ run:
   timeout: 5m
   concurrency: 4
   tests: false
-  issues-exit-code: 2
   skip-files:
     - ".*\\.my\\.go$"
 
@@ -21,6 +20,10 @@ linters:
     - exhaustive # same as exhaustivestruct and exhaustive
     - testpackage # enforces test files to have _test package
     - forbidigo # doesn't allow to use fmt.Println
+    # - inamedparam # forces to give names to interface params
+    - errorlint # doesn't understand wrapping correctly
+    - varnamelen # restricts names like wg, ok, ctx, etc
+    - ireturn # restricts returned interfaces
     # deprecated:
     - deadcode # replaced by unused
     - cyclop # replaced by gocyclo

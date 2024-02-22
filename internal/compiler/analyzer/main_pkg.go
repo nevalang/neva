@@ -50,14 +50,14 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	scope = scope.WithLocation(*location)
 
-	if err := a.analyzeMainComponent(entityMain.Component, mainPkg, scope); err != nil {
+	if err := a.analyzeMainComponent(entityMain.Component, scope); err != nil {
 		return compiler.Error{
 			Location: location,
 			Meta:     &entityMain.Component.Meta,
 		}.Merge(err)
 	}
 
-	if err := mainPkg.Entities(func(entity src.Entity, entityName, fileName string) error {
+	if err := mainPkg.Entities(func(entity src.Entity, entityName, _ string) error {
 		if entity.IsPublic {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),

@@ -4,7 +4,7 @@ import "fmt"
 
 type EmptyListener struct{}
 
-func (l EmptyListener) Send(event Event, msg Msg) Msg {
+func (l EmptyListener) Send(_ Event, msg Msg) Msg {
 	return msg
 }
 

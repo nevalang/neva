@@ -20,7 +20,7 @@ var (
 	ErrMainComponentNodeNotComponent   = errors.New("Main component's nodes must only refer to components")
 )
 
-func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope src.Scope) *compiler.Error {
+func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
 			Err:  ErrMainComponentWithTypeParams,
@@ -32,7 +32,7 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, pkg src.Package, scope
 		return compiler.Error{Meta: &cmp.Interface.Meta}.Merge(err)
 	}
 
-	if err := a.analyzeMainComponentNodes(cmp.Nodes, pkg, scope); err != nil {
+	if err := a.analyzeMainComponentNodes(cmp.Nodes, scope); err != nil {
 		return compiler.Error{Meta: &cmp.Meta}.Merge(err)
 	}
 
@@ -86,7 +86,7 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
 	return nil
 }
 
-func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, pkg src.Package, scope src.Scope) *compiler.Error {
+func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, scope src.Scope) *compiler.Error {
 	for nodeName, node := range nodes {
 		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {

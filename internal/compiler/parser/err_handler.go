@@ -14,7 +14,7 @@ type CustomErrorListener struct {
 }
 
 func (c *CustomErrorListener) SyntaxError(
-	recognizer antlr.Recognizer,
+	_ antlr.Recognizer,
 	offendingSymbol any,
 	line, column int,
 	msg string,

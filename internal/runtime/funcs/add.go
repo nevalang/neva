@@ -8,7 +8,7 @@ import (
 
 type intAdder struct{}
 
-func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intAdder) Create(_ runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	// vvin, err := io.In.Port("vv")
 	// if err != nil {
 	// 	return nil, err

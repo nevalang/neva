@@ -57,10 +57,10 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	}
 
 	// Basic
-	h.CancelRequest = func(context *glsp.Context, params *protocol.CancelParams) error {
+	h.CancelRequest = func(_ *glsp.Context, params *protocol.CancelParams) error {
 		return nil
 	}
-	h.Progress = func(context *glsp.Context, params *protocol.ProgressParams) error {
+	h.Progress = func(_ *glsp.Context, params *protocol.ProgressParams) error {
 		return nil
 	}
 

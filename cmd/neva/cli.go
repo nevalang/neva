@@ -28,7 +28,7 @@ func newCliApp( //nolint:funlen
 			{
 				Name:  "version",
 				Usage: "Get current Nevalang version",
-				Action: func(cCtx *cli.Context) error {
+				Action: func(_ *cli.Context) error {
 					fmt.Println(pkg.Version)
 					return nil
 				},

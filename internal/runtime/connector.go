@@ -22,8 +22,6 @@ func (c Connector) Connect(ctx context.Context, conns []Connection) {
 	}
 
 	wg.Wait()
-
-	return
 }
 
 func (c Connector) broadcast(ctx context.Context, conn Connection) {
@@ -78,7 +76,7 @@ func getReceiversForEvent(conn Connection) map[PortAddr]struct{} {
 }
 
 // distribute implements the "Queue-based Round-Robin Algorithm".
-func (c Connector) distribute( //nolint:funlen
+func (c Connector) distribute(
 	ctx context.Context,
 	msg Msg,
 	meta ConnectionMeta,
@@ -139,8 +137,6 @@ func (c Connector) distribute( //nolint:funlen
 			i = 0 // then start over
 		}
 	}
-
-	return
 }
 
 func NewDefaultConnector() Connector {

@@ -34,7 +34,6 @@ var selectorNodeRef = src.EntityRef{
 func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	conn src.Connection,
 	nodes map[string]src.Node,
-	net []src.Connection,
 	scope src.Scope,
 ) (handleStructSelectorsResult, *compiler.Error) {
 	senderSide := conn.SenderSide
@@ -226,11 +225,12 @@ func (d Desugarer) getNodeOutportType(
 	}
 
 	var nodeIface src.Interface
-	if entity.Kind == src.InterfaceEntity {
+	switch entity.Kind {
+	case src.InterfaceEntity:
 		nodeIface = entity.Interface
-	} else if entity.Kind == src.ComponentEntity {
+	case src.ComponentEntity:
 		nodeIface = entity.Component.Interface
-	} else {
+	default:
 		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrOutportAddrNotFound, "node's entity found but it's not component or interface"),
 			Location: &location,

@@ -58,8 +58,6 @@ func (Desugarer) findUnusedOutports(
 	component src.Component,
 	scope src.Scope,
 	usedNodePorts nodePortsMap,
-	desugaredNodes map[string]src.Node,
-	desugaredNet []src.Connection,
 ) nodePortsMap {
 	unusedOutports := newNodePortsMap()
 	for nodeName, node := range component.Nodes {
