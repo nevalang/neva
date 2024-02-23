@@ -71,16 +71,25 @@ func getPortChanName(addr *ir.PortAddr) string {
 	return result
 }
 
-func getPortsFunc(ports []ir.PortInfo) func(path, port string) string {
-	return func(path, port string) string {
-		var s string
-		for _, info := range ports {
-			if info.PortAddr.Path == path && info.PortAddr.Port == port {
-				s = s + getPortChanName(&info.PortAddr) + ","
-			}
-		}
-		return s
+func getFuncIOPorts(addrs []ir.PortAddr) string {
+	m := map[string][]string{}
+	for _, addr := range addrs {
+		m[addr.Port] = append(
+			m[addr.Port],
+			getPortChanName(compiler.Pointer(addr)),
+		)
 	}
+
+	s := ""
+	for port, chans := range m {
+		s += fmt.Sprintf(`"%s": {`, port)
+		for _, ch := range chans {
+			s += ch + ","
+		}
+		s += "},\n"
+	}
+
+	return s
 }
 
 func handleSpecialChars(portPath string) string {

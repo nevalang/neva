@@ -22,7 +22,7 @@ var (
 func (b Backend) Emit(dst string, prog *ir.Program) error {
 	tmpl, err := template.New("tpl.go").Funcs(template.FuncMap{
 		"getMsg":          getMsg,
-		"getPorts":        getPortsFunc(prog.Ports),
+		"getFuncIOPorts":  getFuncIOPorts,
 		"getPortChanName": getPortChanName,
 		"getConnComment":  getConnComment,
 	}).Parse(mainGoTemplate)
