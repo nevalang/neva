@@ -9,7 +9,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "0_do_nothing"]
+      "args": ["run", "0_do_nothing"]
     },
     {
       "name": "Neva CLI 10",
@@ -18,7 +18,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "1_echo"]
+      "args": ["run", "1_echo"]
     },
     {
       "name": "Neva CLI 20",

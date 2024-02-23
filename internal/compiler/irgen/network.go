@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/runtime/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 

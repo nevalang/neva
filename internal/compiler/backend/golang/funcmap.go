@@ -6,7 +6,7 @@ import (
 	"unicode"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 func getMsg(msg *ir.Msg) (string, error) {
