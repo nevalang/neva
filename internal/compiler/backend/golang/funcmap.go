@@ -3,7 +3,6 @@ package golang
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"unicode"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -65,51 +64,44 @@ func fmtPortAddr(addr ir.PortAddr) string {
 	return fmt.Sprintf("%s:%s[%d]", addr.Path, addr.Port, addr.Idx)
 }
 
-func getPortChVarName(addr *ir.PortAddr) string {
+func getPortChanName(addr *ir.PortAddr) string {
 	path := handleSpecialChars(addr.Path)
 	port := addr.Port
-	if path != "" {
-		port = uppercaseFirstLetter(addr.Port)
-	}
-	return fmt.Sprintf("%s%s%dPort", path, port, addr.Idx)
+	result := fmt.Sprintf("%s_%s_%d_port", path, port, addr.Idx)
+	return result
 }
 
-func getPortsFunc(ports []ir.PortInfo) func(path, port string) string {
-	return func(path, port string) string {
-		var s string
-		for _, info := range ports {
-			if info.PortAddr.Path == path && info.PortAddr.Port == port {
-				s = s + getPortChVarName(&info.PortAddr) + ","
-			}
-		}
-		return s
+func getFuncIOPorts(addrs []ir.PortAddr) string {
+	m := map[string][]string{}
+	for _, addr := range addrs {
+		m[addr.Port] = append(
+			m[addr.Port],
+			getPortChanName(compiler.Pointer(addr)),
+		)
 	}
+
+	s := ""
+	for port, chans := range m {
+		s += fmt.Sprintf(`"%s": {`, port)
+		for _, ch := range chans {
+			s += ch + ","
+		}
+		s += "},\n"
+	}
+
+	return s
 }
 
 func handleSpecialChars(portPath string) string {
-	var (
-		buffer          bytes.Buffer
-		shouldUppercase bool
-	)
-
-	for i := 0; i < len(portPath); i++ {
-		cur := portPath[i]
-		if cur == '$' {
-			buffer.WriteString("_")
-			continue
+	var buffer bytes.Buffer
+	for _, r := range portPath {
+		switch r {
+		case '$', '.', '/', ':':
+			buffer.WriteRune('_')
+		default:
+			buffer.WriteRune(r)
 		}
-		if cur == '.' || cur == '/' || cur == ':' {
-			shouldUppercase = true
-			continue
-		}
-		s := string(cur)
-		if shouldUppercase {
-			s = strings.ToUpper(s)
-			shouldUppercase = false
-		}
-		buffer.WriteString(s)
 	}
-
 	return buffer.String()
 }
 

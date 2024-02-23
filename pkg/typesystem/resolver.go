@@ -30,14 +30,14 @@ type Resolver struct {
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}_test
 type (
 	exprValidator interface {
-		Validate(Expr) error
+		Validate(expr Expr) error
 		ValidateDef(def Def) error
 	}
 	subtypeChecker interface {
 		Check(sub Expr, sup Expr, params TerminatorParams) error
 	}
 	recursionTerminator interface {
-		ShouldTerminate(Trace, Scope) (bool, error)
+		ShouldTerminate(trace Trace, scope Scope) (bool, error)
 	}
 	Scope interface {
 		GetType(ref fmt.Stringer) (Def, Scope, error)

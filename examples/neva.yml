@@ -2,4 +2,4 @@
 # They not only serve documentation purposes, they are also
 # e2e tests that you can manually run to ensure that Nevalang works.
 
-neva: 0.4.1
+neva: 0.5.1

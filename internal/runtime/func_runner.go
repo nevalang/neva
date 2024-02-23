@@ -12,7 +12,7 @@ type FuncRunner struct {
 
 type FuncCreator interface {
 	// Create method validates the input and builds ready to use function
-	Create(FuncIO, Msg) (func(context.Context), error)
+	Create(funcIO FuncIO, msg Msg) (func(context.Context), error)
 }
 
 func (d FuncRunner) Run(funcCalls []FuncCall) (func(ctx context.Context), error) {
