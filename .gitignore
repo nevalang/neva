@@ -11,6 +11,7 @@ cmd/tmp
 
 # generated executable
 /neva
+/examples/output
 
 node_modules
 __debug*

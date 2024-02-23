@@ -18,7 +18,7 @@ func main() {
 
     // ports
     {{- range $idx, $info := .Ports}}
-    {{getPortChVarName $info.PortAddr}} := make(chan runtime.Msg, {{$info.BufSize}})
+    {{getPortChanName $info.PortAddr}} := make(chan runtime.Msg, {{$info.BufSize}})
     {{- end}}
 
 	// program
@@ -29,17 +29,17 @@ func main() {
                 Path: "{{$info.PortAddr.Path}}",
                 Port: "{{$info.PortAddr.Port}}",
                 Idx: {{$info.PortAddr.Idx}},
-            }: {{getPortChVarName $info.PortAddr}},
+            }: {{getPortChanName $info.PortAddr}},
             {{- end}}
         },
         Connections: []runtime.Connection{
             {{- range .Connections}}
             {{ getConnComment . }}
             {
-                Sender: {{getPortChVarName .SenderSide}},
+                Sender: {{getPortChanName .SenderSide}},
                 Receivers: []chan runtime.Msg{
                 {{- range .ReceiverSides }}
-                    {{getPortChVarName .PortAddr}},
+                    {{getPortChanName .PortAddr}},
                 {{- end}}
                 },
                 Meta: runtime.ConnectionMeta{
