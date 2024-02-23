@@ -1,11 +1,13 @@
+import { std/x }
+
 component Main(start any) (stop any) {
 	nodes {
-		reader Scanner
+		scanner x.LineScanner
 		printer Printer<string>
 	}
 	net {
-		:start -> reader:sig
-		reader:data -> printer:data
+		:start -> scanner:sig
+		scanner:data -> printer:data
 		printer:sig -> :stop
 	}
 }

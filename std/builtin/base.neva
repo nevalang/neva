@@ -1,21 +1,6 @@
-type {
-    pub any
-    pub maybe<T>
-    
-    pub bool
-    pub string
-    pub int
-    pub float
-    
-    pub map<T>
-    pub list<T>
-    pub stream<T> maybe<T>
-    
-    pub error struct {
-        text string
-        child maybe<error>
-    }
-}
+// In this package we keep everything that's either
+// a) compiler aware of this (analyzer or desugarer) OR
+// b) it's used all the time
 
 component {
     #extern(emitter)
@@ -27,18 +12,20 @@ component {
     #extern(blocker)
     pub Blocker<T>(sig any, data T) (data T)
 
-    #extern(checker)
-    pub Checker(opt maybe<T>) (some T, none struct{})
-
     #autoports
     #extern(struct_builder)
     pub StructBuilder<T struct {}> () (msg T)
 
     #extern(struct_selector)
     pub StructSelector<T>(msg struct {}) (msg T)
-
-    #extern(string str_len, list list_len, map map_len)
-    pub Len<
-        T string | list<any> | map<any>
-    >(data T) (n int)
 }
+
+// Math
+
+#extern(int int_adder, float float_adder, string string_adder)
+component pub Adder<T int | float | string>(seq stream<T>) (res T)
+
+// IO
+
+#extern(line_printer)
+component pub Printer<T>(data T) (sig T)

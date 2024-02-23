@@ -1,7 +1,7 @@
 // Here we learn how to simplify program by separating concerns
 
 import {
-	std/strconv
+	std/x
 }
 
 component {
@@ -36,8 +36,8 @@ component {
 
 	IntReader(sig any) (num int, err error) {
 		nodes {
-			reader Scanner
-			parser strconv.NumParser<int>
+			reader x.LineScanner
+			parser x.NumParser<int>
 		}
 		net {
 			:sig -> reader:sig

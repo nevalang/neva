@@ -1,0 +1,20 @@
+// base types, typesystem is aware of them
+type {
+    pub any
+    pub maybe<T>
+    pub bool
+    pub string
+    pub int
+    pub float
+    pub map<T>
+    pub list<T>
+}
+
+// frequently used types, they are not special cases for typesystem
+type {
+    pub stream<T> maybe<T>
+    pub error struct {
+        text string
+        child maybe<error>
+    }
+}
