@@ -39,7 +39,6 @@ func buildExecutable(src, dst string) error {
 		"-o", outputPath,
 		src,
 	)
-	cmd.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

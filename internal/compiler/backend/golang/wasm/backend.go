@@ -14,32 +14,34 @@ type Backend struct {
 }
 
 func (b Backend) Emit(dst string, prog *ir.Program) error {
-	gomod := dst + "/tmp"
-	if err := b.golang.Emit(gomod, prog); err != nil {
+	tmpGoProj := dst + "/tmp"
+	if err := b.golang.Emit(tmpGoProj, prog); err != nil {
 		return err
 	}
-	if err := buildExecutable(gomod, dst); err != nil {
+	if err := buildWASM(tmpGoProj, dst); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(gomod); err != nil {
+	if err := os.RemoveAll(tmpGoProj); err != nil {
 		return err
 	}
 	return nil
 }
 
-func buildExecutable(src, dst string) error {
+// TODO handle the whole pipeline including html and js glue generation.
+
+func buildWASM(src, dst string) error {
 	outputPath := filepath.Join(dst, "output")
 	if err := os.Chdir(src); err != nil {
 		return err
 	}
-	// GOOS=js GOARCH=wasm
 	cmd := exec.Command(
 		"go",
 		"build",
 		"-ldflags", "-s -w", // for optimization
-		"-o", outputPath,
+		"-o", outputPath+".wasm",
 		src,
 	)
+	cmd.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
