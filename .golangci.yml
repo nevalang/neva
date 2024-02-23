@@ -24,6 +24,7 @@ linters:
     - errorlint # doesn't understand wrapping correctly
     - varnamelen # restricts names like wg, ok, ctx, etc
     - ireturn # restricts returned interfaces
+    - wrapcheck # plain wrapping barely works for compiler
     # deprecated:
     - deadcode # replaced by unused
     - cyclop # replaced by gocyclo
