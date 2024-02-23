@@ -3,7 +3,6 @@ package golang
 import (
 	"bytes"
 	"fmt"
-	"unicode"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg/ir"
@@ -103,13 +102,4 @@ func handleSpecialChars(portPath string) string {
 		}
 	}
 	return buffer.String()
-}
-
-func uppercaseFirstLetter(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	bb := []byte(s)
-	bb[0] = byte(unicode.ToUpper(rune(bb[0])))
-	return string(bb)
 }
