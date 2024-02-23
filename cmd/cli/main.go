@@ -8,6 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
+	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -71,6 +72,18 @@ func main() { //nolint:funlen
 		),
 	)
 
+	// this one can emit wasm code
+	wasmCompiler := compiler.New(
+		pkgMngr,
+		prsr,
+		desugarer,
+		analyzer,
+		irgen,
+		wasm.NewBackend(
+			golangBackend,
+		),
+	)
+
 	// doesn't matter which compiler to use for interpreter
 	interp := newInterpreter(goCompiler, pkgMngr)
 
@@ -79,6 +92,7 @@ func main() { //nolint:funlen
 		wd,
 		goCompiler,
 		nativeCompiler,
+		wasmCompiler,
 		interp,
 	)
 

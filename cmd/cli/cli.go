@@ -17,9 +17,10 @@ func newCliApp( //nolint:funlen
 	wd string,
 	goComp compiler.Compiler,
 	nativeComp compiler.Compiler,
+	wasmComp compiler.Compiler,
 	intr interpreter.Interpreter,
 ) *cli.App {
-	var golang bool
+	var target string
 
 	return &cli.App{
 		Name:  "neva",
@@ -58,10 +59,19 @@ func newCliApp( //nolint:funlen
 				Usage: "Build executable binary from neva program source code",
 				Args:  true,
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:        "go",
-						Usage:       "Emit Go instead of machine code",
-						Destination: &golang,
+					&cli.StringFlag{
+						Name:        "target",
+						Required:    false,
+						Usage:       "Emit Go or WASM instead of machine code",
+						Destination: &target,
+						Action: func(ctx *cli.Context, s string) error {
+							switch s {
+							case "go", "wasm", "native":
+							default:
+								return fmt.Errorf("Unknown target %s", s)
+							}
+							return nil
+						},
 					},
 				},
 				ArgsUsage: "Provide path to the executable package",
@@ -70,14 +80,20 @@ func newCliApp( //nolint:funlen
 					if err != nil {
 						return err
 					}
-					if golang {
+					switch target {
+					case "go":
 						return goComp.Compile(
 							wd, dirFromArg, wd,
 						)
+					case "wasm":
+						return wasmComp.Compile(
+							wd, dirFromArg, wd,
+						)
+					default:
+						return nativeComp.Compile(
+							wd, dirFromArg, wd,
+						)
 					}
-					return nativeComp.Compile(
-						wd, dirFromArg, wd,
-					)
 				},
 			},
 		},

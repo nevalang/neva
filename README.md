@@ -13,7 +13,7 @@ component Main(start any) (stop any) {
 	nodes { printer Printer<string> }
 	net {
 		:start -> ('Hello, World!' -> printer:msg)
-		printer:msg -> out:
+		printer:msg -> :stop
 	}
 }
 ```

@@ -2,7 +2,7 @@
 # example usage: sudo make install
 .PHONY: install
 install:
-	@go build -ldflags="-s -w" cmd/neva/*.go && \
+	@go build -ldflags="-s -w" cmd/cli/*.go && \
 	rm -rf /usr/local/bin/neva && \
 	mv cli /usr/local/bin/neva
 
@@ -28,6 +28,6 @@ lint:
 	@golangci-lint run ./... --new-from-rev=HEAD~1
 
 # lint all go code
-.PHONY: lintall
-lint:
+.PHONY: lint-all
+lint-all:
 	@golangci-lint run ./...
