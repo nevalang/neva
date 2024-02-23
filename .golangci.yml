@@ -5,10 +5,6 @@ run:
   skip-files:
     - ".*\\.my\\.go$"
 
-linters-settings:
-  lll:
-    line-length: 120
-
 issues:
   exclude-rules:
     - source: "^//go:generate"
