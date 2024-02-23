@@ -67,18 +67,10 @@ func main() {
                 Ref: "{{.Ref}}",
                 IO: runtime.FuncIO{
                     In: map[string][]chan runtime.Msg{
-                        {{- range .IO.In}}
-                        "{{.Port}}": {
-                            {{getPorts .Path .Port}}
-                        },
-                        {{- end}}
+                        {{getFuncIOPorts .IO.In}}
                     },
                     Out: map[string][]chan runtime.Msg{
-                        {{- range .IO.Out}}
-                        "{{.Port}}": {
-                            {{getPorts .Path .Port}}
-                        },
-                        {{- end}}
+                        {{getFuncIOPorts .IO.Out}}
                     },
                 },
                 ConfigMsg: {{getMsg .Msg}},
