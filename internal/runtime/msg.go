@@ -141,9 +141,9 @@ func (msg MapMsg) Type() MsgType       { return MapMsgType }
 func (msg MapMsg) Map() map[string]Msg { return msg.v }
 func (msg MapMsg) String() string      { return fmt.Sprint(msg.v) }
 
-func NewMapMsg(v map[string]Msg) MapMsg {
+func NewMapMsg(m map[string]Msg) MapMsg {
 	return MapMsg{
 		emptyMsg: emptyMsg{},
-		v:        v,
+		v:        m,
 	}
 }

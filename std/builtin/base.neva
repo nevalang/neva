@@ -23,7 +23,7 @@ component {
 // Math
 
 #extern(int int_adder, float float_adder, string string_adder)
-component pub Adder<T int | float | string>(seq stream<T>) (res T)
+component pub Adder<T int | float | string>(stream maybe<T>) (res T)
 
 // IO
 

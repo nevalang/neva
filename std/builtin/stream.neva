@@ -1,20 +1,20 @@
 // Streamers turn non-streams into streams
 
 #extern(port_streamer)
-pub component PortStreamer<T>([p] T) (seq stream<T>)
+pub component PortStreamer<T>([ports] T) (stream maybe<T>)
 
 // Bridges give stream handlers non-stream interface
 
-pub interface IStreamHandler<T>(seq stream<T>) (res T)
+pub interface IStreamHandler<T>(stream maybe<T>) (msg T)
 
-pub component PortBridge<T>([p] T) (res T) {
+pub component PortBridge<T>([ports] T) (msg T) {
     nodes {
         streamer PortStreamer<T>
         handler IStreamHandler<T>
     }
     net {
-        :p -> streamer:p
-        streamer:seq -> handler:seq
-        handler:res -> :res
+        :ports -> streamer:ports
+        streamer:stream -> handler:stream
+        handler:msg -> :msg
     }
 }

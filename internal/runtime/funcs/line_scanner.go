@@ -1,34 +1,28 @@
 package funcs
 
 import (
+	"bufio"
 	"context"
+	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type blocker struct{}
+type lineScanner struct{}
 
-func (l blocker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	vin, err := io.In.Port("v")
-	if err != nil {
-		return nil, err
-	}
-
+func (r lineScanner) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	vout, err := io.Out.Port("v")
+	vout, err := io.Out.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
-	return l.Handle(vin, sig, vout), nil
-}
-
-func (blocker) Handle(vin, sig, vout chan runtime.Msg) func(ctx context.Context) {
 	return func(ctx context.Context) {
+		reader := bufio.NewReader(os.Stdin)
 		for {
 			select {
 			case <-ctx.Done():
@@ -37,14 +31,18 @@ func (blocker) Handle(vin, sig, vout chan runtime.Msg) func(ctx context.Context)
 				select {
 				case <-ctx.Done():
 					return
-				case v := <-vin:
+				default:
+					bb, _, err := reader.ReadLine()
+					if err != nil {
+						panic(err)
+					}
 					select {
 					case <-ctx.Done():
 						return
-					case vout <- v:
+					case vout <- runtime.NewStrMsg(string(bb)):
 					}
 				}
 			}
 		}
-	}
+	}, nil
 }

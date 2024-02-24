@@ -41,7 +41,7 @@ component {
 		}
 		net {
 			:sig -> reader:sig
-			reader:data -> parser:s
+			reader:data -> parser:data
 			parser:res -> :num
 			parser:err -> :err
 		}
