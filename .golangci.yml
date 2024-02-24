@@ -5,33 +5,6 @@ run:
   skip-files:
     - ".*\\.my\\.go$"
 
-linters:
-  enable-all: true
-  disable:
-    - gci # imports order
-    - depguard # enforces to use imports white-list
-    - godox # restricts todo/fixme comments
-    - godot # enforces dots at the end of comments
-    - gomnd # restricts magic numbers
-    - nlreturn # enforces newlines before returns
-    - wsl # enforces spaces in loops, assignments, etc
-    - exhaustivestruct # all struct fields must be initialized
-    - exhaustruct # same as exhaustivestruct
-    - exhaustive # same as exhaustivestruct and exhaustive
-    - testpackage # enforces test files to have _test package
-    - forbidigo # doesn't allow to use fmt.Println
-    # - inamedparam # forces to give names to interface params
-    - errorlint # doesn't understand wrapping correctly
-    - varnamelen # restricts names like wg, ok, ctx, etc
-    - ireturn # restricts returned interfaces
-    # deprecated:
-    - deadcode # replaced by unused
-    - cyclop # replaced by gocyclo
-
-linters-settings:
-  lll:
-    line-length: 120
-
 issues:
   exclude-rules:
     - source: "^//go:generate"

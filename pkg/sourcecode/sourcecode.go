@@ -252,7 +252,7 @@ type ConnectionReceiverSide struct {
 type ConnectionReceiver struct {
 	PortAddr  PortAddr                `json:"portAddr,omitempty"`
 	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
-	Meta      Meta                    `json:"meta,omit"`
+	Meta      Meta                    `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string

@@ -20,13 +20,8 @@ func (intAdder) Create(_ runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 	// }
 
 	return func(ctx context.Context) {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-				// case subStreamItem := <-vvin:
-				// 	subStreamItem
-			}
+		for range ctx.Done() {
+			return
 		}
 	}, nil
 }
