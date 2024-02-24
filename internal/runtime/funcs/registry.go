@@ -14,14 +14,14 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"blocker":       blocker{},
 		"port_streamer": portStreamer{},
 		// for structures
+		"line_scanner":    lineScanner{},
+		"int_parser":      intParser{},
 		"struct_selector": structSelector{},
 		"struct_builder":  structBuilder{},
 		// io
-		"line_scanner": lineScanner{},
 		"line_printer": linePrinter{},
 		// math
 		"int_adder": intAdder{},
 		// parsing
-		"int_parser": intParser{},
 	}
 }

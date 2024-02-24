@@ -13,8 +13,9 @@ pub component PortBridge<T>([ports] T) (res T) {
         handler IStreamHandler<T>
     }
     net {
-        :ports -> streamer:ports
+        :ports => streamer:ports
         streamer:stream -> handler:stream
         handler:res -> :res
     }
 }
+// TODO implement array ports bypass
