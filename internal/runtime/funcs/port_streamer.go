@@ -31,9 +31,22 @@ func (portStreamer) Create(
 		// but still emit messages to stream outport in order
 		for {
 			for _, slot := range portsIn {
-				streamOut <- <-slot
+				select {
+				case <-ctx.Done():
+					return
+				case msg := <-slot:
+					select {
+					case <-ctx.Done():
+						return
+					case streamOut <- msg:
+					}
+				}
 			}
-			streamOut <- nil // delimeter
+			select {
+			case <-ctx.Done():
+				return
+			case streamOut <- nil: // delimeter
+			}
 		}
 	}, nil
 }
