@@ -50,7 +50,7 @@ func (d Desugarer) handleLiteralSender(
 		EntityRef: emitterComponentRef,
 		TypeArgs: []ts.Expr{
 			conn.
-				SenderSide.
+				Normal.SenderSide.
 				Const.
 				Value.
 				TypeExpr,
@@ -65,13 +65,15 @@ func (d Desugarer) handleLiteralSender(
 		constName: constName,
 		handleConstRefSenderResult: handleConstRefSenderResult{
 			desugaredConn: src.Connection{
-				SenderSide: src.ConnectionSenderSide{
-					PortAddr:  &emitterNodeOutportAddr,
-					Selectors: conn.SenderSide.Selectors,
-					Meta:      conn.SenderSide.Meta,
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr:  &emitterNodeOutportAddr,
+						Selectors: conn.Normal.SenderSide.Selectors,
+						Meta:      conn.Normal.SenderSide.Meta,
+					},
+					ReceiverSide: conn.Normal.ReceiverSide,
 				},
-				ReceiverSide: conn.ReceiverSide,
-				Meta:         conn.Meta,
+				Meta: conn.Meta,
 			},
 			emitterNodeName: emitterNodeName,
 			emitterNode:     emitterNode,
@@ -86,19 +88,19 @@ func (d Desugarer) handleConstRefSender(
 	handleConstRefSenderResult,
 	*compiler.Error,
 ) {
-	constTypeExpr, err := d.getConstTypeByRef(*conn.SenderSide.Const.Ref, scope)
+	constTypeExpr, err := d.getConstTypeByRef(*conn.Normal.SenderSide.Const.Ref, scope)
 	if err != nil {
 		return handleConstRefSenderResult{}, compiler.Error{
 			Err: fmt.Errorf(
 				"Unable to get constant type by reference '%v'",
-				*conn.SenderSide.Const.Ref,
+				*conn.Normal.SenderSide.Const.Ref,
 			),
 			Location: &scope.Location,
-			Meta:     &conn.SenderSide.Const.Ref.Meta,
+			Meta:     &conn.Normal.SenderSide.Const.Ref.Meta,
 		}.Wrap(err)
 	}
 
-	constRefStr := conn.SenderSide.Const.Ref.String()
+	constRefStr := conn.Normal.SenderSide.Const.Ref.String()
 
 	emitterNodeName := "$" + constRefStr
 	emitterNode := src.Node{
@@ -115,13 +117,15 @@ func (d Desugarer) handleConstRefSender(
 
 	return handleConstRefSenderResult{
 		desugaredConn: src.Connection{
-			SenderSide: src.ConnectionSenderSide{
-				PortAddr:  &emitterNodeOutportAddr,
-				Selectors: conn.SenderSide.Selectors,
-				Meta:      conn.SenderSide.Meta,
+			Normal: &src.NormalConnection{
+				SenderSide: src.ConnectionSenderSide{
+					PortAddr:  &emitterNodeOutportAddr,
+					Selectors: conn.Normal.SenderSide.Selectors,
+					Meta:      conn.Normal.SenderSide.Meta,
+				},
+				ReceiverSide: conn.Normal.ReceiverSide,
 			},
-			ReceiverSide: conn.ReceiverSide,
-			Meta:         conn.Meta,
+			Meta: conn.Meta,
 		},
 		emitterNodeName: emitterNodeName,
 		emitterNode:     emitterNode,

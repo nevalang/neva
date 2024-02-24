@@ -147,21 +147,21 @@ func (d Desugarer) handleConns( //nolint:funlen
 	constsToInsert := map[string]src.Const{}
 
 	for _, conn := range conns {
-		if conn.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
+		if conn.Normal.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
 			usedNodePorts.set(
-				conn.SenderSide.PortAddr.Node,
-				conn.SenderSide.PortAddr.Port,
+				conn.Normal.SenderSide.PortAddr.Node,
+				conn.Normal.SenderSide.PortAddr.Port,
 			)
 		}
 
-		if conn.SenderSide.Const == nil &&
-			len(conn.SenderSide.Selectors) == 0 &&
-			len(conn.ReceiverSide.ThenConnections) == 0 {
+		if conn.Normal.SenderSide.Const == nil &&
+			len(conn.Normal.SenderSide.Selectors) == 0 &&
+			len(conn.Normal.ReceiverSide.ThenConnections) == 0 {
 			desugaredConns = append(desugaredConns, conn)
 			continue
 		}
 
-		if len(conn.SenderSide.Selectors) != 0 {
+		if len(conn.Normal.SenderSide.Selectors) != 0 {
 			result, err := d.desugarStructSelectors(
 				conn,
 				nodes,
@@ -180,20 +180,20 @@ func (d Desugarer) handleConns( //nolint:funlen
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
 
-		if conn.SenderSide.Const != nil { //nolint:nestif
-			if conn.SenderSide.Const.Ref != nil {
+		if conn.Normal.SenderSide.Const != nil { //nolint:nestif
+			if conn.Normal.SenderSide.Const.Ref != nil {
 				result, err := d.handleConstRefSender(conn, scope)
 				if err != nil {
 					return handleConnsResult{}, err
 				}
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.desugaredConn
-			} else if conn.SenderSide.Const.Value != nil {
+			} else if conn.Normal.SenderSide.Const.Value != nil {
 				result, err := d.handleLiteralSender(conn)
 				if err != nil {
 					return handleConnsResult{}, err
 				}
-				constsToInsert[result.constName] = *conn.SenderSide.Const
+				constsToInsert[result.constName] = *conn.Normal.SenderSide.Const
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.desugaredConn
 			}
@@ -201,7 +201,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 
 		desugaredConns = append(desugaredConns, conn)
 
-		if len(conn.ReceiverSide.ThenConnections) == 0 {
+		if len(conn.Normal.ReceiverSide.ThenConnections) == 0 {
 			continue
 		}
 

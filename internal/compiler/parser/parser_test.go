@@ -84,8 +84,8 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	require.True(t, err == nil)
 
 	conn := got.Entities["C1"].Component.Net[0]
-	sender := conn.SenderSide.PortAddr.Node
-	receiver := conn.ReceiverSide.Receivers[0].PortAddr.Node
+	sender := conn.Normal.SenderSide.PortAddr.Node
+	receiver := conn.Normal.ReceiverSide.Receivers[0].PortAddr.Node
 	require.Equal(t, "in", sender)
 	require.Equal(t, "out", receiver)
 }

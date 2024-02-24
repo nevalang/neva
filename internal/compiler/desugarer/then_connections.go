@@ -37,7 +37,7 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleThenConnsResult, *compiler.Error) {
-	handleConnsResult, err := d.handleConns(originalConn.ReceiverSide.ThenConnections, nodes, scope)
+	handleConnsResult, err := d.handleConns(originalConn.Normal.ReceiverSide.ThenConnections, nodes, scope)
 	if err != nil {
 		return handleThenConnsResult{}, nil
 	}
@@ -49,8 +49,8 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 	for _, desugaredThenConn := range desugaredThenConns {
 		blockerNodeName := fmt.Sprintf(
 			"then_block_from_%v_to_%v_",
-			originalConn.SenderSide.String(),
-			desugaredThenConn.SenderSide.String(),
+			originalConn.Normal.SenderSide.String(),
+			desugaredThenConn.Normal.SenderSide.String(),
 		)
 
 		extraNodes[blockerNodeName] = blockerNode
@@ -59,13 +59,15 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 			extraConns,
 			// original sender -> lock:sig
 			src.Connection{
-				SenderSide: originalConn.SenderSide,
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: []src.ConnectionReceiver{
-						{
-							PortAddr: src.PortAddr{
-								Node: blockerNodeName,
-								Port: "sig",
+				Normal: &src.NormalConnection{
+					SenderSide: originalConn.Normal.SenderSide,
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: src.PortAddr{
+									Node: blockerNodeName,
+									Port: "sig",
+								},
 							},
 						},
 					},
@@ -73,13 +75,15 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 			},
 			// then conn sender -> lock:data
 			src.Connection{
-				SenderSide: desugaredThenConn.SenderSide,
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: []src.ConnectionReceiver{
-						{
-							PortAddr: src.PortAddr{
-								Node: blockerNodeName,
-								Port: "data",
+				Normal: &src.NormalConnection{
+					SenderSide: desugaredThenConn.Normal.SenderSide,
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: src.PortAddr{
+									Node: blockerNodeName,
+									Port: "data",
+								},
 							},
 						},
 					},
@@ -87,14 +91,16 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 			},
 			// lock:data -> { receivers... }
 			src.Connection{
-				SenderSide: src.ConnectionSenderSide{
-					PortAddr: &src.PortAddr{
-						Node: blockerNodeName,
-						Port: "data",
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr: &src.PortAddr{
+							Node: blockerNodeName,
+							Port: "data",
+						},
 					},
-				},
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: desugaredThenConn.ReceiverSide.Receivers, // no nested then in desugared conn
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: desugaredThenConn.Normal.ReceiverSide.Receivers, // no nested `then` in desugared conn
+					},
 				},
 			},
 		)

@@ -68,18 +68,18 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
 ) *compiler.Error {
-	outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface, nodes, nodesIfaces, scope)
+	outportTypeExpr, err := a.getSenderType(conn.Normal.SenderSide, compInterface, nodes, nodesIfaces, scope)
 	if err != nil {
 		return compiler.Error{
 			Location: &scope.Location,
-			Meta:     &conn.SenderSide.Meta,
+			Meta:     &conn.Normal.SenderSide.Meta,
 		}.Wrap(err)
 	}
 
 	// mark node's outport as used if sender isn't const ref
-	if conn.SenderSide.PortAddr != nil {
-		senderNodeName := conn.SenderSide.PortAddr.Node
-		outportName := conn.SenderSide.PortAddr.Port
+	if conn.Normal.SenderSide.PortAddr != nil {
+		senderNodeName := conn.Normal.SenderSide.PortAddr.Node
+		outportName := conn.Normal.SenderSide.PortAddr.Port
 		if _, ok := nodesUsage[senderNodeName]; !ok {
 			nodesUsage[senderNodeName] = NodeNetUsage{
 				In:  map[string]struct{}{},
@@ -89,8 +89,8 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
 	}
 
-	if len(conn.SenderSide.Selectors) > 0 {
-		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.SenderSide.Selectors)
+	if len(conn.Normal.SenderSide.Selectors) > 0 {
+		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.Normal.SenderSide.Selectors)
 		if err != nil {
 			return &compiler.Error{
 				Err:      err,
@@ -101,7 +101,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		outportTypeExpr = lastFieldType
 	}
 
-	if len(conn.ReceiverSide.ThenConnections) == 0 && len(conn.ReceiverSide.Receivers) == 0 {
+	if len(conn.Normal.ReceiverSide.ThenConnections) == 0 && len(conn.Normal.ReceiverSide.Receivers) == 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
@@ -111,7 +111,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 				Meta:     &conn.Meta,
 			}
 		}
-	} else if len(conn.ReceiverSide.ThenConnections) != 0 && len(conn.ReceiverSide.Receivers) != 0 {
+	} else if len(conn.Normal.ReceiverSide.ThenConnections) != 0 && len(conn.Normal.ReceiverSide.Receivers) != 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
@@ -123,12 +123,12 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		}
 	}
 
-	if conn.ReceiverSide.ThenConnections != nil {
+	if conn.Normal.ReceiverSide.ThenConnections != nil {
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
 		return a.analyzeConnections( // indirect recursion
-			conn.ReceiverSide.ThenConnections,
+			conn.Normal.ReceiverSide.ThenConnections,
 			compInterface,
 			nodes,
 			nodesIfaces,
@@ -137,7 +137,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		)
 	}
 
-	for _, receiver := range conn.ReceiverSide.Receivers {
+	for _, receiver := range conn.Normal.ReceiverSide.Receivers {
 		inportTypeExpr, err := a.getReceiverType(
 			receiver,
 			compInterface,
@@ -156,7 +156,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			return &compiler.Error{
 				Err: fmt.Errorf(
 					"Subtype checking failed: %v -> %v: %w",
-					conn.SenderSide, receiver, err,
+					conn.Normal.SenderSide, receiver, err,
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,

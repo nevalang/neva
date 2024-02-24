@@ -45,9 +45,11 @@ func TestDesugarer_Desugar(t *testing.T) {
 											Component: src.Component{
 												Net: []src.Connection{
 													{
-														SenderSide: src.ConnectionSenderSide{
-															Const: &src.Const{
-																Ref: &src.EntityRef{Name: "bar"},
+														Normal: &src.NormalConnection{
+															SenderSide: src.ConnectionSenderSide{
+																Const: &src.Const{
+																	Ref: &src.EntityRef{Name: "bar"},
+																},
 															},
 														},
 													},
@@ -115,10 +117,12 @@ func TestDesugarer_Desugar(t *testing.T) {
 												},
 												Net: []src.Connection{
 													{
-														SenderSide: src.ConnectionSenderSide{ // <-- const ref conn replaced with normal one
-															PortAddr: &src.PortAddr{
-																Node: "__bar__",
-																Port: "v",
+														Normal: &src.NormalConnection{
+															SenderSide: src.ConnectionSenderSide{ // <-- const ref conn replaced with normal one
+																PortAddr: &src.PortAddr{
+																	Node: "__bar__",
+																	Port: "v",
+																},
 															},
 														},
 													},
@@ -208,18 +212,20 @@ func TestDesugarer_Desugar(t *testing.T) {
 												},
 												Net: []src.Connection{
 													{ // <-- (bar.x -> void.void)
-														SenderSide: src.ConnectionSenderSide{
-															PortAddr: &src.PortAddr{
-																Node: "bar",
-																Port: "x",
+														Normal: &src.NormalConnection{
+															SenderSide: src.ConnectionSenderSide{
+																PortAddr: &src.PortAddr{
+																	Node: "bar",
+																	Port: "x",
+																},
 															},
-														},
-														ReceiverSide: src.ConnectionReceiverSide{
-															Receivers: []src.ConnectionReceiver{
-																{
-																	PortAddr: src.PortAddr{
-																		Node: "__destructor__",
-																		Port: "v",
+															ReceiverSide: src.ConnectionReceiverSide{
+																Receivers: []src.ConnectionReceiver{
+																	{
+																		PortAddr: src.PortAddr{
+																			Node: "__destructor__",
+																			Port: "v",
+																		},
 																	},
 																},
 															},

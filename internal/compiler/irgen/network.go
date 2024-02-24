@@ -20,13 +20,13 @@ func (g Generator) processNet(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.SenderSide, nodesPortsUsage)
+		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.Normal.SenderSide, nodesPortsUsage)
 		if err != nil {
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		receiverSidesIR := make([]ir.ReceiverConnectionSide, 0, len(conn.ReceiverSide.Receivers))
-		for _, receiverSide := range conn.ReceiverSide.Receivers {
+		receiverSidesIR := make([]ir.ReceiverConnectionSide, 0, len(conn.Normal.ReceiverSide.Receivers))
+		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 			receiverSidesIR = append(receiverSidesIR, *receiverSideIR)
 

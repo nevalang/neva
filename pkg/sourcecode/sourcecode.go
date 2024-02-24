@@ -239,14 +239,24 @@ type Port struct {
 }
 
 type Connection struct {
+	Normal      *NormalConnection      `json:"normal,omitempty"`
+	ArrayBypass *ArrayBypassConnection `json:"arrayBypass,omitempty"`
+	Meta        Meta                   `json:"meta,omitempty"`
+}
+
+type NormalConnection struct {
 	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
 	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
-	Meta         Meta                   `json:"meta,omitempty"`
+}
+
+type ArrayBypassConnection struct {
+	SenderOutport   PortAddr `json:"senderOutport,omitempty"`
+	ReceiverOutport PortAddr `json:"receiverOutport,omitempty"`
 }
 
 type ConnectionReceiverSide struct {
-	ThenConnections []Connection
-	Receivers       []ConnectionReceiver
+	ThenConnections []Connection         `json:"thenConnections,omitempty"`
+	Receivers       []ConnectionReceiver `json:"receivers,omitempty"`
 }
 
 type ConnectionReceiver struct {

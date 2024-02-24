@@ -35,14 +35,16 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 	for nodeName, ports := range unusedOutports.m {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
-				SenderSide: src.ConnectionSenderSide{
-					PortAddr: &src.PortAddr{
-						Node: nodeName,
-						Port: portName,
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr: &src.PortAddr{
+							Node: nodeName,
+							Port: portName,
+						},
 					},
-				},
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: receiverSides,
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: receiverSides,
+					},
 				},
 				Meta: src.Meta{},
 			})

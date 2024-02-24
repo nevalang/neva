@@ -386,9 +386,11 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	}
 
 	return src.Connection{
-		SenderSide:   parsedSenderSide,
-		ReceiverSide: receiverSide,
-		Meta:         connMeta,
+		Normal: &src.NormalConnection{
+			SenderSide:   parsedSenderSide,
+			ReceiverSide: receiverSide,
+		},
+		Meta: connMeta,
 	}, nil
 }
 
