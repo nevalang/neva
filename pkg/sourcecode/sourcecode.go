@@ -250,8 +250,8 @@ type NormalConnection struct {
 }
 
 type ArrayBypassConnection struct {
-	SenderOutport   PortAddr `json:"senderOutport,omitempty"`
-	ReceiverOutport PortAddr `json:"receiverOutport,omitempty"`
+	SenderOutport  PortAddr `json:"senderOutport,omitempty"`
+	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
 type ConnectionReceiverSide struct {

@@ -8,19 +8,35 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-// processNet
+// processNetwork
 // 1) inserts network connections
 // 2) returns metadata about how subnodes are used by this network
-func (g Generator) processNet(
+func (g Generator) processNetwork(
 	scope src.Scope,
 	conns []src.Connection,
 	nodeCtx nodeContext,
-	irResult *ir.Program,
+	result *ir.Program,
 ) (map[string]portsUsage, error) {
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.Normal.SenderSide, nodesPortsUsage)
+		if conn.ArrayBypass != nil {
+			// TODO handle array bypass case
+			// if we here, then sender is inport of the component
+			// use nodeCtx inport port usage to set receiver inport port usage
+			// to do this you should be able to getSlotsCount(nodeCtx.portsUsage, conn.ArrayBypass.SenderOutport)
+			// then set conn.ArrayBypass.ReceiverInport's slots count to the same value
+			panic("not implemented")
+		}
+
+		senderSide := conn.Normal.SenderSide
+
+		irSenderSidePortAddr, err := g.processSenderSide(
+			scope,
+			nodeCtx,
+			senderSide,
+			nodesPortsUsage,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
@@ -52,7 +68,7 @@ func (g Generator) processNet(
 			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
 		}
 
-		irResult.Connections = append(irResult.Connections, ir.Connection{
+		result.Connections = append(result.Connections, ir.Connection{
 			SenderSide:    *irSenderSidePortAddr,
 			ReceiverSides: receiverSidesIR,
 		})
