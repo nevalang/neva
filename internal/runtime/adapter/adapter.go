@@ -1,11 +1,11 @@
-package interpreter
+package adapter
 
 import (
 	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 type Adapter struct{}

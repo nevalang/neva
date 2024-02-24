@@ -1,45 +1,38 @@
 package funcs
 
 import (
-	"bufio"
 	"context"
-	"os"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type reader struct{}
+type linePrinter struct{}
 
-func (r reader) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sig, err := io.In.Port("sig")
+func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
-
-	vout, err := io.Out.Port("v")
+	dataOut, err := io.Out.Port("sig")
 	if err != nil {
 		return nil, err
 	}
-
 	return func(ctx context.Context) {
-		reader := bufio.NewReader(os.Stdin)
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-sig:
+			case data := <-dataIn:
 				select {
 				case <-ctx.Done():
 					return
 				default:
-					bb, _, err := reader.ReadLine()
-					if err != nil {
-						panic(err)
-					}
+					fmt.Println(data)
 					select {
 					case <-ctx.Done():
 						return
-					case vout <- runtime.NewStrMsg(string(bb)):
+					case dataOut <- data:
 					}
 				}
 			}

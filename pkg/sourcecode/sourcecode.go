@@ -322,7 +322,7 @@ func (p PortAddr) String() string {
 
 	switch {
 	case hasNode && hasPort && hasIdx:
-		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, p.Idx)
+		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, *p.Idx)
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
 	}

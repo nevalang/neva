@@ -44,7 +44,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			Err:      errors.New("Cannot get sender type"),
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	var e error
@@ -54,7 +54,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			Err:      e,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	selectorsStr := strings.Join(senderSide.Selectors, "_")
@@ -88,7 +88,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 				{
 					PortAddr: src.PortAddr{
 						Node: nodeName, // point it to created selector node
-						Port: "v",
+						Port: "msg",
 					},
 				},
 			},
@@ -100,7 +100,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 		SenderSide: src.ConnectionSenderSide{
 			PortAddr: &src.PortAddr{
 				Node: nodeName, // created node received data from original sender and is now sending it further
-				Port: "v",
+				Port: "msg",
 			},
 			Selectors: nil, // no selectors in desugared version
 		},

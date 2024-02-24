@@ -8,15 +8,20 @@ import (
 
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
-		"reader":          reader{},
-		"printer":         printer{},
-		"blocker":         blocker{},
-		"emitter":         emitter{},
-		"int_adder":       intAdder{},
-		"int_parser":      intParser{},
-		"destructor":      destructor{},
+		// basic stuff
+		"emitter":       emitter{},
+		"destructor":    destructor{},
+		"blocker":       blocker{},
+		"port_streamer": portStreamer{},
+		// for structures
 		"struct_selector": structSelector{},
-		"map_selector":    mapSelector{},
 		"struct_builder":  structBuilder{},
+		// io
+		"line_scanner": lineScanner{},
+		"line_printer": linePrinter{},
+		// math
+		"int_adder": intAdder{},
+		// parsing
+		"int_parser": intParser{},
 	}
 }

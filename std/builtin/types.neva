@@ -1,0 +1,17 @@
+// base types, typesystem is aware of them
+type {
+    pub any
+    pub bool
+    pub int
+    pub float
+    pub string
+    pub map<T>
+    pub list<T>
+    pub maybe<T>
+}
+
+// non-base, but frequently used
+pub type error struct {
+    text string
+    child maybe<error>
+}

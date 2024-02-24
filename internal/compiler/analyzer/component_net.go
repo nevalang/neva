@@ -31,11 +31,11 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesUsage := make(map[string]NodeNetUsage, len(nodes)) // we create it here because there's recursion down there
 
 	if err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope); err != nil {
-		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
+		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
 	if err := a.checkNetPortsUsage(compInterface, nodesIfaces, scope, nodesUsage); err != nil {
-		return nil, compiler.Error{Location: &scope.Location}.Merge(err)
+		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
 	return net, nil
@@ -73,7 +73,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		return compiler.Error{
 			Location: &scope.Location,
 			Meta:     &conn.SenderSide.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	// mark node's outport as used if sender isn't const ref
@@ -147,10 +147,9 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		)
 		if err != nil {
 			return compiler.Error{
-				Err:      errors.New("Bad receiver"),
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
@@ -315,11 +314,10 @@ func (a Analyzer) getReceiverType(
 
 	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+		return ts.Expr{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &receiverSide.PortAddr.Meta,
-		}
+		}.Wrap(err)
 	}
 
 	return nodeInportType, nil
@@ -363,7 +361,7 @@ func (a Analyzer) getNodeInportType(
 		return ts.Expr{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
-		}.Merge(aerr)
+		}.Wrap(aerr)
 	}
 
 	return resolvedInportType, nil
@@ -380,8 +378,7 @@ func (a Analyzer) getResolvedPortType(
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
 			Err: fmt.Errorf(
-				"%w '%v'",
-				ErrPortNotFound,
+				"Port not found `%v`",
 				portAddr,
 			),
 			Location: &scope.Location,
@@ -474,11 +471,10 @@ func (a Analyzer) getSenderType( //nolint:funlen
 
 	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+		return ts.Expr{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &senderSide.PortAddr.Meta,
-		}
+		}.Wrap(err)
 	}
 
 	return nodeOutportType, nil
@@ -494,7 +490,7 @@ func (a Analyzer) getResolvedSenderConstType(
 			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &senderSide.Const.Ref.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		return expr, nil
 	}
@@ -566,11 +562,11 @@ func (a Analyzer) getNodeOutportType(
 		scope,
 	)
 	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("get resolved outport type: %v: %w", portAddr, err),
+		return ts.Expr{}, compiler.Error{
+			Err:      fmt.Errorf("get resolved outport type: %v", portAddr),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
-		}
+		}.Wrap(err)
 	}
 
 	return resolvedPortType, err
@@ -600,7 +596,7 @@ func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) 
 			return ts.Expr{}, compiler.Error{
 				Location: &location,
 				Meta:     &entity.Const.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		return expr, nil
 	}

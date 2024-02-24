@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/runtime/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -17,10 +17,10 @@ func (g Generator) processNet(
 	nodeCtx nodeContext,
 	irResult *ir.Program,
 ) (map[string]portsUsage, error) {
-	result := map[string]portsUsage{}
+	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.SenderSide, result)
+		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.SenderSide, nodesPortsUsage)
 		if err != nil {
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
@@ -31,8 +31,8 @@ func (g Generator) processNet(
 			receiverSidesIR = append(receiverSidesIR, *receiverSideIR)
 
 			// same receiver can be used by multiple senders so we only add it once
-			if _, ok := result[receiverSide.PortAddr.Node]; !ok {
-				result[receiverSide.PortAddr.Node] = portsUsage{
+			if _, ok := nodesPortsUsage[receiverSide.PortAddr.Node]; !ok {
+				nodesPortsUsage[receiverSide.PortAddr.Node] = portsUsage{
 					in:  map[relPortAddr]struct{}{},
 					out: map[relPortAddr]struct{}{},
 				}
@@ -43,10 +43,13 @@ func (g Generator) processNet(
 				idx = *receiverSide.PortAddr.Idx
 			}
 
-			result[receiverSide.PortAddr.Node].in[relPortAddr{
+			receiverNode := receiverSide.PortAddr.Node
+			receiverPortAddr := relPortAddr{
 				Port: receiverSide.PortAddr.Port,
 				Idx:  idx,
-			}] = struct{}{}
+			}
+
+			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
 		}
 
 		irResult.Connections = append(irResult.Connections, ir.Connection{
@@ -55,7 +58,7 @@ func (g Generator) processNet(
 		})
 	}
 
-	return result, nil
+	return nodesPortsUsage, nil
 }
 
 func (g Generator) processSenderSide(

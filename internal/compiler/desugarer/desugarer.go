@@ -20,9 +20,12 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 	for modRef := range build.Modules {
 		desugaredMod, err := d.desugarModule(build, modRef)
 		if err != nil {
-			return src.Build{}, compiler.Error{
-				Location: &src.Location{ModRef: modRef},
-			}.Merge(err)
+			return src.Build{},
+				compiler.Error{
+					Location: &src.Location{
+						ModRef: modRef,
+					},
+				}.Wrap(err)
 		}
 		desugaredMods[modRef] = desugaredMod
 	}
@@ -72,7 +75,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		if err != nil {
 			return src.Module{}, compiler.Error{
 				Location: &src.Location{PkgName: pkgName},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		desugaredPkgs[pkgName] = desugaredPkg
@@ -98,7 +101,7 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *c
 		if err != nil {
 			return nil, compiler.Error{
 				Location: &src.Location{FileName: fileName},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		desugaredPkgs[fileName] = desugaredFile
@@ -116,7 +119,7 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 		if err != nil {
 			return src.File{}, compiler.Error{
 				Meta: entity.Meta(),
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		desugaredEntities[entityName] = entityResult.entity
@@ -156,7 +159,7 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 
 	componentResult, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
-		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Merge(err)
+		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 	}
 
 	return desugarEntityResult{

@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/pkg/ir"
+	"github.com/nevalang/neva/internal/runtime/ir"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
+func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil

@@ -18,7 +18,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "1_echo"]
+      "args": ["run", "1_echo"]
     },
     {
       "name": "Neva CLI 20",
@@ -27,7 +27,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "2_hello_world/0_verbose"]
+      "args": ["run", "2_hello_world/0_verbose"]
     },
     {
       "name": "Neva CLI 21",
@@ -36,7 +36,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "2_hello_world/1_with_const_sender"]
+      "args": ["run", "2_hello_world/1_with_const_sender"]
     },
     {
       "name": "Neva CLI 22",
@@ -45,7 +45,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "2_hello_world/2_with_then_connection"]
+      "args": ["run", "2_hello_world/2_with_then_connection"]
     },
     {
       "name": "Neva CLI 23",
@@ -54,7 +54,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "2_hello_world/3_with_literal_sender"]
+      "args": ["run", "2_hello_world/3_with_literal_sender"]
     },
     {
       "name": "Neva CLI 30",
@@ -63,7 +63,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "3_interfaces"]
+      "args": ["run", "3_interfaces"]
     },
     {
       "name": "Neva CLI 40",
@@ -72,7 +72,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "4_add_numbers/verbose"]
+      "args": ["run", "4_add_numbers/verbose"]
     },
     {
       "name": "Neva CLI 41",
@@ -81,7 +81,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "4_add_numbers/with_bridge"]
+      "args": ["run", "4_add_numbers/with_bridge"]
     },
     {
       "name": "Neva CLI 50",

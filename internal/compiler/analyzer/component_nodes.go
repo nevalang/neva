@@ -33,10 +33,9 @@ func (a Analyzer) analyzeComponentNodes(
 		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, parentTypeParams, scope)
 		if err != nil {
 			return nil, nil, compiler.Error{
-				Err:      fmt.Errorf("Invalid node '%v %v", nodeName, node),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		nodesInterfaces[nodeName] = nodeInterface
@@ -149,10 +148,9 @@ func (a Analyzer) analyzeComponentNode(
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, parentTypeParams, scope)
 		if err != nil {
 			return src.Node{}, src.Interface{}, compiler.Error{
-				Err:      fmt.Errorf("Invalid node dependency: node '%v'", depNode),
 				Location: &location,
 				Meta:     &depNode.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedComponentDI[depName] = resolvedDep
 	}

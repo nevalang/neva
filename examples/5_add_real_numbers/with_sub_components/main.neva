@@ -1,7 +1,7 @@
 // Here we learn how to simplify program by separating concerns
 
 import {
-	std/strconv
+	std/x
 }
 
 component {
@@ -26,9 +26,9 @@ component {
 		}
 		net {
 			:sig -> reader1:sig
-			reader1:num -> [adder:p[0], reader2:sig]
+			reader1:num -> [adder:ports[0], reader2:sig]
 			reader1:err -> :err
-			reader2:num -> adder:p[1]
+			reader2:num -> adder:ports[1]
 			reader2:err -> :err
 			adder:res -> :res
 		}
@@ -36,12 +36,12 @@ component {
 
 	IntReader(sig any) (num int, err error) {
 		nodes {
-			reader Scanner
-			parser strconv.NumParser<int>
+			reader x.LineScanner
+			parser x.NumParser<int>
 		}
 		net {
 			:sig -> reader:sig
-			reader:data -> parser:s
+			reader:data -> parser:data
 			parser:res -> :num
 			parser:err -> :err
 		}

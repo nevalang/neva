@@ -9,10 +9,10 @@ import (
 
 	"github.com/nevalang/neva/cmd/lsp/indexer"
 	lspServer "github.com/nevalang/neva/cmd/lsp/server"
+	builder "github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	builder "github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/typesystem"
 )

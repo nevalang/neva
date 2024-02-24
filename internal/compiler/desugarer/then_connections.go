@@ -47,45 +47,50 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 	extraConns := slices.Clone(handleConnsResult.desugaredConns)
 
 	for _, desugaredThenConn := range desugaredThenConns {
-		lockNodeName := fmt.Sprintf(
-			"__then_lock_from_%v_to_%v_",
+		blockerNodeName := fmt.Sprintf(
+			"then_block_from_%v_to_%v_",
 			originalConn.SenderSide.String(),
 			desugaredThenConn.SenderSide.String(),
 		)
 
-		extraNodes[lockNodeName] = blockerNode
+		extraNodes[blockerNodeName] = blockerNode
 
 		extraConns = append(
 			extraConns,
-			// original sender -> lock.sig
+			// original sender -> lock:sig
 			src.Connection{
 				SenderSide: originalConn.SenderSide,
 				ReceiverSide: src.ConnectionReceiverSide{
 					Receivers: []src.ConnectionReceiver{
-						{PortAddr: src.PortAddr{Node: lockNodeName, Port: "sig"}},
+						{
+							PortAddr: src.PortAddr{
+								Node: blockerNodeName,
+								Port: "sig",
+							},
+						},
 					},
 				},
 			},
-			// then conn sender -> lock.v
+			// then conn sender -> lock:data
 			src.Connection{
 				SenderSide: desugaredThenConn.SenderSide,
 				ReceiverSide: src.ConnectionReceiverSide{
 					Receivers: []src.ConnectionReceiver{
 						{
 							PortAddr: src.PortAddr{
-								Node: lockNodeName,
-								Port: "v",
+								Node: blockerNodeName,
+								Port: "data",
 							},
 						},
 					},
 				},
 			},
-			// lock.v -> { receivers... }
+			// lock:data -> { receivers... }
 			src.Connection{
 				SenderSide: src.ConnectionSenderSide{
 					PortAddr: &src.PortAddr{
-						Node: lockNodeName,
-						Port: "v",
+						Node: blockerNodeName,
+						Port: "data",
 					},
 				},
 				ReceiverSide: src.ConnectionReceiverSide{

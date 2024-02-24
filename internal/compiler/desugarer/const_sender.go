@@ -95,7 +95,7 @@ func (d Desugarer) handleConstRefSender(
 			),
 			Location: &scope.Location,
 			Meta:     &conn.SenderSide.Const.Ref.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	constRefStr := conn.SenderSide.Const.Ref.String()
@@ -153,7 +153,7 @@ func (d Desugarer) getConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Exp
 			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     entity.Meta(),
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		return expr, nil
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
@@ -13,8 +14,8 @@ import (
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/interpreter"
-	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/adapter"
 	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/typesystem"
@@ -36,7 +37,7 @@ func main() { //nolint:funlen
 	prsr := parser.New(false)
 
 	// pkg manager
-	pkgMngr := pkgmanager.New(
+	pkgMngr := builder.New(
 		"/Users/emil/projects/neva/std",
 		"/Users/emil/projects/neva/thirdparty",
 		prsr,
@@ -105,11 +106,11 @@ func main() { //nolint:funlen
 
 func newInterpreter(
 	c compiler.Compiler,
-	pkg pkgmanager.Manager,
+	pkg builder.Builder,
 ) interpreter.Interpreter {
 	return interpreter.New(
 		c,
-		interpreter.NewAdapter(),
+		adapter.NewAdapter(),
 		runtime.New(
 			runtime.NewDefaultConnector(),
 			runtime.MustNewFuncRunner(

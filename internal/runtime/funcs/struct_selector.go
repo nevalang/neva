@@ -9,23 +9,23 @@ import (
 
 type structSelector struct{}
 
-func (s structSelector) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	fieldPath := msg.List()
+func (s structSelector) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (func(ctx context.Context), error) {
+	fieldPath := fieldPathMsg.List()
 	if len(fieldPath) == 0 {
 		return nil, errors.New("field path cannot be empty")
 	}
 
-	path := make([]string, 0, len(fieldPath))
+	pathStrings := make([]string, 0, len(fieldPath))
 	for _, el := range fieldPath {
-		path = append(path, el.Str())
+		pathStrings = append(pathStrings, el.Str())
 	}
 
-	vin, err := io.In.Port("v")
+	msgIn, err := io.In.Port("msg")
 	if err != nil {
 		return nil, err
 	}
 
-	vout, err := io.Out.Port("v")
+	msgOut, err := io.Out.Port("msg")
 	if err != nil {
 		return nil, err
 	}
@@ -35,21 +35,21 @@ func (s structSelector) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx con
 			select {
 			case <-ctx.Done():
 				return
-			case obj := <-vin:
+			case msg := <-msgIn:
 				select {
 				case <-ctx.Done():
 					return
-				case vout <- s.getFieldByPath(obj, path):
+				case msgOut <- s.getFieldByPath(msg.Map(), pathStrings):
 				}
 			}
 		}
 	}, nil
 }
 
-func (structSelector) getFieldByPath(msg runtime.Msg, fieldPath []string) runtime.Msg {
+func (structSelector) getFieldByPath(m map[string]runtime.Msg, fieldPath []string) runtime.Msg {
 	for len(fieldPath) > 0 {
-		msg = msg.Map()[fieldPath[0]]
+		m = m[fieldPath[0]].Map()
 		fieldPath = fieldPath[1:]
 	}
-	return msg
+	return runtime.NewMapMsg(m)
 }

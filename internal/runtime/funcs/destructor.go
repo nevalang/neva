@@ -8,8 +8,8 @@ import (
 
 type destructor struct{}
 
-func (v destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	vin, err := io.In.Port("v")
+func (d destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	outport, err := io.In.Port("msg")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (v destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.C
 			select {
 			case <-ctx.Done():
 				return
-			case <-vin:
+			case <-outport:
 			}
 		}
 	}, nil

@@ -9,7 +9,7 @@ import (
 type emitter struct{}
 
 func (c emitter) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	vout, err := io.Out.Port("v")
+	outport, err := io.Out.Port("msg")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (c emitter) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Co
 			select {
 			case <-ctx.Done():
 				return
-			case vout <- msg:
+			case outport <- msg:
 			}
 		}
 	}, nil

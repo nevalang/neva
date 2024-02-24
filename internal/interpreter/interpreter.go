@@ -3,17 +3,18 @@ package interpreter
 import (
 	"context"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/adapter"
 	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Interpreter struct {
-	builder  pkgmanager.Manager
+	builder  builder.Builder
 	compiler compiler.Compiler
 	runtime  runtime.Runtime
-	adapter  Adapter
+	adapter  adapter.Adapter
 }
 
 func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) *compiler.Error {
@@ -23,7 +24,7 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 			Location: &sourcecode.Location{
 				PkgName: mainPkgName,
 			},
-		}.Merge(compilerErr)
+		}.Wrap(compilerErr)
 	}
 
 	rprog, err := i.adapter.Adapt(irProg)
@@ -50,9 +51,9 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 
 func New(
 	compiler compiler.Compiler,
-	adapter Adapter,
+	adapter adapter.Adapter,
 	runtime runtime.Runtime,
-	builder pkgmanager.Manager,
+	builder builder.Builder,
 ) Interpreter {
 	return Interpreter{
 		compiler: compiler,

@@ -1,0 +1,10 @@
+// this is a package where we temporary keep everything that is not builtin
+// we will organize it later into separate packages
+
+component {
+    #extern(int int_parser, float float_parser)
+    pub NumParser<T int | float>(data string) (res T, err error)
+
+    #extern(line_scanner)
+    pub LineScanner(sig any) (data string)
+}

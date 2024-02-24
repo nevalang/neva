@@ -1,4 +1,4 @@
-package pkgmanager
+package builder
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-type Manager struct {
+type Builder struct {
 	stdLibLocation     string // path to standart library module
 	thirdPartyLocation string // path to third-party modules
 	parser             Parser // parser is needed to parse manifest files
@@ -19,22 +19,26 @@ type Parser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
-func (p Manager) Build( //nolint:funlen
+func (p Builder) Build( //nolint:funlen
 	ctx context.Context,
 	workdir string,
 ) (compiler.RawBuild, *compiler.Error) {
-	entryMod, err := p.BuildModule(ctx, workdir)
+	// load user's module from disk
+	entryMod, err := p.LoadModuleByPath(ctx, workdir)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
 		}
 	}
+
+	// inject stdlib dep to user's module
 	entryMod.Manifest.Deps["std"] = src.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,
-	} // inject stdlib mod dep
+	}
 
-	stdMod, err := p.BuildModule(ctx, p.stdLibLocation)
+	// TODO use embedded fs for stdlib
+	stdMod, err := p.LoadModuleByPath(ctx, p.stdLibLocation)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
@@ -62,14 +66,14 @@ func (p Manager) Build( //nolint:funlen
 			}
 		}
 
-		depMod, err := p.BuildModule(ctx, depPath)
+		depMod, err := p.LoadModuleByPath(ctx, depPath)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
-				Err: fmt.Errorf("build entry mod: %w", err),
+				Err: fmt.Errorf("build dep mod: %w", err),
 			}
 		}
 
-		// inject stdlib mod dep
+		// inject stdlib dep into every downloaded dep mod
 		depMod.Manifest.Deps["std"] = src.ModuleRef{
 			Path:    "std",
 			Version: pkg.Version,
@@ -86,7 +90,7 @@ func (p Manager) Build( //nolint:funlen
 	}, nil
 }
 
-func (p Manager) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
+func (p Builder) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
 	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
 		return err
@@ -105,8 +109,8 @@ func New(
 	stdlibPath string,
 	thirdpartyPath string,
 	parser Parser,
-) Manager {
-	return Manager{
+) Builder {
+	return Builder{
 		stdLibLocation:     stdlibPath,
 		thirdPartyLocation: thirdpartyPath,
 		parser:             parser,

@@ -12,12 +12,12 @@ import (
 type intParser struct{}
 
 func (p intParser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	vin, err := io.In.Port("v")
+	vin, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
-	vout, err := io.Out.Port("v")
+	vout, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}

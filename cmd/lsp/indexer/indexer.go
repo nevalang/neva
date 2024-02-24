@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/pkgmanager"
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Indexer struct {
-	pkgManager pkgmanager.Manager
-	parser     parser.Parser
-	desugarer  desugarer.Desugarer
-	analyzer   analyzer.Analyzer
+	builder   builder.Builder
+	parser    parser.Parser
+	desugarer desugarer.Desugarer
+	analyzer  analyzer.Analyzer
 }
 
 func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compiler.Error, error) {
-	rawBuild, err := i.pkgManager.Build(ctx, path)
+	rawBuild, err := i.builder.Build(ctx, path)
 	if err != nil {
 		return src.Build{}, nil, fmt.Errorf("builder: %w", err)
 	}
@@ -44,15 +44,15 @@ func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compil
 }
 
 func New(
-	builder pkgmanager.Manager,
+	builder builder.Builder,
 	parser parser.Parser,
 	desugarer desugarer.Desugarer,
 	analyzer analyzer.Analyzer,
 ) Indexer {
 	return Indexer{
-		pkgManager: builder,
-		parser:     parser,
-		desugarer:  desugarer,
-		analyzer:   analyzer,
+		builder:   builder,
+		parser:    parser,
+		desugarer: desugarer,
+		analyzer:  analyzer,
 	}
 }

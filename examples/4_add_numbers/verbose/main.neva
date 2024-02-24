@@ -8,10 +8,10 @@ component Main(start any) (stop any) {
 	}
 	net {
 		:start -> (
-			1 -> streamer:p[0],
-			2 -> streamer:p[1]
+			1 -> streamer:ports[0],
+			2 -> streamer:ports[1]
 		)
-		streamer:seq -> adder:seq
+		streamer:stream -> adder:stream
 		adder:res -> printer:data
 		printer:sig -> :stop
 	}

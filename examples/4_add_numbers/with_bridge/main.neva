@@ -5,8 +5,8 @@ component Main(start any) (stop any) {
 	}
 	net {
 		:start -> (
-			1 -> adder:p[0],
-			2 -> adder:p[1]
+			1 -> adder:ports[0],
+			2 -> adder:ports[1]
 		)
 		adder:res -> printer:data
 		printer:sig -> :stop

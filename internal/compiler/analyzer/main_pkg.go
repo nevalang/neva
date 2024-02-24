@@ -54,7 +54,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 		return compiler.Error{
 			Location: location,
 			Meta:     &entityMain.Component.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	if err := mainPkg.Entities(func(entity src.Entity, entityName, _ string) error {

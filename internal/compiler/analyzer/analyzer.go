@@ -57,12 +57,12 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err != nil {
-		return src.Build{}, compiler.Error{Location: &location}.Merge(err)
+		return src.Build{}, compiler.Error{Location: &location}.Wrap(err)
 	}
 
 	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
-		return src.Build{}, compiler.Error{Location: &location}.Merge(err)
+		return src.Build{}, compiler.Error{Location: &location}.Wrap(err)
 	}
 
 	return analyzedBuild, nil
@@ -72,35 +72,13 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
-		got, err := semver.NewVersion(mod.Manifest.LanguageVersion)
-		if err != nil {
-			return src.Build{}, &compiler.Error{
-				Err: fmt.Errorf("%w: %v", ErrCompilerVersion, err),
-			}
+		if err := a.semverCheck(mod, modRef); err != nil {
+			return src.Build{}, err
 		}
 
-		want, err := semver.NewVersion(a.compilerVersion)
+		analyzedPkgs, err := a.analyzeModule(modRef, build)
 		if err != nil {
-			return src.Build{}, &compiler.Error{
-				Err: fmt.Errorf("%w: %v", ErrCompilerVersion, err),
-			}
-		}
-
-		// semver check (we use minor as major until 1.0.0)
-		if got.Minor() != want.Minor() ||
-			got.Patch() > want.Patch() {
-			return src.Build{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"%w: module %v wants %v while current is %v",
-					ErrCompilerVersion,
-					modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
-				),
-			}
-		}
-
-		analyzedPkgs, aerr := a.analyzeModule(modRef, build)
-		if err != nil {
-			return src.Build{}, aerr
+			return src.Build{}, err
 		}
 
 		analyzedMods[modRef] = src.Module{
@@ -113,6 +91,37 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 		EntryModRef: build.EntryModRef,
 		Modules:     analyzedMods,
 	}, nil
+}
+
+// semverCheck ensures that module is compatible with existing compiler
+// by checking it's version against semver. It uses minor as major.
+func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Error {
+	got, semverErr := semver.NewVersion(mod.Manifest.LanguageVersion)
+	if semverErr != nil {
+		return &compiler.Error{
+			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
+		}
+	}
+
+	want, semverErr := semver.NewVersion(a.compilerVersion)
+	if semverErr != nil {
+		return &compiler.Error{
+			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
+		}
+	}
+
+	if got.Minor() != want.Minor() ||
+		got.Patch() > want.Patch() {
+		return &compiler.Error{
+			Err: fmt.Errorf(
+				"%w: module %v wants %v while current is %v",
+				ErrCompilerVersion,
+				modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
+			),
+		}
+	}
+
+	return nil
 }
 
 func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
@@ -150,7 +159,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 				Location: &src.Location{
 					PkgName: pkgName,
 				},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		pkgsCopy[pkgName] = resolvedPkg
@@ -188,7 +197,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 			return compiler.Error{
 				Location: &scopeWithFile.Location,
 				Meta:     entity.Meta(),
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		analyzedFiles[fileName].Entities[entityName] = resolvedEntity
@@ -217,7 +226,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
 	case src.ConstEntity:
@@ -227,7 +236,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
@@ -240,7 +249,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
@@ -249,7 +258,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &entity.Component.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedEntity.Component = analyzedComponent
 	default:
