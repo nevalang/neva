@@ -51,6 +51,8 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			continue
 		}
 
+		// desugaring autoports directive
+
 		structFields := node.TypeArgs[0].Lit.Struct // must be resolved struct after analysis stage
 
 		inports := make(map[string]src.Port, len(structFields))
@@ -61,7 +63,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 		}
 
 		outports := map[string]src.Port{
-			"v": {
+			"msg": {
 				TypeExpr: node.TypeArgs[0],
 			},
 		}
@@ -73,7 +75,7 @@ func (d Desugarer) desugarComponent( //nolint:funlen
 			},
 		}
 
-		localBuilderName := fmt.Sprintf("__struct_builder_%v__", nodeName)
+		localBuilderName := fmt.Sprintf("struct_builder_%v", nodeName)
 
 		entitiesToInsert[localBuilderName] = src.Entity{
 			Kind:      src.ComponentEntity,

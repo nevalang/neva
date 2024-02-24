@@ -26,9 +26,9 @@ component {
 		}
 		net {
 			:sig -> reader1:sig
-			reader1:num -> [adder:p[0], reader2:sig]
+			reader1:num -> [adder:ports[0], reader2:sig]
 			reader1:err -> :err
-			reader2:num -> adder:p[1]
+			reader2:num -> adder:ports[1]
 			reader2:err -> :err
 			adder:res -> :res
 		}

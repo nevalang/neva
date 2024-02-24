@@ -9,9 +9,10 @@ import (
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// basic stuff
-		"emitter":    emitter{},
-		"destructor": destructor{},
-		"blocker":    blocker{},
+		"emitter":       emitter{},
+		"destructor":    destructor{},
+		"blocker":       blocker{},
+		"port_streamer": portStreamer{},
 		// for structures
 		"struct_selector": structSelector{},
 		"struct_builder":  structBuilder{},

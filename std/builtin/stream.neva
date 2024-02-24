@@ -5,9 +5,9 @@ pub component PortStreamer<T>([ports] T) (stream maybe<T>)
 
 // Bridges give stream handlers non-stream interface
 
-pub interface IStreamHandler<T>(stream maybe<T>) (msg T)
+pub interface IStreamHandler<T>(stream maybe<T>) (res T)
 
-pub component PortBridge<T>([ports] T) (msg T) {
+pub component PortBridge<T>([ports] T) (res T) {
     nodes {
         streamer PortStreamer<T>
         handler IStreamHandler<T>
@@ -15,6 +15,6 @@ pub component PortBridge<T>([ports] T) (msg T) {
     net {
         :ports -> streamer:ports
         streamer:stream -> handler:stream
-        handler:msg -> :msg
+        handler:res -> :res
     }
 }

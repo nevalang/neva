@@ -13,10 +13,10 @@ component Main(start any) (stop any) {
 	}
 	net {
 		:start -> reader1:sig
-		reader1:data-> parser1:s
-		parser1:res -> [adder:p[0], reader2:sig]
-		reader2:data -> parser2:s
-		parser2:res -> adder:p[1]
+		reader1:data-> parser1:data
+		parser1:res -> [adder:ports[0], reader2:sig]
+		reader2:data -> parser2:data
+		parser2:res -> adder:ports[1]
 		adder:res -> printer:data
 		printer:sig -> :stop
 	}

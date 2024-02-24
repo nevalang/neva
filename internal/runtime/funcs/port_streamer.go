@@ -29,8 +29,11 @@ func (portStreamer) Create(
 		// better implementation should have buffer
 		// so we don't block the senders
 		// but still emit messages to stream outport in order
-		for _, slot := range portsIn {
-			streamOut <- <-slot
+		for {
+			for _, slot := range portsIn {
+				streamOut <- <-slot
+			}
+			streamOut <- nil // delimeter
 		}
 	}, nil
 }
