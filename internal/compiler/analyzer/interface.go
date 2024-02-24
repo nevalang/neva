@@ -32,7 +32,7 @@ func (a Analyzer) analyzeInterface(
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	resolvedIO, err := a.analyzeIO(resolvedParams, iface.IO, scope, params)
@@ -41,7 +41,7 @@ func (a Analyzer) analyzeInterface(
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	typeParams := src.TypeParams{
@@ -80,7 +80,7 @@ func (a Analyzer) analyzeIO(
 		return src.IO{}, compiler.Error{
 			Err:      ErrInvalidInports,
 			Location: &scope.Location,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	resolvedOit, err := a.analyzePorts(typeParams, io.Out, scope)
@@ -88,7 +88,7 @@ func (a Analyzer) analyzeIO(
 		return src.IO{}, compiler.Error{
 			Err:      ErrInvalidOutports,
 			Location: &scope.Location,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	return src.IO{
@@ -109,7 +109,7 @@ func (a Analyzer) analyzePorts(
 			return nil, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &port.Meta,
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		resolvedPorts[name] = resolvedPort
 	}
@@ -128,7 +128,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 		return src.Port{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &port.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	return src.Port{

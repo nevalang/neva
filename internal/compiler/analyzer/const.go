@@ -53,7 +53,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			Err:      ErrResolveConstType,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {

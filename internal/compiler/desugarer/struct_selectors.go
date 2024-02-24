@@ -44,7 +44,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			Err:      errors.New("Cannot get sender type"),
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	var e error
@@ -54,7 +54,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			Err:      e,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	selectorsStr := strings.Join(senderSide.Selectors, "_")

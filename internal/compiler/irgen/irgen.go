@@ -71,7 +71,7 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 	if err := g.processComponentNode(rootNodeCtx, initialScope, result); err != nil {
 		return nil, compiler.Error{
 			Location: &initialScope.Location,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	return result, nil

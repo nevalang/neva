@@ -25,7 +25,6 @@ var (
 		"Referenced inport not found in component's interface",
 	)
 	ErrNodeNotFound               = errors.New("Referenced node not found")
-	ErrPortNotFound               = errors.New("Port not found")
 	ErrNormCompWithExtern         = errors.New("Component with nodes or network cannot use #extern directive")
 	ErrNormComponentWithoutNet    = errors.New("Component must have network except it uses #extern directive")
 	ErrNormNodeBind               = errors.New("Node can't use #bind if it isn't instantiated with the component that use #extern")
@@ -72,7 +71,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	if isRuntimeFunc {
@@ -95,7 +94,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	if len(component.Net) == 0 {
@@ -117,7 +116,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &component.Meta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	return src.Component{

@@ -34,7 +34,7 @@ func (p Parser) ParseModules(
 			return nil, compiler.Error{
 				Err:      errors.New("Parsing error"),
 				Location: &src.Location{ModRef: modRef},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		parsedMods[modRef] = src.Module{
@@ -56,7 +56,7 @@ func (p Parser) ParsePackages(
 		if err != nil {
 			return nil, compiler.Error{
 				Location: &src.Location{PkgName: pkgName},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 
 		packages[pkgName] = parsedFiles
@@ -76,7 +76,7 @@ func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, *compi
 				Location: &src.Location{
 					FileName: fileName,
 				},
-			}.Merge(err)
+			}.Wrap(err)
 		}
 		result[fileName] = parsedFile
 	}

@@ -38,12 +38,11 @@ func (c Compiler) CompileToIR(
 ) (*ir.Program, *Error) {
 	rawBuild, err := c.builder.Build(context.Background(), src)
 	if err != nil {
-		return nil, &Error{
-			Err: err,
+		return nil, Error{
 			Location: &sourcecode.Location{
 				PkgName: mainPkgName,
 			},
-		}
+		}.Wrap(err)
 	}
 
 	parsedMods, err := c.parser.ParseModules(rawBuild.Modules)

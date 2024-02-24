@@ -23,9 +23,9 @@ component {
 // Math
 
 #extern(int int_adder, float float_adder, string string_adder)
-component pub Adder<T int | float | string>(stream maybe<T>) (res T)
+pub component Adder<T int | float | string>(stream maybe<T>) (res T)
 
 // IO
 
 #extern(line_printer)
-component pub Printer<T>(data T) (sig T)
+pub component Printer<T>(data T) (sig T)

@@ -382,7 +382,7 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	if err != nil {
 		return src.Connection{}, compiler.Error{
 			Meta: &connMeta,
-		}.Merge(err)
+		}.Wrap(err)
 	}
 
 	return src.Connection{

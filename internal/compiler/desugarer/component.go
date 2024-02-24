@@ -170,7 +170,7 @@ func (d Desugarer) handleConns( //nolint:funlen
 					Err:      errors.New("Cannot desugar struct selectors"),
 					Location: &scope.Location,
 					Meta:     &conn.Meta,
-				}.Merge(err)
+				}.Wrap(err)
 			}
 			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 			constsToInsert[result.constToInsertName] = result.constToInsert

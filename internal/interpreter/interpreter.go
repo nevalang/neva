@@ -23,7 +23,7 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 			Location: &sourcecode.Location{
 				PkgName: mainPkgName,
 			},
-		}.Merge(compilerErr)
+		}.Wrap(compilerErr)
 	}
 
 	rprog, err := i.adapter.Adapt(irProg)

@@ -29,11 +29,11 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 	}
 
 	if err := a.analyzeMainComponentIO(cmp.Interface.IO); err != nil {
-		return compiler.Error{Meta: &cmp.Interface.Meta}.Merge(err)
+		return compiler.Error{Meta: &cmp.Interface.Meta}.Wrap(err)
 	}
 
 	if err := a.analyzeMainComponentNodes(cmp.Nodes, scope); err != nil {
-		return compiler.Error{Meta: &cmp.Meta}.Merge(err)
+		return compiler.Error{Meta: &cmp.Meta}.Wrap(err)
 	}
 
 	return nil
