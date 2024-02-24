@@ -1,4 +1,4 @@
-package pkgmanager
+package builder
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-func (p Manager) retrieveManifest(workdir string) (src.ModuleManifest, error) {
+func (p Builder) retrieveManifest(workdir string) (src.ModuleManifest, error) {
 	rawManifest, err := readManifestYaml(workdir)
 	if err != nil {
 		return sourcecode.ModuleManifest{}, fmt.Errorf("read manifest yaml: %w", err)

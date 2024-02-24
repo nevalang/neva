@@ -1,4 +1,4 @@
-package pkgmanager
+package builder
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
-func (p Manager) downloadDep(depModRef sourcecode.ModuleRef) (string, error) {
+func (p Builder) downloadDep(depModRef sourcecode.ModuleRef) (string, error) {
 	fsPath := fmt.Sprintf("%s/%s_%s", p.thirdPartyLocation, depModRef.Path, depModRef.Version)
 
 	_, err := os.Stat(fsPath)

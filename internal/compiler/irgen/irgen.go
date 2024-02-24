@@ -97,7 +97,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	//  for outports we use both parent context and component's interface
 	outportAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
 
-	runtimeFuncRef, err := getRuntimeFunc(component, nodeCtx.node.TypeArgs)
+	runtimeFuncRef, err := getRuntimeFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -106,8 +106,10 @@ func (g Generator) processComponentNode( //nolint:funlen
 		}
 	}
 
+	// if component uses #extern, then we only need ports and func call
+	// ports are already created, so it's time to create func call
 	if runtimeFuncRef != "" {
-		// use previous scope's location, not the location where runtime func was found
+		// use prev location, not the location where runtime func was found
 		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
 		if err != nil {
 			return &compiler.Error{

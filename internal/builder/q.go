@@ -1,4 +1,4 @@
-package pkgmanager
+package builder
 
 import src "github.com/nevalang/neva/pkg/sourcecode"
 

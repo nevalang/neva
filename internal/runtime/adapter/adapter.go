@@ -1,4 +1,4 @@
-package interpreter
+package adapter
 
 import (
 	"errors"

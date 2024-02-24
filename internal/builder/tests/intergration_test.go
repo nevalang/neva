@@ -1,18 +1,18 @@
-package pkgmanager_test
+package builder_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/pkgmanager"
 	"github.com/nevalang/neva/pkg"
 	"github.com/stretchr/testify/require"
 )
 
-func TestPkgManager(t *testing.T) {
+func Testbuilder(t *testing.T) {
 	prsr := parser.New(false)
-	manager := pkgmanager.New("/Users/emil/projects/neva/std", "", prsr)
+	manager := builder.New("/Users/emil/projects/neva/std", "", prsr)
 
 	build, err := manager.Build(context.Background(), "testmod")
 	require.NoError(t, err)

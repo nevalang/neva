@@ -10,7 +10,7 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-func getRuntimeFunc(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
+func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
