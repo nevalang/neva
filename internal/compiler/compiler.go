@@ -55,9 +55,7 @@ func (c Compiler) CompileToIR(
 		Modules:     parsedMods,
 	}
 
-	if strings.HasPrefix(mainPkgName, "./") {
-		mainPkgName = strings.TrimPrefix(mainPkgName, "./")
-	}
+	mainPkgName = strings.TrimPrefix(mainPkgName, "./")
 
 	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(parsedBuild, mainPkgName)
 	if err != nil {

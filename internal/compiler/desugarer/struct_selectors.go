@@ -117,31 +117,6 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	}, nil
 }
 
-func (d Desugarer) getStructFieldType(structType ts.Expr, selectors []string) (ts.Expr, *compiler.Error) {
-	var meta *src.Meta
-	if m, ok := structType.Meta.(src.Meta); ok {
-		meta = &m
-	}
-
-	if len(selectors) == 0 {
-		return ts.Expr{}, &compiler.Error{
-			Err:  ErrStructFieldNotFound,
-			Meta: meta,
-		}
-	}
-
-	curField := selectors[0]
-	fieldType, ok := structType.Lit.Struct[curField]
-	if !ok {
-		return ts.Expr{}, &compiler.Error{
-			Err:  fmt.Errorf("%w: '%v'", ErrStructFieldNotFound, curField),
-			Meta: meta,
-		}
-	}
-
-	return d.getStructFieldType(fieldType, selectors[1:])
-}
-
 // list<str>
 var (
 	strTypeExpr = ts.Expr{
@@ -155,11 +130,6 @@ var (
 			Ref:  src.EntityRef{Pkg: "builtin", Name: "list"},
 			Args: []ts.Expr{strTypeExpr},
 		},
-	}
-
-	structSelectorEntityRef = src.EntityRef{
-		Pkg:  "builtin",
-		Name: "structSelector",
 	}
 )
 

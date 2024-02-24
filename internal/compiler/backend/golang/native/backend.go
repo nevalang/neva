@@ -32,7 +32,13 @@ func buildExecutable(src, dst string) error {
 	if err := os.Chdir(src); err != nil {
 		return err
 	}
-	cmd := exec.Command("go", "build", "-o", outputPath, src)
+	cmd := exec.Command(
+		"go",
+		"build",
+		"-ldflags", "-s -w", // strip debug information
+		"-o", outputPath,
+		src,
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

@@ -23,9 +23,8 @@ type (
 	}
 
 	portsUsage struct {
-		in         map[relPortAddr]struct{}
-		out        map[relPortAddr]struct{}
-		constValue *src.Message // const value found by ref from net goes here and then to nodeContext
+		in  map[relPortAddr]struct{}
+		out map[relPortAddr]struct{}
 	}
 
 	relPortAddr struct {

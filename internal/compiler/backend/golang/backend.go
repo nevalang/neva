@@ -37,7 +37,7 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 
 	result := map[string][]byte{}
 	result["main.go"] = buf.Bytes()
-	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.21") //nolint:lll // must match imports in runtime package //
+	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.21") //nolint:lll // must match imports in runtime package
 
 	if err := putRuntime(result); err != nil {
 		return err
@@ -47,19 +47,27 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 }
 
 func putRuntime(files map[string][]byte) error {
-	if err := fs.WalkDir(internal.Efs, "runtime", func(path string, dirEntry fs.DirEntry, err error) error {
-		if dirEntry.IsDir() {
+	if err := fs.WalkDir(
+		internal.Efs,
+		"runtime",
+		func(path string, dirEntry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if dirEntry.IsDir() {
+				return nil
+			}
+
+			bb, err := internal.Efs.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			files[path] = bb
 			return nil
-		}
-
-		bb, err := internal.Efs.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		files[path] = bb
-		return nil
-	}); err != nil {
+		},
+	); err != nil {
 		return err
 	}
 

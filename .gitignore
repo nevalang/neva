@@ -12,6 +12,7 @@ cmd/tmp
 # generated executable
 /neva
 /examples/output
+/examples/output.wasm
 
 node_modules
 __debug*
