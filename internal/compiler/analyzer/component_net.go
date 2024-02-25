@@ -151,11 +151,11 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			}
 		}
 
-		nodesNetUsage(nodesUsage).AddInport(
+		nodesNetUsage(nodesUsage).AddOutport(
 			arrBypassConn.SenderOutport.Node,
 			arrBypassConn.SenderOutport.Port,
 		)
-		nodesNetUsage(nodesUsage).AddOutport(
+		nodesNetUsage(nodesUsage).AddInport(
 			arrBypassConn.ReceiverInport.Node,
 			arrBypassConn.ReceiverInport.Port,
 		)

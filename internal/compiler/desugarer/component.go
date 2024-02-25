@@ -147,6 +147,19 @@ func (d Desugarer) handleConns( //nolint:funlen
 	constsToInsert := map[string]src.Const{}
 
 	for _, conn := range conns {
+		if arrBypass := conn.ArrayBypass; arrBypass != nil {
+			usedNodePorts.set(
+				arrBypass.SenderOutport.Node,
+				arrBypass.SenderOutport.Port,
+			)
+			usedNodePorts.set(
+				arrBypass.ReceiverInport.Node,
+				arrBypass.ReceiverInport.Port,
+			)
+			desugaredConns = append(desugaredConns, conn)
+			continue
+		}
+
 		if conn.Normal.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
 			usedNodePorts.set(
 				conn.Normal.SenderSide.PortAddr.Node,
