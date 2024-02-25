@@ -376,51 +376,82 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 		},
 	}
 
-	parsedSenderSide := parseConnSenderSide(connDef)
+	arrBypassConn := connDef.ArrBypassConnDef()
+	if arrBypassConn == nil {
+		parsedSenderSide := parseNormConnSenderSide(connDef.NormConnDef().SenderSide())
 
-	receiverSide, err := parseConnReceiverSide(connDef, connMeta)
+		receiverSide, err := parseNormConnReceiverSide(connDef.NormConnDef(), connMeta)
+		if err != nil {
+			return src.Connection{}, compiler.Error{
+				Meta: &connMeta,
+			}.Wrap(err)
+		}
+
+		return src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide:   parsedSenderSide,
+				ReceiverSide: receiverSide,
+			},
+			Meta: connMeta,
+		}, nil
+	}
+
+	senderPortAddr := arrBypassConn.SinglePortAddr(0)
+	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
+
+	senderPortAddrParsed, err := parsePortAddr(
+		senderPortAddr.(generated.IPortAddrContext),
+		"in",
+	)
 	if err != nil {
-		return src.Connection{}, compiler.Error{
-			Meta: &connMeta,
-		}.Wrap(err)
+		return src.Connection{}, err
+	}
+
+	receiverPortAddrParsed, err := parsePortAddr(
+		receiverPortAddr.(generated.IPortAddrContext),
+		"out",
+	)
+	if err != nil {
+		return src.Connection{}, err
 	}
 
 	return src.Connection{
-		Normal: &src.NormalConnection{
-			SenderSide:   parsedSenderSide,
-			ReceiverSide: receiverSide,
+		ArrayBypass: &src.ArrayBypassConnection{
+			SenderOutport:  senderPortAddrParsed,
+			ReceiverInport: receiverPortAddrParsed,
 		},
 		Meta: connMeta,
 	}, nil
 }
 
-func parseConnReceiverSide(
-	connDef generated.IConnDefContext,
+func parseNormConnReceiverSide(
+	normConn generated.INormConnDefContext,
 	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
-	if receiverSide := connDef.NormConnDef().ReceiverSide(); receiverSide != nil {
+	if receiverSide := normConn.ReceiverSide(); receiverSide != nil {
 		return parseReceiverSide(receiverSide, connMeta)
 	}
 
-	multipleSides := connDef.NormConnDef().MultipleReceiverSide()
+	multipleSides := normConn.MultipleReceiverSide()
 	if multipleSides == nil {
 		fmt.Println(
-			connDef.NormConnDef().ReceiverSide(),
-			connDef.NormConnDef().MultipleReceiverSide(),
-			connDef.GetText(),
+			normConn.ReceiverSide(),
+			normConn.MultipleReceiverSide(),
+			normConn.GetText(),
 		)
+
 		// FIXME implement literal senders
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
 			Meta: &src.Meta{
-				Text: connDef.GetText(),
+				Text: normConn.GetText(),
 				Start: src.Position{
-					Line:   connDef.GetStart().GetLine(),
-					Column: connDef.GetStart().GetColumn(),
+					Line:   normConn.GetStart().GetLine(),
+					Column: normConn.GetStart().GetColumn(),
 				},
 				Stop: src.Position{
-					Line:   connDef.GetStop().GetLine(),
-					Column: connDef.GetStop().GetColumn(),
+					Line:   normConn.GetStop().GetLine(),
+					Column: normConn.GetStop().GetColumn(),
 				},
 			},
 		})
@@ -489,9 +520,7 @@ func parseThenConnExpr(
 	return src.ConnectionReceiverSide{ThenConnections: thenConns}, nil
 }
 
-func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSenderSide { //nolint:funlen
-	senderSide := connDef.NormConnDef().SenderSide()
-
+func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.ConnectionSenderSide { //nolint:funlen
 	var senderSelectors []string
 	singleSenderSelectors := senderSide.StructSelectors()
 	if singleSenderSelectors != nil {
@@ -510,14 +539,14 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 		panic(&compiler.Error{
 			Err: errors.New("no sender side at all"),
 			Meta: &src.Meta{
-				Text: connDef.GetText(),
+				Text: senderSide.GetText(),
 				Start: src.Position{
-					Line:   connDef.GetStart().GetLine(),
-					Column: connDef.GetStart().GetColumn(),
+					Line:   senderSide.GetStart().GetLine(),
+					Column: senderSide.GetStart().GetColumn(),
 				},
 				Stop: src.Position{
-					Line:   connDef.GetStop().GetLine(),
-					Column: connDef.GetStop().GetColumn(),
+					Line:   senderSide.GetStop().GetLine(),
+					Column: senderSide.GetStop().GetColumn(),
 				},
 			},
 		})
@@ -633,13 +662,13 @@ func parsePortAddr(
 
 	if expr.ArrPortAddr() == nil {
 		nodeName := fallbackNode
-		if n := expr.ArrPortAddr().PortAddrNode(); n != nil {
+		if n := expr.SinglePortAddr().PortAddrNode(); n != nil {
 			nodeName = n.GetText()
 		}
 
 		return src.PortAddr{
 			Node: nodeName,
-			Port: expr.ArrPortAddr().PortAddrPort().GetText(),
+			Port: expr.SinglePortAddr().PortAddrPort().GetText(),
 			Meta: meta,
 		}, nil
 	}
