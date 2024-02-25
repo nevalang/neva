@@ -399,17 +399,19 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	senderPortAddr := arrBypassConn.SinglePortAddr(0)
 	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
 
-	senderPortAddrParsed, err := parsePortAddr(
-		senderPortAddr.(generated.IPortAddrContext),
+	senderPortAddrParsed, err := parseSinglePortAddr(
 		"in",
+		senderPortAddr,
+		connMeta,
 	)
 	if err != nil {
 		return src.Connection{}, err
 	}
 
-	receiverPortAddrParsed, err := parsePortAddr(
-		receiverPortAddr.(generated.IPortAddrContext),
+	receiverPortAddrParsed, err := parseSinglePortAddr(
 		"out",
+		receiverPortAddr,
+		connMeta,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -661,16 +663,7 @@ func parsePortAddr(
 	}
 
 	if expr.ArrPortAddr() == nil {
-		nodeName := fallbackNode
-		if n := expr.SinglePortAddr().PortAddrNode(); n != nil {
-			nodeName = n.GetText()
-		}
-
-		return src.PortAddr{
-			Node: nodeName,
-			Port: expr.SinglePortAddr().PortAddrPort().GetText(),
-			Meta: meta,
-		}, nil
+		return parseSinglePortAddr(fallbackNode, expr.SinglePortAddr(), meta)
 	}
 
 	idxStr := expr.ArrPortAddr().PortAddrIdx()
@@ -712,6 +705,19 @@ func parsePortAddr(
 		Meta: meta,
 	}, nil
 
+}
+
+func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrContext, meta src.Meta) (src.PortAddr, *compiler.Error) {
+	nodeName := fallbackNode
+	if n := expr.PortAddrNode(); n != nil {
+		nodeName = n.GetText()
+	}
+
+	return src.PortAddr{
+		Node: nodeName,
+		Port: expr.PortAddrPort().GetText(),
+		Meta: meta,
+	}, nil
 }
 
 func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:funlen

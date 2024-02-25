@@ -68,7 +68,17 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	scope src.Scope,
 	nodesUsage map[string]NodeNetUsage,
 ) *compiler.Error {
-	outportTypeExpr, err := a.getSenderType(conn.Normal.SenderSide, compInterface, nodes, nodesIfaces, scope)
+	if arrBypassConn := conn.ArrayBypass; arrBypassConn != nil {
+		panic("array bypass not implemented in analyzer")
+	}
+
+	outportTypeExpr, err := a.getSenderType(
+		conn.Normal.SenderSide,
+		compInterface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
 	if err != nil {
 		return compiler.Error{
 			Location: &scope.Location,
@@ -155,7 +165,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
 			return &compiler.Error{
 				Err: fmt.Errorf(
-					"Subtype checking failed: %v -> %v: %w",
+					"Incompatible types: %v -> %v: %w",
 					conn.Normal.SenderSide, receiver, err,
 				),
 				Location: &scope.Location,
