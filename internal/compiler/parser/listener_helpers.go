@@ -398,15 +398,15 @@ func parseConnReceiverSide(
 	connDef generated.IConnDefContext,
 	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
-	if receiverSide := connDef.ReceiverSide(); receiverSide != nil {
+	if receiverSide := connDef.NormConnDef().ReceiverSide(); receiverSide != nil {
 		return parseReceiverSide(receiverSide, connMeta)
 	}
 
-	multipleSides := connDef.MultipleReceiverSide()
+	multipleSides := connDef.NormConnDef().MultipleReceiverSide()
 	if multipleSides == nil {
 		fmt.Println(
-			connDef.ReceiverSide(),
-			connDef.MultipleReceiverSide(),
+			connDef.NormConnDef().ReceiverSide(),
+			connDef.NormConnDef().MultipleReceiverSide(),
 			connDef.GetText(),
 		)
 		// FIXME implement literal senders
@@ -490,7 +490,7 @@ func parseThenConnExpr(
 }
 
 func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSenderSide { //nolint:funlen
-	senderSide := connDef.SenderSide()
+	senderSide := connDef.NormConnDef().SenderSide()
 
 	var senderSelectors []string
 	singleSenderSelectors := senderSide.StructSelectors()
@@ -631,45 +631,58 @@ func parsePortAddr(
 		},
 	}
 
-	var idx *uint8
-	if index := expr.PortAddrIdx(); index != nil {
-		withoutSquareBraces := strings.Trim(index.GetText(), "[]")
-		result, err := strconv.ParseUint(
-			withoutSquareBraces,
-			10,
-			8,
-		)
-		if err != nil {
-			return src.PortAddr{}, &compiler.Error{
-				Err: err,
-				Meta: &src.Meta{
-					Text: expr.GetText(),
-					Start: src.Position{
-						Line:   expr.GetStart().GetLine(),
-						Column: expr.GetStart().GetColumn(),
-					},
-					Stop: src.Position{
-						Line:   expr.GetStop().GetLine(),
-						Column: expr.GetStop().GetColumn(),
-					},
-				},
-			}
+	if expr.ArrPortAddr() == nil {
+		nodeName := fallbackNode
+		if n := expr.ArrPortAddr().PortAddrNode(); n != nil {
+			nodeName = n.GetText()
 		}
-		idxVal := uint8(result)
-		idx = &idxVal
+
+		return src.PortAddr{
+			Node: nodeName,
+			Port: expr.ArrPortAddr().PortAddrPort().GetText(),
+			Meta: meta,
+		}, nil
+	}
+
+	idxStr := expr.ArrPortAddr().PortAddrIdx()
+	withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
+
+	idxUint, err := strconv.ParseUint(
+		withoutSquareBraces,
+		10,
+		8,
+	)
+	if err != nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err: err,
+			Meta: &src.Meta{
+				Text: expr.GetText(),
+				Start: src.Position{
+					Line:   expr.GetStart().GetLine(),
+					Column: expr.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   expr.GetStop().GetLine(),
+					Column: expr.GetStop().GetColumn(),
+				},
+			},
+		}
 	}
 
 	nodeName := fallbackNode
-	if n := expr.PortAddrNode(); n != nil {
+	if n := expr.ArrPortAddr().PortAddrNode(); n != nil {
 		nodeName = n.GetText()
 	}
 
+	idxUint8 := uint8(idxUint)
+
 	return src.PortAddr{
+		Idx:  &idxUint8,
 		Node: nodeName,
-		Port: expr.PortAddrPort().GetText(),
-		Idx:  idx,
+		Port: expr.ArrPortAddr().PortAddrPort().GetText(),
 		Meta: meta,
 	}, nil
+
 }
 
 func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:funlen
