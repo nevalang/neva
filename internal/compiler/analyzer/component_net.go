@@ -189,6 +189,16 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 				Location: &scope.Location,
 			}
 		}
+
+		// make sure array outports always has indexes (it's not arr-bypass)
+		if isSenderArr && normConn.SenderSide.PortAddr.Idx == nil {
+			return &compiler.Error{
+				Err:      errors.New("Index needed for array port"),
+				Meta:     &normConn.SenderSide.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
 		// mark node's outport as used since sender isn't const ref
 		nodesNetUsage(nodesUsage).AddOutport(
 			normConn.SenderSide.PortAddr.Node,
@@ -263,6 +273,15 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if !isReceiverArr && receiver.PortAddr.Idx != nil {
 			return &compiler.Error{
 				Err:      errors.New("Index for non-array port"),
+				Meta:     &receiver.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
+		// make sure array inports always has indexes (it's not arr-bypass)
+		if isReceiverArr && receiver.PortAddr.Idx == nil {
+			return &compiler.Error{
+				Err:      errors.New("Index needed for array port"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
 			}
