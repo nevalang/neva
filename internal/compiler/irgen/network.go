@@ -21,12 +21,26 @@ func (g Generator) processNetwork(
 
 	for _, conn := range conns {
 		if conn.ArrayBypass != nil {
-			// TODO handle array bypass case
-			// if we here, then sender is inport of the component
-			// use nodeCtx inport port usage to set receiver inport port usage
-			// to do this you should be able to getSlotsCount(nodeCtx.portsUsage, conn.ArrayBypass.SenderOutport)
-			// then set conn.ArrayBypass.ReceiverInport's slots count to the same value
-			panic("not implemented")
+			if _, ok := nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node]; !ok {
+				nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node] = portsUsage{
+					in:  map[relPortAddr]struct{}{},
+					out: map[relPortAddr]struct{}{},
+				}
+			}
+
+			var idx uint8 = 0
+			for addr := range nodeCtx.portsUsage.in {
+				if addr.Port == conn.ArrayBypass.SenderOutport.Port {
+					nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node].
+						in[relPortAddr{
+						Port: conn.ArrayBypass.ReceiverInport.Port,
+						Idx:  idx,
+					}] = struct{}{}
+					idx++
+				}
+			}
+
+			continue
 		}
 
 		senderSide := conn.Normal.SenderSide
