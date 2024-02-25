@@ -1,5 +1,3 @@
-// Here we learn `stream<T>` and streamers
-
 component Main(start any) (stop any) {
 	nodes {
 		adder Adder<int>

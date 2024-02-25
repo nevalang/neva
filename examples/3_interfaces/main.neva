@@ -1,5 +1,10 @@
 interface IPrinter<T>(data T) (sig T)
 
+// TODO create issue/discussion about DI sugar
+// if component only have one DI dep then allow
+// omitting of the dep node name. So parent component
+// know nothing about it's sub-component internals
+
 component {
     Main(start any) (stop any) {
         nodes {

@@ -18,4 +18,3 @@ pub component PortBridge<T>([ports] T) (res T) {
         handler:res -> :res
     }
 }
-// TODO implement array ports bypass
