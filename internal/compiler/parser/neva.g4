@@ -22,7 +22,7 @@ compiler_directive_arg: IDENTIFIER+;
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: importAlias? importPath NEWLINE*;
 importAlias: IDENTIFIER;
-importPath: importPathMod '/' importPathPkg;
+importPath: (importPathMod '/')? importPathPkg;
 importPathMod: '@' | IDENTIFIER;
 importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 

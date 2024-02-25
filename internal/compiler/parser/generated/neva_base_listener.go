@@ -434,6 +434,18 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
 
+// EnterNormConnDef is called when production normConnDef is entered.
+func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
+
+// ExitNormConnDef is called when production normConnDef is exited.
+func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
+
+// EnterArrBypassConnDef is called when production arrBypassConnDef is entered.
+func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
+
+// ExitArrBypassConnDef is called when production arrBypassConnDef is exited.
+func (s *BasenevaListener) ExitArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
+
 // EnterSenderSide is called when production senderSide is entered.
 func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
 
@@ -463,6 +475,18 @@ func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 
 // ExitPortAddr is called when production portAddr is exited.
 func (s *BasenevaListener) ExitPortAddr(ctx *PortAddrContext) {}
+
+// EnterSinglePortAddr is called when production singlePortAddr is entered.
+func (s *BasenevaListener) EnterSinglePortAddr(ctx *SinglePortAddrContext) {}
+
+// ExitSinglePortAddr is called when production singlePortAddr is exited.
+func (s *BasenevaListener) ExitSinglePortAddr(ctx *SinglePortAddrContext) {}
+
+// EnterArrPortAddr is called when production arrPortAddr is entered.
+func (s *BasenevaListener) EnterArrPortAddr(ctx *ArrPortAddrContext) {}
+
+// ExitArrPortAddr is called when production arrPortAddr is exited.
+func (s *BasenevaListener) ExitArrPortAddr(ctx *ArrPortAddrContext) {}
 
 // EnterPortAddrNode is called when production portAddrNode is entered.
 func (s *BasenevaListener) EnterPortAddrNode(ctx *PortAddrNodeContext) {}

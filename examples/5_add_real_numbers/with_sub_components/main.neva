@@ -1,7 +1,7 @@
 // Here we learn how to simplify program by separating concerns
 
 import {
-	std/x
+	x
 }
 
 component {

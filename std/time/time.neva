@@ -1,0 +1,10 @@
+pub type Time struct {
+    wall int
+	ext  int
+}
+
+#extern(time_now)
+pub component Now(sig any) (data Time)
+
+#extern(time_stringer)
+pub component Stringer(data Time) (res string)
