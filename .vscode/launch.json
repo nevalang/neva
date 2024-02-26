@@ -81,7 +81,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "4_add_numbers/with_bridge"]
+      "args": ["run", "-debug", "4_add_numbers/with_bridge"]
     },
     {
       "name": "Neva CLI 50",

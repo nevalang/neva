@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/pkg"
@@ -15,12 +16,15 @@ import (
 
 func newCliApp( //nolint:funlen
 	wd string,
-	goComp compiler.Compiler,
-	nativeComp compiler.Compiler,
-	wasmComp compiler.Compiler,
-	intr interpreter.Interpreter,
+	b builder.Builder,
+	goc compiler.Compiler,
+	nativec compiler.Compiler,
+	wasmc compiler.Compiler,
 ) *cli.App {
-	var target string
+	var (
+		target string
+		debug  bool
+	)
 
 	return &cli.App{
 		Name:  "neva",
@@ -39,11 +43,19 @@ func newCliApp( //nolint:funlen
 				Usage:     "Run neva program from source code in interpreter mode",
 				Args:      true,
 				ArgsUsage: "Provide path to the executable package",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:        "debug",
+						Usage:       "Show message events in stdout",
+						Destination: &debug,
+					},
+				},
 				Action: func(cCtx *cli.Context) error {
 					dirFromArg, err := getMainPkgFromArgs(cCtx)
 					if err != nil {
 						return err
 					}
+					intr := interpreter.New(b, goc, debug)
 					if err := intr.Interpret(
 						context.Background(),
 						wd,
@@ -82,15 +94,15 @@ func newCliApp( //nolint:funlen
 					}
 					switch target {
 					case "go":
-						return goComp.Compile(
+						return goc.Compile(
 							wd, dirFromArg, wd,
 						)
 					case "wasm":
-						return wasmComp.Compile(
+						return wasmc.Compile(
 							wd, dirFromArg, wd,
 						)
 					default:
-						return nativeComp.Compile(
+						return nativec.Compile(
 							wd, dirFromArg, wd,
 						)
 					}

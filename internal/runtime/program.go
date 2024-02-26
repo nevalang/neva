@@ -18,7 +18,7 @@ type PortAddr struct {
 }
 
 func (p PortAddr) String() string {
-	return fmt.Sprintf("%v.%v[%v]", p.Path, p.Port, p.Idx)
+	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
 }
 
 type Ports map[PortAddr]chan Msg

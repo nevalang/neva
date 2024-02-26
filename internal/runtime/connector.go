@@ -144,3 +144,9 @@ func NewDefaultConnector() Connector {
 		listener: EmptyListener{},
 	}
 }
+
+func NewConnector(lis EventListener) Connector {
+	return Connector{
+		listener: lis,
+	}
+}
