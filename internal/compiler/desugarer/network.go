@@ -125,7 +125,10 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 		maps.Copy(nodesToInsert, result.virtualNodes)
 
 		// note that we discard original connection, it's desugared version is there
-		desugaredConns = append(desugaredConns, result.desugaredConnections...)
+		desugaredConns = append(
+			desugaredConns,
+			result.desugaredConnections...,
+		)
 	}
 
 	return handleNetResult{

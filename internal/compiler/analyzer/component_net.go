@@ -222,7 +222,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
-					"Connection's receiver side cannot be empty, it must either have then connection or receivers",
+					"Connection's receiver side cannot be empty, it must either have deferred connection or receivers",
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
@@ -232,7 +232,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
-					"Connection's receiver side must either have then connection or receivers, not both",
+					"Connection's receiver side must either have deferred connection or receivers, not both",
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,

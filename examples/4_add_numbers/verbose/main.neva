@@ -1,3 +1,4 @@
+// FIXME def conns
 component Main(start any) (stop any) {
 	nodes {
 		adder Adder<int>

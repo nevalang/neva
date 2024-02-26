@@ -10,8 +10,8 @@ import (
 
 // TODO
 // 1) refactor this test, split into sub-method tests
-// 2) Write test for then connection and make sure it works
-// 3) Fix then connection if needed
+// 2) Write test for deferred connection and make sure it works
+// 3) Fix deferred connection if needed
 // 4) Find problem with program number 4 with_bridge if needed
 
 func TestDesugarer_desugarModule(t *testing.T) {

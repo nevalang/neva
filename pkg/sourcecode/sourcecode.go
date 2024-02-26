@@ -256,7 +256,7 @@ type ArrayBypassConnection struct {
 }
 
 type ConnectionReceiverSide struct {
-	DeferredConnections []Connection         `json:"thenConnections,omitempty"`
+	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
 	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
 }
 
