@@ -1,5 +1,7 @@
 # Architecture
 
+This document only keeps visual schemas of the core language components. For details see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Compiler
 
 ```mermaid

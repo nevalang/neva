@@ -1,8 +1,8 @@
 # Contributing
 
-Make sure you've read the https://nevalang.org/docs from cover to cover.
+Read the https://nevalang.org/docs/tutorial.
 
-Then see [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
+See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
 
 ## Requirements
 
@@ -33,12 +33,6 @@ VSCode extension depends on types defined in the `sourcecode` and `typesystem` p
 
 Check out [tygo.yaml](./tygo.yaml). and `CONTRIBUTING.md` in "vscode-neva" repo.
 
-## Naming conventions
-
-## Tests
-
-Use `_` instead of space in for test-case names because go turns spaces into underscores and makes it hard to find specific case.
-
 ## Learning Resources
 
 ### FBP/DataFlow
@@ -48,7 +42,7 @@ Use `_` instead of space in for test-case names because go turns spaces into und
 
 ### Golang
 
-Advanced Go knowledge is required. Especially understanding of concurrency.
+Advanced Go knowledge is required. Especially understanding concurrency.
 
 - [Concurrency is not parallelism](https://go.dev/blog/waza-talk)
 - [Share Memory By Communicating](https://go.dev/blog/codelab-share)

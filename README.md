@@ -8,7 +8,11 @@ A general-purpose flow-based programming language with static types and implicit
 
 Website: https://nevalang.org/
 
+> ⚠️ WARNING: This project is under heavy development and **not production ready** yet.
+
 ## Hello World
+
+Nevalang programs are executable dataflow graphs. Execution starts with the single `start` message and ends after first `stop` message.
 
 ```neva
 component Main(start any) (stop any) {
@@ -20,47 +24,49 @@ component Main(start any) (stop any) {
 }
 ```
 
-When `Main` receives a `start` signal, it sends a `'Hello, World!'` message to `data` inport of the node `printer`, which is an instance of a `Printer` component. Then `printer` sends a signal to it's `sig` outport, we use it as a signal to our `stop` outport.
-
-## How it works?
-
-Program starts with the single `start` message and ends after first `stop` message. This is our only way to control execution flow. For everything else we control flow of the data.
-
-We create networks of components that are then executed inside a special asynchronous message passing runtime where everything happens in parallel. The compiler analyzes these networks for various semantic errors, including type-safety.
-
-The command line interface can execute such source code directly using an interpreter, which is handy for development and debugging. For production use, it emits either machine code, Golang, or WASM.
+When `Main` receives a `:start` signal, it sends a `'Hello, World!'` message to `data` inport of the node `printer`, which is an instance of a `Printer` component. Then `printer` sends a signal to it's `sig` outport and we use that as a signal to our `:stop` outport.
 
 [Read more about the language](https://nevalang.org/docs/about)
 
 ## Features 🚀
 
 - Flow-Based Programming
-- Effortless Concurrency
+- Implicit Parallelism
 - Strong Static Typing
-- Multi-Target Compilation (PoC)
+- Multi-Target Compilation
 - Clean C-like Syntax
 - Interpreter Mode
-- First-Class Dependency Injection
+- Builtin Dependency Injection
 - Builtin Observability
 - Garbage Collection
 
+Please note that even though these features are technically implemented, **developer-experience could be very bad** due to current project state which is pre-MVP.
+
 ### Roadmap (🚧 WIP)
 
-> ⚠️ WARNING: This project is under heavy development and **not production ready** yet.
+Nevalang is at extrimely early stage but with the help of community it can become feature-reach mature langauge.
 
-- Go Interop
-- No Runtime Exceptions
-- Visual Programming
+- Building a Community
+- Core Standard Library
+- Feature-Rich LSP-compatible Language Server
+- Go Interop (import go from neva, import neva from go)
+- DAP-compatible Debugger
+- No Runtime Exceptions (If it runs then it works)
+- Visual Programming in VSCode (Nevalang becomes hybrid langauge)
 
-## Contributing
+Nevalang needs **your** help - it only have one maintainer.
 
-Nevalang needs your help, it has only one maintainer. Join community. Together we can change programming for the best.
+## Community
+
+Join community. **Together** we can change programming for the better:
 
 - [Discord](https://discord.gg/8fhETxQR)
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
 - [Telegram channel](https://t.me/+H1kRClL8ppI1MWJi)
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md)
+## Contributing
 
----
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+Please note that due to early stage of development documentation can be sometimes outdated. You can reach main maintainer to find help.
