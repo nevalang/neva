@@ -519,7 +519,7 @@ func parseThenConnExpr(
 		}
 		thenConns = append(thenConns, parsedThenConn)
 	}
-	return src.ConnectionReceiverSide{ThenConnections: thenConns}, nil
+	return src.ConnectionReceiverSide{DeferredConnections: thenConns}, nil
 }
 
 func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.ConnectionSenderSide { //nolint:funlen

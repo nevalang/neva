@@ -41,8 +41,8 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	}
 
 	s.file.Imports[alias] = src.Import{
-		ModuleName: modName,
-		PkgName:    pkgName,
+		Module:  modName,
+		Package: pkgName,
 	}
 }
 

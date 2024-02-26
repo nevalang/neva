@@ -135,8 +135,8 @@ func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compi
 	}
 
 	desugaredImports["builtin"] = src.Import{ // inject std/builtin import
-		ModuleName: "std",
-		PkgName:    "builtin",
+		Module:  "std",
+		Package: "builtin",
 	}
 
 	return src.File{
@@ -157,17 +157,17 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 		}, nil
 	}
 
-	componentResult, err := d.desugarComponent(entity.Component, scope)
+	componentResult, err := d.handleComponent(entity.Component, scope)
 	if err != nil {
 		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 	}
 
 	return desugarEntityResult{
-		entitiesToInsert: componentResult.entitiesToInsert,
+		entitiesToInsert: componentResult.virtualEntities,
 		entity: src.Entity{
 			IsPublic:  entity.IsPublic,
 			Kind:      entity.Kind,
-			Component: componentResult.component,
+			Component: componentResult.desugaredComponent,
 		},
 	}, nil
 }

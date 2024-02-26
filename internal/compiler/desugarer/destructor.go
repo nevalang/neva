@@ -3,12 +3,12 @@ package desugarer
 import src "github.com/nevalang/neva/pkg/sourcecode"
 
 type voidResult struct {
-	voidNodeName string
-	voidNode     src.Node
-	voidConns    []src.Connection
+	voidNodeName       string
+	voidNode           src.Node
+	virtualConnections []src.Connection
 }
 
-func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
+func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 	destructorNodeName := "__destructor__"
 
 	result := voidResult{
@@ -19,7 +19,7 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 				Name: "Destructor",
 			},
 		},
-		voidConns: make([]src.Connection, 0, len(unusedOutports.m)),
+		virtualConnections: make([]src.Connection, 0, len(unusedOutports.m)),
 	}
 
 	receiverSides := []src.ConnectionReceiver{
@@ -51,7 +51,7 @@ func (Desugarer) getVoidNodeAndConns(unusedOutports nodePortsMap) voidResult {
 		}
 	}
 
-	result.voidConns = voidConns
+	result.virtualConnections = voidConns
 
 	return result
 }

@@ -15,19 +15,18 @@ var emitterComponentRef = src.EntityRef{
 }
 
 type handleLiteralSenderResult struct {
+	constName                  string
 	handleConstRefSenderResult // conceptually incorrrect but convenient to reuse
-	// constant                   src.Const
-	constName string
 }
 
 type handleConstRefSenderResult struct {
-	desugaredConn   src.Connection
-	emitterNodeName string
-	emitterNode     src.Node
+	connectionWithoutConstSender src.Connection
+	emitterNodeName              string
+	emitterNode                  src.Node
 }
 
 // In the future compiler can operate in concurrently
-var litSendersCount atomic.Uint32
+var virtualEmittersCount atomic.Uint64
 
 func (d Desugarer) handleLiteralSender(
 	conn src.Connection,
@@ -35,14 +34,14 @@ func (d Desugarer) handleLiteralSender(
 	handleLiteralSenderResult,
 	*compiler.Error,
 ) {
-	counter := litSendersCount.Load()
-	litSendersCount.Store(counter + 1)
-	constName := fmt.Sprintf("literal_%d", counter)
+	counter := virtualEmittersCount.Load()
+	virtualEmittersCount.Store(counter + 1)
+	constName := fmt.Sprintf("virtual_const_%d", counter)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
 
-	emitterNodeName := "$" + constName
+	emitterNodeName := fmt.Sprintf("virtual_emitter_%d", counter)
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
@@ -64,7 +63,7 @@ func (d Desugarer) handleLiteralSender(
 	return handleLiteralSenderResult{
 		constName: constName,
 		handleConstRefSenderResult: handleConstRefSenderResult{
-			desugaredConn: src.Connection{
+			connectionWithoutConstSender: src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
 						PortAddr:  &emitterNodeOutportAddr,
@@ -100,23 +99,26 @@ func (d Desugarer) handleConstRefSender(
 		}.Wrap(err)
 	}
 
-	constRefStr := conn.Normal.SenderSide.Const.Ref.String()
+	counter := virtualEmittersCount.Load()
+	virtualEmittersCount.Store(counter + 1)
+	virtualEmitterName := fmt.Sprintf("virtual_emitter_%d", counter)
 
-	emitterNodeName := "$" + constRefStr
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constRefStr},
+			compiler.BindDirective: {
+				conn.Normal.SenderSide.Const.Ref.String(), // don't forget to bind const
+			},
 		},
 		EntityRef: emitterComponentRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
 	emitterNodeOutportAddr := src.PortAddr{
-		Node: emitterNodeName,
+		Node: virtualEmitterName,
 		Port: "msg",
 	}
 
 	return handleConstRefSenderResult{
-		desugaredConn: src.Connection{
+		connectionWithoutConstSender: src.Connection{
 			Normal: &src.NormalConnection{
 				SenderSide: src.ConnectionSenderSide{
 					PortAddr:  &emitterNodeOutportAddr,
@@ -127,7 +129,7 @@ func (d Desugarer) handleConstRefSender(
 			},
 			Meta: conn.Meta,
 		},
-		emitterNodeName: emitterNodeName,
+		emitterNodeName: virtualEmitterName,
 		emitterNode:     emitterNode,
 	}, nil
 }

@@ -218,7 +218,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		outportTypeExpr = lastFieldType
 	}
 
-	if len(normConn.ReceiverSide.ThenConnections) == 0 && len(normConn.ReceiverSide.Receivers) == 0 {
+	if len(normConn.ReceiverSide.DeferredConnections) == 0 && len(normConn.ReceiverSide.Receivers) == 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
@@ -228,7 +228,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 				Meta:     &conn.Meta,
 			}
 		}
-	} else if len(normConn.ReceiverSide.ThenConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
+	} else if len(normConn.ReceiverSide.DeferredConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
@@ -240,12 +240,12 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		}
 	}
 
-	if normConn.ReceiverSide.ThenConnections != nil {
+	if normConn.ReceiverSide.DeferredConnections != nil {
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
 		return a.analyzeConnections( // indirect recursion
-			normConn.ReceiverSide.ThenConnections,
+			normConn.ReceiverSide.DeferredConnections,
 			compInterface,
 			nodes,
 			nodesIfaces,

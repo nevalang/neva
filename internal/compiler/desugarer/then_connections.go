@@ -3,7 +3,7 @@ package desugarer
 import (
 	"fmt"
 	"maps"
-	"slices"
+	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -11,7 +11,7 @@ import (
 	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-var blockerNode = src.Node{
+var virtualBlockerNode = src.Node{
 	EntityRef: src.EntityRef{
 		Pkg:  "builtin",
 		Name: "Blocker",
@@ -25,47 +25,63 @@ var blockerNode = src.Node{
 	},
 }
 
-type handleThenConnsResult struct {
-	extraConns     []src.Connection
-	extraConsts    map[string]src.Const
-	extraNodes     map[string]src.Node
-	usedNodesPorts nodePortsMap
+type handleThenConnectionsResult struct {
+	desugaredConnections []src.Connection // these replaces original deferred connections
+	virtualConstants     map[string]src.Const
+	virtualNodes         map[string]src.Node
+	usedNodesPorts       nodePortsMap
 }
 
-func (d Desugarer) handleThenConns( //nolint:funlen
-	originalConn src.Connection,
+var virtualBlockersCounter atomic.Uint64
+
+func (d Desugarer) handleDeferredConnections( //nolint:funlen
+	sender src.ConnectionSenderSide, // who triggers deferred connections
+	deferredConnections []src.Connection,
 	nodes map[string]src.Node,
 	scope src.Scope,
-) (handleThenConnsResult, *compiler.Error) {
-	handleConnsResult, err := d.handleConns(originalConn.Normal.ReceiverSide.ThenConnections, nodes, scope)
+) (handleThenConnectionsResult, *compiler.Error) {
+	// recursively desugar every deferred connections
+	handleNetResult, err := d.handleNetwork(
+		deferredConnections,
+		nodes,
+		scope,
+	)
 	if err != nil {
-		return handleThenConnsResult{}, nil
+		return handleThenConnectionsResult{}, nil
 	}
 
-	desugaredThenConns := handleConnsResult.desugaredConns
-	extraNodes := maps.Clone(handleConnsResult.extraNodes)
-	extraConns := slices.Clone(handleConnsResult.desugaredConns)
+	// we want to return nodes created in recursive calls
+	// as well as the onces created by us in this call
+	virtualNodes := maps.Clone(handleNetResult.virtualNodes)
 
-	for _, desugaredThenConn := range desugaredThenConns {
-		blockerNodeName := fmt.Sprintf(
-			"then_block_from_%v_to_%v_",
-			originalConn.Normal.SenderSide.String(),
-			desugaredThenConn.Normal.SenderSide.String(),
-		)
+	// we going to replace all desugared deferreded connections with set of our connections
+	virtualConns := make([]src.Connection, 0, len(handleNetResult.desugaredConnections))
 
-		extraNodes[blockerNodeName] = blockerNode
+	// for every deferred connection we must do 4 things
+	// 1) create virtual "blocker" node
+	// 2) create connection from original sender to blocker:sig
+	// 3) create connection from deferred sender to blocker:data
+	// 4) create connection from blocker:data to every receiver in deferred connection
+	for _, desugaredThenConn := range handleNetResult.desugaredConnections {
+		deferredConnection := desugaredThenConn.Normal
 
-		extraConns = append(
-			extraConns,
-			// original sender -> lock:sig
+		// 1) create and add virtual blocker node
+		counter := virtualBlockersCounter.Load()
+		virtualBlockersCounter.Store(counter + 1)
+		virtualBlockerName := fmt.Sprintf("virtual_blocker_%d", counter)
+		virtualNodes[virtualBlockerName] = virtualBlockerNode
+
+		// 2, 3 and 4 goes here
+		virtualConns = append(virtualConns,
+			// 2) original sender -> blocker:sig
 			src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: originalConn.Normal.SenderSide,
+					SenderSide: sender,
 					ReceiverSide: src.ConnectionReceiverSide{
 						Receivers: []src.ConnectionReceiver{
 							{
 								PortAddr: src.PortAddr{
-									Node: blockerNodeName,
+									Node: virtualBlockerName,
 									Port: "sig",
 								},
 							},
@@ -73,15 +89,15 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 					},
 				},
 			},
-			// then conn sender -> lock:data
+			// 2) deferred connection sender -> blocker:data
 			src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: desugaredThenConn.Normal.SenderSide,
+					SenderSide: deferredConnection.SenderSide,
 					ReceiverSide: src.ConnectionReceiverSide{
 						Receivers: []src.ConnectionReceiver{
 							{
 								PortAddr: src.PortAddr{
-									Node: blockerNodeName,
+									Node: virtualBlockerName,
 									Port: "data",
 								},
 							},
@@ -89,27 +105,27 @@ func (d Desugarer) handleThenConns( //nolint:funlen
 					},
 				},
 			},
-			// lock:data -> { receivers... }
+			// 3) blocker:data -> deferred connection receivers
 			src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
 						PortAddr: &src.PortAddr{
-							Node: blockerNodeName,
+							Node: virtualBlockerName,
 							Port: "data",
 						},
 					},
 					ReceiverSide: src.ConnectionReceiverSide{
-						Receivers: desugaredThenConn.Normal.ReceiverSide.Receivers, // no nested `then` in desugared conn
+						Receivers: deferredConnection.ReceiverSide.Receivers,
 					},
 				},
 			},
 		)
 	}
 
-	return handleThenConnsResult{
-		extraNodes:     extraNodes,
-		extraConns:     extraConns,
-		extraConsts:    handleConnsResult.extraConsts,
-		usedNodesPorts: handleConnsResult.usedNodePorts,
+	return handleThenConnectionsResult{
+		virtualNodes:         virtualNodes,
+		desugaredConnections: virtualConns,
+		virtualConstants:     handleNetResult.virtualConstants,
+		usedNodesPorts:       handleNetResult.usedNodePorts,
 	}, nil
 }
