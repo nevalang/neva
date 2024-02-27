@@ -37,7 +37,6 @@ func main() {
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 	builder := builder.New(
-		"/Users/emil/projects/neva/std",
 		"/Users/emil/projects/neva/third_party/",
 		p,
 	)

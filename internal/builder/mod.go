@@ -3,21 +3,22 @@ package builder
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 )
 
-func (p Builder) LoadModuleByPath(ctx context.Context, workdir string) (compiler.RawModule, error) {
+func (p Builder) LoadModuleByPath(ctx context.Context, workdir fs.FS) (compiler.RawModule, error) {
 	manifest, err := p.retrieveManifest(workdir)
 	if err != nil {
 		return compiler.RawModule{}, fmt.Errorf("retrieve manifest: %w", err)
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
-	if err := collectNevaFiles(workdir, pkgs); err != nil {
+	if err := retrieveSourceCode(workdir, ".", pkgs); err != nil {
 		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
@@ -27,19 +28,29 @@ func (p Builder) LoadModuleByPath(ctx context.Context, workdir string) (compiler
 	}, nil
 }
 
-// collectNevaFiles recursively walks the given tree and fills given pkgs with neva files
-func collectNevaFiles(rootPath string, pkgs map[string]compiler.RawPackage) error {
-	if err := filepath.Walk(rootPath, func(filePath string, info os.FileInfo, err error) error {
+// retrieveSourceCode recursively walks the given tree and fills given pkgs with neva files
+func retrieveSourceCode(fsys fs.FS, rootPath string, pkgs map[string]compiler.RawPackage) error {
+	return fs.WalkDir(fsys, rootPath, func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
 		}
 
-		ext := filepath.Ext(info.Name())
+		if d.IsDir() {
+			return nil
+		}
+
+		ext := filepath.Ext(d.Name())
 		if ext != ".neva" {
 			return nil
 		}
 
-		bb, err := os.ReadFile(filePath)
+		file, err := fsys.Open(filePath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		bb, err := io.ReadAll(file)
 		if err != nil {
 			return err
 		}
@@ -49,15 +60,11 @@ func collectNevaFiles(rootPath string, pkgs map[string]compiler.RawPackage) erro
 			pkgs[pkgName] = compiler.RawPackage{}
 		}
 
-		fileName := strings.TrimSuffix(info.Name(), ext)
+		fileName := strings.TrimSuffix(d.Name(), ext)
 		pkgs[pkgName][fileName] = bb
 
 		return nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
 
 func getPkgName(rootPath, filePath string) string {
