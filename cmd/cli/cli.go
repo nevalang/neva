@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	cli "github.com/urfave/cli/v2"
+
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/pkg"
-	cli "github.com/urfave/cli/v2"
 )
 
 func newCliApp( //nolint:funlen

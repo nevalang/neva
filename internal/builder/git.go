@@ -11,7 +11,7 @@ import (
 )
 
 func (p Builder) downloadDep(depModRef sourcecode.ModuleRef) (string, error) {
-	fsPath := fmt.Sprintf("%s/%s_%s", p.thirdPartyLocation, depModRef.Path, depModRef.Version)
+	fsPath := fmt.Sprintf("%s/%s_%s", p.thirdPartyPath, depModRef.Path, depModRef.Version)
 
 	_, err := os.Stat(fsPath)
 	if err == nil {

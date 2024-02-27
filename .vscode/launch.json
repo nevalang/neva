@@ -9,7 +9,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "-target=wasm", "0_do_nothing"]
+      "args": ["run", "0_do_nothing"]
     },
     {
       "name": "Neva CLI 10",
@@ -45,7 +45,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run","-debug", "2_hello_world/2_with_then_connection"]
+      "args": ["run", "-debug", "2_hello_world/2_with_then_connection"]
     },
     {
       "name": "Neva CLI 23",
@@ -72,7 +72,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug","4_add_numbers/verbose"]
+      "args": ["run", "-debug", "4_add_numbers/verbose"]
     },
     {
       "name": "Neva CLI 41",

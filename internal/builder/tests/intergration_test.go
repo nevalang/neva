@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Testbuilder(t *testing.T) {
+func TestBuilder(t *testing.T) {
 	prsr := parser.New(false)
-	manager := builder.New("/Users/emil/projects/neva/std", "", prsr)
+	manager := builder.New("", prsr)
 
 	build, err := manager.Build(context.Background(), "testmod")
 	require.NoError(t, err)

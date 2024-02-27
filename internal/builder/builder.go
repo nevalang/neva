@@ -3,19 +3,20 @@ package builder
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/std"
 )
 
 type Builder struct {
-	stdLibLocation     string // path to standart library module
-	thirdPartyLocation string // path to third-party modules
-	parser             Parser // parser is needed to parse manifest files
+	manifestParser ManifestParser // parser is needed to parse manifest files
+	thirdPartyPath string         // path to third-party modules
 }
 
-type Parser interface {
+type ManifestParser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
@@ -24,7 +25,7 @@ func (p Builder) Build( //nolint:funlen
 	workdir string,
 ) (compiler.RawBuild, *compiler.Error) {
 	// load user's module from disk
-	entryMod, err := p.LoadModuleByPath(ctx, workdir)
+	entryMod, err := p.LoadModuleByPath(ctx, os.DirFS(workdir))
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
@@ -38,7 +39,7 @@ func (p Builder) Build( //nolint:funlen
 	}
 
 	// TODO use embedded fs for stdlib
-	stdMod, err := p.LoadModuleByPath(ctx, p.stdLibLocation)
+	stdMod, err := p.LoadModuleByPath(ctx, std.FS)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
@@ -66,7 +67,7 @@ func (p Builder) Build( //nolint:funlen
 			}
 		}
 
-		depMod, err := p.LoadModuleByPath(ctx, depPath)
+		depMod, err := p.LoadModuleByPath(ctx, os.DirFS(depPath))
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("build dep mod: %w", err),
@@ -90,29 +91,9 @@ func (p Builder) Build( //nolint:funlen
 	}, nil
 }
 
-func (p Builder) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
-	manifest, err := p.retrieveManifest(workdir)
-	if err != nil {
-		return err
-	}
-
-	if _, err := p.downloadDep(depModRef); err != nil {
-		return err
-	}
-
-	manifest.Deps[depModRef.Path] = depModRef
-
-	return nil
-}
-
-func New(
-	stdlibPath string,
-	thirdpartyPath string,
-	parser Parser,
-) Builder {
+func New(thirdParty string, parser ManifestParser) Builder {
 	return Builder{
-		stdLibLocation:     stdlibPath,
-		thirdPartyLocation: thirdpartyPath,
-		parser:             parser,
+		thirdPartyPath: thirdParty,
+		manifestParser: parser,
 	}
 }

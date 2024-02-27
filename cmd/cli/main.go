@@ -34,7 +34,6 @@ func main() { //nolint:funlen
 
 	// pkg manager
 	pkgMngr := builder.New(
-		"/Users/emil/projects/neva/std",
 		"/Users/emil/projects/neva/thirdparty",
 		prsr,
 	)

@@ -47,12 +47,13 @@ Nevalang is at an extremely early stage but with the help of community it can be
 - Building a Community
 - Core Standard Library
 - Feature-Rich LSP-compatible Language Server
-- Go Interop (import go from neva, import neva from go)
+- Go Interop (import go from neva and neva from go)
 - DAP-compatible Debugger
+- Testing Framework
 - No Runtime Exceptions (If it runs then it works)
 - Visual Programming in VSCode (Nevalang becomes hybrid langauge)
 
-Nevalang needs your help—it currently has only one maintainer.
+Nevalang needs your help - it currently has only one maintainer.
 
 ## Community
 
