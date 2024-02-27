@@ -50,7 +50,7 @@ func (g Generator) processNetwork(
 
 					irReceiverSide := ir.ReceiverConnectionSide{
 						PortAddr: ir.PortAddr{
-							Path: joinNodePath(nodeCtx.path, receiverPortAddr.Node),
+							Path: joinNodePath(nodeCtx.path, receiverPortAddr.Node) + "/in",
 							Port: receiverPortAddr.Port,
 							Idx:  uint32(slotIdx),
 						},
