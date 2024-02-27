@@ -314,17 +314,23 @@ func (s *BasenevaListener) EnterConstVal(ctx *ConstValContext) {}
 // ExitConstVal is called when production constVal is exited.
 func (s *BasenevaListener) ExitConstVal(ctx *ConstValContext) {}
 
+// EnterNil is called when production nil is entered.
+func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
+
+// ExitNil is called when production nil is exited.
+func (s *BasenevaListener) ExitNil(ctx *NilContext) {}
+
 // EnterBool is called when production bool is entered.
 func (s *BasenevaListener) EnterBool(ctx *BoolContext) {}
 
 // ExitBool is called when production bool is exited.
 func (s *BasenevaListener) ExitBool(ctx *BoolContext) {}
 
-// EnterNil is called when production nil is entered.
-func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
+// EnterEnumLit is called when production enumLit is entered.
+func (s *BasenevaListener) EnterEnumLit(ctx *EnumLitContext) {}
 
-// ExitNil is called when production nil is exited.
-func (s *BasenevaListener) ExitNil(ctx *NilContext) {}
+// ExitEnumLit is called when production enumLit is exited.
+func (s *BasenevaListener) ExitEnumLit(ctx *EnumLitContext) {}
 
 // EnterListLit is called when production listLit is entered.
 func (s *BasenevaListener) EnterListLit(ctx *ListLitContext) {}

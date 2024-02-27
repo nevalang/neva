@@ -88,10 +88,12 @@ constVal:
 	| INT
 	| FLOAT
 	| STRING
+	| enumLit
 	| listLit
 	| structLit;
-bool: 'true' | 'false';
 nil: 'nil';
+bool: 'true' | 'false';
+enumLit: IDENTIFIER '::' IDENTIFIER ;
 listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	constVal
