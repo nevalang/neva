@@ -39,17 +39,17 @@ func (s structSelector) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (fun
 				select {
 				case <-ctx.Done():
 					return
-				case msgOut <- s.getFieldByPath(msg.Map(), pathStrings):
+				case msgOut <- s.mapLookup(msg, pathStrings):
 				}
 			}
 		}
 	}, nil
 }
 
-func (structSelector) getFieldByPath(m map[string]runtime.Msg, fieldPath []string) runtime.Msg {
-	for len(fieldPath) > 0 {
-		m = m[fieldPath[0]].Map()
-		fieldPath = fieldPath[1:]
+func (structSelector) mapLookup(m runtime.Msg, path []string) runtime.Msg {
+	for len(path) > 0 {
+		m = m.Map()[path[0]]
+		path = path[1:]
 	}
-	return runtime.NewMapMsg(m)
+	return m
 }

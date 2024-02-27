@@ -12,8 +12,6 @@ Website: https://nevalang.org/
 
 ## Hello World
 
-Nevalang programs are executable dataflow graphs. Execution starts with the single `start` message and ends after first `stop` message.
-
 ```neva
 component Main(start any) (stop any) {
 	nodes { printer Printer<string> }
@@ -24,7 +22,7 @@ component Main(start any) (stop any) {
 }
 ```
 
-When `Main` receives a `:start` signal, it sends a `'Hello, World!'` message to `data` inport of the node `printer`, which is an instance of a `Printer` component. Then `printer` sends a signal to it's `sig` outport and we use that as a signal to our `:stop` outport.
+Nevalang programs are executable dataflow graphs where components are connected to each other through input and output ports. No state, no control flow, just message passing in fully asynchronous environment.
 
 [Read more about the language](https://nevalang.org/docs/about)
 
@@ -40,7 +38,7 @@ When `Main` receives a `:start` signal, it sends a `'Hello, World!'` message to 
 - Builtin Observability
 - Garbage Collection
 
-Please note that even though these features are technically implemented, **developer-experience could be very bad** due to current project state which is pre-MVP.
+Please note that even though these features are technically implemented, **developer-experience could be very bad** due to current project state which is pre-MVP. **No backward-compatibility** guarantees at the time.
 
 ### Roadmap (🚧 WIP)
 
@@ -54,7 +52,7 @@ Nevalang is at extrimely early stage but with the help of community it can becom
 - No Runtime Exceptions (If it runs then it works)
 - Visual Programming in VSCode (Nevalang becomes hybrid langauge)
 
-Nevalang needs **your** help - it only have one maintainer.
+Nevalang needs **your** help - it only have one maintainer currently.
 
 ## Community
 
