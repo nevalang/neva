@@ -20,23 +20,50 @@ func (g Generator) processNetwork(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
+		// here's how we handle array-bypass connections
+		// sender is always component's inport
+		// based on that, we can to set receiver's inport slots
+		// to the value equal of the used slots of our inport
+		// that is known thanks to nodeCtx (metadata from parent node)
 		if conn.ArrayBypass != nil {
-			if _, ok := nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node]; !ok {
-				nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node] = portsUsage{
+			senderPortAddr := conn.ArrayBypass.SenderOutport
+			receiverPortAddr := conn.ArrayBypass.ReceiverInport
+
+			if _, ok := nodesPortsUsage[receiverPortAddr.Node]; !ok {
+				nodesPortsUsage[receiverPortAddr.Node] = portsUsage{
 					in:  map[relPortAddr]struct{}{},
 					out: map[relPortAddr]struct{}{},
 				}
 			}
 
-			var idx uint8 = 0
+			var slotIdx uint8 = 0
 			for addr := range nodeCtx.portsUsage.in {
-				if addr.Port == conn.ArrayBypass.SenderOutport.Port {
-					nodesPortsUsage[conn.ArrayBypass.ReceiverInport.Node].
-						in[relPortAddr{
-						Port: conn.ArrayBypass.ReceiverInport.Port,
-						Idx:  idx,
-					}] = struct{}{}
-					idx++
+				if addr.Port == senderPortAddr.Port {
+					addr := relPortAddr{Port: receiverPortAddr.Port, Idx: slotIdx}
+					nodesPortsUsage[receiverPortAddr.Node].in[addr] = struct{}{}
+
+					irSenderSide := ir.PortAddr{
+						Path: joinNodePath(nodeCtx.path, senderPortAddr.Node),
+						Port: senderPortAddr.Port,
+						Idx:  uint32(slotIdx),
+					}
+
+					irReceiverSide := ir.ReceiverConnectionSide{
+						PortAddr: ir.PortAddr{
+							Path: joinNodePath(nodeCtx.path, receiverPortAddr.Node),
+							Port: receiverPortAddr.Port,
+							Idx:  uint32(slotIdx),
+						},
+					}
+
+					result.Connections = append(result.Connections, ir.Connection{
+						SenderSide: irSenderSide,
+						ReceiverSides: []ir.ReceiverConnectionSide{
+							irReceiverSide,
+						},
+					})
+
+					slotIdx++
 				}
 			}
 
