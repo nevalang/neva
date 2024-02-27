@@ -15,19 +15,18 @@ var emitterComponentRef = src.EntityRef{
 }
 
 type handleLiteralSenderResult struct {
+	constName                  string
 	handleConstRefSenderResult // conceptually incorrrect but convenient to reuse
-	// constant                   src.Const
-	constName string
 }
 
 type handleConstRefSenderResult struct {
-	desugaredConn   src.Connection
-	emitterNodeName string
-	emitterNode     src.Node
+	connectionWithoutConstSender src.Connection
+	emitterNodeName              string
+	emitterNode                  src.Node
 }
 
 // In the future compiler can operate in concurrently
-var litSendersCount atomic.Uint32
+var virtualEmittersCount atomic.Uint64
 
 func (d Desugarer) handleLiteralSender(
 	conn src.Connection,
@@ -35,14 +34,14 @@ func (d Desugarer) handleLiteralSender(
 	handleLiteralSenderResult,
 	*compiler.Error,
 ) {
-	counter := litSendersCount.Load()
-	litSendersCount.Store(counter + 1)
-	constName := fmt.Sprintf("literal_%d", counter)
+	counter := virtualEmittersCount.Load()
+	virtualEmittersCount.Store(counter + 1)
+	constName := fmt.Sprintf("virtual_const_%d", counter)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
 
-	emitterNodeName := "$" + constName
+	emitterNodeName := fmt.Sprintf("virtual_emitter_%d", counter)
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
@@ -50,7 +49,7 @@ func (d Desugarer) handleLiteralSender(
 		EntityRef: emitterComponentRef,
 		TypeArgs: []ts.Expr{
 			conn.
-				SenderSide.
+				Normal.SenderSide.
 				Const.
 				Value.
 				TypeExpr,
@@ -64,14 +63,16 @@ func (d Desugarer) handleLiteralSender(
 	return handleLiteralSenderResult{
 		constName: constName,
 		handleConstRefSenderResult: handleConstRefSenderResult{
-			desugaredConn: src.Connection{
-				SenderSide: src.ConnectionSenderSide{
-					PortAddr:  &emitterNodeOutportAddr,
-					Selectors: conn.SenderSide.Selectors,
-					Meta:      conn.SenderSide.Meta,
+			connectionWithoutConstSender: src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr:  &emitterNodeOutportAddr,
+						Selectors: conn.Normal.SenderSide.Selectors,
+						Meta:      conn.Normal.SenderSide.Meta,
+					},
+					ReceiverSide: conn.Normal.ReceiverSide,
 				},
-				ReceiverSide: conn.ReceiverSide,
-				Meta:         conn.Meta,
+				Meta: conn.Meta,
 			},
 			emitterNodeName: emitterNodeName,
 			emitterNode:     emitterNode,
@@ -86,44 +87,49 @@ func (d Desugarer) handleConstRefSender(
 	handleConstRefSenderResult,
 	*compiler.Error,
 ) {
-	constTypeExpr, err := d.getConstTypeByRef(*conn.SenderSide.Const.Ref, scope)
+	constTypeExpr, err := d.getConstTypeByRef(*conn.Normal.SenderSide.Const.Ref, scope)
 	if err != nil {
 		return handleConstRefSenderResult{}, compiler.Error{
 			Err: fmt.Errorf(
 				"Unable to get constant type by reference '%v'",
-				*conn.SenderSide.Const.Ref,
+				*conn.Normal.SenderSide.Const.Ref,
 			),
 			Location: &scope.Location,
-			Meta:     &conn.SenderSide.Const.Ref.Meta,
+			Meta:     &conn.Normal.SenderSide.Const.Ref.Meta,
 		}.Wrap(err)
 	}
 
-	constRefStr := conn.SenderSide.Const.Ref.String()
+	counter := virtualEmittersCount.Load()
+	virtualEmittersCount.Store(counter + 1)
+	virtualEmitterName := fmt.Sprintf("virtual_emitter_%d", counter)
 
-	emitterNodeName := "$" + constRefStr
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constRefStr},
+			compiler.BindDirective: {
+				conn.Normal.SenderSide.Const.Ref.String(), // don't forget to bind const
+			},
 		},
 		EntityRef: emitterComponentRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
 	emitterNodeOutportAddr := src.PortAddr{
-		Node: emitterNodeName,
+		Node: virtualEmitterName,
 		Port: "msg",
 	}
 
 	return handleConstRefSenderResult{
-		desugaredConn: src.Connection{
-			SenderSide: src.ConnectionSenderSide{
-				PortAddr:  &emitterNodeOutportAddr,
-				Selectors: conn.SenderSide.Selectors,
-				Meta:      conn.SenderSide.Meta,
+		connectionWithoutConstSender: src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: src.ConnectionSenderSide{
+					PortAddr:  &emitterNodeOutportAddr,
+					Selectors: conn.Normal.SenderSide.Selectors,
+					Meta:      conn.Normal.SenderSide.Meta,
+				},
+				ReceiverSide: conn.Normal.ReceiverSide,
 			},
-			ReceiverSide: conn.ReceiverSide,
-			Meta:         conn.Meta,
+			Meta: conn.Meta,
 		},
-		emitterNodeName: emitterNodeName,
+		emitterNodeName: virtualEmitterName,
 		emitterNode:     emitterNode,
 	}, nil
 }

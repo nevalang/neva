@@ -376,49 +376,84 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 		},
 	}
 
-	parsedSenderSide := parseConnSenderSide(connDef)
+	arrBypassConn := connDef.ArrBypassConnDef()
+	if arrBypassConn == nil {
+		parsedSenderSide := parseNormConnSenderSide(connDef.NormConnDef().SenderSide())
 
-	receiverSide, err := parseConnReceiverSide(connDef, connMeta)
+		receiverSide, err := parseNormConnReceiverSide(connDef.NormConnDef(), connMeta)
+		if err != nil {
+			return src.Connection{}, compiler.Error{
+				Meta: &connMeta,
+			}.Wrap(err)
+		}
+
+		return src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide:   parsedSenderSide,
+				ReceiverSide: receiverSide,
+			},
+			Meta: connMeta,
+		}, nil
+	}
+
+	senderPortAddr := arrBypassConn.SinglePortAddr(0)
+	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
+
+	senderPortAddrParsed, err := parseSinglePortAddr(
+		"in",
+		senderPortAddr,
+		connMeta,
+	)
 	if err != nil {
-		return src.Connection{}, compiler.Error{
-			Meta: &connMeta,
-		}.Wrap(err)
+		return src.Connection{}, err
+	}
+
+	receiverPortAddrParsed, err := parseSinglePortAddr(
+		"out",
+		receiverPortAddr,
+		connMeta,
+	)
+	if err != nil {
+		return src.Connection{}, err
 	}
 
 	return src.Connection{
-		SenderSide:   parsedSenderSide,
-		ReceiverSide: receiverSide,
-		Meta:         connMeta,
+		ArrayBypass: &src.ArrayBypassConnection{
+			SenderOutport:  senderPortAddrParsed,
+			ReceiverInport: receiverPortAddrParsed,
+		},
+		Meta: connMeta,
 	}, nil
 }
 
-func parseConnReceiverSide(
-	connDef generated.IConnDefContext,
+func parseNormConnReceiverSide(
+	normConn generated.INormConnDefContext,
 	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
-	if receiverSide := connDef.ReceiverSide(); receiverSide != nil {
+	if receiverSide := normConn.ReceiverSide(); receiverSide != nil {
 		return parseReceiverSide(receiverSide, connMeta)
 	}
 
-	multipleSides := connDef.MultipleReceiverSide()
+	multipleSides := normConn.MultipleReceiverSide()
 	if multipleSides == nil {
 		fmt.Println(
-			connDef.ReceiverSide(),
-			connDef.MultipleReceiverSide(),
-			connDef.GetText(),
+			normConn.ReceiverSide(),
+			normConn.MultipleReceiverSide(),
+			normConn.GetText(),
 		)
+
 		// FIXME implement literal senders
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
 			Meta: &src.Meta{
-				Text: connDef.GetText(),
+				Text: normConn.GetText(),
 				Start: src.Position{
-					Line:   connDef.GetStart().GetLine(),
-					Column: connDef.GetStart().GetColumn(),
+					Line:   normConn.GetStart().GetLine(),
+					Column: normConn.GetStart().GetColumn(),
 				},
 				Stop: src.Position{
-					Line:   connDef.GetStop().GetLine(),
-					Column: connDef.GetStop().GetColumn(),
+					Line:   normConn.GetStop().GetLine(),
+					Column: normConn.GetStop().GetColumn(),
 				},
 			},
 		})
@@ -484,12 +519,10 @@ func parseThenConnExpr(
 		}
 		thenConns = append(thenConns, parsedThenConn)
 	}
-	return src.ConnectionReceiverSide{ThenConnections: thenConns}, nil
+	return src.ConnectionReceiverSide{DeferredConnections: thenConns}, nil
 }
 
-func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSenderSide { //nolint:funlen
-	senderSide := connDef.SenderSide()
-
+func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.ConnectionSenderSide { //nolint:funlen
 	var senderSelectors []string
 	singleSenderSelectors := senderSide.StructSelectors()
 	if singleSenderSelectors != nil {
@@ -508,14 +541,14 @@ func parseConnSenderSide(connDef generated.IConnDefContext) src.ConnectionSender
 		panic(&compiler.Error{
 			Err: errors.New("no sender side at all"),
 			Meta: &src.Meta{
-				Text: connDef.GetText(),
+				Text: senderSide.GetText(),
 				Start: src.Position{
-					Line:   connDef.GetStart().GetLine(),
-					Column: connDef.GetStart().GetColumn(),
+					Line:   senderSide.GetStart().GetLine(),
+					Column: senderSide.GetStart().GetColumn(),
 				},
 				Stop: src.Position{
-					Line:   connDef.GetStop().GetLine(),
-					Column: connDef.GetStop().GetColumn(),
+					Line:   senderSide.GetStop().GetLine(),
+					Column: senderSide.GetStop().GetColumn(),
 				},
 			},
 		})
@@ -629,34 +662,52 @@ func parsePortAddr(
 		},
 	}
 
-	var idx *uint8
-	if index := expr.PortAddrIdx(); index != nil {
-		withoutSquareBraces := strings.Trim(index.GetText(), "[]")
-		result, err := strconv.ParseUint(
-			withoutSquareBraces,
-			10,
-			8,
-		)
-		if err != nil {
-			return src.PortAddr{}, &compiler.Error{
-				Err: err,
-				Meta: &src.Meta{
-					Text: expr.GetText(),
-					Start: src.Position{
-						Line:   expr.GetStart().GetLine(),
-						Column: expr.GetStart().GetColumn(),
-					},
-					Stop: src.Position{
-						Line:   expr.GetStop().GetLine(),
-						Column: expr.GetStop().GetColumn(),
-					},
-				},
-			}
-		}
-		idxVal := uint8(result)
-		idx = &idxVal
+	if expr.ArrPortAddr() == nil {
+		return parseSinglePortAddr(fallbackNode, expr.SinglePortAddr(), meta)
 	}
 
+	idxStr := expr.ArrPortAddr().PortAddrIdx()
+	withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
+
+	idxUint, err := strconv.ParseUint(
+		withoutSquareBraces,
+		10,
+		8,
+	)
+	if err != nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err: err,
+			Meta: &src.Meta{
+				Text: expr.GetText(),
+				Start: src.Position{
+					Line:   expr.GetStart().GetLine(),
+					Column: expr.GetStart().GetColumn(),
+				},
+				Stop: src.Position{
+					Line:   expr.GetStop().GetLine(),
+					Column: expr.GetStop().GetColumn(),
+				},
+			},
+		}
+	}
+
+	nodeName := fallbackNode
+	if n := expr.ArrPortAddr().PortAddrNode(); n != nil {
+		nodeName = n.GetText()
+	}
+
+	idxUint8 := uint8(idxUint)
+
+	return src.PortAddr{
+		Idx:  &idxUint8,
+		Node: nodeName,
+		Port: expr.ArrPortAddr().PortAddrPort().GetText(),
+		Meta: meta,
+	}, nil
+
+}
+
+func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrContext, meta src.Meta) (src.PortAddr, *compiler.Error) {
 	nodeName := fallbackNode
 	if n := expr.PortAddrNode(); n != nil {
 		nodeName = n.GetText()
@@ -665,7 +716,6 @@ func parsePortAddr(
 	return src.PortAddr{
 		Node: nodeName,
 		Port: expr.PortAddrPort().GetText(),
-		Idx:  idx,
 		Meta: meta,
 	}, nil
 }

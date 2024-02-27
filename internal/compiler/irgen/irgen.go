@@ -27,6 +27,12 @@ type (
 		out map[relPortAddr]struct{}
 	}
 
+	// TODO add support for array ports bypass
+	// IDEA when we see bypass connection, we must used our existing nodeCtx
+	// To figure outhow many used inports to create for receiver subnode
+	// The count of used inports for subNoteCtx equals
+	// cont of used inports for current nodeCtx
+
 	relPortAddr struct {
 		Port string
 		Idx  uint8
@@ -134,7 +140,12 @@ func (g Generator) processComponentNode( //nolint:funlen
 	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
 	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
-	subnodesPortsUsage, err := g.processNet(scope, component.Net, nodeCtx, result)
+	subnodesPortsUsage, err := g.processNetwork(
+		scope,
+		component.Net,
+		nodeCtx,
+		result,
+	)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -143,7 +154,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	}
 
 	for nodeName, node := range component.Nodes {
-		nodeUsage, ok := subnodesPortsUsage[nodeName]
+		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
@@ -154,7 +165,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 		subNodeCtx := nodeContext{
 			path:       append(nodeCtx.path, nodeName),
-			portsUsage: nodeUsage,
+			portsUsage: nodePortsUsage,
 			node:       node,
 		}
 

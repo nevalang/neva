@@ -28,7 +28,7 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
-	nodesUsage := make(map[string]NodeNetUsage, len(nodes)) // we create it here because there's recursion down there
+	nodesUsage := make(map[string]nodeNetUsage, len(nodes)) // we create it here because there's recursion down there
 
 	if err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope); err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
@@ -49,7 +49,7 @@ func (a Analyzer) analyzeConnections(
 	compInterface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
-	nodesUsage map[string]NodeNetUsage,
+	nodesUsage map[string]nodeNetUsage,
 	scope src.Scope,
 ) *compiler.Error {
 	for _, conn := range net {
@@ -60,37 +60,154 @@ func (a Analyzer) analyzeConnections(
 	return nil
 }
 
+type nodesNetUsage map[string]nodeNetUsage
+
+func (n nodesNetUsage) AddOutport(node, port string) {
+	if _, ok := n[node]; !ok {
+		defaultValue := nodeNetUsage{
+			In:  map[string]struct{}{},
+			Out: map[string]struct{}{},
+		}
+		n[node] = defaultValue
+	}
+	n[node].Out[port] = struct{}{}
+}
+
+func (n nodesNetUsage) AddInport(node, port string) {
+	if _, ok := n[node]; !ok {
+		defaultValue := nodeNetUsage{
+			In:  map[string]struct{}{},
+			Out: map[string]struct{}{},
+		}
+		n[node] = defaultValue
+	}
+	n[node].In[port] = struct{}{}
+}
+
 func (a Analyzer) analyzeConnection( //nolint:funlen
 	conn src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-	nodesUsage map[string]NodeNetUsage,
+	nodesUsage map[string]nodeNetUsage,
 ) *compiler.Error {
-	outportTypeExpr, err := a.getSenderType(conn.SenderSide, compInterface, nodes, nodesIfaces, scope)
+	// first handle array bypass connection, they are simple
+	if arrBypassConn := conn.ArrayBypass; arrBypassConn != nil {
+		senderType, isArray, err := a.getSenderPortAddrType(
+			arrBypassConn.SenderOutport,
+			scope,
+			compInterface,
+			nodes,
+			nodesIfaces,
+		)
+		if err != nil {
+			return compiler.Error{
+				Location: &scope.Location,
+				Meta:     &conn.Normal.SenderSide.Meta,
+			}.Wrap(err)
+		}
+		if !isArray {
+			return &compiler.Error{
+				Err:      errors.New("Non-array outport in array-bypass connection"),
+				Location: &scope.Location,
+				Meta:     &arrBypassConn.SenderOutport.Meta,
+			}
+		}
+
+		receiverType, isArray, err := a.getReceiverType(
+			arrBypassConn.ReceiverInport,
+			compInterface,
+			nodes,
+			nodesIfaces,
+			scope,
+		)
+		if err != nil {
+			return compiler.Error{
+				Location: &scope.Location,
+				Meta:     &conn.Normal.SenderSide.Meta,
+			}.Wrap(err)
+		}
+		if !isArray {
+			return &compiler.Error{
+				Err:      errors.New("Non-array outport in array-bypass connection"),
+				Location: &scope.Location,
+				Meta:     &arrBypassConn.SenderOutport.Meta,
+			}
+		}
+
+		if err := a.resolver.IsSubtypeOf(
+			senderType,
+			receiverType,
+			scope,
+		); err != nil {
+			return &compiler.Error{
+				Err: fmt.Errorf(
+					"Incompatible types: %v -> %v: %w",
+					arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
+				),
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+
+		nodesNetUsage(nodesUsage).AddOutport(
+			arrBypassConn.SenderOutport.Node,
+			arrBypassConn.SenderOutport.Port,
+		)
+		nodesNetUsage(nodesUsage).AddInport(
+			arrBypassConn.ReceiverInport.Node,
+			arrBypassConn.ReceiverInport.Port,
+		)
+
+		return nil
+	}
+
+	// now handle normal connections, they are complex
+	normConn := conn.Normal
+
+	outportTypeExpr, isSenderArr, err := a.getSenderSideType(
+		normConn.SenderSide,
+		compInterface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
 	if err != nil {
 		return compiler.Error{
 			Location: &scope.Location,
-			Meta:     &conn.SenderSide.Meta,
+			Meta:     &normConn.SenderSide.Meta,
 		}.Wrap(err)
 	}
 
-	// mark node's outport as used if sender isn't const ref
-	if conn.SenderSide.PortAddr != nil {
-		senderNodeName := conn.SenderSide.PortAddr.Node
-		outportName := conn.SenderSide.PortAddr.Port
-		if _, ok := nodesUsage[senderNodeName]; !ok {
-			nodesUsage[senderNodeName] = NodeNetUsage{
-				In:  map[string]struct{}{},
-				Out: map[string]struct{}{},
+	if normConn.SenderSide.PortAddr != nil {
+		// make sure only array outports has indexes
+		if !isSenderArr && normConn.SenderSide.PortAddr.Idx != nil {
+			return &compiler.Error{
+				Err:      errors.New("Index for non-array port"),
+				Meta:     &normConn.SenderSide.PortAddr.Meta,
+				Location: &scope.Location,
 			}
 		}
-		nodesUsage[senderNodeName].Out[outportName] = struct{}{}
+
+		// make sure array outports always has indexes (it's not arr-bypass)
+		if isSenderArr && normConn.SenderSide.PortAddr.Idx == nil {
+			return &compiler.Error{
+				Err:      errors.New("Index needed for array port"),
+				Meta:     &normConn.SenderSide.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
+		// mark node's outport as used since sender isn't const ref
+		nodesNetUsage(nodesUsage).AddOutport(
+			normConn.SenderSide.PortAddr.Node,
+			normConn.SenderSide.PortAddr.Port,
+		)
 	}
 
-	if len(conn.SenderSide.Selectors) > 0 {
-		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, conn.SenderSide.Selectors)
+	if len(normConn.SenderSide.Selectors) > 0 {
+		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, normConn.SenderSide.Selectors)
 		if err != nil {
 			return &compiler.Error{
 				Err:      err,
@@ -101,21 +218,21 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		outportTypeExpr = lastFieldType
 	}
 
-	if len(conn.ReceiverSide.ThenConnections) == 0 && len(conn.ReceiverSide.Receivers) == 0 {
+	if len(normConn.ReceiverSide.DeferredConnections) == 0 && len(normConn.ReceiverSide.Receivers) == 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
-					"Connection's receiver side cannot be empty, it must either have then connection or receivers",
+					"Connection's receiver side cannot be empty, it must either have deferred connection or receivers",
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
 			}
 		}
-	} else if len(conn.ReceiverSide.ThenConnections) != 0 && len(conn.ReceiverSide.Receivers) != 0 {
+	} else if len(normConn.ReceiverSide.DeferredConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
 		if err != nil {
 			return &compiler.Error{
 				Err: errors.New(
-					"Connection's receiver side must either have then connection or receivers, not both",
+					"Connection's receiver side must either have deferred connection or receivers, not both",
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
@@ -123,12 +240,12 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		}
 	}
 
-	if conn.ReceiverSide.ThenConnections != nil {
+	if normConn.ReceiverSide.DeferredConnections != nil {
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
 		return a.analyzeConnections( // indirect recursion
-			conn.ReceiverSide.ThenConnections,
+			normConn.ReceiverSide.DeferredConnections,
 			compInterface,
 			nodes,
 			nodesIfaces,
@@ -137,9 +254,9 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		)
 	}
 
-	for _, receiver := range conn.ReceiverSide.Receivers {
-		inportTypeExpr, err := a.getReceiverType(
-			receiver,
+	for _, receiver := range normConn.ReceiverSide.Receivers {
+		inportTypeExpr, isReceiverArr, err := a.getReceiverType(
+			receiver.PortAddr,
 			compInterface,
 			nodes,
 			nodesIfaces,
@@ -152,34 +269,46 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			}.Wrap(err)
 		}
 
+		// make sure only array outports has indexes
+		if !isReceiverArr && receiver.PortAddr.Idx != nil {
+			return &compiler.Error{
+				Err:      errors.New("Index for non-array port"),
+				Meta:     &receiver.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
+		// make sure array inports always has indexes (it's not arr-bypass)
+		if isReceiverArr && receiver.PortAddr.Idx == nil {
+			return &compiler.Error{
+				Err:      errors.New("Index needed for array port"),
+				Meta:     &receiver.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
 		if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
 			return &compiler.Error{
 				Err: fmt.Errorf(
-					"Subtype checking failed: %v -> %v: %w",
-					conn.SenderSide, receiver, err,
+					"Incompatible types: %v -> %v: %w",
+					normConn.SenderSide, receiver, err,
 				),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
 			}
 		}
 
-		// mark node's inport as used
-		receiverNodeName := receiver.PortAddr.Node
-		inportName := receiver.PortAddr.Port
-		if _, ok := nodesUsage[receiverNodeName]; !ok {
-			nodesUsage[receiverNodeName] = NodeNetUsage{
-				In:  map[string]struct{}{}, // we don't use nodeIfaces for the same reason
-				Out: map[string]struct{}{}, // as with outports
-			}
-		}
-		nodesUsage[receiverNodeName].In[inportName] = struct{}{}
+		nodesNetUsage(nodesUsage).AddInport(
+			receiver.PortAddr.Node,
+			receiver.PortAddr.Port,
+		)
 	}
 
 	return nil
 }
 
-// NodeNetUsage represents how network uses node's ports.
-type NodeNetUsage struct {
+// nodeNetUsage shows which ports was used by the network
+type nodeNetUsage struct {
 	In, Out map[string]struct{}
 }
 
@@ -191,7 +320,7 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 	compInterface src.Interface,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-	nodesUsage map[string]NodeNetUsage,
+	nodesUsage map[string]nodeNetUsage,
 ) *compiler.Error {
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
@@ -270,29 +399,29 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 }
 
 func (a Analyzer) getReceiverType(
-	receiverSide src.ConnectionReceiver,
+	receiverSide src.PortAddr,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
-	if receiverSide.PortAddr.Node == "in" {
-		return ts.Expr{}, &compiler.Error{
+) (ts.Expr, bool, *compiler.Error) {
+	if receiverSide.Node == "in" {
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      ErrWriteSelfIn,
 			Location: &scope.Location,
-			Meta:     &receiverSide.PortAddr.Meta,
+			Meta:     &receiverSide.Meta,
 		}
 	}
 
-	if receiverSide.PortAddr.Node == "out" {
+	if receiverSide.Node == "out" {
 		outports := iface.IO.Out
 
-		outport, ok := outports[receiverSide.PortAddr.Port]
+		outport, ok := outports[receiverSide.Port]
 		if !ok {
-			return ts.Expr{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrOutportNotFound, receiverSide.PortAddr.Port),
+			return ts.Expr{}, false, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrOutportNotFound, receiverSide.Port),
 				Location: &scope.Location,
-				Meta:     &receiverSide.PortAddr.Meta,
+				Meta:     &receiverSide.Meta,
 			}
 		}
 
@@ -302,25 +431,25 @@ func (a Analyzer) getReceiverType(
 			scope,
 		)
 		if err != nil {
-			return ts.Expr{}, &compiler.Error{
+			return ts.Expr{}, false, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &receiverSide.PortAddr.Meta,
+				Meta:     &receiverSide.Meta,
 			}
 		}
 
-		return resolvedOutportType, nil
+		return resolvedOutportType, outport.IsArray, nil
 	}
 
-	nodeInportType, err := a.getNodeInportType(receiverSide.PortAddr, nodes, nodesIfaces, scope)
+	nodeInportType, isArray, err := a.getNodeInportType(receiverSide, nodes, nodesIfaces, scope)
 	if err != nil {
-		return ts.Expr{}, compiler.Error{
+		return ts.Expr{}, false, compiler.Error{
 			Location: &scope.Location,
-			Meta:     &receiverSide.PortAddr.Meta,
+			Meta:     &receiverSide.Meta,
 		}.Wrap(err)
 	}
 
-	return nodeInportType, nil
+	return nodeInportType, isArray, nil
 }
 
 func (a Analyzer) getNodeInportType(
@@ -328,10 +457,10 @@ func (a Analyzer) getNodeInportType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
+) (ts.Expr, bool, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      fmt.Errorf("Node not found '%v'", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -340,7 +469,7 @@ func (a Analyzer) getNodeInportType(
 
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -350,7 +479,7 @@ func (a Analyzer) getNodeInportType(
 	// TODO optimize:
 	// we can resolve every node's interface just once
 	// before processing the network
-	resolvedInportType, aerr := a.getResolvedPortType(
+	resolvedInportType, isArray, aerr := a.getResolvedPortType(
 		nodeIface.IO.In,
 		nodeIface.TypeParams.Params,
 		portAddr,
@@ -358,25 +487,26 @@ func (a Analyzer) getNodeInportType(
 		scope,
 	)
 	if aerr != nil {
-		return ts.Expr{}, compiler.Error{
+		return ts.Expr{}, false, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}.Wrap(aerr)
 	}
 
-	return resolvedInportType, nil
+	return resolvedInportType, isArray, nil
 }
 
+// getResolvedPortType returns port's type and isArray bool
 func (a Analyzer) getResolvedPortType(
 	ports map[string]src.Port,
 	nodeIfaceParams []ts.Param,
 	portAddr src.PortAddr,
 	node src.Node,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
+) (ts.Expr, bool, *compiler.Error) {
 	port, ok := ports[portAddr.Port]
 	if !ok {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err: fmt.Errorf(
 				"Port not found `%v`",
 				portAddr,
@@ -404,25 +534,25 @@ func (a Analyzer) getResolvedPortType(
 		scope,
 	)
 	if err != nil {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &port.Meta,
 		}
 	}
 
-	return resolvedPortType, nil
+	return resolvedPortType, port.IsArray, nil
 }
 
-func (a Analyzer) getSenderType( //nolint:funlen
+func (a Analyzer) getSenderSideType( //nolint:funlen
 	senderSide src.ConnectionSenderSide,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
+) (ts.Expr, bool, *compiler.Error) {
 	if senderSide.PortAddr == nil && senderSide.Const == nil {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
@@ -430,26 +560,38 @@ func (a Analyzer) getSenderType( //nolint:funlen
 	}
 
 	if senderSide.Const != nil {
-		return a.getResolvedSenderConstType(senderSide, scope)
+		t, err := a.getResolvedSenderConstType(senderSide, scope)
+		return t, false, err
 	}
 
-	if senderSide.PortAddr.Node == "out" {
-		return ts.Expr{}, &compiler.Error{
+	return a.getSenderPortAddrType(*senderSide.PortAddr, scope, iface, nodes, nodesIfaces)
+}
+
+// getSenderPortAddrType returns port's type and isArray bool
+func (a Analyzer) getSenderPortAddrType(
+	senderSide src.PortAddr,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]src.Interface,
+) (ts.Expr, bool, *compiler.Error) {
+	if senderSide.Node == "out" {
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      ErrReadSelfOut,
 			Location: &scope.Location,
-			Meta:     &senderSide.PortAddr.Meta,
+			Meta:     &senderSide.Meta,
 		}
 	}
 
-	if senderSide.PortAddr.Node == "in" {
+	if senderSide.Node == "in" {
 		inports := iface.IO.In
 
-		inport, ok := inports[senderSide.PortAddr.Port]
+		inport, ok := inports[senderSide.Port]
 		if !ok {
-			return ts.Expr{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSide.PortAddr.Port),
+			return ts.Expr{}, false, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSide.Port),
 				Location: &scope.Location,
-				Meta:     &senderSide.PortAddr.Meta,
+				Meta:     &senderSide.Meta,
 			}
 		}
 
@@ -459,25 +601,19 @@ func (a Analyzer) getSenderType( //nolint:funlen
 			scope,
 		)
 		if err != nil {
-			return ts.Expr{}, &compiler.Error{
+			return ts.Expr{}, false, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &senderSide.PortAddr.Meta,
+				Meta:     &senderSide.Meta,
 			}
 		}
 
-		return resolvedInportType, nil
+		return resolvedInportType, inport.IsArray, nil
 	}
 
-	nodeOutportType, err := a.getNodeOutportType(*senderSide.PortAddr, nodes, nodesIfaces, scope)
-	if err != nil {
-		return ts.Expr{}, compiler.Error{
-			Location: &scope.Location,
-			Meta:     &senderSide.PortAddr.Meta,
-		}.Wrap(err)
-	}
-
-	return nodeOutportType, nil
+	return a.getNodeOutportType(
+		senderSide, nodes, nodesIfaces, scope,
+	)
 }
 
 func (a Analyzer) getResolvedSenderConstType(
@@ -530,15 +666,16 @@ func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
 	return ErrLiteralSenderType
 }
 
+// getNodeOutportType returns port's type and isArray bool
 func (a Analyzer) getNodeOutportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
+) (ts.Expr, bool, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
@@ -547,29 +684,20 @@ func (a Analyzer) getNodeOutportType(
 
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
-		return ts.Expr{}, &compiler.Error{
+		return ts.Expr{}, false, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
 	}
 
-	resolvedPortType, err := a.getResolvedPortType(
+	return a.getResolvedPortType(
 		nodeIface.IO.Out,
 		nodeIface.TypeParams.Params,
 		portAddr,
 		node,
 		scope,
 	)
-	if err != nil {
-		return ts.Expr{}, compiler.Error{
-			Err:      fmt.Errorf("get resolved outport type: %v", portAddr),
-			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
-		}.Wrap(err)
-	}
-
-	return resolvedPortType, err
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {

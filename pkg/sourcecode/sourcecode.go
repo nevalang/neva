@@ -88,8 +88,8 @@ type File struct {
 }
 
 type Import struct {
-	ModuleName string `json:"moduleName,omitempty"`
-	PkgName    string `json:"pkgName,omitempty"`
+	Module  string `json:"moduleName,omitempty"`
+	Package string `json:"pkgName,omitempty"`
 }
 
 type Entity struct {
@@ -224,7 +224,8 @@ type Message struct {
 }
 
 func (m Message) String() string {
-	return "message" // TODO
+	// TODO
+	return "message"
 }
 
 type IO struct {
@@ -239,14 +240,24 @@ type Port struct {
 }
 
 type Connection struct {
+	Normal      *NormalConnection      `json:"normal,omitempty"`
+	ArrayBypass *ArrayBypassConnection `json:"arrayBypass,omitempty"`
+	Meta        Meta                   `json:"meta,omitempty"`
+}
+
+type NormalConnection struct {
 	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
 	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
-	Meta         Meta                   `json:"meta,omitempty"`
+}
+
+type ArrayBypassConnection struct {
+	SenderOutport  PortAddr `json:"senderOutport,omitempty"`
+	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
 type ConnectionReceiverSide struct {
-	ThenConnections []Connection
-	Receivers       []ConnectionReceiver
+	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
+	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
 }
 
 type ConnectionReceiver struct {

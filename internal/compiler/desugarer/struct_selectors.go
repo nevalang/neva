@@ -36,7 +36,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleStructSelectorsResult, *compiler.Error) {
-	senderSide := conn.SenderSide
+	senderSide := conn.Normal.SenderSide
 
 	structType, err := d.getSenderType(senderSide, scope, nodes)
 	if err != nil {
@@ -74,21 +74,23 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	// original connection must be replaced with two new connections, this is the first one
 	connToReplace := src.Connection{
-		SenderSide: src.ConnectionSenderSide{
-			// preserve original sender port
-			PortAddr: senderSide.PortAddr,
-			Const: &src.Const{
-				Ref: senderSide.Const.Ref,
+		Normal: &src.NormalConnection{
+			SenderSide: src.ConnectionSenderSide{
+				// preserve original sender port
+				PortAddr: senderSide.PortAddr,
+				Const: &src.Const{
+					Ref: senderSide.Const.Ref,
+				},
+				// remove selectors in desugared version
+				Selectors: nil,
 			},
-			// remove selectors in desugared version
-			Selectors: nil,
-		},
-		ReceiverSide: src.ConnectionReceiverSide{
-			Receivers: []src.ConnectionReceiver{
-				{
-					PortAddr: src.PortAddr{
-						Node: nodeName, // point it to created selector node
-						Port: "msg",
+			ReceiverSide: src.ConnectionReceiverSide{
+				Receivers: []src.ConnectionReceiver{
+					{
+						PortAddr: src.PortAddr{
+							Node: nodeName, // point it to created selector node
+							Port: "msg",
+						},
 					},
 				},
 			},
@@ -97,14 +99,16 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	// and this is the second
 	connToInsert := src.Connection{
-		SenderSide: src.ConnectionSenderSide{
-			PortAddr: &src.PortAddr{
-				Node: nodeName, // created node received data from original sender and is now sending it further
-				Port: "msg",
+		Normal: &src.NormalConnection{
+			SenderSide: src.ConnectionSenderSide{
+				PortAddr: &src.PortAddr{
+					Node: nodeName, // created node received data from original sender and is now sending it further
+					Port: "msg",
+				},
+				Selectors: nil, // no selectors in desugared version
 			},
-			Selectors: nil, // no selectors in desugared version
+			ReceiverSide: conn.Normal.ReceiverSide, // preserve original receivers
 		},
-		ReceiverSide: conn.ReceiverSide, // preserve original receivers
 	}
 
 	return handleStructSelectorsResult{

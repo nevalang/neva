@@ -1,6 +1,4 @@
-import {
-	std/x
-}
+import { x }
 
 component Main(start any) (stop any) {
 	nodes {

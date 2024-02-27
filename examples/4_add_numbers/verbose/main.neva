@@ -1,5 +1,4 @@
-// Here we learn `stream<T>` and streamers
-
+// FIXME def conns
 component Main(start any) (stop any) {
 	nodes {
 		adder Adder<int>

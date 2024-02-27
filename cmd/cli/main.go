@@ -13,10 +13,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/interpreter"
-	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/runtime/adapter"
-	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/typesystem"
 )
@@ -85,16 +81,13 @@ func main() { //nolint:funlen
 		),
 	)
 
-	// doesn't matter which compiler to use for interpreter
-	interp := newInterpreter(goCompiler, pkgMngr)
-
 	// command-line app that can compile and interpret neva code
 	app := newCliApp(
 		wd,
+		pkgMngr,
 		goCompiler,
 		nativeCompiler,
 		wasmCompiler,
-		interp,
 	)
 
 	// run CLI app
@@ -102,21 +95,4 @@ func main() { //nolint:funlen
 		fmt.Println(err)
 		return
 	}
-}
-
-func newInterpreter(
-	c compiler.Compiler,
-	pkg builder.Builder,
-) interpreter.Interpreter {
-	return interpreter.New(
-		c,
-		adapter.NewAdapter(),
-		runtime.New(
-			runtime.NewDefaultConnector(),
-			runtime.MustNewFuncRunner(
-				funcs.CreatorRegistry(),
-			),
-		),
-		pkg,
-	)
 }

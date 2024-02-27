@@ -22,7 +22,7 @@ compiler_directive_arg: IDENTIFIER+;
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: importAlias? importPath NEWLINE*;
 importAlias: IDENTIFIER;
-importPath: importPathMod '/' importPathPkg;
+importPath: (importPathMod '/')? importPathPkg;
 importPathMod: '@' | IDENTIFIER;
 importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 
@@ -124,13 +124,17 @@ nodeDIArgs: compNodesDefBody;
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
-connDef: senderSide '->' (receiverSide | multipleReceiverSide);
+connDef: normConnDef | arrBypassConnDef;
+normConnDef: senderSide '->' (receiverSide | multipleReceiverSide);
+arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;
 thenConnExpr:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: portAddrNode? ':' portAddrPort portAddrIdx?;
+portAddr: singlePortAddr | arrPortAddr;
+singlePortAddr: portAddrNode? ':' portAddrPort;
+arrPortAddr: portAddrNode? ':' portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';

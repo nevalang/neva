@@ -48,6 +48,9 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 			receiverPortChan, ok := runtimePorts[receiverPortAddr]
 			if !ok {
+				// FIXME array bypass
+				// for some reason we don't have needed receiver port
+				// that we have mention in the connections
 				return runtime.Program{}, fmt.Errorf("receiver port not found: %v", receiverPortAddr)
 			}
 

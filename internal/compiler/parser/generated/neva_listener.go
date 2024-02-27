@@ -214,6 +214,12 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
+	// EnterNormConnDef is called when entering the normConnDef production.
+	EnterNormConnDef(c *NormConnDefContext)
+
+	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
+	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
+
 	// EnterSenderSide is called when entering the senderSide production.
 	EnterSenderSide(c *SenderSideContext)
 
@@ -228,6 +234,12 @@ type nevaListener interface {
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
+
+	// EnterSinglePortAddr is called when entering the singlePortAddr production.
+	EnterSinglePortAddr(c *SinglePortAddrContext)
+
+	// EnterArrPortAddr is called when entering the arrPortAddr production.
+	EnterArrPortAddr(c *ArrPortAddrContext)
 
 	// EnterPortAddrNode is called when entering the portAddrNode production.
 	EnterPortAddrNode(c *PortAddrNodeContext)
@@ -451,6 +463,12 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
+	// ExitNormConnDef is called when exiting the normConnDef production.
+	ExitNormConnDef(c *NormConnDefContext)
+
+	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
+	ExitArrBypassConnDef(c *ArrBypassConnDefContext)
+
 	// ExitSenderSide is called when exiting the senderSide production.
 	ExitSenderSide(c *SenderSideContext)
 
@@ -465,6 +483,12 @@ type nevaListener interface {
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
+
+	// ExitSinglePortAddr is called when exiting the singlePortAddr production.
+	ExitSinglePortAddr(c *SinglePortAddrContext)
+
+	// ExitArrPortAddr is called when exiting the arrPortAddr production.
+	ExitArrPortAddr(c *ArrPortAddrContext)
 
 	// ExitPortAddrNode is called when exiting the portAddrNode production.
 	ExitPortAddrNode(c *PortAddrNodeContext)

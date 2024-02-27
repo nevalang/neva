@@ -32,10 +32,7 @@ func (c Compiler) Compile(
 }
 
 // CompileToIR compiles to intermediate representation
-func (c Compiler) CompileToIR(
-	src string,
-	mainPkgName string,
-) (*ir.Program, *Error) {
+func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Error) {
 	rawBuild, err := c.builder.Build(context.Background(), src)
 	if err != nil {
 		return nil, Error{

@@ -13,215 +13,136 @@ var ErrConstSenderEntityKind = errors.New(
 	"Entity that is used as a const reference in component's network must be of kind constant",
 )
 
-type desugarComponentResult struct {
-	component        src.Component         // desugared component to replace
-	entitiesToInsert map[string]src.Entity //nolint:lll // sometimes after desugaring component we need to insert some entities to the file
+type handleComponentResult struct {
+	desugaredComponent src.Component         // desugared component to replace
+	virtualEntities    map[string]src.Entity //nolint:lll // sometimes after desugaring component we need to insert some entities to the file
 }
 
-func (d Desugarer) desugarComponent( //nolint:funlen
+func (d Desugarer) handleComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
-) (desugarComponentResult, *compiler.Error) {
+) (handleComponentResult, *compiler.Error) {
+	// if it's native component, nothing to desugar
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
-		return desugarComponentResult{
-			component: component,
-		}, nil
+		return handleComponentResult{desugaredComponent: component}, nil
 	}
 
-	entitiesToInsert := map[string]src.Entity{}
+	// we are going to create some entities from scratch
+	virtualEntities := map[string]src.Entity{}
 
+	// handle nodes
 	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
 	for nodeName, node := range component.Nodes {
-		entity, _, err := scope.Entity(node.EntityRef)
+		err := d.handleNode(scope, node, desugaredNodes, nodeName, virtualEntities)
 		if err != nil {
-			return desugarComponentResult{}, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-			}
-		}
-
-		if entity.Kind != src.ComponentEntity {
-			desugaredNodes[nodeName] = node
-			continue
-		}
-
-		_, ok := entity.Component.Directives[compiler.AutoportsDirective]
-		if !ok {
-			desugaredNodes[nodeName] = node
-			continue
-		}
-
-		// desugaring autoports directive
-
-		structFields := node.TypeArgs[0].Lit.Struct // must be resolved struct after analysis stage
-
-		inports := make(map[string]src.Port, len(structFields))
-		for fieldName, fieldTypeExpr := range structFields {
-			inports[fieldName] = src.Port{
-				TypeExpr: fieldTypeExpr,
-			}
-		}
-
-		outports := map[string]src.Port{
-			"msg": {
-				TypeExpr: node.TypeArgs[0],
-			},
-		}
-
-		// create local variation of the struct builder component with inports corresponding to struct fields
-		localBuilderComponent := src.Component{
-			Interface: src.Interface{
-				IO: src.IO{In: inports, Out: outports}, // these ports gonna be used by irgen and then by runtime func
-			},
-		}
-
-		localBuilderName := fmt.Sprintf("struct_builder_%v", nodeName)
-
-		entitiesToInsert[localBuilderName] = src.Entity{
-			Kind:      src.ComponentEntity,
-			Component: localBuilderComponent,
-		}
-
-		// finally replace component ref for this current node with the ref to newly created local builder variation
-		desugaredNodes[nodeName] = src.Node{
-			EntityRef: src.EntityRef{
-				Pkg:  "builtin",
-				Name: "StructBuilder",
-			},
-			Directives: node.Directives,
-			TypeArgs:   node.TypeArgs,
-			Deps:       node.Deps,
-			Meta:       node.Meta,
+			return handleComponentResult{}, err
 		}
 	}
 
-	handleConnsResult, err := d.handleConns(component.Net, desugaredNodes, scope)
+	// handle network
+	handleNetResult, err := d.handleNetwork(component.Net, desugaredNodes, scope)
 	if err != nil {
-		return desugarComponentResult{}, err
+		return handleComponentResult{}, err
 	}
 
-	desugaredNet := handleConnsResult.desugaredConns
-	maps.Copy(desugaredNodes, handleConnsResult.extraNodes)
-
-	unusedOutports := d.findUnusedOutports(component, scope, handleConnsResult.usedNodePorts)
-	if unusedOutports.len() != 0 {
-		voidResult := d.getVoidNodeAndConns(unusedOutports)
-		desugaredNet = append(desugaredNet, voidResult.voidConns...)
-		desugaredNodes[voidResult.voidNodeName] = voidResult.voidNode
-	}
-
-	for name, constant := range handleConnsResult.extraConsts {
-		entitiesToInsert[name] = src.Entity{
+	// add virtual constants created by network handler to virtual entities
+	for name, constant := range handleNetResult.virtualConstants {
+		virtualEntities[name] = src.Entity{
 			Kind:  src.ConstEntity,
 			Const: constant,
 		}
 	}
 
-	return desugarComponentResult{
-		component: src.Component{
+	// create alias
+	desugaredNetwork := handleNetResult.desugaredConnections
+
+	// merge real nodes with virtual ones created by network handler
+	maps.Copy(desugaredNodes, handleNetResult.virtualNodes)
+
+	// create virtual destructor nodes and connections to handle unused outports
+	unusedOutports := d.findUnusedOutports(component, scope, handleNetResult.usedNodePorts)
+	if unusedOutports.len() != 0 {
+		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)
+		desugaredNetwork = append(desugaredNetwork, unusedOutportsResult.virtualConnections...)
+		desugaredNodes[unusedOutportsResult.voidNodeName] = unusedOutportsResult.voidNode
+	}
+
+	return handleComponentResult{
+		desugaredComponent: src.Component{
 			Directives: component.Directives,
 			Interface:  component.Interface,
 			Nodes:      desugaredNodes,
-			Net:        desugaredNet,
+			Net:        desugaredNetwork,
 			Meta:       component.Meta,
 		},
-		entitiesToInsert: entitiesToInsert,
+		virtualEntities: virtualEntities,
 	}, nil
 }
 
-type handleConnsResult struct {
-	desugaredConns []src.Connection     // desugared network
-	extraConsts    map[string]src.Const // constants that needs to be inserted in to make desugared network work
-	extraNodes     map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
-	usedNodePorts  nodePortsMap         // ports that were used in processed network
-}
-
-func (d Desugarer) handleConns( //nolint:funlen
-	conns []src.Connection,
-	nodes map[string]src.Node,
+func (Desugarer) handleNode(
 	scope src.Scope,
-) (handleConnsResult, *compiler.Error) {
-	nodesToInsert := map[string]src.Node{}
-	desugaredConns := make([]src.Connection, 0, len(conns))
-	usedNodePorts := newNodePortsMap()
-	constsToInsert := map[string]src.Const{}
-
-	for _, conn := range conns {
-		if conn.SenderSide.PortAddr != nil { // const sender are not interested, we 100% they're used (we handle that here)
-			usedNodePorts.set(
-				conn.SenderSide.PortAddr.Node,
-				conn.SenderSide.PortAddr.Port,
-			)
+	node src.Node,
+	desugaredNodes map[string]src.Node,
+	nodeName string,
+	virtualEntities map[string]src.Entity,
+) *compiler.Error {
+	entity, _, err := scope.Entity(node.EntityRef)
+	if err != nil {
+		return &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
 		}
-
-		if conn.SenderSide.Const == nil &&
-			len(conn.SenderSide.Selectors) == 0 &&
-			len(conn.ReceiverSide.ThenConnections) == 0 {
-			desugaredConns = append(desugaredConns, conn)
-			continue
-		}
-
-		if len(conn.SenderSide.Selectors) != 0 {
-			result, err := d.desugarStructSelectors(
-				conn,
-				nodes,
-				scope,
-			)
-			if err != nil {
-				return handleConnsResult{}, compiler.Error{
-					Err:      errors.New("Cannot desugar struct selectors"),
-					Location: &scope.Location,
-					Meta:     &conn.Meta,
-				}.Wrap(err)
-			}
-			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
-			constsToInsert[result.constToInsertName] = result.constToInsert
-			conn = result.connToReplace
-			desugaredConns = append(desugaredConns, result.connToInsert)
-		}
-
-		if conn.SenderSide.Const != nil { //nolint:nestif
-			if conn.SenderSide.Const.Ref != nil {
-				result, err := d.handleConstRefSender(conn, scope)
-				if err != nil {
-					return handleConnsResult{}, err
-				}
-				nodesToInsert[result.emitterNodeName] = result.emitterNode
-				conn = result.desugaredConn
-			} else if conn.SenderSide.Const.Value != nil {
-				result, err := d.handleLiteralSender(conn)
-				if err != nil {
-					return handleConnsResult{}, err
-				}
-				constsToInsert[result.constName] = *conn.SenderSide.Const
-				nodesToInsert[result.emitterNodeName] = result.emitterNode
-				conn = result.desugaredConn
-			}
-		}
-
-		desugaredConns = append(desugaredConns, conn)
-
-		if len(conn.ReceiverSide.ThenConnections) == 0 {
-			continue
-		}
-
-		result, err := d.handleThenConns(conn, nodes, scope)
-		if err != nil {
-			return handleConnsResult{}, err
-		}
-
-		// handleThenConns recursively calls this function so it returns the same structure
-		maps.Copy(usedNodePorts.m, result.usedNodesPorts.m)
-		maps.Copy(constsToInsert, result.extraConsts)
-		maps.Copy(nodesToInsert, result.extraNodes)
-
-		desugaredConns = append(desugaredConns, result.extraConns...)
 	}
 
-	return handleConnsResult{
-		desugaredConns: desugaredConns,
-		usedNodePorts:  usedNodePorts,
-		extraConsts:    constsToInsert,
-		extraNodes:     nodesToInsert,
-	}, nil
+	if entity.Kind != src.ComponentEntity {
+		desugaredNodes[nodeName] = node
+		return nil
+	}
+
+	_, ok := entity.Component.Directives[compiler.AutoportsDirective]
+	if !ok {
+		desugaredNodes[nodeName] = node
+		return nil
+	}
+
+	structFields := node.TypeArgs[0].Lit.Struct
+
+	inports := make(map[string]src.Port, len(structFields))
+	for fieldName, fieldTypeExpr := range structFields {
+		inports[fieldName] = src.Port{
+			TypeExpr: fieldTypeExpr,
+		}
+	}
+
+	outports := map[string]src.Port{
+		"msg": {
+			TypeExpr: node.TypeArgs[0],
+		},
+	}
+
+	localBuilderComponent := src.Component{
+		Interface: src.Interface{
+			IO: src.IO{In: inports, Out: outports},
+		},
+	}
+
+	localBuilderName := fmt.Sprintf("struct_builder_%v", nodeName)
+
+	virtualEntities[localBuilderName] = src.Entity{
+		Kind:      src.ComponentEntity,
+		Component: localBuilderComponent,
+	}
+
+	desugaredNodes[nodeName] = src.Node{
+		EntityRef: src.EntityRef{
+			Pkg:  "builtin",
+			Name: "StructBuilder",
+		},
+		Directives: node.Directives,
+		TypeArgs:   node.TypeArgs,
+		Deps:       node.Deps,
+		Meta:       node.Meta,
+	}
+
+	return nil
 }

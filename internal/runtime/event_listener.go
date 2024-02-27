@@ -35,12 +35,24 @@ type EventMessageSent struct {
 }
 
 func (e EventMessageSent) String() string {
-	rr := "{ "
-	for r := range e.ReceiverPortAddrs {
-		rr += r.String() + ", "
+	if len(e.ReceiverPortAddrs) == 1 {
+		for singleReceiver := range e.ReceiverPortAddrs {
+			return fmt.Sprintf("%v -> %v", e.SenderPortAddr, singleReceiver)
+		}
 	}
-	rr += "}"
-	return fmt.Sprintf("%v -> %v", e.SenderPortAddr, rr)
+
+	i := 0
+	receiversStr := "{ "
+	for receiver := range e.ReceiverPortAddrs {
+		receiversStr += receiver.String()
+		if i == len(e.ReceiverPortAddrs)-1 {
+			receiversStr += ", "
+		}
+		i++
+	}
+	receiversStr += "}"
+
+	return fmt.Sprintf("%v -> %v", e.SenderPortAddr, receiversStr)
 }
 
 type EventMessagePending struct {
@@ -72,13 +84,13 @@ const (
 func (e EventType) String() string {
 	switch e {
 	case MessageSentEvent:
-		return "Message sent"
+		return "sent"
 	case MessagePendingEvent:
-		return "Message pending"
+		return "pending"
 	case MessageReceivedEvent:
-		return "Message received"
+		return "received"
 	}
-	return "Unknown Event Type"
+	panic("unknown_event_type")
 }
 
 type EventListener interface {

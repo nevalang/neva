@@ -25,6 +25,13 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
 
+	var modName string
+	if path.ImportPathMod() != nil {
+		modName = path.ImportPathMod().GetText()
+	} else {
+		modName = "std"
+	}
+
 	var alias string
 	if tmp := actx.ImportAlias(); tmp != nil {
 		alias = tmp.GetText()
@@ -34,8 +41,8 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	}
 
 	s.file.Imports[alias] = src.Import{
-		ModuleName: path.ImportPathMod().GetText(),
-		PkgName:    pkgName,
+		Module:  modName,
+		Package: pkgName,
 	}
 }
 

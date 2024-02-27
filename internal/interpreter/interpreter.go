@@ -7,6 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/adapter"
+	"github.com/nevalang/neva/internal/runtime/funcs"
 	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
@@ -50,15 +51,25 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 }
 
 func New(
-	compiler compiler.Compiler,
-	adapter adapter.Adapter,
-	runtime runtime.Runtime,
 	builder builder.Builder,
+	compiler compiler.Compiler,
+	isDebug bool,
 ) Interpreter {
+	var connector runtime.Connector
+	if isDebug {
+		connector = runtime.NewConnector(DebugEventListener{})
+	} else {
+		connector = runtime.NewDefaultConnector()
+	}
 	return Interpreter{
-		compiler: compiler,
-		adapter:  adapter,
-		runtime:  runtime,
 		builder:  builder,
+		compiler: compiler,
+		adapter:  adapter.NewAdapter(),
+		runtime: runtime.New(
+			connector,
+			runtime.MustNewFuncRunner(
+				funcs.CreatorRegistry(),
+			),
+		),
 	}
 }

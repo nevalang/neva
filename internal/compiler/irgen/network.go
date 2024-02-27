@@ -8,25 +8,82 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-// processNet
+// processNetwork
 // 1) inserts network connections
 // 2) returns metadata about how subnodes are used by this network
-func (g Generator) processNet(
+func (g Generator) processNetwork(
 	scope src.Scope,
 	conns []src.Connection,
 	nodeCtx nodeContext,
-	irResult *ir.Program,
+	result *ir.Program,
 ) (map[string]portsUsage, error) {
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		irSenderSidePortAddr, err := g.processSenderSide(scope, nodeCtx, conn.SenderSide, nodesPortsUsage)
+		// here's how we handle array-bypass connections
+		// sender is always component's inport
+		// based on that, we can to set receiver's inport slots
+		// to the value equal of the used slots of our inport
+		// that is known thanks to nodeCtx (metadata from parent node)
+		if conn.ArrayBypass != nil {
+			senderPortAddr := conn.ArrayBypass.SenderOutport
+			receiverPortAddr := conn.ArrayBypass.ReceiverInport
+
+			if _, ok := nodesPortsUsage[receiverPortAddr.Node]; !ok {
+				nodesPortsUsage[receiverPortAddr.Node] = portsUsage{
+					in:  map[relPortAddr]struct{}{},
+					out: map[relPortAddr]struct{}{},
+				}
+			}
+
+			var slotIdx uint8 = 0
+			for addr := range nodeCtx.portsUsage.in {
+				if addr.Port == senderPortAddr.Port {
+					addr := relPortAddr{Port: receiverPortAddr.Port, Idx: slotIdx}
+					nodesPortsUsage[receiverPortAddr.Node].in[addr] = struct{}{}
+
+					irSenderSide := ir.PortAddr{
+						Path: joinNodePath(nodeCtx.path, senderPortAddr.Node),
+						Port: senderPortAddr.Port,
+						Idx:  uint32(slotIdx),
+					}
+
+					irReceiverSide := ir.ReceiverConnectionSide{
+						PortAddr: ir.PortAddr{
+							Path: joinNodePath(nodeCtx.path, receiverPortAddr.Node) + "/in",
+							Port: receiverPortAddr.Port,
+							Idx:  uint32(slotIdx),
+						},
+					}
+
+					result.Connections = append(result.Connections, ir.Connection{
+						SenderSide: irSenderSide,
+						ReceiverSides: []ir.ReceiverConnectionSide{
+							irReceiverSide,
+						},
+					})
+
+					slotIdx++
+				}
+			}
+
+			continue
+		}
+
+		senderSide := conn.Normal.SenderSide
+
+		irSenderSidePortAddr, err := g.processSenderSide(
+			scope,
+			nodeCtx,
+			senderSide,
+			nodesPortsUsage,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		receiverSidesIR := make([]ir.ReceiverConnectionSide, 0, len(conn.ReceiverSide.Receivers))
-		for _, receiverSide := range conn.ReceiverSide.Receivers {
+		receiverSidesIR := make([]ir.ReceiverConnectionSide, 0, len(conn.Normal.ReceiverSide.Receivers))
+		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 			receiverSidesIR = append(receiverSidesIR, *receiverSideIR)
 
@@ -52,7 +109,7 @@ func (g Generator) processNet(
 			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
 		}
 
-		irResult.Connections = append(irResult.Connections, ir.Connection{
+		result.Connections = append(result.Connections, ir.Connection{
 			SenderSide:    *irSenderSidePortAddr,
 			ReceiverSides: receiverSidesIR,
 		})

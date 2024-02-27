@@ -45,7 +45,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "2_hello_world/2_with_then_connection"]
+      "args": ["run","-debug", "2_hello_world/2_with_then_connection"]
     },
     {
       "name": "Neva CLI 23",
@@ -72,7 +72,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "4_add_numbers/verbose"]
+      "args": ["run", "-debug","4_add_numbers/verbose"]
     },
     {
       "name": "Neva CLI 41",
@@ -81,7 +81,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "4_add_numbers/with_bridge"]
+      "args": ["run", "-debug", "4_add_numbers/with_bridge"]
     },
     {
       "name": "Neva CLI 50",
@@ -90,7 +90,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "5_add_real_numbers/naive"]
+      "args": ["run", "5_add_real_numbers/naive"]
     },
     {
       "name": "Neva CLI 51",
@@ -99,7 +99,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "5_add_real_numbers/with_err_handling"]
+      "args": ["run", "5_add_real_numbers/with_err_handling"]
     },
     {
       "name": "Neva CLI 52",
@@ -108,7 +108,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "5_add_real_numbers/with_sub_components"]
+      "args": ["run", "5_add_real_numbers/with_sub_components"]
     },
     {
       "name": "Neva CLI 60",
@@ -117,7 +117,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "6_struct_builder/verbose"]
+      "args": ["run", "6_struct_builder/verbose"]
     },
     {
       "name": "Neva CLI 61",
@@ -126,7 +126,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "6_struct_builder/with_sugar"]
+      "args": ["run", "6_struct_builder/with_sugar"]
     },
     {
       "name": "Neva CLI 70",
@@ -135,7 +135,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "7_struct_selector/verbose"]
+      "args": ["run", "7_struct_selector/verbose"]
     },
     {
       "name": "Neva CLI 71",
@@ -144,7 +144,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "7_struct_selector/verbose"]
+      "args": ["run", "7_struct_selector/verbose"]
     },
     // === LSP ===
     {

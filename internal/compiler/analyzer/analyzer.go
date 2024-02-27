@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 
-	semver "github.com/Masterminds/semver/v3"
 	"golang.org/x/exp/maps"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -91,37 +90,6 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 		EntryModRef: build.EntryModRef,
 		Modules:     analyzedMods,
 	}, nil
-}
-
-// semverCheck ensures that module is compatible with existing compiler
-// by checking it's version against semver. It uses minor as major.
-func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Error {
-	got, semverErr := semver.NewVersion(mod.Manifest.LanguageVersion)
-	if semverErr != nil {
-		return &compiler.Error{
-			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
-		}
-	}
-
-	want, semverErr := semver.NewVersion(a.compilerVersion)
-	if semverErr != nil {
-		return &compiler.Error{
-			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
-		}
-	}
-
-	if got.Minor() != want.Minor() ||
-		got.Patch() > want.Patch() {
-		return &compiler.Error{
-			Err: fmt.Errorf(
-				"%w: module %v wants %v while current is %v",
-				ErrCompilerVersion,
-				modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
-			),
-		}
-	}
-
-	return nil
 }
 
 func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
