@@ -12,7 +12,7 @@ import (
 
 func TestBuilder(t *testing.T) {
 	prsr := parser.New(false)
-	manager := builder.New("", prsr)
+	manager := builder.MustNew(prsr)
 
 	build, err := manager.Build(context.Background(), "testmod")
 	require.NoError(t, err)

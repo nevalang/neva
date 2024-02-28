@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg"
@@ -38,7 +39,7 @@ func (p Builder) Build( //nolint:funlen
 		Version: pkg.Version,
 	}
 
-	// TODO use embedded fs for stdlib
+	// load stdlib module from embedded fs
 	stdMod, err := p.LoadModuleByPath(ctx, std.FS)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
@@ -60,7 +61,7 @@ func (p Builder) Build( //nolint:funlen
 			continue
 		}
 
-		depPath, err := p.downloadDep(depModRef)
+		depPath, _, err := p.downloadDep(depModRef)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("download dep: %w", err),
@@ -91,9 +92,38 @@ func (p Builder) Build( //nolint:funlen
 	}, nil
 }
 
-func New(thirdParty string, parser ManifestParser) Builder {
+func MustNew(parser ManifestParser) Builder {
+	b, err := New(parser)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func New(parser ManifestParser) (Builder, error) {
+	thirdParty, err := getThirdPartyPath()
+	if err != nil {
+		return Builder{}, err
+	}
+
 	return Builder{
 		thirdPartyPath: thirdParty,
 		manifestParser: parser,
+	}, nil
+}
+
+func getThirdPartyPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
 	}
+
+	path := filepath.Join(home, "neva", "deps")
+
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }
