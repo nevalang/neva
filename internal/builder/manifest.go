@@ -3,6 +3,9 @@ package builder
 import (
 	"fmt"
 	"io/fs"
+	"os"
+
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/pkg/sourcecode"
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -34,4 +37,30 @@ func readManifestYaml(workdir fs.FS) ([]byte, error) {
 	}
 
 	return rawManifest, nil
+}
+
+func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) error {
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		return fmt.Errorf("marshal manifest: %w", err)
+	}
+
+	manifestFileName := "neva.yaml"
+	if _, err := os.Stat(workdir + "/neva.yml"); err == nil {
+		manifestFileName = "neva.yml"
+	}
+
+	manifestPath := workdir + "/" + manifestFileName
+	file, err := os.OpenFile(manifestPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = file.Write(manifestData)
+	if err != nil {
+		return fmt.Errorf("write file: %w", err)
+	}
+
+	return nil
 }

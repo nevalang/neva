@@ -9,38 +9,27 @@ import (
 )
 
 func (p Parser) ParseManifest(raw []byte) (src.ModuleManifest, error) {
-	var manifest Manifest
+	var manifest src.ModuleManifest
 	if err := yaml.Unmarshal(raw, &manifest); err != nil {
 		return src.ModuleManifest{}, fmt.Errorf("yaml unmarshal: %w", err)
 	}
-	return manifestToSourceCode(manifest), nil
+	return processParsedManifest(manifest), nil
 }
 
-type Manifest struct {
-	LanguageVersion string      `yaml:"neva"`
-	Deps            []ModuleRef `yaml:"deps"`
-}
-
-type ModuleRef struct {
-	Path    string `yaml:"path"`
-	Version string `yaml:"version"`
-	Alias   string `yaml:"alias"`
-}
-
-func manifestToSourceCode(manifest Manifest) src.ModuleManifest {
+func processParsedManifest(manifest src.ModuleManifest) src.ModuleManifest {
 	deps := make(map[string]src.ModuleRef, len(manifest.Deps))
-	for _, dep := range manifest.Deps {
-		var k string
-		if dep.Alias != "" {
-			k = dep.Alias
-		} else {
-			k = dep.Path
+
+	for alias, dep := range manifest.Deps {
+		path := dep.Path
+		if path == "" {
+			path = alias
 		}
-		deps[k] = src.ModuleRef{
-			Path:    dep.Path,
+		deps[alias] = src.ModuleRef{
+			Path:    path,
 			Version: dep.Version,
 		}
 	}
+
 	return src.ModuleManifest{
 		LanguageVersion: manifest.LanguageVersion,
 		Deps:            deps,

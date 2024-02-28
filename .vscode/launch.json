@@ -2,6 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     // CLI
+    // get
+    {
+      "name": "neva get github.com/nevalang/x",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/cli",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["get", "github.com/nevalang/x"]
+    },
+    // run
     {
       "name": "Neva CLI 00",
       "type": "go",

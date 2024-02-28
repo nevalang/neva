@@ -23,6 +23,7 @@ importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: importAlias? importPath NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod '/')? importPathPkg;
+// FIXME this does not work for modules like github.com/nevalang/x
 importPathMod: '@' | IDENTIFIER;
 importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 

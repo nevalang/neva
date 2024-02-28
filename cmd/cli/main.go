@@ -33,10 +33,7 @@ func main() { //nolint:funlen
 	prsr := parser.New(false)
 
 	// pkg manager
-	pkgMngr := builder.New(
-		"/Users/emil/projects/neva/thirdparty",
-		prsr,
-	)
+	pkgMngr := builder.MustNew(prsr)
 
 	// compiler frontend
 	desugarer := desugarer.Desugarer{}
