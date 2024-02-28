@@ -1,5 +1,5 @@
 import {
-    nevalang/main/x
+    nevalang_x/main
 }
 
 interface IPrinter<T>(data T) (sig T)
@@ -8,7 +8,7 @@ component {
     Main(start any) (stop any) {
         nodes {
             subNode SecondComponent {
-                depNode x.Printer<any>
+                depNode main.Printer<any>
             }
         }
         net {
