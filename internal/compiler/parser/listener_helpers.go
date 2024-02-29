@@ -466,7 +466,7 @@ func parseNormConnReceiverSide(
 		})
 	}
 
-	return parseMultipleReceiverSides(multipleSides, connMeta)
+	return parseMultipleReceiverSides(multipleSides)
 }
 
 func parseReceiverSide(
@@ -481,7 +481,6 @@ func parseReceiverSide(
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
-	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	receiverPortAddrs := multipleSides.AllReceiverSide()
 	result := make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))
