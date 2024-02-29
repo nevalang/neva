@@ -14,7 +14,7 @@ Website: https://nevalang.org/
 
 ```neva
 component Main(start any) (stop any) {
-	nodes { printer Printer<string> }
+	nodes { Printer<string> }
 	net {
 		:start -> ('Hello, World!' -> printer:data)
 		printer:sig -> :stop

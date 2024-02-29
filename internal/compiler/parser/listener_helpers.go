@@ -319,7 +319,14 @@ func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
 			deps = parseNodes(diArgs.CompNodesDefBody())
 		}
 
-		result[node.IDENTIFIER().GetText()] = src.Node{
+		var nodeName string
+		if id := node.IDENTIFIER(); id != nil {
+			nodeName = id.GetText()
+		} else {
+			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
+		}
+
+		result[nodeName] = src.Node{
 			Directives: directives,
 			EntityRef:  parsedRef,
 			TypeArgs:   typeArgs,
@@ -459,7 +466,7 @@ func parseNormConnReceiverSide(
 		})
 	}
 
-	return parseMultipleReceiverSides(multipleSides, connMeta)
+	return parseMultipleReceiverSides(multipleSides)
 }
 
 func parseReceiverSide(
@@ -474,7 +481,6 @@ func parseReceiverSide(
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
-	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	receiverPortAddrs := multipleSides.AllReceiverSide()
 	result := make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))

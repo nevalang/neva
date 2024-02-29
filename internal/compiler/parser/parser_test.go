@@ -89,3 +89,29 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	require.Equal(t, "in", sender)
 	require.Equal(t, "out", receiver)
 }
+
+// Check that notes without names are parsed to nodes with names
+// and their names are lower-cased names of their dependencies.
+func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
+	text := []byte(`
+		component C1(start any) (stop any) {
+			nodes {
+				Scanner
+				Printer<int>
+			}
+		}
+	`)
+
+	p := parser.New(false)
+
+	got, err := p.ParseFile(text)
+	require.True(t, err == nil)
+
+	nodes := got.Entities["C1"].Component.Nodes
+
+	_, ok := nodes["scanner"]
+	require.Equal(t, true, ok)
+
+	_, ok = nodes["printer"]
+	require.Equal(t, true, ok)
+}

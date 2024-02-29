@@ -1,0 +1,14 @@
+// Finally, the shortest "hello world" with "literal senders".
+// Why have const senders then, one might ask?
+// First of all, only primitive messages such as bool, int, float and string
+// could be used as network senders. So no structs, lists or maps senders.
+// Secondly, what if you wanna use your message in several places?
+// Finally, you might wanna move your message to const just because it's big!
+
+component Main(start any) (stop any) {
+	nodes { Printer<string> }
+	net {
+		:start -> ('Hello, World!' -> printer:data)
+		printer:sig -> :stop
+	}
+}
