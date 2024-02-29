@@ -8,6 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Check that comments are parsed witout errors
+func TestParser_ParseFile_Comments(t *testing.T) {
+	text := []byte(`
+	// comment
+	`)
+
+	p := parser.New(false)
+
+	_, err := p.ParseFile(text)
+	require.True(t, err == nil)
+}
+
 // TestParser_ParseFile_Directives checks only
 // how compiler directives are parsed.
 func TestParser_ParseFile_Directives(t *testing.T) {

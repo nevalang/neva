@@ -61,6 +61,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
+		fmt.Println(expr.GetText())
 		panic(&compiler.Error{
 			Err: errors.New("Missing type expression"),
 			Meta: &src.Meta{
