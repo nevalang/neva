@@ -41,6 +41,12 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			Type: ir.MsgTypeString,
 			Str:  *constant.Message.Str,
 		}, nil
+	case constant.Message.Enum != nil:
+		enumTypeExpr := constant.Message.TypeExpr.Lit.Enum
+		return &ir.Msg{
+			Type: ir.MsgTypeInt,
+			Int:  int64(getEnumMemberIndex(enumTypeExpr, constant.Message.Enum.MemberName)),
+		}, nil
 	case constant.Message.List != nil:
 		listMsg := make([]ir.Msg, len(constant.Message.List))
 
@@ -77,4 +83,13 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 		Err:      errors.New("unknown msg type"),
 		Location: &scope.Location,
 	}
+}
+
+func getEnumMemberIndex(enum []string, value string) int {
+	for i, item := range enum {
+		if item == value {
+			return i
+		}
+	}
+	return -1
 }
