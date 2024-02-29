@@ -207,9 +207,9 @@ func (e EntityRef) String() string {
 }
 
 type Const struct {
-	Ref   *EntityRef `json:"ref,omitempty"`
-	Value *Message   `json:"value,omitempty"`
-	Meta  Meta       `json:"meta,omitempty"`
+	Ref     *EntityRef `json:"ref,omitempty"`
+	Message *Message   `json:"value,omitempty"`
+	Meta    Meta       `json:"meta,omitempty"`
 }
 
 type Message struct {
@@ -316,7 +316,7 @@ func (s ConnectionSenderSide) String() string {
 		if s.Const.Ref != nil {
 			result = s.Const.Ref.String()
 		} else {
-			result = s.Const.Value.String()
+			result = s.Const.Message.String()
 		}
 	} else {
 		result = s.PortAddr.String()

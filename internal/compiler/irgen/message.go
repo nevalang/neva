@@ -21,30 +21,30 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 	}
 
 	switch {
-	case constant.Value.Bool != nil:
+	case constant.Message.Bool != nil:
 		return &ir.Msg{
 			Type: ir.MsgTypeBool,
-			Bool: *constant.Value.Bool,
+			Bool: *constant.Message.Bool,
 		}, nil
-	case constant.Value.Int != nil:
+	case constant.Message.Int != nil:
 		return &ir.Msg{
 			Type: ir.MsgTypeInt,
-			Int:  int64(*constant.Value.Int),
+			Int:  int64(*constant.Message.Int),
 		}, nil
-	case constant.Value.Float != nil:
+	case constant.Message.Float != nil:
 		return &ir.Msg{
 			Type:  ir.MsgTypeFloat,
-			Float: *constant.Value.Float,
+			Float: *constant.Message.Float,
 		}, nil
-	case constant.Value.Str != nil:
+	case constant.Message.Str != nil:
 		return &ir.Msg{
 			Type: ir.MsgTypeString,
-			Str:  *constant.Value.Str,
+			Str:  *constant.Message.Str,
 		}, nil
-	case constant.Value.List != nil:
-		listMsg := make([]ir.Msg, len(constant.Value.List))
+	case constant.Message.List != nil:
+		listMsg := make([]ir.Msg, len(constant.Message.List))
 
-		for i, el := range constant.Value.List {
+		for i, el := range constant.Message.List {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err
@@ -56,10 +56,10 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			Type: ir.MsgTypeList,
 			List: listMsg,
 		}, nil
-	case constant.Value.MapOrStruct != nil:
-		mapMsg := make(map[string]ir.Msg, len(constant.Value.MapOrStruct))
+	case constant.Message.MapOrStruct != nil:
+		mapMsg := make(map[string]ir.Msg, len(constant.Message.MapOrStruct))
 
-		for name, el := range constant.Value.MapOrStruct {
+		for name, el := range constant.Message.MapOrStruct {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err

@@ -593,7 +593,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		if err != nil {
 			panic(err)
 		}
-		constant = &src.Const{Value: &msg}
+		constant = &src.Const{Message: &msg}
 	}
 
 	parsedSenderSide := src.ConnectionSenderSide{
@@ -802,8 +802,8 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 				return src.Message{}, err
 			}
 			msg.List = append(msg.List, src.Const{
-				Ref:   nil, // TODO implement references
-				Value: &parsedConstValue,
+				Ref:     nil, // TODO implement references
+				Message: &parsedConstValue,
 			})
 		}
 	case constVal.StructLit() != nil:
@@ -825,8 +825,8 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 				return src.Message{}, err
 			}
 			msg.MapOrStruct[name] = src.Const{
-				Ref:   nil, // TODO implement references
-				Value: &value,
+				Ref:     nil, // TODO implement references
+				Message: &value,
 			}
 		}
 	case constVal.Nil_() != nil:
@@ -913,7 +913,7 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	return src.Entity{
 		Kind: src.ConstEntity,
 		Const: src.Const{
-			Value: &parsedMsg,
+			Message: &parsedMsg,
 			Meta: src.Meta{
 				Text: actx.GetText(),
 				Start: src.Position{

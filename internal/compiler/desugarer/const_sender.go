@@ -51,7 +51,7 @@ func (d Desugarer) handleLiteralSender(
 			conn.
 				Normal.SenderSide.
 				Const.
-				Value.
+				Message.
 				TypeExpr,
 		},
 	}
@@ -164,5 +164,5 @@ func (d Desugarer) getConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Exp
 		return expr, nil
 	}
 
-	return entity.Const.Value.TypeExpr, nil
+	return entity.Const.Message.TypeExpr, nil
 }

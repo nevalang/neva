@@ -1,5 +1,3 @@
-// We need unit tests for parser because it contains not only antlr grammar but also mapping logic.
-
 package parser_test
 
 import (
@@ -83,12 +81,12 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	got, err := p.ParseFile(text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net[0]
+	conn := got.Entities["C1"].Component.Net[0]
 
-	sender := net.Normal.SenderSide.PortAddr.Node
+	sender := conn.Normal.SenderSide.PortAddr.Node
 	require.Equal(t, "in", sender)
 
-	receiver := net.Normal.ReceiverSide.Receivers[0].PortAddr.Node
+	receiver := conn.Normal.ReceiverSide.Receivers[0].PortAddr.Node
 	require.Equal(t, "out", receiver)
 }
 
@@ -104,13 +102,43 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 	got, err := p.ParseFile(text)
 	require.True(t, err == nil)
 
-	enum := got.Entities["c0"].Const.Value.Enum
+	enum := got.Entities["c0"].Const.Message.Enum
 	require.Equal(t, "", enum.EnumRef.Pkg)
 	require.Equal(t, "Enum1", enum.EnumRef.Name)
 	require.Equal(t, "Foo", enum.MemberName)
 
-	enum = got.Entities["c1"].Const.Value.Enum
+	enum = got.Entities["c1"].Const.Message.Enum
 	require.Equal(t, "pkg", enum.EnumRef.Pkg)
 	require.Equal(t, "Enum2", enum.EnumRef.Name)
 	require.Equal(t, "Bar", enum.MemberName)
+}
+
+// Check that primitive literal senders in networks are parsed correctly.
+func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
+	text := []byte(`
+		component C1() () {
+			net {
+				Foo::Bar -> :out
+				foo.Bar::Baz -> :out
+			}
+		}
+	`)
+
+	p := parser.New(false)
+
+	got, err := p.ParseFile(text)
+	require.True(t, err == nil)
+
+	conn := got.Entities["C1"].Component.Net[0]
+
+	senderEnum := conn.Normal.SenderSide.Const.Message.Enum
+	require.Equal(t, "", senderEnum.EnumRef.Pkg)
+	require.Equal(t, "Foo", senderEnum.EnumRef.Name)
+	require.Equal(t, "Bar", senderEnum.MemberName)
+
+	conn = got.Entities["C1"].Component.Net[1]
+	senderEnum = conn.Normal.SenderSide.Const.Message.Enum
+	require.Equal(t, "foo", senderEnum.EnumRef.Pkg)
+	require.Equal(t, "Bar", senderEnum.EnumRef.Name)
+	require.Equal(t, "Baz", senderEnum.MemberName)
 }

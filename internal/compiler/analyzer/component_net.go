@@ -630,20 +630,20 @@ func (a Analyzer) getResolvedSenderConstType(
 		}
 		return expr, nil
 	}
-	if senderSide.Const.Value != nil {
+	if senderSide.Const.Message != nil {
 		if err := a.validateLiteralSender(senderSide.Const); err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &senderSide.Const.Value.Meta,
+				Meta:     &senderSide.Const.Message.Meta,
 			}
 		}
-		resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Value.TypeExpr, scope)
+		resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Message.TypeExpr, scope)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &senderSide.Const.Value.Meta,
+				Meta:     &senderSide.Const.Message.Meta,
 			}
 		}
 		return resolvedExpr, nil
@@ -656,10 +656,10 @@ func (a Analyzer) getResolvedSenderConstType(
 }
 
 func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
-	if cnst.Value.TypeExpr.Inst == nil {
+	if cnst.Message.TypeExpr.Inst == nil {
 		return ErrLiteralSenderKind
 	}
-	switch cnst.Value.TypeExpr.Inst.Ref.String() {
+	switch cnst.Message.TypeExpr.Inst.Ref.String() {
 	case "bool", "int", "float", "string":
 		return nil
 	}
@@ -729,12 +729,12 @@ func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) 
 		return expr, nil
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Value.TypeExpr, scope)
+	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Message.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &entity.Const.Value.Meta,
+			Meta:     &entity.Const.Message.Meta,
 		}
 	}
 
