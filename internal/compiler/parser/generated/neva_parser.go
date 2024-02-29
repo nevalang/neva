@@ -393,7 +393,7 @@ func nevaParserInit() {
 		658, 1, 0, 0, 0, 663, 659, 1, 0, 0, 0, 663, 660, 1, 0, 0, 0, 663, 661,
 		1, 0, 0, 0, 663, 662, 1, 0, 0, 0, 664, 97, 1, 0, 0, 0, 665, 666, 5, 22,
 		0, 0, 666, 99, 1, 0, 0, 0, 667, 668, 7, 1, 0, 0, 668, 101, 1, 0, 0, 0,
-		669, 670, 5, 35, 0, 0, 670, 671, 5, 25, 0, 0, 671, 672, 5, 35, 0, 0, 672,
+		669, 670, 3, 24, 12, 0, 670, 671, 5, 25, 0, 0, 671, 672, 5, 35, 0, 0, 672,
 		103, 1, 0, 0, 0, 673, 677, 5, 18, 0, 0, 674, 676, 5, 39, 0, 0, 675, 674,
 		1, 0, 0, 0, 676, 679, 1, 0, 0, 0, 677, 675, 1, 0, 0, 0, 677, 678, 1, 0,
 		0, 0, 678, 681, 1, 0, 0, 0, 679, 677, 1, 0, 0, 0, 680, 682, 3, 106, 53,
@@ -9164,8 +9164,8 @@ type IEnumLitContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	AllIDENTIFIER() []antlr.TerminalNode
-	IDENTIFIER(i int) antlr.TerminalNode
+	EntityRef() IEntityRefContext
+	IDENTIFIER() antlr.TerminalNode
 
 	// IsEnumLitContext differentiates from other interfaces.
 	IsEnumLitContext()
@@ -9203,12 +9203,24 @@ func NewEnumLitContext(parser antlr.Parser, parent antlr.ParserRuleContext, invo
 
 func (s *EnumLitContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *EnumLitContext) AllIDENTIFIER() []antlr.TerminalNode {
-	return s.GetTokens(nevaParserIDENTIFIER)
+func (s *EnumLitContext) EntityRef() IEntityRefContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(IEntityRefContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IEntityRefContext)
 }
 
-func (s *EnumLitContext) IDENTIFIER(i int) antlr.TerminalNode {
-	return s.GetToken(nevaParserIDENTIFIER, i)
+func (s *EnumLitContext) IDENTIFIER() antlr.TerminalNode {
+	return s.GetToken(nevaParserIDENTIFIER, 0)
 }
 
 func (s *EnumLitContext) GetRuleContext() antlr.RuleContext {
@@ -9237,11 +9249,7 @@ func (p *nevaParser) EnumLit() (localctx IEnumLitContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(669)
-		p.Match(nevaParserIDENTIFIER)
-		if p.HasError() {
-			// Recognition error - abort rule
-			goto errorExit
-		}
+		p.EntityRef()
 	}
 	{
 		p.SetState(670)

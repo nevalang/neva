@@ -56,10 +56,10 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			Type: ir.MsgTypeList,
 			List: listMsg,
 		}, nil
-	case constant.Value.Map != nil:
-		mapMsg := make(map[string]ir.Msg, len(constant.Value.Map))
+	case constant.Value.MapOrStruct != nil:
+		mapMsg := make(map[string]ir.Msg, len(constant.Value.MapOrStruct))
 
-		for name, el := range constant.Value.Map {
+		for name, el := range constant.Value.MapOrStruct {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err

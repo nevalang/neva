@@ -81,7 +81,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			constant.Value.Float != nil ||
 			constant.Value.Str != nil ||
 			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+			constant.Value.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -93,7 +93,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			constant.Value.Float != nil ||
 			constant.Value.Str != nil ||
 			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+			constant.Value.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -105,7 +105,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			constant.Value.Int != nil ||
 			constant.Value.Str != nil ||
 			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+			constant.Value.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -117,7 +117,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			constant.Value.Int != nil ||
 			constant.Value.Float != nil ||
 			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+			constant.Value.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -128,7 +128,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		if constant.Value.Bool != nil ||
 			constant.Value.Int != nil ||
 			constant.Value.Float != nil ||
-			constant.Value.Map != nil {
+			constant.Value.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,

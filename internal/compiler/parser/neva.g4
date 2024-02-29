@@ -93,7 +93,7 @@ constVal:
 	| structLit;
 nil: 'nil';
 bool: 'true' | 'false';
-enumLit: IDENTIFIER '::' IDENTIFIER ;
+enumLit: entityRef '::' IDENTIFIER ;
 listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	constVal

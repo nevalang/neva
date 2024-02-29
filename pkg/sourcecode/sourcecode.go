@@ -213,14 +213,20 @@ type Const struct {
 }
 
 type Message struct {
-	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
-	Bool     *bool            `json:"bool,omitempty"`
-	Int      *int             `json:"int,omitempty"`
-	Float    *float64         `json:"float,omitempty"`
-	Str      *string          `json:"str,omitempty"`
-	List     []Const          `json:"vec,omitempty"`
-	Map      map[string]Const `json:"map,omitempty"` // Used for both maps and structs
-	Meta     Meta             `json:"meta,omitempty"`
+	TypeExpr    ts.Expr          `json:"typeExpr,omitempty"`
+	Bool        *bool            `json:"bool,omitempty"`
+	Int         *int             `json:"int,omitempty"`
+	Float       *float64         `json:"float,omitempty"`
+	Str         *string          `json:"str,omitempty"`
+	List        []Const          `json:"vec,omitempty"`
+	MapOrStruct map[string]Const `json:"map,omitempty"`
+	Enum        *EnumMessage     `json:"enum,omitempty"`
+	Meta        Meta             `json:"meta,omitempty"`
+}
+
+type EnumMessage struct {
+	EnumRef    EntityRef
+	MemberName string
 }
 
 func (m Message) String() string {

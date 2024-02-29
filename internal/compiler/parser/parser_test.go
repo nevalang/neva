@@ -83,9 +83,34 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	got, err := p.ParseFile(text)
 	require.True(t, err == nil)
 
-	conn := got.Entities["C1"].Component.Net[0]
-	sender := conn.Normal.SenderSide.PortAddr.Node
-	receiver := conn.Normal.ReceiverSide.Receivers[0].PortAddr.Node
+	net := got.Entities["C1"].Component.Net[0]
+
+	sender := net.Normal.SenderSide.PortAddr.Node
 	require.Equal(t, "in", sender)
+
+	receiver := net.Normal.ReceiverSide.Receivers[0].PortAddr.Node
 	require.Equal(t, "out", receiver)
+}
+
+// Check that both local and global enum literals are parsed correctly.
+func TestParser_ParseFile_EnumLiterals(t *testing.T) {
+	text := []byte(`
+		const c0 Enum = Enum1::Foo
+		const c1 pkg.Enum = pkg.Enum2::Bar
+	`)
+
+	p := parser.New(false)
+
+	got, err := p.ParseFile(text)
+	require.True(t, err == nil)
+
+	enum := got.Entities["c0"].Const.Value.Enum
+	require.Equal(t, "", enum.EnumRef.Pkg)
+	require.Equal(t, "Enum1", enum.EnumRef.Name)
+	require.Equal(t, "Foo", enum.MemberName)
+
+	enum = got.Entities["c1"].Const.Value.Enum
+	require.Equal(t, "pkg", enum.EnumRef.Pkg)
+	require.Equal(t, "Enum2", enum.EnumRef.Name)
+	require.Equal(t, "Bar", enum.MemberName)
 }
