@@ -2,6 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     // CLI
+    // get
+    {
+      "name": "neva get github.com/nevalang/x",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/cli",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["get", "github.com/nevalang/x"]
+    },
+    // run
     {
       "name": "Neva CLI 00",
       "type": "go",
@@ -9,7 +20,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "-target=wasm", "0_do_nothing"]
+      "args": ["run", "0_do_nothing"]
     },
     {
       "name": "Neva CLI 10",
@@ -45,7 +56,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run","-debug", "2_hello_world/2_with_then_connection"]
+      "args": ["run", "-debug", "2_hello_world/2_with_then_connection"]
     },
     {
       "name": "Neva CLI 23",
@@ -55,6 +66,15 @@
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "2_hello_world/3_with_literal_sender"]
+    },
+    {
+      "name": "Neva CLI 24",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/cli",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "2_hello_world/4_with_unnamed_node"]
     },
     {
       "name": "Neva CLI 30",
@@ -72,7 +92,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug","4_add_numbers/verbose"]
+      "args": ["run", "-debug", "4_add_numbers/verbose"]
     },
     {
       "name": "Neva CLI 41",

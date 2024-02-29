@@ -86,6 +86,18 @@ func (s *BasenevaListener) EnterImportPathMod(ctx *ImportPathModContext) {}
 // ExitImportPathMod is called when production importPathMod is exited.
 func (s *BasenevaListener) ExitImportPathMod(ctx *ImportPathModContext) {}
 
+// EnterImportMod is called when production importMod is entered.
+func (s *BasenevaListener) EnterImportMod(ctx *ImportModContext) {}
+
+// ExitImportMod is called when production importMod is exited.
+func (s *BasenevaListener) ExitImportMod(ctx *ImportModContext) {}
+
+// EnterImportModeDelim is called when production importModeDelim is entered.
+func (s *BasenevaListener) EnterImportModeDelim(ctx *ImportModeDelimContext) {}
+
+// ExitImportModeDelim is called when production importModeDelim is exited.
+func (s *BasenevaListener) ExitImportModeDelim(ctx *ImportModeDelimContext) {}
+
 // EnterImportPathPkg is called when production importPathPkg is entered.
 func (s *BasenevaListener) EnterImportPathPkg(ctx *ImportPathPkgContext) {}
 

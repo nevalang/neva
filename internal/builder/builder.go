@@ -3,19 +3,21 @@ package builder
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/std"
 )
 
 type Builder struct {
-	stdLibLocation     string // path to standart library module
-	thirdPartyLocation string // path to third-party modules
-	parser             Parser // parser is needed to parse manifest files
+	manifestParser ManifestParser // parser is needed to parse manifest files
+	thirdPartyPath string         // path to third-party modules
 }
 
-type Parser interface {
+type ManifestParser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
@@ -24,7 +26,7 @@ func (p Builder) Build( //nolint:funlen
 	workdir string,
 ) (compiler.RawBuild, *compiler.Error) {
 	// load user's module from disk
-	entryMod, err := p.LoadModuleByPath(ctx, workdir)
+	entryMod, err := p.LoadModuleByPath(ctx, os.DirFS(workdir))
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
@@ -37,8 +39,8 @@ func (p Builder) Build( //nolint:funlen
 		Version: pkg.Version,
 	}
 
-	// TODO use embedded fs for stdlib
-	stdMod, err := p.LoadModuleByPath(ctx, p.stdLibLocation)
+	// load stdlib module from embedded fs
+	stdMod, err := p.LoadModuleByPath(ctx, std.FS)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
@@ -59,14 +61,14 @@ func (p Builder) Build( //nolint:funlen
 			continue
 		}
 
-		depPath, err := p.downloadDep(depModRef)
+		depPath, _, err := p.downloadDep(depModRef)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("download dep: %w", err),
 			}
 		}
 
-		depMod, err := p.LoadModuleByPath(ctx, depPath)
+		depMod, err := p.LoadModuleByPath(ctx, os.DirFS(depPath))
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("build dep mod: %w", err),
@@ -90,29 +92,38 @@ func (p Builder) Build( //nolint:funlen
 	}, nil
 }
 
-func (p Builder) Install(ctx context.Context, depModRef src.ModuleRef, workdir string) error {
-	manifest, err := p.retrieveManifest(workdir)
+func MustNew(parser ManifestParser) Builder {
+	b, err := New(parser)
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	if _, err := p.downloadDep(depModRef); err != nil {
-		return err
-	}
-
-	manifest.Deps[depModRef.Path] = depModRef
-
-	return nil
+	return b
 }
 
-func New(
-	stdlibPath string,
-	thirdpartyPath string,
-	parser Parser,
-) Builder {
-	return Builder{
-		stdLibLocation:     stdlibPath,
-		thirdPartyLocation: thirdpartyPath,
-		parser:             parser,
+func New(parser ManifestParser) (Builder, error) {
+	thirdParty, err := getThirdPartyPath()
+	if err != nil {
+		return Builder{}, err
 	}
+
+	return Builder{
+		thirdPartyPath: thirdParty,
+		manifestParser: parser,
+	}, nil
+}
+
+func getThirdPartyPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(home, "neva", "deps")
+
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }

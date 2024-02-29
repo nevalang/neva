@@ -1,14 +1,15 @@
-interface IPrinter<T>(data T) (sig T)
+import {
+    github.com/nevalang/x:main
+}
 
-// TODO create issue/discussion about DI sugar
-// if component only have one DI dep then allow
-// omitting of the dep node name. So parent component
-// know nothing about it's sub-component internals
+interface IPrinter<T>(data T) (sig T)
 
 component {
     Main(start any) (stop any) {
         nodes {
-            subNode SecondComponent { depNode Printer<any> }
+            subNode SecondComponent {
+                depNode main.Printer<any>
+            }
         }
         net {
             :start -> subNode:msg

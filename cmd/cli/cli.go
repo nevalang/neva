@@ -7,16 +7,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	cli "github.com/urfave/cli/v2"
+
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/pkg"
-	cli "github.com/urfave/cli/v2"
 )
 
 func newCliApp( //nolint:funlen
-	wd string,
-	b builder.Builder,
+	workdir string,
+	bldr builder.Builder,
 	goc compiler.Compiler,
 	nativec compiler.Compiler,
 	wasmc compiler.Compiler,
@@ -39,6 +40,27 @@ func newCliApp( //nolint:funlen
 				},
 			},
 			{
+				Name:      "get",
+				Usage:     "Add dependency to current module",
+				Args:      true,
+				ArgsUsage: "Provide path to the module",
+				Action: func(cCtx *cli.Context) error {
+					installedPath, err := bldr.Get(
+						workdir,
+						cCtx.Args().Get(0),
+						cCtx.Args().Get(1),
+					)
+					if err != nil {
+						return err
+					}
+					fmt.Printf(
+						"%s installed to %s\n", cCtx.Args().Get(0),
+						installedPath,
+					)
+					return nil
+				},
+			},
+			{
 				Name:      "run",
 				Usage:     "Run neva program from source code in interpreter mode",
 				Args:      true,
@@ -55,10 +77,10 @@ func newCliApp( //nolint:funlen
 					if err != nil {
 						return err
 					}
-					intr := interpreter.New(b, goc, debug)
+					intr := interpreter.New(bldr, goc, debug)
 					if err := intr.Interpret(
 						context.Background(),
-						wd,
+						workdir,
 						dirFromArg,
 					); err != nil {
 						return err
@@ -95,15 +117,15 @@ func newCliApp( //nolint:funlen
 					switch target {
 					case "go":
 						return goc.Compile(
-							wd, dirFromArg, wd,
+							workdir, dirFromArg, workdir,
 						)
 					case "wasm":
 						return wasmc.Compile(
-							wd, dirFromArg, wd,
+							workdir, dirFromArg, workdir,
 						)
 					default:
 						return nativec.Compile(
-							wd, dirFromArg, wd,
+							workdir, dirFromArg, workdir,
 						)
 					}
 				},

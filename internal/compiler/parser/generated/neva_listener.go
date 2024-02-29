@@ -40,6 +40,12 @@ type nevaListener interface {
 	// EnterImportPathMod is called when entering the importPathMod production.
 	EnterImportPathMod(c *ImportPathModContext)
 
+	// EnterImportMod is called when entering the importMod production.
+	EnterImportMod(c *ImportModContext)
+
+	// EnterImportModeDelim is called when entering the importModeDelim production.
+	EnterImportModeDelim(c *ImportModeDelimContext)
+
 	// EnterImportPathPkg is called when entering the importPathPkg production.
 	EnterImportPathPkg(c *ImportPathPkgContext)
 
@@ -291,6 +297,12 @@ type nevaListener interface {
 
 	// ExitImportPathMod is called when exiting the importPathMod production.
 	ExitImportPathMod(c *ImportPathModContext)
+
+	// ExitImportMod is called when exiting the importMod production.
+	ExitImportMod(c *ImportModContext)
+
+	// ExitImportModeDelim is called when exiting the importModeDelim production.
+	ExitImportModeDelim(c *ImportModeDelimContext)
 
 	// ExitImportPathPkg is called when exiting the importPathPkg production.
 	ExitImportPathPkg(c *ImportPathPkgContext)

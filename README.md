@@ -1,20 +1,20 @@
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-**<p align="center">Flow Based Programming Language</p>**
+**<p align="center">Flow-Based Programming Language</p>**
 
-# Neva (Proof of Concept)
+# Neva
 
 A general-purpose flow-based programming language with static types and implicit parallelism. Compiles to machine code and Go.
 
 Website: https://nevalang.org/
 
-> ⚠️ WARNING: This project is under heavy development and **not production ready** yet.
+> ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
 
 ## Hello World
 
 ```neva
 component Main(start any) (stop any) {
-	nodes { printer Printer<string> }
+	nodes { Printer<string> }
 	net {
 		:start -> ('Hello, World!' -> printer:data)
 		printer:sig -> :stop
@@ -22,7 +22,7 @@ component Main(start any) (stop any) {
 }
 ```
 
-Nevalang programs are executable dataflow graphs where components are connected to each other through input and output ports. No state, no control flow, just message passing in fully asynchronous environment.
+Nevalang programs are executable dataflow graphs with components connected through input and output ports. No state, no control flow, just message passing in a fully asynchronous environment.
 
 [Read more about the language](https://nevalang.org/docs/about)
 
@@ -39,21 +39,22 @@ Nevalang programs are executable dataflow graphs where components are connected 
 - Package Management
 - Garbage Collection
 
-Please note that even though these features are technically implemented, **developer-experience could be very bad** due to current project state which is pre-MVP. **No backward-compatibility** guarantees at the time.
+Please note that even though these features are technically implemented, **developer-experience may be bad** due to current project state. **No backward-compatibility** guarantees at the time.
 
 ### Roadmap (🚧 WIP)
 
-Nevalang is at extrimely early stage but with the help of community it can become feature-reach mature langauge.
+Nevalang is at an extremely early stage but with the help of community it can become a feature-rich, mature language.
 
 - Building a Community
 - Core Standard Library
 - Feature-Rich LSP-compatible Language Server
-- Go Interop (import go from neva, import neva from go)
+- Go Interop (import go from neva and neva from go)
 - DAP-compatible Debugger
+- Testing Framework
 - No Runtime Exceptions (If it runs then it works)
 - Visual Programming in VSCode (Nevalang becomes hybrid langauge)
 
-Nevalang needs **your** help - it only have one maintainer currently.
+Nevalang needs your help - it currently has only one maintainer.
 
 ## Community
 
@@ -68,4 +69,4 @@ Join community. **Together** we can change programming for the better:
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-Please note that due to early stage of development documentation can be sometimes outdated. You can reach main maintainer to find help.
+Please note that, due to the early stage of development, the documentation can sometimes be outdated. You can reach main maintainer to find help.

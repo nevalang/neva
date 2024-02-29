@@ -22,8 +22,10 @@ compiler_directive_arg: IDENTIFIER+;
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
 importDef: importAlias? importPath NEWLINE*;
 importAlias: IDENTIFIER;
-importPath: (importPathMod '/')? importPathPkg;
-importPathMod: '@' | IDENTIFIER;
+importPath: (importPathMod ':')? importPathPkg;
+importPathMod: '@' | importMod;
+importMod: IDENTIFIER (importModeDelim IDENTIFIER)*;
+importModeDelim: '/' | '.';
 importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 
 // Entity Reference
@@ -118,7 +120,7 @@ compBody:
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
 compNodesDefBody: '{' NEWLINE* (compNodeDef NEWLINE*)* '}';
-compNodeDef: compilerDirectives? IDENTIFIER nodeInst;
+compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
 nodeDIArgs: compNodesDefBody;
 
@@ -127,7 +129,8 @@ compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: connDef (NEWLINE* connDef)*;
 connDef: normConnDef | arrBypassConnDef;
-normConnDef: senderSide '->' (receiverSide | multipleReceiverSide);
+normConnDef:
+	senderSide '->' (receiverSide | multipleReceiverSide);
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;
