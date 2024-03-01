@@ -597,6 +597,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 	}
 
 	if senderSideConstLit != nil {
+		// FIXME get type
 		msg, err := parseMessage(senderSideConstLit)
 		if err != nil {
 			panic(err)
@@ -795,6 +796,10 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 		msg.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
 			MemberName: constVal.EnumLit().IDENTIFIER().GetText(),
+		}
+		msg.TypeExpr = ts.Expr{
+			Inst: &ts.InstExpr{Ref: parsedEnumRef},
+			Meta: parsedEnumRef.Meta,
 		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()

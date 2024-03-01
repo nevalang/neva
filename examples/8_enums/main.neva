@@ -13,7 +13,7 @@ type Day enum {
     Thursday,
     Friday,
     Saturday,
-    Sunday,
+    Sunday
 }
 
 component DayPrinter(day Day) (sig any) {
