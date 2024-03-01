@@ -207,9 +207,9 @@ func (e EntityRef) String() string {
 }
 
 type Const struct {
-	Ref   *EntityRef `json:"ref,omitempty"`
-	Value *Message   `json:"value,omitempty"`
-	Meta  Meta       `json:"meta,omitempty"`
+	Ref     *EntityRef `json:"ref,omitempty"`
+	Message *Message   `json:"value,omitempty"`
+	Meta    Meta       `json:"meta,omitempty"`
 }
 
 func (c Const) String() string {
@@ -223,14 +223,20 @@ func (c Const) String() string {
 }
 
 type Message struct {
-	TypeExpr ts.Expr          `json:"typeExpr,omitempty"`
-	Bool     *bool            `json:"bool,omitempty"`
-	Int      *int             `json:"int,omitempty"`
-	Float    *float64         `json:"float,omitempty"`
-	Str      *string          `json:"str,omitempty"`
-	List     []Const          `json:"vec,omitempty"`
-	Map      map[string]Const `json:"map,omitempty"` // Used for both maps and structs
-	Meta     Meta             `json:"meta,omitempty"`
+	TypeExpr    ts.Expr          `json:"typeExpr,omitempty"`
+	Bool        *bool            `json:"bool,omitempty"`
+	Int         *int             `json:"int,omitempty"`
+	Float       *float64         `json:"float,omitempty"`
+	Str         *string          `json:"str,omitempty"`
+	List        []Const          `json:"vec,omitempty"`
+	MapOrStruct map[string]Const `json:"map,omitempty"`
+	Enum        *EnumMessage     `json:"enum,omitempty"`
+	Meta        Meta             `json:"meta,omitempty"`
+}
+
+type EnumMessage struct {
+	EnumRef    EntityRef
+	MemberName string
 }
 
 func (m Message) String() string {
@@ -344,7 +350,7 @@ func (s ConnectionSenderSide) String() string {
 		if s.Const.Ref != nil {
 			result = s.Const.Ref.String()
 		} else {
-			result = s.Const.Value.String()
+			result = s.Const.Message.String()
 		}
 	} else {
 		result = s.PortAddr.String()

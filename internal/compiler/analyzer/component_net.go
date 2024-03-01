@@ -16,8 +16,7 @@ var (
 	ErrUnusedInports          = errors.New("All component inports are unused")
 	ErrUnusedInport           = errors.New("Unused inport found")
 	ErrLiteralSenderTypeEmpty = errors.New("Literal network sender must contain message value")
-	ErrLiteralSenderKind      = errors.New("Literal network sender must have type of kind instantiation")
-	ErrLiteralSenderType      = errors.New("Literal network sender must have primitive type")
+	ErrComplexLiteralSender   = errors.New("Literal network sender must have primitive type")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -28,9 +27,11 @@ func (a Analyzer) analyzeComponentNetwork(
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
-	nodesUsage := make(map[string]nodeNetUsage, len(nodes)) // we create it here because there's recursion down there
+	// we create it here because there's recursion down there
+	nodesUsage := make(map[string]nodeNetUsage, len(nodes))
 
-	if err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope); err != nil {
+	resolvedNet, err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope)
+	if err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
@@ -38,7 +39,7 @@ func (a Analyzer) analyzeComponentNetwork(
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
-	return net, nil
+	return resolvedNet, nil
 }
 
 // analyzeConnections does two things:
@@ -51,13 +52,16 @@ func (a Analyzer) analyzeConnections(
 	nodesIfaces map[string]src.Interface,
 	nodesUsage map[string]nodeNetUsage,
 	scope src.Scope,
-) *compiler.Error {
+) ([]src.Connection, *compiler.Error) {
+	resolvedNet := make([]src.Connection, 0, len(net))
 	for _, conn := range net {
-		if err := a.analyzeConnection(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage); err != nil {
-			return err
+		resolvedConn, err := a.analyzeConnection(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage)
+		if err != nil {
+			return nil, err
 		}
+		resolvedNet = append(resolvedNet, resolvedConn)
 	}
-	return nil
+	return resolvedNet, nil
 }
 
 type nodesNetUsage map[string]nodeNetUsage
@@ -91,7 +95,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
 	nodesUsage map[string]nodeNetUsage,
-) *compiler.Error {
+) (src.Connection, *compiler.Error) {
 	// first handle array bypass connection, they are simple
 	if arrBypassConn := conn.ArrayBypass; arrBypassConn != nil {
 		senderType, isArray, err := a.getSenderPortAddrType(
@@ -102,13 +106,13 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			nodesIfaces,
 		)
 		if err != nil {
-			return compiler.Error{
+			return src.Connection{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &conn.Normal.SenderSide.Meta,
 			}.Wrap(err)
 		}
 		if !isArray {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Non-array outport in array-bypass connection"),
 				Location: &scope.Location,
 				Meta:     &arrBypassConn.SenderOutport.Meta,
@@ -123,13 +127,13 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			scope,
 		)
 		if err != nil {
-			return compiler.Error{
+			return src.Connection{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &conn.Normal.SenderSide.Meta,
 			}.Wrap(err)
 		}
 		if !isArray {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Non-array outport in array-bypass connection"),
 				Location: &scope.Location,
 				Meta:     &arrBypassConn.SenderOutport.Meta,
@@ -141,7 +145,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			receiverType,
 			scope,
 		); err != nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"Incompatible types: %v -> %v: %w",
 					arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
@@ -160,13 +164,13 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			arrBypassConn.ReceiverInport.Port,
 		)
 
-		return nil
+		return conn, nil
 	}
 
 	// now handle normal connections, they are complex
 	normConn := conn.Normal
 
-	outportTypeExpr, isSenderArr, err := a.getSenderSideType(
+	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		normConn.SenderSide,
 		compInterface,
 		nodes,
@@ -174,7 +178,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		scope,
 	)
 	if err != nil {
-		return compiler.Error{
+		return src.Connection{}, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &normConn.SenderSide.Meta,
 		}.Wrap(err)
@@ -183,7 +187,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	if normConn.SenderSide.PortAddr != nil {
 		// make sure only array outports has indexes
 		if !isSenderArr && normConn.SenderSide.PortAddr.Idx != nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Index for non-array port"),
 				Meta:     &normConn.SenderSide.PortAddr.Meta,
 				Location: &scope.Location,
@@ -192,7 +196,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 		// make sure array outports always has indexes (it's not arr-bypass)
 		if isSenderArr && normConn.SenderSide.PortAddr.Idx == nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Index needed for array port"),
 				Meta:     &normConn.SenderSide.PortAddr.Meta,
 				Location: &scope.Location,
@@ -207,36 +211,35 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	}
 
 	if len(normConn.SenderSide.Selectors) > 0 {
-		lastFieldType, err := ts.GetStructFieldTypeByPath(outportTypeExpr, normConn.SenderSide.Selectors)
+		lastFieldType, err := ts.GetStructFieldTypeByPath(
+			resolvedSenderType,
+			normConn.SenderSide.Selectors,
+		)
 		if err != nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
 			}
 		}
-		outportTypeExpr = lastFieldType
+		resolvedSenderType = lastFieldType
 	}
 
 	if len(normConn.ReceiverSide.DeferredConnections) == 0 && len(normConn.ReceiverSide.Receivers) == 0 {
-		if err != nil {
-			return &compiler.Error{
-				Err: errors.New(
-					"Connection's receiver side cannot be empty, it must either have deferred connection or receivers",
-				),
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
-			}
+		return src.Connection{}, &compiler.Error{
+			Err: errors.New(
+				"Connection's receiver side cannot be empty, it must either have deferred connection or receivers",
+			),
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
 		}
 	} else if len(normConn.ReceiverSide.DeferredConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
-		if err != nil {
-			return &compiler.Error{
-				Err: errors.New(
-					"Connection's receiver side must either have deferred connection or receivers, not both",
-				),
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
-			}
+		return src.Connection{}, &compiler.Error{
+			Err: errors.New(
+				"Connection's receiver side must either have deferred connection or receivers, not both",
+			),
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
 		}
 	}
 
@@ -244,7 +247,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
-		return a.analyzeConnections( // indirect recursion
+		resolvedDefConns, err := a.analyzeConnections( // indirect recursion
 			normConn.ReceiverSide.DeferredConnections,
 			compInterface,
 			nodes,
@@ -252,6 +255,19 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			nodesUsage,
 			scope,
 		)
+		if err != nil {
+			return src.Connection{}, err
+		}
+
+		return src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: resolvedSender,
+				ReceiverSide: src.ConnectionReceiverSide{
+					DeferredConnections: resolvedDefConns,
+				},
+			},
+			Meta: conn.Meta,
+		}, nil
 	}
 
 	for _, receiver := range normConn.ReceiverSide.Receivers {
@@ -263,7 +279,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			scope,
 		)
 		if err != nil {
-			return compiler.Error{
+			return src.Connection{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
 			}.Wrap(err)
@@ -271,7 +287,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 		// make sure only array outports has indexes
 		if !isReceiverArr && receiver.PortAddr.Idx != nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Index for non-array port"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
@@ -280,15 +296,15 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 		// make sure array inports always has indexes (it's not arr-bypass)
 		if isReceiverArr && receiver.PortAddr.Idx == nil {
-			return &compiler.Error{
+			return src.Connection{}, &compiler.Error{
 				Err:      errors.New("Index needed for array port"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
 			}
 		}
 
-		if err := a.resolver.IsSubtypeOf(outportTypeExpr, inportTypeExpr, scope); err != nil {
-			return &compiler.Error{
+		if err := a.resolver.IsSubtypeOf(resolvedSenderType, inportTypeExpr, scope); err != nil {
+			return src.Connection{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"Incompatible types: %v -> %v: %w",
 					normConn.SenderSide, receiver, err,
@@ -304,7 +320,13 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		)
 	}
 
-	return nil
+	return src.Connection{
+		Normal: &src.NormalConnection{
+			SenderSide:   resolvedSender,
+			ReceiverSide: normConn.ReceiverSide,
+		},
+		Meta: conn.Meta,
+	}, nil
 }
 
 // nodeNetUsage shows which ports was used by the network
@@ -550,9 +572,9 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
-) (ts.Expr, bool, *compiler.Error) {
+) (src.ConnectionSenderSide, ts.Expr, bool, *compiler.Error) {
 	if senderSide.PortAddr == nil && senderSide.Const == nil {
-		return ts.Expr{}, false, &compiler.Error{
+		return src.ConnectionSenderSide{}, ts.Expr{}, false, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
@@ -560,38 +582,59 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 	}
 
 	if senderSide.Const != nil {
-		t, err := a.getResolvedSenderConstType(senderSide, scope)
-		return t, false, err
+		resolvedConst, resolvedExpr, err := a.getResolvedSenderConstType(*senderSide.Const, scope)
+		if err != nil {
+			return src.ConnectionSenderSide{}, ts.Expr{}, false, err
+		}
+
+		return src.ConnectionSenderSide{
+			Const: &resolvedConst,
+			Meta:  senderSide.Meta,
+		}, resolvedExpr, false, nil
 	}
 
-	return a.getSenderPortAddrType(*senderSide.PortAddr, scope, iface, nodes, nodesIfaces)
+	resolvedExpr, isArr, err := a.getSenderPortAddrType(
+		*senderSide.PortAddr,
+		scope,
+		iface,
+		nodes,
+		nodesIfaces,
+	)
+	if err != nil {
+		return src.ConnectionSenderSide{}, ts.Expr{}, false, err
+	}
+
+	return src.ConnectionSenderSide{
+		PortAddr: senderSide.PortAddr,
+		Meta:     senderSide.Meta,
+	}, resolvedExpr, isArr, nil
 }
 
 // getSenderPortAddrType returns port's type and isArray bool
 func (a Analyzer) getSenderPortAddrType(
-	senderSide src.PortAddr,
+	senderSidePortAddr src.PortAddr,
 	scope src.Scope,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]src.Interface,
 ) (ts.Expr, bool, *compiler.Error) {
-	if senderSide.Node == "out" {
+	if senderSidePortAddr.Node == "out" {
 		return ts.Expr{}, false, &compiler.Error{
 			Err:      ErrReadSelfOut,
 			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
+			Meta:     &senderSidePortAddr.Meta,
 		}
 	}
 
-	if senderSide.Node == "in" {
+	if senderSidePortAddr.Node == "in" {
 		inports := iface.IO.In
 
-		inport, ok := inports[senderSide.Port]
+		inport, ok := inports[senderSidePortAddr.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSide.Port),
+				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSidePortAddr.Port),
 				Location: &scope.Location,
-				Meta:     &senderSide.Meta,
+				Meta:     &senderSidePortAddr.Meta,
 			}
 		}
 
@@ -604,7 +647,7 @@ func (a Analyzer) getSenderPortAddrType(
 			return ts.Expr{}, false, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &senderSide.Meta,
+				Meta:     &senderSidePortAddr.Meta,
 			}
 		}
 
@@ -612,58 +655,82 @@ func (a Analyzer) getSenderPortAddrType(
 	}
 
 	return a.getNodeOutportType(
-		senderSide, nodes, nodesIfaces, scope,
+		senderSidePortAddr, nodes, nodesIfaces, scope,
 	)
 }
 
 func (a Analyzer) getResolvedSenderConstType(
-	senderSide src.ConnectionSenderSide,
+	constSender src.Const,
 	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
-	if senderSide.Const.Ref != nil {
-		expr, err := a.getResolvedConstTypeByRef(*senderSide.Const.Ref, scope)
+) (src.Const, ts.Expr, *compiler.Error) {
+	if constSender.Ref != nil {
+		expr, err := a.getResolvedConstTypeByRef(*constSender.Ref, scope)
 		if err != nil {
-			return ts.Expr{}, compiler.Error{
+			return src.Const{}, ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &senderSide.Const.Ref.Meta,
+				Meta:     &constSender.Ref.Meta,
 			}.Wrap(err)
 		}
-		return expr, nil
+		return constSender, expr, nil
 	}
-	if senderSide.Const.Value != nil {
-		if err := a.validateLiteralSender(senderSide.Const); err != nil {
-			return ts.Expr{}, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-				Meta:     &senderSide.Const.Value.Meta,
-			}
+
+	if constSender.Message == nil {
+		return src.Const{}, ts.Expr{}, &compiler.Error{
+			Err:      ErrLiteralSenderTypeEmpty,
+			Location: &scope.Location,
+			Meta:     &constSender.Meta,
 		}
-		resolvedExpr, err := a.resolver.ResolveExpr(senderSide.Const.Value.TypeExpr, scope)
-		if err != nil {
-			return ts.Expr{}, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-				Meta:     &senderSide.Const.Value.Meta,
-			}
+	}
+
+	resolvedExpr, err := a.resolver.ResolveExpr(constSender.Message.TypeExpr, scope)
+
+	if err != nil {
+		return src.Const{}, ts.Expr{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &constSender.Message.Meta,
 		}
-		return resolvedExpr, nil
 	}
-	return ts.Expr{}, &compiler.Error{
-		Err:      ErrLiteralSenderTypeEmpty,
-		Location: &scope.Location,
-		Meta:     &senderSide.Meta,
+
+	if err := a.validateLiteralSender(resolvedExpr); err != nil {
+		return src.Const{}, ts.Expr{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &constSender.Message.Meta,
+		}
 	}
+
+	return src.Const{
+		Message: &src.Message{
+			TypeExpr:    resolvedExpr,
+			Bool:        constSender.Message.Bool,
+			Int:         constSender.Message.Int,
+			Float:       constSender.Message.Float,
+			Str:         constSender.Message.Str,
+			List:        constSender.Message.List,
+			MapOrStruct: constSender.Message.MapOrStruct,
+			Enum:        constSender.Message.Enum,
+			Meta:        constSender.Message.Meta,
+		},
+		Meta: constSender.Meta,
+	}, resolvedExpr, nil
 }
 
-func (a Analyzer) validateLiteralSender(cnst *src.Const) error {
-	if cnst.Value.TypeExpr.Inst == nil {
-		return ErrLiteralSenderKind
+func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
+	if resolvedExpr.Inst != nil {
+		switch resolvedExpr.Inst.Ref.String() {
+		case "bool", "int", "float", "string":
+			return nil
+		}
+		return ErrComplexLiteralSender
 	}
-	switch cnst.Value.TypeExpr.Inst.Ref.String() {
-	case "bool", "int", "float", "string":
-		return nil
+
+	if resolvedExpr.Lit == nil ||
+		resolvedExpr.Lit.Enum == nil {
+		return ErrComplexLiteralSender
 	}
-	return ErrLiteralSenderType
+
+	return nil
 }
 
 // getNodeOutportType returns port's type and isArray bool
@@ -729,12 +796,12 @@ func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) 
 		return expr, nil
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Value.TypeExpr, scope)
+	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Message.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &entity.Const.Value.Meta,
+			Meta:     &entity.Const.Message.Meta,
 		}
 	}
 

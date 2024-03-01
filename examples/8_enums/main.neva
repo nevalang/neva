@@ -1,0 +1,25 @@
+component Main(start any) (stop any) {
+    nodes { DayPrinter }
+    net {
+        :start -> (Day::Monday -> dayPrinter:day)
+        dayPrinter:sig -> :stop
+    }
+}
+
+type Day enum {
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday
+}
+
+component DayPrinter(day Day) (sig any) {
+    nodes { Printer<Day> }
+    net {
+        :day -> printer:data
+        printer:sig -> :sig
+    }
+}

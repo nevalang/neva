@@ -160,11 +160,14 @@ type nevaListener interface {
 	// EnterConstVal is called when entering the constVal production.
 	EnterConstVal(c *ConstValContext)
 
+	// EnterNil is called when entering the nil production.
+	EnterNil(c *NilContext)
+
 	// EnterBool is called when entering the bool production.
 	EnterBool(c *BoolContext)
 
-	// EnterNil is called when entering the nil production.
-	EnterNil(c *NilContext)
+	// EnterEnumLit is called when entering the enumLit production.
+	EnterEnumLit(c *EnumLitContext)
 
 	// EnterListLit is called when entering the listLit production.
 	EnterListLit(c *ListLitContext)
@@ -415,11 +418,14 @@ type nevaListener interface {
 	// ExitConstVal is called when exiting the constVal production.
 	ExitConstVal(c *ConstValContext)
 
+	// ExitNil is called when exiting the nil production.
+	ExitNil(c *NilContext)
+
 	// ExitBool is called when exiting the bool production.
 	ExitBool(c *BoolContext)
 
-	// ExitNil is called when exiting the nil production.
-	ExitNil(c *NilContext)
+	// ExitEnumLit is called when exiting the enumLit production.
+	ExitEnumLit(c *EnumLitContext)
 
 	// ExitListLit is called when exiting the listLit production.
 	ExitListLit(c *ListLitContext)

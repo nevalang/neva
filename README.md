@@ -36,6 +36,7 @@ Nevalang programs are executable dataflow graphs with components connected throu
 - Interpreter Mode
 - Builtin Dependency Injection
 - Builtin Observability
+- Package Management
 - Garbage Collection
 
 Please note that even though these features are technically implemented, **developer-experience may be bad** due to current project state. **No backward-compatibility** guarantees at the time.

@@ -92,7 +92,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 				}
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.connectionWithoutConstSender
-			} else if normConn.SenderSide.Const.Value != nil {
+			} else if normConn.SenderSide.Const.Message != nil {
 				result, err := d.handleLiteralSender(conn)
 				if err != nil {
 					return handleNetResult{}, err

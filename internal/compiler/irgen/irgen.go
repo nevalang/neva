@@ -94,7 +94,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	// for inports we only use parent context because all inports are used
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
 	//  for outports we use both parent context and component's interface
-	outportAddrs := g.insertAndReturnOutports(component.Interface.IO.Out, nodeCtx, result)
+	outportAddrs := g.insertAndReturnOutports(nodeCtx, result)
 
 	runtimeFuncRef, err := getRuntimeFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
@@ -135,7 +135,6 @@ func (g Generator) processComponentNode( //nolint:funlen
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
 	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
 	subnodesPortsUsage, err := g.processNetwork(
-		scope,
 		component.Net,
 		nodeCtx,
 		result,

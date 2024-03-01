@@ -139,14 +139,14 @@ var (
 
 func (Desugarer) createPathConst(senderSide src.ConnectionSenderSide) src.Const {
 	constToInsert := src.Const{
-		Value: &src.Message{
+		Message: &src.Message{
 			TypeExpr: pathConstTypeExpr,
 			List:     make([]src.Const, 0, len(senderSide.Selectors)),
 		},
 	}
 	for _, selector := range senderSide.Selectors {
-		constToInsert.Value.List = append(constToInsert.Value.List, src.Const{
-			Value: &src.Message{
+		constToInsert.Message.List = append(constToInsert.Message.List, src.Const{
+			Message: &src.Message{
 				TypeExpr: strTypeExpr,
 				Str:      compiler.Pointer(selector),
 			},

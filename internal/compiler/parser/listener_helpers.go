@@ -61,6 +61,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
+		fmt.Println(expr.GetText())
 		panic(&compiler.Error{
 			Err: errors.New("Missing type expression"),
 			Meta: &src.Meta{
@@ -449,7 +450,6 @@ func parseNormConnReceiverSide(
 			normConn.GetText(),
 		)
 
-		// FIXME implement literal senders
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
 			Meta: &src.Meta{
@@ -597,8 +597,12 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 	}
 
 	if senderSideConstLit != nil {
-		msg := parseConstVal(senderSideConstLit)
-		constant = &src.Const{Value: &msg}
+		// FIXME get type
+		msg, err := parseMessage(senderSideConstLit)
+		if err != nil {
+			panic(err)
+		}
+		constant = &src.Const{Message: &msg}
 	}
 
 	parsedSenderSide := src.ConnectionSenderSide{
@@ -726,8 +730,8 @@ func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrCont
 	}, nil
 }
 
-func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:funlen
-	val := src.Message{
+func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //nolint:funlen
+	msg := src.Message{
 		Meta: src.Meta{
 			Text: constVal.GetText(),
 			Start: src.Position{
@@ -741,8 +745,6 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 		},
 	}
 
-	val.TypeExpr = ts.Expr{}
-
 	//nolint:nosnakecase
 	switch {
 	case constVal.Bool_() != nil:
@@ -750,30 +752,30 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 		if boolVal != "true" && boolVal != "false" {
 			panic("bool val not true or false")
 		}
-		val.TypeExpr.Inst = &ts.InstExpr{
+		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "bool"},
 		}
-		val.Bool = compiler.Pointer(boolVal == "true")
+		msg.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		val.TypeExpr.Inst = &ts.InstExpr{
+		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "int"},
 		}
-		val.Int = compiler.Pointer(int(i))
+		msg.Int = compiler.Pointer(int(i))
 	case constVal.FLOAT() != nil:
 		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			panic(err)
 		}
-		val.TypeExpr.Inst = &ts.InstExpr{
+		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "float"},
 		}
-		val.Float = &f
+		msg.Float = &f
 	case constVal.STRING() != nil:
-		val.Str = compiler.Pointer(
+		msg.Str = compiler.Pointer(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),
@@ -783,52 +785,70 @@ func parseConstVal(constVal generated.IConstValContext) src.Message { //nolint:f
 				"'",
 			),
 		)
-		val.TypeExpr.Inst = &ts.InstExpr{
+		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "string"},
+		}
+	case constVal.EnumLit() != nil:
+		parsedEnumRef, err := parseEntityRef(constVal.EnumLit().EntityRef())
+		if err != nil {
+			return src.Message{}, err
+		}
+		msg.Enum = &src.EnumMessage{
+			EnumRef:    parsedEnumRef,
+			MemberName: constVal.EnumLit().IDENTIFIER().GetText(),
+		}
+		msg.TypeExpr = ts.Expr{
+			Inst: &ts.InstExpr{Ref: parsedEnumRef},
+			Meta: parsedEnumRef.Meta,
 		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()
 		if listItems == nil { // empty list []
-			val.List = []src.Const{}
-			return val
+			msg.List = []src.Const{}
+			return src.Message{}, nil
 		}
 		constValues := listItems.AllConstVal()
-		val.List = make([]src.Const, 0, len(constValues))
+		msg.List = make([]src.Const, 0, len(constValues))
 		for _, item := range constValues {
-			parsedConstValue := parseConstVal(item)
-			val.List = append(val.List, src.Const{
-				Ref:   nil, // TODO implement references
-				Value: &parsedConstValue,
+			parsedConstValue, err := parseMessage(item)
+			if err != nil {
+				return src.Message{}, err
+			}
+			msg.List = append(msg.List, src.Const{
+				Ref:     nil, // TODO implement references
+				Message: &parsedConstValue,
 			})
 		}
 	case constVal.StructLit() != nil:
 		fields := constVal.StructLit().StructValueFields()
 		if fields == nil { // empty struct {}
-			val.Map = map[string]src.Const{}
-			return val
+			msg.MapOrStruct = map[string]src.Const{}
+			return msg, nil
 		}
 		fieldValues := fields.AllStructValueField()
-		val.Map = make(map[string]src.Const, len(fieldValues))
+		msg.MapOrStruct = make(map[string]src.Const, len(fieldValues))
 		for i, field := range fieldValues {
 			if field.IDENTIFIER() == nil {
 				fmt.Println(field.GetText(), i)
 				panic("")
 			}
-
 			name := field.IDENTIFIER().GetText()
-			value := parseConstVal(field.ConstVal())
-			val.Map[name] = src.Const{
-				Ref:   nil, // TODO implement references
-				Value: &value,
+			value, err := parseMessage(field.ConstVal())
+			if err != nil {
+				return src.Message{}, err
+			}
+			msg.MapOrStruct[name] = src.Const{
+				Ref:     nil, // TODO implement references
+				Message: &value,
 			}
 		}
 	case constVal.Nil_() != nil:
-		return src.Message{}
+		return src.Message{}, nil
 	default:
 		panic("unknown const: " + constVal.GetText())
 	}
 
-	return val
+	return msg, nil
 }
 
 func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.Directive][]string {
@@ -896,13 +916,17 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
 
-	parsedMsg := parseConstVal(constVal)
+	parsedMsg, err := parseMessage(constVal)
+	if err != nil {
+		panic(err)
+	}
+
 	parsedMsg.TypeExpr = typeExpr
 
 	return src.Entity{
 		Kind: src.ConstEntity,
 		Const: src.Const{
-			Value: &parsedMsg,
+			Message: &parsedMsg,
 			Meta: src.Meta{
 				Text: actx.GetText(),
 				Start: src.Position{

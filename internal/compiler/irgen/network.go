@@ -12,7 +12,6 @@ import (
 // 1) inserts network connections
 // 2) returns metadata about how subnodes are used by this network
 func (g Generator) processNetwork(
-	scope src.Scope,
 	conns []src.Connection,
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -73,7 +72,6 @@ func (g Generator) processNetwork(
 		senderSide := conn.Normal.SenderSide
 
 		irSenderSidePortAddr, err := g.processSenderSide(
-			scope,
 			nodeCtx,
 			senderSide,
 			nodesPortsUsage,
@@ -119,7 +117,6 @@ func (g Generator) processNetwork(
 }
 
 func (g Generator) processSenderSide(
-	scope src.Scope,
 	nodeCtx nodeContext,
 	senderSide src.ConnectionSenderSide,
 	result map[string]portsUsage,
@@ -182,7 +179,6 @@ func (Generator) insertAndReturnInports(
 }
 
 func (Generator) insertAndReturnOutports(
-	outports map[string]src.Port,
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) []ir.PortAddr {

@@ -7,6 +7,18 @@ type MyEnum1 enum {
     One
 }
 
+type MyEnum1 enum {
+    One, Two, Three
+}
+
+type MyEnum1 enum { One, Two, Three }
+
+type MyEnum1 enum {
+    One,
+    Two,
+    Three
+}
+
 pub type MyEnum10 enum { One, Two }
 
 pub type MyEnum10 enum {

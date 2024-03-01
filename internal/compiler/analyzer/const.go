@@ -18,7 +18,7 @@ var (
 
 //nolint:funlen
 func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo,gocognit,lll
-	if constant.Value == nil && constant.Ref == nil {
+	if constant.Message == nil && constant.Ref == nil {
 		return src.Const{}, &compiler.Error{
 			Err:      ErrEmptyConst,
 			Location: &scope.Location,
@@ -26,7 +26,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	}
 
-	if constant.Value == nil { // is ref
+	if constant.Message == nil { // is ref
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
@@ -45,7 +45,7 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(constant.Value.TypeExpr, scope)
+	resolvedType, err := a.analyzeTypeExpr(constant.Message.TypeExpr, scope)
 	if err != nil {
 		return src.Const{}, compiler.Error{
 			Err:      ErrResolveConstType,
@@ -75,11 +75,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 
 	switch typ {
 	case "bool":
-		if constant.Value.Int != nil ||
-			constant.Value.Float != nil ||
-			constant.Value.Str != nil ||
-			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+		if constant.Message.Int != nil ||
+			constant.Message.Float != nil ||
+			constant.Message.Str != nil ||
+			constant.Message.List != nil ||
+			constant.Message.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -87,11 +87,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "int":
-		if constant.Value.Bool != nil ||
-			constant.Value.Float != nil ||
-			constant.Value.Str != nil ||
-			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+		if constant.Message.Bool != nil ||
+			constant.Message.Float != nil ||
+			constant.Message.Str != nil ||
+			constant.Message.List != nil ||
+			constant.Message.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -99,11 +99,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "float":
-		if constant.Value.Bool != nil ||
-			constant.Value.Int != nil ||
-			constant.Value.Str != nil ||
-			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+		if constant.Message.Bool != nil ||
+			constant.Message.Int != nil ||
+			constant.Message.Str != nil ||
+			constant.Message.List != nil ||
+			constant.Message.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -111,11 +111,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "string":
-		if constant.Value.Bool != nil ||
-			constant.Value.Int != nil ||
-			constant.Value.Float != nil ||
-			constant.Value.List != nil ||
-			constant.Value.Map != nil {
+		if constant.Message.Bool != nil ||
+			constant.Message.Int != nil ||
+			constant.Message.Float != nil ||
+			constant.Message.List != nil ||
+			constant.Message.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -123,10 +123,10 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "list":
-		if constant.Value.Bool != nil ||
-			constant.Value.Int != nil ||
-			constant.Value.Float != nil ||
-			constant.Value.Map != nil {
+		if constant.Message.Bool != nil ||
+			constant.Message.Int != nil ||
+			constant.Message.Float != nil ||
+			constant.Message.MapOrStruct != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -134,10 +134,10 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 			}
 		}
 	case "map", "struct":
-		if constant.Value.Bool != nil ||
-			constant.Value.Int != nil ||
-			constant.Value.Float != nil ||
-			constant.Value.List != nil {
+		if constant.Message.Bool != nil ||
+			constant.Message.Int != nil ||
+			constant.Message.Float != nil ||
+			constant.Message.List != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      ErrConstSeveralValues,
 				Location: &scope.Location,
@@ -146,11 +146,11 @@ func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, 
 		}
 	}
 
-	valueCopy := *constant.Value
+	valueCopy := *constant.Message
 	valueCopy.TypeExpr = resolvedType
 
 	return src.Const{
-		Value: &valueCopy,
-		Meta:  constant.Meta,
+		Message: &valueCopy,
+		Meta:    constant.Meta,
 	}, nil
 }
