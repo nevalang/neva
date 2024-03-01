@@ -1,8 +1,6 @@
 // Here we learn how to simplify program by separating concerns
 
-import {
-	x
-}
+import { x }
 
 component {
 	Main(start any) (stop any) {
