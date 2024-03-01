@@ -175,6 +175,9 @@ type nevaListener interface {
 	// EnterListItems is called when entering the listItems production.
 	EnterListItems(c *ListItemsContext)
 
+	// EnterCompositeItem is called when entering the compositeItem production.
+	EnterCompositeItem(c *CompositeItemContext)
+
 	// EnterStructLit is called when entering the structLit production.
 	EnterStructLit(c *StructLitContext)
 
@@ -432,6 +435,9 @@ type nevaListener interface {
 
 	// ExitListItems is called when exiting the listItems production.
 	ExitListItems(c *ListItemsContext)
+
+	// ExitCompositeItem is called when exiting the compositeItem production.
+	ExitCompositeItem(c *CompositeItemContext)
 
 	// ExitStructLit is called when exiting the structLit production.
 	ExitStructLit(c *StructLitContext)

@@ -807,17 +807,37 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 			msg.List = []src.Const{}
 			return src.Message{}, nil
 		}
-		constValues := listItems.AllConstVal()
-		msg.List = make([]src.Const, 0, len(constValues))
-		for _, item := range constValues {
-			parsedConstValue, err := parseMessage(item)
-			if err != nil {
-				return src.Message{}, err
+		items := listItems.AllCompositeItem()
+		msg.List = make([]src.Const, 0, len(items))
+		for _, item := range items {
+			constant := src.Const{
+				Meta: src.Meta{
+					Text: item.GetText(),
+					Start: src.Position{
+						Line:   item.GetStart().GetLine(),
+						Column: item.GetStart().GetLine(),
+					},
+					Stop: src.Position{
+						Line:   item.GetStop().GetLine(),
+						Column: item.GetStop().GetLine(),
+					},
+				},
 			}
-			msg.List = append(msg.List, src.Const{
-				Ref:     nil, // TODO implement references
-				Message: &parsedConstValue,
-			})
+			if item.EntityRef() != nil {
+				parsedRef, err := parseEntityRef(item.EntityRef())
+				if err != nil {
+					return src.Message{}, err
+				}
+				constant.Ref = &parsedRef
+			} else {
+				parsedConstValue, err := parseMessage(item.ConstVal())
+				if err != nil {
+					return src.Message{}, err
+				}
+				constant.Message = &parsedConstValue
+
+			}
+			msg.List = append(msg.List, constant)
 		}
 	case constVal.StructLit() != nil:
 		fields := constVal.StructLit().StructValueFields()
@@ -833,13 +853,22 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 				panic("")
 			}
 			name := field.IDENTIFIER().GetText()
-			value, err := parseMessage(field.ConstVal())
-			if err != nil {
-				return src.Message{}, err
-			}
-			msg.MapOrStruct[name] = src.Const{
-				Ref:     nil, // TODO implement references
-				Message: &value,
+			if field.CompositeItem().EntityRef() != nil {
+				parsedRef, err := parseEntityRef(field.CompositeItem().EntityRef())
+				if err != nil {
+					return src.Message{}, err
+				}
+				msg.MapOrStruct[name] = src.Const{
+					Ref: &parsedRef,
+				}
+			} else {
+				value, err := parseMessage(field.CompositeItem().ConstVal())
+				if err != nil {
+					return src.Message{}, err
+				}
+				msg.MapOrStruct[name] = src.Const{
+					Message: &value,
+				}
 			}
 		}
 	case constVal.Nil_() != nil:

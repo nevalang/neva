@@ -98,13 +98,14 @@ bool: 'true' | 'false';
 enumLit: entityRef '::' IDENTIFIER ;
 listLit: '[' NEWLINE* listItems? ']';
 listItems:
-	constVal
-	| constVal (',' NEWLINE* constVal NEWLINE*)*;
+	compositeItem
+	| compositeItem (',' NEWLINE* compositeItem NEWLINE*)*;
+compositeItem: entityRef | constVal;
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
 	structValueField (',' NEWLINE* structValueField)*;
-structValueField: IDENTIFIER ':' constVal NEWLINE*;
+structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
 
 // components
 compStmt: singleCompStmt | groupCompStmt;

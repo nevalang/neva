@@ -356,6 +356,12 @@ func (s *BasenevaListener) EnterListItems(ctx *ListItemsContext) {}
 // ExitListItems is called when production listItems is exited.
 func (s *BasenevaListener) ExitListItems(ctx *ListItemsContext) {}
 
+// EnterCompositeItem is called when production compositeItem is entered.
+func (s *BasenevaListener) EnterCompositeItem(ctx *CompositeItemContext) {}
+
+// ExitCompositeItem is called when production compositeItem is exited.
+func (s *BasenevaListener) ExitCompositeItem(ctx *CompositeItemContext) {}
+
 // EnterStructLit is called when production structLit is entered.
 func (s *BasenevaListener) EnterStructLit(ctx *StructLitContext) {}
 
