@@ -238,20 +238,20 @@ component {
 		net {
             $foo -> (foo:bar -> bar:baz)
 
-			$foo -> (foo:bar -> bar:baz
+			$foo -> (foo:bar -> bar:baz,
 			foo:bar -> bar:baz
 			)
 
-			$foo -> (foo:bar -> bar:baz
+			$foo -> (foo:bar -> bar:baz,
 				foo:bar -> bar:baz
 			)
 
 			$foo -> (
-				foo:bar -> bar:baz
+				foo:bar -> bar:baz,
 				foo:bar -> bar:baz)
 
 			$foo -> (
-				foo:bar -> bar:baz
+				foo:bar -> bar:baz,
 				foo:bar -> bar:baz
 			)
 		}

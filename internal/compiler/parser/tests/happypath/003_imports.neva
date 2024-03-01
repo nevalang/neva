@@ -1,470 +1,470 @@
-import { simple/path }
+import { simple:path }
 
-import { simple/path
+import { simple:path
 }
 import {
-    simple/path }
+    simple:path }
 
 import {
-    simple/path
+    simple:path
 }
 
 import
-{ simple/path }
-
-import
-{
-    simple/path }
-
-import
-{ simple/path
-}
+{ simple:path }
 
 import
 {
-    simple/path
+    simple:path }
+
+import
+{ simple:path
 }
 
-import {
-
-    simple/path
-}
-
-import {
-    simple/path
-
+import
+{
+    simple:path
 }
 
 import {
 
-    simple/path
-
-}
-
-import
-{
-
-    simple/path
-}
-
-import
-{
-    simple/path
-
-}
-
-import
-{
-
-    simple/path
-
-}
-
-import { path/with/parts }
-
-import { path/with/parts
+    simple:path
 }
 
 import {
-    path/with/parts }
-
-import
-{ path/with/parts }
-
-import
-{
-    path/with/parts }
-
-import
-{ path/with/parts
-}
-
-import
-{
-    path/with/parts
-}
-
-import
-{
-    
-    path/with/parts
-}
-
-import
-{
-    path/with/parts
-
-}
-
-import
-{
-
-    path/with/parts
-
-}
-
-import {
-    path/with/parts
-}
-
-import {
-
-    path/with/parts
-}
-
-import {
-    path/with/parts
+    simple:path
 
 }
 
 import {
 
-    path/with/parts
+    simple:path
 
+}
+
+import
+{
+
+    simple:path
+}
+
+import
+{
+    simple:path
+
+}
+
+import
+{
+
+    simple:path
+
+}
+
+import { path:with/parts }
+
+import { path:with/parts
 }
 
 import {
-    withalias simple/path
-}
-
-import {
-
-    withalias simple/path
-}
-
-import {
-    withalias simple/path
-
-}
-
-import {
-
-    withalias simple/path
-
-}
+    path:with/parts }
 
 import
-{ withalias simple/path }
+{ path:with/parts }
 
 import
 {
-    withalias simple/path }
+    path:with/parts }
 
 import
-{ withalias simple/path
+{ path:with/parts
 }
 
 import
 {
-    withalias simple/path
-}
-
-import
-{
-
-    withalias simple/path
-}
-
-import
-{
-    withalias simple/path
-
-}
-
-import
-{
-
-    withalias simple/path
-
-}
-
-import {
-    withalias path/with/parts
-}
-
-import {
-    
-    withalias path/with/parts
-}
-
-import {
-    withalias path/with/parts
-
-}
-
-import
-{ withalias path/with/parts }
-
-import
-{ withalias path/with/parts
-}
-
-import
-{
-    withalias path/with/parts }
-
-import
-{
-    withalias path/with/parts
-}
-
-import
-{
-
-    withalias path/with/parts
-}
-
-import
-{
-    withalias path/with/parts
-
+    path:with/parts
 }
 
 import
 {
     
-    withalias path/with/parts
-
+    path:with/parts
 }
 
-import {
-    simple/path
-    path/with/parts
-}
-
-import {
-
-    simple/path
-    path/with/parts
-}
-
-import {
-    simple/path
-    path/with/parts
-
-}
-
-import {
-
-    simple/path
-    path/with/parts
-
-}
-
-import {
-
-    simple/path
-
-    path/with/parts
+import
+{
+    path:with/parts
 
 }
 
 import
-{ simple/path
-    path/with/parts
+{
+
+    path:with/parts
+
+}
+
+import {
+    path:with/parts
+}
+
+import {
+
+    path:with/parts
+}
+
+import {
+    path:with/parts
+
+}
+
+import {
+
+    path:with/parts
+
+}
+
+import {
+    withalias simple:path
+}
+
+import {
+
+    withalias simple:path
+}
+
+import {
+    withalias simple:path
+
+}
+
+import {
+
+    withalias simple:path
+
 }
 
 import
-{ simple/path
-    path/with/parts }
+{ withalias simple:path }
+
+import
+{
+    withalias simple:path }
+
+import
+{ withalias simple:path
+}
+
+import
+{
+    withalias simple:path
+}
+
+import
+{
+
+    withalias simple:path
+}
+
+import
+{
+    withalias simple:path
+
+}
+
+import
+{
+
+    withalias simple:path
+
+}
+
+import {
+    withalias path:with/parts
+}
+
+import {
+    
+    withalias path:with/parts
+}
+
+import {
+    withalias path:with/parts
+
+}
+
+import
+{ withalias path:with/parts }
+
+import
+{ withalias path:with/parts
+}
+
+import
+{
+    withalias path:with/parts }
+
+import
+{
+    withalias path:with/parts
+}
+
+import
+{
+
+    withalias path:with/parts
+}
+
+import
+{
+    withalias path:with/parts
+
+}
+
+import
+{
+    
+    withalias path:with/parts
+
+}
+
+import {
+    simple:path
+    path:with/parts
+}
+
+import {
+
+    simple:path
+    path:with/parts
+}
+
+import {
+    simple:path
+    path:with/parts
+
+}
+
+import {
+
+    simple:path
+    path:with/parts
+
+}
+
+import {
+
+    simple:path
+
+    path:with/parts
+
+}
+
+import
+{ simple:path
+    path:with/parts
+}
+
+import
+{ simple:path
+    path:with/parts }
 
     import
 {
-    simple/path
-    path/with/parts }
+    simple:path
+    path:with/parts }
 
 import
 {
-    simple/path
-    path/with/parts
-}
-
-import
-{
-
-    simple/path
-    path/with/parts
-}
-
-import
-{
-    simple/path
-    path/with/parts
-
-}
-
-import
-{
-    simple/path
-
-    path/with/parts
+    simple:path
+    path:with/parts
 }
 
 import
 {
 
-    simple/path
-
-    path/with/parts
+    simple:path
+    path:with/parts
 }
 
 import
 {
-    simple/path
+    simple:path
+    path:with/parts
 
-    path/with/parts
+}
+
+import
+{
+    simple:path
+
+    path:with/parts
+}
+
+import
+{
+
+    simple:path
+
+    path:with/parts
+}
+
+import
+{
+    simple:path
+
+    path:with/parts
 
 }
 
 import {
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import {
 
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import {
 
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 
 }
 
 import {
-    simple/path
+    simple:path
 
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import {
-    simple/path
+    simple:path
 
-    path/with/parts
+    path:with/parts
 
-    withalias simple/path
-    withalias @/local/path/with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import {
-    simple/path
+    simple:path
 
-    path/with/parts
+    path:with/parts
 
-    withalias simple/path
+    withalias simple:path
 
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 }
 
 import {
-    simple/path
-    path/with/parts
+    simple:path
+    path:with/parts
 
-    withalias simple/path
+    withalias simple:path
 
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 }
 
 import {
-    simple/path
-    path/with/parts
-    withalias simple/path
+    simple:path
+    path:with/parts
+    withalias simple:path
 
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 }
 
 import {
 
-    simple/path
+    simple:path
     
-    path/with/parts
+    path:with/parts
     
-    withalias simple/path
+    withalias simple:path
     
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 
 }
 
 import
 {
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import
-{ simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
-}
-
-import
-{
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts }
-
-import
-{
-    simple/path
-
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+{ simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 }
 
 import
 {
-    simple/path
-    path/with/parts
-    withalias simple/path
-    withalias @/local/path/with/parts
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts }
+
+import
+{
+    simple:path
+
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
+}
+
+import
+{
+    simple:path
+    path:with/parts
+    withalias simple:path
+    withalias @:local/path/with/parts
 
 }
 
 import
 {
-    simple/path
+    simple:path
 
-    path/with/parts
+    path:with/parts
 
-    withalias simple/path
+    withalias simple:path
 
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 }
 
 import
 {
 
-    simple/path
+    simple:path
 
-    path/with/parts
+    path:with/parts
 
-    withalias simple/path
+    withalias simple:path
 
-    withalias @/local/path/with/parts
+    withalias @:local/path/with/parts
 
 }
 
 import
-{ simple/path
+{ simple:path
 
-    path/with/parts
+    path:with/parts
 
-    withalias simple/path
+    withalias simple:path
 
-    withalias @/local/path/with/parts }
+    withalias @:local/path/with/parts }

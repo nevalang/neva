@@ -2,7 +2,6 @@ package smoke_test
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"strings"
 	"testing"
@@ -37,8 +36,6 @@ func TestSmoke(t *testing.T) {
 	nevaTestFiles, err := os.ReadDir(".")
 	require.NoError(t, err)
 
-	// printVsCodeDebugConfig(nevaTestFiles) // uncomment to get vscode debug conf
-
 	for _, file := range nevaTestFiles {
 		fileName := file.Name()
 
@@ -72,26 +69,6 @@ func TestSmoke(t *testing.T) {
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)
 	}
-}
-
-// Helper function for VSCode that generates debug tasks for antlr extension to debug generated listener on test files.
-func printVsCodeDebugConfig(nevaTestFiles []fs.DirEntry) {
-	vscodeDebug := "["
-	for _, file := range nevaTestFiles {
-		fileName := file.Name()
-		vscodeDebug += fmt.Sprintf(`{
-			"name": "antlr_%s",
-			"type": "antlr-debug",
-			"request": "launch",
-			"input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/%s",
-			"grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-			"startRule": "prog",
-			"printParseTree": true,
-			"visualParseTree": true
-		  },`, fileName, fileName) // FIXME remove double extension
-	}
-	fmt.Println(vscodeDebug + "]")
-	os.Exit(0)
 }
 
 // initMock configures the mock to expect zero calls
