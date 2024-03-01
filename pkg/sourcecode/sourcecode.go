@@ -216,10 +216,10 @@ func (c Const) String() string {
 	if c.Ref != nil {
 		return c.Ref.String()
 	}
-	if c.Value == nil {
+	if c.Message == nil {
 		return "<invalid_message>"
 	}
-	return c.Value.String()
+	return c.Message.String()
 }
 
 type Message struct {
@@ -258,9 +258,9 @@ func (m Message) String() string {
 			}
 		}
 		return s + "]"
-	case len(m.Map) != 0:
+	case len(m.MapOrStruct) != 0:
 		s := "{"
-		for key, value := range m.Map {
+		for key, value := range m.MapOrStruct {
 			s += fmt.Sprintf("%q: %v", key, value.String())
 		}
 		return s + "}"
