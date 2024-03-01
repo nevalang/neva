@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -37,6 +38,13 @@ func newCliApp( //nolint:funlen
 				Action: func(_ *cli.Context) error {
 					fmt.Println(pkg.Version)
 					return nil
+				},
+			},
+			{
+				Name:  "new",
+				Usage: "Get current Nevalang version",
+				Action: func(_ *cli.Context) error {
+					return createNevaMod(workdir)
 				},
 			},
 			{
@@ -143,4 +151,36 @@ func getMainPkgFromArgs(cCtx *cli.Context) (string, error) {
 		)
 	}
 	return dirFromArg, nil
+}
+
+func createNevaMod(workdir string) error {
+	nevaYmlContent := fmt.Sprintf("neva: %s", pkg.Version)
+
+	if err := os.WriteFile(
+		filepath.Join(workdir, "neva.yml"),
+		[]byte(nevaYmlContent),
+		0644,
+	); err != nil {
+		return err
+	}
+
+	mainNevaContent := `component Main(start any) (stop any) {
+	nodes {
+
+	}
+	net {
+		:start -> :stop
+	}
+}
+`
+
+	if err := os.WriteFile(
+		filepath.Join(workdir, "main.neva"),
+		[]byte(mainNevaContent),
+		0644,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }

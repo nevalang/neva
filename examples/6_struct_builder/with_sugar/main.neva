@@ -1,7 +1,3 @@
-// Here we learn how to build structures
-// without custom component and compiler directives
-// by simply using builtin StructBuilder.
-
 type User struct {
     age int
     name string
