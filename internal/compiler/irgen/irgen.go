@@ -27,12 +27,6 @@ type (
 		out map[relPortAddr]struct{}
 	}
 
-	// TODO add support for array ports bypass
-	// IDEA when we see bypass connection, we must used our existing nodeCtx
-	// To figure outhow many used inports to create for receiver subnode
-	// The count of used inports for subNoteCtx equals
-	// cont of used inports for current nodeCtx
-
 	relPortAddr struct {
 		Port string
 		Idx  uint8

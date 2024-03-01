@@ -211,16 +211,6 @@ func (d Desugarer) getNodeOutportType(
 		}
 	}
 
-	// TODO figure out is there a problem with generics
-	// maybe we need the whole thing starting with component's type args
-	// and maybe we end up resolveing all this here
-
-	// TODO also figure out don't we have problems with type-safety here
-	// because we didn't do analysis and we desugar possibly unsafe selectors
-	// maybe preserve selectors so analyzer can operate on them?
-	// but make sure analyzer doesn't know about desugarer
-	// consider moving this stage on after analysis (and admit that we need two stages of desugaring)
-
 	port, ok := nodeIface.IO.Out[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{

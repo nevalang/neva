@@ -16,8 +16,6 @@ var (
 	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
-// TODO validate messages themselves
-
 //nolint:funlen
 func (a Analyzer) analyzeConst(constant src.Const, scope src.Scope) (src.Const, *compiler.Error) { //nolint:gocyclo,gocognit,lll
 	if constant.Value == nil && constant.Ref == nil {
