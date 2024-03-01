@@ -43,7 +43,14 @@ func newCliApp( //nolint:funlen
 			{
 				Name:  "new",
 				Usage: "Get current Nevalang version",
-				Action: func(_ *cli.Context) error {
+				Args:  true,
+				Action: func(cCtx *cli.Context) error {
+					if path := cCtx.Args().First(); path != "" {
+						if err := os.Mkdir(path, 0755); err != nil {
+							return err
+						}
+						return createNevaMod(path)
+					}
 					return createNevaMod(workdir)
 				},
 			},
@@ -153,17 +160,24 @@ func getMainPkgFromArgs(cCtx *cli.Context) (string, error) {
 	return dirFromArg, nil
 }
 
-func createNevaMod(workdir string) error {
+func createNevaMod(path string) error {
+	// Create neva.yml file
 	nevaYmlContent := fmt.Sprintf("neva: %s", pkg.Version)
-
 	if err := os.WriteFile(
-		filepath.Join(workdir, "neva.yml"),
+		filepath.Join(path, "neva.yml"),
 		[]byte(nevaYmlContent),
 		0644,
 	); err != nil {
 		return err
 	}
 
+	// Create src sub-directory
+	srcPath := filepath.Join(path, "src")
+	if err := os.Mkdir(srcPath, 0755); err != nil {
+		return err
+	}
+
+	// Create main.neva file
 	mainNevaContent := `component Main(start any) (stop any) {
 	nodes {
 
@@ -175,7 +189,7 @@ func createNevaMod(workdir string) error {
 `
 
 	if err := os.WriteFile(
-		filepath.Join(workdir, "main.neva"),
+		filepath.Join(srcPath, "main.neva"),
 		[]byte(mainNevaContent),
 		0644,
 	); err != nil {
