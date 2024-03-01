@@ -27,8 +27,6 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 	return nil
 }
 
-// TODO handle the whole pipeline including html and js glue generation.
-
 func buildWASM(src, dst string) error {
 	outputPath := filepath.Join(dst, "output")
 	if err := os.Chdir(src); err != nil {

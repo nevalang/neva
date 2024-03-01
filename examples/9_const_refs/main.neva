@@ -1,0 +1,28 @@
+type NumsStruct struct {
+    l list<int>
+    m map<int>
+}
+
+const {
+    one int = 1
+    two int = 2
+    three int = 3
+    numsList list<int> = [one, two, three]
+    numsMap map<int> = {
+        one: one,
+        two: two,
+        three: three
+    }
+    numsStruct NumsStruct = {
+        l: numsList,
+        m: numsMap
+    }
+}
+
+component Main(start any) (stop any) {
+    nodes { Printer<NumsStruct> }
+    net {
+        :start -> ($numsStruct -> printer:data)
+        printer:sig -> :stop
+    }
+}

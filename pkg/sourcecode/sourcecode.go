@@ -212,6 +212,16 @@ type Const struct {
 	Meta    Meta       `json:"meta,omitempty"`
 }
 
+func (c Const) String() string {
+	if c.Ref != nil {
+		return c.Ref.String()
+	}
+	if c.Message == nil {
+		return "<invalid_message>"
+	}
+	return c.Message.String()
+}
+
 type Message struct {
 	TypeExpr    ts.Expr          `json:"typeExpr,omitempty"`
 	Bool        *bool            `json:"bool,omitempty"`
@@ -230,7 +240,31 @@ type EnumMessage struct {
 }
 
 func (m Message) String() string {
-	// TODO
+	switch {
+	case m.Bool != nil:
+		return fmt.Sprintf("%v", *m.Bool)
+	case m.Int != nil:
+		return fmt.Sprintf("%v", *m.Int)
+	case m.Float != nil:
+		return fmt.Sprintf("%v", *m.Float)
+	case m.Str != nil:
+		return fmt.Sprintf("%q", *m.Str)
+	case len(m.List) != 0:
+		s := "["
+		for i, item := range m.List {
+			s += item.String()
+			if i != len(m.List)-1 {
+				s += ", "
+			}
+		}
+		return s + "]"
+	case len(m.MapOrStruct) != 0:
+		s := "{"
+		for key, value := range m.MapOrStruct {
+			s += fmt.Sprintf("%q: %v", key, value.String())
+		}
+		return s + "}"
+	}
 	return "message"
 }
 
