@@ -1,6 +1,3 @@
-// Surprisingly "hello world" isn't the simplest program in Nevalang.
-// Here we learn constants, compiler directives and blockers.
-
 const greeting string = 'Hello, World!'
 
 component Main(start any) (stop any) {

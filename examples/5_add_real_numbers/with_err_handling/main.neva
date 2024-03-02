@@ -1,8 +1,4 @@
-// Here we learn how to handle errors by fixing this simple program
-
-import {
-	x
-}
+import { x }
 
 component Main(start any) (stop any) {
 	nodes {
