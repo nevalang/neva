@@ -38,7 +38,7 @@ component Main(start any) (stop any) {
 }
 ```
 
-Now run:
+Now run (make sure you are in created `test` directory with `neva.yml`):
 
 ```bash
 neva run src
