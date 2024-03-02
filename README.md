@@ -12,7 +12,21 @@ A general-purpose flow-based programming language with static types and implicit
 
 Website: https://nevalang.org/
 
-## Hello World
+## Quick Start
+
+Download `neva` command line application:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
+```
+
+Create `test` project:
+
+```bash
+neva new test
+```
+
+Replace the code in `test/src/main.neva` with the following:
 
 ```neva
 component Main(start any) (stop any) {
@@ -24,9 +38,19 @@ component Main(start any) (stop any) {
 }
 ```
 
-Nevalang programs are executable dataflow graphs with components connected through input and output ports. No state, no control flow, just message passing in a fully asynchronous environment.
+Now run:
 
-[Read more about the language](https://nevalang.org/docs/about)
+```bash
+neva run src
+```
+
+You should see the following output:
+
+```bash
+Hello, World!
+```
+
+[Learn how to generate native code or Go](https://nevalang.org/docs/quick-start)
 
 ## Features 🚀
 
@@ -41,9 +65,11 @@ Nevalang programs are executable dataflow graphs with components connected throu
 - Package Management
 - Garbage Collection
 
+[Learn more about the language](https://nevalang.org/docs/about)
+
 Please note that even though these features are technically implemented, **developer-experience may be bad** due to current project state. **No backward-compatibility** guarantees at the time.
 
-### Roadmap (🚧 WIP)
+## Roadmap (🚧 WIP)
 
 Nevalang is at an extremely early stage but with the help of community it can become a feature-rich, mature language.
 
@@ -55,6 +81,8 @@ Nevalang is at an extremely early stage but with the help of community it can be
 - Testing Framework
 - No Runtime Exceptions (If it runs then it works)
 - Visual Programming in VSCode (Nevalang becomes hybrid langauge)
+
+[See backlog for more details](https://github.com/orgs/nevalang/projects)
 
 Nevalang needs your help - it currently has only one maintainer.
 
@@ -71,4 +99,4 @@ Join community. **Together** we can change programming for the better:
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-Please note that, due to the early stage of development, the documentation can sometimes be outdated. You can reach main maintainer to find help.
+Please note that, due to the early stage of development, the documentation can sometimes be outdated. Please reach maintainer if you have questions.
