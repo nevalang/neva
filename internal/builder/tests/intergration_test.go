@@ -6,21 +6,20 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/pkg"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuilder(t *testing.T) {
 	prsr := parser.New(false)
-	manager := builder.MustNew(prsr)
+	bldr := builder.MustNew(prsr)
 
-	build, err := manager.Build(context.Background(), "testmod")
-	require.NoError(t, err)
+	build, err := bldr.Build(context.Background(), "testmod")
+	require.True(t, err == nil)
 
 	mod, ok := build.Modules[build.EntryModRef]
 	require.True(t, ok)
 	require.Len(t, mod.Packages, 1)
-	require.Equal(t, mod.Manifest.LanguageVersion, pkg.Version)
+	require.Equal(t, "0.6.0", mod.Manifest.LanguageVersion) // defined in yml
 
 	pkg, ok := mod.Packages["do_nothing"]
 	require.True(t, ok)
@@ -28,10 +27,8 @@ func TestBuilder(t *testing.T) {
 	file, ok := pkg["main"]
 	require.True(t, ok)
 
-	expected := `components {
-	Main(enter) (exit) {
-		net { in.enter -> out.exit }
-	}
+	expected := `component Main(start any) (stop any) {
+	net { :start -> :stop }
 }`
 
 	require.Equal(t, expected, string(file))
