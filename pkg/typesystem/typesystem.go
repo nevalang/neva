@@ -149,7 +149,6 @@ type LiteralType uint8
 
 const (
 	EmptyLitType LiteralType = iota
-	ArrLitType
 	StructLitType
 	EnumLitType
 	UnionLitType

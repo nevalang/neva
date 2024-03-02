@@ -77,15 +77,10 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 	}
 }
 
-func (h Helper) Param(name string, _ Expr) Param {
+func (h Helper) Param(name string, constr Expr) Param {
 	return Param{
-		Name: name,
-		Constr: Expr{
-			Inst: &InstExpr{
-				// TODO refactor we shouldn't know about exact top-type here
-				Ref: DefaultStringer("any"),
-			},
-		},
+		Name:   name,
+		Constr: constr,
 	}
 }
 

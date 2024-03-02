@@ -2,13 +2,15 @@
 
 **<p align="center">Flow-Based Programming Language</p>**
 
+![tests](https://github.com/nevalang/neva/actions/workflows/tests.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
+
+> ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
+
 # Neva
 
 A general-purpose flow-based programming language with static types and implicit parallelism. Compiles to machine code and Go.
 
 Website: https://nevalang.org/
-
-> ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
 
 ## Hello World
 

@@ -63,11 +63,6 @@ func TestLiteralExpr_Type(t *testing.T) {
 			want: ts.EmptyLitType,
 		},
 		{
-			name: "arr",
-			lit:  ts.LitExpr{nil, nil, nil},
-			want: ts.ArrLitType,
-		},
-		{
 			name: "struct",
 			lit:  ts.LitExpr{map[string]ts.Expr{}, nil, nil},
 			want: ts.StructLitType,
@@ -100,7 +95,7 @@ func TestDef_String(t *testing.T) {
 		want string
 	}{
 		{
-			name: "",
+			name: "<T_int>_=_list<T>",
 			def: h.Def(
 				h.Inst("list", h.Inst("T")),
 				h.Param("T", h.Inst("int")),
@@ -112,7 +107,7 @@ func TestDef_String(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.def.String(); got != tt.want {
-				t.Errorf("Def.String() = %v, want %v", got, tt.want)
+				t.Errorf("got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -153,7 +148,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "<str>",
+			want: "<string>",
 		},
 		{
 			name: "inst expr with non-empty refs and with args",
@@ -165,7 +160,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "map<str>",
+			want: "map<string>",
 		},
 		{
 			name: "inst expr with non-empty refs and with several args",
@@ -178,7 +173,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "map<str, bool>",
+			want: "map<string, bool>",
 		},
 		{
 			name: "inst expr with non-empty refs and with nested arg",
@@ -198,7 +193,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "map<str, list<bool>>",
+			want: "map<string, list<bool>>",
 		},
 		// Lits
 		// enum
@@ -252,7 +247,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "{ name str }",
+			want: "{ name string }",
 		},
 		{ // FIXME flacky test (struct must be ordered)
 			name: "lit_expr_struct_with_two_fields",
@@ -264,7 +259,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "{ name str, age int }",
+			want: "{ name string, age int }",
 		},
 		// union
 		{
@@ -297,7 +292,7 @@ func TestExpr_String(t *testing.T) {
 					},
 				},
 			},
-			want: "int | str",
+			want: "int | string",
 		},
 	}
 

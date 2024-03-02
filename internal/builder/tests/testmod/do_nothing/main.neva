@@ -1,5 +1,3 @@
-component {
-	Main(start) (stop) {
-		net { in.start -> out.stop }
-	}
+component Main(start any) (stop any) {
+	net { :start -> :stop }
 }
