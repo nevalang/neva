@@ -1,8 +1,9 @@
-# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: testing
+name: test
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:

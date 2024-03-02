@@ -2,7 +2,7 @@
 
 **<p align="center">Flow-Based Programming Language</p>**
 
-![tests](https://github.com/nevalang/neva/actions/workflows/tests.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
+![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
 > ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
 
