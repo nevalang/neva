@@ -23,22 +23,22 @@ tygo:
 # build neva cli for all target platforms
 .PHONY: build
 build:
-	$(MAKE) build-mac-amd64
-	$(MAKE) build-mac-arm64
+	$(MAKE) build-darwin-amd64
+	$(MAKE) build-darwin-arm64
 	$(MAKE) build-linux-amd64
 	$(MAKE) build-linux-arm64
 	$(MAKE) build-windows-amd64
 	$(MAKE) build-windows-arm64
 
 # build neva cli for amd64 mac
-.PHONY: build-mac-amd64
-build-mac-amd64:
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o neva-mac-amd64 ./cmd/cli
+.PHONY: build-darwin-amd64
+build-darwin-amd64:
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o neva-darwin-amd64 ./cmd/cli
 
 # build neva cli for arm64 mac
-.PHONY: build-mac-arm64
-build-mac-arm64:
-	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o neva-mac-arm64 ./cmd/cli
+.PHONY: build-darwin-arm64
+build-darwin-arm64:
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o neva-darwin-arm64 ./cmd/cli
 
 # build neva cli for amd64 linux
 .PHONY: build-linux-amd64
