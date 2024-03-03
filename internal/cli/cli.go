@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-func newCliApp( //nolint:funlen
+func NewApp( //nolint:funlen
 	workdir string,
 	bldr builder.Builder,
 	goc compiler.Compiler,

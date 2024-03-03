@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/builder"
+	"github.com/nevalang/neva/internal/cli"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
@@ -78,7 +79,7 @@ func main() { //nolint:funlen
 	)
 
 	// command-line app that can compile and interpret neva code
-	app := newCliApp(
+	app := cli.NewApp(
 		wd,
 		pkgMngr,
 		goCompiler,
