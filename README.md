@@ -24,9 +24,10 @@ Create `test` project:
 
 ```bash
 neva new test
+cd test
 ```
 
-Replace the code in `test/src/main.neva` with the following:
+Replace the code in `src/main.neva` with the following:
 
 ```neva
 component Main(start any) (stop any) {
