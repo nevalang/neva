@@ -1,3 +1,5 @@
+# === Development ===
+
 # build neva cli for host OS and put to the PATH
 .PHONY: install
 install:
@@ -18,22 +20,43 @@ tygo:
 
 # === Release Artifacts ===
 
-# build neva cli for amd64 linux
-.PHONY: build-linux-amd64
-build-linux-amd64:
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" cmd/cli/main.go
+# build neva cli for all target platforms
+.PHONY: build
+build:
+	$(MAKE) build-mac-amd64
+	$(MAKE) build-mac-arm64
+	$(MAKE) build-linux-amd64
+	$(MAKE) build-linux-arm64
+	$(MAKE) build-windows-amd64
+	$(MAKE) build-windows-arm64
 
 # build neva cli for amd64 mac
 .PHONY: build-mac-amd64
 build-mac-amd64:
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" cmd/cli -o neva-mac-amd64
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o neva-mac-amd64 ./cmd/cli
 
-# build neva cli for amd64 windows
-.PHONY: build-windows-amd64
-build-windows-amd64:
-	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" cmd/cli -o neva-windows-amd64.exe
+# build neva cli for arm64 mac
+.PHONY: build-mac-arm64
+build-mac-arm64:
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o neva-mac-arm64 ./cmd/cli
+
+# build neva cli for amd64 linux
+.PHONY: build-linux-amd64
+build-linux-amd64:
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o neva-linux-amd64 ./cmd/cli
 
 # build neva cli for arm64 linux
 .PHONY: build-linux-arm64
 build-linux-arm64:
-	@GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" cmd/cli -o neva-linux-arm64
+	@GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o neva-linux-arm64 ./cmd/cli
+
+# build neva cli for amd64 windows
+.PHONY: build-windows-amd64
+build-windows-amd64:
+	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o neva-windows-amd64.exe ./cmd/cli
+
+# build neva cli for arm64 windows
+.PHONY: build-windows-arm64
+build-windows-arm64:
+	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o neva-windows-arm64.exe ./cmd/cli
+
