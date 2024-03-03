@@ -14,13 +14,19 @@ Website: https://nevalang.org/
 
 ## Quick Start
 
-Download `neva` command line application:
+### Download Neva CLI
+
+For Mac OS and Linux:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
 
-Create `test` project:
+For Windows:
+
+Windows installation is work in progress, but you can download windows release manually from [releases page](https://github.com/nevalang/neva/releases).
+
+### Create test project
 
 ```bash
 neva new test
@@ -38,6 +44,8 @@ component Main(start any) (stop any) {
 	}
 }
 ```
+
+### Execute
 
 Now run (make sure you are in created `test` directory with `neva.yml`):
 
