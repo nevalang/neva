@@ -1,0 +1,3 @@
+// bind regexp string
+#extern(regexp_submatcher)
+pub component Submatcher(data string) (res list<string>)

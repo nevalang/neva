@@ -3,7 +3,7 @@
 # build neva cli for host OS and put to the PATH
 .PHONY: install
 install:
-	@go build -ldflags="-s -w" cmd/cli/*.go && \
+	@go build -ldflags="-s -w" ./cmd/cli && \
 	rm -rf /usr/local/bin/neva && \
 	mv cli /usr/local/bin/neva
 
