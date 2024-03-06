@@ -13,51 +13,42 @@ component Main(start) (stop) {
         secondLinePrinter2 Printer<string>
         firstLinePrinter FPrinter<int>
         secondLinePrinter1 FPrinter<int>
-        greater1 Greater<int>
-        greater2 Greater<int>
+        gt1 GreaterChecker<int>
+        gt2 GreaterChecker<int>
     }
     net {
-        // n > 0 ?
         :start -> (
-            $n -> greater1:data[0],
-            0 -> greater1:data[1]
+            $n -> gt1:a,
+            0 -> gt1:b
         )
-        // then print first line
-        greater1:yes -> (
+        gt1:yes -> (
             $firstLineTpl -> firstLinePrinter:tpl,
-            $n -> firstLinePrinter:data[0],
-            $n -> firstLinePrinter:data[1]
+            $n -> firstLinePrinter:args[0]
         )
-        // else print end lines and terminate
-        greater1:no -> (
+        gt1:no -> (
             $endLines -> endPrinter:data,
             endPrinter:sig -> :stop
         )
 
-        // after first line is printed, decrement n
-        firstLinePrinter:data[0] -> decrementor:data
+        firstLinePrinter:args[0] -> decrementor:data
 
-        // $n > 0?
         decrementor:res -> [
-            greater2:data[0],
-            (0 -> greater2:data[1])
+            gt2:a,
+            (0 -> gt2:b)
         ]
-        // then print second line
-        greater2:yes -> (
+        gt2:yes -> (
             $secondLineTpl1 -> secondLinePrinter1:tpl,
-            decrementor:res -> secondLinePrinter1:data[0]
+            decrementor:res -> secondLinePrinter1:args[0]
         )
-        // else print other second line (without $n)
-        greater2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
+        gt2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
 
-        // after second line is printed go back to start (loop)
-        secondLinePrinter1:data[0] -> [
-            greater1:data[0],
-            (0 -> greater1:data[0])
+        secondLinePrinter1:args[0] -> [
+            gt1:a,
+            (0 -> gt1:b)
         ]
         secondLinePrinter2:sig -> [
-            greater1:data[0],
-            (0 -> greater1:data[0])
+            gt1:a,
+            (0 -> gt1:b)
         ]
     }
 }

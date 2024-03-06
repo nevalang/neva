@@ -34,4 +34,9 @@ pub component Decrementor<T int | float>(data T) (res T)
 pub component Printer<T>(data T) (sig T)
 
 #extern(line_fprinter)
-pub component FPrinter<T>(tpl string, args [T]) (args [T], err error)
+pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
+
+// Logic
+// sends to "yes" if a > b, otherwiese sends to "no"
+#extern(int int_greater_checker, float float_greater_checker, string string_greater_checker)
+pub component GreaterChecker<T int |float | string>(a T, b T) (yes struct{}, no struct{})
