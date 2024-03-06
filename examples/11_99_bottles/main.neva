@@ -1,0 +1,63 @@
+const {
+    n int = 99
+    firstLineTpl string = '$0 bottles of beer on the wall, $0 bottles of beer.'
+    secondLineTpl1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.'
+    secondLineTpl2 string = 'Take one down and pass it around, no more bottles of beer on the wall.'
+    endLines string = 'No more bottles of beer on the wall, no more bottles of beer.\nGo to the store and buy some more, 99 bottles of beer on the wall.'
+}
+
+component Main(start) (stop) {
+    nodes {
+        Decrementor<int>
+        endPrinter Printer<string>
+        secondLinePrinter2 Printer<string>
+        firstLinePrinter FPrinter<int>
+        secondLinePrinter1 FPrinter<int>
+        greater1 Greater<int>
+        greater2 Greater<int>
+    }
+    net {
+        // n > 0 ?
+        :start -> (
+            $n -> greater1:data[0],
+            0 -> greater1:data[1]
+        )
+        // then print first line
+        greater1:yes -> (
+            $firstLineTpl -> firstLinePrinter:tpl,
+            $n -> firstLinePrinter:data[0],
+            $n -> firstLinePrinter:data[1]
+        )
+        // else print end lines and terminate
+        greater1:no -> (
+            $endLines -> endPrinter:data,
+            endPrinter:sig -> :stop
+        )
+
+        // after first line is printed, decrement n
+        firstLinePrinter:data[0] -> decrementor:data
+
+        // $n > 0?
+        decrementor:res -> [
+            greater2:data[0],
+            (0 -> greater2:data[1])
+        ]
+        // then print second line
+        greater2:yes -> (
+            $secondLineTpl1 -> secondLinePrinter1:tpl,
+            decrementor:res -> secondLinePrinter1:data[0]
+        )
+        // else print other second line (without $n)
+        greater2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
+
+        // after second line is printed go back to start (loop)
+        secondLinePrinter1:data[0] -> [
+            greater1:data[0],
+            (0 -> greater1:data[0])
+        ]
+        secondLinePrinter2:sig -> [
+            greater1:data[0],
+            (0 -> greater1:data[0])
+        ]
+    }
+}

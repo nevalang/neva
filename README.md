@@ -99,7 +99,7 @@ Nevalang needs your help - it currently has only one maintainer.
 
 Join community. **Together** we can change programming for the better:
 
-- [Discord](https://discord.gg/8fhETxQR)
+- [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
 - [Telegram channel](https://t.me/+H1kRClL8ppI1MWJi)

@@ -25,7 +25,13 @@ component {
 #extern(int int_adder, float float_adder, string string_adder)
 pub component Adder<T int | float | string>(stream maybe<T>) (res T)
 
+#extern(int int_decrementor, float float_decrementor)
+pub component Decrementor<T int | float>(data T) (res T)
+
 // IO
 
 #extern(line_printer)
 pub component Printer<T>(data T) (sig T)
+
+#extern(line_fprinter)
+pub component FPrinter<T>(tpl string, args [T]) (args [T], err error)
