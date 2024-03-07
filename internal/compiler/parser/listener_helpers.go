@@ -952,12 +952,6 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 
 	parsedMsg.TypeExpr = typeExpr
 
-	// Handle case like `const x float = 1000` when it's float but parsed as integer
-	// if typeExpr.Inst == nil && typeExpr.Inst.Ref.String() != "float" && parsedMsg.Int == nil {
-	// 	parsedMsg.Float = compiler.Pointer(float64(*parsedMsg.Int))
-	// 	parsedMsg.Int = nil
-	// }
-
 	return src.Entity{
 		Kind: src.ConstEntity,
 		Const: src.Const{

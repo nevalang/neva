@@ -1,5 +1,9 @@
-// In this file we test files designed specifically for e2e.
+//go:build e2e
+// +build e2e
+
 package test
+
+// in this file we test files designed specifically for e2e.
 
 import (
 	"os"
