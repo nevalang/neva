@@ -151,9 +151,22 @@ type desugarEntityResult struct {
 }
 
 func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEntityResult, *compiler.Error) {
-	if entity.Kind != src.ComponentEntity {
+	if entity.Kind != src.ComponentEntity && entity.Kind != src.ConstEntity {
+		return desugarEntityResult{entity: entity}, nil
+	}
+
+	if entity.Kind == src.ConstEntity {
+		desugaredConst, err := d.handleConst(entity.Const)
+		if err != nil {
+			return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
+		}
+
 		return desugarEntityResult{
-			entity: entity,
+			entity: src.Entity{
+				IsPublic: entity.IsPublic,
+				Kind:     entity.Kind,
+				Const:    desugaredConst,
+			},
 		}, nil
 	}
 

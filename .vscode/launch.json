@@ -8,7 +8,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["get", "github.com/nevalang/x"]
     },
@@ -18,7 +18,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "0_do_nothing"]
     },
@@ -27,7 +27,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "1_echo"]
     },
@@ -36,7 +36,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "2_hello_world/0_verbose"]
     },
@@ -45,7 +45,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "2_hello_world/1_with_const_sender"]
     },
@@ -54,7 +54,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "-debug", "2_hello_world/2_with_then_connection"]
     },
@@ -63,7 +63,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "2_hello_world/3_with_literal_sender"]
     },
@@ -72,7 +72,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "2_hello_world/4_with_unnamed_node"]
     },
@@ -81,7 +81,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "3_interfaces"]
     },
@@ -90,7 +90,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "-debug", "4_add_numbers/verbose"]
     },
@@ -99,7 +99,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "-debug", "4_add_numbers/with_bridge"]
     },
@@ -108,7 +108,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "5_add_real_numbers/naive"]
     },
@@ -117,7 +117,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "5_add_real_numbers/with_err_handling"]
     },
@@ -126,7 +126,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "5_add_real_numbers/with_sub_components"]
     },
@@ -135,7 +135,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "6_struct_builder/verbose"]
     },
@@ -144,7 +144,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "6_struct_builder/with_sugar"]
     },
@@ -153,7 +153,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "7_struct_selector/verbose"]
     },
@@ -162,7 +162,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "7_struct_selector/verbose"]
     },
@@ -171,7 +171,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/cli",
+      "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "8_enums"]
     },
