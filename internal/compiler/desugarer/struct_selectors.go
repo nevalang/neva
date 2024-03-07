@@ -49,12 +49,12 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	var e error
 	lastFIeldType, e := ts.GetStructFieldTypeByPath(structType, senderSide.Selectors)
-	if err != nil {
-		return handleStructSelectorsResult{}, compiler.Error{
+	if e != nil {
+		return handleStructSelectorsResult{}, &compiler.Error{
 			Err:      e,
 			Location: &scope.Location,
 			Meta:     &senderSide.Meta,
-		}.Wrap(err)
+		}
 	}
 
 	selectorsStr := strings.Join(senderSide.Selectors, "_")
