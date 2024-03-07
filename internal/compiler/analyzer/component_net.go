@@ -235,11 +235,13 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		}
 	}
 
-	if normConn.ReceiverSide.DeferredConnections != nil {
+	resolvedDefConns := make([]src.Connection, 0, len(normConn.ReceiverSide.DeferredConnections))
+	if len(normConn.ReceiverSide.DeferredConnections) != 0 {
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
-		resolvedDefConns, err := a.analyzeConnections( // indirect recursion
+		var err *compiler.Error
+		resolvedDefConns, err = a.analyzeConnections( // indirect recursion
 			normConn.ReceiverSide.DeferredConnections,
 			compInterface,
 			nodes,
@@ -250,16 +252,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if err != nil {
 			return src.Connection{}, err
 		}
-
-		return src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide: resolvedSender,
-				ReceiverSide: src.ConnectionReceiverSide{
-					DeferredConnections: resolvedDefConns,
-				},
-			},
-			Meta: conn.Meta,
-		}, nil
+		// receiver side can contain both deferred connections and receivers so we don't return yet
 	}
 
 	for _, receiver := range normConn.ReceiverSide.Receivers {
@@ -314,8 +307,11 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 	return src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide:   resolvedSender,
-			ReceiverSide: normConn.ReceiverSide,
+			SenderSide: resolvedSender,
+			ReceiverSide: src.ConnectionReceiverSide{
+				DeferredConnections: resolvedDefConns,
+				Receivers:           normConn.ReceiverSide.Receivers,
+			},
 		},
 		Meta: conn.Meta,
 	}, nil
