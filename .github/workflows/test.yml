@@ -20,4 +20,4 @@ jobs:
     - name: install
       run: go install ./cmd/neva/main.go
     - name: test
-      run: go test -v ./... !e2e
+      run: go test -v ./...
