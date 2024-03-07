@@ -103,6 +103,7 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "-debug", "4_add_numbers/with_bridge"]
     },
+    // don't forget this example doesn't work in debugger
     {
       "name": "Neva CLI 50",
       "type": "go",
@@ -112,6 +113,7 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "5_add_real_numbers/naive"]
     },
+    // don't forget this example doesn't work in debugger
     {
       "name": "Neva CLI 51",
       "type": "go",
@@ -121,6 +123,7 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "5_add_real_numbers/with_err_handling"]
     },
+    // don't forget this example doesn't work in debugger
     {
       "name": "Neva CLI 52",
       "type": "go",
@@ -128,7 +131,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/cli",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "5_add_real_numbers/with_sub_components"]
+      "args": ["run", "-debug", "5_add_real_numbers/with_sub_components"]
     },
     {
       "name": "Neva CLI 60",

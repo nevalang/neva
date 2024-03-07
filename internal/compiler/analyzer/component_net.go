@@ -233,14 +233,6 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
 		}
-	} else if len(normConn.ReceiverSide.DeferredConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
-		return src.Connection{}, &compiler.Error{
-			Err: errors.New(
-				"Connection's receiver side must either have deferred connection or receivers, not both",
-			),
-			Location: &scope.Location,
-			Meta:     &conn.Meta,
-		}
 	}
 
 	if normConn.ReceiverSide.DeferredConnections != nil {
