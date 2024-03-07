@@ -17,5 +17,7 @@ jobs:
         go-version: '1.21'
     - name: build
       run: go build -v ./...
+    - name: install
+      run: go install ./cmd/neva/main.go
     - name: test
       run: go test -v ./...
