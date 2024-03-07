@@ -46,9 +46,15 @@ component Main(start) (stop) {
             gt1:a,
             (0 -> gt1:b)
         ]
-        secondLinePrinter2:sig -> [
-            gt1:a,
-            (0 -> gt1:b)
-        ]
+        secondLinePrinter2:sig -> (
+            decrementor:res -> gt1:a,
+            0 -> gt1:b
+        )
     }
 }
+
+// FIXME
+// secondLinePrinter2:sig -> [
+//     gt1:a,
+//     (0 -> gt1:b)
+// ]
