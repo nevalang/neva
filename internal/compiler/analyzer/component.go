@@ -15,7 +15,7 @@ var (
 	ErrNodeTypeArgsTooMuch    = errors.New("Too much type arguments")
 	ErrNonComponentNodeWithDI = errors.New("Only component node can have dependency injection")
 	ErrUnusedNode             = errors.New("Unused node found")
-	ErrUnusedNodeInport       = errors.New("Unused node inport found")
+	ErrUnusedNodeInport       = errors.New("Unused node inport")
 	ErrUnusedNodeOutports     = errors.New("All node's outports are unused")
 	ErrSenderIsEmpty          = errors.New("Sender in network must contain port address, constant reference or message literal")
 	ErrReadSelfOut            = errors.New("Component cannot read from self outport")

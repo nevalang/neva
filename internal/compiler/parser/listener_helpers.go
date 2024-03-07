@@ -481,7 +481,10 @@ func parseReceiverSide(
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
-) (src.ConnectionReceiverSide, *compiler.Error) {
+) (
+	src.ConnectionReceiverSide,
+	*compiler.Error,
+) {
 	receiverSides := multipleSides.AllReceiverSide()
 	allParsedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSides))
 	allParsedDeferredConns := make([]src.Connection, 0, len(receiverSides))
