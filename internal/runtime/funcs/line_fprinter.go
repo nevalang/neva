@@ -126,7 +126,7 @@ func formatWithUsageCheck(tpl string, args []runtime.Msg) (string, error) {
 				usedArgs[argIndex] = true
 
 				// Replace the placeholder with the argument's string representation
-				result.WriteString(args[argIndex].Str())
+				result.WriteString(args[argIndex].String())
 
 				// Move past the current placeholder in the template
 				i = j
