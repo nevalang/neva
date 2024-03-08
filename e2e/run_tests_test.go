@@ -31,3 +31,24 @@ func TestFloatConstWithIntLit(t *testing.T) {
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
+
+// Expect normal error message and not go panic trace in case of bad connection.
+func TestConnectionWithOnlyPortAddr(t *testing.T) {
+	err := os.Chdir("./mod")
+	require.NoError(t, err)
+
+	cmd := exec.Command("neva", "run", "connection_with_only_port_addr")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	expected := strings.TrimSpace(
+		"connection_with_only_port_addr/main.neva:8:2 Invalid connection, make sure you have both sender and receiver",
+	)
+	require.Equal(
+		t,
+		expected,
+		strings.TrimSpace(string(out)),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
