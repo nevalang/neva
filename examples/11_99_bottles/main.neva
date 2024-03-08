@@ -49,7 +49,7 @@ component Main(start) (stop) {
         // else print another second line
         gt2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
 
-        // when second line is printer, go back to start
+        // when second line is printed, go back to start
         secondLinePrinter1:args[0] -> [
             gt1:a,
             (0 -> gt1:b)
