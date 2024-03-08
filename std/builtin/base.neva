@@ -1,6 +1,4 @@
-// In this package we keep everything that's either
-// a) compiler aware of this (analyzer or desugarer) OR
-// b) it's used all the time
+// Core
 
 component {
     #extern(emitter)
@@ -37,6 +35,7 @@ pub component Printer<T>(data T) (sig T)
 pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
 
 // Logic
+
 // sends to "yes" if a > b, otherwiese sends to "no"
 #extern(int int_greater_checker, float float_greater_checker, string string_greater_checker)
-pub component GreaterChecker<T int |float | string>(a T, b T) (yes struct{}, no struct{})
+pub component GreaterChecker<T int |float | string>(a T, b T) (yes any, no any)

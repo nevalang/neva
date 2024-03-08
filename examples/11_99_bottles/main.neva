@@ -52,9 +52,3 @@ component Main(start) (stop) {
         )
     }
 }
-
-// FIXME
-// secondLinePrinter2:sig -> [
-//     gt1:a,
-//     (0 -> gt1:b)
-// ]

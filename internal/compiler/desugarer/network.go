@@ -23,7 +23,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 	nodesToInsert := map[string]src.Node{}
 	desugaredConns := make([]src.Connection, 0, len(net))
 	usedNodePorts := newNodePortsMap()
-	constsToInsert := map[string]src.Const{}
+	constantsToInsert := map[string]src.Const{}
 
 	for _, conn := range net {
 		// array bypass connections don't need desugaring
@@ -76,7 +76,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 				}.Wrap(err)
 			}
 			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
-			constsToInsert[result.constToInsertName] = result.constToInsert
+			constantsToInsert[result.constToInsertName] = result.constToInsert
 			conn = result.connToReplace
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
@@ -97,7 +97,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 				if err != nil {
 					return handleNetResult{}, err
 				}
-				constsToInsert[result.constName] = *normConn.SenderSide.Const
+				constantsToInsert[result.constName] = *normConn.SenderSide.Const
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.connectionWithoutConstSender
 			}
@@ -109,9 +109,8 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 			continue
 		}
 
-		result, err := d.handleDeferredConnections(
-			normConn.SenderSide,
-			normConn.ReceiverSide.DeferredConnections,
+		deferredConnsResult, err := d.handleDeferredConnections(
+			*normConn,
 			nodes,
 			scope,
 		)
@@ -120,21 +119,21 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 		}
 
 		// handleThenConns recursively calls this function so it returns the same structure
-		maps.Copy(usedNodePorts.m, result.usedNodesPorts.m)
-		maps.Copy(constsToInsert, result.virtualConstants)
-		maps.Copy(nodesToInsert, result.virtualNodes)
+		maps.Copy(usedNodePorts.m, deferredConnsResult.usedNodesPorts.m)
+		maps.Copy(constantsToInsert, deferredConnsResult.virtualConstants)
+		maps.Copy(nodesToInsert, deferredConnsResult.virtualNodes)
 
 		// note that we discard original connection, it's desugared version is there
 		desugaredConns = append(
 			desugaredConns,
-			result.desugaredConnections...,
+			deferredConnsResult.desugaredConnections...,
 		)
 	}
 
 	return handleNetResult{
 		desugaredConnections: desugaredConns,
 		usedNodePorts:        usedNodePorts,
-		virtualConstants:     constsToInsert,
+		virtualConstants:     constantsToInsert,
 		virtualNodes:         nodesToInsert,
 	}, nil
 }

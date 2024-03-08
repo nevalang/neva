@@ -35,11 +35,13 @@ type handleThenConnectionsResult struct {
 var virtualBlockersCounter atomic.Uint64
 
 func (d Desugarer) handleDeferredConnections( //nolint:funlen
-	originalSender src.ConnectionSenderSide, // who triggers deferred connections
-	deferredConnections []src.Connection,
+	origConn src.NormalConnection,
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleThenConnectionsResult, *compiler.Error) {
+	originalSender := origConn.SenderSide
+	deferredConnections := origConn.ReceiverSide.DeferredConnections
+
 	// recursively desugar every deferred connections
 	handleNetResult, err := d.handleNetwork(
 		deferredConnections,
@@ -76,7 +78,7 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 		virtualBlockerName := fmt.Sprintf("virtual_blocker_%d", counter)
 		virtualNodes[virtualBlockerName] = virtualBlockerNode
 
-		// 2)
+		// 2) create connection from original sender to blocker:sig
 		receiversForOriginalSender = append(
 			receiversForOriginalSender,
 			src.ConnectionReceiver{
@@ -88,7 +90,7 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 		)
 
 		virtualConns = append(virtualConns,
-			// 3) deferred connection sender -> blocker:data
+			// 3) create connection from deferred sender to blocker:data
 			src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: deferredConnection.SenderSide,
@@ -104,7 +106,7 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 					},
 				},
 			},
-			// 4) blocker:data -> deferred connection receivers
+			// 4) create connection from blocker:data to every receiver in deferred connection
 			src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
@@ -120,6 +122,13 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 			},
 		)
 	}
+
+	// don't forget to append normal original sender receivers
+	// there are connections with both deferred connections and normal receivers
+	receiversForOriginalSender = append(
+		receiversForOriginalSender,
+		origConn.ReceiverSide.Receivers...,
+	)
 
 	// don't forget to append first connection
 	virtualConns = append(
