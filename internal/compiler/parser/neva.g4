@@ -128,7 +128,7 @@ nodeDIArgs: compNodesDefBody;
 // network
 compNetDef:
 	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
-connDefList: connDef (NEWLINE* connDef)*;
+connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef:
 	senderSide '->' (receiverSide | multipleReceiverSide);

@@ -17,35 +17,44 @@ component Main(start) (stop) {
         gt2 GreaterChecker<int>
     }
     net {
+        // if $n > 0
         :start -> (
             $n -> gt1:a,
             0 -> gt1:b
         )
+        // then print first line with $n
         gt1:yes -> (
             $firstLineTpl -> firstLinePrinter:tpl,
             $n -> firstLinePrinter:args[0]
         )
+        // else print end lines and terminate
         gt1:no -> (
             $endLines -> endPrinter:data,
             endPrinter:sig -> :stop
         )
 
+        // after first line printed, decrement $n
         firstLinePrinter:args[0] -> decrementor:data
 
+        // if decremented > 0
         decrementor:res -> [
             gt2:a,
             (0 -> gt2:b)
         ]
+        // then print second line with decremented
         gt2:yes -> (
             $secondLineTpl1 -> secondLinePrinter1:tpl,
             decrementor:res -> secondLinePrinter1:args[0]
         )
+        // else print another second line
         gt2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
 
+        // when second line is printer, go back to start
         secondLinePrinter1:args[0] -> [
             gt1:a,
             (0 -> gt1:b)
         ]
+        // same in case of other second line
         secondLinePrinter2:sig -> (
             decrementor:res -> gt1:a,
             0 -> gt1:b
