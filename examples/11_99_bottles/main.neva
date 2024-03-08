@@ -1,8 +1,5 @@
 const {
     n int = 99
-    firstLineTpl string = '$0 bottles of beer on the wall, $0 bottles of beer.'
-    secondLineTpl1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.'
-    secondLineTpl2 string = 'Take one down and pass it around, no more bottles of beer on the wall.'
     endLines string = 'No more bottles of beer on the wall, no more bottles of beer.\nGo to the store and buy some more, 99 bottles of beer on the wall.'
 }
 
@@ -14,14 +11,14 @@ component Main(start) (stop) {
     }
     net {
         :start -> (
-            99 -> eq:data[0],
-            0 -> eq:data[1]
+            99 -> eq:a,
+            0 -> eq:b
         )
         eq:then -> (
             $endLines -> printer:data,
             printer:sig -> :stop
         )
-        eq:else[0] -> looper:old
+        eq:else.a -> looper:old
         looper:new -> [
             eq:data[0],
             (0 -> eq:data[1])
@@ -29,11 +26,38 @@ component Main(start) (stop) {
     }
 }
 
+const {
+    firstLineTpl string = '$0 bottles of beer on the wall, $0 bottles of beer.'
+    secondLineTpl1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.'
+    secondLine2 string = 'Take one down and pass it around, no more bottles of beer on the wall.'
+}
+
 component Looper(old int) (new int) {
     nodes {
-
+        Printer<any>
+        fprinter1 FPrinter<int>
+        fprinter2 FPrinter<int>
+        Decrementor<int>
+        Eq<int>
     }
     net {
-
+        :old -> [
+            fprinter1:args[0]
+            ($firstLineTpl -> fprinter1:tpl)
+        ]
+        fprinter1:args[0] -> decrementor:data
+        decrementor:res -> [
+            eq:a
+            (0 -> eq:b)
+        ]
+        eq:then -> ($secondLine2 -> printer:data)
+        printer:data -> (eq:then -> :new)
+        eq:else.a -> [
+            fprinter2:args[0],
+            ($secondLineTpl1 -> fprinter2:tpl)
+        ]
+        fprinter2:args[0] -> :new
     }
 }
+
+// FIXME several connections with the same receiver (eq:then in this case) is NEEDED for cases like this
