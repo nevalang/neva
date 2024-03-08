@@ -22,7 +22,8 @@ For Mac OS and Linux:
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
 
-For Windows:
+For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from releases if installed won't work):
+
 ```batch
 curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat && installer.bat
 ```
@@ -37,7 +38,7 @@ cd test
 Replace the code in `src/main.neva` with the following:
 
 ```neva
-component Main(start any) (stop any) {
+component Main(start) (stop) {
 	nodes { Printer<string> }
 	net {
 		:start -> ('Hello, World!' -> printer:data)

@@ -203,7 +203,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "11_99_bottles"]
+      "args": ["run", "-debug", "11_99_bottles"]
     },
     // === LSP ===
     {
