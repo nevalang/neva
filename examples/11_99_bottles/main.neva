@@ -8,56 +8,32 @@ const {
 
 component Main(start) (stop) {
     nodes {
-        Decrementor<int>
-        endPrinter Printer<string>
-        secondLinePrinter2 Printer<string>
-        firstLinePrinter FPrinter<int>
-        secondLinePrinter1 FPrinter<int>
-        gt1 GreaterChecker<int>
-        gt2 GreaterChecker<int>
+        Eq<int>
+        Printer<string>
+        Looper
     }
     net {
-        // if $n > 0
         :start -> (
-            $n -> gt1:a,
-            0 -> gt1:b
+            99 -> eq:data[0],
+            0 -> eq:data[1]
         )
-        // then print first line with $n
-        gt1:yes -> (
-            $firstLineTpl -> firstLinePrinter:tpl,
-            $n -> firstLinePrinter:args[0]
+        eq:then -> (
+            $endLines -> printer:data,
+            printer:sig -> :stop
         )
-        // else print end lines and terminate
-        gt1:no -> (
-            $endLines -> endPrinter:data,
-            endPrinter:sig -> :stop
-        )
-
-        // after first line printed, decrement $n
-        firstLinePrinter:args[0] -> decrementor:data
-
-        // if decremented > 0
-        decrementor:res -> [
-            gt2:a,
-            (0 -> gt2:b)
+        eq:else[0] -> looper:old
+        looper:new -> [
+            eq:data[0],
+            (0 -> eq:data[1])
         ]
-        // then print second line with decremented
-        gt2:yes -> (
-            $secondLineTpl1 -> secondLinePrinter1:tpl,
-            decrementor:res -> secondLinePrinter1:args[0]
-        )
-        // else print another second line
-        gt2:no -> ($secondLineTpl2 -> secondLinePrinter2:data)
+    }
+}
 
-        // when second line is printed, go back to start
-        secondLinePrinter1:args[0] -> [
-            gt1:a,
-            (0 -> gt1:b)
-        ]
-        // same in case of other second line
-        secondLinePrinter2:sig -> (
-            decrementor:res -> gt1:a,
-            0 -> gt1:b
-        )
+component Looper(old int) (new int) {
+    nodes {
+
+    }
+    net {
+
     }
 }
