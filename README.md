@@ -23,8 +23,9 @@ curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.s
 ```
 
 For Windows:
-
-Windows installation is work in progress, but you can download windows release manually from [releases page](https://github.com/nevalang/neva/releases).
+```batch
+curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat && installer.bat
+```
 
 ### Create test project
 
