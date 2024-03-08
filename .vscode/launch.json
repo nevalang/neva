@@ -19,8 +19,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "0_do_nothing"]
+      "cwd": "${workspaceFolder}/e2e/mod",
+      "args": ["run", "connection_with_only_port_addr"]
     },
     {
       "name": "Neva CLI 10",
