@@ -23,6 +23,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// math
 		"int_adder":      intAdder{},
 		"int_subtracter": intSubtracter{},
+		"int_multiplier": intMultiplier{},
 		// regexp
 		"regexp_submatcher": regexpSubmatcher{},
 	}

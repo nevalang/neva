@@ -28,6 +28,8 @@ pub component Adder<T int | float | string>(stream maybe<T>) (res T)
 #extern(int int_subtracter, float float_subtracter, string string_subtracter)
 pub component Subtracter<T int | float | string>(stream maybe<T>) (res T)
 
+#extern(int int_multiplier, float float_multiplier, string string_multiplier)
+pub component Multiplier<T int | float | string>(stream maybe<T>) (res T)
 
 // IO
 
