@@ -6,13 +6,12 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-// Desugarer does the following:
-// 1. Replaces const ref senders with normal nodes that uses Const component with compiler directive;
-// 2. Inserts void nodes and connections for every unused outport in the program;
-// 3. Replaces struct selectors with chain of struct selector nodes.
-type Desugarer struct{}
+type Desugarer struct {
+	resolver ts.Resolver
+}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
@@ -183,4 +182,8 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 			Component: componentResult.desugaredComponent,
 		},
 	}, nil
+}
+
+func New(resolver ts.Resolver) Desugarer {
+	return Desugarer{resolver: resolver}
 }

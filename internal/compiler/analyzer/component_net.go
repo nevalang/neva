@@ -211,9 +211,10 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	}
 
 	if len(normConn.SenderSide.Selectors) > 0 {
-		lastFieldType, err := ts.GetStructFieldTypeByPath(
+		lastFieldType, err := a.getStructFieldTypeByPath(
 			resolvedSenderType,
 			normConn.SenderSide.Selectors,
+			scope,
 		)
 		if err != nil {
 			return src.Connection{}, &compiler.Error{
@@ -796,4 +797,26 @@ func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) 
 	}
 
 	return resolvedExpr, nil
+}
+
+func (a Analyzer) getStructFieldTypeByPath(
+	senderType ts.Expr,
+	path []string,
+	scope src.Scope,
+) (ts.Expr, error) {
+	if len(path) == 0 {
+		return senderType, nil
+	}
+
+	if senderType.Lit == nil || senderType.Lit.Struct == nil {
+		return ts.Expr{}, fmt.Errorf("Type not struct: %v", senderType.String())
+	}
+
+	curField := path[0]
+	fieldType, ok := senderType.Lit.Struct[curField]
+	if !ok {
+		return ts.Expr{}, fmt.Errorf("struct field '%v' not found", curField)
+	}
+
+	return a.getStructFieldTypeByPath(fieldType, path[1:], scope)
 }

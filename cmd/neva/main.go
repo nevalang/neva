@@ -37,7 +37,7 @@ func main() { //nolint:funlen
 	pkgMngr := builder.MustNew(prsr)
 
 	// compiler frontend
-	desugarer := desugarer.Desugarer{}
+	desugarer := desugarer.New(resolver)
 	analyzer := analyzer.MustNew(pkg.Version, resolver)
 	irgen := irgen.New()
 

@@ -69,6 +69,9 @@ func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Err
 		return nil, err
 	}
 
+	// FIXME we don't have msg inport in one of 2 struct selectors func call
+	// in 11 (99 bottles) example
+
 	return irProg, nil
 }
 

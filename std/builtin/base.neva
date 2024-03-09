@@ -43,4 +43,4 @@ type EqElse<T any> struct {
 }
 
 #extern(int int_eq, float float_eq, string string_eq)
-pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)
+pub component Eq<T int | float | string>(a T, b T) (then T, else EqElse<T>)

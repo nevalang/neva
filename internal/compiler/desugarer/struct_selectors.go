@@ -33,32 +33,33 @@ var selectorNodeRef = src.EntityRef{
 
 func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	normConn src.NormalConnection,
-	nodes map[string]src.Node,
-	scope src.Scope,
+	// nodes map[string]src.Node,
+	// scope src.Scope,
 ) (handleStructSelectorsResult, *compiler.Error) {
 	senderSide := normConn.SenderSide
 
-	structType, err := d.getSenderType(senderSide, scope, nodes)
-	if err != nil {
-		return handleStructSelectorsResult{}, compiler.Error{
-			Err:      errors.New("Cannot get sender type"),
-			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
-		}.Wrap(err)
-	}
+	// senderType, err := d.getSenderType(senderSide, scope, nodes)
+	// if err != nil {
+	// 	return handleStructSelectorsResult{}, compiler.Error{
+	// 		Err:      errors.New("Cannot get sender type"),
+	// 		Location: &scope.Location,
+	// 		Meta:     &senderSide.Meta,
+	// 	}.Wrap(err)
+	// }
 
-	var e error
-	lastFIeldType, e := ts.GetStructFieldTypeByPath(
-		structType,
-		senderSide.Selectors,
-	)
-	if e != nil {
-		return handleStructSelectorsResult{}, &compiler.Error{
-			Err:      e,
-			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
-		}
-	}
+	// var e error
+	// lastFIeldType, e := d.resolver.GetStructFieldTypeByPath(
+	// 	senderType,
+	// 	senderSide.Selectors,
+	// 	scope,
+	// )
+	// if e != nil {
+	// 	return handleStructSelectorsResult{}, &compiler.Error{
+	// 		Err:      e,
+	// 		Location: &scope.Location,
+	// 		Meta:     &senderSide.Meta,
+	// 	}
+	// }
 
 	selectorsStr := strings.Join(senderSide.Selectors, "_")
 
@@ -72,7 +73,9 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 			compiler.BindDirective: {constName},
 		},
 		EntityRef: selectorNodeRef,
-		TypeArgs:  src.TypeArgs{lastFIeldType}, // specify selector node's outport type (equal to the last selector)
+		// specify selector node's outport type (equal to the last selector)
+		// TypeArgs: src.TypeArgs{lastFIeldType},
+		// TODO I don't think we NEED to keep node args, it's analyzed already, no-one cares
 	}
 
 	// original connection must be replaced with two new connections, this is the first one
