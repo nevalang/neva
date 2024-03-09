@@ -233,21 +233,15 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
 		}
-	} else if len(normConn.ReceiverSide.DeferredConnections) != 0 && len(normConn.ReceiverSide.Receivers) != 0 {
-		return src.Connection{}, &compiler.Error{
-			Err: errors.New(
-				"Connection's receiver side must either have deferred connection or receivers, not both",
-			),
-			Location: &scope.Location,
-			Meta:     &conn.Meta,
-		}
 	}
 
-	if normConn.ReceiverSide.DeferredConnections != nil {
+	resolvedDefConns := make([]src.Connection, 0, len(normConn.ReceiverSide.DeferredConnections))
+	if len(normConn.ReceiverSide.DeferredConnections) != 0 {
 		// note that we call analyzeConnections instead of analyzeComponentNetwork
 		// because we only need to analyze connections and update nodesUsage
 		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
-		resolvedDefConns, err := a.analyzeConnections( // indirect recursion
+		var err *compiler.Error
+		resolvedDefConns, err = a.analyzeConnections( // indirect recursion
 			normConn.ReceiverSide.DeferredConnections,
 			compInterface,
 			nodes,
@@ -258,16 +252,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		if err != nil {
 			return src.Connection{}, err
 		}
-
-		return src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide: resolvedSender,
-				ReceiverSide: src.ConnectionReceiverSide{
-					DeferredConnections: resolvedDefConns,
-				},
-			},
-			Meta: conn.Meta,
-		}, nil
+		// receiver side can contain both deferred connections and receivers so we don't return yet
 	}
 
 	for _, receiver := range normConn.ReceiverSide.Receivers {
@@ -322,8 +307,11 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 	return src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide:   resolvedSender,
-			ReceiverSide: normConn.ReceiverSide,
+			SenderSide: resolvedSender,
+			ReceiverSide: src.ConnectionReceiverSide{
+				DeferredConnections: resolvedDefConns,
+				Receivers:           normConn.ReceiverSide.Receivers,
+			},
 		},
 		Meta: conn.Meta,
 	}, nil
@@ -588,8 +576,9 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 		}
 
 		return src.ConnectionSenderSide{
-			Const: &resolvedConst,
-			Meta:  senderSide.Meta,
+			Const:     &resolvedConst,
+			Selectors: senderSide.Selectors,
+			Meta:      senderSide.Meta,
 		}, resolvedExpr, false, nil
 	}
 
@@ -605,8 +594,9 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 	}
 
 	return src.ConnectionSenderSide{
-		PortAddr: senderSide.PortAddr,
-		Meta:     senderSide.Meta,
+		PortAddr:  senderSide.PortAddr,
+		Selectors: senderSide.Selectors,
+		Meta:      senderSide.Meta,
 	}, resolvedExpr, isArr, nil
 }
 

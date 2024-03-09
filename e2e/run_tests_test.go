@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package test
 
 // in this file we test files designed specifically for e2e.
@@ -14,12 +11,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var wd string
+
+func init() { wd, _ = os.Getwd() }
+
 // There is special case where constant has float type but integer literal.
 func TestFloatConstWithIntLit(t *testing.T) {
-	err := os.Chdir("./mod")
+	err := os.Chdir("./tests/float_const_with_int_lit")
 	require.NoError(t, err)
 
-	cmd := exec.Command("neva", "run", "float_const_with_int_lit")
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
@@ -33,21 +36,43 @@ func TestFloatConstWithIntLit(t *testing.T) {
 }
 
 // Expect normal error message and not go panic trace in case of bad connection.
-func TestConnectionWithOnlyPortAddr(t *testing.T) {
-	err := os.Chdir("./mod")
+func TestConnWithOnlyPortAddr(t *testing.T) {
+	err := os.Chdir("./tests/conn_with_only_port_addr")
 	require.NoError(t, err)
 
-	cmd := exec.Command("neva", "run", "connection_with_only_port_addr")
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	expected := strings.TrimSpace(
-		"connection_with_only_port_addr/main.neva:8:2 Invalid connection, make sure you have both sender and receiver",
+		"main/main.neva:8:2 Invalid connection",
 	)
 	require.Equal(
 		t,
 		expected,
 		strings.TrimSpace(string(out)),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
+
+// Check that struct selector works with port address sender.
+func TestStructSelectorOnPortAddr(t *testing.T) {
+	err := os.Chdir("./tests/struct_selector_on_port_addr")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"42\n",
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

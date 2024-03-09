@@ -1,9 +1,6 @@
-//go:build e2e
-// +build e2e
-
 package test
 
-// in this file we only check that code in examples folder works as expected.
+// in this file we only check that code in the examples folder works as expected.
 
 import (
 	"os"
@@ -17,6 +14,8 @@ import (
 func TestDoNothing(t *testing.T) {
 	err := os.Chdir("../examples")
 	require.NoError(t, err)
+
+	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "0_do_nothing")
 
@@ -34,6 +33,8 @@ func TestDoNothing(t *testing.T) {
 func TestEcho(t *testing.T) {
 	err := os.Chdir("../examples")
 	require.NoError(t, err)
+
+	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "1_echo")
 

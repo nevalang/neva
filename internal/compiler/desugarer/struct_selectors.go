@@ -32,11 +32,11 @@ var selectorNodeRef = src.EntityRef{
 }
 
 func (d Desugarer) desugarStructSelectors( //nolint:funlen
-	conn src.Connection,
+	normConn src.NormalConnection,
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleStructSelectorsResult, *compiler.Error) {
-	senderSide := conn.Normal.SenderSide
+	senderSide := normConn.SenderSide
 
 	structType, err := d.getSenderType(senderSide, scope, nodes)
 	if err != nil {
@@ -48,7 +48,10 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	}
 
 	var e error
-	lastFIeldType, e := ts.GetStructFieldTypeByPath(structType, senderSide.Selectors)
+	lastFIeldType, e := ts.GetStructFieldTypeByPath(
+		structType,
+		senderSide.Selectors,
+	)
 	if e != nil {
 		return handleStructSelectorsResult{}, &compiler.Error{
 			Err:      e,
@@ -76,12 +79,10 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	connToReplace := src.Connection{
 		Normal: &src.NormalConnection{
 			SenderSide: src.ConnectionSenderSide{
-				// preserve original sender port
+				// preserve original sender
 				PortAddr: senderSide.PortAddr,
-				Const: &src.Const{
-					Ref: senderSide.Const.Ref,
-				},
-				// remove selectors in desugared version
+				Const:    senderSide.Const,
+				// but remove selectors in desugared version
 				Selectors: nil,
 			},
 			ReceiverSide: src.ConnectionReceiverSide{
@@ -107,7 +108,7 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 				},
 				Selectors: nil, // no selectors in desugared version
 			},
-			ReceiverSide: conn.Normal.ReceiverSide, // preserve original receivers
+			ReceiverSide: normConn.ReceiverSide, // preserve original receivers
 		},
 	}
 
@@ -160,20 +161,20 @@ func (d Desugarer) getSenderType(
 	scope src.Scope,
 	nodes map[string]src.Node,
 ) (ts.Expr, *compiler.Error) {
-	var selectorNodeTypeArg ts.Expr
-	if senderSide.Const.Ref != nil {
-		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getConstTypeByRef(*senderSide.Const.Ref, scope)
+	if senderSide.PortAddr != nil {
+		selectorNodeTypeArg, err := d.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
 		if err != nil {
 			return ts.Expr{}, err
 		}
-	} else if senderSide.PortAddr != nil {
-		var err *compiler.Error
-		selectorNodeTypeArg, err = d.getNodeOutportType(*senderSide.PortAddr, nodes, scope)
-		if err != nil {
-			return ts.Expr{}, err
-		}
+		return selectorNodeTypeArg, nil
 	}
+
+	var err *compiler.Error
+	selectorNodeTypeArg, err := d.getConstTypeByRef(*senderSide.Const.Ref, scope)
+	if err != nil {
+		return ts.Expr{}, err
+	}
+
 	return selectorNodeTypeArg, nil
 }
 
