@@ -1,4 +1,4 @@
 package pkg
 
 // Version is the current version of the language and stdlib
-var Version = "0.10.2" //nolint:gochecknoglobals
+var Version = "0.10.3" //nolint:gochecknoglobals

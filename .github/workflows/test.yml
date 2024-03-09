@@ -18,6 +18,8 @@ jobs:
     - name: build
       run: go build -v ./...
     - name: install
-      run: go install ./cmd/neva/main.go
+      run: |
+        go install ./cmd/neva
+        echo "$GOPATH/bin" >> $GITHUB_PATH
     - name: test
       run: go test -v ./...

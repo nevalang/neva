@@ -11,10 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var wd string
+
+func init() { wd, _ = os.Getwd() }
+
 // There is special case where constant has float type but integer literal.
 func TestFloatConstWithIntLit(t *testing.T) {
 	err := os.Chdir("./tests/float_const_with_int_lit")
 	require.NoError(t, err)
+
+	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "main")
 
@@ -33,6 +39,8 @@ func TestFloatConstWithIntLit(t *testing.T) {
 func TestConnWithOnlyPortAddr(t *testing.T) {
 	err := os.Chdir("./tests/conn_with_only_port_addr")
 	require.NoError(t, err)
+
+	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "main")
 
@@ -54,6 +62,8 @@ func TestConnWithOnlyPortAddr(t *testing.T) {
 func TestStructSelectorOnPortAddr(t *testing.T) {
 	err := os.Chdir("./tests/struct_selector_on_port_addr")
 	require.NoError(t, err)
+
+	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "main")
 
