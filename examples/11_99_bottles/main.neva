@@ -20,8 +20,8 @@ component Main(start) (stop) {
         )
         eq:else.a -> looper:old
         looper:new -> [
-            eq:data[0],
-            (0 -> eq:data[1])
+            eq:a,
+            (0 -> eq:b)
         ]
     }
 }
@@ -42,16 +42,16 @@ component Looper(old int) (new int) {
     }
     net {
         :old -> [
-            fprinter1:args[0]
+            fprinter1:args[0],
             ($firstLineTpl -> fprinter1:tpl)
         ]
         fprinter1:args[0] -> decrementor:data
         decrementor:res -> [
-            eq:a
+            eq:a,
             (0 -> eq:b)
         ]
         eq:then -> ($secondLine2 -> printer:data)
-        printer:data -> (eq:then -> :new)
+        printer:sig -> (eq:then -> :new)
         eq:else.a -> [
             fprinter2:args[0],
             ($secondLineTpl1 -> fprinter2:tpl)

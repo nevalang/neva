@@ -37,5 +37,10 @@ pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
 // Logic
 
 // sends to "yes" if a > b, otherwiese sends to "no"
-#extern(int int_greater_checker, float float_greater_checker, string string_greater_checker)
-pub component GreaterChecker<T int |float | string>(a T, b T) (yes any, no any)
+type EqElse<T any> struct {
+    a T
+    b T
+}
+
+#extern(int int_eq, float float_eq, string string_eq)
+pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)

@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intGreaterChecker struct{}
+type intEq struct{}
 
-func (intGreaterChecker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intEq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	aIn, err := io.In.Port("a")
 	if err != nil {
 		return nil, err
@@ -19,12 +19,12 @@ func (intGreaterChecker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx cont
 		return nil, err
 	}
 
-	yesOut, err := io.Out.Port("yes")
+	thenOut, err := io.Out.Port("then")
 	if err != nil {
 		return nil, err
 	}
 
-	noOut, err := io.Out.Port("no")
+	elseOut, err := io.Out.Port("else")
 	if err != nil {
 		return nil, err
 	}
@@ -39,18 +39,22 @@ func (intGreaterChecker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx cont
 				case <-ctx.Done():
 					return
 				case b := <-bIn:
-					if a.Int() > b.Int() {
+					if a.Int() == b.Int() {
 						select {
 						case <-ctx.Done():
 							return
-						case yesOut <- nil:
+						case thenOut <- nil:
 						}
 						continue
 					}
+					elseMsg := runtime.NewMapMsg(map[string]runtime.Msg{
+						"a": a,
+						"b": b,
+					})
 					select {
 					case <-ctx.Done():
 						return
-					case noOut <- nil:
+					case elseOut <- elseMsg:
 					}
 				}
 			}

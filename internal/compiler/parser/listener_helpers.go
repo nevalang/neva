@@ -388,7 +388,7 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 
 	if arrBypassConn == nil && connDef.NormConnDef() == nil {
 		panic(&compiler.Error{
-			Err:  errors.New("Invalid connection, make sure you have both sender and receiver"),
+			Err:  errors.New("Invalid connection"),
 			Meta: &connMeta,
 		})
 	}

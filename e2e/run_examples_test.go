@@ -1,9 +1,6 @@
-//go:build e2e
-// +build e2e
-
 package test
 
-// in this file we only check that code in examples folder works as expected.
+// in this file we only check that code in the examples folder works as expected.
 
 import (
 	"os"
