@@ -64,7 +64,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 		// desugar selectors if they are present
 		if len(normConn.SenderSide.Selectors) != 0 {
 			result, err := d.desugarStructSelectors(
-				conn,
+				*conn.Normal,
 				nodes,
 				scope,
 			)

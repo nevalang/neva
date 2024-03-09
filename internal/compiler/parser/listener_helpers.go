@@ -358,17 +358,17 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 }
 
 func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
-	result := []src.Connection{}
+	parsedConns := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
 		parsedConn, err := parseConn(connDef)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, parsedConn)
+		parsedConns = append(parsedConns, parsedConn)
 	}
 
-	return result, nil
+	return parsedConns, nil
 }
 
 func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
@@ -585,7 +585,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		senderSideConstRef == nil &&
 		senderSideConstLit == nil {
 		panic(&compiler.Error{
-			Err: errors.New("no sender side at all"),
+			Err: errors.New("Sender side is missing in connection"),
 			Meta: &src.Meta{
 				Text: senderSide.GetText(),
 				Start: src.Position{
@@ -602,11 +602,11 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
-		v, err := parsePortAddr(senderSidePort, "in")
+		parsedPortAddr, err := parsePortAddr(senderSidePort, "in")
 		if err != nil {
 			panic(err)
 		}
-		senderSidePortAddr = &v
+		senderSidePortAddr = &parsedPortAddr
 	}
 
 	var constant *src.Const
@@ -636,8 +636,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		}
 	}
 
-	if senderSideConstLit != nil {
-		// FIXME get type
+	if senderSideConstLit != nil {		
 		msg, err := parseMessage(senderSideConstLit)
 		if err != nil {
 			panic(err)

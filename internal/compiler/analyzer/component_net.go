@@ -576,8 +576,9 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 		}
 
 		return src.ConnectionSenderSide{
-			Const: &resolvedConst,
-			Meta:  senderSide.Meta,
+			Const:     &resolvedConst,
+			Selectors: senderSide.Selectors,
+			Meta:      senderSide.Meta,
 		}, resolvedExpr, false, nil
 	}
 
@@ -593,8 +594,9 @@ func (a Analyzer) getSenderSideType( //nolint:funlen
 	}
 
 	return src.ConnectionSenderSide{
-		PortAddr: senderSide.PortAddr,
-		Meta:     senderSide.Meta,
+		PortAddr:  senderSide.PortAddr,
+		Selectors: senderSide.Selectors,
+		Meta:      senderSide.Meta,
 	}, resolvedExpr, isArr, nil
 }
 
