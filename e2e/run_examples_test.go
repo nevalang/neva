@@ -23,8 +23,8 @@ func TestDoNothing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		len(strings.TrimSpace(string(out))),
+		"",
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
@@ -44,8 +44,48 @@ func TestEcho(t *testing.T) {
 
 	require.Equal(
 		t,
-		"yo",
-		strings.TrimSpace(string(out)),
+		"yo\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
+
+func TestStructSelectorWithVerbose(t *testing.T) {
+	err := os.Chdir("../examples")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "7_struct_selector/verbose")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+
+	require.Equal(
+		t,
+		"Charley\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
+
+func TestStructSelectorWithSugar(t *testing.T) {
+	err := os.Chdir("../examples")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "7_struct_selector/with_sugar")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+
+	require.Equal(
+		t,
+		"Charley\n",
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

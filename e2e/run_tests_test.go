@@ -5,7 +5,6 @@ package test
 import (
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,8 +27,8 @@ func TestFloatConstWithIntLit(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		len(strings.TrimSpace(string(out))),
+		"",
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
@@ -46,13 +45,10 @@ func TestConnWithOnlyPortAddr(t *testing.T) {
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
-	expected := strings.TrimSpace(
-		"main/main.neva:8:2 Invalid connection",
-	)
 	require.Equal(
 		t,
-		expected,
-		strings.TrimSpace(string(out)),
+		"main/main.neva:8:2 Invalid connection\n",
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
