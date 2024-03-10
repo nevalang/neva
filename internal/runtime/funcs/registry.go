@@ -22,7 +22,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"line_printer": linePrinter{},
 		// math
 		"int_adder":      intAdder{},
-		"int_subtracter": intSubtracter{},
+		"int_subtractor": intSubtractor{},
 		"int_multiplier": intMultiplier{},
 		// regexp
 		"regexp_submatcher": regexpSubmatcher{},

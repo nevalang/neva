@@ -5,9 +5,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intSubtracter struct{}
+type intSubtractor struct{}
 
-func (intSubtracter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intSubtractor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	streamIn, err := io.In.Port("stream")
 	if err != nil {
 		return nil, err
