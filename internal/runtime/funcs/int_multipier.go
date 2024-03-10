@@ -20,8 +20,7 @@ func (intMultiplier) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	}
 
 	return func(ctx context.Context) {
-		flag := false
-		var res int64
+		var res int64 = 1
 		for {
 			select {
 			case <-ctx.Done():
@@ -32,16 +31,10 @@ func (intMultiplier) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 					case <-ctx.Done():
 						return
 					case resOut <- runtime.NewIntMsg(res):
-						res = 0
 						continue
 					}
 				}
-				if !flag {
-					res = streamItem.Int()
-					flag = true
-				} else {
-					res *= streamItem.Int()
-				}
+				res *= streamItem.Int()
 			}
 		}
 	}, nil
