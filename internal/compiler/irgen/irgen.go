@@ -146,6 +146,10 @@ func (g Generator) processComponentNode( //nolint:funlen
 		}
 	}
 
+	// FIXME 99 bottles example
+	// TODO `eq:else.a -> [...]` this connection isn't fully desugared!
+	// looks like deferred connection part is, but 
+	// maybe that's the first case when we have struct selector AND desugared connection at the same time.
 	for nodeName, node := range component.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {

@@ -26,7 +26,8 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 	constantsToInsert := map[string]src.Const{}
 
 	for _, conn := range net {
-		// array bypass connections don't need desugaring
+		// array bypass connections don't need desugared,
+		// they are always portAddr->portAddr, so mark those addrs as used
 		if arrBypass := conn.ArrayBypass; arrBypass != nil {
 			usedNodePorts.set(
 				arrBypass.SenderOutport.Node,
@@ -40,10 +41,10 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 			continue
 		}
 
-		// here only care normal connections
+		// now we only care normal connections
 		normConn := conn.Normal
 
-		// mark port address as used, if it's not const
+		// if sender is port address, mark it as used
 		if normConn.SenderSide.PortAddr != nil {
 			usedNodePorts.set(
 				normConn.SenderSide.PortAddr.Node,
@@ -51,7 +52,7 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 			)
 		}
 
-		// check if it's actually nothing to desugar
+		// some normal connections doesn't need to be desugared
 		if normConn.SenderSide.Const == nil &&
 			len(normConn.SenderSide.Selectors) == 0 &&
 			len(normConn.ReceiverSide.DeferredConnections) == 0 {
@@ -61,13 +62,9 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 
 		// === Actual desugaring starts here ===
 
-		// desugar selectors if they are present
+		// connections with senders with struct selectors must be desugared
 		if len(normConn.SenderSide.Selectors) != 0 {
-			result, err := d.desugarStructSelectors(
-				*conn.Normal,
-				// nodes,
-				// scope,
-			)
+			result, err := d.desugarStructSelectors(*conn.Normal)
 			if err != nil {
 				return handleNetResult{}, compiler.Error{
 					Err:      errors.New("Cannot desugar struct selectors"),
@@ -77,13 +74,11 @@ func (d Desugarer) handleNetwork( //nolint:funlen
 			}
 			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 			constantsToInsert[result.constToInsertName] = result.constToInsert
-			conn = result.connToReplace
+			conn = result.connToReplace // FIXME u rewrite conn and not normConn (that we use)
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
 
-		// handle const sender if needed
-		// we add virtual nodes and constants if needed
-		// and replace current connection with connection without const sender
+		// connections where sender is constant also need desugarign
 		if normConn.SenderSide.Const != nil { //nolint:nestif
 			if normConn.SenderSide.Const.Ref != nil {
 				result, err := d.handleConstRefSender(conn, scope)

@@ -3,7 +3,7 @@ package desugarer
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/sourcecode"
@@ -31,51 +31,26 @@ var selectorNodeRef = src.EntityRef{
 	Name: "StructSelector",
 }
 
+var virtualSelectorsCount atomic.Uint64
+
 func (d Desugarer) desugarStructSelectors( //nolint:funlen
 	normConn src.NormalConnection,
-	// nodes map[string]src.Node,
-	// scope src.Scope,
 ) (handleStructSelectorsResult, *compiler.Error) {
 	senderSide := normConn.SenderSide
 
-	// senderType, err := d.getSenderType(senderSide, scope, nodes)
-	// if err != nil {
-	// 	return handleStructSelectorsResult{}, compiler.Error{
-	// 		Err:      errors.New("Cannot get sender type"),
-	// 		Location: &scope.Location,
-	// 		Meta:     &senderSide.Meta,
-	// 	}.Wrap(err)
-	// }
+	constCounter := virtualConstCount.Load()
+	virtualConstCount.Store(constCounter + 1)
+	constName := fmt.Sprintf("virtual_const_%d", constCounter)
 
-	// var e error
-	// lastFIeldType, e := d.resolver.GetStructFieldTypeByPath(
-	// 	senderType,
-	// 	senderSide.Selectors,
-	// 	scope,
-	// )
-	// if e != nil {
-	// 	return handleStructSelectorsResult{}, &compiler.Error{
-	// 		Err:      e,
-	// 		Location: &scope.Location,
-	// 		Meta:     &senderSide.Meta,
-	// 	}
-	// }
+	counter := virtualSelectorsCount.Load()
+	virtualSelectorsCount.Store(counter + 1)
+	nodeName := fmt.Sprintf("virtual_selector_%d", counter)
 
-	selectorsStr := strings.Join(senderSide.Selectors, "_")
-
-	constName := fmt.Sprintf("__%v_const__", selectorsStr)
-	pathConst := d.createPathConst(senderSide)
-
-	nodeName := fmt.Sprintf("__%v_node__", selectorsStr)
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{
-			// pass selectors down to component through the constant via directive
 			compiler.BindDirective: {constName},
 		},
 		EntityRef: selectorNodeRef,
-		// specify selector node's outport type (equal to the last selector)
-		// TypeArgs: src.TypeArgs{lastFIeldType},
-		// TODO I don't think we NEED to keep node args, it's analyzed already, no-one cares
 	}
 
 	// original connection must be replaced with two new connections, this is the first one
@@ -115,11 +90,13 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 		},
 	}
 
+	constWithCfgMsg := d.createConstWithCfgMsgForSelectorNode(senderSide)
+
 	return handleStructSelectorsResult{
 		connToReplace:     connToReplace,
 		connToInsert:      connToInsert,
 		constToInsertName: constName,
-		constToInsert:     pathConst,
+		constToInsert:     constWithCfgMsg,
 		nodeToInsertName:  nodeName,
 		nodeToInsert:      selectorNode,
 	}, nil
@@ -141,7 +118,7 @@ var (
 	}
 )
 
-func (Desugarer) createPathConst(senderSide src.ConnectionSenderSide) src.Const {
+func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.Const {
 	constToInsert := src.Const{
 		Message: &src.Message{
 			TypeExpr: pathConstTypeExpr,

@@ -6,12 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
-type Desugarer struct {
-	resolver ts.Resolver
-}
+type Desugarer struct{}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
@@ -184,6 +181,6 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 	}, nil
 }
 
-func New(resolver ts.Resolver) Desugarer {
-	return Desugarer{resolver: resolver}
+func New() Desugarer {
+	return Desugarer{}
 }
