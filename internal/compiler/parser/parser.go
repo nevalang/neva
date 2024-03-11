@@ -29,7 +29,7 @@ func (p Parser) ParseModules(
 	parsedMods := make(map[src.ModuleRef]src.Module, len(rawMods))
 
 	for modRef, rawMod := range rawMods {
-		parsedPkgs, err := p.ParsePackages(rawMod.Packages)
+		parsedPkgs, err := p.ParsePackages(modRef, rawMod.Packages)
 		if err != nil {
 			return nil, compiler.Error{
 				Err:      errors.New("Parsing error"),
@@ -47,12 +47,16 @@ func (p Parser) ParseModules(
 }
 
 func (p Parser) ParsePackages(
+	modRef src.ModuleRef,
 	rawPkgs map[string]compiler.RawPackage,
-) (map[string]src.Package, *compiler.Error) {
+) (
+	map[string]src.Package,
+	*compiler.Error,
+) {
 	packages := make(map[string]src.Package, len(rawPkgs))
 
 	for pkgName, pkgFiles := range rawPkgs {
-		parsedFiles, err := p.ParseFiles(pkgFiles)
+		parsedFiles, err := p.ParseFiles(modRef, pkgName, pkgFiles)
 		if err != nil {
 			return nil, compiler.Error{
 				Location: &src.Location{PkgName: pkgName},
@@ -65,18 +69,22 @@ func (p Parser) ParsePackages(
 	return packages, nil
 }
 
-func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, *compiler.Error) {
+func (p Parser) ParseFiles(
+	modRef src.ModuleRef,
+	pkgName string,
+	files map[string][]byte,
+) (map[string]src.File, *compiler.Error) {
 	result := make(map[string]src.File, len(files))
 
-	for name, fileBytes := range files {
-		fileName := name
-		parsedFile, err := p.ParseFile(fileBytes)
+	for fileName, fileBytes := range files {
+		loc := src.Location{
+			ModRef:   modRef,
+			PkgName:  pkgName,
+			FileName: fileName,
+		}
+		parsedFile, err := p.parseFile(loc, fileBytes)
 		if err != nil {
-			return nil, compiler.Error{
-				Location: &src.Location{
-					FileName: fileName,
-				},
-			}.Wrap(err)
+			return nil, compiler.Error{Location: &loc}.Wrap(err)
 		}
 		result[fileName] = parsedFile
 	}
@@ -84,12 +92,15 @@ func (p Parser) ParseFiles(files map[string][]byte) (map[string]src.File, *compi
 	return result, nil
 }
 
-func (p Parser) ParseFile(bb []byte) (f src.File, err *compiler.Error) {
+func (p Parser) parseFile(
+	loc src.Location,
+	bb []byte,
+) (f src.File, err *compiler.Error) {
 	defer func() {
 		if e := recover(); e != nil {
 			compilerErr, ok := e.(*compiler.Error)
 			if ok {
-				err = compilerErr
+				err = compiler.Error{Location: &loc}.Wrap(compilerErr)
 				return
 			}
 			err = &compiler.Error{
@@ -98,6 +109,7 @@ func (p Parser) ParseFile(bb []byte) (f src.File, err *compiler.Error) {
 					e,
 					string(debug.Stack()),
 				),
+				Location: &loc,
 			}
 		}
 	}()

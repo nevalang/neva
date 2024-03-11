@@ -32,14 +32,14 @@ component {
 
 	IntReader(sig any) (num int, err error) {
 		nodes {
-			reader x.LineScanner
-			parser x.NumParser<int>
+			x.LineScanner
+			x.NumParser<int>
 		}
 		net {
-			:sig -> reader:sig
-			reader:data -> parser:data
-			parser:res -> :num
-			parser:err -> :err
+			:sig -> lineScanner:sig
+			lineScanner:data -> numParser:data
+			numParser:res -> :num
+			numParser:err -> :err
 		}
 	}
 }

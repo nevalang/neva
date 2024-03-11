@@ -23,8 +23,8 @@ func New(connector Connector, funcRunner FuncRunner) Runtime {
 }
 
 var (
-	ErrStartPortNotFound = errors.New("enter port not found")
-	ErrExitPortNotFound  = errors.New("exit port not found")
+	ErrStartPortNotFound = errors.New("start port not found")
+	ErrExitPortNotFound  = errors.New("stop port not found")
 	ErrConnector         = errors.New("connector")
 	ErrFuncRunner        = errors.New("func runner")
 )

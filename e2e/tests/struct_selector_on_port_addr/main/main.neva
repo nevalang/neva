@@ -1,0 +1,19 @@
+component Main(start) (stop) {
+    nodes {
+        Foo
+        Printer<int>
+    }
+    net {
+        :start -> foo:sig
+        foo:msg.a -> printer:data
+        printer:sig -> :stop
+    }
+}
+
+const s struct {a int} = {a: 42}
+
+component Foo(sig any) (msg struct{a int}) {
+    net {
+        :sig -> ($s -> :msg)
+    }
+}
