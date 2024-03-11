@@ -13,6 +13,12 @@ cmd/tmp
 /neva
 /examples/output
 /examples/output.wasm
+/neva-darwin-amd64
+/neva-darwin-arm64
+/neva-linux-amd64
+/neva-linux-arm64
+/neva-windows-amd64.exe
+/neva-windows-arm64.exe
 
 node_modules
 __debug*

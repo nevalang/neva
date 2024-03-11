@@ -2,20 +2,19 @@ package funcs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type linePrinter struct{}
+type intDecrementor struct{}
 
-func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (i intDecrementor) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Port("sig")
+	resOut, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}
@@ -29,13 +28,7 @@ func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 				select {
 				case <-ctx.Done():
 					return
-				default:
-					fmt.Println(data)
-					select {
-					case <-ctx.Done():
-						return
-					case sigOut <- data:
-					}
+				case resOut <- runtime.NewIntMsg(data.Int() - 1):
 				}
 			}
 		}

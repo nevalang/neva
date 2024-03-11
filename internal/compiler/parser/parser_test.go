@@ -1,10 +1,10 @@
-package parser_test
+package parser
 
 import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/parser"
+	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,9 +14,9 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 	// comment
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	_, err := p.ParseFile(text)
+	_, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 }
 
@@ -48,9 +48,9 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 		}
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	got, err := p.ParseFile(text)
+	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
 	d1 := got.Entities["C1"].Component.Directives[compiler.ExternDirective][0]
@@ -88,9 +88,9 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 		}
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	got, err := p.ParseFile(text)
+	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
 	conn := got.Entities["C1"].Component.Net[0]
@@ -114,9 +114,9 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 		}
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	got, err := p.ParseFile(text)
+	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
 	nodes := got.Entities["C1"].Component.Nodes
@@ -135,9 +135,9 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 		const c1 pkg.Enum = pkg.Enum2::Bar
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	got, err := p.ParseFile(text)
+	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
 	enum := got.Entities["c0"].Const.Message.Enum
@@ -162,9 +162,9 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 		}
 	`)
 
-	p := parser.New(false)
+	p := New(false)
 
-	got, err := p.ParseFile(text)
+	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
 	conn := got.Entities["C1"].Component.Net[0]

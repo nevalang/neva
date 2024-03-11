@@ -1,6 +1,4 @@
-// In this package we keep everything that's either
-// a) compiler aware of this (analyzer or desugarer) OR
-// b) it's used all the time
+// Core
 
 component {
     #extern(emitter)
@@ -31,7 +29,24 @@ pub component Subtractor<T int | float >(stream maybe<T>) (res T)
 #extern(int int_multiplier, float float_multiplier)
 pub component Multiplier<T int | float >(stream maybe<T>) (res T)
 
+#extern(int int_decrementor, float float_decrementor)
+pub component Decrementor<T int | float>(data T) (res T)
+
 // IO
 
 #extern(line_printer)
 pub component Printer<T>(data T) (sig T)
+
+#extern(line_fprinter)
+pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
+
+// Logic
+
+// sends to "yes" if a > b, otherwiese sends to "no"
+type EqElse<T any> struct {
+    a T
+    b T
+}
+
+#extern(int int_eq, float float_eq, string string_eq)
+pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)

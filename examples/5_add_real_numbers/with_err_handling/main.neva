@@ -2,19 +2,19 @@ import { x }
 
 component Main(start any) (stop any) {
 	nodes {
-		reader1 x.LineScanner
-		reader2 x.LineScanner
+		scanner1 x.LineScanner
+		scanner2 x.LineScanner
 		parser1 x.NumParser<int>
 		parser2 x.NumParser<int>
 		adder PortBridge<int> { handler Adder<int> }
 		printer Printer<any>
 	}
 	net {
-		:start -> reader1:sig
-		reader1:data -> parser1:data
+		:start -> scanner1:sig
+		scanner1:data -> parser1:data
 		parser1:err -> printer:data
-		parser1:res -> [adder:ports[0], reader2:sig]
-		reader2:data -> parser2:data
+		parser1:res -> [adder:ports[0], scanner2:sig]
+		scanner2:data -> parser2:data
 		parser2:err -> printer:data
 		parser2:res -> adder:ports[1]
 		adder:res -> printer:data

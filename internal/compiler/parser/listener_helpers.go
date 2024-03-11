@@ -358,17 +358,17 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 }
 
 func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
-	result := []src.Connection{}
+	parsedConns := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
 		parsedConn, err := parseConn(connDef)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, parsedConn)
+		parsedConns = append(parsedConns, parsedConn)
 	}
 
-	return result, nil
+	return parsedConns, nil
 }
 
 func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
@@ -385,6 +385,14 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	}
 
 	arrBypassConn := connDef.ArrBypassConnDef()
+
+	if arrBypassConn == nil && connDef.NormConnDef() == nil {
+		panic(&compiler.Error{
+			Err:  errors.New("Invalid connection"),
+			Meta: &connMeta,
+		})
+	}
+
 	if arrBypassConn == nil {
 		parsedSenderSide := parseNormConnSenderSide(connDef.NormConnDef().SenderSide())
 
@@ -474,42 +482,74 @@ func parseReceiverSide(
 	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	if then := actx.ThenConnExpr(); then != nil {
-		return parseThenConnExpr(then, connMeta)
+		return parseDeferredConnExpr(then, connMeta)
 	}
 	return parseSingleReceiverSide(actx.PortAddr())
 }
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
-) (src.ConnectionReceiverSide, *compiler.Error) {
-	receiverPortAddrs := multipleSides.AllReceiverSide()
-	result := make([]src.ConnectionReceiver, 0, len(receiverPortAddrs))
+) (
+	src.ConnectionReceiverSide,
+	*compiler.Error,
+) {
+	receiverSides := multipleSides.AllReceiverSide()
+	allParsedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSides))
+	allParsedDeferredConns := make([]src.Connection, 0, len(receiverSides))
 
-	for _, receiverPortAddr := range receiverPortAddrs {
-		portAddr, err := parsePortAddr(receiverPortAddr.PortAddr(), "out")
-		if err != nil {
-			panic(err)
-		}
-		result = append(result, src.ConnectionReceiver{
-			PortAddr: portAddr,
-			Meta: src.Meta{
-				Text: receiverPortAddr.GetText(),
-				Start: src.Position{
-					Line:   receiverPortAddr.GetStart().GetLine(),
-					Column: receiverPortAddr.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   receiverPortAddr.GetStop().GetLine(),
-					Column: receiverPortAddr.GetStop().GetColumn(),
-				},
+	for _, receiverSide := range receiverSides {
+		meta := src.Meta{
+			Text: receiverSide.GetText(),
+			Start: src.Position{
+				Line:   receiverSide.GetStart().GetLine(),
+				Column: receiverSide.GetStart().GetColumn(),
 			},
-		})
+			Stop: src.Position{
+				Line:   receiverSide.GetStop().GetLine(),
+				Column: receiverSide.GetStop().GetColumn(),
+			},
+		}
+
+		portAddr := receiverSide.PortAddr()
+		deferredConns := receiverSide.ThenConnExpr()
+
+		if portAddr == nil && deferredConns == nil {
+			panic(&compiler.Error{
+				Err:  errors.New("no receiver side at all"),
+				Meta: &meta,
+			})
+		}
+
+		if portAddr != nil {
+			portAddr, err := parsePortAddr(receiverSide.PortAddr(), "out")
+			if err != nil {
+				panic(err)
+			}
+			allParsedReceivers = append(allParsedReceivers, src.ConnectionReceiver{
+				PortAddr: portAddr,
+				Meta:     meta,
+			})
+			continue
+		}
+
+		parsedDeferredConns, err := parseDeferredConnExpr(deferredConns, meta)
+		if err != nil {
+			return src.ConnectionReceiverSide{}, &compiler.Error{
+				Err:  err,
+				Meta: &meta,
+			}
+		}
+
+		allParsedDeferredConns = append(allParsedDeferredConns, parsedDeferredConns.DeferredConnections...)
 	}
 
-	return src.ConnectionReceiverSide{Receivers: result}, nil
+	return src.ConnectionReceiverSide{
+		Receivers:           allParsedReceivers,
+		DeferredConnections: allParsedDeferredConns,
+	}, nil
 }
 
-func parseThenConnExpr(
+func parseDeferredConnExpr(
 	thenExpr generated.IThenConnExprContext,
 	connMeta src.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
@@ -545,7 +585,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		senderSideConstRef == nil &&
 		senderSideConstLit == nil {
 		panic(&compiler.Error{
-			Err: errors.New("no sender side at all"),
+			Err: errors.New("Sender side is missing in connection"),
 			Meta: &src.Meta{
 				Text: senderSide.GetText(),
 				Start: src.Position{
@@ -562,11 +602,11 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 
 	var senderSidePortAddr *src.PortAddr
 	if senderSidePort != nil {
-		v, err := parsePortAddr(senderSidePort, "in")
+		parsedPortAddr, err := parsePortAddr(senderSidePort, "in")
 		if err != nil {
 			panic(err)
 		}
-		senderSidePortAddr = &v
+		senderSidePortAddr = &parsedPortAddr
 	}
 
 	var constant *src.Const
@@ -596,8 +636,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		}
 	}
 
-	if senderSideConstLit != nil {
-		// FIXME get type
+	if senderSideConstLit != nil {		
 		msg, err := parseMessage(senderSideConstLit)
 		if err != nil {
 			panic(err)

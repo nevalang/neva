@@ -1,0 +1,10 @@
+// https://github.com/nevalang/neva/issues/503
+
+const array list<int> = [1,2,3]
+component Main(start any) (stop any) {
+	nodes { printer Printer<any>}
+	net {
+		:start -> ($array -> printer:data) 
+		printer:sig 
+	}
+}
