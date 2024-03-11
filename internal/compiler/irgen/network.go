@@ -2,6 +2,7 @@ package irgen
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime/ir"
@@ -153,7 +154,6 @@ func (g Generator) processSenderSide(
 
 	return irSenderSide, nil
 }
-
 func (Generator) insertAndReturnInports(
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -175,14 +175,30 @@ func (Generator) insertAndReturnInports(
 		inports = append(inports, *addr)
 	}
 
+	sortPortAddrs(inports)
+
 	return inports
+}
+
+// sortPortAddrs sorts port addresses by path, port and idx,
+// this is very important because runtime function calls depends on this order.
+func sortPortAddrs(addrs []ir.PortAddr) {
+	sort.Slice(addrs, func(i, j int) bool {
+		if addrs[i].Path != addrs[j].Path {
+			return addrs[i].Path < addrs[j].Path
+		}
+		if addrs[i].Port != addrs[j].Port {
+			return addrs[i].Port < addrs[j].Port
+		}
+		return addrs[i].Idx < addrs[j].Idx
+	})
 }
 
 func (Generator) insertAndReturnOutports(
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) []ir.PortAddr {
-	runtimeFuncOutportAddrs := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
+	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
 	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use component's IO.
 	// Actually we can't use IO because we need to know how many slots are used.
@@ -196,10 +212,12 @@ func (Generator) insertAndReturnOutports(
 			PortAddr: *irAddr,
 			BufSize:  0,
 		})
-		runtimeFuncOutportAddrs = append(runtimeFuncOutportAddrs, *irAddr)
+		outports = append(outports, *irAddr)
 	}
 
-	return runtimeFuncOutportAddrs
+	sortPortAddrs(outports)
+
+	return outports
 }
 
 // mapReceiverSide maps compiler connection side to ir connection side 1-1 just making the port addr's path absolute
