@@ -40,8 +40,8 @@ type FuncCall struct {
 
 // FuncIO represents the input/output ports of a function.
 type FuncIO struct {
-	In  []PortAddr
-	Out []PortAddr
+	In  []PortAddr // Must be ordered by path -> port -> idx
+	Out []PortAddr // Must be ordered by path -> port -> idx
 }
 
 // Msg represents a message.
