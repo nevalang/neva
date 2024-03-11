@@ -19,7 +19,9 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// logic
 		"int_eq": intEq{},
 		// math
-		"int_adder":       intAdder{},
+		"int_adder":      intAdder{},
+		"int_subtractor": intSubtractor{},
+		"int_multiplier": intMultiplier{},
 		"int_decrementor": intDecrementor{},
 		// io
 		"line_scanner":  lineScanner{},

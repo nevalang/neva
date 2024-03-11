@@ -1,0 +1,20 @@
+component Main(start any) (stop any) {
+	nodes {
+		sub Subtractor<int>
+		streamer PortStreamer<int>
+		printer Printer<int>
+	}
+	net {
+		:start -> (
+			1 -> streamer:ports[0],
+			2 -> streamer:ports[1],
+			3 -> streamer:ports[2]
+		)
+		streamer:stream -> sub:stream
+		sub:res -> printer:data
+		printer:sig -> :stop
+	}
+}
+
+//1 - 2 - 3 = -4
+//outputs -4
