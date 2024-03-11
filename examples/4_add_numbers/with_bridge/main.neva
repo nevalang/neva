@@ -1,7 +1,3 @@
-// FIXME this example does not work
-// because PortBridge uses => array bypass feature
-// that is not implemented yet.
-
 component Main(start any) (stop any) {
 	nodes {
 		adder PortBridge<int> { handler Adder<int> }
