@@ -31,10 +31,12 @@ func (intSubtractor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 					case <-ctx.Done():
 						return
 					case resOut <- runtime.NewIntMsg(res):
+						flag = false
 						res = 0
 						continue
 					}
 				}
+
 				if !flag {
 					res = streamItem.Int()
 					flag = true
