@@ -72,6 +72,8 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 						},
 					},
 				},
+				// don't forget sometimes we have both struct selectors and deferred connections
+				DeferredConnections: normConn.ReceiverSide.DeferredConnections,
 			},
 		},
 	}

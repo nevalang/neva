@@ -1,0 +1,14 @@
+{
+	"files": [
+		{
+			"path": "internal/compiler/irgen/irgen.go",
+			"bookmarks": [
+				{
+					"line": 152,
+					"column": 2,
+					"label": ""
+				}
+			]
+		}
+	]
+}

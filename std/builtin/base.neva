@@ -42,11 +42,11 @@ pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
 
 // Logic
 
-// sends to "yes" if a > b, otherwiese sends to "no"
 type EqElse<T any> struct {
     a T
     b T
 }
 
+// sends to "then" if a == b, otherwiese sends to "else"
 #extern(int int_eq, float float_eq, string string_eq)
 pub component Eq<T int | float | string>(a T, b T) (then T, else EqElse<T>)
