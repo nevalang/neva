@@ -10,7 +10,7 @@ import (
 type regexpSubmatcher struct{}
 
 func (r regexpSubmatcher) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
-	regex, err := regexp.Compile(cfgMsg.Str())
+	regexpIn, err := io.In.Port("regexp")
 	if err != nil {
 		return nil, err
 	}
@@ -25,17 +25,36 @@ func (r regexpSubmatcher) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ct
 		return nil, err
 	}
 
+	errOut, err := io.Out.Port("err")
+	if err != nil {
+		return nil, err
+	}
+
 	return func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case dataMsg := <-dataIn:
-				resOut <- wrap(
-					regex.FindStringSubmatch(
-						dataMsg.String(),
-					),
-				)
+			case regexpMsg := <-regexpIn:
+				regex, err := regexp.Compile(regexpMsg.Str())
+				if err != nil {
+					select {
+					case <-ctx.Done():
+						return
+					case errOut <- runtime.NewStrMsg(err.Error()):
+						continue
+					}
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case dataMsg := <-dataIn:
+					resOut <- wrap(
+						regex.FindStringSubmatch(
+							dataMsg.String(),
+						),
+					)
+				}
 			}
 		}
 	}, nil

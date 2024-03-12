@@ -1,16 +1,15 @@
 import { regexp }
 
-const { regex string = 'a(x*)b(y|z)c' }
-
 component Main(start) (stop) {
     nodes {
         Printer<any>
-
-        #bind(regex)
         regexp.Submatcher
     }
     net {
-        :start -> ('-axxxbyc-' -> submatcher:data)
+        :start -> (
+            'a(x*)b(y|z)c' -> submatcher:regexp,
+            '-axxxbyc-' -> submatcher:data
+        )
         submatcher:res -> printer:data
         printer:sig -> :stop
     }

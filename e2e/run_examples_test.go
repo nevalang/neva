@@ -190,3 +190,23 @@ func TestMathMultiplyNumbers(t *testing.T) {
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
+
+// Check that regex.Submatcher returns exact 3 sub-strings on a given example.
+func TestRegexSubmatch(t *testing.T) {
+	err := os.Chdir("../examples")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "10_regex_submatch")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"[axxxbyc xxx y]\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}

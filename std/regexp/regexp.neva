@@ -1,3 +1,2 @@
-// expect #bind(regexpString)
 #extern(regexp_submatcher)
-pub component Submatcher(data string) (res list<string>)
+pub component Submatcher(regexp string, data string) (res list<string>, err error)
