@@ -23,6 +23,12 @@ component {
 #extern(int int_adder, float float_adder, string string_adder)
 pub component Adder<T int | float | string>(stream maybe<T>) (res T)
 
+#extern(int int_subtractor, float float_subtractor)
+pub component Subtractor<T int | float >(stream maybe<T>) (res T)
+
+#extern(int int_multiplier, float float_multiplier)
+pub component Multiplier<T int | float >(stream maybe<T>) (res T)
+
 #extern(int int_decrementor, float float_decrementor)
 pub component Decrementor<T int | float>(data T) (res T)
 

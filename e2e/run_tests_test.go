@@ -73,3 +73,25 @@ func TestStructSelectorOnPortAddr(t *testing.T) {
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
+
+// There was a bug with order of channels in IR func-call that lead to wrong answer from subtractor.
+func TestOrderDependendWithArrInport(t *testing.T) {
+	err := os.Chdir("./tests/order_dependend_with_arr_inport")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	for i := 0; i < 100; i++ {
+		cmd := exec.Command("neva", "run", "main")
+
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"-4\n",
+			string(out),
+		)
+
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
+}
