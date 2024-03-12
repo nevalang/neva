@@ -42,15 +42,15 @@ func (e EventMessageSent) String() string {
 	}
 
 	i := 0
-	receiversStr := "{ "
+	receiversStr := "[ "
 	for receiver := range e.ReceiverPortAddrs {
 		receiversStr += receiver.String()
-		if i == len(e.ReceiverPortAddrs)-1 {
+		if i != len(e.ReceiverPortAddrs)-1 {
 			receiversStr += ", "
 		}
 		i++
 	}
-	receiversStr += "}"
+	receiversStr += " ]"
 
 	return fmt.Sprintf("%v -> %v", e.SenderPortAddr, receiversStr)
 }
