@@ -81,6 +81,7 @@ func TestOrderDependendWithArrInport(t *testing.T) {
 
 	defer os.Chdir(wd)
 
+	// we do 100 attempts because there was a floating bug caused by unordered map that was
 	for i := 0; i < 100; i++ {
 		cmd := exec.Command("neva", "run", "main")
 

@@ -92,7 +92,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "4_add_numbers/verbose"]
+      "args": ["run", "-debug", "4_math/add_numbers_verbose"]
     },
     {
       "name": "Neva CLI 41",
@@ -101,7 +101,16 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "4_add_numbers/with_bridge"]
+      "args": ["run", "-debug", "4_math/add_numbers_with_bridge"]
+    },
+    {
+      "name": "Neva CLI 42",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "-debug", "4_math/multiply_numbers"]
     },
     // don't forget this example doesn't work in debugger
     {
