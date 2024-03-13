@@ -101,7 +101,7 @@ func TestOrderDependendWithArrInport(t *testing.T) {
 }
 
 func TestLength(t *testing.T) {
-	err := os.Chdir("./tests/arr_length")
+	err := os.Chdir("./tests/list_length")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
