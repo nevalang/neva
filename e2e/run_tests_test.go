@@ -99,3 +99,22 @@ func TestOrderDependendWithArrInport(t *testing.T) {
 		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }
+
+func TestLength(t *testing.T) {
+	err := os.Chdir("./tests/arr_length")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"2\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
