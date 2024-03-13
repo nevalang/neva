@@ -53,7 +53,7 @@ pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)
 
 // List
 #extern(list list_len, map map_len)
-pub component Length<T list<any> | map<any>>(data T) (res int)
+pub component Len<T list<any> | map<any>>(data T) (res int)
 
 
 
