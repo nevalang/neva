@@ -129,7 +129,7 @@ func (a Analyzer) analyzeComponentNode(
 	); err != nil {
 		return src.Node{}, src.Interface{}, &compiler.Error{
 			Err:      err,
-			Location: &location,
+			Location: &scope.Location,
 			Meta:     &node.Meta,
 		}
 	}

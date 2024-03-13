@@ -17,7 +17,7 @@ var (
 	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
-	ErrUnion         = errors.New("Subtype must be subtype of supertype union")
+	ErrUnion         = errors.New("Incompatible types")
 	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
 	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
 	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
@@ -163,7 +163,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 					return nil
 				}
 			}
-			return fmt.Errorf("%w: want %v, got %v", ErrUnion, constr.Lit.Union, expr)
+			return fmt.Errorf("%w: want %v, got %v", ErrUnion, constr, expr)
 		}
 		// If we here, then expr is union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {

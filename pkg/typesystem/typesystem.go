@@ -48,8 +48,8 @@ type Expr struct {
 type ExprMeta any
 
 // String formats expression in a TS manner
-func (expr *Expr) String() string {
-	if expr == nil || expr.Inst == nil && expr.Lit == nil {
+func (expr Expr) String() string {
+	if expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
 
