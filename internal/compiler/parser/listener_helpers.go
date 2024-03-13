@@ -636,7 +636,7 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		}
 	}
 
-	if senderSideConstLit != nil {		
+	if senderSideConstLit != nil {
 		msg, err := parseMessage(senderSideConstLit)
 		if err != nil {
 			panic(err)
@@ -796,23 +796,29 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 		}
 		msg.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
-		i, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
+		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			panic(err)
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "int"},
 		}
-		msg.Int = compiler.Pointer(int(i))
+		if constVal.MINUS() != nil {
+			parsedInt = -parsedInt
+		}
+		msg.Int = compiler.Pointer(int(parsedInt))
 	case constVal.FLOAT() != nil:
-		f, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
+		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			panic(err)
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: src.EntityRef{Name: "float"},
 		}
-		msg.Float = &f
+		if constVal.MINUS() != nil {
+			parsedFloat = -parsedFloat
+		}
+		msg.Float = &parsedFloat
 	case constVal.STRING() != nil:
 		msg.Str = compiler.Pointer(
 			strings.Trim(
