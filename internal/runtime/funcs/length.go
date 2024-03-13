@@ -5,9 +5,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type length struct{}
+type listlen struct{}
 
-func (p length) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p listlen) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
