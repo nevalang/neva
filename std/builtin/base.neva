@@ -51,7 +51,7 @@ type EqElse<T any> struct {
 #extern(int int_eq, float float_eq, string string_eq)
 pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)
 
-// Array
+// List
 #extern(length)
 pub component Length<T>(data T) (res int)
 
