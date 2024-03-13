@@ -117,3 +117,22 @@ func TestListWithNegInt(t *testing.T) {
 		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }
+
+func TestIncompatCompTypeArg(t *testing.T) {
+	err := os.Chdir("./tests/incompat_comp_type_arg")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"main/main.neva:2:9 Incompatible types: want int | float | string, got any\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}

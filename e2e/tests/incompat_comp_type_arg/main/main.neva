@@ -1,0 +1,10 @@
+component Main(start) (stop) {
+	nodes { Eq<any> }
+	net {
+		:start -> (
+            0 -> eq:a,
+            1 -> eq:b
+        )
+        eq:else -> :stop
+	}
+}
