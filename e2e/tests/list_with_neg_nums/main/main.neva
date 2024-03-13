@@ -1,0 +1,9 @@
+const l list<int> = [-215]
+
+component Main(start) (stop) {
+	nodes { Printer<any> }
+	net {
+		:start -> ($l -> printer:data)
+		printer:sig -> :stop
+	}
+}
