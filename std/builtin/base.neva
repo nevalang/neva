@@ -55,5 +55,5 @@ pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)
 #extern(list list_len, map map_len)
 pub component Len<T list<any> | map<any>>(data T) (res int)
 
-
-
+#extern(get_index)
+pub component Index<T any>(data list<T>, idx int) (res T, err error)
