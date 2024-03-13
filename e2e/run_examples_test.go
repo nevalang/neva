@@ -65,7 +65,7 @@ func TestLength(t *testing.T) {
 	require.Equal(
 		t,
 		"5\n",
-		strings.TrimSpace(string(out)),
+		string(out),
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
