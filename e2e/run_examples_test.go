@@ -437,13 +437,14 @@ Go to the store and buy some more, 99 bottles of beer on the wall.`
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
 
-func TestLength(t *testing.T) {
+// Check that Len component works with the list of integers.
+func TestListLength(t *testing.T) {
 	err := os.Chdir("../examples")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "13_list_length")
+	cmd := exec.Command("neva", "run", "12_list_len")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
