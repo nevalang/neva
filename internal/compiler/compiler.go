@@ -69,9 +69,6 @@ func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Err
 		return nil, err
 	}
 
-	// FIXME 99 bottles
-	// fprinter2 func call has no "tpl" port
-	
 	return irProg, nil
 }
 

@@ -55,6 +55,8 @@ func (e EventMessageSent) String() string {
 	return fmt.Sprintf("%v -> %v", e.SenderPortAddr, receiversStr)
 }
 
+// EventMessagePending describes event when message has reached receiver but not yet passed inside.
+// It's usefull only for interception and modifying message for specific receiver.
 type EventMessagePending struct {
 	Meta             ConnectionMeta // We can use sender from here and receivers just as a handy metadata
 	ReceiverPortAddr PortAddr       // So what we really need is sender and receiver port addrs
