@@ -1,0 +1,12 @@
+const n list<int> = [4,123,22,1121,215]
+component Main(start any) (stop any) {
+	nodes {
+	    printer Printer<any>
+	    len Len<list<int>>
+	}
+	net {
+		:start -> ($n -> len:data)
+	    len:res -> printer:data
+		printer:sig -> :stop
+	}
+}

@@ -87,15 +87,15 @@ constDef: IDENTIFIER typeExpr '=' constVal NEWLINE*;
 constVal:
 	nil
 	| bool
-	| INT
-	| FLOAT
+	| MINUS? INT
+	| MINUS? FLOAT
 	| STRING
 	| enumLit
 	| listLit
 	| structLit;
 nil: 'nil';
 bool: 'true' | 'false';
-enumLit: entityRef '::' IDENTIFIER ;
+enumLit: entityRef '::' IDENTIFIER;
 listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	compositeItem
@@ -116,11 +116,14 @@ groupCompStmt:
 	)* '}';
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
-	'{' NEWLINE* (compNodesDef NEWLINE*)? (compNetDef NEWLINE*)? '}';
+	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
+		COMMENT NEWLINE*
+	)* (compNetDef NEWLINE*)? (COMMENT NEWLINE*)* '}';
 
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
-compNodesDefBody: '{' NEWLINE* (compNodeDef NEWLINE*)* '}';
+compNodesDefBody:
+	'{' NEWLINE* ((compNodeDef | COMMENT) NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
 nodeDIArgs: compNodesDefBody;
@@ -157,6 +160,7 @@ PUB_KW: 'pub';
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_];
 INT: [0-9]+; // one or more integer digits
+MINUS: '-';
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
 NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix

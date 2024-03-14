@@ -96,3 +96,65 @@ func TestOrderDependendWithArrInport(t *testing.T) {
 		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }
+
+// There was a bug when compiler couldn't parse [-215]
+func TestListWithNegInt(t *testing.T) {
+	err := os.Chdir("./tests/list_with_neg_nums")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	for i := 0; i < 100; i++ {
+		cmd := exec.Command("neva", "run", "main")
+
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"[-215]\n",
+			string(out),
+		)
+
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
+}
+
+// Check that compiler throws human-readable error when type arguments in Node are incompatible.
+func TestIncompatCompTypeArg(t *testing.T) {
+	err := os.Chdir("./tests/incompat_comp_type_arg")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"main/main.neva:2:9 Incompatible types: want int | float | string, got any\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
+
+// Check program with comments is parsed without errors.
+func TestComments(t *testing.T) {
+	err := os.Chdir("./tests/comments")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"<empty>\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}

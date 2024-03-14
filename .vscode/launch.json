@@ -233,6 +233,15 @@
       "cwd": "${workspaceFolder}/e2e/tests/struct_selector_on_port_addr",
       "args": ["run", "main"]
     },
+    {
+      "name": "E2E incompat_comp_type_arg",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/e2e/tests/incompat_comp_type_arg",
+      "args": ["run", "main"]
+    },
     // === LSP ===
     {
       "name": "LSP",

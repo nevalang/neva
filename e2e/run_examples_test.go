@@ -436,3 +436,23 @@ Go to the store and buy some more, 99 bottles of beer on the wall.`
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
+
+func TestLength(t *testing.T) {
+	err := os.Chdir("../examples")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "13_list_length")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+
+	require.Equal(
+		t,
+		"5\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}

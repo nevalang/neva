@@ -49,4 +49,12 @@ type EqElse<T any> struct {
 
 // sends to "then" if a == b, otherwiese sends to "else"
 #extern(int int_eq, float float_eq, string string_eq)
-pub component Eq<T int | float | string>(a T, b T) (then T, else EqElse<T>)
+pub component Eq<T int |float | string>(a T, b T) (then T, else EqElse<T>)
+
+// List / Map operations
+
+#extern(list list_len, map map_len)
+pub component Len<T list<any> | map<any>>(data T) (res int)
+
+
+

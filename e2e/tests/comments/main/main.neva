@@ -1,0 +1,19 @@
+// top-level comment 1
+component Main(start) (stop) {
+	// comment inside component 1
+	nodes {
+		// comment inside nodes 1
+		Printer<any>
+		// comment inside nodes 2
+	}
+	// comment inside component 2
+	net {
+		// comment inside network 1
+		:start -> printer:data
+		// comment inside network 2
+		printer:sig -> :stop
+		// comment inside network 
+	}
+	// comment inside component 3
+}
+// top-level comment 2
