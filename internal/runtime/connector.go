@@ -27,7 +27,8 @@ func (c Connector) Connect(ctx context.Context, conns []Connection) {
 func (c Connector) broadcast(ctx context.Context, conn Connection) {
 	receiversForEvent := getReceiversForEvent(conn)
 
-	// when some receivers are much faster than others we can leak memory by spawning to many distribute goroutines
+	// when some receivers are much faster than others
+	// we can leak memory by spawning to many distribute goroutines
 	sema := make(chan struct{}, 10)
 
 	for {
@@ -45,7 +46,11 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 
 			sema <- struct{}{} // increment active goroutines counter, if too much active, block
 
-			ready := make(chan struct{}) // distribute will send to this channel after processing first receiver
+			// distribute will send to this channel after processing first receiver
+			// warning: it's not clear whether it's safe to move on before all receivers processed
+			// order of messages must be preserved while distribute goroutines might be concurrent to each other
+			ready := make(chan struct{})
+
 			go func() {
 				c.distribute(
 					ctx,
@@ -58,9 +63,11 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 			}()
 
 			select {
-			case <-ctx.Done(): // it's possible that ctx already closed and no one will receive current message
+			// it's possible that ctx already closed and no one will receive current message
+			case <-ctx.Done():
 				return
-			case <-ready: // after processing first receiver we can move on and accept new messages from sender
+			// after processing first receiver we can move on and accept new messages from sender
+			case <-ready:
 				continue
 			}
 		}
@@ -80,47 +87,53 @@ func (c Connector) distribute(
 	ctx context.Context,
 	msg Msg,
 	meta ConnectionMeta,
-	q []chan Msg,
+	receiverChans []chan Msg,
 	ready chan struct{},
 ) {
 	isFirstReceiverProcessed := false
 	i := 0
-	interceptedMsgs := make(map[PortAddr]Msg, len(q)) // we can handle same receiver multiple times
-	receiversPortAddrs := meta.ReceiverPortAddrs
+	interceptedMsgs := make(map[PortAddr]Msg, len(receiverChans)) // we can handle same receiver multiple times
 
-	for len(q) > 0 {
-		currentReceiver := q[i]
-		receiverPortAddr := meta.ReceiverPortAddrs[i]
+	// we make copy because we're gonna modify it
+	// this is crucial because this array is shared across goroutines
+	queue := make([]chan Msg, len(receiverChans))
+	copy(queue, receiverChans)
+	receiversPortAddrs := make([]PortAddr, len(receiverChans))
+	copy(receiversPortAddrs, meta.ReceiverPortAddrs)
 
-		if _, ok := interceptedMsgs[receiverPortAddr]; !ok { // avoid multuple interceptions
+	for len(queue) > 0 {
+		curRecv := queue[i]
+		recvPortAddr := receiversPortAddrs[i]
+
+		if _, ok := interceptedMsgs[recvPortAddr]; !ok { // avoid multuple interceptions
 			event := Event{
 				Type: MessagePendingEvent,
 				MessagePending: &EventMessagePending{
 					Meta:             meta,
-					ReceiverPortAddr: receiverPortAddr,
+					ReceiverPortAddr: recvPortAddr,
 				},
 			}
 			msg = c.listener.Send(event, msg)
-			interceptedMsgs[receiverPortAddr] = msg
+			interceptedMsgs[recvPortAddr] = msg
 		}
-		interceptedMsg := interceptedMsgs[receiverPortAddr]
+		interceptedMsg := interceptedMsgs[recvPortAddr]
 
 		select {
 		case <-ctx.Done():
 			return
-		case currentReceiver <- interceptedMsg: // receiver has accepted the message
+		case curRecv <- interceptedMsg: // receiver has accepted the message
 			event := Event{
 				Type: MessageReceivedEvent,
 				MessageReceived: &EventMessageReceived{
 					Meta:             meta,
-					ReceiverPortAddr: receiverPortAddr,
+					ReceiverPortAddr: recvPortAddr,
 				},
 			}
 
 			msg = c.listener.Send(event, msg) // notify listener about the event and save intercepted message
 
 			// remove current receiver from queue
-			q = append(q[:i], q[i+1:]...)
+			queue = append(queue[:i], queue[i+1:]...) // this append modifies array
 			receiversPortAddrs = append(receiversPortAddrs[:i], receiversPortAddrs[i+1:]...)
 
 			if !isFirstReceiverProcessed { // if this is the first time we processed receiver
@@ -128,12 +141,12 @@ func (c Connector) distribute(
 				isFirstReceiverProcessed = true // and set flag to true to avoid writing to that channel again
 			}
 		default: // current receiver is busy
-			if i < len(q) { // so if we are not at the end of the queue
+			if i < len(queue) { // so if we are not at the end of the queue
 				i++ // then go try next receiver
 			}
 		}
 
-		if i == len(q) { // if this is the end of the queue (and loop isn't over)
+		if i == len(queue) { // if this is the end of the queue (and loop isn't over)
 			i = 0 // then start over
 		}
 	}

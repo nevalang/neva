@@ -28,9 +28,8 @@ component Looper(old int) (new int) {
             eq:a,
             (0 -> eq:b)
         ]
-        // then print second line
+        // then print second line and end send new to out
         eq:then -> ($secondLine2 -> printer:data)
-        // end send new to out
         printer:sig -> (eq:then -> :new)
         // else print another second line
         eq:else.a -> [

@@ -9,12 +9,12 @@ import (
 type blocker struct{}
 
 func (l blocker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	sigIn, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	sigIn, err := io.In.Port("sig")
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
@@ -24,10 +24,14 @@ func (l blocker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 		return nil, err
 	}
 
-	return l.Handle(dataIn, sigIn, dataOut), nil
+	return l.Handle(sigIn, dataIn, dataOut), nil
 }
 
-func (blocker) Handle(dataIn, sigIn, dataOut chan runtime.Msg) func(ctx context.Context) {
+func (blocker) Handle(
+	sigIn,
+	dataIn,
+	dataOut chan runtime.Msg,
+) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
 			select {
@@ -37,11 +41,11 @@ func (blocker) Handle(dataIn, sigIn, dataOut chan runtime.Msg) func(ctx context.
 				select {
 				case <-ctx.Done():
 					return
-				case v := <-dataIn:
+				case dataMsg := <-dataIn:
 					select {
 					case <-ctx.Done():
 						return
-					case dataOut <- v:
+					case dataOut <- dataMsg:
 					}
 				}
 			}
