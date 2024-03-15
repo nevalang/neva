@@ -1,0 +1,18 @@
+const n list<int> = [1,1,5,112,69,420]
+const j int = 4
+component Main(start any) (stop any) {
+	nodes {
+        index Index<any>
+        printer Printer<any>
+	}
+	net {
+		:start -> ($n -> index:data,$j -> index:idx)
+	    index:res -> printer:data
+	    printer:sig -> :stop
+
+        //Handle error
+	    index:err -> :stop
+	}
+}
+
+//Outputs 69
