@@ -42,7 +42,7 @@ func NewApp( //nolint:funlen
 			},
 			{
 				Name:  "new",
-				Usage: "Create new nevalang project",
+				Usage: "Create new Nevalang project",
 				Args:  true,
 				Action: func(cCtx *cli.Context) error {
 					if path := cCtx.Args().First(); path != "" {

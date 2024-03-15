@@ -118,6 +118,7 @@ func TestListWithNegInt(t *testing.T) {
 	}
 }
 
+// Check that compiler throws human-readable error when type arguments in Node are incompatible.
 func TestIncompatCompTypeArg(t *testing.T) {
 	err := os.Chdir("./tests/incompat_comp_type_arg")
 	require.NoError(t, err)
@@ -131,6 +132,26 @@ func TestIncompatCompTypeArg(t *testing.T) {
 	require.Equal(
 		t,
 		"main/main.neva:2:9 Incompatible types: want int | float | string, got any\n",
+		string(out),
+	)
+
+	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+}
+
+// Check program with comments is parsed without errors.
+func TestComments(t *testing.T) {
+	err := os.Chdir("./tests/comments")
+	require.NoError(t, err)
+
+	defer os.Chdir(wd)
+
+	cmd := exec.Command("neva", "run", "main")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		"<empty>\n",
 		string(out),
 	)
 
