@@ -1,27 +1,95 @@
 // https://www.99-bottles-of-beer.net
 
-const endLines string = 'No more bottles of beer on the wall, no more bottles of beer.
-Go to the store and buy some more, 99 bottles of beer on the wall.'
-
 component Main(start) (stop) {
     nodes {
         Eq<int>
-        Printer<string>
-        Looper
+        NextLinesPrinter
     }
     net {
         :start -> (
             99 -> eq:a,
             0 -> eq:b
         )
-
-        eq:then -> ($endLines -> printer:data)
-        printer:sig -> :stop
-
-        eq:else.a -> looper:old
-        looper:new -> [
+        eq:then -> :stop
+        eq:else.a -> nextLinesPrinter:old
+        nextLinesPrinter:new -> [
             eq:a,
             (0 -> eq:b)
         ]
+    }
+}
+
+component NextLinesPrinter(old int) (new int) {
+    nodes {
+        Decrementor<int>
+        FirstLinePrinter
+        SecondLinePrinter
+    }
+    net {
+        :old -> firstLinePrinter:num
+        firstLinePrinter:sig -> decrementor:data
+        decrementor:res -> secondLinePrinter:num
+        secondLinePrinter:sig -> :new
+    }
+}
+
+const {
+    firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.'
+    firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
+    firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
+}
+
+component FirstLinePrinter(num int) (sig int) {
+    nodes {
+        Match<int>
+        Printer<string>
+        FPrinter<int>
+    }
+    net {
+        :num -> [
+            match:data,
+            (0 -> match:case[0]),
+            (1 -> match:case[1])
+        ]
+        match:then[0] -> ($firstLine3 -> printer:data)
+        match:then[1] -> ($firstLine2 -> printer:data)
+        match:else -> [
+            fPrinter:args[0],
+            ($firstLine1 -> fPrinter:tpl)
+        ]
+        fPrinter:args[0] -> :sig
+        printer:sig -> (:num -> :sig)
+    }
+}
+
+const {
+    secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n'
+    secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
+    secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
+    secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.\n'
+}
+
+component SecondLinePrinter(num int) (sig int) {
+    nodes {
+        Match<int>
+        Printer<string>
+        FPrinter<int>
+    }
+    net {
+        :num -> [
+            match:data,
+            (-1 -> match:case[0]),
+            (0 -> match:case[1]),
+            (1 -> match:case[2])
+        ]
+        match:then[0] -> ($secondLine4 -> printer:data)
+        match:then[1] -> ($secondLine3 -> printer:data)
+        match:then[2] -> ($secondLine2 -> printer:data)
+        match:else -> [
+            fPrinter:args[0],
+            ($secondLine1 -> fPrinter:tpl)
+        ]
+        fPrinter:args[0] -> :sig
+        printer:sig -> (:num -> :sig)
     }
 }
