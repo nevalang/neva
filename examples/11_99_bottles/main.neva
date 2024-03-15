@@ -14,10 +14,10 @@ component Main(start) (stop) {
             99 -> eq:a,
             0 -> eq:b
         )
-        eq:then -> (
-            $endLines -> printer:data,
-            printer:sig -> :stop
-        )
+
+        eq:then -> ($endLines -> printer:data)
+        printer:sig -> :stop
+
         eq:else.a -> looper:old
         looper:new -> [
             eq:a,
