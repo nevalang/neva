@@ -30,8 +30,8 @@ component Println(n maybe<int>) (n maybe<int>) {
         15 -> mod:case[2]
 
         mod:then[0] -> ('Fizz' -> printer:data)
-        mod:then[1] -> ('Bazz' -> printer:data)
-        mod:then[2] -> ('FizzBazz' -> printer:data)
+        mod:then[1] -> ('Buzz' -> printer:data)
+        mod:then[2] -> ('FizzBuzz' -> printer:data)
         mod:else -> printer:data
 
         printer:sig -> blocker:sig
