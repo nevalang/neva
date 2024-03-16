@@ -30,9 +30,9 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	if len(caseIn) != len(thenOut) {
-		return nil, errors.New("number of 'case' ports must match number of 'then' ports")
-	}
+	// if len(caseIn) != len(thenOut) {
+	// 	return nil, errors.New("number of 'case' ports must match number of 'then' ports")
+	// }
 
 	return func(ctx context.Context) {
 		for {
@@ -68,7 +68,6 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 							return
 						case elseOut <- dataMsg:
 						}
-
 					}
 				}
 			}
