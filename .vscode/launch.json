@@ -214,6 +214,15 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "11_99_bottles"]
     },
+    {
+      "name": "Neva CLI 113",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "13_fizzbuzz"]
+    },
     // run (e2e tests)
     {
       "name": "E2E struct_selector_on_port_addr",
