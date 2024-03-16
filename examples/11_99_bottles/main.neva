@@ -2,38 +2,35 @@
 
 component Main(start) (stop) {
     nodes {
-        Eq<int>
-        NextLinesPrinter
+        Match<int>
+        next PrintNext2Lines
     }
     net {
-        :start -> (
-            99 -> eq:a,
-            -1 -> eq:b
-        )
+        :start -> (99 -> next:old)
 
-        eq:then -> :stop
-        eq:else.a -> nextLinesPrinter:old
+        next:new -> match:data
+        -1 -> match:case[0]
 
-        nextLinesPrinter:new -> [
-            eq:a,
-            (-1 -> eq:b)
-        ]
+        match:then[0] -> :stop
+        match:else -> next:old
     }
 }
 
-component NextLinesPrinter(old int) (new int) {
+component PrintNext2Lines(old int) (new int) {
     nodes {
         Decrementor<int>
-        FirstLinePrinter
-        SecondLinePrinter
+        first PrintFirstLine
+        second PrintSecondLine
     }
     net {
-        :old -> firstLinePrinter:num
-        firstLinePrinter:sig -> decrementor:data
-        decrementor:res -> secondLinePrinter:num
-        secondLinePrinter:sig -> :new
+        :old -> first:num
+        first:sig -> decrementor:data
+        decrementor:res -> second:num
+        second:sig -> :new
     }
 }
+
+// === First Line ===
 
 const {
     firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.'
@@ -41,7 +38,7 @@ const {
     firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 }
 
-component FirstLinePrinter(num int) (sig int) {
+component PrintFirstLine(num int) (sig int) {
     nodes {
         Match<int>
         Printer<string>
@@ -70,14 +67,16 @@ component FirstLinePrinter(num int) (sig int) {
     }
 }
 
+// === Second Line ===
+
 const {
     secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n'
     secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
     secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
-    secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.\n'
+    secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 }
 
-component SecondLinePrinter(num int) (sig int) {
+component PrintSecondLine(num int) (sig int) {
     nodes {
         Match<int>
         Blocker<int>

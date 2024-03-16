@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test99Bottles(t *testing.T) {
+func Test(t *testing.T) {
 	err := os.Chdir("../")
 	require.NoError(t, err)
 
@@ -328,4 +328,5 @@ Take one down and pass it around, 1 bottle of beer on the wall.
 Take one down and pass it around, no more bottles of beer on the wall.
 
 No more bottles of beer on the wall, no more bottles of beer.
-Go to the store and buy some more, 99 bottles of beer on the wall.`
+Go to the store and buy some more, 99 bottles of beer on the wall.
+`
