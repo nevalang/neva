@@ -1,10 +1,7 @@
 component Main(start) (stop) {
-	nodes { Eq<any> }
+	nodes { Decrementor<any> }
 	net {
-		:start -> (
-            0 -> eq:a,
-            1 -> eq:b
-        )
-        eq:else -> :stop
+		:start -> (42 -> decrementor:data)
+        decrementor:res -> :stop
 	}
 }

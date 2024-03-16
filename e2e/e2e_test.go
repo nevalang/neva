@@ -132,7 +132,7 @@ func TestIncompatCompTypeArg(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"main/main.neva:2:9 Incompatible types: want int | float | string, got any\n",
+		"main/main.neva:2:9 Incompatible types: want int | float, got any\n",
 		string(out),
 	)
 
