@@ -30,6 +30,7 @@ func (ranger) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			case <-ctx.Done():
 				return
 			case fromMsg := <-fromIn:
+				fromInt := fromMsg.Int()
 				select {
 				case <-ctx.Done():
 					return
@@ -38,11 +39,12 @@ func (ranger) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 					case <-ctx.Done():
 						return
 					case toMsg := <-toIn:
+						toInt := toMsg.Int()
 						select {
 						case <-ctx.Done():
 							return
 						default:
-							for i := fromMsg.Int(); i < toMsg.Int(); i++ {
+							for i := fromInt; i < toInt; i++ {
 								select {
 								case <-ctx.Done():
 									return

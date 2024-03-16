@@ -25,16 +25,16 @@ func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
+			case dataMsg := <-dataIn:
 				select {
 				case <-ctx.Done():
 					return
 				default:
-					fmt.Println(data)
+					fmt.Println(dataMsg)
 					select {
 					case <-ctx.Done():
 						return
-					case sigOut <- data:
+					case sigOut <- dataMsg:
 					}
 				}
 			}

@@ -2,28 +2,39 @@
 
 component Main(start) (stop) {
 	nodes {
-        Mod
         Range
-        Destructor
+        Println
         Unwrap<int>
-        Printer<any>
     }
 	net {
-		:start -> (0 -> range:from, 100 -> range:to)
-
-        range:data -> unwrap:data
-        unwrap:some -> mod:data
+		:start -> (1 -> range:from, 101 -> range:to)
+        range:data -> println:n
+        println:n -> unwrap:data
         unwrap:none -> :stop
+	}
+}
+
+component Println(n maybe<int>) (n maybe<int>) {
+    nodes {
+        Mod
+        Unwrap<int>
+        Printer<any>
+        Blocker<maybe<int>>
+    }
+    net {
+        :n -> [unwrap:data, blocker:data]
+        unwrap:some -> mod:data
 
         3 -> mod:case[0]
         5 -> mod:case[1]
         15 -> mod:case[2]
 
-        mod:then[0] ->('Fizz' -> printer:data)
-        mod:then[1] ->('Bazz' -> printer:data)
+        mod:then[0] -> ('Fizz' -> printer:data)
+        mod:then[1] -> ('Bazz' -> printer:data)
         mod:then[2] -> ('FizzBazz' -> printer:data)
         mod:else -> printer:data
 
-        printer:sig -> destructor:msg
-	}
+        printer:sig -> blocker:sig
+        blocker:data -> :n
+    }
 }
