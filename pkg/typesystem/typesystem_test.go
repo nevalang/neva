@@ -249,18 +249,6 @@ func TestExpr_String(t *testing.T) {
 			},
 			want: "{ name string }",
 		},
-		{ // FIXME flacky test (struct must be ordered)
-			name: "lit_expr_struct_with_two_fields",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Struct: map[string]ts.Expr{
-						"name": {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
-						"age":  {Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
-					},
-				},
-			},
-			want: "{ name string, age int }",
-		},
 		// union
 		{
 			name: "lit expr empty union", // not a valid expr

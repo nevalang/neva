@@ -8,10 +8,6 @@ import (
 	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
-// Desugarer does the following:
-// 1. Replaces const ref senders with normal nodes that uses Const component with compiler directive;
-// 2. Inserts void nodes and connections for every unused outport in the program;
-// 3. Replaces struct selectors with chain of struct selector nodes.
 type Desugarer struct{}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
@@ -183,4 +179,8 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 			Component: componentResult.desugaredComponent,
 		},
 	}, nil
+}
+
+func New() Desugarer {
+	return Desugarer{}
 }

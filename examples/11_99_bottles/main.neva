@@ -1,0 +1,108 @@
+// https://www.99-bottles-of-beer.net
+
+component Main(start) (stop) {
+    nodes {
+        Match<int>
+        next PrintNext2Lines
+    }
+    net {
+        :start -> (99 -> next:old)
+
+        next:new -> match:data
+        -1 -> match:case[0]
+
+        match:then[0] -> :stop
+        match:else -> next:old
+    }
+}
+
+component PrintNext2Lines(old int) (new int) {
+    nodes {
+        Decrementor<int>
+        first PrintFirstLine
+        second PrintSecondLine
+    }
+    net {
+        :old -> first:num
+        first:sig -> decrementor:data
+        decrementor:res -> second:num
+        second:sig -> :new
+    }
+}
+
+// === First Line ===
+
+const {
+    firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.'
+    firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
+    firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
+}
+
+component PrintFirstLine(num int) (sig int) {
+    nodes {
+        Match<int>
+        Printer<string>
+        FPrinter<int>
+        Blocker<int>
+    }
+    net {
+        :num -> [
+            match:data,
+            (0 -> match:case[0]),
+            (1 -> match:case[1]),
+            blocker:data
+        ]
+
+        match:then[0] -> ($firstLine3 -> printer:data)
+        match:then[1] -> ($firstLine2 -> printer:data)
+        match:else -> [
+            fPrinter:args[0],
+            ($firstLine1 -> fPrinter:tpl)
+        ]
+
+        fPrinter:args[0] -> blocker:sig
+        printer:sig -> blocker:sig
+
+        blocker:data -> :sig
+    }
+}
+
+// === Second Line ===
+
+const {
+    secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n'
+    secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
+    secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
+    secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
+}
+
+component PrintSecondLine(num int) (sig int) {
+    nodes {
+        Match<int>
+        Blocker<int>
+        FPrinter<int>
+        Printer<string>
+    }
+    net {
+        :num -> [
+            match:data,
+            (-1 -> match:case[0]),
+            (0 -> match:case[1]),
+            (1 -> match:case[2]),
+            blocker:data
+        ]
+
+        match:then[0] -> ($secondLine4 -> printer:data)
+        match:then[1] -> ($secondLine3 -> printer:data)
+        match:then[2] -> ($secondLine2 -> printer:data)
+        match:else -> [
+            fPrinter:args[0],
+            ($secondLine1 -> fPrinter:tpl)
+        ]
+
+        fPrinter:args[0] -> blocker:sig
+        printer:sig -> blocker:sig
+
+        blocker:data -> :sig
+    }
+}

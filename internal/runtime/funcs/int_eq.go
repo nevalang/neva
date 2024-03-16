@@ -43,7 +43,7 @@ func (intEq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 						select {
 						case <-ctx.Done():
 							return
-						case thenOut <- nil:
+						case thenOut <- a:
 						}
 						continue
 					}

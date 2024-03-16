@@ -83,7 +83,7 @@ func (a Analyzer) analyzeIO(
 		}.Wrap(err)
 	}
 
-	resolvedOit, err := a.analyzePorts(typeParams, io.Out, scope)
+	resolvedOut, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
 		return src.IO{}, compiler.Error{
 			Err:      ErrInvalidOutports,
@@ -93,7 +93,7 @@ func (a Analyzer) analyzeIO(
 
 	return src.IO{
 		In:  resolvedIn,
-		Out: resolvedOit,
+		Out: resolvedOut,
 	}, nil
 }
 
@@ -117,6 +117,7 @@ func (a Analyzer) analyzePorts(
 }
 
 func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *compiler.Error) {
+	// TODO https://github.com/nevalang/neva/issues/507
 	resolvedDef, err := a.analyzeTypeDef(
 		ts.Def{
 			Params:   params,

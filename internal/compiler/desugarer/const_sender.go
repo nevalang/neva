@@ -26,7 +26,10 @@ type handleConstRefSenderResult struct {
 }
 
 // In the future compiler can operate in concurrently
-var virtualEmittersCount atomic.Uint64
+var (
+	virtualEmittersCount atomic.Uint64
+	virtualConstCount    atomic.Uint64
+)
 
 func (d Desugarer) handleLiteralSender(
 	conn src.Connection,
@@ -34,14 +37,13 @@ func (d Desugarer) handleLiteralSender(
 	handleLiteralSenderResult,
 	*compiler.Error,
 ) {
-	counter := virtualEmittersCount.Load()
-	virtualEmittersCount.Store(counter + 1)
-	constName := fmt.Sprintf("virtual_const_%d", counter)
+	constCounter := virtualConstCount.Load()
+	virtualConstCount.Store(constCounter + 1)
+	constName := fmt.Sprintf("virtual_const_%d", constCounter)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
 
-	emitterNodeName := fmt.Sprintf("virtual_emitter_%d", counter)
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
@@ -55,6 +57,11 @@ func (d Desugarer) handleLiteralSender(
 				TypeExpr,
 		},
 	}
+
+	emitterCounter := virtualEmittersCount.Load()
+	virtualEmittersCount.Store(emitterCounter + 1)
+	emitterNodeName := fmt.Sprintf("virtual_emitter_%d", emitterCounter)
+
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: emitterNodeName,
 		Port: "msg",
