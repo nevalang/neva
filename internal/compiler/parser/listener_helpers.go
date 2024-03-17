@@ -10,6 +10,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -29,13 +30,13 @@ func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
 
 	return src.TypeParams{
 		Params: result,
-		Meta: src.Meta{
+		Meta: core.Meta{
 			Text: params.GetText(),
-			Start: src.Position{
+			Start: core.Position{
 				Line:   params.GetStart().GetLine(),
 				Column: params.GetStart().GetColumn(),
 			},
-			Stop: src.Position{
+			Stop: core.Position{
 				Line:   params.GetStop().GetLine(),
 				Column: params.GetStop().GetColumn(),
 			},
@@ -47,9 +48,9 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	if expr == nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
-				Ref: src.EntityRef{Name: "any"},
+				Ref: core.EntityRef{Name: "any"},
 			},
-			Meta: src.Meta{Text: "any"},
+			Meta: core.Meta{Text: "any"},
 		}
 	}
 
@@ -64,13 +65,13 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 		fmt.Println(expr.GetText())
 		panic(&compiler.Error{
 			Err: errors.New("Missing type expression"),
-			Meta: &src.Meta{
+			Meta: &core.Meta{
 				Text: expr.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   expr.GetStart().GetLine(),
 					Column: expr.GetStart().GetLine(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   expr.GetStop().GetLine(),
 					Column: expr.GetStop().GetLine(),
 				},
@@ -83,7 +84,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	return *result
 }
 
-func getTypeExprMeta(expr generated.ITypeExprContext) src.Meta {
+func getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
 	var text string
 	if text = expr.GetText(); text == "" {
 		text = "any "
@@ -91,13 +92,13 @@ func getTypeExprMeta(expr generated.ITypeExprContext) src.Meta {
 
 	start := expr.GetStart()
 	stop := expr.GetStop()
-	meta := src.Meta{
+	meta := core.Meta{
 		Text: text,
-		Start: src.Position{
+		Start: core.Position{
 			Line:   start.GetLine(),
 			Column: start.GetColumn(),
 		},
-		Stop: src.Position{
+		Stop: core.Position{
 			Line:   stop.GetLine(),
 			Column: stop.GetColumn(),
 		},
@@ -202,32 +203,32 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 	return &result
 }
 
-func parseEntityRef(expr generated.IEntityRefContext) (src.EntityRef, error) {
+func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, error) {
 	parts := strings.Split(expr.GetText(), ".")
 	if len(parts) > 2 {
 		panic("")
 	}
 
-	meta := src.Meta{
+	meta := core.Meta{
 		Text: expr.GetText(),
-		Start: src.Position{
+		Start: core.Position{
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStart().GetColumn(),
 		},
-		Stop: src.Position{
+		Stop: core.Position{
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
 	}
 
 	if len(parts) == 1 {
-		return src.EntityRef{
+		return core.EntityRef{
 			Name: parts[0],
 			Meta: meta,
 		}, nil
 	}
 
-	return src.EntityRef{
+	return core.EntityRef{
 		Pkg:  parts[0],
 		Name: parts[1],
 		Meta: meta,
@@ -259,13 +260,13 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
 			TypeExpr: parseTypeExpr(typeExpr),
-			Meta: src.Meta{
+			Meta: core.Meta{
 				Text: port.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   port.GetStart().GetLine(),
 					Column: port.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   port.GetStop().GetLine(),
 					Column: port.GetStop().GetColumn(),
 				},
@@ -283,13 +284,13 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	return src.Interface{
 		TypeParams: parsedTypeParams,
 		IO:         src.IO{In: in, Out: out},
-		Meta: src.Meta{
+		Meta: core.Meta{
 			Text: actx.GetText(),
-			Start: src.Position{
+			Start: core.Position{
 				Line:   actx.GetStart().GetLine(),
 				Column: actx.GetStart().GetColumn(),
 			},
-			Stop: src.Position{
+			Stop: core.Position{
 				Line:   actx.GetStop().GetLine(),
 				Column: actx.GetStop().GetColumn(),
 			},
@@ -332,13 +333,13 @@ func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
 			EntityRef:  parsedRef,
 			TypeArgs:   typeArgs,
 			Deps:       deps,
-			Meta: src.Meta{
+			Meta: core.Meta{
 				Text: node.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   node.GetStart().GetLine(),
 					Column: node.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   node.GetStop().GetLine(),
 					Column: node.GetStop().GetColumn(),
 				},
@@ -372,13 +373,13 @@ func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Er
 }
 
 func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
-	connMeta := src.Meta{
+	connMeta := core.Meta{
 		Text: connDef.GetText(),
-		Start: src.Position{
+		Start: core.Position{
 			Line:   connDef.GetStart().GetLine(),
 			Column: connDef.GetStart().GetColumn(),
 		},
-		Stop: src.Position{
+		Stop: core.Position{
 			Line:   connDef.GetStop().GetLine(),
 			Column: connDef.GetStop().GetColumn(),
 		},
@@ -445,7 +446,7 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 
 func parseNormConnReceiverSide(
 	normConn generated.INormConnDefContext,
-	connMeta src.Meta,
+	connMeta core.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	if receiverSide := normConn.ReceiverSide(); receiverSide != nil {
 		return parseReceiverSide(receiverSide, connMeta)
@@ -461,13 +462,13 @@ func parseNormConnReceiverSide(
 
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
-			Meta: &src.Meta{
+			Meta: &core.Meta{
 				Text: normConn.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   normConn.GetStart().GetLine(),
 					Column: normConn.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   normConn.GetStop().GetLine(),
 					Column: normConn.GetStop().GetColumn(),
 				},
@@ -480,7 +481,7 @@ func parseNormConnReceiverSide(
 
 func parseReceiverSide(
 	actx generated.IReceiverSideContext,
-	connMeta src.Meta,
+	connMeta core.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	if then := actx.ThenConnExpr(); then != nil {
 		return parseDeferredConnExpr(then, connMeta)
@@ -499,13 +500,13 @@ func parseMultipleReceiverSides(
 	allParsedDeferredConns := make([]src.Connection, 0, len(receiverSides))
 
 	for _, receiverSide := range receiverSides {
-		meta := src.Meta{
+		meta := core.Meta{
 			Text: receiverSide.GetText(),
-			Start: src.Position{
+			Start: core.Position{
 				Line:   receiverSide.GetStart().GetLine(),
 				Column: receiverSide.GetStart().GetColumn(),
 			},
-			Stop: src.Position{
+			Stop: core.Position{
 				Line:   receiverSide.GetStop().GetLine(),
 				Column: receiverSide.GetStop().GetColumn(),
 			},
@@ -552,7 +553,7 @@ func parseMultipleReceiverSides(
 
 func parseDeferredConnExpr(
 	thenExpr generated.IThenConnExprContext,
-	connMeta src.Meta,
+	connMeta core.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
 	thenConnExprs := thenExpr.AllConnDef()
 	thenConns := make([]src.Connection, 0, len(thenConnExprs))
@@ -587,13 +588,13 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		senderSideConstLit == nil {
 		panic(&compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
-			Meta: &src.Meta{
+			Meta: &core.Meta{
 				Text: senderSide.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   senderSide.GetStart().GetLine(),
 					Column: senderSide.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   senderSide.GetStop().GetLine(),
 					Column: senderSide.GetStop().GetColumn(),
 				},
@@ -634,13 +635,13 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 		PortAddr:  senderSidePortAddr,
 		Const:     constant,
 		Selectors: senderSelectors,
-		Meta: src.Meta{
+		Meta: core.Meta{
 			Text: senderSide.GetText(),
-			Start: src.Position{
+			Start: core.Position{
 				Line:   senderSide.GetStart().GetLine(),
 				Column: senderSide.GetStart().GetColumn(),
 			},
-			Stop: src.Position{
+			Stop: core.Position{
 				Line:   senderSide.GetStop().GetLine(),
 				Column: senderSide.GetStop().GetColumn(),
 			},
@@ -665,13 +666,13 @@ func parseSingleReceiverSide(
 		Receivers: []src.ConnectionReceiver{
 			{
 				PortAddr: portAddr,
-				Meta: src.Meta{
+				Meta: core.Meta{
 					Text: singleReceiver.GetText(),
-					Start: src.Position{
+					Start: core.Position{
 						Line:   singleReceiver.GetStart().GetLine(),
 						Column: singleReceiver.GetStart().GetColumn(),
 					},
-					Stop: src.Position{
+					Stop: core.Position{
 						Line:   singleReceiver.GetStop().GetLine(),
 						Column: singleReceiver.GetStop().GetColumn(),
 					},
@@ -685,13 +686,13 @@ func parsePortAddr(
 	expr generated.IPortAddrContext,
 	fallbackNode string,
 ) (src.PortAddr, *compiler.Error) {
-	meta := src.Meta{
+	meta := core.Meta{
 		Text: expr.GetText(),
-		Start: src.Position{
+		Start: core.Position{
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStart().GetColumn(),
 		},
-		Stop: src.Position{
+		Stop: core.Position{
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
@@ -712,13 +713,13 @@ func parsePortAddr(
 	if err != nil {
 		return src.PortAddr{}, &compiler.Error{
 			Err: err,
-			Meta: &src.Meta{
+			Meta: &core.Meta{
 				Text: expr.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   expr.GetStart().GetLine(),
 					Column: expr.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   expr.GetStop().GetLine(),
 					Column: expr.GetStop().GetColumn(),
 				},
@@ -742,7 +743,7 @@ func parsePortAddr(
 
 }
 
-func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrContext, meta src.Meta) (src.PortAddr, *compiler.Error) {
+func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrContext, meta core.Meta) (src.PortAddr, *compiler.Error) {
 	nodeName := fallbackNode
 	if n := expr.PortAddrNode(); n != nil {
 		nodeName = n.GetText()
@@ -757,13 +758,13 @@ func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrCont
 
 func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //nolint:funlen
 	msg := src.Message{
-		Meta: src.Meta{
+		Meta: core.Meta{
 			Text: constVal.GetText(),
-			Start: src.Position{
+			Start: core.Position{
 				Line:   constVal.GetStart().GetLine(),
 				Column: constVal.GetStart().GetColumn(),
 			},
-			Stop: src.Position{
+			Stop: core.Position{
 				Line:   constVal.GetStop().GetLine(),
 				Column: constVal.GetStop().GetColumn(),
 			},
@@ -778,7 +779,7 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 			panic("bool val not true or false")
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: src.EntityRef{Name: "bool"},
+			Ref: core.EntityRef{Name: "bool"},
 		}
 		msg.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
@@ -787,7 +788,7 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 			panic(err)
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: src.EntityRef{Name: "int"},
+			Ref: core.EntityRef{Name: "int"},
 		}
 		if constVal.MINUS() != nil {
 			parsedInt = -parsedInt
@@ -799,7 +800,7 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 			panic(err)
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: src.EntityRef{Name: "float"},
+			Ref: core.EntityRef{Name: "float"},
 		}
 		if constVal.MINUS() != nil {
 			parsedFloat = -parsedFloat
@@ -817,7 +818,7 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 			),
 		)
 		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: src.EntityRef{Name: "string"},
+			Ref: core.EntityRef{Name: "string"},
 		}
 	case constVal.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(constVal.EnumLit().EntityRef())
@@ -842,13 +843,13 @@ func parseMessage(constVal generated.IConstValContext) (src.Message, error) { //
 		msg.List = make([]src.Const, 0, len(items))
 		for _, item := range items {
 			constant := src.Const{
-				Meta: src.Meta{
+				Meta: core.Meta{
 					Text: item.GetText(),
-					Start: src.Position{
+					Start: core.Position{
 						Line:   item.GetStart().GetLine(),
 						Column: item.GetStart().GetLine(),
 					},
-					Stop: src.Position{
+					Stop: core.Position{
 						Line:   item.GetStop().GetLine(),
 						Column: item.GetStop().GetLine(),
 					},
@@ -957,13 +958,13 @@ func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 			Params:   parseTypeParams(actx.TypeParams()).Params,
 			BodyExpr: body,
 			// CanBeUsedForRecursiveDefinitions: body == nil,
-			Meta: src.Meta{
+			Meta: core.Meta{
 				Text: actx.GetText(),
-				Start: src.Position{
+				Start: core.Position{
 					Line:   actx.GetStart().GetLine(),
 					Column: actx.GetStart().GetColumn(),
 				},
-				Stop: src.Position{
+				Stop: core.Position{
 					Line:   actx.GetStop().GetLine(),
 					Column: actx.GetStop().GetColumn(),
 				},
@@ -980,13 +981,13 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 		panic("constVal == nil && entityRef == nil")
 	}
 
-	meta := src.Meta{
+	meta := core.Meta{
 		Text: actx.GetText(),
-		Start: src.Position{
+		Start: core.Position{
 			Line:   actx.GetStart().GetLine(),
 			Column: actx.GetStart().GetColumn(),
 		},
-		Stop: src.Position{
+		Stop: core.Position{
 			Line:   actx.GetStop().GetLine(),
 			Column: actx.GetStop().GetColumn(),
 		},

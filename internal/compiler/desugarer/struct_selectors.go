@@ -7,6 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -26,7 +27,7 @@ type handleStructSelectorsResult struct {
 	nodeToInsertName  string
 }
 
-var selectorNodeRef = src.EntityRef{
+var selectorNodeRef = core.EntityRef{
 	Pkg:  "builtin",
 	Name: "StructSelector",
 }
@@ -108,13 +109,13 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 var (
 	strTypeExpr = ts.Expr{
 		Inst: &ts.InstExpr{
-			Ref: src.EntityRef{Pkg: "builtin", Name: "string"},
+			Ref: core.EntityRef{Pkg: "builtin", Name: "string"},
 		},
 	}
 
 	pathConstTypeExpr = ts.Expr{
 		Inst: &ts.InstExpr{
-			Ref:  src.EntityRef{Pkg: "builtin", Name: "list"},
+			Ref:  core.EntityRef{Pkg: "builtin", Name: "list"},
 			Args: []ts.Expr{strTypeExpr},
 		},
 	}

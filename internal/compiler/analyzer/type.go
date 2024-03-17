@@ -5,6 +5,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -16,7 +17,7 @@ var ErrEmptyTypeDefBody = fmt.Errorf("Type definition must have non-empty body")
 
 func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
-		meta := def.Meta.(src.Meta) //nolint:forcetypeassert
+		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
 			Err:      ErrEmptyTypeDefBody,
 			Location: &scope.Location,
@@ -28,7 +29,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	// We can't resolve body without args. And don't worry about unused bodies. Unused entities are error themselves.
 	resolvedParams, _, err := a.resolver.ResolveParams(def.Params, scope)
 	if err != nil {
-		meta := def.Meta.(src.Meta) //nolint:forcetypeassert
+		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
@@ -45,7 +46,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *compiler.Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
-		meta := expr.Meta.(src.Meta) //nolint:forcetypeassert
+		meta := expr.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -19,7 +20,7 @@ type Module struct {
 	Packages map[string]Package `json:"packages,omitempty"`
 }
 
-func (mod Module) Entity(entityRef EntityRef) (entity Entity, filename string, err error) {
+func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
 		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
@@ -101,13 +102,13 @@ type Entity struct {
 	Component Component  `json:"component,omitempty"`
 }
 
-func (e Entity) Meta() *Meta {
-	m := Meta{}
+func (e Entity) Meta() *core.Meta {
+	m := core.Meta{}
 	switch e.Kind {
 	case ConstEntity:
 		m = e.Const.Meta
 	case TypeEntity:
-		m = e.Type.Meta.(Meta) //nolint
+		m = e.Type.Meta.(core.Meta) //nolint
 	case InterfaceEntity:
 		m = e.Interface.Meta
 	case ComponentEntity:
@@ -130,7 +131,7 @@ type Component struct {
 	Interface  `json:"interface,omitempty"`
 	Nodes      map[string]Node `json:"nodes,omitempty"`
 	Net        []Connection    `json:"net,omitempty"`
-	Meta       Meta            `json:"meta,omitempty"`
+	Meta       core.Meta       `json:"meta,omitempty"`
 }
 
 type Directive string
@@ -138,12 +139,12 @@ type Directive string
 type Interface struct {
 	TypeParams TypeParams `json:"typeParams,omitempty"`
 	IO         IO         `json:"io,omitempty,"`
-	Meta       Meta       `json:"meta,omitempty"`
+	Meta       core.Meta  `json:"meta,omitempty"`
 }
 
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
-	Meta   Meta       `json:"meta,omitempty"`
+	Meta   core.Meta  `json:"meta,omitempty"`
 }
 
 func (t TypeParams) ToFrame() map[string]ts.Def {
@@ -170,10 +171,10 @@ func (t TypeParams) String() string {
 
 type Node struct {
 	Directives map[Directive][]string `json:"directives,omitempty"`
-	EntityRef  EntityRef              `json:"entityRef,omitempty"`
+	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
 	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
 	Deps       map[string]Node        `json:"componentDi,omitempty"`
-	Meta       Meta                   `json:"meta,omitempty"`
+	Meta       core.Meta              `json:"meta,omitempty"`
 }
 
 func (n Node) String() string {
@@ -193,23 +194,10 @@ func (t TypeArgs) String() string {
 	return s + ">"
 }
 
-type EntityRef struct {
-	Pkg  string `json:"pkg,omitempty"`
-	Name string `json:"name,omitempty"`
-	Meta Meta   `json:"meta,omitempty"`
-}
-
-func (e EntityRef) String() string {
-	if e.Pkg == "" {
-		return e.Name
-	}
-	return fmt.Sprintf("%s.%s", e.Pkg, e.Name)
-}
-
 type Const struct {
-	Ref     *EntityRef `json:"ref,omitempty"`
-	Message *Message   `json:"value,omitempty"`
-	Meta    Meta       `json:"meta,omitempty"`
+	Ref     *core.EntityRef `json:"ref,omitempty"`
+	Message *Message        `json:"value,omitempty"`
+	Meta    core.Meta       `json:"meta,omitempty"`
 }
 
 func (c Const) String() string {
@@ -231,11 +219,11 @@ type Message struct {
 	List        []Const          `json:"vec,omitempty"`
 	MapOrStruct map[string]Const `json:"map,omitempty"`
 	Enum        *EnumMessage     `json:"enum,omitempty"`
-	Meta        Meta             `json:"meta,omitempty"`
+	Meta        core.Meta        `json:"meta,omitempty"`
 }
 
 type EnumMessage struct {
-	EnumRef    EntityRef
+	EnumRef    core.EntityRef
 	MemberName string
 }
 
@@ -274,15 +262,15 @@ type IO struct {
 }
 
 type Port struct {
-	TypeExpr ts.Expr `json:"typeExpr,omitempty"`
-	IsArray  bool    `json:"isArray,omitempty"`
-	Meta     Meta    `json:"meta,omitempty"`
+	TypeExpr ts.Expr   `json:"typeExpr,omitempty"`
+	IsArray  bool      `json:"isArray,omitempty"`
+	Meta     core.Meta `json:"meta,omitempty"`
 }
 
 type Connection struct {
 	Normal      *NormalConnection      `json:"normal,omitempty"`
 	ArrayBypass *ArrayBypassConnection `json:"arrayBypass,omitempty"`
-	Meta        Meta                   `json:"meta,omitempty"`
+	Meta        core.Meta              `json:"meta,omitempty"`
 }
 
 type NormalConnection struct {
@@ -303,7 +291,7 @@ type ConnectionReceiverSide struct {
 type ConnectionReceiver struct {
 	PortAddr  PortAddr                `json:"portAddr,omitempty"`
 	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
-	Meta      Meta                    `json:"meta,omitempty"`
+	Meta      core.Meta               `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string
@@ -334,7 +322,7 @@ type ConnectionSenderSide struct {
 	PortAddr  *PortAddr `json:"portAddr,omitempty"`
 	Const     *Const    `json:"literal,omitempty"`
 	Selectors []string  `json:"selectors,omitempty"`
-	Meta      Meta      `json:"meta,omitempty"`
+	Meta      core.Meta `json:"meta,omitempty"`
 }
 
 func (s ConnectionSenderSide) String() string {
@@ -360,10 +348,10 @@ func (s ConnectionSenderSide) String() string {
 }
 
 type PortAddr struct {
-	Node string `json:"node,omitempty"`
-	Port string `json:"port,omitempty"`
-	Idx  *uint8 `json:"idx,omitempty"`
-	Meta Meta   `json:"meta,omitempty"`
+	Node string    `json:"node,omitempty"`
+	Port string    `json:"port,omitempty"`
+	Idx  *uint8    `json:"idx,omitempty"`
+	Meta core.Meta `json:"meta,omitempty"`
 }
 
 func (p PortAddr) String() string {
@@ -379,20 +367,4 @@ func (p PortAddr) String() string {
 	}
 
 	return "invalid port addr"
-}
-
-// Meta keeps info about original text related to the structured object
-type Meta struct {
-	Text  string   `json:"text,omitempty"`
-	Start Position `json:"start,omitempty"`
-	Stop  Position `json:"stop,omitempty"`
-}
-
-type Position struct {
-	Line   int `json:"line,omitempty"`
-	Column int `json:"column,omitempty"`
-}
-
-func (p Position) String() string {
-	return fmt.Sprintf("%v:%v", p.Line, p.Column)
 }

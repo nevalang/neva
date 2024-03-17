@@ -11,6 +11,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -190,7 +191,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	case src.TypeEntity:
 		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
 		if err != nil {
-			meta := entity.Type.Meta.(src.Meta) //nolint:forcetypeassert
+			meta := entity.Type.Meta.(core.Meta) //nolint:forcetypeassert
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &meta,

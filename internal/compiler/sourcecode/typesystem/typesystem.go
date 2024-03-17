@@ -3,9 +3,7 @@
 // This is not clean architecture but it's very handy for LSP.
 package typesystem
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type Def struct {
 	// Body can refer to these. Must be replaced with arguments while resolving
@@ -153,5 +151,3 @@ const (
 	EnumLitType
 	UnionLitType
 )
-
-

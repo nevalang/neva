@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type Error struct {
 	Err      error
 	Location *src.Location
-	Meta     *src.Meta
+	Meta     *core.Meta
 	child    *Error
 }
 
@@ -27,7 +28,7 @@ func (e Error) unwrap() Error {
 			loc = e.Location
 		}
 
-		var meta *src.Meta
+		var meta *core.Meta
 		if e.child.Meta != nil {
 			meta = e.child.Meta
 		} else {

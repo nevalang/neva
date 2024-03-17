@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/nevalang/neva/pkg"
 )
@@ -45,7 +46,7 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
 	}
-	parsed, ok := expr.Inst.Ref.(EntityRef)
+	parsed, ok := expr.Inst.Ref.(core.EntityRef)
 	if !ok {
 		return false
 	}
@@ -53,7 +54,7 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 }
 
 func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
-	parsedRef, ok := ref.(EntityRef)
+	parsedRef, ok := ref.(core.EntityRef)
 	if !ok {
 		return ts.Def{}, Scope{}, fmt.Errorf("ref is not entity ref: %v", ref)
 	}
@@ -66,12 +67,12 @@ func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
 	return entity.Type, s.WithLocation(location), nil
 }
 
-func (s Scope) Entity(entityRef EntityRef) (Entity, Location, error) {
+func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
 	return s.entity(entityRef)
 }
 
 //nolint:funlen
-func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
+func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 	curMod, ok := s.Build.Modules[s.Location.ModRef]
 	if !ok {
 		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, s.Location.ModRef)
@@ -98,7 +99,7 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)
 		}
 
-		entity, fileName, err := stdMod.Entity(EntityRef{
+		entity, fileName, err := stdMod.Entity(core.EntityRef{
 			Pkg:  "builtin",
 			Name: entityRef.Name,
 		})
@@ -139,7 +140,7 @@ func (s Scope) entity(entityRef EntityRef) (Entity, Location, error) {
 		mod = depMod
 	}
 
-	ref := EntityRef{
+	ref := core.EntityRef{
 		Pkg:  pkgImport.Package,
 		Name: entityRef.Name,
 	}
