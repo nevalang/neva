@@ -385,18 +385,19 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	}
 
 	arrBypassConn := connDef.ArrBypassConnDef()
+	normConn := connDef.NormConnDef()
 
-	if arrBypassConn == nil && connDef.NormConnDef() == nil {
+	if arrBypassConn == nil && normConn == nil {
 		panic(&compiler.Error{
 			Err:  errors.New("Invalid connection"),
 			Meta: &connMeta,
 		})
 	}
 
-	if arrBypassConn == nil {
-		parsedSenderSide := parseNormConnSenderSide(connDef.NormConnDef().SenderSide())
+	if normConn != nil {
+		parsedSenderSide := parseNormConnSenderSide(normConn.SenderSide())
 
-		receiverSide, err := parseNormConnReceiverSide(connDef.NormConnDef(), connMeta)
+		parsedReceiverSide, err := parseNormConnReceiverSide(normConn, connMeta)
 		if err != nil {
 			return src.Connection{}, compiler.Error{
 				Meta: &connMeta,
@@ -406,7 +407,7 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 		return src.Connection{
 			Normal: &src.NormalConnection{
 				SenderSide:   parsedSenderSide,
-				ReceiverSide: receiverSide,
+				ReceiverSide: parsedReceiverSide,
 			},
 			Meta: connMeta,
 		}, nil
@@ -611,28 +612,13 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 
 	var constant *src.Const
 	if senderSideConstRef != nil {
-		constRefMeta := src.Meta{
-			Text: senderSideConstRef.GetText(),
-			Start: src.Position{
-				Line:   senderSideConstRef.GetStart().GetLine(),
-				Column: senderSideConstRef.GetStart().GetColumn(),
-			},
-			Stop: src.Position{
-				Line:   senderSideConstRef.GetStop().GetLine(),
-				Column: senderSideConstRef.GetStop().GetColumn(),
-			},
+		// fmt.Println(senderSideConstRef.GetText())
+		parsedEntityRef, err := parseEntityRef(senderSideConstRef.EntityRef())
+		if err != nil {
+			panic(err)
 		}
-		if localRef := senderSideConstRef.EntityRef().LocalEntityRef(); localRef != nil {
-			constant = &src.Const{Ref: &src.EntityRef{
-				Name: localRef.GetText(),
-				Meta: constRefMeta,
-			}}
-		} else if imoportedRef := senderSideConstRef.EntityRef().ImportedEntityRef(); imoportedRef != nil {
-			constant = &src.Const{Ref: &src.EntityRef{
-				Pkg:  imoportedRef.PkgRef().GetText(),
-				Name: imoportedRef.EntityName().GetText(),
-				Meta: constRefMeta,
-			}}
+		constant = &src.Const{
+			Ref: &parsedEntityRef,
 		}
 	}
 

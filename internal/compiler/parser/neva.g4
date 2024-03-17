@@ -29,9 +29,9 @@ importModeDelim: '/' | '.';
 importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
 
 // Entity Reference
-entityRef: localEntityRef | importedEntityRef;
+entityRef: importedEntityRef | localEntityRef;
 localEntityRef: IDENTIFIER;
-importedEntityRef: pkgRef ('.' entityName)?;
+importedEntityRef: pkgRef '.' entityName;
 pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
@@ -83,7 +83,8 @@ constStmt: singleConstStmt | groupConstStmt;
 singleConstStmt: PUB_KW? 'const' constDef;
 groupConstStmt:
 	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
-constDef: IDENTIFIER typeExpr '=' (entityRef | constVal) NEWLINE*;
+constDef:
+	IDENTIFIER typeExpr '=' (entityRef | constVal) NEWLINE*;
 constVal:
 	nil
 	| bool
@@ -115,6 +116,7 @@ groupCompStmt:
 		compilerDirectives? PUB_KW? compDef
 	)* '}';
 compDef: interfaceDef compBody? NEWLINE*;
+// compDef: interfaceDef (compNetDef | compBody)? NEWLINE*;
 compBody:
 	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
 		COMMENT NEWLINE*
