@@ -1,5 +1,5 @@
 const n list<int> = [1,1,5,112,69,420]
-const j int = 4
+const j int = 7
 component Main(start any) (stop any) {
 	nodes {
         index Index<any>
@@ -11,7 +11,8 @@ component Main(start any) (stop any) {
 	    printer:sig -> :stop
 
         //Handle error
-	    index:err -> :stop
+	    index:err -> printer:data
+	    printer:sig -> :stop
 	}
 }
 

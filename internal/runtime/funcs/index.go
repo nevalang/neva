@@ -40,10 +40,12 @@ func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 					select {
 					case <-ctx.Done():
 					default:
-						if idx.Int() < 0 || idx.Int() >= int64(len(data.List())) {
+						intIdx := idx.Int()
+						lst := data.List()
+						if intIdx < 0 || intIdx >= int64(len(lst)) {
 							errOut <- runtime.NewStrMsg("Index out of bounds")
 						} else {
-							resOut <- data.List()[idx.Int()]
+							resOut <- lst[intIdx]
 						}
 					}
 				}
