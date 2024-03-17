@@ -9,8 +9,8 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {

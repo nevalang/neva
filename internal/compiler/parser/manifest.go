@@ -5,7 +5,7 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 func (p Parser) ParseManifest(raw []byte) (src.ModuleManifest, error) {

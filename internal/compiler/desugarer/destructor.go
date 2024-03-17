@@ -1,6 +1,6 @@
 package desugarer
 
-import src "github.com/nevalang/neva/pkg/sourcecode"
+import src "github.com/nevalang/neva/internal/compiler/sourcecode"
 
 type voidResult struct {
 	voidNodeName       string

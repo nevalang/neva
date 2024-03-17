@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	"github.com/nevalang/neva/pkg/typesystem"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var virtualBlockerNode = src.Node{

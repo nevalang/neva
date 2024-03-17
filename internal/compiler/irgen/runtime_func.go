@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/nevalang/neva/internal/runtime/ir"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {

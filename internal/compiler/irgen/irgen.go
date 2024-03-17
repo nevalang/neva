@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/runtime/ir"
-	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 var ErrNodeUsageNotFound = errors.New("node usage not found")

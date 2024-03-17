@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 type Error struct {

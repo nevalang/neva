@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 // Pointer allows to avoid creating of temporary variables just to take pointers.

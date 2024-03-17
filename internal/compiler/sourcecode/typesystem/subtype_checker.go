@@ -40,7 +40,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 	constr Expr,
 	params TerminatorParams,
 ) error {
-	if params.Scope.IsTopType(constr) { // no matter what expr is if constr is top type
+	if params.Scope.IsTopType(constr) {
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 		)
 	}
 
-	if isConstraintInstance { //nolint:nestif // both expr and constr are insts
+	if isConstraintInstance { // both expr and constr are insts
 		isSubTypeRecursive, err := s.terminator.ShouldTerminate(
 			params.SubtypeTrace,
 			params.Scope,
@@ -111,7 +111,9 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 		}
 
 		return nil
-	} // we know constr is lit by now
+	}
+
+	// we know constr is literal by now
 
 	exprLitType := expr.Lit.Type()
 	constrLitType := constr.Lit.Type()
@@ -130,7 +132,6 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			}
 		}
 	case StructLitType: // {x int, y float} <: {x int|str}
-
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 			return fmt.Errorf(
 				"%w: got %v, want %v",
@@ -139,19 +140,25 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 				len(constr.Lit.Struct),
 			)
 		}
-		subtypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		supertypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		newParams := TerminatorParams{
-			Scope:          params.Scope,
-			SubtypeTrace:   subtypeTrace,
-			SupertypeTrace: supertypeTrace,
-		}
+
+		// ...
+		// if params.SubtypeTrace.ref.String() != "struct" &&
+		// 	params.SupertypeTrace.String() != "struct" {
+		// 	subtypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
+		// 	supertypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
+		// 	params = TerminatorParams{
+		// 		Scope:          params.Scope,
+		// 		SubtypeTrace:   subtypeTrace,
+		// 		SupertypeTrace: supertypeTrace,
+		// 	}
+		// }
+
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 			}
-			if err := s.Check(exprField, constrField, newParams); err != nil {
+			if err := s.Check(exprField, constrField, params); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
 			}
 		}

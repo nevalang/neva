@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var errTest = errors.New("Oops!")

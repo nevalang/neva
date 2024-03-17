@@ -5,8 +5,8 @@ import (
 	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var emitterComponentRef = src.EntityRef{

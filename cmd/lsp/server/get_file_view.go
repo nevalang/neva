@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/tliron/glsp"
 )
 

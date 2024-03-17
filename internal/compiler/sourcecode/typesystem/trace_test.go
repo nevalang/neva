@@ -3,7 +3,7 @@ package typesystem_test
 import (
 	"testing"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/stretchr/testify/assert"
 )
 

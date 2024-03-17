@@ -9,7 +9,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 type Indexer struct {

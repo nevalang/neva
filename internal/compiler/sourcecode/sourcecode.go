@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 type Build struct {

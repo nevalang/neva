@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/nevalang/neva/pkg"
-	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 var (

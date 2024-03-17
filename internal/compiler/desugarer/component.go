@@ -6,7 +6,7 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 var ErrConstSenderEntityKind = errors.New(

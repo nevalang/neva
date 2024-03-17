@@ -5,10 +5,10 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/adapter"
 	"github.com/nevalang/neva/internal/runtime/funcs"
-	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Interpreter struct {
