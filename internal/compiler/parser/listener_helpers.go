@@ -987,32 +987,52 @@ func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 }
 
 func parseConstDef(actx generated.IConstDefContext) src.Entity {
-	typeExpr := parseTypeExpr(actx.TypeExpr())
 	constVal := actx.ConstVal()
+	entityRef := actx.EntityRef()
 
-	parsedMsg, err := parseMessage(constVal)
-	if err != nil {
-		panic(err)
+	if constVal == nil && entityRef == nil {
+		panic("constVal == nil && entityRef == nil")
 	}
 
-	parsedMsg.TypeExpr = typeExpr
+	meta := src.Meta{
+		Text: actx.GetText(),
+		Start: src.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: src.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
+	var parsedConst src.Const
+
+	if entityRef != nil {
+		parsedRef, err := parseEntityRef(entityRef)
+		if err != nil {
+			panic(err)
+		}
+		parsedConst = src.Const{
+			Ref:  &parsedRef,
+			Meta: meta,
+		}
+	} else {
+		parsedMsg, err := parseMessage(constVal)
+		if err != nil {
+			panic(err)
+		}
+		typeExpr := parseTypeExpr(actx.TypeExpr())
+		parsedMsg.TypeExpr = typeExpr
+		parsedConst = src.Const{
+			Message: &parsedMsg,
+			Meta:    meta,
+		}
+	}
 
 	return src.Entity{
-		Kind: src.ConstEntity,
-		Const: src.Const{
-			Message: &parsedMsg,
-			Meta: src.Meta{
-				Text: actx.GetText(),
-				Start: src.Position{
-					Line:   actx.GetStart().GetLine(),
-					Column: actx.GetStart().GetColumn(),
-				},
-				Stop: src.Position{
-					Line:   actx.GetStop().GetLine(),
-					Column: actx.GetStop().GetColumn(),
-				},
-			},
-		},
+		Kind:  src.ConstEntity,
+		Const: parsedConst,
 	}
 }
 
