@@ -143,17 +143,19 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			)
 		}
 
-		// ...
-		// if params.SubtypeTrace.ref.String() != "struct" &&
-		// 	params.SupertypeTrace.String() != "struct" {
-		// 	subtypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		// 	supertypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		// 	params = TerminatorParams{
-		// 		Scope:          params.Scope,
-		// 		SubtypeTrace:   subtypeTrace,
-		// 		SupertypeTrace: supertypeTrace,
-		// 	}
-		// }
+		// add virtual ref "struct" to trace to avoid direct recursion
+		// e.g. error struct {child maybe<error>}
+		// but only if it's not already there
+		if params.SubtypeTrace.cur.String() != "struct" &&
+			params.SupertypeTrace.String() != "struct" {
+			subtypeTrace := NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"})
+			supertypeTrace := NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"})
+			params = TerminatorParams{
+				Scope:          params.Scope,
+				SubtypeTrace:   subtypeTrace,
+				SupertypeTrace: supertypeTrace,
+			}
+		}
 
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]

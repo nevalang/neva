@@ -207,7 +207,12 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 					prev: trace,
 					cur:  core.EntityRef{Name: "struct"},
 				}
-				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, &newTrace)
+				resolvedFieldExpr, err := r.resolveExpr(
+					fieldExpr,
+					scope,
+					frame,
+					&newTrace,
+				)
 				if err != nil {
 					return Expr{}, fmt.Errorf(
 						"%w: %v: %v",

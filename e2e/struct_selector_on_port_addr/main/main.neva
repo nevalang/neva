@@ -10,7 +10,7 @@ component Main(start) (stop) {
     }
 }
 
-const s struct {a int} = {a: 42}
+const s struct { a int } = { a: 42 }
 
 component Foo(sig any) (msg struct{a int}) {
     net {
