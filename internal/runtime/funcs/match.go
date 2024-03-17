@@ -44,16 +44,20 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 				case <-ctx.Done():
 					return
 				default:
-					matchIdx := -1
-					for i, slot := range caseIn {
+					cases := make([]runtime.Msg, len(caseIn))
+					for i, slot := range caseIn { // always receive all
 						select {
 						case <-ctx.Done():
 							return
 						case caseMsg := <-slot:
-							if caseMsg == dataMsg {
-								matchIdx = i
-								break
-							}
+							cases[i] = caseMsg
+						}
+					}
+					matchIdx := -1
+					for i, caseMsg := range cases {
+						if dataMsg == caseMsg {
+							matchIdx = i
+							break
 						}
 					}
 					if matchIdx != -1 {

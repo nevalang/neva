@@ -4,26 +4,30 @@ component Main(start) (stop) {
 	nodes {
         Range
         Println
+        Match<int>
         Unwrap<int>
     }
 	net {
-		:start -> (1 -> range:from, 101 -> range:to)
-        range:data -> println:n
-        println:n -> unwrap:data
-        unwrap:none -> :stop
+		:start -> (
+            1 -> range:from,
+            101 -> range:to
+        )
+        range:data -> unwrap:data
+        unwrap:some -> println:n
+        println:n -> match:data
+        100 -> match:case[0]
+        match:then[0] -> :stop
 	}
 }
 
-component Println(n maybe<int>) (n maybe<int>) {
+component Println(n int) (n int) {
     nodes {
         Mod
-        Unwrap<int>
+        Blocker<int>
         Printer<any>
-        Blocker<maybe<int>>
     }
     net {
-        :n -> [unwrap:data, blocker:data]
-        unwrap:some -> mod:data
+        :n -> [mod:data, blocker:data]
 
         15 -> mod:case[0]
         3 -> mod:case[1]
