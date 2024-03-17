@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -130,7 +131,7 @@ func TestExpr_String(t *testing.T) {
 		{
 			name: "inst_expr_with_non-empty_ref_and_no_args",
 			expr: ts.Expr{
-				Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")},
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 			},
 			want: "int",
 		},
@@ -138,11 +139,10 @@ func TestExpr_String(t *testing.T) {
 			name: "inst_expr_with_empty_refs_and_with_args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: nil,
 					Args: []ts.Expr{
 						{
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("string"),
+								Ref: core.EntityRef{Name: "string"},
 							},
 						},
 					},
@@ -154,9 +154,9 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: ts.DefaultStringer("map"),
+					Ref: core.EntityRef{Name: "map"},
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
 					},
 				},
 			},
@@ -166,10 +166,10 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with several args",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: ts.DefaultStringer("map"),
+					Ref: core.EntityRef{Name: "map"},
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}}},
 					},
 				},
 			},
@@ -179,14 +179,14 @@ func TestExpr_String(t *testing.T) {
 			name: "inst expr with non-empty refs and with nested arg",
 			expr: ts.Expr{
 				Inst: &ts.InstExpr{
-					Ref: ts.DefaultStringer("map"),
+					Ref: core.EntityRef{Name: "map"},
 					Args: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
 						{
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("list"),
+								Ref: core.EntityRef{Name: "list"},
 								Args: []ts.Expr{
-									{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("bool")}},
+									{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}}},
 								},
 							},
 						},
@@ -241,7 +241,7 @@ func TestExpr_String(t *testing.T) {
 					Struct: map[string]ts.Expr{
 						"name": {
 							Inst: &ts.InstExpr{
-								Ref: ts.DefaultStringer("string"),
+								Ref: core.EntityRef{Name: "string"},
 							},
 						},
 					},
@@ -264,7 +264,7 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
 					},
 				},
 			},
@@ -275,8 +275,8 @@ func TestExpr_String(t *testing.T) {
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")}},
-						{Inst: &ts.InstExpr{Ref: ts.DefaultStringer("string")}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
 					},
 				},
 			},

@@ -1,28 +1,27 @@
 package typesystem
 
-import "fmt"
+import (
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+)
 
 // Linked-list to handle recursive types
 type Trace struct {
 	prev *Trace
-	ref  fmt.Stringer
+	cur  core.EntityRef
 }
 
 // O(2n)
 func (t Trace) String() string {
-	lastToFirst := []fmt.Stringer{}
+	lastToFirst := []core.EntityRef{}
 
 	tmp := &t
 	for tmp != nil {
-		lastToFirst = append(lastToFirst, tmp.ref)
+		lastToFirst = append(lastToFirst, tmp.cur)
 		tmp = tmp.prev
 	}
 
 	firstToLast := "["
 	for i := len(lastToFirst) - 1; i >= 0; i-- {
-		if lastToFirst[i] == nil { // every trace starts with nil
-			continue
-		}
 		firstToLast += lastToFirst[i].String()
 		if i > 0 {
 			firstToLast += ", "
@@ -32,9 +31,9 @@ func (t Trace) String() string {
 	return firstToLast + "]"
 }
 
-func NewTrace(prev *Trace, v fmt.Stringer) Trace {
+func NewTrace(prev *Trace, cur core.EntityRef) Trace {
 	return Trace{
 		prev: prev,
-		ref:  v,
+		cur:  cur,
 	}
 }

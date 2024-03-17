@@ -3,6 +3,8 @@ package typesystem
 import (
 	"errors"
 	"fmt"
+
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var (
@@ -195,15 +197,15 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 
 func (SubtypeChecker) getNewTerminatorParams(
 	old TerminatorParams,
-	subRef, supRef fmt.Stringer,
+	subRef, supRef core.EntityRef,
 ) TerminatorParams {
 	newSubtypeTrace := Trace{
 		prev: &old.SubtypeTrace,
-		ref:  subRef,
+		cur:  subRef,
 	}
 	newSupertypeTrace := Trace{
 		prev: &old.SupertypeTrace,
-		ref:  supRef,
+		cur:  supRef,
 	}
 	newTParams := TerminatorParams{
 		SubtypeTrace:   newSubtypeTrace,

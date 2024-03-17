@@ -3,6 +3,8 @@ package typesystem
 import (
 	"errors"
 	"fmt"
+
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var (
@@ -28,21 +30,21 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 		return false, nil
 	}
 
-	if sameRefs(cur.ref, cur.prev.ref) {
+	if sameRefs(cur.cur, cur.prev.cur) {
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 
 	// Get prev ref's CanBeUsedForRecursiveDefinitions if it exists.
 	// Note that we don't care if it's not found. Not all types are in the scope, some of them are in the frame.
 	var canBeUsedForRecursiveDefinitions bool
-	if prevRef, _, err := scope.GetType(cur.prev.ref); err == nil {
+	if prevRef, _, err := scope.GetType(cur.prev.cur); err == nil {
 		// we don't have to check if prev has params, it has because we're here
 		canBeUsedForRecursiveDefinitions = prevRef.BodyExpr == nil
 	}
 
 	prev := cur.prev
 	for prev != nil {
-		if prev.ref != cur.ref {
+		if prev.cur != cur.cur {
 			prev = prev.prev
 			continue
 		}
@@ -69,15 +71,11 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 
 // getLast3AndSwap turns [... a b a] into [b a b]
 func (Terminator) getLast3AndSwap(cur Trace) Trace {
-	t1 := Trace{prev: nil, ref: cur.prev.ref}
-	t2 := Trace{prev: &t1, ref: cur.ref}
-	return Trace{prev: &t2, ref: cur.prev.ref}
+	t1 := Trace{prev: nil, cur: cur.prev.cur}
+	t2 := Trace{prev: &t1, cur: cur.cur}
+	return Trace{prev: &t2, cur: cur.prev.cur}
 }
 
-func sameRefs(cur, prev fmt.Stringer) bool {
-	// beginning of the trace has nil prev
-	if cur == nil || prev == nil {
-		return false
-	}
+func sameRefs(cur, prev core.EntityRef) bool {
 	return cur.String() == prev.String()
 }

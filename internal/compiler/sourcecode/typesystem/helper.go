@@ -1,5 +1,7 @@
 package typesystem
 
+import "github.com/nevalang/neva/internal/compiler/sourcecode/core"
+
 // Helper is just a namespace for helper functions to avoid conflicts with entity types.
 // It's a stateless type and it's safe to share it between goroutines.
 type Helper struct{}
@@ -31,7 +33,7 @@ func (h Helper) Inst(ref string, args ...Expr) Expr {
 	}
 	return Expr{
 		Inst: &InstExpr{
-			Ref:  DefaultStringer(ref),
+			Ref:  core.EntityRef{Name: ref},
 			Args: args,
 		},
 	}
@@ -71,7 +73,7 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 		Name: name,
 		Constr: Expr{
 			Inst: &InstExpr{
-				Ref: DefaultStringer("any"),
+				Ref: core.EntityRef{Name: "any"},
 			},
 		},
 	}
@@ -91,7 +93,7 @@ func (ds DefaultStringer) String() string { return string(ds) }
 func (h Helper) Trace(ss ...string) Trace {
 	var t *Trace
 	for _, s := range ss {
-		tmp := NewTrace(t, DefaultStringer(s))
+		tmp := NewTrace(t, core.EntityRef{Name: s})
 		t = &tmp
 	}
 	return *t

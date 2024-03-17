@@ -3,6 +3,7 @@ package typesystem_test
 import (
 	"testing"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,9 +17,9 @@ func TestTrace_String(t *testing.T) {
 	}{
 		{
 			trace: func() ts.Trace {
-				t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
-				t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
-				return ts.NewTrace(&t2, ts.DefaultStringer("t3"))
+				t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
+				t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t2"})
+				return ts.NewTrace(&t2, core.EntityRef{Name: "t3"})
 			},
 			want: "[t1, t2, t3]",
 		},

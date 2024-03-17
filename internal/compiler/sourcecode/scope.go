@@ -46,20 +46,14 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
 	}
-	parsed, ok := expr.Inst.Ref.(core.EntityRef)
-	if !ok {
+	if expr.Inst.Ref.Name != "any" {
 		return false
 	}
-	return parsed.Name == "any" && (parsed.Pkg == "" || parsed.Pkg == "builtin")
+	return expr.Inst.Ref.Pkg == "" || expr.Inst.Ref.Pkg == "builtin"
 }
 
-func (s Scope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
-	parsedRef, ok := ref.(core.EntityRef)
-	if !ok {
-		return ts.Def{}, Scope{}, fmt.Errorf("ref is not entity ref: %v", ref)
-	}
-
-	entity, location, err := s.Entity(parsedRef)
+func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
+	entity, location, err := s.Entity(ref)
 	if err != nil {
 		return ts.Def{}, nil, err
 	}

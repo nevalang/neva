@@ -3,7 +3,9 @@
 // This is not clean architecture but it's very handy for LSP.
 package typesystem
 
-import "fmt"
+import (
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+)
 
 type Def struct {
 	// Body can refer to these. Must be replaced with arguments while resolving
@@ -92,9 +94,7 @@ func (expr Expr) String() string {
 		return expr.Inst.Ref.String()
 	}
 
-	if expr.Inst.Ref != nil {
-		str = expr.Inst.Ref.String()
-	}
+	str = expr.Inst.Ref.String()
 	str += "<"
 
 	for i, arg := range expr.Inst.Args {
@@ -110,8 +110,8 @@ func (expr Expr) String() string {
 
 // Instantiation expression
 type InstExpr struct {
-	Ref  fmt.Stringer `json:"ref,omitempty"`  // Must be in the scope
-	Args []Expr       `json:"args,omitempty"` // Every ref's parameter must have subtype argument
+	Ref  core.EntityRef `json:"ref,omitempty"`  // Must be in the scope
+	Args []Expr         `json:"args,omitempty"` // Every ref's parameter must have subtype argument
 }
 
 // Literal expression. Only one field must be initialized

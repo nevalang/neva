@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -26,7 +27,7 @@ func TestValidator_Validate(t *testing.T) {
 			name: "non-empty lit and inst",
 			expr: ts.Expr{
 				Lit:  &ts.LitExpr{Enum: []string{"a"}},
-				Inst: &ts.InstExpr{Ref: ts.DefaultStringer("int")},
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 			},
 			wantErr: ts.ErrExprMustBeInstOrLit,
 		},
