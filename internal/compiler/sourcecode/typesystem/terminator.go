@@ -77,5 +77,7 @@ func (Terminator) getLast3AndSwap(cur Trace) Trace {
 }
 
 func sameRefs(cur, prev core.EntityRef) bool {
-	return cur.String() == prev.String()
+	a := cur.String()
+	b := prev.String()
+	return a == b
 }

@@ -148,15 +148,24 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 		// but only if it's not already there
 		if params.SubtypeTrace.cur.String() != "struct" &&
 			params.SupertypeTrace.String() != "struct" {
-			subtypeTrace := NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"})
-			supertypeTrace := NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"})
-			params = TerminatorParams{
+			newParams := TerminatorParams{
 				Scope:          params.Scope,
-				SubtypeTrace:   subtypeTrace,
-				SupertypeTrace: supertypeTrace,
+				SubtypeTrace:   NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"}),
+				SupertypeTrace: NewTrace(&params.SupertypeTrace, core.EntityRef{Name: "struct"}),
 			}
+			// HACK: we copy-paste this loop to avoid re-assigning to params variable
+			// because that leads to infinite nesting inside that struct because of recursive pointers
+			for constrFieldName, constrField := range constr.Lit.Struct {
+				exprField, ok := expr.Lit.Struct[constrFieldName]
+				if !ok {
+					return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
+				}
+				if err := s.Check(exprField, constrField, newParams); err != nil {
+					return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
+				}
+			}
+			break
 		}
-
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {

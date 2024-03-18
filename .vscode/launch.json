@@ -22,6 +22,7 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "0_do_nothing"]
     },
+    // Don't forget this example does not work in debugger
     {
       "name": "Neva CLI 10",
       "type": "go",

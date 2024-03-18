@@ -1,11 +1,11 @@
 {
 	"files": [
 		{
-			"path": "internal/compiler/sourcecode/typesystem/resolver.go",
+			"path": "internal/compiler/sourcecode/typesystem/subtype_checker.go",
 			"bookmarks": [
 				{
-					"line": 207,
-					"column": 4,
+					"line": 148,
+					"column": 3,
 					"label": ""
 				}
 			]
