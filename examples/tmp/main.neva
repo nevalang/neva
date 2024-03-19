@@ -1,0 +1,63 @@
+component Main(start) (stop) {
+	nodes {
+        Mod
+        Range
+        Match<int>
+        Unwrap<int>
+        Printer<any>
+        Blocker<int>
+    }
+	net {
+		:start -> (
+            1   -> range:from,
+            3   -> range:to
+        )
+        range:data    -> unwrap:data
+
+        unwrap:some   -> [mod:data, blocker:data]
+        15            -> mod:case[0]
+        3             -> mod:case[1]
+        5             -> mod:case[2]
+
+        mod:then[0] -> printer:data
+        mod:then[1] -> printer:data
+        mod:then[2] -> printer:data
+        mod:else    -> printer:data
+
+        printer:sig -> blocker:sig
+
+        blocker:data  -> match:data
+        2             -> match:case[0]
+        match:then[0] -> :stop
+    }
+}
+
+// FIXME this example can terminate until 2 is printed:
+
+// sent: virtual_emitter_46/out:msg[0] -> match/in:case[0] 2
+// sent: virtual_emitter_44/out:msg[0] -> mod/in:case[1] 3
+// sent: in:start[0] -> [ virtual_blocker_31/in:sig[0], virtual_blocker_32/in:sig[0] ] <empty>
+// sent: virtual_emitter_43/out:msg[0] -> mod/in:case[0] 15
+// sent: virtual_emitter_42/out:msg[0] -> virtual_blocker_32/in:data[0] 3
+// sent: virtual_blocker_32/out:data[0] -> range/in:to[0] 3
+// sent: virtual_emitter_42/out:msg[0] -> virtual_blocker_32/in:data[0] 3
+// sent: virtual_emitter_45/out:msg[0] -> mod/in:case[2] 5
+// sent: virtual_emitter_41/out:msg[0] -> virtual_blocker_31/in:data[0] 1
+// sent: virtual_emitter_41/out:msg[0] -> virtual_blocker_31/in:data[0] 1
+// sent: virtual_blocker_31/out:data[0] -> range/in:from[0] 1
+// sent: range/out:data[0] -> unwrap/in:data[0] 1
+// sent: range/out:data[0] -> unwrap/in:data[0] 2
+// sent: unwrap/out:some[0] -> [ mod/in:data[0], blocker/in:data[0] ] 1
+// sent: range/out:data[0] -> unwrap/in:data[0] <nil>
+// sent: unwrap/out:some[0] -> [ mod/in:data[0], blocker/in:data[0] ] 2
+// sent: virtual_emitter_43/out:msg[0] -> mod/in:case[0] 15
+// sent: unwrap/out:none[0] -> __destructor__/in:msg[0] map[]
+// sent: virtual_emitter_44/out:msg[0] -> mod/in:case[1] 3
+// sent: virtual_emitter_45/out:msg[0] -> mod/in:case[2] 5
+// sent: mod/out:else[0] -> printer/in:data[0] 1
+// 1
+// sent: printer/out:sig[0] -> blocker/in:sig[0] 1
+// sent: blocker/out:data[0] -> match/in:data[0] 2
+// sent: virtual_emitter_43/out:msg[0] -> mod/in:case[0] 15
+// sent: virtual_emitter_46/out:msg[0] -> match/in:case[0] 2
+// sent: match/out:then[0] -> out:stop[0] 2
