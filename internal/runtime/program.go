@@ -14,7 +14,7 @@ type Program struct {
 type PortAddr struct {
 	Path string // Path is needed to distinguish ports with the same name
 	Port string // Separate port field is needed for functions
-	Idx  uint8  // FIXME we don't differ between empty idx and zero index
+	Idx  uint8
 }
 
 func (p PortAddr) String() string {

@@ -63,10 +63,14 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		}
 	}
 
-	resolvedInterface, err := a.analyzeInterface(component.Interface, scope, analyzeInterfaceParams{
-		allowEmptyInports:  isRuntimeFunc,
-		allowEmptyOutports: isRuntimeFunc,
-	})
+	resolvedInterface, err := a.analyzeInterface(
+		component.Interface,
+		scope,
+		analyzeInterfaceParams{
+			allowEmptyInports:  isRuntimeFunc,
+			allowEmptyOutports: isRuntimeFunc,
+		},
+	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,

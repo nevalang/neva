@@ -41,7 +41,7 @@ func main() {
 	indexer := indexer.New(
 		builder,
 		p,
-		desugarer.Desugarer{},
+		desugarer.New(),
 		analyzer.MustNew(pkg.Version, resolver),
 	)
 

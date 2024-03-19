@@ -1,0 +1,7 @@
+component Main(start) (stop) {
+	nodes { Decrementor<any> }
+	net {
+		:start -> (42 -> decrementor:data)
+        decrementor:res -> :stop
+	}
+}

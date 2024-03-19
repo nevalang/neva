@@ -110,4 +110,6 @@ Join community. **Together** we can change programming for the better:
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
+Neva is a relatively small and simple language compared to many other statically typed compiled languages out there. Don't be intimidated, feel free to dive in and hack around!
+
 Please note that, due to the early stage of development, the documentation can sometimes be outdated. Please reach maintainer if you have questions.

@@ -16,7 +16,7 @@ func init() { wd, _ = os.Getwd() }
 
 // There is special case where constant has float type but integer literal.
 func TestFloatConstWithIntLit(t *testing.T) {
-	err := os.Chdir("./tests/float_const_with_int_lit")
+	err := os.Chdir("./float_const_with_int_lit")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
@@ -36,7 +36,7 @@ func TestFloatConstWithIntLit(t *testing.T) {
 
 // Expect normal error message and not go panic trace in case of bad connection.
 func TestConnWithOnlyPortAddr(t *testing.T) {
-	err := os.Chdir("./tests/conn_with_only_port_addr")
+	err := os.Chdir("./conn_with_only_port_addr")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
@@ -56,7 +56,7 @@ func TestConnWithOnlyPortAddr(t *testing.T) {
 
 // Check that struct selector works with port address sender.
 func TestStructSelectorOnPortAddr(t *testing.T) {
-	err := os.Chdir("./tests/struct_selector_on_port_addr")
+	err := os.Chdir("./struct_selector_on_port_addr")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
@@ -76,11 +76,12 @@ func TestStructSelectorOnPortAddr(t *testing.T) {
 
 // There was a bug with order of channels in IR func-call that lead to wrong answer from subtractor.
 func TestOrderDependendWithArrInport(t *testing.T) {
-	err := os.Chdir("./tests/order_dependend_with_arr_inport")
+	err := os.Chdir("./order_dependend_with_arr_inport")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
 
+	// we do 100 attempts because there was a floating bug caused by unordered map that was
 	for i := 0; i < 100; i++ {
 		cmd := exec.Command("neva", "run", "main")
 
@@ -98,7 +99,7 @@ func TestOrderDependendWithArrInport(t *testing.T) {
 
 // There was a bug when compiler couldn't parse [-215]
 func TestListWithNegInt(t *testing.T) {
-	err := os.Chdir("./tests/list_with_neg_nums")
+	err := os.Chdir("./list_with_neg_nums")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
@@ -120,7 +121,7 @@ func TestListWithNegInt(t *testing.T) {
 
 // Check that compiler throws human-readable error when type arguments in Node are incompatible.
 func TestIncompatCompTypeArg(t *testing.T) {
-	err := os.Chdir("./tests/incompat_comp_type_arg")
+	err := os.Chdir("./incompat_comp_type_arg")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
@@ -131,7 +132,7 @@ func TestIncompatCompTypeArg(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"main/main.neva:2:9 Incompatible types: want int | float | string, got any\n",
+		"main/main.neva:2:9 Incompatible types: want int | float, got any\n",
 		string(out),
 	)
 
@@ -140,7 +141,7 @@ func TestIncompatCompTypeArg(t *testing.T) {
 
 // Check program with comments is parsed without errors.
 func TestComments(t *testing.T) {
-	err := os.Chdir("./tests/comments")
+	err := os.Chdir("./comments")
 	require.NoError(t, err)
 
 	defer os.Chdir(wd)
