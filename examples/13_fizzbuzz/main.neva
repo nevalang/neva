@@ -14,10 +14,10 @@ component Main(start) (stop) {
             1   -> range:from,
             101 -> range:to
         )
-        range:data -> unwrap:data
-        unwrap:some -> println:n
-        println:n -> match:data
-        100 -> match:case[0]
+        range:data    -> unwrap:data
+        unwrap:some   -> println:n
+        println:n     -> match:data
+        100           -> match:case[0]
         match:then[0] -> :stop
     }
 }
@@ -44,15 +44,17 @@ component Println(n int) (n int) {
 component Switch(n int) (fb int, f int, b int, else int) {
     nodes { Mod }
     net {
-        :n -> mod:data
-
-        15 -> mod:case[0]
-        3 -> mod:case[1]
-        5 -> mod:case[2]
+        :n -> [
+            mod:data,
+            (15 -> mod:case[0]),
+            (3 -> mod:case[1]),
+            (5 -> mod:case[2])
+        ]
 
         mod:then[0] -> :fb
         mod:then[1] -> :f
         mod:then[2] -> :b
+
         mod:else    -> :else
     }
 }
