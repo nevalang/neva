@@ -64,7 +64,7 @@ func TestSmoke(t *testing.T) {
 		parser.BuildParseTrees = true
 		tree := parser.Prog()
 
-		fmt.Println("trying to parse file: ", fileName) // uncomment this in case of debugging
+		fmt.Println("trying to parse file: ", fileName)
 
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)

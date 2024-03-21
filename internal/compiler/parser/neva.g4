@@ -115,8 +115,7 @@ groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
 		compilerDirectives? PUB_KW? compDef
 	)* '}';
-compDef: interfaceDef compBody? NEWLINE*;
-// compDef: interfaceDef (compNetDef | compBody)? NEWLINE*;
+compDef: interfaceDef (compBody | compNetBody)? NEWLINE*;
 compBody:
 	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
 		COMMENT NEWLINE*
@@ -125,18 +124,23 @@ compBody:
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
 compNodesDefBody:
-	'{' NEWLINE* ((compNodeDef | COMMENT) NEWLINE*)* '}';
+	'{' NEWLINE* ((compNodeDef | COMMENT) ','? NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
 nodeDIArgs: compNodesDefBody;
 
 // network
-compNetDef:
-	'net' NEWLINE* '{' NEWLINE* connDefList? NEWLINE* '}';
+compNetDef: 'net' NEWLINE* compNetBody;
+compNetBody: '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef:
-	senderSide '->' (receiverSide | multipleReceiverSide);
+	(senderSide | multipleSenderSide) '->' (
+		receiverSide
+		| multipleReceiverSide
+	);
+multipleSenderSide:
+	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;

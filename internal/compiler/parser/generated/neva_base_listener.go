@@ -446,6 +446,12 @@ func (s *BasenevaListener) EnterCompNetDef(ctx *CompNetDefContext) {}
 // ExitCompNetDef is called when production compNetDef is exited.
 func (s *BasenevaListener) ExitCompNetDef(ctx *CompNetDefContext) {}
 
+// EnterCompNetBody is called when production compNetBody is entered.
+func (s *BasenevaListener) EnterCompNetBody(ctx *CompNetBodyContext) {}
+
+// ExitCompNetBody is called when production compNetBody is exited.
+func (s *BasenevaListener) ExitCompNetBody(ctx *CompNetBodyContext) {}
+
 // EnterConnDefList is called when production connDefList is entered.
 func (s *BasenevaListener) EnterConnDefList(ctx *ConnDefListContext) {}
 
@@ -463,6 +469,12 @@ func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
 
 // ExitNormConnDef is called when production normConnDef is exited.
 func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
+
+// EnterMultipleSenderSide is called when production multipleSenderSide is entered.
+func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContext) {}
+
+// ExitMultipleSenderSide is called when production multipleSenderSide is exited.
+func (s *BasenevaListener) ExitMultipleSenderSide(ctx *MultipleSenderSideContext) {}
 
 // EnterArrBypassConnDef is called when production arrBypassConnDef is entered.
 func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {}

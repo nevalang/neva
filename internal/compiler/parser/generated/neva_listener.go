@@ -220,6 +220,9 @@ type nevaListener interface {
 	// EnterCompNetDef is called when entering the compNetDef production.
 	EnterCompNetDef(c *CompNetDefContext)
 
+	// EnterCompNetBody is called when entering the compNetBody production.
+	EnterCompNetBody(c *CompNetBodyContext)
+
 	// EnterConnDefList is called when entering the connDefList production.
 	EnterConnDefList(c *ConnDefListContext)
 
@@ -228,6 +231,9 @@ type nevaListener interface {
 
 	// EnterNormConnDef is called when entering the normConnDef production.
 	EnterNormConnDef(c *NormConnDefContext)
+
+	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
+	EnterMultipleSenderSide(c *MultipleSenderSideContext)
 
 	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
 	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
@@ -481,6 +487,9 @@ type nevaListener interface {
 	// ExitCompNetDef is called when exiting the compNetDef production.
 	ExitCompNetDef(c *CompNetDefContext)
 
+	// ExitCompNetBody is called when exiting the compNetBody production.
+	ExitCompNetBody(c *CompNetBodyContext)
+
 	// ExitConnDefList is called when exiting the connDefList production.
 	ExitConnDefList(c *ConnDefListContext)
 
@@ -489,6 +498,9 @@ type nevaListener interface {
 
 	// ExitNormConnDef is called when exiting the normConnDef production.
 	ExitNormConnDef(c *NormConnDefContext)
+
+	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
+	ExitMultipleSenderSide(c *MultipleSenderSideContext)
 
 	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
 	ExitArrBypassConnDef(c *ArrBypassConnDefContext)

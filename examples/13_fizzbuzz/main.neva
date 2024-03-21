@@ -1,18 +1,12 @@
 component Main(start) (stop) {
-	nodes {
-        Mod
-        Range
-        Match<int>
-        Unwrap<int>
-        Printer<any>
-        Blocker<int>
-    }
+	nodes { Mod, Range, Match<int>, Unwrap<int>, Printer<any>, Blocker<int> }
 	net {
 		:start -> (
-            1   -> range:from,
+            1     -> range:from,
             101   -> range:to
         )
-        range:data    -> unwrap:data
+
+        range:data -> unwrap:data
 
         unwrap:some   -> [mod:data, blocker:data]
         15            -> mod:case[0]
@@ -26,8 +20,8 @@ component Main(start) (stop) {
 
         printer:sig -> blocker:sig
 
-        blocker:data  -> match:data
+        blocker:data    -> match:data
         100             -> match:case[0]
-        match:then[0] -> :stop
+        match:then[0]   -> :stop
     }
 }

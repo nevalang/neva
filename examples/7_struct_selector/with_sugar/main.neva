@@ -6,16 +6,11 @@ type {
         name string
         pet Pet
     }
-    Pet struct {
-        name string
-    }
+    Pet struct { name string }
 }
 
 component Main(start any) (stop any) {
-    nodes {
-        UserSender
-        Printer<string>
-    }
+    nodes { UserSender, Printer<string> }
     net {
         :start -> userSender:sig
         userSender:u.pet.name -> printer:data
@@ -29,5 +24,5 @@ const user User = {
 }
 
 component UserSender(sig any) (u User) {
-    net { :sig -> ($user -> :u) }
+    :sig -> ($user -> :u)
 }

@@ -122,7 +122,10 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 
 	if single != nil {
 		compDef := single.CompDef()
-		parsedCompEntity := parseCompDef(compDef)
+		parsedCompEntity, err := parseCompDef(compDef)
+		if err != nil {
+			panic(err)
+		}
 		parsedCompEntity.IsPublic = single.PUB_KW() != nil //nolint:nosnakecase
 		parsedCompEntity.Component.Directives = parseCompilerDirectives(
 			single.CompilerDirectives(),
@@ -134,7 +137,10 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 
 	group := actx.GroupCompStmt()
 	for i, compDef := range group.AllCompDef() {
-		parsedCompEntity := parseCompDef(compDef)
+		parsedCompEntity, err := parseCompDef(compDef)
+		if err != nil {
+			panic(err)
+		}
 		parsedCompEntity.IsPublic = group.PUB_KW(i) != nil //nolint:nosnakecase
 		parsedCompEntity.Component.Directives = parseCompilerDirectives(
 			group.CompilerDirectives(i),

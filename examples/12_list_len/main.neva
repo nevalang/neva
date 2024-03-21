@@ -1,10 +1,7 @@
 const lst list<int> = [4, 123, 22, 1121, 215]
 
 component Main(start) (stop) {
-	nodes {
-	    Printer<any>
-	    Len<list<int>>
-	}
+	nodes { Printer<any>, Len<list<int>> }
 	net {
 		:start -> ($lst -> len:data)
 	    len:res -> printer:data

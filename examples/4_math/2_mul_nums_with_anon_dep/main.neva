@@ -2,6 +2,7 @@ component Main(start any) (stop any) {
 	nodes {
 		Printer<int>
 		mul PortBridge<int> { handler Multiplier<int> }
+		// mul PortBridge<int> { Multiplier<int> }
 	}
 	net {
 		:start -> (

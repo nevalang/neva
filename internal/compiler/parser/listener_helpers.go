@@ -358,7 +358,12 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
+func parseNet(
+	actx generated.ICompNetBodyContext,
+) (
+	[]src.Connection,
+	*compiler.Error,
+) {
 	parsedConns := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
@@ -366,13 +371,15 @@ func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Er
 		if err != nil {
 			return nil, err
 		}
-		parsedConns = append(parsedConns, parsedConn)
+		parsedConns = append(parsedConns, parsedConn...)
 	}
 
 	return parsedConns, nil
 }
 
-func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+func parseConn(
+	connDef generated.IConnDefContext,
+) ([]src.Connection, *compiler.Error) {
 	connMeta := core.Meta{
 		Text: connDef.GetText(),
 		Start: core.Position{
@@ -396,22 +403,44 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	}
 
 	if normConn != nil {
-		parsedSenderSide := parseNormConnSenderSide(normConn.SenderSide())
+		singleSender := normConn.SenderSide()
+		mulSenders := normConn.MultipleSenderSide()
+		if singleSender == nil && mulSenders == nil {
+			panic(&compiler.Error{
+				Err:  errors.New("Connection must have at least one sender side"),
+				Meta: &connMeta,
+			})
+		}
 
 		parsedReceiverSide, err := parseNormConnReceiverSide(normConn, connMeta)
 		if err != nil {
-			return src.Connection{}, compiler.Error{
-				Meta: &connMeta,
-			}.Wrap(err)
+			return nil, compiler.Error{Meta: &connMeta}.Wrap(err)
 		}
 
-		return src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide:   parsedSenderSide,
-				ReceiverSide: parsedReceiverSide,
-			},
-			Meta: connMeta,
-		}, nil
+		if singleSender != nil {
+			return []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide:   parseNormConnSenderSide(singleSender),
+						ReceiverSide: parsedReceiverSide,
+					},
+					Meta: connMeta,
+				},
+			}, nil
+		}
+
+		conns := make([]src.Connection, 0, len(mulSenders.AllSenderSide()))
+		for _, senderSide := range mulSenders.AllSenderSide() {
+			conns = append(conns, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide:   parseNormConnSenderSide(senderSide),
+					ReceiverSide: parsedReceiverSide,
+				},
+				Meta: connMeta,
+			})
+		}
+
+		return conns, nil
 	}
 
 	senderPortAddr := arrBypassConn.SinglePortAddr(0)
@@ -423,7 +452,7 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 		connMeta,
 	)
 	if err != nil {
-		return src.Connection{}, err
+		return nil, err
 	}
 
 	receiverPortAddrParsed, err := parseSinglePortAddr(
@@ -432,15 +461,17 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 		connMeta,
 	)
 	if err != nil {
-		return src.Connection{}, err
+		return nil, err
 	}
 
-	return src.Connection{
-		ArrayBypass: &src.ArrayBypassConnection{
-			SenderOutport:  senderPortAddrParsed,
-			ReceiverInport: receiverPortAddrParsed,
+	return []src.Connection{
+		{
+			ArrayBypass: &src.ArrayBypassConnection{
+				SenderOutport:  senderPortAddrParsed,
+				ReceiverInport: receiverPortAddrParsed,
+			},
+			Meta: connMeta,
 		},
-		Meta: connMeta,
 	}, nil
 }
 
@@ -558,14 +589,14 @@ func parseDeferredConnExpr(
 	thenConnExprs := thenExpr.AllConnDef()
 	thenConns := make([]src.Connection, 0, len(thenConnExprs))
 	for _, thenConnDef := range thenConnExprs {
-		parsedThenConn, err := parseConn(thenConnDef)
+		parsedDeferredConn, err := parseConn(thenConnDef)
 		if err != nil {
 			return src.ConnectionReceiverSide{}, &compiler.Error{
 				Err:  err,
 				Meta: &connMeta,
 			}
 		}
-		thenConns = append(thenConns, parsedThenConn)
+		thenConns = append(thenConns, parsedDeferredConn...)
 	}
 	return src.ConnectionReceiverSide{DeferredConnections: thenConns}, nil
 }
@@ -1023,31 +1054,66 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	}
 }
 
-func parseCompDef(actx generated.ICompDefContext) src.Entity {
+func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
 
-	body := actx.CompBody()
-	if body == nil {
+	netBody := actx.CompNetBody()
+	fullBody := actx.CompBody()
+
+	if (netBody != nil) && (fullBody != nil) {
+		return src.Entity{}, &compiler.Error{
+			Err:  errors.New("Component cannot have both root level network and full body"),
+			Meta: &meta,
+		}
+	}
+
+	if netBody == nil && fullBody == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
 			},
+		}, nil
+	}
+
+	if netBody != nil {
+		parsedNet, err := parseNet(netBody)
+		if err != nil {
+			return src.Entity{}, err
 		}
+		return src.Entity{
+			Kind: src.ComponentEntity,
+			Component: src.Component{
+				Interface: parsedInterfaceDef,
+				Net:       parsedNet,
+			},
+		}, nil
 	}
 
 	var nodes map[string]src.Node
-	if nodesDef := body.CompNodesDef(); nodesDef != nil {
+	if nodesDef := fullBody.CompNodesDef(); nodesDef != nil {
 		nodes = parseNodes(nodesDef.CompNodesDefBody())
 	}
 
-	var net []src.Connection
-	if netDef := body.CompNetDef(); netDef != nil {
-		parsedNet, err := parseNet(netDef)
+	var conns []src.Connection
+	if netDef := fullBody.CompNetDef(); netDef != nil {
+		parsedNet, err := parseNet(netDef.CompNetBody())
 		if err != nil {
 			panic(err)
 		}
-		net = parsedNet
+		conns = parsedNet
 	}
 
 	return src.Entity{
@@ -1055,7 +1121,7 @@ func parseCompDef(actx generated.ICompDefContext) src.Entity {
 		Component: src.Component{
 			Interface: parsedInterfaceDef,
 			Nodes:     nodes,
-			Net:       net,
+			Net:       conns,
 		},
-	}
+	}, nil
 }
