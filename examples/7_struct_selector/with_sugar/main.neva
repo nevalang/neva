@@ -11,19 +11,23 @@ type {
     }
 }
 
+component Main(start any) (stop any) {
+    nodes {
+        UserSender
+        Printer<string>
+    }
+    net {
+        :start -> userSender:sig
+        userSender:u.pet.name -> printer:data
+        printer:sig -> :stop
+    }
+}
+
 const user User = {
     name: 'John',
     pet: { name: 'Charley' }
 }
 
-component {
-    Main(start any) (stop any) {
-        nodes {
-            printer Printer<string>
-        }
-        net {
-            :start -> ($user.pet.name -> printer:data)
-            printer:sig -> :stop
-        }
-    }
+component UserSender(sig any) (u User) {
+    net { :sig -> ($user -> :u) }
 }

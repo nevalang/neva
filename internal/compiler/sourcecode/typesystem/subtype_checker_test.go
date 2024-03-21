@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/stretchr/testify/require"
 )
 
@@ -75,8 +76,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
 
 				// TODO figure out why we get [, list]  and not [list]
 				// TODO use h.Trace() helper
@@ -92,8 +93,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
 			},
 			wantErr: nil, // valid case for checker because it iterates over supertype args
 		},
@@ -111,8 +112,8 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, ts.DefaultStringer("list")), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
+				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
 			},
 			wantErr: nil,
 		},

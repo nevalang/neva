@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/runtime/ir"
-	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) { //nolint:funlen

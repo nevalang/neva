@@ -9,7 +9,7 @@ import (
 )
 
 // Check that Len component works with the list of integers.
-func TestListLength(t *testing.T) {
+func Test(t *testing.T) {
 	err := os.Chdir("../")
 	require.NoError(t, err)
 

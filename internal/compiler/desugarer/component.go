@@ -6,7 +6,8 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var ErrConstSenderEntityKind = errors.New(
@@ -134,7 +135,7 @@ func (Desugarer) handleNode(
 	}
 
 	desugaredNodes[nodeName] = src.Node{
-		EntityRef: src.EntityRef{
+		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "StructBuilder",
 		},

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInterfacesSimple(t *testing.T) {
+func Test(t *testing.T) {
 	err := os.Chdir("../..")
 	require.NoError(t, err)
 

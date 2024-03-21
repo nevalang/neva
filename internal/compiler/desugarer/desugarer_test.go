@@ -3,8 +3,8 @@ package desugarer
 import (
 	"testing"
 
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg"
-	src "github.com/nevalang/neva/pkg/sourcecode"
 	"github.com/stretchr/testify/require"
 )
 

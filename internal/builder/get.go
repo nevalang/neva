@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 func (b Builder) Get(workdir, path, version string) (string, error) {

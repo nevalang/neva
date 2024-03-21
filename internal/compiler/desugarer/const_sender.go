@@ -5,11 +5,12 @@ import (
 	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-var emitterComponentRef = src.EntityRef{
+var emitterComponentRef = core.EntityRef{
 	Pkg:  "builtin",
 	Name: "Emitter",
 }
@@ -142,7 +143,7 @@ func (d Desugarer) handleConstRefSender(
 }
 
 // getConstTypeByRef is needed to figure out type parameters for Const node
-func (d Desugarer) getConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
+func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{

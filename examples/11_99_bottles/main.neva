@@ -9,24 +9,24 @@ component Main(start) (stop) {
         :start -> (99 -> next:old)
 
         next:new -> match:data
-        -1 -> match:case[0]
+        -1       -> match:case[0]
 
         match:then[0] -> :stop
-        match:else -> next:old
+        match:else    -> next:old
     }
 }
 
 component PrintNext2Lines(old int) (new int) {
     nodes {
-        Decrementor<int>
-        first PrintFirstLine
+        decr   Decrementor<int>
+        first  PrintFirstLine
         second PrintSecondLine
     }
     net {
-        :old -> first:num
-        first:sig -> decrementor:data
-        decrementor:res -> second:num
-        second:sig -> :new
+        :old            -> first:num
+        first:sig       -> decr:data
+        decr:res        -> second:num
+        second:sig      -> :new
     }
 }
 
@@ -46,22 +46,17 @@ component PrintFirstLine(num int) (sig int) {
         Blocker<int>
     }
     net {
-        :num -> [
-            match:data,
-            (0 -> match:case[0]),
-            (1 -> match:case[1]),
-            blocker:data
-        ]
+        :num -> [match:data, blocker:data]
+        0 -> match:case[0]
+        1 -> match:case[1]
 
         match:then[0] -> ($firstLine3 -> printer:data)
         match:then[1] -> ($firstLine2 -> printer:data)
-        match:else -> [
-            fPrinter:args[0],
-            ($firstLine1 -> fPrinter:tpl)
-        ]
+        match:else    -> fPrinter:args[0]
+        $firstLine1   -> fPrinter:tpl
 
+        printer:sig      -> blocker:sig
         fPrinter:args[0] -> blocker:sig
-        printer:sig -> blocker:sig
 
         blocker:data -> :sig
     }
@@ -84,24 +79,19 @@ component PrintSecondLine(num int) (sig int) {
         Printer<string>
     }
     net {
-        :num -> [
-            match:data,
-            (-1 -> match:case[0]),
-            (0 -> match:case[1]),
-            (1 -> match:case[2]),
-            blocker:data
-        ]
+        :num -> [match:data, blocker:data]
+        -1   -> match:case[0]
+        0    -> match:case[1]
+        1    -> match:case[2]
 
         match:then[0] -> ($secondLine4 -> printer:data)
         match:then[1] -> ($secondLine3 -> printer:data)
         match:then[2] -> ($secondLine2 -> printer:data)
-        match:else -> [
-            fPrinter:args[0],
-            ($secondLine1 -> fPrinter:tpl)
-        ]
+        match:else    -> fPrinter:args[0]
+        $secondLine1  -> fPrinter:tpl
 
+        printer:sig      -> blocker:sig
         fPrinter:args[0] -> blocker:sig
-        printer:sig -> blocker:sig
 
         blocker:data -> :sig
     }

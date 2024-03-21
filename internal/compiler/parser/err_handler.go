@@ -5,7 +5,7 @@ import (
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type CustomErrorListener struct {
@@ -22,8 +22,8 @@ func (c *CustomErrorListener) SyntaxError(
 ) {
 	c.Errors = append(c.Errors, compiler.Error{
 		Err: errors.New(msg),
-		Meta: &src.Meta{
-			Start: src.Position{
+		Meta: &core.Meta{
+			Start: core.Position{
 				Line:   line,
 				Column: column,
 			},

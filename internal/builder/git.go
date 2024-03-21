@@ -8,7 +8,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 
-	"github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 // downloadDep returns path where it downloaded dependency

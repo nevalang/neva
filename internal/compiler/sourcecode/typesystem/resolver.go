@@ -3,6 +3,8 @@ package typesystem
 import (
 	"errors"
 	"fmt"
+
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var (
@@ -40,7 +42,7 @@ type (
 		ShouldTerminate(trace Trace, scope Scope) (bool, error)
 	}
 	Scope interface {
-		GetType(ref fmt.Stringer) (Def, Scope, error)
+		GetType(ref core.EntityRef) (Def, Scope, error)
 		IsTopType(expr Expr) bool
 	}
 )
@@ -118,9 +120,11 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
-	return r.checker.Check(resolvedSub, resolvedSup, TerminatorParams{
-		Scope: scope,
-	})
+	return r.checker.Check(
+		resolvedSub,
+		resolvedSup,
+		TerminatorParams{Scope: scope},
+	)
 }
 
 // CheckArgsCompatibility resolves args
@@ -148,9 +152,11 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			return fmt.Errorf("resolve param constr expr: %w", err)
 		}
 
-		if err := r.checker.Check(resolvedSub, resolvedSup, TerminatorParams{
-			Scope: scope,
-		}); err != nil {
+		if err := r.checker.Check(
+			resolvedSub,
+			resolvedSup,
+			TerminatorParams{Scope: scope},
+		); err != nil {
 			return err
 		}
 	}
@@ -199,9 +205,14 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 				// otherwise expressions like `error struct {child maybe<error>}` will be direct recursive for terminator
 				newTrace := Trace{
 					prev: trace,
-					ref:  DefaultStringer("struct"),
+					cur:  core.EntityRef{Name: "struct"},
 				}
-				resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, &newTrace)
+				resolvedFieldExpr, err := r.resolveExpr(
+					fieldExpr,
+					scope,
+					frame,
+					&newTrace,
+				)
 				if err != nil {
 					return Expr{}, fmt.Errorf(
 						"%w: %v: %v",
@@ -239,7 +250,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 
 	newTrace := Trace{
 		prev: trace,
-		ref:  expr.Inst.Ref, // FIXME t1
+		cur:  expr.Inst.Ref, // FIXME t1
 	}
 
 	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
@@ -294,7 +305,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 	return r.resolveExpr(*def.BodyExpr, scope, newFrame, &newTrace)
 }
 
-func (Resolver) getDef(ref fmt.Stringer, frame map[string]Def, scope Scope) (Def, Scope, error) {
+func (Resolver) getDef(ref core.EntityRef, frame map[string]Def, scope Scope) (Def, Scope, error) {
 	strRef := ref.String()
 	def, exist := frame[strRef]
 	if exist {

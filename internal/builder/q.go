@@ -1,6 +1,6 @@
 package builder
 
-import src "github.com/nevalang/neva/pkg/sourcecode"
+import src "github.com/nevalang/neva/internal/compiler/sourcecode"
 
 type queue []src.ModuleRef
 

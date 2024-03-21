@@ -32,6 +32,12 @@ pub component Multiplier<T int | float >(stream maybe<T>) (res T)
 #extern(int int_decrementor, float float_decrementor)
 pub component Decrementor<T int | float>(data T) (res T)
 
+#extern(mod)
+pub component Mod(data int, [case] int) ([then] int, else int)
+
+#extern(range)
+pub component Range(from int, to int) (data maybe<int>)
+
 // IO
 
 #extern(line_printer)
@@ -45,7 +51,10 @@ pub component FPrinter<T>(tpl string, [args] T) ([args] T, err error)
 #extern(match)
 pub component Match<T any>(data T, [case] T) ([then] T, else T)
 
-// List / Map operations
+# extern(unwrap)
+pub component Unwrap<T any>(data maybe<T>) (some T, none struct{})
+
+// List and Map operations
 
 #extern(list list_len, map map_len)
 pub component Len<T list<any> | map<any>>(data T) (res int)

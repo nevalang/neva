@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var (
@@ -758,7 +759,7 @@ func (a Analyzer) getNodeOutportType(
 	)
 }
 
-func (a Analyzer) getResolvedConstTypeByRef(ref src.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
+func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
 	entity, location, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{

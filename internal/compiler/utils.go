@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 // Pointer allows to avoid creating of temporary variables just to take pointers.
@@ -15,9 +15,9 @@ func Pointer[T any](v T) *T {
 }
 
 // ParseEntityRef assumes string-ref has form of <pkg_name>.<entity_name≥ or just <entity_name>.
-func ParseEntityRef(ref string) src.EntityRef {
-	entityRef := src.EntityRef{
-		Meta: src.Meta{Text: ref},
+func ParseEntityRef(ref string) core.EntityRef {
+	entityRef := core.EntityRef{
+		Meta: core.Meta{Text: ref},
 	}
 
 	parts := strings.Split(ref, ".")

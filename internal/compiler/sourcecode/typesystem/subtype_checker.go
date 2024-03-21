@@ -3,6 +3,8 @@ package typesystem
 import (
 	"errors"
 	"fmt"
+
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var (
@@ -40,7 +42,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 	constr Expr,
 	params TerminatorParams,
 ) error {
-	if params.Scope.IsTopType(constr) { // no matter what expr is if constr is top type
+	if params.Scope.IsTopType(constr) {
 		return nil
 	}
 
@@ -58,7 +60,7 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 		)
 	}
 
-	if isConstraintInstance { //nolint:nestif // both expr and constr are insts
+	if isConstraintInstance { // both expr and constr are insts
 		isSubTypeRecursive, err := s.terminator.ShouldTerminate(
 			params.SubtypeTrace,
 			params.Scope,
@@ -111,7 +113,9 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 		}
 
 		return nil
-	} // we know constr is lit by now
+	}
+
+	// we know constr is literal by now
 
 	exprLitType := expr.Lit.Type()
 	constrLitType := constr.Lit.Type()
@@ -130,7 +134,6 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 			}
 		}
 	case StructLitType: // {x int, y float} <: {x int|str}
-
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 			return fmt.Errorf(
 				"%w: got %v, want %v",
@@ -139,19 +142,36 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 				len(constr.Lit.Struct),
 			)
 		}
-		subtypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		supertypeTrace := NewTrace(&params.SubtypeTrace, DefaultStringer("struct"))
-		newParams := TerminatorParams{
-			Scope:          params.Scope,
-			SubtypeTrace:   subtypeTrace,
-			SupertypeTrace: supertypeTrace,
+
+		// add virtual ref "struct" to trace to avoid direct recursion
+		// e.g. error struct {child maybe<error>}
+		// but only if it's not already there
+		if params.SubtypeTrace.cur.String() != "struct" &&
+			params.SupertypeTrace.String() != "struct" {
+			newParams := TerminatorParams{
+				Scope:          params.Scope,
+				SubtypeTrace:   NewTrace(&params.SubtypeTrace, core.EntityRef{Name: "struct"}),
+				SupertypeTrace: NewTrace(&params.SupertypeTrace, core.EntityRef{Name: "struct"}),
+			}
+			// HACK: we copy-paste this loop to avoid re-assigning to params variable
+			// because that leads to infinite nesting inside that struct because of recursive pointers
+			for constrFieldName, constrField := range constr.Lit.Struct {
+				exprField, ok := expr.Lit.Struct[constrFieldName]
+				if !ok {
+					return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
+				}
+				if err := s.Check(exprField, constrField, newParams); err != nil {
+					return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
+				}
+			}
+			break
 		}
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 			}
-			if err := s.Check(exprField, constrField, newParams); err != nil {
+			if err := s.Check(exprField, constrField, params); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
 			}
 		}
@@ -188,15 +208,15 @@ func (s SubtypeChecker) Check( //nolint:funlen,gocognit,gocyclo
 
 func (SubtypeChecker) getNewTerminatorParams(
 	old TerminatorParams,
-	subRef, supRef fmt.Stringer,
+	subRef, supRef core.EntityRef,
 ) TerminatorParams {
 	newSubtypeTrace := Trace{
 		prev: &old.SubtypeTrace,
-		ref:  subRef,
+		cur:  subRef,
 	}
 	newSupertypeTrace := Trace{
 		prev: &old.SupertypeTrace,
-		ref:  supRef,
+		cur:  supRef,
 	}
 	newTParams := TerminatorParams{
 		SubtypeTrace:   newSubtypeTrace,

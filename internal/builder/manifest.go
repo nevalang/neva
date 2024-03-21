@@ -7,8 +7,8 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/nevalang/neva/pkg/sourcecode"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 func (p Builder) retrieveManifest(workdir fs.FS) (src.ModuleManifest, error) {

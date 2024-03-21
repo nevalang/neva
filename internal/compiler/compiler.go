@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/runtime/ir"
-	"github.com/nevalang/neva/pkg/sourcecode"
 )
 
 type Compiler struct {

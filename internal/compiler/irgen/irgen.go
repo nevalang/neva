@@ -7,8 +7,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/internal/runtime/ir"
-	src "github.com/nevalang/neva/pkg/sourcecode"
 )
 
 var ErrNodeUsageNotFound = errors.New("node usage not found")
@@ -52,7 +53,7 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 	rootNodeCtx := nodeContext{
 		path: []string{},
 		node: src.Node{
-			EntityRef: src.EntityRef{
+			EntityRef: core.EntityRef{
 				Pkg:  "", // ref to local entity
 				Name: "Main",
 			},

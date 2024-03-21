@@ -6,20 +6,21 @@ import (
 	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
-	"github.com/nevalang/neva/pkg/typesystem"
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var virtualBlockerNode = src.Node{
-	EntityRef: src.EntityRef{
+	EntityRef: core.EntityRef{
 		Pkg:  "builtin",
 		Name: "Blocker",
 	},
 	TypeArgs: []typesystem.Expr{
 		ts.Expr{
 			Inst: &typesystem.InstExpr{
-				Ref: src.EntityRef{Pkg: "builtin", Name: "any"},
+				Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
 			},
 		},
 	},

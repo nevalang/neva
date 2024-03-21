@@ -6,7 +6,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 // semverCheck ensures that module is compatible with existing compiler

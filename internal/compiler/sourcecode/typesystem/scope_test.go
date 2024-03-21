@@ -3,9 +3,9 @@ package typesystem_test
 
 import (
 	"errors"
-	"fmt"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var ErrDefaultScope = errors.New("default scope")
@@ -19,7 +19,7 @@ func (s TestScope) IsTopType(expr ts.Expr) bool {
 	return expr.Inst.Ref.String() == "any"
 }
 
-func (s TestScope) GetType(ref fmt.Stringer) (ts.Def, ts.Scope, error) {
+func (s TestScope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	v, ok := s[ref.String()]
 	if !ok {
 		return ts.Def{}, nil, ErrDefaultScope

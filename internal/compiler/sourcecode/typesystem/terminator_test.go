@@ -3,7 +3,8 @@ package typesystem_test
 import (
 	"testing"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +21,7 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	}{
 		{ // list<t1> [t1] { t1=list<t1>, list<t> }
 			name:  "non valid recursive case",
-			trace: ts.NewTrace(nil, ts.DefaultStringer("t1")),
+			trace: ts.NewTrace(nil, core.EntityRef{Name: "t1"}),
 			scope: TestScope{
 				"t1": h.Def(
 					h.Inst("list", h.Inst("t1")),

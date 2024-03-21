@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/pkg/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {

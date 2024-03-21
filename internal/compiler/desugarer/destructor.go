@@ -1,6 +1,9 @@
 package desugarer
 
-import src "github.com/nevalang/neva/pkg/sourcecode"
+import (
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+)
 
 type voidResult struct {
 	voidNodeName       string
@@ -14,7 +17,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 	result := voidResult{
 		voidNodeName: destructorNodeName,
 		voidNode: src.Node{
-			EntityRef: src.EntityRef{
+			EntityRef: core.EntityRef{
 				Pkg:  "builtin",
 				Name: "Destructor",
 			},
@@ -46,7 +49,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 						Receivers: receiverSides,
 					},
 				},
-				Meta: src.Meta{},
+				Meta: core.Meta{},
 			})
 		}
 	}

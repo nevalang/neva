@@ -7,7 +7,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	ts "github.com/nevalang/neva/pkg/typesystem"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 var errTest = errors.New("Oops!")
@@ -76,7 +77,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr.Inst.Args[0]).Return(errTest) // in the loop
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t.ShouldTerminate(ts.NewTrace(nil, ts.DefaultStringer("list")), scope)
+					t.ShouldTerminate(ts.NewTrace(nil, core.EntityRef{Name: "list"}), scope)
 				},
 
 				wantErr: ts.ErrUnresolvedArg,
@@ -102,17 +103,17 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(scope["t2"]).Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("map"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "map"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t1"))
+					t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 
-					t3 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+					t3 := ts.NewTrace(&t1, core.EntityRef{Name: "t2"})
 					t.ShouldTerminate(t3, scope).Return(false, nil)
 				},
 				prepareChecker: func(c *MockcompatCheckerMockRecorder) {
-					t := ts.NewTrace(nil, ts.DefaultStringer("map"))
+					t := ts.NewTrace(nil, core.EntityRef{Name: "map"})
 					tparams := ts.TerminatorParams{
 						Scope:          scope,
 						SubtypeTrace:   t,
@@ -138,10 +139,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
+		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"int"})
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 		// 		},
 		// 		wantErr: ts.ErrScope,
@@ -162,10 +163,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+					t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t2"})
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 				},
 				wantErr: ts.ErrConstr,
@@ -185,9 +186,9 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
-					t.ShouldTerminate(ts.NewTrace(&t1, ts.DefaultStringer("t2")), scope).Return(false, nil)
+					t.ShouldTerminate(ts.NewTrace(&t1, core.EntityRef{Name: "t2"}), scope).Return(false, nil)
 				},
 				wantErr: ts.ErrConstr,
 			}
@@ -210,13 +211,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					c.Check(h.Inst("t2"), h.Inst("t3"), gomock.Any()).Return(errTest)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+					t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t2"})
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 
-					t3 := ts.NewTrace(&t1, ts.DefaultStringer("t3"))
+					t3 := ts.NewTrace(&t1, core.EntityRef{Name: "t3"})
 					t.ShouldTerminate(t3, scope).Return(false, nil)
 				},
 				wantErr: ts.ErrIncompatArg,
@@ -247,10 +248,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope)
 
-					// t2 := ts.NewTrace(nil, ts.DefaultStringer("t2"))
+					// t2 := ts.NewTrace(nil, core.EntityRef{Name:"t2"})
 					// t.ShouldTerminate(t2, scope)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
@@ -293,10 +294,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope)
 
-					t2 := ts.NewTrace(nil, ts.DefaultStringer("t2"))
+					t2 := ts.NewTrace(nil, core.EntityRef{Name: "t2"})
 					t.ShouldTerminate(t2, scope)
 				},
 				want: expr,
@@ -344,7 +345,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("string"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"string"})
 		// 			t.ShouldTerminate(t1, scope)
 		// 		},
 		// 		want: expr,
@@ -395,10 +396,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t"))
+					t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t"})
 					t.ShouldTerminate(t2, scope).Return(false, errTest)
 				},
 				wantErr: ts.ErrTerminator,
@@ -417,13 +418,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope).Return(false, nil)
 
-					t2 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+					t2 := ts.NewTrace(&t1, core.EntityRef{Name: "t2"})
 					t.ShouldTerminate(t2, scope).Return(false, nil)
 
-					t3 := ts.NewTrace(&t2, ts.DefaultStringer("t1"))
+					t3 := ts.NewTrace(&t2, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t3, scope).Return(false, errTest)
 				},
 				wantErr: ts.ErrTerminator,
@@ -452,31 +453,31 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
+		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"int"})
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 
-		// 			t3 := ts.NewTrace(&t1, ts.DefaultStringer("string"))
+		// 			t3 := ts.NewTrace(&t1, core.EntityRef{Name:"string"})
 		// 			t.ShouldTerminate(t3, scope).Return(false, nil)
 
-		// 			t4 := ts.NewTrace(&t1, ts.DefaultStringer("list"))
+		// 			t4 := ts.NewTrace(&t1, core.EntityRef{Name:"list"})
 		// 			t.ShouldTerminate(t4, scope).Return(false, nil)
 
-		// 			t5 := ts.NewTrace(&t4, ts.DefaultStringer("map"))
+		// 			t5 := ts.NewTrace(&t4, core.EntityRef{Name:"map"})
 		// 			t.ShouldTerminate(t5, scope).Return(false, nil)
 
-		// 			t6 := ts.NewTrace(&t5, ts.DefaultStringer("p1"))
+		// 			t6 := ts.NewTrace(&t5, core.EntityRef{Name:"p1"})
 		// 			t.ShouldTerminate(t6, scope).Return(false, nil)
 
-		// 			t7 := ts.NewTrace(&t6, ts.DefaultStringer("int"))
+		// 			t7 := ts.NewTrace(&t6, core.EntityRef{Name:"int"})
 		// 			t.ShouldTerminate(t7, scope).Return(false, nil)
 
-		// 			t8 := ts.NewTrace(&t5, ts.DefaultStringer("p2"))
+		// 			t8 := ts.NewTrace(&t5, core.EntityRef{Name:"p2"})
 		// 			t.ShouldTerminate(t8, scope).Return(false, nil)
 
-		// 			t9 := ts.NewTrace(&t8, ts.DefaultStringer("string"))
+		// 			t9 := ts.NewTrace(&t8, core.EntityRef{Name:"string"})
 		// 			t.ShouldTerminate(t9, scope).Return(false, nil)
 		// 		},
 		// 		want: h.Inst(
@@ -499,16 +500,16 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			v.ValidateDef(gomock.Any()).AnyTimes().Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, ts.DefaultStringer("int"))
+		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"int"})
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 
-		// 			t3 := ts.NewTrace(&t1, ts.DefaultStringer("t"))
+		// 			t3 := ts.NewTrace(&t1, core.EntityRef{Name:"t"})
 		// 			t.ShouldTerminate(t3, scope).Return(false, nil)
 
-		// 			t4 := ts.NewTrace(&t3, ts.DefaultStringer("int"))
+		// 			t4 := ts.NewTrace(&t3, core.EntityRef{Name:"int"})
 		// 			t.ShouldTerminate(t4, scope).Return(false, nil)
 		// 		},
 		// 		want: h.Inst("int"),
@@ -567,13 +568,13 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			v.Validate(gomock.Any()).AnyTimes().Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("t1"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, ts.DefaultStringer("list"))
+		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"list"})
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 
-		// 			t3 := ts.NewTrace(&t2, ts.DefaultStringer("t1"))
+		// 			t3 := ts.NewTrace(&t2, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t3, scope).Return(true, nil)
 		// 		},
 		// 		want: h.Inst("list", h.Inst("t1")),
@@ -596,8 +597,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 		prepareChecker: func(c *MockcompatCheckerMockRecorder) {
 		// 			tparams := ts.TerminatorParams{
 		// 				Scope:          scope,
-		// 				SubtypeTrace:   ts.NewTrace(nil, ts.DefaultStringer("t3")),
-		// 				SupertypeTrace: ts.NewTrace(nil, ts.DefaultStringer("t3")),
+		// 				SubtypeTrace:   ts.NewTrace(nil, core.EntityRef{Name:"t3"}),
+		// 				SupertypeTrace: ts.NewTrace(nil, core.EntityRef{Name:"t3"}),
 		// 			}
 		// 			c.Check(
 		// 				h.Inst("list", h.Inst("t1")),
@@ -606,26 +607,26 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			).Return(nil)
 		// 		},
 		// 		prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-		// 			t1 := ts.NewTrace(nil, ts.DefaultStringer("t3"))
+		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t3"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, ts.DefaultStringer("t1"))
+		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 
-		// 			t3 := ts.NewTrace(&t2, ts.DefaultStringer("list"))
+		// 			t3 := ts.NewTrace(&t2, core.EntityRef{Name:"list"})
 		// 			t.ShouldTerminate(t3, scope).Return(false, nil)
 
-		// 			t4 := ts.NewTrace(&t3, ts.DefaultStringer("t1"))
+		// 			t4 := ts.NewTrace(&t3, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t4, scope).Return(true, nil)
 
 		// 			// constr
-		// 			t5 := ts.NewTrace(&t1, ts.DefaultStringer("t2"))
+		// 			t5 := ts.NewTrace(&t1, core.EntityRef{Name:"t2"})
 		// 			t.ShouldTerminate(t5, scope).Return(false, nil)
 
-		// 			t6 := ts.NewTrace(&t5, ts.DefaultStringer("list"))
+		// 			t6 := ts.NewTrace(&t5, core.EntityRef{Name:"list"})
 		// 			t.ShouldTerminate(t6, scope).Return(false, nil)
 
-		// 			t7 := ts.NewTrace(&t6, ts.DefaultStringer("t2"))
+		// 			t7 := ts.NewTrace(&t6, core.EntityRef{Name:"t2"})
 		// 			t.ShouldTerminate(t7, scope).Return(true, nil)
 		// 		},
 		// 		want: h.Inst("t3", h.Inst("list", h.Inst("t1"))),
