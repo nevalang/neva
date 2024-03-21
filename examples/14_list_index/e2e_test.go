@@ -9,7 +9,7 @@ import (
 )
 
 func TestInterfacesSimple(t *testing.T) {
-	err := os.Chdir("../..")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
