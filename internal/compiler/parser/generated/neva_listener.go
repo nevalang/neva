@@ -232,6 +232,9 @@ type nevaListener interface {
 	// EnterNormConnDef is called when entering the normConnDef production.
 	EnterNormConnDef(c *NormConnDefContext)
 
+	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
+	EnterMultipleSenderSide(c *MultipleSenderSideContext)
+
 	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
 	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
 
@@ -495,6 +498,9 @@ type nevaListener interface {
 
 	// ExitNormConnDef is called when exiting the normConnDef production.
 	ExitNormConnDef(c *NormConnDefContext)
+
+	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
+	ExitMultipleSenderSide(c *MultipleSenderSideContext)
 
 	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
 	ExitArrBypassConnDef(c *ArrBypassConnDefContext)

@@ -470,6 +470,12 @@ func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
 // ExitNormConnDef is called when production normConnDef is exited.
 func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
 
+// EnterMultipleSenderSide is called when production multipleSenderSide is entered.
+func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContext) {}
+
+// ExitMultipleSenderSide is called when production multipleSenderSide is exited.
+func (s *BasenevaListener) ExitMultipleSenderSide(ctx *MultipleSenderSideContext) {}
+
 // EnterArrBypassConnDef is called when production arrBypassConnDef is entered.
 func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
 

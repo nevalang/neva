@@ -124,21 +124,23 @@ compBody:
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
 compNodesDefBody:
-	'{' NEWLINE* (
-		(compNodeDef | COMMENT) ','? NEWLINE*
-	)* '}';
+	'{' NEWLINE* ((compNodeDef | COMMENT) ','? NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
 nodeDIArgs: compNodesDefBody;
 
 // network
-compNetDef:
-	'net' NEWLINE* compNetBody;
+compNetDef: 'net' NEWLINE* compNetBody;
 compNetBody: '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef:
-	senderSide '->' (receiverSide | multipleReceiverSide);
+	(senderSide | multipleSenderSide) '->' (
+		receiverSide
+		| multipleReceiverSide
+	);
+multipleSenderSide:
+	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
 receiverSide: portAddr | thenConnExpr;
