@@ -275,3 +275,20 @@ component {
 		}
 	}
 }
+
+component Main(start) (stop) { :start -> :stop }
+
+component Main(start) (stop) {
+    :start -> :stop }
+
+component Main(start) (stop) { :start -> :stop
+}
+
+component Main(start) (stop) {
+    :start -> :stop
+}
+
+component Main() () {
+    :foo -> :bar
+    :baz -> :bax
+}

@@ -358,7 +358,7 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(actx generated.ICompNetDefContext) ([]src.Connection, *compiler.Error) {
+func parseNet(actx generated.ICompNetBodyContext) ([]src.Connection, *compiler.Error) {
 	parsedConns := []src.Connection{}
 
 	for _, connDef := range actx.ConnDefList().AllConnDef() {
@@ -1038,16 +1038,17 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
 
+	netBody := actx.CompNetBody()
 	fullBody := actx.CompBody()
-	rootLvlNetwork := actx.CompNetDef()
-	if (rootLvlNetwork != nil) && (fullBody != nil) {
+
+	if (netBody != nil) && (fullBody != nil) {
 		return src.Entity{}, &compiler.Error{
 			Err:  errors.New("Component cannot have both root level network and full body"),
 			Meta: &meta,
 		}
 	}
 
-	if rootLvlNetwork == nil && fullBody == nil {
+	if netBody == nil && fullBody == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
@@ -1056,8 +1057,8 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 		}, nil
 	}
 
-	if rootLvlNetwork != nil {
-		parsedNet, err := parseNet(rootLvlNetwork)
+	if netBody != nil {
+		parsedNet, err := parseNet(netBody)
 		if err != nil {
 			return src.Entity{}, err
 		}
@@ -1077,7 +1078,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 
 	var conns []src.Connection
 	if netDef := fullBody.CompNetDef(); netDef != nil {
-		parsedNet, err := parseNet(netDef)
+		parsedNet, err := parseNet(netDef.CompNetBody())
 		if err != nil {
 			panic(err)
 		}
