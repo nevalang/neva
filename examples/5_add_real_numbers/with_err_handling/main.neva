@@ -7,6 +7,7 @@ component Main(start any) (stop any) {
 		parser1 x.NumParser<int>
 		parser2 x.NumParser<int>
 		adder PortBridge<int> { handler Adder<int> }
+		// adder PortBridge<int> { Adder<int> }
 		printer Printer<any>
 	}
 	net {

@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,13 +16,15 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "14_time_sleep")
+	cmd := exec.Command("neva", "run", "0_do_nothing/without_net_kw")
 
-	before := time.Now()
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
+	require.Equal(
+		t,
+		"",
+		string(out),
+	)
 
-	require.Equal(t, "", string(out))
-	require.Greater(t, time.Since(before).Seconds(), float64(1))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

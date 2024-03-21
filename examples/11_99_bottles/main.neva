@@ -1,10 +1,7 @@
 // https://www.99-bottles-of-beer.net
 
 component Main(start) (stop) {
-    nodes {
-        Match<int>
-        next PrintNext2Lines
-    }
+    nodes { Match<int>, next PrintNext2Lines }
     net {
         :start -> (99 -> next:old)
 
@@ -39,12 +36,7 @@ const {
 }
 
 component PrintFirstLine(num int) (sig int) {
-    nodes {
-        Match<int>
-        Printer<string>
-        FPrinter<int>
-        Blocker<int>
-    }
+    nodes { Match<int>, Printer<string>, FPrinter<int>, Blocker<int> }
     net {
         :num -> [match:data, blocker:data]
         0 -> match:case[0]
@@ -72,12 +64,7 @@ const {
 }
 
 component PrintSecondLine(num int) (sig int) {
-    nodes {
-        Match<int>
-        Blocker<int>
-        FPrinter<int>
-        Printer<string>
-    }
+    nodes { Match<int>, Blocker<int>, FPrinter<int>, Printer<string> }
     net {
         :num -> [match:data, blocker:data]
         -1   -> match:case[0]

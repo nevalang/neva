@@ -4,16 +4,13 @@ type User struct {
 }
 
 component Main(start any) (stop any) {
-    nodes {
-        builder StructBuilder<User>
-        print Printer<User>
-    }
+    nodes { Printer<User>, builder StructBuilder<User> }
     net {
         :start -> (
             'John' -> builder:name,
             32 -> builder:age
         )
-        builder:msg -> print:data
-        print:sig -> :stop
+        builder:msg -> printer:data
+        printer:sig -> :stop
     }
 }

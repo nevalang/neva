@@ -1,0 +1,1 @@
+component Main(start) (stop) { :start -> :stop }

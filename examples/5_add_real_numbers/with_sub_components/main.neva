@@ -2,10 +2,7 @@ import { x }
 
 component {
 	Main(start any) (stop any) {
-		nodes {
-			aux Aux
-			printer Printer<any>
-		}
+		nodes { aux Aux, printer Printer<any> }
 		net {
 			:start -> aux:sig
 			aux:res -> printer:data
@@ -18,6 +15,7 @@ component {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
+			// adder PortBridge<int> { Adder<int> }
 			adder PortBridge<int> { handler Adder<int> }
 		}
 		net {
@@ -31,10 +29,7 @@ component {
 	}
 
 	IntReader(sig any) (num int, err error) {
-		nodes {
-			x.LineScanner
-			x.NumParser<int>
-		}
+		nodes { x.LineScanner, x.NumParser<int> }
 		net {
 			:sig -> lineScanner:sig
 			lineScanner:data -> numParser:data
