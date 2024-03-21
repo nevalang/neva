@@ -30,7 +30,10 @@ func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 				case <-ctx.Done():
 					return
 				default:
-					fmt.Println(dataMsg)
+					_, err := fmt.Println(dataMsg)
+					if err != nil {
+						panic(err)
+					}
 					select {
 					case <-ctx.Done():
 						return
