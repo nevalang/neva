@@ -115,8 +115,7 @@ groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
 		compilerDirectives? PUB_KW? compDef
 	)* '}';
-compDef: interfaceDef compBody? NEWLINE*;
-// compDef: interfaceDef (compNetDef | compBody)? NEWLINE*;
+compDef: interfaceDef (compBody | compNetDef)? NEWLINE*;
 compBody:
 	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
 		COMMENT NEWLINE*

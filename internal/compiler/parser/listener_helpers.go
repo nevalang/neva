@@ -1023,31 +1023,65 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	}
 }
 
-func parseCompDef(actx generated.ICompDefContext) src.Entity {
+func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
 	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
 
-	body := actx.CompBody()
-	if body == nil {
+	fullBody := actx.CompBody()
+	rootLvlNetwork := actx.CompNetDef()
+	if (rootLvlNetwork != nil) && (fullBody != nil) {
+		return src.Entity{}, &compiler.Error{
+			Err:  errors.New("Component cannot have both root level network and full body"),
+			Meta: &meta,
+		}
+	}
+
+	if rootLvlNetwork == nil && fullBody == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
 			},
+		}, nil
+	}
+
+	if rootLvlNetwork != nil {
+		parsedNet, err := parseNet(rootLvlNetwork)
+		if err != nil {
+			return src.Entity{}, err
 		}
+		return src.Entity{
+			Kind: src.ComponentEntity,
+			Component: src.Component{
+				Interface: parsedInterfaceDef,
+				Net:       parsedNet,
+			},
+		}, nil
 	}
 
 	var nodes map[string]src.Node
-	if nodesDef := body.CompNodesDef(); nodesDef != nil {
+	if nodesDef := fullBody.CompNodesDef(); nodesDef != nil {
 		nodes = parseNodes(nodesDef.CompNodesDefBody())
 	}
 
-	var net []src.Connection
-	if netDef := body.CompNetDef(); netDef != nil {
+	var conns []src.Connection
+	if netDef := fullBody.CompNetDef(); netDef != nil {
 		parsedNet, err := parseNet(netDef)
 		if err != nil {
 			panic(err)
 		}
-		net = parsedNet
+		conns = parsedNet
 	}
 
 	return src.Entity{
@@ -1055,7 +1089,7 @@ func parseCompDef(actx generated.ICompDefContext) src.Entity {
 		Component: src.Component{
 			Interface: parsedInterfaceDef,
 			Nodes:     nodes,
-			Net:       net,
+			Net:       conns,
 		},
-	}
+	}, nil
 }
