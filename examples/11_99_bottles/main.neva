@@ -77,9 +77,7 @@ component PrintSecondLine(num int) (sig int) {
         match:else    -> fPrinter:args[0]
         $secondLine1  -> fPrinter:tpl
 
-        printer:sig      -> blocker:sig
-        fPrinter:args[0] -> blocker:sig
-
-        blocker:data -> :sig
+        [printer:sig, fPrinter:args[0]] -> blocker:sig
+        blocker:data                    -> :sig
     }
 }

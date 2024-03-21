@@ -1,0 +1,38 @@
+import { x }
+
+component {
+	Main(start any) (stop any) {
+		nodes { Aux, Printer<any> }
+		net {
+			:start             -> aux:sig
+			[aux:res, aux:err] -> printer:data
+			printer:sig        -> :stop
+		}
+	}
+	
+	Aux(sig any) (res int, err error) {
+		nodes {
+			reader1 IntReader
+			reader2 IntReader
+			// adder PortBridge<int> { Adder<int> }
+			adder PortBridge<int> { handler Adder<int> }
+		}
+		net {
+			:sig                       -> reader1:sig
+			reader1:num                -> [adder:ports[0], reader2:sig]
+			[reader1:err, reader2:err] -> :err
+			reader2:num                -> adder:ports[1]
+			adder:res                  -> :res
+		}
+	}
+
+	IntReader(sig any) (num int, err error) {
+		nodes { x.LineScanner, x.NumParser<int> }
+		net {
+			:sig             -> lineScanner:sig
+			lineScanner:data -> numParser:data
+			numParser:res    -> :num
+			numParser:err    -> :err
+		}
+	}
+}

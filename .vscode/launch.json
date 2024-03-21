@@ -121,7 +121,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "5_add_real_numbers/naive"]
+      "args": ["run", "5_add_real_numbers/0_naive"]
     },
     // don't forget this example doesn't work in debugger
     {
@@ -131,7 +131,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "5_add_real_numbers/with_err_handling"]
+      "args": ["run", "5_add_real_numbers/1_with_err_handling"]
     },
     // don't forget this example doesn't work in debugger
     {
@@ -141,7 +141,17 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "5_add_real_numbers/with_sub_components"]
+      "args": ["run", "-debug", "5_add_real_numbers/2_with_sub_components"]
+    },
+    // don't forget this example doesn't work in debugger
+    {
+      "name": "Neva CLI 53",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "-debug", "5_add_real_numbers/3_with_multuple_senders"]
     },
     {
       "name": "Neva CLI 60",
