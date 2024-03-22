@@ -157,8 +157,8 @@ type nevaListener interface {
 	// EnterConstDef is called when entering the constDef production.
 	EnterConstDef(c *ConstDefContext)
 
-	// EnterConstVal is called when entering the constVal production.
-	EnterConstVal(c *ConstValContext)
+	// EnterConstLit is called when entering the constLit production.
+	EnterConstLit(c *ConstLitContext)
 
 	// EnterNil is called when entering the nil production.
 	EnterNil(c *NilContext)
@@ -244,8 +244,8 @@ type nevaListener interface {
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
 
-	// EnterThenConnExpr is called when entering the thenConnExpr production.
-	EnterThenConnExpr(c *ThenConnExprContext)
+	// EnterDeferConnExpr is called when entering the deferConnExpr production.
+	EnterDeferConnExpr(c *DeferConnExprContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -424,8 +424,8 @@ type nevaListener interface {
 	// ExitConstDef is called when exiting the constDef production.
 	ExitConstDef(c *ConstDefContext)
 
-	// ExitConstVal is called when exiting the constVal production.
-	ExitConstVal(c *ConstValContext)
+	// ExitConstLit is called when exiting the constLit production.
+	ExitConstLit(c *ConstLitContext)
 
 	// ExitNil is called when exiting the nil production.
 	ExitNil(c *NilContext)
@@ -511,8 +511,8 @@ type nevaListener interface {
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)
 
-	// ExitThenConnExpr is called when exiting the thenConnExpr production.
-	ExitThenConnExpr(c *ThenConnExprContext)
+	// ExitDeferConnExpr is called when exiting the deferConnExpr production.
+	ExitDeferConnExpr(c *DeferConnExprContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)

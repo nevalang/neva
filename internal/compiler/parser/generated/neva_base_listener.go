@@ -320,11 +320,11 @@ func (s *BasenevaListener) EnterConstDef(ctx *ConstDefContext) {}
 // ExitConstDef is called when production constDef is exited.
 func (s *BasenevaListener) ExitConstDef(ctx *ConstDefContext) {}
 
-// EnterConstVal is called when production constVal is entered.
-func (s *BasenevaListener) EnterConstVal(ctx *ConstValContext) {}
+// EnterConstLit is called when production constLit is entered.
+func (s *BasenevaListener) EnterConstLit(ctx *ConstLitContext) {}
 
-// ExitConstVal is called when production constVal is exited.
-func (s *BasenevaListener) ExitConstVal(ctx *ConstValContext) {}
+// ExitConstLit is called when production constLit is exited.
+func (s *BasenevaListener) ExitConstLit(ctx *ConstLitContext) {}
 
 // EnterNil is called when production nil is entered.
 func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
@@ -494,11 +494,11 @@ func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
 // ExitReceiverSide is called when production receiverSide is exited.
 func (s *BasenevaListener) ExitReceiverSide(ctx *ReceiverSideContext) {}
 
-// EnterThenConnExpr is called when production thenConnExpr is entered.
-func (s *BasenevaListener) EnterThenConnExpr(ctx *ThenConnExprContext) {}
+// EnterDeferConnExpr is called when production deferConnExpr is entered.
+func (s *BasenevaListener) EnterDeferConnExpr(ctx *DeferConnExprContext) {}
 
-// ExitThenConnExpr is called when production thenConnExpr is exited.
-func (s *BasenevaListener) ExitThenConnExpr(ctx *ThenConnExprContext) {}
+// ExitDeferConnExpr is called when production deferConnExpr is exited.
+func (s *BasenevaListener) ExitDeferConnExpr(ctx *DeferConnExprContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}

@@ -8,7 +8,7 @@ component Main(start) (stop) {
         next:new -> match:data
         -1       -> match:case[0]
 
-        match:then[0] -> :stop
+        match:case[0] -> :stop
         match:else    -> next:old
     }
 }
@@ -21,8 +21,8 @@ component PrintNext2Lines(old int) (new int) {
     }
     net {
         :old            -> first:num
-        first:sig       -> decr:data
-        decr:res        -> second:num
+        first:sig       -> decr:n
+        decr:n          -> second:num
         second:sig      -> :new
     }
 }
@@ -42,8 +42,8 @@ component PrintFirstLine(num int) (sig int) {
         0 -> match:case[0]
         1 -> match:case[1]
 
-        match:then[0] -> ($firstLine3 -> printer:data)
-        match:then[1] -> ($firstLine2 -> printer:data)
+        match:case[0] -> ($firstLine3 -> printer:data)
+        match:case[1] -> ($firstLine2 -> printer:data)
         match:else    -> fPrinter:args[0]
         $firstLine1   -> fPrinter:tpl
 
@@ -71,9 +71,9 @@ component PrintSecondLine(num int) (sig int) {
         0    -> match:case[1]
         1    -> match:case[2]
 
-        match:then[0] -> ($secondLine4 -> printer:data)
-        match:then[1] -> ($secondLine3 -> printer:data)
-        match:then[2] -> ($secondLine2 -> printer:data)
+        match:case[0] -> ($secondLine4 -> printer:data)
+        match:case[1] -> ($secondLine3 -> printer:data)
+        match:case[2] -> ($secondLine2 -> printer:data)
         match:else    -> fPrinter:args[0]
         $secondLine1  -> fPrinter:tpl
 

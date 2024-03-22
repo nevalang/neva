@@ -84,8 +84,8 @@ singleConstStmt: PUB_KW? 'const' constDef;
 groupConstStmt:
 	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
 constDef:
-	IDENTIFIER typeExpr '=' (entityRef | constVal) NEWLINE*;
-constVal:
+	IDENTIFIER typeExpr '=' (entityRef | constLit) NEWLINE*;
+constLit:
 	nil
 	| bool
 	| MINUS? INT
@@ -101,7 +101,7 @@ listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	compositeItem
 	| compositeItem (',' NEWLINE* compositeItem NEWLINE*)*;
-compositeItem: entityRef | constVal;
+compositeItem: entityRef | constLit;
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
@@ -138,13 +138,14 @@ normConnDef:
 	(senderSide | multipleSenderSide) '->' (
 		receiverSide
 		| multipleReceiverSide
+		| normConnDef
 	);
 multipleSenderSide:
 	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
-receiverSide: portAddr | thenConnExpr;
-thenConnExpr:
+senderSide: (portAddr | senderConstRef | constLit) structSelectors?;
+receiverSide: portAddr | deferConnExpr;
+deferConnExpr:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
 portAddr: singlePortAddr | arrPortAddr;

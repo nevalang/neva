@@ -30,7 +30,7 @@ pub component Subtractor<T int | float >(stream maybe<T>) (res T)
 pub component Multiplier<T int | float >(stream maybe<T>) (res T)
 
 #extern(int int_decrementor, float float_decrementor)
-pub component Decrementor<T int | float>(data T) (res T)
+pub component Decrementor<T int | float>(n T) (n T)
 
 #extern(mod)
 pub component Mod(data int, [case] int) ([then] int, else int)
