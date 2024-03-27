@@ -232,6 +232,9 @@ type nevaListener interface {
 	// EnterNormConnDef is called when entering the normConnDef production.
 	EnterNormConnDef(c *NormConnDefContext)
 
+	// EnterChainConn is called when entering the chainConn production.
+	EnterChainConn(c *ChainConnContext)
+
 	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
 	EnterMultipleSenderSide(c *MultipleSenderSideContext)
 
@@ -244,8 +247,8 @@ type nevaListener interface {
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
 
-	// EnterDeferConnExpr is called when entering the deferConnExpr production.
-	EnterDeferConnExpr(c *DeferConnExprContext)
+	// EnterDeferredConn is called when entering the deferredConn production.
+	EnterDeferredConn(c *DeferredConnContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -499,6 +502,9 @@ type nevaListener interface {
 	// ExitNormConnDef is called when exiting the normConnDef production.
 	ExitNormConnDef(c *NormConnDefContext)
 
+	// ExitChainConn is called when exiting the chainConn production.
+	ExitChainConn(c *ChainConnContext)
+
 	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
 	ExitMultipleSenderSide(c *MultipleSenderSideContext)
 
@@ -511,8 +517,8 @@ type nevaListener interface {
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)
 
-	// ExitDeferConnExpr is called when exiting the deferConnExpr production.
-	ExitDeferConnExpr(c *DeferConnExprContext)
+	// ExitDeferredConn is called when exiting the deferredConn production.
+	ExitDeferredConn(c *DeferredConnContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)

@@ -138,14 +138,15 @@ normConnDef:
 	(senderSide | multipleSenderSide) '->' (
 		receiverSide
 		| multipleReceiverSide
-		| normConnDef
+		| chainConn
 	);
+chainConn: normConnDef;
 multipleSenderSide:
 	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 senderSide: (portAddr | senderConstRef | constLit) structSelectors?;
-receiverSide: portAddr | deferConnExpr;
-deferConnExpr:
+receiverSide: portAddr | deferredConn;
+deferredConn:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
 portAddr: singlePortAddr | arrPortAddr;
