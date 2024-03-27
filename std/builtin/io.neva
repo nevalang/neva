@@ -1,0 +1,7 @@
+component {
+    #extern(line_printer)
+    pub Println<T>(data T) (sig T)
+
+    #extern(line_fprinter)
+    pub Printf<T>(tpl string, [args] T) ([args] T, err error)
+}

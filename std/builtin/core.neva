@@ -1,0 +1,26 @@
+component {
+    #extern(emitter)
+    pub New<T>() (msg T)
+
+    #extern(destructor)
+    pub Del(msg any) ()
+
+    #extern(blocker)
+    pub Lock<T>(sig any, data T) (data T)
+
+    #autoports
+    #extern(struct_builder)
+    pub Struct<T struct {}> () (msg T)
+
+    #extern(struct_selector)
+    pub Field<T>(msg struct {}) (msg T)
+
+    #extern(match)
+    pub Match<T any>(data T, [case] T) ([case] T, else T)
+
+    #extern(unwrap)
+    pub Unwrap<T any>(data maybe<T>) (some T, none struct{})
+
+    #extern(range)
+    pub Range(from int, to int) (data maybe<int>)
+}

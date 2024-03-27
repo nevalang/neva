@@ -1,0 +1,7 @@
+component {
+    #extern(list list_len, map map_len)
+    pub Len<T list<any> | map<any>>(data T) (res int)
+
+    #extern(index)
+    pub Index<T any>(data list<T>, idx int) (res T, err error)
+}

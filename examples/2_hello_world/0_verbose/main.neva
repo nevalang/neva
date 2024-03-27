@@ -3,9 +3,9 @@ const greeting string = 'Hello, World!'
 component Main(start any) (stop any) {
 	nodes {
 		#bind(greeting)
-		greeting Emitter<string>
-		printer Printer<string>
-		blocker Blocker<string>
+		greeting New<string>
+		printer Println<string>
+		blocker Lock<string>
 	}
 	net {
 		:start -> blocker:sig

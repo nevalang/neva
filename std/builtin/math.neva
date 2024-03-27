@@ -1,0 +1,16 @@
+component {
+    #extern(int int_adder, float float_adder, string string_adder)
+    pub Add<T int | float | string>(seq maybe<T>) (res T)
+
+    #extern(int int_subtractor, float float_subtractor)
+    pub Sub<T int | float >(seq maybe<T>) (res T)
+
+    #extern(int int_multiplier, float float_multiplier)
+    pub Mul<T int | float >(seq maybe<T>) (res T)
+
+    #extern(int int_decrementor, float float_decrementor)
+    pub Decr<T int | float>(n T) (n T)
+
+    #extern(mod)
+    pub Mod(data int, [case] int) ([then] int, else int)
+}
