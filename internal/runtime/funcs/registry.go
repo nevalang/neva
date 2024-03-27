@@ -9,7 +9,7 @@ import (
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
-		"emitter":       emitter{},
+		"new":           emitter{},
 		"destructor":    destructor{},
 		"blocker":       blocker{},
 		"port_streamer": portStreamer{},
@@ -37,7 +37,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"regexp_submatcher": regexpSubmatcher{},
 		//list
 		"list_len": listlen{},
-		"indexer":  index{},
+		"index":    index{},
 		// time
 		"time_sleep": timeSleep{},
 	}

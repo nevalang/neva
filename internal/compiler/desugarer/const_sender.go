@@ -12,7 +12,7 @@ import (
 
 var emitterComponentRef = core.EntityRef{
 	Pkg:  "builtin",
-	Name: "Emitter",
+	Name: "New",
 }
 
 type handleLiteralSenderResult struct {

@@ -320,11 +320,11 @@ func (s *BasenevaListener) EnterConstDef(ctx *ConstDefContext) {}
 // ExitConstDef is called when production constDef is exited.
 func (s *BasenevaListener) ExitConstDef(ctx *ConstDefContext) {}
 
-// EnterConstVal is called when production constVal is entered.
-func (s *BasenevaListener) EnterConstVal(ctx *ConstValContext) {}
+// EnterConstLit is called when production constLit is entered.
+func (s *BasenevaListener) EnterConstLit(ctx *ConstLitContext) {}
 
-// ExitConstVal is called when production constVal is exited.
-func (s *BasenevaListener) ExitConstVal(ctx *ConstValContext) {}
+// ExitConstLit is called when production constLit is exited.
+func (s *BasenevaListener) ExitConstLit(ctx *ConstLitContext) {}
 
 // EnterNil is called when production nil is entered.
 func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
@@ -470,6 +470,12 @@ func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
 // ExitNormConnDef is called when production normConnDef is exited.
 func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
 
+// EnterChainConn is called when production chainConn is entered.
+func (s *BasenevaListener) EnterChainConn(ctx *ChainConnContext) {}
+
+// ExitChainConn is called when production chainConn is exited.
+func (s *BasenevaListener) ExitChainConn(ctx *ChainConnContext) {}
+
 // EnterMultipleSenderSide is called when production multipleSenderSide is entered.
 func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContext) {}
 
@@ -494,11 +500,11 @@ func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
 // ExitReceiverSide is called when production receiverSide is exited.
 func (s *BasenevaListener) ExitReceiverSide(ctx *ReceiverSideContext) {}
 
-// EnterThenConnExpr is called when production thenConnExpr is entered.
-func (s *BasenevaListener) EnterThenConnExpr(ctx *ThenConnExprContext) {}
+// EnterDeferredConn is called when production deferredConn is entered.
+func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
 
-// ExitThenConnExpr is called when production thenConnExpr is exited.
-func (s *BasenevaListener) ExitThenConnExpr(ctx *ThenConnExprContext) {}
+// ExitDeferredConn is called when production deferredConn is exited.
+func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
