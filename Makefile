@@ -2,23 +2,26 @@
 
 # build neva cli for host OS and put to the PATH
 .PHONY: install
-# install nova cli to the PATH
-install-nova:
+# install neva cli to the PATH
+install-neva:
 	go install -ldflags="-s -w" `pwd`/cmd/neva
-# install nova lsp to the PATH
+# install neva lsp to the PATH
 install-lsp:
-	@ln -s `pwd`/cmd/lsp/ `pwd`/cmd/nova-lsp
+	@ln -s `pwd`/cmd/lsp/ `pwd`/cmd/neva-lsp
 	# use soft link to change the executable file name
-	@cd cmd/nova-lsp
-	go install -ldflags="-s -w" `pwd`/cmd/nova-lsp
+	@cd cmd/neva-lsp
+	go install -ldflags="-s -w" `pwd`/cmd/neva-lsp
 	# cleanup
-	@rm -r cmd/nova-lsp
+	@rm -r cmd/neva-lsp
 install:
-	$(MAKE) install-nova
+	$(MAKE) install-neva
 	$(MAKE) install-lsp
 .PHONY: uninstall
+uninstall:
+	$(MAKE) uninstall-neva
+	$(MAKE) uninstall-lsp
 UNINSTALL_PATH ?= $(or $(shell go env GOPATH)/bin,$(GOBIN))
-uninstall-nova:
+uninstall-neva:
 	@if [ -f "$(UNINSTALL_PATH)/neva" ]; then \
 		rm -f "$(UNINSTALL_PATH)/neva"; \
 		echo "Uninstalled neva from $(UNINSTALL_PATH)"; \
@@ -26,9 +29,9 @@ uninstall-nova:
 		echo "neva cli was not installed or not found in $(UNINSTALL_PATH)."; \
 	fi
 uninstall-lsp:
-	@if [ -f "$(UNINSTALL_PATH)/nova-lsp" ]; then \
-		rm -f "$(UNINSTALL_PATH)/nova-lsp"; \
-		echo "Uninstalled nova-lsp from $(UNINSTALL_PATH)"; \
+	@if [ -f "$(UNINSTALL_PATH)/neva-lsp" ]; then \
+		rm -f "$(UNINSTALL_PATH)/neva-lsp"; \
+		echo "Uninstalled neva-lsp from $(UNINSTALL_PATH)"; \
 	else \
 		echo "neva language server was not installed or not found in $(UNINSTALL_PATH)."; \
 	fi
