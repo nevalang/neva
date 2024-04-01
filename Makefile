@@ -2,13 +2,36 @@
 
 # build neva cli for host OS and put to the PATH
 .PHONY: install
+# install nova cli to the PATH
+install-nova:
+	go install -ldflags="-s -w" `pwd`/cmd/neva
+# install nova lsp to the PATH
+install-lsp:
+	@ln -s `pwd`/cmd/lsp/ `pwd`/cmd/nova-lsp
+	# use soft link to change the executable file name
+	@cd cmd/nova-lsp
+	go install -ldflags="-s -w" `pwd`/cmd/nova-lsp
+	# cleanup
+	@rm -r cmd/nova-lsp
 install:
-	@go build -ldflags="-s -w" ./cmd/neva && \
-	rm -rf /usr/local/bin/neva && \
-	mv neva /usr/local/bin/neva
+	$(MAKE) install-nova
+	$(MAKE) install-lsp
 .PHONY: uninstall
-uninstall:
-	@rm -rf /usr/local/bin/neva
+UNINSTALL_PATH ?= $(or $(shell go env GOPATH)/bin,$(GOBIN))
+uninstall-nova:
+	@if [ -f "$(UNINSTALL_PATH)/neva" ]; then \
+		rm -f "$(UNINSTALL_PATH)/neva"; \
+		echo "Uninstalled neva from $(UNINSTALL_PATH)"; \
+	else \
+		echo "neva cli was not installed or not found in $(UNINSTALL_PATH)."; \
+	fi
+uninstall-lsp:
+	@if [ -f "$(UNINSTALL_PATH)/nova-lsp" ]; then \
+		rm -f "$(UNINSTALL_PATH)/nova-lsp"; \
+		echo "Uninstalled nova-lsp from $(UNINSTALL_PATH)"; \
+	else \
+		echo "neva language server was not installed or not found in $(UNINSTALL_PATH)."; \
+	fi
 # generate go parser from antlr grammar
 .PHONY: antlr
 antlr:
@@ -17,10 +40,10 @@ antlr:
 # make clean
 .PHONY: clean
 clean:
-	@rm neva-*
+	- rm neva neva-*
 
 # clean install
-.cleaninstall:
+.install:
 	$(MAKE) clean
 	$(MAKE) uninstall
 	$(MAKE) install
