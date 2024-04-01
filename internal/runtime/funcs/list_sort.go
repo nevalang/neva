@@ -27,7 +27,7 @@ func (p listsort) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 				select {
 				case <-ctx.Done():
 					return
-				case resOut <- runtime.NewListMsg(data):
+				case resOut <- runtime.NewListMsg(data.List()...):
 				}
 			}
 		}
