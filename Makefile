@@ -22,6 +22,7 @@ clean:
 # clean install
 .cleaninstall:
 	$(MAKE) clean
+	$(MAKE) uninstall
 	$(MAKE) install
 # generate ts types from go src pkg
 .PHONY: tygo
