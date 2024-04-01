@@ -37,6 +37,7 @@ build:
 	$(MAKE) build-darwin-arm64
 	$(MAKE) build-linux-amd64
 	$(MAKE) build-linux-arm64
+	$(MAKE) build-linux-loong64
 	$(MAKE) build-windows-amd64
 	$(MAKE) build-windows-arm64
 
