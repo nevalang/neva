@@ -1,18 +1,29 @@
 # === Development ===
-
 # build neva cli for host OS and put to the PATH
 .PHONY: install
 # install neva cli to the PATH
+user := $(shell whoami)
+root := $("root")
 install-neva:
-	go install -ldflags="-s -w" `pwd`/cmd/neva
+    ifeq ($(user), root)
+		${shell GOBIN=/usr/local/bin go install -ldflags="-s -w" `pwd`/cmd/neva}
+    else
+		${shell go install -ldflags="-s -w" `pwd`/cmd/neva}
+	endef
+    endif
 # install neva lsp to the PATH
 install-lsp:
-	@ln -s `pwd`/cmd/lsp/ `pwd`/cmd/neva-lsp
-	# use soft link to change the executable file name
-	@cd cmd/neva-lsp
-	go install -ldflags="-s -w" `pwd`/cmd/neva-lsp
-	# cleanup
-	@rm -r cmd/neva-lsp
+	@${shell ln -s `pwd`/cmd/lsp/ `pwd`/cmd/neva-lsp}
+# use soft link to change the executable file name
+	@${shell cd cmd/neva-lsp}
+    ifeq ($(user), root)
+		${shell GOBIN=/usr/local/bin go install -ldflags="-s -w" `pwd`/cmd/neva-lsp}
+    else
+		${shell go install -ldflags="-s -w" `pwd`/cmd/neva-lsp}
+	endef
+    endif
+# cleanup
+	@${shell rm -r cmd/neva-lsp}
 install:
 	$(MAKE) install-neva
 	$(MAKE) install-lsp
@@ -22,19 +33,21 @@ uninstall:
 	$(MAKE) uninstall-lsp
 UNINSTALL_PATH ?= $(or $(shell go env GOPATH)/bin,$(GOBIN))
 uninstall-neva:
-	@if [ -f "$(UNINSTALL_PATH)/neva" ]; then \
-		rm -f "$(UNINSTALL_PATH)/neva"; \
-		echo "Uninstalled neva from $(UNINSTALL_PATH)"; \
-	else \
-		echo "neva cli was not installed or not found in $(UNINSTALL_PATH)."; \
-	fi
+    ifeq ($(wildcard $(UNINSTALL_PATH)/neva), $(UNINSTALL_PATH)/neva)
+		${shell rm -f "$(UNINSTALL_PATH)/neva"}
+		${shell echo "Uninstalled neva from $(UNINSTALL_PATH)"}
+    else
+		${shell echo "neva cli was not installed or not found in $(UNINSTALL_PATH)."; \}
+	endef
+    endif
 uninstall-lsp:
-	@if [ -f "$(UNINSTALL_PATH)/neva-lsp" ]; then \
-		rm -f "$(UNINSTALL_PATH)/neva-lsp"; \
-		echo "Uninstalled neva-lsp from $(UNINSTALL_PATH)"; \
-	else \
-		echo "neva language server was not installed or not found in $(UNINSTALL_PATH)."; \
-	fi
+    ifeq ($(wildcard $(UNINSTALL_PATH)/neva-lsp), , $(UNINSTALL_PATH)/neva-lsp)
+		${shell rm -f "$(UNINSTALL_PATH)/neva-lsp"}
+		${shell echo "Uninstalled neva-lsp from $(UNINSTALL_PATH)"}
+    else
+		${shell echo "neva language server was not installed or not found in $(UNINSTALL_PATH)."; \}
+	endef
+    endif
 # generate go parser from antlr grammar
 .PHONY: antlr
 antlr:
