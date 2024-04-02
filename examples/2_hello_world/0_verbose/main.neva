@@ -4,13 +4,13 @@ component Main(start any) (stop any) {
 	nodes {
 		#bind(greeting)
 		greeting New<string>
-		printer Println<string>
+		println Println<string>
 		blocker Lock<string>
 	}
 	net {
 		:start -> blocker:sig
 		greeting:msg -> blocker:data
-		blocker:data -> printer:data
-		printer:sig -> :stop
+		blocker:data -> println:data
+		println:sig -> :stop
 	}
 }

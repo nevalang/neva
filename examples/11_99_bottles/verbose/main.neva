@@ -15,7 +15,7 @@ component Main(start) (stop) {
 
 component PrintNext2Lines(old int) (new int) {
     nodes {
-        decr   Decrementor<int>
+        decr   Decr<int>
         first  PrintFirstLine
         second PrintSecondLine
     }
@@ -36,18 +36,18 @@ const {
 }
 
 component PrintFirstLine(num int) (sig int) {
-    nodes { Match<int>, Printer<string>, FPrinter<int>, Blocker<int> }
+    nodes { Match<int>, Println<string>, Printf<int>, Lock<int> }
     net {
         :num -> [match:data, blocker:data]
         0 -> match:case[0]
         1 -> match:case[1]
 
-        match:case[0] -> ($firstLine3 -> printer:data)
-        match:case[1] -> ($firstLine2 -> printer:data)
+        match:case[0] -> ($firstLine3 -> println:data)
+        match:case[1] -> ($firstLine2 -> println:data)
         match:else    -> fPrinter:args[0]
         $firstLine1   -> fPrinter:tpl
 
-        printer:sig      -> blocker:sig
+        println:sig      -> blocker:sig
         fPrinter:args[0] -> blocker:sig
 
         blocker:data -> :sig
@@ -64,20 +64,20 @@ const {
 }
 
 component PrintSecondLine(num int) (sig int) {
-    nodes { Match<int>, Blocker<int>, FPrinter<int>, Printer<string> }
+    nodes { Match<int>, Lock<int>, Printf<int>, Println<string> }
     net {
         :num -> [match:data, blocker:data]
         -1   -> match:case[0]
         0    -> match:case[1]
         1    -> match:case[2]
 
-        match:case[0] -> ($secondLine4 -> printer:data)
-        match:case[1] -> ($secondLine3 -> printer:data)
-        match:case[2] -> ($secondLine2 -> printer:data)
+        match:case[0] -> ($secondLine4 -> println:data)
+        match:case[1] -> ($secondLine3 -> println:data)
+        match:case[2] -> ($secondLine2 -> println:data)
         match:else    -> fPrinter:args[0]
         $secondLine1  -> fPrinter:tpl
 
-        [printer:sig, fPrinter:args[0]] -> blocker:sig
+        [println:sig, fPrinter:args[0]] -> blocker:sig
         blocker:data                    -> :sig
     }
 }

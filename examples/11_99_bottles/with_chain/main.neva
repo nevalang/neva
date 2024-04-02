@@ -11,7 +11,7 @@ component Main(start) (stop) {
 
 component PrintNext2Lines(n int) (n int) {
     nodes {
-        decr   Decrementor<int>
+        decr   Decr<int>
         first  PrintFirstLine
         second PrintSecondLine
     }
@@ -27,18 +27,18 @@ const {
 }
 
 component PrintFirstLine(n int) (n int) {
-    nodes { Match<int>, Printer<string>, Fprinter<int>, Blocker<int> }
+    nodes { Match<int>, Println<string>, Fprint<int>, Lock<int> }
     net {
         :n -> [match:data, blocker:data]
 
-        0          -> match:case[0] -> ($firstLine3 -> printer:data)
-        1          -> match:case[1] -> ($firstLine2 -> printer:data)
+        0          -> match:case[0] -> ($firstLine3 -> println:data)
+        1          -> match:case[1] -> ($firstLine2 -> println:data)
         match:else -> [
             fPrinter:args[0],
             ($firstLine1   -> fPrinter:tpl)
         ]
 
-        [printer:sig, fPrinter:args[0]] -> blocker:sig
+        [println:sig, fPrinter:args[0]] -> blocker:sig
         blocker:data                    -> :n
     }
 }
@@ -53,19 +53,19 @@ const {
 }
 
 component PrintSecondLine(n int) (n int) {
-    nodes { Match<int>, Blocker<int>, FPrinter<int>, Printer<string> }
+    nodes { Match<int>, Lock<int>, Printf<int>, Println<string> }
     net {
         :n -> [match:data, blocker:data]
 
-        -1            -> match:case[0] -> ($secondLine4 -> printer:data)
-        0             -> match:case[1] -> ($secondLine3 -> printer:data)
-        1             -> match:case[2] -> ($secondLine2 -> printer:data)
+        -1            -> match:case[0] -> ($secondLine4 -> println:data)
+        0             -> match:case[1] -> ($secondLine3 -> println:data)
+        1             -> match:case[2] -> ($secondLine2 -> println:data)
         match:else    -> [
             fPrinter:args[0],
             ($secondLine1  -> fPrinter:tpl)
         ]
 
-        [printer:sig, fPrinter:args[0]] -> blocker:sig
+        [println:sig, fPrinter:args[0]] -> blocker:sig
         blocker:data                    -> :n
     }
 }

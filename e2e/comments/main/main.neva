@@ -3,15 +3,15 @@ component Main(start) (stop) {
 	// comment inside component 1
 	nodes {
 		// comment inside nodes 1
-		Printer<any>
+		Println<any>
 		// comment inside nodes 2
 	}
 	// comment inside component 2
 	net {
 		// comment inside network 1
-		:start -> printer:data
+		:start -> println:data
 		// comment inside network 2
-		printer:sig -> :stop
+		println:sig -> :stop
 		// comment inside network 
 	}
 	// comment inside component 3

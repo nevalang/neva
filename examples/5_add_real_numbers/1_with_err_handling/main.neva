@@ -2,23 +2,23 @@ import { x }
 
 component Main(start any) (stop any) {
 	nodes {
-		scanner1 x.LineScanner
-		scanner2 x.LineScanner
-		parser1 x.NumParser<int>
-		parser2 x.NumParser<int>
-		adder PortBridge<int> { handler Adder<int> }
-		// adder PortBridge<int> { Adder<int> }
-		printer Printer<any>
+		scanner1 x.Scanln
+		scanner2 x.Scanln
+		parser1 x.ParseNum<int>
+		parser2 x.ParseNum<int>
+		adder PortReducer<int> { reducer Add<int> }
+		// adder PortReducer<int> { Add<int> }
+		println Println<any>
 	}
 	net {
 		:start -> scanner1:sig
 		scanner1:data -> parser1:data
-		parser1:err -> printer:data
-		parser1:res -> [adder:ports[0], scanner2:sig]
+		parser1:err -> println:data
+		parser1:res -> [adder:port[0], scanner2:sig]
 		scanner2:data -> parser2:data
-		parser2:err -> printer:data
-		parser2:res -> adder:ports[1]
-		adder:res -> printer:data
-		printer:sig -> :stop
+		parser2:err -> println:data
+		parser2:res -> adder:port[1]
+		adder:res -> println:data
+		println:sig -> :stop
 	}
 }

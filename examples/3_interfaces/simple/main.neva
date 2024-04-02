@@ -4,7 +4,7 @@ component {
     Main(start any) (stop any) {
         nodes {
             subNode SecondComponent {
-                depNode Printer<any>
+                depNode Println<any>
             }
         }
         net {

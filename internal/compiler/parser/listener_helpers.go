@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -62,7 +61,6 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
-		fmt.Println(expr.GetText())
 		panic(&compiler.Error{
 			Err: errors.New("Missing type expression"),
 			Meta: &core.Meta{
@@ -468,14 +466,16 @@ func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) (
 		}
 	}
 
-	if normConn.ChainConn() == nil && normConn.ReceiverSide() == nil {
+	if normConn.ChainConn() == nil &&
+		normConn.ReceiverSide() == nil &&
+		normConn.MultipleReceiverSide() == nil {
 		return nil, &compiler.Error{
 			Err:  errors.New("Connection must have a receiver side"),
 			Meta: &connMeta,
 		}
 	}
 
-	if normConn.ReceiverSide() != nil {
+	if normConn.ChainConn() == nil {
 		parsedReceiverSide, err := parseNormConnReceiverSide(normConn, connMeta)
 		if err != nil {
 			return nil, compiler.Error{Meta: &connMeta}.Wrap(err)
@@ -535,12 +535,6 @@ func parseNormConnReceiverSide(
 
 	multipleSides := normConn.MultipleReceiverSide()
 	if multipleSides == nil {
-		fmt.Println(
-			normConn.ReceiverSide(),
-			normConn.MultipleReceiverSide(),
-			normConn.GetText(),
-		)
-
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
 			Meta: &core.Meta{
@@ -694,7 +688,6 @@ func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.Connec
 
 	var constant *src.Const
 	if senderSideConstRef != nil {
-		fmt.Println(senderSideConstRef.GetText())
 		parsedEntityRef, err := parseEntityRef(senderSideConstRef.EntityRef())
 		if err != nil {
 			panic(err)
@@ -960,10 +953,9 @@ func parseMessage(constVal generated.IConstLitContext) (src.Message, error) { //
 		}
 		fieldValues := fields.AllStructValueField()
 		msg.MapOrStruct = make(map[string]src.Const, len(fieldValues))
-		for i, field := range fieldValues {
+		for _, field := range fieldValues {
 			if field.IDENTIFIER() == nil {
-				fmt.Println(field.GetText(), i)
-				panic("")
+				panic("field.GetText()")
 			}
 			name := field.IDENTIFIER().GetText()
 			if field.CompositeItem().EntityRef() != nil {
