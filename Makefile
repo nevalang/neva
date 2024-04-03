@@ -1,68 +1,18 @@
 # === Development ===
+
 # build neva cli for host OS and put to the PATH
 .PHONY: install
-# install neva cli to the PATH
-user := $(shell whoami)
-root := $("root")
-install-neva:
-    ifeq ($(user), root)
-		${shell GOBIN=/usr/local/bin go install -ldflags="-s -w" `pwd`/cmd/neva}
-    else
-		${shell go install -ldflags="-s -w" `pwd`/cmd/neva}
-	endef
-    endif
-# install neva lsp to the PATH
-install-lsp:
-	@${shell ln -s `pwd`/cmd/lsp/ `pwd`/cmd/neva-lsp}
-# use soft link to change the executable file name
-	@${shell cd cmd/neva-lsp}
-    ifeq ($(user), root)
-		${shell GOBIN=/usr/local/bin go install -ldflags="-s -w" `pwd`/cmd/neva-lsp}
-    else
-		${shell go install -ldflags="-s -w" `pwd`/cmd/neva-lsp}
-	endef
-    endif
-# cleanup
-	@${shell rm -r cmd/neva-lsp}
 install:
-	$(MAKE) install-neva
-	$(MAKE) install-lsp
-.PHONY: uninstall
-uninstall:
-	$(MAKE) uninstall-neva
-	$(MAKE) uninstall-lsp
-UNINSTALL_PATH ?= $(or $(shell go env GOPATH)/bin,$(GOBIN))
-uninstall-neva:
-    ifeq ($(wildcard $(UNINSTALL_PATH)/neva), $(UNINSTALL_PATH)/neva)
-		${shell rm -f "$(UNINSTALL_PATH)/neva"}
-		${shell echo "Uninstalled neva from $(UNINSTALL_PATH)"}
-    else
-		${shell echo "neva cli was not installed or not found in $(UNINSTALL_PATH)."; \}
-	endef
-    endif
-uninstall-lsp:
-    ifeq ($(wildcard $(UNINSTALL_PATH)/neva-lsp), , $(UNINSTALL_PATH)/neva-lsp)
-		${shell rm -f "$(UNINSTALL_PATH)/neva-lsp"}
-		${shell echo "Uninstalled neva-lsp from $(UNINSTALL_PATH)"}
-    else
-		${shell echo "neva language server was not installed or not found in $(UNINSTALL_PATH)."; \}
-	endef
-    endif
+	@go build -ldflags="-s -w" ./cmd/neva && \
+	rm -rf /usr/local/bin/neva && \
+	mv neva /usr/local/bin/neva
+
 # generate go parser from antlr grammar
 .PHONY: antlr
 antlr:
 	@cd internal/compiler/parser && \
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
-# make clean
-.PHONY: clean
-clean:
-	- rm neva neva-*
 
-# clean install
-.install:
-	$(MAKE) clean
-	$(MAKE) uninstall
-	$(MAKE) install
 # generate ts types from go src pkg
 .PHONY: tygo
 tygo:
