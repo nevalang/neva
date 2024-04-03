@@ -7,9 +7,7 @@ component Main(start any) (stop any) {
 	}
 	net {
 		:start -> ($l -> push:lst)
-		22 -> push:data
-	    push:res -> push:lst
-        69 -> push:data
+        $f -> push:data
         push:res -> printer:data
 	    printer:sig -> :stop
 
