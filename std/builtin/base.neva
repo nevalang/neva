@@ -60,7 +60,7 @@ pub component Unwrap<T any>(data maybe<T>) (some T, none struct{})
 pub component Len<T list<any> | map<any>>(data T) (res int)
 
 #extern(list_push)
-pub component Push<T> (lst list<T>,data T) (res T)
+pub component Push<T> (lst list<T>,data T) (res list<T>)
 
 
 #extern(list_sort)
