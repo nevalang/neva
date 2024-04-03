@@ -26,3 +26,6 @@ web/webview/dist
 thirdparty
 
 /todo.md
+
+#go package cache
+vendor
