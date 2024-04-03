@@ -4,14 +4,14 @@ component Main(start) (stop) {
 		:start     -> (1 -> range:from, 101 -> range:to)
         range:data -> unwrap:data
 
-        unwrap:some   -> [mod:data, blocker:data]
+        unwrap:some   -> [mod:data, lock:data]
         15            -> mod:case[0] -> ('FizzBuzz' -> println:data)
         3             -> mod:case[1] -> ('Fizz'     -> println:data)
         5             -> mod:case[2] -> ('Buzz'     -> println:data)
         mod:else      -> println:data
 
-        println:sig     -> blocker:sig
-        blocker:data    -> match:data
+        println:sig     -> lock:sig
+        lock:data    -> match:data
         100             -> match:case[0] -> :stop
     }
 }

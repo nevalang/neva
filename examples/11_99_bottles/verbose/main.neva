@@ -38,19 +38,19 @@ const {
 component PrintFirstLine(num int) (sig int) {
     nodes { Match<int>, Println<string>, Printf<int>, Lock<int> }
     net {
-        :num -> [match:data, blocker:data]
+        :num -> [match:data, lock:data]
         0 -> match:case[0]
         1 -> match:case[1]
 
         match:case[0] -> ($firstLine3 -> println:data)
         match:case[1] -> ($firstLine2 -> println:data)
-        match:else    -> fPrinter:args[0]
-        $firstLine1   -> fPrinter:tpl
+        match:else    -> printf:args[0]
+        $firstLine1   -> printf:tpl
 
-        println:sig      -> blocker:sig
-        fPrinter:args[0] -> blocker:sig
+        println:sig      -> lock:sig
+        printf:args[0] -> lock:sig
 
-        blocker:data -> :sig
+        lock:data -> :sig
     }
 }
 
@@ -66,7 +66,7 @@ const {
 component PrintSecondLine(num int) (sig int) {
     nodes { Match<int>, Lock<int>, Printf<int>, Println<string> }
     net {
-        :num -> [match:data, blocker:data]
+        :num -> [match:data, lock:data]
         -1   -> match:case[0]
         0    -> match:case[1]
         1    -> match:case[2]
@@ -74,10 +74,10 @@ component PrintSecondLine(num int) (sig int) {
         match:case[0] -> ($secondLine4 -> println:data)
         match:case[1] -> ($secondLine3 -> println:data)
         match:case[2] -> ($secondLine2 -> println:data)
-        match:else    -> fPrinter:args[0]
-        $secondLine1  -> fPrinter:tpl
+        match:else    -> printf:args[0]
+        $secondLine1  -> printf:tpl
 
-        [println:sig, fPrinter:args[0]] -> blocker:sig
-        blocker:data                    -> :sig
+        [println:sig, printf:args[0]] -> lock:sig
+        lock:data                    -> :sig
     }
 }

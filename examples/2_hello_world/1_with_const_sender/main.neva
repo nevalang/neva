@@ -3,12 +3,12 @@ const greeting string = 'Hello, World!'
 component Main(start any) (stop any) {
 	nodes {
 		println Println<string>
-		blocker Lock<string>
+		lock Lock<string>
 	}
 	net {
-		:start -> blocker:sig
-		$greeting -> blocker:data
-		blocker:data -> println:data
+		:start -> lock:sig
+		$greeting -> lock:data
+		lock:data -> println:data
 		println:sig -> :stop
 	}
 }

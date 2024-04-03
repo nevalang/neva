@@ -1,7 +1,7 @@
 component Main(start any) (stop any) {
 	nodes {
-		adder   Add<int>
-		seq     PortSequencer<int>
+		adder Add<int>
+		sequencer PortSequencer<int>
 		println Println<int>
 	}
 	net {
@@ -9,8 +9,8 @@ component Main(start any) (stop any) {
 			1 -> sequencer:port[0],
 			2 -> sequencer:port[1]
 		)
-		sequencer:seq   -> adder:seq
-		adder:res       -> println:data
-		println:sig     -> :stop
+		sequencer:seq -> adder:seq
+		adder:res -> println:data
+		println:sig -> :stop
 	}
 }
