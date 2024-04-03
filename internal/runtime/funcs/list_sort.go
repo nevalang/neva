@@ -46,6 +46,20 @@ func (p listsort) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 							finalArr = append(finalArr, runtime.NewIntMsg(arr[i]))
 						}
 						resOut <- runtime.NewListMsg(finalArr...)
+					} else if ty == runtime.FloatMsgType {
+						arr := []float64{}
+
+						for i := 0; i < len(lst); i++ {
+							arr = append(arr, lst[i].Float())
+						}
+						slices.Sort(arr)
+
+						finalArr := []runtime.Msg{}
+						for i := 0; i < len(arr); i++ {
+							finalArr = append(finalArr, runtime.NewFloatMsg(arr[i]))
+						}
+						resOut <- runtime.NewListMsg(finalArr...)
+
 					} else {
 						arr := []string{}
 
