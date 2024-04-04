@@ -40,6 +40,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"list_push": listpush{},
 		"list_sort": listsort{},
 		"indexer":   index{},
+		"join":      join{},
 		// time
 		"time_sleep": timeSleep{},
 		//string
