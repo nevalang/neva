@@ -69,3 +69,6 @@ pub component Sort<T> (data list<T>) (res T)
 #extern(indexer)
 pub component Index<T any>(data list<T>, idx int) (res T, err error)
 
+// String
+#extern(split)
+pub component Split(data string) (res list<string>)
