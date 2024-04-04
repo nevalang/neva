@@ -42,5 +42,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"indexer":   index{},
 		// time
 		"time_sleep": timeSleep{},
+		//string
+		"split": split{},
 	}
 }
