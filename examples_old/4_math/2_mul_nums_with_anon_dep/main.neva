@@ -1,8 +1,7 @@
 component Main(start any) (stop any) {
 	nodes {
 		Println<int>
-		mul PortReducer<int> { handler Multiplier<int> }
-		// mul PortReducer<int> { Multiplier<int> }
+		mul PortReducer<int> { Mul<int> }
 	}
 	net {
 		:start -> (

@@ -198,7 +198,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		// make sure array outports always has indexes (it's not arr-bypass)
 		if isSenderArr && normConn.SenderSide.PortAddr.Idx == nil {
 			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Index needed for array port"),
+				Err:      errors.New("Index needed for array outport"),
 				Meta:     &normConn.SenderSide.PortAddr.Meta,
 				Location: &scope.Location,
 			}
@@ -257,6 +257,8 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		// receiver side can contain both deferred connections and receivers so we don't return yet
 	}
 
+	// TODO handle chain connection
+
 	for _, receiver := range normConn.ReceiverSide.Receivers {
 		inportTypeExpr, isReceiverArr, err := a.getReceiverType(
 			receiver.PortAddr,
@@ -284,7 +286,7 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		// make sure array inports always has indexes (it's not arr-bypass)
 		if isReceiverArr && receiver.PortAddr.Idx == nil {
 			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Index needed for array port"),
+				Err:      errors.New("Index needed for array inport"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
 			}
@@ -356,8 +358,10 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 		return &compiler.Error{
 			Err:      ErrUnusedOutports,
 			Location: &scope.Location,
+			Meta:     &compInterface.Meta,
 		}
 	}
+
 	for outportName := range compInterface.IO.Out {
 		if _, ok := outportsUsage.In[outportName]; !ok { // note that self outports are inports for the network
 			return &compiler.Error{
@@ -380,7 +384,7 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 			if _, ok := nodeUsage.In[inportName]; !ok {
 				meta := nodeIface.IO.In[inportName].Meta
 				return &compiler.Error{
-					Err:      fmt.Errorf("%w: node '%v', inport '%v'", ErrUnusedNodeInport, nodeName, inportName),
+					Err:      fmt.Errorf("%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName),
 					Location: &scope.Location,
 					Meta:     &meta,
 				}

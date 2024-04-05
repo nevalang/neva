@@ -375,9 +375,7 @@ func parseNet(
 	return parsedConns, nil
 }
 
-func parseConn(
-	connDef generated.IConnDefContext,
-) (
+func parseConn(connDef generated.IConnDefContext) (
 	[]src.Connection,
 	*compiler.Error,
 ) {
@@ -445,8 +443,8 @@ func parseConn(
 }
 
 func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) ([]src.Connection, *compiler.Error) {
-	singleSender := normConn.SenderSide()
-	mulSenders := normConn.MultipleSenderSide()
+	singleSender := normConn.SenderSide().SingleSenderSide()
+	mulSenders := normConn.SenderSide().MultipleSenderSide()
 
 	if singleSender == nil && mulSenders == nil {
 		return nil, &compiler.Error{
@@ -461,21 +459,26 @@ func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) (
 	if singleSender != nil {
 		senderSides = append(senderSides, parseNormConnSenderSide(singleSender))
 	} else {
-		for _, senderSide := range mulSenders.AllSenderSide() {
+		for _, senderSide := range mulSenders.AllSingleSenderSide() {
 			senderSides = append(senderSides, parseNormConnSenderSide(senderSide))
 		}
 	}
 
-	if normConn.ChainConn() == nil &&
-		normConn.ReceiverSide() == nil &&
-		normConn.MultipleReceiverSide() == nil {
+	receiverSide := normConn.ReceiverSide()
+	chainedConn := receiverSide.ChainedNormConn()
+	singleReceiverSide := receiverSide.SingleReceiverSide()
+	multipleReceiverSide := receiverSide.MultipleReceiverSide()
+
+	if chainedConn == nil &&
+		singleReceiverSide == nil &&
+		multipleReceiverSide == nil {
 		return nil, &compiler.Error{
 			Err:  errors.New("Connection must have a receiver side"),
 			Meta: &connMeta,
 		}
 	}
 
-	if normConn.ChainConn() == nil {
+	if chainedConn == nil {
 		parsedReceiverSide, err := parseNormConnReceiverSide(normConn, connMeta)
 		if err != nil {
 			return nil, compiler.Error{Meta: &connMeta}.Wrap(err)
@@ -496,7 +499,7 @@ func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) (
 	}
 
 	parseChainConnResult, err := parseNormConn(
-		normConn.ChainConn().NormConnDef(),
+		chainedConn.NormConnDef(),
 		connMeta,
 	)
 	if err != nil {
@@ -529,11 +532,22 @@ func parseNormConnReceiverSide(
 	normConn generated.INormConnDefContext,
 	connMeta core.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
-	if receiverSide := normConn.ReceiverSide(); receiverSide != nil {
+	receiverSide := normConn.ReceiverSide()
+	singleReceiverSide := receiverSide.SingleReceiverSide()
+	multipleReceiverSide := receiverSide.MultipleReceiverSide()
+
+	if singleReceiverSide == nil && multipleReceiverSide == nil {
+		return src.ConnectionReceiverSide{}, &compiler.Error{
+			Err:  errors.New("No receiver side in connection"),
+			Meta: &connMeta,
+		}
+	}
+
+	if singleReceiverSide != nil {
 		return parseReceiverSide(receiverSide, connMeta)
 	}
 
-	multipleSides := normConn.MultipleReceiverSide()
+	multipleSides := receiverSide.MultipleReceiverSide()
 	if multipleSides == nil {
 		panic(&compiler.Error{
 			Err: errors.New("no receiver sides at all"),
@@ -558,10 +572,21 @@ func parseReceiverSide(
 	actx generated.IReceiverSideContext,
 	connMeta core.Meta,
 ) (src.ConnectionReceiverSide, *compiler.Error) {
-	if deferConn := actx.DeferredConn(); deferConn != nil {
-		return parseDeferredConnExpr(deferConn, connMeta)
+	deferredConn := actx.SingleReceiverSide().DeferredConn()
+	portAddr := actx.SingleReceiverSide().PortAddr()
+
+	if deferredConn == nil && portAddr == nil {
+		return src.ConnectionReceiverSide{}, &compiler.Error{
+			Err:  errors.New("No receiver side in connection"),
+			Meta: &connMeta,
+		}
 	}
-	return parseSingleReceiverSide(actx.PortAddr())
+
+	if deferredConn != nil {
+		return parseDeferredConnExpr(deferredConn, connMeta)
+	}
+
+	return parseSingleReceiverSide(portAddr)
 }
 
 func parseMultipleReceiverSides(
@@ -570,11 +595,11 @@ func parseMultipleReceiverSides(
 	src.ConnectionReceiverSide,
 	*compiler.Error,
 ) {
-	receiverSides := multipleSides.AllReceiverSide()
-	allParsedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSides))
-	allParsedDeferredConns := make([]src.Connection, 0, len(receiverSides))
+	allSingleReceiverSides := multipleSides.AllSingleReceiverSide()
+	allParsedReceivers := make([]src.ConnectionReceiver, 0, len(allSingleReceiverSides))
+	allParsedDeferredConns := make([]src.Connection, 0, len(allSingleReceiverSides))
 
-	for _, receiverSide := range receiverSides {
+	for _, receiverSide := range allSingleReceiverSides {
 		meta := core.Meta{
 			Text: receiverSide.GetText(),
 			Start: core.Position{
@@ -645,7 +670,7 @@ func parseDeferredConnExpr(
 	return src.ConnectionReceiverSide{DeferredConnections: thenConns}, nil
 }
 
-func parseNormConnSenderSide(senderSide generated.ISenderSideContext) src.ConnectionSenderSide { //nolint:funlen
+func parseNormConnSenderSide(senderSide generated.ISingleSenderSideContext) src.ConnectionSenderSide { //nolint:funlen
 	var senderSelectors []string
 	singleSenderSelectors := senderSide.StructSelectors()
 	if singleSenderSelectors != nil {

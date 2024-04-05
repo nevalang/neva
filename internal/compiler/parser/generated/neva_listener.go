@@ -232,8 +232,8 @@ type nevaListener interface {
 	// EnterNormConnDef is called when entering the normConnDef production.
 	EnterNormConnDef(c *NormConnDefContext)
 
-	// EnterChainConn is called when entering the chainConn production.
-	EnterChainConn(c *ChainConnContext)
+	// EnterSenderSide is called when entering the senderSide production.
+	EnterSenderSide(c *SenderSideContext)
 
 	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
 	EnterMultipleSenderSide(c *MultipleSenderSideContext)
@@ -241,11 +241,14 @@ type nevaListener interface {
 	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
 	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
 
-	// EnterSenderSide is called when entering the senderSide production.
-	EnterSenderSide(c *SenderSideContext)
+	// EnterSingleSenderSide is called when entering the singleSenderSide production.
+	EnterSingleSenderSide(c *SingleSenderSideContext)
 
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
+
+	// EnterChainedNormConn is called when entering the chainedNormConn production.
+	EnterChainedNormConn(c *ChainedNormConnContext)
 
 	// EnterDeferredConn is called when entering the deferredConn production.
 	EnterDeferredConn(c *DeferredConnContext)
@@ -273,6 +276,9 @@ type nevaListener interface {
 
 	// EnterStructSelectors is called when entering the structSelectors production.
 	EnterStructSelectors(c *StructSelectorsContext)
+
+	// EnterSingleReceiverSide is called when entering the singleReceiverSide production.
+	EnterSingleReceiverSide(c *SingleReceiverSideContext)
 
 	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
 	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
@@ -502,8 +508,8 @@ type nevaListener interface {
 	// ExitNormConnDef is called when exiting the normConnDef production.
 	ExitNormConnDef(c *NormConnDefContext)
 
-	// ExitChainConn is called when exiting the chainConn production.
-	ExitChainConn(c *ChainConnContext)
+	// ExitSenderSide is called when exiting the senderSide production.
+	ExitSenderSide(c *SenderSideContext)
 
 	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
 	ExitMultipleSenderSide(c *MultipleSenderSideContext)
@@ -511,11 +517,14 @@ type nevaListener interface {
 	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
 	ExitArrBypassConnDef(c *ArrBypassConnDefContext)
 
-	// ExitSenderSide is called when exiting the senderSide production.
-	ExitSenderSide(c *SenderSideContext)
+	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
+	ExitSingleSenderSide(c *SingleSenderSideContext)
 
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)
+
+	// ExitChainedNormConn is called when exiting the chainedNormConn production.
+	ExitChainedNormConn(c *ChainedNormConnContext)
 
 	// ExitDeferredConn is called when exiting the deferredConn production.
 	ExitDeferredConn(c *DeferredConnContext)
@@ -543,6 +552,9 @@ type nevaListener interface {
 
 	// ExitStructSelectors is called when exiting the structSelectors production.
 	ExitStructSelectors(c *StructSelectorsContext)
+
+	// ExitSingleReceiverSide is called when exiting the singleReceiverSide production.
+	ExitSingleReceiverSide(c *SingleReceiverSideContext)
 
 	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
 	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)

@@ -15,10 +15,7 @@ component PrintNext2Lines(n int) (n int) {
         first  PrintFirstLine
         second PrintSecondLine
     }
-    net {
-        // FIXME: parser parses this to just `:n->first:n` and that's it!
-        :n -> first:n -> decr:n -> second:n -> :n
-    }
+    net { :n -> first:n -> decr:n -> second:n -> :n }
 }
 
 // === First Line ===

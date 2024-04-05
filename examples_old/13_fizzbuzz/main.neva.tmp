@@ -10,8 +10,8 @@ component Main(start) (stop) {
         5             -> mod:case[2] -> ('Buzz'     -> println:data)
         mod:else      -> println:data
 
-        println:sig     -> lock:sig
-        lock:data    -> match:data
-        100             -> match:case[0] -> :stop
+        println:sig -> lock:sig
+        lock:data -> match:data
+        100 -> match:case[0] -> :stop
     }
 }

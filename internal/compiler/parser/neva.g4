@@ -134,18 +134,17 @@ compNetDef: 'net' NEWLINE* compNetBody;
 compNetBody: '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
-normConnDef:
-	(senderSide | multipleSenderSide) '->' (
-		receiverSide
-		| multipleReceiverSide
-		| chainConn
-	);
-chainConn: normConnDef;
+normConnDef: senderSide '->' receiverSide;
+senderSide: singleSenderSide | multipleSenderSide;
 multipleSenderSide:
-	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
+	'[' NEWLINE* singleSenderSide (',' NEWLINE* singleSenderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-senderSide: (portAddr | senderConstRef | constLit) structSelectors?;
-receiverSide: portAddr | deferredConn;
+singleSenderSide: (portAddr | senderConstRef | constLit) structSelectors?;
+receiverSide:
+	chainedNormConn
+	| singleReceiverSide
+	| multipleReceiverSide;
+chainedNormConn: normConnDef;
 deferredConn:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
@@ -156,9 +155,10 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
+singleReceiverSide: portAddr | deferredConn;
 multipleReceiverSide:
-	'[' NEWLINE* receiverSide (
-		',' NEWLINE* receiverSide NEWLINE*
+	'[' NEWLINE* singleReceiverSide (
+		',' NEWLINE* singleReceiverSide NEWLINE*
 	)* ']';
 
 /* LEXER */

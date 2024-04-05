@@ -17,6 +17,7 @@ cmd/tmp
 /neva-darwin-arm64
 /neva-linux-amd64
 /neva-linux-arm64
+/neva-linux-loong64
 /neva-windows-amd64.exe
 /neva-windows-arm64.exe
 
