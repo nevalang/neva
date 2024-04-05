@@ -3,27 +3,27 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
-        :start -> (99 -> next:old)
+        :start -> (99 -> next:n)
 
         next:new -> match:data
         -1       -> match:case[0]
 
         match:case[0] -> :stop
-        match:else    -> next:old
+        match:else    -> next:n
     }
 }
 
-component PrintNext2Lines(old int) (new int) {
+component PrintNext2Lines(n int) (n int) {
     nodes {
         decr   Decr<int>
         first  PrintFirstLine
         second PrintSecondLine
     }
     net {
-        :old            -> first:num
+        :n            -> first:num
         first:sig       -> decr:n
         decr:n          -> second:num
-        second:sig      -> :new
+        second:sig      -> :n
     }
 }
 
