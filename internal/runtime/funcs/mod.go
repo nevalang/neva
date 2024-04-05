@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type mod struct{}
+type intMod struct{}
 
-func (mod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

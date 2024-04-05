@@ -15,7 +15,7 @@ import (
 var virtualBlockerNode = src.Node{
 	EntityRef: core.EntityRef{
 		Pkg:  "builtin",
-		Name: "Blocker",
+		Name: "Lock",
 	},
 	TypeArgs: []typesystem.Expr{
 		ts.Expr{
@@ -76,7 +76,7 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 		// 1) create and add virtual blocker node
 		counter := virtualBlockersCounter.Load()
 		virtualBlockersCounter.Store(counter + 1)
-		virtualBlockerName := fmt.Sprintf("virtual_blocker_%d", counter)
+		virtualBlockerName := fmt.Sprintf("__lock__%d", counter)
 		virtualNodes[virtualBlockerName] = virtualBlockerNode
 
 		// 2) create connection from original sender to blocker:sig

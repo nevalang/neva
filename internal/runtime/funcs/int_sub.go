@@ -2,12 +2,13 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intSubtractor struct{}
+type intSub struct{}
 
-func (intSubtractor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	streamIn, err := io.In.Port("stream")
 	if err != nil {
 		return nil, err

@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intMultiplier struct{}
+type intAdd struct{}
 
-func (intMultiplier) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intAdd) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	streamIn, err := io.In.Port("stream")
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (intMultiplier) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	}
 
 	return func(ctx context.Context) {
-		var res int64 = 1
+		var res int64
 		for {
 			select {
 			case <-ctx.Done():
@@ -31,10 +31,11 @@ func (intMultiplier) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 					case <-ctx.Done():
 						return
 					case resOut <- runtime.NewIntMsg(res):
+						res = 0
 						continue
 					}
 				}
-				res *= streamItem.Int()
+				res += streamItem.Int()
 			}
 		}
 	}, nil

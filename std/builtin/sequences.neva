@@ -1,5 +1,5 @@
 // create sequence from array-port
-#extern(port_streamer)
+#extern(port_sequencer)
 pub component PortSequencer<T>([port] T) (seq maybe<T>)
 
 // reduce sequence to single message

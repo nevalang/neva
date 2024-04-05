@@ -6,10 +6,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type destructor struct{}
+type new struct{}
 
-func (d destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	outport, err := io.In.Port("msg")
+func (c new) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
+	outport, err := io.Out.Port("msg")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (d destructor) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.C
 			select {
 			case <-ctx.Done():
 				return
-			case <-outport:
+			case outport <- msg:
 			}
 		}
 	}, nil

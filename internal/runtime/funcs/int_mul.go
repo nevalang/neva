@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intAdder struct{}
+type intMul struct{}
 
-func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	streamIn, err := io.In.Port("stream")
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 	}
 
 	return func(ctx context.Context) {
-		var res int64
+		var res int64 = 1
 		for {
 			select {
 			case <-ctx.Done():
@@ -31,11 +31,10 @@ func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 					case <-ctx.Done():
 						return
 					case resOut <- runtime.NewIntMsg(res):
-						res = 0
 						continue
 					}
 				}
-				res += streamItem.Int()
+				res *= streamItem.Int()
 			}
 		}
 	}, nil

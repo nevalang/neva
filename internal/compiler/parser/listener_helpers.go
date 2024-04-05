@@ -356,15 +356,14 @@ func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
 	return result
 }
 
-func parseNet(
-	actx generated.ICompNetBodyContext,
-) (
+func parseNet(actx generated.ICompNetBodyContext) (
 	[]src.Connection,
 	*compiler.Error,
 ) {
-	parsedConns := []src.Connection{}
+	allConnDefs := actx.ConnDefList().AllConnDef()
+	parsedConns := make([]src.Connection, 0, len(allConnDefs))
 
-	for _, connDef := range actx.ConnDefList().AllConnDef() {
+	for _, connDef := range allConnDefs {
 		parsedConn, err := parseConn(connDef)
 		if err != nil {
 			return nil, err
@@ -498,8 +497,21 @@ func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) (
 		return conns, nil
 	}
 
+	chainedNormConn := chainedConn.NormConnDef()
+	connMeta = core.Meta{
+		Text: chainedNormConn.GetText(),
+		Start: core.Position{
+			Line:   chainedNormConn.GetStart().GetLine(),
+			Column: chainedNormConn.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   chainedNormConn.GetStop().GetLine(),
+			Column: chainedNormConn.GetStop().GetColumn(),
+		},
+	}
+
 	parseChainConnResult, err := parseNormConn(
-		chainedConn.NormConnDef(),
+		chainedNormConn,
 		connMeta,
 	)
 	if err != nil {
@@ -524,6 +536,9 @@ func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) (
 			Meta: connMeta,
 		})
 	}
+
+	// and don't forget the chained connection(s) itself
+	conns = append(conns, parseChainConnResult...)
 
 	return conns, nil
 }

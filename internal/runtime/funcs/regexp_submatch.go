@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type regexpSubmatcher struct{}
+type regexpSubmatch struct{}
 
-func (r regexpSubmatcher) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
+func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
 	regexpIn, err := io.In.Port("regexp")
 	if err != nil {
 		return nil, err

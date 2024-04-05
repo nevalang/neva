@@ -9,9 +9,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type lineFPrinter struct{}
+type printf struct{}
 
-func (p lineFPrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	tplIn, err := io.In.Port("tpl")
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (p lineFPrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context
 	return p.handle(tplIn, argsIn, errOut, argsOut)
 }
 
-func (lineFPrinter) handle(
+func (printf) handle(
 	tplIn chan runtime.Msg,
 	argsIn []chan runtime.Msg,
 	errOut chan runtime.Msg,
@@ -77,7 +77,7 @@ func (lineFPrinter) handle(
 					continue
 				}
 				// tpl matches args, print result line
-				fmt.Println(res)
+				fmt.Print(res)
 				// finally send args downstream to signal success
 				for i, argOut := range argsOut {
 					select {
