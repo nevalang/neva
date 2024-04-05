@@ -11,6 +11,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
+	"github.com/nevalang/neva/internal/compiler/backend/json"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -78,6 +79,15 @@ func main() { //nolint:funlen
 		),
 	)
 
+	jsonCompiler := compiler.New(
+		pkgMngr,
+		prsr,
+		desugarer,
+		analyzer,
+		irgen,
+		json.NewBackend(),
+	)
+
 	// command-line app that can compile and interpret neva code
 	app := cli.NewApp(
 		wd,
@@ -85,6 +95,7 @@ func main() { //nolint:funlen
 		goCompiler,
 		nativeCompiler,
 		wasmCompiler,
+		jsonCompiler,
 	)
 
 	// run CLI app
