@@ -222,7 +222,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
+      "cwd": "${workspaceFolder}/examples_old",
       "args": ["run", "11_99_bottles/verbose"]
     },
     {

@@ -29,10 +29,10 @@ component {
 	IntReader(sig any) (num int, err error) {
 		nodes { x.Scanln, x.ParseNum<int> }
 		net {
-			:sig             -> scanln:sig
-			scanln:data -> numParser:data
-			numParser:res    -> :num
-			numParser:err    -> :err
+			:sig -> scanln:sig
+			scanln:data -> parseNum:data
+			parseNum:res -> :num
+			parseNum:err -> :err
 		}
 	}
 }

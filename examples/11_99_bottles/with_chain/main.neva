@@ -3,8 +3,8 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
-        :start     -> (99 -> next:n -> match:data)
-        -1         -> match:case[0] -> :stop
+        :start -> (99 -> next:n -> match:data)
+        -1 -> match:case[0] -> :stop
         match:else -> next:n
     }
 }
@@ -16,7 +16,6 @@ component PrintNext2Lines(n int) (n int) {
         second PrintSecondLine
     }
     net {
-        // FIXME: parser parses this to just `:n->first:n` and that's it!
         :n -> first:n -> decr:n -> second:n -> :n
     }
 }
@@ -24,7 +23,7 @@ component PrintNext2Lines(n int) (n int) {
 // === First Line ===
 
 const {
-    firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.'
+    firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n'
     firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
     firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 }
@@ -60,15 +59,15 @@ component PrintSecondLine(n int) (n int) {
     net {
         :n -> [match:data, lock:data]
 
-        -1            -> match:case[0] -> ($secondLine4 -> println:data)
-        0             -> match:case[1] -> ($secondLine3 -> println:data)
-        1             -> match:case[2] -> ($secondLine2 -> println:data)
-        match:else    -> [
+        -1 -> match:case[0] -> ($secondLine4 -> println:data)
+        0  -> match:case[1] -> ($secondLine3 -> println:data)
+        1  -> match:case[2] -> ($secondLine2 -> println:data)
+        match:else -> [
             printf:args[0],
-            ($secondLine1  -> printf:tpl)
+            ($secondLine1 -> printf:tpl)
         ]
 
         [println:sig, printf:args[0]] -> lock:sig
-        lock:data                    -> :n
+        lock:data -> :n
     }
 }
