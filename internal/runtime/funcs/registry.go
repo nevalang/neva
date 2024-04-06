@@ -36,9 +36,16 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// regexp
 		"regexp_submatch": regexpSubmatch{},
 		//list
-		"list_len": listlen{},
-		"index":    index{},
+		"index":       index{},
+		"list_len":    listlen{},
+		"list_push":   listPush{},
+		"int_sort":    listSortInt{},
+		"float_sort":  listSortFloat{},
+		"string_sort": listSortString{},
+		"join":        join{},
 		// time
 		"time_sleep": timeSleep{},
+		//string
+		"split": split{},
 	}
 }

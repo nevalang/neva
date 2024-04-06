@@ -1,0 +1,13 @@
+const l list<int> = [50,30,20,100]
+component Main(start any) (stop any) {
+	nodes {
+        sort Sort<int>
+        printer Printer<any>
+	}
+	net {
+		:start -> ($l -> sort:data)
+	    sort:res -> printer:data
+	    printer:sig -> :stop
+
+	}
+}

@@ -68,8 +68,9 @@ type FloatMsg struct {
 	v float64
 }
 
-func (msg FloatMsg) Type() MsgType     { return FloatMsgType }
-func (msg FloatMsg) FloatMsg() float64 { return msg.v }
+func (msg FloatMsg) Type() MsgType  { return FloatMsgType }
+func (msg FloatMsg) Float() float64 { return msg.v }
+func (msg FloatMsg) String() string { return fmt.Sprint(msg.v) }
 
 func NewFloatMsg(n float64) FloatMsg {
 	return FloatMsg{

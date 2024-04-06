@@ -22,6 +22,7 @@ func NewApp( //nolint:funlen
 	goc compiler.Compiler,
 	nativec compiler.Compiler,
 	wasmc compiler.Compiler,
+	jsonc compiler.Compiler,
 ) *cli.App {
 	var (
 		target string
@@ -115,7 +116,7 @@ func NewApp( //nolint:funlen
 						Destination: &target,
 						Action: func(ctx *cli.Context, s string) error {
 							switch s {
-							case "go", "wasm", "native":
+							case "go", "wasm", "native", "json":
 							default:
 								return fmt.Errorf("Unknown target %s", s)
 							}
@@ -136,6 +137,10 @@ func NewApp( //nolint:funlen
 						)
 					case "wasm":
 						return wasmc.Compile(
+							workdir, dirFromArg, workdir,
+						)
+					case "json":
+						return jsonc.Compile(
 							workdir, dirFromArg, workdir,
 						)
 					default:
