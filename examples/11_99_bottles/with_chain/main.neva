@@ -3,6 +3,9 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
+        // FIXME there might be an issue with
+        // how compiler (parser) handles this connection
+        // (deferred + chain)
         :start -> (99 -> next:n -> match:data)
         -1 -> match:case[0] -> :stop
         match:else -> next:n

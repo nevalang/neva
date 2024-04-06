@@ -20,10 +20,10 @@ component PrintNext2Lines(n int) (n int) {
         second PrintSecondLine
     }
     net {
-        :n            -> first:num
-        first:sig       -> decr:n
-        decr:n          -> second:num
-        second:sig      -> :n
+        :n -> first:n
+        first:n -> decr:n
+        decr:n -> second:n
+        second:n -> :n
     }
 }
 
@@ -35,22 +35,22 @@ const {
     firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 }
 
-component PrintFirstLine(num int) (sig int) {
+component PrintFirstLine(n int) (n int) {
     nodes { Match<int>, Println<string>, Printf<int>, Lock<int> }
     net {
-        :num -> [match:data, lock:data]
+        :n -> [match:data, lock:data]
         0 -> match:case[0]
         1 -> match:case[1]
 
         match:case[0] -> ($firstLine3 -> println:data)
         match:case[1] -> ($firstLine2 -> println:data)
-        match:else    -> printf:args[0]
-        $firstLine1   -> printf:tpl
+        match:else -> printf:args[0]
+        $firstLine1 -> printf:tpl
 
-        println:sig      -> lock:sig
+        println:sig -> lock:sig
         printf:args[0] -> lock:sig
 
-        lock:data -> :sig
+        lock:data -> :n
     }
 }
 
@@ -63,21 +63,21 @@ const {
     secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 }
 
-component PrintSecondLine(num int) (sig int) {
+component PrintSecondLine(n int) (n int) {
     nodes { Match<int>, Lock<int>, Printf<int>, Println<string> }
     net {
-        :num -> [match:data, lock:data]
-        -1   -> match:case[0]
-        0    -> match:case[1]
-        1    -> match:case[2]
+        :n -> [match:data, lock:data]
+        -1 -> match:case[0]
+        0 -> match:case[1]
+        1 -> match:case[2]
 
         match:case[0] -> ($secondLine4 -> println:data)
         match:case[1] -> ($secondLine3 -> println:data)
         match:case[2] -> ($secondLine2 -> println:data)
-        match:else    -> printf:args[0]
-        $secondLine1  -> printf:tpl
+        match:else -> printf:args[0]
+        $secondLine1 -> printf:tpl
 
         [println:sig, printf:args[0]] -> lock:sig
-        lock:data                    -> :sig
+        lock:data -> :n
     }
 }
