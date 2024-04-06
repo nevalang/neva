@@ -1,15 +1,14 @@
 component Main(start any) (stop any) {
 	nodes {
-        printer Printer<any>
+        println Println<any>
         split Split
         join Join
 	}
 	net {
 		:start -> ('neva' -> split:data)
 		split:res -> join:data
-		join:res -> printer:data
-	    printer:sig -> :stop
-
+		join:res -> println:data
+	    println:sig -> :stop
 	}
 }
 
