@@ -3,10 +3,11 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
-        // FIXME there might be an issue with
-        // how compiler (parser) handles this connection
-        // (deferred + chain)
-        :start -> (99 -> next:n -> match:data)
+        // FIXME we can't use chain conn inside defer
+        // because parser parses it like 2 defered connections
+        // should be 1 defered and 1 non-defered
+        :start -> (99 -> next:n)
+        next:n -> match:data
         -1 -> match:case[0] -> :stop
         match:else -> next:n
     }
@@ -51,7 +52,7 @@ component PrintFirstLine(n int) (n int) {
 // === Second Line ===
 
 const {
-    secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n'
+    secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n\n'
     secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
     secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
     secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'

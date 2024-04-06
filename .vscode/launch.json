@@ -232,7 +232,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "11_99_bottles/with_chain"]
+      "args": ["run", "11_99_bottles/with_chain"]
     },
     {
       "name": "TMP",

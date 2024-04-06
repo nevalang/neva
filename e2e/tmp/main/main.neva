@@ -1,6 +1,0 @@
-component Main(start) (stop) {
-	nodes { bp Bypass }
-	net { :start -> bp:v -> :stop }
-}
-
-component Bypass(v) (v) { :v -> :v }

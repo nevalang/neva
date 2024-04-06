@@ -433,15 +433,13 @@ func parseConn(connDef generated.IConnDefContext) (
 		}, nil
 	}
 
-	parseNormConnResult, err := parseNormConn(normConn, connMeta)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseNormConnResult, nil
+	return parseNormConn(normConn, connMeta)
 }
 
-func parseNormConn(normConn generated.INormConnDefContext, connMeta core.Meta) ([]src.Connection, *compiler.Error) {
+func parseNormConn(
+	normConn generated.INormConnDefContext,
+	connMeta core.Meta,
+) ([]src.Connection, *compiler.Error) {
 	singleSender := normConn.SenderSide().SingleSenderSide()
 	mulSenders := normConn.SenderSide().MultipleSenderSide()
 
