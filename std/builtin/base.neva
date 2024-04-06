@@ -63,8 +63,8 @@ pub component Len<T list<any> | map<any>>(data T) (res int)
 pub component Push<T> (lst list<T>,data T) (res list<T>)
 
 
-#extern(list_sort)
-pub component Sort<T> (data list<T>) (res T)
+#extern(int int_sort, float float_sort, string string_sort)
+pub component Sort<T int | float | string>(data list<T>) (res T)
 
 #extern(indexer)
 pub component Index<T any>(data list<T>, idx int) (res T, err error)
