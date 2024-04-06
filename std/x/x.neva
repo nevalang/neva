@@ -5,6 +5,6 @@ component {
     #extern(int int_parser, float float_parser)
     pub ParseNum<T int | float>(data string) (res T, err error)
 
-    #extern(line_scanner)
+    #extern(scanln)
     pub Scanln(sig any) (data string)
 }
