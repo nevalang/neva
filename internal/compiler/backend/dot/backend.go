@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nevalang/neva/internal/runtime/graphviz"
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
@@ -21,7 +20,7 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 		return err
 	}
 	defer f.Close()
-	var cb graphviz.ClusterBuilder
+	var cb ClusterBuilder
 	for _, e := range prog.Connections {
 		for _, r := range e.ReceiverSides {
 			cb.InsertEdge(e.SenderSide, r.PortAddr)

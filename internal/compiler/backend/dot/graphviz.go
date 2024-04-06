@@ -1,4 +1,4 @@
-package graphviz
+package dot
 
 import (
 	"fmt"
@@ -97,31 +97,53 @@ func (b *ClusterBuilder) InsertEdge(send, recv ir.PortAddr) {
 }
 
 func (b *ClusterBuilder) Build(w io.Writer) error {
-	fmt.Fprintln(w, "digraph G {")
-	recursiveBuild(w, "  ", b.Main)
-	for _, e := range b.Edges {
-		fmt.Fprintf(w, "  %q -> %q", e.Send.Name(), e.Recv.Name())
-		if label := e.Label(); label != "" {
-			fmt.Fprintf(w, "[label = %q;]", label)
-		}
-		fmt.Fprintln(w, ";")
+	if _, err := fmt.Fprintln(w, "digraph G {"); err != nil {
+		return err
 	}
-	fmt.Fprintln(w, "}")
+	if err := recursiveBuild(w, "  ", b.Main); err != nil {
+		return err
+	}
+	for _, e := range b.Edges {
+		if _, err := fmt.Fprintf(w, "  %q -> %q", e.Send.Name(), e.Recv.Name()); err != nil {
+			return err
+		}
+		if label := e.Label(); label != "" {
+			if _, err := fmt.Fprintf(w, "[label = %q;]", label); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprintln(w, ";"); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintln(w, "}"); err != nil {
+		return err
+	}
 	return nil
 }
 
 func recursiveBuild(w io.Writer, indent string, c *Cluster) error {
-	fprintlnIndent := func(f string, a ...any) {
-		fmt.Fprintln(w, indent, fmt.Sprintf(f, a...))
+	fprintlnIndent := func(f string, a ...any) error {
+		_, err := fmt.Fprintln(w, indent, fmt.Sprintf(f, a...))
+		return err
 	}
-	fprintlnIndent("subgraph cluster_%d {", c.Index)
-	fprintlnIndent("  label = \"%s\";", c.Label())
+	if err := fprintlnIndent("subgraph cluster_%d {", c.Index); err != nil {
+		return err
+	}
+	if label := c.Label(); label != "" {
+		if err := fprintlnIndent("  label = \"%s\";", label); err != nil {
+			return err
+		}
+	}
 	for n := range c.Nodes {
-		fprintlnIndent("  %q [label = \"%s\";];", n.Name(), n.Label())
+		if err := fprintlnIndent("  %q [label = \"%s\";];", n.Name(), n.Label()); err != nil {
+			return err
+		}
 	}
 	for _, sub := range c.Clusters {
-		recursiveBuild(w, indent+"  ", sub)
+		if err := recursiveBuild(w, indent+"  ", sub); err != nil {
+			return err
+		}
 	}
-	fprintlnIndent("}")
-	return nil
+	return fprintlnIndent("}")
 }
