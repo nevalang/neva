@@ -1,7 +1,7 @@
-const l list<int> = [320,420,100,-100,0,5]
+const l list<int> = [50,30,20,100]
 component Main(start any) (stop any) {
 	nodes {
-        sort Sort<any>
+        sort Sort<int>
         printer Printer<any>
 	}
 	net {
