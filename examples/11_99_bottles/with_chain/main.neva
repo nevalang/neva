@@ -3,9 +3,6 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
-        // FIXME we can't use chain conn inside defer
-        // because parser parses it like 2 defered connections
-        // should be 1 defered and 1 non-defered
         :start -> (99 -> next:n)
         next:n -> match:data
         -1 -> match:case[0] -> :stop
