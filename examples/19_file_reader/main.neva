@@ -1,0 +1,16 @@
+import { io }
+
+const filename string = '19_file_reader/main.neva'
+
+component Main(start any) (stop any) {
+  nodes {
+    io.FileReader
+    Println<string>
+  }
+  net {
+    :start -> ($filename -> fileReader:filename)
+    fileReader:data -> println:data
+    println:sig -> :stop
+  }
+}
+

@@ -1,0 +1,17 @@
+import { io }
+
+const {
+  filename string = 'file_writer_example.txt'
+  data string = 'Hello, FileWriter!'
+}
+
+component Main(start any) (stop any) {
+  nodes {
+    io.FileWriter
+  }
+  net {
+    :start -> ($filename -> fileWriter:filename, $data -> fileWriter:data)
+    fileWriter:sig -> :stop
+  }
+}
+

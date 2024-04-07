@@ -43,6 +43,8 @@ func (emptyMsg) Str() string         { return "" }
 func (emptyMsg) List() []Msg         { return nil }
 func (emptyMsg) Map() map[string]Msg { return nil }
 
+type EmptyMsg struct{ emptyMsg }
+
 // Int
 
 type IntMsg struct {
