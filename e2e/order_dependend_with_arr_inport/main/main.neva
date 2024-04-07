@@ -5,9 +5,9 @@ component Main(start) (stop) {
 	}
 	net {
 		:start -> (
-			1 -> sub:ports[0],
-			2 -> sub:ports[1],
-			3 -> sub:ports[2]
+			1 -> sub:port[0],
+			2 -> sub:port[1],
+			3 -> sub:port[2]
 		)
 		sub:res -> println:data
 		println:sig -> :stop
