@@ -1,5 +1,5 @@
 component {
-    #extern(int int_adder, float float_adder, string string_adder)
+    #extern(int int_add, float float_add, string string_add)
     pub Add<T int | float | string>(seq maybe<T>) (res T)
 
     #extern(int int_sub, float float_sub)

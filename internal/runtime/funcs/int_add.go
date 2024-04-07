@@ -9,7 +9,7 @@ import (
 type intAdd struct{}
 
 func (intAdd) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	streamIn, err := io.In.Port("stream")
+	seqIn, err := io.In.Port("seq")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (intAdd) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			select {
 			case <-ctx.Done():
 				return
-			case streamItem := <-streamIn:
+			case streamItem := <-seqIn:
 				if streamItem == nil {
 					select {
 					case <-ctx.Done():
