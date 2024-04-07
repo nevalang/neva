@@ -8,7 +8,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Check that comments are parsed witout errors
+func TestParser_ParseFile_ChainedConnections(t *testing.T) {
+	text := []byte(`
+		component C1() () { :in -> n1:p1 -> :out }
+	`)
+
+	p := New(false)
+
+	got, err := p.parseFile(src.Location{}, text)
+	require.True(t, err == nil)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 2, len(net))
+}
+
 func TestParser_ParseFile_Comments(t *testing.T) {
 	text := []byte(`
 	// comment
@@ -20,8 +33,6 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 	require.True(t, err == nil)
 }
 
-// TestParser_ParseFile_Directives checks only
-// how compiler directives are parsed.
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		component {
@@ -79,8 +90,6 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	require.Equal(t, true, ok)
 }
 
-// Check that parser correctly parses port addresses without
-// explicitly specified nodes.
 func TestParser_ParseFile_IONodes(t *testing.T) {
 	text := []byte(`
 		component C1(start any) (stop any) {
@@ -102,8 +111,6 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	require.Equal(t, "out", receiver)
 }
 
-// Check that notes without names are parsed to nodes with names
-// and their names are lower-cased names of their dependencies.
 func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	text := []byte(`
 		component C1(start any) (stop any) {
@@ -128,7 +135,6 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	require.Equal(t, true, ok)
 }
 
-// Check that both local and global enum literals are parsed correctly.
 func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 	text := []byte(`
 		const c0 Enum = Enum1::Foo
@@ -151,7 +157,6 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 	require.Equal(t, "Bar", enum.MemberName)
 }
 
-// Check that primitive literal senders in networks are parsed correctly.
 func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 	text := []byte(`
 		component C1() () {

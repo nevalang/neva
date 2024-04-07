@@ -1,0 +1,19 @@
+// create sequence from array-port
+#extern(port_sequencer)
+pub component PortSequencer<T>([port] T) (seq maybe<T>)
+
+// reduce sequence to single message
+pub interface ISeqReducer<T>(seq maybe<T>) (res T)
+
+// reduce array-port to single message
+pub component PortReducer<T>([port] T) (res T) {
+    nodes {
+        reducer   ISeqReducer<T>
+        sequencer PortSequencer<T>
+    }
+    net {
+        :port         => sequencer:port
+        sequencer:seq -> reducer:seq
+        reducer:res   -> :res
+    }
+}

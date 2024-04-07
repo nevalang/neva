@@ -1,2 +1,2 @@
-#extern(regexp_submatcher)
-pub component Submatcher(regexp string, data string) (res list<string>, err error)
+#extern(regexp_submatch)
+pub component Submatch(regexp string, data string) (res list<string>, err error)

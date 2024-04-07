@@ -9,39 +9,39 @@ import (
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
-		"emitter":       emitter{},
-		"destructor":    destructor{},
-		"blocker":       blocker{},
-		"port_streamer": portStreamer{},
+		"new":            new{},
+		"del":            del{},
+		"lock":           lock{},
+		"range":          ranger{},
+		"port_sequencer": portSequencer{},
 		// structures
-		"struct_selector": structSelector{},
-		"struct_builder":  structBuilder{},
+		"field":          field{},
+		"struct_builder": structBuilder{},
 		// logic
 		"int_eq": intEq{},
 		"match":  match{},
 		"unwrap": unwrap{},
 		// math
-		"int_adder":       intAdder{},
-		"int_subtractor":  intSubtractor{},
-		"int_multiplier":  intMultiplier{},
-		"int_decrementor": intDecrementor{},
-		"range":           ranger{},
-		"mod":             mod{},
+		"int_add":  intAdd{},
+		"int_sub":  intSub{},
+		"int_mul":  intMul{},
+		"int_decr": intDecr{},
+		"int_mod":  intMod{},
 		// io
-		"line_scanner":  lineScanner{},
-		"line_printer":  linePrinter{},
-		"line_fprinter": lineFPrinter{},
+		"scanln":  scanln{},
+		"println": println{},
+		"printf":  printf{},
 		// strings
-		"int_parser": intParser{},
+		"int_parse": intParse{},
 		// regexp
-		"regexp_submatcher": regexpSubmatcher{},
+		"regexp_submatch": regexpSubmatch{},
 		//list
+		"index":       index{},
 		"list_len":    listlen{},
-		"list_push":   listpush{},
-		"int_sort":    listsortint{},
-		"float_sort":  listsortfloat{},
-		"string_sort": listsortstring{},
-		"indexer":     index{},
+		"list_push":   listPush{},
+		"int_sort":    listSortInt{},
+		"float_sort":  listSortFloat{},
+		"string_sort": listSortString{},
 		"join":        join{},
 		// time
 		"time_sleep": timeSleep{},

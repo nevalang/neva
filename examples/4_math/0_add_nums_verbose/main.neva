@@ -1,16 +1,16 @@
 component Main(start any) (stop any) {
 	nodes {
-		adder Adder<int>
-		streamer PortStreamer<int>
-		printer Printer<int>
+		adder Add<int>
+		sequencer PortSequencer<int>
+		println Println<int>
 	}
 	net {
 		:start -> (
-			1 -> streamer:ports[0],
-			2 -> streamer:ports[1]
+			1 -> sequencer:port[0],
+			2 -> sequencer:port[1]
 		)
-		streamer:stream -> adder:stream
-		adder:res -> printer:data
-		printer:sig -> :stop
+		sequencer:seq -> adder:seq
+		adder:res -> println:data
+		println:sig -> :stop
 	}
 }

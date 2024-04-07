@@ -20,9 +20,9 @@ const {
 }
 
 component Main(start any) (stop any) {
-    nodes { Printer<NumsStruct> }
+    nodes { Println<NumsStruct> }
     net {
-        :start -> ($numsStruct -> printer:data)
-        printer:sig -> :stop
+        :start -> ($numsStruct -> println:data)
+        println:sig -> :stop
     }
 }

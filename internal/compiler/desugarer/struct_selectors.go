@@ -29,7 +29,7 @@ type handleStructSelectorsResult struct {
 
 var selectorNodeRef = core.EntityRef{
 	Pkg:  "builtin",
-	Name: "StructSelector",
+	Name: "Field",
 }
 
 var virtualSelectorsCount atomic.Uint64
@@ -41,11 +41,11 @@ func (d Desugarer) desugarStructSelectors( //nolint:funlen
 
 	constCounter := virtualConstCount.Load()
 	virtualConstCount.Store(constCounter + 1)
-	constName := fmt.Sprintf("virtual_const_%d", constCounter)
+	constName := fmt.Sprintf("__const__%d", constCounter)
 
 	counter := virtualSelectorsCount.Load()
 	virtualSelectorsCount.Store(counter + 1)
-	nodeName := fmt.Sprintf("virtual_selector_%d", counter)
+	nodeName := fmt.Sprintf("__field__%d", counter)
 
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{

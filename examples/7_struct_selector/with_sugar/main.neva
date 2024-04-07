@@ -10,11 +10,11 @@ type {
 }
 
 component Main(start any) (stop any) {
-    nodes { UserSender, Printer<string> }
+    nodes { UserSender, Println<string> }
     net {
         :start -> userSender:sig
-        userSender:u.pet.name -> printer:data
-        printer:sig -> :stop
+        userSender:u.pet.name -> println:data
+        println:sig -> :stop
     }
 }
 

@@ -1,5 +1,5 @@
 component Main(start) (stop) {
-	nodes { Decrementor<any> }
+	nodes { Decr<any> }
 	net {
 		:start -> (42 -> decrementor:data)
         decrementor:res -> :stop

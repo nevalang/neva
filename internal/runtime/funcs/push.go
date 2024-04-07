@@ -2,12 +2,13 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type listpush struct{}
+type listPush struct{}
 
-func (p listpush) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p listPush) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

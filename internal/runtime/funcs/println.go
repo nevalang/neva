@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type linePrinter struct{}
+type println struct{}
 
-func (p linePrinter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p println) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

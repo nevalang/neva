@@ -9,9 +9,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intParser struct{}
+type intParse struct{}
 
-func (p intParser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p intParse) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	vin, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

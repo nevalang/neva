@@ -1,12 +1,12 @@
 component Main(start) (stop) {
     nodes {
         Foo
-        Printer<int>
+        Println<int>
     }
     net {
         :start -> foo:sig
-        foo:msg.a -> printer:data
-        printer:sig -> :stop
+        foo:msg.a -> println:data
+        println:sig -> :stop
     }
 }
 

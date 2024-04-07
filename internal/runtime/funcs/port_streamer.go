@@ -7,18 +7,18 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type portStreamer struct{}
+type portSequencer struct{}
 
-func (portStreamer) Create(
+func (portSequencer) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
-	portsIn, ok := io.In["ports"] // slots of the "ports" array inport
+	portIn, ok := io.In["port"]
 	if !ok {
-		return nil, errors.New("missing port 'ports'")
+		return nil, errors.New("missing array inport 'port'")
 	}
 
-	streamOut, err := io.Out.Port("stream")
+	streamOut, err := io.Out.Port("seq")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (portStreamer) Create(
 		// so we don't block the senders
 		// but still emit messages to stream outport in order
 		for {
-			for _, slot := range portsIn {
+			for _, slot := range portIn {
 				select {
 				case <-ctx.Done():
 					return

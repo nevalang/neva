@@ -2,13 +2,14 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 	"golang.org/x/exp/slices"
 )
 
-type listsortfloat struct{}
+type listSortFloat struct{}
 
-func (p listsortfloat) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p listSortFloat) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

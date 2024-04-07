@@ -1,9 +1,9 @@
 const greeting string = 'Hello, World!'
 
 component Main(start any) (stop any) {
-	nodes { printer Printer<string> }
+	nodes { println Println<string> }
 	net {
-		:start -> ($greeting -> printer:data)
-		printer:sig -> :stop
+		:start -> ($greeting -> println:data)
+		println:sig -> :stop
 	}
 }

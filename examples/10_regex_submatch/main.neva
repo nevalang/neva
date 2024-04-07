@@ -1,13 +1,13 @@
 import { regexp }
 
 component Main(start) (stop) {
-    nodes { Printer<any>, regexp.Submatcher }
+    nodes { Println<any>, regexp.Submatch }
     net {
         :start -> (
-            'a(x*)b(y|z)c' -> submatcher:regexp,
-            '-axxxbyc-'    -> submatcher:data
+            'a(x*)b(y|z)c' -> submatch:regexp,
+            '-axxxbyc-'    -> submatch:data
         )
-        submatcher:res -> printer:data
-        printer:sig    -> :stop
+        submatch:res -> println:data
+        println:sig    -> :stop
     }
 }

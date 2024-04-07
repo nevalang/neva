@@ -22,15 +22,15 @@ const {
 component {
     Main(start any) (stop any) {
         nodes {
-            printer Printer<string>
+            println Println<string>
 
             #bind(path)
-            selector StructSelector<string>
+            selector Field<string>
         }
         net {
             :start -> ($user -> selector:msg)
-            selector:msg -> printer:data
-            printer:sig -> :stop
+            selector:msg -> println:data
+            println:sig -> :stop
         }
     }
 }

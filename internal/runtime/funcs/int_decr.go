@@ -6,15 +6,15 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intDecrementor struct{}
+type intDecr struct{}
 
-func (i intDecrementor) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
-	dataIn, err := io.In.Port("data")
+func (i intDecr) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
+	nIn, err := io.In.Port("n")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	nOut, err := io.Out.Port("n")
 	if err != nil {
 		return nil, err
 	}
@@ -24,11 +24,11 @@ func (i intDecrementor) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.C
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
+			case data := <-nIn:
 				select {
 				case <-ctx.Done():
 					return
-				case resOut <- runtime.NewIntMsg(data.Int() - 1):
+				case nOut <- runtime.NewIntMsg(data.Int() - 1):
 				}
 			}
 		}

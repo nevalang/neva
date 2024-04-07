@@ -12,14 +12,14 @@ type voidResult struct {
 }
 
 func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
-	destructorNodeName := "__destructor__"
+	destructorNodeName := "__del__"
 
 	result := voidResult{
 		voidNodeName: destructorNodeName,
 		voidNode: src.Node{
 			EntityRef: core.EntityRef{
 				Pkg:  "builtin",
-				Name: "Destructor",
+				Name: "Del",
 			},
 		},
 		virtualConnections: make([]src.Connection, 0, len(unusedOutports.m)),

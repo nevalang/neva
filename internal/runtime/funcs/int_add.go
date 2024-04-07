@@ -6,10 +6,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intAdder struct{}
+type intAdd struct{}
 
-func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	streamIn, err := io.In.Port("stream")
+func (intAdd) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	seqIn, err := io.In.Port("seq")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (intAdder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 			select {
 			case <-ctx.Done():
 				return
-			case streamItem := <-streamIn:
+			case streamItem := <-seqIn:
 				if streamItem == nil {
 					select {
 					case <-ctx.Done():

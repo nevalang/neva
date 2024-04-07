@@ -2,9 +2,9 @@
 
 const array list<int> = [1,2,3]
 component Main(start any) (stop any) {
-	nodes { printer Printer<any>}
+	nodes { println Println<any>}
 	net {
-		:start -> ($array -> printer:data) 
-		printer:sig 
+		:start -> ($array -> println:data) 
+		println:sig 
 	}
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type structSelector struct{}
+type field struct{}
 
-func (s structSelector) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (func(ctx context.Context), error) {
+func (s field) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (func(ctx context.Context), error) {
 	fieldPath := fieldPathMsg.List()
 	if len(fieldPath) == 0 {
 		return nil, errors.New("field path cannot be empty")
@@ -46,7 +46,7 @@ func (s structSelector) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (fun
 	}, nil
 }
 
-func (structSelector) mapLookup(m runtime.Msg, path []string) runtime.Msg {
+func (field) mapLookup(m runtime.Msg, path []string) runtime.Msg {
 	for len(path) > 0 {
 		m = m.Map()[path[0]]
 		path = path[1:]

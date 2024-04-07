@@ -6,7 +6,7 @@ component {
     Main(start any) (stop any) {
         nodes {
             subNode SecondComponent {
-                depNode main.Printer<any>
+                depNode main.Println<any>
             }
         }
         net {

@@ -1,0 +1,19 @@
+component {
+    #extern(list list_len, map map_len)
+    pub Len<T list<any> | map<any>>(data T) (res int)
+
+    #extern(index)
+    pub Index<T any>(data list<T>, idx int) (res T, err error)
+
+    #extern(list_push)
+    pub Push<T> (lst list<T>,data T) (res list<T>)
+
+    #extern(int int_sort, float float_sort, string string_sort)
+    pub Sort<T int | float | string>(data list<T>) (res T)
+
+    #extern(join)
+    pub Join(data list<string>) (res string)
+
+    #extern(split)
+    pub Split(data string) (res list<string>)
+}

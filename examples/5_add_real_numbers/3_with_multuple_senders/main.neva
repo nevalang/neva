@@ -2,11 +2,11 @@ import { x }
 
 component {
 	Main(start any) (stop any) {
-		nodes { Aux, Printer<any> }
+		nodes { Aux, Println<any> }
 		net {
 			:start             -> aux:sig
-			[aux:res, aux:err] -> printer:data
-			printer:sig        -> :stop
+			[aux:res, aux:err] -> println:data
+			println:sig        -> :stop
 		}
 	}
 	
@@ -14,25 +14,25 @@ component {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
-			// adder PortBridge<int> { Adder<int> }
-			adder PortBridge<int> { handler Adder<int> }
+			// adder PortReducer<int> { Add<int> }
+			adder PortReducer<int> { reducer Add<int> }
 		}
 		net {
 			:sig                       -> reader1:sig
-			reader1:num                -> [adder:ports[0], reader2:sig]
+			reader1:num                -> [adder:port[0], reader2:sig]
 			[reader1:err, reader2:err] -> :err
-			reader2:num                -> adder:ports[1]
+			reader2:num                -> adder:port[1]
 			adder:res                  -> :res
 		}
 	}
 
 	IntReader(sig any) (num int, err error) {
-		nodes { x.LineScanner, x.NumParser<int> }
+		nodes { x.Scanln, x.ParseNum<int> }
 		net {
-			:sig             -> lineScanner:sig
-			lineScanner:data -> numParser:data
-			numParser:res    -> :num
-			numParser:err    -> :err
+			:sig -> scanln:sig
+			scanln:data -> parseNum:data
+			parseNum:res -> :num
+			parseNum:err -> :err
 		}
 	}
 }

@@ -84,8 +84,8 @@ singleConstStmt: PUB_KW? 'const' constDef;
 groupConstStmt:
 	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
 constDef:
-	IDENTIFIER typeExpr '=' (entityRef | constVal) NEWLINE*;
-constVal:
+	IDENTIFIER typeExpr '=' (entityRef | constLit) NEWLINE*;
+constLit:
 	nil
 	| bool
 	| MINUS? INT
@@ -101,7 +101,7 @@ listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	compositeItem
 	| compositeItem (',' NEWLINE* compositeItem NEWLINE*)*;
-compositeItem: entityRef | constVal;
+compositeItem: entityRef | constLit;
 structLit:
 	'{' NEWLINE* structValueFields? '}'; // same for struct and map
 structValueFields:
@@ -134,17 +134,18 @@ compNetDef: 'net' NEWLINE* compNetBody;
 compNetBody: '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
-normConnDef:
-	(senderSide | multipleSenderSide) '->' (
-		receiverSide
-		| multipleReceiverSide
-	);
+normConnDef: senderSide '->' receiverSide;
+senderSide: singleSenderSide | multipleSenderSide;
 multipleSenderSide:
-	'[' NEWLINE* senderSide (',' NEWLINE* senderSide NEWLINE*)* ']';
+	'[' NEWLINE* singleSenderSide (',' NEWLINE* singleSenderSide NEWLINE*)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-senderSide: (portAddr | senderConstRef | constVal) structSelectors?;
-receiverSide: portAddr | thenConnExpr;
-thenConnExpr:
+singleSenderSide: (portAddr | senderConstRef | constLit) structSelectors?;
+receiverSide:
+	chainedNormConn
+	| singleReceiverSide
+	| multipleReceiverSide;
+chainedNormConn: normConnDef;
+deferredConn:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
 portAddr: singlePortAddr | arrPortAddr;
@@ -154,9 +155,10 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
+singleReceiverSide: portAddr | deferredConn;
 multipleReceiverSide:
-	'[' NEWLINE* receiverSide (
-		',' NEWLINE* receiverSide NEWLINE*
+	'[' NEWLINE* singleReceiverSide (
+		',' NEWLINE* singleReceiverSide NEWLINE*
 	)* ']';
 
 /* LEXER */

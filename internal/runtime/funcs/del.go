@@ -6,10 +6,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type emitter struct{}
+type del struct{}
 
-func (c emitter) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	outport, err := io.Out.Port("msg")
+func (d del) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	outport, err := io.In.Port("msg")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (c emitter) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Co
 			select {
 			case <-ctx.Done():
 				return
-			case outport <- msg:
+			case <-outport:
 			}
 		}
 	}, nil

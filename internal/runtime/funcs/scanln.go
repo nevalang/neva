@@ -8,9 +8,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type lineScanner struct{}
+type scanln struct{}
 
-func (r lineScanner) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (r scanln) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sig, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err

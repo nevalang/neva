@@ -1,0 +1,7 @@
+component {
+    #extern(println)
+    pub Println<T>(data T) (sig T)
+
+    #extern(printf)
+    pub Printf<T>(tpl string, [args] T) ([args] T, err error)
+}

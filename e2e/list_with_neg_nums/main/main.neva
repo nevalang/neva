@@ -1,9 +1,9 @@
 const l list<int> = [-215]
 
 component Main(start) (stop) {
-	nodes { Printer<any> }
+	nodes { Println<any> }
 	net {
-		:start -> ($l -> printer:data)
-		printer:sig -> :stop
+		:start -> ($l -> println:data)
+		println:sig -> :stop
 	}
 }

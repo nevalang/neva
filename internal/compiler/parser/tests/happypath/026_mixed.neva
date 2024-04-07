@@ -33,7 +33,7 @@ component {
 	}
 
 	#extern(int IntAdder, float FloatAdder, string StringAdder)
-    pub Adder<
+    pub Add<
         T int | float | string
     >(seq stream<T>) (res T)
 }

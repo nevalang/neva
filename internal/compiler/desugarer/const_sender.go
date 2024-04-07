@@ -12,7 +12,7 @@ import (
 
 var emitterComponentRef = core.EntityRef{
 	Pkg:  "builtin",
-	Name: "Emitter",
+	Name: "New",
 }
 
 type handleLiteralSenderResult struct {
@@ -40,7 +40,7 @@ func (d Desugarer) handleLiteralSender(
 ) {
 	constCounter := virtualConstCount.Load()
 	virtualConstCount.Store(constCounter + 1)
-	constName := fmt.Sprintf("virtual_const_%d", constCounter)
+	constName := fmt.Sprintf("__const__%d", constCounter)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
@@ -61,7 +61,7 @@ func (d Desugarer) handleLiteralSender(
 
 	emitterCounter := virtualEmittersCount.Load()
 	virtualEmittersCount.Store(emitterCounter + 1)
-	emitterNodeName := fmt.Sprintf("virtual_emitter_%d", emitterCounter)
+	emitterNodeName := fmt.Sprintf("__new__%d", emitterCounter)
 
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: emitterNodeName,
@@ -109,7 +109,7 @@ func (d Desugarer) handleConstRefSender(
 
 	counter := virtualEmittersCount.Load()
 	virtualEmittersCount.Store(counter + 1)
-	virtualEmitterName := fmt.Sprintf("virtual_emitter_%d", counter)
+	virtualEmitterName := fmt.Sprintf("__new__%d", counter)
 
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{

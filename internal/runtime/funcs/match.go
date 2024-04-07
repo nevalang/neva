@@ -17,12 +17,12 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 
 	caseIn, ok := io.In["case"]
 	if !ok {
-		return nil, errors.New("port 'case' is required")
+		return nil, errors.New("inport 'case' is required")
 	}
 
-	thenOut, ok := io.Out["then"]
+	caseOut, ok := io.Out["case"]
 	if !ok {
-		return nil, errors.New("port 'then' is required")
+		return nil, errors.New("outport 'case' is required")
 	}
 
 	elseOut, err := io.Out.Port("else")
@@ -30,7 +30,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	if len(caseIn) != len(thenOut) {
+	if len(caseIn) != len(caseOut) {
 		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
 	}
 
@@ -64,7 +64,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 						select {
 						case <-ctx.Done():
 							return
-						case thenOut[matchIdx] <- dataMsg:
+						case caseOut[matchIdx] <- dataMsg:
 						}
 					} else {
 						select {

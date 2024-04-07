@@ -320,11 +320,11 @@ func (s *BasenevaListener) EnterConstDef(ctx *ConstDefContext) {}
 // ExitConstDef is called when production constDef is exited.
 func (s *BasenevaListener) ExitConstDef(ctx *ConstDefContext) {}
 
-// EnterConstVal is called when production constVal is entered.
-func (s *BasenevaListener) EnterConstVal(ctx *ConstValContext) {}
+// EnterConstLit is called when production constLit is entered.
+func (s *BasenevaListener) EnterConstLit(ctx *ConstLitContext) {}
 
-// ExitConstVal is called when production constVal is exited.
-func (s *BasenevaListener) ExitConstVal(ctx *ConstValContext) {}
+// ExitConstLit is called when production constLit is exited.
+func (s *BasenevaListener) ExitConstLit(ctx *ConstLitContext) {}
 
 // EnterNil is called when production nil is entered.
 func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
@@ -470,6 +470,12 @@ func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
 // ExitNormConnDef is called when production normConnDef is exited.
 func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
 
+// EnterSenderSide is called when production senderSide is entered.
+func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
+
+// ExitSenderSide is called when production senderSide is exited.
+func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
+
 // EnterMultipleSenderSide is called when production multipleSenderSide is entered.
 func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContext) {}
 
@@ -482,11 +488,11 @@ func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {
 // ExitArrBypassConnDef is called when production arrBypassConnDef is exited.
 func (s *BasenevaListener) ExitArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
 
-// EnterSenderSide is called when production senderSide is entered.
-func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
+// EnterSingleSenderSide is called when production singleSenderSide is entered.
+func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {}
 
-// ExitSenderSide is called when production senderSide is exited.
-func (s *BasenevaListener) ExitSenderSide(ctx *SenderSideContext) {}
+// ExitSingleSenderSide is called when production singleSenderSide is exited.
+func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
 
 // EnterReceiverSide is called when production receiverSide is entered.
 func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
@@ -494,11 +500,17 @@ func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
 // ExitReceiverSide is called when production receiverSide is exited.
 func (s *BasenevaListener) ExitReceiverSide(ctx *ReceiverSideContext) {}
 
-// EnterThenConnExpr is called when production thenConnExpr is entered.
-func (s *BasenevaListener) EnterThenConnExpr(ctx *ThenConnExprContext) {}
+// EnterChainedNormConn is called when production chainedNormConn is entered.
+func (s *BasenevaListener) EnterChainedNormConn(ctx *ChainedNormConnContext) {}
 
-// ExitThenConnExpr is called when production thenConnExpr is exited.
-func (s *BasenevaListener) ExitThenConnExpr(ctx *ThenConnExprContext) {}
+// ExitChainedNormConn is called when production chainedNormConn is exited.
+func (s *BasenevaListener) ExitChainedNormConn(ctx *ChainedNormConnContext) {}
+
+// EnterDeferredConn is called when production deferredConn is entered.
+func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
+
+// ExitDeferredConn is called when production deferredConn is exited.
+func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
@@ -547,6 +559,12 @@ func (s *BasenevaListener) EnterStructSelectors(ctx *StructSelectorsContext) {}
 
 // ExitStructSelectors is called when production structSelectors is exited.
 func (s *BasenevaListener) ExitStructSelectors(ctx *StructSelectorsContext) {}
+
+// EnterSingleReceiverSide is called when production singleReceiverSide is entered.
+func (s *BasenevaListener) EnterSingleReceiverSide(ctx *SingleReceiverSideContext) {}
+
+// ExitSingleReceiverSide is called when production singleReceiverSide is exited.
+func (s *BasenevaListener) ExitSingleReceiverSide(ctx *SingleReceiverSideContext) {}
 
 // EnterMultipleReceiverSide is called when production multipleReceiverSide is entered.
 func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}

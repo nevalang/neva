@@ -1,9 +1,9 @@
 const x float = 42
 
 component Main(start) (stop) {
-    nodes { Printer<float> }
+    nodes { Println<float> }
     net {
-        :start -> ($x -> printer:data)
-        printer:sig -> :stop
+        :start -> ($x -> println:data)
+        println:sig -> :stop
     }
 }

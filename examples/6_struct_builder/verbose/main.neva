@@ -11,14 +11,14 @@ component {
     MyStructBuilder(age int, name string) (msg User)
 
     Main(start any) (stop any) {
-        nodes { Printer<User>, builder MyStructBuilder }
+        nodes { Println<User>, builder MyStructBuilder }
         net {
             :start -> (
                 'John' -> builder:name,
                 32 -> builder:age
             )
-            builder:msg -> printer:data
-            printer:sig -> :stop
+            builder:msg -> println:data
+            println:sig -> :stop
         }
     }
 }
