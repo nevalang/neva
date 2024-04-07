@@ -84,7 +84,16 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "3_interfaces"]
+      "args": ["run", "3_interfaces/verbose"]
+    },
+    {
+      "name": "Neva CLI 31",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "3_interfaces/with_imports"]
     },
     {
       "name": "Neva CLI 40",
