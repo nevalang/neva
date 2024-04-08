@@ -31,16 +31,19 @@ func (s field) Create(io runtime.FuncIO, fieldPathMsg runtime.Msg) (func(ctx con
 	}
 
 	return func(ctx context.Context) {
+		var msg runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case msg := <-msgIn:
-				select {
-				case <-ctx.Done():
-					return
-				case msgOut <- s.mapLookup(msg, pathStrings):
-				}
+			case msg = <-msgIn:
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case msgOut <- s.mapLookup(msg, pathStrings):
 			}
 		}
 	}, nil

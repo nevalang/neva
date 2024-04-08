@@ -35,46 +35,47 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
+		var data runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case dataMsg := <-dataIn:
-				dataInt := dataMsg.Int()
+			case data = <-dataIn:
+			}
+
+			cases := make([]runtime.Msg, len(caseIn))
+			for i, slot := range caseIn {
 				select {
 				case <-ctx.Done():
 					return
-				default:
-					cases := make([]int64, len(caseIn))
-					for i, slot := range caseIn { // always receive all
-						select {
-						case <-ctx.Done():
-							return
-						case caseMsg := <-slot:
-							cases[i] = caseMsg.Int()
-						}
-					}
-					matchIdx := -1
-					for i, caseInt := range cases {
-						if dataInt%caseInt == 0 {
-							matchIdx = i
-							break
-						}
-					}
-					if matchIdx != -1 {
-						select {
-						case <-ctx.Done():
-							return
-						case caseOut[matchIdx] <- dataMsg:
-						}
-					} else {
-						select {
-						case <-ctx.Done():
-							return
-						case elseOut <- dataMsg:
-						}
-					}
+				case caseMsg := <-slot:
+					cases[i] = caseMsg
 				}
+			}
+
+			matchIdx := -1
+			dataInt := data.Int()
+			for i, caseMsg := range cases {
+				if dataInt%caseMsg.Int() == 0 {
+					matchIdx = i
+					break
+				}
+			}
+
+			if matchIdx != -1 {
+				select {
+				case <-ctx.Done():
+					return
+				case caseOut[matchIdx] <- data:
+					continue
+				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case elseOut <- data:
 			}
 		}
 	}, nil

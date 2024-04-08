@@ -20,30 +20,35 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
-		flag := false
-		var res int64
+		var (
+			acc        int64 = 0
+			inProgress bool  = false
+			cur        runtime.Msg
+		)
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case streamItem := <-seqIn:
-				if streamItem == nil {
-					select {
-					case <-ctx.Done():
-						return
-					case resOut <- runtime.NewIntMsg(res):
-						flag = false
-						res = 0
-						continue
-					}
-				}
+			case cur = <-seqIn:
+			}
 
-				if !flag {
-					res = streamItem.Int()
-					flag = true
-				} else {
-					res -= streamItem.Int()
+			if cur == nil {
+				select {
+				case <-ctx.Done():
+					return
+				case resOut <- runtime.NewIntMsg(acc):
+					acc = 0
+					inProgress = false
+					continue
 				}
+			}
+
+			if !inProgress {
+				acc = cur.Int()
+				inProgress = true
+			} else {
+				acc -= cur.Int()
 			}
 		}
 	}, nil

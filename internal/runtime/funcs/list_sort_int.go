@@ -21,29 +21,24 @@ func (p listSortInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	}
 
 	return func(ctx context.Context) {
+		var data runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
-				select {
-				case <-ctx.Done():
-					return
-				default:
-					lst := data.List()
-					arr := []int64{}
+			case data = <-dataIn:
+			}
 
-					for i := 0; i < len(lst); i++ {
-						arr = append(arr, lst[i].Int())
-					}
-					slices.Sort(arr)
+			clone := slices.Clone(data.List())
+			slices.SortFunc(clone, func(i, j runtime.Msg) bool {
+				return i.Int() < j.Int()
+			})
 
-					finalArr := []runtime.Msg{}
-					for i := 0; i < len(arr); i++ {
-						finalArr = append(finalArr, runtime.NewIntMsg(arr[i]))
-					}
-					resOut <- runtime.NewListMsg(finalArr...)
-				}
+			select {
+			case <-ctx.Done():
+				return
+			case resOut <- runtime.NewListMsg(clone...):
 			}
 		}
 	}, nil

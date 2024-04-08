@@ -25,40 +25,33 @@ func (ranger) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
+		var fromMsg, toMsg runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case fromMsg := <-fromIn:
-				fromInt := fromMsg.Int()
+			case fromMsg = <-fromIn:
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case toMsg = <-toIn:
+			}
+
+			for i := fromMsg.Int(); i < toMsg.Int(); i++ {
 				select {
 				case <-ctx.Done():
 					return
-				default:
-					select {
-					case <-ctx.Done():
-						return
-					case toMsg := <-toIn:
-						toInt := toMsg.Int()
-						select {
-						case <-ctx.Done():
-							return
-						default:
-							for i := fromInt; i < toInt; i++ {
-								select {
-								case <-ctx.Done():
-									return
-								case dataOut <- runtime.NewIntMsg(i):
-								}
-							}
-							select {
-							case <-ctx.Done():
-								return
-							case dataOut <- nil:
-							}
-						}
-					}
+				case dataOut <- runtime.NewIntMsg(i):
 				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case dataOut <- nil:
 			}
 		}
 	}, nil

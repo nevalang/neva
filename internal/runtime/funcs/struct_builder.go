@@ -35,25 +35,22 @@ func (structBuilder) Handle(
 	outport chan runtime.Msg,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
+		var structure = make(map[string]runtime.Msg, len(inports))
+
 		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				structure := make(map[string]runtime.Msg, len(inports))
-				for inportName, inportChan := range inports {
-					select {
-					case <-ctx.Done():
-						return
-					case msg := <-inportChan:
-						structure[inportName] = msg
-					}
-				}
+			for inportName, inportChan := range inports {
 				select {
 				case <-ctx.Done():
 					return
-				case outport <- runtime.NewMapMsg(structure):
+				case msg := <-inportChan:
+					structure[inportName] = msg
 				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case outport <- runtime.NewMapMsg(structure):
 			}
 		}
 	}

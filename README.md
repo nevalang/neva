@@ -42,10 +42,10 @@ Replace the code in `src/main.neva` with the following:
 
 ```neva
 component Main(start) (stop) {
-	nodes { Printer<string> }
+	nodes { Println<any> }
 	net {
-		:start -> ('Hello, World!' -> printer:data)
-		printer:sig -> :stop
+		:start -> ('Hello, World!' -> println:data)
+		println:sig -> :stop
 	}
 }
 ```

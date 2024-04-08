@@ -24,28 +24,27 @@ func (portSequencer) Create(
 	}
 
 	return func(ctx context.Context) {
-		// naive implementation that will performe poorly in case
-		// messages arrive in different order
-		// better implementation should have buffer
-		// so we don't block the senders
-		// but still emit messages to stream outport in order
+		var msg runtime.Msg
+
 		for {
 			for _, slot := range portIn {
 				select {
 				case <-ctx.Done():
 					return
-				case msg := <-slot:
-					select {
-					case <-ctx.Done():
-						return
-					case streamOut <- msg:
-					}
+				case msg = <-slot:
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+				case streamOut <- msg:
 				}
 			}
+
 			select {
 			case <-ctx.Done():
 				return
-			case streamOut <- nil: // delimeter
+			case streamOut <- nil:
 			}
 		}
 	}, nil

@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 )
 
@@ -19,16 +20,21 @@ func (p listlen) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 	}
 
 	return func(ctx context.Context) {
+		var data runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewIntMsg(int64(len(data.List()))):
-				}
+			case data = <-dataIn:
+			}
+
+			l := len(data.List())
+
+			select {
+			case <-ctx.Done():
+				return
+			case resOut <- runtime.NewIntMsg(int64(l)):
 			}
 		}
 	}, nil

@@ -21,25 +21,23 @@ func (p println) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 	}
 
 	return func(ctx context.Context) {
+		var data runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case dataMsg := <-dataIn:
-				select {
-				case <-ctx.Done():
-					return
-				default:
-					_, err := fmt.Println(dataMsg)
-					if err != nil {
-						panic(err)
-					}
-					select {
-					case <-ctx.Done():
-						return
-					case sigOut <- dataMsg:
-					}
-				}
+			case data = <-dataIn:
+			}
+
+			if _, err := fmt.Println(data); err != nil {
+				panic(err)
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case sigOut <- data:
 			}
 		}
 	}, nil

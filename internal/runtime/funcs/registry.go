@@ -18,7 +18,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"field":          field{},
 		"struct_builder": structBuilder{},
 		// logic
-		"int_eq": intEq{},
 		"match":  match{},
 		"unwrap": unwrap{},
 		// math
@@ -42,7 +41,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"int_sort":    listSortInt{},
 		"float_sort":  listSortFloat{},
 		"string_sort": listSortString{},
-		"join":        join{},
+		"join":        stringJoin{},
 		// time
 		"time_sleep": timeSleep{},
 		//string
