@@ -15,5 +15,5 @@ component {
     pub Join(data list<string>) (res string)
 
     #extern(split)
-    pub Split(data string) (res list<string>)
+    pub Split(data string, delim string) (res list<string>)
 }
