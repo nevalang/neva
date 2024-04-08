@@ -10,7 +10,6 @@ component Main(start) (stop) {
 			$l -> push:lst,
 			$f -> push:data
 		)
-        push:res -> println:data
-	    println:sig -> :stop
+        push -> println -> :stop
 	}
 }

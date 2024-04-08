@@ -5,9 +5,7 @@ component Main(start) (stop) {
 			'neva' -> split:data,
 			'' -> split:delim
 		)
-		split:res -> join:data
-		join:res -> println:data
-	    println:sig -> :stop
+		split -> join -> println -> :stop
 	}
 }
 

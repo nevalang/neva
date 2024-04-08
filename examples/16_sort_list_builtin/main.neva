@@ -6,8 +6,7 @@ component Main(start any) (stop any) {
         println Println<any>
 	}
 	net {
-		:start -> ($l -> sort:data)
-	    sort:res -> println:data
-	    println:sig -> :stop
+		:start -> ($l -> sort)
+	    sort -> println -> :stop
 	}
 }
