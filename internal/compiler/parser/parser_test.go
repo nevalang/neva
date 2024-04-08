@@ -45,7 +45,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	require.Equal(t, "", receiverPortAddr.Port)
 
 	// 4) lonely -> :port
-	senderPortAddr = net[2].Normal.SenderSide.PortAddr
+	senderPortAddr = net[3].Normal.SenderSide.PortAddr
 	require.Equal(t, "lonely", senderPortAddr.Node)
 	require.Equal(t, "", senderPortAddr.Port)
 }

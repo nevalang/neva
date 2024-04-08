@@ -818,7 +818,16 @@ func parsePortAddr(
 		}
 	}
 
-	if expr.ArrPortAddr() == nil {
+	if expr.LonelyPortAddr() != nil {
+		return src.PortAddr{
+			Node: expr.LonelyPortAddr().PortAddrNode().GetText(),
+			Port: "",
+			Idx:  nil,
+			Meta: meta,
+		}, nil
+	}
+
+	if expr.SinglePortAddr() != nil {
 		return parseSinglePortAddr(fallbackNode, expr.SinglePortAddr(), meta)
 	}
 
@@ -832,18 +841,8 @@ func parsePortAddr(
 	)
 	if err != nil {
 		return src.PortAddr{}, &compiler.Error{
-			Err: err,
-			Meta: &core.Meta{
-				Text: expr.GetText(),
-				Start: core.Position{
-					Line:   expr.GetStart().GetLine(),
-					Column: expr.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   expr.GetStop().GetLine(),
-					Column: expr.GetStop().GetColumn(),
-				},
-			},
+			Err:  err,
+			Meta: &meta,
 		}
 	}
 
