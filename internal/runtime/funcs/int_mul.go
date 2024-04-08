@@ -20,22 +20,29 @@ func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
-		var res int64 = 1
+		var (
+			acc int64 = 1
+			cur runtime.Msg
+		)
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case streamItem := <-seqIn:
-				if streamItem == nil {
-					select {
-					case <-ctx.Done():
-						return
-					case resOut <- runtime.NewIntMsg(res):
-						continue
-					}
-				}
-				res *= streamItem.Int()
+			case cur = <-seqIn:
 			}
+
+			if cur == nil {
+				select {
+				case <-ctx.Done():
+					return
+				case resOut <- runtime.NewIntMsg(acc):
+					acc = 1
+					continue
+				}
+			}
+
+			acc *= cur.Int()
 		}
 	}, nil
 }

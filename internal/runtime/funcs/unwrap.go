@@ -25,24 +25,28 @@ func (unwrap) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
+		var dataMsg runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case dataMsg := <-dataIn:
-				if dataMsg == nil {
-					select {
-					case <-ctx.Done():
-						return
-					case noneOut <- runtime.NewMapMsg(nil):
-					}
-					continue
-				}
+			case dataMsg = <-dataIn:
+			}
+
+			if dataMsg == nil {
 				select {
 				case <-ctx.Done():
 					return
-				case someOut <- dataMsg:
+				case noneOut <- runtime.NewMapMsg(nil):
 				}
+				continue
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case someOut <- dataMsg:
 			}
 		}
 	}, nil

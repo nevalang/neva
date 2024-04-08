@@ -12,50 +12,54 @@ import (
 type intParse struct{}
 
 func (p intParse) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	vin, err := io.In.Port("data")
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
-	vout, err := io.Out.Port("res")
+	resOut, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errout, err := io.Out.Port("err")
+	errOut, err := io.Out.Port("err")
 	if err != nil {
 		return nil, err
-	}
-
-	parseFunc := func(str string) (runtime.Msg, error) {
-		v, err := strconv.Atoi(str)
-		if err != nil {
-			return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
-		}
-		return runtime.NewIntMsg(int64(v)), nil
 	}
 
 	return func(ctx context.Context) {
+		var str runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case str := <-vin:
-				v, err := parseFunc(str.Str())
-				if err != nil {
-					select {
-					case <-ctx.Done():
-						return
-					case errout <- runtime.NewStrMsg(err.Error()):
-					}
-					continue
-				}
+			case str = <-dataIn:
+			}
+
+			parsedNum, err := parse(str.Str())
+			if err != nil {
 				select {
 				case <-ctx.Done():
 					return
-				case vout <- v:
+				case errOut <- runtime.NewStrMsg(err.Error()):
 				}
+				continue
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case resOut <- parsedNum:
 			}
 		}
 	}, nil
+}
+
+func parse(str string) (runtime.Msg, error) {
+	v, err := strconv.Atoi(str)
+	if err != nil {
+		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
+	}
+	return runtime.NewIntMsg(int64(v)), nil
 }

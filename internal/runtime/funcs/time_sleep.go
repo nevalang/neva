@@ -21,17 +21,21 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 	}
 
 	return func(ctx context.Context) {
+		var nsMsg runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case nsMsg := <-nsIn:
-				time.Sleep(time.Duration(nsMsg.Int()))
-				select {
-				case <-ctx.Done():
-					return
-				case sigOut <- nsMsg:
-				}
+			case nsMsg = <-nsIn:
+			}
+
+			time.Sleep(time.Duration(nsMsg.Int()))
+
+			select {
+			case <-ctx.Done():
+				return
+			case sigOut <- nsMsg:
 			}
 		}
 	}, nil

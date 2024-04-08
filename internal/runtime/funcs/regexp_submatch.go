@@ -31,30 +31,39 @@ func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx 
 	}
 
 	return func(ctx context.Context) {
+		var (
+			regexpMsg runtime.Msg
+			dataMsg   runtime.Msg
+		)
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case regexpMsg := <-regexpIn:
-				regex, err := regexp.Compile(regexpMsg.Str())
-				if err != nil {
-					select {
-					case <-ctx.Done():
-						return
-					case errOut <- runtime.NewStrMsg(err.Error()):
-						continue
-					}
-				}
+			case regexpMsg = <-regexpIn:
+			}
+
+			regex, err := regexp.Compile(regexpMsg.Str())
+			if err != nil {
 				select {
 				case <-ctx.Done():
 					return
-				case dataMsg := <-dataIn:
-					resOut <- wrap(
-						regex.FindStringSubmatch(
-							dataMsg.String(),
-						),
-					)
+				case errOut <- runtime.NewStrMsg(err.Error()):
+					continue
 				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case dataMsg = <-dataIn:
+			}
+
+			res := regex.FindStringSubmatch(dataMsg.String())
+
+			select {
+			case <-ctx.Done():
+			case resOut <- wrap(res):
 			}
 		}
 	}, nil

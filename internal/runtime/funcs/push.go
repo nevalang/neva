@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"slices"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -24,19 +25,31 @@ func (p listPush) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 	}
 
 	return func(ctx context.Context) {
+		var (
+			data runtime.Msg
+			lst  runtime.Msg
+		)
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
-				select {
-				case <-ctx.Done():
-					return
-				case lst := <-lstIn:
-					newLst := lst.List()
-					newLst = append(newLst, data)
-					resOut <- runtime.NewListMsg(newLst...)
-				}
+			case data = <-dataIn:
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case lst = <-lstIn:
+			}
+
+			lstCopy := slices.Clone(lst.List())
+			lstCopy = append(lstCopy, data)
+
+			select {
+			case <-ctx.Done():
+				return
+			case resOut <- runtime.NewListMsg(lstCopy...):
 			}
 		}
 	}, nil

@@ -43,55 +43,71 @@ func (printf) handle(
 	tplIn chan runtime.Msg,
 	argsIn []chan runtime.Msg,
 	errOut chan runtime.Msg,
-	argsOut []chan runtime.Msg,
+	argsOuts []chan runtime.Msg,
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
+		var (
+			tpl  runtime.Msg
+			args = make([]runtime.Msg, len(argsIn))
+		)
+
 		for {
-			// get template first
 			select {
 			case <-ctx.Done():
 				return
-			case tpl := <-tplIn:
-				// then get args
-				args := make([]runtime.Msg, 0, len(argsIn))
-				for _, argIn := range argsIn {
-					select {
-					case <-ctx.Done():
-						return
-					case arg := <-argIn:
-						args = append(args, arg)
-					}
+			case tpl = <-tplIn:
+			}
+
+			for i, argIn := range argsIn {
+				select {
+				case <-ctx.Done():
+					return
+				case arg := <-argIn:
+					args[i] = arg
 				}
-				// format the template with the args
-				res, err := formatWithUsageCheck(tpl.Str(), args)
-				if err != nil {
-					errMsg := map[string]runtime.Msg{
-						"text": runtime.NewStrMsg(err.Error()),
-					}
-					// if tpl doesn't match args, then send err and start over
-					select {
-					case <-ctx.Done():
-						return
-					case errOut <- runtime.NewMapMsg(errMsg):
-					}
-					continue
+			}
+
+			res, err := format(tpl.Str(), args)
+			if err != nil {
+				errMsg := map[string]runtime.Msg{
+					"text": runtime.NewStrMsg(err.Error()),
 				}
-				// tpl matches args, print result line
-				fmt.Print(res)
-				// finally send args downstream to signal success
-				for i, argOut := range argsOut {
-					select {
-					case <-ctx.Done():
-						return
-					case argOut <- args[i]:
-					}
+
+				select {
+				case <-ctx.Done():
+					return
+				case errOut <- runtime.NewMapMsg(errMsg):
+				}
+
+				continue
+			}
+
+			if _, err := fmt.Print(res); err != nil {
+				errMsg := map[string]runtime.Msg{
+					"text": runtime.NewStrMsg(err.Error()),
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+				case errOut <- runtime.NewMapMsg(errMsg):
+				}
+
+				continue
+			}
+
+			for i, argOut := range argsOuts {
+				select {
+				case <-ctx.Done():
+					return
+				case argOut <- args[i]:
 				}
 			}
 		}
 	}, nil
 }
 
-func formatWithUsageCheck(tpl string, args []runtime.Msg) (string, error) {
+func format(tpl string, args []runtime.Msg) (string, error) {
 	// Use a map to keep track of which arguments have been used
 	usedArgs := make(map[int]bool)
 

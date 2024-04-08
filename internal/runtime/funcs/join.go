@@ -2,34 +2,41 @@ package funcs
 
 import (
 	"context"
-	"github.com/nevalang/neva/internal/runtime"
 	"strings"
+
+	"github.com/nevalang/neva/internal/runtime"
 )
 
-type join struct{}
+type stringJoin struct{}
 
-func (p join) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p stringJoin) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
+
 	resOut, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
+		var data runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-dataIn:
-				var str strings.Builder
-				for i := 0; i < len(data.List()); i++ {
-					str.WriteString(data.List()[i].String())
-				}
-				resOut <- runtime.NewStrMsg(str.String())
+			case data = <-dataIn:
 			}
+
+			builder := strings.Builder{}
+			list := data.List()
+			for i := range list {
+				builder.WriteString(list[i].Str())
+			}
+
+			resOut <- runtime.NewStrMsg(builder.String())
 		}
 	}, nil
 }

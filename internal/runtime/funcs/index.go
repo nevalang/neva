@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 )
 
@@ -29,26 +30,37 @@ func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 	}
 
 	return func(ctx context.Context) {
+		var listMsg, idxMsg runtime.Msg
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case data := <-listIn:
+			case listMsg = <-listIn:
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case idxMsg = <-indexIn:
+			}
+
+			idx := idxMsg.Int()
+			list := listMsg.List()
+
+			if idx < 0 || idx >= int64(len(list)) {
 				select {
 				case <-ctx.Done():
-				case idx := <-indexIn:
-					select {
-					case <-ctx.Done():
-					default:
-						intIdx := idx.Int()
-						lst := data.List()
-						if intIdx < 0 || intIdx >= int64(len(lst)) {
-							errOut <- runtime.NewStrMsg("Index out of bounds")
-						} else {
-							resOut <- lst[intIdx]
-						}
-					}
+					return
+				case errOut <- runtime.NewStrMsg("Index out of bounds"):
+					continue
 				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case resOut <- list[idx]:
 			}
 		}
 	}, nil
