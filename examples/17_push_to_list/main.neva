@@ -3,7 +3,7 @@ const {
 	f int = 69
 }
 
-component Main(start any) (stop any) {
+component Main(start) (stop) {
 	nodes { Push<any>, Println<any> }
 	net {
 		:start -> (

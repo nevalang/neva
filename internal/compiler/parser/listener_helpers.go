@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -808,6 +809,13 @@ func parsePortAddr(
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
+	}
+
+	if expr.ArrPortAddr() == nil && expr.SinglePortAddr() == nil && expr.LonelyPortAddr() == nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err:  fmt.Errorf("Invalid port address %v", expr.GetText()),
+			Meta: &meta,
+		}
 	}
 
 	if expr.ArrPortAddr() == nil {
