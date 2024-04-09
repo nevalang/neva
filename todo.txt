@@ -1,9 +1,0 @@
-analyzer
-
-if you see port addr with node only
-then check if that node has only one port on that side
-e.g. receiver node has only one inport
-sender has only one outport
-
-if that's not the case - throw error
-otherwise just replace "" with the name of that port
