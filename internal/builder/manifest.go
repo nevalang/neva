@@ -33,10 +33,13 @@ func readManifestYaml(workdir fs.FS) ([]byte, error) {
 
 	rawManifest, err = fs.ReadFile(workdir, "neva.yaml")
 	if err != nil {
+		fmt.Println("!!!", workdir)
+
 		files, readDirErr := fs.ReadDir(workdir, ".")
 		if readDirErr != nil {
 			return nil, fmt.Errorf("fs read dir: %w", readDirErr)
 		}
+
 		for _, file := range files {
 			fmt.Println(file.Name())
 		}
