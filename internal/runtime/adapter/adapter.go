@@ -12,6 +12,7 @@ type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:funlen
 	runtimePorts := make(runtime.Ports, len(irProg.Ports))
+
 	for _, portInfo := range irProg.Ports {
 		runtimePorts[runtime.PortAddr{
 			Path: portInfo.PortAddr.Path,
@@ -22,7 +23,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 	runtimeConnections := make([]runtime.Connection, 0, len(irProg.Connections))
 	for _, conn := range irProg.Connections {
-		senderPortAddr := runtime.PortAddr{ // reference
+		senderPortAddr := runtime.PortAddr{
 			Path: conn.SenderSide.Path,
 			Port: conn.SenderSide.Port,
 			Idx:  uint8(conn.SenderSide.Idx),
@@ -30,7 +31,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:f
 
 		senderPortChan, ok := runtimePorts[senderPortAddr]
 		if !ok {
-			return runtime.Program{}, errors.New("sender port not found")
+			return runtime.Program{}, fmt.Errorf("sender port not found %v", senderPortAddr)
 		}
 
 		meta := runtime.ConnectionMeta{

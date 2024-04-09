@@ -11,13 +11,14 @@ import (
 )
 
 var (
-	ErrStructFieldNotFound    = errors.New("Struct field not found")
-	ErrUnusedOutports         = errors.New("All component's outports are unused")
-	ErrUnusedOutport          = errors.New("Unused outport found")
-	ErrUnusedInports          = errors.New("All component inports are unused")
-	ErrUnusedInport           = errors.New("Unused inport found")
-	ErrLiteralSenderTypeEmpty = errors.New("Literal network sender must contain message value")
-	ErrComplexLiteralSender   = errors.New("Literal network sender must have primitive type")
+	ErrStructFieldNotFound       = errors.New("Struct field not found")
+	ErrUnusedOutports            = errors.New("All component's outports are unused")
+	ErrUnusedOutport             = errors.New("Unused outport found")
+	ErrUnusedInports             = errors.New("All component inports are unused")
+	ErrUnusedInport              = errors.New("Unused inport found")
+	ErrLiteralSenderTypeEmpty    = errors.New("Literal network sender must contain message value")
+	ErrComplexLiteralSender      = errors.New("Literal network sender must have primitive type")
+	ErrInvalidPortlessConnection = errors.New("Connection to a node with more than one port must always has explicit port name")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -55,13 +56,22 @@ func (a Analyzer) analyzeConnections(
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
 	resolvedNet := make([]src.Connection, 0, len(net))
+
 	for _, conn := range net {
-		resolvedConn, err := a.analyzeConnection(conn, compInterface, nodes, nodesIfaces, scope, nodesUsage)
+		resolvedConn, err := a.analyzeConnection(
+			conn,
+			compInterface,
+			nodes,
+			nodesIfaces,
+			scope,
+			nodesUsage,
+		)
 		if err != nil {
 			return nil, err
 		}
 		resolvedNet = append(resolvedNet, resolvedConn)
 	}
+
 	return resolvedNet, nil
 }
 
@@ -98,7 +108,9 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 	nodesUsage map[string]nodeNetUsage,
 ) (src.Connection, *compiler.Error) {
 	// first handle array bypass connection, they are simple
-	if arrBypassConn := conn.ArrayBypass; arrBypassConn != nil {
+	if conn.ArrayBypass != nil {
+		arrBypassConn := conn.ArrayBypass
+
 		senderType, isArray, err := a.getSenderPortAddrType(
 			arrBypassConn.SenderOutport,
 			scope,
@@ -168,8 +180,10 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 		return conn, nil
 	}
 
-	// now handle normal connections, they are complex
+	// now handle normal connections
 	normConn := conn.Normal
+
+	// TODO mark portless connections as used
 
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		normConn.SenderSide,
@@ -382,6 +396,11 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 
 		for inportName := range nodeIface.IO.In {
 			if _, ok := nodeUsage.In[inportName]; !ok {
+				// maybe it's portless connection
+				if _, ok := nodeUsage.In[""]; ok && len(nodeIface.IO.In) == 1 {
+					continue
+				}
+
 				meta := nodeIface.IO.In[inportName].Meta
 				return &compiler.Error{
 					Err:      fmt.Errorf("%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName),
@@ -391,7 +410,7 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 			}
 		}
 
-		if len(nodeIface.IO.Out) == 0 { // std/builtin.Void
+		if len(nodeIface.IO.Out) == 0 { // e.g. std/builtin.Del
 			continue
 		}
 
@@ -402,7 +421,13 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 				break
 			}
 		}
+
 		if !atLeastOneOutportIsUsed {
+			// maybe it's portless connection
+			if _, ok := nodeUsage.Out[""]; ok && len(nodeIface.IO.Out) == 1 {
+				continue
+			}
+
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrUnusedNodeOutports, nodeName),
 				Location: &scope.Location,
@@ -520,6 +545,21 @@ func (a Analyzer) getResolvedPortType(
 	node src.Node,
 	scope src.Scope,
 ) (ts.Expr, bool, *compiler.Error) {
+	if portAddr.Port == "" {
+		if len(ports) > 1 {
+			return ts.Expr{}, false, &compiler.Error{
+				Err:      ErrInvalidPortlessConnection,
+				Location: &scope.Location,
+				Meta:     &portAddr.Meta,
+			}
+		}
+
+		for name := range ports {
+			portAddr.Port = name
+			break
+		}
+	}
+
 	port, ok := ports[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
