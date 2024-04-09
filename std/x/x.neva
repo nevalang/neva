@@ -2,7 +2,7 @@
 // we will organize it later into separate packages
 
 component {
-    #extern(int int_parser, float float_parser)
+    #extern(int parse_int, float parse_float)
     pub ParseNum<T int | float>(data string) (res T, err error)
 
     #extern(scanln)

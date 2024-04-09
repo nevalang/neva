@@ -1,14 +1,11 @@
-component Main(start any) (stop any) {
-	nodes {
-        println Println<any>
-        split Split
-        join Join
-	}
+component Main(start) (stop) {
+	nodes { Println<any>, Split, Join }
 	net {
-		:start -> ('neva' -> split:data)
-		split:res -> join:data
-		join:res -> println:data
-	    println:sig -> :stop
+		:start -> (
+			'neva' -> split:data,
+			'' -> split:delim
+		)
+		split -> join -> println -> :stop
 	}
 }
 

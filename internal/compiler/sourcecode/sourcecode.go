@@ -364,6 +364,8 @@ func (p PortAddr) String() string {
 		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, *p.Idx)
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
+	case hasNode:
+		return fmt.Sprintf("%v:UNKNOWN", p.Node)
 	}
 
 	return "invalid port addr"

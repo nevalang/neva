@@ -137,7 +137,9 @@ connDef: normConnDef | arrBypassConnDef;
 normConnDef: senderSide '->' receiverSide;
 senderSide: singleSenderSide | multipleSenderSide;
 multipleSenderSide:
-	'[' NEWLINE* singleSenderSide (',' NEWLINE* singleSenderSide NEWLINE*)* ']';
+	'[' NEWLINE* singleSenderSide (
+		',' NEWLINE* singleSenderSide NEWLINE*
+	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
 singleSenderSide: (portAddr | senderConstRef | constLit) structSelectors?;
 receiverSide:
@@ -148,7 +150,8 @@ chainedNormConn: normConnDef;
 deferredConn:
 	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: singlePortAddr | arrPortAddr;
+portAddr: singlePortAddr | arrPortAddr | lonelyPortAddr;
+lonelyPortAddr: portAddrNode;
 singlePortAddr: portAddrNode? ':' portAddrPort;
 arrPortAddr: portAddrNode? ':' portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;

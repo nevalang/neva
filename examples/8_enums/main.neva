@@ -1,7 +1,7 @@
 component Main(start any) (stop any) {
     nodes { DayPrinter }
     net {
-        :start -> (Day::Monday -> dayPrinter:day)
+        :start -> (Day::Friday -> dayPrinter:day)
         dayPrinter:sig -> :stop
     }
 }

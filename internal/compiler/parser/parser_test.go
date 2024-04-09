@@ -8,6 +8,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParser_ParseFile_LonelyPorts(t *testing.T) {
+	text := []byte(`
+		component C1() () {
+			:port -> lonely
+			lonely -> :port
+			:port -> lonely -> :port
+		}
+	`)
+
+	p := New(false)
+
+	got, err := p.parseFile(src.Location{}, text)
+	require.True(t, err == nil)
+
+	// 1) :port -> lonely
+	// 2) lonely -> :port
+	// 3) :port -> lonely
+	// 4) lonely -> :port
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 4, len(net))
+
+	// 1) :port -> lonely
+	receiverPortAddr := net[0].Normal.ReceiverSide.Receivers[0].PortAddr
+	require.Equal(t, "lonely", receiverPortAddr.Node)
+	require.Equal(t, "", receiverPortAddr.Port)
+
+	// 2) lonely -> :port
+	senderPortAddr := net[1].Normal.SenderSide.PortAddr
+	require.Equal(t, "lonely", senderPortAddr.Node)
+	require.Equal(t, "", senderPortAddr.Port)
+
+	// 3) :port -> lonely
+	receiverPortAddr = net[2].Normal.ReceiverSide.Receivers[0].PortAddr
+	require.Equal(t, "lonely", receiverPortAddr.Node)
+	require.Equal(t, "", receiverPortAddr.Port)
+
+	// 4) lonely -> :port
+	senderPortAddr = net[3].Normal.SenderSide.PortAddr
+	require.Equal(t, "lonely", senderPortAddr.Node)
+	require.Equal(t, "", senderPortAddr.Port)
+}
+
 func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	text := []byte(`
 		component C1() () { :in -> n1:p1 -> :out }

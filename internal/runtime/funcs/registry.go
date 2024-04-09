@@ -31,7 +31,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"println": println{},
 		"printf":  printf{},
 		// strings
-		"int_parse": intParse{},
+		"parse_int": parseInt{},
 		// regexp
 		"regexp_submatch": regexpSubmatch{},
 		//list

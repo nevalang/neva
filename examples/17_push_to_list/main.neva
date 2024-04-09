@@ -1,15 +1,15 @@
-const l list<int> = [320,420,100,-100,0,5]
-const f int = 69
-component Main(start any) (stop any) {
-	nodes {
-        push Push<any>
-        println Println<any>
-	}
-	net {
-		:start -> ($l -> push:lst)
-        $f -> push:data
-        push:res -> println:data
-	    println:sig -> :stop
+const {
+	l list<int> = [320, 420, 100, -100, 0, 5]
+	f int = 69
+}
 
+component Main(start) (stop) {
+	nodes { Push<any>, Println<any> }
+	net {
+		:start -> (
+			$l -> push:lst,
+			$f -> push:data
+		)
+        push -> println -> :stop
 	}
 }

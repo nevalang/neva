@@ -8,11 +8,6 @@ component Main(start any) (stop any) {
 	}
 	net {
 		:start -> ($l -> index:data, $i -> index:idx)
-	    index:res -> println:data
-	    println:sig -> :stop
-
-        // handle error
-	    index:err -> println:data
-	    println:sig -> :stop
+	    [index:res, index:err] -> println -> :stop
 	}
 }

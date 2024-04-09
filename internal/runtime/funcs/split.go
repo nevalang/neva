@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -13,13 +14,22 @@ func (p split) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
+
+	delimIn, err := io.In.Port("delim")
+	if err != nil {
+		return nil, err
+	}
+
 	resOut, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
+		var (
+			data  runtime.Msg
+			delim runtime.Msg
+		)
 
 		for {
 			select {
@@ -28,16 +38,22 @@ func (p split) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 			case data = <-dataIn:
 			}
 
-			str := data.Str()
-			splitLst := make([]runtime.Msg, 0, len(str))
-			for _, r := range str {
-				splitLst = append(splitLst, runtime.NewStrMsg(string(r)))
+			select {
+			case <-ctx.Done():
+				return
+			case delim = <-delimIn:
+			}
+
+			splitted := strings.Split(data.Str(), delim.Str())
+			res := make([]runtime.Msg, len(splitted))
+			for i, s := range splitted {
+				res[i] = runtime.NewStrMsg(s)
 			}
 
 			select {
 			case <-ctx.Done():
 				return
-			case resOut <- runtime.NewListMsg(splitLst...):
+			case resOut <- runtime.NewListMsg(res...):
 			}
 		}
 	}, nil
