@@ -27,29 +27,49 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 	}
 
 	return func(ctx context.Context) {
-		select {
-		case <-ctx.Done():
-			return
-		case name := <-filename:
+		for {
+			var name runtime.Msg
+			select {
+			case name = <-filename:
+			case <-ctx.Done():
+				return
+			}
+			if name.Type() != runtime.StrMsgType {
+				select {
+				case <-ctx.Done():
+					return
+				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
+					"text": runtime.NewStrMsg("filename must be a string"),
+				}):
+					continue
+				}
+			}
 			f, err := os.Open(name.Str())
 			if err != nil {
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- runtime.NewStrMsg(err.Error()):
-					return
+				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
+					"text": runtime.NewStrMsg(err.Error()),
+				}):
+					continue
 				}
 			}
-			defer f.Close()
 			data, err := io.ReadAll(f)
 			if err != nil {
 				select {
 				case <-ctx.Done():
-				case errPort <- runtime.NewStrMsg(err.Error()):
+					return
+				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
+					"text": runtime.NewStrMsg(err.Error()),
+				}):
+					continue
 				}
 			}
+			f.Close()
 			select {
 			case <-ctx.Done():
+				return
 			case dataPort <- runtime.NewStrMsg(string(data)):
 			}
 		}
