@@ -1,20 +1,13 @@
 import { io }
 
-const {
-  filename string = 'file_writer_example.txt'
-  data string = 'Hello, io.WriteAll!'
-}
-
 component Main(start any) (stop any) {
-  nodes {
-    io.WriteAll
-    Println<error>
-  }
+  nodes { io.WriteAll, Println<any> }
   net {
-    :start -> ($filename -> writeAll:filename, $data -> writeAll:data)
-    writeAll:sig -> :stop
+    :start -> (
+      'file_writer_example.txt' -> writeAll:filename,
+      'Hello, io.WriteAll!' -> writeAll:data
+    )
     writeAll:err -> println:data
-    println:sig -> :stop
+    [writeAll:sig, println:sig] -> :stop
   }
 }
-
