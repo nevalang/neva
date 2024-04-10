@@ -46,5 +46,8 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"time_sleep": timeSleep{},
 		//string
 		"split": split{},
+		// io/file
+		"read_all":  readAll{},
+		"write_all": writeAll{},
 	}
 }
