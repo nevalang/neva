@@ -147,8 +147,7 @@ receiverSide:
 	| singleReceiverSide
 	| multipleReceiverSide;
 chainedNormConn: normConnDef;
-deferredConn:
-	'(' NEWLINE* connDef (',' NEWLINE* connDef)* NEWLINE* ')';
+deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
 portAddr: singlePortAddr | arrPortAddr | lonelyPortAddr;
 lonelyPortAddr: portAddrNode;

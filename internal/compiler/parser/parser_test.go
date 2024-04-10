@@ -8,6 +8,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
+	text := []byte(`
+		component C1() () {
+			:start -> (foo -> bar -> :stop)
+		}
+	`)
+
+	p := New(false)
+
+	got, err := p.parseFile(src.Location{}, text)
+	require.True(t, err == nil)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 2, len(net))
+}
+
 func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	text := []byte(`
 		component C1() () {

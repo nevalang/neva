@@ -3,8 +3,7 @@
 component Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
     net {
-        :start -> (99 -> next:n)
-        next:n -> match:data
+        :start -> (99 -> next:n -> match:data)
         -1 -> match:case[0] -> :stop
         match:else -> next:n
     }

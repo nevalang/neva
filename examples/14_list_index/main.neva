@@ -7,7 +7,10 @@ component Main(start any) (stop any) {
         println Println<any>
 	}
 	net {
-		:start -> ($l -> index:data, $i -> index:idx)
+		:start -> [
+			($l -> index:data),
+			($i -> index:idx)
+		]
 	    [index:res, index:err] -> println -> :stop
 	}
 }

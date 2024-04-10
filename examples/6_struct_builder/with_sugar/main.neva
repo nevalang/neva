@@ -8,10 +8,10 @@ type User struct {
 component Main(start any) (stop any) {
     nodes { Println<User>, builder Struct<User> }
     net {
-        :start -> (
-            'John' -> builder:name,
-            32 -> builder:age
-        )
+        :start -> [
+            ('John' -> builder:name),
+            (32 -> builder:age)
+        ]
         builder:msg -> println:data
         println:sig -> :stop
     }
