@@ -3,10 +3,10 @@ import { regexp }
 component Main(start) (stop) {
     nodes { Println<any>, regexp.Submatch }
     net {
-        :start -> (
-            'a(x*)b(y|z)c' -> submatch:regexp,
-            '-axxxbyc-'    -> submatch:data
-        )
+        :start -> [
+            ('a(x*)b(y|z)c' -> submatch:regexp),
+            ('-axxxbyc-'    -> submatch:data)
+        ]
         submatch:res -> println:data
         println:sig    -> :stop
     }

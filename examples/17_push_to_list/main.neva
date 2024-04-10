@@ -6,10 +6,10 @@ const {
 component Main(start) (stop) {
 	nodes { Push<any>, Println<any> }
 	net {
-		:start -> (
-			$l -> push:lst,
-			$f -> push:data
-		)
+		:start -> [
+			($l -> push:lst),
+			($f -> push:data)
+		]
         push -> println -> :stop
 	}
 }

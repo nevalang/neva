@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -52,8 +51,6 @@ func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Err
 		EntryModRef: rawBuild.EntryModRef,
 		Modules:     parsedMods,
 	}
-
-	// fmt.Println(JSONDump(parsedBuild.Modules[parsedBuild.EntryModRef]))
 
 	mainPkgName = strings.TrimPrefix(mainPkgName, "./")
 
