@@ -47,7 +47,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		//string
 		"split": split{},
 		// io/file
-		"file_reader": fileReader{},
-		"file_writer": fileWriter{},
+		"read_all":  readAll{},
+		"write_all": writeAll{},
 	}
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type fileWriter struct{}
+type writeAll struct{}
 
-func (c fileWriter) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
+func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
 	filename, err := rio.In.Port("filename")
 	if err != nil {
 		return nil, err

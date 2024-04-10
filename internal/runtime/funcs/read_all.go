@@ -8,9 +8,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type fileReader struct{}
+type readAll struct{}
 
-func (c fileReader) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
+func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
 	filename, err := rio.In.Port("filename")
 	if err != nil {
 		return nil, err

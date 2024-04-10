@@ -1,0 +1,19 @@
+import { io }
+
+const filename string = '19_file_readall/main.neva'
+
+component Main(start any) (stop any) {
+  nodes {
+    io.ReadAll
+    Println<string>
+    printerr Println<error>
+  }
+  net {
+    :start -> ($filename -> readAll:filename)
+    readAll:data -> println:data
+    println:sig -> :stop
+    readAll:err -> printerr:data
+    printerr:sig -> :stop
+  }
+}
+

@@ -1,5 +1,5 @@
-#extern(file_reader)
-pub component FileReader(filename string) (data string, err error)
+#extern(read_all)
+pub component ReadAll(filename string) (data string, err error)
 
-#extern(file_writer)
-pub component FileWriter(filename string, data string) (sig any, err error)
+#extern(write_all)
+pub component WriteAll(filename string, data string) (sig any, err error)
