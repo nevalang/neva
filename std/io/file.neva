@@ -1,0 +1,5 @@
+#extern(read_all)
+pub component ReadAll(filename string) (data string, err error)
+
+#extern(write_all)
+pub component WriteAll(filename string, data string) (sig any, err error)
