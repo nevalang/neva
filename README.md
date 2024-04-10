@@ -44,8 +44,7 @@ Replace the code in `src/main.neva` with the following:
 component Main(start) (stop) {
 	nodes { Println<any> }
 	net {
-		:start -> ('Hello, World!' -> println)
-		println -> :stop
+		:start -> ('Hello, World!' -> println -> :stop)
 	}
 }
 ```
