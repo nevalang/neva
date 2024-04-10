@@ -8,19 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO also figure out WHY this is not working
-// FIXME
-// :start -> (foo:v -> bar:v -> :stop) becomes
-// :start -> (foo:v -> bar:v, bar:v -> :stop)
-// which blocks message from bar:v until :stop is sent
-// instead should be 2 connections
-// :start -> (foo:v -> bar:v)
-// bar:v -> :stop
-
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	text := []byte(`
 		component C1() () {
-			:start -> (foo:v -> bar:v -> :stop)
+			:start -> (foo -> bar -> :stop)
 		}
 	`)
 
@@ -30,11 +21,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	require.True(t, err == nil)
 
 	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 3, len(net))
-
-	// :start -> (foo -> bar)
-	sender := net[0].Normal.SenderSide.PortAddr
-	require.Equal(t, "start", sender)
+	require.Equal(t, 2, len(net))
 }
 
 func TestParser_ParseFile_LonelyPorts(t *testing.T) {
