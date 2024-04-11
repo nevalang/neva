@@ -1,5 +1,5 @@
 component Main(start) (stop) {
-	nodes { Mod, Range, Match<int>, Unwrap<int>, Println<any>, Lock<int> }
+	nodes { Mod, Range, Match<int>, Unwrap<int>, Println, Lock<int> }
 	net {
 		:start -> [
             (1 -> range:from),

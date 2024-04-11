@@ -19,8 +19,8 @@ const {
     }
 }
 
-component Main(start any) (stop any) {
-    nodes { Println<NumsStruct> }
+component Main(start) (stop) {
+    nodes { Println }
     net {
         :start -> ($numsStruct -> println:data)
         println:sig -> :stop

@@ -16,8 +16,8 @@ type Day enum {
     Sunday
 }
 
-component DayPrinter(day Day) (sig any) {
-    nodes { Println<Day> }
+component DayPrinter(day Day) (sig) {
+    nodes { Println }
     net {
         :day -> println:data
         println:sig -> :sig

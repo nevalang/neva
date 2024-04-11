@@ -36,7 +36,7 @@ const {
 }
 
 component PrintFirstLine(n int) (n int) {
-    nodes { Match<int>, Println<string>, Printf<int>, Lock<int> }
+    nodes { Match<int>, Println, Printf<int>, Lock<int> }
     net {
         :n -> [match:data, lock:data]
         0 -> match:case[0]
@@ -47,8 +47,7 @@ component PrintFirstLine(n int) (n int) {
         match:else -> printf:args[0]
         $firstLine1 -> printf:tpl
 
-        println:sig -> lock:sig
-        printf:args[0] -> lock:sig
+        [println:sig, printf:args[0]] -> lock:sig
 
         lock:data -> :n
     }
@@ -64,7 +63,7 @@ const {
 }
 
 component PrintSecondLine(n int) (n int) {
-    nodes { Match<int>, Lock<int>, Printf<int>, Println<string> }
+    nodes { Match<int>, Lock<int>, Printf<int>, Println }
     net {
         :n -> [match:data, lock:data]
         -1 -> match:case[0]
