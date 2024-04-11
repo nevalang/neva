@@ -6,7 +6,7 @@ component Main(start any) (stop any) {
 		scanner2 x.Scanln
 		parser1 x.ParseNum<int>
 		parser2 x.ParseNum<int>
-		adder PortReducer<int> { reducer Add<int> }
+		adder PortReducer<int> { Add<int> }
 		println Println<int>
 	}
 	net {
