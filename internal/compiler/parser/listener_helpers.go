@@ -297,7 +297,7 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
-func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
+func parseNodes(actx generated.ICompNodesDefBodyContext, isRootLevel bool) map[string]src.Node {
 	result := map[string]src.Node{}
 
 	for _, node := range actx.AllCompNodeDef() {
@@ -317,13 +317,13 @@ func parseNodes(actx generated.ICompNodesDefBodyContext) map[string]src.Node {
 
 		var deps map[string]src.Node
 		if diArgs := nodeInst.NodeDIArgs(); diArgs != nil {
-			deps = parseNodes(diArgs.CompNodesDefBody())
+			deps = parseNodes(diArgs.CompNodesDefBody(), false)
 		}
 
 		var nodeName string
 		if id := node.IDENTIFIER(); id != nil {
 			nodeName = id.GetText()
-		} else {
+		} else if isRootLevel {
 			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
 		}
 
@@ -753,7 +753,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 
 	var nodes map[string]src.Node
 	if nodesDef := fullBody.CompNodesDef(); nodesDef != nil {
-		nodes = parseNodes(nodesDef.CompNodesDefBody())
+		nodes = parseNodes(nodesDef.CompNodesDefBody(), true)
 	}
 
 	var conns []src.Connection
