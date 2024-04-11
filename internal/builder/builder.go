@@ -52,6 +52,14 @@ func (p Builder) Build( //nolint:funlen
 		{Path: "std", Version: pkg.Version}: stdMod,
 	}
 
+	release, err := acquireLockfile()
+	if err != nil {
+		return compiler.RawBuild{}, &compiler.Error{
+			Err: fmt.Errorf("failed to aquire lock file: %w", err),
+		}
+	}
+	defer release()
+
 	q := newQueue(entryMod.Manifest.Deps)
 
 	for !q.empty() {
