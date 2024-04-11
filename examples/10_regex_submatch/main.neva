@@ -1,7 +1,7 @@
 import { regexp }
 
 component Main(start) (stop) {
-    nodes { Println<any>, regexp.Submatch }
+    nodes { Println, regexp.Submatch }
     net {
         :start -> [
             ('a(x*)b(y|z)c' -> submatch:regexp),

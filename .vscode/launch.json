@@ -84,7 +84,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "3_interfaces/verbose"]
+      "args": ["run", "3_interfaces/0_verbose"]
     },
     {
       "name": "Neva CLI 31",
@@ -93,7 +93,16 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "3_interfaces/with_imports"]
+      "args": ["run", "3_interfaces/1_anonymous"]
+    },
+    {
+      "name": "Neva CLI 32",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "3_interfaces/2_with_imports"]
     },
     {
       "name": "Neva CLI 40",
@@ -161,6 +170,16 @@
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "-debug", "5_add_real_numbers/3_with_multuple_senders"]
+    },
+    // don't forget this example doesn't work in debugger
+    {
+      "name": "Neva CLI 54",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "-debug", "5_add_real_numbers/4_with_default_any"]
     },
     {
       "name": "Neva CLI 60",

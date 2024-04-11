@@ -9,8 +9,8 @@ type {
     Pet struct { name string }
 }
 
-component Main(start any) (stop any) {
-    nodes { UserSender, Println<string> }
+component Main(start) (stop) {
+    nodes { UserSender, Println }
     net {
         :start -> userSender:sig
         userSender:u.pet.name -> println:data
@@ -23,6 +23,6 @@ const user User = {
     pet: { name: 'Charley' }
 }
 
-component UserSender(sig any) (u User) {
+component UserSender(sig) (u User) {
     :sig -> ($user -> :u)
 }

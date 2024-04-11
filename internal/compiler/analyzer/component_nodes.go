@@ -6,6 +6,8 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 //nolint:lll
@@ -117,6 +119,17 @@ func (a Analyzer) analyzeComponentNode(
 			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
+		}
+	}
+
+	// default any
+	if len(resolvedNodeArgs) == 0 && len(nodeIface.TypeParams.Params) == 1 {
+		resolvedNodeArgs = []typesystem.Expr{
+			{
+				Inst: &typesystem.InstExpr{
+					Ref: core.EntityRef{Name: "any"},
+				},
+			},
 		}
 	}
 

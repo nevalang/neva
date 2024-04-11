@@ -4,7 +4,7 @@ const {
 }
 
 component Main(start) (stop) {
-	nodes { Push<any>, Println<any> }
+	nodes { Push, Println }
 	net {
 		:start -> [
 			($l -> push:lst),

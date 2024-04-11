@@ -1,7 +1,7 @@
 import { io }
 
-component Main(start any) (stop any) {
-  nodes { io.WriteAll, Println<any> }
+component Main(start) (stop) {
+  nodes { io.WriteAll, Println }
   net {
     :start -> [
       ('file_writer_example.txt' -> writeAll:filename),

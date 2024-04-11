@@ -22,14 +22,14 @@ const {
 component {
     Main(start any) (stop any) {
         nodes {
-            println Println<string>
+            Println
 
             #bind(path)
-            selector Field<string>
+            Field
         }
         net {
-            :start -> ($user -> selector:msg)
-            selector:msg -> println:data
+            :start -> ($user -> field:msg)
+            field:msg -> println:data
             println:sig -> :stop
         }
     }

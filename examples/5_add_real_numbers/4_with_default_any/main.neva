@@ -2,7 +2,7 @@ import { x }
 
 component {
 	Main(start) (stop) {
-		nodes { Aux, Println<any> }
+		nodes { Aux, Println }
 		net {
 			:start             -> aux:sig
 			[aux:res, aux:err] -> println:data
