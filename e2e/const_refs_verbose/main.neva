@@ -22,6 +22,7 @@ const {
 component Main(start) (stop) {
     nodes { Println }
     net {
-        :start -> ($numsStruct -> println -> :stop)
+        :start -> ($numsStruct -> println:data)
+        println:sig -> :stop
     }
 }

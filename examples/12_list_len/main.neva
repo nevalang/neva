@@ -3,7 +3,6 @@ const lst list<int> = [4, 123, 22, 1121, 215]
 component Main(start) (stop) {
 	nodes { Println, Len<list<int>> }
 	net {
-		:start -> ($lst -> len)
-	    len -> println -> :stop
+		:start -> ($lst -> len -> println -> :stop)
 	}
 }

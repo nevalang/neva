@@ -1,0 +1,13 @@
+component Main(start any) (stop any) {
+	nodes {
+		add PortReducer<int> { Add<int> }
+		Println
+	}
+	net {
+		:start -> [
+			(1 -> add[0]),
+			(2 -> add[1])
+		]
+		add -> println -> :stop
+	}
+}
