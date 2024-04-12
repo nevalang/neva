@@ -1,0 +1,35 @@
+import { x }
+
+component {
+	Main(start) (stop) {
+		nodes { App, Println }
+		net {
+			:start -> app
+			[app:res, app:err] -> println -> :stop
+		}
+	}
+	
+	App(sig) (res int, err error) {
+		nodes {
+			readFirstInt ReadIntFromStdin
+			readSecondInt ReadIntFromStdin
+			add PortReducer<int> { Add<int> }
+		}
+		net {
+			:sig -> readFirstInt
+			readFirstInt:num -> [add[0], readSecondInt]
+			readSecondInt:num -> add[1]
+			[readFirstInt:err, readSecondInt:err] -> :err
+			add -> :res
+		}
+	}
+
+	ReadIntFromStdin(sig) (num int, err error) {
+		nodes { x.Scanln, x.ParseNum<int> }
+		net {
+			:sig -> scanln -> parseNum
+			parseNum:res -> :num
+			parseNum:err -> :err
+		}
+	}
+}

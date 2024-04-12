@@ -1,13 +1,8 @@
 import { x }
 
-component Main(start any) (stop any) {
-	nodes {
-		scanner x.Scanln
-		println Println<string>
-	}
+component Main(start) (stop) {
+	nodes { x.Scanln, Println }
 	net {
-		:start -> scanner:sig
-		scanner:data -> println:data
-		println:sig -> :stop
+		:start -> scanln -> println -> :stop
 	}
 }

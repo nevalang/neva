@@ -5,8 +5,9 @@ component Main(start) (stop) {
     net {
         :start -> [
             ('a(x*)b(y|z)c' -> submatch:regexp),
-            ('-axxxbyc-' -> submatch:data)
+            ('-axxxbyc-'    -> submatch:data)
         ]
-        submatch -> println -> :stop
+        submatch:res -> println:data
+        println:sig    -> :stop
     }
 }

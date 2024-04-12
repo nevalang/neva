@@ -3,7 +3,6 @@ const l list<int> = [50, 30, 20, 100]
 component Main(start any) (stop any) {
 	nodes { Sort<int>, Println }
 	net {
-		:start -> ($l -> sort)
-	    sort -> println -> :stop
+		:start -> ($l -> sort -> println -> :stop)
 	}
 }

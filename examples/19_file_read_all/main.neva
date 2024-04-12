@@ -1,6 +1,6 @@
 import { io }
 
-component Main(start any) (stop any) {
+component Main(start) (stop) {
   nodes { io.ReadAll, Println }
   net {
     :start -> ('19_file_readall/main.neva' -> readAll:filename)

@@ -7,7 +7,7 @@ component Main(start) (stop) {
       ('file_writer_example.txt' -> writeAll:filename),
       ('Hello, io.WriteAll!' -> writeAll:data)
     ]
-    writeAll:err -> println:data
-    [writeAll:sig, println:sig] -> :stop
+    writeAll:err -> println
+    [writeAll:sig, println] -> :stop
   }
 }
