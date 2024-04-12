@@ -1,0 +1,7 @@
+digraph G {
+  {{ template "cluster.dot.tmpl" .Main }}
+
+  {{- range .Edges }}
+  {{ printf "%s -> %s;" .Send.Format .Recv.Format }}
+  {{- end }}
+}
