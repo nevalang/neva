@@ -14,6 +14,12 @@ func (b Builder) Get(workdir, path, version string) (string, error) {
 		Version: version,
 	}
 
+	release, err := acquireLockfile()
+	if err != nil {
+		return "", fmt.Errorf("failed to aquire lock file: %w", err)
+	}
+	defer release()
+
 	downloadPath, actualVersion, err := b.downloadDep(ref)
 	if err != nil {
 		return "", err
