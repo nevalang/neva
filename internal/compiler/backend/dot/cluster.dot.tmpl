@@ -1,0 +1,11 @@
+subgraph cluster_{{.Index}} {
+  label = {{ printf "%q" .Label }};
+
+  {{ range .Nodes -}}
+  {{ .Format }} [shape = plaintext;label = <{{ template "node.html.tmpl" . }}>;];
+  {{ end }}
+
+  {{- range .Clusters -}}
+  {{- template "cluster.dot.tmpl" . -}}
+  {{- end -}}
+}
