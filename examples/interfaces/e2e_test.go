@@ -9,20 +9,20 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("../..")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "4_math/1_add_nums_with_bridge")
+	cmd := exec.Command("neva", "run", "3_interfaces/2_with_imports")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"3\n",
+		"<empty>\n",
 		string(out),
 	)
 
