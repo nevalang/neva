@@ -9,6 +9,8 @@ import (
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
+var ErrEmptyConnDef error = errors.New("Connection must be either normal or array bypass")
+
 func parseNet(actx generated.ICompNetBodyContext) (
 	[]src.Connection,
 	*compiler.Error,
@@ -47,8 +49,9 @@ func parseConn(connDef generated.IConnDefContext) (
 	arrBypassConn := connDef.ArrBypassConnDef()
 
 	if normConn == nil && arrBypassConn == nil {
+
 		return nil, &compiler.Error{
-			Err:  errors.New("Connection must be either normal or array bypass"),
+			Err:  ErrEmptyConnDef,
 			Meta: &connMeta,
 		}
 	}

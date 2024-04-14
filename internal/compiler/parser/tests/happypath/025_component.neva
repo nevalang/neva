@@ -292,3 +292,4 @@ component Main() () {
     :foo -> :bar
     :baz -> :bax
 }
+
