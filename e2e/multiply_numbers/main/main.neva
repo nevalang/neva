@@ -9,6 +9,6 @@ component Main(start) (stop) {
 			(2 -> mul[1]),
 			(3 -> mul[2])
 		]
-		seq -> println -> :stop
+		mul -> println -> :stop
 	}
 }
