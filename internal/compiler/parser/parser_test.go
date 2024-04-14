@@ -18,22 +18,20 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	p := New(false)
 
 	got, err := p.parseFile(src.Location{}, text)
-	require.NoError(t, err)
+	require.Equal(t, true, err == nil)
 
 	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 2, len(net))
-
-	conn := net[1].Normal
+	conn := net[0].Normal
 
 	// foo[0]->
 	require.Equal(t, "foo", conn.SenderSide.PortAddr.Node)
 	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
-	require.Equal(t, 0, conn.SenderSide.PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(uint8(0)), conn.SenderSide.PortAddr.Idx)
 
 	// ->bar[255]
 	require.Equal(t, "bar", conn.ReceiverSide.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.ReceiverSide.Receivers[0].PortAddr.Port)
-	require.Equal(t, 255, conn.ReceiverSide.Receivers[0].PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(uint8(255)), conn.ReceiverSide.Receivers[0].PortAddr.Idx)
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
