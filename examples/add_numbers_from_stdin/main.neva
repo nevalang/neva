@@ -13,7 +13,7 @@ component {
 		nodes {
 			readFirstInt ReadIntFromStdin
 			readSecondInt ReadIntFromStdin
-			add PortReducer<int> { Add<int> }
+			add Reduce<int> { Add<int> }
 		}
 		net {
 			:sig -> readFirstInt

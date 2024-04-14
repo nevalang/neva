@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -9,10 +8,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()

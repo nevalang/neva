@@ -1,28 +1,21 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	cmd := exec.Command("neva", "run", "4_math/1_add_nums_with_bridge")
+// Check that math example with multiplying numbers by using port bridge works as expected.
+func TestMathMultiplyNumbers(t *testing.T) {
+	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"3\n",
+		"6\n",
 		string(out),
 	)
 

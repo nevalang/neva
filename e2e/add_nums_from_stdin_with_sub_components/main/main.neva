@@ -15,7 +15,7 @@ component {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
-			adder PortReducer<int> { Add<int> }
+			adder Reduce<int> { Add<int> }
 		}
 		net {
 			:sig -> reader1:sig

@@ -21,10 +21,13 @@ For Mac OS and Linux:
 ```bash
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
+
 if you device connected to China network:
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
+
 For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from releases if installed won't work):
 
 ```batch
@@ -42,12 +45,14 @@ Replace the code in `src/main.neva` with the following:
 
 ```neva
 component Main(start) (stop) {
-	nodes { Println<any> }
+	nodes { Println }
 	net {
 		:start -> ('Hello, World!' -> println -> :stop)
 	}
 }
 ```
+
+Here we define _component_ `Main` with _inport_ `start` and _outport_ `stop`. It has 1 _node_ `println` that's an _instance_ of `Println` component. Then we define _network_ - set of connections that describe dataflow - when message from `start` received, a string literal "Hello, World!" is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
 
 ### Execute
 
@@ -63,7 +68,11 @@ You should see the following output:
 Hello, World!
 ```
 
-[Learn how to generate native code or Go](https://nevalang.org/docs/quick-start)
+### What's Next?
+
+- [See more examples](./examples/)
+- [Learn how to generate native code, Go or other targets](https://nevalang.org/docs/quick-start)
+- [Learn more about the language](https://nevalang.org/docs/about)
 
 ## Features 🚀
 
@@ -77,8 +86,6 @@ Hello, World!
 - Builtin Observability
 - Package Management
 - Garbage Collection
-
-[Learn more about the language](https://nevalang.org/docs/about)
 
 Please note that even though these features are technically implemented, **developer-experience may be bad** due to current project state. **No backward-compatibility** guarantees at the time.
 
@@ -97,21 +104,23 @@ Nevalang is at an extremely early stage but with the help of community it can be
 
 [See backlog for more details](https://github.com/orgs/nevalang/projects)
 
-Nevalang needs your help - it currently has only one maintainer.
+Nevalang needs your help - it currently just a few maintainers.
 
 ## Community
 
-Join community. **Together** we can change programming for the better:
+Join community. Together we can change programming for the better:
 
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
 - [Telegram channel](https://t.me/+H1kRClL8ppI1MWJi)
 
+Also please check our [CoC](./CODE_OF_CONDUCT.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-Neva is a relatively small and simple language compared to many other statically typed compiled languages out there. Don't be intimidated, feel free to dive in and hack around!
+Neva is a relatively small and simple language. Don't be intimidated, feel free to dive in and hack around. Some directories have a `README.md`.
 
-Please note that, due to the early stage of development, the documentation can sometimes be outdated. Please reach maintainer if you have questions.
+Note that, due to the early stage of development, the documentation can sometimes be outdated. Feel free to reach maintainers if you need _any_ help.

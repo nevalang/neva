@@ -1,21 +1,22 @@
 package test
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("../")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "18_split_join_string")
+	cmd := exec.Command("neva", "run", "split_join_string")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
