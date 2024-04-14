@@ -384,7 +384,7 @@ func parsePortAddr(
 	}
 
 	if expr.LonelyArrPortAddr() != nil {
-		idxStr := expr.ArrPortAddr().PortAddrIdx()
+		idxStr := expr.LonelyArrPortAddr().PortAddrIdx()
 		withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
 
 		idxUint, err := strconv.ParseUint(
