@@ -259,8 +259,11 @@ type nevaListener interface {
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
-	// EnterLonelyPortAddr is called when entering the lonelyPortAddr production.
-	EnterLonelyPortAddr(c *LonelyPortAddrContext)
+	// EnterLonelySinglePortAddr is called when entering the lonelySinglePortAddr production.
+	EnterLonelySinglePortAddr(c *LonelySinglePortAddrContext)
+
+	// EnterLonelyArrPortAddr is called when entering the lonelyArrPortAddr production.
+	EnterLonelyArrPortAddr(c *LonelyArrPortAddrContext)
 
 	// EnterSinglePortAddr is called when entering the singlePortAddr production.
 	EnterSinglePortAddr(c *SinglePortAddrContext)
@@ -538,8 +541,11 @@ type nevaListener interface {
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
 
-	// ExitLonelyPortAddr is called when exiting the lonelyPortAddr production.
-	ExitLonelyPortAddr(c *LonelyPortAddrContext)
+	// ExitLonelySinglePortAddr is called when exiting the lonelySinglePortAddr production.
+	ExitLonelySinglePortAddr(c *LonelySinglePortAddrContext)
+
+	// ExitLonelyArrPortAddr is called when exiting the lonelyArrPortAddr production.
+	ExitLonelyArrPortAddr(c *LonelyArrPortAddrContext)
 
 	// ExitSinglePortAddr is called when exiting the singlePortAddr production.
 	ExitSinglePortAddr(c *SinglePortAddrContext)

@@ -149,8 +149,9 @@ receiverSide:
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: singlePortAddr | arrPortAddr | lonelyPortAddr;
-lonelyPortAddr: portAddrNode;
+portAddr: singlePortAddr | arrPortAddr | lonelySinglePortAddr | lonelyArrPortAddr;
+lonelySinglePortAddr: portAddrNode;
+lonelyArrPortAddr: portAddrNode portAddrIdx;
 singlePortAddr: portAddrNode? ':' portAddrPort;
 arrPortAddr: portAddrNode? ':' portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;

@@ -373,18 +373,47 @@ func parsePortAddr(
 		},
 	}
 
-	if expr.ArrPortAddr() == nil && expr.SinglePortAddr() == nil && expr.LonelyPortAddr() == nil {
+	if expr.ArrPortAddr() == nil &&
+		expr.SinglePortAddr() == nil &&
+		expr.LonelySinglePortAddr() == nil &&
+		expr.LonelyArrPortAddr() == nil {
 		return src.PortAddr{}, &compiler.Error{
 			Err:  fmt.Errorf("Invalid port address %v", expr.GetText()),
 			Meta: &meta,
 		}
 	}
 
-	if expr.LonelyPortAddr() != nil {
+	if expr.LonelyArrPortAddr() != nil {
+		idxStr := expr.ArrPortAddr().PortAddrIdx()
+		withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
+
+		idxUint, err := strconv.ParseUint(
+			withoutSquareBraces,
+			10,
+			8,
+		)
+		if err != nil {
+			return src.PortAddr{}, &compiler.Error{
+				Err:  err,
+				Meta: &meta,
+			}
+		}
+
+		idxUint8 := uint8(idxUint)
+
 		return src.PortAddr{
-			Node: expr.LonelyPortAddr().PortAddrNode().GetText(),
+			Node: expr.LonelyArrPortAddr().PortAddrNode().GetText(),
 			Port: "",
-			Idx:  nil,
+			Idx:  &idxUint8,
+			Meta: meta,
+		}, nil
+	}
+
+	if expr.LonelySinglePortAddr() != nil {
+		return src.PortAddr{
+			Node: expr.LonelySinglePortAddr().PortAddrNode().GetText(),
+			Port: "",
+			// Idx:  &idxUint8,
 			Meta: meta,
 		}, nil
 	}
