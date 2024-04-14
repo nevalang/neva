@@ -48,7 +48,7 @@ func parseConn(connDef generated.IConnDefContext) (
 
 	if normConn == nil && arrBypassConn == nil {
 		return nil, &compiler.Error{
-			Err:  errors.New("Invalid connection"),
+			Err:  errors.New("Connection must be either normal or array bypass"),
 			Meta: &connMeta,
 		}
 	}

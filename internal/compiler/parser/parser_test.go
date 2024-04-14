@@ -8,6 +8,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
+	text := []byte(`
+		component C1() () {
+			foo[0] -> bar[255]
+		}
+	`)
+
+	p := New(false)
+
+	got, err := p.parseFile(src.Location{}, text)
+	require.NoError(t, err)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 2, len(net))
+
+	conn := net[1].Normal
+
+	// foo[0]->
+	require.Equal(t, "foo", conn.SenderSide.PortAddr.Node)
+	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
+	require.Equal(t, 0, conn.SenderSide.PortAddr.Idx)
+
+	// ->bar[255]
+	require.Equal(t, "bar", conn.ReceiverSide.Receivers[0].PortAddr.Node)
+	require.Equal(t, "", conn.ReceiverSide.Receivers[0].PortAddr.Port)
+	require.Equal(t, 255, conn.ReceiverSide.Receivers[0].PortAddr.Idx)
+}
+
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	text := []byte(`
 		component C1() () {

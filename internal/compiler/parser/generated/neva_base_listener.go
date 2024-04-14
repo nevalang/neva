@@ -524,11 +524,17 @@ func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 // ExitPortAddr is called when production portAddr is exited.
 func (s *BasenevaListener) ExitPortAddr(ctx *PortAddrContext) {}
 
-// EnterLonelyPortAddr is called when production lonelyPortAddr is entered.
-func (s *BasenevaListener) EnterLonelyPortAddr(ctx *LonelyPortAddrContext) {}
+// EnterLonelySinglePortAddr is called when production lonelySinglePortAddr is entered.
+func (s *BasenevaListener) EnterLonelySinglePortAddr(ctx *LonelySinglePortAddrContext) {}
 
-// ExitLonelyPortAddr is called when production lonelyPortAddr is exited.
-func (s *BasenevaListener) ExitLonelyPortAddr(ctx *LonelyPortAddrContext) {}
+// ExitLonelySinglePortAddr is called when production lonelySinglePortAddr is exited.
+func (s *BasenevaListener) ExitLonelySinglePortAddr(ctx *LonelySinglePortAddrContext) {}
+
+// EnterLonelyArrPortAddr is called when production lonelyArrPortAddr is entered.
+func (s *BasenevaListener) EnterLonelyArrPortAddr(ctx *LonelyArrPortAddrContext) {}
+
+// ExitLonelyArrPortAddr is called when production lonelyArrPortAddr is exited.
+func (s *BasenevaListener) ExitLonelyArrPortAddr(ctx *LonelyArrPortAddrContext) {}
 
 // EnterSinglePortAddr is called when production singlePortAddr is entered.
 func (s *BasenevaListener) EnterSinglePortAddr(ctx *SinglePortAddrContext) {}
