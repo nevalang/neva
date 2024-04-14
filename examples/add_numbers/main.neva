@@ -1,6 +1,6 @@
-component Main(start any) (stop any) {
+component Main(start) (stop) {
 	nodes {
-		add PortReducer<int> { Add<int> }
+		add Reduce<int> { Add<int> }
 		Println
 	}
 	net {
@@ -11,3 +11,6 @@ component Main(start any) (stop any) {
 		add -> println -> :stop
 	}
 }
+
+
+print(1+2)

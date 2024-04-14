@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "2_hello_world/5_with_implicit_any")
+	cmd := exec.Command("neva", "run", "hello_world")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)

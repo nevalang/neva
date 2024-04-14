@@ -60,6 +60,8 @@ flowchart LR
 
 ### Connector Algorithm
 
+> WARNING: Algorithm has changed, update is needed.
+
 ```mermaid
 flowchart TB
     cond{are there still connections?}

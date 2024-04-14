@@ -6,14 +6,16 @@ component Main(start any) (stop any) {
 		scanner2 x.Scanln
 		parser1 x.ParseNum<int>
 		parser2 x.ParseNum<int>
-		adder PortReducer<int> { Add<int> }
-		println Println<int>
+		adder Reduce<int> { Add<int> }
+		println Println<any>
 	}
 	net {
 		:start -> scanner1:sig
-		scanner1:data-> parser1:data
+		scanner1:data -> parser1:data
+		parser1:err -> println:data
 		parser1:res -> [adder:port[0], scanner2:sig]
 		scanner2:data -> parser2:data
+		parser2:err -> println:data
 		parser2:res -> adder:port[1]
 		adder:res -> println:data
 		println:sig -> :stop

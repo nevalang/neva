@@ -9,14 +9,14 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("../")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "9_const_refs")
+	cmd := exec.Command("neva", "run", "const_refs")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)

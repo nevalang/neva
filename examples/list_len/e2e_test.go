@@ -10,14 +10,14 @@ import (
 
 // Check that Len component works with the list of integers.
 func Test(t *testing.T) {
-	err := os.Chdir("../")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "12_list_len")
+	cmd := exec.Command("neva", "run", "list_len")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)

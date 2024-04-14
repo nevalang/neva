@@ -10,14 +10,14 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("../")
+	err := os.Chdir("..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "15_time_sleep")
+	cmd := exec.Command("neva", "run", "time_sleep")
 
 	before := time.Now()
 	out, err := cmd.CombinedOutput()

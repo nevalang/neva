@@ -6,7 +6,7 @@ pub component PortSequencer<T>([port] T) (seq maybe<T>)
 pub interface ISeqReducer<T>(seq maybe<T>) (res T)
 
 // reduce array-port to single message
-pub component PortReducer<T>([port] T) (res T) {
+pub component Reduce<T>([port] T) (res T) {
     nodes {
         reducer   ISeqReducer<T>
         sequencer PortSequencer<T>
