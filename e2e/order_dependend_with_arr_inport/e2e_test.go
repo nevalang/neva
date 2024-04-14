@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -9,10 +8,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	// we do 100 attempts because there was a floating bug
 	// caused by unordered map that was
 	for i := 0; i < 100; i++ {
