@@ -16,7 +16,7 @@ func (b Builder) Get(workdir, path, version string) (string, error) {
 
 	release, err := acquireLockfile()
 	if err != nil {
-		return "", fmt.Errorf("failed to aquire lock file: %w", err)
+		return "", fmt.Errorf("failed to acquire lock file: %w", err)
 	}
 	defer release()
 
@@ -25,7 +25,7 @@ func (b Builder) Get(workdir, path, version string) (string, error) {
 		return "", err
 	}
 
-	manifest, err := b.retrieveManifest(os.DirFS(workdir))
+	manifest, err := b.getNearestManifest(os.DirFS(workdir), "/")
 	if err != nil {
 		return "", fmt.Errorf("Retrieve manifest: %w", err)
 	}
