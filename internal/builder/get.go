@@ -3,12 +3,11 @@ package builder
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-func (b Builder) Get(workdir, path, version string) (string, error) {
+func (b Builder) Get(wd, path, version string) (string, error) {
 	ref := src.ModuleRef{
 		Path:    path,
 		Version: version,
@@ -25,7 +24,7 @@ func (b Builder) Get(workdir, path, version string) (string, error) {
 		return "", err
 	}
 
-	manifest, err := b.getNearestManifest(os.DirFS(workdir), "/")
+	manifest, err := b.getNearestManifest(wd)
 	if err != nil {
 		return "", fmt.Errorf("Retrieve manifest: %w", err)
 	}
@@ -42,7 +41,7 @@ func (b Builder) Get(workdir, path, version string) (string, error) {
 		Version: actualVersion,
 	}
 
-	if err := b.writeManifest(manifest, workdir); err != nil {
+	if err := b.writeManifest(manifest, wd); err != nil {
 		return "", err
 	}
 

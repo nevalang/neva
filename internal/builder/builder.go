@@ -29,7 +29,7 @@ func (b Builder) Build(
 	wd string,
 ) (compiler.RawBuild, *compiler.Error) {
 	// load user's module from disk
-	entryMod, err := b.LoadModuleByPath(ctx, os.DirFS(fsRoot), wd)
+	entryMod, err := b.LoadModuleByPath(ctx, wd)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
@@ -43,7 +43,7 @@ func (b Builder) Build(
 	}
 
 	// load stdlib module
-	stdMod, err := b.LoadModuleByPath(ctx, os.DirFS(b.stdLibPath), "/")
+	stdMod, err := b.LoadModuleByPath(ctx, b.stdLibPath)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
@@ -72,14 +72,14 @@ func (b Builder) Build(
 			continue
 		}
 
-		depPath, _, err := b.downloadDep(depModRef)
+		depWD, _, err := b.downloadDep(depModRef)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("download dep: %w", err),
 			}
 		}
 
-		depMod, err := b.LoadModuleByPath(ctx, os.DirFS(depPath), "/")
+		depMod, err := b.LoadModuleByPath(ctx, depWD)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("build dep mod: %w", err),
