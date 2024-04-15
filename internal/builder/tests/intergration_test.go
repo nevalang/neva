@@ -13,7 +13,7 @@ func TestBuilder(t *testing.T) {
 	prsr := parser.New(false)
 	bldr := builder.MustNew(prsr)
 
-	build, err := bldr.Build(context.Background(), "testmod")
+	build, err := bldr.Build(context.Background(), "testmod", "/")
 	require.True(t, err == nil)
 
 	mod, ok := build.Modules[build.EntryModRef]
