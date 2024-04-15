@@ -11,14 +11,18 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 )
 
-func (p Builder) LoadModuleByPath(ctx context.Context, workdir fs.FS) (compiler.RawModule, error) {
-	manifest, err := p.retrieveManifest(workdir)
+func (p Builder) LoadModuleByPath(
+	ctx context.Context,
+	filesys fs.FS,
+	wd string,
+) (compiler.RawModule, error) {
+	manifest, err := p.getNearestManifest(filesys, wd)
 	if err != nil {
 		return compiler.RawModule{}, fmt.Errorf("retrieve manifest: %w", err)
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
-	if err := retrieveSourceCode(workdir, ".", pkgs); err != nil {
+	if err := retrieveSourceCode(filesys, ".", pkgs); err != nil {
 		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
