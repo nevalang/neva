@@ -56,7 +56,11 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 
 	var result *ts.Expr
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
-		result = parseTypeInstExpr(instExpr)
+		var err error
+		result, err = parseTypeInstExpr(instExpr)
+		if err != nil {
+			panic(err)
+		}
 	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
 		result = parseUnionExpr(unionExpr)
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
@@ -111,7 +115,11 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 
 	for _, subExpr := range subExprs {
 		if instExpr := subExpr.TypeInstExpr(); instExpr != nil {
-			parsedSubExprs = append(parsedSubExprs, *parseTypeInstExpr(instExpr))
+			parsedTypeInstExpr, err := parseTypeInstExpr(instExpr)
+			if err != nil {
+				panic(err)
+			}
+			parsedSubExprs = append(parsedSubExprs, *parsedTypeInstExpr)
 		}
 		if unionExpr := subExpr.TypeLitExpr(); unionExpr != nil {
 			parsedSubExprs = append(parsedSubExprs, *parseLitExpr(subExpr.TypeLitExpr()))
@@ -175,10 +183,23 @@ func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
 	return &result
 }
 
-func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
+func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *compiler.Error) {
 	parsedRef, err := parseEntityRef(instExpr.EntityRef())
 	if err != nil {
-		panic(err)
+		return nil, &compiler.Error{
+			Err: err,
+			Meta: &core.Meta{
+				Text: instExpr.GetText(),
+				Start: core.Position{
+					Line:   instExpr.GetStart().GetLine(),
+					Column: instExpr.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   instExpr.GetStop().GetLine(),
+					Column: instExpr.GetStop().GetColumn(),
+				},
+			},
+		}
 	}
 
 	result := ts.Expr{
@@ -189,7 +210,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 
 	args := instExpr.TypeArgs()
 	if args == nil {
-		return &result
+		return &result, nil
 	}
 
 	argExprs := args.AllTypeExpr()
@@ -199,7 +220,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) *ts.Expr {
 	}
 	result.Inst.Args = parsedArgs
 
-	return &result
+	return &result, nil
 }
 
 func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, error) {

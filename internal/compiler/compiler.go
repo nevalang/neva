@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"context"
+	"path"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -31,9 +32,12 @@ func (c Compiler) Compile(
 	return c.backend.Emit(dstPath, ir)
 }
 
-// CompileToIR compiles to intermediate representation
 func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Error) {
-	rawBuild, err := c.builder.Build(context.Background(), src)
+	rawBuild, err := c.builder.Build(
+		context.Background(),
+		src,
+		path.Join(src, mainPkgName),
+	)
 	if err != nil {
 		return nil, Error{
 			Location: &sourcecode.Location{
