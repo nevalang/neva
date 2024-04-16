@@ -49,5 +49,10 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// io/file
 		"read_all":  readAll{},
 		"write_all": writeAll{},
+		// image
+		"image_decode": imageDecode{},
+		"image_draw":   imageDraw{},
+		"image_encode": imageEncode{},
+		"image_new":    imageNew{},
 	}
 }

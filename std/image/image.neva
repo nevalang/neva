@@ -1,0 +1,47 @@
+// RGBA represents a color in the RGBA 64-bit color space.
+pub type RGBA struct {
+  r int
+  g int
+  b int
+  a int
+}
+
+// Pixel represents an RGBA color at a given Point.
+pub type Pixel struct {
+  x int
+  y int
+  color RGBA
+}
+
+// Format used for Encode and Decode on images.
+pub type Format enum {
+  Raw,
+  PNG,
+  JPEG
+}
+
+pub type Image struct {
+  pixels string
+  width int
+  height int
+}
+
+// New creates a new transparent RGBA image with the given bounds.
+#extern(image_new)
+pub component New(width int, height int) (img Image)
+
+// Draw the Pixel stream seq over an existing image Pixel stream using the given clipping bounds.
+#extern(image_draw)
+pub component Draw(dst Image, src Image) (img Image)
+
+// SubImage returns a subimage between the input points (p0, p1).
+#extern(image_subimage)
+pub component SubImage(img Image, x0 int, y0 int, x1 int, y1 int) (img Image)
+
+// Decode an image from data using the given Format and outputs a Pixel stream.
+#extern(image_decode)
+pub component Decode(fmt Format, data string) (img Image, err error)
+
+// Encode a Pixel stream using the given Format and output image data.
+#extern(image_encode)
+pub component Encode(fmt Format, bounds Bounds, img Image) (data string)
