@@ -66,5 +66,10 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"write_all": writeAll{},
 		// http
 		"http_get": httpGet{},
+		// image
+		"image_decode": imageDecode{},
+		"image_draw":   imageDraw{},
+		"image_encode": imageEncode{},
+		"image_new":    imageNew{},
 	}
 }
