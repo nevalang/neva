@@ -11,6 +11,3 @@ component Main(start) (stop) {
 		add -> println -> :stop
 	}
 }
-
-
-print(1+2)
