@@ -29,13 +29,9 @@ func (e Error) unwrap() Error {
 func (e Error) Error() string {
 	e = e.unwrap()
 
+	hasErr := e.Err != nil
 	hasMeta := e.Meta != nil
 	hasLocation := e.Location != nil
-	hasErr := e.Err != nil
-
-	if _, ok := e.Err.(*Error); ok {
-		panic("internal error")
-	}
 
 	switch {
 	case hasLocation && hasMeta:

@@ -62,8 +62,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 
 	var result *ts.Expr
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
-		var err error
-		result, err = parseTypeInstExpr(instExpr)
+		v, err := parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Err: err,
@@ -80,6 +79,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 				},
 			}
 		}
+		result = v
 	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
 		v, err := parseUnionExpr(unionExpr)
 		if err != nil {
