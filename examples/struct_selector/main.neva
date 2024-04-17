@@ -10,8 +10,8 @@ component Main(start) (stop) {
     nodes { UserSender, Println }
     net {
         :start -> userSender
-        userSender.pet.name -> println -> :stop
-        
+        userSender.pet.name -> println // https://github.com/nevalang/neva/issues/558
+        println -> :stop
     }
 }
 

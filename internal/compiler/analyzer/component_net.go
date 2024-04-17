@@ -158,8 +158,6 @@ func (a Analyzer) analyzeConnection(
 	// now handle normal connections
 	normConn := conn.Normal
 
-	// TODO mark portless connections as used (?)
-
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		normConn.SenderSide,
 		compInterface,
@@ -333,6 +331,7 @@ func (Analyzer) checkNetPortsUsage(
 			Meta:     &compInterface.Meta,
 		}
 	}
+
 	for inportName := range compInterface.IO.In {
 		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
 			return &compiler.Error{
@@ -377,8 +376,11 @@ func (Analyzer) checkNetPortsUsage(
 				}
 
 				meta := nodeIface.IO.In[inportName].Meta
+
 				return &compiler.Error{
-					Err:      fmt.Errorf("%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName),
+					Err: fmt.Errorf(
+						"%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName,
+					),
 					Location: &scope.Location,
 					Meta:     &meta,
 				}
