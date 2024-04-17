@@ -160,6 +160,9 @@ type nevaListener interface {
 	// EnterConstLit is called when entering the constLit production.
 	EnterConstLit(c *ConstLitContext)
 
+	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
+	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
+
 	// EnterNil is called when entering the nil production.
 	EnterNil(c *NilContext)
 
@@ -441,6 +444,9 @@ type nevaListener interface {
 
 	// ExitConstLit is called when exiting the constLit production.
 	ExitConstLit(c *ConstLitContext)
+
+	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
+	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
 
 	// ExitNil is called when exiting the nil production.
 	ExitNil(c *NilContext)

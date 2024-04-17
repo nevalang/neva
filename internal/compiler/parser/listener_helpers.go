@@ -594,6 +594,133 @@ func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrCont
 	}, nil
 }
 
+func parsePrimitiveConstLiteral(
+	lit generated.IPrimitiveConstLitContext,
+) (src.Message, *compiler.Error) {
+	msg := src.Message{
+		Meta: core.Meta{
+			Text: lit.GetText(),
+			Start: core.Position{
+				Line:   lit.GetStart().GetLine(),
+				Column: lit.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   lit.GetStop().GetLine(),
+				Column: lit.GetStop().GetColumn(),
+			},
+		},
+	}
+
+	switch {
+	case lit.Bool_() != nil:
+		boolVal := lit.Bool_().GetText()
+		if boolVal != "true" && boolVal != "false" {
+			return src.Message{}, &compiler.Error{
+				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
+				Meta: &core.Meta{
+					Text: lit.GetText(),
+					Start: core.Position{
+						Line:   lit.GetStart().GetLine(),
+						Column: lit.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   lit.GetStop().GetLine(),
+						Column: lit.GetStop().GetColumn(),
+					},
+				},
+			}
+		}
+		msg.TypeExpr.Inst = &ts.InstExpr{
+			Ref: core.EntityRef{Name: "bool"},
+		}
+		msg.Bool = compiler.Pointer(boolVal == "true")
+	case lit.INT() != nil:
+		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
+		if err != nil {
+			return src.Message{}, &compiler.Error{
+				Err:      err,
+				Location: &src.Location{},
+				Meta: &core.Meta{
+					Text: lit.GetText(),
+					Start: core.Position{
+						Line:   lit.GetStart().GetLine(),
+						Column: lit.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   lit.GetStop().GetLine(),
+						Column: lit.GetStop().GetColumn(),
+					},
+				},
+			}
+		}
+		msg.TypeExpr.Inst = &ts.InstExpr{
+			Ref: core.EntityRef{Name: "int"},
+		}
+		if lit.MINUS() != nil {
+			parsedInt = -parsedInt
+		}
+		msg.Int = compiler.Pointer(int(parsedInt))
+	case lit.FLOAT() != nil:
+		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
+		if err != nil {
+			return src.Message{}, &compiler.Error{
+				Err: err,
+				Meta: &core.Meta{
+					Text: lit.GetText(),
+					Start: core.Position{
+						Line:   lit.GetStart().GetLine(),
+						Column: lit.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   lit.GetStop().GetLine(),
+						Column: lit.GetStop().GetColumn(),
+					},
+				},
+			}
+		}
+		msg.TypeExpr.Inst = &ts.InstExpr{
+			Ref: core.EntityRef{Name: "float"},
+		}
+		if lit.MINUS() != nil {
+			parsedFloat = -parsedFloat
+		}
+		msg.Float = &parsedFloat
+	case lit.STRING() != nil:
+		msg.Str = compiler.Pointer(
+			strings.Trim(
+				strings.ReplaceAll(
+					lit.STRING().GetText(),
+					"\\n",
+					"\n",
+				),
+				"'",
+			),
+		)
+		msg.TypeExpr.Inst = &ts.InstExpr{
+			Ref: core.EntityRef{Name: "string"},
+		}
+	case lit.EnumLit() != nil:
+		parsedEnumRef, err := parseEntityRef(lit.EnumLit().EntityRef())
+		if err != nil {
+			return src.Message{}, err
+		}
+		msg.Enum = &src.EnumMessage{
+			EnumRef:    parsedEnumRef,
+			MemberName: lit.EnumLit().IDENTIFIER().GetText(),
+		}
+		msg.TypeExpr = ts.Expr{
+			Inst: &ts.InstExpr{Ref: parsedEnumRef},
+			Meta: parsedEnumRef.Meta,
+		}
+	case lit.Nil_() != nil:
+		return src.Message{}, nil
+	default:
+		panic("unknown const: " + lit.GetText())
+	}
+
+	return msg, nil
+}
+
 func parseMessage(
 	constVal generated.IConstLitContext,
 ) (src.Message, *compiler.Error) {
@@ -611,7 +738,6 @@ func parseMessage(
 		},
 	}
 
-	//nolint:nosnakecase
 	switch {
 	case constVal.Bool_() != nil:
 		boolVal := constVal.Bool_().GetText()
@@ -804,7 +930,7 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 			result[src.Directive(id.GetText())] = []string{}
 			continue
 		}
-		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg() //nolint:nosnakecase
+		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg()
 		ss := make([]string, 0, len(args))
 		for _, arg := range args {
 			s := ""

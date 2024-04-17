@@ -13,33 +13,34 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, error) {
-	rawNearest, err := lookupManifestFile(wd, 0)
+func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, error) {
+	rawNearest, path, err := lookupManifestFile(wd, 0)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, fmt.Errorf("read manifest yaml: %w", err)
+		return sourcecode.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
 	}
 
 	parsedNearest, err := p.manifestParser.ParseManifest(rawNearest)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, fmt.Errorf("parse manifest: %w", err)
+		return sourcecode.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
 	}
 
-	return parsedNearest, nil
+	return parsedNearest, path, nil
 }
 
-func lookupManifestFile(wd string, iteration int) ([]byte, error) {
+
+func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 	if iteration > 10 {
-		return nil, errors.New("manifest file not found in 10 nearest levels up to where cli executed")
+		return nil, "", errors.New("manifest file not found in 10 nearest levels up to where cli executed")
 	}
 
 	found, err := readManifestFromDir(wd)
 	if err == nil {
-		return found, nil
+		return found,  wd, nil
 	}
 
 	if !errors.Is(err, fs.ErrInvalid) &&
 		!errors.Is(err, os.ErrNotExist) {
-		return nil, err
+		return nil, "", err
 	}
 
 	return lookupManifestFile(

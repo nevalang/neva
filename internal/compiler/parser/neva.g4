@@ -94,6 +94,13 @@ constLit:
 	| enumLit
 	| listLit
 	| structLit;
+primitiveConstLit:
+	nil
+	| bool
+	| MINUS? INT
+	| MINUS? FLOAT
+	| STRING
+	| enumLit;
 nil: 'nil';
 bool: 'true' | 'false';
 enumLit: entityRef '::' IDENTIFIER;
@@ -141,7 +148,7 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (portAddr | senderConstRef | constLit) structSelectors?;
+singleSenderSide: (portAddr | senderConstRef | primitiveConstLit) structSelectors?;
 receiverSide:
 	chainedNormConn
 	| singleReceiverSide
@@ -149,7 +156,11 @@ receiverSide:
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: singlePortAddr | arrPortAddr | lonelySinglePortAddr | lonelyArrPortAddr;
+portAddr:
+	singlePortAddr
+	| arrPortAddr
+	| lonelySinglePortAddr
+	| lonelyArrPortAddr;
 lonelySinglePortAddr: portAddrNode;
 lonelyArrPortAddr: portAddrNode portAddrIdx;
 singlePortAddr: portAddrNode? ':' portAddrPort;

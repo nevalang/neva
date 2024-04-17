@@ -162,7 +162,7 @@ func (Desugarer) handleNode(
 		},
 	}
 
-	localBuilderName := fmt.Sprintf("struct_builder_%v", nodeName)
+	localBuilderName := fmt.Sprintf("struct_%v", nodeName)
 
 	virtualEntities[localBuilderName] = src.Entity{
 		Kind:      src.ComponentEntity,
@@ -171,8 +171,8 @@ func (Desugarer) handleNode(
 
 	desugaredNodes[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "StructBuilder",
+			Pkg:  "",
+			Name: "Struct",
 		},
 		Directives: node.Directives,
 		TypeArgs:   node.TypeArgs,

@@ -18,7 +18,7 @@ var (
 	ErrUnusedInport              = errors.New("Unused inport found")
 	ErrLiteralSenderTypeEmpty    = errors.New("Literal network sender must contain message value")
 	ErrComplexLiteralSender      = errors.New("Literal network sender must have primitive type")
-	ErrInvalidPortlessConnection = errors.New("Connection to a node with more than one port must always has explicit port name")
+	ErrIllegalPortlessConnection = errors.New("Connection to a node, with more than one port, must always has a port name")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -548,7 +548,7 @@ func (a Analyzer) getResolvedPortType(
 	if portAddr.Port == "" {
 		if len(ports) > 1 {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      ErrInvalidPortlessConnection,
+				Err:      ErrIllegalPortlessConnection,
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}
@@ -718,8 +718,10 @@ func (a Analyzer) getResolvedSenderConstType(
 		}
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(constSender.Message.TypeExpr, scope)
-
+	resolvedExpr, err := a.resolver.ResolveExpr(
+		constSender.Message.TypeExpr,
+		scope,
+	)
 	if err != nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
 			Err:      err,

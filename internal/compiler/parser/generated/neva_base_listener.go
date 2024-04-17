@@ -326,6 +326,12 @@ func (s *BasenevaListener) EnterConstLit(ctx *ConstLitContext) {}
 // ExitConstLit is called when production constLit is exited.
 func (s *BasenevaListener) ExitConstLit(ctx *ConstLitContext) {}
 
+// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
+func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
+
+// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
+func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
+
 // EnterNil is called when production nil is entered.
 func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
 

@@ -13,7 +13,7 @@ func (b Builder) Get(wd, path, version string) (string, error) {
 		Version: version,
 	}
 
-	release, err := acquireLockfile()
+	release, err := acquireLockFile()
 	if err != nil {
 		return "", fmt.Errorf("failed to acquire lock file: %w", err)
 	}
@@ -24,7 +24,7 @@ func (b Builder) Get(wd, path, version string) (string, error) {
 		return "", err
 	}
 
-	manifest, err := b.getNearestManifest(wd)
+	manifest, _, err := b.getNearestManifest(wd)
 	if err != nil {
 		return "", fmt.Errorf("Retrieve manifest: %w", err)
 	}

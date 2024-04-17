@@ -376,13 +376,13 @@ func parseNormConnSenderSide(
 		}
 	}
 
-	senderSidePort := senderSide.PortAddr()
-	senderSideConstRef := senderSide.SenderConstRef()
-	senderSideConstLit := senderSide.ConstLit()
+	portSender := senderSide.PortAddr()
+	constRefSender := senderSide.SenderConstRef()
+	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 
-	if senderSidePort == nil &&
-		senderSideConstRef == nil &&
-		senderSideConstLit == nil {
+	if portSender == nil &&
+		constRefSender == nil &&
+		primitiveConstLitSender == nil {
 		return src.ConnectionSenderSide{}, &compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
 			Meta: &core.Meta{
@@ -400,8 +400,8 @@ func parseNormConnSenderSide(
 	}
 
 	var senderSidePortAddr *src.PortAddr
-	if senderSidePort != nil {
-		parsedPortAddr, err := parsePortAddr(senderSidePort, "in")
+	if portSender != nil {
+		parsedPortAddr, err := parsePortAddr(portSender, "in")
 		if err != nil {
 			return src.ConnectionSenderSide{}, err
 		}
@@ -409,8 +409,8 @@ func parseNormConnSenderSide(
 	}
 
 	var constant *src.Const
-	if senderSideConstRef != nil {
-		parsedEntityRef, err := parseEntityRef(senderSideConstRef.EntityRef())
+	if constRefSender != nil {
+		parsedEntityRef, err := parseEntityRef(constRefSender.EntityRef())
 		if err != nil {
 			return src.ConnectionSenderSide{}, err
 		}
@@ -419,8 +419,8 @@ func parseNormConnSenderSide(
 		}
 	}
 
-	if senderSideConstLit != nil {
-		msg, err := parseMessage(senderSideConstLit)
+	if primitiveConstLitSender != nil {
+		msg, err := parsePrimitiveConstLiteral(primitiveConstLitSender)
 		if err != nil {
 			return src.ConnectionSenderSide{}, err
 		}
