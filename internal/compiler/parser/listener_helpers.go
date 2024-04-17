@@ -14,17 +14,23 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
+func parseTypeParams(
+	params generated.ITypeParamsContext,
+) (src.TypeParams, *compiler.Error) {
 	if params == nil || params.TypeParamList() == nil {
-		return src.TypeParams{}
+		return src.TypeParams{}, nil
 	}
 
 	typeParams := params.TypeParamList().AllTypeParam()
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
+		v, err := parseTypeExpr(typeParam.TypeExpr())
+		if err != nil {
+			return src.TypeParams{}, err
+		}
 		result = append(result, ts.Param{
 			Name:   typeParam.IDENTIFIER().GetText(),
-			Constr: parseTypeExpr(typeParam.TypeExpr()),
+			Constr: v,
 		})
 	}
 
@@ -41,7 +47,7 @@ func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
 				Column: params.GetStop().GetColumn(),
 			},
 		},
-	}
+	}, nil
 }
 
 func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
@@ -75,9 +81,17 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 			}
 		}
 	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
-		result = parseUnionExpr(unionExpr)
+		v, err := parseUnionExpr(unionExpr)
+		if err != nil {
+			return ts.Expr{}, err
+		}
+		result = v
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
-		result = parseLitExpr(litExpr)
+		v, err := parseLitExpr(litExpr)
+		if err != nil {
+			return ts.Expr{}, err
+		}
+		result = v
 	} else {
 		return ts.Expr{}, &compiler.Error{
 			Err: errors.New("Missing type expression"),
@@ -135,7 +149,11 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compi
 			parsedSubExprs = append(parsedSubExprs, *parsedTypeInstExpr)
 		}
 		if unionExpr := subExpr.TypeLitExpr(); unionExpr != nil {
-			parsedSubExprs = append(parsedSubExprs, *parseLitExpr(subExpr.TypeLitExpr()))
+			v, err := parseLitExpr(subExpr.TypeLitExpr())
+			if err != nil {
+				return nil, err
+			}
+			parsedSubExprs = append(parsedSubExprs, *v)
 		}
 	}
 
@@ -154,7 +172,7 @@ func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Er
 	case enumExpr != nil:
 		return parseEnumExpr(enumExpr), nil
 	case structExpr != nil:
-		return parseStructExpr(structExpr), nil
+		return parseStructExpr(structExpr)
 	}
 
 	return nil, &compiler.Error{
@@ -248,7 +266,11 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 	argExprs := args.AllTypeExpr()
 	parsedArgs := make([]ts.Expr, 0, len(argExprs))
 	for _, arg := range argExprs {
-		parsedArgs = append(parsedArgs, parseTypeExpr(arg))
+		v, err := parseTypeExpr(arg)
+		if err != nil {
+			return nil, err
+		}
+		parsedArgs = append(parsedArgs, v)
 	}
 	result.Inst.Args = parsedArgs
 
@@ -290,7 +312,9 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler
 	}, nil
 }
 
-func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
+func parsePorts(
+	in []generated.IPortDefContext,
+) (map[string]src.Port, *compiler.Error) {
 	parsedInports := map[string]src.Port{}
 	for _, port := range in {
 		single := port.SinglePortDef()
@@ -312,9 +336,13 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 		}
 
 		portName := id.GetText()
+		v, err := parseTypeExpr(typeExpr)
+		if err != nil {
+			return nil, err
+		}
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
-			TypeExpr: parseTypeExpr(typeExpr),
+			TypeExpr: v,
 			Meta: core.Meta{
 				Text: port.GetText(),
 				Start: core.Position{
@@ -328,13 +356,25 @@ func parsePorts(in []generated.IPortDefContext) map[string]src.Port {
 			},
 		}
 	}
-	return parsedInports
+
+	return parsedInports, nil
 }
 
-func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
-	parsedTypeParams := parseTypeParams(actx.TypeParams())
-	in := parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
-	out := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+func parseInterfaceDef(
+	actx generated.IInterfaceDefContext,
+) (src.Interface, *compiler.Error) {
+	parsedTypeParams, err := parseTypeParams(actx.TypeParams())
+	if err != nil {
+		return src.Interface{}, err
+	}
+	in, err := parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
+	if err != nil {
+		return src.Interface{}, err
+	}
+	out, err := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+	if err != nil {
+		return src.Interface{}, err
+	}
 
 	return src.Interface{
 		TypeParams: parsedTypeParams,
@@ -350,7 +390,7 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 				Column: actx.GetStop().GetColumn(),
 			},
 		},
-	}
+	}, nil
 }
 
 func parseNodes(
@@ -364,7 +404,11 @@ func parseNodes(
 
 		var typeArgs []ts.Expr
 		if args := nodeInst.TypeArgs(); args != nil {
-			typeArgs = parseTypeExprs(args.AllTypeExpr())
+			v, err := parseTypeExprs(args.AllTypeExpr())
+			if err != nil {
+				return nil, err
+			}
+			typeArgs = v
 		}
 
 		parsedRef, err := parseEntityRef(nodeInst.EntityRef())
@@ -422,15 +466,23 @@ func parseNodes(
 		}
 	}
 
-	return result
+	return result, nil
 }
 
-func parseTypeExprs(in []generated.ITypeExprContext) []ts.Expr {
+func parseTypeExprs(
+	in []generated.ITypeExprContext,
+) ([]ts.Expr, *compiler.Error) {
 	result := make([]ts.Expr, 0, len(in))
+
 	for _, expr := range in {
-		result = append(result, parseTypeExpr(expr))
+		v, err := parseTypeExpr(expr)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, v)
 	}
-	return result
+
+	return result, nil
 }
 
 func parsePortAddr(
@@ -771,18 +823,27 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 	return result
 }
 
-func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
+func parseTypeDef(
+	actx generated.ITypeDefContext,
+) (src.Entity, *compiler.Error) {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		body = compiler.Pointer(
-			parseTypeExpr(actx.TypeExpr()),
-		)
+		v, err := parseTypeExpr(actx.TypeExpr())
+		if err != nil {
+			return src.Entity{}, err
+		}
+		body = compiler.Pointer(v)
+	}
+
+	v, err := parseTypeParams(actx.TypeParams())
+	if err != nil {
+		return src.Entity{}, err
 	}
 
 	return src.Entity{
 		Kind: src.TypeEntity,
 		Type: ts.Def{
-			Params:   parseTypeParams(actx.TypeParams()).Params,
+			Params:   v.Params,
 			BodyExpr: body,
 			// CanBeUsedForRecursiveDefinitions: body == nil,
 			Meta: core.Meta{
@@ -797,7 +858,7 @@ func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func parseConstDef(
@@ -877,7 +938,10 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 		},
 	}
 
-	parsedInterfaceDef := parseInterfaceDef(actx.InterfaceDef())
+	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
+	if err != nil {
+		return src.Entity{}, err
+	}
 
 	netBody := actx.CompNetBody()
 	fullBody := actx.CompBody()

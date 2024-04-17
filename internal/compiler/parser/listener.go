@@ -53,7 +53,13 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 	if single != nil {
 		typeDef := single.TypeDef()
-		parsedEntity := parseTypeDef(typeDef)
+
+		v, err := parseTypeDef(typeDef)
+		if err != nil {
+			panic(err)
+		}
+
+		parsedEntity := v
 		parsedEntity.IsPublic = single.PUB_KW() != nil //nolint:nosnakecase
 		name := typeDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
@@ -62,7 +68,10 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 	group := actx.GroupTypeStmt()
 	for i, typeDef := range group.AllTypeDef() {
-		parsedEntity := parseTypeDef(typeDef)
+		parsedEntity, err := parseTypeDef(typeDef)
+		if err != nil {
+			panic(err)
+		}
 		parsedEntity.IsPublic = group.PUB_KW(i) != nil //nolint:nosnakecase
 		name := typeDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
@@ -73,7 +82,10 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmtContext) {
 	constDef := actx.ConstDef()
-	parsedEntity := parseConstDef(constDef)
+	parsedEntity, err := parseConstDef(constDef)
+	if err != nil {
+		panic(err)
+	}
 	parsedEntity.IsPublic = actx.PUB_KW() != nil //nolint:nosnakecase
 	name := constDef.IDENTIFIER().GetText()
 	s.file.Entities[name] = parsedEntity
@@ -81,7 +93,10 @@ func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmt
 
 func (s *treeShapeListener) EnterGroupConstStmt(actx *generated.GroupConstStmtContext) {
 	for i, constDef := range actx.AllConstDef() {
-		parsedEntity := parseConstDef(constDef)
+		parsedEntity, err := parseConstDef(constDef)
+		if err != nil {
+			panic(err)
+		}
 		parsedEntity.IsPublic = actx.PUB_KW(i) != nil //nolint:nosnakecase
 		name := constDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
@@ -96,10 +111,14 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 
 	if single != nil {
 		name := single.InterfaceDef().IDENTIFIER().GetText()
+		v, err := parseInterfaceDef(single.InterfaceDef())
+		if err != nil {
+			panic(err)
+		}
 		s.file.Entities[name] = src.Entity{
 			IsPublic:  single.PUB_KW() != nil, //nolint:nosnakecase
 			Kind:      src.InterfaceEntity,
-			Interface: parseInterfaceDef(single.InterfaceDef()),
+			Interface: v,
 		}
 		return
 	}
@@ -107,10 +126,15 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	for i, interfaceDef := range group.AllInterfaceDef() {
 		name := interfaceDef.IDENTIFIER().GetText()
 
+		v, err := parseInterfaceDef(interfaceDef)
+		if err != nil {
+			panic(err)
+		}
+
 		s.file.Entities[name] = src.Entity{
 			IsPublic:  group.PUB_KW(i) != nil, //nolint:nosnakecase
 			Kind:      src.InterfaceEntity,
-			Interface: parseInterfaceDef(interfaceDef),
+			Interface: v,
 		}
 	}
 }
