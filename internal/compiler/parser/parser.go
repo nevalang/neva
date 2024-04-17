@@ -102,9 +102,7 @@ func (p Parser) parseFile(
 		if e := recover(); e != nil {
 			compilerErr, ok := e.(*compiler.Error)
 			if ok {
-				err = compiler.Error{
-					Location: &loc,
-				}.Wrap(compilerErr)
+				err = compiler.Error{Location: &loc}.Wrap(compilerErr)
 				return
 			}
 			err = &compiler.Error{

@@ -20,7 +20,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "0_do_nothing"]
+      "args": ["run", "-debug", "hello_world"]
     },
     // Don't forget this example does not work in debugger
     {

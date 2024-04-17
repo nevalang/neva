@@ -28,7 +28,7 @@ func (b Builder) Build(
 	fsRoot string,
 	wd string,
 ) (compiler.RawBuild, *compiler.Error) {
-	// load user's module from disk
+	// load entry module from disk
 	entryMod, err := b.LoadModuleByPath(ctx, wd)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
@@ -36,10 +36,16 @@ func (b Builder) Build(
 		}
 	}
 
-	// inject stdlib dep to user's module
-	entryMod.Manifest.Deps["std"] = src.ModuleRef{
+	// inject stdlib dep to entry module
+	stdModRef := src.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,
+	}
+	entryMod.Manifest.Deps["std"] = stdModRef
+
+	// inject entry mod into the build
+	mods := map[src.ModuleRef]compiler.RawModule{
+		{Path: "@"}: entryMod,
 	}
 
 	// load stdlib module
@@ -50,12 +56,10 @@ func (b Builder) Build(
 		}
 	}
 
-	mods := map[src.ModuleRef]compiler.RawModule{
-		{Path: "@"}:                         entryMod,
-		{Path: "std", Version: pkg.Version}: stdMod,
-	}
+	// inject stdlib module to build
+	mods[stdModRef] = stdMod
 
-	release, err := acquireLockfile()
+	release, err := acquireLockFile()
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("failed to acquire lock file: %w", err),

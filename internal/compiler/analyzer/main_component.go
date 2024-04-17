@@ -86,7 +86,10 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
 	return nil
 }
 
-func (Analyzer) analyzeMainComponentNodes(nodes map[string]src.Node, scope src.Scope) *compiler.Error {
+func (Analyzer) analyzeMainComponentNodes(
+	nodes map[string]src.Node,
+	scope src.Scope,
+) *compiler.Error {
 	for nodeName, node := range nodes {
 		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {

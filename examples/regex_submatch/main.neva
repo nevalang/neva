@@ -7,6 +7,6 @@ component Main(start) (stop) {
             ('a(x*)b(y|z)c' -> submatch:regexp),
             ('-axxxbyc-' -> submatch:data)
         ]
-        submatch -> println -> :stop
+        [submatch:res, submatch:err] -> println -> :stop
     }
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/nevalang/neva/internal/builder"
@@ -100,6 +101,6 @@ func main() {
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 }
