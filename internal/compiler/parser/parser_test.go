@@ -8,6 +8,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// userSender.pet.name -> println -> :stop
+func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
+	text := []byte(`
+		component C1() () {
+			userSender.pet.name -> println -> :stop
+		}`,
+	)
+	p := New(false)
+	got, err := p.parseFile(src.Location{}, text)
+	require.True(t, err == nil)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 2, len(net))
+
+	conn := net[0].Normal
+	require.Equal(t, "userSender", conn.SenderSide.PortAddr.Node)
+	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
+	require.Equal(t, "pet", conn.SenderSide.Selectors[0])
+	require.Equal(t, "name", conn.SenderSide.Selectors[1])
+	require.Equal(t, "println", conn.ReceiverSide.Receivers[0].PortAddr.Node)
+	require.Equal(t, "", conn.ReceiverSide.Receivers[0].PortAddr.Port)
+
+	conn = net[1].Normal
+	require.Equal(t, "println", conn.SenderSide.PortAddr.Node)
+	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
+	require.Equal(t, "stop", conn.ReceiverSide.Receivers[0].PortAddr.Port)
+}
+
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
 		component C1() () {

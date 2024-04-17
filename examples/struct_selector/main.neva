@@ -11,6 +11,7 @@ component Main(start) (stop) {
     net {
         :start -> userSender
         userSender.pet.name -> println -> :stop
+        
     }
 }
 
