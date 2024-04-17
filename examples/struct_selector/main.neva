@@ -1,0 +1,25 @@
+type {
+    User struct {
+        name string
+        pet Pet
+    }
+    Pet struct { name string }
+}
+
+component Main(start) (stop) {
+    nodes { UserSender, Println }
+    net {
+        :start -> userSender
+        userSender.pet.name -> println:data // https://github.com/nevalang/neva/issues/558
+        println -> :stop
+    }
+}
+
+const user User = {
+    name: 'John',
+    pet: { name: 'Charley' }
+}
+
+component UserSender(sig) (u User) {
+    :sig -> ($user -> :u)
+}

@@ -1,0 +1,8 @@
+import { x }
+
+component Main(start) (stop) {
+	nodes { x.Scanln, Println }
+	net {
+		:start -> scanln -> println -> :stop
+	}
+}

@@ -1,9 +1,0 @@
-import { time }
-
-component Main(start) (stop) {
-	nodes { time.Sleep }
-	net {
-		:start -> ($time.second -> sleep)
-        sleep -> :stop
-	}
-}

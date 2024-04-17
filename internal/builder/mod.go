@@ -5,20 +5,24 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 )
 
-func (p Builder) LoadModuleByPath(ctx context.Context, workdir fs.FS) (compiler.RawModule, error) {
-	manifest, err := p.retrieveManifest(workdir)
+func (p Builder) LoadModuleByPath(
+	ctx context.Context,
+	wd string,
+) (compiler.RawModule, error) {
+	manifest, modRootPath, err := p.getNearestManifest(wd)
 	if err != nil {
 		return compiler.RawModule{}, fmt.Errorf("retrieve manifest: %w", err)
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
-	if err := retrieveSourceCode(workdir, ".", pkgs); err != nil {
+	if err := retrieveSourceCode(modRootPath, pkgs); err != nil {
 		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
 	}
 
@@ -29,8 +33,9 @@ func (p Builder) LoadModuleByPath(ctx context.Context, workdir fs.FS) (compiler.
 }
 
 // retrieveSourceCode recursively walks the given tree and fills given pkgs with neva files
-func retrieveSourceCode(fsys fs.FS, rootPath string, pkgs map[string]compiler.RawPackage) error {
-	return fs.WalkDir(fsys, rootPath, func(filePath string, d fs.DirEntry, err error) error {
+func retrieveSourceCode(rootPath string, pkgs map[string]compiler.RawPackage) error {
+	fsys := os.DirFS(rootPath)
+	return fs.WalkDir(fsys, ".", func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
 		}

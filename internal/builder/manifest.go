@@ -1,9 +1,11 @@
 package builder
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 
 	yaml "gopkg.in/yaml.v3"
 
@@ -11,43 +13,49 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-func (p Builder) retrieveManifest(workdir fs.FS) (src.ModuleManifest, error) {
-	rawManifest, err := readManifestYaml(workdir)
+func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, error) {
+	rawNearest, path, err := lookupManifestFile(wd, 0)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, fmt.Errorf("read manifest yaml: %w", err)
+		return sourcecode.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
 	}
 
-	manifest, err := p.manifestParser.ParseManifest(rawManifest)
+	parsedNearest, err := p.manifestParser.ParseManifest(rawNearest)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, fmt.Errorf("parse manifest: %w", err)
+		return sourcecode.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
 	}
 
-	return manifest, nil
+	return parsedNearest, path, nil
 }
 
-func readManifestYaml(workdir fs.FS) ([]byte, error) {
-	rawManifest, err := fs.ReadFile(workdir, "neva.yml")
+
+func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
+	if iteration > 10 {
+		return nil, "", errors.New("manifest file not found in 10 nearest levels up to where cli executed")
+	}
+
+	found, err := readManifestFromDir(wd)
 	if err == nil {
-		return rawManifest, nil
+		return found,  wd, nil
 	}
 
-	rawManifest, err = fs.ReadFile(workdir, "neva.yaml")
-	if err != nil {
-		fmt.Println("!!!", workdir)
-
-		files, readDirErr := fs.ReadDir(workdir, ".")
-		if readDirErr != nil {
-			return nil, fmt.Errorf("fs read dir: %w", readDirErr)
-		}
-
-		for _, file := range files {
-			fmt.Println(file.Name())
-		}
-
-		return nil, fmt.Errorf("fs read file: %w", err)
+	if !errors.Is(err, fs.ErrInvalid) &&
+		!errors.Is(err, os.ErrNotExist) {
+		return nil, "", err
 	}
 
-	return rawManifest, nil
+	return lookupManifestFile(
+		path.Dir(wd),
+		iteration+1,
+	)
+}
+
+func readManifestFromDir(wd string) ([]byte, error) {
+	raw, err := os.ReadFile(path.Join(wd, "neva.yaml"))
+	if err == nil {
+		return raw, nil
+	}
+
+	return os.ReadFile(path.Join(wd, "neva.yml"))
 }
 
 func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) error {

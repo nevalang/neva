@@ -1,0 +1,17 @@
+type User struct {
+    age int
+    name string
+}
+
+// FIXME:grammar - cannot use 'struct' as a node name
+
+component Main(start any) (stop any) {
+    nodes { Println, builder Struct<User> }
+    net {
+        :start -> [
+            ('John' -> builder:name),
+            (32 -> builder:age)
+        ]
+        builder -> println -> :stop
+    }
+}

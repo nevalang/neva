@@ -31,13 +31,15 @@ func (c Compiler) Compile(
 	return c.backend.Emit(dstPath, ir)
 }
 
-// CompileToIR compiles to intermediate representation
-func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Error) {
-	rawBuild, err := c.builder.Build(context.Background(), src)
+func (c Compiler) CompileToIR(whereCLIExecuted string, whereEntryPkg string) (*ir.Program, *Error) {
+	rawBuild, err := c.builder.Build(
+		context.Background(),
+		whereEntryPkg,
+	)
 	if err != nil {
 		return nil, Error{
 			Location: &sourcecode.Location{
-				PkgName: mainPkgName,
+				PkgName: whereEntryPkg,
 			},
 		}.Wrap(err)
 	}
@@ -52,9 +54,9 @@ func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Err
 		Modules:     parsedMods,
 	}
 
-	mainPkgName = strings.TrimPrefix(mainPkgName, "./")
+	whereEntryPkg = strings.TrimPrefix(whereEntryPkg, "./")
 
-	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(parsedBuild, mainPkgName)
+	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(parsedBuild, whereEntryPkg)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func (c Compiler) CompileToIR(src string, mainPkgName string) (*ir.Program, *Err
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, mainPkgName)
+	irProg, err := c.irgen.Generate(desugaredBuild, whereEntryPkg)
 	if err != nil {
 		return nil, err
 	}

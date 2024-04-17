@@ -1,0 +1,295 @@
+component Doer() () {}
+
+pub component Doer() () {}
+
+component {}
+
+component {
+}
+
+component {
+
+}
+
+component { Doer() () {} }
+
+component {
+    Doer() () {} }
+
+component { Doer() () {}
+}
+
+component {
+    Doer() () {}
+}
+
+component { Doer<T>(x int) (y T) {} }
+
+component {
+    Doer<T>(x int) (y T) {
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {}
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes { absNode INode }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            absNode INode }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes { absNode INode
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            absNode INode
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            simpleAbsNode INode
+            absNodeWithTypeArgs INode<
+                int,
+                map<
+                    string, vec<bool>
+                >
+            >
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes { concreteNode  Node }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNode  Node }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes { concreteNode  Node
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNode  Node
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNodeWithTypeArgs  Node<int, vec<string>>
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNodeWithDI1  Node1{foo Node2}
+            concreteNodeWithDI2  Node1{
+                foo Node2
+                bar Node3
+            }
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNodeWithDI1  Node1{
+                foo Node2
+            }
+            concreteNodeWithDI2  Node1{
+                foo Node2
+                bar Node3
+            }
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            concreteNodeWithDIAndTypeArgs  Node1<
+                int,
+                map<
+                    string,
+                    vec<bool>
+                >
+            > {
+                foo Node2
+                bar Node3
+            }
+        }
+    }
+}
+
+component {
+    Doer<T>(x int) (y T) {
+        nodes {
+            simpleAbsNode INode
+
+            absNodeWithTypeArgs INode<
+                int,
+                map<
+                    string, vec<bool>
+                >
+            >
+
+            concreteNodeWithDI1  Node1{ foo Node2 }
+
+            concreteNodeWithDIAndTypeArgs  Node1<
+                int,
+                map<
+                    string,
+                    vec<bool>
+                >
+            >{
+                foo Node2
+                bar Node3
+            }
+        }
+    }
+}
+
+component {
+	Main(start any) (stop any) {
+		nodes {
+			abs IReader
+			concrete  Scanner
+		}
+		net {
+			:start -> abs:v
+			abs:v -> [concrete:v]
+			concrete:v -> :code
+		}
+	}
+}
+
+component {
+	Main() () {
+		net {
+            $foo.bar -> foo:bar
+            $foo.bar.baz -> foo:bar
+            foo:bar.baz -> foo:bar
+            foo:bar.baz.bax -> foo:bar
+			$foo.bar.baz -> [foo:bar, bar:baz]
+			foo:bar.baz.bax -> [
+				foo:bar,
+				bar:baz
+            ]
+		}
+	}
+}
+
+component {
+	Main() () {
+		net {
+            $foo -> (foo:bar -> bar:baz)
+
+			$foo -> [(foo:bar -> bar:baz),
+			(foo:bar -> bar:baz)
+            ]
+
+			$foo -> [(foo:bar -> bar:baz),
+				(foo:bar -> bar:baz)
+            ]
+
+			$foo -> [
+				(foo:bar -> bar:baz),
+				(foo:bar -> bar:baz)]
+
+			$foo -> [
+				(foo:bar -> bar:baz),
+				(foo:bar -> bar:baz)
+            ]
+		}
+	}
+}
+
+component {
+	Main() () {
+		net {
+            $a -> ($b -> ($c -> d:e))
+
+            $a -> (
+                $b -> ($c -> d:e)
+            )
+
+            $a -> (
+                $b -> (
+                    $c -> d:e
+                )
+            )
+		}
+	}
+}
+
+component Main(start) (stop) { :start -> :stop }
+
+component Main(start) (stop) {
+    :start -> :stop }
+
+component Main(start) (stop) { :start -> :stop
+}
+
+component Main(start) (stop) {
+    :start -> :stop
+}
+
+component Main() () {
+    :foo -> :bar
+    :baz -> :bax
+}
+

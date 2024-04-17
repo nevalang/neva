@@ -1,7 +1,7 @@
 component Main(start) (stop) {
 	nodes {
 		Println<int>
-		sub PortReducer<int> { Sub<int> }
+		sub Reduce<int> { Sub<int> }
 	}
 	net {
 		:start -> [

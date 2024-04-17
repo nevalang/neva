@@ -40,7 +40,7 @@ typeStmt: singleTypeStmt | groupTypeStmt;
 singleTypeStmt: PUB_KW? 'type' typeDef;
 groupTypeStmt:
 	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
-typeDef: IDENTIFIER typeParams? typeExpr?;
+typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam)*;
 typeParam: IDENTIFIER typeExpr? NEWLINE*;
@@ -94,6 +94,13 @@ constLit:
 	| enumLit
 	| listLit
 	| structLit;
+primitiveConstLit:
+	nil
+	| bool
+	| MINUS? INT
+	| MINUS? FLOAT
+	| STRING
+	| enumLit;
 nil: 'nil';
 bool: 'true' | 'false';
 enumLit: entityRef '::' IDENTIFIER;
@@ -113,7 +120,7 @@ compStmt: singleCompStmt | groupCompStmt;
 singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
 groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
-		compilerDirectives? PUB_KW? compDef
+		(COMMENT NEWLINE*)* compilerDirectives? PUB_KW? compDef
 	)* '}';
 compDef: interfaceDef (compBody | compNetBody)? NEWLINE*;
 compBody:
@@ -141,7 +148,7 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (portAddr | senderConstRef | constLit) structSelectors?;
+singleSenderSide: (portAddr | senderConstRef | primitiveConstLit) structSelectors?;
 receiverSide:
 	chainedNormConn
 	| singleReceiverSide
@@ -149,8 +156,13 @@ receiverSide:
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
-portAddr: singlePortAddr | arrPortAddr | lonelyPortAddr;
-lonelyPortAddr: portAddrNode;
+portAddr:
+	singlePortAddr
+	| arrPortAddr
+	| lonelySinglePortAddr
+	| lonelyArrPortAddr;
+lonelySinglePortAddr: portAddrNode;
+lonelyArrPortAddr: portAddrNode portAddrIdx;
 singlePortAddr: portAddrNode? ':' portAddrPort;
 arrPortAddr: portAddrNode? ':' portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;

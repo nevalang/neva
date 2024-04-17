@@ -3,6 +3,7 @@ package builder
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -13,49 +14,54 @@ import (
 )
 
 type Builder struct {
-	manifestParser ManifestParser // parser is needed to parse manifest files
-	thirdPartyPath string         // path to third-party modules
+	manifestParser ManifestParser
+	thirdPartyPath string
+	stdLibPath     string
 }
 
 type ManifestParser interface {
 	ParseManifest(raw []byte) (src.ModuleManifest, error)
 }
 
-func (p Builder) Build( //nolint:funlen
+func (b Builder) Build(
 	ctx context.Context,
-	workdir string,
+	wd string,
 ) (compiler.RawBuild, *compiler.Error) {
-	// load user's module from disk
-	entryMod, err := p.LoadModuleByPath(ctx, os.DirFS(workdir))
+	// load entry module from disk
+	entryMod, err := b.LoadModuleByPath(ctx, wd)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
 		}
 	}
 
-	// inject stdlib dep to user's module
-	entryMod.Manifest.Deps["std"] = src.ModuleRef{
+	// inject stdlib dep to entry module
+	stdModRef := src.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,
 	}
+	entryMod.Manifest.Deps["std"] = stdModRef
 
-	// load stdlib module from embedded fs
-	stdMod, err := p.LoadModuleByPath(ctx, std.FS)
+	// inject entry mod into the build
+	mods := map[src.ModuleRef]compiler.RawModule{
+		{Path: "@"}: entryMod,
+	}
+
+	// load stdlib module
+	stdMod, err := b.LoadModuleByPath(ctx, b.stdLibPath)
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
 		}
 	}
 
-	mods := map[src.ModuleRef]compiler.RawModule{
-		{Path: "@"}:                         entryMod,
-		{Path: "std", Version: pkg.Version}: stdMod,
-	}
+	// inject stdlib module to build
+	mods[stdModRef] = stdMod
 
-	release, err := acquireLockfile()
+	release, err := acquireLockFile()
 	if err != nil {
 		return compiler.RawBuild{}, &compiler.Error{
-			Err: fmt.Errorf("failed to aquire lock file: %w", err),
+			Err: fmt.Errorf("failed to acquire lock file: %w", err),
 		}
 	}
 	defer release()
@@ -69,14 +75,14 @@ func (p Builder) Build( //nolint:funlen
 			continue
 		}
 
-		depPath, _, err := p.downloadDep(depModRef)
+		depWD, _, err := b.downloadDep(depModRef)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("download dep: %w", err),
 			}
 		}
 
-		depMod, err := p.LoadModuleByPath(ctx, os.DirFS(depPath))
+		depMod, err := b.LoadModuleByPath(ctx, depWD)
 		if err != nil {
 			return compiler.RawBuild{}, &compiler.Error{
 				Err: fmt.Errorf("build dep mod: %w", err),
@@ -100,26 +106,6 @@ func (p Builder) Build( //nolint:funlen
 	}, nil
 }
 
-func MustNew(parser ManifestParser) Builder {
-	b, err := New(parser)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
-func New(parser ManifestParser) (Builder, error) {
-	thirdParty, err := getThirdPartyPath()
-	if err != nil {
-		return Builder{}, err
-	}
-
-	return Builder{
-		thirdPartyPath: thirdParty,
-		manifestParser: parser,
-	}, nil
-}
-
 func getThirdPartyPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -134,4 +120,81 @@ func getThirdPartyPath() (string, error) {
 	}
 
 	return path, nil
+}
+
+func getStdlibPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(home, "neva", "std")
+
+	_, err = os.Stat(path)
+	if err == nil {
+		return path, nil
+	}
+
+	if !os.IsNotExist(err) {
+		return "", err
+	}
+
+	// Inject missing stdlib files into user's home directory
+	stdFS := std.FS
+	err = fs.WalkDir(stdFS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		data, err := fs.ReadFile(stdFS, path)
+		if err != nil {
+			return err
+		}
+		targetPath := filepath.Join(home, "neva", "std", path)
+		dir := filepath.Dir(targetPath)
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err = os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+		err = os.WriteFile(targetPath, data, 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func New(parser ManifestParser) (Builder, error) {
+	thirdParty, err := getThirdPartyPath()
+	if err != nil {
+		return Builder{}, err
+	}
+
+	stdlibPath, err := getStdlibPath()
+	if err != nil {
+		return Builder{}, err
+	}
+
+	return Builder{
+		manifestParser: parser,
+		stdLibPath:     stdlibPath,
+		thirdPartyPath: thirdParty,
+	}, nil
+}
+
+func MustNew(parser ManifestParser) Builder {
+	b, err := New(parser)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }

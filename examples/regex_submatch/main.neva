@@ -1,0 +1,12 @@
+import { regexp }
+
+component Main(start) (stop) {
+    nodes { Println, regexp.Submatch }
+    net {
+        :start -> [
+            ('a(x*)b(y|z)c' -> submatch:regexp),
+            ('-axxxbyc-' -> submatch:data)
+        ]
+        [submatch:res, submatch:err] -> println -> :stop
+    }
+}

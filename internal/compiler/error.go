@@ -21,41 +21,17 @@ func (e Error) Wrap(child *Error) *Error {
 
 func (e Error) unwrap() Error {
 	for e.child != nil {
-		var loc *src.Location
-		if e.child.Location != nil {
-			loc = e.child.Location
-		} else {
-			loc = e.Location
-		}
-
-		var meta *core.Meta
-		if e.child.Meta != nil {
-			meta = e.child.Meta
-		} else {
-			meta = e.Meta
-		}
-
-		e = Error{
-			Err:      e.child.Err,
-			Location: loc,
-			Meta:     meta,
-			child:    e.child.child,
-		}
+		e = *e.child
 	}
-
 	return e
 }
 
 func (e Error) Error() string {
 	e = e.unwrap()
 
+	hasErr := e.Err != nil
 	hasMeta := e.Meta != nil
 	hasLocation := e.Location != nil
-	hasErr := e.Err != nil
-
-	if _, ok := e.Err.(*Error); ok {
-		panic("internal error")
-	}
 
 	switch {
 	case hasLocation && hasMeta:

@@ -3,6 +3,7 @@ package parser
 import (
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
@@ -53,8 +54,14 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 	if single != nil {
 		typeDef := single.TypeDef()
-		parsedEntity := parseTypeDef(typeDef)
-		parsedEntity.IsPublic = single.PUB_KW() != nil //nolint:nosnakecase
+
+		v, err := parseTypeDef(typeDef)
+		if err != nil {
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		}
+
+		parsedEntity := v
+		parsedEntity.IsPublic = single.PUB_KW() != nil
 		name := typeDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
 		return
@@ -62,8 +69,11 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 	group := actx.GroupTypeStmt()
 	for i, typeDef := range group.AllTypeDef() {
-		parsedEntity := parseTypeDef(typeDef)
-		parsedEntity.IsPublic = group.PUB_KW(i) != nil //nolint:nosnakecase
+		parsedEntity, err := parseTypeDef(typeDef)
+		if err != nil {
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		}
+		parsedEntity.IsPublic = group.PUB_KW(i) != nil
 		name := typeDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
 	}
@@ -73,16 +83,22 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmtContext) {
 	constDef := actx.ConstDef()
-	parsedEntity := parseConstDef(constDef)
-	parsedEntity.IsPublic = actx.PUB_KW() != nil //nolint:nosnakecase
+	parsedEntity, err := parseConstDef(constDef)
+	if err != nil {
+		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+	}
+	parsedEntity.IsPublic = actx.PUB_KW() != nil
 	name := constDef.IDENTIFIER().GetText()
 	s.file.Entities[name] = parsedEntity
 }
 
 func (s *treeShapeListener) EnterGroupConstStmt(actx *generated.GroupConstStmtContext) {
 	for i, constDef := range actx.AllConstDef() {
-		parsedEntity := parseConstDef(constDef)
-		parsedEntity.IsPublic = actx.PUB_KW(i) != nil //nolint:nosnakecase
+		parsedEntity, err := parseConstDef(constDef)
+		if err != nil {
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		}
+		parsedEntity.IsPublic = actx.PUB_KW(i) != nil
 		name := constDef.IDENTIFIER().GetText()
 		s.file.Entities[name] = parsedEntity
 	}
@@ -96,10 +112,14 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 
 	if single != nil {
 		name := single.InterfaceDef().IDENTIFIER().GetText()
+		v, err := parseInterfaceDef(single.InterfaceDef())
+		if err != nil {
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		}
 		s.file.Entities[name] = src.Entity{
-			IsPublic:  single.PUB_KW() != nil, //nolint:nosnakecase
+			IsPublic:  single.PUB_KW() != nil,
 			Kind:      src.InterfaceEntity,
-			Interface: parseInterfaceDef(single.InterfaceDef()),
+			Interface: v,
 		}
 		return
 	}
@@ -107,10 +127,15 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	for i, interfaceDef := range group.AllInterfaceDef() {
 		name := interfaceDef.IDENTIFIER().GetText()
 
+		v, err := parseInterfaceDef(interfaceDef)
+		if err != nil {
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		}
+
 		s.file.Entities[name] = src.Entity{
-			IsPublic:  group.PUB_KW(i) != nil, //nolint:nosnakecase
+			IsPublic:  group.PUB_KW(i) != nil,
 			Kind:      src.InterfaceEntity,
-			Interface: parseInterfaceDef(interfaceDef),
+			Interface: v,
 		}
 	}
 }
@@ -124,9 +149,9 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 		compDef := single.CompDef()
 		parsedCompEntity, err := parseCompDef(compDef)
 		if err != nil {
-			panic(err)
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
 		}
-		parsedCompEntity.IsPublic = single.PUB_KW() != nil //nolint:nosnakecase
+		parsedCompEntity.IsPublic = single.PUB_KW() != nil
 		parsedCompEntity.Component.Directives = parseCompilerDirectives(
 			single.CompilerDirectives(),
 		)
@@ -139,9 +164,9 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	for i, compDef := range group.AllCompDef() {
 		parsedCompEntity, err := parseCompDef(compDef)
 		if err != nil {
-			panic(err)
+			panic(compiler.Error{Location: &s.loc}.Wrap(err))
 		}
-		parsedCompEntity.IsPublic = group.PUB_KW(i) != nil //nolint:nosnakecase
+		parsedCompEntity.IsPublic = group.PUB_KW(i) != nil
 		parsedCompEntity.Component.Directives = parseCompilerDirectives(
 			group.CompilerDirectives(i),
 		)

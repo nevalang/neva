@@ -1,5 +1,13 @@
+// ReadAll reads the file named by filename and returns the contents.
+// It returns an error if the file does not exist or cannot be read.
+// You don't have to think about closing the file, it's done under the hood.
 #extern(read_all)
 pub component ReadAll(filename string) (data string, err error)
 
+// WriteAll writes data to a file named by filename.
+// If the file does not exist, WriteAll creates it with permissions 0755.
+// If the file does exist, WriteAll truncates it before writing, without changing permissions.
+// It returns an error if the file cannot be written.
+// You don't have to think about closing the file, it's done under the hood.
 #extern(write_all)
 pub component WriteAll(filename string, data string) (sig any, err error)

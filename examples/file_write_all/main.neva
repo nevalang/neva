@@ -1,0 +1,13 @@
+import { io }
+
+component Main(start) (stop) {
+  nodes { io.WriteAll, Println }
+  net {
+    :start -> [
+      ('file_writer_example.txt' -> writeAll:filename),
+      ('Hello, io.WriteAll!' -> writeAll:data)
+    ]
+    writeAll:err -> println
+    [writeAll:sig, println] -> :stop
+  }
+}

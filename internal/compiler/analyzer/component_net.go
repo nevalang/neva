@@ -11,14 +11,13 @@ import (
 )
 
 var (
-	ErrStructFieldNotFound       = errors.New("Struct field not found")
 	ErrUnusedOutports            = errors.New("All component's outports are unused")
 	ErrUnusedOutport             = errors.New("Unused outport found")
 	ErrUnusedInports             = errors.New("All component inports are unused")
 	ErrUnusedInport              = errors.New("Unused inport found")
 	ErrLiteralSenderTypeEmpty    = errors.New("Literal network sender must contain message value")
 	ErrComplexLiteralSender      = errors.New("Literal network sender must have primitive type")
-	ErrInvalidPortlessConnection = errors.New("Connection to a node with more than one port must always has explicit port name")
+	ErrIllegalPortlessConnection = errors.New("Connection to a node, with more than one port, must always has a port name")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -75,31 +74,7 @@ func (a Analyzer) analyzeConnections(
 	return resolvedNet, nil
 }
 
-type nodesNetUsage map[string]nodeNetUsage
-
-func (n nodesNetUsage) AddOutport(node, port string) {
-	if _, ok := n[node]; !ok {
-		defaultValue := nodeNetUsage{
-			In:  map[string]struct{}{},
-			Out: map[string]struct{}{},
-		}
-		n[node] = defaultValue
-	}
-	n[node].Out[port] = struct{}{}
-}
-
-func (n nodesNetUsage) AddInport(node, port string) {
-	if _, ok := n[node]; !ok {
-		defaultValue := nodeNetUsage{
-			In:  map[string]struct{}{},
-			Out: map[string]struct{}{},
-		}
-		n[node] = defaultValue
-	}
-	n[node].In[port] = struct{}{}
-}
-
-func (a Analyzer) analyzeConnection( //nolint:funlen
+func (a Analyzer) analyzeConnection(
 	conn src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
@@ -182,8 +157,6 @@ func (a Analyzer) analyzeConnection( //nolint:funlen
 
 	// now handle normal connections
 	normConn := conn.Normal
-
-	// TODO mark portless connections as used
 
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		normConn.SenderSide,
@@ -344,7 +317,7 @@ type nodeNetUsage struct {
 // Every component's inport and outport is used;
 // Every sub-node's inport is used;
 // For every  sub-node's there's at least one used outport.
-func (Analyzer) checkNetPortsUsage( //nolint:funlen
+func (Analyzer) checkNetPortsUsage(
 	compInterface src.Interface,
 	nodesIfaces map[string]src.Interface,
 	scope src.Scope,
@@ -358,6 +331,7 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 			Meta:     &compInterface.Meta,
 		}
 	}
+
 	for inportName := range compInterface.IO.In {
 		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
 			return &compiler.Error{
@@ -402,8 +376,11 @@ func (Analyzer) checkNetPortsUsage( //nolint:funlen
 				}
 
 				meta := nodeIface.IO.In[inportName].Meta
+
 				return &compiler.Error{
-					Err:      fmt.Errorf("%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName),
+					Err: fmt.Errorf(
+						"%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName,
+					),
 					Location: &scope.Location,
 					Meta:     &meta,
 				}
@@ -548,7 +525,7 @@ func (a Analyzer) getResolvedPortType(
 	if portAddr.Port == "" {
 		if len(ports) > 1 {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      ErrInvalidPortlessConnection,
+				Err:      ErrIllegalPortlessConnection,
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}
@@ -600,7 +577,7 @@ func (a Analyzer) getResolvedPortType(
 	return resolvedPortType, port.IsArray, nil
 }
 
-func (a Analyzer) getSenderSideType( //nolint:funlen
+func (a Analyzer) getSenderSideType(
 	senderSide src.ConnectionSenderSide,
 	iface src.Interface,
 	nodes map[string]src.Node,
@@ -718,8 +695,10 @@ func (a Analyzer) getResolvedSenderConstType(
 		}
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(constSender.Message.TypeExpr, scope)
-
+	resolvedExpr, err := a.resolver.ResolveExpr(
+		constSender.Message.TypeExpr,
+		scope,
+	)
 	if err != nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
 			Err:      err,
