@@ -14,13 +14,13 @@
     },
     // run (examples)
     {
-      "name": "99 bottles",
+      "name": "RUN",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "99_bottles"]
+      "args": ["run", "struct_selector"]
     },
     // === LSP ===
     {
