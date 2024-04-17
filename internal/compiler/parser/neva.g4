@@ -40,7 +40,7 @@ typeStmt: singleTypeStmt | groupTypeStmt;
 singleTypeStmt: PUB_KW? 'type' typeDef;
 groupTypeStmt:
 	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
-typeDef: IDENTIFIER typeParams? typeExpr?;
+typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam)*;
 typeParam: IDENTIFIER typeExpr? NEWLINE*;
@@ -120,7 +120,7 @@ compStmt: singleCompStmt | groupCompStmt;
 singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
 groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
-		compilerDirectives? PUB_KW? compDef
+		(COMMENT NEWLINE*)* compilerDirectives? PUB_KW? compDef
 	)* '}';
 compDef: interfaceDef (compBody | compNetBody)? NEWLINE*;
 compBody:

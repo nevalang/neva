@@ -25,7 +25,6 @@ type ManifestParser interface {
 
 func (b Builder) Build(
 	ctx context.Context,
-	fsRoot string,
 	wd string,
 ) (compiler.RawBuild, *compiler.Error) {
 	// load entry module from disk

@@ -34,7 +34,6 @@ func (c Compiler) Compile(
 func (c Compiler) CompileToIR(whereCLIExecuted string, whereEntryPkg string) (*ir.Program, *Error) {
 	rawBuild, err := c.builder.Build(
 		context.Background(),
-		whereCLIExecuted,
 		whereEntryPkg,
 	)
 	if err != nil {

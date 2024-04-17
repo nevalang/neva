@@ -4,7 +4,7 @@
 .PHONY: install
 install:
 	@go build -ldflags="-s -w" ./cmd/neva && \
-	rm -rf /$HOME/neva/std && \
+	rm -rf $HOME/neva/std && \
 	rm -rf /usr/local/bin/neva && \
 	mv neva /usr/local/bin/neva
 
