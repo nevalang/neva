@@ -101,6 +101,6 @@ func main() {
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
