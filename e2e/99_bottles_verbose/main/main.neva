@@ -47,7 +47,7 @@ component PrintFirstLine(n int) (n int) {
         match:else -> printf:args[0]
         $firstLine1 -> printf:tpl
 
-        [println:sig, printf] -> lock:sig
+        [println:sig, printf:args[0]] -> lock:sig
 
         lock:data -> :n
     }

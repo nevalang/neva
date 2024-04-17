@@ -67,7 +67,7 @@ component PrintSecondLine(n int) (n int) {
             ($secondLine1 -> printf:tpl)
         ]
 
-        [println:sig, printf:err] -> lock:sig
+        [println:sig, printf:args[0]] -> lock:sig
         lock:data -> :n
     }
 }
