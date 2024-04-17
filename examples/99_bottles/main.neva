@@ -38,7 +38,7 @@ component PrintFirstLine(n int) (n int) {
             ($firstLine1 -> printf:tpl)
         ]
 
-        [println, printf] -> lock:sig
+        [println, printf:args[0]] -> lock:sig
         lock -> :n
     }
 }
@@ -65,7 +65,7 @@ component PrintSecondLine(n int) (n int) {
             ($secondLine1 -> printf:tpl)
         ]
 
-        [println, printf] -> lock:sig
+        [println, printf:args[0]] -> lock:sig
         lock:data -> :n
     }
 }

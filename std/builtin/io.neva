@@ -3,5 +3,5 @@ component {
     pub Println<T>(data T) (sig T)
 
     #extern(printf)
-    pub Printf(tpl string, [args] any) (err error)
+    pub Printf(tpl string, [args] any) ([args] any, err error)
 }
