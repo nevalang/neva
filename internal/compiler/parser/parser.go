@@ -18,6 +18,7 @@ import (
 type treeShapeListener struct {
 	*generated.BasenevaListener
 	file src.File
+	loc  src.Location
 }
 
 type Parser struct {
@@ -132,7 +133,7 @@ func (p Parser) parseFile(
 	prsr.BuildParseTrees = true
 
 	tree := prsr.Prog()
-	listener := &treeShapeListener{}
+	listener := &treeShapeListener{loc: loc}
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
