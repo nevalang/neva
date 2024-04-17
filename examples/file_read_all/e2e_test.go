@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 
-	want, err := os.ReadFile("19_file_readall/main.neva")
+	want, err := os.ReadFile("file_read_all/main.neva")
 	require.NoError(t, err)
 
 	require.Equal(
