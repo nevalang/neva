@@ -44,14 +44,14 @@ func parseTypeParams(params generated.ITypeParamsContext) src.TypeParams {
 	}
 }
 
-func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
+func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 	if expr == nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: core.EntityRef{Name: "any"},
 			},
 			Meta: core.Meta{Text: "any"},
-		}
+		}, nil
 	}
 
 	var result *ts.Expr
@@ -59,14 +59,27 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 		var err error
 		result, err = parseTypeInstExpr(instExpr)
 		if err != nil {
-			panic(err)
+			return ts.Expr{}, &compiler.Error{
+				Err: err,
+				Meta: &core.Meta{
+					Text: expr.GetText(),
+					Start: core.Position{
+						Line:   expr.GetStart().GetLine(),
+						Column: expr.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   expr.GetStop().GetLine(),
+						Column: expr.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
 	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
 		result = parseUnionExpr(unionExpr)
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
 		result = parseLitExpr(litExpr)
 	} else {
-		panic(&compiler.Error{
+		return ts.Expr{}, &compiler.Error{
 			Err: errors.New("Missing type expression"),
 			Meta: &core.Meta{
 				Text: expr.GetText(),
@@ -79,12 +92,12 @@ func parseTypeExpr(expr generated.ITypeExprContext) ts.Expr {
 					Column: expr.GetStop().GetLine(),
 				},
 			},
-		})
+		}
 	}
 
 	result.Meta = getTypeExprMeta(expr)
 
-	return *result
+	return *result, nil
 }
 
 func getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
@@ -109,7 +122,7 @@ func getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
 	return meta
 }
 
-func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
+func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compiler.Error) {
 	subExprs := unionExpr.AllNonUnionTypeExpr()
 	parsedSubExprs := make([]ts.Expr, 0, len(subExprs))
 
@@ -117,7 +130,7 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 		if instExpr := subExpr.TypeInstExpr(); instExpr != nil {
 			parsedTypeInstExpr, err := parseTypeInstExpr(instExpr)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 			parsedSubExprs = append(parsedSubExprs, *parsedTypeInstExpr)
 		}
@@ -130,21 +143,34 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) *ts.Expr {
 		Lit: &ts.LitExpr{
 			Union: parsedSubExprs,
 		},
-	}
+	}, nil
 }
 
-func parseLitExpr(litExpr generated.ITypeLitExprContext) *ts.Expr {
+func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Error) {
 	enumExpr := litExpr.EnumTypeExpr()
 	structExpr := litExpr.StructTypeExpr()
 
 	switch {
 	case enumExpr != nil:
-		return parseEnumExpr(enumExpr)
+		return parseEnumExpr(enumExpr), nil
 	case structExpr != nil:
-		return parseStructExpr(structExpr)
+		return parseStructExpr(structExpr), nil
 	}
 
-	panic("unknown literal type")
+	return nil, &compiler.Error{
+		Err: errors.New("Unknown literal type"),
+		Meta: &core.Meta{
+			Text: litExpr.GetText(),
+			Start: core.Position{
+				Line:   litExpr.GetStart().GetLine(),
+				Column: litExpr.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   litExpr.GetStop().GetLine(),
+				Column: litExpr.GetStop().GetColumn(),
+			},
+		},
+	}
 }
 
 func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
@@ -160,7 +186,9 @@ func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
 	return &result
 }
 
-func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
+func parseStructExpr(
+	structExpr generated.IStructTypeExprContext,
+) (*ts.Expr, *compiler.Error) {
 	result := ts.Expr{
 		Lit: &ts.LitExpr{
 			Struct: map[string]ts.Expr{},
@@ -169,7 +197,7 @@ func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
 
 	structFields := structExpr.StructFields()
 	if structFields == nil {
-		return &result
+		return &result, nil
 	}
 
 	fields := structExpr.StructFields().AllStructField()
@@ -177,10 +205,14 @@ func parseStructExpr(structExpr generated.IStructTypeExprContext) *ts.Expr {
 
 	for _, field := range fields {
 		fieldName := field.IDENTIFIER().GetText()
-		result.Lit.Struct[fieldName] = parseTypeExpr(field.TypeExpr())
+		v, err := parseTypeExpr(field.TypeExpr())
+		if err != nil {
+			return nil, err
+		}
+		result.Lit.Struct[fieldName] = v
 	}
 
-	return &result
+	return &result, nil
 }
 
 func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *compiler.Error) {
@@ -223,12 +255,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 	return &result, nil
 }
 
-func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, error) {
-	parts := strings.Split(expr.GetText(), ".")
-	if len(parts) > 2 {
-		panic("")
-	}
-
+func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler.Error) {
 	meta := core.Meta{
 		Text: expr.GetText(),
 		Start: core.Position{
@@ -239,6 +266,14 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, error) {
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
+	}
+
+	parts := strings.Split(expr.GetText(), ".")
+	if len(parts) > 2 {
+		return core.EntityRef{}, &compiler.Error{
+			Err:  fmt.Errorf("Invalid entity reference %v", expr.GetText()),
+			Meta: &meta,
+		}
 	}
 
 	if len(parts) == 1 {
@@ -318,7 +353,10 @@ func parseInterfaceDef(actx generated.IInterfaceDefContext) src.Interface {
 	}
 }
 
-func parseNodes(actx generated.ICompNodesDefBodyContext, isRootLevel bool) map[string]src.Node {
+func parseNodes(
+	actx generated.ICompNodesDefBodyContext,
+	isRootLevel bool,
+) (map[string]src.Node, *compiler.Error) {
 	result := map[string]src.Node{}
 
 	for _, node := range actx.AllCompNodeDef() {
@@ -331,14 +369,31 @@ func parseNodes(actx generated.ICompNodesDefBodyContext, isRootLevel bool) map[s
 
 		parsedRef, err := parseEntityRef(nodeInst.EntityRef())
 		if err != nil {
-			panic(err)
+			return nil, &compiler.Error{
+				Err: err,
+				Meta: &core.Meta{
+					Text: node.GetText(),
+					Start: core.Position{
+						Line:   node.GetStart().GetLine(),
+						Column: node.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   node.GetStop().GetLine(),
+						Column: node.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
 
 		directives := parseCompilerDirectives(node.CompilerDirectives())
 
 		var deps map[string]src.Node
 		if diArgs := nodeInst.NodeDIArgs(); diArgs != nil {
-			deps = parseNodes(diArgs.CompNodesDefBody(), false)
+			v, err := parseNodes(diArgs.CompNodesDefBody(), false)
+			if err != nil {
+				return nil, err
+			}
+			deps = v
 		}
 
 		var nodeName string
@@ -487,7 +542,9 @@ func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrCont
 	}, nil
 }
 
-func parseMessage(constVal generated.IConstLitContext) (src.Message, error) { //nolint:funlen
+func parseMessage(
+	constVal generated.IConstLitContext,
+) (src.Message, *compiler.Error) {
 	msg := src.Message{
 		Meta: core.Meta{
 			Text: constVal.GetText(),
@@ -507,7 +564,20 @@ func parseMessage(constVal generated.IConstLitContext) (src.Message, error) { //
 	case constVal.Bool_() != nil:
 		boolVal := constVal.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
-			panic("bool val not true or false")
+			return src.Message{}, &compiler.Error{
+				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
+				Meta: &core.Meta{
+					Text: constVal.GetText(),
+					Start: core.Position{
+						Line:   constVal.GetStart().GetLine(),
+						Column: constVal.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   constVal.GetStop().GetLine(),
+						Column: constVal.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "bool"},
@@ -516,7 +586,21 @@ func parseMessage(constVal generated.IConstLitContext) (src.Message, error) { //
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
-			panic(err)
+			return src.Message{}, &compiler.Error{
+				Err:      err,
+				Location: &src.Location{},
+				Meta: &core.Meta{
+					Text: constVal.GetText(),
+					Start: core.Position{
+						Line:   constVal.GetStart().GetLine(),
+						Column: constVal.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   constVal.GetStop().GetLine(),
+						Column: constVal.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "int"},
@@ -528,7 +612,20 @@ func parseMessage(constVal generated.IConstLitContext) (src.Message, error) { //
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
-			panic(err)
+			return src.Message{}, &compiler.Error{
+				Err: err,
+				Meta: &core.Meta{
+					Text: constVal.GetText(),
+					Start: core.Position{
+						Line:   constVal.GetStart().GetLine(),
+						Column: constVal.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   constVal.GetStop().GetLine(),
+						Column: constVal.GetStop().GetColumn(),
+					},
+				},
+			}
 		}
 		msg.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "float"},
@@ -703,7 +800,9 @@ func parseTypeDef(actx generated.ITypeDefContext) src.Entity {
 	}
 }
 
-func parseConstDef(actx generated.IConstDefContext) src.Entity {
+func parseConstDef(
+	actx generated.IConstDefContext,
+) (src.Entity, *compiler.Error) {
 	constVal := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
@@ -728,7 +827,10 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	if entityRef != nil {
 		parsedRef, err := parseEntityRef(entityRef)
 		if err != nil {
-			panic(err)
+			return src.Entity{}, &compiler.Error{
+				Err:  err,
+				Meta: &meta,
+			}
 		}
 		parsedConst = src.Const{
 			Ref:  &parsedRef,
@@ -737,9 +839,18 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	} else {
 		parsedMsg, err := parseMessage(constVal)
 		if err != nil {
-			panic(err)
+			return src.Entity{}, &compiler.Error{
+				Err:  err,
+				Meta: &meta,
+			}
 		}
-		typeExpr := parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := parseTypeExpr(actx.TypeExpr())
+		if err != nil {
+			return src.Entity{}, &compiler.Error{
+				Err:  err,
+				Meta: &meta,
+			}
+		}
 		parsedMsg.TypeExpr = typeExpr
 		parsedConst = src.Const{
 			Message: &parsedMsg,
@@ -750,7 +861,7 @@ func parseConstDef(actx generated.IConstDefContext) src.Entity {
 	return src.Entity{
 		Kind:  src.ConstEntity,
 		Const: parsedConst,
-	}
+	}, nil
 }
 
 func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
@@ -803,14 +914,18 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 
 	var nodes map[string]src.Node
 	if nodesDef := fullBody.CompNodesDef(); nodesDef != nil {
-		nodes = parseNodes(nodesDef.CompNodesDefBody(), true)
+		v, err := parseNodes(nodesDef.CompNodesDefBody(), true)
+		if err != nil {
+			return src.Entity{}, err
+		}
+		nodes = v
 	}
 
 	var conns []src.Connection
 	if netDef := fullBody.CompNetDef(); netDef != nil {
 		parsedNet, err := parseNet(netDef.CompNetBody())
 		if err != nil {
-			panic(err)
+			return src.Entity{}, err
 		}
 		conns = parsedNet
 	}
