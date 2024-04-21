@@ -1,10 +1,8 @@
 {
   "version": "0.2.0",
   "configurations": [
-    // CLI
-    // get
     {
-      "name": "neva get github.com/nevalang/x",
+      "name": "GET",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -12,7 +10,6 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["get", "github.com/nevalang/x"]
     },
-    // run (examples)
     {
       "name": "RUN",
       "type": "go",
@@ -22,7 +19,6 @@
       "cwd": "${workspaceFolder}/examples",
       "args": ["run", "struct_selector"]
     },
-    // === LSP ===
     {
       "name": "LSP",
       "type": "go",
@@ -32,259 +28,8 @@
       "cwd": "${workspaceFolder}",
       "args": ["-debug"]
     },
-    // === ANTLR ===
     {
-      "name": "antlr_000_empty.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/000_empty.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_001_newline.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/001_newline.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_002_comments.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/002_comments.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_003_use.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/003_use.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_004_type.simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/004_type.simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_005_type.args.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/005_type.args.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_006_type.enum.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/006_type.enum.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_007_type.rec.simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/007_type.rec.simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_008_type.rec.args.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/008_type.rec.args.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_009_type.rec.nested.empty.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/009_type.rec.nested.empty.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_010_type.rec.nested.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/010_type.rec.nested.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_012_type.union.simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/012_type.union.simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_013_type.union.args.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/013_type.union.args.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_014_type.complex.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/014_type.complex.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_015_interface.simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/015_interface.simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_016_interface.enums.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/016_interface.enums.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_018_interface.struct_simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/018_interface.struct_simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_019_interface.struct_nested.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/019_interface.struct_nested.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_020_interface.union.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/020_interface.union.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_021_interface.mixed.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/021_interface.mixed.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_022_interface.typeargs.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/022_interface.typeargs.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_023_const.simple.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/023_const.simple.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_024_const.mixed.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/024_const.mixed.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_025_component.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/025_component.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_026_mixed.neva",
-      "type": "antlr-debug",
-      "request": "launch",
-      "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/026_mixed.neva",
-      "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
-      "startRule": "prog",
-      "printParseTree": true,
-      "visualParseTree": true
-    },
-    {
-      "name": "antlr_027_compiler_directives.neva",
+      "name": "ANTLR",
       "type": "antlr-debug",
       "request": "launch",
       "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/027_compiler_directives.neva",

@@ -3,10 +3,10 @@ package desugarer
 import (
 	"errors"
 	"maps"
+	"slices"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type handleNetResult struct {
@@ -21,10 +21,10 @@ func (d Desugarer) handleNetwork(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleNetResult, *compiler.Error) {
-	nodesToInsert := map[string]src.Node{}
 	desugaredConns := make([]src.Connection, 0, len(net))
+	nodesToInsert := map[string]src.Node{}
+	constsToInsert := map[string]src.Const{}
 	usedNodePorts := newNodePortsMap()
-	constantsToInsert := map[string]src.Const{}
 
 	for _, conn := range net {
 		if conn.ArrayBypass != nil {
@@ -41,31 +41,36 @@ func (d Desugarer) handleNetwork(
 		}
 
 		if conn.Normal.SenderSide.PortAddr != nil {
-			if conn.Normal.SenderSide.PortAddr.Port == "" { // if port is not specified, use first available
-				io, err := getNodeIOByPortAddr(scope, nodes, conn.Normal.SenderSide.PortAddr)
-				if err != nil {
-					return handleNetResult{}, err
+			if conn.Normal.SenderSide.PortAddr.Port != "" {
+				usedNodePorts.set(
+					conn.Normal.SenderSide.PortAddr.Node,
+					conn.Normal.SenderSide.PortAddr.Port,
+				)
+				continue
+			}
+
+			found, err := getFirstOutPortName(scope, nodes, *conn.Normal.SenderSide.PortAddr)
+			if err != nil {
+				return handleNetResult{}, &compiler.Error{
+					Err: err,
 				}
-				for outport := range io.Out {
-					conn = src.Connection{
-						Normal: &src.NormalConnection{
-							SenderSide: src.ConnectionSenderSide{
-								PortAddr: &src.PortAddr{
-									Node: conn.Normal.SenderSide.PortAddr.Node,
-									Port: outport, // <- substituted
-									Idx:  conn.Normal.SenderSide.PortAddr.Idx,
-									Meta: core.Meta{},
-								},
-								Selectors: conn.Normal.SenderSide.Selectors,
-								Meta:      conn.Normal.SenderSide.Meta,
-							},
-							ReceiverSide: conn.Normal.ReceiverSide,
+			}
+
+			conn = src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr: &src.PortAddr{
+							Port: found,
+							Node: conn.Normal.SenderSide.PortAddr.Node,
+							Idx:  conn.Normal.SenderSide.PortAddr.Idx,
+							Meta: conn.Normal.SenderSide.PortAddr.Meta,
 						},
-						Meta: conn.Meta,
-					}
-					conn.Normal.SenderSide.PortAddr.Port = outport
-					break
-				}
+						Selectors: conn.Normal.SenderSide.Selectors,
+						Meta:      conn.Normal.SenderSide.Meta,
+					},
+					ReceiverSide: conn.Normal.ReceiverSide,
+				},
+				Meta: conn.Meta,
 			}
 
 			usedNodePorts.set(
@@ -74,7 +79,6 @@ func (d Desugarer) handleNetwork(
 			)
 		}
 
-		// TODO possible option is to check whether we do not need to desugar anything here
 		if len(conn.Normal.SenderSide.Selectors) != 0 {
 			result, err := d.desugarStructSelectors(*conn.Normal)
 			if err != nil {
@@ -85,12 +89,14 @@ func (d Desugarer) handleNetwork(
 				}.Wrap(err)
 			}
 			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
-			constantsToInsert[result.constToInsertName] = result.constToInsert
+			constsToInsert[result.constToInsertName] = result.constToInsert
 			conn = result.connToReplace
+
+			// FIXME result.connToInsert needs desugaring itself! Because of portless conn
 			desugaredConns = append(desugaredConns, result.connToInsert)
 		}
 
-		if conn.Normal.SenderSide.Const != nil { //nolint:nestif
+		if conn.Normal.SenderSide.Const != nil {
 			if conn.Normal.SenderSide.Const.Ref != nil {
 				result, err := d.handleConstRefSender(conn, scope)
 				if err != nil {
@@ -103,27 +109,47 @@ func (d Desugarer) handleNetwork(
 				if err != nil {
 					return handleNetResult{}, err
 				}
-				constantsToInsert[result.constName] = *conn.Normal.SenderSide.Const
+				constsToInsert[result.constName] = *conn.Normal.SenderSide.Const
 				nodesToInsert[result.emitterNodeName] = result.emitterNode
 				conn = result.connectionWithoutConstSender
 			}
 		}
 
 		if len(conn.Normal.ReceiverSide.DeferredConnections) == 0 {
+			desugaredReceivers := slices.Clone(conn.Normal.ReceiverSide.Receivers)
+
 			for i, receiver := range conn.Normal.ReceiverSide.Receivers {
-				if receiver.PortAddr.Port == "" {
-					io, err := getNodeIOByPortAddr(scope, nodes, &receiver.PortAddr)
-					if err != nil {
-						return handleNetResult{}, err
-					}
-					for inport := range io.In {
-						receiver.PortAddr.Port = inport
-						break
-					}
-					conn.Normal.ReceiverSide.Receivers[i].PortAddr.Port = receiver.PortAddr.Port // <- substituted (mutation)
+				if receiver.PortAddr.Port != "" {
+					usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
+					continue
+				}
+
+				found, err := getFirstInPortName(scope, nodes, receiver.PortAddr)
+				if err != nil {
+					return handleNetResult{}, &compiler.Error{Err: err}
+				}
+
+				desugaredReceivers[i] = src.ConnectionReceiver{
+					PortAddr: src.PortAddr{
+						Port: found,
+						Node: receiver.PortAddr.Node,
+						Idx:  receiver.PortAddr.Idx,
+						Meta: receiver.PortAddr.Meta,
+					},
+					Meta: receiver.Meta,
 				}
 
 				usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
+			}
+
+			conn = src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: conn.Normal.SenderSide,
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: desugaredReceivers,
+					},
+				},
+				Meta: conn.Meta,
 			}
 
 			desugaredConns = append(desugaredConns, conn)
@@ -140,7 +166,7 @@ func (d Desugarer) handleNetwork(
 		}
 
 		maps.Copy(usedNodePorts.m, deferredConnsResult.usedNodesPorts.m)
-		maps.Copy(constantsToInsert, deferredConnsResult.virtualConstants)
+		maps.Copy(constsToInsert, deferredConnsResult.virtualConstants)
 		maps.Copy(nodesToInsert, deferredConnsResult.virtualNodes)
 
 		desugaredConns = append(
@@ -152,7 +178,7 @@ func (d Desugarer) handleNetwork(
 	return handleNetResult{
 		desugaredConnections: desugaredConns,
 		usedNodePorts:        usedNodePorts,
-		virtualConstants:     constantsToInsert,
+		virtualConstants:     constsToInsert,
 		virtualNodes:         nodesToInsert,
 	}, nil
 }
@@ -179,4 +205,26 @@ func getNodeIOByPortAddr(
 	}
 
 	return iface.IO, nil
+}
+
+func getFirstInPortName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
+	if err != nil {
+		return "", err
+	}
+	for inport := range io.In {
+		return inport, nil
+	}
+	return "", errors.New("first inport not found")
+}
+
+func getFirstOutPortName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
+	if err != nil {
+		return "", err
+	}
+	for outport := range io.Out {
+		return outport, nil
+	}
+	return "", errors.New("first outport not found")
 }

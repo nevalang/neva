@@ -31,7 +31,10 @@ func (c Compiler) Compile(
 	return c.backend.Emit(dstPath, ir)
 }
 
-func (c Compiler) CompileToIR(whereCLIExecuted string, whereEntryPkg string) (*ir.Program, *Error) {
+func (c Compiler) CompileToIR(
+	whereCLIExecuted string,
+	whereEntryPkg string,
+) (*ir.Program, *Error) {
 	rawBuild, err := c.builder.Build(
 		context.Background(),
 		whereEntryPkg,

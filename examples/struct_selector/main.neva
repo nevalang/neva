@@ -7,11 +7,10 @@ type {
 }
 
 component Main(start) (stop) {
-    nodes { UserSender, Println }
+    nodes { GetUser, Println }
     net {
-        :start -> userSender
-        userSender.pet.name -> println:data // https://github.com/nevalang/neva/issues/558
-        println -> :stop
+        :start -> getUser
+        getUser.pet.name -> println -> :stop
     }
 }
 
@@ -20,6 +19,6 @@ const user User = {
     pet: { name: 'Charley' }
 }
 
-component UserSender(sig) (u User) {
+component GetUser(sig) (u User) {
     :sig -> ($user -> :u)
 }

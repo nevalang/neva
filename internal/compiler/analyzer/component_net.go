@@ -68,6 +68,7 @@ func (a Analyzer) analyzeConnections(
 		if err != nil {
 			return nil, err
 		}
+
 		resolvedNet = append(resolvedNet, resolvedConn)
 	}
 

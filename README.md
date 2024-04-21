@@ -12,6 +12,21 @@ A general-purpose flow-based programming language with static types and implicit
 
 Website: https://nevalang.org/
 
+## Features 🚀
+
+- **Flow-Based Programming**
+- **Strong Static Typing**
+- **Implicit Parallelism**
+- **Compiles to Machine Code, Go and More**
+- **Clean C-like Syntax**
+- **Interpreter Mode**
+- **First-Class Dependency Injection**
+- **Builtin Observability**
+- **Package Management**
+- **Garbage Collection**
+
+Please note that even though these features are technically implemented, _developer-experience may be bad_ due to current project state. _No backward-compatibility_ guarantees at the time.
+
 ## Quick Start
 
 ### Download Neva CLI
@@ -38,10 +53,25 @@ curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/
 
 ```bash
 neva new test
-cd test
 ```
 
-Replace the code in `src/main.neva` with the following:
+Replace the code in `cat test/src/main.neva` with the following:
+
+### Execute
+
+```bash
+neva run test/src
+```
+
+You should see the following output:
+
+```bash
+Hello, World!
+```
+
+### What's inside?
+
+If you open `test/src/main.neva` with your favorite IDE you'll see this
 
 ```neva
 component Main(start) (stop) {
@@ -52,42 +82,12 @@ component Main(start) (stop) {
 }
 ```
 
-Here we define _component_ `Main` with _inport_ `start` and _outport_ `stop`. It has 1 _node_ `println` that's an _instance_ of `Println` component. Then we define _network_ - set of connections that describe dataflow - when message from `start` received, a string literal "Hello, World!" is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
-
-### Execute
-
-Now run (make sure you are in created `test` directory with `neva.yml`):
-
-```bash
-neva run src
-```
-
-You should see the following output:
-
-```bash
-Hello, World!
-```
+Here we define component `Main` with inport `start` and outport `stop`. It has 1 node `println` that is an instance of the `Println` component. Then we define `net` - set of connections that describe dataflow. When message from `start` received, a string literal `Hello, World!` is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
 
 ### What's Next?
 
-- [See more examples](./examples/)
-- [Learn how to generate native code, Go or other targets](https://nevalang.org/docs/quick-start)
-- [Learn more about the language](https://nevalang.org/docs/about)
-
-## Features 🚀
-
-- Flow-Based Programming
-- Implicit Parallelism
-- Strong Static Typing
-- Multi-Target Compilation
-- Clean C-like Syntax
-- Interpreter Mode
-- Builtin Dependency Injection
-- Builtin Observability
-- Package Management
-- Garbage Collection
-
-Please note that even though these features are technically implemented, **developer-experience may be bad** due to current project state. **No backward-compatibility** guarantees at the time.
+- [Learn more about the language](https://nevalang.org/)
+- [See more examples](./examples/) (`git clone` this repo and `neva run` them!)
 
 ## Roadmap (🚧 WIP)
 
@@ -96,15 +96,15 @@ Nevalang is at an extremely early stage but with the help of community it can be
 - Building a Community
 - Core Standard Library
 - Feature-Rich LSP-compatible Language Server
-- Go Interop (import go from neva and neva from go)
+- **Go Interop** (import go from neva and neva from go)
 - DAP-compatible Debugger
 - Testing Framework
 - No Runtime Exceptions (If it runs then it works)
-- Visual Programming in VSCode (Nevalang becomes hybrid langauge)
+- **Visual Programming** in VSCode (Nevalang becomes hybrid langauge)
 
 [See backlog for more details](https://github.com/orgs/nevalang/projects)
 
-Nevalang needs your help - it currently just a few maintainers.
+Nevalang needs _your_ help - it currently just a few maintainers.
 
 ## Community
 
