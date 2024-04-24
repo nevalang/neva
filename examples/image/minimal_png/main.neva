@@ -1,0 +1,21 @@
+import {
+  io
+  image
+}
+
+component Main(start) (stop) {
+  nodes {
+    image.New
+    image.Encode
+    io.WriteAll
+  }
+  net {
+    :start -> [
+      ('minimal.png' -> writeAll:filename),
+      (16 -> [new:width, new:height])
+    ]
+    new:img -> encode:img
+    [encodeImg:data, encodeImg:err] -> writeAll:data
+    writeAll:sig -> :stop
+  }
+}

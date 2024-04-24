@@ -7,11 +7,27 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+func decodeInt(i *int64, m runtime.Msg) bool {
+	if m.Type() != runtime.IntMsgType {
+		return false
+	}
+	*i = m.Int()
+	return true
+}
+
+func decodeStr(s *string, m runtime.Msg) bool {
+	if m.Type() != runtime.StrMsgType {
+		return false
+	}
+	*s = m.Str()
+	return true
+}
+
 type rgbaMsg struct {
-	r runtime.IntMsg
-	g runtime.IntMsg
-	b runtime.IntMsg
-	a runtime.IntMsg
+	r int64
+	g int64
+	b int64
+	a int64
 }
 
 func (c *rgbaMsg) reset() { *c = rgbaMsg{} }
@@ -24,66 +40,37 @@ func (c *rgbaMsg) decode(msg runtime.Msg) bool {
 	if m == nil {
 		return false
 	}
-	return c.r.Decode(m["r"]) &&
-		c.r.Decode(m["g"]) &&
-		c.r.Decode(m["b"]) &&
-		c.r.Decode(m["a"])
+	return decodeInt(&c.r, m["r"]) &&
+		decodeInt(&c.g, m["g"]) &&
+		decodeInt(&c.b, m["b"]) &&
+		decodeInt(&c.a, m["a"])
 }
-func (c *rgbaMsg) encode() runtime.Msg {
+func (c rgbaMsg) encode() runtime.Msg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
-		"r": c.r,
-		"g": c.g,
-		"b": c.b,
-		"a": c.a,
+		"r": runtime.NewIntMsg(c.r),
+		"g": runtime.NewIntMsg(c.g),
+		"b": runtime.NewIntMsg(c.b),
+		"a": runtime.NewIntMsg(c.a),
 	})
 }
-func (c *rgbaMsg) color() color.Color {
-	return color.RGBA64{R: uint16(c.r.Int()), G: uint16(c.g.Int()), B: uint16(c.b.Int()), A: uint16(c.a.Int())}
+func (c rgbaMsg) color() color.Color {
+	return color.RGBA64{R: uint16(c.r), G: uint16(c.g), B: uint16(c.b), A: uint16(c.a)}
 }
 func (c *rgbaMsg) decodeColor(clr color.Color) {
 	r, g, b, a := clr.RGBA()
-	c.r = runtime.NewIntMsg(int64(r))
-	c.g = runtime.NewIntMsg(int64(g))
-	c.b = runtime.NewIntMsg(int64(b))
-	c.a = runtime.NewIntMsg(int64(a))
-}
-
-type pointMsg struct {
-	x int64
-	y int64
-}
-
-func (p *pointMsg) reset() { *p = pointMsg{} }
-func (p *pointMsg) decode(msg runtime.Msg) bool {
-	p.reset()
-	if msg == nil {
-		return false
-	}
-	m := msg.Map()
-	if m == nil {
-		return false
-	}
-	p.x = m["x"].Int()
-	p.y = m["y"].Int()
-	return true
-}
-func (p *pointMsg) encode() runtime.Msg {
-	return runtime.NewMapMsg(map[string]runtime.Msg{
-		"x": runtime.NewIntMsg(p.x),
-		"y": runtime.NewIntMsg(p.y),
-	})
-}
-func (p *pointMsg) decodePoint(pt image.Point) {
-	p.x = int64(pt.X)
-	p.y = int64(pt.Y)
+	c.r = int64(r)
+	c.g = int64(g)
+	c.b = int64(b)
+	c.a = int64(a)
 }
 
 type pixelMsg struct {
-	point pointMsg
+	x     int64
+	y     int64
 	color rgbaMsg
 }
 
-func (p *pixelMsg) reset() {}
+func (p *pixelMsg) reset() { *p = pixelMsg{} }
 func (p *pixelMsg) decode(msg runtime.Msg) bool {
 	if msg == nil {
 		return false
@@ -92,53 +79,59 @@ func (p *pixelMsg) decode(msg runtime.Msg) bool {
 	if m == nil {
 		return false
 	}
-	return p.point.decode(m["point"]) && p.color.decode(m["color"])
+	return decodeInt(&p.x, m["x"]) && decodeInt(&p.y, m["y"]) && p.color.decode(m["color"])
 }
-func (p *pixelMsg) encode() runtime.Msg {
+func (p pixelMsg) encode() runtime.Msg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
-		"point": p.point.encode(),
+		"x":     runtime.NewIntMsg(p.x),
+		"y":     runtime.NewIntMsg(p.y),
 		"color": p.color.encode(),
 	})
 }
 
-type boundsMsg struct {
-	min pointMsg
-	max pointMsg
+type imageMsg struct {
+	pixels string
+	width  int64
+	height int64
 }
 
-func (b *boundsMsg) reset() {}
-func (b *boundsMsg) decode(msg runtime.Msg) bool {
-	if msg == nil {
+func (i *imageMsg) reset() { *i = imageMsg{} }
+func (i *imageMsg) decode(msg runtime.Msg) bool {
+	if i.reset(); msg.Type() != runtime.MapMsgType {
 		return false
 	}
 	m := msg.Map()
-	if m == nil {
-		return false
-	}
-	return b.min.decode(m["min"]) && b.max.decode(m["max"])
+	return decodeStr(&i.pixels, m["pixels"]) &&
+		decodeInt(&i.width, m["width"]) &&
+		decodeInt(&i.height, m["height"])
 }
-func (b *boundsMsg) rect() image.Rectangle {
-	return image.Rect(int(b.min.x), int(b.min.y), int(b.max.x), int(b.max.y))
-}
-func (b *boundsMsg) decodeRect(r image.Rectangle) {
-	b.min.decodePoint(r.Min)
-	b.max.decodePoint(r.Max)
-}
-func (b *boundsMsg) encode() runtime.Msg {
+func (i imageMsg) encode() runtime.Msg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
-		"min": b.min.encode(),
-		"max": b.max.encode(),
+		"pixels": runtime.NewStrMsg(i.pixels),
+		"width":  runtime.NewIntMsg(i.width),
+		"height": runtime.NewIntMsg(i.height),
 	})
 }
-
-type formatMsg int64
-
-func (f *formatMsg) reset() { *f = 0 }
-func (f *formatMsg) decode(msg runtime.Msg) bool {
-	f.reset()
-	if msg == nil {
-		return false
+func (i imageMsg) createImage() image.Image {
+	// Use pixels directly if available.
+	pix := []uint8(i.pixels)
+	if len(pix) == 0 {
+		if size := i.width * i.height; size > 0 {
+			// Allocate new pixels.
+			// One byte for each color component.
+			pix = make([]uint8, 4*size)
+		}
 	}
-	*f = formatMsg(msg.Int())
-	return *f >= 0 && *f <= 2
+	im := &image.RGBA{
+		Stride: 1,
+		Pix:    pix,
+		Rect:   image.Rect(0, 0, int(i.width), int(i.height)),
+	}
+	return im
+}
+func (i *imageMsg) decodeImage(img *image.RGBA) bool {
+	i.pixels = string(img.Pix)
+	i.width = int64(img.Rect.Dx())
+	i.height = int64(img.Rect.Dy())
+	return true
 }

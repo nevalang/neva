@@ -9,39 +9,31 @@ import (
 type imageNew struct{}
 
 func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	bounds, err := io.In.Port("bounds")
+	width, err := io.In.Port("width")
 	if err != nil {
 		return nil, err
 	}
 
-	seq, err := io.Out.Port("seq")
+	height, err := io.In.Port("height")
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := io.Out.Port("img")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		for msg := range bounds {
-			var b boundsMsg
-			if !b.decode(msg) {
-				// A empty bounds is like a 0x0 image.
-				// Send a sentinel Pixel and continue.
-				seq <- nil
+		for {
+			var i imageMsg
+			if w := <-width; !decodeInt(&i.width, w) {
 				continue
 			}
-			var dx, dy int64
-			if dx = b.max.x - b.min.x; dx < 0 {
-				dx = -dx
+			if h := <-height; !decodeInt(&i.height, h) {
+				continue
 			}
-			if dy = b.max.y - b.min.y; dy < 0 {
-				dy = -dy
-			}
-			// Send raw Pixels.
-			im := make([]pixelMsg, dx*dy)
-			for _, p := range im {
-				seq <- p.encode()
-			}
-			// Send a sentinel Pixel.
-			seq <- nil
+			out <- i.encode()
 		}
 	}, nil
 }
