@@ -67,8 +67,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// http
 		"http_get": httpGet{},
 		// image
-		"image_decode": imageDecode{},
-		"image_draw":   imageDraw{},
 		"image_encode": imageEncode{},
 		"image_new":    imageNew{},
 	}

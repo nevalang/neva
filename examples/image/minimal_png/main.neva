@@ -1,0 +1,32 @@
+import {
+  io
+  image
+}
+
+component Main(start) (stop) {
+  nodes {
+    pb Struct<image.Pixel>
+    cb Struct<image.RGBA>
+    sb Struct<stream<image.Pixel>>
+    image.New
+    image.Encode
+    io.WriteAll
+    Println
+  }
+  net {
+    :start -> [
+      (0 -> [cb:r, cb:g, cb:b, cb:a]),
+      (15 -> [pb:x, pb:y]),
+      (0 -> sb:idx),
+      (true -> sb:last),
+      ('minimal.png' -> writeAll:filename)
+    ]
+    cb:msg -> pb:color
+    pb:msg -> sb:data
+    sb:msg -> new
+    new:img -> encode:img
+    new:err -> println -> :stop
+    encode:data -> writeAll:data
+    [new:err, encode:err, writeAll:err] -> println -> :stop
+  }
+}
