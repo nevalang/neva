@@ -31,4 +31,7 @@ component {
 
     #extern(slice)
     pub Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
+
+    #extern(list_iter)
+    pub Iter<T any> (lst list<T>) (res maybe<T>)
 }

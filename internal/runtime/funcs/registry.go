@@ -37,6 +37,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		//list
 		"index":       index{},
 		"list_len":    listlen{},
+		"list_iter":   list_iter{},
 		"list_push":   listPush{},
 		"int_sort":    listSortInt{},
 		"float_sort":  listSortFloat{},
