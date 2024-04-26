@@ -26,11 +26,11 @@ type ManifestParser interface {
 func (b Builder) Build(
 	ctx context.Context,
 	wd string,
-) (compiler.RawBuild, *compiler.Error) {
+) (compiler.RawBuild, string, *compiler.Error) {
 	// load entry module from disk
-	entryMod, err := b.LoadModuleByPath(ctx, wd)
+	entryMod, entryModRootPath, err := b.LoadModuleByPath(ctx, wd)
 	if err != nil {
-		return compiler.RawBuild{}, &compiler.Error{
+		return compiler.RawBuild{}, "", &compiler.Error{
 			Err: fmt.Errorf("build entry mod: %w", err),
 		}
 	}
@@ -48,9 +48,9 @@ func (b Builder) Build(
 	}
 
 	// load stdlib module
-	stdMod, err := b.LoadModuleByPath(ctx, b.stdLibPath)
+	stdMod, _, err := b.LoadModuleByPath(ctx, b.stdLibPath)
 	if err != nil {
-		return compiler.RawBuild{}, &compiler.Error{
+		return compiler.RawBuild{}, "", &compiler.Error{
 			Err: fmt.Errorf("build stdlib mod: %w", err),
 		}
 	}
@@ -60,7 +60,7 @@ func (b Builder) Build(
 
 	release, err := acquireLockFile()
 	if err != nil {
-		return compiler.RawBuild{}, &compiler.Error{
+		return compiler.RawBuild{}, "", &compiler.Error{
 			Err: fmt.Errorf("failed to acquire lock file: %w", err),
 		}
 	}
@@ -77,14 +77,14 @@ func (b Builder) Build(
 
 		depWD, _, err := b.downloadDep(depModRef)
 		if err != nil {
-			return compiler.RawBuild{}, &compiler.Error{
+			return compiler.RawBuild{}, "", &compiler.Error{
 				Err: fmt.Errorf("download dep: %w", err),
 			}
 		}
 
-		depMod, err := b.LoadModuleByPath(ctx, depWD)
+		depMod, _, err := b.LoadModuleByPath(ctx, depWD)
 		if err != nil {
-			return compiler.RawBuild{}, &compiler.Error{
+			return compiler.RawBuild{}, "", &compiler.Error{
 				Err: fmt.Errorf("build dep mod: %w", err),
 			}
 		}
@@ -103,7 +103,7 @@ func (b Builder) Build(
 	return compiler.RawBuild{
 		EntryModRef: src.ModuleRef{Path: "@"},
 		Modules:     mods,
-	}, nil
+	}, entryModRootPath, nil
 }
 
 func getThirdPartyPath() (string, error) {

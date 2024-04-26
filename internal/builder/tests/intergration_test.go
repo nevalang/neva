@@ -13,7 +13,7 @@ func TestBuilder_WDIsModRoot(t *testing.T) {
 	prsr := parser.New(false)
 	bldr := builder.MustNew(prsr)
 
-	build, err := bldr.Build(context.Background(), "testmod")
+	build, _, err := bldr.Build(context.Background(), "testmod")
 	require.True(t, err == nil)
 
 	mod, ok := build.Modules[build.EntryModRef]
@@ -36,7 +36,7 @@ func TestBuilder_WDIsPkg(t *testing.T) {
 	prsr := parser.New(false)
 	bldr := builder.MustNew(prsr)
 
-	build, err := bldr.Build(context.Background(), "testmod/do_nothing")
+	build, _, err := bldr.Build(context.Background(), "testmod/do_nothing")
 	require.True(t, err == nil)
 
 	mod, ok := build.Modules[build.EntryModRef]

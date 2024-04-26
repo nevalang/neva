@@ -15,7 +15,7 @@ const (
 
 type (
 	Builder interface {
-		Build(ctx context.Context, wd string) (RawBuild, *Error)
+		Build(ctx context.Context, wd string) (RawBuild, string, *Error)
 	}
 
 	RawBuild struct {
