@@ -38,7 +38,6 @@ curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/
 
 ```bash
 neva new test
-cd test
 ```
 
 Replace the code in `src/main.neva` with the following:
@@ -59,7 +58,7 @@ Here we define _component_ `Main` with _inport_ `start` and _outport_ `stop`. It
 Now run (make sure you are in created `test` directory with `neva.yml`):
 
 ```bash
-neva run src
+neva run test/src # or neva run test/src/main.neva
 ```
 
 You should see the following output:
