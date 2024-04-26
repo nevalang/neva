@@ -1,0 +1,6 @@
+import { builtin }
+
+pub component Println(data any) (sig any) {
+    nodes { builtin.Println }
+	net { :data -> println -> :sig }
+}

@@ -44,6 +44,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		}
 	}
 
+	// FIXME mainPkgName containts full path with "examples/ "
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
