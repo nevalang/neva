@@ -19,8 +19,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}",
-      "args": ["run", "examples/struct_selector"]
+      "cwd": "${workspaceFolder}/e2e/run_cli_not_from_module_root/foo",
+      "args": ["run", "bar"]
     },
     // === LSP ===
     {
