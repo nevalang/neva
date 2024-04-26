@@ -1,0 +1,11 @@
+import {
+	@:foo
+	@:foo/bar
+}
+
+component Main(start) (stop) {
+	nodes { foo foo.Println, bar bar.Println }
+	net {
+		:start -> (42 -> foo -> bar -> :stop)
+	}
+}
