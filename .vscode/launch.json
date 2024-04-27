@@ -20,7 +20,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "struct_selector"]
+      "args": ["run", "image/minimal_png"]
     },
     // === LSP ===
     {

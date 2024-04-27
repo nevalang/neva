@@ -8,6 +8,7 @@ component Main(start) (stop) {
     image.New
     image.Encode
     io.WriteAll
+    Println
   }
   net {
     :start -> [
@@ -15,7 +16,8 @@ component Main(start) (stop) {
       (16 -> [new:width, new:height])
     ]
     new:img -> encode:img
-    [encodeImg:data, encodeImg:err] -> writeAll:data
+    encode:data -> writeAll:data
+    [encode:err, writeAll:err] -> println -> :stop
     writeAll:sig -> :stop
   }
 }
