@@ -27,7 +27,7 @@ func (d Desugarer) handleNetwork(
 	usedNodePorts := newNodePortsMap()
 
 	for _, conn := range net {
-		newDesugaredConns, err := d.desugarConn(
+		result, err := d.desugarConn(
 			conn,
 			usedNodePorts,
 			scope,
@@ -39,7 +39,8 @@ func (d Desugarer) handleNetwork(
 			return handleNetResult{}, err
 		}
 
-		desugaredConns = append(desugaredConns, newDesugaredConns...)
+		desugaredConns = append(desugaredConns, result.connToReplace)
+		desugaredConns = append(desugaredConns, result.connsToInsert...)
 	}
 
 	return handleNetResult{
@@ -50,8 +51,14 @@ func (d Desugarer) handleNetwork(
 	}, nil
 }
 
+type desugarConnResult struct {
+	connToReplace src.Connection
+	connsToInsert []src.Connection
+}
+
 // desugarConn modifies given nodesToInsert, constsToInsert and usedNodePorts
-// and returns list of connections to append as a result of desugaring of one connection.
+// it also returns connection to replace the original one and other connections
+// that were generated while desugared the original one.
 func (d Desugarer) desugarConn(
 	conn src.Connection,
 	usedNodePorts nodePortsMap,
@@ -59,7 +66,7 @@ func (d Desugarer) desugarConn(
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) ([]src.Connection, *compiler.Error) {
+) (desugarConnResult, *compiler.Error) {
 	// array bypass connection - nothing to desugar, just mark as used and return as-is
 	if conn.ArrayBypass != nil {
 		usedNodePorts.set(
@@ -70,7 +77,9 @@ func (d Desugarer) desugarConn(
 			conn.ArrayBypass.ReceiverInport.Node,
 			conn.ArrayBypass.ReceiverInport.Port,
 		)
-		return []src.Connection{conn}, nil
+		return desugarConnResult{
+			connToReplace: conn,
+		}, nil
 	}
 
 	// normal connection with port address sender
@@ -79,7 +88,7 @@ func (d Desugarer) desugarConn(
 		if conn.Normal.SenderSide.PortAddr.Port == "" {
 			found, err := getFirstOutPortName(scope, nodes, *conn.Normal.SenderSide.PortAddr)
 			if err != nil {
-				return nil, &compiler.Error{Err: err}
+				return desugarConnResult{}, &compiler.Error{Err: err}
 			}
 
 			conn = src.Connection{
@@ -107,13 +116,13 @@ func (d Desugarer) desugarConn(
 		)
 	}
 
-	// from this point it's possible that we return more than one connection
-	connsToReturn := []src.Connection{}
+	connsToInsert := []src.Connection{}
 
+	// if conn has selectors, desugar it, then replace it and insert generated ones
 	if len(conn.Normal.SenderSide.Selectors) != 0 {
 		result, err := d.desugarStructSelectors(*conn.Normal)
 		if err != nil {
-			return nil, compiler.Error{
+			return desugarConnResult{}, compiler.Error{
 				Err:      errors.New("Cannot desugar struct selectors"),
 				Location: &scope.Location,
 				Meta:     &conn.Meta,
@@ -122,38 +131,44 @@ func (d Desugarer) desugarConn(
 
 		nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 		constsToInsert[result.constToInsertName] = result.constToInsert
-		connsToReturn = append(connsToReturn, result.connToInsert)
 
-		replacedConnDesugarRes, err := d.desugarConn(result.connToReplace, usedNodePorts, scope, nodes, nodesToInsert, constsToInsert)
+		replacedConnDesugarRes, err := d.desugarConn(
+			result.connToReplace,
+			usedNodePorts,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
 		if err != nil {
-			return nil, err
+			return desugarConnResult{}, err
 		}
 
-		// FIXME instead of replacing conn we append it
-		// but the execution of this function is continuing
-		// so we end up with duplicate/incorrect version
-		connsToReturn = append(connsToReturn, replacedConnDesugarRes...)
+		conn = replacedConnDesugarRes.connToReplace
+		connsToInsert = append(connsToInsert, result.connToInsert)
 	}
 
+	// if sender is const or literal, replace it with desugared and insert const/node for emitter
 	if conn.Normal.SenderSide.Const != nil {
 		if conn.Normal.SenderSide.Const.Ref != nil {
 			result, err := d.handleConstRefSender(conn, scope)
 			if err != nil {
-				return nil, err
+				return desugarConnResult{}, err
 			}
-			nodesToInsert[result.emitterNodeName] = result.emitterNode
-			conn = result.connectionWithoutConstSender
+			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
+			conn = result.connToReplace
 		} else if conn.Normal.SenderSide.Const.Message != nil {
 			result, err := d.handleLiteralSender(conn)
 			if err != nil {
-				return nil, err
+				return desugarConnResult{}, err
 			}
 			constsToInsert[result.constName] = *conn.Normal.SenderSide.Const
-			nodesToInsert[result.emitterNodeName] = result.emitterNode
-			conn = result.connectionWithoutConstSender
+			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
+			conn = result.connToReplace
 		}
 	}
 
+	// if there's no deferred connections, then desugar empty port receivers and that's it
 	if len(conn.Normal.ReceiverSide.DeferredConnections) == 0 {
 		desugaredReceivers := slices.Clone(conn.Normal.ReceiverSide.Receivers)
 
@@ -165,7 +180,7 @@ func (d Desugarer) desugarConn(
 
 			found, err := getFirstInPortName(scope, nodes, receiver.PortAddr)
 			if err != nil {
-				return nil, &compiler.Error{Err: err}
+				return desugarConnResult{}, &compiler.Error{Err: err}
 			}
 
 			desugaredReceivers[i] = src.ConnectionReceiver{
@@ -181,38 +196,39 @@ func (d Desugarer) desugarConn(
 			usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
 		}
 
-		conn = src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide: conn.Normal.SenderSide,
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: desugaredReceivers,
+		return desugarConnResult{
+			connToReplace: src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: conn.Normal.SenderSide,
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: desugaredReceivers,
+					},
 				},
+				Meta: conn.Meta,
 			},
-			Meta: conn.Meta,
-		}
-
-		desugaredConns = append(desugaredConns, conn)
-		continue
+			connsToInsert: connsToInsert,
+		}, nil
 	}
 
+	// if there's desugared connections, desugar them,
+	// insert what's needed and replace original connection
 	deferredConnsResult, err := d.handleDeferredConnections(
 		*conn.Normal,
 		nodes,
 		scope,
 	)
 	if err != nil {
-		return nil, true, handleNetResult{}, err
+		return desugarConnResult{}, err
 	}
 
-	maps.Copy(usedNodePorts.m, deferredConnsResult.usedNodesPorts.m)
-	maps.Copy(constsToInsert, deferredConnsResult.virtualConstants)
-	maps.Copy(nodesToInsert, deferredConnsResult.virtualNodes)
+	maps.Copy(usedNodePorts.m, deferredConnsResult.nodesPortsUsed.m)
+	maps.Copy(constsToInsert, deferredConnsResult.constsToInsert)
+	maps.Copy(nodesToInsert, deferredConnsResult.nodesToInsert)
 
-	desugaredConns = append(
-		desugaredConns,
-		deferredConnsResult.desugaredConnections...,
-	)
-	return desugaredConns, false, handleNetResult{}, nil
+	return desugarConnResult{
+		connToReplace: deferredConnsResult.connToReplace,
+		connsToInsert: deferredConnsResult.connsToInsert,
+	}, nil
 }
 
 func getNodeIOByPortAddr(

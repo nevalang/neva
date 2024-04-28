@@ -21,9 +21,9 @@ type handleLiteralSenderResult struct {
 }
 
 type handleConstRefSenderResult struct {
-	connectionWithoutConstSender src.Connection
-	emitterNodeName              string
-	emitterNode                  src.Node
+	connToReplace    src.Connection // connection without const sender
+	nodeToInsertName string         // name of emitter node
+	nodeToInsert     src.Node       // emitter node
 }
 
 // In the future compiler can operate in concurrently
@@ -71,7 +71,7 @@ func (d Desugarer) handleLiteralSender(
 	return handleLiteralSenderResult{
 		constName: constName,
 		handleConstRefSenderResult: handleConstRefSenderResult{
-			connectionWithoutConstSender: src.Connection{
+			connToReplace: src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
 						PortAddr:  &emitterNodeOutportAddr,
@@ -82,8 +82,8 @@ func (d Desugarer) handleLiteralSender(
 				},
 				Meta: conn.Meta,
 			},
-			emitterNodeName: emitterNodeName,
-			emitterNode:     emitterNode,
+			nodeToInsertName: emitterNodeName,
+			nodeToInsert:     emitterNode,
 		},
 	}, nil
 }
@@ -126,7 +126,7 @@ func (d Desugarer) handleConstRefSender(
 	}
 
 	return handleConstRefSenderResult{
-		connectionWithoutConstSender: src.Connection{
+		connToReplace: src.Connection{
 			Normal: &src.NormalConnection{
 				SenderSide: src.ConnectionSenderSide{
 					PortAddr:  &emitterNodeOutportAddr,
@@ -137,8 +137,8 @@ func (d Desugarer) handleConstRefSender(
 			},
 			Meta: conn.Meta,
 		},
-		emitterNodeName: virtualEmitterName,
-		emitterNode:     emitterNode,
+		nodeToInsertName: virtualEmitterName,
+		nodeToInsert:     emitterNode,
 	}, nil
 }
 

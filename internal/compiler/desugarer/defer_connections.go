@@ -27,10 +27,11 @@ var virtualBlockerNode = src.Node{
 }
 
 type handleThenConnectionsResult struct {
-	desugaredConnections []src.Connection // these replaces original deferred connections
-	virtualConstants     map[string]src.Const
-	virtualNodes         map[string]src.Node
-	usedNodesPorts       nodePortsMap
+	connsToInsert  []src.Connection
+	connToReplace  src.Connection
+	constsToInsert map[string]src.Const
+	nodesToInsert  map[string]src.Node
+	nodesPortsUsed nodePortsMap // (probably?) to generate "Del" instances where needed
 }
 
 var virtualBlockersCounter atomic.Uint64
@@ -132,22 +133,20 @@ func (d Desugarer) handleDeferredConnections( //nolint:funlen
 	)
 
 	// don't forget to append first connection
-	virtualConns = append(
-		virtualConns,
-		src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide: originalSender,
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: receiversForOriginalSender,
-				},
+	connToReplace := src.Connection{
+		Normal: &src.NormalConnection{
+			SenderSide: originalSender,
+			ReceiverSide: src.ConnectionReceiverSide{
+				Receivers: receiversForOriginalSender,
 			},
 		},
-	)
+	}
 
 	return handleThenConnectionsResult{
-		virtualNodes:         virtualNodes,
-		desugaredConnections: virtualConns,
-		virtualConstants:     handleNetResult.virtualConstants,
-		usedNodesPorts:       handleNetResult.usedNodePorts,
+		nodesToInsert:  virtualNodes,
+		connsToInsert:  virtualConns,
+		constsToInsert: handleNetResult.virtualConstants,
+		nodesPortsUsed: handleNetResult.usedNodePorts,
+		connToReplace:  connToReplace,
 	}, nil
 }
