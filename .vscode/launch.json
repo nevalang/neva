@@ -16,8 +16,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "struct_selector"]
+      "cwd": "${workspaceFolder}",
+      "args": ["run", "examples/struct_selector"]
     },
     {
       "name": "LSP",

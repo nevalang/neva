@@ -20,7 +20,7 @@ type Indexer struct {
 }
 
 func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compiler.Error, error) {
-	rawBuild, err := i.builder.Build(ctx, path)
+	rawBuild, _, err := i.builder.Build(ctx, path)
 	if err != nil {
 		return src.Build{}, nil, fmt.Errorf("builder: %w", err)
 	}

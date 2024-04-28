@@ -15,21 +15,21 @@ import (
 func (p Builder) LoadModuleByPath(
 	ctx context.Context,
 	wd string,
-) (compiler.RawModule, error) {
+) (compiler.RawModule, string, error) {
 	manifest, modRootPath, err := p.getNearestManifest(wd)
 	if err != nil {
-		return compiler.RawModule{}, fmt.Errorf("retrieve manifest: %w", err)
+		return compiler.RawModule{}, "", fmt.Errorf("retrieve manifest: %w", err)
 	}
 
 	pkgs := map[string]compiler.RawPackage{}
 	if err := retrieveSourceCode(modRootPath, pkgs); err != nil {
-		return compiler.RawModule{}, fmt.Errorf("walk: %w", err)
+		return compiler.RawModule{}, "", fmt.Errorf("walk: %w", err)
 	}
 
 	return compiler.RawModule{
 		Manifest: manifest,
 		Packages: pkgs,
-	}, nil
+	}, modRootPath, nil
 }
 
 // retrieveSourceCode recursively walks the given tree and fills given pkgs with neva files

@@ -1,0 +1,17 @@
+const l list<int> = [50, 30, 20, 100]
+
+component Main(start any) (stop any) {
+    nodes {
+        print Println<int>
+        iter Iter<int>
+        unw Unwrap<int>
+        del Del
+    }
+    net {
+        :start -> ($l -> iter:lst)
+        iter:res -> unw:data
+        unw:some -> print:data
+        print:sig -> del:msg
+        unw:none -> :stop
+    }
+}

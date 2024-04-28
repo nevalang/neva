@@ -32,17 +32,17 @@ func (c Compiler) Compile(
 }
 
 func (c Compiler) CompileToIR(
-	whereCLIExecuted string,
-	whereEntryPkg string,
+	wd string,
+	mainPkgPath string,
 ) (*ir.Program, *Error) {
-	rawBuild, err := c.builder.Build(
+	rawBuild, entryModRoot, err := c.builder.Build(
 		context.Background(),
-		whereEntryPkg,
+		mainPkgPath,
 	)
 	if err != nil {
 		return nil, Error{
 			Location: &sourcecode.Location{
-				PkgName: whereEntryPkg,
+				PkgName: mainPkgPath,
 			},
 		}.Wrap(err)
 	}
@@ -57,9 +57,13 @@ func (c Compiler) CompileToIR(
 		Modules:     parsedMods,
 	}
 
-	whereEntryPkg = strings.TrimPrefix(whereEntryPkg, "./")
+	mainPkgPath = strings.TrimPrefix(mainPkgPath, "./")
+	mainPkgPath = strings.TrimPrefix(mainPkgPath, entryModRoot+"/")
 
-	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(parsedBuild, whereEntryPkg)
+	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(
+		parsedBuild,
+		mainPkgPath,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +73,7 @@ func (c Compiler) CompileToIR(
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, whereEntryPkg)
+	irProg, err := c.irgen.Generate(desugaredBuild, mainPkgPath)
 	if err != nil {
 		return nil, err
 	}

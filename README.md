@@ -82,7 +82,21 @@ component Main(start) (stop) {
 }
 ```
 
-Here we define component `Main` with inport `start` and outport `stop`. It has 1 node `println` that is an instance of the `Println` component. Then we define `net` - set of connections that describe dataflow. When message from `start` received, a string literal `Hello, World!` is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
+Here we define _component_ `Main` with _inport_ `start` and _outport_ `stop`. It has 1 _node_ `println` that's an _instance_ of `Println` component. Then we define _network_ - set of connections that describe dataflow - when message from `start` received, a string literal "Hello, World!" is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
+
+### Execute
+
+Now run (make sure you are in created `test` directory with `neva.yml`):
+
+```bash
+neva run test/src # or neva run test/src/main.neva
+```
+
+You should see the following output:
+
+```bash
+Hello, World!
+```
 
 ### What's Next?
 
