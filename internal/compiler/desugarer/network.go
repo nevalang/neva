@@ -132,6 +132,23 @@ func (d Desugarer) desugarConn(
 		nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 		constsToInsert[result.constToInsertName] = result.constToInsert
 
+		// generated connection might need desugaring itself
+		connToInsertDesugarRes, err := d.desugarConn(
+			result.connToInsert,
+			usedNodePorts,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarConnResult{}, err
+		}
+
+		connsToInsert = append(connsToInsert, connToInsertDesugarRes.connToReplace)
+		connsToInsert = append(connsToInsert, connToInsertDesugarRes.connsToInsert...)
+
+		// connection that replaces original one might need desugaring itself
 		replacedConnDesugarRes, err := d.desugarConn(
 			result.connToReplace,
 			usedNodePorts,
@@ -144,8 +161,9 @@ func (d Desugarer) desugarConn(
 			return desugarConnResult{}, err
 		}
 
+		connsToInsert = append(connsToInsert, replacedConnDesugarRes.connsToInsert...)
+
 		conn = replacedConnDesugarRes.connToReplace
-		connsToInsert = append(connsToInsert, result.connToInsert)
 	}
 
 	// if sender is const or literal, replace it with desugared and insert const/node for emitter
