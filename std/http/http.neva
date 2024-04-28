@@ -1,0 +1,7 @@
+pub type Response struct {
+  statusCode int
+  body string
+}
+
+#extern(http_get)
+pub component Get(url string) (resp Response, err error)
