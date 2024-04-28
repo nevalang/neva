@@ -188,15 +188,12 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	mainNevaContent := `component Main(start any) (stop any) {
-	nodes {
-
-	}
+	mainNevaContent := `component Main(start) (stop) {
+	nodes { Println }
 	net {
-		:start -> :stop
+		:start -> ('Hello, World!' -> println -> :stop)
 	}
-}
-`
+}`
 
 	if err := os.WriteFile(
 		filepath.Join(srcPath, "main.neva"),
