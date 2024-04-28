@@ -122,7 +122,8 @@ func getThirdPartyPath() (string, error) {
 	return path, nil
 }
 
-func getStdlibPath() (string, error) {
+// rewriteStdlibOntoDisk erases stdlib on the disk if it's there and writes it again.
+func rewriteStdlibOntoDisk() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -130,14 +131,20 @@ func getStdlibPath() (string, error) {
 
 	path := filepath.Join(home, "neva", "std")
 
-	_, err = os.Stat(path)
-	if err == nil {
-		return path, nil
-	}
-
-	if !os.IsNotExist(err) {
+	// TODO replace this dirty hack with good solution of https://github.com/nevalang/neva/issues/563
+	err = os.RemoveAll(path)
+	if err != nil {
 		return "", err
 	}
+
+	// _, err = os.Stat(path)
+	// if err == nil {
+	// 	return path, nil
+	// }
+
+	// if !os.IsNotExist(err) {
+	// 	return "", err
+	// }
 
 	// Inject missing stdlib files into user's home directory
 	stdFS := std.FS
@@ -179,7 +186,7 @@ func New(parser ManifestParser) (Builder, error) {
 		return Builder{}, err
 	}
 
-	stdlibPath, err := getStdlibPath()
+	stdlibPath, err := rewriteStdlibOntoDisk()
 	if err != nil {
 		return Builder{}, err
 	}
