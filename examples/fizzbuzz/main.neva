@@ -1,20 +1,18 @@
 component Main(start) (stop) {
-	nodes { Mod, Range, Match<int>, Unwrap<int>, Println, Lock<int> }
+	nodes { Mod, Range, Match, Println }
 	net {
 		:start -> [
             (1 -> range:from),
             (101 -> range:to)
         ]
-        range -> unwrap
 
-        unwrap:some   -> [mod:data, lock:data]
+        range.data -> mod:data
         15 -> mod:case[0] -> ('FizzBuzz' -> println)
         3 -> mod:case[1] -> ('Fizz'     -> println)
         5 -> mod:case[2] -> ('Buzz'     -> println)
         mod:else -> println
 
-        println -> lock:sig
-        lock -> match:data
+        println -> match:data
         100 -> match:case[0] -> :stop
     }
 }
