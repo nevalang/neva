@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Nested map has only one key because keys are unordered
+// so having order in test will make it flacky.
 func Test(t *testing.T) {
 	err := os.Chdir("..")
 	require.NoError(t, err)
@@ -22,7 +24,8 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"map[l:[1 2 3] m:map[one:1 three:3 two:2]]\n",
+		`{"l": [1, 2, 3], "m": {"key": 1}}
+`,
 		string(out),
 	)
 
