@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type split struct{}
+type stringSplit struct{}
 
-func (p split) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p stringSplit) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err

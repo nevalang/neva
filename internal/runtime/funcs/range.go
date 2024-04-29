@@ -8,7 +8,10 @@ import (
 
 type ranger struct{}
 
-func (ranger) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (ranger) Create(
+	io runtime.FuncIO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
 	fromIn, err := io.In.Port("from")
 	if err != nil {
 		return nil, err
@@ -40,18 +43,31 @@ func (ranger) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			case toMsg = <-toIn:
 			}
 
-			for i := fromMsg.Int(); i < toMsg.Int(); i++ {
+			var (
+				idx  int64 = 0
+				last bool  = false
+				data int64 = fromMsg.Int()
+			)
+
+			for !last {
+				if data == toMsg.Int()-1 {
+					last = true
+				}
+
+				item := streamItem(
+					runtime.NewIntMsg(data),
+					idx,
+					last,
+				)
+
 				select {
 				case <-ctx.Done():
 					return
-				case dataOut <- runtime.NewIntMsg(i):
+				case dataOut <- item:
 				}
-			}
 
-			select {
-			case <-ctx.Done():
-				return
-			case dataOut <- nil:
+				idx++
+				data++
 			}
 		}
 	}, nil
