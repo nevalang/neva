@@ -21,34 +21,35 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		var (
-			acc        int64 = 0
-			inProgress bool  = false
-			cur        runtime.Msg
+			acc     int64 = 0
+			started bool  = false
 		)
 
 		for {
+			var item map[string]runtime.Msg
 			select {
 			case <-ctx.Done():
 				return
-			case cur = <-seqIn:
+			case msg := <-seqIn:
+				item = msg.Map()
 			}
 
-			if cur == nil {
+			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
 					return
 				case resOut <- runtime.NewIntMsg(acc):
 					acc = 0
-					inProgress = false
+					started = false
 					continue
 				}
 			}
 
-			if !inProgress {
-				acc = cur.Int()
-				inProgress = true
+			if !started {
+				acc = item["data"].Int()
+				started = true
 			} else {
-				acc -= cur.Int()
+				acc -= item["data"].Int()
 			}
 		}
 	}, nil

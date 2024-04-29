@@ -20,29 +20,28 @@ func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
-		var (
-			acc int64 = 1
-			cur runtime.Msg
-		)
+		var acc int64 = 1
 
 		for {
+			var item map[string]runtime.Msg
 			select {
 			case <-ctx.Done():
 				return
-			case cur = <-seqIn:
+			case msg := <-seqIn:
+				item = msg.Map()
 			}
 
-			if cur == nil {
+			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
 					return
 				case resOut <- runtime.NewIntMsg(acc):
-					acc = 1
+					acc = 1 // reset
 					continue
 				}
 			}
 
-			acc *= cur.Int()
+			acc *= item["data"].Int()
 		}
 	}, nil
 }
