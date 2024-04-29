@@ -130,7 +130,7 @@ type ListMsg struct {
 func (msg ListMsg) Type() MsgType                { return ListMsgType }
 func (msg ListMsg) List() []Msg                  { return msg.v }
 func (msg ListMsg) String() string               { return fmt.Sprint(msg.v) }
-func (msg ListMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
+func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
 
 func NewListMsg(v ...Msg) ListMsg {
 	return ListMsg{
