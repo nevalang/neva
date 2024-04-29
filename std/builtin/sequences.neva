@@ -1,11 +1,11 @@
 // PortSequencer iterates over all array-inport's slots in order
 // and produces stream of messages.
 #extern(port_sequencer)
-pub component PortSequencer<T>([port] T) (seq maybe<T>)
+pub component PortSequencer<T>([port] T) (seq stream<T>)
 
 // ISeqReducer reduce stream of messages to one single message.
 // It's expected to send result message after every processed stream.
-pub interface ISeqReducer<T>(seq maybe<T>) (res T)
+pub interface ISeqReducer<T>(seq stream<T>) (res T)
 
 // Reduce reduces messages from multiple connections to a single message.
 // It iterates over all array-inport's slots in order and streams every message
