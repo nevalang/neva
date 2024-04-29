@@ -69,30 +69,20 @@ func (printf) handle(
 
 			res, err := format(tpl.Str(), args)
 			if err != nil {
-				errMsg := map[string]runtime.Msg{
-					"text": runtime.NewStrMsg(err.Error()),
-				}
-
 				select {
 				case <-ctx.Done():
 					return
-				case errOut <- runtime.NewMapMsg(errMsg):
+				case errOut <- errorFromString(err.Error()):
 				}
-
 				continue
 			}
 
 			if _, err := fmt.Print(res); err != nil {
-				errMsg := map[string]runtime.Msg{
-					"text": runtime.NewStrMsg(err.Error()),
-				}
-
 				select {
 				case <-ctx.Done():
 					return
-				case errOut <- runtime.NewMapMsg(errMsg):
+				case errOut <- errorFromString(err.Error()):
 				}
-
 				continue
 			}
 

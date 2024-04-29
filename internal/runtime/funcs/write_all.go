@@ -38,41 +38,23 @@ func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.
 				return
 			case name = <-filename:
 			}
-			if name.Type() != runtime.StrMsgType {
-				select {
-				case <-ctx.Done():
-					return
-				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg("filename must be a string"),
-				}):
-					continue
-				}
-			}
+
 			select {
 			case <-ctx.Done():
 				return
 			case data = <-dataPort:
 			}
-			if name.Type() != runtime.StrMsgType {
+
+			err := os.WriteFile(name.Str(), []byte(data.Str()), 0755)
+			if err != nil {
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg("data must be a string"),
-				}):
+				case errPort <- errorFromString(err.Error()):
 					continue
 				}
 			}
-			if err := os.WriteFile(name.Str(), []byte(data.Str()), 0755); err != nil {
-				select {
-				case <-ctx.Done():
-					return
-				case errPort <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg("filename must be a string"),
-				}):
-					continue
-				}
-			}
+
 			select {
 			case <-ctx.Done():
 				return
