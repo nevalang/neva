@@ -31,6 +31,8 @@ func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 				item = msg.Map()
 			}
 
+			acc *= item["data"].Int()
+
 			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
@@ -40,8 +42,6 @@ func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 					continue
 				}
 			}
-
-			acc *= item["data"].Int()
 		}
 	}, nil
 }

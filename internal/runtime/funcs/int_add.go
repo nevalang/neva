@@ -34,6 +34,8 @@ func (intAdd) Create(
 				item = msg.Map()
 			}
 
+			acc += item["data"].Int()
+
 			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
@@ -44,7 +46,6 @@ func (intAdd) Create(
 				}
 			}
 
-			acc += item["data"].Int()
 		}
 	}, nil
 }

@@ -34,6 +34,13 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 				item = msg.Map()
 			}
 
+			if !started {
+				acc = item["data"].Int()
+				started = true
+			} else {
+				acc -= item["data"].Int()
+			}
+
 			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
@@ -43,13 +50,6 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 					started = false
 					continue
 				}
-			}
-
-			if !started {
-				acc = item["data"].Int()
-				started = true
-			} else {
-				acc -= item["data"].Int()
 			}
 		}
 	}, nil

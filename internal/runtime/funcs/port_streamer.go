@@ -47,12 +47,6 @@ func (portStreamer) Create(
 				case streamOut <- item:
 				}
 			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case streamOut <- nil:
-			}
 		}
 	}, nil
 }
