@@ -147,7 +147,7 @@ type MapMsg struct {
 
 func (msg MapMsg) Type() MsgType       { return MapMsgType }
 func (msg MapMsg) Map() map[string]Msg { return msg.v }
-func (msg MapMsg) String() string {
+func (msg MapMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
 		panic(err)
@@ -157,7 +157,14 @@ func (msg MapMsg) String() string {
 	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
 	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
 
-	return jsonString
+	return []byte(jsonString), nil
+}
+func (msg MapMsg) String() string {
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 
 func NewMapMsg(m map[string]Msg) MapMsg {
