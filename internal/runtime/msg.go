@@ -1,8 +1,10 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Msg methods don't return errors because they can be used not only at startup.
@@ -50,9 +52,10 @@ type IntMsg struct {
 	v int64
 }
 
-func (msg IntMsg) Type() MsgType  { return IntMsgType }
-func (msg IntMsg) Int() int64     { return msg.v }
-func (msg IntMsg) String() string { return strconv.Itoa(int(msg.v)) }
+func (msg IntMsg) Type() MsgType                { return IntMsgType }
+func (msg IntMsg) Int() int64                   { return msg.v }
+func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
+func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewIntMsg(n int64) IntMsg {
 	return IntMsg{
@@ -68,9 +71,10 @@ type FloatMsg struct {
 	v float64
 }
 
-func (msg FloatMsg) Type() MsgType  { return FloatMsgType }
-func (msg FloatMsg) Float() float64 { return msg.v }
-func (msg FloatMsg) String() string { return fmt.Sprint(msg.v) }
+func (msg FloatMsg) Type() MsgType                { return FloatMsgType }
+func (msg FloatMsg) Float() float64               { return msg.v }
+func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
+func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewFloatMsg(n float64) FloatMsg {
 	return FloatMsg{
@@ -86,9 +90,10 @@ type StrMsg struct {
 	v string
 }
 
-func (msg StrMsg) Type() MsgType  { return StrMsgType }
-func (msg StrMsg) Str() string    { return msg.v }
-func (msg StrMsg) String() string { return msg.v }
+func (msg StrMsg) Type() MsgType                { return StrMsgType }
+func (msg StrMsg) Str() string                  { return msg.v }
+func (msg StrMsg) String() string               { return msg.v }
+func (msg StrMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{
@@ -104,9 +109,10 @@ type BoolMsg struct {
 	v bool
 }
 
-func (msg BoolMsg) Type() MsgType  { return BoolMsgType }
-func (msg BoolMsg) Bool() bool     { return msg.v }
-func (msg BoolMsg) String() string { return strconv.FormatBool(msg.v) }
+func (msg BoolMsg) Type() MsgType                { return BoolMsgType }
+func (msg BoolMsg) Bool() bool                   { return msg.v }
+func (msg BoolMsg) String() string               { return strconv.FormatBool(msg.v) }
+func (msg BoolMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
@@ -121,9 +127,10 @@ type ListMsg struct {
 	v []Msg
 }
 
-func (msg ListMsg) Type() MsgType  { return ListMsgType }
-func (msg ListMsg) List() []Msg    { return msg.v }
-func (msg ListMsg) String() string { return fmt.Sprint(msg.v) }
+func (msg ListMsg) Type() MsgType                { return ListMsgType }
+func (msg ListMsg) List() []Msg                  { return msg.v }
+func (msg ListMsg) String() string               { return fmt.Sprint(msg.v) }
+func (msg ListMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewListMsg(v ...Msg) ListMsg {
 	return ListMsg{
@@ -140,7 +147,18 @@ type MapMsg struct {
 
 func (msg MapMsg) Type() MsgType       { return MapMsgType }
 func (msg MapMsg) Map() map[string]Msg { return msg.v }
-func (msg MapMsg) String() string      { return fmt.Sprint(msg.v) }
+func (msg MapMsg) String() string {
+	jsonData, err := json.Marshal(msg.v)
+	if err != nil {
+		panic(err)
+	}
+
+	jsonString := string(jsonData)
+	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
+	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+
+	return jsonString
+}
 
 func NewMapMsg(m map[string]Msg) MapMsg {
 	return MapMsg{
