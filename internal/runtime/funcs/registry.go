@@ -13,7 +13,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"del":            del{},
 		"lock":           lock{},
 		"range":          ranger{},
-		"port_sequencer": portSequencer{},
+		"port_sequencer": portStreamer{},
 		// structures
 		"field":          field{},
 		"struct_builder": structBuilder{},
@@ -46,7 +46,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// time
 		"time_sleep": timeSleep{},
 		//string
-		"split": split{},
+		"split": stringSplit{},
 		// io/file
 		"read_all":  readAll{},
 		"write_all": writeAll{},

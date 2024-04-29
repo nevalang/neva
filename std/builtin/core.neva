@@ -16,11 +16,11 @@ component {
     pub Field<T>(msg struct {}) (msg T)
 
     #extern(match)
-    pub Match<T any>(data T, [case] T) ([case] T, else T)
+    pub Match<T>(data T, [case] T) ([case] T, else T)
 
     #extern(unwrap)
-    pub Unwrap<T any>(data maybe<T>) (some T, none struct{})
+    pub Unwrap<T>(data maybe<T>) (some T, none struct{})
 
     #extern(range)
-    pub Range(from int, to int) (data maybe<int>)
+    pub Range(from int, to int) (data stream<int>)
 }

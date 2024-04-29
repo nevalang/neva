@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type portSequencer struct{}
+type portStreamer struct{}
 
-func (portSequencer) Create(
+func (portStreamer) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
@@ -24,27 +24,28 @@ func (portSequencer) Create(
 	}
 
 	return func(ctx context.Context) {
-		var msg runtime.Msg
-
 		for {
-			for _, slot := range portIn {
+			l := len(portIn)
+
+			for i, slot := range portIn {
+				var msg runtime.Msg
 				select {
 				case <-ctx.Done():
 					return
 				case msg = <-slot:
 				}
 
+				item := streamItem(
+					msg,
+					int64(i),
+					i == l-1,
+				)
+
 				select {
 				case <-ctx.Done():
 					return
-				case streamOut <- msg:
+				case streamOut <- item:
 				}
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case streamOut <- nil:
 			}
 		}
 	}, nil

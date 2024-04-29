@@ -8,11 +8,7 @@ const {
     two int = 2
     three int = 3
     numsList list<int> = [one, two, three]
-    numsMap map<int> = {
-        one: one,
-        two: two,
-        three: three
-    }
+    numsMap map<int> = { key: one }
     numsStruct NumsStruct = {
         l: numsList,
         m: numsMap

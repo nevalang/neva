@@ -8,7 +8,10 @@ import (
 
 type list_iter struct{}
 
-func (c list_iter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c list_iter) Create(
+	io runtime.FuncIO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
@@ -21,25 +24,27 @@ func (c list_iter) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 
 	return func(ctx context.Context) {
 		for {
+			var list []runtime.Msg
+
 			select {
-			case data, ok := <-dataIn:
-				if !ok {
-					return // lstIn channel closed
-				}
-				for i := 0; i < len(data.List()); i++ {
-					select {
-					case <-ctx.Done():
-						return
-					case seqOut <- data.List()[i]:
-					}
-				}
+			case <-ctx.Done():
+				return
+			case dataMsg := <-dataIn:
+				list = dataMsg.List()
+			}
+
+			for idx := 0; idx < len(list); idx++ {
+				item := streamItem(
+					list[idx],
+					int64(idx),
+					idx == len(list)-1,
+				)
+
 				select {
 				case <-ctx.Done():
 					return
-				case seqOut <- nil:
+				case seqOut <- item:
 				}
-			case <-ctx.Done():
-				return
 			}
 		}
 	}, nil

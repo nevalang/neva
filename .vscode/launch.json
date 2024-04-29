@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "examples/struct_selector"]
+      "args": ["run", "e2e/add_nums_verbose/main"]
     },
     {
       "name": "LSP",

@@ -1,15 +1,21 @@
 type {
-    pub any // any is a top-type
-    pub bool // 1 byte for true | false
-    pub int // 64 bit integer
-    pub float // 64 bit floating point
-    pub string // utf-8 string
-    pub map<T> // map from string to T
-    pub list<T> // dynamic-array of T
-    pub maybe<T> // optional value of T
-}
+    pub any
+    pub bool
+    pub int
+    pub float
+    pub string
+    pub map<T>
+    pub list<T>
+    pub maybe<T>
 
-pub type error struct {
-    text string
-    child maybe<error>
+    pub error struct {
+        text string
+        child maybe<error>
+    }
+
+    pub stream<T> struct {
+        data T
+        idx int
+        last bool
+    }
 }
