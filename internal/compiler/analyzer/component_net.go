@@ -25,7 +25,7 @@ func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
 	// we create it here because there's recursion down there
@@ -50,7 +50,7 @@ func (a Analyzer) analyzeConnections(
 	net []src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]nodeNetUsage,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
@@ -79,7 +79,7 @@ func (a Analyzer) analyzeConnection(
 	conn src.Connection,
 	compInterface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]nodeNetUsage,
 ) (src.Connection, *compiler.Error) {
@@ -320,7 +320,7 @@ type nodeNetUsage struct {
 // For every  sub-node's there's at least one used outport.
 func (Analyzer) checkNetPortsUsage(
 	compInterface src.Interface,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]nodeNetUsage,
 ) *compiler.Error {
@@ -369,14 +369,14 @@ func (Analyzer) checkNetPortsUsage(
 			}
 		}
 
-		for inportName := range nodeIface.IO.In {
+		for inportName := range nodeIface.iface.IO.In {
 			if _, ok := nodeUsage.In[inportName]; !ok {
 				// maybe it's portless connection
-				if _, ok := nodeUsage.In[""]; ok && len(nodeIface.IO.In) == 1 {
+				if _, ok := nodeUsage.In[""]; ok && len(nodeIface.iface.IO.In) == 1 {
 					continue
 				}
 
-				meta := nodeIface.IO.In[inportName].Meta
+				meta := nodeIface.iface.IO.In[inportName].Meta
 
 				return &compiler.Error{
 					Err: fmt.Errorf(
@@ -388,12 +388,12 @@ func (Analyzer) checkNetPortsUsage(
 			}
 		}
 
-		if len(nodeIface.IO.Out) == 0 { // e.g. std/builtin.Del
+		if len(nodeIface.iface.IO.Out) == 0 { // e.g. std/builtin.Del
 			continue
 		}
 
 		atLeastOneOutportIsUsed := false
-		for outportName := range nodeIface.IO.Out {
+		for outportName := range nodeIface.iface.IO.Out {
 			if _, ok := nodeUsage.Out[outportName]; ok {
 				atLeastOneOutportIsUsed = true
 				break
@@ -402,14 +402,14 @@ func (Analyzer) checkNetPortsUsage(
 
 		if !atLeastOneOutportIsUsed {
 			// maybe it's portless connection
-			if _, ok := nodeUsage.Out[""]; ok && len(nodeIface.IO.Out) == 1 {
+			if _, ok := nodeUsage.Out[""]; ok && len(nodeIface.iface.IO.Out) == 1 {
 				continue
 			}
 
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrUnusedNodeOutports, nodeName),
 				Location: &scope.Location,
-				Meta:     &nodeIface.Meta,
+				Meta:     &nodeIface.iface.Meta,
 			}
 		}
 	}
@@ -421,7 +421,7 @@ func (a Analyzer) getReceiverType(
 	receiverSide src.PortAddr,
 	iface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (ts.Expr, bool, *compiler.Error) {
 	if receiverSide.Node == "in" {
@@ -474,7 +474,7 @@ func (a Analyzer) getReceiverType(
 func (a Analyzer) getNodeInportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (ts.Expr, bool, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
@@ -499,11 +499,11 @@ func (a Analyzer) getNodeInportType(
 	// we can resolve every node's interface just once
 	// before processing the network
 	resolvedInportType, isArray, aerr := a.getResolvedPortType(
-		nodeIface.IO.In,
-		nodeIface.TypeParams.Params,
+		nodeIface.iface.IO.In,
+		nodeIface.iface.TypeParams.Params,
 		portAddr,
 		node,
-		scope,
+		scope.WithLocation(nodeIface.location),
 	)
 	if aerr != nil {
 		return ts.Expr{}, false, compiler.Error{
@@ -582,7 +582,7 @@ func (a Analyzer) getSenderSideType(
 	senderSide src.ConnectionSenderSide,
 	iface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (src.ConnectionSenderSide, ts.Expr, bool, *compiler.Error) {
 	if senderSide.PortAddr == nil && senderSide.Const == nil {
@@ -630,7 +630,7 @@ func (a Analyzer) getSenderPortAddrType(
 	scope src.Scope,
 	iface src.Interface,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 ) (ts.Expr, bool, *compiler.Error) {
 	if senderSidePortAddr.Node == "out" {
 		return ts.Expr{}, false, &compiler.Error{
@@ -753,7 +753,7 @@ func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 func (a Analyzer) getNodeOutportType(
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
-	nodesIfaces map[string]src.Interface,
+	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (ts.Expr, bool, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
@@ -775,11 +775,11 @@ func (a Analyzer) getNodeOutportType(
 	}
 
 	return a.getResolvedPortType(
-		nodeIface.IO.Out,
-		nodeIface.TypeParams.Params,
+		nodeIface.iface.IO.Out,
+		nodeIface.iface.TypeParams.Params,
 		portAddr,
 		node,
-		scope,
+		scope.WithLocation(nodeIface.location),
 	)
 }
 
