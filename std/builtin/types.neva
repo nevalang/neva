@@ -4,7 +4,7 @@ type {
     pub int
     pub float
     pub string
-    pub map<T>
+    pub map<T> // TODO rename to dict
     pub list<T>
     pub maybe<T>
 

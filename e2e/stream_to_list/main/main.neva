@@ -1,6 +1,6 @@
 // TODO move to examples
 component Main(start) (stop) {
-    nodes { Range, List }
+    nodes { Range, List, Println }
     net {
         :start -> [
             (1 -> range:from),
