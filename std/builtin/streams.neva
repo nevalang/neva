@@ -1,0 +1,30 @@
+// StreamPort iterates over all array-inport's slots in order
+// and produces stream of messages.
+#extern(array_port_to_stream)
+pub component StreamPort<T>([port] T) (seq stream<T>)
+
+// IPortReducer reduce stream of messages to one single message.
+// It's expected to send result message after every processed stream.
+pub interface IPortReducer<T>(seq stream<T>) (res T)
+
+// ReducePort reduces messages from multiple connections to a single message.
+// It iterates over all array-inport's slots in order and streams every message
+// to reducer. When all messages are processed the result is emited to outport.
+pub component ReducePort<T>([port] T) (res T) {
+    nodes { reducer IPortReducer<T>, streamer StreamPort<T> }
+    net { :port => streamer -> reducer -> :res }
+}
+
+// IMapper maps input message to output message.
+pub interface IMapper<T, Y>(data T) (res Y)
+
+// Map component maps input stream of messages to output stream of messages.
+pub component Map<T, Y>(data stream<T>) (res stream<Y>) {
+    nodes { mapper IMapper<T, Y>, builder Struct<StreamItem> }
+    net {
+        :data.data -> mapper -> builder:data
+        :data.idx -> builder:idx
+        :data.last -> builder:last
+        builder -> :res
+    }
+}

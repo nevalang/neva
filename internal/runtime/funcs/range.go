@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type ranger struct{}
+type streamIntRange struct{}
 
-func (ranger) Create(
+func (streamIntRange) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {

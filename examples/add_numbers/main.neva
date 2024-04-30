@@ -1,6 +1,6 @@
 component Main(start) (stop) {
 	nodes {
-		add Reduce<int> { Add<int> }
+		add ReducePort<int> { Add<int> }
 		Println
 	}
 	net {

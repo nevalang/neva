@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intAdd struct{}
+type streamToList struct{}
 
-func (intAdd) Create(
+func (s streamToList) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
@@ -23,7 +23,7 @@ func (intAdd) Create(
 	}
 
 	return func(ctx context.Context) {
-		var acc int64 = 0
+		acc := []runtime.Msg{}
 
 		for {
 			var item map[string]runtime.Msg
@@ -34,14 +34,14 @@ func (intAdd) Create(
 				item = msg.Map()
 			}
 
-			acc += item["data"].Int()
+			acc = append(acc, item["data"])
 
 			if item["last"].Bool() {
 				select {
 				case <-ctx.Done():
 					return
-				case resOut <- runtime.NewIntMsg(acc):
-					acc = 0 // reset
+				case resOut <- runtime.NewListMsg(acc...):
+					acc = []runtime.Msg{} // reset
 					continue
 				}
 			}

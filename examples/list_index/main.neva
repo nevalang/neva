@@ -1,12 +1,11 @@
-const l list<int> = [1, 1, 5, 112, 69, 420]
-const i int = 4
+const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 component Main(start) (stop) {
-	nodes { Index, Println }
+	nodes { Index<list<int>>, Println }
 	net {
 		:start -> [
-			($l -> index:data),
-			($i -> index:idx)
+			($lst -> index:data),
+			(4 -> index:idx)
 		]
 	    [index:res, index:err] -> println -> :stop
 	}

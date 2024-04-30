@@ -1,7 +1,7 @@
 component Main(start any) (stop any) {
 	nodes {
 		adder Add<int>
-		sequencer PortSequencer<int>
+		sequencer StreamPort<int>
 		println Println<int>
 	}
 	net {

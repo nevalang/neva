@@ -1,5 +1,5 @@
 component Main(start) (stop) {
-	nodes { Println, Split, Join }
+	nodes { Println, strings.Split, strings.Join }
 	net {
 		:start -> [
 			('neva' -> split:data),

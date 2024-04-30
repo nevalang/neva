@@ -1,37 +1,32 @@
 component {
-    // Len returns the length of the given sequence: list, map, or string.
-    // For lists it returns number of elements,
+    // Len returns the length of the given sequence: list, map, or string:
+    // for lists it returns number of elements,
     // for maps it returns number of keys,
-    // and for strings it returns number of utf-8 characters.
+    // for for strings it returns number of utf-8 characters.
     #extern(list list_len, map map_len)
     pub Len<T list<any> | map<any> | string>(data T) (res int)
+
+    // List receives stream and sends list with all elements from the stream.
+    #extern(stream_to_list)
+    pub List<T>(seq stream<T>) (res list<T>)
 
     // Index returns the element at the given index in the ordered collection.
     // If the index is out of bounds, it returns an error.
     // The index is zero-based.
     #extern(index)
-    pub Index<T>(data list<T>, idx int) (res T, err error)
+    pub Index<T list<any> | string>(data T, idx int) (res T, err error)
 
-    // Push appends new element to a list.
-    // It allocates a copy so old list is not modified.
+    // Push creates new list with appended element.
     #extern(list_push)
     pub Push<T> (lst list<T>, data T) (res list<T>)
 
-    // Sort returns sorted version of the given list.
+    // Sort creates sorted version of the given list.
     #extern(int int_sort, float float_sort, string string_sort)
     pub Sort<T int | float | string>(data list<T>) (res T)
-
-    // Join returns 
-    #extern(join)
-    pub Join(data list<string>) (res string)
-
-    // Split 
-    #extern(split)
-    pub Split(data string, delim string) (res list<string>)
 
     #extern(slice)
     pub Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
 
-    #extern(list_iter)
-    pub Iter<T> (data list<T>) (seq stream<T>)
+    #extern(list_to_stream)
+    pub Iter<T>(data list<T>) (seq stream<T>)
 }

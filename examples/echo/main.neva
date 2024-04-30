@@ -1,7 +1,7 @@
-import { x }
+import { io }
 
 component Main(start) (stop) {
-	nodes { x.Scanln, Println }
+	nodes { io.Scanln, Println }
 	net {
 		:start -> scanln -> println -> :stop
 	}

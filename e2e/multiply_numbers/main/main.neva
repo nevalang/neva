@@ -1,7 +1,7 @@
 component Main(start) (stop) {
 	nodes {
 		Println
-		mul Reduce { Mul<int> }
+		mul ReducePort { Mul<int> }
 	}
 	net {
 		:start -> [
