@@ -19,17 +19,22 @@ var (
 	ErrNormalInportsWithAutoPortsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
 )
 
+type foundInterface struct {
+	iface    src.Interface
+	location src.Location
+}
+
 func (a Analyzer) analyzeComponentNodes(
 	parentTypeParams src.TypeParams,
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (
 	map[string]src.Node, // resolved nodes
-	map[string]src.Interface, // resolved nodes interfaces
+	map[string]foundInterface, // resolved nodes interfaces with locations
 	*compiler.Error, // err
 ) {
 	analyzedNodes := make(map[string]src.Node, len(nodes))
-	nodesInterfaces := make(map[string]src.Interface, len(nodes))
+	nodesInterfaces := make(map[string]foundInterface, len(nodes))
 
 	for nodeName, node := range nodes {
 		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, parentTypeParams, scope)
@@ -52,10 +57,10 @@ func (a Analyzer) analyzeComponentNode(
 	node src.Node,
 	parentTypeParams src.TypeParams,
 	scope src.Scope,
-) (src.Node, src.Interface, *compiler.Error) {
+) (src.Node, foundInterface, *compiler.Error) {
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &node.Meta,
@@ -64,7 +69,7 @@ func (a Analyzer) analyzeComponentNode(
 
 	if nodeEntity.Kind != src.ComponentEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
@@ -73,7 +78,7 @@ func (a Analyzer) analyzeComponentNode(
 
 	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
 	if usesBindDirective && len(bindDirectiveArgs) != 1 {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      ErrBindDirectiveArgs,
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
@@ -88,7 +93,7 @@ func (a Analyzer) analyzeComponentNode(
 		scope,
 	)
 	if aerr != nil {
-		return src.Node{}, src.Interface{}, aerr
+		return src.Node{}, foundInterface{}, aerr
 	}
 
 	// We need to get resolved frame from parent type parameters
@@ -99,7 +104,7 @@ func (a Analyzer) analyzeComponentNode(
 		scope,
 	)
 	if err != nil {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
@@ -115,7 +120,7 @@ func (a Analyzer) analyzeComponentNode(
 		scope,
 	)
 	if err != nil {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
@@ -140,7 +145,7 @@ func (a Analyzer) analyzeComponentNode(
 		nodeIface.TypeParams.Params,
 		scope,
 	); err != nil {
-		return src.Node{}, src.Interface{}, &compiler.Error{
+		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
 			Meta:     &node.Meta,
@@ -149,18 +154,21 @@ func (a Analyzer) analyzeComponentNode(
 
 	if node.Deps == nil {
 		return src.Node{
-			Directives: node.Directives,
-			EntityRef:  node.EntityRef,
-			TypeArgs:   resolvedNodeArgs,
-			Meta:       node.Meta,
-		}, nodeIface, nil
+				Directives: node.Directives,
+				EntityRef:  node.EntityRef,
+				TypeArgs:   resolvedNodeArgs,
+				Meta:       node.Meta,
+			}, foundInterface{
+				iface:    nodeIface,
+				location: location,
+			}, nil
 	}
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeComponentNode(depNode, parentTypeParams, scope)
 		if err != nil {
-			return src.Node{}, src.Interface{}, compiler.Error{
+			return src.Node{}, foundInterface{}, compiler.Error{
 				Location: &location,
 				Meta:     &depNode.Meta,
 			}.Wrap(err)
@@ -169,12 +177,15 @@ func (a Analyzer) analyzeComponentNode(
 	}
 
 	return src.Node{
-		Directives: node.Directives,
-		EntityRef:  node.EntityRef,
-		TypeArgs:   resolvedNodeArgs,
-		Deps:       resolvedComponentDI,
-		Meta:       node.Meta,
-	}, nodeIface, nil
+			Directives: node.Directives,
+			EntityRef:  node.EntityRef,
+			TypeArgs:   resolvedNodeArgs,
+			Deps:       resolvedComponentDI,
+			Meta:       node.Meta,
+		}, foundInterface{
+			iface:    nodeIface,
+			location: location,
+		}, nil
 }
 
 func (a Analyzer) getNodeInterface( //nolint:funlen
