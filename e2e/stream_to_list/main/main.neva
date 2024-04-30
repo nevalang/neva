@@ -1,3 +1,4 @@
+// TODO move to examples
 component Main(start) (stop) {
     nodes { Range, List }
     net {

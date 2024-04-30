@@ -3,6 +3,7 @@ package sourcecode
 import (
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
@@ -36,10 +37,16 @@ type Location struct {
 }
 
 func (l Location) String() string {
+	var s string
 	if l.ModRef.Path == "@" {
-		return fmt.Sprintf("%v/%v.neva", l.PkgName, l.FileName)
+		s = l.PkgName
+	} else {
+		s = path.Join(l.ModRef.String(), l.PkgName)
 	}
-	return fmt.Sprintf("%v/%v/%v.neva", l.ModRef, l.PkgName, l.FileName)
+	if l.FileName != "" {
+		s = path.Join(s, l.FileName+".neva")
+	}
+	return s
 }
 
 func (s Scope) IsTopType(expr ts.Expr) bool {

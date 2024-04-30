@@ -12,7 +12,10 @@ pub interface IPortReducer<T>(seq stream<T>) (res T)
 // to reducer. When all messages are processed the result is emited to outport.
 pub component ReducePort<T>([port] T) (res T) {
     nodes { reducer IPortReducer<T>, streamer StreamPort<T> }
-    net { :port => streamer -> reducer -> :res }
+    net {
+        :port => streamer:data
+        streamer -> reducer -> :res
+    }
 }
 
 // IMapper maps input message to output message.
