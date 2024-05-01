@@ -1,0 +1,16 @@
+import { repro }
+
+component Main(start) (stop) {
+  nodes {
+    fb Struct<repro.Foo>
+    sb Struct<stream<repro.Foo>>
+  }
+  net {
+    :start -> [
+      (0 -> [fb:x, sb:idx]),
+      (true -> sb:last)
+    ]
+    fb:msg -> sb:data
+    sb:msg -> :stop
+  }
+}
