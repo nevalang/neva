@@ -50,5 +50,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// io/file
 		"read_all":  readAll{},
 		"write_all": writeAll{},
+		// http
+		"http_get": httpGet{},
 	}
 }
