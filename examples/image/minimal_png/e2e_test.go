@@ -3,13 +3,14 @@ package test
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
+	err := os.Chdir("../..")
 	require.NoError(t, err)
 
 	wd, err := os.Getwd()
@@ -17,6 +18,15 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	cmd := exec.Command("neva", "run", "image/minimal_png")
+
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+
+	require.Equal(
+		t,
+		"",
+		strings.TrimSuffix(string(out), "\n"),
+	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
