@@ -229,7 +229,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		}
 	}
 
-	def, scope, err := r.getDef(expr.Inst.Ref, frame, scope)
+	def, _, err := r.getDef(expr.Inst.Ref, frame, scope)
 	if err != nil {
 		return Expr{}, err
 	}
@@ -305,7 +305,11 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 	return r.resolveExpr(*def.BodyExpr, scope, newFrame, &newTrace)
 }
 
-func (Resolver) getDef(ref core.EntityRef, frame map[string]Def, scope Scope) (Def, Scope, error) {
+func (Resolver) getDef(
+	ref core.EntityRef,
+	frame map[string]Def,
+	scope Scope,
+) (Def, Scope, error) {
 	strRef := ref.String()
 	def, exist := frame[strRef]
 	if exist {

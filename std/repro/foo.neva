@@ -1,3 +1,0 @@
-pub type Foo struct {
-  x int
-}
