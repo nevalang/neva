@@ -1,0 +1,11 @@
+// TODO move to examples
+component Main(start) (stop) {
+    nodes { Range, List, Println }
+    net {
+        :start -> [
+            (1 -> range:from),
+            (11 -> range:to)
+        ]
+        range -> list -> println -> :stop
+    }
+}

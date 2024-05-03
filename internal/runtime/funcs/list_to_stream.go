@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type list_iter struct{}
+type listToStream struct{}
 
-func (c list_iter) Create(
+func (c listToStream) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {

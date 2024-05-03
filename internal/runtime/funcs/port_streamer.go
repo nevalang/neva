@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type portStreamer struct{}
+type arrayPortToStream struct{}
 
-func (portStreamer) Create(
+func (arrayPortToStream) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {

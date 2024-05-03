@@ -1,0 +1,14 @@
+import {
+  http
+}
+
+component Main(start) (stop) {
+  nodes {
+    http.Get
+    Println
+  }
+  net {
+    :start -> [('http://www.example.com' -> get:url)]
+    [get:resp.body, get:err] -> println -> :stop
+  }
+}

@@ -118,7 +118,7 @@ func (a Analyzer) analyzeConnection(
 		if err != nil {
 			return src.Connection{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &conn.Normal.SenderSide.Meta,
+				Meta:     &conn.Meta,
 			}.Wrap(err)
 		}
 		if !isArray {
