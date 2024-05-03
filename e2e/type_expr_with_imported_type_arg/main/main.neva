@@ -1,0 +1,20 @@
+// here we import custom type from another package
+// to check that type expression with imported type as argument
+// can be resolved by type-system, because there was a bug with it
+
+import { @:foo }
+
+component Main(start) (stop) {
+  nodes {
+    justFoo Struct<foo.Foo>
+    itemWithFoo Struct<stream<foo.Foo>>
+  }
+  net {
+    :start -> [
+      (0 -> [justFoo:bar, itemWithFoo:idx]),
+      (true -> itemWithFoo:last)
+    ]
+    justFoo -> itemWithFoo:data
+    itemWithFoo -> :stop
+  }
+}

@@ -19,17 +19,14 @@ Website: https://nevalang.org/
 - **Implicit Parallelism**
 - **Compiles to Machine Code, Go and More**
 - **Clean C-like Syntax**
-- **Interpreter Mode**
-- **First-Class Dependency Injection**
-- **Builtin Observability**
-- **Package Management**
 - **Garbage Collection**
+- **...And more!**
 
-Please note that even though these features are technically implemented, _developer-experience may be bad_ due to current project state. _No backward-compatibility_ guarantees at the time.
+Please note that even though these features are technically implemented, _developer-experience may be bad_ due to current project state. **No backward-compatibility guarantees** at the time.
 
 ## Quick Start
 
-### Download Neva CLI
+### Installation
 
 For Mac OS and Linux:
 
@@ -49,15 +46,13 @@ For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva
 curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat && installer.bat
 ```
 
-### Create test project
+### Creating a project
 
 ```bash
 neva new test
 ```
 
-Replace the code in `cat test/src/main.neva` with the following:
-
-### Execute
+### Running
 
 ```bash
 neva run test/src
@@ -82,7 +77,7 @@ component Main(start) (stop) {
 }
 ```
 
-Here we define _component_ `Main` with _inport_ `start` and _outport_ `stop`. It has 1 _node_ `println` that's an _instance_ of `Println` component. Then we define _network_ - set of connections that describe dataflow - when message from `start` received, a string literal "Hello, World!" is sent to node `println`. When that message is printed, program is terminated by sending to `stop`.
+Here we define a _component_ `Main` with _inport_ `start` and _outport_ `stop`. It contains one _node_, `println`, an _instance_ of `Println`. The _network_ outlines dataflow: upon receiving a message from `start`, "Hello, World!" is sent to `println`. After printing, the program terminates by signaling `stop`.
 
 ### Execute
 
@@ -109,20 +104,19 @@ Nevalang is at an extremely early stage but with the help of community it can be
 
 - Building a Community
 - Core Standard Library
-- Feature-Rich LSP-compatible Language Server
-- **Go Interop** (import go from neva and neva from go)
-- DAP-compatible Debugger
+- Language Server And Debugger
 - Testing Framework
 - No Runtime Exceptions (If it runs then it works)
-- **Visual Programming** in VSCode (Nevalang becomes hybrid langauge)
+- **Go Interop** (import go from neva and neva from go)
+- **Visual Programming** in VSCode (Neva becomes hybrid langauge)
 
 [See backlog for more details](https://github.com/orgs/nevalang/projects)
 
-Nevalang needs _your_ help - it currently just a few maintainers.
+Nevalang needs your help - it currently just a few maintainers.
 
 ## Community
 
-Join community. Together we can change programming for the better:
+Join community. _Together we can change programming_ for the better:
 
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
