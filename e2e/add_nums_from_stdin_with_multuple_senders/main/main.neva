@@ -1,4 +1,7 @@
-import { x }
+import {
+	io
+	strconv
+}
 
 component {
 	Main(start) (stop) {
@@ -14,7 +17,7 @@ component {
 		nodes {
 			reader1 IntReader
 			reader2 IntReader
-			adder Reduce<int> { Add<int> }
+			adder ReducePort<int> { Add<int> }
 		}
 		net {
 			:sig                       -> reader1:sig
@@ -26,7 +29,7 @@ component {
 	}
 
 	IntReader(sig any) (num int, err error) {
-		nodes { x.Scanln, x.ParseNum<int> }
+		nodes { io.Scanln, strconv.ParseNum<int> }
 		net {
 			:sig -> scanln:sig
 			scanln:data -> parseNum:data

@@ -581,7 +581,11 @@ func parsePortAddr(
 
 }
 
-func parseSinglePortAddr(fallbackNode string, expr generated.ISinglePortAddrContext, meta core.Meta) (src.PortAddr, *compiler.Error) {
+func parseSinglePortAddr(
+	fallbackNode string,
+	expr generated.ISinglePortAddrContext,
+	meta core.Meta,
+) (src.PortAddr, *compiler.Error) {
 	nodeName := fallbackNode
 	if n := expr.PortAddrNode(); n != nil {
 		nodeName = n.GetText()
