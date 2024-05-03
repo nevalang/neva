@@ -1,3 +1,5 @@
+import { strings }
+
 component Main(start) (stop) {
 	nodes { Println, strings.Split, strings.Join }
 	net {

@@ -12,7 +12,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type treeShapeListener struct {
@@ -139,16 +138,13 @@ func (p Parser) parseFile(
 
 	if len(lexerErrors.Errors) > 0 {
 		return src.File{}, &compiler.Error{
-			Err:      errors.Join(lexerErrors.Errors...),
-			Location: &src.Location{},
-			Meta:     &core.Meta{},
+			Err: lexerErrors.Errors[0],
 		}
 	}
+
 	if len(parserErrors.Errors) > 0 {
 		return src.File{}, &compiler.Error{
-			Err:      errors.Join(parserErrors.Errors...),
-			Location: &src.Location{},
-			Meta:     &core.Meta{},
+			Err: parserErrors.Errors[0],
 		}
 	}
 
