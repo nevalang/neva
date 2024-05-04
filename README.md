@@ -22,7 +22,7 @@ Website: https://nevalang.org/
 - **Garbage Collection**
 - **...And more!**
 
-Please note that even though these features are technically implemented, _developer-experience may be bad_ due to current project state. **No backward-compatibility guarantees** at the time.
+Please note that even though these features are technically implemented, _developer-experience may be bad_ due to the current state of the project. **No backward-compatibility guarantees** at the time.
 
 ## Quick Start
 
@@ -34,7 +34,7 @@ For Mac OS and Linux:
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
 
-if you device connected to China network:
+If your device is connected to a chinese network:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
@@ -81,7 +81,7 @@ Here we define a _component_ `Main` with _inport_ `start` and _outport_ `stop`. 
 
 ### Execute
 
-Now run (make sure you are in created `test` directory with `neva.yml`):
+Now run (make sure you are in the `test` directory with `neva.yml`):
 
 ```bash
 neva run test/src # or neva run test/src/main.neva
@@ -112,7 +112,7 @@ Nevalang is at an extremely early stage but with the help of community it can be
 
 [See backlog for more details](https://github.com/orgs/nevalang/projects)
 
-Nevalang needs your help - it currently just a few maintainers.
+Nevalang needs your help - it currently has just a few maintainers.
 
 ## Community
 
@@ -131,4 +131,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md
 
 Neva is a relatively small and simple language. Don't be intimidated, feel free to dive in and hack around. Some directories have a `README.md`.
 
-Note that, due to the early stage of development, the documentation can sometimes be outdated. Feel free to reach maintainers if you need _any_ help.
+Note that, due to the early stage of development, the documentation can sometimes be outdated. Feel free to reach out to maintainers if you need _any_ help.
