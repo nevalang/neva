@@ -65,6 +65,7 @@ func (Desugarer) findUnusedOutports(
 	usedNodePorts nodePortsMap,
 ) nodePortsMap {
 	unusedOutports := newNodePortsMap()
+
 	for nodeName, node := range component.Nodes {
 		entity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {

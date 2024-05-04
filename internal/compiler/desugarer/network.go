@@ -191,11 +191,6 @@ func (d Desugarer) desugarConn(
 		desugaredReceivers := slices.Clone(conn.Normal.ReceiverSide.Receivers)
 
 		for i, receiver := range conn.Normal.ReceiverSide.Receivers {
-			if receiver.PortAddr.Port != "" {
-				usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port) // why mark inports?
-				continue
-			}
-
 			found, err := getFirstInPortName(scope, nodes, receiver.PortAddr)
 			if err != nil {
 				return desugarConnResult{}, &compiler.Error{Err: err}
