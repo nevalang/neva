@@ -1,10 +1,10 @@
 // StreamPort iterates over all array-inport's slots in order
-// and produces stream of messages.
+// and produces a stream of messages.
 #extern(array_port_to_stream)
 pub component StreamPort<T>([port] T) (seq stream<T>)
 
-// IPortReducer reduce stream of messages to one single message.
-// It's expected to send result message after every processed stream.
+// IPortReducer reduces a stream of messages to one single message.
+// It's expected to send a result message after every processed stream.
 pub interface IPortReducer<T>(seq stream<T>) (res T)
 
 // ReducePort reduces messages from multiple connections to a single message.
