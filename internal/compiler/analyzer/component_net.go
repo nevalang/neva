@@ -18,12 +18,14 @@ var (
 	ErrLiteralSenderTypeEmpty    = errors.New("Literal network sender must contain message value")
 	ErrComplexLiteralSender      = errors.New("Literal network sender must have primitive type")
 	ErrIllegalPortlessConnection = errors.New("Connection to a node, with more than one port, must always has a port name")
+	ErrGuard                     = errors.New("If node has error guard '?' it's ':err' outport must not be explicitly used in the network")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
 func (a Analyzer) analyzeComponentNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
+	hasGuard bool,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
@@ -36,7 +38,14 @@ func (a Analyzer) analyzeComponentNetwork(
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
-	if err := a.checkNetPortsUsage(compInterface, nodesIfaces, scope, nodesUsage); err != nil {
+	if err := a.checkNetPortsUsage(
+		compInterface,
+		nodesIfaces,
+		hasGuard,
+		scope,
+		nodesUsage,
+		nodes,
+	); err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
@@ -321,8 +330,10 @@ type nodeNetUsage struct {
 func (Analyzer) checkNetPortsUsage(
 	compInterface src.Interface,
 	nodesIfaces map[string]foundInterface,
+	hasGuard bool,
 	scope src.Scope,
 	nodesUsage map[string]nodeNetUsage,
+	nodes map[string]src.Node,
 ) *compiler.Error {
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
@@ -352,11 +363,18 @@ func (Analyzer) checkNetPortsUsage(
 	}
 
 	for outportName := range compInterface.IO.Out {
-		if _, ok := outportsUsage.In[outportName]; !ok { // note that self outports are inports for the network
-			return &compiler.Error{
-				Err:      fmt.Errorf("%w '%v'", ErrUnusedOutport, outportName),
-				Location: &scope.Location,
-			}
+		// note that self outports are inports for the network
+		if _, ok := outportsUsage.In[outportName]; ok {
+			continue
+		}
+
+		if outportName == "err" && hasGuard {
+			continue
+		}
+
+		return &compiler.Error{
+			Err:      fmt.Errorf("%w '%v'", ErrUnusedOutport, outportName),
+			Location: &scope.Location,
 		}
 	}
 
@@ -380,7 +398,10 @@ func (Analyzer) checkNetPortsUsage(
 
 				return &compiler.Error{
 					Err: fmt.Errorf(
-						"%w: %v:%v", ErrUnusedNodeInport, nodeName, inportName,
+						"%w: %v:%v",
+						ErrUnusedNodeInport,
+						nodeName,
+						inportName,
 					),
 					Location: &scope.Location,
 					Meta:     &meta,
@@ -394,6 +415,15 @@ func (Analyzer) checkNetPortsUsage(
 
 		atLeastOneOutportIsUsed := false
 		for outportName := range nodeIface.iface.IO.Out {
+			if outportName == "err" && nodes[nodeName].ErrGuard {
+				meta := nodes[nodeName].Meta
+				return &compiler.Error{
+					Err:      fmt.Errorf("%w: %v", ErrGuard, nodeName),
+					Location: &scope.Location,
+					Meta:     &meta,
+				}
+			}
+
 			if _, ok := nodeUsage.Out[outportName]; ok {
 				atLeastOneOutportIsUsed = true
 				break

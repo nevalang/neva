@@ -173,6 +173,7 @@ type Node struct {
 	Directives map[Directive][]string `json:"directives,omitempty"`
 	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
 	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
+	ErrGuard   bool                   `json:"errGuard,omitempty"`
 	Deps       map[string]Node        `json:"componentDi,omitempty"`
 	Meta       core.Meta              `json:"meta,omitempty"`
 }

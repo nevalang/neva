@@ -14,11 +14,12 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"lock":   lock{},
 		"match":  match{},
 		"unwrap": unwrap{},
+		"panic":  panicker{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},
 		"list_to_stream":       listToStream{},
-		"stream_int_range":                streamIntRange{},
+		"stream_int_range":     streamIntRange{},
 
 		// builders
 		"struct_builder": structBuilder{},

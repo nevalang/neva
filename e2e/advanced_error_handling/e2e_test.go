@@ -16,14 +16,13 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "http/get")
-
+	cmd := exec.Command("neva", "run", "http_get")
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Contains(
 		t,
 		string(out),
-		"<html>",
+		"panic: ",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

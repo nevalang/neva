@@ -440,6 +440,12 @@ func (s *BasenevaListener) EnterNodeInst(ctx *NodeInstContext) {}
 // ExitNodeInst is called when production nodeInst is exited.
 func (s *BasenevaListener) ExitNodeInst(ctx *NodeInstContext) {}
 
+// EnterErrGuard is called when production errGuard is entered.
+func (s *BasenevaListener) EnterErrGuard(ctx *ErrGuardContext) {}
+
+// ExitErrGuard is called when production errGuard is exited.
+func (s *BasenevaListener) ExitErrGuard(ctx *ErrGuardContext) {}
+
 // EnterNodeDIArgs is called when production nodeDIArgs is entered.
 func (s *BasenevaListener) EnterNodeDIArgs(ctx *NodeDIArgsContext) {}
 

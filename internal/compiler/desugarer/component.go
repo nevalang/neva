@@ -2,12 +2,11 @@ package desugarer
 
 import (
 	"errors"
-	"fmt"
 	"maps"
+	"slices"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 var ErrConstSenderEntityKind = errors.New(
@@ -23,28 +22,32 @@ func (d Desugarer) handleComponent( //nolint:funlen
 	component src.Component,
 	scope src.Scope,
 ) (handleComponentResult, *compiler.Error) {
-	// if it's native component, nothing to desugar
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
 		return handleComponentResult{desugaredComponent: component}, nil
 	}
 
-	// we are going to create some entities from scratch
 	virtualEntities := map[string]src.Entity{}
 
-	// handle nodes
-	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
-	for nodeName, node := range component.Nodes {
-		err := d.handleNode(scope, node, desugaredNodes, nodeName, virtualEntities)
-		if err != nil {
-			return handleComponentResult{}, err
-		}
-	}
-
-	// handle network
-	handleNetResult, err := d.handleNetwork(component.Net, desugaredNodes, scope)
+	desugaredNodes, virtConnsForNodes, err := d.handleNodes(
+		component,
+		scope,
+		virtualEntities,
+	)
 	if err != nil {
 		return handleComponentResult{}, err
 	}
+
+	netToDesugar := append(virtConnsForNodes, component.Net...)
+	handleNetResult, err := d.handleNetwork(
+		netToDesugar,
+		desugaredNodes,
+		scope,
+	)
+	if err != nil {
+		return handleComponentResult{}, err
+	}
+
+	desugaredNetwork := slices.Clone(handleNetResult.desugaredConnections)
 
 	// add virtual constants created by network handler to virtual entities
 	for name, constant := range handleNetResult.virtualConstants {
@@ -54,14 +57,15 @@ func (d Desugarer) handleComponent( //nolint:funlen
 		}
 	}
 
-	// create alias
-	desugaredNetwork := handleNetResult.desugaredConnections
-
 	// merge real nodes with virtual ones created by network handler
 	maps.Copy(desugaredNodes, handleNetResult.virtualNodes)
 
 	// create virtual destructor nodes and connections to handle unused outports
-	unusedOutports := d.findUnusedOutports(component, scope, handleNetResult.usedNodePorts)
+	unusedOutports := d.findUnusedOutports(
+		component,
+		scope,
+		handleNetResult.usedNodePorts,
+	)
 	if unusedOutports.len() != 0 {
 		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)
 		desugaredNetwork = append(desugaredNetwork, unusedOutportsResult.virtualConnections...)
@@ -80,105 +84,28 @@ func (d Desugarer) handleComponent( //nolint:funlen
 	}, nil
 }
 
-func (Desugarer) handleNode(
+func (d Desugarer) handleNodes(
+	component src.Component,
 	scope src.Scope,
-	node src.Node,
-	desugaredNodes map[string]src.Node,
-	nodeName string,
 	virtualEntities map[string]src.Entity,
-) *compiler.Error {
-	entity, _, err := scope.Entity(node.EntityRef)
-	if err != nil {
-		return &compiler.Error{
-			Err:      err,
-			Location: &scope.Location,
+) (map[string]src.Node, []src.Connection, *compiler.Error) {
+	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
+	virtualConns := []src.Connection{}
+
+	for nodeName, node := range component.Nodes {
+		extraConns, err := d.handleNode(
+			scope,
+			node,
+			desugaredNodes,
+			nodeName,
+			virtualEntities,
+		)
+		if err != nil {
+			return nil, nil, err
 		}
+
+		virtualConns = append(virtualConns, extraConns...)
 	}
 
-	if entity.Kind != src.ComponentEntity {
-		desugaredNodes[nodeName] = node
-		return nil
-	}
-
-	_, hasAutoports := entity.
-		Component.
-		Directives[compiler.AutoportsDirective]
-
-	// nothing to desugar
-	if !hasAutoports && len(node.Deps) != 1 {
-		desugaredNodes[nodeName] = node
-		return nil
-	}
-
-	// --- anon dep ---
-
-	depArg, ok := node.Deps[""]
-	if ok {
-		for depParamName, depParam := range entity.Component.Nodes {
-			depEntity, _, err := scope.Entity(depParam.EntityRef)
-			if err != nil {
-				panic(err)
-			}
-			if depEntity.Kind == src.InterfaceEntity {
-				desugaredDeps := maps.Clone(node.Deps)
-				desugaredDeps[depParamName] = depArg
-				node = src.Node{
-					Directives: node.Directives,
-					EntityRef:  node.EntityRef,
-					TypeArgs:   node.TypeArgs,
-					Deps:       desugaredDeps,
-					Meta:       node.Meta,
-				}
-				break
-			}
-		}
-	}
-
-	if !hasAutoports {
-		desugaredNodes[nodeName] = node
-		return nil
-	}
-
-	// --- autoports ---
-
-	structFields := node.TypeArgs[0].Lit.Struct
-
-	inports := make(map[string]src.Port, len(structFields))
-	for fieldName, fieldTypeExpr := range structFields {
-		inports[fieldName] = src.Port{
-			TypeExpr: fieldTypeExpr,
-		}
-	}
-
-	outports := map[string]src.Port{
-		"msg": {
-			TypeExpr: node.TypeArgs[0],
-		},
-	}
-
-	localBuilderComponent := src.Component{
-		Interface: src.Interface{
-			IO: src.IO{In: inports, Out: outports},
-		},
-	}
-
-	localBuilderName := fmt.Sprintf("struct_%v", nodeName)
-
-	virtualEntities[localBuilderName] = src.Entity{
-		Kind:      src.ComponentEntity,
-		Component: localBuilderComponent,
-	}
-
-	desugaredNodes[nodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "",
-			Name: "Struct",
-		},
-		Directives: node.Directives,
-		TypeArgs:   node.TypeArgs,
-		Deps:       node.Deps,
-		Meta:       node.Meta,
-	}
-
-	return nil
+	return desugaredNodes, virtualConns, nil
 }

@@ -217,6 +217,9 @@ type nevaListener interface {
 	// EnterNodeInst is called when entering the nodeInst production.
 	EnterNodeInst(c *NodeInstContext)
 
+	// EnterErrGuard is called when entering the errGuard production.
+	EnterErrGuard(c *ErrGuardContext)
+
 	// EnterNodeDIArgs is called when entering the nodeDIArgs production.
 	EnterNodeDIArgs(c *NodeDIArgsContext)
 
@@ -501,6 +504,9 @@ type nevaListener interface {
 
 	// ExitNodeInst is called when exiting the nodeInst production.
 	ExitNodeInst(c *NodeInstContext)
+
+	// ExitErrGuard is called when exiting the errGuard production.
+	ExitErrGuard(c *ErrGuardContext)
 
 	// ExitNodeDIArgs is called when exiting the nodeDIArgs production.
 	ExitNodeDIArgs(c *NodeDIArgsContext)

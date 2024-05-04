@@ -192,7 +192,7 @@ func (d Desugarer) desugarConn(
 
 		for i, receiver := range conn.Normal.ReceiverSide.Receivers {
 			if receiver.PortAddr.Port != "" {
-				usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
+				usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port) // why mark inports?
 				continue
 			}
 
@@ -239,7 +239,7 @@ func (d Desugarer) desugarConn(
 		return desugarConnResult{}, err
 	}
 
-	maps.Copy(usedNodePorts.m, deferredConnsResult.nodesPortsUsed.m)
+	usedNodePorts.merge(deferredConnsResult.nodesPortsUsed)
 	maps.Copy(constsToInsert, deferredConnsResult.constsToInsert)
 	maps.Copy(nodesToInsert, deferredConnsResult.nodesToInsert)
 
