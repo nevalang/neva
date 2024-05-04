@@ -65,6 +65,7 @@ func (Desugarer) findUnusedOutports(
 	usedNodePorts nodePortsMap,
 ) nodePortsMap {
 	unusedOutports := newNodePortsMap()
+
 	for nodeName, node := range component.Nodes {
 		entity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {
@@ -114,6 +115,14 @@ func (n nodePortsMap) get(node, port string) bool {
 	}
 	_, ok = ports[port]
 	return ok
+}
+
+func (n nodePortsMap) merge(m nodePortsMap) {
+	for node, ports := range m.m {
+		for outport := range ports {
+			n.set(node, outport)
+		}
+	}
 }
 
 func (n nodePortsMap) len() int {

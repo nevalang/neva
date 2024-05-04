@@ -72,7 +72,6 @@ func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
 	return s.entity(entityRef)
 }
 
-//nolint:funlen
 func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 	curMod, ok := s.Build.Modules[s.Location.ModRef]
 	if !ok {

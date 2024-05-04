@@ -192,11 +192,10 @@ func (d Desugarer) desugarConn(
 
 		for i, receiver := range conn.Normal.ReceiverSide.Receivers {
 			if receiver.PortAddr.Port != "" {
-				usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
 				continue
 			}
 
-			found, err := getFirstInPortName(scope, nodes, receiver.PortAddr)
+			found, err := getFirstInportName(scope, nodes, receiver.PortAddr)
 			if err != nil {
 				return desugarConnResult{}, &compiler.Error{Err: err}
 			}
@@ -210,8 +209,6 @@ func (d Desugarer) desugarConn(
 				},
 				Meta: receiver.Meta,
 			}
-
-			usedNodePorts.set(receiver.PortAddr.Node, receiver.PortAddr.Port)
 		}
 
 		return desugarConnResult{
@@ -239,7 +236,7 @@ func (d Desugarer) desugarConn(
 		return desugarConnResult{}, err
 	}
 
-	maps.Copy(usedNodePorts.m, deferredConnsResult.nodesPortsUsed.m)
+	usedNodePorts.merge(deferredConnsResult.nodesPortsUsed)
 	maps.Copy(constsToInsert, deferredConnsResult.constsToInsert)
 	maps.Copy(nodesToInsert, deferredConnsResult.nodesToInsert)
 
@@ -254,7 +251,12 @@ func getNodeIOByPortAddr(
 	nodes map[string]src.Node,
 	portAddr *src.PortAddr,
 ) (src.IO, *compiler.Error) {
-	entity, _, err := scope.Entity(nodes[portAddr.Node].EntityRef)
+	node, ok := nodes[portAddr.Node]
+	if !ok {
+		panic(portAddr.Node)
+	}
+
+	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.IO{}, &compiler.Error{
 			Err:      err,
@@ -273,7 +275,7 @@ func getNodeIOByPortAddr(
 	return iface.IO, nil
 }
 
-func getFirstInPortName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+func getFirstInportName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
 	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
 	if err != nil {
 		return "", err

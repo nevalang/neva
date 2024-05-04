@@ -17,6 +17,8 @@ var (
 	ErrAutoPortsTypeParamConstr            = errors.New("Component that uses struct inports directive must have type parameter with struct constraint")
 	ErrAutoPortsTypeParamsCount            = errors.New("Component that uses struct inports directive must have type parameter with have exactly one type parameter")
 	ErrNormalInportsWithAutoPortsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
+	ErrGuardNotAllowedForNode              = errors.New("Guard is not allowed for nodes without 'err' output")
+	ErrGuardNotAllowedForComponent         = errors.New("Guard is not allowed for components without 'err' output")
 )
 
 type foundInterface struct {
@@ -25,21 +27,31 @@ type foundInterface struct {
 }
 
 func (a Analyzer) analyzeComponentNodes(
-	parentTypeParams src.TypeParams,
+	componentIface src.Interface,
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (
 	map[string]src.Node, // resolved nodes
 	map[string]foundInterface, // resolved nodes interfaces with locations
+	bool, // one of the nodes has error guard
 	*compiler.Error, // err
 ) {
 	analyzedNodes := make(map[string]src.Node, len(nodes))
 	nodesInterfaces := make(map[string]foundInterface, len(nodes))
+	hasErrGuard := false
 
 	for nodeName, node := range nodes {
-		analyzedNode, nodeInterface, err := a.analyzeComponentNode(node, parentTypeParams, scope)
+		if node.ErrGuard {
+			hasErrGuard = true
+		}
+
+		analyzedNode, nodeInterface, err := a.analyzeComponentNode(
+			componentIface,
+			node,
+			scope,
+		)
 		if err != nil {
-			return nil, nil, compiler.Error{
+			return nil, nil, false, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}.Wrap(err)
@@ -49,15 +61,17 @@ func (a Analyzer) analyzeComponentNodes(
 		analyzedNodes[nodeName] = analyzedNode
 	}
 
-	return analyzedNodes, nodesInterfaces, nil
+	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
 }
 
 //nolint:funlen
 func (a Analyzer) analyzeComponentNode(
+	componentIface src.Interface,
 	node src.Node,
-	parentTypeParams src.TypeParams,
 	scope src.Scope,
 ) (src.Node, foundInterface, *compiler.Error) {
+	parentTypeParams := componentIface.TypeParams
+
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
@@ -94,6 +108,23 @@ func (a Analyzer) analyzeComponentNode(
 	)
 	if aerr != nil {
 		return src.Node{}, foundInterface{}, aerr
+	}
+
+	if node.ErrGuard {
+		if _, ok := componentIface.IO.Out["err"]; !ok {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Err:      ErrGuardNotAllowedForNode,
+				Location: &scope.Location,
+				Meta:     &node.Meta,
+			}
+		}
+		if _, ok := nodeIface.IO.Out["err"]; !ok {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Err:      ErrGuardNotAllowedForComponent,
+				Location: &scope.Location,
+				Meta:     &node.Meta,
+			}
+		}
 	}
 
 	// We need to get resolved frame from parent type parameters
@@ -158,6 +189,7 @@ func (a Analyzer) analyzeComponentNode(
 				EntityRef:  node.EntityRef,
 				TypeArgs:   resolvedNodeArgs,
 				Meta:       node.Meta,
+				ErrGuard:   node.ErrGuard,
 			}, foundInterface{
 				iface:    nodeIface,
 				location: location,
@@ -166,7 +198,11 @@ func (a Analyzer) analyzeComponentNode(
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
-		resolvedDep, _, err := a.analyzeComponentNode(depNode, parentTypeParams, scope)
+		resolvedDep, _, err := a.analyzeComponentNode(
+			componentIface,
+			depNode,
+			scope,
+		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
 				Location: &location,
@@ -182,6 +218,7 @@ func (a Analyzer) analyzeComponentNode(
 			TypeArgs:   resolvedNodeArgs,
 			Deps:       resolvedComponentDI,
 			Meta:       node.Meta,
+			ErrGuard:   node.ErrGuard,
 		}, foundInterface{
 			iface:    nodeIface,
 			location: location,

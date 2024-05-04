@@ -8,6 +8,9 @@ component {
     #extern(lock)
     pub Lock<T>(sig any, data T) (data T)
 
+    #extern(panic)
+    pub Panic(msg any) ()
+
     #autoports
     #extern(struct_builder)
     pub Struct<T struct {}> () (msg T)

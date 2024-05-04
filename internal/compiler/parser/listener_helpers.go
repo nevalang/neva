@@ -402,14 +402,7 @@ func parseNodes(
 	for _, node := range actx.AllCompNodeDef() {
 		nodeInst := node.NodeInst()
 
-		var typeArgs []ts.Expr
-		if args := nodeInst.TypeArgs(); args != nil {
-			v, err := parseTypeExprs(args.AllTypeExpr())
-			if err != nil {
-				return nil, err
-			}
-			typeArgs = v
-		}
+		directives := parseCompilerDirectives(node.CompilerDirectives())
 
 		parsedRef, err := parseEntityRef(nodeInst.EntityRef())
 		if err != nil {
@@ -429,7 +422,19 @@ func parseNodes(
 			}
 		}
 
-		directives := parseCompilerDirectives(node.CompilerDirectives())
+		var typeArgs []ts.Expr
+		if args := nodeInst.TypeArgs(); args != nil {
+			v, err := parseTypeExprs(args.AllTypeExpr())
+			if err != nil {
+				return nil, err
+			}
+			typeArgs = v
+		}
+
+		var errGuard bool
+		if nodeInst.ErrGuard() != nil {
+			errGuard = true
+		}
 
 		var deps map[string]src.Node
 		if diArgs := nodeInst.NodeDIArgs(); diArgs != nil {
@@ -451,6 +456,7 @@ func parseNodes(
 			Directives: directives,
 			EntityRef:  parsedRef,
 			TypeArgs:   typeArgs,
+			ErrGuard:   errGuard,
 			Deps:       deps,
 			Meta: core.Meta{
 				Text: node.GetText(),

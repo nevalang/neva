@@ -45,16 +45,24 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		return fmt.Errorf("%w: %v", ErrFuncRunner, err)
 	}
 
-	ctx2, cancel := context.WithCancel(ctx)
+	cancelableCtx, cancel := context.WithCancel(ctx)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
+
 	go func() {
-		funcRun(ctx2)
+		funcRun(
+			context.WithValue(
+				cancelableCtx,
+				"cancel", //nolint:staticcheck // SA1029
+				cancel,
+			),
+		)
 		wg.Done()
 	}()
+
 	go func() {
-		r.connector.Connect(ctx2, prog.Connections)
+		r.connector.Connect(cancelableCtx, prog.Connections)
 		wg.Done()
 	}()
 

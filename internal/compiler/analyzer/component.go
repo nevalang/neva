@@ -89,8 +89,8 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, err := a.analyzeComponentNodes(
-		component.Interface.TypeParams,
+	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeComponentNodes(
+		component.Interface,
 		component.Nodes,
 		scope,
 	)
@@ -112,6 +112,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	analyzedNet, err := a.analyzeComponentNetwork(
 		component.Net,
 		resolvedInterface,
+		hasGuard,
 		resolvedNodes,
 		nodesIfaces,
 		scope,

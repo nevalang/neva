@@ -133,7 +133,8 @@ compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
 compNodesDefBody:
 	'{' NEWLINE* ((compNodeDef | COMMENT) ','? NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
-nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs?;
+nodeInst: entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
+errGuard: '?';
 nodeDIArgs: compNodesDefBody;
 
 // network

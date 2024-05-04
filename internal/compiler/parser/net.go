@@ -49,7 +49,6 @@ func parseConn(connDef generated.IConnDefContext) (
 	arrBypassConn := connDef.ArrBypassConnDef()
 
 	if normConn == nil && arrBypassConn == nil {
-
 		return nil, &compiler.Error{
 			Err:  ErrEmptyConnDef,
 			Meta: &connMeta,
