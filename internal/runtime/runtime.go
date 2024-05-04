@@ -54,7 +54,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		funcRun(
 			context.WithValue(
 				cancelableCtx,
-				"cancel",
+				"cancel", //nolint:staticcheck // SA1029
 				cancel,
 			),
 		)
