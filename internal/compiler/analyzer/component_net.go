@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	ErrUnusedOutports            = errors.New("All component's outports are unused")
-	ErrUnusedOutport             = errors.New("Unused outport found")
-	ErrUnusedInports             = errors.New("All component inports are unused")
-	ErrUnusedInport              = errors.New("Unused inport found")
-	ErrLiteralSenderTypeEmpty    = errors.New("Literal network sender must contain message value")
-	ErrComplexLiteralSender      = errors.New("Literal network sender must have primitive type")
-	ErrIllegalPortlessConnection = errors.New("Connection to a node, with more than one port, must always has a port name")
-	ErrGuard                     = errors.New("If node has error guard '?' it's ':err' outport must not be explicitly used in the network")
+	ErrUnusedOutports                = errors.New("All component's outports are unused")
+	ErrUnusedOutport                 = errors.New("Unused outport found")
+	ErrUnusedInports                 = errors.New("All component inports are unused")
+	ErrUnusedInport                  = errors.New("Unused inport found")
+	ErrLiteralSenderTypeEmpty        = errors.New("Literal network sender must contain message value")
+	ErrComplexLiteralSender          = errors.New("Literal network sender must have primitive type")
+	ErrIllegalPortlessConnection     = errors.New("Connection to a node, with more than one port, must always has a port name")
+	ErrGuardMixedWithExplicitErrConn = errors.New("If node has error guard '?' it's ':err' outport must not be explicitly used in the network")
 )
 
 // analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -415,19 +415,30 @@ func (Analyzer) checkNetPortsUsage(
 
 		atLeastOneOutportIsUsed := false
 		for outportName := range nodeIface.iface.IO.Out {
-			if outportName == "err" && nodes[nodeName].ErrGuard {
-				meta := nodes[nodeName].Meta
+			if _, ok := nodeUsage.Out[outportName]; !ok {
+				continue
+			}
+
+			atLeastOneOutportIsUsed = true
+
+			if outportName != "err" {
+				continue
+			}
+
+			meta := nodes[nodeName].Meta
+
+			if nodes[nodeName].ErrGuard {
 				return &compiler.Error{
-					Err:      fmt.Errorf("%w: %v", ErrGuard, nodeName),
+					Err: fmt.Errorf(
+						"%w: %v",
+						ErrGuardMixedWithExplicitErrConn,
+						nodeName,
+					),
 					Location: &scope.Location,
 					Meta:     &meta,
 				}
 			}
 
-			if _, ok := nodeUsage.Out[outportName]; ok {
-				atLeastOneOutportIsUsed = true
-				break
-			}
 		}
 
 		if !atLeastOneOutportIsUsed {

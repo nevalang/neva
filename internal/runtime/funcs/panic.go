@@ -9,7 +9,10 @@ import (
 
 type panicker struct{}
 
-func (p panicker) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p panicker) Create(
+	io runtime.FuncIO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
 	msgIn, err := io.In.Port("msg")
 	if err != nil {
 		return nil, err

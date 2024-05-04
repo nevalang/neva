@@ -25,10 +25,12 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 	if !ok {
 		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
 	}
+
 	entity, filename, ok = pkg.Entity(entityRef.Name)
 	if !ok {
 		return Entity{}, "", fmt.Errorf("%w: '%v'", ErrEntityNotFound, entityRef.Name)
 	}
+
 	return entity, filename, nil
 }
 
