@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -24,7 +25,7 @@ func (p panicker) Create(
 		case panicMsg := <-msgIn:
 			cancel := ctx.Value("cancel").(context.CancelFunc)
 			cancel()
-			fmt.Printf("panic: %v\n", panicMsg)
+			fmt.Fprintln(os.Stderr, "panic: ", panicMsg)
 		}
 	}, nil
 }
