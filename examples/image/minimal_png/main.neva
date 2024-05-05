@@ -4,9 +4,7 @@ import {
 }
 
 component NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
-  nodes {
-    pb Struct<image.Pixel>
-  }
+  nodes { pb Struct<image.Pixel> }
   net {
     x -> pb:x
     y -> pb:y
@@ -49,15 +47,14 @@ component Main(start) (stop) {
   }
   net {
     :start -> [
-      (0 -> [NewColor:r, NewColor:g, NewColor:b, NewColor:a]),
-      (15 -> [NewPixel:x, NewPixel:y]),
+      (0 -> [newColor:r, newColor:g, newColor:b, newColor:a]),
+      (15 -> [newPixel:x, newPixel:y]),
       ('minimal.png' -> writeAll:filename)
     ]
-    NewColor -> NewPixel:c
-    NewPixel -> NewStream:p
-    NewStream:s -> new
+    newColor -> newPixel:c
+    newPixel -> newStream:p
+    newStream:s -> new
     new:img -> encode:img
-    new:err -> println -> :stop
     encode:data -> writeAll:data
     [new:err, encode:err, writeAll:err] -> println -> :stop
   }
