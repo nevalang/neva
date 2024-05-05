@@ -3,11 +3,45 @@ import {
   image
 }
 
-component Main(start) (stop) {
+component NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
   nodes {
     pb Struct<image.Pixel>
+  }
+  net {
+    x -> pb:x
+    y -> pb:y
+    c -> pb:color
+    pb -> pixel
+  }
+}
+
+component NewColor(r int, g int, b int, a int) (color image.RGBA) {
+  nodes {
     cb Struct<image.RGBA>
-    sb Struct<stream<image.Pixel>>
+  }
+  net {
+    :r -> cb:r
+    :g -> cb:g
+    :b -> cb:b
+    :a -> cb:a
+    cb -> :color
+  }
+}
+
+component NewStream(p image.Pixel) (s stream<image.Pixel>) {
+  nodes { sb Struct<stream<image.Pixel>> }
+  net {
+    0 -> sb:idx
+    p -> sb:data
+    true -> sb:last
+  }
+}
+
+component Main(start) (stop) {
+  nodes {
+    NewPixel
+    NewColor
+    NewStream
     image.New
     image.Encode
     io.WriteAll
@@ -15,15 +49,13 @@ component Main(start) (stop) {
   }
   net {
     :start -> [
-      (0 -> [cb:r, cb:g, cb:b, cb:a]),
-      (15 -> [pb:x, pb:y]),
-      (0 -> sb:idx),
-      (true -> sb:last),
+      (0 -> [NewColor:r, NewColor:g, NewColor:b, NewColor:a]),
+      (15 -> [NewPixel:x, NewPixel:y]),
       ('minimal.png' -> writeAll:filename)
     ]
-    cb:msg -> pb:color
-    pb:msg -> sb:data
-    sb:msg -> new
+    NewColor -> NewPixel:c
+    NewPixel -> NewStream:p
+    NewStream:s -> new
     new:img -> encode:img
     new:err -> println -> :stop
     encode:data -> writeAll:data
