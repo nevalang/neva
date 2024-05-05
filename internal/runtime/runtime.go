@@ -67,7 +67,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	}()
 
 	go func() {
-		enter <- emptyMsg{}
+		enter <- &baseMsg{}
 	}()
 
 	go func() {

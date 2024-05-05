@@ -14,7 +14,10 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"lock":   lock{},
 		"match":  match{},
 		"unwrap": unwrap{},
-		"panic":  panicker{},
+
+		// runtime
+		"trace": trace{},
+		"panic": panicker{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},

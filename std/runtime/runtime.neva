@@ -1,0 +1,2 @@
+#extern(trace)
+pub component Trace(msg) (data string)

@@ -32,6 +32,8 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 		case <-ctx.Done():
 			return
 		case msg := <-conn.Sender:
+			msg.AppendTrace(conn.Meta.SenderPortAddr)
+
 			event := Event{
 				Type: MessageSentEvent,
 				MessageSent: &EventMessageSent{
@@ -39,6 +41,7 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 					ReceiverPortAddrs: receiversForEvent,
 				},
 			}
+
 			// distribute will send to this channel after processing first receiver
 			// warning: it's not clear whether it's safe to move on before all receivers processed
 			// order of messages must be preserved while distribute goroutines might be concurrent to each other

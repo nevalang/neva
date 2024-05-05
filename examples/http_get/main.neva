@@ -1,9 +1,10 @@
 import { http }
 
 component Main(start) (stop) {
-  nodes { http.Get, Println }
+  nodes { http.Get, Println, Panic }
   net {
     :start -> ('http://www.example.com' -> get)
     get:resp.body -> println -> :stop
+    get:err -> panic
   }
 }
