@@ -229,7 +229,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		}
 	}
 
-	def, _, err := r.getDef(expr.Inst.Ref, frame, scope)
+	def, scopeWhereDefFound, err := r.getDef(expr.Inst.Ref, frame, scope)
 	if err != nil {
 		return Expr{}, err
 	}
@@ -302,7 +302,7 @@ func (r Resolver) resolveExpr( //nolint:funlen,gocognit
 		}, nil
 	}
 
-	return r.resolveExpr(*def.BodyExpr, scope, newFrame, &newTrace)
+	return r.resolveExpr(*def.BodyExpr, scopeWhereDefFound, newFrame, &newTrace)
 }
 
 func (Resolver) getDef(

@@ -6,10 +6,10 @@ import {
 component NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
   nodes { pb Struct<image.Pixel> }
   net {
-    x -> pb:x
-    y -> pb:y
-    c -> pb:color
-    pb -> pixel
+    :x -> pb:x
+    :y -> pb:y
+    :c -> pb:color
+    pb -> :pixel
   }
 }
 
@@ -26,11 +26,12 @@ component NewColor(r int, g int, b int, a int) (color image.RGBA) {
   }
 }
 
+// FIXME send to -> :s
 component NewStream(p image.Pixel) (s stream<image.Pixel>) {
   nodes { sb Struct<stream<image.Pixel>> }
   net {
     0 -> sb:idx
-    p -> sb:data
+    :p -> sb:data
     true -> sb:last
   }
 }
@@ -56,6 +57,7 @@ component Main(start) (stop) {
     newStream:s -> new
     new:img -> encode:img
     encode:data -> writeAll:data
-    [new:err, encode:err, writeAll:err] -> println -> :stop
+    // [new:err, encode:err, writeAll:err] -> println -> :stop
+    [encode:err, writeAll:err] -> println -> :stop
   }
 }
