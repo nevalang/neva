@@ -20,7 +20,7 @@ compiler_directive_arg: IDENTIFIER+;
 
 // Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
-importDef: importAlias? importPath NEWLINE*;
+importDef: importAlias? importPath ','? NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod ':')? importPathPkg;
 importPathMod: '@' | importMod;

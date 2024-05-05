@@ -1,7 +1,4 @@
-import {
-	io
-	strconv
-}
+import { io, strconv }
 
 component {
 	Main(start) (stop) {
