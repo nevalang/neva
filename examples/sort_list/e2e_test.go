@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"[20 30 50 100]\n",
+		"[20, 30, 50, 100]\n",
 		string(out),
 	)
 

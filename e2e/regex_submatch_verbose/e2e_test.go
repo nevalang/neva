@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"[axxxbyc xxx y]\n",
+		"["axxxbyc","xxx","y"]\n",
 		string(out),
 	)
 
