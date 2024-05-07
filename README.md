@@ -71,13 +71,11 @@ If you open `test/src/main.neva` with your favorite IDE you'll see this
 ```neva
 component Main(start) (stop) {
 	nodes { Println }
-	net {
-		:start -> ('Hello, World!' -> println -> :stop)
-	}
+	:start -> ('Hello, World!' -> println -> :stop)
 }
 ```
 
-Here we define a _component_ `Main` with _inport_ `start` and _outport_ `stop`. It contains one _node_, `println`, an _instance_ of `Println`. The _network_ outlines dataflow: upon receiving a message from `start`, "Hello, World!" is sent to `println`. After printing, the program terminates by signaling `stop`.
+Here we define a _component_ `Main` with _inport_ `start` and _outport_ `stop`. It contains one _node_, `println`, an _instance_ of `Println`. The _network_ consist of one _connection_: upon receiving a message from `start`, "Hello, World!" is sent to `println`. After printing, the program terminates by signaling `stop`.
 
 ### Execute
 
