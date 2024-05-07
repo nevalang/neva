@@ -5,17 +5,13 @@ component {
         nodes {
             SecondComponent { Println<any> }
         }
-        net {
-            :start -> secondComponent:msg
-            secondComponent:msg -> :stop
-        }
+        :start -> secondComponent:msg
+        secondComponent:msg -> :stop
     }
     
     SecondComponent (msg) (msg) {
         nodes { IPrinter<any> }
-        net {
-            :msg -> iPrinter:data
-            iPrinter:sig -> :msg
-        }
+        :msg -> iPrinter:data
+        iPrinter:sig -> :msg
     }
 }

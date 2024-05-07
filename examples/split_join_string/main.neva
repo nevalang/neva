@@ -2,12 +2,10 @@ import { strings }
 
 component Main(start) (stop) {
 	nodes { Println, strings.Split, strings.Join }
-	net {
-		:start -> [
-			('neva' -> split:data),
-			('' -> split:delim)
-		]
-		split -> join -> println -> :stop
-	}
+	:start -> [
+		('neva' -> split:data),
+		('' -> split:delim)
+	]
+	split -> join -> println -> :stop
 }
 

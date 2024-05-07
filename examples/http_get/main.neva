@@ -2,8 +2,6 @@ import { http }
 
 component Main(start) (stop) {
   nodes { http.Get, Println }
-  net {
-    :start -> ('http://www.example.com' -> get)
-    get:resp.body -> println -> :stop
-  }
+  :start -> ('http://www.example.com' -> get)
+  get:resp.body -> println -> :stop
 }

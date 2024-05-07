@@ -1,9 +1,7 @@
 component Main(start any) (stop any) {
     nodes { DayPrinter }
-    net {
-        :start -> (Day::Friday -> dayPrinter:day)
-        dayPrinter:sig -> :stop
-    }
+    :start -> (Day::Friday -> dayPrinter:day)
+    dayPrinter:sig -> :stop
 }
 
 type Day enum {
@@ -18,8 +16,6 @@ type Day enum {
 
 component DayPrinter(day Day) (sig) {
     nodes { Println }
-    net {
-        :day -> println:data
-        println:sig -> :sig
-    }
+    :day -> println:data
+    println:sig -> :sig
 }

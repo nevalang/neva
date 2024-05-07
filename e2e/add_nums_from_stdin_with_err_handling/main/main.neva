@@ -12,15 +12,14 @@ component Main(start any) (stop any) {
 		adder ReducePort<int> { Add<int> }
 		println Println<any>
 	}
-	net {
-		:start -> scanner1:sig
-		scanner1:data -> parser1:data
-		parser1:err -> println:data
-		parser1:res -> [adder:port[0], scanner2:sig]
-		scanner2:data -> parser2:data
-		parser2:err -> println:data
-		parser2:res -> adder:port[1]
-		adder:res -> println:data
-		println:sig -> :stop
-	}
+
+	:start -> scanner1:sig
+	scanner1:data -> parser1:data
+	parser1:err -> println:data
+	parser1:res -> [adder:port[0], scanner2:sig]
+	scanner2:data -> parser2:data
+	parser2:err -> println:data
+	parser2:res -> adder:port[1]
+	adder:res -> println:data
+	println:sig -> :stop
 }

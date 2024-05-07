@@ -3,10 +3,8 @@ import { io, strconv }
 component {
 	Main(start) (stop) {
 		nodes { App, Println }
-		net {
-			:start -> app
-			[app:res, app:err] -> println -> :stop
-		}
+		:start -> app
+		[app:res, app:err] -> println -> :stop
 	}
 	
 	App(sig) (res int, err error) {
@@ -15,21 +13,18 @@ component {
 			readSecondInt ReadIntFromStdin
 			add ReducePort<int> { Add<int> }
 		}
-		net {
-			:sig -> readFirstInt
-			readFirstInt:num -> [add[0], readSecondInt]
-			readSecondInt:num -> add[1]
-			[readFirstInt:err, readSecondInt:err] -> :err
-			add -> :res
-		}
+
+		:sig -> readFirstInt
+		readFirstInt:num -> [add[0], readSecondInt]
+		readSecondInt:num -> add[1]
+		[readFirstInt:err, readSecondInt:err] -> :err
+		add -> :res
 	}
 
 	ReadIntFromStdin(sig) (num int, err error) {
 		nodes { io.Scanln, strconv.ParseNum<int> }
-		net {
-			:sig -> scanln -> parseNum
-			parseNum:res -> :num
-			parseNum:err -> :err
-		}
+		:sig -> scanln -> parseNum
+		parseNum:res -> :num
+		parseNum:err -> :err
 	}
 }

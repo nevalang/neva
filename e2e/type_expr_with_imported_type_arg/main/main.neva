@@ -9,12 +9,11 @@ component Main(start) (stop) {
     justFoo Struct<foo.Foo>
     itemWithFoo Struct<stream<foo.Foo>>
   }
-  net {
-    :start -> [
-      (0 -> [justFoo:bar, itemWithFoo:idx]),
-      (true -> itemWithFoo:last)
-    ]
-    justFoo -> itemWithFoo:data
-    itemWithFoo -> :stop
-  }
+
+  :start -> [
+    (0 -> [justFoo:bar, itemWithFoo:idx]),
+    (true -> itemWithFoo:last)
+  ]
+  justFoo -> itemWithFoo:data
+  itemWithFoo -> :stop
 }

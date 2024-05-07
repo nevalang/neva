@@ -1,7 +1,5 @@
 component Main(start any) (stop any) {
 	nodes { Println<string> }
-	net {
-		:start -> ('Hello, World!' -> println:data)
-		println:sig -> :stop
-	}
+	:start -> ('Hello, World!' -> println:data)
+	println:sig -> :stop
 }

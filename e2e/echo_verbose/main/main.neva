@@ -5,9 +5,7 @@ component Main(start any) (stop any) {
 		scanner io.Scanln
 		println Println<string>
 	}
-	net {
-		:start -> scanner:sig
-		scanner:data -> println:data
-		println:sig -> :stop
-	}
+	:start -> scanner:sig
+	scanner:data -> println:data
+	println:sig -> :stop
 }

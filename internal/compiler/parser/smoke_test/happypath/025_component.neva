@@ -209,70 +209,62 @@ component {
 			abs IReader
 			concrete  Scanner
 		}
-		net {
-			:start -> abs:v
-			abs:v -> [concrete:v]
-			concrete:v -> :code
-		}
+        :start -> abs:v
+        abs:v -> [concrete:v]
+        concrete:v -> :code
 	}
 }
 
 component {
 	Main() () {
-		net {
-            $foo.bar -> foo:bar
-            $foo.bar.baz -> foo:bar
-            foo:bar.baz -> foo:bar
-            foo:bar.baz.bax -> foo:bar
-			$foo.bar.baz -> [foo:bar, bar:baz]
-			foo:bar.baz.bax -> [
-				foo:bar,
-				bar:baz
-            ]
-		}
+        $foo.bar -> foo:bar
+        $foo.bar.baz -> foo:bar
+        foo:bar.baz -> foo:bar
+        foo:bar.baz.bax -> foo:bar
+        $foo.bar.baz -> [foo:bar, bar:baz]
+        foo:bar.baz.bax -> [
+            foo:bar,
+            bar:baz
+        ]
 	}
 }
 
 component {
 	Main() () {
-		net {
-            $foo -> (foo:bar -> bar:baz)
+        $foo -> (foo:bar -> bar:baz)
 
-			$foo -> [(foo:bar -> bar:baz),
-			(foo:bar -> bar:baz)
-            ]
+        $foo -> [(foo:bar -> bar:baz),
+        (foo:bar -> bar:baz)
+        ]
 
-			$foo -> [(foo:bar -> bar:baz),
-				(foo:bar -> bar:baz)
-            ]
+        $foo -> [(foo:bar -> bar:baz),
+            (foo:bar -> bar:baz)
+        ]
 
-			$foo -> [
-				(foo:bar -> bar:baz),
-				(foo:bar -> bar:baz)]
+        $foo -> [
+            (foo:bar -> bar:baz),
+            (foo:bar -> bar:baz)]
 
-			$foo -> [
-				(foo:bar -> bar:baz),
-				(foo:bar -> bar:baz)
-            ]
-		}
+        $foo -> [
+            (foo:bar -> bar:baz),
+            (foo:bar -> bar:baz)
+        ]
 	}
 }
 
 component {
 	Main() () {
-		net {
-            $a -> ($b -> ($c -> d:e))
+        $a -> ($b -> ($c -> d:e))
 
-            $a -> (
-                $b -> ($c -> d:e)
+        $a -> (
+            $b -> ($c -> d:e)
+        )
+
+        $a -> (
+            $b -> (
+                $c -> d:e
             )
-
-            $a -> (
-                $b -> (
-                    $c -> d:e
-                )
-            )
-		}
+        )
 	}
 }
 

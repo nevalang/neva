@@ -2,8 +2,6 @@ const greeting string = 'Hello, World!'
 
 component Main(start any) (stop any) {
 	nodes { println Println<string> }
-	net {
-		:start -> ($greeting -> println:data)
-		println:sig -> :stop
-	}
+	:start -> ($greeting -> println:data)
+	println:sig -> :stop
 }

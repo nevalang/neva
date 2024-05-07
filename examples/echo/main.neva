@@ -2,7 +2,5 @@ import { io }
 
 component Main(start) (stop) {
 	nodes { io.Scanln, Println }
-	net {
-		:start -> scanln -> println -> :stop
-	}
+	:start -> scanln -> println -> :stop
 }

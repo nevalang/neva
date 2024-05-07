@@ -7,10 +7,9 @@ component Main(start any) (stop any) {
 		println Println<string>
 		lock Lock<string>
 	}
-	net {
-		:start -> lock:sig
-		greeting:msg -> lock:data
-		lock:data -> println:data
-		println:sig -> :stop
-	}
+
+	:start -> lock:sig
+	greeting:msg -> lock:data
+	lock:data -> println:data
+	println:sig -> :stop
 }

@@ -122,18 +122,24 @@ groupCompStmt:
 	'component' NEWLINE* '{' NEWLINE* (
 		(COMMENT NEWLINE*)* compilerDirectives? PUB_KW? compDef
 	)* '}';
-compDef: interfaceDef (compBody | compNetBody)? NEWLINE*;
+compDef: interfaceDef compBody? NEWLINE*;
 compBody:
-	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
-		COMMENT NEWLINE*
-	)* (compNetDef NEWLINE*)? (COMMENT NEWLINE*)* '}';
+	'{'
+		NEWLINE*
+		(COMMENT NEWLINE*)*
+		(compNodesDef NEWLINE*)?
+		(COMMENT NEWLINE*)*
+		(connDefList NEWLINE*)?
+		(COMMENT NEWLINE*)*
+	'}';
 
 // nodes
 compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
 compNodesDefBody:
 	'{' NEWLINE* ((compNodeDef | COMMENT) ','? NEWLINE*)* '}';
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
-nodeInst: entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
+nodeInst:
+	entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
 errGuard: '?';
 nodeDIArgs: compNodesDefBody;
 

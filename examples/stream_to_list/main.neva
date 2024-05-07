@@ -1,0 +1,8 @@
+component Main(start) (stop) {
+    nodes { Range, List, Println }
+    :start -> [
+        (1 -> range:from),
+        (11 -> range:to)
+    ]
+    range -> list -> println -> :stop
+}
