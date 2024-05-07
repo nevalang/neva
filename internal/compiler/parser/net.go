@@ -11,11 +11,11 @@ import (
 
 var ErrEmptyConnDef error = errors.New("Connection must be either normal or array bypass")
 
-func parseNet(actx generated.ICompNetBodyContext) (
+func parseNet(actx generated.IConnDefListContext) (
 	[]src.Connection,
 	*compiler.Error,
 ) {
-	allConnDefs := actx.ConnDefList().AllConnDef()
+	allConnDefs := actx.AllConnDef()
 	parsedConns := make([]src.Connection, 0, len(allConnDefs))
 
 	for _, connDef := range allConnDefs {

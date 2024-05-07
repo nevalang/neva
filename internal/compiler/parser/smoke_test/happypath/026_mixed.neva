@@ -25,11 +25,9 @@ component {
 			abs IReader
 			concrete  Scanner
 		}
-		net {
-			:start -> abs:v
-			abs:v -> [concrete:v]
-			concrete:v -> :code
-		}
+		:start -> abs:v
+		abs:v -> [concrete:v]
+		concrete:v -> :code
 	}
 
 	#extern(int IntAdder, float FloatAdder, string StringAdder)

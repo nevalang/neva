@@ -8,9 +8,7 @@ type {
 
 component Main(start) (stop) {
     nodes { GetUser, Println }
-    net {
-        :start -> getUser.pet.name -> println -> :stop
-    }
+    :start -> getUser.pet.name -> println -> :stop
 }
 
 const user User = {

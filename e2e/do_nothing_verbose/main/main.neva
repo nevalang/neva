@@ -1,3 +1,0 @@
-component Main(start) (stop) {
-	net { :start -> :stop }
-}

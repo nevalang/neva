@@ -205,7 +205,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 func TestParser_ParseFile_IONodes(t *testing.T) {
 	text := []byte(`
 		component C1(start any) (stop any) {
-			net { :start -> :stop }
+			:start -> :stop
 		}
 	`)
 
@@ -272,10 +272,8 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 	text := []byte(`
 		component C1() () {
-			net {
-				Foo::Bar -> :out
-				foo.Bar::Baz -> :out
-			}
+			Foo::Bar -> :out
+			foo.Bar::Baz -> :out
 		}
 	`)
 

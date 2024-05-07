@@ -5,11 +5,11 @@ import {
 
 component {
 	Main(start) (stop) {
-		nodes { Aux, Println<any> }
+		nodes { Aux, Println }
 
-		:start -> aux:sig
+		:start             -> aux:sig
 		[aux:res, aux:err] -> println:data
-		println:sig -> :stop
+		println:sig        -> :stop
 	}
 	
 	Aux(sig) (res int, err error) {
@@ -19,14 +19,14 @@ component {
 			adder ReducePort<int> { Add<int> }
 		}
 
-		:sig -> reader1:sig
-		reader1:num -> [adder:port[0], reader2:sig]
+		:sig                       -> reader1:sig
+		reader1:num                -> [adder:port[0], reader2:sig]
 		[reader1:err, reader2:err] -> :err
-		reader2:num -> adder:port[1]
-		adder:res -> :res
+		reader2:num                -> adder:port[1]
+		adder:res                  -> :res
 	}
 
-	IntReader(sig any) (num int, err error) { 
+	IntReader(sig any) (num int, err error) {
 		nodes { io.Scanln, strconv.ParseNum<int> }
 
 		:sig -> scanln:sig

@@ -2,9 +2,6 @@ import { io }
 
 component Main(start) (stop) {
   nodes { io.ReadAll, Println }
-  net {
-    :start -> ('file_read_all/main.neva' -> readAll:filename)
-    [readAll:data, readAll:err] -> println -> :stop
-  }
+  :start -> ('file_read_all/main.neva' -> readAll:filename)
+  [readAll:data, readAll:err] -> println -> :stop
 }
-

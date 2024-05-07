@@ -11,10 +11,8 @@ type {
 
 component Main(start) (stop) {
     nodes { UserSender, Println }
-    net {
-        :start -> userSender:sig
-        userSender.pet.name -> println -> :stop
-    }
+    :start -> userSender:sig
+    userSender.pet.name -> println -> :stop
 }
 
 const user User = {

@@ -2,8 +2,6 @@ const l list<int> = [-215]
 
 component Main(start) (stop) {
 	nodes { Println<any> }
-	net {
-		:start -> ($l -> println:data)
-		println:sig -> :stop
-	}
+	:start -> ($l -> println:data)
+	println:sig -> :stop
 }

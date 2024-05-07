@@ -27,10 +27,9 @@ component {
             #bind(path)
             Field
         }
-        net {
-            :start -> ($user -> field:msg)
-            field:msg -> println:data
-            println:sig -> :stop
-        }
+
+        :start -> ($user -> field:msg)
+        field:msg -> println:data
+        println:sig -> :stop
     }
 }

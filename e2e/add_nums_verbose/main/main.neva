@@ -4,13 +4,12 @@ component Main(start any) (stop any) {
 		sequencer StreamPort<int>
 		println Println<int>
 	}
-	net {
-		:start -> [
-			(1 -> sequencer:port[0]),
-			(2 -> sequencer:port[1])
-		]
-		sequencer:seq -> adder:seq
-		adder:res -> println:data
-		println:sig -> :stop
-	}
+
+	:start -> [
+		(1 -> sequencer:port[0]),
+		(2 -> sequencer:port[1])
+	]
+	sequencer:seq -> adder:seq
+	adder:res -> println:data
+	println:sig -> :stop
 }

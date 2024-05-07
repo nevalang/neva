@@ -12,13 +12,12 @@ component {
 
     Main(start any) (stop any) {
         nodes { Println, builder MyStructBuilder }
-        net {
-            :start -> [
-                ('John' -> builder:name),
-                (32 -> builder:age)
-            ]
-            builder:msg -> println:data
-            println:sig -> :stop
-        }
+
+        :start -> [
+            ('John' -> builder:name),
+            (32 -> builder:age)
+        ]
+        builder:msg -> println:data
+        println:sig -> :stop
     }
 }
