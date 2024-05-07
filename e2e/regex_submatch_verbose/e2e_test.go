@@ -15,7 +15,7 @@ func Test(t *testing.T) {
 	require.Equal(
 		t,
 		`["axxxbyc","xxx","y"]
-	`,
+`,
 		string(out),
 	)
 
