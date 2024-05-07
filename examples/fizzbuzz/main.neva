@@ -1,4 +1,4 @@
-wcomponent Main(start) (stop) {
+component Main(start) (stop) {
 	nodes { Range, PrintLine, Match }
 
     :start -> [
