@@ -33,6 +33,7 @@ component NewStream(p image.Pixel) (s stream<image.Pixel>) {
     0 -> sb:idx
     :p -> sb:data
     true -> sb:last
+    sb -> :s
   }
 }
 
@@ -57,7 +58,7 @@ component Main(start) (stop) {
     newStream:s -> new
     new:img -> encode:img
     encode:data -> writeAll:data
-    // [new:err, encode:err, writeAll:err] -> println -> :stop
-    [encode:err, writeAll:err] -> println -> :stop
+    [new:err, encode:err, writeAll:err] -> println -> :stop
+    writeAll:sig -> :stop
   }
 }

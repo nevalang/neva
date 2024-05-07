@@ -24,7 +24,7 @@ pub type Image struct {
 
 // New creates a new RGBA image from the given pixels.
 #extern(image_new)
-pub component New(pixels stream<Pixel>) (img Image)
+pub component New(pixels stream<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
