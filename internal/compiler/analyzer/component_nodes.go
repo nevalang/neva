@@ -196,6 +196,10 @@ func (a Analyzer) analyzeComponentNode(
 			}, nil
 	}
 
+	// TODO probably here
+	// implement interface->component subtyping
+	// in a way where FP possible
+
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeComponentNode(

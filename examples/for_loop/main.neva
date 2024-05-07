@@ -1,0 +1,8 @@
+import { lists }
+
+component Main(start) (stop) {
+    nodes {
+        lists.For { Println }
+    }
+    :start -> ([1, 2, 3] -> for -> :stop)
+}

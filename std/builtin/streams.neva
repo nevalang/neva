@@ -18,16 +18,32 @@ pub component ReducePort<T>([port] T) (res T) {
     }
 }
 
-// IMapper maps input message to output message.
-pub interface IMapper<T, Y>(data T) (res Y)
+// === For ===
 
-// Map component maps input stream of messages to output stream of messages.
-// pub component Map<T, Y>(data stream<T>) (res stream<Y>) {
-//     nodes { mapper IMapper<T, Y>, builder Struct<stream<Y>> }
-//     net {
-//         :data.data -> mapper -> builder:data
-//         :data.idx -> builder:idx
-//         :data.last -> builder:last
-//         builder -> :res
-//     }
-// }
+pub interface IForHandler<T>(data stream<T>) (sig any)
+
+pub component For<T>(item stream<T>) (sig any) {
+    nodes {
+        IForHandler<T>
+        Lock<T>
+        Match<bool>
+        idx Field<int>
+        data Field<T>
+        last Field<bool>
+    }
+    net {
+        :item -> [
+            lock:data,
+            idx, data, last
+        ]
+
+        :item.data -> iForHandler:data
+        :item.idx -> iForHandler:idx
+        :item.last -> iForHandler:last
+
+        iForHandler:done -> lock:sig
+
+        lock:data.last -> match:data
+        true -> match[0] -> :done
+    }
+}
