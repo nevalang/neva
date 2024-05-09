@@ -24,6 +24,9 @@ component {
     #extern(assert)
     pub Assert<T>(val T, val2 T) (res bool)
 
+    #extern(if)
+    pub If(val bool) (ok any, else any)
+
     #extern(unwrap)
     pub Unwrap<T>(data maybe<T>) (some T, none struct{})
 
