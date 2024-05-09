@@ -21,8 +21,8 @@ component {
     #extern(match)
     pub Match<T>(data T, [case] T) ([case] T, else T)
 
-    #extern(assert)
-    pub Assert<T>(val T, val2 T) (res bool)
+    #extern(eq)
+    pub Eq<T>(val T, val2 T) (res bool)
 
     #extern(if)
     pub If(val bool) (ok any, else any)

@@ -5,9 +5,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type assert struct{}
+type eq struct{}
 
-func (p assert) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p eq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	valIn, err := io.In.Port("val")
 	if err != nil {
 		return nil, err

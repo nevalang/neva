@@ -13,7 +13,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"del":    del{},
 		"lock":   lock{},
 		"match":  match{},
-		"assert": assert{},
+		"eq":     eq{},
 		"if":     if_{},
 		"unwrap": unwrap{},
 		"panic":  panicker{},
