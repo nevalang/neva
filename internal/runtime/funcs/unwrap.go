@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-
 	"github.com/nevalang/neva/internal/runtime"
 )
 
@@ -28,25 +27,27 @@ func (unwrap) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		var dataMsg runtime.Msg
 
 		for {
+			var item map[string]runtime.Msg
 			select {
 			case <-ctx.Done():
 				return
 			case dataMsg = <-dataIn:
+				item = dataMsg.Map()
 			}
-
-			if dataMsg == nil {
+			if item["last"].Bool() {
+				select {
+				case someOut <- item["data"]:
+					noneOut <- runtime.NewMapMsg(nil)
+					return
+				case <-ctx.Done():
+					return
+				}
+			} else {
 				select {
 				case <-ctx.Done():
 					return
-				case noneOut <- runtime.NewMapMsg(nil):
+				case someOut <- item["data"]:
 				}
-				continue
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case someOut <- dataMsg:
 			}
 		}
 	}, nil
