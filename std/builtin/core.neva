@@ -7,6 +7,9 @@ pub component Del(msg any) ()
 #extern(lock)
 pub component Lock<T>(sig any, data T) (data T)
 
+#extern(lock_all)
+pub component LockAll<T>([sig] any, data T) (data T)
+
 #extern(panic)
 pub component Panic(msg any) ()
 
