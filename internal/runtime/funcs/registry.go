@@ -14,6 +14,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"lock":   lock{},
 		"match":  match{},
 		"assert": assert{},
+		"if":     if_{},
 		"unwrap": unwrap{},
 		"panic":  panicker{},
 
