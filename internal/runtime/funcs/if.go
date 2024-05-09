@@ -41,9 +41,9 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 
 			default:
 				if val1.Bool() == true {
-					okOut <- runtime.NewBoolMsg(true)
+					okOut <- val1
 				} else {
-					elseOut <- runtime.NewBoolMsg(false)
+					elseOut <- val1
 				}
 			}
 		}
