@@ -40,7 +40,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 				return
 
 			default:
-				if val1.Bool() == true {
+				if val1.Bool() {
 					okOut <- val1
 				} else {
 					elseOut <- val1
