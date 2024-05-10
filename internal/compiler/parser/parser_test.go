@@ -147,28 +147,26 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
-		component {
-			#extern(d1)
-			C1() ()
+		#extern(d1)
+		component C1() ()
 
-			#extern(d2)
-			C2() () {
-				nodes {
-					#bind(d3)
-					n1 C1
+		#extern(d2)
+		component C2() () {
+			nodes {
+				#bind(d3)
+				n1 C1
 
-					#bind(d4)
-					n2 C1
-				}
+				#bind(d4)
+				n2 C1
 			}
-
-			#autoports
-			C3() ()
-
-			#extern(d5)
-			#autoports
-			C4() ()
 		}
+
+		#autoports
+		component C3() ()
+
+		#extern(d5)
+		#autoports
+		component C4() ()
 	`)
 
 	p := New(false)

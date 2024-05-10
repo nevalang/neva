@@ -1,54 +1,33 @@
-interface { IReader1 (x struct { foo struct {} }) () }
+interface IReader1 (x struct { foo struct {} }) ()
 
-interface {
-    IReader1 (x struct { foo struct {} }) () }
+interface IReader1 (x struct { foo struct {} }) (bar struct { baz struct {} })
 
-interface {
-    IReader1 (x struct { foo struct {} }) ()
-}
+interface IReader1 (
+    x struct { foo struct {} }
+) (bar struct { baz struct {} })
 
-interface { IReader1 (x struct { foo struct {} }) (bar struct { baz struct {} }) }
+interface IReader1 (
+    x struct { foo struct {} }
+) (
+    bar struct { baz struct {} }
+)
 
-interface {
-    IReader1 (x struct { foo struct {} }) (bar struct { baz struct {} })
-}
+interface IReader1 (x struct {
+    foo struct { a int }
+}) (bar struct {
+    baz struct { b bool }
+})
 
-interface {
-    IReader1 (
-        x struct { foo struct {} }
-    ) (bar struct { baz struct {} })
-}
+interface IReader1 (
+    x struct { foo struct { a int } }
+) (
+    bar struct { baz struct { b bool } }
+)
 
-interface {
-    IReader1 (
-        x struct { foo struct {} }
-    ) (
-        bar struct { baz struct {} }
-    )
-}
-
-interface {
-    IReader1 (x struct {
-        foo struct { a int }
-    }) (bar struct {
-        baz struct { b bool }
-    })
-}
-
-interface {
-    IReader1 (
-        x struct { foo struct { a int } }
-    ) (
-        bar struct { baz struct { b bool } }
-    )
-}
-
-interface {
-    pub IReader1 (
-        x struct { foo struct { a int } },
-        y struct {}
-    ) (
-        bar struct { baz struct { b bool } },
-        bax struct { r struct {} }
-    )
-}
+pub interface IReader1 (
+    x struct { foo struct { a int } },
+    y struct {}
+) (
+    bar struct { baz struct { b bool } },
+    bax struct { r struct {} }
+)

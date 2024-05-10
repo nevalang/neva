@@ -1,14 +1,13 @@
 // Here we learn how to read struct field
 // by using builtin component with compiler directive.
 
-type {
-    User struct {
-        name string
-        pet Pet
-    }
-    Pet struct {
-        name string
-    }
+type User struct {
+    name string
+    pet Pet
+}
+
+type Pet struct {
+    name string
 }
 
 const {
@@ -19,17 +18,15 @@ const {
     path list<string> = ['pet', 'name']
 }
 
-component {
-    Main(start any) (stop any) {
-        nodes {
-            Println
+component Main(start any) (stop any) {
+    nodes {
+        Println
 
-            #bind(path)
-            Field
-        }
-
-        :start -> ($user -> field:msg)
-        field:msg -> println:data
-        println:sig -> :stop
+        #bind(path)
+        Field
     }
+
+    :start -> ($user -> field:msg)
+    field:msg -> println:data
+    println:sig -> :stop
 }

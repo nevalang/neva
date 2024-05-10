@@ -2,110 +2,61 @@ type bar i32 | vec<i32>
 
 pub type bar i32 | vec<i32>
 
-type {
-    bar i32 | vec<i32>
-}
+type bar i32
+    | vec<i32>
 
-type {
-    bar i32
-        | vec<i32>
-}
+type bar i32 |
+    vec<i32>
 
-type {
-    bar i32 |
-        vec<i32>
-}
+type bar i32 | vec<
+    i32
+>
 
-type {
-    bar i32 | vec<
-        i32
-    >
-}
+type bar i32 | vec<i32 | f32>
 
-type {
-    bar i32 | vec<i32 | f32>
-}
+type bar i32 | vec<
+    i32 | f32>
 
-type {
-    bar i32 | vec<
-        i32 | f32>
-}
+type bar i32 | vec<i32 | f32
+>
 
-type {
-    bar i32 | vec<i32 | f32
-    >
-}
+type bar i32 | vec<
+    i32 | f32
+>
 
-type {
-    bar i32 | vec<
-        i32 | f32
-    >
-}
+type bar vec<i32 | vec<i32>>
 
-type {
-    bar vec<i32 | vec<i32>>
-}
+type bar vec<
+    i32 | vec<i32>>
+    
+type bar vec<i32
+    | vec<i32>>
+    
+type bar vec<
+    i32 | vec<i32>
+>
+type bar vec<i32 | vec<i32>> | map<i32, i32 | f32>
 
-type {
-    bar vec<
-        i32 | vec<i32>>
-}
+type bar vec<
+    i32 | vec<i32>> | map<i32, i32 | f32
+>
 
-type {
-    bar vec<i32
-        | vec<i32>>
-}
+type bar vec<
+    i32 | vec<i32>
+> | map<i32, i32 | f32>
 
-type {
-    bar vec<
-        i32 | vec<i32>
-    >
-}
+type bar vec<i32 | vec<i32>> | map<
+    i32, i32 | f32
+>
+type bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
 
-type {
-    bar vec<i32 | vec<i32>> | map<i32, i32 | f32>
-}
+type bar vec<
+    i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>
+>
 
-type {
-    bar vec<
-        i32 | vec<i32>> | map<i32, i32 | f32
-    >
-}
+pub type bar vec<
+    i32 |
+    vec<i32 | f32>
+> |
 
-type {
-    bar vec<
-        i32 | vec<i32>
-    > | map<i32, i32 | f32>
-}
-
-type {
-    bar vec<i32 | vec<i32>> | map<
-        i32, i32 | f32
-    >
-}
-
-type {
-    bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
-}
-
-type { bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
-}
-
-type {
-    bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>> }
-
-type { bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>> }
-
-type {
-    bar vec<
-        i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>
-    >
-}
-
-type {
-    pub bar vec<
-        i32 |
-        vec<i32 | f32>
-    > |
-    map<i32, i32 | vec<f32>>
-}
+type map<i32, i32 | vec<f32>>

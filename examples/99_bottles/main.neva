@@ -1,19 +1,15 @@
 // https://www.99-bottles-of-beer.net
 
 component Main(start) (stop) {
-    nodes { Match<int>, next PrintNext2Lines }
-    :start -> (99 -> next -> match:data)
+    nodes { Match<int>, PrintNext2Lines }
+    :start -> (99 -> printNext2Lines -> match:data)
     -1 -> match:case[0] -> :stop
-    match:else -> next
+    match:else -> printNext2Lines
 }
 
 component PrintNext2Lines(n int) (n int) {
-    nodes {
-        decr Decr<int>
-        first PrintFirstLine
-        second PrintSecondLine
-    }
-    :n -> first -> decr -> second -> :n
+    nodes { Decr<int>, PrintFirstLine, PrintSecondLine }
+    :n -> printFirstLine -> decr -> printSecondLine -> :n
 }
 
 // === First Line ===
@@ -57,6 +53,7 @@ component PrintSecondLine(n int) (n int) {
     -1 -> match:case[0] -> ($secondLine4 -> println)
     0  -> match:case[1] -> ($secondLine3 -> println)
     1  -> match:case[2] -> ($secondLine2 -> println)
+
     match:else -> [
         printf:args[0],
         ($secondLine1 -> printf:tpl)

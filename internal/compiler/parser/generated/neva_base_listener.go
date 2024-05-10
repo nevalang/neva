@@ -140,18 +140,6 @@ func (s *BasenevaListener) EnterTypeStmt(ctx *TypeStmtContext) {}
 // ExitTypeStmt is called when production typeStmt is exited.
 func (s *BasenevaListener) ExitTypeStmt(ctx *TypeStmtContext) {}
 
-// EnterSingleTypeStmt is called when production singleTypeStmt is entered.
-func (s *BasenevaListener) EnterSingleTypeStmt(ctx *SingleTypeStmtContext) {}
-
-// ExitSingleTypeStmt is called when production singleTypeStmt is exited.
-func (s *BasenevaListener) ExitSingleTypeStmt(ctx *SingleTypeStmtContext) {}
-
-// EnterGroupTypeStmt is called when production groupTypeStmt is entered.
-func (s *BasenevaListener) EnterGroupTypeStmt(ctx *GroupTypeStmtContext) {}
-
-// ExitGroupTypeStmt is called when production groupTypeStmt is exited.
-func (s *BasenevaListener) ExitGroupTypeStmt(ctx *GroupTypeStmtContext) {}
-
 // EnterTypeDef is called when production typeDef is entered.
 func (s *BasenevaListener) EnterTypeDef(ctx *TypeDefContext) {}
 
@@ -242,18 +230,6 @@ func (s *BasenevaListener) EnterInterfaceStmt(ctx *InterfaceStmtContext) {}
 // ExitInterfaceStmt is called when production interfaceStmt is exited.
 func (s *BasenevaListener) ExitInterfaceStmt(ctx *InterfaceStmtContext) {}
 
-// EnterSingleInterfaceStmt is called when production singleInterfaceStmt is entered.
-func (s *BasenevaListener) EnterSingleInterfaceStmt(ctx *SingleInterfaceStmtContext) {}
-
-// ExitSingleInterfaceStmt is called when production singleInterfaceStmt is exited.
-func (s *BasenevaListener) ExitSingleInterfaceStmt(ctx *SingleInterfaceStmtContext) {}
-
-// EnterGroupInterfaceStmt is called when production groupInterfaceStmt is entered.
-func (s *BasenevaListener) EnterGroupInterfaceStmt(ctx *GroupInterfaceStmtContext) {}
-
-// ExitGroupInterfaceStmt is called when production groupInterfaceStmt is exited.
-func (s *BasenevaListener) ExitGroupInterfaceStmt(ctx *GroupInterfaceStmtContext) {}
-
 // EnterInterfaceDef is called when production interfaceDef is entered.
 func (s *BasenevaListener) EnterInterfaceDef(ctx *InterfaceDefContext) {}
 
@@ -301,18 +277,6 @@ func (s *BasenevaListener) EnterConstStmt(ctx *ConstStmtContext) {}
 
 // ExitConstStmt is called when production constStmt is exited.
 func (s *BasenevaListener) ExitConstStmt(ctx *ConstStmtContext) {}
-
-// EnterSingleConstStmt is called when production singleConstStmt is entered.
-func (s *BasenevaListener) EnterSingleConstStmt(ctx *SingleConstStmtContext) {}
-
-// ExitSingleConstStmt is called when production singleConstStmt is exited.
-func (s *BasenevaListener) ExitSingleConstStmt(ctx *SingleConstStmtContext) {}
-
-// EnterGroupConstStmt is called when production groupConstStmt is entered.
-func (s *BasenevaListener) EnterGroupConstStmt(ctx *GroupConstStmtContext) {}
-
-// ExitGroupConstStmt is called when production groupConstStmt is exited.
-func (s *BasenevaListener) ExitGroupConstStmt(ctx *GroupConstStmtContext) {}
 
 // EnterConstDef is called when production constDef is entered.
 func (s *BasenevaListener) EnterConstDef(ctx *ConstDefContext) {}
@@ -391,18 +355,6 @@ func (s *BasenevaListener) EnterCompStmt(ctx *CompStmtContext) {}
 
 // ExitCompStmt is called when production compStmt is exited.
 func (s *BasenevaListener) ExitCompStmt(ctx *CompStmtContext) {}
-
-// EnterSingleCompStmt is called when production singleCompStmt is entered.
-func (s *BasenevaListener) EnterSingleCompStmt(ctx *SingleCompStmtContext) {}
-
-// ExitSingleCompStmt is called when production singleCompStmt is exited.
-func (s *BasenevaListener) ExitSingleCompStmt(ctx *SingleCompStmtContext) {}
-
-// EnterGroupCompStmt is called when production groupCompStmt is entered.
-func (s *BasenevaListener) EnterGroupCompStmt(ctx *GroupCompStmtContext) {}
-
-// ExitGroupCompStmt is called when production groupCompStmt is exited.
-func (s *BasenevaListener) ExitGroupCompStmt(ctx *GroupCompStmtContext) {}
 
 // EnterCompDef is called when production compDef is entered.
 func (s *BasenevaListener) EnterCompDef(ctx *CompDefContext) {}

@@ -50,127 +50,65 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 /* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
-	single := actx.SingleTypeStmt()
+	typeDef := actx.TypeDef()
 
-	if single != nil {
-		typeDef := single.TypeDef()
-
-		v, err := parseTypeDef(typeDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-
-		parsedEntity := v
-		parsedEntity.IsPublic = single.PUB_KW() != nil
-		name := typeDef.IDENTIFIER().GetText()
-		s.file.Entities[name] = parsedEntity
-		return
+	v, err := parseTypeDef(typeDef)
+	if err != nil {
+		panic(compiler.Error{Location: &s.loc}.Wrap(err))
 	}
 
-	group := actx.GroupTypeStmt()
-	for i, typeDef := range group.AllTypeDef() {
-		parsedEntity, err := parseTypeDef(typeDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-		parsedEntity.IsPublic = group.PUB_KW(i) != nil
-		name := typeDef.IDENTIFIER().GetText()
-		s.file.Entities[name] = parsedEntity
-	}
+	parsedEntity := v
+	parsedEntity.IsPublic = actx.PUB_KW() != nil
+	name := typeDef.IDENTIFIER().GetText()
+	s.file.Entities[name] = parsedEntity
 }
 
 /* --- Constants --- */
 
-func (s *treeShapeListener) EnterSingleConstStmt(actx *generated.SingleConstStmtContext) {
+func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	constDef := actx.ConstDef()
+
 	parsedEntity, err := parseConstDef(constDef)
 	if err != nil {
 		panic(compiler.Error{Location: &s.loc}.Wrap(err))
 	}
+
 	parsedEntity.IsPublic = actx.PUB_KW() != nil
 	name := constDef.IDENTIFIER().GetText()
-	s.file.Entities[name] = parsedEntity
-}
 
-func (s *treeShapeListener) EnterGroupConstStmt(actx *generated.GroupConstStmtContext) {
-	for i, constDef := range actx.AllConstDef() {
-		parsedEntity, err := parseConstDef(constDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-		parsedEntity.IsPublic = actx.PUB_KW(i) != nil
-		name := constDef.IDENTIFIER().GetText()
-		s.file.Entities[name] = parsedEntity
-	}
+	s.file.Entities[name] = parsedEntity
 }
 
 /* --- Interfaces --- */
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
-	single := actx.SingleInterfaceStmt()
-	group := actx.GroupInterfaceStmt()
-
-	if single != nil {
-		name := single.InterfaceDef().IDENTIFIER().GetText()
-		v, err := parseInterfaceDef(single.InterfaceDef())
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-		s.file.Entities[name] = src.Entity{
-			IsPublic:  single.PUB_KW() != nil,
-			Kind:      src.InterfaceEntity,
-			Interface: v,
-		}
-		return
+	name := actx.InterfaceDef().IDENTIFIER().GetText()
+	v, err := parseInterfaceDef(actx.InterfaceDef())
+	if err != nil {
+		panic(compiler.Error{Location: &s.loc}.Wrap(err))
 	}
-
-	for i, interfaceDef := range group.AllInterfaceDef() {
-		name := interfaceDef.IDENTIFIER().GetText()
-
-		v, err := parseInterfaceDef(interfaceDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-
-		s.file.Entities[name] = src.Entity{
-			IsPublic:  group.PUB_KW(i) != nil,
-			Kind:      src.InterfaceEntity,
-			Interface: v,
-		}
+	s.file.Entities[name] = src.Entity{
+		IsPublic:  actx.PUB_KW() != nil,
+		Kind:      src.InterfaceEntity,
+		Interface: v,
 	}
 }
 
 /* --- Components --- */
 
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
-	single := actx.SingleCompStmt()
+	compDef := actx.CompDef()
 
-	if single != nil {
-		compDef := single.CompDef()
-		parsedCompEntity, err := parseCompDef(compDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-		parsedCompEntity.IsPublic = single.PUB_KW() != nil
-		parsedCompEntity.Component.Directives = parseCompilerDirectives(
-			single.CompilerDirectives(),
-		)
-		name := compDef.InterfaceDef().IDENTIFIER().GetText()
-		s.file.Entities[name] = parsedCompEntity
-		return
+	parsedCompEntity, err := parseCompDef(compDef)
+	if err != nil {
+		panic(compiler.Error{Location: &s.loc}.Wrap(err))
 	}
 
-	group := actx.GroupCompStmt()
-	for i, compDef := range group.AllCompDef() {
-		parsedCompEntity, err := parseCompDef(compDef)
-		if err != nil {
-			panic(compiler.Error{Location: &s.loc}.Wrap(err))
-		}
-		parsedCompEntity.IsPublic = group.PUB_KW(i) != nil
-		parsedCompEntity.Component.Directives = parseCompilerDirectives(
-			group.CompilerDirectives(i),
-		)
-		name := compDef.InterfaceDef().IDENTIFIER().GetText()
-		s.file.Entities[name] = parsedCompEntity
-	}
+	parsedCompEntity.IsPublic = actx.PUB_KW() != nil
+	parsedCompEntity.Component.Directives = parseCompilerDirectives(
+		actx.CompilerDirectives(),
+	)
+	name := compDef.InterfaceDef().IDENTIFIER().GetText()
+
+	s.file.Entities[name] = parsedCompEntity
 }
