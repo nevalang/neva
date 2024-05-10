@@ -1,0 +1,17 @@
+// WaitGroup outputs a signal after its internal counter decreases to <= 0.
+//
+// :add increases or decreases the value of the internal counter.
+// WaitGroup will not signal until it received at least one nonnegative value from :add.
+//
+// Example:
+//  nodes { wg WaitGroup }
+//  :start -> (2 -> wg:add)
+//  task1 -> (-1 -> wg:add)
+//  task2 -> (-1 -> wg:add)
+//  wg -> :stop  // Signals after both tasks are done.
+//
+// Example:
+//  nodes { wg WaitGroup }
+//  wg -> :stop  // Blocks forever.
+#extern(wait_group)
+pub component WaitGroup(add int) (sig any)

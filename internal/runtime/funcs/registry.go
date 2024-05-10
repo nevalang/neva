@@ -83,5 +83,8 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// image
 		"image_encode": imageEncode{},
 		"image_new":    imageNew{},
+
+		// sync
+		"wait_group": waitGroup{},
 	}
 }
