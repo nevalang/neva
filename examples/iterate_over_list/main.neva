@@ -1,8 +1,9 @@
 const lst list<int> = [50, 30, 20, 100]
 
 component Main(start) (stop) {
-    nodes { Println<stream<int>>, Iter<int>, Match<bool> }
-    :start -> ($lst -> iter -> println) 
-    println.last -> match:data
-    true -> match:case[0] -> :stop
+    nodes { Println<int>, Iter<int>,Unwrap<int>,Del}
+    :start -> ($lst -> iter -> unwrap)
+    unwrap:some -> println -> del
+    unwrap:none -> :stop
 }
+
