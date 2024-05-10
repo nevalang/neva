@@ -7,6 +7,6 @@ component Main(start) (stop) {
 
        eq:res -> if
 
-       if:ok -> ('They match' -> println -> :stop)
+       if:then -> ('They match' -> println -> :stop)
        if:else -> ('They do not match' -> println -> :stop)
 }

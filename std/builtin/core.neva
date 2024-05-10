@@ -25,7 +25,7 @@ component {
     pub Eq<T>(val T, val2 T) (res bool)
 
     #extern(if)
-    pub If(val bool) (ok any, else any)
+    pub If(val bool) (then any, else any)
 
     #extern(unwrap)
     pub Unwrap<T>(data maybe<T>) (some T, none struct{})

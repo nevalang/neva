@@ -13,7 +13,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	okOut, err := io.Out.Port("ok")
+	okOut, err := io.Out.Port("then")
 	if err != nil {
 		return nil, err
 	}
