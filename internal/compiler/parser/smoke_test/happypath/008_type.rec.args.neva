@@ -1,7 +1,4 @@
-type Rec struct { foo vec<int> }
-
-pub type Rec struct {
-    foo vec<int> }
+pub type Rec struct { foo vec<int> }
 
 pub type Rec struct {
     foo vec<int>
@@ -13,129 +10,42 @@ pub type Rec struct {
     >
 }
 
-type {
-    Rec struct { foo vec<int> }
+pub type Rec struct {
+    foo vec<int>
+    bar map<string, int>
 }
 
-type {
-    Rec struct {
-        foo vec<int> }
+pub type Rec struct {
+    foo map<string, int>
+    bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
 }
 
-type {
-    Rec struct { foo vec<int>
-    }
+pub type Rec struct {
+    foo map<string, int>
+    bar vec<enum {
+        Monday, Tuesday, Wednesday, Thursday, Friday }>
 }
 
-type {
-    Rec struct {
-        foo vec<int>
-    }
+pub type Rec struct {
+    foo map<string, int>
+    bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
+    }>
 }
 
-type {
-    Rec struct {
-        foo vec<int>
-        bar map<string, int>
-    }
+pub type Rec struct {
+    foo map<string, int>
+    bar vec<enum {
+        Monday, Tuesday, Wednesday, Thursday, Friday
+    }>
 }
 
-type {
-    Rec struct { foo vec<int>
-        bar map<string, int>
-    }
-}
-
-type {
-    Rec struct {
-        foo vec<int>
-        bar map<string, int> }
-}
-
-type {
-    Rec struct {
-        foo vec<int>
-
-        bar map<string, int>
-    }
-}
-
-type {
-    Rec struct {
-
-        foo vec<int>
-        bar map<string, int>
-    }
-}
-
-type {
-    Rec struct {
-        foo vec<int>
-        bar map<string, int>
-
-    }
-}
-
-type {
-    Rec struct {
-
-        foo vec<int>
-        bar map<string, int>
-
-    }
-}
-
-type {
-    Rec struct {
-
-        foo vec<int>
-
-        bar map<string, int>
-
-    }
-}
-
-type {
-    Rec struct {
-        foo map<string, int>
-        bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
-    }
-}
-
-type {
-    Rec struct {
-        foo map<string, int>
-        bar vec<enum {
-            Monday, Tuesday, Wednesday, Thursday, Friday }>
-    }
-}
-
-type {
-    Rec struct {
-        foo map<string, int>
-        bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
-        }>
-    }
-}
-
-type {
-    Rec struct {
-        foo map<string, int>
-        bar vec<enum {
-            Monday, Tuesday, Wednesday, Thursday, Friday
-        }>
-    }
-}
-
-type {
-    pub Rec struct {
-        foo map<string, int>
-        bar vec<enum {
-            Monday,
-            Tuesday,
-            Wednesday,
-            Thursday,
-            Friday
-        }>
-    }
+pub type Rec struct {
+    foo map<string, int>
+    bar vec<enum {
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday
+    }>
 }

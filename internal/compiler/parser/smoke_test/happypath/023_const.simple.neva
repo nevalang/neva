@@ -2,166 +2,46 @@ const pi f32 = 3.14
 
 pub const pi f32 = 3.14
 
-const {}
+const pi f32 = 3.14
 
-const {
+const magic_num i8 = 42
+
+const pi f32 = 3.14
+
+const VEC list<i8> = []
+
+const VEC list<i8> = [1, 2, 3, 4]
+
+const REC struct {} = {}
+
+const REC struct { foo int } = { foo: 42 }
+
+const REC struct {
+    foo int
+    bar list<i8>
+} = {
+    foo: 42,
+    bar: [1, 2, 3, 4]
 }
 
-const {
+const ENUM enum { Monday, Tuesday } = 4
 
-}
+const ENUM enum {
+    Monday, Tuesday } = 5
 
-const { pi f32 = 3.14 }
+const ENUM enum { Monday, Tuesday } = 6
 
-const {
-    pi f32 = 3.14 }
+const ENUM enum {
+    Monday, Tuesday
+} = 7
 
-const { pi f32 = 3.14
-}
+const ENUM enum {
+    Monday,
+    Tuesday
+} = 8
 
-const {
-    pi f32 = 3.14
-}
+const UNION int | string = 42
 
-const {
+pub const UNION int | string = 'hello!'
 
-    pi f32 = 3.14
-}
-
-const {
-    pi f32 = 3.14
-
-}
-
-const { pi f32 = 3.14
-    magic_num i8 = 42 }
-
-const {
-    pi f32 = 3.14
-    magic_num i8 = 42 }
-
-const {
-    pi f32 = 3.14
-    magic_num i8 = 42
-}
-
-const {
-
-    pi f32 = 3.14
-    magic_num i8 = 42
-}
-
-const {
-    pi f32 = 3.14
-    magic_num i8 = 42
-
-}
-
-const {
-
-    pi f32 = 3.14
-    magic_num i8 = 42
-}
-
-const {
-    pi f32 = 3.14
-    magic_num i8 = 42
-
-}
-
-const {
-    pi f32 = 3.14
-
-    magic_num i8 = 42
-}
-
-const { VEC list<i8> = [] }
-
-const {
-    VEC list<i8> = [] }
-
-const { VEC list<i8> = []
-}
-
-const {
-    VEC list<i8> = []
-}
-
-const {
-    VEC list<i8> = [1, 2, 3, 4]
-}
-
-const { REC struct {} = {} }
-
-const { REC struct {} = {}
-}
-
-const { REC struct {} = {}
-}
-
-const {
-    REC struct {} = {}
-}
-
-const { REC struct { foo int } = { foo: 42 } }
-
-const {
-    REC struct { foo int } = { foo: 42 } }
-
-const { REC struct { foo int } = { foo: 42 }
-}
-
-const {
-    REC struct {
-        foo int
-        bar list<i8>
-    } = {
-        foo: 42,
-        bar: [1, 2, 3, 4]
-    }
-}
-
-const { ENUM enum { Monday, Tuesday } = 1 }
-
-const {
-    ENUM enum { Monday, Tuesday } = 2 }
-
-const { ENUM enum { Monday, Tuesday } = 3
-}
-
-const {
-    ENUM enum { Monday, Tuesday } = 4
-}
-
-const {
-    ENUM enum {
-        Monday, Tuesday } = 5
-}
-
-const {
-    ENUM enum { Monday, Tuesday
-    } = 6
-}
-
-const {
-    ENUM enum {
-        Monday, Tuesday
-    } = 7
-}
-
-const {
-    ENUM enum {
-        Monday,
-        Tuesday
-    } = 8
-}
-
-const { UNION int | string = 42 }
-
-const {
-    pub UNION int | string = 'hello!'
-}
-
-const {
-    msg string = 'hello!'
-}
+const msg string = 'hello!'

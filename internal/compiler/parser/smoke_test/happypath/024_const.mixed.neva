@@ -1,68 +1,24 @@
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-    pub VEC_EMPTY list<i8> = []
-    VEC_FULL list<i8> = [1, 2, 3, 4]
-    REC struct { foo int } = { foo: 42 }
-    pub ENUM enum { Monday, Tuesday } = 1
-}
+const PI f32 = 3.14
+const MAGIC_NUM i8 = 42
+const VEC_EMPTY list<i8> = []
+pub const VEC_FULL list<i8> = [1, 2, 3, 4]
+pub const REC struct { foo int } = { foo: 42 }
+const ENUM enum { Monday, Tuesday } = 1
 
-const { PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-    VEC_EMPTY list<i8> = []
-    pub VEC_FULL list<i8> = [1, 2, 3, 4]
-    pub REC struct { foo int } = { foo: 42 }
-    ENUM enum { Monday, Tuesday } = 1
-}
+const PI f32 = 3.14
+const MAGIC_NUM i8 = 42
 
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-    VEC_EMPTY list<i8> = []
-    pub VEC_FULL list<i8> = [1, 2, 3, 4]
-    pub REC struct { foo int } = { foo: 42 }
-    ENUM enum { Monday, Tuesday } = 1 }
+const VEC_EMPTY list<i8> = []
+const VEC_FULL list<i8> = [1, 2, 3, 4]
 
-const {
+pub const REC struct { foo int } = { foo: 42 }
+const ENUM enum { Monday, Tuesday } = 1
 
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-    VEC_EMPTY list<i8> = []
-    pub VEC_FULL list<i8> = [1, 2, 3, 4]
-    REC struct { foo int } = { foo: 42 }
-    ENUM enum { Monday, Tuesday } = 1
-}
+const PI f32 = 3.14
+const MAGIC_NUM i8 = 42
 
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-    VEC_EMPTY list<i8> = []
-    VEC_FULL list<i8> = [1, 2, 3, 4]
-    REC struct { foo int } = { foo: 42 }
-    pub ENUM enum { Monday, Tuesday } = 1
+const VEC_EMPTY list<i8> = []
+const VEC_FULL list<i8> = [1, 2, 3, 4]
 
-}
-
-const {
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-
-    VEC_EMPTY list<i8> = []
-    VEC_FULL list<i8> = [1, 2, 3, 4]
-
-    pub REC struct { foo int } = { foo: 42 }
-    ENUM enum { Monday, Tuesday } = 1
-}
-
-const {
-
-    PI f32 = 3.14
-    MAGIC_NUM i8 = 42
-
-    VEC_EMPTY list<i8> = []
-    VEC_FULL list<i8> = [1, 2, 3, 4]
-
-    REC struct { foo int } = { foo: 42 }
-    pub ENUM enum { Monday, Tuesday } = 1
-
-}
+const REC struct { foo int } = { foo: 42 }
+pub const ENUM enum { Monday, Tuesday } = 1

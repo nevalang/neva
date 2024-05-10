@@ -10,13 +10,12 @@ type Pet struct {
     name string
 }
 
-const {
-    user User = {
-        name: 'John',
-        pet: { name: 'Charley' }
-    }
-    path list<string> = ['pet', 'name']
+const user User = {
+    name: 'John',
+    pet: { name: 'Charley' }
 }
+
+const path list<string> = ['pet', 'name']
 
 component Main(start any) (stop any) {
     nodes {

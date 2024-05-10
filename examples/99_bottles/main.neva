@@ -14,11 +14,9 @@ component PrintNext2Lines(n int) (n int) {
 
 // === First Line ===
 
-const {
-    firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n'
-    firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
-    firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
-}
+const firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n'
+const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
+const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 component PrintFirstLine(n int) (n int) {
     nodes { Match<int>, Println, Printf, Lock<int> }
@@ -38,12 +36,10 @@ component PrintFirstLine(n int) (n int) {
 
 // === Second Line ===
 
-const {
-    secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n\n'
-    secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
-    secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
-    secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
-}
+const secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n\n'
+const secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
+const secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
+const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 component PrintSecondLine(n int) (n int) {
     nodes { Match<int>, Println, Printf, Lock<int> }
