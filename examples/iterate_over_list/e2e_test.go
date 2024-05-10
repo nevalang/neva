@@ -22,11 +22,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		`{"data": 50, "idx": 0, "last": false}
-{"data": 30, "idx": 1, "last": false}
-{"data": 20, "idx": 2, "last": false}
-{"data": 100, "idx": 3, "last": true}
-`,
+		"50\n30\n20\n100\n",
 		string(out),
 	)
 
