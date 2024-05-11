@@ -2,192 +2,83 @@ interface IReader1 () ()
 
 pub interface IReader1 () ()
 
-interface {}
+interface IReader8 (x int) ()
 
-interface {
-}
+interface IReader8 (
+    x int) ()
 
-interface {
+interface IReader8 (
+    x int
+) ()
 
-}
+interface IReader8 (
+    x int
+) (
+)
 
-interface { IReader1 () () }
+interface IReader8 (x int) (
 
-interface { IReader2 () ()
-}
+)
 
-interface {
-    IReader3 () () }
+interface IReader8 (x int, y string) ()
 
-interface {
-    IReader4 () ()
-}
+interface IReader8 (
+    x int, y string) ()
 
-interface {
-    IReader5 (
-    ) ()
-}
+interface IReader8 (x int,
+y string) ()
 
-interface {
-    IReader6 () (
-    )
-}
+interface IReader8 (
+    x int,
+    y string) ()
 
-interface {
-    IReader7 (
-    ) (
-    )
-}
+interface IReader8 (
+    x int,
+    y string
+) ()
 
-interface { IReader8 (x int) () }
+interface IReader17 (x int) (a int)
 
-interface { IReader8 (
-    x int) () }
+interface IReader17 (x int) (
+    a int)
 
-interface { IReader8 (x int
-) () }
+interface IReader17 (x int) (a int
+)
 
-interface { IReader8 (x int) (
-) }
+interface IReader17 (x int) (
+    a int
+)
 
-interface {
-    IReader8 (x int) () }
+interface IReader19 (x int, y string) (a int)
 
-interface { IReader8 (x int) ()
-}
+interface IReader19 (
+    x int, y string
+) (a int)
 
-interface {
-    IReader8 (x int) ()
-}
+interface IReader19 (
+    x int, y string
+) (
+    a int
+)
 
-interface {
-    IReader8 (
-        x int) ()
-}
+interface IReader19 (
+    x int,
+    y string
+) (
+    a int
+)
 
-interface {
-    IReader8 (x int
-    ) ()
-}
+pub interface IReader20 (x int, y string) (a int, b bool)
 
-interface {
-    IReader8 (x int) (
-    )
-}
+pub interface IReader20 (x int, y string) (
+    a int,
+    b bool
+)
 
-interface {
-    IReader8 (
-        x int
-    ) ()
-}
-
-interface {
-    IReader8 (
-        x int
-    ) (
-    )
-}
-
-interface { IReader8 (x int, y string) () }
-
-interface {
-    IReader8 (x int, y string) () }
-
-interface { IReader8 (x int, y string) ()
-}
-
-interface { IReader8 (
-    x int, y string) () }
-
-interface { IReader8 (x int,
-y string) () }
-
-interface {
-    IReader8 (x int, y string) ()
-}
-
-interface {
-    IReader8 (
-        x int, y string
-    ) ()
-}
-
-interface {
-    IReader8 (
-        x int,
-        y string) ()
-}
-
-interface {
-    IReader8 (
-        x int,
-        y string
-    ) ()
-}
-
-interface {
-    IReader8 (
-        x int,
-        y string
-    ) (
-    )
-}
-
-interface {
-    IReader8 (
-        x int,
-        y string
-    ) ()
-}
-
-interface { IReader9 () (a int) }
-
-interface {
-    IReader10 () (a int) }
-
-interface { IReader11 () (a int)
-}
-
-interface {
-    IReader12 () (a int)
-}
-
-interface {
-    IReader13 (
-    ) (a int)
-}
-
-interface {
-    IReader14 () (
-        a int)
-}
-
-interface {
-    IReader15 () (a int
-    )
-}
-
-interface {
-    IReader16 (
-    ) (
-        a int
-    )
-}
-
-interface { IReader17 (x int) (a int) }
-
-interface {
-    IReader18 (x int) (a int)
-}
-
-interface {
-    IReader19 (x int, y string) (a int)
-}
-
-interface {
-    pub IReader20 (x int, y string) (a int, b bool)
-}
-
-interface {
-    pub IReader21 (x any, y any) (a any, b any)
-}
+pub interface IReader20 (
+    x int,
+    y string
+) (
+    a int,
+    b bool
+)

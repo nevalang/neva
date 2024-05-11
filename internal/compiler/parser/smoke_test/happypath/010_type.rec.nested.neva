@@ -1,41 +1,33 @@
-type {
-    Rec1Lvl1 struct {
-        rec1Lvl2 struct {
-            foo vec<int>
-        }
+type Rec1Lvl1 struct {
+    rec1Lvl2 struct {
+        foo vec<int>
     }
 }
 
-type {
-    Rec2Lvl1 struct  {
-        rec2Lvl2 struct {
-            foo vec<struct {
-                foo int
-            }>
-        }
+type Rec2Lvl1 struct  {
+    rec2Lvl2 struct {
+        foo vec<struct {
+            foo int
+        }>
     }
 }
 
-type {
-    Rec3Lvl1 struct {
-        rec3Lvl2 struct {
-            foo vec<struct {
-                bar vec<struct {
-                    baz int
-                }>
+type Rec3Lvl1 struct {
+    rec3Lvl2 struct {
+        foo vec<struct {
+            bar vec<struct {
+                baz int
             }>
-        }
+        }>
     }
 }
 
-type {
-    pub Rec4Lvl1 struct {
-        rec4Lvl2 struct {
-            foo vec<struct {
-                bar vec<struct {
-                    baz map<string, struct { baz bool }>
-                }>
+pub type Rec4Lvl1 struct {
+    rec4Lvl2 struct {
+        foo vec<struct {
+            bar vec<struct {
+                baz map<string, struct { baz bool }>
             }>
-        }
+        }>
     }
 }

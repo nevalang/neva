@@ -1,35 +1,31 @@
 // Here we learn how to read struct field
 // by using builtin component with compiler directive.
 
-type {
-    User struct {
-        name string
-        pet Pet
-    }
-    Pet struct {
-        name string
-    }
+type User struct {
+    name string
+    pet Pet
 }
 
-const {
-    user User = {
-        name: 'John',
-        pet: { name: 'Charley' }
-    }
-    path list<string> = ['pet', 'name']
+type Pet struct {
+    name string
 }
 
-component {
-    Main(start any) (stop any) {
-        nodes {
-            Println
+const user User = {
+    name: 'John',
+    pet: { name: 'Charley' }
+}
 
-            #bind(path)
-            Field
-        }
+const path list<string> = ['pet', 'name']
 
-        :start -> ($user -> field:msg)
-        field:msg -> println:data
-        println:sig -> :stop
+component Main(start any) (stop any) {
+    nodes {
+        Println
+
+        #bind(path)
+        Field
     }
+
+    :start -> ($user -> field:msg)
+    field:msg -> println:data
+    println:sig -> :stop
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -39,6 +40,20 @@ func NewApp( //nolint:funlen
 				Usage: "Get current Nevalang version",
 				Action: func(_ *cli.Context) error {
 					fmt.Println(pkg.Version)
+					return nil
+				},
+			},
+			{
+				Name:  "upgrade",
+				Usage: "Upgrade to newest Nevalang version",
+				Action: func(_ *cli.Context) error {
+					cmd := exec.Command("curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash")
+					err := cmd.Run()
+					if err != nil {
+						fmt.Println("Upgrading Nevalang failed :" + err.Error())
+					} else {
+						fmt.Println("Upgrading Nevalang completed. Upgraded to version: " + pkg.Version)
+					}
 					return nil
 				},
 			},
@@ -190,9 +205,7 @@ func createNevaMod(path string) error {
 	// Create main.neva file
 	mainNevaContent := `component Main(start) (stop) {
 	nodes { Println }
-	net {
-		:start -> ('Hello, World!' -> println -> :stop)
-	}
+	:start -> ('Hello, World!' -> println -> :stop)
 }`
 
 	if err := os.WriteFile(

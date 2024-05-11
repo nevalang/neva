@@ -8,25 +8,23 @@ pub component C1(sig any) (v string)
 #autoports
 pub component C1_5(sig any) (v string)
 
-component {
-	#autoports
-	pub C1() ()
-	
-	#extern(read)
-	pub C1(sig any) (v string)
+#autoports
+pub component C1() ()
 
-	#extern(read)
-	#autoports
-	pub C1_5(sig any) (v string)
+#extern(read)
+pub component C1(sig any) (v string)
 
-	#extern(int DoInt, float DoFloat)
-	pub C2(sig any) (v string)
+#extern(read)
+#autoports
+pub component C1_5(sig any) (v string)
 
-	#extern(read, write)
-	pub C3<T>(v T) (v T) {
-		nodes {
-			#bind(msg)
-			msg Const<string>
-		}
+#extern(int DoInt, float DoFloat)
+pub component C2(sig any) (v string)
+
+#extern(read, write)
+pub component C3<T>(v T) (v T) {
+	nodes {
+		#bind(msg)
+		msg Const<string>
 	}
 }

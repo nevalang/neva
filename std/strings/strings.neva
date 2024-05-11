@@ -1,7 +1,5 @@
-component {
-    #extern(join)
-    pub Join(data list<string>) (res string)
+#extern(join)
+pub component Join(data list<string>) (res string)
 
-    #extern(split)
-    pub Split(data string, delim string) (res list<string>)
-}
+#extern(split)
+pub component Split(data string, delim string) (res list<string>)
