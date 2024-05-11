@@ -205,9 +205,7 @@ func createNevaMod(path string) error {
 	// Create main.neva file
 	mainNevaContent := `component Main(start) (stop) {
 	nodes { Println }
-	net {
-		:start -> ('Hello, World!' -> println -> :stop)
-	}
+	:start -> ('Hello, World!' -> println -> :stop)
 }`
 
 	if err := os.WriteFile(
