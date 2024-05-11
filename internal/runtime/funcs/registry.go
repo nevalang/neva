@@ -16,7 +16,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"unwrap": unwrap{},
 
 		// runtime
-		"trace": trace{},
 		"panic": panicker{},
 
 		// streamers

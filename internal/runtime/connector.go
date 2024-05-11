@@ -32,8 +32,6 @@ func (c Connector) broadcast(ctx context.Context, conn Connection) {
 		case <-ctx.Done():
 			return
 		case msg := <-conn.Sender:
-			msg.AppendTrace(conn.Meta.SenderPortAddr)
-
 			event := Event{
 				Type: MessageSentEvent,
 				MessageSent: &EventMessageSent{
