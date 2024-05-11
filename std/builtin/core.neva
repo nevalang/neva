@@ -1,35 +1,33 @@
-component {
-    #extern(new)
-    pub New<T>() (msg T)
+#extern(new)
+pub New<T>() (msg T)
 
-    #extern(del)
-    pub Del(msg any) ()
+#extern(del)
+pub Del(msg any) ()
 
-    #extern(lock)
-    pub Lock<T>(sig any, data T) (data T)
+#extern(lock)
+pub Lock<T>(sig any, data T) (data T)
 
-    #extern(panic)
-    pub Panic(msg any) ()
+#extern(panic)
+pub Panic(msg any) ()
 
-    #autoports
-    #extern(struct_builder)
-    pub Struct<T struct {}> () (msg T)
+#autoports
+#extern(struct_builder)
+pub Struct<T struct {}> () (msg T)
 
-    #extern(field)
-    pub Field<T>(msg struct {}) (msg T)
+#extern(field)
+pub Field<T>(msg struct {}) (msg T)
 
-    #extern(match)
-    pub Match<T>(data T, [case] T) ([case] T, else T)
+#extern(match)
+pub Match<T>(data T, [case] T) ([case] T, else T)
 
-    #extern(eq)
-    pub Eq<T>(actual T, expected T) (res bool)
+#extern(eq)
+pub Eq<T>(actual T, expected T) (res bool)
 
-    #extern(if)
-    pub If(data bool) (then any, else any)
+#extern(if)
+pub If(data bool) (then any, else any)
 
-    #extern(unwrap)
-    pub Unwrap<T>(data maybe<T>) (some T, none struct{})
+#extern(unwrap)
+pub Unwrap<T>(data maybe<T>) (some T, none struct{})
 
-    #extern(stream_int_range)
-    pub Range(from int, to int) (data stream<int>)
-}
+#extern(stream_int_range)
+pub Range(from int, to int) (data stream<int>)
