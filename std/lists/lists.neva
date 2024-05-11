@@ -1,0 +1,26 @@
+import { builtin }
+
+pub component For<T>(data list<T>) (sig any) {
+    nodes {
+        Iter<T>
+        Lock<bool>
+        handler IForHandler
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        Match<bool>
+    }
+
+    :data -> iter -> [getLast, getData]
+    getLast -> lock:data
+    getData -> handler
+
+    handler -> lock:sig
+
+    lock:data -> match:data
+    true -> match:case[0] -> :sig
+}

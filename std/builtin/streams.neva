@@ -15,3 +15,34 @@ pub component ReducePort<T>([port] T) (res T) {
     :port => streamer:port
     streamer -> reducer -> :res
 }
+
+// === FOR ===
+
+pub interface IForHandler<T>(data T) (sig any) 
+
+const dataPath list<string> = ['data']
+const lastPath list<string> = ['last']
+
+pub component For<T>(item stream<T>) (sig any) {
+    nodes {
+        Lock<bool>
+        handler IForHandler
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        Match<bool>
+    }
+
+    :item -> [getLast, getData]
+    getLast -> lock:data
+    getData -> handler
+
+    handler -> lock:sig
+
+    lock:data -> match:data
+    true -> match:case[0] -> :sig
+}
