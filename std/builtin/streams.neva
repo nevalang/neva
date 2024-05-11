@@ -16,17 +16,25 @@ pub component ReducePort<T>([port] T) (res T) {
     streamer -> reducer -> :res
 }
 
-// === FOR ===
+// === Iterators ===
 
-pub interface IForHandler<T>(data T) (sig any) 
-
+// These constatns are used for binding by Field component.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
+const idxPath list<string> = ['idx']
 
+// --- For ---
+
+// IForHandler is a dependency for For component.
+pub interface IForHandler<T>(data T) (sig any)
+
+// For is for performing side-effect for every item in a stream.
+// It will block untill all items are processed, so if you need to perform
+// several side-effects, do them all in a single handler.
 pub component For<T>(item stream<T>) (sig any) {
     nodes {
         Lock<bool>
-        handler IForHandler
+        handler IForHandler<T>
 
         #bind(lastPath)
         getLast Field<bool>
@@ -45,4 +53,38 @@ pub component For<T>(item stream<T>) (sig any) {
 
     lock:data -> match:data
     true -> match:case[0] -> :sig
+}
+
+// --- Map ---
+
+// IMapHandler is a dependency for Map component.
+pub interface IMapHandler<T>(data T) (res T)
+
+// Map is for transforming every item in stream.
+// Unlike For, it's not blocking and will produce a new stream,
+// so it's possible to chain multiple Maps together.
+// It's also possible to perform side-effect for every item,
+// but if side-effect is all you need, consider using For instead.
+pub component Map<T>(item stream<T>) (res stream<T>) {
+    nodes {
+        wrap Struct<stream<T>>
+        handler IMapHandler<T>
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        #bind(idxPath)
+        getIdx Field<T>
+    }
+
+    :item -> [getData, getLast, getIdx]
+
+    getLast -> wrap:last
+    getIdx -> wrap:idx
+    getData -> handler -> wrap:data
+
+    wrap -> :res
 }

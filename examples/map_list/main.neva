@@ -1,0 +1,6 @@
+const lst list<int> = [50, 30, 20, 100]
+
+component Main(start) (stop) {
+    nodes { Map{Decr}, Iter, If }
+    :start -> ($lst -> iter -> map -> if:then -> :stop)
+}

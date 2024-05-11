@@ -16,17 +16,13 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "iterate_over_list")
+	cmd := exec.Command("neva", "run", "map_list")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		`{"data": 50, "idx": 0, "last": false}
-{"data": 30, "idx": 1, "last": false}
-{"data": 20, "idx": 2, "last": false}
-{"data": 100, "idx": 3, "last": true}
-`,
+		"[49\n29\n19\n99]\n",
 		string(out),
 	)
 

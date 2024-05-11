@@ -14,11 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		`50
-30
-20
-100
-`,
+		"50\n30\n20\n100\n",
 		string(out),
 	)
 
