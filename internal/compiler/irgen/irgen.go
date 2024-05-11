@@ -165,13 +165,15 @@ func (g Generator) processComponentNode( //nolint:funlen
 			node:       node,
 		}
 
+		var scopeToUseThisTime src.Scope
 		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
 			subNodeCtx.node = injectedNode
+			scopeToUseThisTime = scope
 		} else {
-			scope = newScope
+			scopeToUseThisTime = newScope
 		}
 
-		if err := g.processComponentNode(subNodeCtx, scope, result); err != nil {
+		if err := g.processComponentNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &foundLocation,
