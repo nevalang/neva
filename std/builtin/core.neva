@@ -22,10 +22,10 @@ component {
     pub Match<T>(data T, [case] T) ([case] T, else T)
 
     #extern(eq)
-    pub Eq<T>(val T, val2 T) (res bool)
+    pub Eq<T>(actual T, expected T) (res bool)
 
     #extern(if)
-    pub If(val bool) (then any, else any)
+    pub If(data bool) (then any, else any)
 
     #extern(unwrap)
     pub Unwrap<T>(data maybe<T>) (some T, none struct{})

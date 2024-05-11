@@ -1,8 +1,8 @@
 component Main(start) (stop) {
     nodes { Println, Eq<string>,If }
     :start -> [
-        ('neva is cool' -> eq:val),
-        ('neva' -> eq:val2)
+        ('neva is cool' -> eq:expected),
+        ('neva' -> eq:actual)
        ]
 
        eq:res -> if

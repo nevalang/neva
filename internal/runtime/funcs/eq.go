@@ -8,11 +8,11 @@ import (
 type eq struct{}
 
 func (p eq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	valIn, err := io.In.Port("val")
+	actualIn, err := io.In.Port("actual")
 	if err != nil {
 		return nil, err
 	}
-	val2In, err := io.In.Port("val2")
+	expectIn, err := io.In.Port("expected")
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (p eq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context),
 			select {
 			case <-ctx.Done():
 				return
-			case val1 = <-valIn:
+			case val1 = <-actualIn:
 			}
 
 			select {
 			case <-ctx.Done():
 				return
-			case val2 = <-val2In:
+			case val2 = <-expectIn:
 			}
 
 			select {

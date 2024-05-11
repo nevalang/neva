@@ -8,7 +8,7 @@ import (
 type if_ struct{}
 
 func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	valIn, err := io.In.Port("val")
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 			select {
 			case <-ctx.Done():
 				return
-			case val1 = <-valIn:
+			case val1 = <-dataIn:
 			}
 
 			select {
