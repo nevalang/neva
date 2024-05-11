@@ -20,6 +20,12 @@ pub component Field<T>(msg struct {}) (msg T)
 #extern(match)
 pub component Match<T>(data T, [case] T) ([case] T, else T)
 
+#extern(eq)
+pub component Eq<T>(actual T, expected T) (res bool)
+
+#extern(if)
+pub component If(data bool) (then any, else any)
+
 #extern(unwrap)
 pub component Unwrap<T>(data maybe<T>) (some T, none struct{})
 
