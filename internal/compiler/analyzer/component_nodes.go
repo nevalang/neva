@@ -45,7 +45,7 @@ func (a Analyzer) analyzeComponentNodes(
 			hasErrGuard = true
 		}
 
-		analyzedNode, nodeInterface, err := a.analyzeComponentNode(
+		analyzedNode, nodeInterface, err := a.analyzeNode(
 			componentIface,
 			node,
 			scope,
@@ -65,7 +65,7 @@ func (a Analyzer) analyzeComponentNodes(
 }
 
 //nolint:funlen
-func (a Analyzer) analyzeComponentNode(
+func (a Analyzer) analyzeNode(
 	componentIface src.Interface,
 	node src.Node,
 	scope src.Scope,
@@ -203,7 +203,7 @@ func (a Analyzer) analyzeComponentNode(
 
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
-		resolvedDep, _, err := a.analyzeComponentNode(
+		resolvedDep, _, err := a.analyzeNode(
 			componentIface,
 			depNode,
 			scope,

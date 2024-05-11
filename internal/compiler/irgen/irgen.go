@@ -82,7 +82,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	scope src.Scope,
 	result *ir.Program,
 ) *compiler.Error {
-	componentEntity, location, err := scope.Entity(nodeCtx.node.EntityRef)
+	componentEntity, foundLocation, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -101,7 +101,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
-			Location: &location,
+			Location: &foundLocation,
 			Meta:     &component.Meta,
 		}
 	}
@@ -130,7 +130,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 		return nil
 	}
 
-	scope = scope.WithLocation(location) // only use new location if that's not builtin
+	newScope := scope.WithLocation(foundLocation) // only use new location if that's not builtin
 
 	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
@@ -143,7 +143,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
-			Location: &scope.Location,
+			Location: &newScope.Location,
 		}
 	}
 
@@ -152,7 +152,7 @@ func (g Generator) processComponentNode( //nolint:funlen
 		if !ok {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
-				Location: &location,
+				Location: &foundLocation,
 				Meta:     &component.Meta,
 			}
 		}
@@ -165,12 +165,14 @@ func (g Generator) processComponentNode( //nolint:funlen
 
 		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
 			subNodeCtx.node = injectedNode
+		} else {
+			scope = newScope
 		}
 
 		if err := g.processComponentNode(subNodeCtx, scope, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
-				Location: &location,
+				Location: &foundLocation,
 				Meta:     &component.Meta,
 			}
 		}
