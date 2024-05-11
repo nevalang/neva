@@ -77,7 +77,7 @@ pub component Map<T>(item stream<T>) (res stream<T>) {
         getData Field<T>
 
         #bind(idxPath)
-        getIdx Field<T>
+        getIdx Field<int>
     }
 
     :item -> [getData, getLast, getIdx]

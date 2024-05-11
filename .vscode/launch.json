@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "examples/get_msg_trace"]
+      "args": ["run", "examples/map_list"]
     },
     {
       "name": "LSP",

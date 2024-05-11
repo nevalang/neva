@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"[49\n29\n19\n99]\n",
+		"[49,29,19,99]\n",
 		string(out),
 	)
 
