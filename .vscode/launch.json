@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "examples/image/minimal_png"]
+      "args": ["run", "e2e/do_nothin_verbose/main"]
     },
     {
       "name": "LSP",

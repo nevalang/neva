@@ -1,30 +1,28 @@
 import { io, strconv }
 
-component {
-	Main(start) (stop) {
-		nodes { App, Println }
-		:start -> app
-		[app:res, app:err] -> println -> :stop
-	}
-	
-	App(sig) (res int, err error) {
-		nodes {
-			readFirstInt ReadIntFromStdin
-			readSecondInt ReadIntFromStdin
-			add ReducePort<int> { Add<int> }
-		}
+component Main(start) (stop) {
+	nodes { App, Println }
+	:start -> app
+	[app:res, app:err] -> println -> :stop
+}
 
-		:sig -> readFirstInt
-		readFirstInt:num -> [add[0], readSecondInt]
-		readSecondInt:num -> add[1]
-		[readFirstInt:err, readSecondInt:err] -> :err
-		add -> :res
+component App(sig) (res int, err error) {
+	nodes {
+		readFirstInt ReadIntFromStdin
+		readSecondInt ReadIntFromStdin
+		add ReducePort<int> { Add<int> }
 	}
 
-	ReadIntFromStdin(sig) (num int, err error) {
-		nodes { io.Scanln, strconv.ParseNum<int> }
-		:sig -> scanln -> parseNum
-		parseNum:res -> :num
-		parseNum:err -> :err
-	}
+	:sig -> readFirstInt
+	readFirstInt:num -> [add[0], readSecondInt]
+	readSecondInt:num -> add[1]
+	[readFirstInt:err, readSecondInt:err] -> :err
+	add -> :res
+}
+
+component ReadIntFromStdin(sig) (num int, err error) {
+	nodes { io.Scanln, strconv.ParseNum<int> }
+	:sig -> scanln -> parseNum
+	parseNum:res -> :num
+	parseNum:err -> :err
 }

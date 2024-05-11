@@ -67,12 +67,6 @@ type nevaListener interface {
 	// EnterTypeStmt is called when entering the typeStmt production.
 	EnterTypeStmt(c *TypeStmtContext)
 
-	// EnterSingleTypeStmt is called when entering the singleTypeStmt production.
-	EnterSingleTypeStmt(c *SingleTypeStmtContext)
-
-	// EnterGroupTypeStmt is called when entering the groupTypeStmt production.
-	EnterGroupTypeStmt(c *GroupTypeStmtContext)
-
 	// EnterTypeDef is called when entering the typeDef production.
 	EnterTypeDef(c *TypeDefContext)
 
@@ -118,12 +112,6 @@ type nevaListener interface {
 	// EnterInterfaceStmt is called when entering the interfaceStmt production.
 	EnterInterfaceStmt(c *InterfaceStmtContext)
 
-	// EnterSingleInterfaceStmt is called when entering the singleInterfaceStmt production.
-	EnterSingleInterfaceStmt(c *SingleInterfaceStmtContext)
-
-	// EnterGroupInterfaceStmt is called when entering the groupInterfaceStmt production.
-	EnterGroupInterfaceStmt(c *GroupInterfaceStmtContext)
-
 	// EnterInterfaceDef is called when entering the interfaceDef production.
 	EnterInterfaceDef(c *InterfaceDefContext)
 
@@ -147,12 +135,6 @@ type nevaListener interface {
 
 	// EnterConstStmt is called when entering the constStmt production.
 	EnterConstStmt(c *ConstStmtContext)
-
-	// EnterSingleConstStmt is called when entering the singleConstStmt production.
-	EnterSingleConstStmt(c *SingleConstStmtContext)
-
-	// EnterGroupConstStmt is called when entering the groupConstStmt production.
-	EnterGroupConstStmt(c *GroupConstStmtContext)
 
 	// EnterConstDef is called when entering the constDef production.
 	EnterConstDef(c *ConstDefContext)
@@ -192,12 +174,6 @@ type nevaListener interface {
 
 	// EnterCompStmt is called when entering the compStmt production.
 	EnterCompStmt(c *CompStmtContext)
-
-	// EnterSingleCompStmt is called when entering the singleCompStmt production.
-	EnterSingleCompStmt(c *SingleCompStmtContext)
-
-	// EnterGroupCompStmt is called when entering the groupCompStmt production.
-	EnterGroupCompStmt(c *GroupCompStmtContext)
 
 	// EnterCompDef is called when entering the compDef production.
 	EnterCompDef(c *CompDefContext)
@@ -355,12 +331,6 @@ type nevaListener interface {
 	// ExitTypeStmt is called when exiting the typeStmt production.
 	ExitTypeStmt(c *TypeStmtContext)
 
-	// ExitSingleTypeStmt is called when exiting the singleTypeStmt production.
-	ExitSingleTypeStmt(c *SingleTypeStmtContext)
-
-	// ExitGroupTypeStmt is called when exiting the groupTypeStmt production.
-	ExitGroupTypeStmt(c *GroupTypeStmtContext)
-
 	// ExitTypeDef is called when exiting the typeDef production.
 	ExitTypeDef(c *TypeDefContext)
 
@@ -406,12 +376,6 @@ type nevaListener interface {
 	// ExitInterfaceStmt is called when exiting the interfaceStmt production.
 	ExitInterfaceStmt(c *InterfaceStmtContext)
 
-	// ExitSingleInterfaceStmt is called when exiting the singleInterfaceStmt production.
-	ExitSingleInterfaceStmt(c *SingleInterfaceStmtContext)
-
-	// ExitGroupInterfaceStmt is called when exiting the groupInterfaceStmt production.
-	ExitGroupInterfaceStmt(c *GroupInterfaceStmtContext)
-
 	// ExitInterfaceDef is called when exiting the interfaceDef production.
 	ExitInterfaceDef(c *InterfaceDefContext)
 
@@ -435,12 +399,6 @@ type nevaListener interface {
 
 	// ExitConstStmt is called when exiting the constStmt production.
 	ExitConstStmt(c *ConstStmtContext)
-
-	// ExitSingleConstStmt is called when exiting the singleConstStmt production.
-	ExitSingleConstStmt(c *SingleConstStmtContext)
-
-	// ExitGroupConstStmt is called when exiting the groupConstStmt production.
-	ExitGroupConstStmt(c *GroupConstStmtContext)
 
 	// ExitConstDef is called when exiting the constDef production.
 	ExitConstDef(c *ConstDefContext)
@@ -480,12 +438,6 @@ type nevaListener interface {
 
 	// ExitCompStmt is called when exiting the compStmt production.
 	ExitCompStmt(c *CompStmtContext)
-
-	// ExitSingleCompStmt is called when exiting the singleCompStmt production.
-	ExitSingleCompStmt(c *SingleCompStmtContext)
-
-	// ExitGroupCompStmt is called when exiting the groupCompStmt production.
-	ExitGroupCompStmt(c *GroupCompStmtContext)
 
 	// ExitCompDef is called when exiting the compDef production.
 	ExitCompDef(c *CompDefContext)

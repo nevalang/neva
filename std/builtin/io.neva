@@ -1,7 +1,5 @@
-component {
-    #extern(println)
-    pub Println<T>(data T) (sig T)
+#extern(println)
+pub component Println<T>(data T) (sig T)
 
-    #extern(printf)
-    pub Printf(tpl string, [args] any) ([args] any, err error)
-}
+#extern(printf)
+pub component Printf(tpl string, [args] any) ([args] any, err error)

@@ -11,94 +11,68 @@ pub type Rec struct {
 pub type Rec struct { foo int
 }
 
-type {
-    EmptyRec struct {}
+type EmptyRec struct {}
+
+type EmptyRec2 struct {
 }
 
-type {
-    EmptyRec2 struct {
+type EmptyRec2 struct {
+
+}
+
+type Rec struct  { foo int }
+
+type Rec struct {
+    foo int }
+
+type Rec struct { foo int
+}
+
+type Rec struct {
+    foo int
+}
+
+type Rec struct {
+    foo int
+    bar enum { Monday, Tuesday, Wednesday }
+}
+
+type Rec struct { foo int
+    bar enum { Monday, Tuesday, Wednesday }
+}
+
+type Rec struct {
+    foo int
+    bar enum { Monday, Tuesday, Wednesday } }
+
+type Rec struct {
+    foo int
+    bar enum {
+        Monday,
+        Tuesday,
+        Wednesday
     }
 }
 
-type {
-    EmptyRec2 struct {
+type Rec struct {
+    foo int
 
+    bar enum {
+        Monday,
+        Tuesday,
+        Wednesday
     }
 }
 
-type {
-    Rec struct  { foo int }
-}
+type EmptyRec struct {}
 
-type {
-    Rec struct {
-        foo int }
-}
+type Rec struct { foo int }
 
-type {
-    Rec struct { foo int
-    }
-}
-
-type {
-    Rec struct {
-        foo int
-    }
-}
-
-type {
-    Rec struct {
-        foo int
-        bar enum { Monday, Tuesday, Wednesday }
-    }
-}
-
-type {
-    Rec struct { foo int
-        bar enum { Monday, Tuesday, Wednesday }
-    }
-}
-
-type {
-    Rec struct {
-        foo int
-        bar enum { Monday, Tuesday, Wednesday } }
-}
-
-type {
-    Rec struct {
-        foo int
-        bar enum {
-            Monday,
-            Tuesday,
-            Wednesday
-        }
-    }
-}
-
-type {
-    Rec struct {
-        foo int
-
-        bar enum {
-            Monday,
-            Tuesday,
-            Wednesday
-        }
-    }
-}
-
-type {
-    EmptyRec struct {}
-
-    Rec struct { foo int }
-
-    pub Rec struct {
-        foo int
-        bar enum {
-            Monday,
-            Tuesday,
-            Wednesday
-        }
+pub type Rec struct {
+    foo int
+    bar enum {
+        Monday,
+        Tuesday,
+        Wednesday
     }
 }

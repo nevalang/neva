@@ -1,10 +1,9 @@
-type {
-    User struct {
-        name string
-        pet Pet
-    }
-    Pet struct { name string }
+type User struct {
+    name string
+    pet Pet
 }
+
+type Pet struct { name string }
 
 component Main(start) (stop) {
     nodes { GetUser, Println }

@@ -3,7 +3,6 @@ component Main(start) (stop) {
 		add ReducePort<int> { Add<int> }
 		Println
 	}
-	
 	:start -> [
 		(1 -> add[0]),
 		(2 -> add[1])

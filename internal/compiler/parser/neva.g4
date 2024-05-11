@@ -36,10 +36,7 @@ pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
 // Types
-typeStmt: singleTypeStmt | groupTypeStmt;
-singleTypeStmt: PUB_KW? 'type' typeDef;
-groupTypeStmt:
-	'type' NEWLINE* '{' NEWLINE* (PUB_KW? typeDef NEWLINE*)* '}';
+typeStmt: PUB_KW? 'type' typeDef;
 typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam)*;
@@ -64,10 +61,7 @@ nonUnionTypeExpr:
 	| typeLitExpr; // union inside union lead to mutual left recursion (not supported by ANTLR)
 
 // interfaces
-interfaceStmt: singleInterfaceStmt | groupInterfaceStmt;
-singleInterfaceStmt: PUB_KW? 'interface' interfaceDef;
-groupInterfaceStmt:
-	'interface' NEWLINE* '{' NEWLINE* (PUB_KW? interfaceDef)* '}';
+interfaceStmt: PUB_KW? 'interface' interfaceDef;
 interfaceDef:
 	IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
@@ -79,10 +73,7 @@ singlePortDef: NEWLINE* IDENTIFIER typeExpr? NEWLINE*;
 arrayPortDef: NEWLINE* '[' IDENTIFIER ']' typeExpr? NEWLINE*;
 
 // const
-constStmt: singleConstStmt | groupConstStmt;
-singleConstStmt: PUB_KW? 'const' constDef;
-groupConstStmt:
-	'const' NEWLINE* '{' NEWLINE* (PUB_KW? constDef)* '}';
+constStmt: PUB_KW? 'const' constDef;
 constDef:
 	IDENTIFIER typeExpr '=' (entityRef | constLit) NEWLINE*;
 constLit:
@@ -116,12 +107,7 @@ structValueFields:
 structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
 
 // components
-compStmt: singleCompStmt | groupCompStmt;
-singleCompStmt: compilerDirectives? PUB_KW? 'component' compDef;
-groupCompStmt:
-	'component' NEWLINE* '{' NEWLINE* (
-		(COMMENT NEWLINE*)* compilerDirectives? PUB_KW? compDef
-	)* '}';
+compStmt: compilerDirectives? PUB_KW? 'component' compDef;
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
 	'{'

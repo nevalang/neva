@@ -1,19 +1,17 @@
 interface IPrinter<T>(data T) (sig T)
 
-component {
-    Main(start any) (stop any) {
-        nodes {
-            SecondComponent {
-                depNode Println<any>
-            }
+component Main(start any) (stop any) {
+    nodes {
+        SecondComponent {
+            depNode Println<any>
         }
-        :start -> secondComponent:msg
-        secondComponent:msg -> :stop
     }
-    
-    SecondComponent (msg any) (msg any) {
-        nodes { depNode IPrinter<any> }
-        :msg -> depNode:data
-        depNode:sig -> :msg
-    }
+    :start -> secondComponent:msg
+    secondComponent:msg -> :stop
+}
+
+component SecondComponent (msg any) (msg any) {
+    nodes { depNode IPrinter<any> }
+    :msg -> depNode:data
+    depNode:sig -> :msg
 }

@@ -3,16 +3,14 @@ type NumsStruct struct {
     m map<int>
 }
 
-const {
-    one int = 1
-    two int = 2
-    three int = 3
-    numsList list<int> = [one, two, three]
-    numsMap map<int> = { key: one }
-    numsStruct NumsStruct = {
-        l: numsList,
-        m: numsMap
-    }
+const one int = 1
+const two int = 2
+const three int = 3
+const numsList list<int> = [one, two, three]
+const numsMap map<int> = { key: one }
+const numsStruct NumsStruct = {
+    l: numsList,
+    m: numsMap
 }
 
 component Main(start) (stop) {

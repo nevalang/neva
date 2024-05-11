@@ -5,142 +5,14 @@ type num int |
 
 pub type num int | float
 
-type { num int | float }
+type time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
 
-type {
-    num int | float
-}
+type Obj struct {} | struct { foo int }
 
-type { num int | float
-}
+type Obj struct {} | struct { foo int | float }
 
-type {
-    num int | float }
+type SomeTyp struct { foo int | float } | int | enum { Monday, Tuesday, Wednesday } | enum { January, February, March } | float
 
-type {
-    num int
-        | float
-}
+type T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
 
-type { num int
-        | float
-}
-
-type {
-    num int
-        | float }
-
-type {
-    num int |
-        float
-}
-
-type { num int |
-        float
-}
-
-type {
-    num int |
-        float }
-
-type {
-    time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
-}
-
-
-type { time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
-}
-
-
-type {
-    time enum { Monday, Tuesday, Wednesday } | enum { January, February, March } }
-
-type {
-    time enum {
-        Monday, Tuesday, Wednesday } | enum { January, February, March }
-}
-
-type {
-    time enum { Monday, Tuesday, Wednesday } | enum { January, February, March
-    }
-}
-
-type {
-    time enum {
-        Monday, Tuesday, Wednesday } | enum { January, February, March
-    }
-}
-
-type {
-    time enum {
-        Monday, Tuesday, Wednesday
-    } | enum { January, February, March }
-}
-
-type {
-    time enum {
-        Monday, Tuesday, Wednesday
-    } | enum {
-        January, February, March }
-}
-
-type {
-    time enum {
-        Monday, Tuesday, Wednesday
-    } | enum {
-        January, February, March
-    }
-}
-
-type {
-    time enum {
-        Monday,
-        Tuesday,
-        Wednesday
-    } | enum {
-        January,
-        February,
-        March
-    }
-}
-
-type { Obj struct {} | struct { foo int } }
-
-type {
-    Obj struct {} | struct { foo int } }
-
-type { Obj struct {} | struct { foo int }
-}
-
-type {
-    Obj struct {} | struct { foo int }
-}
-
-type {
-    Obj struct {} | struct { foo int | float }
-}
-
-type {
-    SomeTyp struct { foo int | float } | int | enum {
-        Monday,
-        Tuesday,
-        Wednesday
-    } | enum {
-        January,
-        February,
-        March
-    } | float 
-}
-
-type {
-    T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
-}
-
-type {
-    pub T int | enum {
-        Monday, Tuesday, Wednesday
-    } | struct {
-        foo int | float
-    }
-}
-
+pub type T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
