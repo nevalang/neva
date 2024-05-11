@@ -77,6 +77,8 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 	return result, nil
 }
 
+// FIXME 9 times out of 10, this function will return an error
+// for e2e/iterate_over_list (problem with passing handler to For)
 func (g Generator) processComponentNode( //nolint:funlen
 	nodeCtx nodeContext,
 	scope src.Scope,

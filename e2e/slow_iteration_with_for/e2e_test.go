@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"[1,2,3,4,5,6,7,8,9,10]\n",
+		"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n",
 		string(out),
 	)
 
