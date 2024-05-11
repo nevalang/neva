@@ -1,32 +1,30 @@
-component {
-    // Len returns the length of the given sequence: list, map, or string:
-    // for lists it returns number of elements,
-    // for maps it returns number of keys,
-    // for for strings it returns number of utf-8 characters.
-    #extern(list list_len, map map_len)
-    pub Len<T list<any> | map<any> | string>(data T) (res int)
+// Len returns the length of the given sequence: list, map, or string:
+// for lists it returns number of elements,
+// for maps it returns number of keys,
+// for for strings it returns number of utf-8 characters.
+#extern(list list_len, map map_len)
+pub component Len<T list<any> | map<any> | string>(data T) (res int)
 
-    // List receives stream and sends list with all elements from the stream.
-    #extern(stream_to_list)
-    pub List<T>(seq stream<T>) (res list<T>)
+// List receives stream and sends list with all elements from the stream.
+#extern(stream_to_list)
+pub component List<T>(seq stream<T>) (res list<T>)
 
-    // Index returns the element at the given index in the ordered collection.
-    // If the index is out of bounds, it returns an error.
-    // The index is zero-based.
-    #extern(index)
-    pub Index<T list<any> | string>(data T, idx int) (res T, err error)
+// Index returns the element at the given index in the ordered collection.
+// If the index is out of bounds, it returns an error.
+// The index is zero-based.
+#extern(index)
+pub component Index<T list<any> | string>(data T, idx int) (res T, err error)
 
-    // Push creates new list with appended element.
-    #extern(list_push)
-    pub Push<T> (lst list<T>, data T) (res list<T>)
+// Push creates new list with appended element.
+#extern(list_push)
+pub component Push<T> (lst list<T>, data T) (res list<T>)
 
-    // Sort creates sorted version of the given list.
-    #extern(int int_sort, float float_sort, string string_sort)
-    pub Sort<T int | float | string>(data list<T>) (res T)
+// Sort creates sorted version of the given list.
+#extern(int int_sort, float float_sort, string string_sort)
+pub component Sort<T int | float | string>(data list<T>) (res T)
 
-    #extern(slice)
-    pub Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
+#extern(slice)
+pub component Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
 
-    #extern(list_to_stream)
-    pub Iter<T>(data list<T>) (seq stream<T>)
-}
+#extern(list_to_stream)
+pub component Iter<T>(data list<T>) (seq stream<T>)

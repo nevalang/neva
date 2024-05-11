@@ -141,8 +141,14 @@ type ListMsg struct {
 	v []Msg
 }
 
-func (msg ListMsg) List() []Msg                  { return msg.v }
-func (msg ListMsg) String() string               { return fmt.Sprint(msg.v) }
+func (msg ListMsg) List() []Msg   { return msg.v }
+func (msg ListMsg) String() string {
+	bb, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(bb)
+}
 func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
 func (msg ListMsg) Trace() []PortAddr            { return msg.baseMsg.trace }
 func (msg ListMsg) AppendTrace(pa PortAddr) {

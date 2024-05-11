@@ -6,92 +6,73 @@ pub type Rec1Lvl1 struct {
     Rec1Lvl2 struct {}
 }
 
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct {}
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {}
+}
+
+type Rec1Lvl1 struct { Rec1Lvl2 struct {}
+}
+
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {} 
+}
+
+type Rec1Lvl1 struct {
+    Rec1Lvl2_1 struct {}
+    Rec1Lvl2_2 struct {}
+}
+
+type Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
+    Rec1Lvl2_2 struct {}
+}
+
+type Rec1Lvl1 struct {
+    Rec1Lvl2_1 struct {}
+    Rec1Lvl2_2 struct {} 
+}
+
+type Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
+    Rec1Lvl2_2 struct {} 
+}
+
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {
+        Rec1Lvl3_1 struct {}
+        Rec1Lvl3_2 struct {}
     }
 }
 
-type {
-    Rec1Lvl1 struct { Rec1Lvl2 struct {}
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+        Rec1Lvl3_2 struct {}
     }
 }
 
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct {} }
-}
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2_1 struct {}
-        Rec1Lvl2_2 struct {}
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {
+        Rec1Lvl3_1 struct {}
+        Rec1Lvl3_2 struct {} 
     }
 }
 
-type {
-    Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
-        Rec1Lvl2_2 struct {}
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+        Rec1Lvl3_2 struct {} 
     }
 }
 
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2_1 struct {}
-        Rec1Lvl2_2 struct {} }
+type Rec1Lvl1 struct {
+    Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
+        Rec1Lvl3_2 struct {} } 
 }
 
-type {
-    Rec1Lvl1 struct { Rec1Lvl2_1 struct {}
-        Rec1Lvl2_2 struct {} } }
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct {
-            Rec1Lvl3_1 struct {}
-            Rec1Lvl3_2 struct {}
+pub type Rec1Lvl1 struct {
+    Rec1Lvl2 struct {
+        Rec1Lvl3_1 struct {
+            foo int
+        }
+        Rec1Lvl3_2 struct {
+            bar vec<int>
         }
     }
 }
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
-            Rec1Lvl3_2 struct {}
-        }
-    }
-}
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct {
-            Rec1Lvl3_1 struct {}
-            Rec1Lvl3_2 struct {} }
-    }
-}
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
-            Rec1Lvl3_2 struct {} }
-    }
-}
-
-type {
-    Rec1Lvl1 struct {
-        Rec1Lvl2 struct { Rec1Lvl3_1 struct {}
-            Rec1Lvl3_2 struct {} } } }
-
-type {
-    pub Rec1Lvl1 struct {
-        Rec1Lvl2 struct {
-            Rec1Lvl3_1 struct {
-                foo int
-            }
-            Rec1Lvl3_2 struct {
-                bar vec<int>
-            }
-        }
-    }
-}
-

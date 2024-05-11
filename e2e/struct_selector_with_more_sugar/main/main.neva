@@ -1,20 +1,17 @@
 // Here we learn how to read struct fields without compiler directives
 // by using another one syntax sugare `.` called "struct selectors".
 
-type {
-    User struct {
-        name string
-        pet Pet
-    }
-    Pet struct { name string }
+type User struct {
+    name string
+    pet Pet
 }
+
+type Pet struct { name string }
 
 component Main(start) (stop) {
     nodes { UserSender, Println }
-    net {
-        :start -> userSender:sig
-        userSender.pet.name -> println -> :stop
-    }
+    :start -> userSender:sig
+    userSender.pet.name -> println -> :stop
 }
 
 const user User = {

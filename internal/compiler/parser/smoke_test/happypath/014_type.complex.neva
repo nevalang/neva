@@ -1,29 +1,27 @@
-type {
-    MyInt i8
+type MyInt int
 
-    MyNum Int | Float
-    Int i32 | i64
-    pub Float f32 | f64
+type MyNum Int | Float
+type Int int | int
+pub type Float float | float
 
-    MyEmptyRec struct {}
-    MyNonEmptyRec struct {
-        foo MyInt
-        bar MyNum
-        baz MyEmptyRec
-    }
-    pub MyNestedRec struct {
-        Nested struct {
-            Level MyNonEmptyRec
-        }
-    }
-
-    MyShortEnum enum { Monday }
-    MyNormalEnum enum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
-    pub MyNormalNewlinedEnum enum {
-        Monday, Tuesday, Wednesday,
-        Thursday, Friday, Saturday
-    }
-
-    pub MyArr string
-    MyArrNested string
+type MyEmptyRec struct {}
+type MyNonEmptyRec struct {
+    foo MyInt
+    bar MyNum
+    baz MyEmptyRec
 }
+pub type MyNestedRec struct {
+    Nested struct {
+        Level MyNonEmptyRec
+    }
+}
+
+type MyShortEnum enum { Monday }
+type MyNormalEnum enum { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+pub type MyNormalNewlinedEnum enum {
+    Monday, Tuesday, Wednesday,
+    Thursday, Friday, Saturday
+}
+
+pub type MyArr string
+type MyArrNested string

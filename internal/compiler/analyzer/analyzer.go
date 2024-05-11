@@ -37,6 +37,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
+	
 	if !ok {
 		return src.Build{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),

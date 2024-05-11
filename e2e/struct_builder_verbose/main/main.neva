@@ -6,19 +6,16 @@ type User struct {
     name string
 }
 
-component {
-    #extern(struct_builder)
-    MyStructBuilder(age int, name string) (msg User)
+#extern(struct_builder)
+component MyStructBuilder(age int, name string) (msg User)
 
-    Main(start any) (stop any) {
-        nodes { Println, builder MyStructBuilder }
-        net {
-            :start -> [
-                ('John' -> builder:name),
-                (32 -> builder:age)
-            ]
-            builder:msg -> println:data
-            println:sig -> :stop
-        }
-    }
+component Main(start any) (stop any) {
+    nodes { Println, builder MyStructBuilder }
+
+    :start -> [
+        ('John' -> builder:name),
+        (32 -> builder:age)
+    ]
+    builder:msg -> println:data
+    println:sig -> :stop
 }

@@ -2,11 +2,9 @@ const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 component Main(start) (stop) {
 	nodes { Index<list<int>>, Println }
-	net {
-		:start -> [
-			($lst -> index:data),
-			(4 -> index:idx)
-		]
-	    [index:res, index:err] -> println -> :stop
-	}
+	:start -> [
+		($lst -> index:data),
+		(4 -> index:idx)
+	]
+	[index:res, index:err] -> println -> :stop
 }

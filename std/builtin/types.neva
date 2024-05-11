@@ -1,21 +1,19 @@
-type {
-    pub any
-    pub bool
-    pub int
-    pub float
-    pub string
-    pub map<T> // TODO rename to dict
-    pub list<T>
-    pub maybe<T>
+pub type any
+pub type bool
+pub type int
+pub type float
+pub type string
+pub type map<T> // TODO rename to dict
+pub type list<T>
+pub type maybe<T>
 
-    pub error struct {
-        text string
-        child maybe<error>
-    }
+pub type error struct {
+    text string
+    child maybe<error>
+}
 
-    pub stream<T> struct {
-        data T
-        idx int
-        last bool
-    }
+pub type stream<T> struct {
+    data T
+    idx int
+    last bool
 }

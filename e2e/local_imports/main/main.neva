@@ -5,7 +5,5 @@ import {
 
 component Main(start) (stop) {
 	nodes { foo foo.Println, bar bar.Println }
-	net {
-		:start -> (42 -> foo -> bar -> :stop)
-	}
+	:start -> (42 -> foo -> bar -> :stop)
 }

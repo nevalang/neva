@@ -2,12 +2,12 @@ component Main(start) (stop) {
     nodes {
         WithDep { Println }
     }
-    net { :start -> withDep -> :stop }
+    :start -> withDep -> :stop
 }
 
 interface IPrinter<T>(data T) (sig T)
 
 component WithDep (msg any) (msg any) {
     nodes { IPrinter<any> }
-    net { :msg -> iPrinter -> :msg }
+    :msg -> iPrinter -> :msg
 }

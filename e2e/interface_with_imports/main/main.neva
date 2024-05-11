@@ -2,22 +2,16 @@ import { github.com/nevalang/x:main }
 
 interface IPrinter<T>(data T) (sig T)
 
-component {
-    Main(start any) (stop any) {
-        nodes {
-            SecondComponent { main.Println<any> }
-        }
-        net {
-            :start -> secondComponent:msg
-            secondComponent:msg -> :stop
-        }
+component Main(start any) (stop any) {
+    nodes {
+        SecondComponent { main.Println<any> }
     }
-    
-    SecondComponent (msg any) (msg any) {
-        nodes { IPrinter<any> }
-        net {
-            :msg -> iPrinter:data
-            iPrinter:sig -> :msg
-        }
-    }
+    :start -> secondComponent:msg
+    secondComponent:msg -> :stop
+}
+
+component SecondComponent (msg any) (msg any) {
+    nodes { IPrinter<any> }
+    :msg -> iPrinter:data
+    iPrinter:sig -> :msg
 }

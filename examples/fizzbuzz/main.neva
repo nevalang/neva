@@ -1,26 +1,24 @@
 component Main(start) (stop) {
 	nodes { Range, PrintLine, Match }
-	net {
-		:start -> [
-            (1 -> range:from),
-            (101 -> range:to)
-        ]
-        range.data -> printLine -> match:data
-        100 -> match:case[0] -> :stop
-    }
+
+    :start -> [
+        (1 -> range:from),
+        (101 -> range:to)
+    ]
+    range.data -> printLine -> match:data
+    100 -> match:case[0] -> :stop
 }
 
 component PrintLine(data int) (data int) {
     nodes { Mod, Println, Lock<int> }
-    net {
-        :data -> [mod:data, lock:data]
 
-        15 -> mod:case[0] -> ('FizzBuzz' -> println)
-        3 -> mod:case[1] -> ('Fizz'     -> println)
-        5 -> mod:case[2] -> ('Buzz'     -> println)
-        mod:else -> println
+    :data -> [mod:data, lock:data]
 
-        println -> lock:sig
-        lock:data -> :data
-    }
+    15 -> mod:case[0] -> ('FizzBuzz' -> println)
+    3 -> mod:case[1] -> ('Fizz'     -> println)
+    5 -> mod:case[2] -> ('Buzz'     -> println)
+    mod:else -> println
+
+    println -> lock:sig
+    lock:data -> :data
 }

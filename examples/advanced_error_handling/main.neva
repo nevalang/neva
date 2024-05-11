@@ -2,17 +2,13 @@ import { http }
 
 component Main(start) (stop) {
     nodes { App, Println, Panic } // Panic will crash the program
-    net {
-      :start -> app
-      app:err -> panic // we only handle err at this lvl
-      app:data -> println -> :stop
-    }
+    :start -> app:sig
+    app:err -> panic // we only handle err at this lvl
+    app:data -> println -> :stop
 }
 
 component App(sig) (data string, err error) {
   nodes { http.Get? } // '?' implicitly sends err downstream
-  net {
-    :sig -> ('definitely not a valid URL' -> get)
-    get:resp.body -> :data // look ma, no error handling!
-  }
+  :sig -> ('definitely not a valid URL' -> get)
+  get:resp.body -> :data // look ma, no error handling!
 }

@@ -7,13 +7,8 @@ component Main(start) (stop) {
 		// comment inside nodes 2
 	}
 	// comment inside component 2
-	net {
-		// comment inside network 1
-		:start -> println:data
-		// comment inside network 2
-		println:sig -> :stop
-		// comment inside network 
-	}
+	:start -> println:data
+	println:sig -> :stop
 	// comment inside component 3
 }
 // top-level comment 2

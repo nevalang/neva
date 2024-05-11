@@ -1,60 +1,58 @@
-interface {
-    IReader1 () ()
-    IReader20 (x int, y string) (a int, b bool)
+interface IReader1 () ()
+interface IReader20 (x int, y string) (a int, b bool)
 
-    IReader12 (
-        x enum {
-            Monday,
-            Tuesday,
-            Wednesday
-        }, y enum {
-            January,
-            February
+interface IReader12 (
+    x enum {
+        Monday,
+        Tuesday,
+        Wednesday
+    }, y enum {
+        January,
+        February
+    }
+) (
+    a enum {
+        Monday,
+        Tuesday,
+        Wednesday
+    }, b  enum {
+        January, February
+    }
+)
+
+interface IReader1 (
+    arr enum { Monday, Tuesday },
+    arr2 struct { foo int },
+    arr3 struct { baz struct {} }
+) (
+    arr enum { January, February },
+    arr2 struct { bar bool },
+    arr3 struct { bax struct {} }
+)
+
+interface IReader1 (x struct {
+    foo int
+    bar string
+}) (a struct {
+    baz bool
+    bax float })
+
+interface IReader1 (
+    x struct { foo struct { a int } },
+    y struct {}
+) (
+    bar struct { baz struct { b bool } },
+    bax struct { r struct {} }
+)
+
+pub interface IReader1 (
+    a bool | int | struct { foo int | string },
+    b struct { bar int }
+) (
+    x string |
+        float |
+        enum { Monday } |
+        struct {
+            foo enum { January } | struct {}
         }
-    ) (
-        a enum {
-            Monday,
-            Tuesday,
-            Wednesday
-        }, b  enum {
-            January, February
-        }
-    )
-
-    IReader1 (
-        arr enum { Monday, Tuesday },
-        arr2 struct { foo int },
-        arr3 struct { baz struct {} }
-    ) (
-        arr enum { January, February },
-        arr2 struct { bar bool },
-        arr3 struct { bax struct {} }
-    )
-
-    IReader1 (x struct {
-        foo int
-        bar string
-    }) (a struct {
-        baz bool
-        bax float })
-
-    IReader1 (
-        x struct { foo struct { a int } },
-        y struct {}
-    ) (
-        bar struct { baz struct { b bool } },
-        bax struct { r struct {} }
-    )
-
-    pub IReader1 (
-        a bool | int | struct { foo int | string },
-        b struct { bar int }
-    ) (
-        x string |
-            float |
-            enum { Monday } |
-            struct {
-                foo enum { January } | struct {}
-            }
-    )
-}
+)

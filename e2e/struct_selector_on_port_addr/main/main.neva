@@ -3,17 +3,14 @@ component Main(start) (stop) {
         Foo
         Println<int>
     }
-    net {
-        :start -> foo:sig
-        foo:msg.a -> println:data
-        println:sig -> :stop
-    }
+
+    :start -> foo:sig
+    foo:msg.a -> println:data
+    println:sig -> :stop
 }
 
 const s struct { a int } = { a: 42 }
 
 component Foo(sig any) (msg struct{a int}) {
-    net {
-        :sig -> ($s -> :msg)
-    }
+    :sig -> ($s -> :msg)
 }

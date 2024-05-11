@@ -3,40 +3,35 @@ import {
  	strconv
 }
 
-component {
-	Main(start any) (stop any) {
-		nodes { Aux, Println<any> }
-		net {
-			:start -> aux:sig
-			aux:res -> println:data
-			aux:err -> println:data
-			println:sig -> :stop
-		}
-	}
-	
-	Aux(sig any) (res int, err error) {
-		nodes {
-			reader1 IntReader
-			reader2 IntReader
-			adder ReducePort<int> { Add<int> }
-		}
-		net {
-			:sig -> reader1:sig
-			reader1:num -> [adder:port[0], reader2:sig]
-			reader1:err -> :err
-			reader2:err -> :err
-			reader2:num -> adder:port[1]
-			adder:res -> :res
-		}
+component Main(start any) (stop any) {
+	nodes { Aux, Println<any> }
+
+	:start -> aux:sig
+	aux:res -> println:data
+	aux:err -> println:data
+	println:sig -> :stop
+}
+
+component Aux(sig any) (res int, err error) {
+	nodes {
+		reader1 IntReader
+		reader2 IntReader
+		adder ReducePort<int> { Add<int> }
 	}
 
-	IntReader(sig any) (num int, err error) {
-		nodes { io.Scanln, strconv.ParseNum<int> }
-		net {
-			:sig -> scanln:sig
-			scanln:data -> parseNum:data
-			parseNum:res -> :num
-			parseNum:err -> :err
-		}
-	}
+	:sig -> reader1:sig
+	reader1:num -> [adder:port[0], reader2:sig]
+	reader1:err -> :err
+	reader2:err -> :err
+	reader2:num -> adder:port[1]
+	adder:res -> :res
+}
+
+component IntReader(sig any) (num int, err error) {
+	nodes { io.Scanln, strconv.ParseNum<int> }
+
+	:sig -> scanln:sig
+	scanln:data -> parseNum:data
+	parseNum:res -> :num
+	parseNum:err -> :err
 }

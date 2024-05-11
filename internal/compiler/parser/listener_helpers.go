@@ -1062,34 +1062,13 @@ func parseConstDef(
 }
 
 func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
-	meta := core.Meta{
-		Text: actx.GetText(),
-		Start: core.Position{
-			Line:   actx.GetStart().GetLine(),
-			Column: actx.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   actx.GetStop().GetLine(),
-			Column: actx.GetStop().GetColumn(),
-		},
-	}
-
 	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		return src.Entity{}, err
 	}
 
-	netBody := actx.CompNetBody()
-	fullBody := actx.CompBody()
-
-	if (netBody != nil) && (fullBody != nil) {
-		return src.Entity{}, &compiler.Error{
-			Err:  errors.New("Component cannot have both root level network and full body"),
-			Meta: &meta,
-		}
-	}
-
-	if netBody == nil && fullBody == nil {
+	body := actx.CompBody()
+	if body == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
@@ -1098,44 +1077,40 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 		}, nil
 	}
 
-	if netBody != nil {
-		parsedNet, err := parseNet(netBody)
+	parsedConnections := []src.Connection{}
+	connections := actx.CompBody().ConnDefList()
+	if connections != nil {
+		parsedNet, err := parseNet(connections)
 		if err != nil {
 			return src.Entity{}, err
 		}
+		parsedConnections = parsedNet
+	}
+
+	nodesDef := body.CompNodesDef()
+	if nodesDef == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
-				Net:       parsedNet,
+				Net:       parsedConnections,
 			},
 		}, nil
 	}
 
-	var nodes map[string]src.Node
-	if nodesDef := fullBody.CompNodesDef(); nodesDef != nil {
-		v, err := parseNodes(nodesDef.CompNodesDefBody(), true)
-		if err != nil {
-			return src.Entity{}, err
-		}
-		nodes = v
+	var parsedNodes map[string]src.Node
+	v, err := parseNodes(nodesDef.CompNodesDefBody(), true)
+	if err != nil {
+		return src.Entity{}, err
 	}
-
-	var conns []src.Connection
-	if netDef := fullBody.CompNetDef(); netDef != nil {
-		parsedNet, err := parseNet(netDef.CompNetBody())
-		if err != nil {
-			return src.Entity{}, err
-		}
-		conns = parsedNet
-	}
+	parsedNodes = v
 
 	return src.Entity{
 		Kind: src.ComponentEntity,
 		Component: src.Component{
 			Interface: parsedInterfaceDef,
-			Nodes:     nodes,
-			Net:       conns,
+			Nodes:     parsedNodes,
+			Net:       parsedConnections,
 		},
 	}, nil
 }

@@ -3,12 +3,11 @@ component Main(start any) (stop any) {
 		adder ReducePort<int> { Add<int> }
 		println Println<int> 
 	}
-	net {
-		:start -> [
-			(1 -> adder:port[0]),
-			(2 -> adder:port[1])
-		]
-		adder:res -> println:data
-		println:sig -> :stop
-	}
+
+	:start -> [
+		(1 -> adder:port[0]),
+		(2 -> adder:port[1])
+	]
+	adder:res -> println:data
+	println:sig -> :stop
 }

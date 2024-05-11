@@ -1,5 +1,5 @@
 const x float = 1000
 
 component Main(start) (stop) {
-	net { :start -> :stop }
+	:start -> :stop
 }

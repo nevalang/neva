@@ -2,8 +2,6 @@ const x float = 42
 
 component Main(start) (stop) {
     nodes { Println<float> }
-    net {
-        :start -> ($x -> println:data)
-        println:sig -> :stop
-    }
+    :start -> ($x -> println:data)
+    println:sig -> :stop
 }

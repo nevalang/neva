@@ -1,15 +1,11 @@
-const {
-	l list<int> = [320, 420, 100, -100, 0, 5]
-	f int = 69
-}
+const l list<int> = [320, 420, 100, -100, 0, 5]
+const f int = 69
 
 component Main(start) (stop) {
 	nodes { Push, Println }
-	net {
-		:start -> [
-			($l -> push:lst),
-			($f -> push:data)
-		]
-        push -> println -> :stop
-	}
+	:start -> [
+		($l -> push:lst),
+		($f -> push:data)
+	]
+	push -> println -> :stop
 }

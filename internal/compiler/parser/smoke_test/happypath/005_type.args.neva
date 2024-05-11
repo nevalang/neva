@@ -11,134 +11,20 @@ type MyVec vec<
     int
 >
 
-type { MyVec vec<int> }
+type MyVec vec<int>
 
-type {
-    MyVec vec<int> }
+pub type MyVec2 Vec<int>
 
-type {
-    MyVec vec<int>
-}
+pub type MyMap map<string, int>
 
-type {
-    MyVec vec<int>
+type MyMap map<string, int>
 
-}
+type MyInt int
 
-type {
-    MyVec vec<
-    int>
-}
+type MyMap1<T, Y> map<T, Y>
 
-type { MyVec vec<
-    int>
-}
+type MyMap2<T int, Y> map<T, Y>
 
-type { MyVec vec<
-    int> }
+type MyMap3<T int, Y vec<float>> map<T, Y>
 
-type {
-    MyVec vec<
-    int> 
-
-}
-
-type {
-    MyVec vec<
-        int
-    >
-}
-
-type {
-    MyVec1 Vec<int>
-    pub MyVec2 Vec<int>
-}
-
-type {
-    MyVec1 Vec<int>
-
-    pub MyVec2 Vec<int>
-}
-
-type {
-    pub MyMap map<string, int>
-}
-
-type {
-    MyMap map<string,
-        int>
-}
-
-type {
-    MyMap map<string,
-        int
-    >
-}
-
-type {
-    MyMap map<
-        string,
-        int
-    >
-}
-
-type {
-    MyInt int
-
-    MyVec vec<int>
-
-    pub MyMap map<
-        string,
-        int
-    >
-}
-
-type {
-
-    MyInt int
-
-    MyVec vec<int>
-
-    pub MyMap map<
-        string,
-        int
-    >
-
-}
-
-type {
-    MyMap1<T, Y> map<T, Y>
-
-    MyMap2<T int, Y> map<T, Y>
-
-    MyMap3<T int, Y vec<float>> map<T, Y>
-}
-
-type {
-    MyMap3<T int, Y vec<
-        float
-    >> map<T, Y>
-}
-
-type {
-    MyMap3<
-        T int,
-        Y vec<float>
-    > map<T, Y>
-}
-
-type {
-    MyMap3<
-        T int,
-        Y vec<float>
-    > map<T, vec<Y>>
-}
-
-type {
-    MyMap3<
-        T int,
-        Y vec<float>
-    > map<
-        T, vec<Y>
-    >
-}
+type MyMap3<T int, Y vec<float>> map<T, vec<Y>>

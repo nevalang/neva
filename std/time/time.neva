@@ -1,11 +1,10 @@
-const {
-	pub nanosecond int = 1
-	pub microsecond int = 1000
-	pub millisecond int = 1000000
-	pub second int = 1000000000
-	pub minute int = 60000000000
-	pub hour int = 3600000000000
-}
+pub const nanosecond int = 1
+pub const microsecond int = 1000
+pub const millisecond int = 1000000
+pub const second int = 1000000000
+pub const minute int = 60000000000
+pub const hour int = 3600000000000
 
+// Sleep delays transmission for the specified duration.
 #extern(time_sleep)
 pub component Sleep(ns int) (sig int)

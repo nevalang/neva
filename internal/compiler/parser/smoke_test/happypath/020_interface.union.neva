@@ -1,44 +1,30 @@
-interface { IReader1 (a bool | int) () }
+interface IReader1 (a bool | int) ()
 
-interface {
-    IReader1 (a bool | int) ()
-}
+interface IReader1 () (x string | float)
 
-interface {
-    IReader1 () (x string | float)
-}
+interface IReader1 (a bool | int) (x string | float)
 
-interface {
-    IReader1 (a bool | int) (x string | float)
-}
+interface IReader1 (a bool | int | struct {}) (x string | float | enum { Monday })
 
-interface {
-    IReader1 (a bool | int | struct {}) (x string | float | enum { Monday })
-}
+interface IReader1 (
+    a bool | int | struct { foo int | string }
+) (
+    x string |
+    float |
+    enum { Monday } |
+    struct {
+        foo enum { January } | struct {}
+    }
+)
 
-interface {
-    IReader1 (
-        a bool | int | struct { foo int | string }
-    ) (
-        x string |
+pub interface IReader1 (
+    a bool | int | struct { foo int | string },
+    b struct { bar int }
+) (
+    x string |
         float |
         enum { Monday } |
         struct {
             foo enum { January } | struct {}
         }
-    )
-}
-
-interface {
-    pub IReader1 (
-        a bool | int | struct { foo int | string },
-        b struct { bar int }
-    ) (
-        x string |
-            float |
-            enum { Monday } |
-            struct {
-                foo enum { January } | struct {}
-            }
-    )
-}
+)

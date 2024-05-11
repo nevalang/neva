@@ -3,13 +3,11 @@ component Main(start) (stop) {
 		Println<int>
 		sub ReducePort<int> { Sub<int> }
 	}
-	net {
-		:start -> [
-			(1 -> sub:port[0]),
-			(2 -> sub:port[1]),
-			(3 -> sub:port[2])
-		]
-		sub:res -> println:data
-		println:sig -> :stop
-	}
+	:start -> [
+		(1 -> sub:port[0]),
+		(2 -> sub:port[1]),
+		(3 -> sub:port[2])
+	]
+	sub:res -> println:data
+	println:sig -> :stop
 }

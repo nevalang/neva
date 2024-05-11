@@ -2,38 +2,28 @@ import {
 	std:io
 }
 
-type {
-	useId int
-	money float
-	userName string
-	isAdmin bool
-}
+type useId int
+type money float
+type userName string
+type isAdmin bool
 
-const {
-    pi float = 3.14
-    magicNum int = 42
-}
+const pi float = 3.14
+const magicNum int = 42
 
-interface {
-	IReader(path string) (i int, e err)
-	IWriter(path string) (i int, anything any)
-}
+interface IReader(path string) (i int, e err)
+interface IWriter(path string) (i int, anything any)
 
-component {
-	Main(start any) (stop any) {
-		nodes {
-			abs IReader
-			concrete  Scanner
-		}
-		net {
-			:start -> abs:v
-			abs:v -> [concrete:v]
-			concrete:v -> :code
-		}
+component Main(start any) (stop any) {
+	nodes {
+		abs IReader
+		concrete  Scanner
 	}
-
-	#extern(int IntAdder, float FloatAdder, string StringAdder)
-    pub Add<
-        T int | float | string
-    >(seq stream<T>) (res T)
+	:start -> abs:v
+	abs:v -> [concrete:v]
+	concrete:v -> :code
 }
+
+#extern(int IntAdder, float FloatAdder, string StringAdder)
+pub component Add<
+	T int | float | string
+>(seq stream<T>) (res T)
