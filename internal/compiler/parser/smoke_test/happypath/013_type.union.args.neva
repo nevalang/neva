@@ -57,6 +57,4 @@ type bar vec<
 pub type bar vec<
     i32 |
     vec<i32 | f32>
-> |
-
-type map<i32, i32 | vec<f32>>
+> | map<i32, i32 | vec<f32>>

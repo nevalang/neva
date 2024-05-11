@@ -22,7 +22,7 @@ type Rec3Lvl1 struct {
     }
 }
 
-type pub Rec4Lvl1 struct {
+pub type Rec4Lvl1 struct {
     rec4Lvl2 struct {
         foo vec<struct {
             bar vec<struct {
