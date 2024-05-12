@@ -30,8 +30,8 @@ func (s streamToList) Create(
 			select {
 			case <-ctx.Done():
 				return
-			case msg := <-seqIn:
-				item = msg.Map()
+			case seqMsg := <-seqIn:
+				item = seqMsg.Map()
 			}
 
 			acc = append(acc, item["data"])

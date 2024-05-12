@@ -9,7 +9,6 @@ import (
 
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
-
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(
@@ -17,6 +16,5 @@ func Test(t *testing.T) {
 		"50\n30\n20\n100\n",
 		string(out),
 	)
-
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
