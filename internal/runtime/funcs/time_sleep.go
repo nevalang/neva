@@ -15,19 +15,30 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Port("sig")
+	dataIn, err := io.In.Port("data")
+	if err != nil {
+		return nil, err
+	}
+
+	dataOut, err := io.Out.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var nsMsg runtime.Msg
-
 		for {
+			var nsMsg runtime.Msg
 			select {
 			case <-ctx.Done():
 				return
 			case nsMsg = <-nsIn:
+			}
+
+			var dataMsg runtime.Msg
+			select {
+			case <-ctx.Done():
+				return
+			case dataMsg = <-dataIn:
 			}
 
 			time.Sleep(time.Duration(nsMsg.Int()))
@@ -35,7 +46,7 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 			select {
 			case <-ctx.Done():
 				return
-			case sigOut <- nsMsg:
+			case dataOut <- dataMsg:
 			}
 		}
 	}, nil

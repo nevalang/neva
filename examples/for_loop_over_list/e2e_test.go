@@ -16,15 +16,17 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "for_loop_over_list")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		"50\n30\n20\n100\n",
-		string(out),
-	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	// We do 100 attempts to prove that implementation is correct
+	// and order of elements is always the same.
+	for i := 0; i < 100; i++ {
+		cmd := exec.Command("neva", "run", "for_loop_over_list")
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"50\n30\n20\n100\n",
+			string(out),
+		)
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }

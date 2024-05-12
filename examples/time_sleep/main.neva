@@ -2,5 +2,6 @@ import { time }
 
 component Main(start) (stop) {
 	nodes { time.Sleep }
-	:start -> ($time.second -> sleep -> :stop)
+	:start -> sleep:data
+	$time.second -> sleep -> :stop
 }
