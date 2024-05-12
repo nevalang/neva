@@ -58,17 +58,17 @@ pub component For<T>(item stream<T>) (sig any) {
 // --- Map ---
 
 // IMapHandler is a dependency for Map component.
-pub interface IMapHandler<T>(data T) (res T)
+pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map is for transforming every item in stream.
 // Unlike For, it's not blocking and will produce a new stream,
 // so it's possible to chain multiple Maps together.
 // It's also possible to perform side-effect for every item,
 // but if side-effect is all you need, consider using For instead.
-pub component Map<T>(item stream<T>) (res stream<T>) {
+pub component Map<T, Y>(item stream<T>) (res stream<Y>) {
     nodes {
-        wrap Struct<stream<T>>
-        handler IMapHandler<T>
+        wrap Struct<stream<Y>>
+        handler IMapHandler<T, Y>
 
         #bind(lastPath)
         getLast Field<bool>

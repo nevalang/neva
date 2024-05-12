@@ -130,8 +130,6 @@ errGuard: '?';
 nodeDIArgs: compNodesDefBody;
 
 // network
-compNetDef: 'net' NEWLINE* compNetBody;
-compNetBody: '{' NEWLINE* connDefList? NEWLINE* '}';
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef: senderSide '->' receiverSide;

@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "-debug", "examples/map_list"]
+      "args": ["run", "e2e/map_list_verbose/main"]
     },
     {
       "name": "LSP",
