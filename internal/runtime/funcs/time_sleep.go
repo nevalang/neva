@@ -10,7 +10,7 @@ import (
 type timeSleep struct{}
 
 func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	nsIn, err := io.In.Port("ns")
+	durIn, err := io.In.Port("dur")
 	if err != nil {
 		return nil, err
 	}
@@ -27,11 +27,11 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 
 	return func(ctx context.Context) {
 		for {
-			var nsMsg runtime.Msg
+			var durMsg runtime.Msg
 			select {
 			case <-ctx.Done():
 				return
-			case nsMsg = <-nsIn:
+			case durMsg = <-durIn:
 			}
 
 			var dataMsg runtime.Msg
@@ -41,7 +41,7 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 			case dataMsg = <-dataIn:
 			}
 
-			time.Sleep(time.Duration(nsMsg.Int()))
+			time.Sleep(time.Duration(durMsg.Int()))
 
 			select {
 			case <-ctx.Done():
