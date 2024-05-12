@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "e2e/slow_iteration_with_for/main"]
+      "args": ["run", "examples/map_list"]
     },
     {
       "name": "LSP",
