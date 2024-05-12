@@ -10,5 +10,5 @@ pub component If(data bool) (then any, else any)
 #extern(not)
 pub component Not(data bool) (res bool)
 
-
-
+#extern(and)
+pub component And(A bool, B bool) (res bool)
