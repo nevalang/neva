@@ -14,11 +14,10 @@ func (c Connector) Connect(ctx context.Context, conns []Connection) {
 	wg.Add(len(conns))
 
 	for i := range conns {
-		conn := conns[i]
-		go func() {
+		go func(conn Connection) {
 			c.broadcast(ctx, conn)
 			wg.Done()
-		}()
+		}(conns[i])
 	}
 
 	wg.Wait()
@@ -94,6 +93,7 @@ func (c Connector) distribute(
 			msg = c.listener.Send(event, msg)
 			interceptedMsgs[recvPortAddr] = msg
 		}
+
 		interceptedMsg := interceptedMsgs[recvPortAddr]
 
 		select {

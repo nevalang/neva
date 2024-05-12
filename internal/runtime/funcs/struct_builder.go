@@ -9,7 +9,10 @@ import (
 
 type structBuilder struct{}
 
-func (s structBuilder) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (s structBuilder) Create(
+	io runtime.FuncIO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
 	if len(io.In) == 0 {
 		return nil, errors.New("cannot create struct builder without inports")
 	}
@@ -35,9 +38,9 @@ func (structBuilder) Handle(
 	outport chan runtime.Msg,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		var structure = make(map[string]runtime.Msg, len(inports))
-
 		for {
+			var structure = make(map[string]runtime.Msg, len(inports))
+
 			for inportName, inportChan := range inports {
 				select {
 				case <-ctx.Done():
