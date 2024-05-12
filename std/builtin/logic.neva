@@ -1,0 +1,8 @@
+#extern(match)
+pub component Match<T>(data T, [case] T) ([case] T, else T)
+
+#extern(eq)
+pub component Eq<T>(actual T, expected T) (res bool)
+
+#extern(if)
+pub component If(data bool) (then any, else any)
