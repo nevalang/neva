@@ -1,5 +1,3 @@
-import { builtin }
-
 pub component For<T>(data list<T>) (sig any) {
     nodes {
         Iter<T>
@@ -23,4 +21,29 @@ pub component For<T>(data list<T>) (sig any) {
 
     lock:data -> match:data
     true -> match:case[0] -> :sig
+}
+
+pub component Map<T, Y>(data list<T>) (res list<Y>) {
+    nodes {
+        Iter<T>, List<Y>
+        wrap Struct<stream<Y>>
+        handler IMapHandler<T, Y>
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        #bind(idxPath)
+        getIdx Field<int>
+    }
+
+    :data -> iter -> [getData, getLast, getIdx]
+
+    getLast -> wrap:last
+    getIdx -> wrap:idx
+    getData -> handler -> wrap:data
+
+    wrap -> list -> :res
 }
