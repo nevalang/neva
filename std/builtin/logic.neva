@@ -6,3 +6,9 @@ pub component Eq<T>(actual T, expected T) (res bool)
 
 #extern(if)
 pub component If(data bool) (then any, else any)
+
+#extern(not)
+pub component Not(data bool) (res bool)
+
+
+

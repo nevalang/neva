@@ -1,11 +1,10 @@
 component Main(start) (stop) {
-    nodes { Println, Eq<string>,If }
+    nodes { Println, Eq<string>,If,Not }
     :start -> [
         ('neva is cool' -> eq:expected),
         ('neva' -> eq:actual)
        ]
-
-       eq:res -> if
+       eq:res -> not -> if
 
        if:then -> ('They match' -> println -> :stop)
        if:else -> ('They do not match' -> println -> :stop)
