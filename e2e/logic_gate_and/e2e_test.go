@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Check that math example with multiplying numbers by using port bridge works as expected.
+// Check that logical AND works
 func TestMathMultiplyNumbers(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
 
