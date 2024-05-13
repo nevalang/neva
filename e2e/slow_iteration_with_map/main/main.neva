@@ -13,9 +13,9 @@ component Main(start) (stop) {
     )
 }
 
-component Slow(data int) (res any) {
-    nodes { time.Sleep }
+component Slow(data int) (res int) {
+    nodes { time.Sleep<int>, Decr<int> }
     :data -> sleep:data
     $time.second -> sleep:dur
-    sleep -> :res
+    sleep -> decr -> :res
 }
