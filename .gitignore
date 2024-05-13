@@ -30,3 +30,5 @@ thirdparty
 
 #go package cache
 vendor
+
+tmp

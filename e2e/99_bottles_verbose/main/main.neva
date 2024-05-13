@@ -20,8 +20,8 @@ component PrintNext2Lines(n int) (n int) {
     }
 
     :n -> first:n
-    first:n -> decr:n
-    decr:n -> second:n
+    first:n -> decr:data
+    decr:res -> second:n
     second:n -> :n
 }
 

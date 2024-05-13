@@ -9,8 +9,6 @@ import (
 type DebugEventListener struct{}
 
 func (e DebugEventListener) Send(event runtime.Event, msg runtime.Msg) runtime.Msg {
-	if event.Type == runtime.MessageSentEvent {
-		fmt.Println(event, msg)
-	}
+	fmt.Println(event, msg)
 	return msg
 }

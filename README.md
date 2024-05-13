@@ -100,12 +100,11 @@ Hello, World!
 
 Nevalang is at an extremely early stage but with the help of community it can become a feature-rich, mature language.
 
-- Building a Community
-- Core Standard Library
-- Language Server And Debugger
-- Testing Framework
-- No Runtime Exceptions (If it runs then it works)
-- **Go Interop** (import go from neva and neva from go)
+- Bigger Community and Better Documentation
+- Batteries included stdlib (including Testing Framework)
+- More language features including _Pattern-Matching_
+- Good DX (Language Server, Debugger, Linter, etc)
+- **Go Interop** (import Go from Neva and Neva from Go)
 - **Visual Programming** in VSCode (Neva becomes hybrid langauge)
 
 [See backlog for more details](https://github.com/orgs/nevalang/projects)

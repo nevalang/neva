@@ -1,0 +1,49 @@
+pub component For<T>(data list<T>) (sig any) {
+    nodes {
+        Iter<T>
+        Lock<bool>
+        handler IForHandler
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        Match<bool>
+    }
+
+    :data -> iter -> [getLast, getData]
+    getLast -> lock:data
+    getData -> handler
+
+    handler -> lock:sig
+
+    lock:data -> match:data
+    true -> match:case[0] -> :sig
+}
+
+pub component Map<T, Y>(data list<T>) (res list<Y>) {
+    nodes {
+        Iter<T>, List<Y>
+        wrap Struct<stream<Y>>
+        handler IMapHandler<T, Y>
+
+        #bind(lastPath)
+        getLast Field<bool>
+
+        #bind(dataPath)
+        getData Field<T>
+
+        #bind(idxPath)
+        getIdx Field<int>
+    }
+
+    :data -> iter -> [getData, getLast, getIdx]
+
+    getLast -> wrap:last
+    getIdx -> wrap:idx
+    getData -> handler -> wrap:data
+
+    wrap -> list -> :res
+}

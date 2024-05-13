@@ -1,0 +1,21 @@
+// this e2e test must prove that this issue is fixed:
+// https://github.com/nevalang/neva/issues/575
+// all elements of the array must be printed befofe program terminate
+
+import { time }
+
+const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+component Main(start) (stop) {
+    nodes { Iter<int>, Map<int,int>{Slow}, List, Println }
+    :start -> (
+        $lst -> iter -> map -> list -> println -> :stop
+    )
+}
+
+component Slow(data int) (res int) {
+    nodes { time.Sleep<int>, Decr<int> }
+    :data -> sleep:data
+    $time.second -> sleep:dur
+    sleep -> decr -> :res
+}
