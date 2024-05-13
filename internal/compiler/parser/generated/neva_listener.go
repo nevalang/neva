@@ -199,12 +199,6 @@ type nevaListener interface {
 	// EnterNodeDIArgs is called when entering the nodeDIArgs production.
 	EnterNodeDIArgs(c *NodeDIArgsContext)
 
-	// EnterCompNetDef is called when entering the compNetDef production.
-	EnterCompNetDef(c *CompNetDefContext)
-
-	// EnterCompNetBody is called when entering the compNetBody production.
-	EnterCompNetBody(c *CompNetBodyContext)
-
 	// EnterConnDefList is called when entering the connDefList production.
 	EnterConnDefList(c *ConnDefListContext)
 
@@ -462,12 +456,6 @@ type nevaListener interface {
 
 	// ExitNodeDIArgs is called when exiting the nodeDIArgs production.
 	ExitNodeDIArgs(c *NodeDIArgsContext)
-
-	// ExitCompNetDef is called when exiting the compNetDef production.
-	ExitCompNetDef(c *CompNetDefContext)
-
-	// ExitCompNetBody is called when exiting the compNetBody production.
-	ExitCompNetBody(c *CompNetBodyContext)
 
 	// ExitConnDefList is called when exiting the connDefList production.
 	ExitConnDefList(c *ConnDefListContext)

@@ -327,8 +327,6 @@ func (a Analyzer) getNodeInterface(
 		}
 	}
 
-	// FIXME we can't resolve this arg if it has type parameter from component interface
-	// probably we need to resolve with frame
 	resolvedNodeArg, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
