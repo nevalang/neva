@@ -8,7 +8,7 @@ pub component Sub<T int | float >(seq stream<T>) (res T)
 pub component Mul<T int | float >(seq stream<T>) (res T)
 
 #extern(int int_decr, float float_decr)
-pub component Decr<T int | float>(n T) (n T)
+pub component Decr<T int | float>(data T) (res T)
 
 #extern(int_mod)
 pub component Mod(data int, [case] int) ([case] int, else int)

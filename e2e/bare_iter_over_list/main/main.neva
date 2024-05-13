@@ -1,0 +1,7 @@
+const lst list<int> = [50, 30, 20, 100]
+
+component Main(start) (stop) {
+    nodes { Println<stream<int>>, Iter<int>, If }
+    :start -> ($lst -> iter -> println.last -> if)
+    if:then -> :stop
+}

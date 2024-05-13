@@ -853,6 +853,8 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 		return expr, nil
 	}
 
+	scope = scope.WithLocation(location)
+
 	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Message.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{

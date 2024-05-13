@@ -1,0 +1,8 @@
+import { lists }
+
+const lst list<int> = [50, 30, 20, 100]
+
+component Main(start) (stop) {
+    nodes { lists.Map<int, int>{Decr<int>}, Println }
+    :start -> ($lst -> map -> println -> :stop)
+}

@@ -1,0 +1,8 @@
+// stream list of ints, decrement each, build new list and print it
+
+const lst list<int> = [50, 30, 20, 100]
+
+component Main(start) (stop) {
+    nodes { Map<int, int>{Decr<int>}, List, Println, Iter<int> }
+    :start -> ($lst -> iter -> map -> list -> println -> :stop)
+}

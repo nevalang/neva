@@ -9,30 +9,30 @@ import (
 type intDecr struct{}
 
 func (i intDecr) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
-	nIn, err := io.In.Port("n")
+	dataIn, err := io.In.Port("data")
 	if err != nil {
 		return nil, err
 	}
 
-	nOut, err := io.Out.Port("n")
+	resOut, err := io.Out.Port("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var n runtime.Msg
+		var dataMsg runtime.Msg
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case n = <-nIn:
+			case dataMsg = <-dataIn:
 			}
 
 			select {
 			case <-ctx.Done():
 				return
-			case nOut <- runtime.NewIntMsg(n.Int() - 1):
+			case resOut <- runtime.NewIntMsg(dataMsg.Int() - 1):
 			}
 		}
 	}, nil

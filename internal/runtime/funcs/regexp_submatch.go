@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -59,7 +60,7 @@ func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx 
 			case dataMsg = <-dataIn:
 			}
 
-			res := regex.FindStringSubmatch(dataMsg.String())
+			res := regex.FindStringSubmatch(fmt.Sprint(dataMsg))
 
 			select {
 			case <-ctx.Done():

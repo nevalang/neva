@@ -1,9 +1,13 @@
-pub const nanosecond int = 1
-pub const microsecond int = 1000
-pub const millisecond int = 1000000
-pub const second int = 1000000000
-pub const minute int = 60000000000
-pub const hour int = 3600000000000
+// Duration represents time between two instants as nanosecond count.
+pub type Duration int
 
+pub const nanosecond  Duration = 1
+pub const microsecond Duration = 1000
+pub const millisecond Duration = 1000000
+pub const second      Duration = 1000000000
+pub const minute      Duration = 60000000000
+pub const hour        Duration = 3600000000000
+
+// Sleep delays transmission of the given data for the specified duration.
 #extern(time_sleep)
-pub component Sleep(ns int) (sig int)
+pub component Sleep<T>(dur Duration, data T) (data T)
