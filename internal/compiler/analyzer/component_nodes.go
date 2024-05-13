@@ -45,7 +45,7 @@ func (a Analyzer) analyzeComponentNodes(
 			hasErrGuard = true
 		}
 
-		analyzedNode, nodeInterface, err := a.analyzeComponentNode(
+		analyzedNode, nodeInterface, err := a.analyzeNode(
 			componentIface,
 			node,
 			scope,
@@ -65,7 +65,7 @@ func (a Analyzer) analyzeComponentNodes(
 }
 
 //nolint:funlen
-func (a Analyzer) analyzeComponentNode(
+func (a Analyzer) analyzeNode(
 	componentIface src.Interface,
 	node src.Node,
 	scope src.Scope,
@@ -99,34 +99,6 @@ func (a Analyzer) analyzeComponentNode(
 		}
 	}
 
-	nodeIface, aerr := a.getNodeInterface(
-		nodeEntity,
-		usesBindDirective,
-		location,
-		node,
-		scope,
-	)
-	if aerr != nil {
-		return src.Node{}, foundInterface{}, aerr
-	}
-
-	if node.ErrGuard {
-		if _, ok := componentIface.IO.Out["err"]; !ok {
-			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForNode,
-				Location: &scope.Location,
-				Meta:     &node.Meta,
-			}
-		}
-		if _, ok := nodeIface.IO.Out["err"]; !ok {
-			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForComponent,
-				Location: &scope.Location,
-				Meta:     &node.Meta,
-			}
-		}
-	}
-
 	// We need to get resolved frame from parent type parameters
 	// in order to be able to resolve node's args
 	// since they can refer to type parameter of the parent (interface)
@@ -155,6 +127,35 @@ func (a Analyzer) analyzeComponentNode(
 			Err:      err,
 			Location: &location,
 			Meta:     &node.Meta,
+		}
+	}
+
+	nodeIface, aerr := a.getNodeInterface(
+		nodeEntity,
+		usesBindDirective,
+		location,
+		node,
+		scope,
+		resolvedNodeArgs,
+	)
+	if aerr != nil {
+		return src.Node{}, foundInterface{}, aerr
+	}
+
+	if node.ErrGuard {
+		if _, ok := componentIface.IO.Out["err"]; !ok {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Err:      ErrGuardNotAllowedForNode,
+				Location: &scope.Location,
+				Meta:     &node.Meta,
+			}
+		}
+		if _, ok := nodeIface.IO.Out["err"]; !ok {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Err:      ErrGuardNotAllowedForComponent,
+				Location: &scope.Location,
+				Meta:     &node.Meta,
+			}
 		}
 	}
 
@@ -196,9 +197,13 @@ func (a Analyzer) analyzeComponentNode(
 			}, nil
 	}
 
+	// TODO probably here
+	// implement interface->component subtyping
+	// in a way where FP possible
+
 	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
-		resolvedDep, _, err := a.analyzeComponentNode(
+		resolvedDep, _, err := a.analyzeNode(
 			componentIface,
 			depNode,
 			scope,
@@ -225,15 +230,17 @@ func (a Analyzer) analyzeComponentNode(
 		}, nil
 }
 
-func (a Analyzer) getNodeInterface( //nolint:funlen
+// also does validation
+func (a Analyzer) getNodeInterface(
 	entity src.Entity,
-	hasConfigMsg bool,
+	usesBindDirective bool,
 	location src.Location,
 	node src.Node,
 	scope src.Scope,
+	resolvedNodeArgs []typesystem.Expr,
 ) (src.Interface, *compiler.Error) {
 	if entity.Kind == src.InterfaceEntity {
-		if hasConfigMsg {
+		if usesBindDirective {
 			return src.Interface{}, &compiler.Error{
 				Err:      ErrInterfaceNodeBindDirective,
 				Location: &location,
@@ -254,7 +261,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 
 	externArgs, hasExternDirective := entity.Component.Directives[compiler.ExternDirective]
 
-	if hasConfigMsg && !hasExternDirective {
+	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrNormNodeBind,
 			Location: &location,
@@ -262,7 +269,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		}
 	}
 
-	if len(externArgs) > 1 && len(node.TypeArgs) != 1 {
+	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrExternOverloadingNodeArgs,
 			Location: &location,
@@ -277,7 +284,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		return iface, nil
 	}
 
-	// if we here then we have #autoports
+	// if we here then we have #autoports (only for structs RN)
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
@@ -312,7 +319,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		}
 	}
 
-	if len(node.TypeArgs) != 1 {
+	if len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrAutoPortsNodeTypeArgsCount,
 			Location: &location,
@@ -320,7 +327,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		}
 	}
 
-	resolvedNodeArg, err := a.resolver.ResolveExpr(node.TypeArgs[0], scope)
+	resolvedNodeArg, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
 			Err:      err,
@@ -345,6 +352,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 		}
 	}
 
+	// TODO refactor (maybe work for desugarer?)
 	return src.Interface{
 		TypeParams: iface.TypeParams,
 		IO: src.IO{
@@ -353,7 +361,7 @@ func (a Analyzer) getNodeInterface( //nolint:funlen
 				"msg": {
 					TypeExpr: resolvedNodeArg,
 					IsArray:  false,
-					Meta:     iface.IO.Out["v"].Meta,
+					Meta:     iface.IO.Out["msg"].Meta,
 				},
 			},
 		},

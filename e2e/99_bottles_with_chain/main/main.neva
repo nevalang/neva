@@ -14,7 +14,8 @@ component PrintNext2Lines(n int) (n int) {
         first  PrintFirstLine
         second PrintSecondLine
     }
-    :n -> first:n -> decr:n -> second:n -> :n
+    :n -> first:n -> decr:data
+    decr:res -> second:n -> :n
 }
 
 // === First Line ===

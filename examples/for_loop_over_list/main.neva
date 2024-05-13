@@ -1,0 +1,8 @@
+import { lists }
+
+const lst list<int> = [50, 30, 20, 100]
+
+component Main(start) (stop) {
+    nodes { lists.For{Println} }
+    :start -> ($lst -> for -> :stop)
+}
