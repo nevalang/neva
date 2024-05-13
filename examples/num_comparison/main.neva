@@ -1,11 +1,18 @@
-component Main(start) (stop) {
-    nodes { Println, IsGreater<float>,If}
-    :start -> [
-        (1.69 -> isGreater:compared),
-        (1.55 -> isGreater:actual)
-       ]
-       isGreater:res  -> if
+const val1 int = 20
+const val2 int = 10
 
-       if:then -> ('The compared number is bigger' -> println -> :stop)
-       if:else -> ('The compared number is smaller' -> println -> :stop)
+component Main(start) (stop) {
+    nodes { Println, IsGreater<int>,If,IsEven,And}
+    :start -> [
+        ($val1 -> isGreater:compared),
+        ($val2 -> isGreater:actual),
+        ($val1 -> isEven)
+
+       ]
+       isGreater:res  -> and:A
+       isEven -> and:B
+       and -> if
+
+       if:then -> ('The compared number is bigger and even' -> println -> :stop)
+       if:else -> ('The compared number is smaller or uneven' -> println -> :stop)
 }

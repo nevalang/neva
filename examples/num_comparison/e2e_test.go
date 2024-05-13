@@ -24,7 +24,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		"The compared number is bigger\n",
+		"The compared number is bigger and even\n",
 		string(out),
 	)
 
