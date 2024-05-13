@@ -1,0 +1,11 @@
+component Main(start) (stop) {
+    nodes { Println, IsGreater<float>,If}
+    :start -> [
+        (1.69 -> isGreater:compared),
+        (1.55 -> isGreater:actual)
+       ]
+       isGreater:res  -> if
+
+       if:then -> ('The compared number is bigger' -> println -> :stop)
+       if:else -> ('The compared number is smaller' -> println -> :stop)
+}

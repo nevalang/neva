@@ -16,12 +16,14 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"panic":  panicker{},
 
 		// logic
-		"match": match{},
-		"eq":    eq{},
-		"if":    if_{},
-		"not":   not{},
-		"and":   and{},
-		"or":    or{},
+		"match":            match{},
+		"eq":               eq{},
+		"if":               if_{},
+		"not":              not{},
+		"and":              and{},
+		"or":               or{},
+		"int_is_greater":   intIsGreater{},
+		"float_is_greater": floatIsGreater{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},
