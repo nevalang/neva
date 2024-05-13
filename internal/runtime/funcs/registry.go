@@ -21,6 +21,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"if":    if_{},
 		"not":   not{},
 		"and":   and{},
+		"or":    or{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},

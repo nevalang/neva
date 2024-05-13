@@ -12,3 +12,6 @@ pub component Not(data bool) (res bool)
 
 #extern(and)
 pub component And(A bool, B bool) (res bool)
+
+#extern(or)
+pub component Or(A bool, B bool) (res bool)
