@@ -1,17 +1,18 @@
-// WaitGroup outputs a signal after its internal counter decreases to <= 0.
+// Wg implements a "wait group" which outputs a signal after the count decreases to 0 via sending to :sig.
 //
-// :add increases or decreases the value of the internal counter.
-// WaitGroup will not signal until it received at least one nonnegative value from :add.
+// Send to :count to set the initial counter.
+// Send to :sig to decrement the counter.
+// WaitGroup will not output a signal until it received at least :count.
 //
 // Example:
-//  nodes { wg WaitGroup }
-//  :start -> (2 -> wg:add)
-//  task1 -> (-1 -> wg:add)
-//  task2 -> (-1 -> wg:add)
+//  nodes { sync.Wg }
+//  :start -> (2 -> wg:count)
+//  task1 -> (true -> wg:sig)
+//  task2 -> (true -> wg:sig)
 //  wg -> :stop  // Signals after both tasks are done.
 //
 // Example:
-//  nodes { wg WaitGroup }
+//  nodes { sync.Wg }
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
-pub component WaitGroup(add int) (sig any)
+pub component Wg(count int, sig any) (sig any)

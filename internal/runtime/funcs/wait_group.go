@@ -10,7 +10,12 @@ import (
 type waitGroup struct{}
 
 func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	addIn, err := io.In.Port("add")
+	countIn, err := io.In.Port("count")
+	if err != nil {
+		return nil, err
+	}
+
+	sigIn, err := io.In.Port("sig")
 	if err != nil {
 		return nil, err
 	}
@@ -20,68 +25,43 @@ func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 		return nil, err
 	}
 
-	return g.Handle(addIn, sigOut), nil
+	return g.Handle(countIn, sigIn, sigOut), nil
 }
 
-func (g waitGroup) Handle(
-	addIn,
+func (waitGroup) Handle(
+	countIn,
+	sigIn,
 	sigOut chan runtime.Msg,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		var (
-			mu    sync.RWMutex
-			ready bool  // ready when we have received a nonnegative count, protected by mu.
-			count int64 // internal count, protected by mu.
-		)
-
-		reset := func() {
-			mu.Lock()
-			defer mu.Unlock()
-			ready = false
-			count = 0
-		}
-
-		add := func(n int64) {
-			mu.Lock()
-			defer mu.Unlock()
-			if n >= 0 {
-				ready = true
-			}
-			count += n
-		}
-
-		done := func() bool {
-			mu.RLock()
-			defer mu.RUnlock()
-			return ready && count <= 0
-		}
-
-		update := func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case n := <-addIn:
-					add(n.Int())
-				}
-			}
-		}
-		go update()
-
 		for {
-			if !done() {
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-				continue
-			}
+			var wg sync.WaitGroup
+			var count int64
+
 			select {
+			case n := <-countIn:
+				count = n.Int()
+				wg.Add(int(count))
 			case <-ctx.Done():
 				return
+			}
+
+			go func() {
+				for i := int64(0); i < count; i++ {
+					select {
+					case <-sigIn:
+						wg.Done()
+					case <-ctx.Done():
+						return
+					}
+				}
+			}()
+			wg.Wait()
+
+			select {
 			case sigOut <- nil:
-				reset()
+			case <-ctx.Done():
+				return
 			}
 		}
 	}

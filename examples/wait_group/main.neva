@@ -1,12 +1,12 @@
 import { sync }
 
 component Main(start) (stop) {
-  nodes { wg sync.WaitGroup, Println }
+  nodes { sync.Wg, Println }
   :start -> [
-    (3 -> wg),
-    ('Hello' -> println -> (-1 -> wg)),
-    ('Neva' -> println -> (-1 -> wg)),
-    ('World!' -> println -> (-1 -> wg))
+    (3 -> wg:count),
+    ('Hello' -> println -> (true -> wg:sig)),
+    ('Neva' -> println -> (true -> wg:sig)),
+    ('World!' -> println -> (true -> wg:sig))
   ]
   wg -> :stop
 }
