@@ -44,7 +44,7 @@ func (p strIsGreater) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context
 			select {
 			case <-ctx.Done():
 				return
-			case resOut <- runtime.NewBoolMsg(val1.Str() < val2.Str()):
+			case resOut <- runtime.NewBoolMsg(val1.Str() > val2.Str()):
 			}
 		}
 	}, nil

@@ -1,0 +1,11 @@
+component Main(start) (stop) {
+    nodes { Println, Gt<int>,If}
+    :start -> [
+        (10 -> gt:compared),
+        (50 -> gt:actual)
+       ]
+       gt:res -> if
+
+       if:then -> ('Actual is greater' -> println -> :stop)
+       if:else -> ('Actual is lower' -> println -> :stop)
+}
