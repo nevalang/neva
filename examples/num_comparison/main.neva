@@ -2,10 +2,10 @@ const val1 int = 20
 const val2 int = 10
 
 component Main(start) (stop) {
-    nodes { Println, IsGreater<int>,If,IsEven,And}
+    nodes { Println, Gt<int>,If,IsEven,And}
     :start -> [
-        ($val1 -> isGreater:compared),
-        ($val2 -> isGreater:actual),
+        ($val1 -> gt:compared),
+        ($val2 -> gt:actual),
         ($val1 -> isEven)
 
        ]

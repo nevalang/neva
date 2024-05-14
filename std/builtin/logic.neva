@@ -17,10 +17,5 @@ pub component And(A bool, B bool) (res bool)
 pub component Or(A bool, B bool) (res bool)
 
 #extern(int int_is_greater, float float_is_greater)
-pub component IsGreater<T int | float>(actual T, compared T) (res bool)
-
-#extern(int_is_even)
-pub component IsEven(data int) (res bool)
-
-
+pub component Gt<T int | float>(actual T, compared T) (res bool)
 
