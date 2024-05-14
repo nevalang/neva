@@ -19,3 +19,9 @@ pub component Or(A bool, B bool) (res bool)
 #extern(int int_is_greater, float float_is_greater, string string_is_greater)
 pub component Gt<T int | float | string>(actual T, compared T) (res bool)
 
+pub component Lt<T int | float | string>(actual T, compared T) (res bool){
+    nodes{Gt<T>, Not}
+    :actual -> gt:actual
+    :compared -> gt:compared
+    gt -> not -> :res
+}
