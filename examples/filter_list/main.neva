@@ -1,0 +1,17 @@
+import { lists }
+
+const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+component Main(start) (stop) {
+    nodes { lists.Filter<int>{Even}, Println }
+    :start -> (
+        $lst -> filter -> println -> :stop
+    )
+}
+
+component Even(data int) (res bool) {
+    nodes { Mod }
+    :data -> mod:data
+    2 -> mod:case[0] -> (true -> :res)
+    mod:else -> (false -> :res)
+}
