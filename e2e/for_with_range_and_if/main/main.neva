@@ -1,0 +1,25 @@
+component Main(start) (stop) {
+	nodes { For{Printer}, Range }
+	:start -> [(1 -> range:from), (11 -> range:to)]
+	range -> for -> :stop
+}
+
+component Printer(data int) (sig any) {
+	nodes { Even, PrintTwice, If }
+	:data -> even -> if
+	if:then -> ('is even' -> printTwice)
+	if:else -> ('is odd' -> printTwice)
+	printTwice -> :sig
+}
+
+component Even(data int) (res bool) {
+	nodes { Mod }
+	:data -> mod:data
+	2 -> mod:case[0] -> (true -> :res)
+	mod:else -> (false -> :res)
+}
+
+component PrintTwice(data string) (sig any) {
+	nodes { p1 Println, p2 Println }
+	:data -> p1 -> p2 -> :sig
+}
