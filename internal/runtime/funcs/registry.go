@@ -12,13 +12,22 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"new":    new{},
 		"del":    del{},
 		"lock":   lock{},
-		"match":  match{},
-		"eq":     eq{},
-		"if":     if_{},
 		"unwrap": unwrap{},
 
 		// runtime
 		"panic": panicker{},
+
+		// logic
+		"match":             match{},
+		"eq":                eq{},
+		"if":                if_{},
+		"not":               not{},
+		"and":               and{},
+		"or":                or{},
+		"int_is_greater":    intIsGreater{},
+		"string_is_greater": strIsGreater{},
+		"float_is_greater":  floatIsGreater{},
+		"int_is_even":       intIsEven{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},

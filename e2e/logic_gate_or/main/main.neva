@@ -1,0 +1,8 @@
+component Main(start) (stop) {
+	nodes { Println, Or }
+		:start -> [
+		    (false -> or:A),
+		    (false -> or:B)
+		]
+		or -> println -> :stop
+}
