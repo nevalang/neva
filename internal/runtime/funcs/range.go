@@ -42,33 +42,56 @@ func (streamIntRange) Create(
 				return
 			case toMsg = <-toIn:
 			}
-
 			var (
 				idx  int64 = 0
 				last bool  = false
 				data int64 = fromMsg.Int()
 			)
 
-			for !last {
-				if data == toMsg.Int()-1 {
-					last = true
+			if fromMsg.Int() < toMsg.Int() {
+				for !last {
+					if data == toMsg.Int()-1 {
+						last = true
+					}
+
+					item := streamItem(
+						runtime.NewIntMsg(data),
+						idx,
+						last,
+					)
+
+					select {
+					case <-ctx.Done():
+						return
+					case dataOut <- item:
+					}
+
+					idx++
+					data++
 				}
+			} else {
+				for !last {
+					if data == toMsg.Int()+1 {
+						last = true
+					}
 
-				item := streamItem(
-					runtime.NewIntMsg(data),
-					idx,
-					last,
-				)
+					item := streamItem(
+						runtime.NewIntMsg(data),
+						idx,
+						last,
+					)
 
-				select {
-				case <-ctx.Done():
-					return
-				case dataOut <- item:
+					select {
+					case <-ctx.Done():
+						return
+					case dataOut <- item:
+					}
+
+					idx++
+					data--
 				}
-
-				idx++
-				data++
 			}
+
 		}
 	}, nil
 }

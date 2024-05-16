@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -9,20 +8,13 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	cmd := exec.Command("neva", "run", "compare_values")
+	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"They match\n",
+		"Actual is greater\n",
 		string(out),
 	)
 
