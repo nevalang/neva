@@ -25,8 +25,11 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"and":               and{},
 		"or":                or{},
 		"int_is_greater":    intIsGreater{},
+		"int_is_lesser":     intIsLesser{},
 		"string_is_greater": strIsGreater{},
+		"string_is_lesser":  strIsLesser{},
 		"float_is_greater":  floatIsGreater{},
+		"float_is_lesser":   floatIsLesser{},
 		"int_is_even":       intIsEven{},
 
 		// streamers
