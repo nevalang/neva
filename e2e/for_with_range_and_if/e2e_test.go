@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 
 		require.Equal(
 			t,
-			"one\nzero\n",
+			"true\nfalse\n",
 			string(out),
 			"iteration: %d", i,
 		)
