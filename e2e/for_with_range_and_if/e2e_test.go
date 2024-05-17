@@ -8,36 +8,19 @@ import (
 )
 
 func Test(t *testing.T) {
-	cmd := exec.Command("neva", "run", "main")
+	for i := 0; i < 100; i++ {
+		cmd := exec.Command("neva", "run", "-debug", "main")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err, "out: ", out)
 
-	require.Equal(
-		t,
-		`is odd
-is odd
-is even
-is even
-is odd
-is odd
-is even
-is even
-is odd
-is odd
-is even
-is even
-is odd
-is odd
-is even
-is even
-is odd
-is odd
-is even
-is even
-`,
-		string(out),
-	)
+		require.Equal(
+			t,
+			"one\nzero\n",
+			string(out),
+			"iteration: %d", i,
+		)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }

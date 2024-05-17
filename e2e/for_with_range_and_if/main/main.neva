@@ -1,25 +1,24 @@
+import { time, lists }
+
+const lst list<int> = [1, 0]
+
 component Main(start) (stop) {
-	nodes { For{Printer}, Range }
-	:start -> [(1 -> range:from), (11 -> range:to)]
-	range -> for -> :stop
+	nodes { lists.For{Printer} }
+	:start -> ($lst -> for -> :stop)
 }
 
 component Printer(data int) (sig any) {
-	nodes { Even, PrintTwice, If }
-	:data -> even -> if
-	if:then -> ('is even' -> printTwice)
-	if:else -> ('is odd' -> printTwice)
-	printTwice -> :sig
+	nodes { Eq, PrintSlow, If }
+	:data -> eq:actual
+	1 -> eq:expected
+	eq -> if
+	if:then -> ('one' -> printSlow)
+	if:else -> ('zero' -> printSlow)
+	printSlow -> :sig
 }
 
-component Even(data int) (res bool) {
-	nodes { Mod }
-	:data -> mod:data
-	2 -> mod:case[0] -> (true -> :res)
-	mod:else -> (false -> :res)
-}
-
-component PrintTwice(data string) (sig any) {
-	nodes { p1 Println, p2 Println }
-	:data -> p1 -> p2 -> :sig
+component PrintSlow(data string) (sig any) {
+    nodes { Println, time.Sleep }
+    200000000 -> sleep:dur // 200 ms
+    :data -> println -> sleep:data -> :sig
 }
