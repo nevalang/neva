@@ -1,4 +1,4 @@
-import { time, lists }
+import { lists }
 
 const lst list<bool> = [true, false]
 

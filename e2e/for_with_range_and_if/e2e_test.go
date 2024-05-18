@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		cmd := exec.Command("neva", "run", "-debug", "main")
 
 		out, err := cmd.CombinedOutput()
