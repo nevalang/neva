@@ -34,6 +34,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"list_to_stream":       listToStream{},
 		"stream_int_range":     streamIntRange{},
 		"stream_product":       streamProduct{},
+		"stream_zip":           streamZip{},
 
 		// builders
 		"struct_builder": structBuilder{},
