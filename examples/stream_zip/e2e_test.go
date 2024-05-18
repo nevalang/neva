@@ -22,9 +22,9 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		`{"first": 0, "second": 0}
-{"first": 1, "second": 1}
-{"first": 2, "second": 2}
+		`{"first": 0, "second": "a"}
+{"first": 1, "second": "b"}
+{"first": 2, "second": "c"}
 `,
 		string(out),
 	)

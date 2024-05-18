@@ -1,15 +1,17 @@
+const strs list<string> = ['a', 'b', 'c']
+
 component Main(start) (stop) {
   nodes {
     r1 Range,
-    r2 Range,
-    Zip<int, int>,
-    For<ZipRes<int, int>>{Println<ZipRes<int, int>>}
+    Iter<string>
+    Zip<int, string>,
+    For<ZipRes<int, string>>{Println<ZipRes<int, string>>}
   }
   :start -> [
-    (0 -> [r1:from, r2:from]),
-    (3 -> [r1:to, r2:to])
+    (0 -> r1:from),
+    (3 -> r1:to)
   ]
   r1 -> zip:first
-  r2 -> zip:second
+  $strs -> iter -> zip:second
   zip -> for -> :stop
 }
