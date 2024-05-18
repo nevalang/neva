@@ -33,6 +33,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"array_port_to_stream": arrayPortToStream{},
 		"list_to_stream":       listToStream{},
 		"stream_int_range":     streamIntRange{},
+		"stream_product":       streamProduct{},
 
 		// builders
 		"struct_builder": structBuilder{},
