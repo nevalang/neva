@@ -1,10 +1,10 @@
 component Main(start) (stop) {
-    nodes { Println, Gt<int>,If}
+    nodes { Println, Eq<int>,If}
     :start -> [
-        (2 -> gt:compared),
-        (2 -> gt:actual)
+        (2 -> eq:expected),
+        (2 -> eq:actual)
        ]
-       gt:res  -> if
+       eq:res  -> if
 
        if:then -> ('They match' -> println -> :stop)
        if:else -> ('They do not match' -> println -> :stop)
