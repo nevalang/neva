@@ -9,7 +9,7 @@ component Main(start) (stop) {
   }
   :start -> [
     (0 -> r1:from),
-    (3 -> r1:to)
+    (10 -> r1:to)
   ]
   r1 -> zip:first
   $strs -> iter -> zip:second
