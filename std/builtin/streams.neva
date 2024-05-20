@@ -97,10 +97,10 @@ pub type ProductRes<T, R> struct {
 #extern(stream_product)
 pub component Product<T, R>(first stream<T>, second stream<R>) (seq stream<ProductRes<T, R>>)
 
-pub type ZipRes<T, R> struct {
+pub type ZipResult<T, R> struct {
     first T
     second R
 }
 
 #extern(stream_zip)
-pub component Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipRes<T, R>>)
+pub component Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)

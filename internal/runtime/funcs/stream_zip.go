@@ -61,8 +61,8 @@ func (streamZip) Create(
 			}
 
 			idx := int64(0)
-			for i, e1 := range firstData {
-				e2 := secondData[i]
+			for i := 0; i < n; i++ {
+				e1, e2 := firstData[i], secondData[i]
 				select {
 				case <-ctx.Done():
 					return

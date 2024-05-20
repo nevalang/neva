@@ -5,7 +5,7 @@ component Main(start) (stop) {
     r1 Range,
     Iter<string>
     Zip<int, string>,
-    For<ZipRes<int, string>>{Println<ZipRes<int, string>>}
+    For<ZipResult<int, string>>{Println<ZipResult<int, string>>}
   }
   :start -> [
     (0 -> r1:from),
