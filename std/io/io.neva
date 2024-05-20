@@ -1,2 +1,5 @@
 #extern(scanln)
 pub component Scanln(sig any) (data string)
+
+#extern(args)
+pub component Args() (data list<string>)

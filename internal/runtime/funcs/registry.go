@@ -74,6 +74,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// io
 		"scanln":  scanln{},
+		"args":    args{},
 		"println": println{},
 		"printf":  printf{},
 
