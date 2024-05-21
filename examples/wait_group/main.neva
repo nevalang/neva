@@ -1,0 +1,12 @@
+import { sync }
+
+component Main(start) (stop) {
+  nodes { sync.Wg, Println }
+  :start -> [
+    (3 -> wg:count),
+    ('Hello' -> println -> (true -> wg:sig)),
+    ('Neva' -> println -> (true -> wg:sig)),
+    ('World!' -> println -> (true -> wg:sig))
+  ]
+  wg -> :stop
+}
