@@ -1,0 +1,2 @@
+#extern(args)
+pub component Args() (data list<string>)
