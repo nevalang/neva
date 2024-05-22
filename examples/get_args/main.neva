@@ -1,0 +1,6 @@
+import {io,lists }
+
+component Main(start) (stop) {
+	nodes { io.Args, lists.For{Println}}
+	:start -> (args -> for -> :stop)
+}
