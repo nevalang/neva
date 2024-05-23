@@ -25,14 +25,19 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"and":               and{},
 		"or":                or{},
 		"int_is_greater":    intIsGreater{},
+		"int_is_lesser":     intIsLesser{},
 		"string_is_greater": strIsGreater{},
+		"string_is_lesser":  strIsLesser{},
 		"float_is_greater":  floatIsGreater{},
+		"float_is_lesser":   floatIsLesser{},
 		"int_is_even":       intIsEven{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},
 		"list_to_stream":       listToStream{},
 		"stream_int_range":     streamIntRange{},
+		"stream_product":       streamProduct{},
+		"stream_zip":           streamZip{},
 
 		// builders
 		"struct_builder": structBuilder{},
@@ -71,6 +76,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// io
 		"scanln":  scanln{},
+		"args":    args{},
 		"println": println{},
 		"printf":  printf{},
 
@@ -82,5 +88,8 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		// image
 		"image_encode": imageEncode{},
 		"image_new":    imageNew{},
+
+		// sync
+		"wait_group": waitGroup{},
 	}
 }

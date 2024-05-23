@@ -1,0 +1,8 @@
+component Main(start) (stop) {
+    nodes { Println, Lt<int>}
+    :start -> [
+        (20 -> lt:compared),
+        (20 -> lt:actual)
+       ]
+       lt:res -> println -> :stop
+}

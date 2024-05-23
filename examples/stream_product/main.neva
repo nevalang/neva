@@ -1,0 +1,15 @@
+component Main(start) (stop) {
+  nodes {
+    r1 Range,
+    r2 Range,
+    Product<int, int>,
+    For<ProductRes<int, int>>{Println<ProductRes<int, int>>}
+  }
+  :start -> [
+    (0 -> [r1:from, r2:from]),
+    (3 -> [r1:to, r2:to])
+  ]
+  r1 -> product:first
+  r2 -> product:second
+  product -> for -> :stop
+}
