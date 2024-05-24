@@ -1,0 +1,166 @@
+// # Proposal for new stdlib operations
+// This is a proposal for several APIs that could be added to stdlib.
+
+// ## `builtin` candidates
+
+// Return logical not operation applied to input `x`
+component Not(x bool) (x bool)
+
+// A generic pair of items. Can stand in for other pair types we've introduced such as `ZipResult`
+type Pair<A, B> struct { first A; second B }
+
+// Try to return `t` or `default` if `t` is unavailable. `default` can be injected with `IInjectable<T>`
+component OrDefault<T>(t T)
+
+// The inverse of `Zip<T, R>` which is already in `builtin`
+component Unzip<T, R>(seq stream<ZipResult<T, R>>) (first stream<T>, second stream<R>)
+
+// ## Map
+
+// Interface for mapping `T` to exactly one `R`
+interface IBijectionMapper<T, R>(T) (R)
+
+// Interface for mapping `T` to one or more `R`; Use `IBijectionMapper<T, R>` to make a one-to-one mapping
+interface IMapper<T, R>(T) -> (stream<R>)
+
+// Map `seq` using the `map`
+component Map(seq stream<T>) (stream<R>)
+
+// Map `seq` using the `map`. `seq` OUTPORT has the same number of elements
+component MapBiject(seq stream<T>) (stream<R>)
+
+// Convert `x` to float. Implements `IBijectionMapper<int, float>`
+component ToFloat(x int) (x float)
+
+// Convert `x` to int. Implements `IBijectionMapper<float, int>`
+component ToInt(x float) (x int)
+
+// ## `rand`
+
+// A new stdlib package for pseudo-randomness.
+
+// Returns random bools. To bias the outputs use `p` (chance of `true`). Can inject `p` with an `IFloat`
+component Bool() (x bool)
+
+// Returns random exponentially distributed floats with lambda 1. Use `Div` to scale by a new rate. Can inject lambda with an `IFloat`
+component Exp() (x float)
+
+// Returns random unscaled uniform ints
+component Int() (x int)
+
+// Returns uniform ints between `[0, n)`
+component Intn(n int) (x int, err error)
+
+// Returns normal floats with mean 0 and stddev 1. Can inject mean, stddev as `IFloat`s
+component Norm() (x float)
+
+// Produce Poisson signals at the average rate of `1/lambda` per second. Author note: I don't have a use case but think this is cool. Can inject the rate parameter as an `IFloat`
+component Sig() (sig any)
+
+// ## Reduce
+
+// Returns `a+b`. Iplements `IFolder<T, T>`. We need similar `IFolder` implementations for the other binary math ops
+component Add<T>(a T, b T) T`
+
+// Boolean predicate over `T`. Alias for `IReducer<T, bool>`
+interface IPredicate<T> = IReducer<T, bool>
+
+// Reduce stream of `T` to `R`
+interface IReducer<T, R>(stream<T>) (R)
+
+// Fold two values into a single one
+interface IFolder<T, R>(T, T) (R)
+
+// Combine values starting from the first element and `init`
+component FoldLeft<T, R>(seq stream<T>, init R) R
+
+// Combine values starting from the last element and `init`
+component FoldRight<T, R>(seq stream<T>, init R) R
+
+// Group sequence items using a `IBijectionMapper<T, R>`
+component Group<T>(seq stream<T>) (map<R, stream<T>>)
+
+// Uses an `IPredicate<T>` to partition the stream into inner and outer components
+component Partition<T>(seq stream<T>) (inner stream<T>, outer stream<T>)
+
+// Reduce `seq` using `reduce`
+component Reduce<T, R>(seq stream<T>) R
+
+// alias for `Map`
+component ReducePartial<T, R>
+
+// Returns `a`. Implements `IFolder<T, T>`
+component First<T>(a T, b T) T
+
+// Returns `b`. Implements `IFolder<T, T>`
+component Second<T>(a T, b T) T
+
+// Implements `IReducer<T, T>`. `T` should be comparable, like `int` or `float`
+component Max<T>(seq stream<T>) T
+
+// Implements `IReducer<T, T>`. `T` should be comparable, like `int` or `float`
+component Min<T>(seq stream<T>) T
+
+// ## `streams`
+
+// Exhausts input streams in order and outputs a combined stream
+component Chain<T>(seq [stream<T>]) stream<T>
+
+// Runs collate on the input sequences. See `ICollator<T>`
+component Collate<T>(first stream<T>, second stream<T>) (stream<T>)
+
+// Discard the first `n` elements from `seq`
+component Drop<T>(n int, seq stream<T>) (stream<T>)
+
+// Interface for components which combine multiple streams. This is the "collate" operation from the FBP book.
+interface ICollator<T>(stream<T>, stream<T>) (stream<T>)
+
+// Interface for components which combine multiple streams. This is the "collate" operation from the FBP book.
+interface ICollator<T>([stream<T>]) (stream<T>)
+
+// Return the first element from `seq` same as `Take(1, seq)`
+component Head<T>(seq stream<T>) T
+
+// Flatten a stream of streams into a single stream
+component Flatten<T>(seq stream<stream<T>>) (stream<T>)
+
+// Return a stream of length one from the first `elem`
+component FromElem<T>(elem T) stream<T>
+
+// Return a infinite stream from elements of `elem`, wraps Struct<stream<T>>
+component Forever<T>(elem T) stream<T>
+
+// Returns a stream repeating the first `elem` `n` times
+component RepeatElem<T>(n int, elem T)
+
+// All but the first element of `seq`. Same as `Drop(1, seq)`
+component Tail<T>(seq stream<T>) (stream<T>)
+
+// Return the first `n` elements from `seq`
+component Take<T>(n int, seq stream<T>) (stream<T>)
+
+// ## `time`
+
+// Helper for making durations in humanized format (e.g. `"1hr6s"`)
+component Duration(duration string) (nsec int, err error)
+
+// If waiting more than the given time to receive an item, return `ErrDeadline`
+component Deadline<T>(nsec int, t T) (T, err error)
+
+// A error returned from `Deadline<T>`
+const ErrDeadline = error{"Deadline exceeded"}
+
+// A error returned from `RateLimit<T>`
+const ErrThrottled = error{"Throttled"}
+
+// A error returned from `Backoff<T>`
+const ErrBackoff = error{"Backoff"}
+
+// Send `t` at most once per duration
+component Every<T>(nsec int, t T) (t T)
+
+// Try to return `t` but no more than once per duration or return `ErrThrottled`
+component RateLimit<T>(nsec int, t T) (t T, err error)
+
+// Try to return `t` or do exponential backoff if `t` is unavailable and return `ErrBackoff`. Backoff resets when returning `t`
+component Backoff<T>(nsec int, exp float, t T) (t T, err error)
