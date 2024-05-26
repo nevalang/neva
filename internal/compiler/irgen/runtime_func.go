@@ -10,6 +10,27 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
+func getFuncCall(
+	nodeCtx nodeContext,
+	scope src.Scope,
+	funcRef string,
+	in []ir.PortAddr,
+	out []ir.PortAddr,
+) (ir.FuncCall, *compiler.Error) {
+	cfgMsg, err := getCfgMsg(nodeCtx.node, scope)
+	if err != nil {
+		return ir.FuncCall{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
+	}
+	return ir.FuncCall{
+		Ref: funcRef,
+		IO:  ir.FuncIO{In: in, Out: out},
+		Msg: cfgMsg,
+	}, nil
+}
+
 func getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
