@@ -1,5 +1,3 @@
-// Package irgen implements IR generation from source code.
-// It assumes that program passed analysis stage and does not enforce any validations.
 package irgen
 
 import (
@@ -34,13 +32,16 @@ type (
 	}
 )
 
-func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
-	initialScope := src.Scope{
+func (g Generator) Generate(
+	build src.Build,
+	mainPkgName string,
+) (*ir.Program, *compiler.Error) {
+	scope := src.Scope{
 		Build: build,
 		Location: src.Location{
 			ModRef:   build.EntryModRef,
 			PkgName:  mainPkgName,
-			FileName: "", // we don't know at this point and we don't need to
+			FileName: "",
 		},
 	}
 
@@ -54,7 +55,7 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 		path: []string{},
 		node: src.Node{
 			EntityRef: core.EntityRef{
-				Pkg:  "", // ref to local entity
+				Pkg:  "",
 				Name: "Main",
 			},
 		},
@@ -68,10 +69,8 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 		},
 	}
 
-	if err := g.processComponentNode(rootNodeCtx, initialScope, result); err != nil {
-		return nil, compiler.Error{
-			Location: &initialScope.Location,
-		}.Wrap(err)
+	if err := g.processComponentNode(rootNodeCtx, scope, result); err != nil {
+		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
 	return result, nil
@@ -82,7 +81,9 @@ func (g Generator) processComponentNode(
 	scope src.Scope,
 	result *ir.Program,
 ) *compiler.Error {
-	componentEntity, foundLocation, err := scope.Entity(nodeCtx.node.EntityRef)
+	ref := nodeCtx.node.EntityRef
+
+	entity, found, err := scope.Entity(ref)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -90,56 +91,34 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	component := componentEntity.Component
+	comp := entity.Component
+	in := g.insertAndReturnInports(nodeCtx, result)   // for inports we only use parent context because all inports are used
+	out := g.insertAndReturnOutports(nodeCtx, result) //  for outports we use both parent context and component's interface
 
-	// for inports we only use parent context because all inports are used
-	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
-	//  for outports we use both parent context and component's interface
-	outportAddrs := g.insertAndReturnOutports(nodeCtx, result)
-
-	runtimeFuncRef, err := getRuntimeFuncRef(component, nodeCtx.node.TypeArgs)
+	funcRef, err := getFuncRef(
+		comp,
+		nodeCtx.node.TypeArgs,
+	)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
-			Location: &foundLocation,
-			Meta:     &component.Meta,
+			Location: &found,
+			Meta:     &comp.Meta,
 		}
 	}
 
-	// if component uses #extern, then we only need ports and func call
-	// ports are already created, so it's time to create func call
-	if runtimeFuncRef != "" {
-		// use prev location, not the location where runtime func was found
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
+	if funcRef != "" {
+		funcCall, err := getFuncCall(nodeCtx, scope, funcRef, in, out)
 		if err != nil {
-			return &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-			}
+			return err
 		}
-
-		result.Funcs = append(result.Funcs, ir.FuncCall{
-			Ref: runtimeFuncRef,
-			IO: ir.FuncIO{
-				In:  inportAddrs,
-				Out: outportAddrs,
-			},
-			Msg: runtimeFuncMsg,
-		})
-
+		result.Funcs = append(result.Funcs, funcCall)
 		return nil
 	}
 
-	newScope := scope.WithLocation(foundLocation) // only use new location if that's not builtin
+	newScope := scope.WithLocation(found)
 
-	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
-	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
-	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
-	subnodesPortsUsage, err := g.processNetwork(
-		component.Net,
-		nodeCtx,
-		result,
-	)
+	subnodesPortsUsage, err := g.processNetwork(comp.Net, nodeCtx, result)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -147,15 +126,8 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	for nodeName, node := range component.Nodes {
-		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
-		if !ok {
-			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
-				Location: &foundLocation,
-				Meta:     &component.Meta,
-			}
-		}
+	for nodeName, node := range comp.Nodes {
+		nodePortsUsage := subnodesPortsUsage[nodeName]
 
 		subNodeCtx := nodeContext{
 			path:       append(nodeCtx.path, nodeName),
@@ -163,24 +135,66 @@ func (g Generator) processComponentNode(
 			node:       node,
 		}
 
-		var scopeToUseThisTime src.Scope
-		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
-			subNodeCtx.node = injectedNode
-			scopeToUseThisTime = scope
-		} else {
-			scopeToUseThisTime = newScope
-		}
+		scopeToUse := getSubnodeScope(
+			nodeCtx.node.Deps,
+			nodeName,
+			subNodeCtx,
+			scope,
+			newScope,
+		)
 
-		if err := g.processComponentNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
+		if err := g.processComponentNode(
+			subNodeCtx,
+			scopeToUse,
+			result,
+		); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
-				Location: &foundLocation,
-				Meta:     &component.Meta,
+				Location: &found,
+				Meta:     &comp.Meta,
 			}
 		}
 	}
 
 	return nil
+}
+
+func getSubnodeScope(
+	deps map[string]src.Node,
+	nodeName string,
+	subNodeCtx nodeContext,
+	scope src.Scope,
+	newScope src.Scope,
+) src.Scope {
+	var scopeToUseThisTime src.Scope
+	if dep, ok := deps[nodeName]; ok { // is interface node
+		subNodeCtx.node = dep
+		scopeToUseThisTime = scope
+	} else {
+		scopeToUseThisTime = newScope
+	}
+	return scopeToUseThisTime
+}
+
+func getFuncCall(
+	nodeCtx nodeContext,
+	scope src.Scope,
+	funcRef string,
+	in []ir.PortAddr,
+	out []ir.PortAddr,
+) (ir.FuncCall, *compiler.Error) {
+	cfgMsg, err := getCfgMsg(nodeCtx.node, scope)
+	if err != nil {
+		return ir.FuncCall{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
+	}
+	return ir.FuncCall{
+		Ref: funcRef,
+		IO:  ir.FuncIO{In: in, Out: out},
+		Msg: cfgMsg,
+	}, nil
 }
 
 func New() Generator {

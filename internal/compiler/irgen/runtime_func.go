@@ -10,7 +10,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
+func getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
@@ -21,8 +21,6 @@ func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string,
 	}
 
 	if len(nodeTypeArgs) == 0 || nodeTypeArgs[0].Inst == nil {
-		// FIXME sometimes we have union here
-		// we must use node argument instead of component type param
 		return "", nil
 	}
 
@@ -37,7 +35,7 @@ func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string,
 	return "", errors.New("type argument mismatches runtime func directive")
 }
 
-func getRuntimeFuncMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
+func getCfgMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
 	args, ok := node.Directives[compiler.BindDirective]
 	if !ok {
 		return nil, nil
