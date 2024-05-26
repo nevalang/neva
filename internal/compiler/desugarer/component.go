@@ -14,11 +14,11 @@ var ErrConstSenderEntityKind = errors.New(
 )
 
 type handleComponentResult struct {
-	desugaredComponent src.Component         // desugared component to replace
-	virtualEntities    map[string]src.Entity //nolint:lll // sometimes after desugaring component we need to insert some entities to the file
+	desugaredComponent src.Component
+	virtualEntities    map[string]src.Entity
 }
 
-func (d Desugarer) handleComponent( //nolint:funlen
+func (d Desugarer) handleComponent(
 	component src.Component,
 	scope src.Scope,
 ) (handleComponentResult, *compiler.Error) {

@@ -18,9 +18,7 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 		if err != nil {
 			return src.Build{},
 				compiler.Error{
-					Location: &src.Location{
-						ModRef: modRef,
-					},
+					Location: &src.Location{ModRef: modRef},
 				}.Wrap(err)
 		}
 		desugaredMods[modRef] = desugaredMod

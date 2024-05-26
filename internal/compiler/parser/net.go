@@ -366,7 +366,7 @@ func parseDeferredConnExpr(
 
 func parseNormConnSenderSide(
 	senderSide generated.ISingleSenderSideContext,
-) (src.ConnectionSenderSide, *compiler.Error) { //nolint:funlen
+) (src.ConnectionSenderSide, *compiler.Error) {
 	var senderSelectors []string
 	singleSenderSelectors := senderSide.StructSelectors()
 	if singleSenderSelectors != nil {

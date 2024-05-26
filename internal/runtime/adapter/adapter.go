@@ -10,7 +10,7 @@ import (
 
 type Adapter struct{}
 
-func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) { //nolint:funlen
+func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	runtimePorts := make(runtime.Ports, len(irProg.Ports))
 
 	for _, portInfo := range irProg.Ports {

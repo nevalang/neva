@@ -36,7 +36,7 @@ type handleThenConnectionsResult struct {
 
 var virtualBlockersCounter atomic.Uint64
 
-func (d Desugarer) handleDeferredConnections( //nolint:funlen
+func (d Desugarer) handleDeferredConnections(
 	origConn src.NormalConnection,
 	nodes map[string]src.Node,
 	scope src.Scope,

@@ -172,7 +172,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this: for enum do nothing (it's valid and not composite, there's nothing to resolveExpr),
 // for array resolveExpr it's type, for struct and union apply recursion for it's every field/element.
-func (r Resolver) resolveExpr( //nolint:funlen,gocognit
+func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
 	frame map[string]Def, // local scope

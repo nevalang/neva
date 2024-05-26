@@ -64,7 +64,6 @@ func (a Analyzer) analyzeComponentNodes(
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
 }
 
-//nolint:funlen
 func (a Analyzer) analyzeNode(
 	componentIface src.Interface,
 	node src.Node,

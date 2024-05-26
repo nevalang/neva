@@ -34,7 +34,7 @@ var selectorNodeRef = core.EntityRef{
 
 var virtualSelectorsCount atomic.Uint64
 
-func (d Desugarer) desugarStructSelectors( //nolint:funlen
+func (d Desugarer) desugarStructSelectors(
 	normConn src.NormalConnection,
 ) (handleStructSelectorsResult, *compiler.Error) {
 	senderSide := normConn.SenderSide

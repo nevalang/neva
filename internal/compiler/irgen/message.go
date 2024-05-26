@@ -8,7 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) { //nolint:funlen
+func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) {
 	if constant.Ref != nil {
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {

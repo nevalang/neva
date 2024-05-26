@@ -36,7 +36,7 @@ var (
 )
 
 // Maybe start here
-func (a Analyzer) analyzeComponent( //nolint:funlen
+func (a Analyzer) analyzeComponent(
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
