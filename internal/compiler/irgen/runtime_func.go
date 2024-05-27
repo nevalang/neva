@@ -10,8 +10,8 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
-	args, ok := component.Directives[compiler.ExternDirective]
+func getRuntimeFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
+	args, ok := flow.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
 	}
@@ -22,7 +22,7 @@ func getRuntimeFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string,
 
 	if len(nodeTypeArgs) == 0 || nodeTypeArgs[0].Inst == nil {
 		// FIXME sometimes we have union here
-		// we must use node argument instead of component type param
+		// we must use node argument instead of flow type param
 		return "", nil
 	}
 

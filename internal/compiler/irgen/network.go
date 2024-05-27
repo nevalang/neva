@@ -21,7 +21,7 @@ func (g Generator) processNetwork(
 
 	for _, conn := range conns {
 		// here's how we handle array-bypass connections
-		// sender is always component's inport
+		// sender is always flow's inport
 		// based on that, we can to set receiver's inport slots
 		// to the value equal of the used slots of our inport
 		// that is known thanks to nodeCtx (metadata from parent node)
@@ -160,7 +160,7 @@ func (Generator) insertAndReturnInports(
 ) []ir.PortAddr {
 	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
-	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
+	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
 	// actually we can't use IO because we need to know how many slots are used
 	for addr := range nodeCtx.portsUsage.in {
 		addr := &ir.PortAddr{
@@ -200,7 +200,7 @@ func (Generator) insertAndReturnOutports(
 ) []ir.PortAddr {
 	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
-	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use component's IO.
+	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
 	// Actually we can't use IO because we need to know how many slots are used.
 	for addr := range nodeCtx.portsUsage.out {
 		irAddr := &ir.PortAddr{

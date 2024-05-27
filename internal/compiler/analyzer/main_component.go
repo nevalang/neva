@@ -9,53 +9,53 @@ import (
 )
 
 var (
-	ErrMainComponentWithTypeParams     = errors.New("Main component cannot have type parameters")
-	ErrEntityNotFoundByNodeRef         = errors.New("Node references to entity that cannot be found")
-	ErrMainComponentInportsCount       = errors.New("Main component must have exactly 1 inport")
-	ErrMainComponentOutportsCount      = errors.New("Main component must have exactly 1 outport")
-	ErrMainComponentWithoutEnterInport = errors.New("Main component must have 'enter' inport")
-	ErrMainComponentWithoutExitOutport = errors.New("Main component must have 'exit' outport")
-	ErrMainPortIsArray                 = errors.New("Main component cannot have array ports")
-	ErrMainComponentPortTypeNotAny     = errors.New("Main component's ports must be of type any")
-	ErrMainComponentNodeNotComponent   = errors.New("Main component's nodes must only refer to components")
+	ErrMainFlowWithTypeParams     = errors.New("Main flow cannot have type parameters")
+	ErrEntityNotFoundByNodeRef    = errors.New("Node references to entity that cannot be found")
+	ErrMainFlowInportsCount       = errors.New("Main flow must have exactly 1 inport")
+	ErrMainFlowOutportsCount      = errors.New("Main flow must have exactly 1 outport")
+	ErrMainFlowWithoutEnterInport = errors.New("Main flow must have 'enter' inport")
+	ErrMainFlowWithoutExitOutport = errors.New("Main flow must have 'exit' outport")
+	ErrMainPortIsArray            = errors.New("Main flow cannot have array ports")
+	ErrMainFlowPortTypeNotAny     = errors.New("Main flow's ports must be of type any")
+	ErrMainNodeEntityNotFlow      = errors.New("Main flow's nodes must only refer to flow entities")
 )
 
-func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
+func (a Analyzer) analyzeMainFlow(cmp src.Flow, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
-			Err:  ErrMainComponentWithTypeParams,
+			Err:  ErrMainFlowWithTypeParams,
 			Meta: &cmp.Interface.Meta,
 		}
 	}
 
-	if err := a.analyzeMainComponentIO(cmp.Interface.IO); err != nil {
+	if err := a.analyzeMainFlowIO(cmp.Interface.IO); err != nil {
 		return compiler.Error{Meta: &cmp.Interface.Meta}.Wrap(err)
 	}
 
-	if err := a.analyzeMainComponentNodes(cmp.Nodes, scope); err != nil {
+	if err := a.analyzeMainFlowNodes(cmp.Nodes, scope); err != nil {
 		return compiler.Error{Meta: &cmp.Meta}.Wrap(err)
 	}
 
 	return nil
 }
 
-func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
+func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: got %v", ErrMainComponentInportsCount, len(io.In)),
+			Err: fmt.Errorf("%w: got %v", ErrMainFlowInportsCount, len(io.In)),
 		}
 	}
 	if len(io.Out) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: got %v", ErrMainComponentOutportsCount, len(io.Out)),
+			Err: fmt.Errorf("%w: got %v", ErrMainFlowOutportsCount, len(io.Out)),
 		}
 	}
 
 	enterInport, ok := io.In["start"]
 	if !ok {
-		return &compiler.Error{Err: ErrMainComponentWithoutEnterInport}
+		return &compiler.Error{Err: ErrMainFlowWithoutEnterInport}
 	}
-	if err := a.analyzeMainComponentPort(enterInport); err != nil {
+	if err := a.analyzeMainFlowPort(enterInport); err != nil {
 		return &compiler.Error{
 			Err:  err,
 			Meta: &enterInport.Meta,
@@ -64,9 +64,9 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
 
 	exitOutport, ok := io.Out["stop"]
 	if !ok {
-		return &compiler.Error{Err: ErrMainComponentWithoutExitOutport}
+		return &compiler.Error{Err: ErrMainFlowWithoutExitOutport}
 	}
-	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
+	if err := a.analyzeMainFlowPort(exitOutport); err != nil {
 		return &compiler.Error{
 			Err:  err,
 			Meta: &exitOutport.Meta,
@@ -76,17 +76,17 @@ func (a Analyzer) analyzeMainComponentIO(io src.IO) *compiler.Error {
 	return nil
 }
 
-func (a Analyzer) analyzeMainComponentPort(port src.Port) error {
+func (a Analyzer) analyzeMainFlowPort(port src.Port) error {
 	if port.IsArray {
 		return ErrMainPortIsArray
 	}
 	if !(src.Scope{}).IsTopType(port.TypeExpr) {
-		return ErrMainComponentPortTypeNotAny
+		return ErrMainFlowPortTypeNotAny
 	}
 	return nil
 }
 
-func (Analyzer) analyzeMainComponentNodes(
+func (Analyzer) analyzeMainFlowNodes(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) *compiler.Error {
@@ -106,9 +106,9 @@ func (Analyzer) analyzeMainComponentNodes(
 			}
 		}
 
-		if nodeEntity.Kind != src.ComponentEntity {
+		if nodeEntity.Kind != src.FlowEntity {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v: %v", ErrMainComponentNodeNotComponent, nodeName, node.EntityRef),
+				Err:      fmt.Errorf("%w: %v: %v", ErrMainNodeEntityNotFlow, nodeName, node.EntityRef),
 				Location: &loc,
 				Meta:     nodeEntity.Meta(),
 			}

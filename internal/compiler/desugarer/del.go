@@ -60,18 +60,18 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 }
 
 func (Desugarer) findUnusedOutports(
-	component src.Component,
+	flow src.Flow,
 	scope src.Scope,
 	usedNodePorts nodePortsMap,
 ) nodePortsMap {
 	unusedOutports := newNodePortsMap()
 
-	for nodeName, node := range component.Nodes {
+	for nodeName, node := range flow.Nodes {
 		entity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {
 			continue
 		}
-		if entity.Kind != src.InterfaceEntity && entity.Kind != src.ComponentEntity {
+		if entity.Kind != src.InterfaceEntity && entity.Kind != src.FlowEntity {
 			continue
 		}
 
@@ -79,7 +79,7 @@ func (Desugarer) findUnusedOutports(
 		if entity.Kind == src.InterfaceEntity {
 			io = entity.Interface.IO
 		} else {
-			io = entity.Component.Interface.IO
+			io = entity.Flow.Interface.IO
 		}
 
 		for outportName := range io.Out {

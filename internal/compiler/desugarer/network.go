@@ -269,7 +269,7 @@ func getNodeIOByPortAddr(
 	if entity.Kind == src.InterfaceEntity {
 		iface = entity.Interface
 	} else {
-		iface = entity.Component.Interface
+		iface = entity.Flow.Interface
 	}
 
 	return iface.IO, nil

@@ -203,7 +203,7 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	mainNevaContent := `component Main(start) (stop) {
+	mainNevaContent := `flow Main(start) (stop) {
 	nodes { Println }
 	:start -> ('Hello, World!' -> println -> :stop)
 }`
