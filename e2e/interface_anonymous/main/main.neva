@@ -1,14 +1,14 @@
 interface IPrinter<T>(data T) (sig T)
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes {
-        SecondComponent { Println<any> }
+        Secondflow { Println<any> }
     }
-    :start -> secondComponent:msg
-    secondComponent:msg -> :stop
+    :start -> secondflow:msg
+    secondflow:msg -> :stop
 }
 
-component SecondComponent (msg) (msg) {
+flow Secondflow (msg) (msg) {
     nodes { IPrinter<any> }
     :msg -> iPrinter:data
     iPrinter:sig -> :msg

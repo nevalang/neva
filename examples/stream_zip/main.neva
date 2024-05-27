@@ -1,6 +1,6 @@
 const strs list<string> = ['a', 'b', 'c']
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
   nodes {
     r1 Range,
     Iter<string>

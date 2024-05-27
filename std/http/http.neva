@@ -4,4 +4,4 @@ pub type Response struct {
 }
 
 #extern(http_get)
-pub component Get(url string) (resp Response, err error)
+pub flow Get(url string) (resp Response, err error)

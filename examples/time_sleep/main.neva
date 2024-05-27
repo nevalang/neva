@@ -1,6 +1,6 @@
 import { time }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { time.Sleep }
 	:start -> sleep:data
 	$time.second -> sleep:dur

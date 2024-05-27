@@ -1,2 +1,2 @@
 #extern(int parse_int, float parse_float)
-pub component ParseNum<T int | float>(data string) (res T, err error)
+pub flow ParseNum<T int | float>(data string) (res T, err error)

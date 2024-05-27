@@ -176,7 +176,7 @@ Of course, it's possible to hide actual parser implementation behind some kind o
 
 At first there was a try to implement analyzer in a way that it only knows about the core of the language.
 
-But turns out that some components in stdlib (especially `builtin` package, especially the ones that uses `#extern` and `#bind` directives) are actually part of the core of the language.
+But turns out that some flows in stdlib (especially `builtin` package, especially the ones that uses `#extern` and `#bind` directives) are actually part of the core of the language.
 
 E.g. when user uses struct selectors like `foo.bar/baz -> ...` and then desugarer replaces this with `foo.bar -> structSelectorNode("baz") -> ...` (this is pseudocode) we must ensure that type of the `bar` is 1) a `struct` 2) has field `baz` and 3) `baz` is compatible with whatever `...` is. _This is static semantic analysis_ and that's is work for analyzer.
 

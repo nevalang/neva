@@ -1,4 +1,4 @@
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes {
 		adder Add<int>
 		sequencer StreamPort<int>

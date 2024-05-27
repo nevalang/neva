@@ -20,7 +20,7 @@ var (
 	ErrEntryModNotFound     = errors.New("Entry module is not found")
 	ErrMainPkgNotFound      = errors.New("Main package not found")
 	ErrPkgWithoutFiles      = errors.New("Package must contain at least one file")
-	ErrUnknownEntityKind    = errors.New("Entity kind can only be either component, interface, type of constant")
+	ErrUnknownEntityKind    = errors.New("Entity kind can only be either flow, interface, type of constant")
 	ErrCompilerVersion      = errors.New("Incompatible compiler version")
 	ErrDepModWithoutVersion = errors.New("Every dependency module must have version")
 )
@@ -37,7 +37,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
-	
+
 	if !ok {
 		return src.Build{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
@@ -223,15 +223,15 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
-	case src.ComponentEntity:
-		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
+	case src.FlowEntity:
+		analyzedFlow, err := a.analyzeFlow(entity.Flow, scope)
 		if err != nil {
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &entity.Component.Meta,
+				Meta:     &entity.Flow.Meta,
 			}.Wrap(err)
 		}
-		resolvedEntity.Component = analyzedComponent
+		resolvedEntity.Flow = analyzedFlow
 	default:
 		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),

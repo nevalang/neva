@@ -1,2 +1,2 @@
 #extern(regexp_submatch)
-pub component Submatch(regexp string, data string) (res list<string>, err error)
+pub flow Submatch(regexp string, data string) (res list<string>, err error)

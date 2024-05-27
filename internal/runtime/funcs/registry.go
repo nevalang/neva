@@ -1,4 +1,4 @@
-// Package funcs implements low-level components (runtime functions).
+// Package funcs implements low-level flows (runtime functions).
 // It has only one exported entity which is function creators registry.
 package funcs
 

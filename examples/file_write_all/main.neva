@@ -1,6 +1,6 @@
 import { io }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
   nodes { io.WriteAll, Println }
 
   :start -> [

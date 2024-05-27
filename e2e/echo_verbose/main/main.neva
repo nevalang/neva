@@ -1,6 +1,6 @@
 import { io }
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes {
 		scanner io.Scanln
 		println Println<string>

@@ -12,13 +12,13 @@ import (
 
 //nolint:lll
 var (
-	ErrAutoPortsArgNonStruct               = errors.New("Type argument for component with struct inports directive must be struct")
-	ErrAutoPortsNodeTypeArgsCount          = errors.New("Note that uses component with struct inports directive must pass exactly one type argument")
-	ErrAutoPortsTypeParamConstr            = errors.New("Component that uses struct inports directive must have type parameter with struct constraint")
-	ErrAutoPortsTypeParamsCount            = errors.New("Component that uses struct inports directive must have type parameter with have exactly one type parameter")
-	ErrNormalInportsWithAutoPortsDirective = errors.New("Component that uses struct inports directive must have no defined inports")
+	ErrAutoPortsArgNonStruct               = errors.New("Type argument for flow with struct inports directive must be struct")
+	ErrAutoPortsNodeTypeArgsCount          = errors.New("Note that uses flow with struct inports directive must pass exactly one type argument")
+	ErrAutoPortsTypeParamConstr            = errors.New("Flow that uses struct inports directive must have type parameter with struct constraint")
+	ErrAutoPortsTypeParamsCount            = errors.New("Flow that uses struct inports directive must have type parameter with have exactly one type parameter")
+	ErrNormalInportsWithAutoPortsDirective = errors.New("Flow that uses struct inports directive must have no defined inports")
 	ErrGuardNotAllowedForNode              = errors.New("Guard is not allowed for nodes without 'err' output")
-	ErrGuardNotAllowedForComponent         = errors.New("Guard is not allowed for components without 'err' output")
+	ErrGuardNotAllowedForFlow              = errors.New("Guard is not allowed for flows without 'err' output")
 )
 
 type foundInterface struct {
@@ -26,8 +26,8 @@ type foundInterface struct {
 	location src.Location
 }
 
-func (a Analyzer) analyzeComponentNodes(
-	componentIface src.Interface,
+func (a Analyzer) analyzeFlowNodes(
+	flowIface src.Interface,
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (
@@ -46,7 +46,7 @@ func (a Analyzer) analyzeComponentNodes(
 		}
 
 		analyzedNode, nodeInterface, err := a.analyzeNode(
-			componentIface,
+			flowIface,
 			node,
 			scope,
 		)
@@ -66,11 +66,11 @@ func (a Analyzer) analyzeComponentNodes(
 
 //nolint:funlen
 func (a Analyzer) analyzeNode(
-	componentIface src.Interface,
+	flowIface src.Interface,
 	node src.Node,
 	scope src.Scope,
 ) (src.Node, foundInterface, *compiler.Error) {
-	parentTypeParams := componentIface.TypeParams
+	parentTypeParams := flowIface.TypeParams
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -81,7 +81,7 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	if nodeEntity.Kind != src.ComponentEntity &&
+	if nodeEntity.Kind != src.FlowEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
@@ -115,8 +115,8 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// Now when we have frame made of parent type parameters constraints
-	// we can resolve cases like `subnode SubComponent<T>`
-	// where `T` refers to type parameter of the component/interface we're in.
+	// we can resolve cases like `subnode SubFlow<T>`
+	// where `T` refers to type parameter of the flow/interface we're in.
 	resolvedNodeArgs, err := a.resolver.ResolveExprsWithFrame(
 		node.TypeArgs,
 		resolvedParentParamsFrame,
@@ -143,7 +143,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	if node.ErrGuard {
-		if _, ok := componentIface.IO.Out["err"]; !ok {
+		if _, ok := flowIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Err:      ErrGuardNotAllowedForNode,
 				Location: &scope.Location,
@@ -152,7 +152,7 @@ func (a Analyzer) analyzeNode(
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForComponent,
+				Err:      ErrGuardNotAllowedForFlow,
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
@@ -198,13 +198,13 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// TODO probably here
-	// implement interface->component subtyping
+	// implement interface->flow subtyping
 	// in a way where FP possible
 
-	resolvedComponentDI := make(map[string]src.Node, len(node.Deps))
+	resolvedFlowDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeNode(
-			componentIface,
+			flowIface,
 			depNode,
 			scope,
 		)
@@ -214,14 +214,14 @@ func (a Analyzer) analyzeNode(
 				Meta:     &depNode.Meta,
 			}.Wrap(err)
 		}
-		resolvedComponentDI[depName] = resolvedDep
+		resolvedFlowDI[depName] = resolvedDep
 	}
 
 	return src.Node{
 			Directives: node.Directives,
 			EntityRef:  node.EntityRef,
 			TypeArgs:   resolvedNodeArgs,
-			Deps:       resolvedComponentDI,
+			Deps:       resolvedFlowDI,
 			Meta:       node.Meta,
 			ErrGuard:   node.ErrGuard,
 		}, foundInterface{
@@ -250,7 +250,7 @@ func (a Analyzer) getNodeInterface(
 
 		if node.Deps != nil {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrNonComponentNodeWithDI,
+				Err:      ErrNonFlowNodeWithDI,
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -259,7 +259,7 @@ func (a Analyzer) getNodeInterface(
 		return entity.Interface, nil
 	}
 
-	externArgs, hasExternDirective := entity.Component.Directives[compiler.ExternDirective]
+	externArgs, hasExternDirective := entity.Flow.Directives[compiler.ExternDirective]
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
@@ -277,9 +277,9 @@ func (a Analyzer) getNodeInterface(
 		}
 	}
 
-	iface := entity.Component.Interface
+	iface := entity.Flow.Interface
 
-	_, hasAutoPortsDirective := entity.Component.Directives[compiler.AutoportsDirective]
+	_, hasAutoPortsDirective := entity.Flow.Directives[compiler.AutoportsDirective]
 	if !hasAutoPortsDirective {
 		return iface, nil
 	}

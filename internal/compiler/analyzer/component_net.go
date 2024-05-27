@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	ErrUnusedOutports                = errors.New("All component's outports are unused")
+	ErrUnusedOutports                = errors.New("All flow's outports are unused")
 	ErrUnusedOutport                 = errors.New("Unused outport found")
-	ErrUnusedInports                 = errors.New("All component inports are unused")
+	ErrUnusedInports                 = errors.New("All flow inports are unused")
 	ErrUnusedInport                  = errors.New("Unused inport found")
 	ErrLiteralSenderTypeEmpty        = errors.New("Literal network sender must contain message value")
 	ErrComplexLiteralSender          = errors.New("Literal network sender must have primitive type")
@@ -21,8 +21,8 @@ var (
 	ErrGuardMixedWithExplicitErrConn = errors.New("If node has error guard '?' it's ':err' outport must not be explicitly used in the network")
 )
 
-// analyzeComponentNetwork must be called after analyzeNodes so we sure nodes are resolved.
-func (a Analyzer) analyzeComponentNetwork(
+// analyzeFlowNetwork must be called after analyzeNodes so we sure nodes are resolved.
+func (a Analyzer) analyzeFlowNetwork(
 	net []src.Connection,
 	compInterface src.Interface,
 	hasGuard bool,
@@ -236,9 +236,9 @@ func (a Analyzer) analyzeConnection(
 
 	resolvedDefConns := make([]src.Connection, 0, len(normConn.ReceiverSide.DeferredConnections))
 	if len(normConn.ReceiverSide.DeferredConnections) != 0 {
-		// note that we call analyzeConnections instead of analyzeComponentNetwork
+		// note that we call analyzeConnections instead of analyzeFlowNetwork
 		// because we only need to analyze connections and update nodesUsage
-		// analyzeComponentNetwork OTOH will also validate nodesUsage by itself
+		// analyzeFlowNetwork OTOH will also validate nodesUsage by itself
 		var err *compiler.Error
 		resolvedDefConns, err = a.analyzeConnections( // indirect recursion
 			normConn.ReceiverSide.DeferredConnections,
@@ -324,7 +324,7 @@ type nodeNetUsage struct {
 }
 
 // checkNetPortsUsage ensures that:
-// Every component's inport and outport is used;
+// Every flow's inport and outport is used;
 // Every sub-node's inport is used;
 // For every  sub-node's there's at least one used outport.
 func (Analyzer) checkNetPortsUsage(

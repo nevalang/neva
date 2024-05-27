@@ -1,7 +1,7 @@
 // StreamPort iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub component StreamPort<T>([port] T) (seq stream<T>)
+pub flow StreamPort<T>([port] T) (seq stream<T>)
 
 // IPortReducer reduces a stream of messages to one single message.
 // It's expected to send a result message after every processed stream.
@@ -10,7 +10,7 @@ pub interface IPortReducer<T>(seq stream<T>) (res T)
 // ReducePort reduces messages from multiple connections to a single message.
 // It iterates over all array-inport's slots in order and streams every message
 // to reducer. When all messages are processed the result is emited to outport.
-pub component ReducePort<T>([port] T) (res T) {
+pub flow ReducePort<T>([port] T) (res T) {
     nodes { reducer IPortReducer<T>, streamer StreamPort<T> }
     :port => streamer:port
     streamer -> reducer -> :res
@@ -18,20 +18,20 @@ pub component ReducePort<T>([port] T) (res T) {
 
 // === Iterators ===
 
-// These constatns are used for binding by Field component.
+// These constatns are used for binding by Field flow.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
 const idxPath list<string> = ['idx']
 
 // --- For ---
 
-// IForHandler is a dependency for For component.
+// IForHandler is a dependency for For flow.
 pub interface IForHandler<T>(data T) (sig any)
 
 // For is for performing side-effect for every item in a stream.
 // It will block untill all items are processed, so if you need to perform
 // several side-effects, do them all in a single handler.
-pub component For<T>(item stream<T>) (sig any) {
+pub flow For<T>(item stream<T>) (sig any) {
     nodes {
         Lock<bool>
         handler IForHandler<T>
@@ -57,7 +57,7 @@ pub component For<T>(item stream<T>) (sig any) {
 
 // --- Map ---
 
-// IMapHandler is a dependency for Map component.
+// IMapHandler is a dependency for Map flow.
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map is for transforming every item in stream.
@@ -65,7 +65,7 @@ pub interface IMapHandler<T, Y>(data T) (res Y)
 // so it's possible to chain multiple Maps together.
 // It's also possible to perform side-effect for every item,
 // but if side-effect is all you need, consider using For instead.
-pub component Map<T, Y>(item stream<T>) (res stream<Y>) {
+pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
     nodes {
         wrap Struct<stream<Y>>
         handler IMapHandler<T, Y>
@@ -95,7 +95,7 @@ pub type ProductRes<T, R> struct {
 } 
 
 #extern(stream_product)
-pub component Product<T, R>(first stream<T>, second stream<R>) (seq stream<ProductRes<T, R>>)
+pub flow Product<T, R>(first stream<T>, second stream<R>) (seq stream<ProductRes<T, R>>)
 
 pub type ZipResult<T, R> struct {
     first T
@@ -103,4 +103,4 @@ pub type ZipResult<T, R> struct {
 }
 
 #extern(stream_zip)
-pub component Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)
+pub flow Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)

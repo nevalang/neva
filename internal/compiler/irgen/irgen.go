@@ -68,7 +68,7 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 		},
 	}
 
-	if err := g.processComponentNode(rootNodeCtx, initialScope, result); err != nil {
+	if err := g.processFlowNode(rootNodeCtx, initialScope, result); err != nil {
 		return nil, compiler.Error{
 			Location: &initialScope.Location,
 		}.Wrap(err)
@@ -77,12 +77,12 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 	return result, nil
 }
 
-func (g Generator) processComponentNode(
+func (g Generator) processFlowNode(
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
 ) *compiler.Error {
-	componentEntity, foundLocation, err := scope.Entity(nodeCtx.node.EntityRef)
+	flowEntity, foundLocation, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -90,23 +90,23 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	component := componentEntity.Component
+	flow := flowEntity.Flow
 
 	// for inports we only use parent context because all inports are used
 	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
-	//  for outports we use both parent context and component's interface
+	//  for outports we use both parent context and flow's interface
 	outportAddrs := g.insertAndReturnOutports(nodeCtx, result)
 
-	runtimeFuncRef, err := getRuntimeFuncRef(component, nodeCtx.node.TypeArgs)
+	runtimeFuncRef, err := getRuntimeFuncRef(flow, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
 			Location: &foundLocation,
-			Meta:     &component.Meta,
+			Meta:     &flow.Meta,
 		}
 	}
 
-	// if component uses #extern, then we only need ports and func call
+	// if flow uses #extern, then we only need ports and func call
 	// ports are already created, so it's time to create func call
 	if runtimeFuncRef != "" {
 		// use prev location, not the location where runtime func was found
@@ -136,7 +136,7 @@ func (g Generator) processComponentNode(
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
 	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
 	subnodesPortsUsage, err := g.processNetwork(
-		component.Net,
+		flow.Net,
 		nodeCtx,
 		result,
 	)
@@ -147,13 +147,13 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	for nodeName, node := range component.Nodes {
+	for nodeName, node := range flow.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
 				Location: &foundLocation,
-				Meta:     &component.Meta,
+				Meta:     &flow.Meta,
 			}
 		}
 
@@ -171,11 +171,11 @@ func (g Generator) processComponentNode(
 			scopeToUseThisTime = newScope
 		}
 
-		if err := g.processComponentNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
+		if err := g.processFlowNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &foundLocation,
-				Meta:     &component.Meta,
+				Meta:     &flow.Meta,
 			}
 		}
 	}

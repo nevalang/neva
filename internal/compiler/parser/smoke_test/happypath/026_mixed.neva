@@ -13,7 +13,7 @@ const magicNum int = 42
 interface IReader(path string) (i int, e err)
 interface IWriter(path string) (i int, anything any)
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes {
 		abs IReader
 		concrete  Scanner
@@ -24,6 +24,6 @@ component Main(start any) (stop any) {
 }
 
 #extern(int IntAdder, float FloatAdder, string StringAdder)
-pub component Add<
+pub flow Add<
 	T int | float | string
 >(seq stream<T>) (res T)

@@ -13,7 +13,7 @@ pub type Pixel struct {
   color RGBA
 }
 
-// Image is an RGBA represented as a string of pixels with one byte per color component.
+// Image is an RGBA represented as a string of pixels with one byte per color flow.
 //
 // Pixels are arranged in order such that (x, y) starts at pixels[y*width + x*4].
 pub type Image struct {
@@ -24,8 +24,8 @@ pub type Image struct {
 
 // New creates a new RGBA image from the given pixels.
 #extern(image_new)
-pub component New(pixels stream<Pixel>) (img Image, err error)
+pub flow New(pixels stream<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
-pub component Encode(img Image) (data string, err error)
+pub flow Encode(img Image) (data string, err error)

@@ -10,7 +10,7 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-var emitterComponentRef = core.EntityRef{
+var emitterFlowRef = core.EntityRef{
 	Pkg:  "builtin",
 	Name: "New",
 }
@@ -49,7 +49,7 @@ func (d Desugarer) handleLiteralSender(
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
 		},
-		EntityRef: emitterComponentRef,
+		EntityRef: emitterFlowRef,
 		TypeArgs: []ts.Expr{
 			conn.
 				Normal.SenderSide.
@@ -117,7 +117,7 @@ func (d Desugarer) handleConstRefSender(
 				conn.Normal.SenderSide.Const.Ref.String(), // don't forget to bind const
 			},
 		},
-		EntityRef: emitterComponentRef,
+		EntityRef: emitterFlowRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
 	emitterNodeOutportAddr := src.PortAddr{

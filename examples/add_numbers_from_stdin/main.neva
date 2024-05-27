@@ -1,12 +1,12 @@
 import { io, strconv }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { App, Println }
 	:start -> app
 	[app:res, app:err] -> println -> :stop
 }
 
-component App(sig) (res int, err error) {
+flow App(sig) (res int, err error) {
 	nodes {
 		readFirstInt ReadIntFromStdin
 		readSecondInt ReadIntFromStdin
@@ -20,7 +20,7 @@ component App(sig) (res int, err error) {
 	add -> :res
 }
 
-component ReadIntFromStdin(sig) (num int, err error) {
+flow ReadIntFromStdin(sig) (num int, err error) {
 	nodes { io.Scanln, strconv.ParseNum<int> }
 	:sig -> scanln -> parseNum
 	parseNum:res -> :num

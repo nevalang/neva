@@ -1,5 +1,5 @@
 const x float = 1000
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	:start -> :stop
 }
