@@ -1,14 +1,14 @@
 #extern(int int_add, float float_add, string string_add)
-pub component Add<T int | float | string>(seq stream<T>) (res T)
+pub flow Add<T int | float | string>(seq stream<T>) (res T)
 
 #extern(int int_sub, float float_sub)
-pub component Sub<T int | float >(seq stream<T>) (res T)
+pub flow Sub<T int | float >(seq stream<T>) (res T)
 
 #extern(int int_mul, float float_mul)
-pub component Mul<T int | float >(seq stream<T>) (res T)
+pub flow Mul<T int | float >(seq stream<T>) (res T)
 
 #extern(int int_decr, float float_decr)
-pub component Decr<T int | float>(data T) (res T)
+pub flow Decr<T int | float>(data T) (res T)
 
 #extern(int_mod)
-pub component Mod(data int, [case] int) ([case] int, else int)
+pub flow Mod(data int, [case] int) ([case] int, else int)

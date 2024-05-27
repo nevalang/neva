@@ -3,7 +3,7 @@ import {
 	strconv
 }
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes {
 		scanner1 io.Scanln
 		scanner2 io.Scanln

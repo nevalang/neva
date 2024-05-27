@@ -15,4 +15,4 @@
 //  nodes { sync.Wg }
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
-pub component Wg(count int, sig any) (sig any)
+pub flow Wg(count int, sig any) (sig any)

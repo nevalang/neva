@@ -1,6 +1,6 @@
 import { regexp }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes { Println, regexp.Submatch }
     :start -> [
         ('a(x*)b(y|z)c' -> submatch:regexp),

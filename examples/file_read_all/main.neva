@@ -1,6 +1,6 @@
 import { io }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
   nodes { io.ReadAll, Println }
   :start -> ('file_read_all/main.neva' -> readAll:filename)
   [readAll:data, readAll:err] -> println -> :stop

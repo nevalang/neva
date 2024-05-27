@@ -1,7 +1,7 @@
 const l list<int> = [320, 420, 100, -100, 0, 5]
 const f int = 69
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { Push, Println }
 	:start -> [
 		($l -> push:lst),

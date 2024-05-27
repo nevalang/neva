@@ -10,4 +10,4 @@ pub const hour        Duration = 3600000000000
 
 // Sleep delays transmission of the given data for the specified duration.
 #extern(time_sleep)
-pub component Sleep<T>(dur Duration, data T) (data T)
+pub flow Sleep<T>(dur Duration, data T) (data T)

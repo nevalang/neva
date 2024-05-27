@@ -1,4 +1,4 @@
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes { Println, Eq<int>,If}
     :start -> [
         (2 -> eq:expected),

@@ -1,4 +1,4 @@
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
     nodes { DayPrinter }
     :start -> (Day::Friday -> dayPrinter -> :stop)
 }
@@ -13,7 +13,7 @@ type Day enum {
     Sunday
 }
 
-component DayPrinter(day Day) (sig) {
+flow DayPrinter(day Day) (sig) {
     nodes { Println }
     :day -> println -> :sig
 }

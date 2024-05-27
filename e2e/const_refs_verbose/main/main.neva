@@ -13,7 +13,7 @@ const numsStruct NumsStruct = {
     m: numsMap
 }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes { Println }
     :start -> ($numsStruct -> println:data)
     println:sig -> :stop

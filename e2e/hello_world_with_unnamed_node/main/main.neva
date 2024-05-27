@@ -1,4 +1,4 @@
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes { Println<string> }
 	:start -> ('Hello, World!' -> println:data)
 	println:sig -> :stop

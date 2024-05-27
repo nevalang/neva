@@ -3,7 +3,7 @@ import {
  	strconv
 }
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes { Aux, Println<any> }
 
 	:start -> aux:sig
@@ -12,7 +12,7 @@ component Main(start any) (stop any) {
 	println:sig -> :stop
 }
 
-component Aux(sig any) (res int, err error) {
+flow Aux(sig any) (res int, err error) {
 	nodes {
 		reader1 IntReader
 		reader2 IntReader
@@ -27,7 +27,7 @@ component Aux(sig any) (res int, err error) {
 	adder:res -> :res
 }
 
-component IntReader(sig any) (num int, err error) {
+flow IntReader(sig any) (num int, err error) {
 	nodes { io.Scanln, strconv.ParseNum<int> }
 
 	:sig -> scanln:sig
