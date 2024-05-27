@@ -20,11 +20,10 @@ func (g Generator) processNetwork(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		// here's how we handle array-bypass connections
+		// here's how we handle array-bypass connections:
 		// sender is always component's inport
-		// based on that, we can to set receiver's inport slots
-		// to the value equal of the used slots of our inport
-		// that is known thanks to nodeCtx (metadata from parent node)
+		// based on that, we can set receiver's inport slots
+		// equal to slots of our inport
 		if conn.ArrayBypass != nil {
 			senderPortAddr := conn.ArrayBypass.SenderOutport
 			receiverPortAddr := conn.ArrayBypass.ReceiverInport
