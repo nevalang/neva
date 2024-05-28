@@ -1,4 +1,4 @@
-pub component For<T>(data list<T>) (sig any) {
+pub flow For<T>(data list<T>) (sig any) {
     nodes {
         Iter<T>
         Lock<bool>
@@ -23,7 +23,7 @@ pub component For<T>(data list<T>) (sig any) {
     true -> match:case[0] -> :sig
 }
 
-pub component Map<T, Y>(data list<T>) (res list<Y>) {
+pub flow Map<T, Y>(data list<T>) (res list<Y>) {
     nodes {
         Iter<T>, List<Y>
         wrap Struct<stream<Y>>

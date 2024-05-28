@@ -1,2 +1,2 @@
 #extern(args)
-pub component Args() (data list<string>)
+pub flow Args() (data list<string>)

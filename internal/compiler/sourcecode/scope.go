@@ -3,7 +3,7 @@ package sourcecode
 import (
 	"errors"
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
@@ -41,10 +41,10 @@ func (l Location) String() string {
 	if l.ModRef.Path == "@" {
 		s = l.PkgName
 	} else {
-		s = path.Join(l.ModRef.String(), l.PkgName)
+		s = filepath.Join(l.ModRef.String(), l.PkgName)
 	}
 	if l.FileName != "" {
-		s = path.Join(s, l.FileName+".neva")
+		s = filepath.Join(s, l.FileName+".neva")
 	}
 	return s
 }

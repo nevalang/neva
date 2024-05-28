@@ -1,28 +1,28 @@
 #autoports
-pub component C1() ()
+pub flow C1() ()
 
 #extern(read)
-pub component C1(sig any) (v string)
-
-#extern(read)
-#autoports
-pub component C1_5(sig any) (v string)
-
-#autoports
-pub component C1() ()
-
-#extern(read)
-pub component C1(sig any) (v string)
+pub flow C1(sig any) (v string)
 
 #extern(read)
 #autoports
-pub component C1_5(sig any) (v string)
+pub flow C1_5(sig any) (v string)
+
+#autoports
+pub flow C1() ()
+
+#extern(read)
+pub flow C1(sig any) (v string)
+
+#extern(read)
+#autoports
+pub flow C1_5(sig any) (v string)
 
 #extern(int DoInt, float DoFloat)
-pub component C2(sig any) (v string)
+pub flow C2(sig any) (v string)
 
 #extern(read, write)
-pub component C3<T>(v T) (v T) {
+pub flow C3<T>(v T) (v T) {
 	nodes {
 		#bind(msg)
 		msg Const<string>

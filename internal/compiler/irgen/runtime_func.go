@@ -31,8 +31,8 @@ func getFuncCall(
 	}, nil
 }
 
-func getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
-	args, ok := component.Directives[compiler.ExternDirective]
+func getFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
+	args, ok := flow.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
 	}
@@ -42,6 +42,8 @@ func getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error)
 	}
 
 	if len(nodeTypeArgs) == 0 || nodeTypeArgs[0].Inst == nil {
+		// FIXME sometimes we have union here
+		// we must use node argument instead of flow type param
 		return "", nil
 	}
 

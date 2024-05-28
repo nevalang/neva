@@ -1,6 +1,6 @@
 // https://www.99-bottles-of-beer.net
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes { Match<int>, next PrintNext2Lines }
 
     :start -> (99 -> next:n)
@@ -12,7 +12,7 @@ component Main(start) (stop) {
     match:else -> next:n
 }
 
-component PrintNext2Lines(n int) (n int) {
+flow PrintNext2Lines(n int) (n int) {
     nodes {
         decr   Decr<int>
         first  PrintFirstLine
@@ -31,7 +31,7 @@ const firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n
 const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
-component PrintFirstLine(n int) (n int) {
+flow PrintFirstLine(n int) (n int) {
     nodes { Match<int>, Println, Printf, Lock<int> }
 
     :n -> [match:data, lock:data]
@@ -55,7 +55,7 @@ const secondLine2 string = 'Take one down and pass it around, 1 bottle of beer o
 const secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
-component PrintSecondLine(n int) (n int) {
+flow PrintSecondLine(n int) (n int) {
     nodes { Match<int>, Lock<int>, Printf, Println }
 
     :n -> [match:data, lock:data]

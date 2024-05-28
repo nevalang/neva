@@ -1,14 +1,14 @@
 // top-level comment 1
-component Main(start) (stop) {
-	// comment inside component 1
+flow Main(start) (stop) {
+	// comment inside flow 1
 	nodes {
 		// comment inside nodes 1
 		Println<any>
 		// comment inside nodes 2
 	}
-	// comment inside component 2
+	// comment inside flow 2
 	:start -> println:data
 	println:sig -> :stop
-	// comment inside component 3
+	// comment inside flow 3
 }
 // top-level comment 2

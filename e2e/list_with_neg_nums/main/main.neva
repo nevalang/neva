@@ -1,6 +1,6 @@
 const l list<int> = [-215]
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { Println<any> }
 	:start -> ($l -> println:data)
 	println:sig -> :stop

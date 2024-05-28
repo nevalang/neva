@@ -5,7 +5,7 @@ type User struct {
 
 // FIXME - cannot use 'struct' as a node name
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
     nodes { Println, builder Struct<User> }
 
     :start -> [

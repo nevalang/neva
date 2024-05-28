@@ -1,51 +1,51 @@
-component Doer() () {}
+flow Doer() () {}
 
-pub component Doer() () {}
+pub flow Doer() () {}
 
-component Doer() () {}
+flow Doer() () {}
 
-component Doer<T>(x int) (y T) {}
+flow Doer<T>(x int) (y T) {}
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
 
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {}
 }
 
-component     Doer<T>(x int) (y T) {
+flow     Doer<T>(x int) (y T) {
     nodes {
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes { absNode INode }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         absNode INode }
 }
 
-component     Doer<T>(x int) (y T) {
+flow     Doer<T>(x int) (y T) {
     nodes { absNode INode
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         absNode INode
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         simpleAbsNode INode
         absNodeWithTypeArgs INode<
@@ -57,33 +57,33 @@ component Doer<T>(x int) (y T) {
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes { concreteNode  Node }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNode  Node }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes { concreteNode  Node
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNode  Node
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNodeWithTypeArgs  Node<int, vec<string>>
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNodeWithDI1  Node1{foo Node2}
         concreteNodeWithDI2  Node1{
@@ -93,7 +93,7 @@ component Doer<T>(x int) (y T) {
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNodeWithDI1  Node1{
             foo Node2
@@ -105,7 +105,7 @@ component Doer<T>(x int) (y T) {
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         concreteNodeWithDIAndTypeArgs  Node1<
             int,
@@ -120,7 +120,7 @@ component Doer<T>(x int) (y T) {
     }
 }
 
-component Doer<T>(x int) (y T) {
+flow Doer<T>(x int) (y T) {
     nodes {
         simpleAbsNode INode
 
@@ -146,7 +146,7 @@ component Doer<T>(x int) (y T) {
     }
 }
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
     nodes {
         abs IReader
         concrete  Scanner
@@ -156,7 +156,7 @@ component Main(start any) (stop any) {
     concrete:v -> :code
 }
 
-component Main() () {
+flow Main() () {
     $foo.bar -> foo:bar
     $foo.bar.baz -> foo:bar
     foo:bar.baz -> foo:bar
@@ -168,7 +168,7 @@ component Main() () {
     ]
 }
 
-component Main() () {
+flow Main() () {
     $foo -> (foo:bar -> bar:baz)
 
     $foo -> [(foo:bar -> bar:baz),
@@ -189,7 +189,7 @@ component Main() () {
     ]
 }
 
-component Main() () {
+flow Main() () {
     $a -> ($b -> ($c -> d:e))
 
     $a -> (
@@ -203,19 +203,19 @@ component Main() () {
     )
 }
 
-component Main(start) (stop) { :start -> :stop }
+flow Main(start) (stop) { :start -> :stop }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     :start -> :stop }
 
-component Main(start) (stop) { :start -> :stop
+flow Main(start) (stop) { :start -> :stop
 }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     :start -> :stop
 }
 
-component Main() () {
+flow Main() () {
     :foo -> :bar
     :baz -> :bax
 }

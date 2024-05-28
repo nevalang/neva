@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Check that Len component works with the list of integers.
+// Check that Len flow works with the list of integers.
 func Test(t *testing.T) {
 	err := os.Chdir("..")
 	require.NoError(t, err)

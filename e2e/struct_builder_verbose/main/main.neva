@@ -1,5 +1,5 @@
 // Here we learn how to build structures
-// by creating custom component with compiler directives.
+// by creating custom flow with compiler directives.
 
 type User struct {
     age int
@@ -7,9 +7,9 @@ type User struct {
 }
 
 #extern(struct_builder)
-component MyStructBuilder(age int, name string) (msg User)
+flow MyStructBuilder(age int, name string) (msg User)
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
     nodes { Println, builder MyStructBuilder }
 
     :start -> [

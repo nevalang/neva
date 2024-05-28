@@ -1,4 +1,4 @@
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { Println, And }
 		:start -> [
 		    (true -> and:A),

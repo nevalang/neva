@@ -1,5 +1,5 @@
 #extern(println)
-pub component Println<T>(data T) (sig T)
+pub flow Println<T>(data T) (sig T)
 
 #extern(printf)
-pub component Printf(tpl string, [args] any) ([args] any, err error)
+pub flow Printf(tpl string, [args] any) ([args] any, err error)

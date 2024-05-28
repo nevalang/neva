@@ -1,6 +1,6 @@
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { Index<list<int>>, Println }
 	:start -> [
 		($lst -> index:data),

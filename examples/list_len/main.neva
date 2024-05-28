@@ -1,6 +1,6 @@
 const lst list<int> = [4, 123, 22, 1121, 215]
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
 	nodes { Println, Len<list<int>> }
 	:start -> ($lst -> len -> println -> :stop)
 }

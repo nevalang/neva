@@ -106,8 +106,8 @@ structValueFields:
 	structValueField (',' NEWLINE* structValueField)*;
 structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
 
-// components
-compStmt: compilerDirectives? PUB_KW? 'component' compDef;
+// flow
+compStmt: compilerDirectives? PUB_KW? 'flow' compDef;
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
 	'{'

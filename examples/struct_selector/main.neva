@@ -5,7 +5,7 @@ type User struct {
 
 type Pet struct { name string }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
     nodes { GetUser, Println }
     :start -> getUser.pet.name -> println -> :stop
 }
@@ -15,6 +15,6 @@ const user User = {
     pet: { name: 'Charley' }
 }
 
-component GetUser(sig) (u User) {
+flow GetUser(sig) (u User) {
     :sig -> ($user -> :u)
 }

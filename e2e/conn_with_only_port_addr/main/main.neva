@@ -2,7 +2,7 @@
 
 const l list<int> = [1,2,3]
 
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes { println Println<any>}
 	:start -> ($l -> println:data) 
 	println:sig 

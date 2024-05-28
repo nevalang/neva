@@ -1,6 +1,6 @@
 import { io, image }
 
-component NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
+flow NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
   nodes { pb Struct<image.Pixel> }
   :x -> pb:x
   :y -> pb:y
@@ -8,7 +8,7 @@ component NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
   pb -> :pixel
 }
 
-component NewColor(r int, g int, b int, a int) (color image.RGBA) {
+flow NewColor(r int, g int, b int, a int) (color image.RGBA) {
   nodes { cb Struct<image.RGBA> }
   :r -> cb:r
   :g -> cb:g
@@ -17,7 +17,7 @@ component NewColor(r int, g int, b int, a int) (color image.RGBA) {
   cb -> :color
 }
 
-component NewStream(p image.Pixel) (s stream<image.Pixel>) {
+flow NewStream(p image.Pixel) (s stream<image.Pixel>) {
   nodes { sb Struct<stream<image.Pixel>> }
   0 -> sb:idx
   :p -> sb:data
@@ -25,7 +25,7 @@ component NewStream(p image.Pixel) (s stream<image.Pixel>) {
   sb -> :s
 }
 
-component Main(start) (stop) {
+flow Main(start) (stop) {
   nodes {
     image.New, image.Encode
     NewPixel, NewColor, NewStream,

@@ -1,4 +1,4 @@
-component Main(start any) (stop any) {
+flow Main(start any) (stop any) {
 	nodes {
 		adder ReducePort<int> { Add<int> }
 		println Println<int> 

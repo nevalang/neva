@@ -65,7 +65,7 @@ func (i imageMsg) createImage() image.Image {
 	if len(pix) == 0 {
 		if size := i.width * i.height; size > 0 {
 			// Allocate new pixels.
-			// One byte for each color component.
+			// One byte for each color flow.
 			pix = make([]uint8, 4*size)
 		}
 	}

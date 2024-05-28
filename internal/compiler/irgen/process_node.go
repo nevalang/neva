@@ -23,19 +23,19 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	comp := entity.Component
+	flow := entity.Flow
 	in := g.insertAndReturnInports(nodeCtx, result)   // for inports we only use parent context because all inports are used
 	out := g.insertAndReturnOutports(nodeCtx, result) //  for outports we use both parent context and component's interface
 
 	funcRef, err := getFuncRef(
-		comp,
+		flow,
 		nodeCtx.node.TypeArgs,
 	)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
 			Location: &found,
-			Meta:     &comp.Meta,
+			Meta:     &flow.Meta,
 		}
 	}
 
@@ -50,7 +50,7 @@ func (g Generator) processComponentNode(
 
 	newScope := scope.WithLocation(found)
 
-	subnodesPortsUsage, err := g.processNetwork(comp.Net, nodeCtx, result)
+	subnodesPortsUsage, err := g.processNetwork(flow.Net, nodeCtx, result)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -58,7 +58,7 @@ func (g Generator) processComponentNode(
 		}
 	}
 
-	for nodeName, node := range comp.Nodes {
+	for nodeName, node := range flow.Nodes {
 		nodePortsUsage := subnodesPortsUsage[nodeName]
 
 		subNodeCtx := nodeContext{
@@ -83,7 +83,7 @@ func (g Generator) processComponentNode(
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &found,
-				Meta:     &comp.Meta,
+				Meta:     &flow.Meta,
 			}
 		}
 	}
