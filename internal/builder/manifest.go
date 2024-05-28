@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 
 	yaml "gopkg.in/yaml.v3"
 
@@ -27,7 +28,6 @@ func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, erro
 	return parsedNearest, path, nil
 }
 
-
 func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 	if iteration > 10 {
 		return nil, "", errors.New("manifest file not found in 10 nearest levels up to where cli executed")
@@ -35,7 +35,7 @@ func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 
 	found, err := readManifestFromDir(wd)
 	if err == nil {
-		return found,  wd, nil
+		return found, wd, nil
 	}
 
 	if !errors.Is(err, fs.ErrInvalid) &&
@@ -44,18 +44,17 @@ func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 	}
 
 	return lookupManifestFile(
-		path.Dir(wd),
+		filepath.Dir(wd),
 		iteration+1,
 	)
 }
 
 func readManifestFromDir(wd string) ([]byte, error) {
-	raw, err := os.ReadFile(path.Join(wd, "neva.yaml"))
+	raw, err := os.ReadFile(filepath.Join(wd, "neva.yaml"))
 	if err == nil {
 		return raw, nil
 	}
-
-	return os.ReadFile(path.Join(wd, "neva.yml"))
+	return os.ReadFile(filepath.Join(wd, "neva.yml"))
 }
 
 func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) error {
@@ -65,7 +64,7 @@ func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) erro
 	}
 
 	manifestFileName := "neva.yaml"
-	if _, err := os.Stat(workdir + "/neva.yml"); err == nil {
+	if _, err := os.Stat(filepath.Join(workdir, "neva.yml")); err == nil {
 		manifestFileName = "neva.yml"
 	}
 
