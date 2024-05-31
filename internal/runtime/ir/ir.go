@@ -4,7 +4,7 @@ package ir
 type Program struct {
 	Ports       map[PortAddr]struct{}              `json:"ports,omitempty"`
 	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"`
-	Funcs       []FuncCall                         `json:"funcs,omitempty"`
+	Funcs       []FuncCall                         `json:"funcs,omitempty"` // can't be map cuz multuple calls can have same ref
 }
 
 // PortAddr represents the address of a port.
@@ -15,7 +15,7 @@ type PortAddr struct {
 }
 
 // Connection represents connections between ports.
-type Connection struct {
+type Connection struct { // TODO remove?
 	SenderSide    PortAddr   `json:"sender_side,omitempty"`
 	ReceiverSides []PortAddr `json:"receiver_sides,omitempty"`
 }

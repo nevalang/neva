@@ -13,20 +13,21 @@ type Adapter struct{}
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	runtimePorts := make(runtime.Ports, len(irProg.Ports))
 
-	for _, portInfo := range irProg.Ports {
-		runtimePorts[runtime.PortAddr{
-			Path: portInfo.PortAddr.Path,
-			Port: portInfo.PortAddr.Port,
-			Idx:  uint8(portInfo.PortAddr.Idx),
-		}] = make(chan runtime.Msg, portInfo.BufSize)
+	for portInfo := range irProg.Ports {
+		addr := runtime.PortAddr{
+			Path: portInfo.Path,
+			Port: portInfo.Port,
+			Idx:  uint8(portInfo.Idx),
+		}
+		runtimePorts[addr] = make(chan runtime.Msg)
 	}
 
 	runtimeConnections := make([]runtime.Connection, 0, len(irProg.Connections))
-	for _, conn := range irProg.Connections {
+	for sender, receivers := range irProg.Connections {
 		senderPortAddr := runtime.PortAddr{
-			Path: conn.SenderSide.Path,
-			Port: conn.SenderSide.Port,
-			Idx:  uint8(conn.SenderSide.Idx),
+			Path: sender.Path,
+			Port: sender.Port,
+			Idx:  uint8(sender.Idx),
 		}
 
 		senderPortChan, ok := runtimePorts[senderPortAddr]
@@ -36,15 +37,15 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 
 		meta := runtime.ConnectionMeta{
 			SenderPortAddr:    senderPortAddr,
-			ReceiverPortAddrs: make([]runtime.PortAddr, 0, len(conn.ReceiverSides)),
+			ReceiverPortAddrs: make([]runtime.PortAddr, 0, len(receivers)),
 		}
-		receiverChans := make([]chan runtime.Msg, 0, len(conn.ReceiverSides))
+		receiverChans := make([]chan runtime.Msg, 0, len(receivers))
 
-		for _, rcvr := range conn.ReceiverSides {
+		for rcvr := range receivers {
 			receiverPortAddr := runtime.PortAddr{
-				Path: rcvr.PortAddr.Path,
-				Port: rcvr.PortAddr.Port,
-				Idx:  uint8(rcvr.PortAddr.Idx),
+				Path: rcvr.Path,
+				Port: rcvr.Port,
+				Idx:  uint8(rcvr.Idx),
 			}
 
 			receiverPortChan, ok := runtimePorts[receiverPortAddr]

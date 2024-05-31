@@ -4,9 +4,12 @@ import "github.com/nevalang/neva/internal/runtime/ir"
 
 // reduceGraph transforms program to a state where it doesn't have intermediate connections.
 // It's not optimization, it's a functional requirement of runtime.
-func reduceGraph(prog *ir.Program) ([]ir.PortAddr, []ir.Connection) {
+func reduceGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]map[ir.PortAddr]struct{}) {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
-	netWithoutIntermediateReceivers := make([]ir.Connection, 0, len(prog.Connections))
+	netWithoutIntermediateReceivers := make(
+		map[ir.PortAddr]map[ir.PortAddr]struct{},
+		len(prog.Connections),
+	)
 
 	for sender, receivers := range prog.Connections {
 		// it's possible that we already saw this sender as a receiver in previous iterations
@@ -15,10 +18,12 @@ func reduceGraph(prog *ir.Program) ([]ir.PortAddr, []ir.Connection) {
 		}
 
 		// find final receivers for every intermediate one, also remember all intermediates
-		finalReceivers := make([]ir.PortAddr, 0, len(receivers))
+		finalReceivers := make(map[ir.PortAddr]struct{}, len(receivers))
 		for receiver := range receivers {
 			curFinalReceivers, wasIntermediate := getFinalReceivers(receiver, prog.Connections)
-			finalReceivers = append(finalReceivers, curFinalReceivers...)
+			for _, curFinalReceiver := range curFinalReceivers {
+				finalReceivers[curFinalReceiver] = struct{}{}
+			}
 			if wasIntermediate {
 				intermediatePorts[receiver] = struct{}{}
 			}
@@ -26,31 +31,31 @@ func reduceGraph(prog *ir.Program) ([]ir.PortAddr, []ir.Connection) {
 
 		// every connection in resultNet has only final receivers
 		// (it still might have intermediate ports as senders though)
-		netWithoutIntermediateReceivers = append(netWithoutIntermediateReceivers, ir.Connection{
-			SenderSide:    sender,
-			ReceiverSides: finalReceivers,
-		})
+		netWithoutIntermediateReceivers[sender] = finalReceivers
 	}
 
 	// resultNet only contains connections with final receivers
 	// but some of them has senders that are intermediate resultPorts
 	// we need to remove these connections and ports for those nodes
-	netWithoutIntermediatePorts := make([]ir.Connection, 0, len(netWithoutIntermediateReceivers))
-	finalPorts := make([]ir.PortAddr, 0, len(prog.Ports))
+	finalPorts := make(map[ir.PortAddr]struct{}, len(prog.Ports))
+	netWithoutIntermediatePorts := make(
+		map[ir.PortAddr]map[ir.PortAddr]struct{},
+		len(netWithoutIntermediateReceivers),
+	)
 
-	for _, conn := range netWithoutIntermediateReceivers {
+	for sender, receivers := range netWithoutIntermediateReceivers {
 		// intermediate receiver is always also a sender in some other connection
-		if _, ok := intermediatePorts[conn.SenderSide]; ok {
+		if _, ok := intermediatePorts[sender]; ok {
 			continue // skip this connection and don't add its ports
 		}
 
-		// basically just add ports for this connection
-		finalPorts = append(finalPorts, conn.SenderSide)
-		for _, receiver := range conn.ReceiverSides {
-			finalPorts = append(finalPorts, receiver)
-		}
+		netWithoutIntermediatePorts[sender] = receivers
 
-		netWithoutIntermediatePorts = append(netWithoutIntermediatePorts, conn)
+		// basically just add ports for every nonskipped connection
+		finalPorts[sender] = struct{}{}
+		for receiver := range receivers {
+			finalPorts[receiver] = struct{}{}
+		}
 	}
 
 	return finalPorts, netWithoutIntermediatePorts

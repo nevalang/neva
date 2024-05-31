@@ -46,8 +46,8 @@ func (g Generator) Generate(
 	}
 
 	result := &ir.Program{
-		Ports:       []ir.PortInfo{},
-		Connections: []ir.Connection{},
+		Ports:       map[ir.PortAddr]struct{}{},
+		Connections: map[ir.PortAddr]map[ir.PortAddr]struct{}{},
 		Funcs:       []ir.FuncCall{},
 	}
 
@@ -99,11 +99,6 @@ func (g Generator) processNode(
 
 	flow := flowEntity.Flow
 
-	// for inports we only use parent context because all inports are used
-	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
-	//  for outports we use both parent context and flow's interface
-	outportAddrs := g.insertAndReturnOutports(nodeCtx, result)
-
 	runtimeFuncRef, err := getFuncRef(flow, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
@@ -124,6 +119,11 @@ func (g Generator) processNode(
 				Location: &scope.Location,
 			}
 		}
+
+		// for in we only use parent ctx cuz all inports are used
+		inportAddrs := g.getFuncInports(nodeCtx)
+		//  for out we use both parent ctx and interface
+		outportAddrs := g.getFuncOutports(nodeCtx)
 
 		result.Funcs = append(result.Funcs, ir.FuncCall{
 			Ref: runtimeFuncRef,
@@ -170,15 +170,15 @@ func (g Generator) processNode(
 			node:       node,
 		}
 
-		var scopeToUseThisTime src.Scope
-		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
-			subNodeCtx.node = injectedNode
-			scopeToUseThisTime = scope
-		} else {
-			scopeToUseThisTime = newScope
-		}
+		scopeToUse := getSubnodeScope(
+			nodeCtx.node.Deps,
+			nodeName,
+			subNodeCtx,
+			scope,
+			newScope,
+		)
 
-		if err := g.processNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
+		if err := g.processNode(subNodeCtx, scopeToUse, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &foundLocation,
@@ -188,6 +188,23 @@ func (g Generator) processNode(
 	}
 
 	return nil
+}
+
+func getSubnodeScope(
+	deps map[string]src.Node,
+	nodeName string,
+	subNodeCtx nodeContext,
+	scope src.Scope,
+	newScope src.Scope,
+) src.Scope {
+	var scopeToUseThisTime src.Scope
+	if dep, ok := deps[nodeName]; ok { // is interface node
+		subNodeCtx.node = dep
+		scopeToUseThisTime = scope
+	} else {
+		scopeToUseThisTime = newScope
+	}
+	return scopeToUseThisTime
 }
 
 func New() Generator {
