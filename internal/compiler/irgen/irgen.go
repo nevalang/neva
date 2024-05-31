@@ -69,16 +69,22 @@ func (g Generator) Generate(
 		},
 	}
 
-	if err := g.processFlowNode(rootNodeCtx, scope, result); err != nil {
+	if err := g.processNode(rootNodeCtx, scope, result); err != nil {
 		return nil, compiler.Error{
 			Location: &scope.Location,
 		}.Wrap(err)
 	}
 
-	return result, nil
+	reducedPorts, reducerNet := reduceGraph(result)
+
+	return &ir.Program{
+		Ports:       reducedPorts,
+		Connections: reducerNet,
+		Funcs:       result.Funcs,
+	}, nil
 }
 
-func (g Generator) processFlowNode(
+func (g Generator) processNode(
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
@@ -172,7 +178,7 @@ func (g Generator) processFlowNode(
 			scopeToUseThisTime = newScope
 		}
 
-		if err := g.processFlowNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
+		if err := g.processNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &foundLocation,
