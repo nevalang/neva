@@ -14,16 +14,14 @@ func reduceGraph(prog *ir.Program) ([]ir.PortInfo, []ir.Connection) {
 			continue
 		}
 
-		// find final receivers for every intermediate one
+		// find final receivers for every intermediate one, also remember all intermediates
 		receivers := make([]ir.ReceiverConnectionSide, 0, len(conn.ReceiverSides))
 		for _, receiver := range conn.ReceiverSides {
-			if isFinal(receiver) {
-				receivers = append(receivers, receiver)
-				continue
-			}
-			intermediatePorts[receiver.PortAddr] = struct{}{}
-			finalReceivers := getFinalReceivers(receiver)
+			finalReceivers, wasIntermediate := getFinalReceivers(receiver)
 			receivers = append(receivers, finalReceivers...)
+			if wasIntermediate {
+				intermediatePorts[receiver.PortAddr] = struct{}{}
+			}
 		}
 
 		// every connection in resultNet has only final receivers
@@ -65,12 +63,7 @@ func reduceGraph(prog *ir.Program) ([]ir.PortInfo, []ir.Connection) {
 	return finalPorts, netWithoutIntermediatePorts
 }
 
-// isFinal returns true if given receiver is a runtime function.
-func isFinal(ir.ReceiverConnectionSide) bool {
-	return false
-}
-
 // getFinalReceivers returns all final receivers that are behind the given one.
-func getFinalReceivers(ir.ReceiverConnectionSide) []ir.ReceiverConnectionSide {
-	return nil
+func getFinalReceivers(ir.ReceiverConnectionSide) ([]ir.ReceiverConnectionSide, bool) {
+	return nil, false
 }
