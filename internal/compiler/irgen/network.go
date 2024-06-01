@@ -148,6 +148,7 @@ func (g Generator) processSenderSide(
 	return irSenderSide, nil
 }
 
+// for in we only use parent ctx cuz all inports are used
 func (Generator) getFuncInports(nodeCtx nodeContext) []ir.PortAddr {
 	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
@@ -181,6 +182,7 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 	})
 }
 
+// for out we use both parent ctx and interface
 func (Generator) getFuncOutports(nodeCtx nodeContext) []ir.PortAddr {
 	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 

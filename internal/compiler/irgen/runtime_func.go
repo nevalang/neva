@@ -10,12 +10,11 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getFuncCall(
+// scope must contain location where node found, not function
+func (g Generator) getFuncCall(
 	nodeCtx nodeContext,
 	scope src.Scope,
 	funcRef string,
-	in []ir.PortAddr,
-	out []ir.PortAddr,
 ) (ir.FuncCall, *compiler.Error) {
 	cfgMsg, err := getCfgMsg(nodeCtx.node, scope)
 	if err != nil {
@@ -26,7 +25,10 @@ func getFuncCall(
 	}
 	return ir.FuncCall{
 		Ref: funcRef,
-		IO:  ir.FuncIO{In: in, Out: out},
+		IO: ir.FuncIO{
+			In:  g.getFuncInports(nodeCtx),
+			Out: g.getFuncOutports(nodeCtx),
+		},
 		Msg: cfgMsg,
 	}, nil
 }

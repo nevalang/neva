@@ -108,32 +108,12 @@ func (g Generator) processNode(
 		}
 	}
 
-	// if flow uses #extern, then we only need ports and func call
-	// ports are already created, so it's time to create func call
 	if runtimeFuncRef != "" {
-		// use prev location, not the location where runtime func was found
-		runtimeFuncMsg, err := getCfgMsg(nodeCtx.node, scope)
+		call, err := g.getFuncCall(nodeCtx, scope, runtimeFuncRef)
 		if err != nil {
-			return &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-			}
+			return err
 		}
-
-		// for in we only use parent ctx cuz all inports are used
-		inportAddrs := g.getFuncInports(nodeCtx)
-		//  for out we use both parent ctx and interface
-		outportAddrs := g.getFuncOutports(nodeCtx)
-
-		result.Funcs = append(result.Funcs, ir.FuncCall{
-			Ref: runtimeFuncRef,
-			IO: ir.FuncIO{
-				In:  inportAddrs,
-				Out: outportAddrs,
-			},
-			Msg: runtimeFuncMsg,
-		})
-
+		result.Funcs = append(result.Funcs, call)
 		return nil
 	}
 
