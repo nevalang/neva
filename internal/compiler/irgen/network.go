@@ -47,13 +47,13 @@ func (g Generator) processNetwork(
 				irSenderSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassSender.Node),
 					Port: arrBypassSender.Port,
-					Idx:  uint32(slotIdx),
+					Idx:  slotIdx,
 				}
 
 				irReceiverSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
 					Port: arrBypassReceiver.Port,
-					Idx:  uint32(slotIdx),
+					Idx:  slotIdx,
 				}
 
 				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
@@ -137,7 +137,7 @@ func (g Generator) processSenderSide(
 	irSenderSide := &ir.PortAddr{
 		Path: joinNodePath(nodeCtx.path, senderSide.PortAddr.Node),
 		Port: senderSide.PortAddr.Port,
-		Idx:  uint32(idx),
+		Idx:  idx,
 	}
 
 	if senderSide.PortAddr.Node == "in" {
@@ -158,7 +158,7 @@ func (Generator) getFuncInports(nodeCtx nodeContext) []ir.PortAddr {
 		addr := &ir.PortAddr{
 			Path: joinNodePath(nodeCtx.path, "in"),
 			Port: addr.Port,
-			Idx:  uint32(addr.Idx),
+			Idx:  addr.Idx,
 		}
 		inports = append(inports, *addr)
 	}
@@ -192,7 +192,7 @@ func (Generator) getFuncOutports(nodeCtx nodeContext) []ir.PortAddr {
 		irAddr := &ir.PortAddr{
 			Path: joinNodePath(nodeCtx.path, "out"),
 			Port: addr.Port,
-			Idx:  uint32(addr.Idx),
+			Idx:  addr.Idx,
 		}
 
 		outports = append(outports, *irAddr)
@@ -213,7 +213,7 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionRece
 	result := &ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,
-		Idx:  uint32(idx),
+		Idx:  idx,
 	}
 	if side.PortAddr.Node == "out" { // 'out' node is actually receiver but we don't want to have 'out.in' addresses
 		return result
