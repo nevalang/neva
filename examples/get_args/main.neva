@@ -1,4 +1,4 @@
-import {os,lists }
+import { os, lists }
 
 flow Main(start) (stop) {
 	nodes { os.Args, lists.For{Println}}

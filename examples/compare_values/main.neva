@@ -1,11 +1,14 @@
 flow Main(start) (stop) {
-    nodes { Println, Eq<int>,If}
-    :start -> [
-        (2 -> eq:expected),
-        (2 -> eq:actual)
-       ]
-       eq:res  -> if
+    nodes { Println, Eq, If }
 
-       if:then -> ('They match' -> println -> :stop)
-       if:else -> ('They do not match' -> println -> :stop)
+    :start -> [
+        (2 -> eq:actual),
+        (2 -> eq:expected)
+    ]
+
+    eq -> if
+    if:then -> ('They match' -> println)
+    if:else -> ('They do not match' -> println)
+
+    println -> :stop
 }
