@@ -1,5 +1,3 @@
-// Package irgen implements IR generation from source code.
-// It assumes that program passed analysis stage and does not enforce any validations.
 package irgen
 
 import (
@@ -18,9 +16,9 @@ type Generator struct{}
 
 type (
 	nodeContext struct {
-		path       []string   // Path to current node including current node
-		node       src.Node   // Node definition
-		portsUsage portsUsage // How parent network uses this node's ports
+		path       []string
+		node       src.Node
+		portsUsage portsUsage
 	}
 
 	portsUsage struct {
@@ -34,19 +32,22 @@ type (
 	}
 )
 
-func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *compiler.Error) {
-	initialScope := src.Scope{
+func (g Generator) Generate(
+	build src.Build,
+	mainPkgName string,
+) (*ir.Program, *compiler.Error) {
+	scope := src.Scope{
 		Build: build,
 		Location: src.Location{
 			ModRef:   build.EntryModRef,
 			PkgName:  mainPkgName,
-			FileName: "", // we don't know at this point and we don't need to
+			FileName: "",
 		},
 	}
 
 	result := &ir.Program{
-		Ports:       []ir.PortInfo{},
-		Connections: []ir.Connection{},
+		Ports:       map[ir.PortAddr]struct{}{},
+		Connections: map[ir.PortAddr]map[ir.PortAddr]struct{}{},
 		Funcs:       []ir.FuncCall{},
 	}
 
@@ -54,7 +55,7 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 		path: []string{},
 		node: src.Node{
 			EntityRef: core.EntityRef{
-				Pkg:  "", // ref to local entity
+				Pkg:  "",
 				Name: "Main",
 			},
 		},
@@ -68,16 +69,22 @@ func (g Generator) Generate(build src.Build, mainPkgName string) (*ir.Program, *
 		},
 	}
 
-	if err := g.processFlowNode(rootNodeCtx, initialScope, result); err != nil {
+	if err := g.processNode(rootNodeCtx, scope, result); err != nil {
 		return nil, compiler.Error{
-			Location: &initialScope.Location,
+			Location: &scope.Location,
 		}.Wrap(err)
 	}
 
-	return result, nil
+	reducedPorts, reducerNet := reduceGraph(result)
+
+	return &ir.Program{
+		Ports:       reducedPorts,
+		Connections: reducerNet,
+		Funcs:       result.Funcs,
+	}, nil
 }
 
-func (g Generator) processFlowNode(
+func (g Generator) processNode(
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
@@ -92,12 +99,7 @@ func (g Generator) processFlowNode(
 
 	flow := flowEntity.Flow
 
-	// for inports we only use parent context because all inports are used
-	inportAddrs := g.insertAndReturnInports(nodeCtx, result)
-	//  for outports we use both parent context and flow's interface
-	outportAddrs := g.insertAndReturnOutports(nodeCtx, result)
-
-	runtimeFuncRef, err := getRuntimeFuncRef(flow, nodeCtx.node.TypeArgs)
+	runtimeFuncRef, err := getFuncRef(flow, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,
@@ -106,27 +108,12 @@ func (g Generator) processFlowNode(
 		}
 	}
 
-	// if flow uses #extern, then we only need ports and func call
-	// ports are already created, so it's time to create func call
 	if runtimeFuncRef != "" {
-		// use prev location, not the location where runtime func was found
-		runtimeFuncMsg, err := getRuntimeFuncMsg(nodeCtx.node, scope)
+		call, err := g.getFuncCall(nodeCtx, scope, runtimeFuncRef)
 		if err != nil {
-			return &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-			}
+			return err
 		}
-
-		result.Funcs = append(result.Funcs, ir.FuncCall{
-			Ref: runtimeFuncRef,
-			IO: ir.FuncIO{
-				In:  inportAddrs,
-				Out: outportAddrs,
-			},
-			Msg: runtimeFuncMsg,
-		})
-
+		result.Funcs = append(result.Funcs, call)
 		return nil
 	}
 
@@ -163,15 +150,15 @@ func (g Generator) processFlowNode(
 			node:       node,
 		}
 
-		var scopeToUseThisTime src.Scope
-		if injectedNode, ok := nodeCtx.node.Deps[nodeName]; ok {
+		var scopeToUse src.Scope
+		if injectedNode, isDINode := nodeCtx.node.Deps[nodeName]; isDINode {
 			subNodeCtx.node = injectedNode
-			scopeToUseThisTime = scope
+			scopeToUse = scope
 		} else {
-			scopeToUseThisTime = newScope
+			scopeToUse = newScope
 		}
 
-		if err := g.processFlowNode(subNodeCtx, scopeToUseThisTime, result); err != nil {
+		if err := g.processNode(subNodeCtx, scopeToUse, result); err != nil {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &foundLocation,

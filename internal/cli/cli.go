@@ -17,7 +17,7 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-func NewApp( //nolint:funlen
+func NewApp(
 	workdir string,
 	bldr builder.Builder,
 	goc compiler.Compiler,

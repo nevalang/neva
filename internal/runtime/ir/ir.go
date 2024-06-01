@@ -2,33 +2,22 @@ package ir
 
 // Program represents the main structure containing ports, connections, and funcs.
 type Program struct {
-	Ports       []PortInfo   `json:"ports,omitempty"`
-	Connections []Connection `json:"connections,omitempty"`
-	Funcs       []FuncCall   `json:"funcs,omitempty"`
-}
-
-// PortInfo contains information about each port.
-type PortInfo struct {
-	PortAddr PortAddr `json:"port_addr,omitempty"`
-	BufSize  uint32   `json:"buf_size,omitempty"`
+	Ports       map[PortAddr]struct{}              `json:"ports,omitempty"`
+	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"`
+	Funcs       []FuncCall                         `json:"funcs,omitempty"` // can't be map cuz multuple calls can have same ref
 }
 
 // PortAddr represents the address of a port.
 type PortAddr struct {
 	Path string `json:"path,omitempty"`
 	Port string `json:"port,omitempty"`
-	Idx  uint32 `json:"index,omitempty"`
+	Idx  uint32 `json:"idx,omitempty"`
 }
 
 // Connection represents connections between ports.
-type Connection struct {
-	SenderSide    PortAddr                 `json:"sender_side,omitempty"`
-	ReceiverSides []ReceiverConnectionSide `json:"receiver_sides,omitempty"`
-}
-
-// ReceiverConnectionSide represents the receiver side of a connection.
-type ReceiverConnectionSide struct {
-	PortAddr PortAddr `json:"port_addr,omitempty"`
+type Connection struct { // TODO remove?
+	SenderSide    PortAddr   `json:"sender_side,omitempty"`
+	ReceiverSides []PortAddr `json:"receiver_sides,omitempty"`
 }
 
 // FuncCall represents a function within the program.

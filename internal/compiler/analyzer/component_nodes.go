@@ -64,7 +64,6 @@ func (a Analyzer) analyzeFlowNodes(
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
 }
 
-//nolint:funlen
 func (a Analyzer) analyzeNode(
 	flowIface src.Interface,
 	node src.Node,

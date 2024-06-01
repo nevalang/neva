@@ -54,7 +54,7 @@ func getMsg(msg *ir.Msg) (string, error) {
 func getConnComment(conn *ir.Connection) string {
 	s := fmtPortAddr(conn.SenderSide) + " -> "
 	for _, rcvr := range conn.ReceiverSides {
-		s += fmtPortAddr(rcvr.PortAddr)
+		s += fmtPortAddr(rcvr)
 	}
 	return "// " + s
 }

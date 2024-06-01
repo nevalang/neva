@@ -5,7 +5,7 @@ flow Main(start) (stop) {
     r1 Range,
     Iter<string>
     Zip<int, string>,
-    For<ZipResult<int, string>>{Println<ZipResult<int, string>>}
+    print For{Println}
   }
   :start -> [
     (0 -> r1:from),
@@ -13,5 +13,5 @@ flow Main(start) (stop) {
   ]
   r1 -> zip:first
   $strs -> iter -> zip:second
-  zip -> for -> :stop
+  zip -> print -> :stop
 }

@@ -16,7 +16,6 @@ var (
 	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
-//nolint:funlen
 func (a Analyzer) analyzeConst(
 	constant src.Const,
 	scope src.Scope,

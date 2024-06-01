@@ -21,9 +21,9 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 	}
 	defer f.Close()
 	var cb ClusterBuilder
-	for _, e := range prog.Connections {
-		for _, r := range e.ReceiverSides {
-			cb.InsertEdge(e.SenderSide, r.PortAddr)
+	for sender, receivers := range prog.Connections {
+		for receiver := range receivers {
+			cb.InsertEdge(sender, receiver)
 		}
 	}
 	return cb.Build(f)

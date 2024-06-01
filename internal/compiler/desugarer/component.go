@@ -14,11 +14,11 @@ var ErrConstSenderEntityKind = errors.New(
 )
 
 type handleFlowResult struct {
-	desugaredFlow   src.Flow              // desugared flow to replace
-	virtualEntities map[string]src.Entity //nolint:lll // sometimes after desugaring flow we need to insert some entities to the file
+	desugaredFlow   src.Flow
+	virtualEntities map[string]src.Entity
 }
 
-func (d Desugarer) handleFlow( //nolint:funlen
+func (d Desugarer) handleFlow(
 	flow src.Flow,
 	scope src.Scope,
 ) (handleFlowResult, *compiler.Error) {

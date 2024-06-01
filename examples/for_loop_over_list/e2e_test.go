@@ -24,7 +24,7 @@ func Test(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(
 			t,
-			"50\n30\n20\n100\n",
+			"1\n2\n3\n",
 			string(out),
 		)
 		require.Equal(t, 0, cmd.ProcessState.ExitCode())

@@ -3,10 +3,10 @@ import { sync }
 flow Main(start) (stop) {
   nodes { sync.Wg, Println }
   :start -> [
-    (3 -> wg:count),
-    ('Hello' -> println -> (true -> wg:sig)),
-    ('Neva' -> println -> (true -> wg:sig)),
-    ('World!' -> println -> (true -> wg:sig))
+    ('Hello' -> println -> wg:sig),
+    ('Neva' -> println -> wg:sig),
+    ('World!' -> println -> wg:sig)
   ]
+  3 -> wg:count
   wg -> :stop
 }
