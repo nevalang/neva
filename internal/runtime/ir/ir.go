@@ -11,7 +11,7 @@ type Program struct {
 type PortAddr struct {
 	Path string `json:"path,omitempty"`
 	Port string `json:"port,omitempty"`
-	Idx  uint32 `json:"index,omitempty"`
+	Idx  uint32 `json:"idx,omitempty"`
 }
 
 // Connection represents connections between ports.

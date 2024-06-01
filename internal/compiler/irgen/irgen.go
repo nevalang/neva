@@ -150,13 +150,13 @@ func (g Generator) processNode(
 			node:       node,
 		}
 
-		scopeToUse := getSubnodeScope(
-			nodeCtx.node.Deps,
-			nodeName,
-			subNodeCtx,
-			scope,
-			newScope,
-		)
+		var scopeToUse src.Scope
+		if injectedNode, isDINode := nodeCtx.node.Deps[nodeName]; isDINode {
+			subNodeCtx.node = injectedNode
+			scopeToUse = scope
+		} else {
+			scopeToUse = newScope
+		}
 
 		if err := g.processNode(subNodeCtx, scopeToUse, result); err != nil {
 			return &compiler.Error{
@@ -168,23 +168,6 @@ func (g Generator) processNode(
 	}
 
 	return nil
-}
-
-func getSubnodeScope(
-	deps map[string]src.Node,
-	nodeName string,
-	subNodeCtx nodeContext,
-	scope src.Scope,
-	newScope src.Scope,
-) src.Scope {
-	var scopeToUseThisTime src.Scope
-	if dep, ok := deps[nodeName]; ok { // is interface node
-		subNodeCtx.node = dep
-		scopeToUseThisTime = scope
-	} else {
-		scopeToUseThisTime = newScope
-	}
-	return scopeToUseThisTime
 }
 
 func New() Generator {
