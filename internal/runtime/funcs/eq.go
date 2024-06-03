@@ -12,7 +12,7 @@ func (p eq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context),
 	if err != nil {
 		return nil, err
 	}
-	expectIn, err := io.In.Port("expected")
+	expectIn, err := io.In.Port("compared")
 	if err != nil {
 		return nil, err
 	}
