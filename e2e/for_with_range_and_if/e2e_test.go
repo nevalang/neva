@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		cmd := exec.Command("neva", "run", "-debug", "main")
+		cmd := exec.Command("neva", "run", "main")
 
 		out, err := cmd.CombinedOutput()
 		require.NoError(t, err, "out: ", out)
