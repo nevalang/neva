@@ -3,7 +3,7 @@ flow Main(start) (stop) {
 
     :start -> [
         (2 -> eq:actual),
-        (2 -> eq:expected)
+        (2 -> eq:compared)
     ]
 
     eq -> if
