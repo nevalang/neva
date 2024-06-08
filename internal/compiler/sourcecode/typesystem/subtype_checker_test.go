@@ -220,7 +220,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				t := ts.Trace{}
 				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(4) // x, a, x, b
 			},
-			wantErr: ts.ErrUnion,
+			wantErr: ts.ErrUnionArg,
 		},
 		{
 			name:      "subtype not union, supertype is. subtype is compat with one el",

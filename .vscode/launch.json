@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "examples/for_loop_over_list"]
+      "args": ["run", "examples/swork"]
     },
     {
       "name": "LSP",
