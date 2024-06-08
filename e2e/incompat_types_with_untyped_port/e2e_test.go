@@ -12,9 +12,10 @@ func Test(t *testing.T) {
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
+
 	require.Equal(
 		t,
-		"main/main.neva:2:9 Subtype must be either union or literal: want int | float, got any\n",
+		"main/main.neva:19:8 Incompatible types: in:in -> add: Subtype and supertype must both be either literals or instances, except if supertype is union: expression any, constaint { data int, idx int, last bool }\n",
 		string(out),
 	)
 

@@ -19,7 +19,7 @@ var (
 	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
-	ErrUnion         = errors.New("Incompatible types")
+	ErrUnionArg      = errors.New("Subtype must be either union or literal")
 	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
 	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
 	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
@@ -176,14 +176,14 @@ func (s SubtypeChecker) Check(
 			}
 		}
 	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
-		if expr.Lit == nil || expr.Lit.Union == nil { // constraint is union, expr is not
+		if expr.Lit == nil || expr.Lit.Union == nil { // expr is not union and not literal
 			for _, constrUnionEl := range constr.Lit.Union {
 				// iterate over constr union and if expr is subtype of any of its elements, return nil
 				if s.Check(expr, constrUnionEl, params) == nil {
 					return nil
 				}
 			}
-			return fmt.Errorf("%w: want %v, got %v", ErrUnion, constr, expr)
+			return fmt.Errorf("%w: want %v, got %v", ErrUnionArg, constr, expr)
 		}
 		// If we here, then expr is union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {

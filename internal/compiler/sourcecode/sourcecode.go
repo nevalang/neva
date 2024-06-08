@@ -297,6 +297,13 @@ type ConnectionReceiver struct {
 	Meta      core.Meta               `json:"meta,omitempty"`
 }
 
+func (r ConnectionReceiver) String() string {
+	if len(r.Selectors) == 0 {
+		return r.PortAddr.String()
+	}
+	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
+}
+
 type ConnectionSideSelectors []string
 
 func (c ConnectionSideSelectors) String() string {
@@ -311,13 +318,6 @@ func (c ConnectionSideSelectors) String() string {
 		}
 	}
 	return s
-}
-
-func (r ConnectionReceiver) String() string {
-	if len(r.Selectors) == 0 {
-		return r.PortAddr.String()
-	}
-	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
 }
 
 // ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
@@ -368,7 +368,7 @@ func (p PortAddr) String() string {
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
 	case hasNode:
-		return fmt.Sprintf("%v:UNKNOWN", p.Node)
+		return p.Node
 	}
 
 	return "invalid port addr"

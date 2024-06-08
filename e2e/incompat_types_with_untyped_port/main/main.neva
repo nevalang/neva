@@ -1,0 +1,20 @@
+flow Main(start) (stop) {
+    nodes {
+        Sworktest
+        StreamPort<int>
+        Println
+    }
+    :start -> [
+        (1 -> streamPort[0]),
+        (2 -> streamPort[1])
+    ]
+
+    streamPort -> sworktest -> println -> :stop
+}
+
+flow Sworktest(in) (out) {
+	nodes {
+		Add<int>
+	}
+	:in -> add -> :out
+}
