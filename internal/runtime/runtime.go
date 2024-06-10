@@ -3,52 +3,23 @@ package runtime
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"sync"
 )
 
 type Runtime struct {
-	connector  Connector
+	queue      Queue
 	funcRunner FuncRunner
 }
 
-var ErrNilDeps = errors.New("runtime deps nil")
-
-func New(connector Connector, funcRunner FuncRunner) Runtime {
-	return Runtime{
-		connector:  connector,
-		funcRunner: funcRunner,
-	}
-}
-
-var (
-	ErrStartPortNotFound = errors.New("start port not found")
-	ErrExitPortNotFound  = errors.New("stop port not found")
-	ErrConnector         = errors.New("connector")
-	ErrFuncRunner        = errors.New("func runner")
-)
-
 func (r Runtime) Run(ctx context.Context, prog Program) error {
-	enter := prog.Ports[PortAddr{Path: "in", Port: "start"}]
-	if enter == nil {
-		return ErrStartPortNotFound
-	}
-
-	exit := prog.Ports[PortAddr{Path: "out", Port: "stop"}]
-	if exit == nil {
-		return ErrExitPortNotFound
-	}
-
 	funcRun, err := r.funcRunner.Run(prog.Funcs)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrFuncRunner, err)
+		return err
 	}
 
-	cancelableCtx, cancel := context.WithCancel(ctx)
-
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(2)
+	cancelableCtx, cancel := context.WithCancel(ctx)
 
 	go func() {
 		funcRun(
@@ -62,20 +33,27 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	}()
 
 	go func() {
-		r.connector.Connect(cancelableCtx, prog.Connections)
+		r.queue.Run(cancelableCtx)
 		wg.Done()
 	}()
 
 	go func() {
-		enter <- &baseMsg{}
+		prog.Ports[PortAddr{Path: "in", Port: "start"}] <- &baseMsg{}
 	}()
 
-	go func() {
-		<-exit
+	go func() { // normal termination
+		<-prog.Ports[PortAddr{Path: "out", Port: "stop"}]
 		cancel()
 	}()
 
 	wg.Wait()
 
 	return nil
+}
+
+func New(queue Queue, funcRunner FuncRunner) Runtime {
+	return Runtime{
+		queue:      queue,
+		funcRunner: funcRunner,
+	}
 }

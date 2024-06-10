@@ -2,8 +2,9 @@ package funcs
 
 import (
 	"context"
-	"github.com/nevalang/neva/internal/runtime"
 	"os"
+
+	"github.com/nevalang/neva/internal/runtime"
 )
 
 type args struct{}

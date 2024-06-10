@@ -11,13 +11,13 @@ import (
 type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
-	runtimePorts := make(runtime.Ports, len(irProg.Ports))
+	runtimePorts := make(map[runtime.PortAddr]chan runtime.Msg, len(irProg.Ports))
 
 	for portInfo := range irProg.Ports {
 		addr := runtime.PortAddr{
 			Path: portInfo.Path,
 			Port: portInfo.Port,
-			Idx:  uint8(portInfo.Idx),
+			Idx:  portInfo.Idx,
 		}
 		runtimePorts[addr] = make(chan runtime.Msg)
 	}
@@ -112,7 +112,7 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	}, nil
 }
 
-func (a Adapter) msg(msg ir.Msg) (runtime.Msg, error) {
+func (a Adapter) msg(msg ir.Message) (runtime.Msg, error) {
 	var result runtime.Msg
 
 	switch msg.Type {
@@ -123,7 +123,7 @@ func (a Adapter) msg(msg ir.Msg) (runtime.Msg, error) {
 	case ir.MsgTypeFloat:
 		result = runtime.NewFloatMsg(msg.Float)
 	case ir.MsgTypeString:
-		result = runtime.NewStrMsg(msg.Str)
+		result = runtime.NewStrMsg(msg.String)
 	case ir.MsgTypeList:
 		list := make([]runtime.Msg, len(msg.List))
 		for i, v := range msg.List {
@@ -136,7 +136,7 @@ func (a Adapter) msg(msg ir.Msg) (runtime.Msg, error) {
 		result = runtime.NewListMsg(list...)
 	case ir.MsgTypeMap:
 		m := make(map[string]runtime.Msg, len(msg.List))
-		for k, v := range msg.Map {
+		for k, v := range msg.Dict {
 			el, err := a.msg(v)
 			if err != nil {
 				return nil, err
