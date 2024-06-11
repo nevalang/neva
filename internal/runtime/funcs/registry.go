@@ -63,6 +63,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"regexp_submatch": regexpSubmatch{},
 
 		// list
+		"list_at":    listAt{},
 		"index":      index{},
 		"list_len":   listlen{},
 		"list_push":  listPush{},
