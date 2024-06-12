@@ -2,13 +2,11 @@ package funcs
 
 import (
 	"context"
-	"errors"
+
+	"golang.org/x/exp/utf8string"
 
 	"github.com/nevalang/neva/internal/runtime"
-	"golang.org/x/exp/utf8string"
 )
-
-var errIndexOutOfBounds = errors.New("index out of bounds")
 
 type stringAt struct{}
 
