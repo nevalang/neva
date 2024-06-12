@@ -3,8 +3,6 @@ package funcs
 import (
 	"context"
 
-	"golang.org/x/exp/utf8string"
-
 	"github.com/nevalang/neva/internal/runtime"
 )
 
@@ -33,14 +31,14 @@ func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context),
 
 	return func(ctx context.Context) {
 		for {
-			var data *utf8string.String
+			var data string
 			var idx int64
 
 			select {
 			case <-ctx.Done():
 				return
 			case msg := <-dataIn:
-				data = utf8string.NewString(msg.Str())
+				data = msg.Str()
 			}
 
 			select {
@@ -50,19 +48,30 @@ func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context),
 				idx = msg.Int()
 			}
 
-			if idx < 0 || idx >= int64(data.RuneCount()) {
-				select {
-				case <-ctx.Done():
-					return
-				case errOut <- errorFromString(errIndexOutOfBounds.Error()):
-					continue
+			if idx >= 0 && idx < int64(len(data)) {
+				var res rune
+				var found bool
+				for i, r := range data {
+					if int64(i) == idx {
+						res = r
+						found = true
+						break
+					}
+				}
+				if found {
+					select {
+					case <-ctx.Done():
+						return
+					case resOut <- runtime.NewStrMsg(string(data.At(int(idx)))):
+						continue
+					}
 				}
 			}
 
 			select {
 			case <-ctx.Done():
 				return
-			case resOut <- runtime.NewStrMsg(string(data.At(int(idx)))):
+			case errOut <- errorFromString(errIndexOutOfBounds.Error()):
 			}
 		}
 	}, nil
