@@ -64,7 +64,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// list
 		"list_at":    listAt{},
-		"index":      index{},
 		"list_len":   listlen{},
 		"list_push":  listPush{},
 		"int_sort":   listSortInt{},
