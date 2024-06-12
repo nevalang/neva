@@ -9,45 +9,39 @@ import (
 type and struct{}
 
 func (p and) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	AIn, err := io.In.Port("A")
-	if err != nil {
-		return nil, err
-	}
-	BIn, err := io.In.Port("B")
+	aIn, err := io.In.SingleInport("a")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	bIn, err := io.In.SingleInport("b")
 	if err != nil {
 		return nil, err
 	}
 
+	resOut, err := io.Out.SingleOutport("res")
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO send false as soon as A in is false, but do it correctly
 	return func(ctx context.Context) {
-		var (
-			AVAL runtime.Msg
-			BVAL runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			aMsg, ok := aIn.Receive(ctx)
+			if !ok {
 				return
-			case AVAL = <-AIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			bMsg, ok := bIn.Receive(ctx)
+			if !ok {
 				return
-			case BVAL = <-BIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(
+				ctx,
+				runtime.NewBoolMsg(aMsg.Bool() && bMsg.Bool()),
+			) {
 				return
-
-			default:
-				resOut <- runtime.NewBoolMsg(BVAL.Bool() && AVAL.Bool())
 			}
 		}
 	}, nil

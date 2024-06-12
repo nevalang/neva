@@ -10,12 +10,12 @@ import (
 type println struct{}
 
 func (p println) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Port("sig")
+	sigOut, err := io.Out.SingleOutport("sig")
 	if err != nil {
 		return nil, err
 	}

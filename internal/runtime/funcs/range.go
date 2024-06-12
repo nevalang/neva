@@ -12,17 +12,17 @@ func (streamIntRange) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	fromIn, err := io.In.Port("from")
+	fromIn, err := io.In.SingleInport("from")
 	if err != nil {
 		return nil, err
 	}
 
-	toIn, err := io.In.Port("to")
+	toIn, err := io.In.SingleInport("to")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Port("data")
+	dataOut, err := io.Out.SingleOutport("data")
 	if err != nil {
 		return nil, err
 	}

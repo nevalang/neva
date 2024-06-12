@@ -12,12 +12,12 @@ func (intAdd) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Port("seq")
+	seqIn, err := io.In.SingleInport("seq")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.SingleOutport("res")
 	if err != nil {
 		return nil, err
 	}

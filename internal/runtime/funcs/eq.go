@@ -9,43 +9,38 @@ import (
 type eq struct{}
 
 func (p eq) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Port("actual")
-	if err != nil {
-		return nil, err
-	}
-	expectIn, err := io.In.Port("compared")
+	actualIn, err := io.In.SingleInport("actual")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	comparedIn, err := io.In.SingleInport("compared")
+	if err != nil {
+		return nil, err
+	}
+
+	resOut, err := io.Out.SingleOutport("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var (
-			val1 runtime.Msg
-			val2 runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			val1, ok := actualIn.Receive(ctx)
+			if !ok {
 				return
-			case val1 = <-actualIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			val2, ok := comparedIn.Receive(ctx)
+			if !ok {
 				return
-			case val2 = <-expectIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(
+				ctx,
+				runtime.NewBoolMsg(val1 == val2),
+			) {
 				return
-			case resOut <- runtime.NewBoolMsg(val1 == val2):
 			}
 		}
 	}, nil

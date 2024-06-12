@@ -12,7 +12,7 @@ import (
 type printf struct{}
 
 func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	tplIn, err := io.In.Port("tpl")
+	tplIn, err := io.In.SingleInport("tpl")
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, fmt.Errorf("input and output ports 'args' must have the same length")
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

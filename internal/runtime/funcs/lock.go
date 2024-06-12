@@ -9,17 +9,17 @@ import (
 type lock struct{}
 
 func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := io.In.Port("sig")
+	sigIn, err := io.In.SingleInport("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Port("data")
+	dataOut, err := io.Out.SingleOutport("data")
 	if err != nil {
 		return nil, err
 	}

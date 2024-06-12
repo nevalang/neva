@@ -11,22 +11,22 @@ import (
 type regexpSubmatch struct{}
 
 func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
-	regexpIn, err := io.In.Port("regexp")
+	regexpIn, err := io.In.SingleInport("regexp")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.SingleOutport("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

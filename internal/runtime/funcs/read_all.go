@@ -11,17 +11,17 @@ import (
 type readAll struct{}
 
 func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.Port("filename")
+	filename, err := rio.In.SingleInport("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.Out.Port("data")
+	dataPort, err := rio.Out.SingleOutport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.Port("err")
+	errPort, err := rio.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

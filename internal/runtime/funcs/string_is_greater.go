@@ -9,16 +9,16 @@ import (
 type strIsGreater struct{}
 
 func (p strIsGreater) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Port("actual")
+	actualIn, err := io.In.SingleInport("actual")
 	if err != nil {
 		return nil, err
 	}
-	comparedIn, err := io.In.Port("compared")
+	comparedIn, err := io.In.SingleInport("compared")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.SingleOutport("res")
 	if err != nil {
 		return nil, err
 	}

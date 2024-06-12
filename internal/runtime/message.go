@@ -123,7 +123,7 @@ func (msg ListMsg) String() string {
 }
 func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
 
-func NewListMsg(v ...Msg) ListMsg {
+func NewListMsg(v []Msg) ListMsg {
 	return ListMsg{
 		baseMsg: &baseMsg{},
 		v:       v,

@@ -11,17 +11,17 @@ import (
 type httpGet struct{}
 
 func (httpGet) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	urlIn, err := io.In.Port("url")
+	urlIn, err := io.In.SingleInport("url")
 	if err != nil {
 		return nil, err
 	}
 
-	respOut, err := io.Out.Port("resp")
+	respOut, err := io.Out.SingleOutport("resp")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

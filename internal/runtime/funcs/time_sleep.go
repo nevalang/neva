@@ -10,17 +10,17 @@ import (
 type timeSleep struct{}
 
 func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	durIn, err := io.In.Port("dur")
+	durIn, err := io.In.SingleInport("dur")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Port("data")
+	dataOut, err := io.Out.SingleOutport("data")
 	if err != nil {
 		return nil, err
 	}

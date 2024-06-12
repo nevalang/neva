@@ -9,7 +9,7 @@ import (
 type new struct{}
 
 func (c new) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	outport, err := io.Out.Port("msg")
+	outport, err := io.Out.SingleOutport("msg")
 	if err != nil {
 		return nil, err
 	}

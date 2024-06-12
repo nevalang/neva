@@ -10,17 +10,17 @@ import (
 type waitGroup struct{}
 
 func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	countIn, err := io.In.Port("count")
+	countIn, err := io.In.SingleInport("count")
 	if err != nil {
 		return nil, err
 	}
 
-	sigIn, err := io.In.Port("sig")
+	sigIn, err := io.In.SingleInport("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Port("sig")
+	sigOut, err := io.Out.SingleOutport("sig")
 	if err != nil {
 		return nil, err
 	}

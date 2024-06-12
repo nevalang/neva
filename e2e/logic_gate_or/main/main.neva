@@ -1,8 +1,8 @@
 flow Main(start) (stop) {
 	nodes { Println, Or }
 		:start -> [
-		    (false -> or:A),
-		    (false -> or:B)
+		    (false -> or:a),
+		    (false -> or:b)
 		]
 		or -> println -> :stop
 }

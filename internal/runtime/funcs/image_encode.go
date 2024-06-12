@@ -11,17 +11,17 @@ import (
 type imageEncode struct{}
 
 func (imageEncode) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	in, err := io.In.Port("img")
+	in, err := io.In.SingleInport("img")
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := io.Out.Port("data")
+	data, err := io.Out.SingleOutport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	errCh, err := io.Out.Port("err")
+	errCh, err := io.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import (
 type intMod struct{}
 
 func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, errors.New("port 'then' is required")
 	}
 
-	elseOut, err := io.Out.Port("else")
+	elseOut, err := io.Out.SingleOutport("else")
 	if err != nil {
 		return nil, err
 	}

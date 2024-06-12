@@ -13,7 +13,7 @@ func (p panicker) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	msgIn, err := io.In.Port("msg")
+	msgIn, err := io.In.SingleInport("msg")
 	if err != nil {
 		return nil, err
 	}

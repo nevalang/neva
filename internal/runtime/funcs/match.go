@@ -10,7 +10,7 @@ import (
 type match struct{}
 
 func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, errors.New("outport 'case' is required")
 	}
 
-	elseOut, err := io.Out.Port("else")
+	elseOut, err := io.Out.SingleOutport("else")
 	if err != nil {
 		return nil, err
 	}

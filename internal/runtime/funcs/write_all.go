@@ -10,22 +10,22 @@ import (
 type writeAll struct{}
 
 func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.Port("filename")
+	filename, err := rio.In.SingleInport("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.In.Port("data")
+	dataPort, err := rio.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	sig, err := rio.Out.Port("sig")
+	sig, err := rio.Out.SingleOutport("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.Port("err")
+	errPort, err := rio.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

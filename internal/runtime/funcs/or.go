@@ -9,16 +9,16 @@ import (
 type or struct{}
 
 func (p or) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	AIn, err := io.In.Port("A")
+	AIn, err := io.In.SingleInport("A")
 	if err != nil {
 		return nil, err
 	}
-	BIn, err := io.In.Port("B")
+	BIn, err := io.In.SingleInport("B")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.SingleOutport("res")
 	if err != nil {
 		return nil, err
 	}

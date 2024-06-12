@@ -10,17 +10,17 @@ import (
 type imageNew struct{}
 
 func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pixelsIn, err := io.In.Port("pixels")
+	pixelsIn, err := io.In.SingleInport("pixels")
 	if err != nil {
 		return nil, err
 	}
 
-	imgOut, err := io.Out.Port("img")
+	imgOut, err := io.Out.SingleOutport("img")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.SingleOutport("err")
 	if err != nil {
 		return nil, err
 	}

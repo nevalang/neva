@@ -9,17 +9,17 @@ import (
 type if_ struct{}
 
 func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	okOut, err := io.Out.Port("then")
+	okOut, err := io.Out.SingleOutport("then")
 	if err != nil {
 		return nil, err
 	}
 
-	elseOut, err := io.Out.Port("else")
+	elseOut, err := io.Out.SingleOutport("else")
 	if err != nil {
 		return nil, err
 	}

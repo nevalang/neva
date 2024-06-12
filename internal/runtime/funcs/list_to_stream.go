@@ -12,12 +12,12 @@ func (c listToStream) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.SingleInport("data")
 	if err != nil {
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Port("seq")
+	seqOut, err := io.Out.SingleOutport("seq")
 	if err != nil {
 		return nil, err
 	}
