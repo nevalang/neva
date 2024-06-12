@@ -74,6 +74,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"time_sleep": timeSleep{},
 
 		// strings
+		"string_at":   stringAt{},
 		"join":        stringJoin{},
 		"split":       stringSplit{},
 		"string_sort": listSortString{},
