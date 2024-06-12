@@ -7,11 +7,11 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-var errIntegerDivideByZero = errors.New("integer divide by zero")
+var errFloatDivideByZero = errors.New("float divide by zero")
 
-type intMod struct{}
+type floatDiv struct{}
 
-func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (floatDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	xIn, err := io.In.Port("x")
 	if err != nil {
 		return nil, err
@@ -34,25 +34,25 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		for {
-			var x, y int64
+			var x, y float64
 			select {
 			case <-ctx.Done():
 				return
 			case msg := <-xIn:
-				x = msg.Int()
+				x = msg.Float()
 			}
 			select {
 			case <-ctx.Done():
 				return
 			case msg := <-yIn:
-				y = msg.Int()
+				y = msg.Float()
 			}
 			if y == 0 {
 				select {
 				case <-ctx.Done():
 					return
 				case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg(errIntegerDivideByZero.Error()),
+					"text": runtime.NewStrMsg(errFloatDivideByZero.Error()),
 				}):
 					continue
 				}
@@ -60,7 +60,7 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			select {
 			case <-ctx.Done():
 				return
-			case resOut <- runtime.NewIntMsg(x % y):
+			case resOut <- runtime.NewFloatMsg(x / y):
 			}
 		}
 	}, nil

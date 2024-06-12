@@ -2,16 +2,13 @@ package funcs
 
 import (
 	"context"
-	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-var errIntegerDivideByZero = errors.New("integer divide by zero")
+type intDiv struct{}
 
-type intMod struct{}
-
-func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	xIn, err := io.In.Port("x")
 	if err != nil {
 		return nil, err
@@ -60,7 +57,7 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			select {
 			case <-ctx.Done():
 				return
-			case resOut <- runtime.NewIntMsg(x % y):
+			case resOut <- runtime.NewIntMsg(x / y):
 			}
 		}
 	}, nil

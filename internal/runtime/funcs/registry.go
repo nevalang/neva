@@ -47,11 +47,14 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"field": readStructField{},
 
 		// math
-		"int_add":  intAdd{},
-		"int_sub":  intSub{},
-		"int_mul":  intMul{},
-		"int_decr": intDecr{},
-		"int_mod":  intMod{},
+		"int_add":     intAdd{},
+		"int_sub":     intSub{},
+		"int_mul":     intMul{},
+		"int_div":     intDiv{},
+		"float_div":   floatDiv{},
+		"int_decr":    intDecr{},
+		"int_mod":     intMod{},
+		"int_casemod": intCaseMod{},
 
 		// strconv
 		"parse_int": parseInt{},
