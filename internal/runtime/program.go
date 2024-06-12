@@ -7,9 +7,9 @@ import (
 )
 
 type Program struct {
-	Funcs       []FuncCall
 	Ports       map[PortAddr]chan Msg
-	Connections map[ConnectionSender]map[PortAddr]chan Msg
+	Connections map[PortAddr]map[PortAddr][]PortAddr // sender -> final -> intermediate
+	Funcs       []FuncCall
 }
 
 type PortAddr struct {

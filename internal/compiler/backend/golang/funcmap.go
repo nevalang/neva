@@ -8,7 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getMsg(msg *ir.Msg) (string, error) {
+func getMsg(msg *ir.Message) (string, error) {
 	if msg == nil {
 		return "nil", nil
 	}
@@ -20,7 +20,7 @@ func getMsg(msg *ir.Msg) (string, error) {
 	case ir.MsgTypeFloat:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
-		return fmt.Sprintf(`runtime.NewStrMsg("%v")`, msg.Str), nil
+		return fmt.Sprintf(`runtime.NewStrMsg("%v")`, msg.String), nil
 	case ir.MsgTypeList:
 		s := `runtime.NewListMsg(
 	`
@@ -36,7 +36,7 @@ func getMsg(msg *ir.Msg) (string, error) {
 	case ir.MsgTypeMap:
 		s := `runtime.NewMapMsg(map[string]runtime.Msg{
 	`
-		for k, v := range msg.Map {
+		for k, v := range msg.Dict {
 			el, err := getMsg(compiler.Pointer(v))
 			if err != nil {
 				return "", err
@@ -51,9 +51,9 @@ func getMsg(msg *ir.Msg) (string, error) {
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func getConnComment(conn *ir.Connection) string {
-	s := fmtPortAddr(conn.SenderSide) + " -> "
-	for _, rcvr := range conn.ReceiverSides {
+func getConnComment(sender ir.PortAddr, receivers map[ir.PortAddr]struct{}) string {
+	s := fmtPortAddr(sender) + " -> "
+	for rcvr := range receivers {
 		s += fmtPortAddr(rcvr)
 	}
 	return "// " + s

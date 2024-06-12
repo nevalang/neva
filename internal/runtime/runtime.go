@@ -3,15 +3,20 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"sync"
 )
 
 type Runtime struct {
-	queue      Queue
 	funcRunner FuncRunner
 }
 
 func (r Runtime) Run(ctx context.Context, prog Program) error {
+	stop, ok := prog.Ports[PortAddr{Path: "out", Port: "stop"}]
+	if !ok {
+		return errors.New("stop outport not found")
+	}
+
 	funcRun, err := r.funcRunner.Run(prog.Funcs)
 	if err != nil {
 		return err
@@ -20,6 +25,29 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	cancelableCtx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		<-stop
+		cancel()
+	}()
+
+	qch := make(chan QueueItem)
+
+	queue := NewQueue(
+		qch,
+		prog.Connections,
+		prog.Ports,
+	)
+
+	go func() {
+		queue.Run(cancelableCtx)
+		wg.Done()
+	}()
+
+	qch <- QueueItem{
+		Sender: PortAddr{Path: "in", Port: "start"},
+		Msg:    &baseMsg{},
+	}
 
 	go func() {
 		funcRun(
@@ -32,28 +60,13 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		wg.Done()
 	}()
 
-	go func() {
-		r.queue.Run(cancelableCtx)
-		wg.Done()
-	}()
-
-	go func() {
-		prog.Ports[PortAddr{Path: "in", Port: "start"}] <- &baseMsg{}
-	}()
-
-	go func() { // normal termination
-		<-prog.Ports[PortAddr{Path: "out", Port: "stop"}]
-		cancel()
-	}()
-
 	wg.Wait()
 
 	return nil
 }
 
-func New(queue Queue, funcRunner FuncRunner) Runtime {
+func New(funcRunner FuncRunner) Runtime {
 	return Runtime{
-		queue:      queue,
 		funcRunner: funcRunner,
 	}
 }

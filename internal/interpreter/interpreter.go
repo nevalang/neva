@@ -53,21 +53,14 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 func New(
 	builder builder.Builder,
 	compiler compiler.Compiler,
-	isDebug bool,
+	isDebug bool, // TODO handle
 ) Interpreter {
-	var connector runtime.Connector
-	if isDebug {
-		connector = runtime.NewConnector(DebugEventListener{})
-	} else {
-		connector = runtime.NewDefaultConnector()
-	}
 	return Interpreter{
 		builder:  builder,
 		compiler: compiler,
 		adapter:  adapter.NewAdapter(),
 		runtime: runtime.New(
-			connector,
-			runtime.MustNewFuncRunner(
+			runtime.NewFuncRunner(
 				funcs.CreatorRegistry(),
 			),
 		),

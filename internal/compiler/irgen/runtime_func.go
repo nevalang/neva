@@ -60,7 +60,7 @@ func getFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
 	return "", errors.New("type argument mismatches runtime func directive")
 }
 
-func getCfgMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
+func getCfgMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error) {
 	args, ok := node.Directives[compiler.BindDirective]
 	if !ok {
 		return nil, nil
