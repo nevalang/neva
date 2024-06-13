@@ -2,9 +2,12 @@ package funcs
 
 import (
 	"context"
+	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
+
+var errStrIndexOutOfBounds = errors.New("string index out of bounds")
 
 type stringAt struct{}
 
@@ -48,6 +51,13 @@ func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context),
 				idx = msg.Int()
 			}
 
+			if idx < 0 {
+				// Support negaitve indexing:
+				//	$s = "abc"
+				//	$s[-1] // "c"
+				idx += int64(len(data))
+			}
+
 			if idx >= 0 && idx < int64(len(data)) {
 				var res rune
 				var found bool
@@ -62,7 +72,7 @@ func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context),
 					select {
 					case <-ctx.Done():
 						return
-					case resOut <- runtime.NewStrMsg(string(data.At(int(idx)))):
+					case resOut <- runtime.NewStrMsg(string(res)):
 						continue
 					}
 				}
@@ -71,7 +81,7 @@ func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context),
 			select {
 			case <-ctx.Done():
 				return
-			case errOut <- errorFromString(errIndexOutOfBounds.Error()):
+			case errOut <- errorFromString(errStrIndexOutOfBounds.Error()):
 			}
 		}
 	}, nil

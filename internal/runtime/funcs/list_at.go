@@ -7,7 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-var errIndexOutOfBounds = errors.New("index out of bounds")
+var errListIndexOutOfBounds = errors.New("list index out of bounds")
 
 type listAt struct{}
 
@@ -51,13 +51,18 @@ func (listAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 				idx = msg.Int()
 			}
 
+			if idx < 0 {
+				// Support negative indexing:
+				//	$l = [1, 2, 3]
+				//	$l[-1] // 3
+				idx += int64(len(data))
+			}
+
 			if idx < 0 || idx >= int64(len(data)) {
 				select {
 				case <-ctx.Done():
 					return
-				case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg(errIndexOutOfBounds.Error()),
-				}):
+				case errOut <- errorFromString(errListIndexOutOfBounds.Error()):
 					continue
 				}
 			}
