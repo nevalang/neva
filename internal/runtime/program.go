@@ -55,9 +55,25 @@ func (f FuncInports) SingleInport(name string) (SingleInport, error) {
 	return *ports.single, nil
 }
 
+func NewFuncInports(ports map[string]FuncInport) FuncInports {
+	return FuncInports{
+		ports: ports,
+	}
+}
+
 type FuncInport struct {
 	array  *ArrayInport
 	single *SingleInport
+}
+
+func NewFuncInport(
+	array *ArrayInport,
+	single *SingleInport,
+) FuncInport {
+	return FuncInport{
+		array:  array,
+		single: single,
+	}
 }
 
 type SingleInport struct{ ch <-chan Msg }
@@ -84,17 +100,22 @@ func (f FuncInports) ArrayInport(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
-type ArrayInport struct{ ch []<-chan Msg }
+type ArrayInport struct{ chans []<-chan Msg }
 
-func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg)) {
-	for i, ch := range a.ch {
+func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg)) bool {
+	for i, ch := range a.chans {
 		select {
 		case msg := <-ch:
 			f(i, msg)
 		case <-ctx.Done():
-			return
+			return false
 		}
 	}
+	return true
+}
+
+func (a ArrayInport) Len() int {
+	return len(a.chans)
 }
 
 type FuncOutports struct {
@@ -112,6 +133,19 @@ func (f FuncOutports) SingleOutport(name string) (SingleOutport, error) {
 	}
 
 	return *port.single, nil
+}
+
+func (f FuncOutports) ArrayOutport(name string) (ArrayOutport, error) {
+	port, ok := f.ports[name]
+	if !ok {
+		return ArrayOutport{}, fmt.Errorf("port '%v' not found", name)
+	}
+
+	if port.array == nil {
+		return ArrayOutport{}, fmt.Errorf("port '%v' is not array", name)
+	}
+
+	return *port.array, nil
 }
 
 type FuncOutport struct {
@@ -138,13 +172,17 @@ type ArrayOutport struct {
 	queue chan<- QueueItem
 }
 
-func (a ArrayOutport) Send(ctx context.Context, f func(idx uint8) Msg) bool {
+func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	for _, addr := range a.addrs {
 		select {
 		case <-ctx.Done():
 			return false
-		case a.queue <- QueueItem{Msg: f(addr.Idx), Sender: addr}:
+		case a.queue <- QueueItem{Msg: msg, Sender: addr}:
 		}
 	}
 	return true
+}
+
+func (a ArrayOutport) Len() int {
+	return len(a.addrs)
 }

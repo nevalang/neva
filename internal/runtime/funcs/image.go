@@ -7,6 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// TODO can't we use uint8 here?
 type rgbaMsg struct {
 	r int64
 	g int64
@@ -21,6 +22,7 @@ func (c *rgbaMsg) decode(msg runtime.Msg) {
 	c.b = m["b"].Int()
 	c.a = m["a"].Int()
 }
+
 func (c rgbaMsg) color() color.Color {
 	return color.RGBA64{R: uint16(c.r), G: uint16(c.g), B: uint16(c.b), A: uint16(c.a)}
 }
@@ -45,13 +47,14 @@ type imageMsg struct {
 }
 
 func (i *imageMsg) reset() { *i = imageMsg{} }
-func (i *imageMsg) decode(msg runtime.Msg) {
+
+func (i *imageMsg) decode(msg map[string]runtime.Msg) {
 	i.reset()
-	m := msg.Map()
-	i.pixels = m["pixels"].Str()
-	i.width = m["width"].Int()
-	i.height = m["height"].Int()
+	i.pixels = msg["pixels"].Str()
+	i.width = msg["width"].Int()
+	i.height = msg["height"].Int()
 }
+
 func (i imageMsg) encode() runtime.Msg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
 		"pixels": runtime.NewStrMsg(i.pixels),
@@ -59,6 +62,7 @@ func (i imageMsg) encode() runtime.Msg {
 		"height": runtime.NewIntMsg(i.height),
 	})
 }
+
 func (i imageMsg) createImage() image.Image {
 	// Use pixels directly if available.
 	pix := []uint8(i.pixels)
@@ -76,6 +80,7 @@ func (i imageMsg) createImage() image.Image {
 	}
 	return im
 }
+
 func (i *imageMsg) decodeImage(img *image.RGBA) {
 	i.pixels = string(img.Pix)
 	i.width = int64(img.Rect.Dx())

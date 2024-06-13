@@ -40,7 +40,7 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- errorFromString(err.Error()):
+				case errPort <- errFromErr(err.Error()):
 					continue
 				}
 			}
@@ -50,7 +50,7 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- errorFromString(err.Error()):
+				case errPort <- errFromErr(err.Error()):
 					continue
 				}
 			}
@@ -59,7 +59,7 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- errorFromString(err.Error()):
+				case errPort <- errFromErr(err.Error()):
 					continue
 				}
 			}

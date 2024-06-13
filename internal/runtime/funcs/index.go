@@ -30,37 +30,29 @@ func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 	}
 
 	return func(ctx context.Context) {
-		var listMsg, idxMsg runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			listMsg, ok := listIn.Receive(ctx)
+			if !ok {
 				return
-			case listMsg = <-listIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			idxMsg, ok := indexIn.Receive(ctx)
+			if !ok {
 				return
-			case idxMsg = <-indexIn:
 			}
 
 			idx := idxMsg.Int()
 			list := listMsg.List()
 
 			if idx < 0 || idx >= int64(len(list)) {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromString("Index out of bounds")) {
 					return
-				case errOut <- runtime.NewStrMsg("Index out of bounds"):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, list[idx]) {
 				return
-			case resOut <- list[idx]:
 			}
 		}
 	}, nil

@@ -30,7 +30,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"string_is_lesser":  strIsLesser{},
 		"float_is_greater":  floatIsGreater{},
 		"float_is_lesser":   floatIsLesser{},
-		"int_is_even":       intIsEven{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},

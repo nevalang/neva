@@ -2,13 +2,19 @@ package funcs
 
 import "github.com/nevalang/neva/internal/runtime"
 
-func errorFromString(s string) runtime.Msg {
+func errFromErr(err error) runtime.MapMsg {
+	return runtime.NewMapMsg(map[string]runtime.Msg{
+		"text": runtime.NewStrMsg(err.Error()),
+	})
+}
+
+func errFromString(s) runtime.MapMsg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
 		"text": runtime.NewStrMsg(s),
 	})
 }
 
-func streamItem(data runtime.Msg, idx int64, last bool) runtime.Msg {
+func streamItem(data runtime.Msg, idx int64, last bool) runtime.MapMsg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
 		"data": data,
 		"idx":  runtime.NewIntMsg(idx),

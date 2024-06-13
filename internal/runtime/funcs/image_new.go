@@ -34,42 +34,44 @@ func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 			)
 		stream:
 			for {
-				select {
-				case m := <-pixelsIn:
-					var pix pixelStreamMsg
-					pix.decode(m)
-					if pix.x < 0 || pix.y < 0 {
-						select {
-						case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-							"text": runtime.NewStrMsg("image.New: Pixel out of bounds"),
-						}):
-						case <-ctx.Done():
-							return
-						}
-					}
-					if pix.x >= width {
-						width = pix.x + 1
-					}
-					if pix.y >= height {
-						height = pix.y + 1
-					}
-					im[pix.pixelMsg] = struct{}{}
-					if pix.last {
-						break stream
-					}
-				case <-ctx.Done():
+				m, ok := pixelsIn.Receive(ctx)
+				if !ok {
 					return
 				}
+
+				var pix pixelStreamMsg
+				pix.decode(m)
+				if pix.x < 0 || pix.y < 0 {
+					errOut.Send(ctx, errFromErr())
+
+					select {
+					case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
+						"text": runtime.NewStrMsg("image.New: Pixel out of bounds"),
+					}):
+					case <-ctx.Done():
+						return
+					}
+				}
+				if pix.x >= width {
+					width = pix.x + 1
+				}
+				if pix.y >= height {
+					height = pix.y + 1
+				}
+				im[pix.pixelMsg] = struct{}{}
+				if pix.last {
+					break stream
+				}
 			}
+
 			img := image.NewRGBA(image.Rect(0, 0, int(width), int(height)))
 			for pix := range im {
 				img.Set(int(pix.x), int(pix.y), pix.color.color())
 			}
+
 			var i imageMsg
 			i.decodeImage(img)
-			select {
-			case imgOut <- i.encode():
-			case <-ctx.Done():
+			if !imgOut.Send(ctx, i.encode()) {
 				return
 			}
 		}

@@ -22,14 +22,14 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	cancelableCtx, cancel := context.WithCancel(ctx)
-
+	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		<-stop
 		cancel()
 	}()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	qch := make(chan QueueItem)
 
@@ -40,7 +40,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	)
 
 	go func() {
-		queue.Run(cancelableCtx)
+		queue.Run(ctx)
 		wg.Done()
 	}()
 
@@ -52,7 +52,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	go func() {
 		funcRun(
 			context.WithValue(
-				cancelableCtx,
+				ctx,
 				"cancel", //nolint:staticcheck // SA1029
 				cancel,
 			),

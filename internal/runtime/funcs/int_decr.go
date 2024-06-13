@@ -20,19 +20,14 @@ func (i intDecr) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context)
 	}
 
 	return func(ctx context.Context) {
-		var dataMsg runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case dataMsg = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewIntMsg(dataMsg.Int()-1)) {
 				return
-			case resOut <- runtime.NewIntMsg(dataMsg.Int() - 1):
 			}
 		}
 	}, nil

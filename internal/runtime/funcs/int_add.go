@@ -26,25 +26,24 @@ func (intAdd) Create(
 		var acc int64 = 0
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			msg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-seqIn:
-				item = msg.Map()
 			}
+
+			item := msg.Map()
 
 			acc += item["data"].Int()
 
-			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewIntMsg(acc):
-					acc = 0 // reset
-					continue
-				}
+			if !item["last"].Bool() {
+				continue
 			}
+
+			if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
+				return
+			}
+
+			acc = 0
 		}
 	}, nil
 }

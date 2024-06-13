@@ -14,7 +14,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	okOut, err := io.Out.SingleOutport("then")
+	thenOut, err := io.Out.SingleOutport("then")
 	if err != nil {
 		return nil, err
 	}
@@ -25,27 +25,21 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 	}
 
 	return func(ctx context.Context) {
-		var (
-			val1 runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
-				return
-			case val1 = <-dataIn:
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
-				return
+			var out runtime.SingleOutport
+			if dataMsg.Bool() {
+				out = thenOut
+			} else {
+				out = elseOut
+			}
 
-			default:
-				if val1.Bool() {
-					okOut <- val1
-				} else {
-					elseOut <- val1
-				}
+			if !out.Send(ctx, nil) {
+				return
 			}
 		}
 	}, nil

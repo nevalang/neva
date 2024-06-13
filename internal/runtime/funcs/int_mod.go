@@ -15,14 +15,14 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
-	caseIn, ok := io.In["case"]
-	if !ok {
-		return nil, errors.New("port 'case' is required")
+	caseIn, err := io.In.ArrayInport("case")
+	if err != nil {
+		return nil, err
 	}
 
-	caseOut, ok := io.Out["case"]
-	if !ok {
-		return nil, errors.New("port 'then' is required")
+	caseOut, err := io.Out.ArrayOutport("case")
+	if err != nil {
+		return nil, err
 	}
 
 	elseOut, err := io.Out.SingleOutport("else")
@@ -30,28 +30,22 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
-	if len(caseIn) != len(caseOut) {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+	if caseIn.Len() != caseOut.Len() {
+		return nil, errors.New("number of 'case' inports must match number of 'case' outports")
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			cases := make([]runtime.Msg, len(caseIn))
-			for i, slot := range caseIn {
-				select {
-				case <-ctx.Done():
-					return
-				case caseMsg := <-slot:
-					cases[i] = caseMsg
-				}
+			cases := make([]runtime.Msg, caseIn.Len())
+			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) {
+				cases[idx] = msg
+			}) {
+				return
 			}
 
 			matchIdx := -1
@@ -64,18 +58,13 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			}
 
 			if matchIdx != -1 {
-				select {
-				case <-ctx.Done():
+				if !caseOut.Send(ctx, uint8(matchIdx), data) {
 					return
-				case caseOut[matchIdx] <- data:
-					continue
 				}
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case elseOut <- data:
+			} else {
+				if !elseOut.Send(ctx, data) {
+					return
+				}
 			}
 		}
 	}, nil

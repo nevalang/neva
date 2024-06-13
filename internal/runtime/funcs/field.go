@@ -31,19 +31,17 @@ func (s readStructField) Create(io runtime.FuncIO, cfg runtime.Msg) (func(ctx co
 	}
 
 	return func(ctx context.Context) {
-		var msg runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			msg, ok := msgIn.Receive(ctx)
+			if !ok {
 				return
-			case msg = <-msgIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !msgOut.Send(
+				ctx,
+				s.recursive(msg, pathStrings),
+			) {
 				return
-			case msgOut <- s.recursive(msg, pathStrings):
 			}
 		}
 	}, nil

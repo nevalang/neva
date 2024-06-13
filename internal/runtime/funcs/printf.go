@@ -72,7 +72,7 @@ func (printf) handle(
 				select {
 				case <-ctx.Done():
 					return
-				case errOut <- errorFromString(err.Error()):
+				case errOut <- errFromErr(err):
 				}
 				continue
 			}
@@ -81,7 +81,7 @@ func (printf) handle(
 				select {
 				case <-ctx.Done():
 					return
-				case errOut <- errorFromString(err.Error()):
+				case errOut <- errFromErr(err.Error()):
 				}
 				continue
 			}

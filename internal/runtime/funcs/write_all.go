@@ -50,7 +50,7 @@ func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.
 				select {
 				case <-ctx.Done():
 					return
-				case errPort <- errorFromString(err.Error()):
+				case errPort <- errFromErr(err.Error()):
 					continue
 				}
 			}

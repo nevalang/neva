@@ -13,6 +13,7 @@ func (p intIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	if err != nil {
 		return nil, err
 	}
+
 	comparedIn, err := io.In.SingleInport("compared")
 	if err != nil {
 		return nil, err
@@ -24,28 +25,19 @@ func (p intIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	}
 
 	return func(ctx context.Context) {
-		var (
-			val1 runtime.Msg
-			val2 runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			actualMsg, ok := actualIn.Receive(ctx)
+			if !ok {
 				return
-			case val1 = <-actualIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			comparedMsg, ok := comparedIn.Receive(ctx)
+			if !ok {
 				return
-			case val2 = <-comparedIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewBoolMsg(actualMsg.Int() < comparedMsg.Int())) {
 				return
-			case resOut <- runtime.NewBoolMsg(val1.Int() < val2.Int()):
 			}
 		}
 	}, nil
