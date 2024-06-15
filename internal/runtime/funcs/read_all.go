@@ -11,7 +11,7 @@ import (
 type readAll struct{}
 
 func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.SingleInport("filename")
+	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err
 	}
@@ -28,46 +28,36 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 
 	return func(ctx context.Context) {
 		for {
-			var name runtime.Msg
-			select {
-			case <-ctx.Done():
+			name, ok := filename.Receive(ctx)
+			if !ok {
 				return
-			case name = <-filename:
 			}
 
 			f, err := os.Open(name.Str())
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errFromErr(err.Error()):
-					continue
 				}
+				continue
 			}
 
 			data, err := io.ReadAll(f)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errFromErr(err.Error()):
-					continue
 				}
+				continue
 			}
 
 			if err := f.Close(); err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errFromErr(err.Error()):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !dataPort.Send(ctx, runtime.NewStrMsg(string(data))) {
 				return
-			case dataPort <- runtime.NewStrMsg(string(data)):
 			}
 		}
 	}, nil

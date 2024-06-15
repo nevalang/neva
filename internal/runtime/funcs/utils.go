@@ -8,7 +8,7 @@ func errFromErr(err error) runtime.MapMsg {
 	})
 }
 
-func errFromString(s) runtime.MapMsg {
+func errFromString(s string) runtime.MapMsg {
 	return runtime.NewMapMsg(map[string]runtime.Msg{
 		"text": runtime.NewStrMsg(s),
 	})

@@ -9,7 +9,7 @@ import (
 type unwrap struct{}
 
 func (unwrap) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -25,28 +25,21 @@ func (unwrap) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
-		var dataMsg runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case dataMsg = <-dataIn:
 			}
 
 			if dataMsg == nil {
-				select {
-				case <-ctx.Done():
+				if !noneOut.Send(ctx, nil) {
 					return
-				case noneOut <- runtime.NewMapMsg(nil):
 				}
 				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !someOut.Send(ctx, dataMsg) {
 				return
-			case someOut <- dataMsg:
 			}
 		}
 	}, nil

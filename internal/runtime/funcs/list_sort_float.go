@@ -10,7 +10,7 @@ import (
 type listSortFloat struct{}
 
 func (p listSortFloat) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -21,13 +21,10 @@ func (p listSortFloat) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx contex
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
 			clone := slices.Clone(data.List())
@@ -35,10 +32,8 @@ func (p listSortFloat) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx contex
 				return i.Float() < j.Float()
 			})
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewListMsg(clone)) {
 				return
-			case resOut <- runtime.NewListMsg(clone...):
 			}
 		}
 	}, nil

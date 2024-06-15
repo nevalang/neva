@@ -10,12 +10,12 @@ import (
 type stringSplit struct{}
 
 func (p stringSplit) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	delimIn, err := io.In.SingleInport("delim")
+	delimIn, err := io.In.Single("delim")
 	if err != nil {
 		return nil, err
 	}
@@ -26,22 +26,15 @@ func (p stringSplit) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 	}
 
 	return func(ctx context.Context) {
-		var (
-			data  runtime.Msg
-			delim runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			delim, ok := delimIn.Receive(ctx)
+			if !ok {
 				return
-			case delim = <-delimIn:
 			}
 
 			splitted := strings.Split(data.Str(), delim.Str())
@@ -50,10 +43,8 @@ func (p stringSplit) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 				res[i] = runtime.NewStrMsg(s)
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewListMsg(res)) {
 				return
-			case resOut <- runtime.NewListMsg(res...):
 			}
 		}
 	}, nil

@@ -12,7 +12,7 @@ func (c listToStream) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -24,14 +24,12 @@ func (c listToStream) Create(
 
 	return func(ctx context.Context) {
 		for {
-			var list []runtime.Msg
-
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case dataMsg := <-dataIn:
-				list = dataMsg.List()
 			}
+
+			list := data.List()
 
 			for idx := 0; idx < len(list); idx++ {
 				item := streamItem(
@@ -40,10 +38,8 @@ func (c listToStream) Create(
 					idx == len(list)-1,
 				)
 
-				select {
-				case <-ctx.Done():
+				if !seqOut.Send(ctx, item) {
 					return
-				case seqOut <- item:
 				}
 			}
 		}

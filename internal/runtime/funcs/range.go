@@ -12,12 +12,12 @@ func (streamIntRange) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	fromIn, err := io.In.SingleInport("from")
+	fromIn, err := io.In.Single("from")
 	if err != nil {
 		return nil, err
 	}
 
-	toIn, err := io.In.SingleInport("to")
+	toIn, err := io.In.Single("to")
 	if err != nil {
 		return nil, err
 	}
@@ -28,20 +28,17 @@ func (streamIntRange) Create(
 	}
 
 	return func(ctx context.Context) {
-		var fromMsg, toMsg runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			fromMsg, ok := fromIn.Receive(ctx)
+			if !ok {
 				return
-			case fromMsg = <-fromIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			toMsg, ok := toIn.Receive(ctx)
+			if !ok {
 				return
-			case toMsg = <-toIn:
 			}
+
 			var (
 				idx  int64 = 0
 				last bool  = false
@@ -60,10 +57,8 @@ func (streamIntRange) Create(
 						last,
 					)
 
-					select {
-					case <-ctx.Done():
+					if !dataOut.Send(ctx, item) {
 						return
-					case dataOut <- item:
 					}
 
 					idx++
@@ -81,10 +76,8 @@ func (streamIntRange) Create(
 						last,
 					)
 
-					select {
-					case <-ctx.Done():
+					if !dataOut.Send(ctx, item) {
 						return
-					case dataOut <- item:
 					}
 
 					idx++

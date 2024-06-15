@@ -10,19 +10,19 @@ import (
 type match struct{}
 
 func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	caseIn, ok := io.In["case"]
-	if !ok {
-		return nil, errors.New("inport 'case' is required")
+	caseIn, err := io.In.Array("case")
+	if err != nil {
+		return nil, err
 	}
 
-	caseOut, ok := io.Out["case"]
-	if !ok {
-		return nil, errors.New("outport 'case' is required")
+	caseOut, err := io.Out.ArrayOutport("then")
+	if err != nil {
+		return nil, err
 	}
 
 	elseOut, err := io.Out.SingleOutport("else")
@@ -30,51 +30,42 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	if len(caseIn) != len(caseOut) {
+	if caseIn.Len() != caseOut.Len() {
 		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			cases := make([]runtime.Msg, len(caseIn))
-			for i, slot := range caseIn {
-				select {
-				case <-ctx.Done():
-					return
-				case caseMsg := <-slot:
-					cases[i] = caseMsg
-				}
+			cases := make([]runtime.Msg, caseIn.Len())
+			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				cases[idx] = msg
+				return true
+			}) {
+				return
 			}
 
 			matchIdx := -1
 			for i, caseMsg := range cases {
-				if data == caseMsg {
+				if dataMsg == caseMsg {
 					matchIdx = i
 					break
 				}
 			}
 
 			if matchIdx != -1 {
-				select {
-				case <-ctx.Done():
+				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
 					return
-				case caseOut[matchIdx] <- data:
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !elseOut.Send(ctx, dataMsg) {
 				return
-			case elseOut <- data:
 			}
 		}
 	}, nil

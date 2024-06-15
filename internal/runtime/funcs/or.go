@@ -9,11 +9,12 @@ import (
 type or struct{}
 
 func (p or) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	AIn, err := io.In.SingleInport("A")
+	aIn, err := io.In.Single("a")
 	if err != nil {
 		return nil, err
 	}
-	BIn, err := io.In.SingleInport("B")
+
+	bIn, err := io.In.Single("b")
 	if err != nil {
 		return nil, err
 	}
@@ -24,30 +25,24 @@ func (p or) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context),
 	}
 
 	return func(ctx context.Context) {
-		var (
-			AVAL runtime.Msg
-			BVAL runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			aMsg, ok := aIn.Receive(ctx)
+			if !ok {
 				return
-			case AVAL = <-AIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			bMsg, ok := bIn.Receive(ctx)
+			if !ok {
 				return
-			case BVAL = <-BIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(
+				ctx,
+				runtime.NewBoolMsg(
+					aMsg.Bool() || bMsg.Bool(),
+				),
+			) {
 				return
-
-			default:
-				resOut <- runtime.NewBoolMsg(BVAL.Bool() || AVAL.Bool())
 			}
 		}
 	}, nil

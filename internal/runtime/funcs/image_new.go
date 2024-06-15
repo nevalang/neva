@@ -10,7 +10,7 @@ import (
 type imageNew struct{}
 
 func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pixelsIn, err := io.In.SingleInport("pixels")
+	pixelsIn, err := io.In.Single("pixels")
 	if err != nil {
 		return nil, err
 	}
@@ -42,13 +42,7 @@ func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 				var pix pixelStreamMsg
 				pix.decode(m)
 				if pix.x < 0 || pix.y < 0 {
-					errOut.Send(ctx, errFromErr())
-
-					select {
-					case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-						"text": runtime.NewStrMsg("image.New: Pixel out of bounds"),
-					}):
-					case <-ctx.Done():
+					if !errOut.Send(ctx, errFromString("image.New: Pixel out of bounds")) {
 						return
 					}
 				}

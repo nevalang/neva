@@ -20,7 +20,7 @@ func (s readStructField) Create(io runtime.FuncIO, cfg runtime.Msg) (func(ctx co
 		pathStrings = append(pathStrings, el.Str())
 	}
 
-	msgIn, err := io.In.SingleInport("msg")
+	msgIn, err := io.In.Single("msg")
 	if err != nil {
 		return nil, err
 	}

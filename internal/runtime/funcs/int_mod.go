@@ -10,12 +10,12 @@ import (
 type intMod struct{}
 
 func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	caseIn, err := io.In.ArrayInport("case")
+	caseIn, err := io.In.Array("case")
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +42,9 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			}
 
 			cases := make([]runtime.Msg, caseIn.Len())
-			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) {
+			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
 				cases[idx] = msg
+				return true
 			}) {
 				return
 			}

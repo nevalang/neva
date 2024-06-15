@@ -10,7 +10,7 @@ import (
 type println struct{}
 
 func (p println) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -21,23 +21,18 @@ func (p println) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
 			if _, err := fmt.Println(data); err != nil {
 				panic(err)
 			}
 
-			select {
-			case <-ctx.Done():
+			if !sigOut.Send(ctx, data) {
 				return
-			case sigOut <- data:
 			}
 		}
 	}, nil

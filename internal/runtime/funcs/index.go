@@ -9,12 +9,12 @@ import (
 type index struct{}
 
 func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	listIn, err := io.In.SingleInport("data")
+	listIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	indexIn, err := io.In.SingleInport("idx")
+	indexIn, err := io.In.Single("idx")
 	if err != nil {
 		return nil, err
 	}

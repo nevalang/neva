@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -10,12 +9,12 @@ import (
 type waitGroup struct{}
 
 func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	countIn, err := io.In.SingleInport("count")
+	countIn, err := io.In.Single("count")
 	if err != nil {
 		return nil, err
 	}
 
-	sigIn, err := io.In.SingleInport("sig")
+	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err
 	}
@@ -29,38 +28,24 @@ func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 }
 
 func (waitGroup) Handle(
-	countIn,
-	sigIn,
-	sigOut chan runtime.Msg,
+	countIn runtime.SingleInport,
+	sigIn runtime.SingleInport,
+	sigOut runtime.SingleOutport,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
-			var wg sync.WaitGroup
-			var count int64
-
-			select {
-			case n := <-countIn:
-				count = n.Int()
-				wg.Add(int(count))
-			case <-ctx.Done():
+			n, ok := countIn.Receive(ctx)
+			if !ok {
 				return
 			}
 
-			go func() {
-				for i := int64(0); i < count; i++ {
-					select {
-					case <-sigIn:
-						wg.Done()
-					case <-ctx.Done():
-						return
-					}
+			for i := int64(0); i < n.Int(); i++ {
+				if _, ok := sigIn.Receive(ctx); !ok {
+					return
 				}
-			}()
-			wg.Wait()
+			}
 
-			select {
-			case sigOut <- nil:
-			case <-ctx.Done():
+			if !sigOut.Send(ctx, nil) {
 				return
 			}
 		}

@@ -9,12 +9,12 @@ import (
 type intIsLesser struct{}
 
 func (p intIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.SingleInport("actual")
+	actualIn, err := io.In.Single("actual")
 	if err != nil {
 		return nil, err
 	}
 
-	comparedIn, err := io.In.SingleInport("compared")
+	comparedIn, err := io.In.Single("compared")
 	if err != nil {
 		return nil, err
 	}

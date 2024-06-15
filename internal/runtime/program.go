@@ -46,7 +46,7 @@ func (f FuncInports) Ports() map[string]FuncInport {
 	return f.ports
 }
 
-func (f FuncInports) SingleInport(name string) (SingleInport, error) {
+func (f FuncInports) Single(name string) (SingleInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return SingleInport{}, errors.New("port not found by name")
@@ -70,11 +70,11 @@ type FuncInport struct {
 	single *SingleInport
 }
 
-func (f FuncInport) ArrayInport() *ArrayInport {
+func (f FuncInport) Array() *ArrayInport {
 	return f.array
 }
 
-func (f FuncInport) SingleInport() *SingleInport {
+func (f FuncInport) Single() *SingleInport {
 	return f.single
 }
 
@@ -99,7 +99,7 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	}
 }
 
-func (f FuncInports) ArrayInport(name string) (ArrayInport, error) {
+func (f FuncInports) Array(name string) (ArrayInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return ArrayInport{}, errors.New("port not found by name")

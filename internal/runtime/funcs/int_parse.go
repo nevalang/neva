@@ -12,7 +12,7 @@ import (
 type parseInt struct{}
 
 func (p parseInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -28,29 +28,22 @@ func (p parseInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 	}
 
 	return func(ctx context.Context) {
-		var str runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			str, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case str = <-dataIn:
 			}
 
 			parsedNum, err := parse(str.Str())
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- runtime.NewStrMsg(err.Error()):
 				}
 				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, parsedNum) {
 				return
-			case resOut <- parsedNum:
 			}
 		}
 	}, nil

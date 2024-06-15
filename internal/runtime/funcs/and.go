@@ -9,12 +9,12 @@ import (
 type and struct{}
 
 func (p and) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	aIn, err := io.In.SingleInport("a")
+	aIn, err := io.In.Single("a")
 	if err != nil {
 		return nil, err
 	}
 
-	bIn, err := io.In.SingleInport("b")
+	bIn, err := io.In.Single("b")
 	if err != nil {
 		return nil, err
 	}

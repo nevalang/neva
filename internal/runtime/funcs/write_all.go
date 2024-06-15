@@ -10,12 +10,12 @@ import (
 type writeAll struct{}
 
 func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.SingleInport("filename")
+	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.In.SingleInport("data")
+	dataPort, err := rio.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -32,33 +32,26 @@ func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.
 
 	return func(ctx context.Context) {
 		for {
-			var name, data runtime.Msg
-			select {
-			case <-ctx.Done():
+			name, ok := filename.Receive(ctx)
+			if !ok {
 				return
-			case name = <-filename:
 			}
 
-			select {
-			case <-ctx.Done():
+			data, ok := dataPort.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataPort:
 			}
 
 			err := os.WriteFile(name.Str(), []byte(data.Str()), 0755)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errFromErr(err.Error()):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !sig.Send(ctx, nil) {
 				return
-			case sig <- nil:
 			}
 		}
 	}, nil

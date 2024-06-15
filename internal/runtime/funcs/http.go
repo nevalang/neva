@@ -11,7 +11,7 @@ import (
 type httpGet struct{}
 
 func (httpGet) Create(funcIO runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	urlIn, err := funcIO.In.SingleInport("url")
+	urlIn, err := funcIO.In.Single("url")
 	if err != nil {
 		return nil, err
 	}

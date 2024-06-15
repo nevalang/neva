@@ -9,12 +9,12 @@ import (
 type lock struct{}
 
 func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := io.In.SingleInport("sig")
+	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -28,30 +28,23 @@ func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 }
 
 func (lock) Handle(
-	sigIn,
-	dataIn,
-	dataOut chan runtime.Msg,
+	sigIn runtime.SingleInport,
+	dataIn runtime.SingleInport,
+	dataOut runtime.SingleOutport,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			if _, ok := sigIn.Receive(ctx); !ok {
 				return
-			case <-sigIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !dataOut.Send(ctx, data) {
 				return
-			case dataOut <- data:
 			}
 		}
 	}

@@ -9,7 +9,7 @@ import (
 type intMul struct{}
 
 func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	seqIn, err := io.In.SingleInport("seq")
+	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err
 	}
@@ -23,25 +23,23 @@ func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		var acc int64 = 1
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			seqMsg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-seqIn:
-				item = msg.Map()
 			}
 
+			item := seqMsg.Map()
 			acc *= item["data"].Int()
 
-			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewIntMsg(acc):
-					acc = 1 // reset
-					continue
-				}
+			if !item["last"].Bool() {
+				continue
 			}
+
+			if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
+				return
+			}
+
+			acc = 1
 		}
 	}, nil
 }

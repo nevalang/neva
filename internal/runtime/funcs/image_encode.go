@@ -11,7 +11,7 @@ import (
 type imageEncode struct{}
 
 func (imageEncode) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	imgIn, err := io.In.SingleInport("img")
+	imgIn, err := io.In.Single("img")
 	if err != nil {
 		return nil, err
 	}

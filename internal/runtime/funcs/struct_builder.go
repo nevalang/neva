@@ -13,16 +13,16 @@ func (s structBuilder) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	if len(io.In) == 0 {
+	if len(io.In.Ports()) == 0 {
 		return nil, errors.New("cannot create struct builder without inports")
 	}
 
-	inports := make(map[string]chan runtime.Msg, len(io.In))
-	for inportName, inportSlots := range io.In {
-		if len(inportSlots) != 1 {
+	inports := make(map[string]runtime.SingleInport, len(io.In.Ports()))
+	for inportName, inportSlots := range io.In.Ports() {
+		if inportSlots.Single() == nil {
 			return nil, errors.New("non-single port found: " + inportName)
 		}
-		inports[inportName] = inportSlots[0]
+		inports[inportName] = *inportSlots.Single()
 	}
 
 	outport, err := io.Out.SingleOutport("msg")
@@ -34,26 +34,23 @@ func (s structBuilder) Create(
 }
 
 func (structBuilder) Handle(
-	inports map[string]chan runtime.Msg,
-	outport chan runtime.Msg,
+	inports map[string]runtime.SingleInport,
+	outport runtime.SingleOutport,
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
 			var structure = make(map[string]runtime.Msg, len(inports))
 
 			for inportName, inportChan := range inports {
-				select {
-				case <-ctx.Done():
+				msg, ok := inportChan.Receive(ctx)
+				if !ok {
 					return
-				case msg := <-inportChan:
-					structure[inportName] = msg
 				}
+				structure[inportName] = msg
 			}
 
-			select {
-			case <-ctx.Done():
+			if !outport.Send(ctx, runtime.NewMapMsg(structure)) {
 				return
-			case outport <- runtime.NewMapMsg(structure):
 			}
 		}
 	}

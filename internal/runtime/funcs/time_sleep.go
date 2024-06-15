@@ -10,12 +10,12 @@ import (
 type timeSleep struct{}
 
 func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	durIn, err := io.In.SingleInport("dur")
+	durIn, err := io.In.Single("dur")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -27,26 +27,20 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 
 	return func(ctx context.Context) {
 		for {
-			var durMsg runtime.Msg
-			select {
-			case <-ctx.Done():
+			durMsg, ok := durIn.Receive(ctx)
+			if !ok {
 				return
-			case durMsg = <-durIn:
 			}
 
-			var dataMsg runtime.Msg
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case dataMsg = <-dataIn:
 			}
 
 			time.Sleep(time.Duration(durMsg.Int()))
 
-			select {
-			case <-ctx.Done():
+			if !dataOut.Send(ctx, dataMsg) {
 				return
-			case dataOut <- dataMsg:
 			}
 		}
 	}, nil

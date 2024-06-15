@@ -9,7 +9,7 @@ import (
 type intDecr struct{}
 
 func (i intDecr) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}

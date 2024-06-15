@@ -9,7 +9,7 @@ import (
 type not struct{}
 
 func (p not) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -19,20 +19,19 @@ func (p not) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 	}
 
 	return func(ctx context.Context) {
-		var val runtime.Msg
-
 		for {
-
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case val = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(
+				ctx,
+				runtime.NewBoolMsg(
+					!dataMsg.Bool(),
+				),
+			) {
 				return
-			case resOut <- runtime.NewBoolMsg(!val.Bool()):
 			}
 		}
 	}, nil

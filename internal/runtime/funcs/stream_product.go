@@ -12,12 +12,12 @@ func (streamProduct) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.SingleInport("first")
+	firstIn, err := io.In.Single("first")
 	if err != nil {
 		return nil, err
 	}
 
-	secondIn, err := io.In.SingleInport("second")
+	secondIn, err := io.In.Single("second")
 	if err != nil {
 		return nil, err
 	}

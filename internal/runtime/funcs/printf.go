@@ -12,22 +12,22 @@ import (
 type printf struct{}
 
 func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	tplIn, err := io.In.SingleInport("tpl")
+	tplIn, err := io.In.Single("tpl")
 	if err != nil {
 		return nil, err
 	}
 
-	argsIn, ok := io.In["args"]
-	if !ok {
+	argsIn, err := io.In.Array("args")
+	if err != nil {
 		return nil, fmt.Errorf("missing required input port 'args'")
 	}
 
-	argsOut, ok := io.Out["args"]
-	if !ok {
+	argsOut, err := io.Out.ArrayOutport("args")
+	if err != nil {
 		return nil, fmt.Errorf("missing required output port 'args'")
 	}
 
-	if len(argsIn) != len(argsOut) {
+	if argsIn.Len() != argsOut.Len() {
 		return nil, fmt.Errorf("input and output ports 'args' must have the same length")
 	}
 
@@ -40,57 +40,42 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 }
 
 func (printf) handle(
-	tplIn chan runtime.Msg,
-	argsIn []chan runtime.Msg,
-	errOut chan runtime.Msg,
-	argsOuts []chan runtime.Msg,
+	tplIn runtime.SingleInport,
+	argsIn runtime.ArrayInport,
+	errOut runtime.SingleOutport,
+	argsOuts runtime.ArrayOutport,
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
-		var (
-			tpl  runtime.Msg
-			args = make([]runtime.Msg, len(argsIn))
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			tpl, ok := tplIn.Receive(ctx)
+			if !ok {
 				return
-			case tpl = <-tplIn:
 			}
 
-			for i, argIn := range argsIn {
-				select {
-				case <-ctx.Done():
-					return
-				case arg := <-argIn:
-					args[i] = arg
-				}
-			}
+			args := make([]runtime.Msg, argsIn.Len())
+			argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				args[idx] = msg
+				return true
+			})
 
 			res, err := format(tpl.Str(), args)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- errFromErr(err):
 				}
 				continue
 			}
 
 			if _, err := fmt.Print(res); err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- errFromErr(err.Error()):
 				}
 				continue
 			}
 
-			for i, argOut := range argsOuts {
-				select {
-				case <-ctx.Done():
+			for i := 0; i < argsOuts.Len(); i++ {
+				if !argsOuts.Send(ctx, uint8(i), args[i]) {
 					return
-				case argOut <- args[i]:
 				}
 			}
 		}

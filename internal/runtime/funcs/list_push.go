@@ -10,11 +10,11 @@ import (
 type listPush struct{}
 
 func (p listPush) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.SingleInport("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
-	lstIn, err := io.In.SingleInport("lst")
+	lstIn, err := io.In.Single("lst")
 	if err != nil {
 		return nil, err
 	}
@@ -25,31 +25,26 @@ func (p listPush) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 	}
 
 	return func(ctx context.Context) {
-		var (
-			data runtime.Msg
-			lst  runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			lstMsg, ok := lstIn.Receive(ctx)
+			if !ok {
 				return
-			case lst = <-lstIn:
 			}
 
-			lstCopy := slices.Clone(lst.List())
-			lstCopy = append(lstCopy, data)
+			lstCopy := slices.Clone(lstMsg.List())
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(
+				ctx,
+				runtime.NewListMsg(
+					append(lstCopy, dataMsg),
+				),
+			) {
 				return
-			case resOut <- runtime.NewListMsg(lstCopy...):
 			}
 		}
 	}, nil

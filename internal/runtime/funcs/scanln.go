@@ -11,7 +11,7 @@ import (
 type scanln struct{}
 
 func (r scanln) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := io.In.SingleInport("sig")
+	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err
 	}
@@ -22,13 +22,11 @@ func (r scanln) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 	}
 
 	return func(ctx context.Context) {
-		var reader = bufio.NewReader(os.Stdin)
-
 		for {
-			select {
-			case <-ctx.Done():
+			reader := bufio.NewReader(os.Stdin)
+
+			if _, ok := sigIn.Receive(ctx); !ok {
 				return
-			case <-sigIn:
 			}
 
 			bb, _, err := reader.ReadLine()
@@ -36,10 +34,8 @@ func (r scanln) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 				panic(err)
 			}
 
-			select {
-			case <-ctx.Done():
+			if !dataOut.Send(ctx, runtime.NewStrMsg(string(bb))) {
 				return
-			case dataOut <- runtime.NewStrMsg(string(bb)):
 			}
 		}
 	}, nil

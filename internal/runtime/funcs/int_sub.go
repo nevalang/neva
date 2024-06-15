@@ -9,7 +9,7 @@ import (
 type intSub struct{}
 
 func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	seqIn, err := io.In.SingleInport("seq")
+	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err
 	}
@@ -26,13 +26,12 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		)
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			seqMsg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-seqIn:
-				item = msg.Map()
 			}
+
+			item := seqMsg.Map()
 
 			if !started {
 				acc = item["data"].Int()
@@ -42,14 +41,11 @@ func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			}
 
 			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
+				if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
 					return
-				case resOut <- runtime.NewIntMsg(acc):
-					acc = 0
-					started = false
-					continue
 				}
+				acc = 0
+				started = false
 			}
 		}
 	}, nil

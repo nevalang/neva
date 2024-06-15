@@ -16,10 +16,8 @@ func (c new) Create(io runtime.FuncIO, msg runtime.Msg) (func(ctx context.Contex
 
 	return func(ctx context.Context) {
 		for {
-			select {
-			case <-ctx.Done():
+			if !outport.Send(ctx, msg) {
 				return
-			case outport <- msg:
 			}
 		}
 	}, nil
