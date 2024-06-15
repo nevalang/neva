@@ -42,6 +42,10 @@ type FuncInports struct {
 	ports map[string]FuncInport
 }
 
+func (f FuncInports) Ports() map[string]FuncInport {
+	return f.ports
+}
+
 func (f FuncInports) SingleInport(name string) (SingleInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
@@ -64,6 +68,14 @@ func NewFuncInports(ports map[string]FuncInport) FuncInports {
 type FuncInport struct {
 	array  *ArrayInport
 	single *SingleInport
+}
+
+func (f FuncInport) ArrayInport() *ArrayInport {
+	return f.array
+}
+
+func (f FuncInport) SingleInport() *SingleInport {
+	return f.single
 }
 
 func NewFuncInport(
@@ -102,11 +114,13 @@ func (f FuncInports) ArrayInport(name string) (ArrayInport, error) {
 
 type ArrayInport struct{ chans []<-chan Msg }
 
-func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg)) bool {
+func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool) bool {
 	for i, ch := range a.chans {
 		select {
 		case msg := <-ch:
-			f(i, msg)
+			if !f(i, msg) {
+				return false
+			}
 		case <-ctx.Done():
 			return false
 		}
