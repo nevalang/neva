@@ -26,25 +26,24 @@ func (s streamToList) Create(
 		acc := []runtime.Msg{}
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			msg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case seqMsg := <-seqIn:
-				item = seqMsg.Map()
 			}
+
+			item := msg.Map()
 
 			acc = append(acc, item["data"])
 
-			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewListMsg(acc...):
-					acc = []runtime.Msg{} // reset
-					continue
-				}
+			if !item["last"].Bool() {
+				continue
 			}
+
+			if !resOut.Send(ctx, runtime.NewListMsg(acc)) {
+				return
+			}
+
+			acc = []runtime.Msg{}
 		}
 	}, nil
 }
