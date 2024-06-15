@@ -1,3 +1,6 @@
+#extern(list_at)
+pub flow At<T>(data list<T>, idx int) (res T, err error)
+
 pub flow For<T>(data list<T>) (sig any) {
     nodes {
         Iter<T>
