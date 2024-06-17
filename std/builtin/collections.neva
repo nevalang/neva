@@ -9,12 +9,6 @@ pub flow Len<T list<any> | map<any> | string>(data T) (res int)
 #extern(stream_to_list)
 pub flow List<T>(seq stream<T>) (res list<T>)
 
-// Index returns the element at the given index in the ordered collection.
-// If the index is out of bounds, it returns an error.
-// The index is zero-based.
-#extern(index)
-pub flow Index<T list<any> | string>(data T, idx int) (res T, err error)
-
 // Push creates new list with appended element.
 #extern(list_push)
 pub flow Push<T> (lst list<T>, data T) (res list<T>)

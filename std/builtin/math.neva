@@ -7,8 +7,14 @@ pub flow Sub<T int | float >(seq stream<T>) (res T)
 #extern(int int_mul, float float_mul)
 pub flow Mul<T int | float >(seq stream<T>) (res T)
 
+#extern(int int_div, float float_div)
+pub flow Div<T int | float >(x T, y T) (res T, err error)
+
 #extern(int int_decr, float float_decr)
 pub flow Decr<T int | float>(data T) (res T)
 
 #extern(int_mod)
-pub flow Mod(data int, [case] int) ([case] int, else int)
+pub flow Mod(x int, y int) (res int, err error)
+
+#extern(int_casemod)
+pub flow CaseMod(data int, [case] int) ([case] int, else int)

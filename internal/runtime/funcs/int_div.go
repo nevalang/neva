@@ -6,15 +6,15 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type index struct{}
+type intDiv struct{}
 
-func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	listIn, err := io.In.Single("data")
+func (intDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	xIn, err := io.In.Single("x")
 	if err != nil {
 		return nil, err
 	}
 
-	indexIn, err := io.In.Single("idx")
+	yIn, err := io.In.Single("y")
 	if err != nil {
 		return nil, err
 	}
@@ -31,27 +31,29 @@ func (p index) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Contex
 
 	return func(ctx context.Context) {
 		for {
-			listMsg, ok := listIn.Receive(ctx)
+			xMsg, ok := xIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			idxMsg, ok := indexIn.Receive(ctx)
+			yMsg, ok := yIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			idx := idxMsg.Int()
-			list := listMsg.List()
-
-			if idx < 0 || idx >= int64(len(list)) {
-				if !errOut.Send(ctx, errFromString("Index out of bounds")) {
+			if yMsg.Int() == 0 {
+				if !errOut.Send(ctx, errFromString("divide by zero")) {
 					return
 				}
 				continue
 			}
 
-			if !resOut.Send(ctx, list[idx]) {
+			if !resOut.Send(
+				ctx,
+				runtime.NewIntMsg(
+					xMsg.Int()/yMsg.Int(),
+				),
+			) {
 				return
 			}
 		}

@@ -2,13 +2,16 @@ package funcs
 
 import (
 	"context"
+	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intMod struct{}
+var errFloatDivideByZero = errors.New("float divide by zero")
 
-func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+type floatDiv struct{}
+
+func (floatDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	xIn, err := io.In.Single("x")
 	if err != nil {
 		return nil, err
@@ -41,7 +44,7 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 				return
 			}
 
-			if yMsg.Int() == 0 {
+			if yMsg.Float() == 0 {
 				if !errOut.Send(ctx, errFromString("divide by zero")) {
 					return
 				}
@@ -50,8 +53,8 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 
 			if !resOut.Send(
 				ctx,
-				runtime.NewIntMsg(
-					xMsg.Int()%yMsg.Int(),
+				runtime.NewFloatMsg(
+					xMsg.Float()/yMsg.Float(),
 				),
 			) {
 				return

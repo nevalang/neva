@@ -10,7 +10,7 @@ flow Main(start) (stop) {
 }
 
 flow PrintLine(data int) (data int) {
-    nodes { Mod, Println, Lock<int> }
+    nodes { mod CaseMod, Println, Lock<int> }
 
     :data -> [mod:data, lock:data]
 

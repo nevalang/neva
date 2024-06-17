@@ -46,11 +46,14 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"field": readStructField{},
 
 		// math
-		"int_add":  intAdd{},
-		"int_sub":  intSub{},
-		"int_mul":  intMul{},
-		"int_decr": intDecr{},
-		"int_mod":  intMod{},
+		"int_add":     intAdd{},
+		"int_sub":     intSub{},
+		"int_mul":     intMul{},
+		"int_div":     intDiv{},
+		"float_div":   floatDiv{},
+		"int_decr":    intDecr{},
+		"int_mod":     intMod{},
+		"int_casemod": intCaseMod{},
 
 		// strconv
 		"parse_int": parseInt{},
@@ -59,7 +62,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"regexp_submatch": regexpSubmatch{},
 
 		// list
-		"index":      index{},
+		"list_at":    listAt{},
 		"list_len":   listlen{},
 		"list_push":  listPush{},
 		"int_sort":   listSortInt{},
@@ -69,6 +72,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"time_sleep": timeSleep{},
 
 		// strings
+		"string_at":   stringAt{},
 		"join":        stringJoin{},
 		"split":       stringSplit{},
 		"string_sort": listSortString{},

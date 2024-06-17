@@ -1,10 +1,12 @@
+import { lists }
+
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 flow Main(start) (stop) {
-	nodes { Index<list<int>>, Println }
+	nodes { lists.At<int>, Println }
 	:start -> [
-		($lst -> index:data),
-		(4 -> index:idx)
+		($lst -> at:data),
+		(4 -> at:idx)
 	]
-	[index:res, index:err] -> println -> :stop
+	[at:res, at:err] -> println -> :stop
 }
