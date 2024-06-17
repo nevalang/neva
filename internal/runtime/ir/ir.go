@@ -11,7 +11,7 @@ type Program struct {
 type PortAddr struct {
 	Path string `json:"path,omitempty"` // List of upstream nodes including the owner of the port.
 	Port string `json:"port,omitempty"` // Name of the port.
-	Idx  uint8 `json:"idx,omitempty"`  // Optional index of a slot in array port.
+	Idx  *uint8 `json:"idx,omitempty"`  // Optional index of a slot in array port.
 }
 
 // FuncCall describes call of a runtime function.

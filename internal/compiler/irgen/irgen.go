@@ -28,7 +28,7 @@ type (
 
 	relPortAddr struct {
 		Port string
-		Idx  uint8
+		Idx  *uint8
 	}
 )
 

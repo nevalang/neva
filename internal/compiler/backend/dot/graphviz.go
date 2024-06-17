@@ -32,7 +32,7 @@ func (p Port) FormatName() string {
 	case strings.HasSuffix(p.Path, "/out"):
 		portStr += "/out"
 	}
-	if p.Idx != 0 {
+	if p.Idx != nil {
 		portStr = fmt.Sprintf("%s/%d", portStr, p.Idx)
 	}
 	return strconv.Quote(portStr)
@@ -40,7 +40,7 @@ func (p Port) FormatName() string {
 
 func (p Port) FormatLabel() string {
 	escapePort := html.EscapeString(p.Port)
-	if p.Idx != 0 {
+	if p.Idx != nil {
 		return html.EscapeString(fmt.Sprintf("%s[%d]", p.Port, p.Idx))
 	}
 	return escapePort
@@ -57,7 +57,7 @@ func (p Port) Format() string {
 		path = path[:len(path)-4] // Trim /out
 		portStr += "/out"
 	}
-	if p.Idx != 0 {
+	if p.Idx != nil {
 		portStr = fmt.Sprint(portStr, "/", p.Idx)
 	}
 	return fmt.Sprintf("%q:%q", path, portStr)

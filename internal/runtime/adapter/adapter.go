@@ -1,8 +1,7 @@
 package adapter
 
 import (
-	"errors"
-	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/ir"
@@ -11,17 +10,20 @@ import (
 type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
-	runtimePorts := make(map[runtime.PortAddr]chan runtime.Msg, len(irProg.Ports))
-
-	for portInfo := range irProg.Ports {
-		addr := runtime.PortAddr{
-			Path: portInfo.Path,
-			Port: portInfo.Port,
-			Idx:  portInfo.Idx,
-		}
-		runtimePorts[addr] = make(chan runtime.Msg)
+	runtimePorts := a.getPorts(irProg)
+	runtimeConnections := a.getConnections(irProg)
+	runtimeFuncs, err := a.getFuncs(irProg, runtimePorts)
+	if err != nil {
+		return runtime.Program{}, err
 	}
+	return runtime.Program{
+		Ports:       runtimePorts,
+		Connections: runtimeConnections,
+		Funcs:       runtimeFuncs,
+	}, nil
+}
 
+func (Adapter) getConnections(irProg *ir.Program) map[runtime.PortAddr]map[runtime.PortAddr][]runtime.PortAddr {
 	runtimeConnections := make(
 		map[runtime.PortAddr]map[runtime.PortAddr][]runtime.PortAddr,
 		len(irProg.Connections),
@@ -31,7 +33,10 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 		senderPortAddr := runtime.PortAddr{
 			Path: sender.Path,
 			Port: sender.Port,
-			Idx:  uint8(sender.Idx),
+		}
+
+		if sender.Idx != nil {
+			senderPortAddr.Idx = *sender.Idx
 		}
 
 		receiverChans := make(map[runtime.PortAddr][]runtime.PortAddr, len(receivers))
@@ -40,108 +45,43 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.Path,
 				Port: rcvr.Port,
-				Idx:  uint8(rcvr.Idx),
 			}
-			intermediatePorts := []runtime.PortAddr{} // TODO
+			if rcvr.Idx != nil {
+				receiverPortAddr.Idx = *rcvr.Idx
+			}
+			intermediatePorts := []runtime.PortAddr{} // TODO intermediate ports
 			receiverChans[receiverPortAddr] = intermediatePorts
 		}
 
 		runtimeConnections[senderPortAddr] = receiverChans
 	}
-
-	runtimeFuncs := make([]runtime.FuncCall, 0, len(irProg.Funcs))
-
-	for _, call := range irProg.Funcs {
-		in := make(
-			map[string]runtime.FuncInport,
-			len(call.IO.In),
-		)
-
-		for _, addr := range call.IO.In {
-			addr := runtime.PortAddr{
-				Path: addr.Path,
-				Port: addr.Port,
-				Idx:  uint8(addr.Idx),
-			}
-
-			ch := runtimePorts[addr]
-
-			in[addr.Port] = runtime.NewFuncInport()
-		}
-
-		rIOOut := make(map[string][]chan runtime.Msg, len(call.IO.Out))
-		for _, addr := range call.IO.Out {
-			rPort := runtimePorts[runtime.PortAddr{
-				Path: addr.Path,
-				Port: addr.Port,
-				Idx:  uint8(addr.Idx),
-			}]
-			rIOOut[addr.Port] = append(rIOOut[addr.Port], rPort)
-		}
-
-		rFunc := runtime.FuncCall{
-			Ref: call.Ref,
-			IO: runtime.FuncIO{
-				In:  in,
-				Out: rIOOut,
-			},
-		}
-
-		if call.Msg != nil {
-			rMsg, err := a.msg(*call.Msg)
-			if err != nil {
-				return runtime.Program{}, fmt.Errorf("msg: %w", err)
-			}
-			rFunc.ConfigMsg = rMsg
-		}
-
-		runtimeFuncs = append(runtimeFuncs, rFunc)
-	}
-
-	return runtime.Program{
-		Ports:       runtimePorts,
-		Connections: runtimeConnections,
-		Funcs:       runtimeFuncs,
-	}, nil
+	return runtimeConnections
 }
 
-func (a Adapter) msg(msg ir.Message) (runtime.Msg, error) {
-	var result runtime.Msg
+func (Adapter) getPorts(irProg *ir.Program) map[runtime.PortAddr]chan runtime.Msg {
+	runtimePorts := make(
+		map[runtime.PortAddr]chan runtime.Msg,
+		len(irProg.Ports),
+	)
 
-	switch msg.Type {
-	case ir.MsgTypeBool:
-		result = runtime.NewBoolMsg(msg.Bool)
-	case ir.MsgTypeInt:
-		result = runtime.NewIntMsg(msg.Int)
-	case ir.MsgTypeFloat:
-		result = runtime.NewFloatMsg(msg.Float)
-	case ir.MsgTypeString:
-		result = runtime.NewStrMsg(msg.String)
-	case ir.MsgTypeList:
-		list := make([]runtime.Msg, len(msg.List))
-		for i, v := range msg.List {
-			el, err := a.msg(v)
-			if err != nil {
-				return nil, err
-			}
-			list[i] = el
+	for portInfo := range irProg.Ports {
+		if strings.HasSuffix(portInfo.Path, "out") {
+			continue // all outports use queue
 		}
-		result = runtime.NewListMsg(list...)
-	case ir.MsgTypeMap:
-		m := make(map[string]runtime.Msg, len(msg.List))
-		for k, v := range msg.Dict {
-			el, err := a.msg(v)
-			if err != nil {
-				return nil, err
-			}
-			m[k] = el
+
+		addr := runtime.PortAddr{
+			Path: portInfo.Path,
+			Port: portInfo.Port,
 		}
-		result = runtime.NewMapMsg(m)
-	default:
-		return nil, errors.New("unknown message type")
+
+		if portInfo.Idx != nil {
+			addr.Idx = *portInfo.Idx
+		}
+
+		runtimePorts[addr] = make(chan runtime.Msg)
 	}
 
-	return result, nil
+	return runtimePorts
 }
 
 func NewAdapter() Adapter {

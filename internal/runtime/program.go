@@ -7,7 +7,8 @@ import (
 )
 
 type Program struct {
-	Ports       map[PortAddr]chan Msg
+	Ports       map[PortAddr]chan Msg // Inports
+	QueueChan   chan QueueItem
 	Connections map[PortAddr]map[PortAddr][]PortAddr // sender -> final -> intermediate
 	Funcs       []FuncCall
 }
@@ -90,6 +91,10 @@ func NewFuncInport(
 
 type SingleInport struct{ ch <-chan Msg }
 
+func NewSingleInport(ch <-chan Msg) *SingleInport {
+	return &SingleInport{ch}
+}
+
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	select {
 	case msg := <-s.ch:
@@ -114,6 +119,10 @@ func (f FuncInports) Array(name string) (ArrayInport, error) {
 
 type ArrayInport struct{ chans []<-chan Msg }
 
+func NewArrayInport(chans []<-chan Msg) *ArrayInport {
+	return &ArrayInport{chans}
+}
+
 func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool) bool {
 	for i, ch := range a.chans {
 		select {
@@ -134,6 +143,10 @@ func (a ArrayInport) Len() int {
 
 type FuncOutports struct {
 	ports map[string]FuncOutport
+}
+
+func NewFuncOutports(ports map[string]FuncOutport) FuncOutports {
+	return FuncOutports{ports}
 }
 
 func (f FuncOutports) SingleOutport(name string) (SingleOutport, error) {
@@ -167,9 +180,26 @@ type FuncOutport struct {
 	array  *ArrayOutport
 }
 
+func NewFuncOutport(
+	single *SingleOutport,
+	array *ArrayOutport,
+) FuncOutport {
+	return FuncOutport{single, array}
+}
+
 type SingleOutport struct {
 	addr  PortAddr
 	queue chan<- QueueItem
+}
+
+func NewSingleOutport(
+	addr PortAddr,
+	queue chan<- QueueItem,
+) *SingleOutport {
+	return &SingleOutport{
+		addr:  addr,
+		queue: queue,
+	}
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
@@ -184,6 +214,16 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 type ArrayOutport struct {
 	addrs []PortAddr
 	queue chan<- QueueItem
+}
+
+func NewArrayOutport(
+	addrs []PortAddr,
+	queue chan<- QueueItem,
+) *ArrayOutport {
+	return &ArrayOutport{
+		addrs: addrs,
+		queue: queue,
+	}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {

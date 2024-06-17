@@ -21,9 +21,9 @@ func (g Generator) processNetwork(
 
 	for _, conn := range conns {
 		// here's how we handle array-bypass connections:
-		// sender is always flow's inport
+		// sender is always component's inport
 		// based on that, we can set receiver's inport slots
-		// equal to slots of our inport
+		// equal to slots of our own inport
 		if conn.ArrayBypass != nil {
 			arrBypassSender := conn.ArrayBypass.SenderOutport
 			arrBypassReceiver := conn.ArrayBypass.ReceiverInport
@@ -41,19 +41,19 @@ func (g Generator) processNetwork(
 					continue
 				}
 
-				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: slotIdx}
+				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: &slotIdx}
 				nodesPortsUsage[arrBypassReceiver.Node].in[addr] = struct{}{}
 
 				irSenderSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassSender.Node),
 					Port: arrBypassSender.Port,
-					Idx:  slotIdx,
+					Idx:  &slotIdx,
 				}
 
 				irReceiverSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
 					Port: arrBypassReceiver.Port,
-					Idx:  slotIdx,
+					Idx:  &slotIdx,
 				}
 
 				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
@@ -90,9 +90,9 @@ func (g Generator) processNetwork(
 				}
 			}
 
-			var idx uint8
+			var idx *uint8
 			if receiverSide.PortAddr.Idx != nil {
-				idx = *receiverSide.PortAddr.Idx
+				idx = receiverSide.PortAddr.Idx
 			}
 
 			receiverNode := receiverSide.PortAddr.Node
@@ -123,9 +123,9 @@ func (g Generator) processSenderSide(
 		}
 	}
 
-	var idx uint8
+	var idx *uint8
 	if senderSide.PortAddr.Idx != nil {
-		idx = *senderSide.PortAddr.Idx
+		idx = senderSide.PortAddr.Idx
 	}
 
 	// insert outport usage
@@ -178,7 +178,10 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 		if addrs[i].Port != addrs[j].Port {
 			return addrs[i].Port < addrs[j].Port
 		}
-		return addrs[i].Idx < addrs[j].Idx
+		if addrs[i].Idx == nil {
+			return true
+		}
+		return *addrs[i].Idx < *addrs[j].Idx
 	})
 }
 
@@ -205,9 +208,9 @@ func (Generator) getFuncOutports(nodeCtx nodeContext) []ir.PortAddr {
 
 // mapReceiverSide maps src connection side to ir connection side 1-1 just making the port addr's path absolute
 func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) *ir.PortAddr {
-	var idx uint8
+	var idx *uint8
 	if side.PortAddr.Idx != nil {
-		idx = *side.PortAddr.Idx
+		idx = side.PortAddr.Idx
 	}
 
 	result := &ir.PortAddr{

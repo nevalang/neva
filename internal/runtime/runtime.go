@@ -31,10 +31,8 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	qch := make(chan QueueItem)
-
 	queue := NewQueue(
-		qch,
+		prog.QueueChan,
 		prog.Connections,
 		prog.Ports,
 	)
@@ -44,7 +42,7 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		wg.Done()
 	}()
 
-	qch <- QueueItem{
+	prog.QueueChan <- QueueItem{
 		Sender: PortAddr{Path: "in", Port: "start"},
 		Msg:    &baseMsg{},
 	}
