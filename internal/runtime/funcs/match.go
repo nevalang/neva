@@ -20,12 +20,12 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	caseOut, err := io.Out.ArrayOutport("case")
+	caseOut, err := io.Out.Array("case")
 	if err != nil {
 		return nil, err
 	}
 
-	elseOut, err := io.Out.SingleOutport("else")
+	elseOut, err := io.Out.Single("else")
 	if err != nil {
 		return nil, err
 	}

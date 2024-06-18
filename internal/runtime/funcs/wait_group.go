@@ -19,7 +19,7 @@ func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 		return nil, err
 	}
 
-	sigOut, err := io.Out.SingleOutport("sig")
+	sigOut, err := io.Out.Single("sig")
 	if err != nil {
 		return nil, err
 	}

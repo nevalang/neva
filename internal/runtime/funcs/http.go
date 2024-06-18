@@ -16,12 +16,12 @@ func (httpGet) Create(funcIO runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 		return nil, err
 	}
 
-	respOut, err := funcIO.Out.SingleOutport("resp")
+	respOut, err := funcIO.Out.Single("resp")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := funcIO.Out.SingleOutport("err")
+	errOut, err := funcIO.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

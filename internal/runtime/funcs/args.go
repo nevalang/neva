@@ -15,7 +15,7 @@ func (a args) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
-	dataOut, err := io.Out.SingleOutport("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}

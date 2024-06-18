@@ -20,7 +20,7 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 		return nil, err
 	}
 
-	dataOut, err := io.Out.SingleOutport("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}

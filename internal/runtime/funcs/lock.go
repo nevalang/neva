@@ -19,19 +19,11 @@ func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
-	dataOut, err := io.Out.SingleOutport("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	return l.Handle(sigIn, dataIn, dataOut), nil
-}
-
-func (lock) Handle(
-	sigIn runtime.SingleInport,
-	dataIn runtime.SingleInport,
-	dataOut runtime.SingleOutport,
-) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
 			if _, ok := sigIn.Receive(ctx); !ok {
@@ -47,5 +39,5 @@ func (lock) Handle(
 				return
 			}
 		}
-	}
+	}, nil
 }

@@ -20,12 +20,12 @@ func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.
 		return nil, err
 	}
 
-	sig, err := rio.Out.SingleOutport("sig")
+	sig, err := rio.Out.Single("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.SingleOutport("err")
+	errPort, err := rio.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

@@ -14,12 +14,12 @@ func (unwrap) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
-	someOut, err := io.Out.SingleOutport("some")
+	someOut, err := io.Out.Single("some")
 	if err != nil {
 		return nil, err
 	}
 
-	noneOut, err := io.Out.SingleOutport("none")
+	noneOut, err := io.Out.Single("none")
 	if err != nil {
 		return nil, err
 	}

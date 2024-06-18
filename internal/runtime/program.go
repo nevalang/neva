@@ -147,7 +147,7 @@ func NewFuncOutports(ports map[string]FuncOutport) FuncOutports {
 	return FuncOutports{ports}
 }
 
-func (f FuncOutports) SingleOutport(name string) (SingleOutport, error) {
+func (f FuncOutports) Single(name string) (SingleOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
 		return SingleOutport{}, fmt.Errorf("port '%v' not found", name)
@@ -160,7 +160,7 @@ func (f FuncOutports) SingleOutport(name string) (SingleOutport, error) {
 	return *port.single, nil
 }
 
-func (f FuncOutports) ArrayOutport(name string) (ArrayOutport, error) {
+func (f FuncOutports) Array(name string) (ArrayOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
 		return ArrayOutport{}, fmt.Errorf("port '%v' not found", name)

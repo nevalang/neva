@@ -14,12 +14,12 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	thenOut, err := io.Out.SingleOutport("then")
+	thenOut, err := io.Out.Single("then")
 	if err != nil {
 		return nil, err
 	}
 
-	elseOut, err := io.Out.SingleOutport("else")
+	elseOut, err := io.Out.Single("else")
 	if err != nil {
 		return nil, err
 	}

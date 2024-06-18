@@ -16,12 +16,12 @@ func (imageEncode) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Co
 		return nil, err
 	}
 
-	dataOut, err := io.Out.SingleOutport("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.SingleOutport("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

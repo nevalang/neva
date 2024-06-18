@@ -22,7 +22,7 @@ func (streamProduct) Create(
 		return nil, err
 	}
 
-	seqOut, err := io.Out.SingleOutport("seq")
+	seqOut, err := io.Out.Single("seq")
 	if err != nil {
 		return nil, err
 	}

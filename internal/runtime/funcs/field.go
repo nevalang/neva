@@ -25,7 +25,7 @@ func (s readStructField) Create(io runtime.FuncIO, cfg runtime.Msg) (func(ctx co
 		return nil, err
 	}
 
-	msgOut, err := io.Out.SingleOutport("msg")
+	msgOut, err := io.Out.Single("msg")
 	if err != nil {
 		return nil, err
 	}

@@ -16,12 +16,12 @@ func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.C
 		return nil, err
 	}
 
-	dataPort, err := rio.Out.SingleOutport("data")
+	dataPort, err := rio.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.SingleOutport("err")
+	errPort, err := rio.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

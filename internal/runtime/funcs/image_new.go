@@ -15,12 +15,12 @@ func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, err
 	}
 
-	imgOut, err := io.Out.SingleOutport("img")
+	imgOut, err := io.Out.Single("img")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.SingleOutport("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

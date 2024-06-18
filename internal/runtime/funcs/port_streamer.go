@@ -18,7 +18,7 @@ func (arrayPortToStream) Create(
 		return nil, errors.New("missing array inport 'port'")
 	}
 
-	seqOut, err := io.Out.SingleOutport("seq")
+	seqOut, err := io.Out.Single("seq")
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ func (streamIntRange) Create(
 		return nil, err
 	}
 
-	dataOut, err := io.Out.SingleOutport("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}

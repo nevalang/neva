@@ -19,7 +19,7 @@ func (p intIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 		return nil, err
 	}
 
-	resOut, err := io.Out.SingleOutport("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}

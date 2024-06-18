@@ -49,7 +49,7 @@ func (d FuncRunner) createHandlers(funcCalls []FuncCall) ([]func(context.Context
 
 		handler, err := creator.Create(call.IO, call.ConfigMsg)
 		if err != nil {
-			return nil, fmt.Errorf("create: %w: %v", err, call.Ref)
+			return nil, fmt.Errorf("%v: %w", call.Ref, err)
 		}
 
 		funcs[i] = handler

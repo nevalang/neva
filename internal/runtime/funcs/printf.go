@@ -22,7 +22,7 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, fmt.Errorf("missing required input port 'args'")
 	}
 
-	argsOut, err := io.Out.ArrayOutport("args")
+	argsOut, err := io.Out.Array("args")
 	if err != nil {
 		return nil, fmt.Errorf("missing required output port 'args'")
 	}
@@ -31,7 +31,7 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, fmt.Errorf("input and output ports 'args' must have the same length")
 	}
 
-	errOut, err := io.Out.SingleOutport("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}

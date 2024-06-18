@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"maps"
 )
 
 type Queue struct {
@@ -18,17 +17,19 @@ func (d Queue) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case item := <-d.ch:
+			// FIXME current design has a problem that queue might be abused
 			d.broadcast(ctx, item)
 		}
 	}
 }
 
+// TODO optimize by implementing queue-based round-robin algorithm
 func (d Queue) broadcast(ctx context.Context, item QueueItem) {
-	receiversCopy := maps.Clone(d.fanOutMap[item.Sender])
+	receivers := d.fanOutMap[item.Sender]
 
-	msg := d.handleSendEvent(ctx, item, receiversCopy)
+	msg := d.handleSendEvent(ctx, item, receivers)
 
-	for final, intermediate := range receiversCopy {
+	for final, intermediate := range receivers {
 		for i := range intermediate {
 			msg = d.handlePendingEvent(ctx, QueueItem{
 				Sender: item.Sender,
@@ -45,9 +46,6 @@ func (d Queue) broadcast(ctx context.Context, item QueueItem) {
 			return
 		case inport <- msg:
 			d.handleReceivedEvent(ctx, item, final)
-			delete(receiversCopy, final)
-		default:
-			continue
 		}
 	}
 }
@@ -79,8 +77,8 @@ func (d Queue) handleReceivedEvent(
 }
 
 type QueueItem struct {
-	Sender PortAddr
 	Msg    Msg
+	Sender PortAddr
 }
 
 func NewQueue(
