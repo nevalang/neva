@@ -28,11 +28,8 @@ func (a Adapter) getFuncs(
 		for _, addr := range call.IO.In {
 			runtimeAddr := runtime.PortAddr{
 				Path: addr.Path,
-				Port: addr.Path,
-			}
-
-			if addr.Idx != nil {
-				runtimeAddr.Idx = *addr.Idx
+				Port: addr.Port,
+				Idx:  addr.Idx,
 			}
 
 			port, ok := inports[runtimeAddr]
@@ -71,10 +68,7 @@ func (a Adapter) getFuncs(
 			runtimeAddr := runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Path,
-			}
-
-			if addr.Idx != nil {
-				runtimeAddr.Idx = *addr.Idx
+				Idx:  addr.Idx,
 			}
 
 			if addr.Idx == nil {

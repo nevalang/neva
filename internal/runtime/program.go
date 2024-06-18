@@ -7,7 +7,7 @@ import (
 )
 
 type Program struct {
-	Ports       map[PortAddr]chan Msg // Inports
+	Ports       map[PortAddr]chan Msg // Inports (and STOP outport)
 	QueueChan   chan QueueItem
 	Connections map[PortAddr]map[PortAddr][]PortAddr // sender -> final -> intermediate
 	Funcs       []FuncCall
@@ -16,16 +16,14 @@ type Program struct {
 type PortAddr struct {
 	Path string
 	Port string
-	Idx  uint8
+	Idx  *uint8
 }
 
 func (p PortAddr) String() string {
+	if p.Idx == nil {
+		return fmt.Sprintf("%v:%v", p.Path, p.Port)
+	}
 	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
-}
-
-type ConnectionSender struct {
-	Addr PortAddr
-	Chan chan Msg
 }
 
 type FuncCall struct {

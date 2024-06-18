@@ -22,6 +22,12 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		return err
 	}
 
+	queue := NewQueue(
+		prog.QueueChan,
+		prog.Connections,
+		prog.Ports,
+	)
+
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		<-stop
@@ -31,21 +37,10 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	queue := NewQueue(
-		prog.QueueChan,
-		prog.Connections,
-		prog.Ports,
-	)
-
 	go func() {
 		queue.Run(ctx)
 		wg.Done()
 	}()
-
-	prog.QueueChan <- QueueItem{
-		Sender: PortAddr{Path: "in", Port: "start"},
-		Msg:    &baseMsg{},
-	}
 
 	go func() {
 		funcRun(
@@ -57,6 +52,11 @@ func (r Runtime) Run(ctx context.Context, prog Program) error {
 		)
 		wg.Done()
 	}()
+
+	prog.QueueChan <- QueueItem{
+		Sender: PortAddr{Path: "in", Port: "start"},
+		Msg:    &baseMsg{},
+	}
 
 	wg.Wait()
 

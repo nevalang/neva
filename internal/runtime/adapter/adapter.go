@@ -17,13 +17,16 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 		return runtime.Program{}, err
 	}
 	return runtime.Program{
+		QueueChan:   make(chan runtime.QueueItem),
 		Ports:       runtimePorts,
 		Connections: runtimeConnections,
 		Funcs:       runtimeFuncs,
 	}, nil
 }
 
-func (Adapter) getConnections(irProg *ir.Program) map[runtime.PortAddr]map[runtime.PortAddr][]runtime.PortAddr {
+func (Adapter) getConnections(
+	irProg *ir.Program,
+) map[runtime.PortAddr]map[runtime.PortAddr][]runtime.PortAddr {
 	runtimeConnections := make(
 		map[runtime.PortAddr]map[runtime.PortAddr][]runtime.PortAddr,
 		len(irProg.Connections),
@@ -33,10 +36,7 @@ func (Adapter) getConnections(irProg *ir.Program) map[runtime.PortAddr]map[runti
 		senderPortAddr := runtime.PortAddr{
 			Path: sender.Path,
 			Port: sender.Port,
-		}
-
-		if sender.Idx != nil {
-			senderPortAddr.Idx = *sender.Idx
+			Idx:  sender.Idx,
 		}
 
 		receiverChans := make(map[runtime.PortAddr][]runtime.PortAddr, len(receivers))
@@ -45,9 +45,7 @@ func (Adapter) getConnections(irProg *ir.Program) map[runtime.PortAddr]map[runti
 			receiverPortAddr := runtime.PortAddr{
 				Path: rcvr.Path,
 				Port: rcvr.Port,
-			}
-			if rcvr.Idx != nil {
-				receiverPortAddr.Idx = *rcvr.Idx
+				Idx:  rcvr.Idx,
 			}
 			intermediatePorts := []runtime.PortAddr{} // TODO intermediate ports
 			receiverChans[receiverPortAddr] = intermediatePorts
@@ -55,6 +53,7 @@ func (Adapter) getConnections(irProg *ir.Program) map[runtime.PortAddr]map[runti
 
 		runtimeConnections[senderPortAddr] = receiverChans
 	}
+
 	return runtimeConnections
 }
 
@@ -72,14 +71,17 @@ func (Adapter) getPorts(irProg *ir.Program) map[runtime.PortAddr]chan runtime.Ms
 		addr := runtime.PortAddr{
 			Path: portInfo.Path,
 			Port: portInfo.Port,
-		}
-
-		if portInfo.Idx != nil {
-			addr.Idx = *portInfo.Idx
+			Idx:  portInfo.Idx,
 		}
 
 		runtimePorts[addr] = make(chan runtime.Msg)
 	}
+
+	// stop outport is special
+	runtimePorts[runtime.PortAddr{
+		Path: "out",
+		Port: "stop",
+	}] = make(chan runtime.Msg)
 
 	return runtimePorts
 }

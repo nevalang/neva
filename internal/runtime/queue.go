@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"maps"
 )
 
@@ -56,6 +57,7 @@ func (d Queue) handleSendEvent(
 	item QueueItem,
 	receivers map[PortAddr][]PortAddr,
 ) Msg {
+	fmt.Println("send", item, receivers)
 	return item.Msg
 }
 
@@ -64,6 +66,7 @@ func (d Queue) handlePendingEvent(
 	item QueueItem,
 	receiver PortAddr,
 ) Msg {
+	fmt.Println("pending", item, receiver)
 	return item.Msg
 }
 
@@ -72,6 +75,7 @@ func (d Queue) handleReceivedEvent(
 	item QueueItem,
 	receiver PortAddr,
 ) {
+	fmt.Println("received", item, receiver)
 }
 
 type QueueItem struct {
