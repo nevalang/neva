@@ -23,7 +23,7 @@ func (p PortAddr) String() string {
 	if p.Idx == nil {
 		return fmt.Sprintf("%v:%v", p.Path, p.Port)
 	}
-	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
+	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, *p.Idx)
 }
 
 type FuncCall struct {

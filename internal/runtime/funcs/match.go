@@ -20,7 +20,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	caseOut, err := io.Out.ArrayOutport("then")
+	caseOut, err := io.Out.ArrayOutport("case")
 	if err != nil {
 		return nil, err
 	}

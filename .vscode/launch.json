@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "-debug", "e2e/hello_world_verbose/main"]
+      "args": ["run", "-debug", "examples/add_numbers"]
     },
     {
       "name": "LSP",
