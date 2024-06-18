@@ -12,12 +12,13 @@ type Adapter struct{}
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	runtimePorts := a.getPorts(irProg)
 	runtimeConnections := a.getConnections(irProg)
-	runtimeFuncs, err := a.getFuncs(irProg, runtimePorts)
+	q := make(chan runtime.QueueItem)
+	runtimeFuncs, err := a.getFuncs(irProg, runtimePorts, q)
 	if err != nil {
 		return runtime.Program{}, err
 	}
 	return runtime.Program{
-		QueueChan:   make(chan runtime.QueueItem),
+		QueueChan:   q,
 		Ports:       runtimePorts,
 		Connections: runtimeConnections,
 		Funcs:       runtimeFuncs,

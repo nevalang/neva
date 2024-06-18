@@ -11,6 +11,7 @@ import (
 func (a Adapter) getFuncs(
 	prog *ir.Program,
 	inports map[runtime.PortAddr]chan runtime.Msg,
+	q chan<- runtime.QueueItem,
 ) ([]runtime.FuncCall, error) {
 	result := make([]runtime.FuncCall, 0, len(prog.Funcs))
 
@@ -60,14 +61,12 @@ func (a Adapter) getFuncs(
 
 		funcOutports := make(map[string]runtime.FuncOutport, len(call.IO.Out))
 
-		q := make(chan<- runtime.QueueItem) // TODO buffer
-
 		tmpArrOutports := map[string][]runtime.PortAddr{}
 
 		for _, addr := range call.IO.Out {
 			runtimeAddr := runtime.PortAddr{
 				Path: addr.Path,
-				Port: addr.Path,
+				Port: addr.Port,
 				Idx:  addr.Idx,
 			}
 
