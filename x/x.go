@@ -2,10 +2,11 @@
 package x
 
 import (
-	"runtime"
 	"sort"
-	"time"
+	"sync/atomic"
 )
+
+var counter atomic.Uint64
 
 type outport struct {
 	ch chan item
@@ -13,13 +14,13 @@ type outport struct {
 
 type item struct {
 	data    any
-	sent_at int64
+	counter uint64
 }
 
 func (o outport) Send(data any) {
 	o.ch <- item{
 		data,
-		time.Now().UnixNano(),
+		counter.Add(1),
 	}
 }
 
@@ -39,7 +40,7 @@ func fanIn(outs []outport, in chan<- item) {
 				case msg := <-out.ch:
 					buf = append(buf, msg)
 				default:
-					runtime.Gosched()
+					// runtime.Gosched()
 					continue
 				}
 			}
@@ -53,7 +54,7 @@ func fanIn(outs []outport, in chan<- item) {
 		// algorithm does't guarantee that we received messages in same order they were sent
 		// but each msg contain its sending_time so we can sort them before sending to inport
 		sort.Slice(buf, func(i, j int) bool {
-			return buf[i].sent_at < buf[j].sent_at
+			return buf[i].counter < buf[j].counter
 		})
 
 		// finally send them to inport
