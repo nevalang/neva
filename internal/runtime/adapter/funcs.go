@@ -10,8 +10,7 @@ import (
 
 func (a Adapter) getFuncs(
 	prog *ir.Program,
-	inports map[runtime.PortAddr]chan runtime.Msg,
-	q chan<- runtime.QueueItem,
+	ports map[runtime.PortAddr]chan runtime.IndexedMsg,
 ) ([]runtime.FuncCall, error) {
 	result := make([]runtime.FuncCall, 0, len(prog.Funcs))
 
@@ -23,7 +22,7 @@ func (a Adapter) getFuncs(
 			len(call.IO.In),
 		)
 
-		tmpArrInports := make(map[string][]<-chan runtime.Msg, len(call.IO.In))
+		tmpArrInports := make(map[string][]<-chan runtime.IndexedMsg, len(call.IO.In))
 
 		// in first run we fill single ports and collect array ports to tmp var
 		for _, addr := range call.IO.In {
@@ -33,7 +32,7 @@ func (a Adapter) getFuncs(
 				Idx:  addr.Idx,
 			}
 
-			port, ok := inports[runtimeAddr]
+			port, ok := ports[runtimeAddr]
 			if !ok {
 				panic("port not found")
 			}
@@ -61,7 +60,7 @@ func (a Adapter) getFuncs(
 
 		funcOutports := make(map[string]runtime.FuncOutport, len(call.IO.Out))
 
-		tmpArrOutports := map[string][]runtime.PortAddr{}
+		tmpArrOutports := map[string][]chan<- runtime.IndexedMsg{}
 
 		for _, addr := range call.IO.Out {
 			runtimeAddr := runtime.PortAddr{
@@ -70,21 +69,26 @@ func (a Adapter) getFuncs(
 				Idx:  addr.Idx,
 			}
 
+			port, ok := ports[runtimeAddr]
+			if !ok {
+				panic("port not found")
+			}
+
 			if addr.Idx == nil {
 				funcOutports[addr.Port] = runtime.NewFuncOutport(
-					runtime.NewSingleOutport(runtimeAddr, q),
+					runtime.NewSingleOutport(runtimeAddr, port),
 					nil,
 				)
 				continue
 			}
 
-			tmpArrOutports[addr.Port] = append(tmpArrOutports[addr.Port], runtimeAddr)
+			tmpArrOutports[addr.Port] = append(tmpArrOutports[addr.Port], port)
 		}
 
-		for name, addrs := range tmpArrOutports {
+		for name, slots := range tmpArrOutports {
 			funcOutports[name] = runtime.NewFuncOutport(
 				nil,
-				runtime.NewArrayOutport(addrs, q),
+				runtime.NewArrayOutport(slots),
 			)
 		}
 

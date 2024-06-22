@@ -7,16 +7,9 @@ import (
 )
 
 type Program struct {
-	Ports       map[PortAddr]chan Msg // Inports (and STOP outport)
-	QueueChan   chan QueueItem
-	Connections map[PortAddr]map[PortAddr][]PortAddr // sender -> final -> intermediate
+	Start, Stop chan IndexedMsg
+	Connections map[Receiver][]Sender
 	Funcs       []FuncCall
-}
-
-type PortAddr struct {
-	Path string
-	Port string
-	Idx  *uint8
 }
 
 func (p PortAddr) String() string {
@@ -87,16 +80,16 @@ func NewFuncInport(
 	}
 }
 
-type SingleInport struct{ ch <-chan Msg }
+type SingleInport struct{ ch <-chan IndexedMsg }
 
-func NewSingleInport(ch <-chan Msg) *SingleInport {
+func NewSingleInport(ch <-chan IndexedMsg) *SingleInport {
 	return &SingleInport{ch}
 }
 
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	select {
-	case msg := <-s.ch:
-		return msg, true
+	case indexedMsg := <-s.ch:
+		return indexedMsg.data, true
 	case <-ctx.Done():
 		return nil, false
 	}
@@ -115,9 +108,9 @@ func (f FuncInports) Array(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
-type ArrayInport struct{ chans []<-chan Msg }
+type ArrayInport struct{ chans []<-chan IndexedMsg }
 
-func NewArrayInport(chans []<-chan Msg) *ArrayInport {
+func NewArrayInport(chans []<-chan IndexedMsg) *ArrayInport {
 	return &ArrayInport{chans}
 }
 
@@ -125,7 +118,7 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 	for i, ch := range a.chans {
 		select {
 		case msg := <-ch:
-			if !f(i, msg) {
+			if !f(i, msg.data) {
 				return false
 			}
 		case <-ctx.Done():
@@ -186,23 +179,26 @@ func NewFuncOutport(
 }
 
 type SingleOutport struct {
-	addr  PortAddr
-	queue chan<- QueueItem
+	addr PortAddr
+	ch   chan<- IndexedMsg
 }
 
 func NewSingleOutport(
 	addr PortAddr,
-	queue chan<- QueueItem,
+	ch chan<- IndexedMsg,
 ) *SingleOutport {
 	return &SingleOutport{
-		addr:  addr,
-		queue: queue,
+		addr: addr,
+		ch:   ch,
 	}
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 	select {
-	case s.queue <- QueueItem{Msg: msg, Sender: s.addr}:
+	case s.ch <- IndexedMsg{
+		data:  msg,
+		index: counter.Add(1),
+	}:
 		return true
 	case <-ctx.Done():
 		return false
@@ -210,31 +206,27 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 }
 
 type ArrayOutport struct {
-	addrs []PortAddr
-	queue chan<- QueueItem
+	slots []chan<- IndexedMsg
 }
 
-func NewArrayOutport(
-	addrs []PortAddr,
-	queue chan<- QueueItem,
-) *ArrayOutport {
-	return &ArrayOutport{
-		addrs: addrs,
-		queue: queue,
-	}
+func NewArrayOutport(slots []chan<- IndexedMsg) *ArrayOutport {
+	return &ArrayOutport{slots: slots}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
-	for _, addr := range a.addrs {
+	for _, slot := range a.slots {
 		select {
 		case <-ctx.Done():
 			return false
-		case a.queue <- QueueItem{Msg: msg, Sender: addr}:
+		case slot <- IndexedMsg{
+			data:  msg,
+			index: counter.Add(1),
+		}:
 		}
 	}
 	return true
 }
 
 func (a ArrayOutport) Len() int {
-	return len(a.addrs)
+	return len(a.slots)
 }

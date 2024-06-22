@@ -3,8 +3,23 @@ package ir
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
 	Ports       map[PortAddr]struct{}              `json:"ports,omitempty"`       // All inports and outports in the program. Each with unique address.
-	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers. Could be thought of as a fan-out map.
+	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out).
 	Funcs       []FuncCall                         `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
+}
+
+func (p Program) FanIn() map[PortAddr]map[PortAddr]struct{} {
+	fanIn := make(map[PortAddr]map[PortAddr]struct{})
+
+	for sender, receivers := range p.Connections {
+		for receiver := range receivers {
+			if _, ok := fanIn[receiver]; !ok {
+				fanIn[receiver] = make(map[PortAddr]struct{})
+			}
+			fanIn[receiver][sender] = struct{}{}
+		}
+	}
+
+	return fanIn
 }
 
 // PortAddr is a composite unique identifier for a port.

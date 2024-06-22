@@ -1,61 +1,44 @@
-// Package runtime implements environment for dataflow programs execution.
 package runtime
 
 import (
 	"context"
-	"errors"
 	"sync"
+	"sync/atomic"
 )
 
+var counter atomic.Uint64
+
 type Runtime struct {
-	funcRunner FuncRunner
+	stop, start chan IndexedMsg
+	funcRunner  FuncRunner
 }
 
-func (r Runtime) Run(ctx context.Context, prog Program) error {
-	stop, ok := prog.Ports[PortAddr{Path: "out", Port: "stop"}]
-	if !ok {
-		return errors.New("stop outport not found")
-	}
-
-	funcRun, err := r.funcRunner.Run(prog.Funcs)
-	if err != nil {
-		return err
-	}
-
-	queue := NewQueue(
-		prog.QueueChan,
-		prog.Connections,
-		prog.Ports,
-	)
-
+func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
-		<-stop
+		<-p.stop
 		cancel()
 	}()
 
-	var wg sync.WaitGroup
+	wg := sync.WaitGroup{}
 	wg.Add(2)
 
+	net := NewNetwork(prog.Connections)
 	go func() {
-		queue.Run(ctx)
+		net.Run(ctx)
 		wg.Done()
 	}()
 
+	funcrun, _ := p.funcRunner.Run(prog.Funcs)
 	go func() {
-		funcRun(
-			context.WithValue(
-				ctx,
-				"cancel", //nolint:staticcheck // SA1029
-				cancel,
-			),
-		)
+		ctx = context.WithValue(ctx, "cancel", cancel)
+		funcrun(ctx)
 		wg.Done()
 	}()
 
-	prog.QueueChan <- QueueItem{
-		Sender: PortAddr{Path: "in", Port: "start"},
-		Msg:    &baseMsg{},
+	p.start <- IndexedMsg{
+		index: counter.Add(1),
+		data:  nil,
 	}
 
 	wg.Wait()
