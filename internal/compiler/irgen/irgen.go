@@ -97,7 +97,7 @@ func (g Generator) processNode(
 		}
 	}
 
-	flow := flowEntity.Flow
+	flow := flowEntity.Component
 
 	runtimeFuncRef, err := getFuncRef(flow, nodeCtx.node.TypeArgs)
 	if err != nil {

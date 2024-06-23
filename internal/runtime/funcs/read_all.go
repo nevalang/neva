@@ -10,7 +10,7 @@ import (
 
 type readAll struct{}
 
-func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
+func (c readAll) Create(rio runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err

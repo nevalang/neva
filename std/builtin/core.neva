@@ -22,3 +22,6 @@ pub flow Unwrap<T>(data maybe<T>) (some T, none struct{})
 
 #extern(stream_int_range)
 pub flow Range(from int, to int) (data stream<int>)
+
+#extern(fan_out)
+pub flow FanOut(data any) ([data] any)

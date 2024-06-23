@@ -145,14 +145,14 @@ type desugarEntityResult struct {
 }
 
 func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEntityResult, *compiler.Error) {
-	if entity.Kind != src.FlowEntity && entity.Kind != src.ConstEntity {
+	if entity.Kind != src.ComponentEntity && entity.Kind != src.ConstEntity {
 		return desugarEntityResult{entity: entity}, nil
 	}
 
 	if entity.Kind == src.ConstEntity {
 		desugaredConst, err := d.handleConst(entity.Const)
 		if err != nil {
-			return desugarEntityResult{}, compiler.Error{Meta: &entity.Flow.Meta}.Wrap(err)
+			return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 		}
 
 		return desugarEntityResult{
@@ -164,17 +164,17 @@ func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEnt
 		}, nil
 	}
 
-	flowResult, err := d.handleFlow(entity.Flow, scope)
+	componentResult, err := d.handleComponent(entity.Component, scope)
 	if err != nil {
-		return desugarEntityResult{}, compiler.Error{Meta: &entity.Flow.Meta}.Wrap(err)
+		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 	}
 
 	return desugarEntityResult{
-		entitiesToInsert: flowResult.virtualEntities,
+		entitiesToInsert: componentResult.virtualEntities,
 		entity: src.Entity{
-			IsPublic: entity.IsPublic,
-			Kind:     entity.Kind,
-			Flow:     flowResult.desugaredFlow,
+			IsPublic:  entity.IsPublic,
+			Kind:      entity.Kind,
+			Component: componentResult.desugaredFlow,
 		},
 	}, nil
 }

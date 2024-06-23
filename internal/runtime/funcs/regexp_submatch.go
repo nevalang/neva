@@ -10,7 +10,7 @@ import (
 
 type regexpSubmatch struct{}
 
-func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
+func (r regexpSubmatch) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	regexpIn, err := io.In.Single("regexp")
 	if err != nil {
 		return nil, err

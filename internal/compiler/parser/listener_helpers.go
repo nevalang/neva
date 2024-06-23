@@ -1070,8 +1070,8 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	body := actx.CompBody()
 	if body == nil {
 		return src.Entity{
-			Kind: src.FlowEntity,
-			Flow: src.Flow{
+			Kind: src.ComponentEntity,
+			Component: src.Component{
 				Interface: parsedInterfaceDef,
 			},
 		}, nil
@@ -1090,8 +1090,8 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	nodesDef := body.CompNodesDef()
 	if nodesDef == nil {
 		return src.Entity{
-			Kind: src.FlowEntity,
-			Flow: src.Flow{
+			Kind: src.ComponentEntity,
+			Component: src.Component{
 				Interface: parsedInterfaceDef,
 				Net:       parsedConnections,
 			},
@@ -1106,8 +1106,8 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	parsedNodes = v
 
 	return src.Entity{
-		Kind: src.FlowEntity,
-		Flow: src.Flow{
+		Kind: src.ComponentEntity,
+		Component: src.Component{
 			Interface: parsedInterfaceDef,
 			Nodes:     parsedNodes,
 			Net:       parsedConnections,

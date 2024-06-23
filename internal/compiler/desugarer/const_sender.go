@@ -120,6 +120,7 @@ func (d Desugarer) handleConstRefSender(
 		EntityRef: emitterFlowRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
 	}
+
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: virtualEmitterName,
 		Port: "msg",

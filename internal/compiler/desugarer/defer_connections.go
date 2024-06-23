@@ -26,7 +26,7 @@ var virtualBlockerNode = src.Node{
 	},
 }
 
-type handleThenConnectionsResult struct {
+type desugarDeferredConnectionsResult struct {
 	connsToInsert  []src.Connection
 	connToReplace  src.Connection
 	constsToInsert map[string]src.Const
@@ -36,13 +36,13 @@ type handleThenConnectionsResult struct {
 
 var virtualBlockersCounter atomic.Uint64
 
-func (d Desugarer) handleDeferredConnections(
-	origConn src.NormalConnection,
+func (d Desugarer) desugarDeferredConnections(
+	originalConn src.NormalConnection,
 	nodes map[string]src.Node,
 	scope src.Scope,
-) (handleThenConnectionsResult, *compiler.Error) {
-	originalSender := origConn.SenderSide
-	deferredConnections := origConn.ReceiverSide.DeferredConnections
+) (desugarDeferredConnectionsResult, *compiler.Error) {
+	originalSender := originalConn.SenderSide
+	deferredConnections := originalConn.ReceiverSide.DeferredConnections
 
 	// recursively desugar every deferred connections
 	handleNetResult, err := d.handleNetwork(
@@ -51,7 +51,7 @@ func (d Desugarer) handleDeferredConnections(
 		scope,
 	)
 	if err != nil {
-		return handleThenConnectionsResult{}, nil
+		return desugarDeferredConnectionsResult{}, nil
 	}
 
 	// we want to return nodes created in recursive calls
@@ -129,7 +129,7 @@ func (d Desugarer) handleDeferredConnections(
 	// there are connections with both deferred connections and normal receivers
 	receiversForOriginalSender = append(
 		receiversForOriginalSender,
-		origConn.ReceiverSide.Receivers...,
+		originalConn.ReceiverSide.Receivers...,
 	)
 
 	// don't forget to append first connection
@@ -142,7 +142,7 @@ func (d Desugarer) handleDeferredConnections(
 		},
 	}
 
-	return handleThenConnectionsResult{
+	return desugarDeferredConnectionsResult{
 		nodesToInsert:  virtualNodes,
 		connsToInsert:  virtualConns,
 		constsToInsert: handleNetResult.virtualConstants,

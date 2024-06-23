@@ -22,13 +22,9 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, fmt.Errorf("missing required input port 'args'")
 	}
 
-	argsOut, err := io.Out.Array("args")
+	sigOut, err := io.Out.Single("sig")
 	if err != nil {
 		return nil, fmt.Errorf("missing required output port 'args'")
-	}
-
-	if argsIn.Len() != argsOut.Len() {
-		return nil, fmt.Errorf("input and output ports 'args' must have the same length")
 	}
 
 	errOut, err := io.Out.Single("err")
@@ -36,14 +32,14 @@ func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, err
 	}
 
-	return p.handle(tplIn, argsIn, errOut, argsOut)
+	return p.handle(tplIn, argsIn, errOut, sigOut)
 }
 
 func (printf) handle(
 	tplIn runtime.SingleInport,
 	argsIn runtime.ArrayInport,
 	errOut runtime.SingleOutport,
-	argsOuts runtime.ArrayOutport,
+	sigOut runtime.SingleOutport,
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
 		for {
@@ -73,10 +69,8 @@ func (printf) handle(
 				continue
 			}
 
-			for i := 0; i < argsOuts.Len(); i++ {
-				if !argsOuts.Send(ctx, uint8(i), args[i]) {
-					return
-				}
+			if !sigOut.Send(ctx, runtime.NewStrMsg(res)) {
+				return
 			}
 		}
 	}, nil
@@ -132,7 +126,10 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 
 	// Check if all arguments were used
 	if len(usedArgs) != len(args) {
-		return "", fmt.Errorf("not all arguments were used in the template")
+		return "", fmt.Errorf(
+			"not all arguments are used in the template: got %v, used %v",
+			len(args), len(usedArgs),
+		)
 	}
 
 	return result.String(), nil

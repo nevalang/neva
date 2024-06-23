@@ -36,7 +36,7 @@ flow PrintFirstLine(n int) (n int) {
         ($firstLine1 -> printf:tpl)
     ]
 
-    [println:sig, printf:args[0]] -> lock:sig
+    [println:sig, printf:sig] -> lock:sig
     lock:data -> :n
 }
 
@@ -60,6 +60,6 @@ flow PrintSecondLine(n int) (n int) {
         ($secondLine1 -> printf:tpl)
     ]
 
-    [println:sig, printf:args[0]] -> lock:sig
+    [println:sig, printf:sig] -> lock:sig
     lock:data -> :n
 }

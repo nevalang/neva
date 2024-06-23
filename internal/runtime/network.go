@@ -75,7 +75,7 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 func (t Network) fanIn(ctx context.Context, in Receiver, outs []Sender) {
 	for {
 		i := 0
-		buf := make([]IndexedMsg, 0, len(outs))
+		buf := make([]IndexedMsg, 0, len(outs)^2)
 
 		for { // wait long enough to fill the buffer
 			if len(buf) > 0 && i >= len(outs) {

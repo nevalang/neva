@@ -33,7 +33,7 @@ func (g Generator) getFuncCall(
 	}, nil
 }
 
-func getFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
+func getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := flow.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil

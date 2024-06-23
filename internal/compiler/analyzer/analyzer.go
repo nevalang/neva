@@ -223,15 +223,15 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
-	case src.FlowEntity:
-		analyzedFlow, err := a.analyzeFlow(entity.Flow, scope)
+	case src.ComponentEntity:
+		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &entity.Flow.Meta,
+				Meta:     &entity.Component.Meta,
 			}.Wrap(err)
 		}
-		resolvedEntity.Flow = analyzedFlow
+		resolvedEntity.Component = analyzedComponent
 	default:
 		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),

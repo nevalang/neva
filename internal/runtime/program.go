@@ -214,6 +214,15 @@ func NewArrayOutport(slots []chan<- IndexedMsg) *ArrayOutport {
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
+	select {
+	case <-ctx.Done():
+		return false
+	case a.slots[idx] <- IndexedMsg{data: msg, index: counter.Add(1)}:
+		return true
+	}
+}
+
+func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	for _, slot := range a.slots {
 		select {
 		case <-ctx.Done():

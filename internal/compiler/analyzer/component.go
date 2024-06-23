@@ -36,17 +36,17 @@ var (
 )
 
 // Maybe start here
-func (a Analyzer) analyzeFlow( //nolint:funlen
-	flow src.Flow,
+func (a Analyzer) analyzeComponent( //nolint:funlen
+	component src.Component,
 	scope src.Scope,
-) (src.Flow, *compiler.Error) {
-	runtimeFuncArgs, isRuntimeFunc := flow.Directives[compiler.ExternDirective]
+) (src.Component, *compiler.Error) {
+	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.ExternDirective]
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
-		return src.Flow{}, &compiler.Error{
+		return src.Component{}, &compiler.Error{
 			Err:      ErrExternNoArgs,
 			Location: &scope.Location,
-			Meta:     &flow.Meta,
+			Meta:     &component.Meta,
 		}
 	}
 
@@ -54,17 +54,17 @@ func (a Analyzer) analyzeFlow( //nolint:funlen
 		for _, runtimeFuncArg := range runtimeFuncArgs {
 			parts := strings.Split(runtimeFuncArg, " ")
 			if len(parts) != 2 {
-				return src.Flow{}, &compiler.Error{
+				return src.Component{}, &compiler.Error{
 					Err:      ErrExternOverloadingArg,
 					Location: &scope.Location,
-					Meta:     &flow.Meta,
+					Meta:     &component.Meta,
 				}
 			}
 		}
 	}
 
 	resolvedInterface, err := a.analyzeInterface(
-		flow.Interface,
+		component.Interface,
 		scope,
 		analyzeInterfaceParams{
 			allowEmptyInports:  isRuntimeFunc,
@@ -72,45 +72,45 @@ func (a Analyzer) analyzeFlow( //nolint:funlen
 		},
 	)
 	if err != nil {
-		return src.Flow{}, compiler.Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Meta:     &flow.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 
 	if isRuntimeFunc {
-		if len(flow.Nodes) != 0 || len(flow.Net) != 0 {
-			return src.Flow{}, &compiler.Error{
+		if len(component.Nodes) != 0 || len(component.Net) != 0 {
+			return src.Component{}, &compiler.Error{
 				Err:      ErrNormCompWithExtern,
 				Location: &scope.Location,
-				Meta:     &flow.Meta,
+				Meta:     &component.Meta,
 			}
 		}
-		return flow, nil
+		return component, nil
 	}
 
 	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeFlowNodes(
-		flow.Interface,
-		flow.Nodes,
+		component.Interface,
+		component.Nodes,
 		scope,
 	)
 	if err != nil {
-		return src.Flow{}, compiler.Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Meta:     &flow.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 
-	if len(flow.Net) == 0 {
-		return src.Flow{}, &compiler.Error{
+	if len(component.Net) == 0 {
+		return src.Component{}, &compiler.Error{
 			Err:      ErrNormFlowWithoutNet,
 			Location: &scope.Location,
-			Meta:     &flow.Meta,
+			Meta:     &component.Meta,
 		}
 	}
 
 	analyzedNet, err := a.analyzeFlowNetwork(
-		flow.Net,
+		component.Net,
 		resolvedInterface,
 		hasGuard,
 		resolvedNodes,
@@ -118,13 +118,13 @@ func (a Analyzer) analyzeFlow( //nolint:funlen
 		scope,
 	)
 	if err != nil {
-		return src.Flow{}, compiler.Error{
+		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Meta:     &flow.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 
-	return src.Flow{
+	return src.Component{
 		Interface: resolvedInterface,
 		Nodes:     resolvedNodes,
 		Net:       analyzedNet,
