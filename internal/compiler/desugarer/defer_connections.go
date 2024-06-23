@@ -56,10 +56,10 @@ func (d Desugarer) desugarDeferredConnections(
 
 	// we want to return nodes created in recursive calls
 	// as well as the onces created by us in this call
-	virtualNodes := maps.Clone(handleNetResult.virtualNodes)
+	nodesToInsert := maps.Clone(handleNetResult.virtualNodes)
 
 	// we going to replace all desugared deferreded connections with set of our connections
-	virtualConns := make([]src.Connection, 0, len(handleNetResult.desugaredConnections))
+	connsToInsert := make([]src.Connection, 0, len(handleNetResult.desugaredConnections))
 
 	// for every deferred connection we must do 4 things
 	// 1) create virtual "blocker" node
@@ -78,7 +78,7 @@ func (d Desugarer) desugarDeferredConnections(
 		counter := virtualBlockersCounter.Load()
 		virtualBlockersCounter.Store(counter + 1)
 		virtualBlockerName := fmt.Sprintf("__lock__%d", counter)
-		virtualNodes[virtualBlockerName] = virtualBlockerNode
+		nodesToInsert[virtualBlockerName] = virtualBlockerNode
 
 		// 2) create connection from original sender to blocker:sig
 		receiversForOriginalSender = append(
@@ -91,7 +91,7 @@ func (d Desugarer) desugarDeferredConnections(
 			},
 		)
 
-		virtualConns = append(virtualConns,
+		connsToInsert = append(connsToInsert,
 			// 3) create connection from deferred sender to blocker:data
 			src.Connection{
 				Normal: &src.NormalConnection{
@@ -143,10 +143,10 @@ func (d Desugarer) desugarDeferredConnections(
 	}
 
 	return desugarDeferredConnectionsResult{
-		nodesToInsert:  virtualNodes,
-		connsToInsert:  virtualConns,
-		constsToInsert: handleNetResult.virtualConstants,
-		nodesPortsUsed: handleNetResult.usedNodePorts,
+		nodesToInsert:  nodesToInsert,
+		connsToInsert:  connsToInsert,
+		constsToInsert: handleNetResult.constsToInsert,
+		nodesPortsUsed: handleNetResult.nodesPortsUsed,
 		connToReplace:  connToReplace,
 	}, nil
 }

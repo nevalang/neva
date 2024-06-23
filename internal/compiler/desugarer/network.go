@@ -12,9 +12,9 @@ import (
 
 type handleNetResult struct {
 	desugaredConnections []src.Connection     // desugared network
-	virtualConstants     map[string]src.Const // constants that needs to be inserted in to make desugared network work
+	constsToInsert       map[string]src.Const // constants that needs to be inserted in to make desugared network work
 	virtualNodes         map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
-	usedNodePorts        nodePortsMap         // to find unused to create virtual del connections
+	nodesPortsUsed       nodePortsMap         // to find unused to create virtual del connections
 }
 
 func (d Desugarer) handleNetwork(
@@ -46,8 +46,8 @@ func (d Desugarer) handleNetwork(
 
 	return handleNetResult{
 		desugaredConnections: desugaredConns,
-		usedNodePorts:        usedNodePorts,
-		virtualConstants:     constsToInsert,
+		nodesPortsUsed:       usedNodePorts,
+		constsToInsert:       constsToInsert,
 		virtualNodes:         nodesToInsert,
 	}, nil
 }
@@ -186,12 +186,13 @@ func (d Desugarer) desugarConnection(
 		}
 	}
 
-	// desugar unnamed receivers if needed and replace them with named ones
 	desugaredReceivers := make([]src.ConnectionReceiver, 0, len(conn.Normal.ReceiverSide.Receivers))
 
-	for i, receiver := range conn.Normal.ReceiverSide.Receivers {
+	// desugar unnamed receivers if needed and replace them with named ones
+	for _, receiver := range conn.Normal.ReceiverSide.Receivers {
 		if receiver.PortAddr.Port != "" {
 			desugaredReceivers = append(desugaredReceivers, receiver)
+			continue
 		}
 
 		found, err := getFirstInportName(scope, nodes, receiver.PortAddr)
@@ -199,7 +200,7 @@ func (d Desugarer) desugarConnection(
 			return desugarConnectionResult{}, &compiler.Error{Err: err}
 		}
 
-		desugaredReceivers[i] = src.ConnectionReceiver{
+		desugaredReceivers = append(desugaredReceivers, src.ConnectionReceiver{
 			PortAddr: src.PortAddr{
 				Port: found,
 				Node: receiver.PortAddr.Node,
@@ -207,7 +208,7 @@ func (d Desugarer) desugarConnection(
 				Meta: receiver.PortAddr.Meta,
 			},
 			Meta: receiver.Meta,
-		}
+		})
 	}
 
 	// desugar deferred connections if needed
@@ -230,6 +231,8 @@ func (d Desugarer) desugarConnection(
 			desugaredReceivers,
 			deferredConnsResult.connToReplace.Normal.ReceiverSide.Receivers...,
 		)
+
+		connectionsToInsert = append(connectionsToInsert, deferredConnsResult.connsToInsert...)
 	}
 
 	// desugar fan-out if needed
@@ -264,7 +267,11 @@ func getNodeIOByPortAddr(
 ) (src.IO, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		panic(portAddr.Node)
+		return src.IO{}, &compiler.Error{
+			Err:      fmt.Errorf("node '%s' not found", portAddr.Node),
+			Location: &scope.Location,
+			Meta:     &portAddr.Meta,
+		}
 	}
 
 	entity, _, err := scope.Entity(node.EntityRef)

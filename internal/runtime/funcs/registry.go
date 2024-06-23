@@ -9,10 +9,11 @@ import (
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
-		"new":    new{},
-		"del":    del{},
-		"lock":   lock{},
-		"unwrap": unwrap{},
+		"new":     new{},
+		"del":     del{},
+		"lock":    lock{},
+		"unwrap":  unwrap{},
+		"fan_out": fanOut{},
 
 		// runtime
 		"panic": panicker{},

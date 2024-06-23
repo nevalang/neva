@@ -51,7 +51,7 @@ func (d Desugarer) handleComponent(
 	desugaredNetwork := slices.Clone(handleNetResult.desugaredConnections)
 
 	// add virtual constants created by network handler to virtual entities
-	for name, constant := range handleNetResult.virtualConstants {
+	for name, constant := range handleNetResult.constsToInsert {
 		virtualEntities[name] = src.Entity{
 			Kind:  src.ConstEntity,
 			Const: constant,
@@ -65,7 +65,7 @@ func (d Desugarer) handleComponent(
 	unusedOutports := d.findUnusedOutports(
 		component,
 		scope,
-		handleNetResult.usedNodePorts,
+		handleNetResult.nodesPortsUsed,
 	)
 	if unusedOutports.len() != 0 {
 		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)

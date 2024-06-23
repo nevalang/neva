@@ -28,7 +28,11 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 		wg.Done()
 	}()
 
-	funcrun, _ := p.funcRunner.Run(prog.Funcs)
+	funcrun, err := p.funcRunner.Run(prog.Funcs)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		ctx = context.WithValue(ctx, "cancel", cancel)
 		funcrun(ctx)
