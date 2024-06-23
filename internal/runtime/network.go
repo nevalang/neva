@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 )
@@ -31,19 +32,23 @@ type IndexedMsg struct {
 	index uint64
 }
 
-func (t Network) Run(ctx context.Context) {
+func (n Network) Run(ctx context.Context) {
 	wg := sync.WaitGroup{}
-	wg.Add(len(t.connections))
+	wg.Add(len(n.connections))
 
-	for r, ss := range t.connections {
+	for r, ss := range n.connections {
 		r := r
 		ss := ss
+
+		var f func()
+		if len(ss) == 1 {
+			f = func() { n.pipe(ctx, r, ss[0]) }
+		} else {
+			f = func() { n.fanIn(ctx, r, ss) }
+		}
+
 		go func() {
-			if len(ss) == 1 {
-				t.oneToOne(ctx, r, ss[0])
-			} else {
-				t.fanIn(ctx, r, ss)
-			}
+			f()
 			wg.Done()
 		}()
 	}
@@ -51,19 +56,21 @@ func (t Network) Run(ctx context.Context) {
 	wg.Wait()
 }
 
-func (t Network) oneToOne(ctx context.Context, in Receiver, out Sender) {
+func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 	for {
 		var msg IndexedMsg
 		select {
 		case <-ctx.Done():
 			return
-		case msg = <-out.Port:
+		case msg = <-s.Port:
 		}
+
+		fmt.Println("received", msg)
 
 		select {
 		case <-ctx.Done():
 			return
-		case in.Port <- msg:
+		case r.Port <- msg:
 		}
 	}
 }
@@ -73,12 +80,12 @@ func (t Network) fanIn(ctx context.Context, in Receiver, outs []Sender) {
 		i := 0
 		buf := make([]IndexedMsg, 0, len(outs))
 
-		for { // do at least len(outs) polls until we have at least 1 msg
+		for { // wait long enough to fill the buffer
 			if len(buf) > 0 && i >= len(outs) {
 				break
 			}
 
-			for _, out := range outs { //
+			for _, out := range outs {
 				select {
 				case <-ctx.Done():
 					return
@@ -88,6 +95,8 @@ func (t Network) fanIn(ctx context.Context, in Receiver, outs []Sender) {
 					continue
 				}
 			}
+
+			// TODO: properly add runtime.Gosched()
 
 			i++
 		}

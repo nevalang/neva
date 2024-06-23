@@ -60,7 +60,7 @@ func (Adapter) getConnections(
 			Port: receiverChan,
 		}
 
-		senders := make([]runtime.Sender, len(senderAddrs))
+		senders := make([]runtime.Sender, 0, len(senderAddrs))
 
 		for senderAddr := range senderAddrs {
 			senderRuntimeAddr := runtime.PortAddr{
@@ -68,12 +68,9 @@ func (Adapter) getConnections(
 				Port: senderAddr.Port,
 				Idx:  senderAddr.Idx,
 			}
-
-			senderChan := ports[senderRuntimeAddr]
-
 			senders = append(senders, runtime.Sender{
-				Addr: runtimeReceiverAddr,
-				Port: senderChan,
+				Addr: senderRuntimeAddr,
+				Port: ports[senderRuntimeAddr],
 			})
 		}
 

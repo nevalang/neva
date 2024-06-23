@@ -9,14 +9,13 @@ import (
 var counter atomic.Uint64
 
 type Runtime struct {
-	stop, start chan IndexedMsg
-	funcRunner  FuncRunner
+	funcRunner FuncRunner
 }
 
 func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
-		<-p.stop
+		<-prog.Stop
 		cancel()
 	}()
 
@@ -36,7 +35,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 		wg.Done()
 	}()
 
-	p.start <- IndexedMsg{
+	prog.Stop <- IndexedMsg{
 		index: counter.Add(1),
 		data:  nil,
 	}
