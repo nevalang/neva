@@ -35,7 +35,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 		wg.Done()
 	}()
 
-	prog.Stop <- IndexedMsg{
+	prog.Start <- IndexedMsg{
 		index: counter.Add(1),
 		data:  nil,
 	}

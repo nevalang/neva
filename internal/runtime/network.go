@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"sync"
 )
@@ -64,8 +63,6 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 			return
 		case msg = <-s.Port:
 		}
-
-		fmt.Println("received", msg)
 
 		select {
 		case <-ctx.Done():
