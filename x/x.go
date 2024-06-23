@@ -27,7 +27,7 @@ func (o outport) Send(data any) {
 func fanIn(outs []outport, in chan<- item) {
 	for {
 		i := 0
-		buf := make([]item, 0, len(outs))
+		buf := make([]item, 0, len(outs)^2)
 
 		// fill the buffer
 		for {
