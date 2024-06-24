@@ -32,7 +32,7 @@ var (
 	ErrExternNoArgs               = errors.New("Flow that use #extern directive must provide at least one argument")
 	ErrBindDirectiveArgs          = errors.New("Node with #bind directive must provide exactly one argument")
 	ErrExternOverloadingArg       = errors.New("Flow that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs")
-	ErrExternOverloadingNodeArgs  = errors.New("Node instantiated with flow with #extern with > 1 argument, must have exactly one type-argument for overloading")
+	ErrExternOverloadingNodeArgs  = errors.New("Node instantiated from component with '#extern' with > 1 argument, must have exactly one type-argument for overloading")
 )
 
 // Maybe start here

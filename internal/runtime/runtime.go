@@ -41,7 +41,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 
 	prog.Start <- IndexedMsg{
 		index: counter.Add(1),
-		data:  nil,
+		data:  &baseMsg{},
 	}
 
 	wg.Wait()

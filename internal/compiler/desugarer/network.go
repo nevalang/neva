@@ -234,12 +234,9 @@ func (d Desugarer) desugarConnection(
 
 	// desugar fan-out if needed
 	if len(desugaredReceivers) > 1 {
-		result := d.desugarFanOut(
-			conn.Normal.SenderSide,
-			desugaredReceivers,
-		)
+		result := d.desugarFanOut(desugaredReceivers)
 		nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
-		conn = result.connToReplace
+		desugaredReceivers = []src.ConnectionReceiver{result.receiverToReplace} // replace all existing receivers with single one
 		connectionsToInsert = append(connectionsToInsert, result.connectionsToInsert...)
 	}
 
@@ -315,16 +312,13 @@ func getFirstOutportName(scope src.Scope, nodes map[string]src.Node, portAddr sr
 type desugarFanOutResult struct {
 	nodeToInsertName    string
 	nodeToInsert        src.Node
-	connToReplace       src.Connection
+	receiverToReplace   src.ConnectionReceiver // only one (no more fan-out)
 	connectionsToInsert []src.Connection
 }
 
 var fanOutCounter uint64
 
-func (d Desugarer) desugarFanOut(
-	senderSide src.ConnectionSenderSide,
-	receiverSides []src.ConnectionReceiver,
-) desugarFanOutResult {
+func (d Desugarer) desugarFanOut(receiverSides []src.ConnectionReceiver) desugarFanOutResult {
 	nodeName := fmt.Sprintf("__fanOut__%d", fanOutCounter)
 
 	node := src.Node{
@@ -334,19 +328,10 @@ func (d Desugarer) desugarFanOut(
 		},
 	}
 
-	connToReplace := src.Connection{
-		Normal: &src.NormalConnection{
-			SenderSide: senderSide,
-			ReceiverSide: src.ConnectionReceiverSide{
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: src.PortAddr{
-							Node: nodeName,
-							Port: "data",
-						},
-					},
-				},
-			},
+	receiverToReplace := src.ConnectionReceiver{
+		PortAddr: src.PortAddr{
+			Node: nodeName,
+			Port: "data",
 		},
 	}
 
@@ -371,7 +356,7 @@ func (d Desugarer) desugarFanOut(
 	return desugarFanOutResult{
 		nodeToInsertName:    nodeName,
 		nodeToInsert:        node,
-		connToReplace:       connToReplace,
+		receiverToReplace:   receiverToReplace,
 		connectionsToInsert: connsToInsert,
 	}
 }
