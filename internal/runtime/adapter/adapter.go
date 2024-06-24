@@ -10,7 +10,7 @@ type Adapter struct{}
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	fanIn := irProg.FanIn()
 
-	ports := a.getPorts(irProg.Ports, fanIn, irProg.Connections)
+	ports := a.getPorts(irProg.Ports, fanIn)
 
 	connections := a.getConnections(fanIn, ports)
 
@@ -83,7 +83,6 @@ func (Adapter) getConnections(
 func (Adapter) getPorts(
 	ports map[ir.PortAddr]struct{},
 	fanIn map[ir.PortAddr]map[ir.PortAddr]struct{},
-	fanOut map[ir.PortAddr]map[ir.PortAddr]struct{},
 ) map[runtime.PortAddr]chan runtime.IndexedMsg {
 	runtimePorts := make(
 		map[runtime.PortAddr]chan runtime.IndexedMsg,
@@ -97,13 +96,11 @@ func (Adapter) getPorts(
 			Idx:  irAddr.Idx,
 		}
 
-		var bufSize int = 0
-		// FIXME fan-out does not exist in IR
-		// if receivers, ok := fanOut[irAddr]; ok {
-		// 	bufSize = len(receivers)
-		// } else if senders, ok := fanIn[irAddr]; ok {
-		// 	bufSize = len(senders)
-		// }
+		// TODO figure out how to set buf for senders (we don't have fan-out)
+		bufSize := 0
+		if senders, ok := fanIn[irAddr]; ok {
+			bufSize = len(senders)
+		}
 
 		runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg, bufSize)
 	}
