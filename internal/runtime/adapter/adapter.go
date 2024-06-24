@@ -97,12 +97,13 @@ func (Adapter) getPorts(
 			Idx:  irAddr.Idx,
 		}
 
-		var bufSize int
-		if receivers, ok := fanOut[irAddr]; ok {
-			bufSize = len(receivers)
-		} else if senders, ok := fanIn[irAddr]; ok {
-			bufSize = len(senders)
-		}
+		var bufSize int = 0
+		// FIXME fan-out does not exist in IR
+		// if receivers, ok := fanOut[irAddr]; ok {
+		// 	bufSize = len(receivers)
+		// } else if senders, ok := fanIn[irAddr]; ok {
+		// 	bufSize = len(senders)
+		// }
 
 		runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg, bufSize)
 	}

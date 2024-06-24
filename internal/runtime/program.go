@@ -90,8 +90,8 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	select {
 	case <-ctx.Done():
 		return nil, false
-	case indexedMsg := <-s.ch:
-		return indexedMsg.data, true
+	case msg := <-s.ch:
+		return msg.data, true
 	}
 }
 
