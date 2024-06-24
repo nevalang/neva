@@ -86,7 +86,7 @@ func (d Desugarer) desugarConnection(
 	// mark as used and handle unnamed port if needed
 	if conn.Normal.SenderSide.PortAddr != nil {
 		if conn.Normal.SenderSide.PortAddr.Port == "" {
-			found, err := getFirstOutPortName(scope, nodes, *conn.Normal.SenderSide.PortAddr)
+			firstOutportName, err := getFirstOutportName(scope, nodes, *conn.Normal.SenderSide.PortAddr)
 			if err != nil {
 				return desugarConnectionResult{}, &compiler.Error{Err: err}
 			}
@@ -95,7 +95,7 @@ func (d Desugarer) desugarConnection(
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
 						PortAddr: &src.PortAddr{
-							Port: found,
+							Port: firstOutportName,
 							Node: conn.Normal.SenderSide.PortAddr.Node,
 							Idx:  conn.Normal.SenderSide.PortAddr.Idx,
 							Meta: conn.Normal.SenderSide.PortAddr.Meta,
@@ -195,14 +195,14 @@ func (d Desugarer) desugarConnection(
 			continue
 		}
 
-		found, err := getFirstInportName(scope, nodes, receiver.PortAddr)
+		firstInportName, err := getFirstInportName(scope, nodes, receiver.PortAddr)
 		if err != nil {
 			return desugarConnectionResult{}, &compiler.Error{Err: err}
 		}
 
 		desugaredReceivers = append(desugaredReceivers, src.ConnectionReceiver{
 			PortAddr: src.PortAddr{
-				Port: found,
+				Port: firstInportName,
 				Node: receiver.PortAddr.Node,
 				Idx:  receiver.PortAddr.Idx,
 				Meta: receiver.PortAddr.Meta,
@@ -211,9 +211,10 @@ func (d Desugarer) desugarConnection(
 		})
 	}
 
-	// desugar deferred connections if needed
+	// it's possible to have connection with both normal receivers and deferred connections so we handle both
+
 	if conn.Normal.ReceiverSide.DeferredConnections != nil {
-		deferredConnsResult, err := d.desugarDeferredConnections(
+		result, err := d.desugarDeferredConnections(
 			*conn.Normal,
 			nodes,
 			scope,
@@ -223,16 +224,12 @@ func (d Desugarer) desugarConnection(
 		}
 
 		// desugaring of deferred connections is recursive process so its result must be merged with existing one
-		usedNodePorts.merge(deferredConnsResult.nodesPortsUsed)
-		maps.Copy(constsToInsert, deferredConnsResult.constsToInsert)
-		maps.Copy(nodesToInsert, deferredConnsResult.nodesToInsert)
-
-		desugaredReceivers = append(
-			desugaredReceivers,
-			deferredConnsResult.connToReplace.Normal.ReceiverSide.Receivers...,
-		)
-
-		connectionsToInsert = append(connectionsToInsert, deferredConnsResult.connsToInsert...)
+		usedNodePorts.merge(result.nodesPortsUsed)
+		maps.Copy(constsToInsert, result.constsToInsert)
+		maps.Copy(nodesToInsert, result.nodesToInsert)
+		// after desugaring of deferred connection we need to add new receivers and new connections
+		desugaredReceivers = append(desugaredReceivers, result.receiversToInsert...)
+		connectionsToInsert = append(connectionsToInsert, result.connsToInsert...)
 	}
 
 	// desugar fan-out if needed
@@ -304,7 +301,7 @@ func getFirstInportName(scope src.Scope, nodes map[string]src.Node, portAddr src
 	return "", errors.New("first inport not found")
 }
 
-func getFirstOutPortName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+func getFirstOutportName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
 	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
 	if err != nil {
 		return "", err

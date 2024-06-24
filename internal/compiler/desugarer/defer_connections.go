@@ -27,11 +27,11 @@ var virtualBlockerNode = src.Node{
 }
 
 type desugarDeferredConnectionsResult struct {
-	connsToInsert  []src.Connection
-	connToReplace  src.Connection
-	constsToInsert map[string]src.Const
-	nodesToInsert  map[string]src.Node
-	nodesPortsUsed nodePortsMap // (probably?) to generate "Del" instances where needed
+	connsToInsert     []src.Connection
+	receiversToInsert []src.ConnectionReceiver
+	constsToInsert    map[string]src.Const
+	nodesToInsert     map[string]src.Node
+	nodesPortsUsed    nodePortsMap // (probably?) to generate "Del" instances where needed
 }
 
 var virtualBlockersCounter atomic.Uint64
@@ -41,7 +41,6 @@ func (d Desugarer) desugarDeferredConnections(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (desugarDeferredConnectionsResult, *compiler.Error) {
-	originalSender := originalConn.SenderSide
 	deferredConnections := originalConn.ReceiverSide.DeferredConnections
 
 	// recursively desugar every deferred connections
@@ -125,28 +124,11 @@ func (d Desugarer) desugarDeferredConnections(
 		)
 	}
 
-	// don't forget to append normal original sender receivers
-	// there are connections with both deferred connections and normal receivers
-	receiversForOriginalSender = append(
-		receiversForOriginalSender,
-		originalConn.ReceiverSide.Receivers...,
-	)
-
-	// don't forget to append first connection
-	connToReplace := src.Connection{
-		Normal: &src.NormalConnection{
-			SenderSide: originalSender,
-			ReceiverSide: src.ConnectionReceiverSide{
-				Receivers: receiversForOriginalSender,
-			},
-		},
-	}
-
 	return desugarDeferredConnectionsResult{
-		nodesToInsert:  nodesToInsert,
-		connsToInsert:  connsToInsert,
-		constsToInsert: handleNetResult.constsToInsert,
-		nodesPortsUsed: handleNetResult.nodesPortsUsed,
-		connToReplace:  connToReplace,
+		nodesToInsert:     nodesToInsert,
+		connsToInsert:     connsToInsert,
+		constsToInsert:    handleNetResult.constsToInsert,
+		nodesPortsUsed:    handleNetResult.nodesPortsUsed,
+		receiversToInsert: receiversForOriginalSender,
 	}, nil
 }
