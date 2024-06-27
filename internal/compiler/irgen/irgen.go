@@ -75,11 +75,11 @@ func (g Generator) Generate(
 		}.Wrap(err)
 	}
 
-	reducedPorts, reducerNet := reduceGraph(result)
+	// reducedPorts, reducerNet := reduceGraph(result)
 
 	return &ir.Program{
-		Ports:       reducedPorts,
-		Connections: reducerNet,
+		Ports:       result.Ports,
+		Connections: result.Connections,
 		Funcs:       result.Funcs,
 	}, nil
 }
@@ -99,6 +99,9 @@ func (g Generator) processNode(
 
 	flow := flowEntity.Component
 
+	inportAddrs := g.insertAndReturnInports(nodeCtx, result)   // for inports we only use parent context because all inports are used
+	outportAddrs := g.insertAndReturnOutports(nodeCtx, result) //  for outports we use both parent context and flow's interface
+
 	runtimeFuncRef, err := getFuncRef(flow, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
@@ -109,11 +112,21 @@ func (g Generator) processNode(
 	}
 
 	if runtimeFuncRef != "" {
-		call, err := g.getFuncCall(nodeCtx, scope, runtimeFuncRef)
+		cfgMsg, err := getConfigMsg(nodeCtx.node, scope)
 		if err != nil {
-			return err
+			return &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+			}
 		}
-		result.Funcs = append(result.Funcs, call)
+		result.Funcs = append(result.Funcs, ir.FuncCall{
+			Ref: runtimeFuncRef,
+			IO: ir.FuncIO{
+				In:  inportAddrs,
+				Out: outportAddrs,
+			},
+			Msg: cfgMsg,
+		})
 		return nil
 	}
 
@@ -168,6 +181,52 @@ func (g Generator) processNode(
 	}
 
 	return nil
+}
+
+func (Generator) insertAndReturnInports(
+	nodeCtx nodeContext,
+	result *ir.Program,
+) []ir.PortAddr {
+	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
+
+	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
+	// actually we can't use IO because we need to know how many slots are used
+	for addr := range nodeCtx.portsUsage.in {
+		addr := ir.PortAddr{
+			Path: joinNodePath(nodeCtx.path, "in"),
+			Port: addr.Port,
+			Idx:  addr.Idx,
+		}
+		result.Ports[addr] = struct{}{}
+		inports = append(inports, addr)
+	}
+
+	sortPortAddrs(inports)
+
+	return inports
+}
+
+func (Generator) insertAndReturnOutports(
+	nodeCtx nodeContext,
+	result *ir.Program,
+) []ir.PortAddr {
+	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
+
+	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
+	// Actually we can't use IO because we need to know how many slots are used.
+	for addr := range nodeCtx.portsUsage.out {
+		irAddr := ir.PortAddr{
+			Path: joinNodePath(nodeCtx.path, "out"),
+			Port: addr.Port,
+			Idx:  addr.Idx,
+		}
+		result.Ports[irAddr] = struct{}{}
+		outports = append(outports, irAddr)
+	}
+
+	sortPortAddrs(outports)
+
+	return outports
 }
 
 func New() Generator {

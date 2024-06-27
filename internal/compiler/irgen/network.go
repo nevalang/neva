@@ -37,23 +37,25 @@ func (g Generator) processNetwork(
 
 			var slotIdx uint8 = 0
 			for usageAddr := range nodeCtx.portsUsage.in {
-				if usageAddr.Port != arrBypassSender.Port {
+				if usageAddr.Port != arrBypassSender.Port { // we only care about the port we're bypassing
 					continue
 				}
 
-				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: &slotIdx}
+				slotIdxCopy := slotIdx // fix of "Using the variable on range scope" issue
+
+				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: &slotIdxCopy} // TODO check if pointer is ok to use here
 				nodesPortsUsage[arrBypassReceiver.Node].in[addr] = struct{}{}
 
 				irSenderSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassSender.Node),
 					Port: arrBypassSender.Port,
-					Idx:  &slotIdx,
+					Idx:  &slotIdxCopy,
 				}
 
 				irReceiverSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
 					Port: arrBypassReceiver.Port,
-					Idx:  &slotIdx,
+					Idx:  &slotIdxCopy,
 				}
 
 				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
@@ -80,7 +82,7 @@ func (g Generator) processNetwork(
 		receiverPortsIR := make(map[ir.PortAddr]struct{}, len(conn.Normal.ReceiverSide.Receivers))
 		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
-			receiverPortsIR[*receiverSideIR] = struct{}{}
+			receiverPortsIR[receiverSideIR] = struct{}{}
 
 			// same receiver can be used by multiple senders so we only add it once
 			if _, ok := nodesPortsUsage[receiverSide.PortAddr.Node]; !ok {
@@ -90,15 +92,10 @@ func (g Generator) processNetwork(
 				}
 			}
 
-			var idx *uint8
-			if receiverSide.PortAddr.Idx != nil {
-				idx = receiverSide.PortAddr.Idx
-			}
-
 			receiverNode := receiverSide.PortAddr.Node
 			receiverPortAddr := relPortAddr{
 				Port: receiverSide.PortAddr.Port,
-				Idx:  idx,
+				Idx:  receiverSide.PortAddr.Idx,
 			}
 
 			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
@@ -148,27 +145,6 @@ func (g Generator) processSenderSide(
 	return irSenderSide, nil
 }
 
-// for in we only use parent ctx cuz all inports are used
-func (Generator) getFuncInports(nodeCtx nodeContext) []ir.PortAddr {
-	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
-
-	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
-	// actually we can't use IO because we need to know how many slots are used
-	for addr := range nodeCtx.portsUsage.in {
-		addr := &ir.PortAddr{
-			Path: joinNodePath(nodeCtx.path, "in"),
-			Port: addr.Port,
-			Idx:  addr.Idx,
-		}
-		inports = append(inports, *addr)
-	}
-
-	sortPortAddrs(inports)
-
-	return inports
-}
-
-// sortPortAddrs sorts port addresses by path, port and idx,
 // this is very important because runtime function calls depends on this order.
 func sortPortAddrs(addrs []ir.PortAddr) {
 	sort.Slice(addrs, func(i, j int) bool {
@@ -185,35 +161,14 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 	})
 }
 
-// for out we use both parent ctx and interface
-func (Generator) getFuncOutports(nodeCtx nodeContext) []ir.PortAddr {
-	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
-
-	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
-	// Actually we can't use IO because we need to know how many slots are used.
-	for addr := range nodeCtx.portsUsage.out {
-		irAddr := &ir.PortAddr{
-			Path: joinNodePath(nodeCtx.path, "out"),
-			Port: addr.Port,
-			Idx:  addr.Idx,
-		}
-
-		outports = append(outports, *irAddr)
-	}
-
-	sortPortAddrs(outports)
-
-	return outports
-}
-
 // mapReceiverSide maps src connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) *ir.PortAddr {
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) ir.PortAddr {
 	var idx *uint8
 	if side.PortAddr.Idx != nil {
 		idx = side.PortAddr.Idx
 	}
 
-	result := &ir.PortAddr{
+	result := ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,
 		Idx:  idx,

@@ -97,10 +97,12 @@ func (Adapter) getPorts(
 		}
 
 		// TODO figure out how to set buf for senders (we don't have fan-out)
+		// IDEA we can do it in src lvl
+		
 		bufSize := 0
-		if senders, ok := fanIn[irAddr]; ok {
-			bufSize = len(senders)
-		}
+		// if senders, ok := fanIn[irAddr]; ok {
+		// 	bufSize = len(senders)
+		// }
 
 		runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg, bufSize)
 	}

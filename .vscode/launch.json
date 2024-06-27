@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "-debug", "e2e/simple_fan_out/main"]
+      "args": ["run", "-debug", "examples/add_numbers"]
     },
     {
       "name": "LSP",

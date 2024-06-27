@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 )
@@ -64,30 +65,35 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 		case msg = <-s.Port:
 		}
 
+		fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
+
 		select {
 		case <-ctx.Done():
 			return
 		case r.Port <- msg:
 		}
+
+		fmt.Println("received:", r.Addr, " <- ", s.Addr, msg.data)
 	}
 }
 
-func (t Network) fanIn(ctx context.Context, in Receiver, outs []Sender) {
+func (t Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 	for {
 		i := 0
-		buf := make([]IndexedMsg, 0, len(outs)^2)
+		buf := make([]IndexedMsg, 0, len(ss)^2)
 
 		for { // wait long enough to fill the buffer
-			if len(buf) > 0 && i >= len(outs) {
+			if len(buf) > 0 && i >= len(ss) {
 				break
 			}
 
-			for _, out := range outs {
+			for _, s := range ss {
 				select {
 				case <-ctx.Done():
 					return
-				case msg := <-out.Port:
+				case msg := <-s.Port:
 					buf = append(buf, msg)
+					fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
 				default:
 					continue
 				}
@@ -111,7 +117,8 @@ func (t Network) fanIn(ctx context.Context, in Receiver, outs []Sender) {
 			select {
 			case <-ctx.Done():
 				return
-			case in.Port <- msg:
+			case r.Port <- msg:
+				fmt.Println("received:", r.Addr, msg.data)
 			}
 		}
 	}
