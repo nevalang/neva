@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"sync"
 )
@@ -67,7 +66,7 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 		case msg = <-s.Port:
 		}
 
-		fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
+		// fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
 
 		select {
 		case <-ctx.Done():
@@ -75,7 +74,7 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 		case r.Port <- msg:
 		}
 
-		fmt.Println("received:", r.Addr, " <- ", s.Addr, msg.data)
+		// fmt.Println("received:", r.Addr, " <- ", s.Addr, msg.data)
 	}
 }
 
@@ -95,7 +94,7 @@ func (t Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 					return
 				case msg := <-s.Port:
 					buf = append(buf, msg)
-					fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
+					// fmt.Println("sent:", s.Addr, " -> ", r.Addr, msg.data)
 				default:
 					continue
 				}
@@ -120,7 +119,7 @@ func (t Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 			case <-ctx.Done():
 				return
 			case r.Port <- msg:
-				fmt.Println("received:", r.Addr, msg.data)
+				// fmt.Println("received:", r.Addr, msg.data)
 			}
 		}
 	}
