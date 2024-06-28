@@ -29,7 +29,11 @@ func (a Adapter) getFuncs(
 			runtimeAddr := runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
-				Idx:  addr.Idx,
+			}
+
+			if addr.Idx != nil {
+				runtimeAddr.Idx = *addr.Idx
+				runtimeAddr.Arr = true
 			}
 
 			port, ok := ports[runtimeAddr]
@@ -66,7 +70,12 @@ func (a Adapter) getFuncs(
 			runtimeAddr := runtime.PortAddr{
 				Path: addr.Path,
 				Port: addr.Port,
-				Idx:  addr.Idx,
+				// Idx:  addr.Idx,
+			}
+
+			if addr.Idx != nil {
+				runtimeAddr.Idx = *addr.Idx
+				runtimeAddr.Arr = true
 			}
 
 			port, ok := ports[runtimeAddr]

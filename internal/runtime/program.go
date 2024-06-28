@@ -13,10 +13,10 @@ type Program struct {
 }
 
 func (p PortAddr) String() string {
-	if p.Idx == nil {
+	if !p.Arr {
 		return fmt.Sprintf("%v:%v", p.Path, p.Port)
 	}
-	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, *p.Idx)
+	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
 }
 
 type FuncCall struct {

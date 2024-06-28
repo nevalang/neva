@@ -46,14 +46,21 @@ func (Adapter) getConnections(
 		len(fanIn),
 	)
 
-	for receiverAddr, senderAddrs := range fanIn {
+	for irReceiverAddr, senderAddrs := range fanIn {
 		runtimeReceiverAddr := runtime.PortAddr{
-			Path: receiverAddr.Path,
-			Port: receiverAddr.Port,
-			Idx:  receiverAddr.Idx,
+			Path: irReceiverAddr.Path,
+			Port: irReceiverAddr.Port,
 		}
 
-		receiverChan := ports[runtimeReceiverAddr]
+		if irReceiverAddr.Idx != nil {
+			runtimeReceiverAddr.Idx = *irReceiverAddr.Idx
+			runtimeReceiverAddr.Arr = true
+		}
+
+		receiverChan, ok := ports[runtimeReceiverAddr]
+		if !ok {
+			panic("receiver chan not found")
+		}
 
 		receiver := runtime.Receiver{
 			Addr: runtimeReceiverAddr,
@@ -66,11 +73,21 @@ func (Adapter) getConnections(
 			senderRuntimeAddr := runtime.PortAddr{
 				Path: senderAddr.Path,
 				Port: senderAddr.Port,
-				Idx:  senderAddr.Idx,
 			}
+
+			if senderAddr.Idx != nil {
+				senderRuntimeAddr.Idx = *senderAddr.Idx
+				senderRuntimeAddr.Arr = true
+			}
+
+			senderChan, ok := ports[senderRuntimeAddr]
+			if !ok {
+				panic("sender chan not found: " + senderRuntimeAddr.String())
+			}
+
 			senders = append(senders, runtime.Sender{
 				Addr: senderRuntimeAddr,
-				Port: ports[senderRuntimeAddr],
+				Port: senderChan,
 			})
 		}
 
@@ -93,12 +110,16 @@ func (Adapter) getPorts(
 		runtimeAddr := runtime.PortAddr{
 			Path: irAddr.Path,
 			Port: irAddr.Port,
-			Idx:  irAddr.Idx,
+		}
+
+		if irAddr.Idx != nil {
+			runtimeAddr.Idx = *irAddr.Idx
+			runtimeAddr.Arr = true
 		}
 
 		// TODO figure out how to set buf for senders (we don't have fan-out)
 		// IDEA we can do it in src lvl
-		
+
 		bufSize := 0
 		// if senders, ok := fanIn[irAddr]; ok {
 		// 	bufSize = len(senders)

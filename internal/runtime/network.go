@@ -24,7 +24,9 @@ type Receiver struct {
 type PortAddr struct {
 	Path string
 	Port string
-	Idx  *uint8
+	// combination of uint8 + bool is more memory efficient than *uint8
+	Idx uint8
+	Arr bool
 }
 
 type IndexedMsg struct {
