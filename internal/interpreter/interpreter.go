@@ -18,12 +18,12 @@ type Interpreter struct {
 	adapter  adapter.Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgName string) *compiler.Error {
-	irProg, compilerErr := i.compiler.CompileToIR(workdirPath, mainPkgName)
+func (i Interpreter) Interpret(ctx context.Context, main string) *compiler.Error {
+	irProg, compilerErr := i.compiler.CompileToIR(main)
 	if compilerErr != nil {
 		return compiler.Error{
 			Location: &sourcecode.Location{
-				PkgName: mainPkgName,
+				PkgName: main,
 			},
 		}.Wrap(compilerErr)
 	}
@@ -33,7 +33,7 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 		return &compiler.Error{
 			Err: err,
 			Location: &sourcecode.Location{
-				PkgName: mainPkgName,
+				PkgName: main,
 			},
 		}
 	}
@@ -42,7 +42,7 @@ func (i Interpreter) Interpret(ctx context.Context, workdirPath string, mainPkgN
 		return &compiler.Error{
 			Err: err,
 			Location: &sourcecode.Location{
-				PkgName: mainPkgName,
+				PkgName: main,
 			},
 		}
 	}

@@ -35,6 +35,7 @@ type (
 func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
+	shouldReduceGraph bool,
 ) (*ir.Program, *compiler.Error) {
 	scope := src.Scope{
 		Build: build,
@@ -75,7 +76,11 @@ func (g Generator) Generate(
 		}.Wrap(err)
 	}
 
-	// reducedPorts, reducerNet := reduceGraph(result)
+	if shouldReduceGraph {
+		reducedPorts, reducerNet := reduceGraph(result)
+		result.Ports = reducedPorts
+		result.Connections = reducerNet
+	}
 
 	return &ir.Program{
 		Ports:       result.Ports,

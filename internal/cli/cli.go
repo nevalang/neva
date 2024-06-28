@@ -110,11 +110,7 @@ func NewApp(
 						return err
 					}
 					intr := interpreter.New(bldr, goc, debug)
-					if err := intr.Interpret(
-						context.Background(),
-						workdir,
-						dirFromArg,
-					); err != nil {
+					if err := intr.Interpret(context.Background(), dirFromArg); err != nil {
 						return err
 					}
 					return nil
@@ -148,25 +144,15 @@ func NewApp(
 					}
 					switch target {
 					case "go":
-						return goc.Compile(
-							workdir, dirFromArg, workdir,
-						)
+						return goc.Compile(dirFromArg, workdir)
 					case "wasm":
-						return wasmc.Compile(
-							workdir, dirFromArg, workdir,
-						)
+						return wasmc.Compile(dirFromArg, workdir)
 					case "json":
-						return jsonc.Compile(
-							workdir, dirFromArg, workdir,
-						)
+						return jsonc.Compile(dirFromArg, workdir)
 					case "dot":
-						return dotc.Compile(
-							workdir, dirFromArg, workdir,
-						)
+						return dotc.Compile(dirFromArg, workdir)
 					default:
-						return nativec.Compile(
-							workdir, dirFromArg, workdir,
-						)
+						return nativec.Compile(dirFromArg, workdir)
 					}
 				},
 			},

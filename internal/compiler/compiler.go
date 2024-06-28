@@ -17,52 +17,36 @@ type Compiler struct {
 	backend   Backend
 }
 
-// Compile compiles given rawBuild to target language
-// and uses specified backend to emit files to the destination.
-func (c Compiler) Compile(
-	src string,
-	mainPkgName string,
-	dstPath string,
-) error {
-	ir, err := c.CompileToIR(src, mainPkgName)
+func (c Compiler) Compile(main string, dst string) error {
+	ir, err := c.CompileToIR(main)
 	if err != nil {
 		return err
 	}
-	return c.backend.Emit(dstPath, ir)
+	return c.backend.Emit(dst, ir)
 }
 
-func (c Compiler) CompileToIR(
-	wd string,
-	mainPkgPath string,
-) (*ir.Program, *Error) {
-	rawBuild, entryModRoot, err := c.builder.Build(
-		context.Background(),
-		mainPkgPath,
-	)
+func (c Compiler) CompileToIR(main string) (*ir.Program, *Error) {
+	raw, root, err := c.builder.Build(context.Background(), main)
 	if err != nil {
-		return nil, Error{
-			Location: &sourcecode.Location{
-				PkgName: mainPkgPath,
-			},
-		}.Wrap(err)
+		return nil, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
 	}
 
-	parsedMods, err := c.parser.ParseModules(rawBuild.Modules)
+	parsedMods, err := c.parser.ParseModules(raw.Modules)
 	if err != nil {
 		return nil, err
 	}
 
 	parsedBuild := sourcecode.Build{
-		EntryModRef: rawBuild.EntryModRef,
+		EntryModRef: raw.EntryModRef,
 		Modules:     parsedMods,
 	}
 
-	mainPkgPath = strings.TrimPrefix(mainPkgPath, "./")
-	mainPkgPath = strings.TrimPrefix(mainPkgPath, entryModRoot+"/")
+	main = strings.TrimPrefix(main, "./")
+	main = strings.TrimPrefix(main, root+"/")
 
 	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(
 		parsedBuild,
-		mainPkgPath,
+		main,
 	)
 	if err != nil {
 		return nil, err
@@ -73,7 +57,7 @@ func (c Compiler) CompileToIR(
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, mainPkgPath)
+	irProg, err := c.irgen.Generate(desugaredBuild, main, false)
 	if err != nil {
 		return nil, err
 	}
