@@ -6,8 +6,8 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/interpreter/adapter"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/runtime/adapter"
 	"github.com/nevalang/neva/internal/runtime/funcs"
 )
 
@@ -18,8 +18,8 @@ type Interpreter struct {
 	adapter  adapter.Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, main string) *compiler.Error {
-	irProg, compilerErr := i.compiler.CompileToIR(main)
+func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *compiler.Error {
+	irProg, compilerErr := i.compiler.CompileToIR(main, debug)
 	if compilerErr != nil {
 		return compiler.Error{
 			Location: &sourcecode.Location{
@@ -31,19 +31,15 @@ func (i Interpreter) Interpret(ctx context.Context, main string) *compiler.Error
 	rprog, err := i.adapter.Adapt(irProg)
 	if err != nil {
 		return &compiler.Error{
-			Err: err,
-			Location: &sourcecode.Location{
-				PkgName: main,
-			},
+			Err:      err,
+			Location: &sourcecode.Location{PkgName: main},
 		}
 	}
 
 	if err := i.runtime.Run(ctx, rprog); err != nil {
 		return &compiler.Error{
-			Err: err,
-			Location: &sourcecode.Location{
-				PkgName: main,
-			},
+			Err:      err,
+			Location: &sourcecode.Location{PkgName: main},
 		}
 	}
 
@@ -53,7 +49,6 @@ func (i Interpreter) Interpret(ctx context.Context, main string) *compiler.Error
 func New(
 	builder builder.Builder,
 	compiler compiler.Compiler,
-	isDebug bool, // TODO handle
 ) Interpreter {
 	return Interpreter{
 		builder:  builder,

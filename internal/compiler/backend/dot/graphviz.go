@@ -10,7 +10,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/nevalang/neva/internal/runtime/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 //go:embed *.tmpl

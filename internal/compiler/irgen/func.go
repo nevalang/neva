@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 func getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {

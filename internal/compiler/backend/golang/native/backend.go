@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
-	"github.com/nevalang/neva/internal/runtime/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 type Backend struct {

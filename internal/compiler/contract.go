@@ -3,8 +3,8 @@ package compiler
 import (
 	"context"
 
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 
 	"github.com/nevalang/neva/internal"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/runtime/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 type Backend struct{}

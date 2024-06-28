@@ -1,8 +1,8 @@
 package adapter
 
 import (
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 type Adapter struct{}

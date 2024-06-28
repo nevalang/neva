@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/runtime/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 func getMsg(msg *ir.Message) (string, error) {

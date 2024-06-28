@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 type Compiler struct {
@@ -17,15 +17,15 @@ type Compiler struct {
 	backend   Backend
 }
 
-func (c Compiler) Compile(main string, dst string) error {
-	ir, err := c.CompileToIR(main)
+func (c Compiler) Compile(main string, dst string, debug bool) error {
+	ir, err := c.CompileToIR(main, debug)
 	if err != nil {
 		return err
 	}
 	return c.backend.Emit(dst, ir)
 }
 
-func (c Compiler) CompileToIR(main string) (*ir.Program, *Error) {
+func (c Compiler) CompileToIR(main string, debug bool) (*ir.Program, *Error) {
 	raw, root, err := c.builder.Build(context.Background(), main)
 	if err != nil {
 		return nil, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
@@ -57,7 +57,7 @@ func (c Compiler) CompileToIR(main string) (*ir.Program, *Error) {
 		return nil, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, main, false)
+	irProg, err := c.irgen.Generate(desugaredBuild, main, !debug)
 	if err != nil {
 		return nil, err
 	}

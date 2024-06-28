@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compiler.Error) {

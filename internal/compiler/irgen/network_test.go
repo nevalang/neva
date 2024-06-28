@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/runtime/ir"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/stretchr/testify/require"
 )
 

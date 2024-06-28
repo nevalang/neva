@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/runtime"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 func (a Adapter) getFuncs(
