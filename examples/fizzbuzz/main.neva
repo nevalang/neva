@@ -1,9 +1,5 @@
 flow Main(start) (stop) {
-	nodes {
-        Range
-        Map<int, string> { FizzBuzz }
-        For { Println<int> }
-    }
+	nodes { Range, Map<int, string>{FizzBuzz}, For{Println} }
     :start -> [(1 -> range:from), (101 -> range:to)]
     range -> map -> for -> :stop
 }
