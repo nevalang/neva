@@ -165,7 +165,7 @@ type dummy struct{}
 
 func (dummy) Sent(sender, receiver PortAddr, msg Msg) Msg { return nil }
 
-func (dummy) Received(sender, receiver PortAddr, msg Msg)
+func (dummy) Received(sender, receiver PortAddr, msg Msg) {}
 
 func NewNetwork(connections map[Receiver][]Sender, debug bool) Network {
 	n := Network{connections: connections}
