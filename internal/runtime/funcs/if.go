@@ -28,7 +28,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		for {
 			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
-				continue
+				return
 			}
 
 			var out runtime.SingleOutport
