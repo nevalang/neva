@@ -38,7 +38,7 @@ func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 				out = elseOut
 			}
 
-			if !out.Send(ctx, nil) {
+			if !out.Send(ctx, dataMsg) {
 				return
 			}
 		}
