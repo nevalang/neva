@@ -40,14 +40,17 @@ func (streamIntRange) Create(
 			}
 
 			var (
+				from = fromMsg.Int()
+				to   = toMsg.Int()
+
 				idx  int64 = 0
 				last bool  = false
-				data int64 = fromMsg.Int()
+				data int64 = from
 			)
 
-			if fromMsg.Int() < toMsg.Int() {
+			if from < to {
 				for !last {
-					if data == toMsg.Int()-1 {
+					if data == to-1 {
 						last = true
 					}
 
@@ -84,7 +87,6 @@ func (streamIntRange) Create(
 					data--
 				}
 			}
-
 		}
 	}, nil
 }

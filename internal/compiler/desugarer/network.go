@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -316,10 +317,12 @@ type desugarFanOutResult struct {
 	connectionsToInsert []src.Connection
 }
 
-var fanOutCounter uint64
+var fanOutCounter atomic.Uint64
 
 func (d Desugarer) desugarFanOut(receiverSides []src.ConnectionReceiver) desugarFanOutResult {
-	nodeName := fmt.Sprintf("__fanOut__%d", fanOutCounter)
+	counter := fanOutCounter.Load()
+	fanOutCounter.Store(counter + 1)
+	nodeName := fmt.Sprintf("__fanOut__%d", counter)
 
 	node := src.Node{
 		EntityRef: core.EntityRef{

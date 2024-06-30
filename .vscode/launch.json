@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}",
-      "args": ["run", "e2e/bare_iter_over_list/main"]
+      "args": ["run", "examples/stream_product"]
     },
     {
       "name": "LSP",

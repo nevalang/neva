@@ -9,8 +9,15 @@ import (
 type fanOut struct{}
 
 func (d fanOut) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, _ := io.In.Single("data")
-	dataOut, _ := io.Out.Array("data")
+	dataIn, err := io.In.Single("data")
+	if err != nil {
+		return nil, err
+	}
+
+	dataOut, err := io.Out.Array("data")
+	if err != nil {
+		return nil, err
+	}
 
 	return func(ctx context.Context) {
 		for {
