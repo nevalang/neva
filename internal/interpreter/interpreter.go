@@ -36,7 +36,7 @@ func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *co
 		}
 	}
 
-	if err := i.runtime.Run(ctx, rprog); err != nil {
+	if err := i.runtime.Run(ctx, rprog, debug); err != nil {
 		return &compiler.Error{
 			Err:      err,
 			Location: &sourcecode.Location{PkgName: main},

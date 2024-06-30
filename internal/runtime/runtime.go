@@ -12,7 +12,7 @@ type Runtime struct {
 	funcRunner FuncRunner
 }
 
-func (p *Runtime) Run(ctx context.Context, prog Program) error {
+func (p *Runtime) Run(ctx context.Context, prog Program, debug bool) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		<-prog.Stop
@@ -22,7 +22,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	net := NewNetwork(prog.Connections)
+	net := NewNetwork(prog.Connections, debug)
 	go func() {
 		net.Run(ctx)
 		wg.Done()
