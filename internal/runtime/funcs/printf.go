@@ -49,10 +49,16 @@ func (printf) handle(
 			}
 
 			args := make([]runtime.Msg, argsIn.Len())
-			argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
 				args[idx] = msg
 				return true
-			})
+			}) {
+				return
+			}
+
+			if args[0] == nil {
+				fmt.Println("here")
+			}
 
 			res, err := format(tpl.Str(), args)
 			if err != nil {
