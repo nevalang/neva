@@ -41,21 +41,16 @@ func (intCaseMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 				return
 			}
 
-			cases := make([]runtime.Msg, caseIn.Len())
+			matchIdx := -1
+			dataInt := data.Int()
+
 			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
-				cases[idx] = msg
+				if matchIdx == -1 && dataInt%msg.Int() == 0 {
+					matchIdx = idx
+				}
 				return true
 			}) {
 				return
-			}
-
-			matchIdx := -1
-			dataInt := data.Int()
-			for i, caseMsg := range cases {
-				if dataInt%caseMsg.Int() == 0 {
-					matchIdx = i
-					break
-				}
 			}
 
 			if matchIdx != -1 {
