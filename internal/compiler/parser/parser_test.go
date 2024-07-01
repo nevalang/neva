@@ -19,7 +19,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Flow.Net
+	net := got.Entities["C1"].Component.Net
 	require.Equal(t, 2, len(net))
 
 	conn := net[0].Normal
@@ -48,7 +48,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.Equal(t, true, err == nil)
 
-	net := got.Entities["C1"].Flow.Net
+	net := got.Entities["C1"].Component.Net
 	conn := net[0].Normal
 
 	// foo[0]->
@@ -74,7 +74,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Flow.Net
+	net := got.Entities["C1"].Component.Net
 	require.Equal(t, 2, len(net))
 }
 
@@ -96,7 +96,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	// 2) lonely -> :port
 	// 3) :port -> lonely
 	// 4) lonely -> :port
-	net := got.Entities["C1"].Flow.Net
+	net := got.Entities["C1"].Component.Net
 	require.Equal(t, 4, len(net))
 
 	// 1) :port -> lonely
@@ -130,7 +130,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Flow.Net
+	net := got.Entities["C1"].Component.Net
 	require.Equal(t, 2, len(net))
 }
 
@@ -174,10 +174,10 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	d1 := got.Entities["C1"].Flow.Directives[compiler.ExternDirective][0]
+	d1 := got.Entities["C1"].Component.Directives[compiler.ExternDirective][0]
 	require.Equal(t, "d1", d1)
 
-	c2 := got.Entities["C2"].Flow
+	c2 := got.Entities["C2"].Component
 
 	d2 := c2.Directives[compiler.ExternDirective][0]
 	require.Equal(t, "d2", d2)
@@ -188,11 +188,11 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	d4 := c2.Nodes["n2"].Directives[compiler.BindDirective][0]
 	require.Equal(t, "d4", d4)
 
-	c3 := got.Entities["C3"].Flow
+	c3 := got.Entities["C3"].Component
 	_, ok := c3.Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 
-	c4 := got.Entities["C4"].Flow
+	c4 := got.Entities["C4"].Component
 	d5, ok := c4.Directives[compiler.ExternDirective]
 	require.Equal(t, true, ok)
 	require.Equal(t, "d5", d5[0])
@@ -212,7 +212,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	conn := got.Entities["C1"].Flow.Net[0]
+	conn := got.Entities["C1"].Component.Net[0]
 
 	sender := conn.Normal.SenderSide.PortAddr.Node
 	require.Equal(t, "in", sender)
@@ -236,7 +236,7 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	nodes := got.Entities["C1"].Flow.Nodes
+	nodes := got.Entities["C1"].Component.Nodes
 
 	_, ok := nodes["scanner"]
 	require.Equal(t, true, ok)
@@ -280,14 +280,14 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 	got, err := p.parseFile(src.Location{}, text)
 	require.True(t, err == nil)
 
-	conn := got.Entities["C1"].Flow.Net[0]
+	conn := got.Entities["C1"].Component.Net[0]
 
 	senderEnum := conn.Normal.SenderSide.Const.Message.Enum
 	require.Equal(t, "", senderEnum.EnumRef.Pkg)
 	require.Equal(t, "Foo", senderEnum.EnumRef.Name)
 	require.Equal(t, "Bar", senderEnum.MemberName)
 
-	conn = got.Entities["C1"].Flow.Net[1]
+	conn = got.Entities["C1"].Component.Net[1]
 	senderEnum = conn.Normal.SenderSide.Const.Message.Enum
 	require.Equal(t, "foo", senderEnum.EnumRef.Pkg)
 	require.Equal(t, "Bar", senderEnum.EnumRef.Name)

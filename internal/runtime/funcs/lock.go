@@ -9,50 +9,35 @@ import (
 type lock struct{}
 
 func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := io.In.Port("sig")
+	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Port("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	return l.Handle(sigIn, dataIn, dataOut), nil
-}
-
-func (lock) Handle(
-	sigIn,
-	dataIn,
-	dataOut chan runtime.Msg,
-) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			if _, ok := sigIn.Receive(ctx); !ok {
 				return
-			case <-sigIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
+			if !dataOut.Send(ctx, data) {
 				return
-			case dataOut <- data:
 			}
 		}
-	}
+	}, nil
 }

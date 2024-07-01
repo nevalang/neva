@@ -34,6 +34,7 @@ var selectorNodeRef = core.EntityRef{
 
 var virtualSelectorsCount atomic.Uint64
 
+// desugarStructSelectors replaces one connection with 2 connections and a node with const
 func (d Desugarer) desugarStructSelectors(
 	normConn src.NormalConnection,
 ) (handleStructSelectorsResult, *compiler.Error) {

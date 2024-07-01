@@ -13,39 +13,28 @@ func (arrayPortToStream) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
-	portIn, ok := io.In["port"]
-	if !ok {
+	portIn, err := io.In.Array("port")
+	if err != nil {
 		return nil, errors.New("missing array inport 'port'")
 	}
 
-	streamOut, err := io.Out.Port("seq")
+	seqOut, err := io.Out.Single("seq")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			l := len(portIn)
-
-			for i, slot := range portIn {
-				var msg runtime.Msg
-				select {
-				case <-ctx.Done():
-					return
-				case msg = <-slot:
-				}
-
+			l := portIn.Len()
+			if !portIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
 				item := streamItem(
 					msg,
-					int64(i),
-					i == l-1,
+					int64(idx),
+					idx == l-1,
 				)
-
-				select {
-				case <-ctx.Done():
-					return
-				case streamOut <- item:
-				}
+				return seqOut.Send(ctx, item)
+			}) {
+				return
 			}
 		}
 	}, nil

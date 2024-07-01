@@ -12,86 +12,71 @@ import (
 type printf struct{}
 
 func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	tplIn, err := io.In.Port("tpl")
+	tplIn, err := io.In.Single("tpl")
 	if err != nil {
 		return nil, err
 	}
 
-	argsIn, ok := io.In["args"]
-	if !ok {
+	argsIn, err := io.In.Array("args")
+	if err != nil {
 		return nil, fmt.Errorf("missing required input port 'args'")
 	}
 
-	argsOut, ok := io.Out["args"]
-	if !ok {
+	sigOut, err := io.Out.Single("sig")
+	if err != nil {
 		return nil, fmt.Errorf("missing required output port 'args'")
 	}
 
-	if len(argsIn) != len(argsOut) {
-		return nil, fmt.Errorf("input and output ports 'args' must have the same length")
-	}
-
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
-	return p.handle(tplIn, argsIn, errOut, argsOut)
+	return p.handle(tplIn, argsIn, errOut, sigOut)
 }
 
 func (printf) handle(
-	tplIn chan runtime.Msg,
-	argsIn []chan runtime.Msg,
-	errOut chan runtime.Msg,
-	argsOuts []chan runtime.Msg,
+	tplIn runtime.SingleInport,
+	argsIn runtime.ArrayInport,
+	errOut runtime.SingleOutport,
+	sigOut runtime.SingleOutport,
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
-		var (
-			tpl  runtime.Msg
-			args = make([]runtime.Msg, len(argsIn))
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			tpl, ok := tplIn.Receive(ctx)
+			if !ok {
 				return
-			case tpl = <-tplIn:
 			}
 
-			for i, argIn := range argsIn {
-				select {
-				case <-ctx.Done():
-					return
-				case arg := <-argIn:
-					args[i] = arg
-				}
+			args := make([]runtime.Msg, argsIn.Len())
+			if !argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				args[idx] = msg
+				return true
+			}) {
+				return
+			}
+
+			if args[0] == nil {
+				fmt.Println("here")
 			}
 
 			res, err := format(tpl.Str(), args)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- errorFromString(err.Error()):
 				}
 				continue
 			}
 
 			if _, err := fmt.Print(res); err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- errorFromString(err.Error()):
 				}
 				continue
 			}
 
-			for i, argOut := range argsOuts {
-				select {
-				case <-ctx.Done():
-					return
-				case argOut <- args[i]:
-				}
+			if !sigOut.Send(ctx, runtime.NewStrMsg(res)) {
+				return
 			}
 		}
 	}, nil
@@ -147,7 +132,10 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 
 	// Check if all arguments were used
 	if len(usedArgs) != len(args) {
-		return "", fmt.Errorf("not all arguments were used in the template")
+		return "", fmt.Errorf(
+			"not all arguments are used in the template: got %v, used %v",
+			len(args), len(usedArgs),
+		)
 	}
 
 	return result.String(), nil

@@ -9,55 +9,52 @@ import (
 type intDiv struct{}
 
 func (intDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	xIn, err := io.In.Port("x")
+	xIn, err := io.In.Single("x")
 	if err != nil {
 		return nil, err
 	}
 
-	yIn, err := io.In.Port("y")
+	yIn, err := io.In.Single("y")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			var x, y int64
-			select {
-			case <-ctx.Done():
+			xMsg, ok := xIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-xIn:
-				x = msg.Int()
 			}
-			select {
-			case <-ctx.Done():
+
+			yMsg, ok := yIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-yIn:
-				y = msg.Int()
 			}
-			if y == 0 {
-				select {
-				case <-ctx.Done():
+
+			if yMsg.Int() == 0 {
+				if !errOut.Send(ctx, errFromString("divide by zero")) {
 					return
-				case errOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-					"text": runtime.NewStrMsg(errIntegerDivideByZero.Error()),
-				}):
-					continue
 				}
+				continue
 			}
-			select {
-			case <-ctx.Done():
+
+			if !resOut.Send(
+				ctx,
+				runtime.NewIntMsg(
+					xMsg.Int()/yMsg.Int(),
+				),
+			) {
 				return
-			case resOut <- runtime.NewIntMsg(x / y):
 			}
 		}
 	}, nil

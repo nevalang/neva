@@ -9,32 +9,27 @@ import (
 type listlen struct{}
 
 func (p listlen) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
-			l := len(data.List())
+			l := len(dataMsg.List())
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewIntMsg(int64(l))) {
 				return
-			case resOut <- runtime.NewIntMsg(int64(l)):
 			}
 		}
 	}, nil

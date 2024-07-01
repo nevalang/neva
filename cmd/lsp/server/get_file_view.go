@@ -80,20 +80,20 @@ func (s *Server) GetFileView(glspCtx *glsp.Context, req GetFileViewRequest) (Get
 func getExtraForFile(file src.File, scope src.Scope) (map[string]map[string]src.Interface, error) {
 	extra := map[string]map[string]src.Interface{}
 	for entityName, entity := range file.Entities {
-		if entity.Kind != src.FlowEntity {
+		if entity.Kind != src.ComponentEntity {
 			continue
 		}
 
 		nodesIfaces := map[string]src.Interface{}
-		for nodeName, node := range entity.Flow.Nodes {
+		for nodeName, node := range entity.Component.Nodes {
 			nodeEntity, _, err := scope.Entity(node.EntityRef)
 			if err != nil {
 				return nil, err
 			}
 
 			var iface src.Interface
-			if nodeEntity.Kind == src.FlowEntity {
-				iface = nodeEntity.Flow.Interface
+			if nodeEntity.Kind == src.ComponentEntity {
+				iface = nodeEntity.Component.Interface
 			} else if nodeEntity.Kind == src.InterfaceEntity {
 				iface = nodeEntity.Interface
 			}

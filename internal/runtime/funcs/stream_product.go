@@ -12,65 +12,66 @@ func (streamProduct) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Port("first")
+	firstIn, err := io.In.Single("first")
 	if err != nil {
 		return nil, err
 	}
 
-	secondIn, err := io.In.Port("second")
+	secondIn, err := io.In.Single("second")
 	if err != nil {
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Port("seq")
+	seqOut, err := io.Out.Single("seq")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			var firstData, secondData []runtime.Msg
+			firstData := []runtime.Msg{}
 			for {
-				var item map[string]runtime.Msg
-				select {
-				case <-ctx.Done():
+				seqMsg, ok := firstIn.Receive(ctx)
+				if !ok {
 					return
-				case seqMsg := <-firstIn:
-					item = seqMsg.Map()
 				}
-				if firstData = append(firstData, item["data"]); item["last"].Bool() {
-					break
-				}
-			}
-			for {
-				var item map[string]runtime.Msg
-				select {
-				case <-ctx.Done():
-					return
-				case seqMsg := <-secondIn:
-					item = seqMsg.Map()
-				}
-				if secondData = append(secondData, item["data"]); item["last"].Bool() {
+
+				item := seqMsg.Map()
+				firstData = append(firstData, item["data"])
+
+				if item["last"].Bool() {
 					break
 				}
 			}
 
-			idx := int64(0)
-			for i, e1 := range firstData {
-				for j, e2 := range secondData {
-					select {
-					case <-ctx.Done():
-						return
-					case seqOut <- runtime.NewMapMsg(map[string]runtime.Msg{
-						"idx":  runtime.NewIntMsg(idx),
-						"last": runtime.NewBoolMsg(i == len(firstData)-1 && j == len(secondData)-1),
-						"data": runtime.NewMapMsg(map[string]runtime.Msg{
-							"first":  e1,
-							"second": e2,
-						}),
-					}):
-						idx++
-					}
+			secondData := []runtime.Msg{}
+			for {
+				seqMsg, ok := secondIn.Receive(ctx)
+				if !ok {
+					return
+				}
+
+				item := seqMsg.Map()
+				secondData = append(secondData, item["data"])
+
+				if item["last"].Bool() {
+					break
+				}
+			}
+
+			for i, msg1 := range firstData {
+				for j, msg2 := range secondData {
+					seqOut.Send(
+						ctx,
+						streamItem(
+							runtime.NewMapMsg(map[string]runtime.Msg{
+								"first":  msg1,
+								"second": msg2,
+							}),
+							int64(i),
+							i == len(firstData)-1 && j == len(secondData)-1,
+						),
+					)
 				}
 			}
 		}

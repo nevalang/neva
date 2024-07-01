@@ -1,9 +1,11 @@
 flow Main(start) (stop) {
   nodes {
-    r1 Range,
-    r2 Range,
-    Product<int, int>,
-    For<ProductRes<int, int>>{Println<ProductRes<int, int>>}
+    r1 Range
+    r2 Range
+    Product<int, int>
+    For<ProductResult<int, int>> {
+      Println<ProductResult<int, int>>
+    }
   }
   :start -> [
     (0 -> [r1:from, r2:from]),

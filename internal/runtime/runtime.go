@@ -1,81 +1,56 @@
-// Package runtime implements environment for dataflow programs execution.
 package runtime
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
+var counter atomic.Uint64
+
 type Runtime struct {
-	connector  Connector
 	funcRunner FuncRunner
 }
 
-var ErrNilDeps = errors.New("runtime deps nil")
-
-func New(connector Connector, funcRunner FuncRunner) Runtime {
-	return Runtime{
-		connector:  connector,
-		funcRunner: funcRunner,
-	}
-}
-
-var (
-	ErrStartPortNotFound = errors.New("start port not found")
-	ErrExitPortNotFound  = errors.New("stop port not found")
-	ErrConnector         = errors.New("connector")
-	ErrFuncRunner        = errors.New("func runner")
-)
-
-func (r Runtime) Run(ctx context.Context, prog Program) error {
-	enter := prog.Ports[PortAddr{Path: "in", Port: "start"}]
-	if enter == nil {
-		return ErrStartPortNotFound
-	}
-
-	exit := prog.Ports[PortAddr{Path: "out", Port: "stop"}]
-	if exit == nil {
-		return ErrExitPortNotFound
-	}
-
-	funcRun, err := r.funcRunner.Run(prog.Funcs)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrFuncRunner, err)
-	}
-
-	cancelableCtx, cancel := context.WithCancel(ctx)
+func (p *Runtime) Run(ctx context.Context, prog Program, debug bool) error {
+	ctx, cancel := context.WithCancel(ctx)
+	go func() {
+		<-prog.Stop
+		cancel()
+	}()
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
+	net := NewNetwork(prog.Connections, debug)
 	go func() {
-		funcRun(
-			context.WithValue(
-				cancelableCtx,
-				"cancel", //nolint:staticcheck // SA1029
-				cancel,
-			),
-		)
+		net.Run(ctx)
 		wg.Done()
 	}()
 
+	funcrun, err := p.funcRunner.Run(prog.Funcs)
+	if err != nil {
+		return err
+	}
+
 	go func() {
-		r.connector.Connect(cancelableCtx, prog.Connections)
+		ctx = context.WithValue(ctx, "cancel", cancel) //nolint:staticcheck // SA1029
+		funcrun(ctx)
 		wg.Done()
 	}()
 
-	go func() {
-		enter <- &baseMsg{}
-	}()
-
-	go func() {
-		<-exit
-		cancel()
-	}()
+	prog.Start <- IndexedMsg{
+		index: counter.Add(1),
+		data:  &baseMsg{},
+	}
 
 	wg.Wait()
 
 	return nil
+}
+
+func New(funcRunner FuncRunner) Runtime {
+	return Runtime{
+		funcRunner: funcRunner,
+	}
 }

@@ -12,12 +12,12 @@ func (s streamToList) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Port("seq")
+	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -26,25 +26,24 @@ func (s streamToList) Create(
 		acc := []runtime.Msg{}
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			msg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case seqMsg := <-seqIn:
-				item = seqMsg.Map()
 			}
+
+			item := msg.Map()
 
 			acc = append(acc, item["data"])
 
-			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewListMsg(acc...):
-					acc = []runtime.Msg{} // reset
-					continue
-				}
+			if !item["last"].Bool() {
+				continue
 			}
+
+			if !resOut.Send(ctx, runtime.NewListMsg(acc)) {
+				return
+			}
+
+			acc = []runtime.Msg{}
 		}
 	}, nil
 }

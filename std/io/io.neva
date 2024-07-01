@@ -1,3 +1,2 @@
 #extern(scanln)
 pub flow Scanln(sig any) (data string)
-

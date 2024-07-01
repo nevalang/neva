@@ -10,72 +10,57 @@ import (
 type intCaseMod struct{}
 
 func (intCaseMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	caseIn, ok := io.In["case"]
-	if !ok {
-		return nil, errors.New("port 'case' is required")
-	}
-
-	caseOut, ok := io.Out["case"]
-	if !ok {
-		return nil, errors.New("port 'then' is required")
-	}
-
-	elseOut, err := io.Out.Port("else")
+	caseIn, err := io.In.Array("case")
 	if err != nil {
 		return nil, err
 	}
 
-	if len(caseIn) != len(caseOut) {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+	caseOut, err := io.Out.Array("case")
+	if err != nil {
+		return nil, err
+	}
+
+	elseOut, err := io.Out.Single("else")
+	if err != nil {
+		return nil, err
+	}
+
+	if caseIn.Len() != caseOut.Len() {
+		return nil, errors.New("number of 'case' inports must match number of 'case' outports")
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
-			}
-
-			cases := make([]runtime.Msg, len(caseIn))
-			for i, slot := range caseIn {
-				select {
-				case <-ctx.Done():
-					return
-				case caseMsg := <-slot:
-					cases[i] = caseMsg
-				}
 			}
 
 			matchIdx := -1
 			dataInt := data.Int()
-			for i, caseMsg := range cases {
-				if dataInt%caseMsg.Int() == 0 {
-					matchIdx = i
-					break
+
+			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				if matchIdx == -1 && dataInt%msg.Int() == 0 {
+					matchIdx = idx
 				}
+				return true
+			}) {
+				return
 			}
 
 			if matchIdx != -1 {
-				select {
-				case <-ctx.Done():
+				if !caseOut.Send(ctx, uint8(matchIdx), data) {
 					return
-				case caseOut[matchIdx] <- data:
-					continue
 				}
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case elseOut <- data:
+			} else {
+				if !elseOut.Send(ctx, data) {
+					return
+				}
 			}
 		}
 	}, nil

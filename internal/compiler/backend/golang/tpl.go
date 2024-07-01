@@ -33,8 +33,8 @@ func main() {
             {{- end}}
         },
         Connections: []runtime.Connection{
-            {{- range .Connections}}
-            {{ getConnComment . }}
+            {{- range $sender, $receivers := .Connections}}
+            {{ getConnComment $sender, $receivers }}
             {
                 Sender: {{getPortChanName .SenderSide}},
                 Receivers: []chan runtime.Msg{

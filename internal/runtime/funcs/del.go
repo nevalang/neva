@@ -9,17 +9,15 @@ import (
 type del struct{}
 
 func (d del) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	outport, err := io.In.Port("msg")
+	dataIn, err := io.In.Single("msg") // TODO rename to data?
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			select {
-			case <-ctx.Done():
+			if _, ok := dataIn.Receive(ctx); !ok {
 				return
-			case <-outport:
 			}
 		}
 	}, nil

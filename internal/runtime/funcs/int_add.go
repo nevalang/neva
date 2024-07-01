@@ -12,12 +12,12 @@ func (intAdd) Create(
 	io runtime.FuncIO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Port("seq")
+	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -26,25 +26,24 @@ func (intAdd) Create(
 		var acc int64 = 0
 
 		for {
-			var item map[string]runtime.Msg
-			select {
-			case <-ctx.Done():
+			msg, ok := seqIn.Receive(ctx)
+			if !ok {
 				return
-			case msg := <-seqIn:
-				item = msg.Map()
 			}
+
+			item := msg.Map()
 
 			acc += item["data"].Int()
 
-			if item["last"].Bool() {
-				select {
-				case <-ctx.Done():
-					return
-				case resOut <- runtime.NewIntMsg(acc):
-					acc = 0 // reset
-					continue
-				}
+			if !item["last"].Bool() {
+				continue
 			}
+
+			if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
+				return
+			}
+
+			acc = 0
 		}
 	}, nil
 }

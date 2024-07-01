@@ -1,11 +1,10 @@
 flow Main(start) (stop) {
-    nodes { Println, Gt<string>,If}
+    nodes { Println, Gt<string>, If }
     :start -> [
         ('A' -> gt:compared),
         ('Z' -> gt:actual)
-       ]
-       gt:res -> if
-
-       if:then -> ('Actual is greater' -> println -> :stop)
-       if:else -> ('Actual is lower' -> println -> :stop)
+    ]
+    gt:res -> if
+    if:then -> ('Actual is greater' -> println -> :stop)
+    if:else -> ('Actual is lower' -> println -> :stop)
 }

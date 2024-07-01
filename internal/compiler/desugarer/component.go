@@ -13,44 +13,45 @@ var ErrConstSenderEntityKind = errors.New(
 	"Entity that is used as a const reference in flow's network must be of kind constant",
 )
 
-type handleFlowResult struct {
-	desugaredFlow   src.Flow
+type handleComponentResult struct {
+	desugaredFlow   src.Component
 	virtualEntities map[string]src.Entity
 }
 
-func (d Desugarer) handleFlow(
-	flow src.Flow,
+func (d Desugarer) handleComponent(
+	component src.Component,
 	scope src.Scope,
-) (handleFlowResult, *compiler.Error) {
-	if len(flow.Net) == 0 && len(flow.Nodes) == 0 {
-		return handleFlowResult{desugaredFlow: flow}, nil
+) (handleComponentResult, *compiler.Error) {
+	if len(component.Net) == 0 && len(component.Nodes) == 0 {
+		return handleComponentResult{desugaredFlow: component}, nil
 	}
 
 	virtualEntities := map[string]src.Entity{}
 
 	desugaredNodes, virtConnsForNodes, err := d.handleNodes(
-		flow,
+		component,
 		scope,
 		virtualEntities,
 	)
 	if err != nil {
-		return handleFlowResult{}, err
+		return handleComponentResult{}, err
 	}
 
-	netToDesugar := append(virtConnsForNodes, flow.Net...)
+	netToDesugar := append(virtConnsForNodes, component.Net...)
+
 	handleNetResult, err := d.handleNetwork(
 		netToDesugar,
 		desugaredNodes,
 		scope,
 	)
 	if err != nil {
-		return handleFlowResult{}, err
+		return handleComponentResult{}, err
 	}
 
 	desugaredNetwork := slices.Clone(handleNetResult.desugaredConnections)
 
 	// add virtual constants created by network handler to virtual entities
-	for name, constant := range handleNetResult.virtualConstants {
+	for name, constant := range handleNetResult.constsToInsert {
 		virtualEntities[name] = src.Entity{
 			Kind:  src.ConstEntity,
 			Const: constant,
@@ -60,11 +61,11 @@ func (d Desugarer) handleFlow(
 	// merge real nodes with virtual ones created by network handler
 	maps.Copy(desugaredNodes, handleNetResult.virtualNodes)
 
-	// create virtual destructor nodes and connections to handle unused outports
+	// create and connect Del nodes to handle unused outports
 	unusedOutports := d.findUnusedOutports(
-		flow,
+		component,
 		scope,
-		handleNetResult.usedNodePorts,
+		handleNetResult.nodesPortsUsed,
 	)
 	if unusedOutports.len() != 0 {
 		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)
@@ -72,20 +73,20 @@ func (d Desugarer) handleFlow(
 		desugaredNodes[unusedOutportsResult.voidNodeName] = unusedOutportsResult.voidNode
 	}
 
-	return handleFlowResult{
-		desugaredFlow: src.Flow{
-			Directives: flow.Directives,
-			Interface:  flow.Interface,
+	return handleComponentResult{
+		desugaredFlow: src.Component{
+			Directives: component.Directives,
+			Interface:  component.Interface,
 			Nodes:      desugaredNodes,
 			Net:        desugaredNetwork,
-			Meta:       flow.Meta,
+			Meta:       component.Meta,
 		},
 		virtualEntities: virtualEntities,
 	}, nil
 }
 
 func (d Desugarer) handleNodes(
-	flow src.Flow,
+	flow src.Component,
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,
 ) (map[string]src.Node, []src.Connection, *compiler.Error) {

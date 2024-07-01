@@ -20,7 +20,7 @@ var (
 	ErrMainNodeEntityNotFlow      = errors.New("Main flow's nodes must only refer to flow entities")
 )
 
-func (a Analyzer) analyzeMainFlow(cmp src.Flow, scope src.Scope) *compiler.Error {
+func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
 			Err:  ErrMainFlowWithTypeParams,
@@ -106,7 +106,7 @@ func (Analyzer) analyzeMainFlowNodes(
 			}
 		}
 
-		if nodeEntity.Kind != src.FlowEntity {
+		if nodeEntity.Kind != src.ComponentEntity {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v: %v", ErrMainNodeEntityNotFlow, nodeName, node.EntityRef),
 				Location: &loc,

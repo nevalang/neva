@@ -12,45 +12,38 @@ import (
 type parseInt struct{}
 
 func (p parseInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var str runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			str, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case str = <-dataIn:
 			}
 
 			parsedNum, err := parse(str.Str())
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
-				case errOut <- runtime.NewStrMsg(err.Error()):
 				}
 				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, parsedNum) {
 				return
-			case resOut <- parsedNum:
 			}
 		}
 	}, nil

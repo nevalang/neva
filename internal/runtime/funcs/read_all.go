@@ -10,64 +10,54 @@ import (
 
 type readAll struct{}
 
-func (c readAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.Port("filename")
+func (c readAll) Create(rio runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.Out.Port("data")
+	dataPort, err := rio.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.Port("err")
+	errPort, err := rio.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			var name runtime.Msg
-			select {
-			case <-ctx.Done():
+			name, ok := filename.Receive(ctx)
+			if !ok {
 				return
-			case name = <-filename:
 			}
 
 			f, err := os.Open(name.Str())
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errorFromString(err.Error()):
-					continue
 				}
+				continue
 			}
 
 			data, err := io.ReadAll(f)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errorFromString(err.Error()):
-					continue
 				}
+				continue
 			}
 
 			if err := f.Close(); err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errorFromString(err.Error()):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !dataPort.Send(ctx, runtime.NewStrMsg(string(data))) {
 				return
-			case dataPort <- runtime.NewStrMsg(string(data)):
 			}
 		}
 	}, nil

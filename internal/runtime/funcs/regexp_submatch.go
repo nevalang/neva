@@ -10,70 +10,65 @@ import (
 
 type regexpSubmatch struct{}
 
-func (r regexpSubmatch) Create(io runtime.FuncIO, cfgMsg runtime.Msg) (func(ctx context.Context), error) {
-	regexpIn, err := io.In.Port("regexp")
+func (r regexpSubmatch) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	regexpIn, err := io.In.Single("regexp")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errOut, err := io.Out.Port("err")
+	errOut, err := io.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var (
-			regexpMsg runtime.Msg
-			dataMsg   runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			regexpMsg, ok := regexpIn.Receive(ctx)
+			if !ok {
 				return
-			case regexpMsg = <-regexpIn:
 			}
 
 			regex, err := regexp.Compile(regexpMsg.Str())
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errOut.Send(ctx, runtime.NewStrMsg(err.Error())) {
 					return
-				case errOut <- runtime.NewStrMsg(err.Error()):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case dataMsg = <-dataIn:
 			}
 
-			res := regex.FindStringSubmatch(fmt.Sprint(dataMsg))
-
-			select {
-			case <-ctx.Done():
-			case resOut <- wrap(res):
+			if !resOut.Send(
+				ctx,
+				stringsToList(
+					regex.FindStringSubmatch(
+						fmt.Sprint(dataMsg),
+					),
+				),
+			) {
+				return
 			}
 		}
 	}, nil
 }
 
-func wrap(ss []string) runtime.Msg {
+func stringsToList(ss []string) runtime.Msg {
 	msgs := make([]runtime.Msg, 0, len(ss))
 	for _, s := range ss {
 		msgs = append(msgs, runtime.NewStrMsg(s))
 	}
-	return runtime.NewListMsg(msgs...)
+	return runtime.NewListMsg(msgs)
 }

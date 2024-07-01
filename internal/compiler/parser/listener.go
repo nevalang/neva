@@ -105,7 +105,7 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	}
 
 	parsedCompEntity.IsPublic = actx.PUB_KW() != nil
-	parsedCompEntity.Flow.Directives = parseCompilerDirectives(
+	parsedCompEntity.Component.Directives = parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
 	name := compDef.InterfaceDef().IDENTIFIER().GetText()

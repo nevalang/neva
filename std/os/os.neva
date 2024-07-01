@@ -1,2 +1,2 @@
 #extern(args)
-pub flow Args() (data list<string>)
+pub flow Args(sig any) (data list<string>)

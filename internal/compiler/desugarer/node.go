@@ -49,13 +49,13 @@ func (Desugarer) handleNode(
 		}
 	}
 
-	if entity.Kind != src.FlowEntity {
+	if entity.Kind != src.ComponentEntity {
 		desugaredNodes[nodeName] = node
 		return extraConnections, nil
 	}
 
 	_, hasAutoports := entity.
-		Flow.
+		Component.
 		Directives[compiler.AutoportsDirective]
 
 	// nothing to desugar
@@ -68,7 +68,7 @@ func (Desugarer) handleNode(
 
 	depArg, ok := node.Deps[""]
 	if ok {
-		for depParamName, depParam := range entity.Flow.Nodes {
+		for depParamName, depParam := range entity.Component.Nodes {
 			depEntity, _, err := scope.Entity(depParam.EntityRef)
 			if err != nil {
 				panic(err)
@@ -110,7 +110,7 @@ func (Desugarer) handleNode(
 		},
 	}
 
-	localBuilderFlow := src.Flow{
+	localBuilderFlow := src.Component{
 		Interface: src.Interface{
 			IO: src.IO{In: inports, Out: outports},
 		},
@@ -119,8 +119,8 @@ func (Desugarer) handleNode(
 	localBuilderName := fmt.Sprintf("struct_%v", nodeName)
 
 	virtualEntities[localBuilderName] = src.Entity{
-		Kind: src.FlowEntity,
-		Flow: localBuilderFlow,
+		Kind:      src.ComponentEntity,
+		Component: localBuilderFlow,
 	}
 
 	desugaredNodes[nodeName] = src.Node{

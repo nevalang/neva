@@ -11,10 +11,10 @@ pub flow If(data bool) (then any, else any)
 pub flow Not(data bool) (res bool)
 
 #extern(and)
-pub flow And(A bool, B bool) (res bool)
+pub flow And(a bool, b bool) (res bool)
 
 #extern(or)
-pub flow Or(A bool, B bool) (res bool)
+pub flow Or(a bool, b bool) (res bool)
 
 #extern(int int_is_greater, float float_is_greater, string string_is_greater)
 pub flow Gt<T int | float | string>(actual T, compared T) (res bool)

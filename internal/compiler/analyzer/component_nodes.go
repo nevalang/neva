@@ -80,7 +80,7 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	if nodeEntity.Kind != src.FlowEntity &&
+	if nodeEntity.Kind != src.ComponentEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
@@ -258,7 +258,7 @@ func (a Analyzer) getNodeInterface(
 		return entity.Interface, nil
 	}
 
-	externArgs, hasExternDirective := entity.Flow.Directives[compiler.ExternDirective]
+	externArgs, hasExternDirective := entity.Component.Directives[compiler.ExternDirective]
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
@@ -276,9 +276,9 @@ func (a Analyzer) getNodeInterface(
 		}
 	}
 
-	iface := entity.Flow.Interface
+	iface := entity.Component.Interface
 
-	_, hasAutoPortsDirective := entity.Flow.Directives[compiler.AutoportsDirective]
+	_, hasAutoPortsDirective := entity.Component.Directives[compiler.AutoportsDirective]
 	if !hasAutoPortsDirective {
 		return iface, nil
 	}

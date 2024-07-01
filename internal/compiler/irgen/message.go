@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.Error) {
+func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compiler.Error) {
 	if constant.Ref != nil {
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
@@ -22,33 +22,33 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 
 	switch {
 	case constant.Message.Bool != nil:
-		return &ir.Msg{
+		return &ir.Message{
 			Type: ir.MsgTypeBool,
 			Bool: *constant.Message.Bool,
 		}, nil
 	case constant.Message.Int != nil:
-		return &ir.Msg{
+		return &ir.Message{
 			Type: ir.MsgTypeInt,
 			Int:  int64(*constant.Message.Int),
 		}, nil
 	case constant.Message.Float != nil:
-		return &ir.Msg{
+		return &ir.Message{
 			Type:  ir.MsgTypeFloat,
 			Float: *constant.Message.Float,
 		}, nil
 	case constant.Message.Str != nil:
-		return &ir.Msg{
-			Type: ir.MsgTypeString,
-			Str:  *constant.Message.Str,
+		return &ir.Message{
+			Type:   ir.MsgTypeString,
+			String: *constant.Message.Str,
 		}, nil
 	case constant.Message.Enum != nil:
 		enumTypeExpr := constant.Message.TypeExpr.Lit.Enum
-		return &ir.Msg{
+		return &ir.Message{
 			Type: ir.MsgTypeInt,
 			Int:  int64(getEnumMemberIndex(enumTypeExpr, constant.Message.Enum.MemberName)),
 		}, nil
 	case constant.Message.List != nil:
-		listMsg := make([]ir.Msg, len(constant.Message.List))
+		listMsg := make([]ir.Message, len(constant.Message.List))
 
 		for i, el := range constant.Message.List {
 			result, err := getIRMsgBySrcRef(el, scope)
@@ -58,12 +58,12 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			listMsg[i] = *result
 		}
 
-		return &ir.Msg{
+		return &ir.Message{
 			Type: ir.MsgTypeList,
 			List: listMsg,
 		}, nil
 	case constant.Message.MapOrStruct != nil:
-		mapMsg := make(map[string]ir.Msg, len(constant.Message.MapOrStruct))
+		mapMsg := make(map[string]ir.Message, len(constant.Message.MapOrStruct))
 
 		for name, el := range constant.Message.MapOrStruct {
 			result, err := getIRMsgBySrcRef(el, scope)
@@ -73,9 +73,9 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Msg, *compiler.E
 			mapMsg[name] = *result // see Q&A on why we don't create flat maps for nested structures
 		}
 
-		return &ir.Msg{
+		return &ir.Message{
 			Type: ir.MsgTypeMap,
-			Map:  mapMsg,
+			Dict: mapMsg,
 		}, nil
 	}
 

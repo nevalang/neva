@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 // processNetwork
@@ -21,9 +21,9 @@ func (g Generator) processNetwork(
 
 	for _, conn := range conns {
 		// here's how we handle array-bypass connections:
-		// sender is always flow's inport
+		// sender is always component's inport
 		// based on that, we can set receiver's inport slots
-		// equal to slots of our inport
+		// equal to slots of our own inport
 		if conn.ArrayBypass != nil {
 			arrBypassSender := conn.ArrayBypass.SenderOutport
 			arrBypassReceiver := conn.ArrayBypass.ReceiverInport
@@ -37,23 +37,25 @@ func (g Generator) processNetwork(
 
 			var slotIdx uint8 = 0
 			for usageAddr := range nodeCtx.portsUsage.in {
-				if usageAddr.Port != arrBypassSender.Port {
+				if usageAddr.Port != arrBypassSender.Port { // we only care about the port we're bypassing
 					continue
 				}
 
-				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: slotIdx}
+				slotIdxCopy := slotIdx // fix of "Using the variable on range scope" issue
+
+				addr := relPortAddr{Port: arrBypassReceiver.Port, Idx: &slotIdxCopy} // TODO check if pointer is ok to use here
 				nodesPortsUsage[arrBypassReceiver.Node].in[addr] = struct{}{}
 
 				irSenderSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassSender.Node),
 					Port: arrBypassSender.Port,
-					Idx:  uint32(slotIdx),
+					Idx:  &slotIdxCopy,
 				}
 
 				irReceiverSlot := ir.PortAddr{
 					Path: joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
 					Port: arrBypassReceiver.Port,
-					Idx:  uint32(slotIdx),
+					Idx:  &slotIdxCopy,
 				}
 
 				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
@@ -78,9 +80,11 @@ func (g Generator) processNetwork(
 		}
 
 		receiverPortsIR := make(map[ir.PortAddr]struct{}, len(conn.Normal.ReceiverSide.Receivers))
+
 		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
-			receiverPortsIR[*receiverSideIR] = struct{}{}
+
+			receiverPortsIR[receiverSideIR] = struct{}{}
 
 			// same receiver can be used by multiple senders so we only add it once
 			if _, ok := nodesPortsUsage[receiverSide.PortAddr.Node]; !ok {
@@ -90,21 +94,16 @@ func (g Generator) processNetwork(
 				}
 			}
 
-			var idx uint8
-			if receiverSide.PortAddr.Idx != nil {
-				idx = *receiverSide.PortAddr.Idx
-			}
-
 			receiverNode := receiverSide.PortAddr.Node
 			receiverPortAddr := relPortAddr{
 				Port: receiverSide.PortAddr.Port,
-				Idx:  idx,
+				Idx:  receiverSide.PortAddr.Idx,
 			}
 
 			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
 		}
 
-		result.Connections[*irSenderSidePortAddr] = receiverPortsIR
+		result.Connections[irSenderSidePortAddr] = receiverPortsIR
 	}
 
 	return nodesPortsUsage, nil
@@ -114,7 +113,7 @@ func (g Generator) processSenderSide(
 	nodeCtx nodeContext,
 	senderSide src.ConnectionSenderSide,
 	result map[string]portsUsage,
-) (*ir.PortAddr, error) {
+) (ir.PortAddr, error) {
 	// there could be many connections with the same sender but we must only add it once
 	if _, ok := result[senderSide.PortAddr.Node]; !ok {
 		result[senderSide.PortAddr.Node] = portsUsage{
@@ -123,52 +122,25 @@ func (g Generator) processSenderSide(
 		}
 	}
 
-	var idx uint8
-	if senderSide.PortAddr.Idx != nil {
-		idx = *senderSide.PortAddr.Idx
-	}
-
 	// insert outport usage
 	result[senderSide.PortAddr.Node].out[relPortAddr{
 		Port: senderSide.PortAddr.Port,
-		Idx:  idx,
+		Idx:  senderSide.PortAddr.Idx,
 	}] = struct{}{}
 
-	irSenderSide := &ir.PortAddr{
+	irSenderPort := ir.PortAddr{
 		Path: joinNodePath(nodeCtx.path, senderSide.PortAddr.Node),
 		Port: senderSide.PortAddr.Port,
-		Idx:  uint32(idx),
+		Idx:  senderSide.PortAddr.Idx,
 	}
 
-	if senderSide.PortAddr.Node == "in" {
-		return irSenderSide, nil
+	if senderSide.PortAddr.Node != "in" {
+		irSenderPort.Path += "/out"
 	}
-	irSenderSide.Path += "/out"
 
-	return irSenderSide, nil
+	return irSenderPort, nil
 }
 
-// for in we only use parent ctx cuz all inports are used
-func (Generator) getFuncInports(nodeCtx nodeContext) []ir.PortAddr {
-	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
-
-	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
-	// actually we can't use IO because we need to know how many slots are used
-	for addr := range nodeCtx.portsUsage.in {
-		addr := &ir.PortAddr{
-			Path: joinNodePath(nodeCtx.path, "in"),
-			Port: addr.Port,
-			Idx:  uint32(addr.Idx),
-		}
-		inports = append(inports, *addr)
-	}
-
-	sortPortAddrs(inports)
-
-	return inports
-}
-
-// sortPortAddrs sorts port addresses by path, port and idx,
 // this is very important because runtime function calls depends on this order.
 func sortPortAddrs(addrs []ir.PortAddr) {
 	sort.Slice(addrs, func(i, j int) bool {
@@ -178,47 +150,25 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 		if addrs[i].Port != addrs[j].Port {
 			return addrs[i].Port < addrs[j].Port
 		}
-		return addrs[i].Idx < addrs[j].Idx
+		if addrs[i].Idx == nil {
+			return true
+		}
+		return *addrs[i].Idx < *addrs[j].Idx
 	})
 }
 
-// for out we use both parent ctx and interface
-func (Generator) getFuncOutports(nodeCtx nodeContext) []ir.PortAddr {
-	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
-
-	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
-	// Actually we can't use IO because we need to know how many slots are used.
-	for addr := range nodeCtx.portsUsage.out {
-		irAddr := &ir.PortAddr{
-			Path: joinNodePath(nodeCtx.path, "out"),
-			Port: addr.Port,
-			Idx:  uint32(addr.Idx),
-		}
-
-		outports = append(outports, *irAddr)
-	}
-
-	sortPortAddrs(outports)
-
-	return outports
-}
-
 // mapReceiverSide maps src connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) *ir.PortAddr {
-	var idx uint8
-	if side.PortAddr.Idx != nil {
-		idx = *side.PortAddr.Idx
-	}
-
-	result := &ir.PortAddr{
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) ir.PortAddr {
+	result := ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,
-		Idx:  uint32(idx),
+		Idx:  side.PortAddr.Idx,
 	}
-	if side.PortAddr.Node == "out" { // 'out' node is actually receiver but we don't want to have 'out.in' addresses
-		return result
+
+	// 'out' node is actually receiver but we don't want to have 'out/in' path
+	if side.PortAddr.Node != "out" {
+		result.Path += "/in"
 	}
-	result.Path += "/in"
 
 	return result
 }

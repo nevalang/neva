@@ -2,49 +2,44 @@ package funcs
 
 import (
 	"context"
+
 	"github.com/nevalang/neva/internal/runtime"
 )
 
 type if_ struct{}
 
 func (p if_) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	okOut, err := io.Out.Port("then")
+	thenOut, err := io.Out.Single("then")
 	if err != nil {
 		return nil, err
 	}
 
-	elseOut, err := io.Out.Port("else")
+	elseOut, err := io.Out.Single("else")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var (
-			val1 runtime.Msg
-		)
-
 		for {
-			select {
-			case <-ctx.Done():
+			dataMsg, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case val1 = <-dataIn:
 			}
 
-			select {
-			case <-ctx.Done():
-				return
+			var out runtime.SingleOutport
+			if dataMsg.Bool() {
+				out = thenOut
+			} else {
+				out = elseOut
+			}
 
-			default:
-				if val1.Bool() {
-					okOut <- val1
-				} else {
-					elseOut <- val1
-				}
+			if !out.Send(ctx, dataMsg) {
+				return
 			}
 		}
 	}, nil

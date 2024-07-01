@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	ErrMainEntityNotFound       = errors.New("Main entity is not found")
-	ErrMainEntityIsNotFlow = errors.New("Main entity is not a flow")
-	ErrMainEntityExported       = errors.New("Main entity cannot be exported")
-	ErrMainPkgExports           = errors.New("Main package must cannot have exported entities")
+	ErrMainEntityNotFound  = errors.New("Main entity is not found")
+	ErrMainEntityIsNotFlow = errors.New("Main entity is not a component")
+	ErrMainEntityExported  = errors.New("Main entity cannot be exported")
+	ErrMainPkgExports      = errors.New("Main package must cannot have exported entities")
 )
 
 func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
@@ -33,7 +33,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	location.FileName = filename
 
-	if entityMain.Kind != src.FlowEntity {
+	if entityMain.Kind != src.ComponentEntity {
 		return &compiler.Error{
 			Err:      ErrMainEntityIsNotFlow,
 			Location: location,
@@ -44,16 +44,16 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 		return &compiler.Error{
 			Err:      ErrMainEntityExported,
 			Location: location,
-			Meta:     &entityMain.Flow.Meta,
+			Meta:     &entityMain.Component.Meta,
 		}
 	}
 
 	scope = scope.WithLocation(*location)
 
-	if err := a.analyzeMainFlow(entityMain.Flow, scope); err != nil {
+	if err := a.analyzeMainComponent(entityMain.Component, scope); err != nil {
 		return compiler.Error{
 			Location: location,
-			Meta:     &entityMain.Flow.Meta,
+			Meta:     &entityMain.Component.Meta,
 		}.Wrap(err)
 	}
 

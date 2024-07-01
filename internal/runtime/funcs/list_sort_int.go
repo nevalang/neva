@@ -10,24 +10,21 @@ import (
 type listSortInt struct{}
 
 func (p listSortInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
 			clone := slices.Clone(data.List())
@@ -35,10 +32,8 @@ func (p listSortInt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.
 				return i.Int() < j.Int()
 			})
 
-			select {
-			case <-ctx.Done():
+			if !resOut.Send(ctx, runtime.NewListMsg(clone)) {
 				return
-			case resOut <- runtime.NewListMsg(clone...):
 			}
 		}
 	}, nil

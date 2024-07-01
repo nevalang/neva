@@ -5,35 +5,12 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
-// scope must contain location where node found, not function
-func (g Generator) getFuncCall(
-	nodeCtx nodeContext,
-	scope src.Scope,
-	funcRef string,
-) (ir.FuncCall, *compiler.Error) {
-	cfgMsg, err := getCfgMsg(nodeCtx.node, scope)
-	if err != nil {
-		return ir.FuncCall{}, &compiler.Error{
-			Err:      err,
-			Location: &scope.Location,
-		}
-	}
-	return ir.FuncCall{
-		Ref: funcRef,
-		IO: ir.FuncIO{
-			In:  g.getFuncInports(nodeCtx),
-			Out: g.getFuncOutports(nodeCtx),
-		},
-		Msg: cfgMsg,
-	}, nil
-}
-
-func getFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
+func getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := flow.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
@@ -60,7 +37,7 @@ func getFuncRef(flow src.Flow, nodeTypeArgs []ts.Expr) (string, error) {
 	return "", errors.New("type argument mismatches runtime func directive")
 }
 
-func getCfgMsg(node src.Node, scope src.Scope) (*ir.Msg, *compiler.Error) {
+func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error) {
 	args, ok := node.Directives[compiler.BindDirective]
 	if !ok {
 		return nil, nil

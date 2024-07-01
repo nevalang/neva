@@ -3,8 +3,8 @@ package compiler
 import (
 	"context"
 
+	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/runtime/ir"
 )
 
 const (
@@ -43,7 +43,7 @@ type (
 	}
 
 	IRGenerator interface {
-		Generate(build src.Build, mainPkgName string) (*ir.Program, *Error)
+		Generate(build src.Build, mainpkg string, optimize bool) (*ir.Program, *Error)
 	}
 
 	Backend interface {

@@ -10,24 +10,21 @@ import (
 type stringJoin struct{}
 
 func (p stringJoin) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Port("data")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Port("res")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var data runtime.Msg
-
 		for {
-			select {
-			case <-ctx.Done():
+			data, ok := dataIn.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataIn:
 			}
 
 			builder := strings.Builder{}
@@ -36,7 +33,9 @@ func (p stringJoin) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.C
 				builder.WriteString(list[i].Str())
 			}
 
-			resOut <- runtime.NewStrMsg(builder.String())
+			if !resOut.Send(ctx, runtime.NewStrMsg(builder.String())) {
+				return
+			}
 		}
 	}, nil
 }

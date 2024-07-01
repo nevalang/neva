@@ -1,11 +1,11 @@
 package irgen
 
-import "github.com/nevalang/neva/internal/runtime/ir"
+import "github.com/nevalang/neva/internal/compiler/ir"
 
 // reduceGraph transforms program to a state where it doesn't have intermediate connections.
-// It's not optimization, it's a functional requirement of runtime.
 func reduceGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]map[ir.PortAddr]struct{}) {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
+
 	netWithoutIntermediateReceivers := make(
 		map[ir.PortAddr]map[ir.PortAddr]struct{},
 		len(prog.Connections),

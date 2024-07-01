@@ -9,56 +9,49 @@ import (
 
 type writeAll struct{}
 
-func (c writeAll) Create(rio runtime.FuncIO, msg runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.Port("filename")
+func (c writeAll) Create(rio runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.In.Port("data")
+	dataPort, err := rio.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	sig, err := rio.Out.Port("sig")
+	sig, err := rio.Out.Single("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.Port("err")
+	errPort, err := rio.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			var name, data runtime.Msg
-			select {
-			case <-ctx.Done():
+			name, ok := filename.Receive(ctx)
+			if !ok {
 				return
-			case name = <-filename:
 			}
 
-			select {
-			case <-ctx.Done():
+			data, ok := dataPort.Receive(ctx)
+			if !ok {
 				return
-			case data = <-dataPort:
 			}
 
 			err := os.WriteFile(name.Str(), []byte(data.Str()), 0755)
 			if err != nil {
-				select {
-				case <-ctx.Done():
+				if !errPort.Send(ctx, errFromErr(err)) {
 					return
-				case errPort <- errorFromString(err.Error()):
-					continue
 				}
+				continue
 			}
 
-			select {
-			case <-ctx.Done():
+			if !sig.Send(ctx, nil) {
 				return
-			case sig <- nil:
 			}
 		}
 	}, nil

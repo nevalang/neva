@@ -1,24 +1,14 @@
 flow Main(start) (stop) {
-	nodes { Range, PrintLine, Match }
-
-    :start -> [
-        (1 -> range:from),
-        (101 -> range:to)
-    ]
-    range.data -> printLine -> match:data
-    100 -> match:case[0] -> :stop
+	nodes { Range, Map<int, string>{FizzBuzz}, For{Println} }
+    :start -> [(1 -> range:from), (101 -> range:to)]
+    range -> map -> for -> :stop
 }
 
-flow PrintLine(data int) (data int) {
-    nodes { mod CaseMod, Println, Lock<int> }
-
-    :data -> [mod:data, lock:data]
-
-    15 -> mod:case[0] -> ('FizzBuzz' -> println)
-    3 -> mod:case[1] -> ('Fizz'     -> println)
-    5 -> mod:case[2] -> ('Buzz'     -> println)
-    mod:else -> println
-
-    println -> lock:sig
-    lock:data -> :data
+flow FizzBuzz(data int) (res any) {
+    nodes { CaseMod }
+    :data -> caseMod:data
+    15 -> caseMod:case[0] -> ('FizzBuzz' -> :res)
+    3 -> caseMod:case[1] -> ('Fizz' -> :res)
+    5 -> caseMod:case[2] -> ('Buzz' -> :res)
+    caseMod:else -> :res
 }

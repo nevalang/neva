@@ -13,7 +13,8 @@ type Msg interface {
 	Float() float64
 	Str() string
 	List() []Msg
-	Map() map[string]Msg
+	Map() map[string]Msg // TODO rename maps to dicts
+	// IDEA use reflect for structures (instead of maps)
 }
 
 // Base (internal helper)
@@ -123,7 +124,7 @@ func (msg ListMsg) String() string {
 }
 func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
 
-func NewListMsg(v ...Msg) ListMsg {
+func NewListMsg(v []Msg) ListMsg {
 	return ListMsg{
 		baseMsg: &baseMsg{},
 		v:       v,

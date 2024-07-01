@@ -101,7 +101,7 @@ type Entity struct {
 	Const     Const      `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
-	Flow      Flow       `json:"flow,omitempty"`
+	Component Component  `json:"flow,omitempty"`
 }
 
 func (e Entity) Meta() *core.Meta {
@@ -113,8 +113,8 @@ func (e Entity) Meta() *core.Meta {
 		m = e.Type.Meta.(core.Meta) //nolint
 	case InterfaceEntity:
 		m = e.Interface.Meta
-	case FlowEntity:
-		m = e.Flow.Meta
+	case ComponentEntity:
+		m = e.Component.Meta
 	}
 	return &m
 }
@@ -122,13 +122,13 @@ func (e Entity) Meta() *core.Meta {
 type EntityKind string // It's handy to transmit strings enum instead of digital
 
 const (
-	FlowEntity      EntityKind = "flow_entity"
+	ComponentEntity EntityKind = "component_entity"
 	ConstEntity     EntityKind = "const_entity"
 	TypeEntity      EntityKind = "type_entity"
 	InterfaceEntity EntityKind = "interface_entity"
 )
 
-type Flow struct {
+type Component struct {
 	Directives map[Directive][]string `json:"directives,omitempty"`
 	Interface  `json:"interface,omitempty"`
 	Nodes      map[string]Node `json:"nodes,omitempty"`

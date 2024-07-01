@@ -9,10 +9,11 @@ import (
 func CreatorRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
-		"new":    new{},
-		"del":    del{},
-		"lock":   lock{},
-		"unwrap": unwrap{},
+		"new":     new{},
+		"del":     del{},
+		"lock":    lock{},
+		"unwrap":  unwrap{},
+		"fan_out": fanOut{},
 
 		// runtime
 		"panic": panicker{},
@@ -30,7 +31,6 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"string_is_lesser":  strIsLesser{},
 		"float_is_greater":  floatIsGreater{},
 		"float_is_lesser":   floatIsLesser{},
-		"int_is_even":       intIsEven{},
 
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},
