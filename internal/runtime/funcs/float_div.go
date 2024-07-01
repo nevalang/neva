@@ -2,12 +2,9 @@ package funcs
 
 import (
 	"context"
-	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
-
-var errFloatDivideByZero = errors.New("float divide by zero")
 
 type floatDiv struct{}
 

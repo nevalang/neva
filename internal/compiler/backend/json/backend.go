@@ -22,5 +22,5 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 	}
 	defer f.Close()
 	e := json.NewEncoder(f)
-	return e.Encode(prog)
+	return e.Encode(prog) //nolint:staticcheck // SA1026
 }

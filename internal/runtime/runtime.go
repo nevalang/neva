@@ -34,7 +34,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program, debug bool) error {
 	}
 
 	go func() {
-		ctx = context.WithValue(ctx, "cancel", cancel)
+		ctx = context.WithValue(ctx, "cancel", cancel) //nolint:staticcheck // SA1029
 		funcrun(ctx)
 		wg.Done()
 	}()
