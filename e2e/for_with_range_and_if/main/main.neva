@@ -1,16 +1,30 @@
-import { lists }
+// import { lists }
+
+// const lst list<bool> = [true, false]
+
+// flow Main(start) (stop) {
+// 	nodes { lists.For{Printer} }
+// 	:start -> ($lst -> for -> :stop)
+// }
+
+// flow Printer(data bool) (sig any) {
+// 	nodes { If, Println }
+// 	:data -> if
+// 	[if:then, if:else] -> println
+// 	println -> :sig
+// }
 
 const lst list<bool> = [true, false]
 
 flow Main(start) (stop) {
-	nodes { lists.For{Printer} }
-	:start -> ($lst -> for -> :stop)
+	nodes { Iter, For{Printer} }
+	:start -> ($lst -> iter -> for -> :stop)
 }
 
 flow Printer(data bool) (sig any) {
 	nodes { If, Println }
 	:data -> if
-	[if:then, if:else] -> println
+	if:then -> ('true' -> println)
+	if:else -> ('false' -> println)
 	println -> :sig
 }
-
