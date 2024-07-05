@@ -13,7 +13,7 @@ pub flow For<T>(data list<T>) (sig any) {
         #bind(dataPath)
         getData Field<T>
 
-        Match<bool>
+        Switch<bool>
     }
 
     :data -> iter -> [getLast, getData]
@@ -22,8 +22,8 @@ pub flow For<T>(data list<T>) (sig any) {
 
     handler -> lock:sig
 
-    lock:data -> match:data
-    true -> match:case[0] -> :sig
+    lock:data -> switch:data
+    true -> switch:case[0] -> :sig
 }
 
 pub flow Map<T, Y>(data list<T>) (res list<Y>) {

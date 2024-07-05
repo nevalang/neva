@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type match struct{}
+type switcher struct{}
 
-func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (switcher) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

@@ -1,11 +1,16 @@
+// Cond is a weaker version of Match that only works with booleans.
+// Just like Match, it is used for mapping.
+// If you need routing, use If instead.
+#extern(cond)
+pub flow Cond<T>(if bool, then T, else T) (res T)
+
 #extern(match)
-pub flow Match<T>(data T, [case] T) ([case] T, else T)
+pub flow Match<T>(data T, [case] T, [then] T, else T) (res T)
+
+// ---
 
 #extern(eq)
 pub flow Eq<T>(actual T, compared T) (res bool)
-
-#extern(if)
-pub flow If(data bool) (then any, else any)
 
 #extern(not)
 pub flow Not(data bool) (res bool)

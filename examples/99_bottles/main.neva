@@ -1,10 +1,10 @@
 // https://www.99-bottles-of-beer.net
 
 flow Main(start) (stop) {
-    nodes { Match<int>, PrintNext2Lines }
-    :start -> (99 -> printNext2Lines -> match:data)
-    -1 -> match:case[0] -> :stop
-    match:else -> printNext2Lines
+    nodes { Switch<int>, PrintNext2Lines }
+    :start -> (99 -> printNext2Lines -> switch:data)
+    -1 -> switch:case[0] -> :stop
+    switch:else -> printNext2Lines
 }
 
 flow PrintNext2Lines(n int) (n int) {
@@ -19,13 +19,13 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 flow PrintFirstLine(n int) (n int) {
-    nodes { Match<int>, Println, Printf, Lock<int> }
+    nodes { Switch<int>, Println, Printf, Lock<int> }
 
-    :n -> [match:data, lock:data]
+    :n -> [switch:data, lock:data]
 
-    0 -> match:case[0] -> ($firstLine3 -> println)
-    1 -> match:case[1] -> ($firstLine2 -> println)
-    match:else -> [
+    0 -> switch:case[0] -> ($firstLine3 -> println)
+    1 -> switch:case[1] -> ($firstLine2 -> println)
+    switch:else -> [
         printf:args[0],
         ($firstLine1 -> printf:tpl)
     ]
@@ -42,15 +42,15 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 flow PrintSecondLine(n int) (n int) {
-    nodes { Match<int>, Println, Printf, Lock<int> }
+    nodes { Switch<int>, Println, Printf, Lock<int> }
 
-    :n -> [match:data, lock:data]
+    :n -> [switch:data, lock:data]
 
-    -1 -> match:case[0] -> ($secondLine4 -> println)
-    0  -> match:case[1] -> ($secondLine3 -> println)
-    1  -> match:case[2] -> ($secondLine2 -> println)
+    -1 -> switch:case[0] -> ($secondLine4 -> println)
+    0  -> switch:case[1] -> ($secondLine3 -> println)
+    1  -> switch:case[2] -> ($secondLine2 -> println)
 
-    match:else -> [
+    switch:else -> [
         printf:args[0],
         ($secondLine1 -> printf:tpl)
     ]

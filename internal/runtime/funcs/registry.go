@@ -19,7 +19,8 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"panic": panicker{},
 
 		// logic
-		"match":             match{},
+		"switch":            switcher{},
+		"cond":              cond{},
 		"eq":                eq{},
 		"if":                if_{},
 		"not":               not{},

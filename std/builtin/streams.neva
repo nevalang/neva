@@ -1,3 +1,6 @@
+#extern(stream_int_range)
+pub flow Range(from int, to int) (data stream<int>)
+
 // StreamPort iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
@@ -42,7 +45,7 @@ pub flow For<T>(item stream<T>) (sig any) {
         #bind(dataPath)
         getData Field<T>
 
-        Match<bool>
+        Switch<bool>
     }
 
     :item -> [getLast, getData]
@@ -51,8 +54,8 @@ pub flow For<T>(item stream<T>) (sig any) {
 
     handler -> lock:sig
 
-    lock:data -> match:data
-    true -> match:case[0] -> :sig
+    lock:data -> switch:data
+    true -> switch:case[0] -> :sig
 }
 
 // --- Map ---
