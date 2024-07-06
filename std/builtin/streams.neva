@@ -92,6 +92,8 @@ pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
     wrap -> :res
 }
 
+// TODO move to streams pkg
+
 pub type ProductResult<T, R> struct {
     first T
     second R

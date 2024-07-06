@@ -4,11 +4,15 @@
 #extern(if)
 pub flow If(data bool) (then any, else any)
 
-// Switch is a more powerful version of If that works with any type.
+// Switch is a more powerful version of If that handles multiple cases.
 // Just like If, it is used for routing.
-// If you need mapping, use Match instead.
+// If you need mapping, use Match or Select instead.
 #extern(switch)
 pub flow Switch<T>(data T, [case] T) ([case] T, else T)
 
+// Lock allows to defer some event until some other event happens.
 #extern(lock)
 pub flow Lock<T>(sig any, data T) (data T)
+
+#extern(fan_out)
+pub flow FanOut<T>(data T) ([data] T)

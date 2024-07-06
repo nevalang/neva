@@ -1,7 +1,7 @@
 import { sync }
 
 flow Main(start) (stop) {
-  nodes { sync.WaitGroup, Println }
+  nodes { wg sync.WaitGroup, Println }
   :start -> [
     ('Hello' -> println -> wg:sig),
     ('Neva' -> println -> wg:sig),

@@ -8,13 +8,13 @@
 
 # Neva
 
-A general-purpose flow-based programming language with static types and implicit parallelism. Compiles to machine code and Go.
+A general-purpose dataflow programming language with static types and implicit parallelism. Compiles to machine code and Go.
 
 Website: https://nevalang.org/
 
 ## Features 🚀
 
-- **Flow-Based Programming**
+- **Dataflow Programming**
 - **Strong Static Typing**
 - **Implicit Parallelism**
 - **Compiles to Machine Code, Go and More**

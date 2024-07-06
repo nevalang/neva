@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 )
 
 type Program struct {
@@ -126,6 +127,52 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 		}
 	}
 	return true
+}
+
+type SelectedMessage struct {
+	Data    Msg
+	SlotIdx uint8
+}
+
+// Select implements simpler version of runtime's fun-in algorithm:
+// It pools the inports until there's at least 1 message in the buffer,
+// then it sorts the buffer and returns list of chronologically ordered messages
+// with their corresponding inport slot indexes.
+func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
+	type bufferedMsg struct {
+		idx        uint8
+		indexedMsg IndexedMsg
+	}
+
+	buf := make([]bufferedMsg, 0, len(a.chans))
+
+	for len(buf) == 0 {
+		for idx, ch := range a.chans {
+			select {
+			case <-ctx.Done():
+				return nil, false
+			case msg := <-ch:
+				buf = append(buf, bufferedMsg{
+					idx:        uint8(idx),
+					indexedMsg: msg,
+				})
+			}
+		}
+	}
+
+	sort.Slice(buf, func(i, j int) bool {
+		return buf[i].indexedMsg.index < buf[j].indexedMsg.index
+	})
+
+	res := make([]SelectedMessage, len(buf))
+	for i := range buf {
+		res = append(res, SelectedMessage{
+			SlotIdx: buf[i].idx,
+			Data:    buf[i].indexedMsg.data,
+		})
+	}
+
+	return res, true
 }
 
 func (a ArrayInport) Len() int {
