@@ -156,6 +156,8 @@ func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 					idx:        uint8(idx),
 					indexedMsg: msg,
 				})
+			default:
+				continue
 			}
 		}
 	}
