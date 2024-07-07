@@ -8,7 +8,7 @@ pub flow Cond<T>(if bool, then T, else T) (res T)
 // Just like Cond it is used for mapping.
 // If you need routing, use Switch instead.
 #extern(match)
-pub flow Match<T>(data T, [case] T, [then] T, else T) (res T)
+pub flow Match<T>(data T, [if] T, [then] T, else T) (res T)
 
 // Select allows to select message based on a trigger.
 // It is useful when it's important where input signal came from.

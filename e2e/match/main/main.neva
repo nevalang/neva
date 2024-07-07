@@ -1,0 +1,26 @@
+import { time }
+
+flow Main(start) (stop) {
+    nodes { Range, For{Handler} }
+    :start -> [(1 -> range:from), (5 -> range:to)]
+    range -> for -> :stop
+}
+
+flow Handler(data int) (sig any) {
+    nodes { Match, Println }
+    
+    :data -> match:data
+    
+    1 -> match:if[0]
+    'one' -> match:then[0]
+
+    2 -> match:if[1]
+    'two' -> match:then[1]
+
+    3 -> match:if[2]
+    'three' -> match:then[2]
+
+    'four' -> match:else
+
+    match -> println -> :sig
+}

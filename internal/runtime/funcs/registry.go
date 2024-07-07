@@ -20,6 +20,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// logic
 		"switch":            switcher{},
+		"match":             match{},
 		"select":            selector{},
 		"cond":              cond{},
 		"eq":                eq{},
