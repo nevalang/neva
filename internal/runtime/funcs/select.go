@@ -69,16 +69,16 @@ func (b *bufferedArrayInport) Receive(ctx context.Context) (runtime.SelectedMess
 		return last, true
 	}
 
-	ifMsgs, ok := b.port.Select(ctx)
+	selectedMsgs, ok := b.port.Select(ctx)
 	if !ok {
 		return runtime.SelectedMessage{}, false
 	}
 
-	if len(ifMsgs) == 1 {
-		return ifMsgs[0], true
+	if len(selectedMsgs) == 1 {
+		return selectedMsgs[0], true
 	}
 
-	b.buf = ifMsgs[1:]
+	b.buf = selectedMsgs[1:]
 
-	return ifMsgs[0], true
+	return selectedMsgs[0], true
 }

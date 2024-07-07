@@ -151,10 +151,10 @@ func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 			select {
 			case <-ctx.Done():
 				return nil, false
-			case msg := <-ch:
+			case indexedMsg := <-ch:
 				buf = append(buf, bufferedMsg{
 					idx:        uint8(idx),
-					indexedMsg: msg,
+					indexedMsg: indexedMsg,
 				})
 			default:
 				continue

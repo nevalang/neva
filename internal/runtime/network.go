@@ -37,7 +37,7 @@ type PortAddr struct {
 
 type IndexedMsg struct {
 	data  Msg
-	index uint64
+	index uint64 // to keep order of messages
 }
 
 func (n Network) Run(ctx context.Context) {
