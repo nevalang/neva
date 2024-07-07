@@ -168,10 +168,10 @@ func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 
 	res := make([]SelectedMessage, len(buf))
 	for i := range buf {
-		res = append(res, SelectedMessage{
+		res[i] = SelectedMessage{
 			SlotIdx: buf[i].idx,
 			Data:    buf[i].indexedMsg.data,
-		})
+		}
 	}
 
 	return res, true
