@@ -8,6 +8,16 @@ pub const second      Duration = 1000000000
 pub const minute      Duration = 60000000000
 pub const hour        Duration = 3600000000000
 
-// Sleep delays transmission of the given data for the specified duration.
+// Sleep blocks the flow for (at least) provided duration.
+// When enough time has passed, it sends a signal to its output port.
+// If you want to delay a message, use Delay instead.
 #extern(time_sleep)
-pub flow Sleep<T>(dur Duration, data T) (data T)
+pub flow Sleep(dur Duration) (sig)
+
+// Delay waits for both dur and data messages.
+// As soon as they both arrive it starts waiting
+// for (at least) provided duration.
+// When enough time has passed, it sends a data to its output port.
+// If all you need is just block the flow, use Sleep instead.
+#extern(time_delay)
+pub flow Delay<T>(dur Duration, data T) (data T)
