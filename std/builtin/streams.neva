@@ -1,3 +1,11 @@
+// basic stream operations
+
+// Wait blocks until last stream item arrive, then sends signal.
+#extern(stream_wait)
+pub flow Wait(data stream<any>) (sig)
+
+// Range sends sequence of integers starting and ending with given from and to.
+// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
 #extern(stream_int_range)
 pub flow Range(from int, to int) (data stream<int>)
 
@@ -31,31 +39,22 @@ const idxPath list<string> = ['idx']
 // IForHandler is a dependency for For flow.
 pub interface IForHandler<T>(data T) (sig any)
 
-// For is for performing side-effect for every item in a stream.
-// It will block untill all items are processed, so if you need to perform
-// several side-effects, do them all in a single handler.
-pub flow For<T>(item stream<T>) (sig any) {
+// For performs side-effect on stream item. It's for side-effects only.
+// If you want to map one stream onto another, use Map instead.
+// Just like Map, For does not block the stream. As soon as one item processed,
+// it sends it downstream and receives the next one.
+// Use Wait to wait for end of the stream.
+pub flow For<T>(data stream<T>) (data stream<T>) {
     nodes {
-        Lock<bool>
-        handler IForHandler<T>
-
-        #bind(lastPath)
-        getLast Field<bool>
+        Lock<bool>, handler IForHandler<T>
 
         #bind(dataPath)
         getData Field<T>
-
-        Switch<bool>
     }
 
-    :item -> [getLast, getData]
-    getLast -> lock:data
-    getData -> handler
-
-    handler -> lock:sig
-
-    lock:data -> switch:data
-    true -> switch:case[0] -> :sig
+    :item -> [getData, lock:data]
+    getData -> handler -> lock:sig
+    lock -> :data
 }
 
 // --- Map ---
@@ -63,11 +62,11 @@ pub flow For<T>(item stream<T>) (sig any) {
 // IMapHandler is a dependency for Map flow.
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
-// Map is for transforming every item in stream.
-// Unlike For, it's not blocking and will produce a new stream,
-// so it's possible to chain multiple Maps together.
-// It's also possible to perform side-effect for every item,
-// but if side-effect is all you need, consider using For instead.
+// Map maps one stream onto another. It's intented for "pure" mapping,
+// but could be combined with side-effects if needed.
+// Just like Map, For does not block the stream. As soon as one item processed,
+// it sends it downstream and receives the next one.
+// Use Wait to wait for end of the stream.
 pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
     nodes {
         wrap Struct<stream<Y>>
@@ -91,21 +90,3 @@ pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
 
     wrap -> :res
 }
-
-// TODO move to streams pkg
-
-pub type ProductResult<T, R> struct {
-    first T
-    second R
-} 
-
-#extern(stream_product)
-pub flow Product<T, R>(first stream<T>, second stream<R>) (seq stream<ProductResult<T, R>>)
-
-pub type ZipResult<T, R> struct {
-    first T
-    second R
-}
-
-#extern(stream_zip)
-pub flow Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)
