@@ -22,7 +22,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"switch":            switcher{},
 		"match":             match{},
 		"select":            selector{},
-		"cond":              cond{},
+		"ternary":           ternary{},
 		"eq":                eq{},
 		"if":                if_{},
 		"not":               not{},

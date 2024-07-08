@@ -1,6 +1,6 @@
 // If is a weaker version of Switch that only works with booleans.
 // Just like Switch, it is used for routing.
-// If you need mapping, use Cond instead.
+// If you need mapping, use Ternary instead.
 #extern(if)
 pub flow If(data bool) (then any, else any)
 
@@ -14,5 +14,8 @@ pub flow Switch<T>(data T, [case] T) ([case] T, else T)
 #extern(lock)
 pub flow Lock<T>(sig any, data T) (data T)
 
+// FanOut is used to broadcast a message from one sender to multiple receivers.
+// You should prefer multiple receivers sugar `-> [...]` instead.
+// Multiple receivers is a syntax sugar over explicit FanOut.
 #extern(fan_out)
 pub flow FanOut<T>(data T) ([data] T)

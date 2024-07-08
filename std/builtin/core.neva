@@ -29,9 +29,11 @@ pub flow Panic(msg any) ()
 pub flow Struct<T struct {}> () (msg T)
 
 // Field is used to access fields of structures.
-//  
+// You prefer dot notation `-> .<field> ->` instead.
+// Dot notation is a syntax sugar for Field.
 #extern(field)
 pub flow Field<T>(msg struct {}) (msg T)
 
+// Unwrap is used to extract value from Maybe type.
 #extern(unwrap)
 pub flow Unwrap<T>(data maybe<T>) (some T, none struct{})

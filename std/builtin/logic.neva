@@ -1,11 +1,11 @@
-// Cond is a weaker version of Match that only works with booleans.
+// Ternary is a weaker version of Match that only handles 2 cases: true and false.
 // Just like Match, it is used for mapping.
 // If you need routing, use If instead.
-#extern(cond)
-pub flow Cond<T>(if bool, then T, else T) (res T)
+#extern(ternary)
+pub flow Ternary<T>(if bool, then T, else T) (res T)
 
-// Match is a more powerful version of Cond that handles multiple cases.
-// Just like Cond it is used for mapping.
+// Match is a more powerful version of Ternary that handles multiple cases.
+// Just like Ternary it is used for mapping.
 // If you need routing, use Switch instead.
 #extern(match)
 pub flow Match<T>(data T, [if] T, [then] T, else T) (res T)
@@ -15,4 +15,3 @@ pub flow Match<T>(data T, [if] T, [then] T, else T) (res T)
 // If it's important what the signal is, use Match or Switch instead.
 #extern(select)
 pub flow Select<T>([if] any, [then] T) (res T)
-

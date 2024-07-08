@@ -8,9 +8,9 @@ flow Main(start) (stop) {
 }
 
 flow Mapper(data bool) (res int) {
-	nodes { Cond<int> }
-	:data -> cond:if
-	1 -> cond:then
-	0 -> cond:else
-	cond -> :res
+	nodes { Ternary<int> }
+	:data -> ternary:if
+	1 -> ternary:then
+	0 -> ternary:else
+	ternary -> :res
 }

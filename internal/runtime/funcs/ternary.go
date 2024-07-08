@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type cond struct{}
+type ternary struct{}
 
-func (p cond) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p ternary) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	ifIn, err := io.In.Single("if")
 	if err != nil {
 		return nil, err
