@@ -1,7 +1,7 @@
 flow Main(start) (stop) {
-    nodes { Range, For{Handler} }
+    nodes { Range, For{Handler}, Wait }
     :start -> [(1 -> range:from), (5 -> range:to)]
-    range -> for -> :stop
+    range -> for -> wait -> :stop
 }
 
 flow Handler(data int) (sig any) {

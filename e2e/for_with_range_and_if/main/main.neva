@@ -3,8 +3,8 @@ import { lists }
 const lst list<bool> = [true, false]
 
 flow Main(start) (stop) {
-	nodes { Iter<bool>, Map<bool, int>{Mapper}, For{Println} }
-	:start -> ($lst -> iter -> map -> for -> :stop)
+	nodes { Iter<bool>, Map<bool, int>{Mapper}, For{Println}, Wait }
+	:start -> ($lst -> iter -> map -> for -> wait -> :stop)
 }
 
 flow Mapper(data bool) (res int) {

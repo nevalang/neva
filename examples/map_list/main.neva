@@ -3,6 +3,6 @@ import { lists }
 const lst list<int> = [50, 30, 20, 100]
 
 flow Main(start) (stop) {
-    nodes { lists.Map<int, int>{Decr<int>}, Println }
-    :start -> ($lst -> map -> println -> :stop)
+    nodes { Iter, Map<int, int>{Decr<int>}, List<int>, Println }
+    :start -> ($lst -> iter -> map -> list -> println -> :stop)
 }
