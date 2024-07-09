@@ -1,10 +1,12 @@
+import { streams }
+
 const strings list<string> = ['a', 'b', 'c']
 
 flow Main(start) (stop) {
   nodes {
     r1 Range,
     Iter<string>
-    Zip<int, string>
+    streams.Zip<int, string>
     For{Println}
     Wait
   }

@@ -2,7 +2,5 @@ import { time }
 
 flow Main(start) (stop) {
 	nodes { time.Sleep }
-	:start -> sleep:data
-	$time.second -> sleep:dur
-	sleep -> :stop
+	:start -> ($time.second -> sleep -> :stop)
 }

@@ -1,8 +1,11 @@
 // basic stream operations
 
 // Wait blocks until last stream item arrive, then sends signal.
-#extern(stream_wait)
-pub flow Wait(data stream<any>) (sig)
+pub flow Wait(data stream<any>) (sig) {
+    nodes { If }
+    :data.last -> if
+    if:then -> :sig
+}
 
 // Range sends sequence of integers starting and ending with given from and to.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
@@ -46,13 +49,13 @@ pub interface IForHandler<T>(data T) (sig any)
 // Use Wait to wait for end of the stream.
 pub flow For<T>(data stream<T>) (data stream<T>) {
     nodes {
-        Lock<bool>, handler IForHandler<T>
+        Lock<stream<T>>, handler IForHandler<T>
 
         #bind(dataPath)
         getData Field<T>
     }
 
-    :item -> [getData, lock:data]
+    :data -> [getData, lock:data]
     getData -> handler -> lock:sig
     lock -> :data
 }
@@ -67,7 +70,7 @@ pub interface IMapHandler<T, Y>(data T) (res Y)
 // Just like Map, For does not block the stream. As soon as one item processed,
 // it sends it downstream and receives the next one.
 // Use Wait to wait for end of the stream.
-pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
+pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     nodes {
         wrap Struct<stream<Y>>
         handler IMapHandler<T, Y>
@@ -82,7 +85,7 @@ pub flow Map<T, Y>(item stream<T>) (res stream<Y>) {
         getIdx Field<int>
     }
 
-    :item -> [getData, getLast, getIdx]
+    :data -> [getData, getLast, getIdx]
 
     getLast -> wrap:last
     getIdx -> wrap:idx
