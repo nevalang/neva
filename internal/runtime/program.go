@@ -13,13 +13,6 @@ type Program struct {
 	Funcs       []FuncCall
 }
 
-func (p PortAddr) String() string {
-	if !p.Arr {
-		return fmt.Sprintf("%v:%v", p.Path, p.Port)
-	}
-	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
-}
-
 type FuncCall struct {
 	Ref       string
 	IO        FuncIO
@@ -134,43 +127,56 @@ type SelectedMessage struct {
 	SlotIdx uint8
 }
 
-// Select implements simpler version of runtime's fun-in algorithm:
-// It pools the inports until there's at least 1 message in the buffer,
-// then it sorts the buffer and returns list of chronologically ordered messages
-// with their corresponding inport slot indexes.
+// Select allows to receive messages in a serialized manner.
+// It implements same algorithm as runtime's fan-in.
+// It threads array-inport's slots as senders.
 func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 	type bufferedMsg struct {
-		idx        uint8
-		indexedMsg IndexedMsg
+		slot uint8
+		msg  IndexedMsg
 	}
 
-	buf := make([]bufferedMsg, 0, len(a.chans))
+	i := 0
+	buf := make([]bufferedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
-	for len(buf) == 0 {
+	for {
+		// it's important to do at least len(ss) iterations even if we already got some messages
+		// the reason is that sending might happen exactly while skip iteration in default case
+		// if we do len(ss) iterations, that's ok, because we will go back and check again
+		if len(buf) > 0 && i >= len(a.chans) {
+			break
+		}
+
 		for idx, ch := range a.chans {
 			select {
 			case <-ctx.Done():
 				return nil, false
 			case indexedMsg := <-ch:
 				buf = append(buf, bufferedMsg{
-					idx:        uint8(idx),
-					indexedMsg: indexedMsg,
+					slot: uint8(idx),
+					msg:  indexedMsg,
 				})
 			default:
 				continue
 			}
 		}
+
+		// TODO: properly add runtime.Gosched()
+
+		i++
 	}
 
+	fmt.Println("BUF", buf)
+
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].indexedMsg.index < buf[j].indexedMsg.index
+		return buf[i].msg.index < buf[j].msg.index
 	})
 
 	res := make([]SelectedMessage, len(buf))
 	for i := range buf {
 		res[i] = SelectedMessage{
-			SlotIdx: buf[i].idx,
-			Data:    buf[i].indexedMsg.data,
+			SlotIdx: buf[i].slot,
+			Data:    buf[i].msg.data,
 		}
 	}
 

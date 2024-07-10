@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -33,6 +34,21 @@ type PortAddr struct {
 	// combination of uint8 + bool is more memory efficient than *uint8
 	Idx uint8
 	Arr bool
+}
+
+func (p PortAddr) String() string {
+	path := p.Path
+
+	if strings.Contains(path, "/out") {
+		path = strings.ReplaceAll(path, "/out", "")
+	} else if strings.Contains(path, "/in") {
+		path = strings.ReplaceAll(path, "/in", "")
+	}
+
+	if !p.Arr {
+		return fmt.Sprintf("%v:%v", path, p.Port)
+	}
+	return fmt.Sprintf("%v:%v[%v]", path, p.Port, p.Idx)
 }
 
 type IndexedMsg struct {
@@ -95,12 +111,18 @@ type fanInQueueItem struct {
 	msg    IndexedMsg
 }
 
+// fanIn is a function that receives messages from multiple senders and sends them to a single receiver.
+// It implements the following algorithm, that is intended to guarantee to preserve chronological ordering:
 func (n Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 	for {
 		i := 0
-		buf := make([]fanInQueueItem, 0, len(ss)^2)
+		buf := make([]fanInQueueItem, 0, len(ss)^2) // len(ss)^2 is an upper bound of messages that can be received
 
-		for { // wait long enough to fill the buffer
+		// wait long enough to fill the buffer
+		for {
+			// it's important to do at least len(ss) iterations even if we already got some messages
+			// the reason is that sending might happen exactly while skip iteration in default case
+			// if we do len(ss) iterations, that's ok, because we will go back and check again
 			if len(buf) > 0 && i >= len(ss) {
 				break
 			}
@@ -153,12 +175,12 @@ func (n Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 type printer struct{}
 
 func (p printer) Sent(sender, receiver PortAddr, msg Msg) Msg {
-	fmt.Println("sent: ", sender, "->", receiver, msg)
+	fmt.Println("sent:", sender, "->", receiver, msg)
 	return nil
 }
 
 func (p printer) Received(sender, receiver PortAddr, msg Msg) {
-	fmt.Println("received", sender, "->", receiver, msg)
+	fmt.Println("received:", sender, "->", receiver, msg)
 }
 
 type dummy struct{}

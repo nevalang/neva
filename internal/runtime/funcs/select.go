@@ -31,7 +31,7 @@ func (selector) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 
 	bufferedIf := bufferedArrayInport{
 		port: ifIn,
-		buf:  make([]runtime.SelectedMessage, 0, 1),
+		buf:  []runtime.SelectedMessage{},
 	}
 
 	return func(ctx context.Context) {
