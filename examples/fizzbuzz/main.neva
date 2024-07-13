@@ -1,14 +1,65 @@
 flow Main(start) (stop) {
-	nodes { Range, Map<int, string>{FizzBuzz}, For{Println} }
+	nodes { Range, Map<int, string|int>{FizzBuzz}, For{Println}, Wait }
     :start -> [(1 -> range:from), (101 -> range:to)]
-    range -> map -> for -> :stop
+    range -> map -> for -> wait -> :stop
 }
 
-flow FizzBuzz(data int) (res any) {
-    nodes { CaseMod }
-    :data -> caseMod:data
-    15 -> caseMod:case[0] -> ('FizzBuzz' -> :res)
-    3 -> caseMod:case[1] -> ('Fizz' -> :res)
-    5 -> caseMod:case[2] -> ('Buzz' -> :res)
-    caseMod:else -> :res
+flow FizzBuzz(data int) (res string|int) {
+    nodes { Select<int, string|int>, Mod15, Mod3, Mod5 }
+
+    :data -> [mod15, select:then[3]]
+
+    mod15:then -> select:if[0]
+    'FizzBuzz' -> select:then[0]
+    mod15:else -> mod3
+    
+    mod3:then -> select:if[1]
+    'Fizz' -> select:then[1]
+    mod3:else -> mod5
+
+    mod5:then -> select:if[2]
+    'Buzz' -> select:then[2]
+    
+    mod5:else -> select:if[3]
+
+    select -> :res
+}
+
+flow Mod15(num int) (then any, else int) {
+    nodes { h ModHelper }
+    :num -> h:num
+    15 -> h:den
+    h:then -> :then
+    h:else -> :else
+}
+
+flow Mod3(num int) (then any, else int) {
+    nodes { h ModHelper }
+    :num -> h:num
+    3 -> h:den
+    h:then -> :then
+    h:else -> :else
+}
+
+flow Mod5(num int) (then any, else int) {
+    nodes { h ModHelper }
+    :num -> h:num
+    5 -> h:den
+    h:then -> :then
+    h:else -> :else
+}
+
+flow ModHelper(num int, den int) (then any, else int) {
+    nodes { Mod, Eq, If, Lock<int> }
+
+    :num -> [mod:num, lock:data]
+    :den -> mod:den
+
+    mod:res -> eq:actual
+    0 -> eq:compared
+    eq -> if
+
+    if:then -> :then
+    if:else -> lock:sig
+    lock:data -> :else
 }
