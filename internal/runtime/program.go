@@ -157,7 +157,6 @@ func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 					msg:  indexedMsg,
 				})
 			default:
-				continue
 			}
 		}
 
@@ -165,8 +164,6 @@ func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
 
 		i++
 	}
-
-	fmt.Println("BUF", buf)
 
 	sort.Slice(buf, func(i, j int) bool {
 		return buf[i].msg.index < buf[j].msg.index

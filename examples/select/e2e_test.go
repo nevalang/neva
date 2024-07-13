@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(
 			t,
-			"a\nb\nc\n",
+			"a\nb\nc\nd\n",
 			string(out),
 			"iteration %d failed\n", i,
 		)

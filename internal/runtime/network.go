@@ -89,7 +89,11 @@ func (n Network) pipe(ctx context.Context, r Receiver, s Sender) {
 		case msg = <-s.Port:
 		}
 
-		if intercepted := n.interceptor.Sent(s.Addr, r.Addr, msg.data); intercepted != nil {
+		if intercepted := n.interceptor.Sent(
+			s.Addr,
+			r.Addr,
+			msg.data,
+		); intercepted != nil {
 			msg = IndexedMsg{
 				data:  intercepted,
 				index: msg.index,
@@ -132,7 +136,11 @@ func (n Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 				case <-ctx.Done():
 					return
 				case msg := <-s.Port:
-					if intercepted := n.interceptor.Sent(s.Addr, r.Addr, msg.data); intercepted != nil {
+					if intercepted := n.interceptor.Sent(
+						s.Addr, 
+						r.Addr, 
+						msg.data,
+					); intercepted != nil {
 						msg = IndexedMsg{
 							data:  intercepted,
 							index: msg.index,
@@ -166,7 +174,11 @@ func (n Network) fanIn(ctx context.Context, r Receiver, ss []Sender) {
 			case <-ctx.Done():
 				return
 			case r.Port <- item.msg:
-				n.interceptor.Received(item.sender, r.Addr, item.msg.data)
+				n.interceptor.Received(
+					item.sender,
+					r.Addr,
+					item.msg.data,
+				)
 			}
 		}
 	}
