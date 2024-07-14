@@ -1,6 +1,6 @@
 const lst list<int> = [50, 30, 20, 100]
 
 flow Main(start) (stop) {
-    nodes { For{Println}, Iter }
-    :start -> ($lst -> iter -> for -> :stop)
+    nodes { Iter, For{Println}, Wait }
+    :start -> ($lst -> iter -> for -> wait -> :stop)
 }

@@ -1,0 +1,19 @@
+// TODO: rename
+
+#extern(eq)
+pub flow Eq<T>(actual T, compared T) (res bool)
+
+#extern(not)
+pub flow Not(data bool) (res bool)
+
+#extern(and)
+pub flow And(a bool, b bool) (res bool)
+
+#extern(or)
+pub flow Or(a bool, b bool) (res bool)
+
+#extern(int int_is_greater, float float_is_greater, string string_is_greater)
+pub flow Gt<T int | float | string>(actual T, compared T) (res bool)
+
+#extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
+pub flow Lt<T int | float | string>(actual T, compared T) (res bool)

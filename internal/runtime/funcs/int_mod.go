@@ -9,12 +9,12 @@ import (
 type intMod struct{}
 
 func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
-	xIn, err := io.In.Single("x")
+	numIn, err := io.In.Single("num") // numerator
 	if err != nil {
 		return nil, err
 	}
 
-	yIn, err := io.In.Single("y")
+	denIn, err := io.In.Single("den") // denominator
 	if err != nil {
 		return nil, err
 	}
@@ -31,17 +31,17 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		for {
-			xMsg, ok := xIn.Receive(ctx)
+			numMsg, ok := numIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			yMsg, ok := yIn.Receive(ctx)
+			denMsg, ok := denIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			if yMsg.Int() == 0 {
+			if denMsg.Int() == 0 {
 				if !errOut.Send(ctx, errFromString("divide by zero")) {
 					return
 				}
@@ -51,7 +51,7 @@ func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context
 			if !resOut.Send(
 				ctx,
 				runtime.NewIntMsg(
-					xMsg.Int()%yMsg.Int(),
+					numMsg.Int()%denMsg.Int(),
 				),
 			) {
 				return

@@ -15,23 +15,28 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	caseIn, err := io.In.Array("case")
+	ifIn, err := io.In.Array("if")
 	if err != nil {
 		return nil, err
 	}
 
-	caseOut, err := io.Out.Array("case")
+	thenOut, err := io.In.Array("then")
 	if err != nil {
 		return nil, err
 	}
 
-	elseOut, err := io.Out.Single("else")
-	if err != nil {
-		return nil, err
-	}
-
-	if caseIn.Len() != caseOut.Len() {
+	if ifIn.Len() != thenOut.Len() {
 		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+	}
+
+	elseIn, err := io.In.Single("else")
+	if err != nil {
+		return nil, err
+	}
+
+	resOut, err := io.Out.Single("res")
+	if err != nil {
+		return nil, err
 	}
 
 	return func(ctx context.Context) {
@@ -41,30 +46,36 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 				return
 			}
 
-			cases := make([]runtime.Msg, caseIn.Len())
-			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
-				cases[idx] = msg
+			ifMsgs := make([]runtime.Msg, ifIn.Len())
+			if !ifIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				ifMsgs[idx] = msg
 				return true
 			}) {
 				return
 			}
 
-			matchIdx := -1
-			for i, caseMsg := range cases {
-				if dataMsg == caseMsg {
-					matchIdx = i
+			thenMsgs := make([]runtime.Msg, thenOut.Len())
+			if !thenOut.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+				thenMsgs[idx] = msg
+				return true
+			}) {
+				return
+			}
+
+			elseInMsg, ok := elseIn.Receive(ctx)
+			if !ok {
+				return
+			}
+
+			resMsg := elseInMsg
+			for i, ifMsg := range ifMsgs {
+				if dataMsg == ifMsg {
+					resMsg = thenMsgs[i]
 					break
 				}
 			}
 
-			if matchIdx != -1 {
-				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
-					return
-				}
-				continue
-			}
-
-			if !elseOut.Send(ctx, dataMsg) {
+			if !resOut.Send(ctx, resMsg) {
 				return
 			}
 		}

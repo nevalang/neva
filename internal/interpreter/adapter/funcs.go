@@ -38,7 +38,7 @@ func (a Adapter) getFuncs(
 
 			port, ok := ports[runtimeAddr]
 			if !ok {
-				panic("port not found")
+				panic("port not found: " + runtimeAddr.String())
 			}
 
 			if addr.Idx == nil {

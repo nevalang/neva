@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intCaseMod struct{}
+type switcher struct{}
 
-func (intCaseMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (switcher) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -31,36 +31,41 @@ func (intCaseMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Con
 	}
 
 	if caseIn.Len() != caseOut.Len() {
-		return nil, errors.New("number of 'case' inports must match number of 'case' outports")
+		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
 	}
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			matchIdx := -1
-			dataInt := data.Int()
-
+			cases := make([]runtime.Msg, caseIn.Len())
 			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
-				if matchIdx == -1 && dataInt%msg.Int() == 0 {
-					matchIdx = idx
-				}
+				cases[idx] = msg
 				return true
 			}) {
 				return
 			}
 
+			matchIdx := -1
+			for i, caseMsg := range cases {
+				if dataMsg == caseMsg {
+					matchIdx = i
+					break
+				}
+			}
+
 			if matchIdx != -1 {
-				if !caseOut.Send(ctx, uint8(matchIdx), data) {
+				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
 					return
 				}
-			} else {
-				if !elseOut.Send(ctx, data) {
-					return
-				}
+				continue
+			}
+
+			if !elseOut.Send(ctx, dataMsg) {
+				return
 			}
 		}
 	}, nil

@@ -14,7 +14,4 @@ pub flow Div<T int | float >(x T, y T) (res T, err error)
 pub flow Decr<T int | float>(data T) (res T)
 
 #extern(int_mod)
-pub flow Mod(x int, y int) (res int, err error)
-
-#extern(int_casemod)
-pub flow CaseMod(data int, [case] int) ([case] int, else int)
+pub flow Mod(num int, den int) (res int, err error)

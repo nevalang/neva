@@ -1,0 +1,26 @@
+// we could use match instead, but we show Select here
+
+import { time }
+
+flow Main(start) (stop) {
+    nodes { Range, Map<int, string>{Choose}, For{Println}, Wait }
+    :start -> [
+        (1 -> range:from),
+        (3 -> range:to)
+    ]
+    range -> map -> for -> wait -> :stop
+}
+
+flow Choose(data int) (res string) {
+    nodes { Switch<int>, Select<int, string> }
+
+    :data -> switch:data
+
+    1 -> switch:case[0] -> select:if[0]
+    'a' -> select:then[0]
+
+    2 -> switch:case[1] -> select:if[1]
+    'b' -> select:then[1]
+
+    select -> :res
+}

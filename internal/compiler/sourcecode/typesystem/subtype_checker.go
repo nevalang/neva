@@ -53,7 +53,7 @@ func (s SubtypeChecker) Check(
 
 	if areKindsDifferent && !isConstraintUnion {
 		return fmt.Errorf(
-			"%w: expression %v, constaint %v",
+			"%w: expression %v, constraint %v",
 			ErrDiffKinds,
 			expr.String(),
 			constr.String(),

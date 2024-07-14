@@ -4,19 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 )
 
 type Program struct {
 	Start, Stop chan IndexedMsg
 	Connections map[Receiver][]Sender
 	Funcs       []FuncCall
-}
-
-func (p PortAddr) String() string {
-	if !p.Arr {
-		return fmt.Sprintf("%v:%v", p.Path, p.Port)
-	}
-	return fmt.Sprintf("%v:%v[%v]", p.Path, p.Port, p.Idx)
 }
 
 type FuncCall struct {
@@ -126,6 +120,64 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 		}
 	}
 	return true
+}
+
+type SelectedMessage struct {
+	Data    Msg
+	SlotIdx uint8
+}
+
+// Select allows to receive messages in a serialized manner.
+// It implements same algorithm as runtime's fan-in.
+// It threads array-inport's slots as senders.
+func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
+	type bufferedMsg struct {
+		slot uint8
+		msg  IndexedMsg
+	}
+
+	i := 0
+	buf := make([]bufferedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
+
+	for {
+		// it's important to do at least len(ss) iterations even if we already got some messages
+		// the reason is that sending might happen exactly while skip iteration in default case
+		// if we do len(ss) iterations, that's ok, because we will go back and check again
+		if len(buf) > 0 && i >= len(a.chans) {
+			break
+		}
+
+		for idx, ch := range a.chans {
+			select {
+			case <-ctx.Done():
+				return nil, false
+			case indexedMsg := <-ch:
+				buf = append(buf, bufferedMsg{
+					slot: uint8(idx),
+					msg:  indexedMsg,
+				})
+			default:
+			}
+		}
+
+		// TODO: properly add runtime.Gosched()
+
+		i++
+	}
+
+	sort.Slice(buf, func(i, j int) bool {
+		return buf[i].msg.index < buf[j].msg.index
+	})
+
+	res := make([]SelectedMessage, len(buf))
+	for i := range buf {
+		res[i] = SelectedMessage{
+			SlotIdx: buf[i].slot,
+			Data:    buf[i].msg.data,
+		}
+	}
+
+	return res, true
 }
 
 func (a ArrayInport) Len() int {

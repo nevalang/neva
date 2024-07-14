@@ -19,7 +19,10 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"panic": panicker{},
 
 		// logic
+		"switch":            switcher{},
 		"match":             match{},
+		"select":            selector{},
+		"ternary":           ternary{},
 		"eq":                eq{},
 		"if":                if_{},
 		"not":               not{},
@@ -47,14 +50,13 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"field": readStructField{},
 
 		// math
-		"int_add":     intAdd{},
-		"int_sub":     intSub{},
-		"int_mul":     intMul{},
-		"int_div":     intDiv{},
-		"float_div":   floatDiv{},
-		"int_decr":    intDecr{},
-		"int_mod":     intMod{},
-		"int_casemod": intCaseMod{},
+		"int_add":   intAdd{},
+		"int_sub":   intSub{},
+		"int_mul":   intMul{},
+		"int_div":   intDiv{},
+		"float_div": floatDiv{},
+		"int_decr":  intDecr{},
+		"int_mod":   intMod{},
 
 		// strconv
 		"parse_int": parseInt{},
