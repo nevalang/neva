@@ -8,9 +8,9 @@ import (
 )
 
 type Program struct {
-	Start, Stop chan IndexedMsg
-	Connections map[Receiver][]Sender
-	Funcs       []FuncCall
+	Start chan IndexedMsg // Start must be inport of the first function
+	Stop  chan IndexedMsg // Stop must be outport of the (one of the) terminator function(s)
+	Funcs []FuncCall
 }
 
 type FuncCall struct {

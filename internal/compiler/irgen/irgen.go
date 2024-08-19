@@ -76,11 +76,11 @@ func (g Generator) Generate(
 		}.Wrap(err)
 	}
 
-	if shouldReduceGraph {
-		reducedPorts, reducerNet := reduceGraph(result)
-		result.Ports = reducedPorts
-		result.Connections = reducerNet
-	}
+	// graph reduction is not an optimization:
+	// it's a necessity for runtime not to have intermediate connections
+	reducedPorts, reducerNet := reduceGraph(result)
+	result.Ports = reducedPorts
+	result.Connections = reducerNet
 
 	return &ir.Program{
 		Ports:       result.Ports,

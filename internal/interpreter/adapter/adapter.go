@@ -8,11 +8,8 @@ import (
 type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
-	fanIn := irProg.FanIn()
 
-	ports := a.getPorts(irProg.Ports, fanIn)
-
-	connections := a.getConnections(fanIn, ports)
+	ports := a.getPorts(irProg)
 
 	funcs, err := a.getFuncs(irProg, ports)
 	if err != nil {
@@ -30,105 +27,136 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	}]
 
 	return runtime.Program{
-		Start:       start,
-		Stop:        stop,
-		Connections: connections,
-		Funcs:       funcs,
+		Start: start,
+		Stop:  stop,
+		Funcs: funcs,
 	}, nil
 }
 
 func (Adapter) getConnections(
-	fanIn map[ir.PortAddr]map[ir.PortAddr]struct{},
+	fanOut map[ir.PortAddr]map[ir.PortAddr]struct{},
 	ports map[runtime.PortAddr]chan runtime.IndexedMsg,
-) map[runtime.Receiver][]runtime.Sender {
+) map[runtime.Sender]runtime.Receiver {
 	runtimeConnections := make(
-		map[runtime.Receiver][]runtime.Sender,
-		len(fanIn),
+		map[runtime.Sender]runtime.Receiver,
+		len(fanOut),
 	)
 
-	for irReceiverAddr, senderAddrs := range fanIn {
-		runtimeReceiverAddr := runtime.PortAddr{
-			Path: irReceiverAddr.Path,
-			Port: irReceiverAddr.Port,
+	for irSenderAddr, receiverAddrs := range fanOut {
+		runtimeSenderAddr := runtime.PortAddr{
+			Path: irSenderAddr.Path,
+			Port: irSenderAddr.Port,
 		}
 
-		if irReceiverAddr.Idx != nil {
-			runtimeReceiverAddr.Idx = *irReceiverAddr.Idx
-			runtimeReceiverAddr.Arr = true
+		if irSenderAddr.Idx != nil {
+			runtimeSenderAddr.Idx = *irSenderAddr.Idx
+			runtimeSenderAddr.Arr = true
 		}
 
-		receiverChan, ok := ports[runtimeReceiverAddr]
+		senderChan, ok := ports[runtimeSenderAddr]
 		if !ok {
-			panic("receiver chan not found")
+			panic("sender chan not found")
 		}
 
-		receiver := runtime.Receiver{
-			Addr: runtimeReceiverAddr,
-			Port: receiverChan,
+		sender := runtime.Sender{
+			Addr: runtimeSenderAddr,
+			Port: senderChan,
 		}
 
-		senders := make([]runtime.Sender, 0, len(senderAddrs))
+		receivers := make([]runtime.Receiver, 0, len(receiverAddrs))
 
-		for senderAddr := range senderAddrs {
-			senderRuntimeAddr := runtime.PortAddr{
-				Path: senderAddr.Path,
-				Port: senderAddr.Port,
+		for receiverAddr := range receiverAddrs {
+			receiverRuntimeAddr := runtime.PortAddr{
+				Path: receiverAddr.Path,
+				Port: receiverAddr.Port,
 			}
 
-			if senderAddr.Idx != nil {
-				senderRuntimeAddr.Idx = *senderAddr.Idx
-				senderRuntimeAddr.Arr = true
+			if receiverAddr.Idx != nil {
+				receiverRuntimeAddr.Idx = *receiverAddr.Idx
+				receiverRuntimeAddr.Arr = true
 			}
 
-			senderChan, ok := ports[senderRuntimeAddr]
+			receiverChan, ok := ports[receiverRuntimeAddr]
 			if !ok {
-				panic("sender chan not found: " + senderRuntimeAddr.String())
+				panic("receiver chan not found: " + receiverRuntimeAddr.String())
 			}
 
-			senders = append(senders, runtime.Sender{
-				Addr: senderRuntimeAddr,
-				Port: senderChan,
+			receivers = append(receivers, runtime.Receiver{
+				Addr: receiverRuntimeAddr,
+				Port: receiverChan,
 			})
 		}
 
-		runtimeConnections[receiver] = senders
+		runtimeConnections[sender] = receivers[0] // TODO use single receiver
 	}
 
 	return runtimeConnections
 }
 
-func (Adapter) getPorts(
-	ports map[ir.PortAddr]struct{},
-	fanIn map[ir.PortAddr]map[ir.PortAddr]struct{},
-) map[runtime.PortAddr]chan runtime.IndexedMsg {
+func (Adapter) getPorts(prog *ir.Program) map[runtime.PortAddr]chan runtime.IndexedMsg {
 	runtimePorts := make(
 		map[runtime.PortAddr]chan runtime.IndexedMsg,
-		len(ports),
+		len(prog.Ports),
 	)
 
-	for irAddr := range ports {
-		runtimeAddr := runtime.PortAddr{
-			Path: irAddr.Path,
-			Port: irAddr.Port,
+	for irAddr := range prog.Ports {
+		runtimeAddr := irAddrToRuntime(irAddr)
+
+		// channel for this port might be already created in previous iterations of this loop
+		// in case this is receiver and corresponding sender was already processed
+		if _, ok := runtimePorts[runtimeAddr]; ok {
+			continue
 		}
 
-		if irAddr.Idx != nil {
-			runtimeAddr.Idx = *irAddr.Idx
-			runtimeAddr.Arr = true
+		// it was not created yet, let's see if it's sender or receiver
+		if _, isSender := prog.Connections[irAddr]; !isSender {
+			// it's a receiver, so we just create a new channel for it and go to the next iteration
+			runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg)
+			continue
 		}
 
-		// TODO figure out how to set buf for senders (we don't have fan-out)
-		// IDEA we can do it in src lvl
+		// if it's a sender, we need to find corresponding receiver channel to re-use it
+		var receiverAddr ir.PortAddr
+		for _, receiverAddrs := range prog.Connections {
+			for curReceiverAddr := range receiverAddrs {
+				if curReceiverAddr == irAddr {
+					receiverAddr = curReceiverAddr
+					break
+				}
+			}
+		}
 
-		bufSize := 0
-		// if senders, ok := fanIn[irAddr]; ok {
-		// 	bufSize = len(senders)
-		// }
+		// now we know address of the receiver channel, so we just check if it's already created
+		// if it's there, we just re-use it, otherwise we create new channel and re-use it
+		receiverAddrRuntime := irAddrToRuntime(receiverAddr)
 
-		runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg, bufSize)
+		ch, ok := runtimePorts[receiverAddrRuntime]
+		if ok {
+			runtimePorts[runtimeAddr] = ch // assign receiver channel to sender so they are connected
+			continue
+		}
+
+		// receiver channel was not created yet,
+		// so we create new one and assign it to both sender and receiver
+		ch = make(chan runtime.IndexedMsg)
+		runtimePorts[receiverAddrRuntime] = ch
+		runtimePorts[runtimeAddr] = ch
 	}
 
 	return runtimePorts
+}
+
+func irAddrToRuntime(irAddr ir.PortAddr) runtime.PortAddr {
+	runtimeAddr := runtime.PortAddr{
+		Path: irAddr.Path,
+		Port: irAddr.Port,
+	}
+
+	if irAddr.Idx != nil {
+		runtimeAddr.Idx = *irAddr.Idx
+		runtimeAddr.Arr = true
+	}
+	return runtimeAddr
 }
 
 func NewAdapter() Adapter {

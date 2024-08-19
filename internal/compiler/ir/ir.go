@@ -4,23 +4,8 @@ package ir
 type Program struct {
 	Ports map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
 	// TODO connections must be 1-1 (or maybe fan-in)
-	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out).
+	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out). // TODO must be 1-1
 	Funcs       []FuncCall                         `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
-}
-
-func (p Program) FanIn() map[PortAddr]map[PortAddr]struct{} {
-	fanIn := make(map[PortAddr]map[PortAddr]struct{})
-
-	for sender, receivers := range p.Connections {
-		for receiver := range receivers {
-			if _, ok := fanIn[receiver]; !ok {
-				fanIn[receiver] = make(map[PortAddr]struct{})
-			}
-			fanIn[receiver][sender] = struct{}{}
-		}
-	}
-
-	return fanIn
 }
 
 // PortAddr is a composite unique identifier for a port.
