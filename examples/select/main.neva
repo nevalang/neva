@@ -6,7 +6,7 @@ flow Main(start) (stop) {
     nodes { Range, Map<int, string>{Choose}, For{Println}, Wait }
     :start -> [
         (1 -> range:from),
-        (3 -> range:to)
+        (5 -> range:to)
     ]
     range -> map -> for -> wait -> :stop
 }
@@ -21,6 +21,12 @@ flow Choose(data int) (res string) {
 
     2 -> switch:case[1] -> select:if[1]
     'b' -> select:then[1]
+
+    3 -> switch:case[2] -> select:if[2]
+    'c' -> select:then[2]
+
+    4 -> switch:case[3] -> select:if[3]
+    'd' -> select:then[3]
 
     select -> :res
 }
