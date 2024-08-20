@@ -8,7 +8,6 @@ import (
 type Adapter struct{}
 
 func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
-
 	ports := a.getPorts(irProg)
 
 	funcs, err := a.getFuncs(irProg, ports)
@@ -16,19 +15,19 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 		return runtime.Program{}, err
 	}
 
-	start := ports[runtime.PortAddr{
-		Path: "in",
-		Port: "start",
-	}]
-
-	stop := ports[runtime.PortAddr{
-		Path: "out",
-		Port: "stop",
-	}]
-
 	return runtime.Program{
-		Start: start,
-		Stop:  stop,
+		Start: ports[runtime.PortAddr{
+			Path: "in",
+			Port: "start",
+			Idx:  0,
+			Arr:  false,
+		}],
+		Stop: ports[runtime.PortAddr{
+			Path: "out",
+			Port: "stop",
+			Idx:  0,
+			Arr:  false,
+		}],
 		Funcs: funcs,
 	}, nil
 }
@@ -94,7 +93,7 @@ func (Adapter) getConnections(
 }
 
 func (Adapter) getPorts(prog *ir.Program) map[runtime.PortAddr]chan runtime.IndexedMsg {
-	runtimePorts := make(
+	result := make(
 		map[runtime.PortAddr]chan runtime.IndexedMsg,
 		len(prog.Ports),
 	)
@@ -104,46 +103,42 @@ func (Adapter) getPorts(prog *ir.Program) map[runtime.PortAddr]chan runtime.Inde
 
 		// channel for this port might be already created in previous iterations of this loop
 		// in case this is receiver and corresponding sender was already processed
-		if _, ok := runtimePorts[runtimeAddr]; ok {
+		if _, ok := result[runtimeAddr]; ok {
 			continue
 		}
 
 		// it was not created yet, let's see if it's sender or receiver
 		if _, isSender := prog.Connections[irAddr]; !isSender {
 			// it's a receiver, so we just create a new channel for it and go to the next iteration
-			runtimePorts[runtimeAddr] = make(chan runtime.IndexedMsg)
+			result[runtimeAddr] = make(chan runtime.IndexedMsg)
 			continue
 		}
 
-		// if it's a sender, we need to find corresponding receiver channel to re-use it
+		// if it's a sender, so we need to find corresponding receiver channel to re-use it
 		var receiverAddr ir.PortAddr
-		for _, receiverAddrs := range prog.Connections {
-			for curReceiverAddr := range receiverAddrs {
-				if curReceiverAddr == irAddr {
-					receiverAddr = curReceiverAddr
-					break
-				}
-			}
+		for v := range prog.Connections[irAddr] { // pick first one
+			receiverAddr = v
+			break
 		}
 
 		// now we know address of the receiver channel, so we just check if it's already created
 		// if it's there, we just re-use it, otherwise we create new channel and re-use it
 		receiverAddrRuntime := irAddrToRuntime(receiverAddr)
 
-		ch, ok := runtimePorts[receiverAddrRuntime]
+		ch, ok := result[receiverAddrRuntime]
 		if ok {
-			runtimePorts[runtimeAddr] = ch // assign receiver channel to sender so they are connected
+			result[runtimeAddr] = ch // assign receiver channel to sender so they are connected
 			continue
 		}
 
 		// receiver channel was not created yet,
 		// so we create new one and assign it to both sender and receiver
 		ch = make(chan runtime.IndexedMsg)
-		runtimePorts[receiverAddrRuntime] = ch
-		runtimePorts[runtimeAddr] = ch
+		result[receiverAddrRuntime] = ch
+		result[runtimeAddr] = ch
 	}
 
-	return runtimePorts
+	return result
 }
 
 func irAddrToRuntime(irAddr ir.PortAddr) runtime.PortAddr {
