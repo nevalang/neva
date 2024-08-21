@@ -75,19 +75,40 @@ func NewInport(
 	}
 }
 
-type SingleInport struct{ ch <-chan IndexedMsg }
+type SingleInport struct {
+	ch          <-chan IndexedMsg
+	addr        PortAddr
+	interceptor Interceptor
+}
 
-func NewSingleInport(ch <-chan IndexedMsg) *SingleInport {
-	return &SingleInport{ch}
+func NewSingleInport(
+	ch <-chan IndexedMsg,
+	addr PortAddr,
+	interceptor Interceptor,
+) *SingleInport {
+	return &SingleInport{ch, addr, interceptor}
 }
 
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
+	var msg Msg
 	select {
 	case <-ctx.Done():
 		return nil, false
-	case msg := <-s.ch:
-		return msg.data, true
+	case v := <-s.ch:
+		msg = v.data
 	}
+
+	msg = s.interceptor.Received(
+		InterceptorPortAddr{
+			PortAddr: PortAddr{
+				Path: s.addr.Path,
+				Port: s.addr.Port,
+			},
+		},
+		msg,
+	)
+
+	return msg, false
 }
 
 func (f Inports) Array(name string) (ArrayInport, error) {
@@ -103,21 +124,43 @@ func (f Inports) Array(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
-type ArrayInport struct{ chans []<-chan IndexedMsg }
+type ArrayInport struct {
+	addr        PortAddr
+	interceptor Interceptor
+	chans       []<-chan IndexedMsg
+}
 
-func NewArrayInport(chans []<-chan IndexedMsg) *ArrayInport {
-	return &ArrayInport{chans}
+func NewArrayInport(
+	chans []<-chan IndexedMsg,
+	addr PortAddr,
+	interceptor Interceptor,
+) *ArrayInport {
+	return &ArrayInport{
+		addr:        addr,
+		interceptor: interceptor,
+		chans:       chans,
+	}
 }
 
 func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool) bool {
 	for i, ch := range a.chans {
 		select {
-		case msg := <-ch:
-			if !f(i, msg.data) {
-				return false
-			}
 		case <-ctx.Done():
 			return false
+		case v := <-ch:
+			msg := v.data
+			msg = a.interceptor.Received(
+				InterceptorPortAddr{
+					PortAddr: PortAddr{
+						Path: a.addr.Path,
+						Port: a.addr.Port,
+					},
+				},
+				msg,
+			)
+			if !f(i, msg) {
+				return false
+			}
 		}
 	}
 	return true
@@ -250,6 +293,15 @@ func NewSingleOutport(
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
+	msg = s.interceptor.Sent(
+		InterceptorPortAddr{
+			PortAddr: PortAddr{
+				Path: s.addr.Path,
+				Port: s.addr.Port,
+			},
+		},
+		msg,
+	)
 	select {
 	case s.ch <- IndexedMsg{
 		data:  msg,
@@ -262,8 +314,8 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 }
 
 type Interceptor interface {
-	Sent(senderAddr, receiverAddr InterceptorPortAddr, msg Msg) Msg
-	Received(senderAddr, receiverAddr InterceptorPortAddr, msg Msg)
+	Sent(InterceptorPortAddr, Msg) Msg
+	Received(InterceptorPortAddr, Msg) Msg
 }
 
 type InterceptorPortAddr struct {
@@ -282,6 +334,16 @@ func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- Inde
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
+	a.interceptor.Sent(
+		InterceptorPortAddr{
+			PortAddr: PortAddr{
+				Path: a.addr.Path,
+				Port: a.addr.Port,
+			},
+			Index: &idx,
+		},
+		msg,
+	)
 	select {
 	case <-ctx.Done():
 		return false

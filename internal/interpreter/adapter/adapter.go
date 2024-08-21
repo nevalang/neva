@@ -34,10 +34,17 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool) (runtime.Program, error) 
 		}],
 	)
 
-	stop := runtime.NewSingleInport(ports[ir.PortAddr{
-		Path: "out",
-		Port: "stop",
-	}])
+	stop := runtime.NewSingleInport(
+		ports[ir.PortAddr{
+			Path: "out",
+			Port: "stop",
+		}],
+		runtime.PortAddr{
+			Path: "in",
+			Port: "start",
+		},
+		interceptor,
+	)
 
 	return runtime.Program{
 		Start:     start,

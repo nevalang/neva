@@ -8,19 +8,22 @@ import (
 
 type debugInterceptor struct{}
 
-func (p debugInterceptor) Sent(sender, receiver runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
-	fmt.Println("sent:", sender, "->", receiver, msg)
-	return nil
+func (p debugInterceptor) Sent(sender runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
+	fmt.Println("sent from:", sender, msg)
+	return msg
 }
 
-func (p debugInterceptor) Received(sender, receiver runtime.InterceptorPortAddr, msg runtime.Msg) {
-	fmt.Println("received:", sender, "->", receiver, msg)
+func (p debugInterceptor) Received(receiver runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
+	fmt.Println("received to:", receiver, msg)
+	return msg
 }
 
 type prodInterceptor struct{}
 
-func (prodInterceptor) Sent(sender, receiver runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
-	return nil
+func (prodInterceptor) Sent(sender runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
+	return msg
 }
 
-func (prodInterceptor) Received(sender, receiver runtime.InterceptorPortAddr, msg runtime.Msg) {}
+func (prodInterceptor) Received(receiver runtime.InterceptorPortAddr, msg runtime.Msg) runtime.Msg {
+	return msg
+}

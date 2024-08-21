@@ -4,13 +4,8 @@
 			"path": "internal/runtime/program.go",
 			"bookmarks": [
 				{
-					"line": 251,
+					"line": 294,
 					"column": 12,
-					"label": ""
-				},
-				{
-					"line": 283,
-					"column": 27,
 					"label": ""
 				}
 			]

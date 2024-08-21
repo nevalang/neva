@@ -23,7 +23,7 @@ func (a Adapter) getFuncs(
 			len(call.IO.In),
 		)
 
-		arrInportsToCreate := make(map[string][]<-chan runtime.IndexedMsg, len(call.IO.In))
+		arrInportsToCreate := make(map[ir.PortAddr][]<-chan runtime.IndexedMsg, len(call.IO.In))
 
 		// in first run we fill single ports and collect array ports to tmp var
 		for _, irAddr := range call.IO.In {
@@ -35,17 +35,31 @@ func (a Adapter) getFuncs(
 			if irAddr.Idx == nil {
 				funcInports[irAddr.Port] = runtime.NewInport(
 					nil,
-					runtime.NewSingleInport(ch),
+					runtime.NewSingleInport(
+						ch,
+						runtime.PortAddr{
+							Path: irAddr.Path,
+							Port: irAddr.Port,
+						},
+						interceptor,
+					),
 				)
 			} else {
-				arrInportsToCreate[irAddr.Port] = append(arrInportsToCreate[irAddr.Port], ch)
+				arrInportsToCreate[irAddr] = append(arrInportsToCreate[irAddr], ch)
 			}
 		}
 
 		// single ports already handled, it's time to create arr ports from tmp var
-		for name, slots := range arrInportsToCreate {
-			funcInports[name] = runtime.NewInport(
-				runtime.NewArrayInport(slots),
+		for irAddr, slots := range arrInportsToCreate {
+			funcInports[irAddr.Port] = runtime.NewInport(
+				runtime.NewArrayInport(
+					slots,
+					runtime.PortAddr{
+						Path: irAddr.Path,
+						Port: irAddr.Port,
+					},
+					interceptor,
+				),
 				nil,
 			)
 		}
