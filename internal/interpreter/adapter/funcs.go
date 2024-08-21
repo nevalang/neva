@@ -18,7 +18,7 @@ func (a Adapter) getFuncs(
 		// INPORTS
 
 		funcInports := make(
-			map[string]runtime.FuncInport,
+			map[string]runtime.Inport,
 			len(call.IO.In),
 		)
 
@@ -42,7 +42,7 @@ func (a Adapter) getFuncs(
 			}
 
 			if addr.Idx == nil {
-				funcInports[addr.Port] = runtime.NewFuncInport(
+				funcInports[addr.Port] = runtime.NewInport(
 					nil,
 					runtime.NewSingleInport(port),
 				)
@@ -54,7 +54,7 @@ func (a Adapter) getFuncs(
 
 		// single ports already handled, it's time to create arr ports from tmp var
 		for name, slots := range tmpArrInports {
-			funcInports[name] = runtime.NewFuncInport(
+			funcInports[name] = runtime.NewInport(
 				runtime.NewArrayInport(slots),
 				nil,
 			)
@@ -62,7 +62,7 @@ func (a Adapter) getFuncs(
 
 		// OUTPORTS
 
-		funcOutports := make(map[string]runtime.FuncOutport, len(call.IO.Out))
+		funcOutports := make(map[string]runtime.Outport, len(call.IO.Out))
 
 		tmpArrOutports := map[string][]chan<- runtime.IndexedMsg{}
 
@@ -84,7 +84,7 @@ func (a Adapter) getFuncs(
 			}
 
 			if addr.Idx == nil {
-				funcOutports[addr.Port] = runtime.NewFuncOutport(
+				funcOutports[addr.Port] = runtime.NewOutport(
 					runtime.NewSingleOutport(runtimeAddr, port),
 					nil,
 				)
@@ -95,7 +95,7 @@ func (a Adapter) getFuncs(
 		}
 
 		for name, slots := range tmpArrOutports {
-			funcOutports[name] = runtime.NewFuncOutport(
+			funcOutports[name] = runtime.NewOutport(
 				nil,
 				runtime.NewArrayOutport(slots),
 			)
@@ -104,8 +104,8 @@ func (a Adapter) getFuncs(
 		rFunc := runtime.FuncCall{
 			Ref: call.Ref,
 			IO: runtime.FuncIO{
-				In:  runtime.NewFuncInports(funcInports),
-				Out: runtime.NewFuncOutports(funcOutports),
+				In:  runtime.NewInports(funcInports),
+				Out: runtime.NewOutports(funcOutports),
 			},
 		}
 

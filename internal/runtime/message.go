@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type IndexedMsg struct {
+	data  Msg
+	index uint64 // to keep order of messages
+}
+
 type Msg interface {
 	Bool() bool
 	Int() int64

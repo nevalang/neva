@@ -16,7 +16,7 @@ type Runtime struct {
 func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
-		<-prog.Stop
+		prog.Stop.Receive(ctx)
 		cancel() // this is how we normally stop the program
 	}()
 
@@ -39,10 +39,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 
 	// block until the program starts
 	// by some node actually receiving from start port
-	prog.Start <- IndexedMsg{
-		index: counter.Add(1),
-		data:  &baseMsg{},
-	}
+	prog.Start.Send(ctx, &baseMsg{})
 
 	// basically wait for the context to be closed
 	// by either writing to the stop port

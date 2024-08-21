@@ -15,81 +15,17 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 		return runtime.Program{}, err
 	}
 
+	startAddr := runtime.PortAddr{Path: "in", Port: "start"}
+	start := runtime.NewSingleOutport(startAddr, ports[startAddr])
+
+	stopAddr := runtime.PortAddr{Path: "out", Port: "stop"}
+	stop := runtime.NewSingleInport(ports[stopAddr])
+
 	return runtime.Program{
-		Start: ports[runtime.PortAddr{
-			Path: "in",
-			Port: "start",
-			Idx:  0,
-			Arr:  false,
-		}],
-		Stop: ports[runtime.PortAddr{
-			Path: "out",
-			Port: "stop",
-			Idx:  0,
-			Arr:  false,
-		}],
+		Start: start,
+		Stop:  stop,
 		Funcs: funcs,
 	}, nil
-}
-
-func (Adapter) getConnections(
-	fanOut map[ir.PortAddr]map[ir.PortAddr]struct{},
-	ports map[runtime.PortAddr]chan runtime.IndexedMsg,
-) map[runtime.Sender]runtime.Receiver {
-	runtimeConnections := make(
-		map[runtime.Sender]runtime.Receiver,
-		len(fanOut),
-	)
-
-	for irSenderAddr, receiverAddrs := range fanOut {
-		runtimeSenderAddr := runtime.PortAddr{
-			Path: irSenderAddr.Path,
-			Port: irSenderAddr.Port,
-		}
-
-		if irSenderAddr.Idx != nil {
-			runtimeSenderAddr.Idx = *irSenderAddr.Idx
-			runtimeSenderAddr.Arr = true
-		}
-
-		senderChan, ok := ports[runtimeSenderAddr]
-		if !ok {
-			panic("sender chan not found")
-		}
-
-		sender := runtime.Sender{
-			Addr: runtimeSenderAddr,
-			Port: senderChan,
-		}
-
-		receivers := make([]runtime.Receiver, 0, len(receiverAddrs))
-
-		for receiverAddr := range receiverAddrs {
-			receiverRuntimeAddr := runtime.PortAddr{
-				Path: receiverAddr.Path,
-				Port: receiverAddr.Port,
-			}
-
-			if receiverAddr.Idx != nil {
-				receiverRuntimeAddr.Idx = *receiverAddr.Idx
-				receiverRuntimeAddr.Arr = true
-			}
-
-			receiverChan, ok := ports[receiverRuntimeAddr]
-			if !ok {
-				panic("receiver chan not found: " + receiverRuntimeAddr.String())
-			}
-
-			receivers = append(receivers, runtime.Receiver{
-				Addr: receiverRuntimeAddr,
-				Port: receiverChan,
-			})
-		}
-
-		runtimeConnections[sender] = receivers[0] // TODO use single receiver
-	}
-
-	return runtimeConnections
 }
 
 func (Adapter) getPorts(prog *ir.Program) map[runtime.PortAddr]chan runtime.IndexedMsg {

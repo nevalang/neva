@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 type Program struct {
-	Start chan IndexedMsg // Start must be inport of the first function
-	Stop  chan IndexedMsg // Stop must be outport of the (one of the) terminator function(s)
+	// for programmer start is inport and stop is outport, but for runtime it's inverted
+	Start *SingleOutport // Start must be inport of the first function
+	Stop  *SingleInport  // Stop must be outport of the (one of the) terminator function(s)
 	Funcs []FuncCall
 }
 
@@ -20,19 +22,19 @@ type FuncCall struct {
 }
 
 type FuncIO struct {
-	In  FuncInports
-	Out FuncOutports
+	In  Inports
+	Out Outports
 }
 
-type FuncInports struct {
-	ports map[string]FuncInport
+type Inports struct {
+	ports map[string]Inport
 }
 
-func (f FuncInports) Ports() map[string]FuncInport {
+func (f Inports) Ports() map[string]Inport {
 	return f.ports
 }
 
-func (f FuncInports) Single(name string) (SingleInport, error) {
+func (f Inports) Single(name string) (SingleInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return SingleInport{}, errors.New("port not found by name")
@@ -45,30 +47,30 @@ func (f FuncInports) Single(name string) (SingleInport, error) {
 	return *ports.single, nil
 }
 
-func NewFuncInports(ports map[string]FuncInport) FuncInports {
-	return FuncInports{
+func NewInports(ports map[string]Inport) Inports {
+	return Inports{
 		ports: ports,
 	}
 }
 
-type FuncInport struct {
+type Inport struct {
 	array  *ArrayInport
 	single *SingleInport
 }
 
-func (f FuncInport) Array() *ArrayInport {
+func (f Inport) Array() *ArrayInport {
 	return f.array
 }
 
-func (f FuncInport) Single() *SingleInport {
+func (f Inport) Single() *SingleInport {
 	return f.single
 }
 
-func NewFuncInport(
+func NewInport(
 	array *ArrayInport,
 	single *SingleInport,
-) FuncInport {
-	return FuncInport{
+) Inport {
+	return Inport{
 		array:  array,
 		single: single,
 	}
@@ -89,7 +91,7 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	}
 }
 
-func (f FuncInports) Array(name string) (ArrayInport, error) {
+func (f Inports) Array(name string) (ArrayInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return ArrayInport{}, errors.New("port not found by name")
@@ -184,15 +186,15 @@ func (a ArrayInport) Len() int {
 	return len(a.chans)
 }
 
-type FuncOutports struct {
-	ports map[string]FuncOutport
+type Outports struct {
+	ports map[string]Outport
 }
 
-func NewFuncOutports(ports map[string]FuncOutport) FuncOutports {
-	return FuncOutports{ports}
+func NewOutports(ports map[string]Outport) Outports {
+	return Outports{ports}
 }
 
-func (f FuncOutports) Single(name string) (SingleOutport, error) {
+func (f Outports) Single(name string) (SingleOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
 		return SingleOutport{}, fmt.Errorf("port '%v' not found", name)
@@ -205,7 +207,7 @@ func (f FuncOutports) Single(name string) (SingleOutport, error) {
 	return *port.single, nil
 }
 
-func (f FuncOutports) Array(name string) (ArrayOutport, error) {
+func (f Outports) Array(name string) (ArrayOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
 		return ArrayOutport{}, fmt.Errorf("port '%v' not found", name)
@@ -218,16 +220,16 @@ func (f FuncOutports) Array(name string) (ArrayOutport, error) {
 	return *port.array, nil
 }
 
-type FuncOutport struct {
+type Outport struct {
 	single *SingleOutport
 	array  *ArrayOutport
 }
 
-func NewFuncOutport(
+func NewOutport(
 	single *SingleOutport,
 	array *ArrayOutport,
-) FuncOutport {
-	return FuncOutport{single, array}
+) Outport {
+	return Outport{single, array}
 }
 
 type SingleOutport struct {
@@ -290,4 +292,27 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 
 func (a ArrayOutport) Len() int {
 	return len(a.slots)
+}
+
+type PortAddr struct {
+	Path string
+	Port string
+	// combination of uint8 + bool is more memory efficient than *uint8
+	Idx uint8
+	Arr bool
+}
+
+func (p PortAddr) String() string {
+	path := p.Path
+
+	if strings.Contains(path, "/out") {
+		path = strings.ReplaceAll(path, "/out", "")
+	} else if strings.Contains(path, "/in") {
+		path = strings.ReplaceAll(path, "/in", "")
+	}
+
+	if !p.Arr {
+		return fmt.Sprintf("%v:%v", path, p.Port)
+	}
+	return fmt.Sprintf("%v:%v[%v]", path, p.Port, p.Idx)
 }
