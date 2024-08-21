@@ -28,7 +28,7 @@ func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *co
 		}.Wrap(compilerErr)
 	}
 
-	rprog, err := i.adapter.Adapt(irProg)
+	rprog, err := i.adapter.Adapt(irProg, debug)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,

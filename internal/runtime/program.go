@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 )
 
 type Program struct {
@@ -233,17 +232,20 @@ func NewOutport(
 }
 
 type SingleOutport struct {
-	addr PortAddr
-	ch   chan<- IndexedMsg
+	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
+	interceptor Interceptor
+	ch          chan<- IndexedMsg
 }
 
 func NewSingleOutport(
 	addr PortAddr,
+	interceptor Interceptor,
 	ch chan<- IndexedMsg,
 ) *SingleOutport {
 	return &SingleOutport{
-		addr: addr,
-		ch:   ch,
+		addr:        addr,
+		interceptor: interceptor,
+		ch:          ch,
 	}
 }
 
@@ -259,13 +261,24 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 	}
 }
 
-type ArrayOutport struct {
-	addr  PortAddr
-	slots []chan<- IndexedMsg
+type Interceptor interface {
+	Sent(senderAddr, receiverAddr InterceptorPortAddr, msg Msg) Msg
+	Received(senderAddr, receiverAddr InterceptorPortAddr, msg Msg)
 }
 
-func NewArrayOutport(slots []chan<- IndexedMsg) *ArrayOutport {
-	return &ArrayOutport{slots: slots}
+type InterceptorPortAddr struct {
+	PortAddr
+	Index *uint8
+}
+
+type ArrayOutport struct {
+	addr        PortAddr
+	interceptor Interceptor
+	slots       []chan<- IndexedMsg
+}
+
+func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- IndexedMsg) *ArrayOutport {
+	return &ArrayOutport{addr: addr, slots: slots, interceptor: interceptor}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
@@ -298,22 +311,4 @@ func (a ArrayOutport) Len() int {
 type PortAddr struct {
 	Path string
 	Port string
-	// combination of uint8 + bool is more memory efficient than *uint8
-	Idx uint8
-	Arr bool
-}
-
-func (p PortAddr) String() string {
-	path := p.Path
-
-	if strings.Contains(path, "/out") {
-		path = strings.ReplaceAll(path, "/out", "")
-	} else if strings.Contains(path, "/in") {
-		path = strings.ReplaceAll(path, "/in", "")
-	}
-
-	if !p.Arr {
-		return fmt.Sprintf("%v:%v", path, p.Port)
-	}
-	return fmt.Sprintf("%v:%v[%v]", path, p.Port, p.Idx)
 }
