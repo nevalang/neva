@@ -8,7 +8,7 @@ import (
 
 type lock struct{}
 
-func (l lock) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err

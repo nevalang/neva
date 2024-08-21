@@ -9,7 +9,7 @@ import (
 
 type stringSplit struct{}
 
-func (p stringSplit) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p stringSplit) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

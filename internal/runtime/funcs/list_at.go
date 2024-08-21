@@ -8,7 +8,7 @@ import (
 
 type listAt struct{}
 
-func (listAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

@@ -8,7 +8,7 @@ import (
 
 type or struct{}
 
-func (p or) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p or) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	aIn, err := io.In.Single("a")
 	if err != nil {
 		return nil, err

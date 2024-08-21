@@ -8,7 +8,7 @@ import (
 
 type del struct{}
 
-func (d del) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (d del) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("msg") // TODO rename to data?
 	if err != nil {
 		return nil, err

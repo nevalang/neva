@@ -9,7 +9,7 @@ import (
 
 type stringAt struct{}
 
-func (stringAt) Create(io runtime.FuncIO, _ runtime.Msg) (func(context.Context), error) {
+func (stringAt) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

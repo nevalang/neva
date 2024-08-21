@@ -37,7 +37,7 @@ curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.s
 If your device is connected to a chinese network:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/cnina/install.sh | bash
 ```
 
 For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from releases if installed won't work):

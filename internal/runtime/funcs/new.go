@@ -8,7 +8,7 @@ import (
 
 type new struct{}
 
-func (c new) Create(io runtime.FuncIO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (c new) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	dataOut, err := io.Out.Single("msg")
 	if err != nil {
 		return nil, err

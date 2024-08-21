@@ -9,7 +9,7 @@ import (
 
 type readStructField struct{}
 
-func (s readStructField) Create(io runtime.FuncIO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (s readStructField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	path := cfg.List()
 	if len(path) == 0 {
 		return nil, errors.New("field path cannot be empty")

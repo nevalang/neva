@@ -10,7 +10,7 @@ import (
 type structBuilder struct{}
 
 func (s structBuilder) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	if len(io.In.Ports()) == 0 {

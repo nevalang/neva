@@ -22,9 +22,9 @@ func (a Adapter) Adapt(irProg *ir.Program) (runtime.Program, error) {
 	stop := runtime.NewSingleInport(ports[stopAddr])
 
 	return runtime.Program{
-		Start: start,
-		Stop:  stop,
-		Funcs: funcs,
+		Start:     start,
+		Stop:      stop,
+		FuncCalls: funcs,
 	}, nil
 }
 

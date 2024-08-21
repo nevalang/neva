@@ -1,0 +1,19 @@
+{
+	"files": [
+		{
+			"path": "internal/runtime/program.go",
+			"bookmarks": [
+				{
+					"line": 249,
+					"column": 12,
+					"label": ""
+				},
+				{
+					"line": 270,
+					"column": 27,
+					"label": ""
+				}
+			]
+		}
+	]
+}

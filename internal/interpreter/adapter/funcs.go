@@ -103,7 +103,7 @@ func (a Adapter) getFuncs(
 
 		rFunc := runtime.FuncCall{
 			Ref: call.Ref,
-			IO: runtime.FuncIO{
+			IO: runtime.IO{
 				In:  runtime.NewInports(funcInports),
 				Out: runtime.NewOutports(funcOutports),
 			},
@@ -114,7 +114,7 @@ func (a Adapter) getFuncs(
 			if err != nil {
 				return nil, fmt.Errorf("msg: %w", err)
 			}
-			rFunc.ConfigMsg = rMsg
+			rFunc.Config = rMsg
 		}
 
 		result = append(result, rFunc)

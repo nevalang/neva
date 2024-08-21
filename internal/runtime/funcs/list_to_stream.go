@@ -9,7 +9,7 @@ import (
 type listToStream struct{}
 
 func (c listToStream) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")

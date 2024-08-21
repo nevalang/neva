@@ -10,7 +10,7 @@ import (
 type arrayPortToStream struct{}
 
 func (arrayPortToStream) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
 	portIn, err := io.In.Array("port")

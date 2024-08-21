@@ -10,18 +10,18 @@ import (
 
 type Program struct {
 	// for programmer start is inport and stop is outport, but for runtime it's inverted
-	Start *SingleOutport // Start must be inport of the first function
-	Stop  *SingleInport  // Stop must be outport of the (one of the) terminator function(s)
-	Funcs []FuncCall
+	Start     *SingleOutport // Start must be inport of the first function
+	Stop      *SingleInport  // Stop must be outport of the (one of the) terminator function(s)
+	FuncCalls []FuncCall
 }
 
 type FuncCall struct {
-	Ref       string
-	IO        FuncIO
-	ConfigMsg Msg
+	Ref    string
+	IO     IO
+	Config Msg
 }
 
-type FuncIO struct {
+type IO struct {
 	In  Inports
 	Out Outports
 }
@@ -260,6 +260,7 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 }
 
 type ArrayOutport struct {
+	addr  PortAddr
 	slots []chan<- IndexedMsg
 }
 

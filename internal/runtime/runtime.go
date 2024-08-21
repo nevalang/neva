@@ -12,7 +12,6 @@ type Runtime struct {
 	funcRunner FuncRunner
 }
 
-// Run runs the program.
 func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
@@ -21,7 +20,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	}()
 
 	// here we create runtime function instances to call them later
-	funcrun, err := p.funcRunner.Run(prog.Funcs)
+	funcrun, err := p.funcRunner.Run(prog.FuncCalls)
 	if err != nil {
 		return err
 	}

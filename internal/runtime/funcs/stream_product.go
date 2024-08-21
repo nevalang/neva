@@ -9,7 +9,7 @@ import (
 type streamProduct struct{}
 
 func (streamProduct) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	firstIn, err := io.In.Single("first")

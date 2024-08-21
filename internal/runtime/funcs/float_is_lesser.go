@@ -8,7 +8,7 @@ import (
 
 type floatIsLesser struct{}
 
-func (p floatIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p floatIsLesser) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	actualIn, err := io.In.Single("actual")
 	if err != nil {
 		return nil, err

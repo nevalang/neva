@@ -11,7 +11,7 @@ type FuncRunner struct {
 }
 
 type FuncCreator interface {
-	Create(FuncIO, Msg) (func(context.Context), error)
+	Create(IO, Msg) (func(context.Context), error)
 }
 
 // Run returns a function that runs all runtime functions with their configurations.
@@ -47,7 +47,7 @@ func (d FuncRunner) createHandlers(funcCalls []FuncCall) ([]func(context.Context
 			return nil, fmt.Errorf("func creator not found: %v", call.Ref)
 		}
 
-		handler, err := creator.Create(call.IO, call.ConfigMsg)
+		handler, err := creator.Create(call.IO, call.Config)
 		if err != nil {
 			return nil, fmt.Errorf("%v: %w", call.Ref, err)
 		}

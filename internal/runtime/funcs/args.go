@@ -9,7 +9,7 @@ import (
 
 type args struct{}
 
-func (a args) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err

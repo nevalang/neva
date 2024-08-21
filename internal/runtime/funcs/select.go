@@ -9,7 +9,7 @@ import (
 
 type selector struct{}
 
-func (selector) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	ifIn, err := io.In.Array("if")
 	if err != nil {
 		return nil, err
