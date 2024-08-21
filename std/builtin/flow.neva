@@ -4,11 +4,13 @@
 #extern(if)
 pub flow If(data bool) (then any, else any)
 
+// TODO if with 2 values?
+
 // Switch is a more powerful version of If that handles multiple cases.
 // Just like If, it is used for routing.
 // If you need mapping, use Match or Select instead.
 #extern(switch)
-pub flow Switch<T>(data T, [case] T) ([case] T, else T)
+pub flow Switch<T>(data T, [case] any) ([case] T, else T)
 
 // Lock allows to defer some event until some other event happens.
 #extern(lock)
