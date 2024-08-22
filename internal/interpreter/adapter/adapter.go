@@ -40,8 +40,8 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool) (runtime.Program, error) 
 			Port: "stop",
 		}],
 		runtime.PortAddr{
-			Path: "in",
-			Port: "start",
+			Path: "out",
+			Port: "stop",
 		},
 		interceptor,
 	)
