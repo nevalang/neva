@@ -108,7 +108,7 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 		msg,
 	)
 
-	return msg, false
+	return msg, true
 }
 
 func (f Inports) Array(name string) (ArrayInport, error) {
