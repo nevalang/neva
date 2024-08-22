@@ -10,7 +10,7 @@ import (
 
 func (a Adapter) getFuncs(
 	prog *ir.Program,
-	portToChan map[ir.PortAddr]chan runtime.IndexedMsg,
+	portToChan map[ir.PortAddr]chan runtime.OrderedMsg,
 	interceptor runtime.Interceptor,
 ) ([]runtime.FuncCall, error) {
 	result := make([]runtime.FuncCall, 0, len(prog.Funcs))
@@ -23,7 +23,7 @@ func (a Adapter) getFuncs(
 			len(call.IO.In),
 		)
 
-		arrInportsToCreate := make(map[ir.PortAddr][]<-chan runtime.IndexedMsg, len(call.IO.In))
+		arrInportsToCreate := make(map[ir.PortAddr][]<-chan runtime.OrderedMsg, len(call.IO.In))
 
 		// in first run we fill single ports and collect array ports to tmp var
 		for _, irAddr := range call.IO.In {
@@ -68,7 +68,7 @@ func (a Adapter) getFuncs(
 
 		funcOutports := make(map[string]runtime.Outport, len(call.IO.Out))
 
-		arrOutportsToCreate := map[runtime.PortAddr][]chan<- runtime.IndexedMsg{}
+		arrOutportsToCreate := map[runtime.PortAddr][]chan<- runtime.OrderedMsg{}
 
 		for _, irAddr := range call.IO.Out {
 			runtimeAddr := runtime.PortAddr{

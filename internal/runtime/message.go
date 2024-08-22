@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-type IndexedMsg struct {
-	data  Msg
-	index uint64 // to keep order of messages
+type OrderedMsg struct {
+	Msg
+	index uint64
 }
 
 type Msg interface {
@@ -18,15 +18,14 @@ type Msg interface {
 	Float() float64
 	Str() string
 	List() []Msg
-	Map() map[string]Msg // TODO rename maps to dicts
-	// IDEA use reflect for structures (instead of maps)
+	Map() map[string]Msg // TODO rename maps to dicts; add real structures
 }
 
-// Base (internal helper)
+// Base
 
 type baseMsg struct{}
 
-func (baseMsg) String() string      { return "<empty>" }
+func (baseMsg) String() string      { return "<base>" }
 func (baseMsg) Bool() bool          { return false }
 func (baseMsg) Int() int64          { return 0 }
 func (baseMsg) Float() float64      { return 0 }

@@ -53,9 +53,9 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool) (runtime.Program, error) 
 	}, nil
 }
 
-func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.IndexedMsg {
+func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMsg {
 	result := make(
-		map[ir.PortAddr]chan runtime.IndexedMsg,
+		map[ir.PortAddr]chan runtime.OrderedMsg,
 		len(prog.Ports),
 	)
 
@@ -69,7 +69,7 @@ func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.IndexedMs
 		// it was not created yet, let's see if it's sender or receiver
 		if _, isSender := prog.Connections[senderIrAddr]; !isSender {
 			// it's a receiver, so we just create a new channel for it and go to the next iteration
-			result[senderIrAddr] = make(chan runtime.IndexedMsg)
+			result[senderIrAddr] = make(chan runtime.OrderedMsg)
 			continue
 		}
 
@@ -89,7 +89,7 @@ func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.IndexedMs
 
 		// receiver channel was not created yet,
 		// so we create new one and assign it to both sender and receiver
-		sharedChan := make(chan runtime.IndexedMsg)
+		sharedChan := make(chan runtime.OrderedMsg)
 		result[senderIrAddr] = sharedChan
 		result[receiverIrAddr] = sharedChan
 	}
