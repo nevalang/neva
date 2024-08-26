@@ -1,12 +1,12 @@
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-**<p align="center">Flow-Based Programming Language</p>**
+**<p align="center">Dataflow Programming Language</p>**
 
 ![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
 > ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
 
-# Neva
+# Nevalang
 
 A general-purpose dataflow programming language with static types and implicit parallelism. Compiles to machine code and Go.
 

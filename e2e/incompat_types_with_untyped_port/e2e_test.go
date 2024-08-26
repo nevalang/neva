@@ -15,7 +15,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		"main/main.neva:19:8 Incompatible types: in:in -> add: Subtype and supertype must both be either literals or instances, except if supertype is union: expression any, constraint { data int, idx int, last bool }\n",
+		"main/main.neva:16:8 Incompatible types: in:in -> add: Subtype and supertype must both be either literals or instances, except if supertype is union: expression any, constraint { data int, idx int, last bool }\n",
 		string(out),
 	)
 
