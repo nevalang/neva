@@ -28,7 +28,7 @@ func (d debugInterceptor) formatMsg(msg runtime.Msg) string {
 func (d debugInterceptor) formatPortSlotAddr(slotAddr runtime.PortSlotAddr) string {
 	s := fmt.Sprintf("%v:%v", slotAddr.Path, slotAddr.Port)
 	if slotAddr.Index != nil {
-		s = fmt.Sprintf("%v[%v]", s, slotAddr.Index)
+		s = fmt.Sprintf("%v[%v]", s, *slotAddr.Index)
 	}
 	return s
 }

@@ -369,7 +369,18 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 }
 
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
-	for _, slot := range a.slots {
+	for i, slot := range a.slots {
+		idx := uint8(i)
+		a.interceptor.Sent(
+			PortSlotAddr{
+				PortAddr: PortAddr{
+					Path: a.addr.Path,
+					Port: a.addr.Port,
+				},
+				Index: &idx,
+			},
+			msg,
+		)
 		select {
 		case <-ctx.Done():
 			return false
