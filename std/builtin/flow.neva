@@ -20,9 +20,9 @@ pub flow Lock<T>(sig any, data T) (data T)
 // You should prefer multiple receivers sugar `-> [...]` instead.
 // Multiple receivers is a syntax sugar over explicit FanOut.
 #extern(fan_out)
-pub flow FanOut<T>(data T) ([data] 
+pub flow FanOut<T>(data T) ([data] T)
 
 // FanIn merges several sources of data into single one.
 // It makes sure order of incoming messages is respected.
 #extern(fan_in)
-pub flow FanIn<T>([data] T) (data T)
+pub flow FanIn<T>([data] T) (res T)

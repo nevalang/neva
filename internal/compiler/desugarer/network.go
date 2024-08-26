@@ -63,7 +63,7 @@ type NetFinalProcessingResult struct {
 	FinalNetwork []src.Connection
 }
 
-var fanInCounter *atomic.Uint64
+var fanInCounter *atomic.Uint64 = &atomic.Uint64{}
 
 // networkFinalProcessing does the following:
 //   - inserts fan-in node in-between everywhere needed: generates necessary connections and inserts corresponding nodes
@@ -74,14 +74,20 @@ func (d Desugarer) networkFinalProcessing(
 	conns []src.Connection,
 	nodesToInsert map[string]src.Node,
 ) (NetFinalProcessingResult, error) {
+	finalNet := []src.Connection{}
 	receiverSendersMap := make(map[src.PortAddr][]src.PortAddr) // receiver -> senders
+
 	for _, conn := range conns {
-		r := conn.Normal.ReceiverSide.Receivers[0].PortAddr
-		s := *conn.Normal.SenderSide.PortAddr
-		receiverSendersMap[r] = append(receiverSendersMap[r], s)
+		if conn.ArrayBypass != nil {
+			finalNet = append(finalNet, conn) // nothing to desugar
+			continue
+		}
+
+		senderAddr := *conn.Normal.SenderSide.PortAddr
+		receiverAddr := conn.Normal.ReceiverSide.Receivers[0].PortAddr
+		receiverSendersMap[receiverAddr] = append(receiverSendersMap[receiverAddr], senderAddr)
 	}
 
-	finalNet := []src.Connection{}
 	for receiver, senders := range receiverSendersMap {
 		if len(senders) < 2 { // keep non fan-in connections as-is
 			finalNet = append(finalNet, src.Connection{
