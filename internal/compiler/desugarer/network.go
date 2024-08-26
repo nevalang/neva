@@ -14,7 +14,7 @@ import (
 type handleNetResult struct {
 	desugaredConnections []src.Connection     // desugared network
 	constsToInsert       map[string]src.Const // constants that needs to be inserted in to make desugared network work
-	virtualNodes         map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
+	nodesToInsert        map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
 	nodesPortsUsed       nodePortsMap         // to find unused to create virtual del connections
 }
 
@@ -23,15 +23,16 @@ func (d Desugarer) handleNetwork(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleNetResult, *compiler.Error) {
-	desugaredConns := make([]src.Connection, 0, len(net))
+	desugaredConnections := make([]src.Connection, 0, len(net))
+	// code smell: we pass connections but mutate maps at the same time
 	nodesToInsert := map[string]src.Node{}
 	constsToInsert := map[string]src.Const{}
-	usedNodePorts := newNodePortsMap()
+	nodePortsUsed := newNodePortsMap()
 
 	for _, conn := range net {
 		result, err := d.desugarConnection(
 			conn,
-			usedNodePorts,
+			nodePortsUsed,
 			scope,
 			nodes,
 			nodesToInsert,
@@ -41,15 +42,117 @@ func (d Desugarer) handleNetwork(
 			return handleNetResult{}, err
 		}
 
-		desugaredConns = append(desugaredConns, result.connectionToReplace)
-		desugaredConns = append(desugaredConns, result.connectionsToInsert...)
+		desugaredConnections = append(desugaredConnections, result.connectionToReplace)
+		desugaredConnections = append(desugaredConnections, result.connectionsToInsert...)
+	}
+
+	result, err := d.networkFinalProcessing(desugaredConnections, scope, nodesToInsert, constsToInsert)
+	if err != nil {
+		return handleNetResult{}, &compiler.Error{} // todo
 	}
 
 	return handleNetResult{
-		desugaredConnections: desugaredConns,
-		nodesPortsUsed:       usedNodePorts,
+		desugaredConnections: result.FinalNetwork,
+		nodesPortsUsed:       nodePortsUsed,
 		constsToInsert:       constsToInsert,
-		virtualNodes:         nodesToInsert,
+		nodesToInsert:        nodesToInsert,
+	}, nil
+}
+
+type NetFinalProcessingResult struct {
+	FinalNetwork []src.Connection
+}
+
+var fanInCounter *atomic.Uint64
+
+// networkFinalProcessing does the following:
+//   - inserts fan-in node in-between everywhere needed: generates necessary connections and inserts corresponding nodes
+//   - ...
+//
+// It's important that given conns must be already desugared separately.
+func (d Desugarer) networkFinalProcessing(
+	conns []src.Connection,
+	nodesToInsert map[string]src.Node,
+) (NetFinalProcessingResult, error) {
+	receiverSendersMap := make(map[src.PortAddr][]src.PortAddr) // receiver -> senders
+	for _, conn := range conns {
+		r := conn.Normal.ReceiverSide.Receivers[0].PortAddr
+		s := *conn.Normal.SenderSide.PortAddr
+		receiverSendersMap[r] = append(receiverSendersMap[r], s)
+	}
+
+	finalNet := []src.Connection{}
+	for receiver, senders := range receiverSendersMap {
+		if len(senders) < 2 { // keep non fan-in connections as-is
+			finalNet = append(finalNet, src.Connection{
+				Normal: &src.NormalConnection{
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: []src.ConnectionReceiver{{PortAddr: receiver}},
+					},
+					SenderSide: src.ConnectionSenderSide{PortAddr: &senders[0]},
+				},
+			})
+			continue
+		}
+
+		// ---
+		// for each connection with >1 senders we need to
+		// 1. create unique fan-in node
+		// 2. replace existing receiver with created fan-in
+		// 3. create new connection with fan-in as sender and original receiver as receiver
+		// ---
+
+		// 1. create unique fan-in node
+		fanInNodeName := fmt.Sprintf("__fanIn__%d", fanInCounter.Add(1))
+		nodesToInsert[fanInNodeName] = src.Node{
+			EntityRef: core.EntityRef{
+				Pkg:  "builtin",
+				Name: "FanIn",
+			},
+		}
+
+		for i, sender := range senders {
+			// 2. replace existing receiver with created fan-in
+			finalNet = append(finalNet, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr: &sender,
+					},
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: src.PortAddr{
+									Node: fanInNodeName,
+									Port: "data",
+									Idx:  compiler.Pointer(uint8(i)),
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// 3. create new connection with fan-in as sender and original receiver as receiver
+			finalNet = append(finalNet, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: src.ConnectionSenderSide{
+						PortAddr: &src.PortAddr{
+							Node: fanInNodeName,
+							Port: "res",
+						},
+					},
+					ReceiverSide: src.ConnectionReceiverSide{
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: receiver},
+						},
+					},
+				},
+			})
+		}
+	}
+
+	return NetFinalProcessingResult{
+		FinalNetwork: finalNet,
 	}, nil
 }
 
@@ -63,7 +166,7 @@ type desugarConnectionResult struct {
 // that were generated while desugared the original one.
 func (d Desugarer) desugarConnection(
 	conn src.Connection,
-	usedNodePorts nodePortsMap,
+	nodePortsUsed nodePortsMap,
 	scope src.Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
@@ -71,11 +174,11 @@ func (d Desugarer) desugarConnection(
 ) (desugarConnectionResult, *compiler.Error) {
 	// "array bypass" connection - nothing to desugar, just mark as used and return as-is
 	if conn.ArrayBypass != nil {
-		usedNodePorts.set(
+		nodePortsUsed.set(
 			conn.ArrayBypass.SenderOutport.Node,
 			conn.ArrayBypass.SenderOutport.Port,
 		)
-		usedNodePorts.set(
+		nodePortsUsed.set(
 			conn.ArrayBypass.ReceiverInport.Node,
 			conn.ArrayBypass.ReceiverInport.Port,
 		)
@@ -111,7 +214,7 @@ func (d Desugarer) desugarConnection(
 		}
 
 		// mark as used
-		usedNodePorts.set(
+		nodePortsUsed.set(
 			conn.Normal.SenderSide.PortAddr.Node,
 			conn.Normal.SenderSide.PortAddr.Port,
 		)
@@ -136,7 +239,7 @@ func (d Desugarer) desugarConnection(
 		// generated connection might need desugaring itself
 		connToInsertDesugarRes, err := d.desugarConnection(
 			result.connToInsert,
-			usedNodePorts,
+			nodePortsUsed,
 			scope,
 			nodes,
 			nodesToInsert,
@@ -152,7 +255,7 @@ func (d Desugarer) desugarConnection(
 		// connection that replaces original one might need desugaring itself
 		replacedConnDesugarRes, err := d.desugarConnection(
 			result.connToReplace,
-			usedNodePorts,
+			nodePortsUsed,
 			scope,
 			nodes,
 			nodesToInsert,
@@ -225,7 +328,7 @@ func (d Desugarer) desugarConnection(
 		}
 
 		// desugaring of deferred connections is recursive process so its result must be merged with existing one
-		usedNodePorts.merge(result.nodesPortsUsed)
+		nodePortsUsed.merge(result.nodesPortsUsed)
 		maps.Copy(constsToInsert, result.constsToInsert)
 		maps.Copy(nodesToInsert, result.nodesToInsert)
 		// after desugaring of deferred connection we need to add new receivers and new connections

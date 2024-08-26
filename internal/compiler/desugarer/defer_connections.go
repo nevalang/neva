@@ -55,7 +55,7 @@ func (d Desugarer) desugarDeferredConnections(
 
 	// we want to return nodes created in recursive calls
 	// as well as the onces created by us in this call
-	nodesToInsert := maps.Clone(handleNetResult.virtualNodes)
+	nodesToInsert := maps.Clone(handleNetResult.nodesToInsert)
 
 	// we going to replace all desugared deferreded connections with set of our connections
 	connsToInsert := make([]src.Connection, 0, len(handleNetResult.desugaredConnections))

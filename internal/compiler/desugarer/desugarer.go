@@ -30,7 +30,10 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 	}, nil
 }
 
-func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Module, *compiler.Error) {
+func (d Desugarer) desugarModule(
+	build src.Build,
+	modRef src.ModuleRef,
+) (src.Module, *compiler.Error) {
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
@@ -48,7 +51,7 @@ func (d Desugarer) desugarModule(build src.Build, modRef src.ModuleRef) (src.Mod
 		Packages: mod.Packages,
 	}
 
-	// create new build with patched modeles (current module have patched manifest with std dependency)
+	// create new build with patched modules (current module has patched manifest with std dependency)
 	build = src.Build{
 		EntryModRef: modRef,
 		Modules:     modsCopy,
@@ -105,7 +108,10 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *c
 }
 
 // desugarFile injects import of std/builtin into every pkg's file and desugares it's every entity
-func (d Desugarer) desugarFile(file src.File, scope src.Scope) (src.File, *compiler.Error) {
+func (d Desugarer) desugarFile(
+	file src.File,
+	scope src.Scope,
+) (src.File, *compiler.Error) {
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
 	for entityName, entity := range file.Entities {
@@ -144,7 +150,10 @@ type desugarEntityResult struct {
 	entitiesToInsert map[string]src.Entity
 }
 
-func (d Desugarer) desugarEntity(entity src.Entity, scope src.Scope) (desugarEntityResult, *compiler.Error) {
+func (d Desugarer) desugarEntity(
+	entity src.Entity,
+	scope src.Scope,
+) (desugarEntityResult, *compiler.Error) {
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.ConstEntity {
 		return desugarEntityResult{entity: entity}, nil
 	}

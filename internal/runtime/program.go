@@ -128,6 +128,7 @@ type ArrayInport struct {
 	addr        PortAddr
 	interceptor Interceptor
 	chans       []<-chan OrderedMsg
+	buf         []SelectedMsg // Select functionality needs buffer to guarantee correct order.
 }
 
 func NewArrayInport(
@@ -139,6 +140,7 @@ func NewArrayInport(
 		addr:        addr,
 		interceptor: interceptor,
 		chans:       chans,
+		buf:         make([]SelectedMsg, len(chans)^2),
 	}
 }
 
@@ -166,62 +168,75 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 	return true
 }
 
-type SelectedMessage struct {
-	Data    Msg
+type SelectedMsg struct {
+	OrderedMsg
 	SlotIdx uint8
 }
 
-// Select allows to receive messages in a serialized manner.
-// It implements same algorithm as runtime's fan-in.
-// It threads array-inport's slots as senders.
-func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
-	type bufferedMsg struct {
-		slot uint8
-		msg  OrderedMsg
-	}
-
+// Select returns the oldest
+func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	i := 0
-	buf := make([]bufferedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
+	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
 	for {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
-		// if we do len(ss) iterations, that's ok, because we will go back and check again
+		// if we do len(ss) iterations, that's ok, because we will go back and check
 		if len(buf) > 0 && i >= len(a.chans) {
 			break
 		}
 
 		for idx, ch := range a.chans {
 			select {
+			default:
+				continue
 			case <-ctx.Done():
 				return nil, false
-			case indexedMsg := <-ch:
-				buf = append(buf, bufferedMsg{
-					slot: uint8(idx),
-					msg:  indexedMsg,
+			case orderedMsg := <-ch:
+				buf = append(buf, SelectedMsg{
+					OrderedMsg: orderedMsg,
+					SlotIdx:    uint8(idx),
 				})
-			default:
 			}
 		}
-
-		// TODO: properly add runtime.Gosched()
 
 		i++
 	}
 
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].msg.index < buf[j].msg.index
+		return buf[i].OrderedMsg.index < buf[j].OrderedMsg.index
 	})
 
-	res := make([]SelectedMessage, len(buf))
-	for i := range buf {
-		res[i] = SelectedMessage{
-			SlotIdx: buf[i].slot,
-			Data:    buf[i].msg.Msg,
-		}
+	return buf, true
+}
+
+// Select returns oldest available message across all available array inport slots.
+func (a ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
+	if len(a.buf) > 1 {
+		v := a.buf[0]
+		a.buf = a.buf[1:]
+		return v, true
 	}
 
-	return res, true
+	if len(a.buf) == 1 {
+		v := a.buf[0]
+		a.buf = nil
+		return v, true
+	}
+
+	batch, ok := a._select(ctx)
+	if !ok {
+		return SelectedMsg{}, false
+	}
+
+	if len(batch) == 1 {
+		return batch[0], true
+	}
+
+	v := batch[0]
+	a.buf = batch[1:]
+
+	return v, true
 }
 
 func (a ArrayInport) Len() int {

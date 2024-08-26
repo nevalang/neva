@@ -2,8 +2,8 @@ package irgen
 
 import "github.com/nevalang/neva/internal/compiler/ir"
 
-// reduceGraph transforms program to a state where it doesn't have intermediate connections.
-func reduceGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]map[ir.PortAddr]struct{}) {
+// reduceFinalGraph transforms program to a state where it doesn't have intermediate connections.
+func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]map[ir.PortAddr]struct{}) {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
 
 	netWithoutIntermediateReceivers := make(

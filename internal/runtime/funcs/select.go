@@ -29,11 +29,9 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 		return nil, err
 	}
 
-	bufferedIf := bufArrInport{port: ifIn}
-
 	return func(ctx context.Context) {
 		for {
-			ifMsg, ok := bufferedIf.Receive(ctx)
+			ifMsg, ok := ifIn.Select(ctx)
 			if !ok {
 				return
 			}
@@ -51,37 +49,4 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			}
 		}
 	}, nil
-}
-
-type bufArrInport struct {
-	port runtime.ArrayInport
-	buf  []runtime.SelectedMessage
-}
-
-// Receive allows to receive messages one by one in a serialized manner.
-func (b *bufArrInport) Receive(ctx context.Context) (runtime.SelectedMessage, bool) {
-	if len(b.buf) > 1 {
-		first := b.buf[0]
-		b.buf = b.buf[1:]
-		return first, true
-	}
-
-	if len(b.buf) == 1 {
-		first := b.buf[0]
-		b.buf = nil
-		return first, true
-	}
-
-	selected, ok := b.port.Select(ctx)
-	if !ok {
-		return runtime.SelectedMessage{}, false
-	}
-
-	if len(selected) == 1 {
-		return selected[0], true
-	}
-
-	b.buf = selected[1:]
-
-	return selected[0], true
 }
