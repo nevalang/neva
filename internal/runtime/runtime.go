@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -13,6 +14,8 @@ type Runtime struct {
 }
 
 func (p *Runtime) Run(ctx context.Context, prog Program) error {
+	debugValidation(prog)
+
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		prog.Stop.Receive(ctx)
@@ -46,6 +49,74 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 	wg.Wait()
 
 	return nil
+}
+
+func debugValidation(prog Program) {
+	type info struct {
+		PortAddr
+		Ref  string
+		Chan any
+	}
+
+	receivers := map[string]info{}
+	senders := map[string]info{}
+	for _, call := range prog.FuncCalls {
+		for _, inport := range call.IO.In.ports {
+			if inport.single != nil {
+				k := fmt.Sprint(inport.single.ch)
+				receivers[k] = info{inport.single.addr, call.Ref, inport.single.ch}
+			} else if inport.array != nil {
+				for _, ch := range inport.array.chans {
+					k := fmt.Sprint(ch)
+					receivers[k] = info{inport.array.addr, call.Ref, ch}
+				}
+			} else {
+				panic("empty func call!")
+			}
+		}
+		for _, outport := range call.IO.Out.ports {
+			if outport.single != nil {
+				k := fmt.Sprint(outport.single.ch)
+				senders[k] = info{outport.single.addr, call.Ref, outport.single.ch}
+			} else if outport.array != nil {
+				for _, ch := range outport.array.slots {
+					k := fmt.Sprint(ch)
+					senders[k] = info{outport.array.addr, call.Ref, ch}
+				}
+			} else {
+				panic("empty func call!")
+			}
+		}
+	}
+
+	if len(senders) != len(receivers) {
+		fmt.Printf(
+			"===\nWARNING: len(senders)!=len(receivers), senders=%d, receivers=%d\n===\n\n",
+			len(senders),
+			len(receivers),
+		)
+	}
+
+	for sChStr, sInfo := range senders {
+		if _, ok := receivers[sChStr]; !ok {
+			fmt.Printf("%v:%v -> ???\n", sInfo.PortAddr.Path, sInfo.PortAddr.Port)
+			continue
+		}
+		fmt.Printf(
+			"%v:%v -> %v:%v\n",
+			senders[sChStr].PortAddr.Path,
+			receivers[sChStr].PortAddr.Port,
+			receivers[sChStr].PortAddr.Path,
+			receivers[sChStr].PortAddr.Port,
+		)
+	}
+
+	for rChStr, rInfo := range receivers {
+		if _, ok := senders[rChStr]; !ok {
+			fmt.Printf("??? -> %v:%v\n", rInfo.PortAddr.Path, rInfo.PortAddr.Port)
+			continue
+		}
+	}
 }
 
 func New(funcRunner FuncRunner) Runtime {
