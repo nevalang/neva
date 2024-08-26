@@ -46,7 +46,7 @@ func (d Desugarer) handleNetwork(
 		desugaredConnections = append(desugaredConnections, result.connectionsToInsert...)
 	}
 
-	result, err := d.networkFinalProcessing(desugaredConnections, scope, nodesToInsert, constsToInsert)
+	result, err := d.networkFinalProcessing(desugaredConnections, nodesToInsert)
 	if err != nil {
 		return handleNetResult{}, &compiler.Error{} // todo
 	}
