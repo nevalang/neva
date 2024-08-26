@@ -31,7 +31,7 @@ func (switcher) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 	}
 
 	if caseIn.Len() != caseOut.Len() {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+		return nil, errors.New("number of 'case' inports must match number of outports")
 	}
 
 	return func(ctx context.Context) {

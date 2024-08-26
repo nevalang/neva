@@ -72,6 +72,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"float_sort": listSortFloat{},
 
 		// time
+		"time_delay": timeDelay{},
 		"time_sleep": timeSleep{},
 
 		// strings
