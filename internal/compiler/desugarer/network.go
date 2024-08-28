@@ -23,16 +23,16 @@ func (d Desugarer) handleNetwork(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleNetResult, *compiler.Error) {
+	// code smell: mix of mutable and immutable styles (connections/nodes-consts)
 	desugaredConnections := make([]src.Connection, 0, len(net))
-	// code smell: we pass connections but mutate maps at the same time
 	nodesToInsert := map[string]src.Node{}
 	constsToInsert := map[string]src.Const{}
-	nodePortsUsed := newNodePortsMap()
+	nodesPortsUsed := newNodePortsMap()
 
 	for _, conn := range net {
 		result, err := d.desugarConnection(
 			conn,
-			nodePortsUsed,
+			nodesPortsUsed,
 			scope,
 			nodes,
 			nodesToInsert,
@@ -50,10 +50,11 @@ func (d Desugarer) handleNetwork(
 	if err != nil {
 		return handleNetResult{}, &compiler.Error{} // todo
 	}
+	desugaredConnections = result.FinalNetwork
 
 	return handleNetResult{
-		desugaredConnections: result.FinalNetwork,
-		nodesPortsUsed:       nodePortsUsed,
+		desugaredConnections: desugaredConnections,
+		nodesPortsUsed:       nodesPortsUsed,
 		constsToInsert:       constsToInsert,
 		nodesToInsert:        nodesToInsert,
 	}, nil
