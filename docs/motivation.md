@@ -1,6 +1,8 @@
 # Motivation
 
-There are thousands of programming languages, why need another one? This document describes the motivation behind Nevalang.
+There are thousands of programming languages, why need another one? This document describes the motivation behind Nevalang in detail.
+
+Before we dig into the details, here's super high-level idea: it's possible to create a better language, where programs are easier to understand, debug and create. Unique set of features properly combined together could lead to such language. Nevalang is nothing but an attempt to create such language.
 
 ## General Purpose Dataflow
 
