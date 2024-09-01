@@ -1,21 +1,10 @@
-# Paradigm
-
-Nevalang is a general purpose programming language - an environment that includes: language specification, compiler, runtime, cli, editor plugins, etc. What kind of language it is?
-
-- Pure Dataflow (FBP-like)
-- Compiled (Machine code, Golang)
-- Statically (Strongly) Typed
-- Concurrent/Parallel by default
-- Hybrid (textual/visual)
-- Pure Declarative
-
-This is simplified explanation so we will discover what means what piece by piece.
+Here we focus on it's paradigm - Dataflow.
 
 ## Dataflow
 
-There are 2 high level programming paradigms: Dataflow and Controlflow. Paradigms like OOP or FP are specific variations of Controlflow while things like Actors or CSP are specific variations of Dataflow.
+There are 2 high level programming paradigms: Dataflow and Controlflow. Paradigms like OOP or FP are specific variations of Controlflow while Actors or CSP are specific variations of Dataflow.
 
-Dataflow programming is paradigm, that explains computation in terms of directed graphs. It takes many forms: OOP (by Alan Kay), CSP, Actor-model, FBP, etc. FBP is the one that influenced Nevalang the most. However, Nevalang is not original FBP in many ways. FBP, for instance, is not pure dataflow because you are intended to write atomic components as a user, which means using some controlflow.
+Dataflow programming is paradigm, that explains computation in terms of directed graphs. It takes many forms: OOP (by Alan Kay), CSP, Actor-model, FBP, etc. FBP is the one that influenced Nevalang the most. However, Nevalang is not original FBP in many ways. FBP, for instance, is not pure dataflow because you intended to write atomic components, which means using controlflow.
 
 Common things for dataflow are nodes, connections and some kind of programmed flow for (probably async) message passing. There are popular general purpose controlflow languages that support some dataflow subset: Go's Goroutines and Channels and Erlang's Actors. Problem with these languages is that controlflow and dataflow are very different and combine them is harder than to combine different controlflow paradigms (e.g. procedural+functional). E.g. concept of variables is very foreign to dataflow.
 
