@@ -13,7 +13,7 @@ Executable package must have _component_ called `Main`. This component must foll
 - Both ports must have type `any`
 - Must have no _abstract nodes_
 
-Main component doesn't have to have _network_ but it is usually the case because it's the _root_ component in the program.
+Main component must have both node and network.jkl
 
 ## Native Components
 
