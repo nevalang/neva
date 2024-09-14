@@ -140,7 +140,7 @@ func NewArrayInport(
 		addr:        addr,
 		interceptor: interceptor,
 		chans:       chans,
-		buf:         make([]SelectedMsg, len(chans)^2),
+		buf:         make([]SelectedMsg, 0, len(chans)^2),
 	}
 }
 
@@ -171,6 +171,10 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 type SelectedMsg struct {
 	OrderedMsg
 	SlotIdx uint8
+}
+
+func (s SelectedMsg) String() string {
+	return fmt.Sprint(s.OrderedMsg)
 }
 
 // Select returns the oldest

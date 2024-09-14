@@ -22,16 +22,16 @@ func (p println) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			if _, err := fmt.Println(data); err != nil {
+			if _, err := fmt.Println(dataMsg); err != nil {
 				panic(err)
 			}
 
-			if !sigOut.Send(ctx, data) {
+			if !sigOut.Send(ctx, dataMsg) {
 				return
 			}
 		}

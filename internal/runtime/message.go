@@ -12,6 +12,10 @@ type OrderedMsg struct {
 	index uint64
 }
 
+func (o OrderedMsg) String() string {
+	return fmt.Sprint(o.Msg)
+}
+
 type Msg interface {
 	Bool() bool
 	Int() int64
