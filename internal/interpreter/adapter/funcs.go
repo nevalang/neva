@@ -29,7 +29,7 @@ func (a Adapter) getFuncs(
 		for _, irAddr := range call.IO.In {
 			ch, ok := portToChan[irAddr]
 			if !ok {
-				panic("port not found")
+				panic("port not found: " + fmt.Sprint(irAddr))
 			}
 
 			if irAddr.Idx == nil {

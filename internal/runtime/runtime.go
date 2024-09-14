@@ -14,7 +14,7 @@ type Runtime struct {
 }
 
 func (p *Runtime) Run(ctx context.Context, prog Program) error {
-	debugValidation(prog)
+	// debugValidation(prog)
 
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
@@ -54,8 +54,8 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 func debugValidation(prog Program) {
 	type info struct {
 		PortAddr
-		Ref  string
-		Chan any
+		FuncRef string
+		Chan    any
 	}
 
 	receivers := map[string]info{}

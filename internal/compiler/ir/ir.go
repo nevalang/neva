@@ -1,5 +1,7 @@
 package ir
 
+import "fmt"
+
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
 	Ports map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
@@ -13,6 +15,13 @@ type PortAddr struct {
 	Path string `json:"path,omitempty"` // List of upstream nodes including the owner of the port.
 	Port string `json:"port,omitempty"` // Name of the port.
 	Idx  *uint8 `json:"idx,omitempty"`  // Optional index of a slot in array port.
+}
+
+func (p PortAddr) String() string {
+	if p.Idx == nil {
+		return p.Path + "." + p.Port
+	}
+	return fmt.Sprintf("%s.%s[%d]", p.Path, p.Port, *p.Idx)
 }
 
 // FuncCall describes call of a runtime function.

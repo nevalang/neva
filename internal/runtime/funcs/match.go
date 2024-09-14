@@ -26,7 +26,7 @@ func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 	}
 
 	if ifIn.Len() != thenOut.Len() {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+		return nil, errors.New("number of 'if' inports must match number of 'then' outports")
 	}
 
 	elseIn, err := io.In.Single("else")
