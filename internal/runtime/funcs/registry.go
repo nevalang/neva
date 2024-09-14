@@ -14,6 +14,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"lock":    lock{},
 		"unwrap":  unwrap{},
 		"fan_out": fanOut{},
+		"fan_in":  fanIn{},
 
 		// runtime
 		"panic": panicker{},

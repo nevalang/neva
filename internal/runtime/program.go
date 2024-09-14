@@ -254,11 +254,11 @@ func NewOutports(ports map[string]Outport) Outports {
 func (f Outports) Single(name string) (SingleOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
-		return SingleOutport{}, fmt.Errorf("port '%v' not found", name)
+		return SingleOutport{}, fmt.Errorf("outport '%v' not found", name)
 	}
 
 	if port.single == nil {
-		return SingleOutport{}, fmt.Errorf("port '%v' is not single", name)
+		return SingleOutport{}, fmt.Errorf("outport '%v' is not single", name)
 	}
 
 	return *port.single, nil

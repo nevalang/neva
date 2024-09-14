@@ -119,11 +119,13 @@ func (d Desugarer) networkFinalProcessing(
 		}
 
 		for i, sender := range senders {
+			s := sender
+
 			// 2. replace existing receiver with created fan-in
 			finalNet = append(finalNet, src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
-						PortAddr: &sender,
+						PortAddr: &s,
 					},
 					ReceiverSide: src.ConnectionReceiverSide{
 						Receivers: []src.ConnectionReceiver{
