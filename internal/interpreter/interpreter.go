@@ -19,7 +19,7 @@ type Interpreter struct {
 }
 
 func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *compiler.Error {
-	irProg, compilerErr := i.compiler.CompileToIR(main, debug)
+	result, compilerErr := i.compiler.CompileToIR(main, debug)
 	if compilerErr != nil {
 		return compiler.Error{
 			Location: &sourcecode.Location{
@@ -28,7 +28,7 @@ func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *co
 		}.Wrap(compilerErr)
 	}
 
-	rprog, err := i.adapter.Adapt(irProg, debug)
+	rprog, err := i.adapter.Adapt(result.IR, debug)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,

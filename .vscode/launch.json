@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "file_read_all"]
+      "args": ["run", "add_numbers"]
     },
     {
       "name": "LSP",
