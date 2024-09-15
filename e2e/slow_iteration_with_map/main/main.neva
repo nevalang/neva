@@ -14,8 +14,8 @@ flow Main(start) (stop) {
 }
 
 flow Slow(data int) (res int) {
-    nodes { time.Sleep<int>, Decr<int> }
-    :data -> sleep:data
-    $time.second -> sleep:dur
-    sleep -> decr -> :res
+    nodes { time.Delay<int>, Decr<int> }
+    :data -> delay:data
+    $time.second -> delay:dur
+    delay -> decr -> :res
 }

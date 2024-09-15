@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"<empty>\n<empty>\n",
+		"<base>\n<base>\n",
 		string(out),
 	)
 
