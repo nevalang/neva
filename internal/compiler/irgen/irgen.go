@@ -196,14 +196,17 @@ func (Generator) insertAndReturnInports(
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
 	// actually we can't use IO because we need to know how many slots are used
-	for addr := range nodeCtx.portsUsage.in {
-		addr := ir.PortAddr{
+	for relAddr := range nodeCtx.portsUsage.in {
+		absAddr := ir.PortAddr{
 			Path: joinNodePath(nodeCtx.path, "in"),
-			Port: addr.Port,
-			Idx:  addr.Idx,
+			Port: relAddr.Port,
 		}
-		result.Ports[addr] = struct{}{}
-		inports = append(inports, addr)
+		if relAddr.Idx != nil {
+			absAddr.IsArray = true
+			absAddr.Idx = *relAddr.Idx
+		}
+		result.Ports[absAddr] = struct{}{}
+		inports = append(inports, absAddr)
 	}
 
 	sortPortAddrs(inports)
@@ -223,7 +226,10 @@ func (Generator) insertAndReturnOutports(
 		irAddr := ir.PortAddr{
 			Path: joinNodePath(nodeCtx.path, "out"),
 			Port: addr.Port,
-			Idx:  addr.Idx,
+		}
+		if addr.Idx != nil {
+			irAddr.IsArray = true
+			irAddr.Idx = *addr.Idx
 		}
 		result.Ports[irAddr] = struct{}{}
 		outports = append(outports, irAddr)

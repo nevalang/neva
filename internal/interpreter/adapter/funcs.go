@@ -38,7 +38,7 @@ func (a Adapter) getFuncs(
 				panic("port not found: " + fmt.Sprint(irAddr))
 			}
 
-			if irAddr.Idx == nil {
+			if !irAddr.IsArray {
 				funcInports[irAddr.Port] = runtime.NewInport(
 					nil,
 					runtime.NewSingleInport(
@@ -55,9 +55,8 @@ func (a Adapter) getFuncs(
 					Path: irAddr.Path,
 					Port: irAddr.Port,
 				}
-				// FIXME order of slots is not synchronized with portToChan addresses
 				arrInportsToCreate[runtimePortAddr] = append(arrInportsToCreate[runtimePortAddr], arrPortSlot{
-					idx: *irAddr.Idx,
+					idx: irAddr.Idx,
 					ch:  ch,
 				})
 			}
@@ -109,14 +108,14 @@ func (a Adapter) getFuncs(
 				panic("port not found")
 			}
 
-			if irAddr.Idx == nil {
+			if !irAddr.IsArray {
 				funcOutports[irAddr.Port] = runtime.NewOutport(
 					runtime.NewSingleOutport(runtimeAddr, interceptor, ch),
 					nil,
 				)
 			} else {
 				arrOutportsToCreate[runtimeAddr] = append(arrOutportsToCreate[runtimeAddr], arrPortSlot{
-					idx: *irAddr.Idx,
+					idx: irAddr.Idx,
 					ch:  ch,
 				})
 			}

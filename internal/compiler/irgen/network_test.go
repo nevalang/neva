@@ -3,7 +3,6 @@ package irgen
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/stretchr/testify/require"
 )
@@ -45,22 +44,22 @@ func Test_sortPortAddrs(t *testing.T) {
 		{
 			name: "messed up order",
 			addrs: []ir.PortAddr{
-				{Path: "b", Port: "A", Idx: compiler.Pointer(uint8(1))},
-				{Path: "b", Port: "A", Idx: compiler.Pointer(uint8(0))},
-				{Path: "a", Port: "B", Idx: compiler.Pointer(uint8(0))},
-				{Path: "a", Port: "B", Idx: compiler.Pointer(uint8(1))},
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(2))},
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(1))},
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(0))},
+				{Path: "b", Port: "A", Idx: uint8(1)},
+				{Path: "b", Port: "A", Idx: uint8(0)},
+				{Path: "a", Port: "B", Idx: uint8(0)},
+				{Path: "a", Port: "B", Idx: uint8(1)},
+				{Path: "a", Port: "A", Idx: uint8(2)},
+				{Path: "a", Port: "A", Idx: uint8(1)},
+				{Path: "a", Port: "A", Idx: uint8(0)},
 			},
 			want: []ir.PortAddr{
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(0))},
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(1))},
-				{Path: "a", Port: "A", Idx: compiler.Pointer(uint8(2))},
-				{Path: "a", Port: "B", Idx: compiler.Pointer(uint8(0))},
-				{Path: "a", Port: "B", Idx: compiler.Pointer(uint8(1))},
-				{Path: "b", Port: "A", Idx: compiler.Pointer(uint8(0))},
-				{Path: "b", Port: "A", Idx: compiler.Pointer(uint8(1))},
+				{Path: "a", Port: "A", Idx: uint8(0)},
+				{Path: "a", Port: "A", Idx: uint8(1)},
+				{Path: "a", Port: "A", Idx: uint8(2)},
+				{Path: "a", Port: "B", Idx: uint8(0)},
+				{Path: "a", Port: "B", Idx: uint8(1)},
+				{Path: "b", Port: "A", Idx: uint8(0)},
+				{Path: "b", Port: "A", Idx: uint8(1)},
 			},
 		},
 	}
