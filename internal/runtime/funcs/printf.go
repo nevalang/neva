@@ -56,10 +56,6 @@ func (printf) handle(
 				return
 			}
 
-			if args[0] == nil {
-				fmt.Println("here")
-			}
-
 			res, err := format(tpl.Str(), args)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
