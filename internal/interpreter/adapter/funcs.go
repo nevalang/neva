@@ -3,6 +3,7 @@ package adapter
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/runtime"
@@ -15,6 +16,11 @@ func (a Adapter) getFuncs(
 ) ([]runtime.FuncCall, error) {
 	result := make([]runtime.FuncCall, 0, len(prog.Funcs))
 
+	type arrPortSlot struct {
+		idx uint8
+		ch  chan runtime.OrderedMsg
+	}
+
 	for _, call := range prog.Funcs {
 		// INPORTS
 
@@ -23,7 +29,7 @@ func (a Adapter) getFuncs(
 			len(call.IO.In),
 		)
 
-		arrInportsToCreate := make(map[ir.PortAddr][]<-chan runtime.OrderedMsg, len(call.IO.In))
+		arrInportsToCreate := make(map[runtime.PortAddr][]arrPortSlot, len(call.IO.In))
 
 		// in first run we fill single ports and collect array ports to tmp var
 		for _, irAddr := range call.IO.In {
@@ -45,15 +51,37 @@ func (a Adapter) getFuncs(
 					),
 				)
 			} else {
-				arrInportsToCreate[irAddr] = append(arrInportsToCreate[irAddr], ch)
+				runtimePortAddr := runtime.PortAddr{
+					Path: irAddr.Path,
+					Port: irAddr.Port,
+				}
+				// FIXME order of slots is not synchronized with portToChan addresses
+				arrInportsToCreate[runtimePortAddr] = append(arrInportsToCreate[runtimePortAddr], arrPortSlot{
+					idx: *irAddr.Idx,
+					ch:  ch,
+				})
 			}
+		}
+
+		// sort arr port slots by index
+		for addr, slots := range arrInportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+			arrInportsToCreate[addr] = slots
 		}
 
 		// single ports already handled, it's time to create arr ports from tmp var
 		for irAddr, slots := range arrInportsToCreate {
+			// for each array port we get sorted channels (slots)
+			chans := make([]<-chan runtime.OrderedMsg, len(slots))
+			for i, slot := range slots {
+				chans[i] = slot.ch
+			}
+
 			funcInports[irAddr.Port] = runtime.NewInport(
 				runtime.NewArrayInport(
-					slots,
+					chans,
 					runtime.PortAddr{
 						Path: irAddr.Path,
 						Port: irAddr.Port,
@@ -68,7 +96,7 @@ func (a Adapter) getFuncs(
 
 		funcOutports := make(map[string]runtime.Outport, len(call.IO.Out))
 
-		arrOutportsToCreate := map[runtime.PortAddr][]chan<- runtime.OrderedMsg{}
+		arrOutportsToCreate := map[runtime.PortAddr][]arrPortSlot{}
 
 		for _, irAddr := range call.IO.Out {
 			runtimeAddr := runtime.PortAddr{
@@ -87,14 +115,31 @@ func (a Adapter) getFuncs(
 					nil,
 				)
 			} else {
-				arrOutportsToCreate[runtimeAddr] = append(arrOutportsToCreate[runtimeAddr], ch)
+				arrOutportsToCreate[runtimeAddr] = append(arrOutportsToCreate[runtimeAddr], arrPortSlot{
+					idx: *irAddr.Idx,
+					ch:  ch,
+				})
 			}
 		}
 
+		// sort arr port slots by index
+		for addr, slots := range arrOutportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+			arrOutportsToCreate[addr] = slots
+		}
+
 		for runtimeAddr, slotChans := range arrOutportsToCreate {
+			// for each array port we get sorted channels (slots)
+			chans := make([]chan<- runtime.OrderedMsg, len(slotChans))
+			for i, slot := range slotChans {
+				chans[i] = slot.ch
+			}
+
 			funcOutports[runtimeAddr.Port] = runtime.NewOutport(
 				nil,
-				runtime.NewArrayOutport(runtimeAddr, interceptor, slotChans),
+				runtime.NewArrayOutport(runtimeAddr, interceptor, chans),
 			)
 		}
 
