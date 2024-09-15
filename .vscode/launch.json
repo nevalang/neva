@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "-debug", "99_bottles"]
+      "args": ["run", "99_bottles_implicit_fanout"]
     },
     {
       "name": "LSP",

@@ -373,27 +373,45 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 }
 
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
-	for i, slot := range a.slots {
-		idx := uint8(i)
-		a.interceptor.Sent(
-			PortSlotAddr{
-				PortAddr: PortAddr{
-					Path: a.addr.Path,
-					Port: a.addr.Port,
-				},
-				Index: &idx,
+	var idx uint8
+	skip := make(map[uint8]struct{}, len(a.slots))
+
+	for len(skip) < len(a.slots) {
+		if idx == uint8(len(a.slots)) {
+			idx = 0
+		}
+
+		if _, ok := skip[idx]; ok {
+			idx++
+			continue
+		}
+
+		slot := a.slots[idx]
+		orderedMsg := OrderedMsg{
+			Msg:   msg,
+			index: counter.Add(1),
+		}
+		slotAddr := PortSlotAddr{
+			PortAddr: PortAddr{
+				Path: a.addr.Path,
+				Port: a.addr.Port,
 			},
-			msg,
-		)
+			Index: &idx,
+		}
+
 		select {
 		case <-ctx.Done():
 			return false
-		case slot <- OrderedMsg{
-			Msg:   msg,
-			index: counter.Add(1),
-		}:
+		case slot <- orderedMsg:
+			skip[idx] = struct{}{}
+			idx++
+			a.interceptor.Sent(slotAddr, msg)
+		default:
+			idx++
+			continue
 		}
 	}
+
 	return true
 }
 
