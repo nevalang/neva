@@ -19,7 +19,7 @@ antlr:
 tygo:
 	@tygo generate
 
-# === Release Artifacts ===
+# === Release Build ===
 
 # build neva cli for all target platforms
 .PHONY: build
@@ -67,7 +67,7 @@ build-windows-amd64:
 build-windows-arm64:
 	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o neva-windows-arm64.exe ./cmd/neva
 
-# === Tool Artifacts ===
+# === LSP ===
 
 # build neva lsp for all target platforms
 .PHONY: build-lsp
