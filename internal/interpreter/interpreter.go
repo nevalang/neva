@@ -18,7 +18,12 @@ type Interpreter struct {
 	adapter  adapter.Adapter
 }
 
-func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *compiler.Error {
+func (i Interpreter) Interpret(
+	ctx context.Context,
+	main string,
+	debug bool,
+	debugFile string,
+) *compiler.Error {
 	result, compilerErr := i.compiler.CompileToIR(main, debug)
 	if compilerErr != nil {
 		return compiler.Error{
@@ -28,7 +33,7 @@ func (i Interpreter) Interpret(ctx context.Context, main string, debug bool) *co
 		}.Wrap(compilerErr)
 	}
 
-	rprog, err := i.adapter.Adapt(result.IR, debug)
+	rprog, err := i.adapter.Adapt(result.IR, debug, debugFile)
 	if err != nil {
 		return &compiler.Error{
 			Err:      err,

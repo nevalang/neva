@@ -12,12 +12,14 @@
     "designs",
     "designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField",
     "designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ",
+    "dotc",
     "feeded",
     "Field",
     "gqlgen",
     "graphql",
     "introspection",
     "irprotosdk",
+    "nativec",
     "pmod",
     "preceiver",
     "pworkers",
@@ -26,6 +28,7 @@
     "rndv",
     "rports",
     "vvin",
+    "wasmc",
     "типобезопасности"
   ],
   "workbench.colorCustomizations": {

@@ -2,19 +2,48 @@ package adapter
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type debugInterceptor struct{}
+type debugInterceptor struct {
+	logger Logger
+}
+
+type Logger interface {
+	Printf(format string, v ...any) error
+}
+
+type stdLogger struct{}
+
+func (s stdLogger) Printf(format string, v ...any) error {
+	_, err := fmt.Printf(format, v...)
+	return err
+}
+
+type fileLogger struct {
+	filepath string
+}
+
+func (f fileLogger) Printf(format string, v ...any) error {
+	file, err := os.OpenFile(f.filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = fmt.Fprintf(file, format, v...)
+	return err
+}
 
 func (d debugInterceptor) Sent(sender runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
-	fmt.Println("sent from:", d.formatPortSlotAddr(sender), d.formatMsg(msg))
+	d.logger.Printf("sent from: %v, msg: %v\n", d.formatPortSlotAddr(sender), d.formatMsg(msg))
 	return msg
 }
 
 func (d debugInterceptor) Received(receiver runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
-	fmt.Println("received to:", d.formatPortSlotAddr(receiver), d.formatMsg(msg))
+	d.logger.Printf("received to: %v, msg: %v\n", d.formatPortSlotAddr(receiver), d.formatMsg(msg))
 	return msg
 }
 

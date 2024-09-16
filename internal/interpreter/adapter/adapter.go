@@ -7,12 +7,16 @@ import (
 
 type Adapter struct{}
 
-func (a Adapter) Adapt(irProg *ir.Program, debug bool) (runtime.Program, error) {
+func (a Adapter) Adapt(irProg *ir.Program, debug bool, debugLogFilePath string) (runtime.Program, error) {
 	portToChan := a.getPorts(irProg)
 
 	var interceptor runtime.Interceptor
 	if debug {
-		interceptor = debugInterceptor{}
+		if debugLogFilePath == "" {
+			interceptor = debugInterceptor{logger: stdLogger{}}
+		} else {
+			interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
+		}
 	} else {
 		interceptor = prodInterceptor{}
 	}
