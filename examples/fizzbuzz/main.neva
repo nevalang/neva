@@ -50,19 +50,15 @@ flow Mod5(num int) (then int, else int) {
 
 // ModHelper checks if num can be devided by den
 flow ModHelper(num int, den int) (then int, else int) {
-    nodes { Mod, Eq, If, Switch<int> }
+    nodes { Mod, Eq, Cond<int> }
 
-    :num -> [mod:num, switch:data]
+    :num -> [mod:num, cond:data]
     :den -> mod:den
 
     mod:res -> eq:actual
     0 -> eq:compared
-    eq -> if
+    eq -> cond:if
 
-    if:then -> switch:case[0]
-    if:else -> switch:case[1]
-
-    switch:case[0] -> :then
-    switch:case[1] -> :else
-    switch:else -> :else // hack (not used)
+    cond:then -> :then
+    cond:else -> :else
 }
