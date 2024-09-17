@@ -38,19 +38,27 @@ func (f fileLogger) Printf(format string, v ...any) error {
 	return err
 }
 
-func (d debugInterceptor) Sent(sender runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
+func (d debugInterceptor) Sent(
+	sender runtime.PortSlotAddr,
+	msg runtime.Msg,
+) runtime.Msg {
 	d.logger.Printf(
-		"sent from: %v, msg: %v\n",
+		"sent | %v | %v\n",
 		d.formatPortSlotAddr(sender), d.formatMsg(msg),
 	)
 	return msg
 }
 
-func (d debugInterceptor) Received(receiver runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
+func (d debugInterceptor) Received(
+	receiver runtime.PortSlotAddr,
+	msg runtime.Msg,
+) runtime.Msg {
 	d.logger.Printf(
-		"received to: %v, msg: %v\n",
-		d.formatPortSlotAddr(receiver), d.formatMsg(msg),
+		"recv | %v | %v\n",
+		d.formatPortSlotAddr(receiver),
+		d.formatMsg(msg),
 	)
+
 	return msg
 }
 

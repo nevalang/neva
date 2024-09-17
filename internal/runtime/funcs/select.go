@@ -36,7 +36,7 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				return
 			}
 
-			then := make([]runtime.Msg, ifIn.Len())
+			then := make([]runtime.Msg, thenIn.Len())
 			if !thenIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
 				then[idx] = msg
 				return true

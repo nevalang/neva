@@ -186,10 +186,11 @@ func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool)
 			}
 			handled[idx] = struct{}{}
 		default:
-			idx++
-			continue
 		}
+
+		idx++
 	}
+
 	return true
 }
 

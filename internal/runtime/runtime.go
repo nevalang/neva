@@ -53,7 +53,7 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 
 func debugValidation(prog Program) {
 	type info struct {
-		PortAddr
+		PortSlotAddr
 		FuncRef string
 		Chan    any
 	}
@@ -64,11 +64,20 @@ func debugValidation(prog Program) {
 		for _, inport := range call.IO.In.ports {
 			if inport.single != nil {
 				k := fmt.Sprint(inport.single.ch)
-				receivers[k] = info{inport.single.addr, call.Ref, inport.single.ch}
+				receivers[k] = info{
+					PortSlotAddr: PortSlotAddr{inport.single.addr, nil},
+					FuncRef:      call.Ref,
+					Chan:         inport.single.ch,
+				}
 			} else if inport.array != nil {
-				for _, ch := range inport.array.chans {
+				for i, ch := range inport.array.chans {
 					k := fmt.Sprint(ch)
-					receivers[k] = info{inport.array.addr, call.Ref, ch}
+					idx := uint8(i)
+					receivers[k] = info{
+						PortSlotAddr: PortSlotAddr{inport.array.addr, &idx},
+						FuncRef:      call.Ref,
+						Chan:         ch,
+					}
 				}
 			} else {
 				panic("empty func call!")
@@ -77,16 +86,37 @@ func debugValidation(prog Program) {
 		for _, outport := range call.IO.Out.ports {
 			if outport.single != nil {
 				k := fmt.Sprint(outport.single.ch)
-				senders[k] = info{outport.single.addr, call.Ref, outport.single.ch}
+				senders[k] = info{
+					PortSlotAddr: PortSlotAddr{outport.single.addr, nil},
+					FuncRef:      call.Ref,
+					Chan:         outport.single.ch,
+				}
 			} else if outport.array != nil {
-				for _, ch := range outport.array.slots {
+				for i, ch := range outport.array.slots {
 					k := fmt.Sprint(ch)
-					senders[k] = info{outport.array.addr, call.Ref, ch}
+					idx := uint8(i)
+					senders[k] = info{
+						PortSlotAddr: PortSlotAddr{outport.array.addr, &idx},
+						FuncRef:      call.Ref,
+						Chan:         ch,
+					}
 				}
 			} else {
 				panic("empty func call!")
 			}
 		}
+	}
+
+	senders[fmt.Sprint(prog.Start.ch)] = info{
+		PortSlotAddr: PortSlotAddr{PortAddr{Path: "prog", Port: "Start"}, nil},
+		FuncRef:      "Program",
+		Chan:         prog.Start,
+	}
+
+	receivers[fmt.Sprint(prog.Stop.ch)] = info{
+		PortSlotAddr: PortSlotAddr{PortAddr{Path: "prog", Port: "Stop"}, nil},
+		FuncRef:      "Program",
+		Chan:         prog.Stop,
 	}
 
 	if len(senders) != len(receivers) {
@@ -97,23 +127,46 @@ func debugValidation(prog Program) {
 		)
 	}
 
-	for sChStr, sInfo := range senders {
-		if _, ok := receivers[sChStr]; !ok {
-			fmt.Printf("%v:%v -> ???\n", sInfo.PortAddr.Path, sInfo.PortAddr.Port)
+	formatSlotIndex := func(idx *uint8) string {
+		if idx != nil {
+			return fmt.Sprintf("[%d]", *idx)
+		}
+		return ""
+	}
+
+	for senderChanString, sInfo := range senders {
+		rInfo, ok := receivers[senderChanString]
+		if !ok {
+			fmt.Printf(
+				"%v | %v:%v%s -> ???\n",
+				senderChanString,
+				sInfo.PortSlotAddr.Path,
+				sInfo.PortSlotAddr.Port,
+				formatSlotIndex(sInfo.PortSlotAddr.Index),
+			)
 			continue
 		}
 		fmt.Printf(
-			"%v:%v -> %v:%v\n",
-			senders[sChStr].PortAddr.Path,
-			receivers[sChStr].PortAddr.Port,
-			receivers[sChStr].PortAddr.Path,
-			receivers[sChStr].PortAddr.Port,
+			"%v | %v:%v%s -> %v:%v%s\n",
+			senderChanString,
+			sInfo.PortSlotAddr.Path,
+			sInfo.PortSlotAddr.Port,
+			formatSlotIndex(sInfo.PortSlotAddr.Index),
+			rInfo.PortSlotAddr.Path,
+			rInfo.PortSlotAddr.Port,
+			formatSlotIndex(rInfo.PortSlotAddr.Index),
 		)
 	}
 
 	for rChStr, rInfo := range receivers {
 		if _, ok := senders[rChStr]; !ok {
-			fmt.Printf("??? -> %v:%v\n", rInfo.PortAddr.Path, rInfo.PortAddr.Port)
+			fmt.Printf(
+				"%v | ??? -> %v:%v%s\n",
+				rChStr,
+				rInfo.PortSlotAddr.Path,
+				rInfo.PortSlotAddr.Port,
+				formatSlotIndex(rInfo.PortSlotAddr.Index),
+			)
 			continue
 		}
 	}
