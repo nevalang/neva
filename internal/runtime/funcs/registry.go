@@ -26,6 +26,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"ternary":           ternary{},
 		"eq":                eq{},
 		"if":                if_{},
+		"cond":              cond{},
 		"not":               not{},
 		"and":               and{},
 		"or":                or{},

@@ -4,6 +4,11 @@
 #extern(if)
 pub flow If(data bool) (then any, else any)
 
+// Cond is an extended version of If
+// that allows to route data based on a condition.
+#extern(cond)
+pub flow Cond<T>(data T, if bool) (then T, else T)
+
 // Switch is a more powerful version of `If` that handles multiple cases.
 // Just like `If`, it is used for data routing.
 // If you need mapping, use Match or Select instead.

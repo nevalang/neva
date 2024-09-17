@@ -144,30 +144,56 @@ func NewArrayInport(
 	}
 }
 
+// Receive receives messages from all available array inport slots just once.
+// It returns false if context is done or if the provided function returns false.
+// The function is called for each message received.
+// The function should return false if it wants to stop receiving messages.
+// Functions are called in order of incoming messages, not in order of slots.
 func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool) bool {
-	for i, ch := range a.chans {
+	handled := make(map[int]struct{}, len(a.chans))
+	idx := 0
+
+	for len(handled) < len(a.chans) {
+		if idx == len(a.chans) {
+			idx = 0
+		}
+
+		if _, ok := handled[idx]; ok {
+			idx++
+			continue
+		}
+
 		select {
 		case <-ctx.Done():
 			return false
-		case v := <-ch:
-			msg := v.Msg
-			msg = a.interceptor.Received(
+		case v, ok := <-a.chans[idx]:
+			if !ok {
+				return false
+			}
+			index := uint8(idx)
+			msg := a.interceptor.Received(
 				PortSlotAddr{
 					PortAddr: PortAddr{
 						Path: a.addr.Path,
 						Port: a.addr.Port,
 					},
+					Index: &index,
 				},
-				msg,
+				v.Msg,
 			)
-			if !f(i, msg) {
+			if !f(idx, msg) {
 				return false
 			}
+			handled[idx] = struct{}{}
+		default:
+			idx++
+			continue
 		}
 	}
 	return true
 }
 
+// SelectedMsg is a message selected from available messages on all array inport slots.
 type SelectedMsg struct {
 	OrderedMsg
 	SlotIdx uint8
@@ -374,14 +400,14 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	var idx uint8
-	skip := make(map[uint8]struct{}, len(a.slots))
+	handled := make(map[uint8]struct{}, len(a.slots))
 
-	for len(skip) < len(a.slots) {
+	for len(handled) < len(a.slots) {
 		if idx == uint8(len(a.slots)) {
 			idx = 0
 		}
 
-		if _, ok := skip[idx]; ok {
+		if _, ok := handled[idx]; ok {
 			idx++
 			continue
 		}
@@ -403,7 +429,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 		case <-ctx.Done():
 			return false
 		case slot <- orderedMsg:
-			skip[idx] = struct{}{}
+			handled[idx] = struct{}{}
 			idx++
 			a.interceptor.Sent(slotAddr, msg)
 		default:

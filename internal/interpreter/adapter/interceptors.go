@@ -3,6 +3,7 @@ package adapter
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -38,12 +39,18 @@ func (f fileLogger) Printf(format string, v ...any) error {
 }
 
 func (d debugInterceptor) Sent(sender runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
-	d.logger.Printf("sent from: %v, msg: %v\n", d.formatPortSlotAddr(sender), d.formatMsg(msg))
+	d.logger.Printf(
+		"sent from: %v, msg: %v\n",
+		d.formatPortSlotAddr(sender), d.formatMsg(msg),
+	)
 	return msg
 }
 
 func (d debugInterceptor) Received(receiver runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
-	d.logger.Printf("received to: %v, msg: %v\n", d.formatPortSlotAddr(receiver), d.formatMsg(msg))
+	d.logger.Printf(
+		"received to: %v, msg: %v\n",
+		d.formatPortSlotAddr(receiver), d.formatMsg(msg),
+	)
 	return msg
 }
 
@@ -55,10 +62,18 @@ func (d debugInterceptor) formatMsg(msg runtime.Msg) string {
 }
 
 func (d debugInterceptor) formatPortSlotAddr(slotAddr runtime.PortSlotAddr) string {
+	parts := strings.Split(slotAddr.Path, "/")
+	lastPart := parts[len(parts)-1]
+	if lastPart == "in" || lastPart == "out" {
+		parts = parts[:len(parts)-1]
+	}
+	slotAddr.Path = strings.Join(parts, "/")
+
 	s := fmt.Sprintf("%v:%v", slotAddr.Path, slotAddr.Port)
 	if slotAddr.Index != nil {
 		s = fmt.Sprintf("%v[%v]", s, *slotAddr.Index)
 	}
+
 	return s
 }
 

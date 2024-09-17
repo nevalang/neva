@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// OrderedMsg is a message with a chronological index.
+// Ordered messages can be compared and sorted by their index.
 type OrderedMsg struct {
 	Msg
 	index uint64
