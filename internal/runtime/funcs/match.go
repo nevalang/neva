@@ -47,7 +47,7 @@ func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 			}
 
 			ifMsgs := make([]runtime.Msg, ifIn.Len())
-			if !ifIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !ifIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				ifMsgs[idx] = msg
 				return true
 			}) {
@@ -55,7 +55,7 @@ func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 			}
 
 			thenMsgs := make([]runtime.Msg, thenOut.Len())
-			if !thenOut.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !thenOut.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				thenMsgs[idx] = msg
 				return true
 			}) {

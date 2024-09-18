@@ -49,7 +49,7 @@ func (printf) handle(
 			}
 
 			args := make([]runtime.Msg, argsIn.Len())
-			if !argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !argsIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				args[idx] = msg
 				return true
 			}) {

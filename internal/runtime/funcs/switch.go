@@ -42,7 +42,7 @@ func (switcher) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			}
 
 			cases := make([]runtime.Msg, caseIn.Len())
-			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				cases[idx] = msg
 				return true
 			}) {
