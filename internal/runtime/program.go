@@ -206,7 +206,7 @@ func (s SelectedMsg) String() string {
 
 // Select returns the oldest
 func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
-	i := 0
+	i := 0                                        // full circles counter
 	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
 	for {
@@ -224,9 +224,23 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
+				index := uint8(idx)
+				msg := a.interceptor.Received(
+					PortSlotAddr{
+						PortAddr: PortAddr{
+							Path: a.addr.Path,
+							Port: a.addr.Port,
+						},
+						Index: &index,
+					},
+					orderedMsg.Msg,
+				)
 				buf = append(buf, SelectedMsg{
-					OrderedMsg: orderedMsg,
-					SlotIdx:    uint8(idx),
+					OrderedMsg: OrderedMsg{
+						Msg:   msg,
+						index: orderedMsg.index,
+					},
+					SlotIdx: index,
 				})
 			}
 		}
