@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"sort"
 )
 
@@ -413,12 +414,17 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	}
 }
 
+// SendAll sends the same message to all slots of the array outport.
+// It returns false if context is done.
+// It blocks until message is sent to all slots.
+// Slots are not guaranteed to be handled in order, message is sent to first available slot.
+// Each slot is guaranteed to be handled only once.
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
-	var idx uint8
-	handled := make(map[uint8]struct{}, len(a.slots))
+	idx := 0
+	handled := make(map[int]struct{}, len(a.slots))
 
 	for len(handled) < len(a.slots) {
-		if idx == uint8(len(a.slots)) {
+		if idx == len(a.slots) {
 			idx = 0
 		}
 
@@ -434,19 +440,20 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			Msg:   msg,
 			index: counter.Add(1),
 		}:
-			handled[idx] = struct{}{}
-			idx++
+			index := uint8(idx)
 			a.interceptor.Sent(PortSlotAddr{
 				PortAddr: PortAddr{
 					Path: a.addr.Path,
 					Port: a.addr.Port,
 				},
-				Index: &idx,
+				Index: &index,
 			}, msg)
+			handled[idx] = struct{}{}
 		default:
-			idx++
-			continue
+			runtime.Gosched() // it's critical to yield here to prevent scheduler starvation
 		}
+
+		idx++
 	}
 
 	return true
