@@ -26,7 +26,7 @@ func (d fanOut) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				return
 			}
 
-			if !dataOut.SendAll(ctx, dataMsg) {
+			if !dataOut.SendAllV4(ctx, dataMsg) {
 				return
 			}
 		}

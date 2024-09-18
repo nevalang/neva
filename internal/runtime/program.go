@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"runtime"
 	"sort"
+	"sync"
+	"time"
 )
 
 type Program struct {
@@ -414,12 +415,31 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	}
 }
 
-// SendAll sends the same message to all slots of the array outport.
+// FIXME: this version is not working for some programs due to blocking nature.
+func (a ArrayOutport) SendAllV1(ctx context.Context, msg Msg) bool {
+	for idx := range a.slots {
+		select {
+		case <-ctx.Done():
+			return false
+		case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
+		}
+		i := uint8(idx)
+		slotAddr := PortSlotAddr{
+			PortAddr: a.addr,
+			Index:    &i,
+		}
+		a.interceptor.Sent(slotAddr, msg)
+	}
+	return true
+}
+
+// FIXME: this version is not working for some reason!
+// SendAllV2 sends the same message to all slots of the array outport.
 // It returns false if context is done.
 // It blocks until message is sent to all slots.
 // Slots are not guaranteed to be handled in order, message is sent to first available slot.
 // Each slot is guaranteed to be handled only once.
-func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
+func (a ArrayOutport) SendAllV2(ctx context.Context, msg Msg) bool {
 	idx := 0
 	handled := make(map[int]struct{}, len(a.slots))
 
@@ -450,13 +470,71 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			}, msg)
 			handled[idx] = struct{}{}
 		default:
-			runtime.Gosched() // it's critical to yield here to prevent scheduler starvation
+			// runtime.Gosched() // it's critical to yield here to prevent scheduler starvation
+			time.Sleep(1 * time.Millisecond)
 		}
 
 		idx++
 	}
 
 	return true
+}
+
+// FIXME: this version is not working for some reason!
+func (a ArrayOutport) SendAllV3(ctx context.Context, msg Msg) bool {
+	sentCount := 0
+	receiverCount := len(a.slots)
+	startIdx := 0
+
+	for sentCount < receiverCount {
+		for idx := startIdx; idx < receiverCount; idx++ {
+			select {
+			case <-ctx.Done():
+				return false
+			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
+				// Successful send, mark as sent
+				i := uint8(idx)
+				slotAddr := PortSlotAddr{
+					PortAddr: a.addr,
+					Index:    &i,
+				}
+				a.interceptor.Sent(slotAddr, msg)
+				sentCount++
+				startIdx = (idx + 1) % receiverCount
+				break
+			default:
+				// Non-blocking, move to the next slot
+			}
+		}
+	}
+	return true
+}
+
+// TODO: figure out why this is the only working version of `SendAll`
+func (a ArrayOutport) SendAllV4(ctx context.Context, msg Msg) bool {
+	var wg sync.WaitGroup
+	success := true
+
+	for idx := range a.slots {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				success = false
+			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
+				i := uint8(idx)
+				slotAddr := PortSlotAddr{
+					PortAddr: a.addr,
+					Index:    &i,
+				}
+				a.interceptor.Sent(slotAddr, msg)
+			}
+		}(idx)
+	}
+
+	wg.Wait()
+	return success
 }
 
 func (a ArrayOutport) Len() int {
