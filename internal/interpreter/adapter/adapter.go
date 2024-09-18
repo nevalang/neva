@@ -1,6 +1,8 @@
 package adapter
 
 import (
+	"os"
+
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -15,6 +17,9 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool, debugLogFilePath string) 
 		if debugLogFilePath == "" {
 			interceptor = debugInterceptor{logger: stdLogger{}}
 		} else {
+			if err := a.clearDebugLogFile(debugLogFilePath); err != nil {
+				return runtime.Program{}, err
+			}
 			interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
 		}
 	} else {
@@ -55,6 +60,16 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool, debugLogFilePath string) 
 		Stop:      stop,
 		FuncCalls: funcs,
 	}, nil
+}
+
+func (a Adapter) clearDebugLogFile(filepath string) error {
+	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return nil
 }
 
 func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMsg {
