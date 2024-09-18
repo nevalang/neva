@@ -413,26 +413,22 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			continue
 		}
 
-		slot := a.slots[idx]
-		orderedMsg := OrderedMsg{
-			Msg:   msg,
-			index: counter.Add(1),
-		}
-		slotAddr := PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: a.addr.Path,
-				Port: a.addr.Port,
-			},
-			Index: &idx,
-		}
-
 		select {
 		case <-ctx.Done():
 			return false
-		case slot <- orderedMsg:
+		case a.slots[idx] <- OrderedMsg{
+			Msg:   msg,
+			index: counter.Add(1),
+		}:
 			handled[idx] = struct{}{}
 			idx++
-			a.interceptor.Sent(slotAddr, msg)
+			a.interceptor.Sent(PortSlotAddr{
+				PortAddr: PortAddr{
+					Path: a.addr.Path,
+					Port: a.addr.Port,
+				},
+				Index: &idx,
+			}, msg)
 		default:
 			idx++
 			continue
