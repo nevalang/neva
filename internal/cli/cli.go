@@ -120,8 +120,14 @@ func NewApp(
 						return err
 					}
 
-					return interpreter.New(bldr, goc).
-						Interpret(context.Background(), dirFromArg, debug, debugLogFilePath)
+					intrprtr := interpreter.New(bldr, goc)
+
+					compileErr := intrprtr.Interpret(context.Background(), dirFromArg, debug, debugLogFilePath)
+					if compileErr != nil {
+						return compileErr
+					}
+
+					return nil
 				},
 			},
 			{
