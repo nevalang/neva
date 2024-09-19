@@ -168,55 +168,53 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	}
 }
 
-
 // ReceiveAll receives messages from all available array inport slots just once.
 // It returns false if context is done or if the provided function returns false.
 // The function is called for each message received.
 // The function should return false if it wants to stop receiving messages.
 // Functions are called in order of incoming messages, not in order of slots.
 func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
-	handled := make(map[int]struct{}, len(a.chans))
-	idx := 0
+	var wg sync.WaitGroup
+	success := true
+	resultChan := make(chan bool, len(a.chans))
 
-	for len(handled) < len(a.chans) {
-		if idx == len(a.chans) {
-			idx = 0
-		}
-
-		if _, ok := handled[idx]; ok {
-			idx++
-			continue
-		}
-
-		select {
-		case <-ctx.Done():
-			return false
-		case v, ok := <-a.chans[idx]:
-			if !ok {
-				return false
-			}
-			index := uint8(idx)
-			msg := a.interceptor.Received(
-				PortSlotAddr{
-					PortAddr: PortAddr{
-						Path: a.addr.Path,
-						Port: a.addr.Port,
+	for idx := range a.chans {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				success = false
+			case v := <-a.chans[idx]:
+				index := uint8(idx)
+				msg := a.interceptor.Received(
+					PortSlotAddr{
+						PortAddr: PortAddr{
+							Path: a.addr.Path,
+							Port: a.addr.Port,
+						},
+						Index: &index,
 					},
-					Index: &index,
-				},
-				v.Msg,
-			)
-			if !f(idx, msg) {
-				return false
+					v.Msg,
+				)
+				resultChan <- f(idx, msg)
 			}
-			handled[idx] = struct{}{}
-		default:
-		}
-
-		idx++
+		}(idx)
 	}
 
-	return true
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	for result := range resultChan {
+		if !result {
+			success = false
+			break
+		}
+	}
+
+	return success
 }
 
 // SelectedMsg is a message selected from available messages on all array inport slots.
