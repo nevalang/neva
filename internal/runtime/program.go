@@ -385,7 +385,6 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 		},
 		msg,
 	)
-
 	select {
 	case <-ctx.Done():
 		return false

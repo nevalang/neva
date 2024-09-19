@@ -32,7 +32,7 @@ pub flow ReducePort<T>([port] T) (res T) {
 
 // === Iterators ===
 
-// These constatns are used for binding by Field flow.
+// These constants are used for binding by Field flow.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
 const idxPath list<string> = ['idx']
@@ -68,9 +68,8 @@ pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another. It's intented for "pure" mapping,
 // but could be combined with side-effects if needed.
-// Just like Map, For does not block the stream. As soon as one item processed,
+// Map does not block the stream. As soon as one item processed:
 // it sends it downstream and receives the next one.
-// Use Wait to wait for end of the stream.
 pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     nodes {
         fanOut FanOut<stream<T>>
