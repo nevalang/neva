@@ -49,7 +49,8 @@ pub interface IForHandler<T>(data T) (sig any)
 // Use Wait to wait for end of the stream.
 pub flow For<T>(data stream<T>) (data stream<T>) {
     nodes {
-        Lock<stream<T>>, handler IForHandler<T>
+        Lock<stream<T>>
+        handler IForHandler<T>
 
         #bind(dataPath)
         getData Field<T>
@@ -72,24 +73,16 @@ pub interface IMapHandler<T, Y>(data T) (res Y)
 // Use Wait to wait for end of the stream.
 pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     nodes {
-        wrap Struct<stream<Y>>
+        fanOut FanOut<stream<T>>
         handler IMapHandler<T, Y>
-
-        #bind(lastPath)
-        getLast Field<bool>
-
-        #bind(dataPath)
-        getData Field<T>
-
-        #bind(idxPath)
-        getIdx Field<int>
+        wrap Struct<stream<Y>>
     }
 
-    :data -> [getData, getLast, getIdx]
-
-    getLast -> wrap:last
-    getIdx -> wrap:idx
-    getData -> handler -> wrap:data
+    :data -> fanOut
+    
+    fanOut[0].idx -> wrap:idx
+    fanOut[1].last -> wrap:last
+    fanOut[2].data -> handler -> wrap:data
 
     wrap -> :res
 }
