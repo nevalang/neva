@@ -1,9 +1,11 @@
 package test
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -16,18 +18,30 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "fizzbuzz")
+	for i := 0; i < 1; i++ {
+		cmd := exec.Command("neva", "run", "fizzbuzz")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+		// Set a timeout for the command
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		cmd = exec.CommandContext(ctx, cmd.Path, cmd.Args[1:]...)
 
-	require.Equal(
-		t,
-		expected,
-		string(out),
-	)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			if ctx.Err() == context.DeadlineExceeded {
+				t.Fatal("Command timed out after 5 seconds")
+			}
+			require.NoError(t, err)
+		}
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(
+			t,
+			expected,
+			string(out),
+		)
+
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }
 
 var expected = `1

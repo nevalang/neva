@@ -16,18 +16,20 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "99_bottles")
+	for i := 0; i < 1; i++ {
+		cmd := exec.Command("neva", "run", "99_bottles")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
 
-	require.Equal(
-		t,
-		expected,
-		string(out),
-	)
+		require.Equal(
+			t,
+			expected,
+			string(out),
+		)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }
 
 var expected = `99 bottles of beer on the wall, 99 bottles of beer.

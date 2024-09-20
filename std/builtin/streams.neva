@@ -37,39 +37,16 @@ const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
 const idxPath list<string> = ['idx']
 
-// --- For ---
-
-// IForHandler is a dependency for For flow.
-pub interface IForHandler<T>(data T) (sig any)
-
-// For performs side-effect on stream item. It's for side-effects only.
-// If you want to map one stream onto another, use Map instead.
-// Just like Map, For does not block the stream. As soon as one item processed,
-// it sends it downstream and receives the next one.
-// Use Wait to wait for end of the stream.
-pub flow For<T>(data stream<T>) (data stream<T>) {
-    nodes {
-        Lock<stream<T>>
-        handler IForHandler<T>
-
-        #bind(dataPath)
-        getData Field<T>
-    }
-
-    :data -> [getData, lock:data]
-    getData -> handler -> lock:sig
-    lock -> :data
-}
-
 // --- Map ---
 
 // IMapHandler is a dependency for Map flow.
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
-// Map maps one stream onto another. It's intented for "pure" mapping,
-// but could be combined with side-effects if needed.
-// Map does not block the stream. As soon as one item processed:
-// it sends it downstream and receives the next one.
+// Map maps one stream onto another.
+// Just like For, it does not block the stream. As soon as one item processed,
+// it sends an item downstream and processes the next one.
+// It's not recommented but possible to also produce side-effects.
+// But, if all you need is side-effects, use For instead.
 pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     nodes {
         fanOut FanOut<stream<T>>
@@ -84,4 +61,29 @@ pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut[2].data -> handler -> wrap:data
 
     wrap -> :res
+}
+
+
+// --- For ---
+
+// IForHandler is a dependency for For flow.
+pub interface IForHandler<T>(data T) (sig any)
+
+// For processes stream to produce side-effects on its items.
+// Just like Map, it does not block the stream. As soon as one item processed,
+// it sends an item downstream and processes the next one.
+// For always sends the same stream, it's not intended for mapping.
+// If you need mapping (or mapping with side-effects), use Map instead.
+pub flow For<T>(data stream<T>) (data stream<T>) {
+    nodes {
+        Lock<stream<T>>
+        handler IForHandler<T>
+
+        #bind(dataPath)
+        getData Field<T>
+    }
+
+    :data -> [getData, lock:data]
+    getData -> handler -> lock:sig
+    lock -> :data
 }
