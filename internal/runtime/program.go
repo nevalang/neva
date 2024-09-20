@@ -281,29 +281,16 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 
 // Select returns oldest available message across all available array inport slots.
 func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
-	if len(a.buf) > 1 {
-		v := a.buf[0]
-		a.buf = a.buf[1:]
-		return v, true
+	if len(a.buf) == 0 {
+		batch, ok := a._select(ctx)
+		if !ok {
+			return SelectedMsg{}, false
+		}
+		a.buf = batch
 	}
 
-	if len(a.buf) == 1 {
-		v := a.buf[0]
-		a.buf = nil
-		return v, true
-	}
-
-	batch, ok := a._select(ctx)
-	if !ok {
-		return SelectedMsg{}, false
-	}
-
-	if len(batch) == 1 {
-		return batch[0], true
-	}
-
-	v := batch[0]
-	a.buf = batch[1:]
+	v := a.buf[0]
+	a.buf = a.buf[1:]
 
 	return v, true
 }
