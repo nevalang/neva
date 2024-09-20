@@ -1,12 +1,12 @@
 ![Big Header](./assets/header/big.svg "Big header with nevalang logo")
 
-**<p align="center">Flow-Based Programming Language</p>**
+**<p align="center">Dataflow Programming Language</p>**
 
 ![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
 > ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
 
-# Neva
+# Nevalang
 
 A general-purpose dataflow programming language with static types and implicit parallelism. Compiles to machine code and Go.
 
@@ -37,7 +37,7 @@ curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.s
 If your device is connected to a chinese network:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/cnina/install.sh | bash
 ```
 
 For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from releases if installed won't work):

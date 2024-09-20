@@ -8,7 +8,7 @@ import (
 
 type intSub struct{}
 
-func (intSub) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intSub) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err

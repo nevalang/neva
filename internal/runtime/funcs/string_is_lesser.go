@@ -8,7 +8,7 @@ import (
 
 type strIsLesser struct{}
 
-func (p strIsLesser) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p strIsLesser) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	actualIn, err := io.In.Single("actual")
 	if err != nil {
 		return nil, err

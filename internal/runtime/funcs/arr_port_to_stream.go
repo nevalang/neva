@@ -10,7 +10,7 @@ import (
 type arrayPortToStream struct{}
 
 func (arrayPortToStream) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
 	portIn, err := io.In.Array("port")
@@ -23,18 +23,27 @@ func (arrayPortToStream) Create(
 		return nil, err
 	}
 
+	// TODO: could be optimized by using portIn.ReceiveAll()
+	// but we need to handle order of sending messages to stream
 	return func(ctx context.Context) {
+		l := portIn.Len()
+
 		for {
-			l := portIn.Len()
-			if !portIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			for idx := 0; idx < l; idx++ {
+				msg, ok := portIn.Receive(ctx, idx)
+				if !ok {
+					return
+				}
+
 				item := streamItem(
 					msg,
 					int64(idx),
 					idx == l-1,
 				)
-				return seqOut.Send(ctx, item)
-			}) {
-				return
+
+				if !seqOut.Send(ctx, item) {
+					return
+				}
 			}
 		}
 	}, nil

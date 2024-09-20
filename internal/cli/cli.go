@@ -27,8 +27,9 @@ func NewApp(
 	dotc compiler.Compiler,
 ) *cli.App {
 	var (
-		target string
-		debug  bool
+		target           string
+		debug            bool
+		debugLogFilePath string
 	)
 
 	return &cli.App{
@@ -103,16 +104,29 @@ func NewApp(
 						Usage:       "Show message events in stdout",
 						Destination: &debug,
 					},
+					&cli.StringFlag{
+						Name:        "debugLogFilePath",
+						Usage:       "File path to write debug log (only available if -debug is passed)",
+						Destination: &debugLogFilePath,
+					},
 				},
 				Action: func(cCtx *cli.Context) error {
+					if !debug && debugLogFilePath != "" {
+						return fmt.Errorf("debugFile can only be used with -debug flag")
+					}
+
 					dirFromArg, err := getMainPkgFromArgs(cCtx)
 					if err != nil {
 						return err
 					}
-					intr := interpreter.New(bldr, goc)
-					if err := intr.Interpret(context.Background(), dirFromArg, debug); err != nil {
-						return err
+
+					intrprtr := interpreter.New(bldr, goc)
+
+					compileErr := intrprtr.Interpret(context.Background(), dirFromArg, debug, debugLogFilePath)
+					if compileErr != nil {
+						return compileErr
 					}
+
 					return nil
 				},
 			},

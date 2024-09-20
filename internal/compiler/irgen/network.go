@@ -47,15 +47,17 @@ func (g Generator) processNetwork(
 				nodesPortsUsage[arrBypassReceiver.Node].in[addr] = struct{}{}
 
 				irSenderSlot := ir.PortAddr{
-					Path: joinNodePath(nodeCtx.path, arrBypassSender.Node),
-					Port: arrBypassSender.Port,
-					Idx:  &slotIdxCopy,
+					Path:    joinNodePath(nodeCtx.path, arrBypassSender.Node),
+					Port:    arrBypassSender.Port,
+					Idx:     slotIdxCopy,
+					IsArray: true,
 				}
 
 				irReceiverSlot := ir.PortAddr{
-					Path: joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
-					Port: arrBypassReceiver.Port,
-					Idx:  &slotIdxCopy,
+					Path:    joinNodePath(nodeCtx.path, arrBypassReceiver.Node) + "/in",
+					Port:    arrBypassReceiver.Port,
+					Idx:     slotIdxCopy,
+					IsArray: true,
 				}
 
 				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
@@ -131,7 +133,10 @@ func (g Generator) processSenderSide(
 	irSenderPort := ir.PortAddr{
 		Path: joinNodePath(nodeCtx.path, senderSide.PortAddr.Node),
 		Port: senderSide.PortAddr.Port,
-		Idx:  senderSide.PortAddr.Idx,
+	}
+	if senderSide.PortAddr.Idx != nil {
+		irSenderPort.IsArray = true
+		irSenderPort.Idx = *senderSide.PortAddr.Idx
 	}
 
 	if senderSide.PortAddr.Node != "in" {
@@ -150,10 +155,10 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 		if addrs[i].Port != addrs[j].Port {
 			return addrs[i].Port < addrs[j].Port
 		}
-		if addrs[i].Idx == nil {
+		if !addrs[i].IsArray {
 			return true
 		}
-		return *addrs[i].Idx < *addrs[j].Idx
+		return addrs[i].Idx < addrs[j].Idx
 	})
 }
 
@@ -162,7 +167,10 @@ func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionRece
 	result := ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,
-		Idx:  side.PortAddr.Idx,
+	}
+	if side.PortAddr.Idx != nil {
+		result.IsArray = true
+		result.Idx = *side.PortAddr.Idx
 	}
 
 	// 'out' node is actually receiver but we don't want to have 'out/in' path

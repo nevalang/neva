@@ -5,34 +5,36 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 )
 
 type Program struct {
-	Start, Stop chan IndexedMsg
-	Connections map[Receiver][]Sender
-	Funcs       []FuncCall
+	// for programmer start is inport and stop is outport, but for runtime it's inverted
+	Start     *SingleOutport // Start must be inport of the first function
+	Stop      *SingleInport  // Stop must be outport of the (one of the) terminator function(s)
+	FuncCalls []FuncCall
 }
 
 type FuncCall struct {
-	Ref       string
-	IO        FuncIO
-	ConfigMsg Msg
+	Ref    string
+	IO     IO
+	Config Msg
 }
 
-type FuncIO struct {
-	In  FuncInports
-	Out FuncOutports
+type IO struct {
+	In  Inports
+	Out Outports
 }
 
-type FuncInports struct {
-	ports map[string]FuncInport
+type Inports struct {
+	ports map[string]Inport
 }
 
-func (f FuncInports) Ports() map[string]FuncInport {
+func (f Inports) Ports() map[string]Inport {
 	return f.ports
 }
 
-func (f FuncInports) Single(name string) (SingleInport, error) {
+func (f Inports) Single(name string) (SingleInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return SingleInport{}, errors.New("port not found by name")
@@ -45,51 +47,72 @@ func (f FuncInports) Single(name string) (SingleInport, error) {
 	return *ports.single, nil
 }
 
-func NewFuncInports(ports map[string]FuncInport) FuncInports {
-	return FuncInports{
+func NewInports(ports map[string]Inport) Inports {
+	return Inports{
 		ports: ports,
 	}
 }
 
-type FuncInport struct {
+type Inport struct {
 	array  *ArrayInport
 	single *SingleInport
 }
 
-func (f FuncInport) Array() *ArrayInport {
+func (f Inport) Array() *ArrayInport {
 	return f.array
 }
 
-func (f FuncInport) Single() *SingleInport {
+func (f Inport) Single() *SingleInport {
 	return f.single
 }
 
-func NewFuncInport(
+func NewInport(
 	array *ArrayInport,
 	single *SingleInport,
-) FuncInport {
-	return FuncInport{
+) Inport {
+	return Inport{
 		array:  array,
 		single: single,
 	}
 }
 
-type SingleInport struct{ ch <-chan IndexedMsg }
+type SingleInport struct {
+	ch          <-chan OrderedMsg
+	addr        PortAddr
+	interceptor Interceptor
+}
 
-func NewSingleInport(ch <-chan IndexedMsg) *SingleInport {
-	return &SingleInport{ch}
+func NewSingleInport(
+	ch <-chan OrderedMsg,
+	addr PortAddr,
+	interceptor Interceptor,
+) *SingleInport {
+	return &SingleInport{ch, addr, interceptor}
 }
 
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
+	var msg Msg
 	select {
 	case <-ctx.Done():
 		return nil, false
-	case msg := <-s.ch:
-		return msg.data, true
+	case v := <-s.ch:
+		msg = v.Msg
 	}
+
+	msg = s.interceptor.Received(
+		PortSlotAddr{
+			PortAddr: PortAddr{
+				Path: s.addr.Path,
+				Port: s.addr.Port,
+			},
+		},
+		msg,
+	)
+
+	return msg, true
 }
 
-func (f FuncInports) Array(name string) (ArrayInport, error) {
+func (f Inports) Array(name string) (ArrayInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
 		return ArrayInport{}, errors.New("port not found by name")
@@ -102,110 +125,202 @@ func (f FuncInports) Array(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
-type ArrayInport struct{ chans []<-chan IndexedMsg }
-
-func NewArrayInport(chans []<-chan IndexedMsg) *ArrayInport {
-	return &ArrayInport{chans}
+type ArrayInport struct {
+	addr        PortAddr
+	interceptor Interceptor
+	chans       []<-chan OrderedMsg
+	buf         []SelectedMsg // Select functionality needs buffer to guarantee correct order.
 }
 
-func (a ArrayInport) Receive(ctx context.Context, f func(idx int, msg Msg) bool) bool {
-	for i, ch := range a.chans {
-		select {
-		case msg := <-ch:
-			if !f(i, msg.data) {
-				return false
+func NewArrayInport(
+	chans []<-chan OrderedMsg,
+	addr PortAddr,
+	interceptor Interceptor,
+) *ArrayInport {
+	return &ArrayInport{
+		addr:        addr,
+		interceptor: interceptor,
+		chans:       chans,
+		buf:         make([]SelectedMsg, 0, len(chans)^2),
+	}
+}
+
+// Receive receives a message from a specific slot of the array inport.
+// It returns the received message and a boolean indicating success.
+// It returns false if the context is done or if the channel is closed.
+func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
+	select {
+	case <-ctx.Done():
+		return nil, false
+	case v := <-a.chans[idx]:
+		index := uint8(idx)
+		msg := a.interceptor.Received(
+			PortSlotAddr{
+				PortAddr: PortAddr{
+					Path: a.addr.Path,
+					Port: a.addr.Port,
+				},
+				Index: &index,
+			},
+			v.Msg,
+		)
+		return msg, true
+	}
+}
+
+// ReceiveAll receives messages from all available array inport slots just once.
+// It returns false if context is done or if the provided function returns false.
+// The function is called for each message received.
+// The function should return false if it wants to stop receiving messages.
+// Functions are called in order of incoming messages, not in order of slots.
+func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
+	// IDEA return channel instead of taking function
+	var wg sync.WaitGroup
+	success := true
+	resultChan := make(chan bool, len(a.chans))
+
+	wg.Add(len(a.chans))
+	for idx := range a.chans {
+		go func(idx int) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				success = false
+			case v := <-a.chans[idx]:
+				index := uint8(idx)
+				msg := a.interceptor.Received(
+					PortSlotAddr{
+						PortAddr: PortAddr{
+							Path: a.addr.Path,
+							Port: a.addr.Port,
+						},
+						Index: &index,
+					},
+					v.Msg,
+				)
+				resultChan <- f(idx, msg)
 			}
-		case <-ctx.Done():
-			return false
+		}(idx)
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	for result := range resultChan {
+		if !result {
+			success = false
+			break
 		}
 	}
-	return true
+
+	return success
 }
 
-type SelectedMessage struct {
-	Data    Msg
+// SelectedMsg is a message selected from available messages on all array inport slots.
+type SelectedMsg struct {
+	OrderedMsg
 	SlotIdx uint8
 }
 
-// Select allows to receive messages in a serialized manner.
-// It implements same algorithm as runtime's fan-in.
-// It threads array-inport's slots as senders.
-func (a ArrayInport) Select(ctx context.Context) ([]SelectedMessage, bool) {
-	type bufferedMsg struct {
-		slot uint8
-		msg  IndexedMsg
-	}
+func (s SelectedMsg) String() string {
+	return fmt.Sprint(s.OrderedMsg)
+}
 
-	i := 0
-	buf := make([]bufferedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
+// Select returns the oldest
+func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
+	i := 0                                        // full circles counter
+	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
 	for {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
-		// if we do len(ss) iterations, that's ok, because we will go back and check again
+		// if we do len(ss) iterations, that's ok, because we will go back and check
 		if len(buf) > 0 && i >= len(a.chans) {
 			break
 		}
 
-		for idx, ch := range a.chans {
+		for slotIdx, ch := range a.chans {
 			select {
+			default:
+				continue
 			case <-ctx.Done():
 				return nil, false
-			case indexedMsg := <-ch:
-				buf = append(buf, bufferedMsg{
-					slot: uint8(idx),
-					msg:  indexedMsg,
+			case orderedMsg := <-ch:
+				index := uint8(slotIdx)
+				msg := a.interceptor.Received(
+					PortSlotAddr{
+						PortAddr: PortAddr{
+							Path: a.addr.Path,
+							Port: a.addr.Port,
+						},
+						Index: &index,
+					},
+					orderedMsg.Msg,
+				)
+				buf = append(buf, SelectedMsg{
+					OrderedMsg: OrderedMsg{
+						Msg:   msg,
+						index: orderedMsg.index,
+					},
+					SlotIdx: index,
 				})
-			default:
 			}
 		}
-
-		// TODO: properly add runtime.Gosched()
 
 		i++
 	}
 
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].msg.index < buf[j].msg.index
+		return buf[i].OrderedMsg.index < buf[j].OrderedMsg.index
 	})
 
-	res := make([]SelectedMessage, len(buf))
-	for i := range buf {
-		res[i] = SelectedMessage{
-			SlotIdx: buf[i].slot,
-			Data:    buf[i].msg.data,
+	return buf, true
+}
+
+// Select returns oldest available message across all available array inport slots.
+func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
+	if len(a.buf) == 0 {
+		batch, ok := a._select(ctx)
+		if !ok {
+			return SelectedMsg{}, false
 		}
+		a.buf = batch
 	}
 
-	return res, true
+	v := a.buf[0]
+	a.buf = a.buf[1:]
+
+	return v, true
 }
 
 func (a ArrayInport) Len() int {
 	return len(a.chans)
 }
 
-type FuncOutports struct {
-	ports map[string]FuncOutport
+type Outports struct {
+	ports map[string]Outport
 }
 
-func NewFuncOutports(ports map[string]FuncOutport) FuncOutports {
-	return FuncOutports{ports}
+func NewOutports(ports map[string]Outport) Outports {
+	return Outports{ports}
 }
 
-func (f FuncOutports) Single(name string) (SingleOutport, error) {
+func (f Outports) Single(name string) (SingleOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
-		return SingleOutport{}, fmt.Errorf("port '%v' not found", name)
+		return SingleOutport{}, fmt.Errorf("outport '%v' not found", name)
 	}
 
 	if port.single == nil {
-		return SingleOutport{}, fmt.Errorf("port '%v' is not single", name)
+		return SingleOutport{}, fmt.Errorf("outport '%v' is not single", name)
 	}
 
 	return *port.single, nil
 }
 
-func (f FuncOutports) Array(name string) (ArrayOutport, error) {
+func (f Outports) Array(name string) (ArrayOutport, error) {
 	port, ok := f.ports[name]
 	if !ok {
 		return ArrayOutport{}, fmt.Errorf("port '%v' not found", name)
@@ -218,76 +333,133 @@ func (f FuncOutports) Array(name string) (ArrayOutport, error) {
 	return *port.array, nil
 }
 
-type FuncOutport struct {
+type Outport struct {
 	single *SingleOutport
 	array  *ArrayOutport
 }
 
-func NewFuncOutport(
+func NewOutport(
 	single *SingleOutport,
 	array *ArrayOutport,
-) FuncOutport {
-	return FuncOutport{single, array}
+) Outport {
+	return Outport{single, array}
 }
 
 type SingleOutport struct {
-	addr PortAddr
-	ch   chan<- IndexedMsg
+	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
+	interceptor Interceptor
+	ch          chan<- OrderedMsg
 }
 
 func NewSingleOutport(
 	addr PortAddr,
-	ch chan<- IndexedMsg,
+	interceptor Interceptor,
+	ch chan<- OrderedMsg,
 ) *SingleOutport {
 	return &SingleOutport{
-		addr: addr,
-		ch:   ch,
+		addr:        addr,
+		interceptor: interceptor,
+		ch:          ch,
 	}
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
+	msg = s.interceptor.Sent(
+		PortSlotAddr{
+			PortAddr: PortAddr{
+				Path: s.addr.Path,
+				Port: s.addr.Port,
+			},
+		},
+		msg,
+	)
 	select {
-	case s.ch <- IndexedMsg{
-		data:  msg,
+	case <-ctx.Done():
+		return false
+	case s.ch <- OrderedMsg{
+		Msg:   msg,
 		index: counter.Add(1),
 	}:
 		return true
-	case <-ctx.Done():
-		return false
 	}
 }
 
-type ArrayOutport struct {
-	slots []chan<- IndexedMsg
+type Interceptor interface {
+	Sent(PortSlotAddr, Msg) Msg
+	Received(PortSlotAddr, Msg) Msg
 }
 
-func NewArrayOutport(slots []chan<- IndexedMsg) *ArrayOutport {
-	return &ArrayOutport{slots: slots}
+type PortSlotAddr struct {
+	PortAddr
+	Index *uint8 // nil means single port
+}
+
+type ArrayOutport struct {
+	addr        PortAddr
+	interceptor Interceptor
+	slots       []chan<- OrderedMsg
+}
+
+func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- OrderedMsg) *ArrayOutport {
+	return &ArrayOutport{addr: addr, slots: slots, interceptor: interceptor}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
+	a.interceptor.Sent(
+		PortSlotAddr{
+			PortAddr: PortAddr{
+				Path: a.addr.Path,
+				Port: a.addr.Port,
+			},
+			Index: &idx,
+		},
+		msg,
+	)
 	select {
 	case <-ctx.Done():
 		return false
-	case a.slots[idx] <- IndexedMsg{data: msg, index: counter.Add(1)}:
+	case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
 		return true
 	}
 }
 
+// SendAllV2 sends the same message to all slots of the array outport.
+// It returns false if context is done.
+// It blocks until message is sent to all slots.
+// Slots are not guaranteed to be handled in order, message is sent to first available slot.
+// Each slot is guaranteed to be handled only once.
+// TODO: figure out why this is the only working version of `SendAll`
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
-	for _, slot := range a.slots {
-		select {
-		case <-ctx.Done():
-			return false
-		case slot <- IndexedMsg{
-			data:  msg,
-			index: counter.Add(1),
-		}:
-		}
+	var wg sync.WaitGroup
+	success := true
+
+	for idx := range a.slots {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				success = false
+			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
+				i := uint8(idx)
+				slotAddr := PortSlotAddr{
+					PortAddr: a.addr,
+					Index:    &i,
+				}
+				a.interceptor.Sent(slotAddr, msg)
+			}
+		}(idx)
 	}
-	return true
+
+	wg.Wait()
+	return success
 }
 
 func (a ArrayOutport) Len() int {
 	return len(a.slots)
+}
+
+type PortAddr struct {
+	Path string
+	Port string
 }

@@ -4,7 +4,7 @@ const strings list<string> = ['a', 'b', 'c']
 
 flow Main(start) (stop) {
   nodes {
-    r1 Range,
+    r1 Range
     Iter<string>
     streams.Zip<int, string>
     For{Println}

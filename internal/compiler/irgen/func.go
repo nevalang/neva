@@ -10,7 +10,7 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-func getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {
+func (Generator) getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {
 	args, ok := flow.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil

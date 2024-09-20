@@ -12,8 +12,8 @@ flow Main(start) (stop) {
 }
 
 flow Slow(data int) (sig any) {
-    nodes { time.Sleep, Println }
-    :data -> sleep:data
-    $time.second -> sleep:dur
-    sleep -> println -> :sig
+    nodes { time.Delay, Println }
+    :data -> delay:data
+    $time.second -> delay:dur
+    delay -> println -> :sig
 }

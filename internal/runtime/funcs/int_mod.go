@@ -8,7 +8,7 @@ import (
 
 type intMod struct{}
 
-func (intMod) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	numIn, err := io.In.Single("num") // numerator
 	if err != nil {
 		return nil, err

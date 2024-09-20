@@ -9,7 +9,7 @@ import (
 type streamToList struct{}
 
 func (s streamToList) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	seqIn, err := io.In.Single("seq")

@@ -10,11 +10,14 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
+// Build represents all the information in source code, that must be compiled.
+// User usually don't interacts with this abstraction, but it's important for compiler.
 type Build struct {
 	EntryModRef ModuleRef            `json:"entryModRef,omitempty"`
 	Modules     map[ModuleRef]Module `json:"modules,omitempty"`
 }
 
+// Module is unit of distribution.
 type Module struct {
 	Manifest ModuleManifest     `json:"manifest,omitempty"`
 	Packages map[string]Package `json:"packages,omitempty"`
@@ -128,16 +131,19 @@ const (
 	InterfaceEntity EntityKind = "interface_entity"
 )
 
+// Component is unit of computation.
 type Component struct {
-	Directives map[Directive][]string `json:"directives,omitempty"`
 	Interface  `json:"interface,omitempty"`
-	Nodes      map[string]Node `json:"nodes,omitempty"`
-	Net        []Connection    `json:"net,omitempty"`
-	Meta       core.Meta       `json:"meta,omitempty"`
+	Directives map[Directive][]string `json:"directives,omitempty"`
+	Nodes      map[string]Node        `json:"nodes,omitempty"`
+	Net        []Connection           `json:"net,omitempty"`
+	Meta       core.Meta              `json:"meta,omitempty"`
 }
 
+// Directive is an explicit instruction for compiler.
 type Directive string
 
+// Interface describes abstract component.
 type Interface struct {
 	TypeParams TypeParams `json:"typeParams,omitempty"`
 	IO         IO         `json:"io,omitempty,"`
@@ -149,6 +155,7 @@ type TypeParams struct {
 	Meta   core.Meta  `json:"meta,omitempty"`
 }
 
+// ToFrame is a utility function.
 func (t TypeParams) ToFrame() map[string]ts.Def {
 	frame := make(map[string]ts.Def, len(t.Params))
 	for _, param := range t.Params {
@@ -175,8 +182,8 @@ type Node struct {
 	Directives map[Directive][]string `json:"directives,omitempty"`
 	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
 	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
-	ErrGuard   bool                   `json:"errGuard,omitempty"`
-	Deps       map[string]Node        `json:"flowDi,omitempty"`
+	ErrGuard   bool                   `json:"errGuard,omitempty"` // ErrGuard explains if node is used with `?` operator.
+	Deps       map[string]Node        `json:"flowDi,omitempty"`   // Dependency Injection.
 	Meta       core.Meta              `json:"meta,omitempty"`
 }
 
@@ -197,6 +204,7 @@ func (t TypeArgs) String() string {
 	return s + ">"
 }
 
+// Const represents abstraction that allow to define reusable message value.
 type Const struct {
 	Ref     *core.EntityRef `json:"ref,omitempty"`
 	Message *Message        `json:"value,omitempty"`

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -21,12 +22,20 @@ func Test(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		cmd := exec.Command("neva", "run", "for_loop_over_list")
 		out, err := cmd.CombinedOutput()
-		require.NoError(t, err)
+		if err != nil {
+			exitError, ok := err.(*exec.ExitError)
+			if ok {
+				t.Fatalf("Command failed with exit code %d. Error output:\n%s", exitError.ExitCode(), string(out))
+			} else {
+				t.Fatalf("Command failed with error: %v. Output:\n%s", err, string(out))
+			}
+		}
 		require.Equal(
 			t,
 			"1\n2\n3\n",
 			string(out),
+			fmt.Sprintf("Unexpected output on iteration %d", i),
 		)
-		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(t, 0, cmd.ProcessState.ExitCode(), fmt.Sprintf("Unexpected exit code on iteration %d", i))
 	}
 }

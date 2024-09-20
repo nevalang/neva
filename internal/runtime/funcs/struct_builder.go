@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -10,7 +11,7 @@ import (
 type structBuilder struct{}
 
 func (s structBuilder) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	if len(io.In.Ports()) == 0 {
@@ -39,15 +40,25 @@ func (structBuilder) Handle(
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
-			var structure = make(map[string]runtime.Msg, len(inports))
+			structure := make(map[string]runtime.Msg, len(inports))
+			var mu sync.Mutex
+			var wg sync.WaitGroup
+			wg.Add(len(inports))
 
 			for inportName, inportChan := range inports {
-				msg, ok := inportChan.Receive(ctx)
-				if !ok {
-					return
-				}
-				structure[inportName] = msg
+				go func(name string, ch runtime.SingleInport) {
+					defer wg.Done()
+					msg, ok := ch.Receive(ctx)
+					if !ok {
+						return
+					}
+					mu.Lock()
+					structure[name] = msg
+					mu.Unlock()
+				}(inportName, inportChan)
 			}
+
+			wg.Wait()
 
 			if !outport.Send(ctx, runtime.NewMapMsg(structure)) {
 				return

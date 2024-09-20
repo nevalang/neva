@@ -19,13 +19,12 @@ flow FizzBuzz(data int) (res string|int) {
 
     mod5:then -> select:if[2]
     'Buzz' -> select:then[2]
-    
     mod5:else -> select:if[3]
 
     select -> :res
 }
 
-flow Mod15(num int) (then any, else int) {
+flow Mod15(num int) (then int, else int) {
     nodes { h ModHelper }
     :num -> h:num
     15 -> h:den
@@ -33,7 +32,7 @@ flow Mod15(num int) (then any, else int) {
     h:else -> :else
 }
 
-flow Mod3(num int) (then any, else int) {
+flow Mod3(num int) (then int, else int) {
     nodes { h ModHelper }
     :num -> h:num
     3 -> h:den
@@ -41,7 +40,7 @@ flow Mod3(num int) (then any, else int) {
     h:else -> :else
 }
 
-flow Mod5(num int) (then any, else int) {
+flow Mod5(num int) (then int, else int) {
     nodes { h ModHelper }
     :num -> h:num
     5 -> h:den
@@ -49,17 +48,17 @@ flow Mod5(num int) (then any, else int) {
     h:else -> :else
 }
 
-flow ModHelper(num int, den int) (then any, else int) {
-    nodes { Mod, Eq, If, Lock<int> }
+// ModHelper checks if num can be devided by den
+flow ModHelper(num int, den int) (then int, else int) {
+    nodes { Mod, Eq, Cond<int> }
 
-    :num -> [mod:num, lock:data]
+    :num -> [mod:num, cond:data]
     :den -> mod:den
 
     mod:res -> eq:actual
     0 -> eq:compared
-    eq -> if
+    eq -> cond:if
 
-    if:then -> :then
-    if:else -> lock:sig
-    lock:data -> :else
+    cond:then -> :then
+    cond:else -> :else
 }

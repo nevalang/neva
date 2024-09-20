@@ -1,33 +1,28 @@
 package ir
 
+import "fmt"
+
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
 	Ports map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
 	// TODO connections must be 1-1 (or maybe fan-in)
-	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out).
+	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out). // TODO must be 1-1
 	Funcs       []FuncCall                         `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
-}
-
-func (p Program) FanIn() map[PortAddr]map[PortAddr]struct{} {
-	fanIn := make(map[PortAddr]map[PortAddr]struct{})
-
-	for sender, receivers := range p.Connections {
-		for receiver := range receivers {
-			if _, ok := fanIn[receiver]; !ok {
-				fanIn[receiver] = make(map[PortAddr]struct{})
-			}
-			fanIn[receiver][sender] = struct{}{}
-		}
-	}
-
-	return fanIn
 }
 
 // PortAddr is a composite unique identifier for a port.
 type PortAddr struct {
-	Path string `json:"path,omitempty"` // List of upstream nodes including the owner of the port.
-	Port string `json:"port,omitempty"` // Name of the port.
-	Idx  *uint8 `json:"idx,omitempty"`  // Optional index of a slot in array port.
+	Path    string `json:"path,omitempty"`    // List of upstream nodes including the owner of the port.
+	Port    string `json:"port,omitempty"`    // Name of the port.
+	Idx     uint8  `json:"idx,omitempty"`     // Optional index of a slot in array port.
+	IsArray bool   `json:"isArray,omitempty"` // Flag to indicate that the port is an array.
+}
+
+func (p PortAddr) String() string {
+	if !p.IsArray {
+		return p.Path + "." + p.Port
+	}
+	return fmt.Sprintf("%s.%s[%d]", p.Path, p.Port, p.Idx)
 }
 
 // FuncCall describes call of a runtime function.

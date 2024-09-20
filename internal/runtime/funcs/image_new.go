@@ -9,7 +9,7 @@ import (
 
 type imageNew struct{}
 
-func (imageNew) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	pixelsIn, err := io.In.Single("pixels")
 	if err != nil {
 		return nil, err

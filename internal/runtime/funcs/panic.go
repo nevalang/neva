@@ -10,7 +10,7 @@ import (
 type panicker struct{}
 
 func (p panicker) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	msgIn, err := io.In.Single("msg")

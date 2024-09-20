@@ -3,6 +3,7 @@ package adapter
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/runtime"
@@ -10,102 +11,142 @@ import (
 
 func (a Adapter) getFuncs(
 	prog *ir.Program,
-	ports map[runtime.PortAddr]chan runtime.IndexedMsg,
+	portToChan map[ir.PortAddr]chan runtime.OrderedMsg,
+	interceptor runtime.Interceptor,
 ) ([]runtime.FuncCall, error) {
 	result := make([]runtime.FuncCall, 0, len(prog.Funcs))
+
+	type arrPortSlot struct {
+		idx uint8
+		ch  chan runtime.OrderedMsg
+	}
 
 	for _, call := range prog.Funcs {
 		// INPORTS
 
 		funcInports := make(
-			map[string]runtime.FuncInport,
+			map[string]runtime.Inport,
 			len(call.IO.In),
 		)
 
-		tmpArrInports := make(map[string][]<-chan runtime.IndexedMsg, len(call.IO.In))
+		arrInportsToCreate := make(map[runtime.PortAddr][]arrPortSlot, len(call.IO.In))
 
 		// in first run we fill single ports and collect array ports to tmp var
-		for _, addr := range call.IO.In {
-			runtimeAddr := runtime.PortAddr{
-				Path: addr.Path,
-				Port: addr.Port,
-			}
-
-			if addr.Idx != nil {
-				runtimeAddr.Idx = *addr.Idx
-				runtimeAddr.Arr = true
-			}
-
-			port, ok := ports[runtimeAddr]
+		for _, irAddr := range call.IO.In {
+			ch, ok := portToChan[irAddr]
 			if !ok {
-				panic("port not found: " + runtimeAddr.String())
+				panic("port not found: " + fmt.Sprint(irAddr))
 			}
 
-			if addr.Idx == nil {
-				funcInports[addr.Port] = runtime.NewFuncInport(
+			if !irAddr.IsArray {
+				funcInports[irAddr.Port] = runtime.NewInport(
 					nil,
-					runtime.NewSingleInport(port),
+					runtime.NewSingleInport(
+						ch,
+						runtime.PortAddr{
+							Path: irAddr.Path,
+							Port: irAddr.Port,
+						},
+						interceptor,
+					),
 				)
-				continue
+			} else {
+				runtimePortAddr := runtime.PortAddr{
+					Path: irAddr.Path,
+					Port: irAddr.Port,
+				}
+				arrInportsToCreate[runtimePortAddr] = append(arrInportsToCreate[runtimePortAddr], arrPortSlot{
+					idx: irAddr.Idx,
+					ch:  ch,
+				})
 			}
+		}
 
-			tmpArrInports[addr.Port] = append(tmpArrInports[addr.Port], port)
+		// sort arr port slots by index
+		for addr, slots := range arrInportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+			arrInportsToCreate[addr] = slots
 		}
 
 		// single ports already handled, it's time to create arr ports from tmp var
-		for name, slots := range tmpArrInports {
-			funcInports[name] = runtime.NewFuncInport(
-				runtime.NewArrayInport(slots),
+		for irAddr, slots := range arrInportsToCreate {
+			// for each array port we get sorted channels (slots)
+			chans := make([]<-chan runtime.OrderedMsg, len(slots))
+			for i, slot := range slots {
+				chans[i] = slot.ch
+			}
+
+			funcInports[irAddr.Port] = runtime.NewInport(
+				runtime.NewArrayInport(
+					chans,
+					runtime.PortAddr{
+						Path: irAddr.Path,
+						Port: irAddr.Port,
+					},
+					interceptor,
+				),
 				nil,
 			)
 		}
 
 		// OUTPORTS
 
-		funcOutports := make(map[string]runtime.FuncOutport, len(call.IO.Out))
+		funcOutports := make(map[string]runtime.Outport, len(call.IO.Out))
 
-		tmpArrOutports := map[string][]chan<- runtime.IndexedMsg{}
+		arrOutportsToCreate := map[runtime.PortAddr][]arrPortSlot{}
 
-		for _, addr := range call.IO.Out {
+		for _, irAddr := range call.IO.Out {
 			runtimeAddr := runtime.PortAddr{
-				Path: addr.Path,
-				Port: addr.Port,
-				// Idx:  addr.Idx,
+				Path: irAddr.Path,
+				Port: irAddr.Port,
 			}
 
-			if addr.Idx != nil {
-				runtimeAddr.Idx = *addr.Idx
-				runtimeAddr.Arr = true
-			}
-
-			port, ok := ports[runtimeAddr]
+			ch, ok := portToChan[irAddr]
 			if !ok {
 				panic("port not found")
 			}
 
-			if addr.Idx == nil {
-				funcOutports[addr.Port] = runtime.NewFuncOutport(
-					runtime.NewSingleOutport(runtimeAddr, port),
+			if !irAddr.IsArray {
+				funcOutports[irAddr.Port] = runtime.NewOutport(
+					runtime.NewSingleOutport(runtimeAddr, interceptor, ch),
 					nil,
 				)
-				continue
+			} else {
+				arrOutportsToCreate[runtimeAddr] = append(arrOutportsToCreate[runtimeAddr], arrPortSlot{
+					idx: irAddr.Idx,
+					ch:  ch,
+				})
 			}
-
-			tmpArrOutports[addr.Port] = append(tmpArrOutports[addr.Port], port)
 		}
 
-		for name, slots := range tmpArrOutports {
-			funcOutports[name] = runtime.NewFuncOutport(
+		// sort arr port slots by index
+		for addr, slots := range arrOutportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+			arrOutportsToCreate[addr] = slots
+		}
+
+		for runtimeAddr, slotChans := range arrOutportsToCreate {
+			// for each array port we get sorted channels (slots)
+			chans := make([]chan<- runtime.OrderedMsg, len(slotChans))
+			for i, slot := range slotChans {
+				chans[i] = slot.ch
+			}
+
+			funcOutports[runtimeAddr.Port] = runtime.NewOutport(
 				nil,
-				runtime.NewArrayOutport(slots),
+				runtime.NewArrayOutport(runtimeAddr, interceptor, chans),
 			)
 		}
 
 		rFunc := runtime.FuncCall{
 			Ref: call.Ref,
-			IO: runtime.FuncIO{
-				In:  runtime.NewFuncInports(funcInports),
-				Out: runtime.NewFuncOutports(funcOutports),
+			IO: runtime.IO{
+				In:  runtime.NewInports(funcInports),
+				Out: runtime.NewOutports(funcOutports),
 			},
 		}
 
@@ -114,7 +155,7 @@ func (a Adapter) getFuncs(
 			if err != nil {
 				return nil, fmt.Errorf("msg: %w", err)
 			}
-			rFunc.ConfigMsg = rMsg
+			rFunc.Config = rMsg
 		}
 
 		result = append(result, rFunc)

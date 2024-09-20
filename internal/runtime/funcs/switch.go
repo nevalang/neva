@@ -9,7 +9,7 @@ import (
 
 type switcher struct{}
 
-func (switcher) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (switcher) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (switcher) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 	}
 
 	if caseIn.Len() != caseOut.Len() {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+		return nil, errors.New("number of 'case' inports must match number of outports")
 	}
 
 	return func(ctx context.Context) {
@@ -42,7 +42,7 @@ func (switcher) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Conte
 			}
 
 			cases := make([]runtime.Msg, caseIn.Len())
-			if !caseIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				cases[idx] = msg
 				return true
 			}) {

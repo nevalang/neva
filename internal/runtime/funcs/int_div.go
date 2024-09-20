@@ -8,7 +8,7 @@ import (
 
 type intDiv struct{}
 
-func (intDiv) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intDiv) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	xIn, err := io.In.Single("x")
 	if err != nil {
 		return nil, err

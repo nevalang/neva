@@ -8,7 +8,7 @@ import (
 
 type waitGroup struct{}
 
-func (g waitGroup) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (g waitGroup) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	countIn, err := io.In.Single("count")
 	if err != nil {
 		return nil, err

@@ -9,18 +9,13 @@ import (
 
 type timeSleep struct{}
 
-func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (timeSleep) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	durIn, err := io.In.Single("dur")
 	if err != nil {
 		return nil, err
 	}
 
-	dataIn, err := io.In.Single("data")
-	if err != nil {
-		return nil, err
-	}
-
-	dataOut, err := io.Out.Single("data")
+	sigOut, err := io.Out.Single("sig")
 	if err != nil {
 		return nil, err
 	}
@@ -32,14 +27,9 @@ func (timeSleep) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Cont
 				return
 			}
 
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
 			time.Sleep(time.Duration(durMsg.Int()))
 
-			if !dataOut.Send(ctx, dataMsg) {
+			if !sigOut.Send(ctx, nil) {
 				return
 			}
 		}

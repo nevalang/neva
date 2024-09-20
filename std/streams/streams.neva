@@ -1,5 +1,3 @@
-// advanced streaming operations
-
 pub type ProductResult<T, R> struct {
     first T
     second R
@@ -13,5 +11,8 @@ pub type ZipResult<T, R> struct {
     second R
 }
 
+// Produces a stream of tuples of the form (first, second)
+// where first is from the first stream and second is from the second stream.
+// Stops when either stream is exhausted.
 #extern(stream_zip)
 pub flow Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)

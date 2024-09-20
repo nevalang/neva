@@ -9,7 +9,7 @@ import (
 
 type match struct{}
 
-func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 	}
 
 	if ifIn.Len() != thenOut.Len() {
-		return nil, errors.New("number of 'case' inports must match number of 'then' outports")
+		return nil, errors.New("number of 'if' inports must match number of 'then' outports")
 	}
 
 	elseIn, err := io.In.Single("else")
@@ -47,7 +47,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 			}
 
 			ifMsgs := make([]runtime.Msg, ifIn.Len())
-			if !ifIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !ifIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				ifMsgs[idx] = msg
 				return true
 			}) {
@@ -55,7 +55,7 @@ func (match) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context)
 			}
 
 			thenMsgs := make([]runtime.Msg, thenOut.Len())
-			if !thenOut.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !thenOut.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				thenMsgs[idx] = msg
 				return true
 			}) {

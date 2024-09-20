@@ -11,7 +11,7 @@ import (
 
 type printf struct{}
 
-func (p printf) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p printf) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	tplIn, err := io.In.Single("tpl")
 	if err != nil {
 		return nil, err
@@ -49,15 +49,11 @@ func (printf) handle(
 			}
 
 			args := make([]runtime.Msg, argsIn.Len())
-			if !argsIn.Receive(ctx, func(idx int, msg runtime.Msg) bool {
+			if !argsIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 				args[idx] = msg
 				return true
 			}) {
 				return
-			}
-
-			if args[0] == nil {
-				fmt.Println("here")
 			}
 
 			res, err := format(tpl.Str(), args)

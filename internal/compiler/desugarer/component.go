@@ -59,7 +59,7 @@ func (d Desugarer) handleComponent(
 	}
 
 	// merge real nodes with virtual ones created by network handler
-	maps.Copy(desugaredNodes, handleNetResult.virtualNodes)
+	maps.Copy(desugaredNodes, handleNetResult.nodesToInsert)
 
 	// create and connect Del nodes to handle unused outports
 	unusedOutports := d.findUnusedOutports(

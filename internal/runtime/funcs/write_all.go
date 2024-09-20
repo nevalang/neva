@@ -9,7 +9,7 @@ import (
 
 type writeAll struct{}
 
-func (c writeAll) Create(rio runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c writeAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	filename, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err

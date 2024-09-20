@@ -10,7 +10,7 @@ import (
 
 type scanln struct{}
 
-func (r scanln) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (r scanln) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		return nil, err

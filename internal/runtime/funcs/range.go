@@ -9,7 +9,7 @@ import (
 type streamIntRange struct{}
 
 func (streamIntRange) Create(
-	io runtime.FuncIO,
+	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	fromIn, err := io.In.Single("from")

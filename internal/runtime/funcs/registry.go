@@ -14,6 +14,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"lock":    lock{},
 		"unwrap":  unwrap{},
 		"fan_out": fanOut{},
+		"fan_in":  fanIn{},
 
 		// runtime
 		"panic": panicker{},
@@ -25,6 +26,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"ternary":           ternary{},
 		"eq":                eq{},
 		"if":                if_{},
+		"cond":              cond{},
 		"not":               not{},
 		"and":               and{},
 		"or":                or{},
@@ -72,6 +74,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"float_sort": listSortFloat{},
 
 		// time
+		"time_delay": timeDelay{},
 		"time_sleep": timeSleep{},
 
 		// strings

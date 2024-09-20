@@ -8,7 +8,7 @@ import (
 
 type intMul struct{}
 
-func (intMul) Create(io runtime.FuncIO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (intMul) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	seqIn, err := io.In.Single("seq")
 	if err != nil {
 		return nil, err

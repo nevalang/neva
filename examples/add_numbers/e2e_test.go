@@ -16,15 +16,17 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "add_numbers")
+	for i := 0; i < 10; i++ {
+		cmd := exec.Command("neva", "run", "add_numbers")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		"3\n",
-		string(out),
-	)
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"3\n",
+			string(out),
+		)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }

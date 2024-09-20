@@ -1,9 +1,25 @@
-# Nevalang
+# Documentation
 
-Welcome to Nevalang - general purpose dataflow programming language.
+Welcome to Nevalang's documentation!
 
-In this language we don't have control-flow. It means we can't call, return, break, continue or goto. There are no functions, no for loops, no variables. Instead we have nodes connected through their input and output ports for message passing. This is what's called dataflow programming.
+It describes general purpose dataflow compiled language with static types. Here you'll find motivation behind the language, it's philosophy, differences between dataflow and controlflow paradigms and of course language abstractions and relations between them.
 
-There are no coroutines, channels or mutexes. You write concurrent program just by having parallel connections in your network. If there is machine capacity, code will be executed in parallel. It's called implicit parallelism.
+## About this Document
 
-Compiler performs strong static type-checking. Language has interfaces and generics for polymorphic code. You can emit ready to deploy machine code or Go, to integrate with existing codebase.
+1. This document describes finite state of the language. Some features (e.g. visual editor) might not be implemented at the time of writing, but they yet important for concept so they will be mentioned
+2. It was written as an attempt to create at least something. I needed to dump all the information I collected about the language with years. So it's far from perfect
+3. This document doesn't teach you how to write Nevalang programs, because Nevalang is very immature language and it is changins all the time. This is especially true for stdlib components. However, a lot about Nevalang is already clear and will never change. We are talking about more fundamental stuff such as philosophy, abstractions, execution model, etc.
+
+## Table of contents
+
+- [About](./about.md)
+- [Motivation](./motivation.md)
+- [Paradigm](./paradigm.md)
+  - [Flow-Based-Programming](./fbp.md)
+- [Program Structure](./program_structure.md)
+  - [Type](./type_entity.md)
+  - [Constant](./const_entity.md)
+  - [Interface](./interface_entity.md)
+  - [Component](./component_entity.md)
+    - [IO](./component_io.md)
+    - [Network](./component_net.md)
