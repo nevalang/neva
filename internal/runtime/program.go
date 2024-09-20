@@ -174,12 +174,13 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 // The function should return false if it wants to stop receiving messages.
 // Functions are called in order of incoming messages, not in order of slots.
 func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
+	// IDEA return channel instead of taking function
 	var wg sync.WaitGroup
 	success := true
 	resultChan := make(chan bool, len(a.chans))
 
+	wg.Add(len(a.chans))
 	for idx := range a.chans {
-		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
 			select {
@@ -240,14 +241,14 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			break
 		}
 
-		for idx, ch := range a.chans {
+		for slotIdx, ch := range a.chans {
 			select {
 			default:
 				continue
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				index := uint8(idx)
+				index := uint8(slotIdx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -279,7 +280,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 }
 
 // Select returns oldest available message across all available array inport slots.
-func (a ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
+func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 	if len(a.buf) > 1 {
 		v := a.buf[0]
 		a.buf = a.buf[1:]
