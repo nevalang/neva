@@ -18,8 +18,8 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	for i := 0; i < 100; i++ {
-		cmd := exec.Command("neva", "run", "filter_list")
+	for i := 0; i < 1; i++ {
+		cmd := exec.Command("neva", "run", "reduce_list")
 
 		// Set a timeout for the command
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

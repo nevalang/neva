@@ -18,5 +18,6 @@ pub flow Mod(num int, den int) (res int, err error)
 
 // === Reducer Interface Experiment ===
 
+// IDEA: res->acc?
 #extern(int int_add_reducer, float float_add_reducer, string string_add_reducer)
 pub flow AddReducer<T int | float | string>(acc T, el T) (res T)

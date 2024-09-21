@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -12,12 +13,12 @@ func (intAddReducer) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Single("first")
+	accIn, err := io.In.Single("acc")
 	if err != nil {
 		return nil, err
 	}
 
-	secondIn, err := io.In.Single("second")
+	elIn, err := io.In.Single("el")
 	if err != nil {
 		return nil, err
 	}
@@ -29,17 +30,29 @@ func (intAddReducer) Create(
 
 	return func(ctx context.Context) {
 		for {
-			firstMsg, ok := firstIn.Receive(ctx)
-			if !ok {
+			var accMsg, elMsg runtime.Msg
+			var accOk, elOk bool
+
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				accMsg, accOk = accIn.Receive(ctx)
+			}()
+
+			go func() {
+				defer wg.Done()
+				elMsg, elOk = elIn.Receive(ctx)
+			}()
+
+			wg.Wait()
+
+			if !accOk || !elOk {
 				return
 			}
 
-			secondMsg, ok := secondIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			resMsg := runtime.NewIntMsg(firstMsg.Int() + secondMsg.Int())
+			resMsg := runtime.NewIntMsg(elMsg.Int() + accMsg.Int())
 			if !resOut.Send(ctx, resMsg) {
 				return
 			}

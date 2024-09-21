@@ -101,5 +101,8 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// sync
 		"wait_group": waitGroup{},
+
+		// other
+		"accumulator": accumulator{},
 	}
 }

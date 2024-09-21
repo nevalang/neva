@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -31,13 +32,25 @@ func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
+			var dataMsg, ifMsg runtime.Msg
+			var dataOk, ifOk bool
 
-			ifMsg, ok := ifIn.Receive(ctx)
-			if !ok {
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				dataMsg, dataOk = dataIn.Receive(ctx)
+			}()
+
+			go func() {
+				defer wg.Done()
+				ifMsg, ifOk = ifIn.Receive(ctx)
+			}()
+
+			wg.Wait()
+
+			if !dataOk || !ifOk {
 				return
 			}
 
