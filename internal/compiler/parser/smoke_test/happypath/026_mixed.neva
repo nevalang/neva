@@ -14,10 +14,9 @@ interface IReader(path string) (i int, e err)
 interface IWriter(path string) (i int, anything any)
 
 flow Main(start any) (stop any) {
-	nodes {
-		abs IReader
-		concrete  Scanner
-	}
+	abs IReader
+	concrete  Scanner
+	---
 	:start -> abs:v
 	abs:v -> [concrete:v]
 	concrete:v -> :code

@@ -1,5 +1,6 @@
 flow Main(start any) (stop any) {
-    nodes { DayPrinter }
+    DayPrinter
+    ---
     :start -> (Day::Friday -> dayPrinter -> :stop)
 }
 
@@ -14,6 +15,7 @@ type Day enum {
 }
 
 flow DayPrinter(day Day) (sig) {
-    nodes { Println }
+    Println
+    ---
     :day -> println -> :sig
 }

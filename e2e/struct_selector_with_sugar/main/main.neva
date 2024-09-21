@@ -9,7 +9,8 @@ type User struct {
 type Pet struct { name string }
 
 flow Main(start) (stop) {
-    nodes { UserSender, Println }
+    UserSender, Println
+    ---
     :start -> userSender:sig
     userSender:u.pet.name -> println:data
     println:sig -> :stop

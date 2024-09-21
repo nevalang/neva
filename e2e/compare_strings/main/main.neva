@@ -1,5 +1,6 @@
 flow Main(start) (stop) {
-    nodes { Println, Gt<string>, If }
+    Println, Gt<string>, If
+    ---
     :start -> [
         ('A' -> gt:compared),
         ('Z' -> gt:actual)

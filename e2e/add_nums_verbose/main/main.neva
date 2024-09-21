@@ -1,9 +1,9 @@
 flow Main(start any) (stop any) {
-	nodes {
-		adder Add<int>
-		sequencer StreamPort<int>
-		println Println<int>
-	}
+	adder Add<int>
+	sequencer StreamPort<int>
+	println Println<int>
+
+	---
 
 	:start -> [
 		(1 -> sequencer:port[0]),

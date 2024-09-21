@@ -4,20 +4,18 @@ import {
 }
 
 flow Main(start) (stop) {
-	nodes { Aux, Println }
-
+	Aux, Println
+	---
 	:start             -> aux:sig
 	[aux:res, aux:err] -> println:data
 	println:sig        -> :stop
 }
 
 flow Aux(sig) (res int, err error) {
-	nodes {
-		reader1 IntReader
-		reader2 IntReader
-		adder ReducePort<int> { Add<int> }
-	}
-
+	reader1 IntReader
+	reader2 IntReader
+	adder ReducePort<int> { Add<int> }
+	---
 	:sig                       -> reader1:sig
 	reader1:num                -> [adder:port[0], reader2:sig]
 	[reader1:err, reader2:err] -> :err
@@ -26,8 +24,8 @@ flow Aux(sig) (res int, err error) {
 }
 
 flow IntReader(sig any) (num int, err error) {
-	nodes { io.Scanln, strconv.ParseNum<int> }
-
+	io.Scanln, strconv.ParseNum<int>
+	---
 	:sig -> scanln:sig
 	scanln:data -> parseNum:data
 	parseNum:res -> :num

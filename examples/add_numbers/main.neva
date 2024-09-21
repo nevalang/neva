@@ -1,8 +1,7 @@
 flow Main(start) (stop) {
-	nodes {
-		Println
-		add ReducePort<int> { Add<int> }
-	}
+	Println
+	add ReducePort<int> { Add<int> }
+	---
 	:start -> [
 		(1 -> add[0]),
 		(2 -> add[1])

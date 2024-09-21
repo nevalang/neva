@@ -1,16 +1,14 @@
 import { streams }
 
 flow Main(start) (stop) {
-  nodes {
-    r1 Range
-    r2 Range
-    streams.Product<int, int>
-    For<streams.ProductResult<int, int>> {
-      Println<streams.ProductResult<int, int>>
-    }
-    Wait
+  r1 Range
+  r2 Range
+  streams.Product<int, int>
+  For<streams.ProductResult<int, int>> {
+    Println<streams.ProductResult<int, int>>
   }
-
+  Wait
+  ---
   :start -> [
     (0 -> [r1:from, r2:from]),
     (3 -> [r1:to, r2:to])

@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -144,9 +144,6 @@ type nevaListener interface {
 
 	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
 	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
-
-	// EnterNil is called when entering the nil production.
-	EnterNil(c *NilContext)
 
 	// EnterBool is called when entering the bool production.
 	EnterBool(c *BoolContext)
@@ -402,9 +399,6 @@ type nevaListener interface {
 
 	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
 	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
-
-	// ExitNil is called when exiting the nil production.
-	ExitNil(c *NilContext)
 
 	// ExitBool is called when exiting the bool production.
 	ExitBool(c *BoolContext)

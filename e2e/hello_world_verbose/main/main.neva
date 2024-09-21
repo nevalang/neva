@@ -1,12 +1,12 @@
 const greeting string = 'Hello, World!'
 
 flow Main(start any) (stop any) {
-	nodes {
-		#bind(greeting)
-		greeting New<string>
-		println Println<string>
-		lock Lock<string>
-	}
+	#bind(greeting)
+	greeting New<string>
+	println Println<string>
+	lock Lock<string>
+
+	---
 
 	:start -> lock:sig
 	greeting:msg -> lock:data

@@ -1,7 +1,8 @@
 const greeting string = 'Hello, World!'
 
 flow Main(start any) (stop any) {
-	nodes { println Println<string> }
+	println Println<string>
+	---
 	:start -> ($greeting -> println:data)
 	println:sig -> :stop
 }

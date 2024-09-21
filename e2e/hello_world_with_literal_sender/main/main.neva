@@ -1,5 +1,6 @@
 flow Main(start any) (stop any) {
-	nodes { println Println<string> }
+	println Println<string>
+	---
 	:start -> ('Hello, World!' -> println:data)
 	println:sig -> :stop
 }

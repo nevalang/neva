@@ -152,13 +152,12 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 
 		#extern(d2)
 		flow C2() () {
-			nodes {
-				#bind(d3)
-				n1 C1
+			#bind(d3)
+			n1 C1
 
-				#bind(d4)
-				n2 C1
-			}
+			#bind(d4)
+			n2 C1
+			---
 		}
 
 		#autoports
@@ -224,10 +223,9 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	text := []byte(`
 		flow C1(start any) (stop any) {
-			nodes {
-				Scanner
-				Printer<int>
-			}
+			Scanner
+			Printer<int>
+			---
 		}
 	`)
 

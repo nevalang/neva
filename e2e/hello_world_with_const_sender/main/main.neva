@@ -1,11 +1,9 @@
 const greeting string = 'Hello, World!'
 
 flow Main(start any) (stop any) {
-	nodes {
-		println Println<string>
-		lock Lock<string>
-	}
-
+	println Println<string>
+	lock Lock<string>
+	---
 	:start -> lock:sig
 	$greeting -> lock:data
 	lock:data -> println:data

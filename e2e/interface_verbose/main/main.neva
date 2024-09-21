@@ -1,17 +1,17 @@
 interface IPrinter<T>(data T) (sig T)
 
 flow Main(start any) (stop any) {
-    nodes {
-        Secondflow {
-            depNode Println<any>
-        }
+    Secondflow {
+        depNode Println<any>
     }
+    ---
     :start -> secondflow:msg
     secondflow:msg -> :stop
 }
 
 flow Secondflow (msg any) (msg any) {
-    nodes { depNode IPrinter<any> }
+    depNode IPrinter<any>
+    ---
     :msg -> depNode:data
     depNode:sig -> :msg
 }

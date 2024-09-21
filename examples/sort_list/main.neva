@@ -1,6 +1,7 @@
 const l list<int> = [50, 30, 20, 100]
 
 flow Main(start any) (stop any) {
-	nodes { Sort<int>, Println }
+	Sort<int>, Println
+	---
 	:start -> ($l -> sort -> println -> :stop)
 }

@@ -6,7 +6,8 @@ type User struct {
 type Pet struct { name string }
 
 flow Main(start) (stop) {
-    nodes { GetUser, Println }
+    GetUser, Println
+    ---
     :start -> getUser.pet.name -> println -> :stop
 }
 

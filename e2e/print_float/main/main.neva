@@ -1,7 +1,8 @@
 const x float = 42
 
 flow Main(start) (stop) {
-    nodes { Println<float> }
+    Println<float>
+    ---
     :start -> ($x -> println:data)
     println:sig -> :stop
 }

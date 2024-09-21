@@ -3,12 +3,11 @@
 import { time }
 
 flow Main(start) (stop) {
-    nodes {
-        Range
-        Map<int, string>{Handler}
-        For{Println}
-        Wait
-    }
+    Range
+    Map<int, string>{Handler}
+    For{Println}
+    Wait
+    ---
     :start -> [
         (1 -> range:from),
         (5 -> range:to)
@@ -17,11 +16,10 @@ flow Main(start) (stop) {
 }
 
 flow Handler(data int) (res string) {
-    nodes {
-        Switch<int>
-        Select<int, string>
-    }
-    
+    Switch<int>, Select<int, string>
+
+    ---
+
     :data -> switch:data
 
     1 -> switch:case[0] -> select:if[0]

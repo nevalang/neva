@@ -1,11 +1,17 @@
 flow Main(start) (stop) {
-	nodes { Range, Map<int, string|int>{FizzBuzz}, For{Println}, Wait }
+	Range
+    Map<int, string|int>{FizzBuzz}
+    For{Println}
+    Wait
+    ---
     :start -> [(1 -> range:from), (101 -> range:to)]
     range -> map -> for -> wait -> :stop
 }
 
 flow FizzBuzz(data int) (res string|int) {
-    nodes { Select<int, string|int>, Mod15, Mod3, Mod5 }
+    Select<int, string|int>, Mod15, Mod3, Mod5
+
+    ---
 
     :data -> [mod15, select:then[3]]
 
@@ -25,7 +31,8 @@ flow FizzBuzz(data int) (res string|int) {
 }
 
 flow Mod15(num int) (then int, else int) {
-    nodes { h ModHelper }
+    h ModHelper
+    ---
     :num -> h:num
     15 -> h:den
     h:then -> :then
@@ -33,7 +40,8 @@ flow Mod15(num int) (then int, else int) {
 }
 
 flow Mod3(num int) (then int, else int) {
-    nodes { h ModHelper }
+    h ModHelper
+    ---
     :num -> h:num
     3 -> h:den
     h:then -> :then
@@ -41,7 +49,8 @@ flow Mod3(num int) (then int, else int) {
 }
 
 flow Mod5(num int) (then int, else int) {
-    nodes { h ModHelper }
+    h ModHelper
+    ---
     :num -> h:num
     5 -> h:den
     h:then -> :then
@@ -50,7 +59,11 @@ flow Mod5(num int) (then int, else int) {
 
 // ModHelper checks if num can be devided by den
 flow ModHelper(num int, den int) (then int, else int) {
-    nodes { Mod, Eq, Cond<int> }
+    Mod
+    Eq
+    Cond<int>
+
+    ---
 
     :num -> [mod:num, cond:data]
     :den -> mod:den

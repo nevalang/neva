@@ -1,5 +1,6 @@
 flow Main(start) (stop) {
-	nodes { Decr<any> }
+	Decr<any>
+	---
 	:start -> (42 -> decr:data)
 	decr:res -> :stop
 }

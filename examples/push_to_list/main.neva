@@ -2,7 +2,8 @@ const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
 flow Main(start) (stop) {
-	nodes { Push, Println }
+	Push, Println
+	---
 	:start -> [
 		($l -> push:lst),
 		($f -> push:data)

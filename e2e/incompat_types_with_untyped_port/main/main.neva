@@ -1,9 +1,8 @@
 flow Main(start) (stop) {
-    nodes {
-        Sworktest
-        StreamPort<int>
-        Println
-    }
+    Sworktest
+    StreamPort<int>
+    Println
+    ---
     :start -> [
         (1 -> streamPort[0]),
         (2 -> streamPort[1])
@@ -12,6 +11,7 @@ flow Main(start) (stop) {
 }
 
 flow Sworktest(in) (out) {
-	nodes { Add<int> }
+	Add<int>
+	---
 	:in -> add -> :out
 }

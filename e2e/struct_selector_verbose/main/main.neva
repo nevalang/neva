@@ -18,12 +18,12 @@ const user User = {
 const path list<string> = ['pet', 'name']
 
 flow Main(start any) (stop any) {
-    nodes {
-        Println
+    Println
 
-        #bind(path)
-        Field
-    }
+    #bind(path)
+    Field
+
+    ---
 
     :start -> ($user -> field:msg)
     field:msg -> println:data

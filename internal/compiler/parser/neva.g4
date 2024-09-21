@@ -77,8 +77,7 @@ constStmt: PUB_KW? 'const' constDef;
 constDef:
 	IDENTIFIER typeExpr '=' (entityRef | constLit) NEWLINE*;
 constLit:
-	nil
-	| bool
+	bool
 	| MINUS? INT
 	| MINUS? FLOAT
 	| STRING
@@ -86,13 +85,11 @@ constLit:
 	| listLit
 	| structLit;
 primitiveConstLit:
-	nil
-	| bool
+	bool
 	| MINUS? INT
 	| MINUS? FLOAT
 	| STRING
 	| enumLit;
-nil: 'nil';
 bool: 'true' | 'false';
 enumLit: entityRef '::' IDENTIFIER;
 listLit: '[' NEWLINE* listItems? ']';
@@ -106,28 +103,22 @@ structValueFields:
 	structValueField (',' NEWLINE* structValueField)*;
 structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
 
-// flow
+// flow (component)
 compStmt: compilerDirectives? PUB_KW? 'flow' compDef;
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
-	'{'
-		NEWLINE*
-		(COMMENT NEWLINE*)*
-		(compNodesDef NEWLINE*)?
-		(COMMENT NEWLINE*)*
-		(connDefList NEWLINE*)?
-		(COMMENT NEWLINE*)*
-	'}';
+	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
+		COMMENT NEWLINE*
+	)* (connDefList NEWLINE*)? (COMMENT NEWLINE*)* '}';
 
 // nodes
-compNodesDef: 'nodes' NEWLINE* compNodesDefBody;
-compNodesDefBody:
-	'{' NEWLINE* ((compNodeDef | COMMENT) ','? NEWLINE*)* '}';
+compNodesDef: compNodesDefBody NEWLINE+ '---';
+compNodesDefBody: ((compNodeDef ','? | COMMENT) NEWLINE*)+;
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst:
 	entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
 errGuard: '?';
-nodeDIArgs: compNodesDefBody;
+nodeDIArgs: '{' NEWLINE* compNodesDefBody '}';
 
 // network
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;

@@ -1,9 +1,6 @@
 flow Main(start) (stop) {
-    nodes {
-        Foo
-        Println<int>
-    }
-
+    Foo, Println<int>
+    ---
     :start -> foo:sig
     foo:msg.a -> println:data
     println:sig -> :stop

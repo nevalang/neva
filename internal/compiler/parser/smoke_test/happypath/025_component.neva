@@ -17,140 +17,143 @@ flow Doer<T>(x int) (y T) {
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes {}
-}
-
-flow     Doer<T>(x int) (y T) {
-    nodes {
-    }
+    absNode INode
+    ---
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes { absNode INode }
+    absNode INode
+
+    ---
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes {
-        absNode INode }
-}
 
-flow     Doer<T>(x int) (y T) {
-    nodes { absNode INode
-    }
+    absNode INode
+
+    ---
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes {
-        absNode INode
-    }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        simpleAbsNode INode
-        absNodeWithTypeArgs INode<
-            int,
-            map<
-                string, vec<bool>
-            >
+    simpleAbsNode INode
+    absNodeWithTypeArgs INode<
+        int,
+        map<
+            string, vec<bool>
         >
+    >
+    ---
+}
+
+flow Doer<T>(x int) (y T) {
+    concreteNode  Node
+    ---
+}
+
+flow Doer<T>(x int) (y T) {
+    concreteNode  Node
+    ---
+}
+
+flow Doer<T>(x int) (y T) {
+    concreteNodeWithTypeArgs  Node<int, vec<string>>
+    ---
+}
+
+flow Doer<T>(x int) (y T) {
+    concreteNodeWithDI1  Node1{foo Node2}
+    concreteNodeWithDI2  Node1{
+        foo Node2
+        bar Node3
     }
+    ---
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes { concreteNode  Node }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNode  Node }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes { concreteNode  Node
+    concreteNodeWithDI1  Node1{
+        foo Node2
     }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNode  Node
+    concreteNodeWithDI2  Node1{
+        foo Node2
+        bar Node3
     }
+    ---
 }
 
 flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNodeWithTypeArgs  Node<int, vec<string>>
-    }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNodeWithDI1  Node1{foo Node2}
-        concreteNodeWithDI2  Node1{
-            foo Node2
-            bar Node3
-        }
-    }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNodeWithDI1  Node1{
-            foo Node2
-        }
-        concreteNodeWithDI2  Node1{
-            foo Node2
-            bar Node3
-        }
-    }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        concreteNodeWithDIAndTypeArgs  Node1<
-            int,
-            map<
-                string,
-                vec<bool>
-            >
-        > {
-            foo Node2
-            bar Node3
-        }
-    }
-}
-
-flow Doer<T>(x int) (y T) {
-    nodes {
-        simpleAbsNode INode
-
-        absNodeWithTypeArgs INode<
-            int,
-            map<
-                string, vec<bool>
-            >
+    concreteNodeWithDIAndTypeArgs  Node1<
+        int,
+        map<
+            string,
+            vec<bool>
         >
-
-        concreteNodeWithDI1  Node1{ foo Node2 }
-
-        concreteNodeWithDIAndTypeArgs  Node1<
-            int,
-            map<
-                string,
-                vec<bool>
-            >
-        >{
-            foo Node2
-            bar Node3
-        }
+    > {
+        foo Node2
+        bar Node3
     }
+    ---
+}
+
+flow Doer<T>(x int) (y T) {
+    simpleAbsNode INode
+
+    absNodeWithTypeArgs INode<
+        int,
+        map<
+            string, vec<bool>
+        >
+    >
+
+    concreteNodeWithDI1  Node1{ foo Node2 }
+
+    concreteNodeWithDIAndTypeArgs  Node1<
+        int,
+        map<
+            string,
+            vec<bool>
+        >
+    >{
+        foo Node2
+        bar Node3
+    }
+    ---
 }
 
 flow Main(start any) (stop any) {
-    nodes {
-        abs IReader
-        concrete  Scanner
-    }
+    abs IReader
+    concrete  Scanner
+    ---
+    :start -> abs:v
+    abs:v -> [concrete:v]
+    concrete:v -> :code
+}
+
+flow Main(start any) (stop any) {
+    abs IReader
+    concrete  Scanner
+    ---
+    
+    :start -> abs:v
+    abs:v -> [concrete:v]
+    concrete:v -> :code
+}
+
+flow Main(start any) (stop any) {
+    abs IReader
+    concrete  Scanner
+
+    ---
+    :start -> abs:v
+    abs:v -> [concrete:v]
+    concrete:v -> :code
+}
+
+flow Main(start any) (stop any) {
+    abs IReader
+    concrete  Scanner
+
+    ---
+
     :start -> abs:v
     abs:v -> [concrete:v]
     concrete:v -> :code
@@ -219,4 +222,3 @@ flow Main() () {
     :foo -> :bar
     :baz -> :bax
 }
-

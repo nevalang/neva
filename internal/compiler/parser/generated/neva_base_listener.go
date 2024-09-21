@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -295,12 +295,6 @@ func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext)
 
 // ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
 func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
-// EnterNil is called when production nil is entered.
-func (s *BasenevaListener) EnterNil(ctx *NilContext) {}
-
-// ExitNil is called when production nil is exited.
-func (s *BasenevaListener) ExitNil(ctx *NilContext) {}
 
 // EnterBool is called when production bool is entered.
 func (s *BasenevaListener) EnterBool(ctx *BoolContext) {}

@@ -4,15 +4,13 @@ import {
 }
 
 flow Main(start any) (stop any) {
-	nodes {
-		scanner1 io.Scanln
-		scanner2 io.Scanln
-		parser1 strconv.ParseNum<int>
-		parser2 strconv.ParseNum<int>
-		adder ReducePort<int> { Add<int> }
-		println Println<int>
-	}
-
+	scanner1 io.Scanln
+	scanner2 io.Scanln
+	parser1 strconv.ParseNum<int>
+	parser2 strconv.ParseNum<int>
+	adder ReducePort<int> { Add<int> }
+	println Println<int>
+	---
 	:start -> scanner1:sig
 	scanner1:data-> parser1:data
 	parser1:res -> [adder:port[0], scanner2:sig]

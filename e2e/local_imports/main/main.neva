@@ -4,6 +4,8 @@ import {
 }
 
 flow Main(start) (stop) {
-	nodes { foo foo.Println, bar bar.Println }
+	foo foo.Println
+	bar bar.Println
+	---
 	:start -> (42 -> foo -> bar -> :stop)
 }

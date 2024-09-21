@@ -1,18 +1,17 @@
 import { io, strconv }
 
 flow Main(start) (stop) {
-	nodes { App, Println }
+	App, Println
+	---
 	:start -> app
 	[app:res, app:err] -> println -> :stop
 }
 
 flow App(sig) (res int, err error) {
-	nodes {
-		readFirstInt ReadIntFromStdin
-		readSecondInt ReadIntFromStdin
-		add ReducePort<int> { Add<int> }
-	}
-
+	readFirstInt ReadIntFromStdin
+	readSecondInt ReadIntFromStdin
+	add ReducePort<int> { Add<int> }
+	---
 	:sig -> readFirstInt
 	readFirstInt:num -> [add[0], readSecondInt]
 	readSecondInt:num -> add[1]
@@ -21,7 +20,8 @@ flow App(sig) (res int, err error) {
 }
 
 flow ReadIntFromStdin(sig) (num int, err error) {
-	nodes { io.Scanln, strconv.ParseNum<int> }
+	io.Scanln, strconv.ParseNum<int>
+	---
 	:sig -> scanln -> parseNum
 	parseNum:res -> :num
 	parseNum:err -> :err

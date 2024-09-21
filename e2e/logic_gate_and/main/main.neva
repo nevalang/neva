@@ -1,8 +1,9 @@
 flow Main(start) (stop) {
-	nodes { Println, And }
-		:start -> [
-		    (true -> and:a),
-		    (true -> and:b)
-		]
-		and -> println -> :stop
+	Println, And
+	---
+	:start -> [
+		(true -> and:a),
+		(true -> and:b)
+	]
+	and -> println -> :stop
 }

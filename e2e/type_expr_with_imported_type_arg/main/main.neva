@@ -5,11 +5,9 @@
 import { @:foo }
 
 flow Main(start) (stop) {
-  nodes {
-    justFoo Struct<foo.Foo>
-    itemWithFoo Struct<stream<foo.Foo>>
-  }
-
+  justFoo Struct<foo.Foo>
+  itemWithFoo Struct<stream<foo.Foo>>
+  ---
   :start -> [
     (0 -> [justFoo:bar, itemWithFoo:idx]),
     (true -> itemWithFoo:last)

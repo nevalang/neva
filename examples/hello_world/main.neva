@@ -1,4 +1,5 @@
 flow Main(start) (stop) {
-	nodes { Println }
+	Println
+	---
 	:start -> ('Hello, World!' -> println -> :stop)
 }
