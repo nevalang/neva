@@ -20,9 +20,9 @@ type PortAddr struct {
 
 func (p PortAddr) String() string {
 	if !p.IsArray {
-		return p.Path + "." + p.Port
+		return p.Path + ":" + p.Port
 	}
-	return fmt.Sprintf("%s.%s[%d]", p.Path, p.Port, p.Idx)
+	return fmt.Sprintf("%s:%s[%d]", p.Path, p.Port, p.Idx)
 }
 
 // FuncCall describes call of a runtime function.

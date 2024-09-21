@@ -35,7 +35,7 @@ func (a Adapter) getFuncs(
 		for _, irAddr := range call.IO.In {
 			ch, ok := portToChan[irAddr]
 			if !ok {
-				panic("port not found: " + fmt.Sprint(irAddr))
+				return nil, fmt.Errorf("port not found: %v", irAddr)
 			}
 
 			if !irAddr.IsArray {

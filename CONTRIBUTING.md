@@ -1,5 +1,6 @@
 # Contributing
 
+parser/smoke_tests
 Read the https://nevalang.org/docs/tutorial.
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
@@ -23,9 +24,11 @@ These are not really required but recommended in order you're using VSCode
 
 ## Development
 
-## ANTLR Grammar
+## Syntax (ANTLR, Parser)
 
-Don't forget to open `neva.g4` file before debugging with VSCode
+1. Make changes to `neva.g4` and corresponding `*.neva` files in the repo
+2. If something doesn't work, run `/parser/smoke_test`
+3. To debug deeper, make sure `neva.g4` is opened in the editor and launch VSCode's `ANTLR` debug task
 
 ## VSCode Extension
 

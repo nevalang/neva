@@ -567,7 +567,7 @@ func (a Analyzer) getResolvedPortType(
 	if portAddr.Port == "" {
 		if len(ports) > 1 {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      ErrIllegalPortlessConnection,
+				Err:      fmt.Errorf("%w: node '%v'", ErrIllegalPortlessConnection, portAddr.Node),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}

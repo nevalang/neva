@@ -66,6 +66,30 @@ pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     wrap -> :res
 }
 
+// --- Filter ---
+
+// IFilterHandler is a dependency for Filter component.
+pub interface IFilterHandler<T>(data T) (res bool)
+
+// Filter is for filtering items in a stream.
+// It will produce a new stream with only items that passed the filter.
+// It's possible to chain multiple Filters together.
+pub flow Filter<T>(data stream<T>) (res stream<T>) {
+    Cond<stream<T>>
+    Del
+    FanOut<stream<T>>
+    handler IFilterHandler<T>
+
+    ---
+
+    :data -> fanOut
+    
+    fanOut[0] -> cond:data
+    fanOut[1].data -> handler -> cond:if
+    
+    cond:then -> :res
+    cond:else -> del
+}
 
 // --- For ---
 
