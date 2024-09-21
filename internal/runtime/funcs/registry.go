@@ -75,7 +75,7 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 
 		// time
 		"time_delay": timeDelay{},
-		"time_sleep": timeSleep{},
+		"time_after": timeAfter{},
 
 		// strings
 		"string_at":   stringAt{},
