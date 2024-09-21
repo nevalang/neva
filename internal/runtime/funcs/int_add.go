@@ -12,7 +12,7 @@ func (intAdd) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Single("seq")
+	seqIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}

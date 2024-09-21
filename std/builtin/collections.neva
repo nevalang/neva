@@ -7,7 +7,7 @@ pub flow Len<T list<any> | map<any> | string>(data T) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)
-pub flow List<T>(seq stream<T>) (res list<T>)
+pub flow List<T>(data stream<T>) (res list<T>)
 
 // Push creates new list with appended element.
 #extern(list_push)
@@ -21,4 +21,4 @@ pub flow Sort<T int | float | string>(data list<T>) (res T)
 pub flow Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
 
 #extern(list_to_stream)
-pub flow Iter<T>(data list<T>) (seq stream<T>)
+pub flow Iter<T>(data list<T>) (data stream<T>)

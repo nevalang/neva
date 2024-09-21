@@ -6,13 +6,18 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type streamToList struct{}
+type intAddReducer struct{}
 
-func (s streamToList) Create(
+func (intAddReducer) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Single("data")
+	firstIn, err := io.In.Single("first")
+	if err != nil {
+		return nil, err
+	}
+
+	secondIn, err := io.In.Single("second")
 	if err != nil {
 		return nil, err
 	}
@@ -23,27 +28,21 @@ func (s streamToList) Create(
 	}
 
 	return func(ctx context.Context) {
-		acc := []runtime.Msg{}
-
 		for {
-			msg, ok := seqIn.Receive(ctx)
+			firstMsg, ok := firstIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			item := msg.Map()
-
-			acc = append(acc, item["data"])
-
-			if !item["last"].Bool() {
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewListMsg(acc)) {
+			secondMsg, ok := secondIn.Receive(ctx)
+			if !ok {
 				return
 			}
 
-			acc = []runtime.Msg{}
+			resMsg := runtime.NewIntMsg(firstMsg.Int() + secondMsg.Int())
+			if !resOut.Send(ctx, resMsg) {
+				return
+			}
 		}
 	}, nil
 }

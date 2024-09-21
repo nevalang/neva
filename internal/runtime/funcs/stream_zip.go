@@ -22,7 +22,7 @@ func (streamZip) Create(
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Single("seq")
+	seqOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}

@@ -25,4 +25,4 @@ flow Main(start any) (stop any) {
 #extern(int IntAdder, float FloatAdder, string StringAdder)
 pub flow Add<
 	T int | float | string
->(seq stream<T>) (res T)
+>(data stream<T>) (res T)
