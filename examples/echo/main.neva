@@ -1,6 +1,7 @@
 import { io }
 
 flow Main(start) (stop) {
-	nodes { io.Scanln, Println }
+	io.Scanln, Println
+	---
 	:start -> scanln -> println -> :stop
 }

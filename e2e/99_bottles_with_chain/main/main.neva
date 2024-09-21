@@ -1,19 +1,19 @@
 // https://www.99-bottles-of-beer.net
 
 flow Main(start) (stop) {
-    nodes { Switch<int>, next PrintNext2Lines }
-
+    Switch<int>
+    next PrintNext2Lines
+    ---
     :start -> (99 -> next:n -> switch:data)
     -1 -> switch:case[0] -> :stop
     switch:else -> next:n
 }
 
 flow PrintNext2Lines(n int) (n int) {
-    nodes {
-        decr   Decr<int>
-        first  PrintFirstLine
-        second PrintSecondLine
-    }
+    decr   Decr<int>
+    first  PrintFirstLine
+    second PrintSecondLine
+    ---
     :n -> first:n -> decr:data
     decr:res -> second:n -> :n
 }
@@ -25,8 +25,8 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 flow PrintFirstLine(n int) (n int) {
-    nodes { Switch<int>, Println, Printf, Lock<int> }
-
+    Switch<int>, Println, Printf, Lock<int>
+    ---
     :n -> [switch:data, lock:data]
 
     0 -> switch:case[0] -> ($firstLine3 -> println:data)
@@ -48,8 +48,8 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 flow PrintSecondLine(n int) (n int) {
-    nodes { Switch<int>, Lock<int>, Printf, Println }
-
+    Switch<int>, Lock<int>, Printf, Println
+    ---
     :n -> [switch:data, lock:data]
 
     -1 -> switch:case[0] -> ($secondLine4 -> println:data)

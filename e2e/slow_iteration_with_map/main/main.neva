@@ -7,14 +7,20 @@ import { time }
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 flow Main(start) (stop) {
-    nodes { Iter<int>, Map<int,int>{Slow}, List, Println }
+    Iter<int>
+    Map<int, int>{Slow}
+    List
+    Println
+    ---
     :start -> (
         $lst -> iter -> map -> list -> println -> :stop
     )
 }
 
 flow Slow(data int) (res int) {
-    nodes { time.Delay<int>, Decr<int> }
+    time.Delay<int>
+    Decr<int>
+    ---
     :data -> delay:data
     $time.second -> delay:dur
     delay -> decr -> :res

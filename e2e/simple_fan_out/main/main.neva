@@ -1,7 +1,9 @@
 import { time }
 
 flow Main(start) (stop) {
-    nodes { p1 Println, p2 Println }
+    p1 Println
+    p2 Println
+    ---
     :start -> [p1, p2]
     p1 -> (p2 -> :stop)
 }

@@ -1,5 +1,6 @@
 flow Main(start) (stop) {
-    nodes { Range, List, Println }
+    Range, List, Println
+    ---
     :start -> [
         (1 -> range:from),
         (11 -> range:to)

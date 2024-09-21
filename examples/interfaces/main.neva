@@ -1,13 +1,13 @@
 flow Main(start) (stop) {
-    nodes {
-        WithDep { Println }
-    }
+    WithDep { Println }
+    ---
     :start -> withDep -> :stop
 }
 
 interface IPrinter<T>(data T) (sig T)
 
 flow WithDep (msg any) (msg any) {
-    nodes { IPrinter<any> }
+    IPrinter<any>
+    ---
     :msg -> iPrinter -> :msg
 }

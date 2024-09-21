@@ -1,6 +1,7 @@
 import { os, lists }
 
 flow Main(start) (stop) {
-	nodes { os.Args, Iter, For{Println}, Wait }
+	os.Args, Iter, For{Println}, Wait
+	---
 	:start -> args -> iter -> for -> wait -> :stop
 }

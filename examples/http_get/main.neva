@@ -1,7 +1,8 @@
 import { http }
 
 flow Main(start) (stop) {
-  nodes { http.Get, Println }
+  http.Get, Println
+  ---
   :start -> ('http://www.example.com' -> get)
   get:resp.body -> println -> :stop
 }

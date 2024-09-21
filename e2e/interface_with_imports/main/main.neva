@@ -3,15 +3,15 @@ import { github.com/nevalang/x:main }
 interface IPrinter<T>(data T) (sig T)
 
 flow Main(start any) (stop any) {
-    nodes {
-        Secondflow { main.Println<any> }
-    }
+    Secondflow { main.Println<any> }
+    ---
     :start -> secondflow:msg
     secondflow:msg -> :stop
 }
 
 flow Secondflow (msg any) (msg any) {
-    nodes { IPrinter<any> }
+    IPrinter<any>
+    ---
     :msg -> iPrinter:data
     iPrinter:sig -> :msg
 }

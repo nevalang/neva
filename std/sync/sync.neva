@@ -5,14 +5,16 @@
 // WaitGroup will not output a signal until it received at least :count.
 //
 // Example:
-//  nodes { sync.WaitGroup }
+//  sync.WaitGroup
+// ---
 //  :start -> (2 -> wg:count)
 //  task1 -> (true -> wg:sig)
 //  task2 -> (true -> wg:sig)
 //  wg -> :stop  // Signals after both tasks are done.
 //
 // Example:
-//  nodes { sync.Wg }
+//  sync.Wg
+// ---
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
 pub flow WaitGroup(count int, sig any) (sig any)

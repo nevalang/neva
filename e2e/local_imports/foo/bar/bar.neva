@@ -1,6 +1,7 @@
 import { builtin }
 
 pub flow Println(data any) (sig any) {
-    nodes { builtin.Println }
+    builtin.Println
+    ---
 	:data -> println -> :sig
 }

@@ -7,12 +7,15 @@ import { time }
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 flow Main(start) (stop) {
-    nodes { Iter<int>, For{Slow}, Wait }
+    Iter<int>, For{Slow}, Wait
+    ---
     :start -> ($lst -> iter -> for -> wait -> :stop)
 }
 
 flow Slow(data int) (sig any) {
-    nodes { time.Delay, Println }
+    time.Delay
+    Println
+    ---
     :data -> delay:data
     $time.second -> delay:dur
     delay -> println -> :sig

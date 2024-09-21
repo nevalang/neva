@@ -1,11 +1,10 @@
 // top-level comment 1
 flow Main(start) (stop) {
 	// comment inside flow 1
-	nodes {
-		// comment inside nodes 1
-		Println<any>
-		// comment inside nodes 2
-	}
+	// comment inside nodes 1
+	Println<any>
+	// comment inside nodes 2
+	---
 	// comment inside flow 2
 	:start -> println:data
 	println:sig -> :stop

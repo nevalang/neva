@@ -6,8 +6,9 @@ type User struct {
 // FIXME - cannot use 'struct' as a node name
 
 flow Main(start any) (stop any) {
-    nodes { Println, builder Struct<User> }
-
+    Println
+    builder Struct<User>
+    ---
     :start -> [
         ('John' -> builder:name),
         (32 -> builder:age)

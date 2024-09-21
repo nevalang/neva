@@ -1,8 +1,8 @@
 import { io }
 
 flow Main(start) (stop) {
-  nodes { io.WriteAll, Println }
-
+  io.WriteAll, Println
+  ---
   :start -> [
     ('file_writer_example.txt' -> writeAll:filename),
     ('Hello, io.WriteAll!' -> writeAll:data)

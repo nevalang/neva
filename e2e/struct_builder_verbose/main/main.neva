@@ -10,8 +10,9 @@ type User struct {
 flow MyStructBuilder(age int, name string) (msg User)
 
 flow Main(start any) (stop any) {
-    nodes { Println, builder MyStructBuilder }
-
+    Println
+    builder MyStructBuilder
+    ---
     :start -> [
         ('John' -> builder:name),
         (32 -> builder:age)
