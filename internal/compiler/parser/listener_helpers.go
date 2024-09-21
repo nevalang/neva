@@ -722,8 +722,6 @@ func parsePrimitiveConstLiteral(
 			Inst: &ts.InstExpr{Ref: parsedEnumRef},
 			Meta: parsedEnumRef.Meta,
 		}
-	case lit.Nil_() != nil:
-		return src.Message{}, nil
 	default:
 		panic("unknown const: " + lit.GetText())
 	}
@@ -918,8 +916,6 @@ func parseMessage(
 				}
 			}
 		}
-	case constVal.Nil_() != nil:
-		return src.Message{}, nil
 	default:
 		panic("unknown const: " + constVal.GetText())
 	}
