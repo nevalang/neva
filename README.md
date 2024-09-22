@@ -1,16 +1,14 @@
-![Big Header](./assets/header/big.svg "Big header with nevalang logo")
+![Big Header](./assets/header/big_1.svg "Big header with nevalang logo")
 
 **<p align="center">Dataflow Programming Language</p>**
 
 ![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
-> ⚠️ Warning: This project is currently under heavy development and is not yet ready for production use.
+> ⚠️ **Warning**: This project is currently under heavy development and is not yet ready for production use.
 
 # Nevalang
 
 A general-purpose dataflow programming language with static types and implicit parallelism. Compiles to machine code and Go.
-
-Website: https://nevalang.org/
 
 ## Features 🚀
 
@@ -22,7 +20,7 @@ Website: https://nevalang.org/
 - **Garbage Collection**
 - **...And more!**
 
-Please note that even though these features are technically implemented, _developer-experience may be bad_ due to the current state of the project. **No backward-compatibility guarantees** at the time.
+Note: Features are implemented but may have poor developer experience. No backward-compatibility guaranteed during development.
 
 ## Quick Start
 
@@ -40,80 +38,66 @@ If your device is connected to a chinese network:
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/cnina/install.sh | bash
 ```
 
-For Windows (please note there's an WIP [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from releases if installed won't work):
+For Windows (see [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from [releases](https://github.com/nevalang/neva/releases) if installation won't work):
 
 ```batch
 curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat && installer.bat
 ```
 
-### Creating a project
+### Hello World
+
+First, use Neva CLI to create a project template
 
 ```bash
-neva new test
+neva new my_awesome_project
 ```
 
-### Running
+Then run it
 
 ```bash
-neva run test/src
+neva run my_awesome_project/src
 ```
 
-You should see the following output:
+You should see the following output
 
 ```bash
 Hello, World!
 ```
 
-### What's inside?
-
-If you open `test/src/main.neva` with your favorite IDE you'll see this
+If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see this
 
 ```neva
 flow Main(start) (stop) {
-	nodes { Println }
+	Println
+	---
 	:start -> ('Hello, World!' -> println -> :stop)
 }
 ```
 
-Here we define a _flow_ `Main` with _inport_ `start` and _outport_ `stop`. It contains one _node_, `println`, an _instance_ of `Println`. The _network_ consist of one _connection_: upon receiving a message from `start`, "Hello, World!" is sent to `println`. After printing, the program terminates by signaling `stop`.
-
-### Execute
-
-Now run (make sure you are in the `test` directory with `neva.yml`):
-
-```bash
-neva run test/src # or neva run test/src/main.neva
-```
-
-You should see the following output:
-
-```bash
-Hello, World!
-```
+The `Main` component has `start` inport and `stop` outport, with a `println` node (instance of stdlib's `Println`). The network after `---` shows: on `start` message, `"Hello, World!"` is sent to `println`, then program terminates via `stop` signal.
 
 ### What's Next?
 
-- [Learn more about the language](https://nevalang.org/)
-- [See more examples](./examples/) (`git clone` this repo and `neva run` them!)
+- [Documentation](./docs/README.md)
+- [Examples](./examples/)
+- [Community](#community)
 
 ## Roadmap (🚧 WIP)
 
-Nevalang is at an extremely early stage but with the help of community it can become a feature-rich, mature language.
+Nevalang is in its early stages, but community support can help it grow into a mature, feature-rich language.
 
-- Bigger Community and Better Documentation
-- Batteries included stdlib (including Testing Framework)
-- More language features including _Pattern-Matching_
-- Good DX (Language Server, Debugger, Linter, etc)
-- **Go Interop** (import Go from Neva and Neva from Go)
-- **Visual Programming** in VSCode (Neva becomes hybrid langauge)
+- Grow community and improve docs
+- Expand stdlib (including test-framework)
+- New language features (e.g. true patter-matching)
+- Enhance developer experience (lsp, debugger, etc)
+- Implement **Go interoperability** (call Go from Neva and Neva from Go)
+- Enable **visual programming** in VSCode
 
-[See backlog for more details](https://github.com/orgs/nevalang/projects)
-
-Nevalang needs your help - it currently has just a few maintainers.
+Nevalang seeks contributors to join its small team of maintainers.
 
 ## Community
 
-Join community. _Together we can change programming_ for the better:
+Join our community and help shape the future of programming:
 
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
@@ -126,6 +110,3 @@ Also please check our [CoC](./CODE_OF_CONDUCT.md).
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-Neva is a relatively small and simple language. Don't be intimidated, feel free to dive in and hack around. Some directories have a `README.md`.
-
-Note that, due to the early stage of development, the documentation can sometimes be outdated. Feel free to reach out to maintainers if you need _any_ help.
