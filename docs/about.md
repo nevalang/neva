@@ -1,67 +1,155 @@
 # About
 
-Nevalang is a general purpose programming language: documentation, compiler, runtime, cli, editor plugins, etc. What kind of language it is?
+Nevalang is a general-purpose programming language with the following key characteristics:
 
-- Pure Dataflow (FBP-like)
-- Compiled (Machine code, Golang, WASM)
-- Statically (Strongly) Typed
-- Concurrent/Parallel by default
-- Hybrid (textual/visual)
-- Pure Declarative
-- Go Interop (call Neva from Go and vice versa)
+- **Pure Dataflow**: Programs are expressed using dataflow abstractions like nodes, ports, connections, and messages. Traditional programming constructs (variables, functions, loops, etc.) are absent.
+- **Implicit Parallelism**: Parallelism is built-in, allowing concurrent execution without explicit primitives like mutexes or threads.
+- **Compilation**: Nevalang compiles to Go as an intermediate representation, then to machine code or WASM, offering performance benefits and easier deployment.
+- **Strong Static Typing**: The language employs a strong, static, and structural type system, ensuring type safety at compile-time.
+- **Hybrid Programming (WIP)**: Nevalang supports both textual and visual programming as first-class citizens, allowing flexibility in development approaches.
+- **Go Interoperability (WIP)**: Nevalang can interact with existing Go codebases, allowing for gradual adoption and integration with Go projects.
 
-We will discover what this means what piece by piece.
+These features combine to create a unique language that emphasizes dataflow, type safety, and declarative programming while leveraging Go's ecosystem and compilation targets. Nevalang aims to provide a fresh approach to programming, particularly suited for concurrent and parallel applications.
 
-## Pure Dataflow
+## Motivation
 
-Pure Dataflow means that your program is expressed in terms of dataflow abstractions such as nodes, ports, connections and messages.
+Nevalang aims to create a better programming language where programs are easier to understand, debug, and create. Here are the key motivations behind its development:
 
-There are no variables, no functions, no classes, no objects, no methods, no loops, no ifs, no switches, no exceptions, no mutable state.
+### General Purpose Dataflow
 
-Nevalang's dataflow mostly influenced by Flow-Based Programming paradigm but Nevalang is not pure FBP. You can find more info about this in specialized section.
+Most general-purpose languages are controlflow-based, while dataflow languages are often domain-specific. Nevalang seeks to bridge this gap by offering a pure, general-purpose dataflow language with static typing.
 
-## Compilation
+### Implicit Parallelism
 
-Nevalang uses Go as low-level IR (Intermediate Representation). This means your Nevalang program is firstly compiled to Go and then Go compiler is used to compile it to any target that Go compiler supports, such as machine code or WASM.
+Nevalang introduces _implicit parallelism_, automating concurrency control like garbage collection automated memory management. Key features:
 
-This firstly has performance benifits and secondly it's easier to deploy if all you need to ship is a binary, unlike Python or Java where you need interpreter/VM of a specific (correct) version.
+- Components exchange messages via buffered queues
+- Blocking limited to specific parts, allowing others to continue
+- First-class stream processing for efficient data handling
+- No low-level concurrency primitives, enhancing safety
 
-There's a temptation to say that Nevalang is as fast as Go but that statement is incorrect because Nevalang is higher abstraction. It has it's own (very-very thin, but still) runtime on top of Go's.
+This approach makes concurrent programming the default, simplifying development.
 
-## Strong Static Typing
+### Text/Visual Hybrid (WIP)
 
-Nevalang has _strong static structural_ type-system. What does it mean?
+Despite humans' visual nature, text-based coding has dominated for decades. A general-purpose visual programming language is needed, as existing visual languages lack the popularity of text-based ones.
 
-- _Strong_ - means there are no implicit type-casts. E.g. `float` will never be implicitly converted to `int` and you will always have to convert (cast) them explicitly, by using special components
-- _Static_ - means that types are known at compile time. E.g. - you can (and you must) explicitly define what data type your port is sending or receiving, or what data-type some constant have
-- _Structural_ - means _structural sub-typing_ is used. In this case it used for data-types and interfaces/components implementation relation.
+Visual programming's necessity is evident in software design diagrams and the popularity of visual tools. People naturally think in interconnected processes, yet static diagrams quickly become outdated.
 
-If you are confused by something, don't worry. Type-system will be explained in detail on related section.
+The claim that visual programming is less maintainable is unfounded. Nevalang offer abstraction similar to text-based programming through modules, packages and components.
 
-## Implicit Parallelism
+Nevalang aims to combine textual and visual programming in the future, addressing the limitations of purely visual languages. The plan is to implement a minimalistic C-like syntax that can be fully represented visually, making it compatible with text-based tools like version control systems.
 
-Nevalang supports implicit parallelism. It means that you don't have to (and you can't) access parallelism/concurrency primitives such as mutexes, threads, coroutines, channels, etc. You just create dataflow and everything that can happen in parallel (better word is _concurrently_) - will happen this way. It's good because of 2 things: performance and maintainance. You basically get parallelism for free.
+### Optimized Type System
 
-If you want to know how exactly Nevalang executes your program then don't worry, there will be a special section about that. This is just a high level overview of a specific feature.
+Nevalang aims for a balanced type system that aids developers without being overly restrictive. It combines elements from Go and TypeScript, featuring structural subtyping for data types and interfaces, along with generics with constraints.
 
-## Hybrid (Textual and Visual Programming)
+#### Structural Subtyping
 
-Textual and visual programming in Nevalang are combined into single workflow. You can use only text if you e.g. work in environment that doesn't support visuals or you just don't like visual programming. However, Nevalang is and always will be hybrid langauge, which means visual programming is a first class citizen. If some feature cannot be supported in visual programming it might not be added or can be removed. Even language abstractions are done in a way so it's possible to visually represent them.
+Unlike Go’s nominative subtyping, Nevalang checks type compatibility based on structure, not name, avoiding unnecessary casting. In Go, a `readBook` function taking a `Book` struct won’t accept a `Magazine` struct, even though `Magazine` has the necessary fields.
 
-## Pure Declarative
+```go
+type Book struct { title string, author string }
+type Magazine struct { title string, author string, number int }
+func main() {
+    readBook(Magazine{title: "FBP time", author: "Emil Valeev"}) // compile error!
+}
+func readBook(book Book) { fmt.Println(book) }
+```
 
-Nevalang doesn't have a single imperative bit except go-interop (including both writing extensions and maintaining stdlib).
+Go requires explicit casting:
 
-Declarative Programming means you write your program by describing what do you want to get as a result, instead of explaining how to actually do it under the hood. E.g. explicit controlflow instructions like `for`, `break` or `goto` are imperative while things like `[1,2,3].map(double)` are declarative. You are not explaining _how_ to actually `map` stuff, you just say that this is _what_ result should be.
+```go
+readBook(Book{
+    title: magazine.title,
+    author: magazine.author,
+})
+```
 
-In Nevalang declarative programming is expressed in a way you write your program - you define entities. Computation is expressed in terms of graph that is also declarative. Network show what should happen (e.g. message from X should be moved to Y) and not how (send message to channel, block coroutine, etc).
+In Nevalang, structural typing eliminates this problem. For example, in web apps using API boundaries like gRPC or GraphQL, where developers often write mapping code between generated types and domain models, structural typing automatically handles compatibility, avoiding hundreds of lines of manual conversions.
 
-Of course there are different problems and imperative programming is better for some of them. However, if we have imperative languages, why not have declarative? Besides, there are tons of declarative languages, they are just (mostly) not dataflow. Let's take functional programming paradigm for instance. If we are talking about pure FP then we are automatically talking about pure declarative. Same goes for dataflow - pure dataflow is always pure declarative.
+### Better Debugging
 
-## Go Interop
+#### Improved Error Handling
 
-As being said Nevalang uses Go as low-level IR which opens the door for two-way interop with existing Go codebases. That is, Nevalang has potential to call Go code from neva code and vice versa - call Nevalang from Go.
+Following Go's "errors are values" approach, Nevalang treats errors as data types. It incorporates Rust-like error handling with a `?` operator, while ensuring that errors are always handled when present.
 
-This is very important thing about Nevalang - it's intended for gradual adaptation among Go developers. Otherwise it would be close to impossible to adapt the language to such a highly competitive market.
+#### Advanced Tracing
 
-However, if you are not Go developer, don't worry. Nevalang won't have interop with your language so you will have to use network for communication. However, it's completely fine to use Nevalang without knowing anything about Go. Nothing requires you Go knowledge to write Nevalang programs. Maybe couple of things might not seem obvious without Go background or as a non-Go developer you couldn't appreciate some decisions. That doesn't matter. Nevalang is separate language. Nevalang to Go is more what C to assembler is, rather than TypeScript to JavaScript.
+Every message in Nevalang has a path that updates as it moves through the program. This provides comprehensive tracing capabilities, similar to stack traces in exception-based languages, but for all messages, not just errors.
+
+#### Next-Generation Debugging (WIP)
+
+The combination of dataflow architecture and advanced tracing enables powerful debugging tools. Developers can set visual breakpoints on specific connections in the network graph, observe messages, and even update their values during runtime.
+
+By combining these features, Nevalang strives to offer a more efficient and intuitive programming experience, pushing the boundaries of what's possible in language design.
+
+## Paradigm
+
+Nevalang adopts the dataflow paradigm, which explains computation in terms of directed graphs. While influenced by Flow-Based Programming (FBP), Nevalang [diverges](./other/fbp.md) from it in several ways.
+
+### Dataflow vs Controlflow
+
+Two high-level programming paradigms exist: Dataflow and Controlflow. Dataflow includes variations like Actors and CSP, while Controlflow encompasses OOP and FP.
+
+Dataflow programming typically involves nodes, connections, and asynchronous message passing. Some controlflow languages (e.g., Go, Erlang) support dataflow subsets, but combining the two paradigms can be challenging.
+
+### Nevalang's Approach
+
+Nevalang makes dataflow its primary paradigm, with controlflow support as a secondary feature. Key dataflow concepts in Nevalang include:
+
+- Components and Nodes
+- Ports (input/output) and Connections
+- Immutable Messages
+
+Unlike many controlflow languages, Nevalang strictly separates code and data. Messages, not components, are passed between components.
+
+### Dependency Injection
+
+Nevalang supports polymorphism through interfaces and static dependency injection. While this approach is familiar to controlflow programmers from statically typed languages, Nevalang's implementation is purely static due to the separation of code and data.
+
+### Declarative Nature
+
+Nevalang is a declarative dataflow language, focusing on "what" rather than "how". This approach contrasts with imperative languages and even declarative controlflow languages like Haskell, which still use controlflow concepts like call/return.
+
+### Advantages and Challenges
+
+Dataflow excels in visualization and parallelism but can struggle with enforcing strict order of operations. While controlflow benefits from its long-standing dominance and extensive resources, dataflow presents opportunities for research and innovation in programming paradigms.
+
+### Flow-Based Programming
+
+> Feel free to skip this section if you are not familiar with the original concept of fbp.
+
+Nevalang's dataflow is influenced by FBP but differs in several key aspects:
+
+#### Granularity and Controlflow
+
+Nevalang is designed for general-purpose programming, expecting entire programs to be written in dataflow, unlike FBP which is used for high-level orchestration. Nevalang provides low-level components (written in Go) for operations like math, eliminating the need for users to write controlflow code except when contributing to the stdlib or integrating with Go.
+
+#### Data Handling
+
+Nevalang is garbage-collected with immutable data, avoiding ownership concepts. This prevents data races but may impact performance. Mutations are possible via unsafe packages (WIP) but are discouraged. FBP, in contrast, uses ownership and allows mutations.
+
+#### Node Behavior
+
+Nevalang's nodes are always running, automatically starting, suspending, and restarting as needed. FBP processes have explicit states (start, suspend, restart, shutdown) that can be manipulated.
+
+#### Static Typing
+
+Nevalang features a static type system with generics and structural sub-typing, improving IDE support and reducing runtime validations. FBP is dynamically typed in its dataflow part.
+
+#### Similarities
+
+Both paradigms support dataflow and implicit parallelism, sharing much terminology.
+
+#### Terminology Comparison
+
+| FBP                              | Nevalang                  |
+| -------------------------------- | ------------------------- |
+| Component (Atomic/Complementary) | Component (Native/Normal) |
+| Process                          | Node                      |
+| Connection                       | Connection                |
+| Ports                            | Ports                     |
+| IP                               | Message                   |
+| IIP                              | Constant                  |
+| IP Tree                          | Structure or Dictionary   |

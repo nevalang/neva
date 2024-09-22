@@ -1,4 +1,4 @@
-# Network
+# Networks
 
 Connections forms component's network. There are array-bypass connections and normal connections. Array bypass are very simple, normal takes many different forms. Connections are also have recursive hierarchy and can be mixed in a lot of forms.
 
