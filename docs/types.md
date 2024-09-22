@@ -1,102 +1,230 @@
 # Types
 
-Type entity (type definition) consist of an optional list of _type parameters_ followed by optional _type expression_ that is called _body_.
+Nevalang is statically typed, requiring compile-time known types for constants and ports. Type expressions refer to type definitions.
 
-## Base Type
+## Expression
 
-Type definition without body means _base_ type. Compiler is aware of base types and will throw error if non-base type has no body. Base types are only allowed inside `std/builtin` package. Some base types can be used inside _recursive type definitions_.
+Two types of type expressions: instantiation and literal.
 
-- _any_
-- _maybe_
-- _bool_
-- _int_
-- _float_
-- _string_
-- _dict_
-- _list_
-- _enum_
-- _union_
-- _struct_
+### Instantiation
 
-### Any (Top-Type)
+Consists of an entity reference and optional type-arguments (if the type definition has type-parameters).
 
-`any` is a _top-type_. It means that any other type is a _sub-type_ of any. That means you can pass any type everywhere `any` is expected. However, since `any` doesn't tell anything about the type, you cannot pass message of type `any` anywhere where more concrete type is expected. You need to either rewrite your code without using any or explicitly cast `any` to concrete type.
+```neva
+int // instantiation without type-arguments
+list<int> // instantiation with 1 type-argument
+streams.ZipResult<int, float> // instantiation with 2 type-arguments
+```
 
-### Maybe
+Type expressions can be infinitely nested:
 
-Maybe represents value that maybe do not exist. One must unwrap maybe before using the actual value.
+```neva
+dict<
+    string,
+    list<struct{
+        foo list<dict<int, float>>
+        bar dict<float, list<int | string>>
+    }>
+>
+```
 
-### Boolean
+### Literal
 
-Boolean type has only two possible values `true` and `false`
+Literal expressions are used for structs, enums, and unions, which cannot be expressed as instantiations.
 
-### Integer
+```neva
+struct { a int, b float } // struct with 2 fields
+enum { Foo, Bar, Baz } // enum with 3 members
+int | string | float | struct{} // union with 4 elements
+```
 
-Integer is 64 bit integer number
+## Definition
 
-### Float
+Type Definition consists of an id, optional type parameters, and a body expression (except for base types).
 
-Integer is 64 bit floating point number
+Examples:
 
-### Strings
+```neva
+// id `foo` with expr `int` and no type-params
+type foo int
+// id `bar` with expr `list<T>` and 1 type-param `T`
+type bar<T> list<T>
+// id `baz` with expr `dict<T, Y>`
+// and 2 type-param `T` and `Y`, Y has `int | float` constraint
+type baz<T, Y int | float> dict<T, Y>
+```
 
-Strings are immutable utf encoded byte arrays
+With these type definitions, `foo`, `bar`, and `baz` can be used as `int`, `list`, and `dict` respectively.
 
-### Maps
+### Parameters (Generics)
 
-Maps are unordered key-value pairs with dynamic set of keys. All values must have the same type
+Every type parameter has a unique name and an optional constraint.
 
-### List
+#### Parameter Constraint
 
-List is a dynamic array that grows as needed. All values in the list must have the same type.
+Constraint is a type expression used as a supertype to ensure compatibility between type argument and parameter. If not explicitly defined, `any` is implicitly used.
 
-### Enums
+### Parameters and Arguments Compatibility
 
-Enums are set fixed set of values (members) each with its own name. They are represented in memory like integer numbers.
+> Word "compatible" has the same meaning as "is subtype of". Example: "T1 compatible with T2" means "T1 is a sub-type of T2"
 
-### Union
+Argument `A` is [compatible](https://en.wikipedia.org/wiki/Subtyping) with parameter `P` if `A' <: C`, where `A'` is resolved form of `A` and `C` is resolved `P`'s constraint. For multiple parameters/arguments, each must be compatible. The number of arguments must match the number of parameters. This is a special case of type expressions compatibility.
 
-Union is a _sum type_. It defines set of possible types.
+### Recursive Definition
 
-### Struct
+A type is recursive if it refers to itself in its own definition. For example: `type l list<l>`. The compiler determines which type support recursion.
 
-Structures are product types (records) - compile-time known set of fields with possibly different types.
+## Expression Resolving
 
-## Custom Type
+> Note: This section describes a simplified algorithm. For actual implementation, refer to the typesystem package source code.
 
-User is allowed to create custom types based on base-types.
+Type resolution is the process of reducing type expressions to their base types, ensuring type-safety and enabling IR generation. Consider the following type definitions:
 
-## Recursive Type Definition
+```neva
+type foo int
+type bar list<int>
+type baz<T> dict<int, T>
+type bax<T, Y foo> struct { x T, y baz<Y> }
+```
 
-If type refers to itself inside its own definition, then it's recursive definition. Example: `type l list<l>`. In this case `list` must be base type that supports recursive definitions. Compiler knows which types supports recursion and which do not.
+And this type-expression:
 
-## Type Parameters (Generics)
+```neva
+bax<maybe<float>, foo>
+```
 
-Every type paremeter has name that must be unique across all other type parameters in this definition and constrant.
+Resolving can be thought of as a lambda-reduction-like process where type-expression is like a function-call. Entity-reference is the function name, and type-arguments are the arguments. References to type-parameters inside the function's body are replaced with provided arguments. This process recursively continues until the whole expression is resolved:
 
-## Type Parameter Constraint
+**Step 1 - Resolve type arguments**
 
-Constraint is a type expression that is used as _supertype_ to ensure _type compatibility_ between _type argument_ and type corresponding parameter. If no constrained explicitly defined then `any` is implicitly used.
+`maybe` and `float` are base types, so they are resolved. `foo` isn't, so `bax<maybe<float>, foo>` becomes `bax<maybe<float>, int>`:
 
-## Type Parameters and Arguments Compatibility
+```neva
+bax<maybe<float>, foo>
+// =>
+bax<maybe<float>, int>
+```
 
-Argument `A` compatible with parameter `P` if there's subtyping relation of form `A <: C` where`C` is a constraint of `P`. If there's several parameters/arguments, every one of them must be compatible. Count of arguments must always be equal to the count of parameters.
+**Step 2 - Replace type reference and parameters**
 
-## Type Expression
+Find the type definition of `bax`:
 
-There is 2 _kinds_ of type expressions:
+```neva
+type bax<T, Y int> struct { x T, y baz<Y> }
+```
 
-1. Instantiation expressions
-2. Literals expressions
+Replace `bax` with `struct { x T, y baz<Y> }` and substitute `T` with `maybe<float>` and `Y` with `int`:
 
-Type expressions can be infinitely nested. Process of reducing the type expression called _type resolving_. Resolved type expression is an expression that cannot be reduced to a more simple form.
+```neva
+bax<maybe<float>, int>
+// =>
+struct { x maybe<float>, y baz<int> }
+```
 
-## Type Instantiation Expression
+**Step 3 - Apply the algorithm recursively**
 
-Such expression consist of _entity reference_ (that must refer to existing type definition or type parameter) and optional list of _type arguments_. Type arguments themselves are arbitrary type expressions (they follows the same rules described above).
+Now apply the algorithm to the body:
 
-## Literal Type Expression
+```
+struct { x maybe<float>, y baz<int> }
+// =>
+struct { x maybe<float>, y dict<int, int> }
+```
 
-Type expressions that cannot be described in a instantiation form.
+**Final Result**
 
-<!-- TODO add examples -->
+```neva
+bax<maybe<float>, foo>
+// =>
+bax<maybe<float>, int>
+// =>
+struct { x maybe<float>, y baz<int> }
+// =>
+struct { x maybe<float>, y dict<int, int> }
+```
+
+### Type Compatibility
+
+Expression `E1` is compatible with `E2`, if `E1` can be used wherever `E2` is expected. For instantiation-expressions:
+
+1. Same entity reference (after both resolved)
+2. Equal number of type-arguments
+3. Each (resolved) argument of `E1` is compatible with the corresponding (resolved) argument from `E2`
+
+Exception: `any` is a super-type, every type-expression is compatible with it.
+
+For literals rules are different:
+
+#### Struct Literals
+
+Struct literal `S1` is compatible with `S2` if `S1` is a superset of `S2` and each field type in `S1` is compatible with its counterpart in `S2`.
+
+#### Enum Literals
+
+Enum literal `E1` is compatible with `E2` if `E1` is a subset of `E2`.
+
+#### Union Literals
+
+Union literal `U1` is compatible with `U2` if:
+
+1. `U1` has fewer or equal elements than `U2`
+2. Each element of `U1` has a compatible element in `U2`
+
+## Base Types
+
+Base types are type definitions without bodies, located in `std/builtin`. The compiler recognizes these types and prevents users from defining bodyless types. Some base types can be used in recursive type definitions. Here's the list:
+
+```neva
+pub type any
+pub type bool
+pub type int
+pub type float
+pub type string
+pub type dict<T>
+pub type list<T>
+pub type maybe<T>
+```
+
+### `any`
+
+Any is a [top-type](https://en.wikipedia.org/wiki/Top_type). All types are subtypes of `any`. You can pass anything where `any` is expected, but not vice versa. To use `any` where a specific type is needed, you must explicitly cast it, checking for errors.
+
+### `maybe<T>`
+
+Maybe is an [option-type](https://en.wikipedia.org/wiki/Option_type) representing a potentially absent value. It's an alternative to `nil`. Using `Maybe<T>` requires explicit unwrapping before use, ensuring [null-safety](https://en.wikipedia.org/wiki/Void_safety) and avoiding the [billion dollar mistake](https://en.wikipedia.org/wiki/Null_pointer).
+
+### `bool`
+
+Boolean type has two possible values: `true` and `false`. It's similar to an enum with 2 members. Booleans are used for conditional logic and routing.
+
+### `int`
+
+Integer is a 64-bit signed number.
+
+### `float`
+
+Float is 64-bit floating point number.
+
+### `string`
+
+Strings are UTF-8 encoded byte arrays. They can be accessed by index (handling possible absence) and converted to streams for iteration.
+
+### `list`
+
+List is a dynamic array of elements with the same type. It can be accessed by index (O(1) time, handling possible absence) or converted to a stream for iteration.
+
+### `dict`
+
+Dictionary is an [associative array](https://en.wikipedia.org/wiki/Associative_array) of key-value pairs. All values have the same type, keys are always strings. Dictionaries can be converted to streams for iteration. Key access is O(1), but require handling absent values.
+
+### `enum`
+
+Enums are fixed sets of named members, represented as integers. Handling requires checking all cases or a default. Enums are compatible if one is a subset of another.
+
+### `union`
+
+Union is a [sum type](https://en.wikipedia.org/wiki/Tagged_union) defining possible message types.
+
+### `struct`
+
+Structures are [product types](https://en.wikipedia.org/wiki/Product_type) - compile-time known set of fields with possibly different types.

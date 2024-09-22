@@ -86,7 +86,7 @@ By combining these features, Nevalang strives to offer a more efficient and intu
 
 ## Paradigm
 
-Nevalang adopts the dataflow paradigm, which explains computation in terms of directed graphs. While influenced by Flow-Based Programming (FBP), Nevalang [diverges](./other/fbp.md) from it in several ways.
+Nevalang adopts the dataflow paradigm, which explains computation in terms of directed graphs. While influenced by Flow-Based Programming (FBP), Nevalang diverges from it in several ways.
 
 ### Dataflow vs Controlflow
 
@@ -110,7 +110,7 @@ Nevalang supports polymorphism through interfaces and static dependency injectio
 
 ### Declarative Nature
 
-Nevalang is a declarative dataflow language, focusing on "what" rather than "how". This approach contrasts with imperative languages and even declarative controlflow languages like Haskell, which still use controlflow concepts like call/return.
+Nevalang is a declarative dataflow language, focusing on "what" rather than "how". This approach contrasts with imperative languages and even declarative controlflow languages like Haskell, which use controlflow concepts like call/return.
 
 ### Advantages and Challenges
 
@@ -126,7 +126,7 @@ Nevalang's dataflow is influenced by FBP but differs in several key aspects:
 
 Nevalang is designed for general-purpose programming, expecting entire programs to be written in dataflow, unlike FBP which is used for high-level orchestration. Nevalang provides low-level components (written in Go) for operations like math, eliminating the need for users to write controlflow code except when contributing to the stdlib or integrating with Go.
 
-#### Data Handling
+#### Garbage Collection
 
 Nevalang is garbage-collected with immutable data, avoiding ownership concepts. This prevents data races but may impact performance. Mutations are possible via unsafe packages (WIP) but are discouraged. FBP, in contrast, uses ownership and allows mutations.
 
@@ -153,3 +153,9 @@ Both paradigms support dataflow and implicit parallelism, sharing much terminolo
 | IP                               | Message                   |
 | IIP                              | Constant                  |
 | IP Tree                          | Structure or Dictionary   |
+| Sub-Stream                       | Stream                    |
+
+---
+
+- [Back: Table of Contents](./README.md#table-of-contents)
+- [Next: Program Structure](./program_structure.md)
