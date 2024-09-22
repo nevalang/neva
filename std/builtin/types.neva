@@ -1,17 +1,20 @@
-pub type any
-pub type bool
-pub type int
-pub type float
-pub type string
-pub type map<T> // TODO rename to dict
-pub type list<T>
-pub type maybe<T>
+pub type any // any possible type
+pub type bool // 1-byte for true/false
+// pub type byte // 8-bit unsigned integer // TODO?
+pub type int // 64-bit signed integer
+pub type float // 64-bit floating point
+pub type string // UTF-8 encoded string
+pub type dict<T> // unordered set of key-value pairs
+pub type list<T> // ordered sequence of elements
+pub type maybe<T> // optional value
 
+// error type
 pub type error struct {
     text string
     child maybe<error>
 }
 
+// stream type
 pub type stream<T> struct {
     data T
     idx int

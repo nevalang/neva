@@ -3,7 +3,7 @@
 // for maps it returns number of keys,
 // for for strings it returns number of utf-8 characters.
 #extern(list list_len, map map_len)
-pub flow Len<T list<any> | map<any> | string>(data T) (res int)
+pub flow Len<T list<any> | dict<any> | string>(data T) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)

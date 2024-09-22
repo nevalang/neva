@@ -26,7 +26,7 @@ pub type Rec4Lvl1 struct {
     rec4Lvl2 struct {
         foo vec<struct {
             bar vec<struct {
-                baz map<string, struct { baz bool }>
+                baz dict<string, struct { baz bool }>
             }>
         }>
     }

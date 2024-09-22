@@ -15,16 +15,16 @@ type MyVec vec<int>
 
 pub type MyVec2 Vec<int>
 
-pub type MyMap map<string, int>
+pub type MyMap dict<string, int>
 
-type MyMap map<string, int>
+type MyMap dict<string, int>
 
 type MyInt int
 
-type MyMap1<T, Y> map<T, Y>
+type MyMap1<T, Y> dict<T, Y>
 
-type MyMap2<T int, Y> map<T, Y>
+type MyMap2<T int, Y> dict<T, Y>
 
-type MyMap3<T int, Y vec<float>> map<T, Y>
+type MyMap3<T int, Y vec<float>> dict<T, Y>
 
-type MyMap3<T int, Y vec<float>> map<T, vec<Y>>
+type MyMap3<T int, Y vec<float>> dict<T, vec<Y>>

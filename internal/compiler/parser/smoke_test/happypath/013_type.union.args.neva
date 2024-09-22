@@ -35,26 +35,26 @@ type bar vec<i32
 type bar vec<
     i32 | vec<i32>
 >
-type bar vec<i32 | vec<i32>> | map<i32, i32 | f32>
+type bar vec<i32 | vec<i32>> | dict<i32, i32 | f32>
 
 type bar vec<
-    i32 | vec<i32>> | map<i32, i32 | f32
+    i32 | vec<i32>> | dict<i32, i32 | f32
 >
 
 type bar vec<
     i32 | vec<i32>
-> | map<i32, i32 | f32>
+> | dict<i32, i32 | f32>
 
-type bar vec<i32 | vec<i32>> | map<
+type bar vec<i32 | vec<i32>> | dict<
     i32, i32 | f32
 >
-type bar vec<i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>>
+type bar vec<i32 | vec<i32 | f32>> | dict<i32, i32 | vec<f32>>
 
 type bar vec<
-    i32 | vec<i32 | f32>> | map<i32, i32 | vec<f32>
+    i32 | vec<i32 | f32>> | dict<i32, i32 | vec<f32>
 >
 
 pub type bar vec<
     i32 |
     vec<i32 | f32>
-> | map<i32, i32 | vec<f32>>
+> | dict<i32, i32 | vec<f32>>

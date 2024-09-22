@@ -12,35 +12,35 @@ pub type Rec struct {
 
 pub type Rec struct {
     foo vec<int>
-    bar map<string, int>
+    bar dict<string, int>
 }
 
 pub type Rec struct {
-    foo map<string, int>
+    foo dict<string, int>
     bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday }>
 }
 
 pub type Rec struct {
-    foo map<string, int>
+    foo dict<string, int>
     bar vec<enum {
         Monday, Tuesday, Wednesday, Thursday, Friday }>
 }
 
 pub type Rec struct {
-    foo map<string, int>
+    foo dict<string, int>
     bar vec<enum { Monday, Tuesday, Wednesday, Thursday, Friday
     }>
 }
 
 pub type Rec struct {
-    foo map<string, int>
+    foo dict<string, int>
     bar vec<enum {
         Monday, Tuesday, Wednesday, Thursday, Friday
     }>
 }
 
 pub type Rec struct {
-    foo map<string, int>
+    foo dict<string, int>
     bar vec<enum {
         Monday,
         Tuesday,
