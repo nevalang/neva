@@ -26,7 +26,7 @@ The core abstraction in Nevalang. There are four kinds:
 
 1. Types - message shape definition
 2. Constants - reusable messages with static values
-3. Interfaces - abstract components
+3. Interfaces - definition of IO of abstract components
 4. Components - computation units
 
 Entities can be public (`pub`) or private, determining their visibility outside the package.
