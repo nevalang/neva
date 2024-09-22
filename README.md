@@ -13,14 +13,14 @@ A general-purpose dataflow programming language with static types and implicit p
 ## Features 🚀
 
 - **Dataflow Programming**
-- **Strong Static Typing**
 - **Implicit Parallelism**
 - **Compiles to Machine Code, Go and More**
-- **Clean C-like Syntax**
 - **Garbage Collection**
+- **Strong Static Typing**
+- **Clean C-like Syntax**
 - **...And more!**
 
-Note: Features are implemented but may have poor developer experience. No backward-compatibility guaranteed during development.
+_Note: Features are implemented but may have poor developer experience. No backward-compatibility guaranteed at the moment._
 
 ## Quick Start
 
@@ -109,4 +109,3 @@ Also please check our [CoC](./CODE_OF_CONDUCT.md).
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
-

@@ -1,4 +1,4 @@
-# Interface Entity
+# Interfaces
 
 Interface is a _component signature_ that describes _abstract component_ - its input and output _ports_ and optional type parameters. Interfaces are used for _dependency injection_.
 
