@@ -9,7 +9,7 @@ flow Main(start any) (stop any) {
 		(1 -> sequencer:port[0]),
 		(2 -> sequencer:port[1])
 	]
-	sequencer:seq -> adder:seq
+	sequencer:data -> adder:data
 	adder:res -> println:data
 	println:sig -> :stop
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type timeSleep struct{}
+type timeAfter struct{}
 
-func (timeSleep) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (timeAfter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	durIn, err := io.In.Single("dur")
 	if err != nil {
 		return nil, err

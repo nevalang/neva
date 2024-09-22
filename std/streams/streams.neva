@@ -4,7 +4,7 @@ pub type ProductResult<T, R> struct {
 } 
 
 #extern(stream_product)
-pub flow Product<T, R>(first stream<T>, second stream<R>) (seq stream<ProductResult<T, R>>)
+pub flow Product<T, R>(first stream<T>, second stream<R>) (data stream<ProductResult<T, R>>)
 
 pub type ZipResult<T, R> struct {
     first T
@@ -15,4 +15,4 @@ pub type ZipResult<T, R> struct {
 // where first is from the first stream and second is from the second stream.
 // Stops when either stream is exhausted.
 #extern(stream_zip)
-pub flow Zip<T, R>(first stream<T>, second stream<R>) (seq stream<ZipResult<T, R>>)
+pub flow Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)

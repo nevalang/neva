@@ -1,0 +1,7 @@
+import { time }
+
+flow Main(start) (stop) {
+	time.After
+	---
+	:start -> ($time.second -> after -> :stop)
+}

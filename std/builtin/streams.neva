@@ -16,11 +16,11 @@ pub flow Range(from int, to int) (data stream<int>)
 // StreamPort iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub flow StreamPort<T>([port] T) (seq stream<T>)
+pub flow StreamPort<T>([port] T) (data stream<T>) // TODO data->res
 
 // IPortReducer reduces a stream of messages to one single message.
 // It's expected to send a result message after every processed stream.
-pub interface IPortReducer<T>(seq stream<T>) (res T)
+pub interface IPortReducer<T>(data stream<T>) (res T)
 
 // ReducePort reduces messages from multiple connections to a single message.
 // It iterates over all array-inport's slots in order and streams every message
@@ -66,6 +66,62 @@ pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     wrap -> :res
 }
 
+// --- Filter ---
+
+// IFilterHandler is a dependency for Filter component.
+pub interface IFilterHandler<T>(data T) (res bool)
+
+// Filter is for filtering items in a stream.
+// It will produce a new stream with only items that passed the filter.
+// It's possible to chain multiple Filters together.
+pub flow Filter<T>(data stream<T>) (res stream<T>) {
+    Cond<stream<T>>
+    FanOut<stream<T>>
+    handler IFilterHandler<T>
+
+    ---
+
+    :data -> fanOut
+    
+    fanOut[0] -> cond:data
+    fanOut[1].data -> handler -> cond:if
+    
+    cond:then -> :res
+}
+
+interface IReduceHandler<T, Y>(acc T, el T) (res Y) // TODO res->acc?
+
+// Reduce applies a reduction function to a stream of values, accumulating the result.
+// It takes an initial value and a stream of data, and produces a single result.
+pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
+    handler IReduceHandler<T, Y>
+    fanOut FanOut<stream<T>>
+    acc Accumulator<Y>
+
+    ---
+
+    :init -> acc:init
+    
+    :data -> fanOut
+    fanOut[0].data -> handler:el
+    fanOut[1].last -> acc:last
+    
+    acc:cur -> handler:acc
+    handler:res -> acc:upd
+
+    acc:res -> :res
+}
+
+// IDEA:
+// pub type AccumulatorUpdate<T> strcut {
+//     data T
+//     last bool
+// }
+
+// Accumulator maintains the current state of the reduction.
+// It updates its value with each new input and outputs the final result when last is true.
+#extern(accumulator)
+pub flow Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
 // --- For ---
 

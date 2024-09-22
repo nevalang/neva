@@ -1,7 +1,0 @@
-import { time }
-
-flow Main(start) (stop) {
-	time.Sleep
-	---
-	:start -> ($time.second -> sleep -> :stop)
-}

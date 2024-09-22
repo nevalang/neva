@@ -1,8 +1,8 @@
 # Contributing
 
-Read the https://nevalang.org/docs/tutorial.
+Neva is a relatively small and simple language, don't be intimidated and feel free to hack around and reach out to maintainers if you need help.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
+Start from reading [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
 
 ## Requirements
 
@@ -10,11 +10,11 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
 - Make: https://www.gnu.org/software/make/#download
 - NodeJS and NPM: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/
 - Antlr: `pip install antlr4-tools`
-- Tygo: `go install github.com/gzuidhof/tygo@latest`
+<!-- - Tygo: `go install github.com/gzuidhof/tygo@latest` -->
 
 ### VSCode
 
-These are not really required but recommended in order you're using VSCode
+Not required but recommended:
 
 - [nevalang](https://marketplace.visualstudio.com/items?itemName=nevalang.vscode-nevalang)
 - [antlr4](https://marketplace.visualstudio.com/items?itemName=mike-lischke.vscode-antlr4)
@@ -23,26 +23,29 @@ These are not really required but recommended in order you're using VSCode
 
 ## Development
 
-## ANTLR Grammar
+## Syntax (ANTLR, Parser)
 
-Don't forget to open `neva.g4` file before debugging with VSCode
+1. Make changes to `neva.g4` and corresponding `*.neva` files in the repo
+2. If something doesn't work, run `/parser/smoke_test`
+3. To debug deeper, make sure `neva.g4` is opened in the editor and launch VSCode's `ANTLR` debug task
 
-## VSCode Extension
+<!-- ## VSCode Extension
 
 VSCode extension depends on types defined in the `sourcecode` and `typesystem` packages so it's dangerous to rename those. If you going to do so, make sure you did't brake TS types generation.
 
-Check out [tygo.yaml](./tygo.yaml). and `CONTRIBUTING.md` in "vscode-neva" repo.
+Check out [tygo.yaml](./tygo.yaml). and `CONTRIBUTING.md` in "vscode-neva" repo. -->
 
 ## Learning Resources
 
-### FBP/DataFlow
+### Dataflow
 
+- [Nevalang's Documentation](./docs/README.md)
 - [Flow-Based Programming: A New Approach to Application Development](https://jpaulmorrison.com/fbp/1stedchaps.html)
 - [Dataflow and Reactive Programming Systems: A Practical Guide](https://www.amazon.com/Dataflow-Reactive-Programming-Systems-Practical/dp/1497422442)
 
 ### Golang
 
-Advanced Go knowledge is required. Especially understanding concurrency.
+Advanced understanding of concurrency is very helpful:
 
 - [Concurrency is not parallelism](https://go.dev/blog/waza-talk)
 - [Share Memory By Communicating](https://go.dev/blog/codelab-share)
@@ -50,45 +53,18 @@ Advanced Go knowledge is required. Especially understanding concurrency.
 - [Go Concurrency Patterns: Context](https://go.dev/blog/context)
 - [Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines)
 
-## Community
-
-Check out https://nevalang.org/community to find out where you can get help and be in touch
-
 ## Design Principles
 
-Nevalang is built on a set of principles. They were rather naturally derived from the development process rather artificially created beforehand.
+Nevalang adheres to the following key principles:
 
-> WARNING: Language is under heavy development and these principles are not guarantees we can give you at the moment, but rather guiding stars for us to keep moving in the right direction
-
-### Program must fail at startup or never
-
-The idea is that most of the errors must be caught by compiler at compile time. And the rest of them, that are hard to catch (without sacrificing compiler's simplicity) are checked in runtime at startup.
-
-If no errors were caught at compile time and startup - then the program is correct and must run successfully. Any (non-logical) error that occurred after startup must be threated like compiler bug.
-
-### Runtime must be fast, flexible and unsafe
-
-Runtime won't do any checks after startup. The program that runtime consumes must be correct. Program's correctness must be ensured by compiler. If there's a bug in compiler and runtime consumed invalid program - bad things can happen: deadlocks, memory leaks, freezes and crashes.
-
-### Compiler directives must not be required
-
-Language must allow to implement everything without using of compiler directives.
-
-**Compiler directives are not always unsafe** (analyzer won't always validate their usage - that will make implementation more complicated) and thus must be used by language/stdlib developers or at _for users that know what they are doing_.
-
-It's good for user to understand what compiler directives are and how syntax sugar use them under the hood though.
-
-### There is interpreter (backend can be slow)
-
-Compiler must be fast to the point where it generates IR. After that we have generating of target code (e.g. generating Go and then generating machine code with Go compiler) - that part ("backend") doesn't have to be fast. It's more important to keep it simple.
-
-The reason for that is that we have an interpreter that is internally uses compiler (it's impossible to generate IR from invalid program due to lack of type information), but not the whole thing. Just to the point where it generates IR. That's the part of the compiler that is used for development/debugging purposes. That's where we need to be fast.
-
-### There is visual programming
-
-Once we build the good enough tool for visual programming we will switch from text based approach. Text will become supporting tool. To achieve this we must always keep in mind that what we do with the language must be easy to visualize in graph environment.
+1. **Fail-fast**: Programs should fail at compile-time or startup, not during runtime.
+2. **Unsafe but efficient runtime**: Runtime assumes program correctness for speed and flexibility.
+3. **Compiler directives**: Powerful but unsafe tools for advanced users and language developers.
+4. **Visual programming ready**: Language design considers future visual programming tools.
 
 ## Internal Implementation Q&A
+
+Here you'll find explanations for specific implementation choices.
 
 ### Why structures are not represented as Go structures?
 

@@ -38,7 +38,7 @@ flow Doer<T>(x int) (y T) {
     simpleAbsNode INode
     absNodeWithTypeArgs INode<
         int,
-        map<
+        dict<
             string, vec<bool>
         >
     >
@@ -83,7 +83,7 @@ flow Doer<T>(x int) (y T) {
 flow Doer<T>(x int) (y T) {
     concreteNodeWithDIAndTypeArgs  Node1<
         int,
-        map<
+        dict<
             string,
             vec<bool>
         >
@@ -99,7 +99,7 @@ flow Doer<T>(x int) (y T) {
 
     absNodeWithTypeArgs INode<
         int,
-        map<
+        dict<
             string, vec<bool>
         >
     >
@@ -108,7 +108,7 @@ flow Doer<T>(x int) (y T) {
 
     concreteNodeWithDIAndTypeArgs  Node1<
         int,
-        map<
+        dict<
             string,
             vec<bool>
         >

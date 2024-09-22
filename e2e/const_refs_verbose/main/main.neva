@@ -1,16 +1,16 @@
 type NumsStruct struct {
     l list<int>
-    m map<int>
+    d dict<int>
 }
 
 const one int = 1
 const two int = 2
 const three int = 3
 const numsList list<int> = [one, two, three]
-const numsMap map<int> = { key: one }
+const numsMap dict<int> = { key: one }
 const numsStruct NumsStruct = {
     l: numsList,
-    m: numsMap
+    d: numsMap
 }
 
 flow Main(start) (stop) {
