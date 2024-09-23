@@ -9,7 +9,7 @@ flow Main(start) (stop) {
 }
 
 flow FizzBuzz(data int) (res string|int) {
-    Select<int, string|int>, Mod15, Mod3, Mod5
+    Select<string|int>, Mod15, Mod3, Mod5
 
     ---
 

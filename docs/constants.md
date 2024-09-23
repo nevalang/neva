@@ -1,6 +1,19 @@
 # Constants
 
-Constants in Nevalang are static entities with compile-time known values. They must have explicit types and can be nested or reference each other. Constants provide static values for network computations and must be compatible with the inport type they are sent to.
+Constants in Nevalang are static entities with compile-time known values. They must have explicit types and can be nested or reference each other. Constants provide static values for network computations and must be compatible with the inport type they are sent to. Constant definition starts with the `const` keyword, following by id and the message literal expression.
+
+```neva
+// primitive types
+const a bool = true
+const b int = 42
+const c float = 42.0
+const d string = 'Hello, world!'
+
+// complex types
+const e list<int> = [1, 2, 3]
+const f dict<float> = { one: 1.0, two: 2.0 }
+const g struct { b int, c float } = { a: 42, b: 42.0 }
+```
 
 ## Constant References as Network Senders
 

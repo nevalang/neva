@@ -40,7 +40,7 @@ int | string | float | struct{} // union with 4 elements
 
 ## Definition
 
-Type Definition consists of an id, optional type parameters, and a body expression (except for base types).
+Type Definition starts with `type` keyword and consists of an id, optional type parameters, and a body expression (except for base types).
 
 Examples:
 
@@ -209,11 +209,11 @@ Float is 64-bit floating point number.
 
 Strings are UTF-8 encoded byte arrays. They can be accessed by index (handling possible absence) and converted to streams for iteration.
 
-### `list`
+### `list<T>`
 
 List is a dynamic array of elements with the same type. It can be accessed by index (O(1) time, handling possible absence) or converted to a stream for iteration.
 
-### `dict`
+### `dict<T>`
 
 Dictionary is an [associative array](https://en.wikipedia.org/wiki/Associative_array) of key-value pairs. All values have the same type, keys are always strings. Dictionaries can be converted to streams for iteration. Key access is O(1), but require handling absent values.
 
@@ -228,3 +228,42 @@ Union is a [sum type](https://en.wikipedia.org/wiki/Tagged_union) defining possi
 ### `struct`
 
 Structures are [product types](https://en.wikipedia.org/wiki/Product_type) - compile-time known set of fields with possibly different types.
+
+## Non-Base Builtin Types
+
+There are 2 more types in `std/builtin` that are expressed in terms of language itself - they have bodies and therefore they are not base. Yet they are embedded into builtin package for simplicity, because they are used heavily in the language. These types are `error` and `stream<T>`.
+
+### `error`
+
+Error type for components that can send errors. Similar to [Go's error interface](https://cs.opensource.google/go/go/+/refs/tags/go1.23.1:src/builtin/builtin.go;l=308) but as a structure, since interfaces in Nevalang are for components, not messages.
+
+```neva
+pub type error struct {
+    text string
+    child maybe<error>
+}
+```
+
+Component/interface that sends error should name outport as `:err`.
+
+### `stream<T>`
+
+Stream structure represents an element of type `T` in a sequence. Streams handle sequences of data in a flow-based programming fashion, allowing operations like mapping, filtering, reducing, and more.
+
+```neva
+pub type stream<T> struct {
+    data T // current element of the stream
+    idx int // index of the current element
+    last bool // whether this is the last element in the stream
+}
+```
+
+Streams can be infinitely nested:
+
+```neva
+stream<stream<int>> // 2 levels
+stream<stream<stream<int>>> 3 levels
+// etc.
+```
+
+Stream processing is first-class citizen in Nevalang, so there's dedicated page about that. From data-type perspective, streams are just structures.

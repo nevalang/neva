@@ -16,7 +16,7 @@ flow Main(start) (stop) {
 }
 
 flow Handler(data int) (res string) {
-    Switch<int>, Select<int, string>
+    Switch<int>, Select<string>
 
     ---
 
