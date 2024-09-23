@@ -1,6 +1,6 @@
 # Types
 
-Nevalang is statically typed, requiring compile-time known types for constants and ports. Type expressions refer to type definitions.
+Nevalang is statically typed, requiring compile-time known types for constants and ports. Type expressions refer to type definitions. There is no [type inference](https://en.m.wikipedia.org/wiki/Type_inference) so all types must be explicitly present in the source code.
 
 ## Expression
 
@@ -8,7 +8,7 @@ Two types of type expressions: instantiation and literal.
 
 ### Instantiation
 
-Consists of an entity reference and optional type-arguments (if the type definition has type-parameters).
+Consists of an entity reference and optional [type-arguments](https://en.wikipedia.org/wiki/Parametric_polymorphism) (if the type definition has type-parameters).
 
 ```neva
 int // instantiation without type-arguments
@@ -93,7 +93,7 @@ And this type-expression:
 bax<maybe<float>, foo>
 ```
 
-Resolving can be thought of as a lambda-reduction-like process where type-expression is like a function-call. Entity-reference is the function name, and type-arguments are the arguments. References to type-parameters inside the function's body are replaced with provided arguments. This process recursively continues until the whole expression is resolved:
+Resolving can be thought of as a [lambda-reduction-like process](https://en.wikipedia.org/wiki/Lambda_calculus#Reduction) where type-expression is like a function-call. Entity-reference is the function name, and type-arguments are the arguments. References to type-parameters inside the function's body are replaced with provided arguments. This process recursively continues until the whole expression is resolved:
 
 **Step 1 - Resolve type arguments**
 

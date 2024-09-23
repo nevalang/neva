@@ -46,7 +46,7 @@ Nevalang aims for a balanced type system that aids developers without being over
 
 #### Structural Subtyping
 
-Unlike Go’s nominative subtyping, Nevalang checks type compatibility based on structure, not name, avoiding unnecessary casting. In Go, a `readBook` function taking a `Book` struct won’t accept a `Magazine` struct, even though `Magazine` has the necessary fields.
+Unlike Go’s nominative subtyping, Nevalang checks [type compatibility based on structure](https://en.wikipedia.org/wiki/Structural_type_system), not name, avoiding unnecessary casting. In Go, a `readBook` function taking a `Book` struct won’t accept a `Magazine` struct, even though `Magazine` has the necessary fields.
 
 ```go
 type Book struct { title string, author string }
@@ -72,7 +72,7 @@ In Nevalang, structural typing eliminates this problem. For example, in web apps
 
 #### Improved Error Handling
 
-Following Go's "errors are values" approach, Nevalang treats errors as data types. It incorporates Rust-like error handling with a `?` operator, while ensuring that errors are always handled when present.
+Following Go's [errors are values](https://go.dev/blog/errors-are-values) approach, Nevalang treats errors as data types. It incorporates [Rust-like error handling](https://doc.rust-lang.org/rust-by-example/std/result/question_mark.html) with a `?` operator, while ensuring that errors are always handled (WIP) when present.
 
 #### Advanced Tracing
 
@@ -86,7 +86,7 @@ By combining these features, Nevalang strives to offer a more efficient and intu
 
 ## Paradigm
 
-Nevalang adopts the dataflow paradigm, which explains computation in terms of directed graphs. While influenced by Flow-Based Programming (FBP), Nevalang diverges from it in several ways.
+Nevalang adopts the dataflow paradigm, which explains computation in terms of directed graphs. While influenced by [Flow-Based Programming (FBP)](https://en.wikipedia.org/wiki/Flow-based_programming), Nevalang diverges from it in several ways.
 
 ### Dataflow vs Controlflow
 
