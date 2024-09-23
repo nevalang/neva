@@ -32,3 +32,5 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - **Ports**: Short `lowerCamelCase`, up to 5 letters.
 - **Nodes**: `lowerCamelCase`, distinguish instances by meaning.
 - **Enums**: Singular form.
+
+<!-- TODO: omit ports when possible -->

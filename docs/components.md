@@ -148,6 +148,14 @@ Component `C1` implements interface `I1` if:
 - Outports are compatible
   - `C1` has full match by name or superset of `I1` outports. Example: `C1(a) (b, c)` is compatible with `I1(a) (b)`, but not with `I1(a) (b, d)`. Types must be compatible too.
 
+### Networks
+
+Each normal component must contain a network. If a component is a box with inports and outports as data entry and exit points, the network is what's inside. Like examining an electronic component's internals, networks describe how the component processes input, uses internal nodes, and produces output.
+
+Networks are complex due to the variety of ways to combine connections. This complexity stems from Nevalang's minimalistic approach, using only dataflow components and message passing for all computations. While keeping the language core small, this necessitates more intricate network designs to maintain expressiveness and compensate for the absence of traditional programming constructs.
+
+See the [networks page](./networks.md) for detailed information.
+
 ### Main Component
 
 Main component is the entry point of a nevalang program. A package containing this component is called a "main package" and serves as the compilation entry point. Each main package must have exactly one non-public `Main` component with no interface nodes, implementing the `(start any) (stop any)` interface. Nevalang's runtime sends a message to `Main:start` at startup and waits for a message from `Main:stop`. Upon receiving the stop signal, it terminates the program.
