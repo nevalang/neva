@@ -14,4 +14,4 @@ pub flow Match<T>(data T, [if] T, [then] T, else T) (res T)
 // It is useful when it's important where input signal came from.
 // If it's important what the signal is, use Match or `Switch` instead.
 #extern(select)
-pub flow Select<T, Y>([if] T, [then] Y) (res Y)
+pub flow Select<T>([if] any, [then] T) (res T)
