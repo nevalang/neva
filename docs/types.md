@@ -1,6 +1,6 @@
 # Types
 
-Nevalang is statically typed, requiring compile-time known types for constants and ports. Type expressions refer to type definitions.
+Nevalang is statically typed, requiring compile-time known types for constants and ports. Type expressions refer to type definitions. There is no [type inference](https://en.m.wikipedia.org/wiki/Type_inference) so all types must be explicitly present in the source code.
 
 ## Expression
 
