@@ -18,6 +18,7 @@
     "Field",
     "gqlgen",
     "graphql",
+    "indeterministic",
     "introspection",
     "intrprtr",
     "irprotosdk",

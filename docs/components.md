@@ -24,6 +24,14 @@ Overloaded native components use a modified extern directive: `#extern(t1 f1, t2
 pub flow Add<T int | float | string>(acc T, el T) (res T)
 ```
 
+Usage:
+
+```
+Add<int> // int_add will be used
+Add<float> // float_add will be used
+Add<string> // string_add will be used
+```
+
 ## Normal Components
 
 Normal components are implemented in Nevalang source code. As a Nevalang programmer, you'll primarily work with these components, which are also found in the standard library alongside native ones. Normal components don't use the `#extern` directive and include an implementation consisting of a required network and optional nodes section. The network must use all of the component's inports and outports, enabling at least basic routing.
