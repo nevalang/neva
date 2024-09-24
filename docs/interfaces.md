@@ -69,7 +69,7 @@ interface IAdd(acc int, el int) (res int)
 It's suitable for combining 2 sources, but what if we need to combine any number of sources? Chaining multiple `IAdd` instances is tedious and sometimes impossible. Let's look at the array-inports solution:
 
 ```neva
-interface IAdd([el] int) (res int)
+interface IAdd([data] int) (res int)
 ```
 
 In a component using `IAdd` in its network, we can do this:
@@ -82,7 +82,7 @@ add IAdd
 3 -> add[2]
 ```
 
-Syntax `add[i]` is shorthand for `add:el[i]`. The compiler infers the port name since there's only one.
+Syntax `add[i]` is shorthand for `add:data[i]`. The compiler infers the port name since there's only one.
 
 Another example of a component that benefits from array-ports is `Switch`. It's used for routing - imagine we have message `data` and need to route it to different destinations based on its value. For example, if it's `a` we send it to the first destination, if `b` to the second, and `c` to the third. Otherwise, we send it to a default destination to handle unknown values. An adhoc solution with a fixed number of ports wouldn't scale. We need a generic component with dynamic port support. Here's the Switch signature:
 

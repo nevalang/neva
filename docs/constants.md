@@ -15,9 +15,13 @@ const f dict<float> = { one: 1.0, two: 2.0 }
 const g struct { b int, c float } = { a: 42, b: 42.0 }
 ```
 
-## Constant References as Network Senders
+## As Network Senders
 
-To create a component that increments a number, we can use an addition component with 2 inports: `:acc` and `:el`. We'll use a constant `$one` for the `:acc` input, while `:el` will receive dynamic values:
+This section briefly outlines how constants are used in networks. For detailed semantics, see the [network page](./networks.md).
+
+### Constant References
+
+It's possible to use constant as a network-sender by refering to it with `$` prefix.
 
 ```neva
 const one int = 1
@@ -31,9 +35,7 @@ flow Inc(data int) (res int) {
 }
 ```
 
-Only primitive data-types are allowed to be used like this: `bool`, `int`, `float` and `string`. You can't use `struct`, `list` or `dict` literals in the network.
-
-## Message Literals as Network Senders
+### Message Literals
 
 You can omit explicit constants; the compiler will create and refer to them implicitly.
 
@@ -46,32 +48,6 @@ flow Inc(data int) (res int) {
     add -> :res
 }
 ```
-
-## Semantics
-
-Constants are sent in an infinite loop. Imagine a `SendOne` component that constantly sends ones. Its speed is limited by the receiver: `sendOne -> add:acc` sends a message each time `add:acc` can receive. In this example, `add:acc` and `add:el` are synchronized. When `:data -> add:el` has a message, `add:acc` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `acc=1 el=1; acc=1 el=2; acc=1 el=3` and produce `2, 3, 4` respectively.
-
-### Internal Implementation (`New` and `#bind`)
-
-> You can skip this section. The above explanation is enough for writing programs. Here we discuss the implementation details of constant sending.
-
-Both forms are syntax sugar. Here's the desugared form:
-
-```neva
-const one int = 1
-
-flow Inc(data int) (res int) {
-    #bind(one)
-    New
-    Add
-    ---
-    new -> add:acc
-    :data -> add:el
-    add -> :res
-}
-```
-
-`New` with `#bind(one)` binds the `one` constant to the component instance, making it an emitter node that infinitely sends `1` to the receiver. This is similar to `SendOne` from the previous section. Constants cannot be rebound, and just a few components need `#bind`. The compiler usually handles this automatically.
 
 ## Nesting and Referensing
 

@@ -130,13 +130,17 @@ Nevalang is designed for general-purpose programming, expecting entire programs 
 
 Nevalang is garbage-collected with immutable data, avoiding ownership concepts. This prevents data races but may impact performance. Mutations are possible via unsafe packages (WIP) but are discouraged. FBP, in contrast, uses ownership and allows mutations.
 
-#### Node Behavior
+#### Node State Control
 
 Nevalang's nodes are always running, automatically starting, suspending, and restarting as needed. FBP processes have explicit states (start, suspend, restart, shutdown) that can be manipulated.
 
 #### Static Typing
 
 Nevalang features a static type system with generics and structural sub-typing, improving IDE support and reducing runtime validations. FBP is dynamically typed in its dataflow part.
+
+#### Buffered Queues
+
+FBP uses buffered queues for connections by default. Nevalang connection-queues are unbuffered, with optional middleware buffer nodes for configurable message buffering.
 
 #### Similarities
 
