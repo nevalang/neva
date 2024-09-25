@@ -33,29 +33,21 @@ func main() {
             {{- end}}
         },
         Connections: []runtime.Connection{
-            {{- range $sender, $receivers := .Connections}}
-            {{ getConnComment $sender, $receivers }}
+            {{- range $sender, $receiver := .Connections}}
+            {{ getConnComment $sender $receiver }}
             {
-                Sender: {{getPortChanName .SenderSide}},
-                Receivers: []chan runtime.Msg{
-                {{- range .ReceiverSides }}
-                    {{getPortChanName .PortAddr}},
-                {{- end}}
-                },
+                Sender: {{getPortChanName $sender}},
+                Receiver: {{getPortChanName $receiver}},
                 Meta: runtime.ConnectionMeta{
                     SenderPortAddr: runtime.PortAddr{
-                        Path: "{{.SenderSide.Path}}",
-                        Port: "{{.SenderSide.Port}}",
-                        Idx: {{.SenderSide.Idx}},
+                        Path: "{{$sender.Path}}",
+                        Port: "{{$sender.Port}}",
+                        Idx: {{$sender.Idx}},
                     },
-                    ReceiverPortAddrs: []runtime.PortAddr{
-                    {{- range .ReceiverSides }}
-                        {
-                            Path: "{{.PortAddr.Path}}",
-                            Port: "{{.PortAddr.Port}}",
-                            Idx: {{.PortAddr.Idx}},
-                        },
-                    {{- end}}
+                    ReceiverPortAddr: runtime.PortAddr{
+                        Path: "{{$receiver.Path}}",
+                        Port: "{{$receiver.Port}}",
+                        Idx: {{$receiver.Idx}},
                     },
                 },
             },

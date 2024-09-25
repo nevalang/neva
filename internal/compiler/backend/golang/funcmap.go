@@ -51,12 +51,8 @@ func getMsg(msg *ir.Message) (string, error) {
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func getConnComment(sender ir.PortAddr, receivers map[ir.PortAddr]struct{}) string {
-	s := fmtPortAddr(sender) + " -> "
-	for rcvr := range receivers {
-		s += fmtPortAddr(rcvr)
-	}
-	return "// " + s
+func getConnComment(sender ir.PortAddr, receiver ir.PortAddr) string {
+	return fmt.Sprintf("// %s -> %s", fmtPortAddr(sender), fmtPortAddr(receiver))
 }
 
 func fmtPortAddr(addr ir.PortAddr) string {

@@ -136,10 +136,9 @@ That actually could solve the issue. The problem is that now we have to update t
 Indeed it would be handy to be able to do stuff like this:
 
 ```neva
-nodes {
-    #bind(str "hello world!")
-    const Const<str>
-}
+#bind(str "hello world!")
+const Const<str>
+---
 ```
 
 This would make desugarer much simpler (no need to create all this virtual constants), and not just for const senders but for struct selectors too.

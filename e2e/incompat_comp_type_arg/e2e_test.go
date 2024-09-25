@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"main/main.neva:2:9 Subtype must be either union or literal: want int | float, got any\n",
+		"main/main.neva:2:1 Subtype must be either union or literal: want int | float, got any\n",
 		string(out),
 	)
 
