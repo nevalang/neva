@@ -37,7 +37,7 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 
 	result := map[string][]byte{}
 	result["main.go"] = buf.Bytes()
-	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.21") //nolint:lll // must match imports in runtime package
+	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
 
 	if err := putRuntime(result); err != nil {
 		return err

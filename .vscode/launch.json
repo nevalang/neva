@@ -11,6 +11,15 @@
       "args": ["run", "filter_list"]
     },
     {
+      "name": "Build",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["build", "hello_world"]
+    },
+    {
       "name": "GET",
       "type": "go",
       "request": "launch",

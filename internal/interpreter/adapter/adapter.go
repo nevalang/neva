@@ -91,7 +91,7 @@ func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMs
 			continue
 		}
 
-		// if it's a sender, so we need to find corresponding receiver channel to re-use it
+		// if it's a sender, we need to find corresponding receiver channel to re-use it
 		var receiverIrAddr ir.PortAddr
 		for tmp := range prog.Connections[irAddr] { // pick first one
 			receiverIrAddr = tmp

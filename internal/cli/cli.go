@@ -132,7 +132,7 @@ func NewApp(
 			},
 			{
 				Name:  "build",
-				Usage: "Build executable binary from neva program source code",
+				Usage: "Build neva program from source code",
 				Args:  true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -150,23 +150,23 @@ func NewApp(
 						},
 					},
 				},
-				ArgsUsage: "Provide path to the executable package",
+				ArgsUsage: "Provide path to main package",
 				Action: func(cCtx *cli.Context) error {
-					dirFromArg, err := getMainPkgFromArgs(cCtx)
+					mainPkg, err := getMainPkgFromArgs(cCtx)
 					if err != nil {
 						return err
 					}
 					switch target {
 					case "go":
-						return goc.Compile(dirFromArg, workdir, debug)
+						return goc.Compile(mainPkg, workdir, debug)
 					case "wasm":
-						return wasmc.Compile(dirFromArg, workdir, debug)
+						return wasmc.Compile(mainPkg, workdir, debug)
 					case "json":
-						return jsonc.Compile(dirFromArg, workdir, debug)
+						return jsonc.Compile(mainPkg, workdir, debug)
 					case "dot":
-						return dotc.Compile(dirFromArg, workdir, debug)
+						return dotc.Compile(mainPkg, workdir, debug)
 					default:
-						return nativec.Compile(dirFromArg, workdir, debug)
+						return nativec.Compile(mainPkg, workdir, debug)
 					}
 				},
 			},
