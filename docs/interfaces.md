@@ -58,7 +58,7 @@ interface IAppend<T>(lst list<T>, el T) (list<T>)
 
 These expressions can be complex and nested, but we'll keep this section brief.
 
-## Array-Ports
+## Array Ports
 
 Let's return to the original `IAdd` without type-parameters for simplicity
 
