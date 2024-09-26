@@ -9,44 +9,52 @@ import (
 	"github.com/nevalang/neva/internal"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
+	"github.com/nevalang/neva/pkg"
 )
 
 type Backend struct{}
 
 var (
 	ErrExecTmpl       = errors.New("execute template")
-	ErrWrongGoVersion = errors.New("wrong Go version")
 	ErrUnknownMsgType = errors.New("unknown msg type")
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program) error {
-	tmpl, err := template.New("tpl.go").Funcs(template.FuncMap{
-		"getMsg":          getMsg,
-		"getFuncIOPorts":  getFuncIOPorts,
-		"getPortChanName": getPortChanName,
-		"getConnComment":  getConnComment,
-	}).Parse(mainGoTemplate)
+	chanMap := getPortChansMap(prog)
+
+	funcmap := template.FuncMap{
+		"getPortChanNameByAddr": func(path string, port string) string {
+			return chanMap[ir.PortAddr{Path: path, Port: port}]
+		},
+	}
+
+	tmpl, err := template.New("tpl.go").Funcs(funcmap).Parse(mainGoTemplate)
 	if err != nil {
 		return err
 	}
 
+	data := templateData{
+		CompilerVersion: pkg.Version,
+		ChanMap:         chanMap,
+	}
+
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, prog); err != nil {
+	if err := tmpl.Execute(&buf, data); err != nil {
 		return errors.Join(ErrExecTmpl, err)
 	}
 
-	result := map[string][]byte{}
-	result["main.go"] = buf.Bytes()
-	result["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
+	files := map[string][]byte{}
+	files["main.go"] = buf.Bytes()
+	files["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
 
-	if err := putRuntime(result); err != nil {
+	if err := insertRuntimeFiles(files); err != nil {
 		return err
 	}
 
-	return compiler.SaveFilesToDir(dst, result)
+	return compiler.SaveFilesToDir(dst, files)
 }
 
-func putRuntime(files map[string][]byte) error {
+func insertRuntimeFiles(files map[string][]byte) error {
 	if err := fs.WalkDir(
 		internal.Efs,
 		"runtime",
