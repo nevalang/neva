@@ -17,7 +17,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["build", "-target=go", "hello_world"]
+      "args": ["build", "-target=go", "-output=../dist", "hello_world"]
     },
     {
       "name": "GET",

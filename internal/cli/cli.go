@@ -29,7 +29,8 @@ func NewApp(
 	var (
 		target           string
 		debug            bool
-		debugLogFilePath string
+		debugLogFilePath string // TODO make this default for -debug flag
+		outputPath       string
 	)
 
 	return &cli.App{
@@ -149,6 +150,11 @@ func NewApp(
 							return nil
 						},
 					},
+					&cli.StringFlag{
+						Name:        "output",
+						Usage:       "Destination path for output file(s)",
+						Destination: &outputPath,
+					},
 				},
 				ArgsUsage: "Provide path to main package",
 				Action: func(cCtx *cli.Context) error {
@@ -156,17 +162,23 @@ func NewApp(
 					if err != nil {
 						return err
 					}
+
+					dst := workdir
+					if outputPath != "" {
+						dst = outputPath
+					}
+
 					switch target {
 					case "go":
-						return goc.Compile(mainPkg, workdir, debug)
+						return goc.Compile(mainPkg, dst, debug)
 					case "wasm":
-						return wasmc.Compile(mainPkg, workdir, debug)
+						return wasmc.Compile(mainPkg, dst, debug)
 					case "json":
-						return jsonc.Compile(mainPkg, workdir, debug)
+						return jsonc.Compile(mainPkg, dst, debug)
 					case "dot":
-						return dotc.Compile(mainPkg, workdir, debug)
+						return dotc.Compile(mainPkg, dst, debug)
 					default:
-						return nativec.Compile(mainPkg, workdir, debug)
+						return nativec.Compile(mainPkg, dst, debug)
 					}
 				},
 			},
