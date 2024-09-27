@@ -2,52 +2,84 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
 
 var counter atomic.Uint64
 
-type Runtime struct {
-	funcRunner FuncRunner
+type FuncCreator interface {
+	Create(IO, Msg) (func(context.Context), error)
 }
 
-func (p *Runtime) Run(ctx context.Context, prog Program) error {
-	// debugValidation(prog)
-
+func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		prog.Stop.Receive(ctx)
-		cancel() // this is how we normally stop the program
+		cancel()
 	}()
 
-	// here we create runtime function instances to call them later
-	funcrun, err := p.funcRunner.Run(prog.FuncCalls)
+	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
 		return err
 	}
 
-	// we gonna use wg to make sure we don't terminate until either
-	// program is successfully executed or context is closed by some runtime function
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	funcsFinished := make(chan struct{})
 
 	go func() {
-		ctx = context.WithValue(ctx, "cancel", cancel) //nolint:staticcheck // SA1029
-		funcrun(ctx)                                   // funcrun blocks until context is closed
-		wg.Done()
+		runFuncs(context.WithValue(ctx, "cancel", cancel))
+		close(funcsFinished)
 	}()
 
-	// block until the program starts
-	// by some node actually receiving from start port
-	prog.Start.Send(ctx, &baseMsg{})
+	prog.Start.Send(ctx, &baseMsg{}) // lock until some node receive
 
-	// basically wait for the context to be closed
-	// by either writing to the stop port
-	// or calling cancel func by some runtime function like `panic`
-	wg.Wait()
+	<-funcsFinished
 
 	return nil
+}
+
+func deferFuncCalls(
+	funcCalls []FuncCall,
+	registry map[string]FuncCreator,
+) (func(ctx context.Context), error) {
+	handlers, err := createHandlers(funcCalls, registry)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) {
+		wg := sync.WaitGroup{}
+		wg.Add(len(handlers))
+		for i := range handlers {
+			routine := handlers[i]
+			go func() {
+				routine(ctx)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+	}, nil
+}
+
+func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]func(context.Context), error) {
+	funcs := make([]func(context.Context), len(funcCalls))
+
+	for i, call := range funcCalls {
+		creator, ok := registry[call.Ref]
+		if !ok {
+			return nil, fmt.Errorf("func creator not found: %v", call.Ref)
+		}
+
+		handler, err := creator.Create(call.IO, call.Config)
+		if err != nil {
+			return nil, fmt.Errorf("%v: %w", call.Ref, err)
+		}
+
+		funcs[i] = handler
+	}
+
+	return funcs, nil
 }
 
 // func debugValidation(prog Program) {
@@ -170,9 +202,3 @@ func (p *Runtime) Run(ctx context.Context, prog Program) error {
 // 		}
 // 	}
 // }
-
-func New(funcRunner FuncRunner) Runtime {
-	return Runtime{
-		funcRunner: funcRunner,
-	}
-}

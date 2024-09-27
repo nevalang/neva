@@ -6,7 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func CreatorRegistry() map[string]runtime.FuncCreator {
+func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
 		"new":     new{},

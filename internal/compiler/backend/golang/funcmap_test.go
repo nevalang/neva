@@ -9,73 +9,59 @@ import (
 
 func TestGetPortChansMap(t *testing.T) {
 	tests := []struct {
-		name     string
-		prog     *ir.Program
-		expected map[ir.PortAddr]string
+		name             string
+		prog             *ir.Program
+		expectedMap      map[ir.PortAddr]string
+		expectedVarNames []string
 	}{
 		{
-			name: "Empty program",
+			name: "empty_program",
 			prog: &ir.Program{
-				Ports:       map[ir.PortAddr]struct{}{},
 				Connections: map[ir.PortAddr]ir.PortAddr{},
 			},
-			expected: map[ir.PortAddr]string{},
+			expectedMap:      map[ir.PortAddr]string{},
+			expectedVarNames: []string{},
 		},
 		{
-			name: "Single unconnected port",
+			name: "two_connected_ports",
 			prog: &ir.Program{
-				Ports: map[ir.PortAddr]struct{}{
-					{Path: "main", Port: "in"}: {},
-				},
-				Connections: map[ir.PortAddr]ir.PortAddr{},
-			},
-			expected: map[ir.PortAddr]string{
-				{Path: "main", Port: "in"}: "main_in",
-			},
-		},
-		{
-			name: "Two connected ports",
-			prog: &ir.Program{
-				Ports: map[ir.PortAddr]struct{}{
-					{Path: "main", Port: "out"}:  {},
-					{Path: "logger", Port: "in"}: {},
-				},
 				Connections: map[ir.PortAddr]ir.PortAddr{
 					{Path: "main", Port: "out"}: {Path: "logger", Port: "in"},
 				},
 			},
-			expected: map[ir.PortAddr]string{
+			expectedMap: map[ir.PortAddr]string{
 				{Path: "main", Port: "out"}:  "main_out_to_logger_in",
 				{Path: "logger", Port: "in"}: "main_out_to_logger_in",
 			},
+			expectedVarNames: []string{"main_out_to_logger_in"},
 		},
 		{
-			name: "Multiple ports with array",
+			name: "multiple_ports_with_array",
 			prog: &ir.Program{
-				Ports: map[ir.PortAddr]struct{}{
-					{Path: "main", Port: "out", IsArray: true, Idx: 0}:  {},
-					{Path: "main", Port: "out", IsArray: true, Idx: 1}:  {},
-					{Path: "logger", Port: "in", IsArray: true, Idx: 0}: {},
-					{Path: "logger", Port: "in", IsArray: true, Idx: 1}: {},
-				},
 				Connections: map[ir.PortAddr]ir.PortAddr{
 					{Path: "main", Port: "out", IsArray: true, Idx: 0}: {Path: "logger", Port: "in", IsArray: true, Idx: 0},
 					{Path: "main", Port: "out", IsArray: true, Idx: 1}: {Path: "logger", Port: "in", IsArray: true, Idx: 1},
 				},
 			},
-			expected: map[ir.PortAddr]string{
+			expectedMap: map[ir.PortAddr]string{
 				{Path: "main", Port: "out", IsArray: true, Idx: 0}:  "main_out_0_to_logger_in_0",
 				{Path: "main", Port: "out", IsArray: true, Idx: 1}:  "main_out_1_to_logger_in_1",
 				{Path: "logger", Port: "in", IsArray: true, Idx: 0}: "main_out_0_to_logger_in_0",
 				{Path: "logger", Port: "in", IsArray: true, Idx: 1}: "main_out_1_to_logger_in_1",
 			},
+			expectedVarNames: []string{
+				"main_out_0_to_logger_in_0",
+				"main_out_1_to_logger_in_1",
+			},
 		},
 	}
 
+	b := Backend{}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getPortChansMap(tt.prog)
-			assert.Equal(t, tt.expected, result)
+			result, _ := b.getPortChansMap(tt.prog)
+			assert.Equal(t, tt.expectedMap, result)
 		})
 	}
 }
@@ -121,9 +107,12 @@ func TestChanVarNameFromPortAddr(t *testing.T) {
 			expected: "logger_in_a",
 		},
 	}
+
+	b := Backend{}
+
 	for _, tt := range tests {
 		t.Run(tt.addr.String(), func(t *testing.T) {
-			result := chanVarNameFromPortAddr(tt.addr)
+			result := b.chanVarNameFromPortAddr(tt.addr)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
