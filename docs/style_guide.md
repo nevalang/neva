@@ -2,35 +2,48 @@
 
 This guide sets standards for Nevalang code organization, formatting, and naming conventions to ensure consistency and readability.
 
-## Code Organization
-
-- **File Length**: Aim for files under 300 lines. Longer files should be split.
-
 ## Formatting
 
-- **Line Length**: Keep lines under 80 characters.
-- **File Size**: Aim for files under 100 lines.
-- **Comments**: Avoid comments. Use clear naming instead. If necessary, keep them short and simple.
-- **Indentation**: Use tabs over spaces.
+### Line Length
 
-## API Design
+Keep lines under 80 characters.
 
-- **Generics**: Use when data type consistency across ports is important.
-- **Components**: Use outports for different data paths, structs for related data.
-- **Network**: Prefer simple topologies (pipes, trees) over complex networks.
-- **Ports**: Limit to 3 inports and 5 outports max.
-- **Interfaces**: Keep small with minimal ports.
+- Comfortable for split-screen viewing
+- Accommodates larger font sizes without horizontal scrolling
+  - Better for visual accessibility
+- Leaves room for IDE features (code lens, git blame, inline-hints, etc.)
+- Enables reading full lines with eye movement alone
+
+### Indentation
+
+Use tabs over spaces.
+
+- Tabs allow users to customize indentation width according to their preferences
+  - More accessible for users with visual impairments who may need larger indentation
+- Tabs are more efficient in terms of file size
+
+### Imports
+
+Group imports by type: stdlib, local, third-party. Separate groups with newlines if at least 1 group has more than 2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions
 
-Names should inherit context from parent scope. Good naming eliminates need for comments.
+Names should inherit context from parent scope. Good naming eliminates need for comments. Names generally rather short than long.
 
-- **Packages/Files**: `lower_snake_case`, up to 3 words.
-- **Entities**: `CamelCase` for types, interfaces, components. `lowerCamelCase` for constants.
-- **Interfaces**: `CamelCase` with `I` prefix.
-- **Components**: Noun, like for functions in most languages.
-- **Ports**: Short `lowerCamelCase`, up to 5 letters.
-- **Nodes**: `lowerCamelCase`, distinguish instances by meaning.
-- **Enums**: Singular form.
+- **Packages/Files**: lower_snake_case up to 3 words
+- **Types**: CamelCase up to 3 words
+- **Interfaces**: CamelCase with `I` prefix up to 3 words
+- **Constants**: lowerCase up to 3 words
+- **Components**: CamelCase noun up to 3 words
+- **Nodes**: lowerCamelCase up to 3 words
+- **Ports**: lowercase, 1 word up to 5 letters
 
-<!-- TODO: omit ports when possible -->
+## Interfaces
+
+- Use type-parameters when need to preserve type information between input and output.
+- Limit to 3 inports and outports max.
+
+## Networks
+
+- Prefer simple topologies over complex networks.
+- Omit port names when possible

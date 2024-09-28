@@ -14,14 +14,10 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool, debugLogFilePath string) 
 
 	var interceptor runtime.Interceptor
 	if debug {
-		if debugLogFilePath == "" {
-			interceptor = debugInterceptor{logger: stdLogger{}}
-		} else {
-			if err := a.clearDebugLogFile(debugLogFilePath); err != nil {
-				return runtime.Program{}, err
-			}
-			interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
+		if err := a.clearDebugLogFile(debugLogFilePath); err != nil {
+			return runtime.Program{}, err
 		}
+		interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
 	} else {
 		interceptor = prodInterceptor{}
 	}
@@ -86,17 +82,13 @@ func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMs
 
 		// it was not created yet, let's see if it's sender or receiver
 		if _, isSender := prog.Connections[irAddr]; !isSender {
-			// it's a receiver, so we just create a new channel for it and go to the next iteration
+			// if it's a receiver, we just create a new channel for it and go to the next iteration
 			result[irAddr] = make(chan runtime.OrderedMsg)
 			continue
 		}
 
-		// if it's a sender, so we need to find corresponding receiver channel to re-use it
-		var receiverIrAddr ir.PortAddr
-		for tmp := range prog.Connections[irAddr] { // pick first one
-			receiverIrAddr = tmp
-			break
-		}
+		// if it's a sender, we need to find corresponding receiver channel to re-use it
+		receiverIrAddr := prog.Connections[irAddr]
 
 		// now we know address of the receiver channel, so we just check if it's already created
 		// if it's there, we just re-use it, otherwise we create new channel and re-use it
@@ -105,8 +97,6 @@ func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMs
 			continue
 		}
 
-		// receiver channel was not created yet,
-		// so we create new one and assign it to both sender and receiver
 		sharedChan := make(chan runtime.OrderedMsg)
 		result[irAddr] = sharedChan
 		result[receiverIrAddr] = sharedChan

@@ -3,35 +3,28 @@ package irgen
 import "github.com/nevalang/neva/internal/compiler/ir"
 
 // reduceFinalGraph transforms program to a state where it doesn't have intermediate connections.
-func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]map[ir.PortAddr]struct{}) {
+func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]ir.PortAddr) {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
 
 	netWithoutIntermediateReceivers := make(
-		map[ir.PortAddr]map[ir.PortAddr]struct{},
+		map[ir.PortAddr]ir.PortAddr,
 		len(prog.Connections),
 	)
 
-	for sender, receivers := range prog.Connections {
+	for sender, receiver := range prog.Connections {
 		// it's possible that we already saw this sender as a receiver in previous iterations
 		if _, ok := intermediatePorts[sender]; ok {
 			continue
 		}
 
-		// find final receivers for every intermediate one, also remember all intermediates
-		finalReceivers := make(map[ir.PortAddr]struct{}, len(receivers))
-		for receiver := range receivers {
-			curFinalReceivers, wasIntermediate := getFinalReceivers(receiver, prog.Connections)
-			for _, curFinalReceiver := range curFinalReceivers {
-				finalReceivers[curFinalReceiver] = struct{}{}
-			}
-			if wasIntermediate {
-				intermediatePorts[receiver] = struct{}{}
-			}
+		curFinalReceiver, wasIntermediate := getFinalReceiver(receiver, prog.Connections)
+		if wasIntermediate {
+			intermediatePorts[receiver] = struct{}{}
 		}
 
-		// every connection in resultNet has only final receivers
+		// every connection in resultNet has final receiver
 		// (it still might have intermediate ports as senders though)
-		netWithoutIntermediateReceivers[sender] = finalReceivers
+		netWithoutIntermediateReceivers[sender] = curFinalReceiver
 	}
 
 	// resultNet only contains connections with final receivers
@@ -39,46 +32,37 @@ func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, m
 	// we need to remove these connections and ports for those nodes
 	finalPorts := make(map[ir.PortAddr]struct{}, len(prog.Ports))
 	netWithoutIntermediatePorts := make(
-		map[ir.PortAddr]map[ir.PortAddr]struct{},
+		map[ir.PortAddr]ir.PortAddr,
 		len(netWithoutIntermediateReceivers),
 	)
 
-	for sender, receivers := range netWithoutIntermediateReceivers {
+	for sender, receiver := range netWithoutIntermediateReceivers {
 		// intermediate receiver is always also a sender in some other connection
 		if _, ok := intermediatePorts[sender]; ok {
 			continue // skip this connection and don't add its ports
 		}
 
-		netWithoutIntermediatePorts[sender] = receivers
+		netWithoutIntermediatePorts[sender] = receiver
 
 		// basically just add ports for every nonskipped connection
 		finalPorts[sender] = struct{}{}
-		for receiver := range receivers {
-			finalPorts[receiver] = struct{}{}
-		}
+		finalPorts[receiver] = struct{}{}
 	}
 
 	return finalPorts, netWithoutIntermediatePorts
 }
 
-// getFinalReceivers returns all final receivers that are behind the given one.
+// getFinalReceiver returns all final receivers that are behind the given one.
 // It also returns true if given port address was intermediate and false otherwise.
 // If given port was already final then a slice with one original port is returned.
-func getFinalReceivers(
+func getFinalReceiver(
 	receiver ir.PortAddr,
-	net map[ir.PortAddr]map[ir.PortAddr]struct{},
-) (final []ir.PortAddr, intermediate bool) {
-	next, ok := net[receiver]
-	if !ok { // given receiver is not a sender for anyone, so it's NOT intermediate port
-		return []ir.PortAddr{receiver}, false
+	net map[ir.PortAddr]ir.PortAddr,
+) (final ir.PortAddr, intermediate bool) {
+	next, isReceiverAlsoSender := net[receiver]
+	if !isReceiverAlsoSender {
+		return receiver, false
 	}
-
-	final = make([]ir.PortAddr, 0, len(next))
-	for nextReceiver := range next {
-		// we don't care about the flag, it's intermediate
-		nextNext, _ := getFinalReceivers(nextReceiver, net) // <- recursion
-		final = append(final, nextNext...)
-	}
-
-	return final, true // yep it was intermediate and here's the finals
+	v, _ := getFinalReceiver(next, net)
+	return v, true
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func CreatorRegistry() map[string]runtime.FuncCreator {
+func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		// core
 		"new":     new{},
@@ -68,21 +68,18 @@ func CreatorRegistry() map[string]runtime.FuncCreator {
 		"regexp_submatch": regexpSubmatch{},
 
 		// list
-		"list_at":    listAt{},
-		"list_len":   listlen{},
-		"list_push":  listPush{},
-		"int_sort":   listSortInt{},
-		"float_sort": listSortFloat{},
+		"list_at":   listAt{},
+		"list_len":  listlen{},
+		"list_push": listPush{},
 
 		// time
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},
 
 		// strings
-		"string_at":   stringAt{},
-		"join":        stringJoin{},
-		"split":       stringSplit{},
-		"string_sort": listSortString{},
+		"string_at": stringAt{},
+		"join":      stringJoin{},
+		"split":     stringSplit{},
 
 		// io
 		"scanln":  scanln{},

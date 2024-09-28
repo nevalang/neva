@@ -68,15 +68,13 @@ readBook(Book{
 
 In Nevalang, structural typing eliminates this problem. For example, in web apps using API boundaries like gRPC or GraphQL, where developers often write mapping code between generated types and domain models, structural typing automatically handles compatibility, avoiding hundreds of lines of manual conversions.
 
-### Better Debugging
+#### Builtin Tracing
 
-#### Improved Error Handling
+Every message in Nevalang has a path that updates as it moves from one place to another. This provides comprehensive tracing capabilities, similar to stack traces in exception-based languages, but for all messages, not just errors.
 
-Following Go's [errors are values](https://go.dev/blog/errors-are-values) approach, Nevalang treats errors as data types. It incorporates [Rust-like error handling](https://doc.rust-lang.org/rust-by-example/std/result/question_mark.html) with a `?` operator, while ensuring that errors are always handled (WIP) when present.
+### Improved Error Handling
 
-#### Advanced Tracing
-
-Every message in Nevalang has a path that updates as it moves through the program. This provides comprehensive tracing capabilities, similar to stack traces in exception-based languages, but for all messages, not just errors.
+Neva combines Go's "errors are values" approach with Rust-like `?` operator, reducing `if err != nil` boilerplate. It also eliminates the need for manual error wrapping - every message, including errors, contains a trace, simplifying debugging by providing context when logged.
 
 #### Next-Generation Debugging (WIP)
 

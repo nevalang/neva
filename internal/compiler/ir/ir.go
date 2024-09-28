@@ -4,10 +4,10 @@ import "fmt"
 
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
-	Ports map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
+	Ports       map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
 	// TODO connections must be 1-1 (or maybe fan-in)
-	Connections map[PortAddr]map[PortAddr]struct{} `json:"connections,omitempty"` // Sender -> receivers (fan-out). // TODO must be 1-1
-	Funcs       []FuncCall                         `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
+	Connections map[PortAddr]PortAddr `json:"connections,omitempty"` // Changed to 1-1 mapping
+	Funcs       []FuncCall            `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
 }
 
 // PortAddr is a composite unique identifier for a port.

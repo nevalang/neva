@@ -1,6 +1,6 @@
 # Networks
 
-Component network is a directed graph connecting ports of component nodes for message passing. Vertices are senders and receivers, and edges are connections between them. Messages flow through connections. The graph may contain cycles.
+A component network is a directed, unweighted graph describing message passing. Vertices represent senders and receivers, while edges are connections between them. Messages flow through these connections, triggering data transformations and side effects. The graph may contain cycles.
 
 Simplest connection with port-address `in:start` on sender-side and `out:stop` on receiver-side - each time message is send from `in:start` it goes to `out:stop`.
 
@@ -8,7 +8,7 @@ Simplest connection with port-address `in:start` on sender-side and `out:stop` o
 :start -> :stop
 ```
 
-Program execution occurs through data transformations and side-effects as messages move from one node to another. Starting from Main, execution flows through sub-components recursively, with native components as leaf nodes. Unlike controlflow, execution happens concurrently across multiple connections and components simultaneously.
+Computation occurs through as messages move from one place to another. Starting from `Main`, execution flows through sub-components recursively, with native components as leaf nodes. Unlike controlflow, execution happens concurrently across multiple connections and components simultaneously.
 
 ## Port Address
 
@@ -464,3 +464,19 @@ In this example, `:data => fanIn` in `FanInWrap` expands to:
 ```
 
 Array-bypass connections adapt to the number of slots used by the parent. Without this feature, we'd need to create numerous variations of `FanInWrap` for different slot counts, potentially up to 255 (the maximum for array-ports), and even more for components with multiple array-ports.
+
+## All Together
+
+Here's an intentionally complex example combining different features. This level of complexity should be avoided in practice; consider decomposing such logic into separate components. However, it demonstrates the potential intricacy of connections. Note the recommended formatting for nested connections.
+
+```
+a -> [
+    b -> c -> d,
+    (
+        $e -> f -> (42 -> g -> [
+            h,
+            [i, j] -> k -> (l -> m),
+        ]
+    )
+]
+```

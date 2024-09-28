@@ -13,10 +13,6 @@ pub flow List<T>(data stream<T>) (res list<T>)
 #extern(list_push)
 pub flow Push<T> (lst list<T>, data T) (res list<T>)
 
-// Sort creates sorted version of the given list.
-#extern(int int_sort, float float_sort, string string_sort)
-pub flow Sort<T int | float | string>(data list<T>) (res T)
-
 #extern(slice)
 pub flow Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
 
