@@ -17,7 +17,7 @@ func (c listToStream) Create(
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c listToStream) Create(
 					idx == len(list)-1,
 				)
 
-				if !seqOut.Send(ctx, item) {
+				if !resOut.Send(ctx, item) {
 					return
 				}
 			}

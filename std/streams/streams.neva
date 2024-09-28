@@ -1,3 +1,6 @@
+// TODO
+// pub flow Uncons<T>(data stream<T>) (head T, tail stream<T>)
+
 pub type ProductResult<T, R> struct {
     first T
     second R

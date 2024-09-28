@@ -1,5 +1,5 @@
 flow Main(start) (stop) {
-    Div<int>, Println<int>
+    Div<int>, Println
     ---
     :start -> [(12 -> div:acc), (3 -> div:el)]
     [div:res, div:err] -> println -> :stop

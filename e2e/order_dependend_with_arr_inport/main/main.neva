@@ -2,11 +2,10 @@ const l list<int> = [1, 2, 3]
 
 flow Main(start) (stop) {
 	Println<int>
-	Reduce{Sub<int>}
+	Reduce<int, int>{Sub<int>}
 	ListToStream<int>
 	---
 	:start -> ($l -> listToStream -> reduce:data)
-	reduce:init -> 0
-	listToStream:res -> println:data
-	println:sig -> :stop
+	0 -> reduce:init
+	reduce -> println -> :stop
 }
