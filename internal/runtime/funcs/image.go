@@ -16,11 +16,11 @@ type rgbaMsg struct {
 }
 
 func (c *rgbaMsg) decode(msg runtime.Msg) {
-	m := msg.Dict()
-	c.r = m["r"].Int()
-	c.g = m["g"].Int()
-	c.b = m["b"].Int()
-	c.a = m["a"].Int()
+	m := msg.Struct()
+	c.r = m.Get("r").Int()
+	c.g = m.Get("g").Int()
+	c.b = m.Get("b").Int()
+	c.a = m.Get("a").Int()
 }
 
 func (c rgbaMsg) color() color.Color {
@@ -34,33 +34,16 @@ type pixelMsg struct {
 }
 
 func (p *pixelMsg) decode(msg runtime.Msg) {
-	m := msg.Dict()
-	p.x = m["x"].Int()
-	p.y = m["y"].Int()
-	p.color.decode(m["color"])
+	m := msg.Struct()
+	p.x = m.Get("x").Int()
+	p.y = m.Get("y").Int()
+	p.color.decode(m.Get("color"))
 }
 
 type imageMsg struct {
 	pixels string
 	width  int64
 	height int64
-}
-
-func (i *imageMsg) reset() { *i = imageMsg{} }
-
-func (i *imageMsg) decode(msg map[string]runtime.Msg) {
-	i.reset()
-	i.pixels = msg["pixels"].Str()
-	i.width = msg["width"].Int()
-	i.height = msg["height"].Int()
-}
-
-func (i imageMsg) encode() runtime.Msg {
-	return runtime.NewDictMsg(map[string]runtime.Msg{
-		"pixels": runtime.NewStrMsg(i.pixels),
-		"width":  runtime.NewIntMsg(i.width),
-		"height": runtime.NewIntMsg(i.height),
-	})
 }
 
 func (i imageMsg) createImage() image.Image {
@@ -94,8 +77,8 @@ type pixelStreamMsg struct {
 }
 
 func (i *pixelStreamMsg) decode(msg runtime.Msg) {
-	m := msg.Dict()
-	i.idx = m["idx"].Int()
-	i.pixelMsg.decode(m["data"])
-	i.last = m["last"].Bool()
+	m := msg.Struct()
+	i.idx = m.Get("idx").Int()
+	i.pixelMsg.decode(m.Get("data"))
+	i.last = m.Get("last").Bool()
 }

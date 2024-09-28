@@ -207,7 +207,6 @@ func (a Adapter) getMessage(msg ir.Message) (runtime.Msg, error) {
 			}
 			values = append(values, el)
 		}
-		sort.Strings(names) // required by the runtime
 		result = runtime.NewStructMsg(names, values)
 	default:
 		return nil, errors.New("unknown message type")

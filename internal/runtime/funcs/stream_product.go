@@ -37,10 +37,10 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Dict()
-				firstData = append(firstData, item["data"])
+				item := seqMsg.Struct()
+				firstData = append(firstData, item.Get("data"))
 
-				if item["last"].Bool() {
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -52,10 +52,10 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Dict()
-				secondData = append(secondData, item["data"])
+				item := seqMsg.Struct()
+				secondData = append(secondData, item.Get("data"))
 
-				if item["last"].Bool() {
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -65,10 +65,10 @@ func (streamProduct) Create(
 					seqOut.Send(
 						ctx,
 						streamItem(
-							runtime.NewDictMsg(map[string]runtime.Msg{
-								"first":  msg1,
-								"second": msg2,
-							}),
+							runtime.NewStructMsg(
+								[]string{"first", "second"},
+								[]runtime.Msg{msg1, msg2},
+							),
 							int64(i),
 							i == len(firstData)-1 && j == len(secondData)-1,
 						),

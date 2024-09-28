@@ -3,7 +3,6 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -191,9 +190,10 @@ func (msg StructMsg) Struct() StructMsg { return msg }
 // It panics if the field is not found.
 // It uses binary search to find the field, assuming the names are sorted.
 func (msg StructMsg) Get(name string) Msg {
-	i := sort.SearchStrings(msg.names, name)
-	if i < len(msg.names) && msg.names[i] == name {
-		return msg.fields[i]
+	for i, n := range msg.names {
+		if n == name {
+			return msg.fields[i]
+		}
 	}
 	panic(fmt.Sprintf("field %q not found", name))
 }

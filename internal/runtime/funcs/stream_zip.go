@@ -22,7 +22,7 @@ func (streamZip) Create(
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Single("data")
+	dataOut, err := io.Out.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +38,9 @@ func (streamZip) Create(
 				if !ok {
 					return
 				}
-				item := seqMsg.Dict()
-				firstData = append(firstData, item["data"])
-				if item["last"].Bool() {
+				item := seqMsg.Struct()
+				firstData = append(firstData, item.Get("data"))
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -51,9 +51,9 @@ func (streamZip) Create(
 				if !ok {
 					return
 				}
-				item := seqMsg.Dict()
-				secondData = append(secondData, item["data"])
-				if item["last"].Bool() {
+				item := seqMsg.Struct()
+				secondData = append(secondData, item.Get("data"))
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -64,13 +64,12 @@ func (streamZip) Create(
 			}
 
 			for i := 0; i < n; i++ {
-				if !seqOut.Send(
+				if !dataOut.Send(
 					ctx,
 					streamItem(
-						runtime.NewDictMsg(map[string]runtime.Msg{
-							"first":  firstData[i],
-							"second": secondData[i],
-						}),
+						runtime.NewStructMsg(
+							[]string{"first", "second"},
+							[]runtime.Msg{firstData[i], secondData[i]}),
 						int64(i),
 						i == n-1,
 					),
