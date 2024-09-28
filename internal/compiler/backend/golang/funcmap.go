@@ -2,21 +2,18 @@ package golang
 
 import (
 	"bytes"
-	"fmt"
-
-	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
-func getConnComment(sender ir.PortAddr, receiver ir.PortAddr) string {
-	return fmt.Sprintf("// %s -> %s", fmtPortAddr(sender), fmtPortAddr(receiver))
-}
+// func getConnComment(sender ir.PortAddr, receiver ir.PortAddr) string {
+// 	return fmt.Sprintf("// %s -> %s", fmtPortAddr(sender), fmtPortAddr(receiver))
+// }
 
-func fmtPortAddr(addr ir.PortAddr) string {
-	if addr.IsArray {
-		return fmt.Sprintf("%s:%s[%d]", addr.Path, addr.Port, addr.Idx)
-	}
-	return fmt.Sprintf("%s:%s", addr.Path, addr.Port)
-}
+// func fmtPortAddr(addr ir.PortAddr) string {
+// 	if addr.IsArray {
+// 		return fmt.Sprintf("%s:%s[%d]", addr.Path, addr.Port, addr.Idx)
+// 	}
+// 	return fmt.Sprintf("%s:%s", addr.Path, addr.Port)
+// }
 
 // func getPortChanName(addr *ir.PortAddr) string {
 // 	path := handleSpecialChars(addr.Path)

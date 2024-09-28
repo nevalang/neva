@@ -28,7 +28,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 	funcsFinished := make(chan struct{})
 
 	go func() {
-		runFuncs(context.WithValue(ctx, "cancel", cancel))
+		runFuncs(context.WithValue(ctx, "cancel", cancel)) //nolint:staticcheck // SA1029
 		close(funcsFinished)
 	}()
 
