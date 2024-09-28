@@ -34,20 +34,20 @@ func main() {
         {{- end}}
     )
 
+    interceptor := runtime.ProdInterceptor{}
+
     var (
         startPort = runtime.NewSingleOutport(
             runtime.PortAddr{Path: "in", Port: "start"},
-            nil,
+            interceptor,
             {{getPortChanNameByAddr "in" "start"}},
         )
         stopPort = runtime.NewSingleInport(
             {{getPortChanNameByAddr "out" "stop"}},
             runtime.PortAddr{Path: "out", Port: "stop"},
-            nil,
+            interceptor,
         )
     )
-
-    interceptor := runtime.ProdInterceptor{}
 
     funcCalls := []runtime.FuncCall{
         {{- range .FuncCalls}}

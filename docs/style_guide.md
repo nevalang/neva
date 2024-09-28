@@ -22,6 +22,10 @@ Use tabs over spaces.
   - More accessible for users with visual impairments who may need larger indentation
 - Tabs are more efficient in terms of file size
 
+### Imports
+
+Group imports by type: stdlib, local, third-party. Separate groups with newlines if at least 1 group has more than 2 imports. Sort alphabetically within groups.
+
 ## Naming Conventions
 
 Names should inherit context from parent scope. Good naming eliminates need for comments. Names generally rather short than long.
