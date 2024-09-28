@@ -1,6 +1,6 @@
 flow Main(start any) (stop any) {
 	adder Add<int>
-	sequencer StreamPort<int>
+	sequencer ArrPortToStream<int>
 	println Println<int>
 
 	---

@@ -13,10 +13,10 @@ pub flow Wait(data stream<any>) (sig) {
 #extern(stream_int_range)
 pub flow Range(from int, to int) (data stream<int>)
 
-// StreamPort iterates over all array-inport's slots in order
+// ArrPortToStream iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub flow StreamPort<T>([port] T) (data stream<T>) // TODO data->res
+pub flow ArrPortToStream<T>([port] T) (data stream<T>)
 
 // IPortReducer reduces a stream of messages to one single message.
 // It's expected to send a result message after every processed stream.
@@ -27,7 +27,7 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 // to reducer. When all messages are processed the result is emited to outport.
 pub flow ReducePort<T>([port] T) (res T) {
     reducer IPortReducer<T>
-    streamer StreamPort<T>
+    streamer ArrPortToStream<T>
     ---
     :port => streamer:port
     streamer -> reducer -> :res
@@ -89,7 +89,12 @@ pub flow Filter<T>(data stream<T>) (res stream<T>) {
     cond:then -> :res
 }
 
-interface IReduceHandler<T, Y>(acc T, el T) (res Y) // TODO res->acc?
+// TODO: Some and Every
+
+// --- Reduce ---
+
+// IReduceHandler is a dependency for Reduce flow.
+pub interface IReduceHandler<T, Y>(acc T, el T) (res Y)
 
 // Reduce applies a reduction function to a stream of values, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.

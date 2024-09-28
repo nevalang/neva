@@ -3,7 +3,7 @@ import { lists }
 const lst list<int> = [1, 2, 3]
 
 flow Main(start) (stop) {
-    Iter, For{Println}, Wait
+    ListToStream, For{Println}, Wait
     ---
-    :start -> ($lst -> iter -> for -> wait -> :stop)
+    :start -> ($lst -> listToStream -> for -> wait -> :stop)
 }

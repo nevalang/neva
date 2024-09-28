@@ -6,7 +6,7 @@ flow Main(start) (stop) {
     Map<int, int>{Decr<int>}
     List
     Println
-    Iter<int>
+    ListToStream<int>
     ---
-    :start -> ($lst -> iter -> map -> list -> println -> :stop)
+    :start -> ($lst -> listToStream -> map -> list -> println -> :stop)
 }

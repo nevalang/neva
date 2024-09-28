@@ -3,9 +3,9 @@ import { lists }
 const lst list<bool> = [true, false]
 
 flow Main(start) (stop) {
-	Iter<bool>, Map<bool, int>{Mapper}, For{Println}, Wait
+	ListToStream<bool>, Map<bool, int>{Mapper}, For{Println}, Wait
 	---
-	:start -> ($lst -> iter -> map -> for -> wait -> :stop)
+	:start -> ($lst -> listToStream -> map -> for -> wait -> :stop)
 }
 
 flow Mapper(data bool) (res int) {

@@ -1,11 +1,11 @@
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 flow Main(start) (stop) {
-    Iter<int>
-    Reduce<int, int>{AddReducer<int>}
+    ListToStream<int>
+    Reduce<int, int>{Add<int>}
     Println
     ---
-    :start -> ($lst -> iter -> reduce:data)
+    :start -> ($lst -> listToStream -> reduce:data)
     0 -> reduce:init
     reduce -> println -> :stop
 }

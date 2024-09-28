@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intAdd struct{}
+type stringAdd struct{}
 
-func (intAdd) Create(
+func (stringAdd) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
@@ -32,7 +32,6 @@ func (intAdd) Create(
 		for {
 			var accMsg, elMsg runtime.Msg
 			var accOk, elOk bool
-
 			var wg sync.WaitGroup
 			wg.Add(2)
 
@@ -52,7 +51,7 @@ func (intAdd) Create(
 				return
 			}
 
-			resMsg := runtime.NewIntMsg(elMsg.Int() + accMsg.Int())
+			resMsg := runtime.NewStrMsg(elMsg.Str() + accMsg.Str())
 			if !resOut.Send(ctx, resMsg) {
 				return
 			}

@@ -1,23 +1,33 @@
+// --- Reducers ---
+
+// Add sums acc with el and sends to result. It can be used with Reduce.
 #extern(int int_add, float float_add, string string_add)
-pub flow Add<T int | float | string>(data stream<T>) (res T)
+pub flow Add<T int | float | string>(acc T, el T) (res T)
 
+// Sub subtracts el from acc and sends to result. It can be used with Reduce.
 #extern(int int_sub, float float_sub)
-pub flow Sub<T int | float >(data stream<T>) (res T)
+pub flow Sub<T int | float>(acc T, el T) (res T)
 
+// Mul multiplies acc with el and sends to result. It can be used with Reduce.
 #extern(int int_mul, float float_mul)
-pub flow Mul<T int | float >(data stream<T>) (res T)
+pub flow Mul<T int | float>(acc T, el T) (res T)
 
+// Div divides acc by el and sends to result. It can be used with Reduce.
 #extern(int int_div, float float_div)
-pub flow Div<T int | float >(x T, y T) (res T, err error)
+pub flow Div<T int | float>(acc T, el T) (res T, err error)
 
+// --- Mappers ---
+
+// Inc increments data by 1 and sends to result. It can be used with Map.
+#extern(int int_inc, float float_inc)
+pub flow Inc<T int | float>(data T) (res T)
+
+// Decr decrements data by 1 and sends to result. It can be used with Map.
 #extern(int int_decr, float float_decr)
 pub flow Decr<T int | float>(data T) (res T)
 
+// --- Other ---
+
+// Mod calculates num modulo den and sends to result.
 #extern(int_mod)
 pub flow Mod(num int, den int) (res int, err error)
-
-// === Reducer Interface Experiment ===
-
-// IDEA: res->acc?
-#extern(int int_add_reducer, float float_add_reducer, string string_add_reducer)
-pub flow AddReducer<T int | float | string>(acc T, el T) (res T)

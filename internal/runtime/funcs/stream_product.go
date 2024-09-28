@@ -27,6 +27,7 @@ func (streamProduct) Create(
 		return nil, err
 	}
 
+	// TODO: make sure it's not possible to do processing on the fly so we don't have to wait for both streams to complete
 	return func(ctx context.Context) {
 		for {
 			firstData := []runtime.Msg{}

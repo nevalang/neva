@@ -1,12 +1,12 @@
+const l list<int> = [1, 2, 3]
+
 flow Main(start) (stop) {
 	Println<int>
-	sub ReducePort<int> { Sub<int> }
+	Reduce{Sub<int>}
+	ListToStream<int>
 	---
-	:start -> [
-		(1 -> sub:port[0]),
-		(2 -> sub:port[1]),
-		(3 -> sub:port[2])
-	]
-	sub:res -> println:data
+	:start -> ($l -> listToStream -> reduce:data)
+	reduce:init -> 0
+	listToStream:res -> println:data
 	println:sig -> :stop
 }
