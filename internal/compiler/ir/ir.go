@@ -40,13 +40,13 @@ type FuncIO struct {
 
 // Message is a data that can be sent and received.
 type Message struct {
-	Type   MsgType            `json:"-"`
-	Bool   bool               `json:"bool,omitempty"`
-	Int    int64              `json:"int,omitempty"`
-	Float  float64            `json:"float,omitempty"`
-	String string             `json:"str,omitempty"`
-	List   []Message          `json:"list,omitempty"`
-	Dict   map[string]Message `json:"map,omitempty"`
+	Type         MsgType            `json:"-"`
+	Bool         bool               `json:"bool,omitempty"`
+	Int          int64              `json:"int,omitempty"`
+	Float        float64            `json:"float,omitempty"`
+	String       string             `json:"str,omitempty"`
+	List         []Message          `json:"list,omitempty"`
+	DictOrStruct map[string]Message `json:"map,omitempty"`
 }
 
 // MsgType is an enumeration of message types.
@@ -58,5 +58,6 @@ const (
 	MsgTypeFloat  MsgType = 3
 	MsgTypeString MsgType = 4
 	MsgTypeList   MsgType = 5
-	DictTypeMap   MsgType = 6
+	MsgTypeDict   MsgType = 6
+	MsgTypeStruct MsgType = 7
 )

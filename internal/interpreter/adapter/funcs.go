@@ -186,9 +186,9 @@ func (a Adapter) getMessage(msg ir.Message) (runtime.Msg, error) {
 			list[i] = el
 		}
 		result = runtime.NewListMsg(list)
-	case ir.DictTypeMap:
-		m := make(map[string]runtime.Msg, len(msg.List))
-		for k, v := range msg.Dict {
+	case ir.MsgTypeDict:
+		m := make(map[string]runtime.Msg, len(msg.DictOrStruct))
+		for k, v := range msg.DictOrStruct {
 			el, err := a.getMessage(v)
 			if err != nil {
 				return nil, err
@@ -196,6 +196,19 @@ func (a Adapter) getMessage(msg ir.Message) (runtime.Msg, error) {
 			m[k] = el
 		}
 		result = runtime.NewDictMsg(m)
+	case ir.MsgTypeStruct:
+		names := make([]string, 0, len(msg.DictOrStruct))
+		values := make([]runtime.Msg, 0, len(msg.DictOrStruct))
+		for k, v := range msg.DictOrStruct {
+			names = append(names, k)
+			el, err := a.getMessage(v)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, el)
+		}
+		sort.Strings(names) // required by the runtime
+		result = runtime.NewStructMsg(names, values)
 	default:
 		return nil, errors.New("unknown message type")
 	}

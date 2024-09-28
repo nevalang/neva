@@ -57,7 +57,6 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 			}
 			listMsg[i] = *result
 		}
-
 		return &ir.Message{
 			Type: ir.MsgTypeList,
 			List: listMsg,
@@ -70,12 +69,19 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 			if err != nil {
 				return nil, err
 			}
-			mapMsg[name] = *result // see Q&A on why we don't create flat maps for nested structures
+			mapMsg[name] = *result
+		}
+
+		var typ ir.MsgType
+		if constant.Message.TypeExpr.Lit.Struct != nil {
+			typ = ir.MsgTypeStruct
+		} else {
+			typ = ir.MsgTypeDict
 		}
 
 		return &ir.Message{
-			Type: ir.DictTypeMap,
-			Dict: mapMsg,
+			Type:         typ,
+			DictOrStruct: mapMsg,
 		}, nil
 	}
 

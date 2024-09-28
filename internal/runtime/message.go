@@ -3,6 +3,7 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -24,7 +25,8 @@ type Msg interface {
 	Float() float64
 	Str() string
 	List() []Msg
-	Dict() map[string]Msg // TODO rename maps to dicts; add real structures
+	Dict() map[string]Msg
+	Struct() StructMsg
 }
 
 // Base
@@ -38,6 +40,7 @@ func (baseMsg) Float() float64       { return 0 }
 func (baseMsg) Str() string          { return "" }
 func (baseMsg) List() []Msg          { return nil }
 func (baseMsg) Dict() map[string]Msg { return nil }
+func (baseMsg) Struct() StructMsg    { return StructMsg{} }
 
 // Int
 
@@ -172,5 +175,48 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 	return DictMsg{
 		baseMsg: &baseMsg{},
 		v:       d,
+	}
+}
+
+// Structure
+type StructMsg struct {
+	*baseMsg
+	names  []string // must be sorted for binary search
+	fields []Msg    // must be equal length to names
+}
+
+func (msg StructMsg) Struct() StructMsg { return msg }
+
+// Get returns the value of a field by name.
+// It panics if the field is not found.
+// It uses binary search to find the field, assuming the names are sorted.
+func (msg StructMsg) Get(name string) Msg {
+	i := sort.SearchStrings(msg.names, name)
+	if i < len(msg.names) && msg.names[i] == name {
+		return msg.fields[i]
+	}
+	panic(fmt.Sprintf("field %q not found", name))
+}
+
+func (msg StructMsg) String() string {
+	m := make(map[string]Msg, len(msg.names))
+	for i, name := range msg.names {
+		m[name] = msg.fields[i]
+	}
+	bb, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return string(bb)
+}
+
+func NewStructMsg(names []string, fields []Msg) StructMsg {
+	if len(names) != len(fields) {
+		panic("names and fields must have the same length")
+	}
+	return StructMsg{
+		baseMsg: &baseMsg{},
+		names:   names,
+		fields:  fields,
 	}
 }
