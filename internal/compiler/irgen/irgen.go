@@ -48,7 +48,7 @@ func (g Generator) Generate(
 
 	result := &ir.Program{
 		Ports:       map[ir.PortAddr]struct{}{},
-		Connections: map[ir.PortAddr]map[ir.PortAddr]struct{}{},
+		Connections: map[ir.PortAddr]ir.PortAddr{}, // Changed to 1-1 mapping
 		Funcs:       []ir.FuncCall{},
 	}
 

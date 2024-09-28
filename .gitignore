@@ -20,6 +20,7 @@ cmd/tmp
 /neva-linux-loong64
 /neva-windows-amd64.exe
 /neva-windows-arm64.exe
+dist
 
 node_modules
 __debug*

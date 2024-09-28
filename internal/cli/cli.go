@@ -29,7 +29,8 @@ func NewApp(
 	var (
 		target           string
 		debug            bool
-		debugLogFilePath string
+		debugLogFilePath string // TODO make this default for -debug flag
+		outputPath       string
 	)
 
 	return &cli.App{
@@ -132,7 +133,7 @@ func NewApp(
 			},
 			{
 				Name:  "build",
-				Usage: "Build executable binary from neva program source code",
+				Usage: "Build neva program from source code",
 				Args:  true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -149,24 +150,35 @@ func NewApp(
 							return nil
 						},
 					},
+					&cli.StringFlag{
+						Name:        "output",
+						Usage:       "Destination path for output file(s)",
+						Destination: &outputPath,
+					},
 				},
-				ArgsUsage: "Provide path to the executable package",
+				ArgsUsage: "Provide path to main package",
 				Action: func(cCtx *cli.Context) error {
-					dirFromArg, err := getMainPkgFromArgs(cCtx)
+					mainPkg, err := getMainPkgFromArgs(cCtx)
 					if err != nil {
 						return err
 					}
+
+					dst := workdir
+					if outputPath != "" {
+						dst = outputPath
+					}
+
 					switch target {
 					case "go":
-						return goc.Compile(dirFromArg, workdir, debug)
+						return goc.Compile(mainPkg, dst, debug)
 					case "wasm":
-						return wasmc.Compile(dirFromArg, workdir, debug)
+						return wasmc.Compile(mainPkg, dst, debug)
 					case "json":
-						return jsonc.Compile(dirFromArg, workdir, debug)
+						return jsonc.Compile(mainPkg, dst, debug)
 					case "dot":
-						return dotc.Compile(dirFromArg, workdir, debug)
+						return dotc.Compile(mainPkg, dst, debug)
 					default:
-						return nativec.Compile(dirFromArg, workdir, debug)
+						return nativec.Compile(mainPkg, dst, debug)
 					}
 				},
 			},
@@ -204,7 +216,8 @@ func createNevaMod(path string) error {
 
 	// Create main.neva file
 	mainNevaContent := `flow Main(start) (stop) {
-	nodes { Println }
+	Println
+	---
 	:start -> ('Hello, World!' -> println -> :stop)
 }`
 

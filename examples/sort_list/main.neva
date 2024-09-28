@@ -1,7 +1,0 @@
-const l list<int> = [50, 30, 20, 100]
-
-flow Main(start any) (stop any) {
-	Sort<int>, Println
-	---
-	:start -> ($l -> sort -> println -> :stop)
-}

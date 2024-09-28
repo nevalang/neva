@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		`{"l": [1, 2, 3], "m": {"key": 1}}
+		`{"l": [1, 2, 3], "d": {"key": 1}}
 `,
 		string(out),
 	)

@@ -60,9 +60,7 @@ func (g Generator) processNetwork(
 					IsArray: true,
 				}
 
-				result.Connections[irSenderSlot] = map[ir.PortAddr]struct{}{
-					irReceiverSlot: {},
-				}
+				result.Connections[irSenderSlot] = irReceiverSlot
 
 				slotIdx++
 			}
@@ -81,12 +79,10 @@ func (g Generator) processNetwork(
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		receiverPortsIR := make(map[ir.PortAddr]struct{}, len(conn.Normal.ReceiverSide.Receivers))
-
 		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 
-			receiverPortsIR[receiverSideIR] = struct{}{}
+			result.Connections[irSenderSidePortAddr] = receiverSideIR
 
 			// same receiver can be used by multiple senders so we only add it once
 			if _, ok := nodesPortsUsage[receiverSide.PortAddr.Node]; !ok {
@@ -104,8 +100,6 @@ func (g Generator) processNetwork(
 
 			nodesPortsUsage[receiverNode].in[receiverPortAddr] = struct{}{}
 		}
-
-		result.Connections[irSenderSidePortAddr] = receiverPortsIR
 	}
 
 	return nodesPortsUsage, nil

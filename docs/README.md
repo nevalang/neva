@@ -10,12 +10,12 @@ This document provides an overview of Nevalang, its core concepts, and how to us
 
 ## Table of Contents
 
-1. [About](./about.md)
-2. [Program Structure](./program_structure.md)
-   1. [Types](./types.md)
-   2. [Constants](./constants.md)
-   3. [Interfaces](./interfaces.md)
-   4. [Components](./components.md)
-      - [Networks](./networks.md)
-3. [Style Guide](./style_guide.md)
-4. [FAQ](./faq.md)
+- [About](./about.md)
+- [Program Structure](./program_structure.md)
+- [Types](./types.md)
+- [Constants](./constants.md)
+- [Interfaces](./interfaces.md)
+- [Components](./components.md)
+- [Networks](./networks.md)
+- [Style Guide](./style_guide.md)
+- [FAQ](./faq.md)

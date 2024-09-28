@@ -14,7 +14,7 @@ import (
 type Interpreter struct {
 	builder  builder.Builder
 	compiler compiler.Compiler
-	runtime  runtime.Runtime
+	registry map[string]runtime.FuncCreator
 	adapter  adapter.Adapter
 }
 
@@ -41,11 +41,8 @@ func (i Interpreter) Interpret(
 		}
 	}
 
-	if err := i.runtime.Run(ctx, rprog); err != nil {
-		return &compiler.Error{
-			Err:      err,
-			Location: &sourcecode.Location{PkgName: main},
-		}
+	if err := runtime.Run(ctx, rprog, i.registry); err != nil {
+		panic(err)
 	}
 
 	return nil
@@ -59,10 +56,6 @@ func New(
 		builder:  builder,
 		compiler: compiler,
 		adapter:  adapter.NewAdapter(),
-		runtime: runtime.New(
-			runtime.NewFuncRunner(
-				funcs.CreatorRegistry(),
-			),
-		),
+		registry: funcs.NewRegistry(),
 	}
 }
