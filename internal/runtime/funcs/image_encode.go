@@ -34,7 +34,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 			}
 
 			var b imageMsg
-			b.decode(imgMsg.Map())
+			b.decode(imgMsg.Dict())
 
 			im := b.createImage()
 

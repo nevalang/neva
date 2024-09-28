@@ -60,7 +60,7 @@ func (structBuilder) Handle(
 
 			wg.Wait()
 
-			if !outport.Send(ctx, runtime.NewMapMsg(structure)) {
+			if !outport.Send(ctx, runtime.NewDictMsg(structure)) {
 				return
 			}
 		}

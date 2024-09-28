@@ -31,7 +31,7 @@ func (s streamToList) Create(
 				return
 			}
 
-			item := msg.Map()
+			item := msg.Dict()
 
 			acc = append(acc, item["data"])
 

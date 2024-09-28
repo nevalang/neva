@@ -37,7 +37,7 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Map()
+				item := seqMsg.Dict()
 				firstData = append(firstData, item["data"])
 
 				if item["last"].Bool() {
@@ -52,7 +52,7 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Map()
+				item := seqMsg.Dict()
 				secondData = append(secondData, item["data"])
 
 				if item["last"].Bool() {
@@ -65,7 +65,7 @@ func (streamProduct) Create(
 					seqOut.Send(
 						ctx,
 						streamItem(
-							runtime.NewMapMsg(map[string]runtime.Msg{
+							runtime.NewDictMsg(map[string]runtime.Msg{
 								"first":  msg1,
 								"second": msg2,
 							}),

@@ -24,20 +24,20 @@ type Msg interface {
 	Float() float64
 	Str() string
 	List() []Msg
-	Map() map[string]Msg // TODO rename maps to dicts; add real structures
+	Dict() map[string]Msg // TODO rename maps to dicts; add real structures
 }
 
 // Base
 
 type baseMsg struct{}
 
-func (baseMsg) String() string      { return "<base>" }
-func (baseMsg) Bool() bool          { return false }
-func (baseMsg) Int() int64          { return 0 }
-func (baseMsg) Float() float64      { return 0 }
-func (baseMsg) Str() string         { return "" }
-func (baseMsg) List() []Msg         { return nil }
-func (baseMsg) Map() map[string]Msg { return nil }
+func (baseMsg) String() string       { return "<base>" }
+func (baseMsg) Bool() bool           { return false }
+func (baseMsg) Int() int64           { return 0 }
+func (baseMsg) Float() float64       { return 0 }
+func (baseMsg) Str() string          { return "" }
+func (baseMsg) List() []Msg          { return nil }
+func (baseMsg) Dict() map[string]Msg { return nil }
 
 // Int
 
@@ -141,14 +141,14 @@ func NewListMsg(v []Msg) ListMsg {
 	}
 }
 
-// Map
-type MapMsg struct {
+// Dictionary
+type DictMsg struct {
 	*baseMsg
 	v map[string]Msg
 }
 
-func (msg MapMsg) Map() map[string]Msg { return msg.v }
-func (msg MapMsg) MarshalJSON() ([]byte, error) {
+func (msg DictMsg) Dict() map[string]Msg { return msg.v }
+func (msg DictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
 		panic(err)
@@ -160,7 +160,7 @@ func (msg MapMsg) MarshalJSON() ([]byte, error) {
 
 	return []byte(jsonString), nil
 }
-func (msg MapMsg) String() string {
+func (msg DictMsg) String() string {
 	b, err := msg.MarshalJSON()
 	if err != nil {
 		panic(err)
@@ -168,9 +168,9 @@ func (msg MapMsg) String() string {
 	return string(b)
 }
 
-func NewMapMsg(m map[string]Msg) MapMsg {
-	return MapMsg{
+func NewDictMsg(d map[string]Msg) DictMsg {
+	return DictMsg{
 		baseMsg: &baseMsg{},
-		v:       m,
+		v:       d,
 	}
 }

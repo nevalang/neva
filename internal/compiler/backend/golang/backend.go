@@ -139,8 +139,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 `, el)
 		}
 		return s + ")", nil
-	case ir.MsgTypeMap:
-		s := `runtime.NewMapMsg(map[string]runtime.Msg{
+	case ir.DictTypeMap:
+		s := `runtime.NewDictMsg(map[string]runtime.Msg{
 	`
 		for k, v := range msg.Dict {
 			el, err := b.getMessageString(compiler.Pointer(v))

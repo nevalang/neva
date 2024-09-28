@@ -38,7 +38,7 @@ func (streamZip) Create(
 				if !ok {
 					return
 				}
-				item := seqMsg.Map()
+				item := seqMsg.Dict()
 				firstData = append(firstData, item["data"])
 				if item["last"].Bool() {
 					break
@@ -51,7 +51,7 @@ func (streamZip) Create(
 				if !ok {
 					return
 				}
-				item := seqMsg.Map()
+				item := seqMsg.Dict()
 				secondData = append(secondData, item["data"])
 				if item["last"].Bool() {
 					break
@@ -67,7 +67,7 @@ func (streamZip) Create(
 				if !seqOut.Send(
 					ctx,
 					streamItem(
-						runtime.NewMapMsg(map[string]runtime.Msg{
+						runtime.NewDictMsg(map[string]runtime.Msg{
 							"first":  firstData[i],
 							"second": secondData[i],
 						}),

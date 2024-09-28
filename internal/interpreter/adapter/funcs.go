@@ -186,7 +186,7 @@ func (a Adapter) getMessage(msg ir.Message) (runtime.Msg, error) {
 			list[i] = el
 		}
 		result = runtime.NewListMsg(list)
-	case ir.MsgTypeMap:
+	case ir.DictTypeMap:
 		m := make(map[string]runtime.Msg, len(msg.List))
 		for k, v := range msg.Dict {
 			el, err := a.getMessage(v)
@@ -195,7 +195,7 @@ func (a Adapter) getMessage(msg ir.Message) (runtime.Msg, error) {
 			}
 			m[k] = el
 		}
-		result = runtime.NewMapMsg(m)
+		result = runtime.NewDictMsg(m)
 	default:
 		return nil, errors.New("unknown message type")
 	}

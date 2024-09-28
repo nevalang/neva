@@ -59,8 +59,8 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 	}, nil
 }
 
-func respMsg(statusCode int, body []byte) runtime.MapMsg {
-	return runtime.NewMapMsg(map[string]runtime.Msg{
+func respMsg(statusCode int, body []byte) runtime.DictMsg {
+	return runtime.NewDictMsg(map[string]runtime.Msg{
 		"body":       runtime.NewStrMsg(string(body)),
 		"statusCode": runtime.NewIntMsg(int64(statusCode)),
 	})

@@ -74,7 +74,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 		}
 
 		return &ir.Message{
-			Type: ir.MsgTypeMap,
+			Type: ir.DictTypeMap,
 			Dict: mapMsg,
 		}, nil
 	}
