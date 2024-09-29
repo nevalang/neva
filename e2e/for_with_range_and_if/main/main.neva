@@ -3,16 +3,16 @@ import { lists }
 const lst list<bool> = [true, false]
 
 flow Main(start) (stop) {
-	ListToStream<bool>, Map<bool, int>{Mapper}, For{Println}, Wait
+	ListToStream<bool>, ForEach<bool>{MapAndPrint}, Wait
 	---
-	:start -> ($lst -> listToStream -> map -> for -> wait -> :stop)
+	:start -> ($lst -> listToStream -> forEach -> wait -> :stop)
 }
 
-flow Mapper(data bool) (res int) {
-	Ternary<int>
+flow MapAndPrint(data bool) (sig any) {
+	Ternary, Println
 	---
 	:data -> ternary:if
 	1 -> ternary:then
 	0 -> ternary:else
-	ternary -> :res
+	ternary -> println -> :sig
 }

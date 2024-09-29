@@ -1,10 +1,10 @@
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 flow Main(start) (stop) {
-    ListToStream, Filter{Even}, For{Println}, Wait
+    ListToStream, Filter{Even}, ForEach{Println}, Wait
     ---
     :start -> (
-        $lst -> listToStream -> filter -> for -> wait -> :stop
+        $lst -> listToStream -> filter -> forEach -> wait -> :stop
     )
 }
 

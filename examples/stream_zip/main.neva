@@ -6,7 +6,7 @@ flow Main(start) (stop) {
   r1 Range
   ListToStream<string>
   streams.Zip<int, string>
-  For{Println}
+  ForEach{Println}
   Wait
   ---
   :start -> [
@@ -15,5 +15,5 @@ flow Main(start) (stop) {
   ]
   r1 -> zip:first
   $strings -> listToStream -> zip:second
-  zip -> for -> wait -> :stop
+  zip -> forEach -> wait -> :stop
 }

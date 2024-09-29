@@ -4,7 +4,7 @@ flow Main(start) (stop) {
   r1 Range
   r2 Range
   streams.Product<int, int>
-  For<streams.ProductResult<int, int>> {
+  ForEach<streams.ProductResult<int, int>> {
     Println<streams.ProductResult<int, int>>
   }
   Wait
@@ -17,5 +17,5 @@ flow Main(start) (stop) {
   r1 -> product:first
   r2 -> product:second
 
-  product -> for -> wait -> :stop
+  product -> forEach -> wait -> :stop
 }

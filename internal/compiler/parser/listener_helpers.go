@@ -608,6 +608,7 @@ func parsePrimitiveConstLiteral(
 	lit generated.IPrimitiveConstLitContext,
 ) (src.Const, *compiler.Error) {
 	parsedConst := src.Const{
+		Message: &src.Message{},
 		Meta: core.Meta{
 			Text: lit.GetText(),
 			Start: core.Position{

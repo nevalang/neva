@@ -46,10 +46,10 @@ const idxPath list<string> = ['idx']
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another.
-// Just like For, it does not block the stream. As soon as one item processed,
+// Just like ForEach, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
 // It's not recommented but possible to also produce side-effects.
-// But, if all you need is side-effects, use For instead.
+// But, if all you need is side-effects, use ForEach instead.
 pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
@@ -128,19 +128,19 @@ pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 #extern(accumulator)
 pub flow Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
-// --- For ---
+// --- ForEach ---
 
-// IForHandler is a dependency for For flow.
-pub interface IForHandler<T>(data T) (sig any)
+// IForEachHandler is a dependency for ForEach flow.
+pub interface IForEachHandler<T>(data T) (sig any)
 
-// For processes stream to produce side-effects on its items.
+// ForEach processes stream to produce side-effects on its items.
 // Just like Map, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
-// For always sends the same stream, it's not intended for mapping.
+// ForEach always sends the same stream, it's not intended for mapping.
 // If you need mapping (or mapping with side-effects), use Map instead.
-pub flow For<T>(data stream<T>) (data stream<T>) {
+pub flow ForEach<T>(data stream<T>) (data stream<T>) {
     Lock<stream<T>>
-    handler IForHandler<T>
+    handler IForEachHandler<T>
 
     #bind(dataPath)
     getData Field<T>
