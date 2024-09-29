@@ -8,7 +8,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "filter_list"]
+      "args": ["run", "struct_selector"]
     },
     {
       "name": "Build",

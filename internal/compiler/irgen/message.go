@@ -62,18 +62,18 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 			List: listMsg,
 		}, nil
 	case constant.Message.MapOrStruct != nil:
-		mapMsg := make(map[string]ir.Message, len(constant.Message.MapOrStruct))
+		m := make(map[string]ir.Message, len(constant.Message.MapOrStruct))
 
 		for name, el := range constant.Message.MapOrStruct {
 			result, err := getIRMsgBySrcRef(el, scope)
 			if err != nil {
 				return nil, err
 			}
-			mapMsg[name] = *result
+			m[name] = *result
 		}
 
 		var typ ir.MsgType
-		if constant.Message.TypeExpr.Lit.Struct != nil {
+		if constant.Message.TypeExpr.Lit != nil && constant.Message.TypeExpr.Lit.Struct != nil {
 			typ = ir.MsgTypeStruct
 		} else {
 			typ = ir.MsgTypeDict
@@ -81,7 +81,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 
 		return &ir.Message{
 			Type:         typ,
-			DictOrStruct: mapMsg,
+			DictOrStruct: m,
 		}, nil
 	}
 

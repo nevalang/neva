@@ -203,11 +203,16 @@ func (msg StructMsg) String() string {
 	for i, name := range msg.names {
 		m[name] = msg.fields[i]
 	}
-	bb, err := json.Marshal(m)
+	jsonData, err := json.Marshal(m)
 	if err != nil {
 		panic(err)
 	}
-	return string(bb)
+
+	jsonString := string(jsonData)
+	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
+	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+
+	return jsonString
 }
 
 func NewStructMsg(names []string, fields []Msg) StructMsg {

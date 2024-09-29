@@ -50,14 +50,14 @@ type Message struct {
 }
 
 // MsgType is an enumeration of message types.
-type MsgType int32
+type MsgType string
 
 const (
-	MsgTypeBool   MsgType = 1
-	MsgTypeInt    MsgType = 2
-	MsgTypeFloat  MsgType = 3
-	MsgTypeString MsgType = 4
-	MsgTypeList   MsgType = 5
-	MsgTypeDict   MsgType = 6
-	MsgTypeStruct MsgType = 7
+	MsgTypeBool   MsgType = "bool"
+	MsgTypeInt    MsgType = "int"
+	MsgTypeFloat  MsgType = "float"
+	MsgTypeString MsgType = "string"
+	MsgTypeList   MsgType = "list"
+	MsgTypeDict   MsgType = "dict"
+	MsgTypeStruct MsgType = "struct"
 )
