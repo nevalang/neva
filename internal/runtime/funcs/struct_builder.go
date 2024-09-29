@@ -40,7 +40,8 @@ func (structBuilder) Handle(
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
-			structure := make(map[string]runtime.Msg, len(inports))
+			names := make([]string, 0, len(inports))
+			fields := make([]runtime.Msg, 0, len(inports))
 			var mu sync.Mutex
 			var wg sync.WaitGroup
 			wg.Add(len(inports))
@@ -53,14 +54,15 @@ func (structBuilder) Handle(
 						return
 					}
 					mu.Lock()
-					structure[name] = msg
+					names = append(names, name)
+					fields = append(fields, msg)
 					mu.Unlock()
 				}(inportName, inportChan)
 			}
 
 			wg.Wait()
 
-			if !outport.Send(ctx, runtime.NewMapMsg(structure)) {
+			if !outport.Send(ctx, runtime.NewStructMsg(names, fields)) {
 				return
 			}
 		}

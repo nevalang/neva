@@ -715,22 +715,22 @@ func (a Analyzer) getSenderPortAddrType(
 }
 
 func (a Analyzer) getResolvedSenderConstType(
-	constSender src.Const,
+	constSender src.ConstDef,
 	scope src.Scope,
-) (src.Const, ts.Expr, *compiler.Error) {
-	if constSender.Ref != nil {
-		expr, err := a.getResolvedConstTypeByRef(*constSender.Ref, scope)
+) (src.ConstDef, ts.Expr, *compiler.Error) {
+	if constSender.Value.Ref != nil {
+		expr, err := a.getResolvedConstTypeByRef(*constSender.Value.Ref, scope)
 		if err != nil {
-			return src.Const{}, ts.Expr{}, compiler.Error{
+			return src.ConstDef{}, ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &constSender.Ref.Meta,
+				Meta:     &constSender.Value.Ref.Meta,
 			}.Wrap(err)
 		}
 		return constSender, expr, nil
 	}
 
-	if constSender.Message == nil {
-		return src.Const{}, ts.Expr{}, &compiler.Error{
+	if constSender.Value.Message == nil {
+		return src.ConstDef{}, ts.Expr{}, &compiler.Error{
 			Err:      ErrLiteralSenderTypeEmpty,
 			Location: &scope.Location,
 			Meta:     &constSender.Meta,
@@ -738,36 +738,38 @@ func (a Analyzer) getResolvedSenderConstType(
 	}
 
 	resolvedExpr, err := a.resolver.ResolveExpr(
-		constSender.Message.TypeExpr,
+		constSender.TypeExpr,
 		scope,
 	)
 	if err != nil {
-		return src.Const{}, ts.Expr{}, &compiler.Error{
+		return src.ConstDef{}, ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &constSender.Message.Meta,
+			Meta:     &constSender.Value.Message.Meta,
 		}
 	}
 
 	if err := a.validateLiteralSender(resolvedExpr); err != nil {
-		return src.Const{}, ts.Expr{}, &compiler.Error{
+		return src.ConstDef{}, ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &constSender.Message.Meta,
+			Meta:     &constSender.Value.Message.Meta,
 		}
 	}
 
-	return src.Const{
-		Message: &src.Message{
-			TypeExpr:    resolvedExpr,
-			Bool:        constSender.Message.Bool,
-			Int:         constSender.Message.Int,
-			Float:       constSender.Message.Float,
-			Str:         constSender.Message.Str,
-			List:        constSender.Message.List,
-			MapOrStruct: constSender.Message.MapOrStruct,
-			Enum:        constSender.Message.Enum,
-			Meta:        constSender.Message.Meta,
+	return src.ConstDef{
+		TypeExpr: resolvedExpr,
+		Value: src.ConstValue{
+			Message: &src.MsgLiteral{
+				Bool:         constSender.Value.Message.Bool,
+				Int:          constSender.Value.Message.Int,
+				Float:        constSender.Value.Message.Float,
+				Str:          constSender.Value.Message.Str,
+				List:         constSender.Value.Message.List,
+				DictOrStruct: constSender.Value.Message.DictOrStruct,
+				Enum:         constSender.Value.Message.Enum,
+				Meta:         constSender.Value.Message.Meta,
+			},
 		},
 		Meta: constSender.Meta,
 	}, resolvedExpr, nil
@@ -842,8 +844,8 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 		}
 	}
 
-	if entity.Const.Ref != nil {
-		expr, err := a.getResolvedConstTypeByRef(*entity.Const.Ref, scope)
+	if entity.Const.Value.Ref != nil {
+		expr, err := a.getResolvedConstTypeByRef(*entity.Const.Value.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, compiler.Error{
 				Location: &location,
@@ -855,12 +857,12 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 
 	scope = scope.WithLocation(location)
 
-	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Message.TypeExpr, scope)
+	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &entity.Const.Message.Meta,
+			Meta:     &entity.Const.Value.Message.Meta,
 		}
 	}
 

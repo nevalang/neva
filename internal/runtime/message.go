@@ -24,20 +24,22 @@ type Msg interface {
 	Float() float64
 	Str() string
 	List() []Msg
-	Map() map[string]Msg // TODO rename maps to dicts; add real structures
+	Dict() map[string]Msg
+	Struct() StructMsg
 }
 
 // Base
 
 type baseMsg struct{}
 
-func (baseMsg) String() string      { return "<base>" }
-func (baseMsg) Bool() bool          { return false }
-func (baseMsg) Int() int64          { return 0 }
-func (baseMsg) Float() float64      { return 0 }
-func (baseMsg) Str() string         { return "" }
-func (baseMsg) List() []Msg         { return nil }
-func (baseMsg) Map() map[string]Msg { return nil }
+func (baseMsg) String() string       { return "<base>" }
+func (baseMsg) Bool() bool           { return false }
+func (baseMsg) Int() int64           { return 0 }
+func (baseMsg) Float() float64       { return 0 }
+func (baseMsg) Str() string          { return "" }
+func (baseMsg) List() []Msg          { return nil }
+func (baseMsg) Dict() map[string]Msg { return nil }
+func (baseMsg) Struct() StructMsg    { return StructMsg{} }
 
 // Int
 
@@ -141,14 +143,14 @@ func NewListMsg(v []Msg) ListMsg {
 	}
 }
 
-// Map
-type MapMsg struct {
+// Dictionary
+type DictMsg struct {
 	*baseMsg
 	v map[string]Msg
 }
 
-func (msg MapMsg) Map() map[string]Msg { return msg.v }
-func (msg MapMsg) MarshalJSON() ([]byte, error) {
+func (msg DictMsg) Dict() map[string]Msg { return msg.v }
+func (msg DictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
 		panic(err)
@@ -160,7 +162,7 @@ func (msg MapMsg) MarshalJSON() ([]byte, error) {
 
 	return []byte(jsonString), nil
 }
-func (msg MapMsg) String() string {
+func (msg DictMsg) String() string {
 	b, err := msg.MarshalJSON()
 	if err != nil {
 		panic(err)
@@ -168,9 +170,58 @@ func (msg MapMsg) String() string {
 	return string(b)
 }
 
-func NewMapMsg(m map[string]Msg) MapMsg {
-	return MapMsg{
+func NewDictMsg(d map[string]Msg) DictMsg {
+	return DictMsg{
 		baseMsg: &baseMsg{},
-		v:       m,
+		v:       d,
+	}
+}
+
+// Structure
+type StructMsg struct {
+	*baseMsg
+	names  []string // must be sorted for binary search
+	fields []Msg    // must be equal length to names
+}
+
+func (msg StructMsg) Struct() StructMsg { return msg }
+
+// Get returns the value of a field by name.
+// It panics if the field is not found.
+// It uses binary search to find the field, assuming the names are sorted.
+func (msg StructMsg) Get(name string) Msg {
+	for i, n := range msg.names {
+		if n == name {
+			return msg.fields[i]
+		}
+	}
+	panic(fmt.Sprintf("field %q not found", name))
+}
+
+func (msg StructMsg) String() string {
+	m := make(map[string]Msg, len(msg.names))
+	for i, name := range msg.names {
+		m[name] = msg.fields[i]
+	}
+	jsonData, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+
+	jsonString := string(jsonData)
+	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
+	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+
+	return jsonString
+}
+
+func NewStructMsg(names []string, fields []Msg) StructMsg {
+	if len(names) != len(fields) {
+		panic("names and fields must have the same length")
+	}
+	return StructMsg{
+		baseMsg: &baseMsg{},
+		names:   names,
+		fields:  fields,
 	}
 }

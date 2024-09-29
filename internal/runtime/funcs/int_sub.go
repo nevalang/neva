@@ -2,14 +2,23 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
 type intSub struct{}
 
-func (intSub) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Single("data")
+func (intSub) Create(
+	io runtime.IO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
+	accIn, err := io.In.Single("acc")
+	if err != nil {
+		return nil, err
+	}
+
+	elIn, err := io.In.Single("el")
 	if err != nil {
 		return nil, err
 	}
@@ -20,32 +29,32 @@ func (intSub) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 	}
 
 	return func(ctx context.Context) {
-		var (
-			acc     int64 = 0
-			started bool  = false
-		)
-
 		for {
-			seqMsg, ok := seqIn.Receive(ctx)
-			if !ok {
+			var accMsg, elMsg runtime.Msg
+			var accOk, elOk bool
+
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				accMsg, accOk = accIn.Receive(ctx)
+			}()
+
+			go func() {
+				defer wg.Done()
+				elMsg, elOk = elIn.Receive(ctx)
+			}()
+
+			wg.Wait()
+
+			if !accOk || !elOk {
 				return
 			}
 
-			item := seqMsg.Map()
-
-			if !started {
-				acc = item["data"].Int()
-				started = true
-			} else {
-				acc -= item["data"].Int()
-			}
-
-			if item["last"].Bool() {
-				if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
-					return
-				}
-				acc = 0
-				started = false
+			resMsg := runtime.NewIntMsg(accMsg.Int() - elMsg.Int())
+			if !resOut.Send(ctx, resMsg) {
+				return
 			}
 		}
 	}, nil

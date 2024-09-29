@@ -1,8 +1,8 @@
 flow Main(start) (stop) {
-    Range, For{Handler}, Wait
+    Range, ForEach{Handler}, Wait
     ---
     :start -> [(1 -> range:from), (5 -> range:to)]
-    range -> for -> wait -> :stop
+    range -> forEach -> wait -> :stop
 }
 
 flow Handler(data int) (sig any) {

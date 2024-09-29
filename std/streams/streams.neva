@@ -1,8 +1,14 @@
+// TODO
+// pub flow Uncons<T>(data stream<T>) (head T, tail stream<T>)
+
 pub type ProductResult<T, R> struct {
     first T
     second R
 } 
 
+// Product waits for each input stream to complete,
+// then outputs stream of every combination of elements from the first stream with
+// elements from the second.
 #extern(stream_product)
 pub flow Product<T, R>(first stream<T>, second stream<R>) (data stream<ProductResult<T, R>>)
 

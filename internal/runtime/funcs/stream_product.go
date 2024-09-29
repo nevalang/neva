@@ -27,6 +27,7 @@ func (streamProduct) Create(
 		return nil, err
 	}
 
+	// TODO: make sure it's not possible to do processing on the fly so we don't have to wait for both streams to complete
 	return func(ctx context.Context) {
 		for {
 			firstData := []runtime.Msg{}
@@ -36,10 +37,10 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Map()
-				firstData = append(firstData, item["data"])
+				item := seqMsg.Struct()
+				firstData = append(firstData, item.Get("data"))
 
-				if item["last"].Bool() {
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -51,10 +52,10 @@ func (streamProduct) Create(
 					return
 				}
 
-				item := seqMsg.Map()
-				secondData = append(secondData, item["data"])
+				item := seqMsg.Struct()
+				secondData = append(secondData, item.Get("data"))
 
-				if item["last"].Bool() {
+				if item.Get("last").Bool() {
 					break
 				}
 			}
@@ -64,10 +65,10 @@ func (streamProduct) Create(
 					seqOut.Send(
 						ctx,
 						streamItem(
-							runtime.NewMapMsg(map[string]runtime.Msg{
-								"first":  msg1,
-								"second": msg2,
-							}),
+							runtime.NewStructMsg(
+								[]string{"first", "second"},
+								[]runtime.Msg{msg1, msg2},
+							),
 							int64(i),
 							i == len(firstData)-1 && j == len(secondData)-1,
 						),

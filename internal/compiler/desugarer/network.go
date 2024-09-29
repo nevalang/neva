@@ -12,10 +12,10 @@ import (
 )
 
 type handleNetResult struct {
-	desugaredConnections []src.Connection     // desugared network
-	constsToInsert       map[string]src.Const // constants that needs to be inserted in to make desugared network work
-	nodesToInsert        map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
-	nodesPortsUsed       nodePortsMap         // to find unused to create virtual del connections
+	desugaredConnections []src.Connection        // desugared network
+	constsToInsert       map[string]src.ConstDef // constants that needs to be inserted in to make desugared network work
+	nodesToInsert        map[string]src.Node     // nodes that needs to be inserted in to make desugared network work
+	nodesPortsUsed       nodePortsMap            // to find unused to create virtual del connections
 }
 
 func (d Desugarer) handleNetwork(
@@ -26,7 +26,7 @@ func (d Desugarer) handleNetwork(
 	// code smell: mix of mutable and immutable styles (connections/nodes-consts)
 	desugaredConnections := make([]src.Connection, 0, len(net))
 	nodesToInsert := map[string]src.Node{}
-	constsToInsert := map[string]src.Const{}
+	constsToInsert := map[string]src.ConstDef{}
 	nodesPortsUsed := newNodePortsMap()
 
 	for _, conn := range net {
@@ -179,7 +179,7 @@ func (d Desugarer) desugarConnection(
 	scope src.Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
-	constsToInsert map[string]src.Const,
+	constsToInsert map[string]src.ConstDef,
 ) (desugarConnectionResult, *compiler.Error) {
 	// "array bypass" connection - nothing to desugar, just mark as used and return as-is
 	if conn.ArrayBypass != nil {
@@ -281,14 +281,14 @@ func (d Desugarer) desugarConnection(
 
 	// if sender is const (ref or literal), replace original connection with desugared and insert const and node
 	if conn.Normal.SenderSide.Const != nil {
-		if conn.Normal.SenderSide.Const.Ref != nil {
+		if conn.Normal.SenderSide.Const.Value.Ref != nil {
 			result, err := d.handleConstRefSender(conn, scope)
 			if err != nil {
 				return desugarConnectionResult{}, err
 			}
 			nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 			conn = result.connToReplace
-		} else if conn.Normal.SenderSide.Const.Message != nil {
+		} else if conn.Normal.SenderSide.Const.Value.Message != nil {
 			result, err := d.handleLiteralSender(conn)
 			if err != nil {
 				return desugarConnectionResult{}, err

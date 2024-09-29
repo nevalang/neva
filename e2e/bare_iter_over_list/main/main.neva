@@ -1,8 +1,8 @@
 const lst list<int> = [50, 30, 20, 100]
 
 flow Main(start) (stop) {
-    Println<stream<int>>, Iter<int>, If
+    Println<stream<int>>, ListToStream<int>, If
     ---
-    :start -> ($lst -> iter -> println.last -> if)
+    :start -> ($lst -> listToStream -> println.last -> if)
     if:then -> :stop
 }

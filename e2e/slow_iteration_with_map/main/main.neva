@@ -7,13 +7,13 @@ import { time }
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 flow Main(start) (stop) {
-    Iter<int>
+    ListToStream<int>
     Map<int, int>{Slow}
     List
     Println
     ---
     :start -> (
-        $lst -> iter -> map -> list -> println -> :stop
+        $lst -> listToStream -> map -> list -> println -> :stop
     )
 }
 

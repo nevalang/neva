@@ -46,7 +46,7 @@ func (s readStructField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx contex
 
 func (readStructField) selector(m runtime.Msg, path []string) runtime.Msg {
 	for len(path) > 0 {
-		m = m.Map()[path[0]]
+		m = m.Struct().Get(path[0])
 		path = path[1:]
 	}
 	return m

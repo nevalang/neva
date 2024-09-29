@@ -33,8 +33,12 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			var b imageMsg
-			b.decode(imgMsg.Map())
+			imgStructMsg := imgMsg.Struct()
+			b := imageMsg{
+				pixels: imgStructMsg.Get("pixels").Str(),
+				width:  imgStructMsg.Get("width").Int(),
+				height: imgStructMsg.Get("height").Int(),
+			}
 
 			im := b.createImage()
 

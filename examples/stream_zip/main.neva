@@ -4,9 +4,9 @@ const strings list<string> = ['a', 'b', 'c']
 
 flow Main(start) (stop) {
   r1 Range
-  Iter<string>
+  ListToStream<string>
   streams.Zip<int, string>
-  For{Println}
+  ForEach{Println}
   Wait
   ---
   :start -> [
@@ -14,6 +14,6 @@ flow Main(start) (stop) {
     (10 -> r1:to)
   ]
   r1 -> zip:first
-  $strings -> iter -> zip:second
-  zip -> for -> wait -> :stop
+  $strings -> listToStream -> zip:second
+  zip -> forEach -> wait -> :stop
 }

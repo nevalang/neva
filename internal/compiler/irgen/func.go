@@ -51,5 +51,9 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error)
 		}
 	}
 
-	return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
+	return getIRMsgBySrcRef(
+		entity.Const.Value,
+		scope.WithLocation(location),
+		entity.Const.TypeExpr,
+	)
 }

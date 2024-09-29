@@ -63,9 +63,14 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				img.Set(int(pix.x), int(pix.y), pix.color.color())
 			}
 
-			var i imageMsg
-			i.decodeImage(img)
-			if !imgOut.Send(ctx, i.encode()) {
+			if !imgOut.Send(ctx, runtime.NewStructMsg(
+				[]string{"pixels", "width", "height"},
+				[]runtime.Msg{
+					runtime.NewStrMsg(string(img.Pix)),
+					runtime.NewIntMsg(int64(img.Rect.Dx())),
+					runtime.NewIntMsg(int64(img.Rect.Dy())),
+				},
+			)) {
 				return
 			}
 		}

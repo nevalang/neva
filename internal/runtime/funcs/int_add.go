@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -12,7 +13,12 @@ func (intAdd) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	seqIn, err := io.In.Single("data")
+	accIn, err := io.In.Single("acc")
+	if err != nil {
+		return nil, err
+	}
+
+	elIn, err := io.In.Single("el")
 	if err != nil {
 		return nil, err
 	}
@@ -23,27 +29,33 @@ func (intAdd) Create(
 	}
 
 	return func(ctx context.Context) {
-		var acc int64 = 0
-
 		for {
-			msg, ok := seqIn.Receive(ctx)
-			if !ok {
+			var accMsg, elMsg runtime.Msg
+			var accOk, elOk bool
+
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				accMsg, accOk = accIn.Receive(ctx)
+			}()
+
+			go func() {
+				defer wg.Done()
+				elMsg, elOk = elIn.Receive(ctx)
+			}()
+
+			wg.Wait()
+
+			if !accOk || !elOk {
 				return
 			}
 
-			item := msg.Map()
-
-			acc += item["data"].Int()
-
-			if !item["last"].Bool() {
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewIntMsg(acc)) {
+			resMsg := runtime.NewIntMsg(elMsg.Int() + accMsg.Int())
+			if !resOut.Send(ctx, resMsg) {
 				return
 			}
-
-			acc = 0
 		}
 	}, nil
 }

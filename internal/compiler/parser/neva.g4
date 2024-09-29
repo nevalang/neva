@@ -98,7 +98,7 @@ listItems:
 	| compositeItem (',' NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;
 structLit:
-	'{' NEWLINE* structValueFields? '}'; // same for struct and map
+	'{' NEWLINE* structValueFields? '}'; // same for struct and dict
 structValueFields:
 	structValueField (',' NEWLINE* structValueField)*;
 structValueField: IDENTIFIER ':' compositeItem NEWLINE*;

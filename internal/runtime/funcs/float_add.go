@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intAddReducer struct{}
+type floatAdd struct{}
 
-func (intAddReducer) Create(
+func (floatAdd) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
@@ -52,7 +52,7 @@ func (intAddReducer) Create(
 				return
 			}
 
-			resMsg := runtime.NewIntMsg(elMsg.Int() + accMsg.Int())
+			resMsg := runtime.NewFloatMsg(elMsg.Float() + accMsg.Float())
 			if !resOut.Send(ctx, resMsg) {
 				return
 			}

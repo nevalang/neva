@@ -4,7 +4,7 @@ import "fmt"
 
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
-	Ports       map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
+	Ports map[PortAddr]struct{} `json:"ports,omitempty"` // All inports and outports in the program. Each with unique address.
 	// TODO connections must be 1-1 (or maybe fan-in)
 	Connections map[PortAddr]PortAddr `json:"connections,omitempty"` // Changed to 1-1 mapping
 	Funcs       []FuncCall            `json:"funcs,omitempty"`       // How to instantiate functions that send and receive messages through ports.
@@ -40,23 +40,24 @@ type FuncIO struct {
 
 // Message is a data that can be sent and received.
 type Message struct {
-	Type   MsgType            `json:"-"`
-	Bool   bool               `json:"bool,omitempty"`
-	Int    int64              `json:"int,omitempty"`
-	Float  float64            `json:"float,omitempty"`
-	String string             `json:"str,omitempty"`
-	List   []Message          `json:"list,omitempty"`
-	Dict   map[string]Message `json:"map,omitempty"`
+	Type         MsgType            `json:"-"`
+	Bool         bool               `json:"bool,omitempty"`
+	Int          int64              `json:"int,omitempty"`
+	Float        float64            `json:"float,omitempty"`
+	String       string             `json:"str,omitempty"`
+	List         []Message          `json:"list,omitempty"`
+	DictOrStruct map[string]Message `json:"map,omitempty"`
 }
 
 // MsgType is an enumeration of message types.
-type MsgType int32
+type MsgType string
 
 const (
-	MsgTypeBool   MsgType = 1
-	MsgTypeInt    MsgType = 2
-	MsgTypeFloat  MsgType = 3
-	MsgTypeString MsgType = 4
-	MsgTypeList   MsgType = 5
-	MsgTypeMap    MsgType = 6
+	MsgTypeBool   MsgType = "bool"
+	MsgTypeInt    MsgType = "int"
+	MsgTypeFloat  MsgType = "float"
+	MsgTypeString MsgType = "string"
+	MsgTypeList   MsgType = "list"
+	MsgTypeDict   MsgType = "dict"
+	MsgTypeStruct MsgType = "struct"
 )

@@ -2,19 +2,23 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
 type floatDiv struct{}
 
-func (floatDiv) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	xIn, err := io.In.Single("x")
+func (floatDiv) Create(
+	io runtime.IO,
+	_ runtime.Msg,
+) (func(ctx context.Context), error) {
+	accIn, err := io.In.Single("acc")
 	if err != nil {
 		return nil, err
 	}
 
-	yIn, err := io.In.Single("y")
+	elIn, err := io.In.Single("el")
 	if err != nil {
 		return nil, err
 	}
@@ -31,29 +35,37 @@ func (floatDiv) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	return func(ctx context.Context) {
 		for {
-			xMsg, ok := xIn.Receive(ctx)
-			if !ok {
+			var accMsg, elMsg runtime.Msg
+			var accOk, elOk bool
+
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				accMsg, accOk = accIn.Receive(ctx)
+			}()
+
+			go func() {
+				defer wg.Done()
+				elMsg, elOk = elIn.Receive(ctx)
+			}()
+
+			wg.Wait()
+
+			if !accOk || !elOk {
 				return
 			}
 
-			yMsg, ok := yIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if yMsg.Float() == 0 {
-				if !errOut.Send(ctx, errFromString("divide by zero")) {
+			if elMsg.Float() == 0 {
+				if !errOut.Send(ctx, runtime.NewStrMsg("divide by zero")) {
 					return
 				}
 				continue
 			}
 
-			if !resOut.Send(
-				ctx,
-				runtime.NewFloatMsg(
-					xMsg.Float()/yMsg.Float(),
-				),
-			) {
+			resMsg := runtime.NewFloatMsg(accMsg.Float() / elMsg.Float())
+			if !resOut.Send(ctx, resMsg) {
 				return
 			}
 		}

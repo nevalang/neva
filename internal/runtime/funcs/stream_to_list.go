@@ -23,7 +23,7 @@ func (s streamToList) Create(
 	}
 
 	return func(ctx context.Context) {
-		acc := []runtime.Msg{}
+		list := []runtime.Msg{}
 
 		for {
 			msg, ok := seqIn.Receive(ctx)
@@ -31,19 +31,19 @@ func (s streamToList) Create(
 				return
 			}
 
-			item := msg.Map()
+			item := msg.Struct()
 
-			acc = append(acc, item["data"])
+			list = append(list, item.Get("data"))
 
-			if !item["last"].Bool() {
+			if !item.Get("last").Bool() {
 				continue
 			}
 
-			if !resOut.Send(ctx, runtime.NewListMsg(acc)) {
+			if !resOut.Send(ctx, runtime.NewListMsg(list)) {
 				return
 			}
 
-			acc = []runtime.Msg{}
+			list = []runtime.Msg{}
 		}
 	}, nil
 }

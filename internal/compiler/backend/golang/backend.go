@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"strings"
 	"text/template"
 
 	"github.com/nevalang/neva/internal"
@@ -139,10 +140,10 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 `, el)
 		}
 		return s + ")", nil
-	case ir.MsgTypeMap:
-		s := `runtime.NewMapMsg(map[string]runtime.Msg{
+	case ir.MsgTypeDict:
+		s := `runtime.NewDictMsg(map[string]runtime.Msg{
 	`
-		for k, v := range msg.Dict {
+		for k, v := range msg.DictOrStruct {
 			el, err := b.getMessageString(compiler.Pointer(v))
 			if err != nil {
 				return "", err
@@ -152,6 +153,20 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		}
 		return s + `},
 )`, nil
+	case ir.MsgTypeStruct:
+		names := make([]string, 0, len(msg.DictOrStruct))
+		values := make([]string, 0, len(msg.DictOrStruct))
+		for k, v := range msg.DictOrStruct {
+			names = append(names, k)
+			el, err := b.getMessageString(compiler.Pointer(v))
+			if err != nil {
+				return "", err
+			}
+			values = append(values, el)
+		}
+		return fmt.Sprintf(`runtime.NewStructMsg([]string{%s}, []runtime.Msg{%s})`,
+			strings.Join(names, ", "),
+			strings.Join(values, ", ")), nil
 	}
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }

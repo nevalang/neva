@@ -17,21 +17,21 @@ var (
 )
 
 func (a Analyzer) analyzeConst(
-	constant src.Const,
+	constant src.ConstDef,
 	scope src.Scope,
-) (src.Const, *compiler.Error) {
-	if constant.Message == nil && constant.Ref == nil {
-		return src.Const{}, &compiler.Error{
+) (src.ConstDef, *compiler.Error) {
+	if constant.Value.Message == nil && constant.Value.Ref == nil {
+		return src.ConstDef{}, &compiler.Error{
 			Err:      ErrEmptyConst,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
 		}
 	}
 
-	if constant.Message == nil { // is ref
-		entity, location, err := scope.Entity(*constant.Ref)
+	if constant.Value.Message == nil { // is ref
+		entity, location, err := scope.Entity(*constant.Value.Ref)
 		if err != nil {
-			return src.Const{}, &compiler.Error{
+			return src.ConstDef{}, &compiler.Error{
 				Err:      err,
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -39,7 +39,7 @@ func (a Analyzer) analyzeConst(
 		}
 
 		if entity.Kind != src.ConstEntity {
-			return src.Const{}, &compiler.Error{
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: entity kind %v", ErrEntityNotConst, entity.Kind),
 				Location: &location,
 				Meta:     entity.Meta(),
@@ -49,9 +49,9 @@ func (a Analyzer) analyzeConst(
 		return a.analyzeConst(entity.Const, scope)
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(constant.Message.TypeExpr, scope)
+	resolvedType, err := a.analyzeTypeExpr(constant.TypeExpr, scope)
 	if err != nil {
-		return src.Const{}, compiler.Error{
+		return src.ConstDef{}, compiler.Error{
 			Err:      ErrResolveConstType,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
@@ -59,7 +59,7 @@ func (a Analyzer) analyzeConst(
 	}
 
 	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
-		return src.Const{}, &compiler.Error{
+		return src.ConstDef{}, &compiler.Error{
 			Err:      ErrUnionConst,
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
@@ -79,41 +79,41 @@ func (a Analyzer) analyzeConst(
 
 	switch typeExprStrRepr {
 	case "bool":
-		if constant.Message.Bool == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Bool == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("Boolean value is missing in boolean contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Int != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.Str != nil ||
-			constant.Message.List != nil ||
-			constant.Message.MapOrStruct != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Int != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.Str != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.DictOrStruct != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	case "int":
-		if constant.Message.Int == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Int == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("Integer value is missing in integer contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.Str != nil ||
-			constant.Message.List != nil ||
-			constant.Message.MapOrStruct != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.Str != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.DictOrStruct != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -121,115 +121,113 @@ func (a Analyzer) analyzeConst(
 	case "float":
 		// Float is special case. Constant can have float type expression but integer literal.
 		// We must pass this case. Desugarer will turn integer literal into float.
-		if constant.Message.Float == nil && constant.Message.Int == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Float == nil && constant.Value.Message.Int == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("Float or integer value is missing in float contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Float != nil && constant.Message.Int != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Float != nil && constant.Value.Message.Int != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Str != nil ||
-			constant.Message.List != nil ||
-			constant.Message.MapOrStruct != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Str != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.DictOrStruct != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	case "string":
-		if constant.Message.Str == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Str == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("String value is missing in string contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Int != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.List != nil ||
-			constant.Message.MapOrStruct != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Int != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.DictOrStruct != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	case "list":
-		if constant.Message.List == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.List == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("List value is missing in list contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Int != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.MapOrStruct != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Int != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.DictOrStruct != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	case "map", "struct":
-		if constant.Message.MapOrStruct == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.DictOrStruct == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("Map or struct value is missing in map or struct contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Int != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.List != nil ||
-			constant.Message.Enum != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Int != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.Enum != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	case "enum":
-		if constant.Message.Enum == nil {
-			return src.Const{}, &compiler.Error{
+		if constant.Value.Message.Enum == nil {
+			return src.ConstDef{}, &compiler.Error{
 				Err:      fmt.Errorf("Enum value is missing in enum contant: %v", constant),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
-		if constant.Message.Bool != nil ||
-			constant.Message.Int != nil ||
-			constant.Message.Float != nil ||
-			constant.Message.List != nil ||
-			constant.Message.MapOrStruct != nil {
-			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Message),
+		if constant.Value.Message.Bool != nil ||
+			constant.Value.Message.Int != nil ||
+			constant.Value.Message.Float != nil ||
+			constant.Value.Message.List != nil ||
+			constant.Value.Message.DictOrStruct != nil {
+			return src.ConstDef{}, &compiler.Error{
+				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
 		}
 	}
 
-	valueCopy := *constant.Message
-	valueCopy.TypeExpr = resolvedType
-
-	return src.Const{
-		Message: &valueCopy,
-		Meta:    constant.Meta,
+	return src.ConstDef{
+		TypeExpr: resolvedType,
+		Value:    constant.Value,
+		Meta:     constant.Meta,
 	}, nil
 }

@@ -13,10 +13,10 @@ pub flow Wait(data stream<any>) (sig) {
 #extern(stream_int_range)
 pub flow Range(from int, to int) (data stream<int>)
 
-// StreamPort iterates over all array-inport's slots in order
+// ArrPortToStream iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub flow StreamPort<T>([port] T) (data stream<T>) // TODO data->res
+pub flow ArrPortToStream<T>([port] T) (data stream<T>)
 
 // IPortReducer reduces a stream of messages to one single message.
 // It's expected to send a result message after every processed stream.
@@ -27,7 +27,7 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 // to reducer. When all messages are processed the result is emited to outport.
 pub flow ReducePort<T>([port] T) (res T) {
     reducer IPortReducer<T>
-    streamer StreamPort<T>
+    streamer ArrPortToStream<T>
     ---
     :port => streamer:port
     streamer -> reducer -> :res
@@ -46,10 +46,10 @@ const idxPath list<string> = ['idx']
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another.
-// Just like For, it does not block the stream. As soon as one item processed,
+// Just like ForEach, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
 // It's not recommented but possible to also produce side-effects.
-// But, if all you need is side-effects, use For instead.
+// But, if all you need is side-effects, use ForEach instead.
 pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
@@ -89,7 +89,12 @@ pub flow Filter<T>(data stream<T>) (res stream<T>) {
     cond:then -> :res
 }
 
-interface IReduceHandler<T, Y>(acc T, el T) (res Y) // TODO res->acc?
+// TODO: Some and Every
+
+// --- Reduce ---
+
+// IReduceHandler is a dependency for Reduce flow.
+pub interface IReduceHandler<T, Y>(acc T, el T) (res Y)
 
 // Reduce applies a reduction function to a stream of values, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
@@ -123,19 +128,19 @@ pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 #extern(accumulator)
 pub flow Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
-// --- For ---
+// --- ForEach ---
 
-// IForHandler is a dependency for For flow.
-pub interface IForHandler<T>(data T) (sig any)
+// IForEachHandler is a dependency for ForEach flow.
+pub interface IForEachHandler<T>(data T) (sig any)
 
-// For processes stream to produce side-effects on its items.
+// ForEach processes stream to produce side-effects on its items.
 // Just like Map, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
-// For always sends the same stream, it's not intended for mapping.
+// ForEach always sends the same stream, it's not intended for mapping.
 // If you need mapping (or mapping with side-effects), use Map instead.
-pub flow For<T>(data stream<T>) (data stream<T>) {
+pub flow ForEach<T>(data stream<T>) (data stream<T>) {
     Lock<stream<T>>
-    handler IForHandler<T>
+    handler IForEachHandler<T>
 
     #bind(dataPath)
     getData Field<T>

@@ -101,7 +101,7 @@ type Import struct {
 type Entity struct {
 	IsPublic  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
-	Const     Const      `json:"const,omitempty"`
+	Const     ConstDef   `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
 	Component Component  `json:"flow,omitempty"`
@@ -204,14 +204,14 @@ func (t TypeArgs) String() string {
 	return s + ">"
 }
 
-// Const represents abstraction that allow to define reusable message value.
-type Const struct {
-	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *Message        `json:"value,omitempty"`
-	Meta    core.Meta       `json:"meta,omitempty"`
+// ConstDef represents abstraction that allow to define reusable message value.
+type ConstDef struct {
+	TypeExpr ts.Expr    `json:"typeExpr,omitempty"`
+	Value    ConstValue `json:"value,omitempty"`
+	Meta     core.Meta  `json:"meta,omitempty"`
 }
 
-func (c Const) String() string {
+func (c ConstValue) String() string {
 	if c.Ref != nil {
 		return c.Ref.String()
 	}
@@ -221,16 +221,20 @@ func (c Const) String() string {
 	return c.Message.String()
 }
 
-type Message struct {
-	TypeExpr    ts.Expr          `json:"typeExpr,omitempty"`
-	Bool        *bool            `json:"bool,omitempty"`
-	Int         *int             `json:"int,omitempty"`
-	Float       *float64         `json:"float,omitempty"`
-	Str         *string          `json:"str,omitempty"`
-	List        []Const          `json:"vec,omitempty"`
-	MapOrStruct map[string]Const `json:"map,omitempty"`
-	Enum        *EnumMessage     `json:"enum,omitempty"`
-	Meta        core.Meta        `json:"meta,omitempty"`
+type ConstValue struct {
+	Ref     *core.EntityRef `json:"ref,omitempty"`
+	Message *MsgLiteral     `json:"value,omitempty"` // literal
+}
+
+type MsgLiteral struct {
+	Bool         *bool                 `json:"bool,omitempty"`
+	Int          *int                  `json:"int,omitempty"`
+	Float        *float64              `json:"float,omitempty"`
+	Str          *string               `json:"str,omitempty"`
+	List         []ConstValue          `json:"vec,omitempty"`
+	DictOrStruct map[string]ConstValue `json:"dict,omitempty"` // TODO separate map and struct
+	Enum         *EnumMessage          `json:"enum,omitempty"`
+	Meta         core.Meta             `json:"meta,omitempty"`
 }
 
 type EnumMessage struct {
@@ -238,7 +242,7 @@ type EnumMessage struct {
 	MemberName string
 }
 
-func (m Message) String() string {
+func (m MsgLiteral) String() string {
 	switch {
 	case m.Bool != nil:
 		return fmt.Sprintf("%v", *m.Bool)
@@ -257,9 +261,9 @@ func (m Message) String() string {
 			}
 		}
 		return s + "]"
-	case len(m.MapOrStruct) != 0:
+	case len(m.DictOrStruct) != 0:
 		s := "{"
-		for key, value := range m.MapOrStruct {
+		for key, value := range m.DictOrStruct {
 			s += fmt.Sprintf("%q: %v", key, value.String())
 		}
 		return s + "}"
@@ -331,7 +335,7 @@ func (c ConnectionSideSelectors) String() string {
 // ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSenderSide struct {
 	PortAddr  *PortAddr `json:"portAddr,omitempty"`
-	Const     *Const    `json:"literal,omitempty"`
+	Const     *ConstDef `json:"literal,omitempty"`
 	Selectors []string  `json:"selectors,omitempty"`
 	Meta      core.Meta `json:"meta,omitempty"`
 }
@@ -346,10 +350,10 @@ func (s ConnectionSenderSide) String() string {
 
 	var result string
 	if s.Const != nil {
-		if s.Const.Ref != nil {
-			result = s.Const.Ref.String()
+		if s.Const.Value.Ref != nil {
+			result = s.Const.Value.Ref.String()
 		} else {
-			result = s.Const.Message.String()
+			result = s.Const.Value.Message.String()
 		}
 	} else {
 		result = s.PortAddr.String()

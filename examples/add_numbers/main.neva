@@ -1,10 +1,7 @@
 flow Main(start) (stop) {
 	Println
-	add ReducePort<int> { Add<int> }
+	Add<int>
 	---
-	:start -> [
-		(1 -> add[0]),
-		(2 -> add[1])
-	]
+	:start -> [(1 -> add:acc), (2 -> add:el)]
 	add -> println -> :stop
 }

@@ -1,7 +1,7 @@
 const lst list<int> = [50, 30, 20, 100]
 
 flow Main(start) (stop) {
-    Iter, For{Println}, Wait
+    ListToStream, ForEach{Println}, Wait
     ---
-    :start -> ($lst -> iter -> for -> wait -> :stop)
+    :start -> ($lst -> listToStream -> forEach -> wait -> :stop)
 }

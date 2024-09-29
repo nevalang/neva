@@ -606,8 +606,11 @@ func parseSinglePortAddr(
 
 func parsePrimitiveConstLiteral(
 	lit generated.IPrimitiveConstLitContext,
-) (src.Message, *compiler.Error) {
-	msg := src.Message{
+) (src.ConstDef, *compiler.Error) {
+	parsedConst := src.ConstDef{
+		Value: src.ConstValue{
+			Message: &src.MsgLiteral{},
+		},
 		Meta: core.Meta{
 			Text: lit.GetText(),
 			Start: core.Position{
@@ -625,7 +628,7 @@ func parsePrimitiveConstLiteral(
 	case lit.Bool_() != nil:
 		boolVal := lit.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
-			return src.Message{}, &compiler.Error{
+			return src.ConstDef{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -640,14 +643,14 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "bool"},
 		}
-		msg.Bool = compiler.Pointer(boolVal == "true")
+		parsedConst.Value.Message.Bool = compiler.Pointer(boolVal == "true")
 	case lit.INT() != nil:
 		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.ConstDef{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
 				Meta: &core.Meta{
@@ -663,17 +666,17 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "int"},
 		}
 		if lit.MINUS() != nil {
 			parsedInt = -parsedInt
 		}
-		msg.Int = compiler.Pointer(int(parsedInt))
+		parsedConst.Value.Message.Int = compiler.Pointer(int(parsedInt))
 	case lit.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.ConstDef{}, &compiler.Error{
 				Err: err,
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -688,15 +691,15 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "float"},
 		}
 		if lit.MINUS() != nil {
 			parsedFloat = -parsedFloat
 		}
-		msg.Float = &parsedFloat
+		parsedConst.Value.Message.Float = &parsedFloat
 	case lit.STRING() != nil:
-		msg.Str = compiler.Pointer(
+		parsedConst.Value.Message.Str = compiler.Pointer(
 			strings.Trim(
 				strings.ReplaceAll(
 					lit.STRING().GetText(),
@@ -706,19 +709,19 @@ func parsePrimitiveConstLiteral(
 				"'",
 			),
 		)
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(lit.EnumLit().EntityRef())
 		if err != nil {
-			return src.Message{}, err
+			return src.ConstDef{}, err
 		}
-		msg.Enum = &src.EnumMessage{
+		parsedConst.Value.Message.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
 			MemberName: lit.EnumLit().IDENTIFIER().GetText(),
 		}
-		msg.TypeExpr = ts.Expr{
+		parsedConst.TypeExpr = ts.Expr{
 			Inst: &ts.InstExpr{Ref: parsedEnumRef},
 			Meta: parsedEnumRef.Meta,
 		}
@@ -726,13 +729,13 @@ func parsePrimitiveConstLiteral(
 		panic("unknown const: " + lit.GetText())
 	}
 
-	return msg, nil
+	return parsedConst, nil
 }
 
 func parseMessage(
 	constVal generated.IConstLitContext,
-) (src.Message, *compiler.Error) {
-	msg := src.Message{
+) (src.MsgLiteral, *compiler.Error) {
+	msg := src.MsgLiteral{
 		Meta: core.Meta{
 			Text: constVal.GetText(),
 			Start: core.Position{
@@ -750,7 +753,7 @@ func parseMessage(
 	case constVal.Bool_() != nil:
 		boolVal := constVal.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
-			return src.Message{}, &compiler.Error{
+			return src.MsgLiteral{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
@@ -765,14 +768,11 @@ func parseMessage(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "bool"},
-		}
 		msg.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.MsgLiteral{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
 				Meta: &core.Meta{
@@ -788,9 +788,6 @@ func parseMessage(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "int"},
-		}
 		if constVal.MINUS() != nil {
 			parsedInt = -parsedInt
 		}
@@ -798,7 +795,7 @@ func parseMessage(
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.MsgLiteral{}, &compiler.Error{
 				Err: err,
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
@@ -812,9 +809,6 @@ func parseMessage(
 					},
 				},
 			}
-		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "float"},
 		}
 		if constVal.MINUS() != nil {
 			parsedFloat = -parsedFloat
@@ -831,32 +825,25 @@ func parseMessage(
 				"'",
 			),
 		)
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "string"},
-		}
 	case constVal.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(constVal.EnumLit().EntityRef())
 		if err != nil {
-			return src.Message{}, err
+			return src.MsgLiteral{}, err
 		}
 		msg.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
 			MemberName: constVal.EnumLit().IDENTIFIER().GetText(),
 		}
-		msg.TypeExpr = ts.Expr{
-			Inst: &ts.InstExpr{Ref: parsedEnumRef},
-			Meta: parsedEnumRef.Meta,
-		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()
 		if listItems == nil { // empty list []
-			msg.List = []src.Const{}
-			return src.Message{}, nil
+			msg.List = []src.ConstValue{}
+			return src.MsgLiteral{}, nil
 		}
 		items := listItems.AllCompositeItem()
-		msg.List = make([]src.Const, 0, len(items))
+		msg.List = make([]src.ConstValue, 0, len(items))
 		for _, item := range items {
-			constant := src.Const{
+			constant := src.ConstDef{
 				Meta: core.Meta{
 					Text: item.GetText(),
 					Start: core.Position{
@@ -872,27 +859,27 @@ func parseMessage(
 			if item.EntityRef() != nil {
 				parsedRef, err := parseEntityRef(item.EntityRef())
 				if err != nil {
-					return src.Message{}, err
+					return src.MsgLiteral{}, err
 				}
-				constant.Ref = &parsedRef
+				constant.Value.Ref = &parsedRef
 			} else {
 				parsedConstValue, err := parseMessage(item.ConstLit())
 				if err != nil {
-					return src.Message{}, err
+					return src.MsgLiteral{}, err
 				}
-				constant.Message = &parsedConstValue
+				constant.Value.Message = &parsedConstValue
 
 			}
-			msg.List = append(msg.List, constant)
+			msg.List = append(msg.List, constant.Value)
 		}
 	case constVal.StructLit() != nil:
 		fields := constVal.StructLit().StructValueFields()
 		if fields == nil { // empty struct {}
-			msg.MapOrStruct = map[string]src.Const{}
+			msg.DictOrStruct = map[string]src.ConstValue{}
 			return msg, nil
 		}
 		fieldValues := fields.AllStructValueField()
-		msg.MapOrStruct = make(map[string]src.Const, len(fieldValues))
+		msg.DictOrStruct = make(map[string]src.ConstValue, len(fieldValues))
 		for _, field := range fieldValues {
 			if field.IDENTIFIER() == nil {
 				panic("field.GetText()")
@@ -901,17 +888,17 @@ func parseMessage(
 			if field.CompositeItem().EntityRef() != nil {
 				parsedRef, err := parseEntityRef(field.CompositeItem().EntityRef())
 				if err != nil {
-					return src.Message{}, err
+					return src.MsgLiteral{}, err
 				}
-				msg.MapOrStruct[name] = src.Const{
+				msg.DictOrStruct[name] = src.ConstValue{
 					Ref: &parsedRef,
 				}
 			} else {
 				value, err := parseMessage(field.CompositeItem().ConstLit())
 				if err != nil {
-					return src.Message{}, err
+					return src.MsgLiteral{}, err
 				}
-				msg.MapOrStruct[name] = src.Const{
+				msg.DictOrStruct[name] = src.ConstValue{
 					Message: &value,
 				}
 			}
@@ -996,10 +983,10 @@ func parseTypeDef(
 func parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
-	constVal := actx.ConstLit()
+	constLit := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
-	if constVal == nil && entityRef == nil {
+	if constLit == nil && entityRef == nil {
 		panic("constVal == nil && entityRef == nil")
 	}
 
@@ -1015,7 +1002,18 @@ func parseConstDef(
 		},
 	}
 
-	var parsedConst src.Const
+	parsedTypeExpr, err := parseTypeExpr(actx.TypeExpr())
+	if err != nil {
+		return src.Entity{}, &compiler.Error{
+			Err:  err,
+			Meta: &meta,
+		}
+	}
+
+	parsedConst := src.ConstDef{
+		TypeExpr: parsedTypeExpr,
+		Meta:     meta,
+	}
 
 	if entityRef != nil {
 		parsedRef, err := parseEntityRef(entityRef)
@@ -1025,30 +1023,27 @@ func parseConstDef(
 				Meta: &meta,
 			}
 		}
-		parsedConst = src.Const{
-			Ref:  &parsedRef,
-			Meta: meta,
+		parsedConst.Value.Ref = &parsedRef
+		return src.Entity{
+			Kind:  src.ConstEntity,
+			Const: parsedConst,
+		}, nil
+	}
+
+	parsedMsgLit, err := parseMessage(constLit)
+	if err != nil {
+		return src.Entity{}, &compiler.Error{
+			Err:  err,
+			Meta: &meta,
 		}
-	} else {
-		parsedMsg, err := parseMessage(constVal)
-		if err != nil {
-			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
-		}
-		typeExpr, err := parseTypeExpr(actx.TypeExpr())
-		if err != nil {
-			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
-		}
-		parsedMsg.TypeExpr = typeExpr
-		parsedConst = src.Const{
-			Message: &parsedMsg,
-			Meta:    meta,
-		}
+	}
+
+	parsedConst = src.ConstDef{
+		TypeExpr: parsedTypeExpr,
+		Value: src.ConstValue{
+			Message: &parsedMsgLit,
+		},
+		Meta: meta,
 	}
 
 	return src.Entity{

@@ -1,7 +1,7 @@
 import { os, lists }
 
 flow Main(start) (stop) {
-	os.Args, Iter, For{Println}, Wait
+	os.Args, ListToStream, ForEach{Println}, Wait
 	---
-	:start -> args -> iter -> for -> wait -> :stop
+	:start -> args -> listToStream -> forEach -> wait -> :stop
 }

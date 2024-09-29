@@ -1,0 +1,6 @@
+flow Main(start) (stop) {
+    Inc<int>, Println<int>
+    ---
+    :start -> (41 -> inc)
+    inc -> println -> :stop
+}
