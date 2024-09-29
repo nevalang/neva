@@ -124,16 +124,16 @@ var (
 
 func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.Const {
 	constToInsert := src.Const{
+		TypeExpr: pathConstTypeExpr,
 		Message: &src.Message{
-			TypeExpr: pathConstTypeExpr,
-			List:     make([]src.Const, 0, len(senderSide.Selectors)),
+			List: make([]src.Const, 0, len(senderSide.Selectors)),
 		},
 	}
 	for _, selector := range senderSide.Selectors {
 		constToInsert.Message.List = append(constToInsert.Message.List, src.Const{
+			TypeExpr: strTypeExpr,
 			Message: &src.Message{
-				TypeExpr: strTypeExpr,
-				Str:      compiler.Pointer(selector),
+				Str: compiler.Pointer(selector),
 			},
 		})
 	}

@@ -49,7 +49,7 @@ func (a Analyzer) analyzeConst(
 		return a.analyzeConst(entity.Const, scope)
 	}
 
-	resolvedType, err := a.analyzeTypeExpr(constant.Message.TypeExpr, scope)
+	resolvedType, err := a.analyzeTypeExpr(constant.TypeExpr, scope)
 	if err != nil {
 		return src.Const{}, compiler.Error{
 			Err:      ErrResolveConstType,
@@ -225,11 +225,9 @@ func (a Analyzer) analyzeConst(
 		}
 	}
 
-	valueCopy := *constant.Message
-	valueCopy.TypeExpr = resolvedType
-
 	return src.Const{
-		Message: &valueCopy,
-		Meta:    constant.Meta,
+		TypeExpr: resolvedType,
+		Message:  constant.Message,
+		Meta:     constant.Meta,
 	}, nil
 }

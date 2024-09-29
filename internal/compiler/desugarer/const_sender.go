@@ -50,13 +50,7 @@ func (d Desugarer) handleLiteralSender(
 			compiler.BindDirective: {constName},
 		},
 		EntityRef: emitterFlowRef,
-		TypeArgs: []ts.Expr{
-			conn.
-				Normal.SenderSide.
-				Const.
-				Message.
-				TypeExpr,
-		},
+		TypeArgs:  []ts.Expr{conn.Normal.SenderSide.Const.TypeExpr},
 	}
 
 	emitterCounter := virtualEmittersCount.Load()
@@ -173,5 +167,5 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 		return expr, nil
 	}
 
-	return entity.Const.Message.TypeExpr, nil
+	return entity.Const.TypeExpr, nil
 }

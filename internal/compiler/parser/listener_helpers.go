@@ -606,8 +606,8 @@ func parseSinglePortAddr(
 
 func parsePrimitiveConstLiteral(
 	lit generated.IPrimitiveConstLitContext,
-) (src.Message, *compiler.Error) {
-	msg := src.Message{
+) (src.Const, *compiler.Error) {
+	parsedConst := src.Const{
 		Meta: core.Meta{
 			Text: lit.GetText(),
 			Start: core.Position{
@@ -625,7 +625,7 @@ func parsePrimitiveConstLiteral(
 	case lit.Bool_() != nil:
 		boolVal := lit.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
-			return src.Message{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -640,14 +640,14 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "bool"},
 		}
-		msg.Bool = compiler.Pointer(boolVal == "true")
+		parsedConst.Message.Bool = compiler.Pointer(boolVal == "true")
 	case lit.INT() != nil:
 		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
 				Meta: &core.Meta{
@@ -663,17 +663,17 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "int"},
 		}
 		if lit.MINUS() != nil {
 			parsedInt = -parsedInt
 		}
-		msg.Int = compiler.Pointer(int(parsedInt))
+		parsedConst.Message.Int = compiler.Pointer(int(parsedInt))
 	case lit.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
 		if err != nil {
-			return src.Message{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err: err,
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -688,15 +688,15 @@ func parsePrimitiveConstLiteral(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "float"},
 		}
 		if lit.MINUS() != nil {
 			parsedFloat = -parsedFloat
 		}
-		msg.Float = &parsedFloat
+		parsedConst.Message.Float = &parsedFloat
 	case lit.STRING() != nil:
-		msg.Str = compiler.Pointer(
+		parsedConst.Message.Str = compiler.Pointer(
 			strings.Trim(
 				strings.ReplaceAll(
 					lit.STRING().GetText(),
@@ -706,19 +706,19 @@ func parsePrimitiveConstLiteral(
 				"'",
 			),
 		)
-		msg.TypeExpr.Inst = &ts.InstExpr{
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(lit.EnumLit().EntityRef())
 		if err != nil {
-			return src.Message{}, err
+			return src.Const{}, err
 		}
-		msg.Enum = &src.EnumMessage{
+		parsedConst.Message.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
 			MemberName: lit.EnumLit().IDENTIFIER().GetText(),
 		}
-		msg.TypeExpr = ts.Expr{
+		parsedConst.TypeExpr = ts.Expr{
 			Inst: &ts.InstExpr{Ref: parsedEnumRef},
 			Meta: parsedEnumRef.Meta,
 		}
@@ -726,7 +726,7 @@ func parsePrimitiveConstLiteral(
 		panic("unknown const: " + lit.GetText())
 	}
 
-	return msg, nil
+	return parsedConst, nil
 }
 
 func parseMessage(
@@ -765,9 +765,6 @@ func parseMessage(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "bool"},
-		}
 		msg.Bool = compiler.Pointer(boolVal == "true")
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
@@ -787,9 +784,6 @@ func parseMessage(
 					},
 				},
 			}
-		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "int"},
 		}
 		if constVal.MINUS() != nil {
 			parsedInt = -parsedInt
@@ -813,9 +807,6 @@ func parseMessage(
 				},
 			}
 		}
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "float"},
-		}
 		if constVal.MINUS() != nil {
 			parsedFloat = -parsedFloat
 		}
@@ -831,9 +822,6 @@ func parseMessage(
 				"'",
 			),
 		)
-		msg.TypeExpr.Inst = &ts.InstExpr{
-			Ref: core.EntityRef{Name: "string"},
-		}
 	case constVal.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(constVal.EnumLit().EntityRef())
 		if err != nil {
@@ -842,10 +830,6 @@ func parseMessage(
 		msg.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
 			MemberName: constVal.EnumLit().IDENTIFIER().GetText(),
-		}
-		msg.TypeExpr = ts.Expr{
-			Inst: &ts.InstExpr{Ref: parsedEnumRef},
-			Meta: parsedEnumRef.Meta,
 		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()
@@ -996,10 +980,10 @@ func parseTypeDef(
 func parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
-	constVal := actx.ConstLit()
+	constLit := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
-	if constVal == nil && entityRef == nil {
+	if constLit == nil && entityRef == nil {
 		panic("constVal == nil && entityRef == nil")
 	}
 
@@ -1015,7 +999,18 @@ func parseConstDef(
 		},
 	}
 
-	var parsedConst src.Const
+	parsedTypeExpr, err := parseTypeExpr(actx.TypeExpr())
+	if err != nil {
+		return src.Entity{}, &compiler.Error{
+			Err:  err,
+			Meta: &meta,
+		}
+	}
+
+	parsedConst := src.Const{
+		TypeExpr: parsedTypeExpr,
+		Meta:     meta,
+	}
 
 	if entityRef != nil {
 		parsedRef, err := parseEntityRef(entityRef)
@@ -1025,30 +1020,25 @@ func parseConstDef(
 				Meta: &meta,
 			}
 		}
-		parsedConst = src.Const{
-			Ref:  &parsedRef,
-			Meta: meta,
+		parsedConst.Ref = &parsedRef
+		return src.Entity{
+			Kind:  src.ConstEntity,
+			Const: parsedConst,
+		}, nil
+	}
+
+	parsedMsgLit, err := parseMessage(constLit)
+	if err != nil {
+		return src.Entity{}, &compiler.Error{
+			Err:  err,
+			Meta: &meta,
 		}
-	} else {
-		parsedMsg, err := parseMessage(constVal)
-		if err != nil {
-			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
-		}
-		typeExpr, err := parseTypeExpr(actx.TypeExpr())
-		if err != nil {
-			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
-		}
-		parsedMsg.TypeExpr = typeExpr
-		parsedConst = src.Const{
-			Message: &parsedMsg,
-			Meta:    meta,
-		}
+	}
+
+	parsedConst = src.Const{
+		TypeExpr: parsedTypeExpr,
+		Message:  &parsedMsgLit,
+		Meta:     meta,
 	}
 
 	return src.Entity{

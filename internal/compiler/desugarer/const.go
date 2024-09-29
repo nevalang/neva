@@ -10,16 +10,16 @@ func (d Desugarer) handleConst(constant src.Const) (src.Const, *compiler.Error) 
 	if constant.Message == nil {
 		return constant, nil
 	}
-	if constant.Message.TypeExpr.String() != "float" {
+	if constant.TypeExpr.String() != "float" {
 		return constant, nil
 	}
 	if constant.Message.Float != nil {
 		return constant, nil
 	}
 	return src.Const{
+		TypeExpr: constant.TypeExpr,
 		Message: &src.Message{
-			TypeExpr: constant.Message.TypeExpr,
-			Float:    compiler.Pointer(float64(*constant.Message.Int)),
+			Float: compiler.Pointer(float64(*constant.Message.Int)),
 		},
 	}, nil
 }

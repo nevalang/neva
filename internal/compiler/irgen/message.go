@@ -42,7 +42,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 			String: *constant.Message.Str,
 		}, nil
 	case constant.Message.Enum != nil:
-		enumTypeExpr := constant.Message.TypeExpr.Lit.Enum
+		enumTypeExpr := constant.TypeExpr.Lit.Enum
 		return &ir.Message{
 			Type: ir.MsgTypeInt,
 			Int:  int64(getEnumMemberIndex(enumTypeExpr, constant.Message.Enum.MemberName)),
@@ -73,7 +73,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 		}
 
 		var typ ir.MsgType
-		if constant.Message.TypeExpr.Lit != nil && constant.Message.TypeExpr.Lit.Struct != nil {
+		if constant.TypeExpr.Lit != nil && constant.TypeExpr.Lit.Struct != nil {
 			typ = ir.MsgTypeStruct
 		} else {
 			typ = ir.MsgTypeDict

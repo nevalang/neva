@@ -419,11 +419,11 @@ func parseNormConnSenderSide(
 	}
 
 	if primitiveConstLitSender != nil {
-		msg, err := parsePrimitiveConstLiteral(primitiveConstLitSender)
+		parsedPrimitiveConstLiteralSender, err := parsePrimitiveConstLiteral(primitiveConstLitSender)
 		if err != nil {
 			return src.ConnectionSenderSide{}, err
 		}
-		constant = &src.Const{Message: &msg}
+		constant = &parsedPrimitiveConstLiteralSender
 	}
 
 	parsedSenderSide := src.ConnectionSenderSide{

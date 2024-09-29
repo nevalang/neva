@@ -206,9 +206,10 @@ func (t TypeArgs) String() string {
 
 // Const represents abstraction that allow to define reusable message value.
 type Const struct {
-	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *Message        `json:"value,omitempty"`
-	Meta    core.Meta       `json:"meta,omitempty"`
+	TypeExpr ts.Expr         `json:"typeExpr,omitempty"`
+	Ref      *core.EntityRef `json:"ref,omitempty"`
+	Message  *Message        `json:"value,omitempty"`
+	Meta     core.Meta       `json:"meta,omitempty"`
 }
 
 func (c Const) String() string {
@@ -222,7 +223,6 @@ func (c Const) String() string {
 }
 
 type Message struct {
-	TypeExpr    ts.Expr          `json:"typeExpr,omitempty"`
 	Bool        *bool            `json:"bool,omitempty"`
 	Int         *int             `json:"int,omitempty"`
 	Float       *float64         `json:"float,omitempty"`

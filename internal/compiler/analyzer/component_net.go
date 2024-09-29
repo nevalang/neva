@@ -738,7 +738,7 @@ func (a Analyzer) getResolvedSenderConstType(
 	}
 
 	resolvedExpr, err := a.resolver.ResolveExpr(
-		constSender.Message.TypeExpr,
+		constSender.TypeExpr,
 		scope,
 	)
 	if err != nil {
@@ -758,8 +758,8 @@ func (a Analyzer) getResolvedSenderConstType(
 	}
 
 	return src.Const{
+		TypeExpr: resolvedExpr,
 		Message: &src.Message{
-			TypeExpr:    resolvedExpr,
 			Bool:        constSender.Message.Bool,
 			Int:         constSender.Message.Int,
 			Float:       constSender.Message.Float,
@@ -855,7 +855,7 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 
 	scope = scope.WithLocation(location)
 
-	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.Message.TypeExpr, scope)
+	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
