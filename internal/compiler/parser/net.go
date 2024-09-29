@@ -407,14 +407,16 @@ func parseNormConnSenderSide(
 		senderSidePortAddr = &parsedPortAddr
 	}
 
-	var constant *src.Const
+	var constant *src.ConstDef
 	if constRefSender != nil {
 		parsedEntityRef, err := parseEntityRef(constRefSender.EntityRef())
 		if err != nil {
 			return src.ConnectionSenderSide{}, err
 		}
-		constant = &src.Const{
-			Ref: &parsedEntityRef,
+		constant = &src.ConstDef{
+			Value: src.ConstValue{
+				Ref: &parsedEntityRef,
+			},
 		}
 	}
 

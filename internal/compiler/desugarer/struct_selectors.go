@@ -22,7 +22,7 @@ type handleStructSelectorsResult struct {
 	connToReplace     src.Connection
 	connToInsert      src.Connection
 	constToInsertName string
-	constToInsert     src.Const
+	constToInsert     src.ConstDef
 	nodeToInsert      src.Node
 	nodeToInsertName  string
 }
@@ -122,17 +122,18 @@ var (
 	}
 )
 
-func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.Const {
-	constToInsert := src.Const{
+func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.ConstDef {
+	constToInsert := src.ConstDef{
 		TypeExpr: pathConstTypeExpr,
-		Message: &src.Message{
-			List: make([]src.Const, 0, len(senderSide.Selectors)),
+		Value: src.ConstValue{
+			Message: &src.MsgLiteral{
+				List: make([]src.ConstValue, 0, len(senderSide.Selectors)),
+			},
 		},
 	}
 	for _, selector := range senderSide.Selectors {
-		constToInsert.Message.List = append(constToInsert.Message.List, src.Const{
-			TypeExpr: strTypeExpr,
-			Message: &src.Message{
+		constToInsert.Value.Message.List = append(constToInsert.Value.Message.List, src.ConstValue{
+			Message: &src.MsgLiteral{
 				Str: compiler.Pointer(selector),
 			},
 		})

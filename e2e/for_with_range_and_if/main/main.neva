@@ -3,12 +3,12 @@ import { lists }
 const lst list<bool> = [true, false]
 
 flow Main(start) (stop) {
-	ListToStream<bool>, ForEach<bool>{MapAndPrint}, Wait
+	ListToStream<bool>, ForEach<bool>{PrintAsNum}, Wait
 	---
 	:start -> ($lst -> listToStream -> forEach -> wait -> :stop)
 }
 
-flow MapAndPrint(data bool) (sig any) {
+flow PrintAsNum(data bool) (sig any) {
 	Ternary, Println
 	---
 	:data -> ternary:if

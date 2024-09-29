@@ -6,9 +6,14 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compiler.Error) {
+func getIRMsgBySrcRef(
+	constant src.ConstValue,
+	scope src.Scope,
+	typeExpr ts.Expr,
+) (*ir.Message, *compiler.Error) {
 	if constant.Ref != nil {
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
@@ -17,7 +22,7 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 				Location: &scope.Location,
 			}
 		}
-		return getIRMsgBySrcRef(entity.Const, scope.WithLocation(location))
+		return getIRMsgBySrcRef(entity.Const.Value, scope.WithLocation(location), typeExpr)
 	}
 
 	switch {
@@ -42,45 +47,56 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 			String: *constant.Message.Str,
 		}, nil
 	case constant.Message.Enum != nil:
-		enumTypeExpr := constant.TypeExpr.Lit.Enum
 		return &ir.Message{
-			Type: ir.MsgTypeInt,
-			Int:  int64(getEnumMemberIndex(enumTypeExpr, constant.Message.Enum.MemberName)),
+			Type:   ir.MsgTypeString,
+			String: constant.Message.Enum.MemberName,
 		}, nil
 	case constant.Message.List != nil:
+		listElType := typeExpr.Inst.Args[0]
 		listMsg := make([]ir.Message, len(constant.Message.List))
 
 		for i, el := range constant.Message.List {
-			result, err := getIRMsgBySrcRef(el, scope)
+			result, err := getIRMsgBySrcRef(el, scope, listElType)
 			if err != nil {
 				return nil, err
 			}
 			listMsg[i] = *result
 		}
+
 		return &ir.Message{
 			Type: ir.MsgTypeList,
 			List: listMsg,
 		}, nil
-	case constant.Message.MapOrStruct != nil:
-		m := make(map[string]ir.Message, len(constant.Message.MapOrStruct))
+	case constant.Message.DictOrStruct != nil:
+		m := make(map[string]ir.Message, len(constant.Message.DictOrStruct))
 
-		for name, el := range constant.Message.MapOrStruct {
-			result, err := getIRMsgBySrcRef(el, scope)
+		isStruct := typeExpr.Lit != nil && typeExpr.Lit.Struct != nil
+
+		for name, el := range constant.Message.DictOrStruct {
+			var elType ts.Expr
+			if isStruct {
+				elType = typeExpr.Lit.Struct[name]
+			} else {
+				elType = typeExpr.Inst.Args[0]
+			}
+
+			result, err := getIRMsgBySrcRef(el, scope, elType)
 			if err != nil {
 				return nil, err
 			}
+
 			m[name] = *result
 		}
 
-		var typ ir.MsgType
-		if constant.TypeExpr.Lit != nil && constant.TypeExpr.Lit.Struct != nil {
-			typ = ir.MsgTypeStruct
+		var irType ir.MsgType
+		if isStruct {
+			irType = ir.MsgTypeStruct
 		} else {
-			typ = ir.MsgTypeDict
+			irType = ir.MsgTypeDict
 		}
 
 		return &ir.Message{
-			Type:         typ,
+			Type:         irType,
 			DictOrStruct: m,
 		}, nil
 	}
@@ -89,13 +105,4 @@ func getIRMsgBySrcRef(constant src.Const, scope src.Scope) (*ir.Message, *compil
 		Err:      errors.New("unknown msg type"),
 		Location: &scope.Location,
 	}
-}
-
-func getEnumMemberIndex(enum []string, value string) int {
-	for i, item := range enum {
-		if item == value {
-			return i
-		}
-	}
-	return -1
 }

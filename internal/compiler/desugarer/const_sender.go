@@ -89,15 +89,15 @@ func (d Desugarer) handleConstRefSender(
 	handleConstRefSenderResult,
 	*compiler.Error,
 ) {
-	constTypeExpr, err := d.getConstTypeByRef(*conn.Normal.SenderSide.Const.Ref, scope)
+	constTypeExpr, err := d.getConstTypeByRef(*conn.Normal.SenderSide.Const.Value.Ref, scope)
 	if err != nil {
 		return handleConstRefSenderResult{}, compiler.Error{
 			Err: fmt.Errorf(
 				"Unable to get constant type by reference '%v'",
-				*conn.Normal.SenderSide.Const.Ref,
+				*conn.Normal.SenderSide.Const.Value.Ref,
 			),
 			Location: &scope.Location,
-			Meta:     &conn.Normal.SenderSide.Const.Ref.Meta,
+			Meta:     &conn.Normal.SenderSide.Const.Value.Ref.Meta,
 		}.Wrap(err)
 	}
 
@@ -108,7 +108,7 @@ func (d Desugarer) handleConstRefSender(
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {
-				conn.Normal.SenderSide.Const.Ref.String(), // don't forget to bind const
+				conn.Normal.SenderSide.Const.Value.Ref.String(), // don't forget to bind const
 			},
 		},
 		EntityRef: emitterFlowRef,
@@ -156,8 +156,8 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 		}
 	}
 
-	if entity.Const.Ref != nil {
-		expr, err := d.getConstTypeByRef(*entity.Const.Ref, scope)
+	if entity.Const.Value.Ref != nil {
+		expr, err := d.getConstTypeByRef(*entity.Const.Value.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
