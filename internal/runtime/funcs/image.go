@@ -64,12 +64,6 @@ func (i imageMsg) createImage() image.Image {
 	return im
 }
 
-func (i *imageMsg) decodeImage(img *image.RGBA) {
-	i.pixels = string(img.Pix)
-	i.width = int64(img.Rect.Dx())
-	i.height = int64(img.Rect.Dy())
-}
-
 type pixelStreamMsg struct {
 	idx int64
 	pixelMsg

@@ -52,11 +52,15 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"field": readStructField{},
 
 		// math reducers
-		"int_add":   intAdd{},
-		"int_sub":   intSub{},
-		"int_mul":   intMul{},
-		"int_div":   intDiv{},
-		"float_div": floatDiv{},
+		"int_add":    intAdd{},
+		"int_sub":    intSub{},
+		"int_mul":    intMul{},
+		"int_div":    intDiv{},
+		"float_add":  floatAdd{},
+		"float_sub":  floatSub{},
+		"float_mul":  floatMul{},
+		"float_div":  floatDiv{},
+		"string_add": stringAdd{},
 		// math mappers
 		"int_inc":  intInc{},
 		"int_decr": intDecr{},

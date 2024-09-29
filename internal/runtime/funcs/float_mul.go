@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type floatMulReducer struct{}
+type floatMul struct{}
 
-func (floatMulReducer) Create(
+func (floatMul) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
