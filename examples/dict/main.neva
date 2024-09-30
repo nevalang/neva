@@ -1,0 +1,13 @@
+const d dict<string> = {
+    name: 'John',
+    age: '20'
+}
+
+flow Main(start) (stop) {
+    Get, Println
+    ---
+    :start -> ('name' -> get:key)
+    $d -> get:dict
+    [get:res, get:err] -> println -> :stop
+}
+
