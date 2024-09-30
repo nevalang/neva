@@ -36,7 +36,8 @@ func buildExecutable(src, dst string) error {
 		"go",
 		"build",
 		"-ldflags", "-s -w", // strip debug information
-		"-o", outputPath,
+		"-o",
+		outputPath,
 		src,
 	)
 	cmd.Stdout = os.Stdout

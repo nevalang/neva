@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/pkg"
 )
 
@@ -96,7 +94,7 @@ func NewApp(
 			},
 			{
 				Name:      "run",
-				Usage:     "Run neva program from source code in interpreter mode",
+				Usage:     "Build and run neva program from source code",
 				Args:      true,
 				ArgsUsage: "Provide path to the executable package",
 				Flags: []cli.Flag{
@@ -116,16 +114,22 @@ func NewApp(
 						return fmt.Errorf("debugFile can only be used with -debug flag")
 					}
 
-					dirFromArg, err := getMainPkgFromArgs(cCtx)
+					mainPkg, err := getMainPkgFromArgs(cCtx)
 					if err != nil {
 						return err
 					}
 
-					intrprtr := interpreter.New(bldr, goc)
+					// build program
+					if err := nativec.Compile(mainPkg, workdir, debug); err != nil {
+						return fmt.Errorf("build failed: %w", err)
+					}
 
-					compileErr := intrprtr.Interpret(context.Background(), dirFromArg, debug, debugLogFilePath)
-					if compileErr != nil {
-						return compileErr
+					// run compiled program
+					cmd := exec.Command(filepath.Join(workdir, "output"))
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					if err := cmd.Run(); err != nil {
+						return fmt.Errorf("run failed: %w", err)
 					}
 
 					return nil
