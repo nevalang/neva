@@ -50,7 +50,9 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return fmt.Errorf("run failed: %w", err)
 			}
 
-			// TODO cleanup
+			if err := os.Remove(filepath.Join(workdir, "output")); err != nil {
+				return fmt.Errorf("failed to remove output file: %w", err)
+			}
 
 			return nil
 		},
