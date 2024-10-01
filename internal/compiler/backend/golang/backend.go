@@ -22,7 +22,7 @@ var (
 	ErrUnknownMsgType = errors.New("unknown msg type")
 )
 
-func (b Backend) Emit(dst string, prog *ir.Program) error {
+func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	addrToChanVar, chanVarNames := b.getPortChansMap(prog)
 	funcCalls := b.getFuncCalls(prog.Funcs, addrToChanVar)
 
@@ -38,10 +38,17 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 		return err
 	}
 
+	var traceFilePath string
+	if trace {
+		traceFilePath = fmt.Sprintf("%s.trace.log", dst)
+	}
+
 	data := templateData{
 		CompilerVersion: pkg.Version,
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
+		Trace:           trace,
+		TraceFile:       traceFilePath,
 	}
 
 	var buf bytes.Buffer

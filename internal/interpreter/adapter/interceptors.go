@@ -13,12 +13,12 @@ type debugInterceptor struct {
 }
 
 type Logger interface {
-	Printf(format string, v ...any) error
+	printf(format string, v ...any) error
 }
 
 type StdoutLogger struct{}
 
-func (s StdoutLogger) Printf(format string, v ...any) error {
+func (s StdoutLogger) printf(format string, v ...any) error {
 	_, err := fmt.Printf(format, v...)
 	return err
 }
@@ -27,7 +27,7 @@ type fileLogger struct {
 	filepath string
 }
 
-func (f fileLogger) Printf(format string, v ...any) error {
+func (f fileLogger) printf(format string, v ...any) error {
 	file, err := os.OpenFile(f.filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (d debugInterceptor) Sent(
 	sender runtime.PortSlotAddr,
 	msg runtime.Msg,
 ) runtime.Msg {
-	d.logger.Printf(
+	d.logger.printf(
 		"sent | %v | %v\n",
 		d.formatPortSlotAddr(sender), d.formatMsg(msg),
 	)
@@ -53,7 +53,7 @@ func (d debugInterceptor) Received(
 	receiver runtime.PortSlotAddr,
 	msg runtime.Msg,
 ) runtime.Msg {
-	d.logger.Printf(
+	d.logger.printf(
 		"recv | %v | %v\n",
 		d.formatPortSlotAddr(receiver),
 		d.formatMsg(msg),
@@ -86,6 +86,10 @@ func (d debugInterceptor) formatPortSlotAddr(slotAddr runtime.PortSlotAddr) stri
 }
 
 type prodInterceptor struct{}
+
+func (prodInterceptor) Prepare() error {
+	return nil
+}
 
 func (prodInterceptor) Sent(sender runtime.PortSlotAddr, msg runtime.Msg) runtime.Msg {
 	return msg

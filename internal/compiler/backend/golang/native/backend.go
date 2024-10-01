@@ -13,9 +13,9 @@ type Backend struct {
 	golang golang.Backend
 }
 
-func (b Backend) Emit(dst string, prog *ir.Program) error {
+func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	gomod := dst + "/tmp"
-	if err := b.golang.Emit(gomod, prog); err != nil {
+	if err := b.golang.Emit(gomod, prog, trace); err != nil {
 		return err
 	}
 	if err := buildExecutable(gomod, dst); err != nil {

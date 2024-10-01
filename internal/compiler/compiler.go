@@ -22,7 +22,7 @@ func (c Compiler) Compile(main string, output string, trace bool) error {
 	if err != nil {
 		return err
 	}
-	return c.backend.Emit(output, result.IR)
+	return c.backend.Emit(output, result.IR, trace)
 }
 
 type CompileResult struct {

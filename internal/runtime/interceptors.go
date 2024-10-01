@@ -8,61 +8,39 @@ import (
 
 type ProdInterceptor struct{}
 
-func (ProdInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
-	return msg
-}
+func (ProdInterceptor) Prepare() error { return nil }
 
-func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
-	return msg
-}
+func (ProdInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg { return msg }
 
-type DebugInterceptor struct {
-	logger Logger
-}
+func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg { return msg }
 
-type Logger interface {
-	Printf(format string, v ...any) error
-}
+type DebugInterceptor struct{ file *os.File }
 
-func NewDebugInterceptor(logger Logger) DebugInterceptor {
-	return DebugInterceptor{logger: logger}
-}
-
-type FileLogger struct {
-	filepath string
-}
-
-func (f FileLogger) Printf(format string, v ...any) error {
-	file, err := os.OpenFile(f.filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
+	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0644)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer file.Close()
-	_, err = fmt.Fprintf(file, format, v...)
-	return err
+	d.file = file
+	return file.Close, nil
 }
 
-func (d DebugInterceptor) Sent(
-	sender PortSlotAddr,
-	msg Msg,
-) Msg {
-	d.logger.Printf(
+func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
+	fmt.Fprintf(
+		d.file,
 		"sent | %v | %v\n",
 		d.formatPortSlotAddr(sender), d.formatMsg(msg),
 	)
 	return msg
 }
 
-func (d DebugInterceptor) Received(
-	receiver PortSlotAddr,
-	msg Msg,
-) Msg {
-	d.logger.Printf(
+func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
+	fmt.Fprintf(
+		d.file,
 		"recv | %v | %v\n",
 		d.formatPortSlotAddr(receiver),
 		d.formatMsg(msg),
 	)
-
 	return msg
 }
 
@@ -87,4 +65,8 @@ func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {
 	}
 
 	return s
+}
+
+func NewDebugInterceptor() DebugInterceptor {
+	return DebugInterceptor{}
 }

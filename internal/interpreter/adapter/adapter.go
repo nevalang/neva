@@ -14,10 +14,10 @@ func (a Adapter) Adapt(irProg *ir.Program, debug bool, debugLogFilePath string) 
 
 	var interceptor runtime.Interceptor
 	if debug {
-		if err := a.clearDebugLogFile(debugLogFilePath); err != nil {
-			return runtime.Program{}, err
-		}
-		interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
+		// if err := a.clearDebugLogFile(debugLogFilePath); err != nil {
+		// 	return runtime.Program{}, err
+		// }
+		// interceptor = debugInterceptor{logger: fileLogger{debugLogFilePath}}
 	} else {
 		interceptor = prodInterceptor{}
 	}
@@ -63,9 +63,7 @@ func (a Adapter) clearDebugLogFile(filepath string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	return nil
+	return file.Close()
 }
 
 func (Adapter) getPorts(prog *ir.Program) map[ir.PortAddr]chan runtime.OrderedMsg {
