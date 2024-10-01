@@ -38,17 +38,11 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		return err
 	}
 
-	var traceFilePath string
-	if trace {
-		traceFilePath = fmt.Sprintf("%s.trace.log", dst)
-	}
-
 	data := templateData{
 		CompilerVersion: pkg.Version,
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
 		Trace:           trace,
-		TraceFile:       traceFilePath,
 	}
 
 	var buf bytes.Buffer

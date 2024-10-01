@@ -5,7 +5,6 @@ type templateData struct {
 	ChanVarNames    []string
 	FuncCalls       []templateFuncCall
 	Trace           bool
-	TraceFile       string
 }
 
 type templateFuncCall struct {
@@ -36,21 +35,22 @@ func main() {
         {{- end}}
     )
 
-    var interceptor runtime.Interceptor
-    if {{.Trace}} {
-        interceptor = runtime.NewDebugInterceptor()
-        close, err := interceptor.Open({{.TraceFile}})
-        if err != nil {
+    {{- if .Trace }}
+    interceptor := runtime.NewDebugInterceptor()
+
+    close, err := interceptor.Open("trace.log")
+    if err != nil {
+        panic(err)
+    }
+
+    defer func() {
+        if err := close(); err != nil {
             panic(err)
         }
-        defer func() {
-            if err := close(); err != nil {
-                panic(err)
-            }
-        }()
-    } else {
-        interceptor = runtime.ProdInterceptor{}
-    }
+    }()
+    {{- else }}
+    interceptor := runtime.ProdInterceptor{}
+    {{- end }}
 
     var (
         startPort = runtime.NewSingleOutport(

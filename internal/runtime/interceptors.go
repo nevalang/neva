@@ -67,6 +67,6 @@ func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {
 	return s
 }
 
-func NewDebugInterceptor() DebugInterceptor {
-	return DebugInterceptor{}
+func NewDebugInterceptor() *DebugInterceptor {
+	return &DebugInterceptor{}
 }
