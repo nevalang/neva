@@ -44,6 +44,7 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 			}
 
 			cmd := exec.Command(filepath.Join(workdir, "output"))
+			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {

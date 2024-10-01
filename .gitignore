@@ -22,6 +22,7 @@ cmd/tmp
 /neva-windows-arm64.exe
 dist
 trace.log
+output
 
 node_modules
 __debug*
