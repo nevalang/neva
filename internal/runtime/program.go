@@ -433,10 +433,9 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	var wg sync.WaitGroup
 	success := true
 
+	wg.Add(len(a.slots))
 	for idx := range a.slots {
-		wg.Add(1)
 		go func(idx int) {
-			defer wg.Done()
 			select {
 			case <-ctx.Done():
 				success = false
@@ -448,6 +447,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 				}
 				a.interceptor.Sent(slotAddr, msg)
 			}
+			wg.Done()
 		}(idx)
 	}
 

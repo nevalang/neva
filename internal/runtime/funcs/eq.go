@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -26,13 +27,24 @@ func (p eq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 
 	return func(ctx context.Context) {
 		for {
-			val1, ok := actualIn.Receive(ctx)
-			if !ok {
-				return
-			}
+			var (
+				wg                   sync.WaitGroup
+				val1, val2           runtime.Msg
+				actualOk, comparedOk bool
+			)
 
-			val2, ok := comparedIn.Receive(ctx)
-			if !ok {
+			wg.Add(2)
+			go func() {
+				val1, actualOk = actualIn.Receive(ctx)
+				wg.Done()
+			}()
+			go func() {
+				val2, comparedOk = comparedIn.Receive(ctx)
+				wg.Done()
+			}()
+			wg.Wait()
+
+			if !actualOk || !comparedOk {
 				return
 			}
 
