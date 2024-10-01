@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -24,17 +23,13 @@ func NewApp(
 	jsonc compiler.Compiler,
 	dotc compiler.Compiler,
 ) *cli.App {
-	var (
-		target           string
-		debug            bool
-		debugLogFilePath string // TODO make this default for -debug flag
-		outputPath       string
-	)
-
 	return &cli.App{
 		Name:  "neva",
 		Usage: "Flow-based programming language",
 		Commands: []*cli.Command{
+			newNewCmd(workdir),
+			newRunCmd(workdir, nativec),
+			newBuildCmd(workdir, goc, nativec, wasmc, jsonc, dotc),
 			{
 				Name:  "version",
 				Usage: "Get current Nevalang version",
@@ -58,20 +53,6 @@ func NewApp(
 				},
 			},
 			{
-				Name:  "new",
-				Usage: "Create new Nevalang project",
-				Args:  true,
-				Action: func(cCtx *cli.Context) error {
-					if path := cCtx.Args().First(); path != "" {
-						if err := os.Mkdir(path, 0755); err != nil {
-							return err
-						}
-						return createNevaMod(path)
-					}
-					return createNevaMod(workdir)
-				},
-			},
-			{
 				Name:      "get",
 				Usage:     "Add dependency to current module",
 				Args:      true,
@@ -92,100 +73,6 @@ func NewApp(
 					return nil
 				},
 			},
-			{
-				Name:      "run",
-				Usage:     "Build and run neva program from source code",
-				Args:      true,
-				ArgsUsage: "Provide path to the executable package",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:        "debug",
-						Usage:       "Show message events in stdout",
-						Destination: &debug,
-					},
-					&cli.StringFlag{
-						Name:        "debugLogFilePath",
-						Usage:       "File path to write debug log (only available if -debug is passed)",
-						Destination: &debugLogFilePath,
-					},
-				},
-				Action: func(cCtx *cli.Context) error {
-					if !debug && debugLogFilePath != "" {
-						return fmt.Errorf("debugFile can only be used with -debug flag")
-					}
-
-					mainPkg, err := getMainPkgFromArgs(cCtx)
-					if err != nil {
-						return err
-					}
-
-					// build program
-					if err := nativec.Compile(mainPkg, workdir, debug); err != nil {
-						return fmt.Errorf("build failed: %w", err)
-					}
-
-					// run compiled program
-					cmd := exec.Command(filepath.Join(workdir, "output"))
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					if err := cmd.Run(); err != nil {
-						return fmt.Errorf("run failed: %w", err)
-					}
-
-					return nil
-				},
-			},
-			{
-				Name:  "build",
-				Usage: "Build neva program from source code",
-				Args:  true,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:        "target",
-						Required:    false,
-						Usage:       "Emit Go or WASM instead of machine code",
-						Destination: &target,
-						Action: func(ctx *cli.Context, s string) error {
-							switch s {
-							case "go", "wasm", "native", "json", "dot":
-							default:
-								return fmt.Errorf("Unknown target %s", s)
-							}
-							return nil
-						},
-					},
-					&cli.StringFlag{
-						Name:        "output",
-						Usage:       "Destination path for output file(s)",
-						Destination: &outputPath,
-					},
-				},
-				ArgsUsage: "Provide path to main package",
-				Action: func(cCtx *cli.Context) error {
-					mainPkg, err := getMainPkgFromArgs(cCtx)
-					if err != nil {
-						return err
-					}
-
-					dst := workdir
-					if outputPath != "" {
-						dst = outputPath
-					}
-
-					switch target {
-					case "go":
-						return goc.Compile(mainPkg, dst, debug)
-					case "wasm":
-						return wasmc.Compile(mainPkg, dst, debug)
-					case "json":
-						return jsonc.Compile(mainPkg, dst, debug)
-					case "dot":
-						return dotc.Compile(mainPkg, dst, debug)
-					default:
-						return nativec.Compile(mainPkg, dst, debug)
-					}
-				},
-			},
 		},
 	}
 }
@@ -199,39 +86,4 @@ func getMainPkgFromArgs(cCtx *cli.Context) (string, error) {
 		)
 	}
 	return dirFromArg, nil
-}
-
-func createNevaMod(path string) error {
-	// Create neva.yml file
-	nevaYmlContent := fmt.Sprintf("neva: %s", pkg.Version)
-	if err := os.WriteFile(
-		filepath.Join(path, "neva.yml"),
-		[]byte(nevaYmlContent),
-		0644,
-	); err != nil {
-		return err
-	}
-
-	// Create src sub-directory
-	srcPath := filepath.Join(path, "src")
-	if err := os.Mkdir(srcPath, 0755); err != nil {
-		return err
-	}
-
-	// Create main.neva file
-	mainNevaContent := `flow Main(start) (stop) {
-	Println
-	---
-	:start -> ('Hello, World!' -> println -> :stop)
-}`
-
-	if err := os.WriteFile(
-		filepath.Join(srcPath, "main.neva"),
-		[]byte(mainNevaContent),
-		0644,
-	); err != nil {
-		return err
-	}
-
-	return nil
 }

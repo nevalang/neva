@@ -11,6 +11,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime/funcs"
 )
 
+// TODO remove
 type Interpreter struct {
 	builder  builder.Builder
 	compiler compiler.Compiler
