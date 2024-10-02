@@ -85,15 +85,7 @@ type StrMsg struct {
 }
 
 func (msg StrMsg) Str() string    { return msg.v }
-func (msg StrMsg) String() string { return msg.v }
-func (msg StrMsg) MarshalJSON() ([]byte, error) {
-	// Escape special characters in the string before marshaling
-	jsonString, err := json.Marshal(msg.String())
-	if err != nil {
-		return nil, err
-	}
-	return jsonString, nil
-}
+func (msg StrMsg) String() string { return fmt.Sprintf("%q", msg.v) }
 
 func NewStrMsg(s string) StrMsg {
 	return StrMsg{

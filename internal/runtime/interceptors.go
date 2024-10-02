@@ -45,9 +45,6 @@ func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
 }
 
 func (d DebugInterceptor) formatMsg(msg Msg) string {
-	if s, ok := msg.(StrMsg); ok {
-		return fmt.Sprintf(`"%s"`, s)
-	}
 	return fmt.Sprint(msg)
 }
 
