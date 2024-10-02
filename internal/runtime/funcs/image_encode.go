@@ -52,7 +52,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 
 			if !dataOut.Send(
 				ctx,
-				runtime.NewStrMsg(sb.String()),
+				runtime.NewStringMsg(sb.String()),
 			) {
 				return
 			}

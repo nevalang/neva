@@ -71,7 +71,7 @@ func (printf) handle(
 				continue
 			}
 
-			if !sigOut.Send(ctx, runtime.NewStrMsg(res)) {
+			if !sigOut.Send(ctx, runtime.NewStringMsg(res)) {
 				return
 			}
 		}

@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug Compiled Go",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/dist/main.go",
+      "cwd": "${workspaceFolder}/dist"
+    },
+    {
       "name": "RUN",
       "type": "go",
       "request": "launch",

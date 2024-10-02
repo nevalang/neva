@@ -54,7 +54,7 @@ func (stringAt) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), err
 
 			for i, r := range data {
 				if int64(i) == idx {
-					if !resOut.Send(ctx, runtime.NewStrMsg(string(r))) {
+					if !resOut.Send(ctx, runtime.NewStringMsg(string(r))) {
 						return
 					}
 					break

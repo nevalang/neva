@@ -40,7 +40,7 @@ func (p stringSplit) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 			splitted := strings.Split(data.Str(), delim.Str())
 			res := make([]runtime.Msg, len(splitted))
 			for i, s := range splitted {
-				res[i] = runtime.NewStrMsg(s)
+				res[i] = runtime.NewStringMsg(s)
 			}
 
 			if !resOut.Send(ctx, runtime.NewListMsg(res)) {

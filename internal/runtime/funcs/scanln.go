@@ -16,7 +16,7 @@ func (r scanln) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (r scanln) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				panic(err)
 			}
 
-			if !dataOut.Send(ctx, runtime.NewStrMsg(string(bb))) {
+			if !resOut.Send(ctx, runtime.NewStringMsg(string(bb))) {
 				return
 			}
 		}

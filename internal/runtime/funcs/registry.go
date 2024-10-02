@@ -97,7 +97,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"printf":  printf{},
 
 		// io/file
-		"read_all":  readAll{},
+		"read_all":  fileReadAll{},
 		"write_all": writeAll{},
 		// http
 		"http_get": httpGet{},

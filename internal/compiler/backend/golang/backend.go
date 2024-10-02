@@ -200,7 +200,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeFloat:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
-		return fmt.Sprintf(`runtime.NewStrMsg(%q)`, msg.String), nil
+		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
 	case ir.MsgTypeList:
 		elements := make([]string, len(msg.List))
 		for i, v := range msg.List {

@@ -1,8 +1,8 @@
 import { io }
 
 flow Main(start) (stop) {
-  io.ReadAll, Println
-  ---
-  :start -> ('file_read_all/main.neva' -> readAll:filename)
-  [readAll:data, readAll:err] -> println -> :stop
+	io.ReadAll, Println
+	---
+	:start -> ('file_read_all/main.neva' -> readAll:filename)
+	[readAll:res, readAll:err] -> println -> :stop
 }

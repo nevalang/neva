@@ -58,7 +58,7 @@ func (floatDiv) Create(
 			}
 
 			if elMsg.Float() == 0 {
-				if !errOut.Send(ctx, runtime.NewStrMsg("divide by zero")) {
+				if !errOut.Send(ctx, runtime.NewStringMsg("divide by zero")) {
 					return
 				}
 				continue

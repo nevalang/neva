@@ -66,7 +66,7 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			if !imgOut.Send(ctx, runtime.NewStructMsg(
 				[]string{"pixels", "width", "height"},
 				[]runtime.Msg{
-					runtime.NewStrMsg(string(img.Pix)),
+					runtime.NewStringMsg(string(img.Pix)),
 					runtime.NewIntMsg(int64(img.Rect.Dx())),
 					runtime.NewIntMsg(int64(img.Rect.Dy())),
 				},

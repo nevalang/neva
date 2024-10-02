@@ -33,7 +33,7 @@ func (p stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				builder.WriteString(list[i].Str())
 			}
 
-			if !resOut.Send(ctx, runtime.NewStrMsg(builder.String())) {
+			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
 				return
 			}
 		}
