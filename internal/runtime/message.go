@@ -103,7 +103,7 @@ type StringMsg struct {
 }
 
 func (msg StringMsg) Str() string                  { return msg.v }
-func (msg StringMsg) String() string               { return fmt.Sprintf("%q", msg.v) }
+func (msg StringMsg) String() string               { return msg.v }
 func (msg StringMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
 
 func NewStringMsg(s string) StringMsg {

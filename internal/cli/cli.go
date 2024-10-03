@@ -49,9 +49,9 @@ var versionCmd = &cli.Command{
 var upgradeCmd = &cli.Command{
 	Name:  "upgrade",
 	Usage: "Upgrade to newest Nevalang version",
-	Action: func(_ *cli.Context) error {
-		cmd := exec.Command("curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash")
-		err := cmd.Run()
+	Action: func(cliCtx *cli.Context) error {
+		curlCmd := "curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash"
+		err := exec.CommandContext(cliCtx.Context, curlCmd).Run()
 		if err != nil {
 			fmt.Println("Upgrading Nevalang failed :" + err.Error())
 		} else {
@@ -67,19 +67,27 @@ func newGetCmd(workdir string, bldr builder.Builder) *cli.Command {
 		Usage:     "Add dependency to current module",
 		Args:      true,
 		ArgsUsage: "Provide path to the module",
-		Action: func(cCtx *cli.Context) error {
-			installedPath, err := bldr.Get(
-				workdir,
-				cCtx.Args().Get(0),
-				cCtx.Args().Get(1),
-			)
-			if err != nil {
-				return err
+		Action: func(cliCtx *cli.Context) error {
+			if cliCtx.Args().Len() != 2 {
+				return fmt.Errorf(
+					"expected 2 arguments, got %d",
+					cliCtx.Args().Len(),
+				)
 			}
+
+			path := cliCtx.Args().Get(0)
+			version := cliCtx.Args().Get(1)
+
+			installedPath, err := bldr.Get(workdir, path, version)
+			if err != nil {
+				return fmt.Errorf("failed to get dependency: %w", err)
+			}
+
 			fmt.Printf(
-				"%s installed to %s\n", cCtx.Args().Get(0),
+				"%s installed to %s\n", cliCtx.Args().Get(0),
 				installedPath,
 			)
+
 			return nil
 		},
 	}

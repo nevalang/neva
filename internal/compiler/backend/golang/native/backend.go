@@ -1,6 +1,7 @@
 package native
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,35 +14,51 @@ type Backend struct {
 	golang golang.Backend
 }
 
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	gomod := dst + "/tmp"
-	if err := b.golang.Emit(gomod, prog, trace); err != nil {
-		return err
+func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
+	tmpGoModuleDir := output + "/tmp"
+	if err := b.golang.Emit(tmpGoModuleDir, prog, trace); err != nil {
+		return fmt.Errorf("emit: %w", err)
 	}
-	if err := buildExecutable(gomod, dst); err != nil {
-		return err
+	if err := b.buildExecutable(tmpGoModuleDir, output); err != nil {
+		return fmt.Errorf("build executable: %w", err)
 	}
-	if err := os.RemoveAll(gomod); err != nil {
-		return err
+	if err := os.RemoveAll(tmpGoModuleDir); err != nil {
+		return fmt.Errorf("remove gomodule: %w", err)
 	}
 	return nil
 }
 
-func buildExecutable(src, dst string) error {
-	outputPath := filepath.Join(dst, "output")
-	if err := os.Chdir(src); err != nil {
-		return err
+func (b Backend) buildExecutable(gomodule, output string) error {
+	// remember current working directory to change back to it later
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
 	}
+
+	// we need to be inside go module to run `go build` command
+	if err := os.Chdir(gomodule); err != nil {
+		return fmt.Errorf("change directory to gomodule: %w", err)
+	}
+
+	// change back to original wd or neva programs
+	// that interact with fs via relative paths will fail
+	defer func() {
+		if err := os.Chdir(wd); err != nil {
+			panic(err)
+		}
+	}()
+
 	cmd := exec.Command(
 		"go",
 		"build",
 		"-ldflags", "-s -w", // strip debug information
 		"-o",
-		outputPath,
-		src,
+		filepath.Join(output, "output"),
+		gomodule,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
 	return cmd.Run()
 }
 

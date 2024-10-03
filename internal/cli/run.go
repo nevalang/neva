@@ -43,16 +43,20 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return fmt.Errorf("build failed: %w", err)
 			}
 
-			cmd := exec.Command(filepath.Join(workdir, "output"))
+			defer func() {
+				if err := os.Remove(filepath.Join(workdir, "output")); err != nil {
+					fmt.Println("failed to remove output file:", err)
+				}
+			}()
+
+			pathToExec := filepath.Join(workdir, "output")
+
+			cmd := exec.CommandContext(cliCtx.Context, pathToExec)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
 				return fmt.Errorf("run failed: %w", err)
-			}
-
-			if err := os.Remove(filepath.Join(workdir, "output")); err != nil {
-				return fmt.Errorf("failed to remove output file: %w", err)
 			}
 
 			return nil

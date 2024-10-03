@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,15 +28,6 @@ func ParseEntityRef(ref string) core.EntityRef {
 	}
 
 	return entityRef
-}
-
-// JSONDump is for debugging purposes only!
-func JSONDump(v any) string {
-	bb, err := json.Marshal(v)
-	if err != nil {
-		return err.Error()
-	}
-	return string(bb)
 }
 
 func SaveFilesToDir(dst string, files map[string][]byte) error {
