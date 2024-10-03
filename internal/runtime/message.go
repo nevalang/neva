@@ -102,9 +102,11 @@ type StringMsg struct {
 	v string
 }
 
-func (msg StringMsg) Str() string                  { return msg.v }
-func (msg StringMsg) String() string               { return msg.v }
-func (msg StringMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
+func (msg StringMsg) Str() string    { return msg.v }
+func (msg StringMsg) String() string { return msg.v }
+func (msg StringMsg) MarshalJSON() ([]byte, error) {
+	return json.Marshal(msg.String())
+}
 
 func NewStringMsg(s string) StringMsg {
 	return StringMsg{

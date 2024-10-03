@@ -34,8 +34,8 @@ func main() {
         {{.}} = make(chan runtime.OrderedMsg)
         {{- end}}
     )
-
     {{- if .Trace }}
+
     interceptor := runtime.NewDebugInterceptor()
 
     close, err := interceptor.Open("trace.log")
@@ -48,6 +48,7 @@ func main() {
         }
     }()
     {{- else }}
+
     interceptor := runtime.ProdInterceptor{}
     {{- end }}
 
