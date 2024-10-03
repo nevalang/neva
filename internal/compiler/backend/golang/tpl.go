@@ -42,7 +42,6 @@ func main() {
     if err != nil {
         panic(err)
     }
-
     defer func() {
         if err := close(); err != nil {
             panic(err)

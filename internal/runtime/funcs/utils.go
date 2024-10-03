@@ -22,3 +22,7 @@ func streamItem(data runtime.Msg, idx int64, last bool) runtime.StructMsg {
 		[]runtime.Msg{data, runtime.NewIntMsg(idx), runtime.NewBoolMsg(last)},
 	)
 }
+
+func emptyStruct() runtime.StructMsg {
+	return emptyStruct()
+}

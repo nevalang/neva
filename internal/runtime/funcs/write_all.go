@@ -50,7 +50,7 @@ func (c writeAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				continue
 			}
 
-			if !sig.Send(ctx, nil) {
+			if !sig.Send(ctx, emptyStruct()) {
 				return
 			}
 		}
