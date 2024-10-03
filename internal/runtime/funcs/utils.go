@@ -24,5 +24,5 @@ func streamItem(data runtime.Msg, idx int64, last bool) runtime.StructMsg {
 }
 
 func emptyStruct() runtime.StructMsg {
-	return emptyStruct()
+	return runtime.NewStructMsg(nil, nil)
 }
