@@ -16,15 +16,17 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "advanced_error_handling")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
+	for i := 0; i < 1; i++ {
+		cmd := exec.Command("neva", "run", "advanced_error_handling")
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
 `,
-		string(out),
-	)
+			string(out),
+		)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	}
 }

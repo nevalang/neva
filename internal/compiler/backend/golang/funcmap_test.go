@@ -10,24 +10,20 @@ import (
 func TestGetPortChansMap(t *testing.T) {
 	tests := []struct {
 		name             string
-		prog             *ir.Program
+		connections      map[ir.PortAddr]ir.PortAddr
 		expectedMap      map[ir.PortAddr]string
 		expectedVarNames []string
 	}{
 		{
-			name: "empty_program",
-			prog: &ir.Program{
-				Connections: map[ir.PortAddr]ir.PortAddr{},
-			},
+			name:             "empty_program",
+			connections:      map[ir.PortAddr]ir.PortAddr{},
 			expectedMap:      map[ir.PortAddr]string{},
 			expectedVarNames: []string{},
 		},
 		{
 			name: "two_connected_ports",
-			prog: &ir.Program{
-				Connections: map[ir.PortAddr]ir.PortAddr{
-					{Path: "main", Port: "out"}: {Path: "logger", Port: "in"},
-				},
+			connections: map[ir.PortAddr]ir.PortAddr{
+				{Path: "main", Port: "out"}: {Path: "logger", Port: "in"},
 			},
 			expectedMap: map[ir.PortAddr]string{
 				{Path: "main", Port: "out"}:  "main_out_to_logger_in",
@@ -37,11 +33,9 @@ func TestGetPortChansMap(t *testing.T) {
 		},
 		{
 			name: "multiple_ports_with_array",
-			prog: &ir.Program{
-				Connections: map[ir.PortAddr]ir.PortAddr{
-					{Path: "main", Port: "out", IsArray: true, Idx: 0}: {Path: "logger", Port: "in", IsArray: true, Idx: 0},
-					{Path: "main", Port: "out", IsArray: true, Idx: 1}: {Path: "logger", Port: "in", IsArray: true, Idx: 1},
-				},
+			connections: map[ir.PortAddr]ir.PortAddr{
+				{Path: "main", Port: "out", IsArray: true, Idx: 0}: {Path: "logger", Port: "in", IsArray: true, Idx: 0},
+				{Path: "main", Port: "out", IsArray: true, Idx: 1}: {Path: "logger", Port: "in", IsArray: true, Idx: 1},
 			},
 			expectedMap: map[ir.PortAddr]string{
 				{Path: "main", Port: "out", IsArray: true, Idx: 0}:  "main_out_0_to_logger_in_0",
@@ -60,7 +54,7 @@ func TestGetPortChansMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, _ := b.getPortChansMap(tt.prog)
+			result, _ := b.getPortChansMap(tt.connections)
 			assert.Equal(t, tt.expectedMap, result)
 		})
 	}

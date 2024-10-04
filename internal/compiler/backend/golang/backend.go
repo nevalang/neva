@@ -23,7 +23,7 @@ var (
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	addrToChanVar, chanVarNames := b.getPortChansMap(prog)
+	addrToChanVar, chanVarNames := b.getPortChansMap(prog.Connections)
 	funcCalls := b.getFuncCalls(prog.Funcs, addrToChanVar)
 
 	funcmap := template.FuncMap{
@@ -267,11 +267,12 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte) error {
 	return nil
 }
 
-func (b Backend) getPortChansMap(prog *ir.Program) (map[ir.PortAddr]string, []string) {
-	varNames := make([]string, 0, len(prog.Ports))
-	addrToChanVar := make(map[ir.PortAddr]string, len(prog.Ports))
+func (b Backend) getPortChansMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {
+	portsCount := len(connections) * 2
+	varNames := make([]string, 0, portsCount)
+	addrToChanVar := make(map[ir.PortAddr]string, portsCount)
 
-	for senderAddr, receiverAddr := range prog.Connections {
+	for senderAddr, receiverAddr := range connections {
 		channelName := fmt.Sprintf(
 			"%s_to_%s",
 			b.chanVarNameFromPortAddr(senderAddr),
