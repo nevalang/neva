@@ -1,25 +1,25 @@
 // RGBA represents a color in the RGBA 64-bit color space.
 pub type RGBA struct {
-  r int
-  g int
-  b int
-  a int
+	r int
+	g int
+	b int
+	a int
 }
 
 // Pixel represents an RGBA color at a given Point.
 pub type Pixel struct {
-  x int
-  y int
-  color RGBA
+	x int
+	y int
+	color RGBA
 }
 
 // Image is an RGBA represented as a string of pixels with one byte per color flow.
 //
 // Pixels are arranged in order such that (x, y) starts at pixels[y*width + x*4].
 pub type Image struct {
-  pixels string
-  width int
-  height int
+	pixels string
+	width int
+	height int
 }
 
 // New creates a new RGBA image from the given pixels.
