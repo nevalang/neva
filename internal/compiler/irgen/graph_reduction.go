@@ -3,21 +3,21 @@ package irgen
 import "github.com/nevalang/neva/internal/compiler/ir"
 
 // reduceFinalGraph transforms program to a state where it doesn't have intermediate connections.
-func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, map[ir.PortAddr]ir.PortAddr) {
+func (Generator) reduceFinalGraph(connections map[ir.PortAddr]ir.PortAddr) map[ir.PortAddr]ir.PortAddr {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
 
 	netWithoutIntermediateReceivers := make(
 		map[ir.PortAddr]ir.PortAddr,
-		len(prog.Connections),
+		len(connections),
 	)
 
-	for sender, receiver := range prog.Connections {
+	for sender, receiver := range connections {
 		// it's possible that we already saw this sender as a receiver in previous iterations
 		if _, ok := intermediatePorts[sender]; ok {
 			continue
 		}
 
-		curFinalReceiver, wasIntermediate := getFinalReceiver(receiver, prog.Connections)
+		curFinalReceiver, wasIntermediate := getFinalReceiver(receiver, connections)
 		if wasIntermediate {
 			intermediatePorts[receiver] = struct{}{}
 		}
@@ -30,7 +30,6 @@ func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, m
 	// resultNet only contains connections with final receivers
 	// but some of them has senders that are intermediate resultPorts
 	// we need to remove these connections and ports for those nodes
-	finalPorts := make(map[ir.PortAddr]struct{}, len(prog.Ports))
 	netWithoutIntermediatePorts := make(
 		map[ir.PortAddr]ir.PortAddr,
 		len(netWithoutIntermediateReceivers),
@@ -41,15 +40,10 @@ func (Generator) reduceFinalGraph(prog *ir.Program) (map[ir.PortAddr]struct{}, m
 		if _, ok := intermediatePorts[sender]; ok {
 			continue // skip this connection and don't add its ports
 		}
-
 		netWithoutIntermediatePorts[sender] = receiver
-
-		// basically just add ports for every nonskipped connection
-		finalPorts[sender] = struct{}{}
-		finalPorts[receiver] = struct{}{}
 	}
 
-	return finalPorts, netWithoutIntermediatePorts
+	return netWithoutIntermediatePorts
 }
 
 // getFinalReceiver returns all final receivers that are behind the given one.
@@ -59,8 +53,8 @@ func getFinalReceiver(
 	receiver ir.PortAddr,
 	net map[ir.PortAddr]ir.PortAddr,
 ) (final ir.PortAddr, intermediate bool) {
-	next, isReceiverAlsoSender := net[receiver]
-	if !isReceiverAlsoSender {
+	next, isSender := net[receiver]
+	if !isSender {
 		return receiver, false
 	}
 	v, _ := getFinalReceiver(next, net)

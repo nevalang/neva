@@ -43,6 +43,5 @@ flow Main(start) (stop) {
 	newStream:s -> new
 	new:img -> encode:img
 	encode:data -> writeAll:data
-	[new:err, encode:err, writeAll:err] -> println -> :stop
-	writeAll:sig -> :stop
+	[new:err, encode:err, writeAll:sig, writeAll:err] -> println -> :stop
 }

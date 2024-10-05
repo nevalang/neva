@@ -59,9 +59,7 @@ flow Mod5(num int) (then int, else int) {
 
 // ModHelper checks if num can be devided by den
 flow ModHelper(num int, den int) (then int, else int) {
-    Mod
-    Eq
-    Cond<int>
+    Mod, Eq, Cond<int>
 
     ---
 

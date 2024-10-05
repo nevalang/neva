@@ -1,12 +1,9 @@
 flow Main(start) (stop) {
-    Println, Gt<int>, If
-    ---
-    :start -> [
-        (10 -> gt:compared),
-        (50 -> gt:actual)
-       ]
-       gt:res -> if
-
-       if:then -> ('Actual is greater' -> println -> :stop)
-       if:else -> ('Actual is lower' -> println -> :stop)
+	Println, Gt<int>, Ternary
+	---
+	:start -> [(50 -> gt:actual), (10 -> gt:compared)]
+	gt:res -> ternary:if
+	'Actual is greater' -> ternary:then
+	'Actual is lower' -> ternary:else
+	ternary:res -> println -> :stop
 }

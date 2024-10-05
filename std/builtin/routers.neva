@@ -29,3 +29,9 @@ pub flow FanOut<T>(data T) ([data] T)
 // It makes sure order of incoming messages is respected.
 #extern(fan_in)
 pub flow FanIn<T>([data] T) (res T)
+
+// IDEA: there's another variation of Select/Switch
+// (data T, [if] any) ([then] T, else T)
+// it's like a mix between Switch and Select
+// - it's like a switch, but it cares where data came from, not what data is
+// - it's like a select, but it cares where to send data, not what to send
