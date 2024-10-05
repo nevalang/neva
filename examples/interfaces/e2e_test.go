@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"<base>\n",
+		"{}\n",
 		string(out),
 	)
 

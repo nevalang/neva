@@ -6,57 +6,52 @@ import "github.com/nevalang/neva/internal/compiler/ir"
 func (Generator) reduceFinalGraph(connections map[ir.PortAddr]ir.PortAddr) map[ir.PortAddr]ir.PortAddr {
 	intermediatePorts := map[ir.PortAddr]struct{}{}
 
-	netWithoutIntermediateReceivers := make(
+	withoutIntermediateReceivers := make(
 		map[ir.PortAddr]ir.PortAddr,
 		len(connections),
 	)
 
+	// after this loop we'll get net where all senders have final receivers
+	// but senders themselves may still be intermediate
 	for sender, receiver := range connections {
-		// it's possible that we already saw this sender as a receiver in previous iterations
-		if _, ok := intermediatePorts[sender]; ok {
-			continue
-		}
-
 		curFinalReceiver, wasIntermediate := getFinalReceiver(receiver, connections)
 		if wasIntermediate {
 			intermediatePorts[receiver] = struct{}{}
 		}
-
-		// every connection in resultNet has final receiver
-		// (it still might have intermediate ports as senders though)
-		netWithoutIntermediateReceivers[sender] = curFinalReceiver
+		withoutIntermediateReceivers[sender] = curFinalReceiver
 	}
 
-	// resultNet only contains connections with final receivers
-	// but some of them has senders that are intermediate resultPorts
-	// we need to remove these connections and ports for those nodes
-	netWithoutIntermediatePorts := make(
+	// second pass: remove connections with intermediate senders
+	result := make(
 		map[ir.PortAddr]ir.PortAddr,
-		len(netWithoutIntermediateReceivers),
+		len(withoutIntermediateReceivers),
 	)
-
-	for sender, receiver := range netWithoutIntermediateReceivers {
-		// intermediate receiver is always also a sender in some other connection
-		if _, ok := intermediatePorts[sender]; ok {
-			continue // skip this connection and don't add its ports
+	for sender, receiver := range withoutIntermediateReceivers {
+		if _, isIntermediate := intermediatePorts[sender]; !isIntermediate {
+			result[sender] = receiver
 		}
-		netWithoutIntermediatePorts[sender] = receiver
 	}
 
-	return netWithoutIntermediatePorts
+	return result
 }
 
-// getFinalReceiver returns all final receivers that are behind the given one.
-// It also returns true if given port address was intermediate and false otherwise.
-// If given port was already final then a slice with one original port is returned.
+// getFinalReceiver returns the final receiver for a given port address.
+// It also returns true if the given port address was intermediate, false otherwise.
 func getFinalReceiver(
 	receiver ir.PortAddr,
-	net map[ir.PortAddr]ir.PortAddr,
+	connections map[ir.PortAddr]ir.PortAddr,
 ) (final ir.PortAddr, intermediate bool) {
-	next, isSender := net[receiver]
-	if !isSender {
-		return receiver, false
+	visited := make(map[ir.PortAddr]struct{})
+	current := receiver
+	for {
+		visited[current] = struct{}{}
+		next, exists := connections[current]
+		if !exists {
+			return current, len(visited) > 1
+		}
+		if _, alreadyVisited := visited[next]; alreadyVisited {
+			return current, true // we've detected a cycle, return the current node
+		}
+		current = next
 	}
-	v, _ := getFinalReceiver(next, net)
-	return v, true
 }

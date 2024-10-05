@@ -31,7 +31,7 @@ flow NewStream(p image.Pixel) (s stream<image.Pixel>) {
 flow Main(start) (stop) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
-	io.WriteAll, Println
+	io.WriteAll, printErr Println
 	---
 	:start -> [
 		(0 -> [newColor:r, newColor:g, newColor:b, newColor:a]),
@@ -43,5 +43,6 @@ flow Main(start) (stop) {
 	newStream:s -> new
 	new:img -> encode:img
 	encode:data -> writeAll:data
-	[new:err, encode:err, writeAll:sig, writeAll:err] -> println -> :stop
+	[new:err, encode:err, writeAll:err] -> printErr
+	[writeAll:sig, printErr] -> :stop
 }
