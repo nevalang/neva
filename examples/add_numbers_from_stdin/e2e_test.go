@@ -18,16 +18,17 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		t.Run("Echo Test", func(t *testing.T) {
-			cmd := exec.Command("neva", "run", "echo")
+		t.Run("Add numbers from stdin", func(t *testing.T) {
+			cmd := exec.Command("neva", "run", "add_numbers_from_stdin")
 
-			cmd.Stdin = strings.NewReader("yo\n")
+			cmd.Stdin = strings.NewReader("3\n4\n\n")
+
 			out, err := cmd.CombinedOutput()
 			require.NoError(t, err)
 
 			require.Equal(
 				t,
-				"yo\n",
+				"7\n",
 				string(out),
 			)
 

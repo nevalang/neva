@@ -1,40 +1,38 @@
 package funcs
 
 import (
-	"bufio"
 	"context"
-	"os"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
 type scanln struct{}
 
-func (r scanln) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := io.In.Single("sig")
+// TODO add `:err` outport
+func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := rio.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			reader := bufio.NewReader(os.Stdin)
-
 			if _, ok := sigIn.Receive(ctx); !ok {
 				return
 			}
 
-			bb, _, err := reader.ReadLine()
-			if err != nil {
+			var input string
+			if _, err := fmt.Scanln(&input); err != nil {
 				panic(err)
 			}
 
-			if !resOut.Send(ctx, runtime.NewStringMsg(string(bb))) {
+			if !resOut.Send(ctx, runtime.NewStringMsg(input)) {
 				return
 			}
 		}

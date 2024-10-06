@@ -1,4 +1,4 @@
-import { os, lists }
+import { os }
 
 flow Main(start) (stop) {
 	os.Args, ListToStream, ForEach{Println}, Wait

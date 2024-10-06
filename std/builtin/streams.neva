@@ -22,17 +22,6 @@ pub flow ArrPortToStream<T>([port] T) (data stream<T>)
 // It's expected to send a result message after every processed stream.
 pub interface IPortReducer<T>(data stream<T>) (res T)
 
-// ReducePort reduces messages from multiple connections to a single message.
-// It iterates over all array-inport's slots in order and streams every message
-// to reducer. When all messages are processed the result is emited to outport.
-pub flow ReducePort<T>([port] T) (res T) {
-    reducer IPortReducer<T>
-    streamer ArrPortToStream<T>
-    ---
-    :port => streamer:port
-    streamer -> reducer -> :res
-}
-
 // === Iterators ===
 
 // These constants are used for binding by Field flow.

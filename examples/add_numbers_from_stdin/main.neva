@@ -10,11 +10,11 @@ flow Main(start) (stop) {
 flow App(sig) (res int, err error) {
 	readFirstInt ReadIntFromStdin
 	readSecondInt ReadIntFromStdin
-	add ReducePort<int> { Add<int> }
+	add Add<int>
 	---
 	:sig -> readFirstInt
-	readFirstInt:num -> [add[0], readSecondInt]
-	readSecondInt:num -> add[1]
+	readFirstInt:num -> [add:acc, readSecondInt]
+	readSecondInt:num -> add:el
 	[readFirstInt:err, readSecondInt:err] -> :err
 	add -> :res
 }

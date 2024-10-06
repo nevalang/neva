@@ -8,16 +8,14 @@ flow Main(start any) (stop any) {
 	scanner2 io.Scanln
 	parser1 strconv.ParseNum<int>
 	parser2 strconv.ParseNum<int>
-	adder ReducePort<int> { Add<int> }
+	add Add<int>
 	println Println<any>
 	---
 	:start -> scanner1:sig
-	scanner1:data -> parser1:data
-	parser1:err -> println:data
-	parser1:res -> [adder:port[0], scanner2:sig]
-	scanner2:data -> parser2:data
-	parser2:err -> println:data
-	parser2:res -> adder:port[1]
-	adder:res -> println:data
+	scanner1:res -> parser1:data
+	parser1:res -> [add:acc, scanner2:sig]
+	scanner2:res -> parser2:data
+	parser2:res -> add:el
 	println:sig -> :stop
+	[parser1:err, parser2:err, add:res] -> println:data
 }

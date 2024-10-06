@@ -35,3 +35,6 @@ pub flow FanIn<T>([data] T) (res T)
 // it's like a mix between Switch and Select
 // - it's like a switch, but it cares where data came from, not what data is
 // - it's like a select, but it cares where to send data, not what to send
+
+// MatchSwitch maps and routes the data.
+// pub flow MatchSwitch<T>(data T, [if] T, [then] T, else T) ([then] T, else T)

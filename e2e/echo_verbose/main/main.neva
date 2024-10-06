@@ -1,10 +1,10 @@
 import { io }
 
 flow Main(start any) (stop any) {
-	scanner io.Scanln
+	io.Scanln
 	println Println<string>
 	---
-	:start -> scanner:sig
-	scanner:data -> println:data
+	:start -> scanln:sig
+	scanln:res -> println:data
 	println:sig -> :stop
 }
