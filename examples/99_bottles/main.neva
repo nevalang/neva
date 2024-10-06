@@ -64,5 +64,5 @@ flow PrintSecondLine(n int) (n int) {
 
     [p1, p2, p3, printf:sig] -> lock:sig
 
-    lock:data -> :n
+    lock -> :n
 }
