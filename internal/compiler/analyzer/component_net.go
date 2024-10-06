@@ -651,9 +651,9 @@ func (a Analyzer) getSenderSideType(
 		// Treat range sender as stream<int>
 		rangeType := ts.Expr{
 			Inst: &ts.InstExpr{
-				Ref: core.EntityRef{Pkg: "builtin", Name: "stream"},
+				Ref: core.EntityRef{Name: "stream"},
 				Args: []ts.Expr{{
-					Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}},
+					Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 				}},
 			},
 		}

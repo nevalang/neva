@@ -434,7 +434,11 @@ func parseNormConnSenderSide(
 
 	var rangeExpr *src.RangeExpr
 	if rangeExprSender != nil {
-		from, err := strconv.ParseInt(rangeExprSender.INT(0).GetText(), 10, 64)
+		fromText := rangeExprSender.INT(0).GetText()
+		if rangeExprSender.MINUS(0) != nil {
+			fromText = "-" + fromText
+		}
+		from, err := strconv.ParseInt(fromText, 10, 64)
 		if err != nil {
 			return src.ConnectionSenderSide{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid range 'from' value: %v", err),
@@ -452,7 +456,11 @@ func parseNormConnSenderSide(
 			}
 		}
 
-		to, err := strconv.ParseInt(rangeExprSender.INT(1).GetText(), 10, 64)
+		toText := rangeExprSender.INT(1).GetText()
+		if rangeExprSender.MINUS(1) != nil {
+			toText = "-" + toText
+		}
+		to, err := strconv.ParseInt(toText, 10, 64)
 		if err != nil {
 			return src.ConnectionSenderSide{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid range 'to' value: %v", err),

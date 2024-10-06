@@ -1,11 +1,9 @@
 flow Main(start) (stop) {
-	Range
-    Map<int, string|int>{FizzBuzz}
+    Map<int, any>{FizzBuzz}
     ForEach{Println}
     Wait
     ---
-    :start -> [(1 -> range:from), (101 -> range:to)]
-    range -> map -> forEach -> wait -> :stop
+    :start -> (1..101 -> map -> forEach -> wait -> :stop)
 }
 
 flow FizzBuzz(data int) (res string|int) {

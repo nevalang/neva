@@ -130,7 +130,12 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (portAddr | senderConstRef | primitiveConstLit | rangeExpr) structSelectors?;
+singleSenderSide: (
+		portAddr
+		| senderConstRef
+		| primitiveConstLit
+		| rangeExpr
+	) structSelectors?;
 receiverSide:
 	chainedNormConn
 	| singleReceiverSide
@@ -138,6 +143,7 @@ receiverSide:
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
+rangeExpr: (MINUS? INT) '..' (MINUS? INT);
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -163,12 +169,9 @@ COMMENT: '//' ~( '\r' | '\n')*;
 PUB_KW: 'pub';
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_];
-INT: [0-9]+; // one or more integer digits
+INT: [0-9]+; // one or more (positive) integer digits
 MINUS: '-';
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
 NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix
 WS: [ \t]+ -> channel(HIDDEN); // ignore whitespace
-
-// Add a new rule for range expression
-rangeExpr: INT '..' INT;

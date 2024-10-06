@@ -40,7 +40,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		// streamers
 		"array_port_to_stream": arrayPortToStream{},
 		"list_to_stream":       listToStream{},
-		"stream_int_range":     streamIntRange{},
+		"stream_int_range":     rangeInt{},
 		"stream_product":       streamProduct{},
 		"stream_zip":           streamZip{},
 

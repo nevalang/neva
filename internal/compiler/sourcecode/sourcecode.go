@@ -356,13 +356,16 @@ func (s ConnectionSenderSide) String() string {
 	}
 
 	var result string
-	if s.Const != nil {
+	switch {
+	case s.Const != nil:
 		if s.Const.Value.Ref != nil {
 			result = s.Const.Value.Ref.String()
 		} else {
 			result = s.Const.Value.Message.String()
 		}
-	} else {
+	case s.Range != nil:
+		result = fmt.Sprintf("%v..%v", s.Range.From, s.Range.To)
+	case s.PortAddr != nil:
 		result = s.PortAddr.String()
 	}
 
