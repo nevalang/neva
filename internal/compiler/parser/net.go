@@ -2,6 +2,8 @@ package parser
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
@@ -378,10 +380,12 @@ func parseNormConnSenderSide(
 	portSender := senderSide.PortAddr()
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
+	rangeExprSender := senderSide.RangeExpr()
 
 	if portSender == nil &&
 		constRefSender == nil &&
-		primitiveConstLitSender == nil {
+		primitiveConstLitSender == nil &&
+		rangeExprSender == nil {
 		return src.ConnectionSenderSide{}, &compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
 			Meta: &core.Meta{
@@ -428,9 +432,65 @@ func parseNormConnSenderSide(
 		constant = &parsedPrimitiveConstLiteralSender
 	}
 
+	var rangeExpr *src.RangeExpr
+	if rangeExprSender != nil {
+		from, err := strconv.ParseInt(rangeExprSender.INT(0).GetText(), 10, 64)
+		if err != nil {
+			return src.ConnectionSenderSide{}, &compiler.Error{
+				Err: fmt.Errorf("Invalid range 'from' value: %v", err),
+				Meta: &core.Meta{
+					Text: rangeExprSender.GetText(),
+					Start: core.Position{
+						Line:   rangeExprSender.GetStart().GetLine(),
+						Column: rangeExprSender.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   rangeExprSender.GetStop().GetLine(),
+						Column: rangeExprSender.GetStop().GetColumn(),
+					},
+				},
+			}
+		}
+
+		to, err := strconv.ParseInt(rangeExprSender.INT(1).GetText(), 10, 64)
+		if err != nil {
+			return src.ConnectionSenderSide{}, &compiler.Error{
+				Err: fmt.Errorf("Invalid range 'to' value: %v", err),
+				Meta: &core.Meta{
+					Text: rangeExprSender.GetText(),
+					Start: core.Position{
+						Line:   rangeExprSender.GetStart().GetLine(),
+						Column: rangeExprSender.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   rangeExprSender.GetStop().GetLine(),
+						Column: rangeExprSender.GetStop().GetColumn(),
+					},
+				},
+			}
+		}
+
+		rangeExpr = &src.RangeExpr{
+			From: from,
+			To:   to,
+			Meta: core.Meta{
+				Text: rangeExprSender.GetText(),
+				Start: core.Position{
+					Line:   rangeExprSender.GetStart().GetLine(),
+					Column: rangeExprSender.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   rangeExprSender.GetStop().GetLine(),
+					Column: rangeExprSender.GetStop().GetColumn(),
+				},
+			},
+		}
+	}
+
 	parsedSenderSide := src.ConnectionSenderSide{
 		PortAddr:  senderSidePortAddr,
 		Const:     constant,
+		Range:     rangeExpr,
 		Selectors: senderSelectors,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),

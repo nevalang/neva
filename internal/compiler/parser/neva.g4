@@ -130,7 +130,7 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (portAddr | senderConstRef | primitiveConstLit) structSelectors?;
+singleSenderSide: (portAddr | senderConstRef | primitiveConstLit | rangeExpr) structSelectors?;
 receiverSide:
 	chainedNormConn
 	| singleReceiverSide
@@ -169,3 +169,6 @@ FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
 NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix
 WS: [ \t]+ -> channel(HIDDEN); // ignore whitespace
+
+// Add a new rule for range expression
+rangeExpr: INT '..' INT;

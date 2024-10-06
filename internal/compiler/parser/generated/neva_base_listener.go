@@ -529,3 +529,9 @@ func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideCo
 
 // ExitMultipleReceiverSide is called when production multipleReceiverSide is exited.
 func (s *BasenevaListener) ExitMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}
+
+// EnterRangeExpr is called when production rangeExpr is entered.
+func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
+
+// ExitRangeExpr is called when production rangeExpr is exited.
+func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}

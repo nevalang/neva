@@ -8,8 +8,6 @@ web/src/sdk
 plugins
 .antlr
 cmd/tmp
-
-# generated executable
 /neva
 /examples/output
 /examples/output.wasm
@@ -23,16 +21,12 @@ cmd/tmp
 dist
 trace.log
 output
-
 node_modules
 __debug*
 web/webview/dist
 thirdparty
-
-
-#go package cache
 vendor
-
+.DS_Store
 tmp
 tmp.md
 todo.md

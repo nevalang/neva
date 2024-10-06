@@ -626,7 +626,7 @@ func (a Analyzer) getSenderSideType(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (src.ConnectionSenderSide, ts.Expr, bool, *compiler.Error) {
-	if senderSide.PortAddr == nil && senderSide.Const == nil {
+	if senderSide.PortAddr == nil && senderSide.Const == nil && senderSide.Range == nil {
 		return src.ConnectionSenderSide{}, ts.Expr{}, false, &compiler.Error{
 			Err:      ErrSenderIsEmpty,
 			Location: &scope.Location,
@@ -645,6 +645,19 @@ func (a Analyzer) getSenderSideType(
 			Selectors: senderSide.Selectors,
 			Meta:      senderSide.Meta,
 		}, resolvedExpr, false, nil
+	}
+
+	if senderSide.Range != nil {
+		// Treat range sender as stream<int>
+		rangeType := ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref: core.EntityRef{Pkg: "builtin", Name: "stream"},
+				Args: []ts.Expr{{
+					Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}},
+				}},
+			},
+		}
+		return senderSide, rangeType, false, nil
 	}
 
 	resolvedExpr, isArr, err := a.getSenderPortAddrType(

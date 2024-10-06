@@ -262,6 +262,9 @@ type nevaListener interface {
 	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
 	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
 
+	// EnterRangeExpr is called when entering the rangeExpr production.
+	EnterRangeExpr(c *RangeExprContext)
+
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
 
@@ -516,4 +519,7 @@ type nevaListener interface {
 
 	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
 	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)
+
+	// ExitRangeExpr is called when exiting the rangeExpr production.
+	ExitRangeExpr(c *RangeExprContext)
 }

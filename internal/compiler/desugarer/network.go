@@ -9,6 +9,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 type handleNetResult struct {
@@ -299,6 +300,22 @@ func (d Desugarer) desugarConnection(
 		}
 	}
 
+	// Handle range expression
+	if conn.Normal.SenderSide.Range != nil {
+		result, err := d.handleRangeSender(conn)
+		if err != nil {
+			return desugarConnectionResult{}, err
+		}
+		for name, node := range result.nodesToInsert {
+			nodesToInsert[name] = node
+		}
+		for name, constDef := range result.constsToInsert {
+			constsToInsert[name] = constDef
+		}
+		connectionsToInsert = append(connectionsToInsert, result.connectionsToInsert...)
+		conn = result.connToReplace
+	}
+
 	desugaredReceivers := make([]src.ConnectionReceiver, 0, len(conn.Normal.ReceiverSide.Receivers))
 
 	// desugar unnamed receivers if needed and replace them with named ones
@@ -474,4 +491,100 @@ func (d Desugarer) desugarFanOut(receiverSides []src.ConnectionReceiver) desugar
 		receiverToReplace:   receiverToReplace,
 		connectionsToInsert: connsToInsert,
 	}
+}
+
+// Add a new atomic counter for range nodes
+var rangeCounter atomic.Uint64
+
+// Add a new function to handle range senders
+func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
+	nodesToInsert       map[string]src.Node
+	constsToInsert      map[string]src.ConstDef
+	connectionsToInsert []src.Connection
+	connToReplace       src.Connection
+}, *compiler.Error) {
+	rangeExpr := conn.Normal.SenderSide.Range
+	rangeID := rangeCounter.Add(1)
+
+	rangeNodeName := fmt.Sprintf("__range%d__", rangeID)
+	fromConstName := fmt.Sprintf("__range%d_from__", rangeID)
+	toConstName := fmt.Sprintf("__range%d_to__", rangeID)
+
+	constsToInsert := map[string]src.ConstDef{
+		fromConstName: {
+			TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
+			Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.From))}},
+		},
+		toConstName: {
+			TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
+			Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.To))}},
+		},
+	}
+
+	nodesToInsert := map[string]src.Node{
+		rangeNodeName: {
+			EntityRef: core.EntityRef{Pkg: "builtin", Name: "Range"},
+		},
+		fromConstName: {
+			EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+			Directives: map[src.Directive][]string{
+				"bind": {fromConstName},
+			},
+		},
+		toConstName: {
+			EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+			Directives: map[src.Directive][]string{
+				"bind": {toConstName},
+			},
+		},
+	}
+
+	connectionsToInsert := []src.Connection{
+		{
+			Normal: &src.NormalConnection{
+				SenderSide: src.ConnectionSenderSide{
+					PortAddr: &src.PortAddr{Node: fromConstName, Port: "msg"},
+				},
+				ReceiverSide: src.ConnectionReceiverSide{
+					Receivers: []src.ConnectionReceiver{{
+						PortAddr: src.PortAddr{Node: rangeNodeName, Port: "from"},
+					}},
+				},
+			},
+		},
+		{
+			Normal: &src.NormalConnection{
+				SenderSide: src.ConnectionSenderSide{
+					PortAddr: &src.PortAddr{Node: toConstName, Port: "msg"},
+				},
+				ReceiverSide: src.ConnectionReceiverSide{
+					Receivers: []src.ConnectionReceiver{{
+						PortAddr: src.PortAddr{Node: rangeNodeName, Port: "to"},
+					}},
+				},
+			},
+		},
+	}
+
+	connToReplace := src.Connection{
+		Normal: &src.NormalConnection{
+			SenderSide: src.ConnectionSenderSide{
+				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
+			},
+			ReceiverSide: conn.Normal.ReceiverSide,
+		},
+		Meta: conn.Meta,
+	}
+
+	return struct {
+		nodesToInsert       map[string]src.Node
+		constsToInsert      map[string]src.ConstDef
+		connectionsToInsert []src.Connection
+		connToReplace       src.Connection
+	}{
+		nodesToInsert:       nodesToInsert,
+		constsToInsert:      constsToInsert,
+		connectionsToInsert: connectionsToInsert,
+		connToReplace:       connToReplace,
+	}, nil
 }
