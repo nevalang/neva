@@ -1,14 +1,22 @@
-// FIXME: println is used multuple times as receiver in this file
-
 // https://www.99-bottles-of-beer.net
 
 flow Main(start) (stop) {
-    Range, Wait
-    first ForEach{PrintFirstLine}
-    second ForEach{PrintSecondLine}
+    // we use explicit lock to implement fan-in to printNext2Lines
+    Switch<int>, PrintNext2Lines, Lock<int>
     ---
-    :start -> [(99 -> range:from), (-1 -> range:to)]
-    range -> first -> second -> wait -> :stop
+    :start -> lock:sig
+    99 -> lock:data
+    [lock:data, switch:else] -> printNext2Lines
+    printNext2Lines -> switch:data
+    -1 -> switch:case[0] -> :stop
+}
+
+flow PrintNext2Lines(n int) (n int) {
+    Decr<int>, PrintFirstLine, PrintSecondLine
+    ---
+    // printFirstLine and printSecondLine won't work in parallel
+    // because they are in the loop at the level of Main
+    :n -> printFirstLine -> decr -> printSecondLine -> :n 
 }
 
 // === First Line ===
@@ -17,12 +25,10 @@ const firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n
 const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
-flow PrintFirstLine(data int) (sig) {
-    Switch<int>, p1 Println, p2 Println, Printf
-
+flow PrintFirstLine(n int) (n int) {
+    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>
     ---
-
-    :data -> switch:data
+    :n -> [switch:data, lock:data]
 
     0 -> switch:case[0] -> ($firstLine3 -> p1)
     1 -> switch:case[1] -> ($firstLine2 -> p2)
@@ -31,7 +37,8 @@ flow PrintFirstLine(data int) (sig) {
         ($firstLine1 -> printf:tpl)
     ]
 
-    [p1, p2, printf:sig] -> :sig
+    [p1, p2, printf:sig] -> lock:sig
+    lock -> :n
 }
 
 // === Second Line ===
@@ -41,13 +48,10 @@ const secondLine2 string = 'Take one down and pass it around, 1 bottle of beer o
 const secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
-flow PrintSecondLine(data int) (sig) {
-    Switch<int>
-    p1 Println, p2 Println, p3 Println, Printf
-
+flow PrintSecondLine(n int) (n int) {
+    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>
     ---
-
-    :data -> switch:data
+    :n -> [switch:data, lock:data]
 
     -1 -> switch:case[0] -> ($secondLine4 -> p1)
     0  -> switch:case[1] -> ($secondLine3 -> p2)
@@ -58,5 +62,7 @@ flow PrintSecondLine(data int) (sig) {
         ($secondLine1 -> printf:tpl)
     ]
 
-    [p1, p2, p3, printf:sig] -> :sig
+    [p1, p2, p3, printf:sig] -> lock:sig
+
+    lock:data -> :n
 }

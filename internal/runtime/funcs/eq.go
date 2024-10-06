@@ -50,7 +50,7 @@ func (p eq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 
 			if !resOut.Send(
 				ctx,
-				runtime.NewBoolMsg(val1 == val2),
+				runtime.NewBoolMsg(val1.Equal(val2)),
 			) {
 				return
 			}
