@@ -2,13 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "DEBUG CODEGEN",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/dist/main.go",
+      "cwd": "${workspaceFolder}/examples"
+    },
+    {
       "name": "RUN",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "struct_selector"]
+      "args": ["run", "file_read_all"]
     },
     {
       "name": "Build",

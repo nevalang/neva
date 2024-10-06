@@ -3,6 +3,7 @@ package test
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,15 +23,10 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log(string(out))
-	require.True(
-		t,
-		string(out) == "Hello\nWorld!\nNeva\n" ||
-			string(out) == "Hello\nNeva\nWorld!\n" ||
-			string(out) == "Neva\nHello\nWorld!\n" ||
-			string(out) == "Neva\nWorld!\nHello\n" ||
-			string(out) == "World!\nHello\nNeva\n" ||
-			string(out) == "World!\nNeva\nHello\n",
-	)
+
+	expected := []string{"Hello", "World!", "Neva"}
+	actual := strings.Split(strings.TrimSpace(string(out)), "\n")
+	require.ElementsMatch(t, expected, actual)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

@@ -51,7 +51,7 @@ func (stringAdd) Create(
 				return
 			}
 
-			resMsg := runtime.NewStrMsg(elMsg.Str() + accMsg.Str())
+			resMsg := runtime.NewStringMsg(elMsg.Str() + accMsg.Str())
 			if !resOut.Send(ctx, resMsg) {
 				return
 			}

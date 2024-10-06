@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Nested map has only one key because keys are unordered
+// Nested dict has only one key because keys are unordered
 // so having order in test will make it flacky.
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		`{"l": [1, 2, 3], "d": {"key": 1}}
+		`{"d": {"key": 1}, "l": [1, 2, 3]}
 `,
 		string(out),
 	)

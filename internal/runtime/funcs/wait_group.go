@@ -45,7 +45,7 @@ func (waitGroup) Handle(
 				}
 			}
 
-			if !sigOut.Send(ctx, nil) {
+			if !sigOut.Send(ctx, emptyStruct()) {
 				return
 			}
 		}

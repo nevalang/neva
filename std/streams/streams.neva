@@ -1,16 +1,4 @@
-// TODO
-// pub flow Uncons<T>(data stream<T>) (head T, tail stream<T>)
-
-pub type ProductResult<T, R> struct {
-    first T
-    second R
-} 
-
-// Product waits for each input stream to complete,
-// then outputs stream of every combination of elements from the first stream with
-// elements from the second.
-#extern(stream_product)
-pub flow Product<T, R>(first stream<T>, second stream<R>) (data stream<ProductResult<T, R>>)
+// === Zip ===
 
 pub type ZipResult<T, R> struct {
     first T
@@ -22,3 +10,19 @@ pub type ZipResult<T, R> struct {
 // Stops when either stream is exhausted.
 #extern(stream_zip)
 pub flow Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)
+
+// === Product ===
+
+pub type ProductResult<T, Y> struct {
+    first T
+    second Y
+}
+
+// Product waits for each input stream to complete,
+// then outputs stream of every combination of elements from the first stream with
+// elements from the second.
+#extern(stream_product)
+pub flow Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
+
+// TODO?
+// pub flow Uncons<T>(data stream<T>) (head T, tail stream<T>)

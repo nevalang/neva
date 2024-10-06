@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -30,44 +31,65 @@ func (streamProduct) Create(
 	// TODO: make sure it's not possible to do processing on the fly so we don't have to wait for both streams to complete
 	return func(ctx context.Context) {
 		for {
-			firstData := []runtime.Msg{}
-			for {
-				seqMsg, ok := firstIn.Receive(ctx)
-				if !ok {
-					return
-				}
+			var (
+				firstOk, secondOk bool
+				firstData         = []runtime.Msg{}
+				secondData        = []runtime.Msg{}
+			)
 
-				item := seqMsg.Struct()
-				firstData = append(firstData, item.Get("data"))
+			var wg sync.WaitGroup
+			wg.Add(2)
 
-				if item.Get("last").Bool() {
-					break
+			go func() {
+				defer wg.Done()
+				for {
+					var firstMsg runtime.Msg
+					firstMsg, firstOk = firstIn.Receive(ctx)
+					if !firstOk {
+						return
+					}
+
+					streamItem := firstMsg.Struct()
+					firstData = append(firstData, streamItem.Get("data"))
+
+					if streamItem.Get("last").Bool() {
+						break
+					}
 				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				for {
+					var secondMsg runtime.Msg
+					secondMsg, secondOk = secondIn.Receive(ctx)
+					if !secondOk {
+						return
+					}
+
+					streamItem := secondMsg.Struct()
+					secondData = append(secondData, streamItem.Get("data"))
+
+					if streamItem.Get("last").Bool() {
+						break
+					}
+				}
+			}()
+
+			wg.Wait()
+
+			if !firstOk || !secondOk {
+				return
 			}
 
-			secondData := []runtime.Msg{}
-			for {
-				seqMsg, ok := secondIn.Receive(ctx)
-				if !ok {
-					return
-				}
-
-				item := seqMsg.Struct()
-				secondData = append(secondData, item.Get("data"))
-
-				if item.Get("last").Bool() {
-					break
-				}
-			}
-
-			for i, msg1 := range firstData {
-				for j, msg2 := range secondData {
+			for i, firstMsg := range firstData {
+				for j, secondMsg := range secondData {
 					seqOut.Send(
 						ctx,
 						streamItem(
 							runtime.NewStructMsg(
 								[]string{"first", "second"},
-								[]runtime.Msg{msg1, msg2},
+								[]runtime.Msg{firstMsg, secondMsg},
 							),
 							int64(i),
 							i == len(firstData)-1 && j == len(secondData)-1,

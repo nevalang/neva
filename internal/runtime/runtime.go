@@ -32,7 +32,10 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 		close(funcsFinished)
 	}()
 
-	prog.Start.Send(ctx, &baseMsg{}) // lock until some node receive
+	prog.Start.Send(
+		ctx,
+		NewStructMsg(nil, nil),
+	)
 
 	<-funcsFinished
 

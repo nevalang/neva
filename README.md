@@ -1,28 +1,35 @@
 ![Big Header](./assets/header/big_1.svg "Big header with nevalang logo")
 
-**<p align="center">Dataflow Programming Language</p>**
+<div align="center" style="display:grid;place-items:center;">
+
+<h1>Dataflow Programming Language</h1>
+
+[Documentation](./docs/)
+| [Examples](./examples/)
+| [Community](#community)
+| [Releases](https://github.com/nevalang/neva/releases)
+| [Contributing](./CONTRIBUTING.md)
+| [Architecture](./ARCHITECTURE.md)
 
 ![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
-> ⚠️ **Warning**: This project is currently under heavy development and is not yet ready for production use.
-
-# Nevalang
+</div>
 
 A general-purpose dataflow programming language with static types and implicit parallelism. Compiles to machine code and Go.
 
-## Features 🚀
+## 🚀 Features
 
-- **Dataflow Programming**
-- **Implicit Parallelism**
-- **Compiles to Machine Code, Go and More**
-- **Garbage Collection**
-- **Strong Static Typing**
-- **Clean C-like Syntax**
-- **...And more!**
+- Dataflow programming
+- Implicit parallelism
+- Compiles to machine code and Go
+- Garbage collection
+- Strong static typing
+- Clean C-like syntax
+- ...And more!
 
-_Note: Features are implemented but may have poor developer experience. No backward-compatibility guaranteed at the moment._
+> ⚠️ This project is currently under heavy development and is not yet ready for production use.
 
-## Quick Start
+## 🔧 Quick Start
 
 ### Installation
 
@@ -82,20 +89,20 @@ The `Main` component has `start` inport and `stop` outport, with a `println` nod
 - [Examples](./examples/)
 - [Community](#community)
 
-## Roadmap (🚧 WIP)
+## 🚧 Roadmap
 
 Nevalang is in its early stages, but community support can help it grow into a mature, feature-rich language.
 
 - Grow community and improve docs
 - Expand stdlib (including test-framework)
-- New language features (e.g. true patter-matching)
+- Better syntax and more features
 - Enhance developer experience (lsp, debugger, etc)
-- Implement **Go interoperability** (call Go from Neva and Neva from Go)
+- Implement **Go interoperability** (call Go from Neva and vice versa)
 - Enable **visual programming** in VSCode
 
-Nevalang seeks contributors to join its small team of maintainers.
+We seek contributors to join our small team.
 
-## Community
+## 📢 Community
 
 Join our community and help shape the future of programming:
 
@@ -106,6 +113,6 @@ Join our community and help shape the future of programming:
 
 Also please check our [CoC](./CODE_OF_CONDUCT.md).
 
-## Contributing
+## 🤝 Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).

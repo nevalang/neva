@@ -29,7 +29,7 @@ func (timeAfter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 			time.Sleep(time.Duration(durMsg.Int()))
 
-			if !sigOut.Send(ctx, nil) {
+			if !sigOut.Send(ctx, emptyStruct()) {
 				return
 			}
 		}

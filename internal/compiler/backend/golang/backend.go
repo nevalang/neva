@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -21,8 +22,8 @@ var (
 	ErrUnknownMsgType = errors.New("unknown msg type")
 )
 
-func (b Backend) Emit(dst string, prog *ir.Program) error {
-	addrToChanVar, chanVarNames := b.getPortChansMap(prog)
+func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
+	addrToChanVar, chanVarNames := b.getPortChansMap(prog.Connections)
 	funcCalls := b.getFuncCalls(prog.Funcs, addrToChanVar)
 
 	funcmap := template.FuncMap{
@@ -41,6 +42,7 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 		CompilerVersion: pkg.Version,
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
+		Trace:           trace,
 	}
 
 	var buf bytes.Buffer
@@ -62,9 +64,18 @@ func (b Backend) Emit(dst string, prog *ir.Program) error {
 func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr]string) []templateFuncCall {
 	result := make([]templateFuncCall, 0, len(funcs))
 
+	type localPortAddr struct{ Path, Port string }
+	type arrPortSlot struct {
+		idx uint8
+		ch  string
+	}
+
 	for _, call := range funcs {
 		funcInports := make(map[string]string, len(call.IO.In))
 		funcOutports := make(map[string]string, len(call.IO.Out))
+
+		arrInportsToCreate := make(map[localPortAddr][]arrPortSlot)
+		arrOutportsToCreate := make(map[localPortAddr][]arrPortSlot)
 
 		// Handle input ports
 		for _, irAddr := range call.IO.In {
@@ -73,11 +84,23 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 				panic(fmt.Sprintf("port not found: %v", irAddr))
 			}
 
-			portAddr := fmt.Sprintf("runtime.PortAddr{Path: %q, Port: %q}", irAddr.Path, irAddr.Port)
+			runtimeAddr := localPortAddr{
+				Path: irAddr.Path,
+				Port: irAddr.Port,
+			}
+
 			if irAddr.IsArray {
-				funcInports[irAddr.Port] = fmt.Sprintf("runtime.NewInport(runtime.NewArrayInport(%s, %s, interceptor), nil)", chanVar, portAddr)
+				arrInportsToCreate[runtimeAddr] = append(arrInportsToCreate[runtimeAddr], arrPortSlot{
+					idx: irAddr.Idx,
+					ch:  chanVar,
+				})
 			} else {
-				funcInports[irAddr.Port] = fmt.Sprintf("runtime.NewInport(nil, runtime.NewSingleInport(%s, %s, interceptor))", chanVar, portAddr)
+				funcInports[irAddr.Port] = fmt.Sprintf(
+					"runtime.NewInport(nil, runtime.NewSingleInport(%s, runtime.PortAddr{Path: %q, Port: %q}, interceptor))",
+					chanVar,
+					irAddr.Path,
+					irAddr.Port,
+				)
 			}
 		}
 
@@ -88,12 +111,62 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 				panic(fmt.Sprintf("port not found: %v", irAddr))
 			}
 
-			portAddr := fmt.Sprintf("runtime.PortAddr{Path: %q, Port: %q}", irAddr.Path, irAddr.Port)
-			if irAddr.IsArray {
-				funcOutports[irAddr.Port] = fmt.Sprintf("runtime.NewOutport(nil, runtime.NewArrayOutport(%s, interceptor, %s))", portAddr, chanVar)
-			} else {
-				funcOutports[irAddr.Port] = fmt.Sprintf("runtime.NewOutport(runtime.NewSingleOutport(%s, interceptor, %s), nil)", portAddr, chanVar)
+			runtimeAddr := localPortAddr{
+				Path: irAddr.Path,
+				Port: irAddr.Port,
 			}
+
+			if irAddr.IsArray {
+				arrOutportsToCreate[runtimeAddr] = append(arrOutportsToCreate[runtimeAddr], arrPortSlot{
+					idx: irAddr.Idx,
+					ch:  chanVar,
+				})
+			} else {
+				funcOutports[irAddr.Port] = fmt.Sprintf(
+					"runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, %s), nil)",
+					irAddr.Path,
+					irAddr.Port,
+					chanVar,
+				)
+			}
+		}
+
+		// Create array inports
+		for addr, slots := range arrInportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+
+			chans := make([]string, len(slots))
+			for i, slot := range slots {
+				chans[i] = slot.ch
+			}
+
+			funcInports[addr.Port] = fmt.Sprintf(
+				"runtime.NewInport(runtime.NewArrayInport([]<-chan runtime.OrderedMsg{%s}, runtime.PortAddr{Path: %q, Port: %q}, interceptor), nil)",
+				strings.Join(chans, ", "),
+				addr.Path,
+				addr.Port,
+			)
+		}
+
+		// Create array outports
+		for addr, slots := range arrOutportsToCreate {
+			sort.Slice(slots, func(i, j int) bool {
+				return slots[i].idx < slots[j].idx
+			})
+
+			chans := make([]string, len(slots))
+			for i, slot := range slots {
+				chans[i] = slot.ch
+			}
+
+			funcOutports[addr.Port] = fmt.Sprintf(
+				"runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, []chan<- runtime.OrderedMsg{%s}))",
+				addr.Path,
+				addr.Port,
+				strings.Join(chans, ", "),
+			)
 		}
 
 		config := "nil"
@@ -127,37 +200,32 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeFloat:
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
-		return fmt.Sprintf(`runtime.NewStrMsg("%v")`, msg.String), nil
+		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
 	case ir.MsgTypeList:
-		s := `runtime.NewListMsg(
-	`
-		for _, v := range msg.List {
-			el, err := b.getMessageString(compiler.Pointer(v))
+		elements := make([]string, len(msg.List))
+		for i, v := range msg.List {
+			el, err := b.getMessageString(&v)
 			if err != nil {
 				return "", err
 			}
-			s += fmt.Sprintf(`	%v,
-`, el)
+			elements[i] = el
 		}
-		return s + ")", nil
+		return fmt.Sprintf("runtime.NewListMsg([]runtime.Msg{%s})", strings.Join(elements, ", ")), nil
 	case ir.MsgTypeDict:
-		s := `runtime.NewDictMsg(map[string]runtime.Msg{
-	`
+		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
 			el, err := b.getMessageString(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
-			s += fmt.Sprintf(`	"%v": %v,
-`, k, el)
+			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`"%s": %s`, k, el))
 		}
-		return s + `},
-)`, nil
+		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
 		names := make([]string, 0, len(msg.DictOrStruct))
 		values := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			names = append(names, k)
+			names = append(names, fmt.Sprintf(`"%s"`, k))
 			el, err := b.getMessageString(compiler.Pointer(v))
 			if err != nil {
 				return "", err
@@ -199,11 +267,12 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte) error {
 	return nil
 }
 
-func (b Backend) getPortChansMap(prog *ir.Program) (map[ir.PortAddr]string, []string) {
-	varNames := make([]string, 0, len(prog.Ports))
-	addrToChanVar := make(map[ir.PortAddr]string, len(prog.Ports))
+func (b Backend) getPortChansMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {
+	portsCount := len(connections) * 2
+	varNames := make([]string, 0, portsCount)
+	addrToChanVar := make(map[ir.PortAddr]string, portsCount)
 
-	for senderAddr, receiverAddr := range prog.Connections {
+	for senderAddr, receiverAddr := range connections {
 		channelName := fmt.Sprintf(
 			"%s_to_%s",
 			b.chanVarNameFromPortAddr(senderAddr),

@@ -32,7 +32,7 @@ func (unwrap) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			}
 
 			if dataMsg == nil {
-				if !noneOut.Send(ctx, nil) {
+				if !noneOut.Send(ctx, emptyStruct()) {
 					return
 				}
 				continue

@@ -1,15 +1,11 @@
 flow Main(start any) (stop any) {
 	adder Add<int>
-	sequencer ArrPortToStream<int>
 	println Println<int>
-
 	---
-
 	:start -> [
-		(1 -> sequencer:port[0]),
-		(2 -> sequencer:port[1])
+		(1 -> adder:acc),
+		(2 -> adder:el)
 	]
-	sequencer:data -> adder:data
 	adder:res -> println:data
 	println:sig -> :stop
 }

@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -13,7 +11,6 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/interpreter"
 	"github.com/nevalang/neva/pkg"
 )
 
@@ -26,162 +23,72 @@ func NewApp(
 	jsonc compiler.Compiler,
 	dotc compiler.Compiler,
 ) *cli.App {
-	var (
-		target           string
-		debug            bool
-		debugLogFilePath string // TODO make this default for -debug flag
-		outputPath       string
-	)
-
 	return &cli.App{
 		Name:  "neva",
-		Usage: "Flow-based programming language",
+		Usage: "Dataflow programming language with static types and implicit parallelism",
 		Commands: []*cli.Command{
-			{
-				Name:  "version",
-				Usage: "Get current Nevalang version",
-				Action: func(_ *cli.Context) error {
-					fmt.Println(pkg.Version)
-					return nil
-				},
-			},
-			{
-				Name:  "upgrade",
-				Usage: "Upgrade to newest Nevalang version",
-				Action: func(_ *cli.Context) error {
-					cmd := exec.Command("curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash")
-					err := cmd.Run()
-					if err != nil {
-						fmt.Println("Upgrading Nevalang failed :" + err.Error())
-					} else {
-						fmt.Println("Upgrading Nevalang completed. Upgraded to version: " + pkg.Version)
-					}
-					return nil
-				},
-			},
-			{
-				Name:  "new",
-				Usage: "Create new Nevalang project",
-				Args:  true,
-				Action: func(cCtx *cli.Context) error {
-					if path := cCtx.Args().First(); path != "" {
-						if err := os.Mkdir(path, 0755); err != nil {
-							return err
-						}
-						return createNevaMod(path)
-					}
-					return createNevaMod(workdir)
-				},
-			},
-			{
-				Name:      "get",
-				Usage:     "Add dependency to current module",
-				Args:      true,
-				ArgsUsage: "Provide path to the module",
-				Action: func(cCtx *cli.Context) error {
-					installedPath, err := bldr.Get(
-						workdir,
-						cCtx.Args().Get(0),
-						cCtx.Args().Get(1),
-					)
-					if err != nil {
-						return err
-					}
-					fmt.Printf(
-						"%s installed to %s\n", cCtx.Args().Get(0),
-						installedPath,
-					)
-					return nil
-				},
-			},
-			{
-				Name:      "run",
-				Usage:     "Run neva program from source code in interpreter mode",
-				Args:      true,
-				ArgsUsage: "Provide path to the executable package",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:        "debug",
-						Usage:       "Show message events in stdout",
-						Destination: &debug,
-					},
-					&cli.StringFlag{
-						Name:        "debugLogFilePath",
-						Usage:       "File path to write debug log (only available if -debug is passed)",
-						Destination: &debugLogFilePath,
-					},
-				},
-				Action: func(cCtx *cli.Context) error {
-					if !debug && debugLogFilePath != "" {
-						return fmt.Errorf("debugFile can only be used with -debug flag")
-					}
+			versionCmd,
+			upgradeCmd,
+			newNewCmd(workdir),
+			newGetCmd(workdir, bldr),
+			newRunCmd(workdir, nativec),
+			newBuildCmd(workdir, goc, nativec, wasmc, jsonc, dotc),
+		},
+	}
+}
 
-					dirFromArg, err := getMainPkgFromArgs(cCtx)
-					if err != nil {
-						return err
-					}
+var versionCmd = &cli.Command{
+	Name:  "version",
+	Usage: "Get current Nevalang version",
+	Action: func(_ *cli.Context) error {
+		fmt.Println(pkg.Version)
+		return nil
+	},
+}
 
-					intrprtr := interpreter.New(bldr, goc)
+var upgradeCmd = &cli.Command{
+	Name:  "upgrade",
+	Usage: "Upgrade to newest Nevalang version",
+	Action: func(cliCtx *cli.Context) error {
+		curlCmd := "curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash"
+		err := exec.CommandContext(cliCtx.Context, curlCmd).Run()
+		if err != nil {
+			fmt.Println("Upgrading Nevalang failed :" + err.Error())
+		} else {
+			fmt.Println("Upgrading Nevalang completed. Upgraded to version: " + pkg.Version)
+		}
+		return nil
+	},
+}
 
-					compileErr := intrprtr.Interpret(context.Background(), dirFromArg, debug, debugLogFilePath)
-					if compileErr != nil {
-						return compileErr
-					}
+func newGetCmd(workdir string, bldr builder.Builder) *cli.Command {
+	return &cli.Command{
+		Name:      "get",
+		Usage:     "Add dependency to current module",
+		Args:      true,
+		ArgsUsage: "Provide path to the module",
+		Action: func(cliCtx *cli.Context) error {
+			if cliCtx.Args().Len() != 2 {
+				return fmt.Errorf(
+					"expected 2 arguments, got %d",
+					cliCtx.Args().Len(),
+				)
+			}
 
-					return nil
-				},
-			},
-			{
-				Name:  "build",
-				Usage: "Build neva program from source code",
-				Args:  true,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:        "target",
-						Required:    false,
-						Usage:       "Emit Go or WASM instead of machine code",
-						Destination: &target,
-						Action: func(ctx *cli.Context, s string) error {
-							switch s {
-							case "go", "wasm", "native", "json", "dot":
-							default:
-								return fmt.Errorf("Unknown target %s", s)
-							}
-							return nil
-						},
-					},
-					&cli.StringFlag{
-						Name:        "output",
-						Usage:       "Destination path for output file(s)",
-						Destination: &outputPath,
-					},
-				},
-				ArgsUsage: "Provide path to main package",
-				Action: func(cCtx *cli.Context) error {
-					mainPkg, err := getMainPkgFromArgs(cCtx)
-					if err != nil {
-						return err
-					}
+			path := cliCtx.Args().Get(0)
+			version := cliCtx.Args().Get(1)
 
-					dst := workdir
-					if outputPath != "" {
-						dst = outputPath
-					}
+			installedPath, err := bldr.Get(workdir, path, version)
+			if err != nil {
+				return fmt.Errorf("failed to get dependency: %w", err)
+			}
 
-					switch target {
-					case "go":
-						return goc.Compile(mainPkg, dst, debug)
-					case "wasm":
-						return wasmc.Compile(mainPkg, dst, debug)
-					case "json":
-						return jsonc.Compile(mainPkg, dst, debug)
-					case "dot":
-						return dotc.Compile(mainPkg, dst, debug)
-					default:
-						return nativec.Compile(mainPkg, dst, debug)
-					}
-				},
-			},
+			fmt.Printf(
+				"%s installed to %s\n", cliCtx.Args().Get(0),
+				installedPath,
+			)
+
+			return nil
 		},
 	}
 }
@@ -195,39 +102,4 @@ func getMainPkgFromArgs(cCtx *cli.Context) (string, error) {
 		)
 	}
 	return dirFromArg, nil
-}
-
-func createNevaMod(path string) error {
-	// Create neva.yml file
-	nevaYmlContent := fmt.Sprintf("neva: %s", pkg.Version)
-	if err := os.WriteFile(
-		filepath.Join(path, "neva.yml"),
-		[]byte(nevaYmlContent),
-		0644,
-	); err != nil {
-		return err
-	}
-
-	// Create src sub-directory
-	srcPath := filepath.Join(path, "src")
-	if err := os.Mkdir(srcPath, 0755); err != nil {
-		return err
-	}
-
-	// Create main.neva file
-	mainNevaContent := `flow Main(start) (stop) {
-	Println
-	---
-	:start -> ('Hello, World!' -> println -> :stop)
-}`
-
-	if err := os.WriteFile(
-		filepath.Join(srcPath, "main.neva"),
-		[]byte(mainNevaContent),
-		0644,
-	); err != nil {
-		return err
-	}
-
-	return nil
 }

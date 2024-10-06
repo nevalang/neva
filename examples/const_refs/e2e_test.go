@@ -24,7 +24,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		`{"l": [1, 2, 3], "d": {"key": 1}}
+		`{"d": {"key": 1}, "l": [1, 2, 3]}
 `,
 		string(out),
 	)

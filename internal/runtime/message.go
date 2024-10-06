@@ -26,103 +26,116 @@ type Msg interface {
 	List() []Msg
 	Dict() map[string]Msg
 	Struct() StructMsg
+	Equal(other Msg) bool
 }
 
-// Base
+// Internal
 
-type baseMsg struct{}
+type internalMsg struct{}
 
-func (baseMsg) String() string       { return "<base>" }
-func (baseMsg) Bool() bool           { return false }
-func (baseMsg) Int() int64           { return 0 }
-func (baseMsg) Float() float64       { return 0 }
-func (baseMsg) Str() string          { return "" }
-func (baseMsg) List() []Msg          { return nil }
-func (baseMsg) Dict() map[string]Msg { return nil }
-func (baseMsg) Struct() StructMsg    { return StructMsg{} }
-
-// Int
-
-type IntMsg struct {
-	*baseMsg
-	v int64
-}
-
-func (msg IntMsg) Int() int64                   { return msg.v }
-func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
-func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-
-func NewIntMsg(n int64) IntMsg {
-	return IntMsg{
-		baseMsg: &baseMsg{},
-		v:       n,
-	}
-}
-
-// Float
-
-type FloatMsg struct {
-	*baseMsg
-	v float64
-}
-
-func (msg FloatMsg) Float() float64               { return msg.v }
-func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
-func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-
-func NewFloatMsg(n float64) FloatMsg {
-	return FloatMsg{
-		baseMsg: &baseMsg{},
-		v:       n,
-	}
-}
-
-// Str
-
-type StrMsg struct {
-	*baseMsg
-	v string
-}
-
-func (msg StrMsg) Str() string    { return msg.v }
-func (msg StrMsg) String() string { return msg.v }
-func (msg StrMsg) MarshalJSON() ([]byte, error) {
-	// Escape special characters in the string before marshaling
-	jsonString, err := json.Marshal(msg.String())
-	if err != nil {
-		return nil, err
-	}
-	return jsonString, nil
-}
-
-func NewStrMsg(s string) StrMsg {
-	return StrMsg{
-		baseMsg: &baseMsg{},
-		v:       s,
-	}
-}
+func (internalMsg) String() string       { panic("unexpected method call on internal message") }
+func (internalMsg) Bool() bool           { panic("unexpected method call on internal message") }
+func (internalMsg) Int() int64           { panic("unexpected method call on internal message") }
+func (internalMsg) Float() float64       { panic("unexpected method call on internal message") }
+func (internalMsg) Str() string          { panic("unexpected method call on internal message") }
+func (internalMsg) List() []Msg          { panic("unexpected method call on internal message") }
+func (internalMsg) Dict() map[string]Msg { panic("unexpected method call on internal message") }
+func (internalMsg) Struct() StructMsg    { panic("unexpected method call on internal message") }
+func (internalMsg) Equal(other Msg) bool { panic("unexpected method call on internal message") }
 
 // Bool
 
 type BoolMsg struct {
-	*baseMsg
+	internalMsg
 	v bool
 }
 
 func (msg BoolMsg) Bool() bool                   { return msg.v }
 func (msg BoolMsg) String() string               { return strconv.FormatBool(msg.v) }
 func (msg BoolMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
+func (msg BoolMsg) Equal(other Msg) bool {
+	otherBool, ok := other.(BoolMsg)
+	return ok && msg.v == otherBool.v
+}
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
-		baseMsg: &baseMsg{},
-		v:       b,
+		internalMsg: internalMsg{},
+		v:           b,
+	}
+}
+
+// Int
+
+type IntMsg struct {
+	internalMsg
+	v int64
+}
+
+func (msg IntMsg) Int() int64                   { return msg.v }
+func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
+func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
+func (msg IntMsg) Equal(other Msg) bool {
+	otherInt, ok := other.(IntMsg)
+	return ok && msg.v == otherInt.v
+}
+
+func NewIntMsg(n int64) IntMsg {
+	return IntMsg{
+		internalMsg: internalMsg{},
+		v:           n,
+	}
+}
+
+// Float
+
+type FloatMsg struct {
+	internalMsg
+	v float64
+}
+
+func (msg FloatMsg) Float() float64               { return msg.v }
+func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
+func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
+func (msg FloatMsg) Equal(other Msg) bool {
+	otherFloat, ok := other.(FloatMsg)
+	return ok && msg.v == otherFloat.v
+}
+
+func NewFloatMsg(n float64) FloatMsg {
+	return FloatMsg{
+		internalMsg: internalMsg{},
+		v:           n,
+	}
+}
+
+// Str
+
+type StringMsg struct {
+	internalMsg
+	v string
+}
+
+func (msg StringMsg) Str() string    { return msg.v }
+func (msg StringMsg) String() string { return msg.v }
+func (msg StringMsg) MarshalJSON() ([]byte, error) {
+	return json.Marshal(msg.String())
+}
+func (msg StringMsg) Equal(other Msg) bool {
+	otherString, ok := other.(StringMsg)
+	return ok && msg.v == otherString.v
+}
+
+func NewStringMsg(s string) StringMsg {
+	return StringMsg{
+		internalMsg: internalMsg{},
+		v:           s,
 	}
 }
 
 // List
 type ListMsg struct {
-	*baseMsg
+	internalMsg
 	v []Msg
 }
 
@@ -135,17 +148,32 @@ func (msg ListMsg) String() string {
 	return string(bb)
 }
 func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
+func (msg ListMsg) Equal(other Msg) bool {
+	otherList, ok := other.(ListMsg)
+	if !ok {
+		return false
+	}
+	if len(msg.v) != len(otherList.v) {
+		return false
+	}
+	for i, v := range msg.v {
+		if !v.Equal(otherList.v[i]) {
+			return false
+		}
+	}
+	return true
+}
 
 func NewListMsg(v []Msg) ListMsg {
 	return ListMsg{
-		baseMsg: &baseMsg{},
-		v:       v,
+		internalMsg: internalMsg{},
+		v:           v,
 	}
 }
 
 // Dictionary
 type DictMsg struct {
-	*baseMsg
+	internalMsg
 	v map[string]Msg
 }
 
@@ -169,17 +197,33 @@ func (msg DictMsg) String() string {
 	}
 	return string(b)
 }
+func (msg DictMsg) Equal(other Msg) bool {
+	otherDict, ok := other.(DictMsg)
+	if !ok {
+		return false
+	}
+	if len(msg.v) != len(otherDict.v) {
+		return false
+	}
+	for k, v := range msg.v {
+		otherV, ok := otherDict.v[k]
+		if !ok || !v.Equal(otherV) {
+			return false
+		}
+	}
+	return true
+}
 
 func NewDictMsg(d map[string]Msg) DictMsg {
 	return DictMsg{
-		baseMsg: &baseMsg{},
-		v:       d,
+		internalMsg: internalMsg{},
+		v:           d,
 	}
 }
 
 // Structure
 type StructMsg struct {
-	*baseMsg
+	internalMsg
 	names  []string // must be sorted for binary search
 	fields []Msg    // must be equal length to names
 }
@@ -190,19 +234,27 @@ func (msg StructMsg) Struct() StructMsg { return msg }
 // It panics if the field is not found.
 // It uses binary search to find the field, assuming the names are sorted.
 func (msg StructMsg) Get(name string) Msg {
-	for i, n := range msg.names {
-		if n == name {
-			return msg.fields[i]
-		}
+	if field, ok := msg.get(name); ok {
+		return field
 	}
 	panic(fmt.Sprintf("field %q not found", name))
 }
 
-func (msg StructMsg) String() string {
+func (msg StructMsg) get(name string) (Msg, bool) {
+	for i, n := range msg.names {
+		if n == name {
+			return msg.fields[i], true
+		}
+	}
+	return nil, false
+}
+
+func (msg StructMsg) MarshalJSON() ([]byte, error) {
 	m := make(map[string]Msg, len(msg.names))
 	for i, name := range msg.names {
 		m[name] = msg.fields[i]
 	}
+
 	jsonData, err := json.Marshal(m)
 	if err != nil {
 		panic(err)
@@ -212,7 +264,35 @@ func (msg StructMsg) String() string {
 	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
 	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
 
-	return jsonString
+	return []byte(jsonString), nil
+}
+
+func (msg StructMsg) String() string {
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+func (msg StructMsg) Equal(other Msg) bool {
+	otherStruct, ok := other.(StructMsg)
+	if !ok {
+		return false
+	}
+	if len(msg.names) != len(otherStruct.names) {
+		return false
+	}
+	for i, name := range msg.names {
+		otherField, ok := otherStruct.get(name)
+		if !ok {
+			return false
+		}
+		if !msg.fields[i].Equal(otherField) {
+			return false
+		}
+	}
+	return true
 }
 
 func NewStructMsg(names []string, fields []Msg) StructMsg {
@@ -220,8 +300,8 @@ func NewStructMsg(names []string, fields []Msg) StructMsg {
 		panic("names and fields must have the same length")
 	}
 	return StructMsg{
-		baseMsg: &baseMsg{},
-		names:   names,
-		fields:  fields,
+		internalMsg: internalMsg{},
+		names:       names,
+		fields:      fields,
 	}
 }

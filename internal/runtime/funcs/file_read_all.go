@@ -8,34 +8,34 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type readAll struct{}
+type fileReadAll struct{}
 
-func (c readAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	filename, err := rio.In.Single("filename")
+func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	filenameIn, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, err
 	}
 
-	dataPort, err := rio.Out.Single("data")
+	resOut, err := rio.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
-	errPort, err := rio.Out.Single("err")
+	errOut, err := rio.Out.Single("err")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			name, ok := filename.Receive(ctx)
+			name, ok := filenameIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
 			f, err := os.Open(name.Str())
 			if err != nil {
-				if !errPort.Send(ctx, errFromErr(err)) {
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 				continue
@@ -43,20 +43,20 @@ func (c readAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 			data, err := io.ReadAll(f)
 			if err != nil {
-				if !errPort.Send(ctx, errFromErr(err)) {
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 				continue
 			}
 
 			if err := f.Close(); err != nil {
-				if !errPort.Send(ctx, errFromErr(err)) {
+				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 				continue
 			}
 
-			if !dataPort.Send(ctx, runtime.NewStrMsg(string(data))) {
+			if !resOut.Send(ctx, runtime.NewStringMsg(string(data))) {
 				return
 			}
 		}

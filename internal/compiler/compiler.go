@@ -17,12 +17,12 @@ type Compiler struct {
 	backend   Backend
 }
 
-func (c Compiler) Compile(main string, dst string, debug bool) error {
-	result, err := c.CompileToIR(main, debug)
+func (c Compiler) Compile(main string, output string, trace bool) error {
+	result, err := c.CompileToIR(main, trace)
 	if err != nil {
 		return err
 	}
-	return c.backend.Emit(dst, result.IR)
+	return c.backend.Emit(output, result.IR, trace)
 }
 
 type CompileResult struct {
@@ -32,7 +32,7 @@ type CompileResult struct {
 	IR             *ir.Program
 }
 
-func (c Compiler) CompileToIR(main string, debug bool) (CompileResult, *Error) {
+func (c Compiler) CompileToIR(main string, trace bool) (CompileResult, *Error) {
 	raw, root, err := c.builder.Build(context.Background(), main)
 	if err != nil {
 		return CompileResult{}, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
@@ -64,7 +64,7 @@ func (c Compiler) CompileToIR(main string, debug bool) (CompileResult, *Error) {
 		return CompileResult{}, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, main, !debug)
+	irProg, err := c.irgen.Generate(desugaredBuild, main, !trace)
 	if err != nil {
 		return CompileResult{}, err
 	}

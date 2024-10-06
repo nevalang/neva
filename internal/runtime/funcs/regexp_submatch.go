@@ -40,7 +40,7 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 
 			regex, err := regexp.Compile(regexpMsg.Str())
 			if err != nil {
-				if !errOut.Send(ctx, runtime.NewStrMsg(err.Error())) {
+				if !errOut.Send(ctx, runtime.NewStringMsg(err.Error())) {
 					return
 				}
 				continue
@@ -68,7 +68,7 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 func stringsToList(ss []string) runtime.Msg {
 	msgs := make([]runtime.Msg, 0, len(ss))
 	for _, s := range ss {
-		msgs = append(msgs, runtime.NewStrMsg(s))
+		msgs = append(msgs, runtime.NewStringMsg(s))
 	}
 	return runtime.NewListMsg(msgs)
 }

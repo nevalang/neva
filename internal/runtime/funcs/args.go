@@ -28,7 +28,7 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 
 		result := make([]runtime.Msg, len(os.Args))
 		for i := range os.Args {
-			result = append(result, runtime.NewStrMsg(os.Args[i]))
+			result = append(result, runtime.NewStringMsg(os.Args[i]))
 		}
 
 		if !dataOut.Send(ctx, runtime.NewListMsg(result)) {

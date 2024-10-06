@@ -14,7 +14,7 @@ func NewBackend() Backend {
 	return Backend{}
 }
 
-func (b Backend) Emit(dst string, prog *ir.Program) error {
+func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	outFile := filepath.Join(dst, "program.json")
 	f, err := os.OpenFile(outFile, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0755)
 	if err != nil {

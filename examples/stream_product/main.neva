@@ -1,21 +1,12 @@
 import { streams }
 
 flow Main(start) (stop) {
-  r1 Range
-  r2 Range
-  streams.Product<int, int>
-  ForEach<streams.ProductResult<int, int>> {
-    Println<streams.ProductResult<int, int>>
-  }
-  Wait
-  ---
-  :start -> [
-    (0 -> [r1:from, r2:from]),
-    (3 -> [r1:to, r2:to])
-  ]
-
-  r1 -> product:first
-  r2 -> product:second
-
-  product -> forEach -> wait -> :stop
+	r1 Range, r2 Range
+	streams.Product<int, int>
+	ForEach{Println}, Wait
+	---
+	:start -> [(0 -> [r1:from, r2:from]), (3 -> [r1:to, r2:to])]
+	r1 -> product:first
+	r2 -> product:second
+	product -> forEach -> wait -> :stop
 }

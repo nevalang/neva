@@ -1,48 +1,48 @@
 import { io, image }
 
 flow NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
-  pb Struct<image.Pixel>
-  ---
-  :x -> pb:x
-  :y -> pb:y
-  :c -> pb:color
-  pb -> :pixel
+	pb Struct<image.Pixel>
+	---
+	:x -> pb:x
+	:y -> pb:y
+	:c -> pb:color
+	pb -> :pixel
 }
 
 flow NewColor(r int, g int, b int, a int) (color image.RGBA) {
-  cb Struct<image.RGBA>
-  ---
-  :r -> cb:r
-  :g -> cb:g
-  :b -> cb:b
-  :a -> cb:a
-  cb -> :color
+	cb Struct<image.RGBA>
+	---
+	:r -> cb:r
+	:g -> cb:g
+	:b -> cb:b
+	:a -> cb:a
+	cb -> :color
 }
 
 flow NewStream(p image.Pixel) (s stream<image.Pixel>) {
-  sb Struct<stream<image.Pixel>>
-  ---
-  0 -> sb:idx
-  :p -> sb:data
-  true -> sb:last
-  sb -> :s
+	sb Struct<stream<image.Pixel>>
+	---
+	0 -> sb:idx
+	:p -> sb:data
+	true -> sb:last
+	sb -> :s
 }
 
 flow Main(start) (stop) {
-  image.New, image.Encode
-  NewPixel, NewColor, NewStream,
-  io.WriteAll, Println
-  ---
-  :start -> [
-    (0 -> [newColor:r, newColor:g, newColor:b, newColor:a]),
-    (15 -> [newPixel:x, newPixel:y]),
-    ('minimal.png' -> writeAll:filename)
-  ]
-  newColor -> newPixel:c
-  newPixel -> newStream:p
-  newStream:s -> new
-  new:img -> encode:img
-  encode:data -> writeAll:data
-  [new:err, encode:err, writeAll:err] -> println -> :stop
-  writeAll:sig -> :stop
+	image.New, image.Encode
+	NewPixel, NewColor, NewStream,
+	io.WriteAll, printErr Println
+	---
+	:start -> [
+		(0 -> [newColor:r, newColor:g, newColor:b, newColor:a]),
+		(15 -> [newPixel:x, newPixel:y]),
+		('minimal.png' -> writeAll:filename)
+	]
+	newColor -> newPixel:c
+	newPixel -> newStream:p
+	newStream:s -> new
+	new:img -> encode:img
+	encode:data -> writeAll:data
+	[new:err, encode:err, writeAll:err] -> printErr
+	[writeAll:sig, printErr] -> :stop
 }

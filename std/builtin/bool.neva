@@ -1,17 +1,25 @@
+// Eq sends true if actual is equal to compared, otherwise false.
 #extern(eq)
 pub flow Eq<T>(actual T, compared T) (res bool)
 
+// Not sends true if data is false, and false if data is true.
 #extern(not)
 pub flow Not(data bool) (res bool)
 
+// And sends true if both a and b are true, otherwise false.
 #extern(and)
 pub flow And(a bool, b bool) (res bool)
 
+// Or sends true if either a or b are true, otherwise false.
 #extern(or)
 pub flow Or(a bool, b bool) (res bool)
 
+// Gt sends true if actual is greater than compared, otherwise false.
 #extern(int int_is_greater, float float_is_greater, string string_is_greater)
 pub flow Gt<T int | float | string>(actual T, compared T) (res bool)
 
+// Lt sends true if actual is lesser than compared, otherwise false.
 #extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
 pub flow Lt<T int | float | string>(actual T, compared T) (res bool)
+
+// TODO Gte, Lte, (Neq?)

@@ -18,7 +18,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	for i := 0; i < 1; i++ {
+	t.Run("FizzBuzz Test", func(t *testing.T) {
 		cmd := exec.Command("neva", "run", "fizzbuzz")
 
 		// Set a timeout for the command
@@ -41,7 +41,7 @@ func Test(t *testing.T) {
 		)
 
 		require.Equal(t, 0, cmd.ProcessState.ExitCode())
-	}
+	})
 }
 
 var expected = `1

@@ -1,17 +1,11 @@
 flow Main(start) (stop) {
-    Sworktest
-    ArrPortToStream<int>
-    Println
+    PrintAny
     ---
-    :start -> [
-        (1 -> arrPortToStream[0]),
-        (2 -> arrPortToStream[1])
-    ]
-    arrPortToStream -> sworktest -> println -> :stop
+    :start -> (42 -> printAny -> :stop)
 }
 
-flow Sworktest(in) (out) {
-	Add<int>
+flow PrintAny(data) (sig) {
+	Println<int>
 	---
-	:in -> add -> :out
+	:data -> println -> :sig
 }

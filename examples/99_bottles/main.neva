@@ -1,17 +1,22 @@
 // https://www.99-bottles-of-beer.net
 
 flow Main(start) (stop) {
-    Switch<int>, PrintNext2Lines
+    // we use explicit lock to implement fan-in to printNext2Lines
+    Switch<int>, PrintNext2Lines, Lock<int>
     ---
-    :start -> (99 -> printNext2Lines -> switch:data)
+    :start -> lock:sig
+    99 -> lock:data
+    [lock:data, switch:else] -> printNext2Lines
+    printNext2Lines -> switch:data
     -1 -> switch:case[0] -> :stop
-    switch:else -> printNext2Lines
 }
 
 flow PrintNext2Lines(n int) (n int) {
     Decr<int>, PrintFirstLine, PrintSecondLine
     ---
-    :n -> printFirstLine -> decr -> printSecondLine -> :n
+    // printFirstLine and printSecondLine won't work in parallel
+    // because they are in the loop at the level of Main
+    :n -> printFirstLine -> decr -> printSecondLine -> :n 
 }
 
 // === First Line ===
@@ -21,20 +26,18 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 flow PrintFirstLine(n int) (n int) {
-    Switch<int>, Println, Printf, Lock<int>
-
+    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>
     ---
-
     :n -> [switch:data, lock:data]
 
-    0 -> switch:case[0] -> ($firstLine3 -> println)
-    1 -> switch:case[1] -> ($firstLine2 -> println)
+    0 -> switch:case[0] -> ($firstLine3 -> p1)
+    1 -> switch:case[1] -> ($firstLine2 -> p2)
     switch:else -> [
         printf:args[0],
         ($firstLine1 -> printf:tpl)
     ]
 
-    [println:sig, printf:sig] -> lock:sig
+    [p1, p2, printf:sig] -> lock:sig
     lock -> :n
 }
 
@@ -46,22 +49,20 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 flow PrintSecondLine(n int) (n int) {
-    Switch<int>, Println, Printf, Lock<int>
-
+    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>
     ---
-
     :n -> [switch:data, lock:data]
 
-    -1 -> switch:case[0] -> ($secondLine4 -> println)
-    0  -> switch:case[1] -> ($secondLine3 -> println)
-    1  -> switch:case[2] -> ($secondLine2 -> println)
+    -1 -> switch:case[0] -> ($secondLine4 -> p1)
+    0  -> switch:case[1] -> ($secondLine3 -> p2)
+    1  -> switch:case[2] -> ($secondLine2 -> p3)
 
     switch:else -> [
         printf:args[0],
         ($secondLine1 -> printf:tpl)
     ]
 
-    [println:sig, printf:sig] -> lock:sig
+    [p1, p2, p3, printf:sig] -> lock:sig
 
-    lock:data -> :n
+    lock -> :n
 }

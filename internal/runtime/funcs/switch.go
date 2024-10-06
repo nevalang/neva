@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -36,22 +37,37 @@ func (switcher) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
+			var (
+				wg              sync.WaitGroup
+				dataMsg         runtime.Msg
+				cases           = make([]runtime.Msg, caseIn.Len())
+				dataOk, casesOk bool
+			)
 
-			cases := make([]runtime.Msg, caseIn.Len())
-			if !caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				cases[idx] = msg
-				return true
-			}) {
+			wg.Add(2)
+
+			go func() {
+				dataMsg, dataOk = dataIn.Receive(ctx)
+				wg.Done()
+			}()
+
+			go func() {
+				casesOk = caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
+					cases[idx] = msg
+					return true
+				})
+				wg.Done()
+			}()
+
+			wg.Wait()
+
+			if !dataOk || !casesOk {
 				return
 			}
 
 			matchIdx := -1
 			for i, caseMsg := range cases {
-				if dataMsg == caseMsg {
+				if dataMsg.Equal(caseMsg) {
 					matchIdx = i
 					break
 				}

@@ -37,3 +37,9 @@ pub flow Field<T>(msg struct {}) (msg T)
 // Unwrap is used to extract value from Maybe type.
 #extern(unwrap)
 pub flow Unwrap<T>(data maybe<T>) (some T, none struct{})
+
+// Get retrieves a value from a dictionary using the provided key.
+// It has two inports: 'dict' for the dictionary and 'key' for the lookup key.
+// Sends result to 'res' outport, or error to 'err' if key not found.
+#extern(get_dict_value)
+pub flow Get<T>(dict dict<T>, key T) (res T, err error)

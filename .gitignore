@@ -21,16 +21,18 @@ cmd/tmp
 /neva-windows-amd64.exe
 /neva-windows-arm64.exe
 dist
+trace.log
+output
 
 node_modules
 __debug*
 web/webview/dist
 thirdparty
 
-/todo.md
 
 #go package cache
 vendor
 
 tmp
 tmp.md
+todo.md

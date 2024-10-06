@@ -4,6 +4,7 @@ type templateData struct {
 	CompilerVersion string
 	ChanVarNames    []string
 	FuncCalls       []templateFuncCall
+	Trace           bool
 }
 
 type templateFuncCall struct {
@@ -33,8 +34,23 @@ func main() {
         {{.}} = make(chan runtime.OrderedMsg)
         {{- end}}
     )
+    {{- if .Trace }}
+
+    interceptor := runtime.NewDebugInterceptor()
+
+    close, err := interceptor.Open("trace.log")
+    if err != nil {
+        panic(err)
+    }
+    defer func() {
+        if err := close(); err != nil {
+            panic(err)
+        }
+    }()
+    {{- else }}
 
     interceptor := runtime.ProdInterceptor{}
+    {{- end }}
 
     var (
         startPort = runtime.NewSingleOutport(

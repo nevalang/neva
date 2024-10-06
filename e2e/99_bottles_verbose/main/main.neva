@@ -1,27 +1,25 @@
 // https://www.99-bottles-of-beer.net
 
 flow Main(start) (stop) {
-    Switch<int>
-    next PrintNext2Lines
+    // we use explicit lock to implement fan-in to printNext2Lines
+    Switch<int>, PrintNext2Lines, Lock<int>
     ---
-    :start -> (99 -> next:n)
-
-    next:n -> switch:data
-    -1 -> switch:case[0]
-
-    switch:case[0] -> :stop
-    switch:else -> next:n
+    :start -> lock:sig
+    99 -> lock:data
+    [lock:data, switch:else] -> printNext2Lines
+    printNext2Lines -> switch:data
+    -1 -> switch:case[0] -> :stop
 }
 
 flow PrintNext2Lines(n int) (n int) {
-    decr   Decr<int>
-    first  PrintFirstLine
-    second PrintSecondLine
+    Decr<int>, PrintFirstLine, PrintSecondLine
     ---
-    :n -> first:n
-    first:n -> decr:data
-    decr:res -> second:n
-    second:n -> :n
+    // printFirstLine and printSecondLine won't work in parallel
+    // because they are in the loop at the level of Main
+    :n -> printFirstLine:n
+    printFirstLine:n -> decr:data
+    decr:res -> printSecondLine:n
+    printSecondLine:n -> :n 
 }
 
 // === First Line ===
@@ -31,19 +29,21 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 flow PrintFirstLine(n int) (n int) {
-    Switch<int>, Println, Printf, Lock<int>
+    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>
     ---
     :n -> [switch:data, lock:data]
+
     0 -> switch:case[0]
     1 -> switch:case[1]
+    switch:case[0] -> ($firstLine3 -> p1:data)
+    switch:case[1] -> ($firstLine2 -> p2:data)
+    
+    switch:else -> [
+        printf:args[0],
+        ($firstLine1 -> printf:tpl)
+    ]
 
-    switch:case[0] -> ($firstLine3 -> println:data)
-    switch:case[1] -> ($firstLine2 -> println:data)
-    switch:else -> printf:args[0]
-    $firstLine1 -> printf:tpl
-
-    [println:sig, printf:sig] -> lock:sig
-
+    [p1:sig, p2:sig, printf:sig] -> lock:sig
     lock:data -> :n
 }
 
@@ -55,19 +55,24 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 flow PrintSecondLine(n int) (n int) {
-    Switch<int>, Lock<int>, Printf, Println
+    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>
     ---
     :n -> [switch:data, lock:data]
+
     -1 -> switch:case[0]
-    0 -> switch:case[1]
-    1 -> switch:case[2]
+    0  -> switch:case[1]
+    1  -> switch:case[2]
 
-    switch:case[0] -> ($secondLine4 -> println:data)
-    switch:case[1] -> ($secondLine3 -> println:data)
-    switch:case[2] -> ($secondLine2 -> println:data)
-    switch:else -> printf:args[0]
-    $secondLine1 -> printf:tpl
+    switch:case[0] -> ($secondLine4 -> p1:data)
+    switch:case[1] -> ($secondLine3 -> p2:data)
+    switch:case[2] -> ($secondLine2 -> p3:data)
 
-    [println:sig, printf:sig] -> lock:sig
+    switch:else -> [
+        printf:args[0],
+        ($secondLine1 -> printf:tpl)
+    ]
+
+    [p1:sig, p2:sig, p3:sig, printf:sig] -> lock:sig
+
     lock:data -> :n
 }

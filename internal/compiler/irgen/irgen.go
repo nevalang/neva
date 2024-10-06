@@ -78,13 +78,11 @@ func (g Generator) Generate(
 
 	// graph reduction is not an optimization:
 	// it's a necessity for runtime not to have intermediate connections
-	reducedPorts, reducedNet := g.reduceFinalGraph(result)
-	result.Ports = reducedPorts
-	result.Connections = reducedNet
+	reducedNet := g.reduceFinalGraph(result.Connections)
 
 	return &ir.Program{
 		Ports:       result.Ports,
-		Connections: result.Connections,
+		Connections: reducedNet,
 		Funcs:       result.Funcs,
 	}, nil
 }

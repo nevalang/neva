@@ -57,10 +57,7 @@ func (r Resolver) ResolveExprWithFrame(
 	expr Expr,
 	frame map[string]Def,
 	scope Scope,
-) (
-	Expr,
-	error,
-) {
+) (Expr, error) {
 	return r.resolveExpr(expr, scope, frame, nil)
 }
 

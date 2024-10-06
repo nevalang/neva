@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		"4\n",
+		"Friday\n",
 		string(out),
 	)
 

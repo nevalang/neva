@@ -63,7 +63,7 @@ func respMsg(statusCode int, body []byte) runtime.StructMsg {
 	return runtime.NewStructMsg(
 		[]string{"body", "statusCode"},
 		[]runtime.Msg{
-			runtime.NewStrMsg(string(body)),
+			runtime.NewStringMsg(string(body)),
 			runtime.NewIntMsg(int64(statusCode)),
 		},
 	)

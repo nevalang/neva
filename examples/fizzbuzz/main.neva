@@ -10,9 +10,7 @@ flow Main(start) (stop) {
 
 flow FizzBuzz(data int) (res string|int) {
     Select<string|int>, Mod15, Mod3, Mod5
-
     ---
-
     :data -> [mod15, select:then[3]]
 
     mod15:then -> select:if[0]
@@ -57,14 +55,9 @@ flow Mod5(num int) (then int, else int) {
     h:else -> :else
 }
 
-// ModHelper checks if num can be devided by den
 flow ModHelper(num int, den int) (then int, else int) {
-    Mod
-    Eq
-    Cond<int>
-
+    Mod, Eq, Cond<int>
     ---
-
     :num -> [mod:num, cond:data]
     :den -> mod:den
 

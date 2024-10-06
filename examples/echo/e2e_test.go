@@ -17,17 +17,21 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "echo")
+	for i := 0; i < 1; i++ {
+		t.Run("Echo Test", func(t *testing.T) {
+			cmd := exec.Command("neva", "run", "echo")
 
-	cmd.Stdin = strings.NewReader("yo\n")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+			cmd.Stdin = strings.NewReader("yo\n")
+			out, err := cmd.CombinedOutput()
+			require.NoError(t, err)
 
-	require.Equal(
-		t,
-		"yo\n",
-		string(out),
-	)
+			require.Equal(
+				t,
+				"yo\n",
+				string(out),
+			)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+			require.Equal(t, 0, cmd.ProcessState.ExitCode())
+		})
+	}
 }

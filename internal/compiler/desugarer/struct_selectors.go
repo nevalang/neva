@@ -1,7 +1,6 @@
 package desugarer
 
 import (
-	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -9,13 +8,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-)
-
-var (
-	ErrEmptySenderSide     = errors.New("Unable to desugar sender side with struct selectors because it's empty.")
-	ErrOutportAddrNotFound = errors.New("Outport addr not found")
-	ErrTypeNotStruct       = errors.New("Type not struct")
-	ErrStructFieldNotFound = errors.New("Struct field not found")
 )
 
 type handleStructSelectorsResult struct {
@@ -106,37 +98,38 @@ func (d Desugarer) desugarStructSelectors(
 	}, nil
 }
 
-// list<str>
 var (
-	strTypeExpr = ts.Expr{
-		Inst: &ts.InstExpr{
-			Ref: core.EntityRef{Pkg: "builtin", Name: "string"},
-		},
-	}
-
 	pathConstTypeExpr = ts.Expr{
 		Inst: &ts.InstExpr{
-			Ref:  core.EntityRef{Pkg: "builtin", Name: "list"},
-			Args: []ts.Expr{strTypeExpr},
+			Ref: core.EntityRef{Pkg: "builtin", Name: "list"},
+			Args: []ts.Expr{
+				{
+					Inst: &ts.InstExpr{
+						Ref: core.EntityRef{Pkg: "builtin", Name: "string"},
+					},
+				},
+			},
 		},
 	}
 )
 
 func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.ConstDef {
-	constToInsert := src.ConstDef{
-		TypeExpr: pathConstTypeExpr,
-		Value: src.ConstValue{
-			Message: &src.MsgLiteral{
-				List: make([]src.ConstValue, 0, len(senderSide.Selectors)),
-			},
-		},
-	}
+	result := make([]src.ConstValue, 0, len(senderSide.Selectors))
+
 	for _, selector := range senderSide.Selectors {
-		constToInsert.Value.Message.List = append(constToInsert.Value.Message.List, src.ConstValue{
+		result = append(result, src.ConstValue{
 			Message: &src.MsgLiteral{
 				Str: compiler.Pointer(selector),
 			},
 		})
 	}
-	return constToInsert
+
+	return src.ConstDef{
+		TypeExpr: pathConstTypeExpr,
+		Value: src.ConstValue{
+			Message: &src.MsgLiteral{
+				List: result,
+			},
+		},
+	}
 }

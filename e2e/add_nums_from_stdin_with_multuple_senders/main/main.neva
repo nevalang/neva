@@ -14,20 +14,20 @@ flow Main(start) (stop) {
 flow Aux(sig) (res int, err error) {
 	reader1 IntReader
 	reader2 IntReader
-	adder ReducePort<int> { Add<int> }
+	add Add<int>
 	---
 	:sig -> reader1:sig
-	reader1:num -> [adder:port[0], reader2:sig]
+	reader1:num -> [add:acc, reader2:sig]
 	[reader1:err, reader2:err] -> :err
-	reader2:num -> adder:port[1]
-	adder:res -> :res
+	reader2:num -> add:el
+	add:res -> :res
 }
 
 flow IntReader(sig any) (num int, err error) { 
 	io.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln:sig
-	scanln:data -> parseNum:data
+	scanln:res -> parseNum:data
 	parseNum:res -> :num
 	parseNum:err -> :err
 }
