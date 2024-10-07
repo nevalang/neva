@@ -254,7 +254,45 @@ func (a Analyzer) analyzeConnection(
 		// receiver side can contain both deferred connections and receivers so we don't return yet
 	}
 
-	// TODO handle chain connection
+	if normConn.ReceiverSide.ChainedConnection != nil {
+		// Analyze the sender side compatibility with the chained connection's receiver
+		chainedConn := normConn.ReceiverSide.ChainedConnection
+		if chainedConn.Normal == nil {
+			return src.Connection{}, &compiler.Error{
+				Err:      errors.New("Chained connection must be a normal connection"),
+				Location: &scope.Location,
+				Meta:     &conn.Meta,
+			}
+		}
+
+		// Ensure the sender is compatible with the first receiver of the chained connection
+		if err := a.checkSenderReceiverCompatibility(
+			resolvedSenderType,
+			chainedConn.Normal.ReceiverSide.Receivers[0],
+			compInterface,
+			nodes,
+			nodesIfaces,
+			scope,
+		); err != nil {
+			return src.Connection{}, err
+		}
+
+		// Recursively analyze the chained connection
+		analyzedChainedConn, err := a.analyzeConnection(
+			*chainedConn,
+			compInterface,
+			nodes,
+			nodesIfaces,
+			scope,
+			nodesUsage,
+		)
+		if err != nil {
+			return src.Connection{}, err
+		}
+
+		// Update the chained connection with the analyzed version
+		normConn.ReceiverSide.ChainedConnection = &analyzedChainedConn
+	}
 
 	for _, receiver := range normConn.ReceiverSide.Receivers {
 		inportTypeExpr, isReceiverArr, err := a.getReceiverType(
@@ -312,6 +350,7 @@ func (a Analyzer) analyzeConnection(
 			ReceiverSide: src.ConnectionReceiverSide{
 				DeferredConnections: resolvedDefConns,
 				Receivers:           normConn.ReceiverSide.Receivers,
+				ChainedConnection:   normConn.ReceiverSide.ChainedConnection,
 			},
 		},
 		Meta: conn.Meta,
@@ -902,4 +941,40 @@ func (a Analyzer) getStructFieldTypeByPath(
 	}
 
 	return a.getStructFieldTypeByPath(fieldType, path[1:], scope)
+}
+
+// Add this new helper function
+func (a Analyzer) checkSenderReceiverCompatibility(
+	senderType ts.Expr,
+	receiver src.ConnectionReceiver,
+	compInterface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	scope src.Scope,
+) *compiler.Error {
+	receiverType, _, err := a.getReceiverType(
+		receiver.PortAddr,
+		compInterface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err := a.resolver.IsSubtypeOf(senderType, receiverType, scope); err != nil {
+		return &compiler.Error{
+			Err: fmt.Errorf(
+				"Incompatible types in chained connection: %v -> %v: %w",
+				senderType,
+				receiverType,
+				err,
+			),
+			Location: &scope.Location,
+			Meta:     &receiver.Meta,
+		}
+	}
+
+	return nil
 }

@@ -276,7 +276,6 @@ func (d Desugarer) desugarConnection(
 		}
 
 		connectionsToInsert = append(connectionsToInsert, replacedConnDesugarRes.connectionsToInsert...)
-
 		conn = replacedConnDesugarRes.connectionToReplace
 	}
 
@@ -368,6 +367,23 @@ func (d Desugarer) desugarConnection(
 		nodesToInsert[result.nodeToInsertName] = result.nodeToInsert
 		desugaredReceivers = []src.ConnectionReceiver{result.receiverToReplace} // replace all existing receivers with single one
 		connectionsToInsert = append(connectionsToInsert, result.connectionsToInsert...)
+	}
+
+	if conn.Normal.ReceiverSide.ChainedConnection != nil {
+		chainedConn := conn.Normal.ReceiverSide.ChainedConnection
+
+		// Recursively desugar the chained connection
+		chainedResult, err := d.desugarConnection(*chainedConn, nodePortsUsed, scope, nodes, nodesToInsert, constsToInsert)
+		if err != nil {
+			return desugarConnectionResult{}, err
+		}
+
+		chainHead := chainedResult.connectionToReplace.Normal.SenderSide
+		desugaredReceivers = append(desugaredReceivers, src.ConnectionReceiver{
+			PortAddr: *chainHead.PortAddr,
+			Meta:     chainHead.Meta,
+		})
+		connectionsToInsert = append(connectionsToInsert, chainedResult.connectionsToInsert...)
 	}
 
 	return desugarConnectionResult{
@@ -587,4 +603,9 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 		connectionsToInsert: connectionsToInsert,
 		connToReplace:       connToReplace,
 	}, nil
+}
+
+// Add this helper method to the Desugarer struct
+func (d *Desugarer) getUniqueID() int64 {
+	return atomic.AddInt64(&d.uniqueIDCounter, 1)
 }

@@ -140,3 +140,8 @@ pub flow ForEach<T>(data stream<T>) (data stream<T>) {
     getData -> handler -> lock:sig
     lock -> :data
 }
+
+// RangeV2 is similar to Range but with an additional signal input to trigger the range generation.
+#extern(stream_int_range_v2)
+pub flow RangeV2(from int, to int, sig any) (res stream<int>)
+// TODO remove original Range and call this "Range" and use everywhere

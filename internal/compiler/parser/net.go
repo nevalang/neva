@@ -169,7 +169,7 @@ func parseNormConn(
 	// --- chained connection ---
 
 	chainedNormConn := chainedConn.NormConnDef()
-	connMeta = core.Meta{
+	chainedConnMeta := core.Meta{
 		Text: chainedNormConn.GetText(),
 		Start: core.Position{
 			Line:   chainedNormConn.GetStart().GetLine(),
@@ -181,35 +181,23 @@ func parseNormConn(
 		},
 	}
 
-	parseChainConnResult, err := parseNormConn(
-		chainedNormConn,
-		connMeta,
-	)
+	parsedChainedConn, err := parseNormConn(chainedNormConn, chainedConnMeta)
 	if err != nil {
 		return nil, err
 	}
 
-	// chain connections always have 1 sender with normal port addr
-	chainSenderPortAddr := parseChainConnResult[0].Normal.SenderSide.PortAddr
-
-	// now we need to connect all senders to the chain sender
 	conns := []src.Connection{}
 	for _, senderSide := range senderSides {
 		conns = append(conns, src.Connection{
 			Normal: &src.NormalConnection{
 				SenderSide: senderSide,
 				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: []src.ConnectionReceiver{
-						{PortAddr: *chainSenderPortAddr},
-					},
+					ChainedConnection: &parsedChainedConn[0],
 				},
 			},
 			Meta: connMeta,
 		})
 	}
-
-	// and don't forget the chained connection(s) itself
-	conns = append(conns, parseChainConnResult...)
 
 	return conns, nil
 }

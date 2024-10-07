@@ -301,6 +301,7 @@ type ArrayBypassConnection struct {
 type ConnectionReceiverSide struct {
 	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
 	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
+	ChainedConnection   *Connection          `json:"chainedConnection,omitempty"` // New field
 }
 
 type ConnectionReceiver struct {
