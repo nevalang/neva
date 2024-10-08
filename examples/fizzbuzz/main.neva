@@ -1,5 +1,5 @@
 flow Main(start) (stop) {
-    Map<int, any>{FizzBuzz}, Del
+    Map<int, any>{FizzBuzz}
     ForEach{Println}
     Wait
     ---

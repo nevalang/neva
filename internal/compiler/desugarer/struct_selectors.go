@@ -14,7 +14,7 @@ type handleStructSelectorsResult struct {
 	connToReplace     src.Connection
 	connToInsert      src.Connection
 	constToInsertName string
-	constToInsert     src.ConstDef
+	constToInsert     src.Const
 	nodeToInsert      src.Node
 	nodeToInsertName  string
 }
@@ -113,7 +113,7 @@ var (
 	}
 )
 
-func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.ConstDef {
+func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.Selectors))
 
 	for _, selector := range senderSide.Selectors {
@@ -124,7 +124,7 @@ func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionS
 		})
 	}
 
-	return src.ConstDef{
+	return src.Const{
 		TypeExpr: pathConstTypeExpr,
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{

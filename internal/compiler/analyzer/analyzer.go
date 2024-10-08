@@ -26,8 +26,7 @@ var (
 )
 
 type Analyzer struct {
-	compilerVersion string
-	resolver        ts.Resolver
+	resolver ts.Resolver
 }
 
 func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
@@ -243,9 +242,6 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	return resolvedEntity, nil
 }
 
-func MustNew(version string, resolver ts.Resolver) Analyzer {
-	return Analyzer{
-		compilerVersion: version,
-		resolver:        resolver,
-	}
+func MustNew(resolver ts.Resolver) Analyzer {
+	return Analyzer{resolver: resolver}
 }

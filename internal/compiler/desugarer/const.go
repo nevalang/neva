@@ -6,7 +6,7 @@ import (
 )
 
 // handleConst handles case when constant has integer value and type is float.
-func (d Desugarer) handleConst(constant src.ConstDef) (src.ConstDef, *compiler.Error) {
+func (d Desugarer) handleConst(constant src.Const) (src.Const, *compiler.Error) {
 	if constant.Value.Message == nil {
 		return constant, nil
 	}
@@ -16,7 +16,7 @@ func (d Desugarer) handleConst(constant src.ConstDef) (src.ConstDef, *compiler.E
 	if constant.Value.Message.Float != nil {
 		return constant, nil
 	}
-	return src.ConstDef{
+	return src.Const{
 		TypeExpr: constant.TypeExpr,
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{

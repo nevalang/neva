@@ -13,10 +13,10 @@ import (
 )
 
 type handleNetResult struct {
-	desugaredConnections []src.Connection        // desugared network
-	constsToInsert       map[string]src.ConstDef // constants that needs to be inserted in to make desugared network work
-	nodesToInsert        map[string]src.Node     // nodes that needs to be inserted in to make desugared network work
-	nodesPortsUsed       nodePortsMap            // to find unused to create virtual del connections
+	desugaredConnections []src.Connection     // desugared network
+	constsToInsert       map[string]src.Const // constants that needs to be inserted in to make desugared network work
+	nodesToInsert        map[string]src.Node  // nodes that needs to be inserted in to make desugared network work
+	nodesPortsUsed       nodePortsMap         // to find unused to create virtual del connections
 }
 
 func (d Desugarer) handleNetwork(
@@ -27,7 +27,7 @@ func (d Desugarer) handleNetwork(
 	// code smell: mix of mutable and immutable styles (connections/nodes-consts)
 	desugaredConnections := make([]src.Connection, 0, len(net))
 	nodesToInsert := map[string]src.Node{}
-	constsToInsert := map[string]src.ConstDef{}
+	constsToInsert := map[string]src.Const{}
 	nodesPortsUsed := newNodePortsMap()
 
 	for _, conn := range net {
@@ -180,7 +180,7 @@ func (d Desugarer) desugarConnection(
 	scope src.Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
-	constsToInsert map[string]src.ConstDef,
+	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, *compiler.Error) {
 	// "array bypass" connection - nothing to desugar, just mark as used and return as-is
 	if conn.ArrayBypass != nil {
@@ -515,7 +515,7 @@ var rangeCounter atomic.Uint64
 // Add a new function to handle range senders
 func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 	nodesToInsert       map[string]src.Node
-	constsToInsert      map[string]src.ConstDef
+	constsToInsert      map[string]src.Const
 	connectionsToInsert []src.Connection
 	connToReplace       src.Connection
 }, *compiler.Error) {
@@ -526,7 +526,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 	fromConstName := fmt.Sprintf("__range%d_from__", rangeID)
 	toConstName := fmt.Sprintf("__range%d_to__", rangeID)
 
-	constsToInsert := map[string]src.ConstDef{
+	constsToInsert := map[string]src.Const{
 		fromConstName: {
 			TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
 			Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.From))}},
@@ -594,7 +594,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 
 	return struct {
 		nodesToInsert       map[string]src.Node
-		constsToInsert      map[string]src.ConstDef
+		constsToInsert      map[string]src.Const
 		connectionsToInsert []src.Connection
 		connToReplace       src.Connection
 	}{
@@ -603,9 +603,4 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 		connectionsToInsert: connectionsToInsert,
 		connToReplace:       connToReplace,
 	}, nil
-}
-
-// Add this helper method to the Desugarer struct
-func (d *Desugarer) getUniqueID() int64 {
-	return atomic.AddInt64(&d.uniqueIDCounter, 1)
 }

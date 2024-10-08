@@ -101,7 +101,7 @@ type Import struct {
 type Entity struct {
 	IsPublic  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
-	Const     ConstDef   `json:"const,omitempty"`
+	Const     Const      `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
 	Component Component  `json:"flow,omitempty"`
@@ -204,8 +204,8 @@ func (t TypeArgs) String() string {
 	return s + ">"
 }
 
-// ConstDef represents abstraction that allow to define reusable message value.
-type ConstDef struct {
+// Const represents abstraction that allow to define reusable message value.
+type Const struct {
 	TypeExpr ts.Expr    `json:"typeExpr,omitempty"`
 	Value    ConstValue `json:"value,omitempty"`
 	Meta     core.Meta  `json:"meta,omitempty"`
@@ -336,7 +336,7 @@ func (c ConnectionSideSelectors) String() string {
 // ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSenderSide struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
-	Const     *ConstDef  `json:"literal,omitempty"`
+	Const     *Const     `json:"literal,omitempty"`
 	Range     *RangeExpr `json:"range,omitempty"` // New field
 	Selectors []string   `json:"selectors,omitempty"`
 	Meta      core.Meta  `json:"meta,omitempty"`

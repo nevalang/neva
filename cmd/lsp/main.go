@@ -14,7 +14,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-	"github.com/nevalang/neva/pkg"
 )
 
 func main() {
@@ -42,7 +41,7 @@ func main() {
 		builder,
 		p,
 		desugarer.New(),
-		analyzer.MustNew(pkg.Version, resolver),
+		analyzer.MustNew(resolver),
 	)
 
 	handler := lspServer.BuildHandler(logger, serverName, indexer)

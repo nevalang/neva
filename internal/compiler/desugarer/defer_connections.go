@@ -29,7 +29,7 @@ var virtualBlockerNode = src.Node{
 type desugarDeferredConnectionsResult struct {
 	connsToInsert     []src.Connection
 	receiversToInsert []src.ConnectionReceiver
-	constsToInsert    map[string]src.ConstDef
+	constsToInsert    map[string]src.Const
 	nodesToInsert     map[string]src.Node
 	nodesPortsUsed    nodePortsMap // (probably?) to generate "Del" instances where needed
 }
