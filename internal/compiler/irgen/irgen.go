@@ -1,7 +1,6 @@
 package irgen
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -9,8 +8,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
-
-var ErrNodeUsageNotFound = errors.New("node usage not found")
 
 type Generator struct{}
 
@@ -154,9 +151,9 @@ func (g Generator) processNode(
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
+				Err:      fmt.Errorf("node usage not found: %v", nodeName),
 				Location: &location,
-				Meta:     &component.Meta,
+				Meta:     &node.Meta,
 			}
 		}
 
