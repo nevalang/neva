@@ -1,9 +1,5 @@
 flow Main(start) (stop) {
-    Range, List, Println
+    List, Println
     ---
-    :start -> [
-        (1 -> range:from),
-        (11 -> range:to)
-    ]
-    range -> list -> println -> :stop
+    :start -> 1..11 -> list -> println -> :stop
 }

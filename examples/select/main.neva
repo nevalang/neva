@@ -3,16 +3,11 @@
 import { time }
 
 flow Main(start) (stop) {
-    Range
     Map<int, string>{Handler}
     ForEach{Println}
     Wait
     ---
-    :start -> [
-        (1 -> range:from),
-        (5 -> range:to)
-    ]
-    range -> map -> forEach -> wait -> :stop
+    :start -> 1..5 -> map -> forEach -> wait -> :stop
 }
 
 flow Handler(data int) (res string) {
