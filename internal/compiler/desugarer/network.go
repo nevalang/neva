@@ -24,7 +24,6 @@ func (d Desugarer) handleNetwork(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) (handleNetResult, *compiler.Error) {
-	// code smell: mix of mutable and immutable styles (connections/nodes-consts)
 	desugaredConnections := make([]src.Connection, 0, len(net))
 	nodesToInsert := map[string]src.Node{}
 	constsToInsert := map[string]src.Const{}
@@ -49,8 +48,12 @@ func (d Desugarer) handleNetwork(
 
 	result, err := d.networkFinalProcessing(desugaredConnections, nodesToInsert)
 	if err != nil {
-		return handleNetResult{}, &compiler.Error{} // todo
+		return handleNetResult{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+		}
 	}
+
 	desugaredConnections = result.FinalNetwork
 
 	return handleNetResult{
