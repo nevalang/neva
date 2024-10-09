@@ -16,13 +16,12 @@ import (
 )
 
 var (
-	ErrModuleWithoutPkgs    = errors.New("Module must contain at least one package")
-	ErrEntryModNotFound     = errors.New("Entry module is not found")
-	ErrMainPkgNotFound      = errors.New("Main package not found")
-	ErrPkgWithoutFiles      = errors.New("Package must contain at least one file")
-	ErrUnknownEntityKind    = errors.New("Entity kind can only be either flow, interface, type of constant")
-	ErrCompilerVersion      = errors.New("Incompatible compiler version")
-	ErrDepModWithoutVersion = errors.New("Every dependency module must have version")
+	ErrModuleWithoutPkgs    = errors.New("module must contain at least one package")
+	ErrEntryModNotFound     = errors.New("entry module not found")
+	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
+	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
+	ErrCompilerVersion      = errors.New("incompatible compiler version")
+	ErrDepModWithoutVersion = errors.New("every dependency module must have version")
 )
 
 type Analyzer struct {
@@ -39,7 +38,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 
 	if !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
+			Err:      fmt.Errorf("%w: entry module name '%s'", ErrEntryModNotFound, build.EntryModRef),
 			Location: &location,
 		}
 	}
@@ -47,7 +46,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	// FIXME mainPkgName containts full path with "examples/ "
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
+			Err:      errors.New("main package not found"),
 			Location: &location,
 		}
 	}

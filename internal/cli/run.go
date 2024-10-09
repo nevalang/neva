@@ -40,7 +40,7 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 			}
 
 			if err := nativec.Compile(mainPkg, output, trace); err != nil {
-				return fmt.Errorf("compilation error: %w", err)
+				return err
 			}
 
 			defer func() {
@@ -55,11 +55,8 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				return fmt.Errorf("run failed: %w", err)
-			}
 
-			return nil
+			return cmd.Run()
 		},
 	}
 }
