@@ -24,7 +24,11 @@ var (
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	addrToChanVar, chanVarNames := b.getPortChansMap(prog.Connections)
-	funcCalls := b.getFuncCalls(prog.Funcs, addrToChanVar)
+
+	funcCalls, err := b.getFuncCalls(prog.Funcs, addrToChanVar)
+	if err != nil {
+		return err
+	}
 
 	funcmap := template.FuncMap{
 		"getPortChanNameByAddr": func(path string, port string) string {
@@ -61,7 +65,10 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	return compiler.SaveFilesToDir(dst, files)
 }
 
-func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr]string) []templateFuncCall {
+func (b Backend) getFuncCalls(
+	funcs []ir.FuncCall,
+	addrToChanVar map[ir.PortAddr]string,
+) ([]templateFuncCall, error) {
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
@@ -81,7 +88,7 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 		for _, irAddr := range call.IO.In {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
-				panic(fmt.Sprintf("port not found: %v", irAddr))
+				return nil, fmt.Errorf("port not found: %v", irAddr)
 			}
 
 			runtimeAddr := localPortAddr{
@@ -188,7 +195,7 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 		})
 	}
 
-	return result
+	return result, nil
 }
 
 func (b Backend) getMessageString(msg *ir.Message) (string, error) {

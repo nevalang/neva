@@ -40,7 +40,7 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 			}
 
 			if err := nativec.Compile(mainPkg, output, trace); err != nil {
-				return fmt.Errorf("build failed: %w", err)
+				return fmt.Errorf("compilation error: %w", err)
 			}
 
 			defer func() {

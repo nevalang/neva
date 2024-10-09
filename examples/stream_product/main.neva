@@ -1,7 +1,7 @@
 import { streams }
 
 flow Main(start) (stop) {
-	FanOut<int>, streams.Product<int, int>
+	FanOut, streams.Product<int, int>
 	ForEach{Println}, Wait
 	---
 	:start -> fanOut
