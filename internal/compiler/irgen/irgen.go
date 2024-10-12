@@ -32,7 +32,6 @@ type (
 func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
-	shouldReduceGraph bool,
 ) (*ir.Program, *compiler.Error) {
 	scope := src.Scope{
 		Build: build,

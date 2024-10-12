@@ -65,15 +65,15 @@ func newBuildCmd(
 
 			switch target {
 			case "go":
-				return goc.Compile(mainPkg, output, trace)
+				return goc.Compile(cliCtx.Context, mainPkg, output, trace)
 			case "wasm":
-				return wasmc.Compile(mainPkg, output, trace)
+				return wasmc.Compile(cliCtx.Context, mainPkg, output, trace)
 			case "json":
-				return jsonc.Compile(mainPkg, output, trace)
+				return jsonc.Compile(cliCtx.Context, mainPkg, output, trace)
 			case "dot":
-				return dotc.Compile(mainPkg, output, trace)
+				return dotc.Compile(cliCtx.Context, mainPkg, output, trace)
 			default:
-				return nativec.Compile(mainPkg, output, trace)
+				return nativec.Compile(cliCtx.Context, mainPkg, output, trace)
 			}
 		},
 	}

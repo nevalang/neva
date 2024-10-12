@@ -88,7 +88,7 @@ func (b Backend) getFuncCalls(
 		for _, irAddr := range call.IO.In {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
-				return nil, fmt.Errorf("port not found: %v", irAddr)
+				return nil, fmt.Errorf("inport not found: %v", irAddr)
 			}
 
 			runtimeAddr := localPortAddr{
@@ -115,7 +115,7 @@ func (b Backend) getFuncCalls(
 		for _, irAddr := range call.IO.Out {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
-				panic(fmt.Sprintf("port not found: %v", irAddr))
+				panic(fmt.Sprintf("outport not found: %v", irAddr))
 			}
 
 			runtimeAddr := localPortAddr{

@@ -392,9 +392,9 @@ type nodeNetUsage struct {
 }
 
 // checkNetPortsUsage ensures that:
-// Every flow's inport and outport is used;
+// Every self inport and outport is used;
 // Every sub-node's inport is used;
-// For every  sub-node's there's at least one used outport.
+// For every sub-node's there's at least one used outport.
 func (Analyzer) checkNetPortsUsage(
 	compInterface src.Interface,
 	nodesIfaces map[string]foundInterface,
@@ -522,6 +522,8 @@ func (Analyzer) checkNetPortsUsage(
 		}
 	}
 
+	// TODO make sure we don't use same sender twice or more outside of the fan-out expression
+	
 	return nil
 }
 

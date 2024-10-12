@@ -291,6 +291,7 @@ type Connection struct {
 type NormalConnection struct {
 	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
 	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
+	// TODO: move slices to this level (for both sides)
 }
 
 type ArrayBypassConnection struct {

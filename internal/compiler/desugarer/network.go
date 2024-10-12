@@ -74,7 +74,7 @@ var fanInCounter *atomic.Uint64 = &atomic.Uint64{}
 //   - inserts fan-in node in-between everywhere needed: generates necessary connections and inserts corresponding nodes
 //   - ...
 //
-// It's important that given conns must be already desugared separately.
+// It's important that given conns must be already desugared separately
 func (d Desugarer) networkFinalProcessing(
 	conns []src.Connection,
 	nodesToInsert map[string]src.Node,
@@ -82,6 +82,8 @@ func (d Desugarer) networkFinalProcessing(
 	finalNet := []src.Connection{}
 	receiverSendersMap := make(map[src.PortAddr][]src.PortAddr) // receiver -> senders
 
+	// TODO remove this when we move fan-in from parser to desugarer fully
+	// TODO2 move this to analyzer and use to check that we don't have connections with the same sender twice or more
 	for _, conn := range conns {
 		if conn.ArrayBypass != nil {
 			finalNet = append(finalNet, conn) // nothing to desugar
@@ -122,10 +124,9 @@ func (d Desugarer) networkFinalProcessing(
 			},
 		}
 
+		// 2. replace existing receiver with created fan-in
 		for i, sender := range senders {
 			s := sender
-
-			// 2. replace existing receiver with created fan-in
 			finalNet = append(finalNet, src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: src.ConnectionSenderSide{
@@ -144,24 +145,24 @@ func (d Desugarer) networkFinalProcessing(
 					},
 				},
 			})
+		}
 
-			// 3. create new connection with fan-in as sender and original receiver as receiver
-			finalNet = append(finalNet, src.Connection{
-				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
-						PortAddr: &src.PortAddr{
-							Node: fanInNodeName,
-							Port: "res",
-						},
-					},
-					ReceiverSide: src.ConnectionReceiverSide{
-						Receivers: []src.ConnectionReceiver{
-							{PortAddr: receiver},
-						},
+		// 3. create new connection with fan-in as sender and original receiver as receiver
+		finalNet = append(finalNet, src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: src.ConnectionSenderSide{
+					PortAddr: &src.PortAddr{
+						Node: fanInNodeName,
+						Port: "res",
 					},
 				},
-			})
-		}
+				ReceiverSide: src.ConnectionReceiverSide{
+					Receivers: []src.ConnectionReceiver{
+						{PortAddr: receiver},
+					},
+				},
+			},
+		})
 	}
 
 	return NetFinalProcessingResult{
