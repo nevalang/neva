@@ -14,7 +14,12 @@ type Compiler struct {
 	be Backend
 }
 
-func (c Compiler) Compile(ctx context.Context, main string, output string, trace bool) error {
+func (c Compiler) Compile(
+	ctx context.Context,
+	main string,
+	output string,
+	trace bool,
+) error {
 	feResult, err := c.fe.Process(ctx, main)
 	if err != nil {
 		return err
@@ -34,7 +39,7 @@ type Frontend struct {
 }
 
 type FrontendResult struct {
-	Root        string
+	MainPkg     string
 	RawBuild    RawBuild
 	ParsedBuild sourcecode.Build
 }
@@ -55,10 +60,13 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 		Modules:     parsedMods,
 	}
 
+	mainPkg := strings.TrimPrefix(main, "./")
+	mainPkg = strings.TrimPrefix(mainPkg, root+"/")
+
 	return FrontendResult{
 		ParsedBuild: parsedBuild,
 		RawBuild:    raw,
-		Root:        root,
+		MainPkg:     mainPkg,
 	}, nil
 }
 
@@ -82,12 +90,9 @@ type MiddleendResult struct {
 }
 
 func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
-	main := strings.TrimPrefix(feResult.Root, "./")
-	main = strings.TrimPrefix(main, feResult.Root+"/")
-
 	analyzedBuild, err := m.analyzer.AnalyzeExecutableBuild(
 		feResult.ParsedBuild,
-		main,
+		feResult.MainPkg,
 	)
 	if err != nil {
 		return MiddleendResult{}, err
@@ -98,7 +103,7 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 		return MiddleendResult{}, err
 	}
 
-	irProg, err := m.irgen.Generate(desugaredBuild, main)
+	irProg, err := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
 	if err != nil {
 		return MiddleendResult{}, err
 	}
