@@ -3,7 +3,6 @@
 package sourcecode
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -26,12 +25,12 @@ type Module struct {
 func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
+		return Entity{}, "", fmt.Errorf("package not found: %v", entityRef.Pkg)
 	}
 
 	entity, filename, ok = pkg.Entity(entityRef.Name)
 	if !ok {
-		return Entity{}, "", fmt.Errorf("%w: '%v'", ErrEntityNotFound, entityRef.Name)
+		return Entity{}, "", fmt.Errorf("entity not found: %v", entityRef.Name)
 	}
 
 	return entity, filename, nil
@@ -61,8 +60,6 @@ func (m ModuleRef) String() string {
 	}
 	return fmt.Sprintf("%v@%v", m.Path, m.Version)
 }
-
-var ErrEntityNotFound = errors.New("entity not found")
 
 type Package map[string]File
 

@@ -84,7 +84,7 @@ func (b Backend) getFuncCalls(
 		arrInportsToCreate := make(map[localPortAddr][]arrPortSlot)
 		arrOutportsToCreate := make(map[localPortAddr][]arrPortSlot)
 
-		// Handle input ports
+		// handle input ports
 		for _, irAddr := range call.IO.In {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
@@ -111,7 +111,7 @@ func (b Backend) getFuncCalls(
 			}
 		}
 
-		// Handle output ports
+		// handle output ports
 		for _, irAddr := range call.IO.Out {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
@@ -138,7 +138,7 @@ func (b Backend) getFuncCalls(
 			}
 		}
 
-		// Create array inports
+		// create array inports
 		for addr, slots := range arrInportsToCreate {
 			sort.Slice(slots, func(i, j int) bool {
 				return slots[i].idx < slots[j].idx
@@ -157,7 +157,7 @@ func (b Backend) getFuncCalls(
 			)
 		}
 
-		// Create array outports
+		// create array outports
 		for addr, slots := range arrOutportsToCreate {
 			sort.Slice(slots, func(i, j int) bool {
 				return slots[i].idx < slots[j].idx

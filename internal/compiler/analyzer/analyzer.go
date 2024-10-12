@@ -17,7 +17,6 @@ import (
 
 var (
 	ErrModuleWithoutPkgs    = errors.New("module must contain at least one package")
-	ErrEntryModNotFound     = errors.New("entry module not found")
 	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
 	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
 	ErrCompilerVersion      = errors.New("incompatible compiler version")
@@ -35,10 +34,9 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
-
 	if !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: entry module name '%s'", ErrEntryModNotFound, build.EntryModRef),
+			Err:      fmt.Errorf("entry module not found: %s", build.EntryModRef),
 			Location: &location,
 		}
 	}

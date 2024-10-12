@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Note: some cases are hard to test this way because desugarer depends on Scope object
+// which is normally passed from top-level functions in this package.
 func TestDesugarNetwork(t *testing.T) {
 	d := Desugarer{}
 	scope := src.Scope{}
@@ -59,7 +61,7 @@ func TestDesugarNetwork(t *testing.T) {
 				nodesToInsert:  map[string]src.Node{},
 			},
 		},
-		// [node1:out, node2:out] ->
+		// [node1:out, node2:out] -> node3:in
 		{
 			name: "fan_in_connection",
 			net: []src.Connection{
@@ -140,6 +142,69 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		// node1:foo -> node2:bar -> node3:baz
+		{
+			name: "chained connection",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: src.ConnectionSenderSide{
+							PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
+						},
+						ReceiverSide: src.ConnectionReceiverSide{
+							ChainedConnection: &src.Connection{
+								Normal: &src.NormalConnection{
+									SenderSide: src.ConnectionSenderSide{
+										PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
+									},
+									ReceiverSide: src.ConnectionReceiverSide{
+										Receivers: []src.ConnectionReceiver{
+											{PortAddr: src.PortAddr{Node: "node3", Port: "baz"}},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"node1": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node1"}},
+				"node2": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node2"}},
+				"node3": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node3"}},
+			},
+			expectedResult: handleNetResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: src.ConnectionSenderSide{
+								PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
+							},
+							ReceiverSide: src.ConnectionReceiverSide{
+								Receivers: []src.ConnectionReceiver{
+									{PortAddr: src.PortAddr{Node: "node2", Port: "bar"}},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: src.ConnectionSenderSide{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
+							},
+							ReceiverSide: src.ConnectionReceiverSide{
+								Receivers: []src.ConnectionReceiver{
+									{PortAddr: src.PortAddr{Node: "node3", Port: "baz"}},
+								},
+							},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+				nodesToInsert:  map[string]src.Node{},
+			},
+		},
+		// TODO [readAll:res, readAll:err] -> println -> :stop (fan_in_and_chained_connection)
 	}
 
 	for _, tt := range tests {

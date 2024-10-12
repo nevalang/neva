@@ -10,14 +10,6 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-var (
-	ErrModNotFound    = errors.New("module not found")
-	ErrPkgNotFound    = fmt.Errorf("package not found")
-	ErrImportNotFound = errors.New("import not found")
-	ErrFileNotFound   = errors.New("file not found")
-	ErrEntityNotPub   = errors.New("entity is not public")
-)
-
 type Scope struct {
 	Location Location
 	Build    Build
@@ -75,12 +67,12 @@ func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
 func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 	curMod, ok := s.Build.Modules[s.Location.ModRef]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, s.Location.ModRef)
+		return Entity{}, Location{}, fmt.Errorf("module not found: %v", s.Location.ModRef)
 	}
 
 	curPkg := curMod.Packages[s.Location.PkgName]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrPkgNotFound, s.Location.PkgName)
+		return Entity{}, Location{}, fmt.Errorf("package not found: %v", s.Location.PkgName)
 	}
 
 	if entityRef.Pkg == "" { // local reference (current package or builtin)
@@ -96,7 +88,7 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		stdModRef := ModuleRef{Path: "std", Version: pkg.Version}
 		stdMod, ok := s.Build.Modules[stdModRef]
 		if !ok {
-			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, stdModRef)
+			return Entity{}, Location{}, fmt.Errorf("std module not found: %v", stdModRef)
 		}
 
 		entity, fileName, err := stdMod.Entity(core.EntityRef{
@@ -116,12 +108,12 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 
 	curFile, ok := curPkg[s.Location.FileName]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrFileNotFound, s.Location.FileName)
+		return Entity{}, Location{}, fmt.Errorf("file not found: %v", s.Location.FileName)
 	}
 
 	pkgImport, ok := curFile.Imports[entityRef.Pkg]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrImportNotFound, entityRef.Pkg)
+		return Entity{}, Location{}, fmt.Errorf("import not found: %v", entityRef.Pkg)
 	}
 
 	var (
@@ -135,7 +127,7 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		modRef = curMod.Manifest.Deps[pkgImport.Module]
 		depMod, ok := s.Build.Modules[modRef]
 		if !ok {
-			return Entity{}, Location{}, fmt.Errorf("%w: %v", ErrModNotFound, modRef)
+			return Entity{}, Location{}, fmt.Errorf("dependency module not found: %v", modRef)
 		}
 		mod = depMod
 	}
@@ -151,7 +143,7 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 	}
 
 	if !entity.IsPublic {
-		return Entity{}, Location{}, ErrEntityNotPub
+		return Entity{}, Location{}, errors.New("entity is not public")
 	}
 
 	return entity, Location{

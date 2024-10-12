@@ -378,9 +378,13 @@ func (d Desugarer) desugarConnection(
 		if chainHead.Range != nil {
 			receiverPortName = "sig"
 		} else if chainHead.PortAddr != nil {
-			firstInportName, err := getFirstInportName(scope, nodes, *chainHead.PortAddr)
-			if err != nil {
-				return desugarConnectionResult{}, &compiler.Error{Err: err}
+			var firstInportName = chainHead.PortAddr.Port
+			if chainHead.PortAddr.Port == "" {
+				var err error
+				firstInportName, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
+				if err != nil {
+					return desugarConnectionResult{}, &compiler.Error{Err: err}
+				}
 			}
 			receiverPortName = firstInportName
 		}
@@ -564,12 +568,14 @@ func (d Desugarer) desugarFanOut(receiverSides []src.ConnectionReceiver) desugar
 var rangeCounter atomic.Uint64
 
 // Add a new function to handle range senders
-func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
+type handleRangeSenderResult struct {
 	nodesToInsert       map[string]src.Node
 	constsToInsert      map[string]src.Const
 	connectionsToInsert []src.Connection
 	connToReplace       src.Connection
-}, *compiler.Error) {
+}
+
+func (d Desugarer) handleRangeSender(conn src.Connection) (handleRangeSenderResult, *compiler.Error) {
 	rangeExpr := conn.Normal.SenderSide.Range
 	rangeID := rangeCounter.Add(1)
 
@@ -643,12 +649,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (struct {
 		Meta: conn.Meta,
 	}
 
-	return struct {
-		nodesToInsert       map[string]src.Node
-		constsToInsert      map[string]src.Const
-		connectionsToInsert []src.Connection
-		connToReplace       src.Connection
-	}{
+	return handleRangeSenderResult{
 		nodesToInsert:       nodesToInsert,
 		constsToInsert:      constsToInsert,
 		connectionsToInsert: connectionsToInsert,
