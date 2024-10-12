@@ -11,7 +11,6 @@ import (
 	lspServer "github.com/nevalang/neva/cmd/lsp/server"
 	builder "github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
-	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
@@ -37,12 +36,7 @@ func main() {
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 	builder := builder.MustNew(p)
 
-	indexer := indexer.New(
-		builder,
-		p,
-		desugarer.New(),
-		analyzer.MustNew(resolver),
-	)
+	indexer := indexer.New(builder, p, analyzer.MustNew(resolver))
 
 	handler := lspServer.BuildHandler(logger, serverName, indexer)
 

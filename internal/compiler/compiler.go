@@ -9,23 +9,23 @@ import (
 )
 
 type Compiler struct {
-	frontend  Frontend
-	middleend Middleend
-	backend   Backend
+	fe Frontend
+	me Middleend
+	be Backend
 }
 
 func (c Compiler) Compile(ctx context.Context, main string, output string, trace bool) error {
-	feResult, err := c.frontend.Process(ctx, main)
+	feResult, err := c.fe.Process(ctx, main)
 	if err != nil {
 		return err
 	}
 
-	meResult, err := c.middleend.Process(feResult)
+	meResult, err := c.me.Process(feResult)
 	if err != nil {
 		return err
 	}
 
-	return c.backend.Emit(output, meResult.IR, trace)
+	return c.be.Emit(output, meResult.IR, trace)
 }
 
 type Frontend struct {
@@ -60,6 +60,13 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 		RawBuild:    raw,
 		Root:        root,
 	}, nil
+}
+
+func NewFrontend(builder Builder, parser Parser) Frontend {
+	return Frontend{
+		builder: builder,
+		parser:  parser,
+	}
 }
 
 type Middleend struct {
@@ -112,15 +119,15 @@ func New(
 	backend Backend,
 ) Compiler {
 	return Compiler{
-		frontend: Frontend{
+		fe: Frontend{
 			builder: builder,
 			parser:  parser,
 		},
-		middleend: Middleend{
+		me: Middleend{
 			desugarer: desugarer,
 			analyzer:  analyzer,
 			irgen:     irgen,
 		},
-		backend: backend,
+		be: backend,
 	}
 }
