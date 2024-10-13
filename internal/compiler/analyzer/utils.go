@@ -1,25 +1,29 @@
 package analyzer
 
-type nodesNetUsage map[string]nodeNetUsage
+import src "github.com/nevalang/neva/internal/compiler/sourcecode"
 
-func (n nodesNetUsage) AddOutport(node, port string) {
-	if _, ok := n[node]; !ok {
-		defaultValue := nodeNetUsage{
-			In:  map[string]struct{}{},
-			Out: map[string]struct{}{},
-		}
-		n[node] = defaultValue
-	}
-	n[node].Out[port] = struct{}{}
+type netNodesUsage map[string]netNodeUsage
+
+type netNodeUsage struct {
+	In, Out map[string]struct{}
 }
 
-func (n nodesNetUsage) AddInport(node, port string) {
-	if _, ok := n[node]; !ok {
-		defaultValue := nodeNetUsage{
+func (n netNodesUsage) AddOutport(addr src.PortAddr) {
+	if _, ok := n[addr.Node]; !ok {
+		n[addr.Node] = netNodeUsage{
 			In:  map[string]struct{}{},
 			Out: map[string]struct{}{},
 		}
-		n[node] = defaultValue
 	}
-	n[node].In[port] = struct{}{}
+	n[addr.Node].Out[addr.Port] = struct{}{}
+}
+
+func (n netNodesUsage) AddInport(addr src.PortAddr) {
+	if _, ok := n[addr.Node]; !ok {
+		n[addr.Node] = netNodeUsage{
+			In:  map[string]struct{}{},
+			Out: map[string]struct{}{},
+		}
+	}
+	n[addr.Node].In[addr.Port] = struct{}{}
 }

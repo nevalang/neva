@@ -50,7 +50,7 @@ func (d Desugarer) desugarStructSelectors(
 	// original connection must be replaced with two new connections, this is the first one
 	connToReplace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: src.ConnectionSenderSide{
+			SenderSide: src.ConnectionSender{
 				// preserve original sender
 				PortAddr: senderSide.PortAddr,
 				Const:    senderSide.Const,
@@ -75,7 +75,7 @@ func (d Desugarer) desugarStructSelectors(
 	// and this is the second
 	connToInsert := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: src.ConnectionSenderSide{
+			SenderSide: src.ConnectionSender{
 				PortAddr: &src.PortAddr{
 					Node: nodeName, // created node received data from original sender and is now sending it further
 					Port: "msg",
@@ -113,7 +113,7 @@ var (
 	}
 )
 
-func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSenderSide) src.Const {
+func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSender) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.Selectors))
 
 	for _, selector := range senderSide.Selectors {

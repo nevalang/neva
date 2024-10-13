@@ -88,7 +88,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeFlowNodes(
+	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
 		component.Interface,
 		component.Nodes,
 		scope,

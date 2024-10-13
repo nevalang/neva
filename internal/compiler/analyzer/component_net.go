@@ -30,10 +30,16 @@ func (a Analyzer) analyzeNetwork(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
-	// we create it here because there's recursion down there
-	nodesUsage := make(map[string]nodeNetUsage, len(nodes))
+	nodesUsage := make(map[string]netNodeUsage, len(nodes))
 
-	analyzedConnections, err := a.analyzeConnections(net, compInterface, nodes, nodesIfaces, nodesUsage, scope)
+	analyzedConnections, err := a.analyzeConnections(
+		net,
+		compInterface,
+		nodes,
+		nodesIfaces,
+		nodesUsage,
+		scope,
+	)
 	if err != nil {
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
@@ -57,10 +63,10 @@ func (a Analyzer) analyzeNetwork(
 // 2. Updates nodesUsage (we mutate it in-place instead of returning to avoid merging across recursive calls).
 func (a Analyzer) analyzeConnections(
 	net []src.Connection,
-	compInterface src.Interface,
+	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
-	nodesUsage map[string]nodeNetUsage,
+	nodesUsage map[string]netNodeUsage,
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
 	analyzedConnections := make([]src.Connection, 0, len(net))
@@ -68,7 +74,7 @@ func (a Analyzer) analyzeConnections(
 	for _, conn := range net {
 		resolvedConn, err := a.analyzeConnection(
 			conn,
-			compInterface,
+			iface,
 			nodes,
 			nodesIfaces,
 			scope,
@@ -77,7 +83,6 @@ func (a Analyzer) analyzeConnections(
 		if err != nil {
 			return nil, err
 		}
-
 		analyzedConnections = append(analyzedConnections, resolvedConn)
 	}
 
@@ -86,161 +91,73 @@ func (a Analyzer) analyzeConnections(
 
 func (a Analyzer) analyzeConnection(
 	conn src.Connection,
-	compInterface src.Interface,
+	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
-	nodesUsage map[string]nodeNetUsage,
+	nodesUsage map[string]netNodeUsage,
 ) (src.Connection, *compiler.Error) {
-	// first handle array bypass connection, they are simple
 	if conn.ArrayBypass != nil {
-		arrBypassConn := conn.ArrayBypass
-
-		senderType, isArray, err := a.getSenderPortAddrType(
-			arrBypassConn.SenderOutport,
+		if err := a.analyzeArrayBypassConnection(
+			conn,
 			scope,
-			compInterface,
+			iface,
 			nodes,
 			nodesIfaces,
-		)
-		if err != nil {
-			return src.Connection{}, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &conn.Normal.SenderSide.Meta,
-			}.Wrap(err)
-		}
-		if !isArray {
-			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Non-array outport in array-bypass connection"),
-				Location: &scope.Location,
-				Meta:     &arrBypassConn.SenderOutport.Meta,
-			}
-		}
-
-		receiverType, isArray, err := a.getReceiverType(
-			arrBypassConn.ReceiverInport,
-			compInterface,
-			nodes,
-			nodesIfaces,
-			scope,
-		)
-		if err != nil {
-			return src.Connection{}, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
-			}.Wrap(err)
-		}
-		if !isArray {
-			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Non-array outport in array-bypass connection"),
-				Location: &scope.Location,
-				Meta:     &arrBypassConn.SenderOutport.Meta,
-			}
-		}
-
-		if err := a.resolver.IsSubtypeOf(
-			senderType,
-			receiverType,
-			scope,
+			nodesUsage,
 		); err != nil {
-			return src.Connection{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"Incompatible types: %v -> %v: %w",
-					arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
-				),
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
-			}
+			return src.Connection{}, err
 		}
-
-		nodesNetUsage(nodesUsage).AddOutport(
-			arrBypassConn.SenderOutport.Node,
-			arrBypassConn.SenderOutport.Port,
-		)
-		nodesNetUsage(nodesUsage).AddInport(
-			arrBypassConn.ReceiverInport.Node,
-			arrBypassConn.ReceiverInport.Port,
-		)
-
 		return conn, nil
 	}
 
-	// now handle normal connections
-	senderSide := conn.Normal.SenderSide
-
-	if senderSide.PortAddr == nil && senderSide.Const == nil && senderSide.Range == nil {
-		return src.Connection{}, &compiler.Error{
-			Err:      ErrEmptySender,
-			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
-		}
-	}
-
-	resolvedSenderSide, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
-		senderSide,
-		compInterface,
+	analyzedNormalConn, err := a.analyzeNormalConnection(
+		conn.Normal,
+		iface,
 		nodes,
 		nodesIfaces,
 		scope,
+		nodesUsage,
 	)
 	if err != nil {
-		return src.Connection{}, compiler.Error{
-			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
-		}.Wrap(err)
+		return src.Connection{}, err
 	}
 
-	if senderSide.PortAddr != nil {
-		// make sure only array outports has indexes
-		if !isSenderArr && senderSide.PortAddr.Idx != nil {
-			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Index for non-array port"),
-				Meta:     &senderSide.PortAddr.Meta,
-				Location: &scope.Location,
-			}
-		}
+	return src.Connection{
+		Normal: analyzedNormalConn,
+		Meta:   conn.Meta,
+	}, nil
+}
 
-		// make sure array outports always has indexes (it's not arr-bypass)
-		if isSenderArr && senderSide.PortAddr.Idx == nil {
-			return src.Connection{}, &compiler.Error{
-				Err:      errors.New("Index needed for array outport"),
-				Meta:     &senderSide.PortAddr.Meta,
-				Location: &scope.Location,
-			}
-		}
-
-		// mark node's outport as used since sender isn't const ref
-		nodesNetUsage(nodesUsage).AddOutport(
-			senderSide.PortAddr.Node,
-			senderSide.PortAddr.Port,
-		)
+func (a Analyzer) analyzeNormalConnection(
+	normConn *src.NormalConnection,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	scope src.Scope,
+	nodesUsage map[string]netNodeUsage,
+) (*src.NormalConnection, *compiler.Error) {
+	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
+		normConn.SenderSide,
+		scope,
+		iface,
+		nodes,
+		nodesIfaces,
+		nodesUsage,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(senderSide.Selectors) > 0 {
-		lastFieldType, err := a.getStructFieldTypeByPath(
-			resolvedSenderType,
-			senderSide.Selectors,
-			scope,
-		)
-		if err != nil {
-			return src.Connection{}, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
-			}
-		}
-		resolvedSenderType = lastFieldType
-	}
-
-	receiverSide := conn.Normal.ReceiverSide
+	receiverSide := normConn.ReceiverSide
 
 	if len(receiverSide.Receivers) == 0 &&
 		len(receiverSide.DeferredConnections) == 0 &&
 		receiverSide.ChainedConnection == nil {
-		return src.Connection{}, &compiler.Error{
+		return nil, &compiler.Error{
 			Err:      errors.New("Connection must have receiver-side"),
 			Location: &scope.Location,
-			Meta:     &senderSide.Meta,
+			Meta:     &normConn.Meta,
 		}
 	}
 
@@ -252,14 +169,14 @@ func (a Analyzer) analyzeConnection(
 		var err *compiler.Error
 		analyzedDeferredConnections, err = a.analyzeConnections( // indirect recursion
 			receiverSide.DeferredConnections,
-			compInterface,
+			iface,
 			nodes,
 			nodesIfaces,
 			nodesUsage,
 			scope,
 		)
 		if err != nil {
-			return src.Connection{}, err
+			return nil, err
 		}
 		// receiver side can contain both deferred connections and receivers so we don't return yet
 	}
@@ -268,14 +185,23 @@ func (a Analyzer) analyzeConnection(
 		// analyze the sender side compatibility with the chained connection's receiver
 		chainedConn := receiverSide.ChainedConnection
 		if chainedConn.Normal == nil {
-			return src.Connection{}, &compiler.Error{
+			return nil, &compiler.Error{
 				Err:      errors.New("Chained connection must be a normal connection"),
 				Location: &scope.Location,
-				Meta:     &conn.Meta,
+				Meta:     &normConn.Meta,
 			}
 		}
 
-		chainHead := chainedConn.Normal.SenderSide
+		if len(chainedConn.Normal.SenderSide) != 1 {
+			return nil, &compiler.Error{
+				Err:      errors.New("multiple senders are only allowed at the start of a connection"),
+				Location: &scope.Location,
+				Meta:     &chainedConn.Normal.Meta,
+			}
+		}
+
+		chainHead := chainedConn.Normal.SenderSide[0]
+
 		chainHeadType, err := a.getChainHeadType(
 			chainHead,
 			nodes,
@@ -283,126 +209,304 @@ func (a Analyzer) analyzeConnection(
 			scope,
 		)
 		if err != nil {
-			return src.Connection{}, err
+			return nil, err
 		}
 
-		if err := a.resolver.IsSubtypeOf(resolvedSenderType, chainHeadType, scope); err != nil {
-			return src.Connection{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"Incompatible types: %v -> %v: %w",
-					senderSide, chainHead, err,
-				),
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
+		// check that each sender is compatible with the chain head
+		for _, resolvedSenderType := range resolvedSenderTypes {
+			if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
+				return nil, &compiler.Error{
+					Err: fmt.Errorf(
+						"Incompatible types: %v -> %v: %w",
+						analyzedSenders, chainHead, err,
+					),
+					Location: &scope.Location,
+					Meta:     &normConn.Meta,
+				}
 			}
 		}
 
-		// Recursively analyze the chained connection
+		// recursively analyze the chained connection itself
 		analyzedChainedConn, err := a.analyzeConnection(
 			*chainedConn,
-			compInterface,
+			iface,
 			nodes,
 			nodesIfaces,
 			scope,
 			nodesUsage,
 		)
 		if err != nil {
-			return src.Connection{}, err
+			return nil, err
 		}
 
-		// Update the chained connection with the analyzed version
+		// update the chained connection with the analyzed version
 		receiverSide.ChainedConnection = &analyzedChainedConn
 
 		if chainHead.PortAddr != nil {
 			// don't forget to mark the receiver side as used
 			// (in recursive call it's marked as sender, but it's also receiver)
-			nodesNetUsage(nodesUsage).AddInport(
-				chainHead.PortAddr.Node,
-				chainHead.PortAddr.Port,
-			)
+			netNodesUsage(nodesUsage).AddInport(*chainHead.PortAddr)
 		}
 	}
 
 	for _, receiver := range receiverSide.Receivers {
-		inportTypeExpr, isReceiverArr, err := a.getReceiverType(
+		inportTypeExpr, isReceiverArr, err := a.getReceiverPortType(
 			receiver.PortAddr,
-			compInterface,
+			iface,
 			nodes,
 			nodesIfaces,
 			scope,
 		)
 		if err != nil {
-			return src.Connection{}, compiler.Error{
+			return nil, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
 			}.Wrap(err)
 		}
 
-		// make sure only array outports has indexes
 		if !isReceiverArr && receiver.PortAddr.Idx != nil {
-			return src.Connection{}, &compiler.Error{
+			return nil, &compiler.Error{
 				Err:      errors.New("Index for non-array port"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
 			}
 		}
 
-		// make sure array inports always has indexes (it's not arr-bypass)
 		if isReceiverArr && receiver.PortAddr.Idx == nil {
-			return src.Connection{}, &compiler.Error{
+			return nil, &compiler.Error{
 				Err:      errors.New("Index needed for array inport"),
 				Meta:     &receiver.PortAddr.Meta,
 				Location: &scope.Location,
 			}
 		}
 
-		if err := a.resolver.IsSubtypeOf(resolvedSenderType, inportTypeExpr, scope); err != nil {
-			return src.Connection{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"Incompatible types: %v -> %v: %w",
-					senderSide, receiver, err,
-				),
-				Location: &scope.Location,
-				Meta:     &conn.Meta,
+		for i, resolvedSenderType := range resolvedSenderTypes {
+			if err := a.resolver.IsSubtypeOf(*resolvedSenderType, inportTypeExpr, scope); err != nil {
+				return nil, &compiler.Error{
+					Err: fmt.Errorf(
+						"Incompatible types: %v -> %v: %w",
+						analyzedSenders[i], receiver, err,
+					),
+					Location: &scope.Location,
+					Meta:     &normConn.Meta,
+				}
 			}
 		}
 
-		nodesNetUsage(nodesUsage).AddInport(
-			receiver.PortAddr.Node,
-			receiver.PortAddr.Port,
-		)
+		netNodesUsage(nodesUsage).AddInport(receiver.PortAddr)
 	}
 
-	return src.Connection{
-		Normal: &src.NormalConnection{
-			SenderSide: resolvedSenderSide,
-			ReceiverSide: src.ConnectionReceiverSide{
-				DeferredConnections: analyzedDeferredConnections,
-				Receivers:           receiverSide.Receivers,
-				ChainedConnection:   receiverSide.ChainedConnection,
-			},
+	return &src.NormalConnection{
+		SenderSide: analyzedSenders,
+		ReceiverSide: src.ConnectionReceiverSide{
+			DeferredConnections: analyzedDeferredConnections,
+			Receivers:           receiverSide.Receivers,
+			ChainedConnection:   receiverSide.ChainedConnection,
 		},
-		Meta: conn.Meta,
 	}, nil
 }
 
-// nodeNetUsage shows which ports was used by the network
-type nodeNetUsage struct {
-	In, Out map[string]struct{}
+func (a Analyzer) analyzeSenderSide(
+	senders []src.ConnectionSender,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
+	// TODO replace string as key with PortAddr as soon as it doesn't have pointer in it
+	seenPortAddrs := make(map[string]struct{}, len(senders))
+	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
+	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
+
+	for _, sender := range senders {
+		analyzedSender, expr, err := a.analyzeSender(
+			sender,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+		)
+		if err != nil {
+			return nil, nil, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &sender.Meta,
+			}.Wrap(err)
+		}
+
+		analyzedSenders = append(analyzedSenders, *analyzedSender)
+		resolvedSenderTypes = append(resolvedSenderTypes, expr)
+
+		if sender.PortAddr == nil {
+			continue
+		}
+
+		s := sender.PortAddr.String()
+		if _, ok := seenPortAddrs[s]; ok {
+			return nil, nil, &compiler.Error{
+				Err:      fmt.Errorf("senders must be unique: %v", s),
+				Location: &scope.Location,
+				Meta:     &sender.Meta,
+			}
+		}
+		seenPortAddrs[s] = struct{}{}
+	}
+
+	return analyzedSenders, resolvedSenderTypes, nil
 }
 
-// checkNetPortsUsage ensures that:
-// Every self inport and outport is used;
-// Every sub-node's inport is used;
-// For every sub-node's there's at least one used outport.
-func (Analyzer) checkNetPortsUsage(
+func (a Analyzer) analyzeSender(
+	sender src.ConnectionSender,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
+	if sender.PortAddr == nil && sender.Const == nil && sender.Range == nil {
+		return nil, nil, &compiler.Error{
+			Err:      ErrEmptySender,
+			Location: &scope.Location,
+			Meta:     &sender.Meta,
+		}
+	}
+
+	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
+		sender,
+		iface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
+	if err != nil {
+		return nil, nil, compiler.Error{
+			Location: &scope.Location,
+			Meta:     &sender.Meta,
+		}.Wrap(err)
+	}
+
+	if sender.PortAddr != nil {
+		if !isSenderArr && sender.PortAddr.Idx != nil {
+			return nil, nil, &compiler.Error{
+				Err:      errors.New("Index for non-array port"),
+				Meta:     &sender.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
+		if isSenderArr && sender.PortAddr.Idx == nil {
+			return nil, nil, &compiler.Error{
+				Err:      errors.New("Index needed for array outport"),
+				Meta:     &sender.PortAddr.Meta,
+				Location: &scope.Location,
+			}
+		}
+
+		netNodesUsage(nodesUsage).AddOutport(*sender.PortAddr)
+	}
+
+	if len(sender.Selectors) > 0 {
+		lastFieldType, err := a.getStructFieldTypeByPath(
+			resolvedSenderType,
+			sender.Selectors,
+			scope,
+		)
+		if err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &sender.Meta,
+			}
+		}
+		resolvedSenderType = lastFieldType
+	}
+
+	return &resolvedSender, &resolvedSenderType, nil
+}
+
+func (a Analyzer) analyzeArrayBypassConnection(
+	conn src.Connection,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+) *compiler.Error {
+	arrBypassConn := conn.ArrayBypass
+
+	senderType, isArray, err := a.getSenderPortType(
+		arrBypassConn.SenderOutport,
+		scope,
+		iface,
+		nodes,
+		nodesIfaces,
+	)
+	if err != nil {
+		return compiler.Error{
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
+		}.Wrap(err)
+	}
+	if !isArray {
+		return &compiler.Error{
+			Err:      errors.New("Non-array outport in array-bypass connection"),
+			Location: &scope.Location,
+			Meta:     &arrBypassConn.SenderOutport.Meta,
+		}
+	}
+
+	receiverType, isArray, err := a.getReceiverPortType(
+		arrBypassConn.ReceiverInport,
+		iface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
+	if err != nil {
+		return compiler.Error{
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
+		}.Wrap(err)
+	}
+	if !isArray {
+		return &compiler.Error{
+			Err:      errors.New("Non-array outport in array-bypass connection"),
+			Location: &scope.Location,
+			Meta:     &arrBypassConn.SenderOutport.Meta,
+		}
+	}
+
+	if err := a.resolver.IsSubtypeOf(
+		senderType,
+		receiverType,
+		scope,
+	); err != nil {
+		return &compiler.Error{
+			Err: fmt.Errorf(
+				"Incompatible types: %v -> %v: %w",
+				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
+			),
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
+		}
+	}
+
+	netNodesUsage(nodesUsage).AddOutport(arrBypassConn.SenderOutport)
+	netNodesUsage(nodesUsage).AddInport(arrBypassConn.ReceiverInport)
+
+	return nil
+}
+
+func (a Analyzer) checkNetPortsUsage(
 	compInterface src.Interface,
 	nodesIfaces map[string]foundInterface,
 	hasGuard bool,
 	scope src.Scope,
-	nodesUsage map[string]nodeNetUsage,
+	nodesUsage map[string]netNodeUsage,
 	nodes map[string]src.Node,
 ) *compiler.Error {
+	// 1. check that every self inport is used
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
 		return &compiler.Error{
@@ -421,6 +525,7 @@ func (Analyzer) checkNetPortsUsage(
 		}
 	}
 
+	// 2. check that every self outport is used
 	outportsUsage, ok := nodesUsage["out"]
 	if !ok {
 		return &compiler.Error{
@@ -431,11 +536,11 @@ func (Analyzer) checkNetPortsUsage(
 	}
 
 	for outportName := range compInterface.IO.Out {
-		// note that self outports are inports for the network
-		if _, ok := outportsUsage.In[outportName]; ok {
+		if _, ok := outportsUsage.In[outportName]; ok { // self outports are inports in network
 			continue
 		}
 
+		// err outport is allowed to be unused if parent uses guard
 		if outportName == "err" && hasGuard {
 			continue
 		}
@@ -446,7 +551,9 @@ func (Analyzer) checkNetPortsUsage(
 		}
 	}
 
+	// 3. check sub-nodes usage in network
 	for nodeName, nodeIface := range nodesIfaces {
+		// check that every sub-node is used
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
@@ -455,61 +562,66 @@ func (Analyzer) checkNetPortsUsage(
 			}
 		}
 
+		// every sub-node's inport is used
 		for inportName := range nodeIface.iface.IO.In {
-			if _, ok := nodeUsage.In[inportName]; !ok {
-				// maybe it's portless connection
-				if _, ok := nodeUsage.In[""]; ok && len(nodeIface.iface.IO.In) == 1 {
-					continue
-				}
+			if _, ok := nodeUsage.In[inportName]; ok {
+				continue
+			}
 
-				meta := nodeIface.iface.IO.In[inportName].Meta
+			_, portless := nodeUsage.In[""]
+			if portless && len(nodeIface.iface.IO.In) == 1 {
+				continue
+			}
 
-				return &compiler.Error{
-					Err: fmt.Errorf(
-						"Unused node inport: %v:%v",
-						nodeName,
-						inportName,
-					),
-					Location: &scope.Location,
-					Meta:     &meta,
-				}
+			return &compiler.Error{
+				Err: fmt.Errorf(
+					"Unused node inport: %v:%v",
+					nodeName,
+					inportName,
+				),
+				Location: &scope.Location,
+				Meta:     compiler.Pointer(nodeIface.iface.IO.In[inportName].Meta),
 			}
 		}
 
-		if len(nodeIface.iface.IO.Out) == 0 { // e.g. std/builtin.Del
+		if len(nodeIface.iface.IO.Out) == 0 { // e.g. Del
 			continue
 		}
 
+		// :err outport is always used and at least one outport is used in general
 		atLeastOneOutportIsUsed := false
-		for outportName := range nodeIface.iface.IO.Out {
-			if _, ok := nodeUsage.Out[outportName]; !ok {
+		for outportName, port := range nodeIface.iface.IO.Out {
+			_, portUsed := nodeUsage.Out[outportName]
+
+			if portUsed {
+				if outportName == "err" && nodes[nodeName].ErrGuard {
+					return &compiler.Error{
+						Err: fmt.Errorf(
+							"if node has error guard '?' it's ':err' outport must not be explicitly used in the network: %v",
+							nodeName,
+						),
+						Location: &scope.Location,
+						Meta:     &port.Meta,
+					}
+				}
+
+				atLeastOneOutportIsUsed = true
 				continue
 			}
 
-			atLeastOneOutportIsUsed = true
-
-			if outportName != "err" {
-				continue
-			}
-
-			meta := nodes[nodeName].Meta
-
-			if nodes[nodeName].ErrGuard {
+			if outportName == "err" && !nodes[nodeName].ErrGuard {
 				return &compiler.Error{
 					Err: fmt.Errorf(
-						"%w: %v",
-						ErrGuardMixedWithExplicitErrConn,
+						"unhandled error: ':err' outport must always be used either explicitly or with ? operator: %v",
 						nodeName,
 					),
 					Location: &scope.Location,
-					Meta:     &meta,
+					Meta:     &port.Meta,
 				}
 			}
-
 		}
 
 		if !atLeastOneOutportIsUsed {
-			// maybe it's portless connection
 			if _, ok := nodeUsage.Out[""]; ok && len(nodeIface.iface.IO.Out) == 1 {
 				continue
 			}
@@ -522,12 +634,14 @@ func (Analyzer) checkNetPortsUsage(
 		}
 	}
 
-	// TODO make sure we don't use same sender twice or more outside of the fan-out expression
-	
+	// TODO
+	// 4. check that each sender and receiver is used at most once
+	// 5. check that array ports are used correctly (from 0 and without holes)
+
 	return nil
 }
 
-func (a Analyzer) getReceiverType(
+func (a Analyzer) getReceiverPortType(
 	receiverSide src.PortAddr,
 	iface src.Interface,
 	nodes map[string]src.Node,
@@ -689,19 +803,19 @@ func (a Analyzer) getResolvedPortType(
 }
 
 func (a Analyzer) getSenderSideType(
-	senderSide src.ConnectionSenderSide,
+	senderSide src.ConnectionSender,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
-) (src.ConnectionSenderSide, ts.Expr, bool, *compiler.Error) {
+) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if senderSide.Const != nil {
 		resolvedConst, resolvedExpr, err := a.getResolvedSenderConstType(*senderSide.Const, scope)
 		if err != nil {
-			return src.ConnectionSenderSide{}, ts.Expr{}, false, err
+			return src.ConnectionSender{}, ts.Expr{}, false, err
 		}
 
-		return src.ConnectionSenderSide{
+		return src.ConnectionSender{
 			Const:     &resolvedConst,
 			Selectors: senderSide.Selectors,
 			Meta:      senderSide.Meta,
@@ -721,7 +835,7 @@ func (a Analyzer) getSenderSideType(
 		return senderSide, rangeType, false, nil
 	}
 
-	resolvedExpr, isArr, err := a.getSenderPortAddrType(
+	resolvedExpr, isArr, err := a.getSenderPortType(
 		*senderSide.PortAddr,
 		scope,
 		iface,
@@ -729,18 +843,18 @@ func (a Analyzer) getSenderSideType(
 		nodesIfaces,
 	)
 	if err != nil {
-		return src.ConnectionSenderSide{}, ts.Expr{}, false, err
+		return src.ConnectionSender{}, ts.Expr{}, false, err
 	}
 
-	return src.ConnectionSenderSide{
+	return src.ConnectionSender{
 		PortAddr:  senderSide.PortAddr,
 		Selectors: senderSide.Selectors,
 		Meta:      senderSide.Meta,
 	}, resolvedExpr, isArr, nil
 }
 
-// getSenderPortAddrType returns port's type and isArray bool
-func (a Analyzer) getSenderPortAddrType(
+// getSenderPortType returns port's type and isArray bool
+func (a Analyzer) getSenderPortType(
 	senderSidePortAddr src.PortAddr,
 	scope src.Scope,
 	iface src.Interface,
@@ -966,7 +1080,7 @@ func (a Analyzer) getStructFieldTypeByPath(
 }
 
 func (a Analyzer) getChainHeadType(
-	chainHead src.ConnectionSenderSide,
+	chainHead src.ConnectionSender,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,

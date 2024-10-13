@@ -285,10 +285,11 @@ type Connection struct {
 	Meta        core.Meta              `json:"meta,omitempty"`
 }
 
+// TODO: move slices for receivers to this level
 type NormalConnection struct {
-	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
+	SenderSide   []ConnectionSender     `json:"senderSide,omitempty"`
 	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
-	// TODO: move slices to this level (for both sides)
+	Meta         core.Meta              `json:"meta,omitempty"`
 }
 
 type ArrayBypassConnection struct {
@@ -297,9 +298,10 @@ type ArrayBypassConnection struct {
 }
 
 type ConnectionReceiverSide struct {
+	// Refactor: chained and deferred connections must be kinds of receivers
 	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
 	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
-	ChainedConnection   *Connection          `json:"chainedConnection,omitempty"` // New field
+	ChainedConnection   *Connection          `json:"chainedConnection,omitempty"`
 }
 
 type ConnectionReceiver struct {
@@ -331,8 +333,8 @@ func (c ConnectionSideSelectors) String() string {
 	return s
 }
 
-// ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
-type ConnectionSenderSide struct {
+// ConnectionSender unlike ReceiverConnectionSide could refer to constant.
+type ConnectionSender struct {
 	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
 	Const     *Const     `json:"literal,omitempty"`
 	Range     *RangeExpr `json:"range,omitempty"` // New field
@@ -346,7 +348,7 @@ type RangeExpr struct {
 	Meta core.Meta `json:"meta,omitempty"`
 }
 
-func (s ConnectionSenderSide) String() string {
+func (s ConnectionSender) String() string {
 	selectorsString := ""
 	if len(s.Selectors) != 0 {
 		for _, selector := range s.Selectors {
@@ -374,7 +376,7 @@ func (s ConnectionSenderSide) String() string {
 type PortAddr struct {
 	Node string    `json:"node,omitempty"`
 	Port string    `json:"port,omitempty"`
-	Idx  *uint8    `json:"idx,omitempty"`
+	Idx  *uint8    `json:"idx,omitempty"` // TODO use bool flag instead of pointer to avoid problems with equality
 	Meta core.Meta `json:"meta,omitempty"`
 }
 

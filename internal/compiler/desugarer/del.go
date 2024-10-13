@@ -39,7 +39,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
+					SenderSide: src.ConnectionSender{
 						PortAddr: &src.PortAddr{
 							Node: nodeName,
 							Port: portName,

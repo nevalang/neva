@@ -110,7 +110,7 @@ func (d Desugarer) desugarDeferredConnections(
 			// 4) create connection from blocker:data to every receiver in deferred connection
 			src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
+					SenderSide: src.ConnectionSender{
 						PortAddr: &src.PortAddr{
 							Node: virtualBlockerName,
 							Port: "data",

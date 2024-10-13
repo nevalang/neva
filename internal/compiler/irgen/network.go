@@ -107,7 +107,7 @@ func (g Generator) processNetwork(
 
 func (g Generator) processSenderSide(
 	nodeCtx nodeContext,
-	senderSide src.ConnectionSenderSide,
+	senderSide src.ConnectionSender,
 	result map[string]portsUsage,
 ) (ir.PortAddr, error) {
 	// there could be many connections with the same sender but we must only add it once

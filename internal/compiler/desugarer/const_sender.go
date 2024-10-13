@@ -67,7 +67,7 @@ func (d Desugarer) handleLiteralSender(
 		handleConstRefSenderResult: handleConstRefSenderResult{
 			connToReplace: src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
+					SenderSide: src.ConnectionSender{
 						PortAddr:  &emitterNodeOutportAddr,
 						Selectors: conn.Normal.SenderSide.Selectors,
 						Meta:      conn.Normal.SenderSide.Meta,
@@ -123,7 +123,7 @@ func (d Desugarer) handleConstRefSender(
 	return handleConstRefSenderResult{
 		connToReplace: src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
+				SenderSide: src.ConnectionSender{
 					PortAddr:  &emitterNodeOutportAddr,
 					Selectors: conn.Normal.SenderSide.Selectors,
 					Meta:      conn.Normal.SenderSide.Meta,

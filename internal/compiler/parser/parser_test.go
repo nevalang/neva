@@ -23,14 +23,14 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
-	require.Equal(t, "userSender", conn.SenderSide.PortAddr.Node)
-	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
-	require.Equal(t, "pet", conn.SenderSide.Selectors[0])
-	require.Equal(t, "name", conn.SenderSide.Selectors[1])
+	require.Equal(t, "userSender", conn.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "", conn.SenderSide[0].PortAddr.Port)
+	require.Equal(t, "pet", conn.SenderSide[0].Selectors[0])
+	require.Equal(t, "name", conn.SenderSide[0].Selectors[1])
 
 	chain := conn.ReceiverSide.ChainedConnection.Normal
-	require.Equal(t, "println", chain.SenderSide.PortAddr.Node)
-	require.Equal(t, "", chain.SenderSide.PortAddr.Port)
+	require.Equal(t, "println", chain.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "", chain.SenderSide[0].PortAddr.Port)
 
 	chainReceiver := chain.ReceiverSide.Receivers[0].PortAddr
 	require.Equal(t, "stop", chainReceiver.Port)
@@ -52,9 +52,9 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	conn := net[0].Normal
 
 	// foo[0]->
-	require.Equal(t, "foo", conn.SenderSide.PortAddr.Node)
-	require.Equal(t, "", conn.SenderSide.PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(0)), conn.SenderSide.PortAddr.Idx)
+	require.Equal(t, "foo", conn.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "", conn.SenderSide[0].PortAddr.Port)
+	require.Equal(t, compiler.Pointer(uint8(0)), conn.SenderSide[0].PortAddr.Idx)
 
 	// ->bar[255]
 	require.Equal(t, "bar", conn.ReceiverSide.Receivers[0].PortAddr.Node)
@@ -78,19 +78,19 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
-	require.Equal(t, "in", conn.SenderSide.PortAddr.Node)
-	require.Equal(t, "start", conn.SenderSide.PortAddr.Port)
+	require.Equal(t, "in", conn.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "start", conn.SenderSide[0].PortAddr.Port)
 
 	deferred := conn.ReceiverSide.DeferredConnections
 	require.Equal(t, 1, len(deferred))
 
-	deferSender := deferred[0].Normal.SenderSide.PortAddr
+	deferSender := deferred[0].Normal.SenderSide[0].PortAddr
 	require.Equal(t, "foo", deferSender.Node)
 	require.Equal(t, "", deferSender.Port)
 
 	chainHead := deferred[0].Normal.ReceiverSide.ChainedConnection.Normal
-	require.Equal(t, "bar", chainHead.SenderSide.PortAddr.Node)
-	require.Equal(t, "", chainHead.SenderSide.PortAddr.Port)
+	require.Equal(t, "bar", chainHead.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "", chainHead.SenderSide[0].PortAddr.Port)
 
 	chainTail := chainHead.ReceiverSide.Receivers[0].PortAddr
 	require.Equal(t, "out", chainTail.Node)
@@ -121,7 +121,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	require.Equal(t, "", receiverPortAddr.Port)
 
 	// 2) lonely -> :port
-	senderPortAddr := net[1].Normal.SenderSide.PortAddr
+	senderPortAddr := net[1].Normal.SenderSide[0].PortAddr
 	require.Equal(t, "lonely", senderPortAddr.Node)
 	require.Equal(t, "", senderPortAddr.Port)
 }
@@ -140,12 +140,12 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	require.Equal(t, 1, len(net))
 	conn := net[0].Normal
 
-	sender := conn.SenderSide.PortAddr
+	sender := conn.SenderSide[0].PortAddr
 	require.Equal(t, "in", sender.Node)
 	require.Equal(t, "foo", sender.Port)
 
 	chain := conn.ReceiverSide.ChainedConnection.Normal
-	chainSender := chain.SenderSide.PortAddr
+	chainSender := chain.SenderSide[0].PortAddr
 	require.Equal(t, "n1", chainSender.Node)
 	require.Equal(t, "p1", chainSender.Port)
 
@@ -233,7 +233,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 
 	conn := got.Entities["C1"].Component.Net[0]
 
-	sender := conn.Normal.SenderSide.PortAddr.Node
+	sender := conn.Normal.SenderSide[0].PortAddr.Node
 	require.Equal(t, "in", sender)
 
 	receiver := conn.Normal.ReceiverSide.Receivers[0].PortAddr.Node
@@ -300,13 +300,13 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 
 	conn := got.Entities["C1"].Component.Net[0]
 
-	senderEnum := conn.Normal.SenderSide.Const.Value.Message.Enum
+	senderEnum := conn.Normal.SenderSide[0].Const.Value.Message.Enum
 	require.Equal(t, "", senderEnum.EnumRef.Pkg)
 	require.Equal(t, "Foo", senderEnum.EnumRef.Name)
 	require.Equal(t, "Bar", senderEnum.MemberName)
 
 	conn = got.Entities["C1"].Component.Net[1]
-	senderEnum = conn.Normal.SenderSide.Const.Value.Message.Enum
+	senderEnum = conn.Normal.SenderSide[0].Const.Value.Message.Enum
 	require.Equal(t, "foo", senderEnum.EnumRef.Pkg)
 	require.Equal(t, "Bar", senderEnum.EnumRef.Name)
 	require.Equal(t, "Baz", senderEnum.MemberName)
@@ -328,9 +328,9 @@ func TestParser_ParseFile_RangeExpression(t *testing.T) {
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide.Range)
-	require.Equal(t, int64(1), conn.SenderSide.Range.From)
-	require.Equal(t, int64(10), conn.SenderSide.Range.To)
+	require.NotNil(t, conn.SenderSide[0].Range)
+	require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
+	require.Equal(t, int64(10), conn.SenderSide[0].Range.To)
 	require.Equal(t, "out", conn.ReceiverSide.Receivers[0].PortAddr.Port)
 }
 
@@ -351,15 +351,15 @@ func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
 	require.Equal(t, 2, len(net))
 
 	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide.Range)
-	require.Equal(t, int64(1), conn1.SenderSide.Range.From)
-	require.Equal(t, int64(5), conn1.SenderSide.Range.To)
+	require.NotNil(t, conn1.SenderSide[0].Range)
+	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+	require.Equal(t, int64(5), conn1.SenderSide[0].Range.To)
 	require.Equal(t, "out1", conn1.ReceiverSide.Receivers[0].PortAddr.Port)
 
 	conn2 := net[1].Normal
-	require.NotNil(t, conn2.SenderSide.Range)
-	require.Equal(t, int64(10), conn2.SenderSide.Range.From)
-	require.Equal(t, int64(20), conn2.SenderSide.Range.To)
+	require.NotNil(t, conn2.SenderSide[0].Range)
+	require.Equal(t, int64(10), conn2.SenderSide[0].Range.From)
+	require.Equal(t, int64(20), conn2.SenderSide[0].Range.To)
 	require.Equal(t, "out2", conn2.ReceiverSide.Receivers[0].PortAddr.Port)
 }
 
@@ -379,9 +379,9 @@ func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide.Range)
-	require.Equal(t, int64(-5), conn.SenderSide.Range.From)
-	require.Equal(t, int64(5), conn.SenderSide.Range.To)
+	require.NotNil(t, conn.SenderSide[0].Range)
+	require.Equal(t, int64(-5), conn.SenderSide[0].Range.From)
+	require.Equal(t, int64(5), conn.SenderSide[0].Range.To)
 	require.Equal(t, "out", conn.ReceiverSide.Receivers[0].PortAddr.Port)
 }
 
@@ -403,19 +403,19 @@ func TestParser_ParseFile_RangeExpressionMixedWithOtherConnections(t *testing.T)
 	require.Equal(t, 3, len(net))
 
 	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide.Range)
-	require.Equal(t, int64(1), conn1.SenderSide.Range.From)
-	require.Equal(t, int64(10), conn1.SenderSide.Range.To)
+	require.NotNil(t, conn1.SenderSide[0].Range)
+	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+	require.Equal(t, int64(10), conn1.SenderSide[0].Range.To)
 	require.Equal(t, "out1", conn1.ReceiverSide.Receivers[0].PortAddr.Port)
 
 	conn2 := net[1].Normal
-	require.Nil(t, conn2.SenderSide.Range)
-	require.Equal(t, "in", conn2.SenderSide.PortAddr.Node)
+	require.Nil(t, conn2.SenderSide[0].Range)
+	require.Equal(t, "in", conn2.SenderSide[0].PortAddr.Node)
 	require.Equal(t, "out2", conn2.ReceiverSide.Receivers[0].PortAddr.Port)
 
 	conn3 := net[2].Normal
-	require.NotNil(t, conn3.SenderSide.Range)
-	require.Equal(t, int64(20), conn3.SenderSide.Range.From)
-	require.Equal(t, int64(30), conn3.SenderSide.Range.To)
+	require.NotNil(t, conn3.SenderSide[0].Range)
+	require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
+	require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
 	require.Equal(t, "out3", conn3.ReceiverSide.Receivers[0].PortAddr.Port)
 }

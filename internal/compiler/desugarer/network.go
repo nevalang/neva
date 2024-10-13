@@ -102,7 +102,7 @@ func (d Desugarer) networkFinalProcessing(
 					ReceiverSide: src.ConnectionReceiverSide{
 						Receivers: []src.ConnectionReceiver{{PortAddr: receiver}},
 					},
-					SenderSide: src.ConnectionSenderSide{PortAddr: &senders[0]},
+					SenderSide: src.ConnectionSender{PortAddr: &senders[0]},
 				},
 			})
 			continue
@@ -129,7 +129,7 @@ func (d Desugarer) networkFinalProcessing(
 			s := sender
 			finalNet = append(finalNet, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
+					SenderSide: src.ConnectionSender{
 						PortAddr: &s,
 					},
 					ReceiverSide: src.ConnectionReceiverSide{
@@ -150,7 +150,7 @@ func (d Desugarer) networkFinalProcessing(
 		// 3. create new connection with fan-in as sender and original receiver as receiver
 		finalNet = append(finalNet, src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
+				SenderSide: src.ConnectionSender{
 					PortAddr: &src.PortAddr{
 						Node: fanInNodeName,
 						Port: "res",
@@ -211,7 +211,7 @@ func (d Desugarer) desugarConnection(
 
 			conn = src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
+					SenderSide: src.ConnectionSender{
 						PortAddr: &src.PortAddr{
 							Port: firstOutportName,
 							Node: conn.Normal.SenderSide.PortAddr.Node,
@@ -542,7 +542,7 @@ func (d Desugarer) desugarFanOut(receiverSides []src.ConnectionReceiver) desugar
 	for i, receiver := range receiverSides {
 		connsToInsert = append(connsToInsert, src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
+				SenderSide: src.ConnectionSender{
 					PortAddr: &src.PortAddr{
 						Node: nodeName,
 						Port: "data",
@@ -615,7 +615,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (handleRangeSenderResu
 	connectionsToInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
+				SenderSide: src.ConnectionSender{
 					PortAddr: &src.PortAddr{Node: fromConstName, Port: "msg"},
 				},
 				ReceiverSide: src.ConnectionReceiverSide{
@@ -627,7 +627,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (handleRangeSenderResu
 		},
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
+				SenderSide: src.ConnectionSender{
 					PortAddr: &src.PortAddr{Node: toConstName, Port: "msg"},
 				},
 				ReceiverSide: src.ConnectionReceiverSide{
@@ -641,7 +641,7 @@ func (d Desugarer) handleRangeSender(conn src.Connection) (handleRangeSenderResu
 
 	connToReplace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: src.ConnectionSenderSide{
+			SenderSide: src.ConnectionSender{
 				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
 			},
 			ReceiverSide: conn.Normal.ReceiverSide,
