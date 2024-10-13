@@ -14,13 +14,14 @@ type Compiler struct {
 	be Backend
 }
 
-func (c Compiler) Compile(
-	ctx context.Context,
-	main string,
-	output string,
-	trace bool,
-) error {
-	feResult, err := c.fe.Process(ctx, main)
+type CompilerInput struct {
+	Main   string
+	Output string
+	Trace  bool
+}
+
+func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
+	feResult, err := c.fe.Process(ctx, input.Main)
 	if err != nil {
 		return err
 	}
@@ -30,7 +31,7 @@ func (c Compiler) Compile(
 		return err
 	}
 
-	return c.be.Emit(output, meResult.IR, trace)
+	return c.be.Emit(input.Output, meResult.IR, input.Trace)
 }
 
 type Frontend struct {

@@ -39,7 +39,13 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				trace = true
 			}
 
-			if err := nativec.Compile(cliCtx.Context, mainPkg, output, trace); err != nil {
+			input := compiler.CompilerInput{
+				Main:   mainPkg,
+				Output: output,
+				Trace:  trace,
+			}
+
+			if err := nativec.Compile(cliCtx.Context, input); err != nil {
 				return err
 			}
 
