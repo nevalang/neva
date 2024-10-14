@@ -137,10 +137,7 @@ singleSenderSide: (
 		| rangeExpr
 	) structSelectors?;
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
-receiverSide:
-	chainedNormConn
-	| singleReceiverSide
-	| multipleReceiverSide;
+receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
@@ -158,7 +155,7 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-singleReceiverSide: portAddr | deferredConn;
+singleReceiverSide: chainedNormConn | portAddr | deferredConn;
 multipleReceiverSide:
 	'[' NEWLINE* singleReceiverSide (
 		',' NEWLINE* singleReceiverSide NEWLINE*

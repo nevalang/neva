@@ -29,7 +29,7 @@ func parseNet(actx generated.IConnDefListContext) ([]src.Connection, *compiler.E
 }
 
 func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
-	connMeta := core.Meta{
+	meta := core.Meta{
 		Text: connDef.GetText(),
 		Start: core.Position{
 			Line:   connDef.GetStart().GetLine(),
@@ -47,32 +47,39 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	if normConn == nil && arrBypassConn == nil {
 		return src.Connection{}, &compiler.Error{
 			Err:  ErrEmptyConnDef,
-			Meta: &connMeta,
+			Meta: &meta,
 		}
 	}
 
 	if arrBypassConn != nil {
-		parsed, err := parseArrayBypassConn(arrBypassConn, connMeta)
-		if err != nil {
-			return src.Connection{}, err
-		}
-		return parsed, nil
+		return parseArrayBypassConn(arrBypassConn)
 	}
 
-	return parseNormConn(normConn, connMeta)
+	return parseNormConn(normConn)
 }
 
 func parseArrayBypassConn(
 	arrBypassConn generated.IArrBypassConnDefContext,
-	connMeta core.Meta,
 ) (src.Connection, *compiler.Error) {
 	senderPortAddr := arrBypassConn.SinglePortAddr(0)
 	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
 
+	meta := core.Meta{
+		Text: arrBypassConn.GetText(),
+		Start: core.Position{
+			Line:   arrBypassConn.GetStart().GetLine(),
+			Column: arrBypassConn.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   arrBypassConn.GetStop().GetLine(),
+			Column: arrBypassConn.GetStop().GetColumn(),
+		},
+	}
+
 	senderPortAddrParsed, err := parseSinglePortAddr(
 		"in",
 		senderPortAddr,
-		connMeta,
+		meta,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -81,7 +88,7 @@ func parseArrayBypassConn(
 	receiverPortAddrParsed, err := parseSinglePortAddr(
 		"out",
 		receiverPortAddr,
-		connMeta,
+		meta,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -92,94 +99,68 @@ func parseArrayBypassConn(
 			SenderOutport:  senderPortAddrParsed,
 			ReceiverInport: receiverPortAddrParsed,
 		},
-		Meta: connMeta,
+		Meta: meta,
 	}, nil
 }
 
 func parseNormConn(
-	normConn generated.INormConnDefContext,
-	connMeta core.Meta,
+	actx generated.INormConnDefContext,
 ) (src.Connection, *compiler.Error) {
-	parsedSenders, err := parseSenderSide(normConn, connMeta)
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
+	parsedSenderSide, err := parseSenderSide(actx.SenderSide())
 	if err != nil {
 		return src.Connection{}, err
 	}
 
-	receiverSide := normConn.ReceiverSide()
-	chainedConn := receiverSide.ChainedNormConn()
-	singleReceiverSide := receiverSide.SingleReceiverSide()
-	multipleReceiverSide := receiverSide.MultipleReceiverSide()
-
-	if chainedConn == nil &&
-		singleReceiverSide == nil &&
-		multipleReceiverSide == nil {
-		return src.Connection{}, &compiler.Error{
-			Err:  errors.New("Connection must have a receiver side"),
-			Meta: &connMeta,
-		}
-	}
-
-	if chainedConn == nil {
-		parsedReceiverSide, err := parseNormConnReceiverSide(normConn, connMeta)
-		if err != nil {
-			return src.Connection{}, compiler.Error{Meta: &connMeta}.Wrap(err)
-		}
-
-		conn := src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide:   parsedSenders,
-				ReceiverSide: parsedReceiverSide,
-			},
-			Meta: connMeta,
-		}
-
-		return conn, nil
-	}
-
-	// --- chained connection ---
-
-	chainedNormConn := chainedConn.NormConnDef()
-	chainedConnMeta := core.Meta{
-		Text: chainedNormConn.GetText(),
-		Start: core.Position{
-			Line:   chainedNormConn.GetStart().GetLine(),
-			Column: chainedNormConn.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   chainedNormConn.GetStop().GetLine(),
-			Column: chainedNormConn.GetStop().GetColumn(),
-		},
-	}
-
-	parsedChainedConn, err := parseNormConn(chainedNormConn, chainedConnMeta)
+	parsedReceiverSide, err := parseReceiverSide(actx.ReceiverSide())
 	if err != nil {
 		return src.Connection{}, err
 	}
 
 	return src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: parsedSenders,
-			ReceiverSide: src.ConnectionReceiverSide{
-				ChainedConnection: &parsedChainedConn,
-			},
+			SenderSide:   parsedSenderSide,
+			ReceiverSide: parsedReceiverSide,
 		},
-		Meta: connMeta,
+		Meta: meta,
 	}, nil
 }
 
 func parseSenderSide(
-	normConn generated.INormConnDefContext,
-	connMeta core.Meta,
+	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
-	singleSender := normConn.SenderSide().SingleSenderSide()
-	mulSenders := normConn.SenderSide().MultipleSenderSide()
+	singleSender := actx.SingleSenderSide()
+	mulSenders := actx.MultipleSenderSide()
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
 
 	if singleSender == nil && mulSenders == nil {
 		return nil, &compiler.Error{
 			Err: errors.New(
 				"Connection must have at least one sender side",
 			),
-			Meta: &connMeta,
+			Meta: &meta,
 		}
 	}
 
@@ -196,7 +177,7 @@ func parseSenderSide(
 		if err != nil {
 			return nil, &compiler.Error{
 				Err:  err,
-				Meta: &connMeta,
+				Meta: &meta,
 			}
 		}
 		parsedSenders = append(parsedSenders, parsedSide)
@@ -205,135 +186,136 @@ func parseSenderSide(
 	return parsedSenders, nil
 }
 
-func parseNormConnReceiverSide(
-	normConn generated.INormConnDefContext,
-	connMeta core.Meta,
-) (src.ConnectionReceiverSide, *compiler.Error) {
-	receiverSide := normConn.ReceiverSide()
-	singleReceiverSide := receiverSide.SingleReceiverSide()
-	multipleReceiverSide := receiverSide.MultipleReceiverSide()
+func parseSingleReceiverSide(
+	actx generated.ISingleReceiverSideContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	deferredConn := actx.DeferredConn()
+	portAddr := actx.PortAddr()
+	chainedConn := actx.ChainedNormConn()
 
-	if singleReceiverSide == nil && multipleReceiverSide == nil {
-		return src.ConnectionReceiverSide{}, &compiler.Error{
-			Err: errors.New("no receiver sides at all"),
-			Meta: &core.Meta{
-				Text: normConn.GetText(),
-				Start: core.Position{
-					Line:   normConn.GetStart().GetLine(),
-					Column: normConn.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   normConn.GetStop().GetLine(),
-					Column: normConn.GetStop().GetColumn(),
-				},
-			},
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
+	switch {
+	case deferredConn != nil:
+		return parseDeferredConn(deferredConn)
+	case chainedConn != nil:
+		return parseChainedConnExpr(chainedConn, meta)
+	case portAddr != nil:
+		return parsePortAddrReceiver(portAddr)
+	default:
+		return src.ConnectionReceiver{}, &compiler.Error{
+			Err:  errors.New("missing receiver side"),
+			Meta: &meta,
 		}
 	}
+}
 
-	if singleReceiverSide != nil {
-		return parseReceiverSide(receiverSide, connMeta)
+func parseChainedConnExpr(
+	actx generated.IChainedNormConnContext,
+	connMeta core.Meta,
+) (src.ConnectionReceiver, *compiler.Error) {
+	parsedConn, err := parseNormConn(actx.NormConnDef())
+	if err != nil {
+		return src.ConnectionReceiver{}, err
 	}
 
-	return parseMultipleReceiverSides(multipleReceiverSide)
+	return src.ConnectionReceiver{
+		ChainedConnection: &parsedConn,
+		Meta:              connMeta,
+	}, nil
 }
 
 func parseReceiverSide(
 	actx generated.IReceiverSideContext,
-	connMeta core.Meta,
-) (src.ConnectionReceiverSide, *compiler.Error) {
-	deferredConn := actx.SingleReceiverSide().DeferredConn()
-	portAddr := actx.SingleReceiverSide().PortAddr()
+) ([]src.ConnectionReceiver, *compiler.Error) {
+	singleReceiverSide := actx.SingleReceiverSide()
+	multipleReceiverSide := actx.MultipleReceiverSide()
 
-	if deferredConn == nil && portAddr == nil {
-		return src.ConnectionReceiverSide{}, &compiler.Error{
-			Err:  errors.New("No receiver side in connection"),
-			Meta: &connMeta,
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+	}
+
+	switch {
+	case singleReceiverSide != nil:
+		parsedSingleReceiver, err := parseSingleReceiverSide(singleReceiverSide)
+		if err != nil {
+			return nil, err
+		}
+		return []src.ConnectionReceiver{parsedSingleReceiver}, nil
+	case multipleReceiverSide != nil:
+		return parseMultipleReceiverSides(multipleReceiverSide)
+	default:
+		return nil, &compiler.Error{
+			Err:  errors.New("missing receiver side"),
+			Meta: &meta,
 		}
 	}
-
-	if deferredConn != nil {
-		return parseDeferredConnExpr(deferredConn, connMeta)
-	}
-
-	return parseSingleReceiverSide(portAddr)
 }
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
 ) (
-	src.ConnectionReceiverSide,
+	[]src.ConnectionReceiver,
 	*compiler.Error,
 ) {
 	allSingleReceiverSides := multipleSides.AllSingleReceiverSide()
-	allParsedReceivers := make([]src.ConnectionPortReceiver, 0, len(allSingleReceiverSides))
-	allParsedDeferredConns := make([]src.Connection, 0, len(allSingleReceiverSides))
+	parsedReceivers := make([]src.ConnectionReceiver, 0, len(allSingleReceiverSides))
 
 	for _, receiverSide := range allSingleReceiverSides {
-		meta := core.Meta{
-			Text: receiverSide.GetText(),
-			Start: core.Position{
-				Line:   receiverSide.GetStart().GetLine(),
-				Column: receiverSide.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   receiverSide.GetStop().GetLine(),
-				Column: receiverSide.GetStop().GetColumn(),
-			},
-		}
-
-		portAddr := receiverSide.PortAddr()
-		deferredConns := receiverSide.DeferredConn()
-
-		if portAddr == nil && deferredConns == nil {
-			return src.ConnectionReceiverSide{}, &compiler.Error{
-				Err:  errors.New("No receiver side in connection"),
-				Meta: &meta,
-			}
-		}
-
-		if portAddr != nil {
-			portAddr, err := parsePortAddr(receiverSide.PortAddr(), "out")
-			if err != nil {
-				return src.ConnectionReceiverSide{}, err
-			}
-			allParsedReceivers = append(allParsedReceivers, src.ConnectionPortReceiver{
-				PortAddr: portAddr,
-				Meta:     meta,
-			})
-			continue
-		}
-
-		parsedDeferredConns, err := parseDeferredConnExpr(deferredConns, meta)
+		parsedReceiver, err := parseSingleReceiverSide(receiverSide)
 		if err != nil {
-			return src.ConnectionReceiverSide{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
+			return nil, err
 		}
-
-		allParsedDeferredConns = append(allParsedDeferredConns, parsedDeferredConns.DeferredConnections...)
+		parsedReceivers = append(parsedReceivers, parsedReceiver)
 	}
 
-	return src.ConnectionReceiverSide{
-		Receivers:           allParsedReceivers,
-		DeferredConnections: allParsedDeferredConns,
-	}, nil
+	return parsedReceivers, nil
 }
 
-func parseDeferredConnExpr(
+func parseDeferredConn(
 	deferredConns generated.IDeferredConnContext,
-	connMeta core.Meta,
-) (src.ConnectionReceiverSide, *compiler.Error) {
+) (src.ConnectionReceiver, *compiler.Error) {
+	meta := core.Meta{
+		Text: deferredConns.GetText(),
+		Start: core.Position{
+			Line:   deferredConns.GetStart().GetLine(),
+			Column: deferredConns.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   deferredConns.GetStop().GetLine(),
+			Column: deferredConns.GetStop().GetColumn(),
+		},
+	}
+
 	parsedConns, err := parseConn(deferredConns.ConnDef())
 	if err != nil {
-		return src.ConnectionReceiverSide{}, &compiler.Error{
+		return src.ConnectionReceiver{}, &compiler.Error{
 			Err:  err,
-			Meta: &connMeta,
+			Meta: &meta,
 		}
 	}
 
-	return src.ConnectionReceiverSide{
-		DeferredConnections: []src.Connection{parsedConns},
+	return src.ConnectionReceiver{
+		DeferredConnection: &parsedConns,
+		Meta:               meta,
 	}, nil
 }
 
@@ -487,32 +469,28 @@ func parseNormConnSenderSide(
 	return parsedSender, nil
 }
 
-func parseSingleReceiverSide(
+func parsePortAddrReceiver(
 	singleReceiver generated.IPortAddrContext,
 ) (
-	src.ConnectionReceiverSide,
+	src.ConnectionReceiver,
 	*compiler.Error,
 ) {
 	portAddr, err := parsePortAddr(singleReceiver, "out")
 	if err != nil {
-		return src.ConnectionReceiverSide{}, err
+		return src.ConnectionReceiver{}, err
 	}
 
-	return src.ConnectionReceiverSide{
-		Receivers: []src.ConnectionPortReceiver{
-			{
-				PortAddr: portAddr,
-				Meta: core.Meta{
-					Text: singleReceiver.GetText(),
-					Start: core.Position{
-						Line:   singleReceiver.GetStart().GetLine(),
-						Column: singleReceiver.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   singleReceiver.GetStop().GetLine(),
-						Column: singleReceiver.GetStop().GetColumn(),
-					},
-				},
+	return src.ConnectionReceiver{
+		PortAddr: &portAddr,
+		Meta: core.Meta{
+			Text: singleReceiver.GetText(),
+			Start: core.Position{
+				Line:   singleReceiver.GetStart().GetLine(),
+				Column: singleReceiver.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   singleReceiver.GetStop().GetLine(),
+				Column: singleReceiver.GetStop().GetColumn(),
 			},
 		},
 	}, nil

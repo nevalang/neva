@@ -285,11 +285,10 @@ type Connection struct {
 	Meta        core.Meta              `json:"meta,omitempty"`
 }
 
-// TODO: move slices for receivers to this level
 type NormalConnection struct {
-	SenderSide   []ConnectionSender     `json:"senderSide,omitempty"`
-	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
-	Meta         core.Meta              `json:"meta,omitempty"`
+	SenderSide   []ConnectionSender   `json:"sender,omitempty"`
+	ReceiverSide []ConnectionReceiver `json:"receiver,omitempty"`
+	Meta         core.Meta            `json:"meta,omitempty"`
 }
 
 type ArrayBypassConnection struct {
@@ -297,20 +296,11 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiverSide struct {
-	// Refactor: chained and deferred connections must be kinds of receivers
-	DeferredConnections []Connection             `json:"deferredConnections,omitempty"`
-	Receivers           []ConnectionPortReceiver `json:"receivers,omitempty"`
-	ChainedConnection   *Connection              `json:"chainedConnection,omitempty"`
-}
-
-type ConnectionPortReceiver struct {
-	PortAddr PortAddr  `json:"portAddr,omitempty"`
-	Meta     core.Meta `json:"meta,omitempty"`
-}
-
-func (r ConnectionPortReceiver) String() string {
-	return r.PortAddr.String()
+type ConnectionReceiver struct {
+	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
+	Meta               core.Meta   `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string
