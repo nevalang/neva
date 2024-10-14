@@ -86,7 +86,7 @@ func (g Generator) processNetwork(
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
+		for _, receiverSide := range conn.Normal.ReceiverSide {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 
 			result.Connections[irSenderSidePortAddr] = receiverSideIR
@@ -164,7 +164,7 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 }
 
 // mapReceiverSide maps src connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionPortReceiver) ir.PortAddr {
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) ir.PortAddr {
 	result := ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,
