@@ -3,7 +3,6 @@ package desugarer
 import (
 	"fmt"
 	"maps"
-	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -28,13 +27,13 @@ var virtualBlockerNode = src.Node{
 
 type desugarDeferredConnectionsResult struct {
 	connsToInsert     []src.Connection
-	receiversToInsert []src.ConnectionReceiver
+	receiversToInsert []src.ConnectionPortReceiver
 	constsToInsert    map[string]src.Const
 	nodesToInsert     map[string]src.Node
 	nodesPortsUsed    nodePortsMap // (probably?) to generate "Del" instances where needed
 }
 
-var virtualBlockersCounter atomic.Uint64
+var virtualBlockersCounter uint64
 
 func (d Desugarer) desugarDeferredConnections(
 	originalConn src.NormalConnection,
@@ -68,21 +67,20 @@ func (d Desugarer) desugarDeferredConnections(
 
 	// we gonna collect receivers for first connection instead of
 	// creating several separate connections because that won't work
-	receiversForOriginalSender := make([]src.ConnectionReceiver, 0, len(handleNetResult.desugaredConnections))
+	receiversForOriginalSender := make([]src.ConnectionPortReceiver, 0, len(handleNetResult.desugaredConnections))
 
 	for _, desugaredThenConn := range handleNetResult.desugaredConnections {
 		deferredConnection := desugaredThenConn.Normal
 
 		// 1) create and add virtual blocker node
-		counter := virtualBlockersCounter.Load()
-		virtualBlockersCounter.Store(counter + 1)
-		virtualBlockerName := fmt.Sprintf("__lock__%d", counter)
+		virtualBlockersCounter++
+		virtualBlockerName := fmt.Sprintf("__lock__%d", virtualBlockersCounter)
 		nodesToInsert[virtualBlockerName] = virtualBlockerNode
 
 		// 2) create connection from original sender to blocker:sig
 		receiversForOriginalSender = append(
 			receiversForOriginalSender,
-			src.ConnectionReceiver{
+			src.ConnectionPortReceiver{
 				PortAddr: src.PortAddr{
 					Node: virtualBlockerName,
 					Port: "sig",
@@ -96,7 +94,7 @@ func (d Desugarer) desugarDeferredConnections(
 				Normal: &src.NormalConnection{
 					SenderSide: deferredConnection.SenderSide,
 					ReceiverSide: src.ConnectionReceiverSide{
-						Receivers: []src.ConnectionReceiver{
+						Receivers: []src.ConnectionPortReceiver{
 							{
 								PortAddr: src.PortAddr{
 									Node: virtualBlockerName,
@@ -110,10 +108,12 @@ func (d Desugarer) desugarDeferredConnections(
 			// 4) create connection from blocker:data to every receiver in deferred connection
 			src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSender{
-						PortAddr: &src.PortAddr{
-							Node: virtualBlockerName,
-							Port: "data",
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: virtualBlockerName,
+								Port: "data",
+							},
 						},
 					},
 					ReceiverSide: src.ConnectionReceiverSide{

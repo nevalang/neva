@@ -25,7 +25,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 		virtualConnections: make([]src.Connection, 0, len(unusedOutports.m)),
 	}
 
-	receiverSides := []src.ConnectionReceiver{
+	receiverSides := []src.ConnectionPortReceiver{
 		{
 			PortAddr: src.PortAddr{
 				Node: destructorNodeName,
@@ -39,10 +39,12 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSender{
-						PortAddr: &src.PortAddr{
-							Node: nodeName,
-							Port: portName,
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: nodeName,
+								Port: portName,
+							},
 						},
 					},
 					ReceiverSide: src.ConnectionReceiverSide{

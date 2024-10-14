@@ -68,11 +68,18 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		senderSide := conn.Normal.SenderSide
+		if len(conn.Normal.SenderSide) != 1 {
+			return nil, fmt.Errorf(
+				"expected exactly one sender side in desugared network, got %v",
+				len(conn.Normal.SenderSide),
+			)
+		}
+
+		sender := conn.Normal.SenderSide[0]
 
 		irSenderSidePortAddr, err := g.processSenderSide(
 			nodeCtx,
-			senderSide,
+			sender,
 			nodesPortsUsage,
 		)
 		if err != nil {
@@ -157,7 +164,7 @@ func sortPortAddrs(addrs []ir.PortAddr) {
 }
 
 // mapReceiverSide maps src connection side to ir connection side 1-1 just making the port addr's path absolute
-func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionReceiver) ir.PortAddr {
+func (g Generator) mapReceiverSide(nodeCtxPath []string, side src.ConnectionPortReceiver) ir.PortAddr {
 	result := ir.PortAddr{
 		Path: joinNodePath(nodeCtxPath, side.PortAddr.Node),
 		Port: side.PortAddr.Port,

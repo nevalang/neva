@@ -299,22 +299,18 @@ type ArrayBypassConnection struct {
 
 type ConnectionReceiverSide struct {
 	// Refactor: chained and deferred connections must be kinds of receivers
-	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
-	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
-	ChainedConnection   *Connection          `json:"chainedConnection,omitempty"`
+	DeferredConnections []Connection             `json:"deferredConnections,omitempty"`
+	Receivers           []ConnectionPortReceiver `json:"receivers,omitempty"`
+	ChainedConnection   *Connection              `json:"chainedConnection,omitempty"`
 }
 
-type ConnectionReceiver struct {
-	PortAddr  PortAddr                `json:"portAddr,omitempty"`
-	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
-	Meta      core.Meta               `json:"meta,omitempty"`
+type ConnectionPortReceiver struct {
+	PortAddr PortAddr  `json:"portAddr,omitempty"`
+	Meta     core.Meta `json:"meta,omitempty"`
 }
 
-func (r ConnectionReceiver) String() string {
-	if len(r.Selectors) == 0 {
-		return r.PortAddr.String()
-	}
-	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
+func (r ConnectionPortReceiver) String() string {
+	return r.PortAddr.String()
 }
 
 type ConnectionSideSelectors []string

@@ -32,7 +32,7 @@ pub flow Struct<T struct {}> () (msg T)
 // You prefer dot notation `-> .<field> ->` instead.
 // Dot notation is a syntax sugar for Field.
 #extern(field)
-pub flow Field<T>(msg struct {}) (msg T)
+pub flow Field<T>(data struct {}) (res T)
 
 // Unwrap is used to extract value from Maybe type.
 #extern(unwrap)

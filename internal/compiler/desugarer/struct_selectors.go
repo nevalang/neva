@@ -2,7 +2,6 @@ package desugarer
 
 import (
 	"fmt"
-	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -10,13 +9,9 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-type handleStructSelectorsResult struct {
-	connToReplace     src.Connection
-	connToInsert      src.Connection
-	constToInsertName string
-	constToInsert     src.Const
-	nodeToInsert      src.Node
-	nodeToInsertName  string
+type desugarStructSelectorsResult struct {
+	connToReplace src.Connection
+	connToInsert  src.Connection
 }
 
 var selectorNodeRef = core.EntityRef{
@@ -24,21 +19,23 @@ var selectorNodeRef = core.EntityRef{
 	Name: "Field",
 }
 
-var virtualSelectorsCount atomic.Uint64
+var virtualSelectorsCount uint64
 
 // desugarStructSelectors replaces one connection with 2 connections and a node with const
 func (d Desugarer) desugarStructSelectors(
+	senderSide src.ConnectionSender,
 	normConn src.NormalConnection,
-) (handleStructSelectorsResult, *compiler.Error) {
-	senderSide := normConn.SenderSide
+	nodesToInsert map[string]src.Node,
+	constsToInsert map[string]src.Const,
+) (
+	desugarStructSelectorsResult,
+	*compiler.Error,
+) {
+	virtualConstCount++
+	constName := fmt.Sprintf("__const__%d", virtualConstCount)
 
-	constCounter := virtualConstCount.Load()
-	virtualConstCount.Store(constCounter + 1)
-	constName := fmt.Sprintf("__const__%d", constCounter)
-
-	counter := virtualSelectorsCount.Load()
-	virtualSelectorsCount.Store(counter + 1)
-	nodeName := fmt.Sprintf("__field__%d", counter)
+	virtualSelectorsCount++
+	fieldNodeName := fmt.Sprintf("__field__%d", virtualSelectorsCount)
 
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{
@@ -50,19 +47,20 @@ func (d Desugarer) desugarStructSelectors(
 	// original connection must be replaced with two new connections, this is the first one
 	connToReplace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: src.ConnectionSender{
-				// preserve original sender
-				PortAddr: senderSide.PortAddr,
-				Const:    senderSide.Const,
-				// but remove selectors in desugared version
-				Selectors: nil,
+			SenderSide: []src.ConnectionSender{
+				{
+					// preserve original sender
+					PortAddr:  senderSide.PortAddr,
+					Const:     senderSide.Const,
+					Selectors: nil, // but remove selectors in desugared version
+				},
 			},
 			ReceiverSide: src.ConnectionReceiverSide{
-				Receivers: []src.ConnectionReceiver{
+				Receivers: []src.ConnectionPortReceiver{
 					{
 						PortAddr: src.PortAddr{
-							Node: nodeName, // point it to created selector node
-							Port: "msg",
+							Node: fieldNodeName, // point it to created selector node
+							Port: "data",
 						},
 					},
 				},
@@ -75,26 +73,24 @@ func (d Desugarer) desugarStructSelectors(
 	// and this is the second
 	connToInsert := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: src.ConnectionSender{
-				PortAddr: &src.PortAddr{
-					Node: nodeName, // created node received data from original sender and is now sending it further
-					Port: "msg",
+			SenderSide: []src.ConnectionSender{
+				{
+					PortAddr: &src.PortAddr{
+						Node: fieldNodeName, // created node received data from original sender and is now sending it further
+						Port: "res",
+					},
 				},
-				Selectors: nil, // no selectors in desugared version
 			},
 			ReceiverSide: normConn.ReceiverSide, // preserve original receivers
 		},
 	}
 
-	constWithCfgMsg := d.createConstWithCfgMsgForSelectorNode(senderSide)
+	nodesToInsert[fieldNodeName] = selectorNode
+	constsToInsert[constName] = d.createSelectorCfgMsg(senderSide)
 
-	return handleStructSelectorsResult{
-		connToReplace:     connToReplace,
-		connToInsert:      connToInsert,
-		constToInsertName: constName,
-		constToInsert:     constWithCfgMsg,
-		nodeToInsertName:  nodeName,
-		nodeToInsert:      selectorNode,
+	return desugarStructSelectorsResult{
+		connToReplace: connToReplace,
+		connToInsert:  connToInsert,
 	}, nil
 }
 
@@ -113,7 +109,7 @@ var (
 	}
 )
 
-func (Desugarer) createConstWithCfgMsgForSelectorNode(senderSide src.ConnectionSender) src.Const {
+func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.Selectors))
 
 	for _, selector := range senderSide.Selectors {

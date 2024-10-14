@@ -265,7 +265,7 @@ func parseMultipleReceiverSides(
 	*compiler.Error,
 ) {
 	allSingleReceiverSides := multipleSides.AllSingleReceiverSide()
-	allParsedReceivers := make([]src.ConnectionReceiver, 0, len(allSingleReceiverSides))
+	allParsedReceivers := make([]src.ConnectionPortReceiver, 0, len(allSingleReceiverSides))
 	allParsedDeferredConns := make([]src.Connection, 0, len(allSingleReceiverSides))
 
 	for _, receiverSide := range allSingleReceiverSides {
@@ -296,7 +296,7 @@ func parseMultipleReceiverSides(
 			if err != nil {
 				return src.ConnectionReceiverSide{}, err
 			}
-			allParsedReceivers = append(allParsedReceivers, src.ConnectionReceiver{
+			allParsedReceivers = append(allParsedReceivers, src.ConnectionPortReceiver{
 				PortAddr: portAddr,
 				Meta:     meta,
 			})
@@ -499,7 +499,7 @@ func parseSingleReceiverSide(
 	}
 
 	return src.ConnectionReceiverSide{
-		Receivers: []src.ConnectionReceiver{
+		Receivers: []src.ConnectionPortReceiver{
 			{
 				PortAddr: portAddr,
 				Meta: core.Meta{
