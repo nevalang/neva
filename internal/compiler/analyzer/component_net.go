@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	ErrUnusedOutports                = errors.New("All flow's outports are unused")
-	ErrUnusedOutport                 = errors.New("Unused outport found")
-	ErrUnusedInports                 = errors.New("All flow inports are unused")
-	ErrUnusedInport                  = errors.New("Unused inport found")
-	ErrLiteralSenderTypeEmpty        = errors.New("Literal network sender must contain message value")
-	ErrComplexLiteralSender          = errors.New("Literal network sender must have primitive type")
-	ErrIllegalPortlessConnection     = errors.New("Connection to a node, with more than one port, must always has a port name")
-	ErrGuardMixedWithExplicitErrConn = errors.New("If node has error guard '?' it's ':err' outport must not be explicitly used in the network")
+	ErrUnusedOutports                = errors.New("All component outports are unused")
+	ErrUnusedOutport                 = errors.New("unused outport found")
+	ErrUnusedInports                 = errors.New("all flow inports are unused")
+	ErrUnusedInport                  = errors.New("unused inport found")
+	ErrLiteralSenderTypeEmpty        = errors.New("literal network sender must contain message value")
+	ErrComplexLiteralSender          = errors.New("literal network sender must have primitive type")
+	ErrIllegalPortlessConnection     = errors.New("connection to a node, with more than one port, must always has a port name")
+	ErrGuardMixedWithExplicitErrConn = errors.New("if node has error guard '?' it's ':err' outport must not be explicitly used in the network")
 )
 
 // analyzeNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -44,7 +44,7 @@ func (a Analyzer) analyzeNetwork(
 		return nil, compiler.Error{Location: &scope.Location}.Wrap(err)
 	}
 
-	if err := a.checkNetPortsUsage(
+	if err := a.analyzeNetPortsUsage(
 		compInterface,
 		nodesIfaces,
 		hasGuard,
@@ -118,6 +118,7 @@ func (a Analyzer) analyzeConnection(
 		nodesIfaces,
 		scope,
 		nodesUsage,
+		false,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -136,6 +137,7 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
+	isChained bool,
 ) (*src.NormalConnection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
 		normConn.SenderSide,
@@ -144,166 +146,270 @@ func (a Analyzer) analyzeNormalConnection(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
+		isChained,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	receiverSide := normConn.ReceiverSide
-
-	if len(receiverSide.Receivers) == 0 &&
-		len(receiverSide.DeferredConnections) == 0 &&
-		receiverSide.ChainedConnection == nil {
-		return nil, &compiler.Error{
-			Err:      errors.New("Connection must have receiver-side"),
-			Location: &scope.Location,
-			Meta:     &normConn.Meta,
-		}
-	}
-
-	analyzedDeferredConnections := make([]src.Connection, 0, len(receiverSide.DeferredConnections))
-	if len(receiverSide.DeferredConnections) != 0 {
-		// note that we call analyzeConnections instead of analyzeNetwork
-		// because we only need to analyze connections and update nodesUsage
-		// analyzeNetwork OTOH will also validate nodesUsage by itself
-		var err *compiler.Error
-		analyzedDeferredConnections, err = a.analyzeConnections( // indirect recursion
-			receiverSide.DeferredConnections,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			scope,
-		)
-		if err != nil {
-			return nil, err
-		}
-		// receiver side can contain both deferred connections and receivers so we don't return yet
-	}
-
-	if receiverSide.ChainedConnection != nil {
-		// analyze the sender side compatibility with the chained connection's receiver
-		chainedConn := receiverSide.ChainedConnection
-		if chainedConn.Normal == nil {
-			return nil, &compiler.Error{
-				Err:      errors.New("Chained connection must be a normal connection"),
-				Location: &scope.Location,
-				Meta:     &normConn.Meta,
-			}
-		}
-
-		if len(chainedConn.Normal.SenderSide) != 1 {
-			return nil, &compiler.Error{
-				Err:      errors.New("multiple senders are only allowed at the start of a connection"),
-				Location: &scope.Location,
-				Meta:     &chainedConn.Normal.Meta,
-			}
-		}
-
-		chainHead := chainedConn.Normal.SenderSide[0]
-
-		chainHeadType, err := a.getChainHeadType(
-			chainHead,
-			nodes,
-			nodesIfaces,
-			scope,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// check that each sender is compatible with the chain head
-		for _, resolvedSenderType := range resolvedSenderTypes {
-			if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
-				return nil, &compiler.Error{
-					Err: fmt.Errorf(
-						"Incompatible types: %v -> %v: %w",
-						analyzedSenders, chainHead, err,
-					),
-					Location: &scope.Location,
-					Meta:     &normConn.Meta,
-				}
-			}
-		}
-
-		// recursively analyze the chained connection itself
-		analyzedChainedConn, err := a.analyzeConnection(
-			*chainedConn,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			nodesUsage,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// update the chained connection with the analyzed version
-		receiverSide.ChainedConnection = &analyzedChainedConn
-
-		if chainHead.PortAddr != nil {
-			// don't forget to mark the receiver side as used
-			// (in recursive call it's marked as sender, but it's also receiver)
-			netNodesUsage(nodesUsage).AddInport(*chainHead.PortAddr)
-		}
-	}
-
-	for _, receiver := range receiverSide.Receivers {
-		inportTypeExpr, isReceiverArr, err := a.getReceiverPortType(
-			receiver.PortAddr,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-		)
-		if err != nil {
-			return nil, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &receiver.Meta,
-			}.Wrap(err)
-		}
-
-		if !isReceiverArr && receiver.PortAddr.Idx != nil {
-			return nil, &compiler.Error{
-				Err:      errors.New("Index for non-array port"),
-				Meta:     &receiver.PortAddr.Meta,
-				Location: &scope.Location,
-			}
-		}
-
-		if isReceiverArr && receiver.PortAddr.Idx == nil {
-			return nil, &compiler.Error{
-				Err:      errors.New("Index needed for array inport"),
-				Meta:     &receiver.PortAddr.Meta,
-				Location: &scope.Location,
-			}
-		}
-
-		for i, resolvedSenderType := range resolvedSenderTypes {
-			if err := a.resolver.IsSubtypeOf(*resolvedSenderType, inportTypeExpr, scope); err != nil {
-				return nil, &compiler.Error{
-					Err: fmt.Errorf(
-						"Incompatible types: %v -> %v: %w",
-						analyzedSenders[i], receiver, err,
-					),
-					Location: &scope.Location,
-					Meta:     &normConn.Meta,
-				}
-			}
-		}
-
-		netNodesUsage(nodesUsage).AddInport(receiver.PortAddr)
+	analyzedReceiverSide, err := a.analyzeReceiverSide(
+		normConn.ReceiverSide,
+		scope,
+		iface,
+		nodes,
+		nodesIfaces,
+		nodesUsage,
+		resolvedSenderTypes,
+		analyzedSenders,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	return &src.NormalConnection{
-		SenderSide: analyzedSenders,
-		ReceiverSide: src.ConnectionReceiverSide{
-			DeferredConnections: analyzedDeferredConnections,
-			Receivers:           receiverSide.Receivers,
-			ChainedConnection:   receiverSide.ChainedConnection,
-		},
+		SenderSide:   analyzedSenders,
+		ReceiverSide: analyzedReceiverSide,
 	}, nil
+}
+
+func (a Analyzer) analyzeReceiverSide(
+	receiverSide []src.ConnectionReceiver,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender,
+) ([]src.ConnectionReceiver, *compiler.Error) {
+	analyzedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSide))
+
+	for _, receiver := range receiverSide {
+		analyzedReceiver, err := a.analyzeReceiver(
+			receiver,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			resolvedSenderTypes,
+			analyzedSenders,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		analyzedReceivers = append(analyzedReceivers, *analyzedReceiver)
+	}
+
+	return analyzedReceivers, nil
+}
+
+func (a Analyzer) analyzeReceiver(
+	receiver src.ConnectionReceiver,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender,
+) (*src.ConnectionReceiver, *compiler.Error) {
+	if receiver.PortAddr == nil &&
+		receiver.ChainedConnection == nil &&
+		receiver.DeferredConnection == nil {
+		return nil, &compiler.Error{
+			Err:      errors.New("Connection must have receiver-side"),
+			Location: &scope.Location,
+			Meta:     &receiver.Meta,
+		}
+	}
+
+	switch {
+	case receiver.PortAddr != nil:
+		analyzedPortAddr, err := a.analyzePortAddrReceiver(
+			*receiver.PortAddr,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			resolvedSenderTypes,
+			analyzedSenders,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &src.ConnectionReceiver{
+			PortAddr: &analyzedPortAddr,
+		}, nil
+	case receiver.ChainedConnection != nil:
+		analyzedChainedConn, err := a.analyzeChainedConnectionReceiver(
+			*receiver.ChainedConnection,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			resolvedSenderTypes,
+			analyzedSenders,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &src.ConnectionReceiver{
+			ChainedConnection: &analyzedChainedConn,
+		}, nil
+	case receiver.DeferredConnection != nil:
+		analyzedDeferredConn, err := a.analyzeConnection(
+			*receiver.DeferredConnection,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			nodesUsage,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &src.ConnectionReceiver{
+			DeferredConnection: &analyzedDeferredConn,
+		}, nil
+	}
+
+	return nil, &compiler.Error{
+		Err:      errors.New("Connection must have receiver-side"),
+		Location: &scope.Location,
+		Meta:     &receiver.Meta,
+	}
+}
+
+func (a Analyzer) analyzePortAddrReceiver(
+	portAddr src.PortAddr,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender,
+) (src.PortAddr, *compiler.Error) {
+	typeExpr, isArrPort, err := a.getReceiverPortType(
+		portAddr,
+		iface,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
+	if err != nil {
+		return src.PortAddr{}, compiler.Error{
+			Location: &scope.Location,
+			Meta:     &portAddr.Meta,
+		}.Wrap(err)
+	}
+
+	if !isArrPort && portAddr.Idx != nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err:      errors.New("Index for non-array port"),
+			Meta:     &portAddr.Meta,
+			Location: &scope.Location,
+		}
+	}
+
+	if isArrPort && portAddr.Idx == nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err:      errors.New("Index needed for array inport"),
+			Meta:     &portAddr.Meta,
+			Location: &scope.Location,
+		}
+	}
+
+	for i, resolvedSenderType := range resolvedSenderTypes {
+		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
+			return src.PortAddr{}, &compiler.Error{
+				Err: fmt.Errorf(
+					"Incompatible types: %v -> %v: %w",
+					analyzedSenders[i], portAddr, err,
+				),
+				Location: &scope.Location,
+				Meta:     &portAddr.Meta,
+			}
+		}
+	}
+
+	netNodesUsage(nodesUsage).AddInport(portAddr)
+
+	return portAddr, nil
+}
+
+func (a Analyzer) analyzeChainedConnectionReceiver(
+	chainedConn src.Connection,
+	scope src.Scope,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	nodesUsage map[string]netNodeUsage,
+	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender,
+) (src.Connection, *compiler.Error) {
+	if chainedConn.Normal == nil {
+		return src.Connection{}, &compiler.Error{
+			Err:      errors.New("Chained connection must be a normal connection"),
+			Location: &scope.Location,
+			Meta:     &chainedConn.Meta,
+		}
+	}
+
+	if len(chainedConn.Normal.SenderSide) != 1 {
+		return src.Connection{}, &compiler.Error{
+			Err:      errors.New("multiple senders are only allowed at the start of a connection"),
+			Location: &scope.Location,
+			Meta:     &chainedConn.Normal.Meta,
+		}
+	}
+
+	chainHead := chainedConn.Normal.SenderSide[0]
+
+	chainHeadType, err := a.getChainHeadType(
+		chainHead,
+		nodes,
+		nodesIfaces,
+		scope,
+	)
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	for _, resolvedSenderType := range resolvedSenderTypes {
+		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
+			return src.Connection{}, &compiler.Error{
+				Err: fmt.Errorf(
+					"Incompatible types: %v -> %v: %w",
+					analyzedSenders, chainHead, err,
+				),
+				Location: &scope.Location,
+				Meta:     &chainedConn.Meta,
+			}
+		}
+	}
+
+	analyzedChainedConn, err := a.analyzeConnection(
+		chainedConn,
+		iface,
+		nodes,
+		nodesIfaces,
+		scope,
+		nodesUsage,
+	)
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	if chainHead.PortAddr != nil {
+		netNodesUsage(nodesUsage).AddInport(*chainHead.PortAddr)
+	}
+
+	return analyzedChainedConn, nil
 }
 
 func (a Analyzer) analyzeSenderSide(
@@ -313,8 +419,8 @@ func (a Analyzer) analyzeSenderSide(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
+	isChainHead bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
-	// TODO replace string as key with PortAddr as soon as it doesn't have pointer in it
 	seenPortAddrs := make(map[string]struct{}, len(senders))
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -343,6 +449,7 @@ func (a Analyzer) analyzeSenderSide(
 		}
 
 		s := sender.PortAddr.String()
+
 		if _, ok := seenPortAddrs[s]; ok {
 			return nil, nil, &compiler.Error{
 				Err:      fmt.Errorf("senders must be unique: %v", s),
@@ -350,6 +457,7 @@ func (a Analyzer) analyzeSenderSide(
 				Meta:     &sender.Meta,
 			}
 		}
+
 		seenPortAddrs[s] = struct{}{}
 	}
 
@@ -498,7 +606,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	return nil
 }
 
-func (a Analyzer) checkNetPortsUsage(
+func (a Analyzer) analyzeNetPortsUsage(
 	compInterface src.Interface,
 	nodesIfaces map[string]foundInterface,
 	hasGuard bool,
