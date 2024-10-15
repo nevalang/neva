@@ -117,14 +117,6 @@ func (n nodePortsMap) get(node, port string) bool {
 	return ok
 }
 
-func (n nodePortsMap) merge(m nodePortsMap) {
-	for node, ports := range m.m {
-		for outport := range ports {
-			n.set(node, outport)
-		}
-	}
-}
-
 func (n nodePortsMap) len() int {
 	return len(n.m)
 }

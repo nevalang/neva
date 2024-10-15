@@ -260,7 +260,6 @@ func (d Desugarer) desugarSingleReceiver(
 	if receiver.DeferredConnection != nil {
 		result, err := d.desugarDeferredConnection(
 			normConn,
-			nodes,
 			scope,
 			constsToInsert,
 			nodesToInsert,
@@ -270,10 +269,7 @@ func (d Desugarer) desugarSingleReceiver(
 			return desugarReceiverResult{}, err
 		}
 
-		return desugarReceiverResult{
-			replace: result.replace,
-			insert:  result.insert,
-		}, nil
+		return desugarReceiverResult(result), nil
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
@@ -289,10 +285,7 @@ func (d Desugarer) desugarSingleReceiver(
 		return desugarReceiverResult{}, err
 	}
 
-	return desugarReceiverResult{
-		replace: desugarChainResult.replace,
-		insert:  desugarChainResult.insert,
-	}, nil
+	return desugarReceiverResult(desugarChainResult), nil
 }
 
 func (d Desugarer) desugarChainedConnection(
@@ -378,7 +371,6 @@ var virtualLocksCounter uint64
 
 func (d Desugarer) desugarDeferredConnection(
 	normConn src.NormalConnection,
-	nodes map[string]src.Node,
 	scope src.Scope,
 	constsToInsert map[string]src.Const,
 	nodesToInsert map[string]src.Node,

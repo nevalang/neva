@@ -14,14 +14,6 @@ var emitterFlowRef = core.EntityRef{
 	Name: "New",
 }
 
-type handleLiteralSenderResult struct {
-	connToReplace src.Connection
-}
-
-type handleConstRefSenderResult struct {
-	connToReplace src.Connection // connection without const sender
-}
-
 // In the future compiler can operate in concurrently
 var (
 	virtualEmittersCount uint64
