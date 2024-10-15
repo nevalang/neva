@@ -55,17 +55,13 @@ func (d Desugarer) desugarStructSelectors(
 					Selectors: nil, // but remove selectors in desugared version
 				},
 			},
-			ReceiverSide: src.ConnectionReceiverSide{
-				Receivers: []src.ConnectionPortReceiver{
-					{
-						PortAddr: src.PortAddr{
-							Node: fieldNodeName, // point it to created selector node
-							Port: "data",
-						},
+			ReceiverSide: []src.ConnectionReceiver{
+				{
+					PortAddr: &src.PortAddr{
+						Node: fieldNodeName, // point it to created selector node
+						Port: "data",
 					},
 				},
-				// don't forget sometimes we have both struct selectors and deferred connections
-				DeferredConnections: normConn.ReceiverSide.DeferredConnections,
 			},
 		},
 	}

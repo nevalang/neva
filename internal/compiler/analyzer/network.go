@@ -118,7 +118,6 @@ func (a Analyzer) analyzeConnection(
 		nodesIfaces,
 		scope,
 		nodesUsage,
-		false,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -137,7 +136,6 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
-	isChained bool,
 ) (*src.NormalConnection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
 		normConn.SenderSide,
@@ -146,7 +144,6 @@ func (a Analyzer) analyzeNormalConnection(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
-		isChained,
 	)
 	if err != nil {
 		return nil, err
@@ -354,7 +351,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 ) (src.Connection, *compiler.Error) {
 	if chainedConn.Normal == nil {
 		return src.Connection{}, &compiler.Error{
-			Err:      errors.New("Chained connection must be a normal connection"),
+			Err:      errors.New("chained connection must be a normal connection"),
 			Location: &scope.Location,
 			Meta:     &chainedConn.Meta,
 		}
@@ -419,7 +416,6 @@ func (a Analyzer) analyzeSenderSide(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
-	isChainHead bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	seenPortAddrs := make(map[string]struct{}, len(senders))
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))

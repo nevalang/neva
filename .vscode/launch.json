@@ -15,8 +15,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "fizzbuzz"]
+      "cwd": "${workspaceFolder}/e2e",
+      "args": ["run", "file_read_all/main"]
     },
     {
       "name": "Build",

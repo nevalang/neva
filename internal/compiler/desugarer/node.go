@@ -29,13 +29,11 @@ func (Desugarer) handleNode(
 						},
 					},
 				},
-				ReceiverSide: src.ConnectionReceiverSide{
-					Receivers: []src.ConnectionPortReceiver{
-						{
-							PortAddr: src.PortAddr{
-								Node: "out",
-								Port: "err",
-							},
+				ReceiverSide: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{
+							Node: "out",
+							Port: "err",
 						},
 					},
 				},
