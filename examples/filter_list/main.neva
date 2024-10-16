@@ -13,7 +13,7 @@ flow Even(data int) (res bool) {
     ---
     :data -> mod:num
     2 -> mod:den
-    mod:res -> eq:actual
+    mod -> eq:actual
     0 -> eq:compared
-    eq:res -> :res
+    eq -> :res
 }

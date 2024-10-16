@@ -264,6 +264,7 @@ func (d Desugarer) desugarSingleReceiver(
 			constsToInsert,
 			nodesToInsert,
 			nodePortsUsed,
+			nodes,
 		)
 		if err != nil {
 			return desugarReceiverResult{}, err
@@ -375,6 +376,7 @@ func (d Desugarer) desugarDeferredConnection(
 	constsToInsert map[string]src.Const,
 	nodesToInsert map[string]src.Node,
 	nodesPortsUsed nodePortsMap,
+	nodes map[string]src.Node,
 ) (desugarDeferredConnectionsResult, *compiler.Error) {
 	deferredConnection := *normConn.ReceiverSide[0].DeferredConnection
 
@@ -382,7 +384,7 @@ func (d Desugarer) desugarDeferredConnection(
 		deferredConnection,
 		nodesPortsUsed,
 		scope,
-		nodesToInsert,
+		nodes,
 		nodesToInsert,
 		constsToInsert,
 	)

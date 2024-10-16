@@ -59,7 +59,7 @@ flow ModHelper(num int, den int) (then int, else int) {
     :num -> [mod:num, cond:data]
     :den -> mod:den
 
-    mod:res -> eq:actual
+    mod -> eq:actual
     0 -> eq:compared
     eq -> cond:if
 
