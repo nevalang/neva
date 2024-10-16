@@ -63,18 +63,27 @@ func newBuildCmd(
 				trace = true
 			}
 
+			input := compiler.CompilerInput{
+				Main:   mainPkg,
+				Output: output,
+				Trace:  trace,
+			}
+
+			var c compiler.Compiler
 			switch target {
 			case "go":
-				return goc.Compile(mainPkg, output, trace)
+				c = goc
 			case "wasm":
-				return wasmc.Compile(mainPkg, output, trace)
+				c = wasmc
 			case "json":
-				return jsonc.Compile(mainPkg, output, trace)
+				c = jsonc
 			case "dot":
-				return dotc.Compile(mainPkg, output, trace)
+				c = dotc
 			default:
-				return nativec.Compile(mainPkg, output, trace)
+				c = nativec
 			}
+
+			return c.Compile(cliCtx.Context, input)
 		},
 	}
 }

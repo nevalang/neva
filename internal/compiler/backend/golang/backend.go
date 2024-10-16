@@ -24,7 +24,11 @@ var (
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	addrToChanVar, chanVarNames := b.getPortChansMap(prog.Connections)
-	funcCalls := b.getFuncCalls(prog.Funcs, addrToChanVar)
+
+	funcCalls, err := b.getFuncCalls(prog.Funcs, addrToChanVar)
+	if err != nil {
+		return err
+	}
 
 	funcmap := template.FuncMap{
 		"getPortChanNameByAddr": func(path string, port string) string {
@@ -61,7 +65,10 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	return compiler.SaveFilesToDir(dst, files)
 }
 
-func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr]string) []templateFuncCall {
+func (b Backend) getFuncCalls(
+	funcs []ir.FuncCall,
+	addrToChanVar map[ir.PortAddr]string,
+) ([]templateFuncCall, error) {
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
@@ -77,11 +84,11 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 		arrInportsToCreate := make(map[localPortAddr][]arrPortSlot)
 		arrOutportsToCreate := make(map[localPortAddr][]arrPortSlot)
 
-		// Handle input ports
+		// handle input ports
 		for _, irAddr := range call.IO.In {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
-				panic(fmt.Sprintf("port not found: %v", irAddr))
+				return nil, fmt.Errorf("inport not found: %v", irAddr)
 			}
 
 			runtimeAddr := localPortAddr{
@@ -104,11 +111,11 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 			}
 		}
 
-		// Handle output ports
+		// handle output ports
 		for _, irAddr := range call.IO.Out {
 			chanVar, ok := addrToChanVar[irAddr]
 			if !ok {
-				panic(fmt.Sprintf("port not found: %v", irAddr))
+				panic(fmt.Sprintf("outport not found: %v", irAddr))
 			}
 
 			runtimeAddr := localPortAddr{
@@ -131,7 +138,7 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 			}
 		}
 
-		// Create array inports
+		// create array inports
 		for addr, slots := range arrInportsToCreate {
 			sort.Slice(slots, func(i, j int) bool {
 				return slots[i].idx < slots[j].idx
@@ -150,7 +157,7 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 			)
 		}
 
-		// Create array outports
+		// create array outports
 		for addr, slots := range arrOutportsToCreate {
 			sort.Slice(slots, func(i, j int) bool {
 				return slots[i].idx < slots[j].idx
@@ -188,7 +195,7 @@ func (b Backend) getFuncCalls(funcs []ir.FuncCall, addrToChanVar map[ir.PortAddr
 		})
 	}
 
-	return result
+	return result, nil
 }
 
 func (b Backend) getMessageString(msg *ir.Message) (string, error) {

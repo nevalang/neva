@@ -24,11 +24,6 @@ func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
 	return func(ctx context.Context) {
 		for {
 			numMsg, ok := numIn.Receive(ctx)
@@ -39,13 +34,6 @@ func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			denMsg, ok := denIn.Receive(ctx)
 			if !ok {
 				return
-			}
-
-			if denMsg.Int() == 0 {
-				if !errOut.Send(ctx, errFromString("divide by zero")) {
-					return
-				}
-				continue
 			}
 
 			if !resOut.Send(

@@ -48,6 +48,23 @@ func TestGetPortChansMap(t *testing.T) {
 				"main_out_1_to_logger_in_1",
 			},
 		},
+		{
+			name: "single_ports_to_array_slots",
+			connections: map[ir.PortAddr]ir.PortAddr{
+				{Path: "read_file", Port: "res"}: {Path: "fan_in", Port: "data", IsArray: true, Idx: 0},
+				{Path: "read_file", Port: "err"}: {Path: "fan_in", Port: "data", IsArray: true, Idx: 1},
+			},
+			expectedMap: map[ir.PortAddr]string{
+				{Path: "read_file", Port: "res"}:                      "read_file_res_to_fan_in_data_0",
+				{Path: "read_file", Port: "err"}:                      "read_file_err_to_fan_in_data_1",
+				{Path: "fan_in", Port: "data", IsArray: true, Idx: 0}: "read_file_res_to_fan_in_data_0",
+				{Path: "fan_in", Port: "data", IsArray: true, Idx: 1}: "read_file_err_to_fan_in_data_1",
+			},
+			expectedVarNames: []string{
+				"read_file_res_to_fan_in_data_0",
+				"read_file_err_to_fan_in_data_1",
+			},
+		},
 	}
 
 	b := Backend{}

@@ -9,38 +9,51 @@ import (
 )
 
 type Compiler struct {
-	builder   Builder
-	parser    Parser
-	desugarer Desugarer
-	analyzer  Analyzer
-	irgen     IRGenerator
-	backend   Backend
+	fe Frontend
+	me Middleend
+	be Backend
 }
 
-func (c Compiler) Compile(main string, output string, trace bool) error {
-	result, err := c.CompileToIR(main, trace)
+type CompilerInput struct {
+	Main   string
+	Output string
+	Trace  bool
+}
+
+func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
+	feResult, err := c.fe.Process(ctx, input.Main)
 	if err != nil {
 		return err
 	}
-	return c.backend.Emit(output, result.IR, trace)
-}
 
-type CompileResult struct {
-	ParsedBuild    sourcecode.Build
-	AnalyzedBuild  sourcecode.Build
-	DesugaredBuild sourcecode.Build
-	IR             *ir.Program
-}
-
-func (c Compiler) CompileToIR(main string, trace bool) (CompileResult, *Error) {
-	raw, root, err := c.builder.Build(context.Background(), main)
+	meResult, err := c.me.Process(feResult)
 	if err != nil {
-		return CompileResult{}, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
+		return err
 	}
 
-	parsedMods, err := c.parser.ParseModules(raw.Modules)
+	return c.be.Emit(input.Output, meResult.IR, input.Trace)
+}
+
+type Frontend struct {
+	builder Builder
+	parser  Parser
+}
+
+type FrontendResult struct {
+	MainPkg     string
+	RawBuild    RawBuild
+	ParsedBuild sourcecode.Build
+}
+
+func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Error) {
+	raw, root, err := f.builder.Build(ctx, main)
 	if err != nil {
-		return CompileResult{}, err
+		return FrontendResult{}, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
+	}
+
+	parsedMods, err := f.parser.ParseModules(raw.Modules)
+	if err != nil {
+		return FrontendResult{}, err
 	}
 
 	parsedBuild := sourcecode.Build{
@@ -48,29 +61,55 @@ func (c Compiler) CompileToIR(main string, trace bool) (CompileResult, *Error) {
 		Modules:     parsedMods,
 	}
 
-	main = strings.TrimPrefix(main, "./")
-	main = strings.TrimPrefix(main, root+"/")
+	mainPkg := strings.TrimPrefix(main, "./")
+	mainPkg = strings.TrimPrefix(mainPkg, root+"/")
 
-	analyzedBuild, err := c.analyzer.AnalyzeExecutableBuild(
-		parsedBuild,
-		main,
+	return FrontendResult{
+		ParsedBuild: parsedBuild,
+		RawBuild:    raw,
+		MainPkg:     mainPkg,
+	}, nil
+}
+
+func NewFrontend(builder Builder, parser Parser) Frontend {
+	return Frontend{
+		builder: builder,
+		parser:  parser,
+	}
+}
+
+type Middleend struct {
+	desugarer Desugarer
+	analyzer  Analyzer
+	irgen     IRGenerator
+}
+
+type MiddleendResult struct {
+	AnalyzedBuild  sourcecode.Build
+	DesugaredBuild sourcecode.Build
+	IR             *ir.Program
+}
+
+func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
+	analyzedBuild, err := m.analyzer.AnalyzeExecutableBuild(
+		feResult.ParsedBuild,
+		feResult.MainPkg,
 	)
 	if err != nil {
-		return CompileResult{}, err
+		return MiddleendResult{}, err
 	}
 
-	desugaredBuild, err := c.desugarer.Desugar(analyzedBuild)
+	desugaredBuild, err := m.desugarer.Desugar(analyzedBuild)
 	if err != nil {
-		return CompileResult{}, err
+		return MiddleendResult{}, err
 	}
 
-	irProg, err := c.irgen.Generate(desugaredBuild, main, !trace)
+	irProg, err := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
 	if err != nil {
-		return CompileResult{}, err
+		return MiddleendResult{}, err
 	}
 
-	return CompileResult{
-		ParsedBuild:    parsedBuild,
+	return MiddleendResult{
 		AnalyzedBuild:  analyzedBuild,
 		DesugaredBuild: desugaredBuild,
 		IR:             irProg,
@@ -86,11 +125,15 @@ func New(
 	backend Backend,
 ) Compiler {
 	return Compiler{
-		builder:   builder,
-		parser:    parser,
-		desugarer: desugarer,
-		analyzer:  analyzer,
-		irgen:     irgen,
-		backend:   backend,
+		fe: Frontend{
+			builder: builder,
+			parser:  parser,
+		},
+		me: Middleend{
+			desugarer: desugarer,
+			analyzer:  analyzer,
+			irgen:     irgen,
+		},
+		be: backend,
 	}
 }

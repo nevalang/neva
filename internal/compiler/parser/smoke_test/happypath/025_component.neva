@@ -222,3 +222,90 @@ flow Main() () {
     :foo -> :bar
     :baz -> :bax
 }
+
+// Test range expression
+flow RangeTest1() () {
+    1..10 -> :out
+}
+
+// Test multiple range expressions
+flow RangeTest2() () {
+    1..5 -> :out1
+    10..20 -> :out2
+}
+
+// Test range expression with negative numbers
+flow RangeTest3() () {
+    -5..5 -> :out
+}
+
+// Test range expression mixed with other connections
+flow RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
+    1..10 -> :out1
+    :in -> :out2
+    20..30 -> :out3
+}
+
+// Test range expression with struct selectors
+flow RangeTest5() (out stream<int>) {
+    1..10.data -> :out
+}
+
+// Test range expression with array index
+flow RangeTest6() (out stream<int>) {
+    1..10 -> arr[0]
+    arr[0] -> :out
+}
+
+// Test range expression with deferred connection
+flow RangeTest7() (out stream<int>) {
+    1..10 -> (process -> :out)
+}
+
+// Test range expression with multiple receivers
+flow RangeTest8() (out1 stream<int>, out2 stream<int>) {
+    1..10 -> [:out1, :out2]
+}
+
+// Test range expression inside deferred connection
+flow RangeTest9() (out stream<int>) {
+    :start -> (1..10 -> process -> :out)
+}
+
+// Test range expression inside fan-in
+flow RangeTest10() (out stream<int>) {
+    [
+        1..5,
+        6..10,
+        11..15
+    ] -> fanIn -> :out
+}
+
+// Test range expression with fan-out
+flow RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+    1..30 -> [
+        :out1,
+        :out2,
+        :out3
+    ]
+}
+
+// Test complex scenario combining multiple features
+flow RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+    [1..10, :input] -> fanIn -> [
+        :out1,
+        (process2 -> :out2),
+        (21..30 -> process3 -> :out3)
+    ]
+}
+
+// Test nested deferred connections with range expressions
+flow RangeTest14() (out stream<int>) {
+    :start -> (
+        1..5 -> (
+            6..10 -> (
+                11..15 -> process
+            )
+        )
+    )
+}

@@ -26,7 +26,7 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 flow PrintFirstLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>
+    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
     ---
     :n -> [switch:data, lock:data]
 
@@ -38,6 +38,7 @@ flow PrintFirstLine(n int) (n int) {
     ]
 
     [p1, p2, printf:sig] -> lock:sig
+    printf:err -> panic
     lock -> :n
 }
 
@@ -49,7 +50,7 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 flow PrintSecondLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>
+    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>, Panic
     ---
     :n -> [switch:data, lock:data]
 
@@ -63,6 +64,6 @@ flow PrintSecondLine(n int) (n int) {
     ]
 
     [p1, p2, p3, printf:sig] -> lock:sig
-
+    printf:err -> panic
     lock -> :n
 }

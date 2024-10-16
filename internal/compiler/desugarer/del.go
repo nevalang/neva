@@ -27,7 +27,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 
 	receiverSides := []src.ConnectionReceiver{
 		{
-			PortAddr: src.PortAddr{
+			PortAddr: &src.PortAddr{
 				Node: destructorNodeName,
 				Port: "msg",
 			},
@@ -39,15 +39,15 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
-						PortAddr: &src.PortAddr{
-							Node: nodeName,
-							Port: portName,
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: nodeName,
+								Port: portName,
+							},
 						},
 					},
-					ReceiverSide: src.ConnectionReceiverSide{
-						Receivers: receiverSides,
-					},
+					ReceiverSide: receiverSides,
 				},
 				Meta: core.Meta{},
 			})
@@ -115,14 +115,6 @@ func (n nodePortsMap) get(node, port string) bool {
 	}
 	_, ok = ports[port]
 	return ok
-}
-
-func (n nodePortsMap) merge(m nodePortsMap) {
-	for node, ports := range m.m {
-		for outport := range ports {
-			n.set(node, outport)
-		}
-	}
 }
 
 func (n nodePortsMap) len() int {

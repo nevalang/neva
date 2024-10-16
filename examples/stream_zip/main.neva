@@ -3,11 +3,10 @@ import { streams }
 const strings list<string> = ['a', 'b', 'c']
 
 flow Main(start) (stop) {
-	Range, ListToStream<string>, streams.Zip<int, string>
+	ListToStream<string>, streams.Zip<int, string>
 	ForEach{Println}, Wait
 	---
-	:start -> [(0 -> range:from), (10 -> range:to)]
-	range -> zip:first
+	:start -> 0..10 -> zip:first
 	$strings -> listToStream -> zip:second
 	zip -> forEach -> wait -> :stop
 }

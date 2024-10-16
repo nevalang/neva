@@ -130,14 +130,18 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (portAddr | senderConstRef | primitiveConstLit) structSelectors?;
-receiverSide:
-	chainedNormConn
-	| singleReceiverSide
-	| multipleReceiverSide;
+singleSenderSide: (
+		portAddr
+		| senderConstRef
+		| primitiveConstLit
+		| rangeExpr
+	) structSelectors?;
+// TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
+receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
 senderConstRef: '$' entityRef;
+rangeExpr: (MINUS? INT) '..' (MINUS? INT);
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -151,7 +155,7 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-singleReceiverSide: portAddr | deferredConn;
+singleReceiverSide: chainedNormConn | portAddr | deferredConn;
 multipleReceiverSide:
 	'[' NEWLINE* singleReceiverSide (
 		',' NEWLINE* singleReceiverSide NEWLINE*
@@ -163,7 +167,7 @@ COMMENT: '//' ~( '\r' | '\n')*;
 PUB_KW: 'pub';
 IDENTIFIER: LETTER (LETTER | INT)*;
 fragment LETTER: [a-zA-Z_];
-INT: [0-9]+; // one or more integer digits
+INT: [0-9]+; // one or more (positive) integer digits
 MINUS: '-';
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';

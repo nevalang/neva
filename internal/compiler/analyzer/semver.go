@@ -7,6 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/pkg"
 )
 
 // semverCheck ensures that module is compatible with existing compiler
@@ -19,7 +20,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 		}
 	}
 
-	compilerVersion, semverErr := semver.NewVersion(a.compilerVersion)
+	compilerVersion, semverErr := semver.NewVersion(pkg.Version)
 	if semverErr != nil {
 		return &compiler.Error{
 			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
@@ -34,7 +35,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 			Err: fmt.Errorf(
 				"%w: different majors: module %v wants %v while current is %v",
 				ErrCompilerVersion,
-				modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
+				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
 	}
@@ -46,7 +47,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 			Err: fmt.Errorf(
 				"%w: incompatible minors: module %v wants %v while current is %v",
 				ErrCompilerVersion,
-				modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
+				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
 	}
@@ -70,7 +71,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 			Err: fmt.Errorf(
 				"%w: incompatible patch: module %v wants %v while current is %v",
 				ErrCompilerVersion,
-				modRef, mod.Manifest.LanguageVersion, a.compilerVersion,
+				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
 	}

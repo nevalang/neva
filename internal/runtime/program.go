@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -37,11 +36,11 @@ func (f Inports) Ports() map[string]Inport {
 func (f Inports) Single(name string) (SingleInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
-		return SingleInport{}, errors.New("port not found by name")
+		return SingleInport{}, fmt.Errorf("single port not found by name: %v", name)
 	}
 
 	if ports.single == nil {
-		return SingleInport{}, errors.New("port is not single")
+		return SingleInport{}, fmt.Errorf("port is not single: %v", name)
 	}
 
 	return *ports.single, nil
@@ -115,11 +114,11 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 func (f Inports) Array(name string) (ArrayInport, error) {
 	ports, ok := f.ports[name]
 	if !ok {
-		return ArrayInport{}, errors.New("port not found by name")
+		return ArrayInport{}, fmt.Errorf("array port not found by name: %v", name)
 	}
 
 	if ports.array == nil {
-		return ArrayInport{}, errors.New("port is not array")
+		return ArrayInport{}, fmt.Errorf("port is not array: %v", name)
 	}
 
 	return *ports.array, nil

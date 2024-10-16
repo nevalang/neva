@@ -15,9 +15,8 @@ var (
 	ErrNodeTypeArgsTooMuch = errors.New("Too much type arguments")
 	ErrNonFlowNodeWithDI   = errors.New("Only flow node can have dependency injection")
 	ErrUnusedNode          = errors.New("Unused node found")
-	ErrUnusedNodeInport    = errors.New("Unused node inport")
 	ErrUnusedNodeOutports  = errors.New("All node's outports are unused")
-	ErrSenderIsEmpty       = errors.New("Sender in network must contain port address, constant reference or message literal")
+	ErrEmptySender         = errors.New("Sender in network must contain port address, constant reference or message literal")
 	ErrReadSelfOut         = errors.New("Flow cannot read from self outport")
 	ErrWriteSelfIn         = errors.New("Flow cannot write to self inport")
 	ErrInportNotFound      = errors.New("Referenced inport not found in flow's interface")
@@ -89,7 +88,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeFlowNodes(
+	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
 		component.Interface,
 		component.Nodes,
 		scope,
@@ -109,7 +108,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		}
 	}
 
-	analyzedNet, err := a.analyzeFlowNetwork(
+	analyzedNet, err := a.analyzeNetwork(
 		component.Net,
 		resolvedInterface,
 		hasGuard,

@@ -28,11 +28,6 @@ func (intDiv) Create(
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
 	return func(ctx context.Context) {
 		for {
 			var accMsg, elMsg runtime.Msg
@@ -55,13 +50,6 @@ func (intDiv) Create(
 
 			if !accOk || !elOk {
 				return
-			}
-
-			if elMsg.Int() == 0 {
-				if !errOut.Send(ctx, runtime.NewStringMsg("divide by zero")) {
-					return
-				}
-				continue
 			}
 
 			resMsg := runtime.NewIntMsg(accMsg.Int() / elMsg.Int())

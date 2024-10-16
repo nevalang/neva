@@ -43,7 +43,7 @@ type (
 	}
 
 	IRGenerator interface {
-		Generate(build src.Build, mainpkg string, optimize bool) (*ir.Program, *Error)
+		Generate(build src.Build, mainpkg string) (*ir.Program, *Error)
 	}
 
 	Backend interface {

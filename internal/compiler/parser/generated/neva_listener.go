@@ -229,6 +229,9 @@ type nevaListener interface {
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
 
+	// EnterRangeExpr is called when entering the rangeExpr production.
+	EnterRangeExpr(c *RangeExprContext)
+
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
@@ -483,6 +486,9 @@ type nevaListener interface {
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
+
+	// ExitRangeExpr is called when exiting the rangeExpr production.
+	ExitRangeExpr(c *RangeExprContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

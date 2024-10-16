@@ -7,52 +7,36 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
-	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 type Indexer struct {
-	builder   builder.Builder
-	parser    parser.Parser
-	desugarer desugarer.Desugarer
-	analyzer  analyzer.Analyzer
+	fe       compiler.Frontend
+	analyzer analyzer.Analyzer
 }
 
 func (i Indexer) FullIndex(ctx context.Context, path string) (src.Build, *compiler.Error, error) {
-	rawBuild, _, err := i.builder.Build(ctx, path)
+	feResult, err := i.fe.Process(ctx, path)
 	if err != nil {
-		return src.Build{}, nil, fmt.Errorf("builder: %w", err)
+		return src.Build{}, nil, fmt.Errorf("frontend: %w", err)
 	}
 
-	parsedMods, err := i.parser.ParseModules(rawBuild.Modules)
+	analyzedBuild, err := i.analyzer.AnalyzeBuild(feResult.ParsedBuild)
 	if err != nil {
-		return src.Build{}, nil, fmt.Errorf("parse prog: %w", err)
+		return src.Build{}, err, nil
 	}
 
-	parsedBuild := src.Build{
-		EntryModRef: rawBuild.EntryModRef,
-		Modules:     parsedMods,
-	}
-
-	_, err = i.analyzer.AnalyzeBuild(parsedBuild)
-	if err == nil {
-		return parsedBuild, nil, nil
-	}
-
-	return parsedBuild, err, nil
+	return analyzedBuild, nil, nil
 }
 
 func New(
 	builder builder.Builder,
 	parser parser.Parser,
-	desugarer desugarer.Desugarer,
 	analyzer analyzer.Analyzer,
 ) Indexer {
 	return Indexer{
-		builder:   builder,
-		parser:    parser,
-		desugarer: desugarer,
-		analyzer:  analyzer,
+		fe:       compiler.NewFrontend(builder, parser),
+		analyzer: analyzer,
 	}
 }
