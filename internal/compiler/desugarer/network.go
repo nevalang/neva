@@ -70,7 +70,10 @@ func (d Desugarer) desugarConnections(
 			return nil, err
 		}
 
-		desugaredConnections = append(desugaredConnections, result.replace)
+		if result.replace != nil {
+			desugaredConnections = append(desugaredConnections, *result.replace)
+		}
+
 		desugaredConnections = append(desugaredConnections, result.insert...)
 	}
 
@@ -78,7 +81,7 @@ func (d Desugarer) desugarConnections(
 }
 
 type desugarConnectionResult struct {
-	replace src.Connection
+	replace *src.Connection
 	insert  []src.Connection
 }
 
@@ -99,7 +102,7 @@ func (d Desugarer) desugarConnection(
 			conn.ArrayBypass.ReceiverInport.Node,
 			conn.ArrayBypass.ReceiverInport.Port,
 		)
-		return desugarConnectionResult{replace: conn}, nil
+		return desugarConnectionResult{replace: &conn}, nil
 	}
 
 	return d.desugarNormalConnection(
@@ -162,7 +165,7 @@ func (d Desugarer) desugarNormalConnection(
 	}
 
 	normConn = *desugarSenderResult.replace.Normal
-	toInsert := desugarSenderResult.insert
+	insert := desugarSenderResult.insert
 
 	if len(normConn.ReceiverSide) > 1 {
 		result, err := d.desugarFanOut(
@@ -178,8 +181,8 @@ func (d Desugarer) desugarNormalConnection(
 		}
 
 		return desugarConnectionResult{
-			replace: result.replace,
-			insert:  append(toInsert, result.insert...),
+			replace: &result.replace,
+			insert:  append(insert, result.insert...),
 		}, nil
 	}
 
@@ -196,8 +199,8 @@ func (d Desugarer) desugarNormalConnection(
 	}
 
 	return desugarConnectionResult{
-		replace: desugarReceiverResult.replace,
-		insert:  append(toInsert, desugarReceiverResult.insert...),
+		replace: &desugarReceiverResult.replace,
+		insert:  append(insert, desugarReceiverResult.insert...),
 	}, nil
 }
 
@@ -286,7 +289,10 @@ func (d Desugarer) desugarSingleReceiver(
 		return desugarReceiverResult{}, err
 	}
 
-	return desugarReceiverResult(desugarChainResult), nil
+	return desugarReceiverResult{
+		replace: *desugarChainResult.replace,
+		insert:  desugarChainResult.insert,
+	}, nil
 }
 
 func (d Desugarer) desugarChainedConnection(
@@ -355,10 +361,10 @@ func (d Desugarer) desugarChainedConnection(
 	// insert = c -> d
 	// (and replace existing one with `a -> b`)
 	insert := append([]src.Connection{}, desugarChainResult.insert...)
-	insert = append(insert, desugarChainResult.replace)
+	insert = append(insert, *desugarChainResult.replace)
 
 	return desugarConnectionResult{
-		replace: replace,
+		replace: &replace,
 		insert:  insert,
 	}, nil
 }
@@ -392,7 +398,7 @@ func (d Desugarer) desugarDeferredConnection(
 		return desugarDeferredConnectionsResult{}, err
 	}
 
-	deferredConnection = desugarDeferredConnResult.replace
+	deferredConnection = *desugarDeferredConnResult.replace
 	connsToInsert := desugarDeferredConnResult.insert
 
 	// 1) create lock node
@@ -535,7 +541,7 @@ func (d Desugarer) desugarSender(
 			return desugarSenderResult{}, err
 		}
 
-		connectionsToInsert = append(connectionsToInsert, connToInsertDesugarRes.replace)
+		connectionsToInsert = append(connectionsToInsert, *connToInsertDesugarRes.replace)
 		connectionsToInsert = append(connectionsToInsert, connToInsertDesugarRes.insert...)
 
 		// connection that replaces original one might need desugaring itself
@@ -732,7 +738,7 @@ func (d Desugarer) desugarFanOut(
 			return desugarFanOutResult{}, err
 		}
 
-		insert = append(insert, desugarConnRes.replace)
+		insert = append(insert, *desugarConnRes.replace)
 		insert = append(insert, desugarConnRes.insert...)
 	}
 
@@ -861,7 +867,7 @@ func (d Desugarer) desugarFanIn(
 		},
 	}
 
-	// 2. replace each sender with connection from sender to fan-in node
+	// 2. connection each sender with fan-in node
 	netWithoutFanIn := make([]src.Connection, 0, len(normConn.SenderSide))
 	for i, sender := range normConn.SenderSide {
 		netWithoutFanIn = append(netWithoutFanIn, src.Connection{
@@ -880,7 +886,7 @@ func (d Desugarer) desugarFanIn(
 		})
 	}
 
-	// 3. insert new connection from fan-in node to original receiver
+	// 3. insert new connection from fan-in to original receivers
 	netWithoutFanIn = append(netWithoutFanIn, src.Connection{
 		Normal: &src.NormalConnection{
 			SenderSide: []src.ConnectionSender{
