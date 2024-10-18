@@ -40,7 +40,7 @@ func (f Inports) Single(name string) (SingleInport, error) {
 	}
 
 	if ports.single == nil {
-		return SingleInport{}, fmt.Errorf("port is not single: %v", name)
+		return SingleInport{}, fmt.Errorf("port found but is not single: %v", name)
 	}
 
 	return *ports.single, nil
@@ -118,7 +118,7 @@ func (f Inports) Array(name string) (ArrayInport, error) {
 	}
 
 	if ports.array == nil {
-		return ArrayInport{}, fmt.Errorf("port is not array: %v", name)
+		return ArrayInport{}, fmt.Errorf("port found but is not array: %v", name)
 	}
 
 	return *ports.array, nil

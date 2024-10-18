@@ -8,11 +8,6 @@ pub flow Wait(data stream<any>) (sig) {
     if:then -> :sig
 }
 
-// Range sends sequence of integers starting and ending with given from and to.
-// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
-#extern(stream_int_range)
-pub flow Range(from int, to int) (res stream<int>)
-
 // ArrPortToStream iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
@@ -141,7 +136,9 @@ pub flow ForEach<T>(data stream<T>) (data stream<T>) {
     lock -> :data
 }
 
-// RangeV2 is similar to Range but with an additional signal input to trigger the range generation.
+// Range sends sequence of integers starting and ending with given from and to.
+// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
+// It emits stream only after all 3 inports receive messages.
+// Signal inport is required because Range is used in range expressions.
 #extern(stream_int_range_v2)
-pub flow RangeV2(from int, to int, sig any) (res stream<int>)
-// TODO remove original Range and call this "Range" and use everywhere
+pub flow Range(from int, to int, sig any) (res stream<int>)

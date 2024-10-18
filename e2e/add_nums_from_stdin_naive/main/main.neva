@@ -10,6 +10,7 @@ flow Main(start any) (stop any) {
 	parser2 strconv.ParseNum<int>
 	add Add<int>
 	println Println<int>
+	panic Panic
 	---
 	:start -> scanner1:sig
 	scanner1:res -> parser1:data
@@ -18,4 +19,5 @@ flow Main(start any) (stop any) {
 	parser2:res -> add:el
 	add:res -> println:data
 	println:sig -> :stop
+	[parser1:err, parser2:err] -> panic
 }

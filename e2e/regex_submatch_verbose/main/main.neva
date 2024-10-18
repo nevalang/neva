@@ -1,7 +1,7 @@
 import { regexp }
 
 flow Main(start) (stop) {
-    Println, regexp.Submatch
+    Println, regexp.Submatch, Panic
     ---
     :start -> [
         ('a(x*)b(y|z)c' -> submatch:regexp),
@@ -9,4 +9,5 @@ flow Main(start) (stop) {
     ]
     submatch:res -> println:data
     println:sig    -> :stop
+    submatch:err -> panic
 }

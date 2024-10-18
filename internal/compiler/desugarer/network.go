@@ -341,6 +341,7 @@ func (d Desugarer) desugarChainedConnection(
 					PortAddr: &src.PortAddr{
 						Node: desugaredHead.PortAddr.Node,
 						Port: chainHeadPort,
+						Idx:  desugaredHead.PortAddr.Idx,
 						Meta: chainHead.Meta,
 					},
 				},
@@ -598,9 +599,8 @@ func (d Desugarer) desugarSingleSender(
 		}
 	}
 
-	// range expression as sender
 	if sender.Range != nil {
-		result, err := d.handleRangeSender(
+		result, err := d.desugarRangeSender(
 			*sender.Range,
 			normConn,
 			nodesToInsert,
@@ -609,8 +609,8 @@ func (d Desugarer) desugarSingleSender(
 		if err != nil {
 			return desugarSenderResult{}, err
 		}
-		connectionsToInsert = append(connectionsToInsert, result.connectionsToInsert...)
-		normConn = result.connToReplace
+		normConn = result.replace
+		connectionsToInsert = append(connectionsToInsert, result.insert...)
 	}
 
 	return desugarSenderResult{
@@ -755,11 +755,14 @@ var rangeCounter uint64
 
 // Add a new function to handle range senders
 type handleRangeSenderResult struct {
-	connToReplace       src.NormalConnection
-	connectionsToInsert []src.Connection
+	replace src.NormalConnection
+	insert  []src.Connection
 }
 
-func (d Desugarer) handleRangeSender(
+// desugarRangeSender desugars `from..to -> XXX` part.
+// It does not create connection to range:sig,
+// it's done in chained connection desugaring.
+func (d Desugarer) desugarRangeSender(
 	rangeExpr src.RangeExpr,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
@@ -796,7 +799,17 @@ func (d Desugarer) handleRangeSender(
 		},
 	}
 
-	connectionsToInsert := []src.Connection{
+	replace := src.NormalConnection{
+		SenderSide: []src.ConnectionSender{
+			{
+				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
+			},
+		},
+		ReceiverSide: normConn.ReceiverSide,
+	}
+
+	insert := []src.Connection{
+		// $from -> range:from
 		{
 			Normal: &src.NormalConnection{
 				SenderSide: []src.ConnectionSender{
@@ -811,6 +824,7 @@ func (d Desugarer) handleRangeSender(
 				},
 			},
 		},
+		// $to -> range:to
 		{
 			Normal: &src.NormalConnection{
 				SenderSide: []src.ConnectionSender{
@@ -827,18 +841,9 @@ func (d Desugarer) handleRangeSender(
 		},
 	}
 
-	connToReplace := src.NormalConnection{
-		SenderSide: []src.ConnectionSender{
-			{
-				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
-			},
-		},
-		ReceiverSide: normConn.ReceiverSide,
-	}
-
 	return handleRangeSenderResult{
-		connectionsToInsert: connectionsToInsert,
-		connToReplace:       connToReplace,
+		insert:  insert,
+		replace: replace,
 	}, nil
 }
 

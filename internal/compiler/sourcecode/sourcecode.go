@@ -208,19 +208,16 @@ type Const struct {
 	Meta     core.Meta  `json:"meta,omitempty"`
 }
 
+type ConstValue struct {
+	Ref     *core.EntityRef `json:"ref,omitempty"`
+	Message *MsgLiteral     `json:"value,omitempty"` // literal
+}
+
 func (c ConstValue) String() string {
 	if c.Ref != nil {
 		return c.Ref.String()
 	}
-	if c.Message == nil {
-		return "<invalid_message>"
-	}
 	return c.Message.String()
-}
-
-type ConstValue struct {
-	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *MsgLiteral     `json:"value,omitempty"` // literal
 }
 
 type MsgLiteral struct {
@@ -328,12 +325,6 @@ type ConnectionSender struct {
 	Meta      core.Meta  `json:"meta,omitempty"`
 }
 
-type RangeExpr struct {
-	From int64     `json:"from"`
-	To   int64     `json:"to"`
-	Meta core.Meta `json:"meta,omitempty"`
-}
-
 func (s ConnectionSender) String() string {
 	selectorsString := ""
 	if len(s.Selectors) != 0 {
@@ -345,18 +336,24 @@ func (s ConnectionSender) String() string {
 	var result string
 	switch {
 	case s.Const != nil:
-		if s.Const.Value.Ref != nil {
-			result = s.Const.Value.Ref.String()
-		} else {
-			result = s.Const.Value.Message.String()
-		}
+		result = s.Const.Value.String()
 	case s.Range != nil:
-		result = fmt.Sprintf("%v..%v", s.Range.From, s.Range.To)
+		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
 	}
 
 	return result + selectorsString
+}
+
+type RangeExpr struct {
+	From int64     `json:"from"`
+	To   int64     `json:"to"`
+	Meta core.Meta `json:"meta,omitempty"`
+}
+
+func (r RangeExpr) String() string {
+	return fmt.Sprintf("%v..%v", r.From, r.To)
 }
 
 type PortAddr struct {

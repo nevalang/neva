@@ -79,6 +79,7 @@ func (a Analyzer) analyzeConnections(
 			nodesIfaces,
 			scope,
 			nodesUsage,
+			false,
 		)
 		if err != nil {
 			return nil, err
@@ -96,6 +97,7 @@ func (a Analyzer) analyzeConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
+	isChained bool,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -118,6 +120,7 @@ func (a Analyzer) analyzeConnection(
 		nodesIfaces,
 		scope,
 		nodesUsage,
+		isChained,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -136,6 +139,7 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
+	isChained bool,
 ) (*src.NormalConnection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
 		normConn.SenderSide,
@@ -144,6 +148,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
+		isChained,
 	)
 	if err != nil {
 		return nil, err
@@ -265,6 +270,7 @@ func (a Analyzer) analyzeReceiver(
 			nodesIfaces,
 			scope,
 			nodesUsage,
+			false,
 		)
 		if err != nil {
 			return nil, err
@@ -383,12 +389,12 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		return src.Connection{}, err
 	}
 
-	for _, resolvedSenderType := range resolvedSenderTypes {
+	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
 			return src.Connection{}, &compiler.Error{
 				Err: fmt.Errorf(
 					"Incompatible types: %v -> %v: %w",
-					analyzedSenders, chainHead, err,
+					analyzedSenders[i], chainHead, err,
 				),
 				Location: &scope.Location,
 				Meta:     &chainedConn.Meta,
@@ -403,6 +409,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		nodesIfaces,
 		scope,
 		nodesUsage,
+		true,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -428,6 +435,7 @@ func (a Analyzer) analyzeSenderSide(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
+	isChained bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -440,6 +448,7 @@ func (a Analyzer) analyzeSenderSide(
 			nodes,
 			nodesIfaces,
 			nodesUsage,
+			isChained,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -466,10 +475,27 @@ func (a Analyzer) analyzeSender(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
+	isChained bool,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
 	if sender.PortAddr == nil && sender.Const == nil && sender.Range == nil {
 		return nil, nil, &compiler.Error{
 			Err:      ErrEmptySender,
+			Location: &scope.Location,
+			Meta:     &sender.Meta,
+		}
+	}
+
+	if sender.Range != nil && !isChained {
+		return nil, nil, &compiler.Error{
+			Err:      errors.New("range expression cannot be used in non-chained connection"),
+			Location: &scope.Location,
+			Meta:     &sender.Meta,
+		}
+	}
+
+	if sender.Const != nil && isChained {
+		return nil, nil, &compiler.Error{
+			Err:      errors.New("constant cannot be used in chained connection"),
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -733,10 +759,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 
 			if outportName == "err" && !nodes[nodeName].ErrGuard {
 				return &compiler.Error{
-					Err: fmt.Errorf(
-						"unhandled error: ':err' outport must always be used either explicitly or with ? operator: %v",
-						nodeName,
-					),
+					Err:      fmt.Errorf("unhandled error: %v:err", nodeName),
 					Location: &scope.Location,
 					Meta:     &port.Meta,
 				}
@@ -1260,14 +1283,6 @@ func (a Analyzer) getChainHeadType(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	if chainHead.PortAddr == nil && chainHead.Range == nil {
-		return ts.Expr{}, &compiler.Error{
-			Err:      errors.New("Chained connection must start with a port or range"),
-			Location: &scope.Location,
-			Meta:     &chainHead.Meta,
-		}
-	}
-
 	if chainHead.PortAddr != nil {
 		resolvedType, _, err := a.getNodeInportType(*chainHead.PortAddr, nodes, nodesIfaces, scope)
 		if err != nil {
@@ -1276,10 +1291,17 @@ func (a Analyzer) getChainHeadType(
 		return resolvedType, nil
 	}
 
-	// range receives any to its :sig inport
-	return ts.Expr{
-		Inst: &ts.InstExpr{
-			Ref: core.EntityRef{Name: "any"},
-		},
-	}, nil
+	if chainHead.Range != nil {
+		return ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref: core.EntityRef{Name: "any"}, // :sig
+			},
+		}, nil
+	}
+
+	return ts.Expr{}, &compiler.Error{
+		Err:      errors.New("Chained connection must start with port address or range expression"),
+		Location: &scope.Location,
+		Meta:     &chainHead.Meta,
+	}
 }
