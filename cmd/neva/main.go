@@ -17,7 +17,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-	"github.com/nevalang/neva/pkg"
 )
 
 func main() {
@@ -34,7 +33,7 @@ func main() {
 	bldr := builder.MustNew(prsr)
 
 	desugarer := desugarer.New()
-	analyzer := analyzer.MustNew(pkg.Version, resolver)
+	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
 
 	golangBackend := golang.NewBackend()

@@ -1,7 +1,6 @@
 package irgen
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -9,8 +8,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
-
-var ErrNodeUsageNotFound = errors.New("node usage not found")
 
 type Generator struct{}
 
@@ -35,7 +32,6 @@ type (
 func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
-	shouldReduceGraph bool,
 ) (*ir.Program, *compiler.Error) {
 	scope := src.Scope{
 		Build: build,
@@ -47,7 +43,6 @@ func (g Generator) Generate(
 	}
 
 	result := &ir.Program{
-		Ports:       map[ir.PortAddr]struct{}{},
 		Connections: map[ir.PortAddr]ir.PortAddr{}, // Changed to 1-1 mapping
 		Funcs:       []ir.FuncCall{},
 	}
@@ -81,7 +76,6 @@ func (g Generator) Generate(
 	reducedNet := g.reduceFinalGraph(result.Connections)
 
 	return &ir.Program{
-		Ports:       result.Ports,
 		Connections: reducedNet,
 		Funcs:       result.Funcs,
 	}, nil
@@ -102,8 +96,8 @@ func (g Generator) processNode(
 
 	component := entity.Component
 
-	inportAddrs := g.insertAndReturnInports(nodeCtx, result)   // for inports we only use parent context because all inports are used
-	outportAddrs := g.insertAndReturnOutports(nodeCtx, result) //  for outports we use both parent context and flow's interface
+	inportAddrs := g.insertAndReturnInports(nodeCtx)   // for inports we only use parent context because all inports are used
+	outportAddrs := g.insertAndReturnOutports(nodeCtx) //  for outports we use both parent context and flow's interface
 
 	runtimeFuncRef, err := g.getFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
@@ -154,9 +148,9 @@ func (g Generator) processNode(
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrNodeUsageNotFound, nodeName),
+				Err:      fmt.Errorf("node usage not found: %v", nodeName),
 				Location: &location,
-				Meta:     &component.Meta,
+				Meta:     &node.Meta,
 			}
 		}
 
@@ -186,10 +180,7 @@ func (g Generator) processNode(
 	return nil
 }
 
-func (Generator) insertAndReturnInports(
-	nodeCtx nodeContext,
-	result *ir.Program,
-) []ir.PortAddr {
+func (Generator) insertAndReturnInports(nodeCtx nodeContext) []ir.PortAddr {
 	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
 	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
@@ -203,7 +194,6 @@ func (Generator) insertAndReturnInports(
 			absAddr.IsArray = true
 			absAddr.Idx = *relAddr.Idx
 		}
-		result.Ports[absAddr] = struct{}{}
 		inports = append(inports, absAddr)
 	}
 
@@ -212,10 +202,7 @@ func (Generator) insertAndReturnInports(
 	return inports
 }
 
-func (Generator) insertAndReturnOutports(
-	nodeCtx nodeContext,
-	result *ir.Program,
-) []ir.PortAddr {
+func (Generator) insertAndReturnOutports(nodeCtx nodeContext) []ir.PortAddr {
 	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
 	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
@@ -229,7 +216,6 @@ func (Generator) insertAndReturnOutports(
 			irAddr.IsArray = true
 			irAddr.Idx = *addr.Idx
 		}
-		result.Ports[irAddr] = struct{}{}
 		outports = append(outports, irAddr)
 	}
 

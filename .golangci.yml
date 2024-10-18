@@ -2,8 +2,6 @@ run:
   timeout: 5m
   concurrency: 4
   tests: false
-  skip-files:
-    - ".*\\.my\\.go$"
 
 issues:
   exclude-rules:

@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO
-// 1) refactor this test, split into sub-method tests
-// 2) Write test for deferred connection and make sure it works
-// 3) Fix deferred connection if needed
-// 4) Find problem with program number 4 with_bridge if needed
-
 func TestDesugarer_desugarModule(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -89,7 +83,7 @@ func TestDesugarer_desugarFile(t *testing.T) {
 	}
 }
 
-// === Helpers ===
+// helpers
 
 func defaultImports() map[string]src.Import {
 	return map[string]src.Import{

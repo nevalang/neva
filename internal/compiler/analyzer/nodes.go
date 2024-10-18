@@ -26,7 +26,7 @@ type foundInterface struct {
 	location src.Location
 }
 
-func (a Analyzer) analyzeFlowNodes(
+func (a Analyzer) analyzeNodes(
 	flowIface src.Interface,
 	nodes map[string]src.Node,
 	scope src.Scope,

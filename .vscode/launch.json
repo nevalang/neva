@@ -2,21 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "RUN",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/neva",
+      "cwd": "${workspaceFolder}/e2e",
+      "args": ["run", "incompat_types_with_untyped_port/main"]
+    },
+    {
       "name": "DEBUG CODEGEN",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/examples/dist/main.go",
       "cwd": "${workspaceFolder}/examples"
-    },
-    {
-      "name": "RUN",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "file_read_all"]
     },
     {
       "name": "Build",

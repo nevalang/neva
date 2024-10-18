@@ -14,7 +14,7 @@ pub flow Mul<T int | float>(acc T, el T) (res T)
 
 // Div divides acc by el and sends to result. It can be used with Reduce.
 #extern(int int_div, float float_div)
-pub flow Div<T int | float>(acc T, el T) (res T, err error)
+pub flow Div<T int | float>(acc T, el T) (res T)
 
 // --- Mappers ---
 
@@ -30,4 +30,4 @@ pub flow Decr<T int | float>(data T) (res T)
 
 // Mod calculates num modulo den and sends to result.
 #extern(int_mod)
-pub flow Mod(num int, den int) (res int, err error)
+pub flow Mod(num int, den int) (res int)

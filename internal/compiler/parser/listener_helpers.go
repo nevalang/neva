@@ -606,8 +606,8 @@ func parseSinglePortAddr(
 
 func parsePrimitiveConstLiteral(
 	lit generated.IPrimitiveConstLitContext,
-) (src.ConstDef, *compiler.Error) {
-	parsedConst := src.ConstDef{
+) (src.Const, *compiler.Error) {
+	parsedConst := src.Const{
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{},
 		},
@@ -628,7 +628,7 @@ func parsePrimitiveConstLiteral(
 	case lit.Bool_() != nil:
 		boolVal := lit.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
-			return src.ConstDef{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -650,7 +650,7 @@ func parsePrimitiveConstLiteral(
 	case lit.INT() != nil:
 		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
 		if err != nil {
-			return src.ConstDef{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
 				Meta: &core.Meta{
@@ -676,7 +676,7 @@ func parsePrimitiveConstLiteral(
 	case lit.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
 		if err != nil {
-			return src.ConstDef{}, &compiler.Error{
+			return src.Const{}, &compiler.Error{
 				Err: err,
 				Meta: &core.Meta{
 					Text: lit.GetText(),
@@ -715,7 +715,7 @@ func parsePrimitiveConstLiteral(
 	case lit.EnumLit() != nil:
 		parsedEnumRef, err := parseEntityRef(lit.EnumLit().EntityRef())
 		if err != nil {
-			return src.ConstDef{}, err
+			return src.Const{}, err
 		}
 		parsedConst.Value.Message.Enum = &src.EnumMessage{
 			EnumRef:    parsedEnumRef,
@@ -843,7 +843,7 @@ func parseMessage(
 		items := listItems.AllCompositeItem()
 		msg.List = make([]src.ConstValue, 0, len(items))
 		for _, item := range items {
-			constant := src.ConstDef{
+			constant := src.Const{
 				Meta: core.Meta{
 					Text: item.GetText(),
 					Start: core.Position{
@@ -1010,7 +1010,7 @@ func parseConstDef(
 		}
 	}
 
-	parsedConst := src.ConstDef{
+	parsedConst := src.Const{
 		TypeExpr: parsedTypeExpr,
 		Meta:     meta,
 	}
@@ -1038,7 +1038,7 @@ func parseConstDef(
 		}
 	}
 
-	parsedConst = src.ConstDef{
+	parsedConst = src.Const{
 		TypeExpr: parsedTypeExpr,
 		Value: src.ConstValue{
 			Message: &parsedMsgLit,

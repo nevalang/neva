@@ -16,18 +16,15 @@ import (
 )
 
 var (
-	ErrModuleWithoutPkgs    = errors.New("Module must contain at least one package")
-	ErrEntryModNotFound     = errors.New("Entry module is not found")
-	ErrMainPkgNotFound      = errors.New("Main package not found")
-	ErrPkgWithoutFiles      = errors.New("Package must contain at least one file")
-	ErrUnknownEntityKind    = errors.New("Entity kind can only be either flow, interface, type of constant")
-	ErrCompilerVersion      = errors.New("Incompatible compiler version")
-	ErrDepModWithoutVersion = errors.New("Every dependency module must have version")
+	ErrModuleWithoutPkgs    = errors.New("module must contain at least one package")
+	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
+	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
+	ErrCompilerVersion      = errors.New("incompatible compiler version")
+	ErrDepModWithoutVersion = errors.New("every dependency module must have version")
 )
 
 type Analyzer struct {
-	compilerVersion string
-	resolver        ts.Resolver
+	resolver ts.Resolver
 }
 
 func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
@@ -37,10 +34,9 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
-
 	if !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: main package name '%s'", ErrEntryModNotFound, build.EntryModRef),
+			Err:      fmt.Errorf("entry module not found: %s", build.EntryModRef),
 			Location: &location,
 		}
 	}
@@ -48,7 +44,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	// FIXME mainPkgName containts full path with "examples/ "
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: main package name '%s'", ErrMainPkgNotFound, mainPkgName),
+			Err:      errors.New("main package not found"),
 			Location: &location,
 		}
 	}
@@ -243,9 +239,6 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	return resolvedEntity, nil
 }
 
-func MustNew(version string, resolver ts.Resolver) Analyzer {
-	return Analyzer{
-		compilerVersion: version,
-		resolver:        resolver,
-	}
+func MustNew(resolver ts.Resolver) Analyzer {
+	return Analyzer{resolver: resolver}
 }

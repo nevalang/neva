@@ -11,7 +11,7 @@ type voidResult struct {
 	virtualConnections []src.Connection
 }
 
-func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
+func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) voidResult {
 	destructorNodeName := "__del__"
 
 	result := voidResult{
@@ -27,7 +27,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 
 	receiverSides := []src.ConnectionReceiver{
 		{
-			PortAddr: src.PortAddr{
+			PortAddr: &src.PortAddr{
 				Node: destructorNodeName,
 				Port: "msg",
 			},
@@ -39,15 +39,15 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
-						PortAddr: &src.PortAddr{
-							Node: nodeName,
-							Port: portName,
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: nodeName,
+								Port: portName,
+							},
 						},
 					},
-					ReceiverSide: src.ConnectionReceiverSide{
-						Receivers: receiverSides,
-					},
+					ReceiverSide: receiverSides,
 				},
 				Meta: core.Meta{},
 			})
@@ -62,8 +62,8 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodePortsMap) voidResult {
 func (Desugarer) findUnusedOutports(
 	flow src.Component,
 	scope src.Scope,
-	usedNodePorts nodePortsMap,
-) nodePortsMap {
+	usedNodePorts nodeOutportsUsed,
+) nodeOutportsUsed {
 	unusedOutports := newNodePortsMap()
 
 	for nodeName, node := range flow.Nodes {
@@ -91,24 +91,24 @@ func (Desugarer) findUnusedOutports(
 	}
 
 	if unusedOutports.len() == 0 {
-		return nodePortsMap{}
+		return nodeOutportsUsed{}
 	}
 
 	return unusedOutports
 }
 
-type nodePortsMap struct {
+type nodeOutportsUsed struct {
 	m map[string]map[string]struct{}
 }
 
-func (n nodePortsMap) set(node string, outport string) {
+func (n nodeOutportsUsed) set(node string, outport string) {
 	if n.m[node] == nil {
 		n.m[node] = map[string]struct{}{}
 	}
 	n.m[node][outport] = struct{}{}
 }
 
-func (n nodePortsMap) get(node, port string) bool {
+func (n nodeOutportsUsed) get(node, port string) bool {
 	ports, ok := n.m[node]
 	if !ok {
 		return false
@@ -117,20 +117,12 @@ func (n nodePortsMap) get(node, port string) bool {
 	return ok
 }
 
-func (n nodePortsMap) merge(m nodePortsMap) {
-	for node, ports := range m.m {
-		for outport := range ports {
-			n.set(node, outport)
-		}
-	}
-}
-
-func (n nodePortsMap) len() int {
+func (n nodeOutportsUsed) len() int {
 	return len(n.m)
 }
 
-func newNodePortsMap() nodePortsMap {
-	return nodePortsMap{
+func newNodePortsMap() nodeOutportsUsed {
+	return nodeOutportsUsed{
 		m: map[string]map[string]struct{}{},
 	}
 }

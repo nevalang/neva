@@ -18,6 +18,7 @@ func Test(t *testing.T) {
 
 	cmd := exec.Command("neva", "run", "stream_to_list")
 
+	// TODO betterh check in a loop
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 	require.Equal(

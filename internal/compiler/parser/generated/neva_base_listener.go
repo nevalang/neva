@@ -464,6 +464,12 @@ func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
 // ExitSenderConstRef is called when production senderConstRef is exited.
 func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
 
+// EnterRangeExpr is called when production rangeExpr is entered.
+func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
+
+// ExitRangeExpr is called when production rangeExpr is exited.
+func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}
+
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 

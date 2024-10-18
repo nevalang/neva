@@ -1,0 +1,8 @@
+import { io }
+
+flow Main(start any) (stop any) {
+	Println
+	---
+	:start -> println -> :stop
+	println -> println
+}

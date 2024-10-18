@@ -1,0 +1,9 @@
+import { io }
+
+flow Main(start any) (stop any) {
+	Println, Panic
+	---
+	:start -> println
+	:start -> panic
+	println:sig -> :stop
+}

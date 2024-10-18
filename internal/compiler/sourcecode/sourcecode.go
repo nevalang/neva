@@ -3,7 +3,6 @@
 package sourcecode
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -26,12 +25,12 @@ type Module struct {
 func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
-		return Entity{}, "", fmt.Errorf("%w '%v'", ErrPkgNotFound, entityRef.Pkg)
+		return Entity{}, "", fmt.Errorf("package not found: %v", entityRef.Pkg)
 	}
 
 	entity, filename, ok = pkg.Entity(entityRef.Name)
 	if !ok {
-		return Entity{}, "", fmt.Errorf("%w: '%v'", ErrEntityNotFound, entityRef.Name)
+		return Entity{}, "", fmt.Errorf("entity not found: %v", entityRef.Name)
 	}
 
 	return entity, filename, nil
@@ -61,8 +60,6 @@ func (m ModuleRef) String() string {
 	}
 	return fmt.Sprintf("%v@%v", m.Path, m.Version)
 }
-
-var ErrEntityNotFound = errors.New("entity not found")
 
 type Package map[string]File
 
@@ -101,7 +98,7 @@ type Import struct {
 type Entity struct {
 	IsPublic  bool       `json:"exported,omitempty"`
 	Kind      EntityKind `json:"kind,omitempty"`
-	Const     ConstDef   `json:"const,omitempty"`
+	Const     Const      `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
 	Component Component  `json:"flow,omitempty"`
@@ -204,26 +201,23 @@ func (t TypeArgs) String() string {
 	return s + ">"
 }
 
-// ConstDef represents abstraction that allow to define reusable message value.
-type ConstDef struct {
+// Const represents abstraction that allow to define reusable message value.
+type Const struct {
 	TypeExpr ts.Expr    `json:"typeExpr,omitempty"`
 	Value    ConstValue `json:"value,omitempty"`
 	Meta     core.Meta  `json:"meta,omitempty"`
+}
+
+type ConstValue struct {
+	Ref     *core.EntityRef `json:"ref,omitempty"`
+	Message *MsgLiteral     `json:"value,omitempty"` // literal
 }
 
 func (c ConstValue) String() string {
 	if c.Ref != nil {
 		return c.Ref.String()
 	}
-	if c.Message == nil {
-		return "<invalid_message>"
-	}
 	return c.Message.String()
-}
-
-type ConstValue struct {
-	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *MsgLiteral     `json:"value,omitempty"` // literal
 }
 
 type MsgLiteral struct {
@@ -289,8 +283,9 @@ type Connection struct {
 }
 
 type NormalConnection struct {
-	SenderSide   ConnectionSenderSide   `json:"senderSide,omitempty"`
-	ReceiverSide ConnectionReceiverSide `json:"receiverSide,omitempty"`
+	SenderSide   []ConnectionSender   `json:"sender,omitempty"`
+	ReceiverSide []ConnectionReceiver `json:"receiver,omitempty"`
+	Meta         core.Meta            `json:"meta,omitempty"`
 }
 
 type ArrayBypassConnection struct {
@@ -298,22 +293,11 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiverSide struct {
-	DeferredConnections []Connection         `json:"deferredConnections,omitempty"`
-	Receivers           []ConnectionReceiver `json:"receivers,omitempty"`
-}
-
 type ConnectionReceiver struct {
-	PortAddr  PortAddr                `json:"portAddr,omitempty"`
-	Selectors ConnectionSideSelectors `json:"selectors,omitempty"`
-	Meta      core.Meta               `json:"meta,omitempty"`
-}
-
-func (r ConnectionReceiver) String() string {
-	if len(r.Selectors) == 0 {
-		return r.PortAddr.String()
-	}
-	return fmt.Sprintf("%v/%v", r.PortAddr.String(), r.Selectors.String())
+	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
+	Meta               core.Meta   `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string
@@ -332,15 +316,16 @@ func (c ConnectionSideSelectors) String() string {
 	return s
 }
 
-// ConnectionSenderSide unlike ReceiverConnectionSide could refer to constant.
-type ConnectionSenderSide struct {
-	PortAddr  *PortAddr `json:"portAddr,omitempty"`
-	Const     *ConstDef `json:"literal,omitempty"`
-	Selectors []string  `json:"selectors,omitempty"`
-	Meta      core.Meta `json:"meta,omitempty"`
+// ConnectionSender unlike ReceiverConnectionSide could refer to constant.
+type ConnectionSender struct {
+	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
+	Const     *Const     `json:"literal,omitempty"`
+	Range     *RangeExpr `json:"range,omitempty"` // New field
+	Selectors []string   `json:"selectors,omitempty"`
+	Meta      core.Meta  `json:"meta,omitempty"`
 }
 
-func (s ConnectionSenderSide) String() string {
+func (s ConnectionSender) String() string {
 	selectorsString := ""
 	if len(s.Selectors) != 0 {
 		for _, selector := range s.Selectors {
@@ -349,23 +334,32 @@ func (s ConnectionSenderSide) String() string {
 	}
 
 	var result string
-	if s.Const != nil {
-		if s.Const.Value.Ref != nil {
-			result = s.Const.Value.Ref.String()
-		} else {
-			result = s.Const.Value.Message.String()
-		}
-	} else {
+	switch {
+	case s.Const != nil:
+		result = s.Const.Value.String()
+	case s.Range != nil:
+		result = s.Range.String()
+	case s.PortAddr != nil:
 		result = s.PortAddr.String()
 	}
 
 	return result + selectorsString
 }
 
+type RangeExpr struct {
+	From int64     `json:"from"`
+	To   int64     `json:"to"`
+	Meta core.Meta `json:"meta,omitempty"`
+}
+
+func (r RangeExpr) String() string {
+	return fmt.Sprintf("%v..%v", r.From, r.To)
+}
+
 type PortAddr struct {
 	Node string    `json:"node,omitempty"`
 	Port string    `json:"port,omitempty"`
-	Idx  *uint8    `json:"idx,omitempty"`
+	Idx  *uint8    `json:"idx,omitempty"` // TODO use bool flag instead of pointer to avoid problems with equality
 	Meta core.Meta `json:"meta,omitempty"`
 }
 
@@ -379,6 +373,8 @@ func (p PortAddr) String() string {
 		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, *p.Idx)
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
+	case hasNode && hasIdx:
+		return fmt.Sprintf("%v[%v]", p.Node, *p.Idx)
 	case hasNode:
 		return p.Node
 	}

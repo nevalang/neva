@@ -2,7 +2,6 @@ package desugarer
 
 import (
 	"fmt"
-	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -15,101 +14,69 @@ var emitterFlowRef = core.EntityRef{
 	Name: "New",
 }
 
-type handleLiteralSenderResult struct {
-	constName                  string
-	handleConstRefSenderResult // conceptually incorrrect but convenient to reuse
-}
-
-type handleConstRefSenderResult struct {
-	connToReplace    src.Connection // connection without const sender
-	nodeToInsertName string         // name of emitter node
-	nodeToInsert     src.Node       // emitter node
-}
-
 // In the future compiler can operate in concurrently
 var (
-	virtualEmittersCount atomic.Uint64
-	virtualConstCount    atomic.Uint64
+	virtualEmittersCount uint64
+	virtualConstCount    uint64
 )
 
 func (d Desugarer) handleLiteralSender(
-	conn src.Connection,
-) (
-	handleLiteralSenderResult,
-	*compiler.Error,
-) {
-	constCounter := virtualConstCount.Load()
-	virtualConstCount.Store(constCounter + 1)
-	constName := fmt.Sprintf("__const__%d", constCounter)
+	constant src.Const,
+	nodesToInsert map[string]src.Node,
+	constsToInsert map[string]src.Const,
+) (src.PortAddr, *compiler.Error) {
+	virtualConstCount++
+	constName := fmt.Sprintf("__const__%d", virtualConstCount)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
+
+	virtualEmittersCount++
+	emitterNodeName := fmt.Sprintf("__new__%d", virtualEmittersCount)
 
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
 		},
 		EntityRef: emitterFlowRef,
-		TypeArgs:  []ts.Expr{conn.Normal.SenderSide.Const.TypeExpr},
+		TypeArgs:  []ts.Expr{constant.TypeExpr},
 	}
 
-	emitterCounter := virtualEmittersCount.Load()
-	virtualEmittersCount.Store(emitterCounter + 1)
-	emitterNodeName := fmt.Sprintf("__new__%d", emitterCounter)
+	nodesToInsert[emitterNodeName] = emitterNode
+	constsToInsert[constName] = constant
 
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: emitterNodeName,
 		Port: "msg",
 	}
 
-	return handleLiteralSenderResult{
-		constName: constName,
-		handleConstRefSenderResult: handleConstRefSenderResult{
-			connToReplace: src.Connection{
-				Normal: &src.NormalConnection{
-					SenderSide: src.ConnectionSenderSide{
-						PortAddr:  &emitterNodeOutportAddr,
-						Selectors: conn.Normal.SenderSide.Selectors,
-						Meta:      conn.Normal.SenderSide.Meta,
-					},
-					ReceiverSide: conn.Normal.ReceiverSide,
-				},
-				Meta: conn.Meta,
-			},
-			nodeToInsertName: emitterNodeName,
-			nodeToInsert:     emitterNode,
-		},
-	}, nil
+	return emitterNodeOutportAddr, nil
 }
 
 func (d Desugarer) handleConstRefSender(
-	conn src.Connection,
+	ref core.EntityRef,
+	nodesToInsert map[string]src.Node,
 	scope src.Scope,
-) (
-	handleConstRefSenderResult,
-	*compiler.Error,
-) {
-	constTypeExpr, err := d.getConstTypeByRef(*conn.Normal.SenderSide.Const.Value.Ref, scope)
+) (src.PortAddr, *compiler.Error) {
+	constTypeExpr, err := d.getConstTypeByRef(ref, scope)
 	if err != nil {
-		return handleConstRefSenderResult{}, compiler.Error{
+		return src.PortAddr{}, compiler.Error{
 			Err: fmt.Errorf(
 				"Unable to get constant type by reference '%v'",
-				*conn.Normal.SenderSide.Const.Value.Ref,
+				ref,
 			),
 			Location: &scope.Location,
-			Meta:     &conn.Normal.SenderSide.Const.Value.Ref.Meta,
+			Meta:     &ref.Meta,
 		}.Wrap(err)
 	}
 
-	counter := virtualEmittersCount.Load()
-	virtualEmittersCount.Store(counter + 1)
-	virtualEmitterName := fmt.Sprintf("__new__%d", counter)
+	virtualEmittersCount++
+	virtualEmitterName := fmt.Sprintf("__new__%d", virtualEmittersCount)
 
 	emitterNode := src.Node{
+		// don't forget to bind
 		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {
-				conn.Normal.SenderSide.Const.Value.Ref.String(), // don't forget to bind const
-			},
+			compiler.BindDirective: {ref.String()},
 		},
 		EntityRef: emitterFlowRef,
 		TypeArgs:  []ts.Expr{constTypeExpr},
@@ -120,21 +87,9 @@ func (d Desugarer) handleConstRefSender(
 		Port: "msg",
 	}
 
-	return handleConstRefSenderResult{
-		connToReplace: src.Connection{
-			Normal: &src.NormalConnection{
-				SenderSide: src.ConnectionSenderSide{
-					PortAddr:  &emitterNodeOutportAddr,
-					Selectors: conn.Normal.SenderSide.Selectors,
-					Meta:      conn.Normal.SenderSide.Meta,
-				},
-				ReceiverSide: conn.Normal.ReceiverSide,
-			},
-			Meta: conn.Meta,
-		},
-		nodeToInsertName: virtualEmitterName,
-		nodeToInsert:     emitterNode,
-	}, nil
+	nodesToInsert[virtualEmitterName] = emitterNode
+
+	return emitterNodeOutportAddr, nil
 }
 
 // getConstTypeByRef is needed to figure out type parameters for Const node

@@ -35,11 +35,11 @@ func (e Error) Error() string {
 
 	switch {
 	case hasLocation && hasMeta:
-		return fmt.Sprintf("%v:%v %v", *e.Location, e.Meta.Start, e.Err)
+		return fmt.Sprintf("%v:%v: %v", *e.Location, e.Meta.Start, e.Err)
 	case hasLocation:
-		return fmt.Sprintf("%v %v", *e.Location, e.Err)
+		return fmt.Sprintf("%v: %v", *e.Location, e.Err)
 	case hasMeta:
-		return fmt.Sprintf("%v %v", e.Meta.Start, e.Err)
+		return fmt.Sprintf("%v: %v", e.Meta.Start, e.Err)
 	case hasErr:
 		return e.Err.Error()
 	}

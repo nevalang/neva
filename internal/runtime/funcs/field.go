@@ -20,24 +20,24 @@ func (s readStructField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx contex
 		pathStrings = append(pathStrings, el.Str())
 	}
 
-	msgIn, err := io.In.Single("msg")
+	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	msgOut, err := io.Out.Single("msg")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := msgIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			if !msgOut.Send(ctx, s.selector(msg, pathStrings)) {
+			if !resOut.Send(ctx, s.selector(dataMsg, pathStrings)) {
 				return
 			}
 		}

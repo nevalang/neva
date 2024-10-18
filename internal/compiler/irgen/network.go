@@ -68,18 +68,25 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		senderSide := conn.Normal.SenderSide
+		if len(conn.Normal.SenderSide) != 1 {
+			return nil, fmt.Errorf(
+				"expected exactly one sender side in desugared network, got %v",
+				len(conn.Normal.SenderSide),
+			)
+		}
+
+		sender := conn.Normal.SenderSide[0]
 
 		irSenderSidePortAddr, err := g.processSenderSide(
 			nodeCtx,
-			senderSide,
+			sender,
 			nodesPortsUsage,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		for _, receiverSide := range conn.Normal.ReceiverSide.Receivers {
+		for _, receiverSide := range conn.Normal.ReceiverSide {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 
 			result.Connections[irSenderSidePortAddr] = receiverSideIR
@@ -107,7 +114,7 @@ func (g Generator) processNetwork(
 
 func (g Generator) processSenderSide(
 	nodeCtx nodeContext,
-	senderSide src.ConnectionSenderSide,
+	senderSide src.ConnectionSender,
 	result map[string]portsUsage,
 ) (ir.PortAddr, error) {
 	// there could be many connections with the same sender but we must only add it once
