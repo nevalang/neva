@@ -1,0 +1,5 @@
+import { io }
+
+flow Main(start any) (stop any) {
+	:start -> [:stop, :stop]
+}

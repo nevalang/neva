@@ -1,0 +1,8 @@
+import { io }
+
+flow Main(start any) (stop any) {
+	FanOut
+	---
+	:start -> fanOut
+	[fanOut[0], fanOut[2]] -> :stop
+}

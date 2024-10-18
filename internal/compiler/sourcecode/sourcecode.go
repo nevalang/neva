@@ -376,6 +376,8 @@ func (p PortAddr) String() string {
 		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, *p.Idx)
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
+	case hasNode && hasIdx:
+		return fmt.Sprintf("%v[%v]", p.Node, *p.Idx)
 	case hasNode:
 		return p.Node
 	}

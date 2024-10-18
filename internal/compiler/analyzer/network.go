@@ -334,7 +334,13 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}
 	}
 
-	netNodesUsage(nodesUsage).AddInport(portAddr)
+	if err := netNodesUsage(nodesUsage).trackInportUsage(portAddr); err != nil {
+		return src.PortAddr{}, &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &portAddr.Meta,
+		}
+	}
 
 	return portAddr, nil
 }
@@ -403,7 +409,13 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	}
 
 	if chainHead.PortAddr != nil {
-		netNodesUsage(nodesUsage).AddInport(*chainHead.PortAddr)
+		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHead.PortAddr); err != nil {
+			return src.Connection{}, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &chainedConn.Meta,
+			}
+		}
 	}
 
 	return analyzedChainedConn, nil
@@ -417,7 +429,6 @@ func (a Analyzer) analyzeSenderSide(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
-	seenPortAddrs := make(map[string]struct{}, len(senders))
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
 
@@ -443,18 +454,6 @@ func (a Analyzer) analyzeSenderSide(
 		if sender.PortAddr == nil {
 			continue
 		}
-
-		s := sender.PortAddr.String()
-
-		if _, ok := seenPortAddrs[s]; ok {
-			return nil, nil, &compiler.Error{
-				Err:      fmt.Errorf("senders must be unique: %v", s),
-				Location: &scope.Location,
-				Meta:     &sender.Meta,
-			}
-		}
-
-		seenPortAddrs[s] = struct{}{}
 	}
 
 	return analyzedSenders, resolvedSenderTypes, nil
@@ -507,7 +506,13 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		netNodesUsage(nodesUsage).AddOutport(*sender.PortAddr)
+		if err := netNodesUsage(nodesUsage).trackOutportUsage(*sender.PortAddr); err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &sender.PortAddr.Meta,
+			}
+		}
 	}
 
 	if len(sender.Selectors) > 0 {
@@ -596,8 +601,21 @@ func (a Analyzer) analyzeArrayBypassConnection(
 		}
 	}
 
-	netNodesUsage(nodesUsage).AddOutport(arrBypassConn.SenderOutport)
-	netNodesUsage(nodesUsage).AddInport(arrBypassConn.ReceiverInport)
+	if err := netNodesUsage(nodesUsage).trackOutportUsage(arrBypassConn.SenderOutport); err != nil {
+		return &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
+		}
+	}
+
+	if err := netNodesUsage(nodesUsage).trackInportUsage(arrBypassConn.ReceiverInport); err != nil {
+		return &compiler.Error{
+			Err:      err,
+			Location: &scope.Location,
+			Meta:     &conn.Meta,
+		}
+	}
 
 	return nil
 }
@@ -610,7 +628,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	nodesUsage map[string]netNodeUsage,
 	nodes map[string]src.Node,
 ) *compiler.Error {
-	// 1. check that every self inport is used
+	// 1. every self inport must be used
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
 		return &compiler.Error{
@@ -629,7 +647,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 		}
 	}
 
-	// 2. check that every self outport is used
+	// 2. every self-outport must be used
 	outportsUsage, ok := nodesUsage["out"]
 	if !ok {
 		return &compiler.Error{
@@ -657,7 +675,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 
 	// 3. check sub-nodes usage in network
 	for nodeName, nodeIface := range nodesIfaces {
-		// check that every sub-node is used
+		// every sub-node must be used
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
@@ -666,7 +684,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			}
 		}
 
-		// every sub-node's inport is used
+		// every sub-node's inport must be used
 		for inportName := range nodeIface.iface.IO.In {
 			if _, ok := nodeUsage.In[inportName]; ok {
 				continue
@@ -692,7 +710,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			continue
 		}
 
-		// :err outport is always used and at least one outport is used in general
+		// :err outport must always be used + at least one outport must be used in general
 		atLeastOneOutportIsUsed := false
 		for outportName, port := range nodeIface.iface.IO.Out {
 			_, portUsed := nodeUsage.Out[outportName]
@@ -738,9 +756,62 @@ func (a Analyzer) analyzeNetPortsUsage(
 		}
 	}
 
-	// TODO
-	// 4. check that each sender and receiver is used at most once
-	// 5. check that array ports are used correctly (from 0 and without holes)
+	// 4. check that array ports are used correctly (from 0 and without holes)
+	for nodeName, nodeUsage := range nodesUsage {
+		for portName, usedSlots := range nodeUsage.In {
+			if usedSlots == nil {
+				continue // skip non-array ports
+			}
+
+			maxSlot := uint8(0)
+			for slot := range usedSlots {
+				if slot > maxSlot {
+					maxSlot = slot
+				}
+			}
+
+			for i := uint8(0); i <= maxSlot; i++ {
+				if _, ok := usedSlots[i]; !ok {
+					return &compiler.Error{
+						Err: fmt.Errorf(
+							"array inport '%s:%s' is used incorrectly: slot %d is missing",
+							nodeName,
+							portName,
+							i,
+						),
+						Location: &scope.Location,
+					}
+				}
+			}
+		}
+
+		for portName, usedSlots := range nodeUsage.Out {
+			if usedSlots == nil {
+				continue // skip non-array ports
+			}
+
+			maxSlot := uint8(0)
+			for slot := range usedSlots {
+				if slot > maxSlot {
+					maxSlot = slot
+				}
+			}
+
+			for i := uint8(0); i <= maxSlot; i++ {
+				if _, ok := usedSlots[i]; !ok {
+					return &compiler.Error{
+						Err: fmt.Errorf(
+							"array outport '%s:%s' is used incorrectly: slot %d is missing",
+							nodeName,
+							portName,
+							i,
+						),
+						Location: &scope.Location,
+					}
+				}
+			}
+		}
+	}
 
 	return nil
 }
