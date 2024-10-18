@@ -14,6 +14,8 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
+	// debugValidation(prog)
+
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		prog.Stop.Receive(ctx)
@@ -94,6 +96,7 @@ func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]fu
 
 // 	receivers := map[string]info{}
 // 	senders := map[string]info{}
+
 // 	for _, call := range prog.FuncCalls {
 // 		for _, inport := range call.IO.In.ports {
 // 			if inport.single != nil {
@@ -117,6 +120,7 @@ func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]fu
 // 				panic("empty func call!")
 // 			}
 // 		}
+
 // 		for _, outport := range call.IO.Out.ports {
 // 			if outport.single != nil {
 // 				k := fmt.Sprint(outport.single.ch)
@@ -155,7 +159,7 @@ func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]fu
 
 // 	if len(senders) != len(receivers) {
 // 		fmt.Printf(
-// 			"===\nWARNING: len(senders)!=len(receivers), senders=%d, receivers=%d\n===\n\n",
+// 			"[DEBUG] ===\nWARNING: len(senders)!=len(receivers), senders=%d, receivers=%d\n===\n\n",
 // 			len(senders),
 // 			len(receivers),
 // 		)
@@ -169,39 +173,27 @@ func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]fu
 // 	}
 
 // 	for senderChanString, sInfo := range senders {
-// 		rInfo, ok := receivers[senderChanString]
-// 		if !ok {
+// 		if _, ok := receivers[senderChanString]; !ok {
 // 			fmt.Printf(
-// 				"%v | %v:%v%s -> ???\n",
+// 				"[DEBUG] Unconnected Sender: %v | %v:%v%s -> ???\n",
 // 				senderChanString,
 // 				sInfo.PortSlotAddr.Path,
 // 				sInfo.PortSlotAddr.Port,
 // 				formatSlotIndex(sInfo.PortSlotAddr.Index),
 // 			)
-// 			continue
 // 		}
-// 		fmt.Printf(
-// 			"%v | %v:%v%s -> %v:%v%s\n",
-// 			senderChanString,
-// 			sInfo.PortSlotAddr.Path,
-// 			sInfo.PortSlotAddr.Port,
-// 			formatSlotIndex(sInfo.PortSlotAddr.Index),
-// 			rInfo.PortSlotAddr.Path,
-// 			rInfo.PortSlotAddr.Port,
-// 			formatSlotIndex(rInfo.PortSlotAddr.Index),
-// 		)
 // 	}
 
 // 	for rChStr, rInfo := range receivers {
 // 		if _, ok := senders[rChStr]; !ok {
 // 			fmt.Printf(
-// 				"%v | ??? -> %v:%v%s\n",
+// 				"[DEBUG] Unconnected Receiver: %v | ??? -> %v:%v%s\n",
 // 				rChStr,
 // 				rInfo.PortSlotAddr.Path,
 // 				rInfo.PortSlotAddr.Port,
 // 				formatSlotIndex(rInfo.PortSlotAddr.Index),
 // 			)
-// 			continue
 // 		}
 // 	}
+
 // }

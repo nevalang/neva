@@ -33,7 +33,11 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	funcmap := template.FuncMap{
 		"getPortChanNameByAddr": func(path string, port string) string {
 			addr := ir.PortAddr{Path: path, Port: port}
-			return addrToChanVar[addr]
+			v, ok := addrToChanVar[addr]
+			if !ok {
+				panic(fmt.Sprintf("port chan not found: %v", addr))
+			}
+			return v
 		},
 	}
 
