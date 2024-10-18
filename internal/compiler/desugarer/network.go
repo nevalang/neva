@@ -484,7 +484,7 @@ func (d Desugarer) desugarSingleSender(
 
 	// mark outport as used and desugar unnamed port if needed
 	if sender.PortAddr != nil {
-		var portName string
+		portName := sender.PortAddr.Port
 		if sender.PortAddr.Port == "" {
 			firstOutportName, err := getFirstOutportName(scope, nodes, *sender.PortAddr)
 			if err != nil {

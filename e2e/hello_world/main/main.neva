@@ -1,0 +1,5 @@
+flow Main(start) (stop) {
+	Println
+	---
+	:start -> println -> :stop
+}
