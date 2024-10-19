@@ -160,12 +160,12 @@ flow Main(start any) (stop any) {
 }
 
 flow Main() () {
-    $foo.bar -> foo:bar
-    $foo.bar.baz -> foo:bar
-    foo:bar.baz -> foo:bar
-    foo:bar.baz.bax -> foo:bar
-    $foo.bar.baz -> [foo:bar, bar:baz]
-    foo:bar.baz.bax -> [
+    $foo -> .bar -> foo:bar
+    $foo -> .bar.baz -> foo:bar
+    foo:bar -> .baz -> foo:bar
+    foo:bar -> .baz.bax -> foo:bar
+    $foo -> .bar.baz -> [foo:bar, bar:baz]
+    foo:bar -> .baz.bax -> [
         foo:bar,
         bar:baz
     ]

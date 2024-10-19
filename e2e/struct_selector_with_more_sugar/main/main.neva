@@ -12,7 +12,7 @@ flow Main(start) (stop) {
     UserSender, Println
     ---
     :start -> userSender:sig
-    userSender.pet.name -> println -> :stop
+    userSender -> .pet.name -> println -> :stop
 }
 
 const user User = {

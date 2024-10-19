@@ -8,7 +8,7 @@ type Pet struct { name string }
 flow Main(start) (stop) {
     GetUser, Println
     ---
-    :start -> getUser.pet.name -> println -> :stop
+    :start -> getUser -> .pet.name -> println -> :stop
 }
 
 const user User = {

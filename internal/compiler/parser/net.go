@@ -322,14 +322,7 @@ func parseDeferredConn(
 func parseNormConnSenderSide(
 	senderSide generated.ISingleSenderSideContext,
 ) (src.ConnectionSender, *compiler.Error) {
-	var senderSelectors []string
-	singleSenderSelectors := senderSide.StructSelectors()
-	if singleSenderSelectors != nil {
-		for _, id := range singleSenderSelectors.AllIDENTIFIER() {
-			senderSelectors = append(senderSelectors, id.GetText())
-		}
-	}
-
+	structSelectors := senderSide.StructSelectors()
 	portSender := senderSide.PortAddr()
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
@@ -338,7 +331,8 @@ func parseNormConnSenderSide(
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
-		rangeExprSender == nil {
+		rangeExprSender == nil &&
+		structSelectors == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
 			Meta: &core.Meta{
@@ -445,6 +439,13 @@ func parseNormConnSenderSide(
 					Column: rangeExprSender.GetStop().GetColumn(),
 				},
 			},
+		}
+	}
+
+	var senderSelectors []string
+	if structSelectors != nil {
+		for _, id := range structSelectors.AllIDENTIFIER() {
+			senderSelectors = append(senderSelectors, id.GetText())
 		}
 	}
 

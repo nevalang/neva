@@ -4,7 +4,7 @@
 pub flow Wait(data stream<any>) (sig) {
     If
     ---
-    :data.last -> if
+    :data -> .last -> if
     if:then -> :sig
 }
 
@@ -43,9 +43,9 @@ pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
 
     :data -> fanOut
     
-    fanOut[0].idx -> wrap:idx
-    fanOut[1].last -> wrap:last
-    fanOut[2].data -> handler -> wrap:data
+    fanOut[0] -> .idx -> wrap:idx
+    fanOut[1] -> .last -> wrap:last
+    fanOut[2] -> .data -> handler -> wrap:data
 
     wrap -> :res
 }
@@ -68,7 +68,7 @@ pub flow Filter<T>(data stream<T>) (res stream<T>) {
     :data -> fanOut
     
     fanOut[0] -> cond:data
-    fanOut[1].data -> handler -> cond:if
+    fanOut[1] -> .data -> handler -> cond:if
     
     cond:then -> :res
 }
@@ -92,8 +92,8 @@ pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     :init -> acc:init
     
     :data -> fanOut
-    fanOut[0].data -> handler:el
-    fanOut[1].last -> acc:last
+    fanOut[0] -> .data -> handler:el
+    fanOut[1] -> .last -> acc:last
     
     acc:cur -> handler:acc
     handler:res -> acc:upd

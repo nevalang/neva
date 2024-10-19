@@ -11,7 +11,7 @@ import (
 
 type desugarStructSelectorsResult struct {
 	connToReplace src.Connection
-	connToInsert  src.Connection
+	insert        src.Connection
 }
 
 var selectorNodeRef = core.EntityRef{
@@ -23,7 +23,7 @@ var virtualSelectorsCount uint64
 
 // desugarStructSelectors replaces one connection with 2 connections and a node with const
 func (d Desugarer) desugarStructSelectors(
-	senderSide src.ConnectionSender,
+	sender src.ConnectionSender,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -35,7 +35,7 @@ func (d Desugarer) desugarStructSelectors(
 	constName := fmt.Sprintf("__const__%d", virtualConstCount)
 
 	virtualSelectorsCount++
-	fieldNodeName := fmt.Sprintf("__field__%d", virtualSelectorsCount)
+	selectorNodeName := fmt.Sprintf("__field__%d", virtualSelectorsCount)
 
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{
@@ -44,21 +44,16 @@ func (d Desugarer) desugarStructSelectors(
 		EntityRef: selectorNodeRef,
 	}
 
+	sender.Selectors = nil
+
 	// original connection must be replaced with two new connections, this is the first one
-	connToReplace := src.Connection{
+	replace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: []src.ConnectionSender{
-				{
-					// preserve original sender
-					PortAddr:  senderSide.PortAddr,
-					Const:     senderSide.Const,
-					Selectors: nil, // but remove selectors in desugared version
-				},
-			},
+			SenderSide: []src.ConnectionSender{sender},
 			ReceiverSide: []src.ConnectionReceiver{
 				{
 					PortAddr: &src.PortAddr{
-						Node: fieldNodeName, // point it to created selector node
+						Node: selectorNodeName, // point it to created selector node
 						Port: "data",
 					},
 				},
@@ -72,7 +67,7 @@ func (d Desugarer) desugarStructSelectors(
 			SenderSide: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
-						Node: fieldNodeName, // created node received data from original sender and is now sending it further
+						Node: selectorNodeName, // created node received data from original sender and is now sending it further
 						Port: "res",
 					},
 				},
@@ -81,12 +76,12 @@ func (d Desugarer) desugarStructSelectors(
 		},
 	}
 
-	nodesToInsert[fieldNodeName] = selectorNode
-	constsToInsert[constName] = d.createSelectorCfgMsg(senderSide)
+	nodesToInsert[selectorNodeName] = selectorNode
+	constsToInsert[constName] = d.createSelectorCfgMsg(sender)
 
 	return desugarStructSelectorsResult{
-		connToReplace: connToReplace,
-		connToInsert:  connToInsert,
+		connToReplace: replace,
+		insert:        connToInsert,
 	}, nil
 }
 

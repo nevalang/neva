@@ -8,11 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// userSender.pet.name -> println -> :stop
 func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	text := []byte(`
 		flow C1() () {
-			userSender.pet.name -> println -> :stop
+			userSender -> .pet.name -> println -> :stop
 		}`,
 	)
 	p := New(false)
@@ -25,15 +24,17 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	conn := net[0].Normal
 	require.Equal(t, "userSender", conn.SenderSide[0].PortAddr.Node)
 	require.Equal(t, "", conn.SenderSide[0].PortAddr.Port)
-	require.Equal(t, "pet", conn.SenderSide[0].Selectors[0])
-	require.Equal(t, "name", conn.SenderSide[0].Selectors[1])
 
 	chain := conn.ReceiverSide[0].ChainedConnection.Normal
-	require.Equal(t, "println", chain.SenderSide[0].PortAddr.Node)
-	require.Equal(t, "", chain.SenderSide[0].PortAddr.Port)
+	require.Equal(t, "pet", chain.SenderSide[0].Selectors[0])
+	require.Equal(t, "name", chain.SenderSide[0].Selectors[1])
 
-	chainReceiver := chain.ReceiverSide[0].PortAddr
-	require.Equal(t, "stop", chainReceiver.Port)
+	secondChain := chain.ReceiverSide[0].ChainedConnection.Normal
+	require.Equal(t, "println", secondChain.SenderSide[0].PortAddr.Node)
+	require.Equal(t, "", secondChain.SenderSide[0].PortAddr.Port)
+
+	chainEnd := secondChain.ReceiverSide[0].PortAddr
+	require.Equal(t, "stop", chainEnd.Port)
 }
 
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
