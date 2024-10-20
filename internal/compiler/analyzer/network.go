@@ -480,7 +480,7 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
-		len(sender.Selectors) == 0 {
+		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
 			Err:      ErrEmptySender,
 			Location: &scope.Location,
@@ -504,7 +504,7 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if len(sender.Selectors) > 0 && prevChainLink == nil {
+	if len(sender.StructSelector) > 0 && prevChainLink == nil {
 		return nil, nil, &compiler.Error{
 			Err:      errors.New("struct selectors cannot be used in non-chained connection"),
 			Location: &scope.Location,
@@ -1029,7 +1029,7 @@ func (a Analyzer) getSenderSideType(
 		return senderSide, rangeType, false, nil
 	}
 
-	if len(senderSide.Selectors) > 0 {
+	if len(senderSide.StructSelector) > 0 {
 		if len(prevChainLink) != 1 {
 			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
 				Err:      errors.New("fan-in with struct selectors is not supported"),
@@ -1052,7 +1052,7 @@ func (a Analyzer) getSenderSideType(
 
 		lastFieldType, err := a.getSelectorsSenderType(
 			chainLinkType,
-			senderSide.Selectors,
+			senderSide.StructSelector,
 			scope,
 		)
 		if err != nil {
@@ -1334,7 +1334,7 @@ func (a Analyzer) getChainHeadType(
 		}, nil
 	}
 
-	if len(chainHead.Selectors) > 0 {
+	if len(chainHead.StructSelector) > 0 {
 		return a.getStructSelectorInportType(chainHead), nil
 	}
 
@@ -1354,8 +1354,8 @@ func (Analyzer) getStructSelectorInportType(chainHead src.ConnectionSender) ts.E
 	}
 
 	currentStruct := typeExpr.Lit.Struct
-	for i, selector := range chainHead.Selectors {
-		if i == len(chainHead.Selectors)-1 {
+	for i, selector := range chainHead.StructSelector {
+		if i == len(chainHead.StructSelector)-1 {
 			// last selector, use any type
 			currentStruct[selector] = ts.Expr{
 				Inst: &ts.InstExpr{

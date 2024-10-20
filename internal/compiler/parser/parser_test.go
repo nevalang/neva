@@ -26,8 +26,8 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	require.Equal(t, "", conn.SenderSide[0].PortAddr.Port)
 
 	chain := conn.ReceiverSide[0].ChainedConnection.Normal
-	require.Equal(t, "pet", chain.SenderSide[0].Selectors[0])
-	require.Equal(t, "name", chain.SenderSide[0].Selectors[1])
+	require.Equal(t, "pet", chain.SenderSide[0].StructSelector[0])
+	require.Equal(t, "name", chain.SenderSide[0].StructSelector[1])
 
 	secondChain := chain.ReceiverSide[0].ChainedConnection.Normal
 	require.Equal(t, "println", secondChain.SenderSide[0].PortAddr.Node)

@@ -318,17 +318,17 @@ func (c ConnectionSideSelectors) String() string {
 
 // ConnectionSender unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSender struct {
-	PortAddr  *PortAddr  `json:"portAddr,omitempty"`
-	Const     *Const     `json:"literal,omitempty"`
-	Range     *RangeExpr `json:"range,omitempty"` // New field
-	Selectors []string   `json:"selectors,omitempty"`
-	Meta      core.Meta  `json:"meta,omitempty"`
+	PortAddr       *PortAddr  `json:"portAddr,omitempty"`
+	Const          *Const     `json:"literal,omitempty"`
+	Range          *RangeExpr `json:"range,omitempty"` // New field
+	StructSelector []string   `json:"selectors,omitempty"`
+	Meta           core.Meta  `json:"meta,omitempty"`
 }
 
 func (s ConnectionSender) String() string {
 	selectorsString := ""
-	if len(s.Selectors) != 0 {
-		for _, selector := range s.Selectors {
+	if len(s.StructSelector) != 0 {
+		for _, selector := range s.StructSelector {
 			selectorsString += ":" + selector
 		}
 	}

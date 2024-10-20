@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -214,7 +215,104 @@ func TestDesugarNetwork(t *testing.T) {
 				nodesToInsert:  map[string]src.Node{},
 			},
 		},
-		// TODO [readAll:res, readAll:err] -> println -> :stop (fan_in_and_chained_connection)
+		// foo:bar -> .a.b.c -> baz:bax
+		{
+			name: "struct_selector_chain",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								ChainedConnection: &src.Connection{
+									Normal: &src.NormalConnection{
+										SenderSide: []src.ConnectionSender{
+											{StructSelector: []string{"a", "b", "c"}},
+										},
+										ReceiverSide: []src.ConnectionReceiver{
+											{PortAddr: &src.PortAddr{Node: "baz", Port: "bax"}},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Pkg: "test", Name: "Foo"}},
+				"baz": {EntityRef: core.EntityRef{Pkg: "test", Name: "Baz"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "__field__1", Port: "data"},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__field__1", Port: "res"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "baz", Port: "bax"},
+								},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__field__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Field"},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__1"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__const__1": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Pkg: "builtin", Name: "list"},
+								Args: []ts.Expr{
+									{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Pkg: "builtin", Name: "string"},
+										},
+									},
+								},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{
+								List: []src.ConstValue{
+									{Message: &src.MsgLiteral{Str: compiler.Pointer("a")}},
+									{Message: &src.MsgLiteral{Str: compiler.Pointer("b")}},
+									{Message: &src.MsgLiteral{Str: compiler.Pointer("c")}},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

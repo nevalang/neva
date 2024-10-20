@@ -460,10 +460,10 @@ func parseNormConnSenderSide(
 	}
 
 	parsedSender := src.ConnectionSender{
-		PortAddr:  senderSidePortAddr,
-		Const:     constant,
-		Range:     rangeExpr,
-		Selectors: senderSelectors,
+		PortAddr:       senderSidePortAddr,
+		Const:          constant,
+		Range:          rangeExpr,
+		StructSelector: senderSelectors,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{
