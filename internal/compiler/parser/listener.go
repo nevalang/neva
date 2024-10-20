@@ -99,7 +99,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
 
-	parsedCompEntity, err := parseCompDef(compDef)
+	parsedCompEntity, err := parseCompDef(compDef, s.loc)
 	if err != nil {
 		panic(compiler.Error{Location: &s.loc}.Wrap(err))
 	}

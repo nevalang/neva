@@ -65,6 +65,7 @@ func (d Desugarer) desugarConnections(
 			nodes,
 			nodesToInsert,
 			constsToInsert,
+			nil,
 		)
 		if err != nil {
 			return nil, err
@@ -92,6 +93,7 @@ func (d Desugarer) desugarConnection(
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
+	prevChainLink *src.ConnectionSender,
 ) (desugarConnectionResult, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		nodePortsUsed.set(
@@ -112,6 +114,7 @@ func (d Desugarer) desugarConnection(
 		nodes,
 		nodesToInsert,
 		constsToInsert,
+		prevChainLink,
 	)
 }
 
@@ -122,6 +125,7 @@ func (d Desugarer) desugarNormalConnection(
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
+	prevChainLink *src.ConnectionSender,
 ) (desugarConnectionResult, *compiler.Error) {
 	if len(normConn.SenderSide) > 1 {
 		result, err := d.desugarFanIn(
@@ -152,6 +156,7 @@ func (d Desugarer) desugarNormalConnection(
 		nodePortsUsed,
 		nodesToInsert,
 		constsToInsert,
+		prevChainLink,
 	)
 	if err != nil {
 		return desugarConnectionResult{}, compiler.Error{
@@ -303,20 +308,24 @@ func (d Desugarer) desugarChainedConnection(
 	chainedConn := *receiver.ChainedConnection
 	chainHead := chainedConn.Normal.SenderSide[0] // chain head is always single sender
 
-	// it's only possible to find receiver port before desugaring
+	// it's only possible to find receiver port before desugaring of chained connection
 	var chainHeadPort string
-	if chainHead.Range != nil {
+	switch {
+	case chainHead.Range != nil:
 		chainHeadPort = "sig"
-	} else if chainHead.PortAddr != nil {
-		var firstInportName = chainHead.PortAddr.Port
-		if chainHead.PortAddr.Port == "" {
+	case len(chainHead.StructSelector) != 0:
+		chainHeadPort = "data"
+	case chainHead.PortAddr != nil:
+		chainHeadPort = chainHead.PortAddr.Port
+		if chainHeadPort == "" {
 			var err error
-			firstInportName, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
+			chainHeadPort, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
 			if err != nil {
 				return desugarConnectionResult{}, &compiler.Error{Err: err}
 			}
 		}
-		chainHeadPort = firstInportName
+	default:
+		panic("unexpected chain head type")
 	}
 
 	desugarChainResult, err := d.desugarConnection(
@@ -326,6 +335,7 @@ func (d Desugarer) desugarChainedConnection(
 		nodes,
 		nodesToInsert,
 		constsToInsert,
+		&normConn.SenderSide[0],
 	)
 	if err != nil {
 		return desugarConnectionResult{}, err
@@ -390,6 +400,7 @@ func (d Desugarer) desugarDeferredConnection(
 		nodes,
 		nodesToInsert,
 		constsToInsert,
+		nil,
 	)
 	if err != nil {
 		return desugarDeferredConnectionsResult{}, err
@@ -480,6 +491,7 @@ func (d Desugarer) desugarSingleSender(
 	usedNodeOutports nodeOutportsUsed,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
+	prevChainLink *src.ConnectionSender,
 ) (desugarSenderResult, *compiler.Error) {
 	sender := normConn.SenderSide[0]
 
@@ -507,14 +519,15 @@ func (d Desugarer) desugarSingleSender(
 			sender.PortAddr.Node,
 			portName,
 		)
+		return desugarSenderResult{
+			replace: src.Connection{Normal: &normConn},
+			insert:  nil,
+		}, nil
 	}
 
-	connectionsToInsert := []src.Connection{}
-
 	// if conn has selectors, desugar them, replace original connection and insert what's needed
-	if len(sender.Selectors) != 0 {
-		desugarSelectorsResult, err := d.desugarStructSelectors(
-			sender,
+	if len(sender.StructSelector) != 0 {
+		result, err := d.desugarStructSelectors(
 			normConn,
 			nodesToInsert,
 			constsToInsert,
@@ -526,37 +539,24 @@ func (d Desugarer) desugarSingleSender(
 			}.Wrap(err)
 		}
 
-		// generated connection might need desugaring itself
-		connToInsertDesugarRes, err := d.desugarConnection(
-			desugarSelectorsResult.connToInsert,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarSenderResult{}, err
-		}
-
-		connectionsToInsert = append(connectionsToInsert, *connToInsertDesugarRes.replace)
-		connectionsToInsert = append(connectionsToInsert, connToInsertDesugarRes.insert...)
-
 		// connection that replaces original one might need desugaring itself
 		replacedConnDesugarRes, err := d.desugarConnection(
-			desugarSelectorsResult.connToReplace,
+			result.replace,
 			usedNodeOutports,
 			scope,
 			nodes,
 			nodesToInsert,
 			constsToInsert,
+			nil,
 		)
 		if err != nil {
 			return desugarSenderResult{}, err
 		}
 
-		connectionsToInsert = append(connectionsToInsert, replacedConnDesugarRes.insert...)
-		normConn = *replacedConnDesugarRes.replace.Normal
+		return desugarSenderResult{
+			replace: src.Connection{Normal: replacedConnDesugarRes.replace.Normal},
+			insert:  replacedConnDesugarRes.insert,
+		}, nil
 	}
 
 	// if sender is const (ref or literal), replace original connection with desugared and insert const and node
@@ -597,25 +597,26 @@ func (d Desugarer) desugarSingleSender(
 				ReceiverSide: normConn.ReceiverSide,
 			}
 		}
+
+		return desugarSenderResult{
+			replace: src.Connection{Normal: &normConn},
+			insert:  nil,
+		}, nil
 	}
 
-	if sender.Range != nil {
-		result, err := d.desugarRangeSender(
-			*sender.Range,
-			normConn,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarSenderResult{}, err
-		}
-		normConn = result.replace
-		connectionsToInsert = append(connectionsToInsert, result.insert...)
+	result, err := d.desugarRangeSender(
+		*sender.Range,
+		normConn,
+		nodesToInsert,
+		constsToInsert,
+	)
+	if err != nil {
+		return desugarSenderResult{}, err
 	}
 
 	return desugarSenderResult{
-		replace: src.Connection{Normal: &normConn},
-		insert:  connectionsToInsert,
+		replace: src.Connection{Normal: &result.replace},
+		insert:  result.insert,
 	}, nil
 }
 
@@ -730,6 +731,7 @@ func (d Desugarer) desugarFanOut(
 			nodes,
 			nodesToInsert,
 			constsToInsert,
+			nil,
 		)
 		if err != nil {
 			return desugarFanOutResult{}, err

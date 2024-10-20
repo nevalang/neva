@@ -130,12 +130,12 @@ multipleSenderSide:
 		',' NEWLINE* singleSenderSide NEWLINE*
 	)* ']';
 arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
-singleSenderSide: (
-		portAddr
-		| senderConstRef
-		| primitiveConstLit
-		| rangeExpr
-	) structSelectors?;
+singleSenderSide:
+	portAddr
+	| senderConstRef
+	| primitiveConstLit
+	| rangeExpr
+	| structSelectors;
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

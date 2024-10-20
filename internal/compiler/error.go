@@ -14,11 +14,20 @@ type Error struct {
 	child    *Error
 }
 
+func NewError(err error, meta *core.Meta, location *src.Location) *Error {
+	return &Error{
+		Err:      err,
+		Meta:     meta,
+		Location: location,
+	}
+}
+
 func (e Error) Wrap(child *Error) *Error {
 	e.child = child
 	return &e
 }
 
+// FIXME: it doesn't make sense to wrap if we don't use anything from parent
 func (e Error) unwrap() Error {
 	for e.child != nil {
 		e = *e.child

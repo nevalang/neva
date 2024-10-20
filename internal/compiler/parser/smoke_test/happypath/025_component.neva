@@ -160,12 +160,12 @@ flow Main(start any) (stop any) {
 }
 
 flow Main() () {
-    $foo.bar -> foo:bar
-    $foo.bar.baz -> foo:bar
-    foo:bar.baz -> foo:bar
-    foo:bar.baz.bax -> foo:bar
-    $foo.bar.baz -> [foo:bar, bar:baz]
-    foo:bar.baz.bax -> [
+    $foo -> .bar -> foo:bar
+    $foo -> .bar.baz -> foo:bar
+    foo:bar -> .baz -> foo:bar
+    foo:bar -> .baz.bax -> foo:bar
+    $foo -> .bar.baz -> [foo:bar, bar:baz]
+    foo:bar -> .baz.bax -> [
         foo:bar,
         bar:baz
     ]
@@ -248,7 +248,7 @@ flow RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
 
 // Test range expression with struct selectors
 flow RangeTest5() (out stream<int>) {
-    1..10.data -> :out
+    1..10 -> .data -> :out
 }
 
 // Test range expression with array index

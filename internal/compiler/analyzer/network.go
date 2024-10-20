@@ -79,7 +79,7 @@ func (a Analyzer) analyzeConnections(
 			nodesIfaces,
 			scope,
 			nodesUsage,
-			false,
+			nil,
 		)
 		if err != nil {
 			return nil, err
@@ -97,7 +97,7 @@ func (a Analyzer) analyzeConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
-	isChained bool,
+	prevChainLink []src.ConnectionSender,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -120,7 +120,7 @@ func (a Analyzer) analyzeConnection(
 		nodesIfaces,
 		scope,
 		nodesUsage,
-		isChained,
+		prevChainLink,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -139,7 +139,7 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
-	isChained bool,
+	prevChainLink []src.ConnectionSender,
 ) (*src.NormalConnection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
 		normConn.SenderSide,
@@ -148,7 +148,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
-		isChained,
+		prevChainLink,
 	)
 	if err != nil {
 		return nil, err
@@ -270,7 +270,7 @@ func (a Analyzer) analyzeReceiver(
 			nodesIfaces,
 			scope,
 			nodesUsage,
-			false,
+			nil,
 		)
 		if err != nil {
 			return nil, err
@@ -409,7 +409,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		nodesIfaces,
 		scope,
 		nodesUsage,
-		true,
+		analyzedSenders,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -435,7 +435,7 @@ func (a Analyzer) analyzeSenderSide(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
-	isChained bool,
+	prevChainLink []src.ConnectionSender,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -448,7 +448,7 @@ func (a Analyzer) analyzeSenderSide(
 			nodes,
 			nodesIfaces,
 			nodesUsage,
-			isChained,
+			prevChainLink,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -475,9 +475,12 @@ func (a Analyzer) analyzeSender(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
-	isChained bool,
+	prevChainLink []src.ConnectionSender,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
-	if sender.PortAddr == nil && sender.Const == nil && sender.Range == nil {
+	if sender.PortAddr == nil &&
+		sender.Const == nil &&
+		sender.Range == nil &&
+		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
 			Err:      ErrEmptySender,
 			Location: &scope.Location,
@@ -485,7 +488,7 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Range != nil && !isChained {
+	if sender.Range != nil && prevChainLink == nil {
 		return nil, nil, &compiler.Error{
 			Err:      errors.New("range expression cannot be used in non-chained connection"),
 			Location: &scope.Location,
@@ -493,9 +496,17 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Const != nil && isChained {
+	if sender.Const != nil && len(prevChainLink) != 0 {
 		return nil, nil, &compiler.Error{
 			Err:      errors.New("constant cannot be used in chained connection"),
+			Location: &scope.Location,
+			Meta:     &sender.Meta,
+		}
+	}
+
+	if len(sender.StructSelector) > 0 && prevChainLink == nil {
+		return nil, nil, &compiler.Error{
+			Err:      errors.New("struct selectors cannot be used in non-chained connection"),
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -507,6 +518,7 @@ func (a Analyzer) analyzeSender(
 		nodes,
 		nodesIfaces,
 		scope,
+		prevChainLink,
 	)
 	if err != nil {
 		return nil, nil, compiler.Error{
@@ -541,22 +553,6 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if len(sender.Selectors) > 0 {
-		lastFieldType, err := a.getStructFieldTypeByPath(
-			resolvedSenderType,
-			sender.Selectors,
-			scope,
-		)
-		if err != nil {
-			return nil, nil, &compiler.Error{
-				Err:      err,
-				Location: &scope.Location,
-				Meta:     &sender.Meta,
-			}
-		}
-		resolvedSenderType = lastFieldType
-	}
-
 	return &resolvedSender, &resolvedSenderType, nil
 }
 
@@ -570,7 +566,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 ) *compiler.Error {
 	arrBypassConn := conn.ArrayBypass
 
-	senderType, isArray, err := a.getSenderPortType(
+	senderType, isArray, err := a.getPortSenderType(
 		arrBypassConn.SenderOutport,
 		scope,
 		iface,
@@ -1006,17 +1002,17 @@ func (a Analyzer) getSenderSideType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
+	prevChainLink []src.ConnectionSender,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if senderSide.Const != nil {
-		resolvedConst, resolvedExpr, err := a.getResolvedSenderConstType(*senderSide.Const, scope)
+		resolvedConst, resolvedExpr, err := a.getConstSenderType(*senderSide.Const, scope)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
 		}
 
 		return src.ConnectionSender{
-			Const:     &resolvedConst,
-			Selectors: senderSide.Selectors,
-			Meta:      senderSide.Meta,
+			Const: &resolvedConst,
+			Meta:  senderSide.Meta,
 		}, resolvedExpr, false, nil
 	}
 
@@ -1033,7 +1029,44 @@ func (a Analyzer) getSenderSideType(
 		return senderSide, rangeType, false, nil
 	}
 
-	resolvedExpr, isArr, err := a.getSenderPortType(
+	if len(senderSide.StructSelector) > 0 {
+		if len(prevChainLink) != 1 {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Err:      errors.New("fan-in with struct selectors is not supported"),
+				Location: &scope.Location,
+				Meta:     &senderSide.Meta,
+			}
+		}
+
+		_, chainLinkType, _, err := a.getSenderSideType(
+			prevChainLink[0],
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			prevChainLink,
+		)
+		if err != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, err
+		}
+
+		lastFieldType, err := a.getSelectorsSenderType(
+			chainLinkType,
+			senderSide.StructSelector,
+			scope,
+		)
+		if err != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &senderSide.Meta,
+			}
+		}
+
+		return senderSide, lastFieldType, false, nil
+	}
+
+	resolvedExpr, isArr, err := a.getPortSenderType(
 		*senderSide.PortAddr,
 		scope,
 		iface,
@@ -1044,15 +1077,11 @@ func (a Analyzer) getSenderSideType(
 		return src.ConnectionSender{}, ts.Expr{}, false, err
 	}
 
-	return src.ConnectionSender{
-		PortAddr:  senderSide.PortAddr,
-		Selectors: senderSide.Selectors,
-		Meta:      senderSide.Meta,
-	}, resolvedExpr, isArr, nil
+	return senderSide, resolvedExpr, isArr, nil
 }
 
-// getSenderPortType returns port's type and isArray bool
-func (a Analyzer) getSenderPortType(
+// getPortSenderType returns port's type and isArray bool
+func (a Analyzer) getPortSenderType(
 	senderSidePortAddr src.PortAddr,
 	scope src.Scope,
 	iface src.Interface,
@@ -1100,7 +1129,7 @@ func (a Analyzer) getSenderPortType(
 	)
 }
 
-func (a Analyzer) getResolvedSenderConstType(
+func (a Analyzer) getConstSenderType(
 	constSender src.Const,
 	scope src.Scope,
 ) (src.Const, ts.Expr, *compiler.Error) {
@@ -1255,26 +1284,32 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 	return resolvedExpr, nil
 }
 
-func (a Analyzer) getStructFieldTypeByPath(
+func (a Analyzer) getSelectorsSenderType(
 	senderType ts.Expr,
-	path []string,
+	selectors []string,
 	scope src.Scope,
-) (ts.Expr, error) {
-	if len(path) == 0 {
+) (ts.Expr, *compiler.Error) {
+	if len(selectors) == 0 {
 		return senderType, nil
 	}
 
 	if senderType.Lit == nil || senderType.Lit.Struct == nil {
-		return ts.Expr{}, fmt.Errorf("Type not struct: %v", senderType.String())
+		return ts.Expr{}, &compiler.Error{
+			Err:      fmt.Errorf("Type not struct: %v", senderType.String()),
+			Location: &scope.Location,
+		}
 	}
 
-	curField := path[0]
+	curField := selectors[0]
 	fieldType, ok := senderType.Lit.Struct[curField]
 	if !ok {
-		return ts.Expr{}, fmt.Errorf("struct field '%v' not found", curField)
+		return ts.Expr{}, &compiler.Error{
+			Err:      fmt.Errorf("struct field '%v' not found", curField),
+			Location: &scope.Location,
+		}
 	}
 
-	return a.getStructFieldTypeByPath(fieldType, path[1:], scope)
+	return a.getSelectorsSenderType(fieldType, selectors[1:], scope)
 }
 
 func (a Analyzer) getChainHeadType(
@@ -1299,9 +1334,45 @@ func (a Analyzer) getChainHeadType(
 		}, nil
 	}
 
+	if len(chainHead.StructSelector) > 0 {
+		return a.getStructSelectorInportType(chainHead), nil
+	}
+
 	return ts.Expr{}, &compiler.Error{
 		Err:      errors.New("Chained connection must start with port address or range expression"),
 		Location: &scope.Location,
 		Meta:     &chainHead.Meta,
 	}
+}
+
+func (Analyzer) getStructSelectorInportType(chainHead src.ConnectionSender) ts.Expr {
+	// build nested struct type for selectors
+	typeExpr := ts.Expr{
+		Lit: &ts.LitExpr{
+			Struct: make(map[string]ts.Expr),
+		},
+	}
+
+	currentStruct := typeExpr.Lit.Struct
+	for i, selector := range chainHead.StructSelector {
+		if i == len(chainHead.StructSelector)-1 {
+			// last selector, use any type
+			currentStruct[selector] = ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "any"},
+				},
+			}
+		} else {
+			// create nested struct
+			nestedStruct := make(map[string]ts.Expr)
+			currentStruct[selector] = ts.Expr{
+				Lit: &ts.LitExpr{
+					Struct: nestedStruct,
+				},
+			}
+			currentStruct = nestedStruct
+		}
+	}
+
+	return typeExpr
 }
