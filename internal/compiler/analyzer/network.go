@@ -496,7 +496,7 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Const != nil && prevChainLink == nil {
+	if sender.Const != nil && len(prevChainLink) != 0 {
 		return nil, nil, &compiler.Error{
 			Err:      errors.New("constant cannot be used in chained connection"),
 			Location: &scope.Location,
