@@ -1,8 +1,9 @@
 import { http }
 
 flow Main(start) (stop) {
-	http.Get, Println
+	http.Get, Println, Panic
 	---
 	:start -> ('http://www.example.com' -> get)
-	[get:resp.body, get:err] -> println -> :stop
+	get:resp -> .body -> println -> :stop
+	get:err -> panic
 }

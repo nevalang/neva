@@ -13,12 +13,12 @@ import (
 
 var ErrEmptyConnDef error = errors.New("Connection must be either normal or array bypass")
 
-func parseNet(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
+func parseNet(actx generated.IConnDefListContext, loc src.Location) ([]src.Connection, *compiler.Error) {
 	allConnDefs := actx.AllConnDef()
 	parsedConns := make([]src.Connection, 0, len(allConnDefs))
 
 	for _, connDef := range allConnDefs {
-		parsedConn, err := parseConn(connDef)
+		parsedConn, err := parseConn(connDef, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -28,7 +28,7 @@ func parseNet(actx generated.IConnDefListContext) ([]src.Connection, *compiler.E
 	return parsedConns, nil
 }
 
-func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+func parseConn(connDef generated.IConnDefContext, loc src.Location) (src.Connection, *compiler.Error) {
 	meta := core.Meta{
 		Text: connDef.GetText(),
 		Start: core.Position{
@@ -45,17 +45,18 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	arrBypassConn := connDef.ArrBypassConnDef()
 
 	if normConn == nil && arrBypassConn == nil {
-		return src.Connection{}, &compiler.Error{
-			Err:  ErrEmptyConnDef,
-			Meta: &meta,
-		}
+		return src.Connection{}, compiler.NewError(
+			ErrEmptyConnDef,
+			&meta,
+			&loc,
+		)
 	}
 
 	if arrBypassConn != nil {
 		return parseArrayBypassConn(arrBypassConn)
 	}
 
-	return parseNormConn(normConn)
+	return parseNormConn(normConn, loc)
 }
 
 func parseArrayBypassConn(
@@ -105,6 +106,7 @@ func parseArrayBypassConn(
 
 func parseNormConn(
 	actx generated.INormConnDefContext,
+	loc src.Location,
 ) (src.Connection, *compiler.Error) {
 	meta := core.Meta{
 		Text: actx.GetText(),
@@ -118,12 +120,12 @@ func parseNormConn(
 		},
 	}
 
-	parsedSenderSide, err := parseSenderSide(actx.SenderSide())
+	parsedSenderSide, err := parseSenderSide(actx.SenderSide(), loc)
 	if err != nil {
 		return src.Connection{}, err
 	}
 
-	parsedReceiverSide, err := parseReceiverSide(actx.ReceiverSide())
+	parsedReceiverSide, err := parseReceiverSide(actx.ReceiverSide(), loc)
 	if err != nil {
 		return src.Connection{}, err
 	}
@@ -139,6 +141,7 @@ func parseNormConn(
 
 func parseSenderSide(
 	actx generated.ISenderSideContext,
+	loc src.Location,
 ) ([]src.ConnectionSender, *compiler.Error) {
 	singleSender := actx.SingleSenderSide()
 	mulSenders := actx.MultipleSenderSide()
@@ -173,7 +176,7 @@ func parseSenderSide(
 
 	parsedSenders := []src.ConnectionSender{}
 	for _, senderSide := range toParse {
-		parsedSide, err := parseNormConnSenderSide(senderSide)
+		parsedSide, err := parseNormConnSenderSide(senderSide, loc)
 		if err != nil {
 			return nil, &compiler.Error{
 				Err:  err,
@@ -188,6 +191,7 @@ func parseSenderSide(
 
 func parseSingleReceiverSide(
 	actx generated.ISingleReceiverSideContext,
+	loc src.Location,
 ) (src.ConnectionReceiver, *compiler.Error) {
 	deferredConn := actx.DeferredConn()
 	portAddr := actx.PortAddr()
@@ -207,24 +211,26 @@ func parseSingleReceiverSide(
 
 	switch {
 	case deferredConn != nil:
-		return parseDeferredConn(deferredConn)
+		return parseDeferredConn(deferredConn, loc)
 	case chainedConn != nil:
-		return parseChainedConnExpr(chainedConn, meta)
+		return parseChainedConnExpr(chainedConn, meta, loc)
 	case portAddr != nil:
-		return parsePortAddrReceiver(portAddr)
+		return parsePortAddrReceiver(portAddr, loc)
 	default:
-		return src.ConnectionReceiver{}, &compiler.Error{
-			Err:  errors.New("missing receiver side"),
-			Meta: &meta,
-		}
+		return src.ConnectionReceiver{}, compiler.NewError(
+			errors.New("missing receiver side"),
+			&meta,
+			&loc,
+		)
 	}
 }
 
 func parseChainedConnExpr(
 	actx generated.IChainedNormConnContext,
 	connMeta core.Meta,
+	loc src.Location,
 ) (src.ConnectionReceiver, *compiler.Error) {
-	parsedConn, err := parseNormConn(actx.NormConnDef())
+	parsedConn, err := parseNormConn(actx.NormConnDef(), loc)
 	if err != nil {
 		return src.ConnectionReceiver{}, err
 	}
@@ -237,6 +243,7 @@ func parseChainedConnExpr(
 
 func parseReceiverSide(
 	actx generated.IReceiverSideContext,
+	loc src.Location,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	singleReceiverSide := actx.SingleReceiverSide()
 	multipleReceiverSide := actx.MultipleReceiverSide()
@@ -255,13 +262,13 @@ func parseReceiverSide(
 
 	switch {
 	case singleReceiverSide != nil:
-		parsedSingleReceiver, err := parseSingleReceiverSide(singleReceiverSide)
+		parsedSingleReceiver, err := parseSingleReceiverSide(singleReceiverSide, loc)
 		if err != nil {
 			return nil, err
 		}
 		return []src.ConnectionReceiver{parsedSingleReceiver}, nil
 	case multipleReceiverSide != nil:
-		return parseMultipleReceiverSides(multipleReceiverSide)
+		return parseMultipleReceiverSides(multipleReceiverSide, loc)
 	default:
 		return nil, &compiler.Error{
 			Err:  errors.New("missing receiver side"),
@@ -272,6 +279,7 @@ func parseReceiverSide(
 
 func parseMultipleReceiverSides(
 	multipleSides generated.IMultipleReceiverSideContext,
+	loc src.Location,
 ) (
 	[]src.ConnectionReceiver,
 	*compiler.Error,
@@ -280,7 +288,7 @@ func parseMultipleReceiverSides(
 	parsedReceivers := make([]src.ConnectionReceiver, 0, len(allSingleReceiverSides))
 
 	for _, receiverSide := range allSingleReceiverSides {
-		parsedReceiver, err := parseSingleReceiverSide(receiverSide)
+		parsedReceiver, err := parseSingleReceiverSide(receiverSide, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -292,6 +300,7 @@ func parseMultipleReceiverSides(
 
 func parseDeferredConn(
 	deferredConns generated.IDeferredConnContext,
+	loc src.Location,
 ) (src.ConnectionReceiver, *compiler.Error) {
 	meta := core.Meta{
 		Text: deferredConns.GetText(),
@@ -305,7 +314,7 @@ func parseDeferredConn(
 		},
 	}
 
-	parsedConns, err := parseConn(deferredConns.ConnDef())
+	parsedConns, err := parseConn(deferredConns.ConnDef(), loc)
 	if err != nil {
 		return src.ConnectionReceiver{}, &compiler.Error{
 			Err:  err,
@@ -321,6 +330,7 @@ func parseDeferredConn(
 
 func parseNormConnSenderSide(
 	senderSide generated.ISingleSenderSideContext,
+	loc src.Location,
 ) (src.ConnectionSender, *compiler.Error) {
 	structSelectors := senderSide.StructSelectors()
 	portSender := senderSide.PortAddr()
@@ -351,7 +361,7 @@ func parseNormConnSenderSide(
 
 	var senderSidePortAddr *src.PortAddr
 	if portSender != nil {
-		parsedPortAddr, err := parsePortAddr(portSender, "in")
+		parsedPortAddr, err := parsePortAddr(portSender, "in", loc)
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
@@ -472,11 +482,12 @@ func parseNormConnSenderSide(
 
 func parsePortAddrReceiver(
 	singleReceiver generated.IPortAddrContext,
+	loc src.Location,
 ) (
 	src.ConnectionReceiver,
 	*compiler.Error,
 ) {
-	portAddr, err := parsePortAddr(singleReceiver, "out")
+	portAddr, err := parsePortAddr(singleReceiver, "out", loc)
 	if err != nil {
 		return src.ConnectionReceiver{}, err
 	}

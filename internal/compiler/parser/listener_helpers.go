@@ -494,6 +494,7 @@ func parseTypeExprs(
 func parsePortAddr(
 	expr generated.IPortAddrContext,
 	fallbackNode string,
+	loc src.Location,
 ) (src.PortAddr, *compiler.Error) {
 	meta := core.Meta{
 		Text: expr.GetText(),
@@ -511,10 +512,11 @@ func parsePortAddr(
 		expr.SinglePortAddr() == nil &&
 		expr.LonelySinglePortAddr() == nil &&
 		expr.LonelyArrPortAddr() == nil {
-		return src.PortAddr{}, &compiler.Error{
-			Err:  fmt.Errorf("Invalid port address %v", expr.GetText()),
-			Meta: &meta,
-		}
+		return src.PortAddr{}, compiler.NewError(
+			fmt.Errorf("Invalid port address %v", expr.GetText()),
+			&meta,
+			&loc,
+		)
 	}
 
 	if expr.LonelyArrPortAddr() != nil {
@@ -527,10 +529,11 @@ func parsePortAddr(
 			8,
 		)
 		if err != nil {
-			return src.PortAddr{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
+			return src.PortAddr{}, compiler.NewError(
+				err,
+				&meta,
+				&loc,
+			)
 		}
 
 		idxUint8 := uint8(idxUint)
@@ -565,10 +568,11 @@ func parsePortAddr(
 		8,
 	)
 	if err != nil {
-		return src.PortAddr{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
-		}
+		return src.PortAddr{}, compiler.NewError(
+			err,
+			&meta,
+			&loc,
+		)
 	}
 
 	nodeName := fallbackNode
@@ -1052,7 +1056,7 @@ func parseConstDef(
 	}, nil
 }
 
-func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
+func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity, *compiler.Error) {
 	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		return src.Entity{}, err
@@ -1071,7 +1075,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	parsedConnections := []src.Connection{}
 	connections := actx.CompBody().ConnDefList()
 	if connections != nil {
-		parsedNet, err := parseNet(connections)
+		parsedNet, err := parseNet(connections, loc)
 		if err != nil {
 			return src.Entity{}, err
 		}

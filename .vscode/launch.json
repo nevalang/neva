@@ -7,8 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e",
-      "args": ["run", "incompat_types_with_untyped_port/main"]
+      "cwd": "${workspaceFolder}/examples",
+      "args": ["run", "time_after"]
     },
     {
       "name": "DEBUG CODEGEN",
@@ -19,7 +19,7 @@
       "cwd": "${workspaceFolder}/examples"
     },
     {
-      "name": "Build",
+      "name": "BUILD",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -49,8 +49,8 @@
       "name": "ANTLR",
       "type": "antlr-debug",
       "request": "launch",
-      // "input": "${workspaceFolder}/internal/compiler/parser/tests/happypath/027_compiler_directives.neva",
-      "input": "${workspaceFolder}/examples/hello_world/main.neva",
+      "input": "${workspaceFolder}/internal/compiler/parser/smoke_test/happypath/024_const.mixed.neva",
+      // "input": "${workspaceFolder}/examples/hello_world/main.neva",
       "grammar": "${workspaceFolder}/internal/compiler/parser/neva.g4",
       "startRule": "prog",
       "printParseTree": true,
