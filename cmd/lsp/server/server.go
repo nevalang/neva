@@ -74,6 +74,12 @@ func (s *Server) createDiagnostics(compilerErr compiler.Error) protocol.PublishD
 
 	var startStopRange protocol.Range
 	if compilerErr.Range != nil {
+		// If stop is 0 0, set it to the same as start but with character incremented by 1
+		if compilerErr.Range.Stop.Line == 0 && compilerErr.Range.Stop.Column == 0 {
+			compilerErr.Range.Stop = compilerErr.Range.Start
+			compilerErr.Range.Stop.Column++
+		}
+
 		startStopRange = protocol.Range{
 			Start: protocol.Position{
 				Line:      uint32(compilerErr.Range.Start.Line),
@@ -84,6 +90,10 @@ func (s *Server) createDiagnostics(compilerErr compiler.Error) protocol.PublishD
 				Character: uint32(compilerErr.Range.Stop.Column),
 			},
 		}
+
+		// Adjust for 0-based indexing
+		startStopRange.Start.Line--
+		startStopRange.End.Line--
 	}
 
 	source := "neva"
