@@ -163,7 +163,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 		if err != nil {
 			return compiler.Error{
 				Location: &scopeWithFile.Location,
-				Meta:     entity.Meta(),
+				Range:    entity.Meta(),
 			}.Wrap(err)
 		}
 
@@ -192,7 +192,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Type.Meta.(core.Meta) //nolint:forcetypeassert
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &meta,
+				Range:    &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
@@ -202,7 +202,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Const.Meta
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &meta,
+				Range:    &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Const = resolvedConst
@@ -215,7 +215,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &meta,
+				Range:    &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
@@ -224,7 +224,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &entity.Component.Meta,
+				Range:    &entity.Component.Meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Component = analyzedComponent
@@ -232,7 +232,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
 			Location: &scope.Location,
-			Meta:     entity.Meta(),
+			Range:    entity.Meta(),
 		}
 	}
 

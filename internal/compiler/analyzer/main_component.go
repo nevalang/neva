@@ -23,17 +23,17 @@ var (
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
-			Err:  ErrMainFlowWithTypeParams,
-			Meta: &cmp.Interface.Meta,
+			Err:   ErrMainFlowWithTypeParams,
+			Range: &cmp.Interface.Meta,
 		}
 	}
 
 	if err := a.analyzeMainFlowIO(cmp.Interface.IO); err != nil {
-		return compiler.Error{Meta: &cmp.Interface.Meta}.Wrap(err)
+		return compiler.Error{Range: &cmp.Interface.Meta}.Wrap(err)
 	}
 
 	if err := a.analyzeMainFlowNodes(cmp.Nodes, scope); err != nil {
-		return compiler.Error{Meta: &cmp.Meta}.Wrap(err)
+		return compiler.Error{Range: &cmp.Meta}.Wrap(err)
 	}
 
 	return nil
@@ -57,8 +57,8 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	}
 	if err := a.analyzeMainFlowPort(enterInport); err != nil {
 		return &compiler.Error{
-			Err:  err,
-			Meta: &enterInport.Meta,
+			Err:   err,
+			Range: &enterInport.Meta,
 		}
 	}
 
@@ -68,8 +68,8 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	}
 	if err := a.analyzeMainFlowPort(exitOutport); err != nil {
 		return &compiler.Error{
-			Err:  err,
-			Meta: &exitOutport.Meta,
+			Err:   err,
+			Range: &exitOutport.Meta,
 		}
 	}
 
@@ -102,7 +102,7 @@ func (Analyzer) analyzeMainFlowNodes(
 					err,
 				),
 				Location: &loc,
-				Meta:     &node.EntityRef.Meta,
+				Range:    &node.EntityRef.Meta,
 			}
 		}
 
@@ -110,7 +110,7 @@ func (Analyzer) analyzeMainFlowNodes(
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: %v: %v", ErrMainNodeEntityNotFlow, nodeName, node.EntityRef),
 				Location: &loc,
-				Meta:     nodeEntity.Meta(),
+				Range:    nodeEntity.Meta(),
 			}
 		}
 	}

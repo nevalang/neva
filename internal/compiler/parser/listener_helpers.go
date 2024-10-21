@@ -66,7 +66,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Err: err,
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: expr.GetText(),
 					Start: core.Position{
 						Line:   expr.GetStart().GetLine(),
@@ -95,7 +95,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 	} else {
 		return ts.Expr{}, &compiler.Error{
 			Err: errors.New("Missing type expression"),
-			Meta: &core.Meta{
+			Range: &core.Meta{
 				Text: expr.GetText(),
 				Start: core.Position{
 					Line:   expr.GetStart().GetLine(),
@@ -177,7 +177,7 @@ func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Er
 
 	return nil, &compiler.Error{
 		Err: errors.New("Unknown literal type"),
-		Meta: &core.Meta{
+		Range: &core.Meta{
 			Text: litExpr.GetText(),
 			Start: core.Position{
 				Line:   litExpr.GetStart().GetLine(),
@@ -238,7 +238,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 	if err != nil {
 		return nil, &compiler.Error{
 			Err: err,
-			Meta: &core.Meta{
+			Range: &core.Meta{
 				Text: instExpr.GetText(),
 				Start: core.Position{
 					Line:   instExpr.GetStart().GetLine(),
@@ -293,8 +293,8 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler
 	parts := strings.Split(expr.GetText(), ".")
 	if len(parts) > 2 {
 		return core.EntityRef{}, &compiler.Error{
-			Err:  fmt.Errorf("Invalid entity reference %v", expr.GetText()),
-			Meta: &meta,
+			Err:   fmt.Errorf("Invalid entity reference %v", expr.GetText()),
+			Range: &meta,
 		}
 	}
 
@@ -408,7 +408,7 @@ func parseNodes(
 		if err != nil {
 			return nil, &compiler.Error{
 				Err: err,
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: node.GetText(),
 					Start: core.Position{
 						Line:   node.GetStart().GetLine(),
@@ -633,7 +633,7 @@ func parsePrimitiveConstLiteral(
 		if boolVal != "true" && boolVal != "false" {
 			return src.Const{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
 						Line:   lit.GetStart().GetLine(),
@@ -656,7 +656,7 @@ func parsePrimitiveConstLiteral(
 			return src.Const{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
 						Line:   lit.GetStart().GetLine(),
@@ -681,7 +681,7 @@ func parsePrimitiveConstLiteral(
 		if err != nil {
 			return src.Const{}, &compiler.Error{
 				Err: err,
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
 						Line:   lit.GetStart().GetLine(),
@@ -758,7 +758,7 @@ func parseMessage(
 		if boolVal != "true" && boolVal != "false" {
 			return src.MsgLiteral{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
 						Line:   constVal.GetStart().GetLine(),
@@ -778,7 +778,7 @@ func parseMessage(
 			return src.MsgLiteral{}, &compiler.Error{
 				Err:      err,
 				Location: &src.Location{},
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
 						Line:   constVal.GetStart().GetLine(),
@@ -800,7 +800,7 @@ func parseMessage(
 		if err != nil {
 			return src.MsgLiteral{}, &compiler.Error{
 				Err: err,
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
 						Line:   constVal.GetStart().GetLine(),
@@ -1008,8 +1008,8 @@ func parseConstDef(
 	parsedTypeExpr, err := parseTypeExpr(actx.TypeExpr())
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
+			Err:   err,
+			Range: &meta,
 		}
 	}
 
@@ -1022,8 +1022,8 @@ func parseConstDef(
 		parsedRef, err := parseEntityRef(entityRef)
 		if err != nil {
 			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
+				Err:   err,
+				Range: &meta,
 			}
 		}
 		parsedConst.Value.Ref = &parsedRef
@@ -1036,8 +1036,8 @@ func parseConstDef(
 	parsedMsgLit, err := parseMessage(constLit)
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
+			Err:   err,
+			Range: &meta,
 		}
 	}
 

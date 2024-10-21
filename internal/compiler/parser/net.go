@@ -161,7 +161,7 @@ func parseSenderSide(
 			Err: errors.New(
 				"Connection must have at least one sender side",
 			),
-			Meta: &meta,
+			Range: &meta,
 		}
 	}
 
@@ -177,8 +177,8 @@ func parseSenderSide(
 		parsedSide, err := parseNormConnSenderSide(senderSide)
 		if err != nil {
 			return nil, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
+				Err:   err,
+				Range: &meta,
 			}
 		}
 		parsedSenders = append(parsedSenders, parsedSide)
@@ -266,8 +266,8 @@ func parseReceiverSide(
 		return parseMultipleReceiverSides(multipleReceiverSide)
 	default:
 		return nil, &compiler.Error{
-			Err:  errors.New("missing receiver side"),
-			Meta: &meta,
+			Err:   errors.New("missing receiver side"),
+			Range: &meta,
 		}
 	}
 }
@@ -310,8 +310,8 @@ func parseDeferredConn(
 	parsedConns, err := parseConn(deferredConns.ConnDef())
 	if err != nil {
 		return src.ConnectionReceiver{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
+			Err:   err,
+			Range: &meta,
 		}
 	}
 
@@ -337,7 +337,7 @@ func parseNormConnSenderSide(
 		structSelectors == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
-			Meta: &core.Meta{
+			Range: &core.Meta{
 				Text: senderSide.GetText(),
 				Start: core.Position{
 					Line:   senderSide.GetStart().GetLine(),
@@ -391,7 +391,7 @@ func parseNormConnSenderSide(
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid range 'from' value: %v", err),
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: rangeExprSender.GetText(),
 					Start: core.Position{
 						Line:   rangeExprSender.GetStart().GetLine(),
@@ -413,7 +413,7 @@ func parseNormConnSenderSide(
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
 				Err: fmt.Errorf("Invalid range 'to' value: %v", err),
-				Meta: &core.Meta{
+				Range: &core.Meta{
 					Text: rangeExprSender.GetText(),
 					Start: core.Position{
 						Line:   rangeExprSender.GetStart().GetLine(),

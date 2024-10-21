@@ -44,7 +44,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 		return &compiler.Error{
 			Err:      ErrMainEntityExported,
 			Location: location,
-			Meta:     &entityMain.Component.Meta,
+			Range:    &entityMain.Component.Meta,
 		}
 	}
 
@@ -53,7 +53,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	if err := a.analyzeMainComponent(entityMain.Component, scope); err != nil {
 		return compiler.Error{
 			Location: location,
-			Meta:     &entityMain.Component.Meta,
+			Range:    &entityMain.Component.Meta,
 		}.Wrap(err)
 	}
 
@@ -61,7 +61,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 		if entity.IsPublic {
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
-				Meta:     entity.Meta(),
+				Range:    entity.Meta(),
 				Location: location,
 			}
 		}

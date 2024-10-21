@@ -21,7 +21,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 		return ts.Def{}, &compiler.Error{
 			Err:      ErrEmptyTypeDefBody,
 			Location: &scope.Location,
-			Meta:     &meta,
+			Range:    &meta,
 		}
 	}
 
@@ -33,7 +33,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 		return ts.Def{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &meta,
+			Range:    &meta,
 		}
 	}
 
@@ -50,7 +50,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *comp
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &meta,
+			Range:    &meta,
 		}
 	}
 	return resolvedExpr, nil

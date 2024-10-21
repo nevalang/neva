@@ -140,7 +140,7 @@ func (d Desugarer) desugarNormalConnection(
 			return desugarConnectionResult{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &normConn.Meta,
+				Range:    &normConn.Meta,
 			}
 		}
 		// original connection is replaced by multiple new ones
@@ -161,7 +161,7 @@ func (d Desugarer) desugarNormalConnection(
 	if err != nil {
 		return desugarConnectionResult{}, compiler.Error{
 			Location: &scope.Location,
-			Meta:     &normConn.SenderSide[0].Meta,
+			Range:    &normConn.SenderSide[0].Meta,
 		}.Wrap(err)
 	}
 
@@ -238,7 +238,7 @@ func (d Desugarer) desugarSingleReceiver(
 			return desugarReceiverResult{}, &compiler.Error{
 				Err:      err,
 				Location: &scope.Location,
-				Meta:     &receiver.Meta,
+				Range:    &receiver.Meta,
 			}
 		}
 
@@ -535,7 +535,7 @@ func (d Desugarer) desugarSingleSender(
 		if err != nil {
 			return desugarSenderResult{}, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &sender.Meta,
+				Range:    &sender.Meta,
 			}.Wrap(err)
 		}
 
@@ -566,7 +566,7 @@ func (d Desugarer) desugarSingleSender(
 			if err != nil {
 				return desugarSenderResult{}, compiler.Error{
 					Location: &scope.Location,
-					Meta:     &sender.Meta,
+					Range:    &sender.Meta,
 				}.Wrap(err)
 			}
 
@@ -630,7 +630,7 @@ func getNodeIOByPortAddr(
 		return src.IO{}, &compiler.Error{
 			Err:      fmt.Errorf("node '%s' not found", portAddr.Node),
 			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
+			Range:    &portAddr.Meta,
 		}
 	}
 
@@ -639,7 +639,7 @@ func getNodeIOByPortAddr(
 		return src.IO{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
+			Range:    &portAddr.Meta,
 		}
 	}
 
@@ -918,7 +918,7 @@ func (d Desugarer) desugarFanIn(
 		return nil, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Meta:     &normConn.Meta,
+			Range:    &normConn.Meta,
 		}
 	}
 

@@ -73,15 +73,15 @@ func (s *Server) createDiagnostics(compilerErr compiler.Error) protocol.PublishD
 	}
 
 	var startStopRange protocol.Range
-	if compilerErr.Meta != nil {
+	if compilerErr.Range != nil {
 		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      uint32(compilerErr.Meta.Start.Line),
-				Character: uint32(compilerErr.Meta.Start.Column),
+				Line:      uint32(compilerErr.Range.Start.Line),
+				Character: uint32(compilerErr.Range.Start.Column),
 			},
 			End: protocol.Position{
-				Line:      uint32(compilerErr.Meta.Stop.Line),
-				Character: uint32(compilerErr.Meta.Stop.Column),
+				Line:      uint32(compilerErr.Range.Stop.Line),
+				Character: uint32(compilerErr.Range.Stop.Column),
 			},
 		}
 	}

@@ -3,18 +3,14 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"runtime/debug"
-	"strconv"
-	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type treeShapeListener struct {
@@ -34,10 +30,7 @@ func (p Parser) ParseModules(
 	for modRef, rawMod := range rawMods {
 		parsedPkgs, err := p.ParsePackages(modRef, rawMod.Packages)
 		if err != nil {
-			return nil, compiler.Error{
-				Err:      errors.New("Parsing error"),
-				Location: &src.Location{ModRef: modRef},
-			}.Wrap(err)
+			return nil, err
 		}
 
 		parsedMods[modRef] = src.Module{
@@ -61,11 +54,8 @@ func (p Parser) ParsePackages(
 	for pkgName, pkgFiles := range rawPkgs {
 		parsedFiles, err := p.ParseFiles(modRef, pkgName, pkgFiles)
 		if err != nil {
-			return nil, compiler.Error{
-				Location: &src.Location{PkgName: pkgName},
-			}.Wrap(err)
+			return nil, err
 		}
-
 		packages[pkgName] = parsedFiles
 	}
 
@@ -80,14 +70,14 @@ func (p Parser) ParseFiles(
 	result := make(map[string]src.File, len(files))
 
 	for fileName, fileBytes := range files {
-		loc := src.Location{
-			ModRef:   modRef,
-			PkgName:  pkgName,
-			FileName: fileName,
-		}
-		parsedFile, err := p.parseFile(loc, fileBytes)
+		parsedFile, err := p.parseFile(fileBytes)
 		if err != nil {
-			return nil, compiler.Error{Location: &loc}.Wrap(err)
+			err.Location = compiler.Pointer(src.Location{
+				ModRef:   modRef,
+				PkgName:  pkgName,
+				FileName: fileName,
+			})
+			return nil, err
 		}
 		result[fileName] = parsedFile
 	}
@@ -95,28 +85,7 @@ func (p Parser) ParseFiles(
 	return result, nil
 }
 
-func (p Parser) parseFile(
-	loc src.Location,
-	bb []byte,
-) (f src.File, err *compiler.Error) {
-	defer func() {
-		if e := recover(); e != nil {
-			compilerErr, ok := e.(*compiler.Error)
-			if ok {
-				compilerErr.Location = &loc
-				return
-			}
-			err = &compiler.Error{
-				Err: fmt.Errorf(
-					"%v: %v",
-					e,
-					string(debug.Stack()),
-				),
-				Location: &loc,
-			}
-		}
-	}()
-
+func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	lexerErrors := &CustomErrorListener{}
@@ -133,62 +102,41 @@ func (p Parser) parseFile(
 	}
 	prsr.BuildParseTrees = true
 
-	tree := prsr.Prog()
 	listener := &treeShapeListener{}
 
-	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+	if err := walkTree(listener, prsr.Prog()); err != nil {
+		return src.File{}, err
+	}
 
 	if len(lexerErrors.Errors) > 0 {
-		return src.File{}, parseLexerError(lexerErrors.Errors[0], loc)
+		return src.File{}, lexerErrors.Errors[0]
 	}
 
 	if len(parserErrors.Errors) > 0 {
-		return src.File{}, &compiler.Error{
-			Err:      parserErrors.Errors[0],
-			Location: &loc,
-		}
+		return src.File{}, parserErrors.Errors[0]
 	}
 
 	return listener.file, nil
 }
 
-func parseLexerError(lexerErr error, loc src.Location) *compiler.Error {
-	errStr := lexerErr.Error()
-
-	parts := strings.SplitN(errStr, ":", 3)
-	if len(parts) < 3 {
-		return &compiler.Error{
-			Err:      errors.New(errStr),
-			Location: &loc,
+func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
+	defer func() {
+		if e := recover(); e != nil {
+			if _, ok := e.(*compiler.Error); !ok {
+				err = &compiler.Error{
+					Err: fmt.Errorf(
+						"%v: %v",
+						e,
+						string(debug.Stack()),
+					),
+				}
+			}
 		}
-	}
+	}()
 
-	line, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return &compiler.Error{
-			Err:      errors.New(errStr),
-			Location: &loc,
-		}
-	}
+	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
-	column, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return &compiler.Error{
-			Err:      errors.New(errStr),
-			Location: &loc,
-		}
-	}
-
-	errorMessage := strings.TrimSpace(parts[2])
-
-	return &compiler.Error{
-		Err:      errors.New(errorMessage),
-		Location: &loc,
-		Meta: &core.Meta{
-			Start: core.Position{Line: line, Column: column},
-			Stop:  core.Position{Line: line, Column: column},
-		},
-	}
+	return nil
 }
 
 func New(isDebug bool) Parser {

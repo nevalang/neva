@@ -24,7 +24,7 @@ func (a Analyzer) analyzeConst(
 		return src.Const{}, &compiler.Error{
 			Err:      ErrEmptyConst,
 			Location: &scope.Location,
-			Meta:     &constant.Meta,
+			Range:    &constant.Meta,
 		}
 	}
 
@@ -34,7 +34,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      err,
 				Location: &location,
-				Meta:     entity.Meta(),
+				Range:    entity.Meta(),
 			}
 		}
 
@@ -42,7 +42,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: entity kind %v", ErrEntityNotConst, entity.Kind),
 				Location: &location,
-				Meta:     entity.Meta(),
+				Range:    entity.Meta(),
 			}
 		}
 
@@ -54,7 +54,7 @@ func (a Analyzer) analyzeConst(
 		return src.Const{}, compiler.Error{
 			Err:      ErrResolveConstType,
 			Location: &scope.Location,
-			Meta:     &constant.Meta,
+			Range:    &constant.Meta,
 		}.Wrap(err)
 	}
 
@@ -62,7 +62,7 @@ func (a Analyzer) analyzeConst(
 		return src.Const{}, &compiler.Error{
 			Err:      ErrUnionConst,
 			Location: &scope.Location,
-			Meta:     &constant.Meta,
+			Range:    &constant.Meta,
 		}
 	}
 
@@ -83,7 +83,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("Boolean value is missing in boolean contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Int != nil ||
@@ -95,7 +95,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "int":
@@ -103,7 +103,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("Integer value is missing in integer contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -115,7 +115,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "float":
@@ -125,14 +125,14 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("Float or integer value is missing in float contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Float != nil && constant.Value.Message.Int != nil {
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -143,7 +143,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "string":
@@ -151,7 +151,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("String value is missing in string contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -163,7 +163,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "list":
@@ -171,7 +171,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("List value is missing in list contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -182,7 +182,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "map", "struct":
@@ -190,7 +190,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("Map or struct value is missing in map or struct contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -201,7 +201,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	case "enum":
@@ -209,7 +209,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("Enum value is missing in enum contant: %v", constant),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Bool != nil ||
@@ -220,7 +220,7 @@ func (a Analyzer) analyzeConst(
 			return src.Const{}, &compiler.Error{
 				Err:      fmt.Errorf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
 				Location: &scope.Location,
-				Meta:     &constant.Meta,
+				Range:    &constant.Meta,
 			}
 		}
 	}
