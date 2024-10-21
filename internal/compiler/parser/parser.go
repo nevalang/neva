@@ -6,18 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"runtime/debug"
+	"strconv"
+	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
 
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type treeShapeListener struct {
 	*generated.BasenevaListener
 	file src.File
-	loc  src.Location
 }
 
 type Parser struct {
@@ -101,7 +103,7 @@ func (p Parser) parseFile(
 		if e := recover(); e != nil {
 			compilerErr, ok := e.(*compiler.Error)
 			if ok {
-				err = compiler.Error{Location: &loc}.Wrap(compilerErr)
+				compilerErr.Location = &loc
 				return
 			}
 			err = &compiler.Error{
@@ -132,23 +134,61 @@ func (p Parser) parseFile(
 	prsr.BuildParseTrees = true
 
 	tree := prsr.Prog()
-	listener := &treeShapeListener{loc: loc}
+	listener := &treeShapeListener{}
 
 	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
 
 	if len(lexerErrors.Errors) > 0 {
-		return src.File{}, &compiler.Error{
-			Err: lexerErrors.Errors[0],
-		}
+		return src.File{}, parseLexerError(lexerErrors.Errors[0], loc)
 	}
 
 	if len(parserErrors.Errors) > 0 {
 		return src.File{}, &compiler.Error{
-			Err: parserErrors.Errors[0],
+			Err:      parserErrors.Errors[0],
+			Location: &loc,
 		}
 	}
 
 	return listener.file, nil
+}
+
+func parseLexerError(lexerErr error, loc src.Location) *compiler.Error {
+	errStr := lexerErr.Error()
+
+	parts := strings.SplitN(errStr, ":", 3)
+	if len(parts) < 3 {
+		return &compiler.Error{
+			Err:      errors.New(errStr),
+			Location: &loc,
+		}
+	}
+
+	line, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return &compiler.Error{
+			Err:      errors.New(errStr),
+			Location: &loc,
+		}
+	}
+
+	column, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return &compiler.Error{
+			Err:      errors.New(errStr),
+			Location: &loc,
+		}
+	}
+
+	errorMessage := strings.TrimSpace(parts[2])
+
+	return &compiler.Error{
+		Err:      errors.New(errorMessage),
+		Location: &loc,
+		Meta: &core.Meta{
+			Start: core.Position{Line: line, Column: column},
+			Stop:  core.Position{Line: line, Column: column},
+		},
+	}
 }
 
 func New(isDebug bool) Parser {

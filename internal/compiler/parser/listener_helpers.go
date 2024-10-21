@@ -494,7 +494,6 @@ func parseTypeExprs(
 func parsePortAddr(
 	expr generated.IPortAddrContext,
 	fallbackNode string,
-	loc src.Location,
 ) (src.PortAddr, *compiler.Error) {
 	meta := core.Meta{
 		Text: expr.GetText(),
@@ -515,7 +514,7 @@ func parsePortAddr(
 		return src.PortAddr{}, compiler.NewError(
 			fmt.Errorf("Invalid port address %v", expr.GetText()),
 			&meta,
-			&loc,
+			nil,
 		)
 	}
 
@@ -532,7 +531,7 @@ func parsePortAddr(
 			return src.PortAddr{}, compiler.NewError(
 				err,
 				&meta,
-				&loc,
+				nil,
 			)
 		}
 
@@ -571,7 +570,7 @@ func parsePortAddr(
 		return src.PortAddr{}, compiler.NewError(
 			err,
 			&meta,
-			&loc,
+			nil,
 		)
 	}
 
@@ -1056,7 +1055,7 @@ func parseConstDef(
 	}, nil
 }
 
-func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity, *compiler.Error) {
+func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
 	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		return src.Entity{}, err
@@ -1075,7 +1074,7 @@ func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity,
 	parsedConnections := []src.Connection{}
 	connections := actx.CompBody().ConnDefList()
 	if connections != nil {
-		parsedNet, err := parseNet(connections, loc)
+		parsedNet, err := parseNet(connections)
 		if err != nil {
 			return src.Entity{}, err
 		}

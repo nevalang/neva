@@ -1,12 +1,37 @@
 package parser
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/stretchr/testify/require"
 )
+
+func TestParseLexerError(t *testing.T) {
+	lexerErr := errors.New("3:15: token recognition error at: '!'")
+
+	loc := src.Location{
+		ModRef: src.ModuleRef{
+			Path:    "test_module",
+			Version: "4.20",
+		},
+		PkgName:  "test_pkg",
+		FileName: "test_file.neva",
+	}
+
+	result := parseLexerError(lexerErr, loc)
+
+	require.NotNil(t, result)
+	require.Equal(t, "token recognition error at: '!'", result.Err.Error())
+	require.Equal(t, &loc, result.Location)
+	require.NotNil(t, result.Meta)
+	require.Equal(t, 3, result.Meta.Start.Line)
+	require.Equal(t, 15, result.Meta.Start.Column)
+	require.Equal(t, 3, result.Meta.Stop.Line)
+	require.Equal(t, 15, result.Meta.Stop.Column)
+}
 
 func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	text := []byte(`

@@ -8,9 +8,9 @@ web/src/sdk
 plugins
 .antlr
 cmd/tmp
-/neva
 /examples/output
 /examples/output.wasm
+/neva
 /neva-darwin-amd64
 /neva-darwin-arm64
 /neva-linux-amd64
@@ -18,6 +18,14 @@ cmd/tmp
 /neva-linux-loong64
 /neva-windows-amd64.exe
 /neva-windows-arm64.exe
+/neva-lsp
+/neva-lsp-darwin-amd64
+/neva-lsp-darwin-arm64
+/neva-lsp-linux-amd64
+/neva-lsp-linux-arm64
+/neva-lsp-linux-loong64
+/neva-lsp-windows-amd64.exe
+/neva-lsp-windows-arm64.exe
 dist
 trace.log
 output

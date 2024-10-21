@@ -3,7 +3,6 @@ package parser
 import (
 	"strings"
 
-	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
@@ -54,7 +53,7 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 
 	v, err := parseTypeDef(typeDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedEntity := v
@@ -70,7 +69,7 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 
 	parsedEntity, err := parseConstDef(constDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedEntity.IsPublic = actx.PUB_KW() != nil
@@ -85,7 +84,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	v, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 	s.file.Entities[name] = src.Entity{
 		IsPublic:  actx.PUB_KW() != nil,
@@ -99,9 +98,9 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
 
-	parsedCompEntity, err := parseCompDef(compDef, s.loc)
+	parsedCompEntity, err := parseCompDef(compDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedCompEntity.IsPublic = actx.PUB_KW() != nil

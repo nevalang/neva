@@ -28,23 +28,24 @@ type Server struct {
 }
 
 // setState allows to update state in a thread-safe manner.
-func (s *Server) saveIndex(build src.Build) {
+func (s *Server) updateIndex(build src.Build) {
 	s.mu.Lock()
 	s.index = &build
 	s.mu.Unlock()
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	build, analyzerErr, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
-	if err != nil {
-		return fmt.Errorf("%w: index", err)
-	}
-	s.saveIndex(build)
+	build, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
 
-	if analyzerErr == nil {
+	s.updateIndex(build)
+
+	if err == nil {
+		// clear problems
 		notify(
 			protocol.ServerTextDocumentPublishDiagnostics,
-			protocol.PublishDiagnosticsParams{}, // clear problems
+			protocol.PublishDiagnosticsParams{
+				Diagnostics: []protocol.Diagnostic{},
+			},
 		)
 		s.logger.Info("full index without problems, sent empty diagnostics")
 		return nil
@@ -52,56 +53,51 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
-		s.createDiagnostics(*analyzerErr),
+		s.createDiagnostics(*err),
 	)
 
-	s.logger.Info("diagnostic sent: " + analyzerErr.Error())
+	s.logger.Info("diagnostic sent: " + err.Error())
 
 	return nil
 }
 
-func (s *Server) createDiagnostics(analyzerErr compiler.Error) protocol.PublishDiagnosticsParams {
-	source := "neva"
-	severity := protocol.DiagnosticSeverityError
-
+func (s *Server) createDiagnostics(compilerErr compiler.Error) protocol.PublishDiagnosticsParams {
 	var uri string
-	if analyzerErr.Location != nil {
+	if compilerErr.Location != nil {
 		uri = fmt.Sprintf(
 			"%s/%s/%s",
 			s.workspacePath,
-			analyzerErr.Location.PkgName,
-			analyzerErr.Location.FileName+".neva",
+			compilerErr.Location.PkgName,
+			compilerErr.Location.FileName+".neva",
 		)
 	}
 
-	var protocolRange protocol.Range
-	if analyzerErr.Meta != nil {
-		protocolRange = protocol.Range{
+	var startStopRange protocol.Range
+	if compilerErr.Meta != nil {
+		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      uint32(analyzerErr.Meta.Start.Line),
-				Character: uint32(analyzerErr.Meta.Start.Column),
+				Line:      uint32(compilerErr.Meta.Start.Line),
+				Character: uint32(compilerErr.Meta.Start.Column),
 			},
 			End: protocol.Position{
-				Line:      uint32(analyzerErr.Meta.Stop.Line),
-				Character: uint32(analyzerErr.Meta.Stop.Column),
+				Line:      uint32(compilerErr.Meta.Stop.Line),
+				Character: uint32(compilerErr.Meta.Stop.Column),
 			},
 		}
 	}
+
+	source := "neva"
+	severity := protocol.DiagnosticSeverityError
 
 	return protocol.PublishDiagnosticsParams{
 		URI: uri,
 		Diagnostics: []protocol.Diagnostic{
 			{
-				Range:    protocolRange,
+				Range:    startStopRange,
 				Severity: &severity,
 				Source:   &source,
-				Message:  analyzerErr.Error(),
+				Message:  compilerErr.Error(),
 				Data:     time.Now(),
-				// Unused:
-				Tags:               []protocol.DiagnosticTag{},
-				Code:               &protocol.IntegerOrString{Value: nil},
-				CodeDescription:    &protocol.CodeDescription{HRef: ""},
-				RelatedInformation: []protocol.DiagnosticRelatedInformation{},
 			},
 		},
 	}
