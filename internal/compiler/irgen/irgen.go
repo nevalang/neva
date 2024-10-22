@@ -104,7 +104,7 @@ func (g Generator) processNode(
 		return &compiler.Error{
 			Err:      err,
 			Location: &location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}
 	}
 
@@ -150,7 +150,7 @@ func (g Generator) processNode(
 			return &compiler.Error{
 				Err:      fmt.Errorf("node usage not found: %v", nodeName),
 				Location: &location,
-				Range:    &node.Meta,
+				Meta:     &node.Meta,
 			}
 		}
 
@@ -172,7 +172,7 @@ func (g Generator) processNode(
 			return &compiler.Error{
 				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
 				Location: &location,
-				Range:    &component.Meta,
+				Meta:     &component.Meta,
 			}
 		}
 	}

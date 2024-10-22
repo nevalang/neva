@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	ErrModuleWithoutPkgs    = errors.New("module must contain at least one package")
 	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
 	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
 	ErrCompilerVersion      = errors.New("incompatible compiler version")
@@ -41,7 +40,6 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		}
 	}
 
-	// FIXME mainPkgName containts full path with "examples/ "
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
 			Err:      errors.New("main package not found"),
@@ -103,7 +101,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 
 	if len(mod.Packages) == 0 {
 		return nil, &compiler.Error{
-			Err:      ErrModuleWithoutPkgs,
+			Err:      errors.New("module must contain at least one package"),
 			Location: &location,
 		}
 	}
@@ -163,7 +161,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 		if err != nil {
 			return compiler.Error{
 				Location: &scopeWithFile.Location,
-				Range:    entity.Meta(),
+				Meta:     entity.Meta(),
 			}.Wrap(err)
 		}
 
@@ -192,7 +190,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Type.Meta.(core.Meta) //nolint:forcetypeassert
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Range:    &meta,
+				Meta:     &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
@@ -202,7 +200,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Const.Meta
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Range:    &meta,
+				Meta:     &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Const = resolvedConst
@@ -215,7 +213,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Range:    &meta,
+				Meta:     &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
@@ -224,7 +222,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			return src.Entity{}, compiler.Error{
 				Location: &scope.Location,
-				Range:    &entity.Component.Meta,
+				Meta:     &entity.Component.Meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Component = analyzedComponent
@@ -232,7 +230,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		return src.Entity{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
 			Location: &scope.Location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 

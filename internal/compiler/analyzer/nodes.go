@@ -53,7 +53,7 @@ func (a Analyzer) analyzeNodes(
 		if err != nil {
 			return nil, nil, false, compiler.Error{
 				Location: &scope.Location,
-				Range:    &node.Meta,
+				Meta:     &node.Meta,
 			}.Wrap(err)
 		}
 
@@ -76,7 +76,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Range:    &node.Meta,
+			Meta:     &node.Meta,
 		}
 	}
 
@@ -85,7 +85,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
 			Location: &location,
-			Range:    nodeEntity.Meta(),
+			Meta:     nodeEntity.Meta(),
 		}
 	}
 
@@ -94,7 +94,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      ErrBindDirectiveArgs,
 			Location: &location,
-			Range:    nodeEntity.Meta(),
+			Meta:     nodeEntity.Meta(),
 		}
 	}
 
@@ -109,7 +109,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
-			Range:    &node.Meta,
+			Meta:     &node.Meta,
 		}
 	}
 
@@ -125,7 +125,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
-			Range:    &node.Meta,
+			Meta:     &node.Meta,
 		}
 	}
 
@@ -146,14 +146,14 @@ func (a Analyzer) analyzeNode(
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Err:      ErrGuardNotAllowedForNode,
 				Location: &scope.Location,
-				Range:    &node.Meta,
+				Meta:     &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Err:      ErrGuardNotAllowedForFlow,
 				Location: &scope.Location,
-				Range:    &node.Meta,
+				Meta:     &node.Meta,
 			}
 		}
 	}
@@ -179,7 +179,7 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Range:    &node.Meta,
+			Meta:     &node.Meta,
 		}
 	}
 
@@ -210,7 +210,7 @@ func (a Analyzer) analyzeNode(
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
 				Location: &location,
-				Range:    &depNode.Meta,
+				Meta:     &depNode.Meta,
 			}.Wrap(err)
 		}
 		resolvedFlowDI[depName] = resolvedDep
@@ -243,7 +243,7 @@ func (a Analyzer) getNodeInterface(
 			return src.Interface{}, &compiler.Error{
 				Err:      ErrInterfaceNodeBindDirective,
 				Location: &location,
-				Range:    entity.Meta(),
+				Meta:     entity.Meta(),
 			}
 		}
 
@@ -251,7 +251,7 @@ func (a Analyzer) getNodeInterface(
 			return src.Interface{}, &compiler.Error{
 				Err:      ErrNonFlowNodeWithDI,
 				Location: &location,
-				Range:    entity.Meta(),
+				Meta:     entity.Meta(),
 			}
 		}
 
@@ -264,7 +264,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrNormNodeBind,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -272,7 +272,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrExternOverloadingNodeArgs,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -289,7 +289,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrNormalInportsWithAutoPortsDirective,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -297,7 +297,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrAutoPortsTypeParamsCount,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -306,7 +306,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -314,7 +314,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrAutoPortsTypeParamConstr,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -322,7 +322,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrAutoPortsNodeTypeArgsCount,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -331,7 +331,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      err,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -339,7 +339,7 @@ func (a Analyzer) getNodeInterface(
 		return src.Interface{}, &compiler.Error{
 			Err:      ErrAutoPortsArgNonStruct,
 			Location: &location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 

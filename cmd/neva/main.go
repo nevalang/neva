@@ -29,7 +29,7 @@ func main() {
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 
-	prsr := parser.New(false)
+	prsr := parser.New()
 	bldr := builder.MustNew(prsr)
 
 	desugarer := desugarer.New()

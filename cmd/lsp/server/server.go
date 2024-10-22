@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -23,71 +23,69 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer indexer.Indexer
 
-	mu    *sync.Mutex
-	index *src.Build
-}
+	indexMutex *sync.Mutex
+	index      *src.Build
 
-// setState allows to update state in a thread-safe manner.
-func (s *Server) updateIndex(build src.Build) {
-	s.mu.Lock()
-	s.index = &build
-	s.mu.Unlock()
+	problemsMutex *sync.Mutex
+	problemFiles  map[string]struct{}
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 	build, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
 
-	s.updateIndex(build)
+	s.indexMutex.Lock()
+	s.index = &build
+	s.indexMutex.Unlock()
 
 	if err == nil {
 		// clear problems
-		notify(
-			protocol.ServerTextDocumentPublishDiagnostics,
-			protocol.PublishDiagnosticsParams{
-				Diagnostics: []protocol.Diagnostic{},
-			},
-		)
+		s.problemsMutex.Lock()
+		for uri := range s.problemFiles {
+			notify(
+				protocol.ServerTextDocumentPublishDiagnostics,
+				protocol.PublishDiagnosticsParams{
+					URI:         uri,
+					Diagnostics: []protocol.Diagnostic{},
+				},
+			)
+		}
+		s.problemFiles = make(map[string]struct{})
 		s.logger.Info("full index without problems, sent empty diagnostics")
+		s.problemsMutex.Unlock()
 		return nil
 	}
 
+	// remember problem and send diagnostic
+	s.problemsMutex.Lock()
+	uri := filepath.Join(s.workspacePath, err.Location.String())
+	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
-		s.createDiagnostics(*err),
+		s.createDiagnostics(*err, uri),
 	)
-
-	s.logger.Info("diagnostic sent: " + err.Error())
+	s.logger.Info("diagnostic sent:", "err", err)
+	s.problemsMutex.Unlock()
 
 	return nil
 }
 
-func (s *Server) createDiagnostics(compilerErr compiler.Error) protocol.PublishDiagnosticsParams {
-	var uri string
-	if compilerErr.Location != nil {
-		uri = fmt.Sprintf(
-			"%s/%s/%s",
-			s.workspacePath,
-			compilerErr.Location.PkgName,
-			compilerErr.Location.FileName+".neva",
-		)
-	}
-
+func (s *Server) createDiagnostics(compilerErr compiler.Error, uri string) protocol.PublishDiagnosticsParams {
 	var startStopRange protocol.Range
-	if compilerErr.Range != nil {
+	if compilerErr.Meta != nil {
 		// If stop is 0 0, set it to the same as start but with character incremented by 1
-		if compilerErr.Range.Stop.Line == 0 && compilerErr.Range.Stop.Column == 0 {
-			compilerErr.Range.Stop = compilerErr.Range.Start
-			compilerErr.Range.Stop.Column++
+		if compilerErr.Meta.Stop.Line == 0 && compilerErr.Meta.Stop.Column == 0 {
+			compilerErr.Meta.Stop = compilerErr.Meta.Start
+			compilerErr.Meta.Stop.Column++
 		}
 
 		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      uint32(compilerErr.Range.Start.Line),
-				Character: uint32(compilerErr.Range.Start.Column),
+				Line:      uint32(compilerErr.Meta.Start.Line),
+				Character: uint32(compilerErr.Meta.Start.Column),
 			},
 			End: protocol.Position{
-				Line:      uint32(compilerErr.Range.Stop.Line),
-				Character: uint32(compilerErr.Range.Stop.Column),
+				Line:      uint32(compilerErr.Meta.Stop.Line),
+				Character: uint32(compilerErr.Meta.Stop.Column),
 			},
 		}
 

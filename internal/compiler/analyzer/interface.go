@@ -31,7 +31,7 @@ func (a Analyzer) analyzeInterface(
 		return src.Interface{}, compiler.Error{
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
-			Range:    &iface.Meta,
+			Meta:     &iface.Meta,
 		}.Wrap(err)
 	}
 
@@ -40,7 +40,7 @@ func (a Analyzer) analyzeInterface(
 		return src.Interface{}, compiler.Error{
 			Err:      ErrInterfaceTypeParams,
 			Location: &scope.Location,
-			Range:    &iface.Meta,
+			Meta:     &iface.Meta,
 		}.Wrap(err)
 	}
 
@@ -108,7 +108,7 @@ func (a Analyzer) analyzePorts(
 		if err != nil {
 			return nil, compiler.Error{
 				Location: &scope.Location,
-				Range:    &port.Meta,
+				Meta:     &port.Meta,
 			}.Wrap(err)
 		}
 		resolvedPorts[name] = resolvedPort
@@ -128,7 +128,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 	if err != nil {
 		return src.Port{}, compiler.Error{
 			Location: &scope.Location,
-			Range:    &port.Meta,
+			Meta:     &port.Meta,
 		}.Wrap(err)
 	}
 

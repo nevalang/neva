@@ -13,7 +13,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 			userSender -> .pet.name -> println -> :stop
 		}`,
 	)
-	p := New(false)
+	p := New()
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
 
@@ -43,7 +43,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.Equal(t, true, err == nil)
@@ -69,7 +69,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -104,7 +104,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -130,7 +130,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 		flow C1() () { :foo -> n1:p1 -> :bar }
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -158,7 +158,7 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 	// comment
 	`)
 
-	p := New(false)
+	p := New()
 
 	_, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -187,7 +187,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 		flow C4() ()
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -225,7 +225,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -248,7 +248,7 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -268,7 +268,7 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 		const c1 pkg.Enum = pkg.Enum2::Bar
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -292,7 +292,7 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -318,7 +318,7 @@ func TestParser_ParseFile_RangeExpression(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -341,7 +341,7 @@ func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -369,7 +369,7 @@ func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)
@@ -393,7 +393,7 @@ func TestParser_ParseFile_RangeExpressionMixedWithOtherConnections(t *testing.T)
 		}
 	`)
 
-	p := New(false)
+	p := New()
 
 	got, err := p.parseFile(text)
 	require.True(t, err == nil)

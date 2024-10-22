@@ -9,6 +9,13 @@ func (s *Server) TextDocumentDidChange(
 	glspCtx *glsp.Context,
 	params *protocol.DidChangeTextDocumentParams,
 ) error {
-	s.logger.Info("TextDocumentDidChange")
+	return nil
+}
+
+func (s *Server) TextDocumentDidSave(
+	glspCtx *glsp.Context,
+	params *protocol.DidSaveTextDocumentParams,
+) error {
+	s.logger.Info("TextDocumentDidSave")
 	return s.indexAndNotifyProblems(glspCtx.Notify)
 }

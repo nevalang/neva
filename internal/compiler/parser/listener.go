@@ -5,20 +5,12 @@ import (
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 	s.file.Entities = map[string]src.Entity{}
 	s.file.Imports = map[string]src.Import{}
-}
-
-/* --- Import --- */
-
-func (s *treeShapeListener) EnterUseStmt(actx *generated.ImportStmtContext) {
-	imports := actx.AllImportDef()
-	if len(s.file.Imports) == 0 { // there could be multiple use statements in the file
-		s.file.Imports = make(map[string]src.Import, len(imports))
-	}
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
@@ -43,10 +35,19 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	s.file.Imports[alias] = src.Import{
 		Module:  modName,
 		Package: pkgName,
+		Meta: core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+		},
 	}
 }
-
-/* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	typeDef := actx.TypeDef()
@@ -62,8 +63,6 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	s.file.Entities[name] = parsedEntity
 }
 
-/* --- Constants --- */
-
 func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	constDef := actx.ConstDef()
 
@@ -74,11 +73,8 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 
 	parsedEntity.IsPublic = actx.PUB_KW() != nil
 	name := constDef.IDENTIFIER().GetText()
-
 	s.file.Entities[name] = parsedEntity
 }
-
-/* --- Interfaces --- */
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
@@ -93,8 +89,6 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	}
 }
 
-/* --- Flows --- */
-
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
 
@@ -108,6 +102,5 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 		actx.CompilerDirectives(),
 	)
 	name := compDef.InterfaceDef().IDENTIFIER().GetText()
-
 	s.file.Entities[name] = parsedCompEntity
 }

@@ -66,7 +66,7 @@ func (d Desugarer) handleConstRefSender(
 				ref,
 			),
 			Location: &scope.Location,
-			Range:    &ref.Meta,
+			Meta:     &ref.Meta,
 		}.Wrap(err)
 	}
 
@@ -99,7 +99,7 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 		return ts.Expr{}, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Range:    &ref.Meta,
+			Meta:     &ref.Meta,
 		}
 	}
 
@@ -107,7 +107,7 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 		return ts.Expr{}, &compiler.Error{
 			Err:      fmt.Errorf("%w: %v", ErrConstSenderEntityKind, entity.Kind),
 			Location: &scope.Location,
-			Range:    entity.Meta(),
+			Meta:     entity.Meta(),
 		}
 	}
 
@@ -116,7 +116,7 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 		if err != nil {
 			return ts.Expr{}, compiler.Error{
 				Location: &scope.Location,
-				Range:    entity.Meta(),
+				Meta:     entity.Meta(),
 			}.Wrap(err)
 		}
 		return expr, nil

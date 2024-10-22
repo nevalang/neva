@@ -22,7 +22,7 @@ func (c *CustomErrorListener) SyntaxError(
 ) {
 	c.Errors = append(c.Errors, &compiler.Error{
 		Err: errors.New(msg),
-		Range: &core.Meta{
+		Meta: &core.Meta{
 			Start: core.Position{
 				Line:   line,
 				Column: column,

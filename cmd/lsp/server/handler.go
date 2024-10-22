@@ -47,13 +47,15 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	}
 
 	s := Server{
-		handler: h,
-		logger:  logger,
-		name:    serverName,
-		version: pkg.Version,
-		indexer: indexer,
-		mu:      &sync.Mutex{},
-		index:   nil,
+		handler:       h,
+		logger:        logger,
+		name:          serverName,
+		version:       pkg.Version,
+		indexer:       indexer,
+		indexMutex:    &sync.Mutex{},
+		index:         nil,
+		problemsMutex: &sync.Mutex{},
+		problemFiles:  make(map[string]struct{}),
 	}
 
 	// Basic
@@ -129,9 +131,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	h.TextDocumentWillSaveWaitUntil = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) {
 		return nil, nil
 	}
-	h.TextDocumentDidSave = func(context *glsp.Context, params *protocol.DidSaveTextDocumentParams) error {
-		return nil
-	}
+	h.TextDocumentDidSave = s.TextDocumentDidSave
 	h.TextDocumentDidClose = func(context *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {
 		return nil
 	}

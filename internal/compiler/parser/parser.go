@@ -18,9 +18,7 @@ type treeShapeListener struct {
 	file src.File
 }
 
-type Parser struct {
-	isDebug bool
-}
+type Parser struct{}
 
 func (p Parser) ParseModules(
 	rawMods map[src.ModuleRef]compiler.RawModule,
@@ -97,9 +95,6 @@ func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
 	prsr := generated.NewnevaParser(tokenStream)
 	prsr.RemoveErrorListeners()
 	prsr.AddErrorListener(parserErrors)
-	if p.isDebug {
-		prsr.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
-	}
 	prsr.BuildParseTrees = true
 
 	listener := &treeShapeListener{}
@@ -139,6 +134,6 @@ func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *comp
 	return nil
 }
 
-func New(isDebug bool) Parser {
-	return Parser{isDebug: isDebug}
+func New() Parser {
+	return Parser{}
 }

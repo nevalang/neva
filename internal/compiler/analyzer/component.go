@@ -45,7 +45,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return src.Component{}, &compiler.Error{
 			Err:      ErrExternNoArgs,
 			Location: &scope.Location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}
 	}
 
@@ -56,7 +56,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 				return src.Component{}, &compiler.Error{
 					Err:      ErrExternOverloadingArg,
 					Location: &scope.Location,
-					Range:    &component.Meta,
+					Meta:     &component.Meta,
 				}
 			}
 		}
@@ -73,7 +73,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 
@@ -82,7 +82,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 			return src.Component{}, &compiler.Error{
 				Err:      ErrNormCompWithExtern,
 				Location: &scope.Location,
-				Range:    &component.Meta,
+				Meta:     &component.Meta,
 			}
 		}
 		return component, nil
@@ -96,7 +96,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 
@@ -104,7 +104,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 		return src.Component{}, &compiler.Error{
 			Err:      ErrNormFlowWithoutNet,
 			Location: &scope.Location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}
 	}
 
@@ -119,7 +119,7 @@ func (a Analyzer) analyzeComponent( //nolint:funlen
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Location: &scope.Location,
-			Range:    &component.Meta,
+			Meta:     &component.Meta,
 		}.Wrap(err)
 	}
 

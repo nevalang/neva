@@ -91,8 +91,9 @@ type File struct {
 }
 
 type Import struct {
-	Module  string `json:"moduleName,omitempty"`
-	Package string `json:"pkgName,omitempty"`
+	Module  string    `json:"moduleName,omitempty"`
+	Package string    `json:"pkgName,omitempty"`
+	Meta    core.Meta `json:"meta,omitempty"`
 }
 
 type Entity struct {

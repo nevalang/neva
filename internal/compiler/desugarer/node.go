@@ -46,7 +46,7 @@ func (Desugarer) handleNode(
 		return nil, &compiler.Error{
 			Err:      err,
 			Location: &scope.Location,
-			Range:    &node.Meta,
+			Meta:     &node.Meta,
 		}
 	}
 

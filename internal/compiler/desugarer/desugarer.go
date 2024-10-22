@@ -118,7 +118,7 @@ func (d Desugarer) desugarFile(
 		entityResult, err := d.desugarEntity(entity, scope)
 		if err != nil {
 			return src.File{}, compiler.Error{
-				Range: entity.Meta(),
+				Meta: entity.Meta(),
 			}.Wrap(err)
 		}
 
@@ -161,7 +161,7 @@ func (d Desugarer) desugarEntity(
 	if entity.Kind == src.ConstEntity {
 		desugaredConst, err := d.handleConst(entity.Const)
 		if err != nil {
-			return desugarEntityResult{}, compiler.Error{Range: &entity.Component.Meta}.Wrap(err)
+			return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 		}
 
 		return desugarEntityResult{
@@ -175,7 +175,7 @@ func (d Desugarer) desugarEntity(
 
 	componentResult, err := d.handleComponent(entity.Component, scope)
 	if err != nil {
-		return desugarEntityResult{}, compiler.Error{Range: &entity.Component.Meta}.Wrap(err)
+		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 	}
 
 	return desugarEntityResult{
