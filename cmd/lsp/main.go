@@ -46,7 +46,13 @@ func main() {
 		*isDebug,
 	)
 
-	if err := srv.RunStdio(); err != nil {
-		panic(err)
+	if *isDebug {
+		if err := srv.RunTCP("localhost:6007"); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := srv.RunStdio(); err != nil {
+			panic(err)
+		}
 	}
 }
