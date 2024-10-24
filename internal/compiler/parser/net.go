@@ -13,22 +13,22 @@ import (
 
 var ErrEmptyConnDef error = errors.New("Connection must be either normal or array bypass")
 
-func parseNet(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
+func parseConnections(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
 	allConnDefs := actx.AllConnDef()
 	parsedConns := make([]src.Connection, 0, len(allConnDefs))
 
 	for _, connDef := range allConnDefs {
-		parsedConn, err := parseConn(connDef)
+		parsedConnection, err := parseConnection(connDef)
 		if err != nil {
 			return nil, err
 		}
-		parsedConns = append(parsedConns, parsedConn)
+		parsedConns = append(parsedConns, parsedConnection)
 	}
 
 	return parsedConns, nil
 }
 
-func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+func parseConnection(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
 	meta := core.Meta{
 		Text: connDef.GetText(),
 		Start: core.Position{
@@ -307,7 +307,7 @@ func parseDeferredConn(
 		},
 	}
 
-	parsedConns, err := parseConn(deferredConns.ConnDef())
+	parsedConns, err := parseConnection(deferredConns.ConnDef())
 	if err != nil {
 		return src.ConnectionReceiver{}, &compiler.Error{
 			Err:  err,
@@ -329,12 +329,14 @@ func parseNormConnSenderSide(
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
+	ternaryExprSender := senderSide.TernaryExpr()
 
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
 		rangeExprSender == nil &&
-		structSelectors == nil {
+		structSelectors == nil &&
+		ternaryExprSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Err: errors.New("Sender side is missing in connection"),
 			Meta: &core.Meta{
@@ -451,11 +453,47 @@ func parseNormConnSenderSide(
 		}
 	}
 
+	var ternaryExpr *src.TernaryExpr
+	if ternaryExprSender != nil {
+		parts := ternaryExprSender.AllSingleSenderSide()
+
+		condition, err := parseNormConnSenderSide(parts[0])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		left, err := parseNormConnSenderSide(parts[1])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		right, err := parseNormConnSenderSide(parts[2])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+
+		ternaryExpr = &src.TernaryExpr{
+			Condition: condition,
+			Left:      left,
+			Right:     right,
+			Meta: core.Meta{
+				Text: ternaryExprSender.GetText(),
+				Start: core.Position{
+					Line:   ternaryExprSender.GetStart().GetLine(),
+					Column: ternaryExprSender.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   ternaryExprSender.GetStop().GetLine(),
+					Column: ternaryExprSender.GetStop().GetColumn(),
+				},
+			},
+		}
+	}
+
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
+		TernaryExpr:    ternaryExpr,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{

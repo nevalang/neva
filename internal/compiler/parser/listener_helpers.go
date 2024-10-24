@@ -1118,7 +1118,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	parsedConnections := []src.Connection{}
 	connections := actx.CompBody().ConnDefList()
 	if connections != nil {
-		parsedNet, err := parseNet(connections)
+		parsedNet, err := parseConnections(connections)
 		if err != nil {
 			return src.Entity{}, err
 		}

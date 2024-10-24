@@ -512,6 +512,78 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
+	if sender.TernaryExpr != nil {
+		// analyze the condition part
+		_, condType, err := a.analyzeSender(
+			sender.TernaryExpr.Condition,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}
+		}
+
+		// ensure the condition is of boolean type
+		boolType := ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+		}
+		if err := a.resolver.IsSubtypeOf(*condType, boolType, scope); err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      errors.New("Condition of ternary expression must be of boolean type"),
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}
+		}
+
+		// analyze the trueVal part
+		_, trueValType, err := a.analyzeSender(
+			sender.TernaryExpr.Left,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}
+		}
+
+		// analyze the falseVal part
+		_, _, err = a.analyzeSender(
+			sender.TernaryExpr.Right,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, &compiler.Error{
+				Err:      err,
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}
+		}
+
+		// TODO support proper typing (see https://github.com/nevalang/neva/issues/737)
+
+		return &sender, trueValType, nil
+	}
+
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		sender,
 		iface,

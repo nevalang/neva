@@ -7,6 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParser_ParseFile_TernaryExpression(t *testing.T) {
+	text := []byte(`
+		flow C1() () {
+			(condition ? trueValue : falseValue) -> receiver
+		}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(text)
+	require.NoError(t, err)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 1, len(net))
+
+	conn := net[0].Normal
+	require.Equal(t, 1, len(conn.SenderSide))
+
+	ternary := conn.SenderSide[0].TernaryExpr
+	require.NotNil(t, ternary)
+
+	require.Equal(t, "condition", ternary.Condition.PortAddr.Node)
+	require.Equal(t, "trueValue", ternary.Left.PortAddr.Node)
+	require.Equal(t, "falseValue", ternary.Right.PortAddr.Node)
+
+	require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
+}
+
 func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	text := []byte(`
 		flow C1() () {

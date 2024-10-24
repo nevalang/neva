@@ -440,6 +440,12 @@ func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {
 // ExitSingleSenderSide is called when production singleSenderSide is exited.
 func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
 
+// EnterTernaryExpr is called when production ternaryExpr is entered.
+func (s *BasenevaListener) EnterTernaryExpr(ctx *TernaryExprContext) {}
+
+// ExitTernaryExpr is called when production ternaryExpr is exited.
+func (s *BasenevaListener) ExitTernaryExpr(ctx *TernaryExprContext) {}
+
 // EnterReceiverSide is called when production receiverSide is entered.
 func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
 
