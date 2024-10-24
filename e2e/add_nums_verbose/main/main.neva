@@ -3,8 +3,8 @@ flow Main(start any) (stop any) {
 	println Println<int>
 	---
 	:start -> [
-		(1 -> adder:acc),
-		(2 -> adder:el)
+		{ 1 -> adder:acc },
+		{ 2 -> adder:el }
 	]
 	adder:res -> println:data
 	println:sig -> :stop

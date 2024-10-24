@@ -16,5 +16,5 @@ const numsStruct NumsStruct = {
 flow Main(start) (stop) {
     Println
     ---
-    :start -> ($numsStruct -> println -> :stop)
+    :start -> { $numsStruct -> println -> :stop }
 }

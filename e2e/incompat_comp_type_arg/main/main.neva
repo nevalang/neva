@@ -1,6 +1,6 @@
 flow Main(start) (stop) {
 	Decr<any>
 	---
-	:start -> (42 -> decr:data)
+	:start -> { 42 -> decr:data }
 	decr:res -> :stop
 }

@@ -4,8 +4,8 @@ flow Main(start) (stop) {
     Println, regexp.Submatch, Panic
     ---
     :start -> [
-        ('a(x*)b(y|z)c' -> submatch:regexp),
-        ('-axxxbyc-'    -> submatch:data)
+        { 'a(x*)b(y|z)c' -> submatch:regexp },
+        { '-axxxbyc-'    -> submatch:data }
     ]
     submatch:res -> println:data
     println:sig    -> :stop

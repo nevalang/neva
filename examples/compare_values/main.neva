@@ -1,7 +1,10 @@
 flow Main(start) (stop) {
     Eq, Ternary, Println
     ---
-    :start -> [(2 -> eq:actual), (2 -> eq:compared)]
+    :start -> [
+        { 2 -> eq:actual },
+        { 2 -> eq:compared }
+    ]
     eq -> ternary:if
     'They match' -> ternary:then
     'They do not match' -> ternary:else

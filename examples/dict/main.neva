@@ -6,7 +6,7 @@ const d dict<string> = {
 flow Main(start) (stop) {
     Get, Println
     ---
-    :start -> ('name' -> get:key)
+    :start -> { 'name' -> get:key }
     $d -> get:dict
     [get:res, get:err] -> println -> :stop
 }

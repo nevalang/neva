@@ -5,5 +5,5 @@ const lst list<int> = [1, 2, 3]
 flow Main(start) (stop) {
     ListToStream, ForEach{Println}, Wait
     ---
-    :start -> ($lst -> listToStream -> forEach -> wait -> :stop)
+    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
 }

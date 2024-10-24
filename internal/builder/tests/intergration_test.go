@@ -10,7 +10,7 @@ import (
 )
 
 func TestBuilder_WDIsModRoot(t *testing.T) {
-	prsr := parser.New(false)
+	prsr := parser.New()
 	bldr := builder.MustNew(prsr)
 
 	build, _, err := bldr.Build(context.Background(), "testmod")
@@ -33,7 +33,7 @@ func TestBuilder_WDIsModRoot(t *testing.T) {
 }
 
 func TestBuilder_WDIsPkg(t *testing.T) {
-	prsr := parser.New(false)
+	prsr := parser.New()
 	bldr := builder.MustNew(prsr)
 
 	build, _, err := bldr.Build(context.Background(), "testmod/do_nothing")

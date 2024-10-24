@@ -3,7 +3,6 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"runtime/debug"
 
@@ -17,12 +16,9 @@ import (
 type treeShapeListener struct {
 	*generated.BasenevaListener
 	file src.File
-	loc  src.Location
 }
 
-type Parser struct {
-	isDebug bool
-}
+type Parser struct{}
 
 func (p Parser) ParseModules(
 	rawMods map[src.ModuleRef]compiler.RawModule,
@@ -32,10 +28,7 @@ func (p Parser) ParseModules(
 	for modRef, rawMod := range rawMods {
 		parsedPkgs, err := p.ParsePackages(modRef, rawMod.Packages)
 		if err != nil {
-			return nil, compiler.Error{
-				Err:      errors.New("Parsing error"),
-				Location: &src.Location{ModRef: modRef},
-			}.Wrap(err)
+			return nil, err
 		}
 
 		parsedMods[modRef] = src.Module{
@@ -59,11 +52,8 @@ func (p Parser) ParsePackages(
 	for pkgName, pkgFiles := range rawPkgs {
 		parsedFiles, err := p.ParseFiles(modRef, pkgName, pkgFiles)
 		if err != nil {
-			return nil, compiler.Error{
-				Location: &src.Location{PkgName: pkgName},
-			}.Wrap(err)
+			return nil, err
 		}
-
 		packages[pkgName] = parsedFiles
 	}
 
@@ -78,14 +68,14 @@ func (p Parser) ParseFiles(
 	result := make(map[string]src.File, len(files))
 
 	for fileName, fileBytes := range files {
-		loc := src.Location{
-			ModRef:   modRef,
-			PkgName:  pkgName,
-			FileName: fileName,
-		}
-		parsedFile, err := p.parseFile(loc, fileBytes)
+		parsedFile, err := p.parseFile(fileBytes)
 		if err != nil {
-			return nil, compiler.Error{Location: &loc}.Wrap(err)
+			err.Location = compiler.Pointer(src.Location{
+				ModRef:   modRef,
+				PkgName:  pkgName,
+				FileName: fileName,
+			})
+			return nil, err
 		}
 		result[fileName] = parsedFile
 	}
@@ -93,28 +83,7 @@ func (p Parser) ParseFiles(
 	return result, nil
 }
 
-func (p Parser) parseFile(
-	loc src.Location,
-	bb []byte,
-) (f src.File, err *compiler.Error) {
-	defer func() {
-		if e := recover(); e != nil {
-			compilerErr, ok := e.(*compiler.Error)
-			if ok {
-				err = compiler.Error{Location: &loc}.Wrap(compilerErr)
-				return
-			}
-			err = &compiler.Error{
-				Err: fmt.Errorf(
-					"%v: %v",
-					e,
-					string(debug.Stack()),
-				),
-				Location: &loc,
-			}
-		}
-	}()
-
+func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
 	input := antlr.NewInputStream(string(bb))
 	lexer := generated.NewnevaLexer(input)
 	lexerErrors := &CustomErrorListener{}
@@ -126,31 +95,45 @@ func (p Parser) parseFile(
 	prsr := generated.NewnevaParser(tokenStream)
 	prsr.RemoveErrorListeners()
 	prsr.AddErrorListener(parserErrors)
-	if p.isDebug {
-		prsr.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
-	}
 	prsr.BuildParseTrees = true
 
-	tree := prsr.Prog()
-	listener := &treeShapeListener{loc: loc}
+	listener := &treeShapeListener{}
 
-	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+	if err := walkTree(listener, prsr.Prog()); err != nil {
+		return src.File{}, err
+	}
 
 	if len(lexerErrors.Errors) > 0 {
-		return src.File{}, &compiler.Error{
-			Err: lexerErrors.Errors[0],
-		}
+		return src.File{}, lexerErrors.Errors[0]
 	}
 
 	if len(parserErrors.Errors) > 0 {
-		return src.File{}, &compiler.Error{
-			Err: parserErrors.Errors[0],
-		}
+		return src.File{}, parserErrors.Errors[0]
 	}
 
 	return listener.file, nil
 }
 
-func New(isDebug bool) Parser {
-	return Parser{isDebug: isDebug}
+func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
+	defer func() {
+		if e := recover(); e != nil {
+			if _, ok := e.(*compiler.Error); !ok {
+				err = &compiler.Error{
+					Err: fmt.Errorf(
+						"%v: %v",
+						e,
+						string(debug.Stack()),
+					),
+				}
+			}
+		}
+	}()
+
+	antlr.ParseTreeWalkerDefault.Walk(listener, tree)
+
+	return nil
+}
+
+func New() Parser {
+	return Parser{}
 }

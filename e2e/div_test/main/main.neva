@@ -1,6 +1,9 @@
 flow Main(start) (stop) {
     Div<int>, Println
     ---
-    :start -> [(12 -> div:acc), (3 -> div:el)]
+    :start -> [
+        { 12 -> div:acc },
+        { 3 -> div:el }
+    ]
     div -> println -> :stop
 }

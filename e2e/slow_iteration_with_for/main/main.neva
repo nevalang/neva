@@ -9,7 +9,7 @@ const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 flow Main(start) (stop) {
     ListToStream<int>, ForEach{Slow}, Wait
     ---
-    :start -> ($lst -> listToStream -> forEach -> wait -> :stop)
+    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
 }
 
 flow Slow(data int) (sig any) {

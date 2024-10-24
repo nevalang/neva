@@ -91,8 +91,9 @@ type File struct {
 }
 
 type Import struct {
-	Module  string `json:"moduleName,omitempty"`
-	Package string `json:"pkgName,omitempty"`
+	Module  string    `json:"moduleName,omitempty"`
+	Package string    `json:"pkgName,omitempty"`
+	Meta    core.Meta `json:"meta,omitempty"`
 }
 
 type Entity struct {
@@ -318,12 +319,37 @@ func (c ConnectionSideSelectors) String() string {
 
 // ConnectionSender unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSender struct {
-	PortAddr       *PortAddr  `json:"portAddr,omitempty"`
-	Const          *Const     `json:"literal,omitempty"`
-	Range          *RangeExpr `json:"range,omitempty"` // New field
-	StructSelector []string   `json:"selectors,omitempty"`
-	Meta           core.Meta  `json:"meta,omitempty"`
+	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
+	Const          *Const       `json:"literal,omitempty"`
+	Range          *RangeExpr   `json:"range,omitempty"`
+	StructSelector []string     `json:"selectors,omitempty"`
+	BinaryExpr     *BinaryExpr  `json:"binaryExpr,omitempty"`
+	TernaryExpr    *TernaryExpr `json:"ternaryExpr,omitempty"`
+	Meta           core.Meta    `json:"meta,omitempty"`
 }
+
+type BinaryExpr struct {
+	Left     ConnectionSender `json:"left,omitempty"`
+	Right    ConnectionSender `json:"right,omitempty"`
+	Operator BinaryOperator   `json:"operator,omitempty"`
+	Meta     core.Meta        `json:"meta,omitempty"`
+}
+
+type TernaryExpr struct {
+	Condition ConnectionSender `json:"condition,omitempty"`
+	Left      ConnectionSender `json:"left,omitempty"`
+	Right     ConnectionSender `json:"right,omitempty"`
+	Meta      core.Meta        `json:"meta,omitempty"`
+}
+
+type BinaryOperator string
+
+const (
+	AddOp BinaryOperator = "+"
+	SubOp BinaryOperator = "-"
+	MulOp BinaryOperator = "*"
+	DivOp BinaryOperator = "/"
+)
 
 func (s ConnectionSender) String() string {
 	selectorsString := ""

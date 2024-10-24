@@ -21,15 +21,10 @@ func main() {
 	isDebug := flag.Bool("debug", false, "-debug")
 	flag.Parse()
 
-	verbosity := 1
-	if *isDebug {
-		verbosity = 2
-	}
-
-	commonlog.Configure(verbosity, nil)
+	commonlog.Configure(1, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
-	p := parser.New(*isDebug)
+	p := parser.New()
 
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
@@ -46,7 +41,13 @@ func main() {
 		*isDebug,
 	)
 
-	if err := srv.RunStdio(); err != nil {
-		panic(err)
+	if *isDebug {
+		if err := srv.RunTCP("localhost:6007"); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := srv.RunStdio(); err != nil {
+			panic(err)
+		}
 	}
 }

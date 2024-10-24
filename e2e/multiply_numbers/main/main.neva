@@ -5,7 +5,7 @@ flow Main(start) (stop) {
 	Reduce<int, int>{Mul<int>}
 	ListToStream<int>
 	---
-	:start -> ($l -> listToStream -> reduce:data)
+	:start -> { $l -> listToStream -> reduce:data }
 	1 -> reduce:init
 	reduce -> println -> :stop
 }

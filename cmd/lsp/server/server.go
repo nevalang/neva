@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -23,85 +23,92 @@ type Server struct {
 	logger  commonlog.Logger
 	indexer indexer.Indexer
 
-	mu    *sync.Mutex
-	index *src.Build
-}
+	indexMutex *sync.Mutex
+	index      *src.Build
 
-// setState allows to update state in a thread-safe manner.
-func (s *Server) saveIndex(build src.Build) {
-	s.mu.Lock()
-	s.index = &build
-	s.mu.Unlock()
+	problemsMutex *sync.Mutex
+	problemFiles  map[string]struct{}
+
+	activeFile      string
+	activeFileMutex *sync.Mutex
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	build, analyzerErr, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
-	if err != nil {
-		return fmt.Errorf("%w: index", err)
-	}
-	s.saveIndex(build)
+	build, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
 
-	if analyzerErr == nil {
-		notify(
-			protocol.ServerTextDocumentPublishDiagnostics,
-			protocol.PublishDiagnosticsParams{}, // clear problems
-		)
+	s.indexMutex.Lock()
+	s.index = &build
+	s.indexMutex.Unlock()
+
+	if err == nil {
+		// clear problems
+		s.problemsMutex.Lock()
+		for uri := range s.problemFiles {
+			notify(
+				protocol.ServerTextDocumentPublishDiagnostics,
+				protocol.PublishDiagnosticsParams{
+					URI:         uri,
+					Diagnostics: []protocol.Diagnostic{},
+				},
+			)
+		}
+		s.problemFiles = make(map[string]struct{})
 		s.logger.Info("full index without problems, sent empty diagnostics")
+		s.problemsMutex.Unlock()
 		return nil
 	}
 
+	// remember problem and send diagnostic
+	s.problemsMutex.Lock()
+	uri := filepath.Join(s.workspacePath, err.Location.String())
+	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
-		s.createDiagnostics(*analyzerErr),
+		s.createDiagnostics(*err, uri),
 	)
-
-	s.logger.Info("diagnostic sent: " + analyzerErr.Error())
+	s.logger.Info("diagnostic sent:", "err", err)
+	s.problemsMutex.Unlock()
 
 	return nil
 }
 
-func (s *Server) createDiagnostics(analyzerErr compiler.Error) protocol.PublishDiagnosticsParams {
-	source := "neva"
-	severity := protocol.DiagnosticSeverityError
+func (s *Server) createDiagnostics(compilerErr compiler.Error, uri string) protocol.PublishDiagnosticsParams {
+	var startStopRange protocol.Range
+	if compilerErr.Meta != nil {
+		// If stop is 0 0, set it to the same as start but with character incremented by 1
+		if compilerErr.Meta.Stop.Line == 0 && compilerErr.Meta.Stop.Column == 0 {
+			compilerErr.Meta.Stop = compilerErr.Meta.Start
+			compilerErr.Meta.Stop.Column++
+		}
 
-	var uri string
-	if analyzerErr.Location != nil {
-		uri = fmt.Sprintf(
-			"%s/%s/%s",
-			s.workspacePath,
-			analyzerErr.Location.PkgName,
-			analyzerErr.Location.FileName+".neva",
-		)
-	}
-
-	var protocolRange protocol.Range
-	if analyzerErr.Meta != nil {
-		protocolRange = protocol.Range{
+		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      uint32(analyzerErr.Meta.Start.Line),
-				Character: uint32(analyzerErr.Meta.Start.Column),
+				Line:      uint32(compilerErr.Meta.Start.Line),
+				Character: uint32(compilerErr.Meta.Start.Column),
 			},
 			End: protocol.Position{
-				Line:      uint32(analyzerErr.Meta.Stop.Line),
-				Character: uint32(analyzerErr.Meta.Stop.Column),
+				Line:      uint32(compilerErr.Meta.Stop.Line),
+				Character: uint32(compilerErr.Meta.Stop.Column),
 			},
 		}
+
+		// Adjust for 0-based indexing
+		startStopRange.Start.Line--
+		startStopRange.End.Line--
 	}
+
+	source := "neva"
+	severity := protocol.DiagnosticSeverityError
 
 	return protocol.PublishDiagnosticsParams{
 		URI: uri,
 		Diagnostics: []protocol.Diagnostic{
 			{
-				Range:    protocolRange,
+				Range:    startStopRange,
 				Severity: &severity,
 				Source:   &source,
-				Message:  analyzerErr.Error(),
+				Message:  compilerErr.Error(),
 				Data:     time.Now(),
-				// Unused:
-				Tags:               []protocol.DiagnosticTag{},
-				Code:               &protocol.IntegerOrString{Value: nil},
-				CodeDescription:    &protocol.CodeDescription{HRef: ""},
-				RelatedInformation: []protocol.DiagnosticRelatedInformation{},
 			},
 		},
 	}

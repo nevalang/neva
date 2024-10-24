@@ -10,7 +10,7 @@ import (
 
 type CustomErrorListener struct {
 	*antlr.DefaultErrorListener
-	Errors []error
+	Errors []*compiler.Error
 }
 
 func (c *CustomErrorListener) SyntaxError(
@@ -20,7 +20,7 @@ func (c *CustomErrorListener) SyntaxError(
 	msg string,
 	e antlr.RecognitionException,
 ) {
-	c.Errors = append(c.Errors, compiler.Error{
+	c.Errors = append(c.Errors, &compiler.Error{
 		Err: errors.New(msg),
 		Meta: &core.Meta{
 			Start: core.Position{

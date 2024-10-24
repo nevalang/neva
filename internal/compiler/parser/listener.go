@@ -3,23 +3,14 @@ package parser
 import (
 	"strings"
 
-	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 	s.file.Entities = map[string]src.Entity{}
 	s.file.Imports = map[string]src.Import{}
-}
-
-/* --- Import --- */
-
-func (s *treeShapeListener) EnterUseStmt(actx *generated.ImportStmtContext) {
-	imports := actx.AllImportDef()
-	if len(s.file.Imports) == 0 { // there could be multiple use statements in the file
-		s.file.Imports = make(map[string]src.Import, len(imports))
-	}
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
@@ -44,17 +35,26 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	s.file.Imports[alias] = src.Import{
 		Module:  modName,
 		Package: pkgName,
+		Meta: core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+		},
 	}
 }
-
-/* --- Types --- */
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	typeDef := actx.TypeDef()
 
 	v, err := parseTypeDef(typeDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedEntity := v
@@ -63,29 +63,24 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	s.file.Entities[name] = parsedEntity
 }
 
-/* --- Constants --- */
-
 func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	constDef := actx.ConstDef()
 
 	parsedEntity, err := parseConstDef(constDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedEntity.IsPublic = actx.PUB_KW() != nil
 	name := constDef.IDENTIFIER().GetText()
-
 	s.file.Entities[name] = parsedEntity
 }
-
-/* --- Interfaces --- */
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	v, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 	s.file.Entities[name] = src.Entity{
 		IsPublic:  actx.PUB_KW() != nil,
@@ -94,14 +89,12 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	}
 }
 
-/* --- Flows --- */
-
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
 
-	parsedCompEntity, err := parseCompDef(compDef, s.loc)
+	parsedCompEntity, err := parseCompDef(compDef)
 	if err != nil {
-		panic(compiler.Error{Location: &s.loc}.Wrap(err))
+		panic(err)
 	}
 
 	parsedCompEntity.IsPublic = actx.PUB_KW() != nil
@@ -109,6 +102,5 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 		actx.CompilerDirectives(),
 	)
 	name := compDef.InterfaceDef().IDENTIFIER().GetText()
-
 	s.file.Entities[name] = parsedCompEntity
 }

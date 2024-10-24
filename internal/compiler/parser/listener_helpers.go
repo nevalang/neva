@@ -161,6 +161,17 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compi
 		Lit: &ts.LitExpr{
 			Union: parsedSubExprs,
 		},
+		Meta: core.Meta{
+			Text: unionExpr.GetText(),
+			Start: core.Position{
+				Line:   unionExpr.GetStart().GetLine(),
+				Column: unionExpr.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   unionExpr.GetStop().GetLine(),
+				Column: unionExpr.GetStop().GetColumn(),
+			},
+		},
 	}, nil
 }
 
@@ -201,6 +212,17 @@ func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
 	for _, id := range ids {
 		result.Lit.Enum = append(result.Lit.Enum, id.GetText())
 	}
+	result.Meta = core.Meta{
+		Text: enumExpr.GetText(),
+		Start: core.Position{
+			Line:   enumExpr.GetStart().GetLine(),
+			Column: enumExpr.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   enumExpr.GetStop().GetLine(),
+			Column: enumExpr.GetStop().GetColumn(),
+		},
+	}
 	return &result
 }
 
@@ -228,6 +250,18 @@ func parseStructExpr(
 			return nil, err
 		}
 		result.Lit.Struct[fieldName] = v
+	}
+
+	result.Meta = core.Meta{
+		Text: structExpr.GetText(),
+		Start: core.Position{
+			Line:   structExpr.GetStart().GetLine(),
+			Column: structExpr.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   structExpr.GetStop().GetLine(),
+			Column: structExpr.GetStop().GetColumn(),
+		},
 	}
 
 	return &result, nil
@@ -273,6 +307,18 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 		parsedArgs = append(parsedArgs, v)
 	}
 	result.Inst.Args = parsedArgs
+
+	result.Meta = core.Meta{
+		Text: instExpr.GetText(),
+		Start: core.Position{
+			Line:   instExpr.GetStart().GetLine(),
+			Column: instExpr.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   instExpr.GetStop().GetLine(),
+			Column: instExpr.GetStop().GetColumn(),
+		},
+	}
 
 	return &result, nil
 }
@@ -494,7 +540,6 @@ func parseTypeExprs(
 func parsePortAddr(
 	expr generated.IPortAddrContext,
 	fallbackNode string,
-	loc src.Location,
 ) (src.PortAddr, *compiler.Error) {
 	meta := core.Meta{
 		Text: expr.GetText(),
@@ -515,7 +560,7 @@ func parsePortAddr(
 		return src.PortAddr{}, compiler.NewError(
 			fmt.Errorf("Invalid port address %v", expr.GetText()),
 			&meta,
-			&loc,
+			nil,
 		)
 	}
 
@@ -532,7 +577,7 @@ func parsePortAddr(
 			return src.PortAddr{}, compiler.NewError(
 				err,
 				&meta,
-				&loc,
+				nil,
 			)
 		}
 
@@ -571,7 +616,7 @@ func parsePortAddr(
 		return src.PortAddr{}, compiler.NewError(
 			err,
 			&meta,
-			&loc,
+			nil,
 		)
 	}
 
@@ -655,8 +700,7 @@ func parsePrimitiveConstLiteral(
 		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
-				Err:      err,
-				Location: &src.Location{},
+				Err: err,
 				Meta: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
@@ -777,8 +821,7 @@ func parseMessage(
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			return src.MsgLiteral{}, &compiler.Error{
-				Err:      err,
-				Location: &src.Location{},
+				Err: err,
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
@@ -1056,7 +1099,7 @@ func parseConstDef(
 	}, nil
 }
 
-func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity, *compiler.Error) {
+func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
 	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		return src.Entity{}, err
@@ -1075,7 +1118,7 @@ func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity,
 	parsedConnections := []src.Connection{}
 	connections := actx.CompBody().ConnDefList()
 	if connections != nil {
-		parsedNet, err := parseNet(connections, loc)
+		parsedNet, err := parseNet(connections)
 		if err != nil {
 			return src.Entity{}, err
 		}
@@ -1106,6 +1149,17 @@ func parseCompDef(actx generated.ICompDefContext, loc src.Location) (src.Entity,
 			Interface: parsedInterfaceDef,
 			Nodes:     parsedNodes,
 			Net:       parsedConnections,
+			Meta: core.Meta{
+				Text: actx.GetText(),
+				Start: core.Position{
+					Line:   actx.GetStart().GetLine(),
+					Column: actx.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   actx.GetStop().GetLine(),
+					Column: actx.GetStop().GetColumn(),
+				},
+			},
 		},
 	}, nil
 }

@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	ErrModuleWithoutPkgs    = errors.New("module must contain at least one package")
 	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
 	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
 	ErrCompilerVersion      = errors.New("incompatible compiler version")
@@ -41,7 +40,6 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		}
 	}
 
-	// FIXME mainPkgName containts full path with "examples/ "
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
 			Err:      errors.New("main package not found"),
@@ -103,7 +101,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 
 	if len(mod.Packages) == 0 {
 		return nil, &compiler.Error{
-			Err:      ErrModuleWithoutPkgs,
+			Err:      errors.New("module must contain at least one package"),
 			Location: &location,
 		}
 	}

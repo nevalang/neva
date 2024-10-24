@@ -8,5 +8,5 @@ flow Main(start) (stop) {
     List<int>
     Println
     ---
-    :start -> ($lst -> listToStream -> map -> list -> println -> :stop)
+    :start -> { $lst -> listToStream -> map -> list -> println -> :stop }
 }

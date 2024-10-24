@@ -2,8 +2,8 @@ flow Main(start) (stop) {
     Println, Lt<int>
     ---
     :start -> [
-        (20 -> lt:compared),
-        (20 -> lt:actual)
+        { 20 -> lt:compared },
+        { 20 -> lt:actual }
     ]
     lt:res -> println -> :stop
 }

@@ -96,7 +96,7 @@ pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     fanOut[1] -> .last -> acc:last
     
     acc:cur -> handler:acc
-    handler:res -> acc:upd
+    handler -> acc:upd
 
     acc:res -> :res
 }

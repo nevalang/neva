@@ -3,6 +3,6 @@ const x float = 42
 flow Main(start) (stop) {
     Println<float>
     ---
-    :start -> ($x -> println:data)
+    :start -> { $x -> println:data }
     println:sig -> :stop
 }

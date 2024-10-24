@@ -1,7 +1,7 @@
 flow Main(start) (stop) {
     PrintAny
     ---
-    :start -> (42 -> printAny -> :stop)
+    :start -> { 42 -> printAny -> :stop }
 }
 
 flow PrintAny(data) (sig) {

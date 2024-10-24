@@ -11,7 +11,7 @@ flow Main(start) (stop) {
 flow App(sig) (data string, err error) {
 	http.Get? // '?' implicitly sends `:err` downstream
 	---
-	:sig -> ('definitely not a valid URL' -> get)
+	:sig -> { 'definitely not a valid URL' -> get }
 	get:resp -> .body -> :data
 	// no need for explicit error handling thanks to `?`
 }

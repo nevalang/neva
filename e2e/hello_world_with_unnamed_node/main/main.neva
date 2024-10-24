@@ -1,6 +1,6 @@
 flow Main(start any) (stop any) {
 	Println<string>
 	---
-	:start -> ('Hello, World!' -> println:data)
+	:start -> { 'Hello, World!' -> println:data }
 	println:sig -> :stop
 }
