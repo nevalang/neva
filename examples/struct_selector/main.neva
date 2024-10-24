@@ -17,5 +17,5 @@ const user User = {
 }
 
 flow GetUser(sig) (u User) {
-    :sig -> ($user -> :u)
+    :sig -> { $user -> :u }
 }

@@ -2,8 +2,8 @@ flow Main(start) (stop) {
 	Println, Or
 	---
 	:start -> [
-		(false -> or:a),
-		(false -> or:b)
+		{ false -> or:a },
+		{ false -> or:b }
 	]
 	or -> println -> :stop
 }

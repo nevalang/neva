@@ -7,9 +7,9 @@
 // Example:
 //  sync.WaitGroup
 // ---
-//  :start -> (2 -> wg:count)
-//  task1 -> (true -> wg:sig)
-//  task2 -> (true -> wg:sig)
+//  :start -> { 2 -> wg:count }
+//  task1 -> { true -> wg:sig }
+//  task2 -> { true -> wg:sig }
 //  wg -> :stop  // Signals after both tasks are done.
 //
 // Example:

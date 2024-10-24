@@ -5,6 +5,6 @@ const l list<int> = [1,2,3]
 flow Main(start any) (stop any) {
 	println Println<any>
 	---
-	:start -> ($l -> println:data) 
+	:start -> { $l -> println:data }
 	println:sig 
 }

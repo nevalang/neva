@@ -9,8 +9,8 @@ flow Main(start) (stop) {
   itemWithFoo Struct<stream<foo.Foo>>
   ---
   :start -> [
-    (0 -> [justFoo:bar, itemWithFoo:idx]),
-    (true -> itemWithFoo:last)
+    { 0 -> [justFoo:bar, itemWithFoo:idx] },
+    { true -> itemWithFoo:last }
   ]
   justFoo -> itemWithFoo:data
   itemWithFoo -> :stop

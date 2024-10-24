@@ -9,5 +9,5 @@ flow Main(start) (stop) {
 const s struct { a int } = { a: 42 }
 
 flow Foo(sig any) (msg struct{a int}) {
-    :sig -> ($s -> :msg)
+    :sig -> { $s -> :msg }
 }

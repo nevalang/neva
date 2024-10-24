@@ -5,5 +5,5 @@ flow Main(start) (stop) {
     p2 Println
     ---
     :start -> [p1, p2]
-    p1 -> (p2 -> :stop)
+    p1 -> { p2 -> :stop }
 }

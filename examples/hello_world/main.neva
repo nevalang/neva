@@ -1,5 +1,5 @@
 flow Main(start) (stop) {
 	Println
 	---
-	:start -> ('Hello, World!' -> println -> :stop)
+	:start -> { 'Hello, World!' -> println -> :stop }
 }

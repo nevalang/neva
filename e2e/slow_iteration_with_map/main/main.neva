@@ -12,9 +12,9 @@ flow Main(start) (stop) {
     List
     Println
     ---
-    :start -> (
+    :start -> {
         $lst -> listToStream -> map -> list -> println -> :stop
-    )
+    }
 }
 
 flow Slow(data int) (res int) {

@@ -139,7 +139,7 @@ singleSenderSide:
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
-deferredConn: '(' NEWLINE* connDef NEWLINE* ')';
+deferredConn: '{' NEWLINE* connDef NEWLINE* '}';
 senderConstRef: '$' entityRef;
 rangeExpr: (MINUS? INT) '..' (MINUS? INT);
 portAddr:

@@ -3,7 +3,7 @@ import { http }
 flow Main(start) (stop) {
 	http.Get, Println, Panic
 	---
-	:start -> ('http://www.example.com' -> get)
+	:start -> { 'http://www.example.com' -> get }
 	get:resp -> .body -> println -> :stop
 	get:err -> panic
 }

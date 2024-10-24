@@ -7,5 +7,5 @@ flow Main(start) (stop) {
 	foo foo.Println
 	bar bar.Println
 	---
-	:start -> (42 -> foo -> bar -> :stop)
+	:start -> { 42 -> foo -> bar -> :stop }
 }

@@ -1,7 +1,7 @@
 flow Main(start any) (stop any) {
     DayPrinter
     ---
-    :start -> (Day::Friday -> dayPrinter:day)
+    :start -> { Day::Friday -> dayPrinter:day }
     dayPrinter:sig -> :stop
 }
 

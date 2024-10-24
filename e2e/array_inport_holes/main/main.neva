@@ -3,7 +3,7 @@ import { io }
 flow Main(start any) (stop any) {
 	Printf
 	---
-	:start -> ('$1 $2 $3' -> printf:tpl)
+	:start -> { '$1 $2 $3' -> printf:tpl }
 	1 -> printf:args[0]
 	3 -> printf:args[2]
 	[printf:sig, printf:err] -> :stop

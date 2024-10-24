@@ -172,38 +172,41 @@ flow Main() () {
 }
 
 flow Main() () {
-    $foo -> (foo:bar -> bar:baz)
+    $foo -> { foo:bar -> bar:baz }
 
-    $foo -> [(foo:bar -> bar:baz),
-    (foo:bar -> bar:baz)
-    ]
-
-    $foo -> [(foo:bar -> bar:baz),
-        (foo:bar -> bar:baz)
+    $foo -> [
+        { foo:bar -> bar:baz },
+        { foo:bar -> bar:baz }
     ]
 
     $foo -> [
-        (foo:bar -> bar:baz),
-        (foo:bar -> bar:baz)]
+        { foo:bar -> bar:baz },
+        { foo:bar -> bar:baz }
+    ]
 
     $foo -> [
-        (foo:bar -> bar:baz),
-        (foo:bar -> bar:baz)
+        { foo:bar -> bar:baz },
+        { foo:bar -> bar:baz }
+    ]
+
+    $foo -> [
+        { foo:bar -> bar:baz },
+        { foo:bar -> bar:baz }
     ]
 }
 
 flow Main() () {
-    $a -> ($b -> ($c -> d:e))
+    $a -> { $b -> { $c -> d:e } }
 
-    $a -> (
-        $b -> ($c -> d:e)
-    )
+    $a -> {
+        $b -> { $c -> d:e }
+    }
 
-    $a -> (
-        $b -> (
+    $a -> {
+        $b -> {
             $c -> d:e
-        )
-    )
+        }
+    }
 }
 
 flow Main(start) (stop) { :start -> :stop }
@@ -259,7 +262,7 @@ flow RangeTest6() (out stream<int>) {
 
 // Test range expression with deferred connection
 flow RangeTest7() (out stream<int>) {
-    1..10 -> (process -> :out)
+    1..10 -> { process -> :out }
 }
 
 // Test range expression with multiple receivers
@@ -269,7 +272,7 @@ flow RangeTest8() (out1 stream<int>, out2 stream<int>) {
 
 // Test range expression inside deferred connection
 flow RangeTest9() (out stream<int>) {
-    :start -> (1..10 -> process -> :out)
+    :start -> { 1..10 -> process -> :out }
 }
 
 // Test range expression inside fan-in
@@ -294,18 +297,18 @@ flow RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
 flow RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
     [1..10, :input] -> fanIn -> [
         :out1,
-        (process2 -> :out2),
-        (21..30 -> process3 -> :out3)
+        { process2 -> :out2 },
+        { 21..30 -> process3 -> :out3 }
     ]
 }
 
 // Test nested deferred connections with range expressions
 flow RangeTest14() (out stream<int>) {
-    :start -> (
-        1..5 -> (
-            6..10 -> (
+    :start -> {
+        1..5 -> {
+            6..10 -> {
                 11..15 -> process
-            )
-        )
-    )
+            }
+        }
+    }
 }

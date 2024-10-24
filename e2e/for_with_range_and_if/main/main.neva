@@ -5,7 +5,7 @@ const lst list<bool> = [true, false]
 flow Main(start) (stop) {
 	ListToStream<bool>, ForEach<bool>{PrintAsNum}, Wait
 	---
-	:start -> ($lst -> listToStream -> forEach -> wait -> :stop)
+	:start -> { $lst -> listToStream -> forEach -> wait -> :stop }
 }
 
 flow PrintAsNum(data bool) (sig any) {

@@ -30,11 +30,11 @@ flow PrintFirstLine(n int) (n int) {
     ---
     :n -> [switch:data, lock:data]
 
-    0 -> switch:case[0] -> ($firstLine3 -> p1)
-    1 -> switch:case[1] -> ($firstLine2 -> p2)
+    0 -> switch:case[0] -> { $firstLine3 -> p1 }
+    1 -> switch:case[1] -> { $firstLine2 -> p2 }
     switch:else -> [
         printf:args[0],
-        ($firstLine1 -> printf:tpl)
+        { $firstLine1 -> printf:tpl }
     ]
 
     [p1, p2, printf:sig] -> lock:sig
@@ -54,13 +54,13 @@ flow PrintSecondLine(n int) (n int) {
     ---
     :n -> [switch:data, lock:data]
 
-    -1 -> switch:case[0] -> ($secondLine4 -> p1)
-    0  -> switch:case[1] -> ($secondLine3 -> p2)
-    1  -> switch:case[2] -> ($secondLine2 -> p3)
+    -1 -> switch:case[0] -> { $secondLine4 -> p1 }
+    0  -> switch:case[1] -> { $secondLine3 -> p2 }
+    1  -> switch:case[2] -> { $secondLine2 -> p3 }
 
     switch:else -> [
         printf:args[0],
-        ($secondLine1 -> printf:tpl)
+        { $secondLine1 -> printf:tpl }
     ]
 
     [p1, p2, p3, printf:sig] -> lock:sig

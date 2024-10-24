@@ -1,7 +1,7 @@
 flow Main(start any) (stop any) {
     PrintDay
     ---
-    :start -> (Day::Friday -> printDay -> :stop)
+    :start -> { Day::Friday -> printDay -> :stop }
 }
 
 type Day enum {
