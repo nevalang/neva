@@ -65,7 +65,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	text := []byte(`
 		flow C1() () {
-			:start -> (foo -> bar -> :stop)
+			:start -> { foo -> bar -> :stop }
 		}
 	`)
 
