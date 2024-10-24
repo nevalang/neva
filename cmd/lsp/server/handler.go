@@ -47,15 +47,17 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	}
 
 	s := Server{
-		handler:       h,
-		logger:        logger,
-		name:          serverName,
-		version:       pkg.Version,
-		indexer:       indexer,
-		indexMutex:    &sync.Mutex{},
-		index:         nil,
-		problemsMutex: &sync.Mutex{},
-		problemFiles:  make(map[string]struct{}),
+		handler:         h,
+		logger:          logger,
+		name:            serverName,
+		version:         pkg.Version,
+		indexer:         indexer,
+		indexMutex:      &sync.Mutex{},
+		index:           nil,
+		problemsMutex:   &sync.Mutex{},
+		problemFiles:    make(map[string]struct{}),
+		activeFile:      "",
+		activeFileMutex: &sync.Mutex{},
 	}
 
 	// Basic
@@ -136,7 +138,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		return nil
 	}
 
-	h.TextDocumentCompletion = nil
+	h.TextDocumentCompletion = s.TextDocumentCompletion
 	h.CompletionItemResolve = nil
 	h.TextDocumentHover = nil
 	h.TextDocumentSignatureHelp = nil

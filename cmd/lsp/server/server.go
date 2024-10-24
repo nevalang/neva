@@ -28,6 +28,9 @@ type Server struct {
 
 	problemsMutex *sync.Mutex
 	problemFiles  map[string]struct{}
+
+	activeFile      string
+	activeFileMutex *sync.Mutex
 }
 
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
