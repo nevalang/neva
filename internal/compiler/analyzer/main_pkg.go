@@ -8,13 +8,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-var (
-	ErrMainEntityNotFound  = errors.New("Main entity is not found")
-	ErrMainEntityIsNotFlow = errors.New("Main entity is not a component")
-	ErrMainEntityExported  = errors.New("Main entity cannot be exported")
-	ErrMainPkgExports      = errors.New("Main package must cannot have exported entities")
-)
-
 func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
 	mainPkg := mod.Packages[mainPkgName]
 
@@ -26,7 +19,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	entityMain, filename, ok := mainPkg.Entity("Main")
 	if !ok {
 		return &compiler.Error{
-			Err:      ErrMainEntityNotFound,
+			Err:      errors.New("Main entity is not found"),
 			Location: location,
 		}
 	}
@@ -35,14 +28,14 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	if entityMain.Kind != src.ComponentEntity {
 		return &compiler.Error{
-			Err:      ErrMainEntityIsNotFlow,
+			Err:      errors.New("Main entity must be a component"),
 			Location: location,
 		}
 	}
 
 	if entityMain.IsPublic {
 		return &compiler.Error{
-			Err:      ErrMainEntityExported,
+			Err:      errors.New("Main entity cannot be exported"),
 			Location: location,
 			Meta:     &entityMain.Component.Meta,
 		}
@@ -60,7 +53,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	if err := mainPkg.Entities(func(entity src.Entity, entityName, _ string) error {
 		if entity.IsPublic {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: exported entity %v", ErrMainPkgExports, entityName),
+				Err:      fmt.Errorf("Main package cannot have exported entities: %v", entityName),
 				Meta:     entity.Meta(),
 				Location: location,
 			}

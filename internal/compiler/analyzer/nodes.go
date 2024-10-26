@@ -10,17 +10,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-//nolint:lll
-var (
-	ErrAutoPortsArgNonStruct               = errors.New("Type argument for flow with struct inports directive must be struct")
-	ErrAutoPortsNodeTypeArgsCount          = errors.New("Note that uses flow with struct inports directive must pass exactly one type argument")
-	ErrAutoPortsTypeParamConstr            = errors.New("Flow that uses struct inports directive must have type parameter with struct constraint")
-	ErrAutoPortsTypeParamsCount            = errors.New("Flow that uses struct inports directive must have type parameter with have exactly one type parameter")
-	ErrNormalInportsWithAutoPortsDirective = errors.New("Flow that uses struct inports directive must have no defined inports")
-	ErrGuardNotAllowedForNode              = errors.New("Guard is not allowed for nodes without 'err' output")
-	ErrGuardNotAllowedForFlow              = errors.New("Guard is not allowed for flows without 'err' output")
-)
-
 type foundInterface struct {
 	iface    src.Interface
 	location src.Location
@@ -144,14 +133,14 @@ func (a Analyzer) analyzeNode(
 	if node.ErrGuard {
 		if _, ok := flowIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForNode,
+				Err:      errors.New("Guard is not allowed for nodes without 'err' output"),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForFlow,
+				Err:      errors.New("Guard is not allowed for nodes without ':err' output"),
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
@@ -291,7 +280,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormalInportsWithAutoPortsDirective,
+			Err:      errors.New("Flow that uses struct inports directive must have no defined inports"),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -299,7 +288,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.TypeParams.Params) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsTypeParamsCount,
+			Err:      errors.New("Exactly one type parameter expected"),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -316,7 +305,7 @@ func (a Analyzer) getNodeInterface(
 
 	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsTypeParamConstr,
+			Err:      errors.New("Struct type expected"),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -324,7 +313,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsNodeTypeArgsCount,
+			Err:      errors.New("Exactly one type argument expected"),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -341,7 +330,7 @@ func (a Analyzer) getNodeInterface(
 
 	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsArgNonStruct,
+			Err:      errors.New("Struct argument expected"),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}

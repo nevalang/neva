@@ -11,14 +11,7 @@ import (
 )
 
 var (
-	ErrUnusedOutports                = errors.New("All component outports are unused")
-	ErrUnusedOutport                 = errors.New("unused outport found")
-	ErrUnusedInports                 = errors.New("all flow inports are unused")
-	ErrUnusedInport                  = errors.New("unused inport found")
-	ErrLiteralSenderTypeEmpty        = errors.New("literal network sender must contain message value")
-	ErrComplexLiteralSender          = errors.New("literal network sender must have primitive type")
-	ErrIllegalPortlessConnection     = errors.New("connection to a node, with more than one port, must always has a port name")
-	ErrGuardMixedWithExplicitErrConn = errors.New("if node has error guard '?' it's ':err' outport must not be explicitly used in the network")
+	ErrComplexLiteralSender = errors.New("literal network sender must have primitive type")
 )
 
 // analyzeNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -729,7 +722,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
 		return &compiler.Error{
-			Err:      ErrUnusedInports,
+			Err:      errors.New("Unused inports"),
 			Location: &scope.Location,
 			Meta:     &compInterface.Meta,
 		}
@@ -738,7 +731,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	for inportName := range compInterface.IO.In {
 		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w '%v'", ErrUnusedInport, inportName),
+				Err:      fmt.Errorf("Unused inport: %v", inportName),
 				Location: &scope.Location,
 			}
 		}
@@ -748,7 +741,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	outportsUsage, ok := nodesUsage["out"]
 	if !ok {
 		return &compiler.Error{
-			Err:      ErrUnusedOutports,
+			Err:      errors.New("Unused outports"),
 			Location: &scope.Location,
 			Meta:     &compInterface.Meta,
 		}
@@ -765,7 +758,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 		}
 
 		return &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrUnusedOutport, outportName),
+			Err:      fmt.Errorf("Unused outport: %v", outportName),
 			Location: &scope.Location,
 		}
 	}
@@ -1019,7 +1012,7 @@ func (a Analyzer) getResolvedPortType(
 	if portAddr.Port == "" {
 		if len(ports) > 1 {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: node '%v'", ErrIllegalPortlessConnection, portAddr.Node),
+				Err:      fmt.Errorf("node '%v' has multiple ports but no port name", portAddr.Node),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}
@@ -1221,7 +1214,7 @@ func (a Analyzer) getConstSenderType(
 
 	if constSender.Value.Message == nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
-			Err:      ErrLiteralSenderTypeEmpty,
+			Err:      errors.New("Literal sender type is empty"),
 			Location: &scope.Location,
 			Meta:     &constSender.Meta,
 		}

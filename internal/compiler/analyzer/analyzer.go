@@ -16,10 +16,7 @@ import (
 )
 
 var (
-	ErrPkgWithoutFiles      = errors.New("package must contain at least one file")
-	ErrUnknownEntityKind    = errors.New("entity kind can only be either flow, interface, type of constant")
-	ErrCompilerVersion      = errors.New("incompatible compiler version")
-	ErrDepModWithoutVersion = errors.New("every dependency module must have version")
+	ErrCompilerVersion = errors.New("incompatible compiler version")
 )
 
 type Analyzer struct {
@@ -92,7 +89,8 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
 	if modRef != build.EntryModRef && modRef.Version == "" {
 		return nil, &compiler.Error{
-			Err: ErrDepModWithoutVersion,
+			Err:      errors.New("every dependency module must have version"),
+			Location: &src.Location{ModRef: modRef},
 		}
 	}
 
@@ -136,7 +134,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	if len(pkg) == 0 {
 		return nil, &compiler.Error{
-			Err:      ErrPkgWithoutFiles,
+			Err:      errors.New("package must contain at least one file"),
 			Location: &scope.Location,
 		}
 	}
@@ -228,7 +226,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		resolvedEntity.Component = analyzedComponent
 	default:
 		return src.Entity{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrUnknownEntityKind, entity.Kind),
+			Err:      fmt.Errorf("unknown entity kind: %v", entity.Kind),
 			Location: &scope.Location,
 			Meta:     entity.Meta(),
 		}

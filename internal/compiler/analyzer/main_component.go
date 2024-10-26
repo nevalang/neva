@@ -8,22 +8,10 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-var (
-	ErrMainFlowWithTypeParams     = errors.New("Main flow cannot have type parameters")
-	ErrEntityNotFoundByNodeRef    = errors.New("Node references to entity that cannot be found")
-	ErrMainFlowInportsCount       = errors.New("Main flow must have exactly 1 inport")
-	ErrMainFlowOutportsCount      = errors.New("Main flow must have exactly 1 outport")
-	ErrMainFlowWithoutEnterInport = errors.New("Main flow must have 'enter' inport")
-	ErrMainFlowWithoutExitOutport = errors.New("Main flow must have 'exit' outport")
-	ErrMainPortIsArray            = errors.New("Main flow cannot have array ports")
-	ErrMainFlowPortTypeNotAny     = errors.New("Main flow's ports must be of type any")
-	ErrMainNodeEntityNotFlow      = errors.New("Main flow's nodes must only refer to flow entities")
-)
-
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
-			Err:  ErrMainFlowWithTypeParams,
+			Err:  errors.New("Main flow cannot have type parameters"),
 			Meta: &cmp.Interface.Meta,
 		}
 	}
@@ -42,18 +30,18 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: got %v", ErrMainFlowInportsCount, len(io.In)),
+			Err: fmt.Errorf("Main flow must have exactly 1 inport: got %v", len(io.In)),
 		}
 	}
 	if len(io.Out) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: got %v", ErrMainFlowOutportsCount, len(io.Out)),
+			Err: fmt.Errorf("Main flow must have exactly 1 outport: got %v", len(io.Out)),
 		}
 	}
 
 	enterInport, ok := io.In["start"]
 	if !ok {
-		return &compiler.Error{Err: ErrMainFlowWithoutEnterInport}
+		return &compiler.Error{Err: errors.New("Main flow must have 'start' inport")}
 	}
 	if err := a.analyzeMainFlowPort(enterInport); err != nil {
 		return &compiler.Error{
@@ -64,7 +52,7 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 
 	exitOutport, ok := io.Out["stop"]
 	if !ok {
-		return &compiler.Error{Err: ErrMainFlowWithoutExitOutport}
+		return &compiler.Error{Err: errors.New("Main flow must have 'stop' outport")}
 	}
 	if err := a.analyzeMainFlowPort(exitOutport); err != nil {
 		return &compiler.Error{
@@ -78,10 +66,10 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 
 func (a Analyzer) analyzeMainFlowPort(port src.Port) error {
 	if port.IsArray {
-		return ErrMainPortIsArray
+		return errors.New("Main flow's ports cannot be arrays")
 	}
 	if !(src.Scope{}).IsTopType(port.TypeExpr) {
-		return ErrMainFlowPortTypeNotAny
+		return errors.New("Main flow's ports must be of type any")
 	}
 	return nil
 }
@@ -95,8 +83,7 @@ func (Analyzer) analyzeMainFlowNodes(
 		if err != nil {
 			return &compiler.Error{
 				Err: fmt.Errorf(
-					"%w: node '%v', ref '%v', details '%v'",
-					ErrEntityNotFoundByNodeRef,
+					"Referenced entity not found: node '%v', ref '%v', details '%v'",
 					nodeName,
 					node.EntityRef,
 					err,
@@ -108,7 +95,7 @@ func (Analyzer) analyzeMainFlowNodes(
 
 		if nodeEntity.Kind != src.ComponentEntity {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v: %v", ErrMainNodeEntityNotFlow, nodeName, node.EntityRef),
+				Err:      fmt.Errorf("Main flow's nodes must only refer to flow entities: %v: %v", nodeName, node.EntityRef),
 				Location: &loc,
 				Meta:     nodeEntity.Meta(),
 			}

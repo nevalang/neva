@@ -9,10 +9,6 @@ import (
 )
 
 var (
-	ErrEmptyConst         = errors.New("Constant must either have value or reference to another constant")
-	ErrEntityNotConst     = errors.New("Constant refers to an entity that is not constant")
-	ErrResolveConstType   = errors.New("Cannot resolve constant type")
-	ErrUnionConst         = errors.New("Constant cannot have type union")
 	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
 )
 
@@ -22,7 +18,7 @@ func (a Analyzer) analyzeConst(
 ) (src.Const, *compiler.Error) {
 	if constant.Value.Message == nil && constant.Value.Ref == nil {
 		return src.Const{}, &compiler.Error{
-			Err:      ErrEmptyConst,
+			Err:      errors.New("Constant must either have value or reference to another constant"),
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
 		}
@@ -40,7 +36,7 @@ func (a Analyzer) analyzeConst(
 
 		if entity.Kind != src.ConstEntity {
 			return src.Const{}, &compiler.Error{
-				Err:      fmt.Errorf("%w: entity kind %v", ErrEntityNotConst, entity.Kind),
+				Err:      fmt.Errorf("Constant refers to an entity that is not constant: %v", entity.Kind),
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -52,7 +48,7 @@ func (a Analyzer) analyzeConst(
 	resolvedType, err := a.analyzeTypeExpr(constant.TypeExpr, scope)
 	if err != nil {
 		return src.Const{}, compiler.Error{
-			Err:      ErrResolveConstType,
+			Err:      errors.New("Cannot resolve constant type"),
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
 		}.Wrap(err)
@@ -60,7 +56,7 @@ func (a Analyzer) analyzeConst(
 
 	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
 		return src.Const{}, &compiler.Error{
-			Err:      ErrUnionConst,
+			Err:      errors.New("Constant cannot have type union"),
 			Location: &scope.Location,
 			Meta:     &constant.Meta,
 		}

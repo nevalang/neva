@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -13,13 +13,11 @@ type analyzeTypeDefParams struct {
 	allowEmptyBody bool
 }
 
-var ErrEmptyTypeDefBody = fmt.Errorf("Type definition must have non-empty body")
-
 func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
 		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
-			Err:      ErrEmptyTypeDefBody,
+			Err:      errors.New("Type definition must have non-empty body"),
 			Location: &scope.Location,
 			Meta:     &meta,
 		}
