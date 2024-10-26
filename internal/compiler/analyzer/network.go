@@ -480,9 +480,12 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
+		sender.TernaryExpr == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
-			Err:      ErrEmptySender,
+			Err: errors.New(
+				"Sender in network must contain port address, constant reference or message literal",
+			),
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -773,7 +776,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrUnusedNode, nodeName),
+				Err:      fmt.Errorf("Unused node found: %v", nodeName),
 				Location: &scope.Location,
 			}
 		}
@@ -840,7 +843,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			}
 
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrUnusedNodeOutports, nodeName),
+				Err:      fmt.Errorf("All node's outports are unused: %v", nodeName),
 				Location: &scope.Location,
 				Meta:     &nodeIface.iface.Meta,
 			}
@@ -916,7 +919,7 @@ func (a Analyzer) getReceiverPortType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if receiverSide.Node == "in" {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      ErrWriteSelfIn,
+			Err:      errors.New("Flow cannot read from self inport"),
 			Location: &scope.Location,
 			Meta:     &receiverSide.Meta,
 		}
@@ -928,7 +931,7 @@ func (a Analyzer) getReceiverPortType(
 		outport, ok := outports[receiverSide.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrOutportNotFound, receiverSide.Port),
+				Err:      fmt.Errorf("Referenced inport not found in flow's interface: %v", receiverSide.Port),
 				Location: &scope.Location,
 				Meta:     &receiverSide.Meta,
 			}
@@ -979,7 +982,7 @@ func (a Analyzer) getNodeInportType(
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
+			Err:      fmt.Errorf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -1162,7 +1165,7 @@ func (a Analyzer) getPortSenderType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if senderSidePortAddr.Node == "out" {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      ErrReadSelfOut,
+			Err:      errors.New("Flow cannot read from self outport"),
 			Location: &scope.Location,
 			Meta:     &senderSidePortAddr.Meta,
 		}
@@ -1174,7 +1177,7 @@ func (a Analyzer) getPortSenderType(
 		inport, ok := inports[senderSidePortAddr.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSidePortAddr.Port),
+				Err:      fmt.Errorf("Referenced inport not found in flow's interface: %v", senderSidePortAddr.Port),
 				Location: &scope.Location,
 				Meta:     &senderSidePortAddr.Meta,
 			}
@@ -1289,7 +1292,7 @@ func (a Analyzer) getNodeOutportType(
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
+			Err:      fmt.Errorf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -1298,7 +1301,7 @@ func (a Analyzer) getNodeOutportType(
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
+			Err:      fmt.Errorf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}

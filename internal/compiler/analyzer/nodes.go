@@ -83,7 +83,7 @@ func (a Analyzer) analyzeNode(
 	if nodeEntity.Kind != src.ComponentEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
+			Err:      fmt.Errorf("Node can only refer to flows or interfaces: %v", nodeEntity.Kind),
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
 		}
@@ -92,7 +92,7 @@ func (a Analyzer) analyzeNode(
 	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
 	if usesBindDirective && len(bindDirectiveArgs) != 1 {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      ErrBindDirectiveArgs,
+			Err:      errors.New("Node with #bind directive must provide exactly one argument"),
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
 		}
@@ -241,7 +241,7 @@ func (a Analyzer) getNodeInterface(
 	if entity.Kind == src.InterfaceEntity {
 		if usesBindDirective {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrInterfaceNodeBindDirective,
+				Err:      errors.New("Interface node cannot use #bind directive"),
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -249,7 +249,7 @@ func (a Analyzer) getNodeInterface(
 
 		if node.Deps != nil {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrNonFlowNodeWithDI,
+				Err:      errors.New("Only flow node can have dependency injection"),
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -262,7 +262,9 @@ func (a Analyzer) getNodeInterface(
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormNodeBind,
+			Err: errors.New(
+				"Node can't use #bind if it isn't instantiated with the flow that use #extern",
+			),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -270,7 +272,9 @@ func (a Analyzer) getNodeInterface(
 
 	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrExternOverloadingNodeArgs,
+			Err: errors.New(
+				"Flow that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
+			),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
