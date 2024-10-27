@@ -29,18 +29,18 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
-			Message: fmt.Sprintf("Main flow must have exactly 1 inport: got %v", len(io.In)),
+			Message: fmt.Sprintf("Main component must have exactly 1 inport: got %v", len(io.In)),
 		}
 	}
 	if len(io.Out) != 1 {
 		return &compiler.Error{
-			Message: fmt.Sprintf("Main flow must have exactly 1 outport: got %v", len(io.Out)),
+			Message: fmt.Sprintf("Main component must have exactly 1 outport: got %v", len(io.Out)),
 		}
 	}
 
 	enterInport, ok := io.In["start"]
 	if !ok {
-		return &compiler.Error{Message: "Main flow must have 'start' inport"}
+		return &compiler.Error{Message: "Main component must have 'start' inport"}
 	}
 
 	if err := a.analyzeMainComponentPort(enterInport); err != nil {
@@ -49,7 +49,7 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 
 	exitOutport, ok := io.Out["stop"]
 	if !ok {
-		return &compiler.Error{Message: "Main flow must have 'stop' outport"}
+		return &compiler.Error{Message: "Main component must have 'stop' outport"}
 	}
 
 	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
@@ -62,13 +62,13 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 func (a Analyzer) analyzeMainComponentPort(port src.Port) *compiler.Error {
 	if port.IsArray {
 		return &compiler.Error{
-			Message: "Main flow's ports cannot be arrays",
+			Message: "Main component's ports cannot be arrays",
 			Meta:    &port.Meta,
 		}
 	}
 	if !(src.Scope{}).IsTopType(port.TypeExpr) {
 		return &compiler.Error{
-			Message: "Main flow's ports must be of type any",
+			Message: "Main component's ports must be of type any",
 			Meta:    &port.Meta,
 		}
 	}
@@ -96,7 +96,7 @@ func (Analyzer) analyzeMainFlowNodes(
 
 		if nodeEntity.Kind != src.ComponentEntity {
 			return &compiler.Error{
-				Message:  fmt.Sprintf("Main flow's nodes must only refer to flow entities: %v: %v", nodeName, node.EntityRef),
+				Message:  fmt.Sprintf("Main component's nodes must only refer to component entities: %v: %v", nodeName, node.EntityRef),
 				Location: &loc,
 				Meta:     nodeEntity.Meta(),
 			}

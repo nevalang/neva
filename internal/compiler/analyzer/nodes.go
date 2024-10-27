@@ -103,7 +103,7 @@ func (a Analyzer) analyzeNode(
 
 	// Now when we have frame made of parent type parameters constraints
 	// we can resolve cases like `subnode SubFlow<T>`
-	// where `T` refers to type parameter of the flow/interface we're in.
+	// where `T` refers to type parameter of the component/interface we're in.
 	resolvedNodeArgs, err := a.resolver.ResolveExprsWithFrame(
 		node.TypeArgs,
 		resolvedParentParamsFrame,
@@ -185,7 +185,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// TODO probably here
-	// implement interface->flow subtyping
+	// implement interface->component subtyping
 	// in a way where FP possible
 
 	resolvedFlowDI := make(map[string]src.Node, len(node.Deps))
@@ -237,7 +237,7 @@ func (a Analyzer) getNodeInterface(
 
 		if node.Deps != nil {
 			return src.Interface{}, &compiler.Error{
-				Message:  "Only flow node can have dependency injection",
+				Message:  "Only component node can have dependency injection",
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -250,7 +250,7 @@ func (a Analyzer) getNodeInterface(
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Node can't use #bind if it isn't instantiated with the flow that use #extern",
+			Message:  "Node can't use #bind if it isn't instantiated with the component that use #extern",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -258,7 +258,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Flow that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
+			Message:  "Component that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -275,7 +275,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Flow that uses struct inports directive must have no defined inports",
+			Message:  "Component that uses struct inports directive must have no defined inports",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}

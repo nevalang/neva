@@ -15,7 +15,7 @@ func (a Analyzer) analyzeComponent(
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
 		return src.Component{}, &compiler.Error{
-			Message:  "Flow that use #extern directive must provide at least one argument",
+			Message:  "Component that use #extern directive must provide at least one argument",
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}

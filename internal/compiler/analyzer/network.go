@@ -907,7 +907,7 @@ func (a Analyzer) getReceiverPortType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if receiverSide.Node == "in" {
 		return ts.Expr{}, false, &compiler.Error{
-			Message:  "Flow cannot read from self inport",
+			Message:  "Component cannot read from self inport",
 			Location: &scope.Location,
 			Meta:     &receiverSide.Meta,
 		}
@@ -919,7 +919,7 @@ func (a Analyzer) getReceiverPortType(
 		outport, ok := outports[receiverSide.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Message:  fmt.Sprintf("Referenced inport not found in flow's interface: %v", receiverSide.Port),
+				Message:  fmt.Sprintf("Referenced inport not found in component's interface: %v", receiverSide.Port),
 				Location: &scope.Location,
 				Meta:     &receiverSide.Meta,
 			}
@@ -1152,7 +1152,7 @@ func (a Analyzer) getPortSenderType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if senderSidePortAddr.Node == "out" {
 		return ts.Expr{}, false, &compiler.Error{
-			Message:  "Flow cannot read from self outport",
+			Message:  "Component cannot read from self outport",
 			Location: &scope.Location,
 			Meta:     &senderSidePortAddr.Meta,
 		}
@@ -1164,7 +1164,7 @@ func (a Analyzer) getPortSenderType(
 		inport, ok := inports[senderSidePortAddr.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Message:  fmt.Sprintf("Referenced inport not found in flow's interface: %v", senderSidePortAddr.Port),
+				Message:  fmt.Sprintf("Referenced inport not found in component's interface: %v", senderSidePortAddr.Port),
 				Location: &scope.Location,
 				Meta:     &senderSidePortAddr.Meta,
 			}
