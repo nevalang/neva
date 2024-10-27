@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -16,7 +15,7 @@ func (a Analyzer) analyzeComponent(
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
 		return src.Component{}, &compiler.Error{
-			Err:      errors.New("Flow that use #extern directive must provide at least one argument"),
+			Message:  "Flow that use #extern directive must provide at least one argument",
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}
@@ -27,7 +26,7 @@ func (a Analyzer) analyzeComponent(
 			parts := strings.Split(runtimeFuncArg, " ")
 			if len(parts) != 2 {
 				return src.Component{}, &compiler.Error{
-					Err:      errors.New("Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs"),
+					Message:  "Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs",
 					Location: &scope.Location,
 					Meta:     &component.Meta,
 				}
@@ -53,7 +52,7 @@ func (a Analyzer) analyzeComponent(
 	if isRuntimeFunc {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
-				Err:      errors.New("Flow with nodes or network cannot use #extern directive"),
+				Message:  "Component with nodes or network cannot use #extern directive",
 				Location: &scope.Location,
 				Meta:     &component.Meta,
 			}
@@ -75,7 +74,7 @@ func (a Analyzer) analyzeComponent(
 
 	if len(component.Net) == 0 {
 		return src.Component{}, &compiler.Error{
-			Err:      errors.New("Flow must have network"),
+			Message:  "Component must have network",
 			Location: &scope.Location,
 			Meta:     &component.Meta,
 		}

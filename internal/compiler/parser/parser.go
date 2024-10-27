@@ -71,9 +71,9 @@ func (p Parser) ParseFiles(
 		parsedFile, err := p.parseFile(fileBytes)
 		if err != nil {
 			err.Location = compiler.Pointer(src.Location{
-				ModRef:   modRef,
-				PkgName:  pkgName,
-				FileName: fileName,
+				Module:   modRef,
+				Package:  pkgName,
+				Filename: fileName,
 			})
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *comp
 		if e := recover(); e != nil {
 			if _, ok := e.(*compiler.Error); !ok {
 				err = &compiler.Error{
-					Err: fmt.Errorf(
+					Message: fmt.Sprintf(
 						"%v: %v",
 						e,
 						string(debug.Stack()),

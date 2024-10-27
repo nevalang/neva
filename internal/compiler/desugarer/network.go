@@ -134,7 +134,7 @@ func (d Desugarer) desugarNormalConnection(
 		)
 		if err != nil {
 			return desugarConnectionResult{}, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &normConn.Meta,
 			}
@@ -231,7 +231,7 @@ func (d Desugarer) desugarSingleReceiver(
 		firstInportName, err := getFirstInportName(scope, nodes, *receiver.PortAddr)
 		if err != nil {
 			return desugarReceiverResult{}, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &receiver.Meta,
 			}
@@ -316,7 +316,7 @@ func (d Desugarer) desugarChainedConnection(
 			var err error
 			chainHeadPort, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
 			if err != nil {
-				return desugarConnectionResult{}, &compiler.Error{Err: err}
+				return desugarConnectionResult{}, &compiler.Error{Message: err.Error()}
 			}
 		}
 	default:
@@ -493,7 +493,7 @@ func (d Desugarer) desugarSingleSender(
 		if sender.PortAddr.Port == "" {
 			firstOutportName, err := getFirstOutportName(scope, nodes, *sender.PortAddr)
 			if err != nil {
-				return desugarSenderResult{}, &compiler.Error{Err: err}
+				return desugarSenderResult{}, &compiler.Error{Message: err.Error()}
 			}
 			portName = firstOutportName
 			normConn.SenderSide = []src.ConnectionSender{
@@ -642,7 +642,7 @@ func getNodeIOByPortAddr(
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return src.IO{}, &compiler.Error{
-			Err:      fmt.Errorf("node '%s' not found", portAddr.Node),
+			Message:  fmt.Sprintf("node '%s' not found", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -651,7 +651,7 @@ func getNodeIOByPortAddr(
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.IO{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -929,7 +929,7 @@ func (d Desugarer) desugarFanIn(
 	)
 	if err != nil {
 		return nil, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &normConn.Meta,
 		}

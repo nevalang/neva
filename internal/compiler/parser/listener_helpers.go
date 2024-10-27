@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -65,7 +64,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 		v, err := parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: expr.GetText(),
 					Start: core.Position{
@@ -94,7 +93,7 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 		result = v
 	} else {
 		return ts.Expr{}, &compiler.Error{
-			Err: errors.New("Missing type expression"),
+			Message: "Missing type expression",
 			Meta: &core.Meta{
 				Text: expr.GetText(),
 				Start: core.Position{
@@ -187,7 +186,7 @@ func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Er
 	}
 
 	return nil, &compiler.Error{
-		Err: errors.New("Unknown literal type"),
+		Message: "Unknown literal type",
 		Meta: &core.Meta{
 			Text: litExpr.GetText(),
 			Start: core.Position{
@@ -271,7 +270,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 	parsedRef, err := parseEntityRef(instExpr.EntityRef())
 	if err != nil {
 		return nil, &compiler.Error{
-			Err: err,
+			Message: err.Error(),
 			Meta: &core.Meta{
 				Text: instExpr.GetText(),
 				Start: core.Position{
@@ -339,8 +338,8 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler
 	parts := strings.Split(expr.GetText(), ".")
 	if len(parts) > 2 {
 		return core.EntityRef{}, &compiler.Error{
-			Err:  fmt.Errorf("Invalid entity reference %v", expr.GetText()),
-			Meta: &meta,
+			Message: fmt.Sprintf("Invalid entity reference %v", expr.GetText()),
+			Meta:    &meta,
 		}
 	}
 
@@ -453,7 +452,7 @@ func parseNodes(
 		parsedRef, err := parseEntityRef(nodeInst.EntityRef())
 		if err != nil {
 			return nil, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: node.GetText(),
 					Start: core.Position{
@@ -557,11 +556,10 @@ func parsePortAddr(
 		expr.SinglePortAddr() == nil &&
 		expr.LonelySinglePortAddr() == nil &&
 		expr.LonelyArrPortAddr() == nil {
-		return src.PortAddr{}, compiler.NewError(
-			fmt.Errorf("Invalid port address %v", expr.GetText()),
-			&meta,
-			nil,
-		)
+		return src.PortAddr{}, &compiler.Error{
+			Message: fmt.Sprintf("Invalid port address %v", expr.GetText()),
+			Meta:    &meta,
+		}
 	}
 
 	if expr.LonelyArrPortAddr() != nil {
@@ -574,11 +572,10 @@ func parsePortAddr(
 			8,
 		)
 		if err != nil {
-			return src.PortAddr{}, compiler.NewError(
-				err,
-				&meta,
-				nil,
-			)
+			return src.PortAddr{}, &compiler.Error{
+				Message: err.Error(),
+				Meta:    &meta,
+			}
 		}
 
 		idxUint8 := uint8(idxUint)
@@ -613,11 +610,10 @@ func parsePortAddr(
 		8,
 	)
 	if err != nil {
-		return src.PortAddr{}, compiler.NewError(
-			err,
-			&meta,
-			nil,
-		)
+		return src.PortAddr{}, &compiler.Error{
+			Message: err.Error(),
+			Meta:    &meta,
+		}
 	}
 
 	nodeName := fallbackNode
@@ -678,7 +674,7 @@ func parsePrimitiveConstLiteral(
 		boolVal := lit.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
 			return src.Const{}, &compiler.Error{
-				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
+				Message: fmt.Sprintf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
@@ -700,7 +696,7 @@ func parsePrimitiveConstLiteral(
 		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
@@ -725,7 +721,7 @@ func parsePrimitiveConstLiteral(
 		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: lit.GetText(),
 					Start: core.Position{
@@ -802,7 +798,7 @@ func parseMessage(
 		boolVal := constVal.Bool_().GetText()
 		if boolVal != "true" && boolVal != "false" {
 			return src.MsgLiteral{}, &compiler.Error{
-				Err: fmt.Errorf("Invalid boolean value %v", boolVal),
+				Message: fmt.Sprintf("Invalid boolean value %v", boolVal),
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
@@ -821,7 +817,7 @@ func parseMessage(
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
 			return src.MsgLiteral{}, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
@@ -843,7 +839,7 @@ func parseMessage(
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
 			return src.MsgLiteral{}, &compiler.Error{
-				Err: err,
+				Message: err.Error(),
 				Meta: &core.Meta{
 					Text: constVal.GetText(),
 					Start: core.Position{
@@ -1052,8 +1048,8 @@ func parseConstDef(
 	parsedTypeExpr, err := parseTypeExpr(actx.TypeExpr())
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
+			Message: err.Error(),
+			Meta:    &meta,
 		}
 	}
 
@@ -1066,8 +1062,8 @@ func parseConstDef(
 		parsedRef, err := parseEntityRef(entityRef)
 		if err != nil {
 			return src.Entity{}, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
+				Message: err.Error(),
+				Meta:    &meta,
 			}
 		}
 		parsedConst.Value.Ref = &parsedRef
@@ -1080,8 +1076,8 @@ func parseConstDef(
 	parsedMsgLit, err := parseMessage(constLit)
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
+			Message: err.Error(),
+			Meta:    &meta,
 		}
 	}
 

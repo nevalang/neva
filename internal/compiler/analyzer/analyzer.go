@@ -25,21 +25,21 @@ type Analyzer struct {
 
 func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
 	location := src.Location{
-		ModRef:  build.EntryModRef,
-		PkgName: mainPkgName,
+		Module:  build.EntryModRef,
+		Package: mainPkgName,
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
 	if !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      fmt.Errorf("entry module not found: %s", build.EntryModRef),
+			Message:  fmt.Sprintf("entry module not found: %s", build.EntryModRef),
 			Location: &location,
 		}
 	}
 
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
-			Err:      errors.New("main package not found"),
+			Message:  "main package not found",
 			Location: &location,
 		}
 	}
@@ -89,17 +89,17 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
 	if modRef != build.EntryModRef && modRef.Version == "" {
 		return nil, &compiler.Error{
-			Err:      errors.New("every dependency module must have version"),
-			Location: &src.Location{ModRef: modRef},
+			Message:  "every dependency module must have version",
+			Location: &src.Location{Module: modRef},
 		}
 	}
 
-	location := src.Location{ModRef: modRef}
+	location := src.Location{Module: modRef}
 	mod := build.Modules[modRef]
 
 	if len(mod.Packages) == 0 {
 		return nil, &compiler.Error{
-			Err:      errors.New("module must contain at least one package"),
+			Message:  "module must contain at least one package",
 			Location: &location,
 		}
 	}
@@ -110,8 +110,8 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 	for pkgName, pkg := range pkgsCopy {
 		scope := src.Scope{
 			Location: src.Location{
-				ModRef:  modRef,
-				PkgName: pkgName,
+				Module:  modRef,
+				Package: pkgName,
 			},
 			Build: build,
 		}
@@ -120,7 +120,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 		if err != nil {
 			return nil, compiler.Error{
 				Location: &src.Location{
-					PkgName: pkgName,
+					Package: pkgName,
 				},
 			}.Wrap(err)
 		}
@@ -134,7 +134,7 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	if len(pkg) == 0 {
 		return nil, &compiler.Error{
-			Err:      errors.New("package must contain at least one file"),
+			Message:  "package must contain at least one file",
 			Location: &scope.Location,
 		}
 	}
@@ -148,26 +148,22 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 		}
 	}
 
-	if err := pkg.Entities(func(entity src.Entity, entityName, fileName string) error {
-		scopeWithFile := scope.WithLocation(src.Location{
-			FileName: fileName,
-			ModRef:   scope.Location.ModRef,
-			PkgName:  scope.Location.PkgName,
+	for result := range pkg.Entities() {
+		relocatedScope := scope.Relocate(src.Location{
+			Module:   scope.Location.Module,
+			Package:  scope.Location.Package,
+			Filename: result.FileName,
 		})
 
-		resolvedEntity, err := a.analyzeEntity(entity, scopeWithFile)
+		analyzedEntity, err := a.analyzeEntity(result.Entity, relocatedScope)
 		if err != nil {
-			return compiler.Error{
-				Location: &scopeWithFile.Location,
-				Meta:     entity.Meta(),
+			return nil, compiler.Error{
+				Location: &relocatedScope.Location,
+				Meta:     result.Entity.Meta(),
 			}.Wrap(err)
 		}
 
-		analyzedFiles[fileName].Entities[entityName] = resolvedEntity
-
-		return nil
-	}); err != nil {
-		return nil, err.(*compiler.Error) //nolint:forcetypeassert
+		analyzedFiles[result.FileName].Entities[result.EntityName] = analyzedEntity
 	}
 
 	return analyzedFiles, nil
@@ -179,7 +175,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		Kind:     entity.Kind,
 	}
 
-	isStd := scope.Location.ModRef.Path == "std"
+	isStd := scope.Location.Module.Path == "std"
 
 	switch entity.Kind {
 	case src.TypeEntity:
@@ -226,7 +222,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		resolvedEntity.Component = analyzedComponent
 	default:
 		return src.Entity{}, &compiler.Error{
-			Err:      fmt.Errorf("unknown entity kind: %v", entity.Kind),
+			Message:  fmt.Sprintf("unknown entity kind: %v", entity.Kind),
 			Location: &scope.Location,
 			Meta:     entity.Meta(),
 		}

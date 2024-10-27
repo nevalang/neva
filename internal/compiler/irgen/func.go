@@ -46,14 +46,14 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error)
 	entity, location, err := scope.Entity(compiler.ParseEntityRef(args[0]))
 	if err != nil {
 		return nil, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 		}
 	}
 
 	return getIRMsgBySrcRef(
 		entity.Const.Value,
-		scope.WithLocation(location),
+		scope.Relocate(location),
 		entity.Const.TypeExpr,
 	)
 }

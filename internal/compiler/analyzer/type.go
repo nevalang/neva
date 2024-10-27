@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"errors"
-
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -17,7 +15,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	if !params.allowEmptyBody && def.BodyExpr == nil {
 		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
-			Err:      errors.New("Type definition must have non-empty body"),
+			Message:  "Type definition must have non-empty body",
 			Location: &scope.Location,
 			Meta:     &meta,
 		}
@@ -29,7 +27,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	if err != nil {
 		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &meta,
 		}
@@ -46,7 +44,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *comp
 	if err != nil {
 		meta := expr.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &meta,
 		}
@@ -64,7 +62,7 @@ func (a Analyzer) analyzeTypeParams(
 	resolvedParams, _, err := a.resolver.ResolveParams(params, scope)
 	if err != nil {
 		return nil, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 		}
 	}

@@ -1,8 +1,6 @@
 package irgen
 
 import (
-	"errors"
-
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -18,11 +16,11 @@ func getIRMsgBySrcRef(
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
 			return nil, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 			}
 		}
-		return getIRMsgBySrcRef(entity.Const.Value, scope.WithLocation(location), typeExpr)
+		return getIRMsgBySrcRef(entity.Const.Value, scope.Relocate(location), typeExpr)
 	}
 
 	switch {
@@ -102,7 +100,7 @@ func getIRMsgBySrcRef(
 	}
 
 	return nil, &compiler.Error{
-		Err:      errors.New("unknown msg type"),
+		Message:  "unknown msg type",
 		Location: &scope.Location,
 	}
 }

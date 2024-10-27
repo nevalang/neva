@@ -18,7 +18,7 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 		if err != nil {
 			return src.Build{},
 				compiler.Error{
-					Location: &src.Location{ModRef: modRef},
+					Location: &src.Location{Module: modRef},
 				}.Wrap(err)
 		}
 		desugaredMods[modRef] = desugaredMod
@@ -63,15 +63,15 @@ func (d Desugarer) desugarModule(
 		scope := src.Scope{
 			Build: build, // it's important to patch build before desugar package so we can resolve references to std
 			Location: src.Location{
-				ModRef:  modRef,
-				PkgName: pkgName,
+				Module:  modRef,
+				Package: pkgName,
 			},
 		}
 
 		desugaredPkg, err := d.desugarPkg(pkg, scope)
 		if err != nil {
 			return src.Module{}, compiler.Error{
-				Location: &src.Location{PkgName: pkgName},
+				Location: &src.Location{Package: pkgName},
 			}.Wrap(err)
 		}
 
@@ -88,16 +88,16 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *c
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
-		newScope := scope.WithLocation(src.Location{
-			ModRef:   scope.Location.ModRef,
-			PkgName:  scope.Location.PkgName,
-			FileName: fileName,
+		newScope := scope.Relocate(src.Location{
+			Module:   scope.Location.Module,
+			Package:  scope.Location.Package,
+			Filename: fileName,
 		})
 
 		desugaredFile, err := d.desugarFile(file, newScope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: &src.Location{FileName: fileName},
+				Location: &src.Location{Filename: fileName},
 			}.Wrap(err)
 		}
 

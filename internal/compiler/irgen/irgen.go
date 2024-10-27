@@ -36,9 +36,9 @@ func (g Generator) Generate(
 	scope := src.Scope{
 		Build: build,
 		Location: src.Location{
-			ModRef:   build.EntryModRef,
-			PkgName:  mainPkgName,
-			FileName: "",
+			Module:   build.EntryModRef,
+			Package:  mainPkgName,
+			Filename: "",
 		},
 	}
 
@@ -89,7 +89,7 @@ func (g Generator) processNode(
 	entity, location, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		return &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 		}
 	}
@@ -102,7 +102,7 @@ func (g Generator) processNode(
 	runtimeFuncRef, err := g.getFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
 		return &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &location,
 			Meta:     &component.Meta,
 		}
@@ -112,7 +112,7 @@ func (g Generator) processNode(
 		cfgMsg, err := getConfigMsg(nodeCtx.node, scope)
 		if err != nil {
 			return &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 			}
 		}
@@ -127,7 +127,7 @@ func (g Generator) processNode(
 		return nil
 	}
 
-	newScope := scope.WithLocation(location) // only use new location if that's not builtin
+	newScope := scope.Relocate(location) // only use new location if that's not builtin
 
 	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
@@ -139,7 +139,7 @@ func (g Generator) processNode(
 	)
 	if err != nil {
 		return &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &newScope.Location,
 		}
 	}
@@ -148,7 +148,7 @@ func (g Generator) processNode(
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
-				Err:      fmt.Errorf("node usage not found: %v", nodeName),
+				Message:  fmt.Sprintf("node usage not found: %v", nodeName),
 				Location: &location,
 				Meta:     &node.Meta,
 			}
@@ -169,11 +169,7 @@ func (g Generator) processNode(
 		}
 
 		if err := g.processNode(subNodeCtx, scopeToUse, result); err != nil {
-			return &compiler.Error{
-				Err:      fmt.Errorf("%w: node '%v'", err, nodeName),
-				Location: &location,
-				Meta:     &component.Meta,
-			}
+			return err
 		}
 	}
 

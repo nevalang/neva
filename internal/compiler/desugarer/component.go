@@ -1,16 +1,11 @@
 package desugarer
 
 import (
-	"errors"
 	"maps"
 	"slices"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-)
-
-var ErrConstSenderEntityKind = errors.New(
-	"Entity that is used as a const reference in flow's network must be of kind constant",
 )
 
 type handleComponentResult struct {

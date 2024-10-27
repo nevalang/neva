@@ -48,7 +48,7 @@ type FrontendResult struct {
 func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Error) {
 	raw, root, err := f.builder.Build(ctx, main)
 	if err != nil {
-		return FrontendResult{}, Error{Location: &sourcecode.Location{PkgName: main}}.Wrap(err)
+		return FrontendResult{}, Error{Location: &sourcecode.Location{Package: main}}.Wrap(err)
 	}
 
 	parsedMods, err := f.parser.ParseModules(raw.Modules)

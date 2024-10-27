@@ -36,14 +36,6 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 	return entity, filename, nil
 }
 
-func (mod Module) Files(f func(file File, pkgName, fileName string)) {
-	for pkgName, pkg := range mod.Packages {
-		for fileName, file := range pkg {
-			f(file, pkgName, fileName)
-		}
-	}
-}
-
 type ModuleManifest struct {
 	LanguageVersion string               `json:"neva,omitempty" yaml:"neva,omitempty"`
 	Deps            map[string]ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
@@ -74,15 +66,27 @@ func (p Package) Entity(entityName string) (entity Entity, filename string, ok b
 	return Entity{}, "", false
 }
 
-func (p Package) Entities(f func(entity Entity, entityName string, fileName string) error) error {
-	for fileName, file := range p {
-		for entityName, entity := range file.Entities {
-			if err := f(entity, entityName, fileName); err != nil {
-				return err
+type EntitiesResult struct {
+	EntityName string
+	FileName   string
+	Entity     Entity
+}
+
+// Entities iterates over all entities in the package using the range-func protocol.
+func (pkg Package) Entities() func(func(EntitiesResult) bool) {
+	return func(yield func(EntitiesResult) bool) {
+		for fileName, file := range pkg {
+			for entityName, entity := range file.Entities {
+				if !yield(EntitiesResult{
+					EntityName: entityName,
+					FileName:   fileName,
+					Entity:     entity,
+				}) {
+					return
+				}
 			}
 		}
 	}
-	return nil
 }
 
 type File struct {
@@ -153,7 +157,6 @@ type TypeParams struct {
 	Meta   core.Meta  `json:"meta,omitempty"`
 }
 
-// ToFrame is a utility function.
 func (t TypeParams) ToFrame() map[string]ts.Def {
 	frame := make(map[string]ts.Def, len(t.Params))
 	for _, param := range t.Params {

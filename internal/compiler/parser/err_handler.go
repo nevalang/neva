@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"errors"
-
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -21,7 +19,7 @@ func (c *CustomErrorListener) SyntaxError(
 	e antlr.RecognitionException,
 ) {
 	c.Errors = append(c.Errors, &compiler.Error{
-		Err: errors.New(msg),
+		Message: msg,
 		Meta: &core.Meta{
 			Start: core.Position{
 				Line:   line,

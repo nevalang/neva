@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -11,8 +10,8 @@ import (
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
-			Err:  errors.New("Main flow cannot have type parameters"),
-			Meta: &cmp.Interface.Meta,
+			Message: "Main component cannot have type parameters",
+			Meta:    &cmp.Interface.Meta,
 		}
 	}
 
@@ -30,46 +29,48 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("Main flow must have exactly 1 inport: got %v", len(io.In)),
+			Message: fmt.Sprintf("Main flow must have exactly 1 inport: got %v", len(io.In)),
 		}
 	}
 	if len(io.Out) != 1 {
 		return &compiler.Error{
-			Err: fmt.Errorf("Main flow must have exactly 1 outport: got %v", len(io.Out)),
+			Message: fmt.Sprintf("Main flow must have exactly 1 outport: got %v", len(io.Out)),
 		}
 	}
 
 	enterInport, ok := io.In["start"]
 	if !ok {
-		return &compiler.Error{Err: errors.New("Main flow must have 'start' inport")}
+		return &compiler.Error{Message: "Main flow must have 'start' inport"}
 	}
-	if err := a.analyzeMainFlowPort(enterInport); err != nil {
-		return &compiler.Error{
-			Err:  err,
-			Meta: &enterInport.Meta,
-		}
+
+	if err := a.analyzeMainComponentPort(enterInport); err != nil {
+		return err
 	}
 
 	exitOutport, ok := io.Out["stop"]
 	if !ok {
-		return &compiler.Error{Err: errors.New("Main flow must have 'stop' outport")}
+		return &compiler.Error{Message: "Main flow must have 'stop' outport"}
 	}
-	if err := a.analyzeMainFlowPort(exitOutport); err != nil {
-		return &compiler.Error{
-			Err:  err,
-			Meta: &exitOutport.Meta,
-		}
+
+	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (a Analyzer) analyzeMainFlowPort(port src.Port) error {
+func (a Analyzer) analyzeMainComponentPort(port src.Port) *compiler.Error {
 	if port.IsArray {
-		return errors.New("Main flow's ports cannot be arrays")
+		return &compiler.Error{
+			Message: "Main flow's ports cannot be arrays",
+			Meta:    &port.Meta,
+		}
 	}
 	if !(src.Scope{}).IsTopType(port.TypeExpr) {
-		return errors.New("Main flow's ports must be of type any")
+		return &compiler.Error{
+			Message: "Main flow's ports must be of type any",
+			Meta:    &port.Meta,
+		}
 	}
 	return nil
 }
@@ -82,7 +83,7 @@ func (Analyzer) analyzeMainFlowNodes(
 		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {
 			return &compiler.Error{
-				Err: fmt.Errorf(
+				Message: fmt.Sprintf(
 					"Referenced entity not found: node '%v', ref '%v', details '%v'",
 					nodeName,
 					node.EntityRef,
@@ -95,7 +96,7 @@ func (Analyzer) analyzeMainFlowNodes(
 
 		if nodeEntity.Kind != src.ComponentEntity {
 			return &compiler.Error{
-				Err:      fmt.Errorf("Main flow's nodes must only refer to flow entities: %v: %v", nodeName, node.EntityRef),
+				Message:  fmt.Sprintf("Main flow's nodes must only refer to flow entities: %v: %v", nodeName, node.EntityRef),
 				Location: &loc,
 				Meta:     nodeEntity.Meta(),
 			}

@@ -16,14 +16,14 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	moduleVersion, semverErr := semver.NewVersion(mod.Manifest.LanguageVersion)
 	if semverErr != nil {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
+			Message: fmt.Sprintf("%w: %v", ErrCompilerVersion, semverErr),
 		}
 	}
 
 	compilerVersion, semverErr := semver.NewVersion(pkg.Version)
 	if semverErr != nil {
 		return &compiler.Error{
-			Err: fmt.Errorf("%w: %v", ErrCompilerVersion, semverErr),
+			Message: fmt.Sprintf("%w: %v", ErrCompilerVersion, semverErr),
 		}
 	}
 
@@ -32,7 +32,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	// and vice versa if got major less than ours
 	if moduleVersion.Major() != compilerVersion.Major() {
 		return &compiler.Error{
-			Err: fmt.Errorf(
+			Message: fmt.Sprintf(
 				"%w: different majors: module %v wants %v while current is %v",
 				ErrCompilerVersion,
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,
@@ -44,7 +44,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	// so we make sure module don't want any features we don't have
 	if moduleVersion.Minor() > compilerVersion.Minor() {
 		return &compiler.Error{
-			Err: fmt.Errorf(
+			Message: fmt.Sprintf(
 				"%w: incompatible minors: module %v wants %v while current is %v",
 				ErrCompilerVersion,
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,
@@ -68,7 +68,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	// but it's not ok if module a wants some patch we don't really have
 	if moduleVersion.Patch() > compilerVersion.Patch() {
 		return &compiler.Error{
-			Err: fmt.Errorf(
+			Message: fmt.Sprintf(
 				"%w: incompatible patch: module %v wants %v while current is %v",
 				ErrCompilerVersion,
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,

@@ -2,24 +2,18 @@ package compiler
 
 import (
 	"fmt"
+	"strings"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type Error struct {
-	Err      error
+	Message  string
 	Location *src.Location
 	Meta     *core.Meta
-	child    *Error
-}
 
-func NewError(err error, meta *core.Meta, location *src.Location) *Error {
-	return &Error{
-		Err:      err,
-		Meta:     meta,
-		Location: location,
-	}
+	child *Error
 }
 
 func (e Error) Wrap(child *Error) *Error {
@@ -27,31 +21,26 @@ func (e Error) Wrap(child *Error) *Error {
 	return &e
 }
 
-// FIXME: it doesn't make sense to wrap if we don't use anything from parent
-func (e Error) unwrap() Error {
-	for e.child != nil {
-		e = *e.child
-	}
-	return e
-}
+func (e *Error) Error() string {
+	var builder strings.Builder
 
-func (e Error) Error() string {
-	e = e.unwrap()
+	current := e
+	for current != nil {
+		hasLocation := current.Location != nil
+		hasMeta := current.Meta != nil
 
-	hasErr := e.Err != nil
-	hasMeta := e.Meta != nil
-	hasLocation := e.Location != nil
+		if hasLocation && hasMeta {
+			fmt.Fprintf(&builder, "%v:%v: %v\n", *current.Location, current.Meta.Start, current.Message)
+		} else if hasLocation {
+			fmt.Fprintf(&builder, "%v: %v\n", *current.Location, current.Message)
+		} else if hasMeta {
+			fmt.Fprintf(&builder, "%v: %v\n", current.Meta.Start, current.Message)
+		} else {
+			builder.WriteString(current.Message + "\n")
+		}
 
-	switch {
-	case hasLocation && hasMeta:
-		return fmt.Sprintf("%v:%v: %v", *e.Location, e.Meta.Start, e.Err)
-	case hasLocation:
-		return fmt.Sprintf("%v: %v", *e.Location, e.Err)
-	case hasMeta:
-		return fmt.Sprintf("%v: %v", e.Meta.Start, e.Err)
-	case hasErr:
-		return e.Err.Error()
+		current = current.child
 	}
 
-	panic(e)
+	return builder.String()
 }
