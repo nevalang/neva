@@ -89,7 +89,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.DictOrStruct != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -109,7 +112,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.DictOrStruct != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -126,7 +132,10 @@ func (a Analyzer) analyzeConst(
 		}
 		if constant.Value.Message.Float != nil && constant.Value.Message.Int != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(	
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -137,7 +146,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.DictOrStruct != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -157,7 +169,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.DictOrStruct != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -176,7 +191,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.DictOrStruct != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -195,7 +213,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.Enum != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}
@@ -214,7 +235,10 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil {
 			return src.Const{}, &compiler.Error{
-				Message:  fmt.Sprintf("%w: %v", ErrConstSeveralValues, constant.Value.Message),
+				Message: fmt.Sprintf(
+					"Constant cannot have several values at once: %v",
+					constant.Value.Message,
+				),
 				Location: &scope.Location,
 				Meta:     &constant.Meta,
 			}

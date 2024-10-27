@@ -324,8 +324,8 @@ func (a Analyzer) analyzePortAddrReceiver(
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
 			return src.PortAddr{}, &compiler.Error{
 				Message: fmt.Sprintf(
-					"Incompatible types: %v -> %v: %w",
-					analyzedSenders[i], portAddr, err,
+					"Incompatible types: %v -> %v: %v",
+					analyzedSenders[i], portAddr, err.Error(),
 				),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
@@ -386,8 +386,8 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
 			return src.Connection{}, &compiler.Error{
 				Message: fmt.Sprintf(
-					"Incompatible types: %v -> %v: %w",
-					analyzedSenders[i], chainHead, err,
+					"Incompatible types: %v -> %v: %v",
+					analyzedSenders[i], chainHead, err.Error(),
 				),
 				Location: &scope.Location,
 				Meta:     &chainedConn.Meta,
@@ -678,8 +678,8 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	); err != nil {
 		return &compiler.Error{
 			Message: fmt.Sprintf(
-				"Incompatible types: %v -> %v: %w",
-				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
+				"Incompatible types: %v -> %v: %v",
+				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err.Error(),
 			),
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
@@ -1315,7 +1315,7 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 
 	if entity.Kind != src.ConstEntity {
 		return ts.Expr{}, &compiler.Error{
-			Message:  fmt.Sprintf("%w: %v", errors.New("Entity found but is not constant"), entity.Kind),
+			Message:  fmt.Sprintf("%v: %v", errors.New("Entity found but is not constant"), entity.Kind),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}

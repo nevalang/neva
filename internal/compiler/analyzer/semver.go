@@ -16,14 +16,19 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	moduleVersion, semverErr := semver.NewVersion(mod.Manifest.LanguageVersion)
 	if semverErr != nil {
 		return &compiler.Error{
-			Message: fmt.Sprintf("%w: %v", ErrCompilerVersion, semverErr),
+			Message: fmt.Sprintf(
+				"Module %v has invalid language Version: %v",
+				modRef, semverErr,
+			),
 		}
 	}
 
 	compilerVersion, semverErr := semver.NewVersion(pkg.Version)
 	if semverErr != nil {
 		return &compiler.Error{
-			Message: fmt.Sprintf("%w: %v", ErrCompilerVersion, semverErr),
+			Message: fmt.Sprintf(
+				"Compiler version is invalid: %v", semverErr,
+			),
 		}
 	}
 
@@ -33,8 +38,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	if moduleVersion.Major() != compilerVersion.Major() {
 		return &compiler.Error{
 			Message: fmt.Sprintf(
-				"%w: different majors: module %v wants %v while current is %v",
-				ErrCompilerVersion,
+				"Incompatible compiler versions: module %v wants %v while current is %v",
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
@@ -45,8 +49,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	if moduleVersion.Minor() > compilerVersion.Minor() {
 		return &compiler.Error{
 			Message: fmt.Sprintf(
-				"%w: incompatible minors: module %v wants %v while current is %v",
-				ErrCompilerVersion,
+				"Incompatible compiler versions: module %v wants %v while current is %v",
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
@@ -69,8 +72,7 @@ func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Er
 	if moduleVersion.Patch() > compilerVersion.Patch() {
 		return &compiler.Error{
 			Message: fmt.Sprintf(
-				"%w: incompatible patch: module %v wants %v while current is %v",
-				ErrCompilerVersion,
+				"Incompatible compiler versions: module %v wants %v while current is %v",
 				modRef, mod.Manifest.LanguageVersion, pkg.Version,
 			),
 		}
