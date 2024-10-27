@@ -103,7 +103,7 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 	if entity.Kind != src.ConstEntity {
 		return ts.Expr{}, &compiler.Error{
 			Message: fmt.Sprintf(
-				"Entity that is used as a const reference in flow's network must be of kind constant: %v",
+				"Entity that is used as a const reference in component's network must be of kind constant: %v",
 				entity.Kind,
 			),
 			Location: &scope.Location,
