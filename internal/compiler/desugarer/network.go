@@ -473,10 +473,11 @@ func (d Desugarer) desugarDeferredConnection(
 }
 
 type desugarSenderResult struct {
-	replace src.Connection
-	insert  []src.Connection
+	replace src.Connection   // receiver side might need desugaring
+	insert  []src.Connection // already desugared
 }
 
+// desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
 func (d Desugarer) desugarSingleSender(
 	normConn src.NormalConnection,
 	scope src.Scope,
@@ -487,7 +488,6 @@ func (d Desugarer) desugarSingleSender(
 ) (desugarSenderResult, *compiler.Error) {
 	sender := normConn.SenderSide[0]
 
-	// mark outport as used and desugar unnamed port if needed
 	if sender.PortAddr != nil {
 		portName := sender.PortAddr.Port
 		if sender.PortAddr.Port == "" {
@@ -517,7 +517,6 @@ func (d Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	// if conn has selectors, desugar them, replace original connection and insert what's needed
 	if len(sender.StructSelector) != 0 {
 		result, err := d.desugarStructSelectors(
 			normConn,
@@ -550,7 +549,6 @@ func (d Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	// if sender is const (ref or literal), replace original connection with desugared and insert const and node
 	if sender.Const != nil {
 		if sender.Const.Value.Ref != nil {
 			result, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodes, scope)
@@ -1045,20 +1043,8 @@ func (d Desugarer) desugarTernarySender(
 		},
 	}
 
-	desugarReplaceRes, err := d.desugarConnection(
-		sugaredReplace,
-		usedNodeOutports,
-		scope,
-		nodes,
-		nodesToInsert,
-		constsToInsert,
-	)
-	if err != nil {
-		return handleTernarySenderResult{}, err
-	}
-
 	return handleTernarySenderResult{
+		replace: sugaredReplace,
 		insert:  desugaredInsert,
-		replace: *desugarReplaceRes.replace,
 	}, nil
 }
