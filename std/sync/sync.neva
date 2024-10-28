@@ -17,4 +17,4 @@
 // ---
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
-pub flow WaitGroup(count int, sig any) (sig any)
+pub def WaitGroup(count int, sig any) (sig any)

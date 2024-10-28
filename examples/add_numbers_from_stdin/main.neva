@@ -1,13 +1,13 @@
 import { io, strconv }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	App, Println
 	---
 	:start -> app
 	[app:res, app:err] -> println -> :stop
 }
 
-flow App(sig) (res int, err error) {
+def App(sig) (res int, err error) {
 	readFirstInt ReadIntFromStdin
 	readSecondInt ReadIntFromStdin
 	add Add<int>
@@ -19,7 +19,7 @@ flow App(sig) (res int, err error) {
 	add -> :res
 }
 
-flow ReadIntFromStdin(sig) (num int, err error) {
+def ReadIntFromStdin(sig) (num int, err error) {
 	io.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln -> parseNum

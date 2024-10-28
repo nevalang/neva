@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Foo, Println<int>
     ---
     :start -> foo:sig
@@ -8,6 +8,6 @@ flow Main(start) (stop) {
 
 const s struct { a int } = { a: 42 }
 
-flow Foo(sig any) (msg struct{a int}) {
+def Foo(sig any) (msg struct{a int}) {
     :sig -> { $s -> :msg }
 }

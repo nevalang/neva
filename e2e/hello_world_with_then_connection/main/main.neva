@@ -1,6 +1,6 @@
 const greeting string = 'Hello, World!'
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	println Println<string>
 	---
 	:start -> { $greeting -> println:data }

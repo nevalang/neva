@@ -1,6 +1,6 @@
 interface IPrinter<T>(data T) (sig T)
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     Secondflow {
         depNode Println<any>
     }
@@ -9,7 +9,7 @@ flow Main(start any) (stop any) {
     secondflow:msg -> :stop
 }
 
-flow Secondflow (msg any) (msg any) {
+def Secondflow (msg any) (msg any) {
     depNode IPrinter<any>
     ---
     :msg -> depNode:data

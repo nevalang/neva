@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     WithDep { Println }
     ---
     :start -> withDep -> :stop
@@ -6,7 +6,7 @@ flow Main(start) (stop) {
 
 interface IPrinter<T>(data T) (sig T)
 
-flow WithDep (msg any) (msg any) {
+def WithDep (msg any) (msg any) {
     IPrinter<any>
     ---
     :msg -> iPrinter -> :msg

@@ -1,5 +1,5 @@
 #extern(join)
-pub flow Join(data list<string>) (res string)
+pub def Join(data list<string>) (res string)
 
 #extern(split)
-pub flow Split(data string, delim string) (res list<string>)
+pub def Split(data string, delim string) (res list<string>)

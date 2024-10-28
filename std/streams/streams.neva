@@ -9,7 +9,7 @@ pub type ZipResult<T, R> struct {
 // where first is from the first stream and second is from the second stream.
 // Stops when either stream is exhausted.
 #extern(stream_zip)
-pub flow Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)
+pub def Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)
 
 // === Product ===
 
@@ -22,7 +22,7 @@ pub type ProductResult<T, Y> struct {
 // then outputs stream of every combination of elements from the first stream with
 // elements from the second.
 #extern(stream_product)
-pub flow Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
+pub def Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
 
 // TODO?
-// pub flow Uncons<T>(data stream<T>) (head T, tail stream<T>)
+// pub def Uncons<T>(data stream<T>) (head T, tail stream<T>)

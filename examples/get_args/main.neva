@@ -1,6 +1,6 @@
 import { os }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	os.Args, ListToStream, ForEach{Println}, Wait
 	---
 	:start -> args -> listToStream -> forEach -> wait -> :stop

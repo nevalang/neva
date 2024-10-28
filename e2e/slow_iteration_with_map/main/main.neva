@@ -6,7 +6,7 @@ import { time }
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     ListToStream<int>
     Map<int, int>{Slow}
     List
@@ -17,7 +17,7 @@ flow Main(start) (stop) {
     }
 }
 
-flow Slow(data int) (res int) {
+def Slow(data int) (res int) {
     time.Delay<int>
     Decr<int>
     ---

@@ -1,2 +1,2 @@
 #extern(regexp_submatch)
-pub flow Submatch(regexp string, data string) (res list<string>, err error)
+pub def Submatch(regexp string, data string) (res list<string>, err error)

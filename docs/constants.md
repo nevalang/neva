@@ -26,7 +26,7 @@ It's possible to use constant as a network-sender by refering to it with `$` pre
 ```neva
 const one int = 1
 
-flow Inc(data int) (res int) {
+def Inc(data int) (res int) {
     Add
     ---
     $one -> add:acc
@@ -40,7 +40,7 @@ flow Inc(data int) (res int) {
 You can omit explicit constants; the compiler will create and refer to them implicitly.
 
 ```neva
-flow Inc(data int) (res int) {
+def Inc(data int) (res int) {
     Add
     ---
     1 -> add:acc

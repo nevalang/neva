@@ -44,7 +44,7 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	mainNevaContent := `flow Main(start) (stop) {
+	mainNevaContent := `def Main(start) (stop) {
 	Println
 	---
 	:start -> ('Hello, World!' -> println -> :stop)

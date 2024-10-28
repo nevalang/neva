@@ -167,7 +167,7 @@ Here we see 3 packages: `main`, `foo` and `foo/bar`. Note that `foo/bar` is a se
 The main package must contain a `Main` component with a specific signature and no exports.
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
     // ...
 }
 ```
@@ -188,7 +188,7 @@ A `.neva` file contains imports and entities. Files organize packages for readab
 pub type myFloat float
 
 // pkg/bar.neva
-flow Bar(mf myFloat) (sig) {
+def Bar(mf myFloat) (sig) {
     // ...
 }
 ```
@@ -287,7 +287,7 @@ pub const p int = 3.14
 // foo/bar/bar.neva
 import { @/foo }
 
-pub flow AddP(el float) (res float) {
+pub def AddP(el float) (res float) {
   Add<float>
   ---
   $foo.p -> add:acc
@@ -301,7 +301,7 @@ import {
   @/foo/bar
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
   bar.AddP, Println
   ---
   :start -> ($foo.p -> addP:el -> println -> :stop)

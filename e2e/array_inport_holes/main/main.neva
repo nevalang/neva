@@ -1,6 +1,6 @@
 import { io }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	Printf
 	---
 	:start -> { '$1 $2 $3' -> printf:tpl }

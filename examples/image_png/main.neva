@@ -1,6 +1,6 @@
 import { io, image }
 
-flow NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
+def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
 	---
 	:x -> pb:x
@@ -9,7 +9,7 @@ flow NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb -> :pixel
 }
 
-flow NewColor(r int, g int, b int, a int) (color image.RGBA) {
+def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 	cb Struct<image.RGBA>
 	---
 	:r -> cb:r
@@ -19,7 +19,7 @@ flow NewColor(r int, g int, b int, a int) (color image.RGBA) {
 	cb -> :color
 }
 
-flow NewStream(p image.Pixel) (s stream<image.Pixel>) {
+def NewStream(p image.Pixel) (s stream<image.Pixel>) {
 	sb Struct<stream<image.Pixel>>
 	---
 	0 -> sb:idx
@@ -28,7 +28,7 @@ flow NewStream(p image.Pixel) (s stream<image.Pixel>) {
 	sb -> :s
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
 	io.WriteAll, printErr Println

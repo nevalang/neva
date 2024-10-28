@@ -1,10 +1,10 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     ForEach{Handler}, Wait
     ---
     :start -> 1..5 -> forEach -> wait -> :stop
 }
 
-flow Handler(data int) (sig any) {
+def Handler(data int) (sig any) {
     Match, Println
 
     ---

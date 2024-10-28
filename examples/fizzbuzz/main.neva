@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Map<int, any>{FizzBuzz}
     ForEach{Println}
     Wait
@@ -6,7 +6,7 @@ flow Main(start) (stop) {
     :start -> 1..101 -> map -> forEach -> wait -> :stop
 }
 
-flow FizzBuzz(data int) (res string|int) {
+def FizzBuzz(data int) (res string|int) {
     Select<string|int>, Mod15, Mod3, Mod5
     ---
     :data -> [mod15, select:then[3]]
@@ -26,7 +26,7 @@ flow FizzBuzz(data int) (res string|int) {
     select -> :res
 }
 
-flow Mod15(num int) (then int, else int) {
+def Mod15(num int) (then int, else int) {
     h ModHelper
     ---
     :num -> h:num
@@ -35,7 +35,7 @@ flow Mod15(num int) (then int, else int) {
     h:else -> :else
 }
 
-flow Mod3(num int) (then int, else int) {
+def Mod3(num int) (then int, else int) {
     h ModHelper
     ---
     :num -> h:num
@@ -44,7 +44,7 @@ flow Mod3(num int) (then int, else int) {
     h:else -> :else
 }
 
-flow Mod5(num int) (then int, else int) {
+def Mod5(num int) (then int, else int) {
     h ModHelper
     ---
     :num -> h:num
@@ -53,7 +53,7 @@ flow Mod5(num int) (then int, else int) {
     h:else -> :else
 }
 
-flow ModHelper(num int, den int) (then int, else int) {
+def ModHelper(num int, den int) (then int, else int) {
     Mod, Eq, Cond<int>
     ---
     :num -> [mod:num, cond:data]

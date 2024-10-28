@@ -1,6 +1,6 @@
-# FAQ
+# Questions And Answers
 
-This FAQ addresses questions not covered in other documentation pages and explains certain language design decisions.
+This Q&A addresses questions not covered in other documentation pages and explains certain language design decisions.
 
 ## Is Neva "classical FBP"?
 
@@ -81,3 +81,13 @@ Names are chosen to be familiar to most programmers, easing the paradigm shift.
 ## Why do `struct` and `dict` literals require `:` and `,` while struct declarations don't?
 
 This makes literals similar to JSON and consistent with languages like Python, JavaScript, and Go. It also distinguishes between `type` and `const` expressions.
+
+## Why keyword `def` has been chosen to define a component?
+
+Previously used `flow` keyword had drawbacks: it's not used in other languages and may confuse since the abstraction is called "component" not "flow".
+
+Common keywords like `fn`/`fun`/`func` could be misleading since Neva components are not functions but rather coroutines. Keywords like `coro`/`routine` focus too much on implementation details rather than semantics.
+
+While `class` is familiar and components are similar to classes as blueprints, it risks confusion with OOP which Neva does not follow.
+
+`def` was chosen because it's familiar from Python, short, and generic enough to define components without implying specific semantics.

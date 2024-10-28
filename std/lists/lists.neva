@@ -1,2 +1,2 @@
 #extern(list_at)
-pub flow At<T>(data list<T>, idx int) (res T, err error)
+pub def At<T>(data list<T>, idx int) (res T, err error)

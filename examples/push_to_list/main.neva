@@ -1,7 +1,7 @@
 const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Push, Println
 	---
 	:start -> [

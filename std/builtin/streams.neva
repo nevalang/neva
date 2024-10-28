@@ -1,7 +1,7 @@
 // basic stream operations
 
 // Wait blocks until last stream item arrive, then sends signal.
-pub flow Wait(data stream<any>) (sig) {
+pub def Wait(data stream<any>) (sig) {
     If
     ---
     :data -> .last -> if
@@ -11,7 +11,7 @@ pub flow Wait(data stream<any>) (sig) {
 // ArrPortToStream iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub flow ArrPortToStream<T>([port] T) (data stream<T>)
+pub def ArrPortToStream<T>([port] T) (data stream<T>)
 
 // IPortReducer reduces a stream of messages to one single message.
 // It's expected to send a result message after every processed stream.
@@ -19,14 +19,14 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 
 // === Iterators ===
 
-// These constants are used for binding by Field flow.
+// These constants are used for binding by Field.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
 const idxPath list<string> = ['idx']
 
 // --- Map ---
 
-// IMapHandler is a dependency for Map flow.
+// IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another.
@@ -34,7 +34,7 @@ pub interface IMapHandler<T, Y>(data T) (res Y)
 // it sends an item downstream and processes the next one.
 // It's not recommented but possible to also produce side-effects.
 // But, if all you need is side-effects, use ForEach instead.
-pub flow Map<T, Y>(data stream<T>) (res stream<Y>) {
+pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
     wrap Struct<stream<Y>>
@@ -58,7 +58,7 @@ pub interface IFilterHandler<T>(data T) (res bool)
 // Filter is for filtering items in a stream.
 // It will produce a new stream with only items that passed the filter.
 // It's possible to chain multiple Filters together.
-pub flow Filter<T>(data stream<T>) (res stream<T>) {
+pub def Filter<T>(data stream<T>) (res stream<T>) {
     Cond<stream<T>>
     FanOut<stream<T>>
     handler IFilterHandler<T>
@@ -77,12 +77,12 @@ pub flow Filter<T>(data stream<T>) (res stream<T>) {
 
 // --- Reduce ---
 
-// IReduceHandler is a dependency for Reduce flow.
+// IReduceHandler is a dependency for Reduce.
 pub interface IReduceHandler<T, Y>(acc T, el T) (res Y)
 
 // Reduce applies a reduction function to a stream of values, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
-pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
+pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     handler IReduceHandler<T, Y>
     fanOut FanOut<stream<T>>
     acc Accumulator<Y>
@@ -110,11 +110,11 @@ pub flow Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 // Accumulator maintains the current state of the reduction.
 // It updates its value with each new input and outputs the final result when last is true.
 #extern(accumulator)
-pub flow Accumulator<T>(init T, upd T, last bool) (cur T, res T)
+pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
 // --- ForEach ---
 
-// IForEachHandler is a dependency for ForEach flow.
+// IForEachHandler is a dependency for ForEach.
 pub interface IForEachHandler<T>(data T) (sig any)
 
 // ForEach processes stream to produce side-effects on its items.
@@ -122,7 +122,7 @@ pub interface IForEachHandler<T>(data T) (sig any)
 // it sends an item downstream and processes the next one.
 // ForEach always sends the same stream, it's not intended for mapping.
 // If you need mapping (or mapping with side-effects), use Map instead.
-pub flow ForEach<T>(data stream<T>) (data stream<T>) {
+pub def ForEach<T>(data stream<T>) (data stream<T>) {
     Lock<stream<T>>
     handler IForEachHandler<T>
 
@@ -141,4 +141,4 @@ pub flow ForEach<T>(data stream<T>) (data stream<T>) {
 // It emits stream only after all 3 inports receive messages.
 // Signal inport is required because Range is used in range expressions.
 #extern(stream_int_range_v2)
-pub flow Range(from int, to int, sig any) (res stream<int>)
+pub def Range(from int, to int, sig any) (res stream<int>)

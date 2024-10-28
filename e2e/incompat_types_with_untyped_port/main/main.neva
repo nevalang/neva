@@ -1,10 +1,10 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     PrintAny
     ---
     :start -> { 42 -> printAny -> :stop }
 }
 
-flow PrintAny(data) (sig) {
+def PrintAny(data) (sig) {
 	Println<int>
 	---
 	:data -> println -> :sig

@@ -13,7 +13,7 @@ const magicNum int = 42
 interface IReader(path string) (i int, e err)
 interface IWriter(path string) (i int, anything any)
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	abs IReader
 	concrete  Scanner
 	---
@@ -23,6 +23,6 @@ flow Main(start any) (stop any) {
 }
 
 #extern(int IntAdder, float FloatAdder, string StringAdder)
-pub flow Add<
+pub def Add<
 	T int | float | string
 >(data stream<T>) (res T)

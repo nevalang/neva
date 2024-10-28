@@ -1,6 +1,6 @@
 import { builtin }
 
-pub flow Println(data any) (sig any) {
+pub def Println(data any) (sig any) {
     builtin.Println
     ---
 	:data -> println -> :sig

@@ -2,13 +2,13 @@ import { lists }
 
 const lst list<bool> = [true, false]
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	ListToStream<bool>, ForEach<bool>{PrintAsNum}, Wait
 	---
 	:start -> { $lst -> listToStream -> forEach -> wait -> :stop }
 }
 
-flow PrintAsNum(data bool) (sig any) {
+def PrintAsNum(data bool) (sig any) {
 	Ternary, Println
 	---
 	:data -> ternary:if

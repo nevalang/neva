@@ -8,7 +8,7 @@ Native components have only a signature (interface) and no implementation in Nev
 
 ```neva
 #extern(and)
-flow And(a bool, b bool) (res bool)
+def And(a bool, b bool) (res bool)
 ```
 
 > Native components may enable future Go-interop, allowing Go functions to be called from Neva using #extern.
@@ -21,7 +21,7 @@ Overloaded native components use a modified extern directive: `#extern(t1 f1, t2
 
 ```neva
 #extern(int int_add, float float_add, string string_add)
-pub flow Add<T int | float | string>(acc T, el T) (res T)
+pub def Add<T int | float | string>(acc T, el T) (res T)
 ```
 
 Usage:
@@ -39,7 +39,7 @@ Normal components are implemented in Nevalang source code. As a Nevalang program
 Minimal nevalang program is one normal component `Main` without any nodes and with network of a single connection:
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
    :start -> :stop
 }
 ```
@@ -51,7 +51,7 @@ Components however typically perform data transformations or side-effects using 
 Normal component `Main` with a `println` node (instance of `Println`):
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
    Println
    ---
    :start -> (42 -> println -> :stop)
@@ -61,7 +61,7 @@ flow Main(start) (stop) {
 As you can see, we refer to the instance of `Println` as `println`. The compiler implicitly assigns a lowercase version of the component name to its instance. However, with multiple instances of the same component, this leads to name collisions. To avoid this, the compiler requires explicit naming for nodes in such cases. Example:
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
    p1 Println
    p2 Println
    ---
@@ -78,7 +78,7 @@ Normal components actually have implicit `in` and `out` nodes. Even in our `Main
 Consider an application that performs some business logic with logging:
 
 ```neva
-flow App(data) (sig) {
+def App(data) (sig) {
    Logic, Log
    ---
    :data -> logic -> log -> :sig
@@ -88,7 +88,7 @@ flow App(data) (sig) {
 Now imagine we want to replace `Logger` with another component based on a condition. Let's say we want to use real logger in production and a mock in testing. Without dependency injection (DI), we'd have to extend the interface with a `flag bool` inport and check it.
 
 ```neva
-flow App(data any, prod bool) (sig any) {
+def App(data any, prod bool) (sig any) {
    Cond, Logic, ProdLogger, MockLogger
    ---
    :data -> businessLogic -> cond:data
@@ -112,7 +112,7 @@ type ILog(data) (sig)
 Next, define the dependency (interface node):
 
 ```neva
-flow App(data) (sig) {
+def App(data) (sig) {
    Logic, ILog
    ---
    :data -> logic -> iLog -> :sig
@@ -125,7 +125,7 @@ Before dependency injection:
 
 ```neva
 // cmd/app
-flow Main(start) (stop)
+def Main(start) (stop)
    App
    ...
 }
@@ -134,12 +134,12 @@ flow Main(start) (stop)
 After dependency injection:
 
 ```neva
-flow Main(start) (stop)
+def Main(start) (stop)
    App{ProdLogger}
    ...
 }
 
-flow Test(start) (stop)
+def Test(start) (stop)
    App{MockLogger}
    ...
 }
@@ -175,13 +175,13 @@ Components contain interfaces, which may have type parameters. Type arguments mu
 Component uses type-parameters for its IO:
 
 ```neva
-flow Foo<T>(data T) (sig any)
+def Foo<T>(data T) (sig any)
 ```
 
 Components can pass type parameters from their interface to node expressions:
 
 ```neva
-flow Bar<T>(data T) (sig any) {
+def Bar<T>(data T) (sig any) {
    Println<T>
    ---
    :data -> println -> :sig

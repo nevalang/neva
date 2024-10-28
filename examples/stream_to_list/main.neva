@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     List, Println
     ---
     :start -> 1..11 -> list -> println -> :stop

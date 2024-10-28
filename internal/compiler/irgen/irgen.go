@@ -97,7 +97,7 @@ func (g Generator) processNode(
 	component := entity.Component
 
 	inportAddrs := g.insertAndReturnInports(nodeCtx)   // for inports we only use parent context because all inports are used
-	outportAddrs := g.insertAndReturnOutports(nodeCtx) //  for outports we use both parent context and flow's interface
+	outportAddrs := g.insertAndReturnOutports(nodeCtx) //  for outports we use both parent context and component's interface
 
 	runtimeFuncRef, err := g.getFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
@@ -179,7 +179,7 @@ func (g Generator) processNode(
 func (Generator) insertAndReturnInports(nodeCtx nodeContext) []ir.PortAddr {
 	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
-	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use flow's IO
+	// in valid program all inports are used, so it's safe to depend on nodeCtx and not use component's IO
 	// actually we can't use IO because we need to know how many slots are used
 	for relAddr := range nodeCtx.portsUsage.in {
 		absAddr := ir.PortAddr{
@@ -201,7 +201,7 @@ func (Generator) insertAndReturnInports(nodeCtx nodeContext) []ir.PortAddr {
 func (Generator) insertAndReturnOutports(nodeCtx nodeContext) []ir.PortAddr {
 	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
-	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use flow's IO.
+	// In a valid (desugared) program all outports are used so it's safe to depend on nodeCtx and not use component's IO.
 	// Actually we can't use IO because we need to know how many slots are used.
 	for addr := range nodeCtx.portsUsage.out {
 		irAddr := ir.PortAddr{

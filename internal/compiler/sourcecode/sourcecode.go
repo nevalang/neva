@@ -106,7 +106,7 @@ type Entity struct {
 	Const     Const      `json:"const,omitempty"`
 	Type      ts.Def     `json:"type,omitempty"`
 	Interface Interface  `json:"interface,omitempty"`
-	Component Component  `json:"flow,omitempty"`
+	Component Component  `json:"component,omitempty"`
 }
 
 func (e Entity) Meta() *core.Meta {

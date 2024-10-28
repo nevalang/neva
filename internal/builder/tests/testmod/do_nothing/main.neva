@@ -1,1 +1,1 @@
-flow Main(start) (stop) { :start -> :stop }
+def Main(start) (stop) { :start -> :stop }

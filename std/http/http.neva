@@ -4,4 +4,4 @@ pub type Response struct {
 }
 
 #extern(http_get)
-pub flow Get(url string) (resp Response, err error)
+pub def Get(url string) (resp Response, err error)

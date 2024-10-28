@@ -1,5 +1,5 @@
 #extern(println)
-pub flow Println<T>(data T) (sig T)
+pub def Println<T>(data T) (sig T)
 
 #extern(printf)
-pub flow Printf(tpl string, [args] any) (sig any, err error)
+pub def Printf(tpl string, [args] any) (sig any, err error)

@@ -1,6 +1,6 @@
 import { streams }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	FanOut, streams.Product<int, int>
 	ForEach{Println}, Wait
 	---

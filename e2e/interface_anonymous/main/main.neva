@@ -1,13 +1,13 @@
 interface IPrinter<T>(data T) (sig T)
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Secondflow { Println<any> }
     ---
     :start -> secondflow:msg
     secondflow:msg -> :stop
 }
 
-flow Secondflow (msg) (msg) {
+def Secondflow (msg) (msg) {
     IPrinter<any>
     ---
     :msg -> iPrinter:data

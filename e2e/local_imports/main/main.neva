@@ -3,7 +3,7 @@ import {
 	@:foo/bar
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	foo foo.Println
 	bar bar.Println
 	---

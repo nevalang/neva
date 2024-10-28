@@ -24,8 +24,8 @@ pub type Image struct {
 
 // New creates a new RGBA image from the given pixels.
 #extern(image_new)
-pub flow New(pixels stream<Pixel>) (img Image, err error)
+pub def New(pixels stream<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
-pub flow Encode(img Image) (data string, err error)
+pub def Encode(img Image) (data string, err error)

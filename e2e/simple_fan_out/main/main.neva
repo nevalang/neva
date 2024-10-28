@@ -1,6 +1,6 @@
 import { time }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     p1 Println
     p2 Println
     ---
