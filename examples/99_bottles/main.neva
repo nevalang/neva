@@ -1,6 +1,6 @@
 // https://www.99-bottles-of-beer.net
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     // we use explicit lock to implement fan-in to printNext2Lines
     Switch<int>, PrintNext2Lines, Lock<int>
     ---
@@ -11,7 +11,7 @@ flow Main(start) (stop) {
     -1 -> switch:case[0] -> :stop
 }
 
-flow PrintNext2Lines(n int) (n int) {
+def PrintNext2Lines(n int) (n int) {
     Decr<int>, PrintFirstLine, PrintSecondLine
     ---
     // printFirstLine and printSecondLine won't work in parallel
@@ -25,7 +25,7 @@ const firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n
 const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
-flow PrintFirstLine(n int) (n int) {
+def PrintFirstLine(n int) (n int) {
     Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
     ---
     :n -> [switch:data, lock:data]
@@ -49,7 +49,7 @@ const secondLine2 string = 'Take one down and pass it around, 1 bottle of beer o
 const secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
-flow PrintSecondLine(n int) (n int) {
+def PrintSecondLine(n int) (n int) {
     Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>, Panic
     ---
     :n -> [switch:data, lock:data]

@@ -103,8 +103,8 @@ structValueFields:
 	structValueField (',' NEWLINE* structValueField)*;
 structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
 
-// flow (component)
-compStmt: compilerDirectives? PUB_KW? 'flow' compDef;
+// def (component)
+compStmt: compilerDirectives? PUB_KW? 'def' compDef;
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
 	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
@@ -135,7 +135,9 @@ singleSenderSide:
 	| senderConstRef
 	| primitiveConstLit
 	| rangeExpr
-	| structSelectors;
+	| structSelectors
+	| ternaryExpr;
+ternaryExpr: '(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

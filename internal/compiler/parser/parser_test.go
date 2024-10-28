@@ -7,9 +7,70 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParser_ParseFile_TernaryExpression(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			(condition ? trueValue : falseValue) -> receiver
+		}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(text)
+	require.Nil(t, err)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 1, len(net))
+
+	conn := net[0].Normal
+	require.Equal(t, 1, len(conn.SenderSide))
+
+	ternary := conn.SenderSide[0].TernaryExpr
+	require.NotNil(t, ternary)
+
+	require.Equal(t, "condition", ternary.Condition.PortAddr.Node)
+	require.Equal(t, "trueValue", ternary.Left.PortAddr.Node)
+	require.Equal(t, "falseValue", ternary.Right.PortAddr.Node)
+
+	require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
+}
+
+func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			(cond1 ? (cond2 ? val1 : val2) : val3) -> receiver
+		}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(text)
+	require.Nil(t, err)
+
+	net := got.Entities["C1"].Component.Net
+	require.Equal(t, 1, len(net))
+
+	conn := net[0].Normal
+	require.Equal(t, 1, len(conn.SenderSide))
+
+	outerTernary := conn.SenderSide[0].TernaryExpr
+	require.NotNil(t, outerTernary)
+
+	require.Equal(t, "cond1", outerTernary.Condition.PortAddr.Node)
+	require.Equal(t, "val3", outerTernary.Right.PortAddr.Node)
+
+	innerTernary := outerTernary.Left.TernaryExpr
+	require.NotNil(t, innerTernary)
+	require.Equal(t, "cond2", innerTernary.Condition.PortAddr.Node)
+	require.Equal(t, "val1", innerTernary.Left.PortAddr.Node)
+	require.Equal(t, "val2", innerTernary.Right.PortAddr.Node)
+
+	require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
+}
+
 func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			userSender -> .pet.name -> println -> :stop
 		}`,
 	)
@@ -38,7 +99,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			foo[0] -> bar[255]
 		}
 	`)
@@ -64,7 +125,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			:start -> { foo -> bar -> :stop }
 		}
 	`)
@@ -98,7 +159,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 
 func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			:port -> lonely
 			lonely -> :port
 		}
@@ -127,7 +188,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 
 func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	text := []byte(`
-		flow C1() () { :foo -> n1:p1 -> :bar }
+		def C1() () { :foo -> n1:p1 -> :bar }
 	`)
 
 	p := New()
@@ -167,10 +228,10 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		#extern(d1)
-		flow C1() ()
+		def C1() ()
 
 		#extern(d2)
-		flow C2() () {
+		def C2() () {
 			#bind(d3)
 			n1 C1
 
@@ -180,11 +241,11 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 		}
 
 		#autoports
-		flow C3() ()
+		def C3() ()
 
 		#extern(d5)
 		#autoports
-		flow C4() ()
+		def C4() ()
 	`)
 
 	p := New()
@@ -220,7 +281,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 
 func TestParser_ParseFile_IONodes(t *testing.T) {
 	text := []byte(`
-		flow C1(start any) (stop any) {
+		def C1(start any) (stop any) {
 			:start -> :stop
 		}
 	`)
@@ -241,7 +302,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 
 func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	text := []byte(`
-		flow C1(start any) (stop any) {
+		def C1(start any) (stop any) {
 			Scanner
 			Printer<int>
 			---
@@ -286,7 +347,7 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 
 func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			Foo::Bar -> :out
 			foo.Bar::Baz -> :out
 		}
@@ -313,7 +374,7 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 
 func TestParser_ParseFile_RangeExpression(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			1..10 -> :out
 		}
 	`)
@@ -335,7 +396,7 @@ func TestParser_ParseFile_RangeExpression(t *testing.T) {
 
 func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			1..5 -> :out1
 			10..20 -> :out2
 		}
@@ -364,7 +425,7 @@ func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
 
 func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			-5..5 -> :out
 		}
 	`)
@@ -386,7 +447,7 @@ func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
 
 func TestParser_ParseFile_RangeExpressionMixedWithOtherConnections(t *testing.T) {
 	text := []byte(`
-		flow C1() () {
+		def C1() () {
 			1..10 -> :out1
 			:in -> :out2
 			20..30 -> :out3

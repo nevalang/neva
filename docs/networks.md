@@ -71,7 +71,7 @@ foo:bar[3] -> baz:bax3
 Components can't receive from their own array-inports by slot. Consider this scenario:
 
 ```neva
-flow Foo([data]) (sig) {
+def Foo([data]) (sig) {
     :data[0] -> ...
     :data[1] -> ...
     :data[3] -> ...
@@ -91,7 +91,7 @@ This defeats the purpose of array-ports, which are needed for unknown situations
 However, components can send to and receive from other nodes' array-ports by index:
 
 ```neva
-flow Foo(sig) (sig) {
+def Foo(sig) (sig) {
     Bar
     ---
     :sig -> bar[0]
@@ -157,7 +157,7 @@ We'll create a component that increments a number using an addition component wi
 ```neva
 const one int = 1
 
-flow Inc(data int) (res int) {
+def Inc(data int) (res int) {
     Add
     ---
     $one -> add:acc
@@ -178,7 +178,7 @@ Const-ref and msg-literal senders are syntax sugar. In the desugared program, al
 
 ```neva
 #extern(new)
-pub flow New<T>() (msg T)
+pub def New<T>() (msg T)
 ```
 
 It's one of the few components without inports or outports, which are only allowed in stdlib. User-created components must have at least 1 inport and outport. New instances require the `#bind` directive to associate a constant with the node, allowing the runtime to use it throughout the program's lifecycle.
@@ -186,7 +186,7 @@ It's one of the few components without inports or outports, which are only allow
 ```
 const p float = 3.14
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     #bind(p)
     New
     Println
@@ -202,7 +202,7 @@ Message literal senders are implemented similarly, with the compiler inserting a
 Sometimes it's convenient to refer to message values directly in the network without creating a dedicated constant. This works the same as using constants, as both are syntax sugar for creating an emitter-node with a bound message.
 
 ```neva
-flow Inc(data int) (res int) {
+def Inc(data int) (res int) {
     Add
     ---
     1 -> add:acc
@@ -243,7 +243,7 @@ We've seen port-address receivers:
 If a component has one inport and one outport
 
 ```neva
-flow Foo(a) (b)
+def Foo(a) (b)
 ```
 
 A "chained" connection is allowed
@@ -262,7 +262,7 @@ foo:b -> ...
 Here's an example using this feature:
 
 ```neva
-flow Foo(data) (sig) {
+def Foo(data) (sig) {
     Println
     ---
     :data -> println -> :sig
@@ -276,7 +276,7 @@ flow Foo(data) (sig) {
 println -> :sig
 ```
 
-Components don't need matching inport and outport names. Chained connections require one port per side. Both `flow Foo(bar) (bar)` and `flow Foo (bar) (baz)` are valid.
+Components don't need matching inport and outport names. Chained connections require one port per side. Both `def Foo(bar) (bar)` and `def Foo (bar) (baz)` are valid.
 
 Chained connections can nest infinitely:
 
@@ -318,7 +318,7 @@ To ensure `42` is printed once, synchronize it with `:start` using "defer". Here
 This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the desugared version:
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Lock, Println
     ---
     :start -> lock:sig
@@ -432,13 +432,13 @@ Fan-in and fan-out can be combined:
 There's one more connection type to discuss: array-bypass for components with array-ports.
 
 ```neva
-flow FanInWrap([data]) (res)
+def FanInWrap([data]) (res)
 ```
 
 Such components can't refer to their ports by index (e.g., `data[i]`). To operate on these ports, we use array-bypass.
 
 ```neva
-flow FanInWrap([data]) (res) {
+def FanInWrap([data]) (res) {
     FanIn
     ---
     :data => fanIn
@@ -450,7 +450,7 @@ The `=>` operator indicates an array-bypass connection, where both sender and re
 Let's examine a specific example to understand how it works:
 
 ```neva
-flow Main() () {
+def Main() () {
     wrap FanInWrap, Println
     ---
     1 -> wrap[0]

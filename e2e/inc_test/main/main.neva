@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Inc<int>, Println<int>
     ---
     :start -> { 41 -> inc }

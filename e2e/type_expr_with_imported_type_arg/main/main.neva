@@ -4,7 +4,7 @@
 
 import { @:foo }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
   justFoo Struct<foo.Foo>
   itemWithFoo Struct<stream<foo.Foo>>
   ---

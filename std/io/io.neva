@@ -2,7 +2,7 @@
 // It returns an error if the file does not exist or cannot be read.
 // You don't have to think about closing the file, it's done under the hood.
 #extern(read_all)
-pub flow ReadAll(filename string) (res string, err error)
+pub def ReadAll(filename string) (res string, err error)
 
 // WriteAll writes data to a file named by filename.
 // If the file does not exist, WriteAll creates it with permissions 0755.
@@ -10,8 +10,8 @@ pub flow ReadAll(filename string) (res string, err error)
 // It returns an error if the file cannot be written.
 // You don't have to think about closing the file, it's done under the hood.
 #extern(write_all)
-pub flow WriteAll(filename string, data string) (sig any, err error)
+pub def WriteAll(filename string, data string) (sig any, err error)
 
 // Scanln scans text read from standard input,
 #extern(scanln)
-pub flow Scanln(sig any) (res string)
+pub def Scanln(sig any) (res string)

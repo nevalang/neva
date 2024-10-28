@@ -15,7 +15,7 @@ type Scope struct {
 	Build    Build
 }
 
-func (s Scope) WithLocation(location Location) Scope {
+func (s Scope) Relocate(location Location) Scope {
 	return Scope{
 		Location: location,
 		Build:    s.Build,
@@ -23,20 +23,20 @@ func (s Scope) WithLocation(location Location) Scope {
 }
 
 type Location struct {
-	ModRef   ModuleRef
-	PkgName  string
-	FileName string
+	Module   ModuleRef
+	Package  string
+	Filename string
 }
 
 func (l Location) String() string {
 	var s string
-	if l.ModRef.Path == "@" {
-		s = l.PkgName
+	if l.Module.Path == "@" {
+		s = l.Package
 	} else {
-		s = filepath.Join(l.ModRef.String(), l.PkgName)
+		s = filepath.Join(l.Module.String(), l.Package)
 	}
-	if l.FileName != "" {
-		s = filepath.Join(s, l.FileName+".neva")
+	if l.Filename != "" {
+		s = filepath.Join(s, l.Filename+".neva")
 	}
 	return s
 }
@@ -57,7 +57,7 @@ func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 		return ts.Def{}, nil, err
 	}
 
-	return entity.Type, s.WithLocation(location), nil
+	return entity.Type, s.Relocate(location), nil
 }
 
 func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
@@ -65,23 +65,23 @@ func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
 }
 
 func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
-	curMod, ok := s.Build.Modules[s.Location.ModRef]
+	curMod, ok := s.Build.Modules[s.Location.Module]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("module not found: %v", s.Location.ModRef)
+		return Entity{}, Location{}, fmt.Errorf("module not found: %v", s.Location.Module)
 	}
 
-	curPkg := curMod.Packages[s.Location.PkgName]
+	curPkg := curMod.Packages[s.Location.Package]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("package not found: %v", s.Location.PkgName)
+		return Entity{}, Location{}, fmt.Errorf("package not found: %v", s.Location.Package)
 	}
 
 	if entityRef.Pkg == "" { // local reference (current package or builtin)
 		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, Location{
-				ModRef:   s.Location.ModRef,
-				PkgName:  s.Location.PkgName,
-				FileName: fileName,
+				Module:   s.Location.Module,
+				Package:  s.Location.Package,
+				Filename: fileName,
 			}, nil
 		}
 
@@ -100,15 +100,15 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		}
 
 		return entity, Location{
-			ModRef:   stdModRef,
-			PkgName:  "builtin",
-			FileName: fileName,
+			Module:   stdModRef,
+			Package:  "builtin",
+			Filename: fileName,
 		}, nil
 	}
 
-	curFile, ok := curPkg[s.Location.FileName]
+	curFile, ok := curPkg[s.Location.Filename]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("file not found: %v", s.Location.FileName)
+		return Entity{}, Location{}, fmt.Errorf("file not found: %v", s.Location.Filename)
 	}
 
 	pkgImport, ok := curFile.Imports[entityRef.Pkg]
@@ -121,7 +121,7 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		modRef ModuleRef
 	)
 	if pkgImport.Module == "@" {
-		modRef = s.Location.ModRef // FIXME s.Location.ModRef is where we are now (e.g. std)
+		modRef = s.Location.Module // FIXME s.Location.ModRef is where we are now (e.g. std)
 		mod = curMod
 	} else {
 		modRef = curMod.Manifest.Deps[pkgImport.Module]
@@ -147,8 +147,8 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 	}
 
 	return entity, Location{
-		ModRef:   modRef,
-		PkgName:  pkgImport.Package,
-		FileName: fileName,
+		Module:   modRef,
+		Package:  pkgImport.Package,
+		Filename: fileName,
 	}, nil
 }

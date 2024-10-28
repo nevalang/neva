@@ -2,4 +2,4 @@ neva: 0.26.0
 deps:
     github.com/nevalang/x:
         path: github.com/nevalang/x
-        version: 0.0.12
+        version: 0.0.13

@@ -11,14 +11,7 @@ import (
 )
 
 var (
-	ErrUnusedOutports                = errors.New("All component outports are unused")
-	ErrUnusedOutport                 = errors.New("unused outport found")
-	ErrUnusedInports                 = errors.New("all flow inports are unused")
-	ErrUnusedInport                  = errors.New("unused inport found")
-	ErrLiteralSenderTypeEmpty        = errors.New("literal network sender must contain message value")
-	ErrComplexLiteralSender          = errors.New("literal network sender must have primitive type")
-	ErrIllegalPortlessConnection     = errors.New("connection to a node, with more than one port, must always has a port name")
-	ErrGuardMixedWithExplicitErrConn = errors.New("if node has error guard '?' it's ':err' outport must not be explicitly used in the network")
+	ErrComplexLiteralSender = errors.New("literal network sender must have primitive type")
 )
 
 // analyzeNetwork must be called after analyzeNodes so we sure nodes are resolved.
@@ -221,7 +214,7 @@ func (a Analyzer) analyzeReceiver(
 		receiver.ChainedConnection == nil &&
 		receiver.DeferredConnection == nil {
 		return nil, &compiler.Error{
-			Err:      errors.New("Connection must have receiver-side"),
+			Message:  "Connection must have receiver-side",
 			Location: &scope.Location,
 			Meta:     &receiver.Meta,
 		}
@@ -281,7 +274,7 @@ func (a Analyzer) analyzeReceiver(
 	}
 
 	return nil, &compiler.Error{
-		Err:      errors.New("Connection must have receiver-side"),
+		Message:  "Connection must have receiver-side",
 		Location: &scope.Location,
 		Meta:     &receiver.Meta,
 	}
@@ -313,7 +306,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 
 	if !isArrPort && portAddr.Idx != nil {
 		return src.PortAddr{}, &compiler.Error{
-			Err:      errors.New("Index for non-array port"),
+			Message:  "Index for non-array port",
 			Meta:     &portAddr.Meta,
 			Location: &scope.Location,
 		}
@@ -321,7 +314,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 
 	if isArrPort && portAddr.Idx == nil {
 		return src.PortAddr{}, &compiler.Error{
-			Err:      errors.New("Index needed for array inport"),
+			Message:  "Index needed for array inport",
 			Meta:     &portAddr.Meta,
 			Location: &scope.Location,
 		}
@@ -330,9 +323,9 @@ func (a Analyzer) analyzePortAddrReceiver(
 	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
 			return src.PortAddr{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"Incompatible types: %v -> %v: %w",
-					analyzedSenders[i], portAddr, err,
+				Message: fmt.Sprintf(
+					"Incompatible types: %v -> %v: %v",
+					analyzedSenders[i], portAddr, err.Error(),
 				),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
@@ -342,7 +335,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 
 	if err := netNodesUsage(nodesUsage).trackInportUsage(portAddr); err != nil {
 		return src.PortAddr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -363,7 +356,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 ) (src.Connection, *compiler.Error) {
 	if chainedConn.Normal == nil {
 		return src.Connection{}, &compiler.Error{
-			Err:      errors.New("chained connection must be a normal connection"),
+			Message:  "chained connection must be a normal connection",
 			Location: &scope.Location,
 			Meta:     &chainedConn.Meta,
 		}
@@ -371,7 +364,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 
 	if len(chainedConn.Normal.SenderSide) != 1 {
 		return src.Connection{}, &compiler.Error{
-			Err:      errors.New("multiple senders are only allowed at the start of a connection"),
+			Message:  "multiple senders are only allowed at the start of a connection",
 			Location: &scope.Location,
 			Meta:     &chainedConn.Normal.Meta,
 		}
@@ -392,9 +385,9 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
 			return src.Connection{}, &compiler.Error{
-				Err: fmt.Errorf(
-					"Incompatible types: %v -> %v: %w",
-					analyzedSenders[i], chainHead, err,
+				Message: fmt.Sprintf(
+					"Incompatible types: %v -> %v: %v",
+					analyzedSenders[i], chainHead, err.Error(),
 				),
 				Location: &scope.Location,
 				Meta:     &chainedConn.Meta,
@@ -418,7 +411,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	if chainHead.PortAddr != nil {
 		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHead.PortAddr); err != nil {
 			return src.Connection{}, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &chainedConn.Meta,
 			}
@@ -480,9 +473,10 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
+		sender.TernaryExpr == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
-			Err:      ErrEmptySender,
+			Message:  "Sender in network must contain port address, constant reference or message literal",
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -490,7 +484,7 @@ func (a Analyzer) analyzeSender(
 
 	if sender.Range != nil && prevChainLink == nil {
 		return nil, nil, &compiler.Error{
-			Err:      errors.New("range expression cannot be used in non-chained connection"),
+			Message:  "range expression cannot be used in non-chained connection",
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -498,7 +492,7 @@ func (a Analyzer) analyzeSender(
 
 	if sender.Const != nil && len(prevChainLink) != 0 {
 		return nil, nil, &compiler.Error{
-			Err:      errors.New("constant cannot be used in chained connection"),
+			Message:  "constant cannot be used in chained connection",
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
@@ -506,10 +500,79 @@ func (a Analyzer) analyzeSender(
 
 	if len(sender.StructSelector) > 0 && prevChainLink == nil {
 		return nil, nil, &compiler.Error{
-			Err:      errors.New("struct selectors cannot be used in non-chained connection"),
+			Message:  "struct selectors cannot be used in non-chained connection",
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
+	}
+
+	if sender.TernaryExpr != nil {
+		// analyze the condition part
+		_, condType, err := a.analyzeSender(
+			sender.TernaryExpr.Condition,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}.Wrap(err)
+		}
+
+		// ensure the condition is of boolean type
+		boolType := ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+		}
+		if err := a.resolver.IsSubtypeOf(*condType, boolType, scope); err != nil {
+			return nil, nil, &compiler.Error{
+				Message:  "Condition of ternary expression must be of boolean type",
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}
+		}
+
+		// analyze the trueVal part
+		_, trueValType, err := a.analyzeSender(
+			sender.TernaryExpr.Left,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}.Wrap(err)
+		}
+
+		// analyze the falseVal part
+		_, _, err = a.analyzeSender(
+			sender.TernaryExpr.Right,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, compiler.Error{
+				Location: &scope.Location,
+				Meta:     &sender.TernaryExpr.Meta,
+			}.Wrap(err)
+		}
+
+		// TODO support proper typing (see https://github.com/nevalang/neva/issues/737)
+
+		return &sender, trueValType, nil
 	}
 
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
@@ -530,7 +593,7 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr != nil {
 		if !isSenderArr && sender.PortAddr.Idx != nil {
 			return nil, nil, &compiler.Error{
-				Err:      errors.New("Index for non-array port"),
+				Message:  "Index for non-array port",
 				Meta:     &sender.PortAddr.Meta,
 				Location: &scope.Location,
 			}
@@ -538,7 +601,7 @@ func (a Analyzer) analyzeSender(
 
 		if isSenderArr && sender.PortAddr.Idx == nil {
 			return nil, nil, &compiler.Error{
-				Err:      errors.New("Index needed for array outport"),
+				Message:  "Index needed for array outport",
 				Meta:     &sender.PortAddr.Meta,
 				Location: &scope.Location,
 			}
@@ -546,7 +609,7 @@ func (a Analyzer) analyzeSender(
 
 		if err := netNodesUsage(nodesUsage).trackOutportUsage(*sender.PortAddr); err != nil {
 			return nil, nil, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &sender.PortAddr.Meta,
 			}
@@ -581,7 +644,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	}
 	if !isArray {
 		return &compiler.Error{
-			Err:      errors.New("Non-array outport in array-bypass connection"),
+			Message:  "Non-array outport in array-bypass connection",
 			Location: &scope.Location,
 			Meta:     &arrBypassConn.SenderOutport.Meta,
 		}
@@ -602,7 +665,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	}
 	if !isArray {
 		return &compiler.Error{
-			Err:      errors.New("Non-array outport in array-bypass connection"),
+			Message:  "Non-array outport in array-bypass connection",
 			Location: &scope.Location,
 			Meta:     &arrBypassConn.SenderOutport.Meta,
 		}
@@ -614,9 +677,9 @@ func (a Analyzer) analyzeArrayBypassConnection(
 		scope,
 	); err != nil {
 		return &compiler.Error{
-			Err: fmt.Errorf(
-				"Incompatible types: %v -> %v: %w",
-				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err,
+			Message: fmt.Sprintf(
+				"Incompatible types: %v -> %v: %v",
+				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err.Error(),
 			),
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
@@ -625,7 +688,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 
 	if err := netNodesUsage(nodesUsage).trackOutportUsage(arrBypassConn.SenderOutport); err != nil {
 		return &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
 		}
@@ -633,7 +696,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 
 	if err := netNodesUsage(nodesUsage).trackInportUsage(arrBypassConn.ReceiverInport); err != nil {
 		return &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &conn.Meta,
 		}
@@ -654,7 +717,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
 		return &compiler.Error{
-			Err:      ErrUnusedInports,
+			Message:  "Unused inports",
 			Location: &scope.Location,
 			Meta:     &compInterface.Meta,
 		}
@@ -663,7 +726,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	for inportName := range compInterface.IO.In {
 		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w '%v'", ErrUnusedInport, inportName),
+				Message:  fmt.Sprintf("Unused inport: %v", inportName),
 				Location: &scope.Location,
 			}
 		}
@@ -673,7 +736,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	outportsUsage, ok := nodesUsage["out"]
 	if !ok {
 		return &compiler.Error{
-			Err:      ErrUnusedOutports,
+			Message:  "Unused outports",
 			Location: &scope.Location,
 			Meta:     &compInterface.Meta,
 		}
@@ -690,7 +753,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 		}
 
 		return &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrUnusedOutport, outportName),
+			Message:  fmt.Sprintf("Unused outport: %v", outportName),
 			Location: &scope.Location,
 		}
 	}
@@ -701,7 +764,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrUnusedNode, nodeName),
+				Message:  fmt.Sprintf("Unused node found: %v", nodeName),
 				Location: &scope.Location,
 			}
 		}
@@ -718,7 +781,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			}
 
 			return &compiler.Error{
-				Err: fmt.Errorf(
+				Message: fmt.Sprintf(
 					"Unused node inport: %v:%v",
 					nodeName,
 					inportName,
@@ -740,7 +803,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			if portUsed {
 				if outportName == "err" && nodes[nodeName].ErrGuard {
 					return &compiler.Error{
-						Err: fmt.Errorf(
+						Message: fmt.Sprintf(
 							"if node has error guard '?' it's ':err' outport must not be explicitly used in the network: %v",
 							nodeName,
 						),
@@ -755,7 +818,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 
 			if outportName == "err" && !nodes[nodeName].ErrGuard {
 				return &compiler.Error{
-					Err:      fmt.Errorf("unhandled error: %v:err", nodeName),
+					Message:  fmt.Sprintf("unhandled error: %v:err", nodeName),
 					Location: &scope.Location,
 					Meta:     &port.Meta,
 				}
@@ -768,7 +831,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			}
 
 			return &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrUnusedNodeOutports, nodeName),
+				Message:  fmt.Sprintf("All node's outports are unused: %v", nodeName),
 				Location: &scope.Location,
 				Meta:     &nodeIface.iface.Meta,
 			}
@@ -792,7 +855,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			for i := uint8(0); i <= maxSlot; i++ {
 				if _, ok := usedSlots[i]; !ok {
 					return &compiler.Error{
-						Err: fmt.Errorf(
+						Message: fmt.Sprintf(
 							"array inport '%s:%s' is used incorrectly: slot %d is missing",
 							nodeName,
 							portName,
@@ -819,7 +882,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 			for i := uint8(0); i <= maxSlot; i++ {
 				if _, ok := usedSlots[i]; !ok {
 					return &compiler.Error{
-						Err: fmt.Errorf(
+						Message: fmt.Sprintf(
 							"array outport '%s:%s' is used incorrectly: slot %d is missing",
 							nodeName,
 							portName,
@@ -844,7 +907,7 @@ func (a Analyzer) getReceiverPortType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if receiverSide.Node == "in" {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      ErrWriteSelfIn,
+			Message:  "Component cannot read from self inport",
 			Location: &scope.Location,
 			Meta:     &receiverSide.Meta,
 		}
@@ -856,7 +919,7 @@ func (a Analyzer) getReceiverPortType(
 		outport, ok := outports[receiverSide.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrOutportNotFound, receiverSide.Port),
+				Message:  fmt.Sprintf("Referenced inport not found in component's interface: %v", receiverSide.Port),
 				Location: &scope.Location,
 				Meta:     &receiverSide.Meta,
 			}
@@ -869,7 +932,7 @@ func (a Analyzer) getReceiverPortType(
 		)
 		if err != nil {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &receiverSide.Meta,
 			}
@@ -898,7 +961,7 @@ func (a Analyzer) getNodeInportType(
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("Node not found '%v'", portAddr.Node),
+			Message:  fmt.Sprintf("Node not found '%v'", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -907,7 +970,7 @@ func (a Analyzer) getNodeInportType(
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w '%v'", ErrNodeNotFound, portAddr.Node),
+			Message:  fmt.Sprintf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -921,7 +984,7 @@ func (a Analyzer) getNodeInportType(
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
 		node,
-		scope.WithLocation(nodeIface.location),
+		scope.Relocate(nodeIface.location),
 	)
 	if aerr != nil {
 		return ts.Expr{}, false, compiler.Error{
@@ -944,7 +1007,7 @@ func (a Analyzer) getResolvedPortType(
 	if portAddr.Port == "" {
 		if len(ports) > 1 {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: node '%v'", ErrIllegalPortlessConnection, portAddr.Node),
+				Message:  fmt.Sprintf("node '%v' has multiple ports but no port name", portAddr.Node),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}
@@ -959,7 +1022,7 @@ func (a Analyzer) getResolvedPortType(
 	port, ok := ports[portAddr.Port]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err: fmt.Errorf(
+			Message: fmt.Sprintf(
 				"Port not found `%v`",
 				portAddr,
 			),
@@ -987,7 +1050,7 @@ func (a Analyzer) getResolvedPortType(
 	)
 	if err != nil {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &port.Meta,
 		}
@@ -1032,7 +1095,7 @@ func (a Analyzer) getSenderSideType(
 	if len(senderSide.StructSelector) > 0 {
 		if len(prevChainLink) != 1 {
 			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Err:      errors.New("fan-in with struct selectors is not supported"),
+				Message:  "fan-in with struct selectors is not supported",
 				Location: &scope.Location,
 				Meta:     &senderSide.Meta,
 			}
@@ -1056,11 +1119,10 @@ func (a Analyzer) getSenderSideType(
 			scope,
 		)
 		if err != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Err:      err,
+			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
 				Location: &scope.Location,
 				Meta:     &senderSide.Meta,
-			}
+			}.Wrap(err)
 		}
 
 		return senderSide, lastFieldType, false, nil
@@ -1090,7 +1152,7 @@ func (a Analyzer) getPortSenderType(
 ) (ts.Expr, bool, *compiler.Error) {
 	if senderSidePortAddr.Node == "out" {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      ErrReadSelfOut,
+			Message:  "Component cannot read from self outport",
 			Location: &scope.Location,
 			Meta:     &senderSidePortAddr.Meta,
 		}
@@ -1102,7 +1164,7 @@ func (a Analyzer) getPortSenderType(
 		inport, ok := inports[senderSidePortAddr.Port]
 		if !ok {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      fmt.Errorf("%w: %v", ErrInportNotFound, senderSidePortAddr.Port),
+				Message:  fmt.Sprintf("Referenced inport not found in component's interface: %v", senderSidePortAddr.Port),
 				Location: &scope.Location,
 				Meta:     &senderSidePortAddr.Meta,
 			}
@@ -1115,7 +1177,7 @@ func (a Analyzer) getPortSenderType(
 		)
 		if err != nil {
 			return ts.Expr{}, false, &compiler.Error{
-				Err:      err,
+				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &senderSidePortAddr.Meta,
 			}
@@ -1146,7 +1208,7 @@ func (a Analyzer) getConstSenderType(
 
 	if constSender.Value.Message == nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
-			Err:      ErrLiteralSenderTypeEmpty,
+			Message:  "Literal sender type is empty",
 			Location: &scope.Location,
 			Meta:     &constSender.Meta,
 		}
@@ -1158,7 +1220,7 @@ func (a Analyzer) getConstSenderType(
 	)
 	if err != nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &constSender.Value.Message.Meta,
 		}
@@ -1166,7 +1228,7 @@ func (a Analyzer) getConstSenderType(
 
 	if err := a.validateLiteralSender(resolvedExpr); err != nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &constSender.Value.Message.Meta,
 		}
@@ -1217,7 +1279,7 @@ func (a Analyzer) getNodeOutportType(
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
+			Message:  fmt.Sprintf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -1226,7 +1288,7 @@ func (a Analyzer) getNodeOutportType(
 	nodeIface, ok := nodesIfaces[portAddr.Node]
 	if !ok {
 		return ts.Expr{}, false, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeNotFound, portAddr.Node),
+			Message:  fmt.Sprintf("Referenced node not found: %v", portAddr.Node),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
@@ -1237,7 +1299,7 @@ func (a Analyzer) getNodeOutportType(
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
 		node,
-		scope.WithLocation(nodeIface.location),
+		scope.Relocate(nodeIface.location),
 	)
 }
 
@@ -1245,7 +1307,7 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 	entity, location, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &ref.Meta,
 		}
@@ -1253,7 +1315,7 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 
 	if entity.Kind != src.ConstEntity {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", errors.New("Entity found but is not constant"), entity.Kind),
+			Message:  fmt.Sprintf("%v: %v", errors.New("Entity found but is not constant"), entity.Kind),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -1270,12 +1332,12 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 		return expr, nil
 	}
 
-	scope = scope.WithLocation(location)
+	scope = scope.Relocate(location)
 
 	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &entity.Const.Value.Message.Meta,
 		}
@@ -1295,7 +1357,7 @@ func (a Analyzer) getSelectorsSenderType(
 
 	if senderType.Lit == nil || senderType.Lit.Struct == nil {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("Type not struct: %v", senderType.String()),
+			Message:  fmt.Sprintf("Type not struct: %v", senderType.String()),
 			Location: &scope.Location,
 		}
 	}
@@ -1304,7 +1366,7 @@ func (a Analyzer) getSelectorsSenderType(
 	fieldType, ok := senderType.Lit.Struct[curField]
 	if !ok {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("struct field '%v' not found", curField),
+			Message:  fmt.Sprintf("struct field '%v' not found", curField),
 			Location: &scope.Location,
 		}
 	}
@@ -1339,7 +1401,7 @@ func (a Analyzer) getChainHeadType(
 	}
 
 	return ts.Expr{}, &compiler.Error{
-		Err:      errors.New("Chained connection must start with port address or range expression"),
+		Message:  "Chained connection must start with port address or range expression",
 		Location: &scope.Location,
 		Meta:     &chainHead.Meta,
 	}

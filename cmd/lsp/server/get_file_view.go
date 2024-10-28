@@ -47,9 +47,9 @@ func (s *Server) GetFileView(glspCtx *glsp.Context, req GetFileViewRequest) (Get
 
 	scope := src.Scope{
 		Location: src.Location{
-			ModRef:   s.index.EntryModRef,
-			PkgName:  pkgName,
-			FileName: fileName,
+			Module:   s.index.EntryModRef,
+			Package:  pkgName,
+			Filename: fileName,
 		},
 		Build: *s.index,
 	}

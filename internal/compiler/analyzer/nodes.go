@@ -1,24 +1,12 @@
 package analyzer
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-)
-
-//nolint:lll
-var (
-	ErrAutoPortsArgNonStruct               = errors.New("Type argument for flow with struct inports directive must be struct")
-	ErrAutoPortsNodeTypeArgsCount          = errors.New("Note that uses flow with struct inports directive must pass exactly one type argument")
-	ErrAutoPortsTypeParamConstr            = errors.New("Flow that uses struct inports directive must have type parameter with struct constraint")
-	ErrAutoPortsTypeParamsCount            = errors.New("Flow that uses struct inports directive must have type parameter with have exactly one type parameter")
-	ErrNormalInportsWithAutoPortsDirective = errors.New("Flow that uses struct inports directive must have no defined inports")
-	ErrGuardNotAllowedForNode              = errors.New("Guard is not allowed for nodes without 'err' output")
-	ErrGuardNotAllowedForFlow              = errors.New("Guard is not allowed for flows without 'err' output")
 )
 
 type foundInterface struct {
@@ -74,7 +62,7 @@ func (a Analyzer) analyzeNode(
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &node.Meta,
 		}
@@ -83,7 +71,7 @@ func (a Analyzer) analyzeNode(
 	if nodeEntity.Kind != src.ComponentEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrNodeWrongEntity, nodeEntity.Kind),
+			Message:  fmt.Sprintf("Node can only refer to flows or interfaces: %v", nodeEntity.Kind),
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
 		}
@@ -92,7 +80,7 @@ func (a Analyzer) analyzeNode(
 	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
 	if usesBindDirective && len(bindDirectiveArgs) != 1 {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      ErrBindDirectiveArgs,
+			Message:  "Node with #bind directive must provide exactly one argument",
 			Location: &location,
 			Meta:     nodeEntity.Meta(),
 		}
@@ -107,7 +95,7 @@ func (a Analyzer) analyzeNode(
 	)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &location,
 			Meta:     &node.Meta,
 		}
@@ -115,7 +103,7 @@ func (a Analyzer) analyzeNode(
 
 	// Now when we have frame made of parent type parameters constraints
 	// we can resolve cases like `subnode SubFlow<T>`
-	// where `T` refers to type parameter of the flow/interface we're in.
+	// where `T` refers to type parameter of the component/interface we're in.
 	resolvedNodeArgs, err := a.resolver.ResolveExprsWithFrame(
 		node.TypeArgs,
 		resolvedParentParamsFrame,
@@ -123,7 +111,7 @@ func (a Analyzer) analyzeNode(
 	)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &location,
 			Meta:     &node.Meta,
 		}
@@ -144,14 +132,14 @@ func (a Analyzer) analyzeNode(
 	if node.ErrGuard {
 		if _, ok := flowIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForNode,
+				Message:  "Guard is not allowed for nodes without 'err' output",
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Err:      ErrGuardNotAllowedForFlow,
+				Message:  "Guard is not allowed for nodes without ':err' output",
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
@@ -177,7 +165,7 @@ func (a Analyzer) analyzeNode(
 		scope,
 	); err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &node.Meta,
 		}
@@ -197,7 +185,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// TODO probably here
-	// implement interface->flow subtyping
+	// implement interface->component subtyping
 	// in a way where FP possible
 
 	resolvedFlowDI := make(map[string]src.Node, len(node.Deps))
@@ -241,7 +229,7 @@ func (a Analyzer) getNodeInterface(
 	if entity.Kind == src.InterfaceEntity {
 		if usesBindDirective {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrInterfaceNodeBindDirective,
+				Message:  "Interface node cannot use #bind directive",
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -249,7 +237,7 @@ func (a Analyzer) getNodeInterface(
 
 		if node.Deps != nil {
 			return src.Interface{}, &compiler.Error{
-				Err:      ErrNonFlowNodeWithDI,
+				Message:  "Only component node can have dependency injection",
 				Location: &location,
 				Meta:     entity.Meta(),
 			}
@@ -262,7 +250,7 @@ func (a Analyzer) getNodeInterface(
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormNodeBind,
+			Message:  "Node can't use #bind if it isn't instantiated with the component that use #extern",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -270,7 +258,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrExternOverloadingNodeArgs,
+			Message:  "Component that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -287,7 +275,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrNormalInportsWithAutoPortsDirective,
+			Message:  "Component that uses struct inports directive must have no defined inports",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -295,7 +283,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.TypeParams.Params) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsTypeParamsCount,
+			Message:  "Exactly one type parameter expected",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -304,7 +292,7 @@ func (a Analyzer) getNodeInterface(
 	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(iface.TypeParams.Params[0].Constr, scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -312,7 +300,7 @@ func (a Analyzer) getNodeInterface(
 
 	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsTypeParamConstr,
+			Message:  "Struct type expected",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -320,7 +308,7 @@ func (a Analyzer) getNodeInterface(
 
 	if len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsNodeTypeArgsCount,
+			Message:  "Exactly one type argument expected",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -329,7 +317,7 @@ func (a Analyzer) getNodeInterface(
 	resolvedNodeArg, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &location,
 			Meta:     entity.Meta(),
 		}
@@ -337,7 +325,7 @@ func (a Analyzer) getNodeInterface(
 
 	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Err:      ErrAutoPortsArgNonStruct,
+			Message:  "Struct argument expected",
 			Location: &location,
 			Meta:     entity.Meta(),
 		}

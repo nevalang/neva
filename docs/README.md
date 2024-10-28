@@ -18,4 +18,4 @@ This document provides an overview of Nevalang, its core concepts, and how to us
 - [Components](./components.md)
 - [Networks](./networks.md)
 - [Style Guide](./style_guide.md)
-- [FAQ](./faq.md)
+- [Questions and Answers](./qa.md)

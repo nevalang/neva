@@ -1,16 +1,11 @@
 package desugarer
 
 import (
-	"errors"
 	"maps"
 	"slices"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-)
-
-var ErrConstSenderEntityKind = errors.New(
-	"Entity that is used as a const reference in flow's network must be of kind constant",
 )
 
 type handleComponentResult struct {
@@ -86,14 +81,14 @@ func (d Desugarer) handleComponent(
 }
 
 func (d Desugarer) handleNodes(
-	flow src.Component,
+	component src.Component,
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,
 ) (map[string]src.Node, []src.Connection, *compiler.Error) {
-	desugaredNodes := make(map[string]src.Node, len(flow.Nodes))
+	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
 	virtualConns := []src.Connection{}
 
-	for nodeName, node := range flow.Nodes {
+	for nodeName, node := range component.Nodes {
 		extraConns, err := d.handleNode(
 			scope,
 			node,

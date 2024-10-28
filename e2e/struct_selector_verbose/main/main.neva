@@ -1,5 +1,5 @@
 // Here we learn how to read struct field
-// by using builtin flow with compiler directive.
+// by using builtin def with compiler directive.
 
 type User struct {
     name string
@@ -17,7 +17,7 @@ const user User = {
 
 const path list<string> = ['pet', 'name']
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     Println
 
     #bind(path)

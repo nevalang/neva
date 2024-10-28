@@ -1,4 +1,4 @@
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	adder Add<int>
 	println Println<int>
 	---

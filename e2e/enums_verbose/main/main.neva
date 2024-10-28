@@ -1,4 +1,4 @@
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     DayPrinter
     ---
     :start -> { Day::Friday -> dayPrinter:day }
@@ -15,7 +15,7 @@ type Day enum {
     Sunday
 }
 
-flow DayPrinter(day Day) (sig) {
+def DayPrinter(day Day) (sig) {
     Println
     ---
     :day -> println:data

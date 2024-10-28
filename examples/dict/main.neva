@@ -3,7 +3,7 @@ const d dict<string> = {
     age: '20'
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Get, Println
     ---
     :start -> { 'name' -> get:key }

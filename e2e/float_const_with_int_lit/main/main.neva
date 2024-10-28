@@ -1,5 +1,5 @@
 const x float = 1000
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	:start -> :stop
 }

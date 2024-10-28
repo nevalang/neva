@@ -1,6 +1,6 @@
 const x float = 42
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Println<float>
     ---
     :start -> { $x -> println:data }

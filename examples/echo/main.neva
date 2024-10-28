@@ -1,6 +1,6 @@
 import { io }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	io.Scanln, Println
 	---
 	:start -> scanln -> println -> :stop

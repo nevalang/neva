@@ -1,6 +1,6 @@
 import { regexp }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Println, regexp.Submatch, Panic
     ---
     :start -> [

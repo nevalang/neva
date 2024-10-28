@@ -217,6 +217,9 @@ type nevaListener interface {
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
 
+	// EnterTernaryExpr is called when entering the ternaryExpr production.
+	EnterTernaryExpr(c *TernaryExprContext)
+
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
 
@@ -474,6 +477,9 @@ type nevaListener interface {
 
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)
+
+	// ExitTernaryExpr is called when exiting the ternaryExpr production.
+	ExitTernaryExpr(c *TernaryExprContext)
 
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)

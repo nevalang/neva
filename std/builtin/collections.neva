@@ -3,18 +3,18 @@
 // for maps it returns number of keys,
 // for for strings it returns number of utf-8 characters.
 #extern(list list_len, map map_len)
-pub flow Len<T list<any> | dict<any> | string>(data T) (res int)
+pub def Len<T list<any> | dict<any> | string>(data T) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)
-pub flow List<T>(data stream<T>) (res list<T>)
+pub def List<T>(data stream<T>) (res list<T>)
 
 // Push creates new list with appended element.
 #extern(list_push)
-pub flow Push<T> (lst list<T>, data T) (res list<T>)
+pub def Push<T> (lst list<T>, data T) (res list<T>)
 
 #extern(slice)
-pub flow Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
+pub def Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
 
 #extern(list_to_stream)
-pub flow ListToStream<T>(data list<T>) (res stream<T>)
+pub def ListToStream<T>(data list<T>) (res stream<T>)

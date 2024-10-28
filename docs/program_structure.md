@@ -43,7 +43,7 @@ neva: 0.26.0
 deps:
   github.com/nevalang/x:
     path: github.com/nevalang/x
-    version: 0.0.12
+    version: 0.0.13
 ```
 
 The `deps` field is a map where each dependency has an alias. When adding dependencies via CLI (e.g., `neva get github.com/nevalang/x`), the package manager automatically inserts a key-value pair. Third-party dependencies must have a valid git-clone path and a fixed semver version. The package manager uses git to download the repo and looks for the corresponding git-tag. The alias typically defaults to the module's path, but custom aliases allow multiple versions of the same module:
@@ -55,7 +55,7 @@ neva: 0.26.0
 deps:
   github.com/nevalang/x@0-0-12:
     path: github.com/nevalang/x
-    version: 0.0.12
+    version: 0.0.13
   github.com/nevalang/x@0-0-11:
     path: github.com/nevalang/x
     version: 0.0.11
@@ -71,7 +71,7 @@ Module references uniquely identify modules in a build, used by the compiler to 
 
 ```yaml
 path: github.com/nevalang/x
-version: 0.0.12
+version: 0.0.13
 ```
 
 ### Entry Module
@@ -167,7 +167,7 @@ Here we see 3 packages: `main`, `foo` and `foo/bar`. Note that `foo/bar` is a se
 The main package must contain a `Main` component with a specific signature and no exports.
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
     // ...
 }
 ```
@@ -188,7 +188,7 @@ A `.neva` file contains imports and entities. Files organize packages for readab
 pub type myFloat float
 
 // pkg/bar.neva
-flow Bar(mf myFloat) (sig) {
+def Bar(mf myFloat) (sig) {
     // ...
 }
 ```
@@ -287,7 +287,7 @@ pub const p int = 3.14
 // foo/bar/bar.neva
 import { @/foo }
 
-pub flow AddP(el float) (res float) {
+pub def AddP(el float) (res float) {
   Add<float>
   ---
   $foo.p -> add:acc
@@ -301,7 +301,7 @@ import {
   @/foo/bar
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
   bar.AddP, Println
   ---
   :start -> ($foo.p -> addP:el -> println -> :stop)
@@ -316,7 +316,7 @@ Third-party imports are imports of packages located in third-party modules - mod
 deps:
   github.com/nevalang/x:
     path: github.com/nevalang/x
-    version: 0.0.12
+    version: 0.0.13
 ```
 
 Then when you `import { github.com/nevalang/x }` compiler will know exactly path and version of the module you are referring to.

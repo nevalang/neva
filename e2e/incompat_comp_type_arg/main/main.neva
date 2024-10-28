@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Decr<any>
 	---
 	:start -> { 42 -> decr:data }

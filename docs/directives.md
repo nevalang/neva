@@ -8,7 +8,7 @@ Tells compiler a component lacks source code implementation and requires a runti
 
 ```neva
 #extern(println)
-pub flow Println<T>(data T) (sig T)
+pub def Println<T>(data T) (sig T)
 ```
 
 ### Overloading
@@ -17,7 +17,7 @@ Native components can be overloaded using `#extern(t1 f1, t2 f2, ...)`. These co
 
 ```neva
 #extern(int int_add, float float_add, string string_add)
-pub flow Add<T int | float | string>(acc T, el T) (res T)
+pub def Add<T int | float | string>(acc T, el T) (res T)
 ```
 
 ## `#bind`
@@ -27,7 +27,7 @@ Instructs compiler to insert a given message into a runtime function call for no
 ```neva
 const greeting string = 'Hello, World!'
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	#bind(greeting)
 	greeting New<string>
 	println Println<string>
@@ -47,5 +47,5 @@ Derives component inports from its type-argument structure fields, rather than d
 ```neva
 #autoports
 #extern(struct_builder)
-pub flow Struct<T struct {}> () (msg T)
+pub def Struct<T struct {}> () (msg T)
 ```

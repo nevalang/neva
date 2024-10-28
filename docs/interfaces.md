@@ -87,7 +87,7 @@ Syntax `add[i]` is shorthand for `add:data[i]`. The compiler infers the port nam
 Another example of a component that benefits from array-ports is `Switch`. It's used for routing - imagine we have message `data` and need to route it to different destinations based on its value. For example, if it's `a` we send it to the first destination, if `b` to the second, and `c` to the third. Otherwise, we send it to a default destination to handle unknown values. An adhoc solution with a fixed number of ports wouldn't scale. We need a generic component with dynamic port support. Here's the Switch signature:
 
 ```neva
-pub flow Switch<T>(data T, [case] T) ([case] T, else T)
+pub def Switch<T>(data T, [case] T) ([case] T, else T)
 ```
 
 This allows code like this

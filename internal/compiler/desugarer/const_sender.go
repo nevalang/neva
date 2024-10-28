@@ -61,10 +61,7 @@ func (d Desugarer) handleConstRefSender(
 	constTypeExpr, err := d.getConstTypeByRef(ref, scope)
 	if err != nil {
 		return src.PortAddr{}, compiler.Error{
-			Err: fmt.Errorf(
-				"Unable to get constant type by reference '%v'",
-				ref,
-			),
+			Message:  fmt.Sprintf("Unable to get constant type by reference '%v'", ref),
 			Location: &scope.Location,
 			Meta:     &ref.Meta,
 		}.Wrap(err)
@@ -97,7 +94,7 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &ref.Meta,
 		}
@@ -105,7 +102,10 @@ func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Ex
 
 	if entity.Kind != src.ConstEntity {
 		return ts.Expr{}, &compiler.Error{
-			Err:      fmt.Errorf("%w: %v", ErrConstSenderEntityKind, entity.Kind),
+			Message: fmt.Sprintf(
+				"Entity that is used as a const reference in component's network must be of kind constant: %v",
+				entity.Kind,
+			),
 			Location: &scope.Location,
 			Meta:     entity.Meta(),
 		}

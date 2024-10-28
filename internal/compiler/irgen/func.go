@@ -10,8 +10,8 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-func (Generator) getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string, error) {
-	args, ok := flow.Directives[compiler.ExternDirective]
+func (Generator) getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (string, error) {
+	args, ok := component.Directives[compiler.ExternDirective]
 	if !ok {
 		return "", nil
 	}
@@ -22,7 +22,7 @@ func (Generator) getFuncRef(flow src.Component, nodeTypeArgs []ts.Expr) (string,
 
 	if len(nodeTypeArgs) == 0 || nodeTypeArgs[0].Inst == nil {
 		// FIXME sometimes we have union here
-		// we must use node argument instead of flow type param
+		// we must use node argument instead of component type param
 		return "", nil
 	}
 
@@ -46,14 +46,14 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error)
 	entity, location, err := scope.Entity(compiler.ParseEntityRef(args[0]))
 	if err != nil {
 		return nil, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 		}
 	}
 
 	return getIRMsgBySrcRef(
 		entity.Const.Value,
-		scope.WithLocation(location),
+		scope.Relocate(location),
 		entity.Const.TypeExpr,
 	)
 }

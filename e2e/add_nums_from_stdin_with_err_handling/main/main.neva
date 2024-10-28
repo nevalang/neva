@@ -3,7 +3,7 @@ import {
 	strconv
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	scanner1 io.Scanln
 	scanner2 io.Scanln
 	parser1 strconv.ParseNum<int>

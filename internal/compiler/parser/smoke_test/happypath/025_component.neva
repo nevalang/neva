@@ -1,40 +1,40 @@
-flow Doer() () {}
+def Doer() () {}
 
-pub flow Doer() () {}
+pub def Doer() () {}
 
-flow Doer() () {}
+def Doer() () {}
 
-flow Doer<T>(x int) (y T) {}
+def Doer<T>(x int) (y T) {}
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
 
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     absNode INode
     ---
 }
 
-flow Doer<T>(x int) (y T) {
-    absNode INode
-
-    ---
-}
-
-flow Doer<T>(x int) (y T) {
-
+def Doer<T>(x int) (y T) {
     absNode INode
 
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
+
+    absNode INode
+
+    ---
+}
+
+def Doer<T>(x int) (y T) {
     simpleAbsNode INode
     absNodeWithTypeArgs INode<
         int,
@@ -45,22 +45,22 @@ flow Doer<T>(x int) (y T) {
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNode  Node
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNode  Node
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNodeWithTypeArgs  Node<int, vec<string>>
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNodeWithDI1  Node1{foo Node2}
     concreteNodeWithDI2  Node1{
         foo Node2
@@ -69,7 +69,7 @@ flow Doer<T>(x int) (y T) {
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNodeWithDI1  Node1{
         foo Node2
     }
@@ -80,7 +80,7 @@ flow Doer<T>(x int) (y T) {
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     concreteNodeWithDIAndTypeArgs  Node1<
         int,
         dict<
@@ -94,7 +94,7 @@ flow Doer<T>(x int) (y T) {
     ---
 }
 
-flow Doer<T>(x int) (y T) {
+def Doer<T>(x int) (y T) {
     simpleAbsNode INode
 
     absNodeWithTypeArgs INode<
@@ -119,7 +119,7 @@ flow Doer<T>(x int) (y T) {
     ---
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     abs IReader
     concrete  Scanner
     ---
@@ -128,7 +128,7 @@ flow Main(start any) (stop any) {
     concrete:v -> :code
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     abs IReader
     concrete  Scanner
     ---
@@ -138,7 +138,7 @@ flow Main(start any) (stop any) {
     concrete:v -> :code
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     abs IReader
     concrete  Scanner
 
@@ -148,7 +148,7 @@ flow Main(start any) (stop any) {
     concrete:v -> :code
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     abs IReader
     concrete  Scanner
 
@@ -159,7 +159,7 @@ flow Main(start any) (stop any) {
     concrete:v -> :code
 }
 
-flow Main() () {
+def Main() () {
     $foo -> .bar -> foo:bar
     $foo -> .bar.baz -> foo:bar
     foo:bar -> .baz -> foo:bar
@@ -171,7 +171,7 @@ flow Main() () {
     ]
 }
 
-flow Main() () {
+def Main() () {
     $foo -> { foo:bar -> bar:baz }
 
     $foo -> [
@@ -195,7 +195,7 @@ flow Main() () {
     ]
 }
 
-flow Main() () {
+def Main() () {
     $a -> { $b -> { $c -> d:e } }
 
     $a -> {
@@ -209,74 +209,74 @@ flow Main() () {
     }
 }
 
-flow Main(start) (stop) { :start -> :stop }
+def Main(start) (stop) { :start -> :stop }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     :start -> :stop }
 
-flow Main(start) (stop) { :start -> :stop
+def Main(start) (stop) { :start -> :stop
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     :start -> :stop
 }
 
-flow Main() () {
+def Main() () {
     :foo -> :bar
     :baz -> :bax
 }
 
 // Test range expression
-flow RangeTest1() () {
+def RangeTest1() () {
     1..10 -> :out
 }
 
 // Test multiple range expressions
-flow RangeTest2() () {
+def RangeTest2() () {
     1..5 -> :out1
     10..20 -> :out2
 }
 
 // Test range expression with negative numbers
-flow RangeTest3() () {
+def RangeTest3() () {
     -5..5 -> :out
 }
 
 // Test range expression mixed with other connections
-flow RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
+def RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
     1..10 -> :out1
     :in -> :out2
     20..30 -> :out3
 }
 
 // Test range expression with struct selectors
-flow RangeTest5() (out stream<int>) {
+def RangeTest5() (out stream<int>) {
     1..10 -> .data -> :out
 }
 
 // Test range expression with array index
-flow RangeTest6() (out stream<int>) {
+def RangeTest6() (out stream<int>) {
     1..10 -> arr[0]
     arr[0] -> :out
 }
 
 // Test range expression with deferred connection
-flow RangeTest7() (out stream<int>) {
+def RangeTest7() (out stream<int>) {
     1..10 -> { process -> :out }
 }
 
 // Test range expression with multiple receivers
-flow RangeTest8() (out1 stream<int>, out2 stream<int>) {
+def RangeTest8() (out1 stream<int>, out2 stream<int>) {
     1..10 -> [:out1, :out2]
 }
 
 // Test range expression inside deferred connection
-flow RangeTest9() (out stream<int>) {
+def RangeTest9() (out stream<int>) {
     :start -> { 1..10 -> process -> :out }
 }
 
 // Test range expression inside fan-in
-flow RangeTest10() (out stream<int>) {
+def RangeTest10() (out stream<int>) {
     [
         1..5,
         6..10,
@@ -285,7 +285,7 @@ flow RangeTest10() (out stream<int>) {
 }
 
 // Test range expression with fan-out
-flow RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+def RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
     1..30 -> [
         :out1,
         :out2,
@@ -294,7 +294,7 @@ flow RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
 }
 
 // Test complex scenario combining multiple features
-flow RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+def RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
     [1..10, :input] -> fanIn -> [
         :out1,
         { process2 -> :out2 },
@@ -303,7 +303,7 @@ flow RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
 }
 
 // Test nested deferred connections with range expressions
-flow RangeTest14() (out stream<int>) {
+def RangeTest14() (out stream<int>) {
     :start -> {
         1..5 -> {
             6..10 -> {

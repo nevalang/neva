@@ -2,7 +2,7 @@ import { streams }
 
 const strings list<string> = ['a', 'b', 'c']
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	ListToStream<string>, streams.Zip<int, string>
 	ForEach{Println}, Wait
 	---

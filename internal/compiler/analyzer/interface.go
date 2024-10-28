@@ -10,10 +10,6 @@ import (
 
 var (
 	ErrInterfaceTypeParams = errors.New("Cannot resolve interface type parameters")
-	ErrEmptyInports        = errors.New("Interface must have inports")
-	ErrEmptyOutports       = errors.New("Interface must have outports")
-	ErrInvalidInports      = errors.New("Inports are invalid")
-	ErrInvalidOutports     = errors.New("Outports are invalid")
 )
 
 type analyzeInterfaceParams struct {
@@ -29,7 +25,7 @@ func (a Analyzer) analyzeInterface(
 	resolvedParams, err := a.analyzeTypeParams(iface.TypeParams.Params, scope)
 	if err != nil {
 		return src.Interface{}, compiler.Error{
-			Err:      ErrInterfaceTypeParams,
+			Message:  ErrInterfaceTypeParams.Error(),
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
 		}.Wrap(err)
@@ -38,7 +34,7 @@ func (a Analyzer) analyzeInterface(
 	resolvedIO, err := a.analyzeIO(resolvedParams, iface.IO, scope, params)
 	if err != nil {
 		return src.Interface{}, compiler.Error{
-			Err:      ErrInterfaceTypeParams,
+			Message:  ErrInterfaceTypeParams.Error(),
 			Location: &scope.Location,
 			Meta:     &iface.Meta,
 		}.Wrap(err)
@@ -63,14 +59,14 @@ func (a Analyzer) analyzeIO(
 ) (src.IO, *compiler.Error) {
 	if !params.allowEmptyInports && len(io.In) == 0 {
 		return src.IO{}, &compiler.Error{
-			Err:      ErrEmptyInports,
+			Message:  "Interface must have inports",
 			Location: &scope.Location,
 		}
 	}
 
 	if !params.allowEmptyOutports && len(io.Out) == 0 {
 		return src.IO{}, &compiler.Error{
-			Err:      ErrEmptyOutports,
+			Message:  "Interface must have outports",
 			Location: &scope.Location,
 		}
 	}
@@ -78,7 +74,7 @@ func (a Analyzer) analyzeIO(
 	resolvedIn, err := a.analyzePorts(typeParams, io.In, scope)
 	if err != nil {
 		return src.IO{}, compiler.Error{
-			Err:      ErrInvalidInports,
+			Message:  "Invalid inports",
 			Location: &scope.Location,
 		}.Wrap(err)
 	}
@@ -86,7 +82,7 @@ func (a Analyzer) analyzeIO(
 	resolvedOut, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
 		return src.IO{}, compiler.Error{
-			Err:      ErrInvalidOutports,
+			Message:  "Invalid outports",
 			Location: &scope.Location,
 		}.Wrap(err)
 	}

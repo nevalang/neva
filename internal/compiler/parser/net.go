@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -11,24 +10,22 @@ import (
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
-var ErrEmptyConnDef error = errors.New("Connection must be either normal or array bypass")
-
-func parseNet(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
+func parseConnections(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
 	allConnDefs := actx.AllConnDef()
 	parsedConns := make([]src.Connection, 0, len(allConnDefs))
 
 	for _, connDef := range allConnDefs {
-		parsedConn, err := parseConn(connDef)
+		parsedConnection, err := parseConnection(connDef)
 		if err != nil {
 			return nil, err
 		}
-		parsedConns = append(parsedConns, parsedConn)
+		parsedConns = append(parsedConns, parsedConnection)
 	}
 
 	return parsedConns, nil
 }
 
-func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+func parseConnection(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
 	meta := core.Meta{
 		Text: connDef.GetText(),
 		Start: core.Position{
@@ -45,11 +42,10 @@ func parseConn(connDef generated.IConnDefContext) (src.Connection, *compiler.Err
 	arrBypassConn := connDef.ArrBypassConnDef()
 
 	if normConn == nil && arrBypassConn == nil {
-		return src.Connection{}, compiler.NewError(
-			ErrEmptyConnDef,
-			&meta,
-			nil,
-		)
+		return src.Connection{}, &compiler.Error{
+			Message: "Connection must be either normal or array bypass",
+			Meta:    &meta,
+		}
 	}
 
 	if arrBypassConn != nil {
@@ -158,10 +154,8 @@ func parseSenderSide(
 
 	if singleSender == nil && mulSenders == nil {
 		return nil, &compiler.Error{
-			Err: errors.New(
-				"Connection must have at least one sender side",
-			),
-			Meta: &meta,
+			Message: "Connection must have at least one sender side",
+			Meta:    &meta,
 		}
 	}
 
@@ -176,10 +170,7 @@ func parseSenderSide(
 	for _, senderSide := range toParse {
 		parsedSide, err := parseNormConnSenderSide(senderSide)
 		if err != nil {
-			return nil, &compiler.Error{
-				Err:  err,
-				Meta: &meta,
-			}
+			return nil, err
 		}
 		parsedSenders = append(parsedSenders, parsedSide)
 	}
@@ -214,11 +205,10 @@ func parseSingleReceiverSide(
 	case portAddr != nil:
 		return parsePortAddrReceiver(portAddr)
 	default:
-		return src.ConnectionReceiver{}, compiler.NewError(
-			errors.New("missing receiver side"),
-			&meta,
-			nil,
-		)
+		return src.ConnectionReceiver{}, &compiler.Error{
+			Message: "missing receiver side",
+			Meta:    &meta,
+		}
 	}
 }
 
@@ -266,8 +256,8 @@ func parseReceiverSide(
 		return parseMultipleReceiverSides(multipleReceiverSide)
 	default:
 		return nil, &compiler.Error{
-			Err:  errors.New("missing receiver side"),
-			Meta: &meta,
+			Message: "missing receiver side",
+			Meta:    &meta,
 		}
 	}
 }
@@ -307,12 +297,9 @@ func parseDeferredConn(
 		},
 	}
 
-	parsedConns, err := parseConn(deferredConns.ConnDef())
+	parsedConns, err := parseConnection(deferredConns.ConnDef())
 	if err != nil {
-		return src.ConnectionReceiver{}, &compiler.Error{
-			Err:  err,
-			Meta: &meta,
-		}
+		return src.ConnectionReceiver{}, err
 	}
 
 	return src.ConnectionReceiver{
@@ -329,14 +316,16 @@ func parseNormConnSenderSide(
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
+	ternaryExprSender := senderSide.TernaryExpr()
 
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
 		rangeExprSender == nil &&
-		structSelectors == nil {
+		structSelectors == nil &&
+		ternaryExprSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
-			Err: errors.New("Sender side is missing in connection"),
+			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
 				Text: senderSide.GetText(),
 				Start: core.Position{
@@ -390,7 +379,7 @@ func parseNormConnSenderSide(
 		from, err := strconv.ParseInt(fromText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
-				Err: fmt.Errorf("Invalid range 'from' value: %v", err),
+				Message: fmt.Sprintf("Invalid range 'from' value: %v", err),
 				Meta: &core.Meta{
 					Text: rangeExprSender.GetText(),
 					Start: core.Position{
@@ -412,7 +401,7 @@ func parseNormConnSenderSide(
 		to, err := strconv.ParseInt(toText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
-				Err: fmt.Errorf("Invalid range 'to' value: %v", err),
+				Message: fmt.Sprintf("Invalid range 'to' value: %v", err),
 				Meta: &core.Meta{
 					Text: rangeExprSender.GetText(),
 					Start: core.Position{
@@ -451,11 +440,47 @@ func parseNormConnSenderSide(
 		}
 	}
 
+	var ternaryExpr *src.TernaryExpr
+	if ternaryExprSender != nil {
+		parts := ternaryExprSender.AllSingleSenderSide()
+
+		condition, err := parseNormConnSenderSide(parts[0])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		left, err := parseNormConnSenderSide(parts[1])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		right, err := parseNormConnSenderSide(parts[2])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+
+		ternaryExpr = &src.TernaryExpr{
+			Condition: condition,
+			Left:      left,
+			Right:     right,
+			Meta: core.Meta{
+				Text: ternaryExprSender.GetText(),
+				Start: core.Position{
+					Line:   ternaryExprSender.GetStart().GetLine(),
+					Column: ternaryExprSender.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   ternaryExprSender.GetStop().GetLine(),
+					Column: ternaryExprSender.GetStop().GetColumn(),
+				},
+			},
+		}
+	}
+
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
+		TernaryExpr:    ternaryExpr,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{

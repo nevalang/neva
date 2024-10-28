@@ -1,6 +1,6 @@
 import { strings }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Println, strings.Split, strings.Join
 	---
 	:start -> [

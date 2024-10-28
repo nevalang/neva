@@ -44,7 +44,7 @@ func (Desugarer) handleNode(
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return nil, &compiler.Error{
-			Err:      err,
+			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &node.Meta,
 		}

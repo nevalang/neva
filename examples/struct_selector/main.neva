@@ -5,7 +5,7 @@ type User struct {
 
 type Pet struct { name string }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     GetUser, Println
     ---
     :start -> getUser -> .pet.name -> println -> :stop
@@ -16,6 +16,6 @@ const user User = {
     pet: { name: 'Charley' }
 }
 
-flow GetUser(sig) (u User) {
+def GetUser(sig) (u User) {
     :sig -> { $user -> :u }
 }

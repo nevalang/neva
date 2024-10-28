@@ -2,7 +2,6 @@ package builder
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -31,7 +30,7 @@ func (b Builder) Build(
 	entryMod, entryModRootPath, err := b.LoadModuleByPath(ctx, wd)
 	if err != nil {
 		return compiler.RawBuild{}, "", &compiler.Error{
-			Err: fmt.Errorf("build entry mod: %w", err),
+			Message: "build entry mod: " + err.Error(),
 		}
 	}
 
@@ -51,7 +50,7 @@ func (b Builder) Build(
 	stdMod, _, err := b.LoadModuleByPath(ctx, b.stdLibPath)
 	if err != nil {
 		return compiler.RawBuild{}, "", &compiler.Error{
-			Err: fmt.Errorf("build stdlib mod: %w", err),
+			Message: "build stdlib mod: " + err.Error(),
 		}
 	}
 
@@ -61,7 +60,7 @@ func (b Builder) Build(
 	release, err := acquireLockFile()
 	if err != nil {
 		return compiler.RawBuild{}, "", &compiler.Error{
-			Err: fmt.Errorf("failed to acquire lock file: %w", err),
+			Message: "failed to acquire lock file: " + err.Error(),
 		}
 	}
 	defer release()
@@ -78,14 +77,14 @@ func (b Builder) Build(
 		depWD, _, err := b.downloadDep(depModRef)
 		if err != nil {
 			return compiler.RawBuild{}, "", &compiler.Error{
-				Err: fmt.Errorf("download dep: %w", err),
+				Message: "download dep: " + err.Error(),
 			}
 		}
 
 		depMod, _, err := b.LoadModuleByPath(ctx, depWD)
 		if err != nil {
 			return compiler.RawBuild{}, "", &compiler.Error{
-				Err: fmt.Errorf("build dep mod: %w", err),
+				Message: "build dep mod: " + err.Error(),
 			}
 		}
 

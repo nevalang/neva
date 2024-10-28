@@ -2,7 +2,7 @@
 
 import { time }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Map<int, string>{Handler}
     ForEach{Println}
     Wait
@@ -10,7 +10,7 @@ flow Main(start) (stop) {
     :start -> 1..5 -> map -> forEach -> wait -> :stop
 }
 
-flow Handler(data int) (res string) {
+def Handler(data int) (res string) {
     Switch<int>, Select<string>
 
     ---

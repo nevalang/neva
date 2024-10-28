@@ -1,6 +1,6 @@
 import { io }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	io.Scanln
 	println Println<string>
 	---

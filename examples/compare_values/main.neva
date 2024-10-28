@@ -1,12 +1,9 @@
-flow Main(start) (stop) {
-    Eq, Ternary, Println
+def Main(start) (stop) {
+    Eq, Println
     ---
     :start -> [
         { 2 -> eq:actual },
         { 2 -> eq:compared }
     ]
-    eq -> ternary:if
-    'They match' -> ternary:then
-    'They do not match' -> ternary:else
-    ternary -> println -> :stop
+    (eq ? 'They match' : 'They do not match') -> println -> :stop
 }

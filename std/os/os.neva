@@ -1,2 +1,2 @@
 #extern(args)
-pub flow Args(sig any) (data list<string>)
+pub def Args(sig any) (data list<string>)

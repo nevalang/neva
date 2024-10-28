@@ -13,7 +13,7 @@ const numsStruct NumsStruct = {
     d: numsMap
 }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Println
     ---
     :start -> { $numsStruct -> println:data }

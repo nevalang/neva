@@ -5,7 +5,7 @@ type User struct {
 
 // FIXME:grammar - cannot use 'struct' as a node name
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
     Println
     builder Struct<User>
     ---

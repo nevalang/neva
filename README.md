@@ -74,7 +74,7 @@ Hello, World!
 If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see this
 
 ```neva
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Println
 	---
 	:start -> ('Hello, World!' -> println -> :stop)

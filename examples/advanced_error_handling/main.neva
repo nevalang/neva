@@ -1,6 +1,6 @@
 import { http }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	App, Println, Panic // `Panic` will terminate the program
 	---
 	:start -> app:sig
@@ -8,7 +8,7 @@ flow Main(start) (stop) {
 	app:data -> println -> :stop
 }
 
-flow App(sig) (data string, err error) {
+def App(sig) (data string, err error) {
 	http.Get? // '?' implicitly sends `:err` downstream
 	---
 	:sig -> { 'definitely not a valid URL' -> get }

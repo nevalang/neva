@@ -1,4 +1,4 @@
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Println<any>
 	---
 	:start -> { 'Hello, World!' -> println:data }

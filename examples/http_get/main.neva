@@ -1,6 +1,6 @@
 import { http }
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	http.Get, Println, Panic
 	---
 	:start -> { 'http://www.example.com' -> get }

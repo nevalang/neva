@@ -2,7 +2,7 @@
 
 const lst list<int> = [50, 30, 20, 100]
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
     Map<int, int>{Decr<int>}
     List
     Println

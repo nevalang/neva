@@ -3,7 +3,7 @@ import {
  	strconv
 }
 
-flow Main(start any) (stop any) {
+def Main(start any) (stop any) {
 	Aux, Println<any>
 	---
 	:start -> aux:sig
@@ -11,7 +11,7 @@ flow Main(start any) (stop any) {
 	println:sig -> :stop
 }
 
-flow Aux(sig any) (res int, err error) {
+def Aux(sig any) (res int, err error) {
 	reader1 IntReader
 	reader2 IntReader
 	add Add<int>
@@ -23,7 +23,7 @@ flow Aux(sig any) (res int, err error) {
 	add:res -> :res
 }
 
-flow IntReader(sig any) (num int, err error) {
+def IntReader(sig any) (num int, err error) {
 	io.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln:sig

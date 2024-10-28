@@ -1,6 +1,6 @@
 const l list<int> = [1, 2, 3]
 
-flow Main(start) (stop) {
+def Main(start) (stop) {
 	Println<int>
 	Reduce<int, int>{Sub<int>}
 	ListToStream<int>
