@@ -610,10 +610,7 @@ func (d Desugarer) desugarSingleSender(
 			}.Wrap(err)
 		}
 
-		return desugarSenderResult{
-			replace: result.replace,
-			insert:  result.insert,
-		}, nil
+		return desugarSenderResult(result), nil
 	}
 
 	result, err := d.desugarRangeSender(
