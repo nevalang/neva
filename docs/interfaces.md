@@ -97,7 +97,7 @@ This allows code like this
 1 -> switch:case[0] -> dst1
 2 -> switch:case[1] -> dst2
 3 -> switch:case[2] -> dst3
-switch:else -> ('!?' -> println)
+switch:else -> { '!?' -> println }
 ```
 
 Array-ports combine data from different sources. They are static, requiring the number of ports to be known at compile time for channel generation. This can always be determined from the source code. Limitations of array-ports will be discussed on the network page.

@@ -54,7 +54,7 @@ Normal component `Main` with a `println` node (instance of `Println`):
 def Main(start) (stop) {
    Println
    ---
-   :start -> (42 -> println -> :stop)
+   :start -> { 42 -> println -> :stop }
 }
 ```
 
@@ -65,7 +65,7 @@ def Main(start) (stop) {
    p1 Println
    p2 Println
    ---
-   :start -> (42 -> p1 -> p2 -> :stop)
+   :start -> { 42 -> p1 -> p2 -> :stop }
 }
 ```
 
