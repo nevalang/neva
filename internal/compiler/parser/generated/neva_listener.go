@@ -220,6 +220,12 @@ type nevaListener interface {
 	// EnterTernaryExpr is called when entering the ternaryExpr production.
 	EnterTernaryExpr(c *TernaryExprContext)
 
+	// EnterBinaryExpr is called when entering the binaryExpr production.
+	EnterBinaryExpr(c *BinaryExprContext)
+
+	// EnterBinaryOp is called when entering the binaryOp production.
+	EnterBinaryOp(c *BinaryOpContext)
+
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
 
@@ -480,6 +486,12 @@ type nevaListener interface {
 
 	// ExitTernaryExpr is called when exiting the ternaryExpr production.
 	ExitTernaryExpr(c *TernaryExprContext)
+
+	// ExitBinaryExpr is called when exiting the binaryExpr production.
+	ExitBinaryExpr(c *BinaryExprContext)
+
+	// ExitBinaryOp is called when exiting the binaryOp production.
+	ExitBinaryOp(c *BinaryOpContext)
 
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)

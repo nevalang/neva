@@ -1159,3 +1159,4 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 		},
 	}, nil
 }
+

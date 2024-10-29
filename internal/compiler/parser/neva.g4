@@ -136,8 +136,11 @@ singleSenderSide:
 	| primitiveConstLit
 	| rangeExpr
 	| structSelectors
-	| ternaryExpr;
+	| ternaryExpr
+	| binaryExpr;
 ternaryExpr: '(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
+binaryExpr: '(' singleSenderSide binaryOp singleSenderSide ')';
+binaryOp: '+' | '-' | '*' | '/';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

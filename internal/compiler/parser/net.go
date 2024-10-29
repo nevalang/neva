@@ -168,7 +168,7 @@ func parseSenderSide(
 
 	parsedSenders := []src.ConnectionSender{}
 	for _, senderSide := range toParse {
-		parsedSide, err := parseNormConnSenderSide(senderSide)
+		parsedSide, err := parseSingleSender(senderSide)
 		if err != nil {
 			return nil, err
 		}
@@ -308,7 +308,7 @@ func parseDeferredConn(
 	}, nil
 }
 
-func parseNormConnSenderSide(
+func parseSingleSender(
 	senderSide generated.ISingleSenderSideContext,
 ) (src.ConnectionSender, *compiler.Error) {
 	structSelectors := senderSide.StructSelectors()
@@ -317,13 +317,15 @@ func parseNormConnSenderSide(
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
 	ternaryExprSender := senderSide.TernaryExpr()
+	binaryExprSender := senderSide.BinaryExpr()
 
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
 		rangeExprSender == nil &&
 		structSelectors == nil &&
-		ternaryExprSender == nil {
+		ternaryExprSender == nil &&
+		binaryExprSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
@@ -444,15 +446,15 @@ func parseNormConnSenderSide(
 	if ternaryExprSender != nil {
 		parts := ternaryExprSender.AllSingleSenderSide()
 
-		condition, err := parseNormConnSenderSide(parts[0])
+		condition, err := parseSingleSender(parts[0])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-		left, err := parseNormConnSenderSide(parts[1])
+		left, err := parseSingleSender(parts[1])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-		right, err := parseNormConnSenderSide(parts[2])
+		right, err := parseSingleSender(parts[2])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
@@ -475,12 +477,18 @@ func parseNormConnSenderSide(
 		}
 	}
 
+	var binaryExpr *src.BinaryExpr
+	if binaryExprSender != nil {
+		binaryExpr = parseBinaryExpr(binaryExprSender)
+	}
+
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
 		TernaryExpr:    ternaryExpr,
+		BinaryExpr:     binaryExpr,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{
@@ -522,4 +530,52 @@ func parsePortAddrReceiver(
 			},
 		},
 	}, nil
+}
+
+func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.BinaryExpr {
+	if ctx == nil {
+		return nil
+	}
+
+	// Get operator
+	var op src.BinaryOperator
+	switch ctx.BinaryOp().GetText() {
+	case "+":
+		op = src.AddOp
+	case "-":
+		op = src.SubOp
+	case "*":
+		op = src.MulOp
+	case "/":
+		op = src.DivOp
+	}
+
+	senders := ctx.AllSingleSenderSide()
+
+	left, err := parseSingleSender(senders[0])
+	if err != nil {
+		return nil
+	}
+
+	right, err := parseSingleSender(senders[1])
+	if err != nil {
+		return nil
+	}
+
+	return &src.BinaryExpr{
+		Left:     left,
+		Right:    right,
+		Operator: op,
+		Meta: core.Meta{
+			Text: ctx.GetText(),
+			Start: core.Position{
+				Line:   ctx.GetStart().GetLine(),
+				Column: ctx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   ctx.GetStop().GetLine(),
+				Column: ctx.GetStop().GetColumn(),
+			},
+		},
+	}
 }
