@@ -26,7 +26,7 @@ func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 	conn := net[0].Normal
 	require.Equal(t, 1, len(conn.SenderSide))
 
-	ternary := conn.SenderSide[0].TernaryExpr
+	ternary := conn.SenderSide[0].Ternary
 	require.NotNil(t, ternary)
 
 	require.Equal(t, "condition", ternary.Condition.PortAddr.Node)
@@ -54,13 +54,13 @@ func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
 	conn := net[0].Normal
 	require.Equal(t, 1, len(conn.SenderSide))
 
-	outerTernary := conn.SenderSide[0].TernaryExpr
+	outerTernary := conn.SenderSide[0].Ternary
 	require.NotNil(t, outerTernary)
 
 	require.Equal(t, "cond1", outerTernary.Condition.PortAddr.Node)
 	require.Equal(t, "val3", outerTernary.Right.PortAddr.Node)
 
-	innerTernary := outerTernary.Left.TernaryExpr
+	innerTernary := outerTernary.Left.Ternary
 	require.NotNil(t, innerTernary)
 	require.Equal(t, "cond2", innerTernary.Condition.PortAddr.Node)
 	require.Equal(t, "val1", innerTernary.Left.PortAddr.Node)
@@ -538,7 +538,7 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 			conn := net[0].Normal
 			require.Equal(t, 1, len(conn.SenderSide))
 
-			binary := conn.SenderSide[0].BinaryExpr
+			binary := conn.SenderSide[0].Binary
 			require.NotNil(t, binary)
 
 			require.Equal(t, "a", binary.Left.PortAddr.Node)
@@ -563,17 +563,17 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, conn *src.NormalConnection) {
-				binary := conn.SenderSide[0].BinaryExpr
+				binary := conn.SenderSide[0].Binary
 				require.NotNil(t, binary)
 				require.Equal(t, src.MulOp, binary.Operator)
 
-				leftBinary := binary.Left.BinaryExpr
+				leftBinary := binary.Left.Binary
 				require.NotNil(t, leftBinary)
 				require.Equal(t, src.AddOp, leftBinary.Operator)
 				require.Equal(t, "a", leftBinary.Left.PortAddr.Node)
 				require.Equal(t, "b", leftBinary.Right.PortAddr.Node)
 
-				rightBinary := binary.Right.BinaryExpr
+				rightBinary := binary.Right.Binary
 				require.NotNil(t, rightBinary)
 				require.Equal(t, src.SubOp, rightBinary.Operator)
 				require.Equal(t, "c", rightBinary.Left.PortAddr.Node)
@@ -588,12 +588,12 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, conn *src.NormalConnection) {
-				binary := conn.SenderSide[0].BinaryExpr
+				binary := conn.SenderSide[0].Binary
 				require.NotNil(t, binary)
 				require.Equal(t, src.AddOp, binary.Operator)
 				require.Equal(t, "a", binary.Left.PortAddr.Node)
 
-				ternary := binary.Right.TernaryExpr
+				ternary := binary.Right.Ternary
 				require.NotNil(t, ternary)
 				require.Equal(t, "b", ternary.Condition.PortAddr.Node)
 				require.Equal(t, "c", ternary.Left.PortAddr.Node)
@@ -608,17 +608,17 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, conn *src.NormalConnection) {
-				ternary := conn.SenderSide[0].TernaryExpr
+				ternary := conn.SenderSide[0].Ternary
 				require.NotNil(t, ternary)
 				require.Equal(t, "cond", ternary.Condition.PortAddr.Node)
 
-				leftBinary := ternary.Left.BinaryExpr
+				leftBinary := ternary.Left.Binary
 				require.NotNil(t, leftBinary)
 				require.Equal(t, src.AddOp, leftBinary.Operator)
 				require.Equal(t, "a", leftBinary.Left.PortAddr.Node)
 				require.Equal(t, "b", leftBinary.Right.PortAddr.Node)
 
-				rightBinary := ternary.Right.BinaryExpr
+				rightBinary := ternary.Right.Binary
 				require.NotNil(t, rightBinary)
 				require.Equal(t, src.MulOp, rightBinary.Operator)
 				require.Equal(t, "c", rightBinary.Left.PortAddr.Node)

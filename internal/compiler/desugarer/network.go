@@ -593,9 +593,9 @@ func (d Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	if sender.TernaryExpr != nil {
+	if sender.Ternary != nil {
 		result, err := d.desugarTernarySender(
-			*sender.TernaryExpr,
+			*sender.Ternary,
 			normConn,
 			nodesToInsert,
 			constsToInsert,

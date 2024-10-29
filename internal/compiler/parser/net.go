@@ -487,8 +487,8 @@ func parseSingleSender(
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
-		TernaryExpr:    ternaryExpr,
-		BinaryExpr:     binaryExpr,
+		Ternary:        ternaryExpr,
+		Binary:         binaryExpr,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{

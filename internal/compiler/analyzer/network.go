@@ -473,7 +473,8 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
-		sender.TernaryExpr == nil &&
+		sender.Binary == nil &&
+		sender.Ternary == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
 			Message:  "Sender in network must contain port address, constant reference or message literal",
@@ -506,10 +507,10 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.TernaryExpr != nil {
+	if sender.Ternary != nil {
 		// analyze the condition part
 		_, condType, err := a.analyzeSender(
-			sender.TernaryExpr.Condition,
+			sender.Ternary.Condition,
 			scope,
 			iface,
 			nodes,
@@ -520,7 +521,7 @@ func (a Analyzer) analyzeSender(
 		if err != nil {
 			return nil, nil, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &sender.TernaryExpr.Meta,
+				Meta:     &sender.Ternary.Meta,
 			}.Wrap(err)
 		}
 
@@ -532,13 +533,13 @@ func (a Analyzer) analyzeSender(
 			return nil, nil, &compiler.Error{
 				Message:  "Condition of ternary expression must be of boolean type",
 				Location: &scope.Location,
-				Meta:     &sender.TernaryExpr.Meta,
+				Meta:     &sender.Ternary.Meta,
 			}
 		}
 
 		// analyze the trueVal part
 		_, trueValType, err := a.analyzeSender(
-			sender.TernaryExpr.Left,
+			sender.Ternary.Left,
 			scope,
 			iface,
 			nodes,
@@ -549,13 +550,13 @@ func (a Analyzer) analyzeSender(
 		if err != nil {
 			return nil, nil, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &sender.TernaryExpr.Meta,
+				Meta:     &sender.Ternary.Meta,
 			}.Wrap(err)
 		}
 
 		// analyze the falseVal part
 		_, _, err = a.analyzeSender(
-			sender.TernaryExpr.Right,
+			sender.Ternary.Right,
 			scope,
 			iface,
 			nodes,
@@ -566,13 +567,87 @@ func (a Analyzer) analyzeSender(
 		if err != nil {
 			return nil, nil, compiler.Error{
 				Location: &scope.Location,
-				Meta:     &sender.TernaryExpr.Meta,
+				Meta:     &sender.Ternary.Meta,
 			}.Wrap(err)
 		}
 
-		// TODO support proper typing (see https://github.com/nevalang/neva/issues/737)
-
 		return &sender, trueValType, nil
+	}
+
+	if sender.Binary != nil {
+		_, leftType, _, err := a.getSenderSideType(
+			sender.Binary.Left,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		_, rightType, _, err := a.getSenderSideType(
+			sender.Binary.Right,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			prevChainLink,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		var constr ts.Expr
+		switch sender.Binary.Operator {
+		case src.AddOp:
+			constr = ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: []ts.Expr{
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+					},
+				},
+			}
+		case src.SubOp, src.MulOp, src.DivOp:
+			constr = ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: []ts.Expr{
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+					},
+				},
+			}
+		default:
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf(
+					"Unsupported binary operator: %v",
+					sender.Binary.Operator,
+				),
+				Location: &scope.Location,
+				Meta:     &sender.Binary.Meta,
+			}
+		}
+
+		if err := a.resolver.IsSubtypeOf(leftType, constr, scope); err != nil {
+			return nil, nil, &compiler.Error{
+				Message:  fmt.Sprintf("Invalid left operand type for %s: %v", sender.Binary.Operator, err),
+				Location: &scope.Location,
+				Meta:     &sender.Binary.Meta,
+			}
+		}
+
+		if err := a.resolver.IsSubtypeOf(rightType, constr, scope); err != nil {
+			return nil, nil, &compiler.Error{
+				Message:  fmt.Sprintf("Invalid right operand type for %s: %v", sender.Binary.Operator, err),
+				Location: &scope.Location,
+				Meta:     &sender.Binary.Meta,
+			}
+		}
+
+		return &sender, &leftType, nil
 	}
 
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(

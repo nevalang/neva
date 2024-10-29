@@ -326,8 +326,8 @@ type ConnectionSender struct {
 	Const          *Const       `json:"literal,omitempty"`
 	Range          *RangeExpr   `json:"range,omitempty"`
 	StructSelector []string     `json:"selectors,omitempty"`
-	BinaryExpr     *BinaryExpr  `json:"binaryExpr,omitempty"`
-	TernaryExpr    *TernaryExpr `json:"ternaryExpr,omitempty"`
+	Binary         *BinaryExpr  `json:"binaryExpr,omitempty"`
+	Ternary        *TernaryExpr `json:"ternaryExpr,omitempty"`
 	Meta           core.Meta    `json:"meta,omitempty"`
 }
 
