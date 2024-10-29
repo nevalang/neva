@@ -313,6 +313,86 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		// Update the binary_expression test case
+		{
+			name: "binary_expressions",
+			net: []src.Connection{
+				{
+					// :a + :b -> :c
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Binary: &src.BinaryExpr{
+									Operator: src.AddOp,
+									Left: src.ConnectionSender{
+										PortAddr: &src.PortAddr{Port: "a"},
+									},
+									Right: src.ConnectionSender{
+										PortAddr: &src.PortAddr{Port: "b"},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Port: "c"}},
+						},
+					},
+				},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						// :a -> __add__1:acc
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Port: "a"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "acc"}},
+							},
+						},
+					},
+					{
+						// :b -> __add__1:el
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Port: "b"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "el"}},
+							},
+						},
+					},
+					{
+						// __add__1:res -> :c
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "res"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Port: "c"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__add__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "Add",
+						},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
