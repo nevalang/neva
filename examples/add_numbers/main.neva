@@ -1,11 +1,6 @@
 def Main(start) (stop) {
 	Println
-	Add<int>
 	---
-	:start -> [
-		{ 1 -> add:acc },
-		{ 2 -> add:el }
-	]
-	add -> println -> :stop
+	:start -> { (1 + 2) -> println -> :stop }
 }
 

@@ -32,6 +32,10 @@ pub def Mul<T int | float>(acc T, el T) (res T)
 #extern(int int_div, float float_div)
 pub def Div<T int | float>(acc T, el T) (res T)
 
+// Mod calculates num modulo den and sends to result.
+#extern(int_mod)
+pub def Mod(acc int, el int) (res int)
+
 // --- Boolean ---
 
 // Eq sends true if actual is equal to compared, otherwise false.

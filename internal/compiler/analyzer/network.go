@@ -620,6 +620,10 @@ func (a Analyzer) analyzeSender(
 					},
 				},
 			}
+		case src.ModOp:
+			constr = ts.Expr{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+			}
 		case src.EqOp:
 			constr = ts.Expr{
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "any"}},

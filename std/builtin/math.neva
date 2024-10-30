@@ -1,5 +1,0 @@
-// --- Other ---
-
-// Mod calculates num modulo den and sends to result.
-#extern(int_mod)
-pub def Mod(num int, den int) (res int)

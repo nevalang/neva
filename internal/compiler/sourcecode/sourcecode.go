@@ -355,6 +355,7 @@ const (
 	MulOp BinaryOperator = "*"
 	DivOp BinaryOperator = "/"
 	EqOp  BinaryOperator = "=="
+	ModOp BinaryOperator = "%"
 )
 
 func (s ConnectionSender) String() string {

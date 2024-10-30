@@ -549,6 +549,8 @@ func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
 		op = src.DivOp
 	case "==":
 		op = src.EqOp
+	case "%":
+		op = src.ModOp
 	}
 
 	senders := ctx.AllSingleSenderSide()

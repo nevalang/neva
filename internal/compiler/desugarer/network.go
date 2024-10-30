@@ -1101,6 +1101,7 @@ var (
 	mulCounter uint64
 	divCounter uint64
 	eqCounter  uint64
+	modCounter uint64
 )
 
 // TODO figure out proper type argument instead of any so overloading works
@@ -1134,6 +1135,10 @@ func (d Desugarer) desugarBinarySender(
 		divCounter++
 		binaryNodeName = fmt.Sprintf("__div__%d", divCounter)
 		mathComponent = "Div"
+	case src.ModOp:
+		modCounter++
+		binaryNodeName = fmt.Sprintf("__mod__%d", modCounter)
+		mathComponent = "Mod"
 	case src.EqOp:
 		eqCounter++
 		binaryNodeName = fmt.Sprintf("__eq__%d", eqCounter)
