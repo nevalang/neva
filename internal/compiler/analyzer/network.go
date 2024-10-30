@@ -620,6 +620,10 @@ func (a Analyzer) analyzeSender(
 					},
 				},
 			}
+		case src.EqOp:
+			constr = ts.Expr{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "any"}},
+			}
 		default:
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf(
@@ -647,7 +651,20 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		return &sender, &leftType, nil
+		// desugarer needs this information to use overloaded components
+		// it could figure this out itself but it's extra work
+		sender.Binary.AnalyzedType = leftType
+
+		var resultType ts.Expr
+		if sender.Binary.Operator == src.EqOp {
+			resultType = ts.Expr{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+			}
+		} else {
+			resultType = leftType
+		}
+
+		return &sender, &resultType, nil
 	}
 
 	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(

@@ -140,7 +140,7 @@ singleSenderSide:
 	| binaryExpr;
 ternaryExpr: '(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
 binaryExpr: '(' singleSenderSide binaryOp singleSenderSide ')';
-binaryOp: '+' | '-' | '*' | '/';
+binaryOp: '+' | '-' | '*' | '/' | '==';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

@@ -372,7 +372,7 @@ func parseSingleSender(
 		constant = &parsedPrimitiveConstLiteralSender
 	}
 
-	var rangeExpr *src.RangeExpr
+	var rangeExpr *src.Range
 	if rangeExprSender != nil {
 		fromText := rangeExprSender.INT(0).GetText()
 		if rangeExprSender.MINUS(0) != nil {
@@ -418,7 +418,7 @@ func parseSingleSender(
 			}
 		}
 
-		rangeExpr = &src.RangeExpr{
+		rangeExpr = &src.Range{
 			From: from,
 			To:   to,
 			Meta: core.Meta{
@@ -442,7 +442,7 @@ func parseSingleSender(
 		}
 	}
 
-	var ternaryExpr *src.TernaryExpr
+	var ternaryExpr *src.Ternary
 	if ternaryExprSender != nil {
 		parts := ternaryExprSender.AllSingleSenderSide()
 
@@ -459,7 +459,7 @@ func parseSingleSender(
 			return src.ConnectionSender{}, err
 		}
 
-		ternaryExpr = &src.TernaryExpr{
+		ternaryExpr = &src.Ternary{
 			Condition: condition,
 			Left:      left,
 			Right:     right,
@@ -477,7 +477,7 @@ func parseSingleSender(
 		}
 	}
 
-	var binaryExpr *src.BinaryExpr
+	var binaryExpr *src.Binary
 	if binaryExprSender != nil {
 		binaryExpr = parseBinaryExpr(binaryExprSender)
 	}
@@ -532,12 +532,11 @@ func parsePortAddrReceiver(
 	}, nil
 }
 
-func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.BinaryExpr {
+func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
 	if ctx == nil {
 		return nil
 	}
 
-	// Get operator
 	var op src.BinaryOperator
 	switch ctx.BinaryOp().GetText() {
 	case "+":
@@ -548,6 +547,8 @@ func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.BinaryExpr {
 		op = src.MulOp
 	case "/":
 		op = src.DivOp
+	case "==":
+		op = src.EqOp
 	}
 
 	senders := ctx.AllSingleSenderSide()
@@ -562,7 +563,7 @@ func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.BinaryExpr {
 		return nil
 	}
 
-	return &src.BinaryExpr{
+	return &src.Binary{
 		Left:     left,
 		Right:    right,
 		Operator: op,

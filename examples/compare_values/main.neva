@@ -1,9 +1,7 @@
 def Main(start) (stop) {
-    Eq, Println
+    Println
     ---
-    :start -> [
-        { 2 -> eq:actual },
-        { 2 -> eq:compared }
-    ]
-    (eq ? 'They match' : 'They do not match') -> println -> :stop
+    :start -> {
+        ((2 == 2) ? 'They match' : 'They do not match') -> println -> :stop
+    }
 }

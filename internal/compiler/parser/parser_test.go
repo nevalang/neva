@@ -625,6 +625,27 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 				require.Equal(t, "d", rightBinary.Right.PortAddr.Node)
 			},
 		},
+		{
+			name: "ternary with binary condition",
+			text: `
+				def C1() () {
+					((a == b) ? c : d) -> receiver
+				}
+			`,
+			check: func(t *testing.T, conn *src.NormalConnection) {
+				ternary := conn.SenderSide[0].Ternary
+				require.NotNil(t, ternary)
+
+				condBinary := ternary.Condition.Binary
+				require.NotNil(t, condBinary)
+				require.Equal(t, src.EqOp, condBinary.Operator)
+				require.Equal(t, "a", condBinary.Left.PortAddr.Node)
+				require.Equal(t, "b", condBinary.Right.PortAddr.Node)
+
+				require.Equal(t, "c", ternary.Left.PortAddr.Node)
+				require.Equal(t, "d", ternary.Right.PortAddr.Node)
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -13,7 +13,7 @@ def Even(data int) (res bool) {
     ---
     :data -> mod:num
     2 -> mod:den
-    mod -> eq:actual
-    0 -> eq:compared
+    mod -> eq:acc
+    0 -> eq:el
     eq -> :res
 }

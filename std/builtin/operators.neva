@@ -1,0 +1,56 @@
+// === UNARY ===
+
+// Not sends true if data is false, and false if data is true.
+#extern(not)
+pub def Not(data bool) (res bool)
+
+// Inc increments data by 1 and sends to result. It can be used with Map.
+#extern(int int_inc, float float_inc)
+pub def Inc<T int | float>(data T) (res T)
+
+// Decr decrements data by 1 and sends to result. It can be used with Map.
+#extern(int int_decr, float float_decr)
+pub def Decr<T int | float>(data T) (res T)
+
+// === BINARY ===
+
+// --- Math ---
+
+// Add sums acc with el and sends to result. It can be used with Reduce.
+#extern(int int_add, float float_add, string string_add)
+pub def Add<T int | float | string>(acc T, el T) (res T)
+
+// Sub subtracts el from acc and sends to result. It can be used with Reduce.
+#extern(int int_sub, float float_sub)
+pub def Sub<T int | float>(acc T, el T) (res T)
+
+// Mul multiplies acc with el and sends to result. It can be used with Reduce.
+#extern(int int_mul, float float_mul)
+pub def Mul<T int | float>(acc T, el T) (res T)
+
+// Div divides acc by el and sends to result. It can be used with Reduce.
+#extern(int int_div, float float_div)
+pub def Div<T int | float>(acc T, el T) (res T)
+
+// --- Boolean ---
+
+// Eq sends true if actual is equal to compared, otherwise false.
+#extern(eq)
+pub def Eq<T>(acc T, el T) (res bool)
+
+// And sends true if both acc and el are true, otherwise false.
+#extern(and)
+pub def And(acc bool, el bool) (res bool)
+
+// Or sends true if either acc or el are true, otherwise false.
+#extern(or)
+pub def Or(acc bool, el bool) (res bool)
+
+// Gt sends true if actual is greater than compared, otherwise false.
+#extern(int int_is_greater, float float_is_greater, string string_is_greater)
+pub def Gt<T int | float | string>(acc T, el T) (res bool)
+
+// Lt sends true if actual is lesser than compared, otherwise false.
+#extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
+pub def Lt<T int | float | string>(acc T, el T) (res bool)
+

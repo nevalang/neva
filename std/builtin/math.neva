@@ -1,31 +1,3 @@
-// --- Reducers ---
-
-// Add sums acc with el and sends to result. It can be used with Reduce.
-#extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(acc T, el T) (res T)
-
-// Sub subtracts el from acc and sends to result. It can be used with Reduce.
-#extern(int int_sub, float float_sub)
-pub def Sub<T int | float>(acc T, el T) (res T)
-
-// Mul multiplies acc with el and sends to result. It can be used with Reduce.
-#extern(int int_mul, float float_mul)
-pub def Mul<T int | float>(acc T, el T) (res T)
-
-// Div divides acc by el and sends to result. It can be used with Reduce.
-#extern(int int_div, float float_div)
-pub def Div<T int | float>(acc T, el T) (res T)
-
-// --- Mappers ---
-
-// Inc increments data by 1 and sends to result. It can be used with Map.
-#extern(int int_inc, float float_inc)
-pub def Inc<T int | float>(data T) (res T)
-
-// Decr decrements data by 1 and sends to result. It can be used with Map.
-#extern(int int_decr, float float_decr)
-pub def Decr<T int | float>(data T) (res T)
-
 // --- Other ---
 
 // Mod calculates num modulo den and sends to result.

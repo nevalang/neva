@@ -59,8 +59,8 @@ def ModHelper(num int, den int) (then int, else int) {
     :num -> [mod:num, cond:data]
     :den -> mod:den
 
-    mod -> eq:actual
-    0 -> eq:compared
+    mod -> eq:acc
+    0 -> eq:el
     eq -> cond:if
 
     cond:then -> :then

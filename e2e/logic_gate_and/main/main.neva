@@ -2,8 +2,8 @@ def Main(start) (stop) {
 	Println, And
 	---
 	:start -> [
-		{ true -> and:a },
-		{ true -> and:b }
+		{ true -> and:acc },
+		{ true -> and:el }
 	]
 	and -> println -> :stop
 }

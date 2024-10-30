@@ -320,25 +320,27 @@ func (c ConnectionSideSelectors) String() string {
 	return s
 }
 
-// ConnectionSender unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSender struct {
-	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
-	Const          *Const       `json:"literal,omitempty"`
-	Range          *RangeExpr   `json:"range,omitempty"`
-	StructSelector []string     `json:"selectors,omitempty"`
-	Binary         *BinaryExpr  `json:"binaryExpr,omitempty"`
-	Ternary        *TernaryExpr `json:"ternaryExpr,omitempty"`
-	Meta           core.Meta    `json:"meta,omitempty"`
+	PortAddr       *PortAddr `json:"portAddr,omitempty"`
+	Const          *Const    `json:"const,omitempty"`
+	Range          *Range    `json:"range,omitempty"`
+	StructSelector []string  `json:"selectors,omitempty"`
+	Binary         *Binary   `json:"binaryExpr,omitempty"`
+	Ternary        *Ternary  `json:"ternaryExpr,omitempty"`
+	Meta           core.Meta `json:"meta,omitempty"`
 }
 
-type BinaryExpr struct {
+type Binary struct {
 	Left     ConnectionSender `json:"left,omitempty"`
 	Right    ConnectionSender `json:"right,omitempty"`
 	Operator BinaryOperator   `json:"operator,omitempty"`
 	Meta     core.Meta        `json:"meta,omitempty"`
+	// This field is result of semantic analysis and is unknown at parsing time.
+	// It's used by desugarer to correctly handle overloaded components.
+	AnalyzedType ts.Expr `json:"type,omitempty"`
 }
 
-type TernaryExpr struct {
+type Ternary struct {
 	Condition ConnectionSender `json:"condition,omitempty"`
 	Left      ConnectionSender `json:"left,omitempty"`
 	Right     ConnectionSender `json:"right,omitempty"`
@@ -352,6 +354,7 @@ const (
 	SubOp BinaryOperator = "-"
 	MulOp BinaryOperator = "*"
 	DivOp BinaryOperator = "/"
+	EqOp  BinaryOperator = "=="
 )
 
 func (s ConnectionSender) String() string {
@@ -375,13 +378,13 @@ func (s ConnectionSender) String() string {
 	return result + selectorsString
 }
 
-type RangeExpr struct {
+type Range struct {
 	From int64     `json:"from"`
 	To   int64     `json:"to"`
 	Meta core.Meta `json:"meta,omitempty"`
 }
 
-func (r RangeExpr) String() string {
+func (r Range) String() string {
 	return fmt.Sprintf("%v..%v", r.From, r.To)
 }
 
