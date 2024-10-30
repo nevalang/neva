@@ -575,24 +575,26 @@ func (a Analyzer) analyzeSender(
 	}
 
 	if sender.Binary != nil {
-		_, leftType, _, err := a.getSenderSideType(
+		_, leftType, err := a.analyzeSender(
 			sender.Binary.Left,
+			scope,
 			iface,
 			nodes,
 			nodesIfaces,
-			scope,
+			nodesUsage,
 			prevChainLink,
 		)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		_, rightType, _, err := a.getSenderSideType(
+		_, rightType, err := a.analyzeSender(
 			sender.Binary.Right,
+			scope,
 			iface,
 			nodes,
 			nodesIfaces,
-			scope,
+			nodesUsage,
 			prevChainLink,
 		)
 		if err != nil {
@@ -639,7 +641,7 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		if err := a.resolver.IsSubtypeOf(leftType, constr, scope); err != nil {
+		if err := a.resolver.IsSubtypeOf(*leftType, constr, scope); err != nil {
 			return nil, nil, &compiler.Error{
 				Message:  fmt.Sprintf("Invalid left operand type for %s: %v", sender.Binary.Operator, err),
 				Location: &scope.Location,
@@ -647,7 +649,7 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		if err := a.resolver.IsSubtypeOf(rightType, constr, scope); err != nil {
+		if err := a.resolver.IsSubtypeOf(*rightType, constr, scope); err != nil {
 			return nil, nil, &compiler.Error{
 				Message:  fmt.Sprintf("Invalid right operand type for %s: %v", sender.Binary.Operator, err),
 				Location: &scope.Location,
@@ -657,7 +659,7 @@ func (a Analyzer) analyzeSender(
 
 		// desugarer needs this information to use overloaded components
 		// it could figure this out itself but it's extra work
-		sender.Binary.AnalyzedType = leftType
+		sender.Binary.AnalyzedType = *leftType
 
 		var resultType ts.Expr
 		if sender.Binary.Operator == src.EqOp {
@@ -665,7 +667,7 @@ func (a Analyzer) analyzeSender(
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
 			}
 		} else {
-			resultType = leftType
+			resultType = *leftType
 		}
 
 		return &sender, &resultType, nil
