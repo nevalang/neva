@@ -77,7 +77,7 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see
 def Main(start) (stop) {
 	Println
 	---
-	:start -> ('Hello, World!' -> println -> :stop)
+	:start -> { 'Hello, World!' -> println -> :stop }
 }
 ```
 

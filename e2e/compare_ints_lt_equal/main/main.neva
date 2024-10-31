@@ -2,8 +2,8 @@ def Main(start) (stop) {
     Println, Lt<int>
     ---
     :start -> [
-        { 20 -> lt:compared },
-        { 20 -> lt:actual }
+        { 20 -> lt:el },
+        { 20 -> lt:acc }
     ]
     lt:res -> println -> :stop
 }

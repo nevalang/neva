@@ -10,12 +10,12 @@ import (
 type eq struct{}
 
 func (p eq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Single("actual")
+	actualIn, err := io.In.Single("acc")
 	if err != nil {
 		return nil, err
 	}
 
-	comparedIn, err := io.In.Single("compared")
+	comparedIn, err := io.In.Single("el")
 	if err != nil {
 		return nil, err
 	}

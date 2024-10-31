@@ -320,38 +320,75 @@ func (c ConnectionSideSelectors) String() string {
 	return s
 }
 
-// ConnectionSender unlike ReceiverConnectionSide could refer to constant.
 type ConnectionSender struct {
-	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
-	Const          *Const       `json:"literal,omitempty"`
-	Range          *RangeExpr   `json:"range,omitempty"`
-	StructSelector []string     `json:"selectors,omitempty"`
-	BinaryExpr     *BinaryExpr  `json:"binaryExpr,omitempty"`
-	TernaryExpr    *TernaryExpr `json:"ternaryExpr,omitempty"`
-	Meta           core.Meta    `json:"meta,omitempty"`
+	PortAddr       *PortAddr `json:"portAddr,omitempty"`
+	Const          *Const    `json:"const,omitempty"`
+	Range          *Range    `json:"range,omitempty"`
+	StructSelector []string  `json:"selector,omitempty"`
+	Unary          *Unary    `json:"unary,omitempty"`
+	Binary         *Binary   `json:"binary,omitempty"`
+	Ternary        *Ternary  `json:"ternary,omitempty"`
+	Meta           core.Meta `json:"meta,omitempty"`
 }
 
-type BinaryExpr struct {
+type Binary struct {
 	Left     ConnectionSender `json:"left,omitempty"`
 	Right    ConnectionSender `json:"right,omitempty"`
 	Operator BinaryOperator   `json:"operator,omitempty"`
 	Meta     core.Meta        `json:"meta,omitempty"`
+	// This field is result of semantic analysis and is unknown at parsing time.
+	// It's used by desugarer to correctly handle overloaded components.
+	AnalyzedType ts.Expr `json:"type,omitempty"`
 }
 
-type TernaryExpr struct {
+type Ternary struct {
 	Condition ConnectionSender `json:"condition,omitempty"`
 	Left      ConnectionSender `json:"left,omitempty"`
 	Right     ConnectionSender `json:"right,omitempty"`
 	Meta      core.Meta        `json:"meta,omitempty"`
 }
 
+type Unary struct {
+	Operand  ConnectionSender `json:"expr,omitempty"`
+	Operator UnaryOperator    `json:"operator,omitempty"`
+	Meta     core.Meta        `json:"meta,omitempty"`
+}
+
+type UnaryOperator string
+
+const (
+	NotOp UnaryOperator = "!"
+	IncOp UnaryOperator = "++"
+	DecOp UnaryOperator = "--"
+	NegOp UnaryOperator = "-"
+)
+
 type BinaryOperator string
 
 const (
+	// Arithmetic
 	AddOp BinaryOperator = "+"
 	SubOp BinaryOperator = "-"
 	MulOp BinaryOperator = "*"
 	DivOp BinaryOperator = "/"
+	ModOp BinaryOperator = "%"
+	PowOp BinaryOperator = "**"
+	// Comparison
+	EqOp BinaryOperator = "=="
+	NeOp BinaryOperator = "!="
+	GtOp BinaryOperator = ">"
+	LtOp BinaryOperator = "<"
+	GeOp BinaryOperator = ">="
+	LeOp BinaryOperator = "<="
+	// Logical
+	AndOp BinaryOperator = "&&"
+	OrOp  BinaryOperator = "||"
+	// Bitwise
+	BitAndOp BinaryOperator = "&"
+	BitOrOp  BinaryOperator = "|"
+	BitXorOp BinaryOperator = "^"
+	BitLshOp BinaryOperator = "<<"
+	BitRshOp BinaryOperator = ">>"
 )
 
 func (s ConnectionSender) String() string {
@@ -375,13 +412,13 @@ func (s ConnectionSender) String() string {
 	return result + selectorsString
 }
 
-type RangeExpr struct {
+type Range struct {
 	From int64     `json:"from"`
 	To   int64     `json:"to"`
 	Meta core.Meta `json:"meta,omitempty"`
 }
 
-func (r RangeExpr) String() string {
+func (r Range) String() string {
 	return fmt.Sprintf("%v..%v", r.From, r.To)
 }
 

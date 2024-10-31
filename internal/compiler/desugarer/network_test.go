@@ -19,6 +19,7 @@ func TestDesugarNetwork(t *testing.T) {
 
 	tests := []struct {
 		name           string
+		iface          src.Interface
 		net            []src.Connection
 		nodes          map[string]src.Node
 		expectedResult handleNetworkResult
@@ -313,11 +314,95 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		// :a + :b -> :c
+		{
+			name: "binary_expressions",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Binary: &src.Binary{
+									Operator: src.AddOp,
+									Left: src.ConnectionSender{
+										PortAddr: &src.PortAddr{Port: "a"},
+									},
+									Right: src.ConnectionSender{
+										PortAddr: &src.PortAddr{Port: "b"},
+									},
+									AnalyzedType: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "int"},
+										},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Port: "c"}},
+						},
+					},
+				},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						// __add__1:res -> :c
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "res"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Port: "c"}},
+							},
+						},
+					},
+					{
+						// :a -> __add__1:acc
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Port: "a"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "acc"}},
+							},
+						},
+					},
+					{
+						// :b -> __add__1:el
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Port: "b"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "el"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__add__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "Add",
+						},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := d.handleNetwork(tt.net, tt.nodes, scope)
+			result, err := d.desugarNetwork(tt.iface, tt.net, tt.nodes, scope)
 
 			require.Nil(t, err)
 			assert.Equal(t, tt.expectedResult.desugaredConnections, result.desugaredConnections)

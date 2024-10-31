@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +26,7 @@ func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 	conn := net[0].Normal
 	require.Equal(t, 1, len(conn.SenderSide))
 
-	ternary := conn.SenderSide[0].TernaryExpr
+	ternary := conn.SenderSide[0].Ternary
 	require.NotNil(t, ternary)
 
 	require.Equal(t, "condition", ternary.Condition.PortAddr.Node)
@@ -53,13 +54,13 @@ func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
 	conn := net[0].Normal
 	require.Equal(t, 1, len(conn.SenderSide))
 
-	outerTernary := conn.SenderSide[0].TernaryExpr
+	outerTernary := conn.SenderSide[0].Ternary
 	require.NotNil(t, outerTernary)
 
 	require.Equal(t, "cond1", outerTernary.Condition.PortAddr.Node)
 	require.Equal(t, "val3", outerTernary.Right.PortAddr.Node)
 
-	innerTernary := outerTernary.Left.TernaryExpr
+	innerTernary := outerTernary.Left.Ternary
 	require.NotNil(t, innerTernary)
 	require.Equal(t, "cond2", innerTernary.Condition.PortAddr.Node)
 	require.Equal(t, "val1", innerTernary.Left.PortAddr.Node)
@@ -372,7 +373,7 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 	require.Equal(t, "Baz", senderEnum.MemberName)
 }
 
-func TestParser_ParseFile_RangeExpression(t *testing.T) {
+func TestParser_ParseFile_Range(t *testing.T) {
 	text := []byte(`
 		def C1() () {
 			1..10 -> :out
@@ -394,7 +395,7 @@ func TestParser_ParseFile_RangeExpression(t *testing.T) {
 	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
 }
 
-func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
+func TestParser_ParseFile_MultipleRanges(t *testing.T) {
 	text := []byte(`
 		def C1() () {
 			1..5 -> :out1
@@ -423,7 +424,7 @@ func TestParser_ParseFile_MultipleRangeExpressions(t *testing.T) {
 	require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
 }
 
-func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
+func TestParser_ParseFile_NegativeRange(t *testing.T) {
 	text := []byte(`
 		def C1() () {
 			-5..5 -> :out
@@ -445,7 +446,7 @@ func TestParser_ParseFile_RangeExpressionWithNegativeNumbers(t *testing.T) {
 	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
 }
 
-func TestParser_ParseFile_RangeExpressionMixedWithOtherConnections(t *testing.T) {
+func TestParser_ParseFile_RangeExpressionMixed(t *testing.T) {
 	text := []byte(`
 		def C1() () {
 			1..10 -> :out1
@@ -478,4 +479,264 @@ func TestParser_ParseFile_RangeExpressionMixedWithOtherConnections(t *testing.T)
 	require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
 	require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
 	require.Equal(t, "out3", conn3.ReceiverSide[0].PortAddr.Port)
+}
+
+func TestParser_ParseFile_Binary(t *testing.T) {
+	tests := []struct {
+		name     string
+		text     string
+		operator string
+	}{
+		// Arithmetic
+		{
+			name: "addition",
+			text: `
+				def C1() () {
+					(a + b) -> receiver
+				}
+			`,
+			operator: "+",
+		},
+		{
+			name: "subtraction",
+			text: `
+				def C1() () {
+					(a - b) -> receiver
+				}
+			`,
+			operator: "-",
+		},
+		{
+			name: "multiplication",
+			text: `
+				def C1() () {
+					(a * b) -> receiver
+				}
+			`,
+			operator: "*",
+		},
+		{
+			name: "division",
+			text: `
+				def C1() () {
+					(a / b) -> receiver
+				}
+			`,
+			operator: "/",
+		},
+		{
+			name: "modulo",
+			text: `
+				def C1() () {
+					(a % b) -> receiver
+				}
+			`,
+			operator: "%",
+		},
+		{
+			name: "power",
+			text: `
+				def C1() () {
+					(a ** b) -> receiver
+				}
+			`,
+			operator: "**",
+		},
+		// Comparison
+		{
+			name: "equality",
+			text: `
+				def C1() () {
+					(a == b) -> receiver
+				}
+			`,
+			operator: "==",
+		},
+		{
+			name: "inequality",
+			text: `
+				def C1() () {
+					(a != b) -> receiver
+				}
+			`,
+			operator: "!=",
+		},
+		{
+			name: "greater than",
+			text: `
+				def C1() () {
+					(a > b) -> receiver
+				}
+			`,
+			operator: ">",
+		},
+		{
+			name: "less than",
+			text: `
+				def C1() () {
+					(a < b) -> receiver
+				}
+			`,
+			operator: "<",
+		},
+		{
+			name: "greater than or equal",
+			text: `
+				def C1() () {
+					(a >= b) -> receiver
+				}
+			`,
+			operator: ">=",
+		},
+		{
+			name: "less than or equal",
+			text: `
+				def C1() () {
+					(a <= b) -> receiver
+				}
+			`,
+			operator: "<=",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
+
+			net := got.Entities["C1"].Component.Net
+			require.Equal(t, 1, len(net))
+
+			conn := net[0].Normal
+			require.Equal(t, 1, len(conn.SenderSide))
+
+			binary := conn.SenderSide[0].Binary
+			require.NotNil(t, binary)
+
+			require.Equal(t, "a", binary.Left.PortAddr.Node)
+			require.Equal(t, "b", binary.Right.PortAddr.Node)
+			require.Equal(t, src.BinaryOperator(tt.operator), binary.Operator)
+			require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
+		})
+	}
+}
+
+func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, conn *src.NormalConnection)
+	}{
+		{
+			name: "nested binary expressions",
+			text: `
+				def C1() () {
+					((a + b) * (c - d)) -> receiver
+				}
+			`,
+			check: func(t *testing.T, conn *src.NormalConnection) {
+				binary := conn.SenderSide[0].Binary
+				require.NotNil(t, binary)
+				require.Equal(t, src.MulOp, binary.Operator)
+
+				leftBinary := binary.Left.Binary
+				require.NotNil(t, leftBinary)
+				require.Equal(t, src.AddOp, leftBinary.Operator)
+				require.Equal(t, "a", leftBinary.Left.PortAddr.Node)
+				require.Equal(t, "b", leftBinary.Right.PortAddr.Node)
+
+				rightBinary := binary.Right.Binary
+				require.NotNil(t, rightBinary)
+				require.Equal(t, src.SubOp, rightBinary.Operator)
+				require.Equal(t, "c", rightBinary.Left.PortAddr.Node)
+				require.Equal(t, "d", rightBinary.Right.PortAddr.Node)
+			},
+		},
+		{
+			name: "binary with ternary",
+			text: `
+				def C1() () {
+					(a + (b ? c : d)) -> receiver
+				}
+			`,
+			check: func(t *testing.T, conn *src.NormalConnection) {
+				binary := conn.SenderSide[0].Binary
+				require.NotNil(t, binary)
+				require.Equal(t, src.AddOp, binary.Operator)
+				require.Equal(t, "a", binary.Left.PortAddr.Node)
+
+				ternary := binary.Right.Ternary
+				require.NotNil(t, ternary)
+				require.Equal(t, "b", ternary.Condition.PortAddr.Node)
+				require.Equal(t, "c", ternary.Left.PortAddr.Node)
+				require.Equal(t, "d", ternary.Right.PortAddr.Node)
+			},
+		},
+		{
+			name: "ternary with binary branches",
+			text: `
+				def C1() () {
+					(cond ? (a + b) : (c * d)) -> receiver
+				}
+			`,
+			check: func(t *testing.T, conn *src.NormalConnection) {
+				ternary := conn.SenderSide[0].Ternary
+				require.NotNil(t, ternary)
+				require.Equal(t, "cond", ternary.Condition.PortAddr.Node)
+
+				leftBinary := ternary.Left.Binary
+				require.NotNil(t, leftBinary)
+				require.Equal(t, src.AddOp, leftBinary.Operator)
+				require.Equal(t, "a", leftBinary.Left.PortAddr.Node)
+				require.Equal(t, "b", leftBinary.Right.PortAddr.Node)
+
+				rightBinary := ternary.Right.Binary
+				require.NotNil(t, rightBinary)
+				require.Equal(t, src.MulOp, rightBinary.Operator)
+				require.Equal(t, "c", rightBinary.Left.PortAddr.Node)
+				require.Equal(t, "d", rightBinary.Right.PortAddr.Node)
+			},
+		},
+		{
+			name: "ternary with binary condition",
+			text: `
+				def C1() () {
+					((a == b) ? c : d) -> receiver
+				}
+			`,
+			check: func(t *testing.T, conn *src.NormalConnection) {
+				ternary := conn.SenderSide[0].Ternary
+				require.NotNil(t, ternary)
+
+				condBinary := ternary.Condition.Binary
+				require.NotNil(t, condBinary)
+				require.Equal(t, src.EqOp, condBinary.Operator)
+				require.Equal(t, "a", condBinary.Left.PortAddr.Node)
+				require.Equal(t, "b", condBinary.Right.PortAddr.Node)
+
+				require.Equal(t, "c", ternary.Left.PortAddr.Node)
+				require.Equal(t, "d", ternary.Right.PortAddr.Node)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
+
+			net := got.Entities["C1"].Component.Net
+			require.Equal(t, 1, len(net))
+
+			conn := net[0].Normal
+			require.Equal(t, 1, len(conn.SenderSide))
+			require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
+
+			tt.check(t, conn)
+		})
+	}
 }

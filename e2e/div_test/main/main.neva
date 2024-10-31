@@ -1,9 +1,5 @@
 def Main(start) (stop) {
-    Div<int>, Println
+    Println
     ---
-    :start -> [
-        { 12 -> div:acc },
-        { 3 -> div:el }
-    ]
-    div -> println -> :stop
+    :start -> { (12 / 3) -> println -> :stop }
 }

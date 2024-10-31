@@ -168,7 +168,7 @@ func parseSenderSide(
 
 	parsedSenders := []src.ConnectionSender{}
 	for _, senderSide := range toParse {
-		parsedSide, err := parseNormConnSenderSide(senderSide)
+		parsedSide, err := parseSingleSender(senderSide)
 		if err != nil {
 			return nil, err
 		}
@@ -308,7 +308,7 @@ func parseDeferredConn(
 	}, nil
 }
 
-func parseNormConnSenderSide(
+func parseSingleSender(
 	senderSide generated.ISingleSenderSideContext,
 ) (src.ConnectionSender, *compiler.Error) {
 	structSelectors := senderSide.StructSelectors()
@@ -317,13 +317,15 @@ func parseNormConnSenderSide(
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
 	ternaryExprSender := senderSide.TernaryExpr()
+	binaryExprSender := senderSide.BinaryExpr()
 
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
 		rangeExprSender == nil &&
 		structSelectors == nil &&
-		ternaryExprSender == nil {
+		ternaryExprSender == nil &&
+		binaryExprSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
@@ -370,7 +372,7 @@ func parseNormConnSenderSide(
 		constant = &parsedPrimitiveConstLiteralSender
 	}
 
-	var rangeExpr *src.RangeExpr
+	var rangeExpr *src.Range
 	if rangeExprSender != nil {
 		fromText := rangeExprSender.INT(0).GetText()
 		if rangeExprSender.MINUS(0) != nil {
@@ -416,7 +418,7 @@ func parseNormConnSenderSide(
 			}
 		}
 
-		rangeExpr = &src.RangeExpr{
+		rangeExpr = &src.Range{
 			From: from,
 			To:   to,
 			Meta: core.Meta{
@@ -440,24 +442,24 @@ func parseNormConnSenderSide(
 		}
 	}
 
-	var ternaryExpr *src.TernaryExpr
+	var ternaryExpr *src.Ternary
 	if ternaryExprSender != nil {
 		parts := ternaryExprSender.AllSingleSenderSide()
 
-		condition, err := parseNormConnSenderSide(parts[0])
+		condition, err := parseSingleSender(parts[0])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-		left, err := parseNormConnSenderSide(parts[1])
+		left, err := parseSingleSender(parts[1])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-		right, err := parseNormConnSenderSide(parts[2])
+		right, err := parseSingleSender(parts[2])
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
 
-		ternaryExpr = &src.TernaryExpr{
+		ternaryExpr = &src.Ternary{
 			Condition: condition,
 			Left:      left,
 			Right:     right,
@@ -475,12 +477,18 @@ func parseNormConnSenderSide(
 		}
 	}
 
+	var binaryExpr *src.Binary
+	if binaryExprSender != nil {
+		binaryExpr = parseBinaryExpr(binaryExprSender)
+	}
+
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
-		TernaryExpr:    ternaryExpr,
+		Ternary:        ternaryExpr,
+		Binary:         binaryExpr,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{
@@ -522,4 +530,81 @@ func parsePortAddrReceiver(
 			},
 		},
 	}, nil
+}
+
+func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
+	var op src.BinaryOperator
+	switch ctx.BinaryOp().GetText() {
+	// Arithmetic
+	case "+":
+		op = src.AddOp
+	case "-":
+		op = src.SubOp
+	case "*":
+		op = src.MulOp
+	case "/":
+		op = src.DivOp
+	case "%":
+		op = src.ModOp
+	case "**":
+		op = src.PowOp
+	// Comparison
+	case "==":
+		op = src.EqOp
+	case "!=":
+		op = src.NeOp
+	case ">":
+		op = src.GtOp
+	case "<":
+		op = src.LtOp
+	case ">=":
+		op = src.GeOp
+	case "<=":
+		op = src.LeOp
+	// Logical
+	case "&&":
+		op = src.AndOp
+	case "||":
+		op = src.OrOp
+	// Bitwise
+	case "&":
+		op = src.BitAndOp
+	case "|":
+		op = src.BitOrOp
+	case "^":
+		op = src.BitXorOp
+	case "<<":
+		op = src.BitLshOp
+	case ">>":
+		op = src.BitRshOp
+	}
+
+	senders := ctx.AllSingleSenderSide()
+
+	left, err := parseSingleSender(senders[0])
+	if err != nil {
+		return nil
+	}
+
+	right, err := parseSingleSender(senders[1])
+	if err != nil {
+		return nil
+	}
+
+	return &src.Binary{
+		Left:     left,
+		Right:    right,
+		Operator: op,
+		Meta: core.Meta{
+			Text: ctx.GetText(),
+			Start: core.Position{
+				Line:   ctx.GetStart().GetLine(),
+				Column: ctx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   ctx.GetStop().GetLine(),
+				Column: ctx.GetStop().GetColumn(),
+			},
+		},
+	}
 }

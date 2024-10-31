@@ -1,0 +1,5 @@
+def Main(start) (stop) {
+    Println
+    ---
+    :start -> { (7 % 3) -> println -> :stop }
+} 

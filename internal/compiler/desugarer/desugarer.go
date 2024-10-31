@@ -173,7 +173,7 @@ func (d Desugarer) desugarEntity(
 		}, nil
 	}
 
-	componentResult, err := d.handleComponent(entity.Component, scope)
+	componentResult, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
 		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
 	}

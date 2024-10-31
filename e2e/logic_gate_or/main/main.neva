@@ -2,8 +2,8 @@ def Main(start) (stop) {
 	Println, Or
 	---
 	:start -> [
-		{ false -> or:a },
-		{ false -> or:b }
+		{ false -> or:acc },
+		{ false -> or:el }
 	]
 	or -> println -> :stop
 }

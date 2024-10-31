@@ -136,8 +136,39 @@ singleSenderSide:
 	| primitiveConstLit
 	| rangeExpr
 	| structSelectors
+	| unaryExpr
+	| binaryExpr
 	| ternaryExpr;
-ternaryExpr: '(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
+unaryExpr: unaryOp singleSenderSide;
+unaryOp: '!' | '++' | '--' | '-';
+ternaryExpr:
+	'(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
+binaryExpr: '(' singleSenderSide binaryOp singleSenderSide ')';
+binaryOp:
+	// Arithmetic
+	'+'
+	| '-'
+	| '*'
+	| '/'
+	| '%'
+	| '**'
+	// Comparison
+	| '=='
+	| '!='
+	| '>'
+	| '<'
+	| '>='
+	| '<='
+	// Logical
+	| '&&'
+	| '||'
+	// Bitwise
+	| '&'
+	| '|'
+	| '^';
+	// TODO implement << and >>, for some reason parser confuses nested generics with this
+	// | '<<'
+	// | '>>';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

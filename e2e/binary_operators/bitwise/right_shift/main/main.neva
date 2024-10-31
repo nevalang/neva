@@ -1,0 +1,5 @@
+def Main(start) (stop) {
+    Println
+    ---
+    :start -> { (8 >> 1) -> println -> :stop }
+}

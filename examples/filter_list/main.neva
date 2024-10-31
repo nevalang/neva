@@ -9,11 +9,5 @@ def Main(start) (stop) {
 }
 
 def Even(data int) (res bool) {
-    Mod, Eq
-    ---
-    :data -> mod:num
-    2 -> mod:den
-    mod -> eq:actual
-    0 -> eq:compared
-    eq -> :res
+    ((:data % 2) == 0) -> :res
 }

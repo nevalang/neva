@@ -66,10 +66,7 @@ func (r Resolver) ResolveExprsWithFrame(
 	exprs []Expr,
 	frame map[string]Def,
 	scope Scope,
-) (
-	[]Expr,
-	error,
-) {
+) ([]Expr, error) {
 	resolvedExprs := make([]Expr, 0, len(exprs))
 	for _, expr := range exprs {
 		resolvedExpr, err := r.resolveExpr(expr, scope, frame, nil)

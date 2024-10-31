@@ -191,7 +191,7 @@ def Main(start) (stop) {
     New
     Println
     ---
-    :start -> (new -> println -> :stop)
+    :start -> { new -> println -> :stop }
 }
 ```
 
@@ -312,7 +312,7 @@ Turns out, this program is indeterministic and could give different outputs. The
 To ensure `42` is printed once, synchronize it with `:start` using "defer". Here's the fix:
 
 ```neva
-:start -> (42 -> println -> :stop)
+:start -> { 42 -> println -> :stop }
 ```
 
 This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the desugared version:
@@ -327,12 +327,12 @@ def Main(start) (stop) {
 }
 ```
 
-**Deferred connections defer receiving, not sending**. In `foo -> (bar -> baz)`, `bar` sends immediately, but `baz` receives the message only after `foo` unlocks it.
+**Deferred connections defer receiving, not sending**. In `foo -> { bar -> baz }`, `bar` sends immediately, but `baz` receives the message only after `foo` unlocks it.
 
 Deferred connections can nest infinitely:
 
 ```neva
-foo -> (bar -> (baz -> bax))
+foo -> {bar -> {baz -> bax}}
 ```
 
 Which translates to:
@@ -352,10 +352,10 @@ lock2:data -> bax
 Deferred and chained connections can be combined in various ways. Here are a few examples:
 
 ```neva
-a -> b -> (c -> d)
-a -> (b -> c -> d)
-a -> b -> (c -> d -> e)
-a -> (b -> (c -> d -> e))
+a -> b -> {c -> d}
+a -> {b -> c -> d}
+a -> b -> {c -> d -> e}
+a -> {b -> {c -> d -> e}}
 ```
 
 ## Fan-in and Fan-out
@@ -477,11 +477,11 @@ Here's an intentionally complex example combining different features. This level
 ```
 a -> [
     b -> c -> d,
-    (
-        $e -> f -> (42 -> g -> [
+    {
+        $e -> f -> 42 -> g -> [
             h,
-            [i, j] -> k -> (l -> m),
+            [i, j] -> k -> { l -> m },
         ]
-    )
+    }
 ]
 ```

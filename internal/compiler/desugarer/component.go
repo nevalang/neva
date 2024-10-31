@@ -13,7 +13,7 @@ type handleComponentResult struct {
 	virtualEntities map[string]src.Entity
 }
 
-func (d Desugarer) handleComponent(
+func (d Desugarer) desugarComponent(
 	component src.Component,
 	scope src.Scope,
 ) (handleComponentResult, *compiler.Error) {
@@ -23,7 +23,7 @@ func (d Desugarer) handleComponent(
 
 	virtualEntities := map[string]src.Entity{}
 
-	desugaredNodes, virtConnsForNodes, err := d.handleNodes(
+	desugaredNodes, virtConnsForNodes, err := d.desugarNodes(
 		component,
 		scope,
 		virtualEntities,
@@ -34,7 +34,8 @@ func (d Desugarer) handleComponent(
 
 	netToDesugar := append(virtConnsForNodes, component.Net...)
 
-	handleNetResult, err := d.handleNetwork(
+	desugarNetResult, err := d.desugarNetwork(
+		component.Interface,
 		netToDesugar,
 		desugaredNodes,
 		scope,
@@ -43,10 +44,10 @@ func (d Desugarer) handleComponent(
 		return handleComponentResult{}, err
 	}
 
-	desugaredNetwork := slices.Clone(handleNetResult.desugaredConnections)
+	desugaredNetwork := slices.Clone(desugarNetResult.desugaredConnections)
 
 	// add virtual constants created by network handler to virtual entities
-	for name, constant := range handleNetResult.constsToInsert {
+	for name, constant := range desugarNetResult.constsToInsert {
 		virtualEntities[name] = src.Entity{
 			Kind:  src.ConstEntity,
 			Const: constant,
@@ -54,13 +55,13 @@ func (d Desugarer) handleComponent(
 	}
 
 	// merge real nodes with virtual ones created by network handler
-	maps.Copy(desugaredNodes, handleNetResult.nodesToInsert)
+	maps.Copy(desugaredNodes, desugarNetResult.nodesToInsert)
 
 	// create and connect Del nodes to handle unused outports
 	unusedOutports := d.findUnusedOutports(
 		component,
 		scope,
-		handleNetResult.nodesPortsUsed,
+		desugarNetResult.nodesPortsUsed,
 	)
 	if unusedOutports.len() != 0 {
 		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)
@@ -80,7 +81,7 @@ func (d Desugarer) handleComponent(
 	}, nil
 }
 
-func (d Desugarer) handleNodes(
+func (d Desugarer) desugarNodes(
 	component src.Component,
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,

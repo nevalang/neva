@@ -18,7 +18,8 @@ type handleNetworkResult struct {
 	nodesPortsUsed       nodeOutportsUsed
 }
 
-func (d Desugarer) handleNetwork(
+func (d Desugarer) desugarNetwork(
+	iface src.Interface,
 	net []src.Connection,
 	nodes map[string]src.Node,
 	scope src.Scope,
@@ -28,6 +29,7 @@ func (d Desugarer) handleNetwork(
 	nodesPortsUsed := newNodePortsMap()
 
 	desugaredConnections, err := d.desugarConnections(
+		iface,
 		net,
 		nodesPortsUsed,
 		scope,
@@ -48,6 +50,7 @@ func (d Desugarer) handleNetwork(
 }
 
 func (d Desugarer) desugarConnections(
+	iface src.Interface,
 	net []src.Connection,
 	nodePortsUsed nodeOutportsUsed,
 	scope src.Scope,
@@ -59,6 +62,7 @@ func (d Desugarer) desugarConnections(
 
 	for _, conn := range net {
 		result, err := d.desugarConnection(
+			iface,
 			conn,
 			nodePortsUsed,
 			scope,
@@ -86,6 +90,7 @@ type desugarConnectionResult struct {
 }
 
 func (d Desugarer) desugarConnection(
+	iface src.Interface,
 	conn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
 	scope src.Scope,
@@ -106,6 +111,7 @@ func (d Desugarer) desugarConnection(
 	}
 
 	return d.desugarNormalConnection(
+		iface,
 		*conn.Normal,
 		nodePortsUsed,
 		scope,
@@ -116,6 +122,7 @@ func (d Desugarer) desugarConnection(
 }
 
 func (d Desugarer) desugarNormalConnection(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	nodePortsUsed nodeOutportsUsed,
 	scope src.Scope,
@@ -125,6 +132,7 @@ func (d Desugarer) desugarNormalConnection(
 ) (desugarConnectionResult, *compiler.Error) {
 	if len(normConn.SenderSide) > 1 {
 		result, err := d.desugarFanIn(
+			iface,
 			normConn,
 			nodesToInsert,
 			constsToInsert,
@@ -146,6 +154,7 @@ func (d Desugarer) desugarNormalConnection(
 	}
 
 	desugarSenderResult, err := d.desugarSingleSender(
+		iface,
 		normConn,
 		scope,
 		nodes,
@@ -165,6 +174,7 @@ func (d Desugarer) desugarNormalConnection(
 
 	if len(normConn.ReceiverSide) > 1 {
 		result, err := d.desugarFanOut(
+			iface,
 			normConn,
 			nodesToInsert,
 			constsToInsert,
@@ -183,6 +193,7 @@ func (d Desugarer) desugarNormalConnection(
 	}
 
 	desugarReceiverResult, err := d.desugarSingleReceiver(
+		iface,
 		normConn,
 		scope,
 		nodes,
@@ -206,6 +217,7 @@ type desugarReceiverResult struct {
 }
 
 func (d Desugarer) desugarSingleReceiver(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	scope src.Scope,
 	nodes map[string]src.Node,
@@ -258,6 +270,7 @@ func (d Desugarer) desugarSingleReceiver(
 
 	if receiver.DeferredConnection != nil {
 		result, err := d.desugarDeferredConnection(
+			iface,
 			normConn,
 			scope,
 			constsToInsert,
@@ -273,6 +286,7 @@ func (d Desugarer) desugarSingleReceiver(
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
+		iface,
 		receiver,
 		scope,
 		nodes,
@@ -292,6 +306,7 @@ func (d Desugarer) desugarSingleReceiver(
 }
 
 func (d Desugarer) desugarChainedConnection(
+	iface src.Interface,
 	receiver src.ConnectionReceiver,
 	scope src.Scope,
 	nodes map[string]src.Node,
@@ -324,6 +339,7 @@ func (d Desugarer) desugarChainedConnection(
 	}
 
 	desugarChainResult, err := d.desugarConnection(
+		iface,
 		chainedConn,
 		nodePortsUsed,
 		scope,
@@ -378,6 +394,7 @@ type desugarDeferredConnectionsResult struct {
 var virtualLocksCounter uint64
 
 func (d Desugarer) desugarDeferredConnection(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	scope src.Scope,
 	constsToInsert map[string]src.Const,
@@ -388,6 +405,7 @@ func (d Desugarer) desugarDeferredConnection(
 	deferredConnection := *normConn.ReceiverSide[0].DeferredConnection
 
 	desugarDeferredConnResult, err := d.desugarConnection(
+		iface,
 		deferredConnection,
 		nodesPortsUsed,
 		scope,
@@ -479,6 +497,7 @@ type desugarSenderResult struct {
 
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
 func (d Desugarer) desugarSingleSender(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	scope src.Scope,
 	nodes map[string]src.Node,
@@ -532,6 +551,7 @@ func (d Desugarer) desugarSingleSender(
 
 		// connection that replaces original one might need desugaring itself
 		replacedConnDesugarRes, err := d.desugarConnection(
+			iface,
 			result.replace,
 			usedNodeOutports,
 			scope,
@@ -593,9 +613,10 @@ func (d Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	if sender.TernaryExpr != nil {
+	if sender.Ternary != nil {
 		result, err := d.desugarTernarySender(
-			*sender.TernaryExpr,
+			iface,
+			*sender.Ternary,
 			normConn,
 			nodesToInsert,
 			constsToInsert,
@@ -610,6 +631,23 @@ func (d Desugarer) desugarSingleSender(
 			}.Wrap(err)
 		}
 
+		return desugarSenderResult(result), nil
+	}
+
+	if sender.Binary != nil {
+		result, err := d.desugarBinarySender(
+			iface,
+			*sender.Binary,
+			normConn,
+			nodesToInsert,
+			constsToInsert,
+			usedNodeOutports,
+			scope,
+			nodes,
+		)
+		if err != nil {
+			return desugarSenderResult{}, err
+		}
 		return desugarSenderResult(result), nil
 	}
 
@@ -692,6 +730,7 @@ type desugarFanOutResult struct {
 var fanOutCounter uint64
 
 func (d Desugarer) desugarFanOut(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -734,6 +773,7 @@ func (d Desugarer) desugarFanOut(
 		}
 
 		desugarConnRes, err := d.desugarConnection(
+			iface,
 			conn,
 			nodePortsUsed,
 			scope,
@@ -773,7 +813,7 @@ type handleRangeSenderResult struct {
 // It does not create connection to range:sig,
 // it's done in chained connection desugaring.
 func (d Desugarer) desugarRangeSender(
-	rangeExpr src.RangeExpr,
+	rangeExpr src.Range,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -862,6 +902,7 @@ var fanInCounter uint64
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
 func (d Desugarer) desugarFanIn(
+	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -915,6 +956,7 @@ func (d Desugarer) desugarFanIn(
 
 	// 4. desugar each connection (original senders and receivers might need it)
 	desugaredConnections, err := d.desugarConnections(
+		iface,
 		netWithoutFanIn,
 		nodePortsUsed,
 		scope,
@@ -948,7 +990,8 @@ type handleTernarySenderResult struct {
 // 3) right -> ternary:else;
 // 4) ternary:res -> XXX;
 func (d Desugarer) desugarTernarySender(
-	ternary src.TernaryExpr,
+	iface src.Interface,
+	ternary src.Ternary,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -1011,6 +1054,7 @@ func (d Desugarer) desugarTernarySender(
 	desugaredInsert := make([]src.Connection, 0, len(sugaredInsert))
 	for _, conn := range sugaredInsert {
 		desugarConnRes, err := d.desugarConnection(
+			iface,
 			conn,
 			usedNodeOutports,
 			scope,
@@ -1042,6 +1086,214 @@ func (d Desugarer) desugarTernarySender(
 
 	return handleTernarySenderResult{
 		replace: sugaredReplace,
+		insert:  desugaredInsert,
+	}, nil
+}
+
+type handleBinarySenderResult struct {
+	replace src.Connection
+	insert  []src.Connection
+}
+
+var (
+	// Arithmetic
+	addCounter uint64
+	subCounter uint64
+	mulCounter uint64
+	divCounter uint64
+	modCounter uint64
+	powCounter uint64
+	// Comparison
+	eqCounter uint64
+	neCounter uint64
+	gtCounter uint64
+	ltCounter uint64
+	geCounter uint64
+	leCounter uint64
+	// Logical
+	andCounter uint64
+	orCounter  uint64
+	// Bitwise
+	bitAndCounter uint64
+	bitOrCounter  uint64
+	bitXorCounter uint64
+	bitLshCounter uint64
+	bitRshCounter uint64
+)
+
+func (d Desugarer) desugarBinarySender(
+	iface src.Interface,
+	binary src.Binary,
+	normConn src.NormalConnection,
+	nodesToInsert map[string]src.Node,
+	constsToInsert map[string]src.Const,
+	usedNodeOutports nodeOutportsUsed,
+	scope src.Scope,
+	nodes map[string]src.Node,
+) (handleBinarySenderResult, *compiler.Error) {
+	var (
+		opNode      string
+		opComponent string
+	)
+
+	switch binary.Operator {
+	// Arithmetic
+	case src.AddOp:
+		addCounter++
+		opNode = fmt.Sprintf("__add__%d", addCounter)
+		opComponent = "Add"
+	case src.SubOp:
+		subCounter++
+		opNode = fmt.Sprintf("__sub__%d", subCounter)
+		opComponent = "Sub"
+	case src.MulOp:
+		mulCounter++
+		opNode = fmt.Sprintf("__mul__%d", mulCounter)
+		opComponent = "Mul"
+	case src.DivOp:
+		divCounter++
+		opNode = fmt.Sprintf("__div__%d", divCounter)
+		opComponent = "Div"
+	case src.ModOp:
+		modCounter++
+		opNode = fmt.Sprintf("__mod__%d", modCounter)
+		opComponent = "Mod"
+	case src.PowOp:
+		powCounter++
+		opNode = fmt.Sprintf("__pow__%d", powCounter)
+		opComponent = "Pow"
+	// Comparison
+	case src.EqOp:
+		eqCounter++
+		opNode = fmt.Sprintf("__eq__%d", eqCounter)
+		opComponent = "Eq"
+	case src.NeOp:
+		neCounter++
+		opNode = fmt.Sprintf("__ne__%d", neCounter)
+		opComponent = "Ne"
+	case src.GtOp:
+		gtCounter++
+		opNode = fmt.Sprintf("__gt__%d", gtCounter)
+		opComponent = "Gt"
+	case src.LtOp:
+		ltCounter++
+		opNode = fmt.Sprintf("__lt__%d", ltCounter)
+		opComponent = "Lt"
+	case src.GeOp:
+		geCounter++
+		opNode = fmt.Sprintf("__ge__%d", geCounter)
+		opComponent = "Ge"
+	case src.LeOp:
+		leCounter++
+		opNode = fmt.Sprintf("__le__%d", leCounter)
+		opComponent = "Le"
+	// Logical
+	case src.AndOp:
+		andCounter++
+		opNode = fmt.Sprintf("__and__%d", andCounter)
+		opComponent = "And"
+	case src.OrOp:
+		orCounter++
+		opNode = fmt.Sprintf("__or__%d", orCounter)
+		opComponent = "Or"
+	// Bitwise
+	case src.BitAndOp:
+		bitAndCounter++
+		opNode = fmt.Sprintf("__bitAnd__%d", bitAndCounter)
+		opComponent = "BitAnd"
+	case src.BitOrOp:
+		bitOrCounter++
+		opNode = fmt.Sprintf("__bitOr__%d", bitOrCounter)
+		opComponent = "BitOr"
+	case src.BitXorOp:
+		bitXorCounter++
+		opNode = fmt.Sprintf("__bitXor__%d", bitXorCounter)
+		opComponent = "BitXor"
+	case src.BitLshOp:
+		bitLshCounter++
+		opNode = fmt.Sprintf("__bitLsh__%d", bitLshCounter)
+		opComponent = "BitLsh"
+	case src.BitRshOp:
+		bitRshCounter++
+		opNode = fmt.Sprintf("__bitRsh__%d", bitRshCounter)
+		opComponent = "BitRsh"
+	default:
+		return handleBinarySenderResult{}, &compiler.Error{
+			Message:  fmt.Sprintf("unsupported binary operator: %s", binary.Operator),
+			Location: &scope.Location,
+			Meta:     &binary.Meta,
+		}
+	}
+
+	nodesToInsert[opNode] = src.Node{
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: opComponent,
+		},
+		TypeArgs: []ts.Expr{binary.AnalyzedType},
+	}
+
+	// left -> op:acc
+	// right -> op:el
+	sugaredInsert := []src.Connection{
+		{
+			Normal: &src.NormalConnection{
+				SenderSide: []src.ConnectionSender{binary.Left},
+				ReceiverSide: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{Node: opNode, Port: "acc"},
+					},
+				},
+			},
+		},
+		{
+			Normal: &src.NormalConnection{
+				SenderSide: []src.ConnectionSender{binary.Right},
+				ReceiverSide: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{Node: opNode, Port: "el"},
+					},
+				},
+			},
+		},
+	}
+
+	// operand-senders might be sugared, so we need to desugar them
+	desugaredInsert := make([]src.Connection, 0, len(sugaredInsert))
+	for _, conn := range sugaredInsert {
+		desugarConnRes, err := d.desugarConnection(
+			iface,
+			conn,
+			usedNodeOutports,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return handleBinarySenderResult{}, err
+		}
+		desugaredInsert = append(desugaredInsert, *desugarConnRes.replace)
+		desugaredInsert = append(desugaredInsert, desugarConnRes.insert...)
+	}
+
+	// op:res -> XXX
+	replace := src.Connection{
+		Normal: &src.NormalConnection{
+			SenderSide: []src.ConnectionSender{
+				{
+					PortAddr: &src.PortAddr{
+						Node: opNode,
+						Port: "res",
+					},
+				},
+			},
+			ReceiverSide: normConn.ReceiverSide, // desugaring of original receivers is job of caller
+		},
+	}
+
+	return handleBinarySenderResult{
+		replace: replace,
 		insert:  desugaredInsert,
 	}, nil
 }

@@ -54,14 +54,12 @@ def Mod5(num int) (then int, else int) {
 }
 
 def ModHelper(num int, den int) (then int, else int) {
-    Mod, Eq, Cond<int>
+    Mod, Cond<int>
     ---
-    :num -> [mod:num, cond:data]
-    :den -> mod:den
+    :num -> [mod:acc, cond:data]
+    :den -> mod:el
 
-    mod -> eq:actual
-    0 -> eq:compared
-    eq -> cond:if
+    (mod == 0) -> cond:if
 
     cond:then -> :then
     cond:else -> :else

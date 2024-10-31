@@ -2,8 +2,8 @@ def Main(start) (stop) {
 	Println, Gt<int>, Ternary
 	---
 	:start -> [
-		{ 50 -> gt:actual },
-		{ 10 -> gt:compared }
+		{ 50 -> gt:acc },
+		{ 10 -> gt:el }
 	]
 	gt:res -> ternary:if
 	'Actual is greater' -> ternary:then
