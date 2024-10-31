@@ -324,9 +324,10 @@ type ConnectionSender struct {
 	PortAddr       *PortAddr `json:"portAddr,omitempty"`
 	Const          *Const    `json:"const,omitempty"`
 	Range          *Range    `json:"range,omitempty"`
-	StructSelector []string  `json:"selectors,omitempty"`
-	Binary         *Binary   `json:"binaryExpr,omitempty"`
-	Ternary        *Ternary  `json:"ternaryExpr,omitempty"`
+	StructSelector []string  `json:"selector,omitempty"`
+	Unary          *Unary    `json:"unary,omitempty"`
+	Binary         *Binary   `json:"binary,omitempty"`
+	Ternary        *Ternary  `json:"ternary,omitempty"`
 	Meta           core.Meta `json:"meta,omitempty"`
 }
 
@@ -347,15 +348,47 @@ type Ternary struct {
 	Meta      core.Meta        `json:"meta,omitempty"`
 }
 
+type Unary struct {
+	Operand  ConnectionSender `json:"expr,omitempty"`
+	Operator UnaryOperator    `json:"operator,omitempty"`
+	Meta     core.Meta        `json:"meta,omitempty"`
+}
+
+type UnaryOperator string
+
+const (
+	NotOp UnaryOperator = "!"
+	IncOp UnaryOperator = "++"
+	DecOp UnaryOperator = "--"
+	NegOp UnaryOperator = "-"
+)
+
 type BinaryOperator string
 
 const (
+	// Arithmetic
 	AddOp BinaryOperator = "+"
 	SubOp BinaryOperator = "-"
 	MulOp BinaryOperator = "*"
 	DivOp BinaryOperator = "/"
-	EqOp  BinaryOperator = "=="
 	ModOp BinaryOperator = "%"
+	PowOp BinaryOperator = "**"
+	// Comparison
+	EqOp BinaryOperator = "=="
+	NeOp BinaryOperator = "!="
+	GtOp BinaryOperator = ">"
+	LtOp BinaryOperator = "<"
+	GeOp BinaryOperator = ">="
+	LeOp BinaryOperator = "<="
+	// Logical
+	AndOp BinaryOperator = "&&"
+	OrOp  BinaryOperator = "||"
+	// Bitwise
+	BitAndOp BinaryOperator = "&"
+	BitOrOp  BinaryOperator = "|"
+	BitXorOp BinaryOperator = "^"
+	BitLshOp BinaryOperator = "<<"
+	BitRshOp BinaryOperator = ">>"
 )
 
 func (s ConnectionSender) String() string {

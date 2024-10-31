@@ -487,6 +487,7 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 		text     string
 		operator string
 	}{
+		// Arithmetic
 		{
 			name: "addition",
 			text: `
@@ -522,6 +523,79 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 				}
 			`,
 			operator: "/",
+		},
+		{
+			name: "modulo",
+			text: `
+				def C1() () {
+					(a % b) -> receiver
+				}
+			`,
+			operator: "%",
+		},
+		{
+			name: "power",
+			text: `
+				def C1() () {
+					(a ** b) -> receiver
+				}
+			`,
+			operator: "**",
+		},
+		// Comparison
+		{
+			name: "equality",
+			text: `
+				def C1() () {
+					(a == b) -> receiver
+				}
+			`,
+			operator: "==",
+		},
+		{
+			name: "inequality",
+			text: `
+				def C1() () {
+					(a != b) -> receiver
+				}
+			`,
+			operator: "!=",
+		},
+		{
+			name: "greater than",
+			text: `
+				def C1() () {
+					(a > b) -> receiver
+				}
+			`,
+			operator: ">",
+		},
+		{
+			name: "less than",
+			text: `
+				def C1() () {
+					(a < b) -> receiver
+				}
+			`,
+			operator: "<",
+		},
+		{
+			name: "greater than or equal",
+			text: `
+				def C1() () {
+					(a >= b) -> receiver
+				}
+			`,
+			operator: ">=",
+		},
+		{
+			name: "less than or equal",
+			text: `
+				def C1() () {
+					(a <= b) -> receiver
+				}
+			`,
+			operator: "<=",
 		},
 	}
 

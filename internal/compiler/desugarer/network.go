@@ -1096,15 +1096,31 @@ type handleBinarySenderResult struct {
 }
 
 var (
+	// Arithmetic
 	addCounter uint64
 	subCounter uint64
 	mulCounter uint64
 	divCounter uint64
-	eqCounter  uint64
 	modCounter uint64
+	powCounter uint64
+	// Comparison
+	eqCounter uint64
+	neCounter uint64
+	gtCounter uint64
+	ltCounter uint64
+	geCounter uint64
+	leCounter uint64
+	// Logical
+	andCounter uint64
+	orCounter  uint64
+	// Bitwise
+	bitAndCounter uint64
+	bitOrCounter  uint64
+	bitXorCounter uint64
+	bitLshCounter uint64
+	bitRshCounter uint64
 )
 
-// TODO figure out proper type argument instead of any so overloading works
 func (d Desugarer) desugarBinarySender(
 	iface src.Interface,
 	binary src.Binary,
@@ -1115,34 +1131,92 @@ func (d Desugarer) desugarBinarySender(
 	scope src.Scope,
 	nodes map[string]src.Node,
 ) (handleBinarySenderResult, *compiler.Error) {
-	var binaryNodeName string
-	var mathComponent string
+	var (
+		opNode      string
+		opComponent string
+	)
 
 	switch binary.Operator {
+	// Arithmetic
 	case src.AddOp:
 		addCounter++
-		binaryNodeName = fmt.Sprintf("__add__%d", addCounter)
-		mathComponent = "Add"
+		opNode = fmt.Sprintf("__add__%d", addCounter)
+		opComponent = "Add"
 	case src.SubOp:
 		subCounter++
-		binaryNodeName = fmt.Sprintf("__sub__%d", subCounter)
-		mathComponent = "Sub"
+		opNode = fmt.Sprintf("__sub__%d", subCounter)
+		opComponent = "Sub"
 	case src.MulOp:
 		mulCounter++
-		binaryNodeName = fmt.Sprintf("__mul__%d", mulCounter)
-		mathComponent = "Mul"
+		opNode = fmt.Sprintf("__mul__%d", mulCounter)
+		opComponent = "Mul"
 	case src.DivOp:
 		divCounter++
-		binaryNodeName = fmt.Sprintf("__div__%d", divCounter)
-		mathComponent = "Div"
+		opNode = fmt.Sprintf("__div__%d", divCounter)
+		opComponent = "Div"
 	case src.ModOp:
 		modCounter++
-		binaryNodeName = fmt.Sprintf("__mod__%d", modCounter)
-		mathComponent = "Mod"
+		opNode = fmt.Sprintf("__mod__%d", modCounter)
+		opComponent = "Mod"
+	case src.PowOp:
+		powCounter++
+		opNode = fmt.Sprintf("__pow__%d", powCounter)
+		opComponent = "Pow"
+	// Comparison
 	case src.EqOp:
 		eqCounter++
-		binaryNodeName = fmt.Sprintf("__eq__%d", eqCounter)
-		mathComponent = "Eq"
+		opNode = fmt.Sprintf("__eq__%d", eqCounter)
+		opComponent = "Eq"
+	case src.NeOp:
+		neCounter++
+		opNode = fmt.Sprintf("__ne__%d", neCounter)
+		opComponent = "Ne"
+	case src.GtOp:
+		gtCounter++
+		opNode = fmt.Sprintf("__gt__%d", gtCounter)
+		opComponent = "Gt"
+	case src.LtOp:
+		ltCounter++
+		opNode = fmt.Sprintf("__lt__%d", ltCounter)
+		opComponent = "Lt"
+	case src.GeOp:
+		geCounter++
+		opNode = fmt.Sprintf("__ge__%d", geCounter)
+		opComponent = "Ge"
+	case src.LeOp:
+		leCounter++
+		opNode = fmt.Sprintf("__le__%d", leCounter)
+		opComponent = "Le"
+	// Logical
+	case src.AndOp:
+		andCounter++
+		opNode = fmt.Sprintf("__and__%d", andCounter)
+		opComponent = "And"
+	case src.OrOp:
+		orCounter++
+		opNode = fmt.Sprintf("__or__%d", orCounter)
+		opComponent = "Or"
+	// Bitwise
+	case src.BitAndOp:
+		bitAndCounter++
+		opNode = fmt.Sprintf("__bitAnd__%d", bitAndCounter)
+		opComponent = "BitAnd"
+	case src.BitOrOp:
+		bitOrCounter++
+		opNode = fmt.Sprintf("__bitOr__%d", bitOrCounter)
+		opComponent = "BitOr"
+	case src.BitXorOp:
+		bitXorCounter++
+		opNode = fmt.Sprintf("__bitXor__%d", bitXorCounter)
+		opComponent = "BitXor"
+	case src.BitLshOp:
+		bitLshCounter++
+		opNode = fmt.Sprintf("__bitLsh__%d", bitLshCounter)
+		opComponent = "BitLsh"
+	case src.BitRshOp:
+		bitRshCounter++
+		opNode = fmt.Sprintf("__bitRsh__%d", bitRshCounter)
+		opComponent = "BitRsh"
 	default:
 		return handleBinarySenderResult{}, &compiler.Error{
 			Message:  fmt.Sprintf("unsupported binary operator: %s", binary.Operator),
@@ -1151,10 +1225,10 @@ func (d Desugarer) desugarBinarySender(
 		}
 	}
 
-	nodesToInsert[binaryNodeName] = src.Node{
+	nodesToInsert[opNode] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
-			Name: mathComponent,
+			Name: opComponent,
 		},
 		TypeArgs: []ts.Expr{binary.AnalyzedType},
 	}
@@ -1167,7 +1241,7 @@ func (d Desugarer) desugarBinarySender(
 				SenderSide: []src.ConnectionSender{binary.Left},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: binaryNodeName, Port: "acc"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "acc"},
 					},
 				},
 			},
@@ -1177,7 +1251,7 @@ func (d Desugarer) desugarBinarySender(
 				SenderSide: []src.ConnectionSender{binary.Right},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: binaryNodeName, Port: "el"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "el"},
 					},
 				},
 			},
@@ -1209,7 +1283,7 @@ func (d Desugarer) desugarBinarySender(
 			SenderSide: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
-						Node: binaryNodeName,
+						Node: opNode,
 						Port: "res",
 					},
 				},

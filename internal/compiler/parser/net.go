@@ -533,12 +533,9 @@ func parsePortAddrReceiver(
 }
 
 func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
-	if ctx == nil {
-		return nil
-	}
-
 	var op src.BinaryOperator
 	switch ctx.BinaryOp().GetText() {
+	// Arithmetic
 	case "+":
 		op = src.AddOp
 	case "-":
@@ -547,10 +544,39 @@ func parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
 		op = src.MulOp
 	case "/":
 		op = src.DivOp
-	case "==":
-		op = src.EqOp
 	case "%":
 		op = src.ModOp
+	case "**":
+		op = src.PowOp
+	// Comparison
+	case "==":
+		op = src.EqOp
+	case "!=":
+		op = src.NeOp
+	case ">":
+		op = src.GtOp
+	case "<":
+		op = src.LtOp
+	case ">=":
+		op = src.GeOp
+	case "<=":
+		op = src.LeOp
+	// Logical
+	case "&&":
+		op = src.AndOp
+	case "||":
+		op = src.OrOp
+	// Bitwise
+	case "&":
+		op = src.BitAndOp
+	case "|":
+		op = src.BitOrOp
+	case "^":
+		op = src.BitXorOp
+	case "<<":
+		op = src.BitLshOp
+	case ">>":
+		op = src.BitRshOp
 	}
 
 	senders := ctx.AllSingleSenderSide()

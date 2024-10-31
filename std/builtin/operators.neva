@@ -80,3 +80,24 @@ pub def And(acc bool, el bool) (res bool)
 #extern(or)
 pub def Or(acc bool, el bool) (res bool)
 
+// --- Bitwise ---
+
+// And performs a binary AND on each bit of two numbers.
+#extern(int_bitwise_and)
+pub def BitAnd(acc int, el int) (res int)
+
+// Or performs a binary OR on each bit of two numbers.
+#extern(int_bitwise_or) 
+pub def BitOr(acc int, el int) (res int)
+
+// Xor performs a binary XOR on each bit of two numbers.
+#extern(int_bitwise_xor)
+pub def BitXor(acc int, el int) (res int)
+
+// Lsh shifts bits to the left, filling with zeros.
+#extern(int_bitwise_lsh)
+pub def BitLsh(acc int, el int) (res int)
+
+// Rsh shifts bits to the right, preserving the sign bit.
+#extern(int_bitwise_rsh)
+pub def BitRsh(acc int, el int) (res int)

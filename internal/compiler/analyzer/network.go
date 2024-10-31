@@ -602,6 +602,7 @@ func (a Analyzer) analyzeSender(
 		}
 
 		var constr ts.Expr
+		// Arithmetic
 		switch sender.Binary.Operator {
 		case src.AddOp:
 			constr = ts.Expr{
@@ -622,13 +623,34 @@ func (a Analyzer) analyzeSender(
 					},
 				},
 			}
-		case src.ModOp:
+		case src.ModOp, src.PowOp:
 			constr = ts.Expr{
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 			}
-		case src.EqOp:
+		// Comparison
+		case src.EqOp, src.NeOp:
 			constr = ts.Expr{
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "any"}},
+			}
+		case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
+			constr = ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: []ts.Expr{
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+					},
+				},
+			}
+		// Logical
+		case src.AndOp, src.OrOp:
+			constr = ts.Expr{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+			}
+		// Bitwise
+		case src.BitAndOp, src.BitOrOp, src.BitXorOp, src.BitLshOp, src.BitRshOp:
+			constr = ts.Expr{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 			}
 		default:
 			return nil, nil, &compiler.Error{
@@ -662,7 +684,14 @@ func (a Analyzer) analyzeSender(
 		sender.Binary.AnalyzedType = *leftType
 
 		var resultType ts.Expr
-		if sender.Binary.Operator == src.EqOp {
+		if sender.Binary.Operator == src.EqOp ||
+			sender.Binary.Operator == src.NeOp ||
+			sender.Binary.Operator == src.GtOp ||
+			sender.Binary.Operator == src.LtOp ||
+			sender.Binary.Operator == src.GeOp ||
+			sender.Binary.Operator == src.LeOp ||
+			sender.Binary.Operator == src.AndOp ||
+			sender.Binary.Operator == src.OrOp {
 			resultType = ts.Expr{
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
 			}
