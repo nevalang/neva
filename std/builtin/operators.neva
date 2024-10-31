@@ -41,7 +41,7 @@ pub def Div<T int | float>(acc T, el T) (res T)
 pub def Mod(acc int, el int) (res int)
 
 // Pow raises base to the power of acc and sends to result.
-#extern(int int_pow)
+#extern(int_pow)
 pub def Pow(acc int, el int) (res int)
 
 // --- Comparison ---

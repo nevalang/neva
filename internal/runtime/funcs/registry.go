@@ -22,6 +22,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"select":  selector{},
 		"ternary": ternary{},
 		"eq":      eq{},
+		"ne":     notEq{},
 		"if":      if_{},
 		"cond":    cond{},
 		"not":     not{},
@@ -100,10 +101,10 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"int_pow": intPow{},
 
-		"int_bitwise_and":    intBitwiseAnd{},
-		"int_bitwise_or":     intBitwiseOr{},
-		"int_bitwise_xor":    intBitwiseXor{},
-		"int_bitwise_lshift": intBitwiseLsh{},
-		"int_bitwise_rshift": intBitwiseRsh{},
+		"int_bitwise_and": intBitwiseAnd{},
+		"int_bitwise_or":  intBitwiseOr{},
+		"int_bitwise_xor": intBitwiseXor{},
+		"int_bitwise_lsh": intBitwiseLsh{},
+		"int_bitwise_rsh": intBitwiseRsh{},
 	}
 }
