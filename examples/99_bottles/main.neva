@@ -12,11 +12,11 @@ def Main(start) (stop) {
 }
 
 def PrintNext2Lines(n int) (n int) {
-    Decr<int>, PrintFirstLine, PrintSecondLine
+    Dec<int>, PrintFirstLine, PrintSecondLine
     ---
     // printFirstLine and printSecondLine won't work in parallel
     // because they are in the loop at the level of Main
-    :n -> printFirstLine -> decr -> printSecondLine -> :n 
+    :n -> printFirstLine -> dec -> printSecondLine -> :n 
 }
 
 // === First Line ===

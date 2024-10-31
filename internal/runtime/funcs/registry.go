@@ -67,9 +67,9 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"string_add": stringAdd{},
 
 		// math mappers
-		"int_inc":  intInc{},
-		"int_decr": intDecr{},
-		"int_mod":  intMod{},
+		"int_inc": intInc{},
+		"int_dec": intDec{},
+		"int_mod": intMod{},
 
 		// strconv
 		"parse_int": parseInt{},

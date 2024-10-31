@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intDecr struct{}
+type intDec struct{}
 
-func (i intDecr) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+func (i intDec) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

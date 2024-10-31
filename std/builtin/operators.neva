@@ -8,13 +8,17 @@ pub def Not(data bool) (res bool)
 #extern(int int_inc, float float_inc)
 pub def Inc<T int | float>(data T) (res T)
 
-// Decr decrements data by 1 and sends to result. It can be used with Map.
-#extern(int int_decr, float float_decr)
-pub def Decr<T int | float>(data T) (res T)
+// Dec decrements data by 1 and sends to result. It can be used with Map.
+#extern(int int_dec, float float_dec)
+pub def Dec<T int | float>(data T) (res T)
+
+// Neg negates data and sends to result. It can be used with Map.
+#extern(int int_neg, float float_neg)
+pub def Neg<T int | float>(data T) (res T)
 
 // === BINARY ===
 
-// --- Math ---
+// --- Arithmetic ---
 
 // Add sums acc with el and sends to result. It can be used with Reduce.
 #extern(int int_add, float float_add, string string_add)
@@ -36,19 +40,19 @@ pub def Div<T int | float>(acc T, el T) (res T)
 #extern(int_mod)
 pub def Mod(acc int, el int) (res int)
 
-// --- Boolean ---
+// Pow raises base to the power of acc and sends to result.
+#extern(int int_pow)
+pub def Pow(acc int, el int) (res int)
+
+// --- Comparison ---
 
 // Eq sends true if actual is equal to compared, otherwise false.
 #extern(eq)
 pub def Eq<T>(acc T, el T) (res bool)
 
-// And sends true if both acc and el are true, otherwise false.
-#extern(and)
-pub def And(acc bool, el bool) (res bool)
-
-// Or sends true if either acc or el are true, otherwise false.
-#extern(or)
-pub def Or(acc bool, el bool) (res bool)
+// Ne sends true if actual is not equal to compared, otherwise false.
+#extern(ne)
+pub def Ne<T>(acc T, el T) (res bool)
 
 // Gt sends true if actual is greater than compared, otherwise false.
 #extern(int int_is_greater, float float_is_greater, string string_is_greater)
@@ -57,4 +61,22 @@ pub def Gt<T int | float | string>(acc T, el T) (res bool)
 // Lt sends true if actual is lesser than compared, otherwise false.
 #extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
 pub def Lt<T int | float | string>(acc T, el T) (res bool)
+
+// Ge sends true if actual is greater than or equal to compared, otherwise false.
+#extern(int int_is_greater_or_equal, float float_is_greater_or_equal)
+pub def Ge<T int | float | string>(acc T, el T) (res bool)
+
+// Le sends true if actual is lesser than or equal to compared, otherwise false.
+#extern(int int_is_lesser_or_equal, float float_is_lesser_or_equal)
+pub def Le<T int | float | string>(acc T, el T) (res bool)
+
+// --- Logical ---
+
+// And sends true if both acc and el are true, otherwise false.
+#extern(and)
+pub def And(acc bool, el bool) (res bool)
+
+// Or sends true if either acc or el are true, otherwise false.
+#extern(or)
+pub def Or(acc bool, el bool) (res bool)
 

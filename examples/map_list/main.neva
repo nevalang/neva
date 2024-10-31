@@ -4,7 +4,7 @@ const lst list<int> = [50, 30, 20, 100]
 
 def Main(start) (stop) {
     ListToStream<int>
-    Map<int, int>{Decr<int>}
+    Map<int, int>{Dec<int>}
     List<int>
     Println
     ---
