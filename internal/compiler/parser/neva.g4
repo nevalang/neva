@@ -165,9 +165,10 @@ binaryOp:
 	// Bitwise
 	| '&'
 	| '|'
-	| '^'
-	| '<<'
-	| '>>';
+	| '^';
+	// TODO implement << and >>, for some reason parser confuses nested generics with this
+	// | '<<'
+	// | '>>';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

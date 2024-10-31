@@ -1,0 +1,5 @@
+def Main(start) (stop) {
+    Println
+    ---
+    :start -> { (true || false) -> println -> :stop }
+} 
