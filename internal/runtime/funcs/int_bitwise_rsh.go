@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type intPow struct{}
+type intBitwiseRsh struct{}
 
-func (intPow) Create(
+func (intBitwiseRsh) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
@@ -52,18 +52,9 @@ func (intPow) Create(
 				return
 			}
 
-			// Calculate power using repeated multiplication
-			base := accMsg.Int()
-			exp := elMsg.Int()
-			result := int64(1)
-			
-			for i := int64(0); i < exp; i++ {
-				result *= base
-			}
-
-			if !resOut.Send(ctx, runtime.NewIntMsg(result)) {
+			if !resOut.Send(ctx, runtime.NewIntMsg(accMsg.Int() >> elMsg.Int())) {
 				return
 			}
 		}
 	}, nil
-}
+} 
