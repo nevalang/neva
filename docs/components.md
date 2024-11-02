@@ -21,7 +21,7 @@ Overloaded native components use a modified extern directive: `#extern(t1 f1, t2
 
 ```neva
 #extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(acc T, el T) (res T)
+pub def Add<T int | float | string>(left T, right T) (res T)
 ```
 
 Usage:

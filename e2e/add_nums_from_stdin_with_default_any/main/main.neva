@@ -17,9 +17,9 @@ def Aux(sig) (res int, err error) {
 	add Add<int>
 	---
 	:sig                       -> reader1:sig
-	reader1:num                -> [add:acc, reader2:sig]
+	reader1:num                -> [add:left, reader2:sig]
 	[reader1:err, reader2:err] -> :err
-	reader2:num                -> add:el
+	reader2:num                -> add:right
 	add:res                  -> :res
 }
 

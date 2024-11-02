@@ -9,12 +9,12 @@ import (
 type intMod struct{}
 
 func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	numIn, err := io.In.Single("acc") // numerator
+	numIn, err := io.In.Single("left") // numerator
 	if err != nil {
 		return nil, err
 	}
 
-	denIn, err := io.In.Single("el") // denominator
+	denIn, err := io.In.Single("right") // denominator
 	if err != nil {
 		return nil, err
 	}

@@ -152,7 +152,7 @@ It acts as an infinite loop, repeatedly sending the same message at the receiver
 
 One way to work with them is to have a node with multiple inports, where at least one is connected to a port, not a constant. This limits the constants' speed to that of the port. Here's a simple example:
 
-We'll create a component that increments a number using an addition component with 2 inports: `:acc` and `:el`. We'll use a constant `$one` for `:acc`, while `:el` receives dynamic values:
+We'll create a component that increments a number using an addition component with 2 inports: `:left` and `:right`. We'll use a constant `$one` for `:left`, while `:right` receives dynamic values:
 
 ```neva
 const one int = 1
@@ -160,13 +160,13 @@ const one int = 1
 def Inc(data int) (res int) {
     Add
     ---
-    $one -> add:acc
-    :data -> add:el
+    $one -> add:left
+    :data -> add:right
     add -> :res
 }
 ```
 
-In this example, `add:acc` and `add:el` are synchronized. When `:data -> add:el` has a message, `add:acc` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `acc=1 el=1; acc=1 el=2; acc=1 el=3` and produce `2, 3, 4` respectively.
+In this example, `add:left` and `add:right` are synchronized. When `:data -> add:right` has a message, `add:left` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `left=1 right=1; left=1 right=2; left=1 right=3` and produce `2, 3, 4` respectively.
 
 Another way to synchronize constants with real data is to use deferred connections. We'll explore this in the receiver-side forms section.
 
@@ -205,8 +205,8 @@ Sometimes it's convenient to refer to message values directly in the network wit
 def Inc(data int) (res int) {
     Add
     ---
-    1 -> add:acc
-    :data -> add:el
+    1 -> add:left
+    :data -> add:right
     add -> :res
 }
 ```

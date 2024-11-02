@@ -287,12 +287,8 @@ pub const p int = 3.14
 // foo/bar/bar.neva
 import { @/foo }
 
-pub def AddP(el float) (res float) {
-  Add<float>
-  ---
-  $foo.p -> add:acc
-  :el -> add:el
-  add -> :res
+pub def AddP(data float) (res float) {
+  (:data + $foo.p) -> :res
 }
 
 // main/main.neva
@@ -304,7 +300,7 @@ import {
 def Main(start) (stop) {
   bar.AddP, Println
   ---
-  :start -> { $foo.p -> addP:el -> println -> :stop }
+  :start -> { $foo.p -> addP:right -> println -> :stop }
 }
 ```
 

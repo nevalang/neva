@@ -1233,15 +1233,15 @@ func (d Desugarer) desugarBinarySender(
 		TypeArgs: []ts.Expr{binary.AnalyzedType},
 	}
 
-	// left -> op:acc
-	// right -> op:el
+	// left -> op:left
+	// right -> op:right
 	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
 				SenderSide: []src.ConnectionSender{binary.Left},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "acc"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "left"},
 					},
 				},
 			},
@@ -1251,7 +1251,7 @@ func (d Desugarer) desugarBinarySender(
 				SenderSide: []src.ConnectionSender{binary.Right},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "el"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "right"},
 					},
 				},
 			},

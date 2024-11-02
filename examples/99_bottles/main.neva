@@ -16,7 +16,7 @@ def PrintNext2Lines(n int) (n int) {
     ---
     // printFirstLine and printSecondLine won't work in parallel
     // because they are in the loop at the level of Main
-    :n -> printFirstLine -> dec -> printSecondLine -> :n 
+    :n -> printFirstLine -> dec -> printSecondLine -> :n
 }
 
 // === First Line ===

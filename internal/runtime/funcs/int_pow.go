@@ -13,12 +13,12 @@ func (intPow) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	accIn, err := io.In.Single("acc")
+	accIn, err := io.In.Single("left")
 	if err != nil {
 		return nil, err
 	}
 
-	elIn, err := io.In.Single("el")
+	elIn, err := io.In.Single("right")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (intPow) Create(
 			base := accMsg.Int()
 			exp := elMsg.Int()
 			result := int64(1)
-			
+
 			for i := int64(0); i < exp; i++ {
 				result *= base
 			}

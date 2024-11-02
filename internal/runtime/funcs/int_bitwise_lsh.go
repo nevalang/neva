@@ -13,12 +13,12 @@ func (intBitwiseLsh) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	accIn, err := io.In.Single("acc")
+	accIn, err := io.In.Single("left")
 	if err != nil {
 		return nil, err
 	}
 
-	elIn, err := io.In.Single("el")
+	elIn, err := io.In.Single("right")
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (intBitwiseLsh) Create(
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(accMsg.Int() << elMsg.Int())) {
+			if !resOut.Send(ctx, runtime.NewIntMsg(accMsg.Int()<<elMsg.Int())) {
 				return
 			}
 		}
 	}, nil
-} 
+}

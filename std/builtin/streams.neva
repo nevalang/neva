@@ -78,7 +78,7 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 // --- Reduce ---
 
 // IReduceHandler is a dependency for Reduce.
-pub interface IReduceHandler<T, Y>(acc T, el T) (res Y)
+pub interface IReduceHandler<T, Y>(left T, right T) (res Y)
 
 // Reduce applies a reduction function to a stream of values, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
@@ -92,10 +92,10 @@ pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     :init -> acc:init
     
     :data -> fanOut
-    fanOut[0] -> .data -> handler:el
+    fanOut[0] -> .data -> handler:right
     fanOut[1] -> .last -> acc:last
     
-    acc:cur -> handler:acc
+    acc:cur -> handler:left
     handler -> acc:upd
 
     acc:res -> :res

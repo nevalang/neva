@@ -9,12 +9,12 @@ import (
 type intIsGreater struct{}
 
 func (p intIsGreater) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Single("acc")
+	actualIn, err := io.In.Single("left")
 	if err != nil {
 		return nil, err
 	}
 
-	comparedIn, err := io.In.Single("el")
+	comparedIn, err := io.In.Single("right")
 	if err != nil {
 		return nil, err
 	}

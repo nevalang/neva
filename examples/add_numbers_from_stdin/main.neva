@@ -13,8 +13,8 @@ def App(sig) (res int, err error) {
 	add Add<int>
 	---
 	:sig -> readFirstInt
-	readFirstInt:num -> [add:acc, readSecondInt]
-	readSecondInt:num -> add:el
+	readFirstInt:num -> [add:left, readSecondInt]
+	readSecondInt:num -> add:right
 	[readFirstInt:err, readSecondInt:err] -> :err
 	add -> :res
 }

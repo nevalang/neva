@@ -3,8 +3,8 @@ def Main(start any) (stop any) {
 	println Println<int>
 	---
 	:start -> [
-		{ 1 -> adder:acc },
-		{ 2 -> adder:el }
+		{ 1 -> adder:left },
+		{ 2 -> adder:right }
 	]
 	adder:res -> println:data
 	println:sig -> :stop

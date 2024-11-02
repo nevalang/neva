@@ -358,24 +358,24 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// :a -> __add__1:acc
+						// :a -> __add__1:left
 						Normal: &src.NormalConnection{
 							SenderSide: []src.ConnectionSender{
 								{PortAddr: &src.PortAddr{Port: "a"}},
 							},
 							ReceiverSide: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "acc"}},
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
 							},
 						},
 					},
 					{
-						// :b -> __add__1:el
+						// :b -> __add__1:right
 						Normal: &src.NormalConnection{
 							SenderSide: []src.ConnectionSender{
 								{PortAddr: &src.PortAddr{Port: "b"}},
 							},
 							ReceiverSide: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "el"}},
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},
 							},
 						},
 					},
