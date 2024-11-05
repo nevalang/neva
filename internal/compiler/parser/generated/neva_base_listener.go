@@ -565,3 +565,9 @@ func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideCo
 
 // ExitMultipleReceiverSide is called when production multipleReceiverSide is exited.
 func (s *BasenevaListener) ExitMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}
+
+// EnterSwitchStmt is called when production switchStmt is entered.
+func (s *BasenevaListener) EnterSwitchStmt(ctx *SwitchStmtContext) {}
+
+// ExitSwitchStmt is called when production switchStmt is exited.
+func (s *BasenevaListener) ExitSwitchStmt(ctx *SwitchStmtContext) {}

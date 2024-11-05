@@ -11,23 +11,15 @@ def Main(start) (stop) {
 }
 
 def Handler(data int) (res string) {
-    Switch<int>, Select<string>
-
+    Select<string>
     ---
-
-    :data -> switch:data
-
-    1 -> switch:case[0] -> select:if[0]
+    :data -> switch {
+        1 -> select:if[0]
+        2 -> select:if[1]
+        3 -> select:if[2]
+    }
     'a' -> select:then[0]
-
-    2 -> switch:case[1] -> select:if[1]
     'b' -> select:then[1]
-
-    3 -> switch:case[2] -> select:if[2]
     'c' -> select:then[2]
-
-    4 -> switch:case[3] -> select:if[3]
-    'd' -> select:then[3]
-
     select -> :res
 }

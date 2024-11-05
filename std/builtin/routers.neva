@@ -1,11 +1,9 @@
-// If is a weaker version of Switch that only works with booleans.
-// Just like Switch, it is used for routing.
-// If you need mapping, use Ternary instead.
+// `If` allows to trigger different branches based on a boolean.
+// Just like `Cond` and `Switch`, it is used for routing. It's simplest form.
 #extern(if)
 pub def If(data bool) (then any, else any)
 
-// Cond is an extended version of If
-// that allows to route data based on a condition.
+// `Cond` is like `If`, but also allows to route data based on a condition.
 #extern(cond)
 pub def Cond<T>(data T, if bool) (then T, else T)
 
@@ -15,12 +13,12 @@ pub def Cond<T>(data T, if bool) (then T, else T)
 #extern(switch)
 pub def Switch<T>(data T, [case] T) ([case] T, else T)
 
-// Lock allows to defer some event until some other event happens.
+// Lock allows to defer receiving until some sending happens.
 #extern(lock)
 pub def Lock<T>(sig any, data T) (data T)
 
 // FanOut is used to broadcast a message from one sender to multiple receivers.
-// You should prefer multiple receivers sugar `-> [...]` instead.
+// You should use multiple receivers syntax `-> [...]` instead.
 // Multiple receivers is a syntax sugar over explicit FanOut.
 #extern(fan_out)
 pub def FanOut<T>(data T) ([data] T)
