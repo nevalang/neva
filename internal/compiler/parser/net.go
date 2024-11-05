@@ -184,6 +184,7 @@ func parseSingleReceiverSide(
 	deferredConn := actx.DeferredConn()
 	portAddr := actx.PortAddr()
 	chainedConn := actx.ChainedNormConn()
+	switchStmt := actx.SwitchStmt()
 
 	meta := core.Meta{
 		Text: actx.GetText(),
@@ -204,12 +205,45 @@ func parseSingleReceiverSide(
 		return parseChainedConnExpr(chainedConn, meta)
 	case portAddr != nil:
 		return parsePortAddrReceiver(portAddr)
+	case switchStmt != nil:
+		return parseSwitchStmt(switchStmt)
 	default:
 		return src.ConnectionReceiver{}, &compiler.Error{
 			Message: "missing receiver side",
 			Meta:    &meta,
 		}
 	}
+}
+
+func parseSwitchStmt(
+	switchStmt generated.ISwitchStmtContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	meta := core.Meta{
+		Text: switchStmt.GetText(),
+		Start: core.Position{
+			Line:   switchStmt.GetStart().GetLine(),
+			Column: switchStmt.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   switchStmt.GetStop().GetLine(),
+			Column: switchStmt.GetStop().GetColumn(),
+		},
+	}
+
+	unparsedCases := switchStmt.AllNormConnDef()
+	cases := make([]src.NormalConnection, 0, len(unparsedCases))
+	for _, connDef := range unparsedCases {
+		parsedConn, err := parseNormConn(connDef)
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		cases = append(cases, *parsedConn.Normal)
+	}
+
+	return src.ConnectionReceiver{
+		Switch: cases,
+		Meta:   meta,
+	}, nil
 }
 
 func parseChainedConnExpr(

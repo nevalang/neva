@@ -298,10 +298,11 @@ type ArrayBypassConnection struct {
 }
 
 type ConnectionReceiver struct {
-	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
-	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
-	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
-	Meta               core.Meta   `json:"meta,omitempty"`
+	PortAddr           *PortAddr          `json:"portAddr,omitempty"`
+	DeferredConnection *Connection        `json:"deferredConnection,omitempty"`
+	ChainedConnection  *Connection        `json:"chainedConnection,omitempty"`
+	Switch             []NormalConnection `json:"switch,omitempty"`
+	Meta               core.Meta          `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string
@@ -324,10 +325,10 @@ type ConnectionSender struct {
 	PortAddr       *PortAddr `json:"portAddr,omitempty"`
 	Const          *Const    `json:"const,omitempty"`
 	Range          *Range    `json:"range,omitempty"`
-	StructSelector []string  `json:"selector,omitempty"`
 	Unary          *Unary    `json:"unary,omitempty"`
 	Binary         *Binary   `json:"binary,omitempty"`
 	Ternary        *Ternary  `json:"ternary,omitempty"`
+	StructSelector []string  `json:"selector,omitempty"`
 	Meta           core.Meta `json:"meta,omitempty"`
 }
 
