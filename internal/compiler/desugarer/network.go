@@ -216,6 +216,8 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
+var switchCounter uint64
+
 func (d Desugarer) desugarSingleReceiver(
 	iface src.Interface,
 	normConn src.NormalConnection,
@@ -283,6 +285,88 @@ func (d Desugarer) desugarSingleReceiver(
 		}
 
 		return desugarReceiverResult(result), nil
+	}
+
+	if receiver.Switch != nil {
+		switchCounter++
+		switchNodeName := fmt.Sprintf("__switch__%d", switchCounter)
+
+		nodesToInsert[switchNodeName] = src.Node{
+			EntityRef: core.EntityRef{
+				Pkg:  "builtin",
+				Name: "Switch",
+			},
+		}
+
+		// Connect original sender to switch:data
+		replace := src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: normConn.SenderSide,
+				ReceiverSide: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{
+							Node: switchNodeName,
+							Port: "data",
+						},
+					},
+				},
+			},
+		}
+
+		insert := []src.Connection{}
+
+		// For each case in the switch
+		for i, caseConn := range receiver.Switch {
+			// Connect case sender to switch:case[i]
+			insert = append(insert, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: caseConn.SenderSide,
+					ReceiverSide: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{
+								Node: switchNodeName,
+								Port: "case",
+								Idx:  compiler.Pointer(uint8(i)),
+							},
+						},
+					},
+				},
+			})
+
+			// Connect switch:case[i] to case receiver
+			insert = append(insert, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: switchNodeName,
+								Port: "case",
+								Idx:  compiler.Pointer(uint8(i)),
+							},
+						},
+					},
+					ReceiverSide: caseConn.ReceiverSide,
+				},
+			})
+		}
+
+		desugaredInsert, err := d.desugarConnections(
+			iface,
+			insert,
+			nodePortsUsed,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarReceiverResult{}, err
+		}
+
+		return desugarReceiverResult{
+			replace: replace,
+			insert:  desugaredInsert,
+		}, nil
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
