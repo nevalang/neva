@@ -212,7 +212,8 @@ func (a Analyzer) analyzeReceiver(
 ) (*src.ConnectionReceiver, *compiler.Error) {
 	if receiver.PortAddr == nil &&
 		receiver.ChainedConnection == nil &&
-		receiver.DeferredConnection == nil {
+		receiver.DeferredConnection == nil &&
+		len(receiver.Switch) == 0 {
 		return nil, &compiler.Error{
 			Message:  "Connection must have receiver-side",
 			Location: &scope.Location,
@@ -271,6 +272,24 @@ func (a Analyzer) analyzeReceiver(
 		return &src.ConnectionReceiver{
 			DeferredConnection: &analyzedDeferredConn,
 		}, nil
+	case receiver.Switch != nil:
+		analyzedSwitchConns, err := a.analyzeSwitchReceiver(
+			receiver,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			nodesUsage,
+			analyzedSenders,
+			resolvedSenderTypes,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &src.ConnectionReceiver{
+			Switch: analyzedSwitchConns,
+			Meta:   receiver.Meta,
+		}, nil
 	}
 
 	return nil, &compiler.Error{
@@ -278,6 +297,76 @@ func (a Analyzer) analyzeReceiver(
 		Location: &scope.Location,
 		Meta:     &receiver.Meta,
 	}
+}
+
+func (a Analyzer) analyzeSwitchReceiver(
+	receiver src.ConnectionReceiver,
+	iface src.Interface,
+	nodes map[string]src.Node,
+	nodesIfaces map[string]foundInterface,
+	scope src.Scope,
+	nodesUsage map[string]netNodeUsage,
+	analyzedSenders []src.ConnectionSender,
+	resolvedSenderTypes []*ts.Expr,
+) ([]src.NormalConnection, *compiler.Error) {
+	analyzedSwitchConns := make([]src.NormalConnection, 0, len(receiver.Switch))
+
+	for _, switchConn := range receiver.Switch {
+		// all option-senders must be subtypes of their branch-receivers
+		analyzedSwitchConn, err := a.analyzeNormalConnection(
+			&switchConn,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			nodesUsage,
+			analyzedSenders,
+		)
+		if err != nil {
+			return nil, &compiler.Error{
+				Message:  fmt.Sprintf("Invalid switch case: %v", err),
+				Location: &scope.Location,
+				Meta:     &switchConn.Meta,
+			}
+		}
+
+		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchConn)
+
+		// all incoming senders must be subtypes of each option-sender
+		// (both incoming senders and switch's option-senders might be slice)
+		for _, switchSender := range switchConn.SenderSide {
+			_, switchSenderType, _, err := a.getSenderSideType(
+				switchSender,
+				iface,
+				nodes,
+				nodesIfaces,
+				scope,
+				nil,
+			)
+			if err != nil {
+				return nil, &compiler.Error{
+					Message:  fmt.Sprintf("Invalid switch case sender: %v", err),
+					Location: &scope.Location,
+					Meta:     &switchSender.Meta,
+				}
+			}
+
+			for i, resolvedSenderType := range resolvedSenderTypes {
+				if err := a.resolver.IsSubtypeOf(*resolvedSenderType, switchSenderType, scope); err != nil {
+					return nil, &compiler.Error{
+						Message: fmt.Sprintf(
+							"Incompatible types in switch: %v -> %v: %v",
+							analyzedSenders[i], switchSender, err.Error(),
+						),
+						Location: &scope.Location,
+						Meta:     &switchSender.Meta,
+					}
+				}
+			}
+		}
+	}
+
+	return analyzedSwitchConns, nil
 }
 
 func (a Analyzer) analyzePortAddrReceiver(
