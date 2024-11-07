@@ -19,6 +19,27 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 
 // === Iterators ===
 
+// --- While ---
+
+// IWhileHandler is a dependency for While.
+pub interface IWhileHandler<T>(data T) (res T, err error)
+
+// While implements truly sequential loop.
+// dependency node won't receive next data until it sends a result.
+// Sometimes it's crucial to guarantee this, to avoid race conditions.
+// E.g. you have pipeline of nodes that produce side-effects and order matters.
+// You can wrap them in single handler and safely pass to `While`.
+// `While` is basically just a shortcut for manually looped network topology.
+// 
+pub def While<T>(from T, to T) (sig struct{}, err error) {
+    do IWhileHandler?
+    ---
+    [:from, do:res] -> switch {
+        to -> :stop
+        else -> do
+    }
+}
+
 // These constants are used for binding by Field.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
