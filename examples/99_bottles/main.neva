@@ -1,69 +1,54 @@
-// https://www.99-bottles-of-beer.net
-
 def Main(start) (stop) {
-    // we use explicit lock to implement fan-in to printNext2Lines
-    Switch<int>, PrintNext2Lines, Lock<int>
-    ---
-    :start -> lock:sig
-    99 -> lock:data
-    [lock:data, switch:else] -> printNext2Lines
-    printNext2Lines -> switch:data
-    -1 -> switch:case[0] -> :stop
+	While<int>{Next2Lines}
+	---
+	:start -> { 99 -> while:from }
+	0 -> while:to
+	while:res -> :stop
+	while:err -> panic
 }
 
-def PrintNext2Lines(n int) (n int) {
-    Dec<int>, PrintFirstLine, PrintSecondLine
-    ---
-    // printFirstLine and printSecondLine won't work in parallel
-    // because they are in the loop at the level of Main
-    :n -> printFirstLine -> dec -> printSecondLine -> :n
+def Next2Lines(data int) (res int, err error) {
+	first Relay<int>{FirstLine}?
+	dec Dec<int>
+	second Relay<int>{SecondLine}?
+	---
+	:data -> first -> dec -> second -> :res
 }
-
-// === First Line ===
 
 const firstLine1 string = '$0 bottles of beer on the wall, $0 bottles of beer.\n'
 const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
-def PrintFirstLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
-    ---
-    :n -> [switch:data, lock:data]
-
-    0 -> switch:case[0] -> { $firstLine3 -> p1 }
-    1 -> switch:case[1] -> { $firstLine2 -> p2 }
-    switch:else -> [
-        printf:args[0],
-        { $firstLine1 -> printf:tpl }
-    ]
-
-    [p1, p2, printf:sig] -> lock:sig
-    printf:err -> panic
-    lock -> :n
+def FirstLine(n int) (sig any, err error) {
+	p1 Println, p2 Println, p3 Printf?
+	---
+	:n -> switch {
+		0 -> { $firstLine3 -> p1 }
+		1 -> { $firstLine2 -> p2 }
+		else -> [
+            p3:args[0],
+			{ $firstLine1 -> p3:tpl }
+		]
+	}
+	[p1, p2, p3] -> :sig
 }
-
-// === Second Line ===
 
 const secondLine1 string = 'Take one down and pass it around, $0 bottles of beer on the wall.\n\n'
 const secondLine2 string = 'Take one down and pass it around, 1 bottle of beer on the wall.\n'
 const secondLine3 string = 'Take one down and pass it around, no more bottles of beer on the wall.\n'
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
-def PrintSecondLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>, Panic
-    ---
-    :n -> [switch:data, lock:data]
-
-    -1 -> switch:case[0] -> { $secondLine4 -> p1 }
-    0  -> switch:case[1] -> { $secondLine3 -> p2 }
-    1  -> switch:case[2] -> { $secondLine2 -> p3 }
-
-    switch:else -> [
-        printf:args[0],
-        { $secondLine1 -> printf:tpl }
-    ]
-
-    [p1, p2, p3, printf:sig] -> lock:sig
-    printf:err -> panic
-    lock -> :n
+def SecondLine(n int) (sig any, err error) {
+	p1 Println, p2 Println, p3 Println, p4 Printf?
+	---
+	:n -> switch {
+		-1 -> { $secondLine4 -> p1 }
+		0 -> { $secondLine3 -> p2 } 
+		1 -> { $secondLine2 -> p3 }
+		else -> [
+            p4:args[0],
+            { $secondLine1 -> p4:tpl }
+        ]
+	}
+	[p1, p2, p3, p4] -> :sig
 }
