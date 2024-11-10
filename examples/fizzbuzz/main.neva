@@ -1,9 +1,9 @@
 def Main(start) (stop) {
     Map<int, any>{FizzBuzz}
-    ForEach{Println}
+    For{Println}
     Wait
     ---
-    :start -> 1..101 -> map -> forEach -> wait -> :stop
+    :start -> 1..101 -> map -> for -> wait -> :stop
 }
 
 def FizzBuzz(data int) (res string|int) {

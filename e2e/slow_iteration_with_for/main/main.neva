@@ -7,9 +7,9 @@ import { time }
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start) (stop) {
-    ListToStream<int>, ForEach{Slow}, Wait
+    ListToStream<int>, For{Slow}, Wait
     ---
-    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
+    :start -> { $lst -> listToStream -> for -> wait -> :stop }
 }
 
 def Slow(data int) (sig any) {

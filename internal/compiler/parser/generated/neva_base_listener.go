@@ -571,3 +571,9 @@ func (s *BasenevaListener) EnterSwitchStmt(ctx *SwitchStmtContext) {}
 
 // ExitSwitchStmt is called when production switchStmt is exited.
 func (s *BasenevaListener) ExitSwitchStmt(ctx *SwitchStmtContext) {}
+
+// EnterDefaultCase is called when production defaultCase is entered.
+func (s *BasenevaListener) EnterDefaultCase(ctx *DefaultCaseContext) {}
+
+// ExitDefaultCase is called when production defaultCase is exited.
+func (s *BasenevaListener) ExitDefaultCase(ctx *DefaultCaseContext) {}

@@ -283,6 +283,9 @@ type nevaListener interface {
 	// EnterSwitchStmt is called when entering the switchStmt production.
 	EnterSwitchStmt(c *SwitchStmtContext)
 
+	// EnterDefaultCase is called when entering the defaultCase production.
+	EnterDefaultCase(c *DefaultCaseContext)
+
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
 
@@ -558,4 +561,7 @@ type nevaListener interface {
 
 	// ExitSwitchStmt is called when exiting the switchStmt production.
 	ExitSwitchStmt(c *SwitchStmtContext)
+
+	// ExitDefaultCase is called when exiting the defaultCase production.
+	ExitDefaultCase(c *DefaultCaseContext)
 }

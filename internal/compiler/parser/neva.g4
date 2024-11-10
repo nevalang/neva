@@ -199,7 +199,9 @@ multipleReceiverSide:
 switchStmt:
 	'switch' NEWLINE* '{' NEWLINE* normConnDef (
 		NEWLINE+ normConnDef
-	)* NEWLINE* '}';
+	)* (NEWLINE+ defaultCase)? NEWLINE* '}';
+
+defaultCase: '_' '->' receiverSide;
 
 /* LEXER */
 

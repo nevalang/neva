@@ -3,7 +3,7 @@ import { lists }
 const lst list<int> = [1, 2, 3]
 
 def Main(start) (stop) {
-    ListToStream, ForEach{Println}, Wait
+    ListToStream, For{Println}, Wait
     ---
-    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
+    :start -> { $lst -> listToStream -> for -> wait -> :stop }
 }

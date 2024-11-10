@@ -240,9 +240,22 @@ func parseSwitchStmt(
 		cases = append(cases, *parsedConn.Normal)
 	}
 
+	var defaultCase []src.ConnectionReceiver = nil
+	defaultCaseCtx := switchStmt.DefaultCase()
+	if defaultCaseCtx != nil {
+		parsedDefault, err := parseReceiverSide(defaultCaseCtx.ReceiverSide())
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		defaultCase = parsedDefault
+	}
+
 	return src.ConnectionReceiver{
-		Switch: cases,
-		Meta:   meta,
+		Switch: &src.Switch{
+			Cases:   cases,
+			Default: defaultCase,
+		},
+		Meta: meta,
 	}, nil
 }
 

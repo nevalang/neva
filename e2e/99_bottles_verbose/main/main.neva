@@ -2,13 +2,13 @@
 
 def Main(start) (stop) {
     // we use explicit lock to implement fan-in to printNext2Lines
-    Switch<int>, PrintNext2Lines, Lock<int>
+    s Switch<int>, PrintNext2Lines, Lock<int>
     ---
     :start -> lock:sig
     99 -> lock:data
-    [lock:data, switch:else] -> printNext2Lines
-    printNext2Lines -> switch:data
-    -1 -> switch:case[0] -> :stop
+    [lock:data, s:else] -> printNext2Lines
+    printNext2Lines -> s:data
+    -1 -> s:case[0] -> :stop
 }
 
 def PrintNext2Lines(n int) (n int) {
@@ -29,16 +29,16 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 def PrintFirstLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
+    s Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
     ---
-    :n -> [switch:data, lock:data]
+    :n -> [s:data, lock:data]
 
-    0 -> switch:case[0]
-    1 -> switch:case[1]
-    switch:case[0] -> { $firstLine3 -> p1:data }
-    switch:case[1] -> { $firstLine2 -> p2:data }
+    0 -> s:case[0]
+    1 -> s:case[1]
+    s:case[0] -> { $firstLine3 -> p1:data }
+    s:case[1] -> { $firstLine2 -> p2:data }
     
-    switch:else -> [
+    s:else -> [
         printf:args[0],
         { $firstLine1 -> printf:tpl }
     ]

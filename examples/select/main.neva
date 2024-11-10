@@ -4,10 +4,10 @@ import { time }
 
 def Main(start) (stop) {
     Map<int, string>{Handler}
-    ForEach{Println}
+    For{Println}
     Wait
     ---
-    :start -> 1..5 -> map -> forEach -> wait -> :stop
+    :start -> 1..5 -> map -> for -> wait -> :stop
 }
 
 def Handler(data int) (res string) {

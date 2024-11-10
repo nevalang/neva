@@ -4,9 +4,9 @@ const strings list<string> = ['a', 'b', 'c']
 
 def Main(start) (stop) {
 	ListToStream<string>, streams.Zip<int, string>
-	ForEach{Println}, Wait
+	For{Println}, Wait
 	---
 	:start -> 0..10 -> zip:first
 	$strings -> listToStream -> zip:second
-	zip -> forEach -> wait -> :stop
+	zip -> for -> wait -> :stop
 }

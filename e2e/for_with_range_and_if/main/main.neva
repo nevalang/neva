@@ -3,9 +3,9 @@ import { lists }
 const lst list<bool> = [true, false]
 
 def Main(start) (stop) {
-	ListToStream<bool>, ForEach<bool>{PrintAsNum}, Wait
+	ListToStream<bool>, For<bool>{PrintAsNum}, Wait
 	---
-	:start -> { $lst -> listToStream -> forEach -> wait -> :stop }
+	:start -> { $lst -> listToStream -> for -> wait -> :stop }
 }
 
 def PrintAsNum(data bool) (sig any) {

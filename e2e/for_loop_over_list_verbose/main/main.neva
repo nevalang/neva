@@ -1,7 +1,7 @@
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start) (stop) {
-    ListToStream, ForEach{Println}, Wait
+    ListToStream, For{Println}, Wait
     ---
-    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
+    :start -> { $lst... -> for -> wait -> :stop }
 }

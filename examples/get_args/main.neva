@@ -1,7 +1,7 @@
 import { os }
 
 def Main(start) (stop) {
-	os.Args, ListToStream, ForEach{Println}, Wait
+	os.Args, ListToStream, For{Println}, Wait
 	---
-	:start -> args -> listToStream -> forEach -> wait -> :stop
+	:start -> args -> listToStream -> for -> wait -> :stop
 }

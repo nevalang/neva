@@ -297,12 +297,18 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiver struct {
-	PortAddr           *PortAddr          `json:"portAddr,omitempty"`
-	DeferredConnection *Connection        `json:"deferredConnection,omitempty"`
-	ChainedConnection  *Connection        `json:"chainedConnection,omitempty"`
-	Switch             []NormalConnection `json:"switch,omitempty"`
-	Meta               core.Meta          `json:"meta,omitempty"`
+type ConnectionReceiver struct { // TODO rename to Receiver
+	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"` // TODO rename to Defer
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`  // TODO rename to Chain
+	Switch             *Switch     `json:"switch,omitempty"`
+	Meta               core.Meta   `json:"meta,omitempty"`
+}
+
+type Switch struct {
+	Cases   []NormalConnection   `json:"case,omitempty"`
+	Default []ConnectionReceiver `json:"default,omitempty"`
+	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string

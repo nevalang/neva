@@ -32,11 +32,11 @@ pub interface IWhileHandler<T>(data T) (res T, err error)
 // `While` is basically just a shortcut for manually looped network topology.
 // 
 pub def While<T>(from T, to T) (sig struct{}, err error) {
-    do IWhileHandler?
+    handler IWhileHandler?
     ---
-    [:from, do:res] -> switch {
-        to -> :stop
-        else -> do
+    [:from, handler] -> switch {
+        :to -> :sig
+        _ -> handler
     }
 }
 
@@ -51,10 +51,10 @@ const idxPath list<string> = ['idx']
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another.
-// Just like ForEach, it does not block the stream. As soon as one item processed,
+// Just like For, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
 // It's not recommented but possible to also produce side-effects.
-// But, if all you need is side-effects, use ForEach instead.
+// But, if all you need is side-effects, use For instead.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
@@ -133,17 +133,17 @@ pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 #extern(accumulator)
 pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
-// --- ForEach ---
+// --- For ---
 
-// IForEachHandler is a dependency for ForEach.
+// IForEachHandler is a dependency for For.
 pub interface IForEachHandler<T>(data T) (sig any)
 
-// ForEach processes stream to produce side-effects on its items.
+// For processes stream to produce side-effects on its items.
 // Just like Map, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
-// ForEach always sends the same stream, it's not intended for mapping.
+// For always sends the same stream, it's not intended for mapping.
 // If you need mapping (or mapping with side-effects), use Map instead.
-pub def ForEach<T>(data stream<T>) (data stream<T>) {
+pub def For<T>(data stream<T>) (data stream<T>) {
     Lock<stream<T>>
     handler IForEachHandler<T>
 

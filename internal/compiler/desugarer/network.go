@@ -316,8 +316,8 @@ func (d Desugarer) desugarSingleReceiver(
 		insert := []src.Connection{}
 
 		// For each case in the switch
-		for i, caseConn := range receiver.Switch {
-			// Connect case sender to switch:case[i]
+		for i, caseConn := range receiver.Switch.Cases {
+			// Connect case-sender to switch:case[i]
 			insert = append(insert, src.Connection{
 				Normal: &src.NormalConnection{
 					SenderSide: caseConn.SenderSide,
@@ -349,6 +349,21 @@ func (d Desugarer) desugarSingleReceiver(
 				},
 			})
 		}
+
+		// Connect switch:default to its receiver
+		insert = append(insert, src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: []src.ConnectionSender{
+					{
+						PortAddr: &src.PortAddr{
+							Node: switchNodeName,
+							Port: "else",
+						},
+					},
+				},
+				ReceiverSide: receiver.Switch.Default,
+			},
+		})
 
 		desugaredInsert, err := d.desugarConnections(
 			iface,
