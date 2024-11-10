@@ -12,6 +12,4 @@ pub def ReadAll(filename string) (res string, err error)
 #extern(write_all)
 pub def WriteAll(filename string, data string) (sig any, err error)
 
-// Scanln scans text read from standard input,
-#extern(scanln)
-pub def Scanln(sig any) (res string)
+

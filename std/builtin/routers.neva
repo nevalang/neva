@@ -10,7 +10,7 @@ pub def Cond<T>(data T, if bool) (then T, else T)
 // Switch is a more powerful version of `If` that handles multiple cases.
 // Just like `If`, it is used for data routing.
 // If you need mapping, use Match or Select instead.
-#extern(switch)
+#extern(switch_router)
 pub def Switch<T>(data T, [case] T) ([case] T, else T)
 
 // Lock allows to defer receiving until some sending happens.

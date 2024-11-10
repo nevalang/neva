@@ -1,0 +1,12 @@
+// Println prints to the standard output with a newline.
+#extern(println)
+pub def Println<T>(data T) (sig struct{}, err error)
+
+// Printf replaces `$` with the corresponding argument
+// and prints to the standard output.
+#extern(printf)
+pub def Printf(tpl string, [args] any) (sig struct{}, err error)
+
+// Scanln scans text read from the standard input.
+#extern(scanln)
+pub def Scanln(sig any) (res string, err error)

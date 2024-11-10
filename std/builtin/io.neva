@@ -1,5 +1,0 @@
-#extern(println)
-pub def Println<T>(data T) (sig T)
-
-#extern(printf)
-pub def Printf(tpl string, [args] any) (sig any, err error)
