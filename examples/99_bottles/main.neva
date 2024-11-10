@@ -1,16 +1,15 @@
 def Main(start) (stop) {
-	While<int>{Next2Lines}
+	For<T>{Next2Lines}, Panic
 	---
-	:start -> { 99 -> while:from }
-	0 -> while:to
-	while:res -> :stop
-	while:err -> panic
+	:start -> 99..-1 -> for
+	for:res -> wait -> :stop
+	for:err -> panic
 }
 
-def Next2Lines(data int) (res int, err error) {
+def Next2Lines(data int) (sig any, err error) {
 	first Relay<int>{FirstLine}?
 	dec Dec<int>
-	second Relay<int>{SecondLine}?
+	second SecondLine?
 	---
 	:data -> first -> dec -> second -> :res
 }

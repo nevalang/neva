@@ -135,29 +135,39 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
 // --- For ---
 
-// IForEachHandler is a dependency for For.
-pub interface IForEachHandler<T>(data T) (sig any)
-
-// For processes stream to produce side-effects on its items.
-// Just like Map, it does not block the stream. As soon as one item processed,
-// it sends an item downstream and processes the next one.
-// For always sends the same stream, it's not intended for mapping.
-// If you need mapping (or mapping with side-effects), use Map instead.
-pub def For<T>(data stream<T>) (data stream<T>) {
-    Lock<stream<T>>
-    handler IForEachHandler<T>
-
-    #bind(dataPath)
-    getData Field<T>
-
+// `For` applies a handler to each item in a stream to produce side-effects.
+// It never modifies the stream - use `Map/Filter/Reduce` for transformations.
+//
+// It uses back pressure to ensure the handler processes items sequentially -
+// the next item is not sent until the handler signals completion of the previous one.
+// This prevents concurrency issues.
+//
+// Like other iterators, it processes items one at a time without blocking the stream.
+// To wait for all items to be processed, use with `Wait`.
+pub def For<T>(data stream<T>) (res stream<T>, err error) {
+    first First
+    lock Lock<T>
+    handler IForEachHandler<T>?
     ---
-
-    :data -> [getData, lock:data]
-    getData -> handler -> lock:sig
-    lock -> :data
+    :data -> [lock:data, first]
+    [first:then, handler] -> lock:sig
+    lock:data -> .data -> handler
 }
 
-// Range sends sequence of integers starting and ending with given from and to.
+// IForEachHandler is a dependency for For.
+pub interface IForEachHandler<T>(data T) (sig any, err error)
+
+// `First` is a helper that allows to check if given stream item is the first one.
+def First(data stream<any>) (then bool, else bool) {
+   :data -> .last -> switch {
+        true -> :then
+        else -> :else
+   }
+}
+
+// --- Range ---
+
+// Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
 // It emits stream only after all 3 inports receive messages.
 // Signal inport is required because Range is used in range expressions.
