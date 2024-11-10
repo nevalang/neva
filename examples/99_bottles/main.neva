@@ -1,23 +1,24 @@
 def Main(start) (stop) {
-	For<T>{Next2Lines}, Panic
+	App, Panic
 	---
-	:start -> 99..-1 -> for
-	for:res -> wait -> :stop
-	for:err -> panic
+	:start -> app
+	app:err -> panic
+	app:sig -> :stop
 }
 
-def Next2Lines(data int) (sig any, err error) {
-	first Relay<int>{FirstLine}?
+def App(sig any) (sig any, err error) {
+	first For<int>{FirstLine}?
 	dec Dec<int>
-	second SecondLine?
+	second For<int>{SecondLine}?
+	wait Wait
 	---
-	:data -> first -> dec -> second -> :res
+	:sig -> 99..-1 -> first -> dec -> second -> wait -> :sig
 }
 
-def FirstLine(n int) (sig any, err error) {
+def FirstLine(data int) (sig any, err error) {
 	p1 Println, p2 Println, p3 Printf?
 	---
-	:n -> switch {
+	:data -> switch {
 		0 -> { 'No more bottles of beer on the wall, no more bottles of beer.' -> p1 }
 		1 -> { '1 bottle of beer on the wall, 1 bottle of beer.' -> p2 }
 		else -> [
@@ -28,10 +29,10 @@ def FirstLine(n int) (sig any, err error) {
 	[p1, p2, p3] -> :sig
 }
 
-def SecondLine(n int) (sig any, err error) {
+def SecondLine(data int) (sig any, err error) {
 	p1 Println, p2 Println, p3 Println, p4 Printf?
 	---
-	:n -> switch {
+	:data -> switch {
 		-1 -> { 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1 }
 		0 -> { 'Take one down and pass it around, no more bottles of beer on the wall.\n' -> p2 } 
 		1 -> { 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3 }
