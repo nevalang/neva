@@ -116,7 +116,7 @@ compNodesDef: compNodesDefBody NEWLINE+ '---';
 compNodesDefBody: ((compNodeDef ','? | COMMENT) NEWLINE*)+;
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst:
-	entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
+	entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs? errGuard?;
 errGuard: '?';
 nodeDIArgs: '{' NEWLINE* compNodesDefBody '}';
 
