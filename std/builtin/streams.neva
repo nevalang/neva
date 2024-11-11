@@ -1,11 +1,13 @@
-// basic stream operations
+// --- Basic operations ---
 
-// Wait blocks until last stream item arrive, then sends signal.
-pub def Wait(data stream<any>) (sig) {
-    If
+// Wait blocks until last stream item arrive, then sends a signal.
+pub def Wait(data stream<any>) (sig any) {
+    Del
     ---
-    :data -> .last -> if
-    if:then -> :sig
+    :data -> .last -> switch {
+        true -> :sig
+        _ -> del
+    }
 }
 
 // ArrPortToStream iterates over all array-inport's slots in order
@@ -144,10 +146,10 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 //
 // Like other iterators, it processes items one at a time without blocking the stream.
 // To wait for all items to be processed, use with `Wait`.
-pub def For<T>(data stream<T>) (res stream<T>, err error) {
+pub def For<T>(data stream<T>) (res stream<T>) {
     first First
     lock Lock<T>
-    handler IForEachHandler<T>?
+    handler IForEachHandler<T>
     ---
     :data -> [lock:data, first]
     [first:then, handler] -> lock:sig
@@ -155,7 +157,7 @@ pub def For<T>(data stream<T>) (res stream<T>, err error) {
 }
 
 // IForEachHandler is a dependency for For.
-pub interface IForEachHandler<T>(data T) (sig any, err error)
+pub interface IForEachHandler<T>(data T) (sig any)
 
 // `First` is a helper that allows to check if given stream item is the first one.
 def First(data stream<any>) (then bool, else bool) {

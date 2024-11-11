@@ -1,22 +1,16 @@
-def Main(start) (stop) {
-	App, Panic
-	---
-	:start -> app
-	app:err -> panic
-	app:sig -> :stop
-}
+import { fmt }
 
-def App(sig any) (sig any, err error) {
-	first For<int>{FirstLine}?
+def Main(start any) (stop any) {
+	first For<int>{FirstLine}
 	dec Dec<int>
-	second For<int>{SecondLine}?
+	second For<int>{SecondLine}
 	wait Wait
 	---
-	:sig -> 99..-1 -> first -> dec -> second -> wait -> :sig
+	:start -> 99..-1 -> first -> dec -> second -> wait -> :stop
 }
 
-def FirstLine(data int) (sig any, err error) {
-	p1 Println, p2 Println, p3 Printf?
+def FirstLine(data int) (sig any) {
+	p1 fmt.Println, p2 fmt.Println, p3 fmt.Printf?
 	---
 	:data -> switch {
 		0 -> { 'No more bottles of beer on the wall, no more bottles of beer.' -> p1 }
@@ -29,8 +23,8 @@ def FirstLine(data int) (sig any, err error) {
 	[p1, p2, p3] -> :sig
 }
 
-def SecondLine(data int) (sig any, err error) {
-	p1 Println, p2 Println, p3 Println, p4 Printf?
+def SecondLine(data int) (sig any) {
+	p1 fmt.Println, p2 fmt.Println, p3 fmt.Println, p4 fmt.Printf?
 	---
 	:data -> switch {
 		-1 -> { 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1 }

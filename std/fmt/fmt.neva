@@ -1,6 +1,7 @@
+// TODO add err outport
 // Println prints to the standard output with a newline.
 #extern(println)
-pub def Println<T>(data T) (sig struct{}, err error)
+pub def Println<T>(data T) (sig struct{})
 
 // Printf replaces `$` with the corresponding argument
 // and prints to the standard output.
