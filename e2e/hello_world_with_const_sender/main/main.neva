@@ -1,7 +1,9 @@
+import { fmt }
+
 const greeting string = 'Hello, World!'
 
 def Main(start any) (stop any) {
-	println Println<string>
+	println fmt.Println<string>
 	lock Lock<string>
 	---
 	:start -> lock:sig

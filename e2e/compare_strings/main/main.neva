@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-    Println, Gt<string>, Ternary
+    fmt.Println, Gt<string>, Ternary
     ---
     :start -> [
         { 'Z' -> gt:left },

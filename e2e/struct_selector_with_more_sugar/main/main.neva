@@ -9,7 +9,7 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start) (stop) {
-    UserSender, Println
+    UserSender, fmt.Println
     ---
     :start -> userSender:sig
     userSender -> .pet.name -> println -> :stop

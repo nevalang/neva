@@ -1,6 +1,8 @@
+import { fmt }
+
 def Main(start) (stop) {
     Map<int, any>{FizzBuzz}
-    For{Println}
+    For{fmt.Println}
     Wait
     ---
     :start -> 1..101 -> map -> for -> wait -> :stop

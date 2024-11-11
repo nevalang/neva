@@ -1,8 +1,8 @@
-import { io }
+import { io, fmt }
 
 def Main(start any) (stop any) {
 	io.Scanln
-	println Println<string>
+	println fmt.Println<string>
 	---
 	:start -> scanln:sig
 	scanln:res -> println:data

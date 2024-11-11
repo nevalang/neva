@@ -1,6 +1,7 @@
 import {
 	io
 	strconv
+	fmt
 }
 
 def Main(start any) (stop any) {
@@ -9,7 +10,7 @@ def Main(start any) (stop any) {
 	parser1 strconv.ParseNum<int>
 	parser2 strconv.ParseNum<int>
 	add Add<int>
-	println Println<int>
+	println fmt.Println<int>
 	panic Panic
 	---
 	:start -> scanner1:sig

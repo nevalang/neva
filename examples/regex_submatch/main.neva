@@ -1,7 +1,7 @@
-import { regexp }
+import { regexp, fmt }
 
 def Main(start) (stop) {
-    Println, regexp.Submatch
+    fmt.Println, regexp.Submatch
     ---
     :start -> [
         { 'a(x*)b(y|z)c' -> submatch:regexp },

@@ -1,7 +1,7 @@
-import { builtin }
+import { fmt }
 
 pub def Println(data any) (sig any) {
-    builtin.Println
+    fmt.Println
     ---
 	:data -> println -> :sig
 }

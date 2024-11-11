@@ -1,3 +1,5 @@
+import { fmt }
+
 def Main(start) (stop) {
     PrintAny
     ---
@@ -5,7 +7,7 @@ def Main(start) (stop) {
 }
 
 def PrintAny(data) (sig) {
-	Println<int>
+	fmt.Println<int>
 	---
 	:data -> println -> :sig
 }

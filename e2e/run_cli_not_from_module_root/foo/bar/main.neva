@@ -1,5 +1,5 @@
 def Main(start) (stop) {
-    Println
+    fmt.Println
     ---
     :start -> { 42 -> println -> :stop }
 }

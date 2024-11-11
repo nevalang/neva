@@ -14,7 +14,7 @@ def Main(start) (stop) {
 
 def Slow(data int) (sig any) {
     time.Delay
-    Println
+    fmt.Println
     ---
     :data -> delay:data
     $time.second -> delay:dur

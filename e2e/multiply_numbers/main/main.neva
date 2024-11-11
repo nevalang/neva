@@ -1,7 +1,7 @@
 const l list<int> = [1, 2, 3]
 
 def Main(start) (stop) {
-	Println
+	fmt.Println
 	Reduce<int, int>{Mul<int>}
 	ListToStream<int>
 	---

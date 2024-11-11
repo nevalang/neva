@@ -1,3 +1,5 @@
+import { fmt }
+
 type User struct {
     age int
     name string
@@ -6,7 +8,7 @@ type User struct {
 // FIXME:grammar - cannot use 'struct' as a node name
 
 def Main(start any) (stop any) {
-    Println
+    fmt.Println
     builder Struct<User>
     ---
     :start -> [

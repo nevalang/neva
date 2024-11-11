@@ -1,4 +1,4 @@
-import { lists }
+import { lists, fmt }
 
 const lst list<bool> = [true, false]
 
@@ -9,7 +9,7 @@ def Main(start) (stop) {
 }
 
 def PrintAsNum(data bool) (sig any) {
-	Ternary, Println
+	Ternary, fmt.Println
 	---
 	:data -> ternary:if
 	1 -> ternary:then

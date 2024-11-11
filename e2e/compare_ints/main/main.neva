@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-	Println, Gt<int>, Ternary
+	fmt.Println, Gt<int>, Ternary
 	---
 	:start -> [
 		{ 50 -> gt:left },

@@ -1,3 +1,5 @@
+import { fmt }
+
 type NumsStruct struct {
     l list<int>
     d dict<int>
@@ -14,7 +16,7 @@ const numsStruct NumsStruct = {
 }
 
 def Main(start) (stop) {
-    Println
+    fmt.Println
     ---
     :start -> { $numsStruct -> println -> :stop }
 }

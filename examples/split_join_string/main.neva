@@ -1,7 +1,7 @@
-import { strings }
+import { strings, fmt }
 
 def Main(start) (stop) {
-	Println, strings.Split, strings.Join
+	fmt.Println, strings.Split, strings.Join
 	---
 	:start -> [
 		{ 'neva' -> split:data },

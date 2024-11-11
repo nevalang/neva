@@ -1,7 +1,9 @@
+import { fmt }
+
 interface IPrinter<T>(data T) (sig T)
 
 def Main(start) (stop) {
-    Secondflow { Println<any> }
+    Secondflow { fmt.Println<any> }
     ---
     :start -> secondflow:msg
     secondflow:msg -> :stop

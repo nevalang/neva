@@ -1,8 +1,10 @@
+import { fmt }
+
 const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
 def Main(start) (stop) {
-	Push, Println
+	Push, fmt.Println
 	---
 	:start -> [
 		{ $l -> push:lst },

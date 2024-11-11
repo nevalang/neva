@@ -1,3 +1,5 @@
+import { fmt }
+
 def Main(start) (stop) {
     For{Handler}, Wait
     ---
@@ -5,7 +7,7 @@ def Main(start) (stop) {
 }
 
 def Handler(data int) (sig any) {
-    Match, Println
+    Match, fmt.Println
 
     ---
 

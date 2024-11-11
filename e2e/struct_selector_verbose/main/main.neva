@@ -18,7 +18,7 @@ const user User = {
 const path list<string> = ['pet', 'name']
 
 def Main(start any) (stop any) {
-    Println
+    fmt.Println
 
     #bind(path)
     Field

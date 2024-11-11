@@ -5,7 +5,7 @@ const lst list<int> = [50, 30, 20, 100]
 def Main(start) (stop) {
     Map<int, int>{Dec<int>}
     List
-    Println
+    fmt.Println
     ListToStream<int>
     ---
     :start -> { $lst -> listToStream -> map -> list -> println -> :stop }

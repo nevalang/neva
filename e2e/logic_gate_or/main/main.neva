@@ -1,5 +1,5 @@
 def Main(start) (stop) {
-	Println, Or
+	fmt.Println, Or
 	---
 	:start -> [
 		{ false -> or:left },

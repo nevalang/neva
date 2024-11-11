@@ -1,8 +1,8 @@
-import { streams }
+import { streams, fmt }
 
 def Main(start) (stop) {
 	FanOut, streams.Product<int, int>
-	For{Println}, Wait
+	For{fmt.Println}, Wait
 	---
 	:start -> fanOut
 	fanOut[0] -> 0..3 -> product:first

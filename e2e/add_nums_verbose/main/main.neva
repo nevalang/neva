@@ -1,6 +1,8 @@
+import { fmt }
+
 def Main(start any) (stop any) {
 	adder Add<int>
-	println Println<int>
+	println fmt.Println<int>
 	---
 	:start -> [
 		{ 1 -> adder:left },

@@ -1,10 +1,11 @@
 import {
 	io
 	strconv
+	fmt
 }
 
 def Main(start) (stop) {
-	Aux, Println<any>
+	Aux, fmt.Println<any>
 	---
 	:start -> aux:sig
 	[aux:res, aux:err] -> println:data

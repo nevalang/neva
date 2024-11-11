@@ -10,7 +10,7 @@ def Main(start) (stop) {
     ListToStream<int>
     Map<int, int>{Slow}
     List
-    Println
+    fmt.Println
     ---
     :start -> {
         $lst -> listToStream -> map -> list -> println -> :stop

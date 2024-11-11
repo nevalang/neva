@@ -1,7 +1,7 @@
-import { io, strconv }
+import { io, strconv, fmt }
 
 def Main(start) (stop) {
-	App, Println
+	App, fmt.Println
 	---
 	:start -> app
 	[app:res, app:err] -> println -> :stop

@@ -1,10 +1,10 @@
 // we could use match instead, but we show Select here
 
-import { time }
+import { time, fmt }
 
 def Main(start) (stop) {
     Map<int, string>{Handler}
-    For{Println}
+    For{fmt.Println}
     Wait
     ---
     :start -> 1..5 -> map -> for -> wait -> :stop

@@ -1,3 +1,5 @@
+import { fmt }
+
 // https://www.99-bottles-of-beer.net
 
 def Main(start) (stop) {
@@ -29,7 +31,7 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 def PrintFirstLine(n int) (n int) {
-    s Switch<int>, p1 Println, p2 Println, Printf, Lock<int>, Panic
+    s Switch<int>, p1 fmt.Println, p2 fmt.Println, Printf, Lock<int>, Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -56,7 +58,7 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 def PrintSecondLine(n int) (n int) {
-    Switch<int>, p1 Println, p2 Println, p3 Println, Printf, Lock<int>, Panic
+    Switch<int>, p1 fmt.Println, p2 fmt.Println, p3 fmt.Println, Printf, Lock<int>, Panic
     ---
     :n -> [switch:data, lock:data]
 

@@ -1,13 +1,14 @@
+import { fmt }
+
 const d dict<string> = {
     name: 'John',
     age: '20'
 }
 
 def Main(start) (stop) {
-    Get, Println
+    Get, fmt.Println
     ---
     :start -> { 'name' -> get:key }
     $d -> get:dict
     [get:res, get:err] -> println -> :stop
 }
-

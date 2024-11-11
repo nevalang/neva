@@ -1,9 +1,9 @@
-import { lists }
+import { fmt }
 
 const lst list<int> = [1, 2, 3]
 
 def Main(start) (stop) {
-    ListToStream, For{Println}, Wait
+    ListToStream, For{fmt.Println}, Wait
     ---
     :start -> { $lst -> listToStream -> for -> wait -> :stop }
 }

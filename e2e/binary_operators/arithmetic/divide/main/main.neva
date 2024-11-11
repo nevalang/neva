@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-    Println
+    fmt.Println
     ---
     :start -> { (6 / 2) -> println -> :stop }
 } 
