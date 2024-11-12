@@ -52,8 +52,10 @@ pub def Pass<T>(data T) (res T) {
     :data -> :res
 }
 
-pub interface IRelayHandler<T>(data T) (sig any, err error)
+// TODO add err outport
+pub interface IRelayHandler<T>(data T) (sig any)
 
+// TODO add err outport
 // Sometimes component needs to receive data, perform some action and pass that
 // data further. However, due to impossibility to reuse same sender twice or
 // more, it leads to need for explicit locks. Deferred connections do not cover
@@ -63,7 +65,7 @@ pub interface IRelayHandler<T>(data T) (sig any, err error)
 // sends a signal when finishes. Signal could be of any type, so no need for
 // dealing with locks manually. Handler can send error, in that case `Relay` will
 // propogate it up to parent node.
-pub def Relay<T>(data T) (res T, err error) {
+pub def Relay<T>(data T) (res T) {
     Lock<T>
     handler IRelayHandler<T>
     ---

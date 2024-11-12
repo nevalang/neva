@@ -210,17 +210,6 @@ func (a Analyzer) analyzeReceiver(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 ) (*src.ConnectionReceiver, *compiler.Error) {
-	if receiver.PortAddr == nil &&
-		receiver.ChainedConnection == nil &&
-		receiver.DeferredConnection == nil &&
-		receiver.Switch != nil {
-		return nil, &compiler.Error{
-			Message:  "Connection must have receiver-side",
-			Location: &scope.Location,
-			Meta:     &receiver.Meta,
-		}
-	}
-
 	switch {
 	case receiver.PortAddr != nil:
 		analyzedPortAddr, err := a.analyzePortAddrReceiver(
@@ -323,7 +312,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 			nodesIfaces,
 			scope,
 			nodesUsage,
-			analyzedSenders,
+			nil,
 		)
 		if err != nil {
 			return nil, nil, &compiler.Error{
@@ -1209,21 +1198,19 @@ func (a Analyzer) getNodeInportType(
 		}
 	}
 
-	// TODO optimize:
-	// we can resolve every node's interface just once
-	// before processing the network
-	resolvedInportType, isArray, aerr := a.getResolvedPortType(
+	resolvedInportType, isArray, err := a.getResolvedPortType(
 		nodeIface.iface.IO.In,
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
 		node,
 		scope.Relocate(nodeIface.location),
+		true,
 	)
-	if aerr != nil {
+	if err != nil {
 		return ts.Expr{}, false, compiler.Error{
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
-		}.Wrap(aerr)
+		}.Wrap(err)
 	}
 
 	return resolvedInportType, isArray, nil
@@ -1236,19 +1223,20 @@ func (a Analyzer) getResolvedPortType(
 	portAddr src.PortAddr,
 	node src.Node,
 	scope src.Scope,
+	isInput bool,
 ) (ts.Expr, bool, *compiler.Error) {
 	if portAddr.Port == "" {
-		if len(ports) > 1 {
+		if len(ports) == 1 || (!isInput && len(ports) == 2 && node.ErrGuard) {
+			for name := range ports {
+				portAddr.Port = name
+				break
+			}
+		} else {
 			return ts.Expr{}, false, &compiler.Error{
-				Message:  fmt.Sprintf("node '%v' has multiple ports but no port name", portAddr.Node),
+				Message:  fmt.Sprintf("node '%v' has multiple ports - port name must be specified", portAddr.Node),
 				Location: &scope.Location,
 				Meta:     &portAddr.Meta,
 			}
-		}
-
-		for name := range ports {
-			portAddr.Port = name
-			break
 		}
 	}
 
@@ -1533,6 +1521,7 @@ func (a Analyzer) getNodeOutportType(
 		portAddr,
 		node,
 		scope.Relocate(nodeIface.location),
+		false,
 	)
 }
 

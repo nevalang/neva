@@ -880,6 +880,38 @@ func TestParser_ParseFile_Switch(t *testing.T) {
 				require.Equal(t, "receiver3", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
 			},
 		},
+		{
+			name: "switch in chained connection",
+			text: `
+				def C1() () {
+					sender -> .field -> switch {
+						true -> receiver1
+						false -> receiver2
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				// sender ->
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				// -> .field
+				chain := conn.ReceiverSide[0].ChainedConnection.Normal
+				require.Equal(t, "field", chain.SenderSide[0].StructSelector[0])
+
+				// -> switch {...}
+				switchStmt := chain.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// { true -> receiver1
+				require.Equal(t, true, *switchStmt.Cases[0].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].ReceiverSide[0].PortAddr.Node)
+
+				// false -> receiver2 }
+				require.Equal(t, false, *switchStmt.Cases[1].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+			},
+		},
 	}
 
 	for _, tt := range tests {

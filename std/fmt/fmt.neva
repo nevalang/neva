@@ -8,6 +8,7 @@ pub def Println<T>(data T) (sig struct{})
 #extern(printf)
 pub def Printf(tpl string, [args] any) (sig struct{}, err error)
 
+// TODO add err outport
 // Scanln scans text read from the standard input.
 #extern(scanln)
-pub def Scanln(sig any) (res string, err error)
+pub def Scanln(sig any) (res string)

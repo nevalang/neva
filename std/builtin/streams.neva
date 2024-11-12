@@ -33,7 +33,7 @@ pub interface IWhileHandler<T>(data T) (res T, err error)
 // You can wrap them in single handler and safely pass to `While`.
 // `While` is basically just a shortcut for manually looped network topology.
 // 
-pub def While<T>(from T, to T) (sig struct{}, err error) {
+pub def While<T>(from T, to T) (sig any, err error) {
     handler IWhileHandler?
     ---
     [:from, handler] -> switch {
@@ -163,7 +163,7 @@ pub interface IForEachHandler<T>(data T) (sig any)
 def First(data stream<any>) (then bool, else bool) {
    :data -> .last -> switch {
         true -> :then
-        else -> :else
+        _ -> :else
    }
 }
 
