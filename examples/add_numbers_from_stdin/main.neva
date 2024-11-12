@@ -1,4 +1,4 @@
-import { io, strconv, fmt }
+import { strconv, fmt }
 
 def Main(start) (stop) {
 	App, fmt.Println
@@ -20,7 +20,7 @@ def App(sig) (res int, err error) {
 }
 
 def ReadIntFromStdin(sig) (num int, err error) {
-	io.Scanln, strconv.ParseNum<int>
+	fmt.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln -> parseNum
 	parseNum:res -> :num

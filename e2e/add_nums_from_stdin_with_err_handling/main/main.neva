@@ -1,12 +1,8 @@
-import {
-	io
-	strconv
-	fmt
-}
+import { strconv, fmt }
 
 def Main(start any) (stop any) {
-	scanner1 io.Scanln
-	scanner2 io.Scanln
+	scanner1 fmt.Scanln
+	scanner2 fmt.Scanln
 	parser1 strconv.ParseNum<int>
 	parser2 strconv.ParseNum<int>
 	add Add<int>
