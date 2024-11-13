@@ -1,13 +1,15 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-	For{Next2Lines}, Wait
+	For<int>{Next2Lines}, Wait
 	---
 	:start -> 99..-1 -> for -> wait -> :stop
 }
 
 def Next2Lines(data int) (sig any) {
-	first Relay<int>{FirstLine}, dec Dec<int>, second Relay<int>{SecondLine}
+	first Tap<int>{FirstLine}
+	dec Dec<int>
+	second SecondLine
 	---
 	:data -> first -> dec -> second -> :sig
 }

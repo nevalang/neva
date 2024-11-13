@@ -103,7 +103,7 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 // IReduceHandler is a dependency for Reduce.
 pub interface IReduceHandler<T, Y>(left T, right T) (res Y)
 
-// Reduce applies a reduction function to a stream of values, accumulating the result.
+// Reduce applies a reduction component to a stream of messages, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     handler IReduceHandler<T, Y>
@@ -147,24 +147,39 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 // Like other iterators, it processes items one at a time without blocking the stream.
 // To wait for all items to be processed, use with `Wait`.
 pub def For<T>(data stream<T>) (res stream<T>) {
-    first First
-    lock Lock<T>
-    handler IForEachHandler<T>
+    first First<T> // to check if current msg is the first
+    lock1 Lock<stream<T>> // to lock current msg before sending to handler
+    lock2 Lock<stream<T>> // to lock current msg before sending downstream
+    handler IForEachHandler<T> // to process current msg
+    pass1 Pass // to unlock current msg to send to handler
+    pass2 Pass // to unlock current msg to send downstream
     ---
-    :data -> [lock:data, first]
-    [first:then, handler] -> lock:sig
-    lock:data -> .data -> handler
+    :data -> [lock1:data, lock2:data, first]
+
+    lock1 -> .data -> handler
+    lock2 -> :res
+
+    [first:then, pass1] -> lock1:sig
+    pass2 -> lock2:sig
+
+    handler -> [pass1, pass2]
 }
 
 // IForEachHandler is a dependency for For.
 pub interface IForEachHandler<T>(data T) (sig any)
 
 // `First` is a helper that allows to check if given stream item is the first one.
-def First(data stream<any>) (then bool, else bool) {
-   :data -> .last -> switch {
-        true -> :then
-        _ -> :else
-   }
+def First<T>(data stream<T>) (then stream<T>, else stream<T>) {
+    Cond<stream<T>>
+    Eq<int>
+    Pass<stream<T>>
+    ---
+    :data -> [cond:data, pass]
+    pass -> .idx -> eq:left
+    0 -> eq:right
+    eq -> cond:if
+    cond:then -> :then
+    cond:else -> :else
 }
 
 // --- Range ---

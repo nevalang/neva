@@ -53,21 +53,21 @@ pub def Pass<T>(data T) (res T) {
 }
 
 // TODO add err outport
-pub interface IRelayHandler<T>(data T) (sig any)
+pub interface ITapHandler<T>(data T) (sig any)
 
 // TODO add err outport
 // Sometimes component needs to receive data, perform some action and pass that
 // data further. However, due to impossibility to reuse same sender twice or
 // more, it leads to need for explicit locks. Deferred connections do not cover
 // this case. Explicit lock make network harder to reason about.
-// `Relay` is a higher-order component, that implements this logic for you.
+// `Tap` is a higher-order component, that implements this logic for you.
 // All you need to do, is to provide dependency node, thar receives data and
 // sends a signal when finishes. Signal could be of any type, so no need for
-// dealing with locks manually. Handler can send error, in that case `Relay` will
+// dealing with locks manually. Handler can send error, in that case `Tap` will
 // propogate it up to parent node.
-pub def Relay<T>(data T) (res T) {
+pub def Tap<T>(data T) (res T) {
     Lock<T>
-    handler IRelayHandler<T>
+    handler ITapHandler<T>
     ---
     :data -> [handler, lock:data]
     handler -> lock:sig

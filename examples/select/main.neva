@@ -17,9 +17,11 @@ def Handler(data int) (res string) {
         1 -> select:if[0]
         2 -> select:if[1]
         3 -> select:if[2]
+        _ -> select:if[3]
     }
     'a' -> select:then[0]
     'b' -> select:then[1]
     'c' -> select:then[2]
+    'd' -> select:then[3]
     select -> :res
 }

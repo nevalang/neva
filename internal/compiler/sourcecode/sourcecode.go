@@ -402,7 +402,7 @@ func (s ConnectionSender) String() string {
 	selectorsString := ""
 	if len(s.StructSelector) != 0 {
 		for _, selector := range s.StructSelector {
-			selectorsString += ":" + selector
+			selectorsString += "." + selector
 		}
 	}
 

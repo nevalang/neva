@@ -20,10 +20,11 @@ func (p println) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
+	// TODO
+	// errOut, err := io.Out.Single("err")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return func(ctx context.Context) {
 		for {
@@ -33,10 +34,10 @@ func (p println) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 			}
 
 			if _, err := fmt.Println(dataMsg); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				return
+				// if !errOut.Send(ctx, errFromErr(err)) {
+				// 	return
+				// }
+				panic(err)
 			}
 
 			if !sigOut.Send(ctx, dataMsg) {
