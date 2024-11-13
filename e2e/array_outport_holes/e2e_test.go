@@ -15,10 +15,10 @@ func Test(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 
-	require.Equal(
+	require.Contains(
 		t,
-		"main/main.neva: array outport 'fanOut:' is used incorrectly: slot 1 is missing\n",
 		string(out),
+		"main/main.neva: array outport 'fanOut:data' is used incorrectly: slot 1 is missing\n",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

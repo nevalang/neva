@@ -374,111 +374,127 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 }
 
 func TestParser_ParseFile_Range(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..10 -> :out
-		}
-	`)
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "simple range",
+			text: `
+				def C1() () {
+					1..10 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(10), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "multiple ranges",
+			text: `
+				def C1() () {
+					1..5 -> :out1
+					10..20 -> :out2
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 2, len(net))
 
-	p := New()
+				conn1 := net[0].Normal
+				require.NotNil(t, conn1.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+				require.Equal(t, int64(5), conn1.SenderSide[0].Range.To)
+				require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
 
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
+				conn2 := net[1].Normal
+				require.NotNil(t, conn2.SenderSide[0].Range)
+				require.Equal(t, int64(10), conn2.SenderSide[0].Range.From)
+				require.Equal(t, int64(20), conn2.SenderSide[0].Range.To)
+				require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "negative from",
+			text: `
+				def C1() () {
+					-5..5 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
 
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 1, len(net))
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(-5), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(5), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "negative to",
+			text: `
+				def C1() () {
+					1..-5 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
 
-	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
-	require.Equal(t, int64(10), conn.SenderSide[0].Range.To)
-	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
-}
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(-5), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "mixed range expressions",
+			text: `
+				def C1() () {
+					1..10 -> :out1
+					:in -> :out2
+					20..30 -> :out3
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 3, len(net))
 
-func TestParser_ParseFile_MultipleRanges(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..5 -> :out1
-			10..20 -> :out2
-		}
-	`)
+				conn1 := net[0].Normal
+				require.NotNil(t, conn1.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+				require.Equal(t, int64(10), conn1.SenderSide[0].Range.To)
+				require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
 
-	p := New()
+				conn2 := net[1].Normal
+				require.Nil(t, conn2.SenderSide[0].Range)
+				require.Equal(t, "in", conn2.SenderSide[0].PortAddr.Node)
+				require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
 
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
+				conn3 := net[2].Normal
+				require.NotNil(t, conn3.SenderSide[0].Range)
+				require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
+				require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
+				require.Equal(t, "out3", conn3.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+	}
 
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 2, len(net))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
 
-	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
-	require.Equal(t, int64(5), conn1.SenderSide[0].Range.To)
-	require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
 
-	conn2 := net[1].Normal
-	require.NotNil(t, conn2.SenderSide[0].Range)
-	require.Equal(t, int64(10), conn2.SenderSide[0].Range.From)
-	require.Equal(t, int64(20), conn2.SenderSide[0].Range.To)
-	require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
-}
-
-func TestParser_ParseFile_NegativeRange(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			-5..5 -> :out
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
-
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 1, len(net))
-
-	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide[0].Range)
-	require.Equal(t, int64(-5), conn.SenderSide[0].Range.From)
-	require.Equal(t, int64(5), conn.SenderSide[0].Range.To)
-	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
-}
-
-func TestParser_ParseFile_RangeExpressionMixed(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..10 -> :out1
-			:in -> :out2
-			20..30 -> :out3
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
-
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 3, len(net))
-
-	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
-	require.Equal(t, int64(10), conn1.SenderSide[0].Range.To)
-	require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
-
-	conn2 := net[1].Normal
-	require.Nil(t, conn2.SenderSide[0].Range)
-	require.Equal(t, "in", conn2.SenderSide[0].PortAddr.Node)
-	require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
-
-	conn3 := net[2].Normal
-	require.NotNil(t, conn3.SenderSide[0].Range)
-	require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
-	require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
-	require.Equal(t, "out3", conn3.ReceiverSide[0].PortAddr.Port)
+			net := got.Entities["C1"].Component.Net
+			tt.check(t, net)
+		})
+	}
 }
 
 func TestParser_ParseFile_Binary(t *testing.T) {

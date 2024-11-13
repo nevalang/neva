@@ -31,7 +31,7 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 def PrintFirstLine(n int) (n int) {
-    s Switch<int>, p1 fmt.Println, p2 fmt.Println, Printf, Lock<int>, Panic
+    s Switch<int>, p1 fmt.Println, p2 fmt.Println, fmt.Printf, Lock<int>, Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -58,19 +58,19 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 def PrintSecondLine(n int) (n int) {
-    Switch<int>, p1 fmt.Println, p2 fmt.Println, p3 fmt.Println, Printf, Lock<int>, Panic
+    s Switch<int>, p1 fmt.Println, p2 fmt.Println, p3 fmt.Println, fmt.Printf, Lock<int>, Panic
     ---
-    :n -> [switch:data, lock:data]
+    :n -> [s:data, lock:data]
 
-    -1 -> switch:case[0]
-    0  -> switch:case[1]
-    1  -> switch:case[2]
+    -1 -> s:case[0]
+    0  -> s:case[1]
+    1  -> s:case[2]
 
-    switch:case[0] -> { $secondLine4 -> p1:data }
-    switch:case[1] -> { $secondLine3 -> p2:data }
-    switch:case[2] -> { $secondLine2 -> p3:data }
+    s:case[0] -> { $secondLine4 -> p1:data }
+    s:case[1] -> { $secondLine3 -> p2:data }
+    s:case[2] -> { $secondLine2 -> p3:data }
 
-    switch:else -> [
+    s:else -> [
         printf:args[0],
         { $secondLine1 -> printf:tpl }
     ]

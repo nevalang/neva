@@ -18,6 +18,7 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 100; i++ {
+		t.Logf("Running iteration %d", i)
 		cmd := exec.Command("neva", "run", "select")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
