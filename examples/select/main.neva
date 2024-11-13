@@ -4,7 +4,7 @@ import { time, fmt }
 
 def Main(start) (stop) {
     Map<int, string>{Handler}
-    For{fmt.Println}
+    For<string>{fmt.Println}
     Wait
     ---
     :start -> 1..5 -> map -> for -> wait -> :stop

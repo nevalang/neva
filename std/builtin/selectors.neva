@@ -10,14 +10,9 @@ pub def Ternary<T>(if bool, then T, else T) (res T)
 #extern(match)
 pub def Match<T>(data T, [if] T, [then] T, else T) (res T)
 
-// TODO select might not be best name for this (it's good but it's not like in Go)
-// TODO default/else case?
+// TODO default case
 // Select allows to select message based on a trigger.
 // It is useful when it's important where input signal came from.
-// If it's important what the signal is, use Match or `Switch` instead.
+// If it's important what the signal is, use `Match` or `Switch` instead.
 #extern(select)
 pub def Select<T>([if] any, [then] T) (res T)
-
-// IDEA:
-// SelectResult<T, Y> { if: T, then: Y }
-

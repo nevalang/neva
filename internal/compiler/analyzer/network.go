@@ -212,7 +212,7 @@ func (a Analyzer) analyzeReceiver(
 ) (*src.ConnectionReceiver, *compiler.Error) {
 	switch {
 	case receiver.PortAddr != nil:
-		analyzedPortAddr, err := a.analyzePortAddrReceiver(
+		err := a.analyzePortAddrReceiver(
 			*receiver.PortAddr,
 			scope,
 			iface,
@@ -226,7 +226,8 @@ func (a Analyzer) analyzeReceiver(
 			return nil, err
 		}
 		return &src.ConnectionReceiver{
-			PortAddr: &analyzedPortAddr,
+			PortAddr: receiver.PortAddr, // no need to change anything
+			Meta:     receiver.Meta,
 		}, nil
 	case receiver.ChainedConnection != nil:
 		analyzedChainedConn, err := a.analyzeChainedConnectionReceiver(
@@ -392,8 +393,8 @@ func (a Analyzer) analyzePortAddrReceiver(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
-) (src.PortAddr, *compiler.Error) {
-	resolvedPort, typeExpr, isArrPort, err := a.getReceiverPortType(
+) *compiler.Error {
+	resolvedPortAddr, typeExpr, isArrPort, err := a.getReceiverPortType(
 		portAddr,
 		iface,
 		nodes,
@@ -401,14 +402,14 @@ func (a Analyzer) analyzePortAddrReceiver(
 		scope,
 	)
 	if err != nil {
-		return src.PortAddr{}, compiler.Error{
+		return compiler.Error{
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}.Wrap(err)
 	}
 
 	if !isArrPort && portAddr.Idx != nil {
-		return src.PortAddr{}, &compiler.Error{
+		return &compiler.Error{
 			Message:  "Index for non-array port",
 			Meta:     &portAddr.Meta,
 			Location: &scope.Location,
@@ -416,7 +417,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 	}
 
 	if isArrPort && portAddr.Idx == nil {
-		return src.PortAddr{}, &compiler.Error{
+		return &compiler.Error{
 			Message:  "Index needed for array inport",
 			Meta:     &portAddr.Meta,
 			Location: &scope.Location,
@@ -425,7 +426,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 
 	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
-			return src.PortAddr{}, &compiler.Error{
+			return &compiler.Error{
 				Message: fmt.Sprintf(
 					"Incompatible types: %v -> %v: %v",
 					analyzedSenders[i], portAddr, err.Error(),
@@ -436,15 +437,18 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}
 	}
 
-	if err := netNodesUsage(nodesUsage).trackInportUsage(resolvedPort); err != nil {
-		return src.PortAddr{}, &compiler.Error{
+	// sometimes port name is omitted and we need to resolve it first
+	// but it's important not to return it, so syntax sugar remains untouched
+	// otherwise desugarer won't be able to properly desugar such port-addresses
+	if err := netNodesUsage(nodesUsage).trackInportUsage(resolvedPortAddr); err != nil {
+		return &compiler.Error{
 			Message:  err.Error(),
 			Location: &scope.Location,
 			Meta:     &portAddr.Meta,
 		}
 	}
 
-	return resolvedPort, nil
+	return nil
 }
 
 func (a Analyzer) analyzeChainedConnectionReceiver(
@@ -805,7 +809,7 @@ func (a Analyzer) analyzeSender(
 		return &sender, &resultType, nil
 	}
 
-	resolvedSender, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
+	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
 		sender,
 		iface,
 		nodes,
@@ -845,16 +849,25 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		if err := netNodesUsage(nodesUsage).trackOutportUsage(*resolvedSender.PortAddr); err != nil {
+		// it's important to track resolved port address here
+		// because sometimes port name is omitted and we need to resolve it first
+		// but it's important not to return it, so syntax sugar remains untouched
+		// otherwise desugarer won't be able to properly desugar such port-addresses
+		if err := netNodesUsage(nodesUsage).trackOutportUsage(*resolvedSenderAddr.PortAddr); err != nil {
 			return nil, nil, &compiler.Error{
 				Message:  err.Error(),
 				Location: &scope.Location,
 				Meta:     &sender.PortAddr.Meta,
 			}
 		}
+
+		return &src.ConnectionSender{
+			PortAddr: sender.PortAddr,
+			Meta:     sender.Meta,
+		}, &resolvedSenderType, nil
 	}
 
-	return &resolvedSender, &resolvedSenderType, nil
+	return &resolvedSenderAddr, &resolvedSenderType, nil
 }
 
 func (a Analyzer) analyzeArrayBypassConnection(
