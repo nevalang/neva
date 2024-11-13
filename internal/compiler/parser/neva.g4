@@ -171,7 +171,8 @@ receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: '{' NEWLINE* connDef NEWLINE* '}';
 senderConstRef: '$' entityRef;
-rangeExpr: (MINUS? INT) '..' (MINUS? INT);
+rangeExpr: rangeMember '..' rangeMember;
+rangeMember: MINUS? INT;
 portAddr:
 	singlePortAddr
 	| arrPortAddr

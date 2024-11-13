@@ -421,10 +421,32 @@ func parseSingleSender(
 
 	var rangeExpr *src.Range
 	if rangeExprSender != nil {
-		fromText := rangeExprSender.INT(0).GetText()
-		if rangeExprSender.MINUS(0) != nil {
+		rangeMeta := &core.Meta{
+			Text: rangeExprSender.GetText(),
+			Start: core.Position{
+				Line:   rangeExprSender.GetStart().GetLine(),
+				Column: rangeExprSender.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   rangeExprSender.GetStop().GetLine(),
+				Column: rangeExprSender.GetStop().GetColumn(),
+			},
+		}
+
+		members := rangeExprSender.AllRangeMember()
+		if len(members) != 2 {
+			return src.ConnectionSender{}, &compiler.Error{
+				Message: "Range expression must have exactly two members",
+				Meta:    rangeMeta,
+			}
+		}
+
+		fromCtx := members[0]
+		fromText := fromCtx.GetText()
+		if fromCtx.MINUS() != nil {
 			fromText = "-" + fromText
 		}
+
 		from, err := strconv.ParseInt(fromText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
@@ -443,10 +465,12 @@ func parseSingleSender(
 			}
 		}
 
-		toText := rangeExprSender.INT(1).GetText()
-		if rangeExprSender.MINUS(1) != nil {
+		toCtx := members[1]
+		toText := toCtx.GetText()
+		if toCtx.MINUS() != nil {
 			toText = "-" + toText
 		}
+
 		to, err := strconv.ParseInt(toText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
@@ -468,17 +492,7 @@ func parseSingleSender(
 		rangeExpr = &src.Range{
 			From: from,
 			To:   to,
-			Meta: core.Meta{
-				Text: rangeExprSender.GetText(),
-				Start: core.Position{
-					Line:   rangeExprSender.GetStart().GetLine(),
-					Column: rangeExprSender.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   rangeExprSender.GetStop().GetLine(),
-					Column: rangeExprSender.GetStop().GetColumn(),
-				},
-			},
+			Meta: *rangeMeta,
 		}
 	}
 

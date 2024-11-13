@@ -247,6 +247,9 @@ type nevaListener interface {
 	// EnterRangeExpr is called when entering the rangeExpr production.
 	EnterRangeExpr(c *RangeExprContext)
 
+	// EnterRangeMember is called when entering the rangeMember production.
+	EnterRangeMember(c *RangeMemberContext)
+
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
@@ -525,6 +528,9 @@ type nevaListener interface {
 
 	// ExitRangeExpr is called when exiting the rangeExpr production.
 	ExitRangeExpr(c *RangeExprContext)
+
+	// ExitRangeMember is called when exiting the rangeMember production.
+	ExitRangeMember(c *RangeMemberContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
