@@ -1,7 +1,9 @@
+import { fmt }
+
 const l list<int> = [1, 2, 3]
 
 def Main(start) (stop) {
-	fmt.Println
+	fmt.Println<int>
 	Reduce<int, int>{Mul<int>}
 	ListToStream<int>
 	---

@@ -8,7 +8,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
       "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "99_bottles", "--trace"]
+      "args": ["run", "--trace", "99_bottles"]
     },
     {
       "name": "DEBUG CODEGEN",

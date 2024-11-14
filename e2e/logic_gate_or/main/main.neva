@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-	fmt.Println, Or
+	fmt.Println<bool>, Or
 	---
 	:start -> [
 		{ false -> or:left },

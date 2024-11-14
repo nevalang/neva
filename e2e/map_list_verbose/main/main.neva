@@ -1,3 +1,5 @@
+import { fmt }
+
 // stream list of ints, decrement each, build new list and print it
 
 const lst list<int> = [50, 30, 20, 100]

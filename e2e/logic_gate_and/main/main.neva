@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-	fmt.Println, And
+	fmt.Println<bool>, And
 	---
 	:start -> [
 		{ true -> and:left },

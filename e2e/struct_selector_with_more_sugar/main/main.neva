@@ -1,6 +1,8 @@
 // Here we learn how to read struct fields without compiler directives
 // by using another one syntax sugare `.` called "struct selectors".
 
+import { fmt }
+
 type User struct {
     name string
     pet Pet
