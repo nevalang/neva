@@ -2,7 +2,7 @@
 // https://github.com/nevalang/neva/issues/575
 // all elements of the array must be printed befofe program terminate
 
-import { time }
+import { time, fmt }
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
@@ -13,8 +13,8 @@ def Main(start) (stop) {
 }
 
 def Slow(data int) (sig any) {
-    time.Delay
-    fmt.Println
+    time.Delay<int>
+    fmt.Println<int>
     ---
     :data -> delay:data
     $time.second -> delay:dur

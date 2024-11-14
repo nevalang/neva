@@ -1,4 +1,4 @@
-import { regexp }
+import { regexp, fmt }
 
 def Main(start) (stop) {
     fmt.Println, regexp.Submatch, Panic

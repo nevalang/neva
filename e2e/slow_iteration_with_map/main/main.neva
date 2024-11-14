@@ -2,15 +2,15 @@
 // https://github.com/nevalang/neva/issues/575
 // all elements of the array must be printed befofe program terminate
 
-import { time }
+import { time, fmt }
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start) (stop) {
     ListToStream<int>
     Map<int, int>{Slow}
-    List
-    fmt.Println
+    List<int>
+    fmt.Println<list<int>>
     ---
     :start -> {
         $lst -> listToStream -> map -> list -> println -> :stop

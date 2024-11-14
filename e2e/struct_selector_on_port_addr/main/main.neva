@@ -1,8 +1,10 @@
+import { fmt }
+
 def Main(start) (stop) {
     Foo, fmt.Println<int>
     ---
     :start -> foo:sig
-    foo:msg.a -> println:data
+    foo:msg -> .a -> println:data
     println:sig -> :stop
 }
 

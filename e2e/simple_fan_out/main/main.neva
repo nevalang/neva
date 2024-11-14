@@ -1,4 +1,4 @@
-import { time }
+import { time, fmt }
 
 def Main(start) (stop) {
     p1 fmt.Println
