@@ -83,7 +83,7 @@ def Main(start) (stop) {
 }
 ```
 
-The `import { fmt }` statement imports the standard library's `fmt` module which provides common formatting and printing functionality. The `Main` component has `start` inport and `stop` outport, with a `println` node (instance of stdlib's `fmt.Println`). The network after `---` shows: on `start` message, `"Hello, World!"` is sent to `println`, then program terminates via `stop` signal.
+The `import { fmt }` statement imports the standard library's `fmt` package which provides common formatting and printing functionality. The `Main` component has `start` inport and `stop` outport, with a `println` node (instance of stdlib's `fmt.Println`). The network after `---` shows: on `start` message, `"Hello, World!"` is sent to `println`, then program terminates via `stop` signal.
 
 ### What's Next?
 

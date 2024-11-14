@@ -443,9 +443,6 @@ func parseSingleSender(
 
 		fromCtx := members[0]
 		fromText := fromCtx.GetText()
-		if fromCtx.MINUS() != nil {
-			fromText = "-" + fromText
-		}
 
 		from, err := strconv.ParseInt(fromText, 10, 64)
 		if err != nil {
@@ -467,9 +464,6 @@ func parseSingleSender(
 
 		toCtx := members[1]
 		toText := toCtx.GetText()
-		if toCtx.MINUS() != nil {
-			toText = "-" + toText
-		}
 
 		to, err := strconv.ParseInt(toText, 10, 64)
 		if err != nil {

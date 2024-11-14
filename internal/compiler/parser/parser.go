@@ -125,6 +125,8 @@ func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *comp
 						string(debug.Stack()),
 					),
 				}
+			} else {
+				err = e.(*compiler.Error)
 			}
 		}
 	}()

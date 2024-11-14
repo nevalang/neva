@@ -419,7 +419,7 @@ func TestParser_ParseFile_Range(t *testing.T) {
 			},
 		},
 		{
-			name: "negative from",
+			name: "negative_from",
 			text: `
 				def C1() () {
 					-5..5 -> :out
@@ -436,7 +436,7 @@ func TestParser_ParseFile_Range(t *testing.T) {
 			},
 		},
 		{
-			name: "negative to",
+			name: "negative_to",
 			text: `
 				def C1() () {
 					1..-5 -> :out

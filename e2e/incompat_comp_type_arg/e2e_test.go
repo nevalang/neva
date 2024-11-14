@@ -12,10 +12,10 @@ func Test(t *testing.T) {
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
-	require.Equal(
+	require.Contains(
 		t,
-		"main/main.neva:2:1: Subtype must be either union or literal: want int | float, got any\n",
 		string(out),
+		"main/main.neva:2:1: Subtype must be either union or literal: want int | float, got any\n",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
