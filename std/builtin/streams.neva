@@ -78,10 +78,20 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 // IFilterHandler is a dependency for Filter component.
 pub interface IFilterHandler<T>(data T) (res bool)
 
-// Filter is for filtering items in a stream.
-// It will produce a new stream with only items that passed the filter.
-// It's possible to chain multiple Filters together.
+// Filter is for filtering items in a stream,
+// producing a new stream with only items that passed the filter.
+// 
+// Unlike other iterators, it blocks the incoming stream,
+// before creating outgoing one. This is needed to handle metadata correctly.
+//
+// Output items may have different indexes than corresponding input ones.
+// For example: filtering even numbers from [1, 2, 3] will emit 2 with index 0.
+// This also affects which item is marked as last - 2 will be marked as last.
+//
+// This is important if you need to manually handle stream metadata,
+// though it's generally better to avoid doing so.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
+    // TODO Filter must be non-blocking!
     Cond<stream<T>>
     FanOut<stream<T>>
     handler IFilterHandler<T>
