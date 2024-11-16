@@ -1,7 +1,7 @@
-import { io, strconv }
+import { strconv, fmt }
 
 def Main(start) (stop) {
-	App, Println
+	App, fmt.Println
 	---
 	:start -> app
 	[app:res, app:err] -> println -> :stop
@@ -13,14 +13,14 @@ def App(sig) (res int, err error) {
 	add Add<int>
 	---
 	:sig -> readFirstInt
-	readFirstInt:num -> [add:acc, readSecondInt]
-	readSecondInt:num -> add:el
+	readFirstInt:num -> [add:left, readSecondInt]
+	readSecondInt:num -> add:right
 	[readFirstInt:err, readSecondInt:err] -> :err
 	add -> :res
 }
 
 def ReadIntFromStdin(sig) (num int, err error) {
-	io.Scanln, strconv.ParseNum<int>
+	fmt.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln -> parseNum
 	parseNum:res -> :num

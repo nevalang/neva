@@ -20,84 +20,84 @@ pub def Neg<T int | float>(data T) (res T)
 
 // --- Arithmetic ---
 
-// Add sums acc with el and sends to result. It can be used with Reduce.
+// Add sums left with right and sends to result. It can be used with Reduce.
 #extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(acc T, el T) (res T)
+pub def Add<T int | float | string>(left T, right T) (res T)
 
-// Sub subtracts el from acc and sends to result. It can be used with Reduce.
+// Sub subtracts right from left and sends to result. It can be used with Reduce.
 #extern(int int_sub, float float_sub)
-pub def Sub<T int | float>(acc T, el T) (res T)
+pub def Sub<T int | float>(left T, right T) (res T)
 
-// Mul multiplies acc with el and sends to result. It can be used with Reduce.
+// Mul multiplies left with right and sends to result. It can be used with Reduce.
 #extern(int int_mul, float float_mul)
-pub def Mul<T int | float>(acc T, el T) (res T)
+pub def Mul<T int | float>(left T, right T) (res T)
 
-// Div divides acc by el and sends to result. It can be used with Reduce.
+// Div divides left by right and sends to result. It can be used with Reduce.
 #extern(int int_div, float float_div)
-pub def Div<T int | float>(acc T, el T) (res T)
+pub def Div<T int | float>(left T, right T) (res T)
 
 // Mod calculates num modulo den and sends to result.
 #extern(int_mod)
-pub def Mod(acc int, el int) (res int)
+pub def Mod(left int, right int) (res int)
 
-// Pow raises base to the power of acc and sends to result.
+// Pow raises left to the power of right and sends to result.
 #extern(int_pow)
-pub def Pow(acc int, el int) (res int)
+pub def Pow(left int, right int) (res int)
 
 // --- Comparison ---
 
 // Eq sends true if actual is equal to compared, otherwise false.
 #extern(eq)
-pub def Eq<T>(acc T, el T) (res bool)
+pub def Eq<T>(left T, right T) (res bool)
 
 // Ne sends true if actual is not equal to compared, otherwise false.
 #extern(ne)
-pub def Ne<T>(acc T, el T) (res bool)
+pub def Ne<T>(left T, right T) (res bool)
 
 // Gt sends true if actual is greater than compared, otherwise false.
 #extern(int int_is_greater, float float_is_greater, string string_is_greater)
-pub def Gt<T int | float | string>(acc T, el T) (res bool)
+pub def Gt<T int | float | string>(left T, right T) (res bool)
 
 // Lt sends true if actual is lesser than compared, otherwise false.
 #extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
-pub def Lt<T int | float | string>(acc T, el T) (res bool)
+pub def Lt<T int | float | string>(left T, right T) (res bool)
 
 // Ge sends true if actual is greater than or equal to compared, otherwise false.
 #extern(int int_is_greater_or_equal, float float_is_greater_or_equal)
-pub def Ge<T int | float | string>(acc T, el T) (res bool)
+pub def Ge<T int | float | string>(left T, right T) (res bool)
 
 // Le sends true if actual is lesser than or equal to compared, otherwise false.
 #extern(int int_is_lesser_or_equal, float float_is_lesser_or_equal)
-pub def Le<T int | float | string>(acc T, el T) (res bool)
+pub def Le<T int | float | string>(left T, right T) (res bool)
 
 // --- Logical ---
 
-// And sends true if both acc and el are true, otherwise false.
+// And sends true if both left and right are true, otherwise false.
 #extern(and)
-pub def And(acc bool, el bool) (res bool)
+pub def And(left bool, right bool) (res bool)
 
-// Or sends true if either acc or el are true, otherwise false.
+// Or sends true if either left or right are true, otherwise false.
 #extern(or)
-pub def Or(acc bool, el bool) (res bool)
+pub def Or(left bool, right bool) (res bool)
 
 // --- Bitwise ---
 
 // And performs a binary AND on each bit of two numbers.
 #extern(int_bitwise_and)
-pub def BitAnd(acc int, el int) (res int)
+pub def BitAnd(left int, right int) (res int)
 
 // Or performs a binary OR on each bit of two numbers.
 #extern(int_bitwise_or) 
-pub def BitOr(acc int, el int) (res int)
+pub def BitOr(left int, right int) (res int)
 
 // Xor performs a binary XOR on each bit of two numbers.
 #extern(int_bitwise_xor)
-pub def BitXor(acc int, el int) (res int)
+pub def BitXor(left int, right int) (res int)
 
 // Lsh shifts bits to the left, filling with zeros.
 #extern(int_bitwise_lsh)
-pub def BitLsh(acc int, el int) (res int)
+pub def BitLsh(left int, right int) (res int)
 
 // Rsh shifts bits to the right, preserving the sign bit.
 #extern(int_bitwise_rsh)
-pub def BitRsh(acc int, el int) (res int)
+pub def BitRsh(left int, right int) (res int)

@@ -1,8 +1,10 @@
+import { fmt }
+
 // top-level comment 1
 def Main(start) (stop) {
 	// comment inside def 1
 	// comment inside nodes 1
-	Println<any>
+	fmt.Println<any>
 	// comment inside nodes 2
 	---
 	// comment inside def 2

@@ -17,7 +17,7 @@ Native components can be overloaded using `#extern(t1 f1, t2 f2, ...)`. These co
 
 ```neva
 #extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(acc T, el T) (res T)
+pub def Add<T int | float | string>(left T, right T) (res T)
 ```
 
 ## `#bind`

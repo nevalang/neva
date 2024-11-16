@@ -184,6 +184,7 @@ func parseSingleReceiverSide(
 	deferredConn := actx.DeferredConn()
 	portAddr := actx.PortAddr()
 	chainedConn := actx.ChainedNormConn()
+	switchStmt := actx.SwitchStmt()
 
 	meta := core.Meta{
 		Text: actx.GetText(),
@@ -204,12 +205,58 @@ func parseSingleReceiverSide(
 		return parseChainedConnExpr(chainedConn, meta)
 	case portAddr != nil:
 		return parsePortAddrReceiver(portAddr)
+	case switchStmt != nil:
+		return parseSwitchStmt(switchStmt)
 	default:
 		return src.ConnectionReceiver{}, &compiler.Error{
 			Message: "missing receiver side",
 			Meta:    &meta,
 		}
 	}
+}
+
+func parseSwitchStmt(
+	switchStmt generated.ISwitchStmtContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	meta := core.Meta{
+		Text: switchStmt.GetText(),
+		Start: core.Position{
+			Line:   switchStmt.GetStart().GetLine(),
+			Column: switchStmt.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   switchStmt.GetStop().GetLine(),
+			Column: switchStmt.GetStop().GetColumn(),
+		},
+	}
+
+	unparsedCases := switchStmt.AllNormConnDef()
+	cases := make([]src.NormalConnection, 0, len(unparsedCases))
+	for _, connDef := range unparsedCases {
+		parsedConn, err := parseNormConn(connDef)
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		cases = append(cases, *parsedConn.Normal)
+	}
+
+	var defaultCase []src.ConnectionReceiver = nil
+	defaultCaseCtx := switchStmt.DefaultCase()
+	if defaultCaseCtx != nil {
+		parsedDefault, err := parseReceiverSide(defaultCaseCtx.ReceiverSide())
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		defaultCase = parsedDefault
+	}
+
+	return src.ConnectionReceiver{
+		Switch: &src.Switch{
+			Cases:   cases,
+			Default: defaultCase,
+		},
+		Meta: meta,
+	}, nil
 }
 
 func parseChainedConnExpr(
@@ -374,10 +421,29 @@ func parseSingleSender(
 
 	var rangeExpr *src.Range
 	if rangeExprSender != nil {
-		fromText := rangeExprSender.INT(0).GetText()
-		if rangeExprSender.MINUS(0) != nil {
-			fromText = "-" + fromText
+		rangeMeta := &core.Meta{
+			Text: rangeExprSender.GetText(),
+			Start: core.Position{
+				Line:   rangeExprSender.GetStart().GetLine(),
+				Column: rangeExprSender.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   rangeExprSender.GetStop().GetLine(),
+				Column: rangeExprSender.GetStop().GetColumn(),
+			},
 		}
+
+		members := rangeExprSender.AllRangeMember()
+		if len(members) != 2 {
+			return src.ConnectionSender{}, &compiler.Error{
+				Message: "Range expression must have exactly two members",
+				Meta:    rangeMeta,
+			}
+		}
+
+		fromCtx := members[0]
+		fromText := fromCtx.GetText()
+
 		from, err := strconv.ParseInt(fromText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
@@ -396,10 +462,9 @@ func parseSingleSender(
 			}
 		}
 
-		toText := rangeExprSender.INT(1).GetText()
-		if rangeExprSender.MINUS(1) != nil {
-			toText = "-" + toText
-		}
+		toCtx := members[1]
+		toText := toCtx.GetText()
+
 		to, err := strconv.ParseInt(toText, 10, 64)
 		if err != nil {
 			return src.ConnectionSender{}, &compiler.Error{
@@ -421,17 +486,7 @@ func parseSingleSender(
 		rangeExpr = &src.Range{
 			From: from,
 			To:   to,
-			Meta: core.Meta{
-				Text: rangeExprSender.GetText(),
-				Start: core.Position{
-					Line:   rangeExprSender.GetStart().GetLine(),
-					Column: rangeExprSender.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   rangeExprSender.GetStop().GetLine(),
-					Column: rangeExprSender.GetStop().GetColumn(),
-				},
-			},
+			Meta: *rangeMeta,
 		}
 	}
 

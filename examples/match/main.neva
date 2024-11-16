@@ -1,16 +1,18 @@
+import { fmt }
+
 def Main(start) (stop) {
-    ForEach{Handler}, Wait
+    For{Handler}, Wait
     ---
-    :start -> 1..5 -> forEach -> wait -> :stop
+    :start -> 1..5 -> for -> wait -> :stop
 }
 
 def Handler(data int) (sig any) {
-    Match, Println
+    Match, fmt.Println
 
     ---
-    
+
     :data -> match:data
-    
+
     1 -> match:if[0]
     'one' -> match:then[0]
 

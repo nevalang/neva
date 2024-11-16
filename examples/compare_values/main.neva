@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-    Println
+    fmt.Println
     ---
     :start -> {
         ((2 == 2) ? 'They match' : 'They do not match') -> println -> :stop

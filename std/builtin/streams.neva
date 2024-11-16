@@ -1,11 +1,13 @@
-// basic stream operations
+// --- Basic operations ---
 
-// Wait blocks until last stream item arrive, then sends signal.
-pub def Wait(data stream<any>) (sig) {
-    If
+// Wait blocks until last stream item arrive, then sends a signal.
+pub def Wait(data stream<any>) (sig any) {
+    Del
     ---
-    :data -> .last -> if
-    if:then -> :sig
+    :data -> .last -> switch {
+        true -> :sig
+        _ -> del
+    }
 }
 
 // ArrPortToStream iterates over all array-inport's slots in order
@@ -19,6 +21,27 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 
 // === Iterators ===
 
+// --- While ---
+
+// IWhileHandler is a dependency for While.
+pub interface IWhileHandler<T>(data T) (res T, err error)
+
+// While implements truly sequential loop.
+// dependency node won't receive next data until it sends a result.
+// Sometimes it's crucial to guarantee this, to avoid race conditions.
+// E.g. you have pipeline of nodes that produce side-effects and order matters.
+// You can wrap them in single handler and safely pass to `While`.
+// `While` is basically just a shortcut for manually looped network topology.
+// 
+pub def While<T>(from T, to T) (sig any, err error) {
+    handler IWhileHandler?
+    ---
+    [:from, handler] -> switch {
+        :to -> :sig
+        _ -> handler
+    }
+}
+
 // These constants are used for binding by Field.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
@@ -30,10 +53,10 @@ const idxPath list<string> = ['idx']
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
 // Map maps one stream onto another.
-// Just like ForEach, it does not block the stream. As soon as one item processed,
+// Just like For, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
 // It's not recommented but possible to also produce side-effects.
-// But, if all you need is side-effects, use ForEach instead.
+// But, if all you need is side-effects, use For instead.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
@@ -53,34 +76,42 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 // --- Filter ---
 
 // IFilterHandler is a dependency for Filter component.
-pub interface IFilterHandler<T>(data T) (res bool)
+// pub interface IFilterHandler<T>(data T) (res bool)
 
-// Filter is for filtering items in a stream.
-// It will produce a new stream with only items that passed the filter.
-// It's possible to chain multiple Filters together.
-pub def Filter<T>(data stream<T>) (res stream<T>) {
-    Cond<stream<T>>
-    FanOut<stream<T>>
-    handler IFilterHandler<T>
+// TODO: https://github.com/nevalang/neva/issues/763
+// Filter is for filtering items in a stream,
+// producing a new stream with only items that passed the filter.
+// 
+// Unlike other iterators, it blocks the incoming stream,
+// before creating outgoing one. This is needed to handle metadata correctly.
+//
+// Output items may have different indexes than corresponding input ones.
+// For example: filtering even numbers from [1, 2, 3] will emit 2 with index 0.
+// This also affects which item is marked as last - 2 will be marked as last.
+//
+// This is important if you need to manually handle stream metadata,
+// though it's generally better to avoid doing so.
+// pub def Filter<T>(data stream<T>) (res stream<T>) {
+//     Cond<stream<T>>
+//     FanOut<stream<T>>
+//     handler IFilterHandler<T>
 
-    ---
+//     ---
 
-    :data -> fanOut
+//     :data -> fanOut
     
-    fanOut[0] -> cond:data
-    fanOut[1] -> .data -> handler -> cond:if
+//     fanOut[0] -> cond:data
+//     fanOut[1] -> .data -> handler -> cond:if
     
-    cond:then -> :res
-}
-
-// TODO: Some and Every
+//     cond:then -> :res
+// }
 
 // --- Reduce ---
 
 // IReduceHandler is a dependency for Reduce.
-pub interface IReduceHandler<T, Y>(acc T, el T) (res Y)
+pub interface IReduceHandler<T, Y>(left T, right T) (res Y)
 
-// Reduce applies a reduction function to a stream of values, accumulating the result.
+// Reduce applies a reduction component to a stream of messages, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     handler IReduceHandler<T, Y>
@@ -92,10 +123,10 @@ pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     :init -> acc:init
     
     :data -> fanOut
-    fanOut[0] -> .data -> handler:el
+    fanOut[0] -> .data -> handler:right
     fanOut[1] -> .last -> acc:last
     
-    acc:cur -> handler:acc
+    acc:cur -> handler:left
     handler -> acc:upd
 
     acc:res -> :res
@@ -112,31 +143,56 @@ pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 #extern(accumulator)
 pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 
-// --- ForEach ---
+// --- For ---
 
-// IForEachHandler is a dependency for ForEach.
-pub interface IForEachHandler<T>(data T) (sig any)
-
-// ForEach processes stream to produce side-effects on its items.
-// Just like Map, it does not block the stream. As soon as one item processed,
-// it sends an item downstream and processes the next one.
-// ForEach always sends the same stream, it's not intended for mapping.
-// If you need mapping (or mapping with side-effects), use Map instead.
-pub def ForEach<T>(data stream<T>) (data stream<T>) {
-    Lock<stream<T>>
-    handler IForEachHandler<T>
-
-    #bind(dataPath)
-    getData Field<T>
-
+// `For` applies a handler to each item in a stream to produce side-effects.
+// It never modifies the stream - use `Map/Filter/Reduce` for transformations.
+//
+// It uses back pressure to ensure the handler processes items sequentially -
+// the next item is not sent until the handler signals completion of the previous one.
+// This prevents concurrency issues.
+//
+// Like other iterators, it processes items one at a time without blocking the stream.
+// To wait for all items to be processed, use with `Wait`.
+pub def For<T>(data stream<T>) (res stream<T>) {
+    first First<T> // to check if current msg is the first
+    lock1 Lock<stream<T>> // to lock current msg before sending to handler
+    lock2 Lock<stream<T>> // to lock current msg before sending downstream
+    handler IForEachHandler<T> // to process current msg
+    pass1 Pass // to unlock current msg to send to handler
+    pass2 Pass // to unlock current msg to send downstream
     ---
+    :data -> [lock1:data, lock2:data, first]
 
-    :data -> [getData, lock:data]
-    getData -> handler -> lock:sig
-    lock -> :data
+    lock1 -> .data -> handler
+    lock2 -> :res
+
+    [first:then, pass1] -> lock1:sig
+    pass2 -> lock2:sig
+
+    handler -> [pass1, pass2]
 }
 
-// Range sends sequence of integers starting and ending with given from and to.
+// IForEachHandler is a dependency for For.
+pub interface IForEachHandler<T>(data T) (sig any)
+
+// `First` is a helper that allows to check if given stream item is the first one.
+def First<T>(data stream<T>) (then stream<T>, else stream<T>) {
+    Cond<stream<T>>
+    Eq<int>
+    Pass<stream<T>>
+    ---
+    :data -> [cond:data, pass]
+    pass -> .idx -> eq:left
+    0 -> eq:right
+    eq -> cond:if
+    cond:then -> :then
+    cond:else -> :else
+}
+
+// --- Range ---
+
+// Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
 // It emits stream only after all 3 inports receive messages.
 // Signal inport is required because Range is used in range expressions.

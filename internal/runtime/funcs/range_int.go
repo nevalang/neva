@@ -140,7 +140,7 @@ func (rangeIntV2) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				data int64 = from
 			)
 
-			if from < to {
+			if from < to { // example: 0..10
 				for !last {
 					if data == to-1 {
 						last = true
@@ -159,7 +159,7 @@ func (rangeIntV2) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 					idx++
 					data++
 				}
-			} else {
+			} else { // example: 10..0
 				for !last {
 					if data == toMsg.Int()+1 {
 						last = true

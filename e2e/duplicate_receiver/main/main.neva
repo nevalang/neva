@@ -1,7 +1,7 @@
-import { io }
+import { io, fmt }
 
 def Main(start any) (stop any) {
-	Println
+	fmt.Println
 	---
 	:start -> println -> :stop
 	println -> println

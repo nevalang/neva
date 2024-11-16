@@ -1,9 +1,11 @@
+import { fmt }
+
 def Main(start) (stop) {
     Map<int, any>{FizzBuzz}
-    ForEach{Println}
+    For{fmt.Println}
     Wait
     ---
-    :start -> 1..101 -> map -> forEach -> wait -> :stop
+    :start -> 1..101 -> map -> for -> wait -> :stop
 }
 
 def FizzBuzz(data int) (res string|int) {
@@ -56,8 +58,8 @@ def Mod5(num int) (then int, else int) {
 def ModHelper(num int, den int) (then int, else int) {
     Mod, Cond<int>
     ---
-    :num -> [mod:acc, cond:data]
-    :den -> mod:el
+    :num -> [mod:left, cond:data]
+    :den -> mod:right
 
     (mod == 0) -> cond:if
 

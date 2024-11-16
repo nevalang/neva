@@ -1,7 +1,7 @@
-import { sync }
+import { sync, fmt }
 
 def Main(start) (stop) {
-	p1 Println, p2 Println, p3 Println
+	p1 fmt.Println, p2 fmt.Println, p3 fmt.Println
 	wg sync.WaitGroup
 	---
 	:start -> [

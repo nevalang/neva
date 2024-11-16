@@ -1,8 +1,0 @@
-const lst list<int> = [50, 30, 20, 100]
-
-def Main(start) (stop) {
-    Println<stream<int>>, ListToStream<int>, If
-    ---
-    :start -> { $lst -> listToStream -> println.last -> if }
-    if:then -> :stop
-}

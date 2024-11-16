@@ -110,3 +110,7 @@ ternary:res -> println
 ```
 
 And guess what? This is exactly how desugared `Ternary` component works! But these are 4 (!) connections! Compare it with `(condition ? thenValue : elseValue) -> println`.
+
+## Why operators and reducers have `left` and `right` naming for ports?
+
+Operators should follow same pattern for simplicity of desugarer and usage by user and they also also should be able to be used as reducers by `Reduce`. It means we need to choose between `left/right` which is convinient for operators and `acc/el` for reduce. Binary expressions (infix form) are more common than reduce operations so desicion was made to sacrifice reduce clarity a little bit.

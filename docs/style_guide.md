@@ -1,6 +1,6 @@
 # Style Guide
 
-This guide sets standards for Nevalang code organization, formatting, and naming conventions to ensure consistency and readability.
+This guide sets standards for Nevalang code to ensure consistency and readability.
 
 ## Formatting
 
@@ -10,7 +10,6 @@ Keep lines under 80 characters.
 
 - Comfortable for split-screen viewing
 - Accommodates larger font sizes without horizontal scrolling
-  - Better for visual accessibility
 - Leaves room for IDE features (code lens, git blame, inline-hints, etc.)
 - Enables reading full lines with eye movement alone
 
@@ -19,7 +18,6 @@ Keep lines under 80 characters.
 Use tabs over spaces.
 
 - Tabs allow users to customize indentation width according to their preferences
-  - More accessible for users with visual impairments who may need larger indentation
 - Tabs are more efficient in terms of file size
 
 ### Imports
@@ -33,17 +31,19 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - **Packages/Files**: lower_snake_case up to 3 words
 - **Types**: CamelCase up to 3 words
 - **Interfaces**: CamelCase with `I` prefix up to 3 words
-- **Constants**: lowerCase up to 3 words
+- **Constants**: lower_snake_case up to 3 words
 - **Components**: CamelCase noun up to 3 words
 - **Nodes**: lowerCamelCase up to 3 words
 - **Ports**: lowercase, 1 word up to 5 letters
 
 ## Interfaces
 
-- Use type-parameters when need to preserve type information between input and output.
-- Limit to 3 inports and outports max.
+- Use outports to separate data flows, not for destructuring
+- Use `data` for input with payload, `sig` for input without payload (trigger), `res` for output with payload, `sig` for output without payload (success), and `err` for failures.
+- `err` outport must be `error` type. `sig` inport must be `any` type for flexibility. For outports, `sig` should be `struct{}` in concrete components and `any` in interfaces. Never use `any` for `res` outport.
+- Don't send input data downstream - parent already knows it
+- Use type-parameters when need to preserve type info between input and output
 
 ## Networks
 
-- Prefer simple topologies over complex networks.
-- Omit port names when possible
+- Omit port names when possible. It enables renaming of ports without updating the networks.

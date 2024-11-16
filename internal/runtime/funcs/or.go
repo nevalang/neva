@@ -9,12 +9,12 @@ import (
 type or struct{}
 
 func (p or) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	aIn, err := io.In.Single("acc")
+	aIn, err := io.In.Single("left")
 	if err != nil {
 		return nil, err
 	}
 
-	bIn, err := io.In.Single("el")
+	bIn, err := io.In.Single("right")
 	if err != nil {
 		return nil, err
 	}

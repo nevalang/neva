@@ -216,6 +216,8 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
+var switchCounter uint64
+
 func (d Desugarer) desugarSingleReceiver(
 	iface src.Interface,
 	normConn src.NormalConnection,
@@ -283,6 +285,103 @@ func (d Desugarer) desugarSingleReceiver(
 		}
 
 		return desugarReceiverResult(result), nil
+	}
+
+	if receiver.Switch != nil {
+		switchCounter++
+		switchNodeName := fmt.Sprintf("__switch__%d", switchCounter)
+
+		nodesToInsert[switchNodeName] = src.Node{
+			EntityRef: core.EntityRef{
+				Pkg:  "builtin",
+				Name: "Switch",
+			},
+		}
+
+		// Connect original sender to switch:data
+		replace := src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: normConn.SenderSide,
+				ReceiverSide: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{
+							Node: switchNodeName,
+							Port: "data",
+						},
+					},
+				},
+			},
+		}
+
+		insert := []src.Connection{}
+
+		// For each case in the switch
+		for i, caseConn := range receiver.Switch.Cases {
+			// Connect case-sender to switch:case[i]
+			insert = append(insert, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: caseConn.SenderSide,
+					ReceiverSide: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{
+								Node: switchNodeName,
+								Port: "case",
+								Idx:  compiler.Pointer(uint8(i)),
+							},
+						},
+					},
+				},
+			})
+
+			// Connect switch:case[i] to case receiver
+			insert = append(insert, src.Connection{
+				Normal: &src.NormalConnection{
+					SenderSide: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{
+								Node: switchNodeName,
+								Port: "case",
+								Idx:  compiler.Pointer(uint8(i)),
+							},
+						},
+					},
+					ReceiverSide: caseConn.ReceiverSide,
+				},
+			})
+		}
+
+		// Connect switch:default to its receiver
+		insert = append(insert, src.Connection{
+			Normal: &src.NormalConnection{
+				SenderSide: []src.ConnectionSender{
+					{
+						PortAddr: &src.PortAddr{
+							Node: switchNodeName,
+							Port: "else",
+						},
+					},
+				},
+				ReceiverSide: receiver.Switch.Default,
+			},
+		})
+
+		desugaredInsert, err := d.desugarConnections(
+			iface,
+			insert,
+			nodePortsUsed,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarReceiverResult{}, err
+		}
+
+		return desugarReceiverResult{
+			replace: replace,
+			insert:  desugaredInsert,
+		}, nil
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
@@ -1233,15 +1332,15 @@ func (d Desugarer) desugarBinarySender(
 		TypeArgs: []ts.Expr{binary.AnalyzedType},
 	}
 
-	// left -> op:acc
-	// right -> op:el
+	// left -> op:left
+	// right -> op:right
 	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
 				SenderSide: []src.ConnectionSender{binary.Left},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "acc"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "left"},
 					},
 				},
 			},
@@ -1251,7 +1350,7 @@ func (d Desugarer) desugarBinarySender(
 				SenderSide: []src.ConnectionSender{binary.Right},
 				ReceiverSide: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "el"},
+						PortAddr: &src.PortAddr{Node: opNode, Port: "right"},
 					},
 				},
 			},

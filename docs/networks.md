@@ -121,11 +121,13 @@ Each connection always has a sender and receiver side. There are 3 types of each
 
 ### Sender Side
 
-There are 3 sender-side forms:
+There are 5 sender-side forms:
 
 1. Port address
 2. Constant reference
 3. Message literal
+4. Binary expression
+5. Ternary expression
 
 #### Port Address Sender
 
@@ -152,7 +154,7 @@ It acts as an infinite loop, repeatedly sending the same message at the receiver
 
 One way to work with them is to have a node with multiple inports, where at least one is connected to a port, not a constant. This limits the constants' speed to that of the port. Here's a simple example:
 
-We'll create a component that increments a number using an addition component with 2 inports: `:acc` and `:el`. We'll use a constant `$one` for `:acc`, while `:el` receives dynamic values:
+We'll create a component that increments a number using an addition component with 2 inports: `:left` and `:right`. We'll use a constant `$one` for `:left`, while `:right` receives dynamic values:
 
 ```neva
 const one int = 1
@@ -160,13 +162,13 @@ const one int = 1
 def Inc(data int) (res int) {
     Add
     ---
-    $one -> add:acc
-    :data -> add:el
+    $one -> add:left
+    :data -> add:right
     add -> :res
 }
 ```
 
-In this example, `add:acc` and `add:el` are synchronized. When `:data -> add:el` has a message, `add:acc` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `acc=1 el=1; acc=1 el=2; acc=1 el=3` and produce `2, 3, 4` respectively.
+In this example, `add:left` and `add:right` are synchronized. When `:data -> add:right` has a message, `add:left` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `left=1 right=1; left=1 right=2; left=1 right=3` and produce `2, 3, 4` respectively.
 
 Another way to synchronize constants with real data is to use deferred connections. We'll explore this in the receiver-side forms section.
 
@@ -205,8 +207,8 @@ Sometimes it's convenient to refer to message values directly in the network wit
 def Inc(data int) (res int) {
     Add
     ---
-    1 -> add:acc
-    :data -> add:el
+    1 -> add:left
+    :data -> add:right
     add -> :res
 }
 ```
@@ -217,6 +219,68 @@ Only primitive data-types (`bool`, `int`, `float`, `string` and `enum`) can be u
 - int: `42 -> ...`
 - float: `42.0 -> ...`
 - enum: `Day::Friday ->`
+
+#### Binary Expression
+
+#### Binary Expression
+
+Binary expression is an easy way to perform arithmetic, comparison, logic or bitwise operation with two operands. Syntax of binary expression is infix notation with binary operator in the middle and operands on left and right. Binary expression is always wrapped in `()` braces (so there's no precedence in Nevalang).
+
+Examples:
+
+```neva
+// arithmetic
+(5 + 3) -> println // addition: outputs 8
+(5 - 3) -> println // subtraction: outputs 2
+(5 * 3) -> println // multiplication: outputs 15
+(6 / 2) -> println // division: outputs 3
+(7 % 3) -> println // modulo: outputs 1
+(2 ** 3) -> println // power: outputs 8
+
+// comparison
+(5 == 5) -> println // equal: outputs true
+(5 != 3) -> println // not equal: outputs true
+(5 > 3) -> println // greater than: outputs true
+(5 < 8) -> println // less than: outputs true
+(5 >= 5) -> println // greater or equal: outputs true
+(5 <= 8) -> println // less or equal: outputs true
+
+// logic
+(true && true) -> println // AND: outputs true
+(true || false) -> println // OR: outputs true
+
+// bitwise
+(5 & 3) -> println // AND: outputs 1
+(5 | 3) -> println // OR: outputs 7
+(5 ^ 3) -> println // XOR: outputs 6
+```
+
+> Bitwise left and right shifts (`<<` and `>>`) are not yet implemented.
+
+Operands of a binary-expression are senders themselves. In example above they are message literals but they could be any senders:
+
+```neva
+(5 + node:port)
+($some_const && false)
+(someNode == 'some string')
+```
+
+Binary expressions could be infinetely nested. Example: `((a + b) * (c - d)) -> receiver`.
+
+Both operands (their resolved versions) must be of the same type. Type of a valid binary expression is the same as types of its operands. Type-compatibility between binary expression sender and its receiver-side is resolved the same way as with any other sender and receiver sides.
+
+#### Tenrary Expression
+
+Similar to binary, but there are 3 operands instead of 2 and first operand is always of `bool` type. Just like binary, ternary expression sender is always wrapped into `()` braces, supports any senders as operands and could be infintely nested (and mixed with binary expressions). Examples:
+
+```neva
+(a ? : b : c) // simple
+(a + (b ? c : d)) // as operand in binary expression
+(cond ? (a + b) : (c * d)) // with binary expressions as brances
+((a == b) ? c : d) // with binary expression as condition
+```
+
+Compiler with ensure that condition operand resolves to `bool` type and that both branch-operands are compatible with the receiver-side.
 
 ### Receivers Side
 

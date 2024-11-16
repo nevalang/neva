@@ -1,9 +1,9 @@
-import { lists }
+import { lists, fmt }
 
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 def Main(start) (stop) {
-	lists.At<int>, Println
+	lists.At<int>, fmt.Println
 	---
 	:start -> [
 		{ $lst -> at:data },

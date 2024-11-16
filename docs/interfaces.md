@@ -26,26 +26,26 @@ Interfaces in Nevalang are used for:
 `any` is too generic; specific types are often needed. Let's define an interface for an integer adder:
 
 ```neva
-interface IAdd(acc int, el int) (res int)
+interface IAdd(left int, right int) (res int)
 ```
 
 What if we want to add not just integers but also support `float` and `string`? You could use `union` for that
 
 ```neva
 type addable int | float | string
-interface IAdd(acc addable, el addable) (res addable)
+interface IAdd(left addable, right addable) (res addable)
 ```
 
-This solution is problematic because it allows mixing types, e.g., `int` for `:acc` and `float` for `:el`. The `:res` message will have a union type `int | float | string`, making the code complex. To maintain type-safety, use type-parameters in the interface definition:
+This solution is problematic because it allows mixing types, e.g., `int` for `:left` and `float` for `:right`. The `:res` message will have a union type `int | float | string`, making the code complex. To maintain type-safety, use type-parameters in the interface definition:
 
 ```neva
-interface IAdd<T>(acc T, el T) (res T)
+interface IAdd<T>(left T, right T) (res T)
 ```
 
-This ensures `:acc` and `:el` receive compatible types, and `:res` matches their type. However, our current definition allows any type, including `IAdd<bool, bool>`, which we don't want. To fix this, we can explicitly constrain `T` using our union:
+This ensures `:left` and `:right` receive compatible types, and `:res` matches their type. However, our current definition allows any type, including `IAdd<bool, bool>`, which we don't want. To fix this, we can explicitly constrain `T` using our union:
 
 ```neva
-interface IAdd<T int | float | string>(acc T, el T) (res T)
+interface IAdd<T int | float | string>(left T, right T) (res T)
 ```
 
 Now only `IAdd<int, int>`, `IAdd<float, float>` or `IAdd<string, string>` (and their compatible variants) are possible. `IAdd:res` will always be `int`, `float`, or `string`.
@@ -53,7 +53,7 @@ Now only `IAdd<int, int>`, `IAdd<float, float>` or `IAdd<string, string>` (and t
 Type-expressions in interface definitions follow type-system rules, so you can pass `T` to other type-expressions. Example:
 
 ```
-interface IAppend<T>(lst list<T>, el T) (list<T>)
+interface IAppend<T>(lst list<T>, right T) (list<T>)
 ```
 
 These expressions can be complex and nested, but we'll keep this section brief.
@@ -63,7 +63,7 @@ These expressions can be complex and nested, but we'll keep this section brief.
 Let's return to the original `IAdd` without type-parameters for simplicity
 
 ```neva
-interface IAdd(acc int, el int) (res int)
+interface IAdd(left int, right int) (res int)
 ```
 
 It's suitable for combining 2 sources, but what if we need to combine any number of sources? Chaining multiple `IAdd` instances is tedious and sometimes impossible. Let's look at the array-inports solution:

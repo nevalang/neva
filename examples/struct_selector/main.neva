@@ -1,3 +1,5 @@
+import { fmt }
+
 type User struct {
     name string
     pet Pet
@@ -6,7 +8,7 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start) (stop) {
-    GetUser, Println
+    GetUser, fmt.Println
     ---
     :start -> getUser -> .pet.name -> println -> :stop
 }

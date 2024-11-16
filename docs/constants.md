@@ -29,8 +29,8 @@ const one int = 1
 def Inc(data int) (res int) {
     Add
     ---
-    $one -> add:acc
-    :data -> add:el
+    $one -> add:left
+    :data -> add:right
     add -> :res
 }
 ```
@@ -43,8 +43,8 @@ You can omit explicit constants; the compiler will create and refer to them impl
 def Inc(data int) (res int) {
     Add
     ---
-    1 -> add:acc
-    :data -> add:el
+    1 -> add:left
+    :data -> add:right
     add -> :res
 }
 ```

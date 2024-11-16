@@ -1,4 +1,4 @@
-import { io, image }
+import { io, image, fmt }
 
 def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
@@ -31,7 +31,7 @@ def NewStream(p image.Pixel) (s stream<image.Pixel>) {
 def Main(start) (stop) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
-	io.WriteAll, printErr Println
+	io.WriteAll, printErr fmt.Println
 	---
 	:start -> [
 		{ 0 -> [newColor:r, newColor:g, newColor:b, newColor:a] },

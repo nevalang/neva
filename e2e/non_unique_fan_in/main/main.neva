@@ -1,5 +1,3 @@
-import { io }
-
 def Main(start any) (stop any) {
 	:start -> [:stop, :stop]
 }

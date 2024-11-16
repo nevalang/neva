@@ -1,10 +1,12 @@
+import { fmt }
+
 def Main(start any) (stop any) {
 	adder Add<int>
-	println Println<int>
+	println fmt.Println<int>
 	---
 	:start -> [
-		{ 1 -> adder:acc },
-		{ 2 -> adder:el }
+		{ 1 -> adder:left },
+		{ 2 -> adder:right }
 	]
 	adder:res -> println:data
 	println:sig -> :stop

@@ -297,11 +297,18 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiver struct {
+type ConnectionReceiver struct { // TODO rename to Receiver
 	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
-	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
-	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"` // TODO rename to Defer
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`  // TODO rename to Chain
+	Switch             *Switch     `json:"switch,omitempty"`
 	Meta               core.Meta   `json:"meta,omitempty"`
+}
+
+type Switch struct {
+	Cases   []NormalConnection   `json:"case,omitempty"`
+	Default []ConnectionReceiver `json:"default,omitempty"`
+	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
 type ConnectionSideSelectors []string
@@ -324,10 +331,10 @@ type ConnectionSender struct {
 	PortAddr       *PortAddr `json:"portAddr,omitempty"`
 	Const          *Const    `json:"const,omitempty"`
 	Range          *Range    `json:"range,omitempty"`
-	StructSelector []string  `json:"selector,omitempty"`
 	Unary          *Unary    `json:"unary,omitempty"`
 	Binary         *Binary   `json:"binary,omitempty"`
 	Ternary        *Ternary  `json:"ternary,omitempty"`
+	StructSelector []string  `json:"selector,omitempty"`
 	Meta           core.Meta `json:"meta,omitempty"`
 }
 
@@ -395,7 +402,7 @@ func (s ConnectionSender) String() string {
 	selectorsString := ""
 	if len(s.StructSelector) != 0 {
 		for _, selector := range s.StructSelector {
-			selectorsString += ":" + selector
+			selectorsString += "." + selector
 		}
 	}
 

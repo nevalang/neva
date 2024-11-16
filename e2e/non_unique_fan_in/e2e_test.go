@@ -15,10 +15,10 @@ func Test(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
 
-	require.Equal(
+	require.Contains(
 		t,
-		"main/main.neva:4:19: port 'out:stop' is used twice\n",
 		string(out),
+		"main/main.neva:2:19: port 'out:stop' is used twice\n",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

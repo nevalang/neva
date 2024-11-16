@@ -1,7 +1,7 @@
-import { io }
+import { io, fmt }
 
 def Main(start) (stop) {
-	io.WriteAll, Println
+	io.WriteAll, fmt.Println
 	---
 	:start -> [
 		{ 'file_writer_example.txt' -> writeAll:filename },

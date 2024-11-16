@@ -1,7 +1,7 @@
-import { http }
+import { http, fmt }
 
 def Main(start) (stop) {
-	http.Get, Println, Panic
+	http.Get, fmt.Println, Panic
 	---
 	:start -> { 'http://www.example.com' -> get }
 	get:resp -> .body -> println -> :stop

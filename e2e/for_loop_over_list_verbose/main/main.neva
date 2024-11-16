@@ -1,7 +1,9 @@
+import { fmt }
+
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start) (stop) {
-    ListToStream, ForEach{Println}, Wait
+    ListToStream<int>, For<int>{fmt.Println}, Wait
     ---
-    :start -> { $lst -> listToStream -> forEach -> wait -> :stop }
+    :start -> { $lst -> listToStream -> for -> wait -> :stop }
 }

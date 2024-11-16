@@ -1,9 +1,11 @@
+import { fmt }
+
 def Main(start) (stop) {
-    Println, Gt<string>, Ternary
+    fmt.Println, Gt<string>, Ternary
     ---
     :start -> [
-        { 'Z' -> gt:acc },
-        { 'A' -> gt:el }
+        { 'Z' -> gt:left },
+        { 'A' -> gt:right }
     ]
     gt:res -> ternary:if
     'Actual is greater' -> ternary:then

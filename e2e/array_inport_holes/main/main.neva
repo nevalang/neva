@@ -1,7 +1,7 @@
-import { io }
+import { fmt }
 
 def Main(start any) (stop any) {
-	Printf
+	fmt.Printf
 	---
 	:start -> { '$1 $2 $3' -> printf:tpl }
 	1 -> printf:args[0]

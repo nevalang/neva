@@ -53,11 +53,11 @@ func (a Analyzer) analyzeNodes(
 }
 
 func (a Analyzer) analyzeNode(
-	flowIface src.Interface,
+	compIface src.Interface,
 	node src.Node,
 	scope src.Scope,
 ) (src.Node, foundInterface, *compiler.Error) {
-	parentTypeParams := flowIface.TypeParams
+	parentTypeParams := compIface.TypeParams
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -130,16 +130,16 @@ func (a Analyzer) analyzeNode(
 	}
 
 	if node.ErrGuard {
-		if _, ok := flowIface.IO.Out["err"]; !ok {
+		if _, ok := compIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Message:  "Guard is not allowed for nodes without 'err' output",
+				Message:  "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Message:  "Guard is not allowed for nodes without ':err' output",
+				Message:  "Error-guard operator '?' requires node to have ':err' outport to propagate errors",
 				Location: &scope.Location,
 				Meta:     &node.Meta,
 			}
@@ -191,7 +191,7 @@ func (a Analyzer) analyzeNode(
 	resolvedFlowDI := make(map[string]src.Node, len(node.Deps))
 	for depName, depNode := range node.Deps {
 		resolvedDep, _, err := a.analyzeNode(
-			flowIface,
+			compIface,
 			depNode,
 			scope,
 		)

@@ -1,7 +1,7 @@
-import { io }
+import { io, fmt }
 
 def Main(start) (stop) {
-	io.ReadAll, Println
+	io.ReadAll, fmt.Println
 	---
 	:start -> { 'file_read_all/main.neva' -> readAll:filename }
 	[readAll:res, readAll:err] -> println -> :stop

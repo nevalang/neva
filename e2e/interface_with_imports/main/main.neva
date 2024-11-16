@@ -3,7 +3,7 @@ import { github.com/nevalang/x:main }
 interface IPrinter<T>(data T) (sig T)
 
 def Main(start any) (stop any) {
-    Secondflow { main.Println<any> }
+    Secondflow {main.Println<any>}
     ---
     :start -> secondflow:msg
     secondflow:msg -> :stop

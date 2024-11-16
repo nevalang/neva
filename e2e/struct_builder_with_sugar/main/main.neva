@@ -6,7 +6,7 @@ type User struct {
 // FIXME - cannot use 'struct' as a node name
 
 def Main(start any) (stop any) {
-    Println
+    fmt.Println
     builder Struct<User>
     ---
     :start -> [

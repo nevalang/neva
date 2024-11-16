@@ -10,7 +10,7 @@ type User struct {
 def MyStructBuilder(age int, name string) (msg User)
 
 def Main(start any) (stop any) {
-    Println
+    fmt.Println
     builder MyStructBuilder
     ---
     :start -> [

@@ -374,111 +374,127 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 }
 
 func TestParser_ParseFile_Range(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..10 -> :out
-		}
-	`)
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "simple range",
+			text: `
+				def C1() () {
+					1..10 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(10), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "multiple ranges",
+			text: `
+				def C1() () {
+					1..5 -> :out1
+					10..20 -> :out2
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 2, len(net))
 
-	p := New()
+				conn1 := net[0].Normal
+				require.NotNil(t, conn1.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+				require.Equal(t, int64(5), conn1.SenderSide[0].Range.To)
+				require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
 
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
+				conn2 := net[1].Normal
+				require.NotNil(t, conn2.SenderSide[0].Range)
+				require.Equal(t, int64(10), conn2.SenderSide[0].Range.From)
+				require.Equal(t, int64(20), conn2.SenderSide[0].Range.To)
+				require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "negative_from",
+			text: `
+				def C1() () {
+					-5..5 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
 
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 1, len(net))
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(-5), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(5), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "negative_to",
+			text: `
+				def C1() () {
+					1..-5 -> :out
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
 
-	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
-	require.Equal(t, int64(10), conn.SenderSide[0].Range.To)
-	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
-}
+				conn := net[0].Normal
+				require.NotNil(t, conn.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn.SenderSide[0].Range.From)
+				require.Equal(t, int64(-5), conn.SenderSide[0].Range.To)
+				require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "mixed range expressions",
+			text: `
+				def C1() () {
+					1..10 -> :out1
+					:in -> :out2
+					20..30 -> :out3
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 3, len(net))
 
-func TestParser_ParseFile_MultipleRanges(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..5 -> :out1
-			10..20 -> :out2
-		}
-	`)
+				conn1 := net[0].Normal
+				require.NotNil(t, conn1.SenderSide[0].Range)
+				require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
+				require.Equal(t, int64(10), conn1.SenderSide[0].Range.To)
+				require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
 
-	p := New()
+				conn2 := net[1].Normal
+				require.Nil(t, conn2.SenderSide[0].Range)
+				require.Equal(t, "in", conn2.SenderSide[0].PortAddr.Node)
+				require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
 
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
+				conn3 := net[2].Normal
+				require.NotNil(t, conn3.SenderSide[0].Range)
+				require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
+				require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
+				require.Equal(t, "out3", conn3.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+	}
 
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 2, len(net))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
 
-	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
-	require.Equal(t, int64(5), conn1.SenderSide[0].Range.To)
-	require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
 
-	conn2 := net[1].Normal
-	require.NotNil(t, conn2.SenderSide[0].Range)
-	require.Equal(t, int64(10), conn2.SenderSide[0].Range.From)
-	require.Equal(t, int64(20), conn2.SenderSide[0].Range.To)
-	require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
-}
-
-func TestParser_ParseFile_NegativeRange(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			-5..5 -> :out
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
-
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 1, len(net))
-
-	conn := net[0].Normal
-	require.NotNil(t, conn.SenderSide[0].Range)
-	require.Equal(t, int64(-5), conn.SenderSide[0].Range.From)
-	require.Equal(t, int64(5), conn.SenderSide[0].Range.To)
-	require.Equal(t, "out", conn.ReceiverSide[0].PortAddr.Port)
-}
-
-func TestParser_ParseFile_RangeExpressionMixed(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			1..10 -> :out1
-			:in -> :out2
-			20..30 -> :out3
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(text)
-	require.True(t, err == nil)
-
-	net := got.Entities["C1"].Component.Net
-	require.Equal(t, 3, len(net))
-
-	conn1 := net[0].Normal
-	require.NotNil(t, conn1.SenderSide[0].Range)
-	require.Equal(t, int64(1), conn1.SenderSide[0].Range.From)
-	require.Equal(t, int64(10), conn1.SenderSide[0].Range.To)
-	require.Equal(t, "out1", conn1.ReceiverSide[0].PortAddr.Port)
-
-	conn2 := net[1].Normal
-	require.Nil(t, conn2.SenderSide[0].Range)
-	require.Equal(t, "in", conn2.SenderSide[0].PortAddr.Node)
-	require.Equal(t, "out2", conn2.ReceiverSide[0].PortAddr.Port)
-
-	conn3 := net[2].Normal
-	require.NotNil(t, conn3.SenderSide[0].Range)
-	require.Equal(t, int64(20), conn3.SenderSide[0].Range.From)
-	require.Equal(t, int64(30), conn3.SenderSide[0].Range.To)
-	require.Equal(t, "out3", conn3.ReceiverSide[0].PortAddr.Port)
+			net := got.Entities["C1"].Component.Net
+			tt.check(t, net)
+		})
+	}
 }
 
 func TestParser_ParseFile_Binary(t *testing.T) {
@@ -737,6 +753,194 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 			require.Equal(t, "receiver", conn.ReceiverSide[0].PortAddr.Node)
 
 			tt.check(t, conn)
+		})
+	}
+}
+
+func TestParser_ParseFile_Switch(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "simple switch",
+			text: `
+				def C1() () {
+					sender -> switch {
+						true -> receiver1
+						false -> receiver2
+						_ -> receiver3
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				switchStmt := conn.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// true -> receiver1
+				require.Equal(t, true, *switchStmt.Cases[0].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].ReceiverSide[0].PortAddr.Node)
+
+				// false -> receiver2
+				require.Equal(t, false, *switchStmt.Cases[1].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+
+				// default -> receiver3
+				require.Equal(t, "receiver3", switchStmt.Default[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "switch with multiple senders and receivers",
+			text: `
+				def C1() () {
+					sender -> switch {
+						[a, b] -> [receiver1, receiver2]
+						c -> [receiver3, receiver4]
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				switchStmt := conn.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// [a, b] -> [receiver1, receiver2]
+				require.Equal(t, 2, len(switchStmt.Cases[0].SenderSide))
+				require.Equal(t, "a", switchStmt.Cases[0].SenderSide[0].PortAddr.Node)
+				require.Equal(t, "b", switchStmt.Cases[0].SenderSide[1].PortAddr.Node)
+				require.Equal(t, 2, len(switchStmt.Cases[0].ReceiverSide))
+				require.Equal(t, "receiver1", switchStmt.Cases[0].ReceiverSide[0].PortAddr.Node)
+				require.Equal(t, "receiver2", switchStmt.Cases[0].ReceiverSide[1].PortAddr.Node)
+
+				// c -> [receiver3, receiver4]
+				require.Equal(t, 1, len(switchStmt.Cases[1].SenderSide))
+				require.Equal(t, "c", switchStmt.Cases[1].SenderSide[0].PortAddr.Node)
+				require.Equal(t, 2, len(switchStmt.Cases[1].ReceiverSide))
+				require.Equal(t, "receiver3", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+				require.Equal(t, "receiver4", switchStmt.Cases[1].ReceiverSide[1].PortAddr.Node)
+			},
+		},
+		{
+			name: "switch with binary expressions",
+			text: `
+				def C1() () {
+					sender -> switch {
+						(a + b) -> receiver1
+						(c * d) -> receiver2
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				switchStmt := conn.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// (a + b) -> receiver1
+				binary1 := switchStmt.Cases[0].SenderSide[0].Binary
+				require.Equal(t, src.AddOp, binary1.Operator)
+				require.Equal(t, "a", binary1.Left.PortAddr.Node)
+				require.Equal(t, "b", binary1.Right.PortAddr.Node)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].ReceiverSide[0].PortAddr.Node)
+
+				// (c * d) -> receiver2
+				binary2 := switchStmt.Cases[1].SenderSide[0].Binary
+				require.Equal(t, src.MulOp, binary2.Operator)
+				require.Equal(t, "c", binary2.Left.PortAddr.Node)
+				require.Equal(t, "d", binary2.Right.PortAddr.Node)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "nested switch",
+			text: `
+				def C1() () {
+					sender -> switch {
+						true -> switch {
+							1 -> receiver1
+							2 -> receiver2
+						}
+						false -> receiver3
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				switchStmt := conn.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// true -> switch {...}
+				require.Equal(t, true, *switchStmt.Cases[0].SenderSide[0].Const.Value.Message.Bool)
+				nestedSwitch := switchStmt.Cases[0].ReceiverSide[0].Switch
+				require.Equal(t, 2, len(nestedSwitch.Cases))
+
+				// 1 -> receiver1
+				require.Equal(t, int(1), *nestedSwitch.Cases[0].SenderSide[0].Const.Value.Message.Int)
+				require.Equal(t, "receiver1", nestedSwitch.Cases[0].ReceiverSide[0].PortAddr.Node)
+
+				// 2 -> receiver2
+				require.Equal(t, int(2), *nestedSwitch.Cases[1].SenderSide[0].Const.Value.Message.Int)
+				require.Equal(t, "receiver2", nestedSwitch.Cases[1].ReceiverSide[0].PortAddr.Node)
+
+				// false -> receiver3
+				require.Equal(t, false, *switchStmt.Cases[1].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver3", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "switch in chained connection",
+			text: `
+				def C1() () {
+					sender -> .field -> switch {
+						true -> receiver1
+						false -> receiver2
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				// sender ->
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.SenderSide[0].PortAddr.Node)
+
+				// -> .field
+				chain := conn.ReceiverSide[0].ChainedConnection.Normal
+				require.Equal(t, "field", chain.SenderSide[0].StructSelector[0])
+
+				// -> switch {...}
+				switchStmt := chain.ReceiverSide[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// { true -> receiver1
+				require.Equal(t, true, *switchStmt.Cases[0].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].ReceiverSide[0].PortAddr.Node)
+
+				// false -> receiver2 }
+				require.Equal(t, false, *switchStmt.Cases[1].SenderSide[0].Const.Value.Message.Bool)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].ReceiverSide[0].PortAddr.Node)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
+
+			net := got.Entities["C1"].Component.Net
+			require.Equal(t, 1, len(net))
+
+			tt.check(t, net)
 		})
 	}
 }

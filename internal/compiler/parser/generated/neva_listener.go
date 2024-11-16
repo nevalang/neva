@@ -247,6 +247,9 @@ type nevaListener interface {
 	// EnterRangeExpr is called when entering the rangeExpr production.
 	EnterRangeExpr(c *RangeExprContext)
 
+	// EnterRangeMember is called when entering the rangeMember production.
+	EnterRangeMember(c *RangeMemberContext)
+
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
@@ -279,6 +282,12 @@ type nevaListener interface {
 
 	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
 	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
+
+	// EnterSwitchStmt is called when entering the switchStmt production.
+	EnterSwitchStmt(c *SwitchStmtContext)
+
+	// EnterDefaultCase is called when entering the defaultCase production.
+	EnterDefaultCase(c *DefaultCaseContext)
 
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
@@ -520,6 +529,9 @@ type nevaListener interface {
 	// ExitRangeExpr is called when exiting the rangeExpr production.
 	ExitRangeExpr(c *RangeExprContext)
 
+	// ExitRangeMember is called when exiting the rangeMember production.
+	ExitRangeMember(c *RangeMemberContext)
+
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
 
@@ -552,4 +564,10 @@ type nevaListener interface {
 
 	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
 	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)
+
+	// ExitSwitchStmt is called when exiting the switchStmt production.
+	ExitSwitchStmt(c *SwitchStmtContext)
+
+	// ExitDefaultCase is called when exiting the defaultCase production.
+	ExitDefaultCase(c *DefaultCaseContext)
 }

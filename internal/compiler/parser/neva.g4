@@ -116,7 +116,7 @@ compNodesDef: compNodesDefBody NEWLINE+ '---';
 compNodesDefBody: ((compNodeDef ','? | COMMENT) NEWLINE*)+;
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst:
-	entityRef NEWLINE* typeArgs? errGuard? NEWLINE* nodeDIArgs?;
+	entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs? errGuard?;
 errGuard: '?';
 nodeDIArgs: '{' NEWLINE* compNodesDefBody '}';
 
@@ -166,15 +166,13 @@ binaryOp:
 	| '&'
 	| '|'
 	| '^';
-	// TODO implement << and >>, for some reason parser confuses nested generics with this
-	// | '<<'
-	// | '>>';
 // TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: '{' NEWLINE* connDef NEWLINE* '}';
 senderConstRef: '$' entityRef;
-rangeExpr: (MINUS? INT) '..' (MINUS? INT);
+rangeExpr: rangeMember '..' rangeMember;
+rangeMember: MINUS? INT;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -188,11 +186,23 @@ portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
 portAddrIdx: '[' INT ']';
 structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
-singleReceiverSide: chainedNormConn | portAddr | deferredConn;
+singleReceiverSide:
+	chainedNormConn
+	| portAddr
+	| deferredConn
+	| switchStmt;
 multipleReceiverSide:
 	'[' NEWLINE* singleReceiverSide (
 		',' NEWLINE* singleReceiverSide NEWLINE*
 	)* ']';
+
+// switch
+switchStmt:
+	'switch' NEWLINE* '{' NEWLINE* normConnDef (
+		NEWLINE+ normConnDef
+	)* (NEWLINE+ defaultCase)? NEWLINE* '}';
+
+defaultCase: '_' '->' receiverSide;
 
 /* LEXER */
 

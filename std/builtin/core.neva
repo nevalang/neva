@@ -43,3 +43,33 @@ pub def Unwrap<T>(data maybe<T>) (some T, none struct{})
 // Sends result to 'res' outport, or error to 'err' if key not found.
 #extern(get_dict_value)
 pub def Get<T>(dict dict<T>, key T) (res T, err error)
+
+// Pass is used to pass data through. It receives data and sends it to outport.
+// E.g. when you want to trigger a constant from deferred connection
+// and then use it as a sender in fan-in receiver-side:
+// :start -> { 99 -> pass }; [pass, receiver2] -> ...
+pub def Pass<T>(data T) (res T) {
+    :data -> :res
+}
+
+// TODO add err outport
+pub interface ITapHandler<T>(data T) (sig any)
+
+// TODO add err outport
+// Sometimes component needs to receive data, perform some action and pass that
+// data further. However, due to impossibility to reuse same sender twice or
+// more, it leads to need for explicit locks. Deferred connections do not cover
+// this case. Explicit lock make network harder to reason about.
+// `Tap` is a higher-order component, that implements this logic for you.
+// All you need to do, is to provide dependency node, thar receives data and
+// sends a signal when finishes. Signal could be of any type, so no need for
+// dealing with locks manually. Handler can send error, in that case `Tap` will
+// propogate it up to parent node.
+pub def Tap<T>(data T) (res T) {
+    Lock<T>
+    handler ITapHandler<T>
+    ---
+    :data -> [handler, lock:data]
+    handler -> lock:sig
+    lock -> :res
+}

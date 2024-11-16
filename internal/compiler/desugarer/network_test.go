@@ -358,24 +358,24 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// :a -> __add__1:acc
+						// :a -> __add__1:left
 						Normal: &src.NormalConnection{
 							SenderSide: []src.ConnectionSender{
 								{PortAddr: &src.PortAddr{Port: "a"}},
 							},
 							ReceiverSide: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "acc"}},
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
 							},
 						},
 					},
 					{
-						// :b -> __add__1:el
+						// :b -> __add__1:right
 						Normal: &src.NormalConnection{
 							SenderSide: []src.ConnectionSender{
 								{PortAddr: &src.PortAddr{Port: "b"}},
 							},
 							ReceiverSide: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "el"}},
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},
 							},
 						},
 					},
@@ -392,6 +392,131 @@ func TestDesugarNetwork(t *testing.T) {
 									Ref: core.EntityRef{Name: "int"},
 								},
 							},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
+		{
+			// node1:x -> switch {
+			//     node2:y -> node3:z
+			//     node4:y -> node5:z
+			//     _ -> node6:z
+			// }
+			name: "switch_receiver",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{PortAddr: &src.PortAddr{Node: "node1", Port: "x"}},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								Switch: &src.Switch{
+									Cases: []src.NormalConnection{
+										{
+											SenderSide: []src.ConnectionSender{
+												{PortAddr: &src.PortAddr{Node: "node2", Port: "y"}},
+											},
+											ReceiverSide: []src.ConnectionReceiver{
+												{PortAddr: &src.PortAddr{Node: "node3", Port: "z"}},
+											},
+										},
+										{
+											SenderSide: []src.ConnectionSender{
+												{PortAddr: &src.PortAddr{Node: "node4", Port: "y"}},
+											},
+											ReceiverSide: []src.ConnectionReceiver{
+												{PortAddr: &src.PortAddr{Node: "node5", Port: "z"}},
+											},
+										},
+									},
+									Default: []src.ConnectionReceiver{
+										{PortAddr: &src.PortAddr{Node: "node6", Port: "z"}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"node1": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node1"}},
+				"node2": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node2"}},
+				"node3": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node3"}},
+				"node4": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node4"}},
+				"node5": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node5"}},
+				"node6": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node6"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "node1", Port: "x"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "data"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "node2", Port: "y"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "case", Idx: compiler.Pointer(uint8(0))}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "case", Idx: compiler.Pointer(uint8(0))}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "node3", Port: "z"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "node4", Port: "y"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "case", Idx: compiler.Pointer(uint8(1))}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "case", Idx: compiler.Pointer(uint8(1))}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "node5", Port: "z"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__switch__1", Port: "else"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "node6", Port: "z"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__switch__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "Switch",
 						},
 					},
 				},

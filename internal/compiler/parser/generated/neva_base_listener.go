@@ -500,6 +500,12 @@ func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
 // ExitRangeExpr is called when production rangeExpr is exited.
 func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}
 
+// EnterRangeMember is called when production rangeMember is entered.
+func (s *BasenevaListener) EnterRangeMember(ctx *RangeMemberContext) {}
+
+// ExitRangeMember is called when production rangeMember is exited.
+func (s *BasenevaListener) ExitRangeMember(ctx *RangeMemberContext) {}
+
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 
@@ -565,3 +571,15 @@ func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideCo
 
 // ExitMultipleReceiverSide is called when production multipleReceiverSide is exited.
 func (s *BasenevaListener) ExitMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}
+
+// EnterSwitchStmt is called when production switchStmt is entered.
+func (s *BasenevaListener) EnterSwitchStmt(ctx *SwitchStmtContext) {}
+
+// ExitSwitchStmt is called when production switchStmt is exited.
+func (s *BasenevaListener) ExitSwitchStmt(ctx *SwitchStmtContext) {}
+
+// EnterDefaultCase is called when production defaultCase is entered.
+func (s *BasenevaListener) EnterDefaultCase(ctx *DefaultCaseContext) {}
+
+// ExitDefaultCase is called when production defaultCase is exited.
+func (s *BasenevaListener) ExitDefaultCase(ctx *DefaultCaseContext) {}

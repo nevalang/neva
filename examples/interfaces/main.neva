@@ -1,5 +1,7 @@
+import { fmt }
+
 def Main(start) (stop) {
-    WithDep { Println }
+    WithDep { fmt.Println }
     ---
     :start -> withDep -> :stop
 }

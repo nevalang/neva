@@ -21,6 +21,11 @@ func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
+	// errOut, err := rio.Out.Single("err")
+	// if err != nil {
+	// 	return nil, err
+	// }
+
 	return func(ctx context.Context) {
 		for {
 			if _, ok := sigIn.Receive(ctx); !ok {
@@ -29,7 +34,10 @@ func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 			var input string
 			if _, err := fmt.Scanln(&input); err != nil {
-				panic(err)
+				// if !errOut.Send(ctx, errFromErr(err)) {
+				// 	return
+				// }
+				continue
 			}
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(input)) {
