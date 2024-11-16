@@ -76,8 +76,9 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 // --- Filter ---
 
 // IFilterHandler is a dependency for Filter component.
-pub interface IFilterHandler<T>(data T) (res bool)
+// pub interface IFilterHandler<T>(data T) (res bool)
 
+// TODO: https://github.com/nevalang/neva/issues/763
 // Filter is for filtering items in a stream,
 // producing a new stream with only items that passed the filter.
 // 
@@ -90,23 +91,20 @@ pub interface IFilterHandler<T>(data T) (res bool)
 //
 // This is important if you need to manually handle stream metadata,
 // though it's generally better to avoid doing so.
-pub def Filter<T>(data stream<T>) (res stream<T>) {
-    // TODO Filter must be non-blocking!
-    Cond<stream<T>>
-    FanOut<stream<T>>
-    handler IFilterHandler<T>
+// pub def Filter<T>(data stream<T>) (res stream<T>) {
+//     Cond<stream<T>>
+//     FanOut<stream<T>>
+//     handler IFilterHandler<T>
 
-    ---
+//     ---
 
-    :data -> fanOut
+//     :data -> fanOut
     
-    fanOut[0] -> cond:data
-    fanOut[1] -> .data -> handler -> cond:if
+//     fanOut[0] -> cond:data
+//     fanOut[1] -> .data -> handler -> cond:if
     
-    cond:then -> :res
-}
-
-// TODO: Some and Every
+//     cond:then -> :res
+// }
 
 // --- Reduce ---
 

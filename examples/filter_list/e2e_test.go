@@ -11,6 +11,9 @@ import (
 )
 
 func Test(t *testing.T) {
+	// TODO: https://github.com/nevalang/neva/issues/763
+	t.Skip("Filter is not implemented yet")
+
 	err := os.Chdir("..")
 	require.NoError(t, err)
 
