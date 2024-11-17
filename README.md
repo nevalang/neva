@@ -4,7 +4,7 @@
 
 <h1>Dataflow Programming Language</h1>
 
-[Documentation](./docs/)
+[Documentation](./docs/README.md)
 | [Examples](./examples/)
 | [Community](#-community)
 | [Releases](https://github.com/nevalang/neva/releases)

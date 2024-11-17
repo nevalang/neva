@@ -1,9 +1,10 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-	For<int>{Next2Lines}, Wait
+	print For<int>{Next2Lines}
+	wait Wait
 	---
-	:start -> 99..-1 -> for -> wait -> :stop
+	:start -> 99..-1 -> print -> wait -> :stop
 }
 
 def Next2Lines(data int) (sig any) {

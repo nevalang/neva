@@ -1,21 +1,19 @@
-# Nevalang Documentation
+# Documentation
 
-This document provides an overview of Nevalang, its core concepts, and how to use it effectively.
+Welcome to Nevalang documentation!
 
-## About this Document
+## [Tutorial](./tutorial.md)
 
-1. Covers conceptual features, some not yet implemented
-2. Compiles initial language information
-3. Focuses on fundamental aspects rather than specific APIs
+Best place to start.
 
-## Table of Contents
+## [Style Guide](./style_guide.md)
 
-- [About](./about.md)
-- [Program Structure](./program_structure.md)
-- [Types](./types.md)
-- [Constants](./constants.md)
-- [Interfaces](./interfaces.md)
-- [Components](./components.md)
-- [Networks](./networks.md)
-- [Style Guide](./style_guide.md)
-- [Questions and Answers](./qa.md)
+Best practices to follow.
+
+## [The Book](./book/README.md)
+
+A deep dive into the language and how it works. Make sure you've read tutorial!
+
+## [Questions and Answers](./qna.md)
+
+If you curious why things exactly the way they are.

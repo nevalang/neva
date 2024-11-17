@@ -115,19 +115,21 @@ foo[1] -> baz
 foo[3] -> baz
 ```
 
-## Sender Side and Receiver Side
+## Senders and Receivers
 
 Each connection always has a sender and receiver side. There are 3 types of each, leading to 9 possible forms of a single connection. Connections can be infinitely nested, resulting in countless options. This is similar to how control flow languages combine expressions, operators, and statements. Don't be intimidated; we don't need to learn every possible combination.
 
-### Sender Side
+### Senders
 
-There are 5 sender-side forms:
+There are 7 sender-side forms:
 
 1. Port address
 2. Constant reference
 3. Message literal
 4. Binary expression
 5. Ternary expression
+6. Struct selector
+7. Range expression
 
 #### Port Address Sender
 
@@ -282,13 +284,99 @@ Similar to binary, but there are 3 operands instead of 2 and first operand is al
 
 Compiler with ensure that condition operand resolves to `bool` type and that both branch-operands are compatible with the receiver-side.
 
-### Receivers Side
+#### Struct Selector
 
-There are 3 types of receiver side:
+In Nevalang, a struct selector sender allows you to access specific fields within a structured data type directly within the network. This feature is particularly useful when you need to extract and send specific data fields from a struct to other nodes in the network.
+
+**Syntax**
+
+The struct selector is used in conjunction with a chained connection. It uses the dot `.` notation to access fields within a struct. Here's the general form:
+
+```neva
+foo -> .bar.baz -> bax
+```
+
+In this example, `foo` is a sender that outputs a struct. The struct selector `.bar.baz` accesses nested fields within the struct, and the value of `baz` is sent to the receiver `bax`.
+
+Connection that has struct selector as sender must be chained. In this example `.bar.baz -> bax` is chained to `foo ->`.
+
+Compiler will ensure that `foo` is a struct that has `bar` field, which is itself also a struct with a `baz` field, and that type of `baz` field is compatible to what `bax` expects.
+
+**Example**
+
+```neva
+import { fmt }
+
+type Person struct { age int }
+
+def Foo(person Person) (sig any) {
+    fmt.Println
+    ---
+    :person -> .age -> println -> :sig
+}
+```
+
+**`Field` component**
+
+Struct selectors are a syntactic sugar. Under the hood, they are translated into a series of `Field` components that access the specific fields within a struct. Each `Field` component extracts a single field from the struct and passes it along the network.
+
+```neva
+def Field<T>(data struct {}) (res T)
+```
+
+For example, the struct selector `.bar.baz` in the connection `foo -> .bar.baz -> bax` is desugared into:
+
+```neva
+#bind(path1)
+field1 Field1<T1>
+#bind(path2)
+field2 Field2<T2>
+#bind(path3)
+field3 Field3<T3>
+---
+foo -> field1
+field1 -> field2
+field2 -> bax
+```
+
+As you can see `Field` is one of few components that are expected to be used with `#bind` directive so it's much better to just use `.` dot notation instead.
+
+#### Range Expression
+
+A range expression sender allows you to generate a `stream<int>` of messages within a specified range.
+
+```
+sig -> 0..100 -> receiver
+```
+
+In this example we generate stream of 100 integers from `0` up to `99` - that is, range is exclusive.
+
+> Only message literals (integers) are supported at the moment, but in the future we'll allow different kinds (e.g. port-addresses) of senders for more flexible ranging
+
+Negative ranging is also supported
+
+```
+sig -> 100..0 -> receiver
+```
+
+**How it works**
+
+Range expressions is syntax sugar over explicit `Range`:
+
+```neva
+def Range(from int, to int, sig any) (res stream<int>)
+```
+
+`Range` component waits for all 3 inports to fire, then emits a stream of `N` messages. You are free to use range as a normal component, but you should prefer `..` syntax whenever possible.
+
+### Receivers
+
+There are 4 types of receivers:
 
 1. Port-Address
 2. Chained Connection
 3. Deferred Connection
+4. Switch
 
 #### Port Address Receiver
 
@@ -421,6 +509,90 @@ a -> {b -> c -> d}
 a -> b -> {c -> d -> e}
 a -> {b -> {c -> d -> e}}
 ```
+
+#### Switch
+
+Another type of sender was added to simplify the use of the `Switch` component. This is necessary when you need to trigger different branches of the network based on the value of an incoming connection. The syntax is as follows:
+
+```neva
+s -> switch {
+    c1 -> r1
+    c1 -> r2
+    c1 -> r3
+    _ -> r4
+}
+```
+
+Here `s` means sender, which could be any sender. `c1, c2, c3` are "case senders" - they are also senders, and any senders will work as long as they are type-safe. Finally, `_` is the default sender. The default branch is required, making each switch expression exhaustive. The compiler ensures that the incoming `s ->` and all `c` and `_` senders are compatible with their corresponding receiver parts.
+
+If one branch is triggered, other branches will not be (until the next message, if the corresponding pattern fires) - one way to think about this is that every branch has a "break" (and there's no way to "fallthrough").
+
+> I don't like this explanation because it's control-flow centric, while Nevalang's switch is pure dataflow, but it makes sense as an analogy.
+
+The switch is syntactic sugar for the `Switch` component:
+
+```neva
+def Switch<T>(data T, [case] T) ([case] T, else T)
+```
+
+> You are allowed to use `Switch` as a component, if you need to, but prefer statement syntax if possible
+
+To better understand the `switch` statement, let's look at a few examples:
+
+```neva
+// simple
+sender -> switch {
+    true -> receiver1
+    false -> receiver2
+    _ -> receiver3
+}
+
+// multiple senders, multuple receivers
+sender -> switch {
+    [a, b] -> [receiver1, receiver2]
+    c -> [receiver3, receiver4]
+    _ -> receiver5
+}
+
+// with binary expression senders
+sender -> switch {
+    (a + b) -> receiver1
+    (c * d) -> receiver2
+    _ -> receiver3
+}
+
+// nested
+sender -> switch {
+    true -> switch {
+        1 -> receiver1
+        2 -> receiver2
+        _ -> receiver3
+    }
+    false -> receiver4
+    _ -> receiver5
+}
+
+// as chained connection
+sender -> .field -> switch {
+    true -> receiver1
+    false -> receiver2
+    _ -> receiver3
+}
+```
+
+**Multuple senders/receivers**
+
+In this example
+
+```neva
+sender -> switch {
+    [a, b] -> [receiver1, receiver2]
+    c -> [receiver3, receiver4]
+    _ -> receiver5
+}
+```
+
+If the `sender` message is equal to _either_ `a` or `b`, it will be sent to _both_ `receiver1` and `receiver2`. You can also have multiple senders and one receiver, or one sender and multiple receivers.
 
 ## Fan-in and Fan-out
 
