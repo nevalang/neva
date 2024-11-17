@@ -6,7 +6,7 @@
 
 [Documentation](./docs/)
 | [Examples](./examples/)
-| [Community](#community)
+| [Community](#-community)
 | [Releases](https://github.com/nevalang/neva/releases)
 | [Contributing](./CONTRIBUTING.md)
 | [Architecture](./ARCHITECTURE.md)
@@ -111,7 +111,6 @@ Join our community and help shape the future of programming:
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
-- [Telegram channel](https://t.me/+H1kRClL8ppI1MWJi)
 
 Also please check our [CoC](./CODE_OF_CONDUCT.md).
 
