@@ -6,7 +6,7 @@
 
 [Documentation](./docs/)
 | [Examples](./examples/)
-| [Community](#community)
+| [Community](#-community)
 | [Releases](https://github.com/nevalang/neva/releases)
 | [Contributing](./CONTRIBUTING.md)
 | [Architecture](./ARCHITECTURE.md)
@@ -76,14 +76,14 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see
 ```neva
 import { fmt }
 
-def Main(start) (stop) {
-	fmt.Println
+def Main(start any) (stop any) {
+	println fmt.Println
 	---
 	:start -> { 'Hello, World!' -> println -> :stop }
 }
 ```
 
-The `import { fmt }` statement imports the standard library's `fmt` package which provides common formatting and printing functionality. The `Main` component has `start` inport and `stop` outport, with a `println` node (instance of stdlib's `fmt.Println`). The network after `---` shows: on `start` message, `"Hello, World!"` is sent to `println`, then program terminates via `stop` signal.
+The `import { fmt }` statement imports the standard library's `fmt` package which provides common formatting and printing functionality. The `Main` component has `start` inport and `stop` outport of type `any`, with a `println` node (instance of `fmt.Println`). The network after `---` shows: on `:start` message, `"Hello, World!"` is sent to `println`, then program terminates via `:stop` signal.
 
 ### What's Next?
 
@@ -111,7 +111,6 @@ Join our community and help shape the future of programming:
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
-- [Telegram channel](https://t.me/+H1kRClL8ppI1MWJi)
 
 Also please check our [CoC](./CODE_OF_CONDUCT.md).
 
