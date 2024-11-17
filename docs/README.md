@@ -1,4 +1,4 @@
-# Nevalang Documentation
+# Documentation
 
 This document provides an overview of Nevalang, its core concepts, and how to use it effectively.
 

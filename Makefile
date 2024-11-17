@@ -14,10 +14,17 @@ antlr:
 	@cd internal/compiler/parser && \
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
 
-# generate ts types from go src pkg
-.PHONY: tygo
-tygo:
-	@tygo generate
+# run lint
+.PHONY: lint
+lint:
+	golangci-lint run ./...
+
+# check potential nil-derefs
+.PHONY: nilaway
+nilaway:
+	nilaway \
+		-include-pkgs="github.com/nevalang/neva/internal" \
+		./...
 
 # === Release Build ===
 
@@ -114,3 +121,4 @@ build-lsp-windows-amd64:
 .PHONY: build-lsp-windows-arm64
 build-lsp-windows-arm64:
 	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o neva-lsp-windows-arm64.exe ./cmd/lsp
+
