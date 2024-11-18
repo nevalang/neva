@@ -13,19 +13,6 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Constants](#constants)
    - [Modules and Packages](#modules-and-packages)
    - [Imports and Visibility](#imports-and-visibility)
-   <!-- 3. [Dataflow](#dataflow) -->
-
-````shell
-# will name output file "my_awesome_binary"
-neva build my_awesome_project/src --output=my_awesome_binary
-
-# will generate go code instead of machine code
-neva build my_awesome_project/src --target=go
-
-# will output my_awesome_wasm.wasm
-neva build my_awesome_project/src --target=wasm --output=my_awesome_wasm
-``` -->
-<!-- Components part 2 (Native vs Normal) -->
 
 ## Welcome
 
@@ -47,7 +34,7 @@ For Mac OS and Linux:
 
 ```shell
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
-````
+```
 
 If your device is connected to a chinese network:
 
@@ -550,3 +537,16 @@ The `{ ... }` syntax creates a "deferred" connection. Since all input ports must
 Without deferral, the program would be non-deterministic - the string might be sent multiple times before the program terminates. Deferred connections defer receiving rather than sending, ensuring proper synchronization.
 
 This section introduces key dataflow patterns while maintaining the tutorial's focus on practical examples. It builds on previous concepts and prepares readers for more advanced topics in the book. -->
+
+<!-- === -->
+
+<!-- ```shell
+# will name output file "my_awesome_binary"
+neva build my_awesome_project/src --output=my_awesome_binary
+
+# will generate go code instead of machine code
+neva build my_awesome_project/src --target=go
+
+# will output my_awesome_wasm.wasm
+neva build my_awesome_project/src --target=wasm --output=my_awesome_wasm
+``` -->
