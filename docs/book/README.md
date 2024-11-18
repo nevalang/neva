@@ -15,4 +15,3 @@ This book is designed to be read sequentially, as each chapter builds upon conce
 - [Interfaces](./interfaces.md) - Component signatures and dependency injection
 - [Components](./components.md) - Core computational units in Nevalang
 - [Networks](./networks.md) - Understanding message passing and connections
-- [Style Guide](./style_guide.md) - Best practices for writing clean Nevalang code

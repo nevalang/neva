@@ -23,7 +23,7 @@ Most general-purpose languages are controlflow-based, while dataflow languages a
 
 Nevalang introduces _implicit parallelism_, automating concurrency control like garbage collection automated memory management. Key features:
 
-- Components exchange messages via buffered queues
+- Components exchange messages via queues
 - Blocking limited to specific parts, allowing others to continue
 - First-class stream processing for efficient data handling
 - No low-level concurrency primitives, enhancing safety

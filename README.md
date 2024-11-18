@@ -77,7 +77,7 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see
 import { fmt }
 
 def Main(start any) (stop any) {
-	println fmt.Println
+	println fmt.Println<any>
 	---
 	:start -> { 'Hello, World!' -> println -> :stop }
 }
