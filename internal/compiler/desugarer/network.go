@@ -670,26 +670,18 @@ func (d Desugarer) desugarSingleSender(
 
 	if sender.Const != nil {
 		if sender.Const.Value.Ref != nil {
-			result, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodes, scope)
+			portAddr, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodes, scope)
 			if err != nil {
-				return desugarSenderResult{}, compiler.Error{
-					Location: &scope.Location,
-					Meta:     &sender.Meta,
-				}.Wrap(err)
+				return desugarSenderResult{}, err
 			}
 
 			normConn = src.NormalConnection{
 				SenderSide: []src.ConnectionSender{
-					{
-						PortAddr: &result,
-						Meta:     sender.Meta,
-					},
+					{PortAddr: &portAddr, Meta: sender.Meta},
 				},
 				ReceiverSide: normConn.ReceiverSide,
 			}
-		}
-
-		if sender.Const.Value.Message != nil {
+		} else if sender.Const.Value.Message != nil {
 			constNodePort, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
 			if err != nil {
 				return desugarSenderResult{}, err
@@ -697,10 +689,7 @@ func (d Desugarer) desugarSingleSender(
 
 			normConn = src.NormalConnection{
 				SenderSide: []src.ConnectionSender{
-					{
-						PortAddr: &constNodePort,
-						Meta:     sender.Meta,
-					},
+					{PortAddr: &constNodePort, Meta: sender.Meta},
 				},
 				ReceiverSide: normConn.ReceiverSide,
 			}
