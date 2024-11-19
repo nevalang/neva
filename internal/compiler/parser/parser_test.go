@@ -215,6 +215,66 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	require.Equal(t, "bar", chainReceiver.Port)
 }
 
+func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "const ref in chain",
+			text: `
+				const msg string = 'hello'
+				def C1() () {
+					:start -> $msg -> :stop
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "in", conn.SenderSide[0].PortAddr.Node)
+				require.Equal(t, "start", conn.SenderSide[0].PortAddr.Port)
+
+				chain := conn.ReceiverSide[0].ChainedConnection.Normal
+				require.NotNil(t, chain.SenderSide[0].Const)
+				require.Equal(t, "msg", chain.SenderSide[0].Const.Value.Ref.Name)
+				require.Equal(t, "out", chain.ReceiverSide[0].PortAddr.Node)
+				require.Equal(t, "stop", chain.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+		{
+			name: "message literal in chain",
+			text: `
+				def C1() () {
+					:start -> 'hello' -> :stop
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				require.Equal(t, "in", conn.SenderSide[0].PortAddr.Node)
+				require.Equal(t, "start", conn.SenderSide[0].PortAddr.Port)
+
+				chain := conn.ReceiverSide[0].ChainedConnection.Normal
+				require.NotNil(t, chain.SenderSide[0].Const)
+				require.Equal(t, "hello", *chain.SenderSide[0].Const.Value.Message.Str)
+				require.Equal(t, "out", chain.ReceiverSide[0].PortAddr.Node)
+				require.Equal(t, "stop", chain.ReceiverSide[0].PortAddr.Port)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			got, err := p.parseFile([]byte(tt.text))
+			require.Nil(t, err)
+
+			net := got.Entities["C1"].Component.Net
+			tt.check(t, net)
+		})
+	}
+}
+
 func TestParser_ParseFile_Comments(t *testing.T) {
 	text := []byte(`
 	// comment
