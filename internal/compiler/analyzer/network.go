@@ -328,7 +328,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 		// all incoming senders must be subtypes of each option-sender
 		// (both incoming senders and switch's option-senders might be slice)
 		for _, switchSender := range switchConn.SenderSide {
-			_, switchSenderType, _, err := a.getSenderSideType(
+			_, switchSenderType, _, err := a.getResolvedSenderType(
 				switchSender,
 				iface,
 				nodes,
@@ -590,7 +590,7 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Range != nil && prevChainLink == nil {
+	if sender.Range != nil && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
 			Message:  "range expression cannot be used in non-chained connection",
 			Location: &scope.Location,
@@ -598,15 +598,15 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Const != nil && len(prevChainLink) != 0 {
+	if sender.Const != nil && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
-			Message:  "constant cannot be used in chained connection",
+			Message:  "constant cannot be used in non-chained connection",
 			Location: &scope.Location,
 			Meta:     &sender.Meta,
 		}
 	}
 
-	if len(sender.StructSelector) > 0 && prevChainLink == nil {
+	if len(sender.StructSelector) > 0 && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
 			Message:  "struct selectors cannot be used in non-chained connection",
 			Location: &scope.Location,
@@ -809,7 +809,7 @@ func (a Analyzer) analyzeSender(
 		return &sender, &resultType, nil
 	}
 
-	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getSenderSideType(
+	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getResolvedSenderType(
 		sender,
 		iface,
 		nodes,
@@ -1303,7 +1303,7 @@ func (a Analyzer) getResolvedPortType(
 	return portAddr, resolvedPortType, port.IsArray, nil
 }
 
-func (a Analyzer) getSenderSideType(
+func (a Analyzer) getResolvedSenderType(
 	senderSide src.ConnectionSender,
 	iface src.Interface,
 	nodes map[string]src.Node,
@@ -1337,7 +1337,7 @@ func (a Analyzer) getSenderSideType(
 	}
 
 	if len(senderSide.StructSelector) > 0 {
-		_, chainLinkType, _, err := a.getSenderSideType(
+		_, chainLinkType, _, err := a.getResolvedSenderType(
 			prevChainLink[0],
 			iface,
 			nodes,
@@ -1636,6 +1636,14 @@ func (a Analyzer) getChainHeadType(
 	}
 
 	if chainHead.Range != nil {
+		return ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref: core.EntityRef{Name: "any"}, // :sig
+			},
+		}, nil
+	}
+
+	if chainHead.Const != nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: core.EntityRef{Name: "any"}, // :sig
