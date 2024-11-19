@@ -598,14 +598,6 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
-	if sender.Const != nil && len(prevChainLink) == 0 {
-		return nil, nil, &compiler.Error{
-			Message:  "constant cannot be used in non-chained connection",
-			Location: &scope.Location,
-			Meta:     &sender.Meta,
-		}
-	}
-
 	if len(sender.StructSelector) > 0 && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
 			Message:  "struct selectors cannot be used in non-chained connection",
