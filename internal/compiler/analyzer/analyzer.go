@@ -44,10 +44,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		}
 	}
 
-	scope := src.Scope{
-		Location: location,
-		Build:    build,
-	}
+	scope := src.NewScope(build, location)
 
 	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err != nil {
 		return src.Build{}, compiler.Error{Location: &location}.Wrap(err)
@@ -108,13 +105,10 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 	maps.Copy(pkgsCopy, mod.Packages)
 
 	for pkgName, pkg := range pkgsCopy {
-		scope := src.Scope{
-			Location: src.Location{
-				Module:  modRef,
-				Package: pkgName,
-			},
-			Build: build,
-		}
+		scope := src.NewScope(build, src.Location{
+			Module:  modRef,
+			Package: pkgName,
+		})
 
 		resolvedPkg, err := a.analyzePkg(pkg, scope)
 		if err != nil {
@@ -135,7 +129,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	if len(pkg) == 0 {
 		return nil, &compiler.Error{
 			Message:  "package must contain at least one file",
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 
@@ -150,15 +144,15 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 
 	for result := range pkg.Entities() {
 		relocatedScope := scope.Relocate(src.Location{
-			Module:   scope.Location.Module,
-			Package:  scope.Location.Package,
+			Module:   scope.Location().Module,
+			Package:  scope.Location().Package,
 			Filename: result.FileName,
 		})
 
 		analyzedEntity, err := a.analyzeEntity(result.Entity, relocatedScope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: &relocatedScope.Location,
+				Location: relocatedScope.Location(),
 				Meta:     result.Entity.Meta(),
 			}.Wrap(err)
 		}
@@ -175,7 +169,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		Kind:     entity.Kind,
 	}
 
-	isStd := scope.Location.Module.Path == "std"
+	isStd := scope.Location().Module.Path == "std"
 
 	switch entity.Kind {
 	case src.TypeEntity:
@@ -183,7 +177,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			meta := entity.Type.Meta.(core.Meta) //nolint:forcetypeassert
 			return src.Entity{}, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &meta,
 			}.Wrap(err)
 		}
@@ -193,7 +187,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			meta := entity.Const.Meta
 			return src.Entity{}, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &meta,
 			}.Wrap(err)
 		}
@@ -206,7 +200,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &meta,
 			}.Wrap(err)
 		}
@@ -215,7 +209,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &entity.Component.Meta,
 			}.Wrap(err)
 		}
@@ -223,7 +217,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	default:
 		return src.Entity{}, &compiler.Error{
 			Message:  fmt.Sprintf("unknown entity kind: %v", entity.Kind),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     entity.Meta(),
 		}
 	}

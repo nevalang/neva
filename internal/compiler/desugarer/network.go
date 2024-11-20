@@ -18,10 +18,6 @@ type handleNetworkResult struct {
 	nodesPortsUsed       nodeOutportsUsed
 }
 
-type Scope interface {
-	Entity(ref core.EntityRef) (src.Entity, bool, error)
-}
-
 func (d Desugarer) desugarNetwork(
 	iface src.Interface,
 	net []src.Connection,

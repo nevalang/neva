@@ -17,7 +17,7 @@ func getIRMsgBySrcRef(
 		if err != nil {
 			return nil, &compiler.Error{
 				Message:  err.Error(),
-				Location: &scope.Location,
+				Location: scope.Location(),
 			}
 		}
 		return getIRMsgBySrcRef(entity.Const.Value, scope.Relocate(location), typeExpr)
@@ -101,6 +101,6 @@ func getIRMsgBySrcRef(
 
 	return nil, &compiler.Error{
 		Message:  "unknown msg type",
-		Location: &scope.Location,
+		Location: scope.Location(),
 	}
 }

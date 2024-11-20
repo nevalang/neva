@@ -26,7 +26,7 @@ func (a Analyzer) analyzeInterface(
 	if err != nil {
 		return src.Interface{}, compiler.Error{
 			Message:  ErrInterfaceTypeParams.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &iface.Meta,
 		}.Wrap(err)
 	}
@@ -35,7 +35,7 @@ func (a Analyzer) analyzeInterface(
 	if err != nil {
 		return src.Interface{}, compiler.Error{
 			Message:  ErrInterfaceTypeParams.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &iface.Meta,
 		}.Wrap(err)
 	}
@@ -60,14 +60,14 @@ func (a Analyzer) analyzeIO(
 	if !params.allowEmptyInports && len(io.In) == 0 {
 		return src.IO{}, &compiler.Error{
 			Message:  "Interface must have inports",
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 
 	if !params.allowEmptyOutports && len(io.Out) == 0 {
 		return src.IO{}, &compiler.Error{
 			Message:  "Interface must have outports",
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 
@@ -75,7 +75,7 @@ func (a Analyzer) analyzeIO(
 	if err != nil {
 		return src.IO{}, compiler.Error{
 			Message:  "Invalid inports",
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}.Wrap(err)
 	}
 
@@ -83,7 +83,7 @@ func (a Analyzer) analyzeIO(
 	if err != nil {
 		return src.IO{}, compiler.Error{
 			Message:  "Invalid outports",
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}.Wrap(err)
 	}
 
@@ -103,7 +103,7 @@ func (a Analyzer) analyzePorts(
 		resolvedPort, err := a.analyzePort(params, port, scope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &port.Meta,
 			}.Wrap(err)
 		}
@@ -123,7 +123,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 	)
 	if err != nil {
 		return src.Port{}, compiler.Error{
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &port.Meta,
 		}.Wrap(err)
 	}

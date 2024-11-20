@@ -16,7 +16,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
 			Message:  "Type definition must have non-empty body",
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &meta,
 		}
 	}
@@ -28,7 +28,7 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Def{}, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &meta,
 		}
 	}
@@ -45,7 +45,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *comp
 		meta := expr.Meta.(core.Meta) //nolint:forcetypeassert
 		return ts.Expr{}, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &meta,
 		}
 	}
@@ -63,7 +63,7 @@ func (a Analyzer) analyzeTypeParams(
 	if err != nil {
 		return nil, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 	return resolvedParams, nil

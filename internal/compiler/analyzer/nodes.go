@@ -40,7 +40,7 @@ func (a Analyzer) analyzeNodes(
 		)
 		if err != nil {
 			return nil, nil, false, compiler.Error{
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &node.Meta,
 			}.Wrap(err)
 		}
@@ -63,7 +63,7 @@ func (a Analyzer) analyzeNode(
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &node.Meta,
 		}
 	}
@@ -133,14 +133,14 @@ func (a Analyzer) analyzeNode(
 		if _, ok := compIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Message:  "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Message:  "Error-guard operator '?' requires node to have ':err' outport to propagate errors",
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &node.Meta,
 			}
 		}
@@ -166,7 +166,7 @@ func (a Analyzer) analyzeNode(
 	); err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &node.Meta,
 		}
 	}

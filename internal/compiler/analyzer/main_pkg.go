@@ -11,7 +11,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 	mainPkg := mod.Packages[mainPkgName]
 
 	location := src.Location{
-		Module:  scope.Location.Module,
+		Module:  scope.Location().Module,
 		Package: mainPkgName,
 	}
 
@@ -55,7 +55,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 				Message: fmt.Sprintf("Unexpected public entity in main package: %v", result.EntityName),
 				Meta:    result.Entity.Meta(),
 				Location: &src.Location{
-					Module:   scope.Location.Module,
+					Module:   scope.Location().Module,
 					Package:  mainPkgName,
 					Filename: result.FileName,
 				},

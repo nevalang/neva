@@ -5,6 +5,7 @@ import (
 	"maps"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/pkg"
 )
 
@@ -57,13 +58,11 @@ func (d Desugarer) desugarModule(
 	desugaredPkgs := make(map[string]src.Package, len(mod.Packages))
 
 	for pkgName, pkg := range mod.Packages {
-		scope := src.Scope{
-			Build: build, // it's important to patch build before desugar package so we can resolve references to std
-			Location: src.Location{
-				Module:  modRef,
-				Package: pkgName,
-			},
-		}
+		// it's important to patch build before desugar package so we can resolve references to std
+		scope := src.NewScope(build, src.Location{
+			Module:  modRef,
+			Package: pkgName,
+		})
 
 		desugaredPkg, err := d.desugarPkg(pkg, scope)
 		if err != nil {
@@ -79,13 +78,20 @@ func (d Desugarer) desugarModule(
 	}, nil
 }
 
-func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, error) {
+// Scope interface allows to use mocks in unit tests for private methods
+type Scope interface {
+	Entity(ref core.EntityRef) (src.Entity, src.Location, error)
+	Relocate(location src.Location) src.Scope
+	Location() *src.Location
+}
+
+func (d Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error) {
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
 		newScope := scope.Relocate(src.Location{
-			Module:   scope.Location.Module,
-			Package:  scope.Location.Package,
+			Module:   scope.Location().Module,
+			Package:  scope.Location().Package,
 			Filename: fileName,
 		})
 

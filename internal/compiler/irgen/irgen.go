@@ -33,14 +33,11 @@ func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
 ) (*ir.Program, *compiler.Error) {
-	scope := src.Scope{
-		Build: build,
-		Location: src.Location{
-			Module:   build.EntryModRef,
-			Package:  mainPkgName,
-			Filename: "",
-		},
-	}
+	scope := src.NewScope(build, src.Location{
+		Module:   build.EntryModRef,
+		Package:  mainPkgName,
+		Filename: "",
+	})
 
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{}, // Changed to 1-1 mapping
@@ -67,7 +64,7 @@ func (g Generator) Generate(
 
 	if err := g.processNode(rootNodeCtx, scope, result); err != nil {
 		return nil, compiler.Error{
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}.Wrap(err)
 	}
 
@@ -90,7 +87,7 @@ func (g Generator) processNode(
 	if err != nil {
 		return &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 
@@ -113,7 +110,7 @@ func (g Generator) processNode(
 		if err != nil {
 			return &compiler.Error{
 				Message:  err.Error(),
-				Location: &scope.Location,
+				Location: scope.Location(),
 			}
 		}
 		result.Funcs = append(result.Funcs, ir.FuncCall{
@@ -140,7 +137,7 @@ func (g Generator) processNode(
 	if err != nil {
 		return &compiler.Error{
 			Message:  err.Error(),
-			Location: &newScope.Location,
+			Location: newScope.Location(),
 		}
 	}
 
