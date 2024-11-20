@@ -9,7 +9,41 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-type Desugarer struct{}
+type Desugarer struct {
+	virtualSelectorsCount uint64
+	ternaryCounter        uint64
+	switchCounter         uint64
+	virtualLocksCounter   uint64
+	virtualEmittersCount  uint64
+	virtualConstCount     uint64
+	virtualTriggersCount  uint64
+	fanOutCounter         uint64
+	fanInCounter          uint64
+	rangeCounter          uint64
+	// Arithmetic
+	addCounter uint64
+	subCounter uint64
+	mulCounter uint64
+	divCounter uint64
+	modCounter uint64
+	powCounter uint64
+	// Comparison
+	eqCounter uint64
+	neCounter uint64
+	gtCounter uint64
+	ltCounter uint64
+	geCounter uint64
+	leCounter uint64
+	// Logical
+	andCounter uint64
+	orCounter  uint64
+	// Bitwise
+	bitAndCounter uint64
+	bitOrCounter  uint64
+	bitXorCounter uint64
+	bitLshCounter uint64
+	bitRshCounter uint64
+}
 
 func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))

@@ -7,6 +7,9 @@
 #extern(new)
 pub def New<T>() (msg T)
 
+#extern(new_v2)
+pub def NewV2<T>(sig any) (msg T)
+
 // Del receives and discards the message.
 // You should avoid using it because compiler will insert it automatically
 // for every unused outport.

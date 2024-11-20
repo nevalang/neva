@@ -18,8 +18,6 @@ var selectorNodeRef = core.EntityRef{
 	Name: "Field",
 }
 
-var virtualSelectorsCount uint64
-
 // desugarStructSelectors doesn't generate incoming connections for field node,
 // it's responsibility of desugarChainConnection.
 func (d Desugarer) desugarStructSelectors(
@@ -30,11 +28,11 @@ func (d Desugarer) desugarStructSelectors(
 	desugarStructSelectorsResult,
 	error,
 ) {
-	virtualConstCount++
-	constName := fmt.Sprintf("__const__%d", virtualConstCount)
+	d.virtualConstCount++
+	constName := fmt.Sprintf("__const__%d", d.virtualConstCount)
 
-	virtualSelectorsCount++
-	selectorNodeName := fmt.Sprintf("__field__%d", virtualSelectorsCount)
+	d.virtualSelectorsCount++
+	selectorNodeName := fmt.Sprintf("__field__%d", d.virtualSelectorsCount)
 
 	selectorNode := src.Node{
 		Directives: map[src.Directive][]string{

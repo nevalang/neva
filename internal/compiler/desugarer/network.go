@@ -206,7 +206,6 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
-var switchCounter uint64
 
 func (d Desugarer) desugarSingleReceiver(
 	iface src.Interface,
@@ -274,8 +273,8 @@ func (d Desugarer) desugarSingleReceiver(
 	}
 
 	if receiver.Switch != nil {
-		switchCounter++
-		switchNodeName := fmt.Sprintf("__switch__%d", switchCounter)
+		d.switchCounter++
+		switchNodeName := fmt.Sprintf("__switch__%d", d.switchCounter)
 
 		nodesToInsert[switchNodeName] = src.Node{
 			EntityRef: core.EntityRef{
@@ -407,7 +406,9 @@ func (d Desugarer) desugarChainedConnection(
 	var chainHeadPort string
 	switch {
 	case chainHead.Range != nil:
-		chainHeadPort = "sig"
+		chainHeadPort = "sig" // Range has sig inport
+	case chainHead.Const != nil:
+		chainHeadPort = "sig" // NewV2 has sig inport
 	case len(chainHead.StructSelector) != 0:
 		chainHeadPort = "data"
 	case chainHead.PortAddr != nil:
@@ -421,6 +422,45 @@ func (d Desugarer) desugarChainedConnection(
 		}
 	default:
 		panic("unexpected chain head type")
+	}
+
+	if chainHead.Const != nil {
+		d.virtualTriggersCount++
+		triggerNodeName := fmt.Sprintf("__newv2__%d", d.virtualTriggersCount)
+
+		if chainHead.Const.Value.Ref != nil {
+			constTypeExpr, err := d.getConstTypeByRef(*chainHead.Const.Value.Ref, scope)
+			if err != nil {
+				return desugarConnectionResult{}, fmt.Errorf("get const type by ref: %w", err)
+			}
+
+			nodesToInsert[triggerNodeName] = src.Node{
+				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+				TypeArgs:  []ts.Expr{constTypeExpr},
+				Directives: map[src.Directive][]string{
+					compiler.BindDirective: {chainHead.Const.Value.Ref.String()},
+				},
+			}
+		} else {
+			d.virtualConstCount++
+			virtualConstName := fmt.Sprintf("__const__%d", d.virtualConstCount)
+			constsToInsert[virtualConstName] = *chainHead.Const
+
+			nodesToInsert[triggerNodeName] = src.Node{
+				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+				TypeArgs:  []ts.Expr{chainHead.Const.TypeExpr},
+				Directives: map[src.Directive][]string{
+					compiler.BindDirective: {virtualConstName},
+				},
+			}
+		}
+
+		chainedConn.Normal.SenderSide = []src.ConnectionSender{
+			{PortAddr: &src.PortAddr{
+				Node: triggerNodeName,
+				Port: "msg",
+			}},
+		}
 	}
 
 	desugarChainResult, err := d.desugarConnection(
@@ -476,7 +516,6 @@ type desugarDeferredConnectionsResult struct {
 	insert  []src.Connection
 }
 
-var virtualLocksCounter uint64
 
 func (d Desugarer) desugarDeferredConnection(
 	iface src.Interface,
@@ -506,8 +545,8 @@ func (d Desugarer) desugarDeferredConnection(
 	connsToInsert := desugarDeferredConnResult.insert
 
 	// 1) create lock node
-	virtualLocksCounter++
-	lockNodeName := fmt.Sprintf("__lock__%d", virtualLocksCounter)
+	d.virtualLocksCounter++
+	lockNodeName := fmt.Sprintf("__lock__%d", d.virtualLocksCounter)
 	nodesToInsert[lockNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
@@ -740,24 +779,21 @@ var newComponentRef = core.EntityRef{
 	Name: "New",
 }
 
-var (
-	virtualEmittersCount uint64
-	virtualConstCount    uint64
-)
+
 
 func (d Desugarer) handleLiteralSender(
 	constant src.Const,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (src.PortAddr, error) {
-	virtualConstCount++
-	constName := fmt.Sprintf("__const__%d", virtualConstCount)
+	d.virtualConstCount++
+	constName := fmt.Sprintf("__const__%d", d.virtualConstCount)
 
 	// we can't call d.handleConstRefSender()
 	// because our virtual const isn't in the scope
 
-	virtualEmittersCount++
-	emitterNodeName := fmt.Sprintf("__new__%d", virtualEmittersCount)
+	d.virtualEmittersCount++
+	emitterNodeName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
 
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
@@ -788,8 +824,8 @@ func (d Desugarer) handleConstRefSender(
 		return src.PortAddr{}, fmt.Errorf("get const type by ref: %w", err)
 	}
 
-	virtualEmittersCount++
-	virtualEmitterName := fmt.Sprintf("__new__%d", virtualEmittersCount)
+	d.virtualEmittersCount++
+	virtualEmitterName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
 
 	emitterNode := src.Node{
 		// don't forget to bind
@@ -884,7 +920,6 @@ type desugarFanOutResult struct {
 	insert  []src.Connection // fanOut sender -> original receivers
 }
 
-var fanOutCounter uint64
 
 func (d Desugarer) desugarFanOut(
 	iface src.Interface,
@@ -895,8 +930,8 @@ func (d Desugarer) desugarFanOut(
 	scope Scope,
 	nodes map[string]src.Node,
 ) (desugarFanOutResult, error) {
-	fanOutCounter++
-	nodeName := fmt.Sprintf("__fanOut__%d", fanOutCounter)
+	d.fanOutCounter++
+	nodeName := fmt.Sprintf("__fanOut__%d", d.fanOutCounter)
 
 	nodesToInsert[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
@@ -957,8 +992,6 @@ func (d Desugarer) desugarFanOut(
 	}, nil
 }
 
-// Add a new atomic counter for range nodes
-var rangeCounter uint64
 
 // Add a new function to handle range senders
 type handleRangeSenderResult struct {
@@ -975,11 +1008,11 @@ func (d Desugarer) desugarRangeSender(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (handleRangeSenderResult, error) {
-	rangeCounter++
+	d.rangeCounter++
 
-	rangeNodeName := fmt.Sprintf("__range%d__", rangeCounter)
-	fromConstName := fmt.Sprintf("__range%d_from__", rangeCounter)
-	toConstName := fmt.Sprintf("__range%d_to__", rangeCounter)
+	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
+	fromConstName := fmt.Sprintf("__range%d_from__", d.rangeCounter)
+	toConstName := fmt.Sprintf("__range%d_to__", d.rangeCounter)
 
 	constsToInsert[fromConstName] = src.Const{
 		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
@@ -1054,7 +1087,6 @@ func (d Desugarer) desugarRangeSender(
 	}, nil
 }
 
-var fanInCounter uint64
 
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
@@ -1068,8 +1100,8 @@ func (d Desugarer) desugarFanIn(
 	nodes map[string]src.Node,
 ) ([]src.Connection, error) {
 	// 1. insert unique fan-in node
-	fanInCounter++
-	fanInNodeName := fmt.Sprintf("__fanIn__%d", fanInCounter)
+	d.fanInCounter++
+	fanInNodeName := fmt.Sprintf("__fanIn__%d", d.fanInCounter)
 	nodesToInsert[fanInNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
@@ -1128,8 +1160,6 @@ func (d Desugarer) desugarFanIn(
 	return desugaredConnections, nil
 }
 
-// Add this variable at the package level
-var ternaryCounter uint64
 
 type handleTernarySenderResult struct {
 	replace src.Connection
@@ -1152,8 +1182,8 @@ func (d Desugarer) desugarTernarySender(
 	scope Scope,
 	nodes map[string]src.Node,
 ) (handleTernarySenderResult, error) {
-	ternaryCounter++
-	ternaryNodeName := fmt.Sprintf("__ternary__%d", ternaryCounter)
+	d.ternaryCounter++
+	ternaryNodeName := fmt.Sprintf("__ternary__%d", d.ternaryCounter)
 
 	nodesToInsert[ternaryNodeName] = src.Node{
 		EntityRef: core.EntityRef{
@@ -1248,31 +1278,6 @@ type handleBinarySenderResult struct {
 	insert  []src.Connection
 }
 
-var (
-	// Arithmetic
-	addCounter uint64
-	subCounter uint64
-	mulCounter uint64
-	divCounter uint64
-	modCounter uint64
-	powCounter uint64
-	// Comparison
-	eqCounter uint64
-	neCounter uint64
-	gtCounter uint64
-	ltCounter uint64
-	geCounter uint64
-	leCounter uint64
-	// Logical
-	andCounter uint64
-	orCounter  uint64
-	// Bitwise
-	bitAndCounter uint64
-	bitOrCounter  uint64
-	bitXorCounter uint64
-	bitLshCounter uint64
-	bitRshCounter uint64
-)
 
 func (d Desugarer) desugarBinarySender(
 	iface src.Interface,
@@ -1292,83 +1297,83 @@ func (d Desugarer) desugarBinarySender(
 	switch binary.Operator {
 	// Arithmetic
 	case src.AddOp:
-		addCounter++
-		opNode = fmt.Sprintf("__add__%d", addCounter)
+		d.addCounter++
+		opNode = fmt.Sprintf("__add__%d", d.addCounter)
 		opComponent = "Add"
 	case src.SubOp:
-		subCounter++
-		opNode = fmt.Sprintf("__sub__%d", subCounter)
+		d.subCounter++
+		opNode = fmt.Sprintf("__sub__%d", d.subCounter)
 		opComponent = "Sub"
 	case src.MulOp:
-		mulCounter++
-		opNode = fmt.Sprintf("__mul__%d", mulCounter)
+		d.mulCounter++
+		opNode = fmt.Sprintf("__mul__%d", d.mulCounter)
 		opComponent = "Mul"
 	case src.DivOp:
-		divCounter++
-		opNode = fmt.Sprintf("__div__%d", divCounter)
+		d.divCounter++
+		opNode = fmt.Sprintf("__div__%d", d.divCounter)
 		opComponent = "Div"
 	case src.ModOp:
-		modCounter++
-		opNode = fmt.Sprintf("__mod__%d", modCounter)
+		d.modCounter++
+		opNode = fmt.Sprintf("__mod__%d", d.modCounter)
 		opComponent = "Mod"
 	case src.PowOp:
-		powCounter++
-		opNode = fmt.Sprintf("__pow__%d", powCounter)
+		d.powCounter++
+		opNode = fmt.Sprintf("__pow__%d", d.powCounter)
 		opComponent = "Pow"
 	// Comparison
 	case src.EqOp:
-		eqCounter++
-		opNode = fmt.Sprintf("__eq__%d", eqCounter)
+		d.eqCounter++
+		opNode = fmt.Sprintf("__eq__%d", d.eqCounter)
 		opComponent = "Eq"
 	case src.NeOp:
-		neCounter++
-		opNode = fmt.Sprintf("__ne__%d", neCounter)
+		d.neCounter++
+		opNode = fmt.Sprintf("__ne__%d", d.neCounter)
 		opComponent = "Ne"
 	case src.GtOp:
-		gtCounter++
-		opNode = fmt.Sprintf("__gt__%d", gtCounter)
+		d.gtCounter++
+		opNode = fmt.Sprintf("__gt__%d", d.gtCounter)
 		opComponent = "Gt"
 	case src.LtOp:
-		ltCounter++
-		opNode = fmt.Sprintf("__lt__%d", ltCounter)
+		d.ltCounter++
+		opNode = fmt.Sprintf("__lt__%d", d.ltCounter)
 		opComponent = "Lt"
 	case src.GeOp:
-		geCounter++
-		opNode = fmt.Sprintf("__ge__%d", geCounter)
+		d.geCounter++
+		opNode = fmt.Sprintf("__ge__%d", d.geCounter)
 		opComponent = "Ge"
 	case src.LeOp:
-		leCounter++
-		opNode = fmt.Sprintf("__le__%d", leCounter)
+		d.leCounter++
+		opNode = fmt.Sprintf("__le__%d", d.leCounter)
 		opComponent = "Le"
 	// Logical
 	case src.AndOp:
-		andCounter++
-		opNode = fmt.Sprintf("__and__%d", andCounter)
+		d.andCounter++
+		opNode = fmt.Sprintf("__and__%d", d.andCounter)
 		opComponent = "And"
 	case src.OrOp:
-		orCounter++
-		opNode = fmt.Sprintf("__or__%d", orCounter)
+		d.orCounter++
+		opNode = fmt.Sprintf("__or__%d", d.orCounter)
 		opComponent = "Or"
 	// Bitwise
 	case src.BitAndOp:
-		bitAndCounter++
-		opNode = fmt.Sprintf("__bitAnd__%d", bitAndCounter)
+		d.bitAndCounter++
+		opNode = fmt.Sprintf("__bitAnd__%d", d.bitAndCounter)
 		opComponent = "BitAnd"
 	case src.BitOrOp:
-		bitOrCounter++
-		opNode = fmt.Sprintf("__bitOr__%d", bitOrCounter)
+		d.bitOrCounter++
+		opNode = fmt.Sprintf("__bitOr__%d", d.bitOrCounter)
 		opComponent = "BitOr"
 	case src.BitXorOp:
-		bitXorCounter++
-		opNode = fmt.Sprintf("__bitXor__%d", bitXorCounter)
+		d.bitXorCounter++
+		opNode = fmt.Sprintf("__bitXor__%d", d.bitXorCounter)
 		opComponent = "BitXor"
 	case src.BitLshOp:
-		bitLshCounter++
-		opNode = fmt.Sprintf("__bitLsh__%d", bitLshCounter)
+		d.bitLshCounter++
+		opNode = fmt.Sprintf("__bitLsh__%d", d.bitLshCounter)
 		opComponent = "BitLsh"
 	case src.BitRshOp:
-		bitRshCounter++
-		opNode = fmt.Sprintf("__bitRsh__%d", bitRshCounter)
+		d.bitRshCounter++
+		opNode = fmt.Sprintf("__bitRsh__%d", d.bitRshCounter)
 		opComponent = "BitRsh"
 	default:
 		return handleBinarySenderResult{}, fmt.Errorf("unsupported binary operator: %s", binary.Operator)
