@@ -79,6 +79,8 @@ func (d Desugarer) desugarModule(
 }
 
 // Scope interface allows to use mocks in unit tests for private methods
+//
+//go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}
 type Scope interface {
 	Entity(ref core.EntityRef) (src.Entity, src.Location, error)
 	Relocate(location src.Location) src.Scope

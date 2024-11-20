@@ -3,6 +3,7 @@ package desugarer
 import (
 	"testing"
 
+	gomock "github.com/golang/mock/gomock"
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -14,12 +15,10 @@ import (
 // Note: some cases are hard to test this way because desugarer depends on Scope object
 // which is normally passed from top-level functions in this package.
 func TestDesugarNetwork(t *testing.T) {
-	d := Desugarer{}
-	scope := src.Scope{}
-
 	tests := []struct {
 		name           string
 		iface          src.Interface
+		mockScope      func(scope *MockScopeMockRecorder)
 		net            []src.Connection
 		nodes          map[string]src.Node
 		expectedResult handleNetworkResult
@@ -549,13 +548,26 @@ func TestDesugarNetwork(t *testing.T) {
 			nodes: map[string]src.Node{
 				"bar": {EntityRef: core.EntityRef{Name: "Bar"}},
 			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				constEntity := src.Const{
+					TypeExpr: ts.Expr{
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					Value: src.ConstValue{
+						Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+					},
+				}
+				mock.
+					Entity(core.EntityRef{Name: "foo"}).
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
 						Normal: &src.NormalConnection{
 							SenderSide: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__const__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"},
 								},
 							},
 							ReceiverSide: []src.ConnectionReceiver{
@@ -567,8 +579,15 @@ func TestDesugarNetwork(t *testing.T) {
 					},
 				},
 				nodesToInsert: map[string]src.Node{
-					"__const__1": {
+					"__new__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
 						Directives: map[src.Directive][]string{
 							compiler.BindDirective: {"foo"},
 						},
@@ -579,11 +598,18 @@ func TestDesugarNetwork(t *testing.T) {
 		},
 	}
 
+	d := Desugarer{}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := d.desugarNetwork(tt.iface, tt.net, tt.nodes, scope)
+			scope := NewMockScope(gomock.NewController(t))
+			if tt.mockScope != nil {
+				tt.mockScope(scope.EXPECT())
+			}
 
+			result, err := d.desugarNetwork(tt.iface, tt.net, tt.nodes, scope)
 			require.Nil(t, err)
+
 			assert.Equal(t, tt.expectedResult.desugaredConnections, result.desugaredConnections)
 			assert.Equal(t, tt.expectedResult.constsToInsert, result.constsToInsert)
 			assert.Equal(t, tt.expectedResult.nodesToInsert, result.nodesToInsert)
