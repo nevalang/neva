@@ -28,7 +28,7 @@ func (d Desugarer) desugarStructSelectors(
 	constsToInsert map[string]src.Const,
 ) (
 	desugarStructSelectorsResult,
-	*compiler.Error,
+	error,
 ) {
 	virtualConstCount++
 	constName := fmt.Sprintf("__const__%d", virtualConstCount)

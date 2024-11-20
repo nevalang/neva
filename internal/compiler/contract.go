@@ -39,7 +39,7 @@ type (
 	}
 
 	Desugarer interface {
-		Desugar(build src.Build) (src.Build, *Error)
+		Desugar(build src.Build) (src.Build, error)
 	}
 
 	IRGenerator interface {

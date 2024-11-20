@@ -99,8 +99,8 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 		return MiddleendResult{}, err
 	}
 
-	desugaredBuild, err := m.desugarer.Desugar(analyzedBuild)
-	if err != nil {
+	desugaredBuild, derr := m.desugarer.Desugar(analyzedBuild)
+	if derr != nil {
 		return MiddleendResult{}, err
 	}
 

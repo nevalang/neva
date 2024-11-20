@@ -1,25 +1,22 @@
 package desugarer
 
 import (
+	"fmt"
 	"maps"
 
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/pkg"
 )
 
 type Desugarer struct{}
 
-func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
+func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef := range build.Modules {
 		desugaredMod, err := d.desugarModule(build, modRef)
 		if err != nil {
-			return src.Build{},
-				compiler.Error{
-					Location: &src.Location{Module: modRef},
-				}.Wrap(err)
+			return src.Build{}, fmt.Errorf("desugar module %s: %w", modRef, err)
 		}
 		desugaredMods[modRef] = desugaredMod
 	}
@@ -33,7 +30,7 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, *compiler.Error) {
 func (d Desugarer) desugarModule(
 	build src.Build,
 	modRef src.ModuleRef,
-) (src.Module, *compiler.Error) {
+) (src.Module, error) {
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
@@ -70,9 +67,7 @@ func (d Desugarer) desugarModule(
 
 		desugaredPkg, err := d.desugarPkg(pkg, scope)
 		if err != nil {
-			return src.Module{}, compiler.Error{
-				Location: &src.Location{Package: pkgName},
-			}.Wrap(err)
+			return src.Module{}, fmt.Errorf("desugar package %s: %w", pkgName, err)
 		}
 
 		desugaredPkgs[pkgName] = desugaredPkg
@@ -84,7 +79,7 @@ func (d Desugarer) desugarModule(
 	}, nil
 }
 
-func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
+func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, error) {
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
@@ -96,9 +91,7 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *c
 
 		desugaredFile, err := d.desugarFile(file, newScope)
 		if err != nil {
-			return nil, compiler.Error{
-				Location: &src.Location{Filename: fileName},
-			}.Wrap(err)
+			return src.Package{}, fmt.Errorf("desugar file %s: %w", fileName, err)
 		}
 
 		desugaredPkgs[fileName] = desugaredFile
@@ -111,15 +104,13 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope src.Scope) (src.Package, *c
 func (d Desugarer) desugarFile(
 	file src.File,
 	scope src.Scope,
-) (src.File, *compiler.Error) {
+) (src.File, error) {
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
 	for entityName, entity := range file.Entities {
 		entityResult, err := d.desugarEntity(entity, scope)
 		if err != nil {
-			return src.File{}, compiler.Error{
-				Meta: entity.Meta(),
-			}.Wrap(err)
+			return src.File{}, fmt.Errorf("desugar entity %s: %w", entityName, err)
 		}
 
 		desugaredEntities[entityName] = entityResult.entity
@@ -153,7 +144,7 @@ type desugarEntityResult struct {
 func (d Desugarer) desugarEntity(
 	entity src.Entity,
 	scope src.Scope,
-) (desugarEntityResult, *compiler.Error) {
+) (desugarEntityResult, error) {
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.ConstEntity {
 		return desugarEntityResult{entity: entity}, nil
 	}
@@ -161,7 +152,7 @@ func (d Desugarer) desugarEntity(
 	if entity.Kind == src.ConstEntity {
 		desugaredConst, err := d.handleConst(entity.Const)
 		if err != nil {
-			return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
+			return desugarEntityResult{}, fmt.Errorf("desugar const: %w", err)
 		}
 
 		return desugarEntityResult{
@@ -175,7 +166,7 @@ func (d Desugarer) desugarEntity(
 
 	componentResult, err := d.desugarComponent(entity.Component, scope)
 	if err != nil {
-		return desugarEntityResult{}, compiler.Error{Meta: &entity.Component.Meta}.Wrap(err)
+		return desugarEntityResult{}, fmt.Errorf("desugar component: %w", err)
 	}
 
 	return desugarEntityResult{

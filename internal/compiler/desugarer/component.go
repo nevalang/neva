@@ -4,7 +4,6 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
@@ -16,7 +15,7 @@ type handleComponentResult struct {
 func (d Desugarer) desugarComponent(
 	component src.Component,
 	scope src.Scope,
-) (handleComponentResult, *compiler.Error) {
+) (handleComponentResult, error) {
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
 		return handleComponentResult{desugaredFlow: component}, nil
 	}
@@ -85,7 +84,7 @@ func (d Desugarer) desugarNodes(
 	component src.Component,
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,
-) (map[string]src.Node, []src.Connection, *compiler.Error) {
+) (map[string]src.Node, []src.Connection, error) {
 	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
 	virtualConns := []src.Connection{}
 

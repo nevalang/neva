@@ -5,16 +5,16 @@ import (
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
-type voidResult struct {
+type unusedOutportsResult struct {
 	voidNodeName       string
 	voidNode           src.Node
 	virtualConnections []src.Connection
 }
 
-func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) voidResult {
+func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOutportsResult {
 	destructorNodeName := "__del__"
 
-	result := voidResult{
+	result := unusedOutportsResult{
 		voidNodeName: destructorNodeName,
 		voidNode: src.Node{
 			EntityRef: core.EntityRef{

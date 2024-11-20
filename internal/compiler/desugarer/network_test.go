@@ -523,6 +523,60 @@ func TestDesugarNetwork(t *testing.T) {
 				constsToInsert: map[string]src.Const{},
 			},
 		},
+		// $foo -> bar:baz
+		{
+			name: "const_ref_sender",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Const: &src.Const{
+									Value: src.ConstValue{
+										Ref: &core.EntityRef{Name: "foo"},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"bar": {EntityRef: core.EntityRef{Name: "Bar"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__const__1", Port: "msg"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
+								},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__const__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"foo"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
