@@ -190,7 +190,7 @@ It's one of the few components without inports or outports, which are only allow
 ```
 const p float = 3.14
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     #bind(p)
     New
     Println
@@ -470,7 +470,7 @@ To ensure `42` is printed once, synchronize it with `:start` using "defer". Here
 This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the desugared version:
 
 ```neva
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Lock, Println
     ---
     :start -> lock:sig

@@ -1,9 +1,10 @@
 import { streams, fmt }
 
+type ProductResult streams.ProductResult<int, int>
+
 def Main(start any) (stop any) {
-	FanOut
 	streams.Product<int, int>
-	For<int>{fmt.Println<int>}
+	For<ProductResult>{fmt.Println<ProductResult>}
 	Wait
 	---
 	:start -> [

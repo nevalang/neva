@@ -36,10 +36,10 @@ Module is usually a git-repo but not necessary. Module that isn't published in g
 
 ### Manifest File
 
-The manifest defines the module's minimum supported language version and dependencies. Here's an example manifest with a dependency on the Nevalang compiler version `0.26.0` and a third-party module:
+The manifest defines the module's minimum supported language version and dependencies. Here's an example manifest with a dependency on the Nevalang compiler version `0.27.0` and a third-party module:
 
 ```yaml
-neva: 0.26.0
+neva: 0.27.0
 deps:
   github.com/nevalang/x:
     path: github.com/nevalang/x
@@ -51,7 +51,7 @@ The `deps` field is a map where each dependency has an alias. When adding depend
 > WIP: CLI tool planned for CI/CD to verify module's backward compatibility
 
 ```yaml
-neva: 0.26.0
+neva: 0.27.0
 deps:
   github.com/nevalang/x@0-0-12:
     path: github.com/nevalang/x
@@ -167,7 +167,7 @@ Here we see 3 packages: `main`, `foo` and `foo/bar`. Note that `foo/bar` is a se
 The main package must contain a `Main` component with a specific signature and no exports.
 
 ```neva
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     // ...
 }
 ```
@@ -297,7 +297,7 @@ import {
   @/foo/bar
 }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
   bar.AddP, Println
   ---
   :start -> { $foo.p -> addP:right -> println -> :stop }
