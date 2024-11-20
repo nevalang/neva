@@ -78,9 +78,6 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	}
 	h.SetTrace = s.SetTrace
 
-	// Custom handlers
-	h.GetFileView = s.GetFileView
-
 	// Rest...
 	h.WindowWorkDoneProgressCancel = func(context *glsp.Context, params *protocol.WorkDoneProgressCancelParams) error {
 		return nil
