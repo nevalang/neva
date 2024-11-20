@@ -7,7 +7,7 @@ type User struct {
 
 type Pet struct { name string }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     GetUser, fmt.Println
     ---
     :start -> getUser -> .pet.name -> println -> :stop

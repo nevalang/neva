@@ -1,6 +1,6 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Foo, fmt.Println<int>
     ---
     :start -> foo:sig

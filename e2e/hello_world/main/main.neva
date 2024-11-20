@@ -1,4 +1,4 @@
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println
 	---
 	:start -> println -> :stop

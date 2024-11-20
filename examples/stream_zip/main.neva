@@ -2,7 +2,7 @@ import { streams, fmt }
 
 const strings list<string> = ['a', 'b', 'c']
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	ListToStream<string>, streams.Zip<int, string>
 	For{fmt.Println}, Wait
 	---

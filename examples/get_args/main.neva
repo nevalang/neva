@@ -1,6 +1,6 @@
 import { os, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	os.Args, ListToStream, For{fmt.Println}, Wait
 	---
 	:start -> args -> listToStream -> for -> wait -> :stop

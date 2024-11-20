@@ -15,7 +15,7 @@ const numsStruct NumsStruct = {
     d: numsMap
 }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     fmt.Println
     ---
     :start -> $numsStruct -> println:data

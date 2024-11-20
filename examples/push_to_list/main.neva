@@ -3,7 +3,7 @@ import { fmt }
 const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	Push, fmt.Println
 	---
 	:start -> [

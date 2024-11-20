@@ -209,15 +209,15 @@ def Main() () {
     }
 }
 
-def Main(start) (stop) { :start -> :stop }
+def Main(start any) (stop any) { :start -> :stop }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     :start -> :stop }
 
-def Main(start) (stop) { :start -> :stop
+def Main(start any) (stop any) { :start -> :stop
 }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     :start -> :stop
 }
 

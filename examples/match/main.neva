@@ -1,6 +1,6 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     For{Handler}, Wait
     ---
     :start -> 1..5 -> for -> wait -> :stop

@@ -28,7 +28,7 @@ def NewStream(p image.Pixel) (s stream<image.Pixel>) {
 	sb -> :s
 }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
 	io.WriteAll, printErr fmt.Println

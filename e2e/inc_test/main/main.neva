@@ -1,6 +1,6 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Inc<int>, fmt.Println<int>
     ---
     :start -> 41 -> inc

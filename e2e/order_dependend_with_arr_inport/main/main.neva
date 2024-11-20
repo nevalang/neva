@@ -2,7 +2,7 @@ import { fmt }
 
 const l list<int> = [1, 2, 3]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println<int>
 	Reduce<int, int>{Sub<int>}
 	ListToStream<int>

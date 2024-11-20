@@ -1,6 +1,6 @@
 import { sync, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	p1 fmt.Println
 	p2 fmt.Println
 	p3 fmt.Println

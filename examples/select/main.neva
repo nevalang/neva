@@ -2,7 +2,7 @@
 
 import { time, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Map<int, string>{Handler}
     For<string>{fmt.Println}
     Wait
