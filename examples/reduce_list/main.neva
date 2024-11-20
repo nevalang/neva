@@ -7,7 +7,7 @@ def Main(start) (stop) {
     Reduce<int, int>{Add<int>}
     fmt.Println
     ---
-    :start -> { $lst -> listToStream -> reduce:data }
+    :start -> $lst -> listToStream -> reduce:data
     0 -> reduce:init
     reduce -> println -> :stop
 }

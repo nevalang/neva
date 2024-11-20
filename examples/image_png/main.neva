@@ -34,9 +34,9 @@ def Main(start) (stop) {
 	io.WriteAll, printErr fmt.Println
 	---
 	:start -> [
-		{ 0 -> [newColor:r, newColor:g, newColor:b, newColor:a] },
-		{ 15 -> [newPixel:x, newPixel:y] },
-		{ 'minimal.png' -> writeAll:filename }
+		0 -> [newColor:r, newColor:g, newColor:b, newColor:a],
+		15 -> [newPixel:x, newPixel:y],
+		'minimal.png' -> writeAll:filename
 	]
 	newColor -> newPixel:c
 	newPixel -> newStream:p

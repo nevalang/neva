@@ -12,9 +12,7 @@ def Main(start) (stop) {
     List<int>
     fmt.Println<list<int>>
     ---
-    :start -> {
-        $lst -> listToStream -> map -> list -> println -> :stop
-    }
+    :start -> $lst -> listToStream -> map -> list -> println -> :stop
 }
 
 def Slow(data int) (res int) {

@@ -1,8 +1,8 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println<any>
 	---
-	:start -> { 'Hello, World!' -> println:data }
+	:start -> 'Hello, World!' -> println:data
 	println:sig -> :stop
 }

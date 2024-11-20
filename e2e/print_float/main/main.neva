@@ -5,6 +5,6 @@ const x float = 42
 def Main(start) (stop) {
     fmt.Println<float>
     ---
-    :start -> { $x -> println:data }
+    :start -> $x -> println:data
     println:sig -> :stop
 }

@@ -1,6 +1,6 @@
 import { http, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	App, fmt.Println, Panic // `Panic` will terminate the program
 	---
 	:start -> app:sig
@@ -11,7 +11,7 @@ def Main(start) (stop) {
 def App(sig) (data string, err error) {
 	http.Get? // '?' implicitly sends `:err` downstream
 	---
-	:sig -> { 'definitely not a valid URL' -> get }
+	:sig -> 'definitely not a valid URL' -> get
 	get:resp -> .body -> :data
 	// no need for explicit error handling thanks to `?`
 }

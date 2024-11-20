@@ -11,5 +11,5 @@ def Main(start) (stop) {
 const s struct { a int } = { a: 42 }
 
 def Foo(sig any) (msg struct{a int}) {
-    :sig -> { $s -> :msg }
+    :sig -> $s -> :msg
 }

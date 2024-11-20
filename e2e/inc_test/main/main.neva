@@ -3,6 +3,6 @@ import { fmt }
 def Main(start) (stop) {
     Inc<int>, fmt.Println<int>
     ---
-    :start -> { 41 -> inc }
+    :start -> 41 -> inc
     inc -> println -> :stop
 }

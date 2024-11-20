@@ -1,7 +1,7 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     fmt.Println
     ---
-    :start -> { 42 -> println -> :stop }
+    :start -> 42 -> println -> :stop
 }

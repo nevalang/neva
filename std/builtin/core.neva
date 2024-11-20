@@ -50,7 +50,7 @@ pub def Get<T>(dict dict<T>, key T) (res T, err error)
 // Pass is used to pass data through. It receives data and sends it to outport.
 // E.g. when you want to trigger a constant from deferred connection
 // and then use it as a sender in fan-in receiver-side:
-// :start -> { 99 -> pass }; [pass, receiver2] -> ...
+// :start -> 99 -> pass; [pass, receiver2] -> ...
 pub def Pass<T>(data T) (res T) {
     :data -> :res
 }

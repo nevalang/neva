@@ -10,5 +10,5 @@ def Main(start) (stop) {
     fmt.Println
     ListToStream<int>
     ---
-    :start -> { $lst -> listToStream -> map -> list -> println -> :stop }
+    :start -> $lst -> listToStream -> map -> list -> println -> :stop
 }

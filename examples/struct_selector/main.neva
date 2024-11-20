@@ -19,5 +19,5 @@ const user User = {
 }
 
 def GetUser(sig) (u User) {
-    :sig -> { $user -> :u }
+    :sig -> $user -> :u
 }

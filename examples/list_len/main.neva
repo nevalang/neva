@@ -5,5 +5,5 @@ const lst list<int> = [4, 123, 22, 1121, 215]
 def Main(start) (stop) {
 	fmt.Println, Len<list<int>>
 	---
-	:start -> { $lst -> len -> println -> :stop }
+	:start -> $lst -> len -> println -> :stop
 }

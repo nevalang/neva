@@ -4,14 +4,14 @@
 
 import { @:foo }
 
-def Main(start) (stop) {
-  justFoo Struct<foo.Foo>
-  itemWithFoo Struct<stream<foo.Foo>>
-  ---
-  :start -> [
-    { 0 -> [justFoo:bar, itemWithFoo:idx] },
-    { true -> itemWithFoo:last }
-  ]
-  justFoo -> itemWithFoo:data
-  itemWithFoo -> :stop
+def Main(start any) (stop any) {
+	justFoo Struct<foo.Foo>
+	itemWithFoo Struct<stream<foo.Foo>>
+	---
+	:start -> [
+		0 -> [justFoo:bar, itemWithFoo:idx],
+		true -> itemWithFoo:last
+	]
+	justFoo -> itemWithFoo:data
+	itemWithFoo -> :stop
 }

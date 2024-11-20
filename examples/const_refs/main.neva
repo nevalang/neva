@@ -18,5 +18,5 @@ const numsStruct NumsStruct = {
 def Main(start) (stop) {
     fmt.Println
     ---
-    :start -> { $numsStruct -> println -> :stop }
+    :start -> $numsStruct -> println -> :stop
 }

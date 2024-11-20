@@ -5,5 +5,5 @@ const lst list<int> = [1, 2, 3]
 def Main(start) (stop) {
     ListToStream<int>, For<int>{fmt.Println<int>}, Wait
     ---
-    :start -> { $lst -> listToStream -> for -> wait -> :stop }
+    :start -> $lst -> listToStream -> for -> wait -> :stop
 }

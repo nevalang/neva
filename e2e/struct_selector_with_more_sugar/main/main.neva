@@ -23,5 +23,5 @@ const user User = {
 }
 
 def UserSender(sig) (u User) {
-    :sig -> { $user -> :u }
+    :sig -> $user -> :u
 }

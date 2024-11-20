@@ -7,8 +7,8 @@ def Main(start) (stop) {
 	Push, fmt.Println
 	---
 	:start -> [
-		{ $l -> push:lst },
-		{ $f -> push:data }
+		$l -> push:lst,
+		$f -> push:data
 	]
 	push -> println -> :stop
 }

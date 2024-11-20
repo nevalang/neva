@@ -14,8 +14,8 @@ def Main(start any) (stop any) {
     builder MyStructBuilder
     ---
     :start -> [
-        { 'John' -> builder:name },
-        { 32 -> builder:age }
+        'John' -> builder:name,
+        32 -> builder:age
     ]
     builder:msg -> println:data
     println:sig -> :stop
