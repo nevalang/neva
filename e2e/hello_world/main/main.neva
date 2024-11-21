@@ -1,6 +1,0 @@
-def Main(start) (stop) {
-	fmt.Println
-	---
-	:start -> println -> :stop
-}
-

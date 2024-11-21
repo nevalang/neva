@@ -47,7 +47,7 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error)
 	if err != nil {
 		return nil, &compiler.Error{
 			Message:  err.Error(),
-			Location: &scope.Location,
+			Location: scope.Location(),
 		}
 	}
 

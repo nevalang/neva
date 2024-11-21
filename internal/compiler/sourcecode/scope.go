@@ -10,24 +10,41 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-type Scope struct {
-	Location Location
-	Build    Build
-}
-
-func (s Scope) Relocate(location Location) Scope {
+// NewScope returns a new scope with a given location
+func NewScope(build Build, location Location) Scope {
 	return Scope{
-		Location: location,
-		Build:    s.Build,
+		loc:   location,
+		build: build,
 	}
 }
 
+// Scope is an object that provides access to program entities
+type Scope struct {
+	loc   Location
+	build Build
+}
+
+// Location returns a location of the current scope
+func (s Scope) Location() *Location {
+	return &s.loc
+}
+
+// Relocate returns a new scope with a given location
+func (s Scope) Relocate(location Location) Scope {
+	return Scope{
+		loc:   location,
+		build: s.build,
+	}
+}
+
+// Location is a source code location
 type Location struct {
 	Module   ModuleRef
 	Package  string
 	Filename string
 }
 
+// String returns location as a string
 func (l Location) String() string {
 	var s string
 	if l.Module.Path == "@" {
@@ -41,6 +58,7 @@ func (l Location) String() string {
 	return s
 }
 
+// IsTopType returns true if expr is a top type (any)
 func (s Scope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
@@ -51,6 +69,7 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 	return expr.Inst.Ref.Pkg == "" || expr.Inst.Ref.Pkg == "builtin"
 }
 
+// GetType returns type definition by reference
 func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	entity, location, err := s.Entity(ref)
 	if err != nil {
@@ -60,33 +79,35 @@ func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	return entity.Type, s.Relocate(location), nil
 }
 
+// Entity returns entity by reference
 func (s Scope) Entity(entityRef core.EntityRef) (Entity, Location, error) {
 	return s.entity(entityRef)
 }
 
+// entity is an alrogithm that resolves entity reference based on scope's location
 func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
-	curMod, ok := s.Build.Modules[s.Location.Module]
+	curMod, ok := s.build.Modules[s.loc.Module]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("module not found: %v", s.Location.Module)
+		return Entity{}, Location{}, fmt.Errorf("module not found: %v", s.loc.Module)
 	}
 
-	curPkg := curMod.Packages[s.Location.Package]
+	curPkg := curMod.Packages[s.loc.Package]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("package not found: %v", s.Location.Package)
+		return Entity{}, Location{}, fmt.Errorf("package not found: %v", s.loc.Package)
 	}
 
 	if entityRef.Pkg == "" { // local reference (current package or builtin)
 		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, Location{
-				Module:   s.Location.Module,
-				Package:  s.Location.Package,
+				Module:   s.loc.Module,
+				Package:  s.loc.Package,
 				Filename: fileName,
 			}, nil
 		}
 
 		stdModRef := ModuleRef{Path: "std", Version: pkg.Version}
-		stdMod, ok := s.Build.Modules[stdModRef]
+		stdMod, ok := s.build.Modules[stdModRef]
 		if !ok {
 			return Entity{}, Location{}, fmt.Errorf("std module not found: %v", stdModRef)
 		}
@@ -106,9 +127,9 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		}, nil
 	}
 
-	curFile, ok := curPkg[s.Location.Filename]
+	curFile, ok := curPkg[s.loc.Filename]
 	if !ok {
-		return Entity{}, Location{}, fmt.Errorf("file not found: %v", s.Location.Filename)
+		return Entity{}, Location{}, fmt.Errorf("file not found: %v", s.loc.Filename)
 	}
 
 	pkgImport, ok := curFile.Imports[entityRef.Pkg]
@@ -121,11 +142,11 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, Location, error) {
 		modRef ModuleRef
 	)
 	if pkgImport.Module == "@" {
-		modRef = s.Location.Module // FIXME s.Location.ModRef is where we are now (e.g. std)
+		modRef = s.loc.Module // FIXME s.Location.ModRef is where we are now (e.g. std)
 		mod = curMod
 	} else {
 		modRef = curMod.Manifest.Deps[pkgImport.Module]
-		depMod, ok := s.Build.Modules[modRef]
+		depMod, ok := s.build.Modules[modRef]
 		if !ok {
 			return Entity{}, Location{}, fmt.Errorf("dependency module not found: %v", modRef)
 		}

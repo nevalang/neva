@@ -1,12 +1,12 @@
 import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     PrintAny
     ---
-    :start -> { 42 -> printAny -> :stop }
+    :start -> 42 -> printAny -> :stop
 }
 
-def PrintAny(data) (sig) {
+def PrintAny(data any) (sig any) {
 	fmt.Println<int>
 	---
 	:data -> println -> :sig

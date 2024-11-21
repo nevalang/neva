@@ -1,6 +1,6 @@
 import { strconv, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	Aux, fmt.Println<any>
 	---
 	:start -> aux:sig

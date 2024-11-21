@@ -1,13 +1,15 @@
 import { sync, fmt }
 
-def Main(start) (stop) {
-	p1 fmt.Println, p2 fmt.Println, p3 fmt.Println
+def Main(start any) (stop any) {
+	p1 fmt.Println
+	p2 fmt.Println
+	p3 fmt.Println
 	wg sync.WaitGroup
 	---
 	:start -> [
-		{ 'Hello' -> p1 },
-		{ 'Neva' -> p2 },
-		{ 'World!' -> p3 }
+		'Hello' -> p1,
+		'Neva' -> p2,
+		'World!' -> p3
 	]
 	[p1, p2, p3] -> wg:sig
 	3 -> wg:count

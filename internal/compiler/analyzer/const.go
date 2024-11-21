@@ -19,7 +19,7 @@ func (a Analyzer) analyzeConst(
 	if constant.Value.Message == nil && constant.Value.Ref == nil {
 		return src.Const{}, &compiler.Error{
 			Message:  "Constant must either have value or reference to another constant",
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &constant.Meta,
 		}
 	}
@@ -49,7 +49,7 @@ func (a Analyzer) analyzeConst(
 	if err != nil {
 		return src.Const{}, compiler.Error{
 			Message:  "Cannot resolve constant type",
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &constant.Meta,
 		}.Wrap(err)
 	}
@@ -57,7 +57,7 @@ func (a Analyzer) analyzeConst(
 	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
 		return src.Const{}, &compiler.Error{
 			Message:  "Constant cannot have type union",
-			Location: &scope.Location,
+			Location: scope.Location(),
 			Meta:     &constant.Meta,
 		}
 	}
@@ -78,7 +78,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.Bool == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("Boolean value is missing in boolean contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -93,7 +93,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -101,7 +101,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.Int == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("Integer value is missing in integer contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -116,7 +116,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -126,17 +126,17 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.Float == nil && constant.Value.Message.Int == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("Float or integer value is missing in float contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
 		if constant.Value.Message.Float != nil && constant.Value.Message.Int != nil {
 			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf(	
+				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -150,7 +150,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -158,7 +158,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.Str == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("String value is missing in string contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -173,7 +173,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -181,7 +181,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.List == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("List value is missing in list contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -195,7 +195,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -203,7 +203,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.DictOrStruct == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("Map or struct value is missing in map or struct contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -217,7 +217,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -225,7 +225,7 @@ func (a Analyzer) analyzeConst(
 		if constant.Value.Message.Enum == nil {
 			return src.Const{}, &compiler.Error{
 				Message:  fmt.Sprintf("Enum value is missing in enum contant: %v", constant),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}
@@ -239,7 +239,7 @@ func (a Analyzer) analyzeConst(
 					"Constant cannot have several values at once: %v",
 					constant.Value.Message,
 				),
-				Location: &scope.Location,
+				Location: scope.Location(),
 				Meta:     &constant.Meta,
 			}
 		}

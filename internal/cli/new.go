@@ -46,7 +46,7 @@ func createNevaMod(path string) error {
 	// Create main.neva file
 	mainNevaContent := `import { fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println
 	---
 	:start -> { 'Hello, World!' -> println -> :stop }

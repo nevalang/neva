@@ -9,6 +9,7 @@ import (
 func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		"new":     new{},
+		"new_v2":  newV2{},
 		"del":     del{},
 		"lock":    lock{},
 		"unwrap":  unwrap{},

@@ -18,12 +18,12 @@ type handleNetworkResult struct {
 	nodesPortsUsed       nodeOutportsUsed
 }
 
-func (d Desugarer) desugarNetwork(
+func (d *Desugarer) desugarNetwork(
 	iface src.Interface,
 	net []src.Connection,
 	nodes map[string]src.Node,
-	scope src.Scope,
-) (handleNetworkResult, *compiler.Error) {
+	scope Scope,
+) (handleNetworkResult, error) {
 	nodesToInsert := map[string]src.Node{}
 	constsToInsert := map[string]src.Const{}
 	nodesPortsUsed := newNodePortsMap()
@@ -49,15 +49,15 @@ func (d Desugarer) desugarNetwork(
 	}, nil
 }
 
-func (d Desugarer) desugarConnections(
+func (d *Desugarer) desugarConnections(
 	iface src.Interface,
 	net []src.Connection,
 	nodePortsUsed nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) ([]src.Connection, *compiler.Error) {
+) ([]src.Connection, error) {
 	desugaredConnections := make([]src.Connection, 0, len(net))
 
 	for _, conn := range net {
@@ -89,15 +89,15 @@ type desugarConnectionResult struct {
 	insert  []src.Connection
 }
 
-func (d Desugarer) desugarConnection(
+func (d *Desugarer) desugarConnection(
 	iface src.Interface,
 	conn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (desugarConnectionResult, *compiler.Error) {
+) (desugarConnectionResult, error) {
 	if conn.ArrayBypass != nil {
 		nodePortsUsed.set(
 			conn.ArrayBypass.SenderOutport.Node,
@@ -121,15 +121,15 @@ func (d Desugarer) desugarConnection(
 	)
 }
 
-func (d Desugarer) desugarNormalConnection(
+func (d *Desugarer) desugarNormalConnection(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodePortsUsed nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (desugarConnectionResult, *compiler.Error) {
+) (desugarConnectionResult, error) {
 	if len(normConn.SenderSide) > 1 {
 		result, err := d.desugarFanIn(
 			iface,
@@ -141,16 +141,9 @@ func (d Desugarer) desugarNormalConnection(
 			nodes,
 		)
 		if err != nil {
-			return desugarConnectionResult{}, &compiler.Error{
-				Message:  err.Error(),
-				Location: &scope.Location,
-				Meta:     &normConn.Meta,
-			}
+			return desugarConnectionResult{}, fmt.Errorf("desugar fan in: %w", err)
 		}
-		// original connection is replaced by multiple new ones
-		return desugarConnectionResult{
-			insert: result,
-		}, nil
+		return desugarConnectionResult{insert: result}, nil // original connection is replaced by multiple new ones
 	}
 
 	desugarSenderResult, err := d.desugarSingleSender(
@@ -163,10 +156,7 @@ func (d Desugarer) desugarNormalConnection(
 		constsToInsert,
 	)
 	if err != nil {
-		return desugarConnectionResult{}, compiler.Error{
-			Location: &scope.Location,
-			Meta:     &normConn.SenderSide[0].Meta,
-		}.Wrap(err)
+		return desugarConnectionResult{}, fmt.Errorf("desugar single sender: %w", err)
 	}
 
 	normConn = *desugarSenderResult.replace.Normal
@@ -216,17 +206,15 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
-var switchCounter uint64
-
-func (d Desugarer) desugarSingleReceiver(
+func (d *Desugarer) desugarSingleReceiver(
 	iface src.Interface,
 	normConn src.NormalConnection,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
-) (desugarReceiverResult, *compiler.Error) {
+) (desugarReceiverResult, error) {
 	receiver := normConn.ReceiverSide[0]
 
 	if receiver.PortAddr != nil {
@@ -244,11 +232,7 @@ func (d Desugarer) desugarSingleReceiver(
 
 		firstInportName, err := getFirstInportName(scope, nodes, *receiver.PortAddr)
 		if err != nil {
-			return desugarReceiverResult{}, &compiler.Error{
-				Message:  err.Error(),
-				Location: &scope.Location,
-				Meta:     &receiver.Meta,
-			}
+			return desugarReceiverResult{}, fmt.Errorf("get first inport name: %w", err)
 		}
 
 		return desugarReceiverResult{
@@ -288,8 +272,8 @@ func (d Desugarer) desugarSingleReceiver(
 	}
 
 	if receiver.Switch != nil {
-		switchCounter++
-		switchNodeName := fmt.Sprintf("__switch__%d", switchCounter)
+		d.switchCounter++
+		switchNodeName := fmt.Sprintf("__switch__%d", d.switchCounter)
 
 		nodesToInsert[switchNodeName] = src.Node{
 			EntityRef: core.EntityRef{
@@ -404,16 +388,16 @@ func (d Desugarer) desugarSingleReceiver(
 	}, nil
 }
 
-func (d Desugarer) desugarChainedConnection(
+func (d *Desugarer) desugarChainedConnection(
 	iface src.Interface,
 	receiver src.ConnectionReceiver,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	nodePortsUsed nodeOutportsUsed,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	normConn src.NormalConnection,
-) (desugarConnectionResult, *compiler.Error) {
+) (desugarConnectionResult, error) {
 	chainedConn := *receiver.ChainedConnection
 	chainHead := chainedConn.Normal.SenderSide[0] // chain head is always single sender
 
@@ -421,7 +405,9 @@ func (d Desugarer) desugarChainedConnection(
 	var chainHeadPort string
 	switch {
 	case chainHead.Range != nil:
-		chainHeadPort = "sig"
+		chainHeadPort = "sig" // Range has sig inport
+	case chainHead.Const != nil:
+		chainHeadPort = "sig" // NewV2 has sig inport
 	case len(chainHead.StructSelector) != 0:
 		chainHeadPort = "data"
 	case chainHead.PortAddr != nil:
@@ -430,11 +416,50 @@ func (d Desugarer) desugarChainedConnection(
 			var err error
 			chainHeadPort, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
 			if err != nil {
-				return desugarConnectionResult{}, &compiler.Error{Message: err.Error()}
+				return desugarConnectionResult{}, fmt.Errorf("get first inport name: %w", err)
 			}
 		}
 	default:
 		panic("unexpected chain head type")
+	}
+
+	if chainHead.Const != nil {
+		d.virtualTriggersCount++
+		triggerNodeName := fmt.Sprintf("__newv2__%d", d.virtualTriggersCount)
+
+		if chainHead.Const.Value.Ref != nil {
+			constTypeExpr, err := d.getConstTypeByRef(*chainHead.Const.Value.Ref, scope)
+			if err != nil {
+				return desugarConnectionResult{}, fmt.Errorf("get const type by ref: %w", err)
+			}
+
+			nodesToInsert[triggerNodeName] = src.Node{
+				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+				TypeArgs:  []ts.Expr{constTypeExpr},
+				Directives: map[src.Directive][]string{
+					compiler.BindDirective: {chainHead.Const.Value.Ref.String()},
+				},
+			}
+		} else {
+			d.virtualConstCount++
+			virtualConstName := fmt.Sprintf("__const__%d", d.virtualConstCount)
+			constsToInsert[virtualConstName] = *chainHead.Const
+
+			nodesToInsert[triggerNodeName] = src.Node{
+				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+				TypeArgs:  []ts.Expr{chainHead.Const.TypeExpr},
+				Directives: map[src.Directive][]string{
+					compiler.BindDirective: {virtualConstName},
+				},
+			}
+		}
+
+		chainedConn.Normal.SenderSide = []src.ConnectionSender{
+			{PortAddr: &src.PortAddr{
+				Node: triggerNodeName,
+				Port: "msg",
+			}},
+		}
 	}
 
 	desugarChainResult, err := d.desugarConnection(
@@ -490,17 +515,15 @@ type desugarDeferredConnectionsResult struct {
 	insert  []src.Connection
 }
 
-var virtualLocksCounter uint64
-
-func (d Desugarer) desugarDeferredConnection(
+func (d *Desugarer) desugarDeferredConnection(
 	iface src.Interface,
 	normConn src.NormalConnection,
-	scope src.Scope,
+	scope Scope,
 	constsToInsert map[string]src.Const,
 	nodesToInsert map[string]src.Node,
 	nodesPortsUsed nodeOutportsUsed,
 	nodes map[string]src.Node,
-) (desugarDeferredConnectionsResult, *compiler.Error) {
+) (desugarDeferredConnectionsResult, error) {
 	deferredConnection := *normConn.ReceiverSide[0].DeferredConnection
 
 	desugarDeferredConnResult, err := d.desugarConnection(
@@ -520,8 +543,8 @@ func (d Desugarer) desugarDeferredConnection(
 	connsToInsert := desugarDeferredConnResult.insert
 
 	// 1) create lock node
-	virtualLocksCounter++
-	lockNodeName := fmt.Sprintf("__lock__%d", virtualLocksCounter)
+	d.virtualLocksCounter++
+	lockNodeName := fmt.Sprintf("__lock__%d", d.virtualLocksCounter)
 	nodesToInsert[lockNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
@@ -595,15 +618,15 @@ type desugarSenderResult struct {
 }
 
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
-func (d Desugarer) desugarSingleSender(
+func (d *Desugarer) desugarSingleSender(
 	iface src.Interface,
 	normConn src.NormalConnection,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	usedNodeOutports nodeOutportsUsed,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (desugarSenderResult, *compiler.Error) {
+) (desugarSenderResult, error) {
 	sender := normConn.SenderSide[0]
 
 	if sender.PortAddr != nil {
@@ -611,7 +634,7 @@ func (d Desugarer) desugarSingleSender(
 		if sender.PortAddr.Port == "" {
 			firstOutportName, err := getFirstOutportName(scope, nodes, *sender.PortAddr)
 			if err != nil {
-				return desugarSenderResult{}, &compiler.Error{Message: err.Error()}
+				return desugarSenderResult{}, fmt.Errorf("get first outport name: %w", err)
 			}
 			portName = firstOutportName
 			normConn.SenderSide = []src.ConnectionSender{
@@ -642,10 +665,7 @@ func (d Desugarer) desugarSingleSender(
 			constsToInsert,
 		)
 		if err != nil {
-			return desugarSenderResult{}, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &sender.Meta,
-			}.Wrap(err)
+			return desugarSenderResult{}, fmt.Errorf("desugar struct selectors: %w", err)
 		}
 
 		// connection that replaces original one might need desugaring itself
@@ -670,37 +690,26 @@ func (d Desugarer) desugarSingleSender(
 
 	if sender.Const != nil {
 		if sender.Const.Value.Ref != nil {
-			result, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodes, scope)
-			if err != nil {
-				return desugarSenderResult{}, compiler.Error{
-					Location: &scope.Location,
-					Meta:     &sender.Meta,
-				}.Wrap(err)
-			}
-
-			normConn = src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
-					{
-						PortAddr: &result,
-						Meta:     sender.Meta,
-					},
-				},
-				ReceiverSide: normConn.ReceiverSide,
-			}
-		}
-
-		if sender.Const.Value.Message != nil {
-			constNodePort, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
+			portAddr, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodesToInsert, scope)
 			if err != nil {
 				return desugarSenderResult{}, err
 			}
 
 			normConn = src.NormalConnection{
 				SenderSide: []src.ConnectionSender{
-					{
-						PortAddr: &constNodePort,
-						Meta:     sender.Meta,
-					},
+					{PortAddr: &portAddr, Meta: sender.Meta},
+				},
+				ReceiverSide: normConn.ReceiverSide,
+			}
+		} else if sender.Const.Value.Message != nil {
+			portAddr, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
+			if err != nil {
+				return desugarSenderResult{}, err
+			}
+
+			normConn = src.NormalConnection{
+				SenderSide: []src.ConnectionSender{
+					{PortAddr: &portAddr, Meta: sender.Meta},
 				},
 				ReceiverSide: normConn.ReceiverSide,
 			}
@@ -724,10 +733,7 @@ func (d Desugarer) desugarSingleSender(
 			nodes,
 		)
 		if err != nil {
-			return desugarSenderResult{}, compiler.Error{
-				Location: &scope.Location,
-				Meta:     &sender.Meta,
-			}.Wrap(err)
+			return desugarSenderResult{}, fmt.Errorf("desugar ternary sender: %w", err)
 		}
 
 		return desugarSenderResult(result), nil
@@ -766,27 +772,111 @@ func (d Desugarer) desugarSingleSender(
 	}, nil
 }
 
+var newComponentRef = core.EntityRef{
+	Pkg:  "builtin",
+	Name: "New",
+}
+
+func (d *Desugarer) handleLiteralSender(
+	constant src.Const,
+	nodesToInsert map[string]src.Node,
+	constsToInsert map[string]src.Const,
+) (src.PortAddr, error) {
+	d.virtualConstCount++
+	constName := fmt.Sprintf("__const__%d", d.virtualConstCount)
+
+	// we can't call d.handleConstRefSender()
+	// because our virtual const isn't in the scope
+
+	d.virtualEmittersCount++
+	emitterNodeName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
+
+	emitterNode := src.Node{
+		Directives: map[src.Directive][]string{
+			compiler.BindDirective: {constName},
+		},
+		EntityRef: newComponentRef,
+		TypeArgs:  []ts.Expr{constant.TypeExpr},
+	}
+
+	nodesToInsert[emitterNodeName] = emitterNode
+	constsToInsert[constName] = constant
+
+	emitterNodeOutportAddr := src.PortAddr{
+		Node: emitterNodeName,
+		Port: "msg",
+	}
+
+	return emitterNodeOutportAddr, nil
+}
+
+func (d *Desugarer) handleConstRefSender(
+	ref core.EntityRef,
+	nodesToInsert map[string]src.Node,
+	scope Scope,
+) (src.PortAddr, error) {
+	constTypeExpr, err := d.getConstTypeByRef(ref, scope)
+	if err != nil {
+		return src.PortAddr{}, fmt.Errorf("get const type by ref: %w", err)
+	}
+
+	d.virtualEmittersCount++
+	virtualEmitterName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
+
+	emitterNode := src.Node{
+		// don't forget to bind
+		Directives: map[src.Directive][]string{
+			compiler.BindDirective: {ref.String()},
+		},
+		EntityRef: newComponentRef,
+		TypeArgs:  []ts.Expr{constTypeExpr},
+	}
+
+	emitterNodeOutportAddr := src.PortAddr{
+		Node: virtualEmitterName,
+		Port: "msg",
+	}
+
+	nodesToInsert[virtualEmitterName] = emitterNode
+
+	return emitterNodeOutportAddr, nil
+}
+
+// getConstTypeByRef is needed to figure out type parameters for Const node
+func (d *Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr, error) {
+	entity, _, err := scope.Entity(ref)
+	if err != nil {
+		return ts.Expr{}, fmt.Errorf("get entity: %w", err)
+	}
+
+	if entity.Kind != src.ConstEntity {
+		return ts.Expr{}, fmt.Errorf("entity is not a constant: %v", entity.Kind)
+	}
+
+	if entity.Const.Value.Ref != nil {
+		expr, err := d.getConstTypeByRef(*entity.Const.Value.Ref, scope)
+		if err != nil {
+			return ts.Expr{}, fmt.Errorf("get const type by ref: %w", err)
+		}
+		return expr, nil
+	}
+
+	return entity.Const.TypeExpr, nil
+}
+
 func getNodeIOByPortAddr(
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 	portAddr *src.PortAddr,
-) (src.IO, *compiler.Error) {
+) (src.IO, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
-		return src.IO{}, &compiler.Error{
-			Message:  fmt.Sprintf("node '%s' not found", portAddr.Node),
-			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
-		}
+		return src.IO{}, fmt.Errorf("node '%s' not found", portAddr.Node)
 	}
 
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return src.IO{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: &scope.Location,
-			Meta:     &portAddr.Meta,
-		}
+		return src.IO{}, fmt.Errorf("get entity: %w", err)
 	}
 
 	var iface src.Interface
@@ -799,7 +889,7 @@ func getNodeIOByPortAddr(
 	return iface.IO, nil
 }
 
-func getFirstInportName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+func getFirstInportName(scope Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
 	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
 	if err != nil {
 		return "", err
@@ -810,7 +900,7 @@ func getFirstInportName(scope src.Scope, nodes map[string]src.Node, portAddr src
 	return "", errors.New("first inport not found")
 }
 
-func getFirstOutportName(scope src.Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
+func getFirstOutportName(scope Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
 	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
 	if err != nil {
 		return "", err
@@ -826,19 +916,17 @@ type desugarFanOutResult struct {
 	insert  []src.Connection // fanOut sender -> original receivers
 }
 
-var fanOutCounter uint64
-
-func (d Desugarer) desugarFanOut(
+func (d *Desugarer) desugarFanOut(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
-) (desugarFanOutResult, *compiler.Error) {
-	fanOutCounter++
-	nodeName := fmt.Sprintf("__fanOut__%d", fanOutCounter)
+) (desugarFanOutResult, error) {
+	d.fanOutCounter++
+	nodeName := fmt.Sprintf("__fanOut__%d", d.fanOutCounter)
 
 	nodesToInsert[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
@@ -899,9 +987,6 @@ func (d Desugarer) desugarFanOut(
 	}, nil
 }
 
-// Add a new atomic counter for range nodes
-var rangeCounter uint64
-
 // Add a new function to handle range senders
 type handleRangeSenderResult struct {
 	replace src.NormalConnection
@@ -911,17 +996,17 @@ type handleRangeSenderResult struct {
 // desugarRangeSender desugars `from..to -> XXX` part.
 // It does not create connection to range:sig,
 // it's done in chained connection desugaring.
-func (d Desugarer) desugarRangeSender(
+func (d *Desugarer) desugarRangeSender(
 	rangeExpr src.Range,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (handleRangeSenderResult, *compiler.Error) {
-	rangeCounter++
+) (handleRangeSenderResult, error) {
+	d.rangeCounter++
 
-	rangeNodeName := fmt.Sprintf("__range%d__", rangeCounter)
-	fromConstName := fmt.Sprintf("__range%d_from__", rangeCounter)
-	toConstName := fmt.Sprintf("__range%d_to__", rangeCounter)
+	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
+	fromConstName := fmt.Sprintf("__range%d_from__", d.rangeCounter)
+	toConstName := fmt.Sprintf("__range%d_to__", d.rangeCounter)
 
 	constsToInsert[fromConstName] = src.Const{
 		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
@@ -996,22 +1081,20 @@ func (d Desugarer) desugarRangeSender(
 	}, nil
 }
 
-var fanInCounter uint64
-
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
-func (d Desugarer) desugarFanIn(
+func (d *Desugarer) desugarFanIn(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
 ) ([]src.Connection, error) {
 	// 1. insert unique fan-in node
-	fanInCounter++
-	fanInNodeName := fmt.Sprintf("__fanIn__%d", fanInCounter)
+	d.fanInCounter++
+	fanInNodeName := fmt.Sprintf("__fanIn__%d", d.fanInCounter)
 	nodesToInsert[fanInNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
@@ -1064,18 +1147,11 @@ func (d Desugarer) desugarFanIn(
 		constsToInsert,
 	)
 	if err != nil {
-		return nil, &compiler.Error{
-			Message:  err.Error(),
-			Location: &scope.Location,
-			Meta:     &normConn.Meta,
-		}
+		return nil, fmt.Errorf("desugar fan in: %w", err)
 	}
 
 	return desugaredConnections, nil
 }
-
-// Add this variable at the package level
-var ternaryCounter uint64
 
 type handleTernarySenderResult struct {
 	replace src.Connection
@@ -1088,18 +1164,18 @@ type handleTernarySenderResult struct {
 // 2) left -> ternary:then;
 // 3) right -> ternary:else;
 // 4) ternary:res -> XXX;
-func (d Desugarer) desugarTernarySender(
+func (d *Desugarer) desugarTernarySender(
 	iface src.Interface,
 	ternary src.Ternary,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	usedNodeOutports nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
-) (handleTernarySenderResult, *compiler.Error) {
-	ternaryCounter++
-	ternaryNodeName := fmt.Sprintf("__ternary__%d", ternaryCounter)
+) (handleTernarySenderResult, error) {
+	d.ternaryCounter++
+	ternaryNodeName := fmt.Sprintf("__ternary__%d", d.ternaryCounter)
 
 	nodesToInsert[ternaryNodeName] = src.Node{
 		EntityRef: core.EntityRef{
@@ -1194,42 +1270,16 @@ type handleBinarySenderResult struct {
 	insert  []src.Connection
 }
 
-var (
-	// Arithmetic
-	addCounter uint64
-	subCounter uint64
-	mulCounter uint64
-	divCounter uint64
-	modCounter uint64
-	powCounter uint64
-	// Comparison
-	eqCounter uint64
-	neCounter uint64
-	gtCounter uint64
-	ltCounter uint64
-	geCounter uint64
-	leCounter uint64
-	// Logical
-	andCounter uint64
-	orCounter  uint64
-	// Bitwise
-	bitAndCounter uint64
-	bitOrCounter  uint64
-	bitXorCounter uint64
-	bitLshCounter uint64
-	bitRshCounter uint64
-)
-
-func (d Desugarer) desugarBinarySender(
+func (d *Desugarer) desugarBinarySender(
 	iface src.Interface,
 	binary src.Binary,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	usedNodeOutports nodeOutportsUsed,
-	scope src.Scope,
+	scope Scope,
 	nodes map[string]src.Node,
-) (handleBinarySenderResult, *compiler.Error) {
+) (handleBinarySenderResult, error) {
 	var (
 		opNode      string
 		opComponent string
@@ -1238,90 +1288,86 @@ func (d Desugarer) desugarBinarySender(
 	switch binary.Operator {
 	// Arithmetic
 	case src.AddOp:
-		addCounter++
-		opNode = fmt.Sprintf("__add__%d", addCounter)
+		d.addCounter++
+		opNode = fmt.Sprintf("__add__%d", d.addCounter)
 		opComponent = "Add"
 	case src.SubOp:
-		subCounter++
-		opNode = fmt.Sprintf("__sub__%d", subCounter)
+		d.subCounter++
+		opNode = fmt.Sprintf("__sub__%d", d.subCounter)
 		opComponent = "Sub"
 	case src.MulOp:
-		mulCounter++
-		opNode = fmt.Sprintf("__mul__%d", mulCounter)
+		d.mulCounter++
+		opNode = fmt.Sprintf("__mul__%d", d.mulCounter)
 		opComponent = "Mul"
 	case src.DivOp:
-		divCounter++
-		opNode = fmt.Sprintf("__div__%d", divCounter)
+		d.divCounter++
+		opNode = fmt.Sprintf("__div__%d", d.divCounter)
 		opComponent = "Div"
 	case src.ModOp:
-		modCounter++
-		opNode = fmt.Sprintf("__mod__%d", modCounter)
+		d.modCounter++
+		opNode = fmt.Sprintf("__mod__%d", d.modCounter)
 		opComponent = "Mod"
 	case src.PowOp:
-		powCounter++
-		opNode = fmt.Sprintf("__pow__%d", powCounter)
+		d.powCounter++
+		opNode = fmt.Sprintf("__pow__%d", d.powCounter)
 		opComponent = "Pow"
 	// Comparison
 	case src.EqOp:
-		eqCounter++
-		opNode = fmt.Sprintf("__eq__%d", eqCounter)
+		d.eqCounter++
+		opNode = fmt.Sprintf("__eq__%d", d.eqCounter)
 		opComponent = "Eq"
 	case src.NeOp:
-		neCounter++
-		opNode = fmt.Sprintf("__ne__%d", neCounter)
+		d.neCounter++
+		opNode = fmt.Sprintf("__ne__%d", d.neCounter)
 		opComponent = "Ne"
 	case src.GtOp:
-		gtCounter++
-		opNode = fmt.Sprintf("__gt__%d", gtCounter)
+		d.gtCounter++
+		opNode = fmt.Sprintf("__gt__%d", d.gtCounter)
 		opComponent = "Gt"
 	case src.LtOp:
-		ltCounter++
-		opNode = fmt.Sprintf("__lt__%d", ltCounter)
+		d.ltCounter++
+		opNode = fmt.Sprintf("__lt__%d", d.ltCounter)
 		opComponent = "Lt"
 	case src.GeOp:
-		geCounter++
-		opNode = fmt.Sprintf("__ge__%d", geCounter)
+		d.geCounter++
+		opNode = fmt.Sprintf("__ge__%d", d.geCounter)
 		opComponent = "Ge"
 	case src.LeOp:
-		leCounter++
-		opNode = fmt.Sprintf("__le__%d", leCounter)
+		d.leCounter++
+		opNode = fmt.Sprintf("__le__%d", d.leCounter)
 		opComponent = "Le"
 	// Logical
 	case src.AndOp:
-		andCounter++
-		opNode = fmt.Sprintf("__and__%d", andCounter)
+		d.andCounter++
+		opNode = fmt.Sprintf("__and__%d", d.andCounter)
 		opComponent = "And"
 	case src.OrOp:
-		orCounter++
-		opNode = fmt.Sprintf("__or__%d", orCounter)
+		d.orCounter++
+		opNode = fmt.Sprintf("__or__%d", d.orCounter)
 		opComponent = "Or"
 	// Bitwise
 	case src.BitAndOp:
-		bitAndCounter++
-		opNode = fmt.Sprintf("__bitAnd__%d", bitAndCounter)
+		d.bitAndCounter++
+		opNode = fmt.Sprintf("__bitAnd__%d", d.bitAndCounter)
 		opComponent = "BitAnd"
 	case src.BitOrOp:
-		bitOrCounter++
-		opNode = fmt.Sprintf("__bitOr__%d", bitOrCounter)
+		d.bitOrCounter++
+		opNode = fmt.Sprintf("__bitOr__%d", d.bitOrCounter)
 		opComponent = "BitOr"
 	case src.BitXorOp:
-		bitXorCounter++
-		opNode = fmt.Sprintf("__bitXor__%d", bitXorCounter)
+		d.bitXorCounter++
+		opNode = fmt.Sprintf("__bitXor__%d", d.bitXorCounter)
 		opComponent = "BitXor"
 	case src.BitLshOp:
-		bitLshCounter++
-		opNode = fmt.Sprintf("__bitLsh__%d", bitLshCounter)
+		d.bitLshCounter++
+		opNode = fmt.Sprintf("__bitLsh__%d", d.bitLshCounter)
 		opComponent = "BitLsh"
 	case src.BitRshOp:
-		bitRshCounter++
-		opNode = fmt.Sprintf("__bitRsh__%d", bitRshCounter)
+		d.bitRshCounter++
+		opNode = fmt.Sprintf("__bitRsh__%d", d.bitRshCounter)
 		opComponent = "BitRsh"
 	default:
-		return handleBinarySenderResult{}, &compiler.Error{
-			Message:  fmt.Sprintf("unsupported binary operator: %s", binary.Operator),
-			Location: &scope.Location,
-			Meta:     &binary.Meta,
-		}
+		return handleBinarySenderResult{}, fmt.Errorf("unsupported binary operator: %s", binary.Operator)
 	}
 
 	nodesToInsert[opNode] = src.Node{

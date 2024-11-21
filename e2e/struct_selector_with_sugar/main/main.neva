@@ -10,7 +10,7 @@ type User struct {
 
 type Pet struct { name string }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     UserSender, fmt.Println
     ---
     :start -> userSender:sig
@@ -24,5 +24,5 @@ const user User = {
 }
 
 def UserSender(sig) (u User) {
-    :sig -> { $user -> :u }
+    :sig -> $user -> :u
 }

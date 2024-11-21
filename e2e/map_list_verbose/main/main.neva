@@ -4,11 +4,11 @@ import { fmt }
 
 const lst list<int> = [50, 30, 20, 100]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Map<int, int>{Dec<int>}
     List
     fmt.Println
     ListToStream<int>
     ---
-    :start -> { $lst -> listToStream -> map -> list -> println -> :stop }
+    :start -> $lst -> listToStream -> map -> list -> println -> :stop
 }

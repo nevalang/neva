@@ -7,8 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "--trace", "99_bottles"]
+      "cwd": "${workspaceFolder}/e2e/add_numbers",
+      "args": ["run", "--trace", "main"]
     },
     {
       "name": "DEBUG CODEGEN",

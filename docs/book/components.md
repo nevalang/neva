@@ -39,7 +39,7 @@ Normal components are implemented in Nevalang source code. As a Nevalang program
 Minimal nevalang program is one normal component `Main` without any nodes and with network of a single connection:
 
 ```neva
-def Main(start) (stop) {
+def Main(start any) (stop any) {
    :start -> :stop
 }
 ```
@@ -51,7 +51,7 @@ Components however typically perform data transformations or side-effects using 
 Normal component `Main` with a `println` node (instance of `Println`):
 
 ```neva
-def Main(start) (stop) {
+def Main(start any) (stop any) {
    Println
    ---
    :start -> { 42 -> println -> :stop }
@@ -61,7 +61,7 @@ def Main(start) (stop) {
 As you can see, we refer to the instance of `Println` as `println`. The compiler implicitly assigns a lowercase version of the component name to its instance. However, with multiple instances of the same component, this leads to name collisions. To avoid this, the compiler requires explicit naming for nodes in such cases. Example:
 
 ```neva
-def Main(start) (stop) {
+def Main(start any) (stop any) {
    p1 Println
    p2 Println
    ---
@@ -125,7 +125,7 @@ Before dependency injection:
 
 ```neva
 // cmd/app
-def Main(start) (stop)
+def Main(start any) (stop any)
    App
    ...
 }
@@ -134,7 +134,7 @@ def Main(start) (stop)
 After dependency injection:
 
 ```neva
-def Main(start) (stop)
+def Main(start any) (stop any)
    App{ProdLogger}
    ...
 }

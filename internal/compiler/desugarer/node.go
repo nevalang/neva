@@ -15,7 +15,7 @@ func (Desugarer) handleNode(
 	desugaredNodes map[string]src.Node,
 	nodeName string,
 	virtualEntities map[string]src.Entity,
-) ([]src.Connection, *compiler.Error) {
+) ([]src.Connection, error) {
 	var extraConnections []src.Connection
 
 	if node.ErrGuard {
@@ -43,11 +43,7 @@ func (Desugarer) handleNode(
 
 	entity, _, err := scope.Entity(node.EntityRef)
 	if err != nil {
-		return nil, &compiler.Error{
-			Message:  err.Error(),
-			Location: &scope.Location,
-			Meta:     &node.Meta,
-		}
+		return nil, fmt.Errorf("get entity: %w", err)
 	}
 
 	if entity.Kind != src.ComponentEntity {

@@ -27,7 +27,7 @@ def Main(start any) (stop any) {
 
     ---
 
-    :start -> { $user -> field:data }
+    :start -> $user -> field:data
     field:res -> println:data
     println:sig -> :stop
 }

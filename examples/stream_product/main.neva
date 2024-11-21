@@ -1,11 +1,15 @@
 import { streams, fmt }
 
-def Main(start) (stop) {
-	FanOut, streams.Product<int, int>
-	For{fmt.Println}, Wait
+type ProductResult streams.ProductResult<int, int>
+
+def Main(start any) (stop any) {
+	streams.Product<int, int>
+	For<ProductResult>{fmt.Println<ProductResult>}
+	Wait
 	---
-	:start -> fanOut
-	fanOut[0] -> 0..3 -> product:first
-	fanOut[1] -> 0..3 -> product:second
+	:start -> [
+		0..3 -> product:first,
+		0..3 -> product:second
+	]
 	product -> for -> wait -> :stop
 }

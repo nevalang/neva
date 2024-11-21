@@ -10,8 +10,8 @@ def Main(start any) (stop any) {
     builder Struct<User>
     ---
     :start -> [
-        { 'John' -> builder:name },
-        { 32 -> builder:age }
+        'John' -> builder:name,
+        32 -> builder:age
     ]
     builder:msg -> println:data
     println:sig -> :stop

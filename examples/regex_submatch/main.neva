@@ -1,11 +1,11 @@
 import { regexp, fmt }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     fmt.Println, regexp.Submatch
     ---
     :start -> [
-        { 'a(x*)b(y|z)c' -> submatch:regexp },
-        { '-axxxbyc-' -> submatch:data }
+        'a(x*)b(y|z)c' -> submatch:regexp,
+        '-axxxbyc-' -> submatch:data
     ]
     [submatch:res, submatch:err] -> println -> :stop
 }

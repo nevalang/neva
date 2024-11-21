@@ -2,8 +2,8 @@ import { fmt }
 
 const lst list<int> = [1, 2, 3]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     ListToStream<int>, For<int>{fmt.Println<int>}, Wait
     ---
-    :start -> { $lst -> listToStream -> for -> wait -> :stop }
+    :start -> $lst -> listToStream -> for -> wait -> :stop
 }

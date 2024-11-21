@@ -2,9 +2,9 @@ import { fmt }
 
 const l list<int> = [-215]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println<any>
 	---
-	:start -> { $l -> println:data }
+	:start -> $l -> println:data
 	println:sig -> :stop
 }

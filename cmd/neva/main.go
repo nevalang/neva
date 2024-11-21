@@ -41,7 +41,7 @@ func main() {
 	goCompiler := compiler.New(
 		bldr,
 		prsr,
-		desugarer,
+		&desugarer,
 		analyzer,
 		irgen,
 		golang.NewBackend(),
@@ -50,7 +50,7 @@ func main() {
 	nativeCompiler := compiler.New(
 		bldr,
 		prsr,
-		desugarer,
+		&desugarer,
 		analyzer,
 		irgen,
 		native.NewBackend(
@@ -61,7 +61,7 @@ func main() {
 	wasmCompiler := compiler.New(
 		bldr,
 		prsr,
-		desugarer,
+		&desugarer,
 		analyzer,
 		irgen,
 		wasm.NewBackend(
@@ -72,7 +72,7 @@ func main() {
 	jsonCompiler := compiler.New(
 		bldr,
 		prsr,
-		desugarer,
+		&desugarer,
 		analyzer,
 		irgen,
 		json.NewBackend(),
@@ -81,7 +81,7 @@ func main() {
 	dotCompiler := compiler.New(
 		bldr,
 		prsr,
-		desugarer,
+		&desugarer,
 		analyzer,
 		irgen,
 		dot.NewBackend(),

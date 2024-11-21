@@ -1,5 +1,5 @@
 const x float = 1000
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	:start -> :stop
 }

@@ -1,1 +1,1 @@
-def Main(start) (stop) { :start -> :stop }
+def Main(start any) (stop any) { :start -> :stop }

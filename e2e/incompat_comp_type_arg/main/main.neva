@@ -1,6 +1,6 @@
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	Dec<any>
 	---
-	:start -> { 42 -> dec:data }
+	:start -> 42 -> dec:data
 	dec:res -> :stop
 }

@@ -3,6 +3,7 @@ package desugarer
 import (
 	"testing"
 
+	gomock "github.com/golang/mock/gomock"
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -14,12 +15,10 @@ import (
 // Note: some cases are hard to test this way because desugarer depends on Scope object
 // which is normally passed from top-level functions in this package.
 func TestDesugarNetwork(t *testing.T) {
-	d := Desugarer{}
-	scope := src.Scope{}
-
 	tests := []struct {
 		name           string
 		iface          src.Interface
+		mockScope      func(scope *MockScopeMockRecorder)
 		net            []src.Connection
 		nodes          map[string]src.Node
 		expectedResult handleNetworkResult
@@ -314,7 +313,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
-		// :a + :b -> :c
+		// (:a + :b) -> :c
 		{
 			name: "binary_expressions",
 			net: []src.Connection{
@@ -398,6 +397,7 @@ func TestDesugarNetwork(t *testing.T) {
 				constsToInsert: map[string]src.Const{},
 			},
 		},
+
 		{
 			// node1:x -> switch {
 			//     node2:y -> node3:z
@@ -523,13 +523,450 @@ func TestDesugarNetwork(t *testing.T) {
 				constsToInsert: map[string]src.Const{},
 			},
 		},
+		// $foo -> bar:baz
+		{
+			name: "const_ref_sender",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Const: &src.Const{
+									Value: src.ConstValue{
+										Ref: &core.EntityRef{Name: "foo"},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"bar": {EntityRef: core.EntityRef{Name: "Bar"}},
+			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				constEntity := src.Const{
+					TypeExpr: ts.Expr{
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					Value: src.ConstValue{
+						Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+					},
+				}
+				mock.
+					Entity(core.EntityRef{Name: "foo"}).
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
+								},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__new__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"foo"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
+		// a:b -> $c -> d:e
+		{
+			name: "const_ref_in_chain",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								ChainedConnection: &src.Connection{
+									Normal: &src.NormalConnection{
+										SenderSide: []src.ConnectionSender{
+											{
+												Const: &src.Const{
+													Value: src.ConstValue{
+														Ref: &core.EntityRef{Name: "c"},
+													},
+												},
+											},
+										},
+										ReceiverSide: []src.ConnectionReceiver{
+											{
+												PortAddr: &src.PortAddr{Node: "d", Port: "e"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"a": {EntityRef: core.EntityRef{Name: "A"}},
+				"d": {EntityRef: core.EntityRef{Name: "D"}},
+			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				constEntity := src.Const{
+					TypeExpr: ts.Expr{
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					Value: src.ConstValue{
+						Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+					},
+				}
+				mock.
+					Entity(core.EntityRef{Name: "c"}).
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "a", Port: "b"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "d", Port: "e"},
+								},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__newv2__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"c"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+			},
+		},
+		// a:b -> 42 -> c:d
+		{
+			name: "const_literal_in_chain",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{
+								ChainedConnection: &src.Connection{
+									Normal: &src.NormalConnection{
+										SenderSide: []src.ConnectionSender{
+											{
+												Const: &src.Const{
+													TypeExpr: ts.Expr{
+														Inst: &ts.InstExpr{
+															Ref: core.EntityRef{Name: "int"},
+														},
+													},
+													Value: src.ConstValue{
+														Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+													},
+												},
+											},
+										},
+										ReceiverSide: []src.ConnectionReceiver{
+											{
+												PortAddr: &src.PortAddr{Node: "c", Port: "d"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"a": {EntityRef: core.EntityRef{Name: "A"}},
+				"c": {EntityRef: core.EntityRef{Name: "C"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "a", Port: "b"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+								},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "c", Port: "d"},
+								},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__newv2__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__1"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__const__1": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+						},
+					},
+				},
+			},
+		},
+		// (5 + 3) -> foo:bar
+		{
+			name: "binary_expression_with_literals",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Binary: &src.Binary{
+									Operator: src.AddOp,
+									Left: src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(5)},
+											},
+										},
+									},
+									Right: src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(3)},
+											},
+										},
+									},
+									AnalyzedType: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "int"},
+										},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						// __add__1:res -> foo:bar
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "res"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+					{
+						// __new__1:msg -> __add__1:left
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
+							},
+						},
+					},
+					{
+						// __new__2:msg -> __add__1:right
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "msg"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__add__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Add"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+					},
+					"__new__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__1"},
+						},
+					},
+					"__new__2": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__2"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__const__1": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(5)},
+						},
+					},
+					"__const__2": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(3)},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := d.desugarNetwork(tt.iface, tt.net, tt.nodes, scope)
+			d := Desugarer{}
 
+			scope := NewMockScope(gomock.NewController(t))
+			if tt.mockScope != nil {
+				tt.mockScope(scope.EXPECT())
+			}
+
+			result, err := d.desugarNetwork(tt.iface, tt.net, tt.nodes, scope)
 			require.Nil(t, err)
+
 			assert.Equal(t, tt.expectedResult.desugaredConnections, result.desugaredConnections)
 			assert.Equal(t, tt.expectedResult.constsToInsert, result.constsToInsert)
 			assert.Equal(t, tt.expectedResult.nodesToInsert, result.nodesToInsert)

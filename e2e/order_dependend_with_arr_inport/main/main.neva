@@ -2,12 +2,12 @@ import { fmt }
 
 const l list<int> = [1, 2, 3]
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
 	fmt.Println<int>
 	Reduce<int, int>{Sub<int>}
 	ListToStream<int>
 	---
-	:start -> { $l -> listToStream -> reduce:data }
+	:start -> $l -> listToStream -> reduce:data
 	0 -> reduce:init
 	reduce -> println -> :stop
 }

@@ -5,10 +5,10 @@ const d dict<string> = {
     age: '20'
 }
 
-def Main(start) (stop) {
+def Main(start any) (stop any) {
     Get, fmt.Println
     ---
-    :start -> { 'name' -> get:key }
+    :start -> 'name' -> get:key
     $d -> get:dict
     [get:res, get:err] -> println -> :stop
 }
