@@ -12,7 +12,7 @@ type handleComponentResult struct {
 	virtualEntities map[string]src.Entity
 }
 
-func (d Desugarer) desugarComponent(
+func (d *Desugarer) desugarComponent(
 	component src.Component,
 	scope src.Scope,
 ) (handleComponentResult, error) {
@@ -80,7 +80,7 @@ func (d Desugarer) desugarComponent(
 	}, nil
 }
 
-func (d Desugarer) desugarNodes(
+func (d *Desugarer) desugarNodes(
 	component src.Component,
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,

@@ -20,7 +20,7 @@ var selectorNodeRef = core.EntityRef{
 
 // desugarStructSelectors doesn't generate incoming connections for field node,
 // it's responsibility of desugarChainConnection.
-func (d Desugarer) desugarStructSelectors(
+func (d *Desugarer) desugarStructSelectors(
 	normConn src.NormalConnection, // sender here is selector (this is chained connection)
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,

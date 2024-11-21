@@ -18,7 +18,7 @@ type handleNetworkResult struct {
 	nodesPortsUsed       nodeOutportsUsed
 }
 
-func (d Desugarer) desugarNetwork(
+func (d *Desugarer) desugarNetwork(
 	iface src.Interface,
 	net []src.Connection,
 	nodes map[string]src.Node,
@@ -49,7 +49,7 @@ func (d Desugarer) desugarNetwork(
 	}, nil
 }
 
-func (d Desugarer) desugarConnections(
+func (d *Desugarer) desugarConnections(
 	iface src.Interface,
 	net []src.Connection,
 	nodePortsUsed nodeOutportsUsed,
@@ -89,7 +89,7 @@ type desugarConnectionResult struct {
 	insert  []src.Connection
 }
 
-func (d Desugarer) desugarConnection(
+func (d *Desugarer) desugarConnection(
 	iface src.Interface,
 	conn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
@@ -121,7 +121,7 @@ func (d Desugarer) desugarConnection(
 	)
 }
 
-func (d Desugarer) desugarNormalConnection(
+func (d *Desugarer) desugarNormalConnection(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodePortsUsed nodeOutportsUsed,
@@ -206,8 +206,7 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
-
-func (d Desugarer) desugarSingleReceiver(
+func (d *Desugarer) desugarSingleReceiver(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	scope Scope,
@@ -389,7 +388,7 @@ func (d Desugarer) desugarSingleReceiver(
 	}, nil
 }
 
-func (d Desugarer) desugarChainedConnection(
+func (d *Desugarer) desugarChainedConnection(
 	iface src.Interface,
 	receiver src.ConnectionReceiver,
 	scope Scope,
@@ -516,8 +515,7 @@ type desugarDeferredConnectionsResult struct {
 	insert  []src.Connection
 }
 
-
-func (d Desugarer) desugarDeferredConnection(
+func (d *Desugarer) desugarDeferredConnection(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	scope Scope,
@@ -620,7 +618,7 @@ type desugarSenderResult struct {
 }
 
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
-func (d Desugarer) desugarSingleSender(
+func (d *Desugarer) desugarSingleSender(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	scope Scope,
@@ -779,9 +777,7 @@ var newComponentRef = core.EntityRef{
 	Name: "New",
 }
 
-
-
-func (d Desugarer) handleLiteralSender(
+func (d *Desugarer) handleLiteralSender(
 	constant src.Const,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -814,7 +810,7 @@ func (d Desugarer) handleLiteralSender(
 	return emitterNodeOutportAddr, nil
 }
 
-func (d Desugarer) handleConstRefSender(
+func (d *Desugarer) handleConstRefSender(
 	ref core.EntityRef,
 	nodesToInsert map[string]src.Node,
 	scope Scope,
@@ -847,7 +843,7 @@ func (d Desugarer) handleConstRefSender(
 }
 
 // getConstTypeByRef is needed to figure out type parameters for Const node
-func (d Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr, error) {
+func (d *Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr, error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
 		return ts.Expr{}, fmt.Errorf("get entity: %w", err)
@@ -920,8 +916,7 @@ type desugarFanOutResult struct {
 	insert  []src.Connection // fanOut sender -> original receivers
 }
 
-
-func (d Desugarer) desugarFanOut(
+func (d *Desugarer) desugarFanOut(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
@@ -992,7 +987,6 @@ func (d Desugarer) desugarFanOut(
 	}, nil
 }
 
-
 // Add a new function to handle range senders
 type handleRangeSenderResult struct {
 	replace src.NormalConnection
@@ -1002,7 +996,7 @@ type handleRangeSenderResult struct {
 // desugarRangeSender desugars `from..to -> XXX` part.
 // It does not create connection to range:sig,
 // it's done in chained connection desugaring.
-func (d Desugarer) desugarRangeSender(
+func (d *Desugarer) desugarRangeSender(
 	rangeExpr src.Range,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
@@ -1087,10 +1081,9 @@ func (d Desugarer) desugarRangeSender(
 	}, nil
 }
 
-
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
-func (d Desugarer) desugarFanIn(
+func (d *Desugarer) desugarFanIn(
 	iface src.Interface,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
@@ -1160,7 +1153,6 @@ func (d Desugarer) desugarFanIn(
 	return desugaredConnections, nil
 }
 
-
 type handleTernarySenderResult struct {
 	replace src.Connection
 	insert  []src.Connection
@@ -1172,7 +1164,7 @@ type handleTernarySenderResult struct {
 // 2) left -> ternary:then;
 // 3) right -> ternary:else;
 // 4) ternary:res -> XXX;
-func (d Desugarer) desugarTernarySender(
+func (d *Desugarer) desugarTernarySender(
 	iface src.Interface,
 	ternary src.Ternary,
 	normConn src.NormalConnection,
@@ -1278,8 +1270,7 @@ type handleBinarySenderResult struct {
 	insert  []src.Connection
 }
 
-
-func (d Desugarer) desugarBinarySender(
+func (d *Desugarer) desugarBinarySender(
 	iface src.Interface,
 	binary src.Binary,
 	normConn src.NormalConnection,

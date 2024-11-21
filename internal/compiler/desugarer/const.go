@@ -6,7 +6,7 @@ import (
 )
 
 // handleConst handles case when constant has integer value and type is float.
-func (d Desugarer) handleConst(constant src.Const) (src.Const, error) {
+func (d *Desugarer) handleConst(constant src.Const) (src.Const, error) {
 	if constant.Value.Message == nil {
 		return constant, nil
 	}

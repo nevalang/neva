@@ -313,7 +313,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
-		// :a + :b -> :c
+		// (:a + :b) -> :c
 		{
 			name: "binary_expressions",
 			net: []src.Connection{
@@ -397,6 +397,7 @@ func TestDesugarNetwork(t *testing.T) {
 				constsToInsert: map[string]src.Const{},
 			},
 		},
+
 		{
 			// node1:x -> switch {
 			//     node2:y -> node3:z
@@ -803,12 +804,161 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		// (5 + 3) -> foo:bar
+		{
+			name: "binary_expression_with_literals",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						SenderSide: []src.ConnectionSender{
+							{
+								Binary: &src.Binary{
+									Operator: src.AddOp,
+									Left: src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(5)},
+											},
+										},
+									},
+									Right: src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(3)},
+											},
+										},
+									},
+									AnalyzedType: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "int"},
+										},
+									},
+								},
+							},
+						},
+						ReceiverSide: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						// __add__1:res -> foo:bar
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "res"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+					{
+						// __new__1:msg -> __add__1:left
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
+							},
+						},
+					},
+					{
+						// __new__2:msg -> __add__1:right
+						Normal: &src.NormalConnection{
+							SenderSide: []src.ConnectionSender{
+								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "msg"}},
+							},
+							ReceiverSide: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__add__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Add"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+					},
+					"__new__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__1"},
+						},
+					},
+					"__new__2": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+						TypeArgs: []ts.Expr{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "int"},
+								},
+							},
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__const__2"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__const__1": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(5)},
+						},
+					},
+					"__const__2": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(3)},
+						},
+					},
+				},
+			},
+		},
 	}
-
-	d := Desugarer{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			d := Desugarer{}
+
 			scope := NewMockScope(gomock.NewController(t))
 			if tt.mockScope != nil {
 				tt.mockScope(scope.EXPECT())

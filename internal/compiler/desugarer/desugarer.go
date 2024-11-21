@@ -9,6 +9,7 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
+// Desugarer is NOT concurrent safe and must be used in single thread
 type Desugarer struct {
 	virtualSelectorsCount uint64
 	ternaryCounter        uint64
@@ -45,7 +46,7 @@ type Desugarer struct {
 	bitRshCounter uint64
 }
 
-func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
+func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
 	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef := range build.Modules {
@@ -62,7 +63,7 @@ func (d Desugarer) Desugar(build src.Build) (src.Build, error) {
 	}, nil
 }
 
-func (d Desugarer) desugarModule(
+func (d *Desugarer) desugarModule(
 	build src.Build,
 	modRef src.ModuleRef,
 ) (src.Module, error) {
@@ -121,7 +122,7 @@ type Scope interface {
 	Location() *src.Location
 }
 
-func (d Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error) {
+func (d *Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error) {
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
@@ -143,7 +144,7 @@ func (d Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error)
 }
 
 // desugarFile injects import of std/builtin into every pkg's file and desugares it's every entity
-func (d Desugarer) desugarFile(
+func (d *Desugarer) desugarFile(
 	file src.File,
 	scope src.Scope,
 ) (src.File, error) {
@@ -183,7 +184,7 @@ type desugarEntityResult struct {
 	entitiesToInsert map[string]src.Entity
 }
 
-func (d Desugarer) desugarEntity(
+func (d *Desugarer) desugarEntity(
 	entity src.Entity,
 	scope src.Scope,
 ) (desugarEntityResult, error) {
