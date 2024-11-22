@@ -49,7 +49,7 @@ func createNevaMod(path string) error {
 def Main(start any) (stop any) {
 	fmt.Println
 	---
-	:start -> { 'Hello, World!' -> println -> :stop }
+	:start -> 'Hello, World!' -> println -> :stop
 }`
 
 	if err := os.WriteFile(

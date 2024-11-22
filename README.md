@@ -79,7 +79,7 @@ import { fmt }
 def Main(start any) (stop any) {
 	println fmt.Println<any>
 	---
-	:start -> { 'Hello, World!' -> println -> :stop }
+	:start -> 'Hello, World!' -> println -> :stop
 }
 ```
 
