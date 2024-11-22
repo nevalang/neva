@@ -8,7 +8,7 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Hello, World!](#hello-world)
    - [Compiling programs](#compiling-programs)
 2. [Basic Concepts](#basic-concepts)
-   - [Components, Ports, Nodes and Connections](#components-nodes-ports-and-connections)
+   - [Components](#components)
    - [Messages and Basic Types](#messages-and-basic-types)
    - [Constants](#constants)
    - [Modules and Packages](#modules-and-packages)
@@ -100,7 +100,7 @@ import { fmt }
 def Main(start any) (stop any) {
 	println fmt.Println<any>
 	---
-	:start -> { 'Hello, World!' -> println -> :stop }
+	:start -> 'Hello, World!' -> println -> :stop
 }
 ```
 
@@ -124,7 +124,7 @@ Once again you should see `Hello, World!`.
 
 ## Basic Concepts
 
-### Components, Nodes, Ports and Connections
+### Components
 
 Components are the basic building blocks in Nevalang. Let's look at the simplest possible Nevalang program:
 
@@ -179,26 +179,26 @@ import { fmt }
 def Main(start any) (stop any) {
     println fmt.Println<any>
     ---
-    :start -> { 'Hello, World!' -> println -> :stop }
+    :start -> 'Hello, World!' -> println -> :stop
 }
 ```
 
-We sent `'Hello, World!'` to the `println` node. This is a string message literal, one of Nevalang's 4 basic types. Ignore the `-> { ... }` part for now; we'll cover it later.
+We sent `'Hello, World!'` to the `println` node. This is a string message literal, one of Nevalang's 4 basic types.
 
 ```neva
-// 1. `bool` - Boolean values: true or false
+// `bool` - Boolean values: true or false
 true -> println   // prints: true
 false -> println  // prints: false
 
-// 2. `int` - 64-bit signed integer numbers
+// `int` - 64-bit signed integer numbers
 42 -> println    // prints: 42
 -100 -> println  // prints: -100
 
-// 3. `float` - 64-bit floating-point numbers
+// `float` - 64-bit floating-point numbers
 3.14 -> println    // prints: 3.14
 -0.5 -> println    // prints: -0.5
 
-// 4. `string` - UTF-8 encoded text
+// `string` - UTF-8 encoded text
 'Hello!' -> println              // prints: Hello!
 'Numbers: 123' -> println        // prints: Numbers: 123
 'Special chars: @#$' -> println  // prints: Special chars: @#$
@@ -220,10 +220,12 @@ const greeting string = 'Hello!'
 Use `$` to prefix a constant in a network:
 
 ```neva
+const greeting string = 'Hello!'
+
 def Main(start any) (stop any) {
     println fmt.Println<any>
     ---
-    :start -> { $greeting -> println -> :stop }
+    :start -> $greeting -> println -> :stop
 }
 ```
 
@@ -260,7 +262,7 @@ import { fmt }
 def Main(start any) (stop any) {
    println fmt.Println<any>
    ---
-   :start -> { 'Hello, World!' -> println -> :stop }
+   :start -> 'Hello, World!' -> println -> :stop
 }
 ```
 
@@ -279,32 +281,32 @@ my_awesome_project/
 └── neva.yaml
 ```
 
-Here's an example of a string utility and its usage in the main program:
+Let's add a string utility `Greet` that receives a `data` string, prefixes it with `"Hello, "` and sends to `res` output port. We'll use binary expression `('Hello, ' + :data)` to concatenate strings:
 
 ```neva
 // src/utils/strings.neva
-pub def Greet(data string) (res string) { // <- new component
+pub def Greet(data string) (res string) { // new component
 	('Hello, ' + :data) -> :res
 }
 
 // src/main.neva
 import {
 	fmt
-	@/utils // <- new import
+	@:/utils // new import
 }
 
 def Main(start any) (stop any) {
-	greet utils.Greet // <- new node
+	greet utils.Greet // new node
 	println fmt.Println<any>
 	---
-	:start -> { 'World' -> greet -> println -> :stop } // <- new connection
+	:start -> 'World' -> greet -> println -> :stop // new connection
 }
 ```
 
 Notice how we can have multiple imports:
 
 - `fmt` from the standard library for printing
-- `@/utils` from our local module using the `@` symbol
+- `@:/utils` from our local module (`@` is module name, `:` separates module/package)
 
 This modular structure keeps your code organized and reusable as your projects grow.
 
@@ -346,17 +348,15 @@ We can use `Greet` (import needed) and `AddExclamation` (no import needed) in ou
 ```neva
 import {
     fmt
-    @/utils
+    @:/utils
 }
 
 def Main(start any) (stop any) {
     greet utils.Greet
-    exclaim AddExclamation  // No import needed - same package
+    exclaim AddExclamation  // same package, no import needed
     println fmt.Println<any>
     ---
-    :start -> {
-        'World' -> greet -> exclaim -> println -> :stop
-    }
+    :start -> 'World' -> greet -> exclaim -> println -> :stop
 }
 ```
 
@@ -528,7 +528,7 @@ Let's revisit our Hello World program:
 def Main(start any) (stop any) {
     println fmt.Println<any>
     ---
-    :start -> { 'Hello, World!' -> println -> :stop }
+    :start -> 'Hello, World!' -> println -> :stop
 }
 ```
 
