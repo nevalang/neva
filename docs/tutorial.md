@@ -14,7 +14,12 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Modules and Packages](#modules-and-packages)
    - [Imports and Visibility](#imports-and-visibility)
 3. [Dataflow](#dataflow)
-   - [Ports](#ports)
+   - [Chained Connections](#chained-connections)
+   - [Multiple Ports](#multiple-ports)
+   - [Fan-In/Fan-Out](#fan-infan-out)
+   <!-- - [Binary Operators](#binary-operators)
+   - [Ternary Operator](#ternary-operator)
+   - [Deferred Connections](#deferred-connections) -->
 
 ## Welcome
 
@@ -370,7 +375,7 @@ Hello, World!!!
 
 ## Dataflow
 
-## Ports
+### Chained Connections
 
 Nodes send and receive messages through ports. Each port is referenced with a `:` prefix followed by its name:
 
@@ -424,18 +429,12 @@ pub def Concat(prefix string, suffix string) (res string) {
 Components must use all their ports within their network. For example, if we remove `:suffix`, the program won't compile:
 
 ```neva
-def Concat(prefix string, suffix string) (res string) { // ERROR: suffix inport is not used
-    :prefix -> :res
+def Concat(prefix string, suffix string) (res string) {
+    :prefix -> :res // ERROR: suffix inport is not used
 }
 ```
 
-When using nodes with multiple inports, we can't use the chain syntax because the compiler won't know which port to connect to. This won't work:
-
-```neva
-:start -> 'Hello, ' -> 'World' -> concat -> println -> :stop
-```
-
-Instead, we must specify ports explicitly:
+When using nodes with multiple inports, we can't use chain syntax because compiler won't know which port to use. Instead, we must specify ports explicitly:
 
 ```neva
 import {
@@ -449,13 +448,16 @@ def Main(start any) (stop any) {
     ---
     :start -> 'Hello, ' -> concat:prefix
     'World' -> concat:suffix
-    concat -> println -> :stop // println can still chain
+    concat -> println -> :stop
 }
 ```
 
-Note that we're allowed to `concat ->` instead of `concat:res ->` beacuse `Concat` still does have one outport.
+Notice that:
 
-Let's add one more outport to `Concat`:
+1. We can omit `concat:res ->` and write just `concat ->` since `Concat` has one outport
+2. We can chain `-> println ->` since it still has a single port
+
+Let's add a `debug` outport to `Concat`:
 
 ```neva
 pub def Concat(prefix string, suffix string) (res string, debug string) {
@@ -464,10 +466,10 @@ pub def Concat(prefix string, suffix string) (res string, debug string) {
 }
 ```
 
-First of all we're no longer allowed to omit outport name of `concat` so `concat -> println -> :stop` needs to become `concat:res -> println -> :stop`. Second - unlike component (self) outports which must all be used, we are allowed to use only the outports we need from nodes, so we can ignore `:debug` outport if we want:
+Unlike self outports, we can ignore node outports we don't need (like `concat:debug`), but we must now specify `concat:res` explicitly since `concat` has multiple outports:
 
 ```neva
-inport {
+import {
     fmt
     @:utils
 }
@@ -478,13 +480,8 @@ def Main(start any) (stop any) {
     ---
     :start -> 'Hello, ' -> concat:prefix
     'World' -> concat:suffix
-    concat:res -> println -> :stop // concat:debug is not used and that's ok
+    concat:res -> println -> :stop // concat:debug is not used
 }
 ```
 
-Summary:
-
-- Component (self) inports must all be used
-- Component (self) outports must all be used
-- Node inports must all be used
-- Node outports can be partially used
+### Fan-In/Fan-Out
