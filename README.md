@@ -42,7 +42,7 @@ curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.s
 If your device is connected to a chinese network:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/cnina/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/china/install.sh | bash
 ```
 
 For Windows (see [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from [releases](https://github.com/nevalang/neva/releases) if installation won't work):
@@ -77,7 +77,7 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see
 import { fmt }
 
 def Main(start any) (stop any) {
-	println fmt.Println<any>
+	println fmt.Println<string>
 	---
 	:start -> 'Hello, World!' -> println -> :stop
 }

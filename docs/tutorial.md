@@ -7,12 +7,42 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Installation](#installation)
    - [Hello, World!](#hello-world)
    - [Compiling programs](#compiling-programs)
-2. [Basic Concepts](#basic-concepts)
+2. [Core Concepts](#core-concepts)
    - [Components](#components)
    - [Messages and Basic Types](#messages-and-basic-types)
    - [Constants](#constants)
    - [Modules and Packages](#modules-and-packages)
    - [Imports and Visibility](#imports-and-visibility)
+   <!-- - [Interfaces and Dependency Injection](#interfaces-and-dependency-injection) interface nodes and DI, interfaces implemented implicitly and by structure -->
+3. [Dataflow Basics](#dataflow)
+   - [Chained Connections](#chained-connections)
+   - [Multiple Ports](#multiple-ports)
+   - [Fan-In/Fan-Out](#fan-infan-out)
+     <!-- - [Binary Operators](#binary-operators) -->
+     <!-- - [Ternary Operator](#ternary-operator) -->
+     <!-- - [Switch](#switch) explain routing: as if-else, as switch, as switch-true -->
+     <!-- - [Deferred Connections](#deferred-connections) -->
+     <!-- - [Array Ports](#array-ports) wait group with array ports -->
+     <!-- 4. [More Types](#more-types) -->
+        <!-- - [Any](#any) -->
+        <!-- - [Maybe](#maybe) -->
+        <!-- - [Struct](#struct) structs and struct selectors -->
+        <!-- - [List](#list) -->
+        <!-- - [Dict](#dict) -->
+        <!-- - [Enum](#enum) -->
+        <!-- - [Union](#union) -->
+        <!-- - [Error](#error) error handling with ? operator, also explain runtime.Panic -->
+        <!-- - [Stream](#stream) stream type, range operator, streams package and streams.Wait component -->
+        <!-- - [Generics](#generics) custom generic types and constraints -->
+     <!-- 5. [Streams](#streams) -->
+        <!-- - [For](#for) -->
+        <!-- - [Map](#map) -->
+        <!-- - [Filter](#filter) -->
+        <!-- - [Reduce](#reduce) -->
+        <!-- - [Stream Convertors](#stream-convertors) -->
+     <!-- 6. [Miscellaneous](#miscellaneous) -->
+        <!-- - [Pass Component](#pass-component) -->
+        <!-- - [Tap Component](#tap-component) examples from 99 bottles -->
 
 ## Welcome
 
@@ -39,7 +69,7 @@ curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.s
 If your device is connected to a chinese network:
 
 ```shell
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/cnina/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/china/install.sh | bash
 ```
 
 For Windows (see [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from [releases](https://github.com/nevalang/neva/releases) if installation won't work):
@@ -98,7 +128,7 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE, you'll se
 import { fmt }
 
 def Main(start any) (stop any) {
-	println fmt.Println<any>
+	println fmt.Println<string>
 	---
 	:start -> 'Hello, World!' -> println -> :stop
 }
@@ -122,7 +152,7 @@ This will produce an `output` file in the directory where neva-cli was executed,
 
 Once again you should see `Hello, World!`.
 
-## Basic Concepts
+## Core Concepts
 
 ### Components
 
@@ -152,7 +182,7 @@ Most components do more interesting work by using nodes to process data:
 import { fmt }
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
+    println fmt.Println<string>
     ---
     :start -> println -> :stop
 }
@@ -177,7 +207,7 @@ Back to hello world:
 import { fmt }
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
+    println fmt.Println<string>
     ---
     :start -> 'Hello, World!' -> println -> :stop
 }
@@ -223,7 +253,7 @@ Use `$` to prefix a constant in a network:
 const greeting string = 'Hello!'
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
+    println fmt.Println<string>
     ---
     :start -> $greeting -> println -> :stop
 }
@@ -260,7 +290,7 @@ A package is a directory with `.neva` files. In our Hello World example, the `sr
 import { fmt }
 
 def Main(start any) (stop any) {
-   println fmt.Println<any>
+   println fmt.Println<string>
    ---
    :start -> 'Hello, World!' -> println -> :stop
 }
@@ -277,14 +307,14 @@ my_awesome_project/
 ├── src/
 │   ├── main.neva
 │   └── utils/
-│       └── strings.neva
+│       └── utils.neva
 └── neva.yaml
 ```
 
 Let's add a string utility `Greet` that receives a `data` string, prefixes it with `"Hello, "` and sends to `res` output port. We'll use binary expression `('Hello, ' + :data)` to concatenate strings:
 
 ```neva
-// src/utils/strings.neva
+// src/utils/utils.neva
 pub def Greet(data string) (res string) { // new component
 	('Hello, ' + :data) -> :res
 }
@@ -292,12 +322,12 @@ pub def Greet(data string) (res string) { // new component
 // src/main.neva
 import {
 	fmt
-	@:/utils // new import
+	@:utils // new import
 }
 
 def Main(start any) (stop any) {
 	greet utils.Greet // new node
-	println fmt.Println<any>
+	println fmt.Println<string>
 	---
 	:start -> 'World' -> greet -> println -> :stop // new connection
 }
@@ -306,7 +336,7 @@ def Main(start any) (stop any) {
 Notice how we can have multiple imports:
 
 - `fmt` from the standard library for printing
-- `@:/utils` from our local module (`@` is module name, `:` separates module/package)
+- `@:utils` from our local module (`@` is module name, `:` separates module/package)
 
 This modular structure keeps your code organized and reusable as your projects grow.
 
@@ -315,7 +345,7 @@ This modular structure keeps your code organized and reusable as your projects g
 In `utils`, we used `pub` keyword:
 
 ```neva
-// src/utils/strings.neva
+// src/utils/utils.neva
 pub def Greet(data string) (res string) {
     ('Hello, ' + :data) -> :res
 }
@@ -331,7 +361,7 @@ my_awesome_project/
 │   ├── main.neva
 │   ├── exclaim.neva
 │   └── utils/
-│       └── strings.neva
+│       └── utils.neva
 └── neva.yaml
 ```
 
@@ -348,13 +378,13 @@ We can use `Greet` (import needed) and `AddExclamation` (no import needed) in ou
 ```neva
 import {
     fmt
-    @:/utils
+    @:utils
 }
 
 def Main(start any) (stop any) {
     greet utils.Greet
     exclaim AddExclamation  // same package, no import needed
-    println fmt.Println<any>
+    println fmt.Println<string>
     ---
     :start -> 'World' -> greet -> exclaim -> println -> :stop
 }
@@ -366,187 +396,237 @@ Output:
 Hello, World!!!
 ```
 
-<!-- ## Dataflow
-
-Let's explore some common patterns for connecting components in Nevalang.
+## Dataflow
 
 ### Chained Connections
 
-Remember our simple string utility in `src/utils/strings.neva`:
+Nodes send and receive messages through ports. Each port is referenced with a `:` prefix followed by its name:
 
 ```neva
+def Main(start any) (stop any) {
+    :start -> :stop
+}
+```
+
+We refer to input ports as "inports" and output ports as "outports". In this example, we connect the `start` inport with the `stop` outport. This single inport/outport pattern is also seen in `utils.Greet`:
+
+```neva
+// src/utils/utils.neva
+
 pub def Greet(data string) (res string) {
     ('Hello, ' + :data) -> :res
 }
 ```
 
-Since `Greet` has exactly one input port and one output port, we can use a "chained" connection syntax:
+Same true for `fmt.Println`:
 
 ```neva
-def Main(start any) (stop any) {
-    greet utils.Greet
-    println fmt.Println<any>
-    ---
-    :start -> { 'World' -> greet -> println -> :stop }
-}
+// fmt package
+pub def Println<T>(data T) (sig struct{})
 ```
 
-The `'World' -> greet -> println -> :stop` is shorthand for:
+This allowed us to chain nodes together:
 
 ```neva
-'World' -> greet:data
+:start -> 'World' -> greet -> println -> :stop
+```
+
+When chaining nodes, we actually reference their ports implicitly. The chain could be written more verbosely as:
+
+```neva
+:start -> 'World' -> greet:data
 greet:res -> println:data
-println:res -> :stop
+println:sig -> :stop
 ```
 
-However, if we modify `Greet` to have multiple ports, this won't work:
+Both versions are equivalent, but the chained syntax is preferred for readability.
+
+### Multiple Ports
+
+Let's look at components with multiple ports. A component can have any number of inports and outports. Here's another component we can add to `src/utils/utils.neva`:
 
 ```neva
-pub def Greet(data string, prefix string) (res string) {
-    (:prefix + :data) -> :res
+pub def Concat(prefix string, suffix string) (res string) {
+    (:prefix + :suffix) -> :res
 }
 ```
 
-Now we must explicitly connect each port:
+Components must use all their ports within their network. For example, if we remove `:suffix`, the program won't compile:
 
 ```neva
-:start -> { 'Hi' -> greet:prefix }
-'World' -> greet:data
-greet -> println -> :stop
-```
-
-Since `greet` has one output port, we are allowed not to specify it, and `println` still has one input and one output port, we can still use the chained connection syntax for that part of the network.
-
-### Port Usage Rules
-
-There are two important rules about port usage in Nevalang:
-
-1. Components must use ALL their own input and output ports in their network
-2. When using nodes (instances of other components), all input ports must be connected, but at least one output port is sufficient
-
-Let's look at examples of both rules:
-
-#### Rule 1: Using Component's Own Ports
-
-This won't compile because the component doesn't use its `:data` input port in the network:
-
-```neva
-pub def Greet(data string) (res string) {
-    'Hello!' -> :res  // Error: input port 'data' is not used
+def Concat(prefix string, suffix string) (res string) {
+    :prefix -> :res // ERROR: suffix inport is not used
 }
 ```
 
-This also won't compile because the component doesn't use its `:res` output port:
+When using nodes with multiple inports, we can't use chain syntax because compiler won't know which port to use. Instead, we must specify ports explicitly:
 
 ```neva
-pub def Greet(data string) (res string) {
-    // Error: output port 'res' is not used
-    :data -> fmt.Println
+import {
+    fmt
+    @:utils
 }
-```
 
-The correct version uses both ports:
-
-```neva
-pub def Greet(data string) (res string) {
-    ('Hello, ' + :data) -> :res
-}
-```
-
-#### Rule 2: Using Node Ports
-
-When using nodes (other components) in your network, the rules are different:
-
-```neva
-pub def Greet(data string) (res string, log string) {
-    msg ('Hello, ' + :data)
-    logger fmt.Println<string>
-    ---
-    msg -> [
-        :res,
-        { ('Greeted: ' + msg) -> logger }  // Only using logger's input port is fine
-    ]
-}
-```
-
-Here:
-- We must connect to all of `logger`'s input ports (it has one)
-- We don't need to use `logger`'s output port
-- But we must use all of `Greet`'s own ports (`:data`, `:res`, `:log`)
-
-This distinction between component's own ports and node ports is important for building modular programs.
-
-### Port Name Omission
-
-When a component has only one port on either side, you can omit the port name:
-
-```neva
-// Instead of foo:data -> bar:input
-foo -> bar
-```
-
-This works even when chained syntax isn't available (like when a component has multiple ports on the other side).
-
-### Fan-out and Fan-in
-
-Sometimes you need to send the same message to multiple receivers (fan-out) or combine multiple senders into one receiver (fan-in).
-
-Fan-out broadcasts a message to all receivers:
-
-```neva
 def Main(start any) (stop any) {
-    p1 fmt.Println<any>
-    p2 fmt.Println<any>
+    concat utils.Concat
+    println fmt.Println<string>
     ---
-    :start -> { 'Hello!' -> [p1, p2] -> :stop }
+    :start -> 'Hello, ' -> concat:prefix
+    'World' -> concat:suffix
+    concat -> println -> :stop
 }
 ```
 
-This prints "Hello!" twice. The message is copied to both `p1` and `p2`.
+Notice that:
 
-Fan-in merges multiple senders:
+1. We can omit `concat:res ->` and write just `concat ->` since `Concat` has one outport
+2. We can chain `-> println ->` since it still has a single port
+
+Let's add a `debug` outport to `Concat`:
 
 ```neva
+pub def Concat(prefix string, suffix string) (res string, debug string) {
+    (:prefix + :suffix) -> :res
+    'Debug: concatenating strings' -> :debug
+}
+```
+
+Unlike self outports, we can ignore node outports we don't need (like `concat:debug`), but we must now specify `concat:res` explicitly since `concat` has multiple outports:
+
+```neva
+import {
+    fmt
+    @:utils
+}
+
 def Main(start any) (stop any) {
+    concat utils.Concat
+    println fmt.Println<string>
+    ---
+    :start -> 'Hello, ' -> concat:prefix
+    'World' -> concat:suffix
+    concat:res -> println -> :stop // concat:debug is not used
+}
+```
+
+### Fan-In/Fan-Out
+
+Sometimes we need to handle multiple senders or receivers. While we've primarily used one-to-one connections (pipelines), Nevalang also supports many-to-one (fan-in) and one-to-many (fan-out) connections.
+
+#### Fan-In
+
+Fan-in allows multiple senders to connect to a single receiver using square brackets on the sender side. The receiver processes messages in FIFO (first in, first out) order, based on when senders emit their messages.
+
+Let's explore this using `strconv.ParseNum` from the standard library, which converts strings to numbers:
+
+```neva
+// strconv package
+pub def ParseNum<T int | float>(data string) (res T, err error)
+```
+
+Note that it has an `err` outport of type `error`. While we can usually ignore node outports as long as we use at least one, the `err` port is special - we must always handle potential errors.
+
+Let's try converting `'42'` to `42` and print both the result and any potential errors:
+
+```neva
+import {
+    fmt
+    strconv
+}
+
+def Main(start any) (stop any) {
+    parse strconv.ParseNum<int>
     println fmt.Println<any>
     ---
-    :start -> {
-        ['Hello', 'World'] -> println -> :stop
-    }
+    :start -> '42' -> parse
+    [parse:res, parse:err] -> println -> :stop // fan-in
 }
 ```
 
-Messages are received in the order they were sent. If multiple messages arrive simultaneously, their order is non-deterministic.
+The fan-in connection `[parse:res, parse:err] -> println` connects both outports to the `println` receiver. Running this produces:
 
-You can't reuse senders or receivers in fan-in/fan-out. If you need to send the same message multiple times, you must use fan-out explicitly.
+```
+42
+```
 
-### Deferred Connections
+The output is consistent because `'42'` is a valid integer string. In this case, only `parse:res` sends a message while `parse:err` remains silent. With error ports, only one will ever fire - either the success result or the error.
 
-Let's revisit our Hello World program:
+If we try an invalid number:
 
 ```neva
-def Main(start any) (stop any) {
-    println fmt.Println<any>
+:start -> 'forty two' -> parse
+[parse:res, parse:err] -> println -> :stop
+```
+
+We'll see:
+
+```
+parsing "forty two": invalid syntax
+```
+
+Now only the `parse:err` port fires, demonstrating the exclusive nature of success and error outputs.
+
+#### Fan-Out
+
+Fan-out allows a single sender to connect with multiple receivers using square brackets on the receiver side. Each receiver gets an identical message. The sender blocks until all receivers process the message, meaning the connection speed is limited by the slowest receiver.
+
+Let's add a component to `src/utils/utils.neva` that receives two strings, parses them as integers, and returns their sum as a result if successful, or an error otherwise:
+
+```neva
+import { strconv }
+
+// ...existing code...
+
+pub def AddIntStrings(left string, right string) (res int, err error) {
+    parse_left strconv.ParseNum<int>
+    parse_right strconv.ParseNum<int>
     ---
-    :start -> 'Hello, World!' -> println -> :stop
+    :left -> parse_left
+    :right -> parse_right
+
+    [parse_left:err, parse_right:err] -> :err // fan-in with error propagation
+
+    parse:res -> :res
 }
 ```
 
-The `{ ... }` syntax creates a "deferred" connection. Since all input ports must be used, we need to wait for the `:start` signal before sending our message. The deferred connection ensures that 'Hello, World!' is only sent after receiving the start signal.
+Key points:
 
-Without deferral, the program would be non-deterministic - the string might be sent multiple times before the program terminates. Deferred connections defer receiving rather than sending, ensuring proper synchronization.
+1. We create two instances of `strconv.ParseNum` to process both connections - `parse_left` for `:left` and `parse_right` for `:right`
+2. We use fan-in to connect both error outputs to our `:err` port for error propagation
 
-This section introduces key dataflow patterns while maintaining the tutorial's focus on practical examples. It builds on previous concepts and prepares readers for more advanced topics in the book. -->
+Now let's update `src/main.neva` to add `'21'` to itself using our new `utils.AddIntStrings`. We'll need to send `'21'` to both input ports simultaneously using fan-out:
 
-<!-- === -->
+```neva
+import {
+    fmt
+    @:utils
+}
 
-<!-- ```shell
-# will name output file "my_awesome_binary"
-neva build my_awesome_project/src --output=my_awesome_binary
+def Main(start any) (stop any) {
+    add utils.AddIntStrings
+    ---
+    :start -> '21' -> [add:left, add:right] // fan-out
+    [add:res, add:err] -> println -> :stop
+}
+```
 
-# will generate go code instead of machine code
-neva build my_awesome_project/src --target=go
+Note that we can use both fan-out (`'21' -> [...]`) and fan-in (`[add:res, add:err] -> ...`) in the same network. Running this program outputs:
 
-# will output my_awesome_wasm.wasm
-neva build my_awesome_project/src --target=wasm --output=my_awesome_wasm
-``` -->
+```
+42
+```
+
+This works because `'21'` is a valid integer string and `21 + 21` equals `42`. If we try an invalid input:
+
+```neva
+:start -> 'twenty one' -> [add:left, add:right]
+```
+
+We get:
+
+```
+parsing "twenty one": invalid syntax
+```
+
+The error from `strconv.ParseNum` propagates through `utils.AddIntStrings` up to `Main`, demonstrating proper error handling.

@@ -149,12 +149,12 @@ Constants can be referenced in the network.
 
 ```neva
 $foo -> // local constant
-$foo.bar -> // important constant
+$foo.bar -> // imported constant
 ```
 
-It acts as an infinite loop, repeatedly sending the same message at the receiver's speed. To prevent potential resource leaks from message spamming, constant senders are always used in conjunction with special technics.
+When used as a standalone sender, it acts as an infinite loop, repeatedly sending the same message at the receiver's speed. Usually you need to synchronize constant sender with some event.
 
-One way to work with them is to have a node with multiple inports, where at least one is connected to a port, not a constant. This limits the constants' speed to that of the port. Here's a simple example:
+One way to do it is to have a node with multiple inports, where at least one is connected to a port, not a constant. This limits the constants' speed to that of the port. Here's a simple example:
 
 We'll create a component that increments a number using an addition component with 2 inports: `:left` and `:right`. We'll use a constant `$one` for `:left`, while `:right` receives dynamic values:
 
@@ -172,34 +172,47 @@ def Inc(data int) (res int) {
 
 In this example, `add:left` and `add:right` are synchronized. When `:data -> add:right` has a message, `add:left` can receive. If the parent of `Inc` sends `1, 2, 3`, `add` will receive `left=1 right=1; left=1 right=2; left=1 right=3` and produce `2, 3, 4` respectively.
 
-Another way to synchronize constants with real data is to use deferred connections. We'll explore this in the receiver-side forms section.
+Second way to synchronize constant senders is to use deferred connections.
+
+```neva
+:start -> { $msg -> println }
+```
+
+In this example `$msg` immidietely sends to `println` but locks by implicit `Lock` node, that waits for signal from `:start` inport. We'll learn how this works in details in the receiver-side forms section.
+
+When used in a chained connection, the constant sender is triggered by the incoming message.
+
+```neva
+:start -> $msg -> println
+```
+
+In this example, when `:start` fires, it triggers sending the constant `$msg` to `println`. This is preferred (easier to read and with better performance) way. It's not always possible to use it though. We'll learn about chained connections in receiver side forms section.
 
 **Internal Implementation**
 
 > Implementation details of constant senders:
 
-Const-ref and msg-literal senders are syntax sugar. In the desugared program, all senders and receivers are port-addresses. For constants and messages, a `New` component is used:
+Const-ref and msg-literal senders are syntax sugar. In the desugared program, all senders and receivers are port-addresses. For constants, there are two components used depending on the context:
+
+1. For standalone constant senders, a `New` component is used:
 
 ```neva
 #extern(new)
 pub def New<T>() (msg T)
 ```
 
-It's one of the few components without inports or outports, which are only allowed in stdlib. User-created components must have at least 1 inport and outport. New instances require the `#bind` directive to associate a constant with the node, allowing the runtime to use it throughout the program's lifecycle.
+It's one of the few components without inports/outports (this is only possible inside stdlib). `New` instances require the `#bind` directive to associate a constant with the node, allowing the runtime to use it throughout the program's lifecycle.
 
-```
-const p float = 3.14
+2. For constants in chained connections, a `NewV2` component is used:
 
-def Main(start any) (stop any) {
-    #bind(p)
-    New
-    Println
-    ---
-    :start -> { new -> println -> :stop }
-}
+```neva
+#extern(new)
+pub def NewV2<T>(sig any) (msg T)
 ```
 
-Message literal senders are implemented similarly, with the compiler inserting a virtual constant for the bind directive.
+`NewV2` also requires `#bind`.
+
+> Message literal senders are implemented similarly, with the compiler inserting a virtual constant for the bind directive.
 
 #### Message Literal Sender
 
@@ -221,8 +234,6 @@ Only primitive data-types (`bool`, `int`, `float`, `string` and `enum`) can be u
 - int: `42 -> ...`
 - float: `42.0 -> ...`
 - enum: `Day::Friday ->`
-
-#### Binary Expression
 
 #### Binary Expression
 
