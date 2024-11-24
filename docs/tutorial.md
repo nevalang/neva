@@ -284,14 +284,14 @@ my_awesome_project/
 ├── src/
 │   ├── main.neva
 │   └── utils/
-│       └── strings.neva
+│       └── utils.neva
 └── neva.yaml
 ```
 
 Let's add a string utility `Greet` that receives a `data` string, prefixes it with `"Hello, "` and sends to `res` output port. We'll use binary expression `('Hello, ' + :data)` to concatenate strings:
 
 ```neva
-// src/utils/strings.neva
+// src/utils/utils.neva
 pub def Greet(data string) (res string) { // new component
 	('Hello, ' + :data) -> :res
 }
@@ -322,7 +322,7 @@ This modular structure keeps your code organized and reusable as your projects g
 In `utils`, we used `pub` keyword:
 
 ```neva
-// src/utils/strings.neva
+// src/utils/utils.neva
 pub def Greet(data string) (res string) {
     ('Hello, ' + :data) -> :res
 }
@@ -338,7 +338,7 @@ my_awesome_project/
 │   ├── main.neva
 │   ├── exclaim.neva
 │   └── utils/
-│       └── strings.neva
+│       └── utils.neva
 └── neva.yaml
 ```
 
@@ -388,6 +388,8 @@ def Main(start any) (stop any) {
 We refer to input ports as "inports" and output ports as "outports". In this example, we connect the `start` inport with the `stop` outport. This single inport/outport pattern is also seen in `utils.Greet`:
 
 ```neva
+// src/utils/utils.neva
+
 pub def Greet(data string) (res string) {
     ('Hello, ' + :data) -> :res
 }
@@ -529,14 +531,79 @@ The output is consistent because `'42'` is a valid integer string. In this case,
 If we try an invalid number:
 
 ```neva
-:start -> 'not a number' -> parse
+:start -> 'forty two' -> parse
 [parse:res, parse:err] -> println -> :stop
 ```
 
 We'll see:
 
 ```
-parsing "not a number": invalid syntax
+parsing "forty two": invalid syntax
 ```
 
 Now only the `parse:err` port fires, demonstrating the exclusive nature of success and error outputs.
+
+#### Fan-Out
+
+Fan-out allows a single sender to connect with multiple receivers using square brackets on the receiver side. Each receiver gets an identical message. The sender blocks until all receivers process the message, meaning the connection speed is limited by the slowest receiver.
+
+Let's add a component to `src/utils/utils.neva` that receives two strings, parses them as integers, and returns their sum as a result if successful, or an error otherwise:
+
+```neva
+import { strconv }
+
+// ...existing code...
+
+pub def AddIntStrings(left string, right string) (res int, err error) {
+    parse_left strconv.ParseNum<int>
+    parse_right strconv.ParseNum<int>
+    ---
+    :left -> parse_left
+    :right -> parse_right
+
+    [parse_left:err, parse_right:err] -> :err // fan-in with error propagation
+
+    parse:res -> :res
+}
+```
+
+Key points:
+
+1. We create two instances of `strconv.ParseNum` to process both connections - `parse_left` for `:left` and `parse_right` for `:right`
+2. We use fan-in to connect both error outputs to our `:err` port for error propagation
+
+Now let's update `src/main.neva` to add `'21'` to itself using our new `utils.AddIntStrings`. We'll need to send `'21'` to both input ports simultaneously using fan-out:
+
+```neva
+import {
+    fmt
+    @:utils
+}
+
+def Main(start any) (stop any) {
+    add utils.AddIntStrings
+    ---
+    :start -> '21' -> [add:left, add:right] // fan-out
+    [add:res, add:err] -> println -> :stop
+}
+```
+
+Note that we can use both fan-out (`'21' -> [...]`) and fan-in (`[add:res, add:err] -> ...`) in the same network. Running this program outputs:
+
+```
+42
+```
+
+This works because `'21'` is a valid integer string and `21 + 21` equals `42`. If we try an invalid input:
+
+```neva
+:start -> 'twenty one' -> [add:left, add:right]
+```
+
+We get:
+
+```
+parsing "twenty one": invalid syntax
+```
+
+The error from `strconv.ParseNum` propagates through `utils.AddIntStrings` up to `Main`, demonstrating proper error handling.
