@@ -485,3 +485,58 @@ def Main(start any) (stop any) {
 ```
 
 ### Fan-In/Fan-Out
+
+Sometimes we need to handle multiple senders or receivers. While we've primarily used one-to-one connections (pipelines), Nevalang also supports many-to-one (fan-in) and one-to-many (fan-out) connections.
+
+#### Fan-In
+
+Fan-in allows multiple senders to connect to a single receiver using square brackets on the sender side. The receiver processes messages in FIFO (first in, first out) order, based on when senders emit their messages.
+
+Let's explore this using `strconv.ParseNum` from the standard library, which converts strings to numbers:
+
+```neva
+// strconv package
+pub def ParseNum<T int | float>(data string) (res T, err error)
+```
+
+Note that it has an `err` outport of type `error`. While we can usually ignore node outports as long as we use at least one, the `err` port is special - we must always handle potential errors.
+
+Let's try converting `'42'` to `42` and print both the result and any potential errors:
+
+```neva
+import {
+    fmt
+    strconv
+}
+
+def Main(start any) (stop any) {
+    parse strconv.ParseNum<int>
+    println fmt.Println<any>
+    ---
+    :start -> '42' -> parse
+    [parse:res, parse:err] -> println -> :stop // fan-in
+}
+```
+
+The fan-in connection `[parse:res, parse:err] -> println` connects both outports to the `println` receiver. Running this produces:
+
+```
+42
+```
+
+The output is consistent because `'42'` is a valid integer string. In this case, only `parse:res` sends a message while `parse:err` remains silent. With error ports, only one will ever fire - either the success result or the error.
+
+If we try an invalid number:
+
+```neva
+:start -> 'not a number' -> parse
+[parse:res, parse:err] -> println -> :stop
+```
+
+We'll see:
+
+```
+parsing "not a number": invalid syntax
+```
+
+Now only the `parse:err` port fires, demonstrating the exclusive nature of success and error outputs.
