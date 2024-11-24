@@ -7,19 +7,42 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Installation](#installation)
    - [Hello, World!](#hello-world)
    - [Compiling programs](#compiling-programs)
-2. [Basic Concepts](#basic-concepts)
+2. [Core Concepts](#core-concepts)
    - [Components](#components)
    - [Messages and Basic Types](#messages-and-basic-types)
    - [Constants](#constants)
    - [Modules and Packages](#modules-and-packages)
    - [Imports and Visibility](#imports-and-visibility)
-3. [Dataflow](#dataflow)
+   <!-- - [Interfaces and Dependency Injection](#interfaces-and-dependency-injection) interface nodes and DI, interfaces implemented implicitly and by structure -->
+3. [Dataflow Basics](#dataflow)
    - [Chained Connections](#chained-connections)
    - [Multiple Ports](#multiple-ports)
    - [Fan-In/Fan-Out](#fan-infan-out)
-   <!-- - [Binary Operators](#binary-operators)
-   - [Ternary Operator](#ternary-operator)
-   - [Deferred Connections](#deferred-connections) -->
+     <!-- - [Binary Operators](#binary-operators) -->
+     <!-- - [Ternary Operator](#ternary-operator) -->
+     <!-- - [Switch](#switch) explain routing: as if-else, as switch, as switch-true -->
+     <!-- - [Deferred Connections](#deferred-connections) -->
+     <!-- - [Array Ports](#array-ports) wait group with array ports -->
+     <!-- 4. [More Types](#more-types) -->
+        <!-- - [Any](#any) -->
+        <!-- - [Maybe](#maybe) -->
+        <!-- - [Struct](#struct) structs and struct selectors -->
+        <!-- - [List](#list) -->
+        <!-- - [Dict](#dict) -->
+        <!-- - [Enum](#enum) -->
+        <!-- - [Union](#union) -->
+        <!-- - [Error](#error) error handling with ? operator, also explain runtime.Panic -->
+        <!-- - [Stream](#stream) stream type, range operator, streams package and streams.Wait component -->
+        <!-- - [Generics](#generics) custom generic types and constraints -->
+     <!-- 5. [Streams](#streams) -->
+        <!-- - [For](#for) -->
+        <!-- - [Map](#map) -->
+        <!-- - [Filter](#filter) -->
+        <!-- - [Reduce](#reduce) -->
+        <!-- - [Stream Convertors](#stream-convertors) -->
+     <!-- 6. [Miscellaneous](#miscellaneous) -->
+        <!-- - [Pass Component](#pass-component) -->
+        <!-- - [Tap Component](#tap-component) examples from 99 bottles -->
 
 ## Welcome
 
@@ -129,7 +152,7 @@ This will produce an `output` file in the directory where neva-cli was executed,
 
 Once again you should see `Hello, World!`.
 
-## Basic Concepts
+## Core Concepts
 
 ### Components
 

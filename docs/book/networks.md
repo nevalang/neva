@@ -237,8 +237,6 @@ Only primitive data-types (`bool`, `int`, `float`, `string` and `enum`) can be u
 
 #### Binary Expression
 
-#### Binary Expression
-
 Binary expression is an easy way to perform arithmetic, comparison, logic or bitwise operation with two operands. Syntax of binary expression is infix notation with binary operator in the middle and operands on left and right. Binary expression is always wrapped in `()` braces (so there's no precedence in Nevalang).
 
 Examples:
