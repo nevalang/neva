@@ -1,0 +1,36 @@
+import {
+	fmt
+	time
+	sync
+}
+
+def Main(start any) (stop any) {
+	w1 Worker
+	w2 Worker
+	w3 Worker
+	w4 Worker
+	w5 Worker
+	wg sync.WaitGroup
+	---
+	:start -> [
+		1 -> w1,
+		2 -> w2,
+		3 -> w3,
+		4 -> w4,
+		5 -> w5
+	]
+	5 -> wg:count
+	[w1, w2, w3, w4, w5] -> wg:sig
+	wg -> :stop
+}
+
+def Worker(data any) (sig any) {
+	delay time.Delay
+	println fmt.Println
+	---
+	:data -> delay:data
+	$time.second -> delay:dur
+	delay -> println -> :sig
+}
+
+// TODO add unit test
