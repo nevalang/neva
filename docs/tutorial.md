@@ -18,7 +18,7 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Chained Connections](#chained-connections)
    - [Multiple Ports](#multiple-ports)
    - [Fan-In/Fan-Out](#fan-infan-out)
-     <!-- - [Binary Operators](#binary-operators) -->
+   - [Binary Operators](#binary-operators)
      <!-- - [Ternary Operator](#ternary-operator) -->
      <!-- - [Switch](#switch) explain routing: as if-else, as switch, as switch-true -->
      <!-- - [Deferred Connections](#deferred-connections) -->
@@ -630,3 +630,57 @@ parsing "twenty one": invalid syntax
 ```
 
 The error from `strconv.ParseNum` propagates through `utils.AddIntStrings` up to `Main`, demonstrating proper error handling.
+
+### Binary Operators
+
+We've already seen binary expressions e.g. in `utils.Greet`:
+
+```neva
+// src/utils/utils.neva
+pub def Greet(data string) (res string) {
+	('Hello, ' + :data) -> :res
+}
+```
+
+A binary expression consists of a left operand, operator, and right operand. In this case, `'Hello, '` is the left operand and `:data` is the right operand. When both operands are ready, the operator transforms the data and sends the result forward.
+
+Both operands must share the same type, and the operator must support that type. For example, string concatenation works (`'Hello, ' + 'World'`), but adding an integer to a string (`21 + '21'`) will fail compilation. Nevalang is strongly typed with no implicit conversions.
+
+Operands can be any senders e.g. ports, constants, even other binary expressions:
+
+```neva
+def TriangleArea(b int, h int) (res float) {
+    ((:b * :h) / 2) -> :res
+}
+```
+
+Here, `(:b * :h)` is a binary expression used as the left operand of another binary expression. The calculation proceeds once both `:b` and `:h` are ready.
+
+Nevalang supports these binary operators:
+
+```neva
+// arithmetic
+(5 + 3) -> println // addition: 8
+(5 - 3) -> println // subtraction: 2
+(5 * 3) -> println // multiplication: 15
+(6 / 2) -> println // division: 3
+(7 % 3) -> println // modulo: 1
+(2 ** 3) -> println // power: 8
+
+// comparison
+(5 == 5) -> println // equal: true
+(5 != 3) -> println // not equal: true
+(5 > 3) -> println // greater than: true
+(5 < 8) -> println // less than: true
+(5 >= 5) -> println // greater or equal: true
+(5 <= 8) -> println // less or equal: true
+
+// logic
+(true && true) -> println // AND: true
+(true || false) -> println // OR: true
+
+// bitwise
+(5 & 3) -> println // AND: 1
+(5 | 3) -> println // OR: 7
+(5 ^ 3) -> println // XOR: 6
+```

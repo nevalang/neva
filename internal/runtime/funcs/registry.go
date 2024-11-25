@@ -24,7 +24,6 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"ternary":       ternary{},
 		"eq":            eq{},
 		"ne":            notEq{},
-		"if":            if_{},
 		"cond":          cond{},
 		"not":           not{},
 		"and":           and{},

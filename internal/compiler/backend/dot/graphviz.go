@@ -3,7 +3,9 @@ package dot
 import (
 	"embed"
 	"fmt"
+	"html"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -22,44 +24,44 @@ func trimPortPath(path string) string {
 	return strings.TrimSuffix(strings.TrimSuffix(path, "/in"), "/out")
 }
 
-// func (p Port) FormatName() string {
-// 	portStr := p.Port
-// 	switch {
-// 	case strings.HasSuffix(p.Path, "/in"):
-// 		portStr += "/in"
-// 	case strings.HasSuffix(p.Path, "/out"):
-// 		portStr += "/out"
-// 	}
-// 	if p.Idx != nil {
-// 		portStr = fmt.Sprintf("%s/%d", portStr, p.Idx)
-// 	}
-// 	return strconv.Quote(portStr)
-// }
+func (p Port) FormatName() string {
+	portStr := p.Port
+	switch {
+	case strings.HasSuffix(p.Path, "/in"):
+		portStr += "/in"
+	case strings.HasSuffix(p.Path, "/out"):
+		portStr += "/out"
+	}
+	if p.IsArray {
+		portStr = fmt.Sprintf("%s/%d", portStr, p.Idx)
+	}
+	return strconv.Quote(portStr)
+}
 
-// func (p Port) FormatLabel() string {
-// 	escapePort := html.EscapeString(p.Port)
-// 	if p.Idx != nil {
-// 		return html.EscapeString(fmt.Sprintf("%s[%d]", p.Port, p.Idx))
-// 	}
-// 	return escapePort
-// }
+func (p Port) FormatLabel() string {
+	escapePort := html.EscapeString(p.Port)
+	if p.IsArray {
+		return html.EscapeString(fmt.Sprintf("%s[%d]", p.Port, p.Idx))
+	}
+	return escapePort
+}
 
-// func (p Port) Format() string {
-// 	path := p.Path
-// 	portStr := p.Port
-// 	switch {
-// 	case strings.HasSuffix(p.Path, "/in"):
-// 		path = path[:len(path)-3] // Trim /in
-// 		portStr += "/in"
-// 	case strings.HasSuffix(p.Path, "/out"):
-// 		path = path[:len(path)-4] // Trim /out
-// 		portStr += "/out"
-// 	}
-// 	if p.Idx != nil {
-// 		portStr = fmt.Sprint(portStr, "/", p.Idx)
-// 	}
-// 	return fmt.Sprintf("%q:%q", path, portStr)
-// }
+func (p Port) Format() string {
+	path := p.Path
+	portStr := p.Port
+	switch {
+	case strings.HasSuffix(p.Path, "/in"):
+		path = path[:len(path)-3] // Trim /in
+		portStr += "/in"
+	case strings.HasSuffix(p.Path, "/out"):
+		path = path[:len(path)-4] // Trim /out
+		portStr += "/out"
+	}
+	if p.IsArray {
+		portStr = fmt.Sprint(portStr, "/", p.Idx)
+	}
+	return fmt.Sprintf("%q:%q", path, portStr)
+}
 
 type Node struct {
 	Name  string
