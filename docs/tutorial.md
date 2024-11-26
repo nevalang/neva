@@ -13,36 +13,14 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Constants](#constants)
    - [Modules and Packages](#modules-and-packages)
    - [Imports and Visibility](#imports-and-visibility)
-   <!-- - [Interfaces and Dependency Injection](#interfaces-and-dependency-injection) interface nodes and DI, interfaces implemented implicitly and by structure -->
 3. [Dataflow Basics](#dataflow)
    - [Chained Connections](#chained-connections)
    - [Multiple Ports](#multiple-ports)
    - [Fan-In/Fan-Out](#fan-infan-out)
    - [Binary Operators](#binary-operators)
-     <!-- - [Ternary Operator](#ternary-operator) -->
-     <!-- - [Switch](#switch) explain routing: as if-else, as switch, as switch-true -->
-     <!-- - [Deferred Connections](#deferred-connections) -->
-     <!-- - [Array Ports](#array-ports) wait group with array ports -->
-     <!-- 4. [More Types](#more-types) -->
-        <!-- - [Any](#any) -->
-        <!-- - [Maybe](#maybe) -->
-        <!-- - [Struct](#struct) structs and struct selectors -->
-        <!-- - [List](#list) -->
-        <!-- - [Dict](#dict) -->
-        <!-- - [Enum](#enum) -->
-        <!-- - [Union](#union) -->
-        <!-- - [Error](#error) error handling with ? operator, also explain runtime.Panic -->
-        <!-- - [Stream](#stream) stream type, range operator, streams package and streams.Wait component -->
-        <!-- - [Generics](#generics) custom generic types and constraints -->
-     <!-- 5. [Streams](#streams) -->
-        <!-- - [For](#for) -->
-        <!-- - [Map](#map) -->
-        <!-- - [Filter](#filter) -->
-        <!-- - [Reduce](#reduce) -->
-        <!-- - [Stream Convertors](#stream-convertors) -->
-     <!-- 6. [Miscellaneous](#miscellaneous) -->
-        <!-- - [Pass Component](#pass-component) -->
-        <!-- - [Tap Component](#tap-component) examples from 99 bottles -->
+   - [Ternary Operator](#ternary-operator)
+   - [Switch Expression](#switch-expression)
+   - [Deferred Connections](#deferred-connections)
 
 ## Welcome
 
@@ -718,3 +696,69 @@ def Main(start any) (stop any) {
 ```
 
 This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
+
+### Switch Expression
+
+So far we've learned how to _select_ sources based on conditions, but the message's _route_ was always the same. For example, in `utils.FormatBool` we selected either `'true'` or `'false'` but the destination was always `:res` - `(:data ? 'true' : 'false') -> :res`. To write real programs we need to be able to select both sources and destinations. In other words, we need "routers" in addition to "selectors", and `switch` is one of them. It has the following syntax:
+
+```neva
+condition_sender -> switch {
+    case_sender_1 -> case_receiver_1
+    case_sender_2 -> case_receiver_2
+    ...
+    _ -> default_receiver
+}
+```
+
+Switch consists of a condition sender and pairs of case senders/receivers, including a required default case with `_`. It waits for all senders, compares the condition message with case messages for equality, and executes the first matching branch. Once triggered, other branches won't fire until the next message arrives. Let's add another component to `src/utils/utils.neva` to see `switch` in action:
+
+```neva
+pub def HttpStatus(code int) (
+    continue any,
+    ok any,
+    multiple_choices any,
+    bad_request any,
+    internal_err any,
+    unknown any
+) {
+    :code -> switch {
+        100 -> :continue
+        200 -> :ok
+        300 -> :multiple_choices
+        400 -> :bad_request
+        500 -> :internal_err
+        _ -> :unknown
+    }
+}
+```
+
+This component receives an integer `code` and based on its value sends to one of its 6 outports.
+
+<!-- TODO make http.get and compare status -->
+<!-- TODO: fan-in, fan-out inside switch and get rid of utility -->
+<!-- TODO: explain how switch works -->
+
+#### If/Else
+
+So far switch branches were chosen by comparing messages, but sometimes we just need to branch on a boolean value. Since Nevalang has no if-else construct, this pattern is implemented using `switch`:
+
+```neva
+pub def ClassifyInt(data int) (neg any, pos any) {
+    :start -> (data >= 0) -> switch {
+        true -> :pos
+        _ -> :neg
+    }
+}
+```
+
+Things to notice:
+
+1. We send `bool` messages to both outports `neg` and `pos`, which works since they're typed as `any`
+2. We use `_` as default case rather than `(:data < 0)` since switch requires a default and negative is the only other option
+3. This works naturally with switch's behavior - we compare the `bool` condition with `true`, and `_` handles `false`
+
+#### Switch True
+
+...
+
+<!-- TODO -->

@@ -575,8 +575,8 @@ sender -> switch {
 // nested
 sender -> switch {
     true -> switch {
-        1 -> receiver1
-        2 -> receiver2
+        (1 == 1) -> receiver1
+        (2 > 3) -> receiver2
         _ -> receiver3
     }
     false -> receiver4
