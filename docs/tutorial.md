@@ -646,10 +646,10 @@ A binary expression consists of a left operand, operator, and right operand. In 
 
 Both operands must share the same type, and the operator must support that type. For example, string concatenation works (`'Hello, ' + 'World'`), but adding an integer to a string (`21 + '21'`) will fail compilation. Nevalang is strongly typed with no implicit conversions.
 
-Operands can be any senders e.g. ports, constants, even other binary expressions:
+Operands can be any senders e.g. ports, constants, even other binary expressions. Let's add one more utility component to our `src/utils/utils.neva`:
 
 ```neva
-def TriangleArea(b int, h int) (res float) {
+pub def TriangleArea(b int, h int) (res float) {
     ((:b * :h) / 2) -> :res
 }
 ```
@@ -684,3 +684,37 @@ Nevalang supports these binary operators:
 (5 | 3) -> println // OR: 7
 (5 ^ 3) -> println // XOR: 6
 ```
+
+### Ternary Operator
+
+Ternary operator allows to select between two sources based on a condition, using the syntax `(if ? then : else) -> receiver`. Operator waits for all operands, selects the message and sends it downstream. Let's add one more component to `src/utils/utils.neva`:
+
+```neva
+pub def FormatBool(data bool) (res string) {
+    (:data ? 'true' : 'false') -> :res
+}
+```
+
+All three operands can be any valid senders (ports, literals, constants, expressions, etc.), as long as "if" sends a `bool` and "then/else" are compatible with the receiver. Let's update our `src/main.neva` and use our new utility components to see how a more complex ternary operator looks:
+
+```neva
+import {
+    fmt
+    @:utils
+}
+
+def Main(start any) (stop any) {
+    println fmt.Println
+    area utils.TriangleArea
+    format utils.FormatBool
+    ---
+    :start -> [
+        20 -> area:b,
+        10 -> area:h
+    ]
+    (area > 50) -> format
+    ((format == 'true') ? 'Big' : 'Small') -> println -> :stop
+}
+```
+
+This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
