@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"fmt"
-	"strings"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -21,26 +20,29 @@ func (e Error) Wrap(child *Error) *Error {
 	return &e
 }
 
+func (e Error) unwrap() *Error {
+	for e.child != nil {
+		e = *e.child
+	}
+	return &e
+}
+
 func (e *Error) Error() string {
-	var builder strings.Builder
+	var s string
 
-	current := e
-	for current != nil {
-		hasLocation := current.Location != nil
-		hasMeta := current.Meta != nil
+	current := e.unwrap()
+	hasLocation := current.Location != nil
+	hasMeta := current.Meta != nil
 
-		if hasLocation && hasMeta {
-			fmt.Fprintf(&builder, "%v:%v: %v\n", *current.Location, current.Meta.Start, current.Message)
-		} else if hasLocation {
-			fmt.Fprintf(&builder, "%v: %v\n", *current.Location, current.Message)
-		} else if hasMeta {
-			fmt.Fprintf(&builder, "%v: %v\n", current.Meta.Start, current.Message)
-		} else {
-			builder.WriteString(current.Message + "\n")
-		}
-
-		current = current.child
+	if hasLocation && hasMeta {
+		s = fmt.Sprintf("%v:%v: %v", *current.Location, current.Meta.Start, current.Message)
+	} else if hasLocation {
+		s = fmt.Sprintf("%v: %v", *current.Location, current.Message)
+	} else if hasMeta {
+		s = fmt.Sprintf("%v: %v", current.Meta.Start, current.Message)
+	} else {
+		s = current.Message
 	}
 
-	return builder.String()
+	return s
 }

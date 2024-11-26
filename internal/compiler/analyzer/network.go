@@ -1003,12 +1003,15 @@ func (a Analyzer) analyzeNetPortsUsage(
 
 	// 3. check sub-nodes usage in network
 	for nodeName, nodeIface := range nodesIfaces {
+		nodeMeta := nodes[nodeName].Meta
+
 		// every sub-node must be used
 		nodeUsage, ok := nodesUsage[nodeName]
 		if !ok {
 			return &compiler.Error{
 				Message:  fmt.Sprintf("Unused node found: %v", nodeName),
 				Location: scope.Location(),
+				Meta:     &nodeMeta,
 			}
 		}
 
@@ -1030,7 +1033,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 					inportName,
 				),
 				Location: scope.Location(),
-				Meta:     compiler.Pointer(nodeIface.iface.IO.In[inportName].Meta),
+				Meta:     &nodeMeta,
 			}
 		}
 
@@ -1040,7 +1043,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 
 		// :err outport must always be used + at least one outport must be used in general
 		atLeastOneOutportIsUsed := false
-		for outportName, port := range nodeIface.iface.IO.Out {
+		for outportName := range nodeIface.iface.IO.Out {
 			if _, ok := nodeUsage.Out[outportName]; ok {
 				atLeastOneOutportIsUsed = true
 				continue
@@ -1050,7 +1053,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 				return &compiler.Error{
 					Message:  fmt.Sprintf("unhandled error: %v:err", nodeName),
 					Location: scope.Location(),
-					Meta:     &port.Meta,
+					Meta:     &nodeMeta,
 				}
 			}
 		}
@@ -1059,17 +1062,18 @@ func (a Analyzer) analyzeNetPortsUsage(
 			if _, ok := nodeUsage.Out[""]; ok && len(nodeIface.iface.IO.Out) == 1 {
 				continue
 			}
-
 			return &compiler.Error{
 				Message:  fmt.Sprintf("All node's outports are unused: %v", nodeName),
 				Location: scope.Location(),
-				Meta:     &nodeIface.iface.Meta,
+				Meta:     &nodeMeta,
 			}
 		}
 	}
 
 	// 4. check that array ports are used correctly (from 0 and without holes)
 	for nodeName, nodeUsage := range nodesUsage {
+		nodeMeta := nodes[nodeName].Meta
+
 		for portName, usedSlots := range nodeUsage.In {
 			if usedSlots == nil {
 				continue // skip non-array ports
@@ -1092,6 +1096,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 							i,
 						),
 						Location: scope.Location(),
+						Meta:     &nodeMeta,
 					}
 				}
 			}
@@ -1119,6 +1124,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 							i,
 						),
 						Location: scope.Location(),
+						Meta:     &nodeMeta,
 					}
 				}
 			}

@@ -1,0 +1,15 @@
+import { fmt }
+
+def Main(start any) (stop any) {
+    sub1 SubComponent
+    sub2 SubComponent
+    ---
+    :start -> 'Hi, Neva!' -> sub1 -> :stop
+    '1' -> sub2
+}
+
+def SubComponent(data string) (stop any) {
+    println fmt.Println
+    ---
+    :data -> println -> :stop
+}
