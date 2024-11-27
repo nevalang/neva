@@ -20,7 +20,7 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Binary Operators](#binary-operators)
    - [Ternary Operator](#ternary-operator)
    - [Switch Expression](#switch-expression)
-   - [Deferred Connections](#deferred-connections)
+   <!-- - [Deferred Connections](#deferred-connections) -->
 
 ## Welcome
 
@@ -699,7 +699,13 @@ This example calculates a triangle's area (base=20, height=10), checks if it's l
 
 ### Switch Expression
 
-So far we've learned how to _select_ sources based on conditions, but the message's _route_ was always the same. For example, in `utils.FormatBool` we selected either `'true'` or `'false'` but the destination was always `:res` - `(:data ? 'true' : 'false') -> :res`. To write real programs we need to be able to select both sources and destinations. In other words, we need "routers" in addition to "selectors", and `switch` is one of them. It has the following syntax:
+So far we've learned how to _select_ sources based on conditions, but the message's _route_ was always the same. For example, in `utils.FormatBool` we selected either `'true'` or `'false'` but the destination was always `:res`:
+
+```neva
+(:data ? 'true' : 'false') -> :res
+```
+
+To write real programs we need to be able to configure both sources and destinations. In other words, we need "routers" in addition to "selectors", and `switch` is one of them. It has the following syntax:
 
 ```neva
 condition_sender -> switch {
@@ -710,41 +716,82 @@ condition_sender -> switch {
 }
 ```
 
-Switch consists of a condition sender and pairs of case senders/receivers, including a required default case with `_`. It waits for all senders, compares the condition message with case messages for equality, and executes the first matching branch. Once triggered, other branches won't fire until the next message arrives. Let's add another component to `src/utils/utils.neva` to see `switch` in action:
+Switch consists of a "condition" sender and "case" sender/receiver pairs, including a required default case with `_`. It compares the condition message with case messages for equality and executes the first matching branch. Once triggered, other branches won't fire until the next iteration.
+
+Let's see switch in action. We're going write a program that reads name from standard output and if name is 'Alice' makes it upper case and prints, if its 'Bob' it makes it lowercase and prints (sorry, Bob), otherwise it panics because it only knows these two names:
 
 ```neva
-pub def HttpStatus(code int) (
-    continue any,
-    ok any,
-    multiple_choices any,
-    bad_request any,
-    internal_err any,
-    unknown any
-) {
-    :code -> switch {
-        100 -> :continue
-        200 -> :ok
-        300 -> :multiple_choices
-        400 -> :bad_request
-        500 -> :internal_err
-        _ -> :unknown
+// src/main.neva
+
+import {
+    fmt
+    strings
+}
+
+def Main(start any) (stop any) {
+    print fmt.Print
+    scanln fmt.Scanln
+    upper strings.ToUpper
+    lower strings.ToLower
+    println fmt.Println
+    panic Panic
+    ---
+    :start -> 'Enter the name: ' -> print -> scanln -> switch {
+        'Alice' -> upper
+        'Bob' -> lower
+        _ -> panic
     }
+    [upper, lower] -> println -> :stop
 }
 ```
 
-This component receives an integer `code` and based on its value sends to one of its 6 outports.
+We used several new things here. First, the `strings` package from the standard library contains components for string manipulation. In this example we use `strings.ToUpper` and `strings.ToLower` to convert text case.
 
-<!-- TODO make http.get and compare status -->
-<!-- TODO: fan-in, fan-out inside switch and get rid of utility -->
-<!-- TODO: explain how switch works -->
+The `fmt` package is used again - `fmt.Print` works like `Println` but without adding `\n` at the end, and `fmt.Scanln` waits for keyboard input followed by Enter.
+
+Finally, there's the builtin `Panic` component. It immediately terminates the program with a non-zero status code when its node receives a message.
+
+The program prompts for a name, converts it to uppercase for "Alice" or lowercase for "Bob" (panicking for any other input), then prints the result.
+
+#### Multiple Destinations
+
+Let's modify our program. For "Alice", we'll uppercase and lowercase simultaneously, concatenate the results and print. Any other name terminates with an error (sorry Bob!).
+
+```neva
+import {
+    fmt
+    strings
+}
+
+def Main(start any) (stop any) {
+    print fmt.Print
+    scanln fmt.Scanln
+    upper strings.ToUpper
+    lower strings.ToLower
+    println fmt.Println
+    panic Panic
+    ---
+    :start -> 'Enter the name: ' -> print -> scanln -> switch {
+        'Alice' -> [upper, lower]
+        _ -> panic
+    }
+    (upper + lower) -> println -> :stop
+}
+```
+
+Things to notice:
+
+- Fan-out to both `upper` and `lower` nodes for the 'Alice' branch
+- Binary expression `(upper + lower)` connects to `println -> :stop` - inside switch we refer to their inports, inside binary expression to outports
+- **Implicit parallelism utilized** - `upper` and `lower` will work in parallel, not sequentially
 
 #### If/Else
 
-So far switch branches were chosen by comparing messages, but sometimes we just need to branch on a boolean value. Since Nevalang has no if-else construct, this pattern is implemented using `switch`:
+While switch can route messages by comparing values to multiple cases, it also serves as Nevalang's if-else when working with boolean conditions. Rather than having a separate if-else construct, we use switch with a boolean condition and two branches - one for true and one for false:
 
 ```neva
 pub def ClassifyInt(data int) (neg any, pos any) {
-    :start -> (data >= 0) -> switch {
+    :start -> (:data >= 0) -> switch {
         true -> :pos
         _ -> :neg
     }
@@ -753,12 +800,25 @@ pub def ClassifyInt(data int) (neg any, pos any) {
 
 Things to notice:
 
-1. We send `bool` messages to both outports `neg` and `pos`, which works since they're typed as `any`
-2. We use `_` as default case rather than `(:data < 0)` since switch requires a default and negative is the only other option
-3. This works naturally with switch's behavior - we compare the `bool` condition with `true`, and `_` handles `false`
+1. Both outports accept `bool` messages since they're typed as `any`
+2. We use `_` as default case since negative is the only other option
+3. The `_` case naturally handles `false` values
 
-#### Switch True
+<!-- #### Switch True
 
-...
+TODO -->
 
-<!-- TODO -->
+#### Multiple Sources
+
+One might ask, why didn't we cover multiple case senders if we covered multiple receivers? When using switch with multiple case receivers, it works differently than in control flow languages. For example:
+
+```neva
+switch {
+    ['Alice', 'Bob'] -> upper
+    _ -> lower
+}
+```
+
+Is **not** "if either Alice or Bob then do uppercase". It's a fan-in, meaning `Alice` and `Bob` are concurrent. Switch will select the first value sent as a case, which is random since both are message literals.
+
+> There's an [issue](https://github.com/nevalang/neva/issues/788). These semantics might change in the future.

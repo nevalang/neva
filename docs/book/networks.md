@@ -603,7 +603,9 @@ sender -> switch {
 }
 ```
 
-If the `sender` message is equal to _either_ `a` or `b`, it will be sent to _both_ `receiver1` and `receiver2`. You can also have multiple senders and one receiver, or one sender and multiple receivers.
+Case senders `a` and `b` are concurrent to each other, the one that will send faster, will be used by switch as a case value. This might be counter intuitive, because one might expect that this works like in controlflow languages where multple cases on a same line means "either".
+
+Multiple receivers on the other hand work as expected. I.e. if `sender` message is equal to `c` in this example, then it will be sent to both `receiver3` and `receiver5`.
 
 ## Fan-in and Fan-out
 
