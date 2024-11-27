@@ -89,7 +89,7 @@ func (Analyzer) analyzeMainFlowNodes(
 					node.EntityRef,
 					err,
 				),
-				Location: &loc,
+				Location: scope.Location(),
 				Meta:     &node.EntityRef.Meta,
 			}
 		}

@@ -16,7 +16,7 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 		return nil, err
 	}
 
-	respOut, err := funcIO.Out.Single("resp")
+	resOut, err := funcIO.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				continue
 			}
 
-			if !respOut.Send(
+			if !resOut.Send(
 				ctx,
 				respMsg(resp.StatusCode, body),
 			) {

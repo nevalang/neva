@@ -48,6 +48,7 @@ func (a Analyzer) analyzeInterface(
 	return src.Interface{
 		TypeParams: typeParams,
 		IO:         resolvedIO,
+		Meta:       iface.Meta,
 	}, nil
 }
 

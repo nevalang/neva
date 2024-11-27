@@ -979,7 +979,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	outportsUsage, ok := nodesUsage["out"]
 	if !ok {
 		return &compiler.Error{
-			Message:  "Unused outports",
+			Message:  "Component must use its outports",
 			Location: scope.Location(),
 			Meta:     &compInterface.Meta,
 		}
