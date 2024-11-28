@@ -19,8 +19,7 @@ Welcome to a tour of the Nevalang programming language. This tutorial will intro
    - [Fan-In/Fan-Out](#fan-infan-out)
    - [Binary Operators](#binary-operators)
    - [Ternary Operator](#ternary-operator)
-   - [Switch Expression](#switch-expression)
-   <!-- - [Deferred Connections](#deferred-connections) -->
+   - [Switch](#switch)
 
 ## Welcome
 
@@ -697,7 +696,7 @@ def Main(start any) (stop any) {
 
 This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
 
-### Switch Expression
+### Switch
 
 So far we've learned how to _select_ sources based on conditions, but the message's _route_ was always the same. For example, in `utils.FormatBool` we selected either `'true'` or `'false'` but the destination was always `:res`:
 
@@ -787,7 +786,7 @@ Things to notice:
 
 #### If/Else
 
-While switch can route messages by comparing values to multiple cases, it also serves as Nevalang's if-else when working with boolean conditions. Rather than having a separate if-else construct, we use switch with a boolean condition and two branches - one for true and one for false:
+While switch can route messages by comparing values to multiple cases, it also serves as Nevalang's if-else when working with boolean conditions. Rather than having a separate if-else construct, we use switch with a boolean condition and two branches - one for true and one for false. Let's add one more component to `src/utils/utils.neva`:
 
 ```neva
 pub def ClassifyInt(data int) (neg any, pos any) {
@@ -804,9 +803,107 @@ Things to notice:
 2. We use `_` as default case since negative is the only other option
 3. The `_` case naturally handles `false` values
 
-<!-- #### Switch True
+Let's update `src/main.neva` to see how it can be used:
 
-TODO -->
+```neva
+import {
+    fmt
+    @:utils
+}
+
+def Main(start any) (stop any) {
+    classify utils.ClassifyInt
+    println1 fmt.Println
+    println2 fmt.Println
+    ---
+    :start -> -42 -> classify
+    classify:pos -> 'positive :)' -> println1
+    classify:neg -> 'negative :(' -> println2
+    [println1, println2] -> :stop
+}
+```
+
+Outputs:
+
+```
+negative :(
+```
+
+#### Switch True
+
+So far we've explored message routing through comparison with set of values and boolean branching with if-else pattern. However, sometimes we need to chain multiple conditional branches where each condition is independent and not just comparing against an input value. This pattern, known as "switch-true", allows us to check multiple conditions in sequence and route messages accordingly.
+
+Let's add one more component to `src/utils/utils.neva` and call it `CommentOnUser`. If user's name "Bob" it will comment on that, because that's the most important thing, otherwise if user's age is under 18, it will comment about that. Otherwise, if there's nothing to comment, it will just panic.
+
+```neva
+// ...existing code...
+
+pub def CommentOnUser(name string, age int) (sig any) {
+    println1 fmt.Println
+    println2 fmt.Println
+    panic Panic
+    ---
+    true -> switch {
+        (:name == 'Bob') -> 'Beauteful name!' -> println1
+        (:age < 18) -> 'Young fellow!' -> println2
+        _ -> panic
+    }
+}
+```
+
+Here's how it can be used in `src/main.neva`
+
+```neva
+import {
+    fmt
+    @:utils
+}
+
+def Main(start any) (stop any) {
+    comment utils.CommentOnUser
+    ---
+    :start -> [
+        'Bob' -> comment:name,
+        17 -> comment:age
+    ]
+    comment -> :stop
+}
+```
+
+Output:
+
+```
+Young fellow!
+```
+
+Note that `utils.CommentOnUser` ignored age of the user, even though it was 33. This is because how switch works - it doesn't trigger several branches in a single iteration, and once it selects branch to execute, it will ignore other branches, until next iteration will start. We can test it by replacing `Bob` with e.g. `Alice` - our switch isn't interested in Alice, but age is still 33 and it will comment on that instead.
+
+```neva
+:start -> [
+    'Alice' -> comment:name,
+    17 -> comment:age
+]
+```
+
+Output:
+
+```
+Young fellow!
+```
+
+By the way, there's another way to solve this problem. We can use if-else pattern and nest switches one inside another like this:
+
+```neva
+:age < 18 -> switch {
+    true -> 'Young fellow!' -> println1
+    _ -> (:name == 'Bob') -> switch {
+        true -> 'Beauteful name!' -> println2
+        _ -> panic
+    }
+}
+```
+
+You should never do that if it's possible to follow "switch-true" pattern, because it's much easier to read and doesn't envolve two switch nodes.
 
 #### Multiple Sources
 
@@ -821,4 +918,4 @@ switch {
 
 Is **not** "if either Alice or Bob then do uppercase". It's a fan-in, meaning `Alice` and `Bob` are concurrent. Switch will select the first value sent as a case, which is random since both are message literals.
 
-> There's an [issue](https://github.com/nevalang/neva/issues/788). These semantics might change in the future.
+> These semantics might change in the future. There's an [issue](https://github.com/nevalang/neva/issues/788) about that.
