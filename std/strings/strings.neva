@@ -1,5 +1,11 @@
-#extern(join)
+#extern(strings_join)
 pub def Join(data list<string>) (res string)
 
-#extern(split)
+#extern(strings_split)
 pub def Split(data string, delim string) (res list<string>)
+
+#extern(strings_to_upper)
+pub def ToUpper(data string) (res string)
+
+#extern(strings_to_lower)
+pub def ToLower(data string) (res string)

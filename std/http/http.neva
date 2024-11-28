@@ -1,7 +1,7 @@
 pub type Response struct {
-  statusCode int
-  body string
+	statusCode int
+	body string
 }
 
 #extern(http_get)
-pub def Get(url string) (resp Response, err error)
+pub def Get(url string) (res Response, err error)

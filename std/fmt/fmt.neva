@@ -3,6 +3,9 @@
 #extern(println)
 pub def Println<T>(data T) (sig struct{})
 
+#extern(print)
+pub def Print<T>(data T) (sig struct{})
+
 // Printf replaces `$` with the corresponding argument
 // and prints to the standard output.
 #extern(printf)
