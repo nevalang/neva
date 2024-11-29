@@ -19,7 +19,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		prog.Stop.Receive(ctx)
-		cancel()
+		cancel() // normal termination
 	}()
 
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
@@ -30,6 +30,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 	funcsFinished := make(chan struct{})
 
 	go func() {
+		// runFuncs blocks until context is cancelled (by the stop port or by panic)
 		runFuncs(context.WithValue(ctx, "cancel", cancel)) //nolint:staticcheck // SA1029
 		close(funcsFinished)
 	}()

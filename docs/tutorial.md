@@ -299,7 +299,7 @@ pub def Greet(data string) (res string) { // new component
 // src/main.neva
 import {
 	fmt
-	@:utils // new import
+	@:src/utils // new import
 }
 
 def Main(start any) (stop any) {
@@ -313,7 +313,7 @@ def Main(start any) (stop any) {
 Notice how we can have multiple imports:
 
 - `fmt` from the standard library for printing
-- `@:utils` from our local module (`@` is module name, `:` separates module/package)
+- `@:src/utils` from our local module (`@` is module name, `:` separates module/package)
 
 This modular structure keeps your code organized and reusable as your projects grow.
 
@@ -355,7 +355,7 @@ We can use `Greet` (import needed) and `AddExclamation` (no import needed) in ou
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -441,7 +441,7 @@ When using nodes with multiple inports, we can't use chain syntax because compil
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -473,7 +473,7 @@ Unlike self outports, we can ignore node outports we don't need (like `concat:de
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -577,7 +577,7 @@ Now let's update `src/main.neva` to add `'21'` to itself using our new `utils.Ad
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -677,7 +677,7 @@ All three operands can be any valid senders (ports, literals, constants, express
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -808,7 +808,7 @@ Let's update `src/main.neva` to see how it can be used:
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {
@@ -856,7 +856,7 @@ Here's how it can be used in `src/main.neva`
 ```neva
 import {
     fmt
-    @:utils
+    @:src/utils
 }
 
 def Main(start any) (stop any) {

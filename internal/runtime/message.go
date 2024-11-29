@@ -26,6 +26,8 @@ type Msg interface {
 	List() []Msg
 	Dict() map[string]Msg
 	Struct() StructMsg
+	Union() UnionMsg
+
 	Equal(other Msg) bool
 }
 
@@ -41,6 +43,7 @@ func (internalMsg) Str() string          { panic("unexpected method call on inte
 func (internalMsg) List() []Msg          { panic("unexpected method call on internal message") }
 func (internalMsg) Dict() map[string]Msg { panic("unexpected method call on internal message") }
 func (internalMsg) Struct() StructMsg    { panic("unexpected method call on internal message") }
+func (internalMsg) Union() UnionMsg      { panic("unexpected method call on internal message") }
 func (internalMsg) Equal(other Msg) bool { panic("unexpected method call on internal message") }
 
 // Bool
@@ -303,5 +306,27 @@ func NewStructMsg(names []string, fields []Msg) StructMsg {
 		internalMsg: internalMsg{},
 		names:       names,
 		fields:      fields,
+	}
+}
+
+// Union
+type UnionMsg struct {
+	internalMsg
+	tag   uint8
+	value Msg
+}
+
+func (msg UnionMsg) Union() UnionMsg { return msg }
+func (msg UnionMsg) Tag() uint8      { return msg.tag }
+func (msg UnionMsg) Value() Msg      { return msg.value }
+func (msg UnionMsg) String() string {
+	return fmt.Sprintf("Union(%d, %v)", msg.tag, msg.value)
+}
+
+func NewUnionMsg(tag uint8, value Msg) UnionMsg {
+	return UnionMsg{
+		internalMsg: internalMsg{},
+		tag:         tag,
+		value:       value,
 	}
 }

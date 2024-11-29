@@ -1,0 +1,19 @@
+import {
+    fmt
+    strings
+}
+
+def Main(start any) (stop any) {
+    print fmt.Print
+    scanln fmt.Scanln
+    upper strings.ToUpper
+    lower strings.ToLower
+    println fmt.Println
+    panic Panic
+    ---
+    :start -> 'Enter the name: ' -> print -> scanln -> switch {
+        'Alice' -> [upper, lower]
+        _ -> panic
+    }
+    (upper + lower) -> println -> :stop
+}
