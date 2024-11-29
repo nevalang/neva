@@ -28,6 +28,8 @@ func (p panicker) Create(
 		cancel := ctx.Value("cancel").(context.CancelFunc)
 		cancel()
 
-		fmt.Fprintln(os.Stderr, "panic:", panicMsg)
+		if _, err := fmt.Fprintln(os.Stderr, "panic:", panicMsg); err != nil {
+			panic(err)
+		}
 	}, nil
 }
