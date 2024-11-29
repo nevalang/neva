@@ -3,5 +3,5 @@ import { fmt }
 def Main(start any) (stop any) {
     fmt.Println
     ---
-    :start -> { (5 + 3) -> println -> :stop }
+    :start -> { (15.0 / 3.0) -> println -> :stop }
 }
