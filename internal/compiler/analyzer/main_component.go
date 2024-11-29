@@ -19,7 +19,7 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 		return compiler.Error{Meta: &cmp.Interface.Meta}.Wrap(err)
 	}
 
-	if err := a.analyzeMainFlowNodes(cmp.Nodes, scope); err != nil {
+	if err := a.analyzeMainComponentNodes(cmp.Nodes, scope); err != nil {
 		return compiler.Error{Meta: &cmp.Meta}.Wrap(err)
 	}
 
@@ -75,7 +75,7 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) *compiler.Error {
 	return nil
 }
 
-func (Analyzer) analyzeMainFlowNodes(
+func (Analyzer) analyzeMainComponentNodes(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) *compiler.Error {
@@ -83,12 +83,7 @@ func (Analyzer) analyzeMainFlowNodes(
 		nodeEntity, loc, err := scope.Entity(node.EntityRef)
 		if err != nil {
 			return &compiler.Error{
-				Message: fmt.Sprintf(
-					"Referenced entity not found: node '%v', ref '%v', details '%v'",
-					nodeName,
-					node.EntityRef,
-					err,
-				),
+				Message:  err.Error(),
 				Location: scope.Location(),
 				Meta:     &node.EntityRef.Meta,
 			}
