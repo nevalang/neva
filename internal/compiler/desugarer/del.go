@@ -39,7 +39,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOut
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: []src.ConnectionSender{
+					Senders: []src.ConnectionSender{
 						{
 							PortAddr: &src.PortAddr{
 								Node: nodeName,
@@ -47,7 +47,7 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOut
 							},
 						},
 					},
-					ReceiverSide: receiverSides,
+					Receivers: receiverSides,
 				},
 				Meta: core.Meta{},
 			})

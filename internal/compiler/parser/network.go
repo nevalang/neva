@@ -127,8 +127,8 @@ func parseNormConn(
 
 	return src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide:   parsedSenderSide,
-			ReceiverSide: parsedReceiverSide,
+			Senders:   parsedSenderSide,
+			Receivers: parsedReceiverSide,
 		},
 		Meta: meta,
 	}, nil

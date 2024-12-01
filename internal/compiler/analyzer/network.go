@@ -134,8 +134,8 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 ) (*src.NormalConnection, *compiler.Error) {
-	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
-		normConn.SenderSide,
+	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
+		normConn.Senders,
 		scope,
 		iface,
 		nodes,
@@ -148,7 +148,7 @@ func (a Analyzer) analyzeNormalConnection(
 	}
 
 	analyzedReceiverSide, err := a.analyzeReceiverSide(
-		normConn.ReceiverSide,
+		normConn.Receivers,
 		scope,
 		iface,
 		nodes,
@@ -162,8 +162,8 @@ func (a Analyzer) analyzeNormalConnection(
 	}
 
 	return &src.NormalConnection{
-		SenderSide:   analyzedSenders,
-		ReceiverSide: analyzedReceiverSide,
+		Senders:   analyzedSenders,
+		Receivers: analyzedReceiverSide,
 	}, nil
 }
 
@@ -327,7 +327,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 
 		// all incoming senders must be subtypes of each option-sender
 		// (both incoming senders and switch's option-senders might be slice)
-		for _, switchSender := range switchConn.SenderSide {
+		for _, switchSender := range switchConn.Senders {
 			_, switchSenderType, _, err := a.getResolvedSenderType(
 				switchSender,
 				iface,
@@ -469,7 +469,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
-	if len(chainedConn.Normal.SenderSide) != 1 {
+	if len(chainedConn.Normal.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
 			Message:  "multiple senders are only allowed at the start of a connection",
 			Location: scope.Location(),
@@ -477,7 +477,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
-	chainHead := chainedConn.Normal.SenderSide[0]
+	chainHead := chainedConn.Normal.Senders[0]
 
 	chainHeadType, err := a.getChainHeadType(
 		chainHead,
@@ -528,7 +528,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	return analyzedChainedConn, nil
 }
 
-func (a Analyzer) analyzeSenderSide(
+func (a Analyzer) analyzeSenders(
 	senders []src.ConnectionSender,
 	scope src.Scope,
 	iface src.Interface,
@@ -581,6 +581,7 @@ func (a Analyzer) analyzeSender(
 		sender.Const == nil &&
 		sender.Range == nil &&
 		sender.Binary == nil &&
+		sender.Unary == nil &&
 		sender.Ternary == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{

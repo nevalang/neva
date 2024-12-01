@@ -68,14 +68,14 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		if len(conn.Normal.SenderSide) != 1 {
+		if len(conn.Normal.Senders) != 1 {
 			return nil, fmt.Errorf(
 				"expected exactly one sender side in desugared network, got %v",
-				len(conn.Normal.SenderSide),
+				len(conn.Normal.Senders),
 			)
 		}
 
-		sender := conn.Normal.SenderSide[0]
+		sender := conn.Normal.Senders[0]
 
 		irSenderSidePortAddr, err := g.processSenderSide(
 			nodeCtx,
@@ -86,7 +86,7 @@ func (g Generator) processNetwork(
 			return nil, fmt.Errorf("process sender side: %w", err)
 		}
 
-		for _, receiverSide := range conn.Normal.ReceiverSide {
+		for _, receiverSide := range conn.Normal.Receivers {
 			receiverSideIR := g.mapReceiverSide(nodeCtx.path, receiverSide)
 
 			result.Connections[irSenderSidePortAddr] = receiverSideIR

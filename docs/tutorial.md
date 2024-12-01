@@ -77,7 +77,7 @@ After installation is finished, you should be able to run the `neva` CLI from yo
 neva version
 ```
 
-It should emit something like `0.28.1`
+It should emit something like `0.28.2`
 
 ### Hello, World!
 
@@ -254,7 +254,7 @@ This structure introduces two fundamental concepts in Nevalang: modules and pack
 A module is a set of packages with a manifest file (`neva.yaml`). When we created our project with `neva new`, it generated a basic module with the following manifest file:
 
 ```yaml
-neva: 0.28.1
+neva: 0.28.2
 ```
 
 This defines the Nevalang version for our project. As your project grows, you can include dependencies on third-party modules here.
@@ -560,10 +560,8 @@ pub def AddIntStrings(left string, right string) (res int, err error) {
     ---
     :left -> parse_left
     :right -> parse_right
-
     [parse_left:err, parse_right:err] -> :err // fan-in with error propagation
-
-    parse:res -> :res
+    (parse_left:res + parse_right:res) -> :res
 }
 ```
 
@@ -582,9 +580,10 @@ import {
 
 def Main(start any) (stop any) {
     add utils.AddIntStrings
+    println fmt.Println<any>
     ---
-    :start -> '21' -> [add:left, add:right] // fan-out
-    [add:res, add:err] -> println -> :stop
+    :start -> '21' -> [add:left, add:right] // chain + fan-out
+    [add:res, add:err] -> println -> :stop // fan-in + chain
 }
 ```
 
@@ -626,12 +625,36 @@ Both operands must share the same type, and the operator must support that type.
 Operands can be any senders e.g. ports, constants, even other binary expressions. Let's add one more utility component to our `src/utils/utils.neva`:
 
 ```neva
-pub def TriangleArea(b int, h int) (res float) {
+pub def TriangleArea(b int, h int) (res int) {
     ((:b * :h) / 2) -> :res
 }
 ```
 
-Here, `(:b * :h)` is a binary expression used as the left operand of another binary expression. The calculation proceeds once both `:b` and `:h` are ready.
+Here, `(:b * :h)` is a binary expression used as the left operand of another binary expression. The calculation proceeds once both `:b` and `:h` are ready. We can test it by changing content in `src/main.neva`
+
+```neva
+import {
+    fmt
+    @:src/utils
+}
+
+def Main(start any) (stop any) {
+    area utils.TriangleArea
+    println fmt.Println<any>
+    ---
+    :start -> [
+        10 -> area:b,
+        20 -> area:h
+    ]
+    area -> println -> :stop
+}
+```
+
+Outputs:
+
+```neva
+100
+```
 
 Nevalang supports these binary operators:
 
@@ -692,6 +715,12 @@ def Main(start any) (stop any) {
     (area > 50) -> format
     ((format == 'true') ? 'Big' : 'Small') -> println -> :stop
 }
+```
+
+Outputs:
+
+```
+100
 ```
 
 This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
@@ -790,7 +819,7 @@ While switch can route messages by comparing values to multiple cases, it also s
 
 ```neva
 pub def ClassifyInt(data int) (neg any, pos any) {
-    :start -> (:data >= 0) -> switch {
+    (:data >= 0) -> switch {
         true -> :pos
         _ -> :neg
     }
@@ -836,6 +865,11 @@ So far we've explored message routing through comparison with set of values and 
 Let's add one more component to `src/utils/utils.neva` and call it `CommentOnUser`. If user's name "Bob" it will comment on that, because that's the most important thing, otherwise if user's age is under 18, it will comment about that. Otherwise, if there's nothing to comment, it will just panic.
 
 ```neva
+import {
+    fmt
+    strconv
+}
+
 // ...existing code...
 
 pub def CommentOnUser(name string, age int) (sig any) {
