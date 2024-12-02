@@ -287,9 +287,9 @@ type Connection struct {
 }
 
 type NormalConnection struct {
-	SenderSide   []ConnectionSender   `json:"sender,omitempty"`
-	ReceiverSide []ConnectionReceiver `json:"receiver,omitempty"`
-	Meta         core.Meta            `json:"meta,omitempty"`
+	Senders   []ConnectionSender   `json:"sender,omitempty"`
+	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
+	Meta      core.Meta            `json:"meta,omitempty"`
 }
 
 type ArrayBypassConnection struct {
@@ -348,6 +348,10 @@ type Binary struct {
 	AnalyzedType ts.Expr `json:"type,omitempty"`
 }
 
+func (b Binary) String() string {
+	return fmt.Sprintf("(%v %v %v)", b.Left, b.Operator, b.Right)
+}
+
 type Ternary struct {
 	Condition ConnectionSender `json:"condition,omitempty"`
 	Left      ConnectionSender `json:"left,omitempty"`
@@ -355,10 +359,18 @@ type Ternary struct {
 	Meta      core.Meta        `json:"meta,omitempty"`
 }
 
+func (t Ternary) String() string {
+	return fmt.Sprintf("(%v ? %v : %v)", t.Condition, t.Left, t.Right)
+}
+
 type Unary struct {
 	Operand  ConnectionSender `json:"expr,omitempty"`
 	Operator UnaryOperator    `json:"operator,omitempty"`
 	Meta     core.Meta        `json:"meta,omitempty"`
+}
+
+func (u Unary) String() string {
+	return fmt.Sprintf("%v %v", u.Operator, u.Operand)
 }
 
 type UnaryOperator string
@@ -414,6 +426,12 @@ func (s ConnectionSender) String() string {
 		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
+	case s.Unary != nil:
+		result = s.Unary.String()
+	case s.Binary != nil:
+		result = s.Binary.String()
+	case s.Ternary != nil:
+		result = s.Ternary.String()
 	}
 
 	return result + selectorsString

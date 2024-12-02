@@ -45,7 +45,7 @@ func (d *Desugarer) desugarStructSelectors(
 	replace := src.Connection{
 		Normal: &src.NormalConnection{
 			// created node will receive data from prev chain link
-			SenderSide: []src.ConnectionSender{
+			Senders: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Node: selectorNodeName,
@@ -54,12 +54,12 @@ func (d *Desugarer) desugarStructSelectors(
 				},
 			},
 			// and send it to original receiver side
-			ReceiverSide: normConn.ReceiverSide,
+			Receivers: normConn.Receivers,
 		},
 	}
 
 	nodesToInsert[selectorNodeName] = selectorNode
-	constsToInsert[constName] = d.createSelectorCfgMsg(normConn.SenderSide[0])
+	constsToInsert[constName] = d.createSelectorCfgMsg(normConn.Senders[0])
 
 	return desugarStructSelectorsResult{
 		replace: replace,

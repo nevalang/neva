@@ -134,8 +134,8 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 ) (*src.NormalConnection, *compiler.Error) {
-	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenderSide(
-		normConn.SenderSide,
+	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
+		normConn.Senders,
 		scope,
 		iface,
 		nodes,
@@ -148,7 +148,7 @@ func (a Analyzer) analyzeNormalConnection(
 	}
 
 	analyzedReceiverSide, err := a.analyzeReceiverSide(
-		normConn.ReceiverSide,
+		normConn.Receivers,
 		scope,
 		iface,
 		nodes,
@@ -162,8 +162,8 @@ func (a Analyzer) analyzeNormalConnection(
 	}
 
 	return &src.NormalConnection{
-		SenderSide:   analyzedSenders,
-		ReceiverSide: analyzedReceiverSide,
+		Senders:   analyzedSenders,
+		Receivers: analyzedReceiverSide,
 	}, nil
 }
 
@@ -327,7 +327,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 
 		// all incoming senders must be subtypes of each option-sender
 		// (both incoming senders and switch's option-senders might be slice)
-		for _, switchSender := range switchConn.SenderSide {
+		for _, switchSender := range switchConn.Senders {
 			_, switchSenderType, _, err := a.getResolvedSenderType(
 				switchSender,
 				iface,
@@ -469,7 +469,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
-	if len(chainedConn.Normal.SenderSide) != 1 {
+	if len(chainedConn.Normal.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
 			Message:  "multiple senders are only allowed at the start of a connection",
 			Location: scope.Location(),
@@ -477,7 +477,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
-	chainHead := chainedConn.Normal.SenderSide[0]
+	chainHead := chainedConn.Normal.Senders[0]
 
 	chainHeadType, err := a.getChainHeadType(
 		chainHead,
@@ -528,7 +528,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	return analyzedChainedConn, nil
 }
 
-func (a Analyzer) analyzeSenderSide(
+func (a Analyzer) analyzeSenders(
 	senders []src.ConnectionSender,
 	scope src.Scope,
 	iface src.Interface,
@@ -568,6 +568,7 @@ func (a Analyzer) analyzeSenderSide(
 	return analyzedSenders, resolvedSenderTypes, nil
 }
 
+// analyzeSender validates sender, marks it as used if it's port-address and returns its type.
 func (a Analyzer) analyzeSender(
 	sender src.ConnectionSender,
 	scope src.Scope,
@@ -581,6 +582,7 @@ func (a Analyzer) analyzeSender(
 		sender.Const == nil &&
 		sender.Range == nil &&
 		sender.Binary == nil &&
+		sender.Unary == nil &&
 		sender.Ternary == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
@@ -589,6 +591,8 @@ func (a Analyzer) analyzeSender(
 			Meta:     &sender.Meta,
 		}
 	}
+
+	// TODO support unary
 
 	if sender.Range != nil && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
@@ -700,66 +704,9 @@ func (a Analyzer) analyzeSender(
 			return nil, nil, err
 		}
 
-		var constr ts.Expr
-		// Arithmetic
-		switch sender.Binary.Operator {
-		case src.AddOp:
-			constr = ts.Expr{
-				Lit: &ts.LitExpr{
-					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
-					},
-				},
-			}
-		case src.SubOp, src.MulOp, src.DivOp:
-			constr = ts.Expr{
-				Lit: &ts.LitExpr{
-					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
-					},
-				},
-			}
-		case src.ModOp, src.PowOp:
-			constr = ts.Expr{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
-			}
-		// Comparison
-		case src.EqOp, src.NeOp:
-			constr = ts.Expr{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "any"}},
-			}
-		case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
-			constr = ts.Expr{
-				Lit: &ts.LitExpr{
-					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
-					},
-				},
-			}
-		// Logical
-		case src.AndOp, src.OrOp:
-			constr = ts.Expr{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
-			}
-		// Bitwise
-		case src.BitAndOp, src.BitOrOp, src.BitXorOp, src.BitLshOp, src.BitRshOp:
-			constr = ts.Expr{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
-			}
-		default:
-			return nil, nil, &compiler.Error{
-				Message: fmt.Sprintf(
-					"Unsupported binary operator: %v",
-					sender.Binary.Operator,
-				),
-				Location: scope.Location(),
-				Meta:     &sender.Binary.Meta,
-			}
+		constr, err := a.getOperatorConstraint(*sender.Binary, scope)
+		if err != nil {
+			return nil, nil, err
 		}
 
 		if err := a.resolver.IsSubtypeOf(*leftType, constr, scope); err != nil {
@@ -782,21 +729,7 @@ func (a Analyzer) analyzeSender(
 		// it could figure this out itself but it's extra work
 		sender.Binary.AnalyzedType = *leftType
 
-		var resultType ts.Expr
-		if sender.Binary.Operator == src.EqOp ||
-			sender.Binary.Operator == src.NeOp ||
-			sender.Binary.Operator == src.GtOp ||
-			sender.Binary.Operator == src.LtOp ||
-			sender.Binary.Operator == src.GeOp ||
-			sender.Binary.Operator == src.LeOp ||
-			sender.Binary.Operator == src.AndOp ||
-			sender.Binary.Operator == src.OrOp {
-			resultType = ts.Expr{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
-			}
-		} else {
-			resultType = *leftType
-		}
+		resultType := a.getBinaryExprType(sender.Binary.Operator, *leftType)
 
 		return &sender, &resultType, nil
 	}
@@ -1302,26 +1235,26 @@ func (a Analyzer) getResolvedPortType(
 }
 
 func (a Analyzer) getResolvedSenderType(
-	senderSide src.ConnectionSender,
+	sender src.ConnectionSender,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	prevChainLink []src.ConnectionSender,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
-	if senderSide.Const != nil {
-		resolvedConst, resolvedExpr, err := a.getConstSenderType(*senderSide.Const, scope)
+	if sender.Const != nil {
+		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
 		}
 
 		return src.ConnectionSender{
 			Const: &resolvedConst,
-			Meta:  senderSide.Meta,
+			Meta:  sender.Meta,
 		}, resolvedExpr, false, nil
 	}
 
-	if senderSide.Range != nil {
+	if sender.Range != nil {
 		// range sends stream<int> from its :data outport
 		rangeType := ts.Expr{
 			Inst: &ts.InstExpr{
@@ -1331,10 +1264,10 @@ func (a Analyzer) getResolvedSenderType(
 				}},
 			},
 		}
-		return senderSide, rangeType, false, nil
+		return sender, rangeType, false, nil
 	}
 
-	if len(senderSide.StructSelector) > 0 {
+	if len(sender.StructSelector) > 0 {
 		_, chainLinkType, _, err := a.getResolvedSenderType(
 			prevChainLink[0],
 			iface,
@@ -1349,21 +1282,60 @@ func (a Analyzer) getResolvedSenderType(
 
 		lastFieldType, err := a.getSelectorsSenderType(
 			chainLinkType,
-			senderSide.StructSelector,
+			sender.StructSelector,
 			scope,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
 				Location: scope.Location(),
-				Meta:     &senderSide.Meta,
+				Meta:     &sender.Meta,
 			}.Wrap(err)
 		}
 
-		return senderSide, lastFieldType, false, nil
+		return sender, lastFieldType, false, nil
 	}
 
+	// logic of getting type for binary expr partially duplicates logic of validating it
+	if sender.Binary != nil {
+		_, leftType, _, err := a.getResolvedSenderType(
+			sender.Binary.Left,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			prevChainLink,
+		)
+		if err != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, err
+		}
+		return sender, a.getBinaryExprType(sender.Binary.Operator, leftType), false, nil
+	}
+
+	// logic of getting type for ternary expr partially duplicates logic of validating it
+	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
+	if sender.Ternary != nil {
+		_, trueValType, _, err := a.getResolvedSenderType(
+			sender.Ternary.Left,
+			iface,
+			nodes,
+			nodesIfaces,
+			scope,
+			prevChainLink,
+		)
+		if err != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
+				Location: scope.Location(),
+				Meta:     &sender.Ternary.Meta,
+			}.Wrap(err)
+		}
+		// FIXME: perfectly we need to return union, but it's not yet supported
+		// see https://github.com/nevalang/neva/issues/737
+		return sender, trueValType, false, nil
+	}
+
+	// handle port-address sender
 	resolvedPort, resolvedExpr, isArr, err := a.getPortSenderType(
-		*senderSide.PortAddr,
+		*sender.PortAddr,
 		scope,
 		iface,
 		nodes,
@@ -1375,8 +1347,84 @@ func (a Analyzer) getResolvedSenderType(
 
 	return src.ConnectionSender{
 		PortAddr: &resolvedPort,
-		Meta:     senderSide.Meta,
+		Meta:     sender.Meta,
 	}, resolvedExpr, isArr, nil
+}
+
+// getBinaryExprType returns type of the result of binary expression.
+func (Analyzer) getBinaryExprType(operator src.BinaryOperator, leftType ts.Expr) ts.Expr {
+	if operator == src.EqOp ||
+		operator == src.NeOp ||
+		operator == src.GtOp ||
+		operator == src.LtOp ||
+		operator == src.GeOp ||
+		operator == src.LeOp ||
+		operator == src.AndOp ||
+		operator == src.OrOp {
+		return ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+		}
+	}
+	return leftType
+}
+
+func (Analyzer) getOperatorConstraint(binary src.Binary, scope src.Scope) (ts.Expr, *compiler.Error) {
+	switch binary.Operator {
+	case src.AddOp:
+		return ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: []ts.Expr{
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+				},
+			},
+		}, nil
+	case src.SubOp, src.MulOp, src.DivOp:
+		return ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: []ts.Expr{
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+				},
+			},
+		}, nil
+	case src.ModOp, src.PowOp:
+		return ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+		}, nil
+	case src.EqOp, src.NeOp:
+		return ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "any"}},
+		}, nil
+	case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
+		return ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: []ts.Expr{
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+				},
+			},
+		}, nil
+	case src.AndOp, src.OrOp:
+		return ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
+		}, nil
+	case src.BitAndOp, src.BitOrOp, src.BitXorOp, src.BitLshOp, src.BitRshOp:
+		return ts.Expr{
+			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+		}, nil
+	default:
+		return ts.Expr{}, &compiler.Error{
+			Message: fmt.Sprintf(
+				"Unsupported binary operator: %v",
+				binary.Operator,
+			),
+			Location: scope.Location(),
+			Meta:     &binary.Meta,
+		}
+	}
 }
 
 // getPortSenderType returns resolved port-addr, type expr and isArray bool.

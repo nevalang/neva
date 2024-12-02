@@ -21,7 +21,7 @@ func (Desugarer) handleNode(
 	if node.ErrGuard {
 		extraConnections = append(extraConnections, src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{
 							Node: nodeName,
@@ -29,7 +29,7 @@ func (Desugarer) handleNode(
 						},
 					},
 				},
-				ReceiverSide: []src.ConnectionReceiver{
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: "out",

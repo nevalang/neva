@@ -130,7 +130,7 @@ func (d *Desugarer) desugarNormalConnection(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, error) {
-	if len(normConn.SenderSide) > 1 {
+	if len(normConn.Senders) > 1 {
 		result, err := d.desugarFanIn(
 			iface,
 			normConn,
@@ -162,7 +162,7 @@ func (d *Desugarer) desugarNormalConnection(
 	normConn = *desugarSenderResult.replace.Normal
 	insert := desugarSenderResult.insert
 
-	if len(normConn.ReceiverSide) > 1 {
+	if len(normConn.Receivers) > 1 {
 		result, err := d.desugarFanOut(
 			iface,
 			normConn,
@@ -215,15 +215,15 @@ func (d *Desugarer) desugarSingleReceiver(
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
 ) (desugarReceiverResult, error) {
-	receiver := normConn.ReceiverSide[0]
+	receiver := normConn.Receivers[0]
 
 	if receiver.PortAddr != nil {
 		if receiver.PortAddr.Port != "" {
 			return desugarReceiverResult{
 				replace: src.Connection{
 					Normal: &src.NormalConnection{
-						SenderSide:   normConn.SenderSide,
-						ReceiverSide: []src.ConnectionReceiver{receiver},
+						Senders:   normConn.Senders,
+						Receivers: []src.ConnectionReceiver{receiver},
 					},
 				},
 				insert: []src.Connection{},
@@ -238,8 +238,8 @@ func (d *Desugarer) desugarSingleReceiver(
 		return desugarReceiverResult{
 			replace: src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: normConn.SenderSide,
-					ReceiverSide: []src.ConnectionReceiver{
+					Senders: normConn.Senders,
+					Receivers: []src.ConnectionReceiver{
 						{
 							PortAddr: &src.PortAddr{
 								Port: firstInportName,
@@ -285,8 +285,8 @@ func (d *Desugarer) desugarSingleReceiver(
 		// Connect original sender to switch:data
 		replace := src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: normConn.SenderSide,
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: normConn.Senders,
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: switchNodeName,
@@ -304,8 +304,8 @@ func (d *Desugarer) desugarSingleReceiver(
 			// Connect case-sender to switch:case[i]
 			insert = append(insert, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: caseConn.SenderSide,
-					ReceiverSide: []src.ConnectionReceiver{
+					Senders: caseConn.Senders,
+					Receivers: []src.ConnectionReceiver{
 						{
 							PortAddr: &src.PortAddr{
 								Node: switchNodeName,
@@ -320,7 +320,7 @@ func (d *Desugarer) desugarSingleReceiver(
 			// Connect switch:case[i] to case receiver
 			insert = append(insert, src.Connection{
 				Normal: &src.NormalConnection{
-					SenderSide: []src.ConnectionSender{
+					Senders: []src.ConnectionSender{
 						{
 							PortAddr: &src.PortAddr{
 								Node: switchNodeName,
@@ -329,7 +329,7 @@ func (d *Desugarer) desugarSingleReceiver(
 							},
 						},
 					},
-					ReceiverSide: caseConn.ReceiverSide,
+					Receivers: caseConn.Receivers,
 				},
 			})
 		}
@@ -337,7 +337,7 @@ func (d *Desugarer) desugarSingleReceiver(
 		// Connect switch:default to its receiver
 		insert = append(insert, src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{
 							Node: switchNodeName,
@@ -345,7 +345,7 @@ func (d *Desugarer) desugarSingleReceiver(
 						},
 					},
 				},
-				ReceiverSide: receiver.Switch.Default,
+				Receivers: receiver.Switch.Default,
 			},
 		})
 
@@ -399,7 +399,7 @@ func (d *Desugarer) desugarChainedConnection(
 	normConn src.NormalConnection,
 ) (desugarConnectionResult, error) {
 	chainedConn := *receiver.ChainedConnection
-	chainHead := chainedConn.Normal.SenderSide[0] // chain head is always single sender
+	chainHead := chainedConn.Normal.Senders[0] // chain head is always single sender
 
 	// it's only possible to find receiver port before desugaring of chained connection
 	var chainHeadPort string
@@ -454,7 +454,7 @@ func (d *Desugarer) desugarChainedConnection(
 			}
 		}
 
-		chainedConn.Normal.SenderSide = []src.ConnectionSender{
+		chainedConn.Normal.Senders = []src.ConnectionSender{
 			{PortAddr: &src.PortAddr{
 				Node: triggerNodeName,
 				Port: "msg",
@@ -475,12 +475,12 @@ func (d *Desugarer) desugarChainedConnection(
 		return desugarConnectionResult{}, err
 	}
 
-	desugaredHead := desugarChainResult.replace.Normal.SenderSide[0]
+	desugaredHead := desugarChainResult.replace.Normal.Senders[0]
 
 	replace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: normConn.SenderSide,
-			ReceiverSide: []src.ConnectionReceiver{
+			Senders: normConn.Senders,
+			Receivers: []src.ConnectionReceiver{
 				{
 					PortAddr: &src.PortAddr{
 						Node: desugaredHead.PortAddr.Node,
@@ -524,7 +524,7 @@ func (d *Desugarer) desugarDeferredConnection(
 	nodesPortsUsed nodeOutportsUsed,
 	nodes map[string]src.Node,
 ) (desugarDeferredConnectionsResult, error) {
-	deferredConnection := *normConn.ReceiverSide[0].DeferredConnection
+	deferredConnection := *normConn.Receivers[0].DeferredConnection
 
 	desugarDeferredConnResult, err := d.desugarConnection(
 		iface,
@@ -562,8 +562,8 @@ func (d *Desugarer) desugarDeferredConnection(
 	// 2) connect original sender to lock receiver
 	replace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: normConn.SenderSide,
-			ReceiverSide: []src.ConnectionReceiver{
+			Senders: normConn.Senders,
+			Receivers: []src.ConnectionReceiver{
 				{
 					PortAddr: &src.PortAddr{
 						Node: lockNodeName,
@@ -579,8 +579,8 @@ func (d *Desugarer) desugarDeferredConnection(
 		connsToInsert,
 		src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: deferredConnection.Normal.SenderSide,
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: deferredConnection.Normal.Senders,
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: lockNodeName,
@@ -593,7 +593,7 @@ func (d *Desugarer) desugarDeferredConnection(
 		// 4) create connection from lock:data to receiver-side of deferred connection
 		src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{
 							Node: lockNodeName,
@@ -601,7 +601,7 @@ func (d *Desugarer) desugarDeferredConnection(
 						},
 					},
 				},
-				ReceiverSide: deferredConnection.Normal.ReceiverSide,
+				Receivers: deferredConnection.Normal.Receivers,
 			},
 		},
 	)
@@ -627,7 +627,7 @@ func (d *Desugarer) desugarSingleSender(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarSenderResult, error) {
-	sender := normConn.SenderSide[0]
+	sender := normConn.Senders[0]
 
 	if sender.PortAddr != nil {
 		portName := sender.PortAddr.Port
@@ -637,7 +637,7 @@ func (d *Desugarer) desugarSingleSender(
 				return desugarSenderResult{}, fmt.Errorf("get first outport name: %w", err)
 			}
 			portName = firstOutportName
-			normConn.SenderSide = []src.ConnectionSender{
+			normConn.Senders = []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Port: portName,
@@ -696,10 +696,10 @@ func (d *Desugarer) desugarSingleSender(
 			}
 
 			normConn = src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{PortAddr: &portAddr, Meta: sender.Meta},
 				},
-				ReceiverSide: normConn.ReceiverSide,
+				Receivers: normConn.Receivers,
 			}
 		} else if sender.Const.Value.Message != nil {
 			portAddr, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
@@ -708,10 +708,10 @@ func (d *Desugarer) desugarSingleSender(
 			}
 
 			normConn = src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{PortAddr: &portAddr, Meta: sender.Meta},
 				},
-				ReceiverSide: normConn.ReceiverSide,
+				Receivers: normConn.Receivers,
 			}
 		}
 
@@ -942,11 +942,11 @@ func (d *Desugarer) desugarFanOut(
 		},
 	}
 
-	insert := make([]src.Connection, 0, len(normConn.ReceiverSide))
-	for i, receiver := range normConn.ReceiverSide {
+	insert := make([]src.Connection, 0, len(normConn.Receivers))
+	for i, receiver := range normConn.Receivers {
 		conn := src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{
 							Node: nodeName,
@@ -955,7 +955,7 @@ func (d *Desugarer) desugarFanOut(
 						},
 					},
 				},
-				ReceiverSide: []src.ConnectionReceiver{receiver},
+				Receivers: []src.ConnectionReceiver{receiver},
 			},
 		}
 
@@ -979,8 +979,8 @@ func (d *Desugarer) desugarFanOut(
 	return desugarFanOutResult{
 		replace: src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide:   normConn.SenderSide, // senders must be desugared
-				ReceiverSide: []src.ConnectionReceiver{receiverToReplace},
+				Senders:   normConn.Senders, // senders must be desugared
+				Receivers: []src.ConnectionReceiver{receiverToReplace},
 			},
 		},
 		insert: insert,
@@ -1034,24 +1034,24 @@ func (d *Desugarer) desugarRangeSender(
 	}
 
 	replace := src.NormalConnection{
-		SenderSide: []src.ConnectionSender{
+		Senders: []src.ConnectionSender{
 			{
 				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
 			},
 		},
-		ReceiverSide: normConn.ReceiverSide,
+		Receivers: normConn.Receivers,
 	}
 
 	insert := []src.Connection{
 		// $from -> range:from
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{Node: fromConstName, Port: "msg"},
 					},
 				},
-				ReceiverSide: []src.ConnectionReceiver{
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "from"},
 					},
@@ -1061,12 +1061,12 @@ func (d *Desugarer) desugarRangeSender(
 		// $to -> range:to
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{
+				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &src.PortAddr{Node: toConstName, Port: "msg"},
 					},
 				},
-				ReceiverSide: []src.ConnectionReceiver{
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "to"},
 					},
@@ -1103,12 +1103,12 @@ func (d *Desugarer) desugarFanIn(
 	}
 
 	// 2. connection each sender with fan-in node
-	netWithoutFanIn := make([]src.Connection, 0, len(normConn.SenderSide))
-	for i, sender := range normConn.SenderSide {
+	netWithoutFanIn := make([]src.Connection, 0, len(normConn.Senders))
+	for i, sender := range normConn.Senders {
 		netWithoutFanIn = append(netWithoutFanIn, src.Connection{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{sender},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{sender},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: fanInNodeName,
@@ -1124,7 +1124,7 @@ func (d *Desugarer) desugarFanIn(
 	// 3. insert new connection from fan-in to original receivers
 	netWithoutFanIn = append(netWithoutFanIn, src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: []src.ConnectionSender{
+			Senders: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Node: fanInNodeName,
@@ -1132,7 +1132,7 @@ func (d *Desugarer) desugarFanIn(
 					},
 				},
 			},
-			ReceiverSide: normConn.ReceiverSide,
+			Receivers: normConn.Receivers,
 		},
 	})
 
@@ -1188,8 +1188,8 @@ func (d *Desugarer) desugarTernarySender(
 		// 1) cond -> ternary:if
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{ternary.Condition},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{ternary.Condition},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: ternaryNodeName,
@@ -1202,8 +1202,8 @@ func (d *Desugarer) desugarTernarySender(
 		// 2) left -> ternary:then
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{ternary.Left},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{ternary.Left},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: ternaryNodeName,
@@ -1216,8 +1216,8 @@ func (d *Desugarer) desugarTernarySender(
 		// right -> ternary:else
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{ternary.Right},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{ternary.Right},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{Node: ternaryNodeName, Port: "else"},
 					},
@@ -1247,7 +1247,7 @@ func (d *Desugarer) desugarTernarySender(
 	// 4) ternary:res -> XXX;
 	sugaredReplace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: []src.ConnectionSender{
+			Senders: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Node: ternaryNodeName,
@@ -1255,7 +1255,7 @@ func (d *Desugarer) desugarTernarySender(
 					},
 				},
 			},
-			ReceiverSide: normConn.ReceiverSide,
+			Receivers: normConn.Receivers,
 		},
 	}
 
@@ -1383,8 +1383,8 @@ func (d *Desugarer) desugarBinarySender(
 	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{binary.Left},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{binary.Left},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{Node: opNode, Port: "left"},
 					},
@@ -1393,8 +1393,8 @@ func (d *Desugarer) desugarBinarySender(
 		},
 		{
 			Normal: &src.NormalConnection{
-				SenderSide: []src.ConnectionSender{binary.Right},
-				ReceiverSide: []src.ConnectionReceiver{
+				Senders: []src.ConnectionSender{binary.Right},
+				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{Node: opNode, Port: "right"},
 					},
@@ -1425,7 +1425,7 @@ func (d *Desugarer) desugarBinarySender(
 	// op:res -> XXX
 	replace := src.Connection{
 		Normal: &src.NormalConnection{
-			SenderSide: []src.ConnectionSender{
+			Senders: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Node: opNode,
@@ -1433,7 +1433,7 @@ func (d *Desugarer) desugarBinarySender(
 					},
 				},
 			},
-			ReceiverSide: normConn.ReceiverSide, // desugaring of original receivers is job of caller
+			Receivers: normConn.Receivers, // desugaring of original receivers is job of caller
 		},
 	}
 
