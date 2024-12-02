@@ -882,6 +882,7 @@ pub def CommentOnUser(name string, age int) (sig any) {
         (:age < 18) -> 'Young fellow!' -> println2
         _ -> panic
     }
+    [println1, println2] -> :sig
 }
 ```
 
