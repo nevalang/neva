@@ -5,8 +5,18 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/stretchr/testify/require"
 )
+
+var location = core.Location{
+	ModRef: core.ModuleRef{
+		Path:    "test",
+		Version: "1",
+	},
+	Package:  "test",
+	Filename: "test",
+}
 
 func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 	text := []byte(`
@@ -17,7 +27,7 @@ func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
 	net := got.Entities["C1"].Component.Net
@@ -45,7 +55,7 @@ func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
 	net := got.Entities["C1"].Component.Net
@@ -76,7 +86,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 		}`,
 	)
 	p := New()
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	net := got.Entities["C1"].Component.Net
@@ -107,7 +117,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Equal(t, true, err == nil)
 
 	net := got.Entities["C1"].Component.Net
@@ -133,7 +143,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	net := got.Entities["C1"].Component.Net
@@ -168,7 +178,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	// 1) :port -> lonely
@@ -194,7 +204,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	net := got.Entities["C1"].Component.Net
@@ -266,7 +276,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New()
 
-			got, err := p.parseFile([]byte(tt.text))
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
 			net := got.Entities["C1"].Component.Net
@@ -282,7 +292,7 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 
 	p := New()
 
-	_, err := p.parseFile(text)
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 }
 
@@ -311,7 +321,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	d1 := got.Entities["C1"].Component.Directives[compiler.ExternDirective][0]
@@ -349,7 +359,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	conn := got.Entities["C1"].Component.Net[0]
@@ -372,7 +382,7 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	nodes := got.Entities["C1"].Component.Nodes
@@ -392,7 +402,7 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	enum := got.Entities["c0"].Const.Value.Message.Enum
@@ -416,7 +426,7 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(text)
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
 	conn := got.Entities["C1"].Component.Net[0]
@@ -548,7 +558,7 @@ func TestParser_ParseFile_Range(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New()
 
-			got, err := p.parseFile([]byte(tt.text))
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
 			net := got.Entities["C1"].Component.Net
@@ -679,7 +689,7 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New()
 
-			got, err := p.parseFile([]byte(tt.text))
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
 			net := got.Entities["C1"].Component.Net
@@ -802,7 +812,7 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New()
 
-			got, err := p.parseFile([]byte(tt.text))
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
 			net := got.Entities["C1"].Component.Net
@@ -994,7 +1004,7 @@ func TestParser_ParseFile_Switch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New()
 
-			got, err := p.parseFile([]byte(tt.text))
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
 			net := got.Entities["C1"].Component.Net

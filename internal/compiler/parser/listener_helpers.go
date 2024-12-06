@@ -13,7 +13,44 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
-func parseTypeParams(
+func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string, *compiler.Error) {
+	path := actx.ImportPath()
+	pkgName := path.ImportPathPkg().GetText()
+
+	var modName string
+	if path.ImportPathMod() != nil {
+		modName = path.ImportPathMod().GetText()
+	} else {
+		modName = "std"
+	}
+
+	var alias string
+	if tmp := actx.ImportAlias(); tmp != nil {
+		alias = tmp.GetText()
+	} else {
+		parts := strings.Split(pkgName, "/")
+		alias = parts[len(parts)-1]
+	}
+
+	return src.Import{
+		Module:  modName,
+		Package: pkgName,
+		Meta: core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}, alias, nil
+}
+
+func (s *treeShapeListener) parseTypeParams(
 	params generated.ITypeParamsContext,
 ) (src.TypeParams, *compiler.Error) {
 	if params == nil || params.TypeParamList() == nil {
@@ -23,7 +60,7 @@ func parseTypeParams(
 	typeParams := params.TypeParamList().AllTypeParam()
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
-		v, err := parseTypeExpr(typeParam.TypeExpr())
+		v, err := s.parseTypeExpr(typeParam.TypeExpr())
 		if err != nil {
 			return src.TypeParams{}, err
 		}
@@ -45,23 +82,27 @@ func parseTypeParams(
 				Line:   params.GetStop().GetLine(),
 				Column: params.GetStop().GetColumn(),
 			},
+			Location: s.loc,
 		},
 	}, nil
 }
 
-func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
+func (s *treeShapeListener) parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 	if expr == nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: core.EntityRef{Name: "any"},
 			},
-			Meta: core.Meta{Text: "any"},
+			Meta: core.Meta{
+				Text:     "any",
+				Location: s.loc,
+			},
 		}, nil
 	}
 
 	var result *ts.Expr
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
-		v, err := parseTypeInstExpr(instExpr)
+		v, err := s.parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Message: err.Error(),
@@ -75,18 +116,19 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 						Line:   expr.GetStop().GetLine(),
 						Column: expr.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
 		result = v
 	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
-		v, err := parseUnionExpr(unionExpr)
+		v, err := s.parseUnionExpr(unionExpr)
 		if err != nil {
 			return ts.Expr{}, err
 		}
 		result = v
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
-		v, err := parseLitExpr(litExpr)
+		v, err := s.parseLitExpr(litExpr)
 		if err != nil {
 			return ts.Expr{}, err
 		}
@@ -104,16 +146,17 @@ func parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
 					Line:   expr.GetStop().GetLine(),
 					Column: expr.GetStop().GetLine(),
 				},
+				Location: s.loc,
 			},
 		}
 	}
 
-	result.Meta = getTypeExprMeta(expr)
+	result.Meta = s.getTypeExprMeta(expr)
 
 	return *result, nil
 }
 
-func getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
+func (s *treeShapeListener) getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
 	var text string
 	if text = expr.GetText(); text == "" {
 		text = "any "
@@ -131,24 +174,25 @@ func getTypeExprMeta(expr generated.ITypeExprContext) core.Meta {
 			Line:   stop.GetLine(),
 			Column: stop.GetColumn(),
 		},
+		Location: s.loc,
 	}
 	return meta
 }
 
-func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compiler.Error) {
+func (s *treeShapeListener) parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compiler.Error) {
 	subExprs := unionExpr.AllNonUnionTypeExpr()
 	parsedSubExprs := make([]ts.Expr, 0, len(subExprs))
 
 	for _, subExpr := range subExprs {
 		if instExpr := subExpr.TypeInstExpr(); instExpr != nil {
-			parsedTypeInstExpr, err := parseTypeInstExpr(instExpr)
+			parsedTypeInstExpr, err := s.parseTypeInstExpr(instExpr)
 			if err != nil {
 				return nil, err
 			}
 			parsedSubExprs = append(parsedSubExprs, *parsedTypeInstExpr)
 		}
 		if unionExpr := subExpr.TypeLitExpr(); unionExpr != nil {
-			v, err := parseLitExpr(subExpr.TypeLitExpr())
+			v, err := s.parseLitExpr(subExpr.TypeLitExpr())
 			if err != nil {
 				return nil, err
 			}
@@ -170,19 +214,20 @@ func parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compi
 				Line:   unionExpr.GetStop().GetLine(),
 				Column: unionExpr.GetStop().GetColumn(),
 			},
+			Location: s.loc,
 		},
 	}, nil
 }
 
-func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Error) {
+func (s *treeShapeListener) parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Error) {
 	enumExpr := litExpr.EnumTypeExpr()
 	structExpr := litExpr.StructTypeExpr()
 
 	switch {
 	case enumExpr != nil:
-		return parseEnumExpr(enumExpr), nil
+		return s.parseEnumExpr(enumExpr), nil
 	case structExpr != nil:
-		return parseStructExpr(structExpr)
+		return s.parseStructExpr(structExpr)
 	}
 
 	return nil, &compiler.Error{
@@ -197,11 +242,12 @@ func parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Er
 				Line:   litExpr.GetStop().GetLine(),
 				Column: litExpr.GetStop().GetColumn(),
 			},
+			Location: s.loc,
 		},
 	}
 }
 
-func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
+func (s *treeShapeListener) parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
 	ids := enumExpr.AllIDENTIFIER()
 	result := ts.Expr{
 		Lit: &ts.LitExpr{
@@ -221,11 +267,12 @@ func parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
 			Line:   enumExpr.GetStop().GetLine(),
 			Column: enumExpr.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 	return &result
 }
 
-func parseStructExpr(
+func (s *treeShapeListener) parseStructExpr(
 	structExpr generated.IStructTypeExprContext,
 ) (*ts.Expr, *compiler.Error) {
 	result := ts.Expr{
@@ -244,7 +291,7 @@ func parseStructExpr(
 
 	for _, field := range fields {
 		fieldName := field.IDENTIFIER().GetText()
-		v, err := parseTypeExpr(field.TypeExpr())
+		v, err := s.parseTypeExpr(field.TypeExpr())
 		if err != nil {
 			return nil, err
 		}
@@ -261,13 +308,14 @@ func parseStructExpr(
 			Line:   structExpr.GetStop().GetLine(),
 			Column: structExpr.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 
 	return &result, nil
 }
 
-func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *compiler.Error) {
-	parsedRef, err := parseEntityRef(instExpr.EntityRef())
+func (s *treeShapeListener) parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *compiler.Error) {
+	parsedRef, err := s.parseEntityRef(instExpr.EntityRef())
 	if err != nil {
 		return nil, &compiler.Error{
 			Message: err.Error(),
@@ -281,6 +329,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 					Line:   instExpr.GetStop().GetLine(),
 					Column: instExpr.GetStop().GetColumn(),
 				},
+				Location: s.loc,
 			},
 		}
 	}
@@ -299,7 +348,7 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 	argExprs := args.AllTypeExpr()
 	parsedArgs := make([]ts.Expr, 0, len(argExprs))
 	for _, arg := range argExprs {
-		v, err := parseTypeExpr(arg)
+		v, err := s.parseTypeExpr(arg)
 		if err != nil {
 			return nil, err
 		}
@@ -317,12 +366,13 @@ func parseTypeInstExpr(instExpr generated.ITypeInstExprContext) (*ts.Expr, *comp
 			Line:   instExpr.GetStop().GetLine(),
 			Column: instExpr.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 
 	return &result, nil
 }
 
-func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler.Error) {
+func (s *treeShapeListener) parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler.Error) {
 	meta := core.Meta{
 		Text: expr.GetText(),
 		Start: core.Position{
@@ -333,6 +383,7 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 
 	parts := strings.Split(expr.GetText(), ".")
@@ -357,7 +408,7 @@ func parseEntityRef(expr generated.IEntityRefContext) (core.EntityRef, *compiler
 	}, nil
 }
 
-func parsePorts(
+func (s *treeShapeListener) parsePorts(
 	in []generated.IPortDefContext,
 ) (map[string]src.Port, *compiler.Error) {
 	parsedInports := map[string]src.Port{}
@@ -380,8 +431,12 @@ func parsePorts(
 			typeExpr = arr.TypeExpr()
 		}
 
-		portName := id.GetText()
-		v, err := parseTypeExpr(typeExpr)
+		var portName string
+		if id != nil {
+			portName = id.GetText()
+		}
+
+		v, err := s.parseTypeExpr(typeExpr)
 		if err != nil {
 			return nil, err
 		}
@@ -398,6 +453,7 @@ func parsePorts(
 					Line:   port.GetStop().GetLine(),
 					Column: port.GetStop().GetColumn(),
 				},
+				Location: s.loc,
 			},
 		}
 	}
@@ -405,40 +461,47 @@ func parsePorts(
 	return parsedInports, nil
 }
 
-func parseInterfaceDef(
+func (s *treeShapeListener) parseInterfaceDef(
 	actx generated.IInterfaceDefContext,
 ) (src.Interface, *compiler.Error) {
-	parsedTypeParams, err := parseTypeParams(actx.TypeParams())
+	parsedTypeParams, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	in, err := parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
+	in, err := s.parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	out, err := parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+	out, err := s.parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
+	}
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
 	}
 
 	return src.Interface{
 		TypeParams: parsedTypeParams,
-		IO:         src.IO{In: in, Out: out},
-		Meta: core.Meta{
-			Text: actx.GetText(),
-			Start: core.Position{
-				Line:   actx.GetStart().GetLine(),
-				Column: actx.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   actx.GetStop().GetLine(),
-				Column: actx.GetStop().GetColumn(),
-			},
+		IO: src.IO{
+			In:   in,
+			Out:  out,
+			Meta: meta,
 		},
+		Meta: meta,
 	}, nil
 }
 
-func parseNodes(
+func (s *treeShapeListener) parseNodes(
 	actx generated.ICompNodesDefBodyContext,
 	isRootLevel bool,
 ) (map[string]src.Node, *compiler.Error) {
@@ -447,9 +510,9 @@ func parseNodes(
 	for _, node := range actx.AllCompNodeDef() {
 		nodeInst := node.NodeInst()
 
-		directives := parseCompilerDirectives(node.CompilerDirectives())
+		directives := s.parseCompilerDirectives(node.CompilerDirectives())
 
-		parsedRef, err := parseEntityRef(nodeInst.EntityRef())
+		parsedRef, err := s.parseEntityRef(nodeInst.EntityRef())
 		if err != nil {
 			return nil, &compiler.Error{
 				Message: err.Error(),
@@ -463,13 +526,14 @@ func parseNodes(
 						Line:   node.GetStop().GetLine(),
 						Column: node.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
 
 		var typeArgs []ts.Expr
 		if args := nodeInst.TypeArgs(); args != nil {
-			v, err := parseTypeExprs(args.AllTypeExpr())
+			v, err := s.parseTypeExprs(args.AllTypeExpr())
 			if err != nil {
 				return nil, err
 			}
@@ -483,7 +547,7 @@ func parseNodes(
 
 		var deps map[string]src.Node
 		if diArgs := nodeInst.NodeDIArgs(); diArgs != nil {
-			v, err := parseNodes(diArgs.CompNodesDefBody(), false)
+			v, err := s.parseNodes(diArgs.CompNodesDefBody(), false)
 			if err != nil {
 				return nil, err
 			}
@@ -513,6 +577,7 @@ func parseNodes(
 					Line:   node.GetStop().GetLine(),
 					Column: node.GetStop().GetColumn(),
 				},
+				Location: s.loc,
 			},
 		}
 	}
@@ -520,13 +585,13 @@ func parseNodes(
 	return result, nil
 }
 
-func parseTypeExprs(
+func (s *treeShapeListener) parseTypeExprs(
 	in []generated.ITypeExprContext,
 ) ([]ts.Expr, *compiler.Error) {
 	result := make([]ts.Expr, 0, len(in))
 
 	for _, expr := range in {
-		v, err := parseTypeExpr(expr)
+		v, err := s.parseTypeExpr(expr)
 		if err != nil {
 			return nil, err
 		}
@@ -536,7 +601,7 @@ func parseTypeExprs(
 	return result, nil
 }
 
-func parsePortAddr(
+func (s *treeShapeListener) parsePortAddr(
 	expr generated.IPortAddrContext,
 	fallbackNode string,
 ) (src.PortAddr, *compiler.Error) {
@@ -550,6 +615,7 @@ func parsePortAddr(
 			Line:   expr.GetStart().GetLine(),
 			Column: expr.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 
 	if expr.ArrPortAddr() == nil &&
@@ -598,7 +664,7 @@ func parsePortAddr(
 	}
 
 	if expr.SinglePortAddr() != nil {
-		return parseSinglePortAddr(fallbackNode, expr.SinglePortAddr(), meta)
+		return s.parseSinglePortAddr(fallbackNode, expr.SinglePortAddr(), meta)
 	}
 
 	idxStr := expr.ArrPortAddr().PortAddrIdx()
@@ -632,7 +698,7 @@ func parsePortAddr(
 
 }
 
-func parseSinglePortAddr(
+func (s *treeShapeListener) parseSinglePortAddr(
 	fallbackNode string,
 	expr generated.ISinglePortAddrContext,
 	meta core.Meta,
@@ -649,7 +715,7 @@ func parseSinglePortAddr(
 	}, nil
 }
 
-func parsePrimitiveConstLiteral(
+func (s *treeShapeListener) parsePrimitiveConstLiteral(
 	lit generated.IPrimitiveConstLitContext,
 ) (src.Const, *compiler.Error) {
 	parsedConst := src.Const{
@@ -666,6 +732,7 @@ func parsePrimitiveConstLiteral(
 				Line:   lit.GetStop().GetLine(),
 				Column: lit.GetStop().GetColumn(),
 			},
+			Location: s.loc,
 		},
 	}
 
@@ -685,6 +752,7 @@ func parsePrimitiveConstLiteral(
 						Line:   lit.GetStop().GetLine(),
 						Column: lit.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -707,6 +775,7 @@ func parsePrimitiveConstLiteral(
 						Line:   lit.GetStop().GetLine(),
 						Column: lit.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -732,6 +801,7 @@ func parsePrimitiveConstLiteral(
 						Line:   lit.GetStop().GetLine(),
 						Column: lit.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -757,7 +827,7 @@ func parsePrimitiveConstLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.EnumLit() != nil:
-		parsedEnumRef, err := parseEntityRef(lit.EnumLit().EntityRef())
+		parsedEnumRef, err := s.parseEntityRef(lit.EnumLit().EntityRef())
 		if err != nil {
 			return src.Const{}, err
 		}
@@ -776,7 +846,7 @@ func parsePrimitiveConstLiteral(
 	return parsedConst, nil
 }
 
-func parseMessage(
+func (s *treeShapeListener) parseMessage(
 	constVal generated.IConstLitContext,
 ) (src.MsgLiteral, *compiler.Error) {
 	msg := src.MsgLiteral{
@@ -790,6 +860,7 @@ func parseMessage(
 				Line:   constVal.GetStop().GetLine(),
 				Column: constVal.GetStop().GetColumn(),
 			},
+			Location: s.loc,
 		},
 	}
 
@@ -809,6 +880,7 @@ func parseMessage(
 						Line:   constVal.GetStop().GetLine(),
 						Column: constVal.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -828,6 +900,7 @@ func parseMessage(
 						Line:   constVal.GetStop().GetLine(),
 						Column: constVal.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -850,6 +923,7 @@ func parseMessage(
 						Line:   constVal.GetStop().GetLine(),
 						Column: constVal.GetStop().GetColumn(),
 					},
+					Location: s.loc,
 				},
 			}
 		}
@@ -869,7 +943,7 @@ func parseMessage(
 			),
 		)
 	case constVal.EnumLit() != nil:
-		parsedEnumRef, err := parseEntityRef(constVal.EnumLit().EntityRef())
+		parsedEnumRef, err := s.parseEntityRef(constVal.EnumLit().EntityRef())
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
@@ -897,16 +971,17 @@ func parseMessage(
 						Line:   item.GetStop().GetLine(),
 						Column: item.GetStop().GetLine(),
 					},
+					Location: s.loc,
 				},
 			}
 			if item.EntityRef() != nil {
-				parsedRef, err := parseEntityRef(item.EntityRef())
+				parsedRef, err := s.parseEntityRef(item.EntityRef())
 				if err != nil {
 					return src.MsgLiteral{}, err
 				}
 				constant.Value.Ref = &parsedRef
 			} else {
-				parsedConstValue, err := parseMessage(item.ConstLit())
+				parsedConstValue, err := s.parseMessage(item.ConstLit())
 				if err != nil {
 					return src.MsgLiteral{}, err
 				}
@@ -929,7 +1004,7 @@ func parseMessage(
 			}
 			name := field.IDENTIFIER().GetText()
 			if field.CompositeItem().EntityRef() != nil {
-				parsedRef, err := parseEntityRef(field.CompositeItem().EntityRef())
+				parsedRef, err := s.parseEntityRef(field.CompositeItem().EntityRef())
 				if err != nil {
 					return src.MsgLiteral{}, err
 				}
@@ -937,7 +1012,7 @@ func parseMessage(
 					Ref: &parsedRef,
 				}
 			} else {
-				value, err := parseMessage(field.CompositeItem().ConstLit())
+				value, err := s.parseMessage(field.CompositeItem().ConstLit())
 				if err != nil {
 					return src.MsgLiteral{}, err
 				}
@@ -953,7 +1028,7 @@ func parseMessage(
 	return msg, nil
 }
 
-func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.Directive][]string {
+func (s *treeShapeListener) parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.Directive][]string {
 	if actx == nil {
 		return nil
 	}
@@ -985,19 +1060,19 @@ func parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.
 	return result
 }
 
-func parseTypeDef(
+func (s *treeShapeListener) parseTypeDef(
 	actx generated.ITypeDefContext,
 ) (src.Entity, *compiler.Error) {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		v, err := parseTypeExpr(actx.TypeExpr())
+		v, err := s.parseTypeExpr(actx.TypeExpr())
 		if err != nil {
 			return src.Entity{}, err
 		}
 		body = compiler.Pointer(v)
 	}
 
-	v, err := parseTypeParams(actx.TypeParams())
+	v, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Entity{}, err
 	}
@@ -1018,12 +1093,13 @@ func parseTypeDef(
 					Line:   actx.GetStop().GetLine(),
 					Column: actx.GetStop().GetColumn(),
 				},
+				Location: s.loc,
 			},
 		},
 	}, nil
 }
 
-func parseConstDef(
+func (s *treeShapeListener) parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
 	constLit := actx.ConstLit()
@@ -1043,9 +1119,10 @@ func parseConstDef(
 			Line:   actx.GetStop().GetLine(),
 			Column: actx.GetStop().GetColumn(),
 		},
+		Location: s.loc,
 	}
 
-	parsedTypeExpr, err := parseTypeExpr(actx.TypeExpr())
+	parsedTypeExpr, err := s.parseTypeExpr(actx.TypeExpr())
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
 			Message: err.Error(),
@@ -1059,7 +1136,7 @@ func parseConstDef(
 	}
 
 	if entityRef != nil {
-		parsedRef, err := parseEntityRef(entityRef)
+		parsedRef, err := s.parseEntityRef(entityRef)
 		if err != nil {
 			return src.Entity{}, &compiler.Error{
 				Message: err.Error(),
@@ -1073,7 +1150,7 @@ func parseConstDef(
 		}, nil
 	}
 
-	parsedMsgLit, err := parseMessage(constLit)
+	parsedMsgLit, err := s.parseMessage(constLit)
 	if err != nil {
 		return src.Entity{}, &compiler.Error{
 			Message: err.Error(),
@@ -1095,8 +1172,8 @@ func parseConstDef(
 	}, nil
 }
 
-func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
-	parsedInterfaceDef, err := parseInterfaceDef(actx.InterfaceDef())
+func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
+	parsedInterfaceDef, err := s.parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		return src.Entity{}, err
 	}
@@ -1114,7 +1191,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	parsedConnections := []src.Connection{}
 	connections := actx.CompBody().ConnDefList()
 	if connections != nil {
-		parsedNet, err := parseConnections(connections)
+		parsedNet, err := s.parseConnections(connections)
 		if err != nil {
 			return src.Entity{}, err
 		}
@@ -1133,7 +1210,7 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 	}
 
 	var parsedNodes map[string]src.Node
-	v, err := parseNodes(nodesDef.CompNodesDefBody(), true)
+	v, err := s.parseNodes(nodesDef.CompNodesDefBody(), true)
 	if err != nil {
 		return src.Entity{}, err
 	}
@@ -1155,7 +1232,678 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 					Line:   actx.GetStop().GetLine(),
 					Column: actx.GetStop().GetColumn(),
 				},
+				Location: s.loc,
 			},
 		},
 	}, nil
+}
+
+func (s *treeShapeListener) parseConnections(actx generated.IConnDefListContext) ([]src.Connection, *compiler.Error) {
+	allConnDefs := actx.AllConnDef()
+	parsedConns := make([]src.Connection, 0, len(allConnDefs))
+
+	for _, connDef := range allConnDefs {
+		parsedConnection, err := s.parseConnection(connDef)
+		if err != nil {
+			return nil, err
+		}
+		parsedConns = append(parsedConns, parsedConnection)
+	}
+
+	return parsedConns, nil
+}
+
+func (s *treeShapeListener) parseConnection(connDef generated.IConnDefContext) (src.Connection, *compiler.Error) {
+	meta := core.Meta{
+		Text: connDef.GetText(),
+		Start: core.Position{
+			Line:   connDef.GetStart().GetLine(),
+			Column: connDef.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   connDef.GetStop().GetLine(),
+			Column: connDef.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	normConn := connDef.NormConnDef()
+	arrBypassConn := connDef.ArrBypassConnDef()
+
+	if normConn == nil && arrBypassConn == nil {
+		return src.Connection{}, &compiler.Error{
+			Message: "Connection must be either normal or array bypass",
+			Meta:    &meta,
+		}
+	}
+
+	if arrBypassConn != nil {
+		return s.parseArrayBypassConn(arrBypassConn)
+	}
+
+	return s.parseNormConn(normConn)
+}
+
+func (s *treeShapeListener) parseArrayBypassConn(
+	arrBypassConn generated.IArrBypassConnDefContext,
+) (src.Connection, *compiler.Error) {
+	senderPortAddr := arrBypassConn.SinglePortAddr(0)
+	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
+
+	meta := core.Meta{
+		Text: arrBypassConn.GetText(),
+		Start: core.Position{
+			Line:   arrBypassConn.GetStart().GetLine(),
+			Column: arrBypassConn.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   arrBypassConn.GetStop().GetLine(),
+			Column: arrBypassConn.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	senderPortAddrParsed, err := s.parseSinglePortAddr(
+		"in",
+		senderPortAddr,
+		meta,
+	)
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	receiverPortAddrParsed, err := s.parseSinglePortAddr(
+		"out",
+		receiverPortAddr,
+		meta,
+	)
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	return src.Connection{
+		ArrayBypass: &src.ArrayBypassConnection{
+			SenderOutport:  senderPortAddrParsed,
+			ReceiverInport: receiverPortAddrParsed,
+		},
+		Meta: meta,
+	}, nil
+}
+
+func (s *treeShapeListener) parseNormConn(
+	actx generated.INormConnDefContext,
+) (src.Connection, *compiler.Error) {
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	parsedReceiverSide, err := s.parseReceiverSide(actx.ReceiverSide())
+	if err != nil {
+		return src.Connection{}, err
+	}
+
+	return src.Connection{
+		Normal: &src.NormalConnection{
+			Senders:   parsedSenderSide,
+			Receivers: parsedReceiverSide,
+		},
+		Meta: meta,
+	}, nil
+}
+
+func (s *treeShapeListener) parseSenderSide(
+	actx generated.ISenderSideContext,
+) ([]src.ConnectionSender, *compiler.Error) {
+	singleSender := actx.SingleSenderSide()
+	mulSenders := actx.MultipleSenderSide()
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	if singleSender == nil && mulSenders == nil {
+		return nil, &compiler.Error{
+			Message: "Connection must have at least one sender side",
+			Meta:    &meta,
+		}
+	}
+
+	toParse := []generated.ISingleSenderSideContext{}
+	if singleSender != nil {
+		toParse = append(toParse, singleSender)
+	} else {
+		toParse = mulSenders.AllSingleSenderSide()
+	}
+
+	parsedSenders := []src.ConnectionSender{}
+	for _, senderSide := range toParse {
+		parsedSide, err := s.parseSingleSender(senderSide)
+		if err != nil {
+			return nil, err
+		}
+		parsedSenders = append(parsedSenders, parsedSide)
+	}
+
+	return parsedSenders, nil
+}
+
+func (s *treeShapeListener) parseSingleReceiverSide(
+	actx generated.ISingleReceiverSideContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	deferredConn := actx.DeferredConn()
+	portAddr := actx.PortAddr()
+	chainedConn := actx.ChainedNormConn()
+	switchStmt := actx.SwitchStmt()
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	switch {
+	case deferredConn != nil:
+		return s.parseDeferredConn(deferredConn)
+	case chainedConn != nil:
+		return s.parseChainedConnExpr(chainedConn, meta)
+	case portAddr != nil:
+		return s.parsePortAddrReceiver(portAddr)
+	case switchStmt != nil:
+		return s.parseSwitchStmt(switchStmt)
+	default:
+		return src.ConnectionReceiver{}, &compiler.Error{
+			Message: "missing receiver side",
+			Meta:    &meta,
+		}
+	}
+}
+
+func (s *treeShapeListener) parseSwitchStmt(
+	switchStmt generated.ISwitchStmtContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	meta := core.Meta{
+		Text: switchStmt.GetText(),
+		Start: core.Position{
+			Line:   switchStmt.GetStart().GetLine(),
+			Column: switchStmt.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   switchStmt.GetStop().GetLine(),
+			Column: switchStmt.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	unparsedCases := switchStmt.AllNormConnDef()
+	cases := make([]src.NormalConnection, 0, len(unparsedCases))
+	for _, connDef := range unparsedCases {
+		parsedConn, err := s.parseNormConn(connDef)
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		cases = append(cases, *parsedConn.Normal)
+	}
+
+	var defaultCase []src.ConnectionReceiver = nil
+	defaultCaseCtx := switchStmt.DefaultCase()
+	if defaultCaseCtx != nil {
+		parsedDefault, err := s.parseReceiverSide(defaultCaseCtx.ReceiverSide())
+		if err != nil {
+			return src.ConnectionReceiver{}, err
+		}
+		defaultCase = parsedDefault
+	}
+
+	return src.ConnectionReceiver{
+		Switch: &src.Switch{
+			Cases:   cases,
+			Default: defaultCase,
+		},
+		Meta: meta,
+	}, nil
+}
+
+func (s *treeShapeListener) parseChainedConnExpr(
+	actx generated.IChainedNormConnContext,
+	connMeta core.Meta,
+) (src.ConnectionReceiver, *compiler.Error) {
+	parsedConn, err := s.parseNormConn(actx.NormConnDef())
+	if err != nil {
+		return src.ConnectionReceiver{}, err
+	}
+
+	return src.ConnectionReceiver{
+		ChainedConnection: &parsedConn,
+		Meta:              connMeta,
+	}, nil
+}
+
+func (s *treeShapeListener) parseReceiverSide(
+	actx generated.IReceiverSideContext,
+) ([]src.ConnectionReceiver, *compiler.Error) {
+	singleReceiverSide := actx.SingleReceiverSide()
+	multipleReceiverSide := actx.MultipleReceiverSide()
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	switch {
+	case singleReceiverSide != nil:
+		parsedSingleReceiver, err := s.parseSingleReceiverSide(singleReceiverSide)
+		if err != nil {
+			return nil, err
+		}
+		return []src.ConnectionReceiver{parsedSingleReceiver}, nil
+	case multipleReceiverSide != nil:
+		return s.parseMultipleReceiverSides(multipleReceiverSide)
+	default:
+		return nil, &compiler.Error{
+			Message: "missing receiver side",
+			Meta:    &meta,
+		}
+	}
+}
+
+func (s *treeShapeListener) parseMultipleReceiverSides(
+	multipleSides generated.IMultipleReceiverSideContext,
+) (
+	[]src.ConnectionReceiver,
+	*compiler.Error,
+) {
+	allSingleReceiverSides := multipleSides.AllSingleReceiverSide()
+	parsedReceivers := make([]src.ConnectionReceiver, 0, len(allSingleReceiverSides))
+
+	for _, receiverSide := range allSingleReceiverSides {
+		parsedReceiver, err := s.parseSingleReceiverSide(receiverSide)
+		if err != nil {
+			return nil, err
+		}
+		parsedReceivers = append(parsedReceivers, parsedReceiver)
+	}
+
+	return parsedReceivers, nil
+}
+
+func (s *treeShapeListener) parseDeferredConn(
+	deferredConns generated.IDeferredConnContext,
+) (src.ConnectionReceiver, *compiler.Error) {
+	meta := core.Meta{
+		Text: deferredConns.GetText(),
+		Start: core.Position{
+			Line:   deferredConns.GetStart().GetLine(),
+			Column: deferredConns.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   deferredConns.GetStop().GetLine(),
+			Column: deferredConns.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	parsedConns, err := s.parseConnection(deferredConns.ConnDef())
+	if err != nil {
+		return src.ConnectionReceiver{}, err
+	}
+
+	return src.ConnectionReceiver{
+		DeferredConnection: &parsedConns,
+		Meta:               meta,
+	}, nil
+}
+
+func (s *treeShapeListener) parseSingleSender(
+	senderSide generated.ISingleSenderSideContext,
+) (src.ConnectionSender, *compiler.Error) {
+	structSelectors := senderSide.StructSelectors()
+	portSender := senderSide.PortAddr()
+	constRefSender := senderSide.SenderConstRef()
+	primitiveConstLitSender := senderSide.PrimitiveConstLit()
+	rangeExprSender := senderSide.RangeExpr()
+	ternaryExprSender := senderSide.TernaryExpr()
+	binaryExprSender := senderSide.BinaryExpr()
+
+	if portSender == nil &&
+		constRefSender == nil &&
+		primitiveConstLitSender == nil &&
+		rangeExprSender == nil &&
+		structSelectors == nil &&
+		ternaryExprSender == nil &&
+		binaryExprSender == nil {
+		return src.ConnectionSender{}, &compiler.Error{
+			Message: "Sender side is missing in connection",
+			Meta: &core.Meta{
+				Text: senderSide.GetText(),
+				Start: core.Position{
+					Line:   senderSide.GetStart().GetLine(),
+					Column: senderSide.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   senderSide.GetStop().GetLine(),
+					Column: senderSide.GetStop().GetColumn(),
+				},
+				Location: s.loc,
+			},
+		}
+	}
+
+	var senderSidePortAddr *src.PortAddr
+	if portSender != nil {
+		parsedPortAddr, err := s.parsePortAddr(portSender, "in")
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		senderSidePortAddr = &parsedPortAddr
+	}
+
+	var constant *src.Const
+	if constRefSender != nil {
+		parsedEntityRef, err := s.parseEntityRef(constRefSender.EntityRef())
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		constant = &src.Const{
+			Value: src.ConstValue{
+				Ref: &parsedEntityRef,
+			},
+		}
+	}
+
+	if primitiveConstLitSender != nil {
+		parsedPrimitiveConstLiteralSender, err := s.parsePrimitiveConstLiteral(primitiveConstLitSender)
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		constant = &parsedPrimitiveConstLiteralSender
+	}
+
+	var rangeExpr *src.Range
+	if rangeExprSender != nil {
+		rangeMeta := &core.Meta{
+			Text: rangeExprSender.GetText(),
+			Start: core.Position{
+				Line:   rangeExprSender.GetStart().GetLine(),
+				Column: rangeExprSender.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   rangeExprSender.GetStop().GetLine(),
+				Column: rangeExprSender.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		}
+
+		members := rangeExprSender.AllRangeMember()
+		if len(members) != 2 {
+			return src.ConnectionSender{}, &compiler.Error{
+				Message: "Range expression must have exactly two members",
+				Meta:    rangeMeta,
+			}
+		}
+
+		fromCtx := members[0]
+		fromText := fromCtx.GetText()
+
+		from, err := strconv.ParseInt(fromText, 10, 64)
+		if err != nil {
+			return src.ConnectionSender{}, &compiler.Error{
+				Message: fmt.Sprintf("Invalid range 'from' value: %v", err),
+				Meta: &core.Meta{
+					Text: rangeExprSender.GetText(),
+					Start: core.Position{
+						Line:   rangeExprSender.GetStart().GetLine(),
+						Column: rangeExprSender.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   rangeExprSender.GetStop().GetLine(),
+						Column: rangeExprSender.GetStop().GetColumn(),
+					},
+					Location: s.loc,
+				},
+			}
+		}
+
+		toCtx := members[1]
+		toText := toCtx.GetText()
+
+		to, err := strconv.ParseInt(toText, 10, 64)
+		if err != nil {
+			return src.ConnectionSender{}, &compiler.Error{
+				Message: fmt.Sprintf("Invalid range 'to' value: %v", err),
+				Meta: &core.Meta{
+					Text: rangeExprSender.GetText(),
+					Start: core.Position{
+						Line:   rangeExprSender.GetStart().GetLine(),
+						Column: rangeExprSender.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   rangeExprSender.GetStop().GetLine(),
+						Column: rangeExprSender.GetStop().GetColumn(),
+					},
+					Location: s.loc,
+				},
+			}
+		}
+
+		rangeExpr = &src.Range{
+			From: from,
+			To:   to,
+			Meta: *rangeMeta,
+		}
+	}
+
+	var senderSelectors []string
+	if structSelectors != nil {
+		for _, id := range structSelectors.AllIDENTIFIER() {
+			senderSelectors = append(senderSelectors, id.GetText())
+		}
+	}
+
+	var ternaryExpr *src.Ternary
+	if ternaryExprSender != nil {
+		parts := ternaryExprSender.AllSingleSenderSide()
+
+		condition, err := s.parseSingleSender(parts[0])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		left, err := s.parseSingleSender(parts[1])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		right, err := s.parseSingleSender(parts[2])
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+
+		ternaryExpr = &src.Ternary{
+			Condition: condition,
+			Left:      left,
+			Right:     right,
+			Meta: core.Meta{
+				Text: ternaryExprSender.GetText(),
+				Start: core.Position{
+					Line:   ternaryExprSender.GetStart().GetLine(),
+					Column: ternaryExprSender.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   ternaryExprSender.GetStop().GetLine(),
+					Column: ternaryExprSender.GetStop().GetColumn(),
+				},
+				Location: s.loc,
+			},
+		}
+	}
+
+	var binaryExpr *src.Binary
+	if binaryExprSender != nil {
+		binaryExpr = s.parseBinaryExpr(binaryExprSender)
+	}
+
+	parsedSender := src.ConnectionSender{
+		PortAddr:       senderSidePortAddr,
+		Const:          constant,
+		Range:          rangeExpr,
+		StructSelector: senderSelectors,
+		Ternary:        ternaryExpr,
+		Binary:         binaryExpr,
+		Meta: core.Meta{
+			Text: senderSide.GetText(),
+			Start: core.Position{
+				Line:   senderSide.GetStart().GetLine(),
+				Column: senderSide.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   senderSide.GetStop().GetLine(),
+				Column: senderSide.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}
+
+	return parsedSender, nil
+}
+
+func (s *treeShapeListener) parsePortAddrReceiver(
+	singleReceiver generated.IPortAddrContext,
+) (
+	src.ConnectionReceiver,
+	*compiler.Error,
+) {
+	portAddr, err := s.parsePortAddr(singleReceiver, "out")
+	if err != nil {
+		return src.ConnectionReceiver{}, err
+	}
+
+	return src.ConnectionReceiver{
+		PortAddr: &portAddr,
+		Meta: core.Meta{
+			Text: singleReceiver.GetText(),
+			Start: core.Position{
+				Line:   singleReceiver.GetStart().GetLine(),
+				Column: singleReceiver.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   singleReceiver.GetStop().GetLine(),
+				Column: singleReceiver.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}, nil
+}
+
+func (s *treeShapeListener) parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
+	var op src.BinaryOperator
+	switch ctx.BinaryOp().GetText() {
+	// Arithmetic
+	case "+":
+		op = src.AddOp
+	case "-":
+		op = src.SubOp
+	case "*":
+		op = src.MulOp
+	case "/":
+		op = src.DivOp
+	case "%":
+		op = src.ModOp
+	case "**":
+		op = src.PowOp
+	// Comparison
+	case "==":
+		op = src.EqOp
+	case "!=":
+		op = src.NeOp
+	case ">":
+		op = src.GtOp
+	case "<":
+		op = src.LtOp
+	case ">=":
+		op = src.GeOp
+	case "<=":
+		op = src.LeOp
+	// Logical
+	case "&&":
+		op = src.AndOp
+	case "||":
+		op = src.OrOp
+	// Bitwise
+	case "&":
+		op = src.BitAndOp
+	case "|":
+		op = src.BitOrOp
+	case "^":
+		op = src.BitXorOp
+	case "<<":
+		op = src.BitLshOp
+	case ">>":
+		op = src.BitRshOp
+	}
+
+	senders := ctx.AllSingleSenderSide()
+
+	left, err := s.parseSingleSender(senders[0])
+	if err != nil {
+		return nil
+	}
+
+	right, err := s.parseSingleSender(senders[1])
+	if err != nil {
+		return nil
+	}
+
+	return &src.Binary{
+		Left:     left,
+		Right:    right,
+		Operator: op,
+		Meta: core.Meta{
+			Text: ctx.GetText(),
+			Start: core.Position{
+				Line:   ctx.GetStart().GetLine(),
+				Column: ctx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   ctx.GetStop().GetLine(),
+				Column: ctx.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}
 }
