@@ -11,7 +11,7 @@ import (
 
 type foundInterface struct {
 	iface    src.Interface
-	location src.Location
+	location core.Location
 }
 
 func (a Analyzer) analyzeNodes(
@@ -40,8 +40,7 @@ func (a Analyzer) analyzeNodes(
 		)
 		if err != nil {
 			return nil, nil, false, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &node.Meta,
+				Meta: &node.Meta,
 			}.Wrap(err)
 		}
 
@@ -62,27 +61,24 @@ func (a Analyzer) analyzeNode(
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-			Meta:     &node.Meta,
+			Message: err.Error(),
+			Meta:    &node.Meta,
 		}
 	}
 
 	if nodeEntity.Kind != src.ComponentEntity &&
 		nodeEntity.Kind != src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  fmt.Sprintf("Node can only refer to flows or interfaces: %v", nodeEntity.Kind),
-			Location: &location,
-			Meta:     nodeEntity.Meta(),
+			Message: fmt.Sprintf("Node can only refer to flows or interfaces: %v", nodeEntity.Kind),
+			Meta:    nodeEntity.Meta(),
 		}
 	}
 
 	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
 	if usesBindDirective && len(bindDirectiveArgs) != 1 {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  "Node with #bind directive must provide exactly one argument",
-			Location: &location,
-			Meta:     nodeEntity.Meta(),
+			Message: "Node with #bind directive must provide exactly one argument",
+			Meta:    nodeEntity.Meta(),
 		}
 	}
 
@@ -95,9 +91,8 @@ func (a Analyzer) analyzeNode(
 	)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: &location,
-			Meta:     &node.Meta,
+			Message: err.Error(),
+			Meta:    &node.Meta,
 		}
 	}
 
@@ -111,16 +106,14 @@ func (a Analyzer) analyzeNode(
 	)
 	if err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: &location,
-			Meta:     &node.Meta,
+			Message: err.Error(),
+			Meta:    &node.Meta,
 		}
 	}
 
 	nodeIface, aerr := a.getNodeInterface(
 		nodeEntity,
 		usesBindDirective,
-		location,
 		node,
 		scope,
 		resolvedNodeArgs,
@@ -132,16 +125,14 @@ func (a Analyzer) analyzeNode(
 	if node.ErrGuard {
 		if _, ok := compIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Message:  "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
-				Location: scope.Location(),
-				Meta:     &node.Meta,
+				Message: "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
+				Meta:    &node.Meta,
 			}
 		}
 		if _, ok := nodeIface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
-				Message:  "Error-guard operator '?' requires node to have ':err' outport to propagate errors",
-				Location: scope.Location(),
-				Meta:     &node.Meta,
+				Message: "Error-guard operator '?' requires node to have ':err' outport to propagate errors",
+				Meta:    &node.Meta,
 			}
 		}
 	}
@@ -165,9 +156,8 @@ func (a Analyzer) analyzeNode(
 		scope,
 	); err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-			Meta:     &node.Meta,
+			Message: err.Error(),
+			Meta:    &node.Meta,
 		}
 	}
 
@@ -197,8 +187,7 @@ func (a Analyzer) analyzeNode(
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
-				Location: &location,
-				Meta:     &depNode.Meta,
+				Meta: &depNode.Meta,
 			}.Wrap(err)
 		}
 		resolvedFlowDI[depName] = resolvedDep
@@ -221,7 +210,6 @@ func (a Analyzer) analyzeNode(
 func (a Analyzer) getNodeInterface(
 	entity src.Entity,
 	usesBindDirective bool,
-	location src.Location,
 	node src.Node,
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
@@ -229,17 +217,15 @@ func (a Analyzer) getNodeInterface(
 	if entity.Kind == src.InterfaceEntity {
 		if usesBindDirective {
 			return src.Interface{}, &compiler.Error{
-				Message:  "Interface node cannot use #bind directive",
-				Location: &location,
-				Meta:     entity.Meta(),
+				Message: "Interface node cannot use #bind directive",
+				Meta:    entity.Meta(),
 			}
 		}
 
 		if node.DIArgs != nil {
 			return src.Interface{}, &compiler.Error{
-				Message:  "Only component node can have dependency injection",
-				Location: &location,
-				Meta:     entity.Meta(),
+				Message: "Only component node can have dependency injection",
+				Meta:    entity.Meta(),
 			}
 		}
 
@@ -250,17 +236,15 @@ func (a Analyzer) getNodeInterface(
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Node can't use #bind if it isn't instantiated with the component that use #extern",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
+			Meta:    entity.Meta(),
 		}
 	}
 
 	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Component that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Component that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
+			Meta:    entity.Meta(),
 		}
 	}
 
@@ -275,59 +259,52 @@ func (a Analyzer) getNodeInterface(
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Component that uses struct inports directive must have no defined inports",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Component that uses struct inports directive must have no defined inports",
+			Meta:    entity.Meta(),
 		}
 	}
 
 	if len(iface.TypeParams.Params) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Exactly one type parameter expected",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Exactly one type parameter expected",
+			Meta:    entity.Meta(),
 		}
 	}
 
 	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(iface.TypeParams.Params[0].Constr, scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: err.Error(),
+			Meta:    entity.Meta(),
 		}
 	}
 
 	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Struct type expected",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Struct type expected",
+			Meta:    entity.Meta(),
 		}
 	}
 
 	if len(resolvedNodeArgs) != 1 {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Exactly one type argument expected",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Exactly one type argument expected",
+			Meta:    entity.Meta(),
 		}
 	}
 
 	resolvedNodeArg, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 	if err != nil {
 		return src.Interface{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: err.Error(),
+			Meta:    entity.Meta(),
 		}
 	}
 
 	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
 		return src.Interface{}, &compiler.Error{
-			Message:  "Struct argument expected",
-			Location: &location,
-			Meta:     entity.Meta(),
+			Message: "Struct argument expected",
+			Meta:    entity.Meta(),
 		}
 	}
 

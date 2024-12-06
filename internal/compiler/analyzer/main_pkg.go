@@ -5,21 +5,24 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
 	mainPkg := mod.Packages[mainPkgName]
 
-	location := src.Location{
-		Module:  scope.Location().Module,
+	location := core.Location{
+		ModRef:  scope.Location().ModRef,
 		Package: mainPkgName,
 	}
 
 	entityMain, filename, ok := mainPkg.Entity("Main")
 	if !ok {
 		return &compiler.Error{
-			Message:  "Main entity is not found",
-			Location: &location,
+			Message: "Main entity is not found",
+			Meta: &core.Meta{
+				Location: location,
+			},
 		}
 	}
 
@@ -27,16 +30,19 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	if entityMain.Kind != src.ComponentEntity {
 		return &compiler.Error{
-			Message:  "Main entity must be a component",
-			Location: &location,
+			Message: "Main entity must be a component",
+			Meta: &core.Meta{
+				Location: location,
+			},
 		}
 	}
 
 	if entityMain.IsPublic {
 		return &compiler.Error{
-			Message:  "Main entity cannot be exported",
-			Location: &location,
-			Meta:     &entityMain.Component.Meta,
+			Message: "Main entity cannot be exported",
+			Meta: &core.Meta{
+				Location: location,
+			},
 		}
 	}
 
@@ -44,8 +50,7 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	if err := a.analyzeMainComponent(entityMain.Component, scope); err != nil {
 		return compiler.Error{
-			Location: &location,
-			Meta:     &entityMain.Component.Meta,
+			Meta: &entityMain.Component.Meta,
 		}.Wrap(err)
 	}
 
@@ -54,11 +59,6 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 			return &compiler.Error{
 				Message: fmt.Sprintf("Unexpected public entity in main package: %v", result.EntityName),
 				Meta:    result.Entity.Meta(),
-				Location: &src.Location{
-					Module:   scope.Location().Module,
-					Package:  mainPkgName,
-					Filename: result.FileName,
-				},
 			}
 		}
 	}

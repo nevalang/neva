@@ -25,18 +25,16 @@ func (a Analyzer) analyzeInterface(
 	resolvedParams, err := a.analyzeTypeParams(iface.TypeParams.Params, scope)
 	if err != nil {
 		return src.Interface{}, compiler.Error{
-			Message:  ErrInterfaceTypeParams.Error(),
-			Location: scope.Location(),
-			Meta:     &iface.Meta,
+			Message: ErrInterfaceTypeParams.Error(),
+			Meta:    &iface.Meta,
 		}.Wrap(err)
 	}
 
 	resolvedIO, err := a.analyzeIO(resolvedParams, iface.IO, scope, params)
 	if err != nil {
 		return src.Interface{}, compiler.Error{
-			Message:  ErrInterfaceTypeParams.Error(),
-			Location: scope.Location(),
-			Meta:     &iface.Meta,
+			Message: ErrInterfaceTypeParams.Error(),
+			Meta:    &iface.Meta,
 		}.Wrap(err)
 	}
 
@@ -60,31 +58,31 @@ func (a Analyzer) analyzeIO(
 ) (src.IO, *compiler.Error) {
 	if !params.allowEmptyInports && len(io.In) == 0 {
 		return src.IO{}, &compiler.Error{
-			Message:  "Interface must have inports",
-			Location: scope.Location(),
+			Message: "Interface must have inports",
+			Meta:    &io.Meta,
 		}
 	}
 
 	if !params.allowEmptyOutports && len(io.Out) == 0 {
 		return src.IO{}, &compiler.Error{
-			Message:  "Interface must have outports",
-			Location: scope.Location(),
+			Message: "Interface must have outports",
+			Meta:    &io.Meta,
 		}
 	}
 
 	resolvedIn, err := a.analyzePorts(typeParams, io.In, scope)
 	if err != nil {
 		return src.IO{}, compiler.Error{
-			Message:  "Invalid inports",
-			Location: scope.Location(),
+			Message: "Invalid inports",
+			Meta:    &io.Meta,
 		}.Wrap(err)
 	}
 
 	resolvedOut, err := a.analyzePorts(typeParams, io.Out, scope)
 	if err != nil {
 		return src.IO{}, compiler.Error{
-			Message:  "Invalid outports",
-			Location: scope.Location(),
+			Message: "Invalid outports",
+			Meta:    &io.Meta,
 		}.Wrap(err)
 	}
 
@@ -104,8 +102,7 @@ func (a Analyzer) analyzePorts(
 		resolvedPort, err := a.analyzePort(params, port, scope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &port.Meta,
+				Meta: &port.Meta,
 			}.Wrap(err)
 		}
 		resolvedPorts[name] = resolvedPort
@@ -124,8 +121,7 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 	)
 	if err != nil {
 		return src.Port{}, compiler.Error{
-			Location: scope.Location(),
-			Meta:     &port.Meta,
+			Meta: &port.Meta,
 		}.Wrap(err)
 	}
 

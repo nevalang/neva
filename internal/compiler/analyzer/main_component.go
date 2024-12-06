@@ -11,7 +11,7 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 	if len(cmp.Interface.TypeParams.Params) != 0 {
 		return &compiler.Error{
 			Message: "Main component cannot have type parameters",
-			Meta:    &cmp.Interface.Meta,
+			Meta:    &cmp.Interface.TypeParams.Meta,
 		}
 	}
 
@@ -30,17 +30,19 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
 			Message: fmt.Sprintf("Main component must have exactly 1 inport: got %v", len(io.In)),
+			Meta:    &io.Meta,
 		}
 	}
 	if len(io.Out) != 1 {
 		return &compiler.Error{
 			Message: fmt.Sprintf("Main component must have exactly 1 outport: got %v", len(io.Out)),
+			Meta:    &io.Meta,
 		}
 	}
 
 	enterInport, ok := io.In["start"]
 	if !ok {
-		return &compiler.Error{Message: "Main component must have 'start' inport"}
+		return &compiler.Error{Message: "Main component must have 'start' inport", Meta: &io.Meta}
 	}
 
 	if err := a.analyzeMainComponentPort(enterInport); err != nil {
@@ -49,11 +51,11 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 
 	exitOutport, ok := io.Out["stop"]
 	if !ok {
-		return &compiler.Error{Message: "Main component must have 'stop' outport"}
+		return &compiler.Error{Message: "Main component must have 'stop' outport", Meta: &io.Meta}
 	}
 
 	if err := a.analyzeMainComponentPort(exitOutport); err != nil {
-		return err
+		return compiler.Error{Meta: &exitOutport.Meta}.Wrap(err)
 	}
 
 	return nil
@@ -80,20 +82,18 @@ func (Analyzer) analyzeMainComponentNodes(
 	scope src.Scope,
 ) *compiler.Error {
 	for nodeName, node := range nodes {
-		nodeEntity, loc, err := scope.Entity(node.EntityRef)
+		nodeEntity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {
 			return &compiler.Error{
-				Message:  err.Error(),
-				Location: scope.Location(),
-				Meta:     &node.EntityRef.Meta,
+				Message: err.Error(),
+				Meta:    &node.EntityRef.Meta,
 			}
 		}
 
 		if nodeEntity.Kind != src.ComponentEntity {
 			return &compiler.Error{
-				Message:  fmt.Sprintf("Main component's nodes must only refer to component entities: %v: %v", nodeName, node.EntityRef),
-				Location: &loc,
-				Meta:     nodeEntity.Meta(),
+				Message: fmt.Sprintf("Main component's nodes must only refer to component entities: %v: %v", nodeName, node.EntityRef),
+				Meta:    nodeEntity.Meta(),
 			}
 		}
 	}
