@@ -8,7 +8,7 @@ def Main(start any) (stop any) {
 	app:data -> println -> :stop
 }
 
-def App(sig) (data string, err error) {
+def App(sig any) (data string, err error) {
 	http.Get? // '?' implicitly sends `:err` downstream
 	---
 	:sig -> 'definitely not a valid URL' -> get

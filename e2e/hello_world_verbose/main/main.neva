@@ -13,5 +13,5 @@ def Main(start any) (stop any) {
 	:start -> lock:sig
 	greeting:msg -> lock:data
 	lock:data -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 }

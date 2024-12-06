@@ -18,7 +18,7 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		string(out),
-		"main/main.neva:7:1: port 'println:sig' is used twice\n",
+		"main/main.neva:7:1: port 'println:res' is used twice\n",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

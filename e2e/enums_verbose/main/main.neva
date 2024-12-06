@@ -17,9 +17,9 @@ type Day enum {
     Sunday
 }
 
-def DayPrinter(day Day) (sig) {
+def DayPrinter(day Day) (sig any) {
     fmt.Println
     ---
     :day -> println:data
-    println:sig -> :sig
+    println:res -> :sig
 }

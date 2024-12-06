@@ -14,5 +14,5 @@ def Main(start any) (stop any) {
         32 -> builder:age
     ]
     builder:msg -> println:data
-    println:sig -> :stop
+    println:res -> :stop
 }

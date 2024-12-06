@@ -15,6 +15,6 @@ def Main(start any) (stop any) {
 	scanner2:res -> parser2:data
 	parser2:res -> add:right
 	add:res -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 	[parser1:err, parser2:err] -> panic
 }

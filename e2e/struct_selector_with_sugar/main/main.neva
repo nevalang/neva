@@ -15,7 +15,7 @@ def Main(start any) (stop any) {
     ---
     :start -> userSender:sig
     userSender:u -> .pet.name -> println:data
-    println:sig -> :stop
+    println:res -> :stop
 }
 
 const user User = {
@@ -23,6 +23,6 @@ const user User = {
     pet: { name: 'Charley' }
 }
 
-def UserSender(sig) (u User) {
+def UserSender(sig any) (u User) {
     :sig -> $user -> :u
 }

@@ -9,5 +9,5 @@ def Main(start any) (stop any) {
 		2 -> adder:right
 	]
 	adder:res -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 }

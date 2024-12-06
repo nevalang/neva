@@ -5,7 +5,7 @@ def Main(start any) (stop any) {
     ---
     :start -> foo:sig
     foo:msg -> .a -> println:data
-    println:sig -> :stop
+    println:res -> :stop
 }
 
 const s struct { a int } = { a: 42 }

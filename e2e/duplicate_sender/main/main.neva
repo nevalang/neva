@@ -5,5 +5,5 @@ def Main(start any) (stop any) {
 	---
 	:start -> println
 	:start -> panic
-	println:sig -> :stop
+	println:res -> :stop
 }

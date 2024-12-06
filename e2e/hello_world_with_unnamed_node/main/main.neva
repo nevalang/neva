@@ -4,5 +4,5 @@ def Main(start any) (stop any) {
 	fmt.Println<string>
 	---
 	:start -> 'Hello, World!' -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 }

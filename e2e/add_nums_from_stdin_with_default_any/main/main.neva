@@ -5,10 +5,10 @@ def Main(start any) (stop any) {
 	---
 	:start             -> aux:sig
 	[aux:res, aux:err] -> println:data
-	println:sig        -> :stop
+	println:res        -> :stop
 }
 
-def Aux(sig) (res int, err error) {
+def Aux(sig any) (res int, err error) {
 	reader1 IntReader
 	reader2 IntReader
 	add Add<int>
@@ -23,7 +23,7 @@ def Aux(sig) (res int, err error) {
 def IntReader(sig any) (num int, err error) {
 	fmt.Scanln, strconv.ParseNum<int>
 	---
-	:sig -> scanln:sig
+	:sig -> scanln:res
 	scanln:res -> parseNum:data
 	parseNum:res -> :num
 	parseNum:err -> :err
