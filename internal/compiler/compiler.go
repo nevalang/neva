@@ -6,6 +6,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type Compiler struct {
@@ -48,7 +49,7 @@ type FrontendResult struct {
 func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Error) {
 	raw, root, err := f.builder.Build(ctx, main)
 	if err != nil {
-		return FrontendResult{}, Error{Location: &sourcecode.Location{Package: main}}.Wrap(err)
+		return FrontendResult{}, err
 	}
 
 	parsedMods, err := f.parser.ParseModules(raw.Modules)
@@ -81,7 +82,7 @@ func NewFrontend(builder Builder, parser Parser) Frontend {
 type Middleend struct {
 	desugarer Desugarer
 	analyzer  Analyzer
-	irgen     IRGenerator
+	irgen     Irgen
 }
 
 type MiddleendResult struct {
@@ -104,9 +105,16 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 		return MiddleendResult{}, err
 	}
 
-	irProg, err := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
-	if err != nil {
-		return MiddleendResult{}, err
+	irProg, irerr := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
+	if irerr != nil {
+		return MiddleendResult{}, &Error{
+			Message: "internal error: unable to generate IR",
+			Meta: &core.Meta{
+				Location: core.Location{
+					ModRef: desugaredBuild.EntryModRef,
+				},
+			},
+		}
 	}
 
 	return MiddleendResult{
@@ -121,7 +129,7 @@ func New(
 	parser Parser,
 	desugarer Desugarer,
 	analyzer Analyzer,
-	irgen IRGenerator,
+	irgen Irgen,
 	backend Backend,
 ) Compiler {
 	return Compiler{
