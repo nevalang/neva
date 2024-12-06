@@ -47,7 +47,7 @@ type Desugarer struct {
 }
 
 func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
-	desugaredMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
+	desugaredMods := make(map[core.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef := range build.Modules {
 		desugaredMod, err := d.desugarModule(build, modRef)
@@ -65,17 +65,17 @@ func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
 
 func (d *Desugarer) desugarModule(
 	build src.Build,
-	modRef src.ModuleRef,
+	modRef core.ModuleRef,
 ) (src.Module, error) {
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
 	desugaredManifest := src.ModuleManifest{
 		LanguageVersion: mod.Manifest.LanguageVersion,
-		Deps:            make(map[string]src.ModuleRef, len(mod.Manifest.Deps)+1),
+		Deps:            make(map[string]core.ModuleRef, len(mod.Manifest.Deps)+1),
 	}
 	maps.Copy(desugaredManifest.Deps, mod.Manifest.Deps)
-	desugaredManifest.Deps["std"] = src.ModuleRef{Path: "std", Version: pkg.Version}
+	desugaredManifest.Deps["std"] = core.ModuleRef{Path: "std", Version: pkg.Version}
 
 	// copy all modules but replace manifest in current one
 	modsCopy := maps.Clone(build.Modules)
@@ -94,8 +94,8 @@ func (d *Desugarer) desugarModule(
 
 	for pkgName, pkg := range mod.Packages {
 		// it's important to patch build before desugar package so we can resolve references to std
-		scope := src.NewScope(build, src.Location{
-			Module:  modRef,
+		scope := src.NewScope(build, core.Location{
+			ModRef:  modRef,
 			Package: pkgName,
 		})
 
@@ -117,17 +117,17 @@ func (d *Desugarer) desugarModule(
 //
 //go:generate mockgen -source $GOFILE -destination mocks_test.go -package ${GOPACKAGE}
 type Scope interface {
-	Entity(ref core.EntityRef) (src.Entity, src.Location, error)
-	Relocate(location src.Location) src.Scope
-	Location() *src.Location
+	Entity(ref core.EntityRef) (src.Entity, core.Location, error)
+	Relocate(location core.Location) src.Scope
+	Location() *core.Location
 }
 
 func (d *Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error) {
 	desugaredPkgs := make(src.Package, len(pkg))
 
 	for fileName, file := range pkg {
-		newScope := scope.Relocate(src.Location{
-			Module:   scope.Location().Module,
+		newScope := scope.Relocate(core.Location{
+			ModRef:   scope.Location().ModRef,
 			Package:  scope.Location().Package,
 			Filename: fileName,
 		})

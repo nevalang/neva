@@ -36,11 +36,11 @@ func (m *MockScope) EXPECT() *MockScopeMockRecorder {
 }
 
 // Entity mocks base method.
-func (m *MockScope) Entity(ref core.EntityRef) (sourcecode.Entity, sourcecode.Location, error) {
+func (m *MockScope) Entity(ref core.EntityRef) (sourcecode.Entity, core.Location, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Entity", ref)
 	ret0, _ := ret[0].(sourcecode.Entity)
-	ret1, _ := ret[1].(sourcecode.Location)
+	ret1, _ := ret[1].(core.Location)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -52,10 +52,10 @@ func (mr *MockScopeMockRecorder) Entity(ref interface{}) *gomock.Call {
 }
 
 // Location mocks base method.
-func (m *MockScope) Location() *sourcecode.Location {
+func (m *MockScope) Location() *core.Location {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Location")
-	ret0, _ := ret[0].(*sourcecode.Location)
+	ret0, _ := ret[0].(*core.Location)
 	return ret0
 }
 
@@ -66,7 +66,7 @@ func (mr *MockScopeMockRecorder) Location() *gomock.Call {
 }
 
 // Relocate mocks base method.
-func (m *MockScope) Relocate(location sourcecode.Location) sourcecode.Scope {
+func (m *MockScope) Relocate(location core.Location) sourcecode.Scope {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Relocate", location)
 	ret0, _ := ret[0].(sourcecode.Scope)

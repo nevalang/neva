@@ -560,7 +560,7 @@ func TestDesugarNetwork(t *testing.T) {
 				}
 				mock.
 					Entity(core.EntityRef{Name: "foo"}).
-					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, core.Location{}, nil)
 			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
@@ -648,7 +648,7 @@ func TestDesugarNetwork(t *testing.T) {
 				}
 				mock.
 					Entity(core.EntityRef{Name: "c"}).
-					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, core.Location{}, nil)
 			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
