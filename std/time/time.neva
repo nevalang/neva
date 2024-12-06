@@ -12,7 +12,7 @@ pub const hour        Duration = 3600000000000
 // When enough time has passed, it sends a signal to its output port.
 // If you want to delay a message, use Delay instead.
 #extern(time_after)
-pub def After(dur Duration) (sig)
+pub def After(dur Duration) (sig any)
 
 // Delay waits for both dur and data messages.
 // As soon as they both arrive it starts waiting

@@ -1,17 +1,16 @@
-// TODO add err outport
-// Println prints to the standard output with a newline.
+// Println prints to stdout with newline and then sends message further.
 #extern(println)
-pub def Println<T>(data T) (sig struct{})
+pub def Println<T>(data T) (res T)
 
+// Print prints to stdout without newline and then sends message further.
 #extern(print)
-pub def Print<T>(data T) (sig struct{})
+pub def Print<T>(data T) (res T)
 
 // Printf replaces `$` with the corresponding argument
 // and prints to the standard output.
 #extern(printf)
-pub def Printf(tpl string, [args] any) (sig struct{}, err error)
+pub def Printf(tpl string, [args] any) (sig any, err error)
 
-// TODO add err outport
-// Scanln scans text read from the standard input.
+// Scanln scans text read from the standard input and then sends it further.
 #extern(scanln)
 pub def Scanln(sig any) (res string)

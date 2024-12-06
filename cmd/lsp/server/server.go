@@ -60,7 +60,7 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 
 	// remember problem and send diagnostic
 	s.problemsMutex.Lock()
-	uri := filepath.Join(s.workspacePath, err.Location.String())
+	uri := filepath.Join(s.workspacePath, err.Meta.Location.String())
 	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,

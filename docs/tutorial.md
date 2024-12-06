@@ -413,7 +413,7 @@ When chaining nodes, we actually reference their ports implicitly. The chain cou
 ```neva
 :start -> 'World' -> greet:data
 greet:res -> println:data
-println:sig -> :stop
+println:res -> :stop
 ```
 
 Both versions are equivalent, but the chained syntax is preferred for readability.

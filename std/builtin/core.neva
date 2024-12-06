@@ -55,10 +55,6 @@ pub def Pass<T>(data T) (res T) {
     :data -> :res
 }
 
-// TODO add err outport
-pub interface ITapHandler<T>(data T) (sig any)
-
-// TODO add err outport
 // Sometimes component needs to receive data, perform some action and pass that
 // data further. However, due to impossibility to reuse same sender twice or
 // more, it leads to need for explicit locks. Deferred connections do not cover
@@ -69,10 +65,12 @@ pub interface ITapHandler<T>(data T) (sig any)
 // dealing with locks manually. Handler can send error, in that case `Tap` will
 // propogate it up to parent node.
 pub def Tap<T>(data T) (res T) {
-    Lock<T>
+    lock Lock<T>
     handler ITapHandler<T>
     ---
     :data -> [handler, lock:data]
     handler -> lock:sig
     lock -> :res
 }
+
+pub interface ITapHandler<T>(T) (any)

@@ -1,7 +1,8 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    List, fmt.Println
+    s2l StreamToList
+    println fmt.Println
     ---
-    :start -> 1..11 -> list -> println -> :stop
+    :start -> 1..11 -> s2l -> println -> :stop
 }
