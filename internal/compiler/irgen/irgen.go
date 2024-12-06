@@ -151,6 +151,23 @@ func (g Generator) processNode(
 			}
 		}
 
+		// TODO e2e test
+		// sometimes DI nodes are drilled down
+		// example: `handler Pass<T>{handler IHandler<T>}`
+		// our component is used like this `Parent{handler FilterOdd<T>}`
+		// Parent.handler is not interface, but its component has interface
+		// It needs our DI nodes, so we merge our DI with node's DI
+		if len(nodeCtx.node.DIArgs) > 0 {
+			if node.DIArgs == nil {
+				node.DIArgs = make(map[string]src.Node)
+			}
+			for k, ourDIarg := range nodeCtx.node.DIArgs {
+				if _, exists := node.DIArgs[k]; !exists {
+					node.DIArgs[k] = ourDIarg
+				}
+			}
+		}
+
 		subNodeCtx := nodeContext{
 			path:       append(nodeCtx.path, nodeName),
 			portsUsage: nodePortsUsage,
@@ -158,7 +175,7 @@ func (g Generator) processNode(
 		}
 
 		var scopeToUse src.Scope
-		if injectedNode, isDINode := nodeCtx.node.Deps[nodeName]; isDINode {
+		if injectedNode, isDINode := nodeCtx.node.DIArgs[nodeName]; isDINode {
 			subNodeCtx.node = injectedNode
 			scopeToUse = scope
 		} else {
