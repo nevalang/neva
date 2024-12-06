@@ -3,7 +3,6 @@ package irgen
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
@@ -32,9 +31,9 @@ type (
 func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
-) (*ir.Program, *compiler.Error) {
-	scope := src.NewScope(build, src.Location{
-		Module:   build.EntryModRef,
+) (*ir.Program, error) {
+	scope := src.NewScope(build, core.Location{
+		ModRef:   build.EntryModRef,
 		Package:  mainPkgName,
 		Filename: "",
 	})
@@ -63,9 +62,7 @@ func (g Generator) Generate(
 	}
 
 	if err := g.processNode(rootNodeCtx, scope, result); err != nil {
-		return nil, compiler.Error{
-			Location: scope.Location(),
-		}.Wrap(err)
+		return nil, fmt.Errorf("process node: %w", err)
 	}
 
 	// graph reduction is not an optimization:
@@ -82,13 +79,10 @@ func (g Generator) processNode(
 	nodeCtx nodeContext,
 	scope src.Scope,
 	result *ir.Program,
-) *compiler.Error {
+) error {
 	entity, location, err := scope.Entity(nodeCtx.node.EntityRef)
 	if err != nil {
-		return &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-		}
+		return fmt.Errorf("get entity: %w", err)
 	}
 
 	component := entity.Component
@@ -98,20 +92,13 @@ func (g Generator) processNode(
 
 	runtimeFuncRef, err := g.getFuncRef(component, nodeCtx.node.TypeArgs)
 	if err != nil {
-		return &compiler.Error{
-			Message:  err.Error(),
-			Location: &location,
-			Meta:     &component.Meta,
-		}
+		return fmt.Errorf("get func ref: %w", err)
 	}
 
 	if runtimeFuncRef != "" {
 		cfgMsg, err := getConfigMsg(nodeCtx.node, scope)
 		if err != nil {
-			return &compiler.Error{
-				Message:  err.Error(),
-				Location: scope.Location(),
-			}
+			return fmt.Errorf("get config msg: %w", err)
 		}
 		result.Funcs = append(result.Funcs, ir.FuncCall{
 			Ref: runtimeFuncRef,
@@ -135,20 +122,13 @@ func (g Generator) processNode(
 		result,
 	)
 	if err != nil {
-		return &compiler.Error{
-			Message:  err.Error(),
-			Location: newScope.Location(),
-		}
+		return fmt.Errorf("process network: %w", err)
 	}
 
 	for nodeName, node := range component.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[nodeName]
 		if !ok {
-			return &compiler.Error{
-				Message:  fmt.Sprintf("node usage not found: %v", nodeName),
-				Location: &location,
-				Meta:     &node.Meta,
-			}
+			return fmt.Errorf("node usage not found: %v", nodeName)
 		}
 
 		// TODO e2e test
@@ -183,7 +163,7 @@ func (g Generator) processNode(
 		}
 
 		if err := g.processNode(subNodeCtx, scopeToUse, result); err != nil {
-			return err
+			return fmt.Errorf("process node: %w", err)
 		}
 	}
 

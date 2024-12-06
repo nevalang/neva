@@ -37,7 +37,7 @@ func (Generator) getFuncRef(component src.Component, nodeTypeArgs []ts.Expr) (st
 	return "", errors.New("type argument mismatches runtime func directive")
 }
 
-func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error) {
+func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	args, ok := node.Directives[compiler.BindDirective]
 	if !ok {
 		return nil, nil
@@ -45,10 +45,7 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, *compiler.Error)
 
 	entity, location, err := scope.Entity(compiler.ParseEntityRef(args[0]))
 	if err != nil {
-		return nil, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-		}
+		return nil, err
 	}
 
 	return getIRMsgBySrcRef(

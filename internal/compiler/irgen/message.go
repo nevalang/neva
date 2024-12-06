@@ -1,7 +1,9 @@
 package irgen
 
 import (
-	"github.com/nevalang/neva/internal/compiler"
+	"errors"
+	"fmt"
+
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
@@ -11,14 +13,11 @@ func getIRMsgBySrcRef(
 	constant src.ConstValue,
 	scope src.Scope,
 	typeExpr ts.Expr,
-) (*ir.Message, *compiler.Error) {
+) (*ir.Message, error) {
 	if constant.Ref != nil {
 		entity, location, err := scope.Entity(*constant.Ref)
 		if err != nil {
-			return nil, &compiler.Error{
-				Message:  err.Error(),
-				Location: scope.Location(),
-			}
+			return nil, fmt.Errorf("get entity: %w", err)
 		}
 		return getIRMsgBySrcRef(entity.Const.Value, scope.Relocate(location), typeExpr)
 	}
@@ -99,8 +98,5 @@ func getIRMsgBySrcRef(
 		}, nil
 	}
 
-	return nil, &compiler.Error{
-		Message:  "unknown msg type",
-		Location: scope.Location(),
-	}
+	return nil, errors.New("unknown msg type")
 }
