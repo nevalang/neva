@@ -502,7 +502,7 @@ func parseNodes(
 			EntityRef:  parsedRef,
 			TypeArgs:   typeArgs,
 			ErrGuard:   errGuard,
-			Deps:       deps,
+			DIArgs:     deps,
 			Meta: core.Meta{
 				Text: node.GetText(),
 				Start: core.Position{
@@ -1159,4 +1159,3 @@ func parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) 
 		},
 	}, nil
 }
-

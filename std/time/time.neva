@@ -20,4 +20,4 @@ pub def After(dur Duration) (sig)
 // When enough time has passed, it sends a data to its output port.
 // If all you need is just block the flow, use Sleep instead.
 #extern(time_delay)
-pub def Delay<T>(dur Duration, data T) (data T)
+pub def Delay<T>(dur Duration, data T) (res T)

@@ -184,7 +184,7 @@ type Node struct {
 	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
 	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
 	ErrGuard   bool                   `json:"errGuard,omitempty"` // ErrGuard explains if node is used with `?` operator.
-	Deps       map[string]Node        `json:"flowDi,omitempty"`   // Dependency Injection.
+	DIArgs     map[string]Node        `json:"diArgs,omitempty"`   // Dependency Injection.
 	Meta       core.Meta              `json:"meta,omitempty"`
 }
 

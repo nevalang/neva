@@ -171,7 +171,7 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	if node.Deps == nil {
+	if node.DIArgs == nil {
 		return src.Node{
 				Directives: node.Directives,
 				EntityRef:  node.EntityRef,
@@ -188,8 +188,8 @@ func (a Analyzer) analyzeNode(
 	// implement interface->component subtyping
 	// in a way where FP possible
 
-	resolvedFlowDI := make(map[string]src.Node, len(node.Deps))
-	for depName, depNode := range node.Deps {
+	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
+	for depName, depNode := range node.DIArgs {
 		resolvedDep, _, err := a.analyzeNode(
 			compIface,
 			depNode,
@@ -208,7 +208,7 @@ func (a Analyzer) analyzeNode(
 			Directives: node.Directives,
 			EntityRef:  node.EntityRef,
 			TypeArgs:   resolvedNodeArgs,
-			Deps:       resolvedFlowDI,
+			DIArgs:     resolvedFlowDI,
 			Meta:       node.Meta,
 			ErrGuard:   node.ErrGuard,
 		}, foundInterface{
@@ -235,7 +235,7 @@ func (a Analyzer) getNodeInterface(
 			}
 		}
 
-		if node.Deps != nil {
+		if node.DIArgs != nil {
 			return src.Interface{}, &compiler.Error{
 				Message:  "Only component node can have dependency injection",
 				Location: &location,

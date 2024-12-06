@@ -2,7 +2,7 @@
 
 // Wait blocks until last stream item arrive, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
-    Del
+    del Del
     ---
     :data -> .last -> switch {
         true -> :sig
@@ -26,22 +26,6 @@ pub interface IPortReducer<T>(data stream<T>) (res T)
 // IWhileHandler is a dependency for While.
 pub interface IWhileHandler<T>(data T) (res T, err error)
 
-// While implements truly sequential loop.
-// dependency node won't receive next data until it sends a result.
-// Sometimes it's crucial to guarantee this, to avoid race conditions.
-// E.g. you have pipeline of nodes that produce side-effects and order matters.
-// You can wrap them in single handler and safely pass to `While`.
-// `While` is basically just a shortcut for manually looped network topology.
-// 
-pub def While<T>(from T, to T) (sig any, err error) {
-    handler IWhileHandler?
-    ---
-    [:from, handler] -> switch {
-        :to -> :sig
-        _ -> handler
-    }
-}
-
 // These constants are used for binding by Field.
 const dataPath list<string> = ['data']
 const lastPath list<string> = ['last']
@@ -52,11 +36,11 @@ const idxPath list<string> = ['idx']
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(data T) (res Y)
 
+// TODO map is not concurrency safe like For
 // Map maps one stream onto another.
 // Just like For, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
-// It's not recommented but possible to also produce side-effects.
-// But, if all you need is side-effects, use For instead.
+// It's possible but not recommended to produce side-effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
     fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
@@ -146,7 +130,7 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 // --- For ---
 
 // `For` applies a handler to each item in a stream to produce side-effects.
-// It never modifies the stream - use `Map/Filter/Reduce` for transformations.
+// It never modifies the stream.
 //
 // It uses back pressure to ensure the handler processes items sequentially -
 // the next item is not sent until the handler signals completion of the previous one.
