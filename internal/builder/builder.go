@@ -8,6 +8,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/std"
 )
@@ -35,14 +36,14 @@ func (b Builder) Build(
 	}
 
 	// inject stdlib dep to entry module
-	stdModRef := src.ModuleRef{
+	stdModRef := core.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,
 	}
 	entryMod.Manifest.Deps["std"] = stdModRef
 
 	// inject entry mod into the build
-	mods := map[src.ModuleRef]compiler.RawModule{
+	mods := map[core.ModuleRef]compiler.RawModule{
 		{Path: "@"}: entryMod,
 	}
 
@@ -89,7 +90,7 @@ func (b Builder) Build(
 		}
 
 		// inject stdlib dep into every downloaded dep mod
-		depMod.Manifest.Deps["std"] = src.ModuleRef{
+		depMod.Manifest.Deps["std"] = core.ModuleRef{
 			Path:    "std",
 			Version: pkg.Version,
 		}
@@ -100,7 +101,7 @@ func (b Builder) Build(
 	}
 
 	return compiler.RawBuild{
-		EntryModRef: src.ModuleRef{Path: "@"},
+		EntryModRef: core.ModuleRef{Path: "@"},
 		Modules:     mods,
 	}, entryModRootPath, nil
 }
