@@ -17,7 +17,7 @@ func NewScope(build Build, location core.Location) Scope {
 	}
 }
 
-// Scope is an object that provides access to program entities
+// Scope is entity reference resolver
 type Scope struct {
 	loc   core.Location
 	build Build

@@ -23,9 +23,11 @@ var (
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	addrToChanVar, chanVarNames := b.getPortChansMap(prog.Connections)
+	// graph must not contain intermediate connections to be supported by runtime
+	prog.Connections = ir.GraphReduction(prog.Connections)
 
-	funcCalls, err := b.getFuncCalls(prog.Funcs, addrToChanVar)
+	addrToChanVar, chanVarNames := b.buildPortChanMap(prog.Connections)
+	funcCalls, err := b.buildFuncCalls(prog.Funcs, addrToChanVar)
 	if err != nil {
 		return err
 	}
@@ -46,7 +48,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		return err
 	}
 
-	data := templateData{
+	tplData := templateData{
 		CompilerVersion: pkg.Version,
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
@@ -54,7 +56,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	}
 
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
+	if err := tmpl.Execute(&buf, tplData); err != nil {
 		return errors.Join(ErrExecTmpl, err)
 	}
 
@@ -69,7 +71,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	return compiler.SaveFilesToDir(dst, files)
 }
 
-func (b Backend) getFuncCalls(
+func (b Backend) buildFuncCalls(
 	funcs []ir.FuncCall,
 	addrToChanVar map[ir.PortAddr]string,
 ) ([]templateFuncCall, error) {
@@ -278,7 +280,7 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte) error {
 	return nil
 }
 
-func (b Backend) getPortChansMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {
+func (b Backend) buildPortChanMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {
 	portsCount := len(connections) * 2
 	varNames := make([]string, 0, portsCount)
 	addrToChanVar := make(map[ir.PortAddr]string, portsCount)

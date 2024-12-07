@@ -65,12 +65,8 @@ func (g Generator) Generate(
 		return nil, fmt.Errorf("process node: %w", err)
 	}
 
-	// graph reduction is not an optimization:
-	// it's a necessity for runtime not to have intermediate connections
-	reducedNet := g.reduceFinalGraph(result.Connections)
-
 	return &ir.Program{
-		Connections: reducedNet,
+		Connections: result.Connections,
 		Funcs:       result.Funcs,
 	}, nil
 }
