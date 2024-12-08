@@ -55,7 +55,7 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 // --- Filter ---
 
 pub def Filter<T>(data stream<T>) (res stream<T>) {
-    split Split<T>{IPredicate}
+    split Split<T>{IPredicate<T>}
     s2l StreamToList
     l2s ListToStream
     ---

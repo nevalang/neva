@@ -51,6 +51,36 @@ func (mr *MockScopeMockRecorder) Entity(ref interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Entity", reflect.TypeOf((*MockScope)(nil).Entity), ref)
 }
 
+// GetFirstInportName mocks base method.
+func (m *MockScope) GetFirstInportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFirstInportName", nodes, portAddr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFirstInportName indicates an expected call of GetFirstInportName.
+func (mr *MockScopeMockRecorder) GetFirstInportName(nodes, portAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstInportName", reflect.TypeOf((*MockScope)(nil).GetFirstInportName), nodes, portAddr)
+}
+
+// GetFirstOutportName mocks base method.
+func (m *MockScope) GetFirstOutportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFirstOutportName", nodes, portAddr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFirstOutportName indicates an expected call of GetFirstOutportName.
+func (mr *MockScopeMockRecorder) GetFirstOutportName(nodes, portAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstOutportName", reflect.TypeOf((*MockScope)(nil).GetFirstOutportName), nodes, portAddr)
+}
+
 // Location mocks base method.
 func (m *MockScope) Location() *core.Location {
 	m.ctrl.T.Helper()

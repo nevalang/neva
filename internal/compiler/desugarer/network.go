@@ -1,7 +1,6 @@
 package desugarer
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -230,11 +229,13 @@ func (d *Desugarer) desugarSingleReceiver(
 			}, nil
 		}
 
-		firstInportName, err := getFirstInportName(scope, nodes, *receiver.PortAddr)
+		firstInportName, err := scope.GetFirstInportName(nodes, *receiver.PortAddr)
 		if err != nil {
 			return desugarReceiverResult{}, fmt.Errorf("get first inport name: %w", err)
 		}
 
+		// if node is interface with anonymous port, port-addr will remain empty string
+		// to be later desugared at irgen step, because it's not possible to do here
 		return desugarReceiverResult{
 			replace: src.Connection{
 				Normal: &src.NormalConnection{
@@ -414,7 +415,7 @@ func (d *Desugarer) desugarChainedConnection(
 		chainHeadPort = chainHead.PortAddr.Port
 		if chainHeadPort == "" {
 			var err error
-			chainHeadPort, err = getFirstInportName(scope, nodes, *chainHead.PortAddr)
+			chainHeadPort, err = scope.GetFirstInportName(nodes, *chainHead.PortAddr)
 			if err != nil {
 				return desugarConnectionResult{}, fmt.Errorf("get first inport name: %w", err)
 			}
@@ -632,7 +633,7 @@ func (d *Desugarer) desugarSingleSender(
 	if sender.PortAddr != nil {
 		portName := sender.PortAddr.Port
 		if sender.PortAddr.Port == "" {
-			firstOutportName, err := getFirstOutportName(scope, nodes, *sender.PortAddr)
+			firstOutportName, err := scope.GetFirstOutportName(nodes, *sender.PortAddr)
 			if err != nil {
 				return desugarSenderResult{}, fmt.Errorf("get first outport name: %w", err)
 			}
@@ -652,6 +653,8 @@ func (d *Desugarer) desugarSingleSender(
 			sender.PortAddr.Node,
 			portName,
 		)
+		// if node is interface with anonymous port, port-addr will remain empty string
+		// to be later desugared at irgen step, because it's not possible to do here
 		return desugarSenderResult{
 			replace: src.Connection{Normal: &normConn},
 			insert:  nil,
@@ -862,53 +865,6 @@ func (d *Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr,
 	}
 
 	return entity.Const.TypeExpr, nil
-}
-
-func getNodeIOByPortAddr(
-	scope Scope,
-	nodes map[string]src.Node,
-	portAddr *src.PortAddr,
-) (src.IO, error) {
-	node, ok := nodes[portAddr.Node]
-	if !ok {
-		return src.IO{}, fmt.Errorf("node '%s' not found", portAddr.Node)
-	}
-
-	entity, _, err := scope.Entity(node.EntityRef)
-	if err != nil {
-		return src.IO{}, fmt.Errorf("get entity: %w", err)
-	}
-
-	var iface src.Interface
-	if entity.Kind == src.InterfaceEntity {
-		iface = entity.Interface
-	} else {
-		iface = entity.Component.Interface
-	}
-
-	return iface.IO, nil
-}
-
-func getFirstInportName(scope Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
-	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
-	if err != nil {
-		return "", err
-	}
-	for inport := range io.In {
-		return inport, nil
-	}
-	return "", errors.New("first inport not found")
-}
-
-func getFirstOutportName(scope Scope, nodes map[string]src.Node, portAddr src.PortAddr) (string, error) {
-	io, err := getNodeIOByPortAddr(scope, nodes, &portAddr)
-	if err != nil {
-		return "", err
-	}
-	for outport := range io.Out {
-		return outport, nil
-	}
-	return "", errors.New("first outport not found")
 }
 
 type desugarFanOutResult struct {

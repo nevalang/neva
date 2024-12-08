@@ -49,17 +49,32 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 
 // GetType returns type definition by reference
 func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
-	entity, location, err := s.Entity(ref)
+	entity, location, err := s.entity(ref)
 	if err != nil {
 		return ts.Def{}, nil, err
 	}
-
 	return entity.Type, s.Relocate(location), nil
+}
+
+func (s Scope) GetInterface(ref core.EntityRef) (Interface, error) {
+	entity, _, err := s.entity(ref)
+	if err != nil {
+		return Interface{}, err
+	}
+	return entity.Interface, nil
 }
 
 // Entity returns entity by reference
 func (s Scope) Entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	return s.entity(entityRef)
+}
+
+func (s Scope) GetComponent(entityRef core.EntityRef) (Component, error) {
+	entity, _, err := s.entity(entityRef)
+	if err != nil {
+		return Component{}, err
+	}
+	return entity.Component, nil
 }
 
 // entity is an alrogithm that resolves entity reference based on scope's location
@@ -150,4 +165,58 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 		Package:  pkgImport.Package,
 		Filename: fileName,
 	}, nil
+}
+
+func (s Scope) getNodeIOByPortAddr(
+	nodes map[string]Node,
+	portAddr *PortAddr,
+) (IO, error) {
+	node, ok := nodes[portAddr.Node]
+	if !ok {
+		return IO{}, fmt.Errorf("node '%s' not found", portAddr.Node)
+	}
+
+	entity, _, err := s.Entity(node.EntityRef)
+	if err != nil {
+		return IO{}, fmt.Errorf("get entity: %w", err)
+	}
+
+	var iface Interface
+	if entity.Kind == InterfaceEntity {
+		iface = entity.Interface
+	} else {
+		iface = entity.Component.Interface
+	}
+
+	return iface.IO, nil
+}
+
+func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
+	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
+	if err != nil {
+		return "", err
+	}
+	for inport := range io.In {
+		return inport, nil
+	}
+	return "", errors.New("first inport not found")
+}
+
+func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
+	entity, _, err := s.Entity(entityRef)
+	if err != nil {
+		return "", err
+	}
+	return entity.Kind, nil
+}
+
+func (s Scope) GetFirstOutportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
+	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
+	if err != nil {
+		return "", err
+	}
+	for outport := range io.Out {
+		return outport, nil
+	}
+	return "", errors.New("first outport not found")
 }
