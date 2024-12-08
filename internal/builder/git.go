@@ -7,13 +7,12 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-
-	"github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 // downloadDep returns path where it downloaded dependency
 // and its downloaded version in case version wasn't specified.
-func (p Builder) downloadDep(depModRef sourcecode.ModuleRef) (string, string, error) {
+func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 	fsPath := fmt.Sprintf(
 		"%s/%s_%s",
 		p.thirdPartyPath,

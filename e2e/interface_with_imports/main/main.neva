@@ -1,17 +1,17 @@
 import { github.com/nevalang/x:main }
 
-interface IPrinter<T>(data T) (sig T)
-
 def Main(start any) (stop any) {
-    Secondflow {main.Println<any>}
+    second_flow Secondflow{main.Println<any>}
     ---
-    :start -> secondflow:msg
-    secondflow:msg -> :stop
+    :start -> second_flow:msg
+    second_flow:msg -> :stop
 }
 
 def Secondflow (msg any) (msg any) {
-    IPrinter<any>
+    printer IPrinter<any>
     ---
-    :msg -> iPrinter:data
-    iPrinter:sig -> :msg
+    :msg -> printer:data
+    printer:sig -> :msg
 }
+
+interface IPrinter<T>(T) (T)

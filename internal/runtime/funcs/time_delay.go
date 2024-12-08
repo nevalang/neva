@@ -20,7 +20,7 @@ func (timeDelay) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (timeDelay) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 			time.Sleep(time.Duration(durMsg.Int()))
 
-			if !dataOut.Send(ctx, dataMsg) {
+			if !resOut.Send(ctx, dataMsg) {
 				return
 			}
 		}

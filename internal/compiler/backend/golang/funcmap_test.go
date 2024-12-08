@@ -71,7 +71,7 @@ func TestGetPortChansMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, _ := b.getPortChansMap(tt.connections)
+			result, _ := b.buildPortChanMap(tt.connections)
 			assert.Equal(t, tt.expectedMap, result)
 		})
 	}

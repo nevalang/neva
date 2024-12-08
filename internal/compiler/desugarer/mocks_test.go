@@ -36,11 +36,11 @@ func (m *MockScope) EXPECT() *MockScopeMockRecorder {
 }
 
 // Entity mocks base method.
-func (m *MockScope) Entity(ref core.EntityRef) (sourcecode.Entity, sourcecode.Location, error) {
+func (m *MockScope) Entity(ref core.EntityRef) (sourcecode.Entity, core.Location, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Entity", ref)
 	ret0, _ := ret[0].(sourcecode.Entity)
-	ret1, _ := ret[1].(sourcecode.Location)
+	ret1, _ := ret[1].(core.Location)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -51,11 +51,41 @@ func (mr *MockScopeMockRecorder) Entity(ref interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Entity", reflect.TypeOf((*MockScope)(nil).Entity), ref)
 }
 
+// GetFirstInportName mocks base method.
+func (m *MockScope) GetFirstInportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFirstInportName", nodes, portAddr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFirstInportName indicates an expected call of GetFirstInportName.
+func (mr *MockScopeMockRecorder) GetFirstInportName(nodes, portAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstInportName", reflect.TypeOf((*MockScope)(nil).GetFirstInportName), nodes, portAddr)
+}
+
+// GetFirstOutportName mocks base method.
+func (m *MockScope) GetFirstOutportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFirstOutportName", nodes, portAddr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFirstOutportName indicates an expected call of GetFirstOutportName.
+func (mr *MockScopeMockRecorder) GetFirstOutportName(nodes, portAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstOutportName", reflect.TypeOf((*MockScope)(nil).GetFirstOutportName), nodes, portAddr)
+}
+
 // Location mocks base method.
-func (m *MockScope) Location() *sourcecode.Location {
+func (m *MockScope) Location() *core.Location {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Location")
-	ret0, _ := ret[0].(*sourcecode.Location)
+	ret0, _ := ret[0].(*core.Location)
 	return ret0
 }
 
@@ -66,7 +96,7 @@ func (mr *MockScopeMockRecorder) Location() *gomock.Call {
 }
 
 // Relocate mocks base method.
-func (m *MockScope) Relocate(location sourcecode.Location) sourcecode.Scope {
+func (m *MockScope) Relocate(location core.Location) sourcecode.Scope {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Relocate", location)
 	ret0, _ := ret[0].(sourcecode.Scope)

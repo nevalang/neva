@@ -1,13 +1,11 @@
-package irgen
+package ir
 
-import "github.com/nevalang/neva/internal/compiler/ir"
-
-// reduceFinalGraph transforms program to a state where it doesn't have intermediate connections.
-func (Generator) reduceFinalGraph(connections map[ir.PortAddr]ir.PortAddr) map[ir.PortAddr]ir.PortAddr {
-	intermediatePorts := map[ir.PortAddr]struct{}{}
+// GraphReduction removes intermediate connections and returns reduced graph.
+func GraphReduction(connections map[PortAddr]PortAddr) map[PortAddr]PortAddr {
+	intermediatePorts := map[PortAddr]struct{}{}
 
 	withoutIntermediateReceivers := make(
-		map[ir.PortAddr]ir.PortAddr,
+		map[PortAddr]PortAddr,
 		len(connections),
 	)
 
@@ -23,7 +21,7 @@ func (Generator) reduceFinalGraph(connections map[ir.PortAddr]ir.PortAddr) map[i
 
 	// second pass: remove connections with intermediate senders
 	result := make(
-		map[ir.PortAddr]ir.PortAddr,
+		map[PortAddr]PortAddr,
 		len(withoutIntermediateReceivers),
 	)
 	for sender, receiver := range withoutIntermediateReceivers {
@@ -38,10 +36,10 @@ func (Generator) reduceFinalGraph(connections map[ir.PortAddr]ir.PortAddr) map[i
 // getFinalReceiver returns the final receiver for a given port address.
 // It also returns true if the given port address was intermediate, false otherwise.
 func getFinalReceiver(
-	receiver ir.PortAddr,
-	connections map[ir.PortAddr]ir.PortAddr,
-) (final ir.PortAddr, intermediate bool) {
-	visited := make(map[ir.PortAddr]struct{})
+	receiver PortAddr,
+	connections map[PortAddr]PortAddr,
+) (final PortAddr, intermediate bool) {
+	visited := make(map[PortAddr]struct{})
 	current := receiver
 	for {
 		visited[current] = struct{}{}

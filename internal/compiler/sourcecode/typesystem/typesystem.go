@@ -13,7 +13,7 @@ type Def struct {
 	// Empty body means base type
 	BodyExpr *Expr `json:"bodyExpr,omitempty"`
 	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
-	Meta ExprMeta `json:"meta,omitempty"`
+	Meta core.Meta `json:"meta,omitempty"`
 }
 
 func (def Def) String() string {
@@ -41,11 +41,8 @@ type Param struct {
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
-	Meta ExprMeta  `json:"meta,omitempty"` // This field must be ignored by the typesystem and only used outside
+	Meta core.Meta `json:"meta,omitempty"` // This field must be ignored by the typesystem and only used outside
 }
-
-// ExprMeta can contain any meta information that typesystem user might need e.g. source code text representation.
-type ExprMeta any
 
 // String formats expression in a TS manner
 func (expr Expr) String() string {

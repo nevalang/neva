@@ -6,5 +6,5 @@ def Main(start any) (stop any) {
 	fmt.Println<any>
 	---
 	:start -> $l -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 }

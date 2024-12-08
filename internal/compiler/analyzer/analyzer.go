@@ -24,42 +24,44 @@ type Analyzer struct {
 }
 
 func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
-	location := src.Location{
-		Module:  build.EntryModRef,
-		Package: mainPkgName,
+	meta := core.Meta{
+		Location: core.Location{
+			ModRef:  build.EntryModRef,
+			Package: mainPkgName,
+		},
 	}
 
 	entryMod, ok := build.Modules[build.EntryModRef]
 	if !ok {
 		return src.Build{}, &compiler.Error{
-			Message:  fmt.Sprintf("entry module not found: %s", build.EntryModRef),
-			Location: &location,
+			Message: fmt.Sprintf("entry module not found: %s", build.EntryModRef),
+			Meta:    &meta,
 		}
 	}
 
 	if _, ok := entryMod.Packages[mainPkgName]; !ok {
 		return src.Build{}, &compiler.Error{
-			Message:  "main package not found",
-			Location: &location,
+			Message: "main package not found",
+			Meta:    &meta,
 		}
 	}
 
-	scope := src.NewScope(build, location)
+	scope := src.NewScope(build, meta.Location)
 
 	if err := a.mainSpecificPkgValidation(mainPkgName, entryMod, scope); err != nil {
-		return src.Build{}, compiler.Error{Location: &location}.Wrap(err)
+		return src.Build{}, compiler.Error{Meta: &meta}.Wrap(err)
 	}
 
 	analyzedBuild, err := a.AnalyzeBuild(build)
 	if err != nil {
-		return src.Build{}, compiler.Error{Location: &location}.Wrap(err)
+		return src.Build{}, compiler.Error{Meta: &meta}.Wrap(err)
 	}
 
 	return analyzedBuild, nil
 }
 
 func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
-	analyzedMods := make(map[src.ModuleRef]src.Module, len(build.Modules))
+	analyzedMods := make(map[core.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
 		if err := a.semverCheck(mod, modRef); err != nil {
@@ -83,21 +85,27 @@ func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	}, nil
 }
 
-func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
+func (a Analyzer) analyzeModule(modRef core.ModuleRef, build src.Build) (map[string]src.Package, *compiler.Error) {
 	if modRef != build.EntryModRef && modRef.Version == "" {
 		return nil, &compiler.Error{
-			Message:  "every dependency module must have version",
-			Location: &src.Location{Module: modRef},
+			Message: "every dependency module must have version",
+			Meta: &core.Meta{
+				Location: core.Location{
+					ModRef: modRef,
+				},
+			},
 		}
 	}
 
-	location := src.Location{Module: modRef}
+	location := core.Location{ModRef: modRef}
 	mod := build.Modules[modRef]
 
 	if len(mod.Packages) == 0 {
 		return nil, &compiler.Error{
-			Message:  "module must contain at least one package",
-			Location: &location,
+			Message: "module must contain at least one package",
+			Meta: &core.Meta{
+				Location: location,
+			},
 		}
 	}
 
@@ -105,16 +113,18 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 	maps.Copy(pkgsCopy, mod.Packages)
 
 	for pkgName, pkg := range pkgsCopy {
-		scope := src.NewScope(build, src.Location{
-			Module:  modRef,
+		scope := src.NewScope(build, core.Location{
+			ModRef:  modRef,
 			Package: pkgName,
 		})
 
 		resolvedPkg, err := a.analyzePkg(pkg, scope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: &src.Location{
-					Package: pkgName,
+				Meta: &core.Meta{
+					Location: core.Location{
+						Package: pkgName,
+					},
 				},
 			}.Wrap(err)
 		}
@@ -128,8 +138,10 @@ func (a Analyzer) analyzeModule(modRef src.ModuleRef, build src.Build) (map[stri
 func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	if len(pkg) == 0 {
 		return nil, &compiler.Error{
-			Message:  "package must contain at least one file",
-			Location: scope.Location(),
+			Message: "package must contain at least one file",
+			Meta: &core.Meta{
+				Location: *scope.Location(),
+			},
 		}
 	}
 
@@ -143,8 +155,8 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	}
 
 	for result := range pkg.Entities() {
-		relocatedScope := scope.Relocate(src.Location{
-			Module:   scope.Location().Module,
+		relocatedScope := scope.Relocate(core.Location{
+			ModRef:   scope.Location().ModRef,
 			Package:  scope.Location().Package,
 			Filename: result.FileName,
 		})
@@ -152,8 +164,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 		analyzedEntity, err := a.analyzeEntity(result.Entity, relocatedScope)
 		if err != nil {
 			return nil, compiler.Error{
-				Location: relocatedScope.Location(),
-				Meta:     result.Entity.Meta(),
+				Meta: result.Entity.Meta(),
 			}.Wrap(err)
 		}
 
@@ -169,16 +180,15 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		Kind:     entity.Kind,
 	}
 
-	isStd := scope.Location().Module.Path == "std"
+	isStd := scope.Location().ModRef.Path == "std"
 
 	switch entity.Kind {
 	case src.TypeEntity:
 		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
 		if err != nil {
-			meta := entity.Type.Meta.(core.Meta) //nolint:forcetypeassert
+			meta := entity.Type.Meta
 			return src.Entity{}, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &meta,
+				Meta: &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Type = resolvedTypeDef
@@ -187,8 +197,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			meta := entity.Const.Meta
 			return src.Entity{}, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &meta,
+				Meta: &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Const = resolvedConst
@@ -200,8 +209,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		if err != nil {
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &meta,
+				Meta: &meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Interface = resolvedInterface
@@ -209,16 +217,14 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
 		if err != nil {
 			return src.Entity{}, compiler.Error{
-				Location: scope.Location(),
-				Meta:     &entity.Component.Meta,
+				Meta: &entity.Component.Meta,
 			}.Wrap(err)
 		}
 		resolvedEntity.Component = analyzedComponent
 	default:
 		return src.Entity{}, &compiler.Error{
-			Message:  fmt.Sprintf("unknown entity kind: %v", entity.Kind),
-			Location: scope.Location(),
-			Meta:     entity.Meta(),
+			Message: fmt.Sprintf("unknown entity kind: %v", entity.Kind),
+			Meta:    entity.Meta(),
 		}
 	}
 

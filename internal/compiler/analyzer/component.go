@@ -15,9 +15,8 @@ func (a Analyzer) analyzeComponent(
 
 	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
 		return src.Component{}, &compiler.Error{
-			Message:  "Component that use #extern directive must provide at least one argument",
-			Location: scope.Location(),
-			Meta:     &component.Meta,
+			Message: "Component that use #extern directive must provide at least one argument",
+			Meta:    &component.Meta,
 		}
 	}
 
@@ -26,9 +25,8 @@ func (a Analyzer) analyzeComponent(
 			parts := strings.Split(runtimeFuncArg, " ")
 			if len(parts) != 2 {
 				return src.Component{}, &compiler.Error{
-					Message:  "Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs",
-					Location: scope.Location(),
-					Meta:     &component.Meta,
+					Message: "Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs",
+					Meta:    &component.Meta,
 				}
 			}
 		}
@@ -44,8 +42,7 @@ func (a Analyzer) analyzeComponent(
 	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
-			Location: scope.Location(),
-			Meta:     &component.Meta,
+			Meta: &component.Meta,
 		}.Wrap(err)
 	}
 
@@ -53,8 +50,7 @@ func (a Analyzer) analyzeComponent(
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
 				Message:  "Component with nodes or network cannot use #extern directive",
-				Location: scope.Location(),
-				Meta:     &component.Meta,
+				Meta: &component.Meta,
 			}
 		}
 		return component, nil
@@ -67,16 +63,14 @@ func (a Analyzer) analyzeComponent(
 	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
-			Location: scope.Location(),
-			Meta:     &component.Meta,
+			Meta: &component.Meta,
 		}.Wrap(err)
 	}
 
 	if len(component.Net) == 0 {
 		return src.Component{}, &compiler.Error{
 			Message:  "Component must have network",
-			Location: scope.Location(),
-			Meta:     &component.Meta,
+			Meta: &component.Meta,
 		}
 	}
 
@@ -90,8 +84,7 @@ func (a Analyzer) analyzeComponent(
 	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
-			Location: scope.Location(),
-			Meta:     &component.Meta,
+			Meta: &component.Meta,
 		}.Wrap(err)
 	}
 

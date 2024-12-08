@@ -5,6 +5,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 const (
@@ -19,12 +20,12 @@ type (
 	}
 
 	RawBuild struct {
-		EntryModRef src.ModuleRef
-		Modules     map[src.ModuleRef]RawModule
+		EntryModRef core.ModuleRef
+		Modules     map[core.ModuleRef]RawModule
 	}
 
 	Parser interface {
-		ParseModules(rawMods map[src.ModuleRef]RawModule) (map[src.ModuleRef]src.Module, *Error)
+		ParseModules(rawMods map[core.ModuleRef]RawModule) (map[core.ModuleRef]src.Module, *Error)
 	}
 
 	RawModule struct {
@@ -42,8 +43,8 @@ type (
 		Desugar(build src.Build) (src.Build, error)
 	}
 
-	IRGenerator interface {
-		Generate(build src.Build, mainpkg string) (*ir.Program, *Error)
+	Irgen interface {
+		Generate(build src.Build, mainpkg string) (*ir.Program, error)
 	}
 
 	Backend interface {

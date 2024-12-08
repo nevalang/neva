@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 func (b Builder) Get(wd, path, version string) (string, error) {
-	ref := src.ModuleRef{
+	ref := core.ModuleRef{
 		Path:    path,
 		Version: version,
 	}
@@ -36,7 +36,7 @@ func (b Builder) Get(wd, path, version string) (string, error) {
 		)
 	}
 
-	manifest.Deps[path] = src.ModuleRef{
+	manifest.Deps[path] = core.ModuleRef{
 		Path:    path,
 		Version: actualVersion,
 	}
