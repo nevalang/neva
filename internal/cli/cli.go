@@ -93,13 +93,17 @@ func newGetCmd(workdir string, bldr builder.Builder) *cli.Command {
 	}
 }
 
-func getMainPkgFromArgs(cCtx *cli.Context) (string, error) {
-	firstArg := cCtx.Args().First()
-	dirFromArg := strings.TrimSuffix(firstArg, "/main.neva")
-	if filepath.Ext(dirFromArg) != "" {
+func mainPkgPathFromArgs(cCtx *cli.Context) (string, error) {
+	arg := cCtx.Args().First()
+
+	path := strings.TrimSuffix(arg, "main.neva")
+	path = strings.TrimSuffix(path, "/")
+
+	if filepath.Ext(path) != "" {
 		return "", errors.New(
 			"Use path to directory with executable package, relative to module root",
 		)
 	}
-	return dirFromArg, nil
+
+	return path, nil
 }
