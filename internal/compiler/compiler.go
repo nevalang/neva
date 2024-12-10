@@ -44,10 +44,11 @@ type FrontendResult struct {
 	MainPkg     string
 	RawBuild    RawBuild
 	ParsedBuild sourcecode.Build
+	Path        string
 }
 
 func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Error) {
-	raw, root, err := f.builder.Build(ctx, main)
+	raw, moduleRoot, err := f.builder.Build(ctx, main)
 	if err != nil {
 		return FrontendResult{}, err
 	}
@@ -63,12 +64,13 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 	}
 
 	mainPkg := strings.TrimPrefix(main, "./")
-	mainPkg = strings.TrimPrefix(mainPkg, root+"/")
+	mainPkg = strings.TrimPrefix(mainPkg, moduleRoot+"/")
 
 	return FrontendResult{
 		ParsedBuild: parsedBuild,
 		RawBuild:    raw,
 		MainPkg:     mainPkg,
+		Path:        moduleRoot,
 	}, nil
 }
 
