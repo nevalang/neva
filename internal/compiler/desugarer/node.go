@@ -56,14 +56,14 @@ func (Desugarer) handleNode(
 		Directives[compiler.AutoportsDirective]
 
 	// nothing to desugar
-	if !hasAutoports && len(node.Deps) != 1 {
+	if !hasAutoports && len(node.DIArgs) != 1 {
 		desugaredNodes[nodeName] = node
 		return extraConnections, nil
 	}
 
 	// --- anon dep ---
 
-	depArg, ok := node.Deps[""]
+	depArg, ok := node.DIArgs[""]
 	if ok {
 		for depParamName, depParam := range entity.Component.Nodes {
 			depEntity, _, err := scope.Entity(depParam.EntityRef)
@@ -71,13 +71,13 @@ func (Desugarer) handleNode(
 				panic(err)
 			}
 			if depEntity.Kind == src.InterfaceEntity {
-				desugaredDeps := maps.Clone(node.Deps)
+				desugaredDeps := maps.Clone(node.DIArgs)
 				desugaredDeps[depParamName] = depArg
 				node = src.Node{
 					Directives: node.Directives,
 					EntityRef:  node.EntityRef,
 					TypeArgs:   node.TypeArgs,
-					Deps:       desugaredDeps,
+					DIArgs:     desugaredDeps,
 					Meta:       node.Meta,
 				}
 				break
@@ -127,7 +127,7 @@ func (Desugarer) handleNode(
 		},
 		Directives: node.Directives,
 		TypeArgs:   node.TypeArgs,
-		Deps:       node.Deps,
+		DIArgs:     node.DIArgs,
 		Meta:       node.Meta,
 	}
 

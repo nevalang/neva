@@ -11,19 +11,15 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
-
-type treeShapeListener struct {
-	*generated.BasenevaListener
-	file src.File
-}
 
 type Parser struct{}
 
 func (p Parser) ParseModules(
-	rawMods map[src.ModuleRef]compiler.RawModule,
-) (map[src.ModuleRef]src.Module, *compiler.Error) {
-	parsedMods := make(map[src.ModuleRef]src.Module, len(rawMods))
+	rawMods map[core.ModuleRef]compiler.RawModule,
+) (map[core.ModuleRef]src.Module, *compiler.Error) {
+	parsedMods := make(map[core.ModuleRef]src.Module, len(rawMods))
 
 	for modRef, rawMod := range rawMods {
 		parsedPkgs, err := p.ParsePackages(modRef, rawMod.Packages)
@@ -41,7 +37,7 @@ func (p Parser) ParseModules(
 }
 
 func (p Parser) ParsePackages(
-	modRef src.ModuleRef,
+	modRef core.ModuleRef,
 	rawPkgs map[string]compiler.RawPackage,
 ) (
 	map[string]src.Package,
@@ -61,20 +57,20 @@ func (p Parser) ParsePackages(
 }
 
 func (p Parser) ParseFiles(
-	modRef src.ModuleRef,
+	modRef core.ModuleRef,
 	pkgName string,
 	files map[string][]byte,
 ) (map[string]src.File, *compiler.Error) {
 	result := make(map[string]src.File, len(files))
 
 	for fileName, fileBytes := range files {
-		parsedFile, err := p.parseFile(fileBytes)
+		parsedFile, err := p.parseFile(modRef, pkgName, fileName, fileBytes)
 		if err != nil {
-			err.Location = compiler.Pointer(src.Location{
-				Module:   modRef,
+			err.Meta.Location = core.Location{
+				ModRef:   modRef,
 				Package:  pkgName,
 				Filename: fileName,
-			})
+			}
 			return nil, err
 		}
 		result[fileName] = parsedFile
@@ -83,8 +79,13 @@ func (p Parser) ParseFiles(
 	return result, nil
 }
 
-func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
-	input := antlr.NewInputStream(string(bb))
+func (p Parser) parseFile(
+	modRef core.ModuleRef,
+	pkgName string,
+	fileName string,
+	content []byte,
+) (src.File, *compiler.Error) {
+	input := antlr.NewInputStream(string(content))
 	lexer := generated.NewnevaLexer(input)
 	lexerErrors := &CustomErrorListener{}
 	lexer.RemoveErrorListeners()
@@ -97,7 +98,13 @@ func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
 	prsr.AddErrorListener(parserErrors)
 	prsr.BuildParseTrees = true
 
-	listener := &treeShapeListener{}
+	listener := &treeShapeListener{
+		loc: core.Location{
+			ModRef:   modRef,
+			Package:  pkgName,
+			Filename: fileName,
+		},
+	}
 
 	if err := walkTree(listener, prsr.Prog()); err != nil {
 		return src.File{}, err
@@ -111,7 +118,7 @@ func (p Parser) parseFile(bb []byte) (src.File, *compiler.Error) {
 		return src.File{}, parserErrors.Errors[0]
 	}
 
-	return listener.file, nil
+	return listener.state, nil
 }
 
 func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {

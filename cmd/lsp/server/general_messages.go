@@ -7,6 +7,7 @@ import (
 
 func (s *Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	s.workspacePath = *params.RootPath
+
 	return protocol.InitializeResult{
 		Capabilities: s.handler.CreateServerCapabilities(),
 		ServerInfo: &protocol.InitializeResultServerInfo{

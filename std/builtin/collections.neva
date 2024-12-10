@@ -7,7 +7,7 @@ pub def Len<T list<any> | dict<any> | string>(data T) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)
-pub def List<T>(data stream<T>) (res list<T>)
+pub def StreamToList<T>(data stream<T>) (res list<T>)
 
 // Push creates new list with appended element.
 #extern(list_push)

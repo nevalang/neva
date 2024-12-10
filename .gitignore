@@ -38,3 +38,4 @@ vendor
 tmp
 tmp.md
 todo.md
+docker-compose.yml

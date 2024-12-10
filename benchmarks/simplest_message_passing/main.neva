@@ -1,0 +1,5 @@
+def Main(start any) (stop any) {
+    wait Wait
+    ---
+    :start -> 1..1000 -> wait -> :stop
+}

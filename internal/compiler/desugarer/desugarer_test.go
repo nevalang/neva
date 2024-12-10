@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/pkg"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +21,7 @@ func TestDesugarer_desugarModule(t *testing.T) {
 			name: "every desugared module has std mod dep with right version",
 			mod: src.Module{
 				Manifest: src.ModuleManifest{
-					Deps: map[string]src.ModuleRef{}, // <-- no std mod dep
+					Deps: map[string]core.ModuleRef{}, // <-- no std mod dep
 				},
 				Packages: map[string]src.Package{},
 			},
@@ -39,9 +40,9 @@ func TestDesugarer_desugarModule(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			modRef := src.ModuleRef{Path: "@"}
+			modRef := core.ModuleRef{Path: "@"}
 			build := src.Build{
-				Modules: map[src.ModuleRef]src.Module{
+				Modules: map[core.ModuleRef]src.Module{
 					modRef: tt.mod,
 				},
 			}
@@ -96,7 +97,7 @@ func defaultImports() map[string]src.Import {
 	}
 }
 
-var defaultDeps = map[string]src.ModuleRef{
+var defaultDeps = map[string]core.ModuleRef{
 	"std": {
 		Path:    "std",
 		Version: pkg.Version,

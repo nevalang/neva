@@ -7,7 +7,7 @@ def Main(start any) (stop any) {
 	[app:res, app:err] -> println -> :stop
 }
 
-def App(sig) (res int, err error) {
+def App(sig any) (res int, err error) {
 	readFirstInt ReadIntFromStdin
 	readSecondInt ReadIntFromStdin
 	add Add<int>
@@ -19,7 +19,7 @@ def App(sig) (res int, err error) {
 	add -> :res
 }
 
-def ReadIntFromStdin(sig) (num int, err error) {
+def ReadIntFromStdin(sig any) (num int, err error) {
 	fmt.Scanln, strconv.ParseNum<int>
 	---
 	:sig -> scanln -> parseNum

@@ -7,12 +7,13 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	"github.com/nevalang/neva/pkg"
 )
 
 // semverCheck ensures that module is compatible with existing compiler
 // by checking it's version against semver. It uses minor as major.
-func (a Analyzer) semverCheck(mod src.Module, modRef src.ModuleRef) *compiler.Error {
+func (a Analyzer) semverCheck(mod src.Module, modRef core.ModuleRef) *compiler.Error {
 	moduleVersion, semverErr := semver.NewVersion(mod.Manifest.LanguageVersion)
 	if semverErr != nil {
 		return &compiler.Error{

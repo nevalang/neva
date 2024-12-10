@@ -23,6 +23,3 @@ pub type ProductResult<T, Y> struct {
 // elements from the second.
 #extern(stream_product)
 pub def Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
-
-// TODO?
-// pub def Uncons<T>(data stream<T>) (head T, tail stream<T>)

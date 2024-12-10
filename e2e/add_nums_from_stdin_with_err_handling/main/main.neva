@@ -13,6 +13,6 @@ def Main(start any) (stop any) {
 	parser1:res -> [add:left, scanner2:sig]
 	scanner2:res -> parser2:data
 	parser2:res -> add:right
-	println:sig -> :stop
+	println:res -> :stop
 	[parser1:err, parser2:err, add:res] -> println:data
 }
