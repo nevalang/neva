@@ -4,7 +4,7 @@ const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start any) (stop any) {
     l2s ListToStream<int>
-    filter_even Filter<int>{Even}
+    filter_even Filter<int>{predicate Even}
     for_print For<int>{fmt.Println<int>}
     wait Wait
     ---

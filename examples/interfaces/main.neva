@@ -6,10 +6,10 @@ def Main(start any) (stop any) {
     :start -> wrapper -> :stop
 }
 
-def Wrapper(msg any) (msg any) {
+def Wrapper(data any) (res any) {
     printer IPrinter<any>
     ---
-    :msg -> printer -> :msg
+    :data -> printer -> :res
 }
 
 interface IPrinter<T>(T) (T)

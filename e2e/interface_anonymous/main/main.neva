@@ -3,15 +3,15 @@ import { fmt }
 def Main(start any) (stop any) {
     second_flow Secondflow {fmt.Println<any>}
     ---
-    :start -> second_flow:msg
-    second_flow:msg -> :stop
+    :start -> second_flow:data
+    second_flow:res -> :stop
 }
 
-def Secondflow (msg any) (msg any) {
-    IPrinter<any>
+def Secondflow (data any) (res any) {
+    iPrinter IPrinter<any>
     ---
-    :msg -> iPrinter:data
-    iPrinter:sig -> :msg
+    :data -> iPrinter:res
+    iPrinter:sig -> :res
 }
 
 interface IPrinter<T>(T) (T)

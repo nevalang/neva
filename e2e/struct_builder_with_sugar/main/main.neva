@@ -3,16 +3,14 @@ type User struct {
     name string
 }
 
-// FIXME - cannot use 'struct' as a node name
-
 def Main(start any) (stop any) {
-    fmt.Println
-    builder Struct<User>
+    println fmt.Println
+    builder Struct<User> // FIXME - cannot use 'struct' as a node name
     ---
     :start -> [
         'John' -> builder:name,
         32 -> builder:age
     ]
-    builder:msg -> println:data
+    builder:res -> println:data
     println:res -> :stop
 }

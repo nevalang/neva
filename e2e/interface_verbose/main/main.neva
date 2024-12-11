@@ -5,15 +5,15 @@ def Main(start any) (stop any) {
         dep_node fmt.Println<any>
     }
     ---
-    :start -> second_flow:msg
-    second_flow:msg -> :stop
+    :start -> second_flow:data
+    second_flow:res -> :stop
 }
 
-def Secondflow (msg any) (msg any) {
+def Secondflow (data any) (res any) {
     dep_node IPrinter<any>
     ---
-    :msg -> dep_node:data
-    dep_node:sig -> :msg
+    :data -> dep_node:res
+    dep_node:sig -> :res
 }
 
 interface IPrinter<T>(T) (T)
