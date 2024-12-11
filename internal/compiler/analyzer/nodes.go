@@ -255,7 +255,7 @@ func (a Analyzer) getNodeInterface(
 		return iface, nil
 	}
 
-	// if we here then we have #autoports (only for structs RN)
+	// if we here then we have #autoports (only for structs)
 
 	if len(iface.IO.In) != 0 {
 		return src.Interface{}, &compiler.Error{
@@ -322,10 +322,11 @@ func (a Analyzer) getNodeInterface(
 		IO: src.IO{
 			In: inports,
 			Out: map[string]src.Port{
-				"msg": {
+				// struct builder has exactly one outport - created structure
+				"res": {
 					TypeExpr: resolvedNodeArg,
 					IsArray:  false,
-					Meta:     iface.IO.Out["msg"].Meta,
+					Meta:     iface.IO.Out["res"].Meta,
 				},
 			},
 		},

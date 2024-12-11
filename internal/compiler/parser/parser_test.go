@@ -234,9 +234,9 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 		{
 			name: "const ref in chain",
 			text: `
-				const msg string = 'hello'
+				const greeting string = 'hello'
 				def C1() () {
-					:start -> $msg -> :stop
+					:start -> $greeting -> :stop
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
@@ -246,7 +246,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 
 				chain := conn.Receivers[0].ChainedConnection.Normal
 				require.NotNil(t, chain.Senders[0].Const)
-				require.Equal(t, "msg", chain.Senders[0].Const.Value.Ref.Name)
+				require.Equal(t, "greeting", chain.Senders[0].Const.Value.Ref.Name)
 				require.Equal(t, "out", chain.Receivers[0].PortAddr.Node)
 				require.Equal(t, "stop", chain.Receivers[0].PortAddr.Port)
 			},

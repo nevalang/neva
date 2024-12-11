@@ -27,7 +27,7 @@ type Meta struct {
 	Text     string   `json:"text,omitempty"`
 	Start    Position `json:"start,omitempty"`
 	Stop     Position `json:"stop,omitempty"`
-	Location Location `json:"location,omitempty"`
+	Location Location `json:"location,omitempty"` // Location must always be present, even for virtual nodes inserted after resugaring, because irgen relies on it.
 }
 
 type Location struct {
