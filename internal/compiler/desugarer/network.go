@@ -97,7 +97,7 @@ func (d *Desugarer) desugarConnection(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, error) {
-	if conn.ArrayBypass != nil {
+	if conn.ArrayBypass != nil { // nothing to desugar, just mark ports as used
 		nodePortsUsed.set(
 			conn.ArrayBypass.SenderOutport.Node,
 			conn.ArrayBypass.SenderOutport.Port,
@@ -129,7 +129,7 @@ func (d *Desugarer) desugarNormalConnection(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, error) {
-	if len(normConn.Senders) > 1 {
+	if fanIn := len(normConn.Senders) > 1; fanIn {
 		result, err := d.desugarFanIn(
 			iface,
 			normConn,
@@ -142,7 +142,8 @@ func (d *Desugarer) desugarNormalConnection(
 		if err != nil {
 			return desugarConnectionResult{}, fmt.Errorf("desugar fan in: %w", err)
 		}
-		return desugarConnectionResult{insert: result}, nil // original connection is replaced by multiple new ones
+		// one fan-in connection was replaced by multiple desugared ones
+		return desugarConnectionResult{insert: result}, nil
 	}
 
 	desugarSenderResult, err := d.desugarSingleSender(
@@ -161,6 +162,7 @@ func (d *Desugarer) desugarNormalConnection(
 	normConn = *desugarSenderResult.replace.Normal
 	insert := desugarSenderResult.insert
 
+	// We need to first degugar fan-out and convert it to a single receiver in this connection
 	if len(normConn.Receivers) > 1 {
 		result, err := d.desugarFanOut(
 			iface,
@@ -205,6 +207,7 @@ type desugarReceiverResult struct {
 	insert  []src.Connection
 }
 
+// desugarSingleReceiver expects connection without fan-out (it must be desugared before).
 func (d *Desugarer) desugarSingleReceiver(
 	iface src.Interface,
 	normConn src.NormalConnection,
@@ -214,6 +217,8 @@ func (d *Desugarer) desugarSingleReceiver(
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
 ) (desugarReceiverResult, error) {
+	locOnlyMeta := core.Meta{Location: normConn.Senders[0].Meta.Location} // FIXME for some reason normConn.Meta sometimes empty
+
 	receiver := normConn.Receivers[0]
 
 	if receiver.PortAddr != nil {
@@ -224,6 +229,7 @@ func (d *Desugarer) desugarSingleReceiver(
 						Senders:   normConn.Senders,
 						Receivers: []src.ConnectionReceiver{receiver},
 					},
+					Meta: locOnlyMeta,
 				},
 				insert: []src.Connection{},
 			}, nil
@@ -250,7 +256,9 @@ func (d *Desugarer) desugarSingleReceiver(
 							},
 						},
 					},
+					Meta: locOnlyMeta,
 				},
+				Meta: locOnlyMeta,
 			},
 		}, nil
 	}
@@ -280,7 +288,9 @@ func (d *Desugarer) desugarSingleReceiver(
 			EntityRef: core.EntityRef{
 				Pkg:  "builtin",
 				Name: "Switch",
+				Meta: locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		}
 
 		// Connect original sender to switch:data
@@ -292,10 +302,13 @@ func (d *Desugarer) desugarSingleReceiver(
 						PortAddr: &src.PortAddr{
 							Node: switchNodeName,
 							Port: "data",
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 			},
+			Meta: locOnlyMeta,
 		}
 
 		insert := []src.Connection{}
@@ -312,10 +325,13 @@ func (d *Desugarer) desugarSingleReceiver(
 								Node: switchNodeName,
 								Port: "case",
 								Idx:  compiler.Pointer(uint8(i)),
+								Meta: locOnlyMeta,
 							},
+							Meta: locOnlyMeta,
 						},
 					},
 				},
+				Meta: locOnlyMeta,
 			})
 
 			// Connect switch:case[i] to case receiver
@@ -327,11 +343,14 @@ func (d *Desugarer) desugarSingleReceiver(
 								Node: switchNodeName,
 								Port: "case",
 								Idx:  compiler.Pointer(uint8(i)),
+								Meta: locOnlyMeta,
 							},
+							Meta: locOnlyMeta,
 						},
 					},
 					Receivers: caseConn.Receivers,
 				},
+				Meta: locOnlyMeta,
 			})
 		}
 
@@ -343,10 +362,13 @@ func (d *Desugarer) desugarSingleReceiver(
 						PortAddr: &src.PortAddr{
 							Node: switchNodeName,
 							Port: "else",
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Receivers: receiver.Switch.Default,
+				Meta:      locOnlyMeta,
 			},
 		})
 
@@ -424,6 +446,8 @@ func (d *Desugarer) desugarChainedConnection(
 		panic("unexpected chain head type")
 	}
 
+	locOnlyMeta := core.Meta{Location: chainHead.Meta.Location}
+
 	if chainHead.Const != nil {
 		d.virtualTriggersCount++
 		triggerNodeName := fmt.Sprintf("__newv2__%d", d.virtualTriggersCount)
@@ -435,11 +459,16 @@ func (d *Desugarer) desugarChainedConnection(
 			}
 
 			nodesToInsert[triggerNodeName] = src.Node{
-				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
-				TypeArgs:  []ts.Expr{constTypeExpr},
+				EntityRef: core.EntityRef{
+					Pkg:  "builtin",
+					Name: "NewV2",
+					Meta: locOnlyMeta,
+				},
+				TypeArgs: []ts.Expr{constTypeExpr},
 				Directives: map[src.Directive][]string{
 					compiler.BindDirective: {chainHead.Const.Value.Ref.String()},
 				},
+				Meta: locOnlyMeta,
 			}
 		} else {
 			d.virtualConstCount++
@@ -447,19 +476,28 @@ func (d *Desugarer) desugarChainedConnection(
 			constsToInsert[virtualConstName] = *chainHead.Const
 
 			nodesToInsert[triggerNodeName] = src.Node{
-				EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
-				TypeArgs:  []ts.Expr{chainHead.Const.TypeExpr},
+				EntityRef: core.EntityRef{
+					Pkg:  "builtin",
+					Name: "NewV2",
+					Meta: locOnlyMeta,
+				},
+				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},
 				Directives: map[src.Directive][]string{
 					compiler.BindDirective: {virtualConstName},
 				},
+				Meta: locOnlyMeta,
 			}
 		}
 
 		chainedConn.Normal.Senders = []src.ConnectionSender{
-			{PortAddr: &src.PortAddr{
-				Node: triggerNodeName,
-				Port: "msg",
-			}},
+			{
+				PortAddr: &src.PortAddr{
+					Node: triggerNodeName,
+					Port: "res",
+					Meta: locOnlyMeta,
+				},
+				Meta: locOnlyMeta,
+			},
 		}
 	}
 
@@ -489,8 +527,10 @@ func (d *Desugarer) desugarChainedConnection(
 						Idx:  desugaredHead.PortAddr.Idx,
 						Meta: chainHead.Meta,
 					},
+					Meta: chainHead.Meta,
 				},
 			},
+			Meta: locOnlyMeta,
 		},
 	}
 
@@ -540,6 +580,8 @@ func (d *Desugarer) desugarDeferredConnection(
 		return desugarDeferredConnectionsResult{}, err
 	}
 
+	locOnlyMeta := core.Meta{Location: deferredConnection.Meta.Location}
+
 	deferredConnection = *desugarDeferredConnResult.replace
 	connsToInsert := desugarDeferredConnResult.insert
 
@@ -550,14 +592,17 @@ func (d *Desugarer) desugarDeferredConnection(
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "Lock",
+			Meta: locOnlyMeta,
 		},
 		TypeArgs: []typesystem.Expr{
 			ts.Expr{
 				Inst: &typesystem.InstExpr{
 					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
 				},
+				Meta: locOnlyMeta,
 			},
 		},
+		Meta: locOnlyMeta,
 	}
 
 	// 2) connect original sender to lock receiver
@@ -569,6 +614,7 @@ func (d *Desugarer) desugarDeferredConnection(
 					PortAddr: &src.PortAddr{
 						Node: lockNodeName,
 						Port: "sig",
+						Meta: locOnlyMeta,
 					},
 				},
 			},
@@ -586,9 +632,11 @@ func (d *Desugarer) desugarDeferredConnection(
 						PortAddr: &src.PortAddr{
 							Node: lockNodeName,
 							Port: "data",
+							Meta: locOnlyMeta,
 						},
 					},
 				},
+				Meta: locOnlyMeta,
 			},
 		},
 		// 4) create connection from lock:data to receiver-side of deferred connection
@@ -599,10 +647,12 @@ func (d *Desugarer) desugarDeferredConnection(
 						PortAddr: &src.PortAddr{
 							Node: lockNodeName,
 							Port: "data",
+							Meta: locOnlyMeta,
 						},
 					},
 				},
 				Receivers: deferredConnection.Normal.Receivers,
+				Meta:      locOnlyMeta,
 			},
 		},
 	)
@@ -641,11 +691,12 @@ func (d *Desugarer) desugarSingleSender(
 			normConn.Senders = []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
-						Port: portName,
+						Port: portName, // <- desugaring
 						Node: sender.PortAddr.Node,
 						Idx:  sender.PortAddr.Idx,
 						Meta: sender.PortAddr.Meta,
 					},
+					Meta: sender.Meta,
 				},
 			}
 		}
@@ -686,8 +737,11 @@ func (d *Desugarer) desugarSingleSender(
 		}
 
 		return desugarSenderResult{
-			replace: src.Connection{Normal: replacedConnDesugarRes.replace.Normal},
-			insert:  replacedConnDesugarRes.insert,
+			replace: src.Connection{
+				Normal: replacedConnDesugarRes.replace.Normal,
+				Meta:   replacedConnDesugarRes.replace.Meta,
+			},
+			insert: replacedConnDesugarRes.insert,
 		}, nil
 	}
 
@@ -794,12 +848,19 @@ func (d *Desugarer) handleLiteralSender(
 	d.virtualEmittersCount++
 	emitterNodeName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
 
+	locOnlyMeta := core.Meta{Location: constant.Meta.Location}
+
 	emitterNode := src.Node{
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
 		},
-		EntityRef: newComponentRef,
-		TypeArgs:  []ts.Expr{constant.TypeExpr},
+		EntityRef: core.EntityRef{
+			Pkg:  newComponentRef.Pkg,
+			Name: newComponentRef.Name,
+			Meta: locOnlyMeta,
+		},
+		TypeArgs: []ts.Expr{constant.TypeExpr},
+		Meta:     locOnlyMeta,
 	}
 
 	nodesToInsert[emitterNodeName] = emitterNode
@@ -807,7 +868,7 @@ func (d *Desugarer) handleLiteralSender(
 
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: emitterNodeName,
-		Port: "msg",
+		Port: "res",
 	}
 
 	return emitterNodeOutportAddr, nil
@@ -823,6 +884,8 @@ func (d *Desugarer) handleConstRefSender(
 		return src.PortAddr{}, fmt.Errorf("get const type by ref: %w", err)
 	}
 
+	locOnlyMeta := core.Meta{Location: ref.Meta.Location}
+
 	d.virtualEmittersCount++
 	virtualEmitterName := fmt.Sprintf("__new__%d", d.virtualEmittersCount)
 
@@ -831,13 +894,19 @@ func (d *Desugarer) handleConstRefSender(
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {ref.String()},
 		},
-		EntityRef: newComponentRef,
-		TypeArgs:  []ts.Expr{constTypeExpr},
+		EntityRef: core.EntityRef{
+			Pkg:  newComponentRef.Pkg,
+			Name: newComponentRef.Name,
+			Meta: locOnlyMeta,
+		},
+		TypeArgs: []ts.Expr{constTypeExpr},
+		Meta:     locOnlyMeta,
 	}
 
 	emitterNodeOutportAddr := src.PortAddr{
 		Node: virtualEmitterName,
-		Port: "msg",
+		Port: "res",
+		Meta: locOnlyMeta,
 	}
 
 	nodesToInsert[virtualEmitterName] = emitterNode
@@ -882,20 +951,26 @@ func (d *Desugarer) desugarFanOut(
 	nodes map[string]src.Node,
 ) (desugarFanOutResult, error) {
 	d.fanOutCounter++
-	nodeName := fmt.Sprintf("__fanOut__%d", d.fanOutCounter)
+	nodeName := fmt.Sprintf("__fan_out__%d", d.fanOutCounter)
+
+	locOnlyMeta := core.Meta{Location: normConn.Senders[0].Meta.Location} // FIXME for some reason norm-conn sometimes doesn't have meta
 
 	nodesToInsert[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Name: "FanOut",
 			Pkg:  "builtin",
+			Meta: locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	receiverToReplace := src.ConnectionReceiver{
 		PortAddr: &src.PortAddr{
 			Node: nodeName,
 			Port: "data",
+			Meta: locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	insert := make([]src.Connection, 0, len(normConn.Receivers))
@@ -908,10 +983,13 @@ func (d *Desugarer) desugarFanOut(
 							Node: nodeName,
 							Port: "data",
 							Idx:  compiler.Pointer(uint8(i)),
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Receivers: []src.ConnectionReceiver{receiver},
+				Meta:      locOnlyMeta,
 			},
 		}
 
@@ -937,7 +1015,9 @@ func (d *Desugarer) desugarFanOut(
 			Normal: &src.NormalConnection{
 				Senders:   normConn.Senders, // senders must be desugared
 				Receivers: []src.ConnectionReceiver{receiverToReplace},
+				Meta:      locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		},
 		insert: insert,
 	}, nil
@@ -958,6 +1038,8 @@ func (d *Desugarer) desugarRangeSender(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (handleRangeSenderResult, error) {
+	locOnlyMeta := core.Meta{Location: rangeExpr.Meta.Location}
+
 	d.rangeCounter++
 
 	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
@@ -967,32 +1049,53 @@ func (d *Desugarer) desugarRangeSender(
 	constsToInsert[fromConstName] = src.Const{
 		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
 		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.From))}},
+		Meta:     locOnlyMeta,
 	}
 	constsToInsert[toConstName] = src.Const{
 		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
 		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.To))}},
+		Meta:     locOnlyMeta,
 	}
 
 	nodesToInsert[rangeNodeName] = src.Node{
-		EntityRef: core.EntityRef{Pkg: "builtin", Name: "Range"},
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: "Range",
+			Meta: locOnlyMeta,
+		},
+		Meta: locOnlyMeta,
 	}
 	nodesToInsert[fromConstName] = src.Node{
-		EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: "New",
+			Meta: locOnlyMeta,
+		},
 		Directives: map[src.Directive][]string{
 			"bind": {fromConstName},
 		},
+		Meta: locOnlyMeta,
 	}
 	nodesToInsert[toConstName] = src.Node{
-		EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: "New",
+			Meta: locOnlyMeta,
+		},
 		Directives: map[src.Directive][]string{
 			"bind": {toConstName},
 		},
+		Meta: locOnlyMeta,
 	}
 
 	replace := src.NormalConnection{
 		Senders: []src.ConnectionSender{
 			{
-				PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "res"},
+				PortAddr: &src.PortAddr{
+					Node: rangeNodeName,
+					Port: "res",
+					Meta: locOnlyMeta,
+				},
 			},
 		},
 		Receivers: normConn.Receivers,
@@ -1004,30 +1107,50 @@ func (d *Desugarer) desugarRangeSender(
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{
 					{
-						PortAddr: &src.PortAddr{Node: fromConstName, Port: "msg"},
+						PortAddr: &src.PortAddr{
+							Node: fromConstName,
+							Port: "res",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
 				Receivers: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "from"},
+						PortAddr: &src.PortAddr{
+							Node: rangeNodeName,
+							Port: "from",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
+				Meta: locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		},
 		// $to -> range:to
 		{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{
 					{
-						PortAddr: &src.PortAddr{Node: toConstName, Port: "msg"},
+						PortAddr: &src.PortAddr{
+							Node: toConstName,
+							Port: "res",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
 				Receivers: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: rangeNodeName, Port: "to"},
+						PortAddr: &src.PortAddr{
+							Node: rangeNodeName,
+							Port: "to",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
+				Meta: locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		},
 	}
 
@@ -1048,7 +1171,11 @@ func (d *Desugarer) desugarFanIn(
 	scope Scope,
 	nodes map[string]src.Node,
 ) ([]src.Connection, error) {
-	// 1. insert unique fan-in node
+	locOnlyMeta := core.Meta{
+		Location: *scope.Location(),
+	}
+
+	// 1. create fan-in node with unique name and insert into nodes
 	d.fanInCounter++
 	fanInNodeName := fmt.Sprintf("__fanIn__%d", d.fanInCounter)
 	nodesToInsert[fanInNodeName] = src.Node{
@@ -1056,46 +1183,52 @@ func (d *Desugarer) desugarFanIn(
 			Pkg:  "builtin",
 			Name: "FanIn",
 		},
+		Meta: locOnlyMeta,
 	}
 
-	// 2. connection each sender with fan-in node
-	netWithoutFanIn := make([]src.Connection, 0, len(normConn.Senders))
-	for i, sender := range normConn.Senders {
-		netWithoutFanIn = append(netWithoutFanIn, src.Connection{
+	// 2. connect each sender of this connection with fan-in node
+	desugaredFanIn := make([]src.Connection, 0, len(normConn.Senders))
+	for i, originalSender := range normConn.Senders {
+		desugaredFanIn = append(desugaredFanIn, src.Connection{
 			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{sender},
+				Senders: []src.ConnectionSender{originalSender},
 				Receivers: []src.ConnectionReceiver{
 					{
 						PortAddr: &src.PortAddr{
 							Node: fanInNodeName,
 							Port: "data",
 							Idx:  compiler.Pointer(uint8(i)),
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 			},
 		})
 	}
 
-	// 3. insert new connection from fan-in to original receivers
-	netWithoutFanIn = append(netWithoutFanIn, src.Connection{
+	// 3. insert new connection: fan_in -> original receivers
+	desugaredFanIn = append(desugaredFanIn, src.Connection{
 		Normal: &src.NormalConnection{
 			Senders: []src.ConnectionSender{
 				{
 					PortAddr: &src.PortAddr{
 						Node: fanInNodeName,
 						Port: "res",
+						Meta: locOnlyMeta,
 					},
+					Meta: locOnlyMeta,
 				},
 			},
 			Receivers: normConn.Receivers,
+			Meta:      locOnlyMeta,
 		},
 	})
 
 	// 4. desugar each connection (original senders and receivers might need it)
 	desugaredConnections, err := d.desugarConnections(
 		iface,
-		netWithoutFanIn,
+		desugaredFanIn,
 		nodePortsUsed,
 		scope,
 		nodes,
@@ -1130,6 +1263,8 @@ func (d *Desugarer) desugarTernarySender(
 	scope Scope,
 	nodes map[string]src.Node,
 ) (handleTernarySenderResult, error) {
+	locOnlyMeta := core.Meta{Location: ternary.Meta.Location}
+
 	d.ternaryCounter++
 	ternaryNodeName := fmt.Sprintf("__ternary__%d", d.ternaryCounter)
 
@@ -1137,7 +1272,9 @@ func (d *Desugarer) desugarTernarySender(
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "Ternary",
+			Meta: locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	sugaredInsert := []src.Connection{
@@ -1150,10 +1287,13 @@ func (d *Desugarer) desugarTernarySender(
 						PortAddr: &src.PortAddr{
 							Node: ternaryNodeName,
 							Port: "if",
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 			},
+			Meta: locOnlyMeta,
 		},
 		// 2) left -> ternary:then
 		{
@@ -1164,9 +1304,12 @@ func (d *Desugarer) desugarTernarySender(
 						PortAddr: &src.PortAddr{
 							Node: ternaryNodeName,
 							Port: "then",
+							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
+				Meta: locOnlyMeta,
 			},
 		},
 		// right -> ternary:else
@@ -1175,10 +1318,17 @@ func (d *Desugarer) desugarTernarySender(
 				Senders: []src.ConnectionSender{ternary.Right},
 				Receivers: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: ternaryNodeName, Port: "else"},
+						PortAddr: &src.PortAddr{
+							Node: ternaryNodeName,
+							Port: "else",
+							Meta: locOnlyMeta,
+						},
+						Meta: locOnlyMeta,
 					},
 				},
+				Meta: locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		},
 	}
 
@@ -1208,10 +1358,12 @@ func (d *Desugarer) desugarTernarySender(
 					PortAddr: &src.PortAddr{
 						Node: ternaryNodeName,
 						Port: "res",
+						Meta: locOnlyMeta,
 					},
 				},
 			},
 			Receivers: normConn.Receivers,
+			Meta:      locOnlyMeta,
 		},
 	}
 
@@ -1236,6 +1388,8 @@ func (d *Desugarer) desugarBinarySender(
 	scope Scope,
 	nodes map[string]src.Node,
 ) (handleBinarySenderResult, error) {
+	locOnlyMeta := core.Meta{Location: binary.Meta.Location}
+
 	var (
 		opNode      string
 		opComponent string
@@ -1330,8 +1484,10 @@ func (d *Desugarer) desugarBinarySender(
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: opComponent,
+			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{binary.AnalyzedType},
+		Meta:     locOnlyMeta,
 	}
 
 	// left -> op:left
@@ -1342,9 +1498,14 @@ func (d *Desugarer) desugarBinarySender(
 				Senders: []src.ConnectionSender{binary.Left},
 				Receivers: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "left"},
+						PortAddr: &src.PortAddr{
+							Node: opNode,
+							Port: "left",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
+				Meta: locOnlyMeta,
 			},
 		},
 		{
@@ -1352,10 +1513,15 @@ func (d *Desugarer) desugarBinarySender(
 				Senders: []src.ConnectionSender{binary.Right},
 				Receivers: []src.ConnectionReceiver{
 					{
-						PortAddr: &src.PortAddr{Node: opNode, Port: "right"},
+						PortAddr: &src.PortAddr{
+							Node: opNode,
+							Port: "right",
+							Meta: locOnlyMeta,
+						},
 					},
 				},
 			},
+			Meta: locOnlyMeta,
 		},
 	}
 
@@ -1386,11 +1552,14 @@ func (d *Desugarer) desugarBinarySender(
 					PortAddr: &src.PortAddr{
 						Node: opNode,
 						Port: "res",
+						Meta: locOnlyMeta,
 					},
 				},
 			},
 			Receivers: normConn.Receivers, // desugaring of original receivers is job of caller
+			Meta:      locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	return handleBinarySenderResult{

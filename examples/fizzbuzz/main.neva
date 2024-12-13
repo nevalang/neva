@@ -8,8 +8,11 @@ def Main(start any) (stop any) {
     :start -> 1..101 -> map -> for -> wait -> :stop
 }
 
-def FizzBuzz(data int) (res string|int) {
-    Select<string|int>, Mod15, Mod3, Mod5
+def FizzBuzz(data int) (res string | int) {
+    select Select<string | int>
+    mod15 Mod15
+    mod3 Mod3
+    mod5 Mod5
     ---
     :data -> [mod15, select:then[3]]
 

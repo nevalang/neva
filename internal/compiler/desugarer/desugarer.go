@@ -158,9 +158,12 @@ func (d *Desugarer) desugarFile(
 			return src.File{}, fmt.Errorf("desugar entity %s: %w", entityName, err)
 		}
 
+		d.resetCounters()
+
 		desugaredEntities[entityName] = entityResult.entity
 
-		for name, entityToInsert := range entityResult.entitiesToInsert {
+		// insert virtual entities, created by desugaring of the entity
+		for name, entityToInsert := range entityResult.insert {
 			desugaredEntities[name] = entityToInsert
 		}
 	}
@@ -173,6 +176,7 @@ func (d *Desugarer) desugarFile(
 	desugaredImports["builtin"] = src.Import{ // inject std/builtin import
 		Module:  "std",
 		Package: "builtin",
+		Meta:    core.Meta{Location: *scope.Location()},
 	}
 
 	return src.File{
@@ -182,8 +186,8 @@ func (d *Desugarer) desugarFile(
 }
 
 type desugarEntityResult struct {
-	entity           src.Entity
-	entitiesToInsert map[string]src.Entity
+	entity src.Entity
+	insert map[string]src.Entity
 }
 
 func (d *Desugarer) desugarEntity(
@@ -215,13 +219,68 @@ func (d *Desugarer) desugarEntity(
 	}
 
 	return desugarEntityResult{
-		entitiesToInsert: componentResult.virtualEntities,
+		insert: componentResult.virtualEntities,
 		entity: src.Entity{
 			IsPublic:  entity.IsPublic,
 			Kind:      entity.Kind,
 			Component: componentResult.desugaredFlow,
 		},
 	}, nil
+}
+
+func (d *Desugarer) resetCounters() {
+	d.virtualSelectorsCount = 0
+	d.ternaryCounter = 0
+	d.switchCounter = 0
+	d.virtualLocksCounter = 0
+	d.virtualEmittersCount = 0
+	d.virtualConstCount = 0
+	d.virtualTriggersCount = 0
+	d.fanOutCounter = 0
+	d.fanInCounter = 0
+	d.rangeCounter = 0
+	//
+	d.addCounter = 0
+	d.subCounter = 0
+	d.mulCounter = 0
+	d.divCounter = 0
+	d.modCounter = 0
+	d.powCounter = 0
+	//
+	d.eqCounter = 0
+	d.neCounter = 0
+	d.gtCounter = 0
+	d.ltCounter = 0
+	d.geCounter = 0
+	d.leCounter = 0
+	//
+	d.andCounter = 0
+	d.orCounter = 0
+	d.bitAndCounter = 0
+	d.bitOrCounter = 0
+	d.bitXorCounter = 0
+	d.bitLshCounter = 0
+	d.bitRshCounter = 0
+	d.mulCounter = 0
+	d.divCounter = 0
+	d.modCounter = 0
+	d.powCounter = 0
+	//
+	d.eqCounter = 0
+	d.neCounter = 0
+	d.gtCounter = 0
+	d.ltCounter = 0
+	d.geCounter = 0
+	d.leCounter = 0
+	//
+	d.andCounter = 0
+	d.orCounter = 0
+	//
+	d.bitAndCounter = 0
+	d.bitOrCounter = 0
+	d.bitXorCounter = 0
+	d.bitLshCounter = 0
+	d.bitRshCounter = 0
 }
 
 func New() Desugarer {

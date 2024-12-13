@@ -163,6 +163,7 @@ func (a Analyzer) analyzeNormalConnection(
 	return &src.NormalConnection{
 		Senders:   analyzedSenders,
 		Receivers: analyzedReceiverSide,
+		Meta:      normConn.Meta,
 	}, nil
 }
 

@@ -568,7 +568,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -670,7 +670,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -764,7 +764,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -869,10 +869,10 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// __new__1:msg -> __add__1:left
+						// __new__1:res -> __add__1:left
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
-								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"}},
+								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"}},
 							},
 							Receivers: []src.ConnectionReceiver{
 								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
@@ -880,10 +880,10 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// __new__2:msg -> __add__1:right
+						// __new__2:res -> __add__1:right
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
-								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "msg"}},
+								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "res"}},
 							},
 							Receivers: []src.ConnectionReceiver{
 								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},

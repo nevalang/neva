@@ -1179,11 +1179,26 @@ func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.En
 	}
 
 	body := actx.CompBody()
+
+	meta := core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
 	if body == nil {
 		return src.Entity{
 			Kind: src.ComponentEntity,
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
+				Meta:      meta,
 			},
 		}, nil
 	}
@@ -1205,16 +1220,15 @@ func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.En
 			Component: src.Component{
 				Interface: parsedInterfaceDef,
 				Net:       parsedConnections,
+				Meta:      meta,
 			},
 		}, nil
 	}
 
-	var parsedNodes map[string]src.Node
-	v, err := s.parseNodes(nodesDef.CompNodesDefBody(), true)
+	parsedNodes, err := s.parseNodes(nodesDef.CompNodesDefBody(), true)
 	if err != nil {
 		return src.Entity{}, err
 	}
-	parsedNodes = v
 
 	return src.Entity{
 		Kind: src.ComponentEntity,
@@ -1222,18 +1236,7 @@ func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.En
 			Interface: parsedInterfaceDef,
 			Nodes:     parsedNodes,
 			Net:       parsedConnections,
-			Meta: core.Meta{
-				Text: actx.GetText(),
-				Start: core.Position{
-					Line:   actx.GetStart().GetLine(),
-					Column: actx.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   actx.GetStop().GetLine(),
-					Column: actx.GetStop().GetColumn(),
-				},
-				Location: s.loc,
-			},
+			Meta:      meta,
 		},
 	}, nil
 }

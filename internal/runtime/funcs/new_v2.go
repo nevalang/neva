@@ -14,7 +14,7 @@ func (c newV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -29,4 +29,4 @@ func (c newV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context)
 			}
 		}
 	}, nil
-} 
+}

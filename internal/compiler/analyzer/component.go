@@ -49,8 +49,8 @@ func (a Analyzer) analyzeComponent(
 	if isRuntimeFunc {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
-				Message:  "Component with nodes or network cannot use #extern directive",
-				Meta: &component.Meta,
+				Message: "Component with nodes or network cannot use #extern directive",
+				Meta:    &component.Meta,
 			}
 		}
 		return component, nil
@@ -69,8 +69,8 @@ func (a Analyzer) analyzeComponent(
 
 	if len(component.Net) == 0 {
 		return src.Component{}, &compiler.Error{
-			Message:  "Component must have network",
-			Meta: &component.Meta,
+			Message: "Component must have network",
+			Meta:    &component.Meta,
 		}
 	}
 
@@ -92,5 +92,6 @@ func (a Analyzer) analyzeComponent(
 		Interface: resolvedInterface,
 		Nodes:     resolvedNodes,
 		Net:       analyzedNet,
+		Meta:      component.Meta,
 	}, nil
 }

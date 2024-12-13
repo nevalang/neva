@@ -13,11 +13,6 @@ type desugarStructSelectorsResult struct {
 	replace src.Connection
 }
 
-var selectorNodeRef = core.EntityRef{
-	Pkg:  "builtin",
-	Name: "Field",
-}
-
 // desugarStructSelectors doesn't generate incoming connections for field node,
 // it's responsibility of desugarChainConnection.
 func (d *Desugarer) desugarStructSelectors(
@@ -28,6 +23,10 @@ func (d *Desugarer) desugarStructSelectors(
 	desugarStructSelectorsResult,
 	error,
 ) {
+	locOnlyMeta := core.Meta{
+		Location: normConn.Senders[0].Meta.Location, // FIXME for some reason norm-conn sometimes doesn't have meta
+	}
+
 	d.virtualConstCount++
 	constName := fmt.Sprintf("__const__%d", d.virtualConstCount)
 
@@ -38,7 +37,12 @@ func (d *Desugarer) desugarStructSelectors(
 		Directives: map[src.Directive][]string{
 			compiler.BindDirective: {constName},
 		},
-		EntityRef: selectorNodeRef,
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: "Field",
+			Meta: locOnlyMeta,
+		},
+		Meta: locOnlyMeta,
 	}
 
 	// struct selectors are discarded from this point
@@ -50,12 +54,15 @@ func (d *Desugarer) desugarStructSelectors(
 					PortAddr: &src.PortAddr{
 						Node: selectorNodeName,
 						Port: "res",
+						Meta: locOnlyMeta,
 					},
+					Meta: locOnlyMeta,
 				},
 			},
 			// and send it to original receiver side
 			Receivers: normConn.Receivers,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	nodesToInsert[selectorNodeName] = selectorNode
@@ -83,11 +90,15 @@ var (
 
 func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.StructSelector))
+	locOnlyMeta := core.Meta{
+		Location: senderSide.Meta.Location,
+	}
 
 	for _, selector := range senderSide.StructSelector {
 		result = append(result, src.ConstValue{
 			Message: &src.MsgLiteral{
-				Str: compiler.Pointer(selector),
+				Str:  compiler.Pointer(selector),
+				Meta: locOnlyMeta,
 			},
 		})
 	}
@@ -97,7 +108,9 @@ func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{
 				List: result,
+				Meta: locOnlyMeta,
 			},
 		},
+		Meta: locOnlyMeta,
 	}
 }

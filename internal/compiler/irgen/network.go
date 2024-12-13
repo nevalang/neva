@@ -138,7 +138,7 @@ func (g Generator) processSender(
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
 	if isNodeDep && sender.PortAddr.Port == "" {
-		depComponent, err := scope.GetComponent(depNode.EntityRef)
+		depComponent, err := scope.Relocate(depNode.Meta.Location).GetComponent(depNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
@@ -185,17 +185,21 @@ func (g Generator) processReceiver(
 		}
 	}
 
-	// if sender node is dependency from DI
-	depNode, ok := nodeCtx.node.DIArgs[receiver.PortAddr.Node]
+	// if receiver node DI
+	diArgNode, isDI := nodeCtx.node.DIArgs[receiver.PortAddr.Node]
 	// and if port we are reffering to is an empty string
-	if ok && receiver.PortAddr.Port == "" {
+	if isDI && receiver.PortAddr.Port == "" {
 		// we need to find depedency component and use its inport name
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
-		depComponent, err := scope.GetComponent(depNode.EntityRef)
+
+		depComponent, err := scope.
+			Relocate(diArgNode.Meta.Location).
+			GetComponent(diArgNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
+
 		for inport := range depComponent.Interface.IO.In {
 			receiver.PortAddr.Port = inport
 			break

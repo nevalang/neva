@@ -22,7 +22,7 @@ func (d *Desugarer) desugarComponent(
 
 	virtualEntities := map[string]src.Entity{}
 
-	desugaredNodes, virtConnsForNodes, err := d.desugarNodes(
+	desugaredNodes, virtualConnections, err := d.desugarNodes(
 		component,
 		scope,
 		virtualEntities,
@@ -31,11 +31,11 @@ func (d *Desugarer) desugarComponent(
 		return handleComponentResult{}, err
 	}
 
-	netToDesugar := append(virtConnsForNodes, component.Net...)
+	connectionsToDesugar := append(virtualConnections, component.Net...)
 
 	desugarNetResult, err := d.desugarNetwork(
 		component.Interface,
-		netToDesugar,
+		connectionsToDesugar,
 		desugaredNodes,
 		scope,
 	)
@@ -63,9 +63,9 @@ func (d *Desugarer) desugarComponent(
 		desugarNetResult.nodesPortsUsed,
 	)
 	if unusedOutports.len() != 0 {
-		unusedOutportsResult := d.handleUnusedOutports(unusedOutports)
+		unusedOutportsResult := d.handleUnusedOutports(unusedOutports, component.Meta)
 		desugaredNetwork = append(desugaredNetwork, unusedOutportsResult.virtualConnections...)
-		desugaredNodes[unusedOutportsResult.voidNodeName] = unusedOutportsResult.voidNode
+		desugaredNodes[unusedOutportsResult.voidNodeName] = unusedOutportsResult.delNode
 	}
 
 	return handleComponentResult{

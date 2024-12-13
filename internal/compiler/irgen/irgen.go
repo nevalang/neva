@@ -32,15 +32,10 @@ func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
 ) (*ir.Program, error) {
-	scope := src.NewScope(build, core.Location{
+	loc := core.Location{
 		ModRef:   build.EntryModRef,
 		Package:  mainPkgName,
 		Filename: "",
-	})
-
-	result := &ir.Program{
-		Connections: map[ir.PortAddr]ir.PortAddr{}, // Changed to 1-1 mapping
-		Funcs:       []ir.FuncCall{},
 	}
 
 	rootNodeCtx := nodeContext{
@@ -50,6 +45,7 @@ func (g Generator) Generate(
 				Pkg:  "",
 				Name: "Main",
 			},
+			Meta: core.Meta{Location: loc}, // it's important to set location for every node, because irgen depends on it
 		},
 		portsUsage: portsUsage{
 			in: map[relPortAddr]struct{}{
@@ -61,7 +57,16 @@ func (g Generator) Generate(
 		},
 	}
 
-	g.processNode(rootNodeCtx, scope, result)
+	result := &ir.Program{
+		Connections: map[ir.PortAddr]ir.PortAddr{},
+		Funcs:       []ir.FuncCall{},
+	}
+
+	g.processNode(
+		rootNodeCtx,
+		src.NewScope(build, loc),
+		result,
+	)
 
 	return &ir.Program{
 		Connections: result.Connections,
@@ -74,7 +79,9 @@ func (g Generator) processNode(
 	scope src.Scope,
 	result *ir.Program,
 ) {
-	entity, location, err := scope.Entity(nodeCtx.node.EntityRef)
+	entity, location, err := scope.
+		Relocate(nodeCtx.node.Meta.Location).
+		Entity(nodeCtx.node.EntityRef)
 	if err != nil {
 		panic(err)
 	}

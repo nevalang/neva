@@ -9,7 +9,7 @@ import (
 type intMod struct{}
 
 func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	numIn, err := io.In.Single("left") // numerator
+	leftIn, err := io.In.Single("left") // numerator
 	if err != nil {
 		return nil, err
 	}
@@ -19,14 +19,14 @@ func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := io.Out.Single("res") // modulo
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			numMsg, ok := numIn.Receive(ctx)
+			numMsg, ok := leftIn.Receive(ctx)
 			if !ok {
 				return
 			}
@@ -36,12 +36,9 @@ func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				return
 			}
 
-			if !resOut.Send(
-				ctx,
-				runtime.NewIntMsg(
-					numMsg.Int()%denMsg.Int(),
-				),
-			) {
+			num := numMsg.Int()
+			den := denMsg.Int()
+			if !resOut.Send(ctx, runtime.NewIntMsg(num%den)) {
 				return
 			}
 		}
