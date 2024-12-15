@@ -21,11 +21,6 @@ pub interface IPortReducer<T>(stream<T>) (T)
 
 // === Iterators ===
 
-// These constants are used for binding by Field.
-const dataPath list<string> = ['data']
-const lastPath list<string> = ['last']
-const idxPath list<string> = ['idx']
-
 // --- Map ---
 
 // IMapHandler is a dependency for Map.
@@ -63,11 +58,13 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
     split:then -> s2l -> l2s -> :res
 }
 
+// Split splits a stream into two streams based on a predicate.
+// Notice that it does not modifies stream item indexes and last flag.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
     cond Cond<stream<T>>
     predicate IPredicate<T>
     ---
-    :data -> [cond:data, predicate]
+    :data -> [cond:data, .data -> predicate]
     predicate -> cond:if
     cond:then -> :then
     cond:else -> :else
