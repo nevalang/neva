@@ -7,20 +7,25 @@ import (
 
 type unusedOutportsResult struct {
 	voidNodeName       string
-	voidNode           src.Node
+	delNode            src.Node
 	virtualConnections []src.Connection
 }
 
-func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOutportsResult {
+func (Desugarer) handleUnusedOutports(
+	unusedOutports nodeOutportsUsed,
+	meta core.Meta,
+) unusedOutportsResult {
 	destructorNodeName := "__del__"
 
 	result := unusedOutportsResult{
 		voidNodeName: destructorNodeName,
-		voidNode: src.Node{
+		delNode: src.Node{
 			EntityRef: core.EntityRef{
 				Pkg:  "builtin",
 				Name: "Del",
+				Meta: meta,
 			},
+			Meta: meta,
 		},
 		virtualConnections: make([]src.Connection, 0, len(unusedOutports.m)),
 	}
@@ -29,8 +34,10 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOut
 		{
 			PortAddr: &src.PortAddr{
 				Node: destructorNodeName,
-				Port: "msg",
+				Port: "data",
+				Meta: meta,
 			},
+			Meta: meta,
 		},
 	}
 
@@ -44,12 +51,15 @@ func (Desugarer) handleUnusedOutports(unusedOutports nodeOutportsUsed) unusedOut
 							PortAddr: &src.PortAddr{
 								Node: nodeName,
 								Port: portName,
+								Meta: meta,
 							},
+							Meta: meta,
 						},
 					},
 					Receivers: receiverSides,
+					Meta:      meta,
 				},
-				Meta: core.Meta{},
+				Meta: meta,
 			})
 		}
 	}

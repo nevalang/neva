@@ -3,7 +3,6 @@ package analyzer
 import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
@@ -13,11 +12,10 @@ type analyzeTypeDefParams struct {
 
 func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
-		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
+		meta := def.Meta
 		return ts.Def{}, &compiler.Error{
-			Message:  "Type definition must have non-empty body",
-			Location: scope.Location(),
-			Meta:     &meta,
+			Message: "Type definition must have non-empty body",
+			Meta:    &meta,
 		}
 	}
 
@@ -25,11 +23,10 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 	// We can't resolve body without args. And don't worry about unused bodies. Unused entities are error themselves.
 	resolvedParams, _, err := a.resolver.ResolveParams(def.Params, scope)
 	if err != nil {
-		meta := def.Meta.(core.Meta) //nolint:forcetypeassert
+		meta := def.Meta
 		return ts.Def{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-			Meta:     &meta,
+			Message: err.Error(),
+			Meta:    &meta,
 		}
 	}
 
@@ -42,11 +39,10 @@ func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeType
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *compiler.Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
-		meta := expr.Meta.(core.Meta) //nolint:forcetypeassert
+		meta := expr.Meta //nolint:forcetypeassert
 		return ts.Expr{}, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
-			Meta:     &meta,
+			Message: err.Error(),
+			Meta:    &meta,
 		}
 	}
 	return resolvedExpr, nil
@@ -62,8 +58,7 @@ func (a Analyzer) analyzeTypeParams(
 	resolvedParams, _, err := a.resolver.ResolveParams(params, scope)
 	if err != nil {
 		return nil, &compiler.Error{
-			Message:  err.Error(),
-			Location: scope.Location(),
+			Message: err.Error(),
 		}
 	}
 	return resolvedParams, nil

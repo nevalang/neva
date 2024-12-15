@@ -1,17 +1,17 @@
 import { github.com/nevalang/x:main }
 
-interface IPrinter<T>(data T) (sig T)
-
 def Main(start any) (stop any) {
-    Secondflow {main.Println<any>}
+    sub_component SubComponent{main.Println<any>}
     ---
-    :start -> secondflow:msg
-    secondflow:msg -> :stop
+    :start -> sub_component:data
+    sub_component:res -> :stop
 }
 
-def Secondflow (msg any) (msg any) {
-    IPrinter<any>
+def SubComponent(data any) (res any) {
+    printer IPrinter<any>
     ---
-    :msg -> iPrinter:data
-    iPrinter:sig -> :msg
+    :data -> printer:data
+    printer:res -> :res
 }
+
+interface IPrinter<T>(data T) (res T)

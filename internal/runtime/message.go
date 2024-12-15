@@ -28,23 +28,29 @@ type Msg interface {
 	Struct() StructMsg
 	Union() UnionMsg
 
-	Equal(other Msg) bool
+	Equal(Msg) bool
 }
 
 // Internal
 
 type internalMsg struct{}
 
-func (internalMsg) String() string       { panic("unexpected method call on internal message") }
-func (internalMsg) Bool() bool           { panic("unexpected method call on internal message") }
-func (internalMsg) Int() int64           { panic("unexpected method call on internal message") }
-func (internalMsg) Float() float64       { panic("unexpected method call on internal message") }
-func (internalMsg) Str() string          { panic("unexpected method call on internal message") }
-func (internalMsg) List() []Msg          { panic("unexpected method call on internal message") }
-func (internalMsg) Dict() map[string]Msg { panic("unexpected method call on internal message") }
-func (internalMsg) Struct() StructMsg    { panic("unexpected method call on internal message") }
-func (internalMsg) Union() UnionMsg      { panic("unexpected method call on internal message") }
-func (internalMsg) Equal(other Msg) bool { panic("unexpected method call on internal message") }
+func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
+func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
+func (internalMsg) Int() int64     { panic("unexpected Int method call on internal message type") }
+func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
+func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
+func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
+func (internalMsg) Dict() map[string]Msg {
+	panic("unexpected Dict method call on internal message type")
+}
+func (internalMsg) Struct() StructMsg {
+	panic("unexpected Struct method call on internal message type")
+}
+func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
+func (internalMsg) Equal(other Msg) bool {
+	panic("unexpected Equal method call on internal message type")
+}
 
 // Bool
 

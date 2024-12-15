@@ -14,7 +14,7 @@ func (p panicker) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	msgIn, err := io.In.Single("msg")
+	msgIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ func (s structBuilder) Create(
 		inports[inportName] = *inportSlots.Single()
 	}
 
-	outport, err := io.Out.Single("msg")
+	outport, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}

@@ -12,8 +12,8 @@ import (
 // Build represents all the information in source code, that must be compiled.
 // User usually don't interacts with this abstraction, but it's important for compiler.
 type Build struct {
-	EntryModRef ModuleRef            `json:"entryModRef,omitempty"`
-	Modules     map[ModuleRef]Module `json:"modules,omitempty"`
+	EntryModRef core.ModuleRef            `json:"entryModRef,omitempty"`
+	Modules     map[core.ModuleRef]Module `json:"modules,omitempty"`
 }
 
 // Module is unit of distribution.
@@ -37,20 +37,8 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 }
 
 type ModuleManifest struct {
-	LanguageVersion string               `json:"neva,omitempty" yaml:"neva,omitempty"`
-	Deps            map[string]ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
-}
-
-type ModuleRef struct {
-	Path    string `json:"path,omitempty"`
-	Version string `json:"version,omitempty"`
-}
-
-func (m ModuleRef) String() string {
-	if m.Version == "" {
-		return m.Path
-	}
-	return fmt.Sprintf("%v@%v", m.Path, m.Version)
+	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
+	Deps            map[string]core.ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
 }
 
 type Package map[string]File
@@ -115,7 +103,7 @@ func (e Entity) Meta() *core.Meta {
 	case ConstEntity:
 		m = e.Const.Meta
 	case TypeEntity:
-		m = e.Type.Meta.(core.Meta) //nolint
+		m = e.Type.Meta
 	case InterfaceEntity:
 		m = e.Interface.Meta
 	case ComponentEntity:
@@ -184,7 +172,7 @@ type Node struct {
 	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
 	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
 	ErrGuard   bool                   `json:"errGuard,omitempty"` // ErrGuard explains if node is used with `?` operator.
-	Deps       map[string]Node        `json:"flowDi,omitempty"`   // Dependency Injection.
+	DIArgs     map[string]Node        `json:"diArgs,omitempty"`   // Dependency Injection.
 	Meta       core.Meta              `json:"meta,omitempty"`
 }
 
@@ -270,8 +258,9 @@ func (m MsgLiteral) String() string {
 }
 
 type IO struct {
-	In  map[string]Port `json:"in,omitempty"`
-	Out map[string]Port `json:"out,omitempty"`
+	In   map[string]Port `json:"in,omitempty"`
+	Out  map[string]Port `json:"out,omitempty"`
+	Meta core.Meta       `json:"meta,omitempty"`
 }
 
 type Port struct {

@@ -46,5 +46,10 @@
     "scrollbar.shadow": "#00000000"
   },
   "svg.preview.background": "dark-transparent",
-  "vsicons.presets.angular": true
+  "vsicons.presets.angular": true,
+  "editor.tokenColorCustomizations": {
+    "[One Dark Pro Flat]": {
+      "comments": "#7f848e82"
+    }
+  }
 }

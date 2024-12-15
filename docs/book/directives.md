@@ -34,9 +34,9 @@ def Main(start any) (stop any) {
 	lock Lock<string>
 	---
 	:start -> lock:sig
-	greeting:msg -> lock:data
+	greeting:res -> lock:data
 	lock:data -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 }
 ```
 

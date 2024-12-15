@@ -101,7 +101,7 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 							Receivers: []src.ConnectionReceiver{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
 								},
 							},
 						},
@@ -115,7 +115,7 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 							Receivers: []src.ConnectionReceiver{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
 								},
 							},
 						},
@@ -124,7 +124,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "res"},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -137,7 +137,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				constsToInsert: map[string]src.Const{},
 				nodesToInsert: map[string]src.Node{
-					"__fanIn__1": {
+					"__fan_in__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "FanIn"},
 					},
 				},
@@ -560,7 +560,7 @@ func TestDesugarNetwork(t *testing.T) {
 				}
 				mock.
 					Entity(core.EntityRef{Name: "foo"}).
-					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, core.Location{}, nil)
 			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
@@ -568,7 +568,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -648,7 +648,7 @@ func TestDesugarNetwork(t *testing.T) {
 				}
 				mock.
 					Entity(core.EntityRef{Name: "c"}).
-					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, src.Location{}, nil)
+					Return(src.Entity{Kind: src.ConstEntity, Const: constEntity}, core.Location{}, nil)
 			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
@@ -670,7 +670,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -764,7 +764,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "msg"},
+									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
@@ -869,10 +869,10 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// __new__1:msg -> __add__1:left
+						// __new__1:res -> __add__1:left
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
-								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "msg"}},
+								{PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"}},
 							},
 							Receivers: []src.ConnectionReceiver{
 								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "left"}},
@@ -880,10 +880,10 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 					},
 					{
-						// __new__2:msg -> __add__1:right
+						// __new__2:res -> __add__1:right
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
-								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "msg"}},
+								{PortAddr: &src.PortAddr{Node: "__new__2", Port: "res"}},
 							},
 							Receivers: []src.ConnectionReceiver{
 								{PortAddr: &src.PortAddr{Node: "__add__1", Port: "right"}},

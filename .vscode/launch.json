@@ -7,8 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e",
-      "args": ["run", "--trace", "tutorial/src"]
+      "cwd": "${workspaceFolder}/e2e/filter_list",
+      "args": ["run", "--trace", "main"]
     },
     {
       "name": "DEBUG CODEGEN",

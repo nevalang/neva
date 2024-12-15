@@ -130,7 +130,7 @@ func nevaParserInit() {
 		38, 1, 38, 3, 38, 537, 8, 38, 1, 38, 1, 38, 1, 38, 5, 38, 542, 8, 38, 10,
 		38, 12, 38, 545, 9, 38, 3, 38, 547, 8, 38, 1, 38, 1, 38, 1, 39, 1, 39,
 		3, 39, 553, 8, 39, 1, 40, 5, 40, 556, 8, 40, 10, 40, 12, 40, 559, 9, 40,
-		1, 40, 1, 40, 3, 40, 563, 8, 40, 1, 40, 5, 40, 566, 8, 40, 10, 40, 12,
+		1, 40, 3, 40, 562, 8, 40, 1, 40, 1, 40, 5, 40, 566, 8, 40, 10, 40, 12,
 		40, 569, 9, 40, 1, 41, 5, 41, 572, 8, 41, 10, 41, 12, 41, 575, 9, 41, 1,
 		41, 1, 41, 1, 41, 1, 41, 3, 41, 581, 8, 41, 1, 41, 5, 41, 584, 8, 41, 10,
 		41, 12, 41, 587, 9, 41, 1, 42, 3, 42, 590, 8, 42, 1, 42, 1, 42, 1, 42,
@@ -363,9 +363,9 @@ func nevaParserInit() {
 		0, 0, 549, 77, 1, 0, 0, 0, 550, 553, 3, 80, 40, 0, 551, 553, 3, 82, 41,
 		0, 552, 550, 1, 0, 0, 0, 552, 551, 1, 0, 0, 0, 553, 79, 1, 0, 0, 0, 554,
 		556, 5, 57, 0, 0, 555, 554, 1, 0, 0, 0, 556, 559, 1, 0, 0, 0, 557, 555,
-		1, 0, 0, 0, 557, 558, 1, 0, 0, 0, 558, 560, 1, 0, 0, 0, 559, 557, 1, 0,
-		0, 0, 560, 562, 5, 52, 0, 0, 561, 563, 3, 48, 24, 0, 562, 561, 1, 0, 0,
-		0, 562, 563, 1, 0, 0, 0, 563, 567, 1, 0, 0, 0, 564, 566, 5, 57, 0, 0, 565,
+		1, 0, 0, 0, 557, 558, 1, 0, 0, 0, 558, 561, 1, 0, 0, 0, 559, 557, 1, 0,
+		0, 0, 560, 562, 5, 52, 0, 0, 561, 560, 1, 0, 0, 0, 561, 562, 1, 0, 0, 0,
+		562, 563, 1, 0, 0, 0, 563, 567, 3, 48, 24, 0, 564, 566, 5, 57, 0, 0, 565,
 		564, 1, 0, 0, 0, 566, 569, 1, 0, 0, 0, 567, 565, 1, 0, 0, 0, 567, 568,
 		1, 0, 0, 0, 568, 81, 1, 0, 0, 0, 569, 567, 1, 0, 0, 0, 570, 572, 5, 57,
 		0, 0, 571, 570, 1, 0, 0, 0, 572, 575, 1, 0, 0, 0, 573, 571, 1, 0, 0, 0,
@@ -575,7 +575,7 @@ func nevaParserInit() {
 		223, 231, 237, 244, 250, 256, 260, 265, 273, 279, 287, 297, 302, 315, 322,
 		325, 328, 334, 338, 347, 353, 358, 363, 369, 373, 379, 387, 393, 399, 406,
 		412, 419, 427, 433, 439, 448, 455, 459, 467, 472, 480, 487, 494, 500, 504,
-		507, 514, 521, 532, 536, 543, 546, 552, 557, 562, 567, 573, 580, 585, 589,
+		507, 514, 521, 532, 536, 543, 546, 552, 557, 561, 567, 573, 580, 585, 589,
 		599, 604, 609, 613, 620, 624, 628, 633, 645, 649, 659, 666, 671, 674, 678,
 		684, 688, 697, 703, 712, 716, 719, 726, 731, 738, 745, 750, 757, 760, 766,
 		771, 778, 781, 787, 792, 801, 807, 810, 815, 820, 823, 826, 834, 838, 843,
@@ -6995,7 +6995,7 @@ func (p *nevaParser) PortsDef() (localctx IPortsDefContext) {
 		}
 		_la = p.GetTokenStream().LA(1)
 
-		if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&148618787703750656) != 0 {
+		if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&148618787703848960) != 0 {
 			{
 				p.SetState(535)
 				p.PortDef()
@@ -7210,10 +7210,10 @@ type ISinglePortDefContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	IDENTIFIER() antlr.TerminalNode
+	TypeExpr() ITypeExprContext
 	AllNEWLINE() []antlr.TerminalNode
 	NEWLINE(i int) antlr.TerminalNode
-	TypeExpr() ITypeExprContext
+	IDENTIFIER() antlr.TerminalNode
 
 	// IsSinglePortDefContext differentiates from other interfaces.
 	IsSinglePortDefContext()
@@ -7251,18 +7251,6 @@ func NewSinglePortDefContext(parser antlr.Parser, parent antlr.ParserRuleContext
 
 func (s *SinglePortDefContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *SinglePortDefContext) IDENTIFIER() antlr.TerminalNode {
-	return s.GetToken(nevaParserIDENTIFIER, 0)
-}
-
-func (s *SinglePortDefContext) AllNEWLINE() []antlr.TerminalNode {
-	return s.GetTokens(nevaParserNEWLINE)
-}
-
-func (s *SinglePortDefContext) NEWLINE(i int) antlr.TerminalNode {
-	return s.GetToken(nevaParserNEWLINE, i)
-}
-
 func (s *SinglePortDefContext) TypeExpr() ITypeExprContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
@@ -7277,6 +7265,18 @@ func (s *SinglePortDefContext) TypeExpr() ITypeExprContext {
 	}
 
 	return t.(ITypeExprContext)
+}
+
+func (s *SinglePortDefContext) AllNEWLINE() []antlr.TerminalNode {
+	return s.GetTokens(nevaParserNEWLINE)
+}
+
+func (s *SinglePortDefContext) NEWLINE(i int) antlr.TerminalNode {
+	return s.GetToken(nevaParserNEWLINE, i)
+}
+
+func (s *SinglePortDefContext) IDENTIFIER() antlr.TerminalNode {
+	return s.GetToken(nevaParserIDENTIFIER, 0)
 }
 
 func (s *SinglePortDefContext) GetRuleContext() antlr.RuleContext {
@@ -7329,27 +7329,25 @@ func (p *nevaParser) SinglePortDef() (localctx ISinglePortDefContext) {
 		}
 		_la = p.GetTokenStream().LA(1)
 	}
-	{
-		p.SetState(560)
-		p.Match(nevaParserIDENTIFIER)
-		if p.HasError() {
-			// Recognition error - abort rule
-			goto errorExit
-		}
-	}
-	p.SetState(562)
+	p.SetState(561)
 	p.GetErrorHandler().Sync(p)
-	if p.HasError() {
+
+	if p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 59, p.GetParserRuleContext()) == 1 {
+		{
+			p.SetState(560)
+			p.Match(nevaParserIDENTIFIER)
+			if p.HasError() {
+				// Recognition error - abort rule
+				goto errorExit
+			}
+		}
+
+	} else if p.HasError() { // JIM
 		goto errorExit
 	}
-	_la = p.GetTokenStream().LA(1)
-
-	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&4503599627468800) != 0 {
-		{
-			p.SetState(561)
-			p.TypeExpr()
-		}
-
+	{
+		p.SetState(563)
+		p.TypeExpr()
 	}
 	p.SetState(567)
 	p.GetErrorHandler().Sync(p)

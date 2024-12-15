@@ -5,10 +5,10 @@ import { fmt }
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    Map<int, int>{Dec<int>}
-    List
-    fmt.Println
-    ListToStream<int>
+    map_decr Map<int, int>{Dec<int>}
+    s2l StreamToList<int>
+    println fmt.Println<list<int>>
+    l2s ListToStream<int>
     ---
-    :start -> $lst -> listToStream -> map -> list -> println -> :stop
+    :start -> $lst -> l2s -> map_decr -> s2l -> println -> :stop
 }

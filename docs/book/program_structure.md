@@ -36,14 +36,14 @@ Module is usually a git-repo but not necessary. Module that isn't published in g
 
 ### Manifest File
 
-The manifest defines the module's minimum supported language version and dependencies. Here's an example manifest with a dependency on the Nevalang compiler version `0.28.2` and a third-party module:
+The manifest defines the module's minimum supported language version and dependencies. Here's an example manifest with a dependency on the Nevalang compiler version `0.29.0` and a third-party module:
 
 ```yaml
-neva: 0.28.2
+neva: 0.29.0
 deps:
   github.com/nevalang/x:
     path: github.com/nevalang/x
-    version: 0.0.14
+    version: 0.0.16
 ```
 
 The `deps` field is a map where each dependency has an alias. When adding dependencies via CLI (e.g., `neva get github.com/nevalang/x`), the package manager automatically inserts a key-value pair. Third-party dependencies must have a valid git-clone path and a fixed semver version. The package manager uses git to download the repo and looks for the corresponding git-tag. The alias typically defaults to the module's path, but custom aliases allow multiple versions of the same module:
@@ -51,11 +51,11 @@ The `deps` field is a map where each dependency has an alias. When adding depend
 > WIP: CLI tool planned for CI/CD to verify module's backward compatibility
 
 ```yaml
-neva: 0.28.2
+neva: 0.29.0
 deps:
   github.com/nevalang/x@0-0-12:
     path: github.com/nevalang/x
-    version: 0.0.14
+    version: 0.0.16
   github.com/nevalang/x@0-0-11:
     path: github.com/nevalang/x
     version: 0.0.11
@@ -71,7 +71,7 @@ Module references uniquely identify modules in a build, used by the compiler to 
 
 ```yaml
 path: github.com/nevalang/x
-version: 0.0.14
+version: 0.0.16
 ```
 
 ### Entry Module
@@ -312,7 +312,7 @@ Third-party imports are imports of packages located in third-party modules - mod
 deps:
   github.com/nevalang/x:
     path: github.com/nevalang/x
-    version: 0.0.14
+    version: 0.0.16
 ```
 
 Then when you `import { github.com/nevalang/x }` compiler will know exactly path and version of the module you are referring to.

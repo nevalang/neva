@@ -185,7 +185,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 			select {
 			case <-ctx.Done():
 				success = false
-			case v := <-a.chans[idx]:
+			case received := <-a.chans[idx]:
 				index := uint8(idx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
@@ -195,7 +195,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 						},
 						Index: &index,
 					},
-					v.Msg,
+					received.Msg,
 				)
 				resultChan <- f(idx, msg)
 			}

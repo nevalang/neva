@@ -43,7 +43,7 @@ func newBuildCmd(
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
-			mainPkg, err := getMainPkgFromArgs(cliCtx)
+			mainPkg, err := mainPkgPathFromArgs(cliCtx)
 			if err != nil {
 				return err
 			}

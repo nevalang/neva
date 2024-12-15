@@ -1,16 +1,16 @@
 package builder
 
-import src "github.com/nevalang/neva/internal/compiler/sourcecode"
+import "github.com/nevalang/neva/internal/compiler/sourcecode/core"
 
-type queue []src.ModuleRef
+type queue []core.ModuleRef
 
-func (q *queue) enqueue(deps map[string]src.ModuleRef) {
+func (q *queue) enqueue(deps map[string]core.ModuleRef) {
 	for _, dep := range deps {
 		*q = append(*q, dep)
 	}
 }
 
-func (q *queue) dequeue() src.ModuleRef {
+func (q *queue) dequeue() core.ModuleRef {
 	tmp := *q
 	last := (tmp)[len(tmp)-1]
 	*q = (tmp)[:len(tmp)-1]
@@ -21,7 +21,7 @@ func (q *queue) empty() bool {
 	return len(*q) == 0
 }
 
-func newQueue(deps map[string]src.ModuleRef) *queue {
+func newQueue(deps map[string]core.ModuleRef) *queue {
 	q := make(queue, 0, len(deps))
 	q.enqueue(deps)
 	return &q

@@ -1,19 +1,19 @@
 import { fmt }
 
-interface IPrinter<T>(data T) (sig T)
-
 def Main(start any) (stop any) {
-    Secondflow {
-        depNode fmt.Println<any>
+    second_flow Secondflow {
+        printer fmt.Println<any>
     }
     ---
-    :start -> secondflow:msg
-    secondflow:msg -> :stop
+    :start -> second_flow:data
+    second_flow:res -> :stop
 }
 
-def Secondflow (msg any) (msg any) {
-    depNode IPrinter<any>
+def Secondflow (data any) (res any) {
+    printer IPrinter<any>
     ---
-    :msg -> depNode:data
-    depNode:sig -> :msg
+    :data -> printer:data
+    printer:res -> :res
 }
+
+interface IPrinter<T>(data T) (res T)

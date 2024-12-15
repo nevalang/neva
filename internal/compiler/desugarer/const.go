@@ -21,6 +21,7 @@ func (d *Desugarer) handleConst(constant src.Const) (src.Const, error) {
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{
 				Float: compiler.Pointer(float64(*constant.Value.Message.Int)),
+				Meta:  constant.Meta,
 			},
 		},
 	}, nil

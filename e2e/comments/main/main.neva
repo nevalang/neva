@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
 	---
 	// comment inside def 2
 	:start -> println:data
-	println:sig -> :stop
+	println:res -> :stop
 	// comment inside def 3
 }
 // top-level comment 2

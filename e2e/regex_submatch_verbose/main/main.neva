@@ -8,6 +8,6 @@ def Main(start any) (stop any) {
         'a(x*)b(y|z)c' -> submatch:regexp
     ]
     submatch:res -> println:data
-    println:sig    -> :stop
+    println:res    -> :stop
     submatch:err -> panic
 }

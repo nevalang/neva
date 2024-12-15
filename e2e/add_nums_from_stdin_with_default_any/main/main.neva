@@ -1,30 +1,34 @@
 import { strconv, fmt }
 
 def Main(start any) (stop any) {
-	Aux, fmt.Println
+	aux Aux
+	println fmt.Println
+	panic Panic
 	---
-	:start             -> aux:sig
-	[aux:res, aux:err] -> println:data
-	println:sig        -> :stop
+	:start -> aux:sig
+	aux:res -> println:data
+	aux:err -> panic
+	println:res -> :stop
 }
 
-def Aux(sig) (res int, err error) {
+def Aux(sig any) (res int, err error) {
 	reader1 IntReader
 	reader2 IntReader
 	add Add<int>
 	---
-	:sig                       -> reader1:sig
-	reader1:num                -> [add:left, reader2:sig]
+	:sig -> reader1:sig
+	reader1:num -> [add:left, reader2:sig]
 	[reader1:err, reader2:err] -> :err
-	reader2:num                -> add:right
-	add:res                  -> :res
+	reader2:num -> add:right
+	add:res -> :res
 }
 
 def IntReader(sig any) (num int, err error) {
-	fmt.Scanln, strconv.ParseNum<int>
+	scanln fmt.Scanln
+	parse_num strconv.ParseNum<int>
 	---
 	:sig -> scanln:sig
-	scanln:res -> parseNum:data
-	parseNum:res -> :num
-	parseNum:err -> :err
+	scanln:res -> parse_num:data
+	parse_num:res -> :num
+	parse_num:err -> :err
 }

@@ -1,15 +1,15 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    WithDep { fmt.Println }
+    wrapper Wrapper{fmt.Println}
     ---
-    :start -> withDep -> :stop
+    :start -> wrapper -> :stop
 }
 
-interface IPrinter<T>(data T) (sig T)
-
-def WithDep (msg any) (msg any) {
-    IPrinter<any>
+def Wrapper(data any) (res any) {
+    printer IPrinter<any>
     ---
-    :msg -> iPrinter -> :msg
+    :data -> printer -> :res
 }
+
+interface IPrinter<T>(T) (T)

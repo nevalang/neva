@@ -27,20 +27,29 @@ type Server struct {
 	index      *src.Build
 
 	problemsMutex *sync.Mutex
-	problemFiles  map[string]struct{}
+	problemFiles  map[string]struct{} // we only need to store file urls but not their problems
 
 	activeFile      string
 	activeFileMutex *sync.Mutex
 }
 
+// indexAndNotifyProblems does full scan of the workspace
+// and sends diagnostics if there are any problems
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	build, err := s.indexer.FullIndex(context.Background(), s.workspacePath)
+	build, found, proplems := s.indexer.FullScan(
+		context.Background(),
+		s.workspacePath,
+	)
+
+	if !found {
+		return nil
+	}
 
 	s.indexMutex.Lock()
 	s.index = &build
 	s.indexMutex.Unlock()
 
-	if err == nil {
+	if proplems == nil {
 		// clear problems
 		s.problemsMutex.Lock()
 		for uri := range s.problemFiles {
@@ -60,13 +69,13 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 
 	// remember problem and send diagnostic
 	s.problemsMutex.Lock()
-	uri := filepath.Join(s.workspacePath, err.Location.String())
+	uri := filepath.Join(s.workspacePath, proplems.Meta.Location.String())
 	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
-		s.createDiagnostics(*err, uri),
+		s.createDiagnostics(*proplems, uri),
 	)
-	s.logger.Info("diagnostic sent:", "err", err)
+	s.logger.Info("diagnostic sent:", "err", proplems)
 	s.problemsMutex.Unlock()
 
 	return nil

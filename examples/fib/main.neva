@@ -1,0 +1,23 @@
+// import { fmt }
+
+// def Main(start any) (stop any) {
+//     map_fib Map<int, int>{Fib}
+//     ---
+//     :start -> 0..10 -> ...map_fib -> :res
+// }
+
+// def Fib(data int) (res int) {
+//     fan_in FanIn<int>
+//     next Next
+//     ---
+//     :data -> switch {
+//         0 -> fan_in[0]
+//         1 -> fan_in[1]
+//         _ -> next -> fan_in[2]
+//     }
+//     fan_in -> :res
+// }
+
+// def Next(prev int) (res int) {
+//     ((:prev - 1) + (:prev - 2)) -> :res
+// }

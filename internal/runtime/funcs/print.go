@@ -15,7 +15,7 @@ func (p print) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Single("sig")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (p print) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 				return
 			}
 			fmt.Print(data)
-			if !sigOut.Send(ctx, data) {
+			if !resOut.Send(ctx, data) {
 				return
 			}
 		}

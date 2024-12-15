@@ -7,16 +7,16 @@ type User struct {
 }
 
 #extern(struct_builder)
-def MyStructBuilder(age int, name string) (msg User)
+def MyStructBuilder(age int, name string) (res User)
 
 def Main(start any) (stop any) {
-    fmt.Println
+    println fmt.Println
     builder MyStructBuilder
     ---
     :start -> [
         'John' -> builder:name,
         32 -> builder:age
     ]
-    builder:msg -> println:data
-    println:sig -> :stop
+    builder:res -> println:data
+    println:res -> :stop
 }
