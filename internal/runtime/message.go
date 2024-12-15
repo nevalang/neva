@@ -28,7 +28,7 @@ type Msg interface {
 	Struct() StructMsg
 	Union() UnionMsg
 
-	Equal(other Msg) bool
+	Equal(Msg) bool
 }
 
 // Internal

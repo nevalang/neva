@@ -1,3 +1,18 @@
+// Lock allows to defer receiving until some sending happens.
+#extern(lock)
+pub def Lock<T>(sig any, data T) (data T)
+
+// FanIn merges several sources of data into single one.
+// It makes sure order of incoming messages is respected.
+#extern(fan_in)
+pub def FanIn<T>([data] T) (res T)
+
+// FanOut is used to broadcast a message from one sender to multiple receivers.
+// You should use multiple receivers syntax `-> [...]` instead.
+// Multiple receivers is a syntax sugar over explicit FanOut.
+#extern(fan_out)
+pub def FanOut<T>(data T) ([data] T)
+
 // `Cond` is like `If`, but also allows to route data based on a condition.
 #extern(cond)
 pub def Cond<T>(data T, if bool) (then T, else T)
@@ -7,18 +22,3 @@ pub def Cond<T>(data T, if bool) (then T, else T)
 // If you need mapping, use Match or Select instead.
 #extern(switch_router)
 pub def Switch<T>(data T, [case] T) ([case] T, else T)
-
-// Lock allows to defer receiving until some sending happens.
-#extern(lock)
-pub def Lock<T>(sig any, data T) (data T)
-
-// FanOut is used to broadcast a message from one sender to multiple receivers.
-// You should use multiple receivers syntax `-> [...]` instead.
-// Multiple receivers is a syntax sugar over explicit FanOut.
-#extern(fan_out)
-pub def FanOut<T>(data T) ([data] T)
-
-// FanIn merges several sources of data into single one.
-// It makes sure order of incoming messages is respected.
-#extern(fan_in)
-pub def FanIn<T>([data] T) (res T)

@@ -101,7 +101,7 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 							Receivers: []src.ConnectionReceiver{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
 								},
 							},
 						},
@@ -115,7 +115,7 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 							Receivers: []src.ConnectionReceiver{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
 								},
 							},
 						},
@@ -124,7 +124,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{
 								{
-									PortAddr: &src.PortAddr{Node: "__fanIn__1", Port: "res"},
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
 								},
 							},
 							Receivers: []src.ConnectionReceiver{
