@@ -137,7 +137,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				constsToInsert: map[string]src.Const{},
 				nodesToInsert: map[string]src.Node{
-					"__fanIn__1": {
+					"__fan_in__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "FanIn"},
 					},
 				},

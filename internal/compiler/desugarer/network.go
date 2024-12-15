@@ -1171,13 +1171,11 @@ func (d *Desugarer) desugarFanIn(
 	scope Scope,
 	nodes map[string]src.Node,
 ) ([]src.Connection, error) {
-	locOnlyMeta := core.Meta{
-		Location: *scope.Location(),
-	}
+	locOnlyMeta := normConn.Senders[0].Meta // FIXME for some reason normConn.Meta sometimes empty
 
 	// 1. create fan-in node with unique name and insert into nodes
 	d.fanInCounter++
-	fanInNodeName := fmt.Sprintf("__fanIn__%d", d.fanInCounter)
+	fanInNodeName := fmt.Sprintf("__fan_in__%d", d.fanInCounter)
 	nodesToInsert[fanInNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
