@@ -4,24 +4,28 @@ import { fmt }
 
 def Main(start any) (stop any) {
     // we use explicit lock to implement fan-in to printNext2Lines
-    s Switch<int>, PrintNext2Lines, Lock<int>
+    s Switch<int>
+    print_next_2_lines PrintNext2Lines
+    lock Lock<int>
     ---
     :start -> lock:sig
     99 -> lock:data
-    [lock:data, s:else] -> printNext2Lines
-    printNext2Lines -> s:data
+    [lock:data, s:else] -> print_next_2_lines
+    print_next_2_lines -> s:data
     -1 -> s:case[0] -> :stop
 }
 
 def PrintNext2Lines(n int) (n int) {
-    Dec<int>, PrintFirstLine, PrintSecondLine
+    dec Dec<int>
+    print_first_line PrintFirstLine
+    print_second_line PrintSecondLine
     ---
-    // printFirstLine and printSecondLine won't work in parallel
+    // print_first_line and print_second_line won't work in parallel
     // because they are in the loop at the level of Main
-    :n -> printFirstLine:n
-    printFirstLine:n -> dec:data
-    dec:res -> printSecondLine:n
-    printSecondLine:n -> :n 
+    :n -> print_first_line:n
+    print_first_line:n -> dec:data
+    dec:res -> print_second_line:n
+    print_second_line:n -> :n 
 }
 
 // === First Line ===
@@ -31,7 +35,12 @@ const firstLine2 string = '1 bottle of beer on the wall, 1 bottle of beer.'
 const firstLine3 string = 'No more bottles of beer on the wall, no more bottles of beer.'
 
 def PrintFirstLine(n int) (n int) {
-    s Switch<int>, p1 fmt.Println, p2 fmt.Println, fmt.Printf, Lock<int>, Panic
+    s Switch<int>
+    p1 fmt.Println
+    p2 fmt.Println
+    printf fmt.Printf
+    lock Lock<int>
+    panic Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -45,7 +54,7 @@ def PrintFirstLine(n int) (n int) {
         $firstLine1 -> printf:tpl
     ]
 
-    [p1:sig, p2:sig, printf:sig] -> lock:sig
+    [p1:res, p2:res, printf:sig] -> lock:sig
     printf:err -> panic
     lock:data -> :n
 }
@@ -58,7 +67,13 @@ const secondLine3 string = 'Take one down and pass it around, no more bottles of
 const secondLine4 string = 'Go to the store and buy some more, 99 bottles of beer on the wall.'
 
 def PrintSecondLine(n int) (n int) {
-    s Switch<int>, p1 fmt.Println, p2 fmt.Println, p3 fmt.Println, fmt.Printf, Lock<int>, Panic
+    s Switch<int>
+    p1 fmt.Println
+    p2 fmt.Println
+    p3 fmt.Println
+    printf fmt.Printf
+    lock Lock<int>
+    panic Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -75,7 +90,7 @@ def PrintSecondLine(n int) (n int) {
         $secondLine1 -> printf:tpl
     ]
 
-    [p1:sig, p2:sig, p3:sig, printf:sig] -> lock:sig
+    [p1:res, p2:res, p3:res, printf:sig] -> lock:sig
     printf:err -> panic
     lock:data -> :n
 }

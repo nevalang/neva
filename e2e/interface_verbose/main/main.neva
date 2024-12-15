@@ -2,7 +2,7 @@ import { fmt }
 
 def Main(start any) (stop any) {
     second_flow Secondflow {
-        dep_node fmt.Println<any>
+        printer fmt.Println<any>
     }
     ---
     :start -> second_flow:data
@@ -10,10 +10,10 @@ def Main(start any) (stop any) {
 }
 
 def Secondflow (data any) (res any) {
-    dep_node IPrinter<any>
+    printer IPrinter<any>
     ---
-    :data -> dep_node:res
-    dep_node:sig -> :res
+    :data -> printer:data
+    printer:res -> :res
 }
 
-interface IPrinter<T>(T) (T)
+interface IPrinter<T>(data T) (res T)
