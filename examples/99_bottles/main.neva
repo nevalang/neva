@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
 	print For<int>{Next2Lines}
@@ -19,7 +22,7 @@ def FirstLine(data int) (sig any) {
 	p1 fmt.Println
 	p2 fmt.Println
 	p3 fmt.Printf
-	panic Panic
+	panic runtime.Panic
 	---
 	:data -> switch {
 		0 -> 'No more bottles of beer on the wall, no more bottles of beer.' -> p1
@@ -38,7 +41,7 @@ def SecondLine(data int) (sig any) {
 	p2 fmt.Println
 	p3 fmt.Println
 	p4 fmt.Printf
-	panic Panic
+	panic runtime.Panic
 	---
 	:data -> switch {
 		-1 -> 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1
