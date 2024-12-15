@@ -1,9 +1,15 @@
-import { http, fmt }
+import {
+	fmt
+	http
+	runtime
+}
 
 def Main(start any) (stop any) {
-	http.Get, fmt.Println, Panic
+	http_get http.Get
+	println fmt.Println
+	panic runtime.Panic
 	---
-	:start -> 'http://www.example.com' -> get
-	get:res -> .body -> println -> :stop
-	get:err -> panic
+	:start -> 'http://www.example.com' -> http_get
+	http_get:res -> .body -> println -> :stop
+	http_get:err -> panic // terminates the program
 }

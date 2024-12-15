@@ -1,7 +1,13 @@
-import { regexp, fmt }
+import {
+	fmt
+	regexp
+	runtime
+}
 
 def Main(start any) (stop any) {
-    fmt.Println, regexp.Submatch, Panic
+	println fmt.Println
+    submatch regexp.Submatch
+    panic runtime.Panic
     ---
     :start -> [
         '-axxxbyc-' -> submatch:data,
