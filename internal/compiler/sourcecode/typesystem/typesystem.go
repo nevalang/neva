@@ -55,11 +55,14 @@ func (expr Expr) String() string {
 	switch expr.Lit.Type() {
 	case UnionLitType:
 		count := 0
-		str += "union { "
+		str += "union {"
 		for tag, tagExpr := range expr.Lit.Union {
+			if count == 0 {
+				str += " "
+			}
 			str += tag + " " + tagExpr.String()
 			if count < len(expr.Lit.Union)-1 {
-				str += " , "
+				str += ", "
 			}
 			count++
 		}
@@ -106,8 +109,8 @@ type InstExpr struct {
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Struct map[string]Expr `json:"struct,omitempty"`
-	Union  map[string]Expr `json:"union,omitempty"`
+	Struct map[string]Expr  `json:"struct,omitempty"`
+	Union  map[string]*Expr `json:"union,omitempty"`
 }
 
 func (lit *LitExpr) Empty() bool {

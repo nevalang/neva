@@ -54,7 +54,6 @@ func (v Validator) Validate(expr Expr) error {
 		return nil
 	}
 
-		
 	switch expr.Lit.Type() {
 	case UnionLitType:
 		var (
@@ -62,11 +61,11 @@ func (v Validator) Validate(expr Expr) error {
 			hasMembersWithData bool
 		)
 		for tag, tagExpr := range expr.Lit.Union {
-			if tag == "" {
+			if tagExpr == nil {
 				hasTagOnlyMembers = true
 				continue
 			}
-			if err := v.Validate(tagExpr); err != nil {
+			if err := v.Validate(*tagExpr); err != nil {
 				return fmt.Errorf("%w: invalid type for tag %s: %v", ErrUnionTagType, tag, err)
 			}
 			hasMembersWithData = true

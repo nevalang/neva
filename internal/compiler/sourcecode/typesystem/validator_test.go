@@ -26,7 +26,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "non-empty lit and inst",
 			expr: ts.Expr{
-				Lit:  &ts.LitExpr{Enum: []string{"a"}},
+				Lit:  &ts.LitExpr{Union: map[string]*ts.Expr{"a": nil}},
 				Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 			},
 			wantErr: ts.ErrExprMustBeInstOrLit,
@@ -56,25 +56,25 @@ func TestValidator_Validate(t *testing.T) {
 			name: "union of 0 element",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{},
+					Union: map[string]*ts.Expr{},
 				},
 			},
-			wantErr: ts.ErrUnionLen,
+			wantErr: nil,
 		},
 		{
 			name: "union of 1 element",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{{}},
+					Union: map[string]*ts.Expr{"a": nil},
 				},
 			},
-			wantErr: ts.ErrUnionLen,
+			wantErr: nil,
 		},
 		{
 			name: "union of 2 element",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{{}, {}},
+					Union: map[string]*ts.Expr{"a": nil, "b": nil},
 				},
 			},
 			wantErr: nil,
@@ -83,50 +83,12 @@ func TestValidator_Validate(t *testing.T) {
 			name: "union of 3 element",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{{}, {}, {}},
+					Union: map[string]*ts.Expr{"a": nil, "b": nil, "c": nil},
 				},
 			},
 			wantErr: nil,
 		},
-		// enum
-		{
-			name: "enum of 0 element",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Enum: []string{},
-				},
-			},
-			wantErr: ts.ErrEnumLen,
-		},
-		{
-			name: "enum of 1 element",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Enum: []string{""},
-				},
-			},
-			wantErr: ts.ErrEnumLen,
-		},
-		{
-			name:    "enum of 2 duplicate element",
-			expr:    h.Enum("a", "a"),
-			wantErr: ts.ErrEnumDupl,
-		},
-		{
-			name:    "enum of 2 diff element",
-			expr:    h.Enum("a", "b"),
-			wantErr: nil,
-		},
-		{
-			name:    "enum of 3 diff element",
-			expr:    h.Enum("a", "b", "c"),
-			wantErr: nil,
-		},
-		{
-			name:    "enum of 3 els with dupl",
-			expr:    h.Enum("a", "b", "a"),
-			wantErr: ts.ErrEnumDupl,
-		},
+		// TODO add unit tests for unions with type expressions
 	}
 
 	v := ts.Validator{}

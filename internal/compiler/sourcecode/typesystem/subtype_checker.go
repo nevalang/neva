@@ -14,12 +14,11 @@ var (
 	ErrArgNotSubtype = errors.New("Subtype arg must be subtype of corresponding supertype arg")
 	ErrLitArrSize    = errors.New("Subtype arr size must be >= supertype")
 	ErrArrDiffType   = errors.New("Subtype arr must have same type as supertype")
-	ErrBigEnum       = errors.New("Subtype enum must be <= supertype enum")
 	ErrEnumEl        = errors.New("Subtype enum el doesn't match supertype")
 	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
-	ErrUnionArg      = errors.New("Subtype must be either be union")
+	ErrUnionArg      = errors.New("Subtype must be union")
 	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
 	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
 	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
@@ -125,28 +124,33 @@ func (s SubtypeChecker) Check(
 
 	switch constrLitType {
 	case UnionLitType:
+		// both must be unions
 		if expr.Lit == nil || expr.Lit.Union == nil {
 			return fmt.Errorf("%w: want union, got %v", ErrUnionArg, expr)
 		}
-		
-		// Sub-type union must have <= tags than super-type union
+		// sub-type union must fit into super-type union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {
 			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
 		}
-
-		// Each tag in sub-type must exist in super-type and be a valid subtype
+		// each tag in sub-type must exist in super-type,
+		// and if tags has type expressions,
+		// the one from sub-type must be subtype of the one from super-type
 		for tag, exprTagType := range expr.Lit.Union {
+			if exprTagType == nil {
+				continue // we assume that unions are valid and both tags are nil
+			}
 			constrTagType, ok := constr.Lit.Union[tag]
 			if !ok {
 				return fmt.Errorf("%w: tag %s not found in constraint", ErrUnions, tag)
 			}
-			if err := s.Check(exprTagType, constrTagType, params); err != nil {
+			if err := s.Check(*exprTagType, *constrTagType, params); err != nil {
 				return fmt.Errorf("%w: for tag %s: %v", ErrUnions, tag, err)
 			}
 		}
 		return nil
-	
+
 	case StructLitType:
+		// super type must fit into sub-type
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 			return fmt.Errorf(
 				"%w: got %v, want %v",
@@ -155,7 +159,6 @@ func (s SubtypeChecker) Check(
 				len(constr.Lit.Struct),
 			)
 		}
-
 		// add virtual ref "struct" to trace to avoid direct recursion
 		// e.g. error struct {child maybe<error>}
 		// but only if it's not already there

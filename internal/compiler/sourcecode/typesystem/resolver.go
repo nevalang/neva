@@ -178,20 +178,20 @@ func (r Resolver) resolveExpr(
 
 	if expr.Lit != nil {
 		switch expr.Lit.Type() {
-		case EnumLitType:
-			return expr, nil
 		case UnionLitType:
-			resolvedUnion := make([]Expr, 0, len(expr.Lit.Union))
-			for _, unionEl := range expr.Lit.Union {
-				resolvedEl, err := r.resolveExpr(unionEl, scope, frame, trace)
+			resolvedUnion := make(map[string]*Expr, len(expr.Lit.Union))
+			for unionElName, unionEl := range expr.Lit.Union {
+				if unionEl == nil {
+					resolvedUnion[unionElName] = nil
+					continue
+				}
+				resolvedEl, err := r.resolveExpr(*unionEl, scope, frame, trace)
 				if err != nil {
 					return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
 				}
-				resolvedUnion = append(resolvedUnion, resolvedEl)
+				resolvedUnion[unionElName] = &resolvedEl
 			}
-			return Expr{
-				Lit: &LitExpr{Union: resolvedUnion},
-			}, nil
+			return Expr{Lit: &LitExpr{Union: resolvedUnion}}, nil
 		case StructLitType:
 			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
 			for field, fieldExpr := range expr.Lit.Struct {
