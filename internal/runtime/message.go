@@ -118,18 +118,20 @@ func NewFloatMsg(n float64) FloatMsg {
 	}
 }
 
-// Str
-
+// --- STRING ---
 type StringMsg struct {
 	internalMsg
 	v string
 }
 
-func (msg StringMsg) Str() string    { return msg.v }
+func (msg StringMsg) Str() string { return msg.v }
+
 func (msg StringMsg) String() string { return msg.v }
+
 func (msg StringMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.String())
 }
+
 func (msg StringMsg) Equal(other Msg) bool {
 	otherString, ok := other.(StringMsg)
 	return ok && msg.v == otherString.v
@@ -142,7 +144,7 @@ func NewStringMsg(s string) StringMsg {
 	}
 }
 
-// List
+// --- LIST ---
 type ListMsg struct {
 	internalMsg
 	v []Msg
@@ -180,7 +182,7 @@ func NewListMsg(v []Msg) ListMsg {
 	}
 }
 
-// Dictionary
+// --- DICT ---
 type DictMsg struct {
 	internalMsg
 	v map[string]Msg
@@ -230,7 +232,7 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 	}
 }
 
-// Structure
+// --- STRUCT ---
 type StructMsg struct {
 	internalMsg
 	names  []string // must be sorted for binary search
@@ -284,6 +286,9 @@ func (msg StructMsg) String() string {
 	return string(b)
 }
 
+// Equal implements strict equality for StructMsg messages.
+// It returns false if the lengths of the names and fields are different.
+// It returns false if any of the fields are not equal.
 func (msg StructMsg) Equal(other Msg) bool {
 	otherStruct, ok := other.(StructMsg)
 	if !ok {
@@ -315,18 +320,66 @@ func NewStructMsg(names []string, fields []Msg) StructMsg {
 	}
 }
 
-// Union
+// --- UNION ---
 type UnionMsg struct {
 	internalMsg
 	tag  string
 	data Msg
 }
 
-func (msg UnionMsg) Union() UnionMsg { return msg }
-func (msg UnionMsg) Tag() string     { return msg.tag }
-func (msg UnionMsg) Data() Msg       { return msg.data }
+func (msg UnionMsg) Union() UnionMsg {
+	return msg
+}
+
+func (msg UnionMsg) Tag() string {
+	return msg.tag
+}
+
+func (msg UnionMsg) Data() Msg {
+	return msg.data
+}
+
 func (msg UnionMsg) String() string {
-	return fmt.Sprintf("{ tag %s, data %v }", msg.tag, msg.data)
+	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
+}
+
+// Equal implements strict equality for UnionMsg messages.
+// If one union has data and another doesn't, it returns false.
+// It returns false if tags are different.
+// It returns false if data is different.
+// Tags are compared as Go strings and data is compared recursevely using Equal method.
+func (msg UnionMsg) Equal(other Msg) bool {
+	otherUnion, ok := other.(UnionMsg)
+	if !ok {
+		return false
+	}
+
+	if msg.data != nil && otherUnion.data == nil {
+		return false
+	} else if msg.data == nil && otherUnion.data != nil {
+		return false
+	}
+
+	if msg.tag != otherUnion.tag {
+		return false
+	}
+
+	if msg.data == nil {
+		return true
+	}
+
+	return msg.data.Equal(otherUnion.data)
+}
+
+// Match implements pattern matching for UnionMsg messages.
+// It handles case when one of the unions doesn't have data
+// and compares only tags. Otherwise it uses Equal method.
+func (msg UnionMsg) Match(pattern UnionMsg) bool {
+	if msg.data != nil && pattern.data == nil ||
+		msg.data == nil && pattern.data != nil {
+		return msg.tag == pattern.tag
+	}
+	return msg.data.Equal(pattern.data)
 }
 
 func NewUnionMsg(tag string, data Msg) UnionMsg {
@@ -335,4 +388,25 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 		tag:         tag,
 		data:        data,
 	}
+}
+
+// --- OPERATIONS ---
+
+func Match(msg Msg, pattern Msg) bool {
+	msgUnion, ok := msg.(UnionMsg)
+	if !ok {
+		return msg.Equal(pattern)
+	}
+
+	patternUnion, ok := pattern.(UnionMsg)
+	if !ok {
+		return msg.Equal(pattern)
+	}
+
+	if msgUnion.data != nil && patternUnion.data == nil ||
+		msgUnion.data == nil && patternUnion.data != nil {
+		return msgUnion.tag == patternUnion.tag
+	}
+
+	return msgUnion.data.Equal(patternUnion.data)
 }

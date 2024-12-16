@@ -69,7 +69,7 @@ func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 
 			resMsg := elseInMsg
 			for i, ifMsg := range ifMsgs {
-				if dataMsg.Equal(ifMsg) {
+				if runtime.Match(dataMsg, ifMsg) {
 					resMsg = thenMsgs[i]
 					break
 				}
