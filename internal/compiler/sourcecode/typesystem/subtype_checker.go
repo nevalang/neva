@@ -19,7 +19,7 @@ var (
 	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
-	ErrUnionArg      = errors.New("Subtype must be either union or literal")
+	ErrUnionArg      = errors.New("Subtype must be either be union")
 	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
 	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
 	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
@@ -124,16 +124,29 @@ func (s SubtypeChecker) Check(
 	}
 
 	switch constrLitType {
-	case EnumLitType: // {a b c} <: {a b c d}
-		if len(expr.Lit.Enum) > len(constr.Lit.Enum) {
-			return fmt.Errorf("%w: got %d, want %d", ErrBigEnum, len(expr.Lit.Enum), len(constr.Lit.Enum))
+	case UnionLitType:
+		if expr.Lit == nil || expr.Lit.Union == nil {
+			return fmt.Errorf("%w: want union, got %v", ErrUnionArg, expr)
 		}
-		for i, exprEl := range expr.Lit.Enum {
-			if exprEl != constr.Lit.Enum[i] {
-				return fmt.Errorf("%w: #%d got %s, want %s", ErrEnumEl, i, exprEl, constr.Lit.Enum[i])
+		
+		// Sub-type union must have <= tags than super-type union
+		if len(expr.Lit.Union) > len(constr.Lit.Union) {
+			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
+		}
+
+		// Each tag in sub-type must exist in super-type and be a valid subtype
+		for tag, exprTagType := range expr.Lit.Union {
+			constrTagType, ok := constr.Lit.Union[tag]
+			if !ok {
+				return fmt.Errorf("%w: tag %s not found in constraint", ErrUnions, tag)
+			}
+			if err := s.Check(exprTagType, constrTagType, params); err != nil {
+				return fmt.Errorf("%w: for tag %s: %v", ErrUnions, tag, err)
 			}
 		}
-	case StructLitType: // {x int, y float} <: {x int|str}
+		return nil
+	
+	case StructLitType:
 		if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 			return fmt.Errorf(
 				"%w: got %v, want %v",
@@ -173,32 +186,6 @@ func (s SubtypeChecker) Check(
 			}
 			if err := s.Check(exprField, constrField, params); err != nil {
 				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
-			}
-		}
-	case UnionLitType: // 1) int <: str | int 2) int | str <: str | bool | int
-		if expr.Lit == nil || expr.Lit.Union == nil { // expr is not union and not literal
-			for _, constrUnionEl := range constr.Lit.Union {
-				// iterate over constr union and if expr is subtype of any of its elements, return nil
-				if s.Check(expr, constrUnionEl, params) == nil {
-					return nil
-				}
-			}
-			return fmt.Errorf("%w: want %v, got %v", ErrUnionArg, constr, expr)
-		}
-		// If we here, then expr is union
-		if len(expr.Lit.Union) > len(constr.Lit.Union) {
-			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
-		}
-		for _, exprEl := range expr.Lit.Union { // check that all elements of arg union are compatible with constr
-			var implements bool
-			for _, constraintEl := range constr.Lit.Union {
-				if s.Check(exprEl, constraintEl, params) == nil {
-					implements = true
-					break
-				}
-			}
-			if !implements {
-				return fmt.Errorf("%w: got %v, want %v", ErrUnions, exprEl, constr.Lit.Union)
 			}
 		}
 	}

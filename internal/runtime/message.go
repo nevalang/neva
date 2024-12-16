@@ -318,21 +318,21 @@ func NewStructMsg(names []string, fields []Msg) StructMsg {
 // Union
 type UnionMsg struct {
 	internalMsg
-	tag   uint8
-	value Msg
+	tag  string
+	data Msg
 }
 
 func (msg UnionMsg) Union() UnionMsg { return msg }
-func (msg UnionMsg) Tag() uint8      { return msg.tag }
-func (msg UnionMsg) Value() Msg      { return msg.value }
+func (msg UnionMsg) Tag() string     { return msg.tag }
+func (msg UnionMsg) Data() Msg       { return msg.data }
 func (msg UnionMsg) String() string {
-	return fmt.Sprintf("Union(%d, %v)", msg.tag, msg.value)
+	return fmt.Sprintf("{ tag %s, data %v }", msg.tag, msg.data)
 }
 
-func NewUnionMsg(tag uint8, value Msg) UnionMsg {
+func NewUnionMsg(tag string, data Msg) UnionMsg {
 	return UnionMsg{
 		internalMsg: internalMsg{},
 		tag:         tag,
-		value:       value,
+		data:        data,
 	}
 }

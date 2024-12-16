@@ -53,17 +53,18 @@ func (expr Expr) String() string {
 	var str string
 
 	switch expr.Lit.Type() {
-	case EnumLitType:
-		str += "{"
-		for i, el := range expr.Lit.Enum {
-			str += " " + el
-			if i == len(expr.Lit.Enum)-1 {
-				str += " "
-			} else {
-				str += ","
+	case UnionLitType:
+		count := 0
+		str += "union { "
+		for tag, tagExpr := range expr.Lit.Union {
+			str += tag + " " + tagExpr.String()
+			if count < len(expr.Lit.Union)-1 {
+				str += " , "
 			}
+			count++
 		}
-		return str + "}"
+		str += " }"
+		return str
 	case StructLitType:
 		str += "{"
 		count := 0
@@ -77,14 +78,6 @@ func (expr Expr) String() string {
 			count++
 		}
 		return str + "}"
-	case UnionLitType:
-		for i, el := range expr.Lit.Union {
-			str += el.String()
-			if i < len(expr.Lit.Union)-1 {
-				str += " | "
-			}
-		}
-		return str
 	}
 
 	if len(expr.Inst.Args) == 0 {
@@ -114,14 +107,12 @@ type InstExpr struct {
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
 	Struct map[string]Expr `json:"struct,omitempty"`
-	Enum   []string        `json:"enum,omitempty"`
-	Union  []Expr          `json:"union,omitempty"`
+	Union  map[string]Expr `json:"union,omitempty"`
 }
 
 func (lit *LitExpr) Empty() bool {
 	return lit == nil ||
 		lit.Struct == nil &&
-			lit.Enum == nil &&
 			lit.Union == nil
 }
 
@@ -132,8 +123,6 @@ func (lit *LitExpr) Type() LiteralType {
 		return EmptyLitType
 	case lit.Struct != nil:
 		return StructLitType
-	case lit.Enum != nil:
-		return EnumLitType
 	case lit.Union != nil:
 		return UnionLitType
 	}
@@ -145,6 +134,5 @@ type LiteralType uint8
 const (
 	EmptyLitType LiteralType = iota
 	StructLitType
-	EnumLitType
 	UnionLitType
 )

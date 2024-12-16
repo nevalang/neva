@@ -1,10 +1,11 @@
-import { fmt }
+import {
+    fmt
+}
 
 def Main(start any) (stop any) {
-    DayPrinter
+    day_printer DayPrinter
     ---
-    :start -> { Day::Friday -> dayPrinter:day }
-    dayPrinter:sig -> :stop
+    :start -> Day::Friday -> day_printer -> :stop
 }
 
 type Day enum {
@@ -18,7 +19,7 @@ type Day enum {
 }
 
 def DayPrinter(day Day) (sig any) {
-    fmt.Println
+    println fmt.Println
     ---
     :day -> println:data
     println:res -> :sig

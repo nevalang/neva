@@ -223,6 +223,7 @@ type MsgLiteral struct {
 	Meta         core.Meta             `json:"meta,omitempty"`
 }
 
+// TODO rename to UnionTagMessage
 type EnumMessage struct {
 	EnumRef    core.EntityRef
 	MemberName string

@@ -15,10 +15,12 @@ var (
 	ErrUnionLitKind        = errors.New("union literal must have no enum, array or struct")
 	ErrEnumLitKind         = errors.New("enum literal must have no union, array or struct")
 	ErrEnumLen             = errors.New("enum len must be >= 2")
-	ErrUnionLen            = errors.New("union len must be >= 2")
+	ErrUnionLen            = errors.New("union len must be >= 1")
 	ErrEnumDupl            = errors.New("enum contains duplicate elements")
 	ErrParamDuplicate      = errors.New("params must have unique names")
 	ErrParams              = errors.New("bad params")
+	ErrUnionTag            = errors.New("union tag must be non-empty")
+	ErrUnionTagType        = errors.New("union tag type must be valid")
 )
 
 // ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
@@ -52,29 +54,25 @@ func (v Validator) Validate(expr Expr) error {
 		return nil
 	}
 
-	switch expr.Lit.Type() { // by now we know it's not empty literal
+		
+	switch expr.Lit.Type() {
 	case UnionLitType:
-		if l := len(expr.Lit.Union); l < 2 {
-			return fmt.Errorf("%w: got %d", ErrUnionLen, l)
-		}
-		switch {
-		case expr.Lit.Enum != nil, expr.Lit.Struct != nil:
-			return ErrUnionLitKind
-		}
-	case EnumLitType:
-		if l := len(expr.Lit.Enum); l < 2 {
-			return fmt.Errorf("%w: got %d", ErrEnumLen, l)
-		}
-		set := make(map[string]struct{}, len(expr.Lit.Enum))
-		for _, el := range expr.Lit.Enum { // look for duplicate
-			if _, ok := set[el]; ok {
-				return fmt.Errorf("%w: %s", ErrEnumDupl, el)
+		var (
+			hasTagOnlyMembers  bool
+			hasMembersWithData bool
+		)
+		for tag, tagExpr := range expr.Lit.Union {
+			if tag == "" {
+				hasTagOnlyMembers = true
+				continue
 			}
-			set[el] = struct{}{}
+			if err := v.Validate(tagExpr); err != nil {
+				return fmt.Errorf("%w: invalid type for tag %s: %v", ErrUnionTagType, tag, err)
+			}
+			hasMembersWithData = true
 		}
-		switch {
-		case expr.Lit.Union != nil, expr.Lit.Struct != nil:
-			return ErrEnumLitKind
+		if hasTagOnlyMembers && hasMembersWithData {
+			return fmt.Errorf("%w: all union memers must either have data or not", ErrUnionTag)
 		}
 	}
 
