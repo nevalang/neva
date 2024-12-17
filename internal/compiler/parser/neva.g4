@@ -84,12 +84,13 @@ constLit:
 	| enumLit
 	| listLit
 	| structLit;
+// TODO rename (it won't be primitive with tagged union)
 primitiveConstLit:
 	bool
 	| MINUS? INT
 	| MINUS? FLOAT
 	| STRING
-	| enumLit;
+	| enumLit; // TODO replace with tagged union
 bool: 'true' | 'false';
 enumLit: entityRef '::' IDENTIFIER;
 listLit: '[' NEWLINE* listItems? ']';

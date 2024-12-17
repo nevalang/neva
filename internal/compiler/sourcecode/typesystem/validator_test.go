@@ -53,7 +53,7 @@ func TestValidator_Validate(t *testing.T) {
 		},
 		// union
 		{
-			name: "union of 0 element",
+			name: "union with 0 elements",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: map[string]*ts.Expr{},
@@ -62,7 +62,7 @@ func TestValidator_Validate(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "union of 1 element",
+			name: "union of 1 tag-only element",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: map[string]*ts.Expr{"a": nil},
@@ -71,7 +71,7 @@ func TestValidator_Validate(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "union of 2 element",
+			name: "union of 2 tag-only elements",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: map[string]*ts.Expr{"a": nil, "b": nil},
@@ -80,7 +80,7 @@ func TestValidator_Validate(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "union of 3 element",
+			name: "union of 3 tag-only elements",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
 					Union: map[string]*ts.Expr{"a": nil, "b": nil, "c": nil},
@@ -88,7 +88,37 @@ func TestValidator_Validate(t *testing.T) {
 			},
 			wantErr: nil,
 		},
-		// TODO add unit tests for unions with type expressions
+		// unions with type expressions
+		{
+			name: "union with one type expression",
+			expr: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"a": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+					},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "union with with two tags, one member is tag-only",
+			expr: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"a": nil,
+						"b": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						}},
+				},
+			},
+			wantErr: nil,
+		},
 	}
 
 	v := ts.Validator{}

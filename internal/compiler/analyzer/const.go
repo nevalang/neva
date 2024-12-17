@@ -81,7 +81,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -102,7 +102,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -133,7 +133,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -154,7 +154,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -174,7 +174,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Int != nil ||
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -194,7 +194,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Int != nil ||
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.List != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -204,7 +204,7 @@ func (a Analyzer) analyzeConst(
 			}
 		}
 	case "enum":
-		if constant.Value.Message.Enum == nil {
+		if constant.Value.Message.Union == nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf("Enum value is missing in enum contant: %v", constant),
 				Meta:    &constant.Meta,

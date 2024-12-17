@@ -1463,7 +1463,7 @@ func (a Analyzer) getConstSenderType(
 				Str:          constSender.Value.Message.Str,
 				List:         constSender.Value.Message.List,
 				DictOrStruct: constSender.Value.Message.DictOrStruct,
-				Enum:         constSender.Value.Message.Enum,
+				Union:        constSender.Value.Message.Union,
 				Meta:         constSender.Value.Message.Meta,
 			},
 		},

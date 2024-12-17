@@ -831,9 +831,9 @@ func (s *treeShapeListener) parsePrimitiveConstLiteral(
 		if err != nil {
 			return src.Const{}, err
 		}
-		parsedConst.Value.Message.Enum = &src.EnumMessage{
-			EnumRef:    parsedEnumRef,
-			MemberName: lit.EnumLit().IDENTIFIER().GetText(),
+		parsedConst.Value.Message.Union = &src.UnionLiteral{
+			EntityRef: parsedEnumRef,
+			Tag:       lit.EnumLit().IDENTIFIER().GetText(),
 		}
 		parsedConst.TypeExpr = ts.Expr{
 			Inst: &ts.InstExpr{Ref: parsedEnumRef},
@@ -947,9 +947,9 @@ func (s *treeShapeListener) parseMessage(
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
-		msg.Enum = &src.EnumMessage{
-			EnumRef:    parsedEnumRef,
-			MemberName: constVal.EnumLit().IDENTIFIER().GetText(),
+		msg.Union = &src.UnionLiteral{
+			EntityRef: parsedEnumRef,
+			Tag:       constVal.EnumLit().IDENTIFIER().GetText(),
 		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()

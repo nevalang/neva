@@ -202,7 +202,8 @@ type Const struct {
 
 type ConstValue struct {
 	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *MsgLiteral     `json:"value,omitempty"` // literal
+	Message *MsgLiteral     `json:"literal,omitempty"`
+	Meta    core.Meta       `json:"meta,omitempty"`
 }
 
 func (c ConstValue) String() string {
@@ -218,15 +219,16 @@ type MsgLiteral struct {
 	Float        *float64              `json:"float,omitempty"`
 	Str          *string               `json:"str,omitempty"`
 	List         []ConstValue          `json:"vec,omitempty"`
-	DictOrStruct map[string]ConstValue `json:"dict,omitempty"` // TODO separate map and struct
-	Enum         *EnumMessage          `json:"enum,omitempty"`
+	DictOrStruct map[string]ConstValue `json:"dict,omitempty"`
+	Union        *UnionLiteral         `json:"union,omitempty"`
 	Meta         core.Meta             `json:"meta,omitempty"`
 }
 
-// TODO rename to UnionTagMessage
-type EnumMessage struct {
-	EnumRef    core.EntityRef
-	MemberName string
+type UnionLiteral struct {
+	EntityRef core.EntityRef `json:"entityRef,omitempty"`
+	Tag       string         `json:"tag,omitempty"`
+	Data      *ConstValue    `json:"data,omitempty"`
+	Meta      core.Meta      `json:"meta,omitempty"`
 }
 
 func (m MsgLiteral) String() string {

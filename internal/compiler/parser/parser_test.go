@@ -405,15 +405,15 @@ func TestParser_ParseFile_EnumLiterals(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	enum := got.Entities["c0"].Const.Value.Message.Enum
-	require.Equal(t, "", enum.EnumRef.Pkg)
-	require.Equal(t, "Enum1", enum.EnumRef.Name)
-	require.Equal(t, "Foo", enum.MemberName)
+	enum := got.Entities["c0"].Const.Value.Message.Union
+	require.Equal(t, "", enum.EntityRef.Pkg)
+	require.Equal(t, "Enum1", enum.EntityRef.Name)
+	require.Equal(t, "Foo", enum.Tag)
 
-	enum = got.Entities["c1"].Const.Value.Message.Enum
-	require.Equal(t, "pkg", enum.EnumRef.Pkg)
-	require.Equal(t, "Enum2", enum.EnumRef.Name)
-	require.Equal(t, "Bar", enum.MemberName)
+	enum = got.Entities["c1"].Const.Value.Message.Union
+	require.Equal(t, "pkg", enum.EntityRef.Pkg)
+	require.Equal(t, "Enum2", enum.EntityRef.Name)
+	require.Equal(t, "Bar", enum.Tag)
 }
 
 func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
@@ -431,16 +431,16 @@ func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
 
 	conn := got.Entities["C1"].Component.Net[0]
 
-	senderEnum := conn.Normal.Senders[0].Const.Value.Message.Enum
-	require.Equal(t, "", senderEnum.EnumRef.Pkg)
-	require.Equal(t, "Foo", senderEnum.EnumRef.Name)
-	require.Equal(t, "Bar", senderEnum.MemberName)
+	senderEnum := conn.Normal.Senders[0].Const.Value.Message.Union
+	require.Equal(t, "", senderEnum.EntityRef.Pkg)
+	require.Equal(t, "Foo", senderEnum.EntityRef.Name)
+	require.Equal(t, "Bar", senderEnum.Tag)
 
 	conn = got.Entities["C1"].Component.Net[1]
-	senderEnum = conn.Normal.Senders[0].Const.Value.Message.Enum
-	require.Equal(t, "foo", senderEnum.EnumRef.Pkg)
-	require.Equal(t, "Bar", senderEnum.EnumRef.Name)
-	require.Equal(t, "Baz", senderEnum.MemberName)
+	senderEnum = conn.Normal.Senders[0].Const.Value.Message.Union
+	require.Equal(t, "foo", senderEnum.EntityRef.Pkg)
+	require.Equal(t, "Bar", senderEnum.EntityRef.Name)
+	require.Equal(t, "Baz", senderEnum.Tag)
 }
 
 func TestParser_ParseFile_Range(t *testing.T) {
