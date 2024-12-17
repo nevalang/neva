@@ -112,7 +112,7 @@ func (e Entity) Meta() *core.Meta {
 	return &m
 }
 
-type EntityKind string // It's handy to transmit strings enum instead of digital
+type EntityKind string
 
 const (
 	ComponentEntity EntityKind = "component_entity"
@@ -140,6 +140,7 @@ type Interface struct {
 	Meta       core.Meta  `json:"meta,omitempty"`
 }
 
+// TODO should we use it to typesystem package?
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
 	Meta   core.Meta  `json:"meta,omitempty"`
@@ -202,7 +203,7 @@ type Const struct {
 
 type ConstValue struct {
 	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *MsgLiteral     `json:"literal,omitempty"`
+	Message *MsgLiteral     `json:"message,omitempty"`
 	Meta    core.Meta       `json:"meta,omitempty"`
 }
 
@@ -303,31 +304,27 @@ type Switch struct {
 	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
-type ConnectionSideSelectors []string
-
-func (c ConnectionSideSelectors) String() string {
-	if len(c) == 0 {
-		return ""
-	}
-	s := ""
-	for i, field := range c {
-		s += field
-		if i != len(c)-1 {
-			s += "/"
-		}
-	}
-	return s
+type ConnectionSender struct {
+	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
+	Const          *Const       `json:"const,omitempty"`
+	Range          *Range       `json:"range,omitempty"`
+	Unary          *Unary       `json:"unary,omitempty"`
+	Binary         *Binary      `json:"binary,omitempty"`
+	Ternary        *Ternary     `json:"ternary,omitempty"`
+	StructSelector []string     `json:"selector,omitempty"`
+	Union          *UnionSender `json:"union,omitempty"`
+	Meta           core.Meta    `json:"meta,omitempty"`
 }
 
-type ConnectionSender struct {
-	PortAddr       *PortAddr `json:"portAddr,omitempty"`
-	Const          *Const    `json:"const,omitempty"`
-	Range          *Range    `json:"range,omitempty"`
-	Unary          *Unary    `json:"unary,omitempty"`
-	Binary         *Binary   `json:"binary,omitempty"`
-	Ternary        *Ternary  `json:"ternary,omitempty"`
-	StructSelector []string  `json:"selector,omitempty"`
-	Meta           core.Meta `json:"meta,omitempty"`
+// UnionSender represents union in connection sender.
+// It's not same thing as UnionLiteral.
+// UnionLiteral is used to represent union in const value.
+// The difference is that UnionSender uses ConnectionSender instead of ConstValue.
+type UnionSender struct {
+	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
+	Tag       string            `json:"tag,omitempty"`
+	Data      *ConnectionSender `json:"data,omitempty"`
+	Meta      core.Meta         `json:"meta,omitempty"`
 }
 
 type Binary struct {

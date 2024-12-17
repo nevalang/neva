@@ -14,7 +14,6 @@ var (
 	ErrArgNotSubtype = errors.New("Subtype arg must be subtype of corresponding supertype arg")
 	ErrLitArrSize    = errors.New("Subtype arr size must be >= supertype")
 	ErrArrDiffType   = errors.New("Subtype arr must have same type as supertype")
-	ErrEnumEl        = errors.New("Subtype enum el doesn't match supertype")
 	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
