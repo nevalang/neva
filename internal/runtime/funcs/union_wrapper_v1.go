@@ -6,9 +6,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type UnionWrapper struct{}
+// UnionWrapV1 wraps without extra signal
+type UnionWrapV1 struct{}
 
-func (UnionWrapper) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (UnionWrapV1) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	tag := cfg.Str()
 
 	dataIn, err := io.In.Single("data")

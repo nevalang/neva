@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type readStructField struct{}
+type structField struct{}
 
-func (s readStructField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	path := cfg.List()
 	if len(path) == 0 {
 		return nil, errors.New("field path cannot be empty")
@@ -44,7 +44,7 @@ func (s readStructField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx contex
 	}, nil
 }
 
-func (readStructField) selector(m runtime.Msg, path []string) runtime.Msg {
+func (structField) selector(m runtime.Msg, path []string) runtime.Msg {
 	for len(path) > 0 {
 		m = m.Struct().Get(path[0])
 		path = path[1:]

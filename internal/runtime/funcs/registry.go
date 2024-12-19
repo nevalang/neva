@@ -8,26 +8,26 @@ import (
 
 func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
-		"new":     new{},
+		"new":     newV1{},
 		"new_v2":  newV2{},
 		"del":     del{},
 		"lock":    lock{},
-		"unwrap":  unwrap{},
-		"fan_out": fanOut{},
 		"fan_in":  fanIn{},
+		"fan_out": fanOut{},
 
 		"panic": panicker{},
 
 		"switch_router": switchRouter{},
-		"match":         match{},
+		"match":         matchSelector{},
 		"select":        selector{},
-		"ternary":       ternary{},
-		"eq":            eq{},
-		"ne":            notEq{},
-		"cond":          cond{},
-		"not":           not{},
-		"and":           and{},
-		"or":            or{},
+		"ternary":       ternarySelector{},
+
+		"eq":   eq{},
+		"ne":   notEq{},
+		"cond": cond{},
+		"not":  not{},
+		"and":  and{},
+		"or":   or{},
 
 		"int_is_greater":          intIsGreater{},
 		"int_is_greater_or_equal": intIsGreaterOrEqual{},
@@ -43,15 +43,16 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"array_port_to_stream": arrayPortToStream{},
 		"list_to_stream":       listToStream{},
-		"stream_int_range":     rangeInt{},
-		"stream_int_range_v2":  rangeIntV2{},
-		"stream_product":       streamProduct{},
-		"stream_zip":           streamZip{},
+		"stream_to_list":       streamToList{},
 
+		"stream_int_range":    rangeIntV1{},
+		"stream_int_range_v2": rangeIntV2{},
+
+		"stream_zip":     streamZip{},
+		"stream_product": streamProduct{},
+
+		"field":          structField{},
 		"struct_builder": structBuilder{},
-		"stream_to_list": streamToList{},
-
-		"field": readStructField{},
 
 		"get_dict_value": getDictValue{},
 
@@ -64,10 +65,18 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"float_mul":  floatMul{},
 		"float_div":  floatDiv{},
 		"string_add": stringAdd{},
+		"int_mod":    intMod{},
+
+		"int_pow": intPow{},
+
+		"int_bitwise_and": intBitwiseAnd{},
+		"int_bitwise_or":  intBitwiseOr{},
+		"int_bitwise_xor": intBitwiseXor{},
+		"int_bitwise_lsh": intBitwiseLsh{},
+		"int_bitwise_rsh": intBitwiseRsh{},
 
 		"int_inc": intInc{},
 		"int_dec": intDec{},
-		"int_mod": intMod{},
 
 		"parse_int": parseInt{},
 
@@ -101,13 +110,5 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"wait_group": waitGroup{},
 
 		"accumulator": accumulator{},
-
-		"int_pow": intPow{},
-
-		"int_bitwise_and": intBitwiseAnd{},
-		"int_bitwise_or":  intBitwiseOr{},
-		"int_bitwise_xor": intBitwiseXor{},
-		"int_bitwise_lsh": intBitwiseLsh{},
-		"int_bitwise_rsh": intBitwiseRsh{},
 	}
 }
