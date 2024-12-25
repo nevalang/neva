@@ -19,59 +19,18 @@ A general-purpose dataflow programming language with static types and implicit p
 
 ## 🚀 Features
 
-- Dataflow programming
-- Implicit parallelism
-- Compiles to machine code and Go
-- Garbage collection
-- Strong static typing
-- Clean C-like syntax
-- ...And more!
+- **Dataflow Programming** - write programs as message-passing graphs
+- **Implicit Parallelism** - no need to manage threads, mutexes, or coroutines
+- **First-Class Stream Processing** - built with streaming primitives in mind
+- **Powerful Type System** - strong static typing with unions and pattern matching
+- **Compiled** - generate code for any platform Go supports, from machine code to WASM
+- **Functional** - immutability and composition via higher-order components
+- **Garbage Collection** - utilizes Go runtime's efficient GC
+- ... and much more!
 
 > ⚠️ This project is currently under heavy development and is not yet ready for production use.
 
-## 🔧 Quick Start
-
-### Installation
-
-For Mac OS and Linux:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
-```
-
-If your device is connected to a chinese network:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/china/install.sh | bash
-```
-
-For Windows (see [issue](https://github.com/nevalang/neva/issues/499) with Windows Defender, try manual download from [releases](https://github.com/nevalang/neva/releases) if installation won't work):
-
-```batch
-curl -o installer.bat -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat && installer.bat
-```
-
-### Hello World
-
-First, use Neva CLI to create a project template
-
-```bash
-neva new my_awesome_project
-```
-
-Then run it
-
-```bash
-neva run my_awesome_project/src
-```
-
-You should see the following output
-
-```bash
-Hello, World!
-```
-
-If you open `my_awesome_project/src/main.neva` with your favorite IDE you'll see this
+## Hello World
 
 ```neva
 import { fmt }
@@ -83,26 +42,22 @@ def Main(start any) (stop any) {
 }
 ```
 
-The `import { fmt }` statement imports the standard library's `fmt` package which provides common formatting and printing functionality. The `Main` component has `start` inport and `stop` outport of type `any`, with a `println` node (instance of `fmt.Println`). The network after `---` shows: on `:start` message, `"Hello, World!"` is sent to `println`, then program terminates via `:stop` signal.
+The `import { fmt }` statement imports the standard library's `fmt` package which provides common formatting and printing functionality. The `Main` component has `start` input and `stop` output ports of type `any`, with a `println` node (instance of `fmt.Println`). The network after `---` shows: on `:start` message, `"Hello, World!"` is sent to `println`, then program terminates via `:stop` signal.
 
-### What's Next?
+## What's Next?
 
-- [Documentation](./docs/README.md)
-- [Examples](./examples/)
-- [Community](#community)
+- [Documentation](./docs/README.md) - learn how to install and use Nevalang
+- [Examples](./examples/) - explore sample programs
+- [Community](#community) - join us!
 
 ## 🚧 Roadmap
 
-Nevalang is in its early stages, but community support can help it grow into a mature, feature-rich language.
+Check out our [full roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open). Here are a few highlights:
 
-- Grow community and improve docs
-- Expand stdlib (including test-framework)
-- Better syntax and more features
-- Enhance developer experience (lsp, debugger, etc)
-- Implement **Go interoperability** (call Go from Neva and vice versa)
-- Enable **visual programming** in VSCode
+- **Visual Programming** - observe and debug your dataflow visually
+- **Go Interop** - leverage the Go ecosystem and enable gradual adoption in Go projects
 
-We seek contributors to join our small team.
+Nevalang is in its early stages, and community support can help it grow into a mature, feature-rich language. _We are looking for contributors_ to join our small team.
 
 ## 📢 Community
 
@@ -110,9 +65,10 @@ Join our community and help shape the future of programming:
 
 - [Discord](https://discord.gg/dmXbC79UuH)
 - [Reddit](https://www.reddit.com/r/nevalang/)
-- [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
+- [Telegram](https://t.me/+H1kRClL8ppI1MWJi)
+- [Twitter](https://x.com/neva_language)
 
-Also please check our [CoC](./CODE_OF_CONDUCT.md).
+Please also check our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## 🤝 Contributing
 

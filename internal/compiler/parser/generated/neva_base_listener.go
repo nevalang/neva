@@ -188,12 +188,6 @@ func (s *BasenevaListener) EnterTypeLitExpr(ctx *TypeLitExprContext) {}
 // ExitTypeLitExpr is called when production typeLitExpr is exited.
 func (s *BasenevaListener) ExitTypeLitExpr(ctx *TypeLitExprContext) {}
 
-// EnterEnumTypeExpr is called when production enumTypeExpr is entered.
-func (s *BasenevaListener) EnterEnumTypeExpr(ctx *EnumTypeExprContext) {}
-
-// ExitEnumTypeExpr is called when production enumTypeExpr is exited.
-func (s *BasenevaListener) ExitEnumTypeExpr(ctx *EnumTypeExprContext) {}
-
 // EnterStructTypeExpr is called when production structTypeExpr is entered.
 func (s *BasenevaListener) EnterStructTypeExpr(ctx *StructTypeExprContext) {}
 
@@ -218,11 +212,17 @@ func (s *BasenevaListener) EnterUnionTypeExpr(ctx *UnionTypeExprContext) {}
 // ExitUnionTypeExpr is called when production unionTypeExpr is exited.
 func (s *BasenevaListener) ExitUnionTypeExpr(ctx *UnionTypeExprContext) {}
 
-// EnterNonUnionTypeExpr is called when production nonUnionTypeExpr is entered.
-func (s *BasenevaListener) EnterNonUnionTypeExpr(ctx *NonUnionTypeExprContext) {}
+// EnterUnionFields is called when production unionFields is entered.
+func (s *BasenevaListener) EnterUnionFields(ctx *UnionFieldsContext) {}
 
-// ExitNonUnionTypeExpr is called when production nonUnionTypeExpr is exited.
-func (s *BasenevaListener) ExitNonUnionTypeExpr(ctx *NonUnionTypeExprContext) {}
+// ExitUnionFields is called when production unionFields is exited.
+func (s *BasenevaListener) ExitUnionFields(ctx *UnionFieldsContext) {}
+
+// EnterUnionField is called when production unionField is entered.
+func (s *BasenevaListener) EnterUnionField(ctx *UnionFieldContext) {}
+
+// ExitUnionField is called when production unionField is exited.
+func (s *BasenevaListener) ExitUnionField(ctx *UnionFieldContext) {}
 
 // EnterInterfaceStmt is called when production interfaceStmt is entered.
 func (s *BasenevaListener) EnterInterfaceStmt(ctx *InterfaceStmtContext) {}
@@ -290,23 +290,17 @@ func (s *BasenevaListener) EnterConstLit(ctx *ConstLitContext) {}
 // ExitConstLit is called when production constLit is exited.
 func (s *BasenevaListener) ExitConstLit(ctx *ConstLitContext) {}
 
-// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
-func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
-// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
-func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
 // EnterBool is called when production bool is entered.
 func (s *BasenevaListener) EnterBool(ctx *BoolContext) {}
 
 // ExitBool is called when production bool is exited.
 func (s *BasenevaListener) ExitBool(ctx *BoolContext) {}
 
-// EnterEnumLit is called when production enumLit is entered.
-func (s *BasenevaListener) EnterEnumLit(ctx *EnumLitContext) {}
+// EnterUnionLit is called when production unionLit is entered.
+func (s *BasenevaListener) EnterUnionLit(ctx *UnionLitContext) {}
 
-// ExitEnumLit is called when production enumLit is exited.
-func (s *BasenevaListener) ExitEnumLit(ctx *EnumLitContext) {}
+// ExitUnionLit is called when production unionLit is exited.
+func (s *BasenevaListener) ExitUnionLit(ctx *UnionLitContext) {}
 
 // EnterListLit is called when production listLit is entered.
 func (s *BasenevaListener) EnterListLit(ctx *ListLitContext) {}
@@ -440,6 +434,24 @@ func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {
 // ExitSingleSenderSide is called when production singleSenderSide is exited.
 func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
 
+// EnterUnionSender is called when production unionSender is entered.
+func (s *BasenevaListener) EnterUnionSender(ctx *UnionSenderContext) {}
+
+// ExitUnionSender is called when production unionSender is exited.
+func (s *BasenevaListener) ExitUnionSender(ctx *UnionSenderContext) {}
+
+// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
+func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
+
+// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
+func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
+
+// EnterSenderConstRef is called when production senderConstRef is entered.
+func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
+
+// ExitSenderConstRef is called when production senderConstRef is exited.
+func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
+
 // EnterUnaryExpr is called when production unaryExpr is entered.
 func (s *BasenevaListener) EnterUnaryExpr(ctx *UnaryExprContext) {}
 
@@ -487,12 +499,6 @@ func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
 
 // ExitDeferredConn is called when production deferredConn is exited.
 func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
-
-// EnterSenderConstRef is called when production senderConstRef is entered.
-func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
-
-// ExitSenderConstRef is called when production senderConstRef is exited.
-func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
 
 // EnterRangeExpr is called when production rangeExpr is entered.
 func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}

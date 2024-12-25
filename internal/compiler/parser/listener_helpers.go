@@ -88,6 +88,7 @@ func (s *treeShapeListener) parseTypeParams(
 }
 
 func (s *treeShapeListener) parseTypeExpr(expr generated.ITypeExprContext) (ts.Expr, *compiler.Error) {
+	// TODO remove support for this
 	if expr == nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
@@ -100,31 +101,27 @@ func (s *treeShapeListener) parseTypeExpr(expr generated.ITypeExprContext) (ts.E
 		}, nil
 	}
 
+	meta := &core.Meta{
+		Text: expr.GetText(),
+		Start: core.Position{
+			Line:   expr.GetStart().GetLine(),
+			Column: expr.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   expr.GetStop().GetLine(),
+			Column: expr.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
 	var result *ts.Expr
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
 		v, err := s.parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
 				Message: err.Error(),
-				Meta: &core.Meta{
-					Text: expr.GetText(),
-					Start: core.Position{
-						Line:   expr.GetStart().GetLine(),
-						Column: expr.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   expr.GetStop().GetLine(),
-						Column: expr.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
+				Meta:    meta,
 			}
-		}
-		result = v
-	} else if unionExpr := expr.UnionTypeExpr(); unionExpr != nil {
-		v, err := s.parseUnionExpr(unionExpr)
-		if err != nil {
-			return ts.Expr{}, err
 		}
 		result = v
 	} else if litExpr := expr.TypeLitExpr(); litExpr != nil {
@@ -179,53 +176,13 @@ func (s *treeShapeListener) getTypeExprMeta(expr generated.ITypeExprContext) cor
 	return meta
 }
 
-func (s *treeShapeListener) parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compiler.Error) {
-	subExprs := unionExpr.AllNonUnionTypeExpr()
-	parsedSubExprs := make([]ts.Expr, 0, len(subExprs))
-
-	for _, subExpr := range subExprs {
-		if instExpr := subExpr.TypeInstExpr(); instExpr != nil {
-			parsedTypeInstExpr, err := s.parseTypeInstExpr(instExpr)
-			if err != nil {
-				return nil, err
-			}
-			parsedSubExprs = append(parsedSubExprs, *parsedTypeInstExpr)
-		}
-		if unionExpr := subExpr.TypeLitExpr(); unionExpr != nil {
-			v, err := s.parseLitExpr(subExpr.TypeLitExpr())
-			if err != nil {
-				return nil, err
-			}
-			parsedSubExprs = append(parsedSubExprs, *v)
-		}
-	}
-
-	return &ts.Expr{
-		Lit: &ts.LitExpr{
-			Union: parsedSubExprs,
-		},
-		Meta: core.Meta{
-			Text: unionExpr.GetText(),
-			Start: core.Position{
-				Line:   unionExpr.GetStart().GetLine(),
-				Column: unionExpr.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   unionExpr.GetStop().GetLine(),
-				Column: unionExpr.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		},
-	}, nil
-}
-
 func (s *treeShapeListener) parseLitExpr(litExpr generated.ITypeLitExprContext) (*ts.Expr, *compiler.Error) {
-	enumExpr := litExpr.EnumTypeExpr()
+	unionExpr := litExpr.UnionTypeExpr()
 	structExpr := litExpr.StructTypeExpr()
 
 	switch {
-	case enumExpr != nil:
-		return s.parseEnumExpr(enumExpr), nil
+	case unionExpr != nil:
+		return s.parseUnionExpr(unionExpr)
 	case structExpr != nil:
 		return s.parseStructExpr(structExpr)
 	}
@@ -247,29 +204,66 @@ func (s *treeShapeListener) parseLitExpr(litExpr generated.ITypeLitExprContext) 
 	}
 }
 
-func (s *treeShapeListener) parseEnumExpr(enumExpr generated.IEnumTypeExprContext) *ts.Expr {
-	ids := enumExpr.AllIDENTIFIER()
-	result := ts.Expr{
+func (s *treeShapeListener) parseUnionExpr(unionExpr generated.IUnionTypeExprContext) (*ts.Expr, *compiler.Error) {
+	fields := unionExpr.UnionFields()
+	if fields == nil {
+		return &ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: make(map[string]*ts.Expr),
+			},
+			Meta: core.Meta{
+				Text: unionExpr.GetText(),
+				Start: core.Position{
+					Line:   unionExpr.GetStart().GetLine(),
+					Column: unionExpr.GetStart().GetColumn(),
+				},
+				Stop: core.Position{
+					Line:   unionExpr.GetStop().GetLine(),
+					Column: unionExpr.GetStop().GetColumn(),
+				},
+				Location: s.loc,
+			},
+		}, nil
+	}
+
+	unionFields := fields.AllUnionField()
+	parsedTags := make(map[string]*ts.Expr)
+
+	for _, field := range unionFields {
+		tagName := field.IDENTIFIER().GetText()
+		var tagType *ts.Expr
+
+		if field.TypeExpr() != nil {
+			tmp, err := s.parseTypeExpr(field.TypeExpr())
+			if err != nil {
+				return nil, err
+			}
+			tagType = &tmp
+		} else {
+			// Tag without type expression
+			tagType = nil
+		}
+
+		parsedTags[tagName] = tagType
+	}
+
+	return &ts.Expr{
 		Lit: &ts.LitExpr{
-			Enum: make([]string, 0, len(ids)),
+			Union: parsedTags,
 		},
-	}
-	for _, id := range ids {
-		result.Lit.Enum = append(result.Lit.Enum, id.GetText())
-	}
-	result.Meta = core.Meta{
-		Text: enumExpr.GetText(),
-		Start: core.Position{
-			Line:   enumExpr.GetStart().GetLine(),
-			Column: enumExpr.GetStart().GetColumn(),
+		Meta: core.Meta{
+			Text: unionExpr.GetText(),
+			Start: core.Position{
+				Line:   unionExpr.GetStart().GetLine(),
+				Column: unionExpr.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   unionExpr.GetStop().GetLine(),
+				Column: unionExpr.GetStop().GetColumn(),
+			},
+			Location: s.loc,
 		},
-		Stop: core.Position{
-			Line:   enumExpr.GetStop().GetLine(),
-			Column: enumExpr.GetStop().GetColumn(),
-		},
-		Location: s.loc,
-	}
-	return &result
+	}, nil
 }
 
 func (s *treeShapeListener) parseStructExpr(
@@ -826,19 +820,6 @@ func (s *treeShapeListener) parsePrimitiveConstLiteral(
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "string"},
 		}
-	case lit.EnumLit() != nil:
-		parsedEnumRef, err := s.parseEntityRef(lit.EnumLit().EntityRef())
-		if err != nil {
-			return src.Const{}, err
-		}
-		parsedConst.Value.Message.Union = &src.UnionLiteral{
-			EntityRef: parsedEnumRef,
-			Tag:       lit.EnumLit().IDENTIFIER().GetText(),
-		}
-		parsedConst.TypeExpr = ts.Expr{
-			Inst: &ts.InstExpr{Ref: parsedEnumRef},
-			Meta: parsedEnumRef.Meta,
-		}
 	default:
 		panic("unknown const: " + lit.GetText())
 	}
@@ -942,20 +923,29 @@ func (s *treeShapeListener) parseMessage(
 				"'",
 			),
 		)
-	case constVal.EnumLit() != nil:
-		parsedEnumRef, err := s.parseEntityRef(constVal.EnumLit().EntityRef())
+	case constVal.UnionLit() != nil:
+		parsedUnionRef, err := s.parseEntityRef(constVal.UnionLit().EntityRef())
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
 		msg.Union = &src.UnionLiteral{
-			EntityRef: parsedEnumRef,
-			Tag:       constVal.EnumLit().IDENTIFIER().GetText(),
+			EntityRef: parsedUnionRef,
+			Tag:       constVal.UnionLit().IDENTIFIER().GetText(),
+		}
+		if wrapped := constVal.UnionLit().ConstLit(); wrapped != nil {
+			parsedUnionData, err := s.parseMessage(wrapped)
+			if err != nil {
+				return src.MsgLiteral{}, err
+			}
+			msg.Union.Data = &src.ConstValue{
+				Message: &parsedUnionData,
+			}
 		}
 	case constVal.ListLit() != nil:
 		listItems := constVal.ListLit().ListItems()
 		if listItems == nil { // empty list []
 			msg.List = []src.ConstValue{}
-			return src.MsgLiteral{}, nil
+			return msg, nil
 		}
 		items := listItems.AllCompositeItem()
 		msg.List = make([]src.ConstValue, 0, len(items))
@@ -1604,6 +1594,7 @@ func (s *treeShapeListener) parseSingleSender(
 	rangeExprSender := senderSide.RangeExpr()
 	ternaryExprSender := senderSide.TernaryExpr()
 	binaryExprSender := senderSide.BinaryExpr()
+	unionSender := senderSide.UnionSender()
 
 	if portSender == nil &&
 		constRefSender == nil &&
@@ -1611,7 +1602,8 @@ func (s *treeShapeListener) parseSingleSender(
 		rangeExprSender == nil &&
 		structSelectors == nil &&
 		ternaryExprSender == nil &&
-		binaryExprSender == nil {
+		binaryExprSender == nil &&
+		unionSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
@@ -1648,6 +1640,36 @@ func (s *treeShapeListener) parseSingleSender(
 			Value: src.ConstValue{
 				Ref: &parsedEntityRef,
 			},
+		}
+	}
+
+	if unionSender != nil {
+		parsedUnionRef, err := s.parseEntityRef(unionSender.EntityRef())
+		if err != nil {
+			return src.ConnectionSender{}, err
+		}
+		constant = &src.Const{
+			Value: src.ConstValue{
+				Message: &src.MsgLiteral{
+					Union: &src.UnionLiteral{
+						EntityRef: parsedUnionRef,
+						Tag:       unionSender.IDENTIFIER().GetText(),
+					},
+				},
+			},
+		}
+		// If there's a wrapped value
+		if unionSender.SingleSenderSide() != nil {
+			wrappedSender, err := s.parseSingleSender(unionSender.SingleSenderSide())
+			if err != nil {
+				return src.ConnectionSender{}, err
+			}
+			if wrappedSender.Const != nil {
+				constant.Value.Message.Int = wrappedSender.Const.Value.Message.Int
+				constant.Value.Message.Float = wrappedSender.Const.Value.Message.Float
+				constant.Value.Message.Bool = wrappedSender.Const.Value.Message.Bool
+				constant.Value.Message.Str = wrappedSender.Const.Value.Message.Str
+			}
 		}
 	}
 

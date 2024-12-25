@@ -51,7 +51,7 @@ structTypeExpr:
 structFields: structField (NEWLINE+ structField)*;
 structField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr: 'union' NEWLINE* '{' NEWLINE* unionFields? '}';
-unionFields: unionField (NEWLINE+ unionField)*;
+unionFields: unionField ((',' NEWLINE* | NEWLINE+) unionField)*;
 unionField: IDENTIFIER typeExpr? NEWLINE*;
 
 // interfaces

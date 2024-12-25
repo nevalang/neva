@@ -91,9 +91,6 @@ type nevaListener interface {
 	// EnterTypeLitExpr is called when entering the typeLitExpr production.
 	EnterTypeLitExpr(c *TypeLitExprContext)
 
-	// EnterEnumTypeExpr is called when entering the enumTypeExpr production.
-	EnterEnumTypeExpr(c *EnumTypeExprContext)
-
 	// EnterStructTypeExpr is called when entering the structTypeExpr production.
 	EnterStructTypeExpr(c *StructTypeExprContext)
 
@@ -106,8 +103,11 @@ type nevaListener interface {
 	// EnterUnionTypeExpr is called when entering the unionTypeExpr production.
 	EnterUnionTypeExpr(c *UnionTypeExprContext)
 
-	// EnterNonUnionTypeExpr is called when entering the nonUnionTypeExpr production.
-	EnterNonUnionTypeExpr(c *NonUnionTypeExprContext)
+	// EnterUnionFields is called when entering the unionFields production.
+	EnterUnionFields(c *UnionFieldsContext)
+
+	// EnterUnionField is called when entering the unionField production.
+	EnterUnionField(c *UnionFieldContext)
 
 	// EnterInterfaceStmt is called when entering the interfaceStmt production.
 	EnterInterfaceStmt(c *InterfaceStmtContext)
@@ -142,14 +142,11 @@ type nevaListener interface {
 	// EnterConstLit is called when entering the constLit production.
 	EnterConstLit(c *ConstLitContext)
 
-	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
-	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
-
 	// EnterBool is called when entering the bool production.
 	EnterBool(c *BoolContext)
 
-	// EnterEnumLit is called when entering the enumLit production.
-	EnterEnumLit(c *EnumLitContext)
+	// EnterUnionLit is called when entering the unionLit production.
+	EnterUnionLit(c *UnionLitContext)
 
 	// EnterListLit is called when entering the listLit production.
 	EnterListLit(c *ListLitContext)
@@ -217,6 +214,15 @@ type nevaListener interface {
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
 
+	// EnterUnionSender is called when entering the unionSender production.
+	EnterUnionSender(c *UnionSenderContext)
+
+	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
+	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
+
+	// EnterSenderConstRef is called when entering the senderConstRef production.
+	EnterSenderConstRef(c *SenderConstRefContext)
+
 	// EnterUnaryExpr is called when entering the unaryExpr production.
 	EnterUnaryExpr(c *UnaryExprContext)
 
@@ -240,9 +246,6 @@ type nevaListener interface {
 
 	// EnterDeferredConn is called when entering the deferredConn production.
 	EnterDeferredConn(c *DeferredConnContext)
-
-	// EnterSenderConstRef is called when entering the senderConstRef production.
-	EnterSenderConstRef(c *SenderConstRefContext)
 
 	// EnterRangeExpr is called when entering the rangeExpr production.
 	EnterRangeExpr(c *RangeExprContext)
@@ -373,9 +376,6 @@ type nevaListener interface {
 	// ExitTypeLitExpr is called when exiting the typeLitExpr production.
 	ExitTypeLitExpr(c *TypeLitExprContext)
 
-	// ExitEnumTypeExpr is called when exiting the enumTypeExpr production.
-	ExitEnumTypeExpr(c *EnumTypeExprContext)
-
 	// ExitStructTypeExpr is called when exiting the structTypeExpr production.
 	ExitStructTypeExpr(c *StructTypeExprContext)
 
@@ -388,8 +388,11 @@ type nevaListener interface {
 	// ExitUnionTypeExpr is called when exiting the unionTypeExpr production.
 	ExitUnionTypeExpr(c *UnionTypeExprContext)
 
-	// ExitNonUnionTypeExpr is called when exiting the nonUnionTypeExpr production.
-	ExitNonUnionTypeExpr(c *NonUnionTypeExprContext)
+	// ExitUnionFields is called when exiting the unionFields production.
+	ExitUnionFields(c *UnionFieldsContext)
+
+	// ExitUnionField is called when exiting the unionField production.
+	ExitUnionField(c *UnionFieldContext)
 
 	// ExitInterfaceStmt is called when exiting the interfaceStmt production.
 	ExitInterfaceStmt(c *InterfaceStmtContext)
@@ -424,14 +427,11 @@ type nevaListener interface {
 	// ExitConstLit is called when exiting the constLit production.
 	ExitConstLit(c *ConstLitContext)
 
-	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
-	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
-
 	// ExitBool is called when exiting the bool production.
 	ExitBool(c *BoolContext)
 
-	// ExitEnumLit is called when exiting the enumLit production.
-	ExitEnumLit(c *EnumLitContext)
+	// ExitUnionLit is called when exiting the unionLit production.
+	ExitUnionLit(c *UnionLitContext)
 
 	// ExitListLit is called when exiting the listLit production.
 	ExitListLit(c *ListLitContext)
@@ -499,6 +499,15 @@ type nevaListener interface {
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)
 
+	// ExitUnionSender is called when exiting the unionSender production.
+	ExitUnionSender(c *UnionSenderContext)
+
+	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
+	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
+
+	// ExitSenderConstRef is called when exiting the senderConstRef production.
+	ExitSenderConstRef(c *SenderConstRefContext)
+
 	// ExitUnaryExpr is called when exiting the unaryExpr production.
 	ExitUnaryExpr(c *UnaryExprContext)
 
@@ -522,9 +531,6 @@ type nevaListener interface {
 
 	// ExitDeferredConn is called when exiting the deferredConn production.
 	ExitDeferredConn(c *DeferredConnContext)
-
-	// ExitSenderConstRef is called when exiting the senderConstRef production.
-	ExitSenderConstRef(c *SenderConstRefContext)
 
 	// ExitRangeExpr is called when exiting the rangeExpr production.
 	ExitRangeExpr(c *RangeExprContext)
