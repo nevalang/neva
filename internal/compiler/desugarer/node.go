@@ -18,7 +18,9 @@ func (Desugarer) handleNode(
 ) ([]src.Connection, error) {
 	var extraConnections []src.Connection
 
-	locOnlyMeta := core.Meta{Location: node.Meta.Location}
+	locOnlyMeta := core.Meta{
+		Location: node.Meta.Location,
+	}
 
 	if node.ErrGuard {
 		extraConnections = append(extraConnections, src.Connection{
@@ -150,12 +152,9 @@ func (Desugarer) handleNode(
 		Component: virtualComponent,
 	}
 
-	// FIXME: HOW DOES IT WORK? WHY DOESN'T IT USES VIRTUAL COMPONENT!?!?
+	// TODO: figure out how does it work and why doesn't it use virtual component
 	desugaredNodes[nodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "",
-			Name: "Struct",
-		},
+		EntityRef:  core.EntityRef{Pkg: "", Name: "Struct"},
 		Directives: node.Directives,
 		TypeArgs:   node.TypeArgs,
 		DIArgs:     node.DIArgs,
