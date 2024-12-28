@@ -217,7 +217,10 @@ func (d *Desugarer) desugarSingleReceiver(
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
 ) (desugarReceiverResult, error) {
-	locOnlyMeta := core.Meta{Location: normConn.Senders[0].Meta.Location} // FIXME for some reason normConn.Meta sometimes empty
+	// FIXME for some reason normConn.Meta sometimes empty
+	locOnlyMeta := core.Meta{
+		Location: normConn.Senders[0].Meta.Location,
+	}
 
 	receiver := normConn.Receivers[0]
 
@@ -349,6 +352,7 @@ func (d *Desugarer) desugarSingleReceiver(
 						},
 					},
 					Receivers: caseConn.Receivers,
+					Meta:      locOnlyMeta,
 				},
 				Meta: locOnlyMeta,
 			})
@@ -649,6 +653,7 @@ func (d *Desugarer) desugarDeferredConnection(
 							Port: "data",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Receivers: deferredConnection.Normal.Receivers,
@@ -754,9 +759,13 @@ func (d *Desugarer) desugarSingleSender(
 
 			normConn = src.NormalConnection{
 				Senders: []src.ConnectionSender{
-					{PortAddr: &portAddr, Meta: sender.Meta},
+					{
+						PortAddr: &portAddr,
+						Meta:     sender.Meta,
+					},
 				},
 				Receivers: normConn.Receivers,
+				Meta:      sender.Meta,
 			}
 		} else if sender.Const.Value.Message != nil {
 			portAddr, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
@@ -766,9 +775,13 @@ func (d *Desugarer) desugarSingleSender(
 
 			normConn = src.NormalConnection{
 				Senders: []src.ConnectionSender{
-					{PortAddr: &portAddr, Meta: sender.Meta},
+					{
+						PortAddr: &portAddr,
+						Meta:     sender.Meta,
+					},
 				},
 				Receivers: normConn.Receivers,
+				Meta:      sender.Meta,
 			}
 		}
 
@@ -1096,9 +1109,11 @@ func (d *Desugarer) desugarRangeSender(
 					Port: "res",
 					Meta: locOnlyMeta,
 				},
+				Meta: locOnlyMeta,
 			},
 		},
 		Receivers: normConn.Receivers,
+		Meta:      locOnlyMeta,
 	}
 
 	insert := []src.Connection{
@@ -1112,6 +1127,7 @@ func (d *Desugarer) desugarRangeSender(
 							Port: "res",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Receivers: []src.ConnectionReceiver{
@@ -1121,6 +1137,7 @@ func (d *Desugarer) desugarRangeSender(
 							Port: "from",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Meta: locOnlyMeta,
@@ -1137,6 +1154,7 @@ func (d *Desugarer) desugarRangeSender(
 							Port: "res",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Receivers: []src.ConnectionReceiver{
@@ -1146,6 +1164,7 @@ func (d *Desugarer) desugarRangeSender(
 							Port: "to",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Meta: locOnlyMeta,
@@ -1180,6 +1199,7 @@ func (d *Desugarer) desugarFanIn(
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "FanIn",
+			Meta: locOnlyMeta,
 		},
 		Meta: locOnlyMeta,
 	}
@@ -1201,7 +1221,9 @@ func (d *Desugarer) desugarFanIn(
 						Meta: locOnlyMeta,
 					},
 				},
+				Meta: locOnlyMeta,
 			},
+			Meta: locOnlyMeta,
 		})
 	}
 
@@ -1221,6 +1243,7 @@ func (d *Desugarer) desugarFanIn(
 			Receivers: normConn.Receivers,
 			Meta:      locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	})
 
 	// 4. desugar each connection (original senders and receivers might need it)
@@ -1386,7 +1409,9 @@ func (d *Desugarer) desugarBinarySender(
 	scope Scope,
 	nodes map[string]src.Node,
 ) (handleBinarySenderResult, error) {
-	locOnlyMeta := core.Meta{Location: binary.Meta.Location}
+	locOnlyMeta := core.Meta{
+		Location: binary.Meta.Location,
+	}
 
 	var (
 		opNode      string
@@ -1475,7 +1500,10 @@ func (d *Desugarer) desugarBinarySender(
 		opNode = fmt.Sprintf("__bitRsh__%d", d.bitRshCounter)
 		opComponent = "BitRsh"
 	default:
-		return handleBinarySenderResult{}, fmt.Errorf("unsupported binary operator: %s", binary.Operator)
+		return handleBinarySenderResult{}, fmt.Errorf(
+			"unsupported binary operator: %s",
+			binary.Operator,
+		)
 	}
 
 	nodesToInsert[opNode] = src.Node{
@@ -1501,6 +1529,7 @@ func (d *Desugarer) desugarBinarySender(
 							Port: "left",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
 				Meta: locOnlyMeta,
@@ -1516,10 +1545,11 @@ func (d *Desugarer) desugarBinarySender(
 							Port: "right",
 							Meta: locOnlyMeta,
 						},
+						Meta: locOnlyMeta,
 					},
 				},
+				Meta: locOnlyMeta,
 			},
-			Meta: locOnlyMeta,
 		},
 	}
 
@@ -1552,6 +1582,7 @@ func (d *Desugarer) desugarBinarySender(
 						Port: "res",
 						Meta: locOnlyMeta,
 					},
+					Meta: locOnlyMeta,
 				},
 			},
 			Receivers: normConn.Receivers, // desugaring of original receivers is job of caller
