@@ -1413,10 +1413,6 @@ func (d *Desugarer) desugarBinarySender(
 		Location: binary.Meta.Location,
 	}
 
-	if locOnlyMeta.Location.ModRef.Path == "" {
-		panic("locOnlyMeta.Location.ModRef.Path is empty")
-	}
-
 	var (
 		opNode      string
 		opComponent string
