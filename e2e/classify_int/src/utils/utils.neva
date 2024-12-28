@@ -1,0 +1,6 @@
+pub def ClassifyInt(data int) (neg any, pos any) {
+    (:data >= 0) -> switch {
+        true -> :pos
+        _ -> :neg
+    }
+}
