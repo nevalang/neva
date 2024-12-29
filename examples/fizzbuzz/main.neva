@@ -1,11 +1,11 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    Map<int, any>{FizzBuzz}
-    For{fmt.Println}
-    Wait
+    map_fb Map<int, any>{FizzBuzz}
+    for_print For{fmt.Println}
+    wait Wait
     ---
-    :start -> 1..101 -> map -> for -> wait -> :stop
+    :start -> 1..101 -> map_fb -> for_print -> wait -> :stop
 }
 
 def FizzBuzz(data int) (res string | int) {

@@ -20,11 +20,11 @@ A general-purpose dataflow programming language with static types and implicit p
 ## 🚀 Features
 
 - **Dataflow Programming** - write programs as message-passing graphs
-- **Implicit Parallelism** - no need to manage threads, mutexes, or coroutines
-- **First-Class Stream Processing** - built with streaming primitives in mind
-- **Powerful Type System** - strong static typing with unions and pattern matching
-- **Compiled** - generate code for any platform Go supports, from machine code to WASM
-- **Functional** - immutability and composition via higher-order components
+- **Implicit Parallelism** - no threads/mutexes/coroutines/channels/etc
+- **Reliable Type System** - strong static typing with unions and pattern matching
+- **Native Stream Processing** - streams as first-class citizens
+- **Compilation** - generate code for any platform Go supports including machine code and WASM
+- **Functional Idioms** - immutability and composition via higher-order components
 - **Garbage Collection** - utilizes Go runtime's efficient GC
 - ... and much more!
 
