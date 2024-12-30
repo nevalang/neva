@@ -333,6 +333,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 				nodesIfaces,
 				scope,
 				nil,
+				nodesUsage,
 			)
 			if err != nil {
 				return nil, nil, &compiler.Error{
@@ -569,9 +570,10 @@ func (a Analyzer) analyzeSender(
 		sender.Binary == nil &&
 		sender.Unary == nil &&
 		sender.Ternary == nil &&
+		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
-			Message: "Sender in network must contain port address, constant reference or message literal",
+			Message: "invalid sender",
 			Meta:    &sender.Meta,
 		}
 	}
@@ -710,6 +712,100 @@ func (a Analyzer) analyzeSender(
 		return &sender, &resultType, nil
 	}
 
+	if sender.Union != nil {
+		// check that entity we are referring to is existing type definition
+		typeDef, _, err := scope.GetType(sender.Union.EntityRef)
+		if err != nil {
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", err),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		// resolve type we are referring to
+		unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
+		if analyzeExprErr != nil {
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		// check that type we refer to resolves to union
+		if unionTypeExpr.Lit == nil || unionTypeExpr.Lit.Union == nil {
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf("type %v is not a union", sender.Union.EntityRef),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		// check that tag we refer to exists in union
+		tagTypeExpr, ok := unionTypeExpr.Lit.Union[sender.Union.Tag]
+		if !ok {
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf("tag %q not found in union %v", sender.Union.Tag, sender.Union.EntityRef),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		// if tag has type-expr, then this union-sender must wrap another sender,
+		// and vice versa - if there's no type-expr, there must be no wrapped-sender
+		if tagTypeExpr != nil && sender.Union.Data == nil {
+			// TODO figure out how this should work in pattern matching
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf(
+					"tag %q requires a wrapped value of type %v",
+					sender.Union.Tag,
+					tagTypeExpr,
+				),
+				Meta: &sender.Meta,
+			}
+		}
+
+		// if there's no type-expr (and thus no wrapped sender)
+		// it's a "enum-like" union, so there's nothing to analyze
+		if tagTypeExpr == nil {
+			return &sender, &unionTypeExpr, nil
+		}
+
+		// analyze wrapped-sender and get its resolved type
+		resolvedWrappedSender, resolvedWrappedType, analyzeWrappedErr := a.analyzeSender(
+			*sender.Union.Data,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if analyzeWrappedErr != nil {
+			return nil, nil, analyzeWrappedErr
+		}
+
+		// check that wrapped-sender is sub-type of tag's constraint
+		if err := a.resolver.IsSubtypeOf(*resolvedWrappedType, *tagTypeExpr, scope); err != nil {
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf(
+					"wrapped sender type %v is not compatible with union tag type %v: %v",
+					resolvedWrappedType,
+					tagTypeExpr,
+					err,
+				),
+				Meta: &sender.Meta,
+			}
+		}
+
+		return &src.ConnectionSender{
+			Union: &src.UnionSender{
+				EntityRef: sender.Union.EntityRef,
+				Tag:       sender.Union.Tag,
+				Data:      resolvedWrappedSender,
+				Meta:      sender.Union.Meta,
+			},
+			Meta: sender.Meta,
+		}, &unionTypeExpr, nil // return type of the union, not specific tag
+	}
+
 	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getResolvedSenderType(
 		sender,
 		iface,
@@ -717,6 +813,7 @@ func (a Analyzer) analyzeSender(
 		nodesIfaces,
 		scope,
 		prevChainLink,
+		nodesUsage,
 	)
 	if err != nil {
 		return nil, nil, compiler.Error{
@@ -1184,6 +1281,7 @@ func (a Analyzer) getResolvedSenderType(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	prevChainLink []src.ConnectionSender,
+	nodesUsage map[string]netNodeUsage,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
 		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
@@ -1218,6 +1316,7 @@ func (a Analyzer) getResolvedSenderType(
 			nodesIfaces,
 			scope,
 			prevChainLink,
+			nodesUsage,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -1246,6 +1345,7 @@ func (a Analyzer) getResolvedSenderType(
 			nodesIfaces,
 			scope,
 			prevChainLink,
+			nodesUsage,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -1263,6 +1363,7 @@ func (a Analyzer) getResolvedSenderType(
 			nodesIfaces,
 			scope,
 			prevChainLink,
+			nodesUsage,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
@@ -1272,6 +1373,58 @@ func (a Analyzer) getResolvedSenderType(
 		// FIXME: perfectly we need to return union, but it's not yet supported
 		// see https://github.com/nevalang/neva/issues/737
 		return sender, trueValType, false, nil
+	}
+
+	// logic of getting type for union sender partially duplicates logic of validating it
+	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
+	if sender.Union != nil {
+		entity, _, err := scope.GetType(sender.Union.EntityRef)
+		if err != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", err),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		resolvedUnionType, typeExprErr := a.analyzeTypeExpr(*entity.BodyExpr, scope)
+		if typeExprErr != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", typeExprErr),
+				Meta:    &sender.Meta,
+			}
+		}
+
+		tagTypeExpr := resolvedUnionType.Lit.Union[sender.Union.Tag] // we assume it's analyzed already
+
+		// if there's no type-expr (and thus no wrapped sender)
+		// it's a "enum-like" union, so there's nothing to analyze
+		if tagTypeExpr == nil {
+			return sender, resolvedUnionType, false, nil
+		}
+
+		// analyze wrapped-sender and get its resolved type
+		resolvedWrappedSender, _, analyzeWrappedErr := a.analyzeSender(
+			*sender.Union.Data,
+			scope,
+			iface,
+			nodes,
+			nodesIfaces,
+			nodesUsage,
+			prevChainLink,
+		)
+		if analyzeWrappedErr != nil {
+			return src.ConnectionSender{}, ts.Expr{}, false, analyzeWrappedErr
+		}
+
+		// return fully resolved union sender, including its wrapped-sender
+		return src.ConnectionSender{
+			Union: &src.UnionSender{
+				EntityRef: sender.Union.EntityRef,
+				Tag:       sender.Union.Tag,
+				Data:      resolvedWrappedSender,
+			},
+			Meta: sender.Meta,
+		}, resolvedUnionType, false, nil
 	}
 
 	// handle port-address sender
@@ -1314,19 +1467,29 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 	case src.AddOp:
 		return ts.Expr{
 			Lit: &ts.LitExpr{
-				Union: []ts.Expr{
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+				Union: map[string]*ts.Expr{
+					"int": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					"float": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}},
+					},
+					"string": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}},
+					},
 				},
 			},
 		}, nil
 	case src.SubOp, src.MulOp, src.DivOp:
 		return ts.Expr{
 			Lit: &ts.LitExpr{
-				Union: []ts.Expr{
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+				Union: map[string]*ts.Expr{
+					"int": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					"float": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}},
+					},
 				},
 			},
 		}, nil
@@ -1341,10 +1504,16 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 	case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
 		return ts.Expr{
 			Lit: &ts.LitExpr{
-				Union: []ts.Expr{
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
-					{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+				Union: map[string]*ts.Expr{
+					"int": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+					"float": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}},
+					},
+					"string": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}},
+					},
 				},
 			},
 		}, nil
@@ -1481,7 +1650,7 @@ func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 	}
 
 	if resolvedExpr.Lit == nil ||
-		resolvedExpr.Lit.Enum == nil {
+		resolvedExpr.Lit.Union == nil {
 		return ErrComplexLiteralSender
 	}
 

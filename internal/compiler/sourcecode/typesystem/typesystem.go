@@ -110,7 +110,7 @@ type InstExpr struct {
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
 	Struct map[string]Expr  `json:"struct,omitempty"`
-	Union  map[string]*Expr `json:"union,omitempty"`
+	Union  map[string]*Expr `json:"union,omitempty"` // tag -> constraint
 }
 
 func (lit *LitExpr) Empty() bool {

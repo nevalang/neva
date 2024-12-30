@@ -61,8 +61,8 @@ func (a Analyzer) analyzeConst(
 	if inst := resolvedType.Inst; inst != nil {
 		typeExprStrRepr = inst.Ref.String()
 	} else if lit := resolvedType.Lit; lit != nil {
-		if lit.Enum != nil {
-			typeExprStrRepr = "enum"
+		if lit.Union != nil {
+			typeExprStrRepr = "union"
 		} else if lit.Struct != nil {
 			typeExprStrRepr = "struct"
 		}
@@ -183,7 +183,7 @@ func (a Analyzer) analyzeConst(
 				Meta: &constant.Meta,
 			}
 		}
-	case "map", "struct":
+	case "dict", "struct":
 		if constant.Value.Message.DictOrStruct == nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf("Map or struct value is missing in map or struct contant: %v", constant),
@@ -203,10 +203,10 @@ func (a Analyzer) analyzeConst(
 				Meta: &constant.Meta,
 			}
 		}
-	case "enum":
+	case "union":
 		if constant.Value.Message.Union == nil {
 			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Enum value is missing in enum contant: %v", constant),
+				Message: fmt.Sprintf("Union value is missing in union contant: %v", constant),
 				Meta:    &constant.Meta,
 			}
 		}
@@ -222,6 +222,11 @@ func (a Analyzer) analyzeConst(
 				),
 				Meta: &constant.Meta,
 			}
+		}
+	default:
+		return src.Const{}, &compiler.Error{
+			Message: fmt.Sprintf("Unknown constant type: %v", typeExprStrRepr),
+			Meta:    &constant.Meta,
 		}
 	}
 
