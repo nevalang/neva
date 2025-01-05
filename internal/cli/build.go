@@ -10,11 +10,11 @@ import (
 
 func newBuildCmd(
 	workdir string,
-	goc compiler.Compiler,
-	nativec compiler.Compiler,
-	wasmc compiler.Compiler,
-	jsonc compiler.Compiler,
-	dotc compiler.Compiler,
+	compilerToGo compiler.Compiler,
+	compilerToNative compiler.Compiler,
+	compilerToWASM compiler.Compiler,
+	compilerToJSON compiler.Compiler,
+	compilerToDOT compiler.Compiler,
 ) *cli.Command {
 	return &cli.Command{
 		Name:  "build",
@@ -31,7 +31,7 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target",
-				Usage: "Target platform for build",
+				Usage: "Target platform for build (options: go, wasm, native, json, dot)",
 				Action: func(ctx *cli.Context, s string) error {
 					switch s {
 					case "go", "wasm", "native", "json", "dot":
@@ -56,34 +56,38 @@ func newBuildCmd(
 			var target string
 			if cliCtx.IsSet("target") {
 				target = cliCtx.String("target")
+			} else {
+				target = "native"
 			}
 
-			var trace bool
+			var isTraceEnabled bool
 			if cliCtx.IsSet("trace") {
-				trace = true
+				isTraceEnabled = true
 			}
 
-			input := compiler.CompilerInput{
+			compilerInput := compiler.CompilerInput{
 				Main:   mainPkg,
 				Output: output,
-				Trace:  trace,
+				Trace:  isTraceEnabled,
 			}
 
-			var c compiler.Compiler
+			var compilerToUse compiler.Compiler
 			switch target {
 			case "go":
-				c = goc
+				compilerToUse = compilerToGo
 			case "wasm":
-				c = wasmc
+				compilerToUse = compilerToWASM
 			case "json":
-				c = jsonc
+				compilerToUse = compilerToJSON
 			case "dot":
-				c = dotc
+				compilerToUse = compilerToDOT
+			case "native":
+				compilerToUse = compilerToNative
 			default:
-				c = nativec
+				return fmt.Errorf("Unknown target %s", target)
 			}
 
-			return c.Compile(cliCtx.Context, input)
+			return compilerToUse.Compile(cliCtx.Context, compilerInput)
 		},
 	}
 }
