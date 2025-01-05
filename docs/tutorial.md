@@ -129,6 +129,8 @@ This will produce an `output` file in the directory where neva-cli was executed,
 
 Once again you should see `Hello, World!`.
 
+> Execute `neva build --help` to learn more - how to compile to Go, WASM or how to do cross-compilation e.g. compile linux binaries in windows.
+
 ## Core Concepts
 
 ### Components
