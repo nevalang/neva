@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/nevalang/neva/internal/compiler"
 
@@ -18,7 +19,7 @@ func newBuildCmd(
 ) *cli.Command {
 	return &cli.Command{
 		Name:  "build",
-		Usage: "Build neva program from source code",
+		Usage: "Generate target platform code from neva program",
 		Args:  true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -31,7 +32,7 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target",
-				Usage: "Target platform for build (options: go, wasm, native, json, dot)",
+				Usage: "Target platform for build (options: go, wasm, native, json, dot). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together.",
 				Action: func(ctx *cli.Context, s string) error {
 					switch s {
 					case "go", "wasm", "native", "json", "dot":
@@ -40,24 +41,52 @@ func newBuildCmd(
 					return fmt.Errorf("Unknown target %s", s)
 				},
 			},
+			&cli.StringFlag{
+				Name:  "target-os",
+				Usage: "Target operating system for native build. See 'neva osarch' for supported combinations. Only supported for native target. Not needed if building for the current platform. Must be combined properly with 'target-arch'.",
+			},
+			&cli.StringFlag{
+				Name:  "target-arch",
+				Usage: "Target architecture for native build. See 'neva osarch' for supported combinations. Only supported for native target. Not needed if building for the current platform. Must be combined properly with 'target-os'.",
+			},
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
-			mainPkg, err := mainPkgPathFromArgs(cliCtx)
-			if err != nil {
-				return err
-			}
-
-			output := workdir
-			if cliCtx.IsSet("output") {
-				output = cliCtx.String("output")
-			}
-
 			var target string
 			if cliCtx.IsSet("target") {
 				target = cliCtx.String("target")
 			} else {
 				target = "native"
+			}
+
+			switch target {
+			case "go", "wasm", "json", "dot", "native":
+			default:
+				return fmt.Errorf("Unknown target %s", target)
+			}
+
+			var targetOS, targetArch string
+			if cliCtx.IsSet("target-os") {
+				targetOS = cliCtx.String("target-os")
+			}
+			if cliCtx.IsSet("target-arch") {
+				targetArch = cliCtx.String("target-arch")
+			}
+			if (targetOS != "" && targetArch == "") || (targetOS == "" && targetArch != "") {
+				return fmt.Errorf("target-os and target-arch must be set together")
+			}
+			if target != "native" && targetOS != "" {
+				return fmt.Errorf("target-os and target-arch are only supported when target is native")
+			}
+
+			mainPkg, err := mainPkgPathFromArgs(cliCtx)
+			if err != nil {
+				return err
+			}
+
+			outputDirPath := workdir
+			if cliCtx.IsSet("output") {
+				outputDirPath = cliCtx.String("output")
 			}
 
 			var isTraceEnabled bool
@@ -67,7 +96,7 @@ func newBuildCmd(
 
 			compilerInput := compiler.CompilerInput{
 				Main:   mainPkg,
-				Output: output,
+				Output: outputDirPath,
 				Trace:  isTraceEnabled,
 			}
 
@@ -83,8 +112,27 @@ func newBuildCmd(
 				compilerToUse = compilerToDOT
 			case "native":
 				compilerToUse = compilerToNative
-			default:
-				return fmt.Errorf("Unknown target %s", target)
+			}
+
+			if targetOS != "" {
+				prevGOOS := os.Getenv("GOOS")
+				prevGOARCH := os.Getenv("GOARCH")
+
+				if err := os.Setenv("GOOS", targetOS); err != nil {
+					return fmt.Errorf("set GOOS: %w", err)
+				}
+				if err := os.Setenv("GOARCH", targetArch); err != nil {
+					return fmt.Errorf("set GOARCH: %w", err)
+				}
+
+				defer func() {
+					if err := os.Setenv("GOOS", prevGOOS); err != nil {
+						panic(err)
+					}
+					if err := os.Setenv("GOARCH", prevGOARCH); err != nil {
+						panic(err)
+					}
+				}()
 			}
 
 			return compilerToUse.Compile(cliCtx.Context, compilerInput)

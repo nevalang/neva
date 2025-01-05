@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	wd, err := os.Getwd()
+	workdir, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
@@ -53,9 +53,7 @@ func main() {
 		&desugarer,
 		analyzer,
 		irgen,
-		native.NewBackend(
-			golangBackend,
-		),
+		native.NewBackend(golangBackend),
 	)
 
 	wasmCompiler := compiler.New(
@@ -64,9 +62,7 @@ func main() {
 		&desugarer,
 		analyzer,
 		irgen,
-		wasm.NewBackend(
-			golangBackend,
-		),
+		wasm.NewBackend(golangBackend),
 	)
 
 	jsonCompiler := compiler.New(
@@ -89,7 +85,7 @@ func main() {
 
 	// command-line app that can compile and interpret neva code
 	app := cli.NewApp(
-		wd,
+		workdir,
 		bldr,
 		goCompiler,
 		nativeCompiler,
