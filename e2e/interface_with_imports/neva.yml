@@ -1,4 +1,4 @@
-neva: 0.29.1
+neva: 0.30.0
 deps:
     github.com/nevalang/x:
         path: github.com/nevalang/x
