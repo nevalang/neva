@@ -21,7 +21,7 @@
   <i>Next-generation programming language that solves programmer's problems.</i>
 </div>
 
-## What Is Nevalang?
+## 🤔 What Is Nevalang?
 
 Nevalang is a new kind of programming language where instead of writing step-by-step instructions you create **networks** where data flows between **nodes** as **immutable messages** and everything runs **in parallel by default**. After **type-checking**, your program is compiled into **machine code** and can be distributed as a **single executable** with zero dependencies.
 
@@ -29,7 +29,7 @@ All this combined with native **stream processing** support and features such as
 
 Future updates will include **visual programming** and **Go interoperability** to allow gradual adoption and leverage existing ecosystem.
 
-## Features
+## 🔥 Features
 
 - 📨 **Dataflow Programming** - Write programs as message-passing graphs
 - 🔀 **Implicit Parallelism** - Everything is parallel by default, no async-await/threads/goroutines/etc.
@@ -43,7 +43,7 @@ Future updates will include **visual programming** and **Go interoperability** t
 - 🔌 **Dependency Injection** - Modularity with interfaces and DI
 - ♻️ **Garbage Collection** - Automatic memory management using Go's low-latency GC
 - 🌈 **Visual Programming** (WIP): Edit programs as visual graphs
-- 🤝 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
+- 🔄 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
 - 🕵 **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
 
 > ⚠️ This project is under active development and not yet production-ready.
@@ -76,7 +76,7 @@ As you can see, this is quite an ambitious project. Typically, such projects are
 
 Also, **please give us a star ⭐️** to increase our chances of getting into GitHub's trending repositories and tell your friends about the project. The more attention Nevalang gets, the higher our chances of actually making a difference!
 
-### What's Next?
+## 💭 What's Next?
 
 - [Documentation](./docs/README.md) - Install and learn the language basics
 - [Examples](./examples/) - Learn the language by small programs
