@@ -72,15 +72,15 @@ Let's compare Nevalang with Go. We could compare it to any language but Go is a 
 
 | **Feature**              | **Neva**                                                           | **Go**                                                                            |
 | ------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| **Paradigm**             | Dataflow - nodes send and receive messages through connections     | Controlflow - execution moves through instructions step by step                   |
-| **Concurrency**          | Implicit - everything is concurrent by default                     | Explicit - goroutines, channels and mutexes                                       |
+| **Paradigm**             | Dataflow - nodes send and receive messages through connections     | Control flow - execution moves through instructions step by step                  |
+| **Concurrency**          | Implicit - everything is concurrent by default                     | Explicit - goroutines, channels, and mutexes                                      |
 | **Error Handling**       | Errors as values with `?` operator to avoid boilerplate            | Errors as values with `if err != nil {}` boilerplate                              |
 | **Mutability**           | Immutable - no variables and pointers; data races are not possible | Mutable - variables and pointers; programmer must avoid data races                |
-| **Null Safety**          | Yes - nil pointer dereference impossible                           | No - nil pointer dereference is possible                                          |
+| **Null Safety**          | Yes - nil pointer dereference is impossible                        | No - nil pointer dereference is possible                                          |
 | **Zero Values**          | No zero values - everything must be explicitly initialized         | Zero values by default - everything can be initialized implicitly                 |
-| **Subtyping**            | Structural - types are equal by their shape                        | Nominative - types are equal by their name                                        |
+| **Subtyping**            | Structural - types are equal by their shape                        | Nominal - types are equal by their name                                           |
 | **Traceback**            | Automatic - every message traces its path                          | Manual - programmer must explicitly wrap every error to add context               |
-| **Dependency Injection** | Builtin - any component with dependency expects injection          | Manual - programmer must create constructor function that takes dependencies      |
+| **Dependency Injection** | Built-in - any component with dependency expects injection         | Manual - programmer must create constructor function that takes dependencies      |
 | **Stream Processing**    | Native support with components like `Map/Filter/Reduce`            | Programmer must manually implement dataflow patterns with goroutines and channels |
 
 ## 📢 Community
