@@ -29,25 +29,6 @@ All this combined with native **stream processing** support and features such as
 
 Future updates will include **visual programming** and **Go interoperability** to allow gradual adoption and leverage existing ecosystem.
 
-## 🔥 Features
-
-- 📨 **Dataflow Programming** - Write programs as message-passing graphs
-- 🔀 **Implicit Parallelism** - Everything is parallel by default, no async-await/threads/goroutines/etc.
-- 🛡️ **Strong Static Typing** - Robust type system with generics and pattern-matching
-- 🚀 **Machine Code Compilation** - Compile for any Go-supported platform, including WASM
-- ⚡️ **Stream Processing** - Handle real-time data with streams as first class citizens
-- 🧯 **Advanced Error Handling** - Errors as values with `?` operator to avoid boilerplate
-- 🪶 **Minimal Core** - Simple language with limited abstractions
-- 📦 **Package Manager** - Publish packages by pushing a git-tag
-- 🧩 **Functional Patterns** - Immutability and higher-order components
-- 🔌 **Dependency Injection** - Modularity with interfaces and DI
-- ♻️ **Garbage Collection** - Automatic memory management using Go's low-latency GC
-- 🌈 **Visual Programming** (WIP): Edit programs as visual graphs
-- 🔄 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
-- 🕵 **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
-
-> ⚠️ This project is under active development and not yet production-ready.
-
 ## 👋 Hello, World!
 
 ```neva
@@ -65,6 +46,42 @@ What’s happening here:
 - `import { fmt }` loads the `fmt` package for printing
 - `def Main` defines the main component with input port `start` and output port `stop`
 - `:start -> ‘Hello, World!’ -> println -> :stop` defines a connection that sends `Hello, World!` string to the `println` printer-node and then terminates the program
+
+## 🔥 Features
+
+- 📨 **Dataflow Programming** - Write programs as message-passing graphs
+- 🔀 **Implicit Parallelism** - Everything is parallel by default, no async-await/threads/goroutines/etc.
+- 🛡️ **Strong Static Typing** - Robust type system with generics and pattern-matching
+- 🚀 **Machine Code Compilation** - Compile for any Go-supported platform, including WASM
+- ⚡️ **Stream Processing** - Handle real-time data with streams as first class citizens
+- 🧯 **Advanced Error Handling** - Errors as values with `?` operator to avoid boilerplate
+- 🧩 **Functional Patterns** - Immutability and higher-order components
+- 🔌 **Dependency Injection** - Modularity with interfaces and DI
+- 🪶 **Minimal Core** - Simple language with limited abstractions
+- 📦 **Package Manager** - Publish packages by pushing a git-tag
+- ♻️ **Garbage Collection** - Automatic memory management using Go's low-latency GC
+- 🌈 **Visual Programming** (WIP): Edit programs as visual graphs
+- 🔄 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
+- 🕵 **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
+
+> ⚠️ This project is under active development and not yet production-ready.
+
+## 🧐 Why Nevalang?
+
+Let's compare Nevalang with Go. We could compare it to any language but Go is a simple reference since Nevalang is written in Go.
+
+| **Feature**              | **Neva**                                                           | **Go**                                                                            |
+| ------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| **Paradigm**             | Dataflow - nodes send and receive messages through connections     | Controlflow - execution moves through instructions step by step                   |
+| **Concurrency**          | Implicit - everything is concurrent by default                     | Explicit - goroutines, channels and mutexes                                       |
+| **Error Handling**       | Errors as values with `?` operator to avoid boilerplate            | Errors as values with `if err != nil {}` boilerplate                              |
+| **Mutability**           | Immutable - no variables and pointers; data races are not possible | Mutable - variables and pointers; programmer must avoid data races                |
+| **Null Safety**          | Yes - nil pointer dereference impossible                           | No - nil pointer dereference is possible                                          |
+| **Zero Values**          | No zero values - everything must be explicitly initialized         | Zero values by default - everything can be initialized implicitly                 |
+| **Subtyping**            | Structural - types are equal by their shape                        | Nominative - types are equal by their name                                        |
+| **Traceback**            | Automatic - every message traces its path                          | Manual - programmer must explicitly wrap every error to add context               |
+| **Dependency Injection** | Builtin - any component with dependency expects injection          | Manual - programmer must create constructor function that takes dependencies      |
+| **Stream Processing**    | Native support with components like `Map/Filter/Reduce`            | Programmer must manually implement dataflow patterns with goroutines and channels |
 
 ## 📢 Community
 
@@ -85,8 +102,7 @@ Also, **please give us a star ⭐️** to increase our chances of getting into G
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
-
-Check out our [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open) to see what we are planning next. You can follow the development process on our [Kanban board](https://github.com/orgs/nevalang/projects/2/views/3?filterQuery=).
-
-Also please check our [CoC](./CODE_OF_CONDUCT.md).
+1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
+2. Check out [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open) and [kanban-board](https://github.com/orgs/nevalang/projects/2/views/3?filterQuery=)
+3. Also please read our [CoC](./CODE_OF_CONDUCT.md)
+4. Join [discord server](https://discord.gg/dmXbC79UuH)
