@@ -25,9 +25,11 @@
 
 Nevalang is a new kind of programming language where instead of writing step-by-step instructions you create **networks** where data flows between **nodes** as **immutable messages** and everything runs **in parallel by default**. After **type-checking**, your program is compiled into **machine code** and can be distributed as a **single executable** with zero dependencies.
 
-All this combined with native **stream processing** support and features such as **advanced error handling** makes Nevalang a perfect choice for **cloud applications** with **high concurrency**.
+Combined with built-in **stream processing** support and features like **advanced error handling**, Nevalang is the perfect choice for **cloud-native applications** requiring **high concurrency**.
 
 Future updates will include **visual programming** and **Go interoperability** to allow gradual adoption and leverage existing ecosystem.
+
+> ⚠️ This project is under active development and not yet production-ready.
 
 ## 👋 Hello, World!
 
@@ -63,8 +65,6 @@ What’s happening here:
 - 🌈 **Visual Programming** (WIP): Edit programs as visual graphs
 - 🔄 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
 - 🕵 **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
-
-> ⚠️ This project is under active development and not yet production-ready.
 
 ## 🧐 Why Nevalang?
 
