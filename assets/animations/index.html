@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Neva Dataflow Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        background: #1a1f2c; /* Slightly lighter, more vibrant dark blue */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      .grid line {
+        stroke: #2a3343; /* Brighter grid lines */
+        stroke-width: 1px;
+      }
+      .node {
+        fill: #2d3748; /* Brighter node fill */
+        stroke: #4a5568; /* More visible node border */
+        stroke-width: 1.5px;
+      }
+      .port {
+        fill: #4299e1; /* Bright blue ports */
+        stroke: #63b3ed; /* Lighter blue port borders */
+        stroke-width: 1px;
+      }
+      .wire {
+        stroke: #4299e1; /* Bright blue wires */
+        stroke-width: 2px;
+        fill: none;
+      }
+      .wire-casing {
+        stroke: #2b6cb0; /* Darker blue wire casing */
+        stroke-width: 6px;
+        fill: none;
+        opacity: 0.6;
+      }
+      .message {
+        fill: #00ffff;
+        filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.7));
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <svg id="dataflow" width="800" height="400"></svg>
+    <script>
+      const svg = d3.select("#dataflow");
+      const width = 800;
+      const height = 400;
+
+      // Create grid
+      const gridSize = 20;
+      const xGrid = d3.range(0, width, gridSize);
+      const yGrid = d3.range(0, height, gridSize);
+
+      const grid = svg.append("g").attr("class", "grid");
+
+      grid
+        .selectAll("line.vertical")
+        .data(xGrid)
+        .enter()
+        .append("line")
+        .attr("class", "vertical")
+        .attr("x1", (d) => d)
+        .attr("y1", 0)
+        .attr("x2", (d) => d)
+        .attr("y2", height);
+
+      grid
+        .selectAll("line.horizontal")
+        .data(yGrid)
+        .enter()
+        .append("line")
+        .attr("class", "horizontal")
+        .attr("x1", 0)
+        .attr("y1", (d) => d)
+        .attr("x2", width)
+        .attr("y2", (d) => d);
+
+      // Define nodes
+      const nodes = [
+        { id: "input", x: 100, y: 200 },
+        { id: "process1", x: 300, y: 150 },
+        { id: "process2", x: 300, y: 250 },
+        { id: "output", x: 500, y: 200 },
+      ];
+
+      // Define connections
+      const links = [
+        { source: "input", target: "process1" },
+        { source: "input", target: "process2" },
+        { source: "process1", target: "output" },
+        { source: "process2", target: "output" },
+      ];
+
+      // Draw connections first (to be under nodes)
+      const linkGenerator = d3.linkHorizontal();
+
+      // Add wire casings
+      const wireCasings = svg
+        .selectAll(".wire-casing")
+        .data(links)
+        .enter()
+        .append("path")
+        .attr("class", "wire-casing")
+        .attr("d", (d) => {
+          const sourceNode = nodes.find((n) => n.id === d.source);
+          const targetNode = nodes.find((n) => n.id === d.target);
+          return linkGenerator({
+            source: [sourceNode.x + 50, sourceNode.y],
+            target: [targetNode.x - 50, targetNode.y],
+          });
+        });
+
+      // Add actual wires
+      const wires = svg
+        .selectAll(".wire")
+        .data(links)
+        .enter()
+        .append("path")
+        .attr("class", "wire")
+        .attr("d", (d) => {
+          const sourceNode = nodes.find((n) => n.id === d.source);
+          const targetNode = nodes.find((n) => n.id === d.target);
+          return linkGenerator({
+            source: [sourceNode.x + 50, sourceNode.y],
+            target: [targetNode.x - 50, targetNode.y],
+          });
+        });
+
+      // Draw nodes
+      const nodeGroups = svg
+        .selectAll(".node-group")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+      nodeGroups
+        .append("rect")
+        .attr("class", "node")
+        .attr("x", -50)
+        .attr("y", -30)
+        .attr("width", 100)
+        .attr("height", 60)
+        .attr("rx", 6);
+
+      // Add input/output ports
+      nodeGroups
+        .filter((d) => d.id !== "input")
+        .append("circle")
+        .attr("class", "port")
+        .attr("cx", -50)
+        .attr("cy", 0)
+        .attr("r", 4);
+
+      nodeGroups
+        .filter((d) => d.id !== "output")
+        .append("circle")
+        .attr("class", "port")
+        .attr("cx", 50)
+        .attr("cy", 0)
+        .attr("r", 4);
+
+      // Animate messages
+      function animateMessages() {
+        links.forEach((link) => {
+          const sourceNode = nodes.find((n) => n.id === link.source);
+          const targetNode = nodes.find((n) => n.id === link.target);
+
+          // Create a path for the message to follow
+          const pathData = linkGenerator({
+            source: [sourceNode.x + 50, sourceNode.y],
+            target: [targetNode.x - 50, targetNode.y],
+          });
+
+          const messagePath = svg
+            .append("path")
+            .attr("d", pathData)
+            .style("display", "none");
+
+          const message = svg
+            .append("circle")
+            .attr("class", "message")
+            .attr("r", 0)
+            .style("opacity", 0)
+            .attr(
+              "transform",
+              `translate(${sourceNode.x + 50},${sourceNode.y})`
+            );
+
+          // Fade in and grow
+          message
+            .transition()
+            .duration(400)
+            .style("opacity", 1)
+            .attr("r", 6)
+            .transition()
+            .duration(300)
+            .attr("r", 5);
+
+          // Move along path
+          message
+            .transition()
+            .delay(700)
+            .duration(1700)
+            .attrTween("transform", () => {
+              const pathNode = messagePath.node();
+              const pathLength = pathNode.getTotalLength();
+              return (t) => {
+                const point = pathNode.getPointAtLength(t * pathLength);
+                return `translate(${point.x},${point.y})`;
+              };
+            });
+
+          // Shrink and fade out
+          message
+            .transition()
+            .delay(2400)
+            .duration(300)
+            .attr("r", 6)
+            .transition()
+            .duration(400)
+            .style("opacity", 0)
+            .attr("r", 0)
+            .remove()
+            .on("end", () => messagePath.remove());
+        });
+
+        setTimeout(animateMessages, 3500);
+      }
+
+      // Start animation
+      animateMessages();
+    </script>
+  </body>
+</html>
