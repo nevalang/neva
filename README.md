@@ -6,6 +6,12 @@
 
 <h1>Neva Programming Language</h1>
 
+<div align="center">
+  <i>Next-generation programming language that solves programmer's problems.</i>
+</div>
+
+<br/>
+
 [**Documentation**](./docs/README.md)
 | [**Examples**](./examples/)
 | [**Community**](#-community)
@@ -15,10 +21,10 @@
 
 ![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 
-</div>
+<p align="center">
+  <img src="./assets/animations/dataflow.gif" alt="Dataflow">
+</p>
 
-<div align="center">
-  <i>Next-generation programming language that solves programmer's problems.</i>
 </div>
 
 ## 🤔 What Is Nevalang?
@@ -96,7 +102,7 @@ As you can see, this is quite an ambitious project. Typically, such projects are
 Please **give us a star ⭐️** to increase our chances of getting into GitHub trends - the more attention Nevalang gets, the higher our chances of actually making a difference.
 
 <p align="center">
-  <img src="./assets/gif/github_star.gif" alt="GitHub Star">
+  <img src="./assets/animations/github_star.gif" alt="GitHub Star">
 </p>
 
 ## 💭 What's Next?
