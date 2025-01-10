@@ -91,7 +91,13 @@ As you can see, this is quite an ambitious project. Typically, such projects are
 - [Reddit](https://www.reddit.com/r/nevalang/)
 - [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
 
-Also, **please give us a star ⭐️** to increase our chances of getting into GitHub's trending repositories and tell your friends about the project. The more attention Nevalang gets, the higher our chances of actually making a difference!
+### 🙏 Support
+
+Please **give us a star ⭐️** to increase our chances of getting into GitHub trends - the more attention Nevalang gets, the higher our chances of actually making a difference.
+
+<p align="center">
+  <img src="./assets/gif/github_star.gif" alt="GitHub Star">
+</p>
 
 ## 💭 What's Next?
 
