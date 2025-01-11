@@ -8,13 +8,13 @@ def Main(start any) (stop any) {
     :start -> Day::Friday -> day_printer -> :stop
 }
 
-type Day enum {
-    Monday,
-    Tuesday,
-    Wednesday,
-    Thursday,
-    Friday,
-    Saturday,
+type Day union {
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
     Sunday
 }
 

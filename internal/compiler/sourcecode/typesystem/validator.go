@@ -36,7 +36,6 @@ func (v Validator) CheckParamUnique(params []Param) error {
 
 // Validate makes shallow validation of expr.
 // It checks that it's inst or literal, not both and not neither; All insts are valid by default;
-// Arr, union and enum must have size >= 2; Enum must have no duplicate elements.
 func (v Validator) Validate(expr Expr) error {
 	if expr.Lit.Empty() == (expr.Inst == nil) {
 		return ErrExprMustBeInstOrLit
