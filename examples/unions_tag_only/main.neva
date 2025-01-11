@@ -21,4 +21,3 @@ def PrintDay(day Day) (sig any) {
     ---
     :day -> println -> :sig
 }
-
