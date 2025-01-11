@@ -953,6 +953,201 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "union_sender_tag_only",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{
+								Union: &src.UnionSender{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+								},
+							},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								PortAddr: &src.PortAddr{
+									Node: "__new__1",
+									Port: "res",
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								Const: &src.Const{
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{
+											Union: &src.UnionLiteral{
+												EntityRef: core.EntityRef{Name: "Input"},
+												Tag:       "Int",
+											},
+										},
+									},
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{{
+								PortAddr: &src.PortAddr{
+									Node: "__new__1",
+									Port: "data",
+								},
+							}},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__new__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "New",
+						},
+						Directives: map[src.Directive][]string{
+							compiler.BindDirective: {"__union_const__1"},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__union_const__1": {
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{
+								Union: &src.UnionLiteral{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "union_sender_with_value",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{
+								Union: &src.UnionSender{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+									Data: &src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+											},
+										},
+									},
+								},
+							},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "res",
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								Const: &src.Const{
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{
+											Str: compiler.Pointer("Int"),
+										},
+									},
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "tag",
+								},
+							}},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								Const: &src.Const{
+									TypeExpr: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "int"},
+										},
+									},
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+									},
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "data",
+								},
+							}},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__union__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "UnionWrap",
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__union_tag__1": {
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{
+								Str: compiler.Pointer("Int"),
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

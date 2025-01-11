@@ -791,6 +791,22 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
+	if sender.Union != nil {
+		result, err := d.desugarUnionSender(
+			*sender.Union,
+			normConn,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
+		}
+		return desugarSenderResult{
+			replace: result.replace,
+			insert:  result.insert,
+		}, nil
+	}
+
 	if sender.Ternary != nil {
 		result, err := d.desugarTernarySender(
 			iface,
