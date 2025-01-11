@@ -168,10 +168,6 @@ Two reasons:
 
 Actually it's impossible to have desugarer before analysis. It's possible to have two desugarers - one before and one after. But that would make compiler much more complicated without visible benefits.
 
-### Why union types are allowed for constants at syntax level?
-
-You indeed can declare `const foo int | string = 42` and that won't make much sense. The problem it's not enough to restrict that at root level, you also have to recursively check every complex type like `struct`, `list` or `map`. And that is impossible to make at syntax level and require work in analyzer. This is could be done in the future when we cover more important cases.
-
 ### Why we have special syntax for union?
 
 We don't have sugar for `maybe<T>` and `list<T>` so why would we have this for unions? The reason is union is special for the type system. It's handled differently at the level of compatibility checking and resolving.

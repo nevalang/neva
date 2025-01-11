@@ -100,7 +100,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		// args compatibility
 		{
-			name:    "insts, one subtype's subtype incompat", // list<str> is not a subtype of list<int|str>
+			name:    "insts, one subtype's subtype incompat", // list<str> is not a subtype of list<union { Int int, String string }>
 			subType: h.Inst("list", h.Inst("string")),
 			superType: h.Inst(
 				"list",
@@ -125,7 +125,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrArgNotSubtype,
 		},
 		{
-			name: "insts, supertype subtype incompat", // list<str|int> is not a subtype of list<int>
+			name: "insts, supertype subtype incompat", // list<union { string string, int int }> is not a subtype of list<int>
 			subType: h.Inst(
 				"list",
 				h.Union(map[string]*ts.Expr{

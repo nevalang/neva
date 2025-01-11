@@ -1,2 +1,7 @@
+type ParseNumInput union {
+    Int int
+    Float float
+}
+
 #extern(int parse_int, float parse_float)
-pub def ParseNum<T int | float>(data string) (res T, err error)
+pub def ParseNum<T ParseNumInput>(data string) (res T, err error)

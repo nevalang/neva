@@ -1,5 +1,5 @@
 def Main(start any) (stop any) {
-	Dec<any>
+	dec Dec<any>
 	---
 	:start -> 42 -> dec:data
 	dec:res -> :stop
