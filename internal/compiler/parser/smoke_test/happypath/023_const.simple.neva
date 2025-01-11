@@ -24,19 +24,19 @@ const REC struct {
     bar: [1, 2, 3, 4]
 }
 
-const ENUM enum { Monday, Tuesday } = 4
+const ENUM union { Monday, Tuesday } = 4
 
-const ENUM enum {
+const ENUM union {
     Monday, Tuesday } = 5
 
-const ENUM enum { Monday, Tuesday } = 6
+const ENUM union { Monday, Tuesday } = 6
 
-const ENUM enum {
+const ENUM union {
     Monday, Tuesday
 } = 7
 
-const ENUM enum {
-    Monday,
+const ENUM union {
+    Monday
     Tuesday
 } = 8
 

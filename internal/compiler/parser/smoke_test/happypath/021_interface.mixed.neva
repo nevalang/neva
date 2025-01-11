@@ -2,30 +2,30 @@ interface IReader1 () ()
 interface IReader20 (x int, y string) (a int, b bool)
 
 interface IReader12 (
-    x enum {
-        Monday,
-        Tuesday,
+    x union {
+        Monday
+        Tuesday
         Wednesday
-    }, y enum {
-        January,
+    }, y union {
+        January
         February
     }
 ) (
-    a enum {
-        Monday,
-        Tuesday,
+    a union {
+        Monday
+        Tuesday
         Wednesday
-    }, b  enum {
+    }, b  union {
         January, February
     }
 )
 
 interface IReader1 (
-    arr enum { Monday, Tuesday },
+    arr union { Monday, Tuesday },
     arr2 struct { foo int },
     arr3 struct { baz struct {} }
 ) (
-    arr enum { January, February },
+    arr union { January, February },
     arr2 struct { bar bool },
     arr3 struct { bax struct {} }
 )
@@ -55,8 +55,8 @@ pub interface IReader1 (
 ) (
     x string |
         float |
-        enum { Monday } |
+        union { Monday } |
         struct {
-            foo enum { January } | struct {}
+            foo union { January } | struct {}
         }
 )
