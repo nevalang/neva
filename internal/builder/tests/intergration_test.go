@@ -19,7 +19,7 @@ func TestBuilder_WDIsModRoot(t *testing.T) {
 	mod, ok := build.Modules[build.EntryModRef]
 	require.True(t, ok)
 	require.Len(t, mod.Packages, 1)
-	require.Equal(t, "0.29.0", mod.Manifest.LanguageVersion) // defined in yml
+	require.Equal(t, "0.30.0", mod.Manifest.LanguageVersion) // defined in yml
 
 	pkg, ok := mod.Packages["do_nothing"]
 	require.True(t, ok)
@@ -42,7 +42,7 @@ func TestBuilder_WDIsPkg(t *testing.T) {
 	mod, ok := build.Modules[build.EntryModRef]
 	require.True(t, ok)
 	require.Len(t, mod.Packages, 1)
-	require.Equal(t, "0.29.0", mod.Manifest.LanguageVersion) // defined in yml
+	require.Equal(t, "0.30.0", mod.Manifest.LanguageVersion) // defined in yml
 
 	pkg, ok := mod.Packages["do_nothing"]
 	require.True(t, ok)

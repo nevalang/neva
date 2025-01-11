@@ -33,6 +33,7 @@ func NewApp(
 			newGetCmd(workdir, bldr),
 			newRunCmd(workdir, nativec),
 			newBuildCmd(workdir, goc, nativec, wasmc, jsonc, dotc),
+			newOSArchCmd(),
 		},
 	}
 }
