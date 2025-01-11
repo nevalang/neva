@@ -46,7 +46,11 @@ interface IReader1 (
 )
 
 pub interface IReader1 (
-    a bool | int | struct { foo int | string },
+    a union {
+        Bool bool
+        Int int
+        Struct struct { foo union { Int int, String string } }
+    },
     b struct { bar int }
 ) (
     x string |

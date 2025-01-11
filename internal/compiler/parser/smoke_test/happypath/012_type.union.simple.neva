@@ -1,18 +1,35 @@
-type num int | float
+type num union { Int int, Float float }
 
-type num int |
-    float
+type num union { Int int
+    Float float }
 
-pub type num int | float
+pub type num union { Int int, Float float }
 
-type time enum { Monday, Tuesday, Wednesday } | enum { January, February, March }
+type time union {
+    Days union { Monday, Tuesday, Wednesday }
+    Months union { January, February, March }
+}
 
-type Obj struct {} | struct { foo int }
+type Obj union { Empty struct {}, Full struct { foo int } }
 
-type Obj struct {} | struct { foo int | float }
+type Obj union { Empty struct {}, Full struct { foo union { Int int, Float float } } }
 
-type SomeTyp struct { foo int | float } | int | enum { Monday, Tuesday, Wednesday } | enum { January, February, March } | float
+type SomeTyp union {
+    Struct struct { foo union { Int int, Float float } }
+    Int int
+    Days union { Monday, Tuesday, Wednesday }
+    Months union { January, February, March }
+    Float float
+}
 
-type T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
+type T union {
+    Int int
+    Days union { Monday, Tuesday, Wednesday }
+    Struct struct { foo union { Int int, Float float } }
+}
 
-pub type T int | enum { Monday, Tuesday, Wednesday } | struct { foo int | float }
+pub type T union {
+    Int int
+    Days union { Monday, Tuesday, Wednesday }
+    Struct struct { foo union { Int int, Float float } }
+}

@@ -1,8 +1,8 @@
 type MyInt int
 
-type MyNum Int | Float
-type Int int | int
-pub type Float float | float
+type MyNum union { Int Int, Float Float }
+type Int union { Int int, Int2 int }
+pub type Float union { Float float, Float2 float }
 
 type MyEmptyRec struct {}
 type MyNonEmptyRec struct {

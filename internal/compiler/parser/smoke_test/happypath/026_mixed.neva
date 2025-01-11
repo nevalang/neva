@@ -24,5 +24,5 @@ def Main(start any) (stop any) {
 
 #extern(int IntAdder, float FloatAdder, string StringAdder)
 pub def Add<
-	T int | float | string
+    T union { Int int, Float float, String string }
 >(data stream<T>) (res T)
