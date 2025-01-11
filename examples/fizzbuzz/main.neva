@@ -3,8 +3,8 @@ import {
 }
 
 def Main(start any) (stop any) {
-    map_fb Map<int, FizzBuzzResult>{FizzBuzz}
-    for_print For{fmt.Println<FizzBuzzResult>}
+    map_fb Map<int, any>{FizzBuzz}
+    for_print For{fmt.Println<any>}
     wait Wait
     ---
     :start -> 1..101 -> map_fb -> for_print -> wait -> :stop
@@ -15,12 +15,14 @@ type FizzBuzzResult union {
     String string
 }
 
-def FizzBuzz(data int) (res FizzBuzzResult) {
-    select Select<FizzBuzzResult>
+def FizzBuzz(data int) (res any) {
+    select Select<any>
     mod15 Mod15
     mod3 Mod3
     mod5 Mod5
+    
     ---
+    
     :data -> [mod15, select:then[3]]
 
     mod15:then -> select:if[0]
