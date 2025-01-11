@@ -763,7 +763,7 @@ func (a Analyzer) analyzeSender(
 		}
 
 		// if there's no type-expr (and thus no wrapped sender)
-		// it's a "enum-like" union, so there's nothing to analyze
+		// it's a tag-only union, so there's nothing to analyze
 		if tagTypeExpr == nil {
 			return &sender, &unionTypeExpr, nil
 		}
