@@ -1,0 +1,114 @@
+{
+	"files": [
+		{
+			"path": "internal/compiler/parser/smoke_test/happypath/026_mixed.neva",
+			"bookmarks": [
+				{
+					"line": 24,
+					"column": 59,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "internal/compiler/parser/smoke_test/happypath/027_compiler_directives.neva",
+			"bookmarks": [
+				{
+					"line": 20,
+					"column": 33,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "std/strconv/strconv.neva",
+			"bookmarks": [
+				{
+					"line": 6,
+					"column": 25,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "std/builtin/operators.neva",
+			"bookmarks": [
+				{
+					"line": 12,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 21,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 30,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 44,
+					"column": 56,
+					"label": ""
+				},
+				{
+					"line": 53,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 62,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 71,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 99,
+					"column": 77,
+					"label": ""
+				},
+				{
+					"line": 103,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 107,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 111,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 117,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 121,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "std/builtin/collections.neva",
+			"bookmarks": [
+				{
+					"line": 10,
+					"column": 0,
+					"label": ""
+				}
+			]
+		}
+	]
+}
