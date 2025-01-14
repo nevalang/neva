@@ -21,8 +21,3 @@ def Main(start any) (stop any) {
 	abs:v -> [concrete:v]
 	concrete:v -> :code
 }
-
-#extern(int IntAdder, float FloatAdder, string StringAdder)
-pub def Add<
-    T union { Int int, Float float, String string }
->(data stream<T>) (res T)

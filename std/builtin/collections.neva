@@ -1,15 +1,13 @@
-type LenInput union {
-    Map dict<any>
-    List list<any>
-    String string
-}
-
 // Len returns the length of the given sequence: list, map, or string:
 // for lists it returns number of elements,
 // for maps it returns number of keys,
 // for for strings it returns number of utf-8 characters.
-#extern(list list_len, map map_len)
-pub def Len<T LenInput>(data T) (res int)
+#extern(list_len)
+pub def Len(data list<any>) (res int)
+#extern(map_len)
+pub def Len(data dict<any>) (res int)
+#extern(string_len)
+pub def Len(data string) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)
@@ -17,7 +15,7 @@ pub def StreamToList<T>(data stream<T>) (res list<T>)
 
 // Push creates new list with appended element.
 #extern(list_push)
-pub def Push<T> (lst list<T>, data T) (res list<T>)
+pub def Push<T>(lst list<T>, data T) (res list<T>)
 
 type SliceInput union {
     String string

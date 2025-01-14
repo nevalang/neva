@@ -10,7 +10,6 @@ Start from reading [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefil
 - Make: https://www.gnu.org/software/make/#download
 - NodeJS and NPM: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/
 - Antlr: `pip install antlr4-tools`
-<!-- - Tygo: `go install github.com/gzuidhof/tygo@latest` -->
 
 ### VSCode
 
@@ -28,12 +27,6 @@ Not required but recommended:
 1. Make changes to `neva.g4` and corresponding `*.neva` files in the repo
 2. If something doesn't work, run `/parser/smoke_test`
 3. To debug deeper, make sure `neva.g4` is opened in the editor and launch VSCode's `ANTLR` debug task
-
-<!-- ## VSCode Extension
-
-VSCode extension depends on types defined in the `sourcecode` and `typesystem` packages so it's dangerous to rename those. If you going to do so, make sure you did't brake TS types generation.
-
-Check out [tygo.yaml](./tygo.yaml). and `CONTRIBUTING.md` in "vscode-neva" repo. -->
 
 ## Learning Resources
 

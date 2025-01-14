@@ -3,7 +3,7 @@ import { fmt }
 const lst list<int> = [4, 123, 22, 1121, 215]
 
 def Main(start any) (stop any) {
-	len Len<union{List list<int>}> // Len has type parameter of type union
+	len Len
 	println fmt.Println
 	---
 	:start -> $lst -> len -> println -> :stop
