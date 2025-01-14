@@ -56,17 +56,22 @@ func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	return entity.Type, s.Relocate(location), nil
 }
 
-func (s Scope) GetInterface(ref core.EntityRef) (Interface, error) {
-	entity, _, err := s.entity(ref)
-	if err != nil {
-		return Interface{}, err
-	}
-	return entity.Interface, nil
-}
-
 // Entity returns entity by reference
 func (s Scope) Entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	return s.entity(entityRef)
+}
+
+func (s Scope) GetConst(entityRef core.EntityRef) (Const, core.Location, error) {
+	entity, loc, err := s.entity(entityRef)
+	if err != nil {
+		return Const{}, core.Location{}, err
+	}
+
+	if entity.Kind != ConstEntity {
+		return Const{}, core.Location{}, fmt.Errorf("entity is not a constant: %v", entity.Kind)
+	}
+
+	return entity.Const, loc, nil
 }
 
 func (s Scope) GetComponent(entityRef core.EntityRef) (Component, error) {
@@ -74,6 +79,11 @@ func (s Scope) GetComponent(entityRef core.EntityRef) (Component, error) {
 	if err != nil {
 		return Component{}, err
 	}
+
+	if entity.Kind != ComponentEntity {
+		return Component{}, fmt.Errorf("entity is not a component: %v", entity.Kind)
+	}
+
 	return entity.Component, nil
 }
 
@@ -176,7 +186,7 @@ func (s Scope) getNodeIOByPortAddr(
 		return IO{}, fmt.Errorf("node '%s' not found", portAddr.Node)
 	}
 
-	entity, _, err := s.Entity(node.EntityRef)
+	entity, _, err := s.entity(node.EntityRef)
 	if err != nil {
 		return IO{}, fmt.Errorf("get entity: %w", err)
 	}
@@ -203,7 +213,7 @@ func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (str
 }
 
 func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
-	entity, _, err := s.Entity(entityRef)
+	entity, _, err := s.entity(entityRef)
 	if err != nil {
 		return "", err
 	}

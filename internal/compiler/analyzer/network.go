@@ -1692,7 +1692,7 @@ func (a Analyzer) getNodeOutportType(
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope) (ts.Expr, *compiler.Error) {
-	entity, location, err := scope.Entity(ref)
+	constant, loc, err := scope.GetConst(ref)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
@@ -1700,30 +1700,23 @@ func (a Analyzer) getResolvedConstTypeByRef(ref core.EntityRef, scope src.Scope)
 		}
 	}
 
-	if entity.Kind != src.ConstEntity {
-		return ts.Expr{}, &compiler.Error{
-			Message: fmt.Sprintf("%v: %v", errors.New("Entity found but is not constant"), entity.Kind),
-			Meta:    entity.Meta(),
-		}
-	}
-
-	if entity.Const.Value.Ref != nil {
-		expr, err := a.getResolvedConstTypeByRef(*entity.Const.Value.Ref, scope)
+	if constant.Value.Ref != nil {
+		expr, err := a.getResolvedConstTypeByRef(*constant.Value.Ref, scope)
 		if err != nil {
 			return ts.Expr{}, compiler.Error{
-				Meta: &entity.Const.Meta,
+				Meta: &constant.Meta,
 			}.Wrap(err)
 		}
 		return expr, nil
 	}
 
-	scope = scope.Relocate(location)
+	scope = scope.Relocate(loc)
 
-	resolvedExpr, err := a.resolver.ResolveExpr(entity.Const.TypeExpr, scope)
+	resolvedExpr, err := a.resolver.ResolveExpr(constant.TypeExpr, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
-			Meta:    &entity.Const.Value.Message.Meta,
+			Meta:    &constant.Value.Message.Meta,
 		}
 	}
 

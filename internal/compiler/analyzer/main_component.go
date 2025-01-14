@@ -81,22 +81,13 @@ func (Analyzer) analyzeMainComponentNodes(
 	nodes map[string]src.Node,
 	scope src.Scope,
 ) *compiler.Error {
-	for nodeName, node := range nodes {
-		nodeEntity, _, err := scope.Entity(node.EntityRef)
-		if err != nil {
+	for _, node := range nodes {
+		if _, err := scope.GetComponent(node.EntityRef); err != nil {
 			return &compiler.Error{
 				Message: err.Error(),
 				Meta:    &node.EntityRef.Meta,
 			}
 		}
-
-		if nodeEntity.Kind != src.ComponentEntity {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Main component's nodes must only refer to component entities: %v: %v", nodeName, node.EntityRef),
-				Meta:    nodeEntity.Meta(),
-			}
-		}
 	}
-
 	return nil
 }

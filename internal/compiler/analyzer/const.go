@@ -24,22 +24,14 @@ func (a Analyzer) analyzeConst(
 	}
 
 	if constant.Value.Message == nil { // is ref
-		entity, _, err := scope.Entity(*constant.Value.Ref)
+		found, _, err := scope.GetConst(*constant.Value.Ref)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
 				Message: err.Error(),
-				Meta:    entity.Meta(),
+				Meta:    &constant.Meta,
 			}
 		}
-
-		if entity.Kind != src.ConstEntity {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Constant refers to an entity that is not constant: %v", entity.Kind),
-				Meta:    entity.Meta(),
-			}
-		}
-
-		return a.analyzeConst(entity.Const, scope)
+		return a.analyzeConst(found, scope)
 	}
 
 	resolvedType, err := a.analyzeTypeExpr(constant.TypeExpr, scope)
