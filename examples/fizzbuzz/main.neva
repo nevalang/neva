@@ -1,6 +1,4 @@
-import {
-    fmt
-}
+import { fmt }
 
 def Main(start any) (stop any) {
     map_fb Map<int, any>{FizzBuzz}
@@ -8,11 +6,6 @@ def Main(start any) (stop any) {
     wait Wait
     ---
     :start -> 1..101 -> map_fb -> for_print -> wait -> :stop
-}
-
-type FizzBuzzResult union {
-    Int int
-    String string
 }
 
 def FizzBuzz(data int) (res any) {
