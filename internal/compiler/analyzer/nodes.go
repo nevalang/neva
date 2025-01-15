@@ -74,10 +74,24 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	bindDirectiveArgs, usesBindDirective := node.Directives[compiler.BindDirective]
-	if usesBindDirective && len(bindDirectiveArgs) != 1 {
+	bindArg, hasBind := node.Directives[compiler.BindDirective]
+	if hasBind && len(bindArg) != 1 {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message: "Node with #bind directive must provide exactly one argument",
+			Meta:    nodeEntity.Meta(),
+		}
+	}
+
+	if hasBind && nodeEntity.Kind == src.InterfaceEntity {
+		return src.Node{}, foundInterface{}, &compiler.Error{
+			Message: "Interface node cannot use #bind directive",
+			Meta:    nodeEntity.Meta(),
+		}
+	}
+
+	if nodeEntity.Kind == src.InterfaceEntity && node.DIArgs != nil {
+		return src.Node{}, foundInterface{}, &compiler.Error{
+			Message: "Only component node can have dependency injection",
 			Meta:    nodeEntity.Meta(),
 		}
 	}
@@ -111,15 +125,21 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	nodeIface, aerr := a.getNodeInterface(
-		nodeEntity,
-		usesBindDirective,
-		node,
-		scope,
-		resolvedNodeArgs,
-	)
-	if aerr != nil {
-		return src.Node{}, foundInterface{}, aerr
+	var nodeIface src.Interface
+	if nodeEntity.Kind == src.InterfaceEntity {
+		nodeIface = nodeEntity.Interface
+	} else {
+		var err *compiler.Error
+		nodeIface, err = a.getComponentNodeInterface(
+			nodeEntity,
+			hasBind,
+			node,
+			scope,
+			resolvedNodeArgs,
+		)
+		if err != nil {
+			return src.Node{}, foundInterface{}, err
+		}
 	}
 
 	if node.ErrGuard {
@@ -206,31 +226,16 @@ func (a Analyzer) analyzeNode(
 		}, nil
 }
 
-// also does validation
-func (a Analyzer) getNodeInterface(
+// getComponentNodeInterface returns interface of the component node.
+// It also performs some validation.
+func (a Analyzer) getComponentNodeInterface(
 	entity src.Entity,
-	usesBindDirective bool,
+	hasBind bool,
 	node src.Node,
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
 ) (src.Interface, *compiler.Error) {
-	if entity.Kind == src.InterfaceEntity {
-		if usesBindDirective {
-			return src.Interface{}, &compiler.Error{
-				Message: "Interface node cannot use #bind directive",
-				Meta:    entity.Meta(),
-			}
-		}
-
-		if node.DIArgs != nil {
-			return src.Interface{}, &compiler.Error{
-				Message: "Only component node can have dependency injection",
-				Meta:    entity.Meta(),
-			}
-		}
-
-		return entity.Interface, nil
-	}
+	// TODO: node.OverloadIndex needs to be set here based on how node is used in the network
 
 	var version src.Component
 	if len(entity.Component) == 1 {
@@ -239,18 +244,10 @@ func (a Analyzer) getNodeInterface(
 		version = entity.Component[*node.OverloadIndex]
 	}
 
-	externArgs, hasExternDirective := version.Directives[compiler.ExternDirective]
-
-	if usesBindDirective && !hasExternDirective {
+	_, hasExtern := version.Directives[compiler.ExternDirective]
+	if hasBind && !hasExtern {
 		return src.Interface{}, &compiler.Error{
 			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
-			Meta:    entity.Meta(),
-		}
-	}
-
-	if len(externArgs) > 1 && len(resolvedNodeArgs) != 1 {
-		return src.Interface{}, &compiler.Error{
-			Message: "Component that use #extern directive with > 1 argument, must have exactly one type-argument for overloading",
 			Meta:    entity.Meta(),
 		}
 	}
