@@ -90,14 +90,46 @@ Let's compare Nevalang with Go. We could compare it to any language but Go is a 
 | **Dependency Injection** | Built-in - any component with dependency expects injection         | Manual - programmer must create constructor function that takes dependencies      |
 | **Stream Processing**    | Native support with components like `Map/Filter/Reduce`            | Programmer must manually implement dataflow patterns with goroutines and channels |
 
-## 📢 Community
+## 🏭 Architecture
 
-As you can see, this is quite an ambitious project. Typically, such projects are backed by companies, but Nevalang is maintained by a very small group of enthusiasts. Your support by joining us will show interest and motivate us to continue.
+> This is a high-level overview. For a more detailed overview of the architecture, please see [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+```mermaid
+flowchart LR
+  source_code-->compiler-->|go_code| go_compiler
+
+  subgraph compiler
+    parser-->analyzer-->backend
+  end
+
+  go_compiler-->machine_code
+  go_compiler-->wasm
+```
+
+Nevalang compiles to dependency-free, human-readable Go code that uses goroutines and channels for message-passing with parallelism. The Go compiler then produces optimized platform-specific code for any supported platform. This approach gives our programs access to Go's production-grade runtime with an advanced scheduler, garbage collector, and battle-tested standard library. We stand on the shoulders of giants.
+
+## 💭 What's Next?
+
+> ℹ️ Please note that these resources may be outdated due to the current state of the project. We take development seriously but have limited time to keep everything current. Don't hesitate to reach out on our social platforms with any questions - we welcome all feedback!
+
+- [Documentation](./docs/README.md) - Install and learn the language basics
+- [Examples](./examples/) - Learn the language by small programs
+
+### 📢 Community
+
+As you can see, this is quite an ambitious project. Typically, such projects are backed by companies, but Nevalang is maintained by a very small group of enthusiasts. **Your support by joining us will show interest and motivate us to continue.**
 
 - [**Discord**](https://discord.gg/dmXbC79UuH)
 - [**Reddit**](https://www.reddit.com/r/nevalang/)
 - [**Telegram**](https://t.me/+H1kRClL8ppI1MWJi)
 - [**Twitter**](https://x.com/neva_language)
+
+### 🤝 Contributing
+
+1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
+2. Check out [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open) and [kanban-board](https://github.com/orgs/nevalang/projects/2/views/3?filterQuery=)
+3. Also please read our [CoC](./CODE_OF_CONDUCT.md)
+4. Join [discord server](https://discord.gg/dmXbC79UuH)
 
 ### 🙏 Support
 
@@ -106,17 +138,3 @@ Please **give us a star ⭐️** to increase our chances of getting into GitHub 
 <p align="center">
   <img src="./assets/animations/github_star.gif" alt="GitHub Star">
 </p>
-
-## 💭 What's Next?
-
-- [Documentation](./docs/README.md) - Install and learn the language basics
-- [Examples](./examples/) - Learn the language by small programs
-
-> Please keep in mind that these resources might not be ready or may be outdated due to the current state of the project. However, rest assured that we take development seriously. We simply don't have enough time to keep everything up to date all the time. Please don't feel intimidated and contact us on our social platforms if you have any questions. We welcome _any_ feedback, no matter what.
-
-## 🤝 Contributing
-
-1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
-2. Check out [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open) and [kanban-board](https://github.com/orgs/nevalang/projects/2/views/3?filterQuery=)
-3. Also please read our [CoC](./CODE_OF_CONDUCT.md)
-4. Join [discord server](https://discord.gg/dmXbC79UuH)
