@@ -13,10 +13,8 @@ stmt:
 
 // Compiler Directives
 compilerDirectives: (compilerDirective NEWLINE)+;
-compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
-compilerDirectivesArgs:
-	'(' compiler_directive_arg (',' compiler_directive_arg)* ')';
-compiler_directive_arg: IDENTIFIER+;
+compilerDirective: '#' IDENTIFIER compilerDirectivesArg?;
+compilerDirectivesArg: '(' IDENTIFIER ')';
 
 // Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';

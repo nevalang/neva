@@ -281,8 +281,8 @@ func TestDesugarNetwork(t *testing.T) {
 				nodesToInsert: map[string]src.Node{
 					"__field__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Field"},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
@@ -589,8 +589,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"foo"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "foo",
 						},
 					},
 				},
@@ -691,8 +691,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"c"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "c",
 						},
 					},
 				},
@@ -785,8 +785,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
@@ -911,8 +911,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 					"__new__2": {
@@ -924,8 +924,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__2"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__2",
 						},
 					},
 				},
@@ -1019,8 +1019,8 @@ func TestDesugarNetwork(t *testing.T) {
 							Pkg:  "builtin",
 							Name: "New",
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__union_const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__union_const__1",
 						},
 					},
 				},

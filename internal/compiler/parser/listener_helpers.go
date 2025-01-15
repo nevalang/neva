@@ -1018,33 +1018,22 @@ func (s *treeShapeListener) parseMessage(
 	return msg, nil
 }
 
-func (s *treeShapeListener) parseCompilerDirectives(actx generated.ICompilerDirectivesContext) map[src.Directive][]string {
+func (s *treeShapeListener) parseCompilerDirectives(
+	actx generated.ICompilerDirectivesContext,
+) map[src.Directive]string {
 	if actx == nil {
 		return nil
 	}
 
 	directives := actx.AllCompilerDirective()
-	result := make(map[src.Directive][]string, len(directives))
+	result := make(map[src.Directive]string, len(directives))
 	for _, directive := range directives {
-		id := directive.IDENTIFIER()
-		if directive.CompilerDirectivesArgs() == nil {
-			result[src.Directive(id.GetText())] = []string{}
+		directiveName := src.Directive(directive.IDENTIFIER().GetText())
+		result[directiveName] = ""                    // default value
+		if directive.CompilerDirectivesArg() == nil { // some directives don't have argument
 			continue
 		}
-		args := directive.CompilerDirectivesArgs().AllCompiler_directive_arg()
-		ss := make([]string, 0, len(args))
-		for _, arg := range args {
-			s := ""
-			ids := arg.AllIDENTIFIER()
-			for i, id := range ids {
-				s += id.GetText()
-				if i < len(ids)-1 {
-					s += " "
-				}
-			}
-			ss = append(ss, s)
-		}
-		result[src.Directive(id.GetText())] = ss
+		result[directiveName] = directive.CompilerDirectivesArg().IDENTIFIER().GetText()
 	}
 
 	return result
@@ -1162,10 +1151,12 @@ func (s *treeShapeListener) parseConstDef(
 	}, nil
 }
 
-func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.Entity, *compiler.Error) {
+func (s *treeShapeListener) parseCompDef(
+	actx generated.ICompDefContext,
+) (src.Component, *compiler.Error) {
 	parsedInterfaceDef, err := s.parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
-		return src.Entity{}, err
+		return src.Component{}, err
 	}
 
 	body := actx.CompBody()
@@ -1184,12 +1175,9 @@ func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.En
 	}
 
 	if body == nil {
-		return src.Entity{
-			Kind: src.ComponentEntity,
-			Component: src.Component{
-				Interface: parsedInterfaceDef,
-				Meta:      meta,
-			},
+		return src.Component{
+			Interface: parsedInterfaceDef,
+			Meta:      meta,
 		}, nil
 	}
 
@@ -1198,36 +1186,30 @@ func (s *treeShapeListener) parseCompDef(actx generated.ICompDefContext) (src.En
 	if connections != nil {
 		parsedNet, err := s.parseConnections(connections)
 		if err != nil {
-			return src.Entity{}, err
+			return src.Component{}, err
 		}
 		parsedConnections = parsedNet
 	}
 
 	nodesDef := body.CompNodesDef()
 	if nodesDef == nil {
-		return src.Entity{
-			Kind: src.ComponentEntity,
-			Component: src.Component{
-				Interface: parsedInterfaceDef,
-				Net:       parsedConnections,
-				Meta:      meta,
-			},
+		return src.Component{
+			Interface: parsedInterfaceDef,
+			Net:       parsedConnections,
+			Meta:      meta,
 		}, nil
 	}
 
 	parsedNodes, err := s.parseNodes(nodesDef.CompNodesDefBody(), true)
 	if err != nil {
-		return src.Entity{}, err
+		return src.Component{}, err
 	}
 
-	return src.Entity{
-		Kind: src.ComponentEntity,
-		Component: src.Component{
-			Interface: parsedInterfaceDef,
-			Nodes:     parsedNodes,
-			Net:       parsedConnections,
-			Meta:      meta,
-		},
+	return src.Component{
+		Interface: parsedInterfaceDef,
+		Nodes:     parsedNodes,
+		Net:       parsedConnections,
+		Meta:      meta,
 	}, nil
 }
 

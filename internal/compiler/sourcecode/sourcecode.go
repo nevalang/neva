@@ -89,12 +89,12 @@ type Import struct {
 }
 
 type Entity struct {
-	IsPublic  bool       `json:"exported,omitempty"`
-	Kind      EntityKind `json:"kind,omitempty"`
-	Const     Const      `json:"const,omitempty"`
-	Type      ts.Def     `json:"type,omitempty"`
-	Interface Interface  `json:"interface,omitempty"`
-	Component Component  `json:"component,omitempty"`
+	IsPublic  bool        `json:"exported,omitempty"`
+	Kind      EntityKind  `json:"kind,omitempty"`
+	Const     Const       `json:"const,omitempty"`
+	Type      ts.Def      `json:"type,omitempty"`
+	Interface Interface   `json:"interface,omitempty"`
+	Component []Component `json:"component,omitempty"` // Non-overloaded components are represented as slice of one element.
 }
 
 func (e Entity) Meta() *core.Meta {
@@ -107,7 +107,7 @@ func (e Entity) Meta() *core.Meta {
 	case InterfaceEntity:
 		m = e.Interface.Meta
 	case ComponentEntity:
-		m = e.Component.Meta
+		m = e.Component[0].Meta // Overloaded components are usually defined in the same file.
 	}
 	return &m
 }
@@ -124,10 +124,10 @@ const (
 // Component is unit of computation.
 type Component struct {
 	Interface  `json:"interface,omitempty"`
-	Directives map[Directive][]string `json:"directives,omitempty"`
-	Nodes      map[string]Node        `json:"nodes,omitempty"`
-	Net        []Connection           `json:"net,omitempty"`
-	Meta       core.Meta              `json:"meta,omitempty"`
+	Directives map[Directive]string `json:"directives,omitempty"`
+	Nodes      map[string]Node      `json:"nodes,omitempty"`
+	Net        []Connection         `json:"net,omitempty"`
+	Meta       core.Meta            `json:"meta,omitempty"`
 }
 
 // Directive is an explicit instruction for compiler.
@@ -169,12 +169,13 @@ func (t TypeParams) String() string {
 }
 
 type Node struct {
-	Directives map[Directive][]string `json:"directives,omitempty"`
-	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
-	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
-	ErrGuard   bool                   `json:"errGuard,omitempty"` // ErrGuard explains if node is used with `?` operator.
-	DIArgs     map[string]Node        `json:"diArgs,omitempty"`   // Dependency Injection.
-	Meta       core.Meta              `json:"meta,omitempty"`
+	Directives    map[Directive]string `json:"directives,omitempty"`
+	EntityRef     core.EntityRef       `json:"entityRef,omitempty"`
+	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
+	ErrGuard      bool                 `json:"errGuard,omitempty"`      // ErrGuard explains if node is used with `?` operator.
+	DIArgs        map[string]Node      `json:"diArgs,omitempty"`        // Dependency Injection.
+	OverloadIndex *int                 `json:"overloadIndex,omitempty"` // Only for overloaded components.
+	Meta          core.Meta            `json:"meta,omitempty"`
 }
 
 func (n Node) String() string {

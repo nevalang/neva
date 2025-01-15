@@ -34,9 +34,7 @@ func (d *Desugarer) desugarStructSelectors(
 	selectorNodeName := fmt.Sprintf("__field__%d", d.virtualSelectorsCount)
 
 	selectorNode := src.Node{
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constName},
-		},
+		Directives: map[src.Directive]string{compiler.BindDirective: constName},
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "Field",

@@ -138,11 +138,21 @@ func (g Generator) processSender(
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
 	if isNodeDep && sender.PortAddr.Port == "" {
-		depComponent, err := scope.Relocate(depNode.Meta.Location).GetComponent(depNode.EntityRef)
+		versions, err := scope.
+			Relocate(depNode.Meta.Location).
+			GetComponent(depNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
-		for outport := range depComponent.Interface.IO.Out {
+
+		var version src.Component
+		if len(versions) == 1 {
+			version = versions[0]
+		} else {
+			version = versions[*depNode.OverloadIndex]
+		}
+
+		for outport := range version.Interface.IO.Out {
 			sender.PortAddr.Port = outport
 			break
 		}
@@ -193,14 +203,21 @@ func (g Generator) processReceiver(
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
 
-		depComponent, err := scope.
+		versions, err := scope.
 			Relocate(diArgNode.Meta.Location).
 			GetComponent(diArgNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
 
-		for inport := range depComponent.Interface.IO.In {
+		var version src.Component
+		if len(versions) == 1 {
+			version = versions[0]
+		} else {
+			version = versions[*diArgNode.OverloadIndex]
+		}
+
+		for inport := range version.Interface.IO.In {
 			receiver.PortAddr.Port = inport
 			break
 		}

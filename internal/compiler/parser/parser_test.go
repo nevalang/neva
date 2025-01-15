@@ -30,7 +30,7 @@ func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -58,7 +58,7 @@ func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -89,7 +89,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -120,7 +120,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Equal(t, true, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	conn := net[0].Normal
 
 	// foo[0]->
@@ -146,7 +146,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -183,7 +183,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 
 	// 1) :port -> lonely
 	// 2) lonely -> :port
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 2, len(net))
 
 	// 1) :port -> lonely
@@ -207,7 +207,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 	conn := net[0].Normal
 
@@ -279,7 +279,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}
@@ -324,29 +324,29 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	d1 := got.Entities["C1"].Component.Directives[compiler.ExternDirective][0]
+	d1 := got.Entities["C1"].Component[0].Directives[compiler.ExternDirective]
 	require.Equal(t, "d1", d1)
 
 	c2 := got.Entities["C2"].Component
 
-	d2 := c2.Directives[compiler.ExternDirective][0]
+	d2 := c2[0].Directives[compiler.ExternDirective]
 	require.Equal(t, "d2", d2)
 
-	d3 := c2.Nodes["n1"].Directives[compiler.BindDirective][0]
+	d3 := c2[0].Nodes["n1"].Directives[compiler.BindDirective]
 	require.Equal(t, "d3", d3)
 
-	d4 := c2.Nodes["n2"].Directives[compiler.BindDirective][0]
+	d4 := c2[0].Nodes["n2"].Directives[compiler.BindDirective]
 	require.Equal(t, "d4", d4)
 
 	c3 := got.Entities["C3"].Component
-	_, ok := c3.Directives[compiler.AutoportsDirective]
+	_, ok := c3[0].Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 
 	c4 := got.Entities["C4"].Component
-	d5, ok := c4.Directives[compiler.ExternDirective]
+	d5, ok := c4[0].Directives[compiler.ExternDirective]
 	require.Equal(t, true, ok)
 	require.Equal(t, "d5", d5[0])
-	_, ok = c4.Directives[compiler.AutoportsDirective]
+	_, ok = c4[0].Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 }
 
@@ -362,7 +362,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	conn := got.Entities["C1"].Component.Net[0]
+	conn := got.Entities["C1"].Component[0].Net[0]
 
 	sender := conn.Normal.Senders[0].PortAddr.Node
 	require.Equal(t, "in", sender)
@@ -385,7 +385,7 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	nodes := got.Entities["C1"].Component.Nodes
+	nodes := got.Entities["C1"].Component[0].Nodes
 
 	_, ok := nodes["scanner"]
 	require.Equal(t, true, ok)
@@ -512,7 +512,7 @@ func TestParser_ParseFile_Range(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}
@@ -643,7 +643,7 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			conn := net[0].Normal
@@ -766,7 +766,7 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			conn := net[0].Normal
@@ -958,7 +958,7 @@ func TestParser_ParseFile_Switch(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			tt.check(t, net)
@@ -1104,7 +1104,7 @@ func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
 			p := New()
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}
@@ -1196,7 +1196,7 @@ func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
 			p := New()
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}

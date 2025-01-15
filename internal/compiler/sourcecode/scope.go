@@ -74,14 +74,15 @@ func (s Scope) GetConst(entityRef core.EntityRef) (Const, core.Location, error) 
 	return entity.Const, loc, nil
 }
 
-func (s Scope) GetComponent(entityRef core.EntityRef) (Component, error) {
+// TODO rename to GetComponents
+func (s Scope) GetComponent(entityRef core.EntityRef) ([]Component, error) {
 	entity, _, err := s.entity(entityRef)
 	if err != nil {
-		return Component{}, err
+		return nil, err
 	}
 
 	if entity.Kind != ComponentEntity {
-		return Component{}, fmt.Errorf("entity is not a component: %v", entity.Kind)
+		return nil, fmt.Errorf("entity is not a component: %v", entity.Kind)
 	}
 
 	return entity.Component, nil
@@ -191,14 +192,17 @@ func (s Scope) getNodeIOByPortAddr(
 		return IO{}, fmt.Errorf("get entity: %w", err)
 	}
 
-	var iface Interface
 	if entity.Kind == InterfaceEntity {
-		iface = entity.Interface
-	} else {
-		iface = entity.Component.Interface
+		return entity.Interface.IO, nil
 	}
 
-	return iface.IO, nil
+	if len(entity.Component) == 1 {
+		return entity.Component[0].Interface.IO, nil
+	} else if len(entity.Component) > 1 {
+		return entity.Component[*node.OverloadIndex].Interface.IO, nil
+	}
+
+	return IO{}, errors.New("component not found")
 }
 
 func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (string, error) {

@@ -214,13 +214,17 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
-		if err != nil {
-			return src.Entity{}, compiler.Error{
-				Meta: &entity.Component.Meta,
-			}.Wrap(err)
+		analyzedVersions := make([]src.Component, 0, len(entity.Component))
+		for _, component := range entity.Component {
+			analyzedComponent, err := a.analyzeComponent(component, scope)
+			if err != nil {
+				return src.Entity{}, compiler.Error{
+					Meta: &component.Meta,
+				}.Wrap(err)
+			}
+			analyzedVersions = append(analyzedVersions, analyzedComponent)
 		}
-		resolvedEntity.Component = analyzedComponent
+		resolvedEntity.Component = analyzedVersions
 	default:
 		return src.Entity{}, &compiler.Error{
 			Message: fmt.Sprintf("unknown entity kind: %v", entity.Kind),

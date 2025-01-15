@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"strings"
-
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
@@ -11,24 +9,11 @@ func (a Analyzer) analyzeComponent(
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.ExternDirective]
-
-	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
+	externArgs, hasExtern := component.Directives[compiler.ExternDirective]
+	if hasExtern && len(externArgs) == 0 {
 		return src.Component{}, &compiler.Error{
 			Message: "Component that use #extern directive must provide at least one argument",
 			Meta:    &component.Meta,
-		}
-	}
-
-	if len(runtimeFuncArgs) > 1 {
-		for _, runtimeFuncArg := range runtimeFuncArgs {
-			parts := strings.Split(runtimeFuncArg, " ")
-			if len(parts) != 2 {
-				return src.Component{}, &compiler.Error{
-					Message: "Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs",
-					Meta:    &component.Meta,
-				}
-			}
 		}
 	}
 
@@ -36,8 +21,8 @@ func (a Analyzer) analyzeComponent(
 		component.Interface,
 		scope,
 		analyzeInterfaceParams{
-			allowEmptyInports:  isRuntimeFunc,
-			allowEmptyOutports: isRuntimeFunc,
+			allowEmptyInports:  hasExtern,
+			allowEmptyOutports: hasExtern,
 		},
 	)
 	if err != nil {
@@ -46,7 +31,7 @@ func (a Analyzer) analyzeComponent(
 		}.Wrap(err)
 	}
 
-	if isRuntimeFunc {
+	if hasExtern {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
 				Message: "Component with nodes or network cannot use #extern directive",

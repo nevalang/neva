@@ -232,7 +232,14 @@ func (a Analyzer) getNodeInterface(
 		return entity.Interface, nil
 	}
 
-	externArgs, hasExternDirective := entity.Component.Directives[compiler.ExternDirective]
+	var version src.Component
+	if len(entity.Component) == 1 {
+		version = entity.Component[0]
+	} else {
+		version = entity.Component[*node.OverloadIndex]
+	}
+
+	externArgs, hasExternDirective := version.Directives[compiler.ExternDirective]
 
 	if usesBindDirective && !hasExternDirective {
 		return src.Interface{}, &compiler.Error{
@@ -248,9 +255,9 @@ func (a Analyzer) getNodeInterface(
 		}
 	}
 
-	iface := entity.Component.Interface
+	iface := version.Interface
 
-	_, hasAutoPortsDirective := entity.Component.Directives[compiler.AutoportsDirective]
+	_, hasAutoPortsDirective := version.Directives[compiler.AutoportsDirective]
 	if !hasAutoPortsDirective {
 		return iface, nil
 	}

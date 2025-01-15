@@ -63,10 +63,8 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 			Pkg:  "builtin",
 			Name: "New",
 		},
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constName},
-		},
-		Meta: union.Meta,
+		Directives: map[src.Directive]string{compiler.BindDirective: constName},
+		Meta:       union.Meta,
 	}
 
 	// create connection from new node to original receiver
