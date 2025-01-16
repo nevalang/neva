@@ -146,7 +146,7 @@ func (a Analyzer) analyzeNormalConnection(
 		return nil, err
 	}
 
-	analyzedReceiverSide, err := a.analyzeReceiverSide(
+	analyzedReceivers, err := a.analyzeReceivers(
 		normConn.Receivers,
 		scope,
 		iface,
@@ -162,12 +162,12 @@ func (a Analyzer) analyzeNormalConnection(
 
 	return &src.NormalConnection{
 		Senders:   analyzedSenders,
-		Receivers: analyzedReceiverSide,
+		Receivers: analyzedReceivers,
 		Meta:      normConn.Meta,
 	}, nil
 }
 
-func (a Analyzer) analyzeReceiverSide(
+func (a Analyzer) analyzeReceivers(
 	receiverSide []src.ConnectionReceiver,
 	scope src.Scope,
 	iface src.Interface,
@@ -363,7 +363,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 		}
 	}
 
-	analyzedDefault, err := a.analyzeReceiverSide(
+	analyzedDefault, err := a.analyzeReceivers(
 		receiver.Switch.Default,
 		scope,
 		iface,

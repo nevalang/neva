@@ -35,6 +35,7 @@ func (a Analyzer) analyzeNodes(
 		}
 
 		analyzedNode, nodeInterface, err := a.analyzeNode(
+			nodeName,
 			flowIface,
 			node,
 			scope,
@@ -54,6 +55,7 @@ func (a Analyzer) analyzeNodes(
 }
 
 func (a Analyzer) analyzeNode(
+	name string,
 	iface src.Interface,
 	node src.Node,
 	scope src.Scope,
@@ -137,6 +139,7 @@ func (a Analyzer) analyzeNode(
 	} else {
 		var err *compiler.Error
 		nodeIface, overloadIndex, err = a.getComponentNodeInterface(
+			name,
 			nodeEntity,
 			hasBind,
 			node,
@@ -205,6 +208,7 @@ func (a Analyzer) analyzeNode(
 	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
 	for depName, depNode := range node.DIArgs {
 		resolvedDep, _, err := a.analyzeNode(
+			name, // TODO make sure DI works with overloading (example: Reduce{Add})
 			iface,
 			depNode,
 			scope,
@@ -236,6 +240,7 @@ func (a Analyzer) analyzeNode(
 // It also performs some validation.
 // Overloading at the level of sourcecode is implemented here.
 func (a Analyzer) getComponentNodeInterface(
+	name string,
 	entity src.Entity,
 	hasBind bool,
 	node src.Node,
@@ -250,7 +255,7 @@ func (a Analyzer) getComponentNodeInterface(
 	if len(entity.Component) == 1 {
 		version = entity.Component[0]
 	} else {
-		v, err := a.getNodeOverloadIndex(node, net, entity.Component, scope)
+		v, err := a.getNodeOverloadIndex(name, node, net, entity.Component, scope)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
 				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
@@ -356,6 +361,7 @@ func (a Analyzer) getComponentNodeInterface(
 }
 
 func (a Analyzer) getNodeOverloadIndex(
+	name string,
 	node src.Node,
 	net []src.Connection,
 	versions []src.Component,
