@@ -184,7 +184,11 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
+		resolvedTypeDef, err := a.analyzeType(
+			entity.Type,
+			scope,
+			analyzeTypeDefParams{allowEmptyBody: isStd},
+		)
 		if err != nil {
 			meta := entity.Type.Meta
 			return src.Entity{}, compiler.Error{
@@ -202,10 +206,13 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope, analyzeInterfaceParams{
-			allowEmptyInports:  false,
-			allowEmptyOutports: false,
-		})
+		resolvedInterface, err := a.analyzeInterface(
+			entity.Interface,
+			scope,
+			analyzeInterfaceParams{
+				allowEmptyInports:  false,
+				allowEmptyOutports: false,
+			})
 		if err != nil {
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{

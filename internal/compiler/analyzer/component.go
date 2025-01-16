@@ -45,6 +45,7 @@ func (a Analyzer) analyzeComponent(
 		component.Interface,
 		component.Nodes,
 		scope,
+		component.Net,
 	)
 	if err != nil {
 		return src.Component{}, compiler.Error{

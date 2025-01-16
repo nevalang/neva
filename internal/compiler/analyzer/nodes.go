@@ -18,6 +18,7 @@ func (a Analyzer) analyzeNodes(
 	flowIface src.Interface,
 	nodes map[string]src.Node,
 	scope src.Scope,
+	net []src.Connection,
 ) (
 	map[string]src.Node, // resolved nodes
 	map[string]foundInterface, // resolved nodes interfaces with locations
@@ -37,6 +38,7 @@ func (a Analyzer) analyzeNodes(
 			flowIface,
 			node,
 			scope,
+			net,
 		)
 		if err != nil {
 			return nil, nil, false, compiler.Error{
@@ -52,11 +54,12 @@ func (a Analyzer) analyzeNodes(
 }
 
 func (a Analyzer) analyzeNode(
-	compIface src.Interface,
+	iface src.Interface,
 	node src.Node,
 	scope src.Scope,
+	net []src.Connection,
 ) (src.Node, foundInterface, *compiler.Error) {
-	parentTypeParams := compIface.TypeParams
+	parentTypeParams := iface.TypeParams
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -125,17 +128,21 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
-	var nodeIface src.Interface
+	var (
+		nodeIface     src.Interface
+		overloadIndex *int // only for component nodes
+	)
 	if nodeEntity.Kind == src.InterfaceEntity {
 		nodeIface = nodeEntity.Interface
 	} else {
 		var err *compiler.Error
-		nodeIface, err = a.getComponentNodeInterface(
+		nodeIface, overloadIndex, err = a.getComponentNodeInterface(
 			nodeEntity,
 			hasBind,
 			node,
 			scope,
 			resolvedNodeArgs,
+			net,
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, err
@@ -143,7 +150,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	if node.ErrGuard {
-		if _, ok := compIface.IO.Out["err"]; !ok {
+		if _, ok := iface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Message: "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
 				Meta:    &node.Meta,
@@ -183,27 +190,25 @@ func (a Analyzer) analyzeNode(
 
 	if node.DIArgs == nil {
 		return src.Node{
-				Directives: node.Directives,
-				EntityRef:  node.EntityRef,
-				TypeArgs:   resolvedNodeArgs,
-				Meta:       node.Meta,
-				ErrGuard:   node.ErrGuard,
+				Directives:    node.Directives,
+				EntityRef:     node.EntityRef,
+				TypeArgs:      resolvedNodeArgs,
+				Meta:          node.Meta,
+				OverloadIndex: overloadIndex,
+				ErrGuard:      node.ErrGuard,
 			}, foundInterface{
 				iface:    nodeIface,
 				location: location,
 			}, nil
 	}
 
-	// TODO probably here
-	// implement interface->component subtyping
-	// in a way where FP possible
-
 	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
 	for depName, depNode := range node.DIArgs {
 		resolvedDep, _, err := a.analyzeNode(
-			compIface,
+			iface,
 			depNode,
 			scope,
+			net, // TODO make sure DI works with overloading (example: Reduce{Add})
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
@@ -214,12 +219,13 @@ func (a Analyzer) analyzeNode(
 	}
 
 	return src.Node{
-			Directives: node.Directives,
-			EntityRef:  node.EntityRef,
-			TypeArgs:   resolvedNodeArgs,
-			DIArgs:     resolvedFlowDI,
-			Meta:       node.Meta,
-			ErrGuard:   node.ErrGuard,
+			Directives:    node.Directives,
+			EntityRef:     node.EntityRef,
+			TypeArgs:      resolvedNodeArgs,
+			DIArgs:        resolvedFlowDI,
+			ErrGuard:      node.ErrGuard,
+			OverloadIndex: overloadIndex,
+			Meta:          node.Meta,
 		}, foundInterface{
 			iface:    nodeIface,
 			location: location,
@@ -228,25 +234,36 @@ func (a Analyzer) analyzeNode(
 
 // getComponentNodeInterface returns interface of the component node.
 // It also performs some validation.
+// Overloading at the level of sourcecode is implemented here.
 func (a Analyzer) getComponentNodeInterface(
 	entity src.Entity,
 	hasBind bool,
 	node src.Node,
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
-) (src.Interface, *compiler.Error) {
-	// TODO: node.OverloadIndex needs to be set here based on how node is used in the network
-
-	var version src.Component
+	net []src.Connection,
+) (src.Interface, *int, *compiler.Error) {
+	var (
+		overloadIndex *int
+		version       src.Component
+	)
 	if len(entity.Component) == 1 {
 		version = entity.Component[0]
 	} else {
-		version = entity.Component[*node.OverloadIndex]
+		v, err := a.getNodeOverloadIndex(node, net, entity.Component, scope)
+		if err != nil {
+			return src.Interface{}, nil, &compiler.Error{
+				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
+				Meta:    &node.Meta,
+			}
+		}
+		version = entity.Component[v]
+		overloadIndex = &v
 	}
 
 	_, hasExtern := version.Directives[compiler.ExternDirective]
 	if hasBind && !hasExtern {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
 			Meta:    entity.Meta(),
 		}
@@ -256,20 +273,20 @@ func (a Analyzer) getComponentNodeInterface(
 
 	_, hasAutoPortsDirective := version.Directives[compiler.AutoportsDirective]
 	if !hasAutoPortsDirective {
-		return iface, nil
+		return iface, overloadIndex, nil
 	}
 
 	// if we here then we have #autoports (only for structs)
 
 	if len(iface.IO.In) != 0 {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Component that uses struct inports directive must have no defined inports",
 			Meta:    entity.Meta(),
 		}
 	}
 
 	if len(iface.TypeParams.Params) != 1 {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Exactly one type parameter expected",
 			Meta:    entity.Meta(),
 		}
@@ -277,21 +294,21 @@ func (a Analyzer) getComponentNodeInterface(
 
 	resolvedTypeParamConstr, err := a.resolver.ResolveExpr(iface.TypeParams.Params[0].Constr, scope)
 	if err != nil {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: err.Error(),
 			Meta:    entity.Meta(),
 		}
 	}
 
 	if resolvedTypeParamConstr.Lit == nil || resolvedTypeParamConstr.Lit.Struct == nil {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Struct type expected",
 			Meta:    entity.Meta(),
 		}
 	}
 
 	if len(resolvedNodeArgs) != 1 {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Exactly one type argument expected",
 			Meta:    entity.Meta(),
 		}
@@ -299,14 +316,14 @@ func (a Analyzer) getComponentNodeInterface(
 
 	resolvedNodeArg, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 	if err != nil {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: err.Error(),
 			Meta:    entity.Meta(),
 		}
 	}
 
 	if resolvedNodeArg.Lit == nil || resolvedNodeArg.Lit.Struct == nil {
-		return src.Interface{}, &compiler.Error{
+		return src.Interface{}, nil, &compiler.Error{
 			Message: "Struct argument expected",
 			Meta:    entity.Meta(),
 		}
@@ -335,5 +352,14 @@ func (a Analyzer) getComponentNodeInterface(
 			},
 		},
 		Meta: iface.Meta,
-	}, nil
+	}, overloadIndex, nil
+}
+
+func (a Analyzer) getNodeOverloadIndex(
+	node src.Node,
+	net []src.Connection,
+	versions []src.Component,
+	scope src.Scope,
+) (int, error) {
+	panic("not implemented") // TODO
 }
