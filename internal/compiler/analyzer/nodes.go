@@ -14,32 +14,26 @@ type foundInterface struct {
 	location core.Location
 }
 
-func (a Analyzer) analyzeNodes(
-	flowIface src.Interface,
-	nodes map[string]src.Node,
-	scope src.Scope,
-	net []src.Connection,
-) (
+func (a Analyzer) analyzeNodes(component src.Component, scope src.Scope) (
 	map[string]src.Node, // resolved nodes
 	map[string]foundInterface, // resolved nodes interfaces with locations
 	bool, // one of the nodes has error guard
 	*compiler.Error, // err
 ) {
-	analyzedNodes := make(map[string]src.Node, len(nodes))
-	nodesInterfaces := make(map[string]foundInterface, len(nodes))
+	analyzedNodes := make(map[string]src.Node, len(component.Nodes))
+	nodesInterfaces := make(map[string]foundInterface, len(component.Nodes))
 	hasErrGuard := false
 
-	for nodeName, node := range nodes {
+	for nodeName, node := range component.Nodes {
 		if node.ErrGuard {
 			hasErrGuard = true
 		}
 
 		analyzedNode, nodeInterface, err := a.analyzeNode(
 			nodeName,
-			flowIface,
 			node,
 			scope,
-			net,
+			component,
 		)
 		if err != nil {
 			return nil, nil, false, compiler.Error{
@@ -56,12 +50,11 @@ func (a Analyzer) analyzeNodes(
 
 func (a Analyzer) analyzeNode(
 	name string,
-	iface src.Interface,
 	node src.Node,
 	scope src.Scope,
-	net []src.Connection,
+	parent src.Component,
 ) (src.Node, foundInterface, *compiler.Error) {
-	parentTypeParams := iface.TypeParams
+	parentTypeParams := parent.Interface.TypeParams
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -145,7 +138,7 @@ func (a Analyzer) analyzeNode(
 			node,
 			scope,
 			resolvedNodeArgs,
-			net,
+			parent,
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, err
@@ -153,7 +146,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	if node.ErrGuard {
-		if _, ok := iface.IO.Out["err"]; !ok {
+		if _, ok := parent.Interface.IO.Out["err"]; !ok {
 			return src.Node{}, foundInterface{}, &compiler.Error{
 				Message: "Error-guard operator '?' can only be used in components with ':err' outport to propagate errors",
 				Meta:    &node.Meta,
@@ -209,10 +202,9 @@ func (a Analyzer) analyzeNode(
 	for depName, depNode := range node.DIArgs {
 		resolvedDep, _, err := a.analyzeNode(
 			name, // TODO make sure DI works with overloading (example: Reduce{Add})
-			iface,
 			depNode,
 			scope,
-			net, // TODO make sure DI works with overloading (example: Reduce{Add})
+			parent, // TODO make sure DI works with overloading (example: Reduce{Add})
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
@@ -246,7 +238,7 @@ func (a Analyzer) getComponentNodeInterface(
 	node src.Node,
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
-	net []src.Connection,
+	parent src.Component,
 ) (src.Interface, *int, *compiler.Error) {
 	var (
 		overloadIndex *int
@@ -255,7 +247,7 @@ func (a Analyzer) getComponentNodeInterface(
 	if len(entity.Component) == 1 {
 		version = entity.Component[0]
 	} else {
-		v, err := a.getNodeOverloadIndex(name, node, net, entity.Component, scope)
+		v, err := a.getNodeOverloadIndex(name, node, parent, entity.Component, scope)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
 				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
@@ -360,12 +352,15 @@ func (a Analyzer) getComponentNodeInterface(
 	}, overloadIndex, nil
 }
 
+// getNodeOverloadIndex returns index of the overload of the node.
+// It must only be called for components that are overloaded.
+// It determines which overload to use based on node's usage in parent component.
 func (a Analyzer) getNodeOverloadIndex(
 	name string,
 	node src.Node,
-	net []src.Connection,
+	parent src.Component,
 	versions []src.Component,
 	scope src.Scope,
 ) (int, error) {
-	panic("not implemented") // TODO
+	panic("not implemented")
 }

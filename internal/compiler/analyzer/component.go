@@ -41,12 +41,7 @@ func (a Analyzer) analyzeComponent(
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
-		component.Interface,
-		component.Nodes,
-		scope,
-		component.Net,
-	)
+	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(component, scope)
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Meta: &component.Meta,
