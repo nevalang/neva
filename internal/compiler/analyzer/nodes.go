@@ -247,15 +247,14 @@ func (a Analyzer) getComponentNodeInterface(
 	if len(entity.Component) == 1 {
 		version = entity.Component[0]
 	} else {
-		v, err := a.getNodeOverloadIndex(name, node, parent, entity.Component, scope)
+		var err *compiler.Error
+		version, overloadIndex, err = a.getNodeOverloadIndex(name, node, parent, entity.Component, scope)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
 				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
 				Meta:    &node.Meta,
 			}
 		}
-		version = entity.Component[v]
-		overloadIndex = &v
 	}
 
 	_, hasExtern := version.Directives[compiler.ExternDirective]
@@ -361,6 +360,51 @@ func (a Analyzer) getNodeOverloadIndex(
 	parent src.Component,
 	versions []src.Component,
 	scope src.Scope,
-) (int, error) {
+) (src.Component, *int, *compiler.Error) {
+	resolvedSenderType, err := a.findSenderTypeForNode(name, parent, scope)
+	if err != nil {
+		return src.Component{}, nil, err
+	}
+
+	return a.selectOverload(versions, resolvedSenderType, scope)
+}
+
+// findSenderTypeForNode returns resolved type of the sender of the given node.
+// In case such type is not found (for whatever reason) it returns nil and error.
+func (a Analyzer) findSenderTypeForNode(
+	name string,
+	parent src.Component,
+	scope src.Scope,
+) (typesystem.Expr, *compiler.Error) {
 	panic("not implemented")
+}
+
+// selectOverload tries to find version of the component
+// compatible with the given resolved sender type.
+// In case such version is not found it returns non-nil error.
+func (a Analyzer) selectOverload(
+	versions []src.Component,
+	resolvedSenderType typesystem.Expr,
+	scope src.Scope,
+) (src.Component, *int, *compiler.Error) {
+	for idx, curVersion := range versions {
+		var firstInport src.Port
+		for _, inport := range curVersion.Interface.IO.In {
+			firstInport = inport
+			break
+		}
+
+		if err := a.resolver.IsSubtypeOf(
+			firstInport.TypeExpr,
+			resolvedSenderType,
+			scope,
+		); err != nil {
+			return curVersion, &idx, nil
+		}
+	}
+
+	return src.Component{}, nil, &compiler.Error{
+		Message: "Could not find any connections using node as receiver",
+		Meta:    &resolvedSenderType.Meta,
+	}
 }
