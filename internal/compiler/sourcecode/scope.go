@@ -205,14 +205,19 @@ func (s Scope) getNodeIOByPortAddr(
 	return IO{}, errors.New("component not found")
 }
 
-func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
+func (s Scope) GetFirstInportName(
+	nodes map[string]Node,
+	portAddr PortAddr,
+) (string, error) {
 	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
 	if err != nil {
 		return "", err
 	}
+
 	for inport := range io.In {
 		return inport, nil
 	}
+
 	return "", errors.New("first inport not found")
 }
 
@@ -221,16 +226,22 @@ func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return entity.Kind, nil
 }
 
-func (s Scope) GetFirstOutportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
+func (s Scope) GetFirstOutportName(
+	nodes map[string]Node,
+	portAddr PortAddr,
+) (string, error) {
 	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
 	if err != nil {
 		return "", err
 	}
+
 	for outport := range io.Out {
 		return outport, nil
 	}
+
 	return "", errors.New("first outport not found")
 }
