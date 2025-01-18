@@ -4,7 +4,6 @@
 package analyzer
 
 import (
-	"errors"
 	"fmt"
 
 	"golang.org/x/exp/maps"
@@ -13,10 +12,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-)
-
-var (
-	ErrCompilerVersion = errors.New("incompatible compiler version")
 )
 
 type Analyzer struct {

@@ -17,7 +17,7 @@ func (a Analyzer) analyzeComponent(
 		}
 	}
 
-	resolvedInterface, err := a.analyzeInterface(
+	resolvedIface, err := a.analyzeInterface(
 		component.Interface,
 		scope,
 		analyzeInterfaceParams{
@@ -41,7 +41,12 @@ func (a Analyzer) analyzeComponent(
 		return component, nil
 	}
 
-	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(component, scope)
+	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
+		resolvedIface,
+		component.Nodes,
+		component.Net,
+		scope,
+	)
 	if err != nil {
 		return src.Component{}, compiler.Error{
 			Meta: &component.Meta,
@@ -57,7 +62,7 @@ func (a Analyzer) analyzeComponent(
 
 	analyzedNet, err := a.analyzeNetwork(
 		component.Net,
-		resolvedInterface,
+		resolvedIface,
 		hasGuard,
 		resolvedNodes,
 		nodesIfaces,
@@ -70,7 +75,7 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	return src.Component{
-		Interface: resolvedInterface,
+		Interface: resolvedIface,
 		Nodes:     resolvedNodes,
 		Net:       analyzedNet,
 		Meta:      component.Meta,

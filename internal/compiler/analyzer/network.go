@@ -16,18 +16,18 @@ var (
 
 // analyzeNetwork must be called after analyzeNodes so we sure nodes are resolved.
 func (a Analyzer) analyzeNetwork(
-	net []src.Connection,
-	compInterface src.Interface,
-	hasGuard bool,
-	nodes map[string]src.Node,
-	nodesIfaces map[string]foundInterface,
+	net []src.Connection, // network to analyze
+	iface src.Interface, // resolved interface of the component that contains the network
+	hasGuard bool, // whether `?` is used by at least one node in the network
+	nodes map[string]src.Node, // nodes of the component that contains the network
+	nodesIfaces map[string]foundInterface, // resolved interfaces of the nodes
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
 	nodesUsage := make(map[string]netNodeUsage, len(nodes))
 
 	analyzedConnections, err := a.analyzeConnections(
 		net,
-		compInterface,
+		iface,
 		nodes,
 		nodesIfaces,
 		nodesUsage,
@@ -38,7 +38,7 @@ func (a Analyzer) analyzeNetwork(
 	}
 
 	if err := a.analyzeNetPortsUsage(
-		compInterface,
+		iface,
 		nodesIfaces,
 		hasGuard,
 		nodesUsage,
