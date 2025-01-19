@@ -51,27 +51,25 @@ def Main(start any) (stop any) {
 What’s happening here:
 
 - `import { fmt }` loads the `fmt` package for printing
-- `def Main` defines the main component with input port `start` and output port `stop`
-- `:start -> 'Hello, World!' -> println -> :stop` creates a connection that sends the string to `println` when program starts and terminates after printing
-
-> ℹ️ Runtime sends a message to `Main:start` at startup and then waits for `Main:stop` to terminate.
+- `def Main` defines the main component with input port `start` and output port `stop` of type `any` (it's safe since it's only used as a signal)
+- `:start -> 'Hello, World!' -> println -> :stop` defines a connection that sends the string to `println` when program starts and terminates after printing (runtime sends a message to `Main:start` at startup and waits for `Main:stop` to terminate)
 
 ## 🔥 Features
 
-- 📨 **Dataflow Programming** - Write programs as message-passing graphs
-- 🔀 **Implicit Parallelism** - Everything is parallel by default, no async-await/threads/goroutines/etc.
-- 🛡️ **Strong Static Typing** - Robust type system with generics and pattern-matching
-- 🚀 **Machine Code Compilation** - Compile for any Go-supported platform, including WASM
-- ⚡️ **Stream Processing** - Handle real-time data with streams as first class citizens
-- 🧯 **Advanced Error Handling** - Errors as values with `?` operator to avoid boilerplate
-- 🧩 **Functional Patterns** - Immutability and higher-order components
-- 🔌 **Dependency Injection** - Modularity with interfaces and DI
-- 🪶 **Minimal Core** - Simple language with limited abstractions
-- 📦 **Package Manager** - Publish packages by pushing a git-tag
-- ♻️ **Garbage Collection** - Automatic memory management using Go's low-latency GC
-- 🌈 **Visual Programming** (WIP): Edit programs as visual graphs
-- 🔄 **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
-- 🕵 **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
+- **Dataflow Programming** - Write programs as message-passing graphs
+- **Implicit Parallelism** - Everything is parallel by default, no async-await/threads/goroutines/etc.
+- **Strong Static Typing** - Robust type system with generics and pattern-matching
+- **Machine Code Compilation** - Compile for any Go-supported platform, including WASM
+- **Stream Processing** - Handle real-time data with streams as first class citizens
+- **Advanced Error Handling** - Errors as values with `?` operator to avoid boilerplate
+- **Functional Patterns** - Immutability and higher-order components
+- **Dependency Injection** - Modularity with interfaces and DI
+- **Minimal Core** - Simple language with limited abstractions
+- **Package Manager** - Publish packages by pushing a git-tag
+- **Garbage Collection** - Automatic memory management using Go's low-latency GC
+- **Visual Programming** (WIP): Edit programs as visual graphs
+- **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
+- **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
 
 ## 🧐 Why Nevalang?
 
@@ -94,6 +92,8 @@ Let's compare Nevalang with Go. We could compare it to any language but Go is a 
 
 > This is a high-level overview. For a more detailed overview of the architecture, please see [ARCHITECTURE.md](./ARCHITECTURE.md)
 
+<div align="center">
+
 ```mermaid
 flowchart LR
   source_code-->compiler-->|go_code| go_compiler
@@ -106,11 +106,25 @@ flowchart LR
   go_compiler-->wasm
 ```
 
+</div>
+
 Nevalang compiles to dependency-free, human-readable Go code that uses goroutines and channels for message-passing with parallelism. The Go compiler then produces optimized platform-specific code for any supported platform. This approach gives our programs access to Go's production-grade runtime with an advanced scheduler, garbage collector, and battle-tested standard library. We stand on the shoulders of giants.
+
+## ⭐️ Star History
+
+<p align="center">
+  <a href="https://star-history.com/#nevalang/neva&Timeline">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
+  </picture>
+  </a>
+</p>
 
 ## 💭 What's Next?
 
-> ℹ️ Please note that these resources may be outdated due to the current state of the project. We take development seriously but have limited time to keep everything current. Don't hesitate to reach out on our social platforms with any questions - we welcome all feedback!
+> ℹ️ We take development seriously but have limited time to keep everything current. Feel free to reach out on our social platforms with any questions!
 
 - [Documentation](./docs/README.md) - Install and learn the language basics
 - [Examples](./examples/) - Learn the language by small programs
