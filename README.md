@@ -15,6 +15,8 @@
 </div>
 <br/>
 
+![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main) [![go report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva) [![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH) [![ChatGPT](https://img.shields.io/badge/Nevalang_AI-74aa9c?logo=openai&logoColor=white)](https://chatgpt.com/g/g-RhZn00MXU-nevalang-expert) ![OS](https://img.shields.io/badge/os-windows%20%7C%20macos%20%7C%20linux-lightgrey?logo=linux&logoColor=white) ![Go](https://img.shields.io/badge/v1.23-00ADD8?logo=go&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [**Documentation**](./docs/README.md)
 | [**Examples**](./examples/)
 | [**Community**](#-community)
@@ -22,7 +24,11 @@
 | [**Contributing**](./CONTRIBUTING.md)
 | [**Architecture**](./ARCHITECTURE.md)
 
-![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
+[![share on x](https://img.shields.io/badge/share-000000?logo=x&logoColor=white)](https://x.com/intent/tweet?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva%20%23Programming%20%23DataFlow%20%23Concurrency)
+[![share on facebook](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/nevalang/neva)
+[![share on linkedin](https://img.shields.io/badge/linkedin-share-0A66C2?logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/nevalang/neva)
+[![share on reddit](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
+[![share on telegram](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/nevalang/neva&text=Check%20out%20Nevalang%20on%20GitHub)
 
 </div>
 
@@ -48,7 +54,7 @@ def Main(start any) (stop any) {
 }
 ```
 
-What’s happening here:
+What's happening here:
 
 - `import { fmt }` loads the `fmt` package for printing
 - `def Main` defines the main component with input port `start` and output port `stop` of type `any` (it's safe since it's only used as a signal)
@@ -131,7 +137,7 @@ Nevalang compiles to dependency-free, human-readable Go code that uses goroutine
 
 ### 📢 Community
 
-As you can see, this is quite an ambitious project. Typically, such projects are backed by companies, but Nevalang is maintained by a very small group of enthusiasts. **Your support by joining us will show interest and motivate us to continue.**
+This is an ambitious project maintained by a small group of enthusiasts. **Your support by joining us will show interest and motivate us to continue.**
 
 - [**Discord**](https://discord.gg/dmXbC79UuH)
 - [**Reddit**](https://www.reddit.com/r/nevalang/)

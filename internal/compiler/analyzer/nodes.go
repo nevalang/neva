@@ -55,7 +55,7 @@ func (a Analyzer) analyzeNodes(
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
 }
 
-func (a Analyzer) analyzeNode( 
+func (a Analyzer) analyzeNode(
 	name string, // name of the node
 	node src.Node, // node to analyze
 	scope src.Scope, // scope of the component that contains the node
@@ -384,7 +384,7 @@ func (a Analyzer) getNodeOverloadIndex(
 	return a.selectOverload(versions, resolvedSenderType, scope)
 }
 
-// findSenderTypeForNode returns resolved type of the sender of the given node.
+// findSenderTypeForNode returns resolved type of the sender (whatever it is) of the given receiver-node.
 // In case such type is not found (for whatever reason) it returns nil and error.
 func (a Analyzer) findSenderTypeForNode(
 	name string, // name of the node
