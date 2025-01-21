@@ -23,10 +23,12 @@ func acquireLockFile() (release func(), err error) {
 		)
 		if err == nil {
 			return func() {
-				if err := os.Remove(filename); err != nil {
+				//must close first, then remove it.
+				if err := f.Close(); err != nil {
 					panic(err)
 				}
-				if err := f.Close(); err != nil {
+				if err := os.Remove(filename); err != nil {
+					time.Sleep(0)
 					panic(err)
 				}
 			}, nil
