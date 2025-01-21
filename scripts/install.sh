@@ -11,6 +11,9 @@ detect_platform() {
         arm64|aarch64)
             arch="arm64"
             ;;
+        loong64|loongarch64)
+            arch="loong64"
+          ;;
         *)
             echo "Unsupported architecture: $arch"
             exit 1
