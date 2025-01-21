@@ -28,7 +28,6 @@ func acquireLockFile() (release func(), err error) {
 					panic(err)
 				}
 				if err := os.Remove(filename); err != nil {
-					time.Sleep(0)
 					panic(err)
 				}
 			}, nil
