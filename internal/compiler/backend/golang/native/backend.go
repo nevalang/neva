@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -48,12 +49,17 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 		}
 	}()
 
+	fileName := "output"
+	if runtime.GOOS == "windows" {
+		fileName += ".exe"
+	}
+
 	cmd := exec.Command(
 		"go",
 		"build",
 		"-ldflags", "-s -w", // strip debug information
 		"-o",
-		filepath.Join(output, "output"),
+		filepath.Join(output, fileName),
 		gomodule,
 	)
 	cmd.Stdout = os.Stdout
