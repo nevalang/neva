@@ -1,0 +1,11 @@
+// import as here
+// eg. import { fmt }
+
+def Main(start any) (stop any) {
+    // code as here
+
+    ---
+    // flow as here
+
+    :start -> :stop
+}

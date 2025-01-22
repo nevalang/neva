@@ -1,0 +1,7 @@
+import { fmt }
+
+def Main(start Any)(stop Any) {
+    println fmt.println<string>
+    ---
+    :start -> "hello world!" -> println -> stop
+}
