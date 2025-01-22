@@ -2,10 +2,10 @@
 // eg. import { fmt }
 
 def Main(start any) (stop any) {
-    // code as here
+    // define nodes here
 
     ---
-    // flow as here
+    // define network here
 
     :start -> :stop
 }

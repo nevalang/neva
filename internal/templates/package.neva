@@ -1,6 +1,6 @@
 // don't forget modify i/o type and name
 
-pub def YourNode(in Any)(out Any) {
+def YourComponent(data any) (res any) {
     // code as here
     ---
     // flow as here
