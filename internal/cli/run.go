@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/nevalang/neva/internal/compiler"
 
@@ -49,13 +50,18 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return err
 			}
 
+			fileName := "output"
+			if runtime.GOOS == "windows" {
+				fileName += ".exe"
+			}
+
 			defer func() {
-				if err := os.Remove(filepath.Join(workdir, "output")); err != nil {
+				if err := os.Remove(filepath.Join(workdir, fileName)); err != nil {
 					fmt.Println("failed to remove output file:", err)
 				}
 			}()
 
-			pathToExec := filepath.Join(workdir, "output")
+			pathToExec := filepath.Join(workdir, fileName)
 
 			cmd := exec.CommandContext(cliCtx.Context, pathToExec)
 			cmd.Stdin = os.Stdin
