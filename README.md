@@ -11,7 +11,7 @@
 </p>
 
 <div align="center">
-  Next-generation programming language that solves programmer's problems
+  Next-generation programming language that solves programmers' problems
 </div>
 <br/>
 
@@ -24,13 +24,9 @@
 | [**Contributing**](./CONTRIBUTING.md)
 | [**Architecture**](./ARCHITECTURE.md)
 
-[![share on x](https://img.shields.io/badge/share-000000?logo=x&logoColor=white)](https://x.com/intent/tweet?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva%20%23Programming%20%23DataFlow%20%23Concurrency)
-[![share on facebook](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/nevalang/neva)
-[![share on linkedin](https://img.shields.io/badge/linkedin-share-0A66C2?logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/nevalang/neva)
-[![share on reddit](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
-[![share on telegram](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/nevalang/neva&text=Check%20out%20Nevalang%20on%20GitHub)
-
 </div>
+
+> **⚠️ WARNING**: This project is under active development and not yet production-ready!
 
 ## 🤔 What Is Nevalang?
 
@@ -40,7 +36,15 @@ Combined with built-in **stream processing** support and features like **advance
 
 Future updates will include **visual programming** and **Go interoperability** to allow gradual adoption and leverage existing ecosystem.
 
-> ⚠️ This project is under active development and not yet production-ready.
+### Why Yet Another Programming Language?
+
+We created Nevalang because we saw a gap in the programming language landscape:
+
+1. **Visual Programming Done Right** - While there are many visual programming tools, they're usually limited to specific domains or lack the power of traditional programming. Nevalang is designed from the ground up to be a hybrid visual/text-based programming environment.
+2. **Simple Parallel Programming** - Most languages treat concurrency as an advanced feature, making it complex and error-prone. In Nevalang, parallelism is the default, and the language design prevents common issues like data races.
+3. **Modern Developer Experience** - We combine the best ideas from modern languages with dataflow programming to create a unique development experience focused on productivity.
+
+Finally, we believe exploring new programming paradigms is valuable for the entire programming community, even if only to learn what works and what doesn't.
 
 ## 👋 Hello, World!
 
@@ -77,7 +81,7 @@ What's happening here:
 - **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
 - **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
 
-## 🧐 Why Nevalang?
+## 🧐 Why Use Nevalang?
 
 Let's compare Nevalang with Go. We could compare it to any language but Go is a simple reference since Nevalang is written in Go.
 
@@ -135,26 +139,40 @@ Nevalang compiles to dependency-free, human-readable Go code that uses goroutine
 - [Documentation](./docs/README.md) - Install and learn the language basics
 - [Examples](./examples/) - Learn the language by small programs
 
-### 📢 Community
+### Community
 
-This is an ambitious project maintained by a small group of enthusiasts. **Your support by joining us will show interest and motivate us to continue.**
+This is an ambitious project maintained by a small group of enthusiasts. Your support by **joining us** will show interest and motivate us to continue.
 
-- [**Discord**](https://discord.gg/dmXbC79UuH)
-- [**Reddit**](https://www.reddit.com/r/nevalang/)
-- [**Telegram**](https://t.me/+H1kRClL8ppI1MWJi)
-- [**Twitter**](https://x.com/neva_language)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.gg/dmXbC79UuH)
+[![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)](https://t.me/+H1kRClL8ppI1MWJi)
+[![Reddit](https://img.shields.io/badge/Reddit-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/r/nevalang/)
+[![Twitter](https://img.shields.io/badge/Twitter-000000?logo=x&logoColor=white)](https://x.com/neva_language)
 
-### 🤝 Contributing
+### Contributing
 
 1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
 2. Check out [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open) and [kanban-board](https://github.com/orgs/nevalang/projects/2/views/3?filterQuery=)
 3. Also please read our [CoC](./CODE_OF_CONDUCT.md)
 4. Join [discord server](https://discord.gg/dmXbC79UuH)
 
-### 🙏 Support
+### Support
 
 Please **give us a star ⭐️** to increase our chances of getting into GitHub trends - the more attention Nevalang gets, the higher our chances of actually making a difference.
 
 <p align="center">
   <img src="./assets/animations/github_star.gif" alt="GitHub Star">
 </p>
+
+Please **share this project** with your friends! Every share helps us reach more developers and grow our community. The more developers we reach, the more likely we are to build something truly revolutionary together. 🚀
+
+<div align="center" style="display:grid;place-items:center;">
+
+[![share on x](https://img.shields.io/badge/share-000000?logo=x&logoColor=white)](https://x.com/intent/tweet?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva%20%23Programming%20%23DataFlow%20%23Concurrency)
+[![share on facebook](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/nevalang/neva)
+[![share on reddit](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
+[![share on telegram](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/nevalang/neva&text=Check%20out%20Nevalang%20on%20GitHub)
+[![share on whatsapp](https://img.shields.io/badge/share-25D366?logo=whatsapp&logoColor=white)](https://wa.me/?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
+[![share on hackernews](https://img.shields.io/badge/share-F0652F?logo=ycombinator&logoColor=white)](https://news.ycombinator.com/submitlink?u=https://github.com/nevalang/neva&t=Nevalang:%20Next-generation%20programming%20language%20with%20implicit%20parallelism)
+[![share on linkedin](https://img.shields.io/badge/linkedin-share-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/nevalang/neva)
+
+</div>
