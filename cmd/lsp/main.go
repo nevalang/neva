@@ -21,7 +21,12 @@ func main() {
 	isDebug := flag.Bool("debug", false, "-debug")
 	flag.Parse()
 
-	commonlog.Configure(1, nil)
+	loglvl := 1
+	if *isDebug {
+		loglvl = 2
+	}
+
+	commonlog.Configure(loglvl, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
 	p := parser.New()
@@ -31,7 +36,7 @@ func main() {
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 	builder := builder.MustNew(p)
 
-	indexer := indexer.New(builder, p, analyzer.MustNew(resolver))
+	indexer := indexer.New(builder, p, analyzer.MustNew(resolver), logger)
 
 	handler := lspServer.BuildHandler(logger, serverName, indexer)
 
