@@ -36,11 +36,10 @@ type Server struct {
 // indexAndNotifyProblems does full scan of the workspace
 // and sends diagnostics if there are any problems
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
-	build, found, proplems := s.indexer.FullScan(
+	build, found, compilerErr := s.indexer.FullScan(
 		context.Background(),
 		s.workspacePath,
 	)
-
 	if !found {
 		return nil
 	}
@@ -49,7 +48,7 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 	s.index = &build
 	s.indexMutex.Unlock()
 
-	if proplems == nil {
+	if compilerErr == nil {
 		// clear problems
 		s.problemsMutex.Lock()
 		for uri := range s.problemFiles {
@@ -69,19 +68,22 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 
 	// remember problem and send diagnostic
 	s.problemsMutex.Lock()
-	uri := filepath.Join(s.workspacePath, proplems.Meta.Location.String())
+	uri := filepath.Join(s.workspacePath, compilerErr.Meta.Location.String()) // we assume compilerErr is deepest child (for now)
 	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
-		s.createDiagnostics(*proplems, uri),
+		s.createDiagnostics(*compilerErr, uri),
 	)
-	s.logger.Info("diagnostic sent:", "err", proplems)
+	s.logger.Info("diagnostic sent:", "err", compilerErr)
 	s.problemsMutex.Unlock()
 
 	return nil
 }
 
-func (s *Server) createDiagnostics(compilerErr compiler.Error, uri string) protocol.PublishDiagnosticsParams {
+func (s *Server) createDiagnostics(
+	compilerErr compiler.Error, // deepest child (for now) compiler error
+	uri string,
+) protocol.PublishDiagnosticsParams {
 	var startStopRange protocol.Range
 	if compilerErr.Meta != nil {
 		// If stop is 0 0, set it to the same as start but with character incremented by 1
@@ -106,17 +108,14 @@ func (s *Server) createDiagnostics(compilerErr compiler.Error, uri string) proto
 		startStopRange.End.Line--
 	}
 
-	source := "neva"
-	severity := protocol.DiagnosticSeverityError
-
 	return protocol.PublishDiagnosticsParams{
-		URI: uri,
+		URI: uri, // uri must be full path to the file, make sure all compiler errors include full location
 		Diagnostics: []protocol.Diagnostic{
 			{
 				Range:    startStopRange,
-				Severity: &severity,
-				Source:   &source,
-				Message:  compilerErr.Error(),
+				Severity: compiler.Pointer(protocol.DiagnosticSeverityError),
+				Source:   compiler.Pointer("compiler"),
+				Message:  compilerErr.Message, // we don't use Error() because it will duplicate location
 				Data:     time.Now(),
 			},
 		},
