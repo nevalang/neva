@@ -24,4 +24,7 @@ jobs:
         go install ./cmd/neva
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
     - name: test
-      run: go test -v -count=1 ./...
+      run: |
+        mkdir -p /home/runner/work/neva/neva/examples/tmp
+        mkdir -p /home/runner/work/neva/neva/examples/output
+        go test -v -count=1 ./...
