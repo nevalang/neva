@@ -30,11 +30,6 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return err
 			}
 
-			output := workdir
-			if cliCtx.IsSet("output") {
-				output = cliCtx.String("output")
-			}
-
 			var trace bool
 			if cliCtx.IsSet("trace") {
 				trace = true
@@ -42,7 +37,7 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 
 			input := compiler.CompilerInput{
 				Main:   mainPkg,
-				Output: output,
+				Output: workdir,
 				Trace:  trace,
 			}
 
@@ -50,25 +45,30 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return err
 			}
 
-			fileName := "output"
+			// here we're making assumptions about compiler internals
+			expectedOutputFileName := "output"
 			if runtime.GOOS == "windows" {
-				fileName += ".exe"
+				expectedOutputFileName += ".exe"
 			}
 
+			execPath := filepath.Join(workdir, expectedOutputFileName)
+
 			defer func() {
-				if err := os.Remove(filepath.Join(workdir, fileName)); err != nil {
+				if err := os.Remove(execPath); err != nil {
 					fmt.Println("failed to remove output file:", err)
 				}
 			}()
 
-			pathToExec := filepath.Join(workdir, fileName)
-
-			cmd := exec.CommandContext(cliCtx.Context, pathToExec)
+			cmd := exec.CommandContext(cliCtx.Context, execPath)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 
-			return cmd.Run()
+			if err := cmd.Run(); err != nil {
+				return fmt.Errorf("failed to run generated executable: %w", err)
+			}
+
+			return nil
 		},
 	}
 }
