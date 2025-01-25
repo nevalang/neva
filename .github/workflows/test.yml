@@ -20,4 +20,6 @@ jobs:
         go install ./cmd/neva
         echo "$GOPATH/bin" >> $GITHUB_PATH
     - name: test
-      run: go test -v -count=1 ./...
+      # IMPORTANT: "-p 1" is a temporary fix for https://github.com/nevalang/neva/issues/767
+      # It set's number of packages that can be run in parallel to one (sequentially)
+      run: go test -v -count=1 -p 1 ./...
