@@ -1,7 +1,0 @@
-import { fmt }
-
-def Main(start any) (stop any) {
-	fmt.Println
-	---
-	:start -> 'Hello, World!' -> println -> :stop
-}

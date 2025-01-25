@@ -19,11 +19,7 @@ func TestBuildWindows(t *testing.T) {
 
 	cmd = exec.Command("neva", "build", "--target-os=windows", "--target-arch=amd64", "src")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	if code := cmd.ProcessState.ExitCode(); code != 0 {
-		t.Log(string(out))
-		t.Fatal("failed to build windows executable")
-	}
+	require.NoError(t, err, string(out))
 	defer func() {
 		require.NoError(t, os.Remove("output.exe"))
 	}()
