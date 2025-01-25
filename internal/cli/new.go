@@ -15,23 +15,29 @@ func newNewCmd(workdir string) *cli.Command {
 		Usage: "Create new Nevalang project",
 		Args:  true,
 		Action: func(cCtx *cli.Context) error {
+			var path string
 			if pathArg := cCtx.Args().First(); pathArg != "" {
+				path = pathArg
 				if err := os.Mkdir(pathArg, 0755); err != nil {
 					return err
 				}
-				return createNevaMod(pathArg)
+			} else {
+				path = workdir
 			}
-			return createNevaMod(workdir)
+			if err := createNevaMod(path); err != nil {
+				return err
+			}
+			fmt.Printf("neva module created in %s\n", path)
+			return nil
 		},
 	}
 }
 
 func createNevaMod(path string) error {
 	// Create neva.yml file
-	nevaYmlContent := fmt.Sprintf("neva: %s", pkg.Version)
 	if err := os.WriteFile(
 		filepath.Join(path, "neva.yml"),
-		[]byte(nevaYmlContent),
+		[]byte(fmt.Sprintf("neva: %s", pkg.Version)),
 		0644,
 	); err != nil {
 		return err

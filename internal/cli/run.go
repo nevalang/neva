@@ -35,6 +35,22 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				trace = true
 			}
 
+			// we need to always set GOOS for compiler backend
+			prevGOOS := os.Getenv("GOOS")
+			if err := os.Setenv("GOOS", runtime.GOOS); err != nil {
+				return fmt.Errorf("set GOOS: %w", err)
+			}
+			defer func() {
+				if err := os.Setenv("GOOS", prevGOOS); err != nil {
+					panic(err)
+				}
+			}()
+
+			expectedOutputFileName := "output"
+			if runtime.GOOS == "windows" { // assumption that on windows compiler generates .exe
+				expectedOutputFileName += ".exe"
+			}
+
 			input := compiler.CompilerInput{
 				Main:   mainPkg,
 				Output: workdir,
@@ -43,12 +59,6 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 
 			if err := nativec.Compile(cliCtx.Context, input); err != nil {
 				return err
-			}
-
-			// here we're making assumptions about compiler internals
-			expectedOutputFileName := "output"
-			if runtime.GOOS == "windows" {
-				expectedOutputFileName += ".exe"
 			}
 
 			execPath := filepath.Join(workdir, expectedOutputFileName)

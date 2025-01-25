@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -50,7 +49,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 	}()
 
 	fileName := "output"
-	if runtime.GOOS == "windows" {
+	if os.Getenv("GOOS") == "windows" { // either we're on windows or we're cross-compiling
 		fileName += ".exe"
 	}
 

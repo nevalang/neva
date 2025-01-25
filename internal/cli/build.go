@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/nevalang/neva/internal/compiler"
 
@@ -65,18 +66,18 @@ func newBuildCmd(
 				return fmt.Errorf("Unknown target %s", target)
 			}
 
-			var targetOS, targetArch string
-			if cliCtx.IsSet("target-os") {
-				targetOS = cliCtx.String("target-os")
+			targetOS := cliCtx.String("target-os")
+			if targetOS != "" && target != "native" {
+				return fmt.Errorf("target-os and target-arch are only supported when target is native")
 			}
-			if cliCtx.IsSet("target-arch") {
-				targetArch = cliCtx.String("target-arch")
+
+			targetArch := cliCtx.String("target-arch")
+			if targetArch != "" && target != "native" {
+				return fmt.Errorf("target-arch is only supported when target is native")
 			}
+
 			if (targetOS != "" && targetArch == "") || (targetOS == "" && targetArch != "") {
 				return fmt.Errorf("target-os and target-arch must be set together")
-			}
-			if target != "native" && targetOS != "" {
-				return fmt.Errorf("target-os and target-arch are only supported when target is native")
 			}
 
 			mainPkg, err := mainPkgPathFromArgs(cliCtx)
@@ -89,16 +90,29 @@ func newBuildCmd(
 				outputDirPath = cliCtx.String("output")
 			}
 
-			var isTraceEnabled bool
-			if cliCtx.IsSet("trace") {
-				isTraceEnabled = true
+			// we're going to change GOOS and GOARCH, so we need to restore them after compilation
+			prevGOOS := os.Getenv("GOOS")
+			prevGOARCH := os.Getenv("GOARCH")
+			// if target-os and target-arch are not set, use the current platform
+			if targetOS == "" {
+				targetOS = runtime.GOOS
+				targetArch = runtime.GOARCH
 			}
-
-			compilerInput := compiler.CompilerInput{
-				Main:   mainPkg,
-				Output: outputDirPath,
-				Trace:  isTraceEnabled,
+			// compiler backend (native one) depends on GOOS and GOARCH, so we always must set them
+			if err := os.Setenv("GOOS", targetOS); err != nil {
+				return fmt.Errorf("set GOOS: %w", err)
 			}
+			if err := os.Setenv("GOARCH", targetArch); err != nil {
+				return fmt.Errorf("set GOARCH: %w", err)
+			}
+			defer func() {
+				if err := os.Setenv("GOOS", prevGOOS); err != nil {
+					panic(err)
+				}
+				if err := os.Setenv("GOARCH", prevGOARCH); err != nil {
+					panic(err)
+				}
+			}()
 
 			var compilerToUse compiler.Compiler
 			switch target {
@@ -114,28 +128,15 @@ func newBuildCmd(
 				compilerToUse = compilerToNative
 			}
 
-			if targetOS != "" {
-				prevGOOS := os.Getenv("GOOS")
-				prevGOARCH := os.Getenv("GOARCH")
-
-				if err := os.Setenv("GOOS", targetOS); err != nil {
-					return fmt.Errorf("set GOOS: %w", err)
-				}
-				if err := os.Setenv("GOARCH", targetArch); err != nil {
-					return fmt.Errorf("set GOARCH: %w", err)
-				}
-
-				defer func() {
-					if err := os.Setenv("GOOS", prevGOOS); err != nil {
-						panic(err)
-					}
-					if err := os.Setenv("GOARCH", prevGOARCH); err != nil {
-						panic(err)
-					}
-				}()
+			if err := compilerToUse.Compile(cliCtx.Context, compiler.CompilerInput{
+				Main:   mainPkg,
+				Output: outputDirPath,
+				Trace:  cliCtx.IsSet("trace"),
+			}); err != nil {
+				return fmt.Errorf("failed to compile: %w", err)
 			}
 
-			return compilerToUse.Compile(cliCtx.Context, compilerInput)
+			return nil
 		},
 	}
 }
