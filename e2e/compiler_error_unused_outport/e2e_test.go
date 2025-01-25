@@ -9,15 +9,11 @@ import (
 
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-
-	require.Equal(
+	out, _ := cmd.CombinedOutput()
+	require.Equal(t, 1, cmd.ProcessState.ExitCode())
+	require.Contains(
 		t,
-		"main/main.neva:5:4: All node's outports are unused: sub2\n",
 		string(out),
+		"main/main.neva:5:4: All node's outports are unused: sub2\n",
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

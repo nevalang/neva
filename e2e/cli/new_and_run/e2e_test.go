@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// This function tests `neva new` followed by `neva run`.
 func Test(t *testing.T) {
 	defer func() {
 		require.NoError(t, os.RemoveAll("src"))

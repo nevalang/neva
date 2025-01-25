@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -24,7 +25,7 @@ type CompilerInput struct {
 func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
 	feResult, err := c.fe.Process(ctx, input.Main)
 	if err != nil {
-		return err
+		return errors.New(err.Error()) // to avoid non-nil interface go-issue
 	}
 
 	meResult, err := c.me.Process(feResult)
