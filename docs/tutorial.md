@@ -880,7 +880,7 @@ pub def CommentOnUser(name string, age int) (sig any) {
     panic Panic
     ---
     true -> switch {
-        (:name == 'Bob') -> 'Beautyful name!' -> println1
+        (:name == 'Bob') -> 'Beautiful name!' -> println1
         (:age < 18) -> 'Young fellow!' -> println2
         _ -> panic
     }
@@ -910,7 +910,7 @@ def Main(start any) (stop any) {
 Output:
 
 ```
-Beautyful name!
+Beautiful name!
 ```
 
 Note that `utils.CommentOnUser` ignored age of the user, even though it was 17. This is because how switch works - it doesn't trigger several branches in a single iteration, and once it selects branch to execute, it will ignore other branches, until next iteration will start. We can test it by replacing `Bob` with e.g. `Alice` - our switch isn't interested in Alice, but age is still 17 and it will comment on that instead.
