@@ -722,7 +722,7 @@ def Main(start any) (stop any) {
 Outputs:
 
 ```
-100
+Big
 ```
 
 This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
@@ -880,7 +880,7 @@ pub def CommentOnUser(name string, age int) (sig any) {
     panic Panic
     ---
     true -> switch {
-        (:name == 'Bob') -> 'Beauteful name!' -> println1
+        (:name == 'Bob') -> 'Beautiful name!' -> println1
         (:age < 18) -> 'Young fellow!' -> println2
         _ -> panic
     }
@@ -910,10 +910,10 @@ def Main(start any) (stop any) {
 Output:
 
 ```
-Young fellow!
+Beautiful name!
 ```
 
-Note that `utils.CommentOnUser` ignored age of the user, even though it was 33. This is because how switch works - it doesn't trigger several branches in a single iteration, and once it selects branch to execute, it will ignore other branches, until next iteration will start. We can test it by replacing `Bob` with e.g. `Alice` - our switch isn't interested in Alice, but age is still 33 and it will comment on that instead.
+Note that `utils.CommentOnUser` ignored age of the user, even though it was 17. This is because how switch works - it doesn't trigger several branches in a single iteration, and once it selects branch to execute, it will ignore other branches, until next iteration will start. We can test it by replacing `Bob` with e.g. `Alice` - our switch isn't interested in Alice, but age is still 17 and it will comment on that instead.
 
 ```neva
 :start -> [
