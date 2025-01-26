@@ -48,12 +48,17 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 		}
 	}()
 
+	fileName := "output"
+	if os.Getenv("GOOS") == "windows" { // either we're on windows or we're cross-compiling
+		fileName += ".exe"
+	}
+
 	cmd := exec.Command(
 		"go",
 		"build",
 		"-ldflags", "-s -w", // strip debug information
 		"-o",
-		filepath.Join(output, "output"),
+		filepath.Join(output, fileName),
 		gomodule,
 	)
 	cmd.Stdout = os.Stdout

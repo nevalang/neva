@@ -9,6 +9,7 @@ import (
 )
 
 // Pointer allows to avoid creating of temporary variables just to take pointers.
+// TODO move to pkg/utils (or something like that)
 func Pointer[T any](v T) *T {
 	return &v
 }

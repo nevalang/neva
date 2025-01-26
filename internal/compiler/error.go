@@ -17,7 +17,7 @@ func (e Error) Wrap(child *Error) *Error {
 	return &e
 }
 
-func (e Error) unwrap() *Error {
+func (e Error) Unwrap() *Error {
 	for e.child != nil {
 		e = *e.child
 	}
@@ -27,7 +27,7 @@ func (e Error) unwrap() *Error {
 func (e *Error) Error() string {
 	var s string
 
-	current := e.unwrap()
+	current := e.Unwrap()
 	hasMeta := current.Meta != nil
 
 	if hasMeta {

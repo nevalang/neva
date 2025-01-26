@@ -34,6 +34,7 @@ func acquireLockFile() (release func(), err error) {
 		)
 		if err == nil {
 			return func() {
+				//must close first, then remove it.
 				if err := f.Close(); err != nil {
 					panic(err)
 				}

@@ -2,7 +2,6 @@ package test
 
 import (
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,18 +9,11 @@ import (
 
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-
-	require.True(
+	out, _ := cmd.CombinedOutput()
+	require.Equal(t, 1, cmd.ProcessState.ExitCode())
+	require.Contains(
 		t,
-		strings.Contains(
-			string(out),
-			"Incompatible types: in:data -> println: Subtype inst must have same ref as supertype: got any, want int",
-		),
-		"Error message should end with expected suffix",
+		string(out),
+		"Incompatible types: in:data -> println: Subtype inst must have same ref as supertype: got any, want int",
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

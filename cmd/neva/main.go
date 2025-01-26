@@ -96,6 +96,9 @@ func main() {
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		if _, err := fmt.Fprintln(os.Stderr, err); err != nil {
+			panic(err)
+		}
+		os.Exit(1)
 	}
 }
