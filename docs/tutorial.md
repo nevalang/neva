@@ -722,7 +722,7 @@ def Main(start any) (stop any) {
 Outputs:
 
 ```
-100
+Big
 ```
 
 This example calculates a triangle's area (base=20, height=10), checks if it's larger than 50, and prints either "Big" or "Small" accordingly. While contrived, it demonstrates how the ternary operator can be used in more complex scenarios.
