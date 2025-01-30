@@ -6,16 +6,7 @@
 
 <h1>Neva Programming Language</h1>
 
-<p align="center">
-  <img src="./assets/animations/dataflow.gif" alt="Dataflow">
-</p>
-
-<div align="center">
-  Next-generation programming language that solves programmers' problems
-</div>
-<br/>
-
-![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main) [![go report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva) [![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH) [![ChatGPT](https://img.shields.io/badge/Nevalang_AI-74aa9c?logo=openai&logoColor=white)](https://chatgpt.com/g/g-RhZn00MXU-nevalang-expert) ![OS](https://img.shields.io/badge/os-windows%20%7C%20macos%20%7C%20linux-lightgrey?logo=linux&logoColor=white) ![Go](https://img.shields.io/badge/v1.23-00ADD8?logo=go&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<a href="https://trendshift.io/repositories/12825" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12825" alt="nevalang%2Fneva | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [**Documentation**](./docs/README.md)
 | [**Examples**](./examples/)
@@ -24,13 +15,18 @@
 | [**Contributing**](./CONTRIBUTING.md)
 | [**Architecture**](./ARCHITECTURE.md)
 
-</div>
+![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main) [![go report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva) [![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH) [![ChatGPT](https://img.shields.io/badge/Nevalang_AI-74aa9c?logo=openai&logoColor=white)](https://chatgpt.com/g/g-RhZn00MXU-nevalang-expert) ![OS](https://img.shields.io/badge/os-windows%20%7C%20macos%20%7C%20linux-lightgrey?logo=linux&logoColor=white) ![Go](https://img.shields.io/badge/v1.23-00ADD8?logo=go&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **⚠️ WARNING**: This project is under active development and not yet production-ready!
+<p align="center">
+  <img src="./assets/animations/dataflow.gif" alt="Dataflow">
+</p>
+</div>
 
 ## 🤔 What Is Nevalang?
 
-Nevalang is a new kind of programming language where instead of writing step-by-step instructions you create **networks** where data flows between **nodes** as **immutable messages** and everything runs **in parallel by default**. After **type-checking**, your program is compiled into **machine code** and can be distributed as a **single executable** with zero dependencies.
+> **⚠️ WARNING**: This project is under active development and not yet production-ready!
+
+Neva is a new kind of programming language where instead of writing step-by-step instructions you create **networks** where data flows between **nodes** as immutable messages and everything runs in **parallel** by default. After type-checking, your program is compiled into **machine code** and can be distributed as a **single executable** with zero dependencies.
 
 Combined with built-in **stream processing** support and features like **advanced error handling**, Nevalang is the perfect choice for **cloud-native applications** requiring **high concurrency**.
 
