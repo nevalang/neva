@@ -3,7 +3,7 @@ const MAGIC_NUM i8 = 42
 const VEC_EMPTY list<i8> = []
 pub const VEC_FULL list<i8> = [1, 2, 3, 4]
 pub const REC struct { foo int } = { foo: 42 }
-const ENUM enum { Monday, Tuesday } = 1
+const ENUM union { Monday, Tuesday } = 1
 
 const PI f32 = 3.14
 const MAGIC_NUM i8 = 42
@@ -12,7 +12,7 @@ const VEC_EMPTY list<i8> = []
 const VEC_FULL list<i8> = [1, 2, 3, 4]
 
 pub const REC struct { foo int } = { foo: 42 }
-const ENUM enum { Monday, Tuesday } = 1
+const ENUM union { Monday, Tuesday } = 1
 
 const PI f32 = 3.14
 const MAGIC_NUM i8 = 42
@@ -21,4 +21,4 @@ const VEC_EMPTY list<i8> = []
 const VEC_FULL list<i8> = [1, 2, 3, 4]
 
 const REC struct { foo int } = { foo: 42 }
-pub const ENUM enum { Monday, Tuesday } = 1
+pub const ENUM union { Monday, Tuesday } = 1

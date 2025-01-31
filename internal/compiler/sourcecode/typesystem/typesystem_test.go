@@ -20,23 +20,18 @@ func TestLiteralExpr_Empty(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "all 4 fields: arr, enum, union and struct are empty",
-			lit:  ts.LitExpr{nil, nil, nil},
+			name: "all 2 fields: structs and unions are empty",
+			lit:  ts.LitExpr{nil, nil},
 			want: true,
 		},
 		{
 			name: "struct not empty",
-			lit:  ts.LitExpr{map[string]ts.Expr{}, nil, nil},
-			want: false,
-		},
-		{
-			name: "enum not empty",
-			lit:  ts.LitExpr{nil, []string{}, nil},
+			lit:  ts.LitExpr{map[string]ts.Expr{}, nil},
 			want: false,
 		},
 		{
 			name: "union not empty",
-			lit:  ts.LitExpr{nil, nil, []ts.Expr{}},
+			lit:  ts.LitExpr{nil, map[string]*ts.Expr{}},
 			want: false,
 		},
 	}
@@ -60,22 +55,17 @@ func TestLiteralExpr_Type(t *testing.T) {
 	}{
 		{
 			name: "unknown",
-			lit:  ts.LitExpr{nil, nil, nil},
+			lit:  ts.LitExpr{nil, nil},
 			want: ts.EmptyLitType,
 		},
 		{
 			name: "struct",
-			lit:  ts.LitExpr{map[string]ts.Expr{}, nil, nil},
+			lit:  ts.LitExpr{map[string]ts.Expr{}, nil},
 			want: ts.StructLitType,
 		},
 		{
-			name: "enum",
-			lit:  ts.LitExpr{nil, []string{}, nil},
-			want: ts.EnumLitType,
-		},
-		{
 			name: "union",
-			lit:  ts.LitExpr{nil, nil, []ts.Expr{}},
+			lit:  ts.LitExpr{nil, map[string]*ts.Expr{}},
 			want: ts.UnionLitType,
 		},
 	}
@@ -195,35 +185,7 @@ func TestExpr_String(t *testing.T) {
 			},
 			want: "map<string, list<bool>>",
 		},
-		// Lits
-		// enum
-		{
-			name: "lit_expr_empty_enum",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Enum: []string{},
-				},
-			},
-			want: "{}",
-		},
-		{
-			name: "lit_expr_enum_with_one_el",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Enum: []string{"MONDAY"},
-				},
-			},
-			want: "{ MONDAY }",
-		},
-		{
-			name: "lit_expr_enum_with_two_els",
-			expr: ts.Expr{
-				Lit: &ts.LitExpr{
-					Enum: []string{"MONDAY", "TUESDAY"},
-				},
-			},
-			want: "{ MONDAY, TUESDAY }",
-		},
+		// --- Lits ---
 		// struct
 		{
 			name: "lit expr struct no fields",
@@ -249,38 +211,62 @@ func TestExpr_String(t *testing.T) {
 			},
 			want: "{ name string }",
 		},
-		// union
+		// union (tag-only)
 		{
-			name: "lit expr empty union", // not a valid expr
+			name: "lit expr empty union",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{},
+					Union: map[string]*ts.Expr{},
 				},
 			},
-			want: "",
+			want: "union {}",
 		},
 		{
-			name: "lit expr union with one el", // not a valid expr
+			name: "lit expr union with one el",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+					Union: map[string]*ts.Expr{
+						"int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
 					},
 				},
 			},
-			want: "int",
+			want: "union { int }",
 		},
 		{
 			name: "lit expr union with two els",
 			expr: ts.Expr{
 				Lit: &ts.LitExpr{
-					Union: []ts.Expr{
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
-						{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+					Union: map[string]*ts.Expr{
+						"int":    {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						"string": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
 					},
 				},
 			},
-			want: "int | string",
+			want: "union { int, string }",
+		},
+		// unions (tag-and-value)
+		{
+			name: "lit expr union with one el (tag-and-value)",
+			expr: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+					},
+				},
+			},
+			want: "union { Int int }",
+		},
+		{
+			name: "lit expr union with two el (tag-and-value)",
+			expr: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+						"Str": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+					},
+				},
+			},
+			want: "union { Int int, Str string }",
 		},
 	}
 

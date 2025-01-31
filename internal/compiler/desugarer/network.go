@@ -469,8 +469,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{constTypeExpr},
-				Directives: map[src.Directive][]string{
-					compiler.BindDirective: {chainHead.Const.Value.Ref.String()},
+				Directives: map[src.Directive]string{
+					compiler.BindDirective: chainHead.Const.Value.Ref.String(),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -486,8 +486,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},
-				Directives: map[src.Directive][]string{
-					compiler.BindDirective: {virtualConstName},
+				Directives: map[src.Directive]string{
+					compiler.BindDirective: virtualConstName,
 				},
 				Meta: locOnlyMeta,
 			}
@@ -791,6 +791,22 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
+	if sender.Union != nil {
+		result, err := d.desugarUnionSender(
+			*sender.Union,
+			normConn,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
+		}
+		return desugarSenderResult{
+			replace: result.replace,
+			insert:  result.insert,
+		}, nil
+	}
+
 	if sender.Ternary != nil {
 		result, err := d.desugarTernarySender(
 			iface,
@@ -864,8 +880,8 @@ func (d *Desugarer) handleLiteralSender(
 	locOnlyMeta := core.Meta{Location: constant.Meta.Location}
 
 	emitterNode := src.Node{
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: constName,
 		},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef.Pkg,
@@ -904,8 +920,8 @@ func (d *Desugarer) handleConstRefSender(
 
 	emitterNode := src.Node{
 		// don't forget to bind
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {ref.String()},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: ref.String(),
 		},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef.Pkg,
@@ -1084,8 +1100,8 @@ func (d *Desugarer) desugarRangeSender(
 			Name: "New",
 			Meta: locOnlyMeta,
 		},
-		Directives: map[src.Directive][]string{
-			"bind": {fromConstName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: fromConstName,
 		},
 		Meta: locOnlyMeta,
 	}
@@ -1095,8 +1111,8 @@ func (d *Desugarer) desugarRangeSender(
 			Name: "New",
 			Meta: locOnlyMeta,
 		},
-		Directives: map[src.Directive][]string{
-			"bind": {toConstName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: toConstName,
 		},
 		Meta: locOnlyMeta,
 	}

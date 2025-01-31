@@ -8,9 +8,10 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    GetUser, fmt.Println
+    get_user GetUser
+    println fmt.Println
     ---
-    :start -> getUser -> .pet.name -> println -> :stop
+    :start -> get_user -> .pet.name -> println -> :stop
 }
 
 const user User = {

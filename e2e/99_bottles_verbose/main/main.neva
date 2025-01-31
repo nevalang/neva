@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 // https://www.99-bottles-of-beer.net
 
@@ -40,7 +43,7 @@ def PrintFirstLine(n int) (n int) {
     p2 fmt.Println
     printf fmt.Printf
     lock Lock<int>
-    panic Panic
+    panic runtime.Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -73,7 +76,7 @@ def PrintSecondLine(n int) (n int) {
     p3 fmt.Println
     printf fmt.Printf
     lock Lock<int>
-    panic Panic
+    panic runtime.Panic
     ---
     :n -> [s:data, lock:data]
 

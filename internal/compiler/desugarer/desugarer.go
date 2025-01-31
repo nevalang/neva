@@ -214,17 +214,24 @@ func (d *Desugarer) desugarEntity(
 		}, nil
 	}
 
-	componentResult, err := d.desugarComponent(entity.Component, scope)
-	if err != nil {
-		return desugarEntityResult{}, fmt.Errorf("desugar component: %w", err)
+	desugaredVersions := make([]src.Component, 0, len(entity.Component))
+	entitiesToInsert := make(map[string]src.Entity)
+
+	for _, component := range entity.Component {
+		componentResult, err := d.desugarComponent(component, scope)
+		if err != nil {
+			return desugarEntityResult{}, fmt.Errorf("desugar component: %w", err)
+		}
+		desugaredVersions = append(desugaredVersions, componentResult.desugaredFlow)
+		maps.Copy(entitiesToInsert, componentResult.virtualEntities)
 	}
 
 	return desugarEntityResult{
-		insert: componentResult.virtualEntities,
+		insert: entitiesToInsert,
 		entity: src.Entity{
 			IsPublic:  entity.IsPublic,
 			Kind:      entity.Kind,
-			Component: componentResult.desugaredFlow,
+			Component: desugaredVersions,
 		},
 	}, nil
 }

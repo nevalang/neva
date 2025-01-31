@@ -1,30 +1,34 @@
-interface IReader1 (a bool | int) ()
+interface IReader1 (a union { Bool bool, Int int }) ()
 
-interface IReader1 () (x string | float)
+interface IReader1 () (x union { String string, Float float })
 
-interface IReader1 (a bool | int) (x string | float)
+interface IReader1 (a union { Bool bool, Int int }) (x union { String string, Float float })
 
-interface IReader1 (a bool | int | struct {}) (x string | float | enum { Monday })
+interface IReader1 (a union { Bool bool, Int int, Empty struct {} }) (x union { String string, Float float, Days union { Monday } })
 
 interface IReader1 (
-    a bool | int | struct { foo int | string }
+    a union { Bool bool, Int int, Struct struct { foo union { Int int, String string } } }
 ) (
-    x string |
-    float |
-    enum { Monday } |
-    struct {
-        foo enum { January } | struct {}
+    x union {
+        String string
+        Float float
+        Days union { Monday }
+        Struct struct {
+            foo union { Months union { January }, Empty struct {} }
+        }
     }
 )
 
 pub interface IReader1 (
-    a bool | int | struct { foo int | string },
+    a union { Bool bool, Int int, Struct struct { foo union { Int int, String string } } },
     b struct { bar int }
 ) (
-    x string |
-        float |
-        enum { Monday } |
-        struct {
-            foo enum { January } | struct {}
+    x union {
+        String string
+        Float float
+        Days union { Monday }
+        Struct struct {
+            foo union { Months union { January }, Empty struct {} }
         }
+    }
 )

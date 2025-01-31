@@ -1,19 +1,21 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    Map<int, any>{FizzBuzz}
-    For{fmt.Println}
-    Wait
+    map_fb Map<int, any>{FizzBuzz}
+    for_print For{fmt.Println<any>}
+    wait Wait
     ---
-    :start -> 1..101 -> map -> for -> wait -> :stop
+    :start -> 1..101 -> map_fb -> for_print -> wait -> :stop
 }
 
-def FizzBuzz(data int) (res string | int) {
-    select Select<string | int>
+def FizzBuzz(data int) (res any) {
+    select Select<any>
     mod15 Mod15
     mod3 Mod3
     mod5 Mod5
+    
     ---
+    
     :data -> [mod15, select:then[3]]
 
     mod15:then -> select:if[0]

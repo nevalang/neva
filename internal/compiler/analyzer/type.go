@@ -10,7 +10,7 @@ type analyzeTypeDefParams struct {
 	allowEmptyBody bool
 }
 
-func (a Analyzer) analyzeTypeDef(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
+func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
 		meta := def.Meta
 		return ts.Def{}, &compiler.Error{
