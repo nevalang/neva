@@ -9,5 +9,5 @@ def Main(start any) (stop any) {
     ]
     submatch:res -> println:data
     println:res    -> :stop
-    submatch:err -> panic
+    [submatch:err, println:err] -> panic
 }

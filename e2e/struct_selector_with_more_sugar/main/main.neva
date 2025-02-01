@@ -11,10 +11,12 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    UserSender, fmt.Println
+    UserSender, fmt.Println, Panic
     ---
     :start -> userSender:sig
-    userSender -> .pet.name -> println -> :stop
+    userSender -> .pet.name -> println:data
+    println:res -> :stop
+    println:err -> panic
 }
 
 const user User = {

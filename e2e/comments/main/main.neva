@@ -6,10 +6,12 @@ def Main(start any) (stop any) {
 	// comment inside nodes 1
 	fmt.Println<any>
 	// comment inside nodes 2
+	panic Panic
 	---
 	// comment inside def 2
 	:start -> println:data
 	println:res -> :stop
 	// comment inside def 3
+	println:err -> panic
 }
 // top-level comment 2

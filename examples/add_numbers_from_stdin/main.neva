@@ -1,28 +1,28 @@
 import { strconv, fmt }
 
 def Main(start any) (stop any) {
-	App, fmt.Println
+	App, fmt.Println, Panic
 	---
 	:start -> app
-	[app:res, app:err] -> println -> :stop
+	[app:res, app:err] -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
 
 def App(sig any) (res int, err error) {
-	readFirstInt ReadIntFromStdin
-	readSecondInt ReadIntFromStdin
+	readFirstInt ReadIntFromStdin?
+	readSecondInt ReadIntFromStdin?
 	add Add<int>
 	---
 	:sig -> readFirstInt
 	readFirstInt:num -> [add:left, readSecondInt]
 	readSecondInt:num -> add:right
-	[readFirstInt:err, readSecondInt:err] -> :err
 	add -> :res
 }
 
 def ReadIntFromStdin(sig any) (num int, err error) {
-	fmt.Scanln, strconv.ParseNum<int>
+	fmt.Scanln, strconv.ParseNum<int>?
 	---
 	:sig -> scanln -> parseNum
 	parseNum:res -> :num
-	parseNum:err -> :err
 }

@@ -1,7 +1,8 @@
 import { fmt }
 
-pub def Println(data any) (sig any) {
-    fmt.Println
+pub def Println(data any) (sig any, err error) {
+    fmt.Println?
     ---
-	:data -> println -> :sig
+	:data -> println:data
+	println:res -> :sig
 }

@@ -3,11 +3,13 @@ import { lists, fmt }
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 def Main(start any) (stop any) {
-	lists.At<int>, fmt.Println
+	lists.At<int>, fmt.Println, Panic
 	---
 	:start -> [
 		$lst -> at:data,
 		4 -> at:idx
 	]
-	[at:res, at:err] -> println -> :stop
+	[at:res, at:err] -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

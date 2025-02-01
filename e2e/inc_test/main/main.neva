@@ -2,7 +2,10 @@ import { fmt }
 
 def Main(start any) (stop any) {
     Inc<int>, fmt.Println<int>
+    panic Panic
     ---
     :start -> 41 -> inc
-    inc -> println -> :stop
+    inc -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

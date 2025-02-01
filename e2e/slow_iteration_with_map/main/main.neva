@@ -11,8 +11,11 @@ def Main(start any) (stop any) {
     map Map<int, int>{Slow}
     s2l StreamToList<int>
     println fmt.Println<list<int>>
+    panic Panic
     ---
-    :start -> $lst -> l2s -> map -> s2l -> println -> :stop
+    :start -> $lst -> l2s -> map -> s2l -> println:data
+    println:res -> :stop
+    println:err -> panic
 }
 
 def Slow(data int) (res int) {

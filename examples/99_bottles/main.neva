@@ -29,8 +29,8 @@ def FirstLine(data int) (sig any) {
 			'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
 		]
 	}
-	[p1, p2, p3:sig] -> :sig
-	p3:err -> panic
+	[p1:res, p2:res, p3:sig] -> :sig
+	[p1:err, p2:err, p3:err] -> panic
 }
 
 def SecondLine(data int) (sig any) {
@@ -49,6 +49,6 @@ def SecondLine(data int) (sig any) {
 			'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
 		]
 	}
-	[p1, p2, p3, p4:sig] -> :sig
-	p4:err -> panic
+	[p1:res, p2:res, p3:res, p4:sig] -> :sig
+	[p1:err, p2:err, p3:err, p4:err] -> panic
 }

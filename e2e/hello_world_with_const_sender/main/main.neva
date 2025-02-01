@@ -5,9 +5,11 @@ const greeting string = 'Hello, World!'
 def Main(start any) (stop any) {
 	println fmt.Println<string>
 	lock Lock<string>
+	panic Panic
 	---
 	:start -> lock:sig
 	$greeting -> lock:data
 	lock:data -> println:data
 	println:res -> :stop
+	println:err -> panic
 }

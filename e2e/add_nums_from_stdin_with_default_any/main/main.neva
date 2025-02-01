@@ -7,18 +7,17 @@ def Main(start any) (stop any) {
 	---
 	:start -> aux:sig
 	aux:res -> println:data
-	aux:err -> panic
 	println:res -> :stop
+	[aux:err, println:err] -> panic
 }
 
 def Aux(sig any) (res int, err error) {
-	reader1 IntReader
-	reader2 IntReader
+	reader1 IntReader?
+	reader2 IntReader?
 	add Add<int>
 	---
 	:sig -> reader1:sig
 	reader1:num -> [add:left, reader2:sig]
-	[reader1:err, reader2:err] -> :err
 	reader2:num -> add:right
 	add:res -> :res
 }

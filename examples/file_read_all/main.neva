@@ -1,8 +1,10 @@
 import { io, fmt }
 
 def Main(start any) (stop any) {
-	io.ReadAll, fmt.Println
+	io.ReadAll, fmt.Println, Panic
 	---
 	:start -> 'file_read_all/main.neva' -> readAll:filename
-	[readAll:res, readAll:err] -> println -> :stop
+	readAll:res -> println:data
+	println:res -> :stop
+	[readAll:err, println:err] -> panic
 }

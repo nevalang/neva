@@ -9,12 +9,15 @@ def Main(start any) (stop any) {
     upper strings.ToUpper
     lower strings.ToLower
     println fmt.Println
-    panic Panic
+    panic1 Panic
+    panic2 Panic
     ---
     :start -> 'Enter the name: ' -> print -> scanln -> switch {
         'Alice' -> upper
         'Bob' -> lower
-        _ -> panic
+        _ -> panic1
     }
-    [upper, lower] -> println -> :stop
+    [upper, lower] -> println:data
+    println:res -> :stop
+    println:err -> panic2
 }

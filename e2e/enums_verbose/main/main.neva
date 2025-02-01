@@ -2,9 +2,11 @@ import { fmt }
 
 def Main(start any) (stop any) {
     DayPrinter
+    panic Panic
     ---
     :start -> { Day::Friday -> dayPrinter:day }
     dayPrinter:sig -> :stop
+    dayPrinter:err -> panic
 }
 
 type Day enum {
@@ -17,8 +19,8 @@ type Day enum {
     Sunday
 }
 
-def DayPrinter(day Day) (sig any) {
-    fmt.Println
+def DayPrinter(day Day) (sig any, err error) {
+    fmt.Println?
     ---
     :day -> println:data
     println:res -> :sig

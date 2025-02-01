@@ -12,6 +12,7 @@ def MyStructBuilder(age int, name string) (res User)
 def Main(start any) (stop any) {
     println fmt.Println
     builder MyStructBuilder
+    panic Panic
     ---
     :start -> [
         'John' -> builder:name,
@@ -19,4 +20,5 @@ def Main(start any) (stop any) {
     ]
     builder:res -> println:data
     println:res -> :stop
+    println:err -> panic
 }
