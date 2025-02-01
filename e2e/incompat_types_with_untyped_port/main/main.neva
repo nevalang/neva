@@ -2,12 +2,16 @@ import { fmt }
 
 def Main(start any) (stop any) {
     PrintAny
+    panic Panic
     ---
-    :start -> 42 -> printAny -> :stop
+    :start -> 42 -> printAny
+    printAny:sig -> :stop
+    printAny:err -> panic
 }
 
-def PrintAny(data any) (sig any) {
-	fmt.Println<int>
+def PrintAny(data any) (sig any, err error) {
+	fmt.Println<int>?
 	---
-	:data -> println -> :sig
+	:data -> println
+	println:res -> :sig
 }

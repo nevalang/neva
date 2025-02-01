@@ -1,11 +1,12 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    Foo, fmt.Println<int>
+    Foo, fmt.Println<int>, Panic
     ---
     :start -> foo:sig
     foo:res -> .a -> println:data
     println:res -> :stop
+    println:err -> panic
 }
 
 const s struct { a int } = { a: 42 }

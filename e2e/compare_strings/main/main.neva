@@ -2,6 +2,7 @@ import { fmt }
 
 def Main(start any) (stop any) {
     fmt.Println, Gt<string>, Ternary
+    panic Panic
     ---
     :start -> [
         'Z' -> gt:left,
@@ -10,5 +11,7 @@ def Main(start any) (stop any) {
     gt:res -> ternary:if
     'Actual is greater' -> ternary:then
     'Actual is lower' -> ternary:else
-    ternary -> println -> :stop
+    ternary -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

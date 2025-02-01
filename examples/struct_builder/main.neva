@@ -8,12 +8,14 @@ type User struct {
 // FIXME:grammar - cannot use 'struct' as a node name
 
 def Main(start any) (stop any) {
-    fmt.Println
+    fmt.Println, Panic
     builder Struct<User>
     ---
     :start -> [
         'John' -> builder:name,
         32 -> builder:age
     ]
-    builder -> println -> :stop
+    builder -> println:data
+    println:res -> :stop
+    println:err -> panic
 }
