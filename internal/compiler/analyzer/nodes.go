@@ -263,7 +263,14 @@ func (a Analyzer) getComponentNodeInterface(
 		version = entity.Component[0]
 	} else {
 		var err *compiler.Error
-		version, overloadIndex, err = a.getNodeOverloadIndex(name, parentIface, nodes, net, entity.Component, scope)
+		version, overloadIndex, err = a.getNodeOverloadIndex(
+			name,
+			parentIface,
+			nodes,
+			net,
+			entity.Component,
+			scope,
+		)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
 				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
@@ -370,17 +377,16 @@ func (a Analyzer) getComponentNodeInterface(
 // It determines which overload to use based on node's usage in parent component.
 func (a Analyzer) getNodeOverloadIndex(
 	name string, // name of the node
-	iface src.Interface, // resolved interface of the component that contains the node
+	parentIface src.Interface, // resolved interface of the component that contains the node
 	nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
 	versions []src.Component, // all versions of the component that node refers to
 	scope src.Scope,
 ) (src.Component, *int, *compiler.Error) {
-	resolvedSenderType, err := a.findSenderTypeForNode(name, iface, nodes, net, scope)
+	resolvedSenderType, err := a.findSenderTypeForNode(name, parentIface, nodes, net, scope)
 	if err != nil {
 		return src.Component{}, nil, err
 	}
-
 	return a.selectOverload(versions, resolvedSenderType, scope)
 }
 
@@ -393,7 +399,97 @@ func (a Analyzer) findSenderTypeForNode(
 	net []src.Connection, // network of the component that contains the node
 	scope src.Scope,
 ) (typesystem.Expr, *compiler.Error) {
-	panic("not implemented")
+	sender, err := a.findFirstSenderForReceiver(name, net)
+	if err != nil {
+		return typesystem.Expr{}, err
+	}
+	if sender == nil {
+		return typesystem.Expr{}, &compiler.Error{
+			Message: "sender not found for given receiver while analyzing overloaded node",
+			Meta:    &iface.Meta,
+		}
+	}
+
+	panic("not impl")
+}
+
+func (a Analyzer) findFirstSenderForReceiver(
+	receiverNode string,
+	net []src.Connection,
+) (*src.ConnectionSender, *compiler.Error) {
+	for _, conn := range net {
+		// arr bypass
+		if conn.ArrayBypass != nil {
+			if conn.ArrayBypass.ReceiverInport.Node == receiverNode {
+				return &src.ConnectionSender{
+					PortAddr: &conn.ArrayBypass.SenderOutport,
+					Meta:     conn.ArrayBypass.SenderOutport.Meta,
+				}, nil
+			}
+			continue
+		}
+
+		for _, receiver := range conn.Normal.Receivers {
+			if receiver.PortAddr != nil {
+				if receiver.PortAddr.Node == receiverNode {
+					return &conn.Normal.Senders[0], nil
+				}
+				continue
+			}
+
+			if receiver.ChainedConnection != nil {
+				found, err := a.findFirstSenderForReceiver(
+					receiverNode,
+					[]src.Connection{*receiver.ChainedConnection},
+				)
+				if err != nil {
+					return nil, err
+				}
+				if found != nil {
+					return found, nil
+				}
+				continue
+			}
+
+			if receiver.DeferredConnection != nil {
+				found, err := a.findFirstSenderForReceiver(
+					receiverNode,
+					[]src.Connection{*receiver.DeferredConnection},
+				)
+				if err != nil {
+					return nil, err
+				}
+				if found != nil {
+					return found, nil
+				}
+				continue
+			}
+
+			if receiver.Switch != nil {
+				cc := make([]src.Connection, 0, len(receiver.Switch.Cases))
+				for _, c := range receiver.Switch.Cases {
+					cc = append(cc, src.Connection{Normal: &c, Meta: c.Meta})
+				}
+
+				found, err := a.findFirstSenderForReceiver(receiverNode, cc)
+				if err != nil {
+					return nil, err
+				}
+				if found != nil {
+					return found, nil
+				}
+
+				continue
+			}
+
+			return nil, &compiler.Error{
+				Message: "unknown type of receiver",
+				Meta:    &receiver.Meta,
+			}
+		}
+	}
+
+	return nil, nil
 }
 
 // selectOverload tries to find version of the component
