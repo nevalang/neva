@@ -43,10 +43,10 @@ func getIRMsgBySrcRef(
 			Type:   ir.MsgTypeString,
 			String: *constant.Message.Str,
 		}, nil
-	case constant.Message.Enum != nil:
+	case constant.Message.Union != nil:
 		return &ir.Message{
 			Type:   ir.MsgTypeString,
-			String: constant.Message.Enum.MemberName,
+			String: constant.Message.Union.Tag,
 		}, nil
 	case constant.Message.List != nil:
 		listElType := typeExpr.Inst.Args[0]

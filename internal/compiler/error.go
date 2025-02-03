@@ -9,8 +9,7 @@ import (
 type Error struct {
 	Message string
 	Meta    *core.Meta
-
-	child *Error
+	child   *Error
 }
 
 func (e Error) Wrap(child *Error) *Error {

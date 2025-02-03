@@ -89,7 +89,11 @@ func (Desugarer) findUnusedOutports(
 		if entity.Kind == src.InterfaceEntity {
 			io = entity.Interface.IO
 		} else {
-			io = entity.Component.Interface.IO
+			if len(entity.Component) == 1 {
+				io = entity.Component[0].Interface.IO
+			} else {
+				io = entity.Component[*node.OverloadIndex].Interface.IO
+			}
 		}
 
 		for outportName := range io.Out {

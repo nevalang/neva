@@ -24,22 +24,14 @@ func (a Analyzer) analyzeConst(
 	}
 
 	if constant.Value.Message == nil { // is ref
-		entity, _, err := scope.Entity(*constant.Value.Ref)
+		found, _, err := scope.GetConst(*constant.Value.Ref)
 		if err != nil {
 			return src.Const{}, &compiler.Error{
 				Message: err.Error(),
-				Meta:    entity.Meta(),
+				Meta:    &constant.Meta,
 			}
 		}
-
-		if entity.Kind != src.ConstEntity {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Constant refers to an entity that is not constant: %v", entity.Kind),
-				Meta:    entity.Meta(),
-			}
-		}
-
-		return a.analyzeConst(entity.Const, scope)
+		return a.analyzeConst(found, scope)
 	}
 
 	resolvedType, err := a.analyzeTypeExpr(constant.TypeExpr, scope)
@@ -61,8 +53,8 @@ func (a Analyzer) analyzeConst(
 	if inst := resolvedType.Inst; inst != nil {
 		typeExprStrRepr = inst.Ref.String()
 	} else if lit := resolvedType.Lit; lit != nil {
-		if lit.Enum != nil {
-			typeExprStrRepr = "enum"
+		if lit.Union != nil {
+			typeExprStrRepr = "union"
 		} else if lit.Struct != nil {
 			typeExprStrRepr = "struct"
 		}
@@ -81,7 +73,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -102,7 +94,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -133,7 +125,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Str != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -154,7 +146,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.List != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -174,7 +166,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Int != nil ||
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -183,7 +175,7 @@ func (a Analyzer) analyzeConst(
 				Meta: &constant.Meta,
 			}
 		}
-	case "map", "struct":
+	case "dict", "struct":
 		if constant.Value.Message.DictOrStruct == nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf("Map or struct value is missing in map or struct contant: %v", constant),
@@ -194,7 +186,7 @@ func (a Analyzer) analyzeConst(
 			constant.Value.Message.Int != nil ||
 			constant.Value.Message.Float != nil ||
 			constant.Value.Message.List != nil ||
-			constant.Value.Message.Enum != nil {
+			constant.Value.Message.Union != nil {
 			return src.Const{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Constant cannot have several values at once: %v",
@@ -203,10 +195,10 @@ func (a Analyzer) analyzeConst(
 				Meta: &constant.Meta,
 			}
 		}
-	case "enum":
-		if constant.Value.Message.Enum == nil {
+	case "union":
+		if constant.Value.Message.Union == nil {
 			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Enum value is missing in enum contant: %v", constant),
+				Message: fmt.Sprintf("Union value is missing in union contant: %v", constant),
 				Meta:    &constant.Meta,
 			}
 		}
@@ -222,6 +214,11 @@ func (a Analyzer) analyzeConst(
 				),
 				Meta: &constant.Meta,
 			}
+		}
+	default:
+		return src.Const{}, &compiler.Error{
+			Message: fmt.Sprintf("Unknown constant type: %v", typeExprStrRepr),
+			Meta:    &constant.Meta,
 		}
 	}
 

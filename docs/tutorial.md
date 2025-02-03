@@ -1,6 +1,6 @@
 # Tutorial
 
-Welcome to a tour of the Nevalang programming language. This tutorial will introduce you to Nevalang through a series of guided examples.
+Welcome to a tour of the Neva programming language. This tutorial will introduce you to Nevalang through a series of guided examples.
 
 1. [Welcome](#welcome)
    - [What kind of language is this?](#what-kind-of-language-is-this)
@@ -77,7 +77,7 @@ After installation is finished, you should be able to run the `neva` CLI from yo
 neva version
 ```
 
-It should emit something like `0.30.2`
+It should emit something like `0.31.0`
 
 ### Hello, World!
 
@@ -256,7 +256,7 @@ This structure introduces two fundamental concepts in Nevalang: modules and pack
 A module is a set of packages with a manifest file (`neva.yaml`). When we created our project with `neva new`, it generated a basic module with the following manifest file:
 
 ```yaml
-neva: 0.30.2
+neva: 0.31.0
 ```
 
 This defines the Nevalang version for our project. As your project grows, you can include dependencies on third-party modules here.
@@ -944,6 +944,8 @@ You should never do that if it's possible to follow "switch-true" pattern, becau
 
 #### Multiple Sources
 
+> WARNING: This is important section. **Don't skip** it!
+
 One might ask, why didn't we cover multiple case senders if we covered multiple receivers? When using switch with multiple case receivers, it works differently than in control flow languages. For example:
 
 ```neva
@@ -956,3 +958,42 @@ switch {
 Is **not** "if either Alice or Bob then do uppercase". It's a fan-in, meaning `Alice` and `Bob` are concurrent. Switch will select the first value sent as a case, which is random since both are message literals.
 
 > These semantics might change in the future. There's an [issue](https://github.com/nevalang/neva/issues/788) about that.
+
+**How To Cover this Case?**
+
+```neva
+pass1 Pass{Upper}
+pass2 Pass{Upper}
+---
+... -> switch {
+    'Alice' -> pass1
+    'Bob' -> pass2
+    _ -> lower
+}
+[pass1, pass2] -> upper
+```
+
+With a little bit of boilerplate 
+
+**WARNING** (Possible Concurrency Issues)
+
+`[pass1, pass2] -> upper` guarantees that `upper` receives messages in the exact same order as they are sent by `pass1` and `pass2` nodes. And `switch` guarantees that it will never reiceve next message from it's sender  `... ->` until previously selected receiver has received.
+
+BUT switch doesn't know about `[pass1, pass2] -> upper`. It will wait for `pass1` and `pass2` to receive yes, but it will not wait `pass1` and `pass2` to _send_!
+
+Example: let's say we send `'bob', 'alice'` sequence to our switch. This sequence of events is totally possible:
+
+```
+pass1 received alice and blocked
+pass2 received bob and blocked
+pass2 send BOB and unlocked
+pass1 send ALICE and unlocked
+```
+
+For `[pass1, pass2] -> upper` connection it will mean that `upper` must receive `BOB` _before_ `Alice` which is not correct!
+
+*Safe Solution*
+
+This situation will never happen if you guarantee that your component never receive next input until it previous sent result is received. But this can only be guaranteed by the parent of your compnent.
+
+Idiomatic way would be to use higher-order component, that can wrap your concurrent component and use it in a safe way, so it will process messages fully sequentionally - synchronized.

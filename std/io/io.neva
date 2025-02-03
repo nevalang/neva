@@ -11,4 +11,3 @@ pub def ReadAll(filename string) (res string, err error)
 // You don't have to think about closing the file, it's done under the hood.
 #extern(write_all)
 pub def WriteAll(filename string, data string) (sig any, err error)
-

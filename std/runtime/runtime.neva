@@ -1,0 +1,6 @@
+// Runtime package contains components that can interact with the runtime.
+
+// Panic immidiately terminates the program after message is received.
+// Panic and Del are the only components without outports.
+#extern(panic)
+pub def Panic(data any) ()
