@@ -1,13 +1,15 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    For{Handler}, Wait
+    For{Handler}, Wait, Panic
     ---
-    :start -> 1..5 -> for -> wait -> :stop
+    :start -> 1..5 -> for
+    for:res -> wait -> :stop
+    for:err -> panic
 }
 
-def Handler(data int) (sig any) {
-    Match, fmt.Println
+def Handler(data int) (sig any, err error) {
+    Match, fmt.Println?
 
     ---
 

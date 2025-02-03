@@ -4,7 +4,7 @@ def Main(start any) (stop any) {
 	fmt.Println
 	Panic
 	---
-	:start -> { (1 + 2) -> println -> :stop }
-	//println:res -> :stop
+	:start -> { (1 + 2) -> println }
+	println:res -> :stop
 	println:err -> panic
 }

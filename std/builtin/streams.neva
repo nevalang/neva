@@ -112,7 +112,7 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 //
 // Like other iterators, it processes items one at a time without blocking the stream.
 // To wait for all items to be processed, use with `Wait`.
-pub def For<T>(data stream<T>) (res stream<T>) {
+pub def For<T>(data stream<T>) (res stream<T>, err error) {
     first First<T> // to check if current msg is the first
     lock1 Lock<stream<T>> // to lock current msg before sending to handler
     lock2 Lock<stream<T>> // to lock current msg before sending downstream
@@ -128,10 +128,11 @@ pub def For<T>(data stream<T>) (res stream<T>) {
     [first:then, pass1] -> lock1:sig
     pass2 -> lock2:sig
 
-    handler -> [pass1, pass2]
+    handler:res -> [pass1, pass2]
+    handler:err -> :err
 }
 
-pub interface ISideEffector<T>(T) (any)
+pub interface ISideEffector<T>(T) (res any, err error)
 
 // `First` is a helper that allows to check if given stream item is the first one.
 def First<T>(data stream<T>) (then stream<T>, else stream<T>) {
