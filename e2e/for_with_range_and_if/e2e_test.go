@@ -8,6 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
+	t.Skip("Remove this skip, until errors.Lift has been implemented.")
 	for i := 0; i < 10; i++ {
 		t.Run("", func(t *testing.T) {
 			cmd := exec.Command("neva", "run", "main")

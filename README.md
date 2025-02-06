@@ -50,7 +50,8 @@ import { fmt }
 def Main(start any) (stop any) {
 	println fmt.Println<string>
 	---
-	:start -> 'Hello, World!' -> println -> :stop
+	:start -> 'Hello, World!' -> println
+	[println:res, println:err] -> :stop
 }
 ```
 
@@ -58,7 +59,10 @@ What's happening here:
 
 - `import { fmt }` loads the `fmt` package for printing
 - `def Main` defines the main component with input port `start` and output port `stop` of type `any` (it's safe since it's only used as a signal)
-- `:start -> 'Hello, World!' -> println -> :stop` defines a connection that sends the string to `println` when program starts and terminates after printing (runtime sends a message to `Main:start` at startup and waits for `Main:stop` to terminate)
+- `:start -> 'Hello, World!' -> println` defines a connection that sends the string to `println` when the program starts
+- The runtime sends a message to `Main:start` at startup and waits for `Main:stop` to terminate
+- `[println:res, println:err] -> :stop` defines a connection that sends either println:res or println:err as the termination signal, depending on which case returned from println.
+- As in Go, errors need to be handled. Removing `println:err` from this example would result in a compiler error.
 
 ## 🔥 Features
 
