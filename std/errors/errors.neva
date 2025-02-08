@@ -1,0 +1,35 @@
+// New creates a new error with the given text.
+#extern(errors_new)
+pub def New(data string) (res error)
+
+// Must converts a node that has an error outport to one that doesn't.
+// It handles the error internally by panicking.
+// Just like Panic, should only be used for fatal errors.
+pub def Must<T, Y>(data T) (res Y) {
+    handler IMustHandler<T, Y>
+    panic Panic
+    ---
+    :data -> handler
+    handler:res -> :res
+    handler:err -> panic
+}
+
+pub interface IMustHandler<T, Y>(T) (res Y, err error)
+
+// Lift converts a node that doesn't have an error outport to one that does.
+// The error outport is fictional and will always be silent.
+pub def Lift<T, Y>(data T) (res Y, err error) {
+    handler ILiftHandler<T, Y>
+    del Del
+    new New
+    ---
+    :data -> [
+        handler -> :res,
+        false -> switch {
+            true -> '' -> new -> :err
+            _ -> del
+        }
+    ]
+}
+
+pub interface ILiftHandler<T, Y>(T) (Y)

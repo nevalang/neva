@@ -1,0 +1,15 @@
+import { fmt, errors }
+
+def Main(start any) (stop any) {
+    lifted errors.Lift<any, any>{Handler}
+    panic Panic
+    ---
+    :start -> lifted
+    lifted:res -> :stop
+    lifted:err -> panic
+}
+
+// Handler doesn't have an error outport, because it doesn't do anything.
+def Handler(data any) (res any) {
+    :data -> :res
+}

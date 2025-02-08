@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e/filter_list",
+      "cwd": "${workspaceFolder}/e2e/errors_lift",
       "args": ["run", "--trace", "main"]
     },
     {

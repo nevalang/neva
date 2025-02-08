@@ -109,5 +109,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"int_bitwise_xor": intBitwiseXor{},
 		"int_bitwise_lsh": intBitwiseLsh{},
 		"int_bitwise_rsh": intBitwiseRsh{},
+
+		"errors_new": errorsNew{},
 	}
 }
