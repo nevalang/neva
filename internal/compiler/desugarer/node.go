@@ -49,10 +49,12 @@ func (Desugarer) handleNode(
 		})
 	}
 
-	nodeEntity, _, err := scope.Entity(node.EntityRef)
+	nodeEntity, nodeEntityLoc, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return nil, fmt.Errorf("get entity: %w", err)
 	}
+
+	scope = scope.Relocate(nodeEntityLoc)
 
 	if nodeEntity.Kind != src.ComponentEntity { // if interface, don't do anything else
 		desugaredNodes[nodeName] = node
@@ -76,7 +78,7 @@ func (Desugarer) handleNode(
 	if hasAnonDep { // this node has anonymous dependency injected
 		// find name of the dependency in this node's sub-nodes
 		var depName string
-		for depParamName, depParam := range nodeEntity.Component.Nodes {
+		for depParamName, depParam := range component.Nodes {
 			kind, err := scope.GetEntityKind(depParam.EntityRef)
 			if err != nil {
 				panic(err)

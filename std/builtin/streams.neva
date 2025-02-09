@@ -26,7 +26,6 @@ pub interface IPortReducer<T>(stream<T>) (T)
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(T) (Y)
 
-// TODO map is not concurrency safe like For
 // Map maps one stream onto another.
 // Just like For, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.

@@ -1,0 +1,22 @@
+import {
+    io
+    fmt
+    errors
+}
+
+// errors.Must wraps handler so it behaves like a node without error outport.
+def Main(start any) (stop any) {
+    println fmt.Println<any>
+    must_handle errors.Must<any, any>{Handler}
+    ---
+    :start -> 'create_me.txt' -> must_handle -> 'success!' -> println -> :stop
+}
+
+// Handler have error outport.
+def Handler(data string) (res any, err error) {
+    write_all io.WriteAll?
+    ---
+    :data -> write_all:filename
+    'Hello, io.WriteAll!' -> write_all:data
+    write_all -> :res
+}
