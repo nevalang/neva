@@ -42,9 +42,10 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Use `data` for input, `res` for output and `err` for failures.
 - Outport `err` must be of type `error`.
 - Ports `data` and `res` of type `any` are interpreted as signals.
-- Use type-parameters to preserve type info between input and output if needed.
 - Use name `sig` if you have _extra_ trigger-inport.
 - Use names `then` and `else` if you implement boolean branching.
+- Use specific inport names if have more than one - e.g. `(filename, data)` for `io.WriteAll`.
+- Use type-parameters to preserve type info between input and output if needed.
 
 ## Networks
 
