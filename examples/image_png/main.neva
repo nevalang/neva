@@ -44,5 +44,5 @@ def Main(start any) (stop any) {
 	new:img -> encode:img
 	encode:data -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr
-	[writeAll:sig, printErr] -> :stop
+	[writeAll:res, printErr] -> :stop
 }

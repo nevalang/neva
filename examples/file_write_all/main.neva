@@ -8,5 +8,5 @@ def Main(start any) (stop any) {
 		'Hello, io.WriteAll!' -> writeAll:data
 	]
 	writeAll:err -> println
-	[writeAll:sig, println] -> :stop
+	[writeAll:res, println] -> :stop
 }
