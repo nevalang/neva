@@ -15,32 +15,37 @@
 | [**Contributing**](./CONTRIBUTING.md)
 | [**Architecture**](./ARCHITECTURE.md)
 
-![tests](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main) ![lint](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main) [![go report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva) [![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH) [![ChatGPT](https://img.shields.io/badge/Nevalang_AI-74aa9c?logo=openai&logoColor=white)](https://chatgpt.com/g/g-RhZn00MXU-nevalang-expert) ![OS](https://img.shields.io/badge/os-windows%20%7C%20macos%20%7C%20linux-lightgrey?logo=linux&logoColor=white) ![Go](https://img.shields.io/badge/v1.23-00ADD8?logo=go&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Tests CI](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main)
+![Linting CI](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
+[![Go Report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/nevalang/neva)
+[![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![OS](https://img.shields.io/badge/os-linux%20%7C%20mac%20%7C%20windows-lightgrey?logo=linux&logoColor=white)
+[![ChatGPT](https://img.shields.io/badge/Neva_GPT-74aa9c?logo=openai&logoColor=white)](https://chatgpt.com/g/g-RhZn00MXU-nevalang-expert)
 
 <p align="center">
   <img src="./assets/animations/dataflow.gif" alt="Dataflow">
 </p>
 </div>
 
+> ⚠️ WARNING: This project is under active development and not yet production-ready!
+
 ## 🤔 What Is Nevalang?
 
-> **⚠️ WARNING**: This project is under active development and not yet production-ready!
+Nevalang is a new kind of programming language where instead of writing step-by-step instructions, you create networks where data flows between nodes as immutable messages, with everything running in parallel by default. After type-checking, your program is compiled into machine code and can be distributed as a single executable with zero dependencies.
 
-Neva is a new kind of programming language where instead of writing step-by-step instructions you create **networks** where data flows between **nodes** as immutable messages and everything runs in **parallel** by default. After type-checking, your program is compiled into **machine code** and can be distributed as a **single executable** with zero dependencies.
-
-Combined with built-in **stream processing** support and features like **advanced error handling**, Nevalang is the perfect choice for **cloud-native applications** requiring **high concurrency**.
-
-Future updates will include **visual programming** and **Go interoperability** to allow gradual adoption and leverage existing ecosystem.
+Neva excels at stream processing and concurrency while remaining simple and enjoyable for general development. Future updates will add visual programming and Go interop to enable gradual adoption.
 
 ### Why Yet Another Programming Language?
 
-We created Nevalang because we saw a gap in the programming language landscape:
+We created it because we saw a gap in the programming language landscape:
 
-1. **Visual Programming Done Right** - While there are many visual programming tools, they're usually limited to specific domains or lack the power of traditional programming. Nevalang is designed from the ground up to be a hybrid visual/text-based programming environment.
-2. **Simple Parallel Programming** - Most languages treat concurrency as an advanced feature, making it complex and error-prone. In Nevalang, parallelism is the default, and the language design prevents common issues like data races.
-3. **Modern Developer Experience** - We combine the best ideas from modern languages with dataflow programming to create a unique development experience focused on productivity.
+1. **Visual Programming Done Right** - existing visual tools are limited to specific domains or lack the power of traditional programming languages. Neva is designed from the ground up to be a hybrid visual/textual programming language.
+2. **Simple Parallelism** - Most languages treat concurrency as an advanced feature. In Neva, parallelism is the default and it prevents issues like data races.
+3. **Modern Developer Experience** - We combine best ideas from modern languages with dataflow paradigm to make programming easy and fun.
 
-Finally, we believe exploring new programming paradigms is valuable for the entire programming community, even if only to learn what works and what doesn't.
+Finally, exploring new programming paradigms helps advance the field by discovering what works and what doesn't!
 
 ## 👋 Hello, World!
 
@@ -49,20 +54,25 @@ import { fmt }
 
 def Main(start any) (stop any) {
 	println fmt.Println<string>
+	panic Panic
 	---
 	:start -> 'Hello, World!' -> println
-	[println:res, println:err] -> :stop
+	println:err -> panic
+	println:res -> :stop
 }
 ```
 
 What's happening here:
 
-- `import { fmt }` loads the `fmt` package for printing
-- `def Main` defines the main component with input port `start` and output port `stop` of type `any` (it's safe since it's only used as a signal)
-- `:start -> 'Hello, World!' -> println` defines a connection that sends the string to `println` when the program starts
-- The runtime sends a message to `Main:start` at startup and waits for `Main:stop` to terminate
-- `[println:res, println:err] -> :stop` defines a connection that sends either println:res or println:err as the termination signal, depending on which case returned from println.
-- As in Go, errors need to be handled. Removing `println:err` from this example would result in a compiler error.
+- `import { fmt }` loads fmt package for printing
+- `def Main(start any) (stop any) {...}` defines component with input port start and output port stop, both of type any (it's safe since they used as signals)
+- `println fmt.Println<string>` defines a node, instance of fmt.Println
+- `panic Panic` defines another node to crash the program
+- `:start -> 'Hello, World!' -> println` defines a connection that sends the string to println when the program starts
+- `println:err -> panic` handles the possible error by crashing the program
+- `println:res -> :stop` terminates the program after successful printing
+
+> Runtime sends a message to `Main:start` at startup and waits for `Main:stop` to terminate
 
 ## 🔥 Features
 
@@ -81,9 +91,9 @@ What's happening here:
 - **Go Interoperability** (WIP): Call Go from Neva and Neva from Go
 - **NextGen Debugging** (WIP): Observe execution in realtime and intercept messages on the fly
 
-## 🧐 Why Use Nevalang?
+## 🧐 Why Use Neva?
 
-Let's compare Nevalang with Go. We could compare it to any language but Go is a simple reference since Nevalang is written in Go.
+Let's compare Neva with Go. We could compare it to any language but Go is a simple reference since Neva is written in Go.
 
 | **Feature**              | **Neva**                                                           | **Go**                                                                            |
 | ------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |

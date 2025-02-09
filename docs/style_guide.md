@@ -28,22 +28,26 @@ Group imports by type: stdlib, third-party, local. Separate groups with newlines
 
 Names should inherit context from parent scope. Good naming eliminates need for comments. Names generally rather short than long.
 
-- **Packages/Files**: `lower_snake_case` up to 3 words
-- **Types**: `CamelCase` up to 3 words
-- **Interfaces**: `CamelCase` with `I` prefix up to 3 words
-- **Constants**: `lower_snake_case` up to 3 words
-- **Components**: `CamelCase` noun up to 3 words
-- **Nodes**: `lowerCamelCase` up to 3 words
-- **Ports**: `lowercase`, up to 5 characters
+- **Packages/Files**: `lower_snake_case`
+- **Types**: `CamelCase`
+- **Interfaces**: `CamelCase` with `I` prefix
+- **Constants**: `lower_snake_case`
+- **Components**: `CamelCase` noun
+- **Nodes**: `lower_snake_case`
+- **Ports**: `lowercase`
 
 ## Interfaces
 
 - Use outports to separate data flows, not for destructuring.
-- Use `data` for input with payload, `sig` for input without payload (trigger), `res` for output with payload, `sig` for output without payload (success), and `err` for failures.
-- `err` outport must be of type `error`. `sig` inport must be of type `any` for flexibility. Never use `any` for `res` outport.
-- Don't send input data downstream; the parent already has it.
-- Use type-parameters to preserve type info between input and output.
+- Use `data` for input, `res` for output and `err` for failures.
+- Outport `err` must be of type `error`.
+- Ports `data` and `res` of type `any` are interpreted as signals.
+- Use name `sig` if you have _extra_ trigger-inport.
+- Use names `then` and `else` if you implement boolean branching.
+- Use specific inport names if have more than one - e.g. `(filename, data)` for `io.WriteAll`.
+- Use type-parameters to preserve type info between input and output if needed.
 
 ## Networks
 
 - Omit port names when possible. It enables renaming of ports without updating the networks.
+- Use `?` for to propogate errors except custom error handling is needed.

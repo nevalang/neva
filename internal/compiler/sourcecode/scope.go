@@ -203,7 +203,7 @@ func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (str
 }
 
 func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
-	entity, _, err := s.Entity(entityRef)
+	entity, _, err := s.entity(entityRef)
 	if err != nil {
 		return "", err
 	}

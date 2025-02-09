@@ -32,7 +32,6 @@ def Main(start any) (stop any) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
 	io.WriteAll, printErr fmt.Println
-	Panic
 	---
 	:start -> [
 		0 -> [newColor:r, newColor:g, newColor:b, newColor:a],
@@ -45,6 +44,5 @@ def Main(start any) (stop any) {
 	new:img -> encode:img
 	encode:data -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr
-	[writeAll:sig, printErr:res] -> :stop
-	printErr:err -> panic
+	[writeAll:res, printErr] -> :stop
 }

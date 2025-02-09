@@ -10,5 +10,5 @@ pub def ReadAll(filename string) (res string, err error)
 // It returns an error if the file cannot be written.
 // You don't have to think about closing the file, it's done under the hood.
 #extern(write_all)
-pub def WriteAll(filename string, data string) (sig any, err error)
+pub def WriteAll(filename string, data string) (res any, err error)
 
