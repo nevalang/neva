@@ -30,7 +30,7 @@ func BenchmarkMessagePassing(b *testing.B) {
 	// Reset timer after setup
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		cmd := exec.Command("neva", "run", "message_passing")
 		out, err := cmd.CombinedOutput()
 		require.NoError(b, err, string(out))
