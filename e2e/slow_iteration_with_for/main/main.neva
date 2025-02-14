@@ -14,12 +14,12 @@ def Main(start any) (stop any) {
     for:err -> panic
 }
 
-def Slow(data int) (sig any, err error) {
+def Slow(data int) (res any, err error) {
     time.Delay<int>
     fmt.Println<int>?
     ---
     :data -> delay:data
     $time.second -> delay:dur
     delay -> println:data
-    println:res -> :sig
+    println:res -> :res
 }

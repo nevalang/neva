@@ -64,13 +64,19 @@ pub def Pass<T>(data T) (res T) {
 // sends a signal when finishes. Signal could be of any type, so no need for
 // dealing with locks manually. Handler can send error, in that case `Tap` will
 // propagate it up to parent node.
-pub def Tap<T>(data T) (res T) {
+pub def Tap<T>(data T) (res T, err error) {
+    proxy1 Pass<T>
+    proxy2 Pass<T>
     lock Lock<T>
     handler ITapHandler<T>
     ---
-    :data -> [handler, lock:data]
-    handler -> lock:sig
+    :data -> [lock:data, handler]
+
+    handler:res -> proxy1
+    handler:err -> [proxy2, :err]
+
+    [proxy1, proxy2] -> lock:sig
     lock -> :res
 }
 
-pub interface ITapHandler<T>(T) (any)
+pub interface ITapHandler<T>(T) (res any, err error)

@@ -10,11 +10,13 @@ def Main(start any) (stop any) {
 	for:err -> panic
 }
 
-def PrintAsNum(data bool) (sig any) {
+def PrintAsNum(data bool) (res any, err error) {
 	Ternary, fmt.Println
 	---
 	:data -> ternary:if
 	1 -> ternary:then
 	0 -> ternary:else
-	ternary -> println -> :sig
+	ternary -> println
+	println:res -> :res
+	println:err -> :err
 }

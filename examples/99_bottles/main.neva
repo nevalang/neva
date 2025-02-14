@@ -10,15 +10,16 @@ def Main(start any) (stop any) {
 	print:err -> panic
 }
 
-def Next2Lines(data int) (sig any, err error) {
+def Next2Lines(data int) (res any, err error) {
 	first Tap<int>{FirstLine}?
 	dec Dec<int>
 	second SecondLine?
 	---
-	:data -> first -> dec -> second -> :sig
+	:data -> first
+	first:res -> dec -> second -> :res
 }
 
-def FirstLine(data int) (sig any, err error) {
+def FirstLine(data int) (res any, err error) {
 	p1 fmt.Println?
 	p2 fmt.Println?
 	p3 fmt.Printf?
@@ -31,10 +32,10 @@ def FirstLine(data int) (sig any, err error) {
 			'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
 		]
 	}
-	[p1:res, p2:res, p3:sig] -> :sig
+	[p1:res, p2:res, p3:sig] -> :res
 }
 
-def SecondLine(data int) (sig any, err error) {
+def SecondLine(data int) (res any, err error) {
 	p1 fmt.Println?
 	p2 fmt.Println?
 	p3 fmt.Println?
@@ -49,5 +50,5 @@ def SecondLine(data int) (sig any, err error) {
 			'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
 		]
 	}
-	[p1:res, p2:res, p3:res, p4:sig] -> :sig
+	[p1:res, p2:res, p3:res, p4:sig] -> :res
 }
