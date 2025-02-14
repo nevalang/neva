@@ -7,12 +7,14 @@ def Main(start any) (stop any) {
 	parser2 strconv.ParseNum<int>
 	add Add<int>
 	println fmt.Println<any>
+	panic Panic
 	---
 	:start -> scanner1:sig
 	scanner1:res -> parser1:data
 	parser1:res -> [add:left, scanner2:sig]
 	scanner2:res -> parser2:data
 	parser2:res -> add:right
+	add:res -> println:data
 	println:res -> :stop
-	[parser1:err, parser2:err, add:res] -> println:data
+	[parser1:err, parser2:err, println:err] -> panic
 }

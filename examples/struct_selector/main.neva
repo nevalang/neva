@@ -8,9 +8,11 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    GetUser, fmt.Println
+    GetUser, fmt.Println, Panic
     ---
-    :start -> getUser -> .pet.name -> println -> :stop
+    :start -> getUser -> .pet.name -> println:data
+    println:res -> :stop
+    println:err -> panic
 }
 
 const user User = {

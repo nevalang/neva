@@ -2,16 +2,18 @@ import { fmt }
 
 def Main(start any) (stop any) {
     second_flow Secondflow{fmt.Println<any>}
+    panic Panic
     ---
     :start -> second_flow:data
     second_flow:res -> :stop
+    second_flow:err -> panic
 }
 
-def Secondflow (data any) (res any) {
-    printer IPrinter<any>
+def Secondflow (data any) (res any, err error) {
+    printer IPrinter<any>?
     ---
     :data -> printer:data
     printer:res -> :res
 }
 
-interface IPrinter<T>(data T) (res T)
+interface IPrinter<T>(data T) (res T, err error)

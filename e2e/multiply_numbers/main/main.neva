@@ -6,8 +6,11 @@ def Main(start any) (stop any) {
 	fmt.Println<int>
 	Reduce<int, int>{Mul<int>}
 	ListToStream<int>
+	panic Panic
 	---
 	:start -> $l -> listToStream -> reduce:data
 	1 -> reduce:init
-	reduce -> println -> :stop
+	reduce -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

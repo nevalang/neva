@@ -6,8 +6,11 @@ def Main(start any) (stop any) {
     Map<int, string>{Handler}
     For<string>{fmt.Println}
     Wait
+    Panic
     ---
-    :start -> 1..5 -> map -> for -> wait -> :stop
+    :start -> 1..5 -> map -> for
+    for:res -> wait -> :stop
+    for:err -> panic
 }
 
 def Handler(data int) (res string) {

@@ -60,17 +60,23 @@ pub def Pass<T>(data T) (res T) {
 // more, it leads to need for explicit locks. Deferred connections do not cover
 // this case. Explicit lock make network harder to reason about.
 // `Tap` is a higher-order component, that implements this logic for you.
-// All you need to do, is to provide dependency node, thar receives data and
+// All you need to do, is to provide dependency node, that receives data and
 // sends a signal when finishes. Signal could be of any type, so no need for
 // dealing with locks manually. Handler can send error, in that case `Tap` will
-// propogate it up to parent node.
-pub def Tap<T>(data T) (res T) {
+// propagate it up to parent node.
+pub def Tap<T>(data T) (res T, err error) {
+    proxy1 Pass<T>
+    proxy2 Pass<T>
     lock Lock<T>
     handler ITapHandler<T>
     ---
-    :data -> [handler, lock:data]
-    handler -> lock:sig
+    :data -> [lock:data, handler]
+
+    handler:res -> proxy1
+    handler:err -> [proxy2, :err]
+
+    [proxy1, proxy2] -> lock:sig
     lock -> :res
 }
 
-pub interface ITapHandler<T>(T) (any)
+pub interface ITapHandler<T>(T) (res any, err error)

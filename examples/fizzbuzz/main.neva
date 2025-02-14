@@ -4,8 +4,11 @@ def Main(start any) (stop any) {
     Map<int, any>{FizzBuzz}
     For{fmt.Println}
     Wait
+    Panic
     ---
-    :start -> 1..101 -> map -> for -> wait -> :stop
+    :start -> 1..101 -> map -> for
+    for:res -> wait -> :stop
+    for:err -> panic
 }
 
 def FizzBuzz(data int) (res string | int) {

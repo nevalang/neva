@@ -3,7 +3,9 @@ import { time, fmt }
 def Main(start any) (stop any) {
     p1 fmt.Println
     p2 fmt.Println
+    panic Panic
     ---
-    :start -> [p1, p2]
-    p1 -> { p2 -> :stop }
+    :start -> [p1:data, p2:data]
+    p1:res -> { p2:res -> :stop }
+    [p1:err, p2:err] -> panic
 }

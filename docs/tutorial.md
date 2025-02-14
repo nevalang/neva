@@ -107,7 +107,8 @@ import { fmt }
 def Main(start any) (stop any) {
 	println fmt.Println<string>
 	---
-	:start -> 'Hello, World!' -> println -> :stop
+	:start -> 'Hello, World!' -> println
+	[println:res, println:err] -> :stop
 }
 ```
 
@@ -163,7 +164,8 @@ import { fmt }
 def Main(start any) (stop any) {
     println fmt.Println<string>
     ---
-    :start -> println -> :stop
+    :start -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -188,7 +190,8 @@ import { fmt }
 def Main(start any) (stop any) {
     println fmt.Println<string>
     ---
-    :start -> 'Hello, World!' -> println -> :stop
+    :start -> 'Hello, World!' -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -234,7 +237,8 @@ const greeting string = 'Hello!'
 def Main(start any) (stop any) {
     println fmt.Println<string>
     ---
-    :start -> $greeting -> println -> :stop
+    :start -> $greeting -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -271,7 +275,8 @@ import { fmt }
 def Main(start any) (stop any) {
    println fmt.Println<string>
    ---
-   :start -> 'Hello, World!' -> println -> :stop
+   :start -> 'Hello, World!' -> println
+   [println:res, println:err] -> :stop
 }
 ```
 
@@ -308,7 +313,8 @@ def Main(start any) (stop any) {
 	greet utils.Greet // new node
 	println fmt.Println<string>
 	---
-	:start -> 'World' -> greet -> println -> :stop // new connection
+	:start -> 'World' -> greet -> println
+	[println:res, println:err] -> :stop // new connection
 }
 ```
 
@@ -365,7 +371,8 @@ def Main(start any) (stop any) {
     exclaim AddExclamation  // same package, no import needed
     println fmt.Println<string>
     ---
-    :start -> 'World' -> greet -> exclaim -> println -> :stop
+    :start -> 'World' -> greet -> exclaim -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -397,17 +404,10 @@ pub def Greet(data string) (res string) {
 }
 ```
 
-Same true for `fmt.Println`:
-
-```neva
-// fmt package
-pub def Println<T>(data T) (sig struct{})
-```
-
 This allowed us to chain nodes together:
 
 ```neva
-:start -> 'World' -> greet -> println -> :stop
+:start -> 'World' -> greet -> println
 ```
 
 When chaining nodes, we actually reference their ports implicitly. The chain could be written more verbosely as:
@@ -415,7 +415,6 @@ When chaining nodes, we actually reference their ports implicitly. The chain cou
 ```neva
 :start -> 'World' -> greet:data
 greet:res -> println:data
-println:res -> :stop
 ```
 
 Both versions are equivalent, but the chained syntax is preferred for readability.
@@ -452,14 +451,12 @@ def Main(start any) (stop any) {
     ---
     :start -> 'Hello, ' -> concat:prefix
     'World' -> concat:suffix
-    concat -> println -> :stop
+    concat -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
-Notice that:
-
-1. We can omit `concat:res ->` and write just `concat ->` since `Concat` has one outport
-2. We can chain `-> println ->` since it still has a single port
+Notice that we can omit `concat:res ->` and write just `concat ->` since `Concat` has one outport.
 
 Let's add a `debug` outport to `Concat`:
 
@@ -484,7 +481,8 @@ def Main(start any) (stop any) {
     ---
     :start -> 'Hello, ' -> concat:prefix
     'World' -> concat:suffix
-    concat:res -> println -> :stop // concat:debug is not used
+    concat:res -> println
+    [println:res, println:err] -> :stop // concat:debug is not used
 }
 ```
 
@@ -503,7 +501,7 @@ Let's explore this using `strconv.ParseNum` from the standard library, which con
 pub def ParseNum<T int | float>(data string) (res T, err error)
 ```
 
-Note that it has an `err` outport of type `error`. While we can usually ignore node outports as long as we use at least one, the `err` port is special - we must always handle potential errors.
+Note that it has an `err` outport of type `error`. While we can usually ignore node outports as long as we use at least one, the `err` port is special - we must always handle potential errors. You may have already seen the fan-in pattern with `Println` earlier, since it also may return an error. But let's take a look into another example.
 
 Let's try converting `'42'` to `42` and print both the result and any potential errors:
 
@@ -518,7 +516,8 @@ def Main(start any) (stop any) {
     println fmt.Println<any>
     ---
     :start -> '42' -> parse
-    [parse:res, parse:err] -> println -> :stop // fan-in
+    [parse:res, parse:err] -> println
+    [println:res, println:err] -> :stop // fan-in
 }
 ```
 
@@ -534,7 +533,7 @@ If we try an invalid number:
 
 ```neva
 :start -> 'forty two' -> parse
-[parse:res, parse:err] -> println -> :stop
+[parse:res, parse:err] -> println
 ```
 
 We'll see:
@@ -585,7 +584,8 @@ def Main(start any) (stop any) {
     println fmt.Println<any>
     ---
     :start -> '21' -> [add:left, add:right] // chain + fan-out
-    [add:res, add:err] -> println -> :stop // fan-in + chain
+    [add:res, add:err] -> println //fan-in
+    [println:res, println:err] -> :stop // fan-in
 }
 ```
 
@@ -648,7 +648,8 @@ def Main(start any) (stop any) {
         10 -> area:b,
         20 -> area:h
     ]
-    area -> println -> :stop
+    area -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -715,7 +716,8 @@ def Main(start any) (stop any) {
         10 -> area:h
     ]
     (area > 50) -> format
-    ((format == 'true') ? 'Big' : 'Small') -> println -> :stop
+    ((format == 'true') ? 'Big' : 'Small') -> println
+    [println:res, println:err] -> :stop
 }
 ```
 
@@ -764,14 +766,16 @@ def Main(start any) (stop any) {
     upper strings.ToUpper
     lower strings.ToLower
     println fmt.Println
-    panic Panic
+    panic1, panic2 Panic
     ---
     :start -> 'Enter the name: ' -> print -> scanln -> switch {
         'Alice' -> upper
         'Bob' -> lower
-        _ -> panic
+        _ -> panic1
     }
-    [upper, lower] -> println -> :stop
+    [upper, lower] -> println
+    println:res -> :stop
+    println:err -> panic2
 }
 ```
 
@@ -779,7 +783,7 @@ We used several new things here. First, the `strings` package from the standard 
 
 The `fmt` package is used again - `fmt.Print` works like `Println` but without adding `\n` at the end, and `fmt.Scanln` waits for keyboard input followed by Enter.
 
-Finally, there's the builtin `Panic` component. It immediately terminates the program with a non-zero status code when its node receives a message.
+Finally, there's the builtin `Panic` component. It immediately terminates the program with a non-zero status code when its node receives a message. We use it to 'panic', when println fails (e. g. couldn't print to stdout).
 
 The program prompts for a name, converts it to uppercase for "Alice" or lowercase for "Bob" (panicking for any other input), then prints the result.
 
@@ -799,13 +803,15 @@ def Main(start any) (stop any) {
     upper strings.ToUpper
     lower strings.ToLower
     println fmt.Println
-    panic Panic
+    panic1, panic2 Panic
     ---
     :start -> 'Enter the name: ' -> print -> scanln -> switch {
         'Alice' -> [upper, lower]
-        _ -> panic
+        _ -> panic1
     }
-    (upper + lower) -> println -> :stop
+    (upper + lower) -> println
+    println:res -> :stop
+    println:err -> panic2
 }
 ```
 
@@ -846,11 +852,13 @@ def Main(start any) (stop any) {
     classify utils.ClassifyInt
     println1 fmt.Println
     println2 fmt.Println
+    panic Panic
     ---
     :start -> -42 -> classify
     classify:pos -> 'positive :)' -> println1
     classify:neg -> 'negative :(' -> println2
-    [println1, println2] -> :stop
+    [println1:res, println2:res] -> :stop
+    [println1:err, println2:err] -> panic
 }
 ```
 
@@ -874,7 +882,7 @@ import {
 
 // ...existing code...
 
-pub def CommentOnUser(name string, age int) (sig any) {
+pub def CommentOnUser(name string, age int) (sig any, err error) {
     println1 fmt.Println
     println2 fmt.Println
     panic Panic
@@ -882,9 +890,10 @@ pub def CommentOnUser(name string, age int) (sig any) {
     true -> switch {
         (:name == 'Bob') -> 'Beautiful name!' -> println1
         (:age < 18) -> 'Young fellow!' -> println2
-        _ -> panic
+        _ -> panic1
     }
-    [println1, println2] -> :sig
+    [println1:res, println2:res] -> :sig
+    [println1:err, println2:err] -> :err
 }
 ```
 
@@ -898,12 +907,14 @@ import {
 
 def Main(start any) (stop any) {
     comment utils.CommentOnUser
+    panic Panic
     ---
     :start -> [
         'Bob' -> comment:name,
         17 -> comment:age
     ]
-    comment -> :stop
+    comment:sig -> :stop
+    comment:err -> panic
 }
 ```
 

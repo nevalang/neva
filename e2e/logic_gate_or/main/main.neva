@@ -2,10 +2,13 @@ import { fmt }
 
 def Main(start any) (stop any) {
 	fmt.Println<bool>, Or
+	panic Panic
 	---
 	:start -> [
 		{ false -> or:left },
 		{ false -> or:right }
 	]
-	or -> println -> :stop
+	or -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
