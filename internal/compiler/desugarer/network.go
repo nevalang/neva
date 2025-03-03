@@ -1,6 +1,7 @@
 package desugarer
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -238,7 +239,7 @@ func (d *Desugarer) desugarSingleReceiver(
 			}, nil
 		}
 
-		firstInportName, err := scope.GetFirstInportName(nodes, *receiver.PortAddr)
+		firstInportName, err := d.getFirstInportName(scope, nodes, *receiver.PortAddr)
 		if err != nil {
 			return desugarReceiverResult{}, fmt.Errorf("get first inport name: %w", err)
 		}
@@ -441,7 +442,7 @@ func (d *Desugarer) desugarChainedConnection(
 		chainHeadPort = chainHead.PortAddr.Port
 		if chainHeadPort == "" {
 			var err error
-			chainHeadPort, err = scope.GetFirstInportName(nodes, *chainHead.PortAddr)
+			chainHeadPort, err = d.getFirstInportName(scope, nodes, *chainHead.PortAddr)
 			if err != nil {
 				return desugarConnectionResult{}, fmt.Errorf("get first inport name: %w", err)
 			}
@@ -688,7 +689,7 @@ func (d *Desugarer) desugarSingleSender(
 	if sender.PortAddr != nil {
 		portName := sender.PortAddr.Port
 		if sender.PortAddr.Port == "" {
-			firstOutportName, err := scope.GetFirstOutportName(nodes, *sender.PortAddr)
+			firstOutportName, err := d.getFirstOutportName(scope, nodes, *sender.PortAddr)
 			if err != nil {
 				return desugarSenderResult{}, fmt.Errorf("get first outport name: %w", err)
 			}
@@ -840,6 +841,42 @@ func (d *Desugarer) desugarSingleSender(
 		replace: src.Connection{Normal: &result.replace},
 		insert:  result.insert,
 	}, nil
+}
+
+func (d *Desugarer) getFirstInportName(
+	scope Scope,
+	nodes map[string]src.Node,
+	portAddr src.PortAddr,
+) (string, error) {
+	io, err := scope.GetNodeIOByPortAddr(nodes, portAddr)
+	if err != nil {
+		return "", err
+	}
+	for inport := range io.In {
+		return inport, nil
+	}
+	return "", errors.New("first inport not found")
+}
+
+func (d *Desugarer) getFirstOutportName(
+	scope Scope,
+	nodes map[string]src.Node,
+	portAddr src.PortAddr,
+) (string, error) {
+	io, err := scope.GetNodeIOByPortAddr(nodes, portAddr)
+	if err != nil {
+		return "", err
+	}
+
+	// important: skip `err` outport if node has err guard
+	for outport := range io.Out {
+		if outport == "err" && nodes[portAddr.Node].ErrGuard {
+			continue
+		}
+		return outport, nil
+	}
+
+	return "", errors.New("first outport not found")
 }
 
 var newComponentRef = core.EntityRef{

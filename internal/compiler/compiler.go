@@ -40,7 +40,7 @@ func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
 	}
 
 	if input.EmitIR {
-		if err := c.emitIR(input.Main, input.Output, meResult.IR); err != nil {
+		if err := c.emitIR(input.Output, meResult.IR); err != nil {
 			return fmt.Errorf("emit IR: %w", err)
 		}
 	}
