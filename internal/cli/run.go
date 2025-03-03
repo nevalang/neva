@@ -22,6 +22,10 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				Name:  "trace",
 				Usage: "Write trace information to file",
 			},
+			&cli.BoolFlag{
+				Name:  "emit-ir",
+				Usage: "Emit intermediate representation to ir.yml file",
+			},
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
@@ -30,10 +34,8 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				return err
 			}
 
-			var trace bool
-			if cliCtx.IsSet("trace") {
-				trace = true
-			}
+			trace := cliCtx.IsSet("trace")
+			emitIR := cliCtx.IsSet("emit-ir")
 
 			// we need to always set GOOS for compiler backend
 			prevGOOS := os.Getenv("GOOS")
@@ -55,6 +57,7 @@ func newRunCmd(workdir string, nativec compiler.Compiler) *cli.Command {
 				Main:   mainPkg,
 				Output: workdir,
 				Trace:  trace,
+				EmitIR: emitIR,
 			}
 
 			if err := nativec.Compile(cliCtx.Context, input); err != nil {
