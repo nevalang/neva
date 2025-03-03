@@ -8,7 +8,7 @@ Tells compiler a component lacks source code implementation and requires a runti
 
 ```neva
 #extern(println)
-pub def Println<T>(data T) (sig T)
+pub def Println<T>(data T) (res T, err error)
 ```
 
 ### Overloading
@@ -36,7 +36,7 @@ def Main(start any) (stop any) {
 	:start -> lock:sig
 	greeting:res -> lock:data
 	lock:data -> println:data
-	println:res -> :stop
+	[println:res, println:err] -> :stop
 }
 ```
 

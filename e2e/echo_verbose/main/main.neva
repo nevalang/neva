@@ -3,8 +3,10 @@ import { fmt }
 def Main(start any) (stop any) {
 	scanln fmt.Scanln
 	println fmt.Println<string>
+	panic Panic
 	---
 	:start -> scanln:sig
 	scanln:res -> println:data
 	println:res -> :stop
+	println:err -> panic
 }

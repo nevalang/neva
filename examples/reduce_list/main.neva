@@ -6,8 +6,11 @@ def Main(start any) (stop any) {
     l2s ListToStream<int>
     reduce Reduce<int, int>{Add<int>}
     println fmt.Println
+    panic Panic
     ---
     :start -> $lst -> l2s -> reduce:data
     0 -> reduce:init
-    reduce -> println -> :stop
+    reduce -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

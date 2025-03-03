@@ -54,7 +54,8 @@ Normal component `Main` with a `println` node (instance of `Println`):
 def Main(start any) (stop any) {
    Println
    ---
-   :start -> { 42 -> println -> :stop }
+   :start -> { 42 -> println }
+   [println:res, println:err] -> :stop
 }
 ```
 
@@ -65,7 +66,9 @@ def Main(start any) (stop any) {
    p1 Println
    p2 Println
    ---
-   :start -> { 42 -> p1 -> p2 -> :stop }
+   :start -> { 42 -> p1 }
+   [p1:res, p1:err] -> p2
+   [p2:res, p2:err] -> :stop
 }
 ```
 
@@ -101,7 +104,7 @@ def App(data any, prod bool) (sig any) {
 
 This not only makes the code more complex but also means we have to initialize both implementations: `ProdLogger` in the test environment and `MockLogger` in the production environment, even though they are not needed in those respective contexts. What if you need to read environment variables to initialize a component? For example, your logger might need to send requests to a third-party service to collect errors. And finally, imagine if it were not a boolean flag but an enum with several possible states. The complexity would increase dramatically.
 
-> As you can see it's possible to write nodes in a single line, separated by comma: `Cond, Logic, Println, Mock`. Don't abuse this style - Nevalang is not about clever one-liners.
+> As you can see it's possible to write nodes in a single line, separated by comma: `Cond, Logic, Mock`. Don't abuse this style - Nevalang is not about clever one-liners, as you can see with `Println`.
 
 Let's implement this using dependency injection. First, define an interface:
 
@@ -182,9 +185,11 @@ Components can pass type parameters from their interface to node expressions:
 
 ```neva
 def Bar<T>(data T) (sig any) {
-   Println<T>
+   Println<T>, Panic
    ---
-   :data -> println -> :sig
+   :data -> println
+   println:res -> :sig
+   println:err -> panic
 }
 ```
 

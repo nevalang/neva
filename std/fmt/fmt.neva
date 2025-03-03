@@ -1,6 +1,6 @@
 // Println prints to stdout with newline and then sends message further.
 #extern(println)
-pub def Println<T>(data T) (res T)
+pub def Println<T>(data T) (res T, err error)
 
 // Print prints to stdout without newline and then sends message further.
 #extern(print)

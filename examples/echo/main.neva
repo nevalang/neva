@@ -1,7 +1,9 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-	fmt.Scanln, fmt.Println
+	fmt.Scanln, fmt.Println, Panic
 	---
-	:start -> scanln -> println -> :stop
+	:start -> scanln -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

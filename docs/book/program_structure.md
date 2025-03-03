@@ -300,7 +300,8 @@ import {
 def Main(start any) (stop any) {
   bar.AddP, Println
   ---
-  :start -> { $foo.p -> addP:right -> println -> :stop }
+  :start -> { $foo.p -> addP:right -> println }
+  [println:res, println:err] -> :stop
 }
 ```
 

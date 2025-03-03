@@ -8,8 +8,11 @@ import {
 def Main(start any) (stop any) {
     println fmt.Println<any>
     must_handle errors.Must<any, any>{Handler}
+    panic Panic
     ---
-    :start -> 'create_me.txt' -> must_handle -> 'success!' -> println -> :stop
+    :start -> 'create_me.txt' -> must_handle -> 'success!' -> println
+    println:res -> :stop
+    println:err -> panic
 }
 
 // Handler have error outport.
@@ -18,5 +21,5 @@ def Handler(data string) (res any, err error) {
     ---
     :data -> write_all:filename
     'Hello, io.WriteAll!' -> write_all:data
-    write_all -> :res
+    write_all:res -> :res
 }

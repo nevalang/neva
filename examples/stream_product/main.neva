@@ -6,10 +6,13 @@ def Main(start any) (stop any) {
 	streams.Product<int, int>
 	For<ProductResult>{fmt.Println<ProductResult>}
 	Wait
+	Panic
 	---
 	:start -> [
 		0..3 -> product:first,
 		0..3 -> product:second
 	]
-	product -> for -> wait -> :stop
+	product -> for
+	for:res -> wait -> :stop
+	for:err -> panic
 }

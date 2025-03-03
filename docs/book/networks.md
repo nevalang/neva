@@ -323,7 +323,8 @@ type Person struct { age int }
 def Foo(person Person) (sig any) {
     fmt.Println
     ---
-    :person -> .age -> println -> :sig
+    :person -> .age -> println
+    [println:res, println:err] -> :sig
 }
 ```
 
@@ -426,17 +427,17 @@ Here's an example using this feature:
 
 ```neva
 def Foo(data) (sig) {
-    Println
+    Print
     ---
-    :data -> println -> :sig
+    :data -> print -> :sig
 }
 ```
 
-`:data -> println -> :sig` combines port-address on the sender-side and chained connection on the receiver-side. `println -> :stop` is chained to `:data ->`. Here's a desugared version:
+`:data -> print -> :sig` combines port-address on the sender-side and chained connection on the receiver-side. `print -> :stop` is chained to `:data ->`. Here's a desugared version:
 
 ```neva
-:data -> println
-println -> :sig
+:data -> print
+print -> :sig
 ```
 
 Components don't need matching inport and outport names. Chained connections require one port per side. Both `def Foo(bar) (bar)` and `def Foo (bar) (baz)` are valid.
@@ -462,20 +463,20 @@ In controlflow programming, instructions execute sequentially. In Nevalang's dat
 Let's say we want to print 42 and then terminate.
 
 ```neva
-42 -> println -> :stop
+42 -> print -> :stop
 ```
 
-Turns out, this program is indeterministic and could give different outputs. The problem is that `42 ->` acts like an emitter sending messages in an infinite loop. Therefore, `42` might reach `println` twice if the program doesn't terminate quickly enough:
+Turns out, this program is indeterministic and could give different outputs. The problem is that `42 ->` acts like an emitter sending messages in an infinite loop. Therefore, `42` might reach `print` twice if the program doesn't terminate quickly enough:
 
-1. `42` received and printed by `println`
-2. signal sent from `println` to `:stop`
+1. `42` received and printed by `print`
+2. signal sent from `print` to `:stop`
 3. new `42` sent and printed again
 4. runtime processed `:stop` signal and terminated the program
 
 To ensure `42` is printed once, synchronize it with `:start` using "defer". Here's the fix:
 
 ```neva
-:start -> { 42 -> println -> :stop }
+:start -> { 42 -> print -> :stop }
 ```
 
 This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the desugared version:
@@ -486,7 +487,7 @@ def Main(start any) (stop any) {
     ---
     :start -> lock:sig
     42 -> lock:data
-    lock:data -> println -> :stop
+    lock:data -> print -> :stop
 }
 ```
 
@@ -705,7 +706,8 @@ def Main() () {
     1 -> wrap[0]
     2 -> wrap[1]
     3 -> wrap[2]
-    wrap -> println -> :stop
+    wrap -> println
+    [println:res, println:err] -> :stop
 }
 ```
 

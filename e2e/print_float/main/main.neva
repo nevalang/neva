@@ -4,7 +4,9 @@ const x float = 42
 
 def Main(start any) (stop any) {
     fmt.Println<float>
+    panic Panic
     ---
     :start -> $x -> println:data
     println:res -> :stop
+    println:err -> panic
 }

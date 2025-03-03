@@ -1,9 +1,11 @@
 import { fmt }
 
 def Main(start any) (stop any) {
-    PrintDay
+    PrintDay, Panic
     ---
-    :start -> { Day::Friday -> printDay -> :stop }
+    :start -> { Day::Friday -> printDay:day }
+    printDay:sig -> :stop
+    printDay:err -> panic
 }
 
 type Day enum {
@@ -16,8 +18,9 @@ type Day enum {
     Sunday
 }
 
-def PrintDay(day Day) (sig any) {
-    fmt.Println
+def PrintDay(day Day) (sig any, err error) {
+    fmt.Println?
     ---
-    :day -> println -> :sig
+    :day -> println:data
+    println:res -> :sig
 }
