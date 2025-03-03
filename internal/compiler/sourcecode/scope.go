@@ -167,9 +167,9 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	}, nil
 }
 
-func (s Scope) getNodeIOByPortAddr(
+func (s Scope) GetNodeIOByPortAddr(
 	nodes map[string]Node,
-	portAddr *PortAddr,
+	portAddr PortAddr,
 ) (IO, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
@@ -191,32 +191,10 @@ func (s Scope) getNodeIOByPortAddr(
 	return iface.IO, nil
 }
 
-func (s Scope) GetFirstInportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
-	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
-	if err != nil {
-		return "", err
-	}
-	for inport := range io.In {
-		return inport, nil
-	}
-	return "", errors.New("first inport not found")
-}
-
 func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
 	entity, _, err := s.entity(entityRef)
 	if err != nil {
 		return "", err
 	}
 	return entity.Kind, nil
-}
-
-func (s Scope) GetFirstOutportName(nodes map[string]Node, portAddr PortAddr) (string, error) {
-	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
-	if err != nil {
-		return "", err
-	}
-	for outport := range io.Out {
-		return outport, nil
-	}
-	return "", errors.New("first outport not found")
 }

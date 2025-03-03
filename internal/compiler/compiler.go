@@ -3,7 +3,12 @@ package compiler
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -20,6 +25,7 @@ type CompilerInput struct {
 	Main   string
 	Output string
 	Trace  bool
+	EmitIR bool
 }
 
 func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
@@ -33,7 +39,24 @@ func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
 		return err
 	}
 
+	if input.EmitIR {
+		if err := c.emitIR(input.Output, meResult.IR); err != nil {
+			return fmt.Errorf("emit IR: %w", err)
+		}
+	}
+
 	return c.be.Emit(input.Output, meResult.IR, input.Trace)
+}
+
+func (c Compiler) emitIR(dst string, prog *ir.Program) error {
+	path := filepath.Join(dst, "ir.yml")
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	// fmt.Println(dst, path, prog)
+	return yaml.NewEncoder(f).Encode(prog)
 }
 
 type Frontend struct {

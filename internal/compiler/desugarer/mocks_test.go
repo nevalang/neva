@@ -51,34 +51,19 @@ func (mr *MockScopeMockRecorder) Entity(ref interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Entity", reflect.TypeOf((*MockScope)(nil).Entity), ref)
 }
 
-// GetFirstInportName mocks base method.
-func (m *MockScope) GetFirstInportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
+// GetNodeIOByPortAddr mocks base method.
+func (m *MockScope) GetNodeIOByPortAddr(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (sourcecode.IO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFirstInportName", nodes, portAddr)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetNodeIOByPortAddr", nodes, portAddr)
+	ret0, _ := ret[0].(sourcecode.IO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFirstInportName indicates an expected call of GetFirstInportName.
-func (mr *MockScopeMockRecorder) GetFirstInportName(nodes, portAddr interface{}) *gomock.Call {
+// GetNodeIOByPortAddr indicates an expected call of GetNodeIOByPortAddr.
+func (mr *MockScopeMockRecorder) GetNodeIOByPortAddr(nodes, portAddr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstInportName", reflect.TypeOf((*MockScope)(nil).GetFirstInportName), nodes, portAddr)
-}
-
-// GetFirstOutportName mocks base method.
-func (m *MockScope) GetFirstOutportName(nodes map[string]sourcecode.Node, portAddr sourcecode.PortAddr) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFirstOutportName", nodes, portAddr)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFirstOutportName indicates an expected call of GetFirstOutportName.
-func (mr *MockScopeMockRecorder) GetFirstOutportName(nodes, portAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFirstOutportName", reflect.TypeOf((*MockScope)(nil).GetFirstOutportName), nodes, portAddr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeIOByPortAddr", reflect.TypeOf((*MockScope)(nil).GetNodeIOByPortAddr), nodes, portAddr)
 }
 
 // Location mocks base method.
