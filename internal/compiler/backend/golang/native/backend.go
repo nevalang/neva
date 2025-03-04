@@ -16,15 +16,19 @@ type Backend struct {
 
 func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
 	tmpGoModuleDir := output + "/tmp"
+
 	if err := b.golang.Emit(tmpGoModuleDir, prog, trace); err != nil {
 		return fmt.Errorf("emit: %w", err)
 	}
+
 	if err := b.buildExecutable(tmpGoModuleDir, output); err != nil {
 		return fmt.Errorf("build executable: %w", err)
 	}
+
 	if err := os.RemoveAll(tmpGoModuleDir); err != nil {
 		return fmt.Errorf("remove gomodule: %w", err)
 	}
+
 	return nil
 }
 

@@ -1,22 +1,30 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 
+	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/backend/dot"
+	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
+	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
+	"github.com/nevalang/neva/internal/compiler/backend/ir"
+	ir_backend "github.com/nevalang/neva/internal/compiler/backend/ir"
 
 	cli "github.com/urfave/cli/v2"
 )
 
 func newBuildCmd(
 	workdir string,
-	compilerToGo compiler.Compiler,
-	compilerToNative compiler.Compiler,
-	compilerToWASM compiler.Compiler,
-	compilerToJSON compiler.Compiler,
-	compilerToDOT compiler.Compiler,
+	bldr builder.Builder,
+	parser compiler.Parser,
+	desugarer compiler.Desugarer,
+	analyzer compiler.Analyzer,
+	irgen compiler.Irgen,
 ) *cli.Command {
 	return &cli.Command{
 		Name:  "build",
@@ -28,15 +36,15 @@ func newBuildCmd(
 				Usage: "Where to put output file(s)",
 			},
 			&cli.BoolFlag{
-				Name:  "trace",
-				Usage: "Write trace information to file",
+				Name:  "emit-trace",
+				Usage: "Emit trace.log file when running the program",
 			},
 			&cli.StringFlag{
 				Name:  "target",
 				Usage: "Target platform for build (options: go, wasm, native, json, dot). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together.",
 				Action: func(ctx *cli.Context, s string) error {
 					switch s {
-					case "go", "wasm", "native", "json", "dot":
+					case "go", "wasm", "native", "ir", "dot":
 						return nil
 					}
 					return fmt.Errorf("Unknown target %s", s)
@@ -50,6 +58,10 @@ func newBuildCmd(
 				Name:  "target-arch",
 				Usage: "Target architecture for native build. See 'neva osarch' for supported combinations. Only supported for native target. Not needed if building for the current platform. Must be combined properly with 'target-os'.",
 			},
+			&cli.StringFlag{
+				Name:  "target-ir-format",
+				Usage: "Format for ir file - yaml or json",
+			},
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
@@ -61,7 +73,7 @@ func newBuildCmd(
 			}
 
 			switch target {
-			case "go", "wasm", "json", "dot", "native":
+			case "go", "wasm", "ir", "dot", "native":
 			default:
 				return fmt.Errorf("Unknown target %s", target)
 			}
@@ -80,7 +92,25 @@ func newBuildCmd(
 				return fmt.Errorf("target-os and target-arch must be set together")
 			}
 
-			mainPkg, err := mainPkgPathFromArgs(cliCtx)
+			isIRTargetFormatSet := cliCtx.IsSet("target-ir-format")
+			if isIRTargetFormatSet && target != "ir" {
+				return errors.New("target-ir-format cannot be used when target is not ir")
+			}
+
+			var irTargetFormat ir_backend.Format
+			if isIRTargetFormatSet {
+				irTargetFormat = ir_backend.Format(cliCtx.String("target-ir-format"))
+			} else {
+				irTargetFormat = ir_backend.FormatYAML
+			}
+
+			switch irTargetFormat {
+			case ir_backend.FormatYAML, ir_backend.FormatJSON:
+			default:
+				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
+			}
+
+			mainPkgPath, err := mainPkgPathFromArgs(cliCtx)
 			if err != nil {
 				return err
 			}
@@ -114,24 +144,61 @@ func newBuildCmd(
 				}
 			}()
 
+			golangBackend := golang.NewBackend()
+
 			var compilerToUse compiler.Compiler
 			switch target {
 			case "go":
-				compilerToUse = compilerToGo
+				compilerToUse = compiler.New(
+					bldr,
+					parser,
+					desugarer,
+					analyzer,
+					irgen,
+					golang.NewBackend(),
+				)
 			case "wasm":
-				compilerToUse = compilerToWASM
-			case "json":
-				compilerToUse = compilerToJSON
+				compilerToUse = compiler.New(
+					bldr,
+					parser,
+					desugarer,
+					analyzer,
+					irgen,
+					wasm.NewBackend(golangBackend),
+				)
+			case "ir":
+				compilerToUse = compiler.New(
+					bldr,
+					parser,
+					desugarer,
+					analyzer,
+					irgen,
+					ir.NewBackend(irTargetFormat),
+				)
 			case "dot":
-				compilerToUse = compilerToDOT
+				compilerToUse = compiler.New(
+					bldr,
+					parser,
+					desugarer,
+					analyzer,
+					irgen,
+					dot.NewBackend(),
+				)
 			case "native":
-				compilerToUse = compilerToNative
+				compilerToUse = compiler.New(
+					bldr,
+					parser,
+					desugarer,
+					analyzer,
+					irgen,
+					native.NewBackend(golangBackend),
+				)
 			}
 
-			if err := compilerToUse.Compile(cliCtx.Context, compiler.CompilerInput{
-				Main:   mainPkg,
-				Output: outputDirPath,
-				Trace:  cliCtx.IsSet("trace"),
+			if _, err := compilerToUse.Compile(cliCtx.Context, compiler.CompilerInput{
+				MainPkgPath:   mainPkgPath,
+				OutputPath:    outputDirPath,
+				EmitTraceFile: cliCtx.IsSet("emit-trace"),
 			}); err != nil {
 				return fmt.Errorf("failed to compile: %w", err)
 			}
