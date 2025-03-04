@@ -3,12 +3,7 @@ package compiler
 import (
 	"context"
 	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -22,41 +17,36 @@ type Compiler struct {
 }
 
 type CompilerInput struct {
-	Main   string
-	Output string
-	Trace  bool
-	EmitIR bool
+	MainPkgPath   string
+	OutputPath    string
+	EmitTraceFile bool
 }
 
-func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
-	feResult, err := c.fe.Process(ctx, input.Main)
+// CompilerOutput is result of intermediate steps done before backend.
+type CompilerOutput struct {
+	FrontEnd  FrontendResult
+	MiddleEnd MiddleendResult
+}
+
+func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOutput, error) {
+	feResult, err := c.fe.Process(ctx, input.MainPkgPath)
 	if err != nil {
-		return errors.New(err.Error()) // to avoid non-nil interface go-issue
+		return nil, errors.New(err.Error()) // to avoid non-nil interface go-issue
 	}
 
 	meResult, err := c.me.Process(feResult)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if input.EmitIR {
-		if err := c.emitIR(input.Output, meResult.IR); err != nil {
-			return fmt.Errorf("emit IR: %w", err)
-		}
+	if err := c.be.Emit(input.OutputPath, meResult.IR, input.EmitTraceFile); err != nil {
+		return nil, err
 	}
 
-	return c.be.Emit(input.Output, meResult.IR, input.Trace)
-}
-
-func (c Compiler) emitIR(dst string, prog *ir.Program) error {
-	path := filepath.Join(dst, "ir.yml")
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	// fmt.Println(dst, path, prog)
-	return yaml.NewEncoder(f).Encode(prog)
+	return &CompilerOutput{
+		FrontEnd:  feResult,
+		MiddleEnd: meResult,
+	}, nil
 }
 
 type Frontend struct {
