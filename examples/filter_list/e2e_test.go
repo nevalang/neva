@@ -31,7 +31,7 @@ func Test(t *testing.T) {
 			if ctx.Err() == context.DeadlineExceeded {
 				t.Fatal("Command timed out after 5 seconds")
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, "Command failed: %v", string(out))
 		}
 
 		require.Equal(
