@@ -6,13 +6,7 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/cli"
-	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
-	"github.com/nevalang/neva/internal/compiler/backend/dot"
-	"github.com/nevalang/neva/internal/compiler/backend/golang"
-	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
-	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
-	"github.com/nevalang/neva/internal/compiler/backend/json"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
@@ -36,63 +30,8 @@ func main() {
 	analyzer := analyzer.MustNew(resolver)
 	irgen := irgen.New()
 
-	golangBackend := golang.NewBackend()
-
-	goCompiler := compiler.New(
-		bldr,
-		prsr,
-		&desugarer,
-		analyzer,
-		irgen,
-		golang.NewBackend(),
-	)
-
-	nativeCompiler := compiler.New(
-		bldr,
-		prsr,
-		&desugarer,
-		analyzer,
-		irgen,
-		native.NewBackend(golangBackend),
-	)
-
-	wasmCompiler := compiler.New(
-		bldr,
-		prsr,
-		&desugarer,
-		analyzer,
-		irgen,
-		wasm.NewBackend(golangBackend),
-	)
-
-	jsonCompiler := compiler.New(
-		bldr,
-		prsr,
-		&desugarer,
-		analyzer,
-		irgen,
-		json.NewBackend(),
-	)
-
-	dotCompiler := compiler.New(
-		bldr,
-		prsr,
-		&desugarer,
-		analyzer,
-		irgen,
-		dot.NewBackend(),
-	)
-
 	// command-line app that can compile and interpret neva code
-	app := cli.NewApp(
-		workdir,
-		bldr,
-		goCompiler,
-		nativeCompiler,
-		wasmCompiler,
-		jsonCompiler,
-		dotCompiler,
-	)
+	app := cli.NewApp(workdir, bldr, prsr, desugarer, analyzer, irgen)
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {

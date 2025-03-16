@@ -29,6 +29,7 @@ cmd/tmp
 dist
 trace.log
 ir.yml
+ir.json
 output
 node_modules
 __debug*

@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		cmd := exec.Command("neva", "run", "-trace", "filter_list")
+		cmd := exec.Command("neva", "run", "filter_list")
 
 		// Set a timeout for the command
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -31,7 +31,7 @@ func Test(t *testing.T) {
 			if ctx.Err() == context.DeadlineExceeded {
 				t.Fatal("Command timed out after 5 seconds")
 			}
-			require.NoError(t, err)
+			require.NoError(t, err, "Command failed: %v", string(out))
 		}
 
 		require.Equal(

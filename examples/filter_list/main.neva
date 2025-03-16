@@ -3,7 +3,7 @@ import { fmt }
 const numbers list<int> = [2, 4, 6, 8, 10]
 
 def Main(start any) (stop any) {
-    list_to_stream1 ListToStream<int>
+    list_to_stream ListToStream<int>
     filter_even Filter<int>{predicate Even}
     for_print For<int>{fmt.Println<int>}
     wait Wait

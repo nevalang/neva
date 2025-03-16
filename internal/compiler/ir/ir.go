@@ -7,9 +7,46 @@ import (
 
 // Program is a graph where ports are vertexes and connections are edges.
 type Program struct {
-	Connections map[PortAddr]PortAddr `json:"connections,omitempty" yaml:"connections,omitempty"`
+	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"` // Hide from default marshaling
 	Funcs       []FuncCall            `json:"funcs,omitempty" yaml:"funcs,omitempty"`
 }
+
+// MarshalJSON implements custom JSON marshaling for Program
+func (p Program) MarshalJSON() ([]byte, error) {
+	type programAlias Program // Avoid infinite recursion
+
+	connections := make(map[string]string, len(p.Connections))
+	for from, to := range p.Connections {
+		connections[from.String()] = to.String()
+	}
+
+	return json.Marshal(struct {
+		programAlias
+		Connections map[string]string `json:"connections,omitempty"`
+	}{
+		programAlias: programAlias(p),
+		Connections:  connections,
+	})
+}
+
+// MarshalYAML implements custom YAML marshaling for Program
+// func (p Program) MarshalYAML() (any, error) {
+// 	connections := make([]serializedConnection, 0, len(p.Connections))
+// 	for from, to := range p.Connections {
+// 		connections = append(connections, serializedConnection{
+// 			From: from.String(),
+// 			To:   to.String(),
+// 		})
+// 	}
+
+// 	return struct {
+// 		Connections []serializedConnection `yaml:"connections,omitempty"`
+// 		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
+// 	}{
+// 		Connections: connections,
+// 		Funcs:       p.Funcs,
+// 	}, nil
+// }
 
 // PortAddr is a composite unique identifier for a port.
 type PortAddr struct {
