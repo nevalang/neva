@@ -427,17 +427,18 @@ Here's an example using this feature:
 
 ```neva
 def Foo(data) (sig) {
-    Print
+    Println, Panic
     ---
-    :data -> print -> :sig
+    :data -> println -> :sig
+    println:err -> panic
 }
 ```
 
-`:data -> print -> :sig` combines port-address on the sender-side and chained connection on the receiver-side. `print -> :stop` is chained to `:data ->`. Here's a desugared version:
+`:data -> println -> :sig` combines port-address on the sender-side and chained connection on the receiver-side. `println -> :stop` is chained to `:data ->`. Here's a desugared version:
 
 ```neva
-:data -> print
-print -> :sig
+:data -> println
+println -> :sig
 ```
 
 Components don't need matching inport and outport names. Chained connections require one port per side. Both `def Foo(bar) (bar)` and `def Foo (bar) (baz)` are valid.
@@ -463,31 +464,32 @@ In controlflow programming, instructions execute sequentially. In Nevalang's dat
 Let's say we want to print 42 and then terminate.
 
 ```neva
-42 -> print -> :stop
+42 -> println -> :stop
 ```
 
 Turns out, this program is indeterministic and could give different outputs. The problem is that `42 ->` acts like an emitter sending messages in an infinite loop. Therefore, `42` might reach `print` twice if the program doesn't terminate quickly enough:
 
-1. `42` received and printed by `print`
-2. signal sent from `print` to `:stop`
+1. `42` received and printed by `println`
+2. signal sent from `println` to `:stop`
 3. new `42` sent and printed again
 4. runtime processed `:stop` signal and terminated the program
 
 To ensure `42` is printed once, synchronize it with `:start` using "defer". Here's the fix:
 
 ```neva
-:start -> { 42 -> print -> :stop }
+:start -> { 42 -> println -> :stop }
 ```
 
 This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the desugared version:
 
 ```neva
 def Main(start any) (stop any) {
-    Lock, Println
+    Lock, Println, Panic
     ---
     :start -> lock:sig
     42 -> lock:data
-    lock:data -> print -> :stop
+    lock:data -> println -> :stop
+    println:err -> panic
 }
 ```
 

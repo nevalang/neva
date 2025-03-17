@@ -9,6 +9,8 @@ def Main(start any) (stop any) {
     '1' -> sub2
 }
 
+//Here we are panicking inside the sub-component instead of propagating the error.
+//If we wouldn't to it, the file would compile and therefore the test would fail.
 def SubComponent(data string) (stop any) {
     println fmt.Println
     panic Panic
