@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
     wait Wait
     panic Panic
     ---
-    :start -> $numbers -> list_to_stream1-> filter_even -> for_print
+    :start -> $numbers -> list_to_stream -> filter_even -> for_print
     for_print:res -> wait -> :stop
     for_print:err -> panic
 }
