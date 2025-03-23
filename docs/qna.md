@@ -4,15 +4,15 @@ This Q&A addresses questions not covered in other documentation pages and explai
 
 ## Is Neva "classical FBP"?
 
-No, but it incorporates many ideas from Flow-Based Programming (FBP). [Read more](./about#flow-based-programming.md).
+No, but it incorporates many ideas from Flow-Based Programming (FBP). [Read more](./book/about.md#flow-based-programming).
 
 ## Why are array-ports needed?
 
-Array-ports are necessary for combining data from multiple sources. [Read more](./interfaces.md#array-ports).
+Array-ports are necessary for combining data from multiple sources. [Read more](./book/interfaces.md#array-ports).
 
 ## Why can't components read from their own array-inports by index?
 
-This could lead to deadlock/panic if the parent component doesn't use specific amount slots, which would defeat the purpose of array-ports. [Read more](./networks.md#array-ports-constraints).
+This could lead to deadlock/panic if the parent component doesn't use specific amount slots, which would defeat the purpose of array-ports. [Read more](./book/networks.md#array-ports-constraints).
 
 ## Why components _can_ read from sub-node's array-outports by index?
 
@@ -56,7 +56,7 @@ Using `any` allows for more flexible exit conditions, preventing unintended beha
 
 ## Why use structural subtyping?
 
-It reduces code, especially for mappings between records, vectors, and dictionaries. Nominal subtyping doesn't prevent mistakes in type-casts anyway. [Read more](./about.md#structural-subtyping).
+It reduces code, especially for mappings between records, vectors, and dictionaries. Nominal subtyping doesn't prevent mistakes in type-casts anyway. [Read more](./book/about.md#structural-subtyping).
 
 ## Why have `any`?
 
