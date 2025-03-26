@@ -48,9 +48,18 @@ func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, 
 
 	scope = scope.Relocate(location)
 
-	if err := a.analyzeMainComponent(entityMain.Component, scope); err != nil {
+	if len(entityMain.Component) != 1 {
+		return &compiler.Error{
+			Message: "Main entity must have non-overloaded component",
+			Meta: &core.Meta{
+				Location: location,
+			},
+		}
+	}
+
+	if err := a.analyzeMainComponent(entityMain.Component[0], scope); err != nil {
 		return compiler.Error{
-			Meta: &entityMain.Component.Meta,
+			Meta: &entityMain.Component[0].Meta,
 		}.Wrap(err)
 	}
 

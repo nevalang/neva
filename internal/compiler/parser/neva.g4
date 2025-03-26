@@ -13,10 +13,8 @@ stmt:
 
 // Compiler Directives
 compilerDirectives: (compilerDirective NEWLINE)+;
-compilerDirective: '#' IDENTIFIER compilerDirectivesArgs?;
-compilerDirectivesArgs:
-	'(' compiler_directive_arg (',' compiler_directive_arg)* ')';
-compiler_directive_arg: IDENTIFIER+;
+compilerDirective: '#' IDENTIFIER compilerDirectivesArg?;
+compilerDirectivesArg: '(' IDENTIFIER ')';
 
 // Imports
 importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
@@ -41,24 +39,18 @@ typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
 typeParams: '<' NEWLINE* typeParamList? '>';
 typeParamList: typeParam (',' NEWLINE* typeParam)*;
 typeParam: IDENTIFIER typeExpr? NEWLINE*;
-typeExpr: typeInstExpr | typeLitExpr | unionTypeExpr;
+typeExpr: typeInstExpr | typeLitExpr;
 typeInstExpr: entityRef typeArgs?;
 typeArgs:
 	'<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
-typeLitExpr: enumTypeExpr | structTypeExpr;
-enumTypeExpr:
-	'enum' NEWLINE* '{' NEWLINE* IDENTIFIER (
-		',' NEWLINE* IDENTIFIER
-	)* NEWLINE* '}';
+typeLitExpr: structTypeExpr | unionTypeExpr;
 structTypeExpr:
 	'struct' NEWLINE* '{' NEWLINE* structFields? '}';
 structFields: structField (NEWLINE+ structField)*;
 structField: IDENTIFIER typeExpr NEWLINE*;
-unionTypeExpr:
-	nonUnionTypeExpr (NEWLINE* '|' NEWLINE* nonUnionTypeExpr)+;
-nonUnionTypeExpr:
-	typeInstExpr
-	| typeLitExpr; // union inside union lead to mutual left recursion (not supported by ANTLR)
+unionTypeExpr: 'union' NEWLINE* '{' NEWLINE* unionFields? '}';
+unionFields: unionField ((',' NEWLINE* | NEWLINE+) unionField)*;
+unionField: IDENTIFIER typeExpr? NEWLINE*;
 
 // interfaces
 interfaceStmt: PUB_KW? 'interface' interfaceDef;
@@ -81,17 +73,11 @@ constLit:
 	| MINUS? INT
 	| MINUS? FLOAT
 	| STRING
-	| enumLit
+	| unionLit
 	| listLit
 	| structLit;
-primitiveConstLit:
-	bool
-	| MINUS? INT
-	| MINUS? FLOAT
-	| STRING
-	| enumLit;
 bool: 'true' | 'false';
-enumLit: entityRef '::' IDENTIFIER;
+unionLit: entityRef '::' IDENTIFIER ('(' constLit ')')?;
 listLit: '[' NEWLINE* listItems? ']';
 listItems:
 	compositeItem
@@ -138,7 +124,16 @@ singleSenderSide:
 	| structSelectors
 	| unaryExpr
 	| binaryExpr
-	| ternaryExpr;
+	| ternaryExpr
+	| unionSender;
+unionSender:
+	entityRef '::' IDENTIFIER ('(' singleSenderSide ')')?;
+primitiveConstLit:
+	bool
+	| MINUS? INT
+	| MINUS? FLOAT
+	| STRING; // TODO rename to sender const lit
+senderConstRef: '$' entityRef;
 unaryExpr: unaryOp singleSenderSide;
 unaryOp: '!' | '++' | '--' | '-';
 ternaryExpr:
@@ -170,7 +165,6 @@ binaryOp:
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: '{' NEWLINE* connDef NEWLINE* '}';
-senderConstRef: '$' entityRef;
 rangeExpr: rangeMember '..' rangeMember;
 rangeMember: MINUS? INT;
 portAddr:
@@ -201,7 +195,6 @@ switchStmt:
 	'switch' NEWLINE* '{' NEWLINE* normConnDef (
 		NEWLINE+ normConnDef
 	)* (NEWLINE+ defaultCase)? NEWLINE* '}';
-
 defaultCase: '_' '->' receiverSide;
 
 /* LEXER */

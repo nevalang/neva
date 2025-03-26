@@ -2,8 +2,12 @@
 // for lists it returns number of elements,
 // for maps it returns number of keys,
 // for for strings it returns number of utf-8 characters.
-#extern(list list_len, map map_len)
-pub def Len<T list<any> | dict<any> | string>(data T) (res int)
+#extern(list_len)
+pub def Len(data list<any>) (res int)
+#extern(map_len)
+pub def Len(data dict<any>) (res int)
+#extern(string_len)
+pub def Len(data string) (res int)
 
 // List receives stream and sends list with all elements from the stream.
 #extern(stream_to_list)
@@ -11,10 +15,13 @@ pub def StreamToList<T>(data stream<T>) (res list<T>)
 
 // Push creates new list with appended element.
 #extern(list_push)
-pub def Push<T> (lst list<T>, data T) (res list<T>)
+pub def Push<T>(lst list<T>, data T) (res list<T>)
 
-#extern(slice)
-pub def Slice<T string | list<any>>(data T, from int, to int) (res T, err error)
+// Slice returns a slice of the given string or list.
+#extern(string_slice)
+pub def Slice(data string, from int, to int) (res string)
+#extern(list_slice)
+pub def Slice<T>(data list<T>, from int, to int) (res list<T>)
 
 #extern(list_to_stream)
 pub def ListToStream<T>(data list<T>) (res stream<T>)

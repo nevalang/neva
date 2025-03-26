@@ -1,11 +1,11 @@
-pub type any // Any is a top-type, sub-type of all types.
-pub type bool // Bool is a 1-byte for true/false.
-pub type int // Int is a 64-bit signed integer.
-pub type float // Float is a 64-bit floating point.
-pub type string // String is a UTF-8 encoded string.
-pub type dict<T> // Dict is an unordered set of key-value pairs.
-pub type list<T> // List is an ordered sequence of elements.
-pub type maybe<T> // Maybe is an optional value.
+pub type any
+pub type bool
+pub type int
+pub type float
+pub type string
+pub type dict<T>
+pub type list<T>
+pub type maybe<T> // TODO consider using union
 
 pub type error struct {
     text string

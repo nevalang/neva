@@ -1,9 +1,13 @@
-import { strconv, fmt }
+import {
+    fmt
+    runtime
+    strconv
+}
 
 def Main(start any) (stop any) {
 	aux Aux
 	println fmt.Println
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> aux:sig
 	aux:res -> println:data

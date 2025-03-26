@@ -29,20 +29,17 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // Map maps one stream onto another.
 // Just like For, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
-// It's possible but not recommended to produce side-effects.
+// It's can receive next message before previous one is processed,
+// so it must never be used with side-effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-    fanOut FanOut<stream<T>>
     handler IMapHandler<T, Y>
     wrap Struct<stream<Y>>
-
     ---
-
-    :data -> fanOut
-    
-    fanOut[0] -> .idx -> wrap:idx
-    fanOut[1] -> .last -> wrap:last
-    fanOut[2] -> .data -> handler -> wrap:data
-
+    :data -> [
+        .idx -> wrap:idx,
+        .last -> wrap:last,
+        .data -> handler -> wrap:data
+    ]
     wrap -> :res
 }
 
@@ -112,6 +109,8 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 // Like other iterators, it processes items one at a time without blocking the stream.
 // To wait for all items to be processed, use with `Wait`.
 pub def For<T>(data stream<T>) (res stream<T>, err error) {
+    // IDEA - if we use sync.Step, we don't have to mess with indexes
+    
     first First<T> // to check if current msg is the first
     lock1 Lock<stream<T>> // to lock current msg before sending to handler
     lock2 Lock<stream<T>> // to lock current msg before sending downstream

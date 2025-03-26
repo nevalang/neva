@@ -4,7 +4,7 @@ const numbers list<int> = [2, 4, 6, 8, 10]
 
 def Main(start any) (stop any) {
     list_to_stream ListToStream<int>
-    filter_even Filter<int>{predicate Even}
+    filter_even Filter<int>{predicate IsEven}
     for_print For<int>{fmt.Println<int>}
     wait Wait
     panic Panic
@@ -14,6 +14,6 @@ def Main(start any) (stop any) {
     for_print:err -> panic
 }
 
-def Even(data int) (res bool) {
+def IsEven(data int) (res bool) {
     ((:data % 2) == 0) -> :res
 }

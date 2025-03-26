@@ -39,18 +39,9 @@ func (h Helper) Inst(ref string, args ...Expr) Expr {
 	}
 }
 
-func (h Helper) Enum(els ...string) Expr {
+func (h Helper) Union(els map[string]*Expr) Expr {
 	if els == nil { // for !lit.Empty()
-		els = []string{}
-	}
-	return Expr{
-		Lit: &LitExpr{Enum: els},
-	}
-}
-
-func (h Helper) Union(els ...Expr) Expr {
-	if els == nil { // for !lit.Empty()
-		els = []Expr{}
+		els = map[string]*Expr{}
 	}
 	return Expr{
 		Lit: &LitExpr{Union: els},

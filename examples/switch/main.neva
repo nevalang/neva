@@ -1,5 +1,6 @@
 import {
     fmt
+    runtime
     strings
 }
 
@@ -8,9 +9,9 @@ def Main(start any) (stop any) {
     scanln fmt.Scanln
     upper strings.ToUpper
     lower strings.ToLower
-    println fmt.Println
-    panic1 Panic
-    panic2 Panic
+    println fmt.Println<any>
+    panic1 runtime.Panic
+    panic2 runtime.Panic
     ---
     :start -> 'Enter the name: ' -> print -> scanln -> switch {
         'Alice' -> upper

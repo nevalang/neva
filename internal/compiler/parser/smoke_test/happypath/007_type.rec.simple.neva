@@ -34,22 +34,22 @@ type Rec struct {
 
 type Rec struct {
     foo int
-    bar enum { Monday, Tuesday, Wednesday }
+    bar union { Monday, Tuesday, Wednesday }
 }
 
 type Rec struct { foo int
-    bar enum { Monday, Tuesday, Wednesday }
+    bar union { Monday, Tuesday, Wednesday }
 }
 
 type Rec struct {
     foo int
-    bar enum { Monday, Tuesday, Wednesday } }
+    bar union { Monday, Tuesday, Wednesday } }
 
 type Rec struct {
     foo int
-    bar enum {
-        Monday,
-        Tuesday,
+    bar union {
+        Monday
+        Tuesday
         Wednesday
     }
 }
@@ -57,9 +57,9 @@ type Rec struct {
 type Rec struct {
     foo int
 
-    bar enum {
-        Monday,
-        Tuesday,
+    bar union {
+        Monday
+        Tuesday
         Wednesday
     }
 }
@@ -70,9 +70,9 @@ type Rec struct { foo int }
 
 pub type Rec struct {
     foo int
-    bar enum {
-        Monday,
-        Tuesday,
+    bar union {
+        Monday
+        Tuesday
         Wednesday
     }
 }
