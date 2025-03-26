@@ -6,7 +6,7 @@ import {
 def Main(start any) (stop any) {
 	print For<int>{Next2Lines}
 	wait Wait
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> 99..-1 -> print
 	print:res -> wait -> :stop
