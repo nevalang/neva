@@ -3,16 +3,20 @@ import { lists, fmt }
 const lst list<bool> = [true, false]
 
 def Main(start any) (stop any) {
-	ListToStream<bool>, For<bool>{PrintAsNum}, Wait
+	ListToStream<bool>, For<bool>{PrintAsNum}, Wait, Panic
 	---
-	:start -> $lst -> listToStream -> for -> wait -> :stop
+	:start -> $lst -> listToStream -> for
+	for:res -> wait -> :stop
+	for:err -> panic
 }
 
-def PrintAsNum(data bool) (sig any) {
+def PrintAsNum(data bool) (res any, err error) {
 	Ternary, fmt.Println
 	---
 	:data -> ternary:if
 	1 -> ternary:then
 	0 -> ternary:else
-	ternary -> println -> :sig
+	ternary -> println
+	println:res -> :res
+	println:err -> :err
 }

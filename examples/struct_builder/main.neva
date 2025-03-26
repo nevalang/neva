@@ -1,4 +1,4 @@
-import { fmt }
+import { fmt, runtime }
 
 type User struct {
     age int
@@ -8,12 +8,15 @@ type User struct {
 // FIXME:grammar - cannot use 'struct' as a node name
 
 def Main(start any) (stop any) {
-    println fmt.Println
+    println fmt.Println<any>
     builder Struct<User>
+    panic runtime.Panic
     ---
     :start -> [
         'John' -> builder:name,
         32 -> builder:age
     ]
-    builder -> println -> :stop
+    builder -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

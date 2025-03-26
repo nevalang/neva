@@ -10,18 +10,20 @@ import (
 	cli "github.com/urfave/cli/v2"
 
 	"github.com/nevalang/neva/internal/builder"
-	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/analyzer"
+	"github.com/nevalang/neva/internal/compiler/desugarer"
+	"github.com/nevalang/neva/internal/compiler/irgen"
+	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/pkg"
 )
 
 func NewApp(
 	workdir string,
 	bldr builder.Builder,
-	goc compiler.Compiler,
-	nativec compiler.Compiler,
-	wasmc compiler.Compiler,
-	jsonc compiler.Compiler,
-	dotc compiler.Compiler,
+	prsr parser.Parser,
+	desugarer desugarer.Desugarer,
+	analyzer analyzer.Analyzer,
+	irgen irgen.Generator,
 ) *cli.App {
 	return &cli.App{
 		Name:  "neva",
@@ -31,8 +33,8 @@ func NewApp(
 			upgradeCmd,
 			newNewCmd(workdir),
 			newGetCmd(workdir, bldr),
-			newRunCmd(workdir, nativec),
-			newBuildCmd(workdir, goc, nativec, wasmc, jsonc, dotc),
+			newRunCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
+			newBuildCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
 			newOSArchCmd(),
 		},
 	}

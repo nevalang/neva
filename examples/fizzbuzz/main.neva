@@ -1,11 +1,14 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
-    map_fb Map<int, any>{FizzBuzz}
-    for_print For{fmt.Println<any>}
-    wait Wait
+    Map<int, any>{FizzBuzz}
+    For{fmt.Println}
+    Wait
+    Panic runtime.Panic
     ---
-    :start -> 1..101 -> map_fb -> for_print -> wait -> :stop
+    :start -> 1..101 -> map -> for
+    for:res -> wait -> :stop
+    for:err -> panic
 }
 
 def FizzBuzz(data int) (res any) {

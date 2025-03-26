@@ -9,7 +9,8 @@ def Main(start any) (stop any) {
 	println fmt.Println
 	panic runtime.Panic
 	---
-	:start -> 'http://www.example.com' -> http_get
-	http_get:res -> .body -> println -> :stop
-	http_get:err -> panic // terminates the program
+	:start -> 'http://www.example.com' -> get
+	get:res -> .body -> println
+	println:res -> :stop
+	[get:err, println:err] -> panic
 }

@@ -1,4 +1,4 @@
-import { fmt }
+import { fmt, runtime }
 
 type User struct {
     name string
@@ -9,9 +9,12 @@ type Pet struct { name string }
 
 def Main(start any) (stop any) {
     get_user GetUser
-    println fmt.Println
+    println fmt.Println<any>
+    panic runtime.Panic
     ---
-    :start -> get_user -> .pet.name -> println -> :stop
+    :start -> get_user -> .pet.name -> println
+    println:res -> :stop
+    println:err -> panic
 }
 
 const user User = {

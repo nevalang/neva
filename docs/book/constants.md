@@ -21,7 +21,7 @@ This section briefly outlines how constants are used in networks. For detailed s
 
 ### Constant References
 
-It's possible to use constant as a network-sender by refering to it with `$` prefix.
+It's possible to use constant as a network-sender by referring to it with `$` prefix.
 
 ```neva
 const one int = 1

@@ -1,12 +1,13 @@
 import { io, fmt }
 
 def Main(start any) (stop any) {
-	io.WriteAll, fmt.Println
+	io.WriteAll, fmt.Println, Panic
 	---
 	:start -> [
 		'file_writer_example.txt' -> writeAll:filename,
 		'Hello, io.WriteAll!' -> writeAll:data
 	]
 	writeAll:err -> println
-	[writeAll:sig, println] -> :stop
+	[writeAll:res, println:res] -> :stop
+	println:err -> panic
 }

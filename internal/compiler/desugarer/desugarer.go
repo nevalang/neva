@@ -120,8 +120,7 @@ type Scope interface {
 	Entity(ref core.EntityRef) (src.Entity, core.Location, error)
 	Relocate(location core.Location) src.Scope
 	Location() *core.Location
-	GetFirstInportName(nodes map[string]src.Node, portAddr src.PortAddr) (string, error)
-	GetFirstOutportName(nodes map[string]src.Node, portAddr src.PortAddr) (string, error)
+	GetNodeIOByPortAddr(nodes map[string]src.Node, portAddr src.PortAddr) (src.IO, error)
 }
 
 func (d *Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error) {

@@ -17,23 +17,36 @@ type Compiler struct {
 }
 
 type CompilerInput struct {
-	Main   string
-	Output string
-	Trace  bool
+	MainPkgPath   string
+	OutputPath    string
+	EmitTraceFile bool
 }
 
-func (c Compiler) Compile(ctx context.Context, input CompilerInput) error {
-	feResult, err := c.fe.Process(ctx, input.Main)
+// CompilerOutput is result of intermediate steps done before backend.
+type CompilerOutput struct {
+	FrontEnd  FrontendResult
+	MiddleEnd MiddleendResult
+}
+
+func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOutput, error) {
+	feResult, err := c.fe.Process(ctx, input.MainPkgPath)
 	if err != nil {
-		return errors.New(err.Error()) // to avoid non-nil interface go-issue
+		return nil, errors.New(err.Error()) // to avoid non-nil interface go-issue
 	}
 
 	meResult, err := c.me.Process(feResult)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return c.be.Emit(input.Output, meResult.IR, input.Trace)
+	if err := c.be.Emit(input.OutputPath, meResult.IR, input.EmitTraceFile); err != nil {
+		return nil, err
+	}
+
+	return &CompilerOutput{
+		FrontEnd:  feResult,
+		MiddleEnd: meResult,
+	}, nil
 }
 
 type Frontend struct {

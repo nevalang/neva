@@ -178,9 +178,9 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	}, nil
 }
 
-func (s Scope) getNodeIOByPortAddr(
+func (s Scope) GetNodeIOByPortAddr(
 	nodes map[string]Node,
-	portAddr *PortAddr,
+	portAddr PortAddr,
 ) (IO, error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
@@ -209,7 +209,7 @@ func (s Scope) GetFirstInportName(
 	nodes map[string]Node,
 	portAddr PortAddr,
 ) (string, error) {
-	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
+	io, err := s.GetNodeIOByPortAddr(nodes, portAddr)
 	if err != nil {
 		return "", err
 	}
@@ -234,7 +234,7 @@ func (s Scope) GetFirstOutportName(
 	nodes map[string]Node,
 	portAddr PortAddr,
 ) (string, error) {
-	io, err := s.getNodeIOByPortAddr(nodes, &portAddr)
+	io, err := s.GetNodeIOByPortAddr(nodes, portAddr)
 	if err != nil {
 		return "", err
 	}

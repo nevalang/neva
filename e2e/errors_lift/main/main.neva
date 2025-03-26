@@ -1,0 +1,19 @@
+import {
+    fmt
+    errors
+}
+
+// errors.Lift wraps handler so it behaves like a node with error outport.
+def Main(start any) (stop any) {
+    lift errors.Lift<any, any>{Handler}
+    panic Panic
+    ---
+    :start -> lift
+    lift:res -> :stop
+    lift:err -> panic
+}
+
+// Handler doesn't have error outport.
+def Handler(data any) (res any) {
+    :data -> :res
+}

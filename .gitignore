@@ -28,6 +28,8 @@ cmd/tmp
 /neva-lsp-windows-arm64.exe
 dist
 trace.log
+ir.yml
+ir.json
 output
 node_modules
 __debug*

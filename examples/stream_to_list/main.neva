@@ -3,6 +3,9 @@ import { fmt }
 def Main(start any) (stop any) {
     s2l StreamToList
     println fmt.Println
+    panic Panic
     ---
-    :start -> 1..11 -> s2l -> println -> :stop
+    :start -> 1..11 -> s2l -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

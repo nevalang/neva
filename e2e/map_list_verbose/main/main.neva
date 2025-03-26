@@ -9,6 +9,9 @@ def Main(start any) (stop any) {
     s2l StreamToList<int>
     println fmt.Println<list<int>>
     l2s ListToStream<int>
+    panic Panic
     ---
-    :start -> $lst -> l2s -> map_decr -> s2l -> println -> :stop
+    :start -> $lst -> l2s -> map_decr -> s2l -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

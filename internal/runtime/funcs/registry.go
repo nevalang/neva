@@ -110,5 +110,6 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"wait_group": waitGroup{},
 
 		"accumulator": accumulator{},
+		"errors_new": errorsNew{},
 	}
 }

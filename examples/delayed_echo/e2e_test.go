@@ -11,6 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
+	// for i := 0; i < 10; i++ {
 	err := os.Chdir("..")
 	require.NoError(t, err)
 
@@ -23,7 +24,7 @@ func Test(t *testing.T) {
 	start := time.Now()
 	out, err := cmd.CombinedOutput()
 	elapsed := time.Since(start)
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	// Check execution time is between 1-5 seconds
 	require.GreaterOrEqual(t, elapsed.Seconds(), 1.0)
@@ -31,10 +32,10 @@ func Test(t *testing.T) {
 
 	// Split output into lines and verify contents
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	require.Equal(t, 7, len(lines)) // Hello + World + 5 numbers
+	require.Equal(t, 7, len(lines), string(out)) // Hello + World + 5 numbers
 
 	// First line must be Hello
-	require.Equal(t, "Hello", lines[0])
+	require.Equal(t, "Hello", lines[0], string(out))
 
 	// Create set of expected remaining values
 	expected := map[string]bool{
@@ -59,4 +60,5 @@ func Test(t *testing.T) {
 	}
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	// }
 }

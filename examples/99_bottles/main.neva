@@ -6,23 +6,26 @@ import {
 def Main(start any) (stop any) {
 	print For<int>{Next2Lines}
 	wait Wait
+	panic Panic
 	---
-	:start -> 99..-1 -> print -> wait -> :stop
+	:start -> 99..-1 -> print
+	print:res -> wait -> :stop
+	print:err -> panic
 }
 
-def Next2Lines(data int) (sig any) {
-	first Tap<int>{FirstLine}
+def Next2Lines(data int) (res any, err error) {
+	first Tap<int>{FirstLine}?
 	dec Dec<int>
-	second SecondLine
+	second SecondLine?
 	---
-	:data -> first -> dec -> second -> :sig
+	:data -> first
+	first:res -> dec -> second -> :res
 }
 
-def FirstLine(data int) (sig any) {
-	p1 fmt.Println
-	p2 fmt.Println
-	p3 fmt.Printf
-	panic runtime.Panic
+def FirstLine(data int) (res any, err error) {
+	p1 fmt.Println?
+	p2 fmt.Println?
+	p3 fmt.Printf?
 	---
 	:data -> switch {
 		0 -> 'No more bottles of beer on the wall, no more bottles of beer.' -> p1
@@ -32,16 +35,14 @@ def FirstLine(data int) (sig any) {
 			'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
 		]
 	}
-	[p1, p2, p3:sig] -> :sig
-	p3:err -> panic
+	[p1:res, p2:res, p3:sig] -> :res
 }
 
-def SecondLine(data int) (sig any) {
-	p1 fmt.Println
-	p2 fmt.Println
-	p3 fmt.Println
-	p4 fmt.Printf
-	panic runtime.Panic
+def SecondLine(data int) (res any, err error) {
+	p1 fmt.Println?
+	p2 fmt.Println?
+	p3 fmt.Println?
+	p4 fmt.Printf?
 	---
 	:data -> switch {
 		-1 -> 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1
@@ -52,6 +53,5 @@ def SecondLine(data int) (sig any) {
 			'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
 		]
 	}
-	[p1, p2, p3, p4:sig] -> :sig
-	p4:err -> panic
+	[p1:res, p2:res, p3:res, p4:sig] -> :res
 }

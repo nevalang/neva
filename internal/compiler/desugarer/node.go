@@ -49,10 +49,12 @@ func (Desugarer) handleNode(
 		})
 	}
 
-	nodeEntity, _, err := scope.Entity(node.EntityRef)
+	nodeEntity, nodeEntityLoc, err := scope.Entity(node.EntityRef)
 	if err != nil {
 		return nil, fmt.Errorf("get entity: %w", err)
 	}
+
+	scope = scope.Relocate(nodeEntityLoc)
 
 	if nodeEntity.Kind != src.ComponentEntity { // if interface, don't do anything else
 		desugaredNodes[nodeName] = node
