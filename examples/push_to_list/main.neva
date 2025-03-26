@@ -4,11 +4,13 @@ const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
 def Main(start any) (stop any) {
-	Push, fmt.Println
+	Push, fmt.Println, Panic
 	---
 	:start -> [
 		$l -> push:lst,
 		$f -> push:data
 	]
-	push -> println -> :stop
+	push -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

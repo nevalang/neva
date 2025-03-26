@@ -2,8 +2,11 @@ import { fmt }
 
 def Main(start any) (stop any) {
     fmt.Println
+    Panic
     ---
     :start -> {
-        ((2 == 2) ? 'They match' : 'They do not match') -> println -> :stop
+        ((2 == 2) ? 'They match' : 'They do not match') -> println:data
     }
+    println:res -> :stop
+    println:err -> panic
 }

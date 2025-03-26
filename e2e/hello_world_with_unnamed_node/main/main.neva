@@ -2,7 +2,9 @@ import { fmt }
 
 def Main(start any) (stop any) {
 	fmt.Println<string>
+	panic Panic
 	---
 	:start -> 'Hello, World!' -> println:data
 	println:res -> :stop
+	println:err -> panic
 }

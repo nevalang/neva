@@ -6,6 +6,10 @@ import {
 def Main(start any) (stop any) {
 	foo foo.Println
 	bar bar.Println
+	panic Panic
 	---
-	:start -> 42 -> foo -> bar -> :stop
+	:start -> 42 -> foo:data
+	foo:sig -> bar:data
+	bar:sig -> :stop
+	[foo:err, bar:err] -> panic
 }

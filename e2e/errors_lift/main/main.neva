@@ -15,7 +15,5 @@ def Main(start any) (stop any) {
 
 // Handler doesn't have error outport.
 def Handler(data any) (res any) {
-    println fmt.Println<any>
-    ---
-    :data -> '42' -> println -> :res
+    :data -> :res
 }

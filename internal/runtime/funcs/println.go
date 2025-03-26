@@ -20,6 +20,11 @@ func (p println) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 		return nil, err
 	}
 
+	errOut, err := io.Out.Single("err")
+	if err != nil {
+		return nil, err
+	}
+
 	return func(ctx context.Context) {
 		for {
 			dataMsg, ok := dataIn.Receive(ctx)
@@ -28,7 +33,10 @@ func (p println) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 			}
 
 			if _, err := fmt.Println(dataMsg); err != nil {
-				panic(err)
+				if !errOut.Send(ctx, errFromErr(err)) {
+					return
+				}
+				continue
 			}
 
 			if !resOut.Send(ctx, dataMsg) {

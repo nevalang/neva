@@ -21,6 +21,7 @@ const path list<string> = ['pet', 'name']
 
 def Main(start any) (stop any) {
     fmt.Println
+    Panic
 
     #bind(path)
     Field
@@ -30,4 +31,5 @@ def Main(start any) (stop any) {
     :start -> $user -> field:data
     field:res -> println:data
     println:res -> :stop
+    println:err -> panic
 }

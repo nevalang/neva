@@ -7,9 +7,11 @@ def Main(start any) (stop any) {
     classify utils.ClassifyInt
     println1 fmt.Println
     println2 fmt.Println
+    panic Panic
     ---
     :start -> -42 -> classify
     classify:pos -> 'positive :)' -> println1
     classify:neg -> 'negative :(' -> println2
-    [println1, println2] -> :stop
+    [println1:res, println2:res] -> :stop
+    [println1:err, println2:err] -> panic
 }

@@ -2,6 +2,9 @@ import { fmt }
 
 def Main(start any) (stop any) {
     fmt.Println
+    panic Panic
     ---
-    :start -> { (true || false) -> println -> :stop }
+    :start -> { (true || false) -> println:data }
+    println:res -> :stop
+    println:err -> panic
 }

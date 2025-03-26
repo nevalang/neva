@@ -4,6 +4,7 @@ def Main(start any) (stop any) {
 	http.Get, fmt.Println, Panic
 	---
 	:start -> 'http://www.example.com' -> get
-	get:res -> .body -> println -> :stop
-	get:err -> panic
+	get:res -> .body -> println:data
+	println:res -> :stop
+	[get:err, println:err] -> panic
 }

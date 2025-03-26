@@ -323,7 +323,8 @@ type Person struct { age int }
 def Foo(person Person) (sig any) {
     fmt.Println
     ---
-    :person -> .age -> println -> :sig
+    :person -> .age -> println
+    [println:res, println:err] -> :sig
 }
 ```
 
@@ -426,9 +427,10 @@ Here's an example using this feature:
 
 ```neva
 def Foo(data) (sig) {
-    Println
+    Println, Panic
     ---
     :data -> println -> :sig
+    println:err -> panic
 }
 ```
 
@@ -465,7 +467,7 @@ Let's say we want to print 42 and then terminate.
 42 -> println -> :stop
 ```
 
-Turns out, this program is indeterministic and could give different outputs. The problem is that `42 ->` acts like an emitter sending messages in an infinite loop. Therefore, `42` might reach `println` twice if the program doesn't terminate quickly enough:
+Turns out, this program is indeterministic and could give different outputs. The problem is that `42 ->` acts like an emitter sending messages in an infinite loop. Therefore, `42` might reach `print` twice if the program doesn't terminate quickly enough:
 
 1. `42` received and printed by `println`
 2. signal sent from `println` to `:stop`
@@ -482,11 +484,12 @@ This syntax sugar inserts a `Lock` node between `:start` and `42`. Here's the de
 
 ```neva
 def Main(start any) (stop any) {
-    Lock, Println
+    Lock, Println, Panic
     ---
     :start -> lock:sig
     42 -> lock:data
     lock:data -> println -> :stop
+    println:err -> panic
 }
 ```
 
@@ -705,7 +708,8 @@ def Main() () {
     1 -> wrap[0]
     2 -> wrap[1]
     3 -> wrap[2]
-    wrap -> println -> :stop
+    wrap -> println
+    [println:res, println:err] -> :stop
 }
 ```
 

@@ -3,6 +3,7 @@ import { fmt }
 def Main(start any) (stop any) {
 	adder Add<int>
 	println fmt.Println<int>
+	panic Panic
 	---
 	:start -> [
 		1 -> adder:left,
@@ -10,4 +11,5 @@ def Main(start any) (stop any) {
 	]
 	adder:res -> println:data
 	println:res -> :stop
+	println:err -> panic
 }
