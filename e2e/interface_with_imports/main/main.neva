@@ -1,8 +1,8 @@
-import { github.com/nevalang/x:main }
+import { github.com/nevalang/x:main, runtime }
 
 def Main(start any) (stop any) {
     sub_component SubComponent{main.Println<any>}
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> sub_component:data
     sub_component:res -> :stop

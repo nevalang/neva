@@ -1,4 +1,4 @@
-import { strconv, fmt }
+import { strconv, fmt, runtime }
 
 def Main(start any) (stop any) {
 	scanner1 fmt.Scanln
@@ -7,7 +7,7 @@ def Main(start any) (stop any) {
 	parser2 strconv.ParseNum<int>
 	add Add<int>
 	println fmt.Println<any>
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> scanner1:sig
 	scanner1:res -> parser1:data

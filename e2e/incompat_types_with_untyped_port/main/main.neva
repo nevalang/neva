@@ -1,8 +1,8 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
     PrintAny
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> 42 -> printAny
     printAny:sig -> :stop

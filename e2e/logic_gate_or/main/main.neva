@@ -1,8 +1,8 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
 	fmt.Println<bool>, Or
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> [
 		{ false -> or:left },

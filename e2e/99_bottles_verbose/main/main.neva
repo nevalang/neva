@@ -10,7 +10,7 @@ def Main(start any) (stop any) {
     s Switch<int>
     print_next_2_lines PrintNext2Lines
     lock Lock<int>
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> lock:sig
     99 -> lock:data

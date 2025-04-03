@@ -6,7 +6,7 @@ import {
 // errors.Lift wraps handler so it behaves like a node with error outport.
 def Main(start any) (stop any) {
     lift errors.Lift<any, any>{Handler}
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> lift
     lift:res -> :stop

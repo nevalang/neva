@@ -6,7 +6,7 @@ type User struct {
 def Main(start any) (stop any) {
     println fmt.Println
     builder Struct<User> // FIXME - cannot use 'struct' as a node name
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> [
         'John' -> builder:name,

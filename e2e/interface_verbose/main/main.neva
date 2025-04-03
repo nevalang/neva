@@ -1,10 +1,10 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
     second_flow Secondflow {
         printer fmt.Println<any>
     }
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> second_flow:data
     second_flow:res -> :stop

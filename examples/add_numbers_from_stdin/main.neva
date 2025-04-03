@@ -1,7 +1,7 @@
-import { strconv, fmt }
+import { strconv, fmt, runtime }
 
 def Main(start any) (stop any) {
-	App, fmt.Println, Panic
+	App, fmt.Println, runtime.Panic
 	---
 	:start -> app
 	[app:res, app:err] -> println:data

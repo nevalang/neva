@@ -1,4 +1,4 @@
-import { fmt }
+import { fmt, runtime }
 
 // stream list of ints, decrement each, build new list and print it
 
@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
     s2l StreamToList<int>
     println fmt.Println<list<int>>
     l2s ListToStream<int>
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> $lst -> l2s -> map_decr -> s2l -> println:data
     println:res -> :stop

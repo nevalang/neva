@@ -1,9 +1,9 @@
-import { time, fmt }
+import { time, fmt, runtime }
 
 def Main(start any) (stop any) {
     p1 fmt.Println
     p2 fmt.Println
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> [p1:data, p2:data]
     p1:res -> { p2:res -> :stop }

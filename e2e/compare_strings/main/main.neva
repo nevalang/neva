@@ -1,8 +1,8 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
     fmt.Println, Gt<string>, Ternary
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> [
         'Z' -> gt:left,

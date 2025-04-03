@@ -1,7 +1,7 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
-    For{Handler}, Wait, Panic
+    For{Handler}, Wait, runtime.Panic
     ---
     :start -> 1..5 -> for
     for:res -> wait -> :stop

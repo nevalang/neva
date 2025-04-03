@@ -1,8 +1,8 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
     wrapper Wrapper{fmt.Println}
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> wrapper:data
     wrapper:res -> :stop

@@ -1,9 +1,9 @@
-import { lists, fmt }
+import { lists, fmt, runtime }
 
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 def Main(start any) (stop any) {
-	lists.At<int>, fmt.Println, Panic
+	lists.At<int>, fmt.Println, runtime.Panic
 	---
 	:start -> [
 		$lst -> at:data,

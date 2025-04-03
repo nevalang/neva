@@ -1,4 +1,4 @@
-import { fmt }
+import { fmt, runtime }
 
 const greeting string = 'Hello, World!'
 
@@ -7,7 +7,7 @@ def Main(start any) (stop any) {
 	greeting New<string>
 	println fmt.Println<string>
 	lock Lock<string>
-	panic Panic
+	panic runtime.Panic
 
 	---
 

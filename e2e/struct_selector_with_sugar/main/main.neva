@@ -1,7 +1,7 @@
 // Here we learn how to read struct fields without compiler directives
 // by using another one syntax sugare `.` called "struct selectors".
 
-import { fmt }
+import { fmt, runtime }
 
 type User struct {
     name string
@@ -11,7 +11,7 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    UserSender, fmt.Println, Panic
+    UserSender, fmt.Println, runtime.Panic
     ---
     :start -> userSender:sig
     userSender:u -> .pet.name -> println:data

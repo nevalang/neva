@@ -1,11 +1,11 @@
-import { sync, fmt }
+import { sync, fmt, runtime }
 
 def Main(start any) (stop any) {
 	p1 fmt.Println
 	p2 fmt.Println
 	p3 fmt.Println
 	wg sync.WaitGroup
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> [
 		'Hello' -> p1,

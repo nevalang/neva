@@ -1,4 +1,4 @@
-import { fmt }
+import { fmt, runtime }
 
 const d dict<string> = {
     name: 'John',
@@ -6,7 +6,7 @@ const d dict<string> = {
 }
 
 def Main(start any) (stop any) {
-    Get, fmt.Println, Panic
+    Get, fmt.Println, runtime.Panic
     ---
     :start -> 'name' -> get:key
     $d -> get:dict

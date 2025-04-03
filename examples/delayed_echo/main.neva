@@ -13,7 +13,7 @@ def Main(start any) (stop any) {
 	w5 Worker
 	w6 Worker
 	wg sync.WaitGroup
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> [
 		'Hello' -> println,

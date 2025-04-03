@@ -1,9 +1,9 @@
-import { fmt }
+import { fmt, runtime }
 
 def Main(start any) (stop any) {
 	adder Add<int>
 	println fmt.Println<int>
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> [
 		1 -> adder:left,
