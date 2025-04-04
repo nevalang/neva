@@ -1,4 +1,8 @@
-import { strconv, fmt, runtime }
+import {
+	fmt
+	runtime
+	strconv
+}
 
 def Main(start any) (stop any) {
 	aux Aux,
@@ -16,17 +20,15 @@ def Aux(sig any) (res int, err error) {
 	reader2 IntReader?
 	add Add<int>
 	---
-	:sig -> reader1:sig
-	reader1:num -> [add:left, reader2:sig]
-	reader2:num -> add:right
+	:sig -> reader1
+	reader1 -> [add:left, reader2]
+	reader2 -> add:right
 	add:res -> :res
 }
 
-def IntReader(sig any) (num int, err error) { 
+def IntReader(sig any) (res int, err error) {
 	scanln fmt.Scanln
-	parse_num strconv.ParseNum<int>?
+	atoi strconv.Atoi<int>?
 	---
-	:sig -> scanln:sig
-	scanln:res -> parse_num:data
-	parse_num:res -> :num
+	:sig -> scanln -> atoi -> :res
 }

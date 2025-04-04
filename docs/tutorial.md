@@ -494,11 +494,11 @@ Sometimes we need to handle multiple senders or receivers. While we've primarily
 
 Fan-in allows multiple senders to connect to a single receiver using square brackets on the sender side. The receiver processes messages in FIFO (first in, first out) order, based on when senders emit their messages.
 
-Let's explore this using `strconv.ParseNum` from the standard library, which converts strings to numbers:
+Let's explore this using `strconv.Atoi` from the standard library, which converts strings to integer numbers:
 
 ```neva
 // strconv package
-pub def ParseNum<T int | float>(data string) (res T, err error)
+pub def Atoi(data string) (res int, err error)
 ```
 
 Note that it has an `err` outport of type `error`. While we can usually ignore node outports as long as we use at least one, the `err` port is special - we must always handle potential errors. You may have already seen the fan-in pattern with `Println` earlier, since it also may return an error. But let's take a look into another example.
@@ -512,7 +512,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    parse strconv.ParseNum<int>
+    parse strconv.Atoi<int>
     println fmt.Println<any>
     ---
     :start -> '42' -> parse
@@ -556,8 +556,8 @@ import { strconv }
 // ...existing code...
 
 pub def AddIntStrings(left string, right string) (res int, err error) {
-    parse_left strconv.ParseNum<int>
-    parse_right strconv.ParseNum<int>
+    parse_left strconv.Atoi<int>
+    parse_right strconv.Atoi<int>
     ---
     :left -> parse_left
     :right -> parse_right
@@ -568,7 +568,7 @@ pub def AddIntStrings(left string, right string) (res int, err error) {
 
 Key points:
 
-1. We create two instances of `strconv.ParseNum` to process both connections - `parse_left` for `:left` and `parse_right` for `:right`
+1. We create two instances of `strconv.Atoi` to process both connections - `parse_left` for `:left` and `parse_right` for `:right`
 2. We use fan-in to connect both error outputs to our `:err` port for error propagation
 
 Now let's update `src/main.neva` to add `'21'` to itself using our new `utils.AddIntStrings`. We'll need to send `'21'` to both input ports simultaneously using fan-out:
@@ -607,7 +607,7 @@ We get:
 parsing "twenty one": invalid syntax
 ```
 
-The error from `strconv.ParseNum` propagates through `utils.AddIntStrings` up to `Main`, demonstrating proper error handling.
+The error from `strconv.Atoi` propagates through `utils.AddIntStrings` up to `Main`, demonstrating proper error handling.
 
 ### Binary Operators
 
