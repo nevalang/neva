@@ -77,7 +77,7 @@ After installation is finished, you should be able to run the `neva` CLI from yo
 neva version
 ```
 
-It should emit something like `0.32.0`
+It should emit something like `0.33.0`
 
 ### Hello, World!
 
@@ -260,7 +260,7 @@ This structure introduces two fundamental concepts in Nevalang: modules and pack
 A module is a set of packages with a manifest file (`neva.yaml`). When we created our project with `neva new`, it generated a basic module with the following manifest file:
 
 ```yaml
-neva: 0.32.0
+neva: 0.33.0
 ```
 
 This defines the Nevalang version for our project. As your project grows, you can include dependencies on third-party modules here.
@@ -984,11 +984,11 @@ pass2 Pass{Upper}
 [pass1, pass2] -> upper
 ```
 
-With a little bit of boilerplate 
+With a little bit of boilerplate
 
 **WARNING** (Possible Concurrency Issues)
 
-`[pass1, pass2] -> upper` guarantees that `upper` receives messages in the exact same order as they are sent by `pass1` and `pass2` nodes. And `switch` guarantees that it will never reiceve next message from it's sender  `... ->` until previously selected receiver has received.
+`[pass1, pass2] -> upper` guarantees that `upper` receives messages in the exact same order as they are sent by `pass1` and `pass2` nodes. And `switch` guarantees that it will never reiceve next message from it's sender `... ->` until previously selected receiver has received.
 
 BUT switch doesn't know about `[pass1, pass2] -> upper`. It will wait for `pass1` and `pass2` to receive yes, but it will not wait `pass1` and `pass2` to _send_!
 
@@ -1003,7 +1003,7 @@ pass1 send ALICE and unlocked
 
 For `[pass1, pass2] -> upper` connection it will mean that `upper` must receive `BOB` _before_ `Alice` which is not correct!
 
-*Safe Solution*
+_Safe Solution_
 
 This situation will never happen if you guarantee that your component never receive next input until it previous sent result is received. But this can only be guaranteed by the parent of your compnent.
 
