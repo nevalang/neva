@@ -28,10 +28,7 @@ def Aux(sig any) (res int, err error) {
 
 def IntReader(sig any) (num int, err error) {
 	scanln fmt.Scanln
-	atoi strconv.Atoi<int>
+	atoi strconv.Atoi?
 	---
-	:sig -> scanln:sig
-	scanln:res -> atoi:data
-	atoi:res -> :num
-	atoi:err -> :err
+	:sig -> scanln -> atoi -> :num
 }

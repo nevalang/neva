@@ -7,8 +7,8 @@ import {
 def Main(start any) (stop any) {
 	scanner1 fmt.Scanln
 	scanner2 fmt.Scanln
-	parser1 strconv.Atoi<int>
-	parser2 strconv.Atoi<int>
+	parser1 strconv.Atoi
+	parser2 strconv.Atoi
 	add Add<int>
 	println fmt.Println<int>
 	panic runtime.Panic

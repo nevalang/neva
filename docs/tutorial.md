@@ -512,7 +512,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    parse strconv.Atoi<int>
+    parse strconv.Atoi
     println fmt.Println<any>
     ---
     :start -> '42' -> parse
@@ -556,8 +556,8 @@ import { strconv }
 // ...existing code...
 
 pub def AddIntStrings(left string, right string) (res int, err error) {
-    parse_left strconv.Atoi<int>
-    parse_right strconv.Atoi<int>
+    parse_left strconv.Atoi
+    parse_right strconv.Atoi
     ---
     :left -> parse_left
     :right -> parse_right
