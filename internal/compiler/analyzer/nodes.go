@@ -148,7 +148,7 @@ func (a Analyzer) analyzeNode(
 			scope,
 			resolvedNodeArgs,
 			iface,
-			nodes,
+			// nodes,
 			net,
 		)
 		if err != nil {
@@ -252,7 +252,7 @@ func (a Analyzer) getComponentNodeInterface(
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
 	parentIface src.Interface, // resolved interface of the component that contains the node
-	nodes map[string]src.Node, // nodes of the component that contains the node
+	// nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
 ) (src.Interface, *int, *compiler.Error) {
 	var (
@@ -266,10 +266,10 @@ func (a Analyzer) getComponentNodeInterface(
 		version, overloadIndex, err = a.getNodeOverloadIndex(
 			name,
 			parentIface,
-			nodes,
+			// nodes,
 			net,
 			entity.Component,
-			scope,
+			// scope,
 		)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
@@ -372,152 +372,193 @@ func (a Analyzer) getComponentNodeInterface(
 	}, overloadIndex, nil
 }
 
-// getNodeOverloadIndex returns index of the overload of the node.
-// It must only be called for components that are overloaded.
-// It determines which overload to use based on node's usage in parent component.
+// getNodeOverloadIndex determines which overload of a component to use for a node.
+// This is called when we know the node references an overloaded component with multiple implementations.
+// It analyzes how the node is used in connections to determine the appropriate implementation.
 func (a Analyzer) getNodeOverloadIndex(
 	name string, // name of the node
 	parentIface src.Interface, // resolved interface of the component that contains the node
-	nodes map[string]src.Node, // nodes of the component that contains the node
+	// nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
 	versions []src.Component, // all versions of the component that node refers to
-	scope src.Scope,
+	// scope src.Scope,
 ) (src.Component, *int, *compiler.Error) {
-	resolvedSenderType, err := a.findSenderTypeForNode(name, parentIface, nodes, net, scope)
-	if err != nil {
-		return src.Component{}, nil, err
-	}
-	return a.selectOverload(versions, resolvedSenderType, scope)
-}
-
-// findSenderTypeForNode returns resolved type of the sender (whatever it is) of the given receiver-node.
-// In case such type is not found (for whatever reason) it returns nil and error.
-func (a Analyzer) findSenderTypeForNode(
-	name string, // name of the node
-	iface src.Interface, // resolved interface of the component that contains the node
-	nodes map[string]src.Node, // nodes of the component that contains the node
-	net []src.Connection, // network of the component that contains the node
-	scope src.Scope,
-) (typesystem.Expr, *compiler.Error) {
-	sender, err := a.findFirstSenderForReceiver(name, net)
-	if err != nil {
-		return typesystem.Expr{}, err
-	}
-	if sender == nil {
-		return typesystem.Expr{}, &compiler.Error{
-			Message: "sender not found for given receiver while analyzing overloaded node",
-			Meta:    &iface.Meta,
+	// We'll analyze all connections to find where this node is used
+	nodeUsages := findNodeUsages(name, net)
+	if len(nodeUsages) == 0 {
+		return src.Component{}, nil, &compiler.Error{
+			Message: fmt.Sprintf("no usages found for node %s", name),
+			Meta:    &parentIface.Meta,
 		}
 	}
 
-	panic("not impl")
-}
-
-func (a Analyzer) findFirstSenderForReceiver(
-	receiverNode string,
-	net []src.Connection,
-) (*src.ConnectionSender, *compiler.Error) {
-	for _, conn := range net {
-		// arr bypass
-		if conn.ArrayBypass != nil {
-			if conn.ArrayBypass.ReceiverInport.Node == receiverNode {
-				return &src.ConnectionSender{
-					PortAddr: &conn.ArrayBypass.SenderOutport,
-					Meta:     conn.ArrayBypass.SenderOutport.Meta,
-				}, nil
-			}
-			continue
-		}
-
-		for _, receiver := range conn.Normal.Receivers {
-			if receiver.PortAddr != nil {
-				if receiver.PortAddr.Node == receiverNode {
-					return &conn.Normal.Senders[0], nil
-				}
-				continue
-			}
-
-			if receiver.ChainedConnection != nil {
-				found, err := a.findFirstSenderForReceiver(
-					receiverNode,
-					[]src.Connection{*receiver.ChainedConnection},
-				)
-				if err != nil {
-					return nil, err
-				}
-				if found != nil {
-					return found, nil
-				}
-				continue
-			}
-
-			if receiver.DeferredConnection != nil {
-				found, err := a.findFirstSenderForReceiver(
-					receiverNode,
-					[]src.Connection{*receiver.DeferredConnection},
-				)
-				if err != nil {
-					return nil, err
-				}
-				if found != nil {
-					return found, nil
-				}
-				continue
-			}
-
-			if receiver.Switch != nil {
-				cc := make([]src.Connection, 0, len(receiver.Switch.Cases))
-				for _, c := range receiver.Switch.Cases {
-					cc = append(cc, src.Connection{Normal: &c, Meta: c.Meta})
-				}
-
-				found, err := a.findFirstSenderForReceiver(receiverNode, cc)
-				if err != nil {
-					return nil, err
-				}
-				if found != nil {
-					return found, nil
-				}
-
-				continue
-			}
-
-			return nil, &compiler.Error{
-				Message: "unknown type of receiver",
-				Meta:    &receiver.Meta,
-			}
-		}
-	}
-
-	return nil, nil
-}
-
-// selectOverload tries to find version of the component
-// compatible with the given resolved sender type.
-// In case such version is not found it returns non-nil error.
-func (a Analyzer) selectOverload(
-	versions []src.Component, // all versions of the component that node refers to
-	senderType typesystem.Expr, // resolved sender type
-	scope src.Scope,
-) (src.Component, *int, *compiler.Error) {
-	for idx, curVersion := range versions {
-		var firstInport src.Port
-		for _, inport := range curVersion.Interface.IO.In {
-			firstInport = inport
-			break
-		}
-
-		if err := a.resolver.IsSubtypeOf( // select first compatible version
-			firstInport.TypeExpr,
-			senderType,
-			scope,
-		); err != nil {
-			return curVersion, &idx, nil
+	// For each overload, check if it's compatible with all the node's usages
+	for i, component := range versions {
+		if isCompatibleWithAllUsages(component, nodeUsages) {
+			return component, &i, nil
 		}
 	}
 
 	return src.Component{}, nil, &compiler.Error{
-		Message: "Could not find any connections using node as receiver",
-		Meta:    &senderType.Meta,
+		Message: fmt.Sprintf("no compatible overload found for node %s", name),
+		Meta:    &parentIface.Meta,
 	}
+}
+
+// findNodeUsages identifies all places where the specified node is used in connections
+func findNodeUsages(nodeName string, connections []src.Connection) []nodeUsage {
+	var usages []nodeUsage
+
+	for _, conn := range connections {
+		// Check array bypass connections
+		if conn.ArrayBypass != nil {
+			if conn.ArrayBypass.SenderOutport.Node == nodeName {
+				usages = append(usages, nodeUsage{
+					direction: outgoing,
+					port:      conn.ArrayBypass.SenderOutport.Port,
+					arrayIdx:  conn.ArrayBypass.SenderOutport.Idx,
+				})
+			}
+			if conn.ArrayBypass.ReceiverInport.Node == nodeName {
+				usages = append(usages, nodeUsage{
+					direction: incoming,
+					port:      conn.ArrayBypass.ReceiverInport.Port,
+					arrayIdx:  conn.ArrayBypass.ReceiverInport.Idx,
+				})
+			}
+			continue
+		}
+
+		// Check normal connections
+		if conn.Normal != nil {
+			// Check senders
+			for _, sender := range conn.Normal.Senders {
+				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+					usages = append(usages, nodeUsage{
+						direction: outgoing,
+						port:      sender.PortAddr.Port,
+						arrayIdx:  sender.PortAddr.Idx,
+					})
+				}
+			}
+
+			// Check receivers (more complex due to nesting)
+			usages = append(usages, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
+		}
+	}
+
+	return usages
+}
+
+type connectionDirection int
+
+const (
+	incoming connectionDirection = iota
+	outgoing
+)
+
+type nodeUsage struct {
+	direction connectionDirection
+	port      string
+	arrayIdx  *uint8
+}
+
+// findNodeUsagesInReceivers recursively checks receivers for node usages
+func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiver) []nodeUsage {
+	var usages []nodeUsage
+
+	for _, receiver := range receivers {
+		// Check direct port address
+		if receiver.PortAddr != nil && receiver.PortAddr.Node == nodeName {
+			usages = append(usages, nodeUsage{
+				direction: incoming,
+				port:      receiver.PortAddr.Port,
+				arrayIdx:  receiver.PortAddr.Idx,
+			})
+		}
+
+		// Check chained connection
+		if receiver.ChainedConnection != nil {
+			if receiver.ChainedConnection.Normal != nil {
+				// Check senders in the chain
+				for _, sender := range receiver.ChainedConnection.Normal.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						usages = append(usages, nodeUsage{
+							direction: outgoing,
+							port:      sender.PortAddr.Port,
+							arrayIdx:  sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				// Recursively check receivers in the chain
+				usages = append(usages, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Normal.Receivers)...)
+			}
+		}
+
+		// Check deferred connection
+		if receiver.DeferredConnection != nil {
+			// Similar logic to what we do with normal connections
+			if receiver.DeferredConnection.Normal != nil {
+				for _, sender := range receiver.DeferredConnection.Normal.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						usages = append(usages, nodeUsage{
+							direction: outgoing,
+							port:      sender.PortAddr.Port,
+							arrayIdx:  sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				usages = append(usages, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Normal.Receivers)...)
+			}
+		}
+
+		// Check switch cases
+		if receiver.Switch != nil {
+			// Check each case in the switch
+			for _, caseConn := range receiver.Switch.Cases {
+				for _, sender := range caseConn.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						usages = append(usages, nodeUsage{
+							direction: outgoing,
+							port:      sender.PortAddr.Port,
+							arrayIdx:  sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				usages = append(usages, findNodeUsagesInReceivers(nodeName, caseConn.Receivers)...)
+			}
+
+			// Check default case
+			if receiver.Switch.Default != nil {
+				usages = append(usages, findNodeUsagesInReceivers(nodeName, receiver.Switch.Default)...)
+			}
+		}
+	}
+
+	return usages
+}
+
+// isCompatibleWithAllUsages checks if the given component is compatible with all the usages
+func isCompatibleWithAllUsages(component src.Component, usages []nodeUsage) bool {
+	for _, usage := range usages {
+		var portExists bool
+		var port src.Port
+
+		if usage.direction == incoming {
+			// Check if the inport exists in the component
+			port, portExists = component.Interface.IO.In[usage.port]
+		} else {
+			// Check if the outport exists in the component
+			port, portExists = component.Interface.IO.Out[usage.port]
+		}
+
+		// If the port doesn't exist or array usage doesn't match, not compatible
+		if !portExists || port.IsArray != (usage.arrayIdx != nil) {
+			return false
+		}
+	}
+	return true
 }
