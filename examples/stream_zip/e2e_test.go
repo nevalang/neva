@@ -27,7 +27,7 @@ func Test(t *testing.T) {
 			cmd := exec.Command("neva", "run", "stream_zip")
 
 			out, err := cmd.CombinedOutput()
-			require.NoError(t, err)
+			require.NoError(t, err, string(out))
 			require.Equal(t, expectedOutput, string(out))
 
 			require.Equal(t, 0, cmd.ProcessState.ExitCode())

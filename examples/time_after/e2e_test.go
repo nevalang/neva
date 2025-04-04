@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 
 	before := time.Now()
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	require.Equal(t, "", string(out))
 	require.Greater(t, time.Since(before).Seconds(), float64(1))

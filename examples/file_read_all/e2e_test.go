@@ -20,10 +20,10 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "file_read_all")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	want, err := os.ReadFile("file_read_all/main.neva")
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	require.Equal(
 		t,

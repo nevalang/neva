@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 
 	// TODO betterh check in a loop
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"[1,2,3,4,5,6,7,8,9,10]\n",

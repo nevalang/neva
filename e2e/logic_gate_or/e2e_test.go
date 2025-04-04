@@ -12,7 +12,7 @@ func TestOR(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"false\n",

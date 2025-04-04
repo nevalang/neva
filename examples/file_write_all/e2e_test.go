@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "file_write_all")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	require.Equal(
 		t,
@@ -34,7 +34,7 @@ func Test(t *testing.T) {
 	const filename = "file_writer_example.txt"
 
 	want, err := os.ReadFile(filename)
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"Hello, io.WriteAll!",

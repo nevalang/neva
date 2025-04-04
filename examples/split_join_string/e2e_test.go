@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "split_join_string")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"neva\n",

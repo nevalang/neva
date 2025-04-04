@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "const_refs")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		`{"d": {"key": 1}, "l": [1, 2, 3]}

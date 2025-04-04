@@ -23,13 +23,13 @@ func TestEmitDefault(t *testing.T) {
 	// Run with IR emission
 	cmd = exec.Command("neva", "run", "--emit-ir", "src")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Hello, World!\n", string(out))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
 	// Verify IR file exists and is valid YAML
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	var ir struct {
 		Connections map[string]string `yaml:"connections"`
@@ -52,13 +52,13 @@ func TestEmitYAML(t *testing.T) {
 	// Run with IR emission
 	cmd = exec.Command("neva", "run", "--emit-ir", "--emit-ir-format", "yaml", "src")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Hello, World!\n", string(out))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
 	// Verify IR file exists and is valid YAML
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	var ir struct {
 		Connections map[string]string `yaml:"connections"`
@@ -87,7 +87,7 @@ func TestEmitJSON(t *testing.T) {
 
 	// Verify IR file exists and is valid JSON
 	irBytes, err := os.ReadFile("ir.json")
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	var ir struct {
 		Connections map[string]string `json:"connections"`

@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 	for i := 0; i < 1; i++ {
 		cmd := exec.Command("neva", "run", "advanced_error_handling")
 		out, err := cmd.CombinedOutput()
-		require.NoError(t, err)
+		require.NoError(t, err, string(out))
 		require.Equal(
 			t,
 			`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
