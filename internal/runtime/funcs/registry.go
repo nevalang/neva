@@ -78,7 +78,9 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"int_inc": intInc{},
 		"int_dec": intDec{},
 
-		"parse_int": parseInt{},
+		"atoi":        atoi{},
+		"parse_int":   parseInt{},
+		"parse_float": parseFloat{},
 
 		"regexp_submatch": regexpSubmatch{},
 
@@ -110,6 +112,6 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"wait_group": waitGroup{},
 
 		"accumulator": accumulator{},
-		"errors_new": errorsNew{},
+		"errors_new":  errorsNew{},
 	}
 }

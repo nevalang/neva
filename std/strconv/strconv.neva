@@ -1,13 +1,11 @@
-// TODO implement and add tests
-
 // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
 #extern(atoi)
 pub def Atoi(data string) (res int, err error)
 
-// ParseInt parses an integer from a string `data` with `base` base (2, 8, 10, 16).
+// ParseInt parses an integer from a string `data` with given `base` (2, 8, 10, 16).
 #extern(parse_int)
 pub def ParseInt(data string, base int, bits int) (res int, err error)
 
-// ParseFloat parses a float from a string `data` with `bits` bits (32 or 64).
+// ParseFloat parses a float from a string `data` with given `bits` (32 or 64).
 #extern(parse_float)
 pub def ParseFloat(data string, bits int) (res float, err error)
