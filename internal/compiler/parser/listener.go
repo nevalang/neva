@@ -74,6 +74,10 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 
 	name := compDef.InterfaceDef().IDENTIFIER().GetText()
 
+	parsedComponent.Directives = s.parseCompilerDirectives(
+		actx.CompilerDirectives(),
+	)
+
 	existing, ok := s.state.Entities[name]
 	if !ok {
 		s.state.Entities[name] = src.Entity{
