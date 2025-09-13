@@ -5,7 +5,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-	http_get http.Get
+	get http.Get
 	println fmt.Println
 	panic runtime.Panic
 	---

@@ -2,6 +2,7 @@ import {
 	fmt
 	time
 	sync
+	runtime
 }
 
 def Main(start any) (stop any) {
