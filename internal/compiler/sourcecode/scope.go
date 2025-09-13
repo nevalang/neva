@@ -149,7 +149,10 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 		modRef = s.loc.ModRef // FIXME s.Location.ModRef is where we are now (e.g. std)
 		mod = curMod
 	} else {
-		modRef = curMod.Manifest.Deps[pkgImport.Module]
+		modRef, ok = curMod.Manifest.Deps[pkgImport.Module]
+		if !ok {
+			panic(fmt.Errorf("dependency module not found: %v (module key: %v, available deps: %v)", modRef, pkgImport.Module, curMod.Manifest.Deps))
+		}
 		depMod, ok := s.build.Modules[modRef]
 		if !ok {
 			return Entity{}, core.Location{}, fmt.Errorf("dependency module not found: %v", modRef)
