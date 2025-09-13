@@ -9,8 +9,8 @@ func (a Analyzer) analyzeComponent(
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	externArgs, hasExtern := component.Directives[compiler.ExternDirective]
-	if hasExtern && len(externArgs) == 0 {
+	externArg, hasExtern := component.Directives[compiler.ExternDirective]
+	if hasExtern && externArg == "" {
 		return src.Component{}, &compiler.Error{
 			Message: "Component that use #extern directive must provide at least one argument",
 			Meta:    &component.Meta,
