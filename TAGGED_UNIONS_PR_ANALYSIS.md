@@ -210,29 +210,6 @@ pub def Add(left string, right string) (res string)
 - Enhanced error messages for union type mismatches
 - Improved type checking error reporting
 
-### 12. Parser Grammar Issues (Post-PR Analysis)
-
-#### Union Syntax Problems
-
-- **Issue**: Mixed union syntax with pipe characters (`|`) was invalid
-- **Example**: `x string | float | union { Monday } |` (incorrect)
-- **Solution**: Use proper union syntax: `x union { String string, Float float, Days union { Monday } }`
-- **Root Cause**: Incomplete migration from enum syntax to tagged union syntax
-
-#### Interface Type Parameter Confusion
-
-- **Issue**: Misunderstanding of when interfaces need type parameters
-- **Problem**: Adding `<>` to interfaces that don't need type parameters
-- **Correct Syntax**:
-  - With type params: `interface IName<T>(params) (outputs)`
-  - Without type params: `interface IName(params) (outputs)` (NO `<>`)
-
-#### Parser Error Message Issues
-
-- **Problem**: ANTLR error messages can be misleading
-- **Example**: Error reports "line 43:50" but line 43 only has 3 characters
-- **Solution**: Always check grammar file (`neva.g4`) for correct syntax rules
-
 ## Design Rationale and Issue Context
 
 ### The Problem with Untagged Unions
@@ -418,74 +395,120 @@ The extensive test suite updates (200+ files) demonstrate thorough migration cov
 
 **Recommendation**: This PR should be carefully reviewed for any remaining enum references and thoroughly tested before merging. The breaking changes are justified by the significant improvements in type safety and developer experience, but proper migration tooling and documentation should be provided to ease the transition for existing users.
 
-## Troubleshooting Guide for Parser Issues
-
-### Common Parser Grammar Problems
-
-1. **Union Syntax Errors**
-
-   ```neva
-   // ❌ WRONG - pipe characters are invalid
-   x string | float | union { Monday } |
-
-   // ✅ CORRECT - proper union syntax
-   x union { String string, Float float, Days union { Monday } }
-   ```
-
-2. **Interface Type Parameter Confusion**
-
-   ```neva
-   // ❌ WRONG - unnecessary empty type parameters
-   interface IReader<> (params) (outputs)
-
-   // ✅ CORRECT - no type parameters needed
-   interface IReader (params) (outputs)
-
-   // ✅ CORRECT - with actual type parameters
-   interface IReader<T> (params) (outputs)
-   ```
-
-3. **Parser Error Message Interpretation**
-   - ANTLR error messages may report incorrect line/column numbers
-   - Always check the grammar file (`internal/compiler/parser/neva.g4`) for correct syntax
-   - Use `go test ./internal/compiler/parser/smoke_test -v` to test parser changes
-
-### Debugging Steps
-
-1. **Check Grammar File**: Review `neva.g4` for correct syntax rules
-2. **Test Individual Files**: Use smoke tests to isolate parser issues
-3. **Verify Examples**: Check standard library for correct syntax examples
-4. **Incremental Changes**: Make small changes and test frequently
-
 ## AI Agent Iteration Plan
 
-Based on the comprehensive test analysis, here's a structured plan for AI agents to systematically fix the remaining issues in the tagged unions implementation:
+Based on the comprehensive test analysis and current test results, here's a structured plan for AI agents to systematically fix the remaining issues in the tagged unions implementation:
 
-### Phase 1: Parser Grammar Issues (✅ Complete - 100%)
+### Phase 1: Dependency Module Resolution System (🚨 CRITICAL - Current Priority)
 
-**Status**: Fully resolved - all parser smoke tests now pass
+**Problem**: The third-party module import dependency system is completely broken, preventing stdlib from loading
 
-**Completed**:
+**Evidence from Test Results**:
 
-- ✅ Fixed union syntax inconsistency (pipe characters `|` removed)
-- ✅ Updated smoke test files with correct union syntax
-- ✅ Corrected interface type parameter usage
-- ✅ Added comprehensive documentation and troubleshooting guide
-- ✅ **Fixed union literal syntax** - corrected `Int(42)` to `UNION::Int(42)` in `023_const.simple.neva`
-- ✅ **Fixed compiler directive syntax** - corrected `#extern(read, write)` to `#extern(read)` in `027_compiler_directives.neva`
-- ✅ **Improved error reporting** - added systematic debugging with "Processing file:" messages
-- ✅ **Identified actual error sources** - discovered errors were in files 23 and 27, not 21-22 as initially thought
+```
+std@0.33.0/errors/errors.neva:12:4: dependency module not found:
+```
 
-**Key Discoveries**:
+**Impact**: This is blocking ALL other functionality - the compiler can't even load the standard library
 
-1. **Misleading Error Messages**: ANTLR error messages can report incorrect line/column numbers
-2. **Systematic Debugging Works**: Adding "Processing file:" messages revealed actual error sources
-3. **Grammar Rules Are Strict**: Union literals must use `TypeName::Variant(value)` syntax
-4. **Compiler Directives Are Limited**: `#extern` only accepts single identifiers, not comma-separated lists
+**Root Cause**: The module resolution system for `std@0.33.0` dependencies is not working
 
-### Phase 2: Standard Library Component Issues (⏳ Pending)
+**Action Items**:
+
+1. Investigate the module resolution system in `internal/builder`
+2. Check if `std@0.33.0` modules are properly available in the expected location
+3. Fix dependency resolution for standard library modules
+4. Verify that `neva.yml` files are properly configured for stdlib dependencies
+5. Test that `std@0.33.0/errors/errors.neva` can resolve its dependencies
+
+### Phase 2: Type System Critical Issues (🚨 HIGH PRIORITY)
+
+**Problem**: Null pointer dereference crashes in type system operations
+
+**Evidence from Test Results**:
+
+```
+panic: runtime error: invalid memory address or nil pointer dereference
+github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
+```
+
+**Impact**: Type system is crashing, preventing compilation
+
+**Action Items**:
+
+1. Fix null pointer dereference in `Expr.String()` method
+2. Add null safety checks in type system operations
+3. Fix union type checking logic in subtype checker
+4. Update type system tests to handle tagged unions correctly
+
+### Phase 3: Operator Overloading Issues (⏳ HIGH PRIORITY)
+
+**Problem**: Incomplete migration from generic operators to function overloading
+
+**Evidence from Test Results**:
+
+```
+Invalid left operand type for +: Subtype must be union: want union, got int
+Invalid left operand type for +: Subtype must be union: want union, got string
+```
+
+**Impact**: Basic arithmetic operations are broken
+
+**Action Items**:
+
+1. Complete operator overloading implementation
+2. Update all operator function definitions in stdlib
+3. Fix type checking for overloaded operators
+4. Update examples and tests to use new operator syntax
+
+### Phase 4: Function Signature Mismatches (⏳ MEDIUM PRIORITY)
+
+**Problem**: Parameter count mismatches throughout codebase
+
+**Evidence from Test Results**:
+
+```
+count of arguments mismatch count of parameters, want 0 got 1
+```
+
+**Impact**: Many examples and e2e tests failing due to function signature issues
+
+**Action Items**:
+
+1. Audit all function signatures for consistency
+2. Update function definitions to match usage
+3. Fix parameter passing in examples and tests
+4. Update function signature documentation
+
+### Phase 5: Import and Module Issues (⏳ MEDIUM PRIORITY)
+
+**Problems**:
+
+- Missing runtime import: `import not found: runtime`
+- Missing node references: `Node not found 'get'`, `Node not found 'panic'`
+- Package resolution failures
+
+**Evidence from Test Results**:
+
+```
+import not found: runtime
+Node not found 'get'
+Node not found 'panic'
+```
+
+**Action Items**:
+
+1. Fix import resolution for runtime package
+2. Update module manifest requirements
+3. Fix package discovery and resolution
+4. Update import documentation
+5. Ensure all required nodes are properly defined
+
+### Phase 6: Standard Library Component Issues (⏳ LOW PRIORITY)
 
 **Problem**: Many stdlib components failing with "Component must have network" errors
+
+**Note**: This phase is currently not visible in test results because Phase 1 (dependency resolution) is blocking stdlib loading entirely.
 
 **Examples**:
 
@@ -501,72 +524,7 @@ Based on the comprehensive test analysis, here's a structured plan for AI agents
 2. Add proper `---` sections to components that need them
 3. Update component templates and documentation
 
-### Phase 3: Type System Issues (⏳ Pending)
-
-**Problems**:
-
-- Union type string representation mismatch
-- Subtype checking failures for union types
-- Null pointer dereference in type system operations
-
-**Examples**:
-
-- Expected: `"union { int, string }"`
-- Actual: `"union { int int, string string }"`
-
-**Action Items**:
-
-1. Fix union type string representation in type system
-2. Update subtype checking logic for tagged unions
-3. Add null pointer safety checks in type operations
-4. Update type system tests
-
-### Phase 4: Operator Overloading Issues (⏳ Pending)
-
-**Problem**: Incomplete migration from generic operators to function overloading
-
-**Examples**:
-
-- `Invalid left operand type for +: Subtype must be union: want union, got int`
-
-**Action Items**:
-
-1. Complete operator overloading implementation
-2. Update all operator function definitions
-3. Fix type checking for overloaded operators
-4. Update examples and tests
-
-### Phase 5: Import and Module Issues (⏳ Pending)
-
-**Problems**:
-
-- Missing runtime import: `import not found: runtime`
-- Package resolution failures
-- Manifest issues with missing `neva.yml` files
-
-**Action Items**:
-
-1. Fix import resolution for runtime package
-2. Update module manifest requirements
-3. Fix package discovery and resolution
-4. Update import documentation
-
-### Phase 6: Function Signature Mismatches (⏳ Pending)
-
-**Problem**: Parameter count mismatches throughout codebase
-
-**Examples**:
-
-- `count of arguments mismatch count of parameters, want 0 got 1`
-
-**Action Items**:
-
-1. Audit all function signatures for consistency
-2. Update function definitions to match usage
-3. Fix parameter passing in examples and tests
-4. Update function signature documentation
-
-### Phase 7: E2E Test Recovery (⏳ Pending)
+### Phase 7: E2E Test Recovery (⏳ LOW PRIORITY)
 
 **Problem**: 100% failure rate in e2e tests
 
@@ -580,17 +538,35 @@ Based on the comprehensive test analysis, here's a structured plan for AI agents
 ### Success Metrics
 
 - [x] **All parser smoke tests pass** ✅
-- [ ] All stdlib components compile without network errors
-- [ ] Type system handles tagged unions correctly
-- [ ] Operator overloading works for all types
-- [ ] Import resolution works for all packages
-- [ ] Function signatures are consistent
-- [ ] E2E tests achieve >90% pass rate
+- [ ] **Dependency module resolution works** (Phase 1 - CRITICAL)
+- [ ] **Type system no longer crashes** (Phase 2 - HIGH)
+- [ ] **Basic arithmetic operations work** (Phase 3 - HIGH)
+- [ ] **Function signatures are consistent** (Phase 4 - MEDIUM)
+- [ ] **Import resolution works for all packages** (Phase 5 - MEDIUM)
+- [ ] **All stdlib components compile without network errors** (Phase 6 - LOW)
+- [ ] **E2E tests achieve >90% pass rate** (Phase 7 - LOW)
 
 ### Implementation Strategy
 
 1. **Sequential Approach**: Complete each phase before moving to the next
-2. **Test-Driven**: Fix tests first, then verify with examples
-3. **Documentation**: Update docs as changes are made
-4. **Incremental**: Small, focused changes with frequent testing
-5. **Validation**: Each phase should improve overall test pass rate
+2. **Dependency-First**: Fix Phase 1 (dependency resolution) before anything else
+3. **Test-Driven**: Fix tests first, then verify with examples
+4. **Documentation**: Update docs as changes are made
+5. **Incremental**: Small, focused changes with frequent testing
+6. **Validation**: Each phase should improve overall test pass rate
+
+### Current Status (Updated)
+
+**Test Results Analysis**: The current test run shows that **Phase 1 (Dependency Module Resolution)** is the critical blocker. The `std@0.33.0/errors/errors.neva:12:4: dependency module not found:` error appears in virtually every failing test, indicating that the standard library cannot be loaded at all.
+
+**Priority Order**:
+
+1. 🚨 **Phase 1**: Fix dependency module resolution system
+2. 🚨 **Phase 2**: Fix type system null pointer crashes
+3. ⏳ **Phase 3**: Fix operator overloading issues
+4. ⏳ **Phase 4**: Fix function signature mismatches
+5. ⏳ **Phase 5**: Fix import and module issues
+6. ⏳ **Phase 6**: Fix stdlib component network issues
+7. ⏳ **Phase 7**: Recover e2e test suite
+
+**Note**: Phase 6 (Standard Library Component Issues) mentioned in the original analysis is not currently visible because Phase 1 is preventing the stdlib from loading entirely.
