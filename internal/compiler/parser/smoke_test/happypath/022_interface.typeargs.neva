@@ -1,4 +1,4 @@
-interface IReader1<> () ()
+interface IReader1 () ()
 interface IReader20<T> (x int, y T) (a int, b bool)
 
 interface IReader12<T int> (
@@ -53,10 +53,12 @@ pub interface IReader1 (
     },
     b struct{ bar int }
 ) (
-    x string |
-        float |
-        union { Monday } |
-        struct {
-            foo union { January } | struct {}
+    x union {
+        String string
+        Float float
+        Days union { Monday }
+        Struct struct {
+            foo union { January, Empty struct {} }
         }
+    }
 )
