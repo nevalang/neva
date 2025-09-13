@@ -210,6 +210,29 @@ pub def Add(left string, right string) (res string)
 - Enhanced error messages for union type mismatches
 - Improved type checking error reporting
 
+### 12. Parser Grammar Issues (Post-PR Analysis)
+
+#### Union Syntax Problems
+
+- **Issue**: Mixed union syntax with pipe characters (`|`) was invalid
+- **Example**: `x string | float | union { Monday } |` (incorrect)
+- **Solution**: Use proper union syntax: `x union { String string, Float float, Days union { Monday } }`
+- **Root Cause**: Incomplete migration from enum syntax to tagged union syntax
+
+#### Interface Type Parameter Confusion
+
+- **Issue**: Misunderstanding of when interfaces need type parameters
+- **Problem**: Adding `<>` to interfaces that don't need type parameters
+- **Correct Syntax**:
+  - With type params: `interface IName<T>(params) (outputs)`
+  - Without type params: `interface IName(params) (outputs)` (NO `<>`)
+
+#### Parser Error Message Issues
+
+- **Problem**: ANTLR error messages can be misleading
+- **Example**: Error reports "line 43:50" but line 43 only has 3 characters
+- **Solution**: Always check grammar file (`neva.g4`) for correct syntax rules
+
 ## Design Rationale and Issue Context
 
 ### The Problem with Untagged Unions
@@ -394,3 +417,42 @@ The extensive test suite updates (200+ files) demonstrate thorough migration cov
 - **Operator Overloading Updates**: Generic operators must be replaced with specific overloaded functions
 
 **Recommendation**: This PR should be carefully reviewed for any remaining enum references and thoroughly tested before merging. The breaking changes are justified by the significant improvements in type safety and developer experience, but proper migration tooling and documentation should be provided to ease the transition for existing users.
+
+## Troubleshooting Guide for Parser Issues
+
+### Common Parser Grammar Problems
+
+1. **Union Syntax Errors**
+
+   ```neva
+   // ❌ WRONG - pipe characters are invalid
+   x string | float | union { Monday } |
+
+   // ✅ CORRECT - proper union syntax
+   x union { String string, Float float, Days union { Monday } }
+   ```
+
+2. **Interface Type Parameter Confusion**
+
+   ```neva
+   // ❌ WRONG - unnecessary empty type parameters
+   interface IReader<> (params) (outputs)
+
+   // ✅ CORRECT - no type parameters needed
+   interface IReader (params) (outputs)
+
+   // ✅ CORRECT - with actual type parameters
+   interface IReader<T> (params) (outputs)
+   ```
+
+3. **Parser Error Message Interpretation**
+   - ANTLR error messages may report incorrect line/column numbers
+   - Always check the grammar file (`internal/compiler/parser/neva.g4`) for correct syntax
+   - Use `go test ./internal/compiler/parser/smoke_test -v` to test parser changes
+
+### Debugging Steps
+
+1. **Check Grammar File**: Review `neva.g4` for correct syntax rules
+2. **Test Individual Files**: Use smoke tests to isolate parser issues
+3. **Verify Examples**: Check standard library for correct syntax examples
+4. **Incremental Changes**: Make small changes and test frequently
