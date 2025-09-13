@@ -411,15 +411,27 @@ std@0.33.0/errors/errors.neva:12:4: dependency module not found:
 
 **Impact**: This is blocking ALL other functionality - the compiler can't even load the standard library
 
-**Root Cause**: The module resolution system for `std@0.33.0` dependencies is not working
+**Root Cause Analysis**:
+
+- **Primary Issue**: Empty `modRef` in scope resolution (`internal/compiler/sourcecode/scope.go:155`)
+- **Specific Problem**: When resolving dependencies, `modRef` is sometimes represented as an empty string, meaning it has neither `Path` nor `Version` fields populated
+- **Location**: `scope.go` line 155: `return Entity{}, core.Location{}, fmt.Errorf("dependency module not found: %v", modRef)`
+- **Example**: Running `neva run examples/hello_world` triggers this issue where `modRef` appears as empty string
+
+**Technical Details**:
+
+- The `modRef` should contain both `Path` and `Version` (e.g., `std@0.33.0`)
+- When empty, it indicates a failure in the module reference construction process
+- This suggests the issue is in the dependency resolution logic before reaching the "not found" error
 
 **Action Items**:
 
-1. Investigate the module resolution system in `internal/builder`
-2. Check if `std@0.33.0` modules are properly available in the expected location
-3. Fix dependency resolution for standard library modules
-4. Verify that `neva.yml` files are properly configured for stdlib dependencies
-5. Test that `std@0.33.0/errors/errors.neva` can resolve its dependencies
+1. **Investigate modRef Construction**: Debug why `modRef` is empty in `scope.go:152-155`
+2. **Check Module Reference Building**: Verify how `curMod.Manifest.Deps[pkgImport.Module]` is populated
+3. **Validate neva.yml Dependencies**: Ensure all `neva.yml` files have proper dependency declarations
+4. **Fix Empty modRef Handling**: Add validation to prevent empty module references
+5. **Test Module Resolution**: Verify that `std@0.33.0` modules can be properly resolved
+6. **Add Debug Logging**: Include modRef values in error messages for better debugging
 
 ### Phase 2: Type System Critical Issues (🚨 HIGH PRIORITY)
 
@@ -454,12 +466,28 @@ Invalid left operand type for +: Subtype must be union: want union, got string
 
 **Impact**: Basic arithmetic operations are broken
 
+**Root Cause Analysis**:
+
+- **Primary Issue**: Type checker incorrectly expects union types for basic operators
+- **Specific Problem**: The `+` operator type checking logic is expecting union types instead of primitive types (int, string)
+- **Example**: `switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string`
+- **Likely Cause**: The operator overloading implementation is incorrectly configured to expect union types for all operands
+
+**Technical Details**:
+
+- The error message "Subtype must be union: want union, got string" suggests the type checker is looking for union types
+- This contradicts the expected behavior where `+` should work with primitive types (int, float, string)
+- The issue likely stems from incomplete migration from generic operators to function overloading
+- The type system may be incorrectly applying union type rules to basic arithmetic operations
+
 **Action Items**:
 
-1. Complete operator overloading implementation
-2. Update all operator function definitions in stdlib
-3. Fix type checking for overloaded operators
-4. Update examples and tests to use new operator syntax
+1. **Investigate Operator Type Checking**: Debug why `+` operator expects union types instead of primitives
+2. **Fix Operator Overloading Logic**: Ensure basic operators (+, -, \*, /) work with primitive types
+3. **Update Type System**: Fix subtype checking for overloaded operators
+4. **Complete Operator Migration**: Finish the transition from generic operators to function overloading
+5. **Validate Operator Signatures**: Ensure all operator functions have correct type signatures
+6. **Test Basic Operations**: Verify that arithmetic operations work with int, float, and string types
 
 ### Phase 4: Function Signature Mismatches (⏳ MEDIUM PRIORITY)
 
@@ -559,14 +587,101 @@ Node not found 'panic'
 
 **Test Results Analysis**: The current test run shows that **Phase 1 (Dependency Module Resolution)** is the critical blocker. The `std@0.33.0/errors/errors.neva:12:4: dependency module not found:` error appears in virtually every failing test, indicating that the standard library cannot be loaded at all.
 
+**Recent Discoveries from Manual Testing**:
+
+1. **Empty modRef Issue**: Running `neva run examples/hello_world` reveals that `modRef` in `scope.go:155` is sometimes empty (no Path or Version), causing the "dependency module not found:" error with no module identifier.
+
+2. **Operator Type Checking Bug**: The `+` operator incorrectly expects union types instead of primitive types, as seen in `switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string`.
+
 **Priority Order**:
 
-1. 🚨 **Phase 1**: Fix dependency module resolution system
+1. 🚨 **Phase 1**: Fix dependency module resolution system (empty modRef issue)
 2. 🚨 **Phase 2**: Fix type system null pointer crashes
-3. ⏳ **Phase 3**: Fix operator overloading issues
+3. ⏳ **Phase 3**: Fix operator overloading issues (union type expectation bug)
 4. ⏳ **Phase 4**: Fix function signature mismatches
 5. ⏳ **Phase 5**: Fix import and module issues
 6. ⏳ **Phase 6**: Fix stdlib component network issues
 7. ⏳ **Phase 7**: Recover e2e test suite
 
 **Note**: Phase 6 (Standard Library Component Issues) mentioned in the original analysis is not currently visible because Phase 1 is preventing the stdlib from loading entirely.
+
+## Critical Issues Discovered Through Testing
+
+### Issue 1: Empty Module Reference in Dependency Resolution (🚨 CRITICAL)
+
+**Location**: `internal/compiler/sourcecode/scope.go:155`
+
+**Problem**: The `modRef` variable is sometimes empty (contains neither `Path` nor `Version` fields), causing dependency resolution to fail with an unhelpful error message.
+
+**Error Message**:
+
+```
+std@0.33.0/errors/errors.neva:12:4: dependency module not found:
+```
+
+**Root Cause**:
+
+- The `modRef` should be populated from `curMod.Manifest.Deps[pkgImport.Module]` at line 152
+- When `modRef` is empty, it indicates that either:
+  - The dependency is not properly declared in the module's manifest
+  - The `pkgImport.Module` key doesn't exist in `curMod.Manifest.Deps`
+  - The dependency resolution logic is failing before reaching the lookup
+
+**Impact**:
+
+- Prevents the standard library from loading entirely
+- Blocks all compilation and execution
+- Affects virtually every test and example
+
+**Reproduction**: Run `neva run examples/hello_world`
+
+### Issue 2: Incorrect Union Type Expectation for Basic Operators (🚨 HIGH)
+
+**Location**: Operator type checking logic (likely in type system)
+
+**Problem**: The `+` operator type checker incorrectly expects union types instead of primitive types for basic arithmetic operations.
+
+**Error Message**:
+
+```
+switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string
+```
+
+**Root Cause**:
+
+- The operator overloading implementation is incorrectly configured
+- The type checker is applying union type rules to basic arithmetic operations
+- This contradicts the expected behavior where `+` should work with primitive types (int, float, string)
+
+**Impact**:
+
+- Basic arithmetic operations are completely broken
+- String concatenation fails
+- Numeric addition fails
+- Affects fundamental language functionality
+
+**Expected Behavior**: The `+` operator should work with:
+
+- `int + int` → `int`
+- `float + float` → `float`
+- `string + string` → `string`
+
+**Actual Behavior**: Type checker expects union types for all operands
+
+### Issue 3: Incomplete Operator Overloading Migration
+
+**Problem**: The migration from generic operators to function overloading is incomplete, causing type system confusion.
+
+**Evidence**: The error message "Subtype must be union: want union, got string" suggests the type system is looking for union types where it should be looking for primitive types.
+
+**Likely Cause**: The operator overloading logic is incorrectly applying union type checking rules to basic arithmetic operations, possibly due to incomplete migration from the old generic operator system.
+
+## Immediate Action Required
+
+These issues represent fundamental problems that prevent the tagged unions implementation from working correctly:
+
+1. **Fix Empty modRef**: Debug and fix the module reference construction in `scope.go`
+2. **Fix Operator Type Checking**: Correct the operator overloading logic to work with primitive types
+3. **Complete Operator Migration**: Finish the transition from generic operators to function overloading
+
+Without fixing these issues, the tagged unions feature cannot be properly tested or used.
