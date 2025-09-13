@@ -579,7 +579,7 @@ Based on the comprehensive test analysis, here's a structured plan for AI agents
 
 ### Success Metrics
 
-- [ ] All parser smoke tests pass
+- [x] **All parser smoke tests pass** ✅
 - [ ] All stdlib components compile without network errors
 - [ ] Type system handles tagged unions correctly
 - [ ] Operator overloading works for all types
@@ -594,3 +594,43 @@ Based on the comprehensive test analysis, here's a structured plan for AI agents
 3. **Documentation**: Update docs as changes are made
 4. **Incremental**: Small, focused changes with frequent testing
 5. **Validation**: Each phase should improve overall test pass rate
+
+## Debugging Methodology for Parser Issues
+
+Based on our experience debugging the parser smoke tests, here's a proven methodology for future parser debugging:
+
+### 1. **Systematic File Processing Debugging**
+
+When parser errors occur, add debugging output to identify the actual source:
+
+```go
+for _, file := range nevaTestFiles {
+    fileName := file.Name()
+    fmt.Printf("Processing file: %s\n", fileName)
+
+    // ... parsing logic ...
+
+    fmt.Printf("✓ parsed successfully: %s\n", fileName)
+}
+```
+
+### 2. **Common Parser Error Patterns**
+
+- **Misleading Line Numbers**: ANTLR error messages may report incorrect line/column numbers
+- **Union Literal Syntax**: Must use `TypeName::Variant(value)`, not `Variant(value)`
+- **Compiler Directives**: `#extern` only accepts single identifiers, not comma-separated lists
+- **Interface Type Parameters**: Only use `<>` when actually needed
+
+### 3. **Error Source Identification**
+
+1. **Add "Processing file:" messages** to see which file is being processed when error occurs
+2. **Move success messages** to after parsing completion to avoid confusion
+3. **Test files individually** if batch processing is unclear
+4. **Check grammar rules** against actual usage patterns
+
+### 4. **Validation Steps**
+
+1. **Verify individual files** parse correctly in isolation
+2. **Check grammar consistency** with actual usage
+3. **Test incremental changes** to isolate specific issues
+4. **Use systematic debugging** rather than relying on error messages alone

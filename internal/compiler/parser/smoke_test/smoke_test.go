@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/golang/mock/gomock"
 
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	"github.com/stretchr/testify/require"
@@ -28,6 +27,37 @@ type MyErrorListener interface {
 	antlr.ErrorListener
 }
 
+// FileAwareErrorListener provides better error reporting with file context
+type FileAwareErrorListener struct {
+	filename string
+	t        *testing.T
+}
+
+func NewFileAwareErrorListener(filename string, t *testing.T) *FileAwareErrorListener {
+	return &FileAwareErrorListener{
+		filename: filename,
+		t:        t,
+	}
+}
+
+func (f *FileAwareErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
+	token := offendingSymbol.(antlr.Token)
+	f.t.Errorf("PARSER ERROR in %s at line %d:%d - %s\n  Token: '%s'",
+		f.filename, line, column, msg, token.GetText())
+}
+
+func (f *FileAwareErrorListener) ReportAmbiguity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, exact bool, ambigAlts *antlr.BitSet, configs *antlr.ATNConfigSet) {
+	// Ignore ambiguity reports for now
+}
+
+func (f *FileAwareErrorListener) ReportAttemptingFullContext(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, conflictingAlts *antlr.BitSet, configs *antlr.ATNConfigSet) {
+	// Ignore full context reports for now
+}
+
+func (f *FileAwareErrorListener) ReportContextSensitivity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex, prediction int, configs *antlr.ATNConfigSet) {
+	// Ignore context sensitivity reports for now
+}
+
 // TestSmoke reads all the ".neva" files in current directory and tries to parse them expecting zero errors.
 func TestSmoke(t *testing.T) {
 	err := os.Chdir("./happypath")
@@ -44,7 +74,7 @@ func TestSmoke(t *testing.T) {
 			continue
 		}
 
-		fmt.Printf("Processing file: %s\n", fileName)
+		fmt.Println("parsing was started for: ", fileName)
 
 		// read file and create input
 		input, err := antlr.NewFileStream(fileName)
@@ -56,11 +86,9 @@ func TestSmoke(t *testing.T) {
 			antlr.NewCommonTokenStream(lexer, 0),
 		)
 
-		// create mock and configure it to expect zero errors
-		ctrl := gomock.NewController(t)
-		mock := NewMockMyErrorListener(ctrl)
-		initMock(mock.EXPECT())
-		parser.AddErrorListener(mock)
+		// create file-aware error listener for better error reporting
+		fileErrorListener := NewFileAwareErrorListener(fileName, t)
+		parser.AddErrorListener(fileErrorListener)
 
 		// create tree to walk
 		parser.BuildParseTrees = true
@@ -69,48 +97,4 @@ func TestSmoke(t *testing.T) {
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)
 	}
-}
-
-// initMock configures the mock to expect zero calls
-func initMock(recorder *MockMyErrorListenerMockRecorder) {
-	// we don't care for now
-	recorder.ReportContextSensitivity(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-	).AnyTimes()
-
-	// we don't care for now
-	recorder.ReportAmbiguity(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-	).AnyTimes()
-
-	// we don't care for now
-	recorder.ReportAttemptingFullContext(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-	).AnyTimes()
-
-	// this is what we care about
-	recorder.SyntaxError(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-	).Times(0)
 }
