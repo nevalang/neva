@@ -44,6 +44,8 @@ func TestSmoke(t *testing.T) {
 			continue
 		}
 
+		fmt.Printf("Processing file: %s\n", fileName)
+
 		// read file and create input
 		input, err := antlr.NewFileStream(fileName)
 		require.NoError(t, err)
@@ -63,8 +65,6 @@ func TestSmoke(t *testing.T) {
 		// create tree to walk
 		parser.BuildParseTrees = true
 		tree := parser.Prog()
-
-		fmt.Println("parsing was started for: ", fileName)
 
 		// walk the tree to catch potential errors
 		antlr.ParseTreeWalkerDefault.Walk(NewTreeShapeListener(), tree)

@@ -40,8 +40,8 @@ const ENUM union {
     Tuesday
 } = 8
 
-const UNION union { Int int, String string } = Int(42)
+const UNION union { Int int, String string } = UNION::Int(42)
 
-pub const UNION union { Int int, String string } = String('hello!')
+pub const UNION union { Int int, String string } = UNION::String('hello!')
 
 const msg string = 'hello!'

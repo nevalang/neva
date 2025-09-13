@@ -456,3 +456,141 @@ The extensive test suite updates (200+ files) demonstrate thorough migration cov
 2. **Test Individual Files**: Use smoke tests to isolate parser issues
 3. **Verify Examples**: Check standard library for correct syntax examples
 4. **Incremental Changes**: Make small changes and test frequently
+
+## AI Agent Iteration Plan
+
+Based on the comprehensive test analysis, here's a structured plan for AI agents to systematically fix the remaining issues in the tagged unions implementation:
+
+### Phase 1: Parser Grammar Issues (✅ Complete - 100%)
+
+**Status**: Fully resolved - all parser smoke tests now pass
+
+**Completed**:
+
+- ✅ Fixed union syntax inconsistency (pipe characters `|` removed)
+- ✅ Updated smoke test files with correct union syntax
+- ✅ Corrected interface type parameter usage
+- ✅ Added comprehensive documentation and troubleshooting guide
+- ✅ **Fixed union literal syntax** - corrected `Int(42)` to `UNION::Int(42)` in `023_const.simple.neva`
+- ✅ **Fixed compiler directive syntax** - corrected `#extern(read, write)` to `#extern(read)` in `027_compiler_directives.neva`
+- ✅ **Improved error reporting** - added systematic debugging with "Processing file:" messages
+- ✅ **Identified actual error sources** - discovered errors were in files 23 and 27, not 21-22 as initially thought
+
+**Key Discoveries**:
+
+1. **Misleading Error Messages**: ANTLR error messages can report incorrect line/column numbers
+2. **Systematic Debugging Works**: Adding "Processing file:" messages revealed actual error sources
+3. **Grammar Rules Are Strict**: Union literals must use `TypeName::Variant(value)` syntax
+4. **Compiler Directives Are Limited**: `#extern` only accepts single identifiers, not comma-separated lists
+
+### Phase 2: Standard Library Component Issues (⏳ Pending)
+
+**Problem**: Many stdlib components failing with "Component must have network" errors
+
+**Examples**:
+
+- `std@0.33.0/fmt/fmt.neva`
+- `std@0.33.0/lists/lists.neva`
+- `std@0.33.0/http/http.neva`
+
+**Root Cause**: Components missing the `---` network definition section
+
+**Action Items**:
+
+1. Audit all stdlib components for missing network definitions
+2. Add proper `---` sections to components that need them
+3. Update component templates and documentation
+
+### Phase 3: Type System Issues (⏳ Pending)
+
+**Problems**:
+
+- Union type string representation mismatch
+- Subtype checking failures for union types
+- Null pointer dereference in type system operations
+
+**Examples**:
+
+- Expected: `"union { int, string }"`
+- Actual: `"union { int int, string string }"`
+
+**Action Items**:
+
+1. Fix union type string representation in type system
+2. Update subtype checking logic for tagged unions
+3. Add null pointer safety checks in type operations
+4. Update type system tests
+
+### Phase 4: Operator Overloading Issues (⏳ Pending)
+
+**Problem**: Incomplete migration from generic operators to function overloading
+
+**Examples**:
+
+- `Invalid left operand type for +: Subtype must be union: want union, got int`
+
+**Action Items**:
+
+1. Complete operator overloading implementation
+2. Update all operator function definitions
+3. Fix type checking for overloaded operators
+4. Update examples and tests
+
+### Phase 5: Import and Module Issues (⏳ Pending)
+
+**Problems**:
+
+- Missing runtime import: `import not found: runtime`
+- Package resolution failures
+- Manifest issues with missing `neva.yml` files
+
+**Action Items**:
+
+1. Fix import resolution for runtime package
+2. Update module manifest requirements
+3. Fix package discovery and resolution
+4. Update import documentation
+
+### Phase 6: Function Signature Mismatches (⏳ Pending)
+
+**Problem**: Parameter count mismatches throughout codebase
+
+**Examples**:
+
+- `count of arguments mismatch count of parameters, want 0 got 1`
+
+**Action Items**:
+
+1. Audit all function signatures for consistency
+2. Update function definitions to match usage
+3. Fix parameter passing in examples and tests
+4. Update function signature documentation
+
+### Phase 7: E2E Test Recovery (⏳ Pending)
+
+**Problem**: 100% failure rate in e2e tests
+
+**Action Items**:
+
+1. Fix fundamental issues preventing e2e tests from running
+2. Update test harnesses for new union syntax
+3. Fix test data and expectations
+4. Implement comprehensive test coverage
+
+### Success Metrics
+
+- [ ] All parser smoke tests pass
+- [ ] All stdlib components compile without network errors
+- [ ] Type system handles tagged unions correctly
+- [ ] Operator overloading works for all types
+- [ ] Import resolution works for all packages
+- [ ] Function signatures are consistent
+- [ ] E2E tests achieve >90% pass rate
+
+### Implementation Strategy
+
+1. **Sequential Approach**: Complete each phase before moving to the next
+2. **Test-Driven**: Fix tests first, then verify with examples
+3. **Documentation**: Update docs as changes are made
+4. **Incremental**: Small, focused changes with frequent testing
+5. **Validation**: Each phase should improve overall test pass rate
