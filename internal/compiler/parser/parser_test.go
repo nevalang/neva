@@ -345,7 +345,7 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	c4 := got.Entities["C4"].Component
 	d5, ok := c4[0].Directives[compiler.ExternDirective]
 	require.Equal(t, true, ok)
-	require.Equal(t, "d5", d5[0])
+	require.Equal(t, "d5", d5)
 	_, ok = c4[0].Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 }
