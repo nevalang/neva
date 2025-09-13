@@ -18,7 +18,7 @@ def Main(start any) (stop any) {
 def App(sig any) (res int, err error) {
 	read_first_int ReadIntFromStdin?
 	read_second_int ReadIntFromStdin?
-	add Add<int>
+	add Add
 	---
 	:sig -> read_first_int
 	read_first_int:res -> [add:left, read_second_int]

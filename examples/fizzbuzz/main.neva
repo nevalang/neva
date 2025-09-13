@@ -4,7 +4,7 @@ def Main(start any) (stop any) {
     Map<int, any>{FizzBuzz}
     For{fmt.Println}
     Wait
-    Panic runtime.Panic
+    panic runtime.Panic
     ---
     :start -> 1..101 -> map -> for
     for:res -> wait -> :stop

@@ -15,7 +15,7 @@ def Main(start any) (stop any) {
 
 def Next2Lines(data int) (res any, err error) {
 	first Tap<int>{FirstLine}?
-	dec Dec<int>
+	dec Dec
 	second SecondLine?
 	---
 	:data -> first
