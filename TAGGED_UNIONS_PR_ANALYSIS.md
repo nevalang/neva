@@ -20,6 +20,36 @@ This implementation addresses several critical issues in the Nevalang type syste
 
 **Problem Solved**: The original issue ([#751](https://github.com/nevalang/neva/issues/751)) identified that untagged unions made it impossible to determine at runtime which union member was active, preventing proper pattern matching and type-safe branching. This forced developers to manually add `kind`/`tag` fields (similar to TypeScript patterns) or rely on structural checking, which was error-prone and not exhaustive.
 
+#### Implementation Architecture
+
+The tagged unions implementation spans multiple compiler phases:
+
+**Parser Level** (`internal/compiler/parser/`):
+
+- **Type Expressions**: Replaced enum and untagged union syntax with tagged union type expressions
+- **Constants**: Added support for union literal constants (e.g., `Input::Int(42)`)
+- **Network Senders**: Added union sender syntax for pattern matching and value construction
+- **Grammar Updates**: Complete ANTLR grammar rewrite to support new union syntax
+
+**Analyzer Level** (`internal/compiler/analyzer/`):
+
+- **Static Analysis**: Union sender validation against union type definitions
+- **Type Checking**: Subtype validation for union tags with optional type expressions
+- **Pattern Matching**: Exhaustive case handling verification for switch statements
+
+**Desugarer Level** (`internal/compiler/desugarer/`):
+
+- **Union Sender Desugaring**: Four distinct cases handled:
+  1. `Input::Int ->` (non-chained, tag-only) → `New<Input>` component
+  2. `-> Input::Int ->` (chained, tag-only) → `NewV2<Input>` component
+  3. `Input::Int(foo) ->` (non-chained, with value) → `UnionWrap<Input>` component
+  4. `-> Input::Int(foo) ->` (chained, with value) → `UnionWrapV2<Input>` component
+
+**Runtime Level** (`internal/runtime/`):
+
+- **Union Wrapper Functions**: `union_wrapper_v1.go` and `union_wrapper_v2.go` for runtime union handling
+- **Type System Integration**: Full support for tagged union type checking and runtime dispatch
+
 #### Grammar Changes (`internal/compiler/parser/neva.g4`)
 
 **Before (Enums)**:
@@ -68,6 +98,58 @@ type Day union {
 }
 ```
 
+#### Union Sender Syntax
+
+The new tagged union system introduces **Union Sender** syntax for pattern matching and value construction:
+
+**Four Supported Cases**:
+
+1. **Non-chained, tag-only**: `Input::Int ->`
+2. **Chained, tag-only**: `-> Input::Int ->`
+3. **Non-chained, with value**: `Input::Int(foo) ->`
+4. **Chained, with value**: `-> Input::Int(42) ->`
+
+**Example Usage**:
+
+```neva
+import {
+    fmt
+    runtime
+}
+
+def Main(start any) (stop any) {
+    proc Process
+    ---
+    // union sender (in chained connection)
+    :start -> Input::Int(42) -> proc -> :stop
+}
+
+// new type expression - tagged union
+type Input union {
+    Int int
+    None
+}
+
+def Process(data Input) (res any) {
+    panic runtime.Panic
+    ---
+    // pattern matching on union with switch
+    :data -> switch {
+        Input::Int -> println -> :res
+        Input::None -> panic
+    }
+}
+```
+
+**Union Const Literals**:
+
+```neva
+const foo union{Int int, None} = Input::Int(42)
+const bar Input = Input::None
+```
+
+**Important Note**: Union tags themselves are **not valid const literal senders**. Only primitive types (bool, int, float, string) are supported as const literal senders.
+
 ### 2. Pattern Matching and Control Flow Enhancement
 
 **Major Change**: Introduction of `match` and `switch` statements with syntax sugar for better control flow.
@@ -78,17 +160,84 @@ type Day union {
 - [Issue #726](https://github.com/nevalang/neva/issues/726) proposed syntax sugar for `match` statements to replace complex if-else chains
 - [Issue #725](https://github.com/nevalang/neva/issues/725) focused on `switch` statement implementation
 
+#### Pattern Matching Implementation
+
+The pattern matching system supports three distinct forms:
+
+**1. Route Selection Based on Pattern**:
+
+```neva
+src_sender -> match {
+    pattern_sender -> pattern_receiver
+    ...
+    _ -> default_receiver
+}
+```
+
+- **Semantics**: `match` waits for all inputs (data + patterns), then matches data against patterns sequentially
+- **Runtime API**: `MatchV1<T>(src T, [pattern] any) ([dst] T, else T)`
+
+**2. Value Selection Based on Pattern**:
+
+```neva
+src_sender -> match {
+    pattern_sender: value_sender
+    ...
+    _: else_receiver
+} -> dst_receiver
+```
+
+- **Semantics**: Selects output value based on pattern match, has single outgoing connection
+- **Runtime API**: `MatchV2<T, Y>(src T, [pattern] T, [value] Y, else Y) (dst T)`
+
+**3. Safe Pattern-Triggered Connections**:
+
+```neva
+src_sender -> match {
+    pattern_sender: value_sender -> pattern_receiver
+    pattern_sender -> pattern_receiver
+    _: value_sender -> pattern_receiver
+}
+```
+
+- **Semantics**: Mix of routing and value selection with concurrency safety
+- **Safety**: Prevents race conditions by treating value_sender as sender rather than chain
+
 **Implementation**: The tagged unions now enable proper pattern matching where the compiler can:
 
 - Enforce exhaustive handling of all union variants
 - Provide compile-time safety for pattern matching
 - Enable cleaner syntax for branching logic
+- Ensure concurrency safety in pattern matching operations
 
 ### 3. Standard Library: Operator Overloading Refactor
 
 **Major Change**: Replaced generic operator functions with function overloading.
 
-#### Before (Generic Operators)
+#### The Problem with Generic Operators
+
+The previous implementation used generic operators with untagged unions, which created fundamental issues:
+
+```neva
+type AddInput union {
+    Int int
+    Float float
+    String string
+}
+
+#extern(int int_add, float float_add, string string_add)
+pub def Add<T AddInput>(left T, right T) (res T)
+```
+
+**Issues**:
+
+1. **Type Constraint Problems**: With tagged unions, `int <: union { Int int, String string }` is **FALSE**
+2. **Return Type Complexity**: Components like `Add` return union types instead of underlying primitive types
+3. **Syntax Sugar Complications**: Makes operator implementation as syntax sugar much more complex
+
+#### The Solution: Real Function Overloading
+
+**Before (Generic Operators)**:
 
 ```neva
 #extern(int int_inc, float float_inc)
@@ -98,7 +247,7 @@ pub def Inc<T int | float>(data T) (res T)
 pub def Add<T int | float | string>(left T, right T) (res T)
 ```
 
-#### After (Overloaded Functions)
+**After (Overloaded Functions)**:
 
 ```neva
 #extern(int_inc)
@@ -113,6 +262,49 @@ pub def Add(left float, right float) (res float)
 #extern(string_add)
 pub def Add(left string, right string) (res string)
 ```
+
+#### Implementation Changes
+
+**Sourcecode Package Updates**:
+
+- **Entity Structure**: Changed `Component Component` to `Component []Component` to support multiple overloaded versions
+- **Directive Changes**: `Directives map[Directive][]string` → `Directives map[Directive]string` (simplified `#extern` syntax)
+- **Scope Resolution**: Updated `GetComponent` method to handle overloaded components with `OverloadIndex` field
+
+**Parser Updates**:
+
+- **Component Parsing**: Modified to append to component slice for overloading support
+- **Directive Parsing**: Updated to handle simplified `#extern` syntax (single string instead of slice)
+
+**Overload Resolution**:
+
+- **Node Overload Index**: Added `OverloadIndex *int` field to `Node` struct for overloaded component selection
+- **Type-Based Resolution**: Implemented `getNodeOverloadIndex` function to determine correct overload based on connection types
+- **Network Analysis**: Enhanced to analyze connection types and select appropriate component overload
+
+#### getNodeOverloadIndex Implementation
+
+The `getNodeOverloadIndex` function is critical for overloaded component resolution:
+
+**Algorithm**:
+
+1. **Input Validation**: Ensures multiple component implementations exist (overloading scenario)
+2. **Network Analysis**: Iterates over all connections to find where the given node is referenced as sender or receiver
+3. **Hierarchical Traversal**: Handles nested connections (switch, chained, deferred) to find all node references
+4. **Type Analysis**: Analyzes connection types to determine which overload signature matches the usage
+5. **Compatibility Check**: Returns appropriate overload index or error if no compatible version found
+
+**Required Parameters**:
+
+- `iface src.Interface` - Component's interface (preferably resolved) for type analysis
+- `nodes map[string]src.Node` - All nodes in the component for connection resolution
+- `connections []src.Connection` - Network connections to analyze for type information
+
+**Implementation Challenges**:
+
+- **Complex Connection Types**: Must handle switch, chained, deferred, and array bypass connections
+- **Type Resolution**: Requires integration with type system for subtype checking
+- **Network Analysis**: Reuses logic from `network.go` for complex connection type resolution
 
 ### 4. Runtime Functions: New Implementations
 
@@ -399,41 +591,19 @@ The extensive test suite updates (200+ files) demonstrate thorough migration cov
 
 Based on the comprehensive test analysis and current test results, here's a structured plan for AI agents to systematically fix the remaining issues in the tagged unions implementation:
 
-### Phase 1: Dependency Module Resolution System (🚨 CRITICAL - Current Priority)
+### ⚠️ CRITICAL AGENT GUIDELINES
 
-**Problem**: The third-party module import dependency system is completely broken, preventing stdlib from loading
+**FOCUS ON SINGLE ISSUES**: AI agents MUST focus on ONE issue at a time and NEVER attempt to fix multiple issues simultaneously, even when it seems convenient. Each issue should be completely resolved before moving to the next.
 
-**Evidence from Test Results**:
+**THINK BEFORE FIXING**: Before attempting any fix, agents MUST analyze the root cause of the problem. Many issues are symptoms of deeper problems. For example:
 
-```
-std@0.33.0/errors/errors.neva:12:4: dependency module not found:
-```
+- Don't add `if-else` branches to handle empty maps - figure out WHY the map is empty when it should always contain data
+- Don't patch error messages - understand what's causing the underlying failure
+- Don't replace operators with components - operators are meant to be syntax sugar, not component calls
 
-**Impact**: This is blocking ALL other functionality - the compiler can't even load the standard library
+**OPERATOR SYNTAX PRESERVATION**: NEVER replace operators like `+` with components. The goal is to maintain operator (binary expression) syntax as syntax sugar, not to convert them to component calls.
 
-**Root Cause Analysis**:
-
-- **Primary Issue**: Empty `modRef` in scope resolution (`internal/compiler/sourcecode/scope.go:155`)
-- **Specific Problem**: When resolving dependencies, `modRef` is sometimes represented as an empty string, meaning it has neither `Path` nor `Version` fields populated
-- **Location**: `scope.go` line 155: `return Entity{}, core.Location{}, fmt.Errorf("dependency module not found: %v", modRef)`
-- **Example**: Running `neva run examples/hello_world` triggers this issue where `modRef` appears as empty string
-
-**Technical Details**:
-
-- The `modRef` should contain both `Path` and `Version` (e.g., `std@0.33.0`)
-- When empty, it indicates a failure in the module reference construction process
-- This suggests the issue is in the dependency resolution logic before reaching the "not found" error
-
-**Action Items**:
-
-1. **Investigate modRef Construction**: Debug why `modRef` is empty in `scope.go:152-155`
-2. **Check Module Reference Building**: Verify how `curMod.Manifest.Deps[pkgImport.Module]` is populated
-3. **Validate neva.yml Dependencies**: Ensure all `neva.yml` files have proper dependency declarations
-4. **Fix Empty modRef Handling**: Add validation to prevent empty module references
-5. **Test Module Resolution**: Verify that `std@0.33.0` modules can be properly resolved
-6. **Add Debug Logging**: Include modRef values in error messages for better debugging
-
-### Phase 2: Type System Critical Issues (🚨 HIGH PRIORITY)
+### Phase 1: Type System Critical Issues (🚨 HIGH PRIORITY - Current Focus)
 
 **Problem**: Null pointer dereference crashes in type system operations
 
@@ -446,16 +616,22 @@ github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 
 **Impact**: Type system is crashing, preventing compilation
 
+**Root Cause Analysis Required**:
+
+- **First**: Determine if this panic is actually relevant to the current tagged unions implementation
+- **Investigate**: Why is `Expr.String()` being called on a nil pointer?
+- **Understand**: What should be populating the `Expr` field that's causing the nil dereference?
+
 **Action Items**:
 
-1. Fix null pointer dereference in `Expr.String()` method
-2. Add null safety checks in type system operations
-3. Fix union type checking logic in subtype checker
-4. Update type system tests to handle tagged unions correctly
+1. **Investigate Relevance**: First check if this panic is actually related to tagged unions or a pre-existing issue
+2. **Root Cause Analysis**: If relevant, understand WHY `Expr` is nil when `String()` is called
+3. **Fix Root Cause**: Don't just add nil checks - fix the underlying issue causing the nil pointer
+4. **Validate Fix**: Ensure the fix doesn't break existing functionality
 
-### Phase 3: Operator Overloading Issues (⏳ HIGH PRIORITY)
+### Phase 2: Operator Overloading Issues (🚨 HIGH PRIORITY)
 
-**Problem**: Incomplete migration from generic operators to function overloading
+**Problem**: Type checker incorrectly expects union types for basic operators instead of primitive types
 
 **Evidence from Test Results**:
 
@@ -464,32 +640,57 @@ Invalid left operand type for +: Subtype must be union: want union, got int
 Invalid left operand type for +: Subtype must be union: want union, got string
 ```
 
-**Impact**: Basic arithmetic operations are broken
+**Impact**: Basic arithmetic operations are completely broken
 
-**Root Cause Analysis**:
+**Root Cause Analysis Required**:
 
-- **Primary Issue**: Type checker incorrectly expects union types for basic operators
-- **Specific Problem**: The `+` operator type checking logic is expecting union types instead of primitive types (int, string)
-- **Example**: `switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string`
-- **Likely Cause**: The operator overloading implementation is incorrectly configured to expect union types for all operands
+- **Critical Question**: Why is the type checker expecting union types for basic operators like `+`?
+- **Investigate**: What changed in the operator overloading implementation that made it expect unions?
+- **Understand**: The `+` operator should work with primitive types (int, float, string), not union types
+- **Focus**: This is likely a bug in the operator overloading type checking logic, not a fundamental design issue
 
 **Technical Details**:
 
-- The error message "Subtype must be union: want union, got string" suggests the type checker is looking for union types
-- This contradicts the expected behavior where `+` should work with primitive types (int, float, string)
-- The issue likely stems from incomplete migration from generic operators to function overloading
-- The type system may be incorrectly applying union type rules to basic arithmetic operations
+- **Expected Behavior**: `int + int` → `int`, `string + string` → `string`
+- **Actual Behavior**: Type checker expects union types for all operands
+- **Error Location**: The subtype checking logic for operators is incorrectly configured
+- **Key Insight**: This suggests the operator overloading implementation has a bug in its type checking logic
 
 **Action Items**:
 
-1. **Investigate Operator Type Checking**: Debug why `+` operator expects union types instead of primitives
-2. **Fix Operator Overloading Logic**: Ensure basic operators (+, -, \*, /) work with primitive types
-3. **Update Type System**: Fix subtype checking for overloaded operators
-4. **Complete Operator Migration**: Finish the transition from generic operators to function overloading
-5. **Validate Operator Signatures**: Ensure all operator functions have correct type signatures
-6. **Test Basic Operations**: Verify that arithmetic operations work with int, float, and string types
+1. **Investigate Operator Type Checking Logic**: Find where the `+` operator type checking is implemented
+2. **Understand the Bug**: Determine why it's expecting union types instead of primitive types
+3. **Fix the Root Cause**: Correct the type checking logic to work with primitive types
+4. **Preserve Operator Syntax**: Ensure operators remain as syntax sugar, not component calls
+5. **Test Basic Operations**: Verify that `int + int`, `string + string` work correctly
 
-### Phase 4: Function Signature Mismatches (⏳ MEDIUM PRIORITY)
+### Phase 3: Dependency Module Resolution System (⏳ MEDIUM PRIORITY)
+
+**Problem**: Occasional empty `modRef` in dependency resolution causing "dependency module not found:" errors
+
+**Evidence from Test Results**:
+
+```
+std@0.33.0/errors/errors.neva:12:4: dependency module not found:
+```
+
+**Impact**: Intermittent failures in module loading, but not blocking all functionality
+
+**Root Cause Analysis Required**:
+
+- **Key Insight**: This is an intermittent bug, not a systematic failure
+- **Investigate**: Why is `modRef` sometimes empty when it should contain module path and version?
+- **Understand**: The dependency should always be present in `curMod.Manifest.Deps[pkgImport.Module]`
+- **Focus**: Don't add empty checks - figure out WHY the dependency is missing from the manifest
+
+**Action Items**:
+
+1. **Investigate Manifest Population**: Understand how `curMod.Manifest.Deps` gets populated
+2. **Find Root Cause**: Determine why `pkgImport.Module` key is sometimes missing from dependencies
+3. **Fix the Source**: Don't patch the symptom - fix why the dependency isn't in the manifest
+4. **Validate Fix**: Ensure dependencies are consistently available
+
+### Phase 4: Function Signature Mismatches (⏳ LOW PRIORITY)
 
 **Problem**: Parameter count mismatches throughout codebase
 
@@ -508,7 +709,7 @@ count of arguments mismatch count of parameters, want 0 got 1
 3. Fix parameter passing in examples and tests
 4. Update function signature documentation
 
-### Phase 5: Import and Module Issues (⏳ MEDIUM PRIORITY)
+### Phase 5: Import and Module Issues (⏳ LOW PRIORITY)
 
 **Problems**:
 
@@ -566,18 +767,18 @@ Node not found 'panic'
 ### Success Metrics
 
 - [x] **All parser smoke tests pass** ✅
-- [ ] **Dependency module resolution works** (Phase 1 - CRITICAL)
-- [ ] **Type system no longer crashes** (Phase 2 - HIGH)
-- [ ] **Basic arithmetic operations work** (Phase 3 - HIGH)
-- [ ] **Function signatures are consistent** (Phase 4 - MEDIUM)
-- [ ] **Import resolution works for all packages** (Phase 5 - MEDIUM)
+- [ ] **Type system no longer crashes** (Phase 1 - HIGH)
+- [ ] **Basic arithmetic operations work** (Phase 2 - HIGH)
+- [ ] **Dependency module resolution works consistently** (Phase 3 - MEDIUM)
+- [ ] **Function signatures are consistent** (Phase 4 - LOW)
+- [ ] **Import resolution works for all packages** (Phase 5 - LOW)
 - [ ] **All stdlib components compile without network errors** (Phase 6 - LOW)
 - [ ] **E2E tests achieve >90% pass rate** (Phase 7 - LOW)
 
 ### Implementation Strategy
 
 1. **Sequential Approach**: Complete each phase before moving to the next
-2. **Dependency-First**: Fix Phase 1 (dependency resolution) before anything else
+2. **Type System First**: Fix Phase 1 (type system crashes) and Phase 2 (operator overloading) before anything else
 3. **Test-Driven**: Fix tests first, then verify with examples
 4. **Documentation**: Update docs as changes are made
 5. **Incremental**: Small, focused changes with frequent testing
@@ -585,57 +786,58 @@ Node not found 'panic'
 
 ### Current Status (Updated)
 
-**Test Results Analysis**: The current test run shows that **Phase 1 (Dependency Module Resolution)** is the critical blocker. The `std@0.33.0/errors/errors.neva:12:4: dependency module not found:` error appears in virtually every failing test, indicating that the standard library cannot be loaded at all.
+**Test Results Analysis**: The current test run shows that **Phase 1 (Type System Crashes)** and **Phase 2 (Operator Overloading)** are the critical blockers. The dependency module resolution issue is intermittent and not blocking all functionality.
 
 **Recent Discoveries from Manual Testing**:
 
-1. **Empty modRef Issue**: Running `neva run examples/hello_world` reveals that `modRef` in `scope.go:155` is sometimes empty (no Path or Version), causing the "dependency module not found:" error with no module identifier.
+1. **Type System Panic**: Null pointer dereference in `Expr.String()` method is causing compilation crashes.
 
 2. **Operator Type Checking Bug**: The `+` operator incorrectly expects union types instead of primitive types, as seen in `switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string`.
 
+3. **Intermittent Dependency Issue**: The empty `modRef` issue in `scope.go:155` is occasional, not systematic.
+
 **Priority Order**:
 
-1. 🚨 **Phase 1**: Fix dependency module resolution system (empty modRef issue)
-2. 🚨 **Phase 2**: Fix type system null pointer crashes
-3. ⏳ **Phase 3**: Fix operator overloading issues (union type expectation bug)
+1. 🚨 **Phase 1**: Fix type system null pointer crashes (investigate relevance first)
+2. 🚨 **Phase 2**: Fix operator overloading issues (union type expectation bug)
+3. ⏳ **Phase 3**: Fix intermittent dependency module resolution issues
 4. ⏳ **Phase 4**: Fix function signature mismatches
 5. ⏳ **Phase 5**: Fix import and module issues
 6. ⏳ **Phase 6**: Fix stdlib component network issues
 7. ⏳ **Phase 7**: Recover e2e test suite
 
-**Note**: Phase 6 (Standard Library Component Issues) mentioned in the original analysis is not currently visible because Phase 1 is preventing the stdlib from loading entirely.
+**Note**: The dependency resolution issue is not blocking all functionality - it's an intermittent bug that should be investigated after the core type system issues are resolved.
 
 ## Critical Issues Discovered Through Testing
 
-### Issue 1: Empty Module Reference in Dependency Resolution (🚨 CRITICAL)
+### Issue 1: Type System Null Pointer Dereference (🚨 HIGH PRIORITY)
 
-**Location**: `internal/compiler/sourcecode/scope.go:155`
+**Location**: `github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String`
 
-**Problem**: The `modRef` variable is sometimes empty (contains neither `Path` nor `Version` fields), causing dependency resolution to fail with an unhelpful error message.
+**Problem**: Null pointer dereference in the `Expr.String()` method is causing compilation crashes.
 
 **Error Message**:
 
 ```
-std@0.33.0/errors/errors.neva:12:4: dependency module not found:
+panic: runtime error: invalid memory address or nil pointer dereference
+github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 ```
 
-**Root Cause**:
+**Root Cause Analysis Required**:
 
-- The `modRef` should be populated from `curMod.Manifest.Deps[pkgImport.Module]` at line 152
-- When `modRef` is empty, it indicates that either:
-  - The dependency is not properly declared in the module's manifest
-  - The `pkgImport.Module` key doesn't exist in `curMod.Manifest.Deps`
-  - The dependency resolution logic is failing before reaching the lookup
+- **First**: Determine if this panic is actually relevant to the tagged unions implementation
+- **Investigate**: Why is `Expr.String()` being called on a nil pointer?
+- **Understand**: What should be populating the `Expr` field that's causing the nil dereference?
 
 **Impact**:
 
-- Prevents the standard library from loading entirely
-- Blocks all compilation and execution
-- Affects virtually every test and example
+- Causes compilation to crash completely
+- Prevents any code from being processed
+- May be a pre-existing issue unrelated to tagged unions
 
-**Reproduction**: Run `neva run examples/hello_world`
+**Action Required**: Investigate relevance first, then fix root cause if related to tagged unions.
 
-### Issue 2: Incorrect Union Type Expectation for Basic Operators (🚨 HIGH)
+### Issue 2: Incorrect Union Type Expectation for Basic Operators (🚨 HIGH PRIORITY)
 
 **Location**: Operator type checking logic (likely in type system)
 
@@ -668,20 +870,141 @@ switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be 
 
 **Actual Behavior**: Type checker expects union types for all operands
 
-### Issue 3: Incomplete Operator Overloading Migration
+### Issue 3: Intermittent Empty Module Reference in Dependency Resolution (⏳ MEDIUM PRIORITY)
 
-**Problem**: The migration from generic operators to function overloading is incomplete, causing type system confusion.
+**Location**: `internal/compiler/sourcecode/scope.go:155`
 
-**Evidence**: The error message "Subtype must be union: want union, got string" suggests the type system is looking for union types where it should be looking for primitive types.
+**Problem**: The `modRef` variable is sometimes empty (contains neither `Path` nor `Version` fields), causing dependency resolution to fail with an unhelpful error message.
 
-**Likely Cause**: The operator overloading logic is incorrectly applying union type checking rules to basic arithmetic operations, possibly due to incomplete migration from the old generic operator system.
+**Error Message**:
+
+```
+std@0.33.0/errors/errors.neva:12:4: dependency module not found:
+```
+
+**Root Cause Analysis Required**:
+
+- **Key Insight**: This is an intermittent bug, not a systematic failure
+- **Investigate**: Why is `modRef` sometimes empty when it should contain module path and version?
+- **Understand**: The dependency should always be present in `curMod.Manifest.Deps[pkgImport.Module]`
+- **Focus**: Don't add empty checks - figure out WHY the dependency is missing from the manifest
+
+**Impact**:
+
+- Causes intermittent failures in module loading
+- Not blocking all functionality (unlike the type system issues)
+- Should be investigated after core type system issues are resolved
+
+**Action Required**: Investigate why dependencies are sometimes missing from the manifest, don't just patch the empty check.
 
 ## Immediate Action Required
 
 These issues represent fundamental problems that prevent the tagged unions implementation from working correctly:
 
-1. **Fix Empty modRef**: Debug and fix the module reference construction in `scope.go`
-2. **Fix Operator Type Checking**: Correct the operator overloading logic to work with primitive types
-3. **Complete Operator Migration**: Finish the transition from generic operators to function overloading
+1. **Investigate Type System Panic**: First determine if the null pointer dereference is relevant to tagged unions
+2. **Fix Operator Type Checking**: Correct the operator overloading logic to work with primitive types instead of expecting unions
+3. **Investigate Dependency Issue**: Understand why module references are sometimes empty (after core issues are fixed)
 
-Without fixing these issues, the tagged unions feature cannot be properly tested or used.
+Without fixing the type system and operator issues, the tagged unions feature cannot be properly tested or used.
+
+## Implementation Status and Remaining Work
+
+### Completed Implementation
+
+**✅ Parser Level**:
+
+- Union type expression parsing (`union { Tag Type, Tag }`)
+- Union sender syntax parsing (`Type::Tag` and `Type::Tag(value)`)
+- Union literal constant parsing
+- Grammar updates for tagged unions
+
+**✅ Sourcecode Package**:
+
+- `UnionLiteral` and `UnionSender` struct definitions
+- Entity structure updates for component overloading
+- Directive syntax simplification for `#extern`
+
+**✅ Runtime Functions**:
+
+- Union wrapper implementations (`union_wrapper_v1.go`, `union_wrapper_v2.go`)
+- Type system integration for tagged unions
+- Runtime union handling and dispatch
+
+**✅ Type System**:
+
+- Tagged union type definitions and subtype checking
+- Union type validation and resolution
+- Pattern matching type safety
+
+### Partially Implemented
+
+**🔄 Analyzer Level**:
+
+- Basic union sender validation exists
+- Pattern matching exhaustive checking needs completion
+- Union type constraint validation needs enhancement
+
+**🔄 Desugarer Level**:
+
+- Union sender desugaring logic exists but needs testing
+- Four union sender cases need validation
+- Integration with overloaded components needs completion
+
+**🔄 Overload Resolution**:
+
+- `getNodeOverloadIndex` function needs implementation
+- Network analysis for overload selection needs completion
+- Type-based overload resolution needs testing
+
+### Not Yet Implemented
+
+**❌ Pattern Matching Runtime**:
+
+- `MatchV1`, `MatchV2` runtime functions need implementation
+- Concurrency safety mechanisms need development
+- Pattern matching performance optimization
+
+**❌ Comprehensive Testing**:
+
+- E2E tests for all union sender cases
+- Pattern matching integration tests
+- Overload resolution test coverage
+- Performance benchmarks for union operations
+
+### Critical Dependencies
+
+**Phase 1 - Type System Crashes** (🚨 HIGH PRIORITY):
+
+- Null pointer dereference in `Expr.String()` method
+- Must investigate relevance to tagged unions first
+- If relevant, must fix root cause before other testing
+
+**Phase 2 - Operator Overloading** (🚨 HIGH PRIORITY):
+
+- Type checker incorrectly expects union types for basic operators
+- `+` operator fails with primitive types (int, string)
+- Overload resolution logic needs completion
+
+**Phase 3 - Dependency Resolution** (⏳ MEDIUM PRIORITY):
+
+- Intermittent empty `modRef` issue in `scope.go:155`
+- Not blocking all functionality, but should be investigated
+- Focus on why dependencies are missing from manifest
+
+**Phase 4 - Integration Testing** (⏳ LOW PRIORITY):
+
+- Union sender desugaring needs validation
+- Pattern matching needs comprehensive test coverage
+- Overload resolution needs real-world testing scenarios
+
+### Next Steps for Implementation
+
+1. **Investigate Type System Panic**: Determine if null pointer dereference is relevant to tagged unions
+2. **Fix Operator Overloading**: Correct type checking logic to work with primitive types instead of unions
+3. **Investigate Dependency Issue**: Understand why module references are sometimes empty (after core issues fixed)
+4. **Complete Analyzer**: Finish union sender validation and pattern matching checks
+5. **Implement Overload Resolution**: Complete `getNodeOverloadIndex` function
+6. **Add Runtime Functions**: Implement `MatchV1` and `MatchV2` pattern matching functions
+7. **Comprehensive Testing**: Add E2E tests for all union and pattern matching features
+8. **Performance Optimization**: Benchmark and optimize union operations
+9. **Documentation**: Update language documentation with new union and pattern matching syntax
