@@ -139,13 +139,22 @@ pub def Add(left string, right string) (res string)
 
 ### 🚨 HIGH PRIORITY - CURRENT FOCUS
 
-1. **Expression Resolution Validation**: Core expression validation preventing basic compilation
+1. **Union Sender Type Resolution Bug**: Critical issue with union tag-only syntax parsing
+
+   - **Debug Info**: `(sender).Meta` shows `unions_tag_only` with value `"Day::Friday"`
+   - **Call Stack**: `getResolvedSenderType` → `a.getConstSenderType(*sender.Const, scope)`
+   - **Problem**: Union tag `Day::Friday` is incorrectly being treated as a constant
+   - **Root Cause**: `sender.Const != nil` but the constant is actually empty (no meta, no location, nothing)
+   - **Expected Behavior**: Should be recognized as union type, not constant
+   - **Impact**: Prevents proper union sender type resolution for tag-only syntax
+
+2. **Expression Resolution Validation**: Core expression validation preventing basic compilation
 
    - Error: `expression must be valid in order to be resolved: expr must be ether literal or instantiation, not both and not neither`
    - Location: `internal/compiler/sourcecode/typesystem/validator.go:40`
    - Root Cause: Unknown. Needs to be figured out.
 
-2. **Struct Field Compatibility**: Struct subtype checking failures
+3. **Struct Field Compatibility**: Struct subtype checking failures
    - Error: `Subtype struct is missing field of supertype: body`
    - Impact: HTTP response handling and struct operations
    - Root Cause: Unknown. Needs to be figured out.
