@@ -60,13 +60,25 @@ func (expr Expr) String() string {
 			if count == 0 {
 				str += " "
 			}
-			str += tag + " " + tagExpr.String()
+			if tagExpr != nil {
+				// check if this is a tag-only union (tag name matches type name)
+				if tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
+					str += tag
+				} else {
+					str += tag + " " + tagExpr.String()
+				}
+			} else {
+				str += tag
+			}
 			if count < len(expr.Lit.Union)-1 {
 				str += ", "
 			}
 			count++
 		}
-		str += " }"
+		if count > 0 {
+			str += " "
+		}
+		str += "}"
 		return str
 	case StructLitType:
 		str += "{"
