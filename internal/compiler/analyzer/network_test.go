@@ -188,3 +188,78 @@ func TestOperatorConstraintAndUnionCreation(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckOperatorOperandTypesWithTypeSystem(t *testing.T) {
+	// test the function components without the complex resolver
+	analyzer := Analyzer{}
+
+	tests := []struct {
+		name        string
+		operator    src.BinaryOperator
+		leftType    ts.Expr
+		rightType   ts.Expr
+		description string
+	}{
+		{
+			name:     "int_plus_int",
+			operator: src.AddOp,
+			leftType: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "int"},
+				},
+			},
+			rightType: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "int"},
+				},
+			},
+			description: "int + int should create proper unions and constraints",
+		},
+		{
+			name:     "int_plus_string",
+			operator: src.AddOp,
+			leftType: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "int"},
+				},
+			},
+			rightType: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "string"},
+				},
+			},
+			description: "int + string should create proper unions and constraints",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// create binary expression
+			binary := src.Binary{
+				Operator: tt.operator,
+				Meta:     core.Meta{},
+			}
+
+			// test constraint creation
+			constraint, err := analyzer.getOperatorConstraint(binary)
+			if err != nil {
+				t.Fatalf("getOperatorConstraint failed: %v", err)
+			}
+			require.NotNil(t, constraint, "constraint should not be nil")
+
+			// test union creation
+			leftUnion := analyzer.createSingleElementUnion(tt.leftType)
+			rightUnion := analyzer.createSingleElementUnion(tt.rightType)
+
+			// verify that the function creates the expected structures
+			// this tests the core logic without the complex resolver
+			require.Contains(t, leftUnion.Lit.Union, tt.leftType.Inst.Ref.Name, "left union should contain the type name")
+			require.Contains(t, rightUnion.Lit.Union, tt.rightType.Inst.Ref.Name, "right union should contain the type name")
+
+			t.Logf("Test: %s", tt.description)
+			t.Logf("Constraint: %s", constraint.String())
+			t.Logf("Left Union: %s", leftUnion.String())
+			t.Logf("Right Union: %s", rightUnion.String())
+		})
+	}
+}
