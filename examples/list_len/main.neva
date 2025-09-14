@@ -3,7 +3,7 @@ import { fmt, runtime }
 const lst list<int> = [4, 123, 22, 1121, 215]
 
 def Main(start any) (stop any) {
-	len Len<list<int>>
+	len Len
 	println fmt.Println<any>
 	panic runtime.Panic
 	---

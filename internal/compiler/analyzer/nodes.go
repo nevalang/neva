@@ -190,7 +190,7 @@ func (a Analyzer) analyzeNode(
 		scope,
 	); err != nil {
 		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message: err.Error(),
+			Message: fmt.Sprintf("%s: %s", node.EntityRef.Name, err.Error()),
 			Meta:    &node.Meta,
 		}
 	}

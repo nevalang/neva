@@ -646,53 +646,50 @@ github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 **Evidence from Test Results**:
 
 ```
-Invalid left operand type for +: Subtype must be union: want union, got int
-Invalid left operand type for +: Subtype must be union: want union, got string
+Invalid left operand type for %: Subtype and supertype must both be either literals or instances, except if supertype is union: expression union { int }, constraint int
 ```
 
 **Impact**: Basic arithmetic operations were completely broken
 
 **Root Cause Analysis Completed**:
 
-- **Original Issue**: The analyzer's `getOperatorConstraint()` function returns a union constraint like `union { int, float, string }` for the `+` operator
-- **Type System Expectation**: When the type system receives a union constraint, it expects the operand to also be a union type for subtype checking
-- **The Problem**: Primitive types like `int` are not unions, so `int <: union { int, float, string }` fails in the type system
-- **Why This Happened**: The analyzer was building union constraints without considering that the type system's subtype checker requires both sides to be unions when the constraint is a union
+- **Original Issue**: The analyzer was always converting operand types to unions, but non-overloaded operators like `%` use primitive constraints
+- **Type System Expectation**: Union constraints require union operands, primitive constraints require primitive operands
+- **The Problem**: `union { int } <: int` fails because the type system expects consistent types on both sides
+- **Why This Happened**: The analyzer forced all operators through union machinery, even when unnecessary
 
 **Solution Implemented**:
 
-- **Approach**: Modified the analyzer to create single-element unions for operand types to work with the type system
+- **Approach**: Implemented conditional logic based on operator type (overloaded vs non-overloaded)
 - **Implementation Details**:
-  1. **Created `createSingleElementUnion()` function**: Converts primitive types like `int` to `union { int }`
-  2. **Implemented `checkOperatorOperandTypesWithTypeSystem()` function**: Uses the type system's `IsSubtypeOf()` method with proper union expressions
-  3. **Removed Custom Logic**: Eliminated the `checkOperatorOperandTypes()` function that bypassed the type system
-  4. **Leveraged Type System**: Now uses the full power of the type system for complex type resolution, generics, aliases, etc.
+  1. **Conditional Union Creation**: Only create unions for overloaded operators (`+`, `*`, `-`, `/`)
+  2. **Primitive Checking**: Use direct primitive-to-primitive checking for non-overloaded operators (`%`, `^`, bitwise)
+  3. **Operator Detection**: Automatically detect overloaded operators by checking if constraint is a union
+  4. **Type System Integration**: Proper integration with `resolver.IsSubtypeOf()` for both cases
 
 **Technical Implementation**:
 
-- **Before**: Analyzer sent `int` vs `union { int, float, string }` to type system (failed)
-- **After**: Analyzer sends `union { int }` vs `union { int, float, string }` to type system (succeeds)
-- **Type System Integration**: Full integration with `resolver.IsSubtypeOf()` for union-to-union subtype checking
-- **Complex Type Support**: Now handles type parameters, aliases, and resolved types correctly
+- **Overloaded Operators**: `union { int } <: union { int, float, string }` (succeeds)
+- **Non-Overloaded Operators**: `int <: int` (succeeds)
+- **Conditional Logic**: `isOverloadedOperator := constraint.Lit != nil && constraint.Lit.Union != nil`
+- **Runtime Compatibility**: No changes needed - runtime still receives primitive types
 
 **Comprehensive Unit Tests Added**:
 
-- **`TestCreateSingleElementUnion`**: Tests the helper function that creates single-element unions
-- **`TestGetOperatorConstraint`**: Tests operator constraint generation for different operators
-- **`TestOperatorConstraintAndUnionCreation`**: Integration test for constraint and union creation
-- **`TestCheckOperatorOperandTypesWithTypeSystem`**: Main test for the operator overloading function
+- **`TestConditionalOperatorTypeChecking`**: Tests conditional logic for different operator types
+- **`TestOperatorConstraintTypes`**: Verifies constraint types (union vs primitive)
 - **Table-driven approach**: Clean, readable tests with comprehensive coverage
-- **Error condition testing**: Verifies when the function returns `nil` (no error) vs non-nil errors
+- **Both operator types tested**: Overloaded and non-overloaded scenarios
 
 **Validation Results**:
 
 ✅ **All analyzer tests pass** - No more operator overloading failures  
-✅ **Union constraint generation works** - Proper constraint strings for all operators  
-✅ **Single-element union creation works** - Correct union structure generation  
-✅ **Type system integration works** - Proper union-to-union subtype checking  
+✅ **Conditional logic works** - Proper handling of overloaded vs non-overloaded operators  
+✅ **Type system integration works** - Correct subtype checking for both cases  
+✅ **Runtime compatibility maintained** - No changes to runtime behavior  
 ✅ **Comprehensive test coverage** - All operator scenarios tested
 
-**Status**: **COMPLETED** - The operator overloading issue has been resolved with proper type system integration
+**Status**: **COMPLETED** - The operator overloading issue has been resolved with conditional logic
 
 ### Phase 3: Dependency Module Resolution System (⏳ MEDIUM PRIORITY)
 
@@ -799,6 +796,7 @@ Node not found 'panic'
 - [x] **All parser smoke tests pass** ✅
 - [x] **Type system no longer crashes** (Phase 1 - HIGH) ✅
 - [x] **Basic arithmetic operations work** (Phase 2 - HIGH) ✅
+- [x] **Operator overloading works correctly** (Phase 2 - HIGH) ✅
 - [ ] **Dependency module resolution works consistently** (Phase 3 - MEDIUM)
 - [ ] **Function signatures are consistent** (Phase 4 - LOW)
 - [ ] **Import resolution works for all packages** (Phase 5 - LOW)
@@ -816,7 +814,7 @@ Node not found 'panic'
 
 ### Current Status (Updated)
 
-**Test Results Analysis**: **Phase 1 (Type System Crashes) and Phase 2 (Operator Overloading) have been COMPLETED**. The current focus is now on **Phase 3 (Dependency Module Resolution)** as the primary remaining issue. The dependency module resolution issue is intermittent and not blocking all functionality.
+**Test Results Analysis**: **Phase 1 (Type System Crashes) and Phase 2 (Operator Overloading) have been COMPLETED**. The current focus is now on **Phase 3 (Expression Resolution Issues)** as the primary remaining issue.
 
 **Recent Discoveries from Manual Testing**:
 
@@ -824,19 +822,20 @@ Node not found 'panic'
 
 2. ✅ **Operator Type Checking Bug**: **FIXED** - The analyzer now properly creates single-element unions for operand types, allowing the type system to correctly validate operator overloading. The `+` operator now works correctly with primitive types.
 
-3. **Intermittent Dependency Issue**: The empty `modRef` issue in `scope.go:155` is occasional, not systematic.
+3. ✅ **Error Message Improvement**: **FIXED** - Improved error messages for type argument mismatches to show component name and clearer context.
+
+4. **Expression Resolution Issues**: **CURRENT FOCUS** - Core expression resolution problems preventing basic compilation.
 
 **Priority Order**:
 
 1. ✅ **Phase 1**: **COMPLETED** - Type system null pointer crashes fixed
-2. ✅ **Phase 2**: **COMPLETED** - Operator overloading issues resolved with proper type system integration
-3. ⏳ **Phase 3**: Fix intermittent dependency module resolution issues - **CURRENT FOCUS**
-4. ⏳ **Phase 4**: Fix function signature mismatches
-5. ⏳ **Phase 5**: Fix import and module issues
-6. ⏳ **Phase 6**: Fix stdlib component network issues
-7. ⏳ **Phase 7**: Recover e2e test suite
-
-**Note**: The dependency resolution issue is not blocking all functionality - it's an intermittent bug that should be investigated after the core type system issues are resolved.
+2. ✅ **Phase 2**: **COMPLETED** - Operator overloading issues resolved with conditional logic
+3. 🚨 **Phase 3**: Fix expression resolution issues - **CURRENT FOCUS**
+4. ⏳ **Phase 4**: Fix dependency module resolution issues (lower priority)
+5. ⏳ **Phase 5**: Fix function signature mismatches
+6. ⏳ **Phase 6**: Fix import and module issues
+7. ⏳ **Phase 7**: Fix stdlib component network issues
+8. ⏳ **Phase 8**: Recover e2e test suite
 
 ## Critical Issues Discovered Through Testing
 
@@ -963,15 +962,61 @@ std@0.33.0/errors/errors.neva:12:4: dependency module not found:
 
 **Action Required**: Investigate why dependencies are sometimes missing from the manifest, don't just patch the empty check.
 
+### Issue 4: Expression Resolution Validation Error (🚨 HIGH PRIORITY)
+
+**Location**: Expression resolution in type system
+
+**Problem**: Core expression resolution is failing with validation errors.
+
+**Error Message**:
+
+```
+:0:0: expression must be valid in order to be resolved: expr must be ether literal or instantiation, not both and not neither
+```
+
+**Impact**: Prevents basic compilation of simple programs like `hello_world`
+
+**Root Cause Analysis**:
+
+- **Key Insight**: The `:0:0:` location indicates this error occurs very early in parsing/analysis, before proper location information is available
+- **Location**: `internal/compiler/sourcecode/typesystem/validator.go:40` - `Validator.Validate()` function
+- **Logic**: `if expr.Lit.Empty() == (expr.Inst == nil)` - fails when expression is both literal AND instantiation, or neither
+- **Problem**: Parser is creating malformed expressions that don't properly set either `Lit` or `Inst` fields
+- **Focus**: This suggests a fundamental issue in expression creation during parsing, not just validation
+
+### Issue 5: Struct Field Compatibility Issues (🚨 HIGH PRIORITY)
+
+**Location**: Type compatibility checking
+
+**Problem**: Struct subtype checking is failing for HTTP response handling.
+
+**Error Message**:
+
+```
+advanced_error_handling/main.neva:24:13: Incompatible types: http_get -> .body: Subtype struct is missing field of supertype: body
+```
+
+**Impact**: Prevents proper handling of HTTP responses and other struct-based operations
+
+**Root Cause Analysis Required**:
+
+- **Key Insight**: The struct field compatibility checking is too strict or incorrect
+- **Investigate**: Why is the `body` field being considered missing when it should be present?
+- **Understand**: The HTTP response struct definition vs expected struct interface
+- **Focus**: This affects real-world usage patterns with external APIs
+
 ## Immediate Action Required
 
 These issues represent fundamental problems that prevent the tagged unions implementation from working correctly:
 
 1. ✅ **Type System Panic**: **RESOLVED** - The null pointer dereference has been fixed with proper nil checks and union formatting
 2. ✅ **Operator Type Checking**: **RESOLVED** - The operator overloading logic has been fixed to work with primitive types using proper type system integration
-3. **Investigate Dependency Issue**: Understand why module references are sometimes empty (after core issues are fixed)
+3. ✅ **Error Message Improvement**: **RESOLVED** - Improved error messages for type argument mismatches
+4. 🚨 **Expression Resolution Validation**: **CURRENT FOCUS** - Fix core expression validation preventing basic compilation
+5. 🚨 **Struct Field Compatibility**: **HIGH PRIORITY** - Fix struct subtype checking for HTTP responses and other struct operations
+6. ⏳ **Dependency Resolution**: **LOWER PRIORITY** - Investigate intermittent empty module references
 
-Both the type system crash and operator overloading issues have been resolved. The tagged unions feature can now be properly tested and used, with the remaining focus on the intermittent dependency resolution issue.
+The type system crash and operator overloading issues have been resolved. The current focus is on expression resolution validation issues that are preventing basic compilation of simple programs.
 
 ## Implementation Status and Remaining Work
 
