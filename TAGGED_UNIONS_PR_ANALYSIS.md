@@ -158,13 +158,38 @@ pub def Add(left string, right string) (res string)
    - **Impact**: Union tag-only syntax now properly parsed and type-resolved
    - **Status**: ✅ **RESOLVED** - Parser tests passing, union senders correctly identified
 
-2. **Expression Resolution Validation**: Core expression validation preventing basic compilation
+2. **🚨 NEW PRIORITY: Go Backend Template Port Channel Resolution**: Critical template execution failure preventing program execution
+
+   - **Error**: `template: tpl.go:43:14: executing "tpl.go" at <getPortChanNameByAddr "in" "start">: error calling getPortChanNameByAddr: port chan not found: in:start`
+   - **Command**: `neva run examples/hello_world`
+   - **Location**: Go backend template execution in `internal/compiler/backend/golang/`
+   - **Root Cause**: The `getPortChanNameByAddr` function cannot find the port channel for `in:start` during template execution
+   - **Impact**: Prevents any program from running, blocking basic functionality
+   - **Status**: 🚨 **NEW HIGH PRIORITY** - Needs immediate investigation
+
+3. **🚨 NEW PRIORITY: HTTP Response Struct Field Compatibility**: Critical struct subtype checking failure preventing compilation
+
+   - **Error**: `advanced_error_handling/main.neva:24:13: Incompatible types: http_get -> .body: Subtype struct is missing field of supertype: body`
+   - **Location**: `advanced_error_handling/main.neva:24:13`
+   - **Root Cause**: HTTP response struct subtype checking is failing - the subtype struct is missing the `body` field that the supertype expects
+   - **Impact**: Prevents compilation of programs using HTTP operations, blocking network functionality
+   - **Status**: 🚨 **NEW HIGH PRIORITY** - Needs immediate investigation
+
+4. **🚨 NEW PRIORITY: Union Type Compatibility with Atoi Function**: Critical type checking failure with union types and string conversion
+
+   - **Error**: `add_numbers_from_stdin/main.neva:33:27: Incompatible types: atoi -> out:res: Subtype and supertype must both be either literals or instances, except if supertype is union: expression { child maybe<{ text string, child maybe<error> }>, text string }, constraint int`
+   - **Location**: `add_numbers_from_stdin/main.neva:33:27`
+   - **Root Cause**: Type system is rejecting union type compatibility with `atoi` function - the expression has a complex union structure that doesn't match the expected `int` constraint
+   - **Impact**: Prevents compilation of programs using string-to-int conversion with union types, blocking basic I/O operations
+   - **Status**: 🚨 **NEW HIGH PRIORITY** - Needs immediate investigation
+
+5. **Expression Resolution Validation**: Core expression validation preventing basic compilation
 
    - Error: `expression must be valid in order to be resolved: expr must be ether literal or instantiation, not both and not neither`
    - Location: `internal/compiler/sourcecode/typesystem/validator.go:40`
    - Root Cause: Unknown. Needs to be figured out.
 
-3. **Struct Field Compatibility**: Struct subtype checking failures
+6. **Struct Field Compatibility**: General struct subtype checking failures
    - Error: `Subtype struct is missing field of supertype: body`
    - Impact: HTTP response handling and struct operations
    - Root Cause: Unknown. Needs to be figured out.
