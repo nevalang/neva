@@ -746,6 +746,136 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 	}
 }
 
+// checkOperatorOperandTypes validates that the operand types are compatible with the operator
+func (a Analyzer) checkOperatorOperandTypes(binary src.Binary, leftType, rightType ts.Expr) *compiler.Error {
+	// helper function to check if a type is a primitive type
+	isPrimitiveType := func(expr ts.Expr, typeName string) bool {
+		return expr.Inst != nil && expr.Inst.Ref.String() == typeName
+	}
+
+	// helper function to check if types are compatible (same type)
+	areCompatibleTypes := func(left, right ts.Expr) bool {
+		if left.Inst == nil || right.Inst == nil {
+			return false
+		}
+		return left.Inst.Ref.String() == right.Inst.Ref.String()
+	}
+
+	switch binary.Operator {
+	case src.AddOp:
+		// + operator supports: int+int, float+float, string+string
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for + operator: got %v and %v", leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") && !isPrimitiveType(leftType, "string") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for +: %v (must be int, float, or string)", leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.SubOp, src.MulOp, src.DivOp:
+		// -, *, / operators support: int-int, float-float
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int or float)", binary.Operator, leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.ModOp, src.PowOp:
+		// %, ** operators support: int%int, int**int
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "int") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int)", binary.Operator, leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.EqOp, src.NeOp:
+		// ==, != operators support any types as long as they match
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
+		// >, <, >=, <= operators support: int, float, string (must match)
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") && !isPrimitiveType(leftType, "string") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int, float, or string)", binary.Operator, leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.AndOp, src.OrOp:
+		// &&, || operators support: bool&&bool, bool||bool
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "bool") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be bool)", binary.Operator, leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	case src.BitAndOp, src.BitOrOp, src.BitXorOp, src.BitLshOp, src.BitRshOp:
+		// bitwise operators support: int&int, int|int, etc.
+		if !areCompatibleTypes(leftType, rightType) {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		if !isPrimitiveType(leftType, "int") {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int)", binary.Operator, leftType.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+		return nil
+
+	default:
+		return &compiler.Error{
+			Message: fmt.Sprintf("Unknown operator: %s", binary.Operator),
+			Meta:    &binary.Meta,
+		}
+	}
+}
+
 // getPortSenderType returns resolved port-addr, type expr and isArray bool.
 // Resolved port is equal to the given one unless it was an "" empty string.
 func (a Analyzer) getPortSenderType(

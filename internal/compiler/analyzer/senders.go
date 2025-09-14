@@ -178,23 +178,9 @@ func (a Analyzer) analyzeSender(
 			return nil, nil, err
 		}
 
-		constr, err := a.getOperatorConstraint(*sender.Binary)
-		if err != nil {
+		// check operator operand types using custom logic instead of union constraints
+		if err := a.checkOperatorOperandTypes(*sender.Binary, *leftType, *rightType); err != nil {
 			return nil, nil, err
-		}
-
-		if err := a.resolver.IsSubtypeOf(*leftType, constr, scope); err != nil {
-			return nil, nil, &compiler.Error{
-				Message: fmt.Sprintf("Invalid left operand type for %s: %v", sender.Binary.Operator, err),
-				Meta:    &sender.Binary.Meta,
-			}
-		}
-
-		if err := a.resolver.IsSubtypeOf(*rightType, constr, scope); err != nil {
-			return nil, nil, &compiler.Error{
-				Message: fmt.Sprintf("Invalid right operand type for %s: %v", sender.Binary.Operator, err),
-				Meta:    &sender.Binary.Meta,
-			}
 		}
 
 		// desugarer needs this information to use overloaded components
