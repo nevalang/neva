@@ -1042,7 +1042,8 @@ func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
 			`,
 			check: func(t *testing.T, net []src.Connection) {
 				conn := net[0].Normal
-				senderUnion := conn.Senders[0].Const.Value.Message.Union
+				senderUnion := conn.Senders[0].Union
+				require.NotNil(t, senderUnion)
 				require.Equal(t, "Input", senderUnion.EntityRef.Name)
 				require.Equal(t, "Int", senderUnion.Tag)
 				require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
@@ -1058,7 +1059,8 @@ func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
 			check: func(t *testing.T, net []src.Connection) {
 				conn := net[0].Normal
 				chain := conn.Receivers[0].ChainedConnection.Normal
-				senderUnion := chain.Senders[0].Const.Value.Message.Union
+				senderUnion := chain.Senders[0].Union
+				require.NotNil(t, senderUnion)
 				require.Equal(t, "Input", senderUnion.EntityRef.Name)
 				require.Equal(t, "Int", senderUnion.Tag)
 				require.Equal(t, "receiver", chain.Receivers[0].PortAddr.Node)
@@ -1073,10 +1075,13 @@ func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
 			`,
 			check: func(t *testing.T, net []src.Connection) {
 				conn := net[0].Normal
-				senderUnion := conn.Senders[0].Const.Value.Message.Union
+				senderUnion := conn.Senders[0].Union
+				require.NotNil(t, senderUnion)
 				require.Equal(t, "Input", senderUnion.EntityRef.Name)
 				require.Equal(t, "Int", senderUnion.Tag)
-				require.Equal(t, 42, *conn.Senders[0].Const.Value.Message.Int)
+				require.NotNil(t, senderUnion.Data)
+				require.NotNil(t, senderUnion.Data.Const)
+				require.Equal(t, 42, *senderUnion.Data.Const.Value.Message.Int)
 				require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
 			},
 		},
@@ -1090,10 +1095,13 @@ func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
 			check: func(t *testing.T, net []src.Connection) {
 				conn := net[0].Normal
 				chain := conn.Receivers[0].ChainedConnection.Normal
-				senderUnion := chain.Senders[0].Const.Value.Message.Union
+				senderUnion := chain.Senders[0].Union
+				require.NotNil(t, senderUnion)
 				require.Equal(t, "Input", senderUnion.EntityRef.Name)
 				require.Equal(t, "Int", senderUnion.Tag)
-				require.Equal(t, 42, *chain.Senders[0].Const.Value.Message.Int)
+				require.NotNil(t, senderUnion.Data)
+				require.NotNil(t, senderUnion.Data.Const)
+				require.Equal(t, 42, *senderUnion.Data.Const.Value.Message.Int)
 				require.Equal(t, "receiver", chain.Receivers[0].PortAddr.Node)
 			},
 		},

@@ -1625,33 +1625,37 @@ func (s *treeShapeListener) parseSingleSender(
 		}
 	}
 
+	var unionSenderData *src.UnionSender
 	if unionSender != nil {
 		parsedUnionRef, err := s.parseEntityRef(unionSender.EntityRef())
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-		constant = &src.Const{
-			Value: src.ConstValue{
-				Message: &src.MsgLiteral{
-					Union: &src.UnionLiteral{
-						EntityRef: parsedUnionRef,
-						Tag:       unionSender.IDENTIFIER().GetText(),
-					},
+
+		unionSenderData = &src.UnionSender{
+			EntityRef: parsedUnionRef,
+			Tag:       unionSender.IDENTIFIER().GetText(),
+			Meta: core.Meta{
+				Text: unionSender.GetText(),
+				Start: core.Position{
+					Line:   unionSender.GetStart().GetLine(),
+					Column: unionSender.GetStart().GetColumn(),
 				},
+				Stop: core.Position{
+					Line:   unionSender.GetStop().GetLine(),
+					Column: unionSender.GetStop().GetColumn(),
+				},
+				Location: s.loc,
 			},
 		}
+
 		// If there's a wrapped value
 		if unionSender.SingleSenderSide() != nil {
 			wrappedSender, err := s.parseSingleSender(unionSender.SingleSenderSide())
 			if err != nil {
 				return src.ConnectionSender{}, err
 			}
-			if wrappedSender.Const != nil {
-				constant.Value.Message.Int = wrappedSender.Const.Value.Message.Int
-				constant.Value.Message.Float = wrappedSender.Const.Value.Message.Float
-				constant.Value.Message.Bool = wrappedSender.Const.Value.Message.Bool
-				constant.Value.Message.Str = wrappedSender.Const.Value.Message.Str
-			}
+			unionSenderData.Data = &wrappedSender
 		}
 	}
 
@@ -1792,6 +1796,7 @@ func (s *treeShapeListener) parseSingleSender(
 		StructSelector: senderSelectors,
 		Ternary:        ternaryExpr,
 		Binary:         binaryExpr,
+		Union:          unionSenderData,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{

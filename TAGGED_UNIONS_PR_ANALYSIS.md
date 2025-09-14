@@ -136,17 +136,20 @@ pub def Add(left string, right string) (res string)
 2. **Operator Overloading**: Implemented conditional logic for overloaded vs non-overloaded operators
 3. **Parser Grammar**: Complete ANTLR grammar rewrite for tagged unions
 4. **Runtime Functions**: Union wrapper implementations
+5. **Union Sender Type Resolution**: Fixed critical parser bug where union tag-only syntax was incorrectly treated as constants
 
 ### 🚨 HIGH PRIORITY - CURRENT FOCUS
 
-1. **Union Sender Type Resolution Bug**: Critical issue with union tag-only syntax parsing
+1. **✅ Union Sender Type Resolution Bug**: **FIXED** - Critical issue with union tag-only syntax parsing
 
-   - **Debug Info**: `(sender).Meta` shows `unions_tag_only` with value `"Day::Friday"`
-   - **Call Stack**: `getResolvedSenderType` → `a.getConstSenderType(*sender.Const, scope)`
-   - **Problem**: Union tag `Day::Friday` is incorrectly being treated as a constant
-   - **Root Cause**: `sender.Const != nil` but the constant is actually empty (no meta, no location, nothing)
-   - **Expected Behavior**: Should be recognized as union type, not constant
-   - **Impact**: Prevents proper union sender type resolution for tag-only syntax
+   - **Problem**: Union tag `Day::Friday` was incorrectly being treated as a constant instead of a union sender
+   - **Root Cause**: Parser was creating `Const` objects instead of properly setting the `Union` field in `ConnectionSender`
+   - **Fix Applied**: Modified `parseSingleSender` in `internal/compiler/parser/listener_helpers.go` to:
+     - Create `UnionSender` objects instead of `Const` objects for union senders
+     - Properly handle wrapped data for union senders with values (e.g., `Day::Friday(42)`)
+     - Store union sender data in the `Union` field of `ConnectionSender`
+   - **Impact**: Union tag-only syntax now properly parsed and type-resolved
+   - **Status**: ✅ **RESOLVED** - Parser tests passing, union senders correctly identified
 
 2. **Expression Resolution Validation**: Core expression validation preventing basic compilation
 
@@ -206,6 +209,102 @@ def HandleResult(result Result) (output string) {
 - **Examples/Tests**: 350+ files (all examples, e2e tests, neva.yml)
 - **Documentation**: 6 files (comparison, terminology docs)
 - **Infrastructure**: 27 files (version, CI/CD, build tools)
+
+## Union Sender Architecture & Fix Details
+
+### The Two-Approach Problem
+
+The codebase had two different structures for handling unions, leading to confusion:
+
+1. **UnionLiteral** (for constants in `MsgLiteral`):
+
+```go
+type UnionLiteral struct {
+    EntityRef core.EntityRef `json:"entityRef,omitempty"`
+    Tag       string         `json:"tag,omitempty"`
+    Data      *ConstValue    `json:"data,omitempty"`  // wraps another const value
+    Meta      core.Meta      `json:"meta,omitempty"`
+}
+```
+
+2. **UnionSender** (for network connections in `ConnectionSender`):
+
+```go
+type UnionSender struct {
+    EntityRef core.EntityRef    `json:"entityRef,omitempty"`
+    Tag       string            `json:"tag,omitempty"`
+    Data      *ConnectionSender `json:"data,omitempty"`  // wraps another sender
+    Meta      core.Meta         `json:"meta,omitempty"`
+}
+```
+
+### The Critical Question: Const vs Union Sender
+
+**Original Issue**: When parsing `Day::Friday`, should it be:
+
+- A **const sender** with union message literal value? (stored in `sender.Const.Value.Message.Union`)
+- A **union sender** with tag-only data? (stored in `sender.Union`)
+
+### The Fix: Union Sender Approach
+
+**Decision**: Use the **Union Sender** approach because:
+
+1. **Network Semantics**: `Day::Friday` in a connection like `Day::Friday -> receiver` is fundamentally a network sender, not a constant
+2. **Wrapping Capability**: Union senders can wrap other senders: `Day::Friday(port_sender)` or `Day::Friday(42)`
+3. **Type Resolution**: The analyzer's `getResolvedSenderType` can properly handle union senders through the `Union` field
+4. **Consistency**: Aligns with the four union sender cases defined in the grammar
+
+### Implementation Changes
+
+**File**: `internal/compiler/parser/listener_helpers.go`
+
+**Before** (incorrect):
+
+```go
+if unionSender != nil {
+    // ... parse union data ...
+    constant = &src.Const{
+        Value: src.ConstValue{
+            Message: &src.MsgLiteral{
+                Union: &src.UnionLiteral{...},
+            },
+        },
+    }
+}
+```
+
+**After** (correct):
+
+```go
+if unionSender != nil {
+    // ... parse union data ...
+    unionSenderData = &src.UnionSender{
+        EntityRef: parsedUnionRef,
+        Tag:       unionSender.IDENTIFIER().GetText(),
+        Data:      wrappedSender,  // if wrapped data exists
+        Meta:      core.Meta{...},
+    }
+}
+```
+
+**ConnectionSender Construction**:
+
+```go
+parsedSender := src.ConnectionSender{
+    PortAddr:       senderSidePortAddr,
+    Const:          constant,           // for actual constants like 42, "hello"
+    Union:          unionSenderData,    // for union senders like Day::Friday
+    Range:          rangeExpr,
+    StructSelector: senderSelectors,
+    Ternary:        ternaryExpr,
+    Binary:         binaryExpr,
+    Meta:           core.Meta{...},
+}
+```
+
+### Test Updates
+
+Updated parser tests in `internal/compiler/parser/parser_test.go` to use the new `Union` field instead of the old `Const.Value.Message.Union` path.
 
 ## Next Steps for AI Agents
 
