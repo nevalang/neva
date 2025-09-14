@@ -1082,40 +1082,14 @@ The type system crash and operator overloading issues have been resolved. The cu
 - Overload resolution test coverage
 - Performance benchmarks for union operations
 
-### Critical Dependencies
+### Next Steps
 
-**Phase 1 - Type System Crashes** (✅ COMPLETED):
-
-- ✅ **RESOLVED**: Null pointer dereference in `Expr.String()` method
-- ✅ **Fixed**: Added proper nil checks and union formatting logic
-- ✅ **Validated**: Type system tests pass completely
-
-**Phase 2 - Operator Overloading** (🚨 HIGH PRIORITY - CURRENT FOCUS):
-
-- Type checker incorrectly expects union types for basic operators
-- `+` operator fails with primitive types (int, string)
-- Overload resolution logic needs completion
-
-**Phase 3 - Dependency Resolution** (⏳ MEDIUM PRIORITY):
-
-- Intermittent empty `modRef` issue in `scope.go:155`
-- Not blocking all functionality, but should be investigated
-- Focus on why dependencies are missing from manifest
-
-**Phase 4 - Integration Testing** (⏳ LOW PRIORITY):
-
-- Union sender desugaring needs validation
-- Pattern matching needs comprehensive test coverage
-- Overload resolution needs real-world testing scenarios
-
-### Next Steps for Implementation
-
-1. ✅ **Type System Panic**: **COMPLETED** - Null pointer dereference has been resolved
-2. ✅ **Fix Operator Overloading**: **COMPLETED** - Type checking logic now works with primitive types using proper type system integration
-3. **Investigate Dependency Issue**: Understand why module references are sometimes empty - **CURRENT PRIORITY**
-4. **Complete Analyzer**: Finish union sender validation and pattern matching checks
-5. **Implement Overload Resolution**: Check if `getNodeOverloadIndex` function needs anything else
-6. **Add Runtime Functions**: Implement `MatchV1` and `MatchV2` pattern matching functions
-7. **Comprehensive Testing**: Add E2E tests for all union and pattern matching features
-8. **Performance Optimization**: Benchmark and optimize union operations
-9. **Documentation**: Update language documentation with new union and pattern matching syntax
+- ✅ **Type System Panic**: **COMPLETED** - Null pointer dereference has been resolved
+- ✅ **Fix Operator Overloading**: **COMPLETED** - Type checking logic now works with primitive types using proper type system integration
+- **Investigate Dependency Issue**: Understand why module references are sometimes empty - **CURRENT PRIORITY**
+   - Intermittent empty `modRef` issue in `scope.go:155`
+   - Not blocking all functionality, but should be investigated
+   - Focus on why dependencies are missing from manifest
+- Pattern Matching Runtime
+- **Implement Overload Resolution**: Check if `getNodeOverloadIndex` function needs anything else
+- **Add Runtime Functions**: Implement `MatchV1` and `MatchV2` pattern matching functions
