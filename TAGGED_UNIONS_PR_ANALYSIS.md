@@ -1061,7 +1061,7 @@ The type system crash has been resolved, but the operator overloading issue stil
 2. **Fix Operator Overloading**: Correct type checking logic to work with primitive types instead of unions - **CURRENT PRIORITY**
 3. **Investigate Dependency Issue**: Understand why module references are sometimes empty (after core issues fixed)
 4. **Complete Analyzer**: Finish union sender validation and pattern matching checks
-5. **Implement Overload Resolution**: Complete `getNodeOverloadIndex` function
+5. **Implement Overload Resolution**: Check if `getNodeOverloadIndex` function needs anything else
 6. **Add Runtime Functions**: Implement `MatchV1` and `MatchV2` pattern matching functions
 7. **Comprehensive Testing**: Add E2E tests for all union and pattern matching features
 8. **Performance Optimization**: Benchmark and optimize union operations

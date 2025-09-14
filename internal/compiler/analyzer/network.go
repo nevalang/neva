@@ -746,134 +746,75 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 	}
 }
 
-// checkOperatorOperandTypes validates that the operand types are compatible with the operator
-func (a Analyzer) checkOperatorOperandTypes(binary src.Binary, leftType, rightType ts.Expr) *compiler.Error {
-	// helper function to check if a type is a primitive type
-	isPrimitiveType := func(expr ts.Expr, typeName string) bool {
-		return expr.Inst != nil && expr.Inst.Ref.String() == typeName
+// checkOperatorOperandTypesWithTypeSystem validates that the operand types are compatible with the operator
+// using the type system with proper union construction
+func (a Analyzer) checkOperatorOperandTypesWithTypeSystem(binary src.Binary, leftType, rightType ts.Expr, scope src.Scope) *compiler.Error {
+	// get the operator constraint (union of allowed types)
+	constraint, err := a.getOperatorConstraint(binary)
+	if err != nil {
+		return err
 	}
 
-	// helper function to check if types are compatible (same type)
-	areCompatibleTypes := func(left, right ts.Expr) bool {
-		if left.Inst == nil || right.Inst == nil {
-			return false
-		}
-		return left.Inst.Ref.String() == right.Inst.Ref.String()
-	}
+	// create single-element unions for the operand types to work with type system
+	leftUnion := a.createSingleElementUnion(leftType)
+	rightUnion := a.createSingleElementUnion(rightType)
 
-	switch binary.Operator {
-	case src.AddOp:
-		// + operator supports: int+int, float+float, string+string
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for + operator: got %v and %v", leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") && !isPrimitiveType(leftType, "string") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for +: %v (must be int, float, or string)", leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.SubOp, src.MulOp, src.DivOp:
-		// -, *, / operators support: int-int, float-float
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int or float)", binary.Operator, leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.ModOp, src.PowOp:
-		// %, ** operators support: int%int, int**int
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "int") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int)", binary.Operator, leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.EqOp, src.NeOp:
-		// ==, != operators support any types as long as they match
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.GtOp, src.LtOp, src.GeOp, src.LeOp:
-		// >, <, >=, <= operators support: int, float, string (must match)
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "int") && !isPrimitiveType(leftType, "float") && !isPrimitiveType(leftType, "string") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int, float, or string)", binary.Operator, leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.AndOp, src.OrOp:
-		// &&, || operators support: bool&&bool, bool||bool
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "bool") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be bool)", binary.Operator, leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	case src.BitAndOp, src.BitOrOp, src.BitXorOp, src.BitLshOp, src.BitRshOp:
-		// bitwise operators support: int&int, int|int, etc.
-		if !areCompatibleTypes(leftType, rightType) {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Operand types must match for %s operator: got %v and %v", binary.Operator, leftType.String(), rightType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		if !isPrimitiveType(leftType, "int") {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid operand type for %s: %v (must be int)", binary.Operator, leftType.String()),
-				Meta:    &binary.Meta,
-			}
-		}
-		return nil
-
-	default:
+	// check that both operands are subtypes of the constraint using the type system
+	// this leverages the full power of the type system for complex type resolution
+	if err := a.resolver.IsSubtypeOf(leftUnion, constraint, scope); err != nil {
 		return &compiler.Error{
-			Message: fmt.Sprintf("Unknown operator: %s", binary.Operator),
+			Message: fmt.Sprintf("Invalid left operand type for %s: %v (leftType: %v, leftUnion: %v, constraint: %v)", binary.Operator, err, leftType.String(), leftUnion.String(), constraint.String()),
 			Meta:    &binary.Meta,
 		}
 	}
+
+	if err := a.resolver.IsSubtypeOf(rightUnion, constraint, scope); err != nil {
+		return &compiler.Error{
+			Message: fmt.Sprintf("Invalid right operand type for %s: %v", binary.Operator, err),
+			Meta:    &binary.Meta,
+		}
+	}
+
+	return nil
+}
+
+// createSingleElementUnion creates a union type with a single element matching the given type
+func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
+	// if the expression is already a union, return it as-is
+	if expr.Lit != nil && expr.Lit.Union != nil {
+		return expr
+	}
+
+	// create a single-element union
+	// for primitive types like int, create union { int }
+	// for complex types, create union with the type name as the tag
+	if expr.Inst != nil {
+		typeName := expr.Inst.Ref.String()
+		// create a new instance expression with the same type
+		tagExpr := ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref:  expr.Inst.Ref,
+				Args: expr.Inst.Args,
+			},
+		}
+		return ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: map[string]*ts.Expr{
+					typeName: &tagExpr,
+				},
+			},
+		}
+	}
+
+	// if the expression is a literal, we need to handle it differently
+	if expr.Lit != nil {
+		// for literal expressions, we can't easily create a union
+		// this shouldn't happen for operator operands, but let's handle it
+		return expr
+	}
+
+	// fallback: return the expression as-is if we can't create a union
+	return expr
 }
 
 // getPortSenderType returns resolved port-addr, type expr and isArray bool.

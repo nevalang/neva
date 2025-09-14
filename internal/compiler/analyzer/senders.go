@@ -178,8 +178,8 @@ func (a Analyzer) analyzeSender(
 			return nil, nil, err
 		}
 
-		// check operator operand types using custom logic instead of union constraints
-		if err := a.checkOperatorOperandTypes(*sender.Binary, *leftType, *rightType); err != nil {
+		// check operator operand types using type system with proper union construction
+		if err := a.checkOperatorOperandTypesWithTypeSystem(*sender.Binary, *leftType, *rightType, scope); err != nil {
 			return nil, nil, err
 		}
 
