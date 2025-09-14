@@ -641,7 +641,7 @@ github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 
 ### Phase 2: Operator Overloading Issues (🚨 HIGH PRIORITY)
 
-**Problem**: Type checker incorrectly expects union types for basic operators instead of primitive types
+**Problem**: Analyzer constructs incorrect union constraint data for the type system, causing subtype checking to fail
 
 **Evidence from Test Results**:
 
@@ -652,27 +652,46 @@ Invalid left operand type for +: Subtype must be union: want union, got string
 
 **Impact**: Basic arithmetic operations are completely broken
 
-**Root Cause Analysis Required**:
+**Root Cause Analysis**:
 
-- **Critical Question**: Why is the type checker expecting union types for basic operators like `+`?
-- **Investigate**: What changed in the operator overloading implementation that made it expect unions?
-- **Understand**: The `+` operator should work with primitive types (int, float, string), not union types
-- **Focus**: This is likely a bug in the operator overloading type checking logic, not a fundamental design issue
+- **Original Issue**: The analyzer's `getOperatorConstraint()` function returns a union constraint like `union { int, float, string }` for the `+` operator
+- **Type System Expectation**: When the type system receives a union constraint, it expects the operand to also be a union type for subtype checking
+- **The Problem**: Primitive types like `int` are not unions, so `int <: union { int, float, string }` fails in the type system
+- **Why This Happened**: The analyzer was building union constraints without considering that the type system's subtype checker requires both sides to be unions when the constraint is a union
+
+**Current Solution and Its Limitations**:
+
+- **Existing Approach**: Custom `checkOperatorOperandTypes()` function that bypasses the type system entirely
+- **Why It's Not Perfect**:
+  - **No Support for Resolved Types**: The custom logic only works with simple primitive types (`int`, `string`, etc.)
+  - **Missing Type Resolution**: Cannot handle type parameters, type aliases, or other complex type expressions that need resolution
+  - **Naive Implementation**: The analyzer-level type checking is much simpler than the sophisticated type system logic
+  - **Bypasses Type System**: Doesn't leverage the full power of the type system for complex type relationships
+
+**Perfect Solution**:
+
+- **Do Not Touch Type System**: The type system is correct and should not be modified for this issue
+- **Modify Analyzer Only**: Change how the analyzer constructs data for the type system
+- **Outsource to Type System**: Continue using the type system's subtype checking because it handles complex type resolution
+- **Analyzer Implementation Details**:
+  1. **Build Union Type Argument**: Create a union expression with a single element matching the operand type: `union { int }`
+  2. **Call Type System**: Use `resolver.IsSubtypeOf()` to check `union { int } <: union { int, float, string }`
+  3. **Leverage Type System**: Let the type system handle all the complexity of type resolution, generics, aliases, etc.
 
 **Technical Details**:
 
 - **Expected Behavior**: `int + int` → `int`, `string + string` → `string`
-- **Actual Behavior**: Type checker expects union types for all operands
-- **Error Location**: The subtype checking logic for operators is incorrectly configured
-- **Key Insight**: This suggests the operator overloading implementation has a bug in its type checking logic
+- **Current Problem**: Analyzer sends `int` vs `union { int, float, string }` to type system
+- **Correct Approach**: Analyzer should send `union { int }` vs `union { int, float, string }` to type system
+- **Type System Handles**: Union-to-union subtype checking, type resolution, complex type relationships
 
 **Action Items**:
 
-1. **Investigate Operator Type Checking Logic**: Find where the `+` operator type checking is implemented
-2. **Understand the Bug**: Determine why it's expecting union types instead of primitive types
-3. **Fix the Root Cause**: Correct the type checking logic to work with primitive types
-4. **Preserve Operator Syntax**: Ensure operators remain as syntax sugar, not component calls
-5. **Test Basic Operations**: Verify that `int + int`, `string + string` work correctly
+1. **Revert Custom Logic**: Remove the `checkOperatorOperandTypes()` function
+2. **Fix Union Constraint Construction**: Modify `getOperatorConstraint()` to work with the type system
+3. **Build Single-Element Union**: Create union type arguments that match operand types
+4. **Use Type System**: Call `resolver.IsSubtypeOf()` with proper union expressions
+5. **Test Complex Types**: Verify that type parameters, aliases, and resolved types work correctly
 
 ### Phase 3: Dependency Module Resolution System (⏳ MEDIUM PRIORITY)
 
@@ -855,11 +874,11 @@ github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 
 **Status**: **RESOLVED** - The critical type system crash has been fixed
 
-### Issue 2: Incorrect Union Type Expectation for Basic Operators (🚨 HIGH PRIORITY)
+### Issue 2: Analyzer Constructs Incorrect Union Constraint Data (🚨 HIGH PRIORITY)
 
-**Location**: Operator type checking logic (likely in type system)
+**Location**: `internal/compiler/analyzer/network.go` - `getOperatorConstraint()` function
 
-**Problem**: The `+` operator type checker incorrectly expects union types instead of primitive types for basic arithmetic operations.
+**Problem**: The analyzer builds union constraints that are incompatible with the type system's subtype checking expectations.
 
 **Error Message**:
 
@@ -867,11 +886,30 @@ github.com/nevalang/neva/internal/compiler/sourcecode/typesystem.Expr.String
 switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be union: want union, got string
 ```
 
-**Root Cause**:
+**Root Cause Analysis**:
 
-- The operator overloading implementation is incorrectly configured
-- The type checker is applying union type rules to basic arithmetic operations
-- This contradicts the expected behavior where `+` should work with primitive types (int, float, string)
+- **Analyzer Issue**: `getOperatorConstraint()` returns `union { int, float, string }` for the `+` operator
+- **Type System Expectation**: When checking subtypes against union constraints, the type system expects both sides to be unions
+- **The Mismatch**: Primitive types like `int` are not unions, so `int <: union { int, float, string }` fails
+- **Why This Happened**: The analyzer didn't consider that the type system's union subtype checking requires union-to-union comparisons
+
+**Current Workaround and Its Problems**:
+
+- **Custom Logic**: `checkOperatorOperandTypes()` function bypasses the type system entirely
+- **Limitations**:
+  - Only works with simple primitive types (`int`, `string`, etc.)
+  - Cannot handle type parameters, type aliases, or complex type expressions
+  - Naive implementation compared to the sophisticated type system logic
+  - Doesn't leverage the type system's full power for type resolution
+
+**Correct Solution**:
+
+- **Don't Modify Type System**: The type system is correct and handles complex type relationships properly
+- **Fix Analyzer Data Construction**: Build union type arguments that work with the type system
+- **Implementation**:
+  1. Create single-element union for operand: `union { int }`
+  2. Use type system to check: `union { int } <: union { int, float, string }`
+  3. Let type system handle all complexity of type resolution, generics, aliases
 
 **Impact**:
 
@@ -879,14 +917,16 @@ switch_fan_out/main.neva:20:4: Invalid left operand type for +: Subtype must be 
 - String concatenation fails
 - Numeric addition fails
 - Affects fundamental language functionality
+- Prevents proper type system integration for complex types
 
 **Expected Behavior**: The `+` operator should work with:
 
 - `int + int` → `int`
 - `float + float` → `float`
 - `string + string` → `string`
+- Plus support for type parameters, aliases, and resolved types
 
-**Actual Behavior**: Type checker expects union types for all operands
+**Actual Behavior**: Analyzer sends incompatible data to type system, causing subtype checking to fail
 
 ### Issue 3: Intermittent Empty Module Reference in Dependency Resolution (⏳ MEDIUM PRIORITY)
 
