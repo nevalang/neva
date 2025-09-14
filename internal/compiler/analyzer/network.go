@@ -747,31 +747,49 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 }
 
 // checkOperatorOperandTypesWithTypeSystem validates that the operand types are compatible with the operator
-// using the type system with proper union construction
+// using conditional logic: union machinery for overloaded operators, primitive checking for non-overloaded
 func (a Analyzer) checkOperatorOperandTypesWithTypeSystem(binary src.Binary, leftType, rightType ts.Expr, scope src.Scope) *compiler.Error {
-	// get the operator constraint (union of allowed types)
+	// get the operator constraint
 	constraint, err := a.getOperatorConstraint(binary)
 	if err != nil {
 		return err
 	}
 
-	// create single-element unions for the operand types to work with type system
-	leftUnion := a.createSingleElementUnion(leftType)
-	rightUnion := a.createSingleElementUnion(rightType)
+	// check if this is an overloaded operator (constraint is a union)
+	isOverloadedOperator := constraint.Lit != nil && constraint.Lit.Union != nil
 
-	// check that both operands are subtypes of the constraint using the type system
-	// this leverages the full power of the type system for complex type resolution
-	if err := a.resolver.IsSubtypeOf(leftUnion, constraint, scope); err != nil {
-		return &compiler.Error{
-			Message: fmt.Sprintf("Invalid left operand type for %s: %v (leftType: %v, leftUnion: %v, constraint: %v)", binary.Operator, err, leftType.String(), leftUnion.String(), constraint.String()),
-			Meta:    &binary.Meta,
+	if isOverloadedOperator {
+		// for overloaded operators: create unions and do union-to-union checking
+		leftUnion := a.createSingleElementUnion(leftType)
+		rightUnion := a.createSingleElementUnion(rightType)
+
+		if err := a.resolver.IsSubtypeOf(leftUnion, constraint, scope); err != nil {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid left operand type for %s: %v (leftType: %v, leftUnion: %v, constraint: %v)", binary.Operator, err, leftType.String(), leftUnion.String(), constraint.String()),
+				Meta:    &binary.Meta,
+			}
 		}
-	}
 
-	if err := a.resolver.IsSubtypeOf(rightUnion, constraint, scope); err != nil {
-		return &compiler.Error{
-			Message: fmt.Sprintf("Invalid right operand type for %s: %v", binary.Operator, err),
-			Meta:    &binary.Meta,
+		if err := a.resolver.IsSubtypeOf(rightUnion, constraint, scope); err != nil {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid right operand type for %s: %v (rightType: %v, rightUnion: %v, constraint: %v)", binary.Operator, err, rightType.String(), rightUnion.String(), constraint.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+	} else {
+		// for non-overloaded operators: use primitive-to-primitive checking
+		if err := a.resolver.IsSubtypeOf(leftType, constraint, scope); err != nil {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid left operand type for %s: %v (leftType: %v, constraint: %v)", binary.Operator, err, leftType.String(), constraint.String()),
+				Meta:    &binary.Meta,
+			}
+		}
+
+		if err := a.resolver.IsSubtypeOf(rightType, constraint, scope); err != nil {
+			return &compiler.Error{
+				Message: fmt.Sprintf("Invalid right operand type for %s: %v (rightType: %v, constraint: %v)", binary.Operator, err, rightType.String(), constraint.String()),
+				Meta:    &binary.Meta,
+			}
 		}
 	}
 
