@@ -137,6 +137,13 @@ pub def Add(left string, right string) (res string)
 3. **Parser Grammar**: Complete ANTLR grammar rewrite for tagged unions
 4. **Runtime Functions**: Union wrapper implementations
 5. **Union Sender Type Resolution**: Fixed critical parser bug where union tag-only syntax was incorrectly treated as constants
+6. **Std Module Dependency Bug**: Fixed "dependency module not found: std" error by correcting relative imports in std module
+
+   - **Problem**: `std/errors/errors.neva` had `import { runtime }` which tried to reference the `runtime` package within the same `std` module, but the std module didn't have a dependency on itself
+   - **Root Cause**: The analyzer couldn't resolve `runtime` because it was looking for it in the std module's dependencies, which was empty
+   - **Solution**: Changed import to `import { @:runtime }` to use relative import syntax within the same module
+   - **Impact**: Resolves intermittent "dependency module not found: std" panic during compilation
+   - **Status**: ✅ **RESOLVED** - Uses existing relative import functionality, conceptually correct approach
 
 ### 🚨 HIGH PRIORITY - CURRENT FOCUS
 
@@ -313,3 +320,4 @@ Updated parser tests in `internal/compiler/parser/parser_test.go` to use the new
 - **Focus on single issues**: Never fix multiple issues simultaneously, wait for the input after issue is fixed
 - **Think before fixing**: Analyze root cause, don't patch symptoms. Avoid adding mindless if-else checks to avoid panics, nil pointer dereferences, etc, unless root-cause is not obvious.
 - **Preserve operator syntax**: Never replace operators with components.
+- **Investigate std module issues**: If encountering "dependency module not found: std" errors, check for incorrect imports in std module files. Use relative imports (`@:package`) for intra-module references.
