@@ -45,11 +45,11 @@ func (s SubtypeChecker) Check(
 	}
 
 	isConstraintInstance := constr.Lit.Empty()
-	areKindsDifferent := expr.Lit.Empty() != isConstraintInstance
+	isExprInstance := expr.Lit.Empty()
 
-	// if kinds are different, return ErrDiffKinds
+	// if one is instance and other is literal, return ErrDiffKinds
 	// this covers cases like: int vs union{foo, bar} or union{foo, bar} vs int
-	if areKindsDifferent {
+	if isExprInstance != isConstraintInstance {
 		return fmt.Errorf(
 			"%w: expression %v, constraint %v",
 			ErrDiffKinds,
@@ -132,16 +132,22 @@ func (s SubtypeChecker) Check(
 			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
 		}
 		// each tag in sub-type must exist in super-type,
-		// and if tags has type expressions,
-		// the one from sub-type must be subtype of the one from super-type
+		// and, if tags has type expressions,
+		// then, the one from the sub-type must be subtype of the one from the super-type
 		for tag, exprTagType := range expr.Lit.Union {
-			if exprTagType == nil {
-				continue // we assume that unions are valid and both tags are nil
-			}
 			constrTagType, ok := constr.Lit.Union[tag]
 			if !ok {
 				return fmt.Errorf("%w: tag %s not found in constraint", ErrUnions, tag)
 			}
+			// if both are tag-only (nil), no need to check further
+			if exprTagType == nil && constrTagType == nil {
+				continue
+			}
+			// if one has type and other doesn't, they're incompatible
+			if (exprTagType == nil) != (constrTagType == nil) {
+				return fmt.Errorf("%w: for tag %s: one has type, other doesn't", ErrUnions, tag)
+			}
+			// both have types, check compatibility
 			if err := s.Check(*exprTagType, *constrTagType, params); err != nil {
 				return fmt.Errorf("%w: for tag %s: %v", ErrUnions, tag, err)
 			}

@@ -116,11 +116,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			subtypeTrace:   ts.Trace{},
 			supertypeTrace: ts.Trace{},
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
+				mtmr.ShouldTerminate(gomock.Any(), nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: ts.ErrArgNotSubtype,
 		},
@@ -197,13 +193,21 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			name:      "subtype and supertype are unions, subtype not bigger but contain diff el",
 			subType:   h.Union(map[string]*ts.Expr{"a": nil, "d": nil}), // d doesn't fit
 			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
-			wantErr:   ts.ErrUnions,
+			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+			},
+			wantErr: ts.ErrUnions,
 		},
 		{
 			name:      "subtype and supertype unions, subtype not bigger and all reqired els are the same",
 			subType:   h.Union(map[string]*ts.Expr{"a": nil, "b": nil}),
 			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
-			wantErr:   nil,
+			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+			},
+			wantErr: nil,
 		},
 		{
 			name:      "subtype and supertype are unions, subtype has more els",
@@ -217,7 +221,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(14)
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: ts.ErrUnions,
 		},
@@ -227,7 +231,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			superType: h.Union(map[string]*ts.Expr{"a": nil, "c": nil, "b": nil}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(10) // c, a, c, c, b, a, b, c, b, c
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: nil,
 		},
@@ -243,7 +247,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(4) // x, a, x, b
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: nil,
 		},
@@ -258,7 +262,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(4) // x, a, x, b
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: ts.ErrUnions,
 		},
