@@ -46,10 +46,10 @@ func (s SubtypeChecker) Check(
 
 	isConstraintInstance := constr.Lit.Empty()
 	areKindsDifferent := expr.Lit.Empty() != isConstraintInstance
-	isConstraintUnion := constr.Lit != nil &&
-		constr.Lit.Type() == UnionLitType
 
-	if areKindsDifferent && !isConstraintUnion {
+	// if kinds are different, return ErrDiffKinds
+	// this covers cases like: int vs union{foo, bar} or union{foo, bar} vs int
+	if areKindsDifferent {
 		return fmt.Errorf(
 			"%w: expression %v, constraint %v",
 			ErrDiffKinds,
