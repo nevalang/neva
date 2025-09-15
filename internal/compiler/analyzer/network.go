@@ -1034,6 +1034,17 @@ func (a Analyzer) getSelectorsSenderType(
 		return senderType, nil
 	}
 
+	// if it's an instance type, resolve it to get the actual struct definition
+	if senderType.Inst != nil {
+		resolvedType, err := a.resolver.ResolveExpr(senderType, scope)
+		if err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("Failed to resolve type: %v", err),
+			}
+		}
+		senderType = resolvedType
+	}
+
 	if senderType.Lit == nil || senderType.Lit.Struct == nil {
 		return ts.Expr{}, &compiler.Error{
 			Message: fmt.Sprintf("Type not struct: %v", senderType.String()),
