@@ -434,9 +434,19 @@ func (a Analyzer) getResolvedPortType(
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
 	if portAddr.Port == "" {
 		if len(ports) == 1 || (!isInput && len(ports) == 2 && node.ErrGuard) {
-			for name := range ports {
-				portAddr.Port = name
-				break
+			// for output ports with error guard, skip the 'err' port and select the first non-error port
+			if !isInput && node.ErrGuard {
+				for name := range ports {
+					if name != "err" {
+						portAddr.Port = name
+						break
+					}
+				}
+			} else {
+				for name := range ports {
+					portAddr.Port = name
+					break
+				}
 			}
 		} else {
 			return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
