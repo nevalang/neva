@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrDiffKinds     = errors.New("Subtype and supertype must both be either literals or instances, except if supertype is union") //nolint:lll
+	ErrDiffKinds     = errors.New("Subtype and supertype must both be either literals or instances") //nolint:lll
 	ErrDiffRefs      = errors.New("Subtype inst must have same ref as supertype")
 	ErrArgsCount     = errors.New("Subtype inst must have >= args than supertype")
 	ErrArgNotSubtype = errors.New("Subtype arg must be subtype of corresponding supertype arg")
