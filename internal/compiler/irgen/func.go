@@ -16,7 +16,7 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 
 	externArg, hasExtern := version.Directives[compiler.ExternDirective]
 	if !hasExtern {
-		return "", src.Component{}, nil
+		return "", version, nil
 	}
 
 	return externArg, version, nil
