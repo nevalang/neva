@@ -30,23 +30,28 @@ func (p Program) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalYAML implements custom YAML marshaling for Program
-// func (p Program) MarshalYAML() (any, error) {
-// 	connections := make([]serializedConnection, 0, len(p.Connections))
-// 	for from, to := range p.Connections {
-// 		connections = append(connections, serializedConnection{
-// 			From: from.String(),
-// 			To:   to.String(),
-// 		})
-// 	}
+func (p Program) MarshalYAML() (any, error) {
+	type serializedConnection struct {
+		From string `yaml:"from"`
+		To   string `yaml:"to"`
+	}
 
-// 	return struct {
-// 		Connections []serializedConnection `yaml:"connections,omitempty"`
-// 		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
-// 	}{
-// 		Connections: connections,
-// 		Funcs:       p.Funcs,
-// 	}, nil
-// }
+	connections := make([]serializedConnection, 0, len(p.Connections))
+	for from, to := range p.Connections {
+		connections = append(connections, serializedConnection{
+			From: from.String(),
+			To:   to.String(),
+		})
+	}
+
+	return struct {
+		Connections []serializedConnection `yaml:"connections,omitempty"`
+		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
+	}{
+		Connections: connections,
+		Funcs:       p.Funcs,
+	}, nil
+}
 
 // PortAddr is a composite unique identifier for a port.
 type PortAddr struct {
