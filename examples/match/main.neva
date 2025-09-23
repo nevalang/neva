@@ -8,7 +8,7 @@ def Main(start any) (stop any) {
     for:err -> panic
 }
 
-def Handler(data int) (sig any, err error) {
+def Handler(data int) (res any, err error) {
     Match, fmt.Println?
 
     ---
@@ -26,5 +26,5 @@ def Handler(data int) (sig any, err error) {
 
     'four' -> match:else
 
-    match -> println -> :sig
+    match -> println -> :res
 }
