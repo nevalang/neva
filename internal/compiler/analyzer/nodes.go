@@ -140,7 +140,7 @@ func (a Analyzer) analyzeNode(
 		nodeIface = nodeEntity.Interface
 	} else {
 		var err *compiler.Error
-		nodeIface, overloadIndex, err = a.getComponentNodeInterface(
+		nodeIface, overloadIndex, err = a.getInterfaceAndOverloadingIndexForNode(
 			name,
 			nodeEntity,
 			hasBind,
@@ -241,10 +241,9 @@ func (a Analyzer) analyzeNode(
 		}, nil
 }
 
-// getComponentNodeInterface returns interface of the component node.
-// It also performs some validation.
+// getInterfaceAndOverloadingIndexForNode returns interface and overload index for the given node.
 // Overloading at the level of sourcecode is implemented here.
-func (a Analyzer) getComponentNodeInterface(
+func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 	name string,
 	entity src.Entity,
 	hasBind bool,
