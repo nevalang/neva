@@ -4,7 +4,7 @@ const l list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
 	fmt.Println<int>
-	Reduce<int, int>{Mul<int>}
+	Reduce<int, int>{Mul}
 	ListToStream<int>
 	panic runtime.Panic
 	---

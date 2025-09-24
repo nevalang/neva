@@ -20,7 +20,7 @@ def Main(start any) (stop any) {
 
 def Slow(data int) (res int) {
     delay time.Delay<int>
-    dec Dec<int>
+    dec Dec
     ---
     :data -> delay:data
     $time.second -> delay:dur

@@ -21,7 +21,7 @@ def Main(start any) (stop any) {
 }
 
 def PrintNext2Lines(n int) (n int, err error) {
-    dec Dec<int>
+    dec Dec
     print_first_line PrintFirstLine?
     print_second_line PrintSecondLine?
     ---
@@ -45,7 +45,6 @@ def PrintFirstLine(n int) (n int, err error) {
     p2 fmt.Println?
     printf fmt.Printf?
     lock Lock<int>
-    panic runtime.Panic
     ---
     :n -> [s:data, lock:data]
 
@@ -77,7 +76,6 @@ def PrintSecondLine(n int) (n int, err error) {
     p3 fmt.Println?
     printf fmt.Printf?
     lock Lock<int>
-    panic runtime.Panic
     ---
     :n -> [s:data, lock:data]
 
