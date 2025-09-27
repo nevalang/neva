@@ -1565,9 +1565,20 @@ func (d *Desugarer) desugarBinarySender(
 			Name: opComponent,
 			Meta: locOnlyMeta,
 		},
-		TypeArgs: []ts.Expr{binary.AnalyzedType},
-		Meta:     locOnlyMeta,
+		Meta: locOnlyMeta,
 	}
+
+	// set overload index for operator node based on analyzed operand type
+
+	// TODO: set OverloadIndex of virtual node inserted
+	// details: components that implements operators are overloaded,
+	// i.e. components like `Add` have multiple implementations and thus we must select one
+	// one must figure out how to do this properly, but implementation must support all binary operators.
+	// They can be found std/builtin/operators.neva.
+	// It's good to avoid hardcode and to have some kind of universal/dynamic logic.
+	// It's ok to depend on APIs from packages sourcecode, compiler and typesystem.
+	// If it make sense and if desugarer depends on analyzer anyway,
+	// then it's also ok to depend on analyzer functions/methods, if really helps.
 
 	// left -> op:left
 	// right -> op:right
