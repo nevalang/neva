@@ -343,6 +343,33 @@ func TestDesugarNetwork(t *testing.T) {
 					},
 				},
 			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				mock.
+					Entity(core.EntityRef{Name: "Add"}).
+					// In reality Add is overloaded, but for for now we only test simplified case with one version.
+					Return(
+						src.Entity{
+							Kind: src.ComponentEntity,
+							Component: []src.Component{
+								{
+									Interface: src.Interface{
+										IO: src.IO{
+											In: map[string]src.Port{
+												"left":  {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+												"right": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+											Out: map[string]src.Port{
+												"res": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+										},
+									},
+								},
+							},
+						},
+						core.Location{},
+						nil,
+					)
+			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
@@ -385,19 +412,13 @@ func TestDesugarNetwork(t *testing.T) {
 							Pkg:  "builtin",
 							Name: "Add",
 						},
-						TypeArgs: []ts.Expr{
-							{
-								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Name: "int"},
-								},
-							},
-						},
+						TypeArgs:      nil,
+						OverloadIndex: compiler.Pointer(0),
 					},
 				},
 				constsToInsert: map[string]src.Const{},
 			},
 		},
-
 		{
 			// node1:x -> switch {
 			//     node2:y -> node3:z
@@ -855,6 +876,33 @@ func TestDesugarNetwork(t *testing.T) {
 			nodes: map[string]src.Node{
 				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
 			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				mock.
+					Entity(core.EntityRef{Name: "Add"}).
+					// In reality Add is overloaded, but for for now we only test simplified case with one version.
+					Return(
+						src.Entity{
+							Kind: src.ComponentEntity,
+							Component: []src.Component{
+								{
+									Interface: src.Interface{
+										IO: src.IO{
+											In: map[string]src.Port{
+												"left":  {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+												"right": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+											Out: map[string]src.Port{
+												"res": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+										},
+									},
+								},
+							},
+						},
+						core.Location{},
+						nil,
+					)
+			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
@@ -893,14 +941,9 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				nodesToInsert: map[string]src.Node{
 					"__add__1": {
-						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Add"},
-						TypeArgs: []ts.Expr{
-							{
-								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Name: "int"},
-								},
-							},
-						},
+						EntityRef:     core.EntityRef{Pkg: "builtin", Name: "Add"},
+						TypeArgs:      nil,
+						OverloadIndex: compiler.Pointer(0),
 					},
 					"__new__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
