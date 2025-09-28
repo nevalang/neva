@@ -1282,3 +1282,37 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
+	text := []byte(`
+		#extern(v1)
+		pub def Add(left int, right int) (res int)
+		#extern(v2)
+		pub def Add(left float, right float) (res float)
+		#extern(v3)
+		pub def Add(left string, right string) (res string)
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+
+	entity, ok := got.Entities["Add"]
+	require.True(t, ok)
+	require.Equal(t, src.ComponentEntity, entity.Kind)
+	require.Equal(t, 3, len(entity.Component))
+
+	// check extern directives preserved and inputs match
+	require.Equal(t, "v1", entity.Component[0].Directives[compiler.ExternDirective])
+	require.Equal(t, "int", entity.Component[0].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "int", entity.Component[0].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+
+	require.Equal(t, "v2", entity.Component[1].Directives[compiler.ExternDirective])
+	require.Equal(t, "float", entity.Component[1].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "float", entity.Component[1].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+
+	require.Equal(t, "v3", entity.Component[2].Directives[compiler.ExternDirective])
+	require.Equal(t, "string", entity.Component[2].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "string", entity.Component[2].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+}
