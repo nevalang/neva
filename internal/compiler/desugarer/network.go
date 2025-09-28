@@ -1559,26 +1559,60 @@ func (d *Desugarer) desugarBinarySender(
 		)
 	}
 
-	nodesToInsert[opNode] = src.Node{
+	operatorNodeToInsert := src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: opComponent,
 			Meta: locOnlyMeta,
 		},
-		Meta: locOnlyMeta,
+		OverloadIndex: nil, // To be set later
+		Meta:          locOnlyMeta,
 	}
 
 	// set overload index for operator node based on analyzed operand type
+	// use analyzer-provided binary.AnalyzedType to choose overload version
+	if binary.AnalyzedType.Inst == nil {
+		panic("binary analyzed type must be instantiation at desugaring stage")
+	}
 
-	// TODO: set OverloadIndex of virtual node inserted
-	// details: components that implements operators are overloaded,
-	// i.e. components like `Add` have multiple implementations and thus we must select one
-	// one must figure out how to do this properly, but implementation must support all binary operators.
-	// They can be found std/builtin/operators.neva.
-	// It's good to avoid hardcode and to have some kind of universal/dynamic logic.
-	// It's ok to depend on APIs from packages sourcecode, compiler and typesystem.
-	// If it make sense and if desugarer depends on analyzer anyway,
-	// then it's also ok to depend on analyzer functions/methods, if really helps.
+	opEntity, _, err := scope.Entity(core.EntityRef{Pkg: "builtin", Name: opComponent})
+	if err != nil {
+		panic(fmt.Sprintf("resolve operator entity: %v", err))
+	}
+	if opEntity.Kind != src.ComponentEntity {
+		panic("operator entity must be a component")
+	}
+	if len(opEntity.Component) == 0 {
+		panic("operator entity must have at least one component")
+	}
+
+	// scope = scope.Relocate(opEntityLoc) // mainly for completeness (not sure if needed)
+
+	if len(opEntity.Component) == 1 {
+		operatorNodeToInsert.OverloadIndex = compiler.Pointer(int(0))
+	} else {
+		wantName := binary.AnalyzedType.Inst.Ref.Name
+		for i, version := range opEntity.Component {
+			leftPort, okL := version.Interface.IO.In["left"]
+			rightPort, okR := version.Interface.IO.In["right"]
+			if !okL || !okR {
+				continue
+			}
+			if leftPort.TypeExpr.Inst == nil || rightPort.TypeExpr.Inst == nil {
+				continue
+			}
+			if leftPort.TypeExpr.Inst.Ref.Name == wantName && rightPort.TypeExpr.Inst.Ref.Name == wantName {
+				operatorNodeToInsert.OverloadIndex = compiler.Pointer(i)
+				break
+			}
+		}
+	}
+
+	if operatorNodeToInsert.OverloadIndex == nil {
+		panic(fmt.Sprintf("no matching overload for operator %s and type %s", opComponent, binary.AnalyzedType.String()))
+	}
+
+	nodesToInsert[opNode] = operatorNodeToInsert
 
 	// left -> op:left
 	// right -> op:right
