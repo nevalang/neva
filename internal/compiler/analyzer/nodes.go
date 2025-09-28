@@ -441,6 +441,161 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 	return remainingComps[0], &remainingIdx[0], nil
 }
 
+// isCandidateCompatibleWithAllNodeRefs checks if the given component is compatible
+// with all the node references by checking that all the node references
+// are compatible with the component's interface.
+// Compatibility is checked by comparing the port types and array usage.
+// The type of the port ignored for now, to be checked later.
+func isCandidateCompatibleWithAllNodeRefs(
+	component src.Component,
+	nodeRefs []nodeRefInNet,
+) bool {
+	for _, nodeRef := range nodeRefs {
+		var ports map[string]src.Port
+		if !nodeRef.isOutgoing {
+			ports = component.Interface.IO.In
+		} else {
+			ports = component.Interface.IO.Out
+		}
+
+		port, portExists := ports[nodeRef.port]
+		if !portExists {
+			return false
+		}
+
+		isArrExpected := nodeRef.arrayIdx != nil
+		if port.IsArray != isArrExpected {
+			return false
+		}
+	}
+
+	return true
+}
+
+// findNodeRefsInNet identifies all places where the specified node is referenced in a connection.
+func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefInNet {
+	var refs []nodeRefInNet
+
+	for _, conn := range connections {
+		if conn.ArrayBypass != nil {
+			if conn.ArrayBypass.SenderOutport.Node == nodeName {
+				refs = append(refs, nodeRefInNet{
+					isOutgoing: true,
+					port:       conn.ArrayBypass.SenderOutport.Port,
+					arrayIdx:   conn.ArrayBypass.SenderOutport.Idx,
+				})
+			}
+			if conn.ArrayBypass.ReceiverInport.Node == nodeName {
+				refs = append(refs, nodeRefInNet{
+					isOutgoing: false,
+					port:       conn.ArrayBypass.ReceiverInport.Port,
+					arrayIdx:   conn.ArrayBypass.ReceiverInport.Idx,
+				})
+			}
+			continue
+		}
+
+		if conn.Normal != nil {
+			for _, sender := range conn.Normal.Senders {
+				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+					refs = append(refs, nodeRefInNet{
+						isOutgoing: true,
+						port:       sender.PortAddr.Port,
+						arrayIdx:   sender.PortAddr.Idx,
+					})
+				}
+			}
+			refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
+		}
+	}
+
+	return refs
+}
+
+// findNodeUsagesInReceivers recursively checks receivers for node usages
+func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiver) []nodeRefInNet {
+	var nodeRefs []nodeRefInNet
+
+	for _, receiver := range receivers {
+		// Check direct port address
+		if receiver.PortAddr != nil && receiver.PortAddr.Node == nodeName {
+			nodeRefs = append(nodeRefs, nodeRefInNet{
+				isOutgoing: false,
+				port:       receiver.PortAddr.Port,
+				arrayIdx:   receiver.PortAddr.Idx,
+			})
+		}
+
+		// Check chained connection
+		if receiver.ChainedConnection != nil {
+			if receiver.ChainedConnection.Normal != nil {
+				// Check senders in the chain
+				for _, sender := range receiver.ChainedConnection.Normal.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						nodeRefs = append(nodeRefs, nodeRefInNet{
+							isOutgoing: true,
+							port:       sender.PortAddr.Port,
+							arrayIdx:   sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				// Recursively check receivers in the chain
+				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Normal.Receivers)...)
+			}
+		}
+
+		// Check deferred connection
+		if receiver.DeferredConnection != nil {
+			// Similar logic to what we do with normal connections
+			if receiver.DeferredConnection.Normal != nil {
+				for _, sender := range receiver.DeferredConnection.Normal.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						nodeRefs = append(nodeRefs, nodeRefInNet{
+							isOutgoing: true,
+							port:       sender.PortAddr.Port,
+							arrayIdx:   sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Normal.Receivers)...)
+			}
+		}
+
+		// Check switch cases
+		if receiver.Switch != nil {
+			// Check each case in the switch
+			for _, caseConn := range receiver.Switch.Cases {
+				for _, sender := range caseConn.Senders {
+					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+						nodeRefs = append(nodeRefs, nodeRefInNet{
+							isOutgoing: true,
+							port:       sender.PortAddr.Port,
+							arrayIdx:   sender.PortAddr.Idx,
+						})
+					}
+				}
+
+				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, caseConn.Receivers)...)
+			}
+
+			// Check default case
+			if receiver.Switch.Default != nil {
+				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.Switch.Default)...)
+			}
+		}
+	}
+
+	return nodeRefs
+}
+
+type nodeRefInNet struct {
+	isOutgoing bool
+	port       string
+	arrayIdx   *uint8
+}
+
 // nodeUsageConstraints captures incoming produced types and outgoing expected types per port.
 // type nodeUsageConstraints struct {
 // 	incoming map[string][]typesystem.Expr // for inports: types produced by connected senders
@@ -766,158 +921,3 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 // 	return true
 // }
-
-// findNodeRefsInNet identifies all places where the specified node is referenced in a connection.
-func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefInNet {
-	var refs []nodeRefInNet
-
-	for _, conn := range connections {
-		if conn.ArrayBypass != nil {
-			if conn.ArrayBypass.SenderOutport.Node == nodeName {
-				refs = append(refs, nodeRefInNet{
-					isOutgoing: true,
-					port:       conn.ArrayBypass.SenderOutport.Port,
-					arrayIdx:   conn.ArrayBypass.SenderOutport.Idx,
-				})
-			}
-			if conn.ArrayBypass.ReceiverInport.Node == nodeName {
-				refs = append(refs, nodeRefInNet{
-					isOutgoing: false,
-					port:       conn.ArrayBypass.ReceiverInport.Port,
-					arrayIdx:   conn.ArrayBypass.ReceiverInport.Idx,
-				})
-			}
-			continue
-		}
-
-		if conn.Normal != nil {
-			for _, sender := range conn.Normal.Senders {
-				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-					refs = append(refs, nodeRefInNet{
-						isOutgoing: true,
-						port:       sender.PortAddr.Port,
-						arrayIdx:   sender.PortAddr.Idx,
-					})
-				}
-			}
-			refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
-		}
-	}
-
-	return refs
-}
-
-type nodeRefInNet struct {
-	isOutgoing bool
-	port       string
-	arrayIdx   *uint8
-}
-
-// findNodeUsagesInReceivers recursively checks receivers for node usages
-func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiver) []nodeRefInNet {
-	var nodeRefs []nodeRefInNet
-
-	for _, receiver := range receivers {
-		// Check direct port address
-		if receiver.PortAddr != nil && receiver.PortAddr.Node == nodeName {
-			nodeRefs = append(nodeRefs, nodeRefInNet{
-				isOutgoing: false,
-				port:       receiver.PortAddr.Port,
-				arrayIdx:   receiver.PortAddr.Idx,
-			})
-		}
-
-		// Check chained connection
-		if receiver.ChainedConnection != nil {
-			if receiver.ChainedConnection.Normal != nil {
-				// Check senders in the chain
-				for _, sender := range receiver.ChainedConnection.Normal.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
-				}
-
-				// Recursively check receivers in the chain
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Normal.Receivers)...)
-			}
-		}
-
-		// Check deferred connection
-		if receiver.DeferredConnection != nil {
-			// Similar logic to what we do with normal connections
-			if receiver.DeferredConnection.Normal != nil {
-				for _, sender := range receiver.DeferredConnection.Normal.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
-				}
-
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Normal.Receivers)...)
-			}
-		}
-
-		// Check switch cases
-		if receiver.Switch != nil {
-			// Check each case in the switch
-			for _, caseConn := range receiver.Switch.Cases {
-				for _, sender := range caseConn.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
-				}
-
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, caseConn.Receivers)...)
-			}
-
-			// Check default case
-			if receiver.Switch.Default != nil {
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.Switch.Default)...)
-			}
-		}
-	}
-
-	return nodeRefs
-}
-
-// isCandidateCompatibleWithAllNodeRefs checks if the given component is compatible
-// with all the node references by checking that all the node references
-// are compatible with the component's interface.
-// Compatibility is checked by comparing the port types and array usage.
-// The type of the port ignored for now, to be checked later.
-func isCandidateCompatibleWithAllNodeRefs(
-	component src.Component,
-	nodeRefs []nodeRefInNet,
-) bool {
-	for _, nodeRef := range nodeRefs {
-		var ports map[string]src.Port
-		if !nodeRef.isOutgoing {
-			ports = component.Interface.IO.In
-		} else {
-			ports = component.Interface.IO.Out
-		}
-
-		port, portExists := ports[nodeRef.port]
-		if !portExists {
-			return false
-		}
-
-		isArrExpected := nodeRef.arrayIdx != nil
-		if port.IsArray != isArrExpected {
-			return false
-		}
-	}
-
-	return true
-}
