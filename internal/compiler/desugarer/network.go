@@ -1575,7 +1575,7 @@ func (d *Desugarer) desugarBinarySender(
 		panic("binary analyzed type must be instantiation at desugaring stage")
 	}
 
-	opEntity, _, err := scope.Entity(core.EntityRef{Pkg: "builtin", Name: opComponent})
+	opEntity, _, err := scope.Entity(core.EntityRef{Name: opComponent})
 	if err != nil {
 		panic(fmt.Sprintf("resolve operator entity: %v", err))
 	}
