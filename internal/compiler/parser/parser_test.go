@@ -1125,7 +1125,7 @@ func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
 		check func(t *testing.T, net []src.Connection)
 	}{
 		{
-			name: "pattern matching without value",
+			name: "pattern_matching_without_value",
 			text: `
 				def C1() () {
 					sender -> switch {
@@ -1145,13 +1145,13 @@ func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
 				require.Equal(t, 2, len(switchStmt.Cases))
 
 				// Input::Int -> receiver1
-				intCase := switchStmt.Cases[0].Senders[0].Const.Value.Message.Union
+				intCase := switchStmt.Cases[0].Senders[0].Union
 				require.Equal(t, "Input", intCase.EntityRef.Name)
 				require.Equal(t, "Int", intCase.Tag)
 				require.Equal(t, "receiver1", switchStmt.Cases[0].Receivers[0].PortAddr.Node)
 
 				// Input::None -> receiver2
-				noneCase := switchStmt.Cases[1].Senders[0].Const.Value.Message.Union
+				noneCase := switchStmt.Cases[1].Senders[0].Union
 				require.Equal(t, "Input", noneCase.EntityRef.Name)
 				require.Equal(t, "None", noneCase.Tag)
 				require.Equal(t, "receiver2", switchStmt.Cases[1].Receivers[0].PortAddr.Node)
@@ -1161,7 +1161,7 @@ func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
 			},
 		},
 		{
-			name: "pattern matching with value",
+			name: "pattern_matching_with_value",
 			text: `
 				def C1() () {
 					sender -> switch {
@@ -1181,14 +1181,14 @@ func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
 				require.Equal(t, 2, len(switchStmt.Cases))
 
 				// Input::Int(42) -> receiver1
-				intCase := switchStmt.Cases[0].Senders[0].Const.Value.Message.Union
+				intCase := switchStmt.Cases[0].Senders[0].Union
 				require.Equal(t, "Input", intCase.EntityRef.Name)
 				require.Equal(t, "Int", intCase.Tag)
-				require.Equal(t, 42, *switchStmt.Cases[0].Senders[0].Const.Value.Message.Int)
+				require.Equal(t, 42, *switchStmt.Cases[0].Senders[0].Union.Data.Const.Value.Message.Int)
 				require.Equal(t, "receiver1", switchStmt.Cases[0].Receivers[0].PortAddr.Node)
 
 				// Input::None -> receiver2
-				noneCase := switchStmt.Cases[1].Senders[0].Const.Value.Message.Union
+				noneCase := switchStmt.Cases[1].Senders[0].Union
 				require.Equal(t, "Input", noneCase.EntityRef.Name)
 				require.Equal(t, "None", noneCase.Tag)
 				require.Equal(t, "receiver2", switchStmt.Cases[1].Receivers[0].PortAddr.Node)
