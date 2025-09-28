@@ -269,7 +269,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 			resolvedNodeArgs,
 			allParentNodes,
 			net,
-			entity.Component,
+			entity,
 		)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
@@ -382,7 +382,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 	resolvedNodeArgs []typesystem.Expr,
 	allParentNodes map[string]src.Node,
 	net []src.Connection,
-	allNodeComponentVersions []src.Component,
+	entity src.Entity,
 ) (src.Component, *int, *compiler.Error) {
 	nodeRefs := findNodeRefsInNet(nodeName, net)
 	if len(nodeRefs) == 0 {
@@ -404,7 +404,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 		remainingIdx   []int
 		remainingComps []src.Component
 	)
-	for i, component := range allNodeComponentVersions {
+	for i, component := range entity.Component {
 		if !isCandidateCompatibleWithAllNodeRefs(component, nodeRefs) {
 			continue
 		}
@@ -424,14 +424,17 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 	if len(remainingComps) == 0 {
 		return src.Component{}, nil, &compiler.Error{
 			Message: fmt.Sprintf("no compatible overload found for node %s", nodeName),
-			Meta:    &resolvedParentIface.Meta,
+			Meta:    entity.Meta(),
 		}
 	}
 
-	if len(remainingComps) > 1 {
+	if l := len(remainingComps); l > 1 {
 		return src.Component{}, nil, &compiler.Error{
-			Message: fmt.Sprintf("ambiguous overload for node %s: multiple candidates satisfy usage", nodeName),
-			Meta:    &resolvedParentIface.Meta,
+			Message: fmt.Sprintf(
+				"ambiguous overload for node %s: multiple candidates satisfy usage: %d",
+				nodeName, l,
+			),
+			Meta: entity.Meta(),
 		}
 	}
 
