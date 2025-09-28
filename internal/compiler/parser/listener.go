@@ -89,4 +89,7 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	}
 
 	existing.Component = append(existing.Component, parsedComponent)
+
+	// store back the updated entity; without this, only the first overload is kept
+	s.state.Entities[name] = existing
 }

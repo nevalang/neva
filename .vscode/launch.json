@@ -7,8 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/examples",
-      "args": ["run", "hello_world"]
+      "cwd": "${workspaceFolder}/e2e/binary_operators/arithmetic/add_floats",
+      "args": ["run", "main"]
     },
     {
       "name": "DEBUG CODEGEN",
