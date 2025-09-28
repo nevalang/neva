@@ -273,7 +273,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 		)
 		if err != nil {
 			return src.Interface{}, nil, &compiler.Error{
-				Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
+				Message: err.Error(),
 				Meta:    &node.Meta,
 			}
 		}
