@@ -32,8 +32,18 @@ func TestEmitDefault(t *testing.T) {
 	require.NoError(t, err, string(out))
 
 	var ir struct {
-		Connections map[string]string `yaml:"connections"`
-		Funcs       []any             `yaml:"funcs"`
+		Connections []struct {
+			From string `yaml:"from"`
+			To   string `yaml:"to"`
+		} `yaml:"connections"`
+		Funcs []struct {
+			Ref string `yaml:"ref"`
+			IO  struct {
+				In  []string `yaml:"in"`
+				Out []string `yaml:"out"`
+			} `yaml:"io"`
+			Msg map[string]any `yaml:"msg,omitempty"`
+		} `yaml:"funcs"`
 	}
 	require.NoError(t, yaml.Unmarshal(irBytes, &ir))
 	require.NotEmpty(t, ir.Funcs)
@@ -61,8 +71,18 @@ func TestEmitYAML(t *testing.T) {
 	require.NoError(t, err, string(out))
 
 	var ir struct {
-		Connections map[string]string `yaml:"connections"`
-		Funcs       []any             `yaml:"funcs"`
+		Connections []struct {
+			From string `yaml:"from"`
+			To   string `yaml:"to"`
+		} `yaml:"connections"`
+		Funcs []struct {
+			Ref string `yaml:"ref"`
+			IO  struct {
+				In  []string `yaml:"in"`
+				Out []string `yaml:"out"`
+			} `yaml:"io"`
+			Msg map[string]any `yaml:"msg,omitempty"`
+		} `yaml:"funcs"`
 	}
 	require.NoError(t, yaml.Unmarshal(irBytes, &ir))
 	require.NotEmpty(t, ir.Funcs)
