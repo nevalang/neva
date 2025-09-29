@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e/binary_operators/arithmetic/add_floats",
+      "cwd": "${workspaceFolder}/e2e/compare_ints",
       "args": ["run", "main"]
     },
     {
