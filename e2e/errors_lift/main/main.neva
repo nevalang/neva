@@ -1,6 +1,7 @@
 import {
     fmt
     errors
+    runtime
 }
 
 // errors.Lift wraps handler so it behaves like a node with error outport.
