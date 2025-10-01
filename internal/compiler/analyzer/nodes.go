@@ -82,7 +82,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	bindArg, hasBind := node.Directives[compiler.BindDirective]
-	if hasBind && bindArg == "" {
+	if hasBind && len(bindArg) != 1 {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message: "Node with #bind directive must provide exactly one argument",
 			Meta:    nodeEntity.Meta(),
