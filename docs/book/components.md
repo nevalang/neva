@@ -102,7 +102,7 @@ def App(data any, prod bool) (sig any) {
 }
 ```
 
-This not only makes the code more complex but also means we have to initialize both implementations: `ProdLogger` in the test environment and `MockLogger` in the production environment, even though they are not needed in those respective contexts. What if you need to read environment variables to initialize a component? For example, your logger might need to send requests to a third-party service to collect errors. And finally, imagine if it were not a boolean flag but an enum with several possible states. The complexity would increase dramatically.
+This not only makes the code more complex but also means we have to initialize both implementations: `ProdLogger` in the test environment and `MockLogger` in the production environment, even though they are not needed in those respective contexts. What if you need to read environment variables to initialize a component? For example, your logger might need to send requests to a third-party service to collect errors. And finally, imagine if it were not a boolean flag but a tagged union with several possible states. The complexity would increase dramatically.
 
 > As you can see it's possible to write nodes in a single line, separated by comma: `Cond, Logic, Mock`. Don't abuse this style - Nevalang is not about clever one-liners, as you can see with `Println`.
 

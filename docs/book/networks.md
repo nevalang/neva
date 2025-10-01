@@ -228,12 +228,12 @@ def Inc(data int) (res int) {
 }
 ```
 
-Only primitive data-types (`bool`, `int`, `float`, `string` and `enum`) can be used like this. `struct`, `list`, and `dict` literals are not allowed in the network.
+Only primitive data-types (`bool`, `int`, `float`, `string` and tagged union literals) can be used like this. `struct`, `list`, and `dict` literals are not allowed in the network.
 
 - bool: `true -> ...` or `false -> ...`
 - int: `42 -> ...`
 - float: `42.0 -> ...`
-- enum: `Day::Friday ->`
+- tagged union: `Day::Friday ->` or `Day::Friday(value) ->`
 
 #### Binary Expression
 

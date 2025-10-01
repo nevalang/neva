@@ -30,11 +30,11 @@ dict<
 
 ### Literal
 
-Literal expressions are used for structs, enums, and unions, which cannot be expressed as instantiations.
+Literal expressions are used for structs and unions, which cannot be expressed as instantiations.
 
 ```neva
 struct { a int, b float } // struct with 2 fields
-enum { Foo, Bar, Baz } // enum with 3 members
+union { Foo, Bar, Baz } // tagged union with 3 variants
 int | string | float | struct{} // union with 4 elements
 ```
 
@@ -159,9 +159,9 @@ For literals rules are different:
 
 Struct literal `S1` is compatible with `S2` if `S1` is a superset of `S2` and each field type in `S1` is compatible with its counterpart in `S2`.
 
-#### Enum Literals
+#### Tagged Union Literals
 
-Enum literal `E1` is compatible with `E2` if `E1` is a subset of `E2`.
+Tagged union literal `U1` is compatible with `U2` if `U1` is a subset of `U2` (all variants in `U1` exist in `U2`).
 
 #### Union Literals
 
@@ -195,7 +195,7 @@ Maybe is an [option-type](https://en.wikipedia.org/wiki/Option_type) representin
 
 ### `bool`
 
-Boolean type has two possible values: `true` and `false`. It's similar to an enum with 2 members. Booleans are used for conditional logic and routing.
+Boolean type has two possible values: `true` and `false`. It's similar to a tagged union with 2 variants. Booleans are used for conditional logic and routing.
 
 ### `int`
 
@@ -217,9 +217,9 @@ List is a dynamic array of elements with the same type. It can be accessed by in
 
 Dictionary is an [associative array](https://en.wikipedia.org/wiki/Associative_array) of key-value pairs. All values have the same type, keys are always strings. Dictionaries can be converted to streams for iteration. Key access is O(1), but require handling absent values.
 
-### `enum`
+### Tagged Unions
 
-Enums are fixed sets of named members, represented as integers. Handling requires checking all cases or a default. Enums are compatible if one is a subset of another.
+Tagged unions are fixed sets of named variants, each potentially carrying data. They enable pattern matching and exhaustive case handling. Tagged unions are compatible if one is a subset of another.
 
 ### `union`
 
