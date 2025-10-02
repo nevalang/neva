@@ -1,4 +1,6 @@
 import {
+	runtime
+
 	@:foo
 	@:foo/bar
 }
