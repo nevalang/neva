@@ -1,17 +1,19 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
-    PrintAny
+    print_any PrintAny
     panic runtime.Panic
     ---
-    :start -> 42 -> printAny
-    printAny:sig -> :stop
-    printAny:err -> panic
+    :start -> 42 -> print_any
+    print_any:sig -> :stop
+    print_any:err -> panic
 }
 
 def PrintAny(data any) (sig any, err error) {
-	fmt.Println<int>?
+	println fmt.Println<int>?
 	---
-	:data -> println
-	println:res -> :sig
+	:data -> println -> :sig
 }
