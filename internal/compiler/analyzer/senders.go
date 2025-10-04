@@ -343,7 +343,7 @@ func (a Analyzer) analyzeSender(
 	return &resolvedSenderAddr, &resolvedSenderType, nil
 }
 
-func (a Analyzer) getChainHeadType(
+func (a Analyzer) getChainHeadInputType(
 	chainHead src.ConnectionSender,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -362,15 +362,7 @@ func (a Analyzer) getChainHeadType(
 		return resolvedType, nil
 	}
 
-	if chainHead.Range != nil {
-		return ts.Expr{
-			Inst: &ts.InstExpr{
-				Ref: core.EntityRef{Name: "any"}, // :sig
-			},
-		}, nil
-	}
-
-	if chainHead.Const != nil {
+	if chainHead.Range != nil || chainHead.Const != nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: core.EntityRef{Name: "any"}, // :sig
@@ -380,6 +372,26 @@ func (a Analyzer) getChainHeadType(
 
 	if len(chainHead.StructSelector) > 0 {
 		return a.getStructSelectorInportType(chainHead), nil
+	}
+
+	if chainHead.Union != nil {
+		typeDef, _, err := scope.GetType(chainHead.Union.EntityRef)
+		if err != nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", err),
+				Meta:    &chainHead.Meta,
+			}
+		}
+
+		unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
+		if analyzeExprErr != nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
+				Meta:    &chainHead.Meta,
+			}
+		}
+
+		return unionTypeExpr, nil
 	}
 
 	return ts.Expr{}, &compiler.Error{
