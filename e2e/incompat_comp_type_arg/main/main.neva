@@ -1,6 +1,0 @@
-def Main(start any) (stop any) {
-	dec Dec
-	---
-	:start -> 42 -> dec:data
-	dec:res -> :stop
-}
