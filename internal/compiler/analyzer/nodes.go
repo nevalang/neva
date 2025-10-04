@@ -501,11 +501,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 		}
 	}
 	if lastUnderscore == -1 {
-		// fallback: return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	depName := nodeName[lastUnderscore+1:]
@@ -525,21 +521,13 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	}
 
 	if parentNodeName == "" {
-		// dependency not found, return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	// get the parent component to find the dependency declaration
 	parentEntity, _, err := scope.Entity(parentNode.EntityRef)
 	if err != nil {
-		// fallback: return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	// find the component version that matches the parent node
@@ -549,11 +537,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	} else if parentNode.OverloadIndex != nil {
 		parentComponent = parentEntity.Component[*parentNode.OverloadIndex]
 	} else {
-		// fallback: return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	// find the dependency declaration in the parent component's nodes
@@ -575,29 +559,17 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	}
 
 	if !hasDep {
-		// fallback: return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	// get the dependency interface
 	depEntity, _, err := scope.Entity(depNode.EntityRef)
 	if err != nil {
-		// fallback: return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	if depEntity.Kind != src.InterfaceEntity {
-		// dependency is not an interface, return empty constraints
-		return nodeUsageConstraints{
-			incoming: make(map[string][]typesystem.Expr),
-			outgoing: make(map[string][]typesystem.Expr),
-		}
+		return emptyConstraints()
 	}
 
 	// resolve the dependency interface with the parent's type arguments
@@ -623,11 +595,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	for portName, port := range depEntity.Interface.IO.In {
 		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
 		if err != nil {
-			// fallback: return empty constraints
-			return nodeUsageConstraints{
-				incoming: make(map[string][]typesystem.Expr),
-				outgoing: make(map[string][]typesystem.Expr),
-			}
+			return emptyConstraints()
 		}
 		constraints.incoming[portName] = []typesystem.Expr{resolvedType}
 	}
@@ -636,11 +604,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	for portName, port := range depEntity.Interface.IO.Out {
 		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
 		if err != nil {
-			// fallback: return empty constraints
-			return nodeUsageConstraints{
-				incoming: make(map[string][]typesystem.Expr),
-				outgoing: make(map[string][]typesystem.Expr),
-			}
+			return emptyConstraints()
 		}
 		constraints.outgoing[portName] = []typesystem.Expr{resolvedType}
 	}
@@ -852,6 +816,14 @@ type nodeUsageConstraints struct {
 	outgoing map[string][]typesystem.Expr // for outports: types expected by connected receivers
 }
 
+// emptyConstraints returns an empty nodeUsageConstraints with initialized maps
+func emptyConstraints() nodeUsageConstraints {
+	return nodeUsageConstraints{
+		incoming: make(map[string][]typesystem.Expr),
+		outgoing: make(map[string][]typesystem.Expr),
+	}
+}
+
 // collectUsageDerivedTypeConstraintsForNode inspects the network and extracts type constraints for the given node.
 // it only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
 func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
@@ -896,27 +868,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 			if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
 				continue
 			}
-			port := sender.PortAddr.Port
-			// if port is empty, we need to resolve it to the actual port name
-			if port == "" {
-				// get the node to find the actual port name
-				if node, ok := nodes[nodeName]; ok {
-					// resolve the entity to get the component interface
-					if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
-						// for now, just use the first component to determine the port name
-						if len(entity.Component) > 0 {
-							iface := entity.Component[0].Interface
-							// if there's only one output port, use that
-							if len(iface.IO.Out) == 1 {
-								for portName := range iface.IO.Out {
-									port = portName
-									break
-								}
-							}
-						}
-					}
-				}
-			}
+			port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
 			// derive expected types from all receivers
 			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
 			for _, rpa := range recvPortAddrs {
@@ -992,20 +944,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 
 						// this node is a sender in a chained connection
 						// collect incoming constraints from the outer senders
-						inPort := "data" // default port name for nodes with single inport
-						if node, ok := nodes[nodeName]; ok {
-							if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
-								if len(entity.Component) > 0 {
-									iface := entity.Component[0].Interface
-									if len(iface.IO.In) == 1 {
-										for portName := range iface.IO.In {
-											inPort = portName
-											break
-										}
-									}
-								}
-							}
-						}
+						inPort := a.resolvePortName(nodeName, nodes, scope, true, "")
 
 						// collect types from the outer senders
 						for _, outerSender := range outerSenders {
@@ -1018,22 +957,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 						}
 
 						// collect outgoing constraints from the chained connection's receivers
-						port := sender.PortAddr.Port
-						if port == "" {
-							if node, ok := nodes[nodeName]; ok {
-								if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
-									if len(entity.Component) > 0 {
-										iface := entity.Component[0].Interface
-										if len(iface.IO.Out) == 1 {
-											for portName := range iface.IO.Out {
-												port = portName
-												break
-											}
-										}
-									}
-								}
-							}
-						}
+						port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
 						chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Normal.Receivers)
 						for _, rpa := range chainedRecvPortAddrs {
 							if rpa.Node == "out" {
@@ -1072,28 +996,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 			if rpa.Node != nodeName {
 				continue
 			}
-			port := rpa.Port
-
-			// if port is empty, we need to resolve it to the actual port name
-			if port == "" {
-				// get the node to find the actual port name
-				if node, ok := nodes[nodeName]; ok {
-					// resolve the entity to get the component interface
-					if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
-						// for now, just use the first component to determine the port name
-						if len(entity.Component) > 0 {
-							iface := entity.Component[0].Interface
-							// if there's only one input port, use that
-							if len(iface.IO.In) == 1 {
-								for portName := range iface.IO.In {
-									port = portName
-									break
-								}
-							}
-						}
-					}
-				}
-			}
+			port := a.resolvePortName(nodeName, nodes, scope, true, rpa.Port)
 			// derive produced types from all senders
 			for _, sender := range conn.Normal.Senders {
 				// check if any receiver is a chained connection that contains our node
@@ -1418,38 +1321,50 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 }
 
 // typesMatchExactly checks if two types match exactly (for native component disambiguation)
+// uses string comparison as a simple and reliable equality check
 func (a Analyzer) typesMatchExactly(type1, type2 typesystem.Expr) bool {
-	// for native components, we need exact type matching
-	// this is simpler than subtype checking since we're dealing with concrete types
-
-	// handle inst expressions (like int, float, string, list<T>, etc.)
-	if type1.Inst != nil && type2.Inst != nil {
-		if type1.Inst.Ref.Name != type2.Inst.Ref.Name {
-			return false
-		}
-
-		// check type arguments recursively
-		if len(type1.Inst.Args) != len(type2.Inst.Args) {
-			return false
-		}
-
-		for i, arg1 := range type1.Inst.Args {
-			arg2 := type2.Inst.Args[i]
-			if !a.typesMatchExactly(arg1, arg2) {
-				return false
-			}
-		}
-
-		return true
-	}
-
-	// handle literal expressions
-	if type1.Lit != nil && type2.Lit != nil {
-		// for now, just compare the string representation
-		// this could be made more sophisticated if needed
-		return type1.String() == type2.String()
-	}
-
-	// fallback to string comparison
 	return type1.String() == type2.String()
+}
+
+// resolvePortName resolves an empty port name to the actual port name by checking
+// if the node has only one port of the given direction. returns the port name if found,
+// otherwise returns the original portName (which may be empty).
+func (a Analyzer) resolvePortName(
+	nodeName string,
+	nodes map[string]src.Node,
+	scope src.Scope,
+	isInput bool,
+	portName string,
+) string {
+	// TODO figure out if this func should return error or panic, not just empty string
+	
+	if portName != "" {
+		return portName
+	}
+
+	node, ok := nodes[nodeName]
+	if !ok {
+		return portName
+	}
+
+	entity, _, err := scope.Entity(node.EntityRef)
+	if err != nil || entity.Kind != src.ComponentEntity || len(entity.Component) == 0 {
+		return portName
+	}
+
+	// use first component to determine port name (works for single-port components)
+	iface := entity.Component[0].Interface
+	ports := iface.IO.Out
+	if isInput {
+		ports = iface.IO.In
+	}
+
+	// only resolve if there's exactly one port
+	if len(ports) == 1 {
+		for name := range ports {
+			return name
+		}
+	}
+
+	return portName
 }
