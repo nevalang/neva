@@ -310,7 +310,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 
 	chainHead := chainedConn.Normal.Senders[0]
 
-	chainHeadType, err := a.getChainHeadType(
+	chainHeadType, err := a.getChainHeadInputType(
 		chainHead,
 		nodes,
 		nodesIfaces,
