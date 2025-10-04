@@ -1,11 +1,14 @@
 import {
     fmt
+    runtime
 }
 
+// TODO get rid of deferred connnection syntax
+// when chained connection with tagged union will be supported
 def Main(start any) (stop any) {
     day_printer DayPrinter
     ---
-    :start -> Day::Friday -> day_printer -> :stop
+    :start -> { Day::Friday -> day_printer -> :stop }
 }
 
 type Day union {
@@ -20,7 +23,9 @@ type Day union {
 
 def DayPrinter(day Day) (sig any) {
     println fmt.Println
+    panic runtime.Panic
     ---
     :day -> println:data
     println:res -> :sig
+    println:err -> panic
 }
