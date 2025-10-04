@@ -211,13 +211,17 @@ func (a Analyzer) analyzeNode(
 
 	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
 	for depName, depNode := range node.DIArgs {
+		// di arguments are not regular nodes in the network, so we generate a unique name
+		// that won't be found in the network. this will cause the overloading logic to skip
+		// network-based checks.
+		uniqueName := "__di_" + name + "_" + depName
 		resolvedDep, _, err := a.analyzeNode(
-			name, // TODO make sure DI works with overloading (example: Reduce{Add})
+			uniqueName, // use a unique name that won't be found in the network
 			depNode,
 			scope,
 			iface,
 			nodes,
-			net,
+			net, // pass the network so that type constraints can be collected
 		)
 		if err != nil {
 			return src.Node{}, foundInterface{}, compiler.Error{
@@ -385,45 +389,82 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 	entity src.Entity,
 ) (src.Component, *int, *compiler.Error) {
 	nodeRefs := findNodeRefsInNet(nodeName, net)
-	if len(nodeRefs) == 0 {
-		return src.Component{}, nil, &compiler.Error{
-			Message: fmt.Sprintf("no usages found for node %s", nodeName),
-			Meta:    &resolvedParentIface.Meta,
-		}
-	}
 
-	// nodeConstraints := a.collectUsageDerivedTypeConstraintsForNode(
-	// 	nodeName,
-	// 	resolvedParentIface,
-	// 	scope,
-	// 	allParentNodes,
-	// 	net,
-	// )
+	// for di arguments (which have no node references in the network),
+	// we skip network-based overloading and rely only on interface compatibility.
+	// di arguments have unique names that won't be found in the network.
+	isDIArg := len(nodeRefs) == 0
+
+	var nodeConstraints nodeUsageConstraints
+	if isDIArg {
+		// for di arguments, we need to get type constraints from the parent component's dependency declaration
+		nodeConstraints = a.collectDITypeConstraintsFromParent(
+			nodeName,
+			resolvedParentIface,
+			scope,
+			allParentNodes,
+		)
+	} else {
+		nodeConstraints = a.collectUsageDerivedTypeConstraintsForNode(
+			nodeName,
+			resolvedParentIface,
+			scope,
+			allParentNodes,
+			net,
+		)
+	}
 
 	var (
 		remainingIdx   []int
 		remainingComps []src.Component
 	)
 	for i, component := range entity.Component {
-		if !isCandidateCompatibleWithAllNodeRefs(component, nodeRefs) {
-			continue
+		// skip network-based compatibility check for di arguments
+		if !isDIArg {
+			if !isCandidateCompatibleWithAllNodeRefs(component, nodeRefs) {
+				continue
+			}
 		}
-		// TODO: uncomment after the related code will be carefully reviewed!
-		// if !a.doesCandidateSatisfyTypeConstraints(
-		// 	component.Interface,
-		// 	resolvedNodeArgs,
-		// 	nodeConstraints,
-		// 	scope,
-		// ) {
-		// 	continue
-		// }
+
+		// for native components with multiple extern implementations, use type argument-based disambiguation
+		// this handles cases like Dec(int) vs Dec(float) or Len(list) vs Len(string)
+		if a.isNativeComponentWithMultipleExterns(component, entity) {
+			// if we have type arguments, use them for disambiguation
+			if len(resolvedNodeArgs) > 0 {
+				if !a.doesNativeComponentMatchTypeArgs(component, resolvedNodeArgs, scope) {
+					continue
+				}
+			} else {
+				// if no type arguments, use network-based type constraints
+				// this handles cases like Len without explicit type args but with network usage
+				if !a.doesCandidateSatisfyTypeConstraints(
+					component.Interface,
+					resolvedNodeArgs,
+					nodeConstraints,
+					scope,
+				) {
+					continue
+				}
+			}
+		} else {
+			// for regular components, use the existing type constraint logic
+			if !a.doesCandidateSatisfyTypeConstraints(
+				component.Interface,
+				resolvedNodeArgs,
+				nodeConstraints,
+				scope,
+			) {
+				continue
+			}
+		}
+
 		remainingIdx = append(remainingIdx, i)
 		remainingComps = append(remainingComps, component)
 	}
 
 	if len(remainingComps) == 0 {
 		return src.Component{}, nil, &compiler.Error{
-			Message: fmt.Sprintf("no compatible overload found for node %s", nodeName),
+			Message: fmt.Sprintf("no compatible overload found for node %s (total components: %d, remaining: %d)", nodeName, len(entity.Component), len(remainingComps)),
 			Meta:    entity.Meta(),
 		}
 	}
@@ -439,6 +480,200 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 	}
 
 	return remainingComps[0], &remainingIdx[0], nil
+}
+
+// collectDITypeConstraintsFromParent collects type constraints for a DI argument
+// from the parent component's dependency declaration.
+func (a Analyzer) collectDITypeConstraintsFromParent(
+	nodeName string, // the unique name of the DI argument (e.g., "__di_reduce_reducer")
+	resolvedParentIface src.Interface,
+	scope src.Scope,
+	allParentNodes map[string]src.Node,
+) nodeUsageConstraints {
+	// extract the dependency name from the unique node name
+	// format: "__di_<parentNodeName>_<depName>"
+	// we need to find the last underscore to get the depName
+	lastUnderscore := -1
+	for i := len(nodeName) - 1; i >= 0; i-- {
+		if nodeName[i] == '_' {
+			lastUnderscore = i
+			break
+		}
+	}
+	if lastUnderscore == -1 {
+		// fallback: return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	depName := nodeName[lastUnderscore+1:]
+
+	// find the parent node that contains this dependency
+	// we need to look through all parent nodes to find the one that has this dependency
+	var parentNodeName string
+	var parentNode src.Node
+	for nodeName, node := range allParentNodes {
+		if node.DIArgs != nil {
+			if _, hasDep := node.DIArgs[depName]; hasDep {
+				parentNodeName = nodeName
+				parentNode = node
+				break
+			}
+		}
+	}
+
+	if parentNodeName == "" {
+		// dependency not found, return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	// get the parent component to find the dependency declaration
+	parentEntity, _, err := scope.Entity(parentNode.EntityRef)
+	if err != nil {
+		// fallback: return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	// find the component version that matches the parent node
+	var parentComponent src.Component
+	if len(parentEntity.Component) == 1 {
+		parentComponent = parentEntity.Component[0]
+	} else if parentNode.OverloadIndex != nil {
+		parentComponent = parentEntity.Component[*parentNode.OverloadIndex]
+	} else {
+		// fallback: return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	// find the dependency declaration in the parent component's nodes
+	var depNode src.Node
+	var hasDep bool
+
+	if depName == "" {
+		// for anonymous dependencies, find the first interface node
+		for _, node := range parentComponent.Nodes {
+			entity, _, err := scope.Entity(node.EntityRef)
+			if err == nil && entity.Kind == src.InterfaceEntity {
+				depNode = node
+				hasDep = true
+				break
+			}
+		}
+	} else {
+		depNode, hasDep = parentComponent.Nodes[depName]
+	}
+
+	if !hasDep {
+		// fallback: return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	// get the dependency interface
+	depEntity, _, err := scope.Entity(depNode.EntityRef)
+	if err != nil {
+		// fallback: return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	if depEntity.Kind != src.InterfaceEntity {
+		// dependency is not an interface, return empty constraints
+		return nodeUsageConstraints{
+			incoming: make(map[string][]typesystem.Expr),
+			outgoing: make(map[string][]typesystem.Expr),
+		}
+	}
+
+	// resolve the dependency interface with the parent's type arguments
+	// we need to create a frame from the parent's type arguments
+	// the parent component's original interface has the type parameters
+	parentTypeFrame := make(map[string]typesystem.Def)
+	for i, param := range parentComponent.Interface.TypeParams.Params {
+		if i < len(parentNode.TypeArgs) {
+			parentTypeFrame[param.Name] = typesystem.Def{
+				BodyExpr: &parentNode.TypeArgs[i],
+				Meta:     param.Constr.Meta,
+			}
+		}
+	}
+
+	// convert the dependency interface to type constraints by resolving each port type
+	constraints := nodeUsageConstraints{
+		incoming: make(map[string][]typesystem.Expr),
+		outgoing: make(map[string][]typesystem.Expr),
+	}
+
+	// add incoming constraints (input ports) - resolve each port type with the parent's type frame
+	for portName, port := range depEntity.Interface.IO.In {
+		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
+		if err != nil {
+			// fallback: return empty constraints
+			return nodeUsageConstraints{
+				incoming: make(map[string][]typesystem.Expr),
+				outgoing: make(map[string][]typesystem.Expr),
+			}
+		}
+		constraints.incoming[portName] = []typesystem.Expr{resolvedType}
+	}
+
+	// add outgoing constraints (output ports) - resolve each port type with the parent's type frame
+	for portName, port := range depEntity.Interface.IO.Out {
+		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
+		if err != nil {
+			// fallback: return empty constraints
+			return nodeUsageConstraints{
+				incoming: make(map[string][]typesystem.Expr),
+				outgoing: make(map[string][]typesystem.Expr),
+			}
+		}
+		constraints.outgoing[portName] = []typesystem.Expr{resolvedType}
+	}
+
+	// resolve empty port names to actual port names if there's only one such port
+	// this handles cases where the interface has unnamed ports but the component has named ports
+	if len(constraints.incoming) == 1 {
+		for portName, types := range constraints.incoming {
+			if portName == "" {
+				// find the actual port name from the first candidate component
+				// we need to look at the entity to find the actual port name
+				// for now, let's use a common port name like "data"
+				delete(constraints.incoming, "")
+				constraints.incoming["data"] = types
+				break
+			}
+		}
+	}
+
+	if len(constraints.outgoing) == 1 {
+		for portName, types := range constraints.outgoing {
+			if portName == "" {
+				// find the actual port name from the first candidate component
+				// we need to look at the entity to find the actual port name
+				// for now, let's use a common port name like "res"
+				delete(constraints.outgoing, "")
+				constraints.outgoing["res"] = types
+				break
+			}
+		}
+	}
+
+	return constraints
 }
 
 // isCandidateCompatibleWithAllNodeRefs checks if the given component is compatible
@@ -458,7 +693,22 @@ func isCandidateCompatibleWithAllNodeRefs(
 			ports = component.Interface.IO.Out
 		}
 
-		port, portExists := ports[nodeRef.port]
+		// handle empty port names by resolving to the actual port name
+		portName := nodeRef.port
+		if portName == "" {
+			// if there's only one port, use that
+			if len(ports) == 1 {
+				for name := range ports {
+					portName = name
+					break
+				}
+			} else {
+				// multiple ports but no port name specified - this is an error
+				return false
+			}
+		}
+
+		port, portExists := ports[portName]
 		if !portExists {
 			return false
 		}
@@ -597,327 +847,609 @@ type nodeRefInNet struct {
 }
 
 // nodeUsageConstraints captures incoming produced types and outgoing expected types per port.
-// type nodeUsageConstraints struct {
-// 	incoming map[string][]typesystem.Expr // for inports: types produced by connected senders
-// 	outgoing map[string][]typesystem.Expr // for outports: types expected by connected receivers
-// }
+type nodeUsageConstraints struct {
+	incoming map[string][]typesystem.Expr // for inports: types produced by connected senders
+	outgoing map[string][]typesystem.Expr // for outports: types expected by connected receivers
+}
 
 // collectUsageDerivedTypeConstraintsForNode inspects the network and extracts type constraints for the given node.
 // it only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
-// func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
-// 	nodeName string,
-// 	resolvedParentIface src.Interface,
-// 	scope src.Scope,
-// 	nodes map[string]src.Node,
-// 	net []src.Connection,
-// ) (nodeUsageConstraints) {
-// 	c := nodeUsageConstraints{
-// 		incoming: map[string][]typesystem.Expr{},
-// 		outgoing: map[string][]typesystem.Expr{},
-// 	}
+func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
+	nodeName string,
+	resolvedParentIface src.Interface,
+	scope src.Scope,
+	nodes map[string]src.Node,
+	net []src.Connection,
+) nodeUsageConstraints {
+	c := nodeUsageConstraints{
+		incoming: map[string][]typesystem.Expr{},
+		outgoing: map[string][]typesystem.Expr{},
+	}
 
-// 	// helper to append unique types (by String) to a slice
-// 	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
-// 		s := t.String()
-// 		for _, e := range *dst {
-// 			if e.String() == s {
-// 				return
-// 			}
-// 		}
-// 		*dst = append(*dst, t)
-// 	}
+	// helper to append unique types (by String) to a slice
+	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
+		s := t.String()
+		for _, e := range *dst {
+			if e.String() == s {
+				return
+			}
+		}
+		*dst = append(*dst, t)
+	}
 
-// 	// resolve parent param frame once
-// 	_, parentFrame, err := a.resolver.ResolveParams(
-// 		resolvedParentIface.TypeParams.Params, scope,
-// 	)
-// 	if err != nil {
-// 		return c
-// 	}
+	// resolve parent param frame once
+	_, parentFrame, err := a.resolver.ResolveParams(
+		resolvedParentIface.TypeParams.Params, scope,
+	)
+	if err != nil {
+		return c
+	}
 
-// 	// walk all connections
-// 	for _, conn := range net {
-// 		if conn.Normal == nil {
-// 			continue
-// 		}
+	// walk all connections
+	for _, conn := range net {
+		if conn.Normal == nil {
+			continue
+		}
 
-// 		// check if our node is a sender in this connection
-// 		for _, sender := range conn.Normal.Senders {
-// 			if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
-// 				continue
-// 			}
-// 			port := sender.PortAddr.Port
-// 			// derive expected types from all receivers
-// 			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
-// 			for _, rpa := range recvPortAddrs {
-// 				// parent out
-// 				if rpa.Node == "out" {
-// 					if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
-// 						if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
-// 							list := c.outgoing[port]
-// 							appendUnique(&list, resolved)
-// 							c.outgoing[port] = list
-// 						}
-// 					}
-// 					continue
-// 				}
-// 				// other node inport
-// 				recvNode, ok := nodes[rpa.Node]
-// 				if !ok {
-// 					continue
-// 				}
-// 				// get possible inport types across overloads
-// 				for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
-// 					list := c.outgoing[port]
-// 					appendUnique(&list, t)
-// 					c.outgoing[port] = list
-// 				}
-// 			}
-// 		}
+		// check if our node is a sender in this connection (including chained connections)
+		for _, sender := range conn.Normal.Senders {
+			if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
+				continue
+			}
+			port := sender.PortAddr.Port
+			// if port is empty, we need to resolve it to the actual port name
+			if port == "" {
+				// get the node to find the actual port name
+				if node, ok := nodes[nodeName]; ok {
+					// resolve the entity to get the component interface
+					if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
+						// for now, just use the first component to determine the port name
+						if len(entity.Component) > 0 {
+							iface := entity.Component[0].Interface
+							// if there's only one output port, use that
+							if len(iface.IO.Out) == 1 {
+								for portName := range iface.IO.Out {
+									port = portName
+									break
+								}
+							}
+						}
+					}
+				}
+			}
+			// derive expected types from all receivers
+			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
+			for _, rpa := range recvPortAddrs {
+				// parent out
+				if rpa.Node == "out" {
+					if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
+						if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
+							list := c.outgoing[port]
+							appendUnique(&list, resolved)
+							c.outgoing[port] = list
+						}
+					}
+					continue
+				}
+				// other node inport
+				recvNode, ok := nodes[rpa.Node]
+				if !ok {
+					continue
+				}
+				// get possible inport types across overloads
+				for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+					list := c.outgoing[port]
+					appendUnique(&list, t)
+					c.outgoing[port] = list
+				}
+			}
 
-// 		// check if our node is a receiver in this connection
-// 		recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
-// 		for _, rpa := range recvPortAddrs {
-// 			if rpa.Node != nodeName {
-// 				continue
-// 			}
-// 			port := rpa.Port
-// 			// derive produced types from all senders
-// 			for _, sender := range conn.Normal.Senders {
-// 				for _, t := range a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender) {
-// 					list := c.incoming[port]
-// 					appendUnique(&list, t)
-// 					c.incoming[port] = list
-// 				}
-// 			}
-// 		}
-// 	}
+			// also check chained connections for outgoing constraints
+			for _, receiver := range conn.Normal.Receivers {
+				if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
+					// this is a chained connection, look at the receivers within the chain
+					chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Normal.Receivers)
+					for _, rpa := range chainedRecvPortAddrs {
+						// parent out
+						if rpa.Node == "out" {
+							if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
+								if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
+									list := c.outgoing[port]
+									appendUnique(&list, resolved)
+									c.outgoing[port] = list
+								}
+							}
+							continue
+						}
+						// other node inport
+						recvNode, ok := nodes[rpa.Node]
+						if !ok {
+							continue
+						}
+						// get possible inport types across overloads
+						for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+							list := c.outgoing[port]
+							appendUnique(&list, t)
+							c.outgoing[port] = list
+						}
+					}
+				}
+			}
+		}
 
-// 	return c
-// }
+		// also check if our node is a sender within chained connections
+		// in a connection like "a -> b -> c", b is a sender in a chained connection
+		// and should receive incoming constraints from a
+		// this needs to be recursive to handle nested chains like "a -> b -> c -> d"
+		var checkChainedConnections func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver)
+		checkChainedConnections = func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver) {
+			for _, receiver := range receivers {
+				if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
+					for _, sender := range receiver.ChainedConnection.Normal.Senders {
+						if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
+							continue
+						}
+
+						// this node is a sender in a chained connection
+						// collect incoming constraints from the outer senders
+						inPort := "data" // default port name for nodes with single inport
+						if node, ok := nodes[nodeName]; ok {
+							if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
+								if len(entity.Component) > 0 {
+									iface := entity.Component[0].Interface
+									if len(iface.IO.In) == 1 {
+										for portName := range iface.IO.In {
+											inPort = portName
+											break
+										}
+									}
+								}
+							}
+						}
+
+						// collect types from the outer senders
+						for _, outerSender := range outerSenders {
+							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender)
+							for _, t := range types {
+								list := c.incoming[inPort]
+								appendUnique(&list, t)
+								c.incoming[inPort] = list
+							}
+						}
+
+						// collect outgoing constraints from the chained connection's receivers
+						port := sender.PortAddr.Port
+						if port == "" {
+							if node, ok := nodes[nodeName]; ok {
+								if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
+									if len(entity.Component) > 0 {
+										iface := entity.Component[0].Interface
+										if len(iface.IO.Out) == 1 {
+											for portName := range iface.IO.Out {
+												port = portName
+												break
+											}
+										}
+									}
+								}
+							}
+						}
+						chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Normal.Receivers)
+						for _, rpa := range chainedRecvPortAddrs {
+							if rpa.Node == "out" {
+								if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
+									if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
+										list := c.outgoing[port]
+										appendUnique(&list, resolved)
+										c.outgoing[port] = list
+									}
+								}
+								continue
+							}
+							recvNode, ok := nodes[rpa.Node]
+							if !ok {
+								continue
+							}
+							for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+								list := c.outgoing[port]
+								appendUnique(&list, t)
+								c.outgoing[port] = list
+							}
+						}
+					}
+
+					// recursively check nested chained connections
+					// in a chain like "a -> b -> c -> d", we need to check if c contains our node
+					checkChainedConnections(receiver.ChainedConnection.Normal.Senders, receiver.ChainedConnection.Normal.Receivers)
+				}
+			}
+		}
+		checkChainedConnections(conn.Normal.Senders, conn.Normal.Receivers)
+
+		// check if our node is a receiver in this connection
+		recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
+		for _, rpa := range recvPortAddrs {
+			if rpa.Node != nodeName {
+				continue
+			}
+			port := rpa.Port
+
+			// if port is empty, we need to resolve it to the actual port name
+			if port == "" {
+				// get the node to find the actual port name
+				if node, ok := nodes[nodeName]; ok {
+					// resolve the entity to get the component interface
+					if entity, _, err := scope.Entity(node.EntityRef); err == nil && entity.Kind == src.ComponentEntity {
+						// for now, just use the first component to determine the port name
+						if len(entity.Component) > 0 {
+							iface := entity.Component[0].Interface
+							// if there's only one input port, use that
+							if len(iface.IO.In) == 1 {
+								for portName := range iface.IO.In {
+									port = portName
+									break
+								}
+							}
+						}
+					}
+				}
+			}
+			// derive produced types from all senders
+			for _, sender := range conn.Normal.Senders {
+				// check if any receiver is a chained connection that contains our node
+				hasChainedConnection := false
+				for _, receiver := range conn.Normal.Receivers {
+					if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
+						// this is a chained connection, look at the senders within the chain
+						for _, chainedSender := range receiver.ChainedConnection.Normal.Senders {
+							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, chainedSender)
+							for _, t := range types {
+								list := c.incoming[port]
+								appendUnique(&list, t)
+								c.incoming[port] = list
+							}
+						}
+						hasChainedConnection = true
+					}
+				}
+
+				if !hasChainedConnection {
+					// regular sender
+					types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender)
+					for _, t := range types {
+						list := c.incoming[port]
+						appendUnique(&list, t)
+						c.incoming[port] = list
+					}
+				}
+			}
+		}
+	}
+
+	return c
+}
 
 // flattenReceiversPortAddrs extracts all direct receiver port addresses from potentially nested receivers.
-// func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) []src.PortAddr {
-// 	var res []src.PortAddr
-// 	var visit func(recs []src.ConnectionReceiver)
-// 	visit = func(recs []src.ConnectionReceiver) {
-// 		for _, r := range recs {
-// 			if r.PortAddr != nil {
-// 				res = append(res, *r.PortAddr)
-// 			}
-// 			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
-// 				// only the head receiver is relevant as a consumer of our sender
-// 				visit(r.ChainedConnection.Normal.Receivers)
-// 			}
-// 			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
-// 				visit(r.DeferredConnection.Normal.Receivers)
-// 			}
-// 			if r.Switch != nil {
-// 				for _, cse := range r.Switch.Cases {
-// 					visit(cse.Receivers)
-// 				}
-// 				if r.Switch.Default != nil {
-// 					visit(r.Switch.Default)
-// 				}
-// 			}
-// 		}
-// 	}
-// 	visit(receivers)
-// 	return res
-// }
+func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) []src.PortAddr {
+	var res []src.PortAddr
+	var visit func(recs []src.ConnectionReceiver)
+	visit = func(recs []src.ConnectionReceiver) {
+		for _, r := range recs {
+			if r.PortAddr != nil {
+				res = append(res, *r.PortAddr)
+			}
+			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
+				// only the head receiver is relevant as a consumer of our sender
+				visit(r.ChainedConnection.Normal.Receivers)
+			}
+			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
+				visit(r.DeferredConnection.Normal.Receivers)
+			}
+			if r.Switch != nil {
+				for _, cse := range r.Switch.Cases {
+					visit(cse.Receivers)
+				}
+				if r.Switch.Default != nil {
+					visit(r.Switch.Default)
+				}
+			}
+		}
+	}
+	visit(receivers)
+	return res
+}
 
 // getPossibleSenderTypes returns a set of possible types produced by a sender without requiring resolved node interfaces.
-// func (a Analyzer) getPossibleSenderTypes(
-// 	scope src.Scope,
-// 	parentFrame map[string]typesystem.Def,
-// 	parentIface src.Interface,
-// 	nodes map[string]src.Node,
-// 	sender src.ConnectionSender,
-// ) []typesystem.Expr {
-// 	// const sender
-// 	if sender.Const != nil {
-// 		if _, t, err := a.getConstSenderType(*sender.Const, scope); err == nil {
-// 			return []typesystem.Expr{t}
-// 		}
-// 	}
-// 	// range sender: stream<int>
-// 	if sender.Range != nil {
-// 		return []typesystem.Expr{
-// 			{
-// 				Inst: &typesystem.InstExpr{
-// 					Ref:  core.EntityRef{Name: "stream"},
-// 					Args: []typesystem.Expr{{Inst: &typesystem.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
-// 				},
-// 			},
-// 		}
-// 	}
-// 	// union sender produces the union type itself
-// 	if sender.Union != nil {
-// 		if entity, _, err := scope.GetType(sender.Union.EntityRef); err == nil {
-// 			if t, e := a.analyzeTypeExpr(*entity.BodyExpr, scope); e == nil {
-// 				return []typesystem.Expr{t}
-// 			}
-// 		}
-// 	}
-// 	// binary sender: approximate using left operand type and operator rule
-// 	if sender.Binary != nil {
-// 		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Binary.Left)
-// 		if len(lefts) > 0 {
-// 			return []typesystem.Expr{a.getBinaryExprType(sender.Binary.Operator, lefts[0])}
-// 		}
-// 	}
-// 	// ternary: approximate with left branch
-// 	if sender.Ternary != nil {
-// 		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Ternary.Left)
-// 		if len(lefts) > 0 {
-// 			return []typesystem.Expr{lefts[0]}
-// 		}
-// 	}
-// 	// port-addr
-// 	if sender.PortAddr != nil {
-// 		pa := *sender.PortAddr
-// 		if pa.Node == "in" {
-// 			if p, ok := parentIface.IO.In[pa.Port]; ok {
-// 				if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
-// 					return []typesystem.Expr{resolved}
-// 				}
-// 			}
-// 			return nil
-// 		}
-// 		// outport of another node
-// 		other, ok := nodes[pa.Node]
-// 		if !ok {
-// 			return nil
-// 		}
-// 		return a.getPossibleNodePortTypes(scope, parentFrame, other, false, pa.Port)
-// 	}
-// 	return nil
-// }
+func (a Analyzer) getPossibleSenderTypes(
+	scope src.Scope,
+	parentFrame map[string]typesystem.Def,
+	parentIface src.Interface,
+	nodes map[string]src.Node,
+	sender src.ConnectionSender,
+) []typesystem.Expr {
+	// const sender
+	if sender.Const != nil {
+		// for type constraint collection, we need to get the resolved type without validation
+		// since we're just collecting constraints, not validating the sender
+		if sender.Const.Value.Ref != nil {
+			if t, err := a.getResolvedConstTypeByRef(*sender.Const.Value.Ref, scope); err == nil {
+				return []typesystem.Expr{t}
+			}
+		} else if sender.Const.TypeExpr.Inst != nil || sender.Const.TypeExpr.Lit != nil {
+			// for literal constants, resolve the type expression directly
+			if t, err := a.resolver.ResolveExpr(sender.Const.TypeExpr, scope); err == nil {
+				return []typesystem.Expr{t}
+			}
+		}
+	}
+	// range sender: stream<int>
+	if sender.Range != nil {
+		return []typesystem.Expr{
+			{
+				Inst: &typesystem.InstExpr{
+					Ref:  core.EntityRef{Name: "stream"},
+					Args: []typesystem.Expr{{Inst: &typesystem.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+				},
+			},
+		}
+	}
+	// union sender produces the union type itself
+	if sender.Union != nil {
+		if entity, _, err := scope.GetType(sender.Union.EntityRef); err == nil {
+			if t, e := a.analyzeTypeExpr(*entity.BodyExpr, scope); e == nil {
+				return []typesystem.Expr{t}
+			}
+		}
+	}
+	// binary sender: approximate using left operand type and operator rule
+	if sender.Binary != nil {
+		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Binary.Left)
+		if len(lefts) > 0 {
+			return []typesystem.Expr{a.getBinaryExprType(sender.Binary.Operator, lefts[0])}
+		}
+	}
+	// ternary: approximate with left branch
+	if sender.Ternary != nil {
+		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Ternary.Left)
+		if len(lefts) > 0 {
+			return []typesystem.Expr{lefts[0]}
+		}
+	}
+	// port-addr
+	if sender.PortAddr != nil {
+		pa := *sender.PortAddr
+		if pa.Node == "in" {
+			if p, ok := parentIface.IO.In[pa.Port]; ok {
+				if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
+					return []typesystem.Expr{resolved}
+				}
+			}
+			return nil
+		}
+		// outport of another node
+		other, ok := nodes[pa.Node]
+		if !ok {
+			return nil
+		}
+		return a.getPossibleNodePortTypes(scope, parentFrame, other, false, pa.Port)
+	}
+	return nil
+}
 
 // getPossibleNodePortTypes collects possible port types across all overloads of a node's component.
 // isInput determines whether we look at inports (true) or outports (false).
-// func (a Analyzer) getPossibleNodePortTypes(
-// 	scope src.Scope,
-// 	parentFrame map[string]typesystem.Def,
-// 	node src.Node,
-// 	isInput bool,
-// 	portName string,
-// ) []typesystem.Expr {
-// 	var out []typesystem.Expr
-// 	// resolve node's entity
-// 	entity, _, err := scope.Entity(node.EntityRef)
-// 	if err != nil || entity.Kind != src.ComponentEntity {
-// 		return out
-// 	}
-// 	// resolve node type args against parent frame
-// 	resolvedArgs, err2 := a.resolver.ResolveExprsWithFrame(node.TypeArgs, parentFrame, scope)
-// 	if err2 != nil {
-// 		return out
-// 	}
-// 	for _, comp := range entity.Component {
-// 		iface := comp.Interface
-// 		// choose port
-// 		var p src.Port
-// 		var ok bool
-// 		if isInput {
-// 			if portName == "" {
-// 				if len(iface.IO.In) == 1 {
-// 					for _, v := range iface.IO.In {
-// 						p = v
-// 						ok = true
-// 						break
-// 					}
-// 				}
-// 			} else {
-// 				p, ok = iface.IO.In[portName]
-// 			}
-// 		} else {
-// 			if portName == "" {
-// 				// if multiple, prefer first non-err
-// 				if len(iface.IO.Out) == 1 {
-// 					for _, v := range iface.IO.Out {
-// 						p = v
-// 						ok = true
-// 						break
-// 					}
-// 				} else {
-// 					for name, v := range iface.IO.Out {
-// 						if name != "err" {
-// 							p = v
-// 							ok = true
-// 							break
-// 						}
-// 					}
-// 				}
-// 			} else {
-// 				p, ok = iface.IO.Out[portName]
-// 			}
-// 		}
-// 		if !ok {
-// 			continue
-// 		}
-// 		// substitute node args into port type
-// 		frame := make(map[string]typesystem.Def, len(iface.TypeParams.Params))
-// 		for i, param := range iface.TypeParams.Params {
-// 			if i < len(resolvedArgs) {
-// 				frame[param.Name] = typesystem.Def{BodyExpr: &resolvedArgs[i]}
-// 			}
-// 		}
-// 		if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope); err == nil {
-// 			out = append(out, resolved)
-// 		}
-// 	}
-// 	return out
-// }
+func (a Analyzer) getPossibleNodePortTypes(
+	scope src.Scope,
+	parentFrame map[string]typesystem.Def,
+	node src.Node,
+	isInput bool,
+	portName string,
+) []typesystem.Expr {
+	var out []typesystem.Expr
+	// resolve node's entity
+	entity, _, err := scope.Entity(node.EntityRef)
+	if err != nil || entity.Kind != src.ComponentEntity {
+		return out
+	}
+	// resolve node type args against parent frame
+	resolvedArgs, err2 := a.resolver.ResolveExprsWithFrame(node.TypeArgs, parentFrame, scope)
+	if err2 != nil {
+		return out
+	}
+	for _, comp := range entity.Component {
+		iface := comp.Interface
+		// choose port
+		var p src.Port
+		var ok bool
+		if isInput {
+			if portName == "" {
+				if len(iface.IO.In) == 1 {
+					for _, v := range iface.IO.In {
+						p = v
+						ok = true
+						break
+					}
+				}
+			} else {
+				p, ok = iface.IO.In[portName]
+			}
+		} else {
+			if portName == "" {
+				// if multiple, prefer first non-err
+				if len(iface.IO.Out) == 1 {
+					for _, v := range iface.IO.Out {
+						p = v
+						ok = true
+						break
+					}
+				} else {
+					for name, v := range iface.IO.Out {
+						if name != "err" {
+							p = v
+							ok = true
+							break
+						}
+					}
+				}
+			} else {
+				p, ok = iface.IO.Out[portName]
+			}
+		}
+		if !ok {
+			continue
+		}
+		// substitute node args into port type
+		frame := make(map[string]typesystem.Def, len(iface.TypeParams.Params))
+		for i, param := range iface.TypeParams.Params {
+			if i < len(resolvedArgs) {
+				frame[param.Name] = typesystem.Def{BodyExpr: &resolvedArgs[i]}
+			}
+		}
+		if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope); err == nil {
+			out = append(out, resolved)
+		}
+	}
+	return out
+}
 
-// // doesCandidateSatisfyTypeConstraints checks that a candidate interface matches all collected constraints.
-// func (a Analyzer) doesCandidateSatisfyTypeConstraints(
-// 	candidate src.Interface,
-// 	resolvedNodeArgs []typesystem.Expr,
-// 	nodeUsageConstr nodeUsageConstraints,
-// 	scope src.Scope,
-// ) bool {
-// 	// build frame for candidate from node's resolved args
-// 	frame := make(map[string]typesystem.Def, len(candidate.TypeParams.Params))
-// 	for i, param := range candidate.TypeParams.Params {
-// 		if i < len(resolvedNodeArgs) {
-// 			frame[param.Name] = typesystem.Def{BodyExpr: &resolvedNodeArgs[i]}
-// 		}
-// 	}
+// doesCandidateSatisfyTypeConstraints checks that a candidate interface matches all collected constraints.
+func (a Analyzer) doesCandidateSatisfyTypeConstraints(
+	candidate src.Interface,
+	resolvedNodeArgs []typesystem.Expr,
+	nodeUsageConstr nodeUsageConstraints,
+	scope src.Scope,
+) bool {
+	// build frame for candidate from node's resolved args
+	frame := make(map[string]typesystem.Def, len(candidate.TypeParams.Params))
+	for i, param := range candidate.TypeParams.Params {
+		if i < len(resolvedNodeArgs) {
+			frame[param.Name] = typesystem.Def{BodyExpr: &resolvedNodeArgs[i]}
+		}
+	}
 
-// 	// check incoming constraints
-// 	for port, types := range nodeUsageConstr.incoming {
-// 		p, ok := candidate.IO.In[port]
-// 		if !ok {
-// 			return false
-// 		}
-// 		candType, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope)
-// 		if err != nil {
-// 			return false
-// 		}
-// 		for _, t := range types {
-// 			if err := a.resolver.IsSubtypeOf(t, candType, scope); err != nil {
-// 				return false
-// 			}
-// 		}
-// 	}
+	// check incoming constraints
+	for port, types := range nodeUsageConstr.incoming {
+		p, ok := candidate.IO.In[port]
+		if !ok {
+			return false
+		}
+		candType, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope)
+		if err != nil {
+			return false
+		}
+		for _, t := range types {
+			if err := a.resolver.IsSubtypeOf(t, candType, scope); err != nil {
+				return false
+			}
+		}
+	}
 
-// 	// check outgoing constraints
-// 	for port, types := range nodeUsageConstr.outgoing {
-// 		p, ok := candidate.IO.Out[port]
-// 		if !ok {
-// 			return false
-// 		}
-// 		candType, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope)
-// 		if err != nil {
-// 			return false
-// 		}
-// 		for _, exp := range types {
-// 			if err := a.resolver.IsSubtypeOf(candType, exp, scope); err != nil {
-// 				return false
-// 			}
-// 		}
-// 	}
+	// check outgoing constraints
+	for port, types := range nodeUsageConstr.outgoing {
+		p, ok := candidate.IO.Out[port]
+		if !ok {
+			return false
+		}
+		candType, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, frame, scope)
+		if err != nil {
+			return false
+		}
+		for _, exp := range types {
+			if err := a.resolver.IsSubtypeOf(candType, exp, scope); err != nil {
+				return false
+			}
+		}
+	}
 
-// 	return true
-// }
+	return true
+}
+
+// isNativeComponentWithMultipleExterns checks if this is a native component with multiple extern implementations
+// (like Dec with int_dec and float_dec, or Len with list_len, map_len, and string_len)
+func (a Analyzer) isNativeComponentWithMultipleExterns(component src.Component, entity src.Entity) bool {
+	// check if this component has extern directive
+	_, hasExtern := component.Directives[compiler.ExternDirective]
+	if !hasExtern {
+		return false
+	}
+
+	// check if the entity has multiple components (overloaded)
+	return len(entity.Component) > 1
+}
+
+// doesNativeComponentMatchTypeArgs checks if a native component's interface matches the type arguments
+// this is used for disambiguating between overloaded native components like Dec(int) vs Dec(float)
+func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, resolvedNodeArgs []typesystem.Expr, scope src.Scope) bool {
+	// for native components, we need to check if the type arguments match the component's interface
+	// for example, if we have Dec<int>, we need to find the component with Dec(data int) (res int)
+
+	// if no type arguments provided, we can't disambiguate
+	if len(resolvedNodeArgs) == 0 {
+		return true // let other logic handle this
+	}
+
+	// resolve the first type argument to get the concrete type
+	if len(resolvedNodeArgs) > 0 {
+		resolvedType, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
+		if err != nil {
+			return true // fallback to other logic
+		}
+
+		// check if this component's interface matches the resolved type
+		// for native components, we need to check the input port type
+		if len(component.Interface.IO.In) == 1 {
+			for _, port := range component.Interface.IO.In {
+				// resolve the port type
+				portType, err := a.resolver.ResolveExpr(port.TypeExpr, scope)
+				if err != nil {
+					continue
+				}
+
+				// check if the resolved type matches the port type
+				// for native components, we need exact type matching
+				if a.typesMatchExactly(resolvedType, portType) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// typesMatchExactly checks if two types match exactly (for native component disambiguation)
+func (a Analyzer) typesMatchExactly(type1, type2 typesystem.Expr) bool {
+	// for native components, we need exact type matching
+	// this is simpler than subtype checking since we're dealing with concrete types
+
+	// handle inst expressions (like int, float, string, list<T>, etc.)
+	if type1.Inst != nil && type2.Inst != nil {
+		if type1.Inst.Ref.Name != type2.Inst.Ref.Name {
+			return false
+		}
+
+		// check type arguments recursively
+		if len(type1.Inst.Args) != len(type2.Inst.Args) {
+			return false
+		}
+
+		for i, arg1 := range type1.Inst.Args {
+			arg2 := type2.Inst.Args[i]
+			if !a.typesMatchExactly(arg1, arg2) {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	// handle literal expressions
+	if type1.Lit != nil && type2.Lit != nil {
+		// for now, just compare the string representation
+		// this could be made more sophisticated if needed
+		return type1.String() == type2.String()
+	}
+
+	// fallback to string comparison
+	return type1.String() == type2.String()
+}
