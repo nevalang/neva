@@ -1,6 +1,7 @@
 package irgen
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -124,6 +125,28 @@ func (g Generator) processSender(
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
+	// union senders should have been desugared by this point
+	if sender.Union != nil {
+		panic(fmt.Sprintf(
+			"INTERNAL ERROR: union sender %v::%v was not desugared (location: %v)",
+			sender.Union.EntityRef,
+			sender.Union.Tag,
+			sender.Meta.Location,
+		))
+	}
+
+	// other special senders should also have been desugared
+	if sender.PortAddr == nil {
+		panic(fmt.Sprintf(
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, binary=%v, ternary=%v, location: %v)",
+			sender.Const != nil,
+			sender.Range != nil,
+			sender.Binary != nil,
+			sender.Ternary != nil,
+			sender.Meta.Location,
+		))
+	}
+
 	// there could be many connections with the same sender but we must only add it once
 	if _, ok := nodesUsage[sender.PortAddr.Node]; !ok {
 		nodesUsage[sender.PortAddr.Node] = portsUsage{
