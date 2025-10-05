@@ -70,31 +70,74 @@ func TestGetOperatorConstraint(t *testing.T) {
 	tests := []struct {
 		name        string
 		operator    src.BinaryOperator
-		expected    string
+		expected    ts.Expr
 		description string
 	}{
 		{
-			name:        "add_operator",
-			operator:    src.AddOp,
-			expected:    "union { int, float, string }",
+			name:     "add_operator",
+			operator: src.AddOp,
+			expected: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"int": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						"float": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "float"},
+							},
+						},
+						"string": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "string"},
+							},
+						},
+					},
+				},
+			},
 			description: "+ operator should support int, float, string",
 		},
 		{
-			name:        "multiply_operator",
-			operator:    src.MulOp,
-			expected:    "union { int, float }",
+			name:     "multiply_operator",
+			operator: src.MulOp,
+			expected: ts.Expr{
+				Lit: &ts.LitExpr{
+					Union: map[string]*ts.Expr{
+						"int": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						"float": {
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "float"},
+							},
+						},
+					},
+				},
+			},
 			description: "* operator should support int, float",
 		},
 		{
-			name:        "modulo_operator",
-			operator:    src.ModOp,
-			expected:    "int",
+			name:     "modulo_operator",
+			operator: src.ModOp,
+			expected: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "int"},
+				},
+			},
 			description: "% operator should support int only",
 		},
 		{
-			name:        "equal_operator",
-			operator:    src.EqOp,
-			expected:    "any",
+			name:     "equal_operator",
+			operator: src.EqOp,
+			expected: ts.Expr{
+				Inst: &ts.InstExpr{
+					Ref: core.EntityRef{Name: "any"},
+				},
+			},
 			description: "== operator should support any type",
 		},
 	}
@@ -110,7 +153,7 @@ func TestGetOperatorConstraint(t *testing.T) {
 			if err != nil {
 				t.Fatalf("getOperatorConstraint failed: %v", err)
 			}
-			require.Equal(t, tt.expected, constraint.String(), tt.description)
+			require.Equal(t, tt.expected, constraint, tt.description)
 		})
 	}
 }
