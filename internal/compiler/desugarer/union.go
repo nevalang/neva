@@ -58,10 +58,12 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 
 	// create new node and bind const to it
 	constNodeName := fmt.Sprintf("__new__%d", d.virtualConstCount)
+	locOnlyMeta := core.Meta{Location: union.Meta.Location}
 	nodesToInsert[constNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "New",
+			Meta: locOnlyMeta,
 		},
 		Directives: map[src.Directive]string{compiler.BindDirective: constName},
 		Meta:       union.Meta,
@@ -140,10 +142,12 @@ func (d *Desugarer) handleValueUnionSender(
 
 	// create union wrapper node
 	nodeName := fmt.Sprintf("__union__%d", d.virtualConstCount)
+	locOnlyMeta := core.Meta{Location: union.Meta.Location}
 	nodesToInsert[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "UnionWrap",
+			Meta: locOnlyMeta,
 		},
 		Meta: union.Meta,
 	}

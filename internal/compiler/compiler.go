@@ -3,6 +3,7 @@ package compiler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -118,7 +119,14 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 
 	desugaredBuild, derr := m.desugarer.Desugar(analyzedBuild)
 	if derr != nil {
-		return MiddleendResult{}, err
+		return MiddleendResult{}, &Error{
+			Message: fmt.Sprintf("desugarer error: %v", derr),
+			Meta: &core.Meta{
+				Location: core.Location{
+					ModRef: analyzedBuild.EntryModRef,
+				},
+			},
+		}
 	}
 
 	irProg, irerr := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
