@@ -802,8 +802,31 @@ func (d *Desugarer) desugarSingleSender(
 		if err != nil {
 			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
 		}
+
+		// TODO figure out if this is needed
+		// // ensure all union-produced inserts are fully desugared here, otherwise
+		// // raw const/range/binary/ternary senders could leak into irgen.
+		// desugaredInsert := make([]src.Connection, 0, len(result.insert))
+		// for _, c := range result.insert {
+		// 	dr, err := d.desugarConnection(
+		// 		iface,
+		// 		c,
+		// 		usedNodeOutports,
+		// 		scope,
+		// 		nodes,
+		// 		nodesToInsert,
+		// 		constsToInsert,
+		// 	)
+		// 	if err != nil {
+		// 		return desugarSenderResult{}, fmt.Errorf("desugar union insert: %w", err)
+		// 	}
+		// 	desugaredInsert = append(desugaredInsert, *dr.replace)
+		// 	desugaredInsert = append(desugaredInsert, dr.insert...)
+		// }
+
 		return desugarSenderResult{
 			replace: result.replace,
+			// insert:  desugaredInsert,
 			insert:  result.insert,
 		}, nil
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
 )
 
 type handleUnionSenderResult struct {
@@ -66,7 +67,12 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 			Meta: locOnlyMeta,
 		},
 		Directives: map[src.Directive]string{compiler.BindDirective: constName},
-		Meta:       union.Meta,
+		TypeArgs: []ts.Expr{ // union type argument for new
+			{
+				Inst: &ts.InstExpr{Ref: union.EntityRef},
+			},
+		},
+		Meta: union.Meta,
 	}
 
 	// create connection from new node to original receiver
@@ -85,38 +91,9 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 		Meta: union.Meta,
 	}
 
-	insert := []src.Connection{
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{{
-					Const: &src.Const{
-						Value: src.ConstValue{
-							Message: &src.MsgLiteral{
-								Union: &src.UnionLiteral{
-									EntityRef: union.EntityRef,
-									Tag:       union.Tag,
-								},
-							},
-						},
-					},
-					Meta: union.Meta,
-				}},
-				Receivers: []src.ConnectionReceiver{{
-					PortAddr: &src.PortAddr{
-						Node: constNodeName,
-						Port: "data",
-					},
-					Meta: union.Meta,
-				}},
-				Meta: union.Meta,
-			},
-			Meta: union.Meta,
-		},
-	}
-
 	return handleUnionSenderResult{
 		replace: replace,
-		insert:  insert,
+		insert:  nil,
 	}, nil
 }
 
@@ -152,6 +129,23 @@ func (d *Desugarer) handleValueUnionSender(
 		Meta: union.Meta,
 	}
 
+	// create a bound new node for the tag constant to avoid raw const senders
+	tagNodeName := fmt.Sprintf("__new__%d", d.virtualConstCount)
+	nodesToInsert[tagNodeName] = src.Node{
+		EntityRef: core.EntityRef{
+			Pkg:  "builtin",
+			Name: "New",
+			Meta: locOnlyMeta,
+		},
+		Directives: map[src.Directive]string{compiler.BindDirective: constName},
+		TypeArgs: []ts.Expr{ // string type for tag
+			{
+				Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "str"}},
+			},
+		},
+		Meta: union.Meta,
+	}
+
 	// create connections for the union wrapper
 	replace := src.Connection{
 		Normal: &src.NormalConnection{
@@ -168,16 +162,14 @@ func (d *Desugarer) handleValueUnionSender(
 		Meta: union.Meta,
 	}
 
-	insert := []src.Connection{
+	// build sugared insert connections and then desugar them to ensure sender.PortAddr is set
+	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{{
-					Const: &src.Const{
-						Value: src.ConstValue{
-							Message: &src.MsgLiteral{
-								Str: &union.Tag,
-							},
-						},
+					PortAddr: &src.PortAddr{
+						Node: tagNodeName,
+						Port: "res",
 					},
 					Meta: union.Meta,
 				}},
@@ -210,6 +202,6 @@ func (d *Desugarer) handleValueUnionSender(
 
 	return handleUnionSenderResult{
 		replace: replace,
-		insert:  insert,
+		insert:  sugaredInsert,
 	}, nil
 }
