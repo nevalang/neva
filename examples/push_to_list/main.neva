@@ -1,4 +1,7 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
