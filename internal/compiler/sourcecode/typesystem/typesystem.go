@@ -4,6 +4,8 @@
 package typesystem
 
 import (
+	"sort"
+
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
@@ -54,9 +56,17 @@ func (expr Expr) String() string {
 
 	switch expr.Lit.Type() {
 	case UnionLitType:
+		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
 		count := 0
 		str += "union {"
-		for tag, tagExpr := range expr.Lit.Union {
+		// collect and sort tags for stable output
+		var tags []string
+		for tag := range expr.Lit.Union {
+			tags = append(tags, tag)
+		}
+		sort.Strings(tags)
+		for _, tag := range tags {
+			tagExpr := expr.Lit.Union[tag]
 			if count == 0 {
 				str += " "
 			}
@@ -70,7 +80,7 @@ func (expr Expr) String() string {
 			} else {
 				str += tag
 			}
-			if count < len(expr.Lit.Union)-1 {
+			if count < len(tags)-1 {
 				str += ", "
 			}
 			count++
@@ -81,11 +91,19 @@ func (expr Expr) String() string {
 		str += "}"
 		return str
 	case StructLitType:
+		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
 		str += "{"
 		count := 0
-		for fieldName, fieldExpr := range expr.Lit.Struct {
+		// collect and sort field names for stable output
+		var fields []string
+		for fieldName := range expr.Lit.Struct {
+			fields = append(fields, fieldName)
+		}
+		sort.Strings(fields)
+		for _, fieldName := range fields {
+			fieldExpr := expr.Lit.Struct[fieldName]
 			str += " " + fieldName + " " + fieldExpr.String()
-			if count < len(expr.Lit.Struct)-1 {
+			if count < len(fields)-1 {
 				str += ","
 			} else {
 				str += " "

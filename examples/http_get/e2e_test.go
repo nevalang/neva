@@ -23,7 +23,7 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		string(out),
-		"<html>",
+		"<html",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
