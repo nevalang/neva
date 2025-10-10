@@ -371,17 +371,6 @@ func (msg UnionMsg) Equal(other Msg) bool {
 	return msg.data.Equal(otherUnion.data)
 }
 
-// Match implements pattern matching for UnionMsg messages.
-// It handles case when one of the unions doesn't have data
-// and compares only tags. Otherwise it uses Equal method.
-func (msg UnionMsg) Match(pattern UnionMsg) bool {
-	if msg.data != nil && pattern.data == nil ||
-		msg.data == nil && pattern.data != nil {
-		return msg.tag == pattern.tag
-	}
-	return msg.data.Equal(pattern.data)
-}
-
 func NewUnionMsg(tag string, data Msg) UnionMsg {
 	return UnionMsg{
 		internalMsg: internalMsg{},
