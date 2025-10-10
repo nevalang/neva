@@ -824,11 +824,9 @@ func (d *Desugarer) desugarSingleSender(
 		// 	desugaredInsert = append(desugaredInsert, dr.insert...)
 		// }
 
-		return desugarSenderResult{
-			replace: result.replace,
-			// insert:  desugaredInsert,
-			insert:  result.insert,
-		}, nil
+		// insert:  desugaredInsert,
+
+		return desugarSenderResult(result), nil
 	}
 
 	if sender.Ternary != nil {
