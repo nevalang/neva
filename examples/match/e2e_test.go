@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		cmd := exec.Command("neva", "run", "match")
 		out, err := cmd.CombinedOutput()
-		require.NoError(t, err)
+		require.NoError(t, err, string(out))
 		require.Equal(
 			t,
 			"one\ntwo\nthree\nfour\n",

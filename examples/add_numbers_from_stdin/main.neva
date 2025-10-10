@@ -1,7 +1,13 @@
-import { strconv, fmt }
+import {
+	fmt
+	runtime
+	strconv
+}
 
 def Main(start any) (stop any) {
-	App, fmt.Println, Panic
+	app App
+	println fmt.Println
+	panic runtime.Panic
 	---
 	:start -> app
 	[app:res, app:err] -> println:data
@@ -10,19 +16,19 @@ def Main(start any) (stop any) {
 }
 
 def App(sig any) (res int, err error) {
-	readFirstInt ReadIntFromStdin?
-	readSecondInt ReadIntFromStdin?
-	add Add<int>
+	read_first_int ReadIntFromStdin?
+	read_second_int ReadIntFromStdin?
+	add Add
 	---
-	:sig -> readFirstInt
-	readFirstInt:num -> [add:left, readSecondInt]
-	readSecondInt:num -> add:right
+	:sig -> read_first_int
+	read_first_int:res -> [add:left, read_second_int]
+	read_second_int:res -> add:right
 	add -> :res
 }
 
-def ReadIntFromStdin(sig any) (num int, err error) {
-	fmt.Scanln, strconv.ParseNum<int>?
+def ReadIntFromStdin(sig any) (res int, err error) {
+	scanln fmt.Scanln
+	atoi strconv.Atoi?
 	---
-	:sig -> scanln -> parseNum
-	parseNum:res -> :num
+	:sig -> scanln -> atoi -> :res
 }

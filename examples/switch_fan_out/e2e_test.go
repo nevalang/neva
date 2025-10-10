@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "switch_fan_out")
 	cmd.Stdin = strings.NewReader("Alice\n")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Enter the name: ALICEalice\n", string(out))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 

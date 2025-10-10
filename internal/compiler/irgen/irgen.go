@@ -86,11 +86,11 @@ func (g Generator) processNode(
 		panic(err)
 	}
 
-	component := entity.Component
+	components := entity.Component
 	inportAddrs := g.insertAndReturnInports(nodeCtx)   // for inports we only use parent context because all inports are used
 	outportAddrs := g.insertAndReturnOutports(nodeCtx) //  for outports we use both parent context and component's interface
 
-	runtimeFuncRef, err := g.getFuncRef(component, nodeCtx.node.TypeArgs)
+	runtimeFuncRef, version, err := g.getFuncRef(components, nodeCtx.node)
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +115,7 @@ func (g Generator) processNode(
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
 	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
 	subnodesPortsUsage, err := g.processNetwork(
-		component.Net,
+		version.Net,
 		&scope,
 		nodeCtx,
 		result,
@@ -124,7 +124,7 @@ func (g Generator) processNode(
 		panic(err)
 	}
 
-	for subnodeName, subnode := range component.Nodes {
+	for subnodeName, subnode := range version.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[subnodeName]
 		if !ok {
 			panic(fmt.Errorf("node usage not found: %v", subnodeName))

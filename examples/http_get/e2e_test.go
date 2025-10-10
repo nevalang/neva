@@ -19,11 +19,11 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "http_get")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Contains(
 		t,
 		string(out),
-		"<html>",
+		"<html",
 	)
 
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())

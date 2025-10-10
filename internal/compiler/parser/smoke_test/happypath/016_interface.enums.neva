@@ -1,116 +1,116 @@
-interface IReader1 (x enum { Monday }) ()
+interface IReader1 (x union { Monday }) ()
 
-interface IReader2 (x enum {
+interface IReader2 (x union {
     Monday }) ()
 
-interface IReader3 (x enum { Monday
+interface IReader3 (x union { Monday
 }) ()
 
-interface IReader4 (x enum { Monday }) ()
+interface IReader4 (x union { Monday }) ()
 
-interface IReader5 (x enum {
+interface IReader5 (x union {
     Monday
 }) ()
 
-interface IReader6 (x enum { Monday, Tuesday, Wednesday }) ()
+interface IReader6 (x union { Monday, Tuesday, Wednesday }) ()
 
-interface IReader7 (x enum {
+interface IReader7 (x union {
     Monday, Tuesday, Wednesday
 }) ()
 
-interface IReader8 (x enum { Monday, Tuesday, Wednesday }) (a enum { Monday, Tuesday, Wednesday })
+interface IReader8 (x union { Monday, Tuesday, Wednesday }) (a union { Monday, Tuesday, Wednesday })
 
-interface IReader9 (x enum { Monday, Tuesday, Wednesday }) (a enum {
+interface IReader9 (x union { Monday, Tuesday, Wednesday }) (a union {
     Monday, Tuesday, Wednesday })
 
-interface IReader10 (x enum { Monday, Tuesday, Wednesday }) (a enum { Monday, Tuesday, Wednesday
+interface IReader10 (x union { Monday, Tuesday, Wednesday }) (a union { Monday, Tuesday, Wednesday
 })
 
-interface IReader11 (x enum {
+interface IReader11 (x union {
     Monday, Tuesday, Wednesday
-}) (a enum {
+}) (a union {
     Monday, Tuesday, Wednesday
 })
 
-interface IReader12 (x enum {
+interface IReader12 (x union {
     Monday,
     Tuesday,
     Wednesday
-}) (a enum {
+}) (a union {
     Monday,
     Tuesday,
     Wednesday
 })
 
-interface IReader12 (x enum { Monday, Tuesday, Wednesday }, y enum { January, February }) (a enum { Monday, Tuesday, Wednesday }, b  enum { January, February })
+interface IReader12 (x union { Monday, Tuesday, Wednesday }, y union { January, February }) (a union { Monday, Tuesday, Wednesday }, b  union { January, February })
 
 interface IReader12 (
-    x enum { Monday, Tuesday, Wednesday }, y enum { January, February }
-) (a enum { Monday, Tuesday, Wednesday }, b  enum { January, February })
+    x union { Monday, Tuesday, Wednesday }, y union { January, February }
+) (a union { Monday, Tuesday, Wednesday }, b  union { January, February })
 
 interface IReader12 (
-    x enum { Monday, Tuesday, Wednesday }, y enum { January, February }
+    x union { Monday, Tuesday, Wednesday }, y union { January, February }
 ) (
-    a enum { Monday, Tuesday, Wednesday }, b  enum { January, February }
+    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
 )
 
 interface IReader12 (
-    x enum {
+    x union {
         Monday, Tuesday, Wednesday
-    }, y enum { January, February }
+    }, y union { January, February }
 ) (
-    a enum { Monday, Tuesday, Wednesday }, b  enum { January, February }
+    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
 )
 
 
 interface IReader12 (
-    x enum {
+    x union {
         Monday, Tuesday, Wednesday
-    }, y enum {
+    }, y union {
         January, February
     }
 ) (
-    a enum { Monday, Tuesday, Wednesday }, b  enum { January, February }
+    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
 )
 
 interface IReader12 (
-    x enum {
+    x union {
         Monday, Tuesday, Wednesday
-    }, y enum {
+    }, y union {
         January, February
     }
 ) (
-    a enum {
-        Monday, Tuesday, Wednesday }, b  enum { January, February }
+    a union {
+        Monday, Tuesday, Wednesday }, b  union { January, February }
 )
 
 interface IReader12 (
-    x enum {
+    x union {
         Monday, Tuesday, Wednesday
-    }, y enum {
+    }, y union {
         January, February
     }
 ) (
-    a enum {
-        Monday, Tuesday, Wednesday }, b  enum { January, February
+    a union {
+        Monday, Tuesday, Wednesday }, b  union { January, February
     }
 )
 
 pub interface IReader12 (
-    x enum {
-        Monday,
-        Tuesday,
+    x union {
+        Monday
+        Tuesday
         Wednesday
-    }, y enum {
-        January,
+    }, y union {
+        January
         February
     }
 ) (
-    a enum {
-        Monday,
-        Tuesday,
+    a union {
+        Monday
+        Tuesday
         Wednesday
-    }, b  enum {
+    }, b  union {
         January, February
     }
 )

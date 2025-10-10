@@ -10,8 +10,8 @@ type isAdmin bool
 const pi float = 3.14
 const magicNum int = 42
 
-interface IReader(path string) (i int, e err)
-interface IWriter(path string) (i int, anything any)
+interface IReader (path string) (i int, e err)
+interface IWriter (path string) (i int, anything any)
 
 def Main(start any) (stop any) {
 	abs IReader
@@ -21,8 +21,3 @@ def Main(start any) (stop any) {
 	abs:v -> [concrete:v]
 	concrete:v -> :code
 }
-
-#extern(int IntAdder, float FloatAdder, string StringAdder)
-pub def Add<
-	T int | float | string
->(data stream<T>) (res T)

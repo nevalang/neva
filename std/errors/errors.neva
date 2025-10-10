@@ -1,3 +1,5 @@
+import { @:runtime }
+
 // New creates a new error with the given text.
 #extern(errors_new)
 pub def New(data string) (res error)
@@ -7,7 +9,7 @@ pub def New(data string) (res error)
 // Just like Panic, should only be used for fatal errors.
 pub def Must<T, Y>(data T) (res Y) {
     handler IMustHandler<T, Y>
-    panic Panic
+    panic runtime.Panic
     ---
     :data -> handler
     handler:res -> :res

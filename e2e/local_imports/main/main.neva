@@ -1,4 +1,6 @@
 import {
+	runtime
+
 	@:foo
 	@:foo/bar
 }
@@ -6,7 +8,7 @@ import {
 def Main(start any) (stop any) {
 	foo foo.Println
 	bar bar.Println
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> 42 -> foo:data
 	foo:sig -> bar:data

@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type rangeInt struct{}
+type rangeIntV1 struct{}
 
-func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (rangeIntV1) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	fromIn, err := io.In.Single("from")
 	if err != nil {
 		return nil, err

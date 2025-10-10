@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 	cmd = exec.Command("neva", "run", "src")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"Hello, World!\n",

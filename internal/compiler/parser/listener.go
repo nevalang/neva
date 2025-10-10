@@ -52,11 +52,11 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 }
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
-	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	v, err := s.parseInterfaceDef(actx.InterfaceDef())
 	if err != nil {
 		panic(err)
 	}
+	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	s.state.Entities[name] = src.Entity{
 		IsPublic:  actx.PUB_KW() != nil,
 		Kind:      src.InterfaceEntity,
@@ -67,15 +67,29 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
 
-	parsedCompEntity, err := s.parseCompDef(compDef)
+	parsedComponent, err := s.parseCompDef(compDef)
 	if err != nil {
 		panic(err)
 	}
 
-	parsedCompEntity.IsPublic = actx.PUB_KW() != nil
-	parsedCompEntity.Component.Directives = s.parseCompilerDirectives(
+	name := compDef.InterfaceDef().IDENTIFIER().GetText()
+
+	parsedComponent.Directives = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
-	name := compDef.InterfaceDef().IDENTIFIER().GetText()
-	s.state.Entities[name] = parsedCompEntity
+
+	existing, ok := s.state.Entities[name]
+	if !ok {
+		s.state.Entities[name] = src.Entity{
+			Kind:      src.ComponentEntity,
+			IsPublic:  actx.PUB_KW() != nil, // in case of overloaded component, first version sets visibility
+			Component: []src.Component{parsedComponent},
+		}
+		return
+	}
+
+	existing.Component = append(existing.Component, parsedComponent)
+
+	// store back the updated entity; without this, only the first overload is kept
+	s.state.Entities[name] = existing
 }

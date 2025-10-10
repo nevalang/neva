@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "image_png")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	require.Equal(
 		t,
@@ -34,7 +34,7 @@ func Test(t *testing.T) {
 	const filename = "minimal.png"
 
 	_, err = os.ReadFile(filename)
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	// Remove file output.
 	os.Remove(filename)

@@ -224,8 +224,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 			}
 		},
 		// Literals
-		"enum": func() testcase { // expr = enum{}, scope = {}
-			expr := h.Enum()
+		"tag-only_union": func() testcase { // expr = union{foo, bar}, scope = {}
+			expr := h.Union(
+				map[string]*ts.Expr{"foo": nil, "bar": nil},
+			)
 			return testcase{
 				expr:             expr,
 				prepareValidator: func(v *MockexprValidatorMockRecorder) { v.Validate(expr).Return(nil) },
@@ -236,10 +238,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"union_with_unresolvable_(undefined)_element": func() testcase { // t1 | t2, {t1=t1}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
-			expr := h.Union(t1, t2)
-			scope := TestScope{
-				"t1": h.BaseDef(),
-			}
+			expr := h.Union(map[string]*ts.Expr{"t1": &t1, "t2": &t2})
+			scope := TestScope{"t1": h.BaseDef()} // only t1 is defined
 			return testcase{
 				expr:  expr,
 				scope: scope,
@@ -260,11 +260,8 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		"union_with_unresolvable_(not_valid)_element": func() testcase { // expr = t1 | t2, scope = {t1=t1, t2=t2}
 			t1 := h.Inst("t1")
 			t2 := h.Inst("t2")
-			expr := h.Union(t1, t2)
-			scope := TestScope{
-				"t1": h.BaseDef(),
-				"t2": h.BaseDef(),
-			}
+			expr := h.Union(map[string]*ts.Expr{"t1": &t1, "t2": &t2})
+			scope := TestScope{"t1": h.BaseDef(), "t2": h.BaseDef()}
 			return testcase{
 				expr:  expr,
 				scope: scope,
@@ -272,20 +269,22 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(expr).Return(nil)
 					v.Validate(t1).Return(nil)
 					v.ValidateDef(scope["t1"]).Return(nil)
-					v.Validate(t2).Return(errTest)
+					v.Validate(t2).Return(errTest) // we make t2 invalid and thus unresolvable
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t.ShouldTerminate(gomock.Any(), gomock.Any()).AnyTimes().Return(false, nil)
+					t.ShouldTerminate(
+						gomock.Any(),
+						gomock.Any(),
+					).AnyTimes().Return(false, nil)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
 		},
 		"union_with_resolvable_elements": func() testcase { // expr = t1 | t2, scope = {t1=..., t2=...}
-			expr := h.Union(h.Inst("t1"), h.Inst("t2"))
-			scope := TestScope{
-				"t1": h.BaseDef(),
-				"t2": h.BaseDef(),
-			}
+			t1 := h.Inst("t1")
+			t2 := h.Inst("t2")
+			expr := h.Union(map[string]*ts.Expr{"t1": &t1, "t2": &t2})
+			scope := TestScope{"t1": h.BaseDef(), "t2": h.BaseDef()}
 			return testcase{
 				expr:  expr,
 				scope: scope,

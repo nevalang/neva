@@ -2,13 +2,14 @@ import {
     io
     fmt
     errors
+    runtime
 }
 
 // errors.Must wraps handler so it behaves like a node without error outport.
 def Main(start any) (stop any) {
     println fmt.Println<any>
     must_handle errors.Must<any, any>{Handler}
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> 'create_me.txt' -> must_handle -> 'success!' -> println
     println:res -> :stop

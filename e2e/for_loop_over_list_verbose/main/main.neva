@@ -1,9 +1,12 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    ListToStream<int>, For<int>{fmt.Println}, Wait, Panic
+    ListToStream<int>, For<int>{fmt.Println}, Wait, runtime.Panic
     ---
     :start -> $lst -> listToStream -> for
     for:res -> wait -> :stop

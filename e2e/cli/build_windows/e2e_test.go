@@ -25,5 +25,5 @@ func TestBuildWindows(t *testing.T) {
 	}()
 
 	_, err = os.Stat("output.exe")
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 }

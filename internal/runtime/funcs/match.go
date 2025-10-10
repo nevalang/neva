@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type match struct{}
+type matchSelector struct{}
 
-func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (match) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 
 			resMsg := elseInMsg
 			for i, ifMsg := range ifMsgs {
-				if dataMsg.Equal(ifMsg) {
+				if runtime.Match(dataMsg, ifMsg) {
 					resMsg = thenMsgs[i]
 					break
 				}

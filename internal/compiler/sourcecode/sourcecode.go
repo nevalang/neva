@@ -89,12 +89,12 @@ type Import struct {
 }
 
 type Entity struct {
-	IsPublic  bool       `json:"exported,omitempty"`
-	Kind      EntityKind `json:"kind,omitempty"`
-	Const     Const      `json:"const,omitempty"`
-	Type      ts.Def     `json:"type,omitempty"`
-	Interface Interface  `json:"interface,omitempty"`
-	Component Component  `json:"component,omitempty"`
+	IsPublic  bool        `json:"exported,omitempty"`
+	Kind      EntityKind  `json:"kind,omitempty"`
+	Const     Const       `json:"const,omitempty"`
+	Type      ts.Def      `json:"type,omitempty"`
+	Interface Interface   `json:"interface,omitempty"`
+	Component []Component `json:"component,omitempty"` // Non-overloaded components are represented as slice of one element.
 }
 
 func (e Entity) Meta() *core.Meta {
@@ -107,12 +107,12 @@ func (e Entity) Meta() *core.Meta {
 	case InterfaceEntity:
 		m = e.Interface.Meta
 	case ComponentEntity:
-		m = e.Component.Meta
+		m = e.Component[0].Meta // Overloaded components are usually defined in the same file.
 	}
 	return &m
 }
 
-type EntityKind string // It's handy to transmit strings enum instead of digital
+type EntityKind string
 
 const (
 	ComponentEntity EntityKind = "component_entity"
@@ -124,10 +124,10 @@ const (
 // Component is unit of computation.
 type Component struct {
 	Interface  `json:"interface,omitempty"`
-	Directives map[Directive][]string `json:"directives,omitempty"`
-	Nodes      map[string]Node        `json:"nodes,omitempty"`
-	Net        []Connection           `json:"net,omitempty"`
-	Meta       core.Meta              `json:"meta,omitempty"`
+	Directives map[Directive]string `json:"directives,omitempty"`
+	Nodes      map[string]Node      `json:"nodes,omitempty"`
+	Net        []Connection         `json:"net,omitempty"`
+	Meta       core.Meta            `json:"meta,omitempty"`
 }
 
 // Directive is an explicit instruction for compiler.
@@ -140,6 +140,7 @@ type Interface struct {
 	Meta       core.Meta  `json:"meta,omitempty"`
 }
 
+// TODO should we use it to typesystem package?
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
 	Meta   core.Meta  `json:"meta,omitempty"`
@@ -168,12 +169,13 @@ func (t TypeParams) String() string {
 }
 
 type Node struct {
-	Directives map[Directive][]string `json:"directives,omitempty"`
-	EntityRef  core.EntityRef         `json:"entityRef,omitempty"`
-	TypeArgs   TypeArgs               `json:"typeArgs,omitempty"`
-	ErrGuard   bool                   `json:"errGuard,omitempty"` // ErrGuard explains if node is used with `?` operator.
-	DIArgs     map[string]Node        `json:"diArgs,omitempty"`   // Dependency Injection.
-	Meta       core.Meta              `json:"meta,omitempty"`
+	Directives    map[Directive]string `json:"directives,omitempty"`
+	EntityRef     core.EntityRef       `json:"entityRef,omitempty"`
+	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
+	ErrGuard      bool                 `json:"errGuard,omitempty"`      // ErrGuard explains if node is used with `?` operator.
+	DIArgs        map[string]Node      `json:"diArgs,omitempty"`        // Dependency Injection.
+	OverloadIndex *int                 `json:"overloadIndex,omitempty"` // Only for overloaded components.
+	Meta          core.Meta            `json:"meta,omitempty"`
 }
 
 func (n Node) String() string {
@@ -202,7 +204,8 @@ type Const struct {
 
 type ConstValue struct {
 	Ref     *core.EntityRef `json:"ref,omitempty"`
-	Message *MsgLiteral     `json:"value,omitempty"` // literal
+	Message *MsgLiteral     `json:"message,omitempty"`
+	Meta    core.Meta       `json:"meta,omitempty"`
 }
 
 func (c ConstValue) String() string {
@@ -218,14 +221,16 @@ type MsgLiteral struct {
 	Float        *float64              `json:"float,omitempty"`
 	Str          *string               `json:"str,omitempty"`
 	List         []ConstValue          `json:"vec,omitempty"`
-	DictOrStruct map[string]ConstValue `json:"dict,omitempty"` // TODO separate map and struct
-	Enum         *EnumMessage          `json:"enum,omitempty"`
+	DictOrStruct map[string]ConstValue `json:"dict,omitempty"`
+	Union        *UnionLiteral         `json:"union,omitempty"`
 	Meta         core.Meta             `json:"meta,omitempty"`
 }
 
-type EnumMessage struct {
-	EnumRef    core.EntityRef
-	MemberName string
+type UnionLiteral struct {
+	EntityRef core.EntityRef `json:"entityRef,omitempty"`
+	Tag       string         `json:"tag,omitempty"`
+	Data      *ConstValue    `json:"data,omitempty"`
+	Meta      core.Meta      `json:"meta,omitempty"`
 }
 
 func (m MsgLiteral) String() string {
@@ -300,31 +305,27 @@ type Switch struct {
 	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
-type ConnectionSideSelectors []string
-
-func (c ConnectionSideSelectors) String() string {
-	if len(c) == 0 {
-		return ""
-	}
-	s := ""
-	for i, field := range c {
-		s += field
-		if i != len(c)-1 {
-			s += "/"
-		}
-	}
-	return s
+type ConnectionSender struct {
+	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
+	Const          *Const       `json:"const,omitempty"`
+	Range          *Range       `json:"range,omitempty"`
+	Unary          *Unary       `json:"unary,omitempty"`
+	Binary         *Binary      `json:"binary,omitempty"`
+	Ternary        *Ternary     `json:"ternary,omitempty"`
+	StructSelector []string     `json:"selector,omitempty"`
+	Union          *UnionSender `json:"union,omitempty"`
+	Meta           core.Meta    `json:"meta,omitempty"`
 }
 
-type ConnectionSender struct {
-	PortAddr       *PortAddr `json:"portAddr,omitempty"`
-	Const          *Const    `json:"const,omitempty"`
-	Range          *Range    `json:"range,omitempty"`
-	Unary          *Unary    `json:"unary,omitempty"`
-	Binary         *Binary   `json:"binary,omitempty"`
-	Ternary        *Ternary  `json:"ternary,omitempty"`
-	StructSelector []string  `json:"selector,omitempty"`
-	Meta           core.Meta `json:"meta,omitempty"`
+// UnionSender represents union in connection sender.
+// It's not same thing as UnionLiteral.
+// UnionLiteral is used to represent union in const value.
+// The difference is that UnionSender uses ConnectionSender instead of ConstValue.
+type UnionSender struct {
+	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
+	Tag       string            `json:"tag,omitempty"`
+	Data      *ConnectionSender `json:"data,omitempty"` // TODO rename to WrappedSender
+	Meta      core.Meta         `json:"meta,omitempty"`
 }
 
 type Binary struct {

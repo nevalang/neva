@@ -23,7 +23,7 @@ func Test(t *testing.T) {
 
 			cmd.Stdin = strings.NewReader("yo\n")
 			out, err := cmd.CombinedOutput()
-			require.NoError(t, err)
+			require.NoError(t, err, string(out))
 
 			require.Equal(
 				t,

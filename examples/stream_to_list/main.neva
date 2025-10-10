@@ -1,9 +1,12 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
     s2l StreamToList
     println fmt.Println
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> 1..11 -> s2l -> println:data
     println:res -> :stop

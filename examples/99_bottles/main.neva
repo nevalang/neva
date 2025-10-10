@@ -1,9 +1,12 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
 	print For<int>{Next2Lines}
 	wait Wait
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> 99..-1 -> print
 	print:res -> wait -> :stop
@@ -12,7 +15,7 @@ def Main(start any) (stop any) {
 
 def Next2Lines(data int) (res any, err error) {
 	first Tap<int>{FirstLine}?
-	dec Dec<int>
+	dec Dec
 	second SecondLine?
 	---
 	:data -> first

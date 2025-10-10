@@ -1,13 +1,13 @@
-import { lists, fmt }
+import { lists, fmt, runtime }
 
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
     s2l StreamToList<int>
-    map_dec Map<int, int>{Dec<int>}
+    map_dec Map<int, int>{Dec}
     println fmt.Println<list<int>>
     l2s ListToStream<int>
-    panic Panic
+    panic runtime.Panic
     ---
     :start -> $lst -> l2s -> map_dec -> s2l -> println:data
     println:res -> :stop

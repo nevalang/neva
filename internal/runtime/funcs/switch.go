@@ -67,7 +67,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 			matchIdx := -1
 			for i, caseMsg := range cases {
-				if dataMsg.Equal(caseMsg) {
+				if runtime.Match(dataMsg, caseMsg) {
 					matchIdx = i
 					break
 				}

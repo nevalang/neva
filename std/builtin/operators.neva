@@ -5,36 +5,52 @@
 pub def Not(data bool) (res bool)
 
 // Inc increments data by 1 and sends to result. It can be used with Map.
-#extern(int int_inc, float float_inc)
-pub def Inc<T int | float>(data T) (res T)
+#extern(int_inc)
+pub def Inc(data int) (res int)
+#extern(float_inc)
+pub def Inc(data float) (res float)
 
 // Dec decrements data by 1 and sends to result. It can be used with Map.
-#extern(int int_dec, float float_dec)
-pub def Dec<T int | float>(data T) (res T)
+#extern(int_dec)
+pub def Dec(data int) (res int)
+#extern(float_dec)
+pub def Dec(data float) (res float)
 
 // Neg negates data and sends to result. It can be used with Map.
-#extern(int int_neg, float float_neg)
-pub def Neg<T int | float>(data T) (res T)
+#extern(int_neg)
+pub def Neg(data int) (res int)
+#extern(float_neg)
+pub def Neg(data float) (res float)
 
 // === BINARY ===
 
 // --- Arithmetic ---
 
 // Add sums left with right and sends to result. It can be used with Reduce.
-#extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(left T, right T) (res T)
+#extern(int_add)
+pub def Add(left int, right int) (res int)
+#extern(float_add)
+pub def Add(left float, right float) (res float)
+#extern(string_add)
+pub def Add(left string, right string) (res string)
 
 // Sub subtracts right from left and sends to result. It can be used with Reduce.
-#extern(int int_sub, float float_sub)
-pub def Sub<T int | float>(left T, right T) (res T)
+#extern(int_sub)
+pub def Sub(left int, right int) (res int)
+#extern(float_sub)
+pub def Sub(left float, right float) (res float)
 
 // Mul multiplies left with right and sends to result. It can be used with Reduce.
-#extern(int int_mul, float float_mul)
-pub def Mul<T int | float>(left T, right T) (res T)
+#extern(int_mul)
+pub def Mul(left int, right int) (res int)
+#extern(float_mul)
+pub def Mul(left float, right float) (res float)
 
 // Div divides left by right and sends to result. It can be used with Reduce.
-#extern(int int_div, float float_div)
-pub def Div<T int | float>(left T, right T) (res T)
+#extern(int_div)
+pub def Div(left int, right int) (res int)
+#extern(float_div)
+pub def Div(left float, right float) (res float)
 
 // Mod calculates num modulo den and sends to result.
 #extern(int_mod)
@@ -55,20 +71,36 @@ pub def Eq<T>(left T, right T) (res bool)
 pub def Ne<T>(left T, right T) (res bool)
 
 // Gt sends true if actual is greater than compared, otherwise false.
-#extern(int int_is_greater, float float_is_greater, string string_is_greater)
-pub def Gt<T int | float | string>(left T, right T) (res bool)
+#extern(int_is_greater)
+pub def Gt(left int, right int) (res bool)
+#extern(float_is_greater)
+pub def Gt(left float, right float) (res bool)
+#extern(string_is_greater)
+pub def Gt(left string, right string) (res bool)
 
 // Lt sends true if actual is lesser than compared, otherwise false.
-#extern(int int_is_lesser, float float_is_lesser, string string_is_lesser)
-pub def Lt<T int | float | string>(left T, right T) (res bool)
+#extern(int_is_lesser)
+pub def Lt(left int, right int) (res bool)
+#extern(float_is_lesser)
+pub def Lt(left float, right float) (res bool)
+#extern(string_is_lesser)
+pub def Lt(left string, right string) (res bool)
 
 // Ge sends true if actual is greater than or equal to compared, otherwise false.
-#extern(int int_is_greater_or_equal, float float_is_greater_or_equal)
-pub def Ge<T int | float | string>(left T, right T) (res bool)
+#extern(int_is_greater_or_equal)
+pub def Ge(left int, right int) (res bool)
+#extern(float_is_greater_or_equal)
+pub def Ge(left float, right float) (res bool)
+#extern(string_is_greater_or_equal)
+pub def Ge(left string, right string) (res bool)
 
 // Le sends true if actual is lesser than or equal to compared, otherwise false.
-#extern(int int_is_lesser_or_equal, float float_is_lesser_or_equal)
-pub def Le<T int | float | string>(left T, right T) (res bool)
+#extern(int_is_lesser_or_equal)
+pub def Le(left int, right int) (res bool)
+#extern(float_is_lesser_or_equal)
+pub def Le(left float, right float) (res bool)
+#extern(string_is_lesser_or_equal)
+pub def Le(left string, right string) (res bool)
 
 // --- Logical ---
 

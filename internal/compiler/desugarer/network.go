@@ -470,8 +470,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{constTypeExpr},
-				Directives: map[src.Directive][]string{
-					compiler.BindDirective: {chainHead.Const.Value.Ref.String()},
+				Directives: map[src.Directive]string{
+					compiler.BindDirective: chainHead.Const.Value.Ref.String(),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -487,8 +487,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},
-				Directives: map[src.Directive][]string{
-					compiler.BindDirective: {virtualConstName},
+				Directives: map[src.Directive]string{
+					compiler.BindDirective: virtualConstName,
 				},
 				Meta: locOnlyMeta,
 			}
@@ -792,6 +792,20 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
+	if sender.Union != nil {
+		result, err := d.desugarUnionSender(
+			*sender.Union,
+			normConn,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if err != nil {
+			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
+		}
+
+		return desugarSenderResult(result), nil
+	}
+
 	if sender.Ternary != nil {
 		result, err := d.desugarTernarySender(
 			iface,
@@ -901,8 +915,8 @@ func (d *Desugarer) handleLiteralSender(
 	locOnlyMeta := core.Meta{Location: constant.Meta.Location}
 
 	emitterNode := src.Node{
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {constName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: constName,
 		},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef.Pkg,
@@ -941,8 +955,8 @@ func (d *Desugarer) handleConstRefSender(
 
 	emitterNode := src.Node{
 		// don't forget to bind
-		Directives: map[src.Directive][]string{
-			compiler.BindDirective: {ref.String()},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: ref.String(),
 		},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef.Pkg,
@@ -1121,8 +1135,8 @@ func (d *Desugarer) desugarRangeSender(
 			Name: "New",
 			Meta: locOnlyMeta,
 		},
-		Directives: map[src.Directive][]string{
-			"bind": {fromConstName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: fromConstName,
 		},
 		Meta: locOnlyMeta,
 	}
@@ -1132,8 +1146,8 @@ func (d *Desugarer) desugarRangeSender(
 			Name: "New",
 			Meta: locOnlyMeta,
 		},
-		Directives: map[src.Directive][]string{
-			"bind": {toConstName},
+		Directives: map[src.Directive]string{
+			compiler.BindDirective: toConstName,
 		},
 		Meta: locOnlyMeta,
 	}
@@ -1543,15 +1557,60 @@ func (d *Desugarer) desugarBinarySender(
 		)
 	}
 
-	nodesToInsert[opNode] = src.Node{
+	operatorNodeToInsert := src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: opComponent,
 			Meta: locOnlyMeta,
 		},
-		TypeArgs: []ts.Expr{binary.AnalyzedType},
-		Meta:     locOnlyMeta,
+		OverloadIndex: nil, // To be set later
+		Meta:          locOnlyMeta,
 	}
+
+	// set overload index for operator node based on analyzed operand type
+	// use analyzer-provided binary.AnalyzedType to choose overload version
+	if binary.AnalyzedType.Inst == nil {
+		panic("binary analyzed type must be instantiation at desugaring stage")
+	}
+
+	opEntity, _, err := scope.Entity(core.EntityRef{Name: opComponent})
+	if err != nil {
+		panic(fmt.Sprintf("resolve operator entity: %v", err))
+	}
+	if opEntity.Kind != src.ComponentEntity {
+		panic("operator entity must be a component")
+	}
+	if len(opEntity.Component) == 0 {
+		panic("operator entity must have at least one component")
+	}
+
+	// scope = scope.Relocate(opEntityLoc) // mainly for completeness (not sure if needed)
+
+	if len(opEntity.Component) == 1 {
+		operatorNodeToInsert.OverloadIndex = compiler.Pointer(int(0))
+	} else {
+		wantName := binary.AnalyzedType.Inst.Ref.Name
+		for i, version := range opEntity.Component {
+			leftPort, okL := version.Interface.IO.In["left"]
+			rightPort, okR := version.Interface.IO.In["right"]
+			if !okL || !okR {
+				continue
+			}
+			if leftPort.TypeExpr.Inst == nil || rightPort.TypeExpr.Inst == nil {
+				continue
+			}
+			if leftPort.TypeExpr.Inst.Ref.Name == wantName && rightPort.TypeExpr.Inst.Ref.Name == wantName {
+				operatorNodeToInsert.OverloadIndex = compiler.Pointer(i)
+				break
+			}
+		}
+	}
+
+	if operatorNodeToInsert.OverloadIndex == nil {
+		panic(fmt.Sprintf("no matching overload for operator %s and type %s", opComponent, binary.AnalyzedType.String()))
+	}
+
+	nodesToInsert[opNode] = operatorNodeToInsert
 
 	// left -> op:left
 	// right -> op:right

@@ -1,6 +1,7 @@
 package irgen
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -124,6 +125,28 @@ func (g Generator) processSender(
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
+	// union senders should have been desugared by this point
+	if sender.Union != nil {
+		panic(fmt.Sprintf(
+			"INTERNAL ERROR: union sender %v::%v was not desugared (location: %v)",
+			sender.Union.EntityRef,
+			sender.Union.Tag,
+			sender.Meta.Location,
+		))
+	}
+
+	// other special senders should also have been desugared
+	if sender.PortAddr == nil {
+		panic(fmt.Sprintf(
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, binary=%v, ternary=%v, location: %v)",
+			sender.Const != nil,
+			sender.Range != nil,
+			sender.Binary != nil,
+			sender.Ternary != nil,
+			sender.Meta.Location,
+		))
+	}
+
 	// there could be many connections with the same sender but we must only add it once
 	if _, ok := nodesUsage[sender.PortAddr.Node]; !ok {
 		nodesUsage[sender.PortAddr.Node] = portsUsage{
@@ -138,11 +161,21 @@ func (g Generator) processSender(
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
 	if isNodeDep && sender.PortAddr.Port == "" {
-		depComponent, err := scope.Relocate(depNode.Meta.Location).GetComponent(depNode.EntityRef)
+		versions, err := scope.
+			Relocate(depNode.Meta.Location).
+			GetComponent(depNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
-		for outport := range depComponent.Interface.IO.Out {
+
+		var version src.Component
+		if len(versions) == 1 {
+			version = versions[0]
+		} else {
+			version = versions[*depNode.OverloadIndex]
+		}
+
+		for outport := range version.Interface.IO.Out {
 			sender.PortAddr.Port = outport
 			break
 		}
@@ -193,14 +226,21 @@ func (g Generator) processReceiver(
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
 
-		depComponent, err := scope.
+		versions, err := scope.
 			Relocate(diArgNode.Meta.Location).
 			GetComponent(diArgNode.EntityRef)
 		if err != nil {
 			panic(err)
 		}
 
-		for inport := range depComponent.Interface.IO.In {
+		var version src.Component
+		if len(versions) == 1 {
+			version = versions[0]
+		} else {
+			version = versions[*diArgNode.OverloadIndex]
+		}
+
+		for inport := range version.Interface.IO.In {
 			receiver.PortAddr.Port = inport
 			break
 		}

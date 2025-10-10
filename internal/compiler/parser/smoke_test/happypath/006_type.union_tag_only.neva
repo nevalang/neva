@@ -1,0 +1,70 @@
+type MyEnum1 union { One }
+
+type MyEnum1 union {
+    One }
+
+type MyEnum1 union {
+    One
+}
+
+type MyEnum1 union {
+    One, Two, Three
+}
+
+type MyEnum1 union { One, Two, Three }
+
+type MyEnum1 union {
+    One,
+    Two,
+    Three
+}
+
+pub type MyEnum10 union { One, Two }
+
+pub type MyEnum10 union {
+    One, Two }
+
+pub type MyEnum10 union { One, Two
+}
+
+pub type MyEnum10 union {
+    One, Two
+}
+
+pub type MyEnum10 union {
+    One
+    Two
+}
+
+type MyEnum1 union { One }
+
+type MyEnum2 union {
+    One }
+
+type MyEnum3 union { One
+}
+
+type MyEnum4 union {
+    One
+}
+
+type MyEnum5 union { One, Two }
+
+type MyEnum6 union { One,
+    Two
+}
+
+type MyEnum7 union {
+    One,
+    Two }
+
+type MyEnum8 union {
+    One,
+    Two
+}
+
+type MyEnum9 union { One }
+pub type MyEnum10 union {
+    One
+    Two
+}

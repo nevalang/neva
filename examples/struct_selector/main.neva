@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 type User struct {
     name string
@@ -8,9 +11,11 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    GetUser, fmt.Println, Panic
+    get_user GetUser
+    println fmt.Println<any>
+    panic runtime.Panic
     ---
-    :start -> getUser -> .pet.name -> println:data
+    :start -> get_user -> .pet.name -> println
     println:res -> :stop
     println:err -> panic
 }

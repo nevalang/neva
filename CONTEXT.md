@@ -149,6 +149,11 @@ At runtime every node is a goroutine reading from _in-ports_ and writing to _out
 3. **Constant Senders** – become infinite loops unless synchronised; prefer chained connections (`:start -> $msg -> node`).
 4. **Module Paths** – entry module is addressed as `@`; forgetting manifest or wrong working dir breaks import resolution.
 5. **Desugarer Edge-Cases** – implicit IO nodes mean actual connection set is larger than user code; be careful when debugging IR.
+6. **Parser Grammar Issues** – ANTLR error messages can be misleading; line/column numbers may not match actual error location. Use systematic debugging with "Processing file:" messages to identify actual error sources.
+7. **Interface Syntax** – interfaces without type parameters should NOT use `<>`; only use `<>` when you actually have type parameters.
+8. **Tagged Union Syntax** – use `union { FieldName type, AnotherField type }` syntax; avoid pipe characters (`|`) which are not valid.
+9. **Tagged Union Literals** – use `TypeName::Variant(value)` syntax, not direct function calls like `Variant(value)`.
+10. **Compiler Directives** – `#extern` directives take single identifiers only, not comma-separated lists.
 
 ---
 
@@ -165,6 +170,7 @@ At runtime every node is a goroutine reading from _in-ports_ and writing to _out
   ```
 - **Debugging Compiler** – set `NEVA_DEBUG=1` (planned) or step through `internal/compiler/*`.
 - **Debugging Runtime** – enable trace file (`neva build --trace`) then inspect message paths.
+- **Debugging Parser** – ANTLR error messages can be misleading; check grammar file (`internal/compiler/parser/neva.g4`) for correct syntax rules.
 
 ---
 

@@ -1,13 +1,17 @@
-import { strconv, fmt }
+import {
+	fmt
+	runtime
+	strconv
+}
 
 def Main(start any) (stop any) {
 	scanner1 fmt.Scanln
 	scanner2 fmt.Scanln
-	parser1 strconv.ParseNum<int>
-	parser2 strconv.ParseNum<int>
-	add Add<int>
+	parser1 strconv.Atoi
+	parser2 strconv.Atoi
+	add Add
 	println fmt.Println<any>
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> scanner1:sig
 	scanner1:res -> parser1:data

@@ -30,7 +30,7 @@ func TestParser_ParseFile_TernaryExpression(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -58,7 +58,7 @@ func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Nil(t, err)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -89,7 +89,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -120,7 +120,7 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.Equal(t, true, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	conn := net[0].Normal
 
 	// foo[0]->
@@ -146,7 +146,7 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
 	conn := net[0].Normal
@@ -183,7 +183,7 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 
 	// 1) :port -> lonely
 	// 2) lonely -> :port
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 2, len(net))
 
 	// 1) :port -> lonely
@@ -207,7 +207,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	net := got.Entities["C1"].Component.Net
+	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 	conn := net[0].Normal
 
@@ -279,7 +279,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}
@@ -324,29 +324,29 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	d1 := got.Entities["C1"].Component.Directives[compiler.ExternDirective][0]
+	d1 := got.Entities["C1"].Component[0].Directives[compiler.ExternDirective]
 	require.Equal(t, "d1", d1)
 
 	c2 := got.Entities["C2"].Component
 
-	d2 := c2.Directives[compiler.ExternDirective][0]
+	d2 := c2[0].Directives[compiler.ExternDirective]
 	require.Equal(t, "d2", d2)
 
-	d3 := c2.Nodes["n1"].Directives[compiler.BindDirective][0]
+	d3 := c2[0].Nodes["n1"].Directives[compiler.BindDirective]
 	require.Equal(t, "d3", d3)
 
-	d4 := c2.Nodes["n2"].Directives[compiler.BindDirective][0]
+	d4 := c2[0].Nodes["n2"].Directives[compiler.BindDirective]
 	require.Equal(t, "d4", d4)
 
 	c3 := got.Entities["C3"].Component
-	_, ok := c3.Directives[compiler.AutoportsDirective]
+	_, ok := c3[0].Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 
 	c4 := got.Entities["C4"].Component
-	d5, ok := c4.Directives[compiler.ExternDirective]
+	d5, ok := c4[0].Directives[compiler.ExternDirective]
 	require.Equal(t, true, ok)
-	require.Equal(t, "d5", d5[0])
-	_, ok = c4.Directives[compiler.AutoportsDirective]
+	require.Equal(t, "d5", d5)
+	_, ok = c4[0].Directives[compiler.AutoportsDirective]
 	require.Equal(t, true, ok)
 }
 
@@ -362,7 +362,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	conn := got.Entities["C1"].Component.Net[0]
+	conn := got.Entities["C1"].Component[0].Net[0]
 
 	sender := conn.Normal.Senders[0].PortAddr.Node
 	require.Equal(t, "in", sender)
@@ -385,62 +385,13 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	nodes := got.Entities["C1"].Component.Nodes
+	nodes := got.Entities["C1"].Component[0].Nodes
 
 	_, ok := nodes["scanner"]
 	require.Equal(t, true, ok)
 
 	_, ok = nodes["printer"]
 	require.Equal(t, true, ok)
-}
-
-func TestParser_ParseFile_EnumLiterals(t *testing.T) {
-	text := []byte(`
-		const c0 Enum = Enum1::Foo
-		const c1 pkg.Enum = pkg.Enum2::Bar
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.True(t, err == nil)
-
-	enum := got.Entities["c0"].Const.Value.Message.Enum
-	require.Equal(t, "", enum.EnumRef.Pkg)
-	require.Equal(t, "Enum1", enum.EnumRef.Name)
-	require.Equal(t, "Foo", enum.MemberName)
-
-	enum = got.Entities["c1"].Const.Value.Message.Enum
-	require.Equal(t, "pkg", enum.EnumRef.Pkg)
-	require.Equal(t, "Enum2", enum.EnumRef.Name)
-	require.Equal(t, "Bar", enum.MemberName)
-}
-
-func TestParser_ParseFile_EnumLiteralSenders(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			Foo::Bar -> :out
-			foo.Bar::Baz -> :out
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.True(t, err == nil)
-
-	conn := got.Entities["C1"].Component.Net[0]
-
-	senderEnum := conn.Normal.Senders[0].Const.Value.Message.Enum
-	require.Equal(t, "", senderEnum.EnumRef.Pkg)
-	require.Equal(t, "Foo", senderEnum.EnumRef.Name)
-	require.Equal(t, "Bar", senderEnum.MemberName)
-
-	conn = got.Entities["C1"].Component.Net[1]
-	senderEnum = conn.Normal.Senders[0].Const.Value.Message.Enum
-	require.Equal(t, "foo", senderEnum.EnumRef.Pkg)
-	require.Equal(t, "Bar", senderEnum.EnumRef.Name)
-	require.Equal(t, "Baz", senderEnum.MemberName)
 }
 
 func TestParser_ParseFile_Range(t *testing.T) {
@@ -561,7 +512,7 @@ func TestParser_ParseFile_Range(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			tt.check(t, net)
 		})
 	}
@@ -692,7 +643,7 @@ func TestParser_ParseFile_Binary(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			conn := net[0].Normal
@@ -815,7 +766,7 @@ func TestParser_ParseFile_ComplexBinaryAndTernary(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			conn := net[0].Normal
@@ -1007,10 +958,361 @@ func TestParser_ParseFile_Switch(t *testing.T) {
 			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 			require.Nil(t, err)
 
-			net := got.Entities["C1"].Component.Net
+			net := got.Entities["C1"].Component[0].Net
 			require.Equal(t, 1, len(net))
 
 			tt.check(t, net)
 		})
 	}
+}
+
+func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, got src.File)
+	}{
+		{
+			name: "simple union",
+			text: `
+				type Input union {
+					Int int
+					None
+				}
+			`,
+			check: func(t *testing.T, got src.File) {
+				unionType := got.Entities["Input"].Type.BodyExpr.Lit.Union
+				require.NotNil(t, unionType)
+
+				// Check Int tag with value
+				intTag := unionType["Int"]
+				require.NotNil(t, intTag)
+				require.Equal(t, "int", intTag.Inst.Ref.Name)
+
+				// Check None tag without value
+				noneTag, ok := unionType["None"]
+				require.True(t, ok)
+				require.Nil(t, noneTag)
+			},
+		},
+		{
+			name: "one-line union",
+			text: `
+				type Result union { Ok int, Err string }
+			`,
+			check: func(t *testing.T, got src.File) {
+				unionType := got.Entities["Result"].Type.BodyExpr.Lit.Union
+				require.NotNil(t, unionType)
+
+				// Check Ok tag with int value
+				okTag := unionType["Ok"]
+				require.NotNil(t, okTag)
+				require.Equal(t, "int", okTag.Inst.Ref.Name)
+
+				// Check Err tag with string value
+				errTag := unionType["Err"]
+				require.NotNil(t, errTag)
+				require.Equal(t, "string", errTag.Inst.Ref.Name)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+			require.Nil(t, err)
+			tt.check(t, got)
+		})
+	}
+}
+
+func TestParser_ParseFile_TaggedUnionSender(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "non-chained tag-only",
+			text: `
+				def C1() () {
+					Input::Int -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				senderUnion := conn.Senders[0].Union
+				require.NotNil(t, senderUnion)
+				require.Equal(t, "Input", senderUnion.EntityRef.Name)
+				require.Equal(t, "Int", senderUnion.Tag)
+				require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "chained tag-only",
+			text: `
+				def C1() () {
+					:start -> Input::Int -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				chain := conn.Receivers[0].ChainedConnection.Normal
+				senderUnion := chain.Senders[0].Union
+				require.NotNil(t, senderUnion)
+				require.Equal(t, "Input", senderUnion.EntityRef.Name)
+				require.Equal(t, "Int", senderUnion.Tag)
+				require.Equal(t, "receiver", chain.Receivers[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "non-chained with value",
+			text: `
+				def C1() () {
+					Input::Int(42) -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				senderUnion := conn.Senders[0].Union
+				require.NotNil(t, senderUnion)
+				require.Equal(t, "Input", senderUnion.EntityRef.Name)
+				require.Equal(t, "Int", senderUnion.Tag)
+				require.NotNil(t, senderUnion.Data)
+				require.NotNil(t, senderUnion.Data.Const)
+				require.Equal(t, 42, *senderUnion.Data.Const.Value.Message.Int)
+				require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "chained with value",
+			text: `
+				def C1() () {
+					:start -> Input::Int(42) -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				conn := net[0].Normal
+				chain := conn.Receivers[0].ChainedConnection.Normal
+				senderUnion := chain.Senders[0].Union
+				require.NotNil(t, senderUnion)
+				require.Equal(t, "Input", senderUnion.EntityRef.Name)
+				require.Equal(t, "Int", senderUnion.Tag)
+				require.NotNil(t, senderUnion.Data)
+				require.NotNil(t, senderUnion.Data.Const)
+				require.Equal(t, 42, *senderUnion.Data.Const.Value.Message.Int)
+				require.Equal(t, "receiver", chain.Receivers[0].PortAddr.Node)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+			require.Nil(t, err)
+			net := got.Entities["C1"].Component[0].Net
+			tt.check(t, net)
+		})
+	}
+}
+
+func TestParser_ParseFile_TaggedUnionPatternMatching(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, net []src.Connection)
+	}{
+		{
+			name: "pattern_matching_without_value",
+			text: `
+				def C1() () {
+					sender -> switch {
+						Input::Int -> receiver1
+						Input::None -> receiver2
+						_ -> receiver3
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
+
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.Senders[0].PortAddr.Node)
+
+				switchStmt := conn.Receivers[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// Input::Int -> receiver1
+				intCase := switchStmt.Cases[0].Senders[0].Union
+				require.Equal(t, "Input", intCase.EntityRef.Name)
+				require.Equal(t, "Int", intCase.Tag)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].Receivers[0].PortAddr.Node)
+
+				// Input::None -> receiver2
+				noneCase := switchStmt.Cases[1].Senders[0].Union
+				require.Equal(t, "Input", noneCase.EntityRef.Name)
+				require.Equal(t, "None", noneCase.Tag)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].Receivers[0].PortAddr.Node)
+
+				// _ -> receiver3
+				require.Equal(t, "receiver3", switchStmt.Default[0].PortAddr.Node)
+			},
+		},
+		{
+			name: "pattern_matching_with_value",
+			text: `
+				def C1() () {
+					sender -> switch {
+						Input::Int(42) -> receiver1
+						Input::None -> receiver2
+						_ -> receiver3
+					}
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				require.Equal(t, 1, len(net))
+
+				conn := net[0].Normal
+				require.Equal(t, "sender", conn.Senders[0].PortAddr.Node)
+
+				switchStmt := conn.Receivers[0].Switch
+				require.Equal(t, 2, len(switchStmt.Cases))
+
+				// Input::Int(42) -> receiver1
+				intCase := switchStmt.Cases[0].Senders[0].Union
+				require.Equal(t, "Input", intCase.EntityRef.Name)
+				require.Equal(t, "Int", intCase.Tag)
+				require.Equal(t, 42, *switchStmt.Cases[0].Senders[0].Union.Data.Const.Value.Message.Int)
+				require.Equal(t, "receiver1", switchStmt.Cases[0].Receivers[0].PortAddr.Node)
+
+				// Input::None -> receiver2
+				noneCase := switchStmt.Cases[1].Senders[0].Union
+				require.Equal(t, "Input", noneCase.EntityRef.Name)
+				require.Equal(t, "None", noneCase.Tag)
+				require.Equal(t, "receiver2", switchStmt.Cases[1].Receivers[0].PortAddr.Node)
+
+				// _ -> receiver3
+				require.Equal(t, "receiver3", switchStmt.Default[0].PortAddr.Node)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+			require.Nil(t, err)
+			net := got.Entities["C1"].Component[0].Net
+			tt.check(t, net)
+		})
+	}
+}
+
+func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
+	tests := []struct {
+		name  string
+		text  string
+		check func(t *testing.T, got src.File)
+	}{
+		{
+			name: "union with value",
+			text: `
+				const c0 Input = Input::Int(42)
+			`,
+			check: func(t *testing.T, got src.File) {
+				union := got.Entities["c0"].Const.Value.Message.Union
+				require.Equal(t, "", union.EntityRef.Pkg)
+				require.Equal(t, "Input", union.EntityRef.Name)
+				require.Equal(t, "Int", union.Tag)
+				require.Equal(t, 42, *union.Data.Message.Int)
+			},
+		},
+		{
+			name: "union without value",
+			text: `
+				const c1 pkg.Input = pkg.Input::None
+			`,
+			check: func(t *testing.T, got src.File) {
+				union := got.Entities["c1"].Const.Value.Message.Union
+				require.Equal(t, "pkg", union.EntityRef.Pkg)
+				require.Equal(t, "Input", union.EntityRef.Name)
+				require.Equal(t, "None", union.Tag)
+				require.Nil(t, got.Entities["c1"].Const.Value.Message.Int)
+			},
+		},
+		{
+			name: "imported union with value",
+			text: `
+				const c2 pkg.Input = pkg.Input::Int(100)
+			`,
+			check: func(t *testing.T, got src.File) {
+				union := got.Entities["c2"].Const.Value.Message.Union
+				require.Equal(t, "pkg", union.EntityRef.Pkg)
+				require.Equal(t, "Input", union.EntityRef.Name)
+				require.Equal(t, "Int", union.Tag)
+				require.Equal(t, 100, *union.Data.Message.Int)
+			},
+		},
+		{
+			name: "nested union const value",
+			text: "const c3 Input = Input::Nested(Input::Int(7))",
+			check: func(t *testing.T, got src.File) {
+				union := got.Entities["c3"].Const.Value.Message.Union
+				require.Equal(t, "", union.EntityRef.Pkg)
+				require.Equal(t, "Input", union.EntityRef.Name)
+				require.Equal(t, "Nested", union.Tag)
+
+				nestedUnion := union.Data.Message.Union
+				require.Equal(t, "", nestedUnion.EntityRef.Pkg)
+				require.Equal(t, "Input", nestedUnion.EntityRef.Name)
+				require.Equal(t, "Int", nestedUnion.Tag)
+				require.Equal(t, 7, *nestedUnion.Data.Message.Int)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+			require.Nil(t, err)
+			tt.check(t, got)
+		})
+	}
+}
+
+func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
+	text := []byte(`
+		#extern(v1)
+		pub def Add(left int, right int) (res int)
+		#extern(v2)
+		pub def Add(left float, right float) (res float)
+		#extern(v3)
+		pub def Add(left string, right string) (res string)
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+
+	entity, ok := got.Entities["Add"]
+	require.True(t, ok)
+	require.Equal(t, src.ComponentEntity, entity.Kind)
+	require.Equal(t, 3, len(entity.Component))
+
+	// check extern directives preserved and inputs match
+	require.Equal(t, "v1", entity.Component[0].Directives[compiler.ExternDirective])
+	require.Equal(t, "int", entity.Component[0].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "int", entity.Component[0].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+
+	require.Equal(t, "v2", entity.Component[1].Directives[compiler.ExternDirective])
+	require.Equal(t, "float", entity.Component[1].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "float", entity.Component[1].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+
+	require.Equal(t, "v3", entity.Component[2].Directives[compiler.ExternDirective])
+	require.Equal(t, "string", entity.Component[2].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "string", entity.Component[2].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
 }

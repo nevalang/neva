@@ -1,8 +1,13 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
-    wrapper Wrapper{fmt.Println}
-    panic Panic
+    wrapper Wrapper{
+        printer fmt.Println<any>
+    }
+    panic runtime.Panic
     ---
     :start -> wrapper:data
     wrapper:res -> :stop
@@ -15,4 +20,4 @@ def Wrapper(data any) (res any, err error) {
     :data -> printer -> :res
 }
 
-interface IPrinter<T>(T) (T, err error)
+interface IPrinter<T>(data T) (res T, err error)

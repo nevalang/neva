@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 // Here we learn how to read struct field
 // by using builtin def with compiler directive.
@@ -21,7 +24,7 @@ const path list<string> = ['pet', 'name']
 
 def Main(start any) (stop any) {
     fmt.Println
-    Panic
+    runtime.Panic
 
     #bind(path)
     Field

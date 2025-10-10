@@ -1,22 +1,27 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
     Map<int, any>{FizzBuzz}
     For{fmt.Println}
     Wait
-    Panic
+    panic runtime.Panic
     ---
     :start -> 1..101 -> map -> for
     for:res -> wait -> :stop
     for:err -> panic
 }
 
-def FizzBuzz(data int) (res string | int) {
-    select Select<string | int>
+def FizzBuzz(data int) (res any) {
+    select Select<any>
     mod15 Mod15
     mod3 Mod3
     mod5 Mod5
+    
     ---
+    
     :data -> [mod15, select:then[3]]
 
     mod15:then -> select:if[0]

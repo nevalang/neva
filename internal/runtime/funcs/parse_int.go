@@ -17,6 +17,16 @@ func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 		return nil, err
 	}
 
+	baseIn, err := io.In.Single("base")
+	if err != nil {
+		return nil, err
+	}
+
+	bitsIn, err := io.In.Single("bits")
+	if err != nil {
+		return nil, err
+	}
+
 	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
@@ -29,12 +39,22 @@ func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		for {
-			str, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			parsedNum, err := parse(str.Str())
+			baseMsg, ok := baseIn.Receive(ctx)
+			if !ok {
+				return
+			}
+
+			bitsMsg, ok := bitsIn.Receive(ctx)
+			if !ok {
+				return
+			}
+
+			parsedNum, err := p.stringToRuntimeInt(dataMsg, baseMsg, bitsMsg)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
@@ -49,8 +69,16 @@ func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 	}, nil
 }
 
-func parse(str string) (runtime.Msg, error) {
-	v, err := strconv.Atoi(str)
+func (p parseInt) stringToRuntimeInt(
+	data runtime.Msg,
+	base runtime.Msg,
+	bits runtime.Msg,
+) (runtime.Msg, error) {
+	v, err := strconv.ParseInt(
+		data.Str(),
+		int(base.Int()),
+		int(bits.Int()),
+	)
 	if err != nil {
 		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 	}

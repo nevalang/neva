@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type new struct{}
+type newV1 struct{}
 
-func (c new) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (c newV1) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err

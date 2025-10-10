@@ -1,7 +1,11 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
-	fmt.Println, Panic
+	println fmt.Println<string>
+	panic runtime.Panic
 	---
 	:start -> 'Hello, World!' -> println:data
 	println:res -> :stop

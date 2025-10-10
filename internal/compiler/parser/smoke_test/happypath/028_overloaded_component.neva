@@ -1,0 +1,6 @@
+#extern(v1)
+pub def Foo(left int, right int) (res int)
+#extern(v2)
+pub def Foo(left float, right float) (res float)
+#extern(v3)
+pub def Foo(left string, right string) (res string)

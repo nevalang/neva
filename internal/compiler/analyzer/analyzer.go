@@ -4,7 +4,6 @@
 package analyzer
 
 import (
-	"errors"
 	"fmt"
 
 	"golang.org/x/exp/maps"
@@ -13,10 +12,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-)
-
-var (
-	ErrCompilerVersion = errors.New("incompatible compiler version")
 )
 
 type Analyzer struct {
@@ -184,7 +179,11 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 
 	switch entity.Kind {
 	case src.TypeEntity:
-		resolvedTypeDef, err := a.analyzeTypeDef(entity.Type, scope, analyzeTypeDefParams{allowEmptyBody: isStd})
+		resolvedTypeDef, err := a.analyzeType(
+			entity.Type,
+			scope,
+			analyzeTypeDefParams{allowEmptyBody: isStd},
+		)
 		if err != nil {
 			meta := entity.Type.Meta
 			return src.Entity{}, compiler.Error{
@@ -202,10 +201,13 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Const = resolvedConst
 	case src.InterfaceEntity:
-		resolvedInterface, err := a.analyzeInterface(entity.Interface, scope, analyzeInterfaceParams{
-			allowEmptyInports:  false,
-			allowEmptyOutports: false,
-		})
+		resolvedInterface, err := a.analyzeInterface(
+			entity.Interface,
+			scope,
+			analyzeInterfaceParams{
+				allowEmptyInports:  false,
+				allowEmptyOutports: false,
+			})
 		if err != nil {
 			meta := entity.Interface.Meta
 			return src.Entity{}, compiler.Error{
@@ -214,13 +216,17 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 		}
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
-		analyzedComponent, err := a.analyzeComponent(entity.Component, scope)
-		if err != nil {
-			return src.Entity{}, compiler.Error{
-				Meta: &entity.Component.Meta,
-			}.Wrap(err)
+		analyzedVersions := make([]src.Component, 0, len(entity.Component))
+		for _, component := range entity.Component {
+			analyzedComponent, err := a.analyzeComponent(component, scope)
+			if err != nil {
+				return src.Entity{}, compiler.Error{
+					Meta: &component.Meta,
+				}.Wrap(err)
+			}
+			analyzedVersions = append(analyzedVersions, analyzedComponent)
 		}
-		resolvedEntity.Component = analyzedComponent
+		resolvedEntity.Component = analyzedVersions
 	default:
 		return src.Entity{}, &compiler.Error{
 			Message: fmt.Sprintf("unknown entity kind: %v", entity.Kind),

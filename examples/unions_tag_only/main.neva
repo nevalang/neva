@@ -1,0 +1,29 @@
+import {
+    fmt
+    runtime
+}
+
+type Day union {
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
+    Sunday
+}
+
+def Main(start any) (stop any) {
+    print_day PrintDay
+    ---
+    :start -> { Day::Friday -> print_day -> :stop }
+}
+
+def PrintDay(day Day) (sig any) {
+    println fmt.Println
+    panic runtime.Panic
+    ---
+    :day -> println:data
+    println:res -> :sig
+    println:err -> panic
+}

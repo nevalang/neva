@@ -10,7 +10,6 @@ Start from reading [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefil
 - Make: https://www.gnu.org/software/make/#download
 - NodeJS and NPM: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/
 - Antlr: `pip install antlr4-tools`
-<!-- - Tygo: `go install github.com/gzuidhof/tygo@latest` -->
 
 ### VSCode
 
@@ -28,12 +27,6 @@ Not required but recommended:
 1. Make changes to `neva.g4` and corresponding `*.neva` files in the repo
 2. If something doesn't work, run `/parser/smoke_test`
 3. To debug deeper, make sure `neva.g4` is opened in the editor and launch VSCode's `ANTLR` debug task
-
-<!-- ## VSCode Extension
-
-VSCode extension depends on types defined in the `sourcecode` and `typesystem` packages so it's dangerous to rename those. If you going to do so, make sure you did't brake TS types generation.
-
-Check out [tygo.yaml](./tygo.yaml). and `CONTRIBUTING.md` in "vscode-neva" repo. -->
 
 ## Learning Resources
 
@@ -167,10 +160,6 @@ Two reasons:
 2. Desugarer that comes before analysis must duplicate some validation because it's unsafe to desugar some constructs before ensuring they are valid. E.g. desugar struct selectors without knowing fir sure that outport's type is a valid structure. Also many desugaring transformations are only possible on analyzed program with all type expressions resolved.
 
 Actually it's impossible to have desugarer before analysis. It's possible to have two desugarers - one before and one after. But that would make compiler much more complicated without visible benefits.
-
-### Why union types are allowed for constants at syntax level?
-
-You indeed can declare `const foo int | string = 42` and that won't make much sense. The problem it's not enough to restrict that at root level, you also have to recursively check every complex type like `struct`, `list` or `map`. And that is impossible to make at syntax level and require work in analyzer. This is could be done in the future when we cover more important cases.
 
 ### Why we have special syntax for union?
 

@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type ternary struct{}
+type ternarySelector struct{}
 
-func (p ternary) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p ternarySelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	ifIn, err := io.In.Single("if")
 	if err != nil {
 		return nil, err

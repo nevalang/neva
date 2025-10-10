@@ -4,6 +4,8 @@
 package typesystem
 
 import (
+	"sort"
+
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
@@ -53,23 +55,55 @@ func (expr Expr) String() string {
 	var str string
 
 	switch expr.Lit.Type() {
-	case EnumLitType:
-		str += "{"
-		for i, el := range expr.Lit.Enum {
-			str += " " + el
-			if i == len(expr.Lit.Enum)-1 {
-				str += " "
-			} else {
-				str += ","
-			}
+	case UnionLitType:
+		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
+		count := 0
+		str += "union {"
+		// collect and sort tags for stable output
+		var tags []string
+		for tag := range expr.Lit.Union {
+			tags = append(tags, tag)
 		}
-		return str + "}"
+		sort.Strings(tags)
+		for _, tag := range tags {
+			tagExpr := expr.Lit.Union[tag]
+			if count == 0 {
+				str += " "
+			}
+			if tagExpr != nil {
+				// check if this is a tag-only union (tag name matches type name)
+				if tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
+					str += tag
+				} else {
+					str += tag + " " + tagExpr.String()
+				}
+			} else {
+				str += tag
+			}
+			if count < len(tags)-1 {
+				str += ", "
+			}
+			count++
+		}
+		if count > 0 {
+			str += " "
+		}
+		str += "}"
+		return str
 	case StructLitType:
+		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
 		str += "{"
 		count := 0
-		for fieldName, fieldExpr := range expr.Lit.Struct {
+		// collect and sort field names for stable output
+		var fields []string
+		for fieldName := range expr.Lit.Struct {
+			fields = append(fields, fieldName)
+		}
+		sort.Strings(fields)
+		for _, fieldName := range fields {
+			fieldExpr := expr.Lit.Struct[fieldName]
 			str += " " + fieldName + " " + fieldExpr.String()
-			if count < len(expr.Lit.Struct)-1 {
+			if count < len(fields)-1 {
 				str += ","
 			} else {
 				str += " "
@@ -77,14 +111,6 @@ func (expr Expr) String() string {
 			count++
 		}
 		return str + "}"
-	case UnionLitType:
-		for i, el := range expr.Lit.Union {
-			str += el.String()
-			if i < len(expr.Lit.Union)-1 {
-				str += " | "
-			}
-		}
-		return str
 	}
 
 	if len(expr.Inst.Args) == 0 {
@@ -113,15 +139,13 @@ type InstExpr struct {
 
 // Literal expression. Only one field must be initialized
 type LitExpr struct {
-	Struct map[string]Expr `json:"struct,omitempty"`
-	Enum   []string        `json:"enum,omitempty"`
-	Union  []Expr          `json:"union,omitempty"`
+	Struct map[string]Expr  `json:"struct,omitempty"`
+	Union  map[string]*Expr `json:"union,omitempty"` // tag -> constraint
 }
 
 func (lit *LitExpr) Empty() bool {
 	return lit == nil ||
 		lit.Struct == nil &&
-			lit.Enum == nil &&
 			lit.Union == nil
 }
 
@@ -132,8 +156,6 @@ func (lit *LitExpr) Type() LiteralType {
 		return EmptyLitType
 	case lit.Struct != nil:
 		return StructLitType
-	case lit.Enum != nil:
-		return EnumLitType
 	case lit.Union != nil:
 		return UnionLitType
 	}
@@ -145,6 +167,5 @@ type LiteralType uint8
 const (
 	EmptyLitType LiteralType = iota
 	StructLitType
-	EnumLitType
 	UnionLitType
 )

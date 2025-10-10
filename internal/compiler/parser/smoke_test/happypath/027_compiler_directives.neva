@@ -18,10 +18,7 @@ pub def C1(sig any) (v string)
 #autoports
 pub def C1_5(sig any) (v string)
 
-#extern(int DoInt, float DoFloat)
-pub def C2(sig any) (v string)
-
-#extern(read, write)
+#extern(read)
 pub def C3<T>(v T) (v T) {
 	#bind(msg)
 	msg Const<string>

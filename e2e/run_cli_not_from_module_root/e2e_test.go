@@ -21,7 +21,7 @@ func Test_UpperThanManifest(t *testing.T) {
 	cmd := exec.Command("neva", "run", "run_cli_not_from_module_root/foo/bar")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"42\n",
@@ -44,7 +44,7 @@ func Test_DownToManifest(t *testing.T) {
 	cmd := exec.Command("neva", "run", "bar")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"42\n",

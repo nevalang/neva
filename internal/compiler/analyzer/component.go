@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"strings"
-
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
@@ -11,33 +9,20 @@ func (a Analyzer) analyzeComponent(
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	runtimeFuncArgs, isRuntimeFunc := component.Directives[compiler.ExternDirective]
-
-	if isRuntimeFunc && len(runtimeFuncArgs) == 0 {
+	externArg, hasExtern := component.Directives[compiler.ExternDirective]
+	if hasExtern && externArg == "" {
 		return src.Component{}, &compiler.Error{
 			Message: "Component that use #extern directive must provide at least one argument",
 			Meta:    &component.Meta,
 		}
 	}
 
-	if len(runtimeFuncArgs) > 1 {
-		for _, runtimeFuncArg := range runtimeFuncArgs {
-			parts := strings.Split(runtimeFuncArg, " ")
-			if len(parts) != 2 {
-				return src.Component{}, &compiler.Error{
-					Message: "Component that use #extern with more than one argument must provide arguments in a form of <type, flow_ref> pairs",
-					Meta:    &component.Meta,
-				}
-			}
-		}
-	}
-
-	resolvedInterface, err := a.analyzeInterface(
+	resolvedIface, err := a.analyzeInterface(
 		component.Interface,
 		scope,
 		analyzeInterfaceParams{
-			allowEmptyInports:  isRuntimeFunc,
-			allowEmptyOutports: isRuntimeFunc,
+			allowEmptyInports:  hasExtern,
+			allowEmptyOutports: hasExtern,
 		},
 	)
 	if err != nil {
@@ -46,7 +31,7 @@ func (a Analyzer) analyzeComponent(
 		}.Wrap(err)
 	}
 
-	if isRuntimeFunc {
+	if hasExtern {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
 				Message: "Component with nodes or network cannot use #extern directive",
@@ -57,8 +42,9 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
-		component.Interface,
+		resolvedIface,
 		component.Nodes,
+		component.Net,
 		scope,
 	)
 	if err != nil {
@@ -76,7 +62,7 @@ func (a Analyzer) analyzeComponent(
 
 	analyzedNet, err := a.analyzeNetwork(
 		component.Net,
-		resolvedInterface,
+		resolvedIface,
 		hasGuard,
 		resolvedNodes,
 		nodesIfaces,
@@ -89,7 +75,7 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	return src.Component{
-		Interface: resolvedInterface,
+		Interface: resolvedIface,
 		Nodes:     resolvedNodes,
 		Net:       analyzedNet,
 		Meta:      component.Meta,

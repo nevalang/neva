@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "wait_group")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	t.Log(string(out))
 

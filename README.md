@@ -50,11 +50,14 @@ Finally, exploring new programming paradigms helps advance the field by discover
 ## 👋 Hello, World!
 
 ```neva
-import { fmt }
+import {
+  fmt
+  runtime
+}
 
 def Main(start any) (stop any) {
 	println fmt.Println<string>
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> 'Hello, World!' -> println
 	println:err -> panic
@@ -64,10 +67,10 @@ def Main(start any) (stop any) {
 
 What's happening here:
 
-- `import { fmt }` loads fmt package for printing
+- `import {...}` loads `fmt` package for printing and `runtime` package for panicing
 - `def Main(start any) (stop any) {...}` defines component with input port start and output port stop, both of type any (it's safe since they used as signals)
 - `println fmt.Println<string>` defines a node, instance of fmt.Println
-- `panic Panic` defines another node to crash the program
+- `panic runtime.Panic` defines another node to crash the program
 - `:start -> 'Hello, World!' -> println` defines a connection that sends the string to println when the program starts
 - `println:err -> panic` handles the possible error by crashing the program
 - `println:res -> :stop` terminates the program after successful printing

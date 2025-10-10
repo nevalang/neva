@@ -14,6 +14,6 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		string(out),
-		"main/main.neva:5:4: All node's outports are unused: sub2\n",
+		"main/main.neva:8:4: All node's outports are unused: sub2\n",
 	)
 }

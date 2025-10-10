@@ -37,7 +37,8 @@ func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 				// if !errOut.Send(ctx, errFromErr(err)) {
 				// 	return
 				// }
-				continue
+				// continue
+				panic(err)
 			}
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(input)) {

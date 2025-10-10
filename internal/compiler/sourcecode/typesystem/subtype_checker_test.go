@@ -25,14 +25,14 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		// Instantiations
 		//  kinds
 		{
-			name:      "subtype inst, supertype lit (not union (enum))", // int <: {}
+			name:      "subtype inst, supertype tag-only union", // int is not a subtype of Union{foo, bar}
 			subType:   h.Inst("int"),
-			superType: h.Enum(),
+			superType: h.Union(map[string]*ts.Expr{"foo": nil, "bar": nil}),
 			wantErr:   ts.ErrDiffKinds,
 		},
 		{
-			name:      "supertype inst, subtype lit (not union)", // {} <: int
-			subType:   h.Enum(),
+			name:      "supertype inst, subtype tag-only union", // Union{foo, bar} is not a subtype of int
+			subType:   h.Union(map[string]*ts.Expr{"foo": nil, "bar": nil}),
 			superType: h.Inst("int"),
 			wantErr:   ts.ErrDiffKinds,
 		},
@@ -100,31 +100,38 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		},
 		// args compatibility
 		{
-			name:    "insts, one subtype's subtype incompat", // list<str> <: list<int|str>
+			name:    "insts, one subtype's subtype incompat", // list<str> is not a subtype of list<union { Int int, String string }>
 			subType: h.Inst("list", h.Inst("string")),
 			superType: h.Inst(
 				"list",
-				h.Union(h.Inst("string"), h.Inst("int")),
+				h.Union(map[string]*ts.Expr{
+					"string": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}},
+					},
+					"int": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+				}),
 			),
 			subtypeTrace:   ts.Trace{},
 			supertypeTrace: ts.Trace{},
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(t, nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
-				mtmr.ShouldTerminate(ts.NewTrace(&t, core.EntityRef{Name: "list"}), nil).Return(false, nil)
+				mtmr.ShouldTerminate(gomock.Any(), nil).Return(false, nil).AnyTimes()
 			},
-			wantErr: nil,
+			wantErr: ts.ErrArgNotSubtype,
 		},
 		{
-			name: "insts, supertype subtype incompat", // list<str|int> <: list<int>
+			name: "insts, supertype subtype incompat", // list<union { string string, int int }> is not a subtype of list<int>
 			subType: h.Inst(
 				"list",
-				h.Union(
-					h.Inst("string"),
-					h.Inst("int"),
-				),
+				h.Union(map[string]*ts.Expr{
+					"string": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}},
+					},
+					"int": {
+						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
+					},
+				}),
 			),
 			superType: h.Inst("list", h.Inst("int")),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
@@ -133,25 +140,6 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 				mtmr.ShouldTerminate(t, nil).Return(false, nil)
 			},
 			wantErr: ts.ErrArgNotSubtype,
-		},
-		// enum
-		{
-			name:      "subtype and supertype are enums, subtype is bigger",
-			subType:   h.Enum("a", "b"),
-			superType: h.Enum("a"),
-			wantErr:   ts.ErrBigEnum,
-		},
-		{
-			name:      "subtype and supertype are enums, subtype not bigger but contain diff el",
-			subType:   h.Enum("a", "d"),
-			superType: h.Enum("a", "b", "c"),
-			wantErr:   ts.ErrEnumEl,
-		},
-		{
-			name:      "subtype and supertype enums, subtype not bigger and all reqired els are the same",
-			subType:   h.Enum("a", "b"),
-			superType: h.Enum("a", "b", "c"),
-			wantErr:   nil,
 		},
 		// struct
 		{
@@ -194,68 +182,89 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			},
 			wantErr: ts.ErrStructField,
 		},
-		// { // { a x, b {} }, { a x }
-		// 	name: "subtype and supertype are both structs, subtype has all supertype fields, all fields compatible",
-		// 	subType: h.Struct(map[string]ts.Expr{
-		// 		"a": h.Inst("x"),
-		// 		"b": {},
-		// 	}),
-		// 	superType: h.Struct(map[string]ts.Expr{
-		// 		"a": h.Inst("x"),
-		// 	}),
-		// 	subtypeTrace:   ts.Trace{},
-		// 	supertypeTrace: ts.Trace{},
-		// 	terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-		// 		t := ts.Trace{}
-		// 		mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(2)
-		// 	},
-		// 	wantErr: nil,
-		// },
-		// UNION
-		{ // x a|b
-			name:      "expr inst, supertype union. expr incompat with all els",
-			subType:   h.Inst("x"),
-			superType: h.Union(h.Inst("a"), h.Inst("b")),
-			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(4) // x, a, x, b
-			},
-			wantErr: ts.ErrUnionArg,
+		// tag-only unions
+		{
+			name:      "subtype and supertype are unions, subtype is bigger",
+			subType:   h.Union(map[string]*ts.Expr{"a": nil, "b": nil}),
+			superType: h.Union(map[string]*ts.Expr{"a": nil}),
+			wantErr:   ts.ErrUnionsLen,
 		},
 		{
-			name:      "subtype not union, supertype is. subtype is compat with one el",
-			subType:   h.Inst("a"),
-			superType: h.Union(h.Inst("a"), h.Inst("b")),
+			name:      "subtype and supertype are unions, subtype not bigger but contain diff el",
+			subType:   h.Union(map[string]*ts.Expr{"a": nil, "d": nil}), // d doesn't fit
+			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
-				mtmr.ShouldTerminate(ts.Trace{}, nil).Return(false, nil).Times(2)
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+			},
+			wantErr: ts.ErrUnions,
+		},
+		{
+			name:      "subtype and supertype unions, subtype not bigger and all reqired els are the same",
+			subType:   h.Union(map[string]*ts.Expr{"a": nil, "b": nil}),
+			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
+			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: nil,
 		},
 		{
 			name:      "subtype and supertype are unions, subtype has more els",
-			subType:   h.Union(h.Inst("a"), h.Inst("b"), h.Inst("c")),
-			superType: h.Union(h.Inst("a"), h.Inst("b")),
+			subType:   h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
+			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil}),
 			wantErr:   ts.ErrUnionsLen,
 		},
 		{
 			name:      "subtype and supertype are unions, same size but subtype has incompat el",
-			subType:   h.Union(h.Inst("c"), h.Inst("a"), h.Inst("x")),
-			superType: h.Union(h.Inst("a"), h.Inst("b"), h.Inst("c")),
+			subType:   h.Union(map[string]*ts.Expr{"c": nil, "a": nil, "x": nil}),
+			superType: h.Union(map[string]*ts.Expr{"a": nil, "b": nil, "c": nil}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(14)
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: ts.ErrUnions,
 		},
 		{
 			name:      "subtype and supertype are unions, expr is less and compat",
-			subType:   h.Union(h.Inst("c"), h.Inst("b")),
-			superType: h.Union(h.Inst("a"), h.Inst("c"), h.Inst("b")),
+			subType:   h.Union(map[string]*ts.Expr{"c": nil, "b": nil}),
+			superType: h.Union(map[string]*ts.Expr{"a": nil, "c": nil, "b": nil}),
 			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
 				t := ts.Trace{}
-				mtmr.ShouldTerminate(t, nil).Return(false, nil).Times(10) // c, a, c, c, b, a, b, c, b, c
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
 			},
 			wantErr: nil,
+		},
+		// unions with type expressions
+		{ // union {Int int} <: union {Int int, Str string}
+			name: "two unions, one 1 tag, second 2, intersection is compatible",
+			subType: h.Union(map[string]*ts.Expr{
+				"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			}),
+			superType: h.Union(map[string]*ts.Expr{
+				"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+				"Str": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			}),
+			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+			},
+			wantErr: nil,
+		},
+		{ // union {Int string} <: union {Int int, Str string}
+			name: "two unions, one 1 tag, second 2, intersection is not compatible",
+			subType: h.Union(map[string]*ts.Expr{
+				"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			}),
+			superType: h.Union(map[string]*ts.Expr{
+				"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+				"Str": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			}),
+			terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+				t := ts.Trace{}
+				mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+			},
+			wantErr: ts.ErrUnions,
 		},
 	}
 

@@ -19,7 +19,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "push_to_list")
 
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"[320,420,100,-100,0,5,69]\n",

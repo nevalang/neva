@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 // top-level comment 1
 def Main(start any) (stop any) {
@@ -6,7 +9,7 @@ def Main(start any) (stop any) {
 	// comment inside nodes 1
 	fmt.Println<any>
 	// comment inside nodes 2
-	panic Panic
+	panic runtime.Panic
 	---
 	// comment inside def 2
 	:start -> println:data

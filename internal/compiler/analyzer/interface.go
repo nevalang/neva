@@ -112,7 +112,7 @@ func (a Analyzer) analyzePorts(
 
 func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *compiler.Error) {
 	// TODO https://github.com/nevalang/neva/issues/507
-	resolvedDef, err := a.analyzeTypeDef(
+	resolvedDef, err := a.analyzeType(
 		ts.Def{
 			Params:   params,
 			BodyExpr: &port.TypeExpr,

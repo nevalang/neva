@@ -1,10 +1,13 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 const l list<int> = [-215]
 
 def Main(start any) (stop any) {
 	fmt.Println<any>
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> $l -> println:data
 	println:res -> :stop

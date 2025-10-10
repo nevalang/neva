@@ -1,7 +1,13 @@
-import { http, fmt }
+import {
+	fmt
+	http
+	runtime
+}
 
 def Main(start any) (stop any) {
-	App, fmt.Println, Panic // `Panic` will terminate the program
+	app App
+	println fmt.Println
+	panic runtime.Panic // terminates the program
 	---
 	:start -> app:sig
 	[app:err, println:err] -> panic // we only handle `:err` at this lvl
@@ -10,9 +16,10 @@ def Main(start any) (stop any) {
 }
 
 def App(sig any) (data string, err error) {
-	http.Get? // '?' implicitly sends `:err` downstream
+	http_get http.Get? // '?' implicitly sends `:err` downstream
 	---
-	:sig -> 'definitely not a valid URL' -> get
-	get:res -> .body -> :data
-	// no need for explicit error handling thanks to `?`
+	:sig -> 'definitely not a valid URL' -> http_get
+	// http_get output handled like it only has one outport
+	// because http_get:err is handled by the ? operator
+	http_get -> .body -> :data 
 }

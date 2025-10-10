@@ -281,8 +281,8 @@ func TestDesugarNetwork(t *testing.T) {
 				nodesToInsert: map[string]src.Node{
 					"__field__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Field"},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
@@ -343,6 +343,33 @@ func TestDesugarNetwork(t *testing.T) {
 					},
 				},
 			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				mock.
+					Entity(core.EntityRef{Name: "Add"}).
+					// In reality Add is overloaded, but for for now we only test simplified case with one version.
+					Return(
+						src.Entity{
+							Kind: src.ComponentEntity,
+							Component: []src.Component{
+								{
+									Interface: src.Interface{
+										IO: src.IO{
+											In: map[string]src.Port{
+												"left":  {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+												"right": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+											Out: map[string]src.Port{
+												"res": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+										},
+									},
+								},
+							},
+						},
+						core.Location{},
+						nil,
+					)
+			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
@@ -385,19 +412,13 @@ func TestDesugarNetwork(t *testing.T) {
 							Pkg:  "builtin",
 							Name: "Add",
 						},
-						TypeArgs: []ts.Expr{
-							{
-								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Name: "int"},
-								},
-							},
-						},
+						TypeArgs:      nil,
+						OverloadIndex: compiler.Pointer(0),
 					},
 				},
 				constsToInsert: map[string]src.Const{},
 			},
 		},
-
 		{
 			// node1:x -> switch {
 			//     node2:y -> node3:z
@@ -589,8 +610,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"foo"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "foo",
 						},
 					},
 				},
@@ -691,8 +712,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"c"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "c",
 						},
 					},
 				},
@@ -785,8 +806,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
@@ -855,6 +876,33 @@ func TestDesugarNetwork(t *testing.T) {
 			nodes: map[string]src.Node{
 				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
 			},
+			mockScope: func(mock *MockScopeMockRecorder) {
+				mock.
+					Entity(core.EntityRef{Name: "Add"}).
+					// In reality Add is overloaded, but for for now we only test simplified case with one version.
+					Return(
+						src.Entity{
+							Kind: src.ComponentEntity,
+							Component: []src.Component{
+								{
+									Interface: src.Interface{
+										IO: src.IO{
+											In: map[string]src.Port{
+												"left":  {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+												"right": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+											Out: map[string]src.Port{
+												"res": {TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
+											},
+										},
+									},
+								},
+							},
+						},
+						core.Location{},
+						nil,
+					)
+			},
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
@@ -893,14 +941,9 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				nodesToInsert: map[string]src.Node{
 					"__add__1": {
-						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Add"},
-						TypeArgs: []ts.Expr{
-							{
-								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Name: "int"},
-								},
-							},
-						},
+						EntityRef:     core.EntityRef{Pkg: "builtin", Name: "Add"},
+						TypeArgs:      nil,
+						OverloadIndex: compiler.Pointer(0),
 					},
 					"__new__1": {
 						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
@@ -911,8 +954,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__1"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__1",
 						},
 					},
 					"__new__2": {
@@ -924,8 +967,8 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive][]string{
-							compiler.BindDirective: {"__const__2"},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__const__2",
 						},
 					},
 				},
@@ -948,6 +991,199 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 						Value: src.ConstValue{
 							Message: &src.MsgLiteral{Int: compiler.Pointer(3)},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "union_sender_tag_only",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{
+								Union: &src.UnionSender{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+								},
+							},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								PortAddr: &src.PortAddr{
+									Node: "__new__1",
+									Port: "res",
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__new__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "New",
+						},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "Input"},
+								},
+							},
+						},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__union_const__1",
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__union_const__1": {
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{
+								Union: &src.UnionLiteral{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "union_sender_with_value",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{
+								Union: &src.UnionSender{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+									Data: &src.ConnectionSender{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
+												},
+											},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+											},
+										},
+									},
+								},
+							},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"foo": {EntityRef: core.EntityRef{Name: "Foo"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "res",
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{
+								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								PortAddr: &src.PortAddr{
+									Node: "__new__1",
+									Port: "res",
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "tag",
+								},
+							}},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{{
+								Const: &src.Const{
+									TypeExpr: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "int"},
+										},
+									},
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+									},
+								},
+							}},
+							Receivers: []src.ConnectionReceiver{{
+								PortAddr: &src.PortAddr{
+									Node: "__union__1",
+									Port: "data",
+								},
+							}},
+						},
+					},
+				},
+				nodesToInsert: map[string]src.Node{
+					"__new__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "New",
+						},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Pkg: "builtin", Name: "str"},
+								},
+							},
+						},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__union_tag__1",
+						},
+					},
+					"__union__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "UnionWrap",
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{
+					"__union_tag__1": {
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{
+								Str: compiler.Pointer("Int"),
+							},
 						},
 					},
 				},

@@ -7,8 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e/errors_must",
-      "args": ["run", "--trace", "main"]
+      "cwd": "${workspaceFolder}/e2e/compare_ints",
+      "args": ["run", "main"]
     },
     {
       "name": "DEBUG CODEGEN",

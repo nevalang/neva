@@ -1,9 +1,14 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 const lst list<int> = [4, 123, 22, 1121, 215]
 
 def Main(start any) (stop any) {
-	fmt.Println, Len<list<int>>, Panic
+	len Len
+	println fmt.Println<any>
+	panic runtime.Panic
 	---
 	:start -> $lst -> len -> println:data
 	println:res -> :stop

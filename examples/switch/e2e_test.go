@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "switch")
 	cmd.Stdin = strings.NewReader("Alice\n")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Enter the name: ALICE\n", string(out))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
@@ -29,7 +29,7 @@ func Test(t *testing.T) {
 	cmd = exec.Command("neva", "run", "switch")
 	cmd.Stdin = strings.NewReader("Bob\n")
 	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Enter the name: bob\n", string(out))
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
@@ -37,6 +37,6 @@ func Test(t *testing.T) {
 	cmd = exec.Command("neva", "run", "switch")
 	cmd.Stdin = strings.NewReader("Charlie\n")
 	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(t, "Enter the name: panic: Charlie\n", string(out))
 }

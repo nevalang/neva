@@ -10,7 +10,7 @@ import (
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
 		"50\n30\n20\n100\n",

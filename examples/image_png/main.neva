@@ -1,4 +1,4 @@
-import { io, image, fmt }
+import { io, image, fmt, runtime }
 
 def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
@@ -32,7 +32,7 @@ def Main(start any) (stop any) {
 	image.New, image.Encode
 	NewPixel, NewColor, NewStream,
 	io.WriteAll, printErr fmt.Println
-	panic Panic
+	panic runtime.Panic
 	---
 	:start -> [
 		0 -> [newColor:r, newColor:g, newColor:b, newColor:a],

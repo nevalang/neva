@@ -61,11 +61,18 @@ func (Desugarer) handleNode(
 		return extraConnections, nil
 	}
 
-	// everything after this is only for component nodes
-	component := nodeEntity.Component
+	// everything after this is only for components nodes
+	components := nodeEntity.Component
+
+	var version src.Component
+	if len(components) == 1 {
+		version = components[0]
+	} else {
+		version = components[*node.OverloadIndex]
+	}
 
 	// only if node component uses #autoports
-	_, hasAutportsDirectory := component.Directives[compiler.AutoportsDirective]
+	_, hasAutportsDirectory := version.Directives[compiler.AutoportsDirective]
 
 	// autoports and anonymous dependency are everything we need to desugar
 	if !hasAutportsDirectory && len(node.DIArgs) != 1 {
@@ -78,7 +85,7 @@ func (Desugarer) handleNode(
 	if hasAnonDep { // this node has anonymous dependency injected
 		// find name of the dependency in this node's sub-nodes
 		var depName string
-		for depParamName, depParam := range component.Nodes {
+		for depParamName, depParam := range version.Nodes {
 			kind, err := scope.GetEntityKind(depParam.EntityRef)
 			if err != nil {
 				panic(err)
@@ -151,7 +158,7 @@ func (Desugarer) handleNode(
 
 	virtualEntities[virtualComponentName] = src.Entity{
 		Kind:      src.ComponentEntity,
-		Component: virtualComponent,
+		Component: []src.Component{virtualComponent},
 	}
 
 	// TODO: figure out how does it work and why doesn't it use virtual component

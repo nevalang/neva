@@ -1,4 +1,7 @@
-import { fmt }
+import {
+    fmt
+    runtime
+}
 
 type NumsStruct struct {
     l list<int>
@@ -16,7 +19,7 @@ const numsStruct NumsStruct = {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println, Panic
+    fmt.Println, runtime.Panic
     ---
     :start -> $numsStruct -> println:data
     println:res -> :stop
