@@ -6,10 +6,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// UnionWrapV2 wraps with extra signal
-type UnionWrapV2 struct{}
+// unionWrapV2 wraps with extra signal
+type unionWrapV2 struct{}
 
-func (UnionWrapV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (unionWrapV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	tag := cfg.Str()
 
 	dataIn, err := io.In.Single("data")

@@ -113,5 +113,8 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"accumulator": accumulator{},
 		"errors_new":  errorsNew{},
+
+		"union_wrap_v1": unionWrapV1{},
+		"union_wrap_v2": unionWrapV2{},
 	}
 }
