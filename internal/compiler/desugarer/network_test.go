@@ -1033,34 +1033,19 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 						},
 					},
-					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{{
-								Const: &src.Const{
-									Value: src.ConstValue{
-										Message: &src.MsgLiteral{
-											Union: &src.UnionLiteral{
-												EntityRef: core.EntityRef{Name: "Input"},
-												Tag:       "Int",
-											},
-										},
-									},
-								},
-							}},
-							Receivers: []src.ConnectionReceiver{{
-								PortAddr: &src.PortAddr{
-									Node: "__new__1",
-									Port: "data",
-								},
-							}},
-						},
-					},
 				},
 				nodesToInsert: map[string]src.Node{
 					"__new__1": {
 						EntityRef: core.EntityRef{
 							Pkg:  "builtin",
 							Name: "New",
+						},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Name: "Input"},
+								},
+							},
 						},
 						Directives: map[src.Directive]string{
 							compiler.BindDirective: "__union_const__1",
@@ -1133,12 +1118,9 @@ func TestDesugarNetwork(t *testing.T) {
 					{
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{{
-								Const: &src.Const{
-									Value: src.ConstValue{
-										Message: &src.MsgLiteral{
-											Str: compiler.Pointer("Int"),
-										},
-									},
+								PortAddr: &src.PortAddr{
+									Node: "__new__1",
+									Port: "res",
 								},
 							}},
 							Receivers: []src.ConnectionReceiver{{
@@ -1173,6 +1155,22 @@ func TestDesugarNetwork(t *testing.T) {
 					},
 				},
 				nodesToInsert: map[string]src.Node{
+					"__new__1": {
+						EntityRef: core.EntityRef{
+							Pkg:  "builtin",
+							Name: "New",
+						},
+						TypeArgs: src.TypeArgs{
+							{
+								Inst: &ts.InstExpr{
+									Ref: core.EntityRef{Pkg: "builtin", Name: "str"},
+								},
+							},
+						},
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__union_tag__1",
+						},
+					},
 					"__union__1": {
 						EntityRef: core.EntityRef{
 							Pkg:  "builtin",
