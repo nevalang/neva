@@ -272,7 +272,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					v.Validate(t2).Return(errTest) // we make t2 invalid and thus unresolvable
 				},
 				prepareTerminator: func(t *MockrecursionTerminatorMockRecorder) {
-					t.ShouldTerminate(gomock.Any(), gomock.Any()).AnyTimes().Return(false, nil)
+					t.ShouldTerminate(
+						gomock.Any(),
+						gomock.Any(),
+					).AnyTimes().Return(false, nil)
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
