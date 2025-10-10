@@ -1,4 +1,7 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 // Here we learn how to read struct field
 // by using builtin def with compiler directive.

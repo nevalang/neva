@@ -1,4 +1,7 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 const x float = 42
 

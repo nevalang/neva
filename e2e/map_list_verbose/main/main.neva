@@ -1,4 +1,7 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 // stream list of ints, decrement each, build new list and print it
 
