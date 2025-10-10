@@ -1,4 +1,7 @@
-import { fmt, runtime }
+import {
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
     s2l StreamToList
