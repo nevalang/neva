@@ -17,4 +17,3 @@ pub type stream<T> struct {
     idx int
     last bool
 }
-
