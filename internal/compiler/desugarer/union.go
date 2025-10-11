@@ -123,7 +123,7 @@ func (d *Desugarer) handleValueUnionSender(
 	nodesToInsert[nodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
-			Name: "UnionWrap",
+			Name: "UnionWrapV1",
 			Meta: locOnlyMeta,
 		},
 		Meta: union.Meta,
