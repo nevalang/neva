@@ -69,6 +69,10 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				}
 			}
 
+			if u, ok := dataMsg.(runtime.UnionMsg); ok {
+				dataMsg = u.Data()
+			}
+
 			if matchIdx != -1 {
 				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
 					return
