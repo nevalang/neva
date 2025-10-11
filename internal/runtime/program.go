@@ -178,10 +178,8 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 	success := true
 	resultChan := make(chan bool, len(a.chans))
 
-	wg.Add(len(a.chans))
 	for idx := range a.chans {
-		go func(idx int) {
-			defer wg.Done()
+		wg.Go(func() {
 			select {
 			case <-ctx.Done():
 				success = false
@@ -199,7 +197,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 				)
 				resultChan <- f(idx, msg)
 			}
-		}(idx)
+		})
 	}
 
 	go func() {
@@ -432,9 +430,8 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	var wg sync.WaitGroup
 	success := true
 
-	wg.Add(len(a.slots))
 	for idx := range a.slots {
-		go func(idx int) {
+		wg.Go(func() {
 			select {
 			case <-ctx.Done():
 				success = false
@@ -446,8 +443,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 				}
 				a.interceptor.Sent(slotAddr, msg)
 			}
-			wg.Done()
-		}(idx)
+		})
 	}
 
 	wg.Wait()
