@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/neva",
-      "cwd": "${workspaceFolder}/e2e/compare_ints",
+      "cwd": "${workspaceFolder}/e2e/union_wrapping_test",
       "args": ["run", "main"]
     },
     {

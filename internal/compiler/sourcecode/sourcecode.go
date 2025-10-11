@@ -324,7 +324,7 @@ type ConnectionSender struct {
 type UnionSender struct {
 	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
 	Tag       string            `json:"tag,omitempty"`
-	Data      *ConnectionSender `json:"data,omitempty"` // TODO rename to WrappedSender
+	Data      *ConnectionSender `json:"data,omitempty"`
 	Meta      core.Meta         `json:"meta,omitempty"`
 }
 
