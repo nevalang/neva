@@ -1,12 +1,15 @@
 import {
     fmt
     errors
+    runtime
 }
 
 def Main(start any) (stop any) {
     h Handler
     ---
-    :start -> { MaybeInt::None -> h -> :stop }
+    :start -> {
+        MaybeInt::Int(42) -> h -> :stop
+    }
 }
 
 type MaybeInt union {
@@ -14,8 +17,15 @@ type MaybeInt union {
     None
 }
 
-def Handler(data MaybeInt) (res MaybeInt) {
-    must_println errors.Must<MaybeInt, MaybeInt>{fmt.Println}
+// Unwraps the int, prints it and sends further.
+def Handler(data MaybeInt) (res int) {
+    must_println errors.Must<int, int>{
+        fmt.Println<int>
+    }
+    panic runtime.Panic
     ---
-    :data -> must_println -> :res
+    :data -> switch {
+        MaybeInt::Int -> must_println -> :res
+        _ -> panic
+    }
 }

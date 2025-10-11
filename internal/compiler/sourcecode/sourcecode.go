@@ -291,10 +291,10 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiver struct { // TODO rename to Receiver
+type ConnectionReceiver struct {
 	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
-	DeferredConnection *Connection `json:"deferredConnection,omitempty"` // TODO rename to Defer
-	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`  // TODO rename to Chain
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
 	Switch             *Switch     `json:"switch,omitempty"`
 	Meta               core.Meta   `json:"meta,omitempty"`
 }

@@ -14,7 +14,7 @@ func Test(t *testing.T) {
 	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
-		"None\n",
+		"42\n",
 		string(out),
 	)
 
