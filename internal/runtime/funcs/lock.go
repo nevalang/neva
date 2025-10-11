@@ -33,15 +33,12 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				dataOk, sigOk bool
 			)
 
-			wg.Add(2)
-			go func() {
+			wg.Go(func() {
 				data, dataOk = dataIn.Receive(ctx)
-				wg.Done()
-			}()
-			go func() {
+			})
+			wg.Go(func() {
 				_, sigOk = sigIn.Receive(ctx)
-				wg.Done()
-			}()
+			})
 			wg.Wait()
 
 			if !dataOk || !sigOk {

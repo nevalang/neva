@@ -36,17 +36,14 @@ func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			var dataOk, ifOk bool
 
 			var wg sync.WaitGroup
-			wg.Add(2)
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				dataMsg, dataOk = dataIn.Receive(ctx)
-			}()
+			})
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				ifMsg, ifOk = ifIn.Receive(ctx)
-			}()
+			})
 
 			wg.Wait()
 
