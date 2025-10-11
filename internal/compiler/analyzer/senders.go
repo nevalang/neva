@@ -249,16 +249,15 @@ func (a Analyzer) analyzeSender(
 				// in pattern matching, the switch runtime unwraps the union
 				// so the type that flows to the receiver is the tag's data type
 				return &sender, memberTypeExpr, nil
-			} else {
-				// if tag has type-expr and it's not pattern matching, then this union-sender must wrap another sender
-				return nil, nil, &compiler.Error{
-					Message: fmt.Sprintf(
-						"tag %q requires a wrapped value of type %v",
-						sender.Union.Tag,
-						memberTypeExpr,
-					),
-					Meta: &sender.Meta,
-				}
+			}
+			// if tag has type-expr and it's not pattern matching, then this union-sender must wrap another sender
+			return nil, nil, &compiler.Error{
+				Message: fmt.Sprintf(
+					"tag %q requires a wrapped value of type %v",
+					sender.Union.Tag,
+					memberTypeExpr,
+				),
+				Meta: &sender.Meta,
 			}
 		}
 
