@@ -134,64 +134,87 @@ func (a Analyzer) analyzeReceiver(
 }
 
 func (a Analyzer) analyzeSwitchReceiver(
-	receiver src.ConnectionReceiver,
+	receiver src.ConnectionReceiver, // switch receiver
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
-	analyzedSenders []src.ConnectionSender,
-	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender, // input senders for switch
+	resolvedSwitchInputTypes []*ts.Expr, // types of input senders for switch
 ) ([]src.NormalConnection, []src.ConnectionReceiver, *compiler.Error) {
 	analyzedSwitchConns := make([]src.NormalConnection, 0, len(receiver.Switch.Cases))
 
-	for _, switchConn := range receiver.Switch.Cases {
+	for _, switchCaseBranch := range receiver.Switch.Cases {
 		// all option-senders must be subtypes of their branch-receivers
-		analyzedSwitchConn, err := a.analyzeNormalConnection(
-			&switchConn,
+		analyzedSwitchBranch, err := a.analyzeNormalConnection(
+			&switchCaseBranch,
 			iface,
 			nodes,
 			nodesIfaces,
 			scope,
 			nodesUsage,
 			nil,
+			true, // isPatternMatchingBranch = true for switch
 		)
 		if err != nil {
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf("Invalid switch case: %v", err),
-				Meta:    &switchConn.Meta,
+				Meta:    &switchCaseBranch.Meta,
 			}
 		}
 
-		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchConn)
+		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchBranch)
 
-		// all incoming senders must be subtypes of each option-sender
-		// (both incoming senders and switch's option-senders might be slice)
-		for _, switchSender := range switchConn.Senders {
-			_, switchSenderType, _, err := a.getResolvedSenderType(
-				switchSender,
-				iface,
-				nodes,
-				nodesIfaces,
-				scope,
-				nil,
-				nodesUsage,
-			)
-			if err != nil {
-				return nil, nil, &compiler.Error{
-					Message: fmt.Sprintf("Invalid switch case sender: %v", err),
-					Meta:    &switchSender.Meta,
+		// all switch branch senders must be compatible with switch input senders
+		for _, branchSender := range switchCaseBranch.Senders {
+			var branchSenderType ts.Expr
+			if branchSender.Union != nil {
+				// for pattern matching compatibility, compare against the union type itself
+				typeDef, _, err := scope.GetType(branchSender.Union.EntityRef)
+				if err != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", err),
+						Meta:    &branchSender.Meta,
+					}
 				}
+				resolvedUnion, analyzeErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
+				if analyzeErr != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", analyzeErr),
+						Meta:    &branchSender.Meta,
+					}
+				}
+				branchSenderType = resolvedUnion
+			} else {
+				_, resolvedType, _, err := a.getResolvedSenderType(
+					branchSender,
+					iface,
+					nodes,
+					nodesIfaces,
+					scope,
+					nil,
+					nodesUsage,
+					false,
+				)
+				if err != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: %v", err),
+						Meta:    &branchSender.Meta,
+					}
+				}
+
+				branchSenderType = resolvedType
 			}
 
-			for i, resolvedSenderType := range resolvedSenderTypes {
-				if err := a.resolver.IsSubtypeOf(*resolvedSenderType, switchSenderType, scope); err != nil {
+			for i, resolverSwitchInputType := range resolvedSwitchInputTypes {
+				if err := a.resolver.IsSubtypeOf(*resolverSwitchInputType, branchSenderType, scope); err != nil {
 					return nil, nil, &compiler.Error{
 						Message: fmt.Sprintf(
 							"Incompatible types in switch: %v -> %v: %v",
-							analyzedSenders[i], switchSender, err.Error(),
+							analyzedSenders[i], branchSender, err.Error(),
 						),
-						Meta: &switchSender.Meta,
+						Meta: &branchSender.Meta,
 					}
 				}
 			}
@@ -212,7 +235,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
-		resolvedSenderTypes,
+		resolvedSwitchInputTypes,
 		analyzedSenders,
 	)
 	if err != nil {
