@@ -146,6 +146,15 @@ func (a Analyzer) analyzeSwitchReceiver(
 	analyzedSwitchConns := make([]src.NormalConnection, 0, len(receiver.Switch.Cases))
 
 	for _, switchCaseBranch := range receiver.Switch.Cases {
+		// step 1: analyze each branch as a normal connection in pattern-matching mode
+		// - inside a branch, union patterns with typed members must behave as payload types
+		//   (e.g. `foo::bar -> yyy` where `bar` carries `int` makes the branch sender `int`),
+		//   because runtime unwraps the matched variant before forwarding to the branch receiver.
+		// - this is why we pass `isPatternMatchingBranch = true` here.
+		//
+		// note: this step validates branch-internal sender->receiver compatibility only.
+		// the global compatibility of switch inputs vs branch patterns is handled below.
+		//
 		// all option-senders must be subtypes of their branch-receivers
 		analyzedSwitchBranch, err := a.analyzeNormalConnection(
 			&switchCaseBranch,
@@ -166,6 +175,17 @@ func (a Analyzer) analyzeSwitchReceiver(
 
 		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchBranch)
 
+		// step 2: ensure each switch input sender is compatible with each branch pattern sender
+		//
+		// important: union patterns must be compared as the union type (not payload).
+		// - calling `getResolvedSenderType` with isPattern=false would reject typed tag-only patterns
+		//   (it demands wrapped data for typed members), which is incorrect for pattern syntax.
+		// - calling it with isPattern=true would yield the payload type (e.g. `int`) which is
+		//   also incorrect for matchability (we need to compare incoming `foo` against pattern `foo`,
+		//   not `int`).
+		// therefore we resolve union patterns to the union type manually here; for non-union senders
+		// the flag is irrelevant, so we safely call the generic resolver with `false`.
+		//
 		// all switch branch senders must be compatible with switch input senders
 		for _, branchSender := range switchCaseBranch.Senders {
 			var branchSenderType ts.Expr
