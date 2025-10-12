@@ -1337,7 +1337,7 @@ func (a Analyzer) resolvePortName(
 	portName string,
 ) string {
 	// TODO figure out if this func should return error or panic, not just empty string
-	
+
 	if portName != "" {
 		return portName
 	}

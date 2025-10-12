@@ -300,8 +300,8 @@ type ConnectionReceiver struct {
 }
 
 type Switch struct {
-	Cases   []NormalConnection   `json:"case,omitempty"`
-	Default []ConnectionReceiver `json:"default,omitempty"`
+	Cases   []NormalConnection   `json:"cases,omitempty"`   // TODO rename to CaseBranches
+	Default []ConnectionReceiver `json:"default,omitempty"` // TODO rename to DefaultBranch
 	Meta    core.Meta            `json:"meta,omitempty"`
 }
 

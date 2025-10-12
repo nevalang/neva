@@ -17,7 +17,7 @@ func (a Analyzer) analyzeSenders(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
-	isPatternMatching bool,
+	isPatternSenders bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -31,7 +31,7 @@ func (a Analyzer) analyzeSenders(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSenders,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -59,7 +59,7 @@ func (a Analyzer) analyzeSender(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
-	isPatternMatching bool,
+	isPatternSender bool,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
@@ -74,8 +74,6 @@ func (a Analyzer) analyzeSender(
 			Meta:    &sender.Meta,
 		}
 	}
-
-	// TODO support unary
 
 	if sender.Range != nil && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
@@ -101,7 +99,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -129,7 +127,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -146,7 +144,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -166,7 +164,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, err
@@ -180,7 +178,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, err
@@ -245,7 +243,7 @@ func (a Analyzer) analyzeSender(
 		// Sometimes union member has type expr but union sender doesn't wrap another sender
 		// This is allowed in pattern matching contexts (like switch cases), but not in other contexts
 		if sender.Union.Data == nil {
-			if isPatternMatching {
+			if isPatternSender {
 				// in pattern matching, the switch runtime unwraps the union
 				// so the type that flows to the receiver is the tag's data type
 				return &sender, memberTypeExpr, nil
@@ -270,7 +268,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternMatching,
+			isPatternSender,
 		)
 		if analyzeWrappedErr != nil {
 			return nil, nil, analyzeWrappedErr
@@ -300,7 +298,7 @@ func (a Analyzer) analyzeSender(
 		}, &unionTypeExpr, nil // return type of the union, not specific tag
 	}
 
-	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getResolvedSenderTypeWithContext(
+	resolvedSenderAddr, resolvedSenderType, isSenderArr, err := a.getResolvedSenderType(
 		sender,
 		iface,
 		nodes,
@@ -308,7 +306,7 @@ func (a Analyzer) analyzeSender(
 		scope,
 		prevChainLink,
 		nodesUsage,
-		isPatternMatching,
+		isPatternSender,
 	)
 	if err != nil {
 		return nil, nil, compiler.Error{
