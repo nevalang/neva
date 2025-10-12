@@ -117,7 +117,7 @@ func (d *Desugarer) handleValueUnionSender(
 		Meta: union.Meta,
 	}
 
-	// create union wrapper node
+	// create union wrapper node (v1) and bind tag via directive so runtime cfg is set
 	nodeName := fmt.Sprintf("__union__%d", d.virtualConstCount)
 	locOnlyMeta := core.Meta{Location: union.Meta.Location}
 	nodesToInsert[nodeName] = src.Node{
@@ -126,24 +126,8 @@ func (d *Desugarer) handleValueUnionSender(
 			Name: "UnionWrapV1",
 			Meta: locOnlyMeta,
 		},
-		Meta: union.Meta,
-	}
-
-	// create a bound new node for the tag constant to avoid raw const senders
-	tagNodeName := fmt.Sprintf("__new__%d", d.virtualConstCount)
-	nodesToInsert[tagNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "New",
-			Meta: locOnlyMeta,
-		},
 		Directives: map[src.Directive]string{compiler.BindDirective: constName},
-		TypeArgs: []ts.Expr{ // string type for tag
-			{
-				Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "str"}},
-			},
-		},
-		Meta: union.Meta,
+		Meta:       union.Meta,
 	}
 
 	// create connections for the union wrapper
@@ -162,28 +146,8 @@ func (d *Desugarer) handleValueUnionSender(
 		Meta: union.Meta,
 	}
 
-	// build sugared insert connections and then desugar them to ensure sender.PortAddr is set
+	// build sugared insert connection for data only; tag is passed via bind
 	sugaredInsert := []src.Connection{
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{{
-					PortAddr: &src.PortAddr{
-						Node: tagNodeName,
-						Port: "res",
-					},
-					Meta: union.Meta,
-				}},
-				Receivers: []src.ConnectionReceiver{{
-					PortAddr: &src.PortAddr{
-						Node: nodeName,
-						Port: "tag",
-					},
-					Meta: union.Meta,
-				}},
-				Meta: union.Meta,
-			},
-			Meta: union.Meta,
-		},
 		{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{*union.Data},
