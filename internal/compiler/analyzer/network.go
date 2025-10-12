@@ -114,6 +114,7 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
+		false, // we're not inside switch
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -133,6 +134,7 @@ func (a Analyzer) analyzeNormalConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	isPatternMatchingBranch bool,
 ) (*src.NormalConnection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
 		normConn.Senders,
@@ -142,6 +144,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesIfaces,
 		nodesUsage,
 		prevChainLink,
+		isPatternMatchingBranch,
 	)
 	if err != nil {
 		return nil, err
@@ -502,6 +505,7 @@ func (a Analyzer) getResolvedSenderType(
 	scope src.Scope,
 	prevChainLink []src.ConnectionSender,
 	nodesUsage map[string]netNodeUsage,
+	isPatternSender bool,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
 		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
@@ -537,6 +541,7 @@ func (a Analyzer) getResolvedSenderType(
 			scope,
 			prevChainLink,
 			nodesUsage,
+			isPatternSender,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -566,6 +571,7 @@ func (a Analyzer) getResolvedSenderType(
 			scope,
 			prevChainLink,
 			nodesUsage,
+			isPatternSender,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -584,21 +590,20 @@ func (a Analyzer) getResolvedSenderType(
 			scope,
 			prevChainLink,
 			nodesUsage,
+			isPatternSender,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
 				Meta: &sender.Ternary.Meta,
 			}.Wrap(err)
 		}
-		// FIXME: perfectly we need to return union, but it's not yet supported
-		// see https://github.com/nevalang/neva/issues/737
 		return sender, trueValType, false, nil
 	}
 
 	// logic of getting type for union sender partially duplicates logic of validating it
 	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
 	if sender.Union != nil {
-		entity, _, err := scope.GetType(sender.Union.EntityRef)
+		unionTypeEntity, _, err := scope.GetType(sender.Union.EntityRef)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
 				Message: fmt.Sprintf("failed to resolve union type: %v", err),
@@ -606,7 +611,7 @@ func (a Analyzer) getResolvedSenderType(
 			}
 		}
 
-		resolvedUnionType, typeExprErr := a.analyzeTypeExpr(*entity.BodyExpr, scope)
+		resolvedUnionTypeExpr, typeExprErr := a.analyzeTypeExpr(*unionTypeEntity.BodyExpr, scope)
 		if typeExprErr != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
 				Message: fmt.Sprintf("failed to resolve union type: %v", typeExprErr),
@@ -614,12 +619,43 @@ func (a Analyzer) getResolvedSenderType(
 			}
 		}
 
-		tagTypeExpr := resolvedUnionType.Lit.Union[sender.Union.Tag] // we assume it's analyzed already
+		tagTypeExpr, ok := resolvedUnionTypeExpr.Lit.Union[sender.Union.Tag]
+		if !ok {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Message: fmt.Sprintf(
+					"tag %q not found in union %v",
+					sender.Union.Tag,
+					sender.Union.EntityRef,
+				),
+				Meta: &sender.Meta,
+			}
+		}
 
-		// if there's no type-expr (and thus no wrapped sender)
-		// it's a "enum-like" union, so there's nothing to analyze
+		// if it's a tag-only union member, we just return type of the union itself
+		// not the type of the tag, because tag doesn't have a type, only name
 		if tagTypeExpr == nil {
-			return sender, resolvedUnionType, false, nil
+			return sender, resolvedUnionTypeExpr, false, nil
+		}
+
+		// we know that tagTypeExpr != nil so we expect sender.Union.Data to be != nil too,
+		// because we are referring to union member that has type, so sender must wrap some data,
+		// except we are inside pattern matching context, then we only need tag
+		if sender.Union.Data == nil && !isPatternSender {
+			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
+				Message: fmt.Sprintf(
+					"tag %q requires a wrapped value of type %v",
+					sender.Union.Tag,
+					tagTypeExpr,
+				),
+				Meta: &sender.Meta,
+			}
+		}
+
+		// insie pattern matching context, only tag is needed,
+		// so it's expected not to have wrapped data
+		if sender.Union.Data == nil && isPatternSender {
+			// in pattern matching, return the tag's data type
+			return sender, *tagTypeExpr, false, nil
 		}
 
 		// analyze wrapped-sender and get its resolved type
@@ -631,20 +667,24 @@ func (a Analyzer) getResolvedSenderType(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if analyzeWrappedErr != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, analyzeWrappedErr
 		}
 
-		// return fully resolved union sender, including its wrapped-sender
+		// outside of the pattern matching context
+		// type of the union sender with wrapped data must be type of the union itself
+		// not the type of the wrapped sender
 		return src.ConnectionSender{
 			Union: &src.UnionSender{
 				EntityRef: sender.Union.EntityRef,
 				Tag:       sender.Union.Tag,
-				Data:      resolvedWrappedSender,
+				// but type of the wrapped sender must also be resolved
+				Data: resolvedWrappedSender,
 			},
 			Meta: sender.Meta,
-		}, resolvedUnionType, false, nil
+		}, resolvedUnionTypeExpr, false, nil
 	}
 
 	// handle port-address sender
