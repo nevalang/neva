@@ -14,7 +14,8 @@ func Test(t *testing.T) {
 	require.NoError(t, err, string(out))
 	require.Equal(
 		t,
-		"Friday\n",
+		`{ "tag": "Friday" }
+`,
 		string(out),
 	)
 
