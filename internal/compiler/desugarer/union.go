@@ -11,7 +11,7 @@ import (
 
 type handleUnionSenderResult struct {
 	replace src.Connection
-	insert  []src.Connection
+	insert  []src.Connection // might need desugaring after returned
 }
 
 // desugarUnionSender handles the four cases of union senders:
