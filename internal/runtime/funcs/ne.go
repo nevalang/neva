@@ -33,15 +33,12 @@ func (p notEq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 				actualOk, comparedOk bool
 			)
 
-			wg.Add(2)
-			go func() {
+			wg.Go(func() {
 				val1, actualOk = actualIn.Receive(ctx)
-				wg.Done()
-			}()
-			go func() {
+			})
+			wg.Go(func() {
 				val2, comparedOk = comparedIn.Receive(ctx)
-				wg.Done()
-			}()
+			})
 			wg.Wait()
 
 			if !actualOk || !comparedOk {

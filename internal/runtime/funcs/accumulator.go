@@ -58,17 +58,14 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				var dataOk, lastOk bool
 
 				var wg sync.WaitGroup
-				wg.Add(2)
 
-				go func() {
-					defer wg.Done()
+				wg.Go(func() {
 					dataMsg, dataOk = updIn.Receive(ctx)
-				}()
+				})
 
-				go func() {
-					defer wg.Done()
+				wg.Go(func() {
 					lastMsg, lastOk = lastIn.Receive(ctx)
-				}()
+				})
 
 				wg.Wait()
 

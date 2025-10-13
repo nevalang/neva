@@ -1126,28 +1126,6 @@ func TestDesugarNetwork(t *testing.T) {
 							Receivers: []src.ConnectionReceiver{{
 								PortAddr: &src.PortAddr{
 									Node: "__union__1",
-									Port: "tag",
-								},
-							}},
-						},
-					},
-					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{{
-								Const: &src.Const{
-									TypeExpr: ts.Expr{
-										Inst: &ts.InstExpr{
-											Ref: core.EntityRef{Name: "int"},
-										},
-									},
-									Value: src.ConstValue{
-										Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
-									},
-								},
-							}},
-							Receivers: []src.ConnectionReceiver{{
-								PortAddr: &src.PortAddr{
-									Node: "__union__1",
 									Port: "data",
 								},
 							}},
@@ -1163,18 +1141,21 @@ func TestDesugarNetwork(t *testing.T) {
 						TypeArgs: src.TypeArgs{
 							{
 								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Pkg: "builtin", Name: "str"},
+									Ref: core.EntityRef{Name: "int"},
 								},
 							},
 						},
 						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__union_tag__1",
+							compiler.BindDirective: "__const__2",
 						},
 					},
 					"__union__1": {
+						Directives: map[src.Directive]string{
+							compiler.BindDirective: "__union_tag__1",
+						},
 						EntityRef: core.EntityRef{
 							Pkg:  "builtin",
-							Name: "UnionWrap",
+							Name: "UnionWrapV1",
 						},
 					},
 				},
@@ -1184,6 +1165,16 @@ func TestDesugarNetwork(t *testing.T) {
 							Message: &src.MsgLiteral{
 								Str: compiler.Pointer("Int"),
 							},
+						},
+					},
+					"__const__2": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "int"},
+							},
+						},
+						Value: src.ConstValue{
+							Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
 						},
 					},
 				},

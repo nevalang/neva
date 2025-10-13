@@ -291,17 +291,17 @@ type ArrayBypassConnection struct {
 	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
-type ConnectionReceiver struct { // TODO rename to Receiver
+type ConnectionReceiver struct {
 	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
-	DeferredConnection *Connection `json:"deferredConnection,omitempty"` // TODO rename to Defer
-	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`  // TODO rename to Chain
+	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
+	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
 	Switch             *Switch     `json:"switch,omitempty"`
 	Meta               core.Meta   `json:"meta,omitempty"`
 }
 
 type Switch struct {
-	Cases   []NormalConnection   `json:"case,omitempty"`
-	Default []ConnectionReceiver `json:"default,omitempty"`
+	Cases   []NormalConnection   `json:"cases,omitempty"`   // TODO rename to CaseBranches
+	Default []ConnectionReceiver `json:"default,omitempty"` // TODO rename to DefaultBranch
 	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
@@ -324,7 +324,7 @@ type ConnectionSender struct {
 type UnionSender struct {
 	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
 	Tag       string            `json:"tag,omitempty"`
-	Data      *ConnectionSender `json:"data,omitempty"` // TODO rename to WrappedSender
+	Data      *ConnectionSender `json:"data,omitempty"`
 	Meta      core.Meta         `json:"meta,omitempty"`
 }
 

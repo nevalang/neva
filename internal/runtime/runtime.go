@@ -56,13 +56,11 @@ func deferFuncCalls(
 
 	return func(ctx context.Context) {
 		wg := sync.WaitGroup{}
-		wg.Add(len(handlers))
 		for i := range handlers {
 			routine := handlers[i]
-			go func() {
+			wg.Go(func() {
 				routine(ctx)
-				wg.Done()
-			}()
+			})
 		}
 		wg.Wait()
 	}, nil

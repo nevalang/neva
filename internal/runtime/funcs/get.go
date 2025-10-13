@@ -38,15 +38,12 @@ func (g getDictValue) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 			)
 
 			wg := sync.WaitGroup{}
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				dictMsg, dictOk = dictIn.Receive(ctx)
-			}()
-			go func() {
-				defer wg.Done()
+			})
+			wg.Go(func() {
 				keyMsg, keyOk = keyIn.Receive(ctx)
-			}()
+			})
 			wg.Wait()
 			if !dictOk || !keyOk {
 				return

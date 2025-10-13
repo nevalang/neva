@@ -38,10 +38,8 @@ func (streamProduct) Create(
 			)
 
 			var wg sync.WaitGroup
-			wg.Add(2)
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				for {
 					var firstMsg runtime.Msg
 					firstMsg, firstOk = firstIn.Receive(ctx)
@@ -56,10 +54,9 @@ func (streamProduct) Create(
 						break
 					}
 				}
-			}()
+			})
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				for {
 					var secondMsg runtime.Msg
 					secondMsg, secondOk = secondIn.Receive(ctx)
@@ -74,7 +71,7 @@ func (streamProduct) Create(
 						break
 					}
 				}
-			}()
+			})
 
 			wg.Wait()
 

@@ -44,20 +44,16 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				dataOk, casesOk bool
 			)
 
-			wg.Add(2)
-
-			go func() {
+			wg.Go(func() {
 				dataMsg, dataOk = dataIn.Receive(ctx)
-				wg.Done()
-			}()
+			})
 
-			go func() {
+			wg.Go(func() {
 				casesOk = caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 					cases[idx] = msg
 					return true
 				})
-				wg.Done()
-			}()
+			})
 
 			wg.Wait()
 
@@ -71,6 +67,10 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 					matchIdx = i
 					break
 				}
+			}
+
+			if u, ok := dataMsg.(runtime.UnionMsg); ok {
+				dataMsg = u.Data()
 			}
 
 			if matchIdx != -1 {

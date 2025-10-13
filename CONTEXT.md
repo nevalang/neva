@@ -1,8 +1,6 @@
-# Nevalang Project Context
+# Project Context
 
-> This document distills the essential architecture, design principles, and workflows of the Nevalang code-base. Reading it should give an experienced developer (or AI agent) enough context to navigate, maintain and safely extend the project without first having to reverse-engineer every package.
-
----
+This document distills the essential architecture, design principles, and workflows of the code-base. Reading it should give AI agent context to navigate, maintain and safely extend the project without first having to reverse-engineer every package.
 
 ## 1 · High-Level Overview
 

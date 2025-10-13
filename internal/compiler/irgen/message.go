@@ -44,10 +44,21 @@ func getIRMsgBySrcRef(
 			String: *constant.Message.Str,
 		}, nil
 	case constant.Message.Union != nil:
-		return &ir.Message{
-			Type:   ir.MsgTypeString,
-			String: constant.Message.Union.Tag,
-		}, nil
+		msg := &ir.Message{
+			Type: ir.MsgTypeUnion,
+			Union: ir.UnionMessage{
+				Tag:  constant.Message.Union.Tag,
+				Data: nil,
+			},
+		}
+		if constant.Message.Union.Data != nil {
+			dataMsg, err := getIRMsgBySrcRef(*constant.Message.Union.Data, scope, typeExpr)
+			if err != nil {
+				return nil, err
+			}
+			msg.Union.Data = dataMsg
+		}
+		return msg, nil
 	case constant.Message.List != nil:
 		listElType := typeExpr.Inst.Args[0]
 		listMsg := make([]ir.Message, len(constant.Message.List))

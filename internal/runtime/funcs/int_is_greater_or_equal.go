@@ -34,17 +34,14 @@ func (intIsGreaterOrEqual) Create(
 			var accOk, elOk bool
 
 			var wg sync.WaitGroup
-			wg.Add(2)
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				accMsg, accOk = accIn.Receive(ctx)
-			}()
+			})
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				elMsg, elOk = elIn.Receive(ctx)
-			}()
+			})
 
 			wg.Wait()
 

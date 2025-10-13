@@ -340,6 +340,9 @@ func (msg UnionMsg) Data() Msg {
 }
 
 func (msg UnionMsg) String() string {
+	if msg.data == nil {
+		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
+	}
 	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
 }
 

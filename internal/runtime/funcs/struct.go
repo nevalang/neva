@@ -44,20 +44,17 @@ func (structBuilder) Handle(
 			fields := make([]runtime.Msg, 0, len(inports))
 			var mu sync.Mutex
 			var wg sync.WaitGroup
-			wg.Add(len(inports))
-
 			for inportName, inportChan := range inports {
-				go func(name string, ch runtime.SingleInport) {
-					defer wg.Done()
-					msg, ok := ch.Receive(ctx)
+				wg.Go(func() {
+					msg, ok := inportChan.Receive(ctx)
 					if !ok {
 						return
 					}
 					mu.Lock()
-					names = append(names, name)
+					names = append(names, inportName)
 					fields = append(fields, msg)
 					mu.Unlock()
-				}(inportName, inportChan)
+				})
 			}
 
 			wg.Wait()

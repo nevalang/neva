@@ -33,17 +33,14 @@ func (stringAdd) Create(
 			var leftMsg, rightMsg runtime.Msg
 			var leftOk, rightOk bool
 			var wg sync.WaitGroup
-			wg.Add(2)
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				leftMsg, leftOk = leftIn.Receive(ctx)
-			}()
+			})
 
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				rightMsg, rightOk = rightIn.Receive(ctx)
-			}()
+			})
 
 			wg.Wait()
 

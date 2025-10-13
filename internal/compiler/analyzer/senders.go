@@ -17,6 +17,7 @@ func (a Analyzer) analyzeSenders(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	isPatternSenders bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -30,6 +31,7 @@ func (a Analyzer) analyzeSenders(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSenders,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -57,6 +59,7 @@ func (a Analyzer) analyzeSender(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	isPatternSender bool,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
@@ -71,8 +74,6 @@ func (a Analyzer) analyzeSender(
 			Meta:    &sender.Meta,
 		}
 	}
-
-	// TODO support unary
 
 	if sender.Range != nil && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
@@ -98,6 +99,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -125,6 +127,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -141,6 +144,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -160,6 +164,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, err
@@ -173,6 +178,7 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if err != nil {
 			return nil, nil, err
@@ -220,7 +226,7 @@ func (a Analyzer) analyzeSender(
 		}
 
 		// check that tag we refer to exists in union
-		tagTypeExpr, ok := unionTypeExpr.Lit.Union[sender.Union.Tag]
+		memberTypeExpr, ok := unionTypeExpr.Lit.Union[sender.Union.Tag]
 		if !ok {
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf("tag %q not found in union %v", sender.Union.Tag, sender.Union.EntityRef),
@@ -228,24 +234,29 @@ func (a Analyzer) analyzeSender(
 			}
 		}
 
-		// if tag has type-expr, then this union-sender must wrap another sender,
-		// and vice versa - if there's no type-expr, there must be no wrapped-sender
-		if tagTypeExpr != nil && sender.Union.Data == nil {
-			// TODO figure out how this should work in pattern matching
+		// if there's no type-expr (and thus no wrapped sender)
+		// it's a tag-only union, so there's nothing to analyze
+		if memberTypeExpr == nil {
+			return &sender, &unionTypeExpr, nil
+		}
+
+		// Sometimes union member has type expr but union sender doesn't wrap another sender
+		// This is allowed in pattern matching contexts (like switch cases), but not in other contexts
+		if sender.Union.Data == nil {
+			if isPatternSender {
+				// in pattern matching, the switch runtime unwraps the union
+				// so the type that flows to the receiver is the tag's data type
+				return &sender, memberTypeExpr, nil
+			}
+			// if tag has type-expr and it's not pattern matching, then this union-sender must wrap another sender
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf(
 					"tag %q requires a wrapped value of type %v",
 					sender.Union.Tag,
-					tagTypeExpr,
+					memberTypeExpr,
 				),
 				Meta: &sender.Meta,
 			}
-		}
-
-		// if there's no type-expr (and thus no wrapped sender)
-		// it's a tag-only union, so there's nothing to analyze
-		if tagTypeExpr == nil {
-			return &sender, &unionTypeExpr, nil
 		}
 
 		// analyze wrapped-sender and get its resolved type
@@ -257,18 +268,19 @@ func (a Analyzer) analyzeSender(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
+			isPatternSender,
 		)
 		if analyzeWrappedErr != nil {
 			return nil, nil, analyzeWrappedErr
 		}
 
 		// check that wrapped-sender is sub-type of tag's constraint
-		if err := a.resolver.IsSubtypeOf(*resolvedWrappedType, *tagTypeExpr, scope); err != nil {
+		if err := a.resolver.IsSubtypeOf(*resolvedWrappedType, *memberTypeExpr, scope); err != nil {
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf(
 					"wrapped sender type %v is not compatible with union tag type %v: %v",
 					resolvedWrappedType,
-					tagTypeExpr,
+					memberTypeExpr,
 					err,
 				),
 				Meta: &sender.Meta,
@@ -294,6 +306,7 @@ func (a Analyzer) analyzeSender(
 		scope,
 		prevChainLink,
 		nodesUsage,
+		isPatternSender,
 	)
 	if err != nil {
 		return nil, nil, compiler.Error{

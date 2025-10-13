@@ -318,11 +318,11 @@ func (d *Desugarer) desugarSingleReceiver(
 		insert := []src.Connection{}
 
 		// For each case in the switch
-		for i, caseConn := range receiver.Switch.Cases {
+		for i, switchCaseBranchConn := range receiver.Switch.Cases {
 			// Connect case-sender to switch:case[i]
 			insert = append(insert, src.Connection{
 				Normal: &src.NormalConnection{
-					Senders: caseConn.Senders,
+					Senders: switchCaseBranchConn.Senders,
 					Receivers: []src.ConnectionReceiver{
 						{
 							PortAddr: &src.PortAddr{
@@ -352,7 +352,7 @@ func (d *Desugarer) desugarSingleReceiver(
 							Meta: locOnlyMeta,
 						},
 					},
-					Receivers: caseConn.Receivers,
+					Receivers: switchCaseBranchConn.Receivers,
 					Meta:      locOnlyMeta,
 				},
 				Meta: locOnlyMeta,
@@ -796,6 +796,10 @@ func (d *Desugarer) desugarSingleSender(
 		result, err := d.desugarUnionSender(
 			*sender.Union,
 			normConn,
+			iface,
+			usedNodeOutports,
+			scope,
+			nodes,
 			nodesToInsert,
 			constsToInsert,
 		)
@@ -803,7 +807,24 @@ func (d *Desugarer) desugarSingleSender(
 			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
 		}
 
-		return desugarSenderResult(result), nil
+		// recursively desugar union inserts to eliminate raw const/literal senders
+		desugaredInsert, derr := d.desugarConnections(
+			iface,
+			result.insert,
+			usedNodeOutports,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if derr != nil {
+			return desugarSenderResult{}, fmt.Errorf("desugar union inserts: %w", derr)
+		}
+
+		return desugarSenderResult{
+			replace: result.replace,
+			insert:  desugaredInsert,
+		}, nil
 	}
 
 	if sender.Ternary != nil {

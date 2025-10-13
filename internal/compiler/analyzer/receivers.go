@@ -134,64 +134,107 @@ func (a Analyzer) analyzeReceiver(
 }
 
 func (a Analyzer) analyzeSwitchReceiver(
-	receiver src.ConnectionReceiver,
+	receiver src.ConnectionReceiver, // switch receiver
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
-	analyzedSenders []src.ConnectionSender,
-	resolvedSenderTypes []*ts.Expr,
+	analyzedSenders []src.ConnectionSender, // input senders for switch
+	resolvedSwitchInputTypes []*ts.Expr, // types of input senders for switch
 ) ([]src.NormalConnection, []src.ConnectionReceiver, *compiler.Error) {
 	analyzedSwitchConns := make([]src.NormalConnection, 0, len(receiver.Switch.Cases))
 
-	for _, switchConn := range receiver.Switch.Cases {
+	for _, switchCaseBranch := range receiver.Switch.Cases {
+		// step 1: analyze each branch as a normal connection in pattern-matching mode
+		// - inside a branch, union patterns with typed members must behave as payload types
+		//   (e.g. `foo::bar -> yyy` where `bar` carries `int` makes the branch sender `int`),
+		//   because runtime unwraps the matched variant before forwarding to the branch receiver.
+		// - this is why we pass `isPatternMatchingBranch = true` here.
+		//
+		// note: this step validates branch-internal sender->receiver compatibility only.
+		// the global compatibility of switch inputs vs branch patterns is handled below.
+		//
 		// all option-senders must be subtypes of their branch-receivers
-		analyzedSwitchConn, err := a.analyzeNormalConnection(
-			&switchConn,
+		analyzedSwitchBranch, err := a.analyzeNormalConnection(
+			&switchCaseBranch,
 			iface,
 			nodes,
 			nodesIfaces,
 			scope,
 			nodesUsage,
 			nil,
+			true, // isPatternMatchingBranch = true for switch
 		)
 		if err != nil {
 			return nil, nil, &compiler.Error{
 				Message: fmt.Sprintf("Invalid switch case: %v", err),
-				Meta:    &switchConn.Meta,
+				Meta:    &switchCaseBranch.Meta,
 			}
 		}
 
-		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchConn)
+		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchBranch)
 
-		// all incoming senders must be subtypes of each option-sender
-		// (both incoming senders and switch's option-senders might be slice)
-		for _, switchSender := range switchConn.Senders {
-			_, switchSenderType, _, err := a.getResolvedSenderType(
-				switchSender,
-				iface,
-				nodes,
-				nodesIfaces,
-				scope,
-				nil,
-				nodesUsage,
-			)
-			if err != nil {
-				return nil, nil, &compiler.Error{
-					Message: fmt.Sprintf("Invalid switch case sender: %v", err),
-					Meta:    &switchSender.Meta,
+		// step 2: ensure each switch input sender is compatible with each branch pattern sender
+		//
+		// important: union patterns must be compared as the union type (not payload).
+		// - calling `getResolvedSenderType` with isPattern=false would reject typed tag-only patterns
+		//   (it demands wrapped data for typed members), which is incorrect for pattern syntax.
+		// - calling it with isPattern=true would yield the payload type (e.g. `int`) which is
+		//   also incorrect for matchability (we need to compare incoming `foo` against pattern `foo`,
+		//   not `int`).
+		// therefore we resolve union patterns to the union type manually here; for non-union senders
+		// the flag is irrelevant, so we safely call the generic resolver with `false`.
+		//
+		// all switch branch senders must be compatible with switch input senders
+		for _, branchSender := range switchCaseBranch.Senders {
+			var branchSenderType ts.Expr
+			if branchSender.Union != nil {
+				// for pattern matching compatibility, compare against the union type itself
+				typeDef, _, err := scope.GetType(branchSender.Union.EntityRef)
+				if err != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", err),
+						Meta:    &branchSender.Meta,
+					}
 				}
+				resolvedUnion, analyzeErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
+				if analyzeErr != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", analyzeErr),
+						Meta:    &branchSender.Meta,
+					}
+				}
+				branchSenderType = resolvedUnion
+			} else {
+				_, resolvedType, _, err := a.getResolvedSenderType(
+					branchSender,
+					iface,
+					nodes,
+					nodesIfaces,
+					scope,
+					nil,
+					nodesUsage,
+					false,
+				)
+				if err != nil {
+					return nil, nil, &compiler.Error{
+						Message: fmt.Sprintf("Invalid switch case sender: %v", err),
+						Meta:    &branchSender.Meta,
+					}
+				}
+
+				branchSenderType = resolvedType
 			}
 
-			for i, resolvedSenderType := range resolvedSenderTypes {
-				if err := a.resolver.IsSubtypeOf(*resolvedSenderType, switchSenderType, scope); err != nil {
+			for i, resolverSwitchInputType := range resolvedSwitchInputTypes {
+				if err := a.resolver.IsSubtypeOf(*resolverSwitchInputType, branchSenderType, scope); err != nil {
 					return nil, nil, &compiler.Error{
 						Message: fmt.Sprintf(
 							"Incompatible types in switch: %v -> %v: %v",
-							analyzedSenders[i], switchSender, err.Error(),
+							analyzedSenders[i], branchSender, err.Error(),
 						),
-						Meta: &switchSender.Meta,
+						Meta: &branchSender.Meta,
 					}
 				}
 			}
@@ -212,7 +255,7 @@ func (a Analyzer) analyzeSwitchReceiver(
 		nodes,
 		nodesIfaces,
 		nodesUsage,
-		resolvedSenderTypes,
+		resolvedSwitchInputTypes,
 		analyzedSenders,
 	)
 	if err != nil {
