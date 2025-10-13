@@ -11,7 +11,7 @@ import (
 
 type handleUnionSenderResult struct {
 	replace src.Connection
-	insert  []src.Connection // might need desugaring after returned
+	insert  []src.Connection
 }
 
 // desugarUnionSender handles the four cases of union senders:
@@ -22,6 +22,10 @@ type handleUnionSenderResult struct {
 func (d *Desugarer) desugarUnionSender(
 	union src.UnionSender,
 	normConn src.NormalConnection,
+	iface src.Interface,
+	usedNodeOutports nodeOutportsUsed,
+	scope Scope,
+	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (handleUnionSenderResult, error) {
@@ -30,7 +34,16 @@ func (d *Desugarer) desugarUnionSender(
 		return d.handleTagOnlyUnionSender(union, normConn, nodesToInsert, constsToInsert)
 	}
 	// cases 3 & 4: with value
-	return d.handleUnionSenderWithWrappedData(union, normConn, nodesToInsert, constsToInsert)
+	return d.handleUnionSenderWithWrappedData(
+		union,
+		normConn,
+		iface,
+		usedNodeOutports,
+		scope,
+		nodes,
+		nodesToInsert,
+		constsToInsert,
+	)
 }
 
 // handleTagOnlyUnionSender handles cases 1 & 2 (tag-only union senders)
@@ -101,6 +114,10 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 func (d *Desugarer) handleUnionSenderWithWrappedData(
 	union src.UnionSender,
 	normConn src.NormalConnection,
+	iface src.Interface,
+	usedNodeOutports nodeOutportsUsed,
+	scope Scope,
+	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (handleUnionSenderResult, error) {
@@ -145,8 +162,7 @@ func (d *Desugarer) handleUnionSenderWithWrappedData(
 		Meta: union.Meta,
 	}
 
-	// wrap the data-sender with union
-	// by connecting the data-sender to union-wrapper node
+	// wrap the data-sender with union by connecting the data-sender to union-wrapper node
 	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
@@ -164,8 +180,22 @@ func (d *Desugarer) handleUnionSenderWithWrappedData(
 		},
 	}
 
+	// make sure nested `*union.Data` is desugared too
+	desugaredInsert, err := d.desugarConnections(
+		iface,
+		sugaredInsert,
+		usedNodeOutports,
+		scope,
+		nodes,
+		nodesToInsert,
+		constsToInsert,
+	)
+	if err != nil {
+		return handleUnionSenderResult{}, err
+	}
+
 	return handleUnionSenderResult{
 		replace: replace,
-		insert:  sugaredInsert,
+		insert:  desugaredInsert,
 	}, nil
 }

@@ -796,6 +796,10 @@ func (d *Desugarer) desugarSingleSender(
 		result, err := d.desugarUnionSender(
 			*sender.Union,
 			normConn,
+			iface,
+			usedNodeOutports,
+			scope,
+			nodes,
 			nodesToInsert,
 			constsToInsert,
 		)
