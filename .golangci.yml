@@ -1,11 +1,38 @@
+version: "2"
 run:
-  timeout: 5m
   concurrency: 4
   tests: false
-
-issues:
-  exclude-rules:
-    - source: "^//go:generate"
-      linters: [funlen , lll , varnamelen, err113, dupword]
-    - path: _test\.go
-      linters: [funlen , lll , varnamelen, err113, dupword]
+linters:
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupword
+          - err113
+          - funlen
+          - lll
+          - varnamelen
+        source: ^//go:generate
+      - linters:
+          - dupword
+          - err113
+          - funlen
+          - lll
+          - varnamelen
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
