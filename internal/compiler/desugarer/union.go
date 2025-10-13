@@ -30,7 +30,7 @@ func (d *Desugarer) desugarUnionSender(
 		return d.handleTagOnlyUnionSender(union, normConn, nodesToInsert, constsToInsert)
 	}
 	// cases 3 & 4: with value
-	return d.handleValueUnionSender(union, normConn, nodesToInsert, constsToInsert)
+	return d.handleUnionSenderWithWrappedData(union, normConn, nodesToInsert, constsToInsert)
 }
 
 // handleTagOnlyUnionSender handles cases 1 & 2 (tag-only union senders)
@@ -97,17 +97,16 @@ func (d *Desugarer) handleTagOnlyUnionSender(
 	}, nil
 }
 
-// handleValueUnionSender handles cases 3 & 4 (union senders with wrapped values)
-func (d *Desugarer) handleValueUnionSender(
+// handleUnionSenderWithWrappedData handles cases 3 & 4 (union senders with wrapped values)
+func (d *Desugarer) handleUnionSenderWithWrappedData(
 	union src.UnionSender,
 	normConn src.NormalConnection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (handleUnionSenderResult, error) {
-	// create virtual const for tag
+	// create virtual const for tag to bind as cfg msg for union wrapper node
 	d.virtualConstCount++
 	constName := fmt.Sprintf("__union_tag__%d", d.virtualConstCount)
-
 	constsToInsert[constName] = src.Const{
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{
@@ -118,9 +117,9 @@ func (d *Desugarer) handleValueUnionSender(
 	}
 
 	// create union wrapper node (v1) and bind tag via directive so runtime cfg is set
-	nodeName := fmt.Sprintf("__union__%d", d.virtualConstCount)
+	unionWrapNodeName := fmt.Sprintf("__union__%d", d.virtualConstCount)
 	locOnlyMeta := core.Meta{Location: union.Meta.Location}
-	nodesToInsert[nodeName] = src.Node{
+	nodesToInsert[unionWrapNodeName] = src.Node{
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "UnionWrapV1",
@@ -135,7 +134,7 @@ func (d *Desugarer) handleValueUnionSender(
 		Normal: &src.NormalConnection{
 			Senders: []src.ConnectionSender{{
 				PortAddr: &src.PortAddr{
-					Node: nodeName,
+					Node: unionWrapNodeName,
 					Port: "res",
 				},
 				Meta: union.Meta,
@@ -146,14 +145,15 @@ func (d *Desugarer) handleValueUnionSender(
 		Meta: union.Meta,
 	}
 
-	// build sugared insert connection for data only; tag is passed via bind
+	// wrap the data-sender with union
+	// by connecting the data-sender to union-wrapper node
 	sugaredInsert := []src.Connection{
 		{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{*union.Data},
 				Receivers: []src.ConnectionReceiver{{
 					PortAddr: &src.PortAddr{
-						Node: nodeName,
+						Node: unionWrapNodeName,
 						Port: "data",
 					},
 					Meta: union.Meta,

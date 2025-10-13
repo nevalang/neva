@@ -803,7 +803,24 @@ func (d *Desugarer) desugarSingleSender(
 			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
 		}
 
-		return desugarSenderResult(result), nil
+		// recursively desugar union inserts to eliminate raw const/literal senders
+		desugaredInsert, derr := d.desugarConnections(
+			iface,
+			result.insert,
+			usedNodeOutports,
+			scope,
+			nodes,
+			nodesToInsert,
+			constsToInsert,
+		)
+		if derr != nil {
+			return desugarSenderResult{}, fmt.Errorf("desugar union inserts: %w", derr)
+		}
+
+		return desugarSenderResult{
+			replace: result.replace,
+			insert:  desugaredInsert,
+		}, nil
 	}
 
 	if sender.Ternary != nil {
