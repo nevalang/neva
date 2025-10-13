@@ -41,10 +41,16 @@ func (internalMsg) Int() int64     { panic("unexpected Int method call on intern
 func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
 func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
 func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
-func (internalMsg) Dict() map[string]Msg { panic("unexpected Dict method call on internal message type") }
-func (internalMsg) Struct() StructMsg { panic("unexpected Struct method call on internal message type") }
+func (internalMsg) Dict() map[string]Msg {
+	panic("unexpected Dict method call on internal message type")
+}
+func (internalMsg) Struct() StructMsg {
+	panic("unexpected Struct method call on internal message type")
+}
 func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
-func (internalMsg) Equal(other Msg) bool { panic("unexpected Equal method call on internal message type") }
+func (internalMsg) Equal(other Msg) bool {
+	panic("unexpected Equal method call on internal message type")
+}
 
 // Bool
 
@@ -334,6 +340,9 @@ func (msg UnionMsg) Data() Msg {
 }
 
 func (msg UnionMsg) String() string {
+	if msg.data == nil {
+		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
+	}
 	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
 }
 

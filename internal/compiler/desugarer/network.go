@@ -318,11 +318,11 @@ func (d *Desugarer) desugarSingleReceiver(
 		insert := []src.Connection{}
 
 		// For each case in the switch
-		for i, caseConn := range receiver.Switch.Cases {
+		for i, switchCaseBranchConn := range receiver.Switch.Cases {
 			// Connect case-sender to switch:case[i]
 			insert = append(insert, src.Connection{
 				Normal: &src.NormalConnection{
-					Senders: caseConn.Senders,
+					Senders: switchCaseBranchConn.Senders,
 					Receivers: []src.ConnectionReceiver{
 						{
 							PortAddr: &src.PortAddr{
@@ -352,7 +352,7 @@ func (d *Desugarer) desugarSingleReceiver(
 							Meta: locOnlyMeta,
 						},
 					},
-					Receivers: caseConn.Receivers,
+					Receivers: switchCaseBranchConn.Receivers,
 					Meta:      locOnlyMeta,
 				},
 				Meta: locOnlyMeta,
