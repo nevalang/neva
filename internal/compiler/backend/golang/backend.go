@@ -214,6 +214,15 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
 		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
+	case ir.MsgTypeUnion:
+		if msg.Union.Data == nil {
+			return fmt.Sprintf(`runtime.NewUnionMsg(%q, nil)`, msg.Union.Tag), nil
+		}
+		payload, err := b.getMessageString(msg.Union.Data)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("runtime.NewUnionMsg(%q, %s)", msg.Union.Tag, payload), nil
 	case ir.MsgTypeList:
 		elements := make([]string, len(msg.List))
 		for i, v := range msg.List {

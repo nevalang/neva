@@ -98,6 +98,12 @@ type Message struct {
 	String       string             `json:"str,omitempty" yaml:"str,omitempty"`
 	List         []Message          `json:"list,omitempty" yaml:"list,omitempty"`
 	DictOrStruct map[string]Message `json:"map,omitempty" yaml:"map,omitempty"`
+	Union        UnionMessage       `json:"union,omitempty" yaml:"union,omitempty"`
+}
+
+type UnionMessage struct {
+	Tag  string   `json:"tag" yaml:"tag"`
+	Data *Message `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
 // MsgType is an enumeration of message types.
@@ -111,4 +117,5 @@ const (
 	MsgTypeList   MsgType = "list"
 	MsgTypeDict   MsgType = "dict"
 	MsgTypeStruct MsgType = "struct"
+	MsgTypeUnion  MsgType = "union"
 )
