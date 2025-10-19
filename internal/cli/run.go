@@ -32,15 +32,15 @@ func newRunCmd(
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "emit-trace",
-				Usage: "Write trace information to file",
+				Usage: "Write real-time trace to a file",
 			},
 			&cli.BoolFlag{
 				Name:  "emit-ir",
-				Usage: "Emit intermediate representation to ir.yml file",
+				Usage: "Emit intermediate representation before running",
 			},
 			&cli.StringFlag{
 				Name:  "emit-ir-format",
-				Usage: "Format for ir file - yaml or json",
+				Usage: "Format for intermediate representation if IR is emitted",
 			},
 		},
 		ArgsUsage: "Provide path to main package",
