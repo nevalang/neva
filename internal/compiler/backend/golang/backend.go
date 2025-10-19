@@ -15,7 +15,16 @@ import (
 	"github.com/nevalang/neva/pkg"
 )
 
-type Backend struct{}
+type Mode string
+
+const (
+	ModeExecutable Mode = "executable"
+	ModePackage    Mode = "pkg"
+)
+
+type Backend struct {
+	mode Mode
+}
 
 var (
 	ErrExecTmpl       = errors.New("execute template")
@@ -61,8 +70,13 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	}
 
 	files := map[string][]byte{}
-	files["main.go"] = buf.Bytes()
-	files["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
+	switch b.mode {
+	case ModeExecutable, "":
+		files["main.go"] = buf.Bytes()
+		files["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
+	case ModePackage:
+		panic("not implemented")
+	}
 
 	if err := b.insertRuntimeFiles(files); err != nil {
 		return err
@@ -318,6 +332,6 @@ func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
 	return handleSpecialChars(s)
 }
 
-func NewBackend() Backend {
-	return Backend{}
+func NewBackend(mode Mode) Backend {
+	return Backend{mode: mode}
 }

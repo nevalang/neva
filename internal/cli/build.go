@@ -62,6 +62,10 @@ func newBuildCmd(
 				Name:  "target-ir-format",
 				Usage: "Format for ir file - yaml or json",
 			},
+			&cli.StringFlag{
+				Name:  "target-go-mode",
+				Usage: "Go backend mode when target=go (executable|pkg)",
+			},
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
@@ -144,18 +148,26 @@ func newBuildCmd(
 				}
 			}()
 
-			golangBackend := golang.NewBackend()
-
 			var compilerToUse compiler.Compiler
 			switch target {
 			case "go":
+				switch goMode := cliCtx.String("target-go-mode"); goMode {
+				case "executable", "", "pkg":
+					break
+				default:
+					return fmt.Errorf("unknown target-go-mode: %s", goMode)
+				}
 				compilerToUse = compiler.New(
 					bldr,
 					parser,
 					desugarer,
 					analyzer,
 					irgen,
-					golang.NewBackend(),
+					golang.NewBackend(
+						golang.Mode(
+							cliCtx.String("target-go-mode"),
+						),
+					),
 				)
 			case "wasm":
 				compilerToUse = compiler.New(
@@ -164,7 +176,9 @@ func newBuildCmd(
 					desugarer,
 					analyzer,
 					irgen,
-					wasm.NewBackend(golangBackend),
+					wasm.NewBackend(
+						golang.NewBackend(golang.ModeExecutable),
+					),
 				)
 			case "ir":
 				compilerToUse = compiler.New(

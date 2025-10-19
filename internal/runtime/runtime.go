@@ -14,17 +14,27 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
+	_, err := Call(ctx, prog, registry, NewStructMsg(nil, nil))
+	return err
+}
+
+// Call runs a single request-response round-trip using program Start/Stop.
+// It sends the provided input to Start, waits for one message on Stop,
+// then cancels and waits for all handlers to finish.
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
 	// debugValidation(prog)
 
+	var out Msg
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
-		prog.Stop.Receive(ctx)
+		out, _ = prog.Stop.Receive(ctx)
 		cancel() // normal termination
 	}()
 
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
-		return err
+		cancel()
+		return nil, err
 	}
 
 	funcsFinished := make(chan struct{})
@@ -35,14 +45,11 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 		close(funcsFinished)
 	}()
 
-	prog.Start.Send(
-		ctx,
-		NewStructMsg(nil, nil),
-	)
+	prog.Start.Send(ctx, in)
 
 	<-funcsFinished
 
-	return nil
+	return out, nil
 }
 
 func deferFuncCalls(
