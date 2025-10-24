@@ -53,6 +53,16 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
 		Trace:           trace,
+		TraceMetadata: templateTraceMetadata{
+			Program: templateTraceProgramMetadata{
+				ModulePath:    prog.Metadata.ModulePath,
+				ModuleVersion: prog.Metadata.ModuleVersion,
+				MainPackage:   prog.Metadata.MainPackage,
+			},
+			Compiler: templateTraceCompilerMetadata{
+				Version: pkg.Version,
+			},
+		},
 	}
 
 	var buf bytes.Buffer

@@ -60,6 +60,11 @@ func (g Generator) Generate(
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{},
 		Funcs:       []ir.FuncCall{},
+		Metadata: ir.ProgramMetadata{
+			ModulePath:    build.EntryModRef.Path,
+			ModuleVersion: build.EntryModRef.Version,
+			MainPackage:   mainPkgName,
+		},
 	}
 
 	g.processNode(
@@ -71,6 +76,7 @@ func (g Generator) Generate(
 	return &ir.Program{
 		Connections: result.Connections,
 		Funcs:       result.Funcs,
+		Metadata:    result.Metadata,
 	}, nil
 }
 
