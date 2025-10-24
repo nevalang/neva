@@ -11,6 +11,14 @@ pub type ZipResult<T, R> struct {
 #extern(stream_zip)
 pub def Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)
 
+// === ZipMany ===
+
+// Produces a stream of lists where each list contains items from the
+// corresponding positions of the input streams. Stops when any stream is
+// exhausted.
+#extern(stream_zip_many)
+pub def ZipMany<T>([streams] stream<T>) (data stream<list<T>>)
+
 // === Product ===
 
 pub type ProductResult<T, Y> struct {
