@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type stringJoin struct{}
+type stringJoinList struct{}
 
-func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -21,27 +21,21 @@ func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 	}
 
 	return func(ctx context.Context) {
-		builder := strings.Builder{}
-
 		for {
-			msg, ok := dataIn.Receive(ctx)
+			data, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			item := msg.Struct()
-
-			builder.WriteString(item.Get("data").Str())
-
-			if !item.Get("last").Bool() {
-				continue
+			builder := strings.Builder{}
+			list := data.List()
+			for i := range list {
+				builder.WriteString(list[i].Str())
 			}
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
 				return
 			}
-
-			builder.Reset()
 		}
 	}, nil
 }

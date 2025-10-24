@@ -91,11 +91,12 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},
 
-		"string_at":        stringAt{},
-		"strings_join":     stringJoin{},
-		"strings_split":    stringsSplit{},
-		"strings_to_upper": stringsToUpper{},
-		"strings_to_lower": stringsToLower{},
+		"string_at":         stringAt{},
+		"strings_join":      stringJoin{},
+		"strings_join_list": stringJoinList{},
+		"strings_split":     stringsSplit{},
+		"strings_to_upper":  stringsToUpper{},
+		"strings_to_lower":  stringsToLower{},
 
 		"scanln":  scanln{},
 		"args":    args{},
