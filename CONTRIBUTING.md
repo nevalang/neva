@@ -22,6 +22,23 @@ Not required but recommended:
 
 ## Development
 
+## Releasing a new version
+
+Follow these steps to publish a new Nevalang release:
+
+1. Go to the [GitHub releases page](https://github.com/nevalang/neva/releases) and draft a new release.
+2. Create a new SemVer tag (e.g., `vX.Y.Z`) for the release and write concise release notes.
+3. important: build the executables locally on your machine:
+
+```bash
+make build
+```
+
+4. Manually upload the built executables as assets to the drafted release.
+5. Publish the release.
+
+after publishing: if the language syntax, stdlib, or tooling changed, update the VS Code extension (`nevalang.vscode-nevalang`) accordingly.
+
 ## Syntax (ANTLR, Parser)
 
 1. Make changes to `neva.g4` and corresponding `*.neva` files in the repo
