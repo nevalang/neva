@@ -1,14 +1,15 @@
 import {
     fmt
     runtime
+    streams
 }
 
 const l list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
 	fmt.Println<int>
-	Reduce<int, int>{Mul}
-	ListToStream<int>
+        streams.Reduce<int, int>{Mul}
+        streams.FromList<int>
 	panic runtime.Panic
 	---
 	:start -> $l -> listToStream -> reduce:data

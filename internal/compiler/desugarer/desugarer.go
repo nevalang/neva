@@ -21,6 +21,7 @@ type Desugarer struct {
 	fanOutCounter         uint64
 	fanInCounter          uint64
 	rangeCounter          uint64
+	needsStreamsImport    bool
 	// Arithmetic
 	addCounter uint64
 	subCounter uint64
@@ -149,6 +150,8 @@ func (d *Desugarer) desugarFile(
 	file src.File,
 	scope src.Scope,
 ) (src.File, error) {
+	d.needsStreamsImport = false
+
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
 	for entityName, entity := range file.Entities {
@@ -177,6 +180,16 @@ func (d *Desugarer) desugarFile(
 		Module:  "std",
 		Package: "builtin",
 		Meta:    core.Meta{Location: *scope.Location()},
+	}
+
+	if d.needsStreamsImport {
+		if _, exists := desugaredImports["streams"]; !exists {
+			desugaredImports["streams"] = src.Import{
+				Module:  "std",
+				Package: "streams",
+				Meta:    core.Meta{Location: *scope.Location()},
+			}
+		}
 	}
 
 	return src.File{

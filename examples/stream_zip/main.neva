@@ -3,8 +3,8 @@ import { streams, fmt, runtime }
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-	ListToStream<string>, streams.Zip<int, string>
-        For{fmt.Println}, streams.Wait, runtime.Panic
+        streams.FromList<string>, streams.Zip<int, string>
+        streams.ForEach{fmt.Println}, streams.Wait, runtime.Panic
 	---
         :start -> 0..10 -> zip:left
         $strings -> listToStream -> zip:right
