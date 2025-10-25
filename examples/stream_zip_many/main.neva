@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
         l2s3 ListToStream<int>
         zip_many streams.ZipMany<int>
         for For<list<int>>{fmt.Println<list<int>>}
-        wait Wait
+        wait streams.Wait
         panic runtime.Panic
         ---
         :start -> [

@@ -1,15 +1,3 @@
-// --- Basic operations ---
-
-// Wait blocks until last stream item arrive, then sends a signal.
-pub def Wait(data stream<any>) (sig any) {
-    del Del
-    ---
-    :data -> .last -> switch {
-        true -> :sig
-        _ -> del
-    }
-}
-
 // ArrPortToStream iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
@@ -107,7 +95,7 @@ pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
 // This prevents concurrency issues.
 //
 // Like other iterators, it processes items one at a time without blocking the stream.
-// To wait for all items to be processed, use with `Wait`.
+// To wait for all items to be processed, use with `streams.Wait`.
 pub def For<T>(data stream<T>) (res stream<T>, err error) {
     // IDEA - if we use sync.Step, we don't have to mess with indexes
     

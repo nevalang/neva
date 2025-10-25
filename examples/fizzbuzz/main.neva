@@ -1,12 +1,13 @@
 import {
     fmt
     runtime
+    streams
 }
 
 def Main(start any) (stop any) {
     Map<int, any>{FizzBuzz}
     For{fmt.Println}
-    Wait
+    streams.Wait
     panic runtime.Panic
     ---
     :start -> 1..101 -> map -> for
