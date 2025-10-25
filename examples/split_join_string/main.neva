@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
         :start -> [
                 'neva' -> split:data,
                 '' -> split:delim,
-                '-' -> join:sep
+                '' -> join:sep
         ]
         split -> list_to_stream -> join:data
         join -> println:data
