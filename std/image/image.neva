@@ -1,6 +1,10 @@
+import {
+        streams
+}
+
 // RGBA represents a color in the RGBA 64-bit color space.
 pub type RGBA struct {
-	r int
+        r int
 	g int
 	b int
 	a int
@@ -24,7 +28,7 @@ pub type Image struct {
 
 // New creates a new RGBA image from the given pixels.
 #extern(image_new)
-pub def New(pixels stream<Pixel>) (img Image, err error)
+pub def New(pixels streams.Item<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
