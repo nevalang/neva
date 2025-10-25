@@ -17,9 +17,9 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	expectedOutput := `{"first": 0, "second": "a"}
-{"first": 1, "second": "b"}
-{"first": 2, "second": "c"}
+	expectedOutput := `{"left": 0, "right": "a"}
+{"left": 1, "right": "b"}
+{"left": 2, "right": "c"}
 `
 
 	for i := 0; i < 10; i++ {

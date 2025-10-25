@@ -12,71 +12,77 @@ func (streamZip) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Single("first")
+	leftIn, err := io.In.Single("left")
 	if err != nil {
 		return nil, err
 	}
 
-	secondIn, err := io.In.Single("second")
+	rightIn, err := io.In.Single("right")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO optimize (read 1 message at a time from each inport, then send 1 message to outport
-	// close out stream as soon as one of the two input messages are last, but be careful with the
-	// rest messages in the second stream, you also need to read them)
 	return func(ctx context.Context) {
+		var idx int64
 		for {
-			firstData := []runtime.Msg{}
-			for {
-				seqMsg, ok := firstIn.Receive(ctx)
-				if !ok {
-					return
-				}
-				item := seqMsg.Struct()
-				firstData = append(firstData, item.Get("data"))
-				if item.Get("last").Bool() {
-					break
-				}
+			leftMsg, ok := leftIn.Receive(ctx)
+			if !ok {
+				return
 			}
 
-			secondData := []runtime.Msg{}
-			for {
-				seqMsg, ok := secondIn.Receive(ctx)
-				if !ok {
-					return
-				}
-				item := seqMsg.Struct()
-				secondData = append(secondData, item.Get("data"))
-				if item.Get("last").Bool() {
-					break
-				}
+			rightMsg, ok := rightIn.Receive(ctx)
+			if !ok {
+				return
 			}
 
-			n := len(firstData)
-			if m := len(secondData); m < n {
-				n = m
+			leftItem := leftMsg.Struct()
+			rightItem := rightMsg.Struct()
+
+			leftLast := leftItem.Get("last").Bool()
+			rightLast := rightItem.Get("last").Bool()
+
+			zipped := runtime.NewStructMsg(
+				[]string{"left", "right"},
+				[]runtime.Msg{leftItem.Get("data"), rightItem.Get("data")},
+			)
+
+			last := leftLast || rightLast
+
+			if !resOut.Send(ctx, streamItem(zipped, idx, last)) {
+				return
 			}
 
-			for i := 0; i < n; i++ {
-				if !dataOut.Send(
-					ctx,
-					streamItem(
-						runtime.NewStructMsg(
-							[]string{"first", "second"},
-							[]runtime.Msg{firstData[i], secondData[i]}),
-						int64(i),
-						i == n-1,
-					),
-				) {
-					return
+			idx++
+
+			if last {
+				if !leftLast {
+					drainStream(ctx, leftIn)
 				}
+
+				if !rightLast {
+					drainStream(ctx, rightIn)
+				}
+
+				return
 			}
 		}
 	}, nil
+}
+
+func drainStream(ctx context.Context, in runtime.SingleInport) {
+	for {
+		msg, ok := in.Receive(ctx)
+		if !ok {
+			return
+		}
+
+		if msg.Struct().Get("last").Bool() {
+			return
+		}
+	}
 }
