@@ -12,23 +12,18 @@ func (streamZipMany) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	streamsIn, err := io.In.Array("streams")
+	dataIn, err := io.In.Array("data")
 	if err != nil {
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
-	}
-
-	// If there are no streams connected there is nothing to zip.
-	if streamsIn.Len() == 0 {
-		return func(ctx context.Context) {}, nil
 	}
 
 	return func(ctx context.Context) {
-		streamsCount := streamsIn.Len()
+		streamsCount := dataIn.Len()
 		index := int64(0)
 
 		for {
@@ -36,7 +31,7 @@ func (streamZipMany) Create(
 			shouldStop := false
 
 			for streamIdx := 0; streamIdx < streamsCount; streamIdx++ {
-				msg, ok := streamsIn.Receive(ctx, streamIdx)
+				msg, ok := dataIn.Receive(ctx, streamIdx)
 				if !ok {
 					return
 				}
@@ -49,7 +44,7 @@ func (streamZipMany) Create(
 				}
 			}
 
-			if !dataOut.Send(
+			if !resOut.Send(
 				ctx,
 				streamItem(
 					runtime.NewListMsg(zipped),

@@ -17,7 +17,7 @@ pub def Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R
 // corresponding positions of the input streams. Stops when any stream is
 // exhausted.
 #extern(stream_zip_many)
-pub def ZipMany<T>([streams] stream<T>) (data stream<list<T>>)
+pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 
 // === Product ===
 
