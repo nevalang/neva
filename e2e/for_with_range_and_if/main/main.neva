@@ -1,9 +1,9 @@
-import { lists, fmt, runtime, streams }
+import { fmt, runtime, streams }
 
 const lst list<bool> = [true, false]
 
 def Main(start any) (stop any) {
-        ListToStream<bool>, For<bool>{PrintAsNum}, streams.Wait, runtime.Panic
+        streams.FromList<bool>, streams.ForEach<bool>{PrintAsNum}, streams.Wait, runtime.Panic
 	---
 	:start -> $lst -> listToStream -> for
 	for:res -> wait -> :stop

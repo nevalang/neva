@@ -1,6 +1,8 @@
 import {
     fmt
     runtime
+    streams
+    lists
 }
 
 // stream list of ints, decrement each, build new list and print it
@@ -8,10 +10,10 @@ import {
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    map_decr Map<int, int>{Dec}
-    s2l StreamToList<int>
+    map_decr streams.Map<int, int>{Dec}
+    s2l lists.FromStream<int>
     println fmt.Println<list<int>>
-    l2s ListToStream<int>
+    l2s streams.FromList<int>
     panic runtime.Panic
     ---
     :start -> $lst -> l2s -> map_decr -> s2l -> println:data

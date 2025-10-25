@@ -1,7 +1,163 @@
-// --- Basic operations ---
+import {
+    lists
+}
+
+pub type Item<T> struct {
+    data T
+    idx int
+    last bool
+}
+
+// --- Sources ---
+
+// FromArray iterates over all array-inport's slots in order
+// and produces a stream of messages.
+#extern(array_port_to_stream)
+pub def FromArray<T>([port] T) (data Item<T>)
+
+// FromList creates a stream from a list by sending each element as a stream item.
+#extern(list_to_stream)
+pub def FromList<T>(data list<T>) (res Item<T>)
+
+// Range sends stream of integers starting and ending with given `from` and `to`.
+// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
+// It emits stream only after all 3 inports receive messages.
+// Signal inport is required because Range is used in range expressions.
+#extern(stream_int_range_v2)
+pub def Range(from int, to int, sig any) (res Item<int>)
+
+// --- Collectors ---
+
+// IPortReducer reduces a stream of messages to one single message.
+// It's expected to send a result message after every processed stream.
+pub interface IPortReducer<T>(Item<T>) (T)
+
+// IReducer is a dependency for Reduce.
+pub interface IReducer<T, Y>(left T, right T) (res Y)
+
+// Reduce applies a reduction component to a stream of messages, accumulating the result.
+// It takes an initial value and a stream of data, and produces a single result.
+pub def Reduce<T, Y>(data Item<T>, init Y) (res Y) {
+    reducer IReducer<T, Y>
+    acc Accumulator<Y>
+    ---
+    :init -> acc:init
+
+    :data -> [
+        .data -> reducer:right,
+        .last -> acc:last
+    ]
+
+    acc:cur -> reducer:left
+    reducer -> acc:upd
+
+    acc:res -> :res
+}
+
+// Accumulator maintains the current state of the reduction.
+// It updates its value with each new input and outputs the final result when last is true.
+#extern(accumulator)
+pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
+
+// --- Transformations ---
+
+// IMapHandler is a dependency for Map.
+pub interface IMapHandler<T, Y>(T) (Y)
+
+// Map maps one stream onto another.
+// Just like ForEach, it does not block the stream. As soon as one item processed,
+// it sends an item downstream and processes the next one.
+// It's can receive next message before previous one is processed,
+// so it must never be used with side-effects.
+pub def Map<T, Y>(data Item<T>) (res Item<Y>) {
+    handler IMapHandler<T, Y>
+    wrap Struct<Item<Y>>
+    ---
+    :data -> [
+        .idx -> wrap:idx,
+        .last -> wrap:last,
+        .data -> handler -> wrap:data
+    ]
+    wrap -> :res
+}
+
+// Filter uses a predicate to split the data stream and keeps only the matching branch.
+pub def Filter<T>(data Item<T>) (res Item<T>) {
+    split Split<T>{predicate IPredicate<T>}
+    s2l lists.FromStream<T>
+    l2s FromList<T>
+    ---
+    :data -> split
+    split:then -> s2l -> l2s -> :res
+}
+
+// Split splits a stream into two streams based on a predicate.
+// Notice that it does not modifies stream item indexes and last flag.
+pub def Split<T>(data Item<T>) (then Item<T>, else Item<T>) {
+    cond Cond<Item<T>>
+    predicate IPredicate<T>
+    ---
+    :data -> [cond:data, .data -> predicate]
+    predicate -> cond:if
+    cond:then -> :then
+    cond:else -> :else
+}
+
+pub interface IPredicate<T>(T) (bool)
+
+// --- Iteration ---
+
+// ForEach applies a handler to each item in a stream to produce side-effects.
+// It never modifies the stream.
+//
+// It uses back pressure to ensure the handler processes items sequentially -
+// the next item is not sent until the handler signals completion of the previous one.
+// This prevents concurrency issues.
+//
+// Like other iterators, it processes items one at a time without blocking the stream.
+// To wait for all items to be processed, use with `streams.Wait`.
+pub def ForEach<T>(data Item<T>) (res Item<T>, err error) {
+    // IDEA - if we use sync.Step, we don't have to mess with indexes
+
+    first IsFirst<T> // to check if current msg is the first
+    lock1 Lock<Item<T>> // to lock current msg before sending to handler
+    lock2 Lock<Item<T>> // to lock current msg before sending downstream
+    handler ISideEffector<T> // to process current msg
+    pass1 Pass // to unlock current msg to send to handler
+    pass2 Pass // to unlock current msg to send downstream
+    ---
+    :data -> [lock1:data, lock2:data, first]
+
+    lock1 -> .data -> handler
+    lock2 -> :res
+
+    [first:then, pass1] -> lock1:sig
+    pass2 -> lock2:sig
+
+    handler:res -> [pass1, pass2]
+    handler:err -> :err
+}
+
+pub interface ISideEffector<T>(T) (res any, err error)
+
+// IsFirst is a helper that allows to check if given stream item is the first one.
+def IsFirst<T>(data Item<T>) (then Item<T>, else Item<T>) {
+    cond Cond<Item<T>>
+    eq Eq<int>
+    pass Pass<Item<T>>
+    ---
+    :data -> [cond:data, pass]
+    pass -> .idx -> eq:left
+    0 -> eq:right
+    eq -> cond:if
+    cond:then -> :then
+    cond:else -> :else
+}
+
+// --- Synchronization ---
 
 // Wait blocks until last stream item arrive, then sends a signal.
-pub def Wait(data stream<any>) (sig any) {
+pub def Wait(data Item<any>) (sig any) {
     del Del
     ---
     :data -> .last -> switch {
@@ -10,7 +166,7 @@ pub def Wait(data stream<any>) (sig any) {
     }
 }
 
-// === Zip ===
+// --- Combinators ---
 
 pub type ZipResult<T, R> struct {
     left T
@@ -21,17 +177,13 @@ pub type ZipResult<T, R> struct {
 // where left is from the left stream and right is from the right stream.
 // Stops when either stream is exhausted.
 #extern(stream_zip)
-pub def Zip<T, R>(left stream<T>, right stream<R>) (res stream<ZipResult<T, R>>)
-
-// === ZipMany ===
+pub def Zip<T, R>(left Item<T>, right Item<R>) (res Item<ZipResult<T, R>>)
 
 // Produces a stream of lists where each list contains items from the
 // corresponding positions of the input streams. Stops when any stream is
 // exhausted.
 #extern(stream_zip_many)
-pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
-
-// === Product ===
+pub def ZipMany<T>([data] Item<T>) (res Item<list<T>>)
 
 pub type ProductResult<T, Y> struct {
     first T
@@ -42,4 +194,4 @@ pub type ProductResult<T, Y> struct {
 // then outputs stream of every combination of elements from the first stream with
 // elements from the second.
 #extern(stream_product)
-pub def Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
+pub def Product<T, Y>(first Item<T>, second Item<Y>) (data Item<ProductResult<T, Y>>)

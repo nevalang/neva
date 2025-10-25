@@ -5,7 +5,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-	print For<int>{Next2Lines}
+        print streams.ForEach<int>{Next2Lines}
         wait streams.Wait
 	panic runtime.Panic
 	---

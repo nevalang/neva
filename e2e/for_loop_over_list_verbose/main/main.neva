@@ -7,7 +7,7 @@ import {
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    ListToStream<int>, For<int>{fmt.Println}, streams.Wait, runtime.Panic
+    streams.FromList<int>, streams.ForEach<int>{fmt.Println}, streams.Wait, runtime.Panic
     ---
     :start -> $lst -> listToStream -> for
     for:res -> wait -> :stop

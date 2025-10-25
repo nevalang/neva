@@ -12,8 +12,3 @@ pub type error struct {
     child maybe<error>
 }
 
-pub type stream<T> struct {
-    data T
-    idx int
-    last bool
-}

@@ -5,7 +5,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    For{Handler}, streams.Wait, runtime.Panic
+    streams.ForEach{Handler}, streams.Wait, runtime.Panic
     ---
     :start -> 1..5 -> for
     for:res -> wait -> :stop

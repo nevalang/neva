@@ -38,17 +38,17 @@ Builtin package entities are frequently used or used internally by the compiler.
 
 Const nodes are implemented as infinite loops that constantly send messages. This covers all use cases but requires locks for controlled constant message sending. Alternative designs like "trigger" semantics or changing to single-send behavior have been considered, but they introduce other complexities or limitations.
 
-## Why have `stream` builtin?
+## Why have `streams.Item`?
 
-Streams solve the problem of iterating over collections in dataflow, providing a way to know when a collection ends, crucial for implementing patterns like `map/filter/reduce`.
+`streams.Item` values solve the problem of iterating over collections in dataflow, providing a way to know when a collection ends—crucial for implementing patterns like `streams.Map`/`streams.Filter`/`streams.Reduce`.
 
 ## Why are Neva's streams different from classical FBP?
 
 Neva supports infinite nesting for streams, but nested streams aren't used to represent structured data due to the existence of `struct`, `list`, and `dict`.
 
-## How to work with components that expect `T` when you have `stream<T>`?
+## How to work with components that expect `T` when you have `streams.Item<T>`?
 
-Use `Map/Filter/Reduce` for data transformations and `For` for side-effects. For complex cases, access `.data` on stream item directly.
+Use `streams.Map`/`streams.Filter`/`streams.Reduce` for data transformations and `streams.ForEach` for side-effects. For complex cases, access `.data` on the stream item directly.
 
 ## Why isn't `Main:stop` of `int` type?
 

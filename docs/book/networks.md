@@ -355,7 +355,7 @@ As you can see `Field` is one of few components that are expected to be used wit
 
 #### Range Expression
 
-A range expression sender allows you to generate a `stream<int>` of messages within a specified range.
+A range expression sender allows you to generate a `streams.Item<int>` sequence within a specified range.
 
 ```
 sig -> 0..100 -> receiver
@@ -376,7 +376,7 @@ sig -> 100..0 -> receiver
 Range expressions is syntax sugar over explicit `Range`:
 
 ```neva
-def Range(from int, to int, sig any) (res stream<int>)
+def Range(from int, to int, sig any) (res streams.Item<int>)
 ```
 
 `Range` component waits for all 3 inports to fire, then emits a stream of `N` messages. You are free to use range as a normal component, but you should prefer `..` syntax whenever possible.

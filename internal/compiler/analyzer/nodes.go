@@ -1090,7 +1090,7 @@ func (a Analyzer) getPossibleSenderTypes(
 		return []typesystem.Expr{
 			{
 				Inst: &typesystem.InstExpr{
-					Ref:  core.EntityRef{Name: "stream"},
+					Ref:  core.EntityRef{Pkg: "streams", Name: "Item"},
 					Args: []typesystem.Expr{{Inst: &typesystem.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
 				},
 			},

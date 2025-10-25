@@ -2,6 +2,7 @@ import {
     strings
     fmt
     runtime
+    streams
 }
 
 def Main(start any) (stop any) {
@@ -9,7 +10,7 @@ def Main(start any) (stop any) {
         split strings.Split
         join strings.Join
         panic runtime.Panic
-        l2s ListToStream<string>
+        l2s streams.FromList<string>
         ---
         :start -> [
                 'a,b,c' -> split:data,

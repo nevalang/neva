@@ -3,8 +3,8 @@
 import { time, fmt, runtime, streams }
 
 def Main(start any) (stop any) {
-    Map<int, string>{Handler}
-    For<string>{fmt.Println}
+    streams.Map<int, string>{Handler}
+    streams.ForEach<string>{fmt.Println}
     streams.Wait
     runtime.Panic
     ---
