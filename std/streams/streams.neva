@@ -1,15 +1,15 @@
 // === Zip ===
 
 pub type ZipResult<T, R> struct {
-    first T
-    second R
+    left T
+    right R
 }
 
-// Produces a stream of tuples of the form (first, second)
-// where first is from the first stream and second is from the second stream.
+// Produces a stream of tuples of the form (left, right)
+// where left is from the left stream and right is from the right stream.
 // Stops when either stream is exhausted.
 #extern(stream_zip)
-pub def Zip<T, R>(first stream<T>, second stream<R>) (data stream<ZipResult<T, R>>)
+pub def Zip<T, R>(left stream<T>, right stream<R>) (res stream<ZipResult<T, R>>)
 
 // === ZipMany ===
 

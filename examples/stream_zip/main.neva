@@ -6,9 +6,9 @@ def Main(start any) (stop any) {
 	ListToStream<string>, streams.Zip<int, string>
 	For{fmt.Println}, Wait, runtime.Panic
 	---
-	:start -> 0..10 -> zip:first
-	$strings -> listToStream -> zip:second
-	zip -> for
+        :start -> 0..10 -> zip:left
+        $strings -> listToStream -> zip:right
+        zip:res -> for
 	for:res -> wait -> :stop
 	for:err -> panic
 }
