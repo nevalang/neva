@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/pkg"
 )
 
 type Generator struct{}
@@ -60,6 +61,7 @@ func (g Generator) Generate(
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{},
 		Funcs:       []ir.FuncCall{},
+		Comment:     buildProgramComment(build.EntryModRef.Path, build.EntryModRef.Version, mainPkgName),
 	}
 
 	g.processNode(
@@ -71,7 +73,18 @@ func (g Generator) Generate(
 	return &ir.Program{
 		Connections: result.Connections,
 		Funcs:       result.Funcs,
+		Comment:     result.Comment,
 	}, nil
+}
+
+func buildProgramComment(modulePath, moduleVersion, mainPackage string) string {
+	return fmt.Sprintf(
+		"// module=%s@%s main=%s compiler=%s",
+		modulePath,
+		moduleVersion,
+		mainPackage,
+		pkg.Version,
+	)
 }
 
 func (g Generator) processNode(

@@ -14,7 +14,10 @@ func (ProdInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg { return msg }
 
 func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg { return msg }
 
-type DebugInterceptor struct{ file *os.File }
+type DebugInterceptor struct {
+	file    *os.File
+	comment string
+}
 
 func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0644)
@@ -22,6 +25,9 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 		return nil, err
 	}
 	d.file = file
+	if _, err := fmt.Fprintln(d.file, d.comment); err != nil {
+		return nil, err
+	}
 	return file.Close, nil
 }
 
@@ -67,6 +73,6 @@ func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {
 	return s
 }
 
-func NewDebugInterceptor() *DebugInterceptor {
-	return &DebugInterceptor{}
+func NewDebugInterceptor(comment string) *DebugInterceptor {
+	return &DebugInterceptor{comment: comment}
 }

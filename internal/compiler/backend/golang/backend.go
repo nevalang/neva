@@ -53,6 +53,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
 		Trace:           trace,
+		TraceComment:    prog.Comment,
 	}
 
 	var buf bytes.Buffer
