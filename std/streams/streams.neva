@@ -1,3 +1,15 @@
+// --- Basic operations ---
+
+// Wait blocks until last stream item arrive, then sends a signal.
+pub def Wait(data stream<any>) (sig any) {
+    del Del
+    ---
+    :data -> .last -> switch {
+        true -> :sig
+        _ -> del
+    }
+}
+
 // === Zip ===
 
 pub type ZipResult<T, R> struct {

@@ -1,11 +1,11 @@
 // we could use match instead, but we show Select here
 
-import { time, fmt, runtime }
+import { time, fmt, runtime, streams }
 
 def Main(start any) (stop any) {
     Map<int, string>{Handler}
     For<string>{fmt.Println}
-    Wait
+    streams.Wait
     runtime.Panic
     ---
     :start -> 1..5 -> map -> for
