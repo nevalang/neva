@@ -94,7 +94,7 @@ func newRunCmd(
 				analyzer,
 				irgen,
 				native.NewBackend(
-					golang.NewBackend(),
+					golang.NewBackend(golang.ModeExecutable),
 				),
 			)
 

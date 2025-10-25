@@ -39,7 +39,7 @@ func (i Indexer) FullScan(
 
 	i.logger.Debug("nevalang module found in workspace", "path", feResult.Path)
 
-	aBuild, err := i.analyzer.AnalyzeBuild(feResult.ParsedBuild)
+	aBuild, err := i.analyzer.AnalyzeBuild(feResult.ParsedBuild, feResult.MainPkg)
 	if err != nil {
 		return src.Build{}, true, err.Unwrap() // use only deepest compiler error for now
 	}

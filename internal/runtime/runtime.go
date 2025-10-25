@@ -71,7 +71,10 @@ func deferFuncCalls(
 	}, nil
 }
 
-func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]func(context.Context), error) {
+func createHandlers(
+	funcCalls []FuncCall,
+	registry map[string]FuncCreator,
+) ([]func(context.Context), error) {
 	funcs := make([]func(context.Context), len(funcCalls))
 
 	for i, call := range funcCalls {

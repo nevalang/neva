@@ -205,7 +205,9 @@ func newBuildCmd(
 					desugarer,
 					analyzer,
 					irgen,
-					native.NewBackend(golangBackend),
+					native.NewBackend(
+						golang.NewBackend(golang.ModeExecutable),
+					),
 				)
 			}
 

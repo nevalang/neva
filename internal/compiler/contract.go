@@ -36,7 +36,7 @@ type (
 	RawPackage map[string][]byte
 
 	Analyzer interface {
-		AnalyzeExecutableBuild(mod src.Build, mainPkgName string) (src.Build, *Error)
+		AnalyzeBuild(mod src.Build, mainPkgName string) (src.Build, *Error)
 	}
 
 	Desugarer interface {

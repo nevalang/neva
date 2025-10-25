@@ -109,7 +109,7 @@ type MiddleendResult struct {
 }
 
 func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
-	analyzedBuild, err := m.analyzer.AnalyzeExecutableBuild(
+	analyzedBuild, err := m.analyzer.AnalyzeBuild(
 		feResult.ParsedBuild,
 		feResult.MainPkg,
 	)
