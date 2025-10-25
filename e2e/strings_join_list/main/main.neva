@@ -1,15 +1,12 @@
 import { strings, fmt, runtime }
 
-const phrase string = 'hello neva lang'
-const sep string = ' '
-
 def Main(start any) (stop any) {
         fmt.Println, strings.Join, strings.Split, runtime.Panic
         ---
         :start -> [
-                $phrase -> split:data,
-                $sep -> split:delim,
-                $sep -> join:sep
+                'hello neva lang' -> split:data,
+                ' ' -> split:delim,
+                ' ' -> join:sep
         ]
         split -> join:data
         join -> println:data

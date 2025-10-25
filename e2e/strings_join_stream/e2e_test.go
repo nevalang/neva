@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -10,7 +9,6 @@ import (
 
 func Test(t *testing.T) {
 	cmd := exec.Command("neva", "run", "main")
-	cmd.Env = append(os.Environ(), "GOTOOLCHAIN=go1.25.0")
 
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
