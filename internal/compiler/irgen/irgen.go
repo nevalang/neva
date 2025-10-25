@@ -1,12 +1,13 @@
 package irgen
 
 import (
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/pkg"
 )
 
 type Generator struct{}
@@ -78,33 +79,30 @@ func (g Generator) Generate(
 }
 
 func buildProgramComment(modulePath, moduleVersion, mainPackage string) string {
-	type programMetadata struct {
-		Program struct {
-			ModulePath    string `json:"modulePath,omitempty"`
-			ModuleVersion string `json:"moduleVersion,omitempty"`
-			MainPackage   string `json:"mainPackage,omitempty"`
-		} `json:"program,omitempty"`
+	var parts []string
+
+	switch {
+	case modulePath != "" && moduleVersion != "":
+		parts = append(parts, fmt.Sprintf("module=%s@%s", modulePath, moduleVersion))
+	case modulePath != "":
+		parts = append(parts, fmt.Sprintf("module=%s", modulePath))
+	case moduleVersion != "":
+		parts = append(parts, fmt.Sprintf("moduleVersion=%s", moduleVersion))
 	}
 
-	var meta programMetadata
-	meta.Program.ModulePath = modulePath
-	meta.Program.ModuleVersion = moduleVersion
-	meta.Program.MainPackage = mainPackage
+	if mainPackage != "" {
+		parts = append(parts, fmt.Sprintf("main=%s", mainPackage))
+	}
 
-	if meta.Program == (struct {
-		ModulePath    string `json:"modulePath,omitempty"`
-		ModuleVersion string `json:"moduleVersion,omitempty"`
-		MainPackage   string `json:"mainPackage,omitempty"`
-	}{}) {
+	if pkg.Version != "" {
+		parts = append(parts, fmt.Sprintf("compiler=%s", pkg.Version))
+	}
+
+	if len(parts) == 0 {
 		return ""
 	}
 
-	payload, err := json.Marshal(meta)
-	if err != nil {
-		panic(err)
-	}
-
-	return fmt.Sprintf("# metadata %s", payload)
+	return "# " + strings.Join(parts, " ")
 }
 
 func (g Generator) processNode(

@@ -2,7 +2,6 @@ package golang
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -54,7 +53,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		ChanVarNames:    chanVarNames,
 		FuncCalls:       funcCalls,
 		Trace:           trace,
-		TraceComment:    buildTraceComment(prog.Comment, pkg.Version),
+		TraceComment:    prog.Comment,
 	}
 
 	var buf bytes.Buffer
@@ -71,77 +70,6 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	}
 
 	return compiler.SaveFilesToDir(dst, files)
-}
-
-func buildTraceComment(irComment, compilerVersion string) string {
-	const prefix = "# metadata "
-
-	type (
-		programBlock struct {
-			ModulePath    string `json:"modulePath,omitempty"`
-			ModuleVersion string `json:"moduleVersion,omitempty"`
-			MainPackage   string `json:"mainPackage,omitempty"`
-		}
-		compilerBlock struct {
-			Version string `json:"version,omitempty"`
-		}
-		metadata struct {
-			Program  programBlock  `json:"program,omitempty"`
-			Compiler compilerBlock `json:"compiler,omitempty"`
-		}
-	)
-
-	var meta metadata
-
-	if strings.HasPrefix(irComment, prefix) {
-		if err := json.Unmarshal([]byte(strings.TrimPrefix(irComment, prefix)), &meta); err != nil {
-			return fallbackTraceComment(irComment, compilerVersion)
-		}
-	} else if irComment != "" {
-		if compilerVersion == "" {
-			return irComment
-		}
-		return irComment + " | compiler=" + compilerVersion
-	}
-
-	meta.Compiler.Version = compilerVersion
-
-	if meta.Program == (programBlock{}) && meta.Compiler == (compilerBlock{}) {
-		return ""
-	}
-
-	payload, err := json.Marshal(meta)
-	if err != nil {
-		return fallbackTraceComment(irComment, compilerVersion)
-	}
-
-	return prefix + string(payload)
-}
-
-func fallbackTraceComment(comment, compilerVersion string) string {
-	if comment == "" {
-		if compilerVersion == "" {
-			return ""
-		}
-		type compilerOnly struct {
-			Compiler struct {
-				Version string `json:"version,omitempty"`
-			} `json:"compiler"`
-		}
-		var payload compilerOnly
-		payload.Compiler.Version = compilerVersion
-		data, err := json.Marshal(payload)
-		if err != nil {
-			return "# compiler=" + compilerVersion
-		}
-		return "# metadata " + string(data)
-	}
-
-	if compilerVersion == "" {
-		return comment
-	}
-
-	return comment + " | compiler=" + compilerVersion
 }
 
 func (b Backend) buildFuncCalls(
