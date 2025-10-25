@@ -1,7 +1,14 @@
-import { strings, fmt, runtime }
+import {
+    strings
+    fmt
+    runtime
+}
 
 def Main(start any) (stop any) {
-        fmt.Println, strings.Join, strings.Split, runtime.Panic
+        println fmt.Println<string>
+        split strings.Split
+        join strings.Join
+        panic runtime.Panic
         ---
         :start -> [
                 'hello neva lang' -> split:data,
