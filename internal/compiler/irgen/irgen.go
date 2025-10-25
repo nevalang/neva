@@ -2,7 +2,6 @@ package irgen
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
@@ -79,30 +78,13 @@ func (g Generator) Generate(
 }
 
 func buildProgramComment(modulePath, moduleVersion, mainPackage string) string {
-	var parts []string
-
-	switch {
-	case modulePath != "" && moduleVersion != "":
-		parts = append(parts, fmt.Sprintf("module=%s@%s", modulePath, moduleVersion))
-	case modulePath != "":
-		parts = append(parts, fmt.Sprintf("module=%s", modulePath))
-	case moduleVersion != "":
-		parts = append(parts, fmt.Sprintf("moduleVersion=%s", moduleVersion))
-	}
-
-	if mainPackage != "" {
-		parts = append(parts, fmt.Sprintf("main=%s", mainPackage))
-	}
-
-	if pkg.Version != "" {
-		parts = append(parts, fmt.Sprintf("compiler=%s", pkg.Version))
-	}
-
-	if len(parts) == 0 {
-		return ""
-	}
-
-	return "# " + strings.Join(parts, " ")
+	return fmt.Sprintf(
+		"// module=%s@%s main=%s compiler=%s",
+		modulePath,
+		moduleVersion,
+		mainPackage,
+		pkg.Version,
+	)
 }
 
 func (g Generator) processNode(

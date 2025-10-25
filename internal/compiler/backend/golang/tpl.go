@@ -39,18 +39,12 @@ func main() {
     )
     {{- if .Trace }}
 
-    interceptor := runtime.NewDebugInterceptor()
+    interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
 
     close, err := interceptor.Open("trace.log")
     if err != nil {
         fmt.Fprintln(os.Stderr, "can't open trace file:", err.Error())
         os.Exit(1)
-    }
-    if comment := {{printf "%q" .TraceComment}}; comment != "" {
-        if err := interceptor.WriteComment(comment); err != nil {
-            fmt.Fprintln(os.Stderr, "can't write trace comment:", err.Error())
-            os.Exit(1)
-        }
     }
     defer func() {
         if err := close(); err != nil {
