@@ -4,27 +4,36 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(wd)
 
-        expectedOutput := `[1,10,100]
+	repoRoot := filepath.Clean(filepath.Join(wd, "..", ".."))
+	examplesDir := filepath.Join(repoRoot, "examples")
+
+	binaryPath := filepath.Join(t.TempDir(), "neva")
+
+	build := exec.Command("go", "build", "-o", binaryPath, "./cmd/neva")
+	build.Dir = repoRoot
+
+	out, err := build.CombinedOutput()
+	require.NoError(t, err, string(out))
+
+	expectedOutput := `[1,10,100]
 [2,20,200]
 [3,30,300]
 `
 
 	for i := 0; i < 10; i++ {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
-			cmd := exec.Command("neva", "run", "stream_zip_many")
+			cmd := exec.Command(binaryPath, "run", "stream_zip_many")
+			cmd.Dir = examplesDir
 
 			out, err := cmd.CombinedOutput()
 			require.NoError(t, err, string(out))
