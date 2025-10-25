@@ -1,0 +1,20 @@
+import { strings, fmt, runtime }
+
+const words list<string> = ['a', 'b', 'c']
+const sep string = ', '
+
+def Main(start any) (stop any) {
+        fmt.Println, strings.Join, runtime.Panic
+        l2s ListToStream<string>
+        pass Pass<string>
+        ---
+        :start -> [
+                $words -> l2s:data,
+                $sep -> pass:data
+        ]
+        pass:res -> join:sep
+        l2s -> join:data
+        join -> println:data
+        println:res -> :stop
+        println:err -> panic
+}

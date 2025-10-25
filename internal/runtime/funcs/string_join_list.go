@@ -15,6 +15,11 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 		return nil, err
 	}
 
+	sepIn, err := io.In.Single("sep")
+	if err != nil {
+		return nil, err
+	}
+
 	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
@@ -27,9 +32,19 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 				return
 			}
 
+			sepMsg, ok := sepIn.Receive(ctx)
+			if !ok {
+				return
+			}
+
+			sep := sepMsg.Str()
+
 			builder := strings.Builder{}
 			list := data.List()
 			for i := range list {
+				if i > 0 {
+					builder.WriteString(sep)
+				}
 				builder.WriteString(list[i].Str())
 			}
 

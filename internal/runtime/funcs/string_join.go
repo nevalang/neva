@@ -7,10 +7,15 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type stringJoin struct{}
+type stringJoinStream struct{}
 
-func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringJoinStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
+	if err != nil {
+		return nil, err
+	}
+
+	sepIn, err := io.In.Single("sep")
 	if err != nil {
 		return nil, err
 	}
@@ -22,6 +27,10 @@ func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		builder := strings.Builder{}
+		var (
+			sep    string
+			hasSep bool
+		)
 
 		for {
 			msg, ok := dataIn.Receive(ctx)
@@ -29,7 +38,21 @@ func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				return
 			}
 
+			if !hasSep {
+				sepMsg, ok := sepIn.Receive(ctx)
+				if !ok {
+					return
+				}
+
+				sep = sepMsg.Str()
+				hasSep = true
+			}
+
 			item := msg.Struct()
+
+			if builder.Len() > 0 {
+				builder.WriteString(sep)
+			}
 
 			builder.WriteString(item.Get("data").Str())
 
@@ -42,6 +65,7 @@ func (stringJoin) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 			}
 
 			builder.Reset()
+			hasSep = false
 		}
 	}, nil
 }

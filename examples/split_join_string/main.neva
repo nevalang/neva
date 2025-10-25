@@ -9,7 +9,8 @@ def Main(start any) (stop any) {
                 '' -> split:delim
         ]
         split -> list_to_stream:data
-        list_to_stream -> join
+        list_to_stream -> join:data
+        '-' -> join:sep
         join -> println:data
         println:res -> :stop
         println:err -> panic
