@@ -1,6 +1,7 @@
 package irgen
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -60,11 +61,7 @@ func (g Generator) Generate(
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{},
 		Funcs:       []ir.FuncCall{},
-		Metadata: ir.ProgramMetadata{
-			ModulePath:    build.EntryModRef.Path,
-			ModuleVersion: build.EntryModRef.Version,
-			MainPackage:   mainPkgName,
-		},
+		Comment:     buildProgramComment(build.EntryModRef.Path, build.EntryModRef.Version, mainPkgName),
 	}
 
 	g.processNode(
@@ -76,8 +73,38 @@ func (g Generator) Generate(
 	return &ir.Program{
 		Connections: result.Connections,
 		Funcs:       result.Funcs,
-		Metadata:    result.Metadata,
+		Comment:     result.Comment,
 	}, nil
+}
+
+func buildProgramComment(modulePath, moduleVersion, mainPackage string) string {
+	type programMetadata struct {
+		Program struct {
+			ModulePath    string `json:"modulePath,omitempty"`
+			ModuleVersion string `json:"moduleVersion,omitempty"`
+			MainPackage   string `json:"mainPackage,omitempty"`
+		} `json:"program,omitempty"`
+	}
+
+	var meta programMetadata
+	meta.Program.ModulePath = modulePath
+	meta.Program.ModuleVersion = moduleVersion
+	meta.Program.MainPackage = mainPackage
+
+	if meta.Program == (struct {
+		ModulePath    string `json:"modulePath,omitempty"`
+		ModuleVersion string `json:"moduleVersion,omitempty"`
+		MainPackage   string `json:"mainPackage,omitempty"`
+	}{}) {
+		return ""
+	}
+
+	payload, err := json.Marshal(meta)
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprintf("# metadata %s", payload)
 }
 
 func (g Generator) processNode(

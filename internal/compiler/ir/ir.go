@@ -9,13 +9,7 @@ import (
 type Program struct {
 	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"` // Hide from default marshaling
 	Funcs       []FuncCall            `json:"funcs,omitempty" yaml:"funcs,omitempty"`
-	Metadata    ProgramMetadata       `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-}
-
-type ProgramMetadata struct {
-	ModulePath    string `json:"modulePath,omitempty" yaml:"modulePath,omitempty"`
-	ModuleVersion string `json:"moduleVersion,omitempty" yaml:"moduleVersion,omitempty"`
-	MainPackage   string `json:"mainPackage,omitempty" yaml:"mainPackage,omitempty"`
+	Comment     string                `json:"comment,omitempty" yaml:"comment,omitempty"` // Comment is an arbitrary string that backends may use.
 }
 
 // MarshalJSON implements custom JSON marshaling for Program
@@ -54,11 +48,11 @@ func (p Program) MarshalYAML() (any, error) {
 	return struct {
 		Connections []serializedConnection `yaml:"connections,omitempty"`
 		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
-		Metadata    ProgramMetadata        `yaml:"metadata,omitempty"`
+		Comment     string                 `yaml:"comment,omitempty"`
 	}{
 		Connections: connections,
 		Funcs:       p.Funcs,
-		Metadata:    p.Metadata,
+		Comment:     p.Comment,
 	}, nil
 }
 

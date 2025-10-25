@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -17,49 +16,25 @@ func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg { return msg
 
 type DebugInterceptor struct{ file *os.File }
 
-func (d *DebugInterceptor) Open(filepath string, metadata TraceMetadata) (func() error, error) {
+func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}
 	d.file = file
-	if err := d.writeMetadata(metadata); err != nil {
-		file.Close()
-		return nil, err
-	}
 	return file.Close, nil
 }
 
-type TraceMetadata struct {
-	Program  TraceProgramMetadata  `json:"program,omitempty"`
-	Compiler TraceCompilerMetadata `json:"compiler,omitempty"`
-}
-
-type TraceProgramMetadata struct {
-	ModulePath    string `json:"modulePath,omitempty"`
-	ModuleVersion string `json:"moduleVersion,omitempty"`
-	MainPackage   string `json:"mainPackage,omitempty"`
-}
-
-type TraceCompilerMetadata struct {
-	Version string `json:"version,omitempty"`
-}
-
-func (m TraceMetadata) isZero() bool {
-	return m.Program == (TraceProgramMetadata{}) && m.Compiler == (TraceCompilerMetadata{})
-}
-
-func (d *DebugInterceptor) writeMetadata(metadata TraceMetadata) error {
-	if metadata.isZero() {
+func (d *DebugInterceptor) WriteComment(comment string) error {
+	if comment == "" {
 		return nil
 	}
 
-	payload, err := json.Marshal(metadata)
-	if err != nil {
-		return err
+	if d.file == nil {
+		return fmt.Errorf("debug interceptor is not opened")
 	}
 
-	if _, err := fmt.Fprintf(d.file, "# metadata %s\n", payload); err != nil {
+	if _, err := fmt.Fprintln(d.file, comment); err != nil {
 		return err
 	}
 
