@@ -9,11 +9,11 @@ const second list<int> = [10, 20, 30]
 const third list<int> = [100, 200, 300]
 
 def Main(start any) (stop any) {
-        l2s1 ListToStream<int>
-        l2s2 ListToStream<int>
-        l2s3 ListToStream<int>
+        l2s1 streams.FromList<int>
+        l2s2 streams.FromList<int>
+        l2s3 streams.FromList<int>
         zip_many streams.ZipMany<int>
-        for For<list<int>>{fmt.Println<list<int>>}
+        for streams.ForEach<list<int>>{fmt.Println<list<int>>}
         wait streams.Wait
         panic runtime.Panic
         ---

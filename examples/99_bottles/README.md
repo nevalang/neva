@@ -39,11 +39,11 @@ def PrintSecond(data int) (res any, err error) {
 
 > To avoid race-conditions, we _must_ process each element one by one
 >
-> TIP: if you have heavy stream-processors, it's better to split operation in several steps. This way you'll be able to utilize more resources, because more nodes will be able to run in parallel. But this is of cource depends on - if parent component can receive next values, until previous ones are processed. For example, if your parent is wrapped into `streams.For`, like here, then it won't help. In other words, separating `PrintFirst` into 2 sub-nodes (e.g. `get_string` and `print_string`) won't do anything.
+> TIP: if you have heavy stream-processors, it's better to split operation in several steps. This way you'll be able to utilize more resources, because more nodes will be able to run in parallel. But this is of cource depends on - if parent component can receive next values, until previous ones are processed. For example, if your parent is wrapped into `streams.ForEach`, like here, then it won't help. In other words, separating `PrintFirst` into 2 sub-nodes (e.g. `get_string` and `print_string`) won't do anything.
 >
 > Pro-TIP: readability is usually more important than performance, so always understand performance, yet focus on readability, until performance issues are faced. TLDR: do not pre-optimize.
 
-Thankfully both of them are part of the `PrintLines` parent-component, that is used by its parent `Main` like this: `streams.For<int>{PrintLines}`.
+Thankfully both of them are part of the `PrintLines` parent-component, that is used by its parent `Main` like this: `streams.ForEach<int>{PrintLines}`.
 
 ```neva
 def PrintLines(data int) (res any, err error) {
@@ -61,7 +61,7 @@ def PrintLines(data int) (res any, err error) {
 
 ```neva
 def Main(start any) (stop any) {
-	print_lines streams.For<int>{PrintLines}
+        print_lines streams.ForEach<int>{PrintLines}
 	wait streams.Wait<any>
 	---
 	:start -> 99..-1 -> print_lines
@@ -70,7 +70,7 @@ def Main(start any) (stop any) {
 }
 ```
 
-We're in luch because `PrintLines` is wrapped into `streams.For`. Component `For` guarantees that its dependency will never receive new message, while previous one wasn't fully processed (while its result or error wasn't successfully received). Of course except for the first stream element, because nothing comes before it.
+We're in luch because `PrintLines` is wrapped into `streams.ForEach`. Component `ForEach` guarantees that its dependency will never receive new message, while previous one wasn't fully processed (while its result or error wasn't successfully received). Of course except for the first stream element, because nothing comes before it.
 
 ## Even Better
 
@@ -84,9 +84,9 @@ import {
 }
 
 def Main(start any) (stop any) {
-	print_lines streams.Map<int>{MapLines}
+        print_lines streams.Map<int>{MapLines}
    println fmt.Println
-	print_lines streams.Map<int>{MapSecond}
+        print_lines streams.Map<int>{MapSecond}
 	wait streams.Wait<any>
 	---
 	:start -> 99..-1 -> map_lines

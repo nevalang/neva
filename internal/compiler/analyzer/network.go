@@ -523,7 +523,7 @@ func (a Analyzer) getResolvedSenderType(
 		// range sends stream<int> from its :data outport
 		rangeType := ts.Expr{
 			Inst: &ts.InstExpr{
-				Ref: core.EntityRef{Name: "stream"},
+				Ref: core.EntityRef{Pkg: "streams", Name: "Item"},
 				Args: []ts.Expr{{
 					Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 				}},

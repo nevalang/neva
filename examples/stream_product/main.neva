@@ -3,8 +3,8 @@ import { streams, fmt, runtime }
 type ProductResult streams.ProductResult<int, int>
 
 def Main(start any) (stop any) {
-	streams.Product<int, int>
-	For<ProductResult>{fmt.Println<ProductResult>}
+        streams.Product<int, int>
+        streams.ForEach<ProductResult>{fmt.Println<ProductResult>}
         streams.Wait
 	runtime.Panic
 	---
