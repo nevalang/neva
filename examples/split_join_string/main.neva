@@ -1,7 +1,7 @@
 import { strings, fmt, runtime }
 
 def Main(start any) (stop any) {
-        fmt.Println, strings.Split, strings.Join, runtime.Panic
+        fmt.Println<string>, strings.Split, strings.Join, runtime.Panic
         list_to_stream ListToStream<string>
         ---
         :start -> [

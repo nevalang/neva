@@ -1,6 +1,5 @@
 #extern(strings_join_list)
 pub def Join(data list<string>, sep string) (res string)
-
 #extern(strings_join_stream)
 pub def Join(data stream<string>, sep string) (res string)
 

@@ -27,7 +27,7 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
@@ -40,7 +40,7 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 			sep := sepMsg.Str()
 
 			builder := strings.Builder{}
-			list := data.List()
+			list := dataMsg.List()
 			for i := range list {
 				if i > 0 {
 					builder.WriteString(sep)

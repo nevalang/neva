@@ -5,15 +5,13 @@ const sep string = ' '
 
 def Main(start any) (stop any) {
         fmt.Println, strings.Join, strings.Split, runtime.Panic
-        pass Pass<string>
         ---
         :start -> [
                 $phrase -> split:data,
                 $sep -> split:delim,
-                $sep -> pass:data
+                $sep -> join:sep
         ]
         split -> join:data
-        pass:res -> join:sep
         join -> println:data
         println:res -> :stop
         println:err -> panic
