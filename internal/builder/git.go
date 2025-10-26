@@ -35,8 +35,13 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 		ref = plumbing.NewTagReferenceName(depModRef.Version)
 	}
 
+	spec, err := nevaGit.ParseRepoSpec(depModRef.Path)
+	if err != nil {
+		return "", "", fmt.Errorf("parse module repository: %w", err)
+	}
+
 	repo, err := gitlib.PlainClone(fsPath, false, &gitlib.CloneOptions{
-		URL:           "https://" + depModRef.Path,
+		URL:           spec.CloneURL(),
 		ReferenceName: ref,
 	})
 	if err != nil {

@@ -36,7 +36,7 @@ func newNewCmd(workdir string) *cli.Command {
 
 			template := cCtx.String("template")
 			if template != "" {
-				spec, err := parseTemplateSpec(template)
+				spec, err := nevaGit.ParseRepoSpec(template)
 				if err != nil {
 					return err
 				}
@@ -101,38 +101,7 @@ println:err -> panic
 	return nil
 }
 
-type templateSpec struct {
-	Source   string
-	Revision string
-}
-
-func parseTemplateSpec(raw string) (templateSpec, error) {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
-		return templateSpec{}, errors.New("template must not be empty")
-	}
-
-	spec := templateSpec{Source: trimmed}
-
-	if hashIdx := strings.LastIndex(trimmed, "#"); hashIdx != -1 {
-		spec.Source = strings.TrimSpace(trimmed[:hashIdx])
-		spec.Revision = strings.TrimSpace(trimmed[hashIdx+1:])
-	} else if atIdx := strings.LastIndex(trimmed, "@"); atIdx != -1 {
-		slashIdx := strings.LastIndex(trimmed, "/")
-		if slashIdx < atIdx {
-			spec.Source = strings.TrimSpace(trimmed[:atIdx])
-			spec.Revision = strings.TrimSpace(trimmed[atIdx+1:])
-		}
-	}
-
-	if spec.Source == "" {
-		return templateSpec{}, errors.New("template repository must not be empty")
-	}
-
-	return spec, nil
-}
-
-func scaffoldFromTemplate(path string, spec templateSpec) error {
+func scaffoldFromTemplate(path string, spec nevaGit.RepoSpec) error {
 	if path == "" {
 		return errors.New("target path must not be empty")
 	}
@@ -148,7 +117,7 @@ func scaffoldFromTemplate(path string, spec templateSpec) error {
 	defer os.RemoveAll(cloneDir)
 
 	repo, err := gitlib.PlainClone(cloneDir, false, &gitlib.CloneOptions{
-		URL: spec.Source,
+		URL: spec.CloneURL(),
 	})
 	if err != nil {
 		return fmt.Errorf("clone template: %w", err)
