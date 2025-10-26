@@ -103,23 +103,17 @@ func newRunCmd(
 				),
 			)
 
-			var irBackend ir_backend.Backend
-			if emitIR {
-				irBackend = ir_backend.NewBackend(emitIRFormat)
-			}
-
 			runOnce := func(ctx context.Context) error {
 				out, err := compilerToNative.Compile(ctx, input)
 				if err != nil {
 					return err
 				}
 
-				if emitIR {
-					// TODO refactor - trace is only used by golang and golang/native backends
-					// it should not be part of the compiler.Backend interface.
-					if err := irBackend.Emit(workdir, out.MiddleEnd.IR, false); err != nil {
-						return err
-					}
+				irBackend := ir_backend.NewBackend(emitIRFormat)
+				// TODO refactor - trace is only used by golang and golang/native backends
+				// it should not be part of the compiler.Backend interface.
+				if err := irBackend.Emit(workdir, out.MiddleEnd.IR, false); err != nil {
+					return err
 				}
 
 				expectedOutputFileName := "output"
@@ -134,13 +128,13 @@ func newRunCmd(
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
 
-				err = cmd.Run()
+				defer func() {
+					if err := os.Remove(execPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+						fmt.Println("failed to remove output file:", err)
+					}
+				}()
 
-				if removeErr := os.Remove(execPath); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
-					fmt.Println("failed to remove output file:", removeErr)
-				}
-
-				if err != nil {
+				if err := cmd.Run(); err != nil {
 					return fmt.Errorf("failed to run generated executable: %w", err)
 				}
 
