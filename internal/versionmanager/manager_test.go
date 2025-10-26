@@ -3,6 +3,8 @@ package versionmanager
 import (
 	"context"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -40,12 +42,14 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestUseSetsActiveVersionWithoutDownload(t *testing.T) {
-	tempDir := t.TempDir()
-	t.Setenv("NEVA_HOME", tempDir)
+	t.Parallel()
 
-	manager, err := NewManager()
+	tempDir := t.TempDir()
+	baseDir := filepath.Join(tempDir, "neva")
+
+	manager, err := newManager(managerConfig{baseDir: baseDir})
 	if err != nil {
-		t.Fatalf("NewManager() returned error: %v", err)
+		t.Fatalf("newManager returned error: %v", err)
 	}
 
 	version, installed, err := manager.Use(context.Background(), "0.33.0", "0.33.0")
@@ -62,7 +66,7 @@ func TestUseSetsActiveVersionWithoutDownload(t *testing.T) {
 		t.Fatalf("Use returned version %q, expected %q", version, expected)
 	}
 
-	data, err := os.ReadFile(filepath.Join(tempDir, "version"))
+	data, err := os.ReadFile(filepath.Join(baseDir, "active-version"))
 	if err != nil {
 		t.Fatalf("reading version file: %v", err)
 	}
@@ -72,24 +76,65 @@ func TestUseSetsActiveVersionWithoutDownload(t *testing.T) {
 	}
 }
 
+func TestUseAcceptsLatestAlias(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+	baseDir := filepath.Join(tempDir, "neva")
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/nevalang/neva/releases/latest":
+			_, _ = w.Write([]byte(`{"tag_name":"v0.33.0"}`))
+		default:
+			t.Fatalf("unexpected request path: %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	manager, err := newManager(managerConfig{
+		baseDir:         baseDir,
+		httpClient:      server.Client(),
+		apiBaseURL:      server.URL,
+		downloadBaseURL: server.URL,
+	})
+	if err != nil {
+		t.Fatalf("newManager returned error: %v", err)
+	}
+
+	version, installed, err := manager.Use(context.Background(), "latest", "0.33.0")
+	if err != nil {
+		t.Fatalf("Use returned error: %v", err)
+	}
+
+	if version != "v0.33.0" {
+		t.Fatalf("Use returned version %q, expected %q", version, "v0.33.0")
+	}
+
+	if installed {
+		t.Fatalf("Use should not install when latest equals bundled version")
+	}
+}
+
 func TestMaybeDelegateRunsInstalledVersion(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("test relies on POSIX shell")
 	}
 
 	tempDir := t.TempDir()
-	t.Setenv("NEVA_HOME", tempDir)
+	homeDir := filepath.Join(tempDir, "home")
+	t.Setenv("HOME", homeDir)
 
-	manager, err := NewManager()
+	manager, err := newManager(managerConfig{baseDir: filepath.Join(homeDir, "neva")})
 	if err != nil {
-		t.Fatalf("NewManager() returned error: %v", err)
+		t.Fatalf("newManager returned error: %v", err)
 	}
 
 	if err := manager.SetActiveVersion("v0.30.0"); err != nil {
 		t.Fatalf("SetActiveVersion returned error: %v", err)
 	}
 
-	binaryDir := filepath.Join(tempDir, "versions", "v0.30.0")
+	binaryDir := filepath.Join(homeDir, "neva", "versions", "v0.30.0")
 	if err := os.MkdirAll(binaryDir, 0o755); err != nil {
 		t.Fatalf("creating binary dir: %v", err)
 	}

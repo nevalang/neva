@@ -32,6 +32,7 @@ func main() {
 	}
 
 	if handled {
+		// Another release already processed the invocation, so the bundled CLI exits.
 		return
 	}
 

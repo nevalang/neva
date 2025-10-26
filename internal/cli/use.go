@@ -11,9 +11,10 @@ import (
 
 func newUseCmd() *cli.Command {
 	return &cli.Command{
-		Name:      "use",
-		Usage:     "Install (if needed) and activate a specific Nevalang release",
-		ArgsUsage: "<version>",
+		Name:        "use",
+		Usage:       "Install (if needed) and activate a specific neva release",
+		ArgsUsage:   "<version>|latest",
+		Description: "Downloads the requested release (if missing), marks it as active, and proxies future invocations of this bundled CLI to it.",
 		Action: func(cCtx *cli.Context) error {
 			if cCtx.Args().Len() != 1 {
 				return fmt.Errorf("expected 1 argument, got %d", cCtx.Args().Len())
@@ -35,18 +36,18 @@ func newUseCmd() *cli.Command {
 			}
 
 			if normalized == currentTag {
-				fmt.Printf("Using bundled Nevalang %s\n", normalized)
+				fmt.Printf("Using bundled neva %s\n", normalized)
 				return nil
 			}
 
 			if installed {
-				fmt.Printf("Installed Nevalang %s\n", normalized)
+				fmt.Printf("Installed neva %s\n", normalized)
 			} else {
-				fmt.Printf("Nevalang %s was already installed\n", normalized)
+				fmt.Printf("neva %s was already installed\n", normalized)
 			}
 
-			fmt.Printf("Now using Nevalang %s\n", normalized)
-			fmt.Println("Tip: ensure your shell invokes the latest 'neva' binary when switching versions.")
+			fmt.Printf("Now using neva %s\n", normalized)
+			fmt.Println("Tip: subsequent 'neva' invocations will automatically proxy to the selected release.")
 
 			return nil
 		},

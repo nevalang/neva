@@ -2,6 +2,7 @@ package versionmanager
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,21 +15,41 @@ import (
 	"strings"
 )
 
+const (
+	defaultAPIBaseURL      = "https://api.github.com"
+	defaultDownloadBaseURL = "https://github.com/nevalang/neva/releases/download"
+)
+
+type managerConfig struct {
+	baseDir         string
+	httpClient      *http.Client
+	apiBaseURL      string
+	downloadBaseURL string
+}
+
 type Manager struct {
 	baseDir     string
 	versionsDir string
 	binaryName  string
 	versionFile string
+
+	httpClient      *http.Client
+	apiBaseURL      string
+	downloadBaseURL string
 }
 
 func NewManager() (*Manager, error) {
-	base := os.Getenv("NEVA_HOME")
-	if strings.TrimSpace(base) == "" {
+	return newManager(managerConfig{})
+}
+
+func newManager(cfg managerConfig) (*Manager, error) {
+	base := strings.TrimSpace(cfg.baseDir)
+	if base == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return nil, fmt.Errorf("determine user home directory: %w", err)
 		}
-		base = filepath.Join(home, ".neva")
+		base = filepath.Join(home, "neva")
 	}
 
 	base = filepath.Clean(base)
@@ -38,11 +59,29 @@ func NewManager() (*Manager, error) {
 		binaryName += ".exe"
 	}
 
+	client := cfg.httpClient
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	apiBase := cfg.apiBaseURL
+	if apiBase == "" {
+		apiBase = defaultAPIBaseURL
+	}
+
+	downloadBase := cfg.downloadBaseURL
+	if downloadBase == "" {
+		downloadBase = defaultDownloadBaseURL
+	}
+
 	return &Manager{
-		baseDir:     base,
-		versionsDir: filepath.Join(base, "versions"),
-		binaryName:  binaryName,
-		versionFile: filepath.Join(base, "version"),
+		baseDir:         base,
+		versionsDir:     filepath.Join(base, "versions"),
+		binaryName:      binaryName,
+		versionFile:     filepath.Join(base, "active-version"),
+		httpClient:      client,
+		apiBaseURL:      strings.TrimRight(apiBase, "/"),
+		downloadBaseURL: strings.TrimRight(downloadBase, "/"),
 	}, nil
 }
 
@@ -86,10 +125,11 @@ func (m *Manager) SetActiveVersion(version string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(m.baseDir, 0o755); err != nil {
-		return fmt.Errorf("create version directory: %w", err)
+	if err := os.MkdirAll(filepath.Dir(m.versionFile), 0o755); err != nil {
+		return fmt.Errorf("prepare version file directory: %w", err)
 	}
 
+	// Persist the selected version so the bundled CLI can delegate future invocations.
 	if err := os.WriteFile(m.versionFile, []byte(normalized+"\n"), 0o644); err != nil {
 		return fmt.Errorf("write active version: %w", err)
 	}
@@ -98,29 +138,79 @@ func (m *Manager) SetActiveVersion(version string) error {
 }
 
 func (m *Manager) Use(ctx context.Context, requestedVersion string, currentVersion string) (string, bool, error) {
-	normalized, err := Normalize(requestedVersion)
+	normalizedRequested, err := m.normalizeRequestedVersion(ctx, requestedVersion)
 	if err != nil {
 		return "", false, err
 	}
 
-	currentNormalized, err := Normalize(currentVersion)
+	normalizedCurrent, err := Normalize(currentVersion)
 	if err != nil {
 		return "", false, err
 	}
 
-	installed := false
-	if normalized != currentNormalized {
-		installed, err = m.ensureVersionInstalled(ctx, normalized)
+	wasInstalledJustNow := false
+	if normalizedRequested != normalizedCurrent {
+		wasInstalledJustNow, err = m.ensureVersionInstalled(ctx, normalizedRequested)
 		if err != nil {
 			return "", false, err
 		}
 	}
 
-	if err := m.SetActiveVersion(normalized); err != nil {
+	if err := m.SetActiveVersion(normalizedRequested); err != nil {
 		return "", false, err
 	}
 
-	return normalized, installed, nil
+	return normalizedRequested, wasInstalledJustNow, nil
+}
+
+func (m *Manager) normalizeRequestedVersion(ctx context.Context, version string) (string, error) {
+	trimmed := strings.TrimSpace(version)
+	if trimmed == "" {
+		return "", errors.New("version must not be empty")
+	}
+
+	if strings.EqualFold(trimmed, "latest") {
+		tag, err := m.fetchLatestReleaseTag(ctx)
+		if err != nil {
+			return "", err
+		}
+		return Normalize(tag)
+	}
+
+	return Normalize(trimmed)
+}
+
+func (m *Manager) fetchLatestReleaseTag(ctx context.Context) (string, error) {
+	url := m.apiBaseURL + "/repos/nevalang/neva/releases/latest"
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("create latest release request: %w", err)
+	}
+
+	resp, err := m.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("fetch latest release: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("fetch latest release: unexpected status %s", resp.Status)
+	}
+
+	var payload struct {
+		TagName string `json:"tag_name"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return "", fmt.Errorf("decode latest release response: %w", err)
+	}
+
+	if strings.TrimSpace(payload.TagName) == "" {
+		return "", errors.New("latest release response missing tag_name")
+	}
+
+	return payload.TagName, nil
 }
 
 func (m *Manager) RunVersion(ctx context.Context, args []string, version string) error {
@@ -162,14 +252,14 @@ func (m *Manager) ensureVersionInstalled(ctx context.Context, version string) (b
 		return false, err
 	}
 
-	url := fmt.Sprintf("https://github.com/nevalang/neva/releases/download/%s/%s", version, assetName)
+	downloadURL := fmt.Sprintf("%s/%s/%s", m.downloadBaseURL, version, assetName)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
 	if err != nil {
 		return false, fmt.Errorf("create download request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("download neva %s: %w", version, err)
 	}
@@ -254,12 +344,12 @@ func MaybeDelegate(args []string, currentVersion string) (bool, error) {
 		return false, nil
 	}
 
-	currentNormalized, err := Normalize(currentVersion)
+	normalizedCurrent, err := Normalize(currentVersion)
 	if err != nil {
 		return false, err
 	}
 
-	if active == currentNormalized {
+	if active == normalizedCurrent {
 		return false, nil
 	}
 

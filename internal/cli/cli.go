@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -30,7 +29,6 @@ func NewApp(
 		Usage: "Dataflow programming language with static types and implicit parallelism",
 		Commands: []*cli.Command{
 			versionCmd,
-			upgradeCmd,
 			newUseCmd(),
 			newNewCmd(workdir),
 			newGetCmd(workdir, bldr),
@@ -46,21 +44,6 @@ var versionCmd = &cli.Command{
 	Usage: "Get current Nevalang version",
 	Action: func(_ *cli.Context) error {
 		fmt.Println(pkg.Version)
-		return nil
-	},
-}
-
-var upgradeCmd = &cli.Command{
-	Name:  "upgrade",
-	Usage: "Upgrade to newest Nevalang version",
-	Action: func(cliCtx *cli.Context) error {
-		curlCmd := "curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash"
-		err := exec.CommandContext(cliCtx.Context, curlCmd).Run()
-		if err != nil {
-			fmt.Println("Upgrading Nevalang failed :" + err.Error())
-		} else {
-			fmt.Println("Upgrading Nevalang completed. Upgraded to version: " + pkg.Version)
-		}
 		return nil
 	},
 }
