@@ -87,6 +87,14 @@ Once you've installed the neva-cli, you are able to use the `new` command to sca
 neva new my_awesome_project
 ```
 
+If you already have a boilerplate repository, you can pass it with the `--template` flag. Any Git repository can be used, for example:
+
+```shell
+neva new --template=github.com/example/neva-template awesome_project
+```
+
+The CLI will clone the repository, optionally checking out a `--template-ref`, and copy its contents into the target directory without the Git metadata.
+
 Each new project contains a Hello World program, so we can just run it
 
 ```shell
