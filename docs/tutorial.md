@@ -87,13 +87,13 @@ Once you've installed the neva-cli, you are able to use the `new` command to sca
 neva new my_awesome_project
 ```
 
-If you already have a boilerplate repository, you can pass it with the `--template` flag. Any Git repository can be used, for example:
+If you already have a boilerplate repository, you can pass it with the `--template` flag. Any Git repository can be used, and you can append a revision with `@` or `#` to pick a specific branch, tag, or commit. For example:
 
 ```shell
-neva new --template=github.com/example/neva-template awesome_project
+neva new --template=https://github.com/example/neva-template#stable awesome_project
 ```
 
-The CLI will clone the repository, optionally checking out a `--template-ref`, and copy its contents into the target directory without the Git metadata.
+The CLI will clone the repository, optionally checking out the requested revision, and copy its contents into the target directory without the Git metadata.
 
 Each new project contains a Hello World program, so we can just run it
 
@@ -110,13 +110,16 @@ Hello, World!
 If you open `my_awesome_project/src/main.neva` with your favorite IDE, you'll see this:
 
 ```neva
-import { fmt }
+import { fmt, runtime }
 
+# Main prints a greeting and propagates failures to the runtime panic node.
 def Main(start any) (stop any) {
-	println fmt.Println<string>
-	---
-	:start -> 'Hello, World!' -> println
-	[println:res, println:err] -> :stop
+        println fmt.Println<string>
+        panic runtime.Panic
+        ---
+        :start -> 'Hello, World!' -> println
+        println:res -> :stop
+        println:err -> panic
 }
 ```
 

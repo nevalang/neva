@@ -14,6 +14,8 @@ import (
 func TestScaffoldFromTemplate(t *testing.T) {
 	t.Parallel()
 
+	// Bootstraps a local git repository to assert the scaffold copies files
+	// verbatim (preserving permissions) while dropping VCS metadata.
 	templateDir := t.TempDir()
 	repo, err := git.PlainInit(templateDir, false)
 	require.NoError(t, err)
@@ -42,7 +44,7 @@ func TestScaffoldFromTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	destination := filepath.Join(t.TempDir(), "module")
-	require.NoError(t, scaffoldFromTemplate(destination, templateDir, ""))
+	require.NoError(t, scaffoldFromTemplate(destination, templateSpec{Source: templateDir}))
 
 	_, err = os.Stat(filepath.Join(destination, "neva.yml"))
 	require.NoError(t, err)
@@ -54,4 +56,49 @@ func TestScaffoldFromTemplate(t *testing.T) {
 
 	_, err = os.Stat(filepath.Join(destination, ".git"))
 	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func TestParseTemplateSpec(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input    string
+		source   string
+		revision string
+	}{
+		"https with tag": {
+			input:    "https://example.com/repo.git#v1.0.0",
+			source:   "https://example.com/repo.git",
+			revision: "v1.0.0",
+		},
+		"ssh without revision": {
+			input:  "git@github.com:nevalang/neva-template",
+			source: "git@github.com:nevalang/neva-template",
+		},
+		"ssh with revision": {
+			input:    "git@github.com:nevalang/neva-template@main",
+			source:   "git@github.com:nevalang/neva-template",
+			revision: "main",
+		},
+		"local with revision": {
+			input:    "../templates/default@feature",
+			source:   "../templates/default",
+			revision: "feature",
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			spec, err := parseTemplateSpec(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.source, spec.Source)
+			require.Equal(t, tc.revision, spec.Revision)
+		})
+	}
+
+	_, err := parseTemplateSpec("")
+	require.Error(t, err)
 }

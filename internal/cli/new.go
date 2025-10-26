@@ -9,27 +9,23 @@ import (
 	"path/filepath"
 	"strings"
 
-	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	gitlib "github.com/go-git/go-git/v5"
 
 	"github.com/nevalang/neva/pkg"
+	nevaGit "github.com/nevalang/neva/pkg/git"
 	cli "github.com/urfave/cli/v2"
 )
 
 func newNewCmd(workdir string) *cli.Command {
 	return &cli.Command{
 		Name:  "new",
-		Usage: "Create new Nevalang project",
+		Usage: "Create new neva project",
 		Args:  true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "template",
 				Aliases: []string{"t"},
-				Usage:   "Git repository to use as a template",
-			},
-			&cli.StringFlag{
-				Name:  "template-ref",
-				Usage: "Git reference (branch, tag, or commit) to checkout for the template",
+				Usage:   "Template repository, optionally suffixed with a revision",
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -40,7 +36,12 @@ func newNewCmd(workdir string) *cli.Command {
 
 			template := cCtx.String("template")
 			if template != "" {
-				if err := scaffoldFromTemplate(path, template, cCtx.String("template-ref")); err != nil {
+				spec, err := parseTemplateSpec(template)
+				if err != nil {
+					return err
+				}
+
+				if err := scaffoldFromTemplate(path, spec); err != nil {
 					return err
 				}
 			} else {
@@ -77,19 +78,22 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	mainNevaContent := `import { fmt }
+	mainNevaContent := `import { fmt, runtime }
 
+# Main prints a greeting and propagates failures to the runtime panic node.
 def Main(start any) (stop any) {
-fmt.Println
+println fmt.Println<string>
+panic runtime.Panic
 ---
 :start -> 'Hello, World!' -> println
-[println:res, println:err] -> :stop
+println:res -> :stop
+println:err -> panic
 }`
 
 	if err := os.WriteFile(
 		filepath.Join(srcPath, "main.neva"),
 		[]byte(mainNevaContent),
-		0o644,
+		0o644, // new files should be writable by the owner and readable by others
 	); err != nil {
 		return err
 	}
@@ -97,7 +101,38 @@ fmt.Println
 	return nil
 }
 
-func scaffoldFromTemplate(path, template, ref string) error {
+type templateSpec struct {
+	Source   string
+	Revision string
+}
+
+func parseTemplateSpec(raw string) (templateSpec, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return templateSpec{}, errors.New("template must not be empty")
+	}
+
+	spec := templateSpec{Source: trimmed}
+
+	if hashIdx := strings.LastIndex(trimmed, "#"); hashIdx != -1 {
+		spec.Source = strings.TrimSpace(trimmed[:hashIdx])
+		spec.Revision = strings.TrimSpace(trimmed[hashIdx+1:])
+	} else if atIdx := strings.LastIndex(trimmed, "@"); atIdx != -1 {
+		slashIdx := strings.LastIndex(trimmed, "/")
+		if slashIdx < atIdx {
+			spec.Source = strings.TrimSpace(trimmed[:atIdx])
+			spec.Revision = strings.TrimSpace(trimmed[atIdx+1:])
+		}
+	}
+
+	if spec.Source == "" {
+		return templateSpec{}, errors.New("template repository must not be empty")
+	}
+
+	return spec, nil
+}
+
+func scaffoldFromTemplate(path string, spec templateSpec) error {
 	if path == "" {
 		return errors.New("target path must not be empty")
 	}
@@ -112,16 +147,16 @@ func scaffoldFromTemplate(path, template, ref string) error {
 	}
 	defer os.RemoveAll(cloneDir)
 
-	repo, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
-		URL: normalizeTemplateURL(template),
+	repo, err := gitlib.PlainClone(cloneDir, false, &gitlib.CloneOptions{
+		URL: spec.Source,
 	})
 	if err != nil {
 		return fmt.Errorf("clone template: %w", err)
 	}
 
-	if ref != "" {
-		if err := checkoutTemplateRef(repo, ref); err != nil {
-			return err
+	if spec.Revision != "" {
+		if err := nevaGit.Checkout(repo, spec.Revision); err != nil {
+			return fmt.Errorf("checkout template revision: %w", err)
 		}
 	}
 
@@ -151,57 +186,6 @@ func ensureEmptyDir(path string) error {
 		return fmt.Errorf("directory %s is not empty", path)
 	}
 	return nil
-}
-
-func checkoutTemplateRef(repo *git.Repository, ref string) error {
-	worktree, err := repo.Worktree()
-	if err != nil {
-		return fmt.Errorf("open worktree: %w", err)
-	}
-
-	if strings.HasPrefix(ref, "refs/") {
-		if err := worktree.Checkout(&git.CheckoutOptions{Branch: plumbing.ReferenceName(ref)}); err == nil {
-			return nil
-		}
-	}
-
-	if err := worktree.Checkout(&git.CheckoutOptions{Branch: plumbing.NewBranchReferenceName(ref)}); err == nil {
-		return nil
-	}
-
-	tagRef, err := repo.Reference(plumbing.NewTagReferenceName(ref), true)
-	if err == nil {
-		if err := worktree.Checkout(&git.CheckoutOptions{Hash: tagRef.Hash()}); err == nil {
-			return nil
-		}
-	}
-
-	hash := plumbing.NewHash(ref)
-	if hash != plumbing.ZeroHash {
-		if _, err := repo.CommitObject(hash); err == nil {
-			if err := worktree.Checkout(&git.CheckoutOptions{Hash: hash}); err == nil {
-				return nil
-			}
-		}
-	}
-
-	return fmt.Errorf("template reference %q not found", ref)
-}
-
-func normalizeTemplateURL(template string) string {
-	if template == "" {
-		return template
-	}
-	if strings.Contains(template, "://") || strings.HasPrefix(template, "git@") {
-		return template
-	}
-	if filepath.IsAbs(template) {
-		return template
-	}
-	if strings.HasPrefix(template, ".") {
-		return template
-	}
-	return "https://" + template
 }
 
 func copyDir(src, dst string) error {
@@ -248,6 +232,7 @@ func copyFile(src, dst string, mode fs.FileMode) error {
 	}
 	defer srcFile.Close()
 
+	// Use the original permission bits so the copy matches the template file.
 	dstFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode.Perm())
 	if err != nil {
 		return err
