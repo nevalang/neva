@@ -31,6 +31,7 @@ func NewApp(
 		Commands: []*cli.Command{
 			versionCmd,
 			upgradeCmd,
+			newUseCmd(),
 			newNewCmd(workdir),
 			newGetCmd(workdir, bldr),
 			newRunCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
