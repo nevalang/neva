@@ -99,11 +99,12 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"strings_to_upper":    stringsToUpper{},
 		"strings_to_lower":    stringsToLower{},
 
-		"scanln":  scanln{},
-		"args":    args{},
-		"println": println{},
-		"printf":  printf{},
-		"print":   print{},
+		"scanln":      scanln{},
+		"args":        args{},
+		"dotenv_load": dotenvLoad{},
+		"println":     println{},
+		"printf":      printf{},
+		"print":       print{},
 
 		"read_all":     fileReadAll{},
 		"write_all":    writeAll{},
