@@ -32,28 +32,60 @@ func (g Generator) Generate(
 	build src.Build,
 	mainPkgName string,
 ) (*ir.Program, error) {
-	loc := core.Location{
+	return g.GenerateForComponent(
+		build,
+		mainPkgName,
+		"Main",
+	)
+}
+
+// GenerateForComponent builds IR for a given exported component as the root.
+// it maps all component inports to the program start payload and all outports
+// to the program stop payload, enabling call/return semantics.
+func (g Generator) GenerateForComponent(
+	build src.Build,
+	pkgName string,
+	componentName string,
+) (*ir.Program, error) {
+	// prepare root node context for the target component with ports usage
+	scope := src.NewScope(build, core.Location{
 		ModRef:   build.EntryModRef,
-		Package:  mainPkgName,
-		Filename: "",
+		Package:  pkgName,
+		Filename: "", // file is initially unknown
+	})
+	entity, loc, err := scope.Entity(core.EntityRef{
+		Pkg:  "",
+		Name: componentName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// entry point is expected to be not overloaded
+	version := entity.Component[0]
+
+	// in and out ports of the root node are expected to be used by runtime
+	inUsage := make(map[relPortAddr]struct{}, len(version.Interface.IO.In))
+	for inName := range version.Interface.IO.In {
+		inUsage[relPortAddr{Port: inName}] = struct{}{}
+	}
+	outUsage := make(map[relPortAddr]struct{}, len(version.Interface.IO.Out))
+	for outName := range version.Interface.IO.Out {
+		outUsage[relPortAddr{Port: outName}] = struct{}{}
 	}
 
 	rootNodeCtx := nodeContext{
 		path: []string{},
 		node: src.Node{
 			EntityRef: core.EntityRef{
-				Pkg:  "",
-				Name: "Main",
+				Pkg:  "", // package in reference is empty because entity is local
+				Name: componentName,
 			},
-			Meta: core.Meta{Location: loc}, // it's important to set location for every node, because irgen depends on it
+			Meta: core.Meta{Location: loc},
 		},
 		portsUsage: portsUsage{
-			in: map[relPortAddr]struct{}{
-				{Port: "start"}: {},
-			},
-			out: map[relPortAddr]struct{}{
-				{Port: "stop"}: {},
-			},
+			in:  inUsage,
+			out: outUsage,
 		},
 	}
 
@@ -62,11 +94,7 @@ func (g Generator) Generate(
 		Funcs:       []ir.FuncCall{},
 	}
 
-	g.processNode(
-		rootNodeCtx,
-		src.NewScope(build, loc),
-		result,
-	)
+	g.processNode(rootNodeCtx, scope, result)
 
 	return &ir.Program{
 		Connections: result.Connections,
