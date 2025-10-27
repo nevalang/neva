@@ -1,2 +1,10 @@
 #extern(args)
 pub def Args(sig any) (data list<string>)
+
+// LoadEnv loads environment variables from a dotenv file.
+//
+// If `filename` is empty, `.env` from the current working directory is used.
+// Already defined environment variables are left untouched. The parsed values
+// are returned as a dictionary.
+#extern(dotenv_load)
+pub def LoadEnv(filename string) (values dict<string>, err error)

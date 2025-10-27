@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -41,6 +42,10 @@ func newRunCmd(
 			&cli.StringFlag{
 				Name:  "emit-ir-format",
 				Usage: "Format for ir file - yaml or json",
+			},
+			&cli.BoolFlag{
+				Name:  "watch",
+				Usage: "Rebuild and rerun when source files change",
 			},
 		},
 		ArgsUsage: "Provide path to main package",
@@ -98,41 +103,54 @@ func newRunCmd(
 				),
 			)
 
-			out, err := compilerToNative.Compile(cliCtx.Context, input)
-			if err != nil {
-				return err
-			}
-
-			irBackend := ir_backend.NewBackend(emitIRFormat)
-			// TODO refactor - trace is only used by golang and golang/native backends
-			// it should not be part of the compiler.Backend interface.
-			if err := irBackend.Emit(workdir, out.MiddleEnd.IR, false); err != nil {
-				return err
-			}
-
-			expectedOutputFileName := "output"
-			if runtime.GOOS == "windows" { // assumption that on windows compiler generates .exe
-				expectedOutputFileName += ".exe"
-			}
-
-			execPath := filepath.Join(workdir, expectedOutputFileName)
-
-			defer func() {
-				if err := os.Remove(execPath); err != nil {
-					fmt.Println("failed to remove output file:", err)
+			runOnce := func(ctx context.Context) error {
+				out, err := compilerToNative.Compile(ctx, input)
+				if err != nil {
+					return err
 				}
-			}()
 
-			cmd := exec.CommandContext(cliCtx.Context, execPath)
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
+				irBackend := ir_backend.NewBackend(emitIRFormat)
+				// TODO refactor - trace is only used by golang and golang/native backends
+				// it should not be part of the compiler.Backend interface.
+				if err := irBackend.Emit(workdir, out.MiddleEnd.IR, false); err != nil {
+					return err
+				}
 
-			if err := cmd.Run(); err != nil {
-				return fmt.Errorf("failed to run generated executable: %w", err)
+				expectedOutputFileName := "output"
+				if runtime.GOOS == "windows" { // assumption that on windows compiler generates .exe
+					expectedOutputFileName += ".exe"
+				}
+
+				execPath := filepath.Join(workdir, expectedOutputFileName)
+
+				cmd := exec.CommandContext(ctx, execPath)
+				cmd.Stdin = os.Stdin
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+
+				defer func() {
+					if err := os.Remove(execPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+						fmt.Println("failed to remove output file:", err)
+					}
+				}()
+
+				if err := cmd.Run(); err != nil {
+					return fmt.Errorf("failed to run generated executable: %w", err)
+				}
+
+				return nil
 			}
 
-			return nil
+			if cliCtx.Bool("watch") {
+				moduleRoot, err := findModuleRoot(workdir, mainPkg)
+				if err != nil {
+					return err
+				}
+
+				return watchAndRun(cliCtx.Context, moduleRoot, runOnce)
+			}
+
+			return runOnce(cliCtx.Context)
 		},
 	}
 }
