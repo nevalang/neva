@@ -7,14 +7,14 @@ import {
 const l list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
-	fmt.Println<int>
-        streams.Reduce<int, int>{Sub}
-        streams.FromList<int>
-	panic runtime.Panic
-	---
-	:start -> $l -> listToStream -> reduce:data
-	0 -> reduce:init
-	reduce -> println:data
-	println:res -> :stop
-	println:err -> panic
+        println fmt.Println<int>
+        reduce streams.Reduce<int, int>{Sub}
+        list_to_stream streams.FromList<int>
+        panic runtime.Panic
+        ---
+        :start -> $l -> list_to_stream -> reduce:data
+        0 -> reduce:init
+        reduce -> println:data
+        println:res -> :stop
+        println:err -> panic
 }

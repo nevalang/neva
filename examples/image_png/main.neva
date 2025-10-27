@@ -1,4 +1,4 @@
-import { io, image, fmt, runtime, streams }
+import { io, image, fmt, runtime }
 
 def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
@@ -19,8 +19,8 @@ def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 	cb -> :color
 }
 
-def NewStream(p image.Pixel) (s streams.Item<image.Pixel>) {
-        sb Struct<streams.Item<image.Pixel>>
+def NewStream(p image.Pixel) (s stream<image.Pixel>) {
+        sb Struct<stream<image.Pixel>>
 	---
 	0 -> sb:idx
 	:p -> sb:data

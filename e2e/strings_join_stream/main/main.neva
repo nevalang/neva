@@ -10,15 +10,15 @@ def Main(start any) (stop any) {
         split strings.Split
         join strings.Join
         panic runtime.Panic
-        l2s streams.FromList<string>
+        list_to_stream streams.FromList<string>
         ---
         :start -> [
                 'a,b,c' -> split:data,
                 ',' -> split:delim,
                 ', ' -> join:sep
         ]
-        split -> l2s:data
-        l2s -> join:data
+        split -> list_to_stream:data
+        list_to_stream -> join:data
         join -> println:data
         println:res -> :stop
         println:err -> panic

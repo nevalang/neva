@@ -3,14 +3,14 @@
 import { time, fmt, runtime, streams }
 
 def Main(start any) (stop any) {
-    streams.Map<int, string>{Handler}
-    streams.ForEach<string>{fmt.Println}
-    streams.Wait
-    runtime.Panic
+    map streams.Map<int, string>{Handler}
+    for_each streams.ForEach<string>{fmt.Println<string>}
+    wait streams.Wait
+    panic runtime.Panic
     ---
-    :start -> 1..5 -> map -> for
-    for:res -> wait -> :stop
-    for:err -> panic
+    :start -> 1..5 -> map -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
 def Handler(data int) (res string) {

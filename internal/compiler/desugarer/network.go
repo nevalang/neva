@@ -1126,7 +1126,6 @@ func (d *Desugarer) desugarRangeSender(
 	locOnlyMeta := core.Meta{Location: rangeExpr.Meta.Location}
 
 	d.rangeCounter++
-	d.needsStreamsImport = true
 
 	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
 	fromConstName := fmt.Sprintf("__range%d_from__", d.rangeCounter)
@@ -1145,7 +1144,7 @@ func (d *Desugarer) desugarRangeSender(
 
 	nodesToInsert[rangeNodeName] = src.Node{
 		EntityRef: core.EntityRef{
-			Pkg:  "streams",
+			Pkg:  "builtin",
 			Name: "Range",
 			Meta: locOnlyMeta,
 		},

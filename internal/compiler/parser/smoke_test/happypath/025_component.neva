@@ -243,40 +243,40 @@ def RangeTest3() () {
 }
 
 // Test range expression mixed with other connections
-def RangeTest4() (out1 streams.Item<int>, out2 any, out3 streams.Item<int>) {
+def RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
     1..10 -> :out1
     :in -> :out2
     20..30 -> :out3
 }
 
 // Test range expression with struct selectors
-def RangeTest5() (out streams.Item<int>) {
+def RangeTest5() (out stream<int>) {
     1..10 -> .data -> :out
 }
 
 // Test range expression with array index
-def RangeTest6() (out streams.Item<int>) {
+def RangeTest6() (out stream<int>) {
     1..10 -> arr[0]
     arr[0] -> :out
 }
 
 // Test range expression with deferred connection
-def RangeTest7() (out streams.Item<int>) {
+def RangeTest7() (out stream<int>) {
     1..10 -> { process -> :out }
 }
 
 // Test range expression with multiple receivers
-def RangeTest8() (out1 streams.Item<int>, out2 streams.Item<int>) {
+def RangeTest8() (out1 stream<int>, out2 stream<int>) {
     1..10 -> [:out1, :out2]
 }
 
 // Test range expression inside deferred connection
-def RangeTest9() (out streams.Item<int>) {
+def RangeTest9() (out stream<int>) {
     :start -> { 1..10 -> process -> :out }
 }
 
 // Test range expression inside fan-in
-def RangeTest10() (out streams.Item<int>) {
+def RangeTest10() (out stream<int>) {
     [
         1..5,
         6..10,
@@ -285,7 +285,7 @@ def RangeTest10() (out streams.Item<int>) {
 }
 
 // Test range expression with fan-out
-def RangeTest11() (out1 streams.Item<int>, out2 streams.Item<int>, out3 streams.Item<int>) {
+def RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
     1..30 -> [
         :out1,
         :out2,
@@ -294,7 +294,7 @@ def RangeTest11() (out1 streams.Item<int>, out2 streams.Item<int>, out3 streams.
 }
 
 // Test complex scenario combining multiple features
-def RangeTest12() (out1 streams.Item<int>, out2 streams.Item<int>, out3 streams.Item<int>) {
+def RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
     [1..10, :input] -> fanIn -> [
         :out1,
         { process2 -> :out2 },
@@ -303,7 +303,7 @@ def RangeTest12() (out1 streams.Item<int>, out2 streams.Item<int>, out3 streams.
 }
 
 // Test nested deferred connections with range expressions
-def RangeTest14() (out streams.Item<int>) {
+def RangeTest14() (out stream<int>) {
     :start -> {
         1..5 -> {
             6..10 -> {

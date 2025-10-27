@@ -3,12 +3,15 @@ import { streams, fmt, runtime }
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-        streams.FromList<string>, streams.Zip<int, string>
-        streams.ForEach{fmt.Println}, streams.Wait, runtime.Panic
-	---
+        list_to_stream streams.FromList<string>
+        zip streams.Zip<int, string>
+        for_each streams.ForEach<streams.ZipResult<int, string>>{fmt.Println<streams.ZipResult<int, string>>}
+        wait streams.Wait
+        panic runtime.Panic
+        ---
         :start -> 0..10 -> zip:left
-        $strings -> listToStream -> zip:right
-        zip:res -> for
-	for:res -> wait -> :stop
-	for:err -> panic
+        $strings -> list_to_stream -> zip:right
+        zip:res -> for_each
+        for_each:res -> wait -> :stop
+        for_each:err -> panic
 }

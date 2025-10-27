@@ -5,13 +5,13 @@ import {
 }
 
 def Main(start any) (stop any) {
-        print streams.ForEach<int>{Next2Lines}
+        for_each streams.ForEach<int>{Next2Lines}
         wait streams.Wait
-	panic runtime.Panic
-	---
-	:start -> 99..-1 -> print
-	print:res -> wait -> :stop
-	print:err -> panic
+        panic runtime.Panic
+        ---
+        :start -> 99..-1 -> for_each
+        for_each:res -> wait -> :stop
+        for_each:err -> panic
 }
 
 def Next2Lines(data int) (res any, err error) {

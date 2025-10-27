@@ -1,9 +1,5 @@
-import {
-    streams
-}
-
 #extern(stream_to_list)
-pub def FromStream<T>(data streams.Item<T>) (res list<T>)
+pub def FromStream<T>(data stream<T>) (res list<T>)
 
 #extern(list_at)
 pub def At<T>(data list<T>, idx int) (res T, err error)

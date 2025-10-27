@@ -231,7 +231,7 @@ Structures are [product types](https://en.wikipedia.org/wiki/Product_type) - com
 
 ## Non-Base Builtin Types
 
-There is one more type in `std/builtin` that is expressed in terms of the language itself—it has a body and therefore is not base. Stream items now live in the `std/streams` package as `streams.Item<T>`.
+There are 2 more types in `std/builtin` that are expressed in terms of language itself - they have bodies and therefore they are not base. Yet they are embedded into builtin package for simplicity, because they are used heavily in the language. These types are `error` and `stream<T>`.
 
 ### `error`
 
@@ -246,24 +246,24 @@ pub type error struct {
 
 Component/interface that sends error should name outport as `:err`.
 
-### `streams.Item<T>`
+### `stream<T>`
 
-`streams.Item` represents an element of type `T` in a sequence. Streams handle sequences of data in a flow-based programming fashion, allowing operations like mapping, filtering, reducing, and more.
+Stream structure represents an element of type `T` in a sequence. Streams handle sequences of data in a flow-based programming fashion, allowing operations like mapping, filtering, reducing, and more.
 
 ```neva
-pub type Item<T> struct {
+pub type stream<T> struct {
     data T // current element of the stream
     idx int // index of the current element
     last bool // whether this is the last element in the stream
 }
 ```
 
-Items can be infinitely nested:
+Streams can be infinitely nested:
 
 ```neva
-streams.Item<streams.Item<int>> // 2 levels
-streams.Item<streams.Item<streams.Item<int>>> 3 levels
+stream<stream<int>> // 2 levels
+stream<stream<stream<int>>> 3 levels
 // etc.
 ```
 
-Stream processing is a first-class citizen in Nevalang, so there's a dedicated page about it. From the data-type perspective, stream items are just structures.
+Stream processing is first-class citizen in Nevalang, so there's dedicated page about that. From data-type perspective, streams are just structures.

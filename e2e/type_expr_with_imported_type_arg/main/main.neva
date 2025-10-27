@@ -2,19 +2,16 @@
 // to check that type expression with imported type as argument
 // can be resolved by type-system, because there was a bug with it
 
-import {
-        @:foo,
-        streams
-}
+import { @:foo }
 
 def Main(start any) (stop any) {
 	justFoo Struct<foo.Foo>
-        itemWithFoo Struct<streams.Item<foo.Foo>>
+	itemWithFoo Struct<stream<foo.Foo>>
 	---
 	:start -> [
 		0 -> [justFoo:bar, itemWithFoo:idx],
 		true -> itemWithFoo:last
 	]
 	justFoo -> itemWithFoo:data
-        itemWithFoo -> :stop
+	itemWithFoo -> :stop
 }

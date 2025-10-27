@@ -5,11 +5,11 @@ import {
 }
 
 def Main(start any) (stop any) {
-    s2l lists.FromStream
-    println fmt.Println
+    stream_to_list lists.FromStream<int>
+    println fmt.Println<list<int>>
     panic runtime.Panic
     ---
-    :start -> 1..11 -> s2l -> println:data
+    :start -> 1..11 -> stream_to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }
