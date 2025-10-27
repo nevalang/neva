@@ -36,6 +36,7 @@ func NewApp(
 			newRunCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
 			newBuildCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
 			newOSArchCmd(),
+			newDocCmd(),
 		},
 	}
 }
