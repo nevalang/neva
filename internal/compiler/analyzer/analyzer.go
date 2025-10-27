@@ -21,7 +21,7 @@ type Analyzer struct {
 // AnalyzeBuild analyzes a build. When mainPkgName is non-empty,
 // analyzer treats the build as an executable entry. When mainPkgName is empty,
 // analyzer only analyzes the build as a library.
-func (a Analyzer) AnalyzeBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
+func (a Analyzer) Analyze(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
 	if mainPkgName == "" {
 		return a.analyzeBuild(build)
 	}
