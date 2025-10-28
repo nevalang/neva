@@ -127,6 +127,11 @@ func scaffoldFromTemplate(path string, spec nevaGit.RepoSpec) error {
 		if err := nevaGit.Checkout(repo, spec.Revision); err != nil {
 			return fmt.Errorf("checkout template revision: %w", err)
 		}
+	} else {
+		// ensure files are checked out when cloning from local repos too
+		if err := nevaGit.Checkout(repo, "HEAD"); err != nil {
+			return fmt.Errorf("checkout template default revision: %w", err)
+		}
 	}
 
 	if err := copyDir(cloneDir, path); err != nil {
