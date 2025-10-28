@@ -462,3 +462,47 @@ func (p PortAddr) String() string {
 
 	return "invalid port addr"
 }
+
+// InteropableComponent describes a component that can be exported to go.
+type InteropableComponent struct {
+	Name      string
+	Component Component
+}
+
+// GetInteropableComponents finds all public components in the package
+// that have exactly one inport and one outport (valid for go interop).
+// components that don't meet this criteria are silently ignored.
+func (pkg Package) GetInteropableComponents() []InteropableComponent {
+	var result []InteropableComponent
+
+	for res := range pkg.Entities() {
+		// skip non-public entities
+		if !res.Entity.IsPublic {
+			continue
+		}
+
+		// skip non-components
+		if res.Entity.Kind != ComponentEntity {
+			continue
+		}
+
+		// skip overloaded components (they have multiple versions)
+		if len(res.Entity.Component) != 1 {
+			continue
+		}
+
+		comp := res.Entity.Component[0]
+
+		// only accept components with exactly one inport and one outport
+		if len(comp.Interface.IO.In) != 1 || len(comp.Interface.IO.Out) != 1 {
+			continue
+		}
+
+		result = append(result, InteropableComponent{
+			Name:      res.EntityName,
+			Component: comp,
+		})
+	}
+
+	return result
+}

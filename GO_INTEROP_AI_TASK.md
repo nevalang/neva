@@ -47,7 +47,7 @@ Running `neva build --target=go` today produces an executable:
 2. `tpl.go` renders `main.go`, wiring those calls into one `runtime.Program` literal with `Start`/`Stop` ports.
 3. The backend copies `internal/runtime/**` and related support files next to the entry point so the emitted Go compiles in isolation.
 
-Package mode keeps this pipeline but emits library-friendly files instead of a `main` package.
+Package mode extends this pipeline: instead of generating one main program, it discovers all exported components, generates an IR program for each export, and emits library-friendly files (`api.go`, `programs.go`) in a reusable Go package. Both modes share the same wiring logic and runtime.
 
 ## CLI Surface
 
@@ -252,10 +252,10 @@ graph LR
 
 ## implementation plan
 
-1. **cli plumbing.** add the `pkg` mode flag parsing while leaving executable behaviour untouched.
-2. **export collection.** thread export metadata through the go backend entry point.
-3. **wrapper generation.** synthesize wrapper programs and reuse `tpl.go` to materialise the `runtime.Program` literals.
-4. **template additions.** introduce library templates for `api.go` and `programs.go` (which also contains wiring helpers) that consume the existing `templateData`.
+1. **backend interface extension.** add `CompileLibrary` method to compiler backend interface; all backends implement it (unsupported backends panic).
+2. **go backend library mode.** implement `CompileLibrary` in golang backend: discover exports, generate wrapper IR per export, render library templates.
+3. **template additions.** introduce library templates for `api.go` and `programs.go` that consume the existing wiring helpers.
+4. **cli integration.** route `--target-go-mode=pkg` to call `backend.CompileLibrary` instead of `backend.CompileExecutable`.
 5. **end-to-end tests.** generate a package from a sample neva project, `go build` it, and execute a smoke test that calls the exported component from go.
 
 ## Performance & Tooling Notes
@@ -274,15 +274,19 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 - irgen:
   - `Generator.GenerateForComponent(build, pkgName, componentName)` exists and produces an `ir.Program` rooted at the exported component (ports usage from the component interface).
 - go backend:
-  - `ModePackage` is defined but not implemented in `Emit` (currently panics).
-  - executable template and wiring helpers exist.
+  - executable template and wiring helpers exist and work.
+  - library mode will be implemented as a new `CompileLibrary` method.
 - tests:
   - e2e `e2e/cli/build_with_go_pkg_mode/e2e_test.go` expects:
     - generated files: `api.go`, `programs.go`
     - public free function per export (e.g. `Print42(ctx, runtime.Msg) (runtime.Msg, error)`).
     - factory `new<Export>Program()` behind the api.
 - analyzer:
-  - analyzer already supports library analysis when `mainPkgName == ""` (skips main-specific checks). cli currently always passes a non-empty main, so pkg-mode must call analyzer in library mode.
+  - analyzer already supports library analysis when `mainPkgName == ""` (skips main-specific checks). library compilation will use this path.
+- export discovery:
+  - `Package.GetInteropableComponents()` method exists in `internal/compiler/sourcecode` and filters valid exports (public components with exactly one inport and one outport).
+  - returns `[]InteropableComponent` (struct containing component name and Component).
+  - comprehensive unit tests in `internal/compiler/sourcecode/sourcecode_test.go` cover all filtering scenarios.
 
 ## target mvp behavior
 - `neva build --target=go --target-go-mode=pkg --output=./gen/<pkg> ./src[/subpkg]`
@@ -296,35 +300,49 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 
 ## step-by-step implementation
 
-1) add package-mode analysis path (no main)
-- goal: analyze/desugar a package without enforcing `Main` or banning public entities.
-- implement one of:
-  - a) add `AnalyzeBuildForPackage(build, pkgPath)` (no `Main` checks, allow public entities in that package).
-  - b) extend `AnalyzeBuild` with a mode param; in pkg-mode branch, skip `mainSpecificPkgValidation`.
-- update `internal/cli/build.go` to call the package-mode analyzer when `--target-go-mode=pkg`.
+### architectural approach: proper compiler abstraction
 
-2) export discovery for the selected package
-- input: analyzed build + target package path (`FrontendResult.MainPkg`).
-- iterate package entities and collect public component entities:
-  - source: `internal/compiler/sourcecode.Package.Entities()` → `Entity{IsPublic, Kind==ComponentEntity}`.
-- validate each export:
-  - exactly one inport and one outport (`component.Interface.IO.In`/`Out` length == 1).
-  - for mvp, accept any underlying types; downstream we treat them as `runtime.Msg`.
-- produce a list of `exports = [{name, interface}]`.
+the compiler will support two distinct compilation modes through dedicated methods:
+- **executable mode:** `CompileExecutable(build, mainPkg, dst, trace) → error` - generates single-program executables
+- **library mode:** `CompileLibrary(build, pkgName, dst, trace) → error` - generates multi-export libraries
 
-3) wrapper ir per export
-- for each export `E`, call:
+each backend implements both methods:
+- `golang.Backend` implements both modes fully
+- other backends (e.g., `wasm.Backend`) implement the executable method but panic in the library method with a clear message like `"library mode not supported for wasm backend"`
+
+this keeps the compiler interface clean and allows backends to declare their capabilities explicitly.
+
+1) define backend interface with compilation modes
+- add two methods to the backend interface (or create new interface if appropriate):
+  - `CompileExecutable(build *sourcecode.Build, mainPkg, dst string, trace bool) error`
+  - `CompileLibrary(build *sourcecode.Build, pkgName, dst string, trace bool) error`
+- backends orchestrate the full pipeline (analyzer, irgen, template rendering) inside these methods
+- `CompileExecutable` calls analyzer with mainPkg to enforce main checks; `CompileLibrary` calls analyzer with empty main (`""`) to skip them
+
+2) export discovery for the selected package ✅
+- **moved to `internal/compiler/sourcecode` package** as `Package.GetInteropableComponents()` method.
+- filters components that are public and have exactly one inport and one outport.
+- silently ignores components that don't meet criteria (multiple ports, overloaded, private, non-components).
+- returns `[]InteropableComponent` (struct containing component name and Component).
+- tested with comprehensive unit tests covering all filtering cases.
+
+3) wrapper ir per export (handled inside backend's CompileLibrary)
+- for each export `E` discovered in step 2, the backend calls:
   - `irgen.GenerateForComponent(build, pkgName, E)`.
-- this yields an `ir.Program` with ports named as in the component interface (not `start`/`stop`) — we will use a dedicated pkg template that wires these as `runtime.Program{Start, Stop}` appropriately.
+- this yields an `ir.Program` with ports named as in the component interface (not `start`/`stop`) — the pkg template wires these as `runtime.Program{Start, Stop}` appropriately.
 
-4) implement go backend package emission
-- create new method in `internal/compiler/backend/golang` (non-interface):
-  - `func (b Backend) EmitPackage(dst string, wrappers map[string]*ir.Program, trace bool) error`.
-- responsibilities:
-  - for each export, compute `addrToChanVar` and `FuncCalls` via existing helpers (`buildPortChanMap`, `buildFuncCalls`).
-  - render `programs.go` and `api.go` using new templates (see next step).
-  - copy `internal/runtime/**` into `dst/runtime/**` via existing `insertRuntimeFiles`.
-  - write files via `compiler.SaveFilesToDir`.
+4) implement backend interface with library support
+- define new compiler interface methods (all backends must implement):
+  - `CompileExecutable(build, mainPkg, dst string, trace bool) error` - existing single-program flow
+  - `CompileLibrary(build, pkgName, dst string, trace bool) error` - new multi-export flow
+- `golang.Backend` implements `CompileLibrary`:
+  - discover exports via `pkg.GetInteropableComponents()`
+  - for each export, call `irgen.GenerateForComponent()` to get wrapper ir
+  - for each wrapper, compute `addrToChanVar` and `FuncCalls` via existing helpers (`buildPortChanMap`, `buildFuncCalls`)
+  - render `programs.go` and `api.go` using new templates (see next step)
+  - copy `internal/runtime/**` into `dst/runtime/**` via existing `insertRuntimeFiles`
+  - write files via `compiler.SaveFilesToDir`
+- other backends (wasm, etc.) implement `CompileLibrary` to panic with clear message
 
 5) add templates for pkg mode
 - `programs.go` template (one factory per export):
@@ -343,16 +361,14 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 6) integrate cli flow for pkg mode
 - in `internal/cli/build.go`:
   - when `--target-go-mode=pkg`:
-    - run frontend as usual to build module graph and determine target package path.
-    - call analyzer in library mode `AnalyzeBuild(build, "")` to skip main checks.
-    - run desugarer on the analyzed build.
-    - perform step (2) export discovery on the selected package.
-    - for each export, run (3) to get wrapper ir via `GenerateForComponent`.
-    - instantiate `golang.NewBackend(golang.ModePackage)` and call `EmitPackage(outputDir, wrappers, trace)`.
+    - instantiate the appropriate backend (e.g., `golang.NewBackend()`)
+    - call `backend.CompileLibrary(build, pkgName, outputDir, trace)`
+  - when `--target-go-mode=executable` (or default):
+    - call `backend.CompileExecutable(build, mainPkg, outputDir, trace)`
+- all compilation orchestration (frontend, analyzer, irgen, template rendering) happens inside the backend's compile methods, not in cli
 
 7) enforce constraints and errors
-- if any export lacks exactly one inport or one outport: return a clear error (point to entity location).
-- if no exports found: return a clear error suggesting to add `pub def` to the target package.
+- if no exports found: return a clear error suggesting to add `pub def` with 1 inport and 1 outport to the target package.
 - keep errors surfaced via cli.
 
 8) tests
@@ -363,7 +379,7 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
     - `go build ./...` succeeds with `-replace github.com/nevalang/neva=../`.
     - `go run .` prints expected output.
 - unit:
-  - export discovery returns expected set.
+  - `Package.GetInteropableComponents()` returns expected set.
   - wrapper generation uses exact in/out port names.
   - templates compile minimal stubs (string-compare or `go build` in a temp module).
 
@@ -376,6 +392,8 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 
 ## implementation notes
 - reuse existing wiring helpers (`buildPortChanMap`, `buildFuncCalls`) to avoid duplicating logic.
-- program factories should declare channel variables locally; executable template’s top-level channel vars don’t apply.
-- do not change the compiler backend interface; pkg mode is invoked by cli using `EmitPackage`.
-- analyzer changes must avoid regressing executable mode (gate by explicit pkg-mode path only).
+- program factories should declare channel variables locally; executable template's top-level channel vars don't apply.
+- backends receive frontend/analyzer/irgen as dependencies and orchestrate the full pipeline internally within `CompileExecutable` and `CompileLibrary` methods.
+- library analysis path already exists in analyzer (`AnalyzeBuild(build, "")`) - library compilation uses this, executable compilation continues using main-aware analysis.
+- backends that don't support library mode must still implement the `CompileLibrary` method but panic with a descriptive message.
+- export discovery is complete: `Package.GetInteropableComponents()` in `internal/compiler/sourcecode/sourcecode.go` returns `[]InteropableComponent` for valid exports; tested in `sourcecode_test.go`.
