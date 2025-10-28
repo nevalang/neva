@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/nevalang/neva/pkg"
 	nevaGit "github.com/nevalang/neva/pkg/git"
+	nevaos "github.com/nevalang/neva/pkg/os"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -187,32 +187,6 @@ func copyDir(src, dst string) error {
 			return err
 		}
 
-		return copyFile(path, target, info.Mode())
+		return nevaos.CopyFile(path, target, info.Mode())
 	})
-}
-
-func copyFile(src, dst string, mode fs.FileMode) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-		return err
-	}
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	// Use the original permission bits so the copy matches the template file.
-	dstFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode.Perm())
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = dstFile.Close()
-	}()
-
-	if _, err := io.Copy(dstFile, srcFile); err != nil {
-		return err
-	}
-
-	return dstFile.Close()
 }
