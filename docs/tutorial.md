@@ -112,7 +112,7 @@ If you open `my_awesome_project/src/main.neva` with your favorite IDE, you'll se
 ```neva
 import { fmt, runtime }
 
-# Main prints a greeting and propagates failures to the runtime panic node.
+// main prints a greeting and propagates failures to the runtime panic node.
 def Main(start any) (stop any) {
         println fmt.Println<string>
         panic runtime.Panic

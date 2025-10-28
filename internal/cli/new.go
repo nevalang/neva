@@ -80,7 +80,7 @@ func createNevaMod(path string) error {
 	// Create main.neva file
 	mainNevaContent := `import { fmt, runtime }
 
-# Main prints a greeting and propagates failures to the runtime panic node.
+// main prints a greeting and propagates failures to the runtime panic node.
 def Main(start any) (stop any) {
 println fmt.Println<string>
 panic runtime.Panic
