@@ -66,7 +66,7 @@ neva build --target=go --target-go-mode=pkg --output=./internal/gen ./pkg/userfm
 
 ## Exported Component Handling
 
-Executable builds assume one entry point. Library emission must surface every `pub def` exposed by the package. The compiler performs three extra steps when `--target-go-mode=pkg` is selected:
+Executable builds assume one entry point. Library emission must surface every `pub def` exposed by the package. the only requirement for a neva component to be exposed to go is that it is exported (`pub`). port names do not matter, their amount does not matter, and ports themselves do not have to be structs — they can be of any neva type. the backend normalizes any shape via a synthesized bundling wrapper (see below). for the mvp we still require at least one input and one output to preserve call/return semantics. the compiler performs three extra steps when `--target-go-mode=pkg` is selected:
 
 1. **Export discovery.** We already mark exported components in the IR. Package mode collects each export and records its complete set of inports and outports (no single-port restriction).
 2. **Wrapper synthesis (multi-port bundling).** For every export the compiler fabricates a synthetic component that has exactly one input and one output port, both structs. The wrapper unpacks the input struct into the original component’s input ports and re-bundles all outputs into the output struct:
@@ -79,63 +79,19 @@ This design intentionally presents exported components as *call/return* style AP
 
 ## start/stop ports and struct bundling
 
-`runtime.Program` (and `ir.Program`) expose exactly one input port (`Start`) and one output port (`Stop`). exported components may have multiple input and output ports. to carry multiple values across the single start/stop boundary, the compiler synthesizes a wrapper with struct ports and performs field-level routing:
+`runtime.Program` (and `ir.Program`) expose exactly one input port (`Start`) and one output port (`Stop`). exported components may have multiple input and output ports with arbitrary names and types. to carry multiple values across the single start/stop boundary, the compiler synthesizes a wrapper with struct ports and performs field-level routing:
 
 - **input → start struct**: a single input port whose value is a struct; field names mirror logical input names (original inports); field values are encoded `runtime.Msg` primitives.
 - **output ← stop struct**: a single output port whose value is a struct; field names mirror logical output names (original outports); values are decoded back into go primitives.
 
-the generated go api stays untyped in the mvp (`runtime.Msg`), while the wiring helpers in `programs.go` perform the conversion to/from neva structs by building parallel `names []string` and `fields []runtime.Msg` slices.
+the generated go api uses typed go structs in the mvp. each exported neva component `E` gets:
+- an input struct whose fields mirror `E`'s input ports
+- an output struct whose fields mirror `E`'s output ports
+the backend converts between these go structs and the synthesized wrapper's struct messages.
 
-## Example Program Factory
+## program factory shape (conceptual)
 
-generated factories create the same wiring as today’s executable template. below is the shape for the exported `FormatUser` component (single input/output, both structs) without any extra ports wrapper, since `runtime.Program` already exposes `Start` and `Stop`:
-
-```go
-package gen
-
-import "github.com/nevalang/neva/internal/runtime"
-
-func newFormatUserProgram() runtime.Program {
-    interceptor := runtime.ProdInterceptor{}
-
-    startChan := make(chan runtime.OrderedMsg)
-    stopChan := make(chan runtime.OrderedMsg)
-
-    startPort := runtime.NewSingleOutport(
-        runtime.PortAddr{Path: "in", Port: "start"},
-        interceptor,
-        startChan,
-    )
-    stopPort := runtime.NewSingleInport(
-        stopChan,
-        runtime.PortAddr{Path: "out", Port: "stop"},
-        interceptor,
-    )
-
-    funcCalls := []runtime.FuncCall{
-        {
-            Ref: "user.format_user",
-            IO: runtime.IO{
-                In: runtime.NewInports(map[string]runtime.Inport{
-                    "input": runtime.NewInport(nil, runtime.NewSingleInport(startChan, runtime.PortAddr{Path: "in/user.format_user", Port: "input"}, interceptor)),
-                }),
-                Out: runtime.NewOutports(map[string]runtime.Outport{
-                    "output": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "out/user.format_user", Port: "output"}, interceptor, stopChan), nil),
-                }),
-            },
-            Config: nil,
-        },
-    }
-
-    return runtime.Program{
-        Start:     startPort,
-        Stop:      stopPort,
-        FuncCalls: funcCalls,
-    }
-}
-```
-
-the host-facing client never touches channel wiring directly — it receives the `runtime.Program` and uses its public `Start`/`Stop` ports via `runtime.Call`.
+generated factories mirror the executable template: a `runtime.Program` with `Start`/`Stop` ports and a list of `FuncCall`s wired according to ir generated by `irgen`. the exact function list and channel wiring are derived from the analyzed package graph and are intentionally not reproduced here. the important idea: the synthesized wrapper adapts any exported component's ports into one struct-on-start and one struct-on-stop, and the factory simply instantiates that program. the host never touches channels directly — it calls via a generated function.
 
 ## Generated Package Layout
 
@@ -143,41 +99,40 @@ given `--output=./internal/gen`, the backend emits a single go package rooted ex
 
 ```
 internal/gen/
-  runtime/…         # identical to executable mode
-  api.go            # one free function per export calling runtime.Call
-  programs.go       # factories like newFormatUserProgram + wiring helpers
+  runtime/…   # identical to executable mode
+  exports.go  # per-export: typed structs, factory, and free function
 ```
 
 all files start with the conventional `// Code generated by neva. DO NOT EDIT.` comment. host code imports `internal/gen`; the runtime copy remains an implementation detail.
 
 ## mvp api and type strategy
 
-for the initial package mode, the api is untyped: free functions accept and return `runtime.Msg`. this keeps codegen simple (no type mapping logic) and matches the runtime representation. a later iteration can add optional typed adapters and a typed client that map to go primitives.
+for the initial package mode, the api is typed at the go boundary:
+- for each exported component `E`, generate `type EInput struct { /* fields = inports */ }` and `type EOutput struct { /* fields = outports */ }`.
+- generate a free function `func E(ctx context.Context, in EInput) (EOutput, error)`.
+- if the neva component includes an `err error` outport, it maps onto the returned `error` in the go signature. operational/runtime failures may also surface via the same `error`.
 
 ## Go → Neva Workflow
 
 ### step-by-step
 
 1. **generate the package.** run `neva build --target=go --target-go-mode=pkg --output=./internal/gen ./pkg/userfmt`.
-2. **import the package.** in go code: `import "example.com/app/internal/gen"` and `import "github.com/nevalang/neva/internal/runtime"`.
+2. **import the package.** in go code: `import "example.com/app/internal/gen"`.
 3. **call an export (free function).**
    ```go
    out, err := gen.FormatUser(
        ctx,
-       runtime.NewStructMsg(
-           []string{"name", "age", "active"},
-           []runtime.Msg{
-               runtime.NewStringMsg("Ada"),
-               runtime.NewIntMsg(37),
-               runtime.NewBoolMsg(true),
-           },
-       ),
+       gen.FormatUserInput{
+           Name:   "Ada",
+           Age:    37,
+           Active: true,
+       },
    )
    if err != nil { /* handle */ }
-   fmt.Println(out.Struct().Get("greeting").Str())
-   fmt.Println(out.Struct().Get("summary").Str())
+   fmt.Println(out.Greeting)
+   fmt.Println(out.Summary)
    ```
-4. **handle the result.** outputs are returned as a `runtime.Msg` (struct) mirroring the neva output port.
+4. **handle the result.** outputs are returned as a typed `FormatUserOutput` struct whose fields mirror the neva output ports.
 
 ### mvp api snippet (free function)
 
@@ -187,21 +142,13 @@ package main
 import (
     "context"
     gen "example.com/app/internal/gen"
-    "github.com/nevalang/neva/internal/runtime"
 )
 
 func main() {
     ctx := context.Background()
     out, err := gen.FormatUser(
         ctx,
-        runtime.NewStructMsg(
-            []string{"name", "age", "active"},
-            []runtime.Msg{
-                runtime.NewStringMsg("Ada"),
-                runtime.NewIntMsg(37),
-                runtime.NewBoolMsg(true),
-            },
-        ),
+        gen.FormatUserInput{ Name: "Ada", Age: 37, Active: true },
     )
     if err != nil {
         panic(err)
@@ -210,16 +157,9 @@ func main() {
 }
 ```
 
-### typed client example (post-mvp)
+### client type (post-mvp)
 
-the following client-based, typed-struct api is a future enhancement and not part of the mvp:
-
-```go
-// not implemented in mvp
-type Client struct { /* ... */ }
-type FormatUserInput struct { /* ... */ }
-type FormatUserOutput struct { /* ... */ }
-```
+a dedicated client type (connection reuse, options) remains a future enhancement. the mvp already generates typed structs per export as shown above.
 
 <!-- echo examples removed to focus on the struct-on-single-port model -->
 
@@ -244,18 +184,19 @@ graph LR
 
 * exported components behave like rpc endpoints: the host waits for completion before receiving a response. streaming between go and neva is not directly exposed yet.
 * each invocation spins up its own program instance. sharing a runtime across multiple calls may be considered later; the mvp keeps the api simple.
-* components may expose multiple inports and outports; the compiler bundles them via a synthesized single-port wrapper. components must currently expose at least one inport and one outport. support for sink/source shapes can be added once we define the expected go-side semantics.
+* components may expose multiple inports and outports (any names and types); the compiler bundles them via a synthesized single-port wrapper. components must currently expose at least one inport and one outport. support for sink/source shapes can be added once we define the expected go-side semantics.
 
 ## error handling
 
-- no errors are ignored; all helper functions return errors and callers decide how to handle them.
+- if a component defines an `err error` outport, it maps to the go function's returned `error`. callers should treat a non-nil error as a component-level failure.
+- helper/runtime errors (e.g., setup, execution) also surface as the returned `error`. these are distinct from domain errors produced by the neva program.
 - `context.Context` governs lifetime.
 
 ## implementation plan
 
 1. **backend interface extension.** add `CompileLibrary` method to compiler backend interface; all backends implement it (unsupported backends panic).
-2. **go backend library mode.** implement `CompileLibrary` in golang backend: discover exports (no single-port restriction), synthesize a bundled wrapper per export and generate its IR, render library templates.
-3. **template additions.** introduce library templates for `api.go` and `programs.go` that consume the existing wiring helpers.
+2. **go backend library mode.** implement `CompileLibrary` in golang backend: discover exports (name/count/type agnostic), synthesize a bundled wrapper per export and generate its IR, render library template(s).
+3. **template additions.** introduce a library template that emits `exports.go` combining per-export typed structs, the factory, and the free function.
 4. **cli integration.** route `--target-go-mode=pkg` to call `backend.CompileLibrary` instead of `backend.CompileExecutable`.
 5. **end-to-end tests.** generate a package from a sample neva project (including a multi-port export), `go build` it, and execute a smoke test that calls the exported component from go.
 
@@ -279,10 +220,7 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
   - executable template and wiring helpers exist and work.
   - library mode will be implemented as a new `CompileLibrary` method.
 - tests:
-  - e2e `e2e/cli/build_with_go_pkg_mode/e2e_test.go` expects:
-    - generated files: `api.go`, `programs.go`
-    - public free function per export (e.g. `Print42(ctx, runtime.Msg) (runtime.Msg, error)`).
-    - factory `new<Export>Program()` behind the api.
+  - e2e `e2e/cli/build_with_go_pkg_mode/e2e_test.go` exists and validates package-mode generation. tests will be updated alongside the implementation to expect typed structs and the consolidated `exports.go` layout.
 - analyzer:
   - analyzer already supports library analysis when `mainPkgName == ""` (skips main-specific checks). library compilation will use this path.
 - export discovery:
@@ -294,12 +232,11 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 
 - `neva build --target=go --target-go-mode=pkg --output=./gen/<pkg> ./src[/subpkg]`
 - emit a go package:
-  - `programs.go`: one `new<Export>Program() runtime.Program` per exported component (backed by a synthesized single-port wrapper bundling multi-port i/o into structs).
-  - `api.go`: one top-level function per export calling `runtime.Call(ctx, prog, funcs.NewRegistry(), start runtime.Msg) (stop runtime.Msg, error)`.
+  - `exports.go`: for each export, define typed `EInput`/`EOutput`, a `newEProgram()` factory, and a free function `E(ctx, in EInput) (EOutput, error)` that calls into the runtime.
   - runtime is copied under `runtime/` as in executable mode.
 - constraints:
-  - exported component may have multiple inports and outports; the compiler will synthesize a wrapper with a single struct input and a single struct output bundling all ports (for now we accept/return `runtime.Msg` directly).
-  - components must have at least one input and one output.
+  - exported components may have any number of inports and outports with arbitrary names and types; the compiler synthesizes a wrapper with a single struct input and a single struct output bundling all ports.
+  - components must have at least one input and one output (mvp).
   - one request → one response (no streaming).
 
 ## step-by-step implementation
@@ -351,29 +288,22 @@ this keeps the compiler interface clean and allows backends to declare their cap
   - `CompileExecutable(build, mainPkg, dst string, trace bool) error` - existing single-program flow
   - `CompileLibrary(build, pkgName, dst string, trace bool) error` - new multi-export flow
 - `golang.Backend` implements `CompileLibrary`:
-  - discover exports via `pkg.GetInteropableComponents()` (no single-port restriction)
+  - discover exports via `pkg.GetInteropableComponents()` (name/count/type agnostic)
   - synthesize a bundled wrapper per export as described above
   - call `irgen.GenerateForComponent()` on the bundled wrapper to get ir
   - for each wrapper, compute `addrToChanVar` and `FuncCalls` via existing helpers (`buildPortChanMap`, `buildFuncCalls`)
-  - render `programs.go` and `api.go` using new templates (see next step)
+  - render `exports.go` using a new template (see next step)
   - copy `internal/runtime/**` into `dst/runtime/**` via existing `insertRuntimeFiles`
   - write files via `compiler.SaveFilesToDir`
 - other backends (wasm, etc.) implement `CompileLibrary` to panic with clear message
 
 5) add templates for pkg mode
 
-- `programs.go` template (one factory per export):
+- `exports.go` template:
   - for each export E:
-    - define local channels inside `newEProgram()` from `ChanVarNames`.
-    - create `interceptor` (debug or prod based on `trace` param passed into EmitPackage).
-    - construct `startPort` and `stopPort` using the in/out path/port names produced by the bundled wrapper ir (typically `in:start` and `out:stop`).
-    - build `[]runtime.FuncCall` with maps created by `buildFuncCalls`.
-    - return `runtime.Program{Start, Stop, FuncCalls}`.
-- `api.go` template (one free function per export):
-  - imports: `context`, `github.com/nevalang/neva/internal/runtime`, `github.com/nevalang/neva/internal/runtime/funcs`.
-  - for each export E:
-    - `func E(ctx context.Context, start runtime.Msg) (runtime.Msg, error) { prog := newEProgram(); return runtime.Call(ctx, prog, funcs.NewRegistry(), start) }`.
-- note: for mvp we keep the api untyped (`runtime.Msg`); typed structs and a `Client` type can be added later without breaking this surface.
+    - generate typed `EInput` and `EOutput` structs (fields mirror in/out ports).
+    - generate `newEProgram()` that instantiates the synthesized wrapper program (wiring derived from IR).
+    - generate a free function `E(ctx context.Context, in EInput) (EOutput, error)` that converts to/from runtime messages and invokes `runtime.Call`.
 
 6) integrate cli flow for pkg mode
 
@@ -395,7 +325,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - e2e:
   - keep `e2e/cli/build_with_go_pkg_mode`:
     - ensure it includes a multi-port export in a package acceptable by package-mode analyzer.
-    - assert files `api.go`, `programs.go` exist.
+    - assert file `exports.go` exists (factories, typed structs, and api in one place).
     - `go build ./...` succeeds with `-replace github.com/nevalang/neva=../`.
     - `go run .` prints expected output.
 - unit:
