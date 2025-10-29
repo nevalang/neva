@@ -84,10 +84,10 @@ func (streamProduct) Create(
 					seqOut.Send(
 						ctx,
 						streamItem(
-							runtime.NewStructMsg(
-								[]string{"first", "second"},
-								[]runtime.Msg{firstMsg, secondMsg},
-							),
+							runtime.NewStructMsg([]runtime.StructField{
+								runtime.NewStructField("first", firstMsg),
+								runtime.NewStructField("second", secondMsg),
+							}),
 							int64(i),
 							i == len(firstData)-1 && j == len(secondData)-1,
 						),
