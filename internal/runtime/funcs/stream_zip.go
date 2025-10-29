@@ -47,8 +47,10 @@ func (streamZip) Create(
 			rightLast := rightItem.Get("last").Bool()
 
 			zipped := runtime.NewStructMsg(
-				[]string{"left", "right"},
-				[]runtime.Msg{leftItem.Get("data"), rightItem.Get("data")},
+				[]runtime.StructField{
+					runtime.NewStructField("left", leftItem.Get("data")),
+					runtime.NewStructField("right", rightItem.Get("data")),
+				},
 			)
 
 			last := leftLast || rightLast

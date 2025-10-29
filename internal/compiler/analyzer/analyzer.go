@@ -18,7 +18,14 @@ type Analyzer struct {
 	resolver ts.Resolver
 }
 
-func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
+// AnalyzeBuild analyzes a build. When mainPkgName is non-empty,
+// analyzer treats the build as an executable entry. When mainPkgName is empty,
+// analyzer only analyzes the build as a library.
+func (a Analyzer) Analyze(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
+	if mainPkgName == "" {
+		return a.analyzeBuild(build)
+	}
+
 	meta := core.Meta{
 		Location: core.Location{
 			ModRef:  build.EntryModRef,
@@ -47,7 +54,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 		return src.Build{}, compiler.Error{Meta: &meta}.Wrap(err)
 	}
 
-	analyzedBuild, err := a.AnalyzeBuild(build)
+	analyzedBuild, err := a.analyzeBuild(build)
 	if err != nil {
 		return src.Build{}, compiler.Error{Meta: &meta}.Wrap(err)
 	}
@@ -55,7 +62,7 @@ func (a Analyzer) AnalyzeExecutableBuild(build src.Build, mainPkgName string) (s
 	return analyzedBuild, nil
 }
 
-func (a Analyzer) AnalyzeBuild(build src.Build) (src.Build, *compiler.Error) {
+func (a Analyzer) analyzeBuild(build src.Build) (src.Build, *compiler.Error) {
 	analyzedMods := make(map[core.ModuleRef]src.Module, len(build.Modules))
 
 	for modRef, mod := range build.Modules {
