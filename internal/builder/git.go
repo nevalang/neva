@@ -5,9 +5,10 @@ import (
 	"os"
 	"strings"
 
-	git "github.com/go-git/go-git/v5"
+	gitlib "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	nevaGit "github.com/nevalang/neva/pkg/git"
 )
 
 // downloadDep returns path where it downloaded dependency
@@ -34,8 +35,13 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 		ref = plumbing.NewTagReferenceName(depModRef.Version)
 	}
 
-	repo, err := git.PlainClone(fsPath, false, &git.CloneOptions{
-		URL:           "https://" + depModRef.Path,
+	spec, err := nevaGit.ParseRepoSpec(depModRef.Path)
+	if err != nil {
+		return "", "", fmt.Errorf("parse module repository: %w", err)
+	}
+
+	repo, err := gitlib.PlainClone(fsPath, false, &gitlib.CloneOptions{
+		URL:           spec.CloneURL(),
 		ReferenceName: ref,
 	})
 	if err != nil {
@@ -51,14 +57,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 		return "", "", err
 	}
 
-	tree, err := repo.Worktree()
-	if err != nil {
-		return "", "", err
-	}
-
-	if err := tree.Checkout(&git.CheckoutOptions{
-		Hash: latestTagHash,
-	}); err != nil {
+	if err := nevaGit.Checkout(repo, latestTagHash.String()); err != nil {
 		return "", "", err
 	}
 
@@ -80,7 +79,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 	return newFsPath, tagName, nil
 }
 
-func getLatestTagHash(repository *git.Repository) (plumbing.Hash, string, error) {
+func getLatestTagHash(repository *gitlib.Repository) (plumbing.Hash, string, error) {
 	tagRefs, err := repository.Tags()
 	if err != nil {
 		return plumbing.Hash{}, "", err

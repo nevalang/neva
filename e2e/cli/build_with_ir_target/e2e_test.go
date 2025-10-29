@@ -17,7 +17,7 @@ func TestBuildIRDefault(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// build with ir target (default yaml format)
@@ -55,7 +55,7 @@ func TestBuildIRYAML(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// build with ir target and explicit yaml format
@@ -93,7 +93,7 @@ func TestBuildIRJSON(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// build with ir target and json format

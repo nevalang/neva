@@ -14,17 +14,25 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
-	// debugValidation(prog)
+	_, err := Call(ctx, prog, registry, NewStructMsg(nil))
+	return err
+}
 
+// Call runs a single request-response round-trip using program Start/Stop.
+// It sends the provided input to Start, waits for one message on Stop,
+// then cancels and waits for all handlers to finish.
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
+	var out Msg
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
-		prog.Stop.Receive(ctx)
+		out, _ = prog.Stop.Receive(ctx)
 		cancel() // normal termination
 	}()
 
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
-		return err
+		cancel()
+		return nil, err
 	}
 
 	funcsFinished := make(chan struct{})
@@ -35,14 +43,11 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 		close(funcsFinished)
 	}()
 
-	prog.Start.Send(
-		ctx,
-		NewStructMsg(nil, nil),
-	)
+	prog.Start.Send(ctx, in)
 
 	<-funcsFinished
 
-	return nil
+	return out, nil
 }
 
 func deferFuncCalls(
@@ -66,7 +71,10 @@ func deferFuncCalls(
 	}, nil
 }
 
-func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]func(context.Context), error) {
+func createHandlers(
+	funcCalls []FuncCall,
+	registry map[string]FuncCreator,
+) ([]func(context.Context), error) {
 	funcs := make([]func(context.Context), len(funcCalls))
 
 	for i, call := range funcCalls {
@@ -85,114 +93,3 @@ func createHandlers(funcCalls []FuncCall, registry map[string]FuncCreator) ([]fu
 
 	return funcs, nil
 }
-
-// func debugValidation(prog Program) {
-// 	type info struct {
-// 		PortSlotAddr
-// 		FuncRef string
-// 		Chan    any
-// 	}
-
-// 	receivers := map[string]info{}
-// 	senders := map[string]info{}
-
-// 	for _, call := range prog.FuncCalls {
-// 		for _, inport := range call.IO.In.ports {
-// 			if inport.single != nil {
-// 				k := fmt.Sprint(inport.single.ch)
-// 				receivers[k] = info{
-// 					PortSlotAddr: PortSlotAddr{inport.single.addr, nil},
-// 					FuncRef:      call.Ref,
-// 					Chan:         inport.single.ch,
-// 				}
-// 			} else if inport.array != nil {
-// 				for i, ch := range inport.array.chans {
-// 					k := fmt.Sprint(ch)
-// 					idx := uint8(i)
-// 					receivers[k] = info{
-// 						PortSlotAddr: PortSlotAddr{inport.array.addr, &idx},
-// 						FuncRef:      call.Ref,
-// 						Chan:         ch,
-// 					}
-// 				}
-// 			} else {
-// 				panic("empty func call!")
-// 			}
-// 		}
-
-// 		for _, outport := range call.IO.Out.ports {
-// 			if outport.single != nil {
-// 				k := fmt.Sprint(outport.single.ch)
-// 				senders[k] = info{
-// 					PortSlotAddr: PortSlotAddr{outport.single.addr, nil},
-// 					FuncRef:      call.Ref,
-// 					Chan:         outport.single.ch,
-// 				}
-// 			} else if outport.array != nil {
-// 				for i, ch := range outport.array.slots {
-// 					k := fmt.Sprint(ch)
-// 					idx := uint8(i)
-// 					senders[k] = info{
-// 						PortSlotAddr: PortSlotAddr{outport.array.addr, &idx},
-// 						FuncRef:      call.Ref,
-// 						Chan:         ch,
-// 					}
-// 				}
-// 			} else {
-// 				panic("empty func call!")
-// 			}
-// 		}
-// 	}
-
-// 	senders[fmt.Sprint(prog.Start.ch)] = info{
-// 		PortSlotAddr: PortSlotAddr{PortAddr{Path: "prog", Port: "Start"}, nil},
-// 		FuncRef:      "Program",
-// 		Chan:         prog.Start,
-// 	}
-
-// 	receivers[fmt.Sprint(prog.Stop.ch)] = info{
-// 		PortSlotAddr: PortSlotAddr{PortAddr{Path: "prog", Port: "Stop"}, nil},
-// 		FuncRef:      "Program",
-// 		Chan:         prog.Stop,
-// 	}
-
-// 	if len(senders) != len(receivers) {
-// 		fmt.Printf(
-// 			"[DEBUG] ===\nWARNING: len(senders)!=len(receivers), senders=%d, receivers=%d\n===\n\n",
-// 			len(senders),
-// 			len(receivers),
-// 		)
-// 	}
-
-// 	formatSlotIndex := func(idx *uint8) string {
-// 		if idx != nil {
-// 			return fmt.Sprintf("[%d]", *idx)
-// 		}
-// 		return ""
-// 	}
-
-// 	for senderChanString, sInfo := range senders {
-// 		if _, ok := receivers[senderChanString]; !ok {
-// 			fmt.Printf(
-// 				"[DEBUG] Unconnected Sender: %v | %v:%v%s -> ???\n",
-// 				senderChanString,
-// 				sInfo.PortSlotAddr.Path,
-// 				sInfo.PortSlotAddr.Port,
-// 				formatSlotIndex(sInfo.PortSlotAddr.Index),
-// 			)
-// 		}
-// 	}
-
-// 	for rChStr, rInfo := range receivers {
-// 		if _, ok := senders[rChStr]; !ok {
-// 			fmt.Printf(
-// 				"[DEBUG] Unconnected Receiver: %v | ??? -> %v:%v%s\n",
-// 				rChStr,
-// 				rInfo.PortSlotAddr.Path,
-// 				rInfo.PortSlotAddr.Port,
-// 				formatSlotIndex(rInfo.PortSlotAddr.Index),
-// 			)
-// 		}
-// 	}
-
-// }
