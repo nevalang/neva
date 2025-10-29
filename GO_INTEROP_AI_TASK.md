@@ -66,32 +66,30 @@ neva build --target=go --target-go-mode=pkg --output=./internal/gen ./pkg/userfm
 
 ## Exported Component Handling
 
-Executable builds assume one entry point. Library emission must surface every `pub def` exposed by the package. the only requirement for a neva component to be exposed to go is that it is exported (`pub`). port names do not matter, their amount does not matter, and ports themselves do not have to be structs — they can be of any neva type. the backend normalizes any shape via a synthesized bundling wrapper (see below). for the mvp we still require at least one input and one output to preserve call/return semantics. the compiler performs three extra steps when `--target-go-mode=pkg` is selected:
+executable builds assume one entry point. library emission surfaces every `pub def` that has exactly one input port and exactly one output port. multi-port exports are out of scope for stage-1 and will be handled in stage-2 via desugarer-based bundling. for stage-1 there is no wrapper synthesis; the backend generates programs directly for eligible exports. the compiler performs two extra steps when `--target-go-mode=pkg` is selected:
 
-1. **Export discovery.** We already mark exported components in the IR. Package mode collects each export and records its complete set of inports and outports (no single-port restriction).
-2. **Wrapper synthesis (multi-port bundling).** For every export the compiler fabricates a synthetic component that has exactly one input and one output port, both structs. The wrapper unpacks the input struct into the original component’s input ports and re-bundles all outputs into the output struct:
-   * All input ports → fields of the wrapper’s input struct delivered on `Start`.
-   * All output ports ← fields of the wrapper’s output struct observed on `Stop`.
-   * Components lacking either inputs or outputs are rejected in the mvp (call/return). Support for more exotic shapes can be layered in later.
-3. **Template reuse.** The existing Go template runs once per synthesized wrapper, producing a `runtime.Program` literal identical to what the executable backend would emit.
+1. **export discovery.** we already mark exported components in the ir. package mode collects each export that satisfies the single-port constraint (exactly one inport and one outport).
+2. **template reuse.** the existing go template runs once per eligible export, producing a `runtime.Program` literal identical to what the executable backend would emit.
 
 This design intentionally presents exported components as *call/return* style APIs to Go code while preserving dataflow inside the Neva program. It sacrifices direct streaming semantics for the first iteration but massively simplifies interop: the host submits one request, waits for one response, and can run multiple requests concurrently by creating independent runtimes.
 
 ## start/stop ports and struct bundling
 
-`runtime.Program` (and `ir.Program`) expose exactly one input port (`Start`) and one output port (`Stop`). exported components may have multiple input and output ports with arbitrary names and types. to carry multiple values across the single start/stop boundary, the compiler synthesizes a wrapper with struct ports and performs field-level routing:
+`runtime.Program` (and `ir.Program`) expose exactly one input port (`Start`) and one output port (`Stop`).
 
-- **input → start struct**: a single input port whose value is a struct; field names mirror logical input names (original inports); field values are encoded `runtime.Msg` primitives.
-- **output ← stop struct**: a single output port whose value is a struct; field names mirror logical output names (original outports); values are decoded back into go primitives.
+- stage-1: exported components must already have exactly one input and one output. no struct bundling is performed.
+- stage-2 (future): to carry multiple values across the single start/stop boundary for multi-port exports, the desugarer will synthesize a wrapper with struct ports and perform field-level routing:
+  - **input → start struct**: a single input port whose value is a struct; field names mirror logical input names (original inports); field values are encoded `runtime.Msg` primitives.
+  - **output ← stop struct**: a single output port whose value is a struct; field names mirror logical output names (original outports); values are decoded back into go primitives.
 
-the generated go api uses typed go structs in the mvp. each exported neva component `E` gets:
-- an input struct whose fields mirror `E`'s input ports
-- an output struct whose fields mirror `E`'s output ports
-the backend converts between these go structs and the synthesized wrapper's struct messages.
+the generated go api uses typed go structs. in stage-1, fields map directly to the component's single input and output. conversion to `runtime.Msg` primitives is handled in the generated wiring.
 
 ## program factory shape (conceptual)
 
-generated factories mirror the executable template: a `runtime.Program` with `Start`/`Stop` ports and a list of `FuncCall`s wired according to ir generated by `irgen`. the exact function list and channel wiring are derived from the analyzed package graph and are intentionally not reproduced here. the important idea: the synthesized wrapper adapts any exported component's ports into one struct-on-start and one struct-on-stop, and the factory simply instantiates that program. the host never touches channels directly — it calls via a generated function.
+generated factories mirror the executable template: a `runtime.Program` with `Start`/`Stop` ports and a list of `FuncCall`s wired according to ir generated by `irgen`. the exact function list and channel wiring are derived from the analyzed package graph and are intentionally not reproduced here.
+
+- stage-1: factories instantiate programs rooted directly at the exported component.
+- stage-2: factories will instantiate the synthesized bundling adapter produced by the desugarer for multi-port exports.
 
 ## Generated Package Layout
 
@@ -184,7 +182,7 @@ graph LR
 
 * exported components behave like rpc endpoints: the host waits for completion before receiving a response. streaming between go and neva is not directly exposed yet.
 * each invocation spins up its own program instance. sharing a runtime across multiple calls may be considered later; the mvp keeps the api simple.
-* components may expose multiple inports and outports (any names and types); the compiler bundles them via a synthesized single-port wrapper. components must currently expose at least one inport and one outport. support for sink/source shapes can be added once we define the expected go-side semantics.
+* stage-1 supports only components with exactly one inport and one outport. multi-port exports will be enabled in stage-2 via desugarer-based bundling. support for sink/source shapes can be added once we define the expected go-side semantics.
 
 ## error handling
 
@@ -195,10 +193,10 @@ graph LR
 ## implementation plan
 
 1. **backend interface extension.** add `CompileLibrary` method to compiler backend interface; all backends implement it (unsupported backends panic).
-2. **go backend library mode.** implement `CompileLibrary` in golang backend: discover exports (name/count/type agnostic), synthesize a bundled wrapper per export and generate its IR, render library template(s).
+2. **go backend library mode.** implement `CompileLibrary` in golang backend: discover eligible single-port exports and generate their ir directly; render library template(s).
 3. **template additions.** introduce a library template that emits `exports.go` combining per-export typed structs, the factory, and the free function.
 4. **cli integration.** route `--target-go-mode=pkg` to call `backend.CompileLibrary` instead of `backend.CompileExecutable`.
-5. **end-to-end tests.** generate a package from a sample neva project (including a multi-port export), `go build` it, and execute a smoke test that calls the exported component from go.
+5. **end-to-end tests.** generate a package from a sample neva project (using a single-port export), `go build` it, and execute a smoke test that calls the exported component from go.
 
 ## Performance & Tooling Notes
 
@@ -224,9 +222,9 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 - analyzer:
   - analyzer already supports library analysis when `mainPkgName == ""` (skips main-specific checks). library compilation will use this path.
 - export discovery:
-  - `Package.GetInteropableComponents()` method exists in `internal/compiler/sourcecode` and will be extended to return public components eligible for interop without enforcing a single-port shape.
+  - `Package.GetInteropableComponents()` method exists in `internal/compiler/sourcecode` and returns public components eligible for interop that have exactly one inport and one outport.
   - returns `[]InteropableComponent` (struct containing component name and Component).
-  - unit tests in `internal/compiler/sourcecode/sourcecode_test.go` should be updated to cover multi-port scenarios.
+  - unit tests in `internal/compiler/sourcecode/sourcecode_test.go` cover filtering to single-port components.
 
 ## target mvp behavior
 
@@ -235,8 +233,7 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
   - `exports.go`: for each export, define typed `EInput`/`EOutput`, a `newEProgram()` factory, and a free function `E(ctx, in EInput) (EOutput, error)` that calls into the runtime.
   - runtime is copied under `runtime/` as in executable mode.
 - constraints:
-  - exported components may have any number of inports and outports with arbitrary names and types; the compiler synthesizes a wrapper with a single struct input and a single struct output bundling all ports.
-  - components must have at least one input and one output (mvp).
+  - exported components must have exactly one input and one output (single-port). no bundling in stage-1.
   - one request → one response (no streaming).
 
 ## step-by-step implementation
@@ -271,16 +268,9 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - returns `[]InteropableComponent` (struct containing component name and Component).
 - tested with comprehensive unit tests covering all filtering cases.
 
-3) wrapper per export (handled inside backend's CompileLibrary)
+3) bundling (stage-2, implemented in desugarer)
 
-- for each export `E` discovered in step 2, the backend synthesizes a new component `E_Bundled` with a single input struct and a single output struct:
-  - input struct fields = all of `E`’s input port names and types
-  - output struct fields = all of `E`’s output port names and types
-  - wiring:
-    - `:in.<field>` → `E:<inport>` for every input port
-    - `E:<outport>` → `build_struct:<field>` for every output port
-    - `build_struct` → `:out`
-- the backend then calls `irgen.GenerateForComponent(build, pkgName, E_Bundled)` to obtain an `ir.Program` compatible with `runtime.Program{Start, Stop}`.
+- for multi-port exports, the desugarer will synthesize a new component `E_Bundled` with a single input struct and a single output struct and perform field-level routing (see stage-2 notes below). this is not part of stage-1.
 
 4) implement backend interface with library support
 
@@ -288,10 +278,9 @@ this keeps the compiler interface clean and allows backends to declare their cap
   - `CompileExecutable(build, mainPkg, dst string, trace bool) error` - existing single-program flow
   - `CompileLibrary(build, pkgName, dst string, trace bool) error` - new multi-export flow
 - `golang.Backend` implements `CompileLibrary`:
-  - discover exports via `pkg.GetInteropableComponents()` (name/count/type agnostic)
-  - synthesize a bundled wrapper per export as described above
-  - call `irgen.GenerateForComponent()` on the bundled wrapper to get ir
-  - for each wrapper, compute `addrToChanVar` and `FuncCalls` via existing helpers (`buildPortChanMap`, `buildFuncCalls`)
+  - discover exports via `pkg.GetInteropableComponents()` (single-port eligible components)
+  - call `irgen.GenerateForComponent()` on the export to get ir
+  - compute `addrToChanVar` and `FuncCalls` via existing helpers (`buildPortChanMap`, `buildFuncCalls`)
   - render `exports.go` using a new template (see next step)
   - copy `internal/runtime/**` into `dst/runtime/**` via existing `insertRuntimeFiles`
   - write files via `compiler.SaveFilesToDir`
@@ -302,7 +291,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - `exports.go` template:
   - for each export E:
     - generate typed `EInput` and `EOutput` structs (fields mirror in/out ports).
-    - generate `newEProgram()` that instantiates the synthesized wrapper program (wiring derived from IR).
+    - generate `newEProgram()` that instantiates the program rooted at `E` (wiring derived from IR).
     - generate a free function `E(ctx context.Context, in EInput) (EOutput, error)` that converts to/from runtime messages and invokes `runtime.Call`.
 
 6) integrate cli flow for pkg mode
@@ -324,13 +313,13 @@ this keeps the compiler interface clean and allows backends to declare their cap
 
 - e2e:
   - keep `e2e/cli/build_with_go_pkg_mode`:
-    - ensure it includes a multi-port export in a package acceptable by package-mode analyzer.
+    - ensure it includes a single-port export acceptable by package-mode analyzer.
     - assert file `exports.go` exists (factories, typed structs, and api in one place).
     - `go build ./...` succeeds with `-replace github.com/nevalang/neva=../`.
     - `go run .` prints expected output.
 - unit:
-  - `Package.GetInteropableComponents()` returns expected set (including multi-port exports).
-  - bundled wrapper generation uses exact in/out port names.
+  - `Package.GetInteropableComponents()` returns expected set of single-port exports.
+  - stage-2 will add tests for bundled wrapper generation using exact in/out port names.
   - templates compile minimal stubs (string-compare or `go build` in a temp module).
 
 9) future incremental improvements (post-mvp)
@@ -348,9 +337,9 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - backends receive frontend/analyzer/irgen as dependencies and orchestrate the full pipeline internally within `CompileExecutable` and `CompileLibrary` methods.
 - library analysis path already exists in analyzer (`AnalyzeBuild(build, "")`) - library compilation uses this, executable compilation continues using main-aware analysis.
 - backends that don't support library mode must still implement the `CompileLibrary` method but panic with a descriptive message.
-- export discovery will surface public components (no single-port restriction); the backend bundles multi-port exports via a synthesized wrapper with single input/output structs in the mvp.
+ - export discovery surfaces public components with exactly one inport and one outport in stage-1; multi-port bundling will be added in the desugarer in stage-2.
 
-## multi-port export example and synthesized wrapper
+## multi-port export example and synthesized wrapper (stage-2)
 
 the following illustrates how a multi-port exported component is adapted for go package mode:
 
@@ -374,9 +363,9 @@ pub def FooBundled(in FooInput) (out FooOutput) {
 }
 ```
 
-`FooBundled` is the compilation target for `irgen.GenerateForComponent`; it provides the single `Start`/`Stop` shape required by `runtime.Program` while preserving `Foo`’s public multi-port api via struct bundling.
+`FooBundled` will be the compilation target produced by the desugarer in stage-2; it provides the single `Start`/`Stop` shape required by `runtime.Program` while preserving `Foo`’s public multi-port api via struct bundling.
 
-## naming for the synthesized wrapper
+## naming for the synthesized wrapper (stage-2)
 
 "wrapper" is generic; here are five more explicit alternatives for the synthesized component name:
 
@@ -386,21 +375,21 @@ pub def FooBundled(in FooInput) (out FooOutput) {
 - struct_bundler
 - export_facade
 
-recommendation for mvp: use `ports_bundling_adapter` internally and derive user-visible names as `<ExportName>Bundled` (e.g., `FooBundled`) to keep generated identifiers predictable and readable.
+recommendation for stage-2: use `ports_bundling_adapter` internally and derive user-visible names as `<ExportName>Bundled` (e.g., `FooBundled`) to keep generated identifiers predictable and readable.
 
 ## where to implement bundling (desugarer vs backend)
 
+bundling will be implemented in the desugarer (stage-2). stage-1 does not perform bundling and supports only single-port exports.
+
 several strategies can produce the synthesized wrapper:
 
-1. backend-time ir synthesis (recommended for mvp):
+1. backend-time ir synthesis:
 
-   - the golang backend constructs the bundled component on the fly from the analyzed package model and invokes `irgen.GenerateForComponent` on it.
-   - pros: localized change, no need to thread package-mode through desugarer; simpler rollback.
-   - cons: a small amount of desugaring-like wiring logic exists in the backend.
-2. desugarer-time synthesis:
+   - not used in this project. we avoid backend-specific bundling to keep wiring logic centralized.
+2. desugarer-time synthesis (chosen):
 
-   - extend the desugarer to create bundled siblings for each public component when compiling in package mode.
-   - pros: bundling becomes a first-class transformation with full language context; other backends could reuse it.
+   - extend the desugarer to create bundled siblings for each public multi-port component when compiling in package mode.
+   - pros: bundling becomes a first-class transformation with full language context; other backends can reuse it.
    - cons: couples desugaring to build mode; broader surface area of change.
 3. hybrid utility:
 
@@ -408,4 +397,4 @@ several strategies can produce the synthesized wrapper:
    - pros: shared logic, keeps backend thin; paves path to future typed clients.
    - cons: introduces a new utility layer to maintain.
 
-for the mvp, adopt (1). once stable, consider (3) to share bundling across backends.
+for stage-2, adopt (2). once stable, consider (3) to share bundling across backends.
