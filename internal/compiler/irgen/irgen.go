@@ -93,7 +93,11 @@ func (g Generator) GenerateForComponent(
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{},
 		Funcs:       []ir.FuncCall{},
-		Comment:     buildProgramComment(build.EntryModRef.Path, build.EntryModRef.Version, mainPkgName),
+		Comment:     buildProgramComment(
+			build.EntryModRef.Path,
+			build.EntryModRef.Version,
+			pkgName,
+		),
 	}
 
 	g.processNode(rootNodeCtx, scope, result)
