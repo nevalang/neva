@@ -66,12 +66,12 @@ func (g Generator) GenerateForComponent(
 	version := entity.Component[0]
 
 	// in and out ports of the root node are expected to be used by runtime
-	inUsage := make(map[relPortAddr]struct{}, len(version.Interface.IO.In))
-	for inName := range version.Interface.IO.In {
+	inUsage := make(map[relPortAddr]struct{}, len(version.IO.In))
+	for inName := range version.IO.In {
 		inUsage[relPortAddr{Port: inName}] = struct{}{}
 	}
-	outUsage := make(map[relPortAddr]struct{}, len(version.Interface.IO.Out))
-	for outName := range version.Interface.IO.Out {
+	outUsage := make(map[relPortAddr]struct{}, len(version.IO.Out))
+	for outName := range version.IO.Out {
 		outUsage[relPortAddr{Port: outName}] = struct{}{}
 	}
 
@@ -93,7 +93,7 @@ func (g Generator) GenerateForComponent(
 	result := &ir.Program{
 		Connections: map[ir.PortAddr]ir.PortAddr{},
 		Funcs:       []ir.FuncCall{},
-		Comment:     buildProgramComment(
+		Comment: buildProgramComment(
 			build.EntryModRef.Path,
 			build.EntryModRef.Version,
 			pkgName,
