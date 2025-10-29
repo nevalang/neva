@@ -476,12 +476,10 @@ func (pkg Package) GetInteropableComponents() []InteropableComponent {
 	var result []InteropableComponent
 
 	for res := range pkg.Entities() {
-		// skip non-public entities
 		if !res.Entity.IsPublic {
 			continue
 		}
 
-		// skip non-components
 		if res.Entity.Kind != ComponentEntity {
 			continue
 		}
@@ -492,11 +490,6 @@ func (pkg Package) GetInteropableComponents() []InteropableComponent {
 		}
 
 		comp := res.Entity.Component[0]
-
-		// only accept components with exactly one inport and one outport
-		if len(comp.Interface.IO.In) != 1 || len(comp.Interface.IO.Out) != 1 {
-			continue
-		}
 
 		result = append(result, InteropableComponent{
 			Name:      res.EntityName,
