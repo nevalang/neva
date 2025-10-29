@@ -2,12 +2,12 @@
 // https://github.com/nevalang/neva/issues/575
 // all elements of the array must be printed before program terminate
 
-import { time, fmt, runtime }
+import { time, fmt, runtime, streams }
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start any) (stop any) {
-    ListToStream<int>, For{Slow}, Wait, runtime.Panic
+    ListToStream<int>, For{Slow}, streams.Wait, runtime.Panic
     ---
     :start -> $lst -> listToStream -> for
     for:res -> wait -> :stop

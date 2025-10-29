@@ -1,0 +1,24 @@
+import {
+    strings
+    fmt
+    runtime
+}
+
+def Main(start any) (stop any) {
+        println fmt.Println<string>
+        split strings.Split
+        join strings.Join
+        panic runtime.Panic
+        l2s ListToStream<string>
+        ---
+        :start -> [
+                'a,b,c' -> split:data,
+                ',' -> split:delim,
+                ', ' -> join:sep
+        ]
+        split -> l2s:data
+        l2s -> join:data
+        join -> println:data
+        println:res -> :stop
+        println:err -> panic
+}

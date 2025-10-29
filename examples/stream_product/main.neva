@@ -5,7 +5,7 @@ type ProductResult streams.ProductResult<int, int>
 def Main(start any) (stop any) {
 	streams.Product<int, int>
 	For<ProductResult>{fmt.Println<ProductResult>}
-	Wait
+        streams.Wait
 	runtime.Panic
 	---
 	:start -> [

@@ -1,5 +1,7 @@
-#extern(strings_join)
-pub def Join(data list<string>) (res string)
+#extern(strings_join_list)
+pub def Join(data list<string>, sep string) (res string)
+#extern(strings_join_stream)
+pub def Join(data stream<string>, sep string) (res string)
 
 #extern(strings_split)
 pub def Split(data string, delim string) (res list<string>)

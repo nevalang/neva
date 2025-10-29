@@ -1,14 +1,23 @@
-import { strings, fmt, runtime }
-
-def Main(start any) (stop any) {
-	fmt.Println, strings.Split, strings.Join, runtime.Panic
-	---
-	:start -> [
-		'neva' -> split:data,
-		'' -> split:delim
-	]
-	split -> join -> println:data
-	println:res -> :stop
-	println:err -> panic
+import {
+    strings
+    fmt
+    runtime
 }
 
+def Main(start any) (stop any) {
+        println fmt.Println<string>
+        split strings.Split
+        join strings.Join
+        list_to_stream ListToStream<string>
+        panic runtime.Panic
+        ---
+        :start -> [
+                'neva' -> split:data,
+                '' -> split:delim,
+                '' -> join:sep
+        ]
+        split -> list_to_stream -> join:data
+        join -> println:data
+        println:res -> :stop
+        println:err -> panic
+}

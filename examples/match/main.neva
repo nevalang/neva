@@ -1,10 +1,11 @@
 import {
     fmt
     runtime
+    streams
 }
 
 def Main(start any) (stop any) {
-    For{Handler}, Wait, runtime.Panic
+    For{Handler}, streams.Wait, runtime.Panic
     ---
     :start -> 1..5 -> for
     for:res -> wait -> :stop

@@ -1,5 +1,7 @@
+import { streams }
+
 def Main(start any) (stop any) {
-    wait Wait
+    wait streams.Wait
     ---
     :start -> 1..1000 -> wait -> :stop
 }

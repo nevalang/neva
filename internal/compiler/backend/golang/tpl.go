@@ -5,6 +5,7 @@ type templateData struct {
 	ChanVarNames    []string
 	FuncCalls       []templateFuncCall
 	Trace           bool
+	TraceComment    string
 }
 
 type templateFuncCall struct {
@@ -38,7 +39,7 @@ func main() {
     )
     {{- if .Trace }}
 
-    interceptor := runtime.NewDebugInterceptor()
+    interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
 
     close, err := interceptor.Open("trace.log")
     if err != nil {

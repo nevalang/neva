@@ -1335,6 +1335,7 @@ func (s *treeShapeListener) parseNormConn(
 		Normal: &src.NormalConnection{
 			Senders:   parsedSenderSide,
 			Receivers: parsedReceiverSide,
+			Meta:      meta,
 		},
 		Meta: meta,
 	}, nil

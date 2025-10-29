@@ -1,0 +1,29 @@
+import {
+        streams,
+        fmt,
+        runtime,
+}
+
+const first list<int> = [1, 2, 3]
+const second list<int> = [10, 20, 30]
+const third list<int> = [100, 200, 300]
+
+def Main(start any) (stop any) {
+        l2s1 ListToStream<int>
+        l2s2 ListToStream<int>
+        l2s3 ListToStream<int>
+        zip_many streams.ZipMany<int>
+        for For<list<int>>{fmt.Println<list<int>>}
+        wait streams.Wait
+        panic runtime.Panic
+        ---
+        :start -> [
+                $first -> l2s1 -> zip_many:data[0],
+                $second -> l2s2 -> zip_many:data[1],
+                $third -> l2s3 -> zip_many:data[2]
+        ]
+
+        zip_many:res -> for
+        for:res -> wait -> :stop
+        for:err -> panic
+}

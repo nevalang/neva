@@ -14,6 +14,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/fsnotify/fsnotify v1.7.0
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
