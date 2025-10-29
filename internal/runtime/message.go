@@ -235,15 +235,14 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 // --- STRUCT ---
 type StructMsg struct {
 	internalMsg
-	names  []string // must be sorted for binary search
-	fields []Msg    // must be equal length to names
+	fields []StructField
 }
 
 func (msg StructMsg) Struct() StructMsg { return msg }
 
-// Get returns the value of a field by name.
-// It panics if the field is not found.
-// It uses binary search to find the field, assuming the names are sorted.
+// get returns the value of a field by name.
+// it panics if the field is not found.
+// it uses linear scan to find the field.
 func (msg StructMsg) Get(name string) Msg {
 	if field, ok := msg.get(name); ok {
 		return field
@@ -252,18 +251,18 @@ func (msg StructMsg) Get(name string) Msg {
 }
 
 func (msg StructMsg) get(name string) (Msg, bool) {
-	for i, n := range msg.names {
-		if n == name {
-			return msg.fields[i], true
+	for i := range msg.fields {
+		if msg.fields[i].name == name {
+			return msg.fields[i].value, true
 		}
 	}
 	return nil, false
 }
 
 func (msg StructMsg) MarshalJSON() ([]byte, error) {
-	m := make(map[string]Msg, len(msg.names))
-	for i, name := range msg.names {
-		m[name] = msg.fields[i]
+	m := make(map[string]Msg, len(msg.fields))
+	for i := range msg.fields {
+		m[msg.fields[i].name] = msg.fields[i].value
 	}
 
 	jsonData, err := json.Marshal(m)
@@ -294,29 +293,30 @@ func (msg StructMsg) Equal(other Msg) bool {
 	if !ok {
 		return false
 	}
-	if len(msg.names) != len(otherStruct.names) {
+	if len(msg.fields) != len(otherStruct.fields) {
 		return false
 	}
-	for i, name := range msg.names {
-		otherField, ok := otherStruct.get(name)
+	for i := range msg.fields {
+		otherField, ok := otherStruct.get(msg.fields[i].name)
 		if !ok {
 			return false
 		}
-		if !msg.fields[i].Equal(otherField) {
+		if !msg.fields[i].value.Equal(otherField) {
 			return false
 		}
 	}
 	return true
 }
 
-func newStructMsg(names []string, fields []Msg) StructMsg {
-	if len(names) != len(fields) {
-		panic("names and fields must have the same length")
+func newStructMsg(fields []StructField) StructMsg {
+	if len(fields) == 0 {
+		return StructMsg{internalMsg: internalMsg{}, fields: nil}
 	}
+	copied := make([]StructField, len(fields))
+	copy(copied, fields)
 	return StructMsg{
 		internalMsg: internalMsg{},
-		names:       names,
-		fields:      fields,
+		fields:      copied,
 	}
 }
 
@@ -333,18 +333,7 @@ func NewStructField(name string, value Msg) StructField {
 
 // newstruct builds a struct message from a slice of structfield.
 // underlying struct representation remains unchanged for now.
-func NewStructMsg(fields []StructField) StructMsg {
-	if len(fields) == 0 {
-		return newStructMsg(nil, nil)
-	}
-	names := make([]string, len(fields))
-	values := make([]Msg, len(fields))
-	for i, f := range fields {
-		names[i] = f.name
-		values[i] = f.value
-	}
-	return newStructMsg(names, values)
-}
+func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
 
 // --- UNION ---
 type UnionMsg struct {
