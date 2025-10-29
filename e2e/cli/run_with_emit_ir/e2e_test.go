@@ -17,7 +17,7 @@ func TestEmitDefault(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// Run with IR emission
@@ -56,7 +56,7 @@ func TestEmitYAML(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// Run with IR emission
@@ -95,7 +95,7 @@ func TestEmitJSON(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// Run with IR emission

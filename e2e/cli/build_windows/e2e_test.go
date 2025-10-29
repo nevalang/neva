@@ -14,7 +14,7 @@ func TestBuildWindows(t *testing.T) {
 		require.NoError(t, os.RemoveAll("src"))
 	}()
 
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	cmd = exec.Command("neva", "build", "--target-os=windows", "--target-arch=amd64", "src")
