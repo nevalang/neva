@@ -30,23 +30,20 @@ func newNewCmd(workdir string) *cli.Command {
 		},
 		Action: func(cCtx *cli.Context) error {
 			path := workdir
-			if pathArg := cCtx.Args().First(); pathArg != "" {
+			pathArg := cCtx.Args().First()
+			if pathArg != "" {
 				path = pathArg
 			}
 
 			template := cCtx.String("template")
-			if template != "" {
-				spec, err := nevaGit.ParseRepoSpec(template)
-				if err != nil {
-					return err
-				}
 
-				if err := scaffoldFromTemplate(path, spec); err != nil {
+			if template != "" {
+				if err := scaffoldFromTemplate(path, template); err != nil {
 					return err
 				}
 			} else {
-				if pathArg := cCtx.Args().First(); pathArg != "" {
-					if err := os.Mkdir(pathArg, 0o755); err != nil {
+				if pathArg != "" {
+					if err := os.MkdirAll(pathArg, 0o755); err != nil {
 						return err
 					}
 				}
@@ -61,11 +58,26 @@ func newNewCmd(workdir string) *cli.Command {
 	}
 }
 
+const mainNevaContent = `import {
+	fmt
+	runtime
+}
+
+// main prints a greeting and propagates failures to the runtime panic node.
+def Main(start any) (stop any) {
+	println fmt.Println<string>
+	panic runtime.Panic
+	---
+	:start -> 'Hello, World!' -> println
+	println:res -> :stop
+	println:err -> panic
+}`
+
 func createNevaMod(path string) error {
 	// Create neva.yml file
 	if err := os.WriteFile(
 		filepath.Join(path, "neva.yml"),
-		[]byte(fmt.Sprintf("neva: %s", pkg.Version)),
+		fmt.Appendf(nil, "neva: %s", pkg.Version),
 		0o644,
 	); err != nil {
 		return err
@@ -78,18 +90,6 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	mainNevaContent := `import { fmt, runtime }
-
-// main prints a greeting and propagates failures to the runtime panic node.
-def Main(start any) (stop any) {
-println fmt.Println<string>
-panic runtime.Panic
----
-:start -> 'Hello, World!' -> println
-println:res -> :stop
-println:err -> panic
-}`
-
 	if err := os.WriteFile(
 		filepath.Join(srcPath, "main.neva"),
 		[]byte(mainNevaContent),
@@ -101,13 +101,18 @@ println:err -> panic
 	return nil
 }
 
-func scaffoldFromTemplate(path string, spec nevaGit.RepoSpec) error {
+func scaffoldFromTemplate(path string, template string) error {
 	if path == "" {
 		return errors.New("target path must not be empty")
 	}
 
 	if err := ensureEmptyDir(path); err != nil {
 		return fmt.Errorf("prepare target directory: %w", err)
+	}
+
+	spec, err := nevaGit.ParseRepoSpec(template)
+	if err != nil {
+		return err
 	}
 
 	cloneDir, err := os.MkdirTemp("", "neva-template-*")
