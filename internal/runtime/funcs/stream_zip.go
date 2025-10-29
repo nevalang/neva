@@ -67,9 +67,10 @@ func (streamZip) Create(
 				if !dataOut.Send(
 					ctx,
 					streamItem(
-						runtime.NewStructMsg(
-							[]string{"first", "second"},
-							[]runtime.Msg{firstData[i], secondData[i]}),
+						runtime.NewStructMsg([]runtime.StructField{
+							runtime.NewStructField("first", firstData[i]),
+							runtime.NewStructField("second", secondData[i]),
+						}),
 						int64(i),
 						i == n-1,
 					),

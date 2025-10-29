@@ -14,7 +14,7 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
-	_, err := Call(ctx, prog, registry, NewStructMsg(nil, nil))
+	_, err := Call(ctx, prog, registry, NewStructMsg(nil))
 	return err
 }
 

@@ -247,6 +247,7 @@ graph LR
 * components may expose multiple inports and outports; the compiler bundles them via a synthesized single-port wrapper. components must currently expose at least one inport and one outport. support for sink/source shapes can be added once we define the expected go-side semantics.
 
 ## error handling
+
 - no errors are ignored; all helper functions return errors and callers decide how to handle them.
 - `context.Context` governs lifetime.
 
@@ -269,6 +270,7 @@ graph LR
 this guide is a step-by-step for completing go → neva package mode, aligned with the current codebase state.
 
 ## current state (as of branch go_interop)
+
 - cli:
   - `--target-go-mode` flag is plumbed; accepts `executable` (default) or `pkg`.
 - irgen:
@@ -289,6 +291,7 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
   - unit tests in `internal/compiler/sourcecode/sourcecode_test.go` should be updated to cover multi-port scenarios.
 
 ## target mvp behavior
+
 - `neva build --target=go --target-go-mode=pkg --output=./gen/<pkg> ./src[/subpkg]`
 - emit a go package:
   - `programs.go`: one `new<Export>Program() runtime.Program` per exported component (backed by a synthesized single-port wrapper bundling multi-port i/o into structs).
@@ -304,16 +307,19 @@ this guide is a step-by-step for completing go → neva package mode, aligned wi
 ### architectural approach: proper compiler abstraction
 
 the compiler will support two distinct compilation modes through dedicated methods:
+
 - **executable mode:** `CompileExecutable(build, mainPkg, dst, trace) → error` - generates single-program executables
 - **library mode:** `CompileLibrary(build, pkgName, dst, trace) → error` - generates multi-export libraries
 
 each backend implements both methods:
+
 - `golang.Backend` implements both modes fully
 - other backends (e.g., `wasm.Backend`) implement the executable method but panic in the library method with a clear message like `"library mode not supported for wasm backend"`
 
 this keeps the compiler interface clean and allows backends to declare their capabilities explicitly.
 
 1) define backend interface with compilation modes
+
 - add two methods to the backend interface (or create new interface if appropriate):
   - `CompileExecutable(build *sourcecode.Build, mainPkg, dst string, trace bool) error`
   - `CompileLibrary(build *sourcecode.Build, pkgName, dst string, trace bool) error`
@@ -321,6 +327,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - `CompileExecutable` calls analyzer with mainPkg to enforce main checks; `CompileLibrary` calls analyzer with empty main (`""`) to skip them
 
 2) export discovery for the selected package ✅
+
 - **moved to `internal/compiler/sourcecode` package** as `Package.GetInteropableComponents()` method.
 - filters components that are public and have exactly one inport and one outport.
 - silently ignores components that don't meet criteria (multiple ports, overloaded, private, non-components).
@@ -328,6 +335,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - tested with comprehensive unit tests covering all filtering cases.
 
 3) wrapper per export (handled inside backend's CompileLibrary)
+
 - for each export `E` discovered in step 2, the backend synthesizes a new component `E_Bundled` with a single input struct and a single output struct:
   - input struct fields = all of `E`’s input port names and types
   - output struct fields = all of `E`’s output port names and types
@@ -338,6 +346,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - the backend then calls `irgen.GenerateForComponent(build, pkgName, E_Bundled)` to obtain an `ir.Program` compatible with `runtime.Program{Start, Stop}`.
 
 4) implement backend interface with library support
+
 - define new compiler interface methods (all backends must implement):
   - `CompileExecutable(build, mainPkg, dst string, trace bool) error` - existing single-program flow
   - `CompileLibrary(build, pkgName, dst string, trace bool) error` - new multi-export flow
@@ -352,6 +361,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - other backends (wasm, etc.) implement `CompileLibrary` to panic with clear message
 
 5) add templates for pkg mode
+
 - `programs.go` template (one factory per export):
   - for each export E:
     - define local channels inside `newEProgram()` from `ChanVarNames`.
@@ -366,6 +376,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - note: for mvp we keep the api untyped (`runtime.Msg`); typed structs and a `Client` type can be added later without breaking this surface.
 
 6) integrate cli flow for pkg mode
+
 - in `internal/cli/build.go`:
   - when `--target-go-mode=pkg`:
     - instantiate the appropriate backend (e.g., `golang.NewBackend()`)
@@ -375,10 +386,12 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - all compilation orchestration (frontend, analyzer, irgen, template rendering) happens inside the backend's compile methods, not in cli
 
 7) enforce constraints and errors
+
 - if no exports found: return a clear error suggesting to add `pub def` with at least 1 inport and 1 outport to the target package.
 - keep errors surfaced via cli.
 
 8) tests
+
 - e2e:
   - keep `e2e/cli/build_with_go_pkg_mode`:
     - ensure it includes a multi-port export in a package acceptable by package-mode analyzer.
@@ -391,6 +404,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
   - templates compile minimal stubs (string-compare or `go build` in a temp module).
 
 9) future incremental improvements (post-mvp)
+
 - generate typed request/response structs mirroring neva struct fields.
 - add a `client` type with per-export methods.
 - allow 0-in/1-out (source) and 1-in/0-out (sink) shapes with defined go semantics.
@@ -398,6 +412,7 @@ this keeps the compiler interface clean and allows backends to declare their cap
 - optional tracing hook/config in `newclient`.
 
 ## implementation notes
+
 - reuse existing wiring helpers (`buildPortChanMap`, `buildFuncCalls`) to avoid duplicating logic.
 - program factories should declare channel variables locally; executable template's top-level channel vars don't apply.
 - backends receive frontend/analyzer/irgen as dependencies and orchestrate the full pipeline internally within `CompileExecutable` and `CompileLibrary` methods.
@@ -448,16 +463,17 @@ recommendation for mvp: use `ports_bundling_adapter` internally and derive user-
 several strategies can produce the synthesized wrapper:
 
 1. backend-time ir synthesis (recommended for mvp):
+
    - the golang backend constructs the bundled component on the fly from the analyzed package model and invokes `irgen.GenerateForComponent` on it.
    - pros: localized change, no need to thread package-mode through desugarer; simpler rollback.
    - cons: a small amount of desugaring-like wiring logic exists in the backend.
-
 2. desugarer-time synthesis:
+
    - extend the desugarer to create bundled siblings for each public component when compiling in package mode.
    - pros: bundling becomes a first-class transformation with full language context; other backends could reuse it.
    - cons: couples desugaring to build mode; broader surface area of change.
-
 3. hybrid utility:
+
    - provide a small irgen-level helper that creates the bundled wrapper given a component interface; both desugarer and backends can call it.
    - pros: shared logic, keeps backend thin; paves path to future typed clients.
    - cons: introduces a new utility layer to maintain.

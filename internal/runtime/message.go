@@ -309,7 +309,7 @@ func (msg StructMsg) Equal(other Msg) bool {
 	return true
 }
 
-func NewStructMsg(names []string, fields []Msg) StructMsg {
+func newStructMsg(names []string, fields []Msg) StructMsg {
 	if len(names) != len(fields) {
 		panic("names and fields must have the same length")
 	}
@@ -318,6 +318,32 @@ func NewStructMsg(names []string, fields []Msg) StructMsg {
 		names:       names,
 		fields:      fields,
 	}
+}
+
+// structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
+type StructField struct {
+	name  string
+	value Msg
+}
+
+// newstructfield constructs a structfield with provided name and value.
+func NewStructField(name string, value Msg) StructField {
+	return StructField{name: name, value: value}
+}
+
+// newstruct builds a struct message from a slice of structfield.
+// underlying struct representation remains unchanged for now.
+func NewStructMsg(fields []StructField) StructMsg {
+	if len(fields) == 0 {
+		return newStructMsg(nil, nil)
+	}
+	names := make([]string, len(fields))
+	values := make([]Msg, len(fields))
+	for i, f := range fields {
+		names[i] = f.name
+		values[i] = f.value
+	}
+	return newStructMsg(names, values)
 }
 
 // --- UNION ---

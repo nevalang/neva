@@ -59,7 +59,12 @@ func (structBuilder) Handle(
 
 			wg.Wait()
 
-			if !outport.Send(ctx, runtime.NewStructMsg(names, fields)) {
+			pairs := make([]runtime.StructField, len(names))
+			for i := range names {
+				pairs[i] = runtime.NewStructField(names[i], fields[i])
+			}
+
+			if !outport.Send(ctx, runtime.NewStructMsg(pairs)) {
 				return
 			}
 		}

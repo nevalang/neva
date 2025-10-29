@@ -63,14 +63,11 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				img.Set(int(pix.x), int(pix.y), pix.color.color())
 			}
 
-			if !imgOut.Send(ctx, runtime.NewStructMsg(
-				[]string{"pixels", "width", "height"},
-				[]runtime.Msg{
-					runtime.NewStringMsg(string(img.Pix)),
-					runtime.NewIntMsg(int64(img.Rect.Dx())),
-					runtime.NewIntMsg(int64(img.Rect.Dy())),
-				},
-			)) {
+			if !imgOut.Send(ctx, runtime.NewStructMsg([]runtime.StructField{
+				runtime.NewStructField("pixels", runtime.NewStringMsg(string(img.Pix))),
+				runtime.NewStructField("width", runtime.NewIntMsg(int64(img.Rect.Dx()))),
+				runtime.NewStructField("height", runtime.NewIntMsg(int64(img.Rect.Dy()))),
+			})) {
 				return
 			}
 		}

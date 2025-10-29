@@ -258,19 +258,15 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		}
 		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
-		names := make([]string, 0, len(msg.DictOrStruct))
-		values := make([]string, 0, len(msg.DictOrStruct))
+		fields := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			names = append(names, fmt.Sprintf(`"%s"`, k))
 			el, err := b.getMessageString(compiler.Pointer(v))
 			if err != nil {
 				return "", err
 			}
-			values = append(values, el)
+			fields = append(fields, fmt.Sprintf("runtime.NewStructField(%q, %s)", k, el))
 		}
-		return fmt.Sprintf(`runtime.NewStructMsg([]string{%s}, []runtime.Msg{%s})`,
-			strings.Join(names, ", "),
-			strings.Join(values, ", ")), nil
+		return fmt.Sprintf("runtime.NewStructMsg([]runtime.StructField{%s})", strings.Join(fields, ", ")), nil
 	}
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }

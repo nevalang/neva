@@ -74,7 +74,7 @@ import (
 )
 func main(){
     ctx := context.Background()
-    _, _ = gen.Print42(ctx, runtime.NewStructMsg([]string{"sig"}, []runtime.Msg{runtime.NewIntMsg(0)}))
+    _, _ = gen.Print42(ctx, runtime.NewStructMsg([]runtime.StructField{runtime.NewStructField("sig", runtime.NewIntMsg(0))}))
 }`
 	require.NoError(t, os.WriteFile(filepath.Join("gen", "main.go"), []byte(runner), 0o644))
 	run := exec.Command("go", "run", ".")
