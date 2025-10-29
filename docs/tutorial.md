@@ -87,7 +87,7 @@ Once you've installed the neva-cli, you are able to use the `new` command to sca
 neva new my_awesome_project
 ```
 
-If you already have a boilerplate repository, you can pass it with the `--template` flag. Any Git repository can be used, and you can append a revision with `@` to pick a specific branch, tag, or commit. For example:
+If you already have a boilerplate repository, you can pass it with the `--template` flag. Any remote Git repository can be used, and you can append a revision with `@` to pick a specific branch, tag, or commit. For example:
 
 ```shell
 neva new --template=github.com/example/neva-template@stable awesome_project

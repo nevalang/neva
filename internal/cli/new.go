@@ -16,7 +16,7 @@ import (
 	cli "github.com/urfave/cli/v2"
 )
 
-func newNewCmd(workdir string) *cli.Command {
+func newNewCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "new",
 		Usage: "Create new neva project",
@@ -29,30 +29,27 @@ func newNewCmd(workdir string) *cli.Command {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			path := workdir
 			pathArg := cCtx.Args().First()
-			if pathArg != "" {
-				path = pathArg
+			if pathArg == "" {
+				return errors.New("path argument is required")
 			}
 
 			template := cCtx.String("template")
 
 			if template != "" {
-				if err := scaffoldFromTemplate(path, template); err != nil {
+				if err := scaffoldFromTemplate(pathArg, template); err != nil {
 					return err
 				}
 			} else {
-				if pathArg != "" {
-					if err := os.MkdirAll(pathArg, 0o755); err != nil {
-						return err
-					}
+				if err := os.MkdirAll(pathArg, 0o755); err != nil {
+					return err
 				}
-				if err := createNevaMod(path); err != nil {
+				if err := createNevaMod(pathArg); err != nil {
 					return err
 				}
 			}
 
-			fmt.Printf("neva module created in %s\n", path)
+			fmt.Printf("neva module created in %s\n", pathArg)
 			return nil
 		},
 	}
@@ -102,17 +99,17 @@ func createNevaMod(path string) error {
 }
 
 func scaffoldFromTemplate(path string, template string) error {
-	if path == "" {
-		return errors.New("target path must not be empty")
+	spec, err := nevaGit.ParseRepoSpec(template)
+	if err != nil {
+		return err
+	}
+
+	if spec.IsLocal() {
+		return fmt.Errorf("local templates are not supported, use a remote repository URL")
 	}
 
 	if err := ensureEmptyDir(path); err != nil {
 		return fmt.Errorf("prepare target directory: %w", err)
-	}
-
-	spec, err := nevaGit.ParseRepoSpec(template)
-	if err != nil {
-		return err
 	}
 
 	cloneDir, err := os.MkdirTemp("", "neva-template-*")
@@ -133,7 +130,6 @@ func scaffoldFromTemplate(path string, template string) error {
 			return fmt.Errorf("checkout template revision: %w", err)
 		}
 	} else {
-		// ensure files are checked out when cloning from local repos too
 		if err := nevaGit.Checkout(repo, "HEAD"); err != nil {
 			return fmt.Errorf("checkout template default revision: %w", err)
 		}
