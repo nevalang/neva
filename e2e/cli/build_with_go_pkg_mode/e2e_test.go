@@ -19,7 +19,7 @@ func TestGoPkgMode_EndToEnd(t *testing.T) {
 	})
 
 	// create a real neva module with manifest and src/ via cli
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 

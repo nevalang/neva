@@ -17,7 +17,7 @@ func TestBuildDOTGeneratesProgram(t *testing.T) {
 	})
 
 	// create new project
-	cmd := exec.Command("neva", "new")
+	cmd := exec.Command("neva", "new", ".")
 	require.NoError(t, cmd.Run())
 
 	// build with dot target
