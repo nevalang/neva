@@ -199,13 +199,72 @@ defaultCase: '_' '->' receiverSide;
 
 /* LEXER */
 
-COMMENT: '//' ~( '\r' | '\n')*;
-PUB_KW: 'pub';
-IDENTIFIER: LETTER (LETTER | INT)*;
-fragment LETTER: [a-zA-Z_];
-INT: [0-9]+; // one or more (positive) integer digits
+// Keywords
+PUB: 'pub';
+TYPE: 'type';
+STRUCT: 'struct';
+UNION: 'union';
+INTERFACE: 'interface';
+CONST: 'const';
+DEF: 'def';
+IMPORT: 'import';
+SWITCH: 'switch';
+TRUE: 'true';
+FALSE: 'false';
+
+// Operators and Punctuation
+PLUS: '+';
 MINUS: '-';
+STAR: '*';
+SLASH: '/';
+PERCENT: '%';
+EQ: '=';
+LT: '<';
+GT: '>';
+LPAREN: '(';
+RPAREN: ')';
+LBRACE: '{';
+RBRACE: '}';
+LBRACK: '[';
+RBRACK: ']';
+COMMA: ',';
+COLON: ':';
+SEMI: ';';
+DOT: '.';
+QUEST: '?';
+NOT: '!';
+AND: '&';
+OR: '|';
+CARET: '^';
+TILDE: '~';
+DOLLAR: '$';
+AT: '@';
+UNDERSCORE: '_';
+HASH: '#';
+
+// Compound Operators
+PLUS2: '++';
+MINUS2: '--';
+STAR2: '**';
+EQ2: '==';
+NOT_EQ: '!=';
+GTE: '>=';
+LTE: '<=';
+AND2: '&&';
+OR2: '||';
+DCOLON: '::';
+DOT2: '..';
+ARROW: '->';
+FAT_ARROW: '=>';
+DASH3: '---';
+
+// Literals
+IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
+INT: [0-9]+;
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
-NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix
-WS: [ \t]+ -> channel(HIDDEN); // ignore whitespace
+
+// Comments and Whitespace
+COMMENT: '//' ~[\r\n]*;
+NEWLINE: '\r'? '\n';
+WS: [ \t]+ -> skip;
