@@ -1,3 +1,14 @@
-- never remove my comments
-- write comments in lowercase
-- write names for table-driven test-cases in lower_snake_case
+# Neva
+
+## Common Guidelines
+
+- Never delete previously written comments unless you update them when necessary.
+- Always use Context7 MCP to avoid hallucinations while generating library-dependent code.
+
+## Go
+
+- Write names for table driven test cases in lower_snake_case.
+
+## Uncertainty Assessment
+
+Before giving me an answer, assess your uncertainty. If it is greater than 0.1, ask me clarifying questions until the uncertainty is 0.1 or less.

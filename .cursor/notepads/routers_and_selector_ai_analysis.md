@@ -174,9 +174,6 @@ select {
 
 The design successfully balances expressiveness with implementability, providing a solid foundation for dataflow programming in Neva.
 
-
-
-
 ---
 
 *Notepad ID: 9a5caa7f-4870-492d-9bf1-f3ad2f105596*
