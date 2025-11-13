@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 // processNetwork inserts connections to result and returns metadata about the network.

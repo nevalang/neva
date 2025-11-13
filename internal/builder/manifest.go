@@ -9,19 +9,18 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ast "github.com/nevalang/neva/internal/compiler/ast"
 )
 
-func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, error) {
+func (p Builder) getNearestManifest(wd string) (ast.ModuleManifest, string, error) {
 	rawNearest, path, err := lookupManifestFile(wd, 0)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
+		return ast.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
 	}
 
 	parsedNearest, err := p.manifestParser.ParseManifest(rawNearest)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
+		return ast.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
 	}
 
 	return parsedNearest, path, nil
@@ -56,7 +55,7 @@ func readManifestFromDir(wd string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(wd, "neva.yml"))
 }
 
-func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) error {
+func (b Builder) writeManifest(manifest ast.ModuleManifest, workdir string) error {
 	manifestData, err := yaml.Marshal(manifest)
 	if err != nil {
 		return fmt.Errorf("marshal manifest: %w", err)
