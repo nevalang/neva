@@ -10,10 +10,9 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	ast "github.com/nevalang/neva/internal/compiler/ast"
-	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
-func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, error) {
+func (p Builder) getNearestManifest(wd string) (ast.ModuleManifest, string, error) {
 	rawNearest, path, err := lookupManifestFile(wd, 0)
 	if err != nil {
 		return ast.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
@@ -56,7 +55,7 @@ func readManifestFromDir(wd string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(wd, "neva.yml"))
 }
 
-func (b Builder) writeManifest(manifest src.ModuleManifest, workdir string) error {
+func (b Builder) writeManifest(manifest ast.ModuleManifest, workdir string) error {
 	manifestData, err := yaml.Marshal(manifest)
 	if err != nil {
 		return fmt.Errorf("marshal manifest: %w", err)

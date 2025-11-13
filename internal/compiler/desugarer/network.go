@@ -7,7 +7,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
-	"github.com/nevalang/neva/internal/compiler/typesystem"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
@@ -599,9 +598,9 @@ func (d *Desugarer) desugarDeferredConnection(
 			Name: "Lock",
 			Meta: locOnlyMeta,
 		},
-		TypeArgs: []typesystem.Expr{
+		TypeArgs: []ts.Expr{
 			ts.Expr{
-				Inst: &typesystem.InstExpr{
+				Inst: &ts.InstExpr{
 					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
 				},
 				Meta: locOnlyMeta,
