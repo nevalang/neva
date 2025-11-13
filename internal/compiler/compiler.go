@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
-	"github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 type Compiler struct {
@@ -58,7 +58,7 @@ type Frontend struct {
 type FrontendResult struct {
 	MainPkg     string
 	RawBuild    RawBuild
-	ParsedBuild sourcecode.Build
+	ParsedBuild ast.Build
 	Path        string
 }
 
@@ -73,7 +73,7 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 		return FrontendResult{}, err
 	}
 
-	parsedBuild := sourcecode.Build{
+	parsedBuild := ast.Build{
 		EntryModRef: raw.EntryModRef,
 		Modules:     parsedMods,
 	}
@@ -103,8 +103,8 @@ type Middleend struct {
 }
 
 type MiddleendResult struct {
-	AnalyzedBuild  sourcecode.Build
-	DesugaredBuild sourcecode.Build
+	AnalyzedBuild  ast.Build
+	DesugaredBuild ast.Build
 	IR             *ir.Program
 }
 

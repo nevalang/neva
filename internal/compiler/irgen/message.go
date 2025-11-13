@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 

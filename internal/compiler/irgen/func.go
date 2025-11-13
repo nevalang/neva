@@ -3,7 +3,7 @@ package irgen
 import (
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {

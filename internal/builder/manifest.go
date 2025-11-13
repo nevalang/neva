@@ -9,19 +9,19 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	ast "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 func (p Builder) getNearestManifest(wd string) (src.ModuleManifest, string, error) {
 	rawNearest, path, err := lookupManifestFile(wd, 0)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
+		return ast.ModuleManifest{}, "", fmt.Errorf("read manifest yaml: %w", err)
 	}
 
 	parsedNearest, err := p.manifestParser.ParseManifest(rawNearest)
 	if err != nil {
-		return sourcecode.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
+		return ast.ModuleManifest{}, "", fmt.Errorf("parse manifest: %w", err)
 	}
 
 	return parsedNearest, path, nil

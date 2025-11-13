@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/stretchr/testify/require"
 )

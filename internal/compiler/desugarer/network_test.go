@@ -5,8 +5,8 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
