@@ -6,7 +6,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func getIRMsgBySrcRef(

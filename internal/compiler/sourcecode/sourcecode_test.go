@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func TestPackage_GetInteropableComponents(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 	"github.com/nevalang/neva/internal/compiler/irgen"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	"github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 // Build represents all the information in source code, that must be compiled.

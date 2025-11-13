@@ -10,7 +10,7 @@ import (
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string, *compiler.Error) {

@@ -6,7 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	"github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 type foundInterface struct {
