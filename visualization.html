@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style> body { margin: 0; } </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://esm.sh/three",
+      "three/": "https://esm.sh/three/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="3d-graph"></div>
+
+  <script type="module">
+    import ForceGraph3D from 'https://esm.sh/3d-force-graph?external=three';
+    import * as THREE from 'https://esm.sh/three';
+    import SpriteText from 'https://esm.sh/three-spritetext?external=three';
+
+    // Fix for "three" module resolution in dependencies
+    // Some libraries import 'three' directly, so we need to provide it in the global scope or import map
+    window.THREE = THREE;
+
+    // Embedded IR Data
+    const irData = {"funcs":[{"ref":"new","io":{"out":["__new__7/out:res"]},"msg":{"type":"int","int":-1,"union":{"tag":""}}},{"ref":"lock","io":{"in":["lock/in:data","lock/in:sig"],"out":["lock/out:data"]}},{"ref":"panic","io":{"in":["panic/in:data"]}},{"ref":"switch_router","io":{"in":["s/in:case[0]","s/in:data"],"out":["s/out:case[0]","s/out:else"]}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_second_line/__newv2__4/in:sig"],"out":["print_next_2_lines/print_second_line/__newv2__4/out:res"]},"msg":{"type":"string","str":"Take one down and pass it around, $0 bottles of beer on the wall.\n\n","union":{"tag":""}}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_second_line/__newv2__3/in:sig"],"out":["print_next_2_lines/print_second_line/__newv2__3/out:res"]},"msg":{"type":"string","str":"Take one down and pass it around, 1 bottle of beer on the wall.\n","union":{"tag":""}}},{"ref":"println","io":{"in":["print_next_2_lines/print_second_line/p1/in:data"],"out":["print_next_2_lines/print_second_line/p1/out:err","print_next_2_lines/print_second_line/p1/out:res"]}},{"ref":"printf","io":{"in":["print_next_2_lines/print_second_line/printf/in:args[0]","print_next_2_lines/print_second_line/printf/in:tpl"],"out":["print_next_2_lines/print_second_line/printf/out:err","print_next_2_lines/print_second_line/printf/out:sig"]}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_second_line/__newv2__1/in:sig"],"out":["print_next_2_lines/print_second_line/__newv2__1/out:res"]},"msg":{"type":"string","str":"Go to the store and buy some more, 99 bottles of beer on the wall.","union":{"tag":""}}},{"ref":"fan_out","io":{"in":["print_next_2_lines/print_second_line/__fan_out__2/in:data"],"out":["print_next_2_lines/print_second_line/__fan_out__2/out:data[0]","print_next_2_lines/print_second_line/__fan_out__2/out:data[1]"]}},{"ref":"lock","io":{"in":["print_next_2_lines/print_second_line/lock/in:data","print_next_2_lines/print_second_line/lock/in:sig"],"out":["print_next_2_lines/print_second_line/lock/out:data"]}},{"ref":"switch_router","io":{"in":["print_next_2_lines/print_second_line/s/in:case[0]","print_next_2_lines/print_second_line/s/in:case[1]","print_next_2_lines/print_second_line/s/in:case[2]","print_next_2_lines/print_second_line/s/in:data"],"out":["print_next_2_lines/print_second_line/s/out:case[0]","print_next_2_lines/print_second_line/s/out:case[1]","print_next_2_lines/print_second_line/s/out:case[2]","print_next_2_lines/print_second_line/s/out:else"]}},{"ref":"println","io":{"in":["print_next_2_lines/print_second_line/p3/in:data"],"out":["print_next_2_lines/print_second_line/p3/out:err","print_next_2_lines/print_second_line/p3/out:res"]}},{"ref":"new","io":{"out":["print_next_2_lines/print_second_line/__new__2/out:res"]},"msg":{"type":"int","union":{"tag":""}}},{"ref":"new","io":{"out":["print_next_2_lines/print_second_line/__new__3/out:res"]},"msg":{"type":"int","int":1,"union":{"tag":""}}},{"ref":"println","io":{"in":["print_next_2_lines/print_second_line/p2/in:data"],"out":["print_next_2_lines/print_second_line/p2/out:err","print_next_2_lines/print_second_line/p2/out:res"]}},{"ref":"fan_in","io":{"in":["print_next_2_lines/print_second_line/__fan_in__1/in:data[0]","print_next_2_lines/print_second_line/__fan_in__1/in:data[1]","print_next_2_lines/print_second_line/__fan_in__1/in:data[2]","print_next_2_lines/print_second_line/__fan_in__1/in:data[3]"],"out":["print_next_2_lines/print_second_line/__fan_in__1/out:res"]}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_second_line/__newv2__2/in:sig"],"out":["print_next_2_lines/print_second_line/__newv2__2/out:res"]},"msg":{"type":"string","str":"Take one down and pass it around, no more bottles of beer on the wall.\n","union":{"tag":""}}},{"ref":"fan_out","io":{"in":["print_next_2_lines/print_second_line/__fan_out__1/in:data"],"out":["print_next_2_lines/print_second_line/__fan_out__1/out:data[0]","print_next_2_lines/print_second_line/__fan_out__1/out:data[1]"]}},{"ref":"new","io":{"out":["print_next_2_lines/print_second_line/__new__1/out:res"]},"msg":{"type":"int","int":-1,"union":{"tag":""}}},{"ref":"int_dec","io":{"in":["print_next_2_lines/dec/in:data"],"out":["print_next_2_lines/dec/out:res"]}},{"ref":"printf","io":{"in":["print_next_2_lines/print_first_line/printf/in:args[0]","print_next_2_lines/print_first_line/printf/in:tpl"],"out":["print_next_2_lines/print_first_line/printf/out:err","print_next_2_lines/print_first_line/printf/out:sig"]}},{"ref":"switch_router","io":{"in":["print_next_2_lines/print_first_line/s/in:case[0]","print_next_2_lines/print_first_line/s/in:case[1]","print_next_2_lines/print_first_line/s/in:data"],"out":["print_next_2_lines/print_first_line/s/out:case[0]","print_next_2_lines/print_first_line/s/out:case[1]","print_next_2_lines/print_first_line/s/out:else"]}},{"ref":"println","io":{"in":["print_next_2_lines/print_first_line/p1/in:data"],"out":["print_next_2_lines/print_first_line/p1/out:err","print_next_2_lines/print_first_line/p1/out:res"]}},{"ref":"fan_out","io":{"in":["print_next_2_lines/print_first_line/__fan_out__3/in:data"],"out":["print_next_2_lines/print_first_line/__fan_out__3/out:data[0]","print_next_2_lines/print_first_line/__fan_out__3/out:data[1]"]}},{"ref":"new","io":{"out":["print_next_2_lines/print_first_line/__new__4/out:res"]},"msg":{"type":"int","union":{"tag":""}}},{"ref":"new","io":{"out":["print_next_2_lines/print_first_line/__new__5/out:res"]},"msg":{"type":"int","int":1,"union":{"tag":""}}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_first_line/__newv2__5/in:sig"],"out":["print_next_2_lines/print_first_line/__newv2__5/out:res"]},"msg":{"type":"string","str":"No more bottles of beer on the wall, no more bottles of beer.","union":{"tag":""}}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_first_line/__newv2__6/in:sig"],"out":["print_next_2_lines/print_first_line/__newv2__6/out:res"]},"msg":{"type":"string","str":"1 bottle of beer on the wall, 1 bottle of beer.","union":{"tag":""}}},{"ref":"println","io":{"in":["print_next_2_lines/print_first_line/p2/in:data"],"out":["print_next_2_lines/print_first_line/p2/out:err","print_next_2_lines/print_first_line/p2/out:res"]}},{"ref":"lock","io":{"in":["print_next_2_lines/print_first_line/lock/in:data","print_next_2_lines/print_first_line/lock/in:sig"],"out":["print_next_2_lines/print_first_line/lock/out:data"]}},{"ref":"fan_in","io":{"in":["print_next_2_lines/print_first_line/__fan_in__2/in:data[0]","print_next_2_lines/print_first_line/__fan_in__2/in:data[1]","print_next_2_lines/print_first_line/__fan_in__2/in:data[2]"],"out":["print_next_2_lines/print_first_line/__fan_in__2/out:res"]}},{"ref":"fan_out","io":{"in":["print_next_2_lines/print_first_line/__fan_out__4/in:data"],"out":["print_next_2_lines/print_first_line/__fan_out__4/out:data[0]","print_next_2_lines/print_first_line/__fan_out__4/out:data[1]"]}},{"ref":"new_v2","io":{"in":["print_next_2_lines/print_first_line/__newv2__7/in:sig"],"out":["print_next_2_lines/print_first_line/__newv2__7/out:res"]},"msg":{"type":"string","str":"$0 bottles of beer on the wall, $0 bottles of beer.\n","union":{"tag":""}}},{"ref":"new","io":{"out":["__new__6/out:res"]},"msg":{"type":"int","int":99,"union":{"tag":""}}},{"ref":"fan_in","io":{"in":["__fan_in__3/in:data[0]","__fan_in__3/in:data[1]"],"out":["__fan_in__3/out:res"]}}],"comment":"// module=@@ main=main compiler=0.32.0","connections":{"__fan_in__3/out:res":"print_next_2_lines/in:n","__new__6/out:res":"lock/in:data","__new__7/out:res":"s/in:case[0]","in:start":"lock/in:sig","lock/out:data":"__fan_in__3/in:data[0]","print_next_2_lines/dec/out:res":"print_next_2_lines/print_second_line/in:n","print_next_2_lines/in:n":"print_next_2_lines/print_first_line/in:n","print_next_2_lines/out:err":"panic/in:data","print_next_2_lines/out:n":"s/in:data","print_next_2_lines/print_first_line/__fan_in__2/out:res":"print_next_2_lines/print_first_line/lock/in:sig","print_next_2_lines/print_first_line/__fan_out__3/out:data[0]":"print_next_2_lines/print_first_line/s/in:data","print_next_2_lines/print_first_line/__fan_out__3/out:data[1]":"print_next_2_lines/print_first_line/lock/in:data","print_next_2_lines/print_first_line/__fan_out__4/out:data[0]":"print_next_2_lines/print_first_line/printf/in:args[0]","print_next_2_lines/print_first_line/__fan_out__4/out:data[1]":"print_next_2_lines/print_first_line/__newv2__7/in:sig","print_next_2_lines/print_first_line/__new__4/out:res":"print_next_2_lines/print_first_line/s/in:case[0]","print_next_2_lines/print_first_line/__new__5/out:res":"print_next_2_lines/print_first_line/s/in:case[1]","print_next_2_lines/print_first_line/__newv2__5/out:res":"print_next_2_lines/print_first_line/p1/in:data","print_next_2_lines/print_first_line/__newv2__6/out:res":"print_next_2_lines/print_first_line/p2/in:data","print_next_2_lines/print_first_line/__newv2__7/out:res":"print_next_2_lines/print_first_line/printf/in:tpl","print_next_2_lines/print_first_line/in:n":"print_next_2_lines/print_first_line/__fan_out__3/in:data","print_next_2_lines/print_first_line/lock/out:data":"print_next_2_lines/print_first_line/out:n","print_next_2_lines/print_first_line/out:err":"print_next_2_lines/out:err","print_next_2_lines/print_first_line/out:n":"print_next_2_lines/dec/in:data","print_next_2_lines/print_first_line/p1/out:err":"print_next_2_lines/print_first_line/out:err","print_next_2_lines/print_first_line/p1/out:res":"print_next_2_lines/print_first_line/__fan_in__2/in:data[0]","print_next_2_lines/print_first_line/p2/out:err":"print_next_2_lines/print_first_line/out:err","print_next_2_lines/print_first_line/p2/out:res":"print_next_2_lines/print_first_line/__fan_in__2/in:data[1]","print_next_2_lines/print_first_line/printf/out:err":"print_next_2_lines/print_first_line/out:err","print_next_2_lines/print_first_line/printf/out:sig":"print_next_2_lines/print_first_line/__fan_in__2/in:data[2]","print_next_2_lines/print_first_line/s/out:case[0]":"print_next_2_lines/print_first_line/__newv2__5/in:sig","print_next_2_lines/print_first_line/s/out:case[1]":"print_next_2_lines/print_first_line/__newv2__6/in:sig","print_next_2_lines/print_first_line/s/out:else":"print_next_2_lines/print_first_line/__fan_out__4/in:data","print_next_2_lines/print_second_line/__fan_in__1/out:res":"print_next_2_lines/print_second_line/lock/in:sig","print_next_2_lines/print_second_line/__fan_out__1/out:data[0]":"print_next_2_lines/print_second_line/s/in:data","print_next_2_lines/print_second_line/__fan_out__1/out:data[1]":"print_next_2_lines/print_second_line/lock/in:data","print_next_2_lines/print_second_line/__fan_out__2/out:data[0]":"print_next_2_lines/print_second_line/printf/in:args[0]","print_next_2_lines/print_second_line/__fan_out__2/out:data[1]":"print_next_2_lines/print_second_line/__newv2__4/in:sig","print_next_2_lines/print_second_line/__new__1/out:res":"print_next_2_lines/print_second_line/s/in:case[0]","print_next_2_lines/print_second_line/__new__2/out:res":"print_next_2_lines/print_second_line/s/in:case[1]","print_next_2_lines/print_second_line/__new__3/out:res":"print_next_2_lines/print_second_line/s/in:case[2]","print_next_2_lines/print_second_line/__newv2__1/out:res":"print_next_2_lines/print_second_line/p1/in:data","print_next_2_lines/print_second_line/__newv2__2/out:res":"print_next_2_lines/print_second_line/p2/in:data","print_next_2_lines/print_second_line/__newv2__3/out:res":"print_next_2_lines/print_second_line/p3/in:data","print_next_2_lines/print_second_line/__newv2__4/out:res":"print_next_2_lines/print_second_line/printf/in:tpl","print_next_2_lines/print_second_line/in:n":"print_next_2_lines/print_second_line/__fan_out__1/in:data","print_next_2_lines/print_second_line/lock/out:data":"print_next_2_lines/print_second_line/out:n","print_next_2_lines/print_second_line/out:err":"print_next_2_lines/out:err","print_next_2_lines/print_second_line/out:n":"print_next_2_lines/out:n","print_next_2_lines/print_second_line/p1/out:err":"print_next_2_lines/print_second_line/out:err","print_next_2_lines/print_second_line/p1/out:res":"print_next_2_lines/print_second_line/__fan_in__1/in:data[0]","print_next_2_lines/print_second_line/p2/out:err":"print_next_2_lines/print_second_line/out:err","print_next_2_lines/print_second_line/p2/out:res":"print_next_2_lines/print_second_line/__fan_in__1/in:data[1]","print_next_2_lines/print_second_line/p3/out:err":"print_next_2_lines/print_second_line/out:err","print_next_2_lines/print_second_line/p3/out:res":"print_next_2_lines/print_second_line/__fan_in__1/in:data[2]","print_next_2_lines/print_second_line/printf/out:err":"print_next_2_lines/print_second_line/out:err","print_next_2_lines/print_second_line/printf/out:sig":"print_next_2_lines/print_second_line/__fan_in__1/in:data[3]","print_next_2_lines/print_second_line/s/out:case[0]":"print_next_2_lines/print_second_line/__newv2__1/in:sig","print_next_2_lines/print_second_line/s/out:case[1]":"print_next_2_lines/print_second_line/__newv2__2/in:sig","print_next_2_lines/print_second_line/s/out:case[2]":"print_next_2_lines/print_second_line/__newv2__3/in:sig","print_next_2_lines/print_second_line/s/out:else":"print_next_2_lines/print_second_line/__fan_out__2/in:data","s/out:case[0]":"out:stop","s/out:else":"__fan_in__3/in:data[1]"}};
+
+    // Process data
+    const nodes = [];
+    const links = [];
+    const nodeMap = new Map(); // path -> node object
+
+    // Identify Atomic Nodes (Nodes that are explicitly listed in 'funcs')
+    // 'funcs' array contains atomic components (leaf nodes in the execution graph)
+    const atomicNodeIds = new Set();
+    
+    // Helper to get raw path from func
+    function getFuncPath(func) {
+      // Heuristic: use the first IO port to determine the node path
+      if (func.io.in && func.io.in.length > 0) {
+        return getNodePathInfo(func.io.in[0]).nodePath;
+      } else if (func.io.out && func.io.out.length > 0) {
+        return getNodePathInfo(func.io.out[0]).nodePath;
+      }
+      return null;
+    }
+
+    // Helper to parse path string
+    function getNodePathInfo(portPath) {
+      const lastSlash = portPath.lastIndexOf('/');
+      if (lastSlash === -1) {
+        const parts = portPath.split(':');
+        return { nodePath: parts[0], portName: parts[1] || "" };
+      }
+      const nodePath = portPath.substring(0, lastSlash);
+      const portName = portPath.substring(lastSlash + 1);
+      return { nodePath, portName };
+    }
+
+    // Populate atomic nodes
+    irData.funcs.forEach(func => {
+      const path = getFuncPath(func);
+      if (path) atomicNodeIds.add(path);
+    });
+
+    // Function to determine the unique Node ID for the graph
+    // - If it's an atomic node, use the nodePath.
+    // - If it's a composite boundary (implicit node), use the FULL path (nodePath + portName)
+    //   to create separate nodes for Input vs Output ports, breaking cycles.
+    function getGraphNodeID(portPath) {
+      const info = getNodePathInfo(portPath);
+      if (atomicNodeIds.has(info.nodePath)) {
+        return info.nodePath;
+      }
+      // It's a composite boundary or global port
+      // Use full port path to make it unique per port (e.g. "my_comp:in" vs "my_comp:out")
+      // We treat "print_first_line/in:n" as a unique node "print_first_line:in:n"
+      return portPath; 
+    }
+
+    // 1. Create Nodes
+    // First, add all Atomic Nodes
+    irData.funcs.forEach(func => {
+      const id = getFuncPath(func);
+      if (!id || nodeMap.has(id)) return;
+
+      const pathSegments = id.split('/');
+      const name = pathSegments[pathSegments.length - 1];
+      const group = pathSegments.slice(0, -1).join('/');
+      const type = func.ref;
+
+      const node = {
+        id: id,
+        name: name,
+        type: type,
+        group: group,
+        val: 1,
+        isAtomic: true
+      };
+
+      // Style customization
+      if (type.startsWith('new')) { 
+        node.color = '#aaffaa'; node.val = 0.5;
+      } else if (type.includes('fan')) {
+        node.color = '#aaaaaa'; node.val = 0.3;
+      } else if (type === 'lock') {
+        node.color = '#ffaaaa';
+      } else if (type === 'switch_router') {
+        node.color = '#aaaaff';
+      } else if (type === 'println' || type === 'printf') {
+        node.color = '#ffffaa'; node.val = 1.5;
+      }
+
+      if (func.msg) {
+        if (func.msg.str) node.desc = `String: "${func.msg.str}"`;
+        if (func.msg.int !== undefined) node.desc = `Int: ${func.msg.int}`;
+      }
+
+      nodes.push(node);
+      nodeMap.set(id, node);
+    });
+
+    // 2. Create Links and Implicit Nodes (Composite Boundaries)
+    Object.entries(irData.connections).forEach(([srcPortPath, dstPortPath]) => {
+      const srcId = getGraphNodeID(srcPortPath);
+      const dstId = getGraphNodeID(dstPortPath);
+
+      // Create implicit nodes if they don't exist
+      [srcId, dstId].forEach(id => {
+        if (!nodeMap.has(id)) {
+          // This is a boundary node or global port
+          // Extract name from the full path (e.g. "path/to/node:port")
+          const info = getNodePathInfo(id);
+          // If it's a port specific node, let's name it nicely
+          // e.g. "print_first_line:in:n"
+          const pathSegments = info.nodePath.split('/');
+          const parentName = pathSegments[pathSegments.length - 1];
+          const name = `${parentName}.${info.portName}`;
+          const group = pathSegments.slice(0, -1).join('/');
+
+          const node = { 
+            id: id, 
+            name: name, 
+            type: 'port', 
+            group: group || 'global', 
+            color: '#ffffff', 
+            val: 0.5,
+            isAtomic: false 
+          };
+          nodes.push(node);
+          nodeMap.set(id, node);
+        }
+      });
+
+      links.push({
+        source: srcId,
+        target: dstId,
+        color: '#ffffff'
+      });
+    });
+
+    // 3. Render
+    // Import d3 for the custom forces
+    import * as d3 from 'https://esm.sh/d3';
+
+    const Graph = ForceGraph3D()
+      (document.getElementById('3d-graph'))
+        .graphData({ nodes, links })
+        .nodeLabel(node => `${node.name} (${node.type}) ${node.desc ? '\n' + node.desc : ''}`)
+        .nodeThreeObject(node => {
+          const width = 40;
+          const height = 20;
+          const depth = 10;
+          const color = node.color || '#cccccc';
+          
+          const group = new THREE.Group();
+
+          // Main Body
+          const geometry = new THREE.BoxGeometry(width, height, depth);
+          const material = new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: 0.9 });
+          const mesh = new THREE.Mesh(geometry, material);
+          group.add(mesh);
+
+          // Label
+          const sprite = new SpriteText(node.name);
+          sprite.color = 'white';
+          sprite.textHeight = 5;
+          sprite.position.y = height / 2 + 5;
+          group.add(sprite);
+
+          // Pins
+          const pinGeo = new THREE.CylinderGeometry(1, 1, 5, 8);
+          pinGeo.rotateZ(Math.PI / 2);
+          const pinMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+          
+          const pinIn1 = new THREE.Mesh(pinGeo, pinMat);
+          pinIn1.position.set(-width/2 - 2.5, 3, 0);
+          group.add(pinIn1);
+          const pinIn2 = new THREE.Mesh(pinGeo, pinMat);
+          pinIn2.position.set(-width/2 - 2.5, -3, 0);
+          group.add(pinIn2);
+
+          const pinOut1 = new THREE.Mesh(pinGeo, pinMat);
+          pinOut1.position.set(width/2 + 2.5, 3, 0);
+          group.add(pinOut1);
+          const pinOut2 = new THREE.Mesh(pinGeo, pinMat);
+          pinOut2.position.set(width/2 + 2.5, -3, 0);
+          group.add(pinOut2);
+
+          return group;
+        })
+        .linkDirectionalArrowLength(3.5)
+        .linkDirectionalArrowRelPos(1)
+        .linkWidth(1)
+        .nodeAutoColorBy('group')
+        // Disable explicit DAG mode to avoid crash on cycles
+        // We will rely on standard force layout which handles cycles naturally
+        .dagMode(null)
+        .forceEngine('d3') // Set force engine to d3
+        .d3Force('charge', d3.forceManyBody().strength(-150))
+        // Important: The link force needs the 'links' array from the graph, BUT 3d-force-graph
+        // manages the link data internally. We should just configure the strength/distance if possible,
+        // or pass the LINK ID accessor if we are replacing the force entirely.
+        // However, passing `d3.forceLink(links)` directly here is risky because `links` array is modified by the library (objects instead of IDs).
+        // A safer way is to let the library manage the link force but configure it.
+        // BUT `d3Force` replaces the force entirely.
+        // So we must ensure we pass the correct ID accessor if we replace it.
+        .d3Force('link', d3.forceLink().id(d => d.id).distance(120)) 
+        .d3Force('center', d3.forceCenter())
+        .onNodeClick(node => {
+          const distance = 100;
+          const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+
+          Graph.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            3000
+          );
+        });
+  </script>
+</body>
+</html>
