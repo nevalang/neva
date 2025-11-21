@@ -41,13 +41,13 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target",
-				Usage: "Target platform for build (options: go, wasm, native, json, dot). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together.",
+				Usage: "Target platform for build (options: go, wasm, native, ir, dot). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together. For 'ir' target, 'target-ir-format' can be used.",
 				Action: func(ctx *cli.Context, s string) error {
 					switch s {
 					case "go", "wasm", "native", "ir", "dot":
 						return nil
 					}
-					return fmt.Errorf("Unknown target %s", s)
+					return fmt.Errorf("Unknown target: '%s', supported targets: go, wasm, native, ir, dot", s)
 				},
 			},
 			&cli.StringFlag{
