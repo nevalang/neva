@@ -42,7 +42,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		fullFileName = filepath.Join(dst, "program.dot")
 	case FormatMermaid:
 		encoder = b.encodeMermaid
-		fullFileName = filepath.Join(dst, "program.mermaid")
+		fullFileName = filepath.Join(dst, "program.md")
 	default:
 		panic("unknown format")
 	}

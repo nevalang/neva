@@ -29,6 +29,30 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 type Encoder struct{}
 
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
+	// Parse comment for metadata (module, compiler version)
+	// Format: // module=@@ main=hello_world compiler=0.32.0
+	var modName, compilerVer string
+	if strings.HasPrefix(prog.Comment, "//") {
+		parts := strings.Fields(prog.Comment)
+		for _, p := range parts {
+			if strings.HasPrefix(p, "main=") {
+				modName = strings.TrimPrefix(p, "main=")
+			}
+			if strings.HasPrefix(p, "compiler=") {
+				compilerVer = strings.TrimPrefix(p, "compiler=")
+			}
+		}
+	}
+
+	fmt.Fprintf(w, "# Program: %s\n\n", modName)
+	if compilerVer != "" {
+		fmt.Fprintf(w, "**Compiler:** %s\n\n", compilerVer)
+	}
+
+	fmt.Fprintln(w, "## 1. Visual Flow")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "```mermaid")
+
 	if _, err := fmt.Fprintln(w, "flowchart TD"); err != nil {
 		return err
 	}
@@ -69,11 +93,17 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Port is the specific pin: "in" or "out_res".
 
 	// Let's extract all unique "nodes" (leaf components) and their ports from connections.
+	type NodeMeta struct {
+		Ref string
+		Msg string
+	}
+
 	type NodeInfo struct {
 		Path  string
 		Label string
 		In    map[string]struct{}
 		Out   map[string]struct{}
+		Meta  NodeMeta
 	}
 	nodes := map[string]*NodeInfo{}
 
@@ -125,18 +155,66 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		processPortAddr(receiver, false)
 	}
 
-	// Also check Funcs to get better labels (e.g. for constants)
-	// We need to map Func Ref/Name to the paths we found.
-	// Use a heuristic or map if possible.
-	// If we rely solely on connections, we miss unconnected nodes (less important)
-	// and we miss metadata like constant values.
-	//
-	// ISSUE: `prog.Funcs` in IR might not align 1:1 with paths if paths are instance IDs and Funcs are defs?
-	// Or Funcs is list of calls?
-	//
-	// Let's rely on what DOT does: DOT completely ignores `prog.Funcs`.
-	// It produces a graph of connections.
-	// We will stick to that for now.
+	// Second pass: Extract metadata from prog.Funcs
+	// Iterate over Funcs and match them to existing nodes by looking at their used ports.
+	for _, f := range prog.Funcs {
+		var matchPath string
+
+		// Check Inputs
+		for _, addr := range f.IO.In {
+			// Try to find component path from port address
+			path := addr.Path
+			if strings.HasSuffix(path, "/in") {
+				path = strings.TrimSuffix(path, "/in")
+			} else if strings.HasSuffix(path, "/out") {
+				path = strings.TrimSuffix(path, "/out")
+			}
+			if path != "" {
+				matchPath = path
+				break
+			}
+		}
+
+		// Check Outputs if not found
+		if matchPath == "" {
+			for _, addr := range f.IO.Out {
+				path := addr.Path
+				if strings.HasSuffix(path, "/in") {
+					path = strings.TrimSuffix(path, "/in")
+				} else if strings.HasSuffix(path, "/out") {
+					path = strings.TrimSuffix(path, "/out")
+				}
+				if path != "" {
+					matchPath = path
+					break
+				}
+			}
+		}
+
+		// If we found a path, update the node's metadata
+		if matchPath != "" {
+			if n, ok := nodes[matchPath]; ok {
+				n.Meta.Ref = f.Ref
+				if f.Msg != nil {
+					// Format message based on type
+					switch f.Msg.Type {
+					case ir.MsgTypeString:
+						n.Meta.Msg = fmt.Sprintf("%q", f.Msg.String)
+					case ir.MsgTypeInt:
+						n.Meta.Msg = fmt.Sprintf("%d", f.Msg.Int)
+					case ir.MsgTypeBool:
+						n.Meta.Msg = fmt.Sprintf("%v", f.Msg.Bool)
+					case ir.MsgTypeFloat:
+						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
+					case ir.MsgTypeList:
+						n.Meta.Msg = "[...]"
+					case ir.MsgTypeDict, ir.MsgTypeStruct:
+						n.Meta.Msg = "{...}"
+					}
+				}
+			}
+		}
+	}
 
 	// Sort nodes for deterministic output
 	var nodePaths []string
@@ -213,6 +291,46 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		toID := getPortID(c.To)
 		fmt.Fprintf(w, "    %s --> %s\n", fromID, toID)
 	}
+
+	fmt.Fprintln(w, "```")
+
+	fmt.Fprintln(w, "## 2. Components")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "| Node | Ref | Config | Ports |")
+	fmt.Fprintln(w, "| :--- | :--- | :--- | :--- |")
+	for _, path := range nodePaths {
+		n := nodes[path]
+		var portList []string
+		for p := range n.In {
+			portList = append(portList, "in:"+p)
+		}
+		for p := range n.Out {
+			portList = append(portList, "out:"+p)
+		}
+		sort.Strings(portList)
+		
+		ref := n.Meta.Ref
+		if ref == "" {
+			ref = "-"
+		} else {
+			ref = "`" + ref + "`"
+		}
+		
+		msg := n.Meta.Msg
+		if msg == "" {
+			msg = "-"
+		} else {
+			msg = "`" + msg + "`"
+		}
+		
+		fmt.Fprintf(w, "| `%s` | %s | %s | `%s` |\n", n.Label, ref, msg, strings.Join(portList, ", "))
+	}
+
+	// 4. Metrics
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "## 3. Metrics")
+	fmt.Fprintf(w, "* **Nodes:** %d\n", len(nodes))
+	fmt.Fprintf(w, "* **Connections:** %d\n", len(prog.Connections))
 
 	return nil
 }
