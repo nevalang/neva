@@ -10,6 +10,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/backend/dot"
 	"github.com/nevalang/neva/internal/compiler/backend/mermaid"
+	"github.com/nevalang/neva/internal/compiler/backend/visual3d"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
@@ -20,10 +21,11 @@ type Backend struct {
 type Format string
 
 const (
-	FormatJSON    Format = "json"
-	FormatYAML    Format = "yaml"
-	FormatDOT     Format = "dot"
-	FormatMermaid Format = "mermaid"
+	FormatJSON     Format = "json"
+	FormatYAML     Format = "yaml"
+	FormatDOT      Format = "dot"
+	FormatMermaid  Format = "mermaid"
+	FormatVisual3D Format = "visual3d"
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
@@ -43,6 +45,9 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	case FormatMermaid:
 		encoder = b.encodeMermaid
 		fullFileName = filepath.Join(dst, "program.md")
+	case FormatVisual3D:
+		encoder = b.encodeVisual3D
+		fullFileName = filepath.Join(dst, "program.3d.html")
 	default:
 		panic("unknown format")
 	}
@@ -74,6 +79,11 @@ func (b Backend) encodeDOT(f *os.File, prog *ir.Program) error {
 
 func (b Backend) encodeMermaid(f *os.File, prog *ir.Program) error {
 	var encoder mermaid.Encoder
+	return encoder.Encode(f, prog)
+}
+
+func (b Backend) encodeVisual3D(f *os.File, prog *ir.Program) error {
+	var encoder visual3d.Encoder
 	return encoder.Encode(f, prog)
 }
 
