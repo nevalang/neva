@@ -1,5 +1,6 @@
 package ir
 
+
 import (
 	"encoding/json"
 	"os"
@@ -7,6 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/nevalang/neva/internal/compiler/backend/dot"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
@@ -19,6 +21,7 @@ type Format string
 const (
 	FormatJSON Format = "json"
 	FormatYAML Format = "yaml"
+	FormatDOT  Format = "dot"
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
@@ -32,6 +35,9 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	case FormatYAML:
 		encoder = b.encodeYAML
 		fullFileName += ".yml"
+	case FormatDOT:
+		encoder = b.encodeDOT
+		fullFileName = filepath.Join(dst, "program.dot")
 	default:
 		panic("unknown format")
 	}
@@ -51,6 +57,14 @@ func (b Backend) encodeJSON(f *os.File, prog *ir.Program) error {
 
 func (b Backend) encodeYAML(f *os.File, prog *ir.Program) error {
 	return yaml.NewEncoder(f).Encode(prog)
+}
+
+func (b Backend) encodeDOT(f *os.File, prog *ir.Program) error {
+	var cb dot.ClusterBuilder
+	for sender, receiver := range prog.Connections {
+		cb.InsertEdge(sender, receiver)
+	}
+	return cb.Build(f)
 }
 
 func NewBackend(format Format) Backend {
