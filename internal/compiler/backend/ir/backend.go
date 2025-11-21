@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler/backend/dot"
+	"github.com/nevalang/neva/internal/compiler/backend/mermaid"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
@@ -19,9 +20,10 @@ type Backend struct {
 type Format string
 
 const (
-	FormatJSON Format = "json"
-	FormatYAML Format = "yaml"
-	FormatDOT  Format = "dot"
+	FormatJSON    Format = "json"
+	FormatYAML    Format = "yaml"
+	FormatDOT     Format = "dot"
+	FormatMermaid Format = "mermaid"
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
@@ -38,6 +40,9 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	case FormatDOT:
 		encoder = b.encodeDOT
 		fullFileName = filepath.Join(dst, "program.dot")
+	case FormatMermaid:
+		encoder = b.encodeMermaid
+		fullFileName = filepath.Join(dst, "program.mermaid")
 	default:
 		panic("unknown format")
 	}
@@ -65,6 +70,11 @@ func (b Backend) encodeDOT(f *os.File, prog *ir.Program) error {
 		cb.InsertEdge(sender, receiver)
 	}
 	return cb.Build(f)
+}
+
+func (b Backend) encodeMermaid(f *os.File, prog *ir.Program) error {
+	var encoder mermaid.Encoder
+	return encoder.Encode(f, prog)
 }
 
 func NewBackend(format Format) Backend {

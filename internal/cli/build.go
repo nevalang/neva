@@ -108,7 +108,7 @@ func newBuildCmd(
 			}
 
 			switch irTargetFormat {
-			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT:
+			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid:
 			default:
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
