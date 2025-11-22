@@ -10,7 +10,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler/backend/dot"
 	"github.com/nevalang/neva/internal/compiler/backend/mermaid"
-	"github.com/nevalang/neva/internal/compiler/backend/visual3d"
+	"github.com/nevalang/neva/internal/compiler/backend/threejs"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
@@ -21,11 +21,11 @@ type Backend struct {
 type Format string
 
 const (
-	FormatJSON     Format = "json"
-	FormatYAML     Format = "yaml"
-	FormatDOT      Format = "dot"
-	FormatMermaid  Format = "mermaid"
-	FormatVisual3D Format = "visual3d"
+	FormatJSON    Format = "json"
+	FormatYAML    Format = "yaml"
+	FormatDOT     Format = "dot"
+	FormatMermaid Format = "mermaid"
+	FormatThreeJS Format = "threejs"
 )
 
 func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
@@ -45,8 +45,8 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 	case FormatMermaid:
 		encoder = b.encodeMermaid
 		fullFileName = filepath.Join(dst, "program.md")
-	case FormatVisual3D:
-		encoder = b.encodeVisual3D
+	case FormatThreeJS:
+		encoder = b.encodeThreeJS
 		fullFileName = filepath.Join(dst, "program.3d.html")
 	default:
 		panic("unknown format")
@@ -82,8 +82,8 @@ func (b Backend) encodeMermaid(f *os.File, prog *ir.Program) error {
 	return encoder.Encode(f, prog)
 }
 
-func (b Backend) encodeVisual3D(f *os.File, prog *ir.Program) error {
-	var encoder visual3d.Encoder
+func (b Backend) encodeThreeJS(f *os.File, prog *ir.Program) error {
+	var encoder threejs.Encoder
 	return encoder.Encode(f, prog)
 }
 
