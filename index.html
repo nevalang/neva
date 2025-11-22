@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Dataflow Program</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">Drag to rotate, Scroll to zoom</div>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/"
+          }
+        }
+    </script>
+    <script type="module">
+        // CORRECTED IMPORTS:
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Scene Setup ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e); // Dark background
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 10, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // --- Lighting ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 7);
+        scene.add(directionalLight);
+
+        // --- Orbit Controls ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // --- Dataflow Program Definition (based on YAML and Mermaid diagram) ---
+        const nodes = {
+            'in': { x: 0, y: 15, z: 0, ref: 'in', ports: { out: { start: { type: 'out', pos: 'bottom', offset: 0 } } } },
+            '__newv2__13': { x: 0, y: 8, z: 0, ref: 'new_v2', ports: { in: { sig: { type: 'in', pos: 'top', offset: 0 } }, out: { res: { type: 'out', pos: 'bottom', offset: 0 } } } },
+            'println_renamed': { x: 0, y: 1, z: 0, ref: 'println', ports: { in: { data: { type: 'in', pos: 'top', offset: 0 } }, out: { err: { type: 'out', pos: 'bottom', offset: -0.8 }, res: { type: 'out', pos: 'bottom', offset: 0.8 } } } },
+            'panic': { x: -6, y: -6, z: 0, ref: 'panic', ports: { in: { data: { type: 'in', pos: 'top', offset: 0 } } } },
+            'out': { x: 6, y: -6, z: 0, ref: 'out', ports: { in: { stop: { type: 'in', pos: 'top', offset: 0 } } } }
+        };
+
+        const connections = [
+            { from: 'in:start', to: '__newv2__13:sig', color: 0x4dd0e1 }, // Light blue
+            { from: '__newv2__13:res', to: 'println_renamed:data', color: 0x4dd0e1 }, // Light blue
+            { from: 'println_renamed:err', to: 'panic:data', color: 0xffa726 }, // Light orange
+            { from: 'println_renamed:res', to: 'out:stop', color: 0x4dd0e1 } // Light blue
+        ];
+
+        // --- Node & Port Dimensions ---
+        const NODE_WIDTH = 5;
+        const NODE_HEIGHT = 3;
+        const NODE_DEPTH = 1;
+        const PORT_RADIUS = 0.3;
+        const PORT_HEIGHT = 0.1; // For indentation/protrusion
+
+        const portMap = {}; // To store actual Three.js port mesh positions
+
+        // --- Create Nodes ---
+        function createNode(name, data) {
+            const nodeGroup = new THREE.Group();
+            nodeGroup.position.set(data.x, data.y, data.z);
+            nodeGroup.name = name;
+
+            const boxGeometry = new THREE.BoxGeometry(NODE_WIDTH, NODE_HEIGHT, NODE_DEPTH);
+            const boxMaterial = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                roughness: 0.6,
+                metalness: 0.3,
+                emissive: 0x1a1a2e, // Subtle glow
+                emissiveIntensity: 0.1
+            });
+            const nodeMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+            nodeGroup.add(nodeMesh);
+
+            // Node Label
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const fontSize = 80;
+            context.font = `${fontSize}px Arial`;
+            const textWidth = context.measureText(name).width;
+            const textHeight = fontSize;
+            canvas.width = textWidth + 20;
+            canvas.height = textHeight + 20;
+            context.font = `${fontSize}px Arial`;
+            context.fillStyle = '#333333';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(name, canvas.width / 2, canvas.height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            const labelPlane = new THREE.Mesh(new THREE.PlaneGeometry(NODE_WIDTH * 0.8, NODE_HEIGHT * 0.4), labelMaterial);
+            labelPlane.position.z = NODE_DEPTH / 2 + 0.01; // Slightly in front of the block
+            nodeGroup.add(labelPlane);
+
+            // Create Ports
+            for (const typeKey in data.ports) {
+                for (const portName in data.ports[typeKey]) {
+                    const portData = data.ports[typeKey][portName];
+                    const portAddr = `${name}:${portName}`;
+
+                    const portGeometry = new THREE.CylinderGeometry(PORT_RADIUS, PORT_RADIUS, PORT_HEIGHT, 16);
+                    const portMaterial = new THREE.MeshStandardMaterial({
+                        color: portData.type === 'in' ? 0x66bb6a : 0xef5350, // Green for in, Red for out
+                        emissive: portData.type === 'in' ? 0x388e3c : 0xc62828,
+                        emissiveIntensity: 0.5,
+                        roughness: 0.5
+                    });
+                    const portMesh = new THREE.Mesh(portGeometry, portMaterial);
+
+                    // Position ports on top/bottom surface
+                    if (portData.pos === 'top') {
+                        portMesh.position.y = NODE_HEIGHT / 2;
+                        portMesh.position.x = portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS); // Offset on X for multiple ports
+                        portMesh.rotation.x = Math.PI / 2; // Point up
+                    } else { // 'bottom'
+                        portMesh.position.y = -NODE_HEIGHT / 2;
+                        portMesh.position.x = portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS); // Offset on X for multiple ports
+                        portMesh.rotation.x = -Math.PI / 2; // Point down
+                    }
+                    portMesh.position.y += (portData.type === 'in' ? -PORT_HEIGHT / 2 : PORT_HEIGHT / 2); // Indent/protrude
+
+                    nodeGroup.add(portMesh);
+                    // Store global position, need to update world matrix first
+                    // The world position will be updated after all nodes are added to scene and scene.updateMatrixWorld is called
+                    portMap[portAddr] = new THREE.Vector3(); // Placeholder
+                    portMesh.userData.portAddr = portAddr; // Store addr on mesh for later lookup
+
+                    // Port Label (aligned to the port)
+                    const portLabelCanvas = document.createElement('canvas');
+                    const portLabelContext = portLabelCanvas.getContext('2d');
+                    const portFontSize = 40;
+                    portLabelContext.font = `${portFontSize}px Arial`;
+                    const portTextWidth = portLabelContext.measureText(portName).width;
+                    const portTextHeight = portFontSize;
+                    portLabelCanvas.width = portTextWidth + 10;
+                    portLabelCanvas.height = portTextHeight + 10;
+                    portLabelContext.font = `${portFontSize}px Arial`;
+                    portLabelContext.fillStyle = '#ffffff';
+                    portLabelContext.textAlign = 'center';
+                    portLabelContext.textBaseline = 'middle';
+                    portLabelContext.fillText(portName, portLabelCanvas.width / 2, portLabelCanvas.height / 2);
+
+                    const portTexture = new THREE.CanvasTexture(portLabelCanvas);
+                    const portLabelMaterial = new THREE.MeshBasicMaterial({ map: portTexture, transparent: true });
+                    const portLabelPlane = new THREE.Mesh(new THREE.PlaneGeometry(PORT_RADIUS * 4, PORT_RADIUS * 2), portLabelMaterial);
+
+                    // Position port labels
+                    if (portData.pos === 'top') {
+                        portLabelPlane.position.copy(portMesh.position);
+                        portLabelPlane.position.y += PORT_HEIGHT + PORT_RADIUS;
+                    } else { // 'bottom'
+                        portLabelPlane.position.copy(portMesh.position);
+                        portLabelPlane.position.y -= PORT_HEIGHT + PORT_RADIUS;
+                    }
+                    nodeGroup.add(portLabelPlane);
+                }
+            }
+
+            scene.add(nodeGroup);
+            return nodeGroup;
+        }
+
+        // Add all nodes to the scene
+        for (const name in nodes) {
+            createNode(name, nodes[name]);
+        }
+
+        // Update world matrices for all objects to get correct global positions
+        scene.updateMatrixWorld(true);
+
+        // Populate portMap with actual world positions
+        scene.traverse(obj => {
+            if (obj.userData.portAddr) {
+                portMap[obj.userData.portAddr] = obj.getWorldPosition(new THREE.Vector3());
+            }
+        });
+
+
+        // --- Create Connections (Curved Lines) ---
+        connections.forEach(conn => {
+            const fromPos = portMap[conn.from];
+            const toPos = portMap[conn.to];
+
+            if (fromPos && toPos) {
+                const curve = new THREE.CatmullRomCurve3([
+                    fromPos,
+                    // Control point: move in Z-direction to create a curve
+                    new THREE.Vector3(
+                        (fromPos.x + toPos.x) / 2,
+                        (fromPos.y + toPos.y) / 2,
+                        (fromPos.z + toPos.z) / 2 + 2 // Push out in Z for curvature
+                    ),
+                    toPos
+                ]);
+
+                const geometry = new THREE.TubeGeometry(curve, 64, 0.1, 8, false);
+                const material = new THREE.MeshBasicMaterial({
+                    color: conn.color,
+                    emissive: conn.color,
+                    emissiveIntensity: 1.5
+                });
+                const line = new THREE.Mesh(geometry, material);
+                scene.add(line);
+            } else {
+                console.warn(`Missing port for connection: ${conn.from} -> ${conn.to}`);
+            }
+        });
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- Handle Window Resize ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
