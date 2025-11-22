@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
@@ -61,6 +62,12 @@ type connectionData struct {
 type templateData struct {
 	NodesJSON       template.JS
 	ConnectionsJSON template.JS
+}
+
+// To fix crossings, we need to know which port connects to which node.
+type outgoingConn struct {
+	targetNode string
+	portOffset float64
 }
 
 func prepareData(prog *ir.Program) (templateData, error) {
@@ -143,7 +150,8 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	// Build adjacency list for layout
 	adj := make(map[string][]string)
 	inDegree := make(map[string]int)
-	
+	parentToChildren := make(map[string][]outgoingConn)
+
 	connections := make([]connectionData, 0, len(prog.Connections))
 	for from, to := range prog.Connections {
 		// Resolve From Node
@@ -188,13 +196,17 @@ func prepareData(prog *ir.Program) (templateData, error) {
 				Ports: make(map[string]portList),
 			}
 		}
-		// Ensure From Port exists
+		// Ensure From Port exists and get offset
 		node := nodes[fromNode]
 		if node.Ports == nil { node.Ports = make(map[string]portList) }
 		if node.Ports["out"] == nil { node.Ports["out"] = make(portList) }
+		
+		// If implicit, default offset 0. If explicit (from Funcs loop), it's already set.
 		if _, ok := node.Ports["out"][fromPortName]; !ok {
 			node.Ports["out"][fromPortName] = portData{Type: "out", Pos: "bottom", Offset: 0}
 		}
+		
+		fromOffset := node.Ports["out"][fromPortName].Offset
 		nodes[fromNode] = node // Write back updated copy
 
 		// Ensure To Node exists (handle implicit)
@@ -218,6 +230,11 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		if _, exists := inDegree[fromNode]; !exists {
 			inDegree[fromNode] = 0
 		}
+		
+		parentToChildren[fromNode] = append(parentToChildren[fromNode], outgoingConn{
+			targetNode: toNode,
+			portOffset: fromOffset,
+		})
 	}
 
 	// Calculate ranks (BFS)
@@ -274,26 +291,53 @@ func prepareData(prog *ir.Program) (templateData, error) {
 
 	// Assign coordinates
 	// Y based on rank (Top-Down), X based on position in rank (Centered)
-	const xSpacing = 12
-	const ySpacing = 8
+	const xSpacing = 15
+	const ySpacing = 10
+
+	// We will store computed X for nodes to use for next rank
+	nodeX := make(map[string]float64)
 
 	for r := 0; r <= maxRank; r++ {
 		rankNodes := nodesByRank[r]
+		
+		// Sort rankNodes to minimize crossings
+		if r > 0 {
+			sort.Slice(rankNodes, func(i, j int) bool {
+				nodeA := rankNodes[i]
+				nodeB := rankNodes[j]
+				
+				weightA := getParentWeight(nodeA, nodeX, parentToChildren)
+				weightB := getParentWeight(nodeB, nodeX, parentToChildren)
+				
+				if weightA != weightB {
+					return weightA < weightB
+				}
+				return nodeA < nodeB // Stable tie-break
+			})
+		} else {
+			// Rank 0: just sort by name for stability
+			sort.Strings(rankNodes)
+		}
+
 		for i, nodeName := range rankNodes {
 			node := nodes[nodeName]
 			// Invert Y so rank 0 is at top
 			// Center X around 0
 			node.Y = (maxRank/2 - r) * ySpacing 
-			node.X = (i - (len(rankNodes)-1)/2.0) * xSpacing
+			
+			x := (float64(i) - float64(len(rankNodes)-1)/2.0) * float64(xSpacing)
+			
+			node.X = int(x)
 			node.Z = 0
 			nodes[nodeName] = node
+			nodeX[nodeName] = x
 		}
 	}
 	
 	// Handle disconnected nodes (rank not assigned)
 	for nodeName, node := range nodes {
 		if _, ok := ranks[nodeName]; !ok {
-			node.X = -10 
+			node.X = -20 
 			node.Y = 0
 			nodes[nodeName] = node
 		}
@@ -315,6 +359,31 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	}, nil
 }
 
+// getParentWeight calculates the "ideal" X position for a node based on its parents' positions and port offsets.
+func getParentWeight(childNode string, nodeX map[string]float64, parentToChildren map[string][]outgoingConn) float64 {
+	sumX := 0.0
+	count := 0.0
+	
+	for parent, conns := range parentToChildren {
+		if pX, ok := nodeX[parent]; ok {
+			for _, conn := range conns {
+				if conn.targetNode == childNode {
+					// The ideal X for child is ParentX + PortOffset
+					// This tends to align the child with the port it connects to.
+					// Multiply offset to give it weight in screen space (5 units approx)
+					sumX += pX + conn.portOffset*5 
+					count++
+				}
+			}
+		}
+	}
+	
+	if count == 0 {
+		return 0 // No parents with assigned positions
+	}
+	return sumX / count
+}
+
 const templateHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -333,11 +402,14 @@ const templateHTML = `<!DOCTYPE html>
             background: rgba(0,0,0,0.5);
             padding: 5px;
             border-radius: 3px;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="info">Drag to rotate, Scroll to zoom</div>
+    <div id="info">
+        Scroll to zoom, Drag to rotate
+    </div>
     <script type="importmap">
         {
           "imports": {
@@ -355,7 +427,7 @@ const templateHTML = `<!DOCTYPE html>
         scene.background = new THREE.Color(0x1a1a2e);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 40); 
+        camera.position.set(0, 0, 60); 
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -370,28 +442,34 @@ const templateHTML = `<!DOCTYPE html>
         scene.add(directionalLight);
 
         // --- Orbit Controls ---
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+        const orbitControls = new OrbitControls(camera, renderer.domElement);
+        orbitControls.enableDamping = true;
+        orbitControls.dampingFactor = 0.05;
 
         // --- Dataflow Program Definition ---
-        const nodes = {{.NodesJSON}};
-        const connections = {{.ConnectionsJSON}};
+        const nodesData = {{.NodesJSON}};
+        const connectionsData = {{.ConnectionsJSON}};
 
-        // --- Node & Port Dimensions ---
+        // --- Constants ---
         const NODE_WIDTH = 5;
         const NODE_HEIGHT = 3;
         const NODE_DEPTH = 1;
         const PORT_RADIUS = 0.3;
         const PORT_HEIGHT = 0.1;
 
-        const portMap = {};
+        // --- State ---
+        const nodeMeshes = []; 
+        const nodeMap = {}; // name -> { mesh, ports: { name -> localPos } }
+        const connectionLines = []; 
 
         // --- Create Nodes ---
         function createNode(name, data) {
             const nodeGroup = new THREE.Group();
             nodeGroup.position.set(data.x, data.y, data.z);
             nodeGroup.name = name;
+            // Store velocity for force layout
+            nodeGroup.userData.velocity = new THREE.Vector3();
+            nodeGroup.userData.force = new THREE.Vector3();
 
             const boxGeometry = new THREE.BoxGeometry(NODE_WIDTH, NODE_HEIGHT, NODE_DEPTH);
             const boxMaterial = new THREE.MeshStandardMaterial({
@@ -425,13 +503,13 @@ const templateHTML = `<!DOCTYPE html>
             labelPlane.position.z = NODE_DEPTH / 2 + 0.1;
             nodeGroup.add(labelPlane);
 
-            // Create Ports
+            // Ports
+            const ports = {};
             if (data.ports) {
                 for (const typeKey in data.ports) {
                     for (const portName in data.ports[typeKey]) {
                         const portData = data.ports[typeKey][portName];
-                        const portAddr = ` + "`" + `${name}:${portName}` + "`" + `;
-
+                        
                         const portGeometry = new THREE.CylinderGeometry(PORT_RADIUS, PORT_RADIUS, PORT_HEIGHT, 16);
                         const portMaterial = new THREE.MeshStandardMaterial({
                             color: portData.type === 'in' ? 0x66bb6a : 0xef5350,
@@ -441,99 +519,206 @@ const templateHTML = `<!DOCTYPE html>
                         });
                         const portMesh = new THREE.Mesh(portGeometry, portMaterial);
 
+                        // Local position calculation
+                        const localPos = new THREE.Vector3();
                         if (portData.pos === 'top') {
-                            portMesh.position.y = NODE_HEIGHT / 2;
-                            portMesh.position.x = portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS);
+                            localPos.set(
+                                portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS),
+                                NODE_HEIGHT / 2 + (portData.type === 'in' ? -PORT_HEIGHT/2 : PORT_HEIGHT/2),
+                                0
+                            );
                             portMesh.rotation.x = Math.PI / 2;
-                        } else { // 'bottom'
-                            portMesh.position.y = -NODE_HEIGHT / 2;
-                            portMesh.position.x = portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS);
+                        } else { // bottom
+                            localPos.set(
+                                portData.offset * (NODE_WIDTH / 2 - PORT_RADIUS),
+                                -NODE_HEIGHT / 2 + (portData.type === 'in' ? -PORT_HEIGHT/2 : PORT_HEIGHT/2),
+                                0
+                            );
                             portMesh.rotation.x = -Math.PI / 2;
                         }
-                        portMesh.position.y += (portData.type === 'in' ? -PORT_HEIGHT / 2 : PORT_HEIGHT / 2);
-
+                        
+                        portMesh.position.copy(localPos);
                         nodeGroup.add(portMesh);
-                        portMap[portAddr] = new THREE.Vector3();
-                        portMesh.userData.portAddr = portAddr;
+                        
+                        ports[portName] = localPos; // Store local offset
 
                         // Port Label
-                        const portLabelCanvas = document.createElement('canvas');
-                        const portLabelContext = portLabelCanvas.getContext('2d');
-                        const portFontSize = 32;
-                        portLabelContext.font = ` + "`" + `${portFontSize}px Arial` + "`" + `;
-                        const portTextWidth = portLabelContext.measureText(portName).width;
-                        const portTextHeight = portFontSize;
-                        portLabelCanvas.width = portTextWidth + 10;
-                        portLabelCanvas.height = portTextHeight + 10;
-                        portLabelContext.font = ` + "`" + `${portFontSize}px Arial` + "`" + `;
-                        portLabelContext.fillStyle = '#ffffff';
-                        portLabelContext.textAlign = 'center';
-                        portLabelContext.textBaseline = 'middle';
-                        portLabelContext.fillText(portName, portLabelCanvas.width / 2, portLabelCanvas.height / 2);
+                        const pCanvas = document.createElement('canvas');
+                        const pCtx = pCanvas.getContext('2d');
+                        const pFontSize = 32;
+                        pCtx.font = ` + "`" + `${pFontSize}px Arial` + "`" + `;
+                        const pTextWidth = pCtx.measureText(portName).width;
+                        const pTextHeight = pFontSize;
+                        pCanvas.width = pTextWidth + 10;
+                        pCanvas.height = pTextHeight + 10;
+                        pCtx.font = ` + "`" + `${pFontSize}px Arial` + "`" + `;
+                        pCtx.fillStyle = '#ffffff';
+                        pCtx.textAlign = 'center';
+                        pCtx.textBaseline = 'middle';
+                        pCtx.fillText(portName, pCanvas.width / 2, pCanvas.height / 2);
 
-                        const portTexture = new THREE.CanvasTexture(portLabelCanvas);
-                        const portLabelMaterial = new THREE.MeshBasicMaterial({ map: portTexture, transparent: true });
-                        const portLabelPlane = new THREE.Mesh(new THREE.PlaneGeometry(PORT_RADIUS * 4, PORT_RADIUS * 2), portLabelMaterial);
+                        const pTexture = new THREE.CanvasTexture(pCanvas);
+                        const pLabelMat = new THREE.MeshBasicMaterial({ map: pTexture, transparent: true });
+                        const pLabelPlane = new THREE.Mesh(new THREE.PlaneGeometry(PORT_RADIUS * 4, PORT_RADIUS * 2), pLabelMat);
 
                         if (portData.pos === 'top') {
-                            portLabelPlane.position.copy(portMesh.position);
-                            portLabelPlane.position.y += PORT_HEIGHT + PORT_RADIUS;
+                            pLabelPlane.position.copy(localPos);
+                            pLabelPlane.position.y += PORT_HEIGHT + PORT_RADIUS;
                         } else {
-                            portLabelPlane.position.copy(portMesh.position);
-                            portLabelPlane.position.y -= PORT_HEIGHT + PORT_RADIUS;
+                            pLabelPlane.position.copy(localPos);
+                            pLabelPlane.position.y -= PORT_HEIGHT + PORT_RADIUS;
                         }
-                        nodeGroup.add(portLabelPlane);
+                        nodeGroup.add(pLabelPlane);
                     }
                 }
             }
 
             scene.add(nodeGroup);
-            return nodeGroup;
+            nodeMeshes.push(nodeGroup); 
+            nodeMap[name] = { mesh: nodeGroup, ports: ports };
         }
 
-        for (const name in nodes) {
-            createNode(name, nodes[name]);
+        // Initialize Nodes
+        for (const name in nodesData) {
+            createNode(name, nodesData[name]);
         }
 
-        scene.updateMatrixWorld(true);
-
-        scene.traverse(obj => {
-            if (obj.userData.portAddr) {
-                portMap[obj.userData.portAddr] = obj.getWorldPosition(new THREE.Vector3());
-            }
-        });
-
-        connections.forEach(conn => {
-            const fromPos = portMap[conn.from];
-            const toPos = portMap[conn.to];
-
-            if (fromPos && toPos) {
-                const curve = new THREE.CatmullRomCurve3([
-                    fromPos,
-                    new THREE.Vector3(
-                        (fromPos.x + toPos.x) / 2,
-                        (fromPos.y + toPos.y) / 2,
-                        (fromPos.z + toPos.z) / 2 + 2
-                    ),
-                    toPos
-                ]);
-
-                const geometry = new THREE.TubeGeometry(curve, 64, 0.1, 8, false);
-                const material = new THREE.MeshBasicMaterial({
-                    color: conn.color,
-                    emissive: conn.color,
-                    emissiveIntensity: 1.5
+        // Initialize Connections
+        const materialCache = {};
+        function getLineMaterial(color) {
+            if (!materialCache[color]) {
+                materialCache[color] = new THREE.LineBasicMaterial({ 
+                    color: color,
+                    linewidth: 2 
                 });
-                const line = new THREE.Mesh(geometry, material);
+            }
+            return materialCache[color];
+        }
+
+        connectionsData.forEach(conn => {
+            const fromParts = conn.from.split(':');
+            const toParts = conn.to.split(':');
+            const fromNodeName = fromParts[0];
+            const fromPortName = fromParts[1];
+            const toNodeName = toParts[0];
+            const toPortName = toParts[1];
+
+            const fromNode = nodeMap[fromNodeName];
+            const toNode = nodeMap[toNodeName];
+
+            if (fromNode && toNode) {
+                const geometry = new THREE.BufferGeometry();
+                const material = getLineMaterial(conn.color);
+                const line = new THREE.Line(geometry, material);
+                
                 scene.add(line);
-            } else {
-                console.warn(` + "`" + `Missing port for connection: ${conn.from} -> ${conn.to}` + "`" + `);
+                
+                connectionLines.push({
+                    mesh: line,
+                    fromNode: fromNode,
+                    fromPort: fromPortName,
+                    toNode: toNode,
+                    toPort: toPortName
+                });
             }
         });
 
+        // --- Force Layout Simulation ---
+        const REPULSION_STRENGTH = 500;
+        const SPRING_LENGTH = 15;
+        const SPRING_STRENGTH = 0.05;
+        const DAMPING = 0.90;
+        const CENTER_STRENGTH = 0.01;
+
+        function updatePhysics() {
+            // 1. Repulsion (All pairs)
+            for (let i = 0; i < nodeMeshes.length; i++) {
+                const nodeA = nodeMeshes[i];
+                for (let j = i + 1; j < nodeMeshes.length; j++) {
+                    const nodeB = nodeMeshes[j];
+                    
+                    const diff = new THREE.Vector3().subVectors(nodeA.position, nodeB.position);
+                    const distSq = diff.lengthSq();
+                    
+                    if (distSq > 0.1 && distSq < 5000) { // Limit range
+                        const force = diff.normalize().multiplyScalar(REPULSION_STRENGTH / distSq);
+                        nodeA.userData.force.add(force);
+                        nodeB.userData.force.sub(force);
+                    }
+                }
+                
+                // 2. Center Gravity (Weak)
+                const centerDir = new THREE.Vector3().subVectors(new THREE.Vector3(0,0,0), nodeA.position);
+                nodeA.userData.force.add(centerDir.multiplyScalar(CENTER_STRENGTH));
+            }
+
+            // 3. Spring Force (Connections)
+            connectionLines.forEach(conn => {
+                const nodeA = conn.fromNode.mesh;
+                const nodeB = conn.toNode.mesh;
+                
+                const diff = new THREE.Vector3().subVectors(nodeA.position, nodeB.position);
+                const dist = diff.length();
+                const displacement = dist - SPRING_LENGTH;
+                
+                const force = diff.normalize().multiplyScalar(-SPRING_STRENGTH * displacement);
+                
+                nodeA.userData.force.add(force);
+                nodeB.userData.force.sub(force);
+            });
+
+            // 4. Apply Force to Velocity & Position
+            nodeMeshes.forEach(node => {
+                const vel = node.userData.velocity;
+                vel.add(node.userData.force);
+                vel.multiplyScalar(DAMPING);
+                
+                // Limit speed
+                if (vel.lengthSq() > 100) vel.setLength(10);
+                
+                node.position.add(vel);
+                node.userData.force.set(0, 0, 0); // Reset force
+            });
+        }
+
+        function updateConnections() {
+            connectionLines.forEach(conn => {
+                const start = new THREE.Vector3();
+                const end = new THREE.Vector3();
+                
+                // Get world positions of ports
+                const startLocal = conn.fromNode.ports[conn.fromPort] || new THREE.Vector3(0,0,0);
+                const endLocal = conn.toNode.ports[conn.toPort] || new THREE.Vector3(0,0,0);
+                
+                start.copy(startLocal).applyMatrix4(conn.fromNode.mesh.matrixWorld);
+                end.copy(endLocal).applyMatrix4(conn.toNode.mesh.matrixWorld);
+
+                // Create curved line points
+                // Simple bezier control points
+                const dist = start.distanceTo(end);
+                const control1 = start.clone().add(new THREE.Vector3(0, dist * 0.25, dist * 0.1));
+                const control2 = end.clone().add(new THREE.Vector3(0, -dist * 0.25, dist * 0.1));
+                
+                const curve = new THREE.CubicBezierCurve3(start, control1, control2, end);
+                const points = curve.getPoints(20);
+                
+                conn.mesh.geometry.setFromPoints(points);
+            });
+        }
+
+        // Pre-calculate layout to avoid shaking
+        for (let i = 0; i < 300; i++) {
+            updatePhysics();
+        }
+        
+        // Initial connection update
+        scene.updateMatrixWorld();
+        updateConnections();
+
+        // --- Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
-            controls.update();
+            orbitControls.update();
             renderer.render(scene, camera);
         }
         animate();

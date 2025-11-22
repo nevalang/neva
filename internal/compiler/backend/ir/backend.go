@@ -46,7 +46,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		fullFileName = filepath.Join(dst, "program.md")
 	case FormatThreeJS:
 		encoder = b.encodeThreeJS
-		fullFileName = filepath.Join(dst, "program.3d.html")
+		fullFileName = filepath.Join(dst, "program.threejs.html")
 	default:
 		panic("unknown format")
 	}
