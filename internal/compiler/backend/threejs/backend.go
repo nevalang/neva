@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
@@ -64,31 +65,37 @@ type templateData struct {
 
 func prepareData(prog *ir.Program) (templateData, error) {
 	nodes := make(map[string]nodeData)
+	pathMap := make(map[string]string) // Maps a port's path to the unified node name
+
+	// Helper to normalize node names
+	getNodeName := func(path string) string {
+		for _, suffix := range []string{"/in", "/out", ".in", ".out"} {
+			if strings.HasSuffix(path, suffix) {
+				return strings.TrimSuffix(path, suffix)
+			}
+		}
+		return path
+	}
 	
-	// Simple grid layout
-	const gridSize = 10
-	x, y := 0, 0
-	
-	// Add functions as nodes
-	for i, f := range prog.Funcs {
+	// 1. Collect all nodes defined in Funcs
+	for _, f := range prog.Funcs {
+		// Determine the node name for this function call
 		name := ""
-		// Try to find name from Input ports
 		if len(f.IO.In) > 0 {
-			name = f.IO.In[0].Path
+			name = getNodeName(f.IO.In[0].Path)
 		} else if len(f.IO.Out) > 0 {
-			name = f.IO.Out[0].Path
+			name = getNodeName(f.IO.Out[0].Path)
 		}
 		
 		if name == "" {
 			continue
 		}
 
-		nodes[name] = nodeData{
-			X:     (i % gridSize) * 10,
-			Y:     (i / gridSize) * 10,
-			Z:     0,
-			Ref:   f.Ref,
-			Ports: make(map[string]portList),
+		if _, exists := nodes[name]; !exists {
+			nodes[name] = nodeData{
+				Ref:   f.Ref,
+				Ports: make(map[string]portList),
+			}
 		}
 		
 		if nodes[name].Ports["in"] == nil {
@@ -98,7 +105,11 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			nodes[name].Ports["out"] = make(portList)
 		}
 
+		// Map all paths involved in this func to the unified name
+		// and populate ports
 		for j, port := range f.IO.In {
+			pathMap[port.Path] = name
+			
 			portName := port.Port
 			if port.IsArray {
 				portName = fmt.Sprintf("%s[%d]", port.Port, port.Idx)
@@ -111,6 +122,8 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		}
 		
 		for j, port := range f.IO.Out {
+			pathMap[port.Path] = name
+
 			portName := port.Port
 			if port.IsArray {
 				portName = fmt.Sprintf("%s[%d]", port.Port, port.Idx)
@@ -122,67 +135,167 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			}
 		}
 	}
+
+	// 2. Process connections
+	// We use pathMap to resolve node names. If a path is missing (implicit node),
+	// we derive the name and create the node on the fly.
+	
+	// Build adjacency list for layout
+	adj := make(map[string][]string)
+	inDegree := make(map[string]int)
 	
 	connections := make([]connectionData, 0, len(prog.Connections))
 	for from, to := range prog.Connections {
+		// Resolve From Node
+		fromNode, ok := pathMap[from.Path]
+		if !ok {
+			fromNode = getNodeName(from.Path)
+			pathMap[from.Path] = fromNode
+		}
+		
+		// Resolve To Node
+		toNode, ok := pathMap[to.Path]
+		if !ok {
+			toNode = getNodeName(to.Path)
+			pathMap[to.Path] = toNode
+		}
+
+		color := 0x4dd0e1 // Default light blue
+		if from.Port == "err" {
+			color = 0xffa726 // Orange
+		}
+		
+		fromPortName := from.Port
+		if from.IsArray {
+			fromPortName = fmt.Sprintf("%s[%d]", from.Port, from.Idx)
+		}
+		
+		toPortName := to.Port
+		if to.IsArray {
+			toPortName = fmt.Sprintf("%s[%d]", to.Port, to.Idx)
+		}
+
 		connections = append(connections, connectionData{
-			From:  from.String(),
-			To:    to.String(),
-			Color: 0x4dd0e1, // Default color
+			From:  fmt.Sprintf("%s:%s", fromNode, fromPortName),
+			To:    fmt.Sprintf("%s:%s", toNode, toPortName),
+			Color: color,
 		})
 		
-		// Check if nodes exist, if not create dummy ones
-		if _, ok := nodes[from.Path]; !ok {
-			portName := from.Port
-			if from.IsArray {
-				portName = fmt.Sprintf("%s[%d]", from.Port, from.Idx)
+		// Ensure From Node exists (handle implicit)
+		if _, ok := nodes[fromNode]; !ok {
+			nodes[fromNode] = nodeData{
+				Ref: fromNode,
+				Ports: make(map[string]portList),
 			}
-			nodes[from.Path] = nodeData{
-				X: x * 10, Y: y * 10, Z: 0, 
-				Ref: from.Path,
-				Ports: map[string]portList{"out": {portName: {Type: "out", Pos: "bottom", Offset: 0}}},
-			}
-			x++
 		}
-		// Update existing node ports if missing
-		if node, ok := nodes[from.Path]; ok {
-			if node.Ports == nil { node.Ports = make(map[string]portList) }
-			if node.Ports["out"] == nil { node.Ports["out"] = make(portList) }
-			
-			portName := from.Port
-			if from.IsArray {
-				portName = fmt.Sprintf("%s[%d]", from.Port, from.Idx)
-			}
+		// Ensure From Port exists
+		node := nodes[fromNode]
+		if node.Ports == nil { node.Ports = make(map[string]portList) }
+		if node.Ports["out"] == nil { node.Ports["out"] = make(portList) }
+		if _, ok := node.Ports["out"][fromPortName]; !ok {
+			node.Ports["out"][fromPortName] = portData{Type: "out", Pos: "bottom", Offset: 0}
+		}
+		nodes[fromNode] = node // Write back updated copy
 
-			if _, ok := node.Ports["out"][portName]; !ok {
-				node.Ports["out"][portName] = portData{Type: "out", Pos: "bottom", Offset: 0}
+		// Ensure To Node exists (handle implicit)
+		if _, ok := nodes[toNode]; !ok {
+			nodes[toNode] = nodeData{
+				Ref: toNode,
+				Ports: make(map[string]portList),
 			}
 		}
+		// Ensure To Port exists
+		node = nodes[toNode]
+		if node.Ports == nil { node.Ports = make(map[string]portList) }
+		if node.Ports["in"] == nil { node.Ports["in"] = make(portList) }
+		if _, ok := node.Ports["in"][toPortName]; !ok {
+			node.Ports["in"][toPortName] = portData{Type: "in", Pos: "top", Offset: 0}
+		}
+		nodes[toNode] = node // Write back updated copy
 
-		if _, ok := nodes[to.Path]; !ok {
-			portName := to.Port
-			if to.IsArray {
-				portName = fmt.Sprintf("%s[%d]", to.Port, to.Idx)
-			}
-			nodes[to.Path] = nodeData{
-				X: x * 10, Y: y * 10, Z: 0,
-				Ref: to.Path,
-				Ports: map[string]portList{"in": {portName: {Type: "in", Pos: "top", Offset: 0}}},
-			}
-			x++
+		adj[fromNode] = append(adj[fromNode], toNode)
+		inDegree[toNode]++
+		if _, exists := inDegree[fromNode]; !exists {
+			inDegree[fromNode] = 0
 		}
-		if node, ok := nodes[to.Path]; ok {
-			if node.Ports == nil { node.Ports = make(map[string]portList) }
-			if node.Ports["in"] == nil { node.Ports["in"] = make(portList) }
-			
-			portName := to.Port
-			if to.IsArray {
-				portName = fmt.Sprintf("%s[%d]", to.Port, to.Idx)
+	}
+
+	// Calculate ranks (BFS)
+	ranks := make(map[string]int)
+	queue := []string{}
+	
+	// Find roots
+	for node := range nodes {
+		if inDegree[node] == 0 {
+			ranks[node] = 0
+			queue = append(queue, node)
+		}
+	}
+	// If no roots (cycles), pick one arbitrarily
+	if len(queue) == 0 && len(nodes) > 0 {
+		for node := range nodes {
+			ranks[node] = 0
+			queue = append(queue, node)
+			break
+		}
+	}
+
+	visited := make(map[string]bool)
+	for _, n := range queue {
+		visited[n] = true
+	}
+
+	for len(queue) > 0 {
+		curr := queue[0]
+		queue = queue[1:]
+		
+		currentRank := ranks[curr]
+		
+		for _, neighbor := range adj[curr] {
+			if r, seen := ranks[neighbor]; !seen || r < currentRank+1 {
+				ranks[neighbor] = currentRank + 1
+				if !visited[neighbor] {
+					queue = append(queue, neighbor)
+					visited[neighbor] = true
+				}
 			}
-			
-			if _, ok := node.Ports["in"][portName]; !ok {
-				node.Ports["in"][portName] = portData{Type: "in", Pos: "top", Offset: 0}
-			}
+		}
+	}
+
+	// Group by rank
+	nodesByRank := make(map[int][]string)
+	maxRank := 0
+	for node, rank := range ranks {
+		nodesByRank[rank] = append(nodesByRank[rank], node)
+		if rank > maxRank {
+			maxRank = rank
+		}
+	}
+
+	// Assign coordinates
+	// Y based on rank (Top-Down), X based on position in rank (Centered)
+	const xSpacing = 12
+	const ySpacing = 8
+
+	for r := 0; r <= maxRank; r++ {
+		rankNodes := nodesByRank[r]
+		for i, nodeName := range rankNodes {
+			node := nodes[nodeName]
+			// Invert Y so rank 0 is at top
+			// Center X around 0
+			node.Y = (maxRank/2 - r) * ySpacing 
+			node.X = (i - (len(rankNodes)-1)/2.0) * xSpacing
+			node.Z = 0
+			nodes[nodeName] = node
+		}
+	}
+	
+	// Handle disconnected nodes (rank not assigned)
+	for nodeName, node := range nodes {
+		if _, ok := ranks[nodeName]; !ok {
+			node.X = -10 
+			node.Y = 0
+			nodes[nodeName] = node
 		}
 	}
 
@@ -242,7 +355,7 @@ const templateHTML = `<!DOCTYPE html>
         scene.background = new THREE.Color(0x1a1a2e);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 10, 15);
+        camera.position.set(0, 0, 40); 
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -294,7 +407,7 @@ const templateHTML = `<!DOCTYPE html>
             // Node Label
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            const fontSize = 80;
+            const fontSize = 64;
             context.font = ` + "`" + `${fontSize}px Arial` + "`" + `;
             const textWidth = context.measureText(name).width;
             const textHeight = fontSize;
@@ -308,8 +421,8 @@ const templateHTML = `<!DOCTYPE html>
 
             const texture = new THREE.CanvasTexture(canvas);
             const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-            const labelPlane = new THREE.Mesh(new THREE.PlaneGeometry(NODE_WIDTH * 0.8, NODE_HEIGHT * 0.4), labelMaterial);
-            labelPlane.position.z = NODE_DEPTH / 2 + 0.01;
+            const labelPlane = new THREE.Mesh(new THREE.PlaneGeometry(NODE_WIDTH * 0.9, NODE_HEIGHT * 0.5), labelMaterial);
+            labelPlane.position.z = NODE_DEPTH / 2 + 0.1;
             nodeGroup.add(labelPlane);
 
             // Create Ports
@@ -346,7 +459,7 @@ const templateHTML = `<!DOCTYPE html>
                         // Port Label
                         const portLabelCanvas = document.createElement('canvas');
                         const portLabelContext = portLabelCanvas.getContext('2d');
-                        const portFontSize = 40;
+                        const portFontSize = 32;
                         portLabelContext.font = ` + "`" + `${portFontSize}px Arial` + "`" + `;
                         const portTextWidth = portLabelContext.measureText(portName).width;
                         const portTextHeight = portFontSize;
