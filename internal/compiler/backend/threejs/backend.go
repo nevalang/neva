@@ -168,9 +168,11 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			pathMap[to.Path] = toNode
 		}
 
-		color := 0x4dd0e1 // Default light blue
+		color := 0x90caf9 // Default light blue
 		if from.Port == "err" {
-			color = 0xffa726 // Orange
+			color = 0xef5350 // Red
+		} else if from.Port == "res" {
+			color = 0x66bb6a // Green
 		}
 		
 		fromPortName := from.Port
@@ -473,10 +475,10 @@ const templateHTML = `<!DOCTYPE html>
 
             const boxGeometry = new THREE.BoxGeometry(NODE_WIDTH, NODE_HEIGHT, NODE_DEPTH);
             const boxMaterial = new THREE.MeshStandardMaterial({
-                color: 0xcccccc,
-                roughness: 0.6,
-                metalness: 0.3,
-                emissive: 0x1a1a2e,
+                color: 0xffffff,
+                roughness: 0.1,
+                metalness: 0.1,
+                emissive: 0x222222,
                 emissiveIntensity: 0.1
             });
             const nodeMesh = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -486,13 +488,13 @@ const templateHTML = `<!DOCTYPE html>
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             const fontSize = 64;
-            context.font = ` + "`" + `${fontSize}px Arial` + "`" + `;
+            context.font = ` + "`" + `bold ${fontSize}px Arial` + "`" + `;
             const textWidth = context.measureText(name).width;
             const textHeight = fontSize;
             canvas.width = textWidth + 20;
             canvas.height = textHeight + 20;
-            context.font = ` + "`" + `${fontSize}px Arial` + "`" + `;
-            context.fillStyle = '#333333';
+            context.font = ` + "`" + `bold ${fontSize}px Arial` + "`" + `;
+            context.fillStyle = '#000000';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
             context.fillText(name, canvas.width / 2, canvas.height / 2);
@@ -510,10 +512,14 @@ const templateHTML = `<!DOCTYPE html>
                     for (const portName in data.ports[typeKey]) {
                         const portData = data.ports[typeKey][portName];
                         
+                        let portColor = 0x90caf9; // Default Light Blue
+                        if (portName === 'err') portColor = 0xef5350; // Red
+                        else if (portName === 'res') portColor = 0x66bb6a; // Green
+
                         const portGeometry = new THREE.CylinderGeometry(PORT_RADIUS, PORT_RADIUS, PORT_HEIGHT, 16);
                         const portMaterial = new THREE.MeshStandardMaterial({
-                            color: portData.type === 'in' ? 0x66bb6a : 0xef5350,
-                            emissive: portData.type === 'in' ? 0x388e3c : 0xc62828,
+                            color: portColor,
+                            emissive: portColor,
                             emissiveIntensity: 0.5,
                             roughness: 0.5
                         });
