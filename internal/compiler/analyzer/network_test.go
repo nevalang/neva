@@ -507,3 +507,77 @@ func TestOperatorConstraintTypes(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckOperatorOperandTypesWithTypeSystem_Validation(t *testing.T) {
+	terminator := ts.Terminator{}
+	checker := ts.MustNewSubtypeChecker(terminator)
+	resolver := ts.MustNewResolver(ts.Validator{}, checker, terminator)
+
+	a := MustNew(resolver)
+	scope := &testScope{} // Reusing testScope from network_test.go
+
+	tests := []struct {
+		name        string
+		operator    src.BinaryOperator
+		leftType    ts.Expr
+		rightType   ts.Expr
+		wantErr     bool
+		description string
+	}{
+		{
+			name:        "int_plus_int_valid",
+			operator:    src.AddOp,
+			leftType:    ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			rightType:   ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			wantErr:     false,
+			description: "int + int should match",
+		},
+		{
+			name:        "float_plus_float_valid",
+			operator:    src.AddOp,
+			leftType:    ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+			rightType:   ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+			wantErr:     false,
+			description: "float + float should match",
+		},
+		{
+			name:        "int_plus_float_invalid",
+			operator:    src.AddOp,
+			leftType:    ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			rightType:   ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}},
+			wantErr:     true,
+			description: "int + float should fail because they are different types",
+		},
+		{
+			name:        "string_plus_string_valid",
+			operator:    src.AddOp,
+			leftType:    ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			rightType:   ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			wantErr:     false,
+			description: "string + string should match",
+		},
+		{
+			name:        "string_plus_int_invalid",
+			operator:    src.AddOp,
+			leftType:    ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+			rightType:   ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			wantErr:     true,
+			description: "string + int should fail",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			binary := src.Binary{
+				Operator: tt.operator,
+				Meta:     core.Meta{},
+			}
+			err := a.checkOperatorOperandTypesWithTypeSystem(binary, tt.leftType, tt.rightType, scope)
+			if tt.wantErr {
+				require.NotNil(t, err, tt.description)
+			} else {
+				require.Nil(t, err, tt.description)
+			}
+		})
+	}
+}
