@@ -9,9 +9,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/nevalang/neva/internal/compiler/backend/dot"
-	"github.com/nevalang/neva/internal/compiler/backend/mermaid"
-	"github.com/nevalang/neva/internal/compiler/backend/threejs"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/dot"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/mermaid"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/threejs"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
