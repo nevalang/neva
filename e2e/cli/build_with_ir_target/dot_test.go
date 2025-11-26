@@ -12,7 +12,7 @@ import (
 func TestBuildIRDOT(t *testing.T) {
 	defer func() {
 		require.NoError(t, os.RemoveAll("src"))
-		require.NoError(t, os.Remove("program.dot"))
+		require.NoError(t, os.Remove("ir.dot"))
 	}()
 
 	// create new project
@@ -26,7 +26,7 @@ func TestBuildIRDOT(t *testing.T) {
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
 	// verify dot file exists
-	dotBytes, err := os.ReadFile("program.dot")
+	dotBytes, err := os.ReadFile("ir.dot")
 	require.NoError(t, err, string(out))
 
 	// Check for basic DOT syntax and content

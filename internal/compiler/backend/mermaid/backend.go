@@ -9,22 +9,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
-type Backend struct{}
-
-func NewBackend() Backend {
-	return Backend{}
-}
-
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	// The IR backend wrapper handles file creation, so we might not need to write to file here directly
-	// but looking at dot backend, it seems it writes to a specific file "program.dot".
-	// However, the ir backend (internal/compiler/backend/ir/backend.go) seems to call a specific encoder.
-	// We will follow the pattern of `encodeDOT` in ir backend which calls `cb.Build(f)`.
-	// So `Emit` here might not be used directly if we integrate it into `ir` backend package's `encodeMermaid`.
-	// But to stay consistent with `dot` package having its own logic, we'll implement the core logic here.
-	return nil
-}
-
 // Encoder implements the logic to write Mermaid diagram to a writer
 type Encoder struct{}
 

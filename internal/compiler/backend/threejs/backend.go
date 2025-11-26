@@ -11,16 +11,6 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
-type Backend struct{}
-
-func NewBackend() Backend {
-	return Backend{}
-}
-
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	return nil
-}
-
 type Encoder struct{}
 
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
@@ -76,7 +66,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 
 	// Helper to normalize node names
 	getNodeName := func(path string) string {
-		for _, suffix := range []string{"/in", "/out", ".in", ".out"} {
+		for _, suffix := range []string{"/in", "/out"} {
 			if strings.HasSuffix(path, suffix) {
 				return strings.TrimSuffix(path, suffix)
 			}
@@ -95,7 +85,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		}
 		
 		if name == "" {
-			continue
+			return templateData{}, fmt.Errorf("could not determine node name for func ref %s", f.Ref)
 		}
 
 		if _, exists := nodes[name]; !exists {
