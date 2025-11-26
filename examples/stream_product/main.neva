@@ -9,8 +9,8 @@ def Main(start any) (stop any) {
 	runtime.Panic
 	---
 	:start -> [
-		0..3 -> product:first,
-		0..3 -> product:second
+		0..4 -> product:first,
+		0..4 -> product:second
 	]
 	product -> for
 	for:res -> wait -> :stop
