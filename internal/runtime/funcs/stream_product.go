@@ -88,7 +88,7 @@ func (streamProduct) Create(
 								runtime.NewStructField("first", firstMsg),
 								runtime.NewStructField("second", secondMsg),
 							}),
-							int64(i),
+							int64(i*len(secondData)+j),
 							i == len(firstData)-1 && j == len(secondData)-1,
 						),
 					)
