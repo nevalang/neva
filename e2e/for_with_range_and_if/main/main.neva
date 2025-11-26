@@ -19,8 +19,8 @@ def Main(start any) (stop any) {
 }
 
 def PrintAsNum(data bool) (res any, err error) {
-	ternary Ternary
-	println fmt.Println<bool>
+	ternary Ternary<int>
+	println fmt.Println<int>
 	---
 	:data -> ternary:if
 	1 -> ternary:then
