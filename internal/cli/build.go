@@ -46,7 +46,7 @@ func newBuildCmd(
 					case "go", "wasm", "native", "ir":
 						return nil
 					}
-					return fmt.Errorf("Unknown target: '%s', supported targets: go, wasm, native, ir", s)
+					return fmt.Errorf("unknown target: '%s', supported targets: go, wasm, native, ir", s)
 				},
 			},
 			&cli.StringFlag{

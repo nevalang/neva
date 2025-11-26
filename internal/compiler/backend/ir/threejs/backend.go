@@ -73,7 +73,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		}
 		return path
 	}
-	
+
 	// 1. Collect all nodes defined in Funcs
 	for _, f := range prog.Funcs {
 		// Determine the node name for this function call
@@ -83,7 +83,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		} else if len(f.IO.Out) > 0 {
 			name = getNodeName(f.IO.Out[0].Path)
 		}
-		
+
 		if name == "" {
 			return templateData{}, fmt.Errorf("could not determine node name for func ref %s", f.Ref)
 		}
@@ -94,7 +94,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 				Ports: make(map[string]portList),
 			}
 		}
-		
+
 		if nodes[name].Ports["in"] == nil {
 			nodes[name].Ports["in"] = make(portList)
 		}
@@ -106,7 +106,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		// and populate ports
 		for j, port := range f.IO.In {
 			pathMap[port.Path] = name
-			
+
 			portName := port.Port
 			if port.IsArray {
 				portName = fmt.Sprintf("%s[%d]", port.Port, port.Idx)
@@ -114,10 +114,10 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			nodes[name].Ports["in"][portName] = portData{
 				Type:   "in",
 				Pos:    "top",
-				Offset: float64(j) - float64(len(f.IO.In)-1)/2.0, 
+				Offset: float64(j) - float64(len(f.IO.In)-1)/2.0,
 			}
 		}
-		
+
 		for j, port := range f.IO.Out {
 			pathMap[port.Path] = name
 
@@ -136,7 +136,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	// 2. Process connections
 	// We use pathMap to resolve node names. If a path is missing (implicit node),
 	// we derive the name and create the node on the fly.
-	
+
 	// Build adjacency list for layout
 	adj := make(map[string][]string)
 	inDegree := make(map[string]int)
@@ -150,7 +150,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			fromNode = getNodeName(from.Path)
 			pathMap[from.Path] = fromNode
 		}
-		
+
 		// Resolve To Node
 		toNode, ok := pathMap[to.Path]
 		if !ok {
@@ -159,17 +159,18 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		}
 
 		color := 0x90caf9 // Default light blue
-		if from.Port == "err" {
+		switch from.Port {
+		case "err":
 			color = 0xef5350 // Red
-		} else if from.Port == "res" {
+		case "res":
 			color = 0x66bb6a // Green
 		}
-		
+
 		fromPortName := from.Port
 		if from.IsArray {
 			fromPortName = fmt.Sprintf("%s[%d]", from.Port, from.Idx)
 		}
-		
+
 		toPortName := to.Port
 		if to.IsArray {
 			toPortName = fmt.Sprintf("%s[%d]", to.Port, to.Idx)
@@ -180,38 +181,46 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			To:    fmt.Sprintf("%s:%s", toNode, toPortName),
 			Color: color,
 		})
-		
+
 		// Ensure From Node exists (handle implicit)
 		if _, ok := nodes[fromNode]; !ok {
 			nodes[fromNode] = nodeData{
-				Ref: fromNode,
+				Ref:   fromNode,
 				Ports: make(map[string]portList),
 			}
 		}
 		// Ensure From Port exists and get offset
 		node := nodes[fromNode]
-		if node.Ports == nil { node.Ports = make(map[string]portList) }
-		if node.Ports["out"] == nil { node.Ports["out"] = make(portList) }
-		
+		if node.Ports == nil {
+			node.Ports = make(map[string]portList)
+		}
+		if node.Ports["out"] == nil {
+			node.Ports["out"] = make(portList)
+		}
+
 		// If implicit, default offset 0. If explicit (from Funcs loop), it's already set.
 		if _, ok := node.Ports["out"][fromPortName]; !ok {
 			node.Ports["out"][fromPortName] = portData{Type: "out", Pos: "bottom", Offset: 0}
 		}
-		
+
 		fromOffset := node.Ports["out"][fromPortName].Offset
 		nodes[fromNode] = node // Write back updated copy
 
 		// Ensure To Node exists (handle implicit)
 		if _, ok := nodes[toNode]; !ok {
 			nodes[toNode] = nodeData{
-				Ref: toNode,
+				Ref:   toNode,
 				Ports: make(map[string]portList),
 			}
 		}
 		// Ensure To Port exists
 		node = nodes[toNode]
-		if node.Ports == nil { node.Ports = make(map[string]portList) }
-		if node.Ports["in"] == nil { node.Ports["in"] = make(portList) }
+		if node.Ports == nil {
+			node.Ports = make(map[string]portList)
+		}
+		if node.Ports["in"] == nil {
+			node.Ports["in"] = make(portList)
+		}
 		if _, ok := node.Ports["in"][toPortName]; !ok {
 			node.Ports["in"][toPortName] = portData{Type: "in", Pos: "top", Offset: 0}
 		}
@@ -222,7 +231,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 		if _, exists := inDegree[fromNode]; !exists {
 			inDegree[fromNode] = 0
 		}
-		
+
 		parentToChildren[fromNode] = append(parentToChildren[fromNode], outgoingConn{
 			targetNode: toNode,
 			portOffset: fromOffset,
@@ -232,7 +241,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	// Calculate ranks (BFS)
 	ranks := make(map[string]int)
 	queue := []string{}
-	
+
 	// Find roots
 	for node := range nodes {
 		if inDegree[node] == 0 {
@@ -257,9 +266,9 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	for len(queue) > 0 {
 		curr := queue[0]
 		queue = queue[1:]
-		
+
 		currentRank := ranks[curr]
-		
+
 		for _, neighbor := range adj[curr] {
 			if r, seen := ranks[neighbor]; !seen || r < currentRank+1 {
 				ranks[neighbor] = currentRank + 1
@@ -291,16 +300,16 @@ func prepareData(prog *ir.Program) (templateData, error) {
 
 	for r := 0; r <= maxRank; r++ {
 		rankNodes := nodesByRank[r]
-		
+
 		// Sort rankNodes to minimize crossings
 		if r > 0 {
 			sort.Slice(rankNodes, func(i, j int) bool {
 				nodeA := rankNodes[i]
 				nodeB := rankNodes[j]
-				
+
 				weightA := getParentWeight(nodeA, nodeX, parentToChildren)
 				weightB := getParentWeight(nodeB, nodeX, parentToChildren)
-				
+
 				if weightA != weightB {
 					return weightA < weightB
 				}
@@ -315,21 +324,21 @@ func prepareData(prog *ir.Program) (templateData, error) {
 			node := nodes[nodeName]
 			// Invert Y so rank 0 is at top
 			// Center X around 0
-			node.Y = (maxRank/2 - r) * ySpacing 
-			
+			node.Y = (maxRank/2 - r) * ySpacing
+
 			x := (float64(i) - float64(len(rankNodes)-1)/2.0) * float64(xSpacing)
-			
+
 			node.X = int(x)
 			node.Z = 0
 			nodes[nodeName] = node
 			nodeX[nodeName] = x
 		}
 	}
-	
+
 	// Handle disconnected nodes (rank not assigned)
 	for nodeName, node := range nodes {
 		if _, ok := ranks[nodeName]; !ok {
-			node.X = -20 
+			node.X = -20
 			node.Y = 0
 			nodes[nodeName] = node
 		}
@@ -339,7 +348,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	if err != nil {
 		return templateData{}, err
 	}
-	
+
 	connsJSON, err := json.Marshal(connections)
 	if err != nil {
 		return templateData{}, err
@@ -355,7 +364,7 @@ func prepareData(prog *ir.Program) (templateData, error) {
 func getParentWeight(childNode string, nodeX map[string]float64, parentToChildren map[string][]outgoingConn) float64 {
 	sumX := 0.0
 	count := 0.0
-	
+
 	for parent, conns := range parentToChildren {
 		if pX, ok := nodeX[parent]; ok {
 			for _, conn := range conns {
@@ -363,13 +372,13 @@ func getParentWeight(childNode string, nodeX map[string]float64, parentToChildre
 					// The ideal X for child is ParentX + PortOffset
 					// This tends to align the child with the port it connects to.
 					// Multiply offset to give it weight in screen space (5 units approx)
-					sumX += pX + conn.portOffset*5 
+					sumX += pX + conn.portOffset*5
 					count++
 				}
 			}
 		}
 	}
-	
+
 	if count == 0 {
 		return 0 // No parents with assigned positions
 	}
