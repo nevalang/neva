@@ -5,8 +5,8 @@ import (
 	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 func (Desugarer) handleNode(

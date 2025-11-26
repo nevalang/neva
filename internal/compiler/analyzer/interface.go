@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 var (

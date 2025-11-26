@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 func (b Builder) Get(wd, path, version string) (string, error) {

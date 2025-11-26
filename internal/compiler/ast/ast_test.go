@@ -1,10 +1,10 @@
-package sourcecode
+package ast
 
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func TestPackage_GetInteropableComponents(t *testing.T) {

@@ -2,7 +2,7 @@ package desugarer
 
 import (
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 // handleConst handles case when constant has integer value and type is float.

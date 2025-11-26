@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 type handleNetworkResult struct {
@@ -599,9 +598,9 @@ func (d *Desugarer) desugarDeferredConnection(
 			Name: "Lock",
 			Meta: locOnlyMeta,
 		},
-		TypeArgs: []typesystem.Expr{
+		TypeArgs: []ts.Expr{
 			ts.Expr{
-				Inst: &typesystem.InstExpr{
+				Inst: &ts.InstExpr{
 					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
 				},
 				Meta: locOnlyMeta,

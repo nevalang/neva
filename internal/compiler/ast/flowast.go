@@ -1,12 +1,12 @@
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
-package sourcecode
+package ast
 
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 // Build represents all the information in source code, that must be compiled.

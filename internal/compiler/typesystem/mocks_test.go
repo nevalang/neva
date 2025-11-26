@@ -7,7 +7,7 @@ package typesystem_test
 import (
 	reflect "reflect"
 
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	gomock "github.com/golang/mock/gomock"
 )
 

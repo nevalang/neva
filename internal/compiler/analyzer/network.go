@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 var ErrComplexLiteralSender = errors.New("literal network sender must have primitive type")
@@ -798,7 +798,7 @@ func (Analyzer) getOperatorConstraint(binary src.Binary) (ts.Expr, *compiler.Err
 
 // checkOperatorOperandTypesWithTypeSystem validates that the operand types are compatible with the operator
 // using conditional logic: union machinery for overloaded operators, primitive checking for non-overloaded
-func (a Analyzer) checkOperatorOperandTypesWithTypeSystem(binary src.Binary, leftType, rightType ts.Expr, scope src.Scope) *compiler.Error {
+func (a Analyzer) checkOperatorOperandTypesWithTypeSystem(binary src.Binary, leftType, rightType ts.Expr, scope ts.Scope) *compiler.Error {
 	// get the operator constraint
 	constraint, err := a.getOperatorConstraint(binary)
 	if err != nil {
@@ -809,21 +809,29 @@ func (a Analyzer) checkOperatorOperandTypesWithTypeSystem(binary src.Binary, lef
 	isOverloadedOperator := constraint.Lit != nil && constraint.Lit.Union != nil
 
 	if isOverloadedOperator {
-		// for overloaded operators: create unions and do union-to-union checking
-		leftUnion := a.createSingleElementUnion(leftType)
-		rightUnion := a.createSingleElementUnion(rightType)
-
-		if err := a.resolver.IsSubtypeOf(leftUnion, constraint, scope); err != nil {
-			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid left operand type for %s: %v (leftType: %v, leftUnion: %v, constraint: %v)", binary.Operator, err, leftType.String(), leftUnion.String(), constraint.String()),
-				Meta:    &binary.Meta,
+		// for overloaded operators (like +) we need to make sure that both operands
+		// are compatible with at least one of the types in the union.
+		// For example, int + int is ok, float + float is ok, but int + float is not.
+		var compatible bool
+		for _, typeExpr := range constraint.Lit.Union {
+			// Check if both operands are compatible with the SAME union member.
+			// This is crucial because we don't want to allow mixing types like int + float.
+			if a.resolver.IsSubtypeOf(leftType, *typeExpr, scope) == nil &&
+				a.resolver.IsSubtypeOf(rightType, *typeExpr, scope) == nil {
+				compatible = true
+				break
 			}
 		}
 
-		if err := a.resolver.IsSubtypeOf(rightUnion, constraint, scope); err != nil {
+		if !compatible {
 			return &compiler.Error{
-				Message: fmt.Sprintf("Invalid right operand type for %s: %v (rightType: %v, rightUnion: %v, constraint: %v)", binary.Operator, err, rightType.String(), rightUnion.String(), constraint.String()),
-				Meta:    &binary.Meta,
+				Message: fmt.Sprintf(
+					"Incompatible operand types for binary operator '%v': %v and %v",
+					binary.Operator,
+					leftType.String(),
+					rightType.String(),
+				),
+				Meta: &binary.Meta,
 			}
 		}
 	} else {

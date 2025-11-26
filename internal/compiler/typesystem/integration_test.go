@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func TestDefaultResolver(t *testing.T) {

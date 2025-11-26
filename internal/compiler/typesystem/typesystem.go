@@ -6,7 +6,7 @@ package typesystem
 import (
 	"sort"
 
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 type Def struct {

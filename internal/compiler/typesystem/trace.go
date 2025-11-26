@@ -1,7 +1,7 @@
 package typesystem
 
 import (
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 // Linked-list to handle recursive types
