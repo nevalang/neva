@@ -8,7 +8,6 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/backend/dot"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
@@ -41,13 +40,13 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target",
-				Usage: "Target platform for build (options: go, wasm, native, json, dot). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together.",
+				Usage: "Target platform for build (options: go, wasm, native, ir). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together. For 'ir' target, 'target-ir-format' can be used.",
 				Action: func(ctx *cli.Context, s string) error {
 					switch s {
-					case "go", "wasm", "native", "ir", "dot":
+					case "go", "wasm", "native", "ir":
 						return nil
 					}
-					return fmt.Errorf("Unknown target %s", s)
+					return fmt.Errorf("unknown target: '%s', supported targets: go, wasm, native, ir", s)
 				},
 			},
 			&cli.StringFlag{
@@ -60,7 +59,7 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target-ir-format",
-				Usage: "Format for ir file - yaml or json",
+				Usage: "Format for ir file - yaml, json or dot",
 			},
 			&cli.StringFlag{
 				Name:  "target-go-mode",
@@ -77,7 +76,7 @@ func newBuildCmd(
 			}
 
 			switch target {
-			case "go", "wasm", "ir", "dot", "native":
+			case "go", "wasm", "ir", "native":
 			default:
 				return fmt.Errorf("Unknown target %s", target)
 			}
@@ -109,7 +108,7 @@ func newBuildCmd(
 			}
 
 			switch irTargetFormat {
-			case ir_backend.FormatYAML, ir_backend.FormatJSON:
+			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid, ir_backend.FormatThreeJS:
 			default:
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
@@ -188,15 +187,6 @@ func newBuildCmd(
 					analyzer,
 					irgen,
 					ir.NewBackend(irTargetFormat),
-				)
-			case "dot":
-				compilerToUse = compiler.New(
-					bldr,
-					parser,
-					desugarer,
-					analyzer,
-					irgen,
-					dot.NewBackend(),
 				)
 			case "native":
 				compilerToUse = compiler.New(
