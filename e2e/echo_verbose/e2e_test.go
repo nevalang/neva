@@ -1,25 +1,17 @@
 package test
 
 import (
-	"os/exec"
-	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	cmd := exec.Command("neva", "run", "main")
-
-	cmd.Stdin = strings.NewReader("yo\n")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-
+	out := e2e.RunWithStdin(t, "yo\n", "run", "main")
 	require.Equal(
 		t,
 		"yo\n",
-		string(out),
+		out,
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

@@ -2,9 +2,9 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,15 +16,11 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "http_get")
+	out := e2e.Run(t, "run", "http_get")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
 	require.Contains(
 		t,
-		string(out),
+		out,
 		"<html",
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

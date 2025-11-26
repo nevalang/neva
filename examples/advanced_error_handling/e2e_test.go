@@ -2,9 +2,9 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,16 +17,12 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		cmd := exec.Command("neva", "run", "advanced_error_handling")
-		out, err := cmd.CombinedOutput()
-		require.NoError(t, err, string(out))
+		out := e2e.Run(t, "run", "advanced_error_handling")
 		require.Equal(
 			t,
 			`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
 `,
-			string(out),
+			out,
 		)
-
-		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }

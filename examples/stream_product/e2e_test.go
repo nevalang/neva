@@ -3,9 +3,9 @@ package test
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,13 +37,8 @@ func Test(t *testing.T) {
 
 	for i := 0; i < 1; i++ {
 		t.Run(fmt.Sprintf("Run %d", i+1), func(t *testing.T) {
-			cmd := exec.Command("neva", "run", "stream_product")
-
-			out, err := cmd.CombinedOutput()
-			require.NoError(t, err, string(out))
-			require.Equal(t, expectedOutput, string(out))
-
-			require.Equal(t, 0, cmd.ProcessState.ExitCode())
+			out := e2e.Run(t, "run", "stream_product")
+			require.Equal(t, expectedOutput, out)
 		})
 	}
 }

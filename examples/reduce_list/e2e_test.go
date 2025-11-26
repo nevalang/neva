@@ -1,12 +1,10 @@
 package test
 
 import (
-	"context"
 	"os"
-	"os/exec"
 	"testing"
-	"time"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,27 +17,11 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		cmd := exec.Command("neva", "run", "reduce_list")
-
-		// Set a timeout for the command
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		cmd = exec.CommandContext(ctx, cmd.Path, cmd.Args[1:]...)
-
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			if ctx.Err() == context.DeadlineExceeded {
-				t.Fatal("Command timed out after 5 seconds")
-			}
-			require.NoError(t, err, string(out))
-		}
-
+		out := e2e.Run(t, "run", "reduce_list")
 		require.Equal(
 			t,
 			"55\n",
-			string(out),
+			out,
 		)
-
-		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }
