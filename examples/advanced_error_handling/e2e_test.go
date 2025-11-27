@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		out := e2e.Run(t, "run", "advanced_error_handling")
+		out := e2e.RunCombined(t, "run", "advanced_error_handling")
 		require.Equal(
 			t,
 			`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}

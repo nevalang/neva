@@ -25,6 +25,6 @@ func Test(t *testing.T) {
 	require.Equal(t, "Enter the name: bob\n", out)
 
 	// Test panic case with "Charlie"
-	out = e2e.RunWithStdin(t, "Charlie\n", "run", "switch")
+	out = e2e.RunWithStdinCombined(t, "Charlie\n", "run", "switch")
 	require.Equal(t, "Enter the name: panic: Charlie\n", out)
 }
