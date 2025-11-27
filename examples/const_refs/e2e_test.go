@@ -2,9 +2,9 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,16 +18,11 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "const_refs")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out := e2e.Run(t, "run", "const_refs")
 	require.Equal(
 		t,
 		`{"d": {"key": 1}, "l": [1, 2, 3]}
 `,
-		string(out),
+		out,
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

@@ -4,9 +4,9 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,17 +18,12 @@ func Test_UpperThanManifest(t *testing.T) {
 	defer os.Chdir(wd)
 	require.NoError(t, os.Chdir(".."))
 
-	cmd := exec.Command("neva", "run", "run_cli_not_from_module_root/foo/bar")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out := e2e.Run(t, "run", "run_cli_not_from_module_root/foo/bar")
 	require.Equal(
 		t,
 		"42\n",
-		string(out),
+		out,
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
 
 // Test that CLI will go from down to up and find module's manifest
@@ -41,15 +36,10 @@ func Test_DownToManifest(t *testing.T) {
 	defer os.Chdir(wd)
 	require.NoError(t, os.Chdir("foo"))
 
-	cmd := exec.Command("neva", "run", "bar")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out := e2e.Run(t, "run", "bar")
 	require.Equal(
 		t,
 		"42\n",
-		string(out),
+		out,
 	)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

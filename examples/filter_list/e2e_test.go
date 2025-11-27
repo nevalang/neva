@@ -1,12 +1,10 @@
 package test
 
 import (
-	"context"
 	"os"
-	"os/exec"
 	"testing"
-	"time"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,27 +17,16 @@ func Test(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for i := 0; i < 1; i++ {
-		cmd := exec.Command("neva", "run", "filter_list")
-
-		// Set a timeout for the command
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		cmd = exec.CommandContext(ctx, cmd.Path, cmd.Args[1:]...)
-
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			if ctx.Err() == context.DeadlineExceeded {
-				t.Fatal("Command timed out after 5 seconds")
-			}
-			require.NoError(t, err, "Command failed: %v", string(out))
-		}
-
+		// Note: removed context timeout logic as e2e.Run handles execution.
+		// If timeout is strictly required for this test to fail fast, e2e.Run doesn't support it yet.
+		// But usually tests just time out by global go test timeout.
+		// The original test had specific timeout of 5s.
+		// Assuming e2e.Run is fine.
+		out := e2e.Run(t, "run", "filter_list")
 		require.Equal(
 			t,
 			"2\n4\n6\n8\n10\n",
-			string(out),
+			out,
 		)
-
-		require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	}
 }

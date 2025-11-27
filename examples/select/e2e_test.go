@@ -3,9 +3,9 @@ package test
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,22 +19,12 @@ func Test(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		t.Logf("Running iteration %d", i)
-		cmd := exec.Command("neva", "run", "select")
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			exitError, ok := err.(*exec.ExitError)
-			if ok {
-				t.Fatalf("Command failed with exit code %d. Error output:\n%s", exitError.ExitCode(), string(out))
-			} else {
-				t.Fatalf("Command failed with error: %v. Output:\n%s", err, string(out))
-			}
-		}
+		out := e2e.Run(t, "run", "select")
 		require.Equal(
 			t,
 			"a\nb\nc\nd\n",
-			string(out),
+			out,
 			"iteration %d failed\n", i,
 		)
-		require.Equal(t, 0, cmd.ProcessState.ExitCode(), fmt.Sprintf("Unexpected exit code on iteration %d", i))
 	}
 }

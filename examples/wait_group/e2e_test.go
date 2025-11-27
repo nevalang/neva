@@ -2,10 +2,10 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,16 +17,11 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "wait_group")
+	out := e2e.Run(t, "run", "wait_group")
 
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-
-	t.Log(string(out))
+	t.Log(out)
 
 	expected := []string{"Hello", "World!", "Neva"}
-	actual := strings.Split(strings.TrimSpace(string(out)), "\n")
+	actual := strings.Split(strings.TrimSpace(out), "\n")
 	require.ElementsMatch(t, expected, actual)
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }

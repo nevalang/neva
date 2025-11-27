@@ -2,11 +2,11 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,26 +19,41 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "delayed_echo")
-
 	start := time.Now()
-	out, err := cmd.CombinedOutput()
+	out := e2e.Run(t, "run", "delayed_echo")
 	elapsed := time.Since(start)
-	require.NoError(t, err, string(out))
 
 	// Check execution time is between 1-5 seconds
 	require.GreaterOrEqual(t, elapsed.Seconds(), 1.0)
 	require.LessOrEqual(t, elapsed.Seconds(), 5.0)
 
 	// Split output into lines and verify contents
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	require.Equal(t, 7, len(lines), string(out)) // Hello + World + 5 numbers
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	require.Equal(t, 7, len(lines), out) // Hello + World + 5 numbers
 
 	// First line must be Hello
-	require.Equal(t, "Hello", lines[0], string(out))
+	require.Equal(t, "Hello", lines[0], out)
 
 	// Create set of expected remaining values
 	expected := map[string]bool{
+		"World": false,
+		"1":     false,
+		"2":     false,
+		"3":     false,
+		"4":     false,
+		"5":     false,
+		"6":     false,
+	}
+
+	// Check remaining lines contain all expected values
+	// Note: previous test had 6 items in expected map but asserted 7 lines.
+	// Output is Hello + World + 5 numbers (1,2,3,4,5).
+	// But `delayed_echo` probably outputs 1,2,3,4,5 and World.
+	// Previous map had: World, 1, 2, 3, 4, 5. Total 6 items.
+	// Hello is separate.
+	// Let's copy exact expected map from previous code.
+	
+	expected = map[string]bool{
 		"World": false,
 		"1":     false,
 		"2":     false,
@@ -59,6 +74,5 @@ func Test(t *testing.T) {
 		require.True(t, found, "Expected value not found: %s", val)
 	}
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 	// }
 }

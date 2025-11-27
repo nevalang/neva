@@ -2,10 +2,10 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,13 +17,9 @@ func Test(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Chdir(wd)
 
-	cmd := exec.Command("neva", "run", "time_after")
-
 	before := time.Now()
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out := e2e.Run(t, "run", "time_after")
 
-	require.Equal(t, "", string(out))
+	require.Equal(t, "", out)
 	require.Greater(t, time.Since(before).Seconds(), float64(1))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 }
