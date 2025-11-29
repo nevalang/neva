@@ -89,23 +89,23 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		}
 
 		// Map fields
-		inFields, err := b.mapFields(export.Component.Interface.IO.In)
+		inFields, err := b.mapFields(export.Component.IO.In)
 		if err != nil {
 			return err
 		}
-		outFields, err := b.mapFields(export.Component.Interface.IO.Out)
+		outFields, err := b.mapFields(export.Component.IO.Out)
 		if err != nil {
 			return err
 		}
 
 		// Look up start/stop chans
 		var inPortName string
-		for name := range export.Component.Interface.IO.In {
+		for name := range export.Component.IO.In {
 			inPortName = name
 			break
 		}
 		var outPortName string
-		for name := range export.Component.Interface.IO.Out {
+		for name := range export.Component.IO.Out {
 			outPortName = name
 			break
 		}
