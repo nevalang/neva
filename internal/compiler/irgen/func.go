@@ -2,14 +2,10 @@ package irgen
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	"github.com/nevalang/neva/internal/compiler/utils/generated"
-	"github.com/nevalang/neva/internal/runtime"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {
@@ -34,21 +30,9 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 		return nil, nil
 	}
 
-	// Call the generated Neva function
-	out, err := generated.ParseEntityRef(context.Background(), generated.ParseEntityRefInput{Ref: bindArg})
+	entityRef, err := compiler.ParseEntityRef(context.Background(), bindArg)
 	if err != nil {
 		return nil, err
-	}
-
-	// Unmarshal the result
-	msg, ok := out.Res.(runtime.StructMsg)
-	if !ok {
-		return nil, fmt.Errorf("expected struct msg, got %T", out.Res)
-	}
-	entityRef := core.EntityRef{
-		Pkg:  msg.Get("pkg").Str(),
-		Name: msg.Get("name").Str(),
-		Meta: core.Meta{Text: msg.Get("metaText").Str()},
 	}
 
 	entity, location, err := scope.Entity(entityRef)
