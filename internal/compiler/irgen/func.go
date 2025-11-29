@@ -8,8 +8,8 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	gen "github.com/nevalang/neva/internal/compiler/utils/generated"
-	gen_runtime "github.com/nevalang/neva/internal/compiler/utils/generated/runtime"
+	"github.com/nevalang/neva/internal/compiler/utils/generated"
+	"github.com/nevalang/neva/internal/runtime"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {
@@ -35,13 +35,13 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	}
 
 	// Call the generated Neva function
-	out, err := gen.ParseEntityRef(context.Background(), gen.ParseEntityRefInput{Ref: bindArg})
+	out, err := generated.ParseEntityRef(context.Background(), generated.ParseEntityRefInput{Ref: bindArg})
 	if err != nil {
 		return nil, err
 	}
 
 	// Unmarshal the result
-	msg, ok := out.Res.(gen_runtime.StructMsg)
+	msg, ok := out.Res.(runtime.StructMsg)
 	if !ok {
 		return nil, fmt.Errorf("expected struct msg, got %T", out.Res)
 	}

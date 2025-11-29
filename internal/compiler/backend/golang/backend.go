@@ -21,7 +21,7 @@ import (
 )
 
 type Backend struct {
-	runtimeImportPath string
+	externalRuntimePath string
 }
 
 var (
@@ -183,15 +183,21 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 	}
 
 	// Calculate runtime import path
+	goModRootPath, err := golang.FindModulePath(dst)
+	if err != nil {
+		return fmt.Errorf("find module path: %w", err)
+	}
+
+	// Handle runtime import path
 	var runtimeImportPath string
-	if b.runtimeImportPath != "" {
-		runtimeImportPath = b.runtimeImportPath
-	} else {
-		baseImportPath, err := golang.FindModulePath(dst)
+	if b.externalRuntimePath != "" {
+		runtimeImportPath, err = golang.FindModulePath(b.externalRuntimePath)
 		if err != nil {
-			return fmt.Errorf("find module path: %w", err)
+			return fmt.Errorf("resolve external runtime import path: %w", err)
 		}
-		runtimeImportPath = baseImportPath + "/runtime"
+	} else {
+		// Default to the runtime inside the module
+		runtimeImportPath = filepath.Join(goModRootPath, "runtime")
 	}
 
 	tmpl, err := template.New("exports.go").Funcs(funcmap).Parse(libraryGoTemplate)
@@ -218,7 +224,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 	// If we are NOT using an external runtime (default behavior), we must copy the runtime source code
 	// into the generated package. We also need to rewrite the imports inside those copied files
 	// so they refer to the local copy (e.g. "my/gen/pkg/runtime") instead of the original module.
-	if b.runtimeImportPath == "" {
+	if b.externalRuntimePath == "" {
 		replacements := map[string]string{
 			"github.com/nevalang/neva/internal/runtime": runtimeImportPath,
 		}
@@ -532,6 +538,6 @@ func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
 
 func NewBackend(runtimeImportPath string) Backend {
 	return Backend{
-		runtimeImportPath: runtimeImportPath,
+		externalRuntimePath: runtimeImportPath,
 	}
 }

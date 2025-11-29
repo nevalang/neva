@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/urfave/cli/v2"
@@ -152,7 +153,12 @@ func newBuildCmd(
 			var compilerToUse compiler.Compiler
 			var compilerMode compiler.Mode
 
-			golangBackend := golang.NewBackend(cliCtx.String("target-go-runtime-path"))
+			externalRuntimePath := cliCtx.String("target-go-runtime-path")
+			if externalRuntimePath != "" && !filepath.IsAbs(externalRuntimePath) {
+				externalRuntimePath = filepath.Join(workdir, externalRuntimePath)
+			}
+
+			golangBackend := golang.NewBackend(externalRuntimePath)
 
 			switch target {
 			case "go":
