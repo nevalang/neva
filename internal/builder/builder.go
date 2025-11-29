@@ -36,6 +36,12 @@ func (b Builder) Build(
 	}
 
 	// inject stdlib dep to entry module
+	if _, ok := entryMod.Manifest.Deps["std"]; ok {
+		return compiler.RawBuild{}, "", &compiler.Error{
+			Message: "entry module cannot depend on 'std' explicitly; it is injected automatically",
+		}
+	}
+
 	stdModRef := core.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,

@@ -103,7 +103,15 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 	}
 
 	mainPkg := strings.TrimPrefix(main, "./")
-	mainPkg = strings.TrimPrefix(mainPkg, moduleRoot+"/")
+
+	// Check if the main package is the module root itself.
+	// This happens when compiling a module where the main package is at the root level (e.g. `neva build .`).
+	// In Go, this is akin to having `go.mod` and `main.go` in the same directory.
+	if mainPkg == moduleRoot {
+		mainPkg = "."
+	} else {
+		mainPkg = strings.TrimPrefix(mainPkg, moduleRoot+"/")
+	}
 
 	return FrontendResult{
 		ParsedBuild: parsedBuild,

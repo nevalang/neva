@@ -16,6 +16,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/golang"
+	pkgos "github.com/nevalang/neva/pkg/os"
 )
 
 type Backend struct{}
@@ -73,7 +74,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 		return err
 	}
 
-	return compiler.SaveFilesToDir(dst, files)
+	return pkgos.SaveFilesToDir(dst, files)
 }
 
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
@@ -145,6 +146,11 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		"getPortChanNameByAddr": func(path string, port string) string {
 			return "ERROR_SHOULD_NOT_BE_CALLED"
 		},
+		// getMsgFromGo generates Go code that converts a raw Go value (passed from outside)
+		// into a runtime.Msg which is understandable by Neva runtime.
+		// For example, if we have a Go int variable "x", we want to generate "runtime.NewIntMsg(x)".
+		// If the type is not a primitive, we assume it's already a runtime.Msg (e.g. StructMsg, ListMsg)
+		// and perform a type assertion.
 		"getMsgFromGo": func(prefix, field, typeName string) string {
 			switch typeName {
 			case "int":
@@ -156,9 +162,14 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 			case "float64":
 				return fmt.Sprintf("runtime.NewFloatMsg(%s.%s)", prefix, field)
 			default:
-				return "nil"
+				return fmt.Sprintf("%s.%s.(runtime.Msg)", prefix, field)
 			}
 		},
+		// getGoFromMsg generates Go code that converts a runtime.Msg (received from Neva runtime)
+		// back into a raw Go value.
+		// For example, if we have a Neva IntMsg, we want to extract the underlying int64.
+		// If the type is not a primitive (e.g. struct, list), we return the runtime.Msg as is,
+		// allowing the caller to handle complex structures.
 		"getGoFromMsg": func(msgVar, typeName string) string {
 			switch typeName {
 			case "int":
@@ -170,7 +181,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 			case "float64":
 				return fmt.Sprintf("%s.Float()", msgVar)
 			default:
-				return "nil"
+				return msgVar
 			}
 		},
 	}
@@ -204,7 +215,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		return err
 	}
 
-	return compiler.SaveFilesToDir(dst, files)
+	return pkgos.SaveFilesToDir(dst, files)
 }
 
 func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, error) {
