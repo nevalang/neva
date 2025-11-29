@@ -20,7 +20,9 @@ import (
 	pkgos "github.com/nevalang/neva/pkg/os"
 )
 
-type Backend struct{}
+type Backend struct {
+	runtimeImportPath string
+}
 
 var (
 	ErrExecTmpl       = errors.New("execute template")
@@ -136,13 +138,6 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		})
 	}
 
-	// Calculate runtime import path
-	baseImportPath, err := golang.FindModulePath(dst)
-	if err != nil {
-		return fmt.Errorf("find module path: %w", err)
-	}
-	runtimeImportPath := baseImportPath + "/runtime"
-
 	funcmap := template.FuncMap{
 		"getPortChanNameByAddr": func(path string, port string) string {
 			return "ERROR_SHOULD_NOT_BE_CALLED"
@@ -187,6 +182,18 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		},
 	}
 
+	// Calculate runtime import path
+	var runtimeImportPath string
+	if b.runtimeImportPath != "" {
+		runtimeImportPath = b.runtimeImportPath
+	} else {
+		baseImportPath, err := golang.FindModulePath(dst)
+		if err != nil {
+			return fmt.Errorf("find module path: %w", err)
+		}
+		runtimeImportPath = baseImportPath + "/runtime"
+	}
+
 	tmpl, err := template.New("exports.go").Funcs(funcmap).Parse(libraryGoTemplate)
 	if err != nil {
 		return err
@@ -208,13 +215,17 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		"exports.go": buf.Bytes(),
 	}
 
-	// Replace internal imports in runtime files
-	replacements := map[string]string{
-		"github.com/nevalang/neva/internal/runtime": runtimeImportPath,
-	}
+	// If we are NOT using an external runtime (default behavior), we must copy the runtime source code
+	// into the generated package. We also need to rewrite the imports inside those copied files
+	// so they refer to the local copy (e.g. "my/gen/pkg/runtime") instead of the original module.
+	if b.runtimeImportPath == "" {
+		replacements := map[string]string{
+			"github.com/nevalang/neva/internal/runtime": runtimeImportPath,
+		}
 
-	if err := b.insertRuntimeFiles(files, replacements); err != nil {
-		return err
+		if err := b.insertRuntimeFiles(files, replacements); err != nil {
+			return err
+		}
 	}
 
 	return pkgos.SaveFilesToDir(dst, files)
@@ -519,6 +530,8 @@ func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
 	return handleSpecialChars(s)
 }
 
-func NewBackend() Backend {
-	return Backend{}
+func NewBackend(runtimeImportPath string) Backend {
+	return Backend{
+		runtimeImportPath: runtimeImportPath,
+	}
 }

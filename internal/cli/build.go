@@ -63,6 +63,10 @@ func newBuildCmd(
 				Usage: "IR target format (json, yaml, dot, mermaid, threejs)",
 				Value: "yaml",
 			},
+			&cli.StringFlag{
+				Name:  "target-go-runtime-path",
+				Usage: "Go runtime import path (only for go target)",
+			},
 		},
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
@@ -148,8 +152,7 @@ func newBuildCmd(
 			var compilerToUse compiler.Compiler
 			var compilerMode compiler.Mode
 
-			// golang backend does NOT take dependencies anymore
-			golangBackend := golang.NewBackend()
+			golangBackend := golang.NewBackend(cliCtx.String("target-go-runtime-path"))
 
 			switch target {
 			case "go":
