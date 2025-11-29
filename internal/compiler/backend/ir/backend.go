@@ -9,6 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/dot"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/mermaid"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/threejs"
@@ -29,7 +30,20 @@ const (
 	FormatThreeJS Format = "threejs"
 )
 
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
+	return b.emit(dst, "ir", prog)
+}
+
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	for _, export := range exports {
+		if err := b.emit(dst, "ir_"+export.Name, export.Program); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b Backend) emit(dst, name string, prog *ir.Program) error {
 	var (
 		fileName string
 		encode   func(io.Writer, *ir.Program) error
@@ -37,23 +51,23 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 
 	switch b.format {
 	case FormatJSON:
-		fileName = "ir.json"
+		fileName = name + ".json"
 		encode = func(w io.Writer, p *ir.Program) error {
 			return json.NewEncoder(w).Encode(p)
 		}
 	case FormatYAML:
-		fileName = "ir.yml"
+		fileName = name + ".yml"
 		encode = func(w io.Writer, p *ir.Program) error {
 			return yaml.NewEncoder(w).Encode(p)
 		}
 	case FormatDOT:
-		fileName = "ir.dot"
+		fileName = name + ".dot"
 		encode = dot.Encoder{}.Encode
 	case FormatMermaid:
-		fileName = "ir.md"
+		fileName = name + ".md"
 		encode = mermaid.Encoder{}.Encode
 	case FormatThreeJS:
-		fileName = "ir.threejs.html"
+		fileName = name + ".threejs.html"
 		encode = threejs.Encoder{}.Encode
 	default:
 		return fmt.Errorf("unknown format: %s", b.format)
@@ -73,5 +87,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 }
 
 func NewBackend(format Format) Backend {
-	return Backend{format}
+	return Backend{
+		format: format,
+	}
 }

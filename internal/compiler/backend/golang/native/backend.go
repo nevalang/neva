@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
@@ -14,14 +15,14 @@ type Backend struct {
 	golang golang.Backend
 }
 
-func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
-	tmpGoModuleDir := output + "/tmp"
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
+	tmpGoModuleDir := dst + "/tmp"
 
-	if err := b.golang.Emit(tmpGoModuleDir, prog, trace); err != nil {
-		return fmt.Errorf("emit: %w", err)
+	if err := b.golang.EmitExecutable(tmpGoModuleDir, prog, trace); err != nil {
+		return fmt.Errorf("emit executable: %w", err)
 	}
 
-	if err := b.buildExecutable(tmpGoModuleDir, output); err != nil {
+	if err := b.buildExecutable(tmpGoModuleDir, dst); err != nil {
 		return fmt.Errorf("build executable: %w", err)
 	}
 
@@ -30,6 +31,10 @@ func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
 	}
 
 	return nil
+}
+
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	return fmt.Errorf("library mode not implemented for native backend")
 }
 
 func (b Backend) buildExecutable(gomodule, output string) error {
