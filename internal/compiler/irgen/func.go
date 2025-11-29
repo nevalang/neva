@@ -8,8 +8,8 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	gen "github.com/nevalang/neva/internal/compiler/utils/gen"
-	gen_runtime "github.com/nevalang/neva/internal/compiler/utils/gen/runtime"
+	gen "github.com/nevalang/neva/internal/compiler/utils/generated"
+	gen_runtime "github.com/nevalang/neva/internal/compiler/utils/generated/runtime"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {

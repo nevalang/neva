@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -195,6 +196,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		CompilerVersion:   pkg.Version,
 		Exports:           exportList,
 		RuntimeImportPath: runtimeImportPath,
+		PackageName:       filepath.Base(dst),
 	}
 
 	var buf bytes.Buffer
