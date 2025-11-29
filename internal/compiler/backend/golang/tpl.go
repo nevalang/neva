@@ -23,6 +23,7 @@ type libraryTemplateData struct {
 	CompilerVersion   string
 	Exports           []exportTemplateData
 	RuntimeImportPath string
+	HasFmt            bool
 }
 
 type exportTemplateData struct {
@@ -139,6 +140,7 @@ import (
 	"{{.RuntimeImportPath}}/funcs"
 )
 
+// suppress unused import error, standard go approach for generated code
 var _ = fmt.Errorf
 
 {{- range .Exports}}
@@ -256,7 +258,6 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		case "{{.Port}}":
 			out.{{.Name}} = {{getGoFromMsg "msg" .Type}}
 		{{- end}}
-		}
 	}
 	{{- end}}
 

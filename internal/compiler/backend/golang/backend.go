@@ -1,13 +1,10 @@
 package golang
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -18,6 +15,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
+	"github.com/nevalang/neva/pkg/golang"
 )
 
 type Backend struct{}
@@ -137,7 +135,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 	}
 
 	// Calculate runtime import path
-	baseImportPath, err := b.findModulePath(dst)
+	baseImportPath, err := golang.FindModulePath(dst)
 	if err != nil {
 		return fmt.Errorf("find module path: %w", err)
 	}
@@ -209,55 +207,10 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 	return compiler.SaveFilesToDir(dst, files)
 }
 
-func (b Backend) findModulePath(dst string) (string, error) {
-	absDst, err := filepath.Abs(dst)
-	if err != nil {
-		return "", err
-	}
-
-	dir := absDst
-	for {
-		goModPath := filepath.Join(dir, "go.mod")
-		if _, err := os.Stat(goModPath); err == nil {
-			// found go.mod
-			f, err := os.Open(goModPath)
-			if err != nil {
-				return "", err
-			}
-			defer f.Close()
-
-			scanner := bufio.NewScanner(f)
-			for scanner.Scan() {
-				line := scanner.Text()
-				if strings.HasPrefix(line, "module ") {
-					modName := strings.TrimSpace(strings.TrimPrefix(line, "module "))
-					relPath, err := filepath.Rel(dir, absDst)
-					if err != nil {
-						return "", err
-					}
-					if relPath == "." {
-						return modName, nil
-					}
-					return modName + "/" + relPath, nil
-				}
-			}
-			return "", fmt.Errorf("module name not found in %s", goModPath)
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
-	}
-
-	return "", fmt.Errorf("go.mod not found in %s or parents", dst)
-}
-
 func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, error) {
 	fields := make([]fieldTemplateData, 0, len(ports))
 	for name, port := range ports {
-		goType := "interface{}"
+		goType := "any"
 		if port.TypeExpr.Inst != nil {
 			switch port.TypeExpr.Inst.Ref.Name {
 			case "int":

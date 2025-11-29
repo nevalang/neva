@@ -1,11 +1,8 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	cli "github.com/urfave/cli/v2"
 
@@ -33,8 +30,8 @@ func NewApp(
 			upgradeCmd,
 			newNewCmd(),
 			newGetCmd(workdir, bldr),
-			newRunCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
-			newBuildCmd(workdir, bldr, prsr, &desugarer, analyzer, irgen),
+			newRunCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
+			newBuildCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
 			newOSArchCmd(),
 			newDocCmd(),
 		},
@@ -95,19 +92,4 @@ func newGetCmd(workdir string, bldr builder.Builder) *cli.Command {
 			return nil
 		},
 	}
-}
-
-func mainPkgPathFromArgs(cCtx *cli.Context) (string, error) {
-	arg := cCtx.Args().First()
-
-	path := strings.TrimSuffix(arg, "main.neva")
-	path = strings.TrimSuffix(path, "/")
-
-	if filepath.Ext(path) != "" {
-		return "", errors.New(
-			"Use path to directory with executable package, relative to module root",
-		)
-	}
-
-	return path, nil
 }

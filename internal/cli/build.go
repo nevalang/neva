@@ -6,64 +6,62 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/wasm"
 	"github.com/nevalang/neva/internal/compiler/backend/ir"
-	ir_backend "github.com/nevalang/neva/internal/compiler/backend/ir"
-
-	cli "github.com/urfave/cli/v2"
+	"github.com/nevalang/neva/internal/compiler/desugarer"
+	"github.com/nevalang/neva/internal/compiler/irgen"
+	"github.com/nevalang/neva/internal/compiler/parser"
 )
 
 func newBuildCmd(
 	workdir string,
 	bldr builder.Builder,
-	parser compiler.Parser,
-	desugarer compiler.Desugarer,
-	analyzer compiler.Analyzer,
-	irgen compiler.Irgen,
+	parser parser.Parser,
+	desugarer desugarer.Desugarer,
+	analyzer analyzer.Analyzer,
+	irgen irgen.Generator,
 ) *cli.Command {
 	return &cli.Command{
 		Name:  "build",
-		Usage: "Generate target platform code from neva program",
-		Args:  true,
+		Usage: "Build neva program",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "output",
-				Usage: "Where to put output file(s)",
+				Usage: "Output directory",
 			},
 			&cli.BoolFlag{
 				Name:  "emit-trace",
-				Usage: "Emit trace.log file when running the program",
+				Usage: "Emit trace file",
 			},
 			&cli.StringFlag{
 				Name:  "target",
-				Usage: "Target platform for build (options: go, wasm, native, ir). For 'native' target, 'target-os' and 'target-arch' flags can be used, but if used, they must be used together. For 'ir' target, 'target-ir-format' can be used.",
-				Action: func(ctx *cli.Context, s string) error {
-					switch s {
-					case "go", "wasm", "native", "ir":
-						return nil
-					}
-					return fmt.Errorf("unknown target: '%s', supported targets: go, wasm, native, ir", s)
-				},
+				Usage: "Target platform (go, wasm, native, ir)",
+				Value: "native",
 			},
 			&cli.StringFlag{
 				Name:  "target-os",
-				Usage: "Target operating system for native build. See 'neva osarch' for supported combinations. Only supported for native target. Not needed if building for the current platform. Must be combined properly with 'target-arch'.",
+				Usage: "Target OS (only for native target)",
 			},
 			&cli.StringFlag{
 				Name:  "target-arch",
-				Usage: "Target architecture for native build. See 'neva osarch' for supported combinations. Only supported for native target. Not needed if building for the current platform. Must be combined properly with 'target-os'.",
-			},
-			&cli.StringFlag{
-				Name:  "target-ir-format",
-				Usage: "Format for ir file - yaml, json or dot",
+				Usage: "Target Architecture (only for native target)",
 			},
 			&cli.StringFlag{
 				Name:  "target-go-mode",
-				Usage: "Go backend mode when target=go (executable|pkg)",
+				Usage: "Go target mode (executable, pkg)",
+				Value: "executable",
+			},
+			&cli.StringFlag{
+				Name:  "target-ir-format",
+				Usage: "IR target format (json, yaml, dot, mermaid, threejs)",
+				Value: "yaml",
 			},
 		},
 		ArgsUsage: "Provide path to main package",
@@ -100,15 +98,15 @@ func newBuildCmd(
 				return errors.New("target-ir-format cannot be used when target is not ir")
 			}
 
-			var irTargetFormat ir_backend.Format
+			var irTargetFormat ir.Format
 			if isIRTargetFormatSet {
-				irTargetFormat = ir_backend.Format(cliCtx.String("target-ir-format"))
+				irTargetFormat = ir.Format(cliCtx.String("target-ir-format"))
 			} else {
-				irTargetFormat = ir_backend.FormatYAML
+				irTargetFormat = ir.FormatYAML
 			}
 
 			switch irTargetFormat {
-			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid, ir_backend.FormatThreeJS:
+			case ir.FormatYAML, ir.FormatJSON, ir.FormatDOT, ir.FormatMermaid, ir.FormatThreeJS:
 			default:
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
@@ -148,56 +146,59 @@ func newBuildCmd(
 			}()
 
 			var compilerToUse compiler.Compiler
+			var compilerMode compiler.Mode
+
+			// golang backend does NOT take dependencies anymore
+			golangBackend := golang.NewBackend()
+
 			switch target {
 			case "go":
-				switch goMode := cliCtx.String("target-go-mode"); goMode {
-				case "executable", "", "pkg":
-					break
+				goMode := cliCtx.String("target-go-mode")
+				switch goMode {
+				case "executable", "":
+					compilerMode = compiler.ModeExecutable
+				case "pkg":
+					compilerMode = compiler.ModeLibrary
 				default:
 					return fmt.Errorf("unknown target-go-mode: %s", goMode)
 				}
 				compilerToUse = compiler.New(
 					bldr,
 					parser,
-					desugarer,
+					&desugarer,
 					analyzer,
 					irgen,
-					golang.NewBackend(
-						golang.Mode(
-							cliCtx.String("target-go-mode"),
-						),
-					),
+					golangBackend,
 				)
 			case "wasm":
+				compilerMode = compiler.ModeExecutable
 				compilerToUse = compiler.New(
 					bldr,
 					parser,
-					desugarer,
+					&desugarer,
 					analyzer,
 					irgen,
-					wasm.NewBackend(
-						golang.NewBackend(golang.ModeExecutable),
-					),
+					wasm.NewBackend(golangBackend),
 				)
 			case "ir":
+				compilerMode = compiler.ModeExecutable
 				compilerToUse = compiler.New(
 					bldr,
 					parser,
-					desugarer,
+					&desugarer,
 					analyzer,
 					irgen,
 					ir.NewBackend(irTargetFormat),
 				)
 			case "native":
+				compilerMode = compiler.ModeExecutable
 				compilerToUse = compiler.New(
 					bldr,
 					parser,
-					desugarer,
+					&desugarer,
 					analyzer,
 					irgen,
-					native.NewBackend(
-						golang.NewBackend(golang.ModeExecutable),
-					),
+					native.NewBackend(golangBackend),
 				)
 			}
 
@@ -205,6 +206,7 @@ func newBuildCmd(
 				MainPkgPath:   mainPkgPath,
 				OutputPath:    outputDirPath,
 				EmitTraceFile: cliCtx.IsSet("emit-trace"),
+				Mode:          compilerMode,
 			}); err != nil {
 				return fmt.Errorf("failed to compile: %w", err)
 			}
@@ -212,4 +214,11 @@ func newBuildCmd(
 			return nil
 		},
 	}
+}
+
+func mainPkgPathFromArgs(cliCtx *cli.Context) (string, error) {
+	if cliCtx.NArg() == 0 {
+		return "", errors.New("path to main package is required")
+	}
+	return cliCtx.Args().First(), nil
 }
