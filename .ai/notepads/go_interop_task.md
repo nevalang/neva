@@ -157,3 +157,11 @@ Each backend (`golang`, `ir`, `native`, `wasm`) implements this interface. `nati
 * **Client Type:** Generate a `Client` struct to allow shared runtime instance and configuration.
 * **Streaming:** Explore support for streaming APIs (channel-based interaction) if Go semantics allow.
 * **Type Resolution for Named Structs:** Improve backend `mapFields` to resolve named types (like `EntityRef`) to their underlying struct definitions, avoiding generic `runtime.Msg` fallback.
+
+---
+
+Am I right that grpc protobuf compiler requires you to go get some third-party dep from google or something in order to import generated go sdk that u generate from proto schema? if so, I think we should also support it and also that should be the default behaviour. Ability to connect external runtime (u just did with flag) and generate the copy of runtime is ok and should remain, but under tha flag. add --target-go-copy-runtime=true and check that only one of the flags can be set at the same time. its either we connect external runtime and specify path OR we ask compiler to copy-paste runtime copy inside the package. If none of these 2 flags specified then the runtime is third-party deps on github.com/nevalang/neva that should be fetched by the user. also consider calling `go get github.com/nevalang/neva@<VERSION>` yourself if that's easy to do properly. I mean so user does not have to. If it's hard then print the command for the user. Make sure we respect the `pkg.Version`, it's the latest release for us
+
+Also in case you going to move runtime from internal to pkg, which is needed to expose it, remember that code generated normally (non library mode) must not depend on extra modules, nevalang binaries must not have any dependencies and their gomod should be clear because of that. its critical to avoid bad scenarious where you develop the compiler and your binary depends on the pkg.Version that wasn't released yet. it should be in general possilble to compile the program without internet (executable)
+
+Maybe its possible to move embed.go to the root of the repo and import from internal?
