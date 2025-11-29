@@ -1,9 +1,11 @@
 package irgen
 
 import (
+	"context"
+
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {
@@ -28,7 +30,12 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 		return nil, nil
 	}
 
-	entity, location, err := scope.Entity(compiler.ParseEntityRef(bindArg))
+	entityRef, err := compiler.ParseEntityRef(context.Background(), bindArg)
+	if err != nil {
+		return nil, err
+	}
+
+	entity, location, err := scope.Entity(entityRef)
 	if err != nil {
 		return nil, err
 	}

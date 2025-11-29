@@ -1,49 +1,38 @@
 package compiler
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
+	"context"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/ast/core"
+	neva "github.com/nevalang/neva/internal/compiler/utils/generated"
+	"github.com/nevalang/neva/internal/runtime"
 )
 
+//go:generate neva build --target=go --target-go-mode=pkg --target-go-runtime-path=../runtime --output=utils/generated utils
+
 // Pointer allows to avoid creating of temporary variables just to take pointers.
-// TODO move to pkg/utils (or something like that)
 func Pointer[T any](v T) *T {
 	return &v
 }
 
-// ParseEntityRef assumes string-ref has form of <pkg_name>.<entity_name≥ or just <entity_name>.
-func ParseEntityRef(ref string) core.EntityRef {
-	entityRef := core.EntityRef{
-		Meta: core.Meta{Text: ref},
+// ParseEntityRef calls Neva and marshals result into core.EntityRef.
+func ParseEntityRef(ctx context.Context, ref string) (core.EntityRef, error) {
+	// Call the generated Neva function
+	out, err := neva.ParseEntityRef(ctx, neva.ParseEntityRefInput{Ref: ref})
+	if err != nil {
+		return core.EntityRef{}, err
 	}
 
-	parts := strings.Split(ref, ".")
-	if len(parts) == 2 {
-		entityRef.Pkg = parts[0]
-		entityRef.Name = parts[1]
-	} else {
-		entityRef.Name = ref
+	// Unmarshal the result
+	msg, ok := out.Res.(runtime.StructMsg)
+	if !ok {
+		return core.EntityRef{}, fmt.Errorf("expected struct msg, got %T", out.Res)
 	}
 
-	return entityRef
-}
-
-func SaveFilesToDir(dst string, files map[string][]byte) error {
-	for path, content := range files {
-		filePath := filepath.Join(dst, path)
-		dirPath := filepath.Dir(filePath)
-
-		if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(filePath, content, os.ModePerm); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return core.EntityRef{
+		Pkg:  msg.Get("pkg").Str(),
+		Name: msg.Get("name").Str(),
+		Meta: core.Meta{Text: msg.Get("metaText").Str()},
+	}, nil
 }

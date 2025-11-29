@@ -45,8 +45,16 @@ type Desugarer interface {
 
 type Irgen interface {
 	Generate(build src.Build, mainPkgName string) (*ir.Program, error)
+	GenerateForComponent(build src.Build, pkgName, componentName string) (*ir.Program, error)
 }
 
 type Backend interface {
-	Emit(dst string, prog *ir.Program, isTraceEnabled bool) error
+	EmitExecutable(dst string, prog *ir.Program, trace bool) error
+	EmitLibrary(dst string, exports []LibraryExport, trace bool) error
+}
+
+type LibraryExport struct {
+	Name      string
+	Component src.Component
+	Program   *ir.Program
 }

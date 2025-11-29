@@ -1,10 +1,12 @@
 package wasm
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
@@ -13,9 +15,9 @@ type Backend struct {
 	golang golang.Backend
 }
 
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
 	tmpGoProj := dst + "/tmp"
-	if err := b.golang.Emit(tmpGoProj, prog, trace); err != nil {
+	if err := b.golang.EmitExecutable(tmpGoProj, prog, trace); err != nil {
 		return err
 	}
 	if err := buildWASM(tmpGoProj, dst); err != nil {
@@ -25,6 +27,10 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		return err
 	}
 	return nil
+}
+
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	return fmt.Errorf("library mode not implemented for wasm backend")
 }
 
 func buildWASM(src, dst string) error {

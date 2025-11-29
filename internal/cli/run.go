@@ -16,13 +16,14 @@ import (
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	ir_backend "github.com/nevalang/neva/internal/compiler/backend/ir"
+	"github.com/nevalang/neva/internal/compiler/desugarer"
 )
 
 func newRunCmd(
 	workdir string,
 	bldr builder.Builder,
 	parser compiler.Parser,
-	desugarer compiler.Desugarer,
+	desugarer desugarer.Desugarer,
 	analyzer compiler.Analyzer,
 	irgen compiler.Irgen,
 ) *cli.Command {
@@ -65,7 +66,7 @@ func newRunCmd(
 			}
 
 			switch emitIRFormat {
-			case ir_backend.FormatYAML, ir_backend.FormatJSON:
+			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid, ir_backend.FormatThreeJS:
 			default:
 				return fmt.Errorf("unknown emit-ir-format: %s", emitIRFormat)
 			}
@@ -90,29 +91,36 @@ func newRunCmd(
 				MainPkgPath:   mainPkg,
 				OutputPath:    workdir,
 				EmitTraceFile: cliCtx.IsSet("emit-trace"),
+				Mode:          compiler.ModeExecutable,
 			}
 
-			compilerToNative := compiler.New(
-				bldr,
-				parser,
-				desugarer,
-				analyzer,
-				irgen,
-				native.NewBackend(
-					golang.NewBackend(golang.ModeExecutable),
-				),
-			)
-
 			runOnce := func(ctx context.Context) error {
-				out, err := compilerToNative.Compile(ctx, input)
-				if err != nil {
-					return err
+				if emitIR {
+					irCompiler := compiler.New(
+						bldr,
+						parser,
+						&desugarer,
+						analyzer,
+						irgen,
+						ir_backend.NewBackend(emitIRFormat),
+					)
+					if _, err := irCompiler.Compile(ctx, input); err != nil {
+						return fmt.Errorf("emit IR: %w", err)
+					}
 				}
 
-				irBackend := ir_backend.NewBackend(emitIRFormat)
-				// TODO refactor - trace is only used by golang and golang/native backends
-				// it should not be part of the compiler.Backend interface.
-				if err := irBackend.Emit(workdir, out.MiddleEnd.IR, false); err != nil {
+				compilerToNative := compiler.New(
+					bldr,
+					parser,
+					&desugarer,
+					analyzer,
+					irgen,
+					native.NewBackend(
+						golang.NewBackend(""),
+					),
+				)
+
+				if _, err := compilerToNative.Compile(ctx, input); err != nil {
 					return err
 				}
 
