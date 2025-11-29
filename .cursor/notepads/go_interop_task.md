@@ -149,6 +149,7 @@ Each backend (`golang`, `ir`, `native`, `wasm`) implements this interface. `nati
     - `list<T>` -> `[]runtime.Msg`
     - `dict<T>` -> `map[string]runtime.Msg`
     - Named Complex Types (e.g. `EntityRef` struct) -> `runtime.Msg` interface (fallback)
+8. **Dynamic Package Naming:** The generated Go package name is now derived from the output directory name instead of being hardcoded to `gen`.
 
 ## Stage 2 (Future)
 
