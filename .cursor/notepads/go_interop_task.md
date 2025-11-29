@@ -139,7 +139,7 @@ Each backend (`golang`, `ir`, `native`, `wasm`) implements this interface. `nati
 1. **Backend Interface:** Updated to `EmitExecutable` and `EmitLibrary`.
 2. **Middleend:** Refactored to handle `ProcessExecutable` and `ProcessLibrary`.
 3. **Golang Backend:** Implemented `EmitLibrary` with `exports.go` generation and runtime copying with import rewriting.
-4. **CLI:** Updated `build` command to use new `compiler.Compile` flow with `Mode` flag.
+4. **CLI:** Updated `build` and `run` commands to use new `compiler.Compile` flow with `Mode` flag and consistent IR format validation.
 5. **E2E Test:** Verifies `go mod init` -> `neva build` -> `go run` flow without external dependencies.
 
 ## Stage 2 (Future)
