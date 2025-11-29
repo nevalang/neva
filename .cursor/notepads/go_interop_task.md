@@ -141,9 +141,18 @@ Each backend (`golang`, `ir`, `native`, `wasm`) implements this interface. `nati
 3. **Golang Backend:** Implemented `EmitLibrary` with `exports.go` generation and runtime copying with import rewriting.
 4. **CLI:** Updated `build` and `run` commands to use new `compiler.Compile` flow with `Mode` flag and consistent IR format validation.
 5. **E2E Test:** Verifies `go mod init` -> `neva build` -> `go run` flow without external dependencies.
+6. **Self-Contained Modules:** Compiler now supports building modules where the main package is at the root (`.`), mirroring Go's `go.mod` + `main.go` behavior.
+7. **Complex Type Support:** Backend `getGoFromMsg` and `getMsgFromGo` now support:
+    - Primitives (`int`, `string`, `bool`, `float`) -> Native Go types
+    - Struct Literals -> `runtime.StructMsg`
+    - Union Literals -> `runtime.UnionMsg`
+    - `list<T>` -> `[]runtime.Msg`
+    - `dict<T>` -> `map[string]runtime.Msg`
+    - Named Complex Types (e.g. `EntityRef` struct) -> `runtime.Msg` interface (fallback)
 
 ## Stage 2 (Future)
 
 * **Multi-port Exports:** Implement bundling in Desugarer (synthesize wrapper component with single struct in/out ports).
 * **Client Type:** Generate a `Client` struct to allow shared runtime instance and configuration.
 * **Streaming:** Explore support for streaming APIs (channel-based interaction) if Go semantics allow.
+* **Type Resolution for Named Structs:** Improve backend `mapFields` to resolve named types (like `EntityRef`) to their underlying struct definitions, avoiding generic `runtime.Msg` fallback.

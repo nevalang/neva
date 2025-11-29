@@ -221,7 +221,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, error) {
 	fields := make([]fieldTemplateData, 0, len(ports))
 	for name, port := range ports {
-		goType := "any"
+		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
 		if port.TypeExpr.Inst != nil {
 			switch port.TypeExpr.Inst.Ref.Name {
 			case "int":
@@ -232,6 +232,17 @@ func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, erro
 				goType = "bool"
 			case "float":
 				goType = "float64"
+			case "list":
+				goType = "[]runtime.Msg"
+			case "dict":
+				goType = "map[string]runtime.Msg"
+			}
+		} else if port.TypeExpr.Lit != nil {
+			switch {
+			case port.TypeExpr.Lit.Struct != nil:
+				goType = "runtime.StructMsg"
+			case port.TypeExpr.Lit.Union != nil:
+				goType = "runtime.UnionMsg"
 			}
 		}
 
