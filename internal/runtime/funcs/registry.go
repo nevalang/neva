@@ -8,8 +8,7 @@ import (
 
 func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
-		"new":     newV1{},
-		"new_v2":  newV2{},
+		"new":     newV2{},
 		"del":     del{},
 		"lock":    lock{},
 		"fan_in":  fanIn{},
