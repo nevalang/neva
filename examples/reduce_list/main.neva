@@ -11,8 +11,10 @@ def Main(start any) (stop any) {
     println fmt.Println
     panic runtime.Panic
     ---
-    :start -> $lst -> l2s -> reduce:data
-    0 -> reduce:init
+    :start -> [
+        $lst -> l2s -> reduce:data,
+        0 -> reduce:init
+    ]
     reduce -> println:data
     println:res -> :stop
     println:err -> panic

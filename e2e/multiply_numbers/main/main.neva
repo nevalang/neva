@@ -6,14 +6,16 @@ import {
 const l list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
-	fmt.Println<int>
-	Reduce<int, int>{Mul}
-	ListToStream<int>
-	panic runtime.Panic
-	---
-	:start -> $l -> listToStream -> reduce:data
-	1 -> reduce:init
-	reduce -> println:data
-	println:res -> :stop
-	println:err -> panic
+        fmt.Println<int>
+        Reduce<int, int>{Mul}
+        ListToStream<int>
+        panic runtime.Panic
+        ---
+        :start -> [
+            $l -> listToStream -> reduce:data,
+            1 -> reduce:init
+        ]
+        reduce -> println:data
+        println:res -> :stop
+        println:err -> panic
 }
