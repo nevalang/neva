@@ -11,8 +11,10 @@ const d dict<string> = {
 def Main(start any) (stop any) {
     Get, fmt.Println, runtime.Panic
     ---
-    :start -> 'name' -> get:key
-    $d -> get:dict
+    :start -> [
+        'name' -> get:key,
+        $d -> get:dict
+    ]
     [get:res, get:err] -> println:data
     println:res -> :stop
     println:err -> panic

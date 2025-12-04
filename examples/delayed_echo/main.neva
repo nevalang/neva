@@ -16,28 +16,30 @@ def Main(start any) (stop any) {
 	wg sync.WaitGroup
 	panic runtime.Panic
 	---
-	:start -> [
-		'Hello' -> println,
-		1 -> w1,
+        :start -> [
+                'Hello' -> println,
+                1 -> w1,
 		2 -> w2,
 		3 -> w3,
-		4 -> w4,
-		5 -> w5,
-		'World' -> w6
-	]
-	6 -> wg:count
-	[w1:sig, w2:sig, w3:sig, w4:sig, w5:sig, w6:sig, println:res] -> wg:sig
-	wg -> :stop
+                4 -> w4,
+                5 -> w5,
+                'World' -> w6,
+                6 -> wg:count
+        ]
+        [w1:sig, w2:sig, w3:sig, w4:sig, w5:sig, w6:sig, println:res] -> wg:sig
+        wg -> :stop
 	[w1:err, w2:err, w3:err, w4:err, w5:err, w6:err, println:err] -> panic
 }
 
 def Worker(data any) (sig any, err error) {
-	delay time.Delay
-	println fmt.Println?
-	---
-	:data -> delay:data
-	$time.second -> delay:dur
-	delay -> println -> :sig
+        delay time.Delay
+        println fmt.Println?
+        ---
+        :data -> [
+                delay:data,
+                $time.second -> delay:dur
+        ]
+        delay -> println -> :sig
 }
 
 // TODO add unit test
