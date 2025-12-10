@@ -2,6 +2,7 @@ package builder
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -192,9 +193,10 @@ func New(parser ManifestParser) (Builder, error) {
 		return Builder{}, err
 	}
 
-	stdlibPath, err := rewriteStdlibOntoDisk()
+	// Use EnsureStdlib to handle stdlib extraction with checksum validation
+	stdlibPath, err := std.EnsureStdlib()
 	if err != nil {
-		return Builder{}, err
+		return Builder{}, fmt.Errorf("ensure stdlib: %w", err)
 	}
 
 	return Builder{
