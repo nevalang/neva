@@ -3,7 +3,6 @@ package builder
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -122,64 +121,6 @@ func getThirdPartyPath() (string, error) {
 	path := filepath.Join(home, "neva", "deps")
 
 	err = os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-
-	return path, nil
-}
-
-// rewriteStdlibOntoDisk erases stdlib on the disk if it's there and writes it again.
-func rewriteStdlibOntoDisk() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	path := filepath.Join(home, "neva", "std")
-
-	// TODO replace this dirty hack with good solution of https://github.com/nevalang/neva/issues/563
-	err = os.RemoveAll(path)
-	if err != nil {
-		return "", err
-	}
-
-	// _, err = os.Stat(path)
-	// if err == nil {
-	// 	return path, nil
-	// }
-
-	// if !os.IsNotExist(err) {
-	// 	return "", err
-	// }
-
-	// Inject missing stdlib files into user's home directory
-	stdFS := std.FS
-	err = fs.WalkDir(stdFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		data, err := fs.ReadFile(stdFS, path)
-		if err != nil {
-			return err
-		}
-		targetPath := filepath.Join(home, "neva", "std", path)
-		dir := filepath.Dir(targetPath)
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err = os.MkdirAll(dir, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		}
-		err = os.WriteFile(targetPath, data, 0644)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
 	if err != nil {
 		return "", err
 	}
