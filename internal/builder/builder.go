@@ -10,7 +10,6 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/pkg"
-	"github.com/nevalang/neva/std"
 )
 
 type Builder struct {
@@ -135,7 +134,7 @@ func New(parser ManifestParser) (Builder, error) {
 	}
 
 	// Use EnsureStdlib to handle stdlib extraction with checksum validation
-	stdlibPath, err := std.EnsureStdlib()
+	stdlibPath, err := ensureStdlib()
 	if err != nil {
 		return Builder{}, fmt.Errorf("ensure stdlib: %w", err)
 	}

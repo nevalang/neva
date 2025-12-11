@@ -1,7 +1,6 @@
-package std
+package builder
 
 import (
-	"embed"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -9,13 +8,11 @@ import (
 	"path/filepath"
 
 	nevaos "github.com/nevalang/neva/pkg/os"
+	std "github.com/nevalang/neva/std"
 )
 
-//go:embed *
-var FS embed.FS
-
-// EnsureStdlib ensures the standard library is properly extracted and up-to-date
-func EnsureStdlib() (string, error) {
+// ensureStdlib ensures the standard library is properly extracted and up-to-date
+func ensureStdlib() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("get home directory: %w", err)
@@ -24,7 +21,7 @@ func EnsureStdlib() (string, error) {
 	path := filepath.Join(home, "neva", "std")
 
 	// Compute checksum of the embedded stdlib
-	embeddedChecksum, err := nevaos.ComputeChecksumForFS(FS)
+	embeddedChecksum, err := nevaos.ComputeChecksumForFS(std.FS)
 	if err != nil {
 		return "", fmt.Errorf("compute embedded checksum: %w", err)
 	}
@@ -52,7 +49,7 @@ func EnsureStdlib() (string, error) {
 	}
 
 	// Write all files from the embedded FS
-	err = fs.WalkDir(FS, ".", func(filePath string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(std.FS, ".", func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walk error at %s: %w", filePath, err)
 		}
@@ -63,7 +60,7 @@ func EnsureStdlib() (string, error) {
 			return os.MkdirAll(targetPath, 0755)
 		}
 
-		data, err := fs.ReadFile(FS, filePath)
+		data, err := fs.ReadFile(std.FS, filePath)
 		if err != nil {
 			return fmt.Errorf("read embedded file %s: %w", filePath, err)
 		}
