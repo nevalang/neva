@@ -1,12 +1,9 @@
 # === Development ===
 
-# build neva cli for host OS and put to the PATH as well as replaces stdlib
+# build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
 install:
-	@go build -ldflags="-s -w" ./cmd/neva && \
-	rm -rf $HOME/neva/std && \
-	rm -rf /usr/local/bin/neva && \
-	mv neva /usr/local/bin/neva
+	@go install ./cmd/neva
 
 # generate go parser from antlr grammar
 .PHONY: antlr

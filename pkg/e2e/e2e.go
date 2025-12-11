@@ -8,6 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"path/filepath"
+	"runtime"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,7 +55,7 @@ func RunWithStdinCombined(t *testing.T, stdin string, args ...string) string {
 func RunExpectingError(t *testing.T, args ...string) (string, string) {
 	t.Helper()
 
-	cmd := exec.Command("neva", args...)
+	cmd := getNevaCmd(t, args...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -69,7 +72,7 @@ func RunExpectingError(t *testing.T, args ...string) (string, string) {
 func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) string {
 	t.Helper()
 
-	cmd := exec.Command("neva", args...)
+	cmd := getNevaCmd(t, args...)
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
 	}
@@ -91,4 +94,15 @@ func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) st
 	require.Equal(t, 0, cmd.ProcessState.ExitCode())
 
 	return stdout.String()
+}
+
+func getNevaCmd(t *testing.T, args ...string) *exec.Cmd {
+	_, filename, _, ok := runtime.Caller(0)
+	require.True(t, ok)
+
+	root := filepath.Join(filepath.Dir(filename), "..", "..")
+	main := filepath.Join(root, "cmd", "neva", "main.go")
+	cmdArgs := append([]string{"run", main}, args...)
+
+	return exec.Command("go", cmdArgs...)
 }
