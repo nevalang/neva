@@ -14,7 +14,7 @@ type Encoder struct{}
 
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Parse comment for metadata (module, compiler version)
-	// Format: // module=@@ main=hello_world compiler=0.33.0
+	// Format: // module=@@ main=hello_world compiler=0.34.0
 	var modName, compilerVer string
 	if strings.HasPrefix(prog.Comment, "//") {
 		parts := strings.Fields(prog.Comment)
