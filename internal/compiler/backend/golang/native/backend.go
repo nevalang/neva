@@ -68,7 +68,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 		"-ldflags", "-s -w", // strip debug information
 		"-o",
 		filepath.Join(output, fileName),
-		gomodule,
+		".",
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

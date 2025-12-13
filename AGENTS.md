@@ -6,7 +6,7 @@
 ## 1. 🤖 Agent Operating Protocol
 
 1.  **Context7 MCP**: ALWAYS use the `context7` MCP server to avoid hallucinations.
-2.  **Linter**: Always run `make test` (includes `golangci-lint`). **FIX ALL WARNINGS**.
+2.  **Linter/Test command**: Run `golangci-lint run ./...` and `go test ./...`. **FIX ALL WARNINGS**.
 3.  **Uncertainty Check**: If uncertainty > 10% (0.1), **ASK** the user.
 4.  **Self-Correction**: IF you change the build process, architecture, or strict rules, **YOU MUST UPDATE THIS FILE** (`AGENTS.md`) to reflect the new reality.
 5.  **Cross-Reference**:
@@ -89,5 +89,5 @@ The runtime (`internal/runtime`) is a library embedded into every compiled progr
 **Workflow**:
 
 1.  `make build` (Verify compilation).
-2.  `make test` (Verify logic & linting).
+2.  `golangci-lint run ./...` then `go test ./...` (Verify lint + tests).
 3.  `make antlr` (Regenerate parser if `.g4` changed).
