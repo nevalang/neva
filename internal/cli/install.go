@@ -34,6 +34,7 @@ func newInstallCmd(
 				return err
 			}
 
+			// Resolve absolute path to package
 			absPkg := mainPkg
 			if !filepath.IsAbs(absPkg) {
 				absPkg = filepath.Join(workdir, absPkg)
@@ -47,20 +48,24 @@ func newInstallCmd(
 				return fmt.Errorf("stat package: %w", err)
 			}
 
+			// If path points to a file, use its directory as base
 			if !pkgInfo.IsDir() {
 				pkgBase = filepath.Dir(absPkg)
 			}
 
+			// Resolve actual package path (handles module root vs src subdirectory)
 			compilePkg, err := resolveMainPkgPath(absPkg)
 			if err != nil {
 				return err
 			}
 
+			// Binary name is derived from package directory name
 			binName := filepath.Base(pkgBase)
 			if binName == string(filepath.Separator) || binName == "." || binName == "" {
 				return fmt.Errorf("cannot determine binary name for %s", mainPkg)
 			}
 
+			// Ensure GOOS/GOARCH match runtime to build for current platform
 			prevGOOS := os.Getenv("GOOS")
 			prevGOARCH := os.Getenv("GOARCH")
 
@@ -79,6 +84,7 @@ func newInstallCmd(
 				}
 			}()
 
+			// Compile to temporary directory first
 			tempDir, err := os.MkdirTemp("", "neva-install-*")
 			if err != nil {
 				return fmt.Errorf("create temp dir: %w", err)
@@ -103,6 +109,7 @@ func newInstallCmd(
 				return err
 			}
 
+			// Compiler outputs binary as "output" (or "output.exe" on Windows)
 			outputName := "output"
 			if runtime.GOOS == "windows" {
 				outputName += ".exe"
@@ -114,6 +121,7 @@ func newInstallCmd(
 				return fmt.Errorf("expected built binary at %s: %w", builtBinary, err)
 			}
 
+			// Install to GOBIN, GOPATH/bin, or ~/go/bin
 			binDir, err := resolveBinDir()
 			if err != nil {
 				return err
@@ -134,6 +142,8 @@ func newInstallCmd(
 	}
 }
 
+// resolveBinDir determines the installation directory following Go conventions:
+// GOBIN > GOPATH/bin > ~/go/bin
 func resolveBinDir() (string, error) {
 	if gobin := os.Getenv("GOBIN"); gobin != "" {
 		return gobin, nil
@@ -151,6 +161,9 @@ func resolveBinDir() (string, error) {
 	return filepath.Join(home, "go", "bin"), nil
 }
 
+// resolveMainPkgPath resolves the actual package path, handling both module root
+// and src subdirectory cases. If path is a file, returns it as-is. If it's a directory
+// with .neva files, uses it. Otherwise checks for src subdirectory.
 func resolveMainPkgPath(absPkg string) (string, error) {
 	info, err := os.Stat(absPkg)
 	if err != nil {
@@ -169,6 +182,7 @@ func resolveMainPkgPath(absPkg string) (string, error) {
 		return absPkg, nil
 	}
 
+	// Check if src subdirectory contains .neva files
 	srcDir := filepath.Join(absPkg, "src")
 	srcInfo, err := os.Stat(srcDir)
 	if err == nil && srcInfo.IsDir() {
