@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
     ---
     :start -> 'Hi, Neva!' -> sub1:data
     sub1:stop-> :stop
-    '1' -> sub2
+    :start -> '1' -> sub2
 }
 
 // Here we are panicking inside the sub-component instead of propagating the error.

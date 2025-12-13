@@ -4,16 +4,16 @@ def Main(start any) (stop any) {
 	p1 fmt.Println
 	p2 fmt.Println
 	p3 fmt.Println
-	wg sync.WaitGroup
-	panic runtime.Panic
-	---
-	:start -> [
-		'Hello' -> p1,
-		'Neva' -> p2,
-		'World!' -> p3
-	]
-	[p1:res, p2:res, p3:res] -> wg:sig
-	3 -> wg:count
-	wg -> :stop
-	[p1:err, p2:err, p3:err] -> panic
+    wg sync.WaitGroup
+    panic runtime.Panic
+    ---
+    :start -> [
+            'Hello' -> p1,
+            'Neva' -> p2,
+            'World!' -> p3,
+            3 -> wg:count
+    ]
+    [p1:res, p2:res, p3:res] -> wg:sig
+    wg -> :stop
+    [p1:err, p2:err, p3:err] -> panic
 }
