@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
-	"github.com/nevalang/neva/internal/compiler/backend/golang/native"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 )
 
@@ -84,23 +84,24 @@ func newInstallCmd(
 				}
 			}()
 
-			// Compile to temporary directory first
+			// Generate Go source to temporary directory
 			tempDir, err := os.MkdirTemp("", "neva-install-*")
 			if err != nil {
 				return fmt.Errorf("create temp dir: %w", err)
 			}
 			defer os.RemoveAll(tempDir)
 
-			compilerToNative := compiler.New(
+			// Use golang backend to generate Go source (not native, which builds)
+			compilerToGo := compiler.New(
 				bldr,
 				parser,
 				&desugarer,
 				analyzer,
 				irgen,
-				native.NewBackend(golang.NewBackend("")),
+				golang.NewBackend(""),
 			)
 
-			if _, err := compilerToNative.Compile(cliCtx.Context, compiler.CompilerInput{
+			if _, err := compilerToGo.Compile(cliCtx.Context, compiler.CompilerInput{
 				MainPkgPath:   compilePkg,
 				OutputPath:    tempDir,
 				EmitTraceFile: false,
@@ -109,31 +110,50 @@ func newInstallCmd(
 				return err
 			}
 
-			// Compiler outputs binary as "output" (or "output.exe" on Windows)
-			outputName := "output"
-			if runtime.GOOS == "windows" {
-				outputName += ".exe"
-				binName += ".exe"
-			}
-
-			builtBinary := filepath.Join(tempDir, outputName)
-			if _, err := os.Stat(builtBinary); err != nil {
-				return fmt.Errorf("expected built binary at %s: %w", builtBinary, err)
-			}
-
-			// Install to GOBIN, GOPATH/bin, or ~/go/bin
+			// Determine installation directory (GOBIN, GOPATH/bin, or ~/go/bin)
 			binDir, err := resolveBinDir()
 			if err != nil {
 				return err
 			}
 
+			// Create bin directory if it doesn't exist
 			if err := os.MkdirAll(binDir, 0o755); err != nil {
 				return fmt.Errorf("create bin dir: %w", err)
 			}
 
+			if runtime.GOOS == "windows" {
+				binName += ".exe"
+			}
+
 			targetPath := filepath.Join(binDir, binName)
-			if err := os.Rename(builtBinary, targetPath); err != nil {
-				return fmt.Errorf("install binary: %w", err)
+
+			// Use go build to build directly to the target location
+			// This leverages Go's build system while giving us control over binary name
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("get working directory: %w", err)
+			}
+
+			// Change to temporary directory to build the binary
+			if err := os.Chdir(tempDir); err != nil {
+				return fmt.Errorf("change directory to temp: %w", err)
+			}
+			defer func() {
+				if err := os.Chdir(wd); err != nil {
+					panic(err)
+				}
+			}()
+
+			cmd := exec.Command("go", "build", "-ldflags", "-s -w", "-o", targetPath, ".")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			if err := cmd.Run(); err != nil {
+				return fmt.Errorf("go build: %w", err)
+			}
+
+			if _, err := os.Stat(targetPath); err != nil {
+				return fmt.Errorf("binary not found at %s after build: %w", targetPath, err)
 			}
 
 			fmt.Printf("installed %s to %s\n", binName, targetPath)
