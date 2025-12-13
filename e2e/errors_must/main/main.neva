@@ -20,7 +20,9 @@ def Main(start any) (stop any) {
 def Handler(data string) (res any, err error) {
     write_all io.WriteAll?
     ---
-    :data -> write_all:filename
-    'Hello, io.WriteAll!' -> write_all:data
+    :data -> [
+        write_all:filename,
+        'Hello, io.WriteAll!' -> write_all:data
+    ]
     write_all:res -> :res
 }
