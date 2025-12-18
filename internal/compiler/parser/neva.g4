@@ -109,24 +109,12 @@ singleSenderSide:
 	| primitiveConstLit
 	| rangeExpr
 	| structSelectors
-	| binaryExpr
 	| ternaryExpr
-	| unionSender;
-unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
+	| unionSender;unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
 primitiveConstLit: bool | (MINUS)? INT | (MINUS)? FLOAT | STRING;
 senderConstRef: DOLLAR entityRef;
 
 ternaryExpr: LPAREN singleSenderSide QUEST singleSenderSide COLON singleSenderSide RPAREN;
-binaryExpr: LPAREN singleSenderSide binaryOp singleSenderSide RPAREN;
-binaryOp:
-	// Arithmetic
-	PLUS | MINUS | STAR | SLASH | PERCENT | STAR2
-	// Comparison
-	| EQ2 | NOT_EQ | GT | LT | GTE | LTE
-	// Logical
-	| AND2 | OR2
-	// Bitwise
-	| AND | OR | CARET;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;

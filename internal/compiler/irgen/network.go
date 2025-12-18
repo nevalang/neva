@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
 // processNetwork inserts connections to result and returns metadata about the network.
@@ -141,7 +141,6 @@ func (g Generator) processSender(
 			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, binary=%v, ternary=%v, location: %v)",
 			sender.Const != nil,
 			sender.Range != nil,
-			sender.Binary != nil,
 			sender.Ternary != nil,
 			sender.Meta.Location,
 		))

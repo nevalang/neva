@@ -310,7 +310,6 @@ type ConnectionSender struct {
 	Const    *Const    `json:"const,omitempty"`
 	Range    *Range    `json:"range,omitempty"`
 
-	Binary         *Binary      `json:"binary,omitempty"`
 	Ternary        *Ternary     `json:"ternary,omitempty"`
 	StructSelector []string     `json:"selector,omitempty"`
 	Union          *UnionSender `json:"union,omitempty"`
@@ -328,20 +327,6 @@ type UnionSender struct {
 	Meta      core.Meta         `json:"meta,omitempty"`
 }
 
-type Binary struct {
-	Left     ConnectionSender `json:"left,omitempty"`
-	Right    ConnectionSender `json:"right,omitempty"`
-	Operator BinaryOperator   `json:"operator,omitempty"`
-	Meta     core.Meta        `json:"meta,omitempty"`
-	// This field is result of semantic analysis and is unknown at parsing time.
-	// It's used by desugarer to correctly handle overloaded components.
-	AnalyzedType ts.Expr `json:"type,omitempty"`
-}
-
-func (b Binary) String() string {
-	return fmt.Sprintf("(%v %v %v)", b.Left, b.Operator, b.Right)
-}
-
 type Ternary struct {
 	Condition ConnectionSender `json:"condition,omitempty"`
 	Left      ConnectionSender `json:"left,omitempty"`
@@ -352,34 +337,6 @@ type Ternary struct {
 func (t Ternary) String() string {
 	return fmt.Sprintf("(%v ? %v : %v)", t.Condition, t.Left, t.Right)
 }
-
-type BinaryOperator string
-
-const (
-	// Arithmetic
-	AddOp BinaryOperator = "+"
-	SubOp BinaryOperator = "-"
-	MulOp BinaryOperator = "*"
-	DivOp BinaryOperator = "/"
-	ModOp BinaryOperator = "%"
-	PowOp BinaryOperator = "**"
-	// Comparison
-	EqOp BinaryOperator = "=="
-	NeOp BinaryOperator = "!="
-	GtOp BinaryOperator = ">"
-	LtOp BinaryOperator = "<"
-	GeOp BinaryOperator = ">="
-	LeOp BinaryOperator = "<="
-	// Logical
-	AndOp BinaryOperator = "&&"
-	OrOp  BinaryOperator = "||"
-	// Bitwise
-	BitAndOp BinaryOperator = "&"
-	BitOrOp  BinaryOperator = "|"
-	BitXorOp BinaryOperator = "^"
-	BitLshOp BinaryOperator = "<<"
-	BitRshOp BinaryOperator = ">>"
-)
 
 func (s ConnectionSender) String() string {
 	selectorsString := ""
@@ -398,8 +355,6 @@ func (s ConnectionSender) String() string {
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
 
-	case s.Binary != nil:
-		result = s.Binary.String()
 	case s.Ternary != nil:
 		result = s.Ternary.String()
 	}

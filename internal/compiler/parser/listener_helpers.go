@@ -7,9 +7,9 @@ import (
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
-	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
+	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
@@ -1576,7 +1576,7 @@ func (s *treeShapeListener) parseSingleSender(
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
 	ternaryExprSender := senderSide.TernaryExpr()
-	binaryExprSender := senderSide.BinaryExpr()
+
 	unionSender := senderSide.UnionSender()
 
 	if portSender == nil &&
@@ -1585,7 +1585,6 @@ func (s *treeShapeListener) parseSingleSender(
 		rangeExprSender == nil &&
 		structSelectors == nil &&
 		ternaryExprSender == nil &&
-		binaryExprSender == nil &&
 		unionSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
@@ -1785,18 +1784,12 @@ func (s *treeShapeListener) parseSingleSender(
 		}
 	}
 
-	var binaryExpr *src.Binary
-	if binaryExprSender != nil {
-		binaryExpr = s.parseBinaryExpr(binaryExprSender)
-	}
-
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
 		Ternary:        ternaryExpr,
-		Binary:         binaryExpr,
 		Union:          unionSenderData,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
@@ -1841,82 +1834,4 @@ func (s *treeShapeListener) parsePortAddrReceiver(
 			Location: s.loc,
 		},
 	}, nil
-}
-
-func (s *treeShapeListener) parseBinaryExpr(ctx generated.IBinaryExprContext) *src.Binary {
-	var op src.BinaryOperator
-	switch ctx.BinaryOp().GetText() {
-	// Arithmetic
-	case "+":
-		op = src.AddOp
-	case "-":
-		op = src.SubOp
-	case "*":
-		op = src.MulOp
-	case "/":
-		op = src.DivOp
-	case "%":
-		op = src.ModOp
-	case "**":
-		op = src.PowOp
-	// Comparison
-	case "==":
-		op = src.EqOp
-	case "!=":
-		op = src.NeOp
-	case ">":
-		op = src.GtOp
-	case "<":
-		op = src.LtOp
-	case ">=":
-		op = src.GeOp
-	case "<=":
-		op = src.LeOp
-	// Logical
-	case "&&":
-		op = src.AndOp
-	case "||":
-		op = src.OrOp
-	// Bitwise
-	case "&":
-		op = src.BitAndOp
-	case "|":
-		op = src.BitOrOp
-	case "^":
-		op = src.BitXorOp
-	case "<<":
-		op = src.BitLshOp
-	case ">>":
-		op = src.BitRshOp
-	}
-
-	senders := ctx.AllSingleSenderSide()
-
-	left, err := s.parseSingleSender(senders[0])
-	if err != nil {
-		return nil
-	}
-
-	right, err := s.parseSingleSender(senders[1])
-	if err != nil {
-		return nil
-	}
-
-	return &src.Binary{
-		Left:     left,
-		Right:    right,
-		Operator: op,
-		Meta: core.Meta{
-			Text: ctx.GetText(),
-			Start: core.Position{
-				Line:   ctx.GetStart().GetLine(),
-				Column: ctx.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   ctx.GetStop().GetLine(),
-				Column: ctx.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		},
-	}
 }
