@@ -65,7 +65,7 @@ func (a Analyzer) analyzeSender(
 		sender.Const == nil &&
 		sender.Range == nil &&
 		sender.Binary == nil &&
-		sender.Unary == nil &&
+
 		sender.Ternary == nil &&
 		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {

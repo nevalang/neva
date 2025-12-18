@@ -109,15 +109,13 @@ singleSenderSide:
 	| primitiveConstLit
 	| rangeExpr
 	| structSelectors
-	| unaryExpr
 	| binaryExpr
 	| ternaryExpr
 	| unionSender;
 unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
 primitiveConstLit: bool | (MINUS)? INT | (MINUS)? FLOAT | STRING;
 senderConstRef: DOLLAR entityRef;
-unaryExpr: unaryOp singleSenderSide;
-unaryOp: NOT | PLUS2 | MINUS2 | MINUS;
+
 ternaryExpr: LPAREN singleSenderSide QUEST singleSenderSide COLON singleSenderSide RPAREN;
 binaryExpr: LPAREN singleSenderSide binaryOp singleSenderSide RPAREN;
 binaryOp:

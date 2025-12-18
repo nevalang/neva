@@ -306,10 +306,10 @@ type Switch struct {
 }
 
 type ConnectionSender struct {
-	PortAddr       *PortAddr    `json:"portAddr,omitempty"`
-	Const          *Const       `json:"const,omitempty"`
-	Range          *Range       `json:"range,omitempty"`
-	Unary          *Unary       `json:"unary,omitempty"`
+	PortAddr *PortAddr `json:"portAddr,omitempty"`
+	Const    *Const    `json:"const,omitempty"`
+	Range    *Range    `json:"range,omitempty"`
+
 	Binary         *Binary      `json:"binary,omitempty"`
 	Ternary        *Ternary     `json:"ternary,omitempty"`
 	StructSelector []string     `json:"selector,omitempty"`
@@ -352,25 +352,6 @@ type Ternary struct {
 func (t Ternary) String() string {
 	return fmt.Sprintf("(%v ? %v : %v)", t.Condition, t.Left, t.Right)
 }
-
-type Unary struct {
-	Operand  ConnectionSender `json:"expr,omitempty"`
-	Operator UnaryOperator    `json:"operator,omitempty"`
-	Meta     core.Meta        `json:"meta,omitempty"`
-}
-
-func (u Unary) String() string {
-	return fmt.Sprintf("%v %v", u.Operator, u.Operand)
-}
-
-type UnaryOperator string
-
-const (
-	NotOp UnaryOperator = "!"
-	IncOp UnaryOperator = "++"
-	DecOp UnaryOperator = "--"
-	NegOp UnaryOperator = "-"
-)
 
 type BinaryOperator string
 
@@ -416,8 +397,7 @@ func (s ConnectionSender) String() string {
 		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
-	case s.Unary != nil:
-		result = s.Unary.String()
+
 	case s.Binary != nil:
 		result = s.Binary.String()
 	case s.Ternary != nil:

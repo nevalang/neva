@@ -220,12 +220,6 @@ type nevaListener interface {
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
 
-	// EnterUnaryExpr is called when entering the unaryExpr production.
-	EnterUnaryExpr(c *UnaryExprContext)
-
-	// EnterUnaryOp is called when entering the unaryOp production.
-	EnterUnaryOp(c *UnaryOpContext)
-
 	// EnterTernaryExpr is called when entering the ternaryExpr production.
 	EnterTernaryExpr(c *TernaryExprContext)
 
@@ -501,12 +495,6 @@ type nevaListener interface {
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
-
-	// ExitUnaryExpr is called when exiting the unaryExpr production.
-	ExitUnaryExpr(c *UnaryExprContext)
-
-	// ExitUnaryOp is called when exiting the unaryOp production.
-	ExitUnaryOp(c *UnaryOpContext)
 
 	// ExitTernaryExpr is called when exiting the ternaryExpr production.
 	ExitTernaryExpr(c *TernaryExprContext)
