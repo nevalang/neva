@@ -599,7 +599,7 @@ func (d *Desugarer) desugarDeferredConnection(
 			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{
-			ts.Expr{
+			{
 				Inst: &ts.InstExpr{
 					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
 				},

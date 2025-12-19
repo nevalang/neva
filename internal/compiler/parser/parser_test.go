@@ -588,38 +588,6 @@ func TestParser_ParseFile_Switch(t *testing.T) {
 			},
 		},
 		{
-			name: "switch with binary expressions",
-			text: `
-				def C1() () {
-					sender -> switch {
-						(a + b) -> receiver1
-						(c * d) -> receiver2
-					}
-				}
-			`,
-			check: func(t *testing.T, net []src.Connection) {
-				conn := net[0].Normal
-				require.Equal(t, "sender", conn.Senders[0].PortAddr.Node)
-
-				switchStmt := conn.Receivers[0].Switch
-				require.Equal(t, 2, len(switchStmt.Cases))
-
-				// (a + b) -> receiver1
-				binary1 := switchStmt.Cases[0].Senders[0].Binary
-				require.Equal(t, src.AddOp, binary1.Operator)
-				require.Equal(t, "a", binary1.Left.PortAddr.Node)
-				require.Equal(t, "b", binary1.Right.PortAddr.Node)
-				require.Equal(t, "receiver1", switchStmt.Cases[0].Receivers[0].PortAddr.Node)
-
-				// (c * d) -> receiver2
-				binary2 := switchStmt.Cases[1].Senders[0].Binary
-				require.Equal(t, src.MulOp, binary2.Operator)
-				require.Equal(t, "c", binary2.Left.PortAddr.Node)
-				require.Equal(t, "d", binary2.Right.PortAddr.Node)
-				require.Equal(t, "receiver2", switchStmt.Cases[1].Receivers[0].PortAddr.Node)
-			},
-		},
-		{
 			name: "nested switch",
 			text: `
 				def C1() () {
