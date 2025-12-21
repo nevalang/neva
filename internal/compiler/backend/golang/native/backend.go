@@ -16,7 +16,10 @@ type Backend struct {
 }
 
 func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
-	tmpGoModuleDir := dst + "/tmp"
+	tmpGoModuleDir, err := os.MkdirTemp(dst, "neva_build_")
+	if err != nil {
+		return fmt.Errorf("create temporary build directory: %w", err)
+	}
 
 	if err := b.golang.EmitExecutable(tmpGoModuleDir, prog, trace); err != nil {
 		return fmt.Errorf("emit executable: %w", err)
@@ -38,25 +41,6 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 }
 
 func (b Backend) buildExecutable(gomodule, output string) error {
-	// remember current working directory to change back to it later
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get working directory: %w", err)
-	}
-
-	// we need to be inside go module to run `go build` command
-	if err := os.Chdir(gomodule); err != nil {
-		return fmt.Errorf("change directory to gomodule: %w", err)
-	}
-
-	// change back to original wd or neva programs
-	// that interact with fs via relative paths will fail
-	defer func() {
-		if err := os.Chdir(wd); err != nil {
-			panic(err)
-		}
-	}()
-
 	fileName := "output"
 	if os.Getenv("GOOS") == "windows" { // either we're on windows or we're cross-compiling
 		fileName += ".exe"
@@ -70,6 +54,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 		filepath.Join(output, fileName),
 		".",
 	)
+	cmd.Dir = gomodule
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
