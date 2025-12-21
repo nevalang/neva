@@ -138,7 +138,7 @@ func (g Generator) processSender(
 	// other special senders should also have been desugared
 	if sender.PortAddr == nil {
 		panic(fmt.Sprintf(
-			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, binary=%v, ternary=%v, location: %v)",
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, ternary=%v, location: %v)",
 			sender.Const != nil,
 			sender.Range != nil,
 			sender.Ternary != nil,

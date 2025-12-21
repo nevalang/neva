@@ -55,7 +55,7 @@ func RunWithStdinCombined(t *testing.T, stdin string, args ...string) string {
 func RunExpectingError(t *testing.T, args ...string) (string, string) {
 	t.Helper()
 
-	cmd := getNevaCmd(t, args...)
+	cmd := buildGoRunCmd(t, args...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -72,7 +72,7 @@ func RunExpectingError(t *testing.T, args ...string) (string, string) {
 func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) string {
 	t.Helper()
 
-	cmd := getNevaCmd(t, args...)
+	cmd := buildGoRunCmd(t, args...)
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
 	}
@@ -96,7 +96,7 @@ func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) st
 	return stdout.String()
 }
 
-func getNevaCmd(t *testing.T, args ...string) *exec.Cmd {
+func buildGoRunCmd(t *testing.T, args ...string) *exec.Cmd {
 	_, filename, _, ok := runtime.Caller(0)
 	require.True(t, ok)
 
