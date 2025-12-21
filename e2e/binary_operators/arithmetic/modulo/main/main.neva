@@ -4,10 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
+    mod Mod
     println fmt.Println
     panic runtime.Panic
     ---
-    :start -> { (7 % 3) -> println:data }
+    :start -> [
+        7 -> mod:left,
+        3 -> mod:right
+    ]
+    mod:res -> println
     println:res -> :stop
     println:err -> panic
 }
