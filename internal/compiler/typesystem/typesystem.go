@@ -31,9 +31,6 @@ func (def Def) String() string {
 	}
 	params += ">"
 
-	if def.BodyExpr == nil {
-		return params
-	}
 	return params + " = " + def.BodyExpr.String()
 }
 
