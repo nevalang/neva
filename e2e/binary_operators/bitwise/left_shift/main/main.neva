@@ -4,10 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println
+    lshift LShift
+    println fmt.Println
     panic runtime.Panic
     ---
-    :start -> { (5 << 1) -> println:data }
+    :start -> [
+        5 -> lshift:left,
+        1 -> lshift:right
+    ]
+    lshift:res -> println
     println:res -> :stop
     println:err -> panic
-} 
+}

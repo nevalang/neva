@@ -1,93 +1,90 @@
 # AGENTS.md
 
-> [!NOTE]
-> This file is your primary source of truth for working on the Neva repository. STRICTLY FOLLOW these instructions.
+Follow these instructions.
 
-## 1. 🤖 Agent Operating Protocol
+## 1. 🤖 Operating Protocol
 
-1.  **Context7 MCP**: ALWAYS use the `context7` MCP server to avoid hallucinations.
-2.  **Linter/Test command**: Run `golangci-lint run ./...` and `go test ./...`. **FIX ALL WARNINGS**.
-3.  **Uncertainty Check**: If uncertainty > 10% (0.1), **ASK** the user.
-4.  **Self-Correction**: IF you change the build process, architecture, or strict rules, **YOU MUST UPDATE THIS FILE** (`AGENTS.md`) to reflect the new reality.
-5.  **Cross-Reference**:
-    - **Editing `.neva` code**: Read `examples/` and `internal/compiler/parser/neva.g4` (grammar) first.
-    - **Editing Go code**: Read `go.mod` before importing.
-6.  **Step-by-Step**: Plan -> Review -> Execute one step -> Review.
+1. Use `context7` MCP server.
+2. Run `golangci-lint` and `go test`. Fix warnings.
+3. If uncertainty > 10%, ask user.
+4. Update this file if changes to process, architecture, or rules.
+5. Examples and parser for `.neva` changes. `go.mod` for Go imports.
+6. Plan -> Review -> Execute -> Review.
 
-## 2. ⚡ The Neva Language (Internal View)
-
-**Core Concepts**:
+## 2. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
-- **Implicit Parallelism**: Every node runs in parallel (goroutines).
-- **Type System**: Static, structural (like TypeScript), with generics and Rust-like tagged-unions.
-- **Visibility**: Entities are private by default. Use `pub` keyword to export (e.g., `pub def Main`).
+- **Implicit Parallelism**: Every node runs in parallel.
+- **Type System**: Static, structural, with generics and tagged-unions.
+- **Visibility**: Entities are private by default. Export with `pub`.
 - **Entities**:
-  1.  **Components**: Logic containers (Interface + Implementation), node blueprints.
-  2.  **Interfaces**: Port definitions (Inports/Outports), abstract components.
-  3.  **Types**: Type definitions (Structs, Unions, etc.).
-  4.  **Constants**: Fixed values (`const msg string = 'hello'`).
+  - **Components**: Logic containers, node blueprints.
+  - **Interfaces**: Port definitions, abstract components.
+  - **Types**: Type definitions.
+  - **Constants**: Fixed values.
+- **Program Hierarchy**:
+  - **Module**: Root unit (has `neva.yml`).
+  - **Package**: Directory with `*.neva` files.
+  - **Component**: The building block.
 
-**Program Hierarchy**:
+## 3. 🧠 Architecture
 
-- **Module**: Root unit (has `neva.yml`).
-- **Package**: Directory with `*.neva` files.
-- **Component**: The building block.
+### Compiler (`internal/compiler/`)
 
-## 3. 🧠 Architecture & Runtime
+1. **Parser**: ANTLR4 -> Raw AST.
+2. **Analyzer**: Semantics & Type checking.
+3. **Desugaring**: Syntactic sugar -> Canonical AST.
+4. **IR Gen**: Canonical AST -> IR.
+5. **Backend**: IR -> Target Code.
 
-### Compiler Pipeline (`internal/compiler/`)
+### Runtime (`internal/runtime/`)
 
-1.  **Parser** (`parser/`): ANTLR4 (`neva.g4`) -> Raw AST.
-2.  **Analyzer** (`analyzer/`): Semantic analysis & Type checking.
-3.  **Desugarer** (`desugarer/`): Lowers syntactic sugar -> **Desugared AST** (Canonical).
-4.  **IR Gen** (`irgen/`): Desugared AST -> **IR** (Intermediate Representation).
-5.  **Backend** (`backend/`): IR -> Target Code (Go/Native/WASM).
+The runtime is a library embedded into every compiled program.
 
-### Runtime Model (`internal/runtime/`)
-
-The runtime (`internal/runtime`) is a library embedded into every compiled program.
-
-- **FuncRunner**: Executes "Native" flows (Go functions).
+- **FuncRunner**: Executes "native components" (runtime functions).
 - **Connector**: Manages message passing.
 - **Extensibility**:
-  - **Native Functions**: Implemented in `internal/runtime/funcs`.
-  - **Registry**: Register new Go funcs in `internal/runtime/funcs/registry.go`.
-  - **Interface**: All runtime funcs implement `runtime.Func` (and `FuncCreator`).
+  - **Native Functions**: `internal/runtime/funcs`.
+  - **Func Registry**: `internal/runtime/funcs/registry.go`.
+  - **Func Interface**: `runtime.Func` & `FuncCreator`.
 
-## 4. 🛠️ Debugging & Observability
+### Standard Library (`std/`)
+
+The standard library provides components for all programs. Some are implemented in Neva, some use runtime functions written in Go via `#extern`.
+
+## 4. 🛠️ Debugging Tips
 
 **Debug Compiler Output**:
 
-- **Emit IR**: `neva build --target ir --target-ir-format yaml <pkg>` (View the compiler's intermediate state).
-- **Trace Execution**: `neva build --emit-trace <pkg>` -> Generates `trace.json` (visualize message flow).
+- **IR**: `neva run --target ir <pkg>`
+- **Trace**: `neva run --emit-trace <pkg>`
 
 **Debug the CLI/Compiler**:
 
-- **Logs**: Use `fmt.Printf` for debugging, but **MUST REMOVE** before finishing.
-- **Test**: `go test -v ./...` for verbose output.
+- **Logs**: Use `fmt.Printf`, remove before finishing.
+- **Tests**: `go test ./...`
 
 ## 5. 🗺️ Key Locations
 
 - `cmd/neva/`: CLI Entry point.
-- `internal/compiler/parser/neva.g4`: **Grammar Definition**.
-- `internal/runtime/funcs/`: **Standard Library Implementation** (Go side).
-- `std/`: **Standard Library Definition** (Neva side, `#extern`).
-- `e2e/`: **End-to-End Tests**.
+- `internal/cli/`: CLI implementation.
+- `internal/compiler/parser/neva.g4`: Grammar Definition.
+- `e2e/`: End-to-End Tests.
+- `examples/`: Example programs.
+- `pkg/`: Shared utilities.
 
 ## 6. 🎨 Coding Standards
 
-**Go Idioms**:
-
-- **Modern Go**: Use `any` instead of `interface{}`.
-- **Table-Driven Tests**: `tests := []struct { name string ... }`
-- **Naming**: Test cases MUST be `lower_snake_case`.
-- **KISS**: Simple code > Complex abstractions.
-- **Utils**: Use `pkg/` for shared utilities (EXCEPT in `internal/runtime` -> keep zero deps).
-  - If functionality is duplicated in 3+ places, consider moving it to `pkg/` (except `runtime`).
+- **Go Idioms**:
+  - Use `any` instead of `interface{}`.
+  - TD tests: `tests := []struct{ name string ... }`
+  - Test case names: lower_snake_case
+  - KISS: simpler code > complex abstractions
+  - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
+    - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).
 
 **Workflow**:
 
-1.  `make build` (Verify compilation).
-2.  `golangci-lint run ./...` then `go test ./...` (Verify lint + tests).
-3.  `make antlr` (Regenerate parser if `.g4` changed).
+1. `make build` (Verify compilation).
+2. `golangci-lint run ./...` then `go test ./...` (Verify lint + tests).
+3. `make antlr` (Regenerate parser if `.g4` changed).
