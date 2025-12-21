@@ -70,7 +70,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 
 	files := map[string][]byte{
 		"main.go": buf.Bytes(),
-		"go.mod":  []byte("module github.com/nevalang/neva/internal\n\ngo 1.23"),
+		"go.mod":  []byte("module github.com/nevalang/neva/internal\n\ngo 1.25"),
 	}
 
 	if err := b.insertRuntimeFiles(files, nil); err != nil {

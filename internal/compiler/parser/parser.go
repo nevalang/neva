@@ -9,9 +9,9 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 
 	"github.com/nevalang/neva/internal/compiler"
-	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
+	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 )
 
 type Parser struct{}
@@ -66,6 +66,9 @@ func (p Parser) ParseFiles(
 	for fileName, fileBytes := range files {
 		parsedFile, err := p.parseFile(modRef, pkgName, fileName, fileBytes)
 		if err != nil {
+			if err.Meta == nil {
+				err.Meta = &core.Meta{}
+			}
 			err.Meta.Location = core.Location{
 				ModRef:   modRef,
 				Package:  pkgName,
