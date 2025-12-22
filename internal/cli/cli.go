@@ -30,6 +30,7 @@ func NewApp(
 			upgradeCmd,
 			newNewCmd(),
 			newGetCmd(workdir, bldr),
+			newInstallCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
 			newRunCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
 			newBuildCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
 			newOSArchCmd(),

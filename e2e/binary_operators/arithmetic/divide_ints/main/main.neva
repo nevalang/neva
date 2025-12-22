@@ -4,10 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
+    div Div
     println fmt.Println
     panic runtime.Panic
     ---
-    :start -> { (6 / 2) -> println:data }
+    :start -> [
+        6 -> div:left,
+        2 -> div:right
+    ]
+    div:res -> println
     println:res -> :stop
     println:err -> panic
-} 
+}

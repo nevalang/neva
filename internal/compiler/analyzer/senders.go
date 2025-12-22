@@ -64,8 +64,7 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
-		sender.Binary == nil &&
-		sender.Unary == nil &&
+
 		sender.Ternary == nil &&
 		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {
@@ -160,49 +159,6 @@ func (a Analyzer) analyzeSender(
 		}
 
 		return &sender, trueValType, nil
-	}
-
-	if sender.Binary != nil {
-		_, leftType, err := a.analyzeSender(
-			sender.Binary.Left,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		_, rightType, err := a.analyzeSender(
-			sender.Binary.Right,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		// check operator operand types using type system with proper union construction
-		if err := a.checkOperatorOperandTypesWithTypeSystem(*sender.Binary, *leftType, *rightType, scope); err != nil {
-			return nil, nil, err
-		}
-
-		// desugarer needs this information to use overloaded components
-		// it could figure this out itself but it's extra work
-		sender.Binary.AnalyzedType = *leftType
-
-		resultType := a.getBinaryExprType(sender.Binary.Operator, *leftType)
-
-		return &sender, &resultType, nil
 	}
 
 	if sender.Union != nil {

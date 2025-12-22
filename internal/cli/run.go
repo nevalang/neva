@@ -95,6 +95,12 @@ func newRunCmd(
 			}
 
 			runOnce := func(ctx context.Context) error {
+				tempExecDir, err := os.MkdirTemp("", "neva_run_")
+				if err != nil {
+					return fmt.Errorf("create temporary execution directory: %w", err)
+				}
+				defer os.RemoveAll(tempExecDir)
+
 				if emitIR {
 					irCompiler := compiler.New(
 						bldr,
@@ -120,6 +126,8 @@ func newRunCmd(
 					),
 				)
 
+				input.OutputPath = tempExecDir
+
 				if _, err := compilerToNative.Compile(ctx, input); err != nil {
 					return err
 				}
@@ -129,18 +137,12 @@ func newRunCmd(
 					expectedOutputFileName += ".exe"
 				}
 
-				execPath := filepath.Join(workdir, expectedOutputFileName)
+				execPath := filepath.Join(tempExecDir, expectedOutputFileName)
 
 				cmd := exec.CommandContext(ctx, execPath)
 				cmd.Stdin = os.Stdin
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
-
-				defer func() {
-					if err := os.Remove(execPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-						fmt.Println("failed to remove output file:", err)
-					}
-				}()
 
 				if err := cmd.Run(); err != nil {
 					return fmt.Errorf("failed to run generated executable: %w", err)

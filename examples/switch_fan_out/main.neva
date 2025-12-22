@@ -9,6 +9,7 @@ def Main(start any) (stop any) {
     scanln fmt.Scanln
     upper strings.ToUpper
     lower strings.ToLower
+    add Add
     println fmt.Println<any>
     panic1 runtime.Panic
     panic2 runtime.Panic
@@ -17,7 +18,9 @@ def Main(start any) (stop any) {
         'Alice' -> [upper, lower]
         _ -> panic1
     }
-    (upper + lower) -> println:data
+    upper -> add:left
+    lower -> add:right
+    add -> println
     println:res -> :stop
     println:err -> panic2
 }

@@ -446,35 +446,11 @@ func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
 // ExitSenderConstRef is called when production senderConstRef is exited.
 func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
 
-// EnterUnaryExpr is called when production unaryExpr is entered.
-func (s *BasenevaListener) EnterUnaryExpr(ctx *UnaryExprContext) {}
-
-// ExitUnaryExpr is called when production unaryExpr is exited.
-func (s *BasenevaListener) ExitUnaryExpr(ctx *UnaryExprContext) {}
-
-// EnterUnaryOp is called when production unaryOp is entered.
-func (s *BasenevaListener) EnterUnaryOp(ctx *UnaryOpContext) {}
-
-// ExitUnaryOp is called when production unaryOp is exited.
-func (s *BasenevaListener) ExitUnaryOp(ctx *UnaryOpContext) {}
-
 // EnterTernaryExpr is called when production ternaryExpr is entered.
 func (s *BasenevaListener) EnterTernaryExpr(ctx *TernaryExprContext) {}
 
 // ExitTernaryExpr is called when production ternaryExpr is exited.
 func (s *BasenevaListener) ExitTernaryExpr(ctx *TernaryExprContext) {}
-
-// EnterBinaryExpr is called when production binaryExpr is entered.
-func (s *BasenevaListener) EnterBinaryExpr(ctx *BinaryExprContext) {}
-
-// ExitBinaryExpr is called when production binaryExpr is exited.
-func (s *BasenevaListener) ExitBinaryExpr(ctx *BinaryExprContext) {}
-
-// EnterBinaryOp is called when production binaryOp is entered.
-func (s *BasenevaListener) EnterBinaryOp(ctx *BinaryOpContext) {}
-
-// ExitBinaryOp is called when production binaryOp is exited.
-func (s *BasenevaListener) ExitBinaryOp(ctx *BinaryOpContext) {}
 
 // EnterReceiverSide is called when production receiverSide is entered.
 func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}

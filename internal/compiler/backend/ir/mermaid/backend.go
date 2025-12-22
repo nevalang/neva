@@ -14,7 +14,7 @@ type Encoder struct{}
 
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Parse comment for metadata (module, compiler version)
-	// Format: // module=@@ main=hello_world compiler=0.32.0
+	// Format: // module=@@ main=hello_world compiler=0.34.0
 	var modName, compilerVer string
 	if strings.HasPrefix(prog.Comment, "//") {
 		parts := strings.Fields(prog.Comment)
@@ -292,21 +292,21 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 			portList = append(portList, "out:"+p)
 		}
 		sort.Strings(portList)
-		
+
 		ref := n.Meta.Ref
 		if ref == "" {
 			ref = "-"
 		} else {
 			ref = "`" + ref + "`"
 		}
-		
+
 		msg := n.Meta.Msg
 		if msg == "" {
 			msg = "-"
 		} else {
 			msg = "`" + msg + "`"
 		}
-		
+
 		fmt.Fprintf(w, "| `%s` | %s | %s | `%s` |\n", n.Label, ref, msg, strings.Join(portList, ", "))
 	}
 

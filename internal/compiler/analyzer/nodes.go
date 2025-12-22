@@ -1104,13 +1104,7 @@ func (a Analyzer) getPossibleSenderTypes(
 			}
 		}
 	}
-	// binary sender: approximate using left operand type and operator rule
-	if sender.Binary != nil {
-		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Binary.Left)
-		if len(lefts) > 0 {
-			return []typesystem.Expr{a.getBinaryExprType(sender.Binary.Operator, lefts[0])}
-		}
-	}
+
 	// ternary: approximate with left branch
 	if sender.Ternary != nil {
 		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Ternary.Left)

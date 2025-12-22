@@ -77,7 +77,7 @@ After installation is finished, you should be able to run the `neva` CLI from yo
 neva version
 ```
 
-It should emit something like `0.32.0`
+It should emit something like `0.34.0`
 
 ### Hello, World!
 
@@ -271,7 +271,7 @@ This structure introduces two fundamental concepts in Nevalang: modules and pack
 A module is a set of packages with a manifest file (`neva.yaml`). When we created our project with `neva new`, it generated a basic module with the following manifest file:
 
 ```yaml
-neva: 0.32.0
+neva: 0.34.0
 ```
 
 This defines the Nevalang version for our project. As your project grows, you can include dependencies on third-party modules here.

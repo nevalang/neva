@@ -4,10 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
+    mul Mul
     println fmt.Println
     panic runtime.Panic
     ---
-    :start -> { (5.5 * 3.3) -> println:data }
+    :start -> [
+        5.5 -> mul:left,
+        3.3 -> mul:right
+    ]
+    mul -> println
     println:res -> :stop
     println:err -> panic
 }

@@ -4,10 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println
+    xor BitXor
+    println fmt.Println
     panic runtime.Panic
     ---
-    :start -> { (5 ^ 3) -> println:data }
+    :start -> [
+        5 -> xor:left,
+        3 -> xor:right
+    ]
+    xor:res -> println
     println:res -> :stop
     println:err -> panic
 }
