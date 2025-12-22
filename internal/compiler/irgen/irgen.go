@@ -3,9 +3,9 @@ package irgen
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
 )
 

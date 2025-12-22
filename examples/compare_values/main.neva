@@ -13,9 +13,11 @@ def Main(start any) (stop any) {
         2 -> eq:left,
         2 -> eq:right
     ]
-    eq -> ternary:if
-    'They match' -> ternary:then
-    'They do not match' -> ternary:else
+    eq -> [
+        ternary:if,
+        'They match' -> ternary:then,
+        'They do not match' -> ternary:else
+    ]
     ternary -> println
     println:res -> :stop
     println:err -> panic
