@@ -1,14 +1,11 @@
-// New emits a message in an infinite loop.
-// It is inteited to be used with #bind directive.
-// You should prefer constant references and literals over New if possible.
-// New, just like constant senders, must be used with caution.
-// Being infinite, it can easily lead to buffer overflow.
-// New is within small group of components without inports.
+// New emits a message when triggered by a signal.
+// It is intended to be used with #bind directive.
+// You should prefer constant references and literals over New.
+// New requires a trigger signal to prevent buffer overflow.
 #extern(new)
-pub def New<T>() (res T)
+pub def New<T>(sig any) (res T)
 
-#extern(new_v2)
-pub def NewV2<T>(sig any) (res T)
+
 
 // Del receives and discards the message.
 // You should avoid using it because compiler will insert it automatically

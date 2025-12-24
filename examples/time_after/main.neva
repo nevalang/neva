@@ -3,5 +3,5 @@ import { time }
 def Main(start any) (stop any) {
 	time.After
 	---
-	:start -> { $time.second -> after -> :stop }
+	:start -> $time.second -> after -> :stop
 }
