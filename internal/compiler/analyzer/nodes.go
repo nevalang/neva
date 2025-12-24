@@ -1105,13 +1105,6 @@ func (a Analyzer) getPossibleSenderTypes(
 		}
 	}
 
-	// ternary: approximate with left branch
-	if sender.Ternary != nil {
-		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Ternary.Left)
-		if len(lefts) > 0 {
-			return []typesystem.Expr{lefts[0]}
-		}
-	}
 	// port-addr
 	if sender.PortAddr != nil {
 		pa := *sender.PortAddr

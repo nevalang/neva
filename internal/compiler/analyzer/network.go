@@ -561,27 +561,6 @@ func (a Analyzer) getResolvedSenderType(
 		return sender, lastFieldType, false, nil
 	}
 
-	// logic of getting type for ternary expr partially duplicates logic of validating it
-	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
-	if sender.Ternary != nil {
-		_, trueValType, _, err := a.getResolvedSenderType(
-			sender.Ternary.Left,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			prevChainLink,
-			nodesUsage,
-			isPatternSender,
-		)
-		if err != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
-				Meta: &sender.Ternary.Meta,
-			}.Wrap(err)
-		}
-		return sender, trueValType, false, nil
-	}
-
 	// logic of getting type for union sender partially duplicates logic of validating it
 	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
 	if sender.Union != nil {

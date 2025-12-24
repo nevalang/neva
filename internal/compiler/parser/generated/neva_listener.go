@@ -220,9 +220,6 @@ type nevaListener interface {
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
 
-	// EnterTernaryExpr is called when entering the ternaryExpr production.
-	EnterTernaryExpr(c *TernaryExprContext)
-
 	// EnterReceiverSide is called when entering the receiverSide production.
 	EnterReceiverSide(c *ReceiverSideContext)
 
@@ -489,9 +486,6 @@ type nevaListener interface {
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
-
-	// ExitTernaryExpr is called when exiting the ternaryExpr production.
-	ExitTernaryExpr(c *TernaryExprContext)
 
 	// ExitReceiverSide is called when exiting the receiverSide production.
 	ExitReceiverSide(c *ReceiverSideContext)

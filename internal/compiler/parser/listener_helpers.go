@@ -1575,7 +1575,6 @@ func (s *treeShapeListener) parseSingleSender(
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
 	rangeExprSender := senderSide.RangeExpr()
-	ternaryExprSender := senderSide.TernaryExpr()
 
 	unionSender := senderSide.UnionSender()
 
@@ -1584,7 +1583,6 @@ func (s *treeShapeListener) parseSingleSender(
 		primitiveConstLitSender == nil &&
 		rangeExprSender == nil &&
 		structSelectors == nil &&
-		ternaryExprSender == nil &&
 		unionSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
@@ -1748,48 +1746,11 @@ func (s *treeShapeListener) parseSingleSender(
 		}
 	}
 
-	var ternaryExpr *src.Ternary
-	if ternaryExprSender != nil {
-		parts := ternaryExprSender.AllSingleSenderSide()
-
-		condition, err := s.parseSingleSender(parts[0])
-		if err != nil {
-			return src.ConnectionSender{}, err
-		}
-		left, err := s.parseSingleSender(parts[1])
-		if err != nil {
-			return src.ConnectionSender{}, err
-		}
-		right, err := s.parseSingleSender(parts[2])
-		if err != nil {
-			return src.ConnectionSender{}, err
-		}
-
-		ternaryExpr = &src.Ternary{
-			Condition: condition,
-			Left:      left,
-			Right:     right,
-			Meta: core.Meta{
-				Text: ternaryExprSender.GetText(),
-				Start: core.Position{
-					Line:   ternaryExprSender.GetStart().GetLine(),
-					Column: ternaryExprSender.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   ternaryExprSender.GetStop().GetLine(),
-					Column: ternaryExprSender.GetStop().GetColumn(),
-				},
-				Location: s.loc,
-			},
-		}
-	}
-
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		Range:          rangeExpr,
 		StructSelector: senderSelectors,
-		Ternary:        ternaryExpr,
 		Union:          unionSenderData,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
