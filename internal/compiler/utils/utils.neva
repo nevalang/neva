@@ -1,7 +1,6 @@
 import {
     strings
     lists
-    builtin
     runtime
 }
 
@@ -13,66 +12,67 @@ pub type EntityRef struct {
 
 pub def ParseEntityRef(ref string) (res EntityRef) {
     split strings.Split
-    len builtin.Len
-    eq builtin.Eq<int>
-    cond builtin.Cond<list<string>>
+    len Len
+    eq Eq<int>
+    cond Cond<list<string>>
     
-    lock_empty_pkg builtin.Lock<string>
+    lock_empty_pkg Lock<string>
     
     // Path 2 parts
-    at_pkg_2 lists.At<string>
-    at_name_2 lists.At<string>
+    at_pkg_2 MustAt
+    at_name_2 MustAt
     
     // Path 1 part
-    at_name_1 lists.At<string>
-    fan_in_pkg builtin.FanIn<string>
-    fan_in_name builtin.FanIn<string>
+    at_name_1 MustAt
+    fan_in_pkg FanIn<string>
+    fan_in_name FanIn<string>
     builder Struct<EntityRef>
-    
-    p1 runtime.Panic
-    p2 runtime.Panic
-    p3 runtime.Panic
     
     ---
     
     :ref -> [
         split:data, 
-        builder:metaText
+        builder:metaText,
+        '.' -> split:delim,
+        2 -> eq:right,
+        0 -> at_pkg_2:idx,
+        1 -> at_name_2:idx,
+        '' -> lock_empty_pkg:data,
+        0 -> at_name_1:idx
     ]
-    '.' -> split:delim
     
     split:res -> [len:data, cond:data]
     
     len -> eq:left
-    2 -> eq:right
     
     eq -> cond:if
     
     // If 2 parts
     cond:then -> [at_pkg_2:data, at_name_2:data]
-    0 -> at_pkg_2:idx
-    1 -> at_name_2:idx
     
     at_pkg_2:res -> fan_in_pkg:data[0]
     at_name_2:res -> fan_in_name:data[0]
     
     // If 1 part
     cond:else -> [lock_empty_pkg:sig, at_name_1:data]
-    '' -> lock_empty_pkg:data
     
     lock_empty_pkg:data -> fan_in_pkg:data[1]
     
-    0 -> at_name_1:idx
     at_name_1:res -> fan_in_name:data[1]
     
     fan_in_pkg -> builder:pkg
     fan_in_name -> builder:name
     
     builder -> :res
-    
-    // Invariants
-    at_pkg_2:err -> p1
-    at_name_2:err -> p2
-    at_name_1:err -> p3
 }
 
+def MustAt(data list<string>, idx int) (res string) {
+    at lists.At<string>
+    panic runtime.Panic
+    ---
+    :data -> at:data
+    :idx -> at:idx
+    at:err -> panic
+    at:res -> :res
+}
+    
