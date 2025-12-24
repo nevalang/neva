@@ -288,7 +288,11 @@ pub const p int = 3.14
 import { @/foo }
 
 pub def AddP(data float) (res float) {
-  (:data + $foo.p) -> :res
+  add Add
+  ---
+  :data -> add:left
+  $foo.p -> add:right
+  add:res -> :res
 }
 
 // main/main.neva

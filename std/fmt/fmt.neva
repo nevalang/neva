@@ -6,8 +6,10 @@ pub def Println<T>(data T) (res T, err error)
 #extern(print)
 pub def Print<T>(data T) (res T)
 
-// Printf replaces `$` with the corresponding argument
+// Printf replaces placeholders `$<index>` (0-based) with the corresponding argument
 // and prints to the standard output.
+// The same argument can be referenced multiple times, but every provided argument
+// must be referenced at least once (otherwise it returns an error).
 #extern(printf)
 pub def Printf(tpl string, [args] any) (sig any, err error)
 
