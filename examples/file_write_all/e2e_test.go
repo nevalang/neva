@@ -2,6 +2,7 @@ package test
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,14 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	out := e2e.Run(t, "run", "file_write_all")
+	out := e2e.RunExample(t, "file_write_all")
 
 	require.Equal(
 		t,
@@ -26,7 +20,7 @@ func Test(t *testing.T) {
 	)
 
 	// Check file contents.
-	const filename = "file_writer_example.txt"
+	filename := filepath.Join(e2e.ExamplesDir(t), "file_writer_example.txt")
 
 	want, err := os.ReadFile(filename)
 	require.NoError(t, err, out)
@@ -37,5 +31,5 @@ func Test(t *testing.T) {
 	)
 
 	// Remove file output.
-	os.Remove(filename)
+	_ = os.Remove(filename)
 }

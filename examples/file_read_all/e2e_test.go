@@ -2,6 +2,7 @@ package test
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,16 +11,9 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
+	out := e2e.RunExample(t, "file_read_all")
 
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	out := e2e.Run(t, "run", "file_read_all")
-
-	want, err := os.ReadFile("file_read_all/main.neva")
+	want, err := os.ReadFile(filepath.Join(e2e.ExamplesDir(t), "file_read_all", "main.neva"))
 	require.NoError(t, err, out)
 
 	require.Equal(

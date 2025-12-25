@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -12,15 +11,8 @@ import (
 
 func Test(t *testing.T) {
 	// for i := 0; i < 10; i++ {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	start := time.Now()
-	out := e2e.Run(t, "run", "delayed_echo")
+	out := e2e.RunExample(t, "delayed_echo")
 	elapsed := time.Since(start)
 
 	// Check execution time is between 1-5 seconds

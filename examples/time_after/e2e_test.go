@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -10,15 +9,8 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	before := time.Now()
-	out := e2e.Run(t, "run", "time_after")
+	out := e2e.RunExample(t, "time_after")
 
 	require.Equal(t, "", out)
 	require.Greater(t, time.Since(before).Seconds(), float64(1))

@@ -39,5 +39,3 @@ def Worker(data any) (sig any, err error) {
 	$time.second -> delay:dur
 	delay -> println -> :sig
 }
-
-// TODO add unit test

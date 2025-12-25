@@ -2,21 +2,13 @@ package test
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	expectedOutput := `{"left": 0, "right": "a"}
 {"left": 1, "right": "b"}
 {"left": 2, "right": "c"}
@@ -24,13 +16,8 @@ func Test(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
-			cmd := exec.Command("neva", "run", "stream_zip")
-
-			out, err := cmd.CombinedOutput()
-			require.NoError(t, err, string(out))
-			require.Equal(t, expectedOutput, string(out))
-
-			require.Equal(t, 0, cmd.ProcessState.ExitCode())
+			out := e2e.RunExampleCombined(t, "stream_zip")
+			require.Equal(t, expectedOutput, out)
 		})
 	}
 }
