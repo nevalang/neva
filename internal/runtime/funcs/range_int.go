@@ -40,9 +40,9 @@ func (rangeIntV1) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				from = fromMsg.Int()
 				to   = toMsg.Int()
 
-				idx  int64 = 0
-				last bool  = false
-				data int64 = from
+				idx  = int64(0)
+				last = false
+				data = from
 			)
 
 			if from < to {
@@ -135,9 +135,9 @@ func (rangeIntV2) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				from = fromMsg.Int()
 				to   = toMsg.Int()
 
-				idx  int64 = 0
-				last bool  = false
-				data int64 = from
+				idx  = int64(0)
+				last = false
+				data = from
 			)
 
 			if from < to { // example: 0..10
