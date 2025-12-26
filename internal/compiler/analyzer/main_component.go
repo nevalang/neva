@@ -8,14 +8,14 @@ import (
 )
 
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
-	if len(cmp.Interface.TypeParams.Params) != 0 {
+	if len(cmp.TypeParams.Params) != 0 {
 		return &compiler.Error{
 			Message: "Main component cannot have type parameters",
-			Meta:    &cmp.Interface.TypeParams.Meta,
+			Meta:    &cmp.TypeParams.Meta,
 		}
 	}
 
-	if err := a.analyzeMainFlowIO(cmp.Interface.IO); err != nil {
+	if err := a.analyzeMainFlowIO(cmp.IO); err != nil {
 		return compiler.Error{Meta: &cmp.Interface.Meta}.Wrap(err)
 	}
 

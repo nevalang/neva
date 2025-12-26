@@ -576,7 +576,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	// we need to create a frame from the parent's type arguments
 	// the parent component's original interface has the type parameters
 	parentTypeFrame := make(map[string]typesystem.Def)
-	for i, param := range parentComponent.Interface.TypeParams.Params {
+	for i, param := range parentComponent.TypeParams.Params {
 		if i < len(parentNode.TypeArgs) {
 			parentTypeFrame[param.Name] = typesystem.Def{
 				BodyExpr: &parentNode.TypeArgs[i],
@@ -652,9 +652,9 @@ func isCandidateCompatibleWithAllNodeRefs(
 	for _, nodeRef := range nodeRefs {
 		var ports map[string]src.Port
 		if !nodeRef.isOutgoing {
-			ports = component.Interface.IO.In
+			ports = component.IO.In
 		} else {
-			ports = component.Interface.IO.Out
+			ports = component.IO.Out
 		}
 
 		// handle empty port names by resolving to the actual port name
@@ -1287,8 +1287,8 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 
 		// check if this component's interface matches the resolved type
 		// for native components, we need to check the input port type
-		if len(component.Interface.IO.In) == 1 {
-			for _, port := range component.Interface.IO.In {
+		if len(component.IO.In) == 1 {
+			for _, port := range component.IO.In {
 				// resolve the port type
 				portType, err := a.resolver.ResolveExpr(port.TypeExpr, scope)
 				if err != nil {

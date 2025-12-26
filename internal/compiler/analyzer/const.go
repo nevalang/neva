@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
+	ErrConstSeveralValues = errors.New("constant cannot have several values at once")
 )
 
 func (a Analyzer) analyzeConst(

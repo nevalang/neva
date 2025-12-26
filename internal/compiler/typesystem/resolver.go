@@ -11,7 +11,7 @@ var (
 	ErrInvalidExpr        = errors.New("expression must be valid in order to be resolved")
 	ErrScope              = errors.New("can't get type def from scope by ref")
 	ErrScopeUpdate        = errors.New("scope update")
-	ErrInstArgsCount      = errors.New("Wrong number of type arguments")
+	ErrInstArgsCount      = errors.New("wrong number of type arguments")
 	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
 	ErrUnresolvedArg      = errors.New("can't resolve argument")
 	ErrConstr             = errors.New("can't resolve constraint")

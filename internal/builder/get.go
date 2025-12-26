@@ -26,13 +26,13 @@ func (b Builder) Get(wd, path, version string) (string, error) {
 
 	manifest, _, err := b.getNearestManifest(wd)
 	if err != nil {
-		return "", fmt.Errorf("Retrieve manifest: %w", err)
+		return "", fmt.Errorf("retrieve manifest: %w", err)
 	}
 
 	existing, ok := manifest.Deps[path]
 	if ok && existing.Version != actualVersion {
 		return "", errors.New(
-			"Several versions of the same dependency not yet supported.",
+			"several versions of the same dependency not yet supported",
 		)
 	}
 

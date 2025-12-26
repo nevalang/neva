@@ -81,7 +81,7 @@ func newBuildCmd(
 			switch target {
 			case "go", "wasm", "ir", "native":
 			default:
-				return fmt.Errorf("Unknown target %s", target)
+				return fmt.Errorf("unknown target %s", target)
 			}
 
 			targetOS := cliCtx.String("target-os")

@@ -12,6 +12,6 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		out+err,
-		"Incompatible types: in:data -> println: Subtype inst must have same ref as supertype: got any, want int",
+		"Incompatible types: in:data -> println: subtype instance must have same ref as supertype: got any, want int",
 	)
 }

@@ -43,8 +43,8 @@ func RunWithStdin(t *testing.T, stdin string, args ...string) string {
 	return runWithMode(t, stdin, captureStdoutOnly, args...)
 }
 
-// RunWithStdinInDir is the same as RunWithStdin but sets the working directory for the invoked command.
-func RunWithStdinInDir(t *testing.T, dir, stdin string, args ...string) string {
+// runWithStdinInDir is the same as RunWithStdin but sets the working directory for the invoked command.
+func runWithStdinInDir(t *testing.T, dir, stdin string, args ...string) string {
 	t.Helper()
 	return runWithModeInDir(t, dir, stdin, captureStdoutOnly, args...)
 }
@@ -56,28 +56,16 @@ func RunCombined(t *testing.T, args ...string) string {
 	return runWithMode(t, "", captureCombinedOutput, args...)
 }
 
-// RunCombinedInDir is the same as RunCombined but sets the working directory for the invoked command.
-func RunCombinedInDir(t *testing.T, dir string, args ...string) string {
+// runCombinedInDir is the same as RunCombined but sets the working directory for the invoked command.
+func runCombinedInDir(t *testing.T, dir string, args ...string) string {
 	t.Helper()
 	return runWithModeInDir(t, dir, "", captureCombinedOutput, args...)
 }
 
-// RunWithStdinCombined is similar to RunCombined but also lets callers pass stdin.
-func RunWithStdinCombined(t *testing.T, stdin string, args ...string) string {
-	t.Helper()
-	return runWithMode(t, stdin, captureCombinedOutput, args...)
-}
-
-// RunWithStdinCombinedInDir is similar to RunWithStdinCombined but also sets the working directory.
-func RunWithStdinCombinedInDir(t *testing.T, dir, stdin string, args ...string) string {
+// runWithStdinCombinedInDir is similar to RunWithStdinCombined but also sets the working directory.
+func runWithStdinCombinedInDir(t *testing.T, dir, stdin string, args ...string) string {
 	t.Helper()
 	return runWithModeInDir(t, dir, stdin, captureCombinedOutput, args...)
-}
-
-// RepoRoot returns the repository root directory (the directory containing cmd/neva/main.go).
-func RepoRoot(t *testing.T) string {
-	t.Helper()
-	return repoRoot(t)
 }
 
 // ExamplesDir returns the absolute path to the repository examples directory.
@@ -96,20 +84,20 @@ func RunExample(t *testing.T, exampleName string) string {
 // capturing both stdout and stderr.
 func RunExampleCombined(t *testing.T, exampleName string) string {
 	t.Helper()
-	return RunCombinedInDir(t, ExamplesDir(t), "run", exampleName)
+	return runCombinedInDir(t, ExamplesDir(t), "run", exampleName)
 }
 
 // RunExampleWithStdin runs `neva run <exampleName>` from the repository `examples/` directory with stdin.
 func RunExampleWithStdin(t *testing.T, stdin, exampleName string) string {
 	t.Helper()
-	return RunWithStdinInDir(t, ExamplesDir(t), stdin, "run", exampleName)
+	return runWithStdinInDir(t, ExamplesDir(t), stdin, "run", exampleName)
 }
 
 // RunExampleWithStdinCombined runs `neva run <exampleName>` from the repository `examples/` directory with stdin,
 // capturing both stdout and stderr.
 func RunExampleWithStdinCombined(t *testing.T, stdin, exampleName string) string {
 	t.Helper()
-	return RunWithStdinCombinedInDir(t, ExamplesDir(t), stdin, "run", exampleName)
+	return runWithStdinCombinedInDir(t, ExamplesDir(t), stdin, "run", exampleName)
 }
 
 // RunExpectingError executes the neva command and asserts it fails with the expected exit code (default 1).
@@ -117,7 +105,7 @@ func RunExampleWithStdinCombined(t *testing.T, stdin, exampleName string) string
 func RunExpectingError(t *testing.T, args ...string) (string, string) {
 	t.Helper()
 
-	cmd := buildGoRunCmd(t, args...)
+	cmd := buildGoRunNevaRunCmd(t, args...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -136,12 +124,15 @@ func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) st
 	return runWithModeInDir(t, "", stdin, mode, args...)
 }
 
+// runWithModeInDir runs the neva CLI with the requested working directory and capture mode.
 func runWithModeInDir(t *testing.T, dir, stdin string, mode outputMode, args ...string) string {
 	t.Helper()
 
-	cmd := buildGoRunCmd(t, args...)
-	if dir != "" {
-		cmd.Dir = dir
+	var cmd *exec.Cmd
+	if dir == "" {
+		cmd = buildGoRunNevaRunCmd(t, args...)
+	} else {
+		cmd = buildTempBinaryAndRunInDir(t, dir, args...)
 	}
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
@@ -166,12 +157,41 @@ func runWithModeInDir(t *testing.T, dir, stdin string, mode outputMode, args ...
 	return stdout.String()
 }
 
-func buildGoRunCmd(t *testing.T, args ...string) *exec.Cmd {
+func buildGoRunNevaRunCmd(t *testing.T, args ...string) *exec.Cmd {
 	root := repoRoot(t)
 	main := filepath.Join(root, "cmd", "neva", "main.go")
 	cmdArgs := append([]string{"run", main}, args...)
 
-	return exec.Command("go", cmdArgs...)
+	cmd := exec.Command("go", cmdArgs...)
+	cmd.Dir = root
+
+	return cmd
+}
+
+// buildTempBinaryAndRunInDir builds a temporary neva binary from the repo root and runs it in the provided directory.
+func buildTempBinaryAndRunInDir(t *testing.T, dir string, args ...string) *exec.Cmd {
+	t.Helper()
+
+	root := repoRoot(t)
+	tmpDir, err := os.MkdirTemp("", "neva-e2e-bin-")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
+
+	binName := "neva-e2e-bin"
+	if runtime.GOOS == "windows" {
+		binName += ".exe"
+	}
+	binPath := filepath.Join(tmpDir, binName)
+
+	buildCmd := exec.Command("go", "build", "-o", binPath, filepath.Join(root, "cmd", "neva", "main.go"))
+	buildCmd.Dir = root
+	buildCmd.Stdout = os.Stderr
+	buildCmd.Stderr = os.Stderr
+	require.NoError(t, buildCmd.Run(), "failed to build neva binary")
+
+	cmd := exec.Command(binPath, args...)
+	cmd.Dir = dir
+	return cmd
 }
 
 func repoRoot(t *testing.T) string {

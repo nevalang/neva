@@ -173,7 +173,7 @@ func (g Generator) processSender(
 			version = versions[*depNode.OverloadIndex]
 		}
 
-		for outport := range version.Interface.IO.Out {
+		for outport := range version.IO.Out {
 			sender.PortAddr.Port = outport
 			break
 		}
@@ -238,7 +238,7 @@ func (g Generator) processReceiver(
 			version = versions[*diArgNode.OverloadIndex]
 		}
 
-		for inport := range version.Interface.IO.In {
+		for inport := range version.IO.In {
 			receiver.PortAddr.Port = inport
 			break
 		}
