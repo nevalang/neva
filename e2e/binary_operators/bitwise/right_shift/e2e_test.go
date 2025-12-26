@@ -8,7 +8,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	t.Skip("// TODO: parser doesn't support >> and << yet")
-	out := e2e.RunCombined(t, "run", "main")
+	out := e2e.Run(t, []string{"run", "main"}, e2e.WithStderr())
 	require.Equal(t, "4\n", out)
 }

@@ -8,10 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, err := e2e.RunExpectingError(t, "run", "main")
+	out := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1), e2e.WithStderr())
 	require.Contains(
 		t,
-		out+err,
+		out,
 		"main/main.neva:2:10: port 'in:start' is used twice\n",
 	)
 }

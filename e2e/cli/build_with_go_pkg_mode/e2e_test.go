@@ -26,7 +26,7 @@ func TestGoPkgMode_EndToEnd(t *testing.T) {
 	})
 
 	// create neva module
-	e2e.Run(t, "new", ".")
+	e2e.Run(t, []string{"new", "."})
 
 	// add exported PrintHello(sig int) (res string) that prints "Hello from Neva!" and panics on error
 	nevaSrc := `import {
@@ -53,7 +53,7 @@ pub def PrintHello(sig int) (res string) {
 
 	// neva build with pkg mode into "gen/hello"
 	outDir := filepath.Join("gen", "hello")
-	e2e.RunCombined(t, "build", "--target=go", "--target-go-mode=pkg", "--output="+outDir, "src")
+	e2e.Run(t, []string{"build", "--target=go", "--target-go-mode=pkg", "--output="+outDir, "src"}, e2e.WithStderr())
 
 	// No need for go mod edit -replace or go get if runtime is self-contained and imports are correct!
 

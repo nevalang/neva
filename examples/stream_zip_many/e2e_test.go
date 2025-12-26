@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
-			out := e2e.RunExampleCombined(t, "stream_zip_many")
+			out := e2e.Run(t, []string{"run", "stream_zip_many"}, e2e.WithStderr())
 			require.Equal(t, expectedOutput, out)
 		})
 	}

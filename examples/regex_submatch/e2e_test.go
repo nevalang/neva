@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "regex_submatch")
+	out := e2e.Run(t, []string{"run", "regex_submatch"})
 
 	require.Equal(
 		t,

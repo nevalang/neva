@@ -14,8 +14,8 @@ func Test(t *testing.T) {
 		require.NoError(t, os.RemoveAll("src"))
 	}()
 
-	e2e.Run(t, "new", ".")
+	e2e.Run(t, []string{"new", "."})
 
-	out := e2e.RunCombined(t, "run", "src")
+	out := e2e.Run(t, []string{"run", "src"}, e2e.WithStderr())
 	require.Equal(t, "Hello, World!\n", out)
 }

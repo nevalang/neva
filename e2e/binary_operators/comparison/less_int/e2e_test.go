@@ -8,6 +8,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunCombined(t, "run", "main")
+	out := e2e.Run(t, []string{"run", "main"}, e2e.WithStderr())
 	require.Equal(t, "true\n", out)
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "stream_to_list")
+	out := e2e.Run(t, []string{"run", "stream_to_list"})
 
 	// TODO betterh check in a loop
 	require.Equal(

@@ -16,10 +16,10 @@ func TestBuildIRMermaid(t *testing.T) {
 	}()
 
 	// create new project
-	e2e.Run(t, "new", ".")
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and mermaid format
-	out := e2e.RunCombined(t, "build", "-target=ir", "-target-ir-format=mermaid", "src")
+	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=mermaid", "src"}, e2e.WithStderr())
 
 	// verify mermaid file exists
 	mdBytes, err := os.ReadFile("ir.md")
@@ -38,10 +38,10 @@ func TestBuildIRThreeJS(t *testing.T) {
 	}()
 
 	// create new project
-	e2e.Run(t, "new", ".")
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and threejs format
-	out := e2e.RunCombined(t, "build", "-target=ir", "-target-ir-format=threejs", "src")
+	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=threejs", "src"}, e2e.WithStderr())
 
 	// verify threejs file exists
 	htmlBytes, err := os.ReadFile("ir.threejs.html")

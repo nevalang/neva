@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		out := e2e.RunExample(t, "add_numbers")
+		out := e2e.Run(t, []string{"run", "add_numbers"})
 		require.Equal(
 			t,
 			"3\n",

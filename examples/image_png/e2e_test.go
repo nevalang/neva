@@ -11,7 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "image_png")
+	out := e2e.Run(t, []string{"run", "image_png"})
 
 	require.Equal(
 		t,

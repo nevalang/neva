@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "push_to_list")
+	out := e2e.Run(t, []string{"run", "push_to_list"})
 
 	require.Equal(
 		t,

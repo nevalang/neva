@@ -8,10 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, err := e2e.RunExpectingError(t, "run", "main")
+	out := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1), e2e.WithStderr())
 	require.Contains(
 		t,
-		out+err,
+		out,
 		"Incompatible types: in:data -> println: subtype instance must have same ref as supertype: got any, want int",
 	)
 }

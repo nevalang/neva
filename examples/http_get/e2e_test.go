@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "http_get")
+	out := e2e.Run(t, []string{"run", "http_get"})
 
 	require.Contains(
 		t,

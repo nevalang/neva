@@ -11,7 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.RunExample(t, "file_read_all")
+	out := e2e.Run(t, []string{"run", "file_read_all"})
 
 	want, err := os.ReadFile(filepath.Join(e2e.ExamplesDir(t), "file_read_all", "main.neva"))
 	require.NoError(t, err, out)

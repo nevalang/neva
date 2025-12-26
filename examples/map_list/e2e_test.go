@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		out := e2e.RunExample(t, "map_list")
+		out := e2e.Run(t, []string{"run", "map_list"})
 		require.Equal(
 			t,
 			"[49,29,19,99]\n",
