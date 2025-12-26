@@ -29,7 +29,7 @@ var expectedOutput = `{"first": 0, "second": 0}
 func Test(t *testing.T) {
 	for i := 0; i < 1; i++ {
 		t.Run(fmt.Sprintf("Run %d", i+1), func(t *testing.T) {
-			out := e2e.Run(t, []string{"run", "stream_product"})
+			out, _ := e2e.Run(t, []string{"run", "stream_product"})
 			require.Equal(t, expectedOutput, out)
 		})
 	}

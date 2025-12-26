@@ -53,7 +53,7 @@ pub def PrintHello(sig int) (res string) {
 
 	// neva build with pkg mode into "gen/hello"
 	outDir := filepath.Join("gen", "hello")
-	e2e.Run(t, []string{"build", "--target=go", "--target-go-mode=pkg", "--output="+outDir, "src"}, e2e.WithStderr())
+	e2e.Run(t, []string{"build", "--target=go", "--target-go-mode=pkg", "--output="+outDir, "src"})
 
 	// No need for go mod edit -replace or go get if runtime is self-contained and imports are correct!
 

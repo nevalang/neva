@@ -10,7 +10,7 @@ import (
 func Test(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		t.Logf("Running iteration %d", i)
-		out := e2e.Run(t, []string{"run", "select"})
+		out, _ := e2e.Run(t, []string{"run", "select"})
 		require.Equal(
 			t,
 			"a\nb\nc\nd\n",

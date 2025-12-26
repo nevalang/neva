@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "unions_tag_only"})
+	out, _ := e2e.Run(t, []string{"run", "unions_tag_only"})
 	require.Equal(
 		t,
 		`{ "tag": "Friday" }

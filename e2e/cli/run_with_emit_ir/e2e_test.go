@@ -20,7 +20,7 @@ func TestEmitDefault(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	out := e2e.Run(t, []string{"run", "--emit-ir", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "src"})
 	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid YAML
@@ -55,7 +55,7 @@ func TestEmitYAML(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	out := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "yaml", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "yaml", "src"})
 	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid YAML
@@ -90,7 +90,7 @@ func TestEmitJSON(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	out := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "json", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "json", "src"})
 	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid JSON

@@ -16,7 +16,7 @@ func TestBuildWindows(t *testing.T) {
 
 	e2e.Run(t, []string{"new", "."})
 
-	out := e2e.Run(t, []string{"build", "--target-os=windows", "--target-arch=amd64", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "--target-os=windows", "--target-arch=amd64", "src"})
 	defer func() {
 		require.NoError(t, os.Remove("output.exe"))
 	}()

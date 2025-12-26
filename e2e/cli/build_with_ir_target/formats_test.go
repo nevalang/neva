@@ -19,7 +19,7 @@ func TestBuildIRMermaid(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and mermaid format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=mermaid", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=mermaid", "src"})
 
 	// verify mermaid file exists
 	mdBytes, err := os.ReadFile("ir.md")
@@ -41,7 +41,7 @@ func TestBuildIRThreeJS(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and threejs format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=threejs", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=threejs", "src"})
 
 	// verify threejs file exists
 	htmlBytes, err := os.ReadFile("ir.threejs.html")

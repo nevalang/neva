@@ -13,7 +13,7 @@ func Test(t *testing.T) {
 	// and order of elements is always the same.
 	for i := 0; i < 100; i++ {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
-			out := e2e.Run(t, []string{"run", "for_loop_over_list"})
+			out, _ := e2e.Run(t, []string{"run", "for_loop_over_list"})
 			require.Equal(
 				t,
 				"1\n2\n3\n",

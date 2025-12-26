@@ -16,6 +16,6 @@ func Test(t *testing.T) {
 
 	e2e.Run(t, []string{"new", "."})
 
-	out := e2e.Run(t, []string{"run", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"run", "src"})
 	require.Equal(t, "Hello, World!\n", out)
 }

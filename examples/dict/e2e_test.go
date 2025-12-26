@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "dict"})
+	out, _ := e2e.Run(t, []string{"run", "dict"})
 
 	require.Equal(
 		t,

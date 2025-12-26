@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		out := e2e.Run(t, []string{"run", "compare_values"})
+		out, _ := e2e.Run(t, []string{"run", "compare_values"})
 		require.Equal(
 			t,
 			"They match\n",

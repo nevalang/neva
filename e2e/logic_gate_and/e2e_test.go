@@ -9,7 +9,7 @@ import (
 
 // Check that logical AND works
 func TestAND(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "main"})
+	out, _ := e2e.Run(t, []string{"run", "main"})
 	require.Equal(
 		t,
 		"true\n",

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,22 +17,14 @@ import (
 type Option func(*config)
 
 type config struct {
-	stdin         string
-	captureStderr bool
-	expectedCode  int
+	stdin        string
+	expectedCode int
 }
 
 // WithStdin sets stdin input for the command.
 func WithStdin(stdin string) Option {
 	return func(c *config) {
 		c.stdin = stdin
-	}
-}
-
-// WithStderr captures both stdout and stderr together (combined output).
-func WithStderr() Option {
-	return func(c *config) {
-		c.captureStderr = true
 	}
 }
 
@@ -45,9 +36,11 @@ func WithCode(code int) Option {
 }
 
 // Run executes the neva command with the given arguments and options.
-// It returns captured output (stdout only by default, or combined stdout+stderr if WithStderr is set).
+// It returns captured stdout and stderr separately.
 // The working directory is os.Getwd() (relies on go test running each package with cwd at that package).
-func Run(t *testing.T, args []string, opts ...Option) string {
+// Most tests can ignore stderr: `out, _ := e2e.Run(...)`
+// Tests that need stderr (e.g., panic cases) can use: `out, stderr := e2e.Run(...)` and combine if needed.
+func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	t.Helper()
 
 	cfg := &config{
@@ -78,33 +71,22 @@ func Run(t *testing.T, args []string, opts ...Option) string {
 		cmd.Stdin = strings.NewReader(cfg.stdin)
 	}
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
 
-	if cfg.captureStderr {
-		// Capture combined output - both stdout and stderr go to the same buffer
-		writer := io.MultiWriter(&stdout, &stderr)
-		cmd.Stdout = writer
-		cmd.Stderr = writer
-	} else {
-		// Capture stdout only, stderr goes to separate buffer (discarded unless error)
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-	}
+	// Always capture stdout and stderr separately
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
 
 	err = cmd.Run()
 	actualCode := getExitCode(err)
 
-	// Always show both stdout and stderr in error messages for consistency
-	// When captureStderr is true, both buffers contain the same combined content (via MultiWriter)
-	outputMsg := fmt.Sprintf("stdout: %q\nstderr: %q", stdout.String(), stderr.String())
+	// Always show both stdout and stderr in error messages
+	outputMsg := fmt.Sprintf("stdout: %q\nstderr: %q", stdoutBuf.String(), stderrBuf.String())
 	require.Equal(t, cfg.expectedCode, actualCode,
 		"neva execution exit code mismatch. %s", outputMsg)
 
-	// Return captured output:
-	// - When captureStderr is true: stdout contains combined output (stderr buffer has same content via MultiWriter)
-	// - When captureStderr is false: stdout contains only stdout
-	return stdout.String()
+	return stdoutBuf.String(), stderrBuf.String()
 }
 
 // findRepoRoot finds the repository root using go env GOMOD.

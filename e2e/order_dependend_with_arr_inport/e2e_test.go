@@ -11,7 +11,7 @@ func Test(t *testing.T) {
 	// we do 100 attempts because there was a floating bug
 	// caused by unordered map that was
 	for i := 0; i < 100; i++ {
-		out := e2e.Run(t, []string{"run", "main"})
+		out, _ := e2e.Run(t, []string{"run", "main"})
 		require.Equal(
 			t,
 			"-6\n",

@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "split_join_string"})
+	out, _ := e2e.Run(t, []string{"run", "split_join_string"})
 
 	require.Equal(
 		t,

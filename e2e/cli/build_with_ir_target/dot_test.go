@@ -19,7 +19,7 @@ func TestBuildIRDOT(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and dot format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=dot", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=dot", "src"})
 
 	// verify dot file exists
 	dotBytes, err := os.ReadFile("ir.dot")

@@ -9,14 +9,14 @@ import (
 
 func Test(t *testing.T) {
 	// Test successful case with "Alice"
-	out := e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Alice\n"))
+	out, _ := e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Alice\n"))
 	require.Equal(t, "Enter the name: ALICE\n", out)
 
 	// Test panic case with "Bob"
-	out = e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Bob\n"))
+	out, _ = e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Bob\n"))
 	require.Equal(t, "Enter the name: bob\n", out)
 
 	// Test panic case with "Charlie"
-	out = e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Charlie\n"), e2e.WithStderr())
-	require.Equal(t, "Enter the name: panic: Charlie\n", out)
+	out, stderr := e2e.Run(t, []string{"run", "switch"}, e2e.WithStdin("Charlie\n"))
+	require.Equal(t, "Enter the name: panic: Charlie\n", out+stderr)
 }

@@ -8,10 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1), e2e.WithStderr())
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		out,
+		stderr,
 		"main/main.neva:4:1: array outport 'fanOut:data' is used incorrectly: slot 1 is missing\n",
 	)
 }

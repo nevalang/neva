@@ -9,7 +9,7 @@ import (
 
 // Check that logical OR works
 func TestOR(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "main"})
+	out, _ := e2e.Run(t, []string{"run", "main"})
 	require.Equal(
 		t,
 		"false\n",

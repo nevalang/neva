@@ -10,7 +10,7 @@ import (
 
 func Test(t *testing.T) {
 	before := time.Now()
-	out := e2e.Run(t, []string{"run", "time_after"})
+	out, _ := e2e.Run(t, []string{"run", "time_after"})
 
 	require.Equal(t, "", out)
 	require.Greater(t, time.Since(before).Seconds(), float64(1))

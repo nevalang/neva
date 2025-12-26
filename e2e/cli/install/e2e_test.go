@@ -30,12 +30,12 @@ func TestInstall(t *testing.T) {
 
 	// Create a neva module
 	moduleDir := filepath.Join(workdir, "testapp")
-	out := e2e.Run(t, []string{"new", moduleDir})
+	out, _ := e2e.Run(t, []string{"new", moduleDir})
 	require.Contains(t, out, "neva module created")
 
 	// Install the program
 	srcPath := filepath.Join(moduleDir, "src")
-	out = e2e.Run(t, []string{"install", srcPath})
+	out, _ = e2e.Run(t, []string{"install", srcPath})
 
 	// Verify the binary was installed
 	expectedBinName := "src"
@@ -99,11 +99,11 @@ func TestInstallWithPackageDirectory(t *testing.T) {
 
 	// Create a neva module
 	moduleDir := filepath.Join(workdir, "myapp")
-	out := e2e.Run(t, []string{"new", moduleDir})
+	out, _ := e2e.Run(t, []string{"new", moduleDir})
 	require.Contains(t, out, "neva module created")
 
 	// Install using the package directory path (not the src subdirectory)
-	out = e2e.Run(t, []string{"install", moduleDir})
+	out, _ = e2e.Run(t, []string{"install", moduleDir})
 
 	// Verify the binary was installed with the correct name (based on package directory)
 	expectedBinName := "myapp"

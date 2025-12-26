@@ -11,7 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "file_write_all"})
+	out, _ := e2e.Run(t, []string{"run", "file_write_all"})
 
 	require.Equal(
 		t,

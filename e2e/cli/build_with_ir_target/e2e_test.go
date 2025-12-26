@@ -20,7 +20,7 @@ func TestBuildIRDefault(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target (default yaml format)
-	out := e2e.Run(t, []string{"build", "-target=ir", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "src"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
@@ -54,7 +54,7 @@ func TestBuildIRYAML(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and explicit yaml format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=yaml", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=yaml", "src"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
@@ -88,7 +88,7 @@ func TestBuildIRJSON(t *testing.T) {
 	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and json format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "src"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "src"})
 
 	// verify ir file exists and is valid json
 	irBytes, err := os.ReadFile("ir.json")
@@ -110,7 +110,7 @@ func TestBuildIRWithInterfaceWithImports(t *testing.T) {
 
 	// build the specific case that was failing in the original issue
 	// this tests the interface_with_imports case with ir target
-	out := e2e.Run(t, []string{"build", "-target=ir", "../../interface_with_imports/main"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "../../interface_with_imports/main"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
@@ -140,7 +140,7 @@ func TestBuildIRWithInterfaceWithImportsJSON(t *testing.T) {
 	}()
 
 	// build the specific case that was failing in the original issue with json format
-	out := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "../../interface_with_imports/main"}, e2e.WithStderr())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "../../interface_with_imports/main"})
 
 	// verify ir file exists and is valid json
 	irBytes, err := os.ReadFile("ir.json")

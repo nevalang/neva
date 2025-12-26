@@ -10,7 +10,7 @@ import (
 func Test(t *testing.T) {
 	for i := 0; i < 1; i++ {
 		t.Run("Echo Test", func(t *testing.T) {
-			out := e2e.Run(t, []string{"run", "echo"}, e2e.WithStdin("yo\n"))
+			out, _ := e2e.Run(t, []string{"run", "echo"}, e2e.WithStdin("yo\n"))
 			require.Equal(
 				t,
 				"yo\n",

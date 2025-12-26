@@ -8,10 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1), e2e.WithStderr())
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		out,
+		stderr,
 		"main/main.neva:8:4: All node's outports are unused: sub2\n",
 	)
 }

@@ -12,7 +12,7 @@ import (
 func Test(t *testing.T) {
 	// for i := 0; i < 10; i++ {
 	start := time.Now()
-	out := e2e.Run(t, []string{"run", "delayed_echo"})
+	out, _ := e2e.Run(t, []string{"run", "delayed_echo"})
 	elapsed := time.Since(start)
 
 	// Check execution time is between 1-5 seconds

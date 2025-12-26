@@ -10,7 +10,7 @@ import (
 func Test(t *testing.T) {
 	// we run N times to make sure https://github.com/nevalang/neva/issues/872 is fixed
 	for range 10 {
-		out := e2e.Run(t, []string{"run", "main"})
+		out, _ := e2e.Run(t, []string{"run", "main"})
 		require.Equal(
 			t,
 			"success!\n",
