@@ -67,8 +67,28 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		require.NoError(t, err, "failed to get working directory")
 	}
 
-	cmdArgs := append([]string{"run", mainPath}, args...)
-	cmd := exec.Command("go", cmdArgs...)
+	// Build the CLI binary from the repo root so Go modules are resolved correctly,
+	// but execute the resulting binary from the requested working directory.
+	binPath := filepath.Join(t.TempDir(), "neva")
+	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
+	buildCmd.Dir = repoRoot
+
+	var buildStdoutBuf bytes.Buffer
+	var buildStderrBuf bytes.Buffer
+	buildCmd.Stdout = &buildStdoutBuf
+	buildCmd.Stderr = &buildStderrBuf
+
+	err = buildCmd.Run()
+	require.NoError(
+		t,
+		err,
+		"failed to build neva CLI. stdout: %q stderr: %q",
+		buildStdoutBuf.String(),
+		buildStderrBuf.String(),
+	)
+
+	cmdArgs := append([]string{binPath}, args...)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	cmd.Dir = wd
 
 	if cfg.stdin != "" {
