@@ -60,35 +60,22 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 
 	repoRoot := FindRepoRoot(t)
 	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
+
+	// Build the CLI binary from repo root; run it from wd.
+	binPath := buildNevaBinary(t, repoRoot, mainPath)
+
+	cmdArgs := append([]string{binPath}, args...)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+
+	// Resolve the working directory from which the CLI should be executed.
+	// This intentionally differs from the directory used to build the CLI,
+	// which must stay at repo root so Go modules resolve correctly.
 	wd := cfg.wd
 	var err error
 	if wd == "" {
 		wd, err = os.Getwd()
 		require.NoError(t, err, "failed to get working directory")
 	}
-
-	// Build the CLI binary from the repo root so Go modules are resolved correctly,
-	// but execute the resulting binary from the requested working directory.
-	binPath := filepath.Join(t.TempDir(), "neva")
-	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
-	buildCmd.Dir = repoRoot
-
-	var buildStdoutBuf bytes.Buffer
-	var buildStderrBuf bytes.Buffer
-	buildCmd.Stdout = &buildStdoutBuf
-	buildCmd.Stderr = &buildStderrBuf
-
-	err = buildCmd.Run()
-	require.NoError(
-		t,
-		err,
-		"failed to build neva CLI. stdout: %q stderr: %q",
-		buildStdoutBuf.String(),
-		buildStderrBuf.String(),
-	)
-
-	cmdArgs := append([]string{binPath}, args...)
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	cmd.Dir = wd
 
 	if cfg.stdin != "" {
@@ -146,4 +133,31 @@ func getExitCode(err error) int {
 	// This shouldn't happen in normal operation, but return a non-zero
 	// to indicate failure
 	return 1
+}
+
+// buildNevaBinary builds the neva CLI from the repo root to ensure module
+// resolution works regardless of where tests execute the resulting binary.
+// It returns the path to the built binary.
+func buildNevaBinary(t *testing.T, repoRoot, mainPath string) string {
+	t.Helper()
+
+	binPath := filepath.Join(t.TempDir(), "neva")
+	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
+	buildCmd.Dir = repoRoot
+
+	var buildStdoutBuf bytes.Buffer
+	var buildStderrBuf bytes.Buffer
+	buildCmd.Stdout = &buildStdoutBuf
+	buildCmd.Stderr = &buildStderrBuf
+
+	err := buildCmd.Run()
+	require.NoError(
+		t,
+		err,
+		"failed to build neva CLI. stdout: %q stderr: %q",
+		buildStdoutBuf.String(),
+		buildStderrBuf.String(),
+	)
+
+	return binPath
 }
