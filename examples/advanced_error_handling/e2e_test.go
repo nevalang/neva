@@ -8,13 +8,11 @@ import (
 )
 
 func Test(t *testing.T) {
-	for i := 0; i < 1; i++ {
-		_, stderr := e2e.Run(t, []string{"run", "advanced_error_handling"})
-		require.Equal(
-			t,
-			`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
+	_, stderr := e2e.Run(t, []string{"run", "advanced_error_handling"})
+	require.Equal(
+		t,
+		`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
 `,
-			stderr,
-		)
-	}
+		stderr,
+	)
 }

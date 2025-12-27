@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/nevalang/neva/pkg/e2e"
@@ -27,10 +26,6 @@ var expectedOutput = `{"first": 0, "second": 0}
 `
 
 func Test(t *testing.T) {
-	for i := 0; i < 1; i++ {
-		t.Run(fmt.Sprintf("Run %d", i+1), func(t *testing.T) {
-			out, _ := e2e.Run(t, []string{"run", "stream_product"})
-			require.Equal(t, expectedOutput, out)
-		})
-	}
+	out, _ := e2e.Run(t, []string{"run", "stream_product"})
+	require.Equal(t, expectedOutput, out)
 }

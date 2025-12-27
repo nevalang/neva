@@ -52,4 +52,3 @@ func TestBuildIRThreeJS(t *testing.T) {
 	require.True(t, strings.Contains(htmlContent, "<!DOCTYPE html>"), "File should be HTML")
 	require.True(t, strings.Contains(htmlContent, "import * as THREE"), "File should import Three.js")
 }
-

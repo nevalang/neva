@@ -30,4 +30,3 @@ func TestBuildIRDOT(t *testing.T) {
 	require.True(t, strings.HasPrefix(dotContent, "digraph G {"), "DOT file should start with 'digraph G {'")
 	require.True(t, strings.Contains(dotContent, "}"), "DOT file should contain closing brace")
 }
-

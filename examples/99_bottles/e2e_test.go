@@ -8,14 +8,12 @@ import (
 )
 
 func Test(t *testing.T) {
-	for i := 0; i < 1; i++ {
-		out, _ := e2e.Run(t, []string{"run", "99_bottles"})
-		require.Equal(
-			t,
-			expected,
-			out,
-		)
-	}
+	out, _ := e2e.Run(t, []string{"run", "99_bottles"})
+	require.Equal(
+		t,
+		expected,
+		out,
+	)
 }
 
 var expected = `99 bottles of beer on the wall, 99 bottles of beer.
