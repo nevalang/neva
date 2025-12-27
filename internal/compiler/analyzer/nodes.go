@@ -776,29 +776,6 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Normal.Receivers)...)
 			}
 		}
-
-		// Check switch cases
-		if receiver.Switch != nil {
-			// Check each case in the switch
-			for _, caseConn := range receiver.Switch.Cases {
-				for _, sender := range caseConn.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
-				}
-
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, caseConn.Receivers)...)
-			}
-
-			// Check default case
-			if receiver.Switch.Default != nil {
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.Switch.Default)...)
-			}
-		}
 	}
 
 	return nodeRefs
@@ -1047,14 +1024,6 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 			}
 			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
 				visit(r.DeferredConnection.Normal.Receivers)
-			}
-			if r.Switch != nil {
-				for _, cse := range r.Switch.Cases {
-					visit(cse.Receivers)
-				}
-				if r.Switch.Default != nil {
-					visit(r.Switch.Default)
-				}
 			}
 		}
 	}

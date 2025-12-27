@@ -136,16 +136,9 @@ structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
 	| portAddr
-	| deferredConn
-	| switchStmt;
+	| deferredConn;
 multipleReceiverSide:
 	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
-
-// Switch
-switchStmt:
-	SWITCH NEWLINE* LBRACE NEWLINE* normConnDef (NEWLINE+ normConnDef)* 
-	(NEWLINE+ defaultCase)? NEWLINE* RBRACE;
-defaultCase: UNDERSCORE ARROW receiverSide;
 
 /* LEXER */
 
@@ -158,7 +151,6 @@ INTERFACE: 'interface';
 CONST: 'const';
 DEF: 'def';
 IMPORT: 'import';
-SWITCH: 'switch';
 TRUE: 'true';
 FALSE: 'false';
 
