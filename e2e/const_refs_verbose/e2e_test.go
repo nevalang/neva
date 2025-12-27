@@ -10,7 +10,7 @@ import (
 // Nested dict has only one key because keys are unordered
 // so having order in test will make it flacky.
 func Test(t *testing.T) {
-	out := e2e.Run(t, "run", "main")
+	out, _ := e2e.Run(t, []string{"run", "main"})
 	require.Equal(
 		t,
 		`{"d": {"key": 1}, "l": [1, 2, 3]}

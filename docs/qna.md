@@ -92,25 +92,6 @@ While `class` is familiar and components are similar to classes as blueprints, i
 
 `def` was chosen because it's familiar from Python, short, and generic enough to define components without implying specific semantics.
 
-## Why syntax for ternary operator is like this (without incoming `->`)?
-
-It would be in the spirit of Neva to have incoming `->` that would visually "trigger" ternary:
-
-```neva
-condition -> (? thenValue : elseValue) -> ...
-```
-
-This way we have clear incoming and outgoing parts of the connection. However, despite that looks weird (not a single language have this ternary syntax), it's just inconsistent - all 3 (condition, then and else) parts of the ternary are incoming messages ("arguments") for ternary component. Consistent syntax could be like this:
-
-```neva
-condition -> ternary:cond
-thenValue -> ternary:then
-elseValue -> ternary:else
-ternary:res -> println
-```
-
-And guess what? This is exactly how desugared `Ternary` component works! But these are 4 (!) connections! Compare it with `(condition ? thenValue : elseValue) -> println`.
-
 ## Why operators and reducers have `left` and `right` naming for ports?
 
-Operators should follow same pattern for simplicity of desugarer and usage by user and they also also should be able to be used as reducers by `Reduce`. It means we need to choose between `left/right` which is convinient for operators and `acc/el` for reduce. Binary expressions (infix form) are more common than reduce operations so desicion was made to sacrifice reduce clarity a little bit.
+Operators should follow same pattern for simplicity of desugarer and usage by user and they also should be able to be used as reducers by `Reduce`. It means we need to choose between `left/right` which is convenient for operators and `acc/el` for reduce. To keep syntax minimal, we align on `left/right`.

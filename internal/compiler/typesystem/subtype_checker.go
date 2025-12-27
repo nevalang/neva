@@ -8,19 +8,19 @@ import (
 )
 
 var (
-	ErrDiffKinds     = errors.New("Subtype and supertype must both be either literals or instances") //nolint:lll
-	ErrDiffRefs      = errors.New("Subtype inst must have same ref as supertype")
-	ErrArgsCount     = errors.New("Subtype inst must have >= args than supertype")
-	ErrArgNotSubtype = errors.New("Subtype arg must be subtype of corresponding supertype arg")
-	ErrLitArrSize    = errors.New("Subtype arr size must be >= supertype")
-	ErrArrDiffType   = errors.New("Subtype arr must have same type as supertype")
-	ErrStructLen     = errors.New("Subtype struct must contain >= fields than supertype")
-	ErrStructField   = errors.New("Subtype struct field must be subtype of corresponding supertype field")
-	ErrStructNoField = errors.New("Subtype struct is missing field of supertype")
-	ErrUnionArg      = errors.New("Subtype must be union")
-	ErrUnionsLen     = errors.New("Subtype union must be <= supertype union")
-	ErrUnions        = errors.New("Subtype union el must be subtype of supertype union")
-	ErrDiffLitTypes  = errors.New("Subtype and supertype lits must be of the same type")
+	ErrDiffKinds     = errors.New("subtype and supertype must both be either literals or instances") //nolint:lll
+	ErrDiffRefs      = errors.New("subtype instance must have same ref as supertype")
+	ErrArgsCount     = errors.New("subtype instance must have >= args than supertype")
+	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
+	ErrLitArrSize    = errors.New("subtype arr size must be >= supertype")
+	ErrArrDiffType   = errors.New("subtype arr must have same type as supertype")
+	ErrStructLen     = errors.New("subtype struct must contain >= fields than supertype")
+	ErrStructField   = errors.New("subtype struct field must be subtype of corresponding supertype field")
+	ErrStructNoField = errors.New("subtype struct is missing field of supertype")
+	ErrUnionArg      = errors.New("subtype must be union")
+	ErrUnionsLen     = errors.New("subtype union must be <= supertype union")
+	ErrUnions        = errors.New("subtype union element must be subtype of supertype union")
+	ErrDiffLitTypes  = errors.New("subtype and supertype lits must be of the same type")
 )
 
 type SubtypeChecker struct {

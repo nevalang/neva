@@ -2,9 +2,9 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,16 +14,13 @@ func TestBuildWindows(t *testing.T) {
 		require.NoError(t, os.RemoveAll("src"))
 	}()
 
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
-	cmd = exec.Command("neva", "build", "--target-os=windows", "--target-arch=amd64", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out, _ := e2e.Run(t, []string{"build", "--target-os=windows", "--target-arch=amd64", "src"})
 	defer func() {
 		require.NoError(t, os.Remove("output.exe"))
 	}()
 
-	_, err = os.Stat("output.exe")
-	require.NoError(t, err, string(out))
+	_, err := os.Stat("output.exe")
+	require.NoError(t, err, out)
 }

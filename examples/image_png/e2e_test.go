@@ -2,6 +2,7 @@ package test
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,14 +11,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	out := e2e.Run(t, "run", "image_png")
+	out, _ := e2e.Run(t, []string{"run", "."})
 
 	require.Equal(
 		t,
@@ -26,11 +20,12 @@ func Test(t *testing.T) {
 	)
 
 	// Check file exists.
-	const filename = "minimal.png"
+	repoRoot := e2e.FindRepoRoot(t)
+	filename := filepath.Join(repoRoot, "examples", "image_png", "minimal.png")
 
-	_, err = os.ReadFile(filename)
+	_, err := os.ReadFile(filename)
 	require.NoError(t, err, out)
 
 	// Remove file output.
-	os.Remove(filename)
+	_ = os.Remove(filename)
 }

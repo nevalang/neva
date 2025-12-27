@@ -62,3 +62,43 @@ func (s *testScope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 func (s *testScope) IsTopType(expr ts.Expr) bool {
 	return false
 }
+
+// createSingleElementUnion creates a union type with a single element matching the given type.
+// It's used only by unit tests.
+func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
+	// if the expression is already a union, return it as-is
+	if expr.Lit != nil && expr.Lit.Union != nil {
+		return expr
+	}
+
+	// create a single-element union
+	// for primitive types like int, create union { int }
+	// for complex types, create union with the type name as the tag
+	if expr.Inst != nil {
+		typeName := expr.Inst.Ref.String()
+		// create a new instance expression with the same type
+		tagExpr := ts.Expr{
+			Inst: &ts.InstExpr{
+				Ref:  expr.Inst.Ref,
+				Args: expr.Inst.Args,
+			},
+		}
+		return ts.Expr{
+			Lit: &ts.LitExpr{
+				Union: map[string]*ts.Expr{
+					typeName: &tagExpr,
+				},
+			},
+		}
+	}
+
+	// if the expression is a literal, we need to handle it differently
+	if expr.Lit != nil {
+		// for literal expressions, we can't easily create a union
+		// this shouldn't happen for operator operands, but let's handle it
+		return expr
+	}
+
+	// fallback: return the expression as-is if we can't create a union
+	return expr
+}

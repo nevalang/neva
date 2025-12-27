@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrInterfaceTypeParams = errors.New("Cannot resolve interface type parameters")
+	ErrInterfaceTypeParams = errors.New("cannot resolve interface type parameters")
 )
 
 type analyzeInterfaceParams struct {

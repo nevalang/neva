@@ -561,27 +561,6 @@ func (a Analyzer) getResolvedSenderType(
 		return sender, lastFieldType, false, nil
 	}
 
-	// logic of getting type for ternary expr partially duplicates logic of validating it
-	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
-	if sender.Ternary != nil {
-		_, trueValType, _, err := a.getResolvedSenderType(
-			sender.Ternary.Left,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			prevChainLink,
-			nodesUsage,
-			isPatternSender,
-		)
-		if err != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, compiler.Error{
-				Meta: &sender.Ternary.Meta,
-			}.Wrap(err)
-		}
-		return sender, trueValType, false, nil
-	}
-
 	// logic of getting type for union sender partially duplicates logic of validating it
 	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
 	if sender.Union != nil {
@@ -685,45 +664,6 @@ func (a Analyzer) getResolvedSenderType(
 		PortAddr: &resolvedPort,
 		Meta:     sender.Meta,
 	}, resolvedExpr, isArr, nil
-}
-
-// createSingleElementUnion creates a union type with a single element matching the given type
-func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
-	// if the expression is already a union, return it as-is
-	if expr.Lit != nil && expr.Lit.Union != nil {
-		return expr
-	}
-
-	// create a single-element union
-	// for primitive types like int, create union { int }
-	// for complex types, create union with the type name as the tag
-	if expr.Inst != nil {
-		typeName := expr.Inst.Ref.String()
-		// create a new instance expression with the same type
-		tagExpr := ts.Expr{
-			Inst: &ts.InstExpr{
-				Ref:  expr.Inst.Ref,
-				Args: expr.Inst.Args,
-			},
-		}
-		return ts.Expr{
-			Lit: &ts.LitExpr{
-				Union: map[string]*ts.Expr{
-					typeName: &tagExpr,
-				},
-			},
-		}
-	}
-
-	// if the expression is a literal, we need to handle it differently
-	if expr.Lit != nil {
-		// for literal expressions, we can't easily create a union
-		// this shouldn't happen for operator operands, but let's handle it
-		return expr
-	}
-
-	// fallback: return the expression as-is if we can't create a union
-	return expr
 }
 
 // getPortSenderType returns resolved port-addr, type expr and isArray bool.

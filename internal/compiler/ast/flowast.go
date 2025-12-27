@@ -310,7 +310,6 @@ type ConnectionSender struct {
 	Const    *Const    `json:"const,omitempty"`
 	Range    *Range    `json:"range,omitempty"`
 
-	Ternary        *Ternary     `json:"ternary,omitempty"`
 	StructSelector []string     `json:"selector,omitempty"`
 	Union          *UnionSender `json:"union,omitempty"`
 	Meta           core.Meta    `json:"meta,omitempty"`
@@ -325,17 +324,6 @@ type UnionSender struct {
 	Tag       string            `json:"tag,omitempty"`
 	Data      *ConnectionSender `json:"data,omitempty"`
 	Meta      core.Meta         `json:"meta,omitempty"`
-}
-
-type Ternary struct {
-	Condition ConnectionSender `json:"condition,omitempty"`
-	Left      ConnectionSender `json:"left,omitempty"`
-	Right     ConnectionSender `json:"right,omitempty"`
-	Meta      core.Meta        `json:"meta,omitempty"`
-}
-
-func (t Ternary) String() string {
-	return fmt.Sprintf("(%v ? %v : %v)", t.Condition, t.Left, t.Right)
 }
 
 func (s ConnectionSender) String() string {
@@ -354,9 +342,6 @@ func (s ConnectionSender) String() string {
 		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
-
-	case s.Ternary != nil:
-		result = s.Ternary.String()
 	}
 
 	return result + selectorsString

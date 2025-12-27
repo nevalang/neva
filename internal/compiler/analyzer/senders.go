@@ -64,8 +64,6 @@ func (a Analyzer) analyzeSender(
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
-
-		sender.Ternary == nil &&
 		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
@@ -86,72 +84,6 @@ func (a Analyzer) analyzeSender(
 			Message: "struct selectors cannot be used in non-chained connection",
 			Meta:    &sender.Meta,
 		}
-	}
-
-	if sender.Ternary != nil {
-		// analyze the condition part
-		_, condType, err := a.analyzeSender(
-			sender.Ternary.Condition,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if err != nil {
-			return nil, nil, compiler.Error{
-				Meta: &sender.Ternary.Meta,
-			}.Wrap(err)
-		}
-
-		// ensure the condition is of boolean type
-		boolType := ts.Expr{
-			Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}},
-		}
-		if err := a.resolver.IsSubtypeOf(*condType, boolType, scope); err != nil {
-			return nil, nil, &compiler.Error{
-				Message: "Condition of ternary expression must be of boolean type",
-				Meta:    &sender.Ternary.Meta,
-			}
-		}
-
-		// analyze the trueVal part
-		_, trueValType, err := a.analyzeSender(
-			sender.Ternary.Left,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if err != nil {
-			return nil, nil, compiler.Error{
-				Meta: &sender.Ternary.Meta,
-			}.Wrap(err)
-		}
-
-		// analyze the falseVal part
-		_, _, err = a.analyzeSender(
-			sender.Ternary.Right,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if err != nil {
-			return nil, nil, compiler.Error{
-				Meta: &sender.Ternary.Meta,
-			}.Wrap(err)
-		}
-
-		return &sender, trueValType, nil
 	}
 
 	if sender.Union != nil {

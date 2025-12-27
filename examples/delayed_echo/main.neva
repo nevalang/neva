@@ -6,15 +6,14 @@ import {
 }
 
 def Main(start any) (stop any) {
-	println fmt.Println
-	w1 Worker
-	w2 Worker
-	w3 Worker
-	w4 Worker
-	w5 Worker
-	w6 Worker
+	println MustPrint
+	w1 PrintAfter1Sec
+	w2 PrintAfter1Sec
+	w3 PrintAfter1Sec
+	w4 PrintAfter1Sec
+	w5 PrintAfter1Sec
+	w6 PrintAfter1Sec
 	wg sync.WaitGroup
-	panic runtime.Panic
 	---
 	:start -> [
 		'Hello' -> println,
@@ -23,21 +22,30 @@ def Main(start any) (stop any) {
 		3 -> w3,
 		4 -> w4,
 		5 -> w5,
-		'World' -> w6
+		'World' -> w6,
+		6 -> wg:count
 	]
-	6 -> wg:count
-	[w1:sig, w2:sig, w3:sig, w4:sig, w5:sig, w6:sig, println:res] -> wg:sig
+	[w1, w2, w3, w4, w5, w6, println] -> wg:sig
 	wg -> :stop
-	[w1:err, w2:err, w3:err, w4:err, w5:err, w6:err, println:err] -> panic
 }
 
-def Worker(data any) (sig any, err error) {
+def PrintAfter1Sec(data any) (res any) {
 	delay time.Delay
-	println fmt.Println?
+	println fmt.Println
+	panic runtime.Panic
 	---
 	:data -> delay:data
 	$time.second -> delay:dur
-	delay -> println -> :sig
+	delay -> println
+	println:res -> :res
+	println:err -> panic
 }
 
-// TODO add unit test
+def MustPrint(data any) (res any) {
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:data -> println:data
+	println:res -> :res
+	println:err -> panic
+}

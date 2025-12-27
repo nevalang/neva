@@ -81,7 +81,7 @@ func newBuildCmd(
 			switch target {
 			case "go", "wasm", "ir", "native":
 			default:
-				return fmt.Errorf("Unknown target %s", target)
+				return fmt.Errorf("unknown target %s", target)
 			}
 
 			targetOS := cliCtx.String("target-os")
@@ -120,6 +120,12 @@ func newBuildCmd(
 			if err != nil {
 				return err
 			}
+
+			// Resolve mainPkgPath relative to workdir if it's not absolute
+			if !filepath.IsAbs(mainPkgPath) {
+				mainPkgPath = filepath.Join(workdir, mainPkgPath)
+			}
+			mainPkgPath = filepath.Clean(mainPkgPath)
 
 			outputDirPath := workdir
 			if cliCtx.IsSet("output") {

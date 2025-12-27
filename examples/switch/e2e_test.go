@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/nevalang/neva/pkg/e2e"
@@ -9,22 +8,15 @@ import (
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	// Test successful case with "Alice"
-	out := e2e.RunWithStdin(t, "Alice\n", "run", "switch")
+	out, _ := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Alice\n"))
 	require.Equal(t, "Enter the name: ALICE\n", out)
 
 	// Test panic case with "Bob"
-	out = e2e.RunWithStdin(t, "Bob\n", "run", "switch")
+	out, _ = e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Bob\n"))
 	require.Equal(t, "Enter the name: bob\n", out)
 
 	// Test panic case with "Charlie"
-	out = e2e.RunWithStdinCombined(t, "Charlie\n", "run", "switch")
-	require.Equal(t, "Enter the name: panic: Charlie\n", out)
+	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Charlie\n"))
+	require.Equal(t, "Enter the name: panic: Charlie\n", out+stderr)
 }

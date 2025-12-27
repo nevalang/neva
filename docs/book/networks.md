@@ -121,15 +121,13 @@ Each connection always has a sender and receiver side. There are 3 types of each
 
 ### Senders
 
-There are 7 sender-side forms:
+There are 5 sender-side forms:
 
 1. Port address
 2. Constant reference
 3. Message literal
-4. Binary expression
-5. Ternary expression
-6. Struct selector
-7. Range expression
+4. Struct selector
+5. Range expression
 
 #### Port Address Sender
 
@@ -234,66 +232,6 @@ Only primitive data-types (`bool`, `int`, `float`, `string` and tagged union lit
 - int: `42 -> ...`
 - float: `42.0 -> ...`
 - tagged union: `Day::Friday ->` or `Day::Friday(value) ->`
-
-#### Binary Expression
-
-Binary expression is an easy way to perform arithmetic, comparison, logic or bitwise operation with two operands. Syntax of binary expression is infix notation with binary operator in the middle and operands on left and right. Binary expression is always wrapped in `()` braces (so there's no precedence in Nevalang).
-
-Examples:
-
-```neva
-// arithmetic
-(5 + 3) -> println // addition: outputs 8
-(5 - 3) -> println // subtraction: outputs 2
-(5 * 3) -> println // multiplication: outputs 15
-(6 / 2) -> println // division: outputs 3
-(7 % 3) -> println // modulo: outputs 1
-(2 ** 3) -> println // power: outputs 8
-
-// comparison
-(5 == 5) -> println // equal: outputs true
-(5 != 3) -> println // not equal: outputs true
-(5 > 3) -> println // greater than: outputs true
-(5 < 8) -> println // less than: outputs true
-(5 >= 5) -> println // greater or equal: outputs true
-(5 <= 8) -> println // less or equal: outputs true
-
-// logic
-(true && true) -> println // AND: outputs true
-(true || false) -> println // OR: outputs true
-
-// bitwise
-(5 & 3) -> println // AND: outputs 1
-(5 | 3) -> println // OR: outputs 7
-(5 ^ 3) -> println // XOR: outputs 6
-```
-
-> Bitwise left and right shifts (`<<` and `>>`) are not yet implemented.
-
-Operands of a binary-expression are senders themselves. In example above they are message literals but they could be any senders:
-
-```neva
-(5 + node:port)
-($some_const && false)
-(someNode == 'some string')
-```
-
-Binary expressions could be infinetely nested. Example: `((a + b) * (c - d)) -> receiver`.
-
-Both operands (their resolved versions) must be of the same type. Type of a valid binary expression is the same as types of its operands. Type-compatibility between binary expression sender and its receiver-side is resolved the same way as with any other sender and receiver sides.
-
-#### Tenrary Expression
-
-Similar to binary, but there are 3 operands instead of 2 and first operand is always of `bool` type. Just like binary, ternary expression sender is always wrapped into `()` braces, supports any senders as operands and could be infintely nested (and mixed with binary expressions). Examples:
-
-```neva
-(a ? : b : c) // simple
-(a + (b ? c : d)) // as operand in binary expression
-(cond ? (a + b) : (c * d)) // with binary expressions as brances
-((a == b) ? c : d) // with binary expression as condition
-```
-
-Compiler with ensure that condition operand resolves to `bool` type and that both branch-operands are compatible with the receiver-side.
 
 #### Struct Selector
 
@@ -568,18 +506,18 @@ sender -> switch {
     _ -> receiver5
 }
 
-// with binary expression senders
-sender -> switch {
-    (a + b) -> receiver1
-    (c * d) -> receiver2
-    _ -> receiver3
-}
-
 // nested
+eq Eq
+gt Gt
+---
+... -> 1 -> eq:left
+... -> 1 -> eq:right
+... -> 2 -> gt:left
+... -> 3 -> gt:right
 sender -> switch {
     true -> switch {
-        (1 == 1) -> receiver1
-        (2 > 3) -> receiver2
+        eq:res -> receiver1
+        gt:res -> receiver2
         _ -> receiver3
     }
     false -> receiver4

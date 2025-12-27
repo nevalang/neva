@@ -18,67 +18,6 @@ var location = core.Location{
 	Filename: "test",
 }
 
-func TestParser_ParseFile_TernaryExpression(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			(condition ? trueValue : falseValue) -> receiver
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.Nil(t, err)
-
-	net := got.Entities["C1"].Component[0].Net
-	require.Equal(t, 1, len(net))
-
-	conn := net[0].Normal
-	require.Equal(t, 1, len(conn.Senders))
-
-	ternary := conn.Senders[0].Ternary
-	require.NotNil(t, ternary)
-
-	require.Equal(t, "condition", ternary.Condition.PortAddr.Node)
-	require.Equal(t, "trueValue", ternary.Left.PortAddr.Node)
-	require.Equal(t, "falseValue", ternary.Right.PortAddr.Node)
-
-	require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
-}
-
-func TestParser_ParseFile_NestedTernaryExpression(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			(cond1 ? (cond2 ? val1 : val2) : val3) -> receiver
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.Nil(t, err)
-
-	net := got.Entities["C1"].Component[0].Net
-	require.Equal(t, 1, len(net))
-
-	conn := net[0].Normal
-	require.Equal(t, 1, len(conn.Senders))
-
-	outerTernary := conn.Senders[0].Ternary
-	require.NotNil(t, outerTernary)
-
-	require.Equal(t, "cond1", outerTernary.Condition.PortAddr.Node)
-	require.Equal(t, "val3", outerTernary.Right.PortAddr.Node)
-
-	innerTernary := outerTernary.Left.Ternary
-	require.NotNil(t, innerTernary)
-	require.Equal(t, "cond2", innerTernary.Condition.PortAddr.Node)
-	require.Equal(t, "val1", innerTernary.Left.PortAddr.Node)
-	require.Equal(t, "val2", innerTernary.Right.PortAddr.Node)
-
-	require.Equal(t, "receiver", conn.Receivers[0].PortAddr.Node)
-}
-
 func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	text := []byte(`
 		def C1() () {

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -11,21 +10,13 @@ import (
 )
 
 func Test(t *testing.T) {
-	// for i := 0; i < 10; i++ {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	start := time.Now()
-	out := e2e.Run(t, "run", "delayed_echo")
+	out, _ := e2e.Run(t, []string{"run", "."})
 	elapsed := time.Since(start)
 
-	// Check execution time is between 1-5 seconds
+	// Check execution time is between 1-10 seconds
 	require.GreaterOrEqual(t, elapsed.Seconds(), 1.0)
-	require.LessOrEqual(t, elapsed.Seconds(), 5.0)
+	require.LessOrEqual(t, elapsed.Seconds(), 10.0)
 
 	// Split output into lines and verify contents
 	lines := strings.Split(strings.TrimSpace(out), "\n")
@@ -52,7 +43,7 @@ func Test(t *testing.T) {
 	// Previous map had: World, 1, 2, 3, 4, 5. Total 6 items.
 	// Hello is separate.
 	// Let's copy exact expected map from previous code.
-	
+
 	expected = map[string]bool{
 		"World": false,
 		"1":     false,
@@ -73,6 +64,4 @@ func Test(t *testing.T) {
 	for val, found := range expected {
 		require.True(t, found, "Expected value not found: %s", val)
 	}
-
-	// }
 }

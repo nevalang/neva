@@ -446,12 +446,6 @@ func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
 // ExitSenderConstRef is called when production senderConstRef is exited.
 func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
 
-// EnterTernaryExpr is called when production ternaryExpr is entered.
-func (s *BasenevaListener) EnterTernaryExpr(ctx *TernaryExprContext) {}
-
-// ExitTernaryExpr is called when production ternaryExpr is exited.
-func (s *BasenevaListener) ExitTernaryExpr(ctx *TernaryExprContext) {}
-
 // EnterReceiverSide is called when production receiverSide is entered.
 func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
 
