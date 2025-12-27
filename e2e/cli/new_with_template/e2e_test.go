@@ -13,7 +13,11 @@ func TestNewFromRemoteTemplate(t *testing.T) {
 	workdir := t.TempDir()
 	destination := filepath.Join(workdir, "module")
 
-	e2e.RunInDir(t, workdir, "new", destination, "--template", "github.com/nevalang/x")
+	e2e.Run(
+		t,
+		[]string{"new", destination, "--template", "github.com/nevalang/x"},
+		e2e.WithDir(workdir),
+	)
 
 	// verify that files from the template were copied
 	_, err := os.Stat(filepath.Join(destination, "neva.yml"))

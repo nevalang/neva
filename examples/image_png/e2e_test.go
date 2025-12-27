@@ -20,7 +20,8 @@ func Test(t *testing.T) {
 	)
 
 	// Check file exists.
-	filename := filepath.Join(e2e.ExamplesDir(t), "minimal.png")
+	repoRoot := e2e.FindRepoRoot(t)
+	filename := filepath.Join(repoRoot, "examples", "image_png", "minimal.png")
 
 	_, err := os.ReadFile(filename)
 	require.NoError(t, err, out)

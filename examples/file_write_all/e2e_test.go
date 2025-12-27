@@ -20,7 +20,8 @@ func Test(t *testing.T) {
 	)
 
 	// Check file contents.
-	filename := filepath.Join(e2e.ExamplesDir(t), "file_writer_example.txt")
+	repoRoot := e2e.FindRepoRoot(t)
+	filename := filepath.Join(repoRoot, "examples", "file_write_all", "file_writer_example.txt")
 
 	want, err := os.ReadFile(filename)
 	require.NoError(t, err, out)

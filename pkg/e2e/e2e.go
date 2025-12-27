@@ -19,6 +19,7 @@ type Option func(*config)
 type config struct {
 	stdin        string
 	expectedCode int
+	wd           string
 }
 
 // WithStdin sets stdin input for the command.
@@ -32,6 +33,13 @@ func WithStdin(stdin string) Option {
 func WithCode(code int) Option {
 	return func(c *config) {
 		c.expectedCode = code
+	}
+}
+
+// WithDir sets the working directory for the command execution.
+func WithDir(wd string) Option {
+	return func(c *config) {
+		c.wd = wd
 	}
 }
 
@@ -52,8 +60,12 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 
 	repoRoot := FindRepoRoot(t)
 	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
-	wd, err := os.Getwd()
-	require.NoError(t, err, "failed to get working directory")
+	wd := cfg.wd
+	var err error
+	if wd == "" {
+		wd, err = os.Getwd()
+		require.NoError(t, err, "failed to get working directory")
+	}
 
 	cmdArgs := append([]string{"run", mainPath}, args...)
 	cmd := exec.Command("go", cmdArgs...)
