@@ -121,6 +121,12 @@ func newBuildCmd(
 				return err
 			}
 
+			// Resolve mainPkgPath relative to workdir if it's not absolute
+			if !filepath.IsAbs(mainPkgPath) {
+				mainPkgPath = filepath.Join(workdir, mainPkgPath)
+			}
+			mainPkgPath = filepath.Clean(mainPkgPath)
+
 			outputDirPath := workdir
 			if cliCtx.IsSet("output") {
 				outputDirPath = cliCtx.String("output")
