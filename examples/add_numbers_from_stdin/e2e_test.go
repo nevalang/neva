@@ -8,12 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	t.Run("Add_numbers_from_stdin", func(t *testing.T) {
-		out, _ := e2e.Run(t, []string{"run", "add_numbers_from_stdin"}, e2e.WithStdin("3\n4\n\n"))
-		require.Equal(
-			t,
-			"7\n",
-			out,
-		)
-	})
+	out, _ := e2e.Run(t, []string{"run", "add_numbers_from_stdin"}, e2e.WithStdin("3\n4\n\n"))
+	require.Equal(
+		t,
+		"7\n",
+		out,
+	)
 }
