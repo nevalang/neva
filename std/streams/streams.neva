@@ -3,11 +3,12 @@
 // Wait blocks until last stream item arrive, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
     del Del
+    s Switch<bool>
     ---
-    :data -> .last -> switch {
-        true -> :sig
-        _ -> del
-    }
+    :data -> .last -> s:data
+    true -> s:case[0]
+    s:case[0] -> :sig
+    s:else -> del
 }
 
 // === Zip ===

@@ -82,16 +82,10 @@ func newRunCmd(
 				}
 			}()
 
-			mainPkg, err := mainPkgPathFromArgs(cliCtx)
+			mainPkg, err := mainPkgPathFromArgs(cliCtx, workdir)
 			if err != nil {
 				return err
 			}
-
-			// Resolve mainPkg relative to workdir if it's not absolute
-			if !filepath.IsAbs(mainPkg) {
-				mainPkg = filepath.Join(workdir, mainPkg)
-			}
-			mainPkg = filepath.Clean(mainPkg)
 
 			input := compiler.CompilerInput{
 				MainPkgPath:   mainPkg,

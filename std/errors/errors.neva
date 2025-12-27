@@ -24,14 +24,15 @@ pub def Lift<T, Y>(data T) (res Y, err error) {
     handler ILiftHandler<T, Y>
     del Del
     new New
+    s Switch<bool>
     ---
     :data -> [
         handler -> :res,
-        false -> switch {
-            true -> '' -> new -> :err
-            _ -> del
-        }
+        false -> s:data
     ]
+    true -> s:case[0]
+    s:case[0] -> '' -> new -> :err
+    s:else -> del
 }
 
 pub interface ILiftHandler<T, Y>(T) (Y)
