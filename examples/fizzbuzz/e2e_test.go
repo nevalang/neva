@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	t.Run("FizzBuzz Test", func(t *testing.T) {
-		out, _ := e2e.Run(t, []string{"run", "fizzbuzz"})
+		out, _ := e2e.Run(t, []string{"run", "."})
 		require.Equal(
 			t,
 			expected,

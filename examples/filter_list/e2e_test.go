@@ -13,7 +13,7 @@ func Test(t *testing.T) {
 	// But usually tests just time out by global go test timeout.
 	// The original test had specific timeout of 5s.
 	// Assuming e2e.Run is fine.
-	out, _ := e2e.Run(t, []string{"run", "filter_list"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 	require.Equal(
 		t,
 		"2\n4\n6\n8\n10\n",

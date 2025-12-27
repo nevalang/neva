@@ -9,7 +9,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "wait_group"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 
 	t.Log(out)
 

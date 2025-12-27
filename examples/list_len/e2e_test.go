@@ -9,7 +9,7 @@ import (
 
 // Check that Len def works with the list of integers.
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "list_len"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 
 	require.Equal(
 		t,

@@ -26,6 +26,6 @@ var expectedOutput = `{"first": 0, "second": 0}
 `
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "stream_product"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 	require.Equal(t, expectedOutput, out)
 }

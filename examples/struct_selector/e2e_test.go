@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "struct_selector"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 
 	require.Equal(
 		t,

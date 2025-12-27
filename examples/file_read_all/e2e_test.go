@@ -11,9 +11,9 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "file_read_all"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 
-	want, err := os.ReadFile(filepath.Join(e2e.ExamplesDir(t), "file_read_all", "main.neva"))
+	want, err := os.ReadFile(filepath.Join(e2e.FindRepoRoot(t), "examples", "file_read_all", "main.neva"))
 	require.NoError(t, err, out)
 
 	require.Equal(

@@ -50,18 +50,10 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		opt(cfg)
 	}
 
-	repoRoot := findRepoRoot(t)
+	repoRoot := FindRepoRoot(t)
 	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
 	wd, err := os.Getwd()
 	require.NoError(t, err, "failed to get working directory")
-
-	// For examples, we need to run from the examples directory to find neva.yml
-	// Check if we're in an examples subdirectory and adjust working directory accordingly
-	examplesDir := filepath.Join(repoRoot, "examples")
-	if strings.HasPrefix(wd, examplesDir+string(filepath.Separator)) || wd == examplesDir {
-		// We're in an examples subdirectory, run from examples directory
-		wd = examplesDir
-	}
 
 	cmdArgs := append([]string{"run", mainPath}, args...)
 	cmd := exec.Command("go", cmdArgs...)
@@ -89,8 +81,8 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	return stdoutBuf.String(), stderrBuf.String()
 }
 
-// findRepoRoot finds the repository root using go env GOMOD.
-func findRepoRoot(t *testing.T) string {
+// FindRepoRoot finds the repository root using go env GOMOD.
+func FindRepoRoot(t *testing.T) string {
 	t.Helper()
 
 	cmd := exec.Command("go", "env", "GOMOD")

@@ -10,7 +10,7 @@ import (
 // Nested map has only one key because keys are unordered
 // so having order in test will make it flacky.
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "const_refs"})
+	out, _ := e2e.Run(t, []string{"run", "."})
 	require.Equal(
 		t,
 		`{"d": {"key": 1}, "l": [1, 2, 3]}
