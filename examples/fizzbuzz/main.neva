@@ -5,9 +5,9 @@ import {
 }
 
 def Main(start any) (stop any) {
-    Map<int, any>{FizzBuzz}
-    For{fmt.Println}
-    streams.Wait
+    map Map<int, any>{FizzBuzz}
+    for For{fmt.Println}
+    wait streams.Wait
     panic runtime.Panic
     ---
     :start -> 1..101 -> map -> for
@@ -68,7 +68,9 @@ def Mod5(num int) (then int, else int) {
 }
 
 def ModHelper(num int, den int) (then int, else int) {
-    Mod, Cond<int>, Eq<int>
+    mod Mod
+    cond Cond<int>
+    eq Eq<int>
     ---
     :num -> [mod:left, cond:data]
     :den -> mod:right

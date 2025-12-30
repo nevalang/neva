@@ -7,6 +7,7 @@
 #extern(new)
 pub def New<T>() (res T)
 
+// NewV2 is like New but with `:sig` inport that works like trigger.
 #extern(new_v2)
 pub def NewV2<T>(sig any) (res T)
 

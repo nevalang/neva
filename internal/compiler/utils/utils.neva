@@ -1,7 +1,6 @@
 import {
     strings
     lists
-    builtin
     runtime
 }
 
@@ -13,11 +12,11 @@ pub type EntityRef struct {
 
 pub def ParseEntityRef(ref string) (res EntityRef) {
     split strings.Split
-    len builtin.Len
-    eq builtin.Eq<int>
-    cond builtin.Cond<list<string>>
+    len Len
+    eq Eq<int>
+    cond Cond<list<string>>
     
-    lock_empty_pkg builtin.Lock<string>
+    lock_empty_pkg Lock<string>
     
     // Path 2 parts
     at_pkg_2 lists.At<string>
@@ -25,8 +24,8 @@ pub def ParseEntityRef(ref string) (res EntityRef) {
     
     // Path 1 part
     at_name_1 lists.At<string>
-    fan_in_pkg builtin.FanIn<string>
-    fan_in_name builtin.FanIn<string>
+    fan_in_pkg FanIn<string>
+    fan_in_name FanIn<string>
     builder Struct<EntityRef>
     
     p1 runtime.Panic

@@ -62,15 +62,15 @@ pub def Pow(left int, right int) (res int)
 
 // --- Comparison ---
 
-// Eq sends true if actual is equal to compared, otherwise false.
+// Eq sends true if left is equal to right, otherwise false.
 #extern(eq)
 pub def Eq<T>(left T, right T) (res bool)
 
-// Ne sends true if actual is not equal to compared, otherwise false.
+// Ne sends true if left is not equal to right, otherwise false.
 #extern(ne)
 pub def Ne<T>(left T, right T) (res bool)
 
-// Gt sends true if actual is greater than compared, otherwise false.
+// Gt sends true if left is greater than right, otherwise false.
 #extern(int_is_greater)
 pub def Gt(left int, right int) (res bool)
 #extern(float_is_greater)
@@ -78,7 +78,7 @@ pub def Gt(left float, right float) (res bool)
 #extern(string_is_greater)
 pub def Gt(left string, right string) (res bool)
 
-// Lt sends true if actual is lesser than compared, otherwise false.
+// Lt sends true if left is lesser than right, otherwise false.
 #extern(int_is_lesser)
 pub def Lt(left int, right int) (res bool)
 #extern(float_is_lesser)
@@ -86,7 +86,7 @@ pub def Lt(left float, right float) (res bool)
 #extern(string_is_lesser)
 pub def Lt(left string, right string) (res bool)
 
-// Ge sends true if actual is greater than or equal to compared, otherwise false.
+// Ge sends true if left is greater than or equal to right, otherwise false.
 #extern(int_is_greater_or_equal)
 pub def Ge(left int, right int) (res bool)
 #extern(float_is_greater_or_equal)
@@ -94,7 +94,7 @@ pub def Ge(left float, right float) (res bool)
 #extern(string_is_greater_or_equal)
 pub def Ge(left string, right string) (res bool)
 
-// Le sends true if actual is lesser than or equal to compared, otherwise false.
+// Le sends true if left is lesser than or equal to right, otherwise false.
 #extern(int_is_lesser_or_equal)
 pub def Le(left int, right int) (res bool)
 #extern(float_is_lesser_or_equal)

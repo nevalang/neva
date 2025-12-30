@@ -2,25 +2,34 @@ import {
     fmt
     strings
     runtime
+    errors
 }
 
 def Main(start any) (stop any) {
+    app App
+    panic runtime.Panic
+    ---
+    :start -> app:start
+    app:err -> panic
+    app:stop -> :stop
+}
+
+def Main(start any) (stop any, err error) {
     print fmt.Print<any>
     scanln fmt.Scanln
+    switch Switch<string>
     upper strings.ToUpper
     lower strings.ToLower
     add Add
-    println fmt.Println<any>
-    panic1 runtime.Panic
-    panic2 runtime.Panic
+    println fmt.Println<any>?
+    err_new errors.New
     ---
-    :start -> 'Enter the name: ' -> print -> scanln -> switch {
-        'Alice' -> [upper, lower]
-        _ -> panic1
-    }
+    :start -> [
+        'Enter the name: ' -> print -> scanln -> switch:data,
+        'Alice' -> switch:case[0] -> [upper, lower]
+    ]
+    switch:else -> '...' -> err_new -> :err
     upper -> add:left
     lower -> add:right
-    add -> println
-    println:res -> :stop
-    println:err -> panic2
+    add -> println -> :stop
 }
